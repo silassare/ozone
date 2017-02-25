@@ -1,0 +1,14 @@
+AddDefaultCharset UTF-8
+RewriteEngine on
+AddType text/cache-manifest .manifest
+
+
+#
+# Disable files listing
+#
+
+Options All -Indexes
+
+RewriteCond %{REQUEST_URI} !^/index\.php
+RewriteCond %{REQUEST_URI} !^/robots\.txt
+RewriteRule (.*)    index.php
