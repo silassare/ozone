@@ -20,19 +20,16 @@
 
 	include_once OZ_OZONE_DIR . 'oz_core' . DS . 'OZoneClassLoader.php';
 
-	OZoneClassLoader::addDirsList( array(
+	OZoneClassLoader::addDirs( array(
 		OZ_OZONE_DIR,
 		OZ_OZONE_DIR . 'oz_admin',
 		OZ_OZONE_DIR . 'oz_core',
 		OZ_OZONE_DIR . 'oz_errors',
 		OZ_APP_SERVICES_DIR,
-		OZ_APP_CORE_DIR
+		OZ_APP_CORE_DIR,
+		array( OZ_OZONE_DIR . 'oz_lib', true, 1 ) ,
+		array( OZ_OZONE_DIR . 'oz_plugins', true, 1 )
 	) );
-
-	OZoneClassLoader::addDirsList( array(
-		OZ_OZONE_DIR . 'oz_lib',
-		OZ_OZONE_DIR . 'oz_plugins'
-	), true, 1 );
 
 	include_once OZ_ROOT_DIR . 'oz' . DS . 'oz_default' . DS . 'oz_func.php';
 	include_once OZ_APP_DIR . 'app_config.php';
