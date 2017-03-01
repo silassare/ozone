@@ -1,22 +1,24 @@
 <?php
-/*! OTpl {otpl_version}*/
+/*
+ * OTpl {otpl_version}
+ * Auto-generated file, please don't edit
+ *
+ */
 
+if(
 	OTpl::register( array(
 		'version'		=> "{otpl_version}",
 		'version_name'	=> "{otpl_version_name}",
 		'src_path'		=> "{otpl_src_path}",
 		'compile_time'	=> {otpl_compile_time},
-		'func_name'		=> "{otpl_func_name}",
-		'data_key'		=> "{otpl_data_key}"
-	) );
-
+		'func_name'		=> "{otpl_func_name}"
+	) )
+){
 	function {otpl_func_name}({otpl_root_ref})
 	{
 		{otpl_data_ref} = {otpl_root_ref}->getData();
 		/*--------------OTPL source file Start----------------*/
-?>
-{otpl_file_content}
-<?php
+?>{otpl_file_content}<?php
 		/*--------------OTPL source file End----------------*/
 	}
-?>
+}

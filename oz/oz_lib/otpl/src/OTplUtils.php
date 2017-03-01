@@ -63,8 +63,11 @@
 
 		public static function importExec( $url, $data ) {
 			$o = new OTpl();
+			$o->parse( $url );
 
-			$o->parse( $url )
-				->runWith( $data );
+			ob_start();
+			$o->runWith( $data );
+
+			return ob_get_clean();
 		}
 	}

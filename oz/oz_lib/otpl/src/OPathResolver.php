@@ -4,12 +4,12 @@
 		const DS = DIRECTORY_SEPARATOR;
 
 		public static function resolve( $root, $path ) {
-			$root = empty( $root ) ? __DIR__ : self::nomalize( $root );
-			$path = self::nomalize( $path );
+			$root = self::normalize( $root );
+			$path = self::normalize( $path );
 
 			if ( self::isRelative( $path ) ) {
 				if ( ( self::DS === '/' AND $path[ 0 ] === '/' ) OR preg_match( "#^[\w]+:#", $path ) ) {
-					/*$path already start form the root
+					/*$path start form the root
 						/ 	of linux - unix
 						D: 	of windows
 					*/
@@ -18,15 +18,21 @@
 					$full_path = $root . self::DS . $path;
 				}
 
-				return self::job( explode( self::DS, $full_path ) );
+				return self::job( $full_path );
 
 			} else {
 				return $path;
 			}
 		}
 
-		private static function job( array $in ) {
+		private static function job( $src ) {
+			$in = explode( self::DS, $src );
 			$out = array();
+
+			//preserve linux root first char '/' like in: /root/path/to/
+			if ( $src[ 0 ] === self::DS ) {
+				array_push( $out, '' );
+			}
 
 			foreach ( $in as $part ) {
 				//ignore part that have no value
@@ -41,14 +47,22 @@
 					array_pop( $out );
 				} else {
 					//now here we don't like
-					throw new Exception( "Climbing above root is dangerouse: " . join( self::DS, $in ) );
+					throw new Exception( "Climbing above root is dangerouse: " . $src );
 				}
+			}
+
+			if ( !count( $out ) ) {
+				return self::DS;
+			}
+
+			if ( count( $out ) === 1 ) {
+				array_push( $out, null );
 			}
 
 			return join( self::DS, $out );
 		}
 
-		public static function nomalize( $path ) {
+		public static function normalize( $path ) {
 			if ( self::DS == "\\" )
 				return strtr( $path, '/', '\\' );
 

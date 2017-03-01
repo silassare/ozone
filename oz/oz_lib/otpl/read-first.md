@@ -1,4 +1,4 @@
-### I know it doesn't make any sense, but just do it lol . Silo
+### I know it doesn't make any sense, but just do it lol. Silo
 - you should:
 	- group your features and plugins in class
 	- prefixe your feature class with OTplFeature_

@@ -8,23 +8,25 @@
 	//CORE::INCLUDES
 
 	final class OTpl {
-		const OTPL_VERSION = "php-1.1.2";
-		const OTPL_VERSION_NAME = "OTpl php-1.1.2";
+		const OTPL_VERSION = "php-1.1.4";
+		const OTPL_VERSION_NAME = "OTpl php-1.1.4";
 
 		const OTPL_COMPILE_DIR_NAME = "otpl_done";
 
 		const OTPL_TAG_REG = "#<%(.+?)?%>#";
 		const OTPL_SCRIPT_REG = "#^(\s*)?(if|else|for|foreach|while|break|continue|switch|case|default|})#";
+		const OTPL_CLEAN_LEFT_REG = "#([\r\n]+)[\t ]*(<%.*?[}{]\s*%>)#";
+		const OTPL_PRESERVE_NEWLINE_REG = "#(<%.*?%>)(\s+)(?!<%.*?[}{]\s*%>)#";
 
-		private $src_path = "";
-		private $dest_path = "";
-		private $compile_time = 0;
-		private $func_name = "otpl_nope_";
-		private $data_key = null;
 		private $input = "";
 		private $output = null;
+		private $is_url = false;
+		private $src_path = "";
+		private $dest_path = "";
+		private $func_name = null;
+		private $compile_time = 0;
 
-		private static $otpl_root = array();
+		private static $checked_func = array();
 
 		public function __construct() {
 		}
@@ -52,7 +54,6 @@
 				'{otpl_src_path}',
 				'{otpl_compile_time}',
 				'{otpl_func_name}',
-				'{otpl_data_key}',
 				'{otpl_file_content}'
 			), array(
 				self::OTPL_VERSION,
@@ -62,7 +63,6 @@
 				$this->src_path,
 				$this->compile_time,
 				$this->func_name,
-				$this->data_key,
 				$this->output
 			), $code );
 
@@ -82,37 +82,41 @@
 			fclose( $f );
 		}
 
-		public function parse( $tpl, $force_new_compile = false ) {
-			$rand_str = "";
-			$dest_dir = OTPL_ROOT_DIR;
-			$is_url = OTplUtils::isTplFile( $tpl );
-			$fname_prefixe = "otpl_";
-			$DS = DIRECTORY_SEPARATOR;
+		public function parse( $tpl, $force_new_compile = false, $timed_func_name = false ) {
 
-			if ( $is_url ) {
+			$this->is_url = OTplUtils::isTplFile( $tpl );
+
+			if ( $this->is_url ) {
+
 				$tpl = OPathResolver::resolve( OTPL_ROOT_DIR, $tpl );
 				$this->input = OTplUtils::loadFile( $tpl );
 				$this->src_path = $tpl;
-				$rand_str = md5_file( $tpl );
 
-				$finfos = pathinfo( $tpl );
-				$dest_dir = $finfos[ 'dirname' ];
-				$fname_prefixe = $finfos[ 'filename' ];
+				$pinfos = pathinfo( $tpl );
+				$dest_dir = $pinfos[ 'dirname' ];
+				$out_fname = $pinfos[ 'filename' ] . '_' . md5_file( $tpl );
+
 			} else {
+
 				$this->input = $tpl;
-				$rand_str = md5( $tpl );
+
+				$dest_dir = OTPL_ROOT_DIR;
+				$out_fname = 'otpl_' . md5( $tpl );
 			}
 
-			$this->output = $this->Engine();
-			$dest_dir .= $DS . self::OTPL_COMPILE_DIR_NAME;
-			$this->dest_path = $dest_dir . $DS . $fname_prefixe . '_' . $rand_str . '.php';
+			$dest_dir .= DIRECTORY_SEPARATOR . self::OTPL_COMPILE_DIR_NAME;
 
 			if ( !file_exists( $dest_dir ) ) {
 				mkdir( $dest_dir, 0777 );
 			}
 
-			$this->func_name = "otpl_executor_$rand_str";
-			$this->data_key = $rand_str;
+			$this->dest_path = $dest_dir . DIRECTORY_SEPARATOR . $out_fname . '.php';
+
+			if ( !$timed_func_name ) {
+				$this->func_name = 'otpl_func_' . md5( $out_fname );
+			} else {
+				$this->func_name = 'otpl_func_' . md5( $out_fname . microtime() );
+			}
 
 			if ( !file_exists( $this->dest_path ) OR $force_new_compile ) {
 				$this->output = $this->Engine();
@@ -126,55 +130,79 @@
 			return $this->src_path;
 		}
 
-		public function getOutputUrl() {
-			return $this->dest_path;
+		public function getSrcDir() {
+			$pinfos = pathinfo( $this->getSrcPath() );
+
+			return $pinfos[ 'dirname' ];
 		}
 
-		public function getDataKey() {
-			return $this->data_key;
+		public function getOutputUrl() {
+			return $this->dest_path;
 		}
 
 		public function getFuncName() {
 			return $this->func_name;
 		}
 
-		private function setExecData( $key, $data ) {
-			self::$otpl_root[ $key ] = new OTplData( $data, $this );
+		public static function register( $desc ) {
+
+			if ( self::check( $desc ) ) {
+				$func_name = $desc[ 'func_name' ];
+				self::$checked_func[ $func_name ] = true;
+
+				//make sure func_name is not already defined
+				return !is_callable( $desc[ 'func_name' ] );
+			}
+
+			return false;
+		}
+
+		private static function check( array $desc = array() ) {
+
+			if ( !isset( $desc[ 'func_name' ] ) ) {
+				return false;
+			}
+
+			if ( !isset( $desc[ 'version' ] ) OR $desc[ 'version' ] != OTpl::OTPL_VERSION ) {
+				return false;
+			}
+
+			return true;
+		}
+
+		private function checkPassed() {
+			return array_key_exists( $this->func_name, self::$checked_func );
 		}
 
 		public function runWith( $data ) {
-			$this->setExecData( $this->data_key, $data );
 
-			require_once $this->dest_path;
+			if ( file_exists( $this->dest_path ) ) {
+				require $this->dest_path;
+			}
+
+			if ( $this->checkPassed() AND is_callable( $this->func_name ) ) {
+				call_user_func( $this->func_name, new OTplData( $data, $this ) );
+			} else {
+				@unlink( $this->dest_path );
+
+				$tpl = $this->is_url ? $this->src_path : $this->input;
+				$o = new OTpl();
+
+				//let's parse again with a timed func_name: just for this use 
+				$o->parse( $tpl, true, true )
+					->runWith( $data );
+
+				@unlink( $this->dest_path );
+			}
 		}
 
 		public function runSave( $data, $out_url ) {
 			$out_url = OPathResolver::resolve( __DIR__, $out_url );
+
 			ob_start();
 			$this->runWith( $data );
-			$content = ob_get_contents();
-			ob_get_clean();
 
-			$this->_write_file( $out_url, $content );
-		}
-
-		public static function register( $compile_desc ) {
-			$func_name = $compile_desc[ 'func_name' ];
-			$data_key = $compile_desc[ 'data_key' ];
-
-			if ( is_callable( $func_name ) ) {
-				//SILO::
-				//on verifie s'il s'agit du template principale
-				//si oui on execute
-				//si non alors il s'agit d'une dependence/inclusion
-				if ( isset( self::$otpl_root[ $data_key ] ) ) {
-					call_user_func( $func_name, self::$otpl_root[ $data_key ] );
-
-					return true;
-				}
-			}
-
-			return false;
+			$this->_write_file( $out_url, ob_get_clean() );
 		}
 
 		private function runner( $workers, $code ) {
@@ -198,8 +226,15 @@
 			return $code;
 		}
 
+		private static function _clean( $tpl ) {
+			$tpl = preg_replace( self::OTPL_CLEAN_LEFT_REG, "$1$2", $tpl );
+			$tpl = preg_replace( self::OTPL_PRESERVE_NEWLINE_REG, "$1<?php echo '$2';?>", $tpl );
+
+			return $tpl;
+		}
+
 		private function Engine() {
-			$tpl = $this->input;
+			$tpl = self::_clean( $this->input );
 
 			$in = array();
 

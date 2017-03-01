@@ -13,13 +13,8 @@
 		}
 
 		private static function _import( $url, $data_str, OTpl $context ) {
-			$root = OTPL_ROOT_DIR;
-			$src_path = $context->getSrcPath();
-
-			if ( $src_path ) {
-				$pinfos = pathinfo( $src_path );
-				$root = $pinfos[ 'dirname' ];
-			}
+			$src_dir = $context->getSrcDir();
+			$root = ( $src_dir ) ? $src_dir : OTPL_ROOT_DIR;
 
 			$url = OPathResolver::resolve( $root, $url );
 
