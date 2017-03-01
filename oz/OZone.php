@@ -107,7 +107,7 @@
 
 			array_shift( $c_args );
 
-			return OZoneClassLoader::instanciateClass( $class_name, $c_args );
+			return OZoneClassLoader::instantiateClass( $class_name, $c_args );
 		}
 
 		public static function getServices() {

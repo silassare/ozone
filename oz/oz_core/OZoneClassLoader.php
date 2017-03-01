@@ -103,7 +103,7 @@
 			//let's register our class loader if not done
 			if ( self::$registred === false ) {
 				self::$registred = true;
-				spl_autoload_register( array( self, 'loadClass' ) );
+				spl_autoload_register( array( 'OZoneClassLoader', 'loadClass' ) );
 			}
 
 			$dir = self::cleanPath( $dir );
@@ -137,7 +137,7 @@
 								self::$class_map[ $class_name ] = $c_path;
 							} else {
 								$class_path = self::$class_map[ $class_name ];
-								throw new Exception( "$class_name defined in $class_path Can't overwrite with $c_path" )
+								throw new Exception( "$class_name defined in $class_path Can't overwrite with $c_path" );
 							}
 
 						} elseif ( !!$recursive AND $deep > 0 AND is_dir( $c_path ) ) {
@@ -256,7 +256,7 @@
 		 * @return mixed
 		 */
 
-		public static function instanciateClass( $class_name, $args = array() ) {
+		public static function instantiateClass( $class_name, $args = array() ) {
 
 			if ( self::exists( $class_name ) ) {
 				$obj = new ReflectionClass( $class_name );

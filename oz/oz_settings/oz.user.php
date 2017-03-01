@@ -1,7 +1,7 @@
 <?php
 
 	OZoneSettings::set( 'oz.user', array(
-		//class used to instanciate user object, must extends OZoneUserBase 
+		//class used to instantiate user object, must extends OZoneUserBase 
 		"OZ_USER_CLASS"     => "OZoneUser",
 		//id par defaut s'il n'y en a pas
 		"OZ_DEFAULT_PICID"  => '0_0',
