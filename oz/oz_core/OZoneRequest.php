@@ -54,8 +54,9 @@
 			$client = null;
 			$apikey = self::getApiKey();
 
-			if ( empty( $apikey ) )
+			if ( empty( $apikey ) ){
 				self::attackProcedure();
+			}
 
 			$client = OZoneClient::getInstanceWith( $apikey, 'clid' );
 
@@ -75,8 +76,9 @@
 			$client = null;
 			$sid = OZoneSessions::getCurrentSid();
 
-			if ( empty( $sid ) )
+			if ( empty( $sid ) ){
 				self::attackProcedure();
+			}
 
 			$client = OZoneClient::getInstanceWith( $sid, 'sid' );
 
@@ -108,16 +110,27 @@
 
 		//SILO:: Allow Cross Origine Ressource Sharing
 		private static function setInitialHeaders( $allow_cors = false, $uri = null ) {
+
 			//evitons le Clickjacking: qui consiste a tromper un user à partir d'un frame
 			header( "X-Frame-Options: DENY" );
-			//enable self made headers
-			header( "Access-Control-Allow-Headers: accept, " . OZ_APIKEY_HEADER_NAME );
 
-			if ( $allow_cors AND !empty( $uri ) ) {
-				//SILO:: enable browser to make CORS request from $uri
-				header( "Access-Control-Allow-Origin: $uri" );
-				//SILO:: enable browser to send CORS request with cookies
-				header( "Access-Control-Allow-Credentials: true" );
+			if ( $allow_cors ) {
+
+				if( self::isOptions() ) {
+					//enable self made headers
+					header( "Access-Control-Allow-Headers: accept, " . OZ_APIKEY_HEADER_NAME );
+					//TODO:: retieve acepted methods from the desired service
+					header( "Access-Control-Allow-Methods: OPTIONS, GET, POST, PUT" );
+					//TODO:: set max age to session max life time
+					header( "Access-Control-Max-Age: 86400" );
+				}
+
+				if ( !empty( $uri ) ) {
+					//SILO:: enable browser to make CORS request from $uri
+					header( "Access-Control-Allow-Origin: $uri" );
+					//SILO:: enable browser to send CORS request with cookies
+					header( "Access-Control-Allow-Credentials: true" );
+				}
 			}
 		}
 
