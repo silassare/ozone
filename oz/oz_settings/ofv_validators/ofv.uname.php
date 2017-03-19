@@ -1,4 +1,17 @@
 <?php
+	/**
+	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 *
+	 * This file is part of the OZone package.
+	 *
+	 * For the full copyright and license information, please view the LICENSE
+	 * file that was distributed with this source code.
+	 */
+
+	namespace OZONE\OZ\Ofv;
+
+	use OZONE\OZ\Core\OZoneSettings;
+	use OZONE\OZ\Utils\OZoneStr;
 
 	function ofv_uname( OFormValidator $ofv ) {
 		$uname = preg_replace( OZoneSettings::get( 'oz.ofv.const', 'OZ_UNWANTED_CHAR_REG' ), ' ', $ofv->getField( 'uname' ) );
@@ -8,7 +21,7 @@
 
 		//on verifie le uname
 		if ( !$contains_key_words AND preg_match( OZoneSettings::get( 'oz.ofv.const', 'OZ_UNAME_REG' ), $uname ) ) {
-			$ofv->updateForm( 'uname', OZoneStr::clean( $uname ) );
+			$ofv->setField( 'uname', OZoneStr::clean( $uname ) );
 
 		} else {
 			//le uname n'est pas valide

@@ -1,4 +1,16 @@
 <?php
+	/**
+	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 *
+	 * This file is part of the OZone package.
+	 *
+	 * For the full copyright and license information, please view the LICENSE
+	 * file that was distributed with this source code.
+	 */
+
+	namespace OZONE\OZ\Ofv;
+
+	use OZONE\OZ\Core\OZoneSettings;
 
 	function ofv_pass( OFormValidator $ofv ) {
 		$pass = $ofv->getField( 'pass' );
@@ -15,6 +27,6 @@
 			$ofv->addError( 'OZ_FIELD_PASS_TOO_LONG' );
 
 		} else {
-			$ofv->updateForm( 'pass', $pass );
+			$ofv->setField( 'pass', $pass );
 		}
 	}

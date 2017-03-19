@@ -1,0 +1,11 @@
+<?php
+	\OZONE\OZ\Core\OZoneSettings::set( 'oz.keygen.salt', array(
+		//sel utilisé pour générer les clefs des fichiers
+		'OZ_FKEY_GEN_SALT'   => '<%$.OZ_FKEY_GEN_SALT%>',
+		//sel utilisé pour générer les identifiants de sessions
+		'OZ_SID_GEN_SALT'    => '<%$.OZ_SID_GEN_SALT%>',
+		//sel utilisé pour générer les tokens d'authentification
+		'OZ_AUTH_TOKEN_SALT' => '<%$.OZ_AUTH_TOKEN_SALT%>',
+		//sel utilisé pour générer les identifiants de client
+		'OZ_CLID_GEN_SALT'   => '<%$.OZ_CLID_GEN_SALT%>'
+	) );
