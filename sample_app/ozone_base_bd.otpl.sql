@@ -77,7 +77,7 @@ CREATE TABLE `oz_clients` (
 
 LOCK TABLES `oz_clients` WRITE;
 /*!40000 ALTER TABLE `oz_clients` DISABLE KEYS */;
-INSERT INTO `oz_clients` VALUES ('678928D0-95OIF6BF-067FGB58-F5T2EH42',NULL,'http://web.khamelia.com',1,NULL,'khamelia web app.',NULL);
+INSERT INTO `oz_clients` VALUES ('<%$.client_id%>',NULL,'<%$.client_url%>',1,NULL,'<%$.client_about%>',NULL);
 /*!40000 ALTER TABLE `oz_clients` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -136,9 +136,7 @@ CREATE TABLE `oz_files` (
   `file_path` varchar(255) NOT NULL COMMENT 'lien vers le fichier original',
   `file_thumb` varchar(255) DEFAULT NULL COMMENT 'lien vers un thumbnails si possible(image, video...)',
   `file_upload_time` bigint(20) unsigned NOT NULL,
-  PRIMARY KEY (`file_id`),
-  KEY `oz_files_ibfk_2` (`user_id`),
-  CONSTRAINT `oz_files_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `oz_users` (`user_id`) ON DELETE NO ACTION ON UPDATE CASCADE
+  PRIMARY KEY (`file_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
