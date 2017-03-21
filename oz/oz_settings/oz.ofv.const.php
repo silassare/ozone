@@ -27,5 +27,5 @@
 		'OZ_UNAME_REG'        => '#^.{3,60}$#',
 		'OZ_UNAME_MIN_LENGTH' => 3,
 		'OZ_UNAME_MAX_LENGTH' => 60,
-		'OZ_EMAIL_REG'	=> '#^[a-z][a-z0-9_.]+@[a-z09]+\.[a-z0-9]{3}$#'
+		'OZ_EMAIL_REG'	=> '#^[a-z][a-z0-9_.]+@[a-z0-9]+\.[a-z0-9]{3}$#'
 	) );
