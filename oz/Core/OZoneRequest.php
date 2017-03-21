@@ -47,9 +47,11 @@
 
 			//if the request uri is not ok
 			if ( !OZoneUri::parseRequestUri() ) {
+				$origin = $_SERVER[ 'HTTP_ORIGIN' ];
 
-				//check if it is root
-				if ( $_SERVER[ 'REQUEST_URI' ] === '/' ) {
+				if ( !self::isCrossSiteAllowed() AND  $origin != OZ_APP_MAIN_URL ){ /**/
+					self::attackProcedure( new OZoneForbiddenException( 'OZ_CROSS_SITE_REQUEST_NOT_ALLOWED', array( 'origin' => $origin )) );
+				} else if ( $_SERVER[ 'REQUEST_URI' ] === '/' ) {/* check if it is root */
 					//SILO::TODO show api description page
 					self::attackProcedure( new OZoneForbiddenException() );
 				} else if ( empty( self::getApiKey() ) ) { /* if no api key go hard: forbid */
@@ -227,6 +229,15 @@
 		}
 
 		/**
+		 * check if it is an OPTIONS request method
+		 *
+		 * @return bool
+		 */
+		public static function isOptions() {
+			return $_SERVER[ 'REQUEST_METHOD' ] === 'OPTIONS';
+		}
+
+		/**
 		 * check if it is a POST request method
 		 *
 		 * @return bool
@@ -254,15 +265,6 @@
 		}
 
 		/**
-		 * check if it is an OPTIONS request method
-		 *
-		 * @return bool
-		 */
-		public static function isOptions() {
-			return $_SERVER[ 'REQUEST_METHOD' ] === 'OPTIONS';
-		}
-
-		/**
 		 * check if it is a DELETE request method
 		 *
 		 * @return bool
@@ -283,7 +285,26 @@
 		}
 
 		/**
-		 * check if the request service require a valid client
+		 * check if the requested service allow cross site request without api key
+		 *
+		 * @return bool
+		 */
+		public static function isCrossSiteAllowed() {
+
+			if ( isset( $_REQUEST[ 'oz_req_service' ] ) ) {
+
+				$svc = OZoneSettings::get( 'oz.services.list', $_REQUEST[ 'oz_req_service' ] );
+
+				if ( !empty( $svc ) AND isset( $svc[ 'cross_site' ] ) ) {
+					return $svc[ 'cross_site' ];
+				}
+			}
+
+			return false;
+		}
+
+		/**
+		 * check if the requested service require a valid client
 		 *
 		 * @return bool
 		 */

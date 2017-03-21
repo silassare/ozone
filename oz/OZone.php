@@ -60,7 +60,7 @@
 			"can_serve_resp"  => false,
 			"cross_site"      => false,
 			"require_client"  => true,
-			"req_methods"     => [ 'POST', 'GET' ]
+			"req_methods"     => [ 'POST', 'GET', 'PUT', 'DELETE' ]
 		);
 		/**
 		 * the current running app

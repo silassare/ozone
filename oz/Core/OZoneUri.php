@@ -82,11 +82,17 @@
 
 			if ( !empty( $extra ) AND preg_match( $extra_reg, $extra, $in ) ) {
 
-				foreach ( $extra_map as $value ) {
-					if ( !isset( $in[ $c ] ) )
-						break;
+				$stop = false;
 
-					$extra_out[ $value ] = $in[ $c ];
+				while( !$stop AND isset($in[ $c ]) ){
+
+					if ( isset( $extra_map[ $c ] ) ){
+						$key = $extra_map[ $c ];
+						$extra_out[ $key ] = $in[ $c ];
+					} else {
+						$stop = true;
+					}
+
 					$c++;
 				}
 

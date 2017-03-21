@@ -39,6 +39,7 @@
 			$ok = false;
 
 			foreach ( $required_methods as $method ) {
+				$method = strtoupper( $method );
 
 				switch ( $method ) {
 					case 'POST' :

@@ -27,5 +27,16 @@
 		'OZ_UNAME_REG'        => '#^.{3,60}$#',
 		'OZ_UNAME_MIN_LENGTH' => 3,
 		'OZ_UNAME_MAX_LENGTH' => 60,
-		'OZ_EMAIL_REG'	=> '#^[a-z][a-z0-9_.]+@[a-z0-9]+\.[a-z0-9]{3}$#'
+
+		/**
+		 * Email matching regex
+		 *
+		 * source: http://www.w3.org/TR/html5/forms.html#valid-e-mail-address
+		 *		- TLD not required
+		 *			/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+		 * 		- must have TLD
+		 * 			/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/
+		 */
+
+		'OZ_EMAIL_REG'	=> '#^[a-zA-Z0-9.!#$%&\'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$#'
 	) );
