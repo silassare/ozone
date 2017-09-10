@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -12,20 +12,23 @@
 
 	use OZONE\OZ\Core\OZoneDb;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	/**
 	 * Class OZoneUser the default user object class
+	 *
 	 * @package OZONE\OZ\User
 	 */
-	class OZoneUser extends OZoneUserBase {
+	class OZoneUser extends OZoneUserBase
+	{
 		/**
 		 * OZoneUser constructor.
 		 *
 		 * @param int|string $uid
 		 */
-		function __construct( $uid ) {
-			parent::__construct( $uid );
+		function __construct($uid)
+		{
+			parent::__construct($uid);
 		}
 
 		/**
@@ -34,17 +37,17 @@
 		 * @throws \OZONE\OZ\Exceptions\OZoneInternalError
 		 */
 
-		public function userDataFilter( array $user_data ) {
-
-			return OZoneDb::mapDbFieldsToExtern( $user_data, array(
+		public function userDataFilter(array $user_data)
+		{
+			return OZoneDb::maskColumnsName($user_data, [
 				'user_id',
 				'user_name',
 				'user_phone',
 				'user_email',
 				'user_cc2',
-				'user_sex',
+				'user_gender',
 				'user_bdate',
 				'user_picid'
-			) );
+			]);
 		}
 	}

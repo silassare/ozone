@@ -1,0 +1,34 @@
+<?php
+	/**
+	 * Auto generated file
+	 *
+	 * INFO: you are free to edit it,
+	 * but make sure to know what you are doing.
+	 *
+	 * Proudly With: <%$.oz_version_name%>
+	 * Time: <%$.oz_time%>
+	 */
+
+	namespace <%$.oz_project_namespace%>;
+
+	use OZONE\OZ\Exceptions\OZoneBaseException;
+	use OZONE\OZ\App\AppInterface;
+
+	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+
+	final class <%$.oz_project_class%> implements AppInterface
+	{
+
+		/**
+		 * {@inheritdoc}
+		 */
+		public static function onInit() {}
+
+		/**
+		 * {@inheritdoc}
+		 */
+		public static function onError( OZoneBaseException $error )
+		{
+			return false;
+		}
+	}

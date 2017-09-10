@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+  ~
+  ~ This file is part of the OZone package.
+  ~
+  ~ For the full copyright and license information, please view the LICENSE
+  ~ file that was distributed with this source code.
+  -->
+
+<html lang="fr">
+	<head>
+		<title>OZone::Error</title>
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no" />
+		<style rel="stylesheet">
+			body{
+				font-family: 'Segoe UI Light', 'Calibri Light', Segoe, 'Segoe WP', Calibri, Arial, sans-serif;
+				font-size: 1.2em;
+				margin:0;
+				width:100%;
+				height:100%;
+				background-color:#FFF;
+			}
+			#error-box{
+				max-width:80%;
+				margin:0 auto;
+				padding:150px 0;
+			}
+			.error-title{
+				font-size: 3em;
+				color: #FFBA3F;
+				text-align: center;
+			}
+			.error-desc{
+				color: #4F4F4F;
+			}
+			.error-back-url{
+				display: block;
+				text-align: center;
+				background-color: #FFBA3F;
+				margin: 10px 0;
+				padding: 5px;
+				text-decoration: none;
+				color: #FFF;
+				text-transform: lowercase;
+				border-radius: 3px;
+			}
+			.error-back-url:hover{
+				background-color: #797979;
+			}
+			ul{
+				padding: 0;
+			}
+			li{
+				list-style-type: none;
+			    padding: 5px;
+			    background-color: #e6e6e6;
+			    color: #333;
+			}
+			li:nth-child(odd){
+				background-color: #f7f7f7;
+			}
+
+			@media all and (max-width:360px){
+				.error-title{
+					font-size:2em;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div id="error-box">
+			<span class="logo"></span>
+			<div class="error-title"><% $.oz_error_title %></div>
+			<div class="error-desc">
+				<ul>
+					<li><% $.oz_error_desc %></li>
+					<li><% $.oz_error_url %></li>
+				</ul>
+			</div>
+			<% if( @has($ ,'oz_error_back_url') ){ %>
+				<a class="error-back-url" href="<% $.oz_error_back_url %>">Retour</a>
+			<%}%>
+		</div>
+	</body>
+</html>

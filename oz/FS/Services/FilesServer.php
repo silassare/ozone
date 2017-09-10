@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -17,14 +17,16 @@
 	use OZONE\OZ\Exceptions\OZoneNotFoundException;
 	use OZONE\OZ\FS\OZoneImagesUtils;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	class FilesServer extends OZoneService {
+	class FilesServer extends OZoneService
+	{
 
 		/**
 		 * FilesServer constructor.
 		 */
-		public function __construct() {
+		public function __construct()
+		{
 			parent::__construct();
 		}
 
@@ -33,11 +35,12 @@
 		 *
 		 * @throws \OZONE\OZ\Exceptions\OZoneInvalidFormException
 		 */
-		public function execute( $request = array() ) {
-			OZoneAssert::assertForm( $request, array( 'src', 'fname', 'fmime', 'thumb' ), new OZoneNotFoundException() );
+		public function execute($request = [])
+		{
+			OZoneAssert::assertForm($request, ['src', 'fname', 'fmime', 'thumb'], new OZoneNotFoundException());
 
 			// désactive le temps max d'exécution
-			set_time_limit( 0 );
+			set_time_limit(0);
 
 			// désactivation compression GZip
 			/*
@@ -47,42 +50,45 @@
 			}
 			*/
 
-			$src = $request[ 'src' ];
-			$fname = $request[ 'fname' ];
-			$fmime = $request[ 'fmime' ];
-			$thumb = $request[ 'thumb' ];
-			$size = filesize( $src );
+			$src = $request['src'];
 
-			//$fmime = "application/force-download";//<-- par defaut
-			//fermeture de la session
-			session_write_close();
+			if (empty($src) || !file_exists($src) || !is_file($src) || !is_readable($src)) {
+				throw new OZoneNotFoundException();
+			}
 
-			if ( ob_get_contents() )
-				ob_clean();
+			$fname = $request['fname'];
+			$fmime = $request['fmime'];
+			$thumb = intval($request['thumb']);
+			$size  = filesize($src);
 
-			header( 'Pragma: public' ); //requis
-			header( 'Expires: 99936000' );
-			header( 'Cache-Control: public, max-age=99936000' );//requis
-			header( 'Content-Transfer-Encoding: binary' );
-			header( "Content-Length: $size" );
-			header( "Content-type: $fmime" );
-			header( "Content-Disposition: attachment; filename='$fname';" );
+			// fermeture de la session
+			if (session_id()) session_write_close();
 
-			//envoi le contenu du fichier
-			if ( $thumb > 0 ) {
-				//thumbnails
-				//0: 'original file'
-				//1: 'low quality',
-				//2: 'normal quality',
-				//3: 'high quality'
-				$jpeg_quality_array = array( 60, 80, 100 );
-				$jpeg_quality = $jpeg_quality_array[ $thumb - 1 ];
-				$img_utils_obj = new OZoneImagesUtils( $src );
+			// clean output buffer
+			if (ob_get_contents()) ob_clean();
 
-				//ceci 'devrait' etre toujours vrai
-				if ( $img_utils_obj->load() ) {
-					$max_size = OZoneSettings::get( 'oz.user', 'OZ_THUMB_MAX_SIZE' );
-					$advice = $img_utils_obj->adviceBestSize( $max_size, $max_size );
+			header('Pragma: public');
+			header('Expires: 99936000');
+			header('Cache-Control: public, max-age=99936000');
+			header('Content-Transfer-Encoding: binary');
+			header("Content-Length: $size");
+			header("Content-type: $fmime");
+			header("Content-Disposition: attachment; filename='$fname';");
+
+			if ($thumb > 0) {
+				// thumbnails
+				// 0: 'original file'
+				// 1: 'low quality',
+				// 2: 'normal quality',
+				// 3: 'high quality'
+				$jpeg_quality_array = [60, 80, 100];
+				$jpeg_quality       = $jpeg_quality_array[$thumb - 1];
+				$img_utils_obj      = new OZoneImagesUtils($src);
+
+				// ceci 'devrait' etre toujours vrai
+				if ($img_utils_obj->load()) {
+					$max_size = OZoneSettings::get('oz.user', 'OZ_THUMB_MAX_SIZE');
+					$advice   = $img_utils_obj->adviceBestSize($max_size, $max_size);
 					// $img_r = imagecreatefromjpeg( $src );
 					// $src_w = imagesx( $img_r );
 					// $src_h = imagesy( $img_r );
@@ -92,24 +98,22 @@
 					// imagecopyresampled( $dest_r, $img_r, 0, 0, 0, 0, $targ_w, $targ_h, $src_w, $src_h );
 
 					// header( 'Content-type: image/jpeg' );
-					// //important car la taille changera a cause de la compresion
+					// // important car la taille changera a cause de la compresion
 					// header_remove( 'Content-Length' );
 
 					// imagejpeg( $dest_r, null, $jpeg_quality );
 
-					// //free memory
+					// // free memory
 					// imagedestroy( $img_r );
 					// imagedestroy( $dest_r );
-					$img_utils_obj
-						->resizeImage( $advice[ 'w' ], $advice[ 'h' ], $advice[ 'crop' ] )
-						->outputJpeg( $jpeg_quality );
-
+					$img_utils_obj->resizeImage($advice['w'], $advice['h'], $advice['crop'])
+								  ->outputJpeg($jpeg_quality);
 				} else {
-					//on affiche le thumb tel qu'il est
-					$this->sendOriginal( $src );//en suivant la logique il s'agit bien du thumbnail
+					// on affiche le thumb tel qu'il est
+					$this->sendOriginal($src);//en suivant la logique il s'agit bien du thumbnail
 				}
 			} else {
-				$this->sendOriginal( $src );
+				$this->sendOriginal($src);
 			}
 		}
 
@@ -118,9 +122,10 @@
 		 *
 		 * @param string $path the file path
 		 */
-		private function sendOriginal( $path ) {
+		private function sendOriginal($path)
+		{
 			flush();
-			readfile( $path );
+			readfile($path);
 			exit;
 		}
 
@@ -134,93 +139,93 @@
 		 * @throws \OZONE\OZ\Exceptions\OZoneInternalError
 		 * @throws \OZONE\OZ\Exceptions\OZoneUnauthorizedActionException
 		 */
-		public static function startDownloadServer( array $options, $allow_resume = false, $is_stream = false ) {
-			//- turn off compression on the server
-			@apache_setenv( 'no-gzip', 1 );
-			@ini_set( 'zlib.output_compression', 'Off' );
+		public static function startDownloadServer(array $options, $allow_resume = false, $is_stream = false)
+		{
+			// - turn off compression on the server
+			@apache_setenv('no-gzip', 1);
+			@ini_set('zlib.output_compression', 'Off');
 
 			$mime_default = "application/octet-stream";
-			$file_path = $options[ 'path' ];
-			$file_name = isset( $options[ 'name' ] ) ? $options[ 'name' ] : basename( $file_path );
-			$expires_date = isset( $options[ 'expires_date' ] ) ? $options[ 'expires_date' ] : -1;
-			$mime = isset( $options[ 'mime' ] ) ? $options[ 'mime' ] : $mime_default;
-			$range = '';
+			$file_path    = $options['path'];
+			$file_name    = isset($options['name']) ? $options['name'] : basename($file_path);
+			$expires_date = isset($options['expires_date']) ? $options['expires_date'] : -1;
+			$mime         = isset($options['mime']) ? $options['mime'] : $mime_default;
+			$range        = '';
 
 			// make sure the file exists
-			OZoneAssert::assertAuthorizeAction( is_file( $file_path ), new OZoneNotFoundException() );
+			OZoneAssert::assertAuthorizeAction(is_file($file_path), new OZoneNotFoundException());
 
-			$file_size = filesize( $file_path );
-			$file = @fopen( $file_path, 'rb' );
+			$file_size = filesize($file_path);
+			$file      = @fopen($file_path, 'rb');
 
 			// make sure file open success
-			if ( !$file )
-				throw new OZoneInternalError( null, array( "can't open file at $file_path" ) );
+			if (!$file) throw new OZoneInternalError('OZ_FILE_OPEN_ERROR', [$file_path]);
 
 			// set the headers, prevent caching
-			header( 'Pragma: public' );
-			header( 'Expires: ' . $expires_date );
-			header( 'Cache-Control: public, max-age=' . $expires_date . ', must-revalidate, post-check=0, pre-check=0' );
+			header('Pragma: public');
+			header('Expires: ' . $expires_date);
+			header('Cache-Control: public, max-age=' . $expires_date . ', must-revalidate, post-check=0, pre-check=0');
 
 			// set appropriate headers for attachment or streamed file
-			if ( !$is_stream ) {
-				header( "Content-Disposition: attachment; filename='$file_name';" );
+			if (!$is_stream) {
+				header("Content-Disposition: attachment; filename='$file_name';");
 			} else {
-				header( 'Content-Disposition: inline;' );
-				header( 'Content-Transfer-Encoding: binary' );
+				header('Content-Disposition: inline;');
+				header('Content-Transfer-Encoding: binary');
 			}
 
 			// set the mime type
-			header( "Content-Type: " . $mime );
+			header("Content-Type: " . $mime);
 
-			//check if http_range is sent by browser (or download manager)
-			if ( $allow_resume AND isset( $_SERVER[ 'HTTP_RANGE' ] ) ) {
-				list( $size_unit, $range_orig ) = explode( '=', $_SERVER[ 'HTTP_RANGE' ], 2 );
-				if ( $size_unit === 'bytes' ) {
-					//multiple ranges could be specified at the same time, but for simplicity only serve the first range
-					//http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
-					@list( $range ) = explode( ',', $range_orig, 2 );
+			// check if http_range is sent by browser (or download manager)
+			if ($allow_resume AND isset($_SERVER['HTTP_RANGE'])) {
+				list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+				if ($size_unit === 'bytes') {
+					// multiple ranges could be specified at the same time, but for simplicity only serve the first range
+					// http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
+					@list($range) = explode(',', $range_orig, 2);
 				} else {
-					header( 'HTTP/1.1 416 Requested Range Not Satisfiable' );
+					header('HTTP/1.1 416 Requested Range Not Satisfiable');
 					exit;
 				}
 			}
 
-			//figure out download piece from range (if set)
-			@list( $seek_start, $seek_end ) = explode( '-', $range, 2 );
+			// figure out download piece from range (if set)
+			@list($seek_start, $seek_end) = explode('-', $range, 2);
 
-			//set start and end based on range (if set), else set defaults
-			//also check for invalid ranges.
-			$seek_end = ( empty( $seek_end ) ) ? ( $file_size - 1 ) : min( abs( intval( $seek_end ) ), ( $file_size - 1 ) );
-			$seek_start = ( empty( $seek_start ) || $seek_end < abs( intval( $seek_start ) ) ) ? 0 : max( abs( intval( $seek_start ) ), 0 );
+			// set start and end based on range (if set), else set defaults
+			// also check for invalid ranges.
+			$seek_end   = (empty($seek_end)) ? ($file_size - 1) : min(abs(intval($seek_end)), ($file_size - 1));
+			$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)), 0);
 
-			//Only send partial content header if downloading a piece of the file (IE workaround)
-			if ( $seek_start > 0 || $seek_end < ( $file_size - 1 ) ) {
-				$chunk_size = ( $seek_end - $seek_start + 1 );
+			// Only send partial content header if downloading a piece of the file (IE workaround)
+			if ($seek_start > 0 || $seek_end < ($file_size - 1)) {
+				$chunk_size = ($seek_end - $seek_start + 1);
 
-				header( 'HTTP/1.1 206 Partial Content' );
-				header( 'Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $file_size );
-				header( "Content-Length: $chunk_size" );
+				header('HTTP/1.1 206 Partial Content');
+				header('Content-Range: bytes ' . $seek_start . '-' . $seek_end . '/' . $file_size);
+				header("Content-Length: $chunk_size");
 			} else {
-				header( "Content-Length: $file_size" );
+				header("Content-Length: $file_size");
 			}
 
-			header( 'Accept-Ranges: bytes' );
+			header('Accept-Ranges: bytes');
 
-			set_time_limit( 0 );
-			fseek( $file, $seek_start );
+			set_time_limit(0);
+			fseek($file, $seek_start);
 
-			while ( !feof( $file ) ) {
-				print( @fread( $file, 1024 * 8 ) );
+			while (!feof($file)) {
+				print(@fread($file, 1024 * 8));
 				ob_flush();
 				flush();
-				if ( connection_status() != 0 ) {
-					@fclose( $file );
+				if (connection_status() != 0) {
+					@fclose($file);
 					exit;
 				}
 			}
 
 			// file download was a success
-			@fclose( $file );
+			@fclose($file);
 			exit;
 		}
 	}

@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -19,9 +19,10 @@
 	use OZONE\OZ\Ofv\OFormUtils;
 	use OZONE\OZ\User\OZoneUserUtils;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	final class OZoneAssert {
+	final class OZoneAssert
+	{
 
 		/**
 		 * assert if the request method is authorized
@@ -30,18 +31,18 @@
 		 * @param OZoneBaseException|string|null $msg              the error message
 		 * @param mixed                          $data             the error data
 		 *
-		 * @return bool
 		 * @throws \OZONE\OZ\Exceptions\OZoneBaseException
 		 * @throws \OZONE\OZ\Exceptions\OZoneBadRequestException
 		 * @throws string
 		 */
-		public static function assertSafeRequestMethod( $required_methods, $msg = 'OZ_ERROR_BAD_REQUEST_METHOD', $data = null ) {
+		public static function assertSafeRequestMethod($required_methods, $msg = 'OZ_ERROR_BAD_REQUEST_METHOD', $data = null)
+		{
 			$ok = false;
 
-			foreach ( $required_methods as $method ) {
-				$method = strtoupper( $method );
+			foreach ($required_methods as $method) {
+				$method = strtoupper($method);
 
-				switch ( $method ) {
+				switch ($method) {
 					case 'POST' :
 						$ok = OZoneRequest::isPost();
 						break;
@@ -59,18 +60,16 @@
 						break;
 				}
 
-				if ( $ok === true )
-					break;
+				if ($ok === true) break;
 			}
 
-			if ( $ok === true )
-				return $ok;
+			if ($ok === false) {
+				if (!($msg instanceof OZoneBaseException)) {
+					$msg = new OZoneBadRequestException($msg, $data);
+				}
 
-			if ( !( $msg instanceof OZoneBaseException ) ) {
-				$msg = new OZoneBadRequestException( $msg, $data );
+				throw $msg;
 			}
-
-			throw $msg;
 		}
 
 		/**
@@ -83,10 +82,11 @@
 		 * @throws \OZONE\OZ\Exceptions\OZoneUnverifiedUserException
 		 * @throws string
 		 */
-		public static function assertUserVerified( $msg = 'OZ_ERROR_YOU_MUST_LOGIN', $data = null ) {
-			if ( !OZoneUserUtils::userVerified() ) {
-				if ( !( $msg instanceof OZoneBaseException ) ) {
-					$msg = new OZoneUnverifiedUserException( $msg, $data );
+		public static function assertUserVerified($msg = 'OZ_ERROR_YOU_MUST_LOGIN', $data = null)
+		{
+			if (!OZoneUserUtils::userVerified()) {
+				if (!($msg instanceof OZoneBaseException)) {
+					$msg = new OZoneUnverifiedUserException($msg, $data);
 				}
 
 				throw $msg;
@@ -103,10 +103,11 @@
 		 * @throws \OZONE\OZ\Exceptions\OZoneUnverifiedUserException
 		 * @throws string
 		 */
-		public static function assertIsAdmin( $msg = 'OZ_YOU_ARE_NOT_ADMIN', $data = null ) {
-			if ( !OZoneUserUtils::userVerified() OR !AdminUtils::isAdmin( OZoneSessions::get( 'ozone_user:user_id' ) ) ) {
-				if ( !( $msg instanceof OZoneBaseException ) ) {
-					$msg = new OZoneUnverifiedUserException( $msg, $data );
+		public static function assertIsAdmin($msg = 'OZ_YOU_ARE_NOT_ADMIN', $data = null)
+		{
+			if (!OZoneUserUtils::userVerified() OR !AdminUtils::isAdmin(OZoneSessions::get('ozone_user:data:user_id'))) {
+				if (!($msg instanceof OZoneBaseException)) {
+					$msg = new OZoneUnverifiedUserException($msg, $data);
 				}
 
 				throw $msg;
@@ -124,10 +125,11 @@
 		 * @throws \OZONE\OZ\Exceptions\OZoneUnauthorizedActionException
 		 * @throws string
 		 */
-		public static function assertAuthorizeAction( $expression, $msg = 'OZ_ERROR_NOT_ALLOWED', $data = null ) {
-			if ( !$expression ) {
-				if ( $msg instanceof OZoneBaseException ) {
-					$msg = new OZoneUnauthorizedActionException( $msg, $data );
+		public static function assertAuthorizeAction($expression, $msg = 'OZ_ERROR_NOT_ALLOWED', $data = null)
+		{
+			if (!$expression) {
+				if (!($msg instanceof OZoneBaseException)) {
+					$msg = new OZoneUnauthorizedActionException($msg, $data);
 				}
 
 				throw $msg;
@@ -141,9 +143,9 @@
 		 *
 		 * @throws \OZONE\OZ\Exceptions\OZoneBaseException
 		 */
-		public static function assertOperationSuccess( $result ) {
-			if ( $result instanceof OZoneBaseException )
-				throw $result;
+		public static function assertOperationSuccess($result)
+		{
+			if ($result instanceof OZoneBaseException) throw $result;
 		}
 
 		/**
@@ -158,17 +160,17 @@
 		 * @throws \OZONE\OZ\Exceptions\OZoneInvalidFormException
 		 * @throws string
 		 */
-		public static function assertForm( $form = null, array $required_fields, $msg = 'OZ_ERROR_INVALID_FORM', $data = null ) {
-
-			if ( empty( $form ) OR !is_array( $form ) ) {
+		public static function assertForm($form = null, array $required_fields, $msg = 'OZ_ERROR_INVALID_FORM', $data = null)
+		{
+			if (empty($form) OR !is_array($form)) {
 				$safe = false;
 			} else {
-				$safe = OFormUtils::isFormComplete( $form, $required_fields );
+				$safe = OFormUtils::isFormComplete($form, $required_fields);
 			}
 
-			if ( !$safe ) {
-				if ( !( $msg instanceof OZoneBaseException ) ) {
-					$msg = new OZoneInvalidFormException( $msg, $data );
+			if (!$safe) {
+				if (!($msg instanceof OZoneBaseException)) {
+					$msg = new OZoneInvalidFormException($msg, $data);
 				}
 
 				throw $msg;

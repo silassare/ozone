@@ -26,7 +26,8 @@
 	 *
 	 * @package Exceptions
 	 */
-	class WideImage_InvalidImageDimensionException extends WideImage_Exception {
+	class WideImage_InvalidImageDimensionException extends WideImage_Exception
+	{
 	}
 
 	/**
@@ -34,7 +35,8 @@
 	 *
 	 * @package Exceptions
 	 */
-	class WideImage_UnknownErrorWhileMappingException extends WideImage_Exception {
+	class WideImage_UnknownErrorWhileMappingException extends WideImage_Exception
+	{
 	}
 
 	/**
@@ -42,21 +44,25 @@
 	 *
 	 * @package WideImage
 	 */
-	abstract class WideImage_Image {
+	abstract class WideImage_Image
+	{
 		/**
 		 * Holds the image resource
+		 *
 		 * @var resource
 		 */
 		protected $handle = null;
 
 		/**
 		 * Flag that determines if WideImage should call imagedestroy() upon object destruction
+		 *
 		 * @var bool
 		 */
 		protected $handleReleased = false;
 
 		/**
 		 * Canvas object
+		 *
 		 * @var WideImage_Canvas
 		 */
 		protected $canvas = null;
@@ -71,8 +77,9 @@
 		 *
 		 * @param resource $handle Image handle (GD2 resource)
 		 */
-		function __construct( $handle ) {
-			WideImage::assertValidImageHandle( $handle );
+		function __construct($handle)
+		{
+			WideImage::assertValidImageHandle($handle);
 			$this->handle = $handle;
 		}
 
@@ -81,7 +88,8 @@
 		 *
 		 * Destroys the handle via WideImage_Image::destroy() when called by the GC.
 		 */
-		function __destruct() {
+		function __destruct()
+		{
 			$this->destroy();
 		}
 
@@ -91,9 +99,9 @@
 		 * After this is called, the object doesn't hold a valid image any more.
 		 * No operation should be called after that.
 		 */
-		function destroy() {
-			if ( $this->isValid() && !$this->handleReleased )
-				imagedestroy( $this->handle );
+		function destroy()
+		{
+			if ($this->isValid() && !$this->handleReleased) imagedestroy($this->handle);
 
 			$this->handle = null;
 		}
@@ -103,21 +111,24 @@
 		 *
 		 * @return resource GD image resource
 		 */
-		function getHandle() {
+		function getHandle()
+		{
 			return $this->handle;
 		}
 
 		/**
 		 * @return bool True, if the image object holds a valid GD image, false otherwise
 		 */
-		function isValid() {
-			return WideImage::isValidImageHandle( $this->handle );
+		function isValid()
+		{
+			return WideImage::isValidImageHandle($this->handle);
 		}
 
 		/**
 		 * Releases the handle
 		 */
-		function releaseHandle() {
+		function releaseHandle()
+		{
 			$this->handleReleased = true;
 		}
 
@@ -148,13 +159,13 @@
 		 *
 		 * @param string $uri File location
 		 */
-		function saveToFile( $uri ) {
-			$mapper = WideImage_MapperFactory::selectMapper( $uri, null );
-			$args = func_get_args();
-			array_unshift( $args, $this->getHandle() );
-			$res = call_user_func_array( array( $mapper, 'save' ), $args );
-			if ( !$res )
-				throw new WideImage_UnknownErrorWhileMappingException( get_class( $mapper ) . " returned an invalid result while saving to $uri" );
+		function saveToFile($uri)
+		{
+			$mapper = WideImage_MapperFactory::selectMapper($uri, null);
+			$args   = func_get_args();
+			array_unshift($args, $this->getHandle());
+			$res = call_user_func_array([$mapper, 'save'], $args);
+			if (!$res) throw new WideImage_UnknownErrorWhileMappingException(get_class($mapper) . " returned an invalid result while saving to $uri");
 		}
 
 		/**
@@ -166,16 +177,16 @@
 		 *
 		 * @return string The binary image data in specified format
 		 */
-		function asString( $format ) {
+		function asString($format)
+		{
 			ob_start();
-			$args = func_get_args();
-			$args[ 0 ] = null;
-			array_unshift( $args, $this->getHandle() );
+			$args    = func_get_args();
+			$args[0] = null;
+			array_unshift($args, $this->getHandle());
 
-			$mapper = WideImage_MapperFactory::selectMapper( null, $format );
-			$res = call_user_func_array( array( $mapper, 'save' ), $args );
-			if ( !$res )
-				throw new WideImage_UnknownErrorWhileMappingException( get_class( $mapper ) . " returned an invalid result while writing the image data" );
+			$mapper = WideImage_MapperFactory::selectMapper(null, $format);
+			$res    = call_user_func_array([$mapper, 'save'], $args);
+			if (!$res) throw new WideImage_UnknownErrorWhileMappingException(get_class($mapper) . " returned an invalid result while writing the image data");
 
 			return ob_get_clean();
 		}
@@ -186,8 +197,9 @@
 		 * @param $name Name of the header
 		 * @param $data Data
 		 */
-		protected function writeHeader( $name, $data ) {
-			header( $name . ": " . $data );
+		protected function writeHeader($name, $data)
+		{
+			header($name . ": " . $data);
 		}
 
 		/**
@@ -203,27 +215,30 @@
 		 *
 		 * @param string $format Image format
 		 */
-		function output( $format ) {
+		function output($format)
+		{
 			$args = func_get_args();
-			$data = call_user_func_array( array( $this, 'asString' ), $args );
+			$data = call_user_func_array([$this, 'asString'], $args);
 
-			$this->writeHeader( 'Content-length', strlen( $data ) );
-			$this->writeHeader( 'Content-type', WideImage_MapperFactory::mimeType( $format ) );
+			$this->writeHeader('Content-length', strlen($data));
+			$this->writeHeader('Content-type', WideImage_MapperFactory::mimeType($format));
 			echo $data;
 		}
 
 		/**
 		 * @return int Image width
 		 */
-		function getWidth() {
-			return imagesx( $this->handle );
+		function getWidth()
+		{
+			return imagesx($this->handle);
 		}
 
 		/**
 		 * @return int Image height
 		 */
-		function getHeight() {
-			return imagesy( $this->handle );
+		function getHeight()
+		{
+			return imagesy($this->handle);
 		}
 
 		/**
@@ -235,25 +250,26 @@
 		 *
 		 * @return int Image color index
 		 */
-		function allocateColor( $R, $G = null, $B = null ) {
-			if ( is_array( $R ) )
-				return imageColorAllocate( $this->handle, $R[ 'red' ], $R[ 'green' ], $R[ 'blue' ] );
-			else
-				return imageColorAllocate( $this->handle, $R, $G, $B );
+		function allocateColor($R, $G = null, $B = null)
+		{
+			if (is_array($R)) return imageColorAllocate($this->handle, $R['red'], $R['green'], $R['blue']); else
+				return imageColorAllocate($this->handle, $R, $G, $B);
 		}
 
 		/**
 		 * @return bool True if the image is transparent, false otherwise
 		 */
-		function isTransparent() {
+		function isTransparent()
+		{
 			return $this->getTransparentColor() >= 0;
 		}
 
 		/**
 		 * @return int Transparent color index
 		 */
-		function getTransparentColor() {
-			return imagecolortransparent( $this->handle );
+		function getTransparentColor()
+		{
+			return imagecolortransparent($this->handle);
 		}
 
 		/**
@@ -261,8 +277,9 @@
 		 *
 		 * @param int $color Transparent color index
 		 */
-		function setTransparentColor( $color ) {
-			return imagecolortransparent( $this->handle, $color );
+		function setTransparentColor($color)
+		{
+			return imagecolortransparent($this->handle, $color);
 		}
 
 		/**
@@ -270,14 +287,13 @@
 		 *
 		 * @return mixed Transparent color RGBA array
 		 */
-		function getTransparentColorRGB() {
-			$total = imagecolorstotal( $this->handle );
-			$tc = $this->getTransparentColor();
+		function getTransparentColorRGB()
+		{
+			$total = imagecolorstotal($this->handle);
+			$tc    = $this->getTransparentColor();
 
-			if ( $tc >= $total && $total > 0 )
-				return null;
-			else
-				return $this->getColorRGB( $tc );
+			if ($tc >= $total && $total > 0) return null; else
+				return $this->getColorRGB($tc);
 		}
 
 		/**
@@ -288,8 +304,9 @@
 		 *
 		 * @return array RGB array
 		 */
-		function getRGBAt( $x, $y ) {
-			return $this->getColorRGB( $this->getColorAt( $x, $y ) );
+		function getRGBAt($x, $y)
+		{
+			return $this->getColorRGB($this->getColorAt($x, $y));
 		}
 
 		/**
@@ -302,8 +319,9 @@
 		 * @param int   $y
 		 * @param array $color
 		 */
-		function setRGBAt( $x, $y, $color ) {
-			$this->setColorAt( $x, $y, $this->getExactColor( $color ) );
+		function setRGBAt($x, $y, $color)
+		{
+			$this->setColorAt($x, $y, $this->getExactColor($color));
 		}
 
 		/**
@@ -313,8 +331,9 @@
 		 *
 		 * @return mixed RGBA array for a color with index $colorIndex
 		 */
-		function getColorRGB( $colorIndex ) {
-			return imageColorsForIndex( $this->handle, $colorIndex );
+		function getColorRGB($colorIndex)
+		{
+			return imageColorsForIndex($this->handle, $colorIndex);
 		}
 
 		/**
@@ -325,8 +344,9 @@
 		 *
 		 * @return int Color index for a pixel at $x, $y
 		 */
-		function getColorAt( $x, $y ) {
-			return imagecolorat( $this->handle, $x, $y );
+		function getColorAt($x, $y)
+		{
+			return imagecolorat($this->handle, $x, $y);
 		}
 
 		/**
@@ -336,8 +356,9 @@
 		 * @param int $y
 		 * @param int $color Color index
 		 */
-		function setColorAt( $x, $y, $color ) {
-			return imagesetpixel( $this->handle, $x, $y, $color );
+		function setColorAt($x, $y, $color)
+		{
+			return imagesetpixel($this->handle, $x, $y, $color);
 		}
 
 		/**
@@ -350,11 +371,10 @@
 		 *
 		 * @return int Color index
 		 */
-		function getClosestColor( $R, $G = null, $B = null ) {
-			if ( is_array( $R ) )
-				return imagecolorclosest( $this->handle, $R[ 'red' ], $R[ 'green' ], $R[ 'blue' ] );
-			else
-				return imagecolorclosest( $this->handle, $R, $G, $B );
+		function getClosestColor($R, $G = null, $B = null)
+		{
+			if (is_array($R)) return imagecolorclosest($this->handle, $R['red'], $R['green'], $R['blue']); else
+				return imagecolorclosest($this->handle, $R, $G, $B);
 		}
 
 		/**
@@ -367,11 +387,10 @@
 		 *
 		 * @return int Color index
 		 */
-		function getExactColor( $R, $G = null, $B = null ) {
-			if ( is_array( $R ) )
-				return imagecolorexact( $this->handle, $R[ 'red' ], $R[ 'green' ], $R[ 'blue' ] );
-			else
-				return imagecolorexact( $this->handle, $R, $G, $B );
+		function getExactColor($R, $G = null, $B = null)
+		{
+			if (is_array($R)) return imagecolorexact($this->handle, $R['red'], $R['green'], $R['blue']); else
+				return imagecolorexact($this->handle, $R, $G, $B);
 		}
 
 		/**
@@ -381,21 +400,20 @@
 		 * @param object $sourceImage
 		 * @param bool   $fill True if you want to fill the image with transparent color
 		 */
-		function copyTransparencyFrom( $sourceImage, $fill = true ) {
-			if ( $sourceImage->isTransparent() ) {
+		function copyTransparencyFrom($sourceImage, $fill = true)
+		{
+			if ($sourceImage->isTransparent()) {
 				$rgba = $sourceImage->getTransparentColorRGB();
-				if ( $rgba === null )
-					return;
+				if ($rgba === null) return;
 
-				if ( $this->isTrueColor() ) {
-					$rgba[ 'alpha' ] = 127;
-					$color = $this->allocateColorAlpha( $rgba );
+				if ($this->isTrueColor()) {
+					$rgba['alpha'] = 127;
+					$color         = $this->allocateColorAlpha($rgba);
 				} else
-					$color = $this->allocateColor( $rgba );
+					$color = $this->allocateColor($rgba);
 
-				$this->setTransparentColor( $color );
-				if ( $fill )
-					$this->fill( 0, 0, $color );
+				$this->setTransparentColor($color);
+				if ($fill) $this->fill(0, 0, $color);
 			}
 		}
 
@@ -406,8 +424,9 @@
 		 * @param int $y
 		 * @param int $color
 		 */
-		function fill( $x, $y, $color ) {
-			return imagefill( $this->handle, $x, $y, $color );
+		function fill($x, $y, $color)
+		{
+			return imagefill($this->handle, $x, $y, $color);
 		}
 
 		/**
@@ -417,8 +436,9 @@
 		 *
 		 * @return object
 		 */
-		protected function getOperation( $name ) {
-			return WideImage_OperationFactory::get( $name );
+		protected function getOperation($name)
+		{
+			return WideImage_OperationFactory::get($name);
 		}
 
 		/**
@@ -426,14 +446,16 @@
 		 *
 		 * Mask is a greyscale image where the shade defines the alpha channel (black = transparent, white = opaque).
 		 *
-		 * For opaque images (JPEG), the result will be white. For images with single-color transparency (GIF, 8-bit PNG),
-		 * the areas with the transparent color will be black. For images with alpha channel transparenct,
-		 * the result will be alpha channel.
+		 * For opaque images (JPEG), the result will be white. For images with single-color transparency (GIF, 8-bit
+		 * PNG), the areas with the transparent color will be black. For images with alpha channel transparenct, the
+		 * result will be alpha channel.
 		 *
 		 * @return WideImage_Image An image mask
 		 **/
-		function getMask() {
-			return $this->getOperation( 'GetMask' )->execute( $this );
+		function getMask()
+		{
+			return $this->getOperation('GetMask')
+						->execute($this);
 		}
 
 		/**
@@ -462,8 +484,10 @@
 		 *
 		 * @return WideImage_Image The resized image
 		 */
-		function resize( $width = null, $height = null, $fit = 'inside', $scale = 'any' ) {
-			return $this->getOperation( 'Resize' )->execute( $this, $width, $height, $fit, $scale );
+		function resize($width = null, $height = null, $fit = 'inside', $scale = 'any')
+		{
+			return $this->getOperation('Resize')
+						->execute($this, $width, $height, $fit, $scale);
 		}
 
 		/**
@@ -476,8 +500,9 @@
 		 *
 		 * @return WideImage_Image resized image
 		 */
-		function resizeDown( $width = null, $height = null, $fit = 'inside' ) {
-			return $this->resize( $width, $height, $fit, 'down' );
+		function resizeDown($width = null, $height = null, $fit = 'inside')
+		{
+			return $this->resize($width, $height, $fit, 'down');
 		}
 
 		/**
@@ -490,8 +515,9 @@
 		 *
 		 * @return WideImage_Image resized image
 		 */
-		function resizeUp( $width = null, $height = null, $fit = 'inside' ) {
-			return $this->resize( $width, $height, $fit, 'up' );
+		function resizeUp($width = null, $height = null, $fit = 'inside')
+		{
+			return $this->resize($width, $height, $fit, 'up');
 		}
 
 		/**
@@ -505,8 +531,10 @@
 		 *
 		 * @return WideImage_Image The rotated image
 		 */
-		function rotate( $angle, $bgColor = null, $ignoreTransparent = true ) {
-			return $this->getOperation( 'Rotate' )->execute( $this, $angle, $bgColor, $ignoreTransparent );
+		function rotate($angle, $bgColor = null, $ignoreTransparent = true)
+		{
+			return $this->getOperation('Rotate')
+						->execute($this, $angle, $bgColor, $ignoreTransparent);
 		}
 
 		/**
@@ -529,8 +557,10 @@
 		 *
 		 * @return WideImage_Image The merged image
 		 */
-		function merge( $overlay, $left = 0, $top = 0, $pct = 100 ) {
-			return $this->getOperation( 'Merge' )->execute( $this, $overlay, $left, $top, $pct );
+		function merge($overlay, $left = 0, $top = 0, $pct = 100)
+		{
+			return $this->getOperation('Merge')
+						->execute($this, $overlay, $left, $top, $pct);
 		}
 
 		/**
@@ -564,14 +594,19 @@
 		 * @param mixed  $height   Height of the new canvas (smart coordinate, relative to current image height)
 		 * @param mixed  $pos_x    x-position of the image (smart coordinate, relative to the new width)
 		 * @param mixed  $pos_y    y-position of the image (smart coordinate, relative to the new height)
-		 * @param int    $bg_color Background color (created with allocateColor or allocateColorAlpha), defaults to null (tries to use a transparent color)
-		 * @param string $scale    Possible values: 'up' (enlarge only), 'down' (downsize only), 'any' (resize precisely to $width x $height). Defaults to 'any'.
-		 * @param bool   $merge    Merge the original image (flatten alpha channel and transparency) or copy it over (preserve). Defaults to false.
+		 * @param int    $bg_color Background color (created with allocateColor or allocateColorAlpha), defaults to
+		 *                         null (tries to use a transparent color)
+		 * @param string $scale    Possible values: 'up' (enlarge only), 'down' (downsize only), 'any' (resize
+		 *                         precisely to $width x $height). Defaults to 'any'.
+		 * @param bool   $merge    Merge the original image (flatten alpha channel and transparency) or copy it over
+		 *                         (preserve). Defaults to false.
 		 *
 		 * @return WideImage_Image The resulting image with resized canvas
 		 */
-		function resizeCanvas( $width, $height, $pos_x, $pos_y, $bg_color = null, $scale = 'any', $merge = false ) {
-			return $this->getOperation( 'ResizeCanvas' )->execute( $this, $width, $height, $pos_x, $pos_y, $bg_color, $scale, $merge );
+		function resizeCanvas($width, $height, $pos_x, $pos_y, $bg_color = null, $scale = 'any', $merge = false)
+		{
+			return $this->getOperation('ResizeCanvas')
+						->execute($this, $width, $height, $pos_x, $pos_y, $bg_color, $scale, $merge);
 		}
 
 		/**
@@ -579,8 +614,8 @@
 		 *
 		 * You can either set the corners' color or set them transparent.
 		 *
-		 * Note on $smoothness: 1 means jagged edges, 2 is much better, more than 4 doesn't noticeably improve the quality.
-		 * Rendering becomes increasingly slower if you increase smoothness.
+		 * Note on $smoothness: 1 means jagged edges, 2 is much better, more than 4 doesn't noticeably improve the
+		 * quality. Rendering becomes increasingly slower if you increase smoothness.
 		 *
 		 * Example:
 		 * <code>
@@ -597,19 +632,23 @@
 		 * Example:
 		 * <code>
 		 * $white = $image->allocateColor(255, 255, 255);
-		 * $diagonal_corners = $image->roundCorners(15, $white, 2, WideImage::SIDE_TOP_LEFT + WideImage::SIDE_BOTTOM_RIGHT);
+		 * $diagonal_corners = $image->roundCorners(15, $white, 2, WideImage::SIDE_TOP_LEFT +
+		 * WideImage::SIDE_BOTTOM_RIGHT);
 		 * $right_corners = $image->roundCorners(15, $white, 2, WideImage::SIDE_RIGHT);
 		 * </code>
 		 *
 		 * @param int $radius     Radius of the corners
-		 * @param int $color      The color of corners. If null, corners are rendered transparent (slower than using a solid color).
+		 * @param int $color      The color of corners. If null, corners are rendered transparent (slower than using a
+		 *                        solid color).
 		 * @param int $smoothness Specify the level of smoothness. Suggested values from 1 to 4.
 		 * @param int $corners    Specify which corners to draw (defaults to WideImage::SIDE_ALL = all corners)
 		 *
 		 * @return WideImage_Image The resulting image with round corners
 		 */
-		function roundCorners( $radius, $color = null, $smoothness = 2, $corners = 255 ) {
-			return $this->getOperation( 'RoundCorners' )->execute( $this, $radius, $color, $smoothness, $corners );
+		function roundCorners($radius, $color = null, $smoothness = 2, $corners = 255)
+		{
+			return $this->getOperation('RoundCorners')
+						->execute($this, $radius, $color, $smoothness, $corners);
 		}
 
 		/**
@@ -624,8 +663,10 @@
 		 *
 		 * @return WideImage_Image The resulting image
 		 **/
-		function applyMask( $mask, $left = 0, $top = 0 ) {
-			return $this->getOperation( 'ApplyMask' )->execute( $this, $mask, $left, $top );
+		function applyMask($mask, $left = 0, $top = 0)
+		{
+			return $this->getOperation('ApplyMask')
+						->execute($this, $mask, $left, $top);
 		}
 
 		/**
@@ -639,8 +680,10 @@
 		 *
 		 * @return WideImage_Image
 		 */
-		function applyFilter( $filter, $arg1 = null, $arg2 = null, $arg3 = null, $arg4 = null ) {
-			return $this->getOperation( 'ApplyFilter' )->execute( $this, $filter, $arg1, $arg2, $arg3, $arg4 );
+		function applyFilter($filter, $arg1 = null, $arg2 = null, $arg3 = null, $arg4 = null)
+		{
+			return $this->getOperation('ApplyFilter')
+						->execute($this, $filter, $arg1, $arg2, $arg3, $arg4);
 		}
 
 		/**
@@ -652,8 +695,10 @@
 		 *
 		 * @return WideImage_Image
 		 */
-		function applyConvolution( $matrix, $div, $offset ) {
-			return $this->getOperation( 'ApplyConvolution' )->execute( $this, $matrix, $div, $offset );
+		function applyConvolution($matrix, $div, $offset)
+		{
+			return $this->getOperation('ApplyConvolution')
+						->execute($this, $matrix, $div, $offset);
 		}
 
 		/**
@@ -682,8 +727,10 @@
 		 *
 		 * @return WideImage_Image The cropped image
 		 **/
-		function crop( $left = 0, $top = 0, $width = '100%', $height = '100%' ) {
-			return $this->getOperation( 'Crop' )->execute( $this, $left, $top, $width, $height );
+		function crop($left = 0, $top = 0, $width = '100%', $height = '100%')
+		{
+			return $this->getOperation('Crop')
+						->execute($this, $left, $top, $width, $height);
 		}
 
 		/**
@@ -705,21 +752,25 @@
 		 *
 		 * @return WideImage_Image The cropped image
 		 */
-		function autoCrop( $margin = 0, $rgb_threshold = 0, $pixel_cutoff = 1, $base_color = null ) {
-			return $this->getOperation( 'AutoCrop' )->execute( $this, $margin, $rgb_threshold, $pixel_cutoff, $base_color );
+		function autoCrop($margin = 0, $rgb_threshold = 0, $pixel_cutoff = 1, $base_color = null)
+		{
+			return $this->getOperation('AutoCrop')
+						->execute($this, $margin, $rgb_threshold, $pixel_cutoff, $base_color);
 		}
 
 		/**
 		 * Returns a negative of the image
 		 *
-		 * This operation differs from calling WideImage_Image::applyFilter(IMG_FILTER_NEGATIVE), because it's 8-bit and transparency safe.
-		 * This means it will return an 8-bit image, if the source image is 8-bit. If that 8-bit image has a palette transparency,
-		 * the resulting image will keep transparency.
+		 * This operation differs from calling WideImage_Image::applyFilter(IMG_FILTER_NEGATIVE), because it's 8-bit
+		 * and transparency safe. This means it will return an 8-bit image, if the source image is 8-bit. If that 8-bit
+		 * image has a palette transparency, the resulting image will keep transparency.
 		 *
 		 * @return WideImage_Image negative of the image
 		 */
-		function asNegative() {
-			return $this->getOperation( 'AsNegative' )->execute( $this );
+		function asNegative()
+		{
+			return $this->getOperation('AsNegative')
+						->execute($this);
 		}
 
 		/**
@@ -727,8 +778,10 @@
 		 *
 		 * @return WideImage_Image grayscale copy
 		 **/
-		function asGrayscale() {
-			return $this->getOperation( 'AsGrayscale' )->execute( $this );
+		function asGrayscale()
+		{
+			return $this->getOperation('AsGrayscale')
+						->execute($this);
 		}
 
 		/**
@@ -736,8 +789,10 @@
 		 *
 		 * @return WideImage_Image Mirrored copy
 		 **/
-		function mirror() {
-			return $this->getOperation( 'Mirror' )->execute( $this );
+		function mirror()
+		{
+			return $this->getOperation('Mirror')
+						->execute($this);
 		}
 
 		/**
@@ -749,8 +804,10 @@
 		 *
 		 * @return WideImage_Image Unsharpened copy of the image
 		 **/
-		function unsharp( $amount, $radius, $threshold ) {
-			return $this->getOperation( 'Unsharp' )->execute( $this, $amount, $radius, $threshold );
+		function unsharp($amount, $radius, $threshold)
+		{
+			return $this->getOperation('Unsharp')
+						->execute($this, $amount, $radius, $threshold);
 		}
 
 		/**
@@ -758,8 +815,10 @@
 		 *
 		 * @return WideImage_Image Flipped copy
 		 **/
-		function flip() {
-			return $this->getOperation( 'Flip' )->execute( $this );
+		function flip()
+		{
+			return $this->getOperation('Flip')
+						->execute($this);
 		}
 
 		/**
@@ -770,8 +829,10 @@
 		 *
 		 * @return WideImage_Image Image with corrected gamma
 		 **/
-		function correctGamma( $inputGamma, $outputGamma ) {
-			return $this->getOperation( 'CorrectGamma' )->execute( $this, $inputGamma, $outputGamma );
+		function correctGamma($inputGamma, $outputGamma)
+		{
+			return $this->getOperation('CorrectGamma')
+						->execute($this, $inputGamma, $outputGamma);
 		}
 
 		/**
@@ -784,8 +845,10 @@
 		 *
 		 * @return WideImage_Image Image with noise added
 		 **/
-		function addNoise( $amount, $type ) {
-			return $this->getOperation( 'AddNoise' )->execute( $this, $amount, $type );
+		function addNoise($amount, $type)
+		{
+			return $this->getOperation('AddNoise')
+						->execute($this, $amount, $type);
 		}
 
 		/**
@@ -796,11 +859,12 @@
 		 *
 		 * @return WideImage_Image
 		 */
-		function __call( $name, $args ) {
-			$op = $this->getOperation( $name );
-			array_unshift( $args, $this );
+		function __call($name, $args)
+		{
+			$op = $this->getOperation($name);
+			array_unshift($args, $this);
 
-			return call_user_func_array( array( $op, 'execute' ), $args );
+			return call_user_func_array([$op, 'execute'], $args);
 		}
 
 		/**
@@ -808,11 +872,10 @@
 		 *
 		 * @return string
 		 */
-		function __toString() {
-			if ( $this->isTransparent() )
-				return $this->asString( 'gif' );
-			else
-				return $this->asString( 'png' );
+		function __toString()
+		{
+			if ($this->isTransparent()) return $this->asString('gif'); else
+				return $this->asString('png');
 		}
 
 		/**
@@ -820,10 +883,11 @@
 		 *
 		 * @return WideImage_Image The copy
 		 **/
-		function copy() {
-			$dest = $this->doCreate( $this->getWidth(), $this->getHeight() );
-			$dest->copyTransparencyFrom( $this, true );
-			$this->copyTo( $dest, 0, 0 );
+		function copy()
+		{
+			$dest = $this->doCreate($this->getWidth(), $this->getHeight());
+			$dest->copyTransparencyFrom($this, true);
+			$this->copyTo($dest, 0, 0);
 
 			return $dest;
 		}
@@ -835,9 +899,9 @@
 		 * @param int             $left
 		 * @param int             $top
 		 **/
-		function copyTo( $dest, $left = 0, $top = 0 ) {
-			if ( !imagecopy( $dest->getHandle(), $this->handle, $left, $top, 0, 0, $this->getWidth(), $this->getHeight() ) )
-				throw new WideImage_GDFunctionResultException( "imagecopy() returned false" );
+		function copyTo($dest, $left = 0, $top = 0)
+		{
+			if (!imagecopy($dest->getHandle(), $this->handle, $left, $top, 0, 0, $this->getWidth(), $this->getHeight())) throw new WideImage_GDFunctionResultException("imagecopy() returned false");
 		}
 
 		/**
@@ -859,9 +923,9 @@
 		 *
 		 * @return WideImage_Canvas The Canvas object
 		 **/
-		function getCanvas() {
-			if ( $this->canvas == null )
-				$this->canvas = new WideImage_Canvas( $this );
+		function getCanvas()
+		{
+			if ($this->canvas == null) $this->canvas = new WideImage_Canvas($this);
 
 			return $this->canvas;
 		}
@@ -885,11 +949,12 @@
 		 *
 		 * @param int  $nColors      Number of colors in the resulting image, more than 0, less or equal to 255
 		 * @param bool $dither       Use dithering or not
-		 * @param bool $matchPalette Set to true to use imagecolormatch() to match the resulting palette more closely to the original image
+		 * @param bool $matchPalette Set to true to use imagecolormatch() to match the resulting palette more closely
+		 *                           to the original image
 		 *
 		 * @return WideImage_Image
 		 **/
-		abstract function asPalette( $nColors = 255, $dither = null, $matchPalette = true );
+		abstract function asPalette($nColors = 255, $dither = null, $matchPalette = true);
 
 		/**
 		 * Retrieve an image with selected channels
@@ -917,20 +982,22 @@
 		 *
 		 * @return array
 		 */
-		function __sleep() {
-			$this->sdata = $this->asString( 'png' );
+		function __sleep()
+		{
+			$this->sdata = $this->asString('png');
 
-			return array( 'sdata', 'handleReleased' );
+			return ['sdata', 'handleReleased'];
 		}
 
 		/**
 		 * Restores an image from serialization. Called automatically upon unserialize().
 		 */
-		function __wakeup() {
-			$temp_image = WideImage::loadFromString( $this->sdata );
+		function __wakeup()
+		{
+			$temp_image = WideImage::loadFromString($this->sdata);
 			$temp_image->releaseHandle();
 			$this->handle = $temp_image->handle;
-			$temp_image = null;
-			$this->sdata = null;
+			$temp_image   = null;
+			$this->sdata  = null;
 		}
 	}

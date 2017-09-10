@@ -1,0 +1,56 @@
+{
+    "plurals"
+:
+    "personnels",
+        "actions"
+:
+    {
+        "add"
+    :
+        {
+            "if"
+        :
+            "admin"
+        }
+    ,
+        "edit"
+    :
+        {
+            "if"
+        :
+            "admin"
+        }
+    ,
+        "list"
+    :
+        {
+            "if"
+        :
+            "verified"
+        }
+    }
+,
+    "fields"
+:
+    {
+        "role"
+    :
+        {
+            "type"
+        :
+            "enum",
+                "list"
+        :
+            ["admin", "moderators", "default"]
+        }
+    ,
+        "company:id"
+    :
+        {
+        }
+        "user:id"
+    :
+        {
+        }
+    }
+}

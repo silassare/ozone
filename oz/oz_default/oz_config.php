@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -8,42 +8,41 @@
 	 * file that was distributed with this source code.
 	 */
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	//En phase de TEST
-	//error_reporting( E_ALL );
-	//SILO soyons ferme: -1 pour tout type que meme E_ALL n'inclut pas avant php 5.2
-	error_reporting( -1 );
+	// Lets write clean code -1 same as E_ALL
+	error_reporting(-1);
+	// error_reporting( 0 );
 
-	//En phase de PRODUCTION
-	//error_reporting( 0 );
+	// Ameliore la configuration de PHP
+	ini_set('upload_max_filesize', '100M');
+	ini_set('post_max_size', '100M');
+	ini_set('default_charset', 'UTF-8');
+	ini_set('magic_quotes_runtime', 0);
 
-	//Ameliore la configuration de PHP
-	ini_set( 'upload_max_filesize', '100M' );
-	ini_set( 'post_max_size', '100M' );
-	ini_set( 'default_charset', 'UTF-8' );
-	ini_set( 'magic_quotes_runtime', 0 );
+	// Permet d'économiser des octets
+	ini_set("zlib.output_compression", 'On');
 
-	//permet d'economiser des octets
-	ini_set( "zlib.output_compression", 'On' );
+	// =============== FOR OZONE USE ONLY
 
-	//===============FOR OZONE USE ONLY
+	// Enable cookies if not done
+	ini_set('session.use_cookies', '1');
 
-	//Enable cookies if not done
-	ini_set( 'session.use_cookies', '1' );
+	// Nous gérons nous même nos sessions grace à la classe \OZONE\OZ\Core\OZoneSessions
+	ini_set('session.save_handler', 'user');
 
-	//SILO::nous gerons nous meme nos sessions grace à la classe OZoneSessions
-	ini_set( 'session.save_handler', 'user' );
+	// Evitons de prendre en compte des sessions id visibles dans les url
+	ini_set('session.use_trans_sid', '0');
 
-	//Evitons de prendre en compte des sessions id visibles dans les url
-	ini_set( 'session.use_trans_sid', '0' );
+	// Only allow the session ID to come from cookies and nothing else.
+	ini_set('session.use_only_cookies', '1');
 
-	//Only allow the session ID to come from cookies and nothing else.
-	ini_set( 'session.use_only_cookies', '1' );
-
-	//empeche que la version de php soit presente dans la reponse envoyee au navigateur/client
-	if ( function_exists( 'header_remove' ) ) {
-		header_remove( 'X-Powered-By' ); // PHP 5.3+
+	// Empêche que la version de php soit présente dans la réponse envoyée au navigateur/client
+	if (function_exists('header_remove')) {
+		header_remove('X-Powered-By'); // PHP 5.3+
 	} else {
-		ini_set( 'expose_php', 'off' );
+		ini_set('expose_php', 'off');
 	}
+
+	// we should use UTC for any date
+	date_default_timezone_set('UTC');

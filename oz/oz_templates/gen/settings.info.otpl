@@ -1,0 +1,14 @@
+<?php
+	/**
+	 * Auto generated file
+	 *
+	 * INFO: you are free to edit it,
+	 * but make sure to know what you are doing.
+	 *
+	 * Proudly With: <%$.oz_version_name%>
+	 * Time: <%$.oz_time%>
+	 */
+
+	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+
+	return <%$.oz_settings_str%>;

@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -12,9 +12,10 @@
 
 	use OZONE\OZ\Utils\OZoneStr;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	final class OZoneKeyGen {
+	final class OZoneKeyGen
+	{
 
 		/**
 		 * @param string $name The 'oz.keygen.salt' settings salt key name.
@@ -22,9 +23,9 @@
 		 * @return mixed|null
 		 * @throws \OZONE\OZ\Exceptions\OZoneInternalError
 		 */
-		private static function getSalt( $name ) {
-
-			return OZoneSettings::get( 'oz.keygen.salt', $name );
+		private static function getSalt($name)
+		{
+			return OZoneSettings::get('oz.keygen.salt', $name);
 		}
 
 		/**
@@ -33,22 +34,20 @@
 		 * @return string
 		 * @throws \Exception    When the file doesn't exists
 		 */
-		public static function genFileKey( $path ) {
-
-			if ( !file_exists( $path ) ) {
-				throw new \Exception( "can't generate file key for: $path" );
+		public static function genFileKey($path)
+		{
+			if (!file_exists($path)) {
+				throw new \Exception("can't generate file key for: $path");
 			}
 
-			$salt = self::getSalt( 'OZ_FKEY_GEN_SALT' );
-			$str = md5_file( $path );
+			// make sure to make differences between each cloned file key
+			// if no, all clone will have the same fkey as the original file
+			srand(microtime() * 100);
 
-			srand( microtime() * 100 );
+			$salt = self::getSalt('OZ_FKEY_GEN_SALT') . microtime() . rand(111111, 999999);
+			$str  = md5_file($path) . $salt;
 
-			//make sure to make differences between each cloned file key
-			//if no, all clone will have the same fkey as the original file
-			$str = $salt . microtime() . rand( 111111, 999999 ) . $str;
-
-			return self::hashIt( $str, 32 );
+			return self::hashIt($str, 32);
 		}
 
 		/**
@@ -60,22 +59,35 @@
 		 * @return string
 		 * @throws \InvalidArgumentException
 		 */
-		public static function hashIt( $string, $length = 32 ) {
-			$accept = array( 32, 64 );
+		public static function hashIt($string, $length = 32)
+		{
+			$accept = [32, 64];
 
-			if ( !in_array( $length, $accept ) ) {
-				$values = join( $accept, ' , ' );
+			if (!in_array($length, $accept)) {
+				$values = join($accept, ' , ');
 
-				throw new \InvalidArgumentException( "hash length argument shoud be on of this list: $values" );
+				throw new \InvalidArgumentException("hash length argument shoud be on of this list: $values");
 			}
 
-			$string = hash( 'sha256', $string );
+			$string = hash('sha256', $string);
 
-			if ( $length === 32 ) {
-				return md5( $string );
+			if ($length === 32) {
+				return md5($string);
 			}
 
 			return $string;
+		}
+
+		/**
+		 * generate random hash
+		 *
+		 * @param int $length The desired hash string length default 32
+		 *
+		 * @return string
+		 */
+		public static function genRandomHash($length = 32)
+		{
+			return self::hashIt(OZoneStr::genRandomString(), $length);
 		}
 
 		/**
@@ -83,10 +95,11 @@
 		 *
 		 * @return string
 		 */
-		public static function genSid() {
-			$salt = self::getSalt( 'OZ_SID_GEN_SALT' );
+		public static function genSid()
+		{
+			$salt = self::getSalt('OZ_SID_GEN_SALT');
 
-			return self::hashIt( $salt . OZoneStr::genRandomString(), 32 );
+			return self::hashIt(OZoneStr::genRandomString() . $salt, 32);
 		}
 
 		/**
@@ -96,12 +109,12 @@
 		 *
 		 * @return string
 		 */
-		public static function genClid( $url ) {
+		public static function genClid($url)
+		{
+			$salt = self::getSalt('OZ_CLID_GEN_SALT');
+			$str  = self::hashIt($url . $salt, 32);
 
-			$salt = self::getSalt( 'OZ_CLID_GEN_SALT' );
-			$str = self::hashIt( $salt . $url, 32 );
-
-			return implode( '-', str_split( strtoupper( $str ), 8 ) );
+			return implode('-', str_split(strtoupper($str), 8));
 		}
 
 		/**
@@ -109,11 +122,11 @@
 		 *
 		 * @return int
 		 */
-		public static function genAuthCode() {
+		public static function genAuthCode()
+		{
+			srand(microtime() * 100);
 
-			srand( microtime() * 100 );
-
-			return rand( 111111, 999999 );
+			return rand(111111, 999999);
 		}
 
 		/**
@@ -123,11 +136,12 @@
 		 *
 		 * @return string
 		 */
-		public static function genAuthToken( $key ) {
-			$salt = self::getSalt( 'OZ_AUTH_TOKEN_SALT' );
+		public static function genAuthToken($key)
+		{
+			$salt = self::getSalt('OZ_AUTH_TOKEN_SALT');
 
-			$str = $salt . OZoneStr::genRandomString() . microtime() . $key;
+			$str = $key . OZoneStr::genRandomString() . microtime() . $salt;
 
-			return self::hashIt( $str, 32 );
+			return self::hashIt($str, 32);
 		}
 	}

@@ -26,12 +26,15 @@
 	 *
 	 * @package Internal/Mappers
 	 */
-	class WideImage_Mapper_JPEG {
-		function load( $uri ) {
-			return @imagecreatefromjpeg( $uri );
+	class WideImage_Mapper_JPEG
+	{
+		function load($uri)
+		{
+			return @imagecreatefromjpeg($uri);
 		}
 
-		function save( $handle, $uri = null, $quality = 100 ) {
-			return imagejpeg( $handle, $uri, $quality );
+		function save($handle, $uri = null, $quality = 100)
+		{
+			return imagejpeg($handle, $uri, $quality);
 		}
 	}

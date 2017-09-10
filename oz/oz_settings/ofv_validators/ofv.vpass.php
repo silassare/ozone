@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,10 +10,11 @@
 
 	namespace OZONE\OZ\Ofv;
 
-	function ofv_vpass( OFormValidator $ofv ) {
-		//on verifie que pass et vpass sont identiques
-		if ( !OFormUtils::equalFields( $ofv, 'pass', 'vpass' ) ) {
-			//pass et vpass ne sont pas identiques
-			$ofv->addError( 'OZ_FIELD_PASS_AND_VPASS_NOT_EQUAL' );
+	function ofv_vpass(OFormValidator $ofv)
+	{
+		// on verifie que pass et vpass sont identiques
+		if (!OFormUtils::equalFields($ofv, 'pass', 'vpass')) {
+			// pass et vpass ne sont pas identiques
+			$ofv->addError('OZ_FIELD_PASS_AND_VPASS_NOT_EQUAL');
 		}
 	}

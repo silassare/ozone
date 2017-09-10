@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,9 +10,10 @@
 
 	namespace OZONE\OZ\Utils;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	final class OZoneStr {
+	final class OZoneStr
+	{
 
 		/**
 		 * alphanumerics case insensitive
@@ -26,7 +27,7 @@
 		 *
 		 * @var string
 		 */
-		const SYMBOLS = '~!@#$%^&()_-+={}[]:";\'<>?,./\\';
+		const SYMBOLS = '~!@#$£µ§²¨%^&()_-+={}[]:";\'<>?,./\\';
 
 		/**
 		 * clean a given text
@@ -36,27 +37,26 @@
 		 *
 		 * @return string
 		 */
-		public static function clean( $text = null, $disable_oml = true ) {
-			if ( is_numeric( $text ) )
-				return '' . $text;
-			if ( !is_string( $text ) )
-				return '';
+		public static function clean($text = null, $disable_oml = true)
+		{
+			if (is_numeric($text)) return '' . $text;
+			if (!is_string($text)) return '';
 
-			//on prend le soin d'effacer les espaces de fins
-			//mais on laisse les espaces de debuts car utiles dans le cas des dessin a partie du texte ex: arbre de noel....
+			// on prend le soin d'effacer les espaces de fins
+			// mais on laisse les espaces de debuts car utiles dans le cas des dessin a partie du texte ex: arbre de noel....
 
-			$text = rtrim( $text );
-			$text = htmlentities( $text, ENT_QUOTES, 'UTF-8' );
-			$text = str_replace( "&amp;", "&", $text );
+			$text = rtrim($text);
+			$text = htmlentities($text, ENT_QUOTES, 'UTF-8');
+			$text = str_replace("&amp;", "&", $text);
 
-			//evitons que user utilise le langage OML dans l'editeur
+			// evitons que user utilise le langage OML dans l'editeur
 
-			if ( $disable_oml ) {
-				$text = str_replace( "{", "{&#x0000;", $text );
-				$text = str_replace( "&#x0000;&#x0000;", "&#x0000;", $text );
+			if ($disable_oml) {
+				$text = str_replace("{", "{&#x0000;", $text);
+				$text = str_replace("&#x0000;&#x0000;", "&#x0000;", $text);
 			}
 
-			return self::emo_fix( $text );
+			return self::emoFix($text);
 		}
 
 		/**
@@ -66,27 +66,28 @@
 		 *
 		 * @return string
 		 */
-		private static function emo_fix( $text ) {
-			//json_encode nous permet de regler certain probleme d'encodage au niveau des emoji
-			$text = json_encode( $text );
-			//on enleve le "" mis par json_encode en debut et fin
-			$text = substr( $text, 1, strlen( $text ) - 2 );
-			$htmlentities_emo = array(
-				array( "&trade;", "\u2122" ),
-				array( "&harr;", "\u2194" ),
-				array( "&spades;", "\u2660" ),
-				array( "&clubs;", "\u2663" ),
-				array( "&hearts;", "\u2665" ),
-				array( "&diams;", "\u2666" ),
-				array( "&copy;", "\u00a9" ),
-				array( "&reg;", "\u00ae" )
-			);
+		private static function emoFix($text)
+		{
+			// json_encode nous permet de regler certain probleme d'encodage au niveau des emoji
+			$text = json_encode($text);
+			// on enleve le "" mis par json_encode en debut et fin
+			$text             = substr($text, 1, strlen($text) - 2);
+			$htmlentities_emo = [
+				["&trade;", "\u2122"],
+				["&harr;", "\u2194"],
+				["&spades;", "\u2660"],
+				["&clubs;", "\u2663"],
+				["&hearts;", "\u2665"],
+				["&diams;", "\u2666"],
+				["&copy;", "\u00a9"],
+				["&reg;", "\u00ae"]
+			];
 
-			foreach ( $htmlentities_emo as $key => $emo ) {
-				$text = str_replace( $emo[ 0 ], $emo[ 1 ], $text );
+			foreach ($htmlentities_emo as $key => $emo) {
+				$text = str_replace($emo[0], $emo[1], $text);
 			}
 
-			$text = str_replace( "\\\\u", "\\u", $text );
+			$text = str_replace("\\\\u", "\\u", $text);
 
 			return $text;
 		}
@@ -100,68 +101,141 @@
 		 * @return string
 		 * @throws \InvalidArgumentException
 		 */
-		public static function genRandomString( $length = 32, $alphanum_only = false ) {
-
-			$min = 1;
-			$max = 512;
+		public static function genRandomString($length = 32, $alphanum_only = false)
+		{
+			$min   = 1;
+			$max   = 512;
 			$chars = self::ALPHA_NUM_INS;
 
-			if ( $length < $min OR $length > $max ) {
-				throw new \InvalidArgumentException( "random string length must be between $min and $max" );
+			if ($length < $min OR $length > $max) {
+				throw new \InvalidArgumentException("random string length must be between $min and $max");
 			}
 
-			if ( !$alphanum_only ) {
+			if (!$alphanum_only) {
 				$chars .= self::SYMBOLS;
 			}
 
-			$chars_length = strlen( $chars ) - 1;
-			$string = '';
+			$chars_length = strlen($chars) - 1;
+			$string       = '';
+			$blind_rand   = rand(-3600, 3600);
+			// a seed
+			$fake_time = (microtime() * 100) + $blind_rand;
+			srand($fake_time);
 
-			srand( microtime() * 100 );
-
-			for ( $i = 0 ; $i < $length ; ++$i ) {
-				$string .= $chars[ rand( 0, $chars_length ) ];
+			for ($i = 0; $i < $length; ++$i) {
+				$string .= $chars[rand(0, $chars_length)];
 			}
 
 			return $string;
 		}
 
 		/**
-		 * format an array to sql list style
+		 * remove a given prefix from a given string
 		 *
-		 * @param array $arr the array to format
+		 * @param string $str
+		 * @param string $prefix
 		 *
 		 * @return string
 		 */
-		public static function arrayToList( array $arr ) {
+		public static function removePrefix($str, $prefix)
+		{
+			if (strlen($str) AND strlen($prefix) AND 0 === strpos($str, $prefix)) {
+				$str = substr($str, strlen($prefix));
+			}
 
-			return self::clean( "( " . implode( ',', $arr ) . " )" );
+			return $str;
 		}
 
 		/**
-		 * fix some encoding problems
+		 * remove a given sufix from a given string
+		 *
+		 * @param string $str
+		 * @param string $sufix
+		 *
+		 * @return string
+		 */
+		public static function removeSufix($str, $sufix)
+		{
+			if (strlen($str) AND strlen($sufix) AND 0 < strpos($str, $sufix)) {
+				$str = substr($str, 0, strlen($str) - strlen($sufix));
+			}
+
+			return $str;
+		}
+
+		/**
+		 * Change a string from one encoding to another
+		 *
+		 * @param string $data your raw data
+		 * @param string $from encoding of your data
+		 * @param string $to   encoding you want
+		 *
+		 * @return string|boolean    false if error
+		 *
+		 * @throws \Exception        when some required modules not found
+		 */
+		public static function convertEncoding($data, $from, $to = 'UTF-8')
+		{
+			if (function_exists('mb_convert_encoding')) {
+				// alternatives
+				$alt = ['windows-949' => 'EUC-KR', 'Windows-31J' => 'SJIS'];
+
+				$from = isset($alt[$from]) ? $alt[$from] : $from;
+				$to   = isset($alt[$to]) ? $alt[$to] : $to;
+
+				return @mb_convert_encoding($data, $to, $from);
+			}
+
+			if (function_exists('iconv')) {
+				return @iconv($from, $to, $data);
+			}
+
+			throw new \Exception('Make sure PHP module iconv or mbstring is installed.');
+		}
+
+		/**
+		 * convert to utf8
+		 *
+		 * @param mixed $input the string to encode
+		 *
+		 * @return mixed
+		 */
+		public static function toUtf8($input)
+		{
+			$from = null;
+
+			if (function_exists('mb_detect_encoding')) {
+				$from = mb_detect_encoding($input);
+			}
+
+			return self::convertEncoding($input, $from, 'UTF-8');
+		}
+
+		/**
+		 * fix some encoding problems as we only use UTF-8
 		 *
 		 * @param mixed $input       the input to fix
 		 * @param bool  $encode_keys whether to encode keys if input is array or object
 		 *
 		 * @return mixed
 		 */
-		public static function encodeFix( $input, $encode_keys = false ) {
+		public static function encodeFix($input, $encode_keys = false)
+		{
 			$result = null;
 
-			if ( is_string( $input ) ) {
-				$result = utf8_encode( $input );
-			} elseif ( is_array( $input ) ) {
-				$result = array();
-				foreach ( $input as $k => $v ) {
-					$key = ( $encode_keys ) ? utf8_encode( $k ) : $k;
-					$result[ $key ] = self::encodeFix( $v, $encode_keys );
+			if (is_string($input)) {
+				$result = self::toUtf8($input);
+			} elseif (is_array($input)) {
+				$result = [];
+				foreach ($input as $k => $v) {
+					$key          = ($encode_keys) ? self::toUtf8($k) : $k;
+					$result[$key] = self::encodeFix($v, $encode_keys);
 				}
-			} elseif ( is_object( $input ) ) {
-				$vars = array_keys( get_object_vars( $input ) );
+			} elseif (is_object($input)) {
+				$vars = array_keys(get_object_vars($input));
 
-				foreach ( $vars as $var ) {
-					$input->$var = self::encodeFix( $input->$var );
+				foreach ($vars as $var) {
+					$input->$var = self::encodeFix($input->$var);
 				}
 			} else {
 				return $input;

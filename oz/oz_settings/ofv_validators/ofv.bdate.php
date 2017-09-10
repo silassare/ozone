@@ -1,6 +1,7 @@
 <?php
+
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,6 +11,7 @@
 
 	namespace OZONE\OZ\Ofv;
 
-	function ofv_bdate( OFormValidator $ofv ) {
-		ofv_birthdate( $ofv );
+	function ofv_bdate(OFormValidator $ofv)
+	{
+		ofv_birthdate($ofv);
 	}

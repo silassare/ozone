@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -12,17 +12,20 @@
 
 	use OZONE\OZ\Core\OZoneSessions;
 	use OZONE\OZ\Exceptions\OZoneNotFoundException;
+	use OZONE\OZ\Core\OZoneSettings;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	/**
 	 * Class CaptchaCodeHelper
+	 *
 	 * @package OZONE\OZ\Authenticator
 	 */
-	final class CaptchaCodeHelper {
+	final class CaptchaCodeHelper implements AuthenticatorHelper
+	{
 
-		private static $default_config = array(
-			'backgrounds'     => array(
+		private static $default_config = [
+			'backgrounds'     => [
 				'45-degree-fabric.png',
 				'cloth-alike.png',
 				'grey-sandbag.png',
@@ -31,10 +34,8 @@
 				'stitched-wool.png',
 				'white-carbon.png',
 				'white-wave.png'
-			),
-			'fonts'           => array(
-				'times_new_yorker.ttf'
-			),
+			],
+			'fonts'           => ['times_new_yorker.ttf'],
 			'min_font_size'   => 28,
 			'max_font_size'   => 28,
 			'color'           => '#666',
@@ -44,30 +45,40 @@
 			'shadow_color'    => '#fff',
 			'shadow_offset_x' => -1,
 			'shadow_offset_y' => 1
-		);
+		];
+
+		private $auth = null;
 
 		/**
 		 * CaptchaCodeHelper constructor.
+		 *
+		 * @param \OZONE\OZ\Authenticator\Authenticator $auth
 		 */
-		public function __construct() {
+		public function __construct(Authenticator $auth)
+		{
+			$this->auth = $auth;
 		}
 
 		/**
-		 * get captcha image uri for a given authenticator
+		 * get captcha image uri for authentication
 		 *
-		 * @param \OZONE\OZ\Authenticator\Authenticator $auth the authenticator to use
-		 *
-		 * @return string
+		 * @return array the captcha info
 		 */
-		public function getUri( Authenticator $auth ) {
-			$generated = $auth->getGenerated();
+		public function getCaptcha()
+		{
+			$auth = $this->auth;
 
-			$captcha_key = md5( $auth->getLabel() . $auth->getForValue() . microtime() );
-			$img_src = $captcha_key . '.png';
+			$generated = $auth->generate()
+							  ->getGenerated();
 
-			OZoneSessions::set( '_captcha_cfg_:' . $captcha_key, $generated[ 'code' ] );
+			$captcha_key = md5($auth->getLabel() . $auth->getForValue() . microtime());
 
-			return $img_src;
+			$fname   = OZoneSettings::get('oz.files', 'OZ_CAPTCHA_FILE_NAME');
+			$img_src = str_replace(['{oz_captcha_key}'], [$captcha_key], $fname);
+
+			OZoneSessions::set('_captcha_cfg_:' . $captcha_key, $generated['authCode']);
+
+			return ['captchaSrc' => $img_src];
 		}
 
 		/**
@@ -77,61 +88,61 @@
 		 *
 		 * @throws \OZONE\OZ\Exceptions\OZoneNotFoundException when captcha image key is not valid
 		 */
-		public function drawImage( $captcha_key ) {
-
+		public static function serveCaptchaImage($captcha_key)
+		{
 			$code = null;
 
-			if ( is_string( $captcha_key ) ) {
-				$code = OZoneSessions::get( '_captcha_cfg_:' . $captcha_key );
+			if (is_string($captcha_key)) {
+				$code = OZoneSessions::get('_captcha_cfg_:' . $captcha_key);
 			}
 
-			if ( empty( $code ) ) {
+			if (empty($code)) {
 				throw new OZoneNotFoundException();
 			}
 
-			OZoneSessions::remove( '_captcha_cfg_:' . $captcha_key );
+			OZoneSessions::remove('_captcha_cfg_:' . $captcha_key);
 
-			$CAPTCHA_DIR = OZ_OZONE_ASSETS_DIR . 'captcha' . DS;
+			$CAPTCHA_DIR = OZ_OZONE_DIR . 'oz_assets' . DS . 'captcha' . DS;
 
-			srand( microtime() * 100 );
+			srand(microtime() * 100);
 
-			$background = $CAPTCHA_DIR . self::$default_config[ 'backgrounds' ][ rand( 0, count( self::$default_config[ 'backgrounds' ] ) - 1 ) ];
+			$background = $CAPTCHA_DIR . self::$default_config['backgrounds'][rand(0, count(self::$default_config['backgrounds']) - 1)];
 
-			$captcha = imagecreatefrompng( $background );
+			$captcha = imagecreatefrompng($background);
 
-			$bg_width = imagesx( $captcha );
-			$bg_height = imagesy( $captcha );
+			$bg_width  = imagesx($captcha);
+			$bg_height = imagesy($captcha);
 
-			$color = self::hex2rgb( self::$default_config[ 'color' ] );
-			$color = imagecolorallocate( $captcha, $color[ 'r' ], $color[ 'g' ], $color[ 'b' ] );
+			$color = self::hex2rgb(self::$default_config['color']);
+			$color = imagecolorallocate($captcha, $color['r'], $color['g'], $color['b']);
 
-			$angle = rand( self::$default_config[ 'angle_min' ], self::$default_config[ 'angle_max' ] ) * ( rand( 0, 1 ) == 1 ? -1 : 1 );
+			$angle = rand(self::$default_config['angle_min'], self::$default_config['angle_max']) * (rand(0, 1) == 1 ? -1 : 1);
 
-			$font = $CAPTCHA_DIR . self::$default_config[ 'fonts' ][ rand( 0, count( self::$default_config[ 'fonts' ] ) - 1 ) ];
+			$font = $CAPTCHA_DIR . self::$default_config['fonts'][rand(0, count(self::$default_config['fonts']) - 1)];
 
-			$font_size = rand( self::$default_config[ 'min_font_size' ], self::$default_config[ 'max_font_size' ] );
-			$text_box_size = imagettfbbox( $font_size, $angle, $font, $code );
+			$font_size     = rand(self::$default_config['min_font_size'], self::$default_config['max_font_size']);
+			$text_box_size = imagettfbbox($font_size, $angle, $font, $code);
 
-			$box_width = abs( $text_box_size[ 6 ] - $text_box_size[ 2 ] );
-			$box_height = abs( $text_box_size[ 5 ] - $text_box_size[ 1 ] );
+			$box_width      = abs($text_box_size[6] - $text_box_size[2]);
+			$box_height     = abs($text_box_size[5] - $text_box_size[1]);
 			$text_pos_x_min = 0;
-			$text_pos_x_max = ( $bg_width ) - ( $box_width );
-			$text_pos_x = rand( $text_pos_x_min, $text_pos_x_max );
+			$text_pos_x_max = ($bg_width) - ($box_width);
+			$text_pos_x     = rand($text_pos_x_min, $text_pos_x_max);
 			$text_pos_y_min = $box_height;
-			$text_pos_y_max = ( $bg_height ) - ( $box_height / 2 );
-			$text_pos_y = rand( $text_pos_y_min, $text_pos_y_max );
+			$text_pos_y_max = ($bg_height) - ($box_height / 2);
+			$text_pos_y     = rand($text_pos_y_min, $text_pos_y_max);
 
-			if ( self::$default_config[ 'shadow' ] ) {
-				$shadow_color = self::hex2rgb( self::$default_config[ 'shadow_color' ] );
-				$shadow_color = imagecolorallocate( $captcha, $shadow_color[ 'r' ], $shadow_color[ 'g' ], $shadow_color[ 'b' ] );
-				imagettftext( $captcha, $font_size, $angle, $text_pos_x + self::$default_config[ 'shadow_offset_x' ], $text_pos_y + self::$default_config[ 'shadow_offset_y' ], $shadow_color, $font, $code );
+			if (self::$default_config['shadow']) {
+				$shadow_color = self::hex2rgb(self::$default_config['shadow_color']);
+				$shadow_color = imagecolorallocate($captcha, $shadow_color['r'], $shadow_color['g'], $shadow_color['b']);
+				imagettftext($captcha, $font_size, $angle, $text_pos_x + self::$default_config['shadow_offset_x'], $text_pos_y + self::$default_config['shadow_offset_y'], $shadow_color, $font, $code);
 			}
 
-			imagettftext( $captcha, $font_size, $angle, $text_pos_x, $text_pos_y, $color, $font, $code );
+			imagettftext($captcha, $font_size, $angle, $text_pos_x, $text_pos_y, $color, $font, $code);
 
-			header( 'Content-type: image/png' );
+			header('Content-type: image/png');
 			flush();
-			imagepng( $captcha );
+			imagepng($captcha);
 		}
 
 		/**
@@ -143,22 +154,23 @@
 		 *
 		 * @return array|bool    array when get_string is false, string otherwise
 		 */
-		private static function hex2rgb( $hex_str, $get_string = false, $separator = ',' ) {
-			$hex_str = preg_replace( "/[^0-9A-Fa-f]/", '', $hex_str ); // Gets a proper hex string
-			$rgb_array = array();
-			if ( strlen( $hex_str ) == 6 ) {
-				$color_val = hexdec( $hex_str );
-				$rgb_array[ 'r' ] = 0xFF & ( $color_val >> 0x10 );
-				$rgb_array[ 'g' ] = 0xFF & ( $color_val >> 0x8 );
-				$rgb_array[ 'b' ] = 0xFF & $color_val;
-			} elseif ( strlen( $hex_str ) == 3 ) {
-				$rgb_array[ 'r' ] = hexdec( str_repeat( substr( $hex_str, 0, 1 ), 2 ) );
-				$rgb_array[ 'g' ] = hexdec( str_repeat( substr( $hex_str, 1, 1 ), 2 ) );
-				$rgb_array[ 'b' ] = hexdec( str_repeat( substr( $hex_str, 2, 1 ), 2 ) );
+		private static function hex2rgb($hex_str, $get_string = false, $separator = ',')
+		{
+			$hex_str   = preg_replace("/[^0-9A-Fa-f]/", '', $hex_str); // Gets a proper hex string
+			$rgb_array = [];
+			if (strlen($hex_str) == 6) {
+				$color_val      = hexdec($hex_str);
+				$rgb_array['r'] = 0xFF & ($color_val >> 0x10);
+				$rgb_array['g'] = 0xFF & ($color_val >> 0x8);
+				$rgb_array['b'] = 0xFF & $color_val;
+			} elseif (strlen($hex_str) == 3) {
+				$rgb_array['r'] = hexdec(str_repeat(substr($hex_str, 0, 1), 2));
+				$rgb_array['g'] = hexdec(str_repeat(substr($hex_str, 1, 1), 2));
+				$rgb_array['b'] = hexdec(str_repeat(substr($hex_str, 2, 1), 2));
 			} else {
 				return false;
 			}
 
-			return $get_string ? implode( $separator, $rgb_array ) : $rgb_array;
+			return $get_string ? implode($separator, $rgb_array) : $rgb_array;
 		}
 	}

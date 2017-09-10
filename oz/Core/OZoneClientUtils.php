@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -12,26 +12,28 @@
 
 	use OZONE\OZ\Utils\OZoneStr;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	class OZoneClientUtils {
+	class OZoneClientUtils
+	{
 
-		private static $temp_clients_infos = array();
+		private static $temp_clients_infos = [];
 
-		public static function isTokenLike( $token ) {
+		public static function isTokenLike($token)
+		{
 			$token_reg = "#^[a-zA-Z0-9]{32}$#";
 
-			return is_string( $token ) AND preg_match( $token_reg, $token );
+			return is_string($token) AND preg_match($token_reg, $token);
 		}
 
-		public static function checkSafeOriginUrl( $url ) {
-			$sql = "
+		public static function checkSafeOriginUrl($url)
+		{
+			$sql    = "
 				SELECT oz_clients.*
  				FROM oz_clients
  				WHERE oz_clients.client_url =:cliurl AND oz_clients.client_valid = 1";
-			$select = OZoneDb::getInstance()->select( $sql, array(
-				'cliurl' => $url
-			) );
+			$select = OZoneDb::getInstance()
+							 ->select($sql, ['cliurl' => $url]);
 
 			return $select->rowCount() > 0;
 		}
@@ -44,19 +46,18 @@
 		 *
 		 * @return array|null
 		 */
-		public static function getInfoWith( $key_value, $key_type ) {
-
-			if ( empty( $key_value ) OR !is_string( $key_value ) OR !in_array( $key_type, array( 'clid', 'sid', 'token' ) ) )
+		public static function getInfoWith($key_value, $key_type)
+		{
+			if (empty($key_value) OR !is_string($key_value) OR !in_array($key_type, ['clid', 'sid', 'token'])) {
 				return null;
+			}
 
 			$sql = null;
-
-			switch ( $key_type ) {
-
+			switch ($key_type) {
 				case 'clid' :
 
-					if ( array_key_exists( $key_value, self::$temp_clients_infos ) ) {
-						return self::$temp_clients_infos[ $key_value ];
+					if (array_key_exists($key_value, self::$temp_clients_infos)) {
+						return self::$temp_clients_infos[$key_value];
 					}
 
 					$sql = "SELECT oz_clients.*
@@ -86,14 +87,13 @@
 					break;
 			}
 
-			$select = OZoneDb::getInstance()->select( $sql, array(
-				'key' => OZoneStr::clean( $key_value )
-			) );
+			$select = OZoneDb::getInstance()
+							 ->select($sql, ['key' => OZoneStr::clean($key_value)]);
 
-			if ( $select->rowCount() > 0 ) {
+			if ($select->rowCount() > 0) {
 				$info = $select->fetch();
 
-				self::$temp_clients_infos[ $info[ 'client_clid' ] ] = $info;
+				self::$temp_clients_infos[$info['client_clid']] = $info;
 
 				return $info;
 			}

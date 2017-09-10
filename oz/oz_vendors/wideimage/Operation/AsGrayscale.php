@@ -26,7 +26,8 @@
 	 *
 	 * @package Internal/Operations
 	 */
-	class WideImage_Operation_AsGrayscale {
+	class WideImage_Operation_AsGrayscale
+	{
 		/**
 		 * Returns a greyscale copy of an image
 		 *
@@ -34,13 +35,12 @@
 		 *
 		 * @return WideImage_Image
 		 */
-		function execute( $image ) {
+		function execute($image)
+		{
 			$new = $image->asTrueColor();
-			if ( !imagefilter( $new->getHandle(), IMG_FILTER_GRAYSCALE ) )
-				throw new WideImage_GDFunctionResultException( "imagefilter() returned false" );
+			if (!imagefilter($new->getHandle(), IMG_FILTER_GRAYSCALE)) throw new WideImage_GDFunctionResultException("imagefilter() returned false");
 
-			if ( !$image->isTrueColor() )
-				$new = $new->asPalette();
+			if (!$image->isTrueColor()) $new = $new->asPalette();
 
 			return $new;
 		}

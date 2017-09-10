@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,11 +10,10 @@
 
 	namespace OZONE\OZ\Exceptions;
 
-	use OZONE\OZ\Core\OZoneRequest;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
-
-	class OZoneUnverifiedUserException extends OZoneBaseException {
+	class OZoneUnverifiedUserException extends OZoneBaseException
+	{
 
 		/**
 		 * OZoneUnverifiedUserException constructor.
@@ -22,22 +21,16 @@
 		 * @param string     $message the exception message
 		 * @param array|null $data    additional exception data
 		 */
-		public function __construct( $message = 'OZ_ERROR_YOU_MUST_LOGIN', array $data = null ) {
-			parent::__construct( $message, OZoneBaseException::UNVERIFIED_USER, $data );
+		public function __construct($message = 'OZ_ERROR_YOU_MUST_LOGIN', array $data = null)
+		{
+			parent::__construct($message, OZoneBaseException::UNVERIFIED_USER, $data);
 		}
 
 		/**
 		 * {@inheritdoc}
 		 */
-		public function procedure() {
-			if ( OZoneRequest::isPost() ) {
-				//SILO::TODO force user a se connecter
-				$this->showJson();
-			} else {
-				//SILO::TODO redirect to login page
-				//et affiche un message d'erreur
-				//ou si grave ce qui suit
-				$this->showCustomErrorPage();
-			}
+		public function procedure()
+		{
+			$this->informClient();
 		}
 	}

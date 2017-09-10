@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -12,11 +12,12 @@
 
 	use OZONE\OZ\Core\OZoneSettings;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	require_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'wideimage' . DS . 'WideImage.php';
 
-	class OZoneImagesUtils {
+	class OZoneImagesUtils
+	{
 
 		/**
 		 * @var \WideImage_Image
@@ -41,31 +42,32 @@
 		 *
 		 * @var array
 		 */
-		protected $image_extensions = array( 'jpg', 'jpeg', 'png', 'gif' );
+		protected $image_extensions = ['jpg', 'jpeg', 'png', 'gif'];
 
 		/**
 		 * OZoneImagesUtils constructor.
 		 *
 		 * @param string $source_path the image file source path
-		 * @param string $format      the image file format, default is JPEG
 		 */
-		public function __construct( $source_path, $format = 'JPEG' ) {
+		public function __construct($source_path)
+		{
 			$this->source_path = $source_path;
-			$this->format = strtoupper( $format );
 		}
 
 		/**
 		 * OZoneImagesUtils destructor.
 		 */
-		public function __destruct() {
+		public function __destruct()
+		{
 			$this->destroy();
 		}
 
 		/**
 		 * destroy WideImage_Image object
 		 */
-		public function destroy() {
-			if ( $this->image ) {
+		public function destroy()
+		{
+			if ($this->image) {
 				$this->image->destroy();
 			}
 		}
@@ -78,18 +80,19 @@
 		 *
 		 * @param string $quality Image quality
 		 */
-		function outputJpeg( $quality ) {
-			$data = $this->image->asString( 'jpeg' );
+		function outputJpeg($quality)
+		{
+			$data  = $this->image->asString('jpeg');
 			$img_r = imagecreatefromstring($data);
 
-			header( 'Content-type: image/jpeg' );
-			//important car la taille changera a cause de la compresion
-			header_remove( 'Content-Length' );
+			header('Content-type: image/jpeg');
+			// important car la taille changera a cause de la compresion
+			header_remove('Content-Length');
 
-			imagejpeg( $img_r, null, $quality );
+			imagejpeg($img_r, null, $quality);
 
-			//free memory
-			imagedestroy( $img_r );
+			// free memory
+			imagedestroy($img_r);
 		}
 
 		/**
@@ -97,10 +100,10 @@
 		 *
 		 * @return bool true if successful, false if fail
 		 */
-		public function load() {
-			if ( !$this->isValidImage() )
-				return false;
-			$this->image = \WideImage::load( $this->source_path );
+		public function load()
+		{
+			if (!$this->isValidImage()) return false;
+			$this->image = \WideImage::load($this->source_path);
 
 			return true;
 		}
@@ -110,17 +113,17 @@
 		 *
 		 * @return bool
 		 */
-		public function isValidImage() {
-			$src = $this->source_path;
-			$extension = strtolower( substr( $src, ( strrpos( $src, '.' ) + 1 ) ) );
+		public function isValidImage()
+		{
+			$src       = $this->source_path;
+			$extension = strtolower(substr($src, (strrpos($src, '.') + 1)));
 
-			if ( !in_array( $extension, $this->image_extensions ) )
-				return false;
+			if (!in_array($extension, $this->image_extensions)) return false;
 
-			$data = file_get_contents( $src );
-			$r = @imagecreatefromstring( $data );
+			$data = file_get_contents($src);
+			$r    = @imagecreatefromstring($data);
 
-			return ( is_resource( $r ) && get_resource_type( $r ) == 'gd' );
+			return (is_resource($r) && get_resource_type($r) == 'gd');
 		}
 
 		/**
@@ -130,8 +133,9 @@
 		 *
 		 * @return \OZONE\OZ\FS\OZoneImagesUtils
 		 */
-		public function copyImage( $destination_path ) {
-			$this->image->saveToFile( $destination_path );
+		public function copyImage($destination_path)
+		{
+			$this->image->saveToFile($destination_path);
 
 			return $this;
 		}
@@ -144,42 +148,34 @@
 		 *
 		 * @return array
 		 */
-		public function adviceBestSize( $max_out_width, $max_out_height ) {
+		public function adviceBestSize($max_out_width, $max_out_height)
+		{
+			$iW    = $this->getWidth();
+			$iH    = $this->getHeight();
+			$ratio = ($iW > $iH) ? $iH / $iW : $iW / $iH;
+			$crop  = ($ratio < 0.6) ? true : false;
 
-			$iW = $this->getWidth();
-			$iH = $this->getHeight();
-			$ratio = ( $iW > $iH ) ? $iH / $iW : $iW / $iH;
-			$crop = ( $ratio < 0.6 ) ? true : false;
-
-			if ( $iW <= $max_out_width AND $iH <= $max_out_height ) {
-
-				$W = $iW;
-				$H = $iH;
+			if ($iW <= $max_out_width AND $iH <= $max_out_height) {
+				$W    = $iW;
+				$H    = $iH;
 				$crop = false;
-
-			} elseif ( !$crop ) {
-
-				if ( $iW > $iH ) {
+			} elseif (!$crop) {
+				if ($iW > $iH) {
 					$W = $max_out_width * $ratio;
 					$H = $W * $ratio;
-				} elseif ( $iW < $iH ) {
+				} elseif ($iW < $iH) {
 					$H = $max_out_height * $ratio;
 					$W = $H * $ratio;
 				} else {
-					$W = min( $max_out_width, $max_out_height ) * $ratio;
-					$H = min( $max_out_width, $max_out_height ) * $ratio;
+					$W = min($max_out_width, $max_out_height) * $ratio;
+					$H = min($max_out_width, $max_out_height) * $ratio;
 				}
-
 			} else {
-				$W = min( $max_out_width, $iW );
-				$H = min( $max_out_height, $iH );
+				$W = min($max_out_width, $iW);
+				$H = min($max_out_height, $iH);
 			}
 
-			return array(
-				'w'    => ceil( $W ),
-				'h'    => ceil( $H ),
-				'crop' => $crop
-			);
+			return ['w' => ceil($W), 'h' => ceil($H), 'crop' => $crop];
 		}
 
 		/**
@@ -189,33 +185,33 @@
 		 *
 		 * @return \OZONE\OZ\FS\OZoneImagesUtils
 		 */
-		public function resizeImage( $width, $height, $crop = true ) {
-			$iWidth = $this->getWidth();
+		public function resizeImage($width, $height, $crop = true)
+		{
+			$iWidth  = $this->getWidth();
 			$iHeight = $this->getHeight();
 
-			$this->image_resized = ( $width <= $iWidth ) || ( isset( $height ) && $height <= $iHeight ) ? true : false;
+			$this->image_resized = ($width <= $iWidth) || (isset($height) && $height <= $iHeight) ? true : false;
 
-			if ( !$width ) {
+			if (!$width) {
 				$width = $iWidth;
 			} else {
 				$width = $width > $iWidth ? $iWidth : $width;
 			}
 
-			if ( !$height ) {
+			if (!$height) {
 				$height = $iHeight;
 			} else {
 				$height = $height > $iHeight ? $iHeight : $height;
 			}
 
-			if ( $crop ) {
-				$wHalf = ceil( $width / 2 );
-				$hHalf = ceil( $height / 2 );
+			if ($crop) {
+				$wHalf = ceil($width / 2);
+				$hHalf = ceil($height / 2);
 
-				$this->image = $this->image
-					->resize( $width, $height, 'outside' )
-					->crop( '50%-' . $wHalf, '50%-' . $hHalf, $width, $height );
+				$this->image = $this->image->resize($width, $height, 'outside')
+										   ->crop('50%-' . $wHalf, '50%-' . $hHalf, $width, $height);
 			} else {
-				$this->image = $this->image->resize( $width, $height );
+				$this->image = $this->image->resize($width, $height);
 			}
 
 			return $this;
@@ -231,8 +227,9 @@
 		 *
 		 * @return \OZONE\OZ\FS\OZoneImagesUtils
 		 */
-		public function cropImage( $left, $top, $width, $height ) {
-			$this->image = $this->image->crop( $left, $top, $width, $height );
+		public function cropImage($left, $top, $width, $height)
+		{
+			$this->image = $this->image->crop($left, $top, $width, $height);
 
 			return $this;
 		}
@@ -247,11 +244,12 @@
 		 *
 		 * @return \OZONE\OZ\FS\OZoneImagesUtils
 		 */
-		public function saveImage( $destination_path = null, $quality = 90 ) {
-			if ( !isset( $destination_path ) ) {
-				$this->image->saveToFile( $this->source_path, $quality );
+		public function saveImage($destination_path = null, $quality = 90)
+		{
+			if (!isset($destination_path)) {
+				$this->image->saveToFile($this->source_path, $quality);
 			} else {
-				$this->image->saveToFile( $destination_path, $quality );
+				$this->image->saveToFile($destination_path, $quality);
 			}
 
 			return $this;
@@ -262,7 +260,8 @@
 		 *
 		 * @return int
 		 */
-		public function getWidth() {
+		public function getWidth()
+		{
 			return $this->image->getWidth();
 		}
 
@@ -271,7 +270,8 @@
 		 *
 		 * @return int
 		 */
-		public function getHeight() {
+		public function getHeight()
+		{
 			return $this->image->getHeight();
 		}
 
@@ -280,7 +280,8 @@
 		 *
 		 * @return bool
 		 */
-		public function imageResized() {
+		public function imageResized()
+		{
 			return $this->image_resized;
 		}
 
@@ -293,19 +294,15 @@
 		 * @throws \OZONE\OZ\Exceptions\OZoneInternalError when can't load 'oz.user' setting
 		 */
 
-		private function safeCoordinate( array $coordinate ) {
-			$x = $coordinate[ 'x' ];
-			$y = $coordinate[ 'y' ];
-			$w = $coordinate[ 'w' ];
-			$h = $coordinate[ 'h' ];
-			$min_size = OZoneSettings::get( 'oz.user', 'OZ_PPIC_MIN_SIZE' );
+		private function safeCoordinate(array $coordinate)
+		{
+			$x        = $coordinate['x'];
+			$y        = $coordinate['y'];
+			$w        = $coordinate['w'];
+			$h        = $coordinate['h'];
+			$min_size = OZoneSettings::get('oz.user', 'OZ_PPIC_MIN_SIZE');
 
-			return $x >= 0
-			AND $y >= 0
-			AND $w >= ( $min_size + $x )
-			AND $h >= ( $min_size + $y )
-			AND ( $x + $w ) <= $this->getWidth()
-			AND ( $y + $h ) <= $this->getHeight();
+			return $x >= 0 AND $y >= 0 AND $w >= ($min_size + $x) AND $h >= ($min_size + $y) AND ($x + $w) <= $this->getWidth() AND ($y + $h) <= $this->getHeight();
 		}
 
 		/**
@@ -320,26 +317,29 @@
 		 *
 		 * @return \OZONE\OZ\FS\OZoneImagesUtils
 		 */
-		public function cropAndSave( $destination_path, $quality = 90, $max_width, $max_height, array $coordinate = null, $resize = true ) {
+		public function cropAndSave($destination_path, $quality = 90, $max_width, $max_height, array $coordinate = null, $resize = true)
+		{
+			if (!empty($coordinate)) {
+				if ($this->safeCoordinate($coordinate)) {
+					$x = $coordinate['x'];
+					$y = $coordinate['y'];
+					$w = $coordinate['w'];
+					$h = $coordinate['h'];
 
-			if ( !empty( $coordinate ) ) {
-
-				if ( $this->safeCoordinate( $coordinate ) ) {
-					$x = $coordinate[ 'x' ];
-					$y = $coordinate[ 'y' ];
-					$w = $coordinate[ 'w' ];
-					$h = $coordinate[ 'h' ];
-
-					if ( $resize ) {
-						return $this->cropImage( $x, $y, $w, $h )->resizeImage( $max_width, $max_height )->saveImage( $destination_path, $quality );
+					if ($resize) {
+						return $this->cropImage($x, $y, $w, $h)
+									->resizeImage($max_width, $max_height)
+									->saveImage($destination_path, $quality);
 					}
 
-					//permet de garder l'image tel qu'il a ete cropper par user
-					return $this->cropImage( $x, $y, $w, $h )->saveImage( $destination_path, $quality );
+					// permet de garder l'image tel qu'il a ete cropper par user
+					return $this->cropImage($x, $y, $w, $h)
+								->saveImage($destination_path, $quality);
 				}
 			}
 
-			//alors on fait un resize
-			return $this->resizeImage( $max_width, $max_height )->saveImage( $destination_path, $quality );
+			// alors on fait un resize
+			return $this->resizeImage($max_width, $max_height)
+						->saveImage($destination_path, $quality);
 		}
 	}

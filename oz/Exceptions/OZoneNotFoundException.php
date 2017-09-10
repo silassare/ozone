@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,11 +10,10 @@
 
 	namespace OZONE\OZ\Exceptions;
 
-	use OZONE\OZ\Core\OZoneRequest;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
-
-	class OZoneNotFoundException extends OZoneBaseException {
+	class OZoneNotFoundException extends OZoneBaseException
+	{
 
 		/**
 		 * OZoneNotFoundException constructor.
@@ -22,22 +21,20 @@
 		 * @param string     $message the exception message
 		 * @param array|null $data    additional exception data
 		 */
-		public function __construct( $message = 'OZ_ERROR_NOT_FOUND', array $data = null ) {
-			if ( empty( $data ) ) {
-				$data = array( $_SERVER[ 'REQUEST_URI' ] );
+		public function __construct($message = 'OZ_ERROR_NOT_FOUND', array $data = null)
+		{
+			if (empty($data)) {
+				$data = [$_SERVER['REQUEST_URI']];
 			}
 
-			parent::__construct( $message, OZoneBaseException::NOT_FOUND, $data );
+			parent::__construct($message, OZoneBaseException::NOT_FOUND, $data);
 		}
 
 		/**
 		 * {@inheritdoc}
 		 */
-		public function procedure() {
-			if ( OZoneRequest::isPost() ) {
-				$this->showJson();
-			} else {
-				$this->showCustomErrorPage();
-			}
+		public function procedure()
+		{
+			$this->informClient();
 		}
 	}

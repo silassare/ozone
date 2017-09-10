@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,7 +10,7 @@
 
 	namespace OZONE\OZ\Loader;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	/**
 	 * OZone class loader comply with PSR-4.
@@ -78,7 +78,8 @@
 	 *    $loader::addDir( '/root/app/' , true, 3 );
 	 *```
 	 */
-	class ClassLoader {
+	class ClassLoader
+	{
 		/**
 		 * Class name regexp
 		 *
@@ -96,14 +97,14 @@
 		 *
 		 * @var array
 		 */
-		private static $indexed_dirs = array();
+		private static $indexed_dirs = [];
 
 		/**
 		 * Array of classes name mapped to classes path.
 		 *
 		 * @var array
 		 */
-		private static $class_map = array();
+		private static $class_map = [];
 
 		/**
 		 * An associative array where the key is a namespace prefix and the value
@@ -111,7 +112,7 @@
 		 *
 		 * @var array
 		 */
-		protected static $psr4_namespaces_map = array();
+		protected static $psr4_namespaces_map = [];
 
 		/**
 		 * Registered as class loader or not.
@@ -125,11 +126,11 @@
 		 *
 		 * @return void
 		 */
-		protected static function register() {
-
-			if ( self::$registered === false ) {
+		protected static function register()
+		{
+			if (self::$registered === false) {
 				self::$registered = true;
-				spl_autoload_register( array( '\OZONE\OZ\Loader\ClassLoader', 'loadClass' ) );
+				spl_autoload_register(['\OZONE\OZ\Loader\ClassLoader', 'loadClass']);
 			}
 		}
 
@@ -142,53 +143,50 @@
 		 *
 		 * @throws \Exception
 		 */
-		public static function addDir( $dir, $recursive = false, $deep = 1 ) {
-
-			//let's register our class loader if not done
+		public static function addDir($dir, $recursive = false, $deep = 1)
+		{
+			// let's register our class loader if not done
 			self::register();
 
-			$dir = self::cleanPath( $dir );
+			$dir = self::cleanPath($dir);
 
-			if ( !file_exists( $dir ) || !is_dir( $dir ) ) {
-				throw new \Exception( "$dir does not exists or is not a directory" );
+			if (!is_dir($dir)) {
+				throw new \Exception(sprintf('"%s" does not exists or is not a directory.', $dir));
 			}
 
-			if ( in_array( $dir, self::$indexed_dirs ) ) {
+			if (in_array($dir, self::$indexed_dirs)) {
 				return;
 			}
 
-			array_push( self::$indexed_dirs, $dir );
+			array_push(self::$indexed_dirs, $dir);
 
-			$res = opendir( $dir );
+			$res = opendir($dir);
 
-			if ( $res ) {
-
-				while ( false !== ( $filename = readdir( $res ) ) ) {
-
-					if ( $filename !== '.' AND $filename !== '..' ) {
-
+			if ($res) {
+				while (false !== ($filename = readdir($res))) {
+					if ($filename !== '.' AND $filename !== '..') {
 						$c_path = $dir . DIRECTORY_SEPARATOR . $filename;
-						$in = array();
+						$in     = [];
 
-						if ( is_file( $c_path ) AND preg_match( ClassLoader::CLASS_FILE_REG, $filename, $in ) ) {
+						if (is_file($c_path) AND preg_match(ClassLoader::CLASS_FILE_REG, $filename, $in)) {
+							$class_name = $in[1];
 
-							$class_name = $in[ 1 ];
-
-							if ( !array_key_exists( $class_name, self::$class_map ) ) {
-								self::$class_map[ $class_name ] = $c_path;
-							} else {
-								$class_path = self::$class_map[ $class_name ];
-								throw new \Exception( "$class_name defined in $class_path Can't overwrite with $c_path" );
-							}
-
-						} elseif ( !!$recursive AND $deep > 0 AND is_dir( $c_path ) ) {
-							self::addDir( $c_path, $recursive, $deep - 1 );
+							if (!array_key_exists($class_name, self::$class_map)) {
+								self::$class_map[$class_name] = $c_path;
+							}// else {
+							// tmp duplicate
+							// $class_path = self::$class_map[ $class_name ];
+							// throw new \Exception( sprintf('"%s" is defined in "%s" cannot overwrite with "%s"', $class_name, $class_path, $c_path ) );
+							// }
+						} elseif (!!$recursive AND $deep > 0 AND is_dir($c_path)) {
+							self::addDir($c_path, $recursive, $deep - 1);
 						}
 					}
 				}
 
+				closedir($res);
 			} else {
-				throw new \Exception( "Can't open directory at: $dir" );
+				throw new \Exception(sprintf('cannot open directory at: "%s"', $dir));
 			}
 		}
 
@@ -201,18 +199,17 @@
 		 *
 		 * @return void
 		 */
-		public static function addDirs( array $dirs, $recursive = false, $deep = 1 ) {
+		public static function addDirs(array $dirs, $recursive = false, $deep = 1)
+		{
+			foreach ($dirs as $dir) {
+				if (is_array($dir)) {
+					$c_dir       = isset($dir[0]) ? $dir[0] : null;
+					$c_recursive = isset($dir[1]) ? $dir[1] : $recursive;
+					$c_deep      = isset($dir[2]) ? $dir[2] : $deep;
 
-			foreach ( $dirs as $dir ) {
-
-				if ( is_array( $dir ) ) {
-					$c_dir = isset( $dir[ 0 ] ) ? $dir[ 0 ] : null;
-					$c_recursive = isset( $dir[ 1 ] ) ? $dir[ 1 ] : $recursive;
-					$c_deep = isset( $dir[ 2 ] ) ? $dir[ 2 ] : $deep;
-
-					self::addDir( $c_dir, $c_recursive, $c_deep );
+					self::addDir($c_dir, $c_recursive, $c_deep);
 				} else {
-					self::addDir( $dir, $recursive, $deep );
+					self::addDir($dir, $recursive, $deep);
 				}
 			}
 		}
@@ -229,32 +226,32 @@
 		 *
 		 * @throws \Exception
 		 */
-		public static function addNamespace( $prefix, $base_dir, $prepend = false ) {
-
-			//let's register our class loader if not done
+		public static function addNamespace($prefix, $base_dir, $prepend = false)
+		{
+			// let's register our class loader if not done
 			self::register();
 
-			$dir = self::cleanPath( $base_dir );
+			$dir = self::cleanPath($base_dir);
 
-			if ( !file_exists( $dir ) || !is_dir( $dir ) ) {
-				throw new \Exception( "$dir does not exists or is not a directory" );
+			if (!is_dir($dir)) {
+				throw new \Exception(sprintf('"%s" does not exists or is not a directory.', $dir));
 			}
 
 			// normalize namespace prefix
-			$prefix = trim( $prefix, '\\' ) . '\\';
+			$prefix = trim($prefix, '\\') . '\\';
 			// normalize the base directory with a trailing separator
-			$base_dir = rtrim( $base_dir, DIRECTORY_SEPARATOR ) . '/';
+			$base_dir = rtrim($base_dir, DIRECTORY_SEPARATOR) . '/';
 			// initialize the namespace prefix array
-			if ( isset ( self::$psr4_namespaces_map[ $prefix ] ) === false ) {
-				self::$psr4_namespaces_map[ $prefix ] = array();
+			if (isset (self::$psr4_namespaces_map[$prefix]) === false) {
+				self::$psr4_namespaces_map[$prefix] = [];
 			}
 
-			if ( !in_array( $base_dir, self::$psr4_namespaces_map[ $prefix ] ) ) {
+			if (!in_array($base_dir, self::$psr4_namespaces_map[$prefix])) {
 				// retain the base directory for the namespace prefix
-				if ( $prepend ) {
-					array_unshift( self::$psr4_namespaces_map[ $prefix ], $base_dir );
+				if ($prepend) {
+					array_unshift(self::$psr4_namespaces_map[$prefix], $base_dir);
 				} else {
-					array_push( self::$psr4_namespaces_map[ $prefix ], $base_dir );
+					array_push(self::$psr4_namespaces_map[$prefix], $base_dir);
 				}
 			}
 		}
@@ -266,18 +263,15 @@
 		 *
 		 * @return mixed The mapped file name on success, or boolean false on failure.
 		 */
-		public static function loadClass( $class_name ) {
+		public static function loadClass($class_name)
+		{
+			if (false !== strrpos($class_name, '\\')) {
+				// it seems to be a fully-qualified class name
+				return self::loadClassPsr4($class_name);
+			} elseif (array_key_exists($class_name, self::$class_map)) {
+				$path = self::$class_map[$class_name];
 
-			if ( false !== strrpos( $class_name, '\\' ) ) {
-
-				//it seems to be a fully-qualified class name
-				return self::loadClassPsr4( $class_name );
-
-			} else if ( array_key_exists( $class_name, self::$class_map ) ) {
-
-				$path = self::$class_map[ $class_name ];
-
-				if ( self::requireFile( $path ) ) {
+				if (self::requireFile($path)) {
 					return $path;
 				}
 			}
@@ -293,25 +287,26 @@
 		 *
 		 * @return mixed The mapped file name on success, or boolean false on failure.
 		 */
-		protected static function loadClassPsr4( $class ) {
+		protected static function loadClassPsr4($class)
+		{
 			// the current namespace prefix
 			$prefix = $class;
 			// work backwards through the namespace names of the fully-qualified
 			// class name to find a mapped file name
-			while ( false !== $pos = strrpos( $prefix, '\\' ) ) {
+			while (false !== $pos = strrpos($prefix, '\\')) {
 				// retain the trailing namespace separator in the prefix
-				$prefix = substr( $class, 0, $pos + 1 );
+				$prefix = substr($class, 0, $pos + 1);
 				// the rest is the relative class name
-				$relative_class = substr( $class, $pos + 1 );
+				$relative_class = substr($class, $pos + 1);
 				// try to load a mapped file for the prefix and relative class
-				$mapped_file = self::getPsr4MappedFile( $prefix, $relative_class );
+				$mapped_file = self::getPsr4MappedFile($prefix, $relative_class);
 
-				if ( $mapped_file ) {
+				if ($mapped_file) {
 					return $mapped_file;
 				}
 				// remove the trailing namespace separator for the next iteration
 				// of strrpos()
-				$prefix = rtrim( $prefix, '\\' );
+				$prefix = rtrim($prefix, '\\');
 			}
 
 			// never found a mapped file
@@ -327,21 +322,20 @@
 		 * @return mixed Boolean false if no mapped file can be loaded, or the
 		 * name of the mapped file that was loaded.
 		 */
-		protected static function getPsr4MappedFile( $prefix, $relative_class ) {
+		protected static function getPsr4MappedFile($prefix, $relative_class)
+		{
 			// are there any base directories for this namespace prefix?
-			if ( isset ( self::$psr4_namespaces_map[ $prefix ] ) === false ) {
+			if (isset (self::$psr4_namespaces_map[$prefix]) === false) {
 				return false;
 			}
 			// look through base directories for this namespace prefix
-			foreach ( self::$psr4_namespaces_map[ $prefix ] as $base_dir ) {
+			foreach (self::$psr4_namespaces_map[$prefix] as $base_dir) {
 				// replace the namespace prefix with the base directory,
 				// replace namespace separators with directory separators
 				// in the relative class name, append with .php
-				$file = $base_dir
-					. str_replace( '\\', '/', $relative_class )
-					. '.php';
+				$file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
 				// if the mapped file exists, require it
-				if ( self::requireFile( $file ) ) {
+				if (self::requireFile($file)) {
 					// yes, we're done
 					return $file;
 				}
@@ -358,11 +352,11 @@
 		 *
 		 * @return bool
 		 */
-		public static function exists( $class_name ) {
+		public static function exists($class_name)
+		{
+			self::loadClass($class_name);
 
-			self::loadClass( $class_name );
-
-			return class_exists( $class_name );
+			return class_exists($class_name);
 		}
 
 		/**
@@ -372,14 +366,14 @@
 		 *
 		 * @return string
 		 */
-		protected static function cleanPath( $dir_path ) {
+		protected static function cleanPath($dir_path)
+		{
+			if (is_string($dir_path) AND strlen($dir_path) > 1) {
+				// remove last / or \
+				$dir_path = rtrim($dir_path, '\\/');
 
-			if ( is_string( $dir_path ) AND strlen( $dir_path ) > 1 ) {
-				//remove last / or \
-				$dir_path = rtrim( $dir_path, '\\/' );
-
-				if ( DIRECTORY_SEPARATOR === '\\' ) {
-					$dir_path = str_replace( '/', '\\', $dir_path );
+				if (DIRECTORY_SEPARATOR === '\\') {
+					$dir_path = str_replace('/', '\\', $dir_path);
 				}
 			}
 
@@ -393,8 +387,9 @@
 		 *
 		 * @return bool True if the file exists, false if not.
 		 */
-		protected static function requireFile( $file ) {
-			if ( file_exists( $file ) ) {
+		protected static function requireFile($file)
+		{
+			if (file_exists($file)) {
 				require $file;
 
 				return true;
@@ -411,9 +406,10 @@
 		 *
 		 * @return object
 		 */
-		public static function instantiateClass( $class_name, $args = array() ) {
-			$obj = new \ReflectionClass( $class_name );
+		public static function instantiateClass($class_name, $args = [])
+		{
+			$obj = new \ReflectionClass($class_name);
 
-			return $obj->newInstanceArgs( $args );
+			return $obj->newInstanceArgs($args);
 		}
 	}

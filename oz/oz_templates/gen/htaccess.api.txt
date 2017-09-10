@@ -1,0 +1,17 @@
+AddDefaultCharset UTF-8
+AddType text/cache-manifest .manifest
+
+# Disable files listing multiview and enable symbolique link
+
+Options -Indexes -Multiviews +FollowSymlinks
+
+# Start rewriter
+
+<IfModule mod_rewrite.c>
+	RewriteEngine on
+
+	RewriteCond %{REQUEST_URI} !^/index\.php
+	RewriteCond %{REQUEST_URI} !^/robots\.txt
+	RewriteCond %{REQUEST_URI} !^/favicon\.ico
+	RewriteRule (.*)           index.php [L]
+</IfModule>

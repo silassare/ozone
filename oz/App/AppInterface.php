@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -12,9 +12,10 @@
 
 	use OZONE\OZ\Exceptions\OZoneBaseException;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	interface AppInterface {
+	interface AppInterface
+	{
 		/**
 		 * Is called before the requested service is executed.
 		 *
@@ -29,5 +30,5 @@
 		 *
 		 * @return bool  Returns True for cancel error, False for log error and exit.
 		 */
-		public static function onError( OZoneBaseException $err );
+		public static function onError(OZoneBaseException $err);
 	}

@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,9 +10,10 @@
 
 	namespace OZONE\OZ\Core;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	final class OZoneClient {
+	final class OZoneClient
+	{
 		/**
 		 * this client info cache
 		 *
@@ -25,8 +26,9 @@
 		 *
 		 * @param string $clid The client id
 		 */
-		public function __construct( $clid ) {
-			$this->client_info = OZoneClientUtils::getInfoWith( $clid, 'clid' );
+		public function __construct($clid)
+		{
+			$this->client_info = OZoneClientUtils::getInfoWith($clid, 'clid');
 		}
 
 		/**
@@ -37,15 +39,15 @@
 		 *
 		 * @return null|\OZONE\OZ\Core\OZoneClient
 		 */
-		public static function getInstanceWith( $key_value, $key_type ) {
+		public static function getInstanceWith($key_value, $key_type)
+		{
+			$info = OZoneClientUtils::getInfoWith($key_value, $key_type);
 
-			$info = OZoneClientUtils::getInfoWith( $key_value, $key_type );
-
-			if ( empty( $info ) ) {
+			if (empty($info)) {
 				return null;
 			}
 
-			return new self( $info[ 'client_clid' ] );
+			return new self($info['client_clid']);
 		}
 
 		/**
@@ -53,8 +55,9 @@
 		 *
 		 * @return bool
 		 */
-		public function checkClient() {
-			return is_array( $this->client_info ) AND intval( $this->client_info[ 'client_valid' ] );
+		public function checkClient()
+		{
+			return is_array($this->client_info) AND intval($this->client_info['client_valid']);
 		}
 
 		/**
@@ -62,7 +65,8 @@
 		 *
 		 * @return int
 		 */
-		public function getSessionMaxLifeTime() {
+		public function getSessionMaxLifeTime()
+		{
 			return 86400;//1day
 		}
 
@@ -71,7 +75,8 @@
 		 *
 		 * @return array|null
 		 */
-		public function getClientInfo() {
+		public function getClientInfo()
+		{
 			return $this->client_info;
 		}
 
@@ -80,8 +85,9 @@
 		 *
 		 * @return string
 		 */
-		public function getClientUrl() {
-			return $this->client_info[ 'client_url' ];
+		public function getClientUrl()
+		{
+			return $this->client_info['client_url'];
 		}
 
 		/**
@@ -89,8 +95,9 @@
 		 *
 		 * @return bool
 		 */
-		public function isMultiUserSupported() {
-			return empty( $this->client_info[ 'client_userid' ] );
+		public function isMultiUserSupported()
+		{
+			return empty($this->client_info['client_userid']);
 		}
 
 		/**
@@ -103,18 +110,18 @@
 		 * @throws \OZONE\OZ\Exceptions\OZoneUnauthorizedActionException
 		 * @throws string
 		 */
-		public function logUser( $uid ) {
-
+		public function logUser($uid)
+		{
 			$client_infos = $this->getClientInfo();
 
-			$safe = ( $this->isMultiUserSupported() OR $client_infos[ 'client_userid' ] === $uid );
+			$safe = ($this->isMultiUserSupported() OR $client_infos['client_userid'] === $uid);
 
-			OZoneAssert::assertAuthorizeAction( $safe, null, $uid );
+			OZoneAssert::assertAuthorizeAction($safe, null, $uid);
 
-			$token = OZoneKeyGen::genAuthToken( $uid );
-			$sid = session_id();
+			$token = OZoneKeyGen::genAuthToken($uid);
+			$sid   = session_id();
 
-			$clid = $client_infos[ 'client_clid' ];
+			$clid = $client_infos['client_clid'];
 
 			$sql = "
 				INSERT INTO oz_clients_users (client_clid, client_userid, client_sid, client_token, client_last_check)
@@ -122,13 +129,14 @@
 				ON DUPLICATE KEY 
 				UPDATE client_sid =:sid , client_token =:token , client_last_check =:lcheck";
 
-			OZoneDb::getInstance()->execute( $sql, array(
-				'clid'   => $clid,
-				'uid'    => $uid,
-				'sid'    => $sid,
-				'token'  => $token,
-				'lcheck' => time()
-			) );
+			OZoneDb::getInstance()
+				   ->execute($sql, [
+					   'clid'   => $clid,
+					   'uid'    => $uid,
+					   'sid'    => $sid,
+					   'token'  => $token,
+					   'lcheck' => time()
+				   ]);
 
 			return $token;
 		}
@@ -138,19 +146,17 @@
 		 *
 		 * @param string|int $uid the user id
 		 */
-		public function removeUser( $uid ) {
-
+		public function removeUser($uid)
+		{
 			$client_infos = $this->getClientInfo();
-			$clid = $client_infos[ 'client_clid' ];
+			$clid         = $client_infos['client_clid'];
 
 			$sql = "
 				DELETE FROM oz_clients_users
 				WHERE oz_clients_users.client_clid =:clid AND oz_clients_users.client_userid =:uid";
 
-			OZoneDb::getInstance()->delete( $sql, array(
-				'clid' => $clid,
-				'uid'  => $uid
-			) );
+			OZoneDb::getInstance()
+				   ->delete($sql, ['clid' => $clid, 'uid' => $uid]);
 		}
 
 		/**
@@ -161,14 +167,14 @@
 		 *
 		 * @return bool
 		 */
-		public function hasUser( $uid, $token ) {
-
-			if ( empty( $uid ) OR !OZoneClientUtils::isTokenLike( $token ) ) {
+		public function hasUser($uid, $token)
+		{
+			if (empty($uid) OR !OZoneClientUtils::isTokenLike($token)) {
 				return false;
 			}
 
 			$client_infos = $this->getClientInfo();
-			$clid = $client_infos[ 'client_clid' ];
+			$clid         = $client_infos['client_clid'];
 
 			$sql = "SELECT oz_clients_users.client_userid
 				FROM oz_clients_users
@@ -176,11 +182,8 @@
 					AND oz_clients_users.client_userid =:uid
 					AND oz_clients_users.client_token =:token";
 
-			$req = OZoneDb::getInstance()->select( $sql, array(
-				'clid'  => $clid,
-				'uid'   => $uid,
-				'token' => $token
-			) );
+			$req = OZoneDb::getInstance()
+						  ->select($sql, ['clid' => $clid, 'uid' => $uid, 'token' => $token]);
 
 			$c = $req->rowCount();
 

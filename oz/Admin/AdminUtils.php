@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -12,9 +12,10 @@
 
 	use OZONE\OZ\Core\OZoneDb;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	final class AdminUtils {
+	final class AdminUtils
+	{
 
 		/**
 		 * Check if a given user id belong to an admin.
@@ -23,7 +24,8 @@
 		 *
 		 * @return bool
 		 */
-		public static function isAdmin( $uid ) {
+		public static function isAdmin($uid)
+		{
 			$sql = "
 				SELECT * FROM oz_users , oz_administrators 
 				WHERE oz_administrators.user_id =:uid 
@@ -32,9 +34,8 @@
 					AND oz_users.user_valid = 1
 				LIMIT 0,1";
 
-			$req = OZoneDb::getInstance()->select( $sql, array(
-				'uid' => $uid
-			) );
+			$req = OZoneDb::getInstance()
+						  ->select($sql, ['uid' => $uid]);
 
 			return $req->rowCount() > 0;
 		}

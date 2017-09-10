@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,12 +10,16 @@
 
 	namespace OZONE\OZ\Crypt;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	use OZONE\OZ\Core\OZoneKeyGen;
 
-	class DoCrypt implements DoCryptInterface {
+	defined('OZ_SELF_SECURITY_CHECK') or die;
+
+	class DoCrypt implements DoCryptInterface
+	{
 
 		/**
 		 * BCRYPT algorithm max input length is 72
+		 *
 		 * @var int
 		 */
 		const BCRYPT_MAX_INPUT_LENGTH = 72;
@@ -23,24 +27,39 @@
 		/**
 		 * DoCrypt constructor.
 		 */
-		public function __construct() {
+		public function __construct()
+		{
 		}
 
 		/**
 		 *{@inheritdoc}
 		 */
-		public function passHash( $pass ) {
-			if ( strlen( $pass ) > self::BCRYPT_MAX_INPUT_LENGTH ) {
-				throw new \InvalidArgumentException( 'your password length should not exceed ' . self::BCRYPT_MAX_INPUT_LENGTH );
-			}
-
-			return password_hash( $pass, PASSWORD_BCRYPT );
+		public function passHash($pass)
+		{
+			return password_hash(self::toShort($pass), PASSWORD_BCRYPT);
 		}
 
 		/**
 		 * {@inheritdoc}
 		 */
-		public function passCheck( $pass, $known_hash ) {
-			return password_verify( $pass, $known_hash );
+		public function passCheck($pass, $known_hash)
+		{
+			return password_verify(self::toShort($pass), $known_hash);
+		}
+
+		/**
+		 * shorten password to comply with BCRYPT algorithm max input length (72)
+		 *
+		 * @param string $pass the password
+		 *
+		 * @return string
+		 */
+		private static function toShort($pass)
+		{
+			if (strlen($pass) > self::BCRYPT_MAX_INPUT_LENGTH) {
+				$pass = OZoneKeyGen::hashIt($pass, 64);
+			}
+
+			return $pass;
 		}
 	}

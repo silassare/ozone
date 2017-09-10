@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,9 +10,10 @@
 
 	namespace OZONE\OZ\Crypt;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	interface DoCryptInterface {
+	interface DoCryptInterface
+	{
 
 		/**
 		 * get password hash
@@ -21,7 +22,7 @@
 		 *
 		 * @return string
 		 */
-		public function passHash( $pass );
+		public function passHash($pass);
 
 		/**
 		 * check password
@@ -31,11 +32,11 @@
 		 *
 		 * @return bool
 		 */
-		public function passCheck( $pass, $known_hash );
+		public function passCheck($pass, $known_hash);
 
-		//TODO
-		//public function encrypt ( $pass_phrase, $input );
-		//public function decrypt ( $pass_phrase, $input );
-		//public function encryptFile ( $pass_phrase, $file_path, $destination_path );
-		//public function decryptFile ( $pass_phrase, $file_path, $destination_path );
+		// TODO
+		// public function encrypt ( $pass_phrase, $input );
+		// public function decrypt ( $pass_phrase, $input );
+		// public function encryptFile ( $pass_phrase, $file_path, $destination_path );
+		// public function decryptFile ( $pass_phrase, $file_path, $destination_path );
 	}

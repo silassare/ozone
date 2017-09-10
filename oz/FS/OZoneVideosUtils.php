@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,9 +10,10 @@
 
 	namespace OZONE\OZ\FS;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	class OZoneVideosUtils {
+	class OZoneVideosUtils
+	{
 		/**
 		 * the video source file path
 		 *
@@ -32,7 +33,8 @@
 		 *
 		 * @param string $video_source_path the video file source path
 		 */
-		public function __construct( $video_source_path ) {
+		public function __construct($video_source_path)
+		{
 			$this->source_path = $video_source_path;
 		}
 
@@ -41,7 +43,8 @@
 		 *
 		 * @return bool
 		 */
-		public function load() {
+		public function load()
+		{
 			return $this->canLoadVideo();
 		}
 
@@ -52,28 +55,29 @@
 		 *
 		 * @return bool true if successful, false otherwise
 		 */
-		public function makeVideoThumb( $destination_path ) {
-			if ( file_exists( $destination_path ) ) {
-				unlink( $destination_path );
+		public function makeVideoThumb($destination_path)
+		{
+			if (file_exists($destination_path)) {
+				unlink($destination_path);
 			}
 
 			$ffmpeg = $this->ffmpeg;
-			$src = $this->source_path;
-			$sec = $this->getRandFrameSec();
+			$src    = $this->source_path;
+			$sec    = $this->getRandFrameSec();
 
-			//windows platform
-			//$cmd = "$ffmpeg -i $src -an -ss 00:00:$sec -r 1 -vframes 1 -f mjpeg -y $dest";
+			// windows platform
+			// $cmd = "$ffmpeg -i $src -an -ss 00:00:$sec -r 1 -vframes 1 -f mjpeg -y $dest";
 
-			//linux platform
-			//SILO::TODO make it run in background because php wait
-			//use this to run in background
-			//$cmd = "$ffmpeg -i $src -an -ss 00:00:$sec -r 1 -vframes 1 -f mjpeg -y $dest </dev/null >/dev/null 2>/dev/null &";
-			//we want a result now, so we do it now and wait until job end
+			// linux platform
+			// TODO make it run in background because php wait
+			// use this to run in background
+			// $cmd = "$ffmpeg -i $src -an -ss 00:00:$sec -r 1 -vframes 1 -f mjpeg -y $dest </dev/null >/dev/null 2>/dev/null &";
+			// we want a result now, so we do it now and wait until job end
 			$cmd = "$ffmpeg -i $src -an -ss 00:00:$sec -r 1 -vframes 1 -f mjpeg -y $destination_path";
 
-			$this->execute( $cmd );
+			$this->execute($cmd);
 
-			return file_exists( $destination_path );
+			return file_exists($destination_path);
 		}
 
 		/**
@@ -81,7 +85,8 @@
 		 *
 		 * @return string
 		 */
-		private function getRandFrameSec() {
+		private function getRandFrameSec()
+		{
 			return "02";
 		}
 
@@ -90,8 +95,9 @@
 		 *
 		 * @param string $cmd the command to execute
 		 */
-		private function execute( $cmd ) {
-			@shell_exec( $cmd );
+		private function execute($cmd)
+		{
+			@shell_exec($cmd);
 		}
 
 		/**
@@ -99,9 +105,10 @@
 		 *
 		 * @return bool
 		 */
-		public function canLoadVideo() {
+		public function canLoadVideo()
+		{
 			$src = $this->source_path;
 
-			return file_exists( $src ) AND is_file( $src ) AND is_readable( $src );
+			return file_exists($src) AND is_file($src) AND is_readable($src);
 		}
 	}

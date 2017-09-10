@@ -26,7 +26,8 @@
 	 *
 	 * @package Internal/Operations
 	 */
-	class WideImage_Operation_AsNegative {
+	class WideImage_Operation_AsNegative
+	{
 		/**
 		 * Returns a greyscale copy of an image
 		 *
@@ -34,24 +35,28 @@
 		 *
 		 * @return WideImage_Image
 		 */
-		function execute( $image ) {
-			$palette = !$image->isTrueColor();
+		function execute($image)
+		{
+			$palette     = !$image->isTrueColor();
 			$transparent = $image->isTransparent();
 
-			if ( $palette && $transparent )
-				$tcrgb = $image->getTransparentColorRGB();
+			if ($palette && $transparent) $tcrgb = $image->getTransparentColorRGB();
 
 			$new = $image->asTrueColor();
-			if ( !imagefilter( $new->getHandle(), IMG_FILTER_NEGATE ) )
-				throw new WideImage_GDFunctionResultException( "imagefilter() returned false" );
+			if (!imagefilter($new->getHandle(), IMG_FILTER_NEGATE)) throw new WideImage_GDFunctionResultException("imagefilter() returned false");
 
-			if ( $palette ) {
+			if ($palette) {
 				$new = $new->asPalette();
-				if ( $transparent ) {
-					$irgb = array( 'red' => 255 - $tcrgb[ 'red' ], 'green' => 255 - $tcrgb[ 'green' ], 'blue' => 255 - $tcrgb[ 'blue' ], 'alpha' => 127 );
+				if ($transparent) {
+					$irgb = [
+						'red'   => 255 - $tcrgb['red'],
+						'green' => 255 - $tcrgb['green'],
+						'blue'  => 255 - $tcrgb['blue'],
+						'alpha' => 127
+					];
 					// needs imagecolorexactalpha instead of imagecolorexact, otherwise doesn't work on some transparent GIF images
-					$new_tci = imagecolorexactalpha( $new->getHandle(), $irgb[ 'red' ], $irgb[ 'green' ], $irgb[ 'blue' ], 127 );
-					$new->setTransparentColor( $new_tci );
+					$new_tci = imagecolorexactalpha($new->getHandle(), $irgb['red'], $irgb['green'], $irgb['blue'], 127);
+					$new->setTransparentColor($new_tci);
 				}
 			}
 

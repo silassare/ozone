@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -16,19 +16,22 @@
 	use OZONE\OZ\Core\OZoneUri;
 	use OZONE\OZ\Exceptions\OZoneNotFoundException;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	/**
 	 * Class TokenUri
+	 *
 	 * @package OZONE\OZ\Authenticator\Services
 	 */
-	final class TokenUri extends OZoneService {
+	final class TokenUri extends OZoneService
+	{
 		private static $REG_TOKEN_URI = '#^([a-z0-9]{32})/([a-z0-9]{32})\.auth$#';
 
 		/**
 		 * ServiceTokenUri constructor.
 		 */
-		public function __construct() {
+		public function __construct()
+		{
 			parent::__construct();
 		}
 
@@ -37,14 +40,14 @@
 		 *
 		 * @throws \OZONE\OZ\Exceptions\OZoneNotFoundException
 		 */
-		public function execute( $request = array() ) {
-			$extra_ok = OZoneUri::parseUriExtra( self::$REG_TOKEN_URI, array( 'label', 'token' ), $request );
+		public function execute($request = [])
+		{
+			$extra_ok = OZoneUri::parseUriExtra(self::$REG_TOKEN_URI, ['label', 'token'], $request);
 
-			if ( !$extra_ok )
-				throw new OZoneNotFoundException();
+			if (!$extra_ok) throw new OZoneNotFoundException();
 
-			OZoneAssert::assertForm( $request, array( 'label', 'token' ), new OZoneNotFoundException() );
+			OZoneAssert::assertForm($request, ['label', 'token'], new OZoneNotFoundException());
 
-			( new TokenUriHelper() )->validate( $request[ 'label' ], $request[ 'token' ] );
+			(new TokenUriHelper())->validate($request['label'], $request['token']);
 		}
 	}

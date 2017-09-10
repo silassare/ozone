@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -8,8 +8,8 @@
 	 * file that was distributed with this source code.
 	 */
 
-	\OZONE\OZ\Core\OZoneSettings::set( 'oz.map.ext.to.mime', array(
-		//CUSTOM OZONE FILE ALIAS
+	return [
+		// CUSTOM OZONE FILE ALIAS
 		'ofa' => 'text/x-ozone-file-alias',
 
 		'3dml'      => 'text/vnd.in3d.3dml',
@@ -998,4 +998,4 @@
 		'zirz'      => 'application/vnd.zul',
 		'zmm'       => 'application/vnd.handheld-entertainment+xml',
 		'123'       => 'application/vnd.lotus-1-2-3'
-	) );
+	];

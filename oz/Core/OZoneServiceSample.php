@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,11 +10,13 @@
 
 	namespace OZONE\OZ\Core;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	class OZoneServiceSample extends OZoneService {
+	class OZoneServiceSample extends OZoneService
+	{
 
-		public function execute( $request = array() ) {
-			self::$resp->setDone( "OZ_SAMPLE_SERVICE_HELLO" );
+		public function execute($request = [])
+		{
+			self::$resp->setDone("OZ_SAMPLE_SERVICE_HELLO");
 		}
 	}

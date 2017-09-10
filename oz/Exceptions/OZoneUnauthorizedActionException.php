@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,11 +10,10 @@
 
 	namespace OZONE\OZ\Exceptions;
 
-	use OZONE\OZ\Core\OZoneRequest;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
-
-	class OZoneUnauthorizedActionException extends OZoneBaseException {
+	class OZoneUnauthorizedActionException extends OZoneBaseException
+	{
 
 		/**
 		 * OZoneUnauthorizedActionException constructor.
@@ -22,21 +21,16 @@
 		 * @param string     $message the exception message
 		 * @param array|null $data    additional exception data
 		 */
-		public function __construct( $message = 'OZ_ERROR_NOT_ALLOWED', array $data = null ) {
-			parent::__construct( $message, OZoneBaseException::UNAUTHORIZED_ACTION, $data );
+		public function __construct($message = 'OZ_ERROR_NOT_ALLOWED', array $data = null)
+		{
+			parent::__construct($message, OZoneBaseException::UNAUTHORIZED_ACTION, $data);
 		}
 
 		/**
 		 * {@inheritdoc}
 		 */
-		public function procedure() {
-			if ( OZoneRequest::isPost() ) {
-				$this->showJson();
-			} else {
-				//SILO::TODO force un retour a la page precedente
-				//et affiche un message d'erreur
-				//ou si grave ce qui suit
-				$this->showCustomErrorPage();
-			}
+		public function procedure()
+		{
+			$this->informClient();
 		}
 	}

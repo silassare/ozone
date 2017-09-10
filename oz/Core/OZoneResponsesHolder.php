@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,9 +10,10 @@
 
 	namespace OZONE\OZ\Core;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	final class OZoneResponsesHolder {
+	final class OZoneResponsesHolder
+	{
 
 		/**
 		 * @var int    ozone done response code
@@ -27,7 +28,7 @@
 		/**
 		 * @var array    map label to responses
 		 */
-		private static $responses = array();
+		private static $responses = [];
 
 		/**
 		 * @var string    response label
@@ -39,9 +40,10 @@
 		 *
 		 * @param string $label the response label
 		 */
-		public function __construct( $label ) {
-			$this->label = $label;
-			self::$responses[ $this->label ] = array( 'error' => self::RESPONSE_CODE_DONE );
+		public function __construct($label)
+		{
+			$this->label                   = $label;
+			self::$responses[$this->label] = ['error' => self::RESPONSE_CODE_DONE];
 		}
 
 		/**
@@ -51,8 +53,9 @@
 		 *
 		 * @return \OZONE\OZ\Core\OZoneResponsesHolder
 		 */
-		public static function getInstance( $label ) {
-			return new self( $label );
+		public static function getInstance($label)
+		{
+			return new self($label);
 		}
 
 		/**
@@ -61,9 +64,10 @@
 		 *
 		 * @return $this
 		 */
-		private function setMessage( $msg, $code ) {
-			return $this->setKey( 'error', $code )
-				->setKey( 'msg', $msg );
+		private function setMessage($msg, $code)
+		{
+			return $this->setKey('error', $code)
+						->setKey('msg', $msg);
 		}
 
 		/**
@@ -73,8 +77,9 @@
 		 *
 		 * @return \OZONE\OZ\Core\OZoneResponsesHolder
 		 */
-		public function setError( $msg = 'OZ_ERROR_INTERNAL' ) {
-			return $this->setMessage( $msg, self::RESPONSE_CODE_ERROR );
+		public function setError($msg = 'OZ_ERROR_INTERNAL')
+		{
+			return $this->setMessage($msg, self::RESPONSE_CODE_ERROR);
 		}
 
 		/**
@@ -84,8 +89,9 @@
 		 *
 		 * @return \OZONE\OZ\Core\OZoneResponsesHolder
 		 */
-		public function setDone( $msg = 'OK' ) {
-			return $this->setMessage( $msg, self::RESPONSE_CODE_DONE );
+		public function setDone($msg = 'OK')
+		{
+			return $this->setMessage($msg, self::RESPONSE_CODE_DONE);
 		}
 
 		/**
@@ -95,8 +101,9 @@
 		 *
 		 * @return \OZONE\OZ\Core\OZoneResponsesHolder
 		 */
-		public function setData( $data ) {
-			return $this->setKey( 'data', $data );
+		public function setData($data)
+		{
+			return $this->setKey('data', $data);
 		}
 
 		/**
@@ -107,9 +114,10 @@
 		 *
 		 * @return $this
 		 */
-		public function setKey( $key, $value ) {
-			if ( !empty( $key ) ) {
-				self::$responses[ $this->label ][ $key ] = $value;
+		public function setKey($key, $value)
+		{
+			if (!empty($key)) {
+				self::$responses[$this->label][$key] = $value;
 			}
 
 			return $this;
@@ -120,8 +128,9 @@
 		 *
 		 * @return array
 		 */
-		public function getResponse() {
-			return self::$responses[ $this->label ];
+		public function getResponse()
+		{
+			return self::$responses[$this->label];
 		}
 
 		/**
@@ -131,10 +140,11 @@
 		 *
 		 * @return array|null
 		 */
-		public static function getResponses( $label = null ) {
-			if ( !empty( $label ) ) {
-				if ( array_key_exists( $label, self::$responses ) ) {
-					return self::$responses[ $label ];
+		public static function getResponses($label = null)
+		{
+			if (!empty($label)) {
+				if (array_key_exists($label, self::$responses)) {
+					return self::$responses[$label];
 				} else {
 					return null;
 				}

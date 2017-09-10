@@ -26,13 +26,14 @@
 	 *
 	 * @package Internal/Operations
 	 */
-	class WideImage_Operation_ApplyFilter {
+	class WideImage_Operation_ApplyFilter
+	{
 		/**
 		 * A list of filters that only accept one arguments for imagefilter()
 		 *
 		 * @var array
 		 */
-		static protected $one_arg_filters = array( IMG_FILTER_SMOOTH, IMG_FILTER_CONTRAST, IMG_FILTER_BRIGHTNESS );
+		static protected $one_arg_filters = [IMG_FILTER_SMOOTH, IMG_FILTER_CONTRAST, IMG_FILTER_BRIGHTNESS];
 
 		/**
 		 * Executes imagefilter
@@ -45,20 +46,16 @@
 		 *
 		 * @return WideImage_TrueColorImage
 		 */
-		function execute( $image, $filter, $arg1 = null, $arg2 = null, $arg3 = null, $arg4 = null ) {
+		function execute($image, $filter, $arg1 = null, $arg2 = null, $arg3 = null, $arg4 = null)
+		{
 			$new = $image->asTrueColor();
 
-			if ( in_array( $filter, self::$one_arg_filters ) )
-				$res = imagefilter( $new->getHandle(), $filter, $arg1 );
-			elseif ( defined( 'IMG_FILTER_PIXELATE' ) && $filter == IMG_FILTER_PIXELATE )
-				$res = imagefilter( $new->getHandle(), $filter, $arg1, $arg2 );
-			elseif ( $filter == IMG_FILTER_COLORIZE )
-				$res = imagefilter( $new->getHandle(), $filter, $arg1, $arg2, $arg3, $arg4 );
+			if (in_array($filter, self::$one_arg_filters)) $res = imagefilter($new->getHandle(), $filter, $arg1); elseif (defined('IMG_FILTER_PIXELATE') && $filter == IMG_FILTER_PIXELATE) $res = imagefilter($new->getHandle(), $filter, $arg1, $arg2);
+			elseif ($filter == IMG_FILTER_COLORIZE) $res = imagefilter($new->getHandle(), $filter, $arg1, $arg2, $arg3, $arg4);
 			else
-				$res = imagefilter( $new->getHandle(), $filter );
+				$res = imagefilter($new->getHandle(), $filter);
 
-			if ( !$res )
-				throw new WideImage_GDFunctionResultException( "imagefilter() returned false" );
+			if (!$res) throw new WideImage_GDFunctionResultException("imagefilter() returned false");
 
 			return $new;
 		}

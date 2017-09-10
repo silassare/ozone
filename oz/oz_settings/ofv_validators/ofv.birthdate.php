@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -12,40 +12,27 @@
 
 	use OZONE\OZ\Core\OZoneSettings;
 
-	function ofv_birthdate( OFormValidator $ofv ) {
-		$bdate = $ofv->getField( 'bdate' );
-		$safe = !empty( $bdate );
-		//standard
-		$DATE_REG_A = '#^(\d{4})[\-\/](\d{1,2})[\-\/](\d{1,2})$#';
-		//when browser threat date field as text field (in firefox)
-		$DATE_REG_B = '#^(\d{1,2})[\-\/](\d{1,2})[\-\/](\d{4})$#';
+	function ofv_birthdate(OFormValidator $ofv)
+	{
+		$bdate = $ofv->getField('bdate');
+		$date  = OFormUtils::parseDate($bdate);
 
-		$year = $month = $day = "";
+		// on verifie que la date de naissance est valide
+		if ($date) {
+			$year  = $date['year'];
+			$month = $date['month'];
+			$day   = $date['day'];
 
-		$in_a = array();
-		$in_b = array();
+			$min_age = OZoneSettings::get('oz.ofv.const', 'OZ_USER_MIN_AGE');
+			$max_age = OZoneSettings::get('oz.ofv.const', 'OZ_USER_MAX_AGE');
 
-		if ( $safe && preg_match( $DATE_REG_A, $bdate, $in_a ) ) {
+			if (OFormUtils::isBirthDate($month, $day, $year, $min_age, $max_age)) {
+				$ofv->setField('bdate', $day . '-' . $month . '-' . $year);
 
-			$year = intval( $in_a[ 1 ] );
-			$month = intval( $in_a[ 2 ] );
-			$day = intval( $in_a[ 3 ] );
-
-		} elseif ( $safe && preg_match( $DATE_REG_B, $bdate, $in_b ) ) {
-
-			$year = intval( $in_b[ 3 ] );
-			$month = intval( $in_b[ 2 ] );
-			$day = intval( $in_b[ 1 ] );
-
-		} else {
-			$safe = false;
+				return;
+			}
 		}
 
-		//on verifie que la date de naissance est valide
-		if ( $safe AND OFormUtils::isBirthDate( $month, $day, $year, OZoneSettings::get( 'oz.ofv.const', 'OZ_USER_MIN_AGE' ), OZoneSettings::get( 'oz.ofv.const', 'OZ_USER_MAX_AGE' ) ) ) {
-			$ofv->setField( 'bdate', $day . '-' . $month . '-' . $year );
-		} else {
-			//la date de naissance n'est pas valide
-			$ofv->addError( 'OZ_FIELD_BIRTHDATE_INVALID' );
-		}
+		// la date de naissance n'est pas valide
+		$ofv->addError('OZ_FIELD_BIRTHDATE_INVALID');
 	}

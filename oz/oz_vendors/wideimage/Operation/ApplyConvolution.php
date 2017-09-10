@@ -26,7 +26,8 @@
 	 *
 	 * @package Internal/Operations
 	 */
-	class WideImage_Operation_ApplyConvolution {
+	class WideImage_Operation_ApplyConvolution
+	{
 		/**
 		 * Executes imageconvolution() filter
 		 *
@@ -37,10 +38,10 @@
 		 *
 		 * @return WideImage_Image
 		 */
-		function execute( $image, $matrix, $div, $offset ) {
+		function execute($image, $matrix, $div, $offset)
+		{
 			$new = $image->asTrueColor();
-			if ( !imageconvolution( $new->getHandle(), $matrix, $div, $offset ) )
-				throw new WideImage_GDFunctionResultException( "imageconvolution() returned false" );
+			if (!imageconvolution($new->getHandle(), $matrix, $div, $offset)) throw new WideImage_GDFunctionResultException("imageconvolution() returned false");
 
 			return $new;
 		}

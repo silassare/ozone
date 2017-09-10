@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,34 +10,42 @@
 
 	namespace OZONE\OZ\Authenticator;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	/**
 	 * Class TokenUriHelper
+	 *
 	 * @package OZONE\OZ\Authenticator
 	 */
-	final class TokenUriHelper {
+	final class TokenUriHelper implements AuthenticatorHelper
+	{
 
-		public function __construct() {
+		private $auth = null;
+
+		/**
+		 * TokenUriHelper constructor.
+		 *
+		 * @param \OZONE\OZ\Authenticator\Authenticator $auth
+		 */
+		public function __construct(Authenticator $auth)
+		{
+			$this->auth = $auth;
 		}
 
 		/**
-		 * get authenticator token uri for a given authenticator
+		 * get token url for authentication
 		 *
-		 * @param \OZONE\OZ\Authenticator\Authenticator $auth the authenticator to use
-		 *
-		 * @return string
+		 * @return array the token url info
 		 */
-		public static function getUri( Authenticator $auth ) {
-			$generated = $auth->getGenerated();
-			$label = $auth->getLabel();
-			$token = $generated[ 'token' ];
-			$uri = "$label/$token.auth";
+		public function getTokenUrl()
+		{
+			$auth      = $this->auth;
+			$generated = $auth->generate()
+							  ->getGenerated();
+			$label     = $auth->getLabel();
+			$token     = $generated['token'];
+			$uri       = "$label/$token.auth";
 
-			return $uri;
-		}
-
-		public function validate( $label, $token ) {
-
+			return ['tokenUrl' => $uri];
 		}
 	}

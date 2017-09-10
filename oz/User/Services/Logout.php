@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -13,26 +13,30 @@
 	use OZONE\OZ\Core\OZoneService;
 	use OZONE\OZ\User\OZoneUserUtils;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	/**
 	 * Class Logout
+	 *
 	 * @package OZONE\OZ\User\Services
 	 */
-	final class Logout extends OZoneService {
+	final class Logout extends OZoneService
+	{
 
 		/**
 		 * Logout constructor.
 		 */
-		public function __construct() {
+		public function __construct()
+		{
 			parent::__construct();
 		}
 
 		/**
 		 * {@inheritdoc}
 		 */
-		public function execute( $request = array() ) {
+		public function execute($request = [])
+		{
 			OZoneUserUtils::logOut();
-			self::$resp->setDone( 'OZ_USER_LOGOUT' );
+			self::$resp->setDone('OZ_USER_LOGOUT');
 		}
 	}

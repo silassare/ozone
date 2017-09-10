@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -12,43 +12,44 @@
 
 	use OZONE\OZ\OZone;
 	use OZONE\OZ\Core\OZoneResponsesHolder;
+	use OZONE\OZ\Core\OZoneRequest;
+	use OZONE\OZ\WebRoute\WebRoute;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	abstract class OZoneBaseException extends \Exception {
+	abstract class OZoneBaseException extends \Exception
+	{
 
-		const BAD_REQUEST = 400;
-		const FORBIDDEN = 403;
-		const NOT_FOUND = 404;
+		const BAD_REQUEST    = 400;
+		const FORBIDDEN      = 403;
+		const NOT_FOUND      = 404;
 		const INTERNAL_ERROR = 500;
 
 		const UNKNOWN_ERROR = 520;
 
-		//ozone custom error codes
-		const UNVERIFIED_USER = 1;
+		// ozone custom error codes
+		const UNVERIFIED_USER     = 1;
 		const UNAUTHORIZED_ACTION = 2;
-		const INVALID_FORM = 3;
+		const INVALID_FORM        = 3;
 
-		private static $ERROR_HEADER_MAP = array(
-			//SILO:: si on doit forcement montrer une custom page alors c'est que user n'a pas les droits requis
-			1   => 'HTTP/1.1 403 Forbidden',
-			2   => 'HTTP/1.1 403 Forbidden',
+		private static $ERROR_HEADER_MAP = [
+			1 => 'HTTP/1.1 403 Forbidden',
+			2 => 'HTTP/1.1 403 Forbidden',
+			// un formulaire invalide est le produit d'une mauvaise requete
+			3 => 'HTTP/1.1 400 Bad Request',
 
-			//SILO:: un formulaire invalide est conduit a une mauvaise requete lorsque nous ne redirigeons pas vers le formulaire
-			//cas oû on n'a pas de formulaire ou que se soit juste une detection de paramettres invalides/manquantes d'un lien
-			3   => 'HTTP/1.1 400 Bad Request',
-
-			//SILO:: affichage normale et naturelle
-			//SILO::TODO sois un peu comique tout utilisateur est important et ne doit pas être fustree d'avantage
-			//TROP DE POISSONS NE GATTENT PAS LA SAUCE DIT-ON :)
 			400 => 'HTTP/1.1 400 Bad Request',
 			403 => 'HTTP/1.1 403 Forbidden',
 			404 => 'HTTP/1.1 404 Not Found',
 			500 => 'HTTP/1.1 500 Internal Server Error',
-
-			//SILO:: default error str same as the CloudFlare's Unknown Error
+			// default error same as the CloudFlare's Unknown Error
 			520 => 'HTTP/1.1 520 Unknown Error'
-		);
+		];
+
+		/**
+		 * @var bool
+		 */
+		protected static $just_die = false;
 
 		/**
 		 * @var array
@@ -67,20 +68,22 @@
 		 * @param int        $code    the exception code
 		 * @param array|null $data    additional error data
 		 */
-		public function __construct( $message, $code, array $data = null ) {
-
-			parent::__construct( $message, $code );
+		public function __construct($message, $code, array $data = null)
+		{
+			parent::__construct($message, $code);
 
 			$this->data = $data;
 
-			self::$resp = new OZoneResponsesHolder( get_class( $this ) );
+			self::$resp = new OZoneResponsesHolder(get_class($this));
 		}
 
 		/**
 		 * get exception data
+		 *
 		 * @return array
 		 */
-		public function getData() {
+		public function getData()
+		{
 			return $this->data;
 		}
 
@@ -89,55 +92,87 @@
 		 *
 		 * @return string
 		 */
-		private function getHeaderString() {
-			$code = $this->getCode();;
+		public function getHeaderString()
+		{
+			$code = $this->getCode();
 
-			if ( array_key_exists( $code, self::$ERROR_HEADER_MAP ) ) {
-				return self::$ERROR_HEADER_MAP[ $code ];
+			if (isset(self::$ERROR_HEADER_MAP[$code])) {
+				return self::$ERROR_HEADER_MAP[$code];
 			}
 
-			return self::$ERROR_HEADER_MAP[ OZoneBaseException::UNKNOWN_ERROR ];
+			return self::$ERROR_HEADER_MAP[OZoneBaseException::UNKNOWN_ERROR];
+		}
+
+		/**
+		 * show exception according to accept header name or request type
+		 */
+		protected function informClient()
+		{
+			// We must avoid any other error, if there is one after this,
+			// then we are in a critical situation: "Error handling error"
+
+			// clear the output buffer, "Dirty linen should be washed as a family."
+			// loop until we get the top buffer level
+			while (ob_get_level()) @ob_end_clean();
+
+			if (self::$just_die === true) {
+				$err_msg = 'OZone: An "Error handling error" occurs. If you are an admin please look in log file and fix it!';
+
+				if (OZ_OZONE_IS_CLI) die(PHP_EOL . $err_msg . PHP_EOL);
+
+				if (!headers_sent()) header(self::$ERROR_HEADER_MAP[OZoneBaseException::INTERNAL_ERROR]);
+
+				die('<!DOCTYPE html>
+					<html>
+					<head>
+					<title>OZone Error!</title>
+					<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+					<style>
+						body{
+							margin: 0;
+							font-family: Tahoma, Verdana, Arial, sans-serif;
+						}
+						div.oz-error{
+							margin: 50px auto;
+							width: 80%;
+							padding: 10px 20px;
+							border-left: 3px solid #ff0000;
+							background-color: whitesmoke;
+						}
+					</style>
+					</head>
+					<body>
+					<div class="oz-error">
+						<p>' . $err_msg . '</p>
+					</div>
+					</body>
+					</html>');
+			}
+
+			// Any other error or exception should not be tolerated
+			self::$just_die = true;
+
+			if (OZ_OZONE_IS_CLI) {
+				die(PHP_EOL . $this->getMessage() . PHP_EOL);
+			} elseif (isset($_SERVER['HTTP_ACCEPT']) AND is_int(strpos($_SERVER['HTTP_ACCEPT'], 'application/json'))) {
+				$this->showJson();
+			} elseif (!defined('OZ_OZONE_IS_WWW') AND OZoneRequest::isPost()) {
+				$this->showJson();
+			} else {
+				WebRoute::showCustomErrorPage($this);
+			}
 		}
 
 		/**
 		 * show exception as json file
 		 */
-		protected function showJson() {
+		protected function showJson()
+		{
+			self::$resp->setError($this->getMessage())
+					   ->setData($this->getData());
 
-			self::$resp
-				->setError( $this->getMessage() )
-				->setData( $this->getData() );
-
-			OZone::sayJson( self::$resp->getResponse() );
+			OZone::sayJson(self::$resp->getResponse());
 			exit;
-		}
-
-		/**
-		 * show exception in a custom error page
-		 */
-		protected function showCustomErrorPage() {
-			$back_url = OZ_APP_MAIN_URL; //SILO::TODO find last url or go home
-			$http_response_header = $this->getHeaderString();
-			$err_title = str_replace( 'HTTP/1.1 ', '', $http_response_header );
-			$err_msg = $this->getMessage();//SILO::TODO translate/replace err_msg with phrases
-			$err_data = $this->getData();//<-- utile pour la traduction
-
-			$url = OZ_APP_TEMPLATES_DIR . 'error.otpl';
-
-			$tpl_data = array(
-				'oz_error_title'    => $err_title,
-				'oz_error_desc'     => $err_msg,
-				'oz_error_data'     => $err_data,
-				'oz_error_url'      => $_SERVER[ 'REQUEST_URI' ],
-				'oz_error_back_url' => $back_url
-			);
-
-			$o = new \OTpl();
-
-			header( $http_response_header );
-			$o->parse( $url )
-				->runWith( $tpl_data );
-			exit;//<--- exit
 		}
 
 		/**
@@ -145,15 +180,10 @@
 		 *
 		 * @return string
 		 */
-		public function __toString() {
-			$e_data = json_encode( $this->getData() );
-			$e_msg = ''
-				. "\n\tFile    : {$this->getFile()}"
-				. "\n\tLine    : {$this->getLine()}"
-				. "\n\tCode    : {$this->getCode()}"
-				. "\n\tMessage : {$this->getMessage()}"
-				. "\n\tData    : $e_data"
-				. "\n\tTrace   : {$this->getTraceAsString()}";
+		public function __toString()
+		{
+			$e_data = json_encode($this->getData());
+			$e_msg  = '' . "\n\tFile    : {$this->getFile()}" . "\n\tLine    : {$this->getLine()}" . "\n\tCode    : {$this->getCode()}" . "\n\tMessage : {$this->getMessage()}" . "\n\tData    : $e_data" . "\n\tTrace   : {$this->getTraceAsString()}";
 
 			return $e_msg;
 		}

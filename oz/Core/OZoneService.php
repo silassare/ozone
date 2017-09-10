@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Silas E. Sare <emile.silas@gmail.com>
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
 	 * This file is part of the OZone package.
 	 *
@@ -10,16 +10,18 @@
 
 	namespace OZONE\OZ\Core;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	abstract class OZoneService {
+	abstract class OZoneService
+	{
 		protected static $resp;
 
 		/**
 		 * OZoneService constructor.
 		 */
-		public function __construct() {
-			self::$resp = new OZoneResponsesHolder( $this->getServiceName() );
+		public function __construct()
+		{
+			self::$resp = new OZoneResponsesHolder($this->getServiceName());
 		}
 
 		/**
@@ -29,15 +31,16 @@
 		 *
 		 * @return void
 		 */
-		abstract public function execute( $request = array() );
+		abstract public function execute($request = []);
 
 		/**
 		 * get the service name
 		 *
 		 * @return string
 		 */
-		public function getServiceName() {
-			return get_class( $this );
+		public function getServiceName()
+		{
+			return get_class($this);
 		}
 
 		/**
@@ -46,7 +49,8 @@
 		 * @return mixed
 		 */
 
-		public function getServiceResponse() {
+		public function getServiceResponse()
+		{
 			return self::$resp->getResponse();
 		}
 	}

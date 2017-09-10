@@ -26,7 +26,8 @@
 	 *
 	 * @package Internal/Operations
 	 */
-	class WideImage_Operation_CorrectGamma {
+	class WideImage_Operation_CorrectGamma
+	{
 		/**
 		 * Executes imagegammacorrect()
 		 *
@@ -36,10 +37,10 @@
 		 *
 		 * @return WideImage_TrueColorImage
 		 */
-		function execute( $image, $input_gamma, $output_gamma ) {
+		function execute($image, $input_gamma, $output_gamma)
+		{
 			$new = $image->copy();
-			if ( !imagegammacorrect( $new->getHandle(), $input_gamma, $output_gamma ) )
-				throw new WideImage_GDFunctionResultException( "imagegammacorrect() returned false" );
+			if (!imagegammacorrect($new->getHandle(), $input_gamma, $output_gamma)) throw new WideImage_GDFunctionResultException("imagegammacorrect() returned false");
 
 			return $new;
 		}
