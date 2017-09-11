@@ -237,4 +237,30 @@
 
 			closedir($res);
 		}
+
+		/**
+		 * check if a given directory is empty
+		 *
+		 * @param string $dir the directory path
+		 *
+		 * @return bool|null
+		 */
+		public static function isEmptyDir($dir)
+		{
+			if (!is_readable($dir)) return null;
+
+			$handle = opendir($dir);
+			$yes    = true;
+
+			while (false !== ($entry = readdir($handle))) {
+				if ($entry !== '.' && $entry !== '..') {
+					$yes = false;
+					break;
+				}
+			}
+
+			closedir($handle);
+
+			return $yes;
+		}
 	}
