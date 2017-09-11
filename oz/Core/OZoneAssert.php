@@ -12,7 +12,6 @@
 
 	use OZONE\OZ\Admin\AdminUtils;
 	use OZONE\OZ\Exceptions\OZoneBadRequestException;
-	use OZONE\OZ\Exceptions\OZoneBaseException;
 	use OZONE\OZ\Exceptions\OZoneInvalidFormException;
 	use OZONE\OZ\Exceptions\OZoneUnauthorizedActionException;
 	use OZONE\OZ\Exceptions\OZoneUnverifiedUserException;
@@ -27,11 +26,10 @@
 		/**
 		 * assert if the request method is authorized
 		 *
-		 * @param array                          $required_methods the required methods
-		 * @param OZoneBaseException|string|null $msg              the error message
-		 * @param mixed                          $data             the error data
+		 * @param array                  $required_methods the required methods
+		 * @param \Exception|string|null $msg              the error message
+		 * @param mixed                  $data             the error data
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneBaseException
 		 * @throws \OZONE\OZ\Exceptions\OZoneBadRequestException
 		 * @throws string
 		 */
@@ -64,7 +62,7 @@
 			}
 
 			if ($ok === false) {
-				if (!($msg instanceof OZoneBaseException)) {
+				if (!self::isException($msg)) {
 					$msg = new OZoneBadRequestException($msg, $data);
 				}
 
@@ -75,17 +73,16 @@
 		/**
 		 * assert if the current user is verified
 		 *
-		 * @param OZoneBaseException|string|null $msg  the error message
-		 * @param mixed                          $data the error data
+		 * @param \Exception|string|null $msg  the error message
+		 * @param mixed                  $data the error data
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneBaseException
 		 * @throws \OZONE\OZ\Exceptions\OZoneUnverifiedUserException
 		 * @throws string
 		 */
 		public static function assertUserVerified($msg = 'OZ_ERROR_YOU_MUST_LOGIN', $data = null)
 		{
 			if (!OZoneUserUtils::userVerified()) {
-				if (!($msg instanceof OZoneBaseException)) {
+				if (!self::isException($msg)) {
 					$msg = new OZoneUnverifiedUserException($msg, $data);
 				}
 
@@ -96,17 +93,16 @@
 		/**
 		 * assert if the current user is a verified admin
 		 *
-		 * @param OZoneBaseException|string|null $msg  the error message
-		 * @param mixed                          $data the error data
+		 * @param \Exception|string|null $msg  the error message
+		 * @param mixed                  $data the error data
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneBaseException
 		 * @throws \OZONE\OZ\Exceptions\OZoneUnverifiedUserException
 		 * @throws string
 		 */
 		public static function assertIsAdmin($msg = 'OZ_YOU_ARE_NOT_ADMIN', $data = null)
 		{
 			if (!OZoneUserUtils::userVerified() OR !AdminUtils::isAdmin(OZoneSessions::get('ozone_user:data:user_id'))) {
-				if (!($msg instanceof OZoneBaseException)) {
+				if (!self::isException($msg)) {
 					$msg = new OZoneUnverifiedUserException($msg, $data);
 				}
 
@@ -117,18 +113,17 @@
 		/**
 		 * assert if the result of a given expression is evaluated to true
 		 *
-		 * @param mixed                          $expression the expression
-		 * @param OZoneBaseException|string|null $msg        the error message
-		 * @param mixed                          $data       the error data
+		 * @param mixed                  $expression the expression
+		 * @param \Exception|string|null $msg        the error message
+		 * @param mixed                  $data       the error data
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneBaseException
 		 * @throws \OZONE\OZ\Exceptions\OZoneUnauthorizedActionException
 		 * @throws string
 		 */
 		public static function assertAuthorizeAction($expression, $msg = 'OZ_ERROR_NOT_ALLOWED', $data = null)
 		{
 			if (!$expression) {
-				if (!($msg instanceof OZoneBaseException)) {
+				if (!self::isException($msg)) {
 					$msg = new OZoneUnauthorizedActionException($msg, $data);
 				}
 
@@ -141,22 +136,21 @@
 		 *
 		 * @param mixed $result the result
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneBaseException
+		 * @throws \Exception
 		 */
 		public static function assertOperationSuccess($result)
 		{
-			if ($result instanceof OZoneBaseException) throw $result;
+			if (self::isException($result)) throw $result;
 		}
 
 		/**
 		 * assert if a given form contains has all required fields
 		 *
-		 * @param mixed  $form            the form to be checked
-		 * @param array  $required_fields the required fields
-		 * @param string $msg             the error message
-		 * @param mixed  $data            the error data
+		 * @param mixed                  $form            the form to be checked
+		 * @param array                  $required_fields the required fields
+		 * @param \Exception|string|null $msg             the error message
+		 * @param mixed                  $data            the error data
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneBaseException
 		 * @throws \OZONE\OZ\Exceptions\OZoneInvalidFormException
 		 * @throws string
 		 */
@@ -169,11 +163,23 @@
 			}
 
 			if (!$safe) {
-				if (!($msg instanceof OZoneBaseException)) {
+				if (!self::isException($msg)) {
 					$msg = new OZoneInvalidFormException($msg, $data);
 				}
 
 				throw $msg;
 			}
+		}
+
+		/**
+		 * check for exception
+		 *
+		 * @param mixed $e
+		 *
+		 * @return bool
+		 */
+		private static function isException($e)
+		{
+			return ($e instanceof \Exception);
 		}
 	}
