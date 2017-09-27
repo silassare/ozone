@@ -20,27 +20,29 @@
 	abstract class OZoneBaseException extends \Exception
 	{
 
-		const BAD_REQUEST    = 400;
-		const FORBIDDEN      = 403;
-		const NOT_FOUND      = 404;
-		const INTERNAL_ERROR = 500;
-
-		const UNKNOWN_ERROR = 520;
+		const BAD_REQUEST        = 400;
+		const FORBIDDEN          = 403;
+		const NOT_FOUND          = 404;
+		const METHOD_NOT_ALLOWED = 405;
+		const INTERNAL_ERROR     = 500;
+		const UNKNOWN_ERROR      = 520;
 
 		// ozone custom error codes
 		const UNVERIFIED_USER     = 1;
 		const UNAUTHORIZED_ACTION = 2;
 		const INVALID_FORM        = 3;
+		const INVALID_FIELD       = 4;
 
 		private static $ERROR_HEADER_MAP = [
 			1 => 'HTTP/1.1 403 Forbidden',
 			2 => 'HTTP/1.1 403 Forbidden',
-			// un formulaire invalide est le produit d'une mauvaise requete
 			3 => 'HTTP/1.1 400 Bad Request',
+			4 => 'HTTP/1.1 400 Bad Request',
 
 			400 => 'HTTP/1.1 400 Bad Request',
 			403 => 'HTTP/1.1 403 Forbidden',
 			404 => 'HTTP/1.1 404 Not Found',
+			405 => 'HTTP/1.1 405 Method Not Allowed',
 			500 => 'HTTP/1.1 500 Internal Server Error',
 			// default error same as the CloudFlare's Unknown Error
 			520 => 'HTTP/1.1 520 Unknown Error'

@@ -12,22 +12,18 @@
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	/**
-	 * use this exception when a field is mixing in
-	 * a form or the form is somehow invalid
-	 */
-	class OZoneInvalidFormException extends OZoneBaseException
+	class OZoneMethodNotAllowedException extends OZoneBaseException
 	{
 
 		/**
-		 * OZoneInvalidFormException constructor.
+		 * OZoneMethodNotAllowedException constructor.
 		 *
 		 * @param string     $message the exception message
 		 * @param array|null $data    additional exception data
 		 */
-		public function __construct($message = 'OZ_ERROR_INVALID_FORM', array $data = null)
+		public function __construct($message = 'OZ_ERROR_METHOD_NOT_ALLOWED', array $data = null)
 		{
-			parent::__construct($message, OZoneBaseException::INVALID_FORM, $data);
+			parent::__construct($message, OZoneBaseException::METHOD_NOT_ALLOWED, $data);
 		}
 
 		/**
