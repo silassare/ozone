@@ -56,7 +56,7 @@
 					. $text
 					. "\n================================================================================\n";
 
-			$f = fopen(OZ_APP_DIR . 'debug.log', 'a+');
+			$f = fopen(OZ_LOG_DIR . 'debug.log', 'a+');
 			fwrite($f, $text);
 			fclose($f);
 		}
