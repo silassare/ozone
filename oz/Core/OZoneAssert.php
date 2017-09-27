@@ -11,7 +11,7 @@
 	namespace OZONE\OZ\Core;
 
 	use OZONE\OZ\Admin\AdminUtils;
-	use OZONE\OZ\Exceptions\OZoneBadRequestException;
+	use OZONE\OZ\Exceptions\OZoneMethodNotAllowedException;
 	use OZONE\OZ\Exceptions\OZoneInvalidFormException;
 	use OZONE\OZ\Exceptions\OZoneUnauthorizedActionException;
 	use OZONE\OZ\Exceptions\OZoneUnverifiedUserException;
@@ -30,10 +30,10 @@
 		 * @param \Exception|string|null $msg              the error message
 		 * @param mixed                  $data             the error data
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneBadRequestException
+		 * @throws \OZONE\OZ\Exceptions\OZoneMethodNotAllowedException
 		 * @throws string
 		 */
-		public static function assertSafeRequestMethod($required_methods, $msg = 'OZ_ERROR_BAD_REQUEST_METHOD', $data = null)
+		public static function assertSafeRequestMethod($required_methods, $msg = 'OZ_ERROR_METHOD_NOT_ALLOWED', $data = null)
 		{
 			$ok = false;
 
@@ -63,7 +63,7 @@
 
 			if ($ok === false) {
 				if (!self::isException($msg)) {
-					$msg = new OZoneBadRequestException($msg, $data);
+					$msg = new OZoneMethodNotAllowedException($msg, $data);
 				}
 
 				throw $msg;
