@@ -10,20 +10,38 @@
 
 	namespace OZONE\OZ\Core;
 
+	use OZONE\OZ\Db\Db;
 	use OZONE\OZ\Exceptions\OZoneInternalError;
+	use OZONE\OZ\Loader\ClassLoader;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	final class OZoneDb
 	{
 		/**
-		 * PDO database connection instance
+		 * database instance.
+		 *
+		 * @var \OZONE\OZ\Db\Db
+		 */
+		private static $database;
+
+		/**
+		 * relational database management system.
+		 *
+		 * @var \OZONE\OZ\Db\RDBMS
+		 */
+		private static $rdbms;
+
+		/**
+		 * PDO database connection instance.
 		 *
 		 * @var \PDO
 		 */
-		private static $db;
+		private static $db_connection;
 
 		/**
+		 * used to generate bind param id.
+		 *
 		 * @var int
 		 */
 		private static $bind_unique_id = 0;
@@ -33,8 +51,13 @@
 		 */
 		private function __construct()
 		{
-			if (empty(self::$db)) {
-				self::$db = $this->connect();
+			if (empty(self::$database)) {
+				$this->initRDBMS();
+				$oz_db_init = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_db_init.php';
+				$tables     = OZoneSettings::get('oz.db.tables');
+
+				self::$database->addTablesFromOptions($oz_db_init)
+							   ->addTablesFromOptions($tables);
 			}
 		}
 
@@ -43,19 +66,45 @@
 		 */
 		public function __destruct()
 		{
-			if (isset(self::$db)) {
-				self::$db = null;
+			if (isset(self::$database)) {
+				self::$db_connection = null;
+				self::$rdbms         = null;
+				self::$database      = null;
 			}
 		}
 
 		/**
-		 * get the current PDO instance
+		 * get the project rdbms.
 		 *
-		 * @return \PDO
+		 * @return \OZONE\OZ\Db\RDBMS
+		 */
+		public function getRDBMS()
+		{
+			return self::$rdbms;
+		}
+
+		/**
+		 * get the project database.
+		 *
+		 * @return \OZONE\OZ\Db\Db
 		 */
 		public function getDb()
 		{
-			return self::$db;
+			return self::$database;
+		}
+
+		/**
+		 * get database connection.
+		 *
+		 * @return \PDO
+		 */
+		public function getConnection()
+		{
+			if (empty(self::$db_connection)) {
+				self::$db_connection = self::$rdbms->connect();
+			}
+
+			return self::$db_connection;
 		}
 
 		/**
@@ -69,27 +118,31 @@
 		}
 
 		/**
-		 * connect to the db
+		 * init rdbms.
 		 *
-		 * @return \PDO
 		 * @throws \OZONE\OZ\Exceptions\OZoneInternalError    When database connection fails.
 		 */
-		private function connect()
+		private function initRDBMS()
 		{
-			$config   = OZoneSettings::get('oz.config');
-			$host     = $config['OZ_APP_DB_HOST'];
-			$dbname   = $config['OZ_APP_DB_NAME'];
-			$user     = $config['OZ_APP_DB_USER'];
-			$password = $config['OZ_APP_DB_PASS'];
+			$config      = OZoneSettings::get('oz.config');
+			$rdbms_class = $config['OZ_APP_DB_RDBMS'];
 
 			try {
-				$pdo_options[\PDO::ATTR_ERRMODE] = \PDO::ERRMODE_EXCEPTION;
+				$oz_db_class = 'OZONE\OZ\Db\RDBMS';
+				if (ClassLoader::exists($rdbms_class)) {
+					/** @var \OZONE\OZ\Db\RDBMS $rdbms */
+					$rdbms = ClassLoader::instantiateClass($rdbms_class, [$config]);
 
-				$db = new \PDO('mysql:host=' . $host . ';dbname=' . $dbname, $user, $password, $pdo_options);
+					if (!is_subclass_of($rdbms, $oz_db_class)) {
+						throw new \Exception(sprintf('your rdbms class "%s" should implements "%s".', $rdbms_class, $oz_db_class));
+					}
 
-				return $db;
+					self::$rdbms    = $rdbms;
+					self::$database = new Db($rdbms);
+				} else {
+					throw new \Exception(sprintf('rdbms class "%s" defined in "oz.db" not found.', $rdbms_class));
+				}
 			} catch (\Exception $e) {
-				// die( 'Erreur de connexion : ' . $e->getMessage());
 				throw new OZoneInternalError('OZ_DB_IS_DOWN', [$e->getMessage()]);
 			}
 		}
@@ -104,7 +157,8 @@
 		 */
 		public function execute($sql, array $params = null)
 		{
-			$stmt = self::$db->prepare($sql);
+			$stmt = $this->getConnection()
+						 ->prepare($sql);
 
 			if ($params !== null) {
 				foreach ($params as $key => $value) {
@@ -177,7 +231,8 @@
 		public function insert($sql, array $params = null)
 		{
 			$stmt    = $this->execute($sql, $params);
-			$last_id = self::$db->lastInsertId();
+			$last_id = $this->getConnection()
+							->lastInsertId();
 
 			$stmt->closeCursor();
 
@@ -307,6 +362,8 @@
 		}
 
 		/**
+		 * get a unique bind param id.
+		 *
 		 * @return int
 		 */
 		private static function getBindUniqueId()
