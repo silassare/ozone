@@ -10,19 +10,24 @@
 	 */
 
 	// Informs OZone that we are in www mode
-	define( 'OZ_OZONE_IS_WWW', true );
-	define( 'OZ_OZONE_DEFAULT_APIKEY', '<%$.oz_default_apikey%>' );
+	define('OZ_OZONE_IS_WWW', true);
+
+	// Api key to use
+	define('OZ_OZONE_DEFAULT_APIKEY', '<%$.oz_default_apikey%>');
+
+	// Logs directory
+	define('OZ_LOG_DIR', __DIR__ . DS);
 
 	include_once '../api/index.php';
 
 	// Add settings source
-	\OZONE\OZ\Core\OZoneSettings::addSource( __DIR__ . DS . 'oz_private'. DS . 'oz_settings' );
+	\OZONE\OZ\Core\OZoneSettings::addSource(__DIR__ . DS . 'oz_private'. DS . 'oz_settings');
 
 	// Add a new templates source
-	\OZONE\OZ\FS\OZoneTemplates::addSource( __DIR__ . DS . 'oz_private'. DS . 'oz_templates' );
+	\OZONE\OZ\FS\OZoneTemplates::addSource(__DIR__ . DS . 'oz_private'. DS . 'oz_templates');
 
 	// Add project namespace root directory
-	\OZONE\OZ\Loader\ClassLoader::addNamespace( '\<%$.oz_project_namespace%>', __DIR__ . DS . 'oz_private' );
+	\OZONE\OZ\Loader\ClassLoader::addNamespace('\<%$.oz_project_namespace%>', __DIR__ . DS . 'oz_private');
 
 	// Execute OZone
-	\OZONE\OZ\OZone::execute( new \<%$.oz_project_namespace%>\<%$.oz_project_class%>() );
+	\OZONE\OZ\OZone::execute(new \<%$.oz_project_namespace%>\<%$.oz_project_class%>());

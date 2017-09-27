@@ -10,28 +10,36 @@
 	 */
 
 	// Protect from unauthorized access/include
-	define( 'OZ_SELF_SECURITY_CHECK', 1 );
+	define('OZ_SELF_SECURITY_CHECK', 1);
 
 	// Don't forget to use DS instead of \ or / and allways add the last DS to your directories path
-	define( 'DS', DIRECTORY_SEPARATOR );
+	define('DS', DIRECTORY_SEPARATOR);
+
+	// Project directory
+	define('OZ_PROJECT_DIR', dirname(__DIR__) . DS);
 
 	// You can define the path to your specific ozone framework directory
-	define( 'OZ_OZONE_DIR', __DIR__ . DS . 'oz' . DS );
+	define('OZ_OZONE_DIR', __DIR__ . DS . 'oz' . DS);
 
 	// You can define the path to your ozone app directory here
-	define( 'OZ_APP_DIR', __DIR__ . DS . 'app' . DS );
+	define('OZ_APP_DIR', __DIR__ . DS . 'app' . DS);
+
+	// Logs directory
+	if (!defined('OZ_LOG_DIR')) {
+		define('OZ_LOG_DIR', __DIR__ . DS);
+	}
 
 	include_once OZ_OZONE_DIR . 'OZone.php';
 
 	// Add project namespace root directory
-	\OZONE\OZ\Loader\ClassLoader::addNamespace( '\<%$.oz_project_namespace%>', OZ_APP_DIR );
+	\OZONE\OZ\Loader\ClassLoader::addNamespace('\<%$.oz_project_namespace%>', OZ_APP_DIR);
 
 	// Execute OZone only if the incoming request is for the api
 	// Else we are in www/index.php
-	if( defined('OZ_OZONE_IS_WWW') ) {
-		if ( !defined( 'OZ_OZONE_DEFAULT_APIKEY' ) ) {
+	if (defined('OZ_OZONE_IS_WWW')) {
+		if (!defined('OZ_OZONE_DEFAULT_APIKEY')) {
 			throw new \OZONE\OZ\Exceptions\OZoneInternalError('OZ_DEFAULT_APIKEY_NOT_DEFINED');
 		}
 	} else {
-		\OZONE\OZ\OZone::execute( new \<%$.oz_project_namespace%>\<%$.oz_project_class%>() );
+		\OZONE\OZ\OZone::execute(new \<%$.oz_project_namespace%>\<%$.oz_project_class%>());
 	}

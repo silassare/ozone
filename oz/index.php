@@ -12,12 +12,22 @@
 	// Protect from unauthorized access/include
 	define('OZ_SELF_SECURITY_CHECK', 1);
 
-	// don't forget to use DS instead of \ or / and always add the last DS to your directories path
+	// Don't forget to use DS instead of \ or / and always add the last DS to your directories path
 	define('DS', DIRECTORY_SEPARATOR);
+
+	// Project directory
+	define('OZ_PROJECT_DIR', getcwd() . DS);
+
+	// OZone directory
 	define('OZ_OZONE_DIR', __DIR__ . DS);
-	define('OZ_APP_DIR', getcwd() . DS);
 
-	include_once OZ_OZONE_DIR . 'OZoneCli.php';
+	// OZone app directory 
+	define('OZ_APP_DIR', OZ_PROJECT_DIR . 'api' . DS . 'app' . DS);
 
-	$oz_cli = new \OZONE\OZ\OZoneCli;
+	// Logs directory
+	define('OZ_LOG_DIR', OZ_PROJECT_DIR);
+
+	include_once OZ_OZONE_DIR . 'Cli' . DS . 'OZoneCli.php';
+
+	$oz_cli = new \OZONE\OZ\Cli\OZoneCli;
 	$oz_cli->run($argv);
