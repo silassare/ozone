@@ -29,7 +29,7 @@
 		 */
 		public function __construct($root)
 		{
-			$this->root = OZonePath::resolve(OZ_APP_DIR, $root);
+			$this->root = OZonePath::resolve(OZ_PROJECT_DIR, $root);
 		}
 
 		/**
