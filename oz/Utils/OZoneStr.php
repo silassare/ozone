@@ -14,20 +14,9 @@
 
 	final class OZoneStr
 	{
-
-		/**
-		 * alphanumerics case insensitive
-		 *
-		 * @var string
-		 */
-		const ALPHA_NUM_INS = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-		/**
-		 * symbols
-		 *
-		 * @var string
-		 */
-		const SYMBOLS = '~!@#$£µ§²¨%^&()_-+={}[]:";\'<>?,./\\';
+		const CHARS_ALPHA   = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		const CHARS_NUM     = '0123456789';
+		const CHARS_SYMBOLS = '~!@#$£µ§²¨%^&()_-+={}[]:";\'<>?,./\\';
 
 		/**
 		 * clean a given text
@@ -95,26 +84,30 @@
 		/**
 		 * generate a random string for a given length
 		 *
-		 * @param int  $length        The desired random string length default 32 range is [1,512]
-		 * @param bool $alphanum_only Should we use alphanumerics chars only
+		 * @param int    $length     The desired random string length default 32 range is [1,512]
+		 * @param string $chars_type The chars to use
 		 *
 		 * @return string
-		 * @throws \InvalidArgumentException
 		 */
-		public static function genRandomString($length = 32, $alphanum_only = false)
+		public static function genRandomString($length = 32, $chars_type = 'all')
 		{
-			$min   = 1;
-			$max   = 512;
-			$chars = self::ALPHA_NUM_INS;
+			$min       = 1;
+			$max       = 512;
+			$chars_map = [
+				'alpha'    => OZoneStr::CHARS_ALPHA,
+				'num'      => OZoneStr::CHARS_NUM,
+				'symbols'  => OZoneStr::CHARS_SYMBOLS,
+				'alphanum' => OZoneStr::CHARS_ALPHA . OZoneStr::CHARS_NUM,
+				'all'      => OZoneStr::CHARS_ALPHA . OZoneStr::CHARS_NUM . OZoneStr::CHARS_SYMBOLS
+			];
 
-			if ($length < $min OR $length > $max) {
-				throw new \InvalidArgumentException("random string length must be between $min and $max");
-			}
+			if ($length < $min OR $length > $max)
+				throw new \InvalidArgumentException(sprintf('random string length must be between %d and %d', $min, $max));
 
-			if (!$alphanum_only) {
-				$chars .= self::SYMBOLS;
-			}
+			if (!isset($chars_map[$chars_type]))
+				throw new \InvalidArgumentException(sprintf('random string chars type should be one of: %s', implode(' , ', array_keys($chars_map))));
 
+			$chars        = $chars_map[$chars_type];
 			$chars_length = strlen($chars) - 1;
 			$string       = '';
 			$blind_rand   = rand(-3600, 3600);
