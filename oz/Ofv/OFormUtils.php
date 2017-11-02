@@ -14,7 +14,7 @@
 	{
 
 		/**
-		 * check the given fields 'a' and 'b' fields are equals
+		 * Checks the given fields 'a' and 'b' fields are equals
 		 *
 		 * @param \OZONE\OZ\Ofv\OFormValidator $ofv The form validator object
 		 * @param  string                      $a   the field 'a' name
@@ -67,29 +67,7 @@
 		}
 
 		/**
-		 * check if a given form has all required field
-		 *
-		 * @param array $form            the form
-		 * @param array $required_fields the required fields
-		 *
-		 * @return bool
-		 */
-		public static function isFormComplete(array $form, array $required_fields)
-		{
-			$ans = true;
-
-			foreach ($required_fields as $field_name) {
-				if (!isset($form[$field_name])) {
-					$ans = false;
-					break;
-				}
-			}
-
-			return $ans;
-		}
-
-		/**
-		 * check if a given date is valid
+		 * Checks if a given date is valid
 		 *
 		 * @param int $month the month
 		 * @param int $day   the day of the month
@@ -161,7 +139,7 @@
 		}
 
 		/**
-		 * check if a given date is a valid birth date
+		 * Checks if a given date is a valid birth date
 		 *
 		 * @param int $month   the month
 		 * @param int $day     the day of the month

@@ -1,0 +1,322 @@
+<?php
+	/**
+	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 *
+	 * This file is part of the OZone package.
+	 *
+	 * For the full copyright and license information, please view the LICENSE
+	 * file that was distributed with this source code.
+	 */
+
+	namespace OZONE\OZ\User;
+
+	use OZONE\OZ\Core\Assert;
+	use OZONE\OZ\Core\RequestHandler;
+	use OZONE\OZ\Core\SessionsData;
+	use OZONE\OZ\Core\SessionsHandler;
+	use OZONE\OZ\Crypt\DoCrypt;
+	use OZONE\OZ\Db\OZCountriesQuery;
+	use OZONE\OZ\Db\OZUser;
+	use OZONE\OZ\Db\OZUsersQuery;
+	use OZONE\OZ\Exceptions\UnverifiedUserException;
+	use OZONE\OZ\OZone;
+
+	defined('OZ_SELF_SECURITY_CHECK') or die;
+
+	/**
+	 * Class UsersUtils
+	 *
+	 * @package OZONE\OZ\User
+	 */
+	final class UsersUtils
+	{
+		/**
+		 * Gets the current user object.
+		 *
+		 * @return \OZONE\OZ\Db\OZUser
+		 */
+		public static function getCurrentUserObject()
+		{
+			Assert::assertUserVerified();
+			$uid = SessionsData::get('ozone_user:id');
+
+			return self::getUserObject($uid);
+		}
+
+		/**
+		 * Gets the user object with a given user id.
+		 *
+		 * @param int|string $uid the user id
+		 *
+		 * @return null|\OZONE\OZ\Db\OZUser
+		 */
+		public static function getUserObject($uid)
+		{
+			$u_table = new OZUsersQuery();
+
+			return $u_table->filterById($uid)
+						   ->find(1)
+						   ->fetchClass();
+		}
+
+		/**
+		 * Checks if the current user is verified.
+		 *
+		 * @return bool    true when user is verified, false otherwise
+		 */
+		public static function userVerified()
+		{
+			$user_verified = SessionsData::get('ozone_user:verified');
+
+			return !empty($user_verified) AND $user_verified === true;
+		}
+
+		/**
+		 * Logon the user that have the given user id.
+		 *
+		 * @param \OZONE\OZ\Db\OZUser $user the user object
+		 *
+		 * @return string the login token
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 */
+		public static function logUserIn(OZUser $user)
+		{
+			// TODO
+			// when user change his password, force login again, by deleting :
+			//	- all oz_sessions rows associated with user
+			//	- all oz_clients_users rows associated with user
+
+			if (!$user->isSaved()) {
+				// deleted account or something is going wrong
+				throw new UnverifiedUserException();
+			}
+
+			$saved_data  = [];
+			$current_uid = SessionsData::get('ozone_user:id');
+			if (!empty($current_uid)) {                // if the current user is the previous one,
+				// save the data of the previous session
+				if ($current_uid === $user->getId()) {
+					$saved_data = array_merge($saved_data, $_SESSION);
+				}
+			}
+
+			SessionsHandler::restart();
+
+			foreach ($saved_data as $k => $v) {
+				$_SESSION[$k] = $v;
+			}
+
+			// TODO why not ask if user really want to attach his account to this client ?
+			$token = RequestHandler::getCurrentClient()
+								 ->addClientUser($user->getId());
+
+			SessionsData::set('ozone_user:id', $user->getId());
+			SessionsData::set('ozone_user:verified', true);
+			SessionsData::set('ozone_user:token', $token);
+
+			OZone::getEventManager()
+				 ->trigger('OZ_EVENT:USER_LOGIN', $user, ['token' => $token]);
+
+			return $token;
+		}
+
+		/**
+		 * Log out the current user.
+		 *
+		 * @throws \Exception
+		 */
+		public static function logUserOut()
+		{
+			if (self::userVerified()) {
+				$current_user = self::getCurrentUserObject();
+
+				SessionsHandler::restart();
+
+				RequestHandler::getCurrentClient()
+							->removeClientUser($current_user->getId());
+				// may be useful
+				SessionsData::set('ozone_user:id', $current_user->getId());
+
+				OZone::getEventManager()
+					 ->trigger('OZ_EVENT:USER_LOGOUT', $current_user);
+			}
+		}
+
+		/**
+		 * Checks if a password match the user with a given phone number.
+		 *
+		 * @param string $phone the phone number
+		 * @param string $pass  the password
+		 *
+		 * @return bool    true if password is ok, false otherwise
+		 */
+		public static function checkUserPassWithPhone($phone, $pass)
+		{
+			$u = self::searchUserWithPhone($phone);
+			if ($u) {
+				$crypt_obj = new DoCrypt();
+
+				return $crypt_obj->passCheck($pass, $u->getPass());
+			}
+
+			return false;
+		}
+
+		/**
+		 * Checks if a password match the user with a given email address.
+		 *
+		 * @param string $email the email address
+		 * @param string $pass  the password
+		 *
+		 * @return bool    true if password is ok, false otherwise
+		 */
+		public static function checkUserPassWithEmail($email, $pass)
+		{
+			$u = self::searchUserWithEmail($email);
+			if ($u) {
+				$crypt_obj = new DoCrypt();
+
+				return $crypt_obj->passCheck($pass, $u->getPass());
+			}
+
+			return false;
+		}
+
+		/**
+		 * Try to log on a user with a given phone number and password.
+		 *
+		 * Make sure that user is a valid user.
+		 *
+		 * @param string $phone the phone number
+		 * @param string $pass  the password
+		 *
+		 * @return \OZONE\OZ\Db\OZUser|string the user object or error string
+		 */
+		public static function tryLogOnWithPhone($phone, $pass)
+		{
+			$u = self::searchUserWithPhone($phone);
+
+			if (!$u) {
+				return 'OZ_FIELD_PHONE_NOT_REGISTERED';
+			}
+
+			if (!$u->getValid()) {
+				return 'OZ_USER_INVALID';
+			}
+
+			$crypt_obj = new DoCrypt();
+			if (!$crypt_obj->passCheck($pass, $u->getPass())) {
+				return 'OZ_FIELD_PASS_INVALID';
+			}
+
+			self::logUserIn($u);
+
+			return $u;
+		}
+
+		/**
+		 * Try to log on a user with a given email address and password.
+		 *
+		 * Make sure that user is a valid user.
+		 *
+		 * @param string $email the email address
+		 * @param string $pass  the password
+		 *
+		 * @return \OZONE\OZ\Db\OZUser|string the user object or error string
+		 */
+		public static function tryLogOnWithEmail($email, $pass)
+		{
+			$u = self::searchUserWithEmail($email);
+
+			if (!$u) {
+				return 'OZ_FIELD_EMAIL_NOT_REGISTERED';
+			}
+
+			if (!$u->getValid()) {
+				return 'OZ_USER_INVALID';
+			}
+
+			$crypt_obj = new DoCrypt();
+			if (!$crypt_obj->passCheck($pass, $u->getPass())) {
+				return 'OZ_FIELD_PASS_INVALID';
+			}
+
+			self::logUserIn($u);
+
+			return $u;
+		}
+
+		/**
+		 * Search for registered user with a given phone number.
+		 *
+		 * No matter if user is valid or not.
+		 *
+		 * @param string $phone the phone number
+		 *
+		 * @return null|\OZONE\OZ\Db\OZUser
+		 */
+		public static function searchUserWithPhone($phone)
+		{
+			$u_table = new OZUsersQuery();
+			$result  = $u_table->filterByPhone($phone)
+							   ->find(1);
+
+			return $result->fetchClass();
+		}
+
+		/**
+		 * Search for registered user with a given email address.
+		 *
+		 * No matter if user is valid or not.
+		 *
+		 * @param string $email the email address
+		 *
+		 * @return null|\OZONE\OZ\Db\OZUser
+		 */
+		public static function searchUserWithEmail($email)
+		{
+			$u_table = new OZUsersQuery();
+			$result  = $u_table->filterByEmail($email)
+							   ->find(1);
+
+			return $result->fetchClass();
+		}
+
+		/**
+		 * Gets the country info with a given cc2 (country code 2).
+		 *
+		 * @param string $cc2 the country code 2
+		 *
+		 * @return null|\OZONE\OZ\Db\OZCountry
+		 */
+		public static function getCountryObject($cc2)
+		{
+			if (!empty($cc2) AND is_string($cc2) AND strlen($cc2) === 2) {
+				$c_table = new OZCountriesQuery();
+				$result  = $c_table->filterByCc2($cc2)
+								   ->find(1);
+
+				return $result->fetchClass();
+			}
+
+			return null;
+		}
+
+		/**
+		 * Checks if a country (with a given cc2) is authorized or not.
+		 *
+		 * @param string $cc2 the country code 2
+		 *
+		 * @return bool
+		 */
+		public static function authorizedCountry($cc2)
+		{
+			$c = self::getCountryObject($cc2);
+
+			if ($c) {
+				return $c->getValid();
+			}
+
+			return false;
+		}
+	}

@@ -1,19 +1,13 @@
 <?php
-	/**
-	 * Auto generated file
-	 *
-	 * INFO: you are free to edit it,
-	 * but make sure to know what you are doing.
-	 *
-	 * Proudly With: <%$.oz_version_name%>
-	 * Time: <%$.oz_time%>
-	 */
+<%@import('gen.info.otpl',$)%>
 
 	// Protect from unauthorized access/include
 	define('OZ_SELF_SECURITY_CHECK', 1);
 
-	// Don't forget to use DS instead of \ or / and allways add the last DS to your directories path
-	define('DS', DIRECTORY_SEPARATOR);
+	// Don't forget to use DS instead of \ or / and always add the last DS to your directories path
+	if (!defined('DS')) {
+		define('DS', DIRECTORY_SEPARATOR);
+	}
 
 	// Project directory
 	define('OZ_PROJECT_DIR', dirname(__DIR__) . DS);
@@ -37,8 +31,8 @@
 	// Execute OZone only if the incoming request is for the api
 	// Else we are in www/index.php
 	if (defined('OZ_OZONE_IS_WWW')) {
-		if (!defined('OZ_OZONE_DEFAULT_APIKEY')) {
-			throw new \OZONE\OZ\Exceptions\OZoneInternalError('OZ_DEFAULT_APIKEY_NOT_DEFINED');
+		if (!defined('OZ_OZONE_DEFAULT_API_KEY')) {
+			throw new \OZONE\OZ\Exceptions\InternalErrorException('OZ_DEFAULT_API_KEY_NOT_DEFINED');
 		}
 	} else {
 		\OZONE\OZ\OZone::execute(new \<%$.oz_project_namespace%>\<%$.oz_project_class%>());

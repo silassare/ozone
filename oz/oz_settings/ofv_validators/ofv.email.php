@@ -10,8 +10,8 @@
 
 	namespace OZONE\OZ\Ofv;
 
-	use OZONE\OZ\User\OZoneUserUtils;
-	use OZONE\OZ\Utils\OZoneStr;
+	use OZONE\OZ\User\UsersUtils;
+	use OZONE\OZ\Utils\StringUtils;
 
 	function ofv_email(OFormValidator $ofv)
 	{
@@ -19,12 +19,12 @@
 		$rules = $ofv->getRules('email');
 
 		if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-			$ofv->addError('OZ_EMAIL_INVALID');
-		} elseif (in_array('not-registered', $rules) AND OZoneUserUtils::registered('email', $email)) {
+			$ofv->addError('OZ_FIELD_EMAIL_INVALID');
+		} elseif (in_array('not-registered', $rules) AND UsersUtils::searchUserWithEmail($email)) {
 			$ofv->addError('OZ_FIELD_EMAIL_ALREADY_REGISTERED', ['email' => $email]);
-		} elseif (in_array('registered', $rules) AND !OZoneUserUtils::registered('email', $email)) {
+		} elseif (in_array('registered', $rules) AND !UsersUtils::searchUserWithEmail($email)) {
 			$ofv->addError('OZ_FIELD_EMAIL_NOT_REGISTERED');
 		} else {
-			$ofv->setField('email', OZoneStr::clean($email));
+			$ofv->setField('email', StringUtils::clean($email));
 		}
 	}

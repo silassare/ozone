@@ -10,12 +10,10 @@
 
 	namespace OZONE\OZ\User\Services;
 
-	use OZONE\OZ\Core\OZoneAssert;
-	use OZONE\OZ\Core\OZoneService;
-	use OZONE\OZ\Core\OZoneDb;
-	use OZONE\OZ\Core\OZoneSessions;
-	use OZONE\OZ\FS\OZonePPicUtils;
-	use OZONE\OZ\User\OZoneUserUtils;
+	use OZONE\OZ\Core\Assert;
+	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\FS\PPicUtils;
+	use OZONE\OZ\User\UsersUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -24,9 +22,8 @@
 	 *
 	 * @package OZONE\OZ\User\Services
 	 */
-	class UserPicEdit extends OZoneService
+	class UserPicEdit extends BaseService
 	{
-
 		/**
 		 * UserPicEdit constructor.
 		 */
@@ -37,16 +34,11 @@
 
 		/**
 		 * {@inheritdoc}
-		 *
-		 * @throws \Exception
-		 * @throws \OZONE\OZ\Exceptions\OZoneInvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\OZoneUnauthorizedActionException
-		 * @throws \OZONE\OZ\Exceptions\OZoneUnverifiedUserException
 		 */
-		public function execute($request = [])
+		public function execute(array $request = [])
 		{
-			OZoneAssert::assertUserVerified();
-			OZoneAssert::assertForm($request, ['forid']);
+			Assert::assertUserVerified();
+			Assert::assertForm($request, ['for_id']);
 
 			$label = 'file';
 
@@ -54,34 +46,34 @@
 				$label = $request['label'];
 			}
 
-			OZoneAssert::assertAuthorizeAction(in_array($label, ['file', 'fid', 'def']));
+			Assert::assertAuthorizeAction(in_array($label, ['file', 'file_id', 'def']));
 
-			$forid = $request['forid'];
+			$for_id = $request['for_id'];
 
-			$uid        = OZoneSessions::get('ozone_user:data:user_id');
+			$user_obj   = UsersUtils::getCurrentUserObject();
+			$uid        = $user_obj->getId();
 			$file_label = 'OZ_FILE_LABEL_USER_PPIC';
 			$msg        = 'OZ_PROFILE_PIC_CHANGED';
 
-			OZoneAssert::assertAuthorizeAction($uid === $forid);
+			Assert::assertAuthorizeAction($uid === $for_id);
 
-			$user_obj = OZoneUserUtils::getUserObject($uid);
+			$ppic_obj = new PPicUtils($uid);
 
-			$ppic_obj = new OZonePPicUtils($uid);
-
-			if ($label === 'fid') {
-				OZoneAssert::assertForm($request, ['fid', 'fkey']);
-				$picid = $ppic_obj->fromFid($request, $request['fid'], $request['fkey'], $file_label);
+			if ($label === 'file_id') {
+				Assert::assertForm($request, ['file_id', 'file_key']);
+				$picid = $ppic_obj->fromFileId($request, $request['file_id'], $request['file_key'], $file_label);
 			} elseif ($label === 'file') {
-				OZoneAssert::assertForm($_FILES, ['photo']);
+				Assert::assertForm($_FILES, ['photo']);
 				$picid = $ppic_obj->fromUploadedFile($request, $_FILES['photo'], $file_label);
 			} else {//def
-				$picid = $ppic_obj->toDefault();
+				$picid = PPicUtils::getDefault();
 				$msg   = 'OZ_PROFILE_PIC_SET_TO_DEFAULT';
 			}
 
-			$user_obj->updateUserData('user_picid', $picid);
+			$user_obj->setPicid($picid)
+					 ->save();
 
-			self::$resp->setDone($msg)
-					   ->setData(OZoneDb::maskColumnsName(['user_picid' => $picid], ['user_picid']));
+			$this->getResponseHolder()->setDone($msg)
+					   ->setData($user_obj->asArray());
 		}
 	}

@@ -10,10 +10,10 @@
 
 	namespace OZONE\OZ\User\Services;
 
-	use OZONE\OZ\Core\OZoneRequest;
-	use OZONE\OZ\Core\OZoneService;
-	use OZONE\OZ\Core\OZoneSessions;
-	use OZONE\OZ\User\OZoneUserUtils;
+	use OZONE\OZ\Core\RequestHandler;
+	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Core\SessionsData;
+	use OZONE\OZ\User\UsersUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -22,7 +22,7 @@
 	 *
 	 * @package OZONE\OZ\User\Services
 	 */
-	class TestNet extends OZoneService
+	class TestNet extends BaseService
 	{
 
 		/**
@@ -36,33 +36,35 @@
 		/**
 		 * {@inheritdoc}
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneUnverifiedUserException
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
-		public function execute($request = [])
+		public function execute(array $request = [])
 		{
 			$data = [];
-			$uid  = OZoneSessions::get('ozone_user:data:user_id');
-			// on verifie si user a une session en cours
-			if (OZoneUserUtils::userVerified() AND !empty($uid)) {
-				$data['ok'] = 1;
-				// SILO:: embigue mais c'est juste pour pouvoir retourner les infos de users
-				$data['_current_user'] = OZoneUserUtils::logOn($uid);
-			} elseif ($this->canWeRememberUser($request)) {
+
+			if (UsersUtils::userVerified()) {
+				$user_obj = UsersUtils::getCurrentUserObject();
+				// user is already logged
+				// UsersUtils::logUserIn($user_obj);
 				$data['ok']            = 1;
-				$data['_current_user'] = OZoneUserUtils::logOn($request['uid']);
+				$data['_current_user'] = $user_obj->asArray();
+			} elseif ($this->canWeRememberUser($request)) {
+				$user_obj = UsersUtils::getUserObject($request['uid']);
+				UsersUtils::logUserIn($user_obj);
+
+				$data['ok']            = 1;
+				$data['_current_user'] = $user_obj->asArray();
 			} else {
 				$data['ok'] = 0;
-				$step       = OZoneSessions::get('svc_signin:step');
-				$phone      = OZoneSessions::get('svc_signin:phone');
+				$step       = SessionsData::get('svc_sign_up:step');
+				$phone      = SessionsData::get('svc_sign_up:phone');
 
-				// on verifie si user est en cours d'inscription et qu'il est a l'etape de validation du code
-				if (!empty($step) AND !empty($phone) AND $step === Signin::SIGNIN_STEP_VALIDATE) {
-					$data['_info_signin'] = ['step' => $step, 'phone' => $phone];
+				if (!empty($step) AND !empty($phone) AND $step === Signup::SIGNUP_STEP_VALIDATE) {
+					$data['_info_sign_up'] = ['step' => $step, 'phone' => $phone];
 				}
 			}
 
-			// SILO::TODO on verifie si il y a une mise a jours en executant le service des mises a jours
-			self::$resp->setData($data);
+			$this->getResponseHolder()->setData($data);
 		}
 
 		private function canWeRememberUser($request)
@@ -71,9 +73,8 @@
 				$uid   = $request['uid'];
 				$token = $request['token'];
 
-				// SILO::TODO high security risk here
-				return OZoneRequest::getCurrentClient()
-								   ->hasUser($uid, $token);
+				return RequestHandler::getCurrentClient()
+								   ->clientHasUser($uid, $token);
 			}
 
 			return false;

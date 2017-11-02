@@ -10,18 +10,17 @@
 
 	namespace OZONE\OZ\FS\Services;
 
-	use OZONE\OZ\Core\OZoneAssert;
-	use OZONE\OZ\Core\OZoneService;
-	use OZONE\OZ\Core\OZoneSettings;
-	use OZONE\OZ\Exceptions\OZoneInternalError;
-	use OZONE\OZ\Exceptions\OZoneNotFoundException;
-	use OZONE\OZ\FS\OZoneImagesUtils;
+	use OZONE\OZ\Core\Assert;
+	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Core\SettingsManager;
+	use OZONE\OZ\Exceptions\InternalErrorException;
+	use OZONE\OZ\Exceptions\NotFoundException;
+	use OZONE\OZ\FS\ImagesUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	class FilesServer extends OZoneService
+	class FilesServer extends BaseService
 	{
-
 		/**
 		 * FilesServer constructor.
 		 */
@@ -33,35 +32,26 @@
 		/**
 		 * {@inheritdoc}
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneInvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 */
-		public function execute($request = [])
+		public function execute(array $request = [])
 		{
-			OZoneAssert::assertForm($request, ['src', 'fname', 'fmime', 'thumb'], new OZoneNotFoundException());
+			Assert::assertForm($request, ['src', 'file_name', 'file_mime', 'thumb'], new NotFoundException());
 
-			// désactive le temps max d'exécution
 			set_time_limit(0);
-
-			// désactivation compression GZip
-			/*
-			if (ini_get( "zlib.output_compression" ) )
-			{
-				ini_set( "zlib.output_compression", 'Off' );
-			}
-			*/
 
 			$src = $request['src'];
 
 			if (empty($src) || !file_exists($src) || !is_file($src) || !is_readable($src)) {
-				throw new OZoneNotFoundException();
+				throw new NotFoundException();
 			}
 
-			$fname = $request['fname'];
-			$fmime = $request['fmime'];
+			$file_name = $request['file_name'];
+			$file_mime = $request['file_mime'];
 			$thumb = intval($request['thumb']);
 			$size  = filesize($src);
 
-			// fermeture de la session
+			// close the current session
 			if (session_id()) session_write_close();
 
 			// clean output buffer
@@ -72,8 +62,8 @@
 			header('Cache-Control: public, max-age=99936000');
 			header('Content-Transfer-Encoding: binary');
 			header("Content-Length: $size");
-			header("Content-type: $fmime");
-			header("Content-Disposition: attachment; filename='$fname';");
+			header("Content-type: $file_mime");
+			header("Content-Disposition: attachment; filename='$file_name';");
 
 			if ($thumb > 0) {
 				// thumbnails
@@ -83,34 +73,15 @@
 				// 3: 'high quality'
 				$jpeg_quality_array = [60, 80, 100];
 				$jpeg_quality       = $jpeg_quality_array[$thumb - 1];
-				$img_utils_obj      = new OZoneImagesUtils($src);
+				$img_utils_obj      = new ImagesUtils($src);
 
-				// ceci 'devrait' etre toujours vrai
 				if ($img_utils_obj->load()) {
-					$max_size = OZoneSettings::get('oz.user', 'OZ_THUMB_MAX_SIZE');
+					$max_size = SettingsManager::get('oz.user', 'OZ_THUMB_MAX_SIZE');
 					$advice   = $img_utils_obj->adviceBestSize($max_size, $max_size);
-					// $img_r = imagecreatefromjpeg( $src );
-					// $src_w = imagesx( $img_r );
-					// $src_h = imagesy( $img_r );
-					// $targ_w = $advice[ 'w' ];
-					// $targ_h = $advice[ 'h' ];
-					// $dest_r = imagecreatetruecolor( $targ_w, $targ_h );
-					// imagecopyresampled( $dest_r, $img_r, 0, 0, 0, 0, $targ_w, $targ_h, $src_w, $src_h );
-
-					// header( 'Content-type: image/jpeg' );
-					// // important car la taille changera a cause de la compresion
-					// header_remove( 'Content-Length' );
-
-					// imagejpeg( $dest_r, null, $jpeg_quality );
-
-					// // free memory
-					// imagedestroy( $img_r );
-					// imagedestroy( $dest_r );
 					$img_utils_obj->resizeImage($advice['w'], $advice['h'], $advice['crop'])
 								  ->outputJpeg($jpeg_quality);
 				} else {
-					// on affiche le thumb tel qu'il est
-					$this->sendOriginal($src);//en suivant la logique il s'agit bien du thumbnail
+					$this->sendOriginal($src);
 				}
 			} else {
 				$this->sendOriginal($src);
@@ -136,8 +107,8 @@
 		 * @param bool  $allow_resume should we support download resuming
 		 * @param bool  $is_stream    is it a stream
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneInternalError
-		 * @throws \OZONE\OZ\Exceptions\OZoneUnauthorizedActionException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 */
 		public static function startDownloadServer(array $options, $allow_resume = false, $is_stream = false)
 		{
@@ -153,13 +124,13 @@
 			$range        = '';
 
 			// make sure the file exists
-			OZoneAssert::assertAuthorizeAction(is_file($file_path), new OZoneNotFoundException());
+			Assert::assertAuthorizeAction(is_file($file_path), new NotFoundException());
 
 			$file_size = filesize($file_path);
 			$file      = @fopen($file_path, 'rb');
 
 			// make sure file open success
-			if (!$file) throw new OZoneInternalError('OZ_FILE_OPEN_ERROR', [$file_path]);
+			if (!$file) throw new InternalErrorException('OZ_FILE_OPEN_ERROR', [$file_path]);
 
 			// set the headers, prevent caching
 			header('Pragma: public');

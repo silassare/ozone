@@ -10,7 +10,7 @@
 
 	namespace OZONE\OZ\Ofv;
 
-	use OZONE\OZ\User\OZoneUserUtils;
+	use OZONE\OZ\User\UsersUtils;
 
 	function ofv_phone(OFormValidator $ofv)
 	{
@@ -18,11 +18,11 @@
 		$rules = $ofv->getRules('phone');
 		$phone = str_replace(' ', '', $phone);
 
-		if (!OZoneUserUtils::isPhoneNumberPossible($phone)) {
+		if (!preg_match('#^\+\d{6,15}$#', $phone)) {
 			$ofv->addError('OZ_FIELD_PHONE_INVALID');
-		} elseif (in_array('not-registered', $rules) AND OZoneUserUtils::registered('phone', $phone)) {
+		} elseif (in_array('not-registered', $rules) AND UsersUtils::searchUserWithPhone($phone)) {
 			$ofv->addError('OZ_FIELD_PHONE_ALREADY_REGISTERED', ['phone' => $phone]);
-		} elseif (in_array('registered', $rules) AND !OZoneUserUtils::registered('phone', $phone)) {
+		} elseif (in_array('registered', $rules) AND !UsersUtils::searchUserWithPhone($phone)) {
 			$ofv->addError('OZ_FIELD_PHONE_NOT_REGISTERED');
 		} else {
 			$ofv->setField('phone', $phone);

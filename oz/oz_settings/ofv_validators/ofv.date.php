@@ -10,14 +10,11 @@
 
 	namespace OZONE\OZ\Ofv;
 
-	use OZONE\OZ\Core\OZoneSettings;
-
 	function ofv_date(OFormValidator $ofv)
 	{
 		$date = $ofv->getField('date');
 		$date = OFormUtils::parseDate($date);
 
-		// on verifie que la date de naissance est valide
 		if ($date) {
 			$year  = $date['year'];
 			$month = $date['month'];
@@ -28,6 +25,5 @@
 			return;
 		}
 
-		// la date n'est pas valide
 		$ofv->addError('OZ_FIELD_DATE_INVALID');
 	}

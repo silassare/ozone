@@ -10,13 +10,13 @@
 
 	namespace OZONE\OZ\Ofv;
 
-	use OZONE\OZ\Core\OZoneSettings;
+	use OZONE\OZ\Core\SettingsManager;
 
 	function ofv_gender(OFormValidator $ofv)
 	{
 		$gender = $ofv->getField('gender');
 
-		if (!in_array($gender, OZoneSettings::get('oz.user', 'OZ_USER_ALLOWED_GENDERS'))) {
+		if (!in_array($gender, SettingsManager::get('oz.user', 'OZ_USER_ALLOWED_GENDERS'))) {
 			$ofv->addError('OZ_FIELD_GENDER_INVALID');
 		} else {
 			$ofv->setField('gender', $gender);

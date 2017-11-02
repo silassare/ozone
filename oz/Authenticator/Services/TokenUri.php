@@ -11,10 +11,10 @@
 	namespace OZONE\OZ\Authenticator\Services;
 
 	use OZONE\OZ\Authenticator\TokenUriHelper;
-	use OZONE\OZ\Core\OZoneAssert;
-	use OZONE\OZ\Core\OZoneService;
-	use OZONE\OZ\Core\OZoneUri;
-	use OZONE\OZ\Exceptions\OZoneNotFoundException;
+	use OZONE\OZ\Core\Assert;
+	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Core\URIHelper;
+	use OZONE\OZ\Exceptions\NotFoundException;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -23,7 +23,7 @@
 	 *
 	 * @package OZONE\OZ\Authenticator\Services
 	 */
-	final class TokenUri extends OZoneService
+	final class TokenUri extends BaseService
 	{
 		private static $REG_TOKEN_URI = '#^([a-z0-9]{32})/([a-z0-9]{32})\.auth$#';
 
@@ -38,15 +38,15 @@
 		/**
 		 * {@inheritdoc}
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneNotFoundException
+		 * @throws \OZONE\OZ\Exceptions\NotFoundException
 		 */
-		public function execute($request = [])
+		public function execute(array $request = [])
 		{
-			$extra_ok = OZoneUri::parseUriExtra(self::$REG_TOKEN_URI, ['label', 'token'], $request);
+			$extra_ok = URIHelper::parseUriExtra(self::$REG_TOKEN_URI, ['label', 'token'], $request);
 
-			if (!$extra_ok) throw new OZoneNotFoundException();
+			if (!$extra_ok) throw new NotFoundException();
 
-			OZoneAssert::assertForm($request, ['label', 'token'], new OZoneNotFoundException());
+			Assert::assertForm($request, ['label', 'token'], new NotFoundException());
 
 			(new TokenUriHelper())->validate($request['label'], $request['token']);
 		}

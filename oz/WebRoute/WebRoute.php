@@ -2,10 +2,10 @@
 
 	namespace OZONE\OZ\WebRoute;
 
-	use OZONE\OZ\Exceptions\OZoneBaseException;
-	use OZONE\OZ\Exceptions\OZoneInternalError;
-	use OZONE\OZ\Core\OZoneSettings;
-	use OZONE\OZ\Core\OZoneAssert;
+	use OZONE\OZ\Exceptions\BaseException;
+	use OZONE\OZ\Exceptions\InternalErrorException;
+	use OZONE\OZ\Core\SettingsManager;
+	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\WebRoute\Services\RouteRunner;
 
 	final class WebRoute
@@ -22,7 +22,7 @@
 		 */
 		public static function findRoute($path)
 		{
-			$routes = OZoneSettings::get('oz.routes');
+			$routes = SettingsManager::get('oz.routes');
 			$found  = null;
 
 			// search for exact match
@@ -55,7 +55,7 @@
 		}
 
 		/**
-		 * check if a route exists for a given path
+		 * Checks if a route exists for a given path
 		 *
 		 * @param string $path a path
 		 *
@@ -78,7 +78,7 @@
 		{
 			$debug_data = ['oz_redirect_path' => $path, 'oz_redirect_history' => self::$redirect_history];
 
-			OZoneAssert::assertAuthorizeAction(self::routeExists($path), new OZoneInternalError('OZ_REDIRECT_UNDEFINED_ROUTE', $debug_data));
+			Assert::assertAuthorizeAction(self::routeExists($path), new InternalErrorException('OZ_REDIRECT_UNDEFINED_ROUTE', $debug_data));
 
 			$request['oz_route_path'] = $path;
 
@@ -93,13 +93,13 @@
 		/**
 		 * show exception in a custom error page.
 		 *
-		 * @param $e \OZONE\OZ\Exceptions\OZoneBaseException
+		 * @param $e \OZONE\OZ\Exceptions\BaseException
 		 */
 
-		public static function showCustomErrorPage(OZoneBaseException $e)
+		public static function showCustomErrorPage(BaseException $e)
 		{
 			// TODO: find last url or go home
-			$back_url             = OZoneSettings::get('oz.config', 'OZ_APP_MAIN_URL');
+			$back_url             = SettingsManager::get('oz.config', 'OZ_APP_MAIN_URL');
 			$http_response_header = $e->getHeaderString();
 			$err_title            = str_replace('HTTP/1.1 ', '', $http_response_header);
 			$err_code             = $e->getCode();

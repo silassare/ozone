@@ -96,11 +96,11 @@
 	 */
 
 	// definitions
-	if (!defined('QRCODEDEFS')) {
+	if (!defined('QR_CODEDEFS')) {
 		/**
 		 * Indicate that definitions for this class are set
 		 */
-		define('QRCODEDEFS', true);
+		define('QR_CODEDEFS', true);
 
 		// -----------------------------------------------------
 
@@ -986,7 +986,7 @@
 			// FrameFiller
 
 			/**
-			 * Set frame value at specified position
+			 * Sets frame value at specified position
 			 *
 			 * @param array $at  x,y position
 			 * @param int   $val value of the character to set
@@ -997,7 +997,7 @@
 			}
 
 			/**
-			 * Get frame value at specified position
+			 * Gets frame value at specified position
 			 *
 			 * @param array $at x,y position
 			 *
@@ -3068,7 +3068,7 @@
 			}
 
 			/**
-			 * Set new frame for the specified version.
+			 * Sets new frame for the specified version.
 			 *
 			 * @param int $version version
 			 *

@@ -10,9 +10,9 @@
 
 	namespace OZONE\OZ\Authenticator;
 
-	use OZONE\OZ\Core\OZoneSessions;
-	use OZONE\OZ\Exceptions\OZoneNotFoundException;
-	use OZONE\OZ\Core\OZoneSettings;
+	use OZONE\OZ\Core\SessionsData;
+	use OZONE\OZ\Exceptions\NotFoundException;
+	use OZONE\OZ\Core\SettingsManager;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -60,7 +60,7 @@
 		}
 
 		/**
-		 * get captcha image uri for authentication
+		 * Gets captcha image uri for authentication
 		 *
 		 * @return array the captcha info
 		 */
@@ -73,10 +73,10 @@
 
 			$captcha_key = md5($auth->getLabel() . $auth->getForValue() . microtime());
 
-			$fname   = OZoneSettings::get('oz.files', 'OZ_CAPTCHA_FILE_NAME');
-			$img_src = str_replace(['{oz_captcha_key}'], [$captcha_key], $fname);
+			$f_name  = SettingsManager::get('oz.files', 'OZ_CAPTCHA_FILE_NAME');
+			$img_src = str_replace(['{oz_captcha_key}'], [$captcha_key], $f_name);
 
-			OZoneSessions::set('_captcha_cfg_:' . $captcha_key, $generated['authCode']);
+			SessionsData::set('_captcha_cfg_:' . $captcha_key, $generated['authCode']);
 
 			return ['captchaSrc' => $img_src];
 		}
@@ -86,21 +86,21 @@
 		 *
 		 * @param string $captcha_key the captcha image key
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneNotFoundException when captcha image key is not valid
+		 * @throws \OZONE\OZ\Exceptions\NotFoundException when captcha image key is not valid
 		 */
 		public static function serveCaptchaImage($captcha_key)
 		{
 			$code = null;
 
 			if (is_string($captcha_key)) {
-				$code = OZoneSessions::get('_captcha_cfg_:' . $captcha_key);
+				$code = SessionsData::get('_captcha_cfg_:' . $captcha_key);
 			}
 
 			if (empty($code)) {
-				throw new OZoneNotFoundException();
+				throw new NotFoundException();
 			}
 
-			OZoneSessions::remove('_captcha_cfg_:' . $captcha_key);
+			SessionsData::remove('_captcha_cfg_:' . $captcha_key);
 
 			$CAPTCHA_DIR = OZ_OZONE_DIR . 'oz_assets' . DS . 'captcha' . DS;
 
@@ -156,7 +156,7 @@
 		 */
 		private static function hex2rgb($hex_str, $get_string = false, $separator = ',')
 		{
-			$hex_str   = preg_replace("/[^0-9A-Fa-f]/", '', $hex_str); // Gets a proper hex string
+			$hex_str   = preg_replace("/[^0-9A-Fa-f]/", '', $hex_str); // Get  a proper hex string
 			$rgb_array = [];
 			if (strlen($hex_str) == 6) {
 				$color_val      = hexdec($hex_str);

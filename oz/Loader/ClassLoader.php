@@ -55,7 +55,7 @@
 	 *    // no need to instantiate the loader nor register class loader
 	 *    $loader = \OZONE\OZ\Loader\ClassLoader;
 	 *
-	 *    // to load namespaced class
+	 *    // to load class with namespace
 	 *        // register the base directories for your namespace prefixes
 	 *        $loader::addNamespace('Foo\Bar', '/root/packages/Foo/Bar');
 	 *        $loader::addNamespace('Foo\Baz', '/root/packages/Foo/Baz');
@@ -130,7 +130,7 @@
 		{
 			if (self::$registered === false) {
 				self::$registered = true;
-				spl_autoload_register(['\OZONE\OZ\Loader\ClassLoader', 'loadClass']);
+				spl_autoload_register([self::class, 'loadClass']);
 			}
 		}
 
@@ -173,11 +173,7 @@
 
 							if (!array_key_exists($class_name, self::$class_map)) {
 								self::$class_map[$class_name] = $c_path;
-							}// else {
-							// tmp duplicate
-							// $class_path = self::$class_map[ $class_name ];
-							// throw new \Exception( sprintf('"%s" is defined in "%s" cannot overwrite with "%s"', $class_name, $class_path, $c_path ) );
-							// }
+							}
 						} elseif (!!$recursive AND $deep > 0 AND is_dir($c_path)) {
 							self::addDir($c_path, $recursive, $deep - 1);
 						}
@@ -305,7 +301,6 @@
 					return $mapped_file;
 				}
 				// remove the trailing namespace separator for the next iteration
-				// of strrpos()
 				$prefix = rtrim($prefix, '\\');
 			}
 
@@ -346,7 +341,7 @@
 		}
 
 		/**
-		 * Check if the class exists
+		 * Checks if the class exists
 		 *
 		 * @param string $class_name The class name
 		 *

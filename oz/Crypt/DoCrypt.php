@@ -10,7 +10,7 @@
 
 	namespace OZONE\OZ\Crypt;
 
-	use OZONE\OZ\Core\OZoneKeyGen;
+	use OZONE\OZ\Core\Hasher;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -57,7 +57,7 @@
 		private static function toShort($pass)
 		{
 			if (strlen($pass) > self::BCRYPT_MAX_INPUT_LENGTH) {
-				$pass = OZoneKeyGen::hashIt($pass, 64);
+				$pass = Hasher::hashIt($pass, 64);
 			}
 
 			return $pass;

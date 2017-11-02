@@ -10,12 +10,12 @@
 
 	namespace OZONE\OZ\Authenticator\Services;
 
-	use OZONE\OZ\Authenticator\QrCodeHelper;
-	use OZONE\OZ\Core\OZoneAssert;
-	use OZONE\OZ\Core\OZoneService;
-	use OZONE\OZ\Core\OZoneSettings;
-	use OZONE\OZ\Core\OZoneUri;
-	use OZONE\OZ\Exceptions\OZoneNotFoundException;
+	use OZONE\OZ\Authenticator\QRCodeHelper;
+	use OZONE\OZ\Core\Assert;
+	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Core\SettingsManager;
+	use OZONE\OZ\Core\URIHelper;
+	use OZONE\OZ\Exceptions\NotFoundException;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -24,7 +24,7 @@
 	 *
 	 * @package OZONE\OZ\Authenticator\Services
 	 */
-	final class QrCode extends OZoneService
+	final class QrCode extends BaseService
 	{
 		/**
 		 * QrCode constructor.
@@ -37,21 +37,21 @@
 		/**
 		 * {@inheritdoc}
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneNotFoundException
+		 * @throws \OZONE\OZ\Exceptions\NotFoundException
 		 */
-		public function execute($request = [])
+		public function execute(array $request = [])
 		{
 			$params = ['key'];
 
-			$file_uri_reg = OZoneSettings::get('oz.files', "OZ_QRCODE_FILE_REG");
-			$extra_ok     = OZoneUri::parseUriExtra($file_uri_reg, $params, $request);
+			$file_uri_reg = SettingsManager::get('oz.files', "OZ_QR_CODE_FILE_REG");
+			$extra_ok     = URIHelper::parseUriExtra($file_uri_reg, $params, $request);
 
 			if (!$extra_ok) {
-				throw new OZoneNotFoundException();
+				throw new NotFoundException();
 			}
 
-			OZoneAssert::assertForm($request, $params, new OZoneNotFoundException());
+			Assert::assertForm($request, $params, new NotFoundException());
 
-			QrCodeHelper::serveQrCodeImage($request['key']);
+			QRCodeHelper::serveQrCodeImage($request['key']);
 		}
 	}

@@ -10,19 +10,16 @@
 
 	namespace OZONE\OZ\Ofv;
 
-	use OZONE\OZ\Core\OZoneSettings;
+	use OZONE\OZ\Core\SettingsManager;
 
 	function ofv_pass(OFormValidator $ofv)
 	{
 		$pass = $ofv->getField('pass');
 
-		// on verifie la longueur du mot de pass
 		$len = strlen($pass);
-		if ($len < OZoneSettings::get('oz.ofv.const', 'OZ_PASS_MIN_LENGTH')) {
-			// mot de pass trop court
+		if ($len < SettingsManager::get('oz.ofv.const', 'OZ_PASS_MIN_LENGTH')) {
 			$ofv->addError('OZ_FIELD_PASS_TOO_SHORT');
-		} elseif ($len > OZoneSettings::get('oz.ofv.const', 'OZ_PASS_MAX_LENGTH')) {
-			// mot de pass trop long
+		} elseif ($len > SettingsManager::get('oz.ofv.const', 'OZ_PASS_MAX_LENGTH')) {
 			$ofv->addError('OZ_FIELD_PASS_TOO_LONG');
 		} else {
 			$ofv->setField('pass', $pass);

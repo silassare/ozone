@@ -33,7 +33,7 @@
 		}
 
 		/**
-		 * get token url for authentication
+		 * Gets token url for authentication
 		 *
 		 * @return array the token url info
 		 */

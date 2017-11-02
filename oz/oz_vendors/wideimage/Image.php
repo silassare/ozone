@@ -350,7 +350,7 @@
 		}
 
 		/**
-		 * Set the color index $color to a pixel at $x, $y
+		 * Sets the color index $color to a pixel at $x, $y
 		 *
 		 * @param int $x
 		 * @param int $y

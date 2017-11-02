@@ -10,23 +10,21 @@
 
 	namespace OZONE\OZ\FS\Services;
 
-	use OZONE\OZ\Core\OZoneAssert;
-	use OZONE\OZ\Core\OZoneService;
-	use OZONE\OZ\Core\OZoneSessions;
-	use OZONE\OZ\Core\OZoneSettings;
-	use OZONE\OZ\Core\OZoneDb;
-	use OZONE\OZ\Core\OZoneUri;
-	use OZONE\OZ\Exceptions\OZoneForbiddenException;
-	use OZONE\OZ\Exceptions\OZoneNotFoundException;
-	use OZONE\OZ\FS\OZoneFiles;
-	use OZONE\OZ\FS\OZoneFilesUtils;
-	use OZONE\OZ\User\OZoneUserUtils;
+	use OZONE\OZ\Core\Assert;
+	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Core\SessionsData;
+	use OZONE\OZ\Core\SettingsManager;
+	use OZONE\OZ\Core\URIHelper;
+	use OZONE\OZ\Db\OZUsersQuery;
+	use OZONE\OZ\Exceptions\ForbiddenException;
+	use OZONE\OZ\Exceptions\NotFoundException;
+	use OZONE\OZ\FS\FilesUtils;
+	use OZONE\OZ\User\UsersUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	class GetFiles extends OZoneService
+	class GetFiles extends BaseService
 	{
-
 		/**
 		 * GetFiles constructor.
 		 */
@@ -38,30 +36,30 @@
 		/**
 		 * {@inheritdoc}
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneForbiddenException
-		 * @throws \OZONE\OZ\Exceptions\OZoneInternalError
-		 * @throws \OZONE\OZ\Exceptions\OZoneInvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\OZoneNotFoundException
+		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\NotFoundException
 		 */
-		public function execute($request = [])
+		public function execute(array $request = [])
 		{
 			$src          = null;
 			$result       = null;
-			$params       = ['fid', 'fkey', 't'];
-			$file_uri_reg = OZoneSettings::get('oz.files', 'OZ_FILE_URI_EXTRA_REG');
+			$params       = ['id', 'key', 't'];
+			$file_uri_reg = SettingsManager::get('oz.files', 'OZ_FILE_URI_EXTRA_REG');
 
-			$extra_ok = OZoneUri::parseUriExtra($file_uri_reg, $params, $request);
+			$extra_ok = URIHelper::parseUriExtra($file_uri_reg, $params, $request);
 
 			if (!$extra_ok) {
-				throw new OZoneNotFoundException();
+				throw new NotFoundException();
 			}
 
-			OZoneAssert::assertForm($request, $params, new OZoneNotFoundException());
+			Assert::assertForm($request, $params, new NotFoundException());
 
-			$picid = $request['fid'] . '_' . $request['fkey'];
+			$picid = $request['id'] . '_' . $request['key'];
 
-			if (!OZoneUserUtils::userVerified() AND !$this->isLastUserPic($picid)) {
-				throw new OZoneForbiddenException();
+			if (!UsersUtils::userVerified() AND !$this->isLastUserPic($picid)) {
+				throw new ForbiddenException();
 			}
 
 			$this->labelGetFile($request);
@@ -72,72 +70,74 @@
 		 *
 		 * @param $request
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneInternalError
-		 * @throws \OZONE\OZ\Exceptions\OZoneNotFoundException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\NotFoundException
 		 */
 		private function labelGetFile($request)
 		{
-			$fid   = $request['fid'];
-			$fkey  = $request['fkey'];
-			$thumb = intval($request['t']);
-			$src   = null;
+			$file_id  = $request['id'];
+			$file_key = $request['key'];
+			$thumb    = intval($request['t']);
+			$src      = null;
 
-			$result = OZoneFilesUtils::getFileFromFid($fid, $fkey);
+			$result = FilesUtils::getFileWithId($file_id, $file_key);
 
 			if (!$result) {
-				throw new OZoneNotFoundException();
+				throw new NotFoundException();
 			}
 
 			if ($thumb > 0) {
-				// si l'application veut un thumbnails et qu'on ne l'a pas
-				// alors on notifie cela; l'application cliente devrais pouvoir prendre en charge cette situation
-				// mais quand il s'agira de la version wap/mobilebrowser c'est a dire sans javascript il faudra retourner l'image par defaut pour le type de ce fichier
-				if (empty($result['fthumb'])) {
-					throw new OZoneNotFoundException();
+				// if the client wants a thumbnails and we do not have it
+				// then we notify it; the client should be able to handle this situation
+				if (empty($result->getThumb())) {
+					throw new NotFoundException();
 				}
 
-				$src = OZoneFiles::toAbsolute($result['fthumb']);
+				$src = $result->getThumb();
 			} else {
-				$src = OZoneFiles::toAbsolute($result['fpath']);
+				$src = $result->getPath();
 			}
 
-			// on verifie s'il y a un probleme sur le lien tirer de la base de donnee
-			// TODO disfonctionnement il faudrat peut-etre creer un log afin de resoudre ce probleme de lien
 			if (empty($src) || !file_exists($src) || !is_file($src) || !is_readable($src)) {
-				throw new OZoneNotFoundException();
+				// NOTE keep this log, helpful for debugging
+				oz_logger(sprintf('The file_id: "%s" exist in the database but not at "%s".', $file_id, $src));
+
+				throw new NotFoundException();
 			}
 
 			$path_parts = pathinfo($src);
 			$ext        = strtolower($path_parts['extension']);
 
-			$fmime = OZoneFilesUtils::extensionToMimeType($ext);
+			$file_mime = FilesUtils::extensionToMimeType($ext);
+			$file_name = SettingsManager::get('oz.files', 'OZ_FILE_DOWNLOAD_NAME');
 
-			$fname = OZoneSettings::get('oz.files', 'OZ_FILE_DOWNLOAD_NAME');
-			$fname = str_replace(['{oz_fid}', '{oz_thumb}', '{oz_ext}'], [$fid, $thumb, $ext], $fname);
+			if (strlen($file_name)) {
+				$file_name = str_replace(['{oz_file_id}', '{oz_thumbnail}', '{oz_file_extension}'], [$file_id, $thumb, $ext], $file_name);
+			} else {
+				$file_name = $result->getName();
+			}
 
-			(new FilesServer())->execute(['src' => $src, 'thumb' => $thumb, 'fname' => $fname, 'fmime' => $fmime]);
+			(new FilesServer())->execute(['src' => $src, 'thumb' => $thumb, 'file_name' => $file_name, 'file_mime' => $file_mime]);
 		}
 
 		/**
-		 * check if a given picid is the current user profile picid
+		 * Checks if a given picid is the current user profile picid
 		 *
 		 * @param string $picid the file picture file id
 		 *
 		 * @return bool
-		 * @throws \Exception
 		 */
 		private function isLastUserPic($picid)
 		{
-			$uid = OZoneSessions::get('ozone_user:data:user_id');
+			$uid = SessionsData::get('ozone_user:id');
 
 			if (!empty($uid)) {
-				$data = OZoneUserUtils::getUserObject($uid)
-									  ->getUserData();
-
-				if (empty($data)) {
-					$data = OZoneDb::tryRemoveColumnsNameMask($data);
-
-					return ($data['user_picid'] === $picid);
+				$u_table = new OZUsersQuery();
+				$u       = $u_table->filterById($uid)
+								   ->find(1)
+								   ->fetchClass();
+				if ($u) {
+					return ($u->getPicid() === $picid);
 				}
 			}
 

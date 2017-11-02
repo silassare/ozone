@@ -20,7 +20,7 @@
 		'OZ_PASS_MIN_LENGTH' => 6,
 		'OZ_PASS_MAX_LENGTH' => 60,
 
-		'OZ_UNAME_REG'        => '#^.{3,60}$#',
-		'OZ_UNAME_MIN_LENGTH' => 3,
-		'OZ_UNAME_MAX_LENGTH' => 60
+		'OZ_USER_NAME_REG'        => '#^.+$#',
+		'OZ_USER_NAME_MIN_LENGTH' => 3,
+		'OZ_USER_NAME_MAX_LENGTH' => 60
 	];

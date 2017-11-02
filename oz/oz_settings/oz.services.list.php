@@ -9,14 +9,14 @@
 	 */
 
 	return [
-		'oz_webroute' => [
+		'oz_web_route' => [
 			'internal_name'   => 'OZONE\OZ\WebRoute\Services\RouteRunner',
 			'is_file_service' => false,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
 			'req_methods'     => ['GET', 'POST', 'PUT', 'DELETE']
 		],
-		'getfile'     => [
+		'file'     => [
 			'internal_name'   => 'OZONE\OZ\FS\Services\GetFiles',
 			'is_file_service' => true,
 			'can_serve_resp'  => true,
@@ -46,8 +46,8 @@
 			'cross_site'      => true,
 			'req_methods'     => ['POST', 'GET']
 		],
-		'signin'      => [
-			'internal_name'   => 'OZONE\OZ\User\Services\Signin',
+		'signup'      => [
+			'internal_name'   => 'OZONE\OZ\User\Services\Signup',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,

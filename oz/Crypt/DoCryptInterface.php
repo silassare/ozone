@@ -16,7 +16,7 @@
 	{
 
 		/**
-		 * get password hash
+		 * Gets password hash
 		 *
 		 * @param string $pass The password to be hashed
 		 *
@@ -25,7 +25,7 @@
 		public function passHash($pass);
 
 		/**
-		 * check password
+		 * Checks password
 		 *
 		 * @param string $pass       The password to be hashed
 		 * @param string $known_hash The correct password hash

@@ -10,15 +10,15 @@
 
 	namespace OZONE\OZ\Ofv;
 
-	use OZONE\OZ\Core\OZoneSettings;
-	use OZONE\OZ\Utils\OZoneStr;
+	use OZONE\OZ\Core\SettingsManager;
+	use OZONE\OZ\Utils\StringUtils;
 
 	function ofv_code(OFormValidator $ofv)
 	{
 		$code = $ofv->getField('code');
 
-		if (preg_match(OZoneSettings::get('oz.ofv.const', 'OZ_CODE_REG'), $code)) {
-			$ofv->setField('code', OZoneStr::clean($code));
+		if (preg_match(SettingsManager::get('oz.ofv.const', 'OZ_CODE_REG'), $code)) {
+			$ofv->setField('code', StringUtils::clean($code));
 		} else {
 			$ofv->addError('OZ_AUTH_CODE_INVALID');
 		}

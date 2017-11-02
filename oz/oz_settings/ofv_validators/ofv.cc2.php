@@ -10,21 +10,20 @@
 
 	namespace OZONE\OZ\Ofv;
 
-	use OZONE\OZ\User\OZoneUserUtils;
+	use OZONE\OZ\User\UsersUtils;
 
 	function ofv_cc2(OFormValidator $ofv)
 	{
-		// code cc2 du pays concerné
 		$cc2   = strtoupper($ofv->getField('cc2')); // <- important
 		$rules = $ofv->getRules('cc2');
 
 		if (in_array('authorized-only', $rules)) {
-			if (!OZoneUserUtils::authorizedCountry($cc2)) {
+			if (!UsersUtils::authorizedCountry($cc2)) {
 				$ofv->addError('OZ_FIELD_COUNTRY_NOT_ALLOWED');
 
 				return;
 			}
-		} elseif (empty(OZoneUserUtils::getCountry($cc2))) {
+		} elseif (!UsersUtils::getCountryObject($cc2)) {
 			$ofv->addError('OZ_FIELD_COUNTRY_UNKNOWN');
 
 			return;

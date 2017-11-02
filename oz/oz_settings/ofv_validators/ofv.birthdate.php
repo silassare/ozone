@@ -10,29 +10,27 @@
 
 	namespace OZONE\OZ\Ofv;
 
-	use OZONE\OZ\Core\OZoneSettings;
+	use OZONE\OZ\Core\SettingsManager;
 
 	function ofv_birthdate(OFormValidator $ofv)
 	{
-		$bdate = $ofv->getField('bdate');
-		$date  = OFormUtils::parseDate($bdate);
+		$birthdate = $ofv->getField('birth_date');
+		$date  = OFormUtils::parseDate($birthdate);
 
-		// on verifie que la date de naissance est valide
 		if ($date) {
 			$year  = $date['year'];
 			$month = $date['month'];
 			$day   = $date['day'];
 
-			$min_age = OZoneSettings::get('oz.ofv.const', 'OZ_USER_MIN_AGE');
-			$max_age = OZoneSettings::get('oz.ofv.const', 'OZ_USER_MAX_AGE');
+			$min_age = SettingsManager::get('oz.ofv.const', 'OZ_USER_MIN_AGE');
+			$max_age = SettingsManager::get('oz.ofv.const', 'OZ_USER_MAX_AGE');
 
 			if (OFormUtils::isBirthDate($month, $day, $year, $min_age, $max_age)) {
-				$ofv->setField('bdate', $day . '-' . $month . '-' . $year);
+				$ofv->setField('birth_date', $day . '-' . $month . '-' . $year);
 
 				return;
 			}
 		}
 
-		// la date de naissance n'est pas valide
-		$ofv->addError('OZ_FIELD_BIRTHDATE_INVALID');
+		$ofv->addError('OZ_FIELD_BIRTH_DATE_INVALID');
 	}

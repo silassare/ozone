@@ -10,7 +10,7 @@
 
 	namespace OZONE\OZ\App;
 
-	use OZONE\OZ\Exceptions\OZoneBaseException;
+	use OZONE\OZ\Exceptions\BaseException;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -26,9 +26,9 @@
 		/**
 		 * Is called when some unhandled ozone error occurs.
 		 *
-		 * @param \OZONE\OZ\Exceptions\OZoneBaseException $err The ozone error object.
+		 * @param \OZONE\OZ\Exceptions\BaseException $err The ozone error object.
 		 *
 		 * @return bool  Returns True for cancel error, False for log error and exit.
 		 */
-		public static function onError(OZoneBaseException $err);
+		public static function onError(BaseException $err);
 	}

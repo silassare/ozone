@@ -1,17 +1,9 @@
 <?php
-	/**
-	 * Auto generated file
-	 *
-	 * INFO: you are free to edit it,
-	 * but make sure to know what you are doing.
-	 *
-	 * Proudly With: <%$.oz_version_name%>
-	 * Time: <%$.oz_time%>
-	 */
+<%@import('gen.info.otpl',$)%>
 
 	namespace <%$.oz_project_namespace%>;
 
-	use OZONE\OZ\Exceptions\OZoneBaseException;
+	use OZONE\OZ\Exceptions\BaseException;
 	use OZONE\OZ\App\AppInterface;
 
 	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
@@ -27,7 +19,7 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public static function onError( OZoneBaseException $error )
+		public static function onError( BaseException $error )
 		{
 			return false;
 		}

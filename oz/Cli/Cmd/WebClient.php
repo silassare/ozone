@@ -14,13 +14,15 @@
 	use Kli\KliAction;
 	use Kli\KliOption;
 	use Kli\Types\KliTypeString;
-	use OZONE\OZ\Cli\OZoneCommand;
+	use OZONE\OZ\Cli\Command;
 	use OZONE\OZ\Cli\Utils\Utils;
-	use OZONE\OZ\FS\OZoneFS;
-	use OZONE\OZ\FS\OZonePath;
-	use OZONE\OZ\FS\OZoneTemplates;
+	use OZONE\OZ\Core\Hasher;
+	use OZONE\OZ\Db\OZClient;
+	use OZONE\OZ\FS\FilesManager;
+	use OZONE\OZ\FS\PathUtils;
+	use OZONE\OZ\FS\TemplatesUtils;
 
-	final class WebClient extends OZoneCommand
+	final class WebClient extends Command
 	{
 		/**
 		 * {@inheritdoc}
@@ -35,7 +37,7 @@
 		}
 
 		/**
-		 * add new web client.
+		 * Adds new web client.
 		 *
 		 * @param array $options
 		 *
@@ -45,19 +47,27 @@
 		{
 			$host           = $options['h'];
 			$folder_name    = $options['f'];
+			$about          = $options['a'];
 			$project_folder = getcwd();
 			$config         = Utils::loadProjectConfig($project_folder, true);
 
 			$project_name = $config['OZ_PROJECT_NAME'];
 			$namespace    = $config['OZ_PROJECT_NAMESPACE'];
 			$class_name   = $config['OZ_PROJECT_CLASS'];
-			$api_key      = '--YOUR OZONE API KEY HERE--';
+			$api_key      = Hasher::genClientId($host);
+
+			$wc = new OZClient();
+			$wc->setApiKey($api_key)
+			   ->setAbout($about)
+			   ->setUrl($host)
+			   ->setValid(true)
+			   ->save();
 
 			if (!empty($folder_name)) {
-				$abs_folder = OZonePath::resolve($project_folder, $folder_name);
+				$abs_folder = PathUtils::resolve($project_folder, $folder_name);
 
 				if (file_exists($abs_folder)) {
-					if (is_file($abs_folder) OR !OZoneFS::isEmptyDir($abs_folder)) {
+					if (is_file($abs_folder) OR !FilesManager::isEmptyDir($abs_folder)) {
 						throw new KliInputException(sprintf('cannot overwrite "%s".', $abs_folder));
 					}
 				}
@@ -67,15 +77,15 @@
 					'oz_time'              => time(),
 					'oz_project_namespace' => $namespace,
 					'oz_project_class'     => $class_name,
-					'oz_default_apikey'    => $api_key
+					'oz_default_api_key'    => $api_key
 				];
 
-				$www_index = OZoneTemplates::compute('oz:gen/index.www.otpl', $inject);
+				$www_index = TemplatesUtils::compute('oz:gen/index.www.otpl', $inject);
 
 				$tpl_folder = OZ_OZONE_DIR . 'oz_templates' . DS;
 
-				$fs = new OZoneFS($project_folder);
-				$fs->cd($abs_folder, true)
+				$fm = new FilesManager($project_folder);
+				$fm->cd($abs_folder, true)
 				   ->cd('oz_private', true)
 				   ->mkdir('oz_templates')
 				   ->mkdir('oz_settings')
@@ -88,7 +98,7 @@
 			}
 
 			$this->getCli()
-				 ->writeLn(sprintf('Success: web client added to project "%s".', $project_name), true)
+				 ->writeLn(sprintf('Success: web client added to project "%s".', $project_name))
 				 ->writeLn(sprintf('Client Host  : %s', $host))
 				 ->writeLn(sprintf('Client ApiKey: %s', $api_key));
 		}
@@ -119,10 +129,18 @@
 			$f->alias('folder')
 			  ->offsets(2)
 			  ->type((new KliTypeString)->pattern('#^[^\\/?%*:|"<>]+$#'))
-			  ->description('The name of the folder in which a web client will be generated.');
+			  ->description('The web client folder name.');
 
-			$add->addOption($h)
-				->addOption($f);
+			// option: -a alias --about
+			$a = new KliOption('a');
+			$a->alias('about')
+			  ->offsets(3)
+			  ->type(new KliTypeString)
+			  ->required()
+			  ->prompt('Short text about the web client')
+			  ->description('Short text about the web client.');
+
+			$add->addOption($h, $f, $a);
 
 			$this->addAction($add);
 		}

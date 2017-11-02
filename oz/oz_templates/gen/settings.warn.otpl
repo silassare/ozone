@@ -1,13 +1,5 @@
 <?php
-	/**
-	 * Auto generated file
-	 *
-	 * WARNING: please don't edit,
-	 * secure this file to prevent illegal access.
-	 *
-	 * Proudly With: <%$.oz_version_name%>
-	 * Time: <%$.oz_time%>
-	 */
+<%@import('gen.warn.otpl',$)%>
 
 	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
 

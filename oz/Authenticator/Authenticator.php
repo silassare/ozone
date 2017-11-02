@@ -10,9 +10,10 @@
 
 	namespace OZONE\OZ\Authenticator;
 
-	use OZONE\OZ\Core\OZoneDb;
-	use OZONE\OZ\Core\OZoneKeyGen;
-	use OZONE\OZ\Core\OZoneSettings;
+	use OZONE\OZ\Core\Hasher;
+	use OZONE\OZ\Core\SettingsManager;
+	use OZONE\OZ\Db\OZAuth;
+	use OZONE\OZ\Db\OZAuthenticatorQuery;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -31,41 +32,44 @@
 		/**
 		 * @var string
 		 */
-		private $forValue = null;
+		private $for_value = null;
 
 		/**
-		 * contains generated authentication code, token ...
+		 * Contains generated authentication code, token ...
 		 *
 		 * @var array
 		 */
 		private $generated = null;
 
 		/**
-		 * the last auth message
+		 * The last auth message
 		 *
 		 * @var string|null
 		 */
 		private $message = null;
 
+		/** @var \OZONE\OZ\Db\OZAuth */
+		private $auth_object = null;
+
 		/**
 		 * Authenticator constructor.
 		 *
-		 * @param string|null $name     The authentication proccess name.
-		 * @param string      $forValue The value to authenticate : email/phone number etc.
+		 * @param string|null $name      The authentication process name.
+		 * @param string      $for_value The value to authenticate : email/phone number etc.
 		 */
-		function __construct($name = null, $forValue)
+		function __construct($name = null, $for_value)
 		{
 			if (empty($name)) {
-				$this->label = OZoneKeyGen::genRandomHash(32);
+				$this->label = Hasher::genRandomHash(32);
 			} else {
-				$this->label = OZoneKeyGen::hashIt($name);
+				$this->label = Hasher::hashIt($name);
 			}
 
-			$this->forValue = $forValue;
+			$this->for_value = $for_value;
 		}
 
 		/**
-		 * check if an authentication process was already started
+		 * Checks if an authentication process was already started
 		 *
 		 * @return bool
 		 */
@@ -75,52 +79,44 @@
 		}
 
 		/**
-		 * generate new authentication code, token ...
+		 * Generate new authentication code, token ...
 		 *
-		 * @param int $tryMax
-		 * @param int $lifeTime
+		 * @param int $try_max
+		 * @param int $life_time
 		 *
 		 * @return \OZONE\OZ\Authenticator\Authenticator
 		 * @throws \Exception
 		 */
-		public function generate($tryMax = null, $lifeTime = null)
+		public function generate($try_max = null, $life_time = null)
 		{
-			if (empty($tryMax)) {
-				$tryMax = intval(OZoneSettings::get('oz.authenticator', 'OZ_AUTH_CODE_TRY_MAX'));
+			if (empty($try_max)) {
+				$try_max = (int)SettingsManager::get('oz.authenticator', 'OZ_AUTH_CODE_TRY_MAX');
 			}
 
-			if (empty($lifeTime)) {
-				$lifeTime = intval(OZoneSettings::get('oz.authenticator', 'OZ_AUTH_CODE_LIFE_TIME'));
+			if (empty($life_time)) {
+				$life_time = (int)SettingsManager::get('oz.authenticator', 'OZ_AUTH_CODE_LIFE_TIME');
 			}
 
-			if (!($tryMax > 0 AND $lifeTime > 0 AND is_int($tryMax) AND is_int($lifeTime))) {
-				throw new \Exception('invalid tryMax and lifeTime, you should provide natural integer values');
+			if (!is_int($try_max) OR !is_int($life_time) OR $try_max <= 0 OR $life_time <= 0) {
+				throw new \InvalidArgumentException('arguments should be unsigned integer.');
 			}
 
-			$expire = time() + $lifeTime;
-			$code   = OZoneKeyGen::genAuthCode();
-			$token  = OZoneKeyGen::genAuthToken($code);
+			$expire = time() + $life_time;
+			$code   = Hasher::genAuthCode();
+			$token  = Hasher::genAuthToken($code);
 
-			$sql = "
-				INSERT INTO
-					oz_authenticator ( auth_label , auth_for , auth_code , auth_token, auth_try_max , auth_try_count , auth_expire )
-				VALUES ( :label , :forv , :code , :token, :tmax , :tcount , :expire )
-				ON DUPLICATE KEY
-				UPDATE auth_code =:code , auth_token =:token , auth_try_count =:tcount, auth_expire =:expire";
-
-			OZoneDb::getInstance()
-				   ->insert($sql, [
-					   'label'  => $this->label,
-					   'forv'   => $this->forValue,
-					   'code'   => $code,
-					   'token'  => $token,
-					   'tmax'   => $tryMax,
-					   'tcount' => 0,
-					   'expire' => $expire
-				   ]);
+			$auth = new OZAuth();
+			$auth->setLabel($this->label)
+				 ->setFor($this->for_value)
+				 ->setCode($code)
+				 ->setToken($token)
+				 ->setTryMax($try_max)
+				 ->setTryCount(0)
+				 ->setExpire($expire)
+				 ->save();
 
 			$this->generated = [
-				'authForValue' => $this->forValue,
+				'authForValue' => $this->for_value,
 				'authLabel'    => $this->label,
 				'authExpire'   => $expire,
 				'authCode'     => $code,
@@ -131,7 +127,7 @@
 		}
 
 		/**
-		 * get the generated authentication code token ... in an array
+		 * Gets the generated authentication code token ... in an array
 		 *
 		 * @return array
 		 *
@@ -147,7 +143,7 @@
 		}
 
 		/**
-		 * get this authenticator label
+		 * Gets the authentication label.
 		 *
 		 * @return string
 		 */
@@ -157,7 +153,7 @@
 		}
 
 		/**
-		 * check if you can use a given authenticator label
+		 * Checks if you can use a given authentication label
 		 *
 		 * this doesn't check the validity of the label
 		 *
@@ -167,7 +163,7 @@
 		 */
 		public function canUseLabel($label)
 		{
-			if (!is_string($label) AND !preg_match('#^[a-z0-9]{32}$#', $label)) {
+			if (!is_string($label) OR !preg_match('#^[a-z0-9]{32}$#', $label)) {
 				return false;
 			}
 
@@ -175,7 +171,7 @@
 		}
 
 		/**
-		 * set label
+		 * Sets label.
 		 *
 		 * the label and the value should be unique otherwise if an authentication
 		 * exists for the same label and value it'll be overwritten, so be aware
@@ -198,17 +194,17 @@
 		}
 
 		/**
-		 * get the value we want to authenticate
+		 * Gets the value we want to authenticate
 		 *
 		 * @return string
 		 */
 		public function getForValue()
 		{
-			return $this->forValue;
+			return $this->for_value;
 		}
 
 		/**
-		 * validate this authentication process with code
+		 * Validate the authentication process with code.
 		 *
 		 * @param int $code the code value
 		 *
@@ -219,18 +215,18 @@
 			$ok  = false;
 			$msg = 'OZ_AUTH_PROCESS_INVALID';
 
-			$data = $this->get();
+			$auth = $this->get();
 
-			if (!empty($data)) {
-				$try_max = intval($data['auth_try_max']);
-				$count   = intval($data['auth_try_count']) + 1;
+			if (!empty($auth)) {
+				$try_max = $auth->getTryMax();
+				$count   = $auth->getTryCount() + 1;
 				$rest    = $try_max - $count;
 
 				// check if auth process has expired
-				if ($data['auth_expire'] <= time()) {
+				if ($auth->getExpire() <= time()) {
 					$msg = 'OZ_AUTH_CODE_EXPIRED';
 					$this->cancel();
-				} elseif ($rest >= 0 AND $data['auth_code'] === $code) {
+				} elseif ($rest >= 0 AND $auth->getCode() === $code) {
 					// we don't exceed the auth_try_max and the code is valid
 					$ok  = true;
 					$msg = 'OZ_AUTH_CODE_OK';
@@ -239,7 +235,8 @@
 					$msg = 'OZ_AUTH_CODE_EXCEED_MAX_FAIL';
 					$this->cancel();
 				} else { /*we have another chance*/
-					$this->tryUpdateCounter();
+					$auth->setTryCount($auth->getTryCount() + 1)
+						 ->save();
 					$msg = 'OZ_AUTH_CODE_INVALID';
 				}
 			}
@@ -250,7 +247,7 @@
 		}
 
 		/**
-		 * validate this authentication process with token
+		 * Validate the authentication process with token.
 		 *
 		 * only one tentative per authentication process are allowed with token
 		 *
@@ -263,12 +260,12 @@
 			$ok  = false;
 			$msg = 'OZ_AUTH_PROCESS_INVALID';
 
-			$data = $this->get();
+			$auth = $this->get();
 
-			if (!empty($data)) {
-				if ($data['auth_expire'] <= time()) {
+			if (!empty($auth)) {
+				if ($auth->getExpire() <= time()) {
 					$msg = 'OZ_AUTH_TOKEN_EXPIRED';
-				} elseif ($data['auth_token'] != $token) {
+				} elseif ($auth->getToken() != $token) {
 					$msg = 'OZ_AUTH_TOKEN_INVALID';
 				} else {
 					$ok  = true;
@@ -285,65 +282,41 @@
 		}
 
 		/**
-		 * retrieve this authentication data from database
+		 * Fetch the authentication data from database.
 		 *
-		 * @return array|null;
+		 * @return null|\OZONE\OZ\Db\OZAuth
 		 */
 		private function get()
 		{
-			$sql = "
-				SELECT * FROM oz_authenticator
-				WHERE auth_label =:label AND auth_for =:forv
-				LIMIT 0,1";
+			if (!$this->auth_object) {
+				$auth_table = new OZAuthenticatorQuery();
+				$result     = $auth_table->filterByLabel($this->label)
+										 ->filterByFor($this->for_value)
+										 ->find(1);
 
-			$req = OZoneDb::getInstance()
-						  ->select($sql, ['label' => $this->label, 'forv' => $this->forValue]);
-
-			oz_logger([$this->label, $this->forValue]);
-
-			if ($req->rowCount() > 0) {
-				$data = $req->fetch();
-				$req->closeCursor();
-
-				return $data;
+				$this->auth_object = $result->fetchClass();
 			}
 
-			return null;
+			return $this->auth_object;
 		}
 
 		/**
-		 * cancel this authentication process
+		 * Cancel the authentication process.
 		 *
 		 * @return int
 		 */
 		public function cancel()
 		{
-			$sql = "
-				DELETE FROM oz_authenticator 
-				WHERE auth_label =:label AND auth_for =:for";
+			$auth = new OZAuthenticatorQuery();
 
-			return OZoneDb::getInstance()
-						  ->delete($sql, ['label' => $this->label, 'for' => $this->forValue]);
+			return $auth->filterByLabel($this->label)
+						->filterByFor($this->for_value)
+						->delete()
+						->execute();
 		}
 
 		/**
-		 * update the authentication counter when code fails
-		 *
-		 * @return int
-		 */
-		private function tryUpdateCounter()
-		{
-			$sql = "
-				UPDATE oz_authenticator 
-				SET auth_try_count = auth_try_count + 1
-				WHERE auth_label =:label AND auth_for =:forv";
-
-			return OZoneDb::getInstance()
-						  ->update($sql, ['label' => $this->label, 'forv' => $this->forValue]);
-		}
-
-		/**
-		 * return the last message
+		 * Gets the last message.
 		 *
 		 * @return null|string
 		 */

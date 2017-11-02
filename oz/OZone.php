@@ -11,18 +11,21 @@
 	namespace OZONE\OZ;
 
 	use OZONE\OZ\App\AppInterface;
-	use OZONE\OZ\Core\OZoneAssert;
-	use OZONE\OZ\Core\OZoneRequest;
-	use OZONE\OZ\Core\OZoneService;
-	use OZONE\OZ\Core\OZoneSettings;
-	use OZONE\OZ\Core\OZoneUri;
-	use OZONE\OZ\Exceptions\OZoneBaseException;
-	use OZONE\OZ\Exceptions\OZoneForbiddenException;
-	use OZONE\OZ\Exceptions\OZoneInternalError;
-	use OZONE\OZ\Exceptions\OZoneNotFoundException;
-	use OZONE\OZ\Lang\OZoneLang;
+	use OZONE\OZ\Core\Assert;
+	use OZONE\OZ\Core\DbManager;
+	use OZONE\OZ\Core\RequestHandler;
+	use OZONE\OZ\Core\ResponseHolder;
+	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Core\SettingsManager;
+	use OZONE\OZ\Core\URIHelper;
+	use OZONE\OZ\Event\EventManager;
+	use OZONE\OZ\Exceptions\BaseException;
+	use OZONE\OZ\Exceptions\ForbiddenException;
+	use OZONE\OZ\Exceptions\InternalErrorException;
+	use OZONE\OZ\Exceptions\NotFoundException;
+	use OZONE\OZ\Lang\Polyglot;
 	use OZONE\OZ\Loader\ClassLoader;
-	use OZONE\OZ\Utils\OZoneStr;
+	use OZONE\OZ\Utils\StringUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -32,6 +35,7 @@
 
 	ClassLoader::addNamespace('\OZONE\OZ', OZ_OZONE_DIR);
 	ClassLoader::addDir(OZ_OZONE_DIR . 'oz_vendors', true, 1);
+	ClassLoader::addNamespace('\Gobl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'gobl' . DS . 'src');
 
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
 
@@ -59,11 +63,23 @@
 		private static $current_app = null;
 
 		/**
-		 * @return mixed
+		 * Gets current running app.
+		 *
+		 * @return AppInterface
 		 */
 		public static function getCurrentApp()
 		{
 			return self::$current_app;
+		}
+
+		/**
+		 * Gets event manager instance.
+		 *
+		 * @return \OZONE\OZ\Event\EventManager
+		 */
+		public static function getEventManager()
+		{
+			return EventManager::getInstance();
 		}
 
 		/**
@@ -81,9 +97,11 @@
 
 			self::$current_app = $app;
 
-			OZoneLang::init();
+			Polyglot::init();
 
-			OZoneRequest::initCheck();
+			DbManager::init();
+
+			RequestHandler::initCheck();
 
 			self::runApp();
 		}
@@ -91,18 +109,18 @@
 		/**
 		 * the ozone app running logic is here
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneInternalError
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		private static function runApp()
 		{
 			self::getCurrentApp()
 				->onInit();
 
-			$req_svc = OZoneUri::getUriPart('oz_uri_service');
+			$req_svc = URIHelper::getUriService();
 
 			if (!empty($req_svc)) {
 				try {
-					$svc    = OZoneSettings::get('oz.services.list', $req_svc);
+					$svc    = SettingsManager::get('oz.services.list', $req_svc);
 					$svc_ok = false;
 
 					if (!empty($svc)) {
@@ -114,20 +132,20 @@
 					}
 
 					if ($svc_ok === true) {
-						OZoneAssert::assertSafeRequestMethod($svc['req_methods']);
+						Assert::assertSafeRequestMethod($svc['req_methods']);
 
-						/** @var OZoneService $svc_obj */
+						/** @var BaseService $svc_obj */
 						$svc_obj = OZone::obj($svc['internal_name']);
 
 						$svc_obj->execute($_REQUEST);
 
-						if (!$svc['can_serve_resp']) OZone::say($svc_obj->getServiceResponse());
+						if (!$svc['can_serve_resp']) OZone::say($svc_obj->getResponseHolder());
 					} else {
-						throw new OZoneNotFoundException('OZ_SERVICE_NOT_FOUND');
+						throw new NotFoundException('OZ_SERVICE_NOT_FOUND');
 					}
-				} catch (OZoneInternalError $e) {
+				} catch (InternalErrorException $e) {
 					throw $e;
-				} catch (OZoneBaseException $e) {
+				} catch (BaseException $e) {
 					$cancel = self::getCurrentApp()
 								  ->onError($e);
 
@@ -138,8 +156,7 @@
 					}
 				}
 			} else {
-				// SILO:: nous sommes peut-etre victime d'une attaque
-				OZoneRequest::attackProcedure(new OZoneForbiddenException(), 'Requested service should not be empty here, something went wrong or we are under attack.');
+				RequestHandler::attackProcedure(new ForbiddenException(), 'Requested service should not be empty here, something went wrong or we are under attack.');
 			}
 		}
 
@@ -160,18 +177,18 @@
 		}
 
 		/**
-		 * get all declared services
+		 * Gets all declared services
 		 *
 		 * @return array|null
-		 * @throws \OZONE\OZ\Exceptions\OZoneInternalError
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getAllServices()
 		{
-			return OZoneSettings::get('oz.services.list');
+			return SettingsManager::get('oz.services.list');
 		}
 
 		/**
-		 * get all declared file services
+		 * Gets all declared file services
 		 *
 		 * @return array
 		 */
@@ -190,30 +207,28 @@
 		}
 
 		/**
-		 * output response in json format for client
+		 * Send response to client in json format
 		 *
-		 * @param array $data
+		 * @param \OZONE\OZ\Core\ResponseHolder $response_holder
 		 */
-		public static function sayJson($data)
+		public static function sayJson(ResponseHolder $response_holder)
 		{
+			$data          = $response_holder->getResponse();
 			$data['utime'] = time();
 
-			// reponse vers l'application cliente au format JSON
 			header('Content-type: application/json');
-			echo json_encode(OZoneStr::encodeFix($data));
+			echo json_encode(StringUtils::encodeFix($data));
 			exit;
 		}
 
 		/**
-		 * output response for client in different format
+		 * Send response to client in different format
 		 *
-		 * @param array $resp
+		 * @param \OZONE\OZ\Core\ResponseHolder $response_holder
 		 */
-		public static function say($resp)
+		public static function say(ResponseHolder $response_holder)
 		{
-			// TODO
-			// output in xml
-			// output in html (build custom page)
-			self::sayJson($resp);
+			// TODO output in xml
+			self::sayJson($response_holder);
 		}
 	}

@@ -11,11 +11,12 @@
 	namespace OZONE\OZ\Cli\Utils;
 
 	use Kli\Exceptions\KliInputException;
+	use OZONE\OZ\Core\DbManager;
 
 	final class Utils
 	{
 		/**
-		 * loads project config from a given project folder or current working dir.
+		 * Loads project config from a given project folder or current working dir.
 		 *
 		 * @param string|null $folder   the project folder
 		 * @param bool        $required the config is required
@@ -45,8 +46,7 @@
 		}
 
 		/**
-		 * assert if a folder or current working directory
-		 * is contains OZone project
+		 * Assert if a folder or current working directory contains OZone project.
 		 *
 		 * @param string|null $folder the project folder
 		 *
@@ -55,5 +55,21 @@
 		public static function assertProjectFolder($folder = null)
 		{
 			self::loadProjectConfig($folder, true);
+		}
+
+		/**
+		 * Assert if whether we have access to the database.
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 */
+		public static function assertDatabaseAccess()
+		{
+			self::assertProjectFolder();
+
+			// get connection to make sure that
+			// we have access to the database
+			// will throw error when something went wrong
+			DbManager::getInstance()
+				   ->getConnection();
 		}
 	}

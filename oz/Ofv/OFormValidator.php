@@ -10,9 +10,9 @@
 
 	namespace OZONE\OZ\Ofv;
 
-	use OZONE\OZ\Exceptions\OZoneBaseException;
-	use OZONE\OZ\Exceptions\OZoneInternalError;
-	use OZONE\OZ\Exceptions\OZoneInvalidFormException;
+	use OZONE\OZ\Exceptions\BaseException;
+	use OZONE\OZ\Exceptions\InternalErrorException;
+	use OZONE\OZ\Exceptions\InvalidFormException;
 
 	final class OFormValidator
 	{
@@ -74,8 +74,8 @@
 		 * @param array $rules_list the rules to use for each field
 		 *
 		 * @return bool
-		 * @throws \OZONE\OZ\Exceptions\OZoneBaseException
-		 * @throws \OZONE\OZ\Exceptions\OZoneInvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\BaseException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 */
 		public function checkForm(array $rules_list)
 		{
@@ -88,7 +88,7 @@
 				if (function_exists($ofv_func_name)) {
 					call_user_func($ofv_func_name, $this);
 				} else {
-					$this->addError(new OZoneInternalError('OZ_FIELD_UNKNOWN', [$field_name]));
+					$this->addError(new InternalErrorException('OZ_FIELD_UNKNOWN', [$field_name]));
 				}
 			}
 
@@ -96,7 +96,7 @@
 		}
 
 		/**
-		 * get the value of a given field name
+		 * Gets the value of a given field name
 		 *
 		 * @param string $name the field name
 		 *
@@ -112,7 +112,7 @@
 		}
 
 		/**
-		 * set the value of a given field name
+		 * Sets the value of a given field name
 		 *
 		 * @param string $name  the field name
 		 * @param mixed  $value the field value
@@ -123,7 +123,7 @@
 		}
 
 		/**
-		 * get the rules of a given field name
+		 * Gets the rules of a given field name
 		 *
 		 * @param string $name the field name
 		 *
@@ -139,7 +139,7 @@
 		}
 
 		/**
-		 * get the current form
+		 * Gets the current form
 		 *
 		 * @return array
 		 */
@@ -149,7 +149,7 @@
 		}
 
 		/**
-		 * get form errors
+		 * Gets form errors
 		 *
 		 * @return array
 		 */
@@ -164,19 +164,19 @@
 		 * @param mixed $e_msg  the error message
 		 * @param mixed $e_data the error data
 		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneBaseException
-		 * @throws \OZONE\OZ\Exceptions\OZoneInvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\BaseException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 */
 		public function addError($e_msg, $e_data = null)
 		{
 			$e = null;
 
-			if ($e_msg instanceof OZoneBaseException) {
+			if ($e_msg instanceof BaseException) {
 				$e      = $e_msg;
 				$e_msg  = $e->getMessage();
 				$e_data = $e->getData() || $e_data;
 			} else {
-				$e = new OZoneInvalidFormException($e_msg, $e_data);
+				$e = new InvalidFormException($e_msg, $e_data);
 			}
 
 			if ($this->log_error) {

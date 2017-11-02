@@ -10,7 +10,8 @@
 
 	namespace OZONE\OZ\Cli;
 
-	use OZONE\OZ\Core\OZoneSettings;
+	use OZONE\OZ\Core\DbManager;
+	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Loader\ClassLoader;
 	use Kli\Kli;
 
@@ -28,6 +29,7 @@
 	ClassLoader::addNamespace('\OZONE\OZ', OZ_OZONE_DIR);
 	ClassLoader::addDir(OZ_OZONE_DIR . 'oz_vendors', true, 1);
 	ClassLoader::addNamespace('\Kli', OZ_OZONE_DIR . 'oz_vendors' . DS . 'kli' . DS . 'src');
+	ClassLoader::addNamespace('\Gobl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'gobl' . DS . 'src');
 
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
 
@@ -40,52 +42,51 @@
 		public function __construct()
 		{
 			parent::__construct('oz', true);
+			DbManager::init();
 		}
 
 		/**
-		 * run the cli.
+		 * Run the commands.
 		 *
 		 * @param array $arg
 		 */
 		public function run(array $arg)
 		{
-			$this->welcome();
 			$this->loadCommands();
 			parent::execute($arg);
 		}
 
 		/**
-		 * print a welcome message.
-		 */
-		private function welcome()
-		{
-			$this->write(file_get_contents(OZ_OZONE_DIR . 'welcome'));
-		}
-
-		/**
-		 * loads all defined commands in oz.cli settings.
+		 * Loads all defined commands in oz.cli settings.
 		 */
 		private function loadCommands()
 		{
-			$list         = OZoneSettings::get('oz.cli');
-			$oz_cmd_class = 'OZONE\OZ\Cli\OZoneCommand';
+			$list = SettingsManager::get('oz.cli');
 
 			if (is_array($list) AND count($list)) {
 				foreach ($list as $cmd_name => $cmd_class) {
 					if (ClassLoader::exists($cmd_class)) {
-						/** @var \OZONE\OZ\Cli\OZoneCommand $cmd */
+						/** @var \OZONE\OZ\Cli\Command $cmd */
 						$cmd = ClassLoader::instantiateClass($cmd_class, [$cmd_name, $this]);
 
-						if (!is_subclass_of($cmd, $oz_cmd_class)) {
-							throw new \Exception(sprintf('your custom command class "%s" should extends "%s".', $cmd_class, $oz_cmd_class));
+						if ($cmd instanceof Command) {
+							$this->addCommand($cmd);
+						} else {
+							throw new \Exception(sprintf('Your custom command class "%s" should extends "%s".', $cmd_class, Command::class));
 						}
-
-						$this->addCommand($cmd);
 					} else {
-						throw new \Exception(sprintf('class "%s" not found for command "%s".', $cmd_class, $cmd_name));
+						throw new \Exception(sprintf('Class "%s" not found for command "%s".', $cmd_class, $cmd_name));
 					}
 				}
 			}
+		}
+
+		/**
+		 * {@inheritdoc}
+		 */
+		public function welcome()
+		{
+			$this->write(file_get_contents(OZ_OZONE_DIR . 'welcome'), false);
 		}
 
 		/**

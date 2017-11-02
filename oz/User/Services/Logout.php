@@ -10,8 +10,8 @@
 
 	namespace OZONE\OZ\User\Services;
 
-	use OZONE\OZ\Core\OZoneService;
-	use OZONE\OZ\User\OZoneUserUtils;
+	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\User\UsersUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -20,9 +20,8 @@
 	 *
 	 * @package OZONE\OZ\User\Services
 	 */
-	final class Logout extends OZoneService
+	final class Logout extends BaseService
 	{
-
 		/**
 		 * Logout constructor.
 		 */
@@ -34,9 +33,9 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public function execute($request = [])
+		public function execute(array $request = [])
 		{
-			OZoneUserUtils::logOut();
-			self::$resp->setDone('OZ_USER_LOGOUT');
+			UsersUtils::logUserOut();
+			$this->getResponseHolder()->setDone('OZ_USER_LOGOUT');
 		}
 	}

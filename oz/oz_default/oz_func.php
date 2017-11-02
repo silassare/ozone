@@ -12,7 +12,7 @@
 
 	if (!function_exists('oz_logger')) {
 		/**
-		 * read file content.
+		 * Safely read file content.
 		 *
 		 * @param string $src the file path
 		 *
@@ -29,51 +29,52 @@
 		}
 
 		/**
-		 * write to log.
+		 * Write to log file.
 		 *
 		 * @param mixed $in
 		 */
 		function oz_logger($in)
 		{
-			$log = '';
-
-			if ($in instanceof \OZONE\OZ\Exceptions\OZoneBaseException) {
-				$log .= $in;
+			if ($in instanceof \OZONE\OZ\Exceptions\BaseException OR is_scalar($in)) {
+				$text = (string)$in;
 			} elseif ($in instanceof Exception OR $in instanceof Error) {
-				$e   = $in;
-				$log = "\n\tFile    : {$e->getFile()}"
-					   . "\n\tLine    : {$e->getLine()}"
-					   . "\n\tCode    : {$e->getCode()}"
-					   . "\n\tMessage : {$e->getMessage()}"
-					   . "\n\tTrace   : {$e->getTraceAsString()}";
+				$e    = $in;
+				$text = "\tFile    : {$e->getFile()}"
+						. "\n\tLine    : {$e->getLine()}"
+						. "\n\tCode    : {$e->getCode()}"
+						. "\n\tMessage : {$e->getMessage()}"
+						. "\n\tTrace   : {$e->getTraceAsString()}";
 			} else {
-				$log = $in;
+				$text = var_export($in, true);
 			}
 
-			$text = trim(json_encode($log), '"');
-			$text = str_replace(["\\n", "\\t", "\\\\"], ["\n", "\t", "\\"], $text);
-			$text = date('Y-m-d H:i:s ')
-					. $text
-					. "\n================================================================================\n";
-
-			$f = fopen(OZ_LOG_DIR . 'debug.log', 'a+');
-			fwrite($f, $text);
+			$date = date('Y-m-d H:i:s ');
+			$text = str_replace(["\\n", "\\t", "\/"], ["\n", "\t", "/"], $text);
+			$log  = <<<LOG
+================================================================================
+$date
+===================
+$text\n\n
+LOG;
+			$f    = fopen(OZ_LOG_DIR . 'debug.log', 'a+');
+			fwrite($f, $log);
 			fclose($f);
 		}
 
 		/**
-		 * when we should shutdown and only admin should know what is going wrong
+		 * Called when we should shutdown and only admin
+		 * should know what is going wrong.
 		 */
 		function oz_critical_die_message()
 		{
-			$mask_e = new \OZONE\OZ\Exceptions\OZoneInternalError('Internal error: unhandled, if you are an admin please look in log file and fix it!');
+			$mask_e = new \OZONE\OZ\Exceptions\InternalErrorException('Internal Error: Unhandled, if you are an admin, please review the log file and correct it!');
 			$mask_e->procedure();
 
 			false OR die;
 		}
 
 		/**
-		 * log unhandled exception.
+		 * Log unhandled exception.
 		 *
 		 * @param \Exception $e
 		 */
@@ -87,7 +88,7 @@
 		}
 
 		/**
-		 * log non fatalist error.
+		 * Log non fatalist error.
 		 *
 		 * @param int    $code    the error code
 		 * @param string $message the error message
@@ -102,7 +103,7 @@
 		}
 
 		/**
-		 * log fatalist error.
+		 * Log fatalist error.
 		 */
 		function oz_error_fatalist()
 		{
@@ -117,7 +118,7 @@
 					oz_critical_die_message();
 				} else {
 					// tmp : this error probably would have been handled
-					oz_logger("OZone: shutdown IGNORE code: $code");
+					oz_logger("OZone: shutdown IGNORE error code: $code");
 				}
 			}
 		}

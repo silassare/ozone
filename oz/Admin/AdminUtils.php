@@ -10,15 +10,14 @@
 
 	namespace OZONE\OZ\Admin;
 
-	use OZONE\OZ\Core\OZoneDb;
+	use OZONE\OZ\Db\OZAdministratorsQuery;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	final class AdminUtils
 	{
-
 		/**
-		 * Check if a given user id belong to an admin.
+		 * Checks if a given user id belong to an admin.
 		 *
 		 * @param mixed $uid The user id
 		 *
@@ -26,17 +25,12 @@
 		 */
 		public static function isAdmin($uid)
 		{
-			$sql = "
-				SELECT * FROM oz_users , oz_administrators 
-				WHERE oz_administrators.user_id =:uid 
-					AND oz_administrators.admin_valid = 1
-					AND oz_administrators.user_id = oz_users.user_id
-					AND oz_users.user_valid = 1
-				LIMIT 0,1";
+			$admins = new OZAdministratorsQuery();
+			$count = $admins->filterByUserId($uid)
+						   ->filterByValid(1)
+						   ->find(1)
+						   ->count();
 
-			$req = OZoneDb::getInstance()
-						  ->select($sql, ['uid' => $uid]);
-
-			return $req->rowCount() > 0;
+			return ($count === 1 ? true : false);
 		}
 	}

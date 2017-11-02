@@ -625,7 +625,7 @@
 			if ($BitCount < 24) $Size += pow(2, $BitCount) * 4;
 			$IconId   = 1;
 			$ret      .= jpexs_inttodword($Size); // SIZE
-			$OffSet   = 6 + 16 * $ImageCount + $FullSize;
+			$OffSet  = 6 + 16 * $ImageCount + $FullSize;
 			$ret      .= jpexs_inttodword(6 + 16 * $ImageCount + $FullSize);//OFFSET
 			$FullSize += $Size;
 			// -------------

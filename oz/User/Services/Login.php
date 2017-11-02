@@ -10,11 +10,12 @@
 
 	namespace OZONE\OZ\User\Services;
 
-	use OZONE\OZ\Core\OZoneAssert;
-	use OZONE\OZ\Core\OZoneService;
+	use OZONE\OZ\Core\Assert;
+	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Db\Base\OZUser;
 	use OZONE\OZ\Ofv\OFormValidator;
-	use OZONE\OZ\User\OZoneUserUtils;
-	use OZONE\OZ\Exceptions\OZoneForbiddenException;
+	use OZONE\OZ\User\UsersUtils;
+	use OZONE\OZ\Exceptions\ForbiddenException;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -23,9 +24,8 @@
 	 *
 	 * @package OZONE\OZ\User\Services
 	 */
-	final class Login extends OZoneService
+	final class Login extends BaseService
 	{
-
 		/**
 		 * Login constructor.
 		 */
@@ -36,39 +36,40 @@
 
 		/**
 		 * {@inheritdoc}
-		 *
-		 * @throws \OZONE\OZ\Exceptions\OZoneInvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\OZoneUnverifiedUserException
 		 */
-		public function execute($request = [])
+		public function execute(array $request = [])
 		{
-			// et oui! user nous a soumit un formulaire alors on verifie que le formulaire est valide.
-			OZoneUserUtils::logOut();
+			// And yes! user sent us a form
+			// so we check that the form is valid.
+			UsersUtils::logUserOut();
 
-			$result = null;
+			$user_obj = null;
 
 			if (isset($request['phone'])) {
-				$result = $this->withPhone($request);
+				$user_obj = $this->withPhone($request);
 			} elseif (isset($request['email'])) {
-				$result = $this->withEmail($request);
+				$user_obj = $this->withEmail($request);
 			} else {
-				throw new OZoneForbiddenException('OZ_ERROR_INVALID_FORM');
+				throw new ForbiddenException('OZ_ERROR_INVALID_FORM');
 			}
 
-			if (is_array($result)) {
-				// on connecte user
-				// et on lui renvois les infos sur lui
-				self::$resp->setDone('OZ_USER_ONLINE')
-						   ->setData($result);
+			if ($user_obj instanceof OZUser) {
+				$this->getResponseHolder()->setDone('OZ_USER_ONLINE')
+						   ->setData($user_obj->asArray());
 			} else {
-				$err_msg = $result;
-				self::$resp->setError($err_msg);
+				$err_msg = $user_obj;
+				$this->getResponseHolder()->setError($err_msg);
 			}
 		}
 
+		/**
+		 * @param array $request
+		 *
+		 * @return \OZONE\OZ\Db\OZUser|string
+		 */
 		private function withPhone(array $request)
 		{
-			OZoneAssert::assertForm($request, ['phone', 'pass']);
+			Assert::assertForm($request, ['phone', 'pass']);
 
 			$fv_obj = new OFormValidator($request);
 
@@ -78,12 +79,17 @@
 			$phone = $form['phone'];
 			$pass  = $form['pass'];
 
-			return OZoneUserUtils::tryLogOnWith('phone', $phone, $pass);
+			return UsersUtils::tryLogOnWithPhone($phone, $pass);
 		}
 
+		/**
+		 * @param array $request
+		 *
+		 * @return \OZONE\OZ\Db\OZUser|string
+		 */
 		private function withEmail(array $request)
 		{
-			OZoneAssert::assertForm($request, ['email', 'pass']);
+			Assert::assertForm($request, ['email', 'pass']);
 
 			$fv_obj = new OFormValidator($request);
 
@@ -93,6 +99,6 @@
 			$email = $form['email'];
 			$pass  = $form['pass'];
 
-			return OZoneUserUtils::tryLogOnWith('email', $email, $pass);
+			return UsersUtils::tryLogOnWithEmail($email, $pass);
 		}
 	}
