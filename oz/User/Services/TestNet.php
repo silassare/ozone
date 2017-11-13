@@ -41,7 +41,6 @@
 		public function execute(array $request = [])
 		{
 			$data = [];
-
 			if (UsersUtils::userVerified()) {
 				$user_obj = UsersUtils::getCurrentUserObject();
 				// user is already logged

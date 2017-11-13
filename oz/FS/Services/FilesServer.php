@@ -76,7 +76,7 @@
 				$img_utils_obj      = new ImagesUtils($src);
 
 				if ($img_utils_obj->load()) {
-					$max_size = SettingsManager::get('oz.user', 'OZ_THUMB_MAX_SIZE');
+					$max_size = SettingsManager::get('oz.users', 'OZ_THUMB_MAX_SIZE');
 					$advice   = $img_utils_obj->adviceBestSize($max_size, $max_size);
 					$img_utils_obj->resizeImage($advice['w'], $advice['h'], $advice['crop'])
 								  ->outputJpeg($jpeg_quality);

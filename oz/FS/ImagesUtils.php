@@ -291,7 +291,7 @@
 		 * @param array $coordinate
 		 *
 		 * @return bool
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException when can't load 'oz.user' setting
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException when can't load 'oz.users' setting
 		 */
 
 		private function safeCoordinate(array $coordinate)
@@ -300,7 +300,7 @@
 			$y        = $coordinate['y'];
 			$w        = $coordinate['w'];
 			$h        = $coordinate['h'];
-			$min_size = SettingsManager::get('oz.user', 'OZ_PPIC_MIN_SIZE');
+			$min_size = SettingsManager::get('oz.users', 'OZ_PPIC_MIN_SIZE');
 
 			return $x >= 0 AND $y >= 0 AND $w >= ($min_size + $x) AND $h >= ($min_size + $y) AND ($x + $w) <= $this->getWidth() AND ($y + $h) <= $this->getHeight();
 		}

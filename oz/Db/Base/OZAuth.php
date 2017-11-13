@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1509638392
+	 * Time: 1510528733
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -48,12 +48,7 @@
 		/**
 		 * @var bool
 		 */
-		protected $saved = false;
-
-		/**
-		 * @var bool
-		 */
-		protected $modified = false;
+		protected $is_saved = false;
 
 		/**
 		 * The auto_increment column full name.
@@ -72,10 +67,11 @@
 		 */
 		public function __construct($is_new = true)
 		{
-			$this->table  = ORM::getDatabase()
-							   ->getTable('oz_authenticator');
-			$columns      = $this->table->getColumns();
-			$this->is_new = (bool)$is_new;
+			$this->table    = ORM::getDatabase()
+								 ->getTable('oz_authenticator');
+			$columns        = $this->table->getColumns();
+			$this->is_new   = (bool)$is_new;
+			$this->is_saved = !$this->is_new;
 
 			// we initialise row with default value
 			foreach ($columns as $column) {
@@ -287,7 +283,7 @@
 		}
 
 		/**
-		 * Hydrate, load, populate this entity with values from an array.
+		 * Hydrate this entity with values from an array.
 		 *
 		 * @param array $row map column name to column value
 		 *
@@ -300,16 +296,6 @@
 			}
 
 			return $this;
-		}
-
-		/**
-		 * To check if this entity is modified
-		 *
-		 * @return bool
-		 */
-		public function isModified()
-		{
-			return $this->modified;
 		}
 
 		/**
@@ -329,7 +315,7 @@
 		 */
 		public function isSaved()
 		{
-			return $this->saved;
+			return $this->is_saved;
 		}
 
 		/**
@@ -340,15 +326,7 @@
 		 */
 		public function save()
 		{
-			if ($this->isSaved()) {
-				if ($this->isModified()) {
-					// update
-					$t       = new OZAuthenticatorQueryReal();
-					$returns = $t->safeUpdate($this->row_saved, $this->row);
-				} else {
-					$returns = 0;
-				}
-			} else {
+			if ($this->isNew()) {
 				// add
 				$columns = array_keys($this->row);
 				$values  = array_values($this->row);
@@ -370,12 +348,19 @@
 				} else {
 					$returns = intval($result); // one row saved
 				}
+			} elseif (!$this->isSaved() AND isset($this->row_saved)) {
+				// update
+				$t       = new OZAuthenticatorQueryReal();
+				$returns = $t->safeUpdate($this->row_saved, $this->row)
+							 ->execute();
+			} else {
+				// nothing to do
+				$returns = 0;
 			}
 
 			$this->row_saved = $this->row;
 			$this->is_new    = false;
-			$this->saved     = true;
-			$this->modified  = false;
+			$this->is_saved  = true;
 
 			return $returns;
 		}
@@ -416,8 +401,7 @@
 				$full_name = $column->getFullName();
 				if ($this->row[$full_name] !== $value) {
 					$this->row[$full_name] = $value;
-					$this->modified        = true;
-					$this->saved           = false;
+					$this->is_saved        = false;
 				}
 			}
 
@@ -432,18 +416,18 @@
 		 *
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
-		public function __set($full_name, $value)
+		final public function __set($full_name, $value)
 		{
-			if (!$this->isNew()) {
-				if ($this->table->hasColumn($full_name)) {
-					$this->row[$full_name]       = $value;
-					$this->row_saved[$full_name] = $value;
-					$this->modified              = false;
-				} else {
-					throw new ORMException(sprintf('Could not set column "%s", not defined in table "%s".', $full_name, $this->table->getName()));
-				}
+			if ($this->isNew()) {
+				throw new ORMException(sprintf('You should not try to manually set properties on "%s" use appropriate getters and setters.', get_class($this)));
+			}
+
+			if ($this->table->hasColumn($full_name)) {
+				$this->row[$full_name]       = $value;
+				$this->row_saved[$full_name] = $value;
+				$this->is_saved              = true;
 			} else {
-				throw new ORMException(sprintf('You should not try to manually set property for "%s".', $full_name, get_class($this)));
+				throw new ORMException(sprintf('Could not set column "%s", not defined in table "%s".', $full_name, $this->table->getName()));
 			}
 		}
 

@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1509638392
+	 * Time: 1510528733
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -12,7 +12,7 @@
 	use Gobl\ORM\Exceptions\ORMControllerFormException;
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Db\OZClientUser as OZClientUserReal;
-	use OZONE\OZ\Db\OZClientsUsersQuery;
+	use OZONE\OZ\Db\OZClientsUsersQuery as OZClientsUsersQueryReal;
 
 	/**
 	 * Class OZClientsUsersController
@@ -23,6 +23,8 @@
 	{
 		/** @var array */
 		protected $form_fields = [];
+		/** @var array */
+		protected $form_fields_mask = [];
 
 		/**
 		 * OZClientsUsersController constructor.
@@ -98,14 +100,14 @@
 		protected static function assertUpdateColumns(array $columns = [])
 		{
 			if (empty($columns)) {
-				throw new ORMControllerFormException('form_no_column_to_update');
+				throw new ORMControllerFormException('form_no_fields_to_update');
 			}
 
 			$table = ORM::getDatabase()
 						->getTable('oz_clients_users');
 			foreach ($columns as $column) {
 				if (!$table->hasColumn($column)) {
-					throw new ORMControllerFormException('form_unknown_column', [$column]);
+					throw new ORMControllerFormException('form_unknown_fields', [$column]);
 				}
 			}
 		}
@@ -141,8 +143,8 @@
 		 *
 		 * (name = value1 OR name = value2) AND (age < 40 OR age > 50) AND (valid = 1)
 		 *
-		 * @param \OZONE\OZ\Db\OZClientsUsersQuery $query
-		 * @param array                       $item_filters
+		 * @param \OZONE\OZ\Db\Base\OZClientsUsersQuery $query
+		 * @param array                               $item_filters
 		 *
 		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
 		 */
@@ -167,7 +169,7 @@
 
 			foreach ($item_filters as $column => $filters) {
 				if (!$table->hasColumn($column)) {
-					throw new ORMControllerFormException('form_filters_unknown_column', [$column]);
+					throw new ORMControllerFormException('form_filters_unknown_fields', [$column]);
 				}
 
 				if (is_array($filters)) {
@@ -273,7 +275,7 @@
 			$my_entity = $this->getItem($item_filters);
 
 			if ($my_entity) {
-				$my_query = new OZClientsUsersQuery();
+				$my_query = new OZClientsUsersQueryReal();
 
 				self::applyFilters($my_query, $item_filters);
 
@@ -296,7 +298,7 @@
 		public function deleteAllItem(array $item_filters)
 		{
 			self::assertFiltersNotEmpty($item_filters);
-			$my_query = new OZClientsUsersQuery();
+			$my_query = new OZClientsUsersQueryReal();
 
 			self::applyFilters($my_query, $item_filters);
 
@@ -353,7 +355,7 @@
 		 */
 		public function findAllItems(array $item_filters = [], $max = null, $offset = 0)
 		{
-			$my_query = new OZClientsUsersQuery();
+			$my_query = new OZClientsUsersQueryReal();
 
 			if (!empty($item_filters)) {
 				self::applyFilters($my_query, $item_filters);

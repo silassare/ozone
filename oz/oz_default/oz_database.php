@@ -19,49 +19,51 @@
 			],
 			'constraints'   => [
 				['type' => 'primary_key', 'columns' => ['id']],
+				['type' => 'unique', 'columns' => ['phone']],
+				['type' => 'unique', 'columns' => ['email']],
 				['type' => 'foreign_key', 'reference' => 'oz_countries', 'columns' => ['cc2' => 'cc2']]
 			],
 			'columns'       => [
-				'id'        => [
+				'id'           => [
 					'type'           => 'bigint',
 					'auto_increment' => true,
 					'unsigned'       => true
 				],
-				'phone'     => [
+				'phone'        => [
 					'type' => 'phone',
-					'null' => true
+					'null' => !\OZONE\OZ\Core\SettingsManager::get('oz.users', 'OZ_USERS_PHONE_REQUIRED')
 				],
-				'email'     => [
+				'email'        => [
 					'type' => 'email',
-					'null' => true
+					'null' => !\OZONE\OZ\Core\SettingsManager::get('oz.users', 'OZ_USERS_EMAIL_REQUIRED')
 				],
-				'pass'      => [
+				'pass'         => [
 					'type' => 'password'
 				],
-				'name'      => [
+				'name'         => [
 					'type' => 'uname'
 				],
-				'gender'    => [
+				'gender'       => [
 					'type' => 'gender'
 				],
-				'birth_date' => [
-					'type' => 'date',
+				'birth_date'   => [
+					'type'       => 'date',
 					'birth_date' => true
 				],
-				'sign_up_time'   => [
+				'sign_up_time' => [
 					'type'     => 'bigint',
 					'unsigned' => true
 				],
-				'picid'     => [
+				'picid'        => [
 					'type'    => 'string',
 					'default' => '0_0',
 					'max'     => 50
 				],
-				'cc2'       => [
-					'type' => 'cc2',
+				'cc2'          => [
+					'type'       => 'cc2',
 					'authorized' => true
 				],
-				'valid'     => [
+				'valid'        => [
 					'type' => 'bool'
 				]
 			]
@@ -104,15 +106,15 @@
 				['type' => 'foreign_key', 'reference' => 'oz_users', 'columns' => ['user_id' => 'id']]
 			],
 			'columns'       => [
-				'api_key'      => [
+				'api_key'           => [
 					'type' => 'string',
 					'max'  => 35
 				],
-				'user_id' => [
+				'user_id'           => [
 					'type' => 'ref:oz_users.id',
 					'null' => true
 				],
-				'url'     => [
+				'url'               => [
 					'type' => 'string',
 					'max'  => 255
 				],
@@ -121,10 +123,10 @@
 					'default'  => 86400,
 					'unsigned' => true
 				],
-				'about'   => [
+				'about'             => [
 					'type' => 'string'
 				],
-				'valid'   => [
+				'valid'             => [
 					'type' => 'bool'
 				]
 			]
@@ -135,39 +137,45 @@
 			'relations'     => [
 				'OZ_session' => ['type' => 'one-to-one', 'target' => 'oz_sessions'],
 				'OZ_user'    => ['type' => 'many-to-one', 'target' => 'oz_users'],
-				'OZ_client'    => ['type' => 'many-to-one', 'target' => 'oz_clients']
+				'OZ_client'  => ['type' => 'many-to-one', 'target' => 'oz_clients']
 			],
 			'constraints'   => [
-				['type' => 'primary_key', 'columns' => ['client_api_key', 'user_id']],
+				['type' => 'primary_key', 'columns' => ['client_api_key', 'user_id', 'session_id']],
 				[
 					'type'      => 'foreign_key',
 					'reference' => 'oz_users',
-					'columns'   => ['user_id' => 'id']
+					'columns'   => ['user_id' => 'id'],
+					'update'    => 'cascade',
+					'delete'    => 'cascade'
 				],
 				[
 					'type'      => 'foreign_key',
 					'reference' => 'oz_clients',
-					'columns'   => ['client_api_key' => 'api_key']
+					'columns'   => ['client_api_key' => 'api_key'],
+					'update'    => 'cascade',
+					'delete'    => 'cascade'
 				],
 				[
 					'type'      => 'foreign_key',
 					'reference' => 'oz_sessions',
-					'columns'   => ['session_id' => 'id']
+					'columns'   => ['session_id' => 'id'],
+					'update'    => 'cascade',
+					'delete'    => 'cascade'
 				]
 			],
 			'columns'       => [
-				'client_api_key'  => 'ref:oz_clients.api_key',
-				'user_id'    => [
+				'client_api_key' => 'ref:oz_clients.api_key',
+				'user_id'        => [
 					'type' => 'ref:oz_users.id',
 					'null' => false
 				],
-				'session_id' => 'ref:oz_sessions.id',
-				'token'      => [
+				'session_id'     => 'ref:oz_sessions.id',
+				'token'          => [
 					'type' => 'string',
 					'min'  => 32,
 					'max'  => 32
 				],
-				'last_check' => [
+				'last_check'     => [
 					'type'     => 'bigint',
 					'unsigned' => true
 				]
@@ -286,7 +294,7 @@
 					'unsigned' => true,
 					'default'  => 0
 				],
-				'origin'       => [
+				'origin'      => [
 					'type'     => 'bigint',
 					'unsigned' => true,
 					'default'  => 0

@@ -12,7 +12,7 @@
 
 	use OZONE\OZ\Core\SettingsManager;
 
-	function ofv_birthdate(OFormValidator $ofv)
+	function ofv_birth_date(OFormValidator $ofv)
 	{
 		$birthdate = $ofv->getField('birth_date');
 		$date  = OFormUtils::parseDate($birthdate);

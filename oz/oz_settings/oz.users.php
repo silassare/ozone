@@ -9,12 +9,16 @@
 	 */
 
 	return [
-		// id par defaut s'il n'y en a pas
+		// default picid if there is none
 		'OZ_DEFAULT_PICID'        => '0_0',
-		// taille maximale de crop d'une image de profile: en pixels
+		// maximum crop size of a profile image: in pixels
 		'OZ_PPIC_MIN_SIZE'        => 150,
-		// taille maximale d'un thumbnail: en pixels
+		// maximum size of a thumbnail: in pixels
 		'OZ_THUMB_MAX_SIZE'       => 640,
-		// liste du genre/sexe des utilisateurs autorisés
-		'OZ_USER_ALLOWED_GENDERS' => ['Male', 'Female', 'None', 'Other']
+		// allowed gender list
+		'OZ_USER_ALLOWED_GENDERS' => ['Male', 'Female', 'None', 'Other'],
+		// phone number are required to register
+		'OZ_USERS_PHONE_REQUIRED' => false,
+		// email are required to register
+		'OZ_USERS_EMAIL_REQUIRED' => true
 	];

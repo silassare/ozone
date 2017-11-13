@@ -13,19 +13,22 @@
 	use Gobl\DBAL\Rule;
 	use OZONE\OZ\Db\OZSession;
 	use OZONE\OZ\Db\OZSessionsQuery;
+	use OZONE\OZ\Exceptions\InternalErrorException;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	final class SessionsHandler implements \SessionHandlerInterface
 	{
 		/**
-		 * @var bool
+		 * @var \OZONE\OZ\Core\SessionsHandler
 		 */
-		private static $registered = false;
+		private static $instance;
+
 		/**
 		 * @var bool
 		 */
 		private static $started = false;
+
 		/**
 		 * Fetched data cache.
 		 *
@@ -113,12 +116,11 @@
 		 */
 		private static function register()
 		{
-			if (self::$registered === false) {
-				self::$registered = true;
-				$sid_name         = SettingsManager::get('oz.config', 'OZ_APP_SESSION_ID_NAME');
-
+			if (!isset(self::$instance)) {
+				$sid_name       = SettingsManager::get('oz.config', 'OZ_APP_SESSION_ID_NAME');
+				self::$instance = new self();
 				session_cache_limiter('nocache');
-				session_set_save_handler(new self, true);
+				session_set_save_handler(self::$instance, true);
 
 				// we force the execution just before the destruction
 				// of all objects by php occurs
@@ -178,6 +180,30 @@
 		}
 
 		/**
+		 * Force session to be persisted in the database.
+		 *
+		 * Useful when you have some foreign key constraint on session_id.
+		 *
+		 * @return string the active session id
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException when there is no active session
+		 */
+		public static function persistActiveSession()
+		{
+			if (session_status() !== PHP_SESSION_ACTIVE) {
+				throw new InternalErrorException('There is no active session.');
+			}
+
+			$sid  = session_id();
+			$data = session_encode();
+			if (!$data) {
+				$data = '';
+			}
+			self::$instance->write($sid, $data);
+
+			return $sid;
+		}
+
+		/**
 		 * Regenerate new session id.
 		 */
 		private static function setNewSessionId()
@@ -191,7 +217,6 @@
 			session_id($session_id);
 			// restore the saved config
 			ini_set('session.use_strict_mode', $saved);
-
 			self::log(['setNewSessionId', 'from' => $old, 'to' => $session_id]);
 			self::updateSessionCookieHeader($session_id);
 		}

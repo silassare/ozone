@@ -9,7 +9,8 @@
 	 */
 
 	return [
-		'project' => '\OZONE\OZ\Cli\Cmd\Project',
+		'project'   => '\OZONE\OZ\Cli\Cmd\Project',
 		'webclient' => '\OZONE\OZ\Cli\Cmd\WebClient',
-		'db' => '\OZONE\OZ\Cli\Cmd\Db'
+		'db'        => '\OZONE\OZ\Cli\Cmd\Db',
+		'service'   => '\OZONE\OZ\Cli\Cmd\Service'
 	];

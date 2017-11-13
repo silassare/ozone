@@ -17,6 +17,7 @@
 	use OZONE\OZ\Core\SessionsData;
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Db\OZUser;
+	use OZONE\OZ\Db\OZUsersController;
 	use OZONE\OZ\Exceptions\ForbiddenException;
 	use OZONE\OZ\Ofv\OFormValidator;
 	use OZONE\OZ\User\UsersUtils;
@@ -61,8 +62,9 @@
 					$this->stepEnd($request);
 					break;
 				default:
-					$this->getResponseHolder()->setError('OZ_ERROR_INVALID_FORM')
-							   ->setKey('step', $step);
+					$this->getResponseHolder()
+						 ->setError('OZ_ERROR_INVALID_FORM')
+						 ->setKey('step', $step);
 			}
 		}
 
@@ -76,7 +78,7 @@
 		private function stepStart(array $request)
 		{
 			// do this before log out
-			$authLabel = SessionsData::get('svc_sign_up:auth:authLabel');
+			$auth_label = SessionsData::get('svc_sign_up:auth_label');
 			// log user out
 			UsersUtils::logUserOut();
 
@@ -95,8 +97,8 @@
 			$auth_obj = new Authenticator('svc_sign_up', $phone);
 			$knowOnce = false;
 
-			if ($auth_obj->canUseLabel($authLabel)) {
-				$auth_obj->setLabel($authLabel);
+			if ($auth_obj->canUseLabel($auth_label)) {
+				$auth_obj->setLabel($auth_label);
 				$knowOnce = $auth_obj->exists();
 			}
 
@@ -113,7 +115,8 @@
 				'next_step'    => self::SIGNUP_STEP_VALIDATE,
 				'cc2'          => $cc2,
 				'phone'        => $phone,
-				'num_verified' => false
+				'num_verified' => false,
+				'auth_label'   => $auth_obj->getLabel()
 			]);
 		}
 
@@ -127,12 +130,12 @@
 		private function stepValidate(array $request)
 		{
 			$saved_form = SessionsData::get('svc_sign_up');
-			$authLabel  = SessionsData::get('svc_sign_up:auth:authLabel');
 
 			// assert if previous step is successful
-			Assert::assertForm($saved_form AND $authLabel, [
+			Assert::assertForm($saved_form, [
 				'phone',
-				'cc2'
+				'cc2',
+				'auth_label'
 			], new ForbiddenException('OZ_SIGNUP_STEP_1_INVALID'));
 
 			Assert::assertForm($request, ['code']);
@@ -145,16 +148,20 @@
 
 			$phone = $saved_form['phone'];
 
+			$auth_label = $saved_form['auth_label'];
+
 			$auth_obj = new Authenticator('svc_sign_up', $phone);
-			$auth_obj->setLabel($authLabel);
+			$auth_obj->setLabel($auth_label);
 
 			if ($auth_obj->validateCode($code)) {
 				SessionsData::set('svc_sign_up:next_step', self::SIGNUP_STEP_END);
 				SessionsData::set('svc_sign_up:num_verified', true);
 
-				$this->getResponseHolder()->setDone($auth_obj->getMessage());
+				$this->getResponseHolder()
+					 ->setDone($auth_obj->getMessage());
 			} else {
-				$this->getResponseHolder()->setError($auth_obj->getMessage());
+				$this->getResponseHolder()
+					 ->setError($auth_obj->getMessage());
 			}
 		}
 
@@ -193,40 +200,31 @@
 			$fv_obj = new OFormValidator($request);
 
 			$fv_obj->checkForm([
-				'uname'     => null,
-				'pass'      => null,
-				'vpass'     => null,
-				'birth_date' => null,
-				'gender'    => null
+				'pass'  => null,
+				'vpass' => null,
 			]);
 
-			$form = $fv_obj->getForm();
+			$form_data[OZUser::COL_PHONE]        = $phone;
+			$form_data[OZUser::COL_EMAIL]        = isset($request['email']) ? $request['email'] : "";
+			$form_data[OZUser::COL_PASS]         = $request['pass'];
+			$form_data[OZUser::COL_NAME]         = $request['uname'];
+			$form_data[OZUser::COL_GENDER]       = $request['gender'];
+			$form_data[OZUser::COL_BIRTH_DATE]   = $request['birth_date'];
+			$form_data[OZUser::COL_SIGN_UP_TIME] = time();
+			$form_data[OZUser::COL_PICID]        = SettingsManager::get('oz.users', 'OZ_DEFAULT_PICID');
+			$form_data[OZUser::COL_CC2]          = $cc2;
+			$form_data[OZUser::COL_VALID]        = true;
 
-			$uname     = $form['uname'];
-			$pass      = $form['pass'];
-			$birthdate = $form['birth_date'];
-			$gender    = $form['gender'];
-
-			$user_obj = new OZUser();
-
-			$user_obj->setName($uname)
-					 ->setPhone($phone)
-					 ->setEmail('')
-					 ->setPass($pass)
-					 ->setGender($gender)
-					 ->setSignUpTime(time())
-					 ->setBirthDate($birthdate)
-					 ->setCc2($cc2)
-					 ->setValid(1)
-					 ->setPicid(SettingsManager::get('oz.user', 'OZ_DEFAULT_PICID'))
-					 ->save();
+			$controller = new OZUsersController();
+			$user_obj   = $controller->addItem($form_data);
 
 			SessionsData::remove('svc_sign_up');
 
 			UsersUtils::logUserIn($user_obj);
 
-			$this->getResponseHolder()->setDone('OZ_SIGNUP_SUCCESS')
-					   ->setData($user_obj->asArray());
+			$this->getResponseHolder()
+				 ->setDone('OZ_SIGNUP_SUCCESS')
+				 ->setData($user_obj->asArray());
 		}
 
 		/**
@@ -238,13 +236,11 @@
 		 */
 		private function sendAuthCodeResp(Authenticator $auth_obj, $phone, $msg)
 		{
-			$helper    = new CaptchaCodeHelper($auth_obj);
-			$captcha   = $helper->getCaptcha();
-			$generated = $auth_obj->getGenerated();
+			$helper  = new CaptchaCodeHelper($auth_obj);
+			$captcha = $helper->getCaptcha();
 
-			SessionsData::set('svc_sign_up:auth', $generated);
-
-			$this->getResponseHolder()->setDone($msg)
-					   ->setData(['phone' => $phone, 'captcha' => $captcha['captchaSrc']]);
+			$this->getResponseHolder()
+				 ->setDone($msg)
+				 ->setData(['phone' => $phone, 'captcha' => $captcha['captchaSrc']]);
 		}
 	}

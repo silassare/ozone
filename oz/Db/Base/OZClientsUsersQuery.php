@@ -3,14 +3,14 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1509638392
+	 * Time: 1510528733
 	 */
 
 	namespace OZONE\OZ\Db\Base;
 
-	use Gobl\DBAL\Exceptions\DBALException;
 	use Gobl\DBAL\QueryBuilder;
 	use Gobl\DBAL\Rule;
+	use Gobl\ORM\Exceptions\ORMException;
 	use Gobl\ORM\ORM;
 
 	/**
@@ -27,7 +27,7 @@
 		/** @var \Gobl\DBAL\Db */
 		protected $db;
 		/** @var int */
-		protected $alias_counter = 0;
+		protected $gen_identifier_counter = 0;
 		/** @var \Gobl\DBAL\QueryBuilder */
 		protected $qb;
 		/** @var \Gobl\DBAL\Rule[] */
@@ -42,7 +42,7 @@
 		{
 			$this->db          = ORM::getDatabase();
 			$this->table       = $this->db->getTable('oz_clients_users');
-			$this->table_alias = $this->getUniqueAlias();
+			$this->table_alias = $this->genUniqueAlias();
 			$this->qb          = new QueryBuilder($this->db);
 		}
 
@@ -104,12 +104,12 @@
 		 * @param array $set_columns new values
 		 *
 		 * @return \Gobl\DBAL\QueryBuilder
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function update(array $set_columns)
 		{
 			if (!count($set_columns)) {
-				throw new DBALException('Empty columns, cannot update.');
+				throw new ORMException('Empty columns, cannot update.');
 			}
 
 			$this->qb->update($this->table->getFullName(), $this->table_alias);
@@ -122,8 +122,9 @@
 			$columns = [];
 			foreach ($set_columns as $column => $value) {
 				$this->table->assertHasColumn($column);
-				$columns[]      = $column;
-				$this->params[] = $value;
+				$param_key                = $this->genUniqueParamKey();
+				$this->params[$param_key] = $value;
+				$columns[$column]         = ':' . $param_key;
 			}
 
 			$this->qb->set($columns)
@@ -138,19 +139,20 @@
 		 * @param array $old_values old values
 		 * @param array $new_values new values
 		 *
-		 * @return int affected rows count
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @return \Gobl\DBAL\QueryBuilder
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function safeUpdate(array $old_values, array $new_values)
 		{
 			$this->resetQuery();
 
-			foreach ($this->table->getColumns() as $column_name => $column) {
+			foreach ($this->table->getColumns() as $column) {
+				$column_name = $column->getFullName();
 				if (!array_key_exists($column_name, $old_values)) {
-					throw new DBALException(sprintf('Missing column "%s" in old_values.', $column_name));
+					throw new ORMException(sprintf('Missing column "%s" in old_values.', $column_name));
 				}
 				if (!array_key_exists($column_name, $new_values)) {
-					throw new DBALException(sprintf('Missing column "%s" in new_values.', $column_name));
+					throw new ORMException(sprintf('Missing column "%s" in new_values.', $column_name));
 				}
 			}
 
@@ -165,56 +167,13 @@
 				}
 			}
 
-			return $this->update($new_values)
-						->execute(); // affected row count
-		}
-
-		/**
-		 * Adds when row does not exists, otherwise update.
-		 *
-		 * This check existence with primary key only.
-		 *
-		 * @param array $row
-		 *
-		 * @return int|string int affected row, string last insert id
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 */
-		public function addOrUpdate(array $row)
-		{
-			$this->resetQuery();
-
-			foreach ($this->table->getColumns() as $column_name => $column) {
-				if (!array_key_exists($column_name, $row)) {
-					throw new DBALException(sprintf('Missing column "%s" in row.', $column_name));
-				}
-			}
-
-			$is_new = true;
-
-			// Todo check unique constraint.
-			if ($this->table->hasPrimaryKeyConstraint()) {
-				$pk = $this->table->getPrimaryKeyConstraint();
-				foreach ($pk->getConstraintColumns() as $key) {
-					$this->filterBy($key, $row[$key]);
-				}
-
-				$results = $this->find();
-
-				if ($results->count()) {
-					$is_new = false;
-				}
-			}
-
-			$entity = new \OZONE\OZ\Db\OZClientUser($is_new);
-			$entity->hydrate($row);
-
-			return $entity->save();
+			return $this->update($new_values);
 		}
 
 		/**
 		 * Filters rows in the table `oz_clients_users`.
 		 *
-		 * @param string $column   the column name
+		 * @param string $column   the column name or full name
 		 * @param mixed  $value    the filter value
 		 * @param int    $operator the operator to use
 		 *
@@ -241,9 +200,10 @@
 			}
 
 			$a = $this->table_alias . '.' . $full_name;
-			$rule->conditions([$a => '?'], $operator, false);
 
-			$this->params[] = $value;
+			$param_key                = $this->genUniqueParamKey();
+			$this->params[$param_key] = $value;
+			$rule->conditions([$a => ':' . $param_key], $operator, false);
 
 			return $this;
 		}
@@ -354,7 +314,27 @@
 		}
 
 		/**
-		 * Returns unique alias.
+		 * Generate unique alias.
+		 *
+		 * @return string
+		 */
+		protected function genUniqueAlias()
+		{
+			return '_' . $this->genIdentifier() . '_';
+		}
+
+		/**
+		 * Generate unique parameter key.
+		 *
+		 * @return string
+		 */
+		protected function genUniqueParamKey()
+		{
+			return '_val_' . $this->genIdentifier();
+		}
+
+		/**
+		 * Generate unique char sequence.
 		 *
 		 * infinite possibilities
 		 * a,  b  ... z
@@ -363,9 +343,9 @@
 		 *
 		 * @return string
 		 */
-		protected function getUniqueAlias()
+		protected function genIdentifier()
 		{
-			$x    = $this->alias_counter++;
+			$x    = $this->gen_identifier_counter++;
 			$list = range('a', 'z');
 			$len  = count($list);
 			$a    = '';
@@ -376,6 +356,6 @@
 				$a = $list[$r] . $a;
 			} while ($n);
 
-			return '_' . $a . '_';
+			return $a;
 		}
 	}

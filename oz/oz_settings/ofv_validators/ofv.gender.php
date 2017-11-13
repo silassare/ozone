@@ -16,7 +16,7 @@
 	{
 		$gender = $ofv->getField('gender');
 
-		if (!in_array($gender, SettingsManager::get('oz.user', 'OZ_USER_ALLOWED_GENDERS'))) {
+		if (!in_array($gender, SettingsManager::get('oz.users', 'OZ_USER_ALLOWED_GENDERS'))) {
 			$ofv->addError('OZ_FIELD_GENDER_INVALID');
 		} else {
 			$ofv->setField('gender', $gender);

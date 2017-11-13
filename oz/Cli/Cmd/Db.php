@@ -22,7 +22,6 @@
 	use OZONE\OZ\Cli\Utils\Utils;
 	use OZONE\OZ\Core\DbManager;
 	use OZONE\OZ\Core\SettingsManager;
-	use OZONE\OZ\Exceptions\UnverifiedUserException;
 	use OZONE\OZ\FS\FilesManager;
 
 	final class Db extends Command
@@ -93,7 +92,7 @@
 				}
 				// we (re)generate classes only for tables
 				// in the given namespace
-				$gen->generateClasses($ns, $dir);
+				$gen->generateORMClasses($ns, $dir);
 			}
 
 			$query = $db->generateDatabaseQuery();
@@ -139,7 +138,7 @@
 			// we (re)generate classes only for tables
 			// in the given namespace
 			$gen = ORM::getClassGenerator();
-			$gen->generateClasses($namespace, $dir);
+			$gen->generateORMClasses($namespace, $dir);
 
 			$db->execute($query);
 
@@ -158,7 +157,7 @@
 
 			$dir       = $options['d'];
 			$query     = DbManager::getInstance()
-								->generateDatabaseQuery();
+								  ->generateDatabaseQuery();
 			$file_name = sprintf('database-%s.sql', time());
 			$fm        = new FilesManager($dir);
 			$fm->wf($file_name, $query);
@@ -186,7 +185,7 @@
 			$query = file_get_contents($f);
 			try {
 				DbManager::getInstance()
-					   ->execute($query);
+						 ->execute($query);
 
 				$this->getCli()
 					 ->writeLn('Success: database updated.');

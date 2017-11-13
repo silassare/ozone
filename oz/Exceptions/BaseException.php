@@ -24,35 +24,33 @@
 	 */
 	abstract class BaseException extends \Exception
 	{
-
 		const BAD_REQUEST        = 400;
 		const FORBIDDEN          = 403;
 		const NOT_FOUND          = 404;
 		const METHOD_NOT_ALLOWED = 405;
 		const INTERNAL_ERROR     = 500;
 		const UNKNOWN_ERROR      = 520;
-
 		// ozone custom error codes
-		const UNVERIFIED_USER     = 1;
-		const UNAUTHORIZED_ACTION = 2;
-		const INVALID_FORM        = 3;
-		const INVALID_FIELD       = 4;
-		const RUNTIME             = 5;
+		const UNVERIFIED_USER     = 10001;
+		const UNAUTHORIZED_ACTION = 10002;
+		const INVALID_FORM        = 10003;
+		const INVALID_FIELD       = 10004;
+		const RUNTIME             = 10005;
 
 		private static $ERROR_HEADER_MAP = [
-			1 => 'HTTP/1.1 403 Forbidden',
-			2 => 'HTTP/1.1 403 Forbidden',
-			3 => 'HTTP/1.1 400 Bad Request',
-			4 => 'HTTP/1.1 400 Bad Request',
-			5 => 'HTTP/1.1 500 Internal Server Error',
-
-			400 => 'HTTP/1.1 400 Bad Request',
-			403 => 'HTTP/1.1 403 Forbidden',
-			404 => 'HTTP/1.1 404 Not Found',
-			405 => 'HTTP/1.1 405 Method Not Allowed',
-			500 => 'HTTP/1.1 500 Internal Server Error',
+			self::BAD_REQUEST         => 'HTTP/1.1 400 Bad Request',
+			self::FORBIDDEN           => 'HTTP/1.1 403 Forbidden',
+			self::NOT_FOUND           => 'HTTP/1.1 404 Not Found',
+			self::METHOD_NOT_ALLOWED  => 'HTTP/1.1 405 Method Not Allowed',
+			self::INTERNAL_ERROR      => 'HTTP/1.1 500 Internal Server Error',
 			// default error same as the CloudFlare's Unknown Error
-			520 => 'HTTP/1.1 520 Unknown Error'
+			self::UNKNOWN_ERROR       => 'HTTP/1.1 520 Unknown Error',
+			// ozone custom error codes
+			self::UNVERIFIED_USER     => 'HTTP/1.1 403 Forbidden',
+			self::UNAUTHORIZED_ACTION => 'HTTP/1.1 403 Forbidden',
+			self::INVALID_FORM        => 'HTTP/1.1 400 Bad Request',
+			self::INVALID_FIELD       => 'HTTP/1.1 400 Bad Request',
+			self::RUNTIME             => 'HTTP/1.1 500 Internal Server Error',
 		];
 
 		/**
@@ -73,13 +71,14 @@
 		/**
 		 * BaseException constructor.
 		 *
-		 * @param string     $message the exception message
-		 * @param int        $code    the exception code
-		 * @param array|null $data    additional error data
+		 * @param string          $message  the exception message
+		 * @param int             $code     the exception code
+		 * @param array|null      $data     additional error data
+		 * @param \Exception|null $previous previous exception if nested exception
 		 */
-		public function __construct($message, $code, array $data = null)
+		public function __construct($message, $code, array $data = null, \Exception $previous = null)
 		{
-			parent::__construct($message, $code);
+			parent::__construct($message, $code, $previous);
 
 			$this->data = $data;
 
@@ -180,6 +179,8 @@ ERROR_PAGE;
 		 */
 		protected function showJson()
 		{
+			if (!headers_sent()) header($this->getHeaderString());
+
 			$this->response_holder->setError($this->getMessage())
 								  ->setData($this->getData());
 

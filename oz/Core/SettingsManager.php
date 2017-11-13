@@ -175,7 +175,7 @@
 			$parts  = pathinfo($setting_file);
 			$inject = self::genExportInfo($setting_group_name, $settings);
 
-			// SILO:: why not backup setting file if exists before saving?
+			// why not backup setting file if exists before saving?
 			$fm = new FilesManager();
 			$fm->cd($parts['dirname'], true)
 			   ->wf($parts['basename'], TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject));
@@ -263,7 +263,7 @@
 				'oz_time'          => time(),
 				'oz_settings_name' => $setting_group_name,
 				'oz_settings_data' => $settings,
-				'oz_settings_str'  => self::export($settings, 1, null, true)
+				'oz_settings_str'  => self::export($settings, 1, "\t", true)
 			];
 		}
 

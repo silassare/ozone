@@ -112,7 +112,7 @@
 
 			if (is_null($client) OR !$client->getClientData()
 											->getValid()) {
-				self::attackProcedure(new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID'));
+				self::attackProcedure(new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID', [$api_key]));
 			}
 
 			define('OZ_SESSION_MAX_LIFE_TIME', $client->getClientData()
@@ -313,13 +313,46 @@
 		}
 
 		/**
+		 * Checks if the request method is correct.
+		 *
+		 * For server that does not support HEAD, PATCH, PUT, DELETE...
+		 * request methods you need to make sure that
+		 * - "OZ_APP_ALLOW_REAL_METHOD_HEADER" is set to "true" in "oz.config" file
+		 * - the real method header (default x-ozone-real-method) is set to the real http method you want
+		 * - you use POST to send your request
+		 *
+		 * @param string $method the http request method
+		 *
+		 * @return bool
+		 */
+		private static function isMethodOrRealMethod($method)
+		{
+			if ($_SERVER['REQUEST_METHOD'] === $method) {
+				return true;
+			}
+
+			$allowed = SettingsManager::get('oz.config', 'OZ_APP_ALLOW_REAL_METHOD_HEADER');
+
+			if ($allowed) {
+				$real_method_header_name = SettingsManager::get('oz.config', 'OZ_APP_REAL_METHOD_HEADER_NAME');
+				$header_key              = sprintf('HTTP_X_%s', strtoupper(str_replace('-', '_', $real_method_header_name)));
+
+				if (self::isPost() AND isset($_SERVER[$header_key])) {
+					return $_SERVER[$header_key] === $method;
+				}
+			}
+
+			return false;
+		}
+
+		/**
 		 * Checks if it is a PATCH request method
 		 *
 		 * @return bool
 		 */
 		public static function isPatch()
 		{
-			return $_SERVER['REQUEST_METHOD'] === 'PATCH';
+			return self::isMethodOrRealMethod('PATCH');
 		}
 
 		/**
@@ -329,7 +362,7 @@
 		 */
 		public static function isPut()
 		{
-			return $_SERVER['REQUEST_METHOD'] === 'PUT';
+			return self::isMethodOrRealMethod('PUT');
 		}
 
 		/**
@@ -339,7 +372,7 @@
 		 */
 		public static function isDelete()
 		{
-			return $_SERVER['REQUEST_METHOD'] === 'DELETE';
+			return self::isMethodOrRealMethod('DELETE');
 		}
 
 		/**
@@ -399,7 +432,7 @@
 		 * run procedure when some unhandled ozone exceptions occurs
 		 *
 		 * @param \OZONE\OZ\Exceptions\BaseException|null $err  the current ozone exception
-		 * @param mixed                                        $desc a short description
+		 * @param mixed                                   $desc a short description
 		 */
 		public static function attackProcedure(BaseException $err = null, $desc = null)
 		{

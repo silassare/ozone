@@ -204,7 +204,7 @@
 		public static function makeThumb(OZFile $file, $destination)
 		{
 			$quality         = 50;
-			$max_thumb_width = $max_thumb_height = SettingsManager::get('oz.user', 'OZ_THUMB_MAX_SIZE');
+			$max_thumb_width = $max_thumb_height = SettingsManager::get('oz.users', 'OZ_THUMB_MAX_SIZE');
 			$done            = false;
 			$file_category   = FilesUtils::mimeTypeToCategory($file->getType());
 

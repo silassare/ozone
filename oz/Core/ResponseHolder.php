@@ -41,8 +41,10 @@
 		 */
 		public function __construct($label)
 		{
-			$this->label                   = $label;
-			self::$responses[$this->label] = ['error' => self::RESPONSE_CODE_DONE];
+			$this->label             = $label;
+			self::$responses[$label] = [
+				'error' => self::RESPONSE_CODE_DONE
+			];
 		}
 
 		/**

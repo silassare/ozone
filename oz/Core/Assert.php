@@ -50,11 +50,14 @@
 					case 'PUT' :
 						$ok = RequestHandler::isPut();
 						break;
-					case 'OPTIONS' :
-						$ok = RequestHandler::isOptions();
+					case 'PATCH' :
+						$ok = RequestHandler::isPatch();
 						break;
 					case 'DELETE' :
 						$ok = RequestHandler::isDelete();
+						break;
+					case 'OPTIONS' :
+						$ok = RequestHandler::isOptions();
 						break;
 				}
 

@@ -9,7 +9,7 @@
 	 */
 
 	return [
-		'OZ_UNWANTED_CHAR_REG' => '#[\t\r]|[ ]{2,}#',
+		'OZ_UNWANTED_CHAR_REG' => '#\s+#',
 		'OZ_EXCLUDE_KEY_WORDS' => '#^ozone$#i',
 
 		'OZ_USER_MIN_AGE' => 16,

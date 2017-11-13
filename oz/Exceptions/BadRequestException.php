@@ -23,12 +23,13 @@
 		/**
 		 * BadRequestException constructor.
 		 *
-		 * @param string     $message the exception message
-		 * @param array|null $data    additional exception data
+		 * @param string          $message  the exception message
+		 * @param array|null      $data     additional exception data
+		 * @param \Exception|null $previous previous exception if nested exception
 		 */
-		public function __construct($message = 'OZ_ERROR_BAD_REQUEST', array $data = null)
+		public function __construct($message = 'OZ_ERROR_BAD_REQUEST', array $data = null, \Exception $previous = null)
 		{
-			parent::__construct($message, BaseException::BAD_REQUEST, $data);
+			parent::__construct($message, BaseException::BAD_REQUEST, $data, $previous);
 		}
 
 		/**

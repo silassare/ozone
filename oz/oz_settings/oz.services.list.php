@@ -10,68 +10,68 @@
 
 	return [
 		'oz_web_route' => [
-			'internal_name'   => 'OZONE\OZ\WebRoute\Services\RouteRunner',
+			'service_class'   => 'OZONE\OZ\WebRoute\Services\RouteRunner',
 			'is_file_service' => false,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
-			'req_methods'     => ['GET', 'POST', 'PUT', 'DELETE']
+			'request_methods'     => ['GET', 'POST', 'PUT', 'DELETE']
 		],
 		'file'     => [
-			'internal_name'   => 'OZONE\OZ\FS\Services\GetFiles',
+			'service_class'   => 'OZONE\OZ\FS\Services\GetFiles',
 			'is_file_service' => true,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
-			'req_methods'     => ['GET']
+			'request_methods'     => ['GET']
 		],
 		'captcha'     => [
-			'internal_name'   => 'OZONE\OZ\Authenticator\Services\CaptchaCode',
+			'service_class'   => 'OZONE\OZ\Authenticator\Services\CaptchaCode',
 			'is_file_service' => true,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
 			'require_client'  => false,
-			'req_methods'     => ['GET']
+			'request_methods'     => ['GET']
 		],
 		'qrcode'      => [
-			'internal_name'   => 'OZONE\OZ\Authenticator\Services\QrCodeCode',
+			'service_class'   => 'OZONE\OZ\Authenticator\Services\QrCodeCode',
 			'is_file_service' => true,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
 			'require_client'  => false,
-			'req_methods'     => ['GET']
+			'request_methods'     => ['GET']
 		],
 		'tnet'        => [
-			'internal_name'   => 'OZONE\OZ\User\Services\TestNet',
+			'service_class'   => 'OZONE\OZ\User\Services\TestNet',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,
-			'req_methods'     => ['POST', 'GET']
+			'request_methods'     => ['POST', 'GET']
 		],
 		'signup'      => [
-			'internal_name'   => 'OZONE\OZ\User\Services\Signup',
+			'service_class'   => 'OZONE\OZ\User\Services\Signup',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,
-			'req_methods'     => ['POST']
+			'request_methods'     => ['POST']
 		],
 		'upicedit'    => [
-			'internal_name'   => 'OZONE\OZ\User\Services\UserPicEdit',
+			'service_class'   => 'OZONE\OZ\User\Services\UserPicEdit',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,
-			'req_methods'     => ['POST']
+			'request_methods'     => ['POST']
 		],
 		'login'       => [
-			'internal_name'   => 'OZONE\OZ\User\Services\Login',
+			'service_class'   => 'OZONE\OZ\User\Services\Login',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,
-			'req_methods'     => ['POST']
+			'request_methods'     => ['POST']
 		],
 		'logout'      => [
-			'internal_name'   => 'OZONE\OZ\User\Services\Logout',
+			'service_class'   => 'OZONE\OZ\User\Services\Logout',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,
-			'req_methods'     => ['POST', 'GET']
+			'request_methods'     => ['POST', 'GET']
 		]
 	];

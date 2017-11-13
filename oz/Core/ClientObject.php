@@ -104,7 +104,8 @@
 			}
 
 			$token = Hasher::genAuthToken($uid);
-			$sid   = session_id();
+			// prevent foreign key constraint violation on session_id
+			$sid   = SessionsHandler::persistActiveSession();
 
 			$cu = new OZClientUser();
 			$cu->setClientApiKey($this->client->getApiKey())

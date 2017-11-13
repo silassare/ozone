@@ -19,13 +19,25 @@
 		private $registered = null;
 
 		/**
-		 * @param bool $state true to accept registered only, false otherwise
+		 * To accept phone number that are not registered only
 		 *
 		 * @return $this
 		 */
-		public function registered($state = true)
+		public function registered()
 		{
-			$this->registered = (bool)$state;
+			$this->registered = true;
+
+			return $this;
+		}
+
+		/**
+		 * To accept phone number that are not registered only
+		 *
+		 * @return $this
+		 */
+		public function notRegistered()
+		{
+			$this->registered = false;
 
 			return $this;
 		}
@@ -46,10 +58,14 @@
 
 			if (!$success) {
 				throw new TypesInvalidValueException('OZ_FIELD_PHONE_INVALID', $data);
-			} elseif ($this->registered === false AND UsersUtils::searchUserWithPhone($value)) {
-				throw new TypesInvalidValueException('OZ_FIELD_PHONE_ALREADY_REGISTERED', $data);
-			} elseif ($this->registered === true AND !UsersUtils::searchUserWithPhone($value)) {
-				throw new TypesInvalidValueException('OZ_FIELD_PHONE_NOT_REGISTERED', $data);
+			}
+
+			if (!empty($value)) {
+				if ($this->registered === false AND UsersUtils::searchUserWithPhone($value)) {
+					throw new TypesInvalidValueException('OZ_FIELD_PHONE_ALREADY_REGISTERED', $data);
+				} elseif ($this->registered === true AND !UsersUtils::searchUserWithPhone($value)) {
+					throw new TypesInvalidValueException('OZ_FIELD_PHONE_NOT_REGISTERED', $data);
+				}
 			}
 
 			return $value;
@@ -65,8 +81,14 @@
 			$instance->max(15);
 			$instance->pattern('#^\+\d{6,15}$#');
 
-			if (isset($options['registered']))
-				$instance->registered($options['registered']);
+			if (isset($options['registered'])) {
+				$registered = $options['registered'];
+				if ($registered === true) {
+					$instance->registered();
+				} else {
+					$instance->notRegistered();
+				}
+			}
 
 			if (isset($options['null']) AND $options['null'])
 				$instance->nullAble();

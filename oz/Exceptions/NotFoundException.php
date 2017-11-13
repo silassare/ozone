@@ -23,16 +23,17 @@
 		/**
 		 * NotFoundException constructor.
 		 *
-		 * @param string     $message the exception message
-		 * @param array|null $data    additional exception data
+		 * @param string          $message  the exception message
+		 * @param array|null      $data     additional exception data
+		 * @param \Exception|null $previous previous exception if nested exception
 		 */
-		public function __construct($message = 'OZ_ERROR_NOT_FOUND', array $data = null)
+		public function __construct($message = 'OZ_ERROR_NOT_FOUND', array $data = null, \Exception $previous = null)
 		{
 			if (empty($data)) {
 				$data = [$_SERVER['REQUEST_URI']];
 			}
 
-			parent::__construct($message, BaseException::NOT_FOUND, $data);
+			parent::__construct($message, BaseException::NOT_FOUND, $data, $previous);
 		}
 
 		/**

@@ -23,7 +23,7 @@
 		{
 			$data = [$value];
 
-			if (!in_array($value, SettingsManager::get('oz.user', 'OZ_USER_ALLOWED_GENDERS'))) {
+			if (!in_array($value, SettingsManager::get('oz.users', 'OZ_USER_ALLOWED_GENDERS'))) {
 				throw new TypesInvalidValueException('OZ_FIELD_GENDER_INVALID',$data);
 			}
 

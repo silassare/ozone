@@ -25,7 +25,6 @@
 	use OZONE\OZ\Exceptions\NotFoundException;
 	use OZONE\OZ\Lang\Polyglot;
 	use OZONE\OZ\Loader\ClassLoader;
-	use OZONE\OZ\Utils\StringUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -47,12 +46,12 @@
 		 * @var array
 		 */
 		private static $svc_default = [
-			"internal_name"   => null,
+			"service_class"   => null,
 			"is_file_service" => false,
 			"can_serve_resp"  => false,
 			"cross_site"      => false,
 			"require_client"  => true,
-			"req_methods"     => ['POST', 'GET', 'PUT', 'DELETE']
+			"request_methods"     => ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
 		];
 
 		/**
@@ -126,16 +125,16 @@
 					if (!empty($svc)) {
 						$svc = array_merge(self::$svc_default, $svc);
 
-						if (!empty($svc['internal_name']) AND ClassLoader::exists($svc['internal_name'])) {
+						if (!empty($svc['service_class']) AND ClassLoader::exists($svc['service_class'])) {
 							$svc_ok = true;
 						}
 					}
 
 					if ($svc_ok === true) {
-						Assert::assertSafeRequestMethod($svc['req_methods']);
+						Assert::assertSafeRequestMethod($svc['request_methods']);
 
 						/** @var BaseService $svc_obj */
-						$svc_obj = OZone::obj($svc['internal_name']);
+						$svc_obj = OZone::obj($svc['service_class']);
 
 						$svc_obj->execute($_REQUEST);
 
@@ -217,7 +216,7 @@
 			$data['utime'] = time();
 
 			header('Content-type: application/json');
-			echo json_encode(StringUtils::encodeFix($data));
+			echo json_encode($data);
 			exit;
 		}
 

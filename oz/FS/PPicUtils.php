@@ -43,7 +43,7 @@
 		private function makeProfilePic($source, $destination, array $coordinates)
 		{
 			$img_utils_obj     = new ImagesUtils($source);
-			$size_x            = $size_y = SettingsManager::get('oz.user', 'OZ_PPIC_MIN_SIZE');
+			$size_x            = $size_y = SettingsManager::get('oz.users', 'OZ_PPIC_MIN_SIZE');
 			$quality           = 100; // jpeg image quality: 0 to 100
 			$clean_coordinates = null;
 

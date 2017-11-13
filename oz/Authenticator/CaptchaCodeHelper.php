@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Authenticator;
 
+	use OZONE\OZ\Core\Hasher;
 	use OZONE\OZ\Core\SessionsData;
 	use OZONE\OZ\Exceptions\NotFoundException;
 	use OZONE\OZ\Core\SettingsManager;
@@ -97,14 +98,14 @@
 			}
 
 			if (empty($code)) {
-				throw new NotFoundException();
+				throw new NotFoundException(null,$_SESSION);
 			}
 
 			SessionsData::remove('_captcha_cfg_:' . $captcha_key);
 
 			$CAPTCHA_DIR = OZ_OZONE_DIR . 'oz_assets' . DS . 'captcha' . DS;
 
-			srand(microtime() * 100);
+			srand(Hasher::genSeed());
 
 			$background = $CAPTCHA_DIR . self::$default_config['backgrounds'][rand(0, count(self::$default_config['backgrounds']) - 1)];
 
