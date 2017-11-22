@@ -45,6 +45,8 @@
 		 */
 		private function add(array $options)
 		{
+			Utils::assertDatabaseAccess();
+
 			$host           = $options['h'];
 			$folder_name    = $options['f'];
 			$about          = $options['a'];
@@ -60,6 +62,7 @@
 			$wc->setApiKey($api_key)
 			   ->setAbout($about)
 			   ->setUrl($host)
+			   ->setCreateTime(time())
 			   ->setValid(true)
 			   ->save();
 
@@ -137,7 +140,7 @@
 			  ->offsets(3)
 			  ->type(new KliTypeString)
 			  ->required()
-			  ->prompt('Short text about the web client')
+			  ->prompt(true,'Short text about the web client')
 			  ->description('Short text about the web client.');
 
 			$add->addOption($h, $f, $a);

@@ -54,7 +54,7 @@
 				$success = false;
 			}
 
-			$data = [$value];
+			$data = ['email' => $value];
 
 			if (!$success) {
 				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $data);

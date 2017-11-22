@@ -31,8 +31,8 @@
 		public function __construct($cmd, $cwd = '.')
 		{
 			$this->command = $cmd;
-			$this->cwd     = new FilesManager(getcwd())
-									->resolve($cwd);
+			$fm            = new FilesManager(getcwd());
+			$this->cwd     = $fm->resolve($cwd);
 		}
 
 		public function run()

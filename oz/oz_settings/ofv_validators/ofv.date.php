@@ -12,18 +12,13 @@
 
 	function ofv_date(OFormValidator $ofv)
 	{
-		$date = $ofv->getField('date');
-		$date = OFormUtils::parseDate($date);
+		$date   = $ofv->getField('date');
+		$format = OFormUtils::parseDate($date);
 
-		if ($date) {
-			$year  = $date['year'];
-			$month = $date['month'];
-			$day   = $date['day'];
-
-			$ofv->setField('date', $day . '-' . $month . '-' . $year);
-
+		if (!$format) {
+			$ofv->addError('OZ_FIELD_DATE_INVALID');
 			return;
 		}
 
-		$ofv->addError('OZ_FIELD_DATE_INVALID');
+		$ofv->setField('date', $format["DD-MM-YYYY"]);
 	}

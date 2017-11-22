@@ -112,7 +112,7 @@
 
 			if (is_null($client) OR !$client->getClientData()
 											->getValid()) {
-				self::attackProcedure(new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID', [$api_key]));
+				self::attackProcedure(new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID', ['api_key' => $api_key]));
 			}
 
 			define('OZ_SESSION_MAX_LIFE_TIME', $client->getClientData()
@@ -129,9 +129,14 @@
 		{
 			// please BE AWARE!!!
 
-			$client = null;
-			$sid    = session_id();
+			$client   = null;
+			$sid      = null;
+			$sid_name = SettingsManager::get('oz.config', 'OZ_APP_SESSION_ID_NAME');
 
+			if (isset($_COOKIE[$sid_name])) {
+				$sid = $_COOKIE[$sid_name];
+			}
+			oz_logger($sid);
 			if (empty($sid)) {
 				self::attackProcedure(new ForbiddenException('OZ_SESSION_INVALID'));
 			}
@@ -144,7 +149,7 @@
 			}
 
 			define('OZ_SESSION_MAX_LIFE_TIME', $client->getClientData()
-													  ->getSessionLifeTime()());
+													  ->getSessionLifeTime());
 
 			self::setInitialHeaders($client);
 			self::$client = $client;

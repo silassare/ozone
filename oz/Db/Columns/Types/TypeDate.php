@@ -44,20 +44,12 @@
 			$data = [$value];
 
 			if ($success) {
-				$date = OFormUtils::parseDate($value);
+				$min_age = SettingsManager::get('oz.ofv.const', 'OZ_USER_MIN_AGE');
+				$max_age = SettingsManager::get('oz.ofv.const', 'OZ_USER_MAX_AGE');
 
-				if ($date) {
-					$year  = $date['year'];
-					$month = $date['month'];
-					$day   = $date['day'];
-					$value = $day . '-' . $month . '-' . $year;
-
-					$min_age = SettingsManager::get('oz.ofv.const', 'OZ_USER_MIN_AGE');
-					$max_age = SettingsManager::get('oz.ofv.const', 'OZ_USER_MAX_AGE');
-
-					if (!OFormUtils::isBirthDate($month, $day, $year, $min_age, $max_age)) {
-						$success = false;
-					}
+				if (OFormUtils::isBirthDate($value, $min_age, $max_age)) {
+					$format  = OFormUtils::parseDate($value);
+					$value = $format["DD-MM-YYYY"];
 				} else {
 					$success = false;
 				}

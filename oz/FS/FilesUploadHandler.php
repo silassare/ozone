@@ -10,6 +10,7 @@
 
 	use OZONE\OZ\Core\Hasher;
 	use OZONE\OZ\Db\OZFile;
+	use OZONE\OZ\Exceptions\RuntimeException;
 
 	class FilesUploadHandler
 	{
@@ -85,6 +86,7 @@
 			if ($result) {
 				$file_obj->setName($file_name)
 						 ->setPath($destination)
+						 ->setUploadTime(time())
 						 ->setType($file_type)
 						 ->setSize(filesize($destination));
 
@@ -111,6 +113,7 @@
 		 * @param string $to             the destination directory
 		 *
 		 * @return bool|\OZONE\OZ\Db\OZFile[] array of file object when successful, false otherwise
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function moveMultipleFilesUpload(array $uploaded_files, $to)
 		{
@@ -119,6 +122,12 @@
 			$tmp_file_list = [];
 			$error         = false;
 
+			if (!isset($uploaded_files["name"]) OR !is_array($uploaded_files["name"])) {
+				// this is not a valid tree dimensional array
+				// may be it is not a multiple file upload
+
+				throw new RuntimeException();
+			}
 			// multiple upload files
 			// transforming a three dimensional array into a two dimension array
 			foreach ($uploaded_files as $key => $values) {

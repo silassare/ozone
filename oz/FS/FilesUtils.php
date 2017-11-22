@@ -18,7 +18,7 @@
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	final class FilesUtils
+	class FilesUtils
 	{
 		/**
 		 * the default mime type for any file

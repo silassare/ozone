@@ -52,7 +52,7 @@
 		 */
 		public static function getAvailablesLanguages($key = null)
 		{
-			return SettingsManager::get('lang/lang.list', $key);
+			return SettingsManager::get('lang/oz.lang.list', $key);
 		}
 
 		/**

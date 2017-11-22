@@ -16,7 +16,7 @@
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	final class PPicUtils
+	class PPicUtils
 	{
 		/** @var int|string */
 		private $uid;

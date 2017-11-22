@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1510528733
+	 * Time: 1511267802
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -196,7 +196,7 @@
 								]);
 							}
 
-							$query->filterBy($column, $value, $operators_map[$operator]);
+							$query->filterBy($column, $value, $operators_map[$operator], false);
 						}
 					}
 				} else {

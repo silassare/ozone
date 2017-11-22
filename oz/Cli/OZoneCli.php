@@ -42,7 +42,6 @@
 		public function __construct()
 		{
 			parent::__construct('oz', true);
-			DbManager::init();
 		}
 
 		/**
@@ -53,6 +52,9 @@
 		public function run(array $arg)
 		{
 			$this->loadCommands();
+
+			DbManager::init();
+
 			parent::execute($arg);
 		}
 

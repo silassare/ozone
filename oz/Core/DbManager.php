@@ -130,7 +130,7 @@
 		{
 			$config                       = SettingsManager::get('oz.config');
 			$info['oz_db_namespace']      = 'OZONE\\OZ\\Db';
-			$info['project_db_namespace'] = $config['OZ_PROJECT_NAMESPACE'] . '\\Db';
+			$info['project_db_namespace'] = (isset($config['OZ_PROJECT_NAMESPACE']) ? $config['OZ_PROJECT_NAMESPACE'] : 'NO_PROJECT') . '\\Db';
 			$fm                           = new FilesManager(OZ_OZONE_DIR);
 			$info['oz_db_folder']         = $fm->cd('Db', true)
 											   ->getRoot();

@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1510528733
+	 * Time: 1511267802
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -176,10 +176,12 @@
 		 * @param string $column   the column name or full name
 		 * @param mixed  $value    the filter value
 		 * @param int    $operator the operator to use
+		 * @param bool   $use_and  whether to use AND condition
+		 *                         to combine multiple rules on the same column
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZClientsUsersQuery
 		 */
-		public function filterBy($column, $value, $operator = Rule::OP_EQ)
+		public function filterBy($column, $value, $operator = Rule::OP_EQ, $use_and = true)
 		{
 			// maybe user make change to the table without regenerating the classes
 			$this->table->assertHasColumn($column);
@@ -195,8 +197,12 @@
 
 			$rule = $this->filters[$full_name];
 
-			if (!$head) {
-				$rule->andX();
+			if ($head === false) {
+				if ($use_and) {
+					$rule->andX();
+				} else {
+					$rule->orX();
+				}
 			}
 
 			$a = $this->table_alias . '.' . $full_name;

@@ -42,7 +42,7 @@
 		 */
 		private function generate(array $options)
 		{
-			Utils::assertProjectFolder();
+			Utils::assertDatabaseAccess();
 
 			$table_name    = $options['t'];
 			$service_name  = $options['n'];

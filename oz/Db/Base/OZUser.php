@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1510528733
+	 * Time: 1511267802
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -486,6 +486,16 @@
 		{
 			if ($this->isNew()) {
 				// add
+				$ai_column = $this->auto_increment_column;
+
+				if (!empty($ai_column)) {
+					$ai_column_value = $this->row[$ai_column];
+
+					if (!is_null($ai_column_value)) {
+						throw new ORMException(sprintf('Auto increment column "%s" should be set to null.', $ai_column));
+					}
+				}
+
 				$columns = array_keys($this->row);
 				$values  = array_values($this->row);
 				$qb      = new QueryBuilder(ORM::getDatabase());
@@ -493,8 +503,7 @@
 				   ->into($this->table->getFullName(), $columns)
 				   ->values($values);
 
-				$result    = $qb->execute();
-				$ai_column = $this->auto_increment_column;
+				$result = $qb->execute();
 
 				if (!empty($ai_column)) {
 					if (is_string($result)) {

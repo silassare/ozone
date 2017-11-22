@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1510528733
+	 * Time: 1511267802
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -30,6 +30,7 @@
 		const COL_URL = 'client_url';
 		const COL_SESSION_LIFE_TIME = 'client_session_life_time';
 		const COL_ABOUT = 'client_about';
+		const COL_CREATE_TIME = 'client_create_time';
 		const COL_VALID = 'client_valid';
 
 		/** @var \Gobl\DBAL\Table */
@@ -268,6 +269,34 @@
 		}
 
 		/**
+		 * Getter for column `oz_clients`.`create_time`.
+		 *
+		 * @return string the real type is: bigint
+		 */
+		public function getCreateTime()
+		{
+		    $v = $this->_getValue(self::COL_CREATE_TIME);
+
+		    if( $v !== null){
+		        $v = (string)$v;
+		    }
+
+			return $v;
+		}
+
+		/**
+		 * Setter for column `oz_clients`.`create_time`.
+		 *
+		 * @param string $create_time
+		 *
+		 * @return \OZONE\OZ\Db\OZClient
+		 */
+		public function setCreateTime($create_time)
+		{
+			return $this->_setValue(self::COL_CREATE_TIME, $create_time);
+		}
+
+		/**
 		 * Getter for column `oz_clients`.`valid`.
 		 *
 		 * @return bool the real type is: bool
@@ -341,6 +370,16 @@
 		{
 			if ($this->isNew()) {
 				// add
+				$ai_column = $this->auto_increment_column;
+
+				if (!empty($ai_column)) {
+					$ai_column_value = $this->row[$ai_column];
+
+					if (!is_null($ai_column_value)) {
+						throw new ORMException(sprintf('Auto increment column "%s" should be set to null.', $ai_column));
+					}
+				}
+
 				$columns = array_keys($this->row);
 				$values  = array_values($this->row);
 				$qb      = new QueryBuilder(ORM::getDatabase());
@@ -348,8 +387,7 @@
 				   ->into($this->table->getFullName(), $columns)
 				   ->values($values);
 
-				$result    = $qb->execute();
-				$ai_column = $this->auto_increment_column;
+				$result = $qb->execute();
 
 				if (!empty($ai_column)) {
 					if (is_string($result)) {

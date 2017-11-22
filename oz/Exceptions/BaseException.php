@@ -74,9 +74,9 @@
 		 * @param string          $message  the exception message
 		 * @param int             $code     the exception code
 		 * @param array|null      $data     additional error data
-		 * @param \Exception|null $previous previous exception if nested exception
+		 * @param null|\Throwable $previous previous exception if nested exception
 		 */
-		public function __construct($message, $code, array $data = null, \Exception $previous = null)
+		public function __construct($message, $code, array $data = null, \Throwable $previous = null)
 		{
 			parent::__construct($message, $code, $previous);
 

@@ -14,23 +14,18 @@
 
 	function ofv_birth_date(OFormValidator $ofv)
 	{
-		$birthdate = $ofv->getField('birth_date');
-		$date  = OFormUtils::parseDate($birthdate);
+		$birth_date = $ofv->getField('birth_date');
+		$min_age    = SettingsManager::get('oz.ofv.const', 'OZ_USER_MIN_AGE');
+		$max_age    = SettingsManager::get('oz.ofv.const', 'OZ_USER_MAX_AGE');
 
-		if ($date) {
-			$year  = $date['year'];
-			$month = $date['month'];
-			$day   = $date['day'];
+		if (!OFormUtils::isBirthDate($birth_date, $min_age, $max_age)) {
+			$ofv->addError('OZ_FIELD_BIRTH_DATE_INVALID');
 
-			$min_age = SettingsManager::get('oz.ofv.const', 'OZ_USER_MIN_AGE');
-			$max_age = SettingsManager::get('oz.ofv.const', 'OZ_USER_MAX_AGE');
-
-			if (OFormUtils::isBirthDate($month, $day, $year, $min_age, $max_age)) {
-				$ofv->setField('birth_date', $day . '-' . $month . '-' . $year);
-
-				return;
-			}
+			return;
 		}
 
-		$ofv->addError('OZ_FIELD_BIRTH_DATE_INVALID');
+		$format     = OFormUtils::parseDate($birth_date);
+		$birth_date = $format["DD-MM-YYYY"];
+
+		$ofv->setField('birth_date', $birth_date);
 	}

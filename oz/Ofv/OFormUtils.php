@@ -12,9 +12,8 @@
 
 	final class OFormUtils
 	{
-
 		/**
-		 * Checks the given fields 'a' and 'b' fields are equals
+		 * Checks if the fields 'a' and 'b' are equals
 		 *
 		 * @param \OZONE\OZ\Ofv\OFormValidator $ofv The form validator object
 		 * @param  string                      $a   the field 'a' name
@@ -34,7 +33,7 @@
 		}
 
 		/**
-		 * load form validators in a given directory
+		 * Loads form validators in a given directory
 		 *
 		 * @param string $dir         the directory path
 		 * @param bool   $silent_mode whether to throw exception when directory was not found
@@ -69,14 +68,22 @@
 		/**
 		 * Checks if a given date is valid
 		 *
-		 * @param int $month the month
-		 * @param int $day   the day of the month
-		 * @param int $year  the year
+		 * @param string $date_string the date string
 		 *
 		 * @return bool
 		 */
-		public static function isValidDate($month, $day, $year)
+		public static function isValidDate($date_string)
 		{
+			$date = OFormUtils::parseDate($date_string);
+
+			if (!$date) {
+				return false;
+			}
+
+			$year  = $date['YYYY'];
+			$month = $date['MM'];
+			$day   = $date['DD'];
+
 			// depending on the year, calculate the number of days in the month
 			if (($year % 4) == 0) {
 				$days_in_month = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -105,55 +112,22 @@
 		}
 
 		/**
-		 * parse a given date is a field input
-		 *
-		 * @param string $date the date to input value to parse
-		 *
-		 * @return array|bool    result in array when successful, false otherwise
-		 */
-
-		public static function parseDate($date)
-		{
-			$safe = !empty($date);
-			// standard
-			$DATE_REG_A = '#^(\d{4})[\-\/](\d{1,2})[\-\/](\d{1,2})$#';
-			// when browser threat date field as text field (ex: in firefox) we consider valid dd/mm/yyyy
-			$DATE_REG_B = '#^(\d{1,2})[\-\/](\d{1,2})[\-\/](\d{4})$#';
-
-			$in_a = [];
-			$in_b = [];
-
-			if ($safe && preg_match($DATE_REG_A, $date, $in_a)) {
-				$year  = intval($in_a[1]);
-				$month = intval($in_a[2]);
-				$day   = intval($in_a[3]);
-			} elseif ($safe && preg_match($DATE_REG_B, $date, $in_b)) {
-				$year  = intval($in_b[3]);
-				$month = intval($in_b[2]);
-				$day   = intval($in_b[1]);
-			} else {
-				return false;
-			}
-
-			return ['year' => $year, 'month' => $month, 'day' => $day];
-		}
-
-		/**
 		 * Checks if a given date is a valid birth date
 		 *
-		 * @param int $month   the month
-		 * @param int $day     the day of the month
-		 * @param int $year    the year
-		 * @param int $min_age the min user age
-		 * @param int $max_age the max user age
+		 * @param string $date_string the date string
+		 * @param int    $min_age     the min user age
+		 * @param int    $max_age     the max user age
 		 *
 		 * @return bool
 		 */
-		public static function isBirthDate($month, $day, $year, $min_age = 0, $max_age = INF)
+		public static function isBirthDate($date_string, $min_age = 0, $max_age = INF)
 		{
-			if (!OFormUtils::isValidDate($month, $day, $year)) {
+			if (!OFormUtils::isValidDate($date_string)) {
 				return false;
 			}
+
+			$date = OFormUtils::parseDate($date_string);
+			$year = $date['YYYY'];
 
 			// get current year
 			$c_year = date('Y');
@@ -164,5 +138,45 @@
 			}
 
 			return true;
+		}
+
+		/**
+		 * Parse a given date string
+		 *
+		 * @param string $date_string the date string to parse
+		 *
+		 * @return array|bool    result in array when successful, false otherwise
+		 */
+		public static function parseDate($date_string)
+		{
+			$safe = !empty($date_string);
+			// standard YYYY-MM-DD
+			$DATE_REG_A = '#^(\d{4})[\-\/](\d{1,2})[\-\/](\d{1,2})$#';
+			// other DD-MM-YYYY
+			// when browser threat date field as text field (ex: in firefox) we consider valid dd/mm/yyyy
+			$DATE_REG_B = '#^(\d{1,2})[\-\/](\d{1,2})[\-\/](\d{4})$#';
+
+			$in_a = [];
+			$in_b = [];
+
+			if ($safe && preg_match($DATE_REG_A, $date_string, $in_a)) {
+				$year  = intval($in_a[1]);
+				$month = intval($in_a[2]);
+				$day   = intval($in_a[3]);
+			} elseif ($safe && preg_match($DATE_REG_B, $date_string, $in_b)) {
+				$year  = intval($in_b[3]);
+				$month = intval($in_b[2]);
+				$day   = intval($in_b[1]);
+			} else {
+				return false;
+			}
+
+			$format["DD"]         = $day;
+			$format["MM"]         = $month;
+			$format["YYYY"]       = $year;
+			$format["YYYY-MM-DD"] = $year . '-' . $month . '-' . $day;
+			$format["DD-MM-YYYY"] = $day . '-' . $month . '-' . $year;
+
+			return $format;
 		}
 	}

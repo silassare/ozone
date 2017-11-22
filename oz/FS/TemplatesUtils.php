@@ -15,7 +15,7 @@
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	final class TemplatesUtils
+	class TemplatesUtils
 	{
 
 		/**

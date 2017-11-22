@@ -35,8 +35,14 @@
 		 */
 		function oz_logger($in)
 		{
-			if ($in instanceof \OZONE\OZ\Exceptions\BaseException OR is_scalar($in)) {
+			if (is_scalar($in)) {
 				$text = (string)$in;
+			} elseif ($in instanceof \OZONE\OZ\Exceptions\BaseException) {
+				$previous = $in->getPrevious();
+				$text     = (string)$in;
+				if (!is_null($previous)) {
+					$text .= "\n-------previous--------\n" . $previous;
+				}
 			} elseif ($in instanceof Exception OR $in instanceof Error) {
 				$e    = $in;
 				$text = "\tFile    : {$e->getFile()}"

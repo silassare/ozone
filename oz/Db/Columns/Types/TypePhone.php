@@ -54,7 +54,7 @@
 				$success = false;
 			}
 
-			$data = [$value];
+			$data = ['phone' => $value];
 
 			if (!$success) {
 				throw new TypesInvalidValueException('OZ_FIELD_PHONE_INVALID', $data);

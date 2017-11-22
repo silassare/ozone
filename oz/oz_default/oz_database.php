@@ -126,6 +126,10 @@
 				'about'             => [
 					'type' => 'string'
 				],
+				'create_time'       => [
+					'type'     => 'bigint',
+					'unsigned' => true
+				],
 				'valid'             => [
 					'type' => 'bool'
 				]
@@ -173,7 +177,7 @@
 				'token'          => [
 					'type' => 'string',
 					'min'  => 32,
-					'max'  => 32
+					'max'  => 250
 				],
 				'last_check'     => [
 					'type'     => 'bigint',

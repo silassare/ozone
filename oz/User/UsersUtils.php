@@ -31,6 +31,19 @@
 	final class UsersUtils
 	{
 		/**
+		 * Gets the current user id.
+		 *
+		 * @return string|int
+		 */
+		public static function getCurrentUserId()
+		{
+			Assert::assertUserVerified();
+			$uid = SessionsData::get('ozone_user:id');
+
+			return $uid;
+		}
+
+		/**
 		 * Gets the current user object.
 		 *
 		 * @return \OZONE\OZ\Db\OZUser
@@ -108,7 +121,7 @@
 
 			// TODO why not ask if user really want to attach his account to this client ?
 			$token = RequestHandler::getCurrentClient()
-								 ->addClientUser($user->getId());
+								   ->addClientUser($user->getId());
 
 			SessionsData::set('ozone_user:id', $user->getId());
 			SessionsData::set('ozone_user:verified', true);
@@ -133,7 +146,7 @@
 				SessionsHandler::restart();
 
 				RequestHandler::getCurrentClient()
-							->removeClientUser($current_user->getId());
+							  ->removeClientUser($current_user->getId());
 				// may be useful
 				SessionsData::set('ozone_user:id', $current_user->getId());
 
