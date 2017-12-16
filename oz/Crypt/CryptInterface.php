@@ -12,8 +12,16 @@
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	interface DoCryptInterface
+	interface CryptInterface
 	{
+		/**
+		 * Checks if a given password is hashed with current algorithm
+		 *
+		 * @param string $pass The password to check
+		 *
+		 * @return bool
+		 */
+		public function isHash($pass);
 
 		/**
 		 * Gets password hash

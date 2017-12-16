@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Core;
 
+	use OZONE\OZ\Db\OZClient;
 	use OZONE\OZ\Exceptions\BaseException;
 	use OZONE\OZ\Exceptions\ForbiddenException;
 	use OZONE\OZ\Exceptions\NotFoundException;
@@ -19,7 +20,6 @@
 
 	final class RequestHandler
 	{
-
 		/**
 		 * api key regexp:
 		 *    -ozone api key is a 4 groups of 8 alphanumerics (A-Z0-9) separated with -
@@ -37,7 +37,7 @@
 		/**
 		 * the current client object
 		 *
-		 * @var \OZONE\OZ\Core\ClientObject
+		 * @var \OZONE\OZ\Db\OZClient
 		 */
 		private static $client;
 
@@ -81,51 +81,46 @@
 				exit;
 			}
 
-			if (self::isClientRequired()) { /* do we require a client for this service? */
+			// we start a session only if the service require a session
+			if (self::isSessionRequired()) {
 				if (self::isForFile()) {
-					self::initClientObjectForFile();
+					self::startSessionForFile();
 				} else {
-					self::initClientObject();
+					self::startSessionDefault();
 				}
-			}// else {
-			// this service does not require a client object
-			// for now any call to \OZONE\OZ\Core\RequestHandler::getCurrentClient() should not be tolerated
-			// please be aware look in \OZONE\OZ\Core\RequestHandler::getCurrentClient()
-			// }
-
-			SessionsHandler::start();
+			}
 		}
 
 		/**
-		 * init client object
+		 * init client
 		 */
-		private static function initClientObject()
+		private static function startSessionDefault()
 		{
 			$client  = null;
-			$api_key = self::getApiKey();
+			$api_key = self::getRequestApiKey();
 
 			if (empty($api_key)) {
 				self::attackProcedure(new ForbiddenException('OZ_API_KEY_MISSING_IN_HEADERS'));
 			}
 
-			$client = ClientObject::getInstanceWithApiKey($api_key);
+			$client = ClientManager::getClientWithApiKey($api_key);
 
-			if (is_null($client) OR !$client->getClientData()
-											->getValid()) {
+			if (is_null($client) OR !$client->getValid()) {
 				self::attackProcedure(new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID', ['api_key' => $api_key]));
 			}
 
-			define('OZ_SESSION_MAX_LIFE_TIME', $client->getClientData()
-													  ->getSessionLifeTime());
+			define('OZ_SESSION_MAX_LIFE_TIME', $client->getSessionLifeTime());
 
 			self::$client = $client;
 			self::setInitialHeaders($client);
+
+			SessionsHandler::start();
 		}
 
 		/**
-		 * init client object for file request
+		 * init client for file request
 		 */
-		private static function initClientObjectForFile()
+		private static function startSessionForFile()
 		{
 			// please BE AWARE!!!
 
@@ -136,64 +131,59 @@
 			if (isset($_COOKIE[$sid_name])) {
 				$sid = $_COOKIE[$sid_name];
 			}
-			oz_logger($sid);
+
 			if (empty($sid)) {
 				self::attackProcedure(new ForbiddenException('OZ_SESSION_INVALID'));
 			}
 
-			$client = ClientObject::getInstanceWithSessionId($sid);
+			$client = ClientManager::getClientWithSessionId($sid);
 
-			if (is_null($client) OR !$client->getClientData()
-											->getValid()) {
+			if (is_null($client) OR !$client->getValid()) {
 				self::attackProcedure(new ForbiddenException('OZ_SESSION_INVALID'));
 			}
 
-			define('OZ_SESSION_MAX_LIFE_TIME', $client->getClientData()
-													  ->getSessionLifeTime());
+			define('OZ_SESSION_MAX_LIFE_TIME', $client->getSessionLifeTime());
 
-			self::setInitialHeaders($client);
 			self::$client = $client;
+			self::setInitialHeaders($client);
+
+			SessionsHandler::start();
 		}
 
 		/**
 		 * Gets current client object
 		 *
-		 * if the 'require_client' property is set to false in the requested service's settings
+		 * if the 'require_session' property is set to false in the requested service's settings
 		 * you should not call this otherwise an exception is raised
 		 *
-		 * @return \OZONE\OZ\Core\ClientObject
+		 * @return \OZONE\OZ\Db\OZClient
 		 * @throws \Exception
 		 */
 		public static function getCurrentClient()
 		{
-			if (self::$client instanceof ClientObject) {
+			if (self::$client instanceof OZClient) {
 				return self::$client;
 			}
 
-			// this is a DEV error
-			// the requested service does not require a client object
-			// but a call to OZONE\OZ\Core\RequestHandler::getCurrentClient() occurs
 			$svc_name = URIHelper::getUriService();
 
-			throw new \Exception("client not defined, maybe 'require_client' is set to false in your oz.services.list for the service '$svc_name'");
+			throw new \Exception("client not defined, maybe 'require_session' is set to false in your oz.services.list for the service '$svc_name'");
 		}
 
 		/**
 		 * Sets required http headers
 		 *
-		 * @param \OZONE\OZ\Core\ClientObject|null $client the current client
+		 * @param null|\OZONE\OZ\Db\OZClient $client the current client
 		 */
-		private static function setInitialHeaders(ClientObject $client = null)
+		private static function setInitialHeaders(OZClient $client = null)
 		{
 			$rule        = SettingsManager::get('oz.clients', 'OZ_CORS_ALLOW_RULE');
 			$default_url = SettingsManager::get('oz.config', 'OZ_APP_MAIN_URL');
 			$life_time   = 86400;
 
 			if (!empty($client)) {
-				$default_url = $client->getClientData()
-									  ->getUrl();
-				$life_time   = $client->getClientData()
-									  ->getSessionLifeTime();
+				$default_url = $client->getUrl();
+				$life_time   = $client->getSessionLifeTime();
 			}
 
 			$origin = self::getRequestOriginOrReferer();
@@ -204,7 +194,7 @@
 					break;
 				case 'check':
 				default:
-					if (ClientObject::checkSafeOriginUrl($origin)) {
+					if (ClientManager::checkSafeOriginUrl($origin)) {
 						$url = $origin;
 					} else {
 						$url = $default_url;
@@ -215,18 +205,22 @@
 			header("X-Frame-Options: DENY");
 
 			if (self::isOptions()) {
-				$api_key_name   = strtolower(SettingsManager::get('oz.config', 'OZ_APP_API_KEY_NAME'));
-				$api_key_header = sprintf('x-%s', $api_key_name);
+				$allow_real_method_header = SettingsManager::get('oz.config', 'OZ_APP_ALLOW_REAL_METHOD_HEADER');
+				$custom_headers[]         = sprintf('x-%s', strtolower(SettingsManager::get('oz.config', 'OZ_APP_API_KEY_HEADER_NAME')));
+
+				if ($allow_real_method_header) {
+					$custom_headers[] = sprintf('x-%s', strtolower(SettingsManager::get('oz.config', 'OZ_APP_REAL_METHOD_HEADER_NAME')));
+				}
 
 				// enable self made headers
-				header(sprintf('Access-Control-Allow-Headers: accept, %s', $api_key_header));
+				header(sprintf('Access-Control-Allow-Headers: accept, %s', implode(', ', $custom_headers)));
 				// TODO:: retrieve accepted methods from the desired service (add OPTIONS)
 				header('Access-Control-Allow-Methods: OPTIONS, GET, POST, PATCH, PUT, DELETE');
 				header(sprintf('Access-Control-Max-Age: %s', $life_time));
 			}
 
 			if (!empty($url)) {
-				// Remember: CORS is not security. Do not rely on CORS to secure your web site.
+				// Remember: CORS is not security. Do not rely on CORS to secure your web site/application.
 				// If you are serving protected data, use cookies or OAuth tokens or something
 				// other than the Origin header to secure that data. The Access-Control-Allow-Origin header 
 				// in CORS only dictates which origins should be allowed to make cross-origin requests.
@@ -263,10 +257,10 @@
 		 *
 		 * @return string
 		 */
-		public static function getApiKey()
+		public static function getRequestApiKey()
 		{
 			$key          = '';
-			$api_key_name = SettingsManager::get('oz.config', 'OZ_APP_API_KEY_NAME');
+			$api_key_name = SettingsManager::get('oz.config', 'OZ_APP_API_KEY_HEADER_NAME');
 			$header_key   = sprintf('HTTP_X_%s', strtoupper(str_replace('-', '_', $api_key_name)));
 
 			// test if already verified
@@ -414,19 +408,19 @@
 		}
 
 		/**
-		 * Checks if the requested service require a valid client
+		 * Checks if the requested service require a session
 		 *
 		 * @return bool
 		 */
-		public static function isClientRequired()
+		public static function isSessionRequired()
 		{
 			$svc_name = URIHelper::getUriService();
 
 			if (!empty($svc_name)) {
 				$svc = SettingsManager::get('oz.services.list', $svc_name);
 
-				if (!empty($svc) AND isset($svc['require_client'])) {
-					return $svc['require_client'];
+				if (!empty($svc) AND isset($svc['require_session'])) {
+					return $svc['require_session'];
 				}
 			}
 
@@ -434,7 +428,7 @@
 		}
 
 		/**
-		 * run procedure when some unhandled ozone exceptions occurs
+		 * Runs procedure when illegal access is detected
 		 *
 		 * @param \OZONE\OZ\Exceptions\BaseException|null $err  the current ozone exception
 		 * @param mixed                                   $desc a short description

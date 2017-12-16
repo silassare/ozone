@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1511267802
+	 * Time: 1513395180
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -24,6 +24,8 @@
 	 */
 	abstract class OZAdmin extends ArrayCapable
 	{
+		const TABLE_NAME = 'oz_administrators';
+
 		const COL_USER_ID = 'admin_user_id';
 		const COL_TIME = 'admin_time';
 		const COL_VALID = 'admin_valid';
@@ -70,7 +72,7 @@
 		public function __construct($is_new = true)
 		{
 			$this->table    = ORM::getDatabase()
-								 ->getTable('oz_administrators');
+								 ->getTable(OZAdmin::TABLE_NAME);
 			$columns        = $this->table->getColumns();
 			$this->is_new   = (bool)$is_new;
 			$this->is_saved = !$this->is_new;

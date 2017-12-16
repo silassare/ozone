@@ -25,14 +25,6 @@
 	class UserPicEdit extends BaseService
 	{
 		/**
-		 * UserPicEdit constructor.
-		 */
-		public function __construct()
-		{
-			parent::__construct();
-		}
-
-		/**
 		 * {@inheritdoc}
 		 */
 		public function execute(array $request = [])

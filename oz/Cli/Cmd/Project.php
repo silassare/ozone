@@ -106,8 +106,11 @@
 				'OZ_PROJECT_PREFIX'    => $prefix,
 				'OZ_APP_DEBUG_MODE'    => 0,
 				'OZ_APP_MAIN_URL'      => 'http://localhost',
-				'OZ_APP_SESSION_ID_NAME'      => 'OZONE_SID',
-				'OZ_APP_API_KEY_NAME'   => 'ozone-api-key'
+				'OZ_APP_SESSION_ID_NAME' => 'OZONE_SID',
+				'OZ_APP_API_KEY_HEADER_NAME'   => 'ozone-api-key',
+				':oz:comment:2'        => 'For server that does not support HEAD, PATCH, PUT, DELETE...',
+				'OZ_APP_ALLOW_REAL_METHOD_HEADER' => true,
+				'OZ_APP_REAL_METHOD_HEADER_NAME' => 'ozone-real-method'
 			]);
 
 			$oz_config = TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject);

@@ -14,7 +14,7 @@
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	class DoCrypt implements DoCryptInterface
+	class DoCrypt implements CryptInterface
 	{
 
 		/**
@@ -29,6 +29,16 @@
 		 */
 		public function __construct()
 		{
+		}
+
+		/**
+		 *{@inheritdoc}
+		 */
+		public function isHash($pass)
+		{
+			$pass_info = password_get_info($pass);
+
+			return $pass_info['algo'] === PASSWORD_BCRYPT;
 		}
 
 		/**

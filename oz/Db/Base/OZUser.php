@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1511267802
+	 * Time: 1513395180
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -25,6 +25,8 @@
 	 */
 	abstract class OZUser extends ArrayCapable
 	{
+		const TABLE_NAME = 'oz_users';
+
 		const COL_ID = 'user_id';
 		const COL_PHONE = 'user_phone';
 		const COL_EMAIL = 'user_email';
@@ -79,7 +81,7 @@
 		public function __construct($is_new = true)
 		{
 			$this->table    = ORM::getDatabase()
-								 ->getTable('oz_users');
+								 ->getTable(OZUser::TABLE_NAME);
 			$columns        = $this->table->getColumns();
 			$this->is_new   = (bool)$is_new;
 			$this->is_saved = !$this->is_new;

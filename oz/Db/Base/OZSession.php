@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1511267802
+	 * Time: 1513395180
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -14,6 +14,8 @@
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Db\OZSessionsQuery as OZSessionsQueryReal;
 
+	use OZONE\OZ\Db\OZClientsQuery;
+	use OZONE\OZ\Db\OZUsersQuery;
 
 
 	/**
@@ -23,9 +25,15 @@
 	 */
 	abstract class OZSession extends ArrayCapable
 	{
+		const TABLE_NAME = 'oz_sessions';
+
 		const COL_ID = 'session_id';
+		const COL_CLIENT_API_KEY = 'session_client_api_key';
+		const COL_USER_ID = 'session_user_id';
+		const COL_TOKEN = 'session_token';
 		const COL_DATA = 'session_data';
 		const COL_EXPIRE = 'session_expire';
+		const COL_LAST_SEEN = 'session_last_seen';
 
 		/** @var \Gobl\DBAL\Table */
 		protected $table;
@@ -54,6 +62,16 @@
 		protected $auto_increment_column = null;
 
 
+		/**
+		 * @var \OZONE\OZ\Db\OZClient
+		 */
+		protected $r_OZ_client;
+
+		/**
+		 * @var \OZONE\OZ\Db\OZUser
+		 */
+		protected $r_OZ_user;
+
 
 		/**
 		 * OZSession constructor.
@@ -64,7 +82,7 @@
 		public function __construct($is_new = true)
 		{
 			$this->table    = ORM::getDatabase()
-								 ->getTable('oz_sessions');
+								 ->getTable(OZSession::TABLE_NAME);
 			$columns        = $this->table->getColumns();
 			$this->is_new   = (bool)$is_new;
 			$this->is_saved = !$this->is_new;
@@ -80,6 +98,42 @@
 				}
 			}
 		}
+
+        /**
+         * ManyToOne relation between `oz_sessions` and `oz_clients`.
+         *
+         * @return null|\OZONE\OZ\Db\OZClient
+         */
+        public function getOZClient()
+        {
+            if (!isset($this->r_OZ_client)) {
+                $m = new OZClientsQuery();
+
+                $m->filterByApiKey($this->getClientApiKey());
+
+                $this->r_OZ_client = $m->find()->fetchClass();
+            }
+
+            return $this->r_OZ_client;
+        }
+
+        /**
+         * ManyToOne relation between `oz_sessions` and `oz_users`.
+         *
+         * @return null|\OZONE\OZ\Db\OZUser
+         */
+        public function getOZUser()
+        {
+            if (!isset($this->r_OZ_user)) {
+                $m = new OZUsersQuery();
+
+                $m->filterById($this->getUserId());
+
+                $this->r_OZ_user = $m->find()->fetchClass();
+            }
+
+            return $this->r_OZ_user;
+        }
 
 
 		/**
@@ -108,6 +162,90 @@
 		public function setId($id)
 		{
 			return $this->_setValue(self::COL_ID, $id);
+		}
+
+		/**
+		 * Getter for column `oz_sessions`.`client_api_key`.
+		 *
+		 * @return string the real type is: string
+		 */
+		public function getClientApiKey()
+		{
+		    $v = $this->_getValue(self::COL_CLIENT_API_KEY);
+
+		    if( $v !== null){
+		        $v = (string)$v;
+		    }
+
+			return $v;
+		}
+
+		/**
+		 * Setter for column `oz_sessions`.`client_api_key`.
+		 *
+		 * @param string $client_api_key
+		 *
+		 * @return \OZONE\OZ\Db\OZSession
+		 */
+		public function setClientApiKey($client_api_key)
+		{
+			return $this->_setValue(self::COL_CLIENT_API_KEY, $client_api_key);
+		}
+
+		/**
+		 * Getter for column `oz_sessions`.`user_id`.
+		 *
+		 * @return string the real type is: bigint
+		 */
+		public function getUserId()
+		{
+		    $v = $this->_getValue(self::COL_USER_ID);
+
+		    if( $v !== null){
+		        $v = (string)$v;
+		    }
+
+			return $v;
+		}
+
+		/**
+		 * Setter for column `oz_sessions`.`user_id`.
+		 *
+		 * @param string $user_id
+		 *
+		 * @return \OZONE\OZ\Db\OZSession
+		 */
+		public function setUserId($user_id)
+		{
+			return $this->_setValue(self::COL_USER_ID, $user_id);
+		}
+
+		/**
+		 * Getter for column `oz_sessions`.`token`.
+		 *
+		 * @return string the real type is: string
+		 */
+		public function getToken()
+		{
+		    $v = $this->_getValue(self::COL_TOKEN);
+
+		    if( $v !== null){
+		        $v = (string)$v;
+		    }
+
+			return $v;
+		}
+
+		/**
+		 * Setter for column `oz_sessions`.`token`.
+		 *
+		 * @param string $token
+		 *
+		 * @return \OZONE\OZ\Db\OZSession
+		 */
+		public function setToken($token)
+		{
+			return $this->_setValue(self::COL_TOKEN, $token);
 		}
 
 		/**
@@ -164,6 +302,34 @@
 		public function setExpire($expire)
 		{
 			return $this->_setValue(self::COL_EXPIRE, $expire);
+		}
+
+		/**
+		 * Getter for column `oz_sessions`.`last_seen`.
+		 *
+		 * @return string the real type is: bigint
+		 */
+		public function getLastSeen()
+		{
+		    $v = $this->_getValue(self::COL_LAST_SEEN);
+
+		    if( $v !== null){
+		        $v = (string)$v;
+		    }
+
+			return $v;
+		}
+
+		/**
+		 * Setter for column `oz_sessions`.`last_seen`.
+		 *
+		 * @param string $last_seen
+		 *
+		 * @return \OZONE\OZ\Db\OZSession
+		 */
+		public function setLastSeen($last_seen)
+		{
+			return $this->_setValue(self::COL_LAST_SEEN, $last_seen);
 		}
 
 		/**

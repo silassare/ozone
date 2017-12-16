@@ -63,6 +63,7 @@
 		{
 			Utils::assertDatabaseAccess();
 
+			$cli       = $this->getCli();
 			$all       = (bool)$options['a'];
 			$structure = DbManager::getProjectDbDirectoryStructure();
 
@@ -95,11 +96,14 @@
 				$gen->generateORMClasses($ns, $dir);
 			}
 
-			$query = $db->generateDatabaseQuery();
-			$db->execute($query);
-
-			$this->getCli()
-				 ->writeLn('Success: database build done.');
+			try {
+				$query = $db->generateDatabaseQuery();
+				$db->multipleQueryExecute($query);
+				$cli->writeLn('Success: database build done.');
+			} catch (\Exception $e) {
+				oz_logger($e);
+				$cli->writeLn('Error: database build fails. Open log file.');
+			}
 		}
 
 		/**
@@ -114,6 +118,8 @@
 		private function refresh(array $options)
 		{
 			Utils::assertDatabaseAccess();
+
+			$cli       = $this->getCli();
 			$namespace = $options['n'];
 			$dir       = $options['d'];
 
@@ -140,10 +146,13 @@
 			$gen = ORM::getClassGenerator();
 			$gen->generateORMClasses($namespace, $dir);
 
-			$db->execute($query);
-
-			$this->getCli()
-				 ->writeLn('Success: database refreshed.');
+			try {
+				$db->multipleQueryExecute($query);
+				$cli->writeLn('Success: database refreshed.');
+			} catch (\Exception $e) {
+				oz_logger($e);
+				$cli->writeLn('Error: database refresh fails. Open log file.');
+			}
 		}
 
 		/**
@@ -183,17 +192,22 @@
 
 			$f     = $options['f'];
 			$query = file_get_contents($f);
-			try {
-				DbManager::getInstance()
-						 ->execute($query);
+			$cli   = $this->getCli();
 
-				$this->getCli()
-					 ->writeLn('Success: database updated.');
+			if (empty($query)) {
+				$cli->writeLn(sprintf('Error: the sql source file(%s) is empty.', $f));
+
+				return;
+			}
+
+			$db = DbManager::getInstance();
+
+			try {
+				$db->multipleQueryExecute($query);
+				$cli->writeLn('Success: database updated.');
 			} catch (\Exception $e) {
 				oz_logger($e);
-
-				$this->getCli()
-					 ->writeLn('Error: database update fails.');
+				$cli->writeLn('Error: database update fails. Open log file.');
 			}
 		}
 

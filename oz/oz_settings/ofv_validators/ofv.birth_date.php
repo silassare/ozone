@@ -19,7 +19,7 @@
 		$max_age    = SettingsManager::get('oz.ofv.const', 'OZ_USER_MAX_AGE');
 
 		if (!OFormUtils::isBirthDate($birth_date, $min_age, $max_age)) {
-			$ofv->addError('OZ_FIELD_BIRTH_DATE_INVALID');
+			$ofv->addError('OZ_FIELD_BIRTH_DATE_INVALID',['input' => $value, 'min' => $min_age, 'max' => $max_age]);
 
 			return;
 		}

@@ -9,6 +9,9 @@
 	 */
 
 	return [
+		// routes that start with `/oz:` are for internal use only
+		// any external request of such route will be rejected
+
 		'oz:error' => [
 			'path'    => '/oz:error',
 			'handler' => 'OZONE\OZ\WebRoute\Views\ErrorView'

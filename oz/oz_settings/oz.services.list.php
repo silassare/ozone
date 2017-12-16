@@ -8,6 +8,8 @@
 	 * file that was distributed with this source code.
 	 */
 
+	use OZONE\OZ\Core\SettingsManager;
+
 	return [
 		'oz_web_route' => [
 			'service_class'   => 'OZONE\OZ\WebRoute\Services\RouteRunner',
@@ -16,11 +18,12 @@
 			'cross_site'      => true,
 			'request_methods'     => ['GET', 'POST', 'PUT', 'DELETE']
 		],
-		'file'     => [
+		'files'     => [
 			'service_class'   => 'OZONE\OZ\FS\Services\GetFiles',
 			'is_file_service' => true,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
+			'require_session' => !(SettingsManager::get('oz.files', 'OZ_FILE_ACCESS_LEVEL') === 'any'),
 			'request_methods'     => ['GET']
 		],
 		'captcha'     => [
@@ -28,7 +31,7 @@
 			'is_file_service' => true,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
-			'require_client'  => false,
+			'require_session'  => true,
 			'request_methods'     => ['GET']
 		],
 		'qrcode'      => [
@@ -36,7 +39,7 @@
 			'is_file_service' => true,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
-			'require_client'  => false,
+			'require_session'  => true,
 			'request_methods'     => ['GET']
 		],
 		'tnet'        => [

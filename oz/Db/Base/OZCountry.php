@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1511267802
+	 * Time: 1513395180
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -23,6 +23,8 @@
 	 */
 	abstract class OZCountry extends ArrayCapable
 	{
+		const TABLE_NAME = 'oz_countries';
+
 		const COL_CC2 = 'country_cc2';
 		const COL_CODE = 'country_code';
 		const COL_NAME = 'country_name';
@@ -66,7 +68,7 @@
 		public function __construct($is_new = true)
 		{
 			$this->table    = ORM::getDatabase()
-								 ->getTable('oz_countries');
+								 ->getTable(OZCountry::TABLE_NAME);
 			$columns        = $this->table->getColumns();
 			$this->is_new   = (bool)$is_new;
 			$this->is_saved = !$this->is_new;

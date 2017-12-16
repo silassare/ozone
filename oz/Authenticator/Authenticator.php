@@ -105,6 +105,9 @@
 			$code   = Hasher::genAuthCode();
 			$token  = Hasher::genAuthToken($code);
 
+			// cancel any existing to prevent primary key duplication
+			$this->cancel();
+
 			$auth = new OZAuth();
 			$auth->setLabel($this->label)
 				 ->setFor($this->for_value)

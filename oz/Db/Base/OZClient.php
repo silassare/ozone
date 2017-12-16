@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1511267802
+	 * Time: 1513395180
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -15,7 +15,6 @@
 	use OZONE\OZ\Db\OZClientsQuery as OZClientsQueryReal;
 
 	use OZONE\OZ\Db\OZUsersQuery;
-	use OZONE\OZ\Db\OZClientsUsersQuery;
 
 
 	/**
@@ -25,6 +24,8 @@
 	 */
 	abstract class OZClient extends ArrayCapable
 	{
+		const TABLE_NAME = 'oz_clients';
+
 		const COL_API_KEY = 'client_api_key';
 		const COL_USER_ID = 'client_user_id';
 		const COL_URL = 'client_url';
@@ -75,7 +76,7 @@
 		public function __construct($is_new = true)
 		{
 			$this->table    = ORM::getDatabase()
-								 ->getTable('oz_clients');
+								 ->getTable(OZClient::TABLE_NAME);
 			$columns        = $this->table->getColumns();
 			$this->is_new   = (bool)$is_new;
 			$this->is_saved = !$this->is_new;
@@ -108,23 +109,6 @@
             }
 
             return $this->r_OZ_client_owner;
-        }
-
-        /**
-         * OneToMany relation between `oz_clients` and `oz_clients_users`.
-         *
-		 * @param null|int $max    maximum row to retrieve
-		 * @param int      $offset first row offset
-		 *
-         * @return \OZONE\OZ\Db\OZClientUser[]
-         */
-        public function getOZCurrentUsers($max = null, $offset = 0)
-        {
-            $m = new OZClientsUsersQuery();
-
-            $m->filterByClientApiKey($this->getApiKey());
-
-            return $m->find($max, $offset)->fetchAllClass();
         }
 
 

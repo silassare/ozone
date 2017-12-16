@@ -11,7 +11,6 @@
 	namespace OZONE\OZ\User;
 
 	use OZONE\OZ\Core\Assert;
-	use OZONE\OZ\Core\RequestHandler;
 	use OZONE\OZ\Core\SessionsData;
 	use OZONE\OZ\Core\SessionsHandler;
 	use OZONE\OZ\Crypt\DoCrypt;
@@ -119,9 +118,7 @@
 				$_SESSION[$k] = $v;
 			}
 
-			// TODO why not ask if user really want to attach his account to this client ?
-			$token = RequestHandler::getCurrentClient()
-								   ->addClientUser($user->getId());
+			$token = SessionsHandler::attachUser($user)->getToken();
 
 			SessionsData::set('ozone_user:id', $user->getId());
 			SessionsData::set('ozone_user:verified', true);
@@ -145,8 +142,6 @@
 
 				SessionsHandler::restart();
 
-				RequestHandler::getCurrentClient()
-							  ->removeClientUser($current_user->getId());
 				// may be useful
 				SessionsData::set('ozone_user:id', $current_user->getId());
 

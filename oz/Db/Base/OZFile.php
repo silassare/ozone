@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1511267802
+	 * Time: 1513395180
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -25,6 +25,8 @@
 	 */
 	abstract class OZFile extends ArrayCapable
 	{
+		const TABLE_NAME = 'oz_files';
+
 		const COL_ID = 'file_id';
 		const COL_USER_ID = 'file_user_id';
 		const COL_KEY = 'file_key';
@@ -80,7 +82,7 @@
 		public function __construct($is_new = true)
 		{
 			$this->table    = ORM::getDatabase()
-								 ->getTable('oz_files');
+								 ->getTable(OZFile::TABLE_NAME);
 			$columns        = $this->table->getColumns();
 			$this->is_new   = (bool)$is_new;
 			$this->is_saved = !$this->is_new;

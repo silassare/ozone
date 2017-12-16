@@ -6,7 +6,6 @@
 
 	final class ErrorView extends BaseView
 	{
-
 		private $compileData = [];
 
 		/**

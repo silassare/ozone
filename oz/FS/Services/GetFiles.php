@@ -55,11 +55,16 @@
 			}
 
 			Assert::assertForm($request, $params, new NotFoundException());
+			$access = SettingsManager::get('oz.files', 'OZ_FILE_ACCESS_LEVEL');
 
-			$picid = $request['id'] . '_' . $request['key'];
+			// we directly set the behavior in oz.services.list
+			// for 'session' and 'any' access level
 
-			if (!UsersUtils::userVerified() AND !$this->isLastUserPic($picid)) {
-				throw new ForbiddenException();
+			if ($access === 'users') {
+				$picid = $request['id'] . '_' . $request['key'];
+				if (!UsersUtils::userVerified() AND !$this->isLastUserPic($picid)) {
+					throw new ForbiddenException();
+				}
 			}
 
 			$this->labelGetFile($request);
@@ -112,12 +117,21 @@
 			$file_name = SettingsManager::get('oz.files', 'OZ_FILE_DOWNLOAD_NAME');
 
 			if (strlen($file_name)) {
-				$file_name = str_replace(['{oz_file_id}', '{oz_thumbnail}', '{oz_file_extension}'], [$file_id, $thumb, $ext], $file_name);
+				$file_name = str_replace(['{oz_file_id}', '{oz_thumbnail}', '{oz_file_extension}'], [
+					$file_id,
+					$thumb,
+					$ext
+				], $file_name);
 			} else {
 				$file_name = $result->getName();
 			}
 
-			(new FilesServer())->execute(['src' => $src, 'thumb' => $thumb, 'file_name' => $file_name, 'file_mime' => $file_mime]);
+			(new FilesServer())->execute([
+				'src'       => $src,
+				'thumb'     => $thumb,
+				'file_name' => $file_name,
+				'file_mime' => $file_mime
+			]);
 		}
 
 		/**

@@ -35,14 +35,6 @@
 		const SIGNUP_STEP_VALIDATE = 2;
 		const SIGNUP_STEP_END      = 3;
 
-		/**
-		 * BaseServiceSignup constructor.
-		 */
-		public function __construct()
-		{
-			parent::__construct();
-		}
-
 		public function execute(array $request = [])
 		{
 			$step = SessionsData::get('svc_sign_up:next_step');

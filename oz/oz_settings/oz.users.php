@@ -17,8 +17,8 @@
 		'OZ_THUMB_MAX_SIZE'       => 640,
 		// allowed gender list
 		'OZ_USER_ALLOWED_GENDERS' => ['Male', 'Female', 'None', 'Other'],
-		// phone number are required to register
-		'OZ_USERS_PHONE_REQUIRED' => false,
-		// email are required to register
-		'OZ_USERS_EMAIL_REQUIRED' => true
+		// does email are required to register
+		'OZ_USERS_EMAIL_REQUIRED' => true,
+		// does phone number are required to register
+		'OZ_USERS_PHONE_REQUIRED' => false
 	];

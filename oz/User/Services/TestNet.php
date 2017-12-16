@@ -10,7 +10,6 @@
 
 	namespace OZONE\OZ\User\Services;
 
-	use OZONE\OZ\Core\RequestHandler;
 	use OZONE\OZ\Core\BaseService;
 	use OZONE\OZ\Core\SessionsData;
 	use OZONE\OZ\User\UsersUtils;
@@ -24,15 +23,6 @@
 	 */
 	class TestNet extends BaseService
 	{
-
-		/**
-		 * TestNet constructor.
-		 */
-		public function __construct()
-		{
-			parent::__construct();
-		}
-
 		/**
 		 * {@inheritdoc}
 		 *
@@ -47,12 +37,6 @@
 				// UsersUtils::logUserIn($user_obj);
 				$data['ok']            = 1;
 				$data['_current_user'] = $user_obj->asArray();
-			} elseif ($this->canWeRememberUser($request)) {
-				$user_obj = UsersUtils::getUserObject($request['uid']);
-				UsersUtils::logUserIn($user_obj);
-
-				$data['ok']            = 1;
-				$data['_current_user'] = $user_obj->asArray();
 			} else {
 				$data['ok'] = 0;
 				$step       = SessionsData::get('svc_sign_up:step');
@@ -63,19 +47,7 @@
 				}
 			}
 
-			$this->getResponseHolder()->setData($data);
-		}
-
-		private function canWeRememberUser($request)
-		{
-			if (isset($request['uid']) AND isset($request['token'])) {
-				$uid   = $request['uid'];
-				$token = $request['token'];
-
-				return RequestHandler::getCurrentClient()
-								   ->clientHasUser($uid, $token);
-			}
-
-			return false;
+			$this->getResponseHolder()
+				 ->setData($data);
 		}
 	}

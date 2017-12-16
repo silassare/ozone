@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1511267802
+	 * Time: 1513395180
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -52,12 +52,13 @@
 		 * When filters exists only rows that
 		 * satisfy the filters are returned.
 		 *
-		 * @param null|int $max    maximum row to retrieve
-		 * @param int      $offset first row offset
+		 * @param null|int $max      maximum row to retrieve
+		 * @param int      $offset   first row offset
+		 * @param array    $order_by order by rules
 		 *
 		 * @return \OZONE\OZ\Db\OZClientsResults
 		 */
-		public function find($max = null, $offset = 0)
+		public function find($max = null, $offset = 0, array $order_by = [])
 		{
 			$this->qb->select()
 					 ->from($this->table->getFullName(), $this->table_alias);
@@ -65,6 +66,10 @@
 			$rule = $this->_getFiltersRule();
 			if (!is_null($rule)) {
 				$this->qb->where($rule);
+			}
+
+			if (!empty($order_by)) {
+				$this->qb->orderBy($order_by);
 			}
 
 			$this->qb->limit($max, $offset)
@@ -87,9 +92,11 @@
 					 ->from($this->table->getFullName(), $this->table_alias);
 
 			$rule = $this->_getFiltersRule();
+
 			if (!is_null($rule)) {
 				$this->qb->where($rule);
 			}
+
 			$this->qb->bindArray($this->params);
 
 			return $this->resetQuery();

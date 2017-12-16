@@ -38,7 +38,9 @@
 		 *
 		 * @var string
 		 */
-		const SERVICE_URL_REG = "#/?([a-zA-Z][a-zA-Z0-9_]+)(?:/(.*))?$#";
+		const SERVICE_URL_REG = "#^/?([a-zA-Z][a-zA-Z0-9_-]+)(?:/(.*))?$#";
+
+		const INTERNAL_WEB_ROUTE_PREFIX = "#^/oz:#";
 
 		private static $parsed_uri_parts = ['oz_uri_service' => '', 'oz_uri_extra' => ''];
 
@@ -78,6 +80,11 @@
 			} else {
 				if (0 !== strpos($uri, '/')) {
 					$uri = '/' . $uri;
+				}
+
+				// prevent request to any route like /oz:error, /oz:...
+				if (preg_match(self::INTERNAL_WEB_ROUTE_PREFIX, $uri)) {
+					return false;
 				}
 
 				if (!WebRoute::routeExists($uri)) {

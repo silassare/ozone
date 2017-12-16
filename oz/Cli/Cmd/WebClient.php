@@ -58,14 +58,6 @@
 			$class_name   = $config['OZ_PROJECT_CLASS'];
 			$api_key      = Hasher::genClientId($host);
 
-			$wc = new OZClient();
-			$wc->setApiKey($api_key)
-			   ->setAbout($about)
-			   ->setUrl($host)
-			   ->setCreateTime(time())
-			   ->setValid(true)
-			   ->save();
-
 			if (!empty($folder_name)) {
 				$abs_folder = PathUtils::resolve($project_folder, $folder_name);
 
@@ -100,7 +92,15 @@
 				   ->cp($tpl_folder . 'gen/htaccess.www.txt', '.htaccess');
 			}
 
-			$this->getCli()
+			$wc = new OZClient();
+			$wc->setApiKey($api_key)
+			   ->setAbout($about)
+			   ->setUrl($host)
+			   ->setCreateTime(time())
+			   ->setValid(true)
+			   ->save();
+
+		   $this->getCli()
 				 ->writeLn(sprintf('Success: web client added to project "%s".', $project_name))
 				 ->writeLn(sprintf('Client Host  : %s', $host))
 				 ->writeLn(sprintf('Client ApiKey: %s', $api_key));

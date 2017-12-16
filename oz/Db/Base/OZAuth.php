@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1511267802
+	 * Time: 1513395180
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -23,6 +23,8 @@
 	 */
 	abstract class OZAuth extends ArrayCapable
 	{
+		const TABLE_NAME = 'oz_authenticator';
+
 		const COL_LABEL = 'auth_label';
 		const COL_FOR = 'auth_for';
 		const COL_CODE = 'auth_code';
@@ -68,7 +70,7 @@
 		public function __construct($is_new = true)
 		{
 			$this->table    = ORM::getDatabase()
-								 ->getTable('oz_authenticator');
+								 ->getTable(OZAuth::TABLE_NAME);
 			$columns        = $this->table->getColumns();
 			$this->is_new   = (bool)$is_new;
 			$this->is_saved = !$this->is_new;

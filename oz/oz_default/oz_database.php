@@ -98,8 +98,7 @@
 				'OZ_client_owner'  => [
 					'type'   => 'one-to-one',
 					'target' => 'oz_users'
-				],
-				'OZ_current_users' => ['type' => 'one-to-many', 'target' => 'oz_clients_users']
+				]
 			],
 			'constraints'   => [
 				['type' => 'primary_key', 'columns' => ['api_key']],
@@ -135,23 +134,16 @@
 				]
 			]
 		],
-		'oz_clients_users'  => [
-			'plural_name'   => 'OZ_clients_users',
-			'singular_name' => 'OZ_client_user',
+		'oz_sessions'       => [
+			'plural_name'   => 'OZ_sessions',
+			'singular_name' => 'OZ_session',
+			'column_prefix' => 'session',
 			'relations'     => [
-				'OZ_session' => ['type' => 'one-to-one', 'target' => 'oz_sessions'],
-				'OZ_user'    => ['type' => 'many-to-one', 'target' => 'oz_users'],
-				'OZ_client'  => ['type' => 'many-to-one', 'target' => 'oz_clients']
+				'OZ_client' => ['type' => 'many-to-one', 'target' => 'oz_clients'],
+				'OZ_user'   => ['type' => 'many-to-one', 'target' => 'oz_users']
 			],
 			'constraints'   => [
-				['type' => 'primary_key', 'columns' => ['client_api_key', 'user_id', 'session_id']],
-				[
-					'type'      => 'foreign_key',
-					'reference' => 'oz_users',
-					'columns'   => ['user_id' => 'id'],
-					'update'    => 'cascade',
-					'delete'    => 'cascade'
-				],
+				['type' => 'primary_key', 'columns' => ['id']],
 				[
 					'type'      => 'foreign_key',
 					'reference' => 'oz_clients',
@@ -161,25 +153,35 @@
 				],
 				[
 					'type'      => 'foreign_key',
-					'reference' => 'oz_sessions',
-					'columns'   => ['session_id' => 'id'],
+					'reference' => 'oz_users',
+					'columns'   => ['user_id' => 'id'],
 					'update'    => 'cascade',
 					'delete'    => 'cascade'
 				]
 			],
 			'columns'       => [
+				'id'             => [
+					'type' => 'string',
+					'max'  => 128
+				],
 				'client_api_key' => 'ref:oz_clients.api_key',
 				'user_id'        => [
 					'type' => 'ref:oz_users.id',
-					'null' => false
+					'null' => true
 				],
-				'session_id'     => 'ref:oz_sessions.id',
 				'token'          => [
 					'type' => 'string',
 					'min'  => 32,
 					'max'  => 250
 				],
-				'last_check'     => [
+				'data'           => [
+					'type' => 'string'
+				],
+				'expire'         => [
+					'type'     => 'bigint',
+					'unsigned' => true
+				],
+				'last_seen'    => [
 					'type'     => 'bigint',
 					'unsigned' => true
 				]
@@ -219,25 +221,6 @@
 					'default'  => '0'
 				],
 				'expire'    => [
-					'type'     => 'bigint',
-					'unsigned' => true
-				]
-			]
-		],
-		'oz_sessions'       => [
-			'plural_name'   => 'OZ_sessions',
-			'singular_name' => 'OZ_session',
-			'column_prefix' => 'session',
-			'constraints'   => [['type' => 'primary_key', 'columns' => ['id']]],
-			'columns'       => [
-				'id'     => [
-					'type' => 'string',
-					'max'  => 128
-				],
-				'data'   => [
-					'type' => 'string'
-				],
-				'expire' => [
 					'type'     => 'bigint',
 					'unsigned' => true
 				]

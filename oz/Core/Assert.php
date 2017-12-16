@@ -11,11 +11,11 @@
 	namespace OZONE\OZ\Core;
 
 	use OZONE\OZ\Admin\AdminUtils;
+	use OZONE\OZ\Exceptions\ForbiddenException;
 	use OZONE\OZ\Exceptions\MethodNotAllowedException;
 	use OZONE\OZ\Exceptions\InvalidFormException;
 	use OZONE\OZ\Exceptions\UnauthorizedActionException;
 	use OZONE\OZ\Exceptions\UnverifiedUserException;
-	use OZONE\OZ\Ofv\OFormUtils;
 	use OZONE\OZ\User\UsersUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
@@ -99,14 +99,22 @@
 		 * @param \Exception|string|null $msg  the error message
 		 * @param mixed                  $data the error data
 		 *
+		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
-		 * @throws string
 		 */
 		public static function assertIsAdmin($msg = 'OZ_YOU_ARE_NOT_ADMIN', $data = null)
 		{
-			if (!UsersUtils::userVerified() OR !AdminUtils::isAdmin(SessionsData::get('ozone_user:id'))) {
+			if (!UsersUtils::userVerified()) {
 				if (!self::isException($msg)) {
 					$msg = new UnverifiedUserException($msg, $data);
+				}
+
+				throw $msg;
+			}
+
+			if (!AdminUtils::isAdmin(UsersUtils::getCurrentUserId())) {
+				if (!self::isException($msg)) {
+					$msg = new ForbiddenException($msg, $data);
 				}
 
 				throw $msg;

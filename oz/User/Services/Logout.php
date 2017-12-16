@@ -23,14 +23,6 @@
 	final class Logout extends BaseService
 	{
 		/**
-		 * Logout constructor.
-		 */
-		public function __construct()
-		{
-			parent::__construct();
-		}
-
-		/**
 		 * {@inheritdoc}
 		 */
 		public function execute(array $request = [])

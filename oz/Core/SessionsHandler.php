@@ -13,6 +13,7 @@
 	use Gobl\DBAL\Rule;
 	use OZONE\OZ\Db\OZSession;
 	use OZONE\OZ\Db\OZSessionsQuery;
+	use OZONE\OZ\Db\OZUser;
 	use OZONE\OZ\Exceptions\InternalErrorException;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
@@ -180,18 +181,27 @@
 		}
 
 		/**
+		 * Asserts if there is an active session.
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 */
+		public static function assertSessionStarted()
+		{
+			if (session_status() !== PHP_SESSION_ACTIVE) {
+				throw new InternalErrorException('There is no active session.');
+			}
+		}
+
+		/**
 		 * Force session to be persisted in the database.
 		 *
 		 * Useful when you have some foreign key constraint on session_id.
 		 *
 		 * @return string the active session id
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException when there is no active session
 		 */
 		public static function persistActiveSession()
 		{
-			if (session_status() !== PHP_SESSION_ACTIVE) {
-				throw new InternalErrorException('There is no active session.');
-			}
+			self::assertSessionStarted();
 
 			$sid  = session_id();
 			$data = session_encode();
@@ -415,10 +425,10 @@
 			self::log(['write', session_id(), $session_data]);
 			$expire = intval(time() + OZ_SESSION_MAX_LIFE_TIME);
 
-			$s_table = new OZSessionsQuery();
+			$sq = new OZSessionsQuery();
 
-			$result = $s_table->filterById($session_id)
-							  ->find();
+			$result = $sq->filterById($session_id)
+						 ->find();
 			$s      = $result->fetchClass();
 
 			if ($s) {
@@ -426,13 +436,60 @@
 				  ->setExpire($expire)
 				  ->save();
 			} else {
-				$s = new OZSession();
+				$client = RequestHandler::getCurrentClient();
+				$token  = Hasher::genAuthToken($session_id);
+				$s      = new OZSession();
 				$s->setId($session_id)
+				  ->setClientApiKey($client->getApiKey())
 				  ->setData($session_data)
 				  ->setExpire($expire)
+				  ->setLastSeen(time())
+				  ->setToken($token)
 				  ->save();
 			}
 
 			return true;
+		}
+
+		/**
+		 * Attach user to the current session.
+		 *
+		 * @param \OZONE\OZ\Db\OZUser $user
+		 *
+		 * @return OZSession the current session
+		 * @throws \Exception
+		 */
+		public static function attachUser(OZUser $user)
+		{
+			self::assertSessionStarted();
+			self::persistActiveSession();
+
+			$uid    = $user->getId();
+			$client = RequestHandler::getCurrentClient();
+
+			if (!$client->isMultiUserSupported()) {
+				Assert::assertAuthorizeAction($client->getUserId() === $uid);
+			}
+
+			$session_id = session_id();
+			$sq         = new OZSessionsQuery();
+
+			$result = $sq->filterById($session_id)
+						 ->find();
+			$s      = $result->fetchClass();
+
+			if ($s) {
+				if ($s->getUserId()) {
+					throw new InternalErrorException(sprintf('The session (sid: %s) is already in use by (user: %s) and should not be attached to (user: %s).', $session_id, $s->getUserId(), $uid));
+				}
+
+				$s->setUserId($uid)
+				  ->save();
+			} else {
+				// the session is supposed to exists in the database but was not found
+				throw new InternalErrorException(sprintf('The session (sid: %s) is supposed to exists in the database but was not found.', $session_id));
+			}
+
+			return $s;
 		}
 	}

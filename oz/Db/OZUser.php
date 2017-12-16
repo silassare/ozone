@@ -29,11 +29,6 @@
 				$emit_create_event = true;
 				$phone             = $this->getPhone();
 				$email             = $this->getEmail();
-				$pass              = $this->getPass();
-
-				// we should store encrypted password
-				$crypt = new DoCrypt();
-				parent::setPass($crypt->passHash($pass));
 
 				if (!empty($phone)) {
 					// check if the phone is not already registered
@@ -53,6 +48,15 @@
 					// Maybe "OZ_USERS_PHONE_REQUIRED" and "OZ_USERS_EMAIL_REQUIRED" are both set to "false" in "oz.users" settings file.
 					throw new InternalErrorException('Both user Phone and Email should not be empty.', ['Maybe "OZ_USERS_PHONE_REQUIRED" and "OZ_USERS_EMAIL_REQUIRED" are both set to "false" in "oz.users" settings file.']);
 				}
+			}
+
+			$crypt = new DoCrypt();
+			$pass  = $this->getPass();
+
+			// we should not store unencrypted password
+			if (!$crypt->isHash($pass)) {
+				$pass = $crypt->passHash($pass);
+				$this->setPass($pass);
 			}
 
 			$result = parent::save();

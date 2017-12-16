@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1511267802
+	 * Time: 1513395180
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -32,7 +32,7 @@
 		public function __construct()
 		{
 			$table   = ORM::getDatabase()
-						  ->getTable('oz_administrators');
+						  ->getTable(OZAdmin::TABLE_NAME);
 			$columns = $table->getColumns();
 
 			// we finds all required fields
@@ -104,7 +104,7 @@
 			}
 
 			$table = ORM::getDatabase()
-						->getTable('oz_administrators');
+						->getTable(OZAdmin::TABLE_NAME);
 			foreach ($columns as $column) {
 				if (!$table->hasColumn($column)) {
 					throw new ORMControllerFormException('form_unknown_fields', [$column]);
@@ -165,7 +165,7 @@
 			];
 
 			$table = ORM::getDatabase()
-						->getTable('oz_administrators');
+						->getTable(OZAdmin::TABLE_NAME);
 
 			foreach ($item_filters as $column => $filters) {
 				if (!$table->hasColumn($column)) {
@@ -316,13 +316,14 @@
 		 * - `OZAdmin` otherwise
 		 *
 		 * @param array $item_filters
+		 * @param array $order_by order by rules
 		 *
 		 * @return \OZONE\OZ\Db\OZAdmin|null
 		 */
-		public function getItem(array $item_filters)
+		public function getItem(array $item_filters, array $order_by = [])
 		{
 			self::assertFiltersNotEmpty($item_filters);
-			$results = $this->findAllItems($item_filters, 1, 0);
+			$results = $this->findAllItems($item_filters, 1, 0, $order_by);
 
 			return $results->fetchClass();
 		}
@@ -333,12 +334,13 @@
 		 * @param array $item_filters
 		 * @param int   $max
 		 * @param int   $offset
+		 * @param array $order_by order by rules
 		 *
 		 * @return \OZONE\OZ\Db\OZAdmin[]
 		 */
-		public function getAllItems(array $item_filters = [], $max = null, $offset = 0)
+		public function getAllItems(array $item_filters = [], $max = null, $offset = 0, array $order_by = [])
 		{
-			$results = $this->findAllItems($item_filters, $max, $offset);
+			$results = $this->findAllItems($item_filters, $max, $offset, $order_by);
 
 			return $results->fetchAllClass();
 		}
@@ -350,10 +352,11 @@
 		 *
 		 * @param int   $max
 		 * @param int   $offset
+		 * @param array $order_by order by rules
 		 *
 		 * @return \OZONE\OZ\Db\OZAdministratorsResults
 		 */
-		public function findAllItems(array $item_filters = [], $max = null, $offset = 0)
+		public function findAllItems(array $item_filters = [], $max = null, $offset = 0, array $order_by = [])
 		{
 			$my_query = new OZAdministratorsQueryReal();
 
@@ -361,7 +364,7 @@
 				self::applyFilters($my_query, $item_filters);
 			}
 
-			$results = $my_query->find($max, $offset);
+			$results = $my_query->find($max, $offset, $order_by);
 
 			return $results;
 		}

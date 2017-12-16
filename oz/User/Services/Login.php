@@ -27,14 +27,6 @@
 	final class Login extends BaseService
 	{
 		/**
-		 * Login constructor.
-		 */
-		public function __construct()
-		{
-			parent::__construct();
-		}
-
-		/**
 		 * {@inheritdoc}
 		 */
 		public function execute(array $request = [])

@@ -23,6 +23,12 @@
 		// you can use oz_file_id, oz_thumbnail and oz_file_extension
 		'OZ_FILE_DOWNLOAD_NAME' => 'ozone-{oz_file_id}-{oz_thumbnail}.{oz_file_extension}',
 
+		// who is able to access files through the "files service"
+		// 	users				=> serve file only for verified users
+		// 	session (default)	=> serve file only when there is an active session
+		// 	any					=> serve file without restriction
+		'OZ_FILE_ACCESS_LEVEL'  => 'session',
+
 		'OZ_CAPTCHA_FILE_NAME' => 'oz-captcha-{oz_captcha_key}.png',
 		'OZ_CAPTCHA_FILE_REG'  => '#^oz-captcha-([a-z0-9]{32})\.png$#',
 

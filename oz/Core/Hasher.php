@@ -47,8 +47,8 @@
 			// if not, all clone will have the same file_key as the original file
 			srand(self::genSeed());
 
-			$salt = self::getSalt('OZ_FILE_KEY_GEN_SALT') . microtime() . rand(111111, 999999);
-			$str  = md5_file($path) . $salt;
+			$file_salt = self::genRandomString() . microtime() . self::getSalt('OZ_FILE_KEY_GEN_SALT');
+			$str       = md5_file($path) . $file_salt;
 
 			return self::hashIt($str, 32);
 		}
@@ -90,7 +90,7 @@
 		 */
 		public static function genRandomHash($length = 32)
 		{
-			return self::hashIt(self::genRandomString(), $length);
+			return self::hashIt(self::genRandomString() . microtime(), $length);
 		}
 
 		/**
@@ -152,7 +152,7 @@
 		{
 			$salt = self::getSalt('OZ_SESSION_ID_GEN_SALT');
 
-			return self::hashIt(self::genRandomString() . $salt, 32);
+			return self::hashIt(self::genRandomString() . microtime() . $salt, 32);
 		}
 
 		/**
