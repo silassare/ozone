@@ -126,7 +126,7 @@
 				// this is not a valid tree dimensional array
 				// may be it is not a multiple file upload
 
-				throw new RuntimeException();
+				throw new RuntimeException("OZ_MULTIPLE_FILES_UPLOAD_REQUIRED");
 			}
 			// multiple upload files
 			// transforming a three dimensional array into a two dimension array

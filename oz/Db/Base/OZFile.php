@@ -3,19 +3,21 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1513395180
+	 * Time: 1523161566
 	 */
 
 	namespace OZONE\OZ\Db\Base;
 
 	use Gobl\DBAL\QueryBuilder;
+	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 	use Gobl\ORM\ArrayCapable;
 	use Gobl\ORM\Exceptions\ORMException;
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Db\OZFilesQuery as OZFilesQueryReal;
 
-	use OZONE\OZ\Db\OZUsersQuery;
-	use OZONE\OZ\Db\OZFilesQuery;
+	use OZONE\OZ\Db\OZUsersQuery as OZUsersQueryRealR;
+	use OZONE\OZ\Db\OZFile as OZFileRealR;
+	use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
 
 
 	/**
@@ -66,6 +68,13 @@
 		 */
 		protected $auto_increment_column = null;
 
+		/**
+		 * To enable/disable strict mode.
+		 *
+		 * @var bool
+		 */
+		protected $strict = true;
+
 
 		/**
 		 * @var \OZONE\OZ\Db\OZUser
@@ -78,22 +87,25 @@
 		 *
 		 * @param bool $is_new True for new entity false for entity fetched
 		 *                     from the database, default is true.
+		 * @param bool $strict
 		 */
-		public function __construct($is_new = true)
+		public function __construct($is_new = true, $strict = true)
 		{
 			$this->table    = ORM::getDatabase()
 								 ->getTable(OZFile::TABLE_NAME);
 			$columns        = $this->table->getColumns();
 			$this->is_new   = (bool)$is_new;
 			$this->is_saved = !$this->is_new;
+			$this->strict   = (bool)$strict;
 
 			// we initialise row with default value
 			foreach ($columns as $column) {
 				$full_name             = $column->getFullName();
-				$this->row[$full_name] = $column->getDefaultValue();
+				$type                  = $column->getTypeObject();
+				$this->row[$full_name] = $type->getDefault();
 
 				// the auto_increment column
-				if ($column->isAutoIncrement()) {
+				if ($type->isAutoIncremented()) {
 					$this->auto_increment_column = $full_name;
 				}
 			}
@@ -107,7 +119,7 @@
         public function getOZFileOwner()
         {
             if (!isset($this->r_OZ_file_owner)) {
-                $m = new OZUsersQuery();
+                $m = new OZUsersQueryRealR();
 
                 $m->filterById($this->getUserId());
 
@@ -120,18 +132,22 @@
         /**
          * OneToMany relation between `oz_files` and `oz_files`.
          *
-		 * @param null|int $max    maximum row to retrieve
-		 * @param int      $offset first row offset
-		 *
+         * @param array    $filters  the row filters
+         * @param int|null $max      maximum row to retrieve
+         * @param int      $offset   first row offset
+         * @param array    $order_by order by rules
+         * @param int|bool $total    total rows without limit
+         *
          * @return \OZONE\OZ\Db\OZFile[]
          */
-        public function getOZFileClones($max = null, $offset = 0)
+        function getOZFileClones($filters = [], $max = null, $offset = 0, $order_by = [], &$total = false)
         {
-            $m = new OZFilesQuery();
 
-            $m->filterByClone($this->getId());
+            $filters[OZFileRealR::COL_CLONE] = $this->getId();
 
-            return $m->find($max, $offset)->fetchAllClass();
+            $ctrl = new OZFilesControllerRealR();
+
+            return $ctrl->getAllItems($filters, $max, $offset, $order_by, $total);
         }
 
 
@@ -589,13 +605,28 @@
 		 * @param mixed  $value the column new value.
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		protected function _setValue($name, $value)
 		{
 			if ($this->table->hasColumn($name)) {
-				$column    = $this->table->getColumn($name);
-				$value     = $column->getTypeObject()
-									->validate($value);
+				$column = $this->table->getColumn($name);
+				$type   = $column->getTypeObject();
+
+				try {
+					$value = $type->validate($value, $column->getName(), $this->table->getName());
+				} catch (TypesInvalidValueException $e) {
+					$debug = [
+						"column_name" => $column->getName(),
+						"table_name"  => $this->table->getName(),
+						"options"     => $type->getCleanOptions()
+					];
+
+					$e->setDebugData($debug);
+
+					throw $e;
+				}
+
 				$full_name = $column->getFullName();
 				if ($this->row[$full_name] !== $value) {
 					$this->row[$full_name] = $value;
@@ -624,7 +655,7 @@
 				$this->row[$full_name]       = $value;
 				$this->row_saved[$full_name] = $value;
 				$this->is_saved              = true;
-			} else {
+			} elseif ($this->strict) {
 				throw new ORMException(sprintf('Could not set column "%s", not defined in table "%s".', $full_name, $this->table->getName()));
 			}
 		}

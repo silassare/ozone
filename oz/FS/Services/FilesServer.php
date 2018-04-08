@@ -36,20 +36,25 @@
 		 */
 		public function execute(array $request = [])
 		{
-			Assert::assertForm($request, ['src', 'file_name', 'file_mime', 'thumb'], new NotFoundException());
+			Assert::assertForm($request, [
+				'file_src',
+				'file_name',
+				'file_mime',
+				'file_quality'
+			], new NotFoundException());
 
 			set_time_limit(0);
 
-			$src = $request['src'];
+			$src = $request['file_src'];
 
 			if (empty($src) || !file_exists($src) || !is_file($src) || !is_readable($src)) {
 				throw new NotFoundException();
 			}
 
-			$file_name = $request['file_name'];
-			$file_mime = $request['file_mime'];
-			$thumb = intval($request['thumb']);
-			$size  = filesize($src);
+			$file_name    = $request['file_name'];
+			$file_mime    = $request['file_mime'];
+			$file_quality = intval($request['file_quality']);
+			$size         = filesize($src);
 
 			// close the current session
 			if (session_id()) session_write_close();
@@ -65,14 +70,14 @@
 			header("Content-type: $file_mime");
 			header("Content-Disposition: attachment; filename='$file_name';");
 
-			if ($thumb > 0) {
+			if ($file_quality > 0) {
 				// thumbnails
 				// 0: 'original file'
 				// 1: 'low quality',
 				// 2: 'normal quality',
 				// 3: 'high quality'
 				$jpeg_quality_array = [60, 80, 100];
-				$jpeg_quality       = $jpeg_quality_array[$thumb - 1];
+				$jpeg_quality       = $jpeg_quality_array[$file_quality - 1];
 				$img_utils_obj      = new ImagesUtils($src);
 
 				if ($img_utils_obj->load()) {
@@ -117,20 +122,20 @@
 			@ini_set('zlib.output_compression', 'Off');
 
 			$mime_default = "application/octet-stream";
-			$file_path    = $options['path'];
-			$file_name    = isset($options['name']) ? $options['name'] : basename($file_path);
-			$expires_date = isset($options['expires_date']) ? $options['expires_date'] : -1;
-			$mime         = isset($options['mime']) ? $options['mime'] : $mime_default;
+			$file_src     = $options['file_src'];
+			$file_name    = isset($options['file_name']) ? $options['file_name'] : basename($file_src);
+			$expires_date = isset($options['file_expires_date']) ? $options['file_expires_date'] : -1;
+			$mime         = isset($options['file_mime']) ? $options['file_mime'] : $mime_default;
 			$range        = '';
 
 			// make sure the file exists
-			Assert::assertAuthorizeAction(is_file($file_path), new NotFoundException());
+			Assert::assertAuthorizeAction(is_file($file_src), new NotFoundException());
 
-			$file_size = filesize($file_path);
-			$file      = @fopen($file_path, 'rb');
+			$file_size = filesize($file_src);
+			$file      = @fopen($file_src, 'rb');
 
 			// make sure file open success
-			if (!$file) throw new InternalErrorException('OZ_FILE_OPEN_ERROR', [$file_path]);
+			if (!$file) throw new InternalErrorException('OZ_FILE_OPEN_ERROR', [$file_src]);
 
 			// set the headers, prevent caching
 			header('Pragma: public');

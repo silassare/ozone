@@ -261,14 +261,16 @@
 		 */
 		public static function loadClass($class_name)
 		{
-			if (false !== strrpos($class_name, '\\')) {
-				// it seems to be a fully-qualified class name
-				return self::loadClassPsr4($class_name);
-			} elseif (array_key_exists($class_name, self::$class_map)) {
-				$path = self::$class_map[$class_name];
+			if (is_string($class_name)) {
+				if (false !== strrpos($class_name, '\\')) {
+					// it seems to be a fully-qualified class name
+					return self::loadClassPsr4($class_name);
+				} elseif (array_key_exists($class_name, self::$class_map)) {
+					$path = self::$class_map[$class_name];
 
-				if (self::requireFile($path)) {
-					return $path;
+					if (self::requireFile($path)) {
+						return $path;
+					}
 				}
 			}
 

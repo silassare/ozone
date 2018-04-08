@@ -2,9 +2,11 @@
 
 	namespace OZONE\OZ\WebRoute\Views;
 
-	use OZONE\OZ\Core\BaseView;
+	use OZONE\OZ\WebRoute\WebPageBase;
 
-	final class ErrorView extends BaseView
+	defined('OZ_SELF_SECURITY_CHECK') or die;
+
+	final class ErrorView extends WebPageBase
 	{
 		private $compileData = [];
 
@@ -31,5 +33,4 @@
 		{
 			return 'error.otpl';
 		}
-
 	}

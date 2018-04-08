@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1513395180
+	 * Time: 1523161566
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -21,8 +21,6 @@
 	{
 		/** @var \Gobl\DBAL\Db */
 		protected $db;
-		/** @var \OZONE\OZ\Db\Base\OZUsersQuery */
-		protected $table_manager;
 		/** @var \Gobl\DBAL\QueryBuilder */
 		protected $query;
 		/** @var int */
@@ -30,7 +28,9 @@
 		/** @var array|null|\OZONE\OZ\Db\OZUser */
 		protected $current = null;
 		/** @var  int */
-		protected $count_cache = null;
+		protected $limited_count_cache = null;
+		/** @var  int */
+		protected $total_count_cache = null;
 		/** @var bool */
 		protected $trust_row_count = true;
 		/** @var \OZONE\OZ\Db\OZUser */
@@ -48,23 +48,21 @@
 		/**
 		 * OZUsersResults constructor.
 		 *
-		 * @param \Gobl\DBAL\Db               $db
-		 * @param \OZONE\OZ\Db\Base\OZUsersQuery $table_manager
-		 * @param \Gobl\DBAL\QueryBuilder     $query
+		 * @param \Gobl\DBAL\Db           $db
+		 * @param \Gobl\DBAL\QueryBuilder $query
 		 *
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
-		public function __construct(Db $db, OZUsersQuery $table_manager, QueryBuilder $query)
+		public function __construct(Db $db, QueryBuilder $query)
 		{
 			if ($query->getType() !== QueryBuilder::QUERY_TYPE_SELECT) {
 				throw new ORMException('The query should be a selection.');
 			}
 
-			$this->db            = $db;
-			$this->table_manager = $table_manager;
-			$this->query         = $query;
-			$driver              = $db->getConnection()
-									  ->getAttribute(\PDO::ATTR_DRIVER_NAME);
+			$this->db    = $db;
+			$this->query = $query;
+			$driver      = $db->getConnection()
+							  ->getAttribute(\PDO::ATTR_DRIVER_NAME);
 			// TODO search and verify source
 			//  - we should not trust rowCount
 			//  - sqlite 3.x does not support rowCount
@@ -116,12 +114,14 @@
 		/**
 		 * Fetches the next row into table OZUser class instance.
 		 *
+		 * @param bool $strict enable/disable strict mode on class fetch
+		 *
 		 * @return null|\OZONE\OZ\Db\OZUser
 		 */
-		public function fetchClass()
+		public function fetchClass($strict = true)
 		{
 			if ($this->entity === null) {
-				$this->entity = new \OZONE\OZ\Db\OZUser(false);
+				$this->entity = new \OZONE\OZ\Db\OZUser(false, $strict);
 			}
 
 			if ($this->fetch_style !== \PDO::FETCH_INTO) {
@@ -136,15 +136,17 @@
 		/**
 		 * Fetches all rows and return array of OZUser class instance.
 		 *
+		 * @param bool $strict enable/disable strict mode on class fetch
+		 *
 		 * @return \OZONE\OZ\Db\OZUser[]
 		 */
-		public function fetchAllClass()
+		public function fetchAllClass($strict = true)
 		{
 			$this->fetch_style = \PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE;
 			$entity_class      = \OZONE\OZ\Db\OZUser::class;
 
 			return $this->getStatement()
-						->fetchAll($this->fetch_style, $entity_class, [false]);
+						->fetchAll($this->fetch_style, $entity_class, [false, $strict]);
 		}
 
 		/**
@@ -244,18 +246,30 @@
 		 */
 		public function count()
 		{
-			if ($this->count_cache === null) {
+			if ($this->limited_count_cache === null) {
 				if ($this->trust_row_count === false) {
-					$sql               = $this->query->getSqlQuery();
-					$sql               = 'SELECT ' . 'COUNT(*) FROM (' . $sql . ')';
-					$req               = $this->db->execute($sql, $this->query->getBoundValues(), $this->query->getBoundValuesTypes());
-					$this->count_cache = (int)$req->fetchColumn();
+					$this->limited_count_cache = $this->query->runTotalRowsCount();
 				} else {
-					$this->count_cache = $this->getStatement()
-											  ->rowCount();
+					$this->limited_count_cache = $this->getStatement()
+													  ->rowCount();
 				}
 			}
 
-			return $this->count_cache;
+			return $this->limited_count_cache;
 		}
+
+		/**
+		 * Count rows without limit.
+		 *
+		 * @return int
+		 */
+		public function totalCount()
+		{
+			if ($this->total_count_cache === null) {
+				$this->total_count_cache = $this->query->runTotalRowsCount(false);
+			}
+
+			return $this->total_count_cache;
+		}
+
 	}

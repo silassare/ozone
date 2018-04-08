@@ -19,6 +19,14 @@
 		private $registered = null;
 
 		/**
+		 * TypeEmail constructor.
+		 */
+		public function __construct()
+		{
+			parent::__construct(1, 255);
+		}
+
+		/**
 		 * To accept email that are not registered only
 		 *
 		 * @return $this
@@ -45,28 +53,31 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public function validate($value)
+		public function validate($value, $column_name, $table_name)
 		{
 			$success = true;
 			try {
-				$value = parent::validate($value);
+				$value = parent::validate($value, $column_name, $table_name);
 			} catch (TypesInvalidValueException $e) {
 				$success = false;
 			}
 
-			$data = ['email' => $value];
+			$debug = [
+				'email' => $value,
+				"value" => $value
+			];
 
 			if (!$success) {
-				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $data);
+				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug);
 			}
 
 			if (!empty($value)) {
 				if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-					throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $data);
+					throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug);
 				} elseif ($this->registered === false AND UsersUtils::searchUserWithEmail($value)) {
-					throw new TypesInvalidValueException('OZ_FIELD_EMAIL_ALREADY_REGISTERED', $data);
+					throw new TypesInvalidValueException('OZ_FIELD_EMAIL_ALREADY_REGISTERED', $debug);
 				} elseif ($this->registered === true AND !UsersUtils::searchUserWithEmail($value)) {
-					throw new TypesInvalidValueException('OZ_FIELD_EMAIL_NOT_REGISTERED', $data);
+					throw new TypesInvalidValueException('OZ_FIELD_EMAIL_NOT_REGISTERED', $debug);
 				}
 			}
 
@@ -80,8 +91,6 @@
 		{
 			$instance = new self;
 
-			$instance->max(255);
-
 			if (isset($options['registered'])) {
 				$registered = $options['registered'];
 				if ($registered === true) {
@@ -91,11 +100,11 @@
 				}
 			}
 
-			if (isset($options['null']) AND $options['null'])
+			if (self::getOptionKey($options, 'null', false))
 				$instance->nullAble();
 
 			if (array_key_exists('default', $options))
-				$instance->def($options['default']);
+				$instance->setDefault($options['default']);
 
 			return $instance;
 		}

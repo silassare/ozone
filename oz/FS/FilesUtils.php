@@ -15,6 +15,7 @@
 	use OZONE\OZ\Db\OZFile;
 	use OZONE\OZ\Db\OZFilesQuery;
 	use OZONE\OZ\Exceptions\RuntimeException;
+	use OZONE\OZ\Utils\StringUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -332,4 +333,24 @@
 			return $result . ' ' . $unites[$i - 1];
 		}
 
+		/**
+		 * Generate regexp used to match file URI.
+		 *
+		 * @param array &$fields
+		 *
+		 * @return string
+		 */
+		public static function genFileURIRegExp(array &$fields)
+		{
+			$format = SettingsManager::get("oz.files", "OZ_GET_FILE_URI_EXTRA_FORMAT");
+
+			$parts = [
+				"oz_file_id"        => "([0-9]+)",
+				"oz_file_key"       => "([a-z0-9]+)",
+				"oz_file_quality"   => "(0|1|2|3)",
+				"oz_file_extension" => "([a-zA-Z0-9]{1,10})"
+			];
+
+			return StringUtils::stringFormatToRegExp($format, $parts, $fields);
+		}
 	}

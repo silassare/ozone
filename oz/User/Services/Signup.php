@@ -20,6 +20,7 @@
 	use OZONE\OZ\Db\OZUsersController;
 	use OZONE\OZ\Exceptions\ForbiddenException;
 	use OZONE\OZ\Ofv\OFormValidator;
+	use OZONE\OZ\Sender\SMSUtils;
 	use OZONE\OZ\User\UsersUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
@@ -230,6 +231,15 @@
 		{
 			$helper  = new CaptchaCodeHelper($auth_obj);
 			$captcha = $helper->getCaptcha();
+
+			$sms_sender = SMSUtils::getSenderInstance();
+
+			if ($sms_sender) {
+				$generated = $auth_obj->getGenerated();
+				$code      = $generated["authCode"];
+				$message   = SMSUtils::getSMSMessage(SMSUtils::SMS_TYPE_AUTH_CODE, ['code' => $code]);
+				$sms_sender->sendToNumber($phone, $message);
+			}
 
 			$this->getResponseHolder()
 				 ->setDone($msg)

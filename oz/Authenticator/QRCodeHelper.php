@@ -13,6 +13,7 @@
 	use OZONE\OZ\Core\SessionsData;
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Exceptions\NotFoundException;
+	use OZONE\OZ\Utils\StringUtils;
 
 	require_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'phpqrcode' . DS . 'qrlib.php';
 
@@ -38,7 +39,7 @@
 		}
 
 		/**
-		 * Gets captcha image uri for authentication
+		 * Gets QRCode image uri for authentication
 		 *
 		 * @return array the qrcode info
 		 */
@@ -100,8 +101,25 @@
 			$token     = $data['authToken'];
 			$for_value = $data['authForValue'];
 			$content   = "$for_value:$label:$token";
-			oz_logger($content);
 
 			\QRcode::png($content, 'php://output', QR_ECLEVEL_H, 20);
+		}
+
+		/**
+		 * Generate regexp used to match QRCode file URI.
+		 *
+		 * @param array &$fields
+		 *
+		 * @return string
+		 */
+		public static function genQRCodeURIRegExp(array &$fields)
+		{
+			$format = SettingsManager::get("oz.files", "OZ_QR_CODE_URI_EXTRA_FORMAT");
+
+			$parts = [
+				"oz_qrcode_key"       => "([a-z0-9]{32})"
+			];
+
+			return StringUtils::stringFormatToRegExp($format, $parts, $fields);
 		}
 	}

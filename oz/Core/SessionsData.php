@@ -70,12 +70,9 @@
 			// when called before session start
 			if (!isset($_SESSION)) return;
 
-			$parts = self::keyCheck($key);
-			$counter   = count($parts);
-			$next  = &$_SESSION;
-
-			// the counter is useful for us to move until
-			// we reach the last part
+			$parts   = self::keyCheck($key);
+			$counter = count($parts);
+			$next    = &$_SESSION;
 
 			foreach ($parts as $part) {
 				$counter--;
@@ -102,12 +99,9 @@
 			// when called before session start
 			if (!isset($_SESSION)) return null;
 
-			$parts  = self::keyCheck($key);
-			$counter    = count($parts);
-			$result = $_SESSION;
-
-			// the counter is useful for us to move until
-			// we reach the last part
+			$parts   = self::keyCheck($key);
+			$counter = count($parts);
+			$result  = $_SESSION;
 
 			foreach ($parts as $part) {
 				$result = self::getNext($result, $part);
@@ -129,6 +123,25 @@
 		 */
 		public static function remove($key)
 		{
-			self::set($key, null);
+			// when called before session start
+			if (!isset($_SESSION)) return;
+
+			$parts   = self::keyCheck($key);
+			$counter = count($parts);
+			$next    = &$_SESSION;
+
+			// the counter is useful for us to move until
+			// we reach the last part
+
+			foreach ($parts as $part) {
+				$counter--;
+				if ($counter AND isset($next[$part]) AND is_array($next[$part])) {
+					$next = &$next[$part];
+				} elseif (!$counter AND array_key_exists($part, $next)) {
+					unset($next[$part]);
+				} else {
+					break;
+				}
+			}
 		}
 	}

@@ -3,18 +3,19 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1513395180
+	 * Time: 1523161566
 	 */
 
 	namespace OZONE\OZ\Db\Base;
 
 	use Gobl\DBAL\QueryBuilder;
+	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 	use Gobl\ORM\ArrayCapable;
 	use Gobl\ORM\Exceptions\ORMException;
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Db\OZAdministratorsQuery as OZAdministratorsQueryReal;
 
-	use OZONE\OZ\Db\OZUsersQuery;
+	use OZONE\OZ\Db\OZUsersQuery as OZUsersQueryRealR;
 
 
 	/**
@@ -56,6 +57,13 @@
 		 */
 		protected $auto_increment_column = null;
 
+		/**
+		 * To enable/disable strict mode.
+		 *
+		 * @var bool
+		 */
+		protected $strict = true;
+
 
 		/**
 		 * @var \OZONE\OZ\Db\OZUser
@@ -68,22 +76,25 @@
 		 *
 		 * @param bool $is_new True for new entity false for entity fetched
 		 *                     from the database, default is true.
+		 * @param bool $strict
 		 */
-		public function __construct($is_new = true)
+		public function __construct($is_new = true, $strict = true)
 		{
 			$this->table    = ORM::getDatabase()
 								 ->getTable(OZAdmin::TABLE_NAME);
 			$columns        = $this->table->getColumns();
 			$this->is_new   = (bool)$is_new;
 			$this->is_saved = !$this->is_new;
+			$this->strict   = (bool)$strict;
 
 			// we initialise row with default value
 			foreach ($columns as $column) {
 				$full_name             = $column->getFullName();
-				$this->row[$full_name] = $column->getDefaultValue();
+				$type                  = $column->getTypeObject();
+				$this->row[$full_name] = $type->getDefault();
 
 				// the auto_increment column
-				if ($column->isAutoIncrement()) {
+				if ($type->isAutoIncremented()) {
 					$this->auto_increment_column = $full_name;
 				}
 			}
@@ -97,7 +108,7 @@
         public function getOZUser()
         {
             if (!isset($this->r_OZ_user)) {
-                $m = new OZUsersQuery();
+                $m = new OZUsersQueryRealR();
 
                 $m->filterById($this->getUserId());
 
@@ -310,13 +321,28 @@
 		 * @param mixed  $value the column new value.
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZAdmin
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		protected function _setValue($name, $value)
 		{
 			if ($this->table->hasColumn($name)) {
-				$column    = $this->table->getColumn($name);
-				$value     = $column->getTypeObject()
-									->validate($value);
+				$column = $this->table->getColumn($name);
+				$type   = $column->getTypeObject();
+
+				try {
+					$value = $type->validate($value, $column->getName(), $this->table->getName());
+				} catch (TypesInvalidValueException $e) {
+					$debug = [
+						"column_name" => $column->getName(),
+						"table_name"  => $this->table->getName(),
+						"options"     => $type->getCleanOptions()
+					];
+
+					$e->setDebugData($debug);
+
+					throw $e;
+				}
+
 				$full_name = $column->getFullName();
 				if ($this->row[$full_name] !== $value) {
 					$this->row[$full_name] = $value;
@@ -345,7 +371,7 @@
 				$this->row[$full_name]       = $value;
 				$this->row_saved[$full_name] = $value;
 				$this->is_saved              = true;
-			} else {
+			} elseif ($this->strict) {
 				throw new ORMException(sprintf('Could not set column "%s", not defined in table "%s".', $full_name, $this->table->getName()));
 			}
 		}

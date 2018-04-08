@@ -15,5 +15,9 @@
 		'oz:error' => [
 			'path'    => '/oz:error',
 			'handler' => 'OZONE\OZ\WebRoute\Views\ErrorView'
+		],
+		'oz-static' => [
+			'~path'    => '#^/oz-static/.+$#',
+			'handler' => 'OZONE\OZ\FS\Views\GetFilesView'
 		]
 	];

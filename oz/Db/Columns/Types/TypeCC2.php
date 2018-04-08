@@ -19,6 +19,14 @@
 		private $authorized = false;
 
 		/**
+		 * TypeCC2 constructor.
+		 */
+		public function __construct()
+		{
+			parent::__construct(2, 2, '#^[a-zA-Z]{2}$#');
+		}
+
+		/**
 		 * @return $this
 		 */
 		public function authorized()
@@ -31,31 +39,36 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public function validate($value)
+		public function validate($value, $column_name, $table_name)
 		{
 			$success = true;
+
+			$debug = [
+				"value" => $value
+			];
+
 			try {
-				$value = parent::validate($value);
+				$value = parent::validate($value, $column_name, $table_name);
 			} catch (TypesInvalidValueException $e) {
 				$success = false;
 			}
 
-			$data = [$value];
-
 			if (!$success) {
-				throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $data);
+				throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug);
 			}
 
-			$cc2 = strtoupper($value); //<-- important
-			if ($this->authorized) {
-				if (!UsersUtils::authorizedCountry($cc2)) {
-					throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_NOT_ALLOWED', $data);
+			if (!empty($value)) {
+				$value = strtoupper($value); //<-- important
+				if ($this->authorized) {
+					if (!UsersUtils::authorizedCountry($value)) {
+						throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_NOT_ALLOWED', $debug);
+					}
+				} elseif (!UsersUtils::getCountryObject($value)) {
+					throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug);
 				}
-			} elseif (!UsersUtils::getCountryObject($cc2)) {
-				throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $data);
 			}
 
-			return $cc2;
+			return $value;
 		}
 
 		/**
@@ -65,18 +78,14 @@
 		{
 			$instance = new self;
 
-			$instance->min(2);
-			$instance->max(2);
-			$instance->pattern('#^[a-zA-Z]{2}$#');
-
-			if (isset($options['authorized']) AND $options['authorized'])
+			if (self::getOptionKey($options, 'authorized', false))
 				$instance->authorized();
 
-			if (isset($options['null']) AND $options['null'])
+			if (self::getOptionKey($options, 'null', false))
 				$instance->nullAble();
 
 			if (array_key_exists('default', $options))
-				$instance->def($options['default']);
+				$instance->setDefault($options['default']);
 
 			return $instance;
 		}

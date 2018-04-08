@@ -80,7 +80,7 @@
 		{
 			parent::__construct($message, $code, $previous);
 
-			$this->data = $data;
+			$this->data = is_array($data) ? $data : [];// prevent null value
 
 			$this->response_holder = new ResponseHolder(get_class($this));
 		}

@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Cli;
 
+	use OZONE\OZ\Cli\Utils\Utils;
 	use OZONE\OZ\Core\DbManager;
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Loader\ClassLoader;
@@ -51,9 +52,14 @@
 		 */
 		public function run(array $arg)
 		{
-			$this->loadCommands();
+			if ($config = Utils::loadProjectConfig()) {
+				// Add project namespace root directory
+				ClassLoader::addNamespace($config['OZ_PROJECT_NAMESPACE'], OZ_APP_DIR);
+				// Init database
+				DbManager::init();
+			}
 
-			DbManager::init();
+			$this->loadCommands();
 
 			parent::execute($arg);
 		}

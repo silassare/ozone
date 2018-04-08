@@ -40,8 +40,6 @@
 		 */
 		const SERVICE_URL_REG = "#^/?([a-zA-Z][a-zA-Z0-9_-]+)(?:/(.*))?$#";
 
-		const INTERNAL_WEB_ROUTE_PREFIX = "#^/oz:#";
-
 		private static $parsed_uri_parts = ['oz_uri_service' => '', 'oz_uri_extra' => ''];
 
 		/**
@@ -52,8 +50,8 @@
 		public static function parseRequestUri()
 		{
 			$install_root  = dirname($_SERVER['PHP_SELF']);
-			$uri           = StringUtils::removePrefix($_SERVER['REQUEST_URI'], $install_root);
-			$uri           = StringUtils::removeSuffix($uri, '?' . $_SERVER['QUERY_STRING']);
+			$uri_full      = StringUtils::removePrefix($_SERVER['REQUEST_URI'], $install_root);
+			$uri           = StringUtils::removeSuffix($uri_full, '?' . $_SERVER['QUERY_STRING']);
 			$service       = null;
 			$service_extra = null;
 			$route         = null;
@@ -82,12 +80,14 @@
 					$uri = '/' . $uri;
 				}
 
-				// prevent request to any route like /oz:error, /oz:...
-				if (preg_match(self::INTERNAL_WEB_ROUTE_PREFIX, $uri)) {
+				$route_id = WebRoute::findRoute($uri);
+
+				if (empty($route_id)) {
 					return false;
 				}
 
-				if (!WebRoute::routeExists($uri)) {
+				// prevent request to any route like oz:error, oz:...
+				if (WebRoute::isInternalRoute($route_id)) {
 					return false;
 				}
 
@@ -132,15 +132,17 @@
 		/**
 		 * parse uri extra with a given custom service extra regexp and a given key map
 		 *
-		 * @param string $extra_reg  the service extra regexp to be used
-		 * @param array  $extra_map  the key map of regexp catch group
-		 * @param array  &$extra_out the array in which the result will be stored
+		 * @param string      $extra_reg  the service extra regexp to be used
+		 * @param array       $extra_map  the key map of regexp catch group
+		 * @param array       &$extra_out the array in which the result will be stored
+		 * @param string|null $extra      the extra string to use, if null the current
+		 *                                request uri extra will be used
 		 *
 		 * @return bool true if valid extra, false if not valid
 		 */
-		public static function parseUriExtra($extra_reg, array $extra_map, array &$extra_out)
+		public static function parseUriExtra($extra_reg, array $extra_map, array &$extra_out, $extra = null)
 		{
-			$extra = self::getUriExtra();
+			$extra = is_null($extra) ? self::getUriExtra() : $extra;
 			$in    = [];
 			$c     = 1; // start from $1
 
@@ -162,5 +164,69 @@
 			}
 
 			return false;
+		}
+
+		/**
+		 * Build an URL based on URL fragments.
+		 *
+		 * @param string $protocol    the protocol
+		 * @param string $domain_name the domain name
+		 * @param string $path        the path name
+		 * @param array  $query       the query params
+		 * @param bool   $merge_query merge current $_GET with the query params or not
+		 *
+		 * @return string
+		 */
+		public static function buildURL($protocol = '', $domain_name = '', $path = '/', $query = [], $merge_query = false)
+		{
+			if (empty($protocol)) {
+				$protocol = (empty($_SERVER['HTTPS']) OR $_SERVER['HTTPS'] === 'off') ? 'http' : 'https';
+			}
+
+			$protocol    .= '://';
+			$domain_name = empty($domain_name) ? $_SERVER['HTTP_HOST'] : $domain_name;
+
+			if ($merge_query) {
+				$query = array_merge($_GET, $query);
+			}
+
+			if (count($query) AND !empty($query = http_build_query($query))) {
+				$query = '?' . $query;
+			} else {
+				$query = '';
+			}
+
+			$domain_name = rtrim($domain_name) . '/';
+			$path        = ltrim($path, '/');
+
+			return $protocol . $domain_name . $path . $query;
+		}
+
+		/**
+		 * Gets the current request url.
+		 *
+		 * @param bool $append_query append query string or not
+		 *
+		 * @return string
+		 */
+		public static function getRequestURL($append_query = false)
+		{
+			$url = self::buildURL(null, $_SERVER['HTTP_HOST'], $_SERVER['REQUEST_URI']);
+
+			if ($append_query AND !empty($_SERVER['QUERY_STRING'])) {
+				$url .= '?' . $_SERVER['QUERY_STRING'];
+			}
+
+			return $url;
+		}
+
+		/**
+		 * Gets the base url.
+		 *
+		 * @return string
+		 */
+		public static function getBaseURL()
+		{
+			return self::buildURL(null, $_SERVER['HTTP_HOST']);
 		}
 	}

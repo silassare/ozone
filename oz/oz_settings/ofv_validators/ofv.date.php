@@ -20,5 +20,5 @@
 			return;
 		}
 
-		$ofv->setField('date', $format["DD-MM-YYYY"]);
+		$ofv->setField('date', $format["YYYY-MM-DD"]);
 	}

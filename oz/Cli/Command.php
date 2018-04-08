@@ -27,9 +27,10 @@
 		}
 
 		/**
-		 * describe your command.
+		 * Describe your command.
 		 *
-		 * called once the cli start.
+		 * Is called once the cli start.
+		 * You can add Actions and Options to your command.
 		 *
 		 * @return void
 		 */

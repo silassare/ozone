@@ -15,6 +15,8 @@
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
+	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_otpl_plugins.php';
+
 	class TemplatesUtils
 	{
 

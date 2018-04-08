@@ -14,7 +14,7 @@
 
 	function ofv_cc2(OFormValidator $ofv)
 	{
-		$cc2   = strtoupper($ofv->getField('cc2')); // <- important
+		$cc2   = strtoupper($ofv->getField('cc2')); // <-- important
 		$rules = $ofv->getRules('cc2');
 
 		if (in_array('authorized-only', $rules)) {

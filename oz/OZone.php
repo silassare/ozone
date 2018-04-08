@@ -18,6 +18,7 @@
 	use OZONE\OZ\Core\BaseService;
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Core\URIHelper;
+	use OZONE\OZ\Db\OZClient;
 	use OZONE\OZ\Event\EventManager;
 	use OZONE\OZ\Exceptions\BaseException;
 	use OZONE\OZ\Exceptions\ForbiddenException;
@@ -25,6 +26,7 @@
 	use OZONE\OZ\Exceptions\NotFoundException;
 	use OZONE\OZ\Lang\Polyglot;
 	use OZONE\OZ\Loader\ClassLoader;
+	use OZONE\OZ\User\UsersUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -50,8 +52,8 @@
 			"is_file_service" => false,
 			"can_serve_resp"  => false,
 			"cross_site"      => false,
-			"require_session"  => true,
-			"request_methods"     => ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
+			"require_session" => true,
+			"request_methods" => ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
 		];
 
 		/**
@@ -213,7 +215,21 @@
 		public static function sayJson(ResponseHolder $response_holder)
 		{
 			$data          = $response_holder->getResponse();
-			$data['utime'] = time();
+			$now           = time();
+			$data['utime'] = $now;
+
+			if (UsersUtils::userVerified()) {
+				// set session expire time
+				/**
+				 * @var $client \OZONE\OZ\Db\OZClient
+				 */
+				$client = RequestHandler::getCurrentClient();
+
+				if ($client instanceof OZClient) {
+					$lifetime      = 1 * $client->getSessionLifeTime();
+					$data["stime"] = $now + $lifetime;
+				}
+			}
 
 			header('Content-type: application/json');
 			echo json_encode($data);

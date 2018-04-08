@@ -28,6 +28,5 @@
 	define('OZ_LOG_DIR', OZ_PROJECT_DIR);
 
 	include_once OZ_OZONE_DIR . 'Cli' . DS . 'OZoneCli.php';
-
 	$oz_cli = new \OZONE\OZ\Cli\OZoneCli;
 	$oz_cli->run($argv);

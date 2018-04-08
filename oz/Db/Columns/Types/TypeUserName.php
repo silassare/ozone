@@ -18,43 +18,63 @@
 	final class TypeUserName extends TypeString
 	{
 		/**
+		 * TypeUserName constructor.
+		 */
+		public function __construct()
+		{
+			parent::__construct();
+
+			$max     = intval(SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_MAX_LENGTH'));
+			$pattern = SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_REG');
+
+			$this->length(1, max(3, $max));
+
+			if (isset($pattern))
+				$this->pattern($pattern);
+		}
+
+		/**
 		 * {@inheritdoc}
 		 */
-		public function validate($value)
+		public function validate($value, $column_name, $table_name)
 		{
 			$success = true;
+			$data    = [
+				"value" => $value
+			];
+
 			try {
-				$value = parent::validate($value);
+				$value = parent::validate($value, $column_name, $table_name);
 			} catch (TypesInvalidValueException $e) {
 				$success = false;
 			}
-
-			$data = [$value];
 
 			if (!$success) {
 				throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_INVALID', $data);
 			}
 
-			$unwanted = SettingsManager::get('oz.ofv.const', 'OZ_UNWANTED_CHAR_REG');
-			$value    = preg_replace($unwanted, ' ', $value);
-			$value    = trim($value);
+			if (!empty($value)) {
+				$unwanted = SettingsManager::get('oz.ofv.const', 'OZ_UNWANTED_CHAR_REG');
+				$value    = preg_replace($unwanted, ' ', $value);
+				$value    = trim($value);
 
-			$contains_key_words = preg_match(SettingsManager::get('oz.ofv.const', 'OZ_EXCLUDE_KEY_WORDS'), $value);
+				$contains_key_words = preg_match(SettingsManager::get('oz.ofv.const', 'OZ_EXCLUDE_KEY_WORDS'), $value);
 
-			if (!$contains_key_words) {
-				$value = StringUtils::clean($value);
-			} else {
-				$error_msg = 'OZ_FIELD_USER_NAME_INVALID';
+				if (!$contains_key_words) {
+					$value = StringUtils::clean($value);
+				} else {
+					$error_msg = 'OZ_FIELD_USER_NAME_INVALID';
 
-				if ($contains_key_words) {
-					$error_msg = 'OZ_FIELD_USER_NAME_CONTAINS_KEYWORDS';
-				} elseif (strlen($value) < SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_MIN_LENGTH')) {
-					$error_msg = 'OZ_FIELD_USER_NAME_TOO_SHORT';
-				} elseif (strlen($value) > SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_MAX_LENGTH')) {
-					$error_msg = 'OZ_FIELD_USER_NAME_TOO_LONG';
+					if ($contains_key_words) {
+						$error_msg = 'OZ_FIELD_USER_NAME_CONTAINS_KEYWORDS';
+					} elseif (strlen($value) < SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_MIN_LENGTH')) {
+						$error_msg = 'OZ_FIELD_USER_NAME_TOO_SHORT';
+					} elseif (strlen($value) > SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_MAX_LENGTH')) {
+						$error_msg = 'OZ_FIELD_USER_NAME_TOO_LONG';
+					}
+
+					throw new TypesInvalidValueException($error_msg, $data);
 				}
-
-				throw new TypesInvalidValueException($error_msg, $data);
 			}
 
 			return $value;
@@ -67,18 +87,11 @@
 		{
 			$instance = new self;
 
-			$max = intval(SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_MAX_LENGTH'));
-			$instance->max(max(0, $max));
-			$pattern = SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_REG');
-
-			if (isset($pattern))
-				$instance->pattern($pattern);
-
-			if (isset($options['null']) AND $options['null'])
+			if (self::getOptionKey($options, 'null', false))
 				$instance->nullAble();
 
 			if (array_key_exists('default', $options))
-				$instance->def($options['default']);
+				$instance->setDefault($options['default']);
 
 			return $instance;
 		}

@@ -9,6 +9,6 @@
 	 */
 
 	return [
-		'default' => 'en',
-		'en'      => true
+		'default' => 'fr',
+		'fr'      => true
 	];

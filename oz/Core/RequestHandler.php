@@ -21,15 +21,6 @@
 	final class RequestHandler
 	{
 		/**
-		 * api key regexp:
-		 *    -ozone api key is a 4 groups of 8 alphanumerics (A-Z0-9) separated with -
-		 *    -length: 35 chars (32 [A-Z0-9] + 3 [-])
-		 *
-		 * @var string
-		 */
-		private static $api_key_reg = '#^[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$#';
-
-		/**
 		 * @var string
 		 */
 		private static $req_header_api_key = '';
@@ -105,7 +96,7 @@
 
 			$client = ClientManager::getClientWithApiKey($api_key);
 
-			if (is_null($client) OR !$client->getValid()) {
+			if (!$client OR !$client->getValid()) {
 				self::attackProcedure(new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID', ['api_key' => $api_key]));
 			}
 
@@ -156,18 +147,23 @@
 		 * if the 'require_session' property is set to false in the requested service's settings
 		 * you should not call this otherwise an exception is raised
 		 *
-		 * @return \OZONE\OZ\Db\OZClient
+		 * @param bool $required
+		 *
+		 * @return null|\OZONE\OZ\Db\OZClient
 		 * @throws \Exception
 		 */
-		public static function getCurrentClient()
+		public static function getCurrentClient($required = true)
 		{
 			if (self::$client instanceof OZClient) {
 				return self::$client;
 			}
 
-			$svc_name = URIHelper::getUriService();
+			if ($required) {
+				$svc_name = URIHelper::getUriService();
+				throw new \Exception("client not defined, maybe 'require_session' is set to false in your oz.services.list for the service '$svc_name'");
+			}
 
-			throw new \Exception("client not defined, maybe 'require_session' is set to false in your oz.services.list for the service '$svc_name'");
+			return null;
 		}
 
 		/**
@@ -274,11 +270,30 @@
 				$key = OZ_OZONE_DEFAULT_API_KEY;
 			}
 
-			if (preg_match(self::$api_key_reg, $key)) {
+			if (!empty($key) AND self::isApiKeyLike($key)) {
 				self::$req_header_api_key = $key;
 			}
 
 			return $key;
+		}
+
+		/**
+		 * Check if a given string is like an api key
+		 *
+		 * - old version api key:
+		 *    -ozone api key is a 4 groups of 8 alphanumerics (A-Z0-9) separated with -
+		 *    -length: 35 chars (32 [A-Z0-9] + 3 [-])
+		 *
+		 * @param string $str
+		 *
+		 * @return bool
+		 */
+		public static function isApiKeyLike($str)
+		{
+			// TODO change to uuid
+			$api_key_reg = '#^[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$#';
+
+			return preg_match($api_key_reg, $str);
 		}
 
 		/**

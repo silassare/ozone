@@ -18,6 +18,7 @@
 	use OZONE\OZ\Db\OZUser;
 	use OZONE\OZ\Db\OZUsersQuery;
 	use OZONE\OZ\Exceptions\UnverifiedUserException;
+	use OZONE\OZ\Ofv\OFormValidator;
 	use OZONE\OZ\OZone;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
@@ -118,7 +119,8 @@
 				$_SESSION[$k] = $v;
 			}
 
-			$token = SessionsHandler::attachUser($user)->getToken();
+			$token = SessionsHandler::attachUser($user)
+									->getToken();
 
 			SessionsData::set('ozone_user:id', $user->getId());
 			SessionsData::set('ozone_user:verified', true);
@@ -202,6 +204,14 @@
 		 */
 		public static function tryLogOnWithPhone($phone, $pass)
 		{
+			$fv_obj = new OFormValidator(["phone" => $phone, "pass" => $pass]);
+
+			$fv_obj->checkForm(['phone' => ['registered'], 'pass' => null]);
+
+			$form  = $fv_obj->getForm();
+			$phone = $form['phone'];
+			$pass  = $form['pass'];
+
 			$u = self::searchUserWithPhone($phone);
 
 			if (!$u) {
@@ -234,6 +244,14 @@
 		 */
 		public static function tryLogOnWithEmail($email, $pass)
 		{
+			$fv_obj = new OFormValidator(["email" => $email, "pass" => $pass]);
+
+			$fv_obj->checkForm(['email' => ['registered'], 'pass' => null]);
+
+			$form  = $fv_obj->getForm();
+			$email = $form['email'];
+			$pass  = $form['pass'];
+
 			$u = self::searchUserWithEmail($email);
 
 			if (!$u) {

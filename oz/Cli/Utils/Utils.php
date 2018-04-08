@@ -32,7 +32,7 @@
 			if (file_exists($oz_config)) {
 				$config = include $oz_config;
 
-				if (is_array($config)) {
+				if (self::isProjectConfigLike($config)) {
 					return $config;
 				}
 			}
@@ -43,6 +43,18 @@
 			}
 
 			return null;
+		}
+
+		/**
+		 * Check for ozone config.
+		 *
+		 * @param mixed $config
+		 *
+		 * @return bool
+		 */
+		public static function isProjectConfigLike($config)
+		{
+			return is_array($config) AND isset($config['OZ_PROJECT_NAME']);
 		}
 
 		/**
@@ -70,6 +82,6 @@
 			// we have access to the database
 			// will throw error when something went wrong
 			DbManager::getInstance()
-				   ->getConnection();
+					 ->getConnection();
 		}
 	}

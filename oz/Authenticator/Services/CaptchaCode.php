@@ -15,7 +15,6 @@
 	use OZONE\OZ\Core\BaseService;
 	use OZONE\OZ\Core\URIHelper;
 	use OZONE\OZ\Exceptions\NotFoundException;
-	use OZONE\OZ\Core\SettingsManager;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -42,17 +41,17 @@
 		 */
 		public function execute(array $request = [])
 		{
-			$params = ['key'];
-
-			$file_uri_reg = SettingsManager::get('oz.files', "OZ_CAPTCHA_FILE_REG");
-			$extra_ok     = URIHelper::parseUriExtra($file_uri_reg, $params, $request);
+			$params_required = ['oz_captcha_key'];
+			$params_orders   = [];
+			$file_uri_reg    = CaptchaCodeHelper::genCaptchaURIRegExp($params_orders);
+			$extra_ok        = URIHelper::parseUriExtra($file_uri_reg, $params_orders, $request);
 
 			if (!$extra_ok) {
 				throw new NotFoundException();
 			}
 
-			Assert::assertForm($request, $params, new NotFoundException());
+			Assert::assertForm($request, $params_required, new NotFoundException());
 
-			CaptchaCodeHelper::serveCaptchaImage($request['key']);
+			CaptchaCodeHelper::serveCaptchaImage($request['oz_captcha_key']);
 		}
 	}

@@ -8,6 +8,8 @@
 	 * file that was distributed with this source code.
 	 */
 
+	use OZONE\OZ\Core\SettingsManager;
+
 	return [
 		'oz_users'          => [
 			'plural_name'   => 'OZ_users',
@@ -30,25 +32,30 @@
 					'unsigned'       => true
 				],
 				'phone'        => [
-					'type' => 'phone',
-					'null' => !\OZONE\OZ\Core\SettingsManager::get('oz.users', 'OZ_USERS_PHONE_REQUIRED')
+					'type'       => 'phone',
+					'registered' => false,
+					'null'       => !SettingsManager::get('oz.users', 'OZ_USERS_PHONE_REQUIRED')
 				],
 				'email'        => [
-					'type' => 'email',
-					'null' => !\OZONE\OZ\Core\SettingsManager::get('oz.users', 'OZ_USERS_EMAIL_REQUIRED')
+					'type'       => 'email',
+					'registered' => false,
+					'null'       => !SettingsManager::get('oz.users', 'OZ_USERS_EMAIL_REQUIRED')
 				],
 				'pass'         => [
 					'type' => 'password'
 				],
 				'name'         => [
-					'type' => 'uname'
+					'type' => 'user_name'
 				],
 				'gender'       => [
 					'type' => 'gender'
 				],
 				'birth_date'   => [
 					'type'       => 'date',
-					'birth_date' => true
+					'birth_date' => true,
+					'min_age'    => SettingsManager::get('oz.ofv.const', 'OZ_USER_MIN_AGE'),
+					'max_age'    => SettingsManager::get('oz.ofv.const', 'OZ_USER_MAX_AGE')
+
 				],
 				'sign_up_time' => [
 					'type'     => 'bigint',
@@ -95,7 +102,7 @@
 			'singular_name' => 'OZ_client',
 			'column_prefix' => 'client',
 			'relations'     => [
-				'OZ_client_owner'  => [
+				'OZ_client_owner' => [
 					'type'   => 'one-to-one',
 					'target' => 'oz_users'
 				]
@@ -181,7 +188,7 @@
 					'type'     => 'bigint',
 					'unsigned' => true
 				],
-				'last_seen'    => [
+				'last_seen'      => [
 					'type'     => 'bigint',
 					'unsigned' => true
 				]

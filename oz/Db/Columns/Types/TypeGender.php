@@ -17,14 +17,21 @@
 	final class TypeGender extends TypeString
 	{
 		/**
+		 * TypeGender constructor.
+		 */
+		public function __construct() { parent::__construct(1, 30); }
+
+		/**
 		 * {@inheritdoc}
 		 */
-		public function validate($value)
+		public function validate($value, $column_name, $table_name)
 		{
-			$data = [$value];
+			$debug = [
+				"value" => $value
+			];
 
 			if (!in_array($value, SettingsManager::get('oz.users', 'OZ_USER_ALLOWED_GENDERS'))) {
-				throw new TypesInvalidValueException('OZ_FIELD_GENDER_INVALID',$data);
+				throw new TypesInvalidValueException('OZ_FIELD_GENDER_INVALID', $debug);
 			}
 
 			return $value;
@@ -35,9 +42,6 @@
 		 */
 		public static function getInstance(array $options)
 		{
-			$instance = new self;
-			$instance->max(30);
-
-			return $instance;
+			return new self;
 		}
 	}

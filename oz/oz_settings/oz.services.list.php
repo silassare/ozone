@@ -16,65 +16,65 @@
 			'is_file_service' => false,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
-			'request_methods'     => ['GET', 'POST', 'PUT', 'DELETE']
+			'request_methods' => ['GET', 'POST']
 		],
-		'files'     => [
+		'files'        => [
 			'service_class'   => 'OZONE\OZ\FS\Services\GetFiles',
 			'is_file_service' => true,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
-			'require_session' => !(SettingsManager::get('oz.files', 'OZ_FILE_ACCESS_LEVEL') === 'any'),
-			'request_methods'     => ['GET']
+			'require_session' => !(SettingsManager::get('oz.files', 'OZ_GET_FILE_ACCESS_LEVEL') === 'any'),
+			'request_methods' => ['GET']
 		],
-		'captcha'     => [
+		'captcha'      => [
 			'service_class'   => 'OZONE\OZ\Authenticator\Services\CaptchaCode',
 			'is_file_service' => true,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
-			'require_session'  => true,
-			'request_methods'     => ['GET']
+			'require_session' => true,
+			'request_methods' => ['GET']
 		],
-		'qrcode'      => [
+		'qrcode'       => [
 			'service_class'   => 'OZONE\OZ\Authenticator\Services\QrCodeCode',
 			'is_file_service' => true,
 			'can_serve_resp'  => true,
 			'cross_site'      => true,
-			'require_session'  => true,
-			'request_methods'     => ['GET']
+			'require_session' => true,
+			'request_methods' => ['GET']
 		],
-		'tnet'        => [
+		'tnet'         => [
 			'service_class'   => 'OZONE\OZ\User\Services\TestNet',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,
-			'request_methods'     => ['POST', 'GET']
+			'request_methods' => ['POST', 'GET']
 		],
-		'signup'      => [
+		'signup'       => [
 			'service_class'   => 'OZONE\OZ\User\Services\Signup',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,
-			'request_methods'     => ['POST']
+			'request_methods' => ['POST']
 		],
-		'upicedit'    => [
+		'upicedit'     => [
 			'service_class'   => 'OZONE\OZ\User\Services\UserPicEdit',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,
-			'request_methods'     => ['POST']
+			'request_methods' => ['POST']
 		],
-		'login'       => [
+		'login'        => [
 			'service_class'   => 'OZONE\OZ\User\Services\Login',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,
-			'request_methods'     => ['POST']
+			'request_methods' => ['POST']
 		],
-		'logout'      => [
+		'logout'       => [
 			'service_class'   => 'OZONE\OZ\User\Services\Logout',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,
-			'request_methods'     => ['POST', 'GET']
+			'request_methods' => ['POST', 'GET']
 		]
 	];

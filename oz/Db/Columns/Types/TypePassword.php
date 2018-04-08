@@ -17,18 +17,29 @@
 	final class TypePassword extends TypeString
 	{
 		/**
+		 * TypePassword constructor.
+		 */
+		public function __construct()
+		{
+			parent::__construct(1, 255);
+		}
+
+		/**
 		 * {@inheritdoc}
 		 */
-		public function validate($value)
+		public function validate($value, $column_name, $table_name)
 		{
-			$data = [$value];
+			$debug = [
+				"value" => $value
+			];
 
 			$pass = (string)$value;
 			$len  = strlen($pass);
+
 			if ($len < SettingsManager::get('oz.ofv.const', 'OZ_PASS_MIN_LENGTH')) {
-				throw new TypesInvalidValueException('OZ_FIELD_PASS_TOO_SHORT', $data);
+				throw new TypesInvalidValueException('OZ_FIELD_PASS_TOO_SHORT', $debug);
 			} elseif ($len > SettingsManager::get('oz.ofv.const', 'OZ_PASS_MAX_LENGTH')) {
-				throw new TypesInvalidValueException('OZ_FIELD_PASS_TOO_LONG', $data);
+				throw new TypesInvalidValueException('OZ_FIELD_PASS_TOO_LONG', $debug);
 			}
 
 			return $pass;
@@ -39,9 +50,6 @@
 		 */
 		public static function getInstance(array $options)
 		{
-			$instance = new self;
-			$instance->max(255);
-
-			return $instance;
+			return new self;
 		}
 	}

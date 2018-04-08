@@ -10,8 +10,6 @@
 
 	use OZONE\OZ\Crypt\DoCrypt;
 	use OZONE\OZ\Db\Base\OZUser as BaseOZUser;
-	use OZONE\OZ\Db\Columns\Types\TypeEmail;
-	use OZONE\OZ\Db\Columns\Types\TypePhone;
 	use OZONE\OZ\Exceptions\InternalErrorException;
 	use OZONE\OZ\OZone;
 
@@ -30,19 +28,19 @@
 				$phone             = $this->getPhone();
 				$email             = $this->getEmail();
 
-				if (!empty($phone)) {
+				// if (!empty($phone)) {
 					// check if the phone is not already registered
-					$phone_validator = new TypePhone();
-					$phone_validator->notRegistered();
-					$phone_validator->validate($phone);
-				}
+				// 	$phone_validator = new TypePhone();
+				// 	$phone_validator->notRegistered();
+				// 	$phone = $phone_validator->validate($phone);
+				// }
 
-				if (!empty($email)) {
+				// if (!empty($email)) {
 					// check if the email is not already registered
-					$email_validator = new TypeEmail();
-					$email_validator->notRegistered();
-					$email_validator->validate($email);
-				}
+				// $email_validator = new TypeEmail();
+				// 	$email_validator->notRegistered();
+				// 	$email = $email_validator->validate($email);
+				// }
 
 				if (empty($phone) AND empty($email)) {
 					// Maybe "OZ_USERS_PHONE_REQUIRED" and "OZ_USERS_EMAIL_REQUIRED" are both set to "false" in "oz.users" settings file.

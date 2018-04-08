@@ -14,6 +14,7 @@
 	use OZONE\OZ\Core\SessionsData;
 	use OZONE\OZ\Exceptions\NotFoundException;
 	use OZONE\OZ\Core\SettingsManager;
+	use OZONE\OZ\Utils\StringUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -98,7 +99,7 @@
 			}
 
 			if (empty($code)) {
-				throw new NotFoundException(null,$_SESSION);
+				throw new NotFoundException(null, $_SESSION);
 			}
 
 			SessionsData::remove('_captcha_cfg_:' . $captcha_key);
@@ -174,4 +175,23 @@
 
 			return $get_string ? implode($separator, $rgb_array) : $rgb_array;
 		}
+
+		/**
+		 * Generate regexp used to match Captcha file URI.
+		 *
+		 * @param array &$fields
+		 *
+		 * @return string
+		 */
+		public static function genCaptchaURIRegExp(array &$fields)
+		{
+			$format = SettingsManager::get("oz.files", "OZ_CAPTCHA_URI_EXTRA_FORMAT");
+
+			$parts = [
+				"oz_captcha_key" => "([a-z0-9]{32})"
+			];
+
+			return StringUtils::stringFormatToRegExp($format, $parts, $fields);
+		}
+
 	}

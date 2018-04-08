@@ -174,9 +174,13 @@
 			$format["DD"]         = $day;
 			$format["MM"]         = $month;
 			$format["YYYY"]       = $year;
-			$format["YYYY-MM-DD"] = $year . '-' . $month . '-' . $day;
-			$format["DD-MM-YYYY"] = $day . '-' . $month . '-' . $year;
+			$format["YYYY-MM-DD"] = $year . '-' . self::prefixZero($month) . '-' . self::prefixZero($day);
+			$format["DD-MM-YYYY"] = self::prefixZero($day) . '-' . self::prefixZero($month) . '-' . $year;
 
 			return $format;
+		}
+
+		private static function prefixZero($x){
+			return ( intval($x) < 10 ? "0". $x : $x );
 		}
 	}

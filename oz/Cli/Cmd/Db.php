@@ -87,6 +87,7 @@
 			}
 
 			$gen = ORM::getClassGenerator();
+
 			foreach ($map as $ns => $dir) {
 				if ($all === false AND $ns === $structure['oz_db_namespace']) {
 					continue;
@@ -98,6 +99,7 @@
 
 			try {
 				$query = $db->generateDatabaseQuery();
+				// oz_logger($query);
 				$db->multipleQueryExecute($query);
 				$cli->writeLn('Success: database build done.');
 			} catch (\Exception $e) {

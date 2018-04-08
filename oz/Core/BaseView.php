@@ -14,11 +14,12 @@
 
 	use OZONE\OZ\Exceptions\InternalErrorException;
 	use OZONE\OZ\FS\TemplatesUtils;
+	use OZONE\OZ\WebRoute\WebInject;
 
 	abstract class BaseView
 	{
 		/**
-		 * the view output
+		 * The view output
 		 */
 		private $output = null;
 
@@ -64,7 +65,17 @@
 		}
 
 		/**
-		 * render the view
+		 * Returns default data to inject in template.
+		 *
+		 * @return array
+		 */
+		public function getDefaultCompileData()
+		{
+			return [];
+		}
+
+		/**
+		 * Render the view
 		 *
 		 * @param boolean $force should we force rendering
 		 *
@@ -74,26 +85,29 @@
 		public function render($force = false)
 		{
 			if (is_null($this->output) OR $force) {
-				$this->output = TemplatesUtils::compute($this->getTemplate(), $this->getCompileData());
+				$data         = array_merge($this->getDefaultCompileData(), $this->getCompileData());
+				$this->output = TemplatesUtils::compute($this->getTemplate(), $data);
 			}
 
 			return $this;
 		}
 
 		/**
-		 * serve the view to the browser and exit
+		 * Serve the view to the browser and exit
 		 *
 		 * @return void
 		 */
-
 		public function serve()
 		{
-			Assert::assertAuthorizeAction(!is_null($this->output), new InternalErrorException('OZ_VIEW_NOT_RENDERED', [$this->getTemplate()]));
+			$output = $this->render()
+						   ->getOutput();
+
+			Assert::assertAuthorizeAction(!is_null($output), new InternalErrorException('OZ_VIEW_NOT_RENDERED', [$this->getTemplate()]));
+
 			// set headers
+			// -- ---
 			// send data to browser
-
-			echo $this->getOutput();
-
+			echo $output;
 			exit;
 		}
 	}

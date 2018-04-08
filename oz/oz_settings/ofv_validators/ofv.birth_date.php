@@ -25,7 +25,7 @@
 		}
 
 		$format     = OFormUtils::parseDate($birth_date);
-		$birth_date = $format["DD-MM-YYYY"];
+		$birth_date = $format["YYYY-MM-DD"];
 
 		$ofv->setField('birth_date', $birth_date);
 	}
