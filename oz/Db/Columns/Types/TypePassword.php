@@ -29,16 +29,20 @@
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
+			$min = SettingsManager::get('oz.ofv.const', 'OZ_PASS_MIN_LENGTH');
+			$max = SettingsManager::get('oz.ofv.const', 'OZ_PASS_MAX_LENGTH');
 			$debug = [
-				"value" => $value
+				"value" => $value,
+				"min" => $min,
+				"max" => $max
 			];
 
 			$pass = (string)$value;
 			$len  = strlen($pass);
 
-			if ($len < SettingsManager::get('oz.ofv.const', 'OZ_PASS_MIN_LENGTH')) {
+			if ($len < $min) {
 				throw new TypesInvalidValueException('OZ_FIELD_PASS_TOO_SHORT', $debug);
-			} elseif ($len > SettingsManager::get('oz.ofv.const', 'OZ_PASS_MAX_LENGTH')) {
+			} elseif ($len > $max) {
 				throw new TypesInvalidValueException('OZ_FIELD_PASS_TOO_LONG', $debug);
 			}
 

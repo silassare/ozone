@@ -51,18 +51,32 @@
 		/** @var \OZONE\OZ\Db\OZAuth */
 		private $auth_object = null;
 
+		/** @var int */
+		private $auth_code_length = 6;
+		/** @var bool */
+		private $auth_code_alpha_num = false;
+
 		/**
 		 * Authenticator constructor.
 		 *
 		 * @param string|null $name      The authentication process name.
 		 * @param string      $for_value The value to authenticate : email/phone number etc.
+		 * @param array       $options   Options
 		 */
-		function __construct($name = null, $for_value)
+		function __construct($name = null, $for_value, array $options = [])
 		{
 			if (empty($name)) {
 				$this->label = Hasher::genRandomHash(32);
 			} else {
 				$this->label = Hasher::hashIt($name);
+			}
+
+			if (isset($options["auth_code_length"])) {
+				$this->auth_code_length = (int)$options["auth_code_length"];
+			}
+
+			if (isset($options["auth_code_alpha_num"])) {
+				$this->auth_code_alpha_num = (bool)$options["auth_code_alpha_num"];
 			}
 
 			$this->for_value = $for_value;
@@ -81,28 +95,28 @@
 		/**
 		 * Generate new authentication code, token ...
 		 *
-		 * @param int $try_max
-		 * @param int $life_time
+		 * @param int $try_max  maximum failure count
+		 * @param int $lifetime auth lifetime
 		 *
 		 * @return \OZONE\OZ\Authenticator\Authenticator
 		 * @throws \Exception
 		 */
-		public function generate($try_max = null, $life_time = null)
+		public function generate($try_max = null, $lifetime = null)
 		{
 			if (empty($try_max)) {
 				$try_max = (int)SettingsManager::get('oz.authenticator', 'OZ_AUTH_CODE_TRY_MAX');
 			}
 
-			if (empty($life_time)) {
-				$life_time = (int)SettingsManager::get('oz.authenticator', 'OZ_AUTH_CODE_LIFE_TIME');
+			if (empty($lifetime)) {
+				$lifetime = (int)SettingsManager::get('oz.authenticator', 'OZ_AUTH_CODE_LIFE_TIME');
 			}
 
-			if (!is_int($try_max) OR !is_int($life_time) OR $try_max <= 0 OR $life_time <= 0) {
+			if (!is_int($try_max) OR !is_int($lifetime) OR $try_max <= 0 OR $lifetime <= 0) {
 				throw new \InvalidArgumentException('arguments should be unsigned integer.');
 			}
 
-			$expire = time() + $life_time;
-			$code   = Hasher::genAuthCode();
+			$expire = time() + $lifetime;
+			$code   = Hasher::genAuthCode($this->auth_code_length, $this->auth_code_alpha_num);
 			$token  = Hasher::genAuthToken($code);
 
 			// cancel any existing to prevent primary key duplication

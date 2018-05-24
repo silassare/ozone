@@ -23,13 +23,13 @@
 		/**
 		 * MethodNotAllowedException constructor.
 		 *
-		 * @param string          $message  the exception message
+		 * @param string|null          $message  the exception message
 		 * @param array|null      $data     additional exception data
 		 * @param null|\Throwable $previous previous exception if nested exception
 		 */
-		public function __construct($message = 'OZ_ERROR_METHOD_NOT_ALLOWED', array $data = null, \Throwable $previous = null)
+		public function __construct($message = null, array $data = null, \Throwable $previous = null)
 		{
-			parent::__construct($message, BaseException::METHOD_NOT_ALLOWED, $data, $previous);
+			parent::__construct((empty($message)? 'OZ_ERROR_METHOD_NOT_ALLOWED' : $message), BaseException::METHOD_NOT_ALLOWED, $data, $previous);
 		}
 
 		/**

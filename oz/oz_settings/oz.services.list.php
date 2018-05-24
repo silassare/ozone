@@ -50,7 +50,14 @@
 			'request_methods' => ['POST', 'GET']
 		],
 		'signup'       => [
-			'service_class'   => 'OZONE\OZ\User\Services\Signup',
+			'service_class'   => 'OZONE\OZ\User\Services\SignUp',
+			'is_file_service' => false,
+			'can_serve_resp'  => false,
+			'cross_site'      => true,
+			'request_methods' => ['POST']
+		],
+		'password'       => [
+			'service_class'   => 'OZONE\OZ\User\Services\Password',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
 			'cross_site'      => true,

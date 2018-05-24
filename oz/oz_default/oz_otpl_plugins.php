@@ -41,5 +41,11 @@
 			], $url);
 		}
 
+		function oz_verified_user()
+		{
+			return \OZONE\OZ\User\UsersUtils::userVerified();
+		}
+
 		\OTpl::addPluginAlias("oz_file_link", "oz_file_link");
+		\OTpl::addPluginAlias("oz_verified_user", "oz_verified_user");
 	}

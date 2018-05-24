@@ -18,10 +18,12 @@
 
 	final class SMSUtils
 	{
-		const SMS_TYPE_AUTH_CODE = 1;
+		const SMS_TYPE_AUTH_CODE      = 1;
+		const SMS_TYPE_PASS_AUTH_CODE = 2;
 
 		static $sms_map = [
-			SMSUtils::SMS_TYPE_AUTH_CODE => "OZ_SMS_TYPE_AUTH_CODE_MESSAGE"
+			SMSUtils::SMS_TYPE_AUTH_CODE      => "OZ_SMS_AUTH_CODE_MESSAGE",
+			SMSUtils::SMS_TYPE_PASS_AUTH_CODE => "OZ_SMS_AUTH_CODE_PASSWORD_EDIT_MESSAGE",
 		];
 
 		/**
@@ -50,7 +52,7 @@
 		 */
 		public static function getSenderInstance($sender_name = "")
 		{
-			$sender = SettingsManager::get('oz.config', '');
+			$sender = SettingsManager::get('oz.config', 'OZ_APP_SMS_SENDER_CLASS');
 			if ($sender AND ClassLoader::exists($sender)) {
 				/**
 				 * @var \OZONE\OZ\Sender\SMSSenderInterface $instance

@@ -150,9 +150,14 @@
 					$cancel = self::getCurrentApp()
 								  ->onError($e);
 
-					oz_logger(($cancel ? 'CANCELED: Message :' . $e : '' . $e));
-
-					if (!$cancel) {
+					if ($cancel) {
+						oz_logger('--------Error canceled--------');
+						oz_logger($e);
+						// TODO
+						// What happen after this? :)
+						// Silence is gold rule or ...?
+					} else {
+						oz_logger($e);
 						$e->procedure();
 					}
 				}

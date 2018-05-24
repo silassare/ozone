@@ -38,18 +38,23 @@
 			if (is_scalar($in)) {
 				$text = (string)$in;
 			} elseif ($in instanceof \OZONE\OZ\Exceptions\BaseException) {
-				$previous = $in->getPrevious();
-				$text     = (string)$in;
+				$e        = $in;
+				$text     = (string)$e;
+				$previous = $e->getPrevious();
 				if (!is_null($previous)) {
 					$text .= "\n-------previous--------\n" . $previous;
 				}
 			} elseif ($in instanceof Exception OR $in instanceof Error) {
-				$e    = $in;
-				$text = "\tFile    : {$e->getFile()}"
-						. "\n\tLine    : {$e->getLine()}"
-						. "\n\tCode    : {$e->getCode()}"
-						. "\n\tMessage : {$e->getMessage()}"
-						. "\n\tTrace   : {$e->getTraceAsString()}";
+				$e        = $in;
+				$text     = "\tFile    : {$e->getFile()}"
+							. "\n\tLine    : {$e->getLine()}"
+							. "\n\tCode    : {$e->getCode()}"
+							. "\n\tMessage : {$e->getMessage()}"
+							. "\n\tTrace   : {$e->getTraceAsString()}";
+				$previous = $in->getPrevious();
+				if (!is_null($previous)) {
+					$text .= "\n-------previous--------\n" . $previous;
+				}
 			} else {
 				$text = var_export($in, true);
 			}
@@ -123,8 +128,8 @@ LOG;
 					oz_error_handler($code, $error["message"], $error["file"], $error["line"]);
 					oz_critical_die_message();
 				} else {
-					// tmp : this error probably would have been handled
-					oz_logger("OZone: shutdown IGNORE error code: $code");
+					oz_logger("OZone: shutdown error.");
+					oz_error_handler($code, $error["message"], $error["file"], $error["line"]);
 				}
 			}
 		}

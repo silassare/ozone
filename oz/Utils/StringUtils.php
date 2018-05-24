@@ -240,6 +240,22 @@
 		}
 
 		/**
+		 * Create URL Slug from string (ex: Post Title)
+		 *
+		 * @param string $string
+		 *
+		 * @return string
+		 */
+		public static function stringToURLSlug($string)
+		{
+			$string = trim($string);
+			$string = self::removeAccents($string);
+			$string = preg_replace('#[^A-Za-z0-9-]+#', '-', $string);
+
+			return strtolower(preg_replace('#[-]{2,}#', '-', $string));
+		}
+
+		/**
 		 * Remove accents from string.
 		 *
 		 * @param string $string

@@ -14,7 +14,7 @@
 		"OZ_ERROR_REQUEST_FAIL" => "Erreur: la requête a échoué.",
 		"OZ_ERROR_NETWORK"      => "Erreur: problèmes de connexion internet.",
 		"OZ_ERROR_SERVER"       => "Erreur: echec de récupération des informations.",
-		"OZ_YOU_ARE_NOT_ADMIN"  => "Erreur: Vous n'etes pas un administrateur.",
+		"OZ_ERROR_YOU_ARE_NOT_ADMIN"  => "Erreur: Vous n'etes pas un administrateur.",
 
 		"OZ_ERROR_BAD_REQUEST"        => "Votre requête est invalide.",
 		"OZ_ERROR_INTERNAL"           => "Une erreur interne s'est produite.",
@@ -26,7 +26,8 @@
 		"OZ_ERROR_YOU_MUST_LOGIN"     => "Vous devez vous connecter d'abord.",
 		"OZ_ERROR_NOT_ALLOWED"        => "Une erreur s'est produite. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
 
-		"OZ_SMS_TYPE_AUTH_CODE_MESSAGE" => "Votre code d'authentification est: {code}",
+		"OZ_SMS_AUTH_CODE_MESSAGE" => "Votre code d'authentification est: {code}",
+		"OZ_SMS_AUTH_CODE_PASSWORD_EDIT_MESSAGE" => "Votre code d'authentification est: {code}",
 		// ---------END NEW
 
 		"OZ_IMAGE_NOT_VALID"            => "Fichier image invalide. Veuillez choisir une image de type png, jpg, jpeg, ou gif.",
@@ -50,8 +51,8 @@
 		"OZ_AUTH_CODE_EXPIRED"              => "Le code a déjà expiré.",
 		"OZ_AUTH_PROCESS_INVALID"           => "Veuillez recommencer le processus d'authentification",
 
-		"OZ_SIGNUP_STEP_1_INVALID" => "Vous n'avez pas validé l'étape 1.",
-		"OZ_SIGNUP_STEP_2_INVALID" => "Vous n'avez pas validé l'étape 2.",
+		"OZ_PHONE_AUTH_NOT_STARTED" => "Vous n'avez pas validé l'étape 1.",
+		"OZ_PHONE_AUTH_NOT_VALIDATED" => "Vous n'avez pas validé l'étape 2.",
 
 		"OZ_FIELD_USER_NAME_INVALID"           => "Le nom et prénoms contient des caractères non autorisés.",
 		"OZ_FIELD_USER_NAME_TOO_SHORT"         => "Le nom et prénoms est trop court.",

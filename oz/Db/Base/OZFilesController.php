@@ -3,7 +3,7 @@
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
-	 * Time: 1523161566
+	 * Time: 1527068711
 	 */
 
 	namespace OZONE\OZ\Db\Base;
@@ -256,7 +256,7 @@
 		 * when there is an error updating you can catch the exception
 		 *
 		 * @param array $filters    the row filters
-		 * @param array $new_values the item new values
+		 * @param array $new_values the new values
 		 *
 		 * @return bool|\OZONE\OZ\Db\OZFile
 		 */
@@ -275,6 +275,27 @@
 			} else {
 				return false;
 			}
+		}
+
+		/**
+		 * Update all items in `oz_files` that match the given item filters.
+		 *
+		 * @param array $filters    the row filters
+		 * @param array $new_values the new values
+		 *
+		 * @return int Affected row count.
+		 */
+		public function updateAllItems(array $filters, array $new_values)
+		{
+			self::assertFiltersNotEmpty($filters);
+			$my_query = new OZFilesQueryReal();
+
+			self::applyFilters($my_query, $filters);
+
+			$affected = $my_query->update($new_values)
+								 ->execute();
+
+			return $affected;
 		}
 
 		/**
@@ -315,7 +336,7 @@
 		 *
 		 * @return int Affected row count.
 		 */
-		public function deleteAllItem(array $filters)
+		public function deleteAllItems(array $filters)
 		{
 			self::assertFiltersNotEmpty($filters);
 			$my_query = new OZFilesQueryReal();
@@ -406,23 +427,15 @@
 			return $results;
 		}
 
-		public function addOneItemRelation(array $filters, $relation, array $relation_values)
-		{
-			// TODO
-		}
+		// TODO
+		// public function addOneItemRelation(array $filters, $relation, array $relation_values){}
 
-		public function updateOneItemRelation(array $filters, $relation, array $new_values)
-		{
-			// TODO
-		}
+		// TODO
+		// public function updateOneItemRelation(array $filters, $relation, array $new_values) {}
 
-		public function deleteOneItemRelation(array $filters, $relation, $delete_max = 1, $delete_offset = 0)
-		{
-			// TODO
-		}
+		// TODO
+		// public function deleteOneItemRelation(array $filters, $relation, $delete_max = 1, $delete_offset = 0) {}
 
-		public function getOneItemWithRelations(array $filters, array $relations, $max = null, $offset = 0)
-		{
-			// TODO
-		}
+		// TODO
+		// public function getOneItemWithRelations(array $filters, array $relations, $max = null, $offset = 0) {}
 	}

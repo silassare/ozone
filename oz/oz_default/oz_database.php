@@ -58,8 +58,8 @@
 
 				],
 				'sign_up_time' => [
-					'type'     => 'bigint',
-					'unsigned' => true
+					'type' => 'timestamp',
+					'auto' => true
 				],
 				'picid'        => [
 					'type'    => 'string',
@@ -71,7 +71,8 @@
 					'authorized' => true
 				],
 				'valid'        => [
-					'type' => 'bool'
+					'type'    => 'bool',
+					'default' => true
 				]
 			]
 		],

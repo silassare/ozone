@@ -351,9 +351,13 @@
 		 */
 		public static function exists($class_name)
 		{
-			self::loadClass($class_name);
+			if (is_string($class_name)) {
+				self::loadClass($class_name);
 
-			return class_exists($class_name);
+				return class_exists($class_name);
+			}
+
+			return false;
 		}
 
 		/**

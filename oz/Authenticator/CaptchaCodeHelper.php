@@ -99,7 +99,7 @@
 			}
 
 			if (empty($code)) {
-				throw new NotFoundException(null, $_SESSION);
+				throw new NotFoundException();
 			}
 
 			SessionsData::remove('_captcha_cfg_:' . $captcha_key);

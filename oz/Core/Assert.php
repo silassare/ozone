@@ -102,7 +102,7 @@
 		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
-		public static function assertIsAdmin($msg = 'OZ_YOU_ARE_NOT_ADMIN', $data = null)
+		public static function assertIsAdmin($msg = 'OZ_ERROR_YOU_ARE_NOT_ADMIN', $data = null)
 		{
 			if (!UsersUtils::userVerified()) {
 				if (!self::isException($msg)) {

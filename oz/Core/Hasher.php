@@ -171,19 +171,39 @@
 		}
 
 		/**
-		 * generate a 6 digits authentication code
+		 * Generate auth code
 		 *
-		 * @return int
+		 * @param int  $length    the auth code length
+		 * @param bool $alpha_num whether to use digits or alpha_num
+		 *
+		 * @return string
 		 */
-		public static function genAuthCode()
+		public static function genAuthCode($length = 4, $alpha_num = false)
 		{
+			$min = 4;
+			$max = 32;
+
+			if ($length < $min OR $length > $max)
+				throw new \InvalidArgumentException(sprintf('Auth code length must be between %d and %d.', $min, $max));
+
+			if ($alpha_num) {
+				return self::genRandomString($length, Hasher::CHARS_ALPHA_NUM);
+			}
+
 			srand(self::genSeed());
 
-			return rand(111111, 999999);
+			$code = rand(111111, 999999);
+			$code .= rand(111111, 999999);
+			$code .= rand(111111, 999999);
+			$code .= rand(111111, 999999);
+			$code .= rand(111111, 999999);
+			$code .= rand(111111, 999999);
+
+			return substr($code, 0, $length);
 		}
 
 		/**
-		 * generate authentication token
+		 * Generate auth token
 		 *
 		 * @param string|int $key the key to authenticate
 		 *

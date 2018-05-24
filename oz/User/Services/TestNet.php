@@ -11,7 +11,6 @@
 	namespace OZONE\OZ\User\Services;
 
 	use OZONE\OZ\Core\BaseService;
-	use OZONE\OZ\Core\SessionsData;
 	use OZONE\OZ\User\UsersUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
@@ -39,12 +38,12 @@
 				$data['_current_user'] = $user_obj->asArray();
 			} else {
 				$data['ok'] = 0;
-				$step       = SessionsData::get('svc_sign_up:step');
-				$phone      = SessionsData::get('svc_sign_up:phone');
+				//$step       = SessionsData::get('svc_sign_up:step');
+				//$phone      = SessionsData::get('svc_sign_up:phone');
 
-				if (!empty($step) AND !empty($phone) AND $step === Signup::SIGNUP_STEP_VALIDATE) {
-					$data['_info_sign_up'] = ['step' => $step, 'phone' => $phone];
-				}
+				//if (!empty($step) AND !empty($phone) AND $step === SignUp::SIGNUP_STEP_VALIDATE) {
+				//	$data['_info_sign_up'] = ['step' => $step, 'phone' => $phone];
+				//}
 			}
 
 			$this->getResponseHolder()

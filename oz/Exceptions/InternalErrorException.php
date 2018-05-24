@@ -23,13 +23,13 @@
 		/**
 		 * InternalErrorException constructor.
 		 *
-		 * @param string          $message  the exception message
+		 * @param string|null          $message  the exception message
 		 * @param array|null      $data     additional exception data
 		 * @param null|\Throwable $previous previous exception if nested exception
 		 */
-		public function __construct($message = 'OZ_ERROR_INTERNAL', array $data = null, \Throwable $previous = null)
+		public function __construct($message = null, array $data = null, \Throwable $previous = null)
 		{
-			parent::__construct($message, BaseException::INTERNAL_ERROR, $data, $previous);
+			parent::__construct((empty($message)? 'OZ_ERROR_INTERNAL' : $message), BaseException::INTERNAL_ERROR, $data, $previous);
 		}
 
 		/**

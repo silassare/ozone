@@ -10,8 +10,6 @@
 
 	namespace OZONE\OZ\Db\Columns\Types;
 
-	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
-
 	final class TypeImage extends TypeFile
 	{
 		private $image_min_width  = null;
@@ -73,11 +71,7 @@
 				"value" => $value
 			];
 
-			if (!isset($_FILES[$value])) {
-				throw new TypesInvalidValueException("OZ_FILE_FIELD_NOT_FOUND", $debug);
-			}
-
-			return $value;
+			return parent::validate($value, $column_name, $table_name);
 		}
 
 		/**
@@ -86,6 +80,8 @@
 		public static function getInstance(array $options)
 		{
 			$instance = new self;
+
+			$instance->mimeTypes(["image/jpeg"]);
 
 			$instance->imageWidthRange(
 				self::getOptionKey($options, "image_min_width", 1),
