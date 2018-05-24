@@ -135,6 +135,20 @@
 		}
 
 		/**
+		 * Sets the response from a given response holder instance
+		 *
+		 * @param \OZONE\OZ\Core\ResponseHolder $response
+		 *
+		 * @return $this
+		 */
+		public function setResponse(ResponseHolder $response)
+		{
+			self::$responses[$this->label] = $response->getResponse();
+
+			return $this;
+		}
+
+		/**
 		 * Gets response with a given label or get all responses if no label is given
 		 *
 		 * @param null|string $label
