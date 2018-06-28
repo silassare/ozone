@@ -38,6 +38,9 @@
 				case 'build':
 					$this->build($options);
 					break;
+				case 'js-bundle':
+					$this->jsBundle($options);
+					break;
 				case 'generate':
 					$this->generate($options);
 					break;
@@ -106,6 +109,25 @@
 				oz_logger($e);
 				$cli->writeLn('Error: database build fails. Open log file.');
 			}
+		}
+
+		/**
+		 * Creates entities js classes bundle.
+		 *
+		 * @param array $options
+		 *
+		 * @throws \Kli\Exceptions\KliInputException
+		 */
+		private function jsBundle(array $options)
+		{
+			Utils::assertDatabaseAccess();
+
+			$cli = $this->getCli();
+			$dir = $options['d'];
+			$gen = ORM::getClassGenerator();
+
+			$gen->generateJSClassesVerbose(null, $dir);
+			$cli->writeLn("JS bundle generated in: $dir ");
 		}
 
 		/**
@@ -260,6 +282,10 @@
 			$build = new KliAction('build');
 			$build->description('To build the entire database and generate required classes.');
 
+			// action: js bundle
+			$js_bundle = new KliAction('js-bundle');
+			$js_bundle->description('To generate entities classes for use in JS.');
+
 			// action: generate database query
 			$generate = new KliAction('generate');
 			$generate->description('Generate database file.');
@@ -293,7 +319,7 @@
 			   ->type((new KliTypePath)->dir()
 									   ->writable())
 			   ->def(null)
-			   ->description('The rows classes directory.');
+			   ->description('The db classes directory.');
 
 			// action: source database
 			$source = new KliAction('source');
@@ -307,6 +333,16 @@
 									  ->writable())
 			  ->def('.')
 			  ->description('The destination directory of the database file.');
+
+			// option: -d alias --dir
+			$js_d = new KliOption('d');
+			$js_d->alias('dir')
+				 ->offsets(1)
+				 ->type((new KliTypePath)->dir()
+										 ->writable())
+				 ->def('.')
+				 ->description('The destination directory of the js bundle file.');
+
 			$f = new KliOption('f');
 			$f->alias('file')
 			  ->offsets(1)
@@ -317,8 +353,9 @@
 			$refresh->addOption($rn, $rd);
 			$generate->addOption($d);
 			$backup->addOption($d);
+			$js_bundle->addOption($js_d);
 			$source->addOption($f);
 
-			$this->addAction($build, $refresh, $generate, $backup, $source);
+			$this->addAction($build, $js_bundle, $refresh, $generate, $backup, $source);
 		}
 	}
