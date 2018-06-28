@@ -90,11 +90,12 @@
 			'columns'       => [
 				'user_id' => 'ref:oz_users.id',
 				'time'    => [
-					'type'     => 'bigint',
-					'unsigned' => true
+					'type'     => 'timestamp',
+					'auto' => true
 				],
 				'valid'   => [
-					'type' => 'bool'
+					'type' => 'bool',
+					'default' => true
 				]
 			]
 		],
@@ -127,18 +128,19 @@
 				],
 				'session_life_time' => [
 					'type'     => 'bigint',
-					'default'  => 86400,
-					'unsigned' => true
+					'unsigned' => true,
+					'default'  => 86400
 				],
 				'about'             => [
 					'type' => 'string'
 				],
 				'create_time'       => [
-					'type'     => 'bigint',
-					'unsigned' => true
+					'type' => 'timestamp',
+					'auto' => true
 				],
 				'valid'             => [
-					'type' => 'bool'
+					'type' => 'bool',
+					'default'=> true
 				]
 			]
 		],
@@ -186,12 +188,10 @@
 					'type' => 'string'
 				],
 				'expire'         => [
-					'type'     => 'bigint',
-					'unsigned' => true
+					'type' => 'timestamp'
 				],
 				'last_seen'      => [
-					'type'     => 'bigint',
-					'unsigned' => true
+					'type' => 'timestamp'
 				]
 			]
 		],
@@ -229,8 +229,7 @@
 					'default'  => '0'
 				],
 				'expire'    => [
-					'type'     => 'bigint',
-					'unsigned' => true
+					'type' => 'timestamp'
 				]
 			]
 		],
@@ -256,7 +255,8 @@
 					'max'  => 60
 				],
 				'valid'     => [
-					'type' => 'bool'
+					'type' => 'bool',
+					'default'=> true
 				]
 			]
 		],
@@ -320,8 +320,8 @@
 					'null' => true
 				],
 				'upload_time' => [
-					'type'     => 'bigint',
-					'unsigned' => true
+					'type' => 'timestamp',
+					'auto' => true
 				]
 			]
 		]
