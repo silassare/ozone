@@ -1,4 +1,4 @@
 /.idea
-/ignore/*
+/ignore/**/*
 **/otpl_done/*
 /oz/Db/Base/*
