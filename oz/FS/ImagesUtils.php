@@ -316,9 +316,12 @@
 		 * @param bool       $resize           should we resize when required? default is true
 		 *
 		 * @return \OZONE\OZ\FS\ImagesUtils
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
-		public function cropAndSave($destination_path, $quality = 90, $max_width, $max_height, array $coordinate = null, $resize = true)
+		public function cropAndSave($destination_path, $quality, $max_width, $max_height, array $coordinate = null, $resize = true)
 		{
+			$quality = empty($quality) ? 90 : $quality;
+
 			if (!empty($coordinate)) {
 				if ($this->safeCoordinate($coordinate)) {
 					$x = $coordinate['x'];

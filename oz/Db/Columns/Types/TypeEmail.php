@@ -20,6 +20,8 @@
 
 		/**
 		 * TypeEmail constructor.
+		 *
+		 * {@inheritdoc}
 		 */
 		public function __construct()
 		{

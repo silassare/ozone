@@ -31,6 +31,7 @@
 		 * @param array $data
 		 *
 		 * @return string
+		 * @throws \Exception
 		 */
 		public static function getSMSMessage($sms_type, array $data = [])
 		{
@@ -49,6 +50,7 @@
 		 * @param string $sender_name
 		 *
 		 * @return null|\OZONE\OZ\Sender\SMSSenderInterface
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getSenderInstance($sender_name = "")
 		{

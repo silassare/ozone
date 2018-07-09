@@ -32,7 +32,11 @@
 		/**
 		 * {@inheritdoc}
 		 *
+		 * @param array $request
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\NotFoundException
 		 */
 		public function execute(array $request = [])
 		{

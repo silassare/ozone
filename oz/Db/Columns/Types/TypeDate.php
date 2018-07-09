@@ -20,6 +20,11 @@
 		private $min_age    = 0;
 		private $max_age    = PHP_INT_MAX;
 
+		/**
+		 * TypeDate constructor.
+		 *
+		 * {@inheritdoc}
+		 */
 		public function __construct()
 		{
 			parent::__construct();

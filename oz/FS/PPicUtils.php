@@ -38,6 +38,7 @@
 		 * @param string $destination the profile pic destination
 		 * @param array  $coordinates the crop zone coordinates
 		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private function makeProfilePic($source, $destination, array $coordinates)
@@ -76,6 +77,11 @@
 		 * @param string     $file_label the file log label
 		 *
 		 * @return string    the profile picid
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+		 * @throws \Exception
 		 */
 		public function fromFileId(array $coordinate, $file_id, $file_key, $file_label = 'OZ_FILE_LABEL_PPIC')
 		{
@@ -110,6 +116,11 @@
 		 * @param string $file_label    the file log label
 		 *
 		 * @return string    the profile picid
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+		 * @throws \Exception
 		 */
 		public function fromUploadedFile(array $coordinate, $uploaded_file, $file_label = 'OZ_FILE_LABEL_PPIC')
 		{

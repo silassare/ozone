@@ -46,6 +46,7 @@
 		 * parse request uri
 		 *
 		 * @return bool        true if valid uri, false if not valid
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function parseRequestUri()
 		{

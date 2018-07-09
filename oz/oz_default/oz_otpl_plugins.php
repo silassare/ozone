@@ -11,6 +11,15 @@
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	if (!function_exists("oz_file_link")) {
+		/**
+		 * @param integer $file_id
+		 * @param string  $file_key
+		 * @param int     $file_quality
+		 * @param string  $def
+		 *
+		 * @return int|mixed|string
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 */
 		function oz_file_link($file_id, $file_key = "", $file_quality = 0, $def = "")
 		{
 			$args  = func_get_args();

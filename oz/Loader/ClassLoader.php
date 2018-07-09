@@ -194,6 +194,7 @@
 		 * @param int   $deep      Define how deep we should go if recursive.
 		 *
 		 * @return void
+		 * @throws \Exception
 		 */
 		public static function addDirs(array $dirs, $recursive = false, $deep = 1)
 		{
@@ -406,6 +407,7 @@
 		 * @param array  $args       A list of arguments, used to instantiate.
 		 *
 		 * @return object
+		 * @throws \ReflectionException
 		 */
 		public static function instantiateClass($class_name, $args = [])
 		{

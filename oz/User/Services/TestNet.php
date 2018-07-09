@@ -24,8 +24,6 @@
 	{
 		/**
 		 * {@inheritdoc}
-		 *
-		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
 		public function execute(array $request = [])
 		{

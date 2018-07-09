@@ -12,6 +12,8 @@
 
 	// original sources: https://gist.github.com/silassare/e048711c92ca9de0eca77e8e6d08a004
 
+	use OZONE\OZ\Exceptions\RuntimeException;
+
 	class PathUtils
 	{
 		const DS = DIRECTORY_SEPARATOR;
@@ -23,6 +25,7 @@
 		 * @param string $path the path to resolve
 		 *
 		 * @return string    the absolute path
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function resolve($root, $path)
 		{
@@ -52,7 +55,7 @@
 		 * @param string $path the path to normalize
 		 *
 		 * @return string the resolved path
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private static function job($path)
 		{
@@ -76,7 +79,7 @@
 					array_pop($out);
 				} else {
 					// now here we don't like
-					throw new \Exception(sprintf("climbing above root is dangerous: %s", $path));
+					throw new RuntimeException(sprintf("climbing above root is dangerous: %s", $path));
 				}
 			}
 

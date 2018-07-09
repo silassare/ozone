@@ -1,10 +1,10 @@
 <?php
-	/**
-	 * Auto generated file, please don't edit.
-	 *
-	 * With: Gobl v1.0.0
-	 * Time: 1529690781
-	 */
+/**
+ * Auto generated file, please don't edit.
+ *
+ * With: Gobl v1.0.0
+ * Time: 1530471772
+ */
 
 	namespace OZONE\OZ\Db\Base;
 
@@ -28,6 +28,8 @@
 
 		/**
 		 * OZAuthenticatorController constructor.
+		 *
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function __construct()
 		{
@@ -71,6 +73,7 @@
 		 * @param array &$form The form
 		 *
 		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		protected function completeForm(array &$form)
 		{
@@ -106,6 +109,7 @@
 		 * @param array $columns The columns list
 		 *
 		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		protected static function assertUpdateColumns(array $columns = [])
 		{
@@ -157,6 +161,8 @@
 		 * @param array                               $filters
 		 *
 		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
 		final protected static function applyFilters(OZAuthenticatorQuery &$query, array $filters)
 		{
@@ -234,6 +240,10 @@
 		 * @param array $values the row values
 		 *
 		 * @return \OZONE\OZ\Db\OZAuth
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function addItem(array $values = [])
 		{
@@ -259,6 +269,10 @@
 		 * @param array $new_values the new values
 		 *
 		 * @return bool|\OZONE\OZ\Db\OZAuth
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function updateOneItem(array $filters, array $new_values)
 		{
@@ -284,6 +298,9 @@
 		 * @param array $new_values the new values
 		 *
 		 * @return int Affected row count.
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function updateAllItems(array $filters, array $new_values)
 		{
@@ -309,6 +326,9 @@
 		 * @param array $filters the row filters
 		 *
 		 * @return bool|\OZONE\OZ\Db\OZAuth
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function deleteOneItem(array $filters)
 		{
@@ -335,6 +355,9 @@
 		 * @param array $filters the row filters
 		 *
 		 * @return int Affected row count.
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function deleteAllItems(array $filters)
 		{
@@ -360,6 +383,9 @@
 		 * @param array $order_by order by rules
 		 *
 		 * @return \OZONE\OZ\Db\OZAuth|null
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function getItem(array $filters, array $order_by = [])
 		{
@@ -379,6 +405,9 @@
 		 * @param int|bool $total    total rows without limit
 		 *
 		 * @return \OZONE\OZ\Db\OZAuth[]
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function getAllItems(array $filters = [], $max = null, $offset = 0, array $order_by = [], &$total = false)
 		{
@@ -413,6 +442,9 @@
 		 * @param array    $order_by order by rules
 		 *
 		 * @return \OZONE\OZ\Db\OZAuthenticatorResults
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function findAllItems(array $filters = [], $max = null, $offset = 0, array $order_by = [])
 		{

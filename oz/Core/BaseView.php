@@ -14,7 +14,6 @@
 
 	use OZONE\OZ\Exceptions\InternalErrorException;
 	use OZONE\OZ\FS\TemplatesUtils;
-	use OZONE\OZ\WebRoute\WebInject;
 
 	abstract class BaseView
 	{
@@ -96,6 +95,7 @@
 		 * Serve the view to the browser and exit
 		 *
 		 * @return void
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 */
 		public function serve()
 		{

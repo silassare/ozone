@@ -11,6 +11,7 @@
 	namespace OZONE\OZ\Core;
 
 	use OZONE\OZ\Exceptions\InternalErrorException;
+	use OZONE\OZ\Exceptions\RuntimeException;
 	use OZONE\OZ\FS\FilesManager;
 	use OZONE\OZ\FS\TemplatesUtils;
 
@@ -92,9 +93,11 @@
 		}
 
 		/**
-		 * disable a given settings edit at runtime.
+		 * Disable a given settings edit at runtime.
 		 *
 		 * @param string $setting_group_name the setting group name.
+		 *
+		 * @throws \Exception
 		 */
 		public static function disableRuntimeEdit($setting_group_name)
 		{
@@ -110,8 +113,9 @@
 		 * @param bool   $required           setting key name should be defined.
 		 *
 		 * @return mixed
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException    when a setting group or required setting key is not
-		 *                                                    defined.
+		 *                                                        defined.
 		 */
 		public static function get($setting_group_name, $key = null, $required = false)
 		{
@@ -143,6 +147,8 @@
 		 * @param string $setting_group_name the setting group name.
 		 * @param mixed  $key                a setting key.
 		 * @param mixed  $value              setting key value.
+		 *
+		 * @throws \Exception
 		 */
 		public static function setKey($setting_group_name, $key, $value)
 		{
@@ -157,14 +163,15 @@
 		 * @param mixed  $data               setting data.
 		 * @param bool   $overwrite          overwrite setting with data.
 		 *
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function set($setting_group_name, array $data, $overwrite = false)
 		{
 			self::checkSettingGroupName($setting_group_name);
 
 			if (array_key_exists($setting_group_name, self::$settings_blacklist)) {
-				throw new \Exception(sprintf('You should not try to edit "%s" at runtime (try manually).', $setting_group_name));
+				throw new RuntimeException(sprintf('You should not try to edit "%s" at runtime (try manually).', $setting_group_name));
 			}
 
 			$setting_file = OZ_APP_DIR . 'oz_settings' . DS . $setting_group_name . '.php';
@@ -193,7 +200,7 @@
 		 *
 		 * @param string $setting_group_name the setting group name.
 		 *
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private static function loadAll($setting_group_name)
 		{
@@ -208,7 +215,7 @@
 							$result = include $setting_file;
 
 							if (!is_array($result)) {
-								throw new \Exception(sprintf('settings "%s" in "%s" should be of type "array" not "%s".', $setting_group_name, $setting_file, gettype($result)));
+								throw new RuntimeException(sprintf('settings "%s" in "%s" should be of type "array" not "%s".', $setting_group_name, $setting_file, gettype($result)));
 							}
 
 							self::$as_loaded[$setting_file] = $result;
@@ -224,12 +231,12 @@
 		 *
 		 * @param string $setting_group_name the setting group name.
 		 *
-		 * @throws \Exception    when the setting group name is invaild.
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private static function checkSettingGroupName($setting_group_name)
 		{
 			if (!preg_match(self::REG_SETTING_GROUP_NAME, $setting_group_name)) {
-				throw new \Exception(sprintf('"%s" is not a valid setting group name.', $setting_group_name));
+				throw new RuntimeException(sprintf('"%s" is not a valid setting group name.', $setting_group_name));
 			}
 		}
 

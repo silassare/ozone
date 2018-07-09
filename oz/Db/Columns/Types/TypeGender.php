@@ -18,11 +18,14 @@
 	{
 		/**
 		 * TypeGender constructor.
+		 *
+		 * {@inheritdoc}
 		 */
 		public function __construct() { parent::__construct(1, 30); }
 
 		/**
 		 * {@inheritdoc}
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public function validate($value, $column_name, $table_name)
 		{

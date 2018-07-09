@@ -42,6 +42,9 @@
 
 		/**
 		 * DbManager constructor.
+		 *
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		protected function __construct()
 		{
@@ -54,6 +57,8 @@
 		 * Gets instance.
 		 *
 		 * @return \OZONE\OZ\Core\DbManager
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getInstance()
 		{
@@ -66,6 +71,10 @@
 
 		/**
 		 * Init OZone project database.
+		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public static function init()
 		{
@@ -115,6 +124,8 @@
 		 * Returns a new query builder instance.
 		 *
 		 * @return \Gobl\DBAL\QueryBuilder
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function queryBuilder()
 		{
@@ -125,6 +136,8 @@
 		 * Returns the database folder structure of the current project.
 		 *
 		 * @return array
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public static function getProjectDbDirectoryStructure()
 		{

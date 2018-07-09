@@ -37,6 +37,8 @@
 		 * @param string $to            the destination directory
 		 *
 		 * @return bool|\OZONE\OZ\Db\OZFile file object when successful, false otherwise
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \Exception
 		 */
 		public function moveUploadedFile(array $uploaded_file, $to)
 		{

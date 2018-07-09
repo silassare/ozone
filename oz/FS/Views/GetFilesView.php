@@ -33,6 +33,11 @@
 
 		/**
 		 * {@inheritdoc}
+		 *
+		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\NotFoundException
 		 */
 		public function serve()
 		{

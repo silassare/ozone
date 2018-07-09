@@ -10,7 +10,7 @@
 
 	namespace OZONE\OZ\Authenticator\Services;
 
-	use OZONE\OZ\Authenticator\TokenUriHelper;
+	use OZONE\OZ\Authenticator\Authenticator;
 	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\BaseService;
 	use OZONE\OZ\Core\URIHelper;
@@ -38,7 +38,11 @@
 		/**
 		 * {@inheritdoc}
 		 *
+		 * @param array $request
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 * @throws \OZONE\OZ\Exceptions\NotFoundException
+		 * @throws \Exception
 		 */
 		public function execute(array $request = [])
 		{
@@ -48,6 +52,22 @@
 
 			Assert::assertForm($request, ['label', 'token'], new NotFoundException());
 
-			(new TokenUriHelper())->validate($request['label'], $request['token']);
+			$name       = "mail_validator";
+			$email      = "sample@mail.com";
+			$auth_obj   = new Authenticator($name, $email);
+			$auth_label = $request['label'];
+			$auth_token = $request['token'];
+			$valid      = false;
+
+			if ($auth_obj->canUseLabel($auth_label)) {
+				$auth_obj->setLabel($auth_label);
+				$valid = $auth_obj->validateToken($auth_token);
+			}
+
+			if ($valid){
+				// do something good here or inform, redirect user
+			} else {
+				throw new NotFoundException();
+			}
 		}
 	}

@@ -19,6 +19,8 @@
 		 *
 		 * @param string                 $name command name.
 		 * @param \OZONE\OZ\Cli\OZoneCli $cli  cli object to use.
+		 *
+		 * @throws \Kli\Exceptions\KliException
 		 */
 		final public function __construct($name, OZoneCli $cli)
 		{

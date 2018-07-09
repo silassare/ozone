@@ -29,7 +29,10 @@
 		 * @param $request
 		 *
 		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 * @throws \OZONE\OZ\Exceptions\NotFoundException
+		 * @throws \Exception
 		 */
 		public static function serveFile($request)
 		{
@@ -122,6 +125,7 @@
 		 * @param string $picid the file picture file id
 		 *
 		 * @return bool
+		 * @throws \Exception
 		 */
 		private static function isLastUserPic($picid)
 		{

@@ -59,11 +59,11 @@
 		/**
 		 * Authenticator constructor.
 		 *
-		 * @param string|null $name      The authentication process name.
-		 * @param string      $for_value The value to authenticate : email/phone number etc.
-		 * @param array       $options   Options
+		 * @param string $name      The authentication process name.
+		 * @param string $for_value The value to authenticate : email/phone number etc.
+		 * @param array  $options   Options
 		 */
-		function __construct($name = null, $for_value, array $options = [])
+		function __construct($name, $for_value, array $options = [])
 		{
 			if (empty($name)) {
 				$this->label = Hasher::genRandomHash(32);
@@ -226,6 +226,8 @@
 		 * @param int $code the code value
 		 *
 		 * @return bool            true when successful, false otherwise
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function validateCode($code)
 		{
@@ -271,6 +273,7 @@
 		 * @param string $token the token value
 		 *
 		 * @return bool                true when successful, false otherwise
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 */
 		public function validateToken($token)
 		{
@@ -321,6 +324,7 @@
 		 * Cancel the authentication process.
 		 *
 		 * @return int
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 */
 		public function cancel()
 		{

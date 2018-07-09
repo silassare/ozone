@@ -70,6 +70,7 @@
 		 * @param array  $data     data to inject in template.
 		 *
 		 * @return string            the template result output.
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function compute($template, array $data)
 		{
@@ -91,6 +92,7 @@
 		 *
 		 * @return string            the template file path.
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException    when template file does not exists.
+		 * @throws \Exception
 		 */
 		public static function localize($template)
 		{

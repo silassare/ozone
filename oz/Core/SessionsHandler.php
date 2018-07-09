@@ -99,6 +99,8 @@
 
 		/**
 		 * Restart the session.
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function restart()
 		{
@@ -114,6 +116,8 @@
 
 		/**
 		 * Register this session handler
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		private static function register()
 		{
@@ -198,6 +202,8 @@
 		 * Useful when you have some foreign key constraint on session_id.
 		 *
 		 * @return string the active session id
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function persistActiveSession()
 		{
@@ -215,6 +221,8 @@
 
 		/**
 		 * Regenerate new session id.
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		private static function setNewSessionId()
 		{
@@ -235,6 +243,7 @@
 		 * Gets cookie params to use for this request.
 		 *
 		 * @return array
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		private static function getCookieParams()
 		{
@@ -276,6 +285,8 @@
 		 * Update session cookie header.
 		 *
 		 * @param string $session_id
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		private static function updateSessionCookieHeader($session_id)
 		{
@@ -314,6 +325,9 @@
 		 * The return value (usually TRUE on success, FALSE on failure).
 		 * Note this value is returned internally to PHP for processing.
 		 * </p>
+		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public function destroy($session_id)
 		{
@@ -346,6 +360,8 @@
 		 * The return value (usually TRUE on success, FALSE on failure).
 		 * Note this value is returned internally to PHP for processing.
 		 * </p>
+		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 */
 		public function gc($maxlifetime)
 		{
@@ -419,6 +435,10 @@
 		 * The return value (usually TRUE on success, FALSE on failure).
 		 * Note this value is returned internally to PHP for processing.
 		 * </p>
+		 *
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public function write($session_id, $session_data)
 		{

@@ -65,6 +65,8 @@
 		 * Gets captcha image uri for authentication
 		 *
 		 * @return array the captcha info
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public function getCaptcha()
 		{
@@ -89,6 +91,7 @@
 		 * @param string $captcha_key the captcha image key
 		 *
 		 * @throws \OZONE\OZ\Exceptions\NotFoundException when captcha image key is not valid
+		 * @throws \Exception
 		 */
 		public static function serveCaptchaImage($captcha_key)
 		{
@@ -182,6 +185,7 @@
 		 * @param array &$fields
 		 *
 		 * @return string
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function genCaptchaURIRegExp(array &$fields)
 		{

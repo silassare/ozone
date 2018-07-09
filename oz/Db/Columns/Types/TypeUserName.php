@@ -19,6 +19,10 @@
 	{
 		/**
 		 * TypeUserName constructor.
+		 *
+		 * {@inheritdoc}
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public function __construct()
 		{
@@ -35,6 +39,7 @@
 
 		/**
 		 * {@inheritdoc}
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public function validate($value, $column_name, $table_name)
 		{

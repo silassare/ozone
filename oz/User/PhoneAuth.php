@@ -54,6 +54,7 @@
 		 * @param array $request
 		 *
 		 * @return $this
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 */
 		public function authenticate(array $request)
 		{
@@ -106,6 +107,7 @@
 		 * @param string $key
 		 *
 		 * @return mixed
+		 * @throws \Exception
 		 */
 		private function getStoredData($key = "")
 		{
@@ -119,8 +121,9 @@
 		 * @param mixed  $value
 		 *
 		 * @return $this
+		 * @throws \Exception
 		 */
-		private function setStoredData($key = "", $value)
+		private function setStoredData($key, $value)
 		{
 			$key = $this->tag . (!empty($key) ? ":{$key}" : "");
 
@@ -131,8 +134,8 @@
 
 		/**
 		 * @param array $request
-		 *
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+
+		 * @throws \Exception
 		 */
 		private function stepStart(array $request)
 		{
@@ -185,7 +188,10 @@
 		/**
 		 * @param array $request
 		 *
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\BaseException
+		 * @throws \Exception
 		 */
 		private function stepValidate(array $request)
 		{
@@ -227,6 +233,8 @@
 		 * @param \OZONE\OZ\Authenticator\Authenticator $auth_obj
 		 * @param string                                $phone
 		 * @param string                                $msg
+		 *
+		 * @throws \Exception
 		 */
 		private function sendAuthCodeResp(Authenticator $auth_obj, $phone, $msg)
 		{

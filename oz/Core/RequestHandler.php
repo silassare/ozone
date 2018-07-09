@@ -14,6 +14,7 @@
 	use OZONE\OZ\Exceptions\BaseException;
 	use OZONE\OZ\Exceptions\ForbiddenException;
 	use OZONE\OZ\Exceptions\NotFoundException;
+	use OZONE\OZ\Exceptions\RuntimeException;
 	use OZONE\OZ\OZone;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
@@ -34,6 +35,9 @@
 
 		/**
 		 * init incoming request check
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public static function initCheck()
 		{
@@ -84,6 +88,8 @@
 
 		/**
 		 * init client
+		 *
+		 * @throws \Exception
 		 */
 		private static function startSessionDefault()
 		{
@@ -110,6 +116,9 @@
 
 		/**
 		 * init client for file request
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		private static function startSessionForFile()
 		{
@@ -150,7 +159,7 @@
 		 * @param bool $required
 		 *
 		 * @return null|\OZONE\OZ\Db\OZClient
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function getCurrentClient($required = true)
 		{
@@ -160,7 +169,7 @@
 
 			if ($required) {
 				$svc_name = URIHelper::getUriService();
-				throw new \Exception("client not defined, maybe 'require_session' is set to false in your oz.services.list for the service '$svc_name'");
+				throw new RuntimeException("client not defined, maybe 'require_session' is set to false in your oz.services.list for the service '$svc_name'");
 			}
 
 			return null;
@@ -170,6 +179,9 @@
 		 * Sets required http headers
 		 *
 		 * @param null|\OZONE\OZ\Db\OZClient $client the current client
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private static function setInitialHeaders(OZClient $client = null)
 		{
@@ -252,6 +264,8 @@
 		 * Gets the current request api key
 		 *
 		 * @return string
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function getRequestApiKey()
 		{
@@ -338,6 +352,8 @@
 		 * @param string $method the http request method
 		 *
 		 * @return bool
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private static function isMethodOrRealMethod($method)
 		{
@@ -363,6 +379,8 @@
 		 * Checks if it is a PATCH request method
 		 *
 		 * @return bool
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function isPatch()
 		{
@@ -373,6 +391,8 @@
 		 * Checks if it is a PUT request method
 		 *
 		 * @return bool
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function isPut()
 		{
@@ -383,6 +403,8 @@
 		 * Checks if it is a DELETE request method
 		 *
 		 * @return bool
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function isDelete()
 		{
@@ -393,6 +415,7 @@
 		 * Checks if it is a file request for a file service
 		 *
 		 * @return bool
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function isForFile()
 		{
@@ -406,6 +429,8 @@
 		 * Checks if the requested service allow cross site request without api key
 		 *
 		 * @return bool
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function isCrossSiteAllowed()
 		{
@@ -426,6 +451,8 @@
 		 * Checks if the requested service require a session
 		 *
 		 * @return bool
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function isSessionRequired()
 		{

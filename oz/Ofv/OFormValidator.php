@@ -54,6 +54,8 @@
 		 *
 		 * @param array $form      the form to validate
 		 * @param bool  $log_error should we log error?
+		 *
+		 * @throws \Exception
 		 */
 		public function __construct(array $form, $log_error = false)
 		{

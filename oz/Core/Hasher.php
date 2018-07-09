@@ -147,6 +147,7 @@
 		 * generate session id
 		 *
 		 * @return string
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function genSessionId()
 		{
@@ -161,6 +162,7 @@
 		 * @param string $url the client url
 		 *
 		 * @return string
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function genClientId($url)
 		{
@@ -208,6 +210,7 @@
 		 * @param string|int $key the key to authenticate
 		 *
 		 * @return string
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function genAuthToken($key)
 		{

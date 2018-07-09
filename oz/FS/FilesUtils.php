@@ -58,6 +58,7 @@
 		 * @param int|string $uid the user id
 		 *
 		 * @return string
+		 * @throws \Exception
 		 */
 		public static function getUserRootDirectory($uid)
 		{
@@ -78,6 +79,7 @@
 		 * @param string $real_type   the real file mime type
 		 *
 		 * @return array the generated file info
+		 * @throws \Exception
 		 */
 		public static function genNewFileInfo($destination, $real_name, $real_type)
 		{
@@ -108,6 +110,7 @@
 		 * @param string $type the file mime type
 		 *
 		 * @return string
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getExtension($path, $type)
 		{
@@ -128,6 +131,7 @@
 		 * @param string $ext the file extension
 		 *
 		 * @return string the mime type
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function extensionToMimeType($ext)
 		{
@@ -149,6 +153,7 @@
 		 * @param string $type the file mime type
 		 *
 		 * @return string    the file extension that match to this file mime type
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function mimeTypeToExtension($type)
 		{
@@ -201,6 +206,7 @@
 		 * @param string              $destination the thumbnail destination path
 		 *
 		 * @return bool true if successful, false if fails
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function makeThumb(OZFile $file, $destination)
 		{
@@ -339,6 +345,7 @@
 		 * @param array &$fields
 		 *
 		 * @return string
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function genFileURIRegExp(array &$fields)
 		{

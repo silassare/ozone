@@ -10,8 +10,8 @@
 
 	namespace OZONE\OZ\Cli\Utils;
 
-	use Kli\Exceptions\KliInputException;
 	use OZONE\OZ\Core\DbManager;
+	use OZONE\OZ\Exceptions\RuntimeException;
 
 	final class Utils
 	{
@@ -22,7 +22,7 @@
 		 * @param bool        $required the config is required
 		 *
 		 * @return mixed|null
-		 * @throws \Kli\Exceptions\KliInputException when config is required and not found
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function loadProjectConfig($folder = null, $required = false)
 		{
@@ -39,7 +39,7 @@
 
 			if ($required) {
 				$err = 'Error: there is no ozone project in "%s". Are you in project root folder?';
-				throw new KliInputException(sprintf($err, $folder));
+				throw new RuntimeException(sprintf($err, $folder));
 			}
 
 			return null;
@@ -62,7 +62,7 @@
 		 *
 		 * @param string|null $folder the project folder
 		 *
-		 * @throws \Kli\Exceptions\KliInputException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function assertProjectFolder($folder = null)
 		{
@@ -72,7 +72,9 @@
 		/**
 		 * Assert if whether we have access to the database.
 		 *
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function assertDatabaseAccess()
 		{

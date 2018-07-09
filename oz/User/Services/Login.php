@@ -27,6 +27,7 @@
 	{
 		/**
 		 * {@inheritdoc}
+		 * @throws \Exception
 		 */
 		public function execute(array $request = [])
 		{

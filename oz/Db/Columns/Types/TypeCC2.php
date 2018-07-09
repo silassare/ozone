@@ -20,6 +20,8 @@
 
 		/**
 		 * TypeCC2 constructor.
+		 *
+		 * {@inheritdoc}
 		 */
 		public function __construct()
 		{

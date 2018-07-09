@@ -23,7 +23,7 @@
 	include_once OZ_OZONE_DIR . 'Loader' . DS . 'ClassLoader.php';
 
 	if (!OZ_OZONE_IS_CLI) {
-		echo 'This is a command line tool for OZone Framework.';
+		echo 'This is the command line tool for OZone Framework.';
 		exit(1);
 	}
 
@@ -49,6 +49,9 @@
 		 * Run the commands.
 		 *
 		 * @param array $arg
+		 *
+		 * @throws \Kli\Exceptions\KliInputException
+		 * @throws \Exception
 		 */
 		public function run(array $arg)
 		{
@@ -66,6 +69,9 @@
 
 		/**
 		 * Loads all defined commands in oz.cli settings.
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		private function loadCommands()
 		{

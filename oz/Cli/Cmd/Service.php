@@ -25,6 +25,10 @@
 	{
 		/**
 		 * {@inheritdoc}
+		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public function execute(KliAction $action, array $options, array $anonymous_options)
 		{
@@ -39,6 +43,11 @@
 		 * Generate service for a table in the database.
 		 *
 		 * @param array $options
+		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		private function generate(array $options)
 		{
@@ -74,6 +83,7 @@
 
 		/**
 		 * {@inheritdoc}
+		 * @throws \Kli\Exceptions\KliException
 		 */
 		protected function describe()
 		{

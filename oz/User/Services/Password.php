@@ -36,6 +36,14 @@
 		 */
 		private $phone_auth;
 
+		/**
+		 * @param array $request
+		 *
+		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 */
 		public function execute(array $request = [])
 		{
 			$this->phone_auth = new PhoneAuth('svc_password', true);
@@ -68,7 +76,6 @@
 		 * @param array $request
 		 *
 		 * @throws \Exception
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException

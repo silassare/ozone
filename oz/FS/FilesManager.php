@@ -10,6 +10,8 @@
 
 	namespace OZONE\OZ\FS;
 
+	use OZONE\OZ\Exceptions\RuntimeException;
+
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	class FilesManager
@@ -25,6 +27,8 @@
 		 * FilesManager constructor.
 		 *
 		 * @param string $root the directory root path
+		 *
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function __construct($root = '.')
 		{
@@ -47,6 +51,7 @@
 		 * @param string $target the path to resolve
 		 *
 		 * @return string
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function resolve($target)
 		{
@@ -60,7 +65,7 @@
 		 * @param bool   $auto_create to automatically create directory
 		 *
 		 * @return $this
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function cd($path, $auto_create = false)
 		{
@@ -68,12 +73,12 @@
 
 			if (file_exists($abs_path)) {
 				if (!is_dir($abs_path)) {
-					throw new \Exception(sprintf('"%s" is not a directory.', $abs_path));
+					throw new RuntimeException(sprintf('"%s" is not a directory.', $abs_path));
 				}
 			} elseif ($auto_create === true) {
 				$this->mkdir($abs_path);
 			} else {
-				throw new \Exception(sprintf('"%s" does not exists.', $abs_path));
+				throw new RuntimeException(sprintf('"%s" does not exists.', $abs_path));
 			}
 
 			$this->root = $abs_path;
@@ -88,7 +93,7 @@
 		 * @param string $name   the link name
 		 *
 		 * @return $this
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function ln($target, $name)
 		{
@@ -96,9 +101,9 @@
 			$abs_destination = PathUtils::resolve($this->root, $name);
 
 			if (!file_exists($abs_target)) {
-				throw new \Exception(sprintf('"%s" does not exists.', $abs_target));
+				throw new RuntimeException(sprintf('"%s" does not exists.', $abs_target));
 			} elseif (file_exists($abs_destination)) {
-				throw new \Exception(sprintf('cannot overwrite "%s".', $abs_destination));
+				throw new RuntimeException(sprintf('cannot overwrite "%s".', $abs_destination));
 			}
 
 			symlink($abs_target, $abs_destination);
@@ -113,7 +118,7 @@
 		 * @param string|null $to   the destination path
 		 *
 		 * @return $this
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function cp($from, $to = null)
 		{
@@ -125,7 +130,7 @@
 			if (file_exists($abs_from)) {
 				if (is_dir($abs_from)) {
 					if (file_exists($abs_to) AND !is_dir($abs_to)) {
-						throw new \Exception(sprintf('cannot overwrite non-directory "%s" with directory "%s".', $abs_to, $abs_from));
+						throw new RuntimeException(sprintf('cannot overwrite non-directory "%s" with directory "%s".', $abs_to, $abs_from));
 					}
 
 					$this->mkdir($abs_to);
@@ -139,7 +144,7 @@
 					copy($abs_from, $abs_to);
 				}
 			} else {
-				throw new \Exception(sprintf('"%s" does not exists.', $abs_from));
+				throw new RuntimeException(sprintf('"%s" does not exists.', $abs_from));
 			}
 
 			return $this;
@@ -153,6 +158,7 @@
 		 * @param string $mode    php file write mode
 		 *
 		 * @return $this
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function wf($path, $content = '', $mode = 'w')
 		{
@@ -172,7 +178,7 @@
 		 * @param int    $mode The mode is 0777 by default, which means the widest possible access
 		 *
 		 * @return $this
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function mkdir($path, $mode = 0777)
 		{
@@ -180,7 +186,7 @@
 
 			if (!is_dir($abs_path)) {
 				if (false === @mkdir($abs_path, $mode, true) AND !is_dir($abs_path)) {
-					throw new \Exception(sprintf('cannot create directory: "%s"', $abs_path));
+					throw new RuntimeException(sprintf('cannot create directory: "%s"', $abs_path));
 				}
 			}
 
@@ -193,6 +199,7 @@
 		 * @param string $path the file/directory path
 		 *
 		 * @return $this
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function rm($path)
 		{
@@ -293,6 +300,7 @@
 		 * @param string $path the path to check
 		 *
 		 * @return bool
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function isSelf($path)
 		{
@@ -307,6 +315,7 @@
 		 * @param string $path the path to check
 		 *
 		 * @return bool
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function isParentOf($path)
 		{

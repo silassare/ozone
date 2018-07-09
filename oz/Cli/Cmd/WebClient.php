@@ -26,6 +26,10 @@
 	{
 		/**
 		 * {@inheritdoc}
+		 *
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Kli\Exceptions\KliInputException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public function execute(KliAction $action, array $options, array $anonymous_options)
 		{
@@ -41,7 +45,10 @@
 		 *
 		 * @param array $options
 		 *
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \Kli\Exceptions\KliInputException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		private function add(array $options)
 		{
@@ -108,6 +115,7 @@
 
 		/**
 		 * {@inheritdoc}
+		 * @throws \Kli\Exceptions\KliException
 		 */
 		protected function describe()
 		{

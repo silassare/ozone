@@ -28,6 +28,8 @@
 
 		/**
 		 * TypeFile constructor.
+		 *
+		 * {@inheritdoc}
 		 */
 		public function __construct()
 		{
@@ -122,6 +124,7 @@
 
 		/**
 		 * {@inheritdoc}
+		 * @throws \Exception
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
@@ -242,6 +245,7 @@
 		 *
 		 * @return string
 		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public static function computeSingleFileUploaded($uploaded_file, $uid, $file_label, $debug)
 		{
@@ -270,6 +274,8 @@
 		 *
 		 * @return array
 		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function computeMultipleFilesUploaded($uploaded_files, $uid, $file_label, $debug)
 		{

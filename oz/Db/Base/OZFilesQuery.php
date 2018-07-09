@@ -1,10 +1,10 @@
 <?php
-	/**
-	 * Auto generated file, please don't edit.
-	 *
-	 * With: Gobl v1.0.0
-	 * Time: 1529690781
-	 */
+/**
+ * Auto generated file, please don't edit.
+ *
+ * With: Gobl v1.0.0
+ * Time: 1530471772
+ */
 
 	namespace OZONE\OZ\Db\Base;
 
@@ -37,6 +37,8 @@
 
 		/**
 		 * OZFilesQuery constructor.
+		 *
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function __construct()
 		{
@@ -57,6 +59,8 @@
 		 * @param array    $order_by order by rules
 		 *
 		 * @return \OZONE\OZ\Db\OZFilesResults
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function find($max = null, $offset = 0, array $order_by = [])
 		{
@@ -85,6 +89,7 @@
 		 * satisfy the filters are deleted.
 		 *
 		 * @return \Gobl\DBAL\QueryBuilder
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 */
 		public function delete()
 		{
@@ -111,6 +116,7 @@
 		 * @param array $set_columns new values
 		 *
 		 * @return \Gobl\DBAL\QueryBuilder
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function update(array $set_columns)
@@ -148,6 +154,7 @@
 		 *
 		 * @return \Gobl\DBAL\QueryBuilder
 		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
 		public function safeUpdate(array $old_values, array $new_values)
 		{
@@ -235,6 +242,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterById($value, $operator = Rule::OP_EQ)
 		{
@@ -248,6 +256,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterByUserId($value, $operator = Rule::OP_EQ)
 		{
@@ -261,6 +270,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterByKey($value, $operator = Rule::OP_EQ)
 		{
@@ -274,6 +284,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterByClone($value, $operator = Rule::OP_EQ)
 		{
@@ -287,6 +298,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterByOrigin($value, $operator = Rule::OP_EQ)
 		{
@@ -300,6 +312,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterBySize($value, $operator = Rule::OP_EQ)
 		{
@@ -313,6 +326,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterByType($value, $operator = Rule::OP_EQ)
 		{
@@ -326,6 +340,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterByName($value, $operator = Rule::OP_EQ)
 		{
@@ -339,6 +354,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterByLabel($value, $operator = Rule::OP_EQ)
 		{
@@ -352,6 +368,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterByPath($value, $operator = Rule::OP_EQ)
 		{
@@ -365,6 +382,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterByThumb($value, $operator = Rule::OP_EQ)
 		{
@@ -378,6 +396,7 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFilesQuery
+		 * @throws \Exception
 		 */
 		public function filterByUploadTime($value, $operator = Rule::OP_EQ)
 		{
@@ -403,6 +422,7 @@
 		 * Returns a rule that include all filters rules.
 		 *
 		 * @return \Gobl\DBAL\Rule|null
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 */
 		protected function _getFiltersRule()
 		{

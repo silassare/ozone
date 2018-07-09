@@ -28,6 +28,12 @@
 	{
 		/**
 		 * {@inheritdoc}
+		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Kli\Exceptions\KliInputException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function execute(KliAction $action, array $options, array $anonymous_options)
 		{
@@ -60,7 +66,9 @@
 		 *
 		 * @param array $options
 		 *
-		 * @throws \Kli\Exceptions\KliInputException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private function build(array $options)
 		{
@@ -95,9 +103,10 @@
 				if ($all === false AND $ns === $structure['oz_db_namespace']) {
 					continue;
 				}
+				$tables = $db->getTables($ns);
 				// we (re)generate classes only for tables
 				// in the given namespace
-				$gen->generateORMClasses($ns, $dir);
+				$gen->generateORMClasses($tables, $dir);
 			}
 
 			try {
@@ -116,17 +125,21 @@
 		 *
 		 * @param array $options
 		 *
-		 * @throws \Kli\Exceptions\KliInputException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private function jsBundle(array $options)
 		{
 			Utils::assertDatabaseAccess();
 
-			$cli = $this->getCli();
-			$dir = $options['d'];
-			$gen = ORM::getClassGenerator();
+			$cli    = $this->getCli();
+			$dir    = $options['d'];
+			$db     = DbManager::getInstance();
+			$tables = $db->getTables();
+			$gen    = ORM::getClassGenerator();
 
-			$gen->generateJSClassesVerbose(null, $dir);
+			$gen->generateJSClasses($tables, $dir);
 			$cli->writeLn("JS bundle generated in: $dir ");
 		}
 
@@ -137,7 +150,11 @@
 		 *
 		 * @param array $options
 		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \Kli\Exceptions\KliInputException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private function refresh(array $options)
 		{
@@ -167,8 +184,9 @@
 			$query = $db->generateDatabaseQuery($namespace);
 			// we (re)generate classes only for tables
 			// in the given namespace
-			$gen = ORM::getClassGenerator();
-			$gen->generateORMClasses($namespace, $dir);
+			$gen    = ORM::getClassGenerator();
+			$tables = $db->getTables($namespace);
+			$gen->generateORMClasses($tables, $dir);
 
 			try {
 				$db->multipleQueryExecute($query);
@@ -183,6 +201,11 @@
 		 * Generate database file.
 		 *
 		 * @param array $options
+		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private function generate(array $options)
 		{
@@ -209,6 +232,10 @@
 		 * Run database file.
 		 *
 		 * @param array $options
+		 *
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private function source(array $options)
 		{
@@ -239,6 +266,10 @@
 		 * Backup database.
 		 *
 		 * @param array $options
+		 *
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private function backup(array $options)
 		{
@@ -273,6 +304,8 @@
 
 		/**
 		 * {@inheritdoc}
+		 *
+		 * @throws \Kli\Exceptions\KliException
 		 */
 		protected function describe()
 		{

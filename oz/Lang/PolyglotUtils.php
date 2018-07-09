@@ -37,6 +37,7 @@
 		 * Gets available languages list or check if a given one is defined
 		 *
 		 * @return array
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getAvailableLanguages()
 		{
@@ -47,6 +48,7 @@
 		 * Gets the default language.
 		 *
 		 * @return string
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getDefaultLanguage()
 		{
@@ -57,6 +59,7 @@
 		 * Gets enabled languages list from available languages
 		 *
 		 * @return array
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getEnabledLanguages()
 		{
@@ -139,6 +142,7 @@
 		 * @param string $lang_code
 		 *
 		 * @return mixed
+		 * @throws \Exception
 		 */
 		public static function parseText($lang_key, $data, $lang_code)
 		{
@@ -203,6 +207,7 @@
 		 * for the best to use according to available languages
 		 *
 		 * @return array
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function parseBrowserLanguage()
 		{

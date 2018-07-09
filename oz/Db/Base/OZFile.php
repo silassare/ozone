@@ -1,10 +1,10 @@
 <?php
-	/**
-	 * Auto generated file, please don't edit.
-	 *
-	 * With: Gobl v1.0.0
-	 * Time: 1529690781
-	 */
+/**
+ * Auto generated file, please don't edit.
+ *
+ * With: Gobl v1.0.0
+ * Time: 1530471772
+ */
 
 	namespace OZONE\OZ\Db\Base;
 
@@ -88,6 +88,8 @@
 		 * @param bool $is_new True for new entity false for entity fetched
 		 *                     from the database, default is true.
 		 * @param bool $strict
+		 *
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function __construct($is_new = true, $strict = true)
 		{
@@ -173,6 +175,7 @@
 		 * @param string $id
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setId($id)
 		{
@@ -201,6 +204,7 @@
 		 * @param string $user_id
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setUserId($user_id)
 		{
@@ -229,6 +233,7 @@
 		 * @param string $key
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setKey($key)
 		{
@@ -257,6 +262,7 @@
 		 * @param string $clone
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setClone($clone)
 		{
@@ -285,6 +291,7 @@
 		 * @param string $origin
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setOrigin($origin)
 		{
@@ -313,6 +320,7 @@
 		 * @param string $size
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setSize($size)
 		{
@@ -341,6 +349,7 @@
 		 * @param string $type
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setType($type)
 		{
@@ -369,6 +378,7 @@
 		 * @param string $name
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setName($name)
 		{
@@ -397,6 +407,7 @@
 		 * @param string $label
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setLabel($label)
 		{
@@ -425,6 +436,7 @@
 		 * @param string $path
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setPath($path)
 		{
@@ -453,6 +465,7 @@
 		 * @param string $thumb
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setThumb($thumb)
 		{
@@ -481,6 +494,7 @@
 		 * @param string $upload_time
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setUploadTime($upload_time)
 		{
@@ -493,6 +507,7 @@
 		 * @param array $row map column name to column value
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function hydrate(array $row)
 		{
@@ -527,6 +542,7 @@
 		 * Saves modifications to database.
 		 *
 		 * @return int|string int for affected row count on update, string for last insert id
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function save()

@@ -1,10 +1,10 @@
 <?php
-	/**
-	 * Auto generated file, please don't edit.
-	 *
-	 * With: Gobl v1.0.0
-	 * Time: 1529690781
-	 */
+/**
+ * Auto generated file, please don't edit.
+ *
+ * With: Gobl v1.0.0
+ * Time: 1530471772
+ */
 
 	namespace OZONE\OZ\Db\Base;
 
@@ -87,6 +87,8 @@
 		 * @param bool $is_new True for new entity false for entity fetched
 		 *                     from the database, default is true.
 		 * @param bool $strict
+		 *
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function __construct($is_new = true, $strict = true)
 		{
@@ -169,6 +171,7 @@
 		 * @param string $id
 		 *
 		 * @return \OZONE\OZ\Db\OZSession
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setId($id)
 		{
@@ -197,6 +200,7 @@
 		 * @param string $client_api_key
 		 *
 		 * @return \OZONE\OZ\Db\OZSession
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setClientApiKey($client_api_key)
 		{
@@ -225,6 +229,7 @@
 		 * @param string $user_id
 		 *
 		 * @return \OZONE\OZ\Db\OZSession
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setUserId($user_id)
 		{
@@ -253,6 +258,7 @@
 		 * @param string $token
 		 *
 		 * @return \OZONE\OZ\Db\OZSession
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setToken($token)
 		{
@@ -281,6 +287,7 @@
 		 * @param string $data
 		 *
 		 * @return \OZONE\OZ\Db\OZSession
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setData($data)
 		{
@@ -309,6 +316,7 @@
 		 * @param string $expire
 		 *
 		 * @return \OZONE\OZ\Db\OZSession
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setExpire($expire)
 		{
@@ -337,6 +345,7 @@
 		 * @param string $last_seen
 		 *
 		 * @return \OZONE\OZ\Db\OZSession
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function setLastSeen($last_seen)
 		{
@@ -349,6 +358,7 @@
 		 * @param array $row map column name to column value
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZSession
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function hydrate(array $row)
 		{
@@ -383,6 +393,7 @@
 		 * Saves modifications to database.
 		 *
 		 * @return int|string int for affected row count on update, string for last insert id
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function save()

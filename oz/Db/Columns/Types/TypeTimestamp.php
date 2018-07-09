@@ -19,6 +19,8 @@
 
 		/**
 		 * TypeTimestamp constructor.
+		 *
+		 * {@inheritdoc}
 		 */
 		public function __construct()
 		{

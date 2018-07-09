@@ -38,6 +38,14 @@
 		 */
 		private $phone_auth;
 
+		/**
+		 * @param array $request
+		 *
+		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 */
 		public function executeSub(array $request = [])
 		{
 			$this->phone_auth = new PhoneAuth('svc_sign_up', false);
@@ -68,6 +76,12 @@
 		 * Executes the service.
 		 *
 		 * @param array $request the request parameters
+		 *
+		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFieldException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
 		public function execute(array $request = [])
 		{
@@ -120,7 +134,6 @@
 		 * @throws \Exception
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
 		private function register(array $request)

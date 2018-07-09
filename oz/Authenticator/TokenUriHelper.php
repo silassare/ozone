@@ -36,6 +36,7 @@
 		 * Gets token url for authentication
 		 *
 		 * @return array the token url info
+		 * @throws \Exception
 		 */
 		public function getTokenUrl()
 		{

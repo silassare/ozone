@@ -22,6 +22,9 @@
 		 * @param mixed $uid The user id
 		 *
 		 * @return bool
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
 		public static function isAdmin($uid)
 		{

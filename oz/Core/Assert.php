@@ -27,13 +27,13 @@
 		 * assert if the request method is authorized
 		 *
 		 * @param array                  $required_methods the required methods
-		 * @param \Exception|string|null $msg              the error message
-		 * @param mixed                  $data             the error data
+		 * @param \Exception|string|null $error_msg        the error message
+		 * @param mixed                  $error_data       the error data
 		 *
 		 * @throws \OZONE\OZ\Exceptions\MethodNotAllowedException
 		 * @throws string
 		 */
-		public static function assertSafeRequestMethod($required_methods, $msg = 'OZ_ERROR_METHOD_NOT_ALLOWED', $data = null)
+		public static function assertSafeRequestMethod($required_methods, $error_msg = 'OZ_ERROR_METHOD_NOT_ALLOWED', $error_data = null)
 		{
 			$ok = false;
 
@@ -65,59 +65,61 @@
 			}
 
 			if ($ok === false) {
-				if (!self::isException($msg)) {
-					$msg = new MethodNotAllowedException($msg, $data);
+				if (!self::isException($error_msg)) {
+					$error_msg = new MethodNotAllowedException($error_msg, $error_data);
 				}
 
-				throw $msg;
+				throw $error_msg;
 			}
 		}
 
 		/**
 		 * assert if the current user is verified
 		 *
-		 * @param \Exception|string|null $msg  the error message
-		 * @param mixed                  $data the error data
+		 * @param \Exception|string|null $error_msg  the error message
+		 * @param mixed                  $error_data the error data
 		 *
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 * @throws string
 		 */
-		public static function assertUserVerified($msg = 'OZ_ERROR_YOU_MUST_LOGIN', $data = null)
+		public static function assertUserVerified($error_msg = 'OZ_ERROR_YOU_MUST_LOGIN', $error_data = null)
 		{
 			if (!UsersUtils::userVerified()) {
-				if (!self::isException($msg)) {
-					$msg = new UnverifiedUserException($msg, $data);
+				if (!self::isException($error_msg)) {
+					$error_msg = new UnverifiedUserException($error_msg, $error_data);
 				}
 
-				throw $msg;
+				throw $error_msg;
 			}
 		}
 
 		/**
 		 * assert if the current user is a verified admin
 		 *
-		 * @param \Exception|string|null $msg  the error message
-		 * @param mixed                  $data the error data
+		 * @param \Exception|string|null $error_msg  the error message
+		 * @param mixed                  $error_data the error data
 		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
-		public static function assertIsAdmin($msg = 'OZ_ERROR_YOU_ARE_NOT_ADMIN', $data = null)
+		public static function assertIsAdmin($error_msg = 'OZ_ERROR_YOU_ARE_NOT_ADMIN', $error_data = null)
 		{
 			if (!UsersUtils::userVerified()) {
-				if (!self::isException($msg)) {
-					$msg = new UnverifiedUserException($msg, $data);
+				if (!self::isException($error_msg)) {
+					$error_msg = new UnverifiedUserException($error_msg, $error_data);
 				}
 
-				throw $msg;
+				throw $error_msg;
 			}
 
 			if (!AdminUtils::isAdmin(UsersUtils::getCurrentUserId())) {
-				if (!self::isException($msg)) {
-					$msg = new ForbiddenException($msg, $data);
+				if (!self::isException($error_msg)) {
+					$error_msg = new ForbiddenException($error_msg, $error_data);
 				}
 
-				throw $msg;
+				throw $error_msg;
 			}
 		}
 
@@ -125,20 +127,20 @@
 		 * assert if the result of a given expression is evaluated to true
 		 *
 		 * @param mixed                  $expression the expression
-		 * @param \Exception|string|null $msg        the error message
-		 * @param mixed                  $data       the error data
+		 * @param \Exception|string|null $error_msg  the error message
+		 * @param mixed                  $error_data the error data
 		 *
 		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 * @throws string
 		 */
-		public static function assertAuthorizeAction($expression, $msg = 'OZ_ERROR_NOT_ALLOWED', $data = null)
+		public static function assertAuthorizeAction($expression, $error_msg = 'OZ_ERROR_NOT_ALLOWED', $error_data = null)
 		{
 			if (!$expression) {
-				if (!self::isException($msg)) {
-					$msg = new UnauthorizedActionException($msg, $data);
+				if (!self::isException($error_msg)) {
+					$error_msg = new UnauthorizedActionException($error_msg, $error_data);
 				}
 
-				throw $msg;
+				throw $error_msg;
 			}
 		}
 
@@ -159,13 +161,13 @@
 		 *
 		 * @param mixed                  $form            the form to be checked
 		 * @param array                  $required_fields the required fields
-		 * @param \Exception|string|null $msg             the error message
-		 * @param mixed                  $data            the error data
+		 * @param \Exception|string|null $error_msg       the error message
+		 * @param mixed                  $error_data      the error data
 		 *
 		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 * @throws string
 		 */
-		public static function assertForm($form = null, array $required_fields, $msg = 'OZ_ERROR_INVALID_FORM', $data = null)
+		public static function assertForm($form, array $required_fields, $error_msg = 'OZ_ERROR_INVALID_FORM', $error_data = null)
 		{
 			if (empty($form) OR !is_array($form)) {
 				$safe = false;
@@ -180,11 +182,11 @@
 			}
 
 			if (!$safe) {
-				if (!self::isException($msg)) {
-					$msg = new InvalidFormException($msg, $data);
+				if (!self::isException($error_msg)) {
+					$error_msg = new InvalidFormException($error_msg, $error_data);
 				}
 
-				throw $msg;
+				throw $error_msg;
 			}
 		}
 

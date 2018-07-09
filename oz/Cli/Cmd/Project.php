@@ -27,6 +27,8 @@
 	{
 		/**
 		 * {@inheritdoc}
+		 *
+		 * @throws \Exception
 		 */
 		public function execute(KliAction $action, array $options, array $anonymous_options)
 		{
@@ -46,6 +48,7 @@
 		 * @param array $options
 		 *
 		 * @throws \Kli\Exceptions\KliInputException
+		 * @throws \Exception
 		 */
 		private function backup(array $options)
 		{
@@ -78,6 +81,8 @@
 		 * Creates new project.
 		 *
 		 * @param array $options
+		 *
+		 * @throws \Exception
 		 */
 		private function create(array $options)
 		{
@@ -142,7 +147,7 @@
 				'OZ_CLIENT_ID_GEN_SALT'   => Hasher::genRandomString(rand(32, 64))
 			]);
 
-			$oz_keygen_salt = TemplatesUtils::compute('oz:gen/settings.warn.otpl', $inject);
+			$oz_key_gen_salt = TemplatesUtils::compute('oz:gen/settings.warn.otpl', $inject);
 
 			$inject = [
 				'oz_version_name'      => OZ_OZONE_VERSION_NAME,
@@ -163,7 +168,7 @@
 			   ->cd('oz_settings', true)
 			   ->wf('oz.config.php', $oz_config)
 			   ->wf('oz.db.php', $oz_db)
-			   ->wf('oz.keygen.salt.php', $oz_keygen_salt)
+			   ->wf('oz.keygen.salt.php', $oz_key_gen_salt)
 			   ->cd('..')
 			   ->mkdir('oz_templates')
 			   ->mkdir('oz_users_files')
@@ -182,6 +187,7 @@
 
 		/**
 		 * {@inheritdoc}
+		 * @throws \Kli\Exceptions\KliException
 		 */
 		protected function describe()
 		{

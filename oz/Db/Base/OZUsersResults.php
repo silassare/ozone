@@ -1,10 +1,10 @@
 <?php
-	/**
-	 * Auto generated file, please don't edit.
-	 *
-	 * With: Gobl v1.0.0
-	 * Time: 1529690781
-	 */
+/**
+ * Auto generated file, please don't edit.
+ *
+ * With: Gobl v1.0.0
+ * Time: 1530471772
+ */
 
 	namespace OZONE\OZ\Db\Base;
 
@@ -75,6 +75,7 @@
 		 * We lazily run query.
 		 *
 		 * @return \PDOStatement
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 */
 		protected function getStatement()
 		{
@@ -101,6 +102,8 @@
 		 * Fetches the next row in foreach mode.
 		 *
 		 * @return array|null|\OZONE\OZ\Db\OZUser
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		protected function runFetch()
 		{
@@ -117,6 +120,8 @@
 		 * @param bool $strict enable/disable strict mode on class fetch
 		 *
 		 * @return null|\OZONE\OZ\Db\OZUser
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function fetchClass($strict = true)
 		{
@@ -139,6 +144,7 @@
 		 * @param bool $strict enable/disable strict mode on class fetch
 		 *
 		 * @return \OZONE\OZ\Db\OZUser[]
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 */
 		public function fetchAllClass($strict = true)
 		{
@@ -155,6 +161,7 @@
 		 * @param int $fetch_style
 		 *
 		 * @return mixed
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 */
 		public function fetch($fetch_style = \PDO::FETCH_ASSOC)
 		{
@@ -170,6 +177,7 @@
 		 * @param int $fetch_style
 		 *
 		 * @return array
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 */
 		public function fetchAll($fetch_style = \PDO::FETCH_ASSOC)
 		{
@@ -191,6 +199,9 @@
 
 		/**
 		 * Move forward to next element.
+		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function next()
 		{
@@ -225,6 +236,7 @@
 		 * Rewind the Iterator to the first element.
 		 *
 		 * @return void Any returned value is ignored.
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function rewind()
@@ -243,6 +255,7 @@
 		 * Count elements of an object.
 		 *
 		 * @return int The custom count as an integer.
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 */
 		public function count()
 		{
@@ -262,6 +275,7 @@
 		 * Count rows without limit.
 		 *
 		 * @return int
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 */
 		public function totalCount()
 		{

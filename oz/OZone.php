@@ -108,9 +108,10 @@
 		}
 
 		/**
-		 * the ozone app running logic is here
+		 * The ozone app running logic is here
 		 *
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \ReflectionException
 		 */
 		private static function runApp()
 		{
@@ -172,6 +173,7 @@
 		 * @param string $class_name The full qualified class name to instantiate.
 		 *
 		 * @return object
+		 * @throws \ReflectionException
 		 */
 		public static function obj($class_name)
 		{
@@ -187,6 +189,7 @@
 		 *
 		 * @return array|null
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function getAllServices()
 		{
@@ -197,6 +200,8 @@
 		 * Gets all declared file services
 		 *
 		 * @return array
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function getFileServices()
 		{
@@ -216,6 +221,8 @@
 		 * Send response to client in json format
 		 *
 		 * @param \OZONE\OZ\Core\ResponseHolder $response_holder
+		 *
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function sayJson(ResponseHolder $response_holder)
 		{
@@ -245,6 +252,8 @@
 		 * Send response to client in different format
 		 *
 		 * @param \OZONE\OZ\Core\ResponseHolder $response_holder
+		 *
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function say(ResponseHolder $response_holder)
 		{

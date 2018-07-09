@@ -18,6 +18,8 @@
 	{
 		/**
 		 * TypePassword constructor.
+		 *
+		 * {@inheritdoc}
 		 */
 		public function __construct()
 		{
@@ -26,6 +28,7 @@
 
 		/**
 		 * {@inheritdoc}
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public function validate($value, $column_name, $table_name)
 		{

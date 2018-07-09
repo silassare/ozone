@@ -120,6 +120,8 @@
 		 * Remove session value for a given key.
 		 *
 		 * @param string $key the session key
+		 *
+		 * @throws \Exception
 		 */
 		public static function remove($key)
 		{

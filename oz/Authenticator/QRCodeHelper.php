@@ -42,6 +42,8 @@
 		 * Gets QRCode image uri for authentication
 		 *
 		 * @return array the qrcode info
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public function getQrCode()
 		{
@@ -62,6 +64,9 @@
 			return ['qrCodeSrc' => $qr_code_src, 'qrCodeKey' => $qr_code_key];
 		}
 
+		/**
+		 * @throws \Exception
+		 */
 		private static function cleanExpired()
 		{
 			$list = SessionsData::get('_qrcode_cfg_');
@@ -82,6 +87,7 @@
 		 * @param string $qr_code_key the captcha image key
 		 *
 		 * @throws \OZONE\OZ\Exceptions\NotFoundException when captcha image key is not valid
+		 * @throws \Exception
 		 */
 		public static function serveQrCodeImage($qr_code_key)
 		{
@@ -111,6 +117,7 @@
 		 * @param array &$fields
 		 *
 		 * @return string
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function genQRCodeURIRegExp(array &$fields)
 		{

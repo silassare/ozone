@@ -42,6 +42,7 @@
 		 * Gets language to use.
 		 *
 		 * @return String
+		 * @throws \Exception
 		 */
 		public static function getLanguage()
 		{
@@ -61,6 +62,7 @@
 		 * @param string $lang
 		 *
 		 * @return void
+		 * @throws \Exception
 		 */
 		public static function setUserLanguage($lang)
 		{
@@ -88,6 +90,7 @@
 		 * @param string $lang use a specific lang
 		 *
 		 * @return String | null    human readable text or null if none found
+		 * @throws \Exception
 		 */
 		public static function translate($key, array $data = [], $lang = null)
 		{
