@@ -1,9 +1,9 @@
 <?php
-/**
+	/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1530471772
+ * Time: 1532929917
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -15,8 +15,7 @@
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Db\OZFilesQuery as OZFilesQueryReal;
 
-	use OZONE\OZ\Db\OZUsersQuery as OZUsersQueryRealR;
-	use OZONE\OZ\Db\OZFile as OZFileRealR;
+		use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
 	use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
 
 
@@ -29,7 +28,7 @@
 	{
 		const TABLE_NAME = 'oz_files';
 
-		const COL_ID = 'file_id';
+				const COL_ID = 'file_id';
 		const COL_USER_ID = 'file_user_id';
 		const COL_KEY = 'file_key';
 		const COL_CLONE = 'file_clone';
@@ -75,11 +74,20 @@
 		 */
 		protected $strict = true;
 
+		/**
+		 * Private columns
+		 *
+		 * @var array
+		 */
+		protected static $private_columns = [
+			
+		];
 
+		
 		/**
 		 * @var \OZONE\OZ\Db\OZUser
 		 */
-		protected $r_OZ_file_owner;
+		protected $r_oz_file_owner;
 
 
 		/**
@@ -112,23 +120,26 @@
 				}
 			}
 		}
-
+		
         /**
          * ManyToOne relation between `oz_files` and `oz_users`.
          *
          * @return null|\OZONE\OZ\Db\OZUser
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Gobl\CRUD\Exceptions\CRUDException
          */
         public function getOZFileOwner()
         {
-            if (!isset($this->r_OZ_file_owner)) {
-                $m = new OZUsersQueryRealR();
+            if (!isset($this->r_oz_file_owner)) {
 
-                $m->filterById($this->getUserId());
+                $filters['user_id'] = $this->getUserId();
 
-                $this->r_OZ_file_owner = $m->find()->fetchClass();
+                $m = new OZUsersControllerRealR(true);
+                $this->r_oz_file_owner = $m->getItem($filters);
             }
 
-            return $this->r_OZ_file_owner;
+            return $this->r_oz_file_owner;
         }
 
         /**
@@ -141,18 +152,21 @@
          * @param int|bool $total    total rows without limit
          *
          * @return \OZONE\OZ\Db\OZFile[]
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Gobl\CRUD\Exceptions\CRUDException
          */
         function getOZFileClones($filters = [], $max = null, $offset = 0, $order_by = [], &$total = false)
         {
 
-            $filters[OZFileRealR::COL_CLONE] = $this->getId();
+            $filters['file_clone'] = $this->getId();
 
-            $ctrl = new OZFilesControllerRealR();
+            $ctrl = new OZFilesControllerRealR(true);
 
             return $ctrl->getAllItems($filters, $max, $offset, $order_by, $total);
         }
 
-
+		
 		/**
 		 * Getter for column `oz_files`.`id`.
 		 *
@@ -633,9 +647,9 @@
 					$value = $type->validate($value, $column->getName(), $this->table->getName());
 				} catch (TypesInvalidValueException $e) {
 					$debug = [
-						"column_name" => $column->getName(),
-						"table_name"  => $this->table->getName(),
-						"options"     => $type->getCleanOptions()
+						"field"      => $column->getName(),
+						"table_name" => $this->table->getName(),
+						"options"    => $type->getCleanOptions()
 					];
 
 					$e->setDebugData($debug);
@@ -679,8 +693,16 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public function asArray()
+		public function asArray($hide_private_column = true)
 		{
-			return $this->row;
+			$row = $this->row;
+
+			if ($hide_private_column) {
+				foreach (self::$private_columns as $key => $value) {
+					unset($row[$key]);
+				}
+			}
+
+			return $row;
 		}
 	}

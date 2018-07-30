@@ -2,7 +2,7 @@
 	/**
 	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
-	 * This file is part of the OZone package.
+	 * This file is part of OZone (O'Zone) package.
 	 *
 	 * For the full copyright and license information, please view the LICENSE
 	 * file that was distributed with this source code.
@@ -34,6 +34,8 @@
 		 * Gets the current user id.
 		 *
 		 * @return string|int
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 * @throws \Exception
 		 */
 		public static function getCurrentUserId()
 		{
@@ -47,6 +49,10 @@
 		 * Gets the current user object.
 		 *
 		 * @return \OZONE\OZ\Db\OZUser
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 * @throws \Exception
 		 */
 		public static function getCurrentUserObject()
 		{
@@ -62,6 +68,9 @@
 		 * @param int|string $uid the user id
 		 *
 		 * @return null|\OZONE\OZ\Db\OZUser
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
 		public static function getUserObject($uid)
 		{
@@ -76,6 +85,7 @@
 		 * Checks if the current user is verified.
 		 *
 		 * @return bool    true when user is verified, false otherwise
+		 * @throws \Exception
 		 */
 		public static function userVerified()
 		{
@@ -90,7 +100,9 @@
 		 * @param \OZONE\OZ\Db\OZUser $user the user object
 		 *
 		 * @return string the login token
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 * @throws \Exception
 		 */
 		public static function logUserIn(OZUser $user)
 		{
@@ -159,6 +171,8 @@
 		 * @param string $pass  the password
 		 *
 		 * @return bool    true if password is ok, false otherwise
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public static function checkUserPassWithPhone($phone, $pass)
 		{
@@ -179,6 +193,8 @@
 		 * @param string $pass  the password
 		 *
 		 * @return bool    true if password is ok, false otherwise
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public static function checkUserPassWithEmail($email, $pass)
 		{
@@ -201,6 +217,11 @@
 		 * @param string $pass  the password
 		 *
 		 * @return \OZONE\OZ\Db\OZUser|string the user object or error string
+		 * @throws \OZONE\OZ\Exceptions\BaseException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 * @throws \Exception
 		 */
 		public static function tryLogOnWithPhone($phone, $pass)
 		{
@@ -241,6 +262,11 @@
 		 * @param string $pass  the password
 		 *
 		 * @return \OZONE\OZ\Db\OZUser|string the user object or error string
+		 * @throws \OZONE\OZ\Exceptions\BaseException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 * @throws \Exception
 		 */
 		public static function tryLogOnWithEmail($email, $pass)
 		{
@@ -280,6 +306,9 @@
 		 * @param string $phone the phone number
 		 *
 		 * @return null|\OZONE\OZ\Db\OZUser
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
 		public static function searchUserWithPhone($phone)
 		{
@@ -298,6 +327,9 @@
 		 * @param string $email the email address
 		 *
 		 * @return null|\OZONE\OZ\Db\OZUser
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
 		public static function searchUserWithEmail($email)
 		{
@@ -314,6 +346,9 @@
 		 * @param string $cc2 the country code 2
 		 *
 		 * @return null|\OZONE\OZ\Db\OZCountry
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
 		public static function getCountryObject($cc2)
 		{
@@ -334,6 +369,8 @@
 		 * @param string $cc2 the country code 2
 		 *
 		 * @return bool
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public static function authorizedCountry($cc2)
 		{

@@ -2,7 +2,7 @@
 	/**
 	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
-	 * This file is part of the OZone package.
+	 * This file is part of OZone (O'Zone) package.
 	 *
 	 * For the full copyright and license information, please view the LICENSE
 	 * file that was distributed with this source code.
@@ -12,12 +12,12 @@
 
 	return [
 		'oz_users'          => [
-			'plural_name'   => 'OZ_users',
-			'singular_name' => 'OZ_user',
+			'plural_name'   => 'oz_users',
+			'singular_name' => 'oz_user',
 			'column_prefix' => 'user',
 			'relations'     => [
-				'OZ_files'   => ['type' => 'one-to-many', 'target' => 'oz_files'],
-				'OZ_country' => ['type' => 'one-to-one', 'target' => 'oz_countries', 'columns' => ['cc2' => 'cc2']]
+				'oz_files'   => ['type' => 'one-to-many', 'target' => 'oz_files'],
+				'oz_country' => ['type' => 'one-to-one', 'target' => 'oz_countries', 'columns' => ['cc2' => 'cc2']]
 			],
 			'constraints'   => [
 				['type' => 'primary_key', 'columns' => ['id']],
@@ -55,7 +55,6 @@
 					'birth_date' => true,
 					'min_age'    => SettingsManager::get('oz.ofv.const', 'OZ_USER_MIN_AGE'),
 					'max_age'    => SettingsManager::get('oz.ofv.const', 'OZ_USER_MAX_AGE')
-
 				],
 				'sign_up_time' => [
 					'type' => 'timestamp',
@@ -77,11 +76,11 @@
 			]
 		],
 		'oz_administrators' => [
-			'plural_name'   => 'OZ_administrators',
-			'singular_name' => 'OZ_admin',
+			'plural_name'   => 'oz_administrators',
+			'singular_name' => 'oz_admin',
 			'column_prefix' => 'admin',
 			'relations'     => [
-				'OZ_user' => ['type' => 'one-to-one', 'target' => 'oz_users']
+				'oz_user' => ['type' => 'one-to-one', 'target' => 'oz_users']
 			],
 			'constraints'   => [
 				['type' => 'primary_key', 'columns' => ['user_id']],
@@ -90,21 +89,22 @@
 			'columns'       => [
 				'user_id' => 'ref:oz_users.id',
 				'time'    => [
-					'type'     => 'timestamp',
+					'type' => 'timestamp',
 					'auto' => true
 				],
 				'valid'   => [
-					'type' => 'bool',
+					'type'    => 'bool',
 					'default' => true
 				]
 			]
 		],
 		'oz_clients'        => [
-			'plural_name'   => 'OZ_clients',
-			'singular_name' => 'OZ_client',
+			'private'       => true,
+			'plural_name'   => 'oz_clients',
+			'singular_name' => 'oz_client',
 			'column_prefix' => 'client',
 			'relations'     => [
-				'OZ_client_owner' => [
+				'oz_client_owner' => [
 					'type'   => 'one-to-one',
 					'target' => 'oz_users'
 				]
@@ -139,18 +139,19 @@
 					'auto' => true
 				],
 				'valid'             => [
-					'type' => 'bool',
-					'default'=> true
+					'type'    => 'bool',
+					'default' => true
 				]
 			]
 		],
 		'oz_sessions'       => [
-			'plural_name'   => 'OZ_sessions',
-			'singular_name' => 'OZ_session',
+			'private'       => true,
+			'plural_name'   => 'oz_sessions',
+			'singular_name' => 'oz_session',
 			'column_prefix' => 'session',
 			'relations'     => [
-				'OZ_client' => ['type' => 'many-to-one', 'target' => 'oz_clients'],
-				'OZ_user'   => ['type' => 'many-to-one', 'target' => 'oz_users']
+				'oz_client' => ['type' => 'many-to-one', 'target' => 'oz_clients'],
+				'oz_user'   => ['type' => 'many-to-one', 'target' => 'oz_users']
 			],
 			'constraints'   => [
 				['type' => 'primary_key', 'columns' => ['id']],
@@ -196,8 +197,9 @@
 			]
 		],
 		'oz_authenticator'  => [
-			'plural_name'   => 'OZ_authenticator',
-			'singular_name' => 'OZ_auth',
+			'private'       => true,
+			'plural_name'   => 'oz_authenticator',
+			'singular_name' => 'oz_auth',
 			'column_prefix' => 'auth',
 			'constraints'   => [['type' => 'primary_key', 'columns' => ['label', 'for']]],
 			'columns'       => [
@@ -234,8 +236,8 @@
 			]
 		],
 		'oz_countries'      => [
-			'plural_name'   => 'OZ_countries',
-			'singular_name' => 'OZ_country',
+			'plural_name'   => 'oz_countries',
+			'singular_name' => 'oz_country',
 			'column_prefix' => 'country',
 			'constraints'   => [['type' => 'primary_key', 'columns' => ['cc2']]],
 			'columns'       => [
@@ -255,18 +257,18 @@
 					'max'  => 60
 				],
 				'valid'     => [
-					'type' => 'bool',
-					'default'=> true
+					'type'    => 'bool',
+					'default' => true
 				]
 			]
 		],
 		'oz_files'          => [
-			'plural_name'   => 'OZ_files',
-			'singular_name' => 'OZ_file',
+			'plural_name'   => 'oz_files',
+			'singular_name' => 'oz_file',
 			'column_prefix' => 'file',
 			'relations'     => [
-				'OZ_file_owner'  => ['type' => 'many-to-one', 'target' => 'oz_users'],
-				'OZ_file_clones' => ['type' => 'one-to-many', 'target' => 'oz_files', 'columns' => ['id' => 'clone']]
+				'oz_file_owner'  => ['type' => 'many-to-one', 'target' => 'oz_users'],
+				'oz_file_clones' => ['type' => 'one-to-many', 'target' => 'oz_files', 'columns' => ['id' => 'clone']]
 			],
 			'constraints'   => [
 				['type' => 'primary_key', 'columns' => ['id']],

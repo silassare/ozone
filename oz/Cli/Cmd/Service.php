@@ -2,7 +2,7 @@
 	/**
 	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
-	 * This file is part of the OZone package.
+	 * This file is part of OZone (O'Zone) package.
 	 *
 	 * For the full copyright and license information, please view the LICENSE
 	 * file that was distributed with this source code.
@@ -21,8 +21,7 @@
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\FS\FilesManager;
 
-	final class Service extends Command
-	{
+	final class Service extends Command {
 		/**
 		 * {@inheritdoc}
 		 *
@@ -30,8 +29,7 @@
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
-		public function execute(KliAction $action, array $options, array $anonymous_options)
-		{
+		public function execute(KliAction $action, array $options, array $anonymous_options) {
 			switch ($action->getName()) {
 				case 'generate':
 					$this->generate($options);
@@ -49,8 +47,7 @@
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \Exception
 		 */
-		private function generate(array $options)
-		{
+		private function generate(array $options) {
 			Utils::assertDatabaseAccess();
 
 			$table_name    = $options['t'];
@@ -68,7 +65,7 @@
 
 				$config            = SettingsManager::get('oz.config');
 				$service_namespace = $config['OZ_PROJECT_NAMESPACE'] . '\\Services';
-				$generator         = new Generator($db);
+				$generator         = new Generator($db, false, false);
 				$service           = $generator->generateOZServiceClass($table, $service_namespace, $service_dir, $service_name, $service_class);
 
 				SettingsManager::setKey('oz.services.list', $service_name, $service);
@@ -85,8 +82,7 @@
 		 * {@inheritdoc}
 		 * @throws \Kli\Exceptions\KliException
 		 */
-		protected function describe()
-		{
+		protected function describe() {
 			$this->description("Manage your project service.");
 
 			// action: generate service for a table

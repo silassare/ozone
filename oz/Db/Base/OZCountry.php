@@ -1,9 +1,9 @@
 <?php
-/**
+	/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1530471772
+ * Time: 1532929917
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -15,7 +15,7 @@
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Db\OZCountriesQuery as OZCountriesQueryReal;
 
-
+	
 
 	/**
 	 * Class OZCountry
@@ -26,7 +26,7 @@
 	{
 		const TABLE_NAME = 'oz_countries';
 
-		const COL_CC2 = 'country_cc2';
+				const COL_CC2 = 'country_cc2';
 		const COL_CODE = 'country_code';
 		const COL_NAME = 'country_name';
 		const COL_NAME_REAL = 'country_name_real';
@@ -65,7 +65,16 @@
 		 */
 		protected $strict = true;
 
+		/**
+		 * Private columns
+		 *
+		 * @var array
+		 */
+		protected static $private_columns = [
+			
+		];
 
+		
 
 		/**
 		 * OZCountry constructor.
@@ -97,8 +106,8 @@
 				}
 			}
 		}
-
-
+		
+		
 		/**
 		 * Getter for column `oz_countries`.`cc2`.
 		 *
@@ -376,9 +385,9 @@
 					$value = $type->validate($value, $column->getName(), $this->table->getName());
 				} catch (TypesInvalidValueException $e) {
 					$debug = [
-						"column_name" => $column->getName(),
-						"table_name"  => $this->table->getName(),
-						"options"     => $type->getCleanOptions()
+						"field"      => $column->getName(),
+						"table_name" => $this->table->getName(),
+						"options"    => $type->getCleanOptions()
 					];
 
 					$e->setDebugData($debug);
@@ -422,8 +431,16 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public function asArray()
+		public function asArray($hide_private_column = true)
 		{
-			return $this->row;
+			$row = $this->row;
+
+			if ($hide_private_column) {
+				foreach (self::$private_columns as $key => $value) {
+					unset($row[$key]);
+				}
+			}
+
+			return $row;
 		}
 	}

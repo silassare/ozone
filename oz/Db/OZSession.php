@@ -14,5 +14,4 @@
 
 	class OZSession extends BaseOZSession
 	{
-
 	}

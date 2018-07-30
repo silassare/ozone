@@ -1,9 +1,9 @@
 <?php
-/**
+	/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1530471772
+ * Time: 1532929917
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -15,7 +15,7 @@
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Db\OZClientsQuery as OZClientsQueryReal;
 
-	use OZONE\OZ\Db\OZUsersQuery as OZUsersQueryRealR;
+		use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
 
 
 	/**
@@ -27,7 +27,7 @@
 	{
 		const TABLE_NAME = 'oz_clients';
 
-		const COL_API_KEY = 'client_api_key';
+				const COL_API_KEY = 'client_api_key';
 		const COL_USER_ID = 'client_user_id';
 		const COL_URL = 'client_url';
 		const COL_SESSION_LIFE_TIME = 'client_session_life_time';
@@ -68,11 +68,20 @@
 		 */
 		protected $strict = true;
 
+		/**
+		 * Private columns
+		 *
+		 * @var array
+		 */
+		protected static $private_columns = [
+			
+		];
 
+		
 		/**
 		 * @var \OZONE\OZ\Db\OZUser
 		 */
-		protected $r_OZ_client_owner;
+		protected $r_oz_client_owner;
 
 
 		/**
@@ -105,26 +114,29 @@
 				}
 			}
 		}
-
+		
         /**
          * OneToOne relation between `oz_clients` and `oz_users`.
          *
          * @return null|\OZONE\OZ\Db\OZUser
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Gobl\CRUD\Exceptions\CRUDException
          */
         public function getOZClientOwner()
         {
-            if (!isset($this->r_OZ_client_owner)) {
-                $m = new OZUsersQueryRealR();
+            if (!isset($this->r_oz_client_owner)) {
 
-                $m->filterById($this->getUserId());
+                $filters['user_id'] = $this->getUserId();
 
-                $this->r_OZ_client_owner = $m->find()->fetchClass();
+                $m = new OZUsersControllerRealR(true);
+                $this->r_oz_client_owner = $m->getItem($filters);
             }
 
-            return $this->r_OZ_client_owner;
+            return $this->r_oz_client_owner;
         }
 
-
+		
 		/**
 		 * Getter for column `oz_clients`.`api_key`.
 		 *
@@ -460,9 +472,9 @@
 					$value = $type->validate($value, $column->getName(), $this->table->getName());
 				} catch (TypesInvalidValueException $e) {
 					$debug = [
-						"column_name" => $column->getName(),
-						"table_name"  => $this->table->getName(),
-						"options"     => $type->getCleanOptions()
+						"field"      => $column->getName(),
+						"table_name" => $this->table->getName(),
+						"options"    => $type->getCleanOptions()
 					];
 
 					$e->setDebugData($debug);
@@ -506,8 +518,16 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public function asArray()
+		public function asArray($hide_private_column = true)
 		{
-			return $this->row;
+			$row = $this->row;
+
+			if ($hide_private_column) {
+				foreach (self::$private_columns as $key => $value) {
+					unset($row[$key]);
+				}
+			}
+
+			return $row;
 		}
 	}

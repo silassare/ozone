@@ -1,9 +1,9 @@
 <?php
-/**
+	/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1530471772
+ * Time: 1532929917
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -15,9 +15,8 @@
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Db\OZUsersQuery as OZUsersQueryReal;
 
-	use OZONE\OZ\Db\OZFile as OZFileRealR;
-	use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
-	use OZONE\OZ\Db\OZCountriesQuery as OZCountriesQueryRealR;
+		use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
+	use OZONE\OZ\Db\OZCountriesController as OZCountriesControllerRealR;
 
 
 	/**
@@ -29,7 +28,7 @@
 	{
 		const TABLE_NAME = 'oz_users';
 
-		const COL_ID = 'user_id';
+				const COL_ID = 'user_id';
 		const COL_PHONE = 'user_phone';
 		const COL_EMAIL = 'user_email';
 		const COL_PASS = 'user_pass';
@@ -74,11 +73,20 @@
 		 */
 		protected $strict = true;
 
+		/**
+		 * Private columns
+		 *
+		 * @var array
+		 */
+		protected static $private_columns = [
+			
+		];
 
+		
 		/**
 		 * @var \OZONE\OZ\Db\OZCountry
 		 */
-		protected $r_OZ_country;
+		protected $r_oz_country;
 
 
 		/**
@@ -111,7 +119,7 @@
 				}
 			}
 		}
-
+		
         /**
          * OneToMany relation between `oz_users` and `oz_files`.
          *
@@ -122,13 +130,16 @@
          * @param int|bool $total    total rows without limit
          *
          * @return \OZONE\OZ\Db\OZFile[]
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Gobl\CRUD\Exceptions\CRUDException
          */
         function getOZFiles($filters = [], $max = null, $offset = 0, $order_by = [], &$total = false)
         {
 
-            $filters[OZFileRealR::COL_USER_ID] = $this->getId();
+            $filters['file_user_id'] = $this->getId();
 
-            $ctrl = new OZFilesControllerRealR();
+            $ctrl = new OZFilesControllerRealR(true);
 
             return $ctrl->getAllItems($filters, $max, $offset, $order_by, $total);
         }
@@ -137,21 +148,24 @@
          * OneToOne relation between `oz_users` and `oz_countries`.
          *
          * @return null|\OZONE\OZ\Db\OZCountry
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Gobl\CRUD\Exceptions\CRUDException
          */
         public function getOZCountry()
         {
-            if (!isset($this->r_OZ_country)) {
-                $m = new OZCountriesQueryRealR();
+            if (!isset($this->r_oz_country)) {
 
-                $m->filterByCc2($this->getCc2());
+                $filters['country_cc2'] = $this->getCc2();
 
-                $this->r_OZ_country = $m->find()->fetchClass();
+                $m = new OZCountriesControllerRealR(true);
+                $this->r_oz_country = $m->getItem($filters);
             }
 
-            return $this->r_OZ_country;
+            return $this->r_oz_country;
         }
 
-
+		
 		/**
 		 * Getter for column `oz_users`.`id`.
 		 *
@@ -603,9 +617,9 @@
 					$value = $type->validate($value, $column->getName(), $this->table->getName());
 				} catch (TypesInvalidValueException $e) {
 					$debug = [
-						"column_name" => $column->getName(),
-						"table_name"  => $this->table->getName(),
-						"options"     => $type->getCleanOptions()
+						"field"      => $column->getName(),
+						"table_name" => $this->table->getName(),
+						"options"    => $type->getCleanOptions()
 					];
 
 					$e->setDebugData($debug);
@@ -649,8 +663,16 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public function asArray()
+		public function asArray($hide_private_column = true)
 		{
-			return $this->row;
+			$row = $this->row;
+
+			if ($hide_private_column) {
+				foreach (self::$private_columns as $key => $value) {
+					unset($row[$key]);
+				}
+			}
+
+			return $row;
 		}
 	}

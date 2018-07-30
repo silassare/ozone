@@ -1,9 +1,9 @@
 <?php
-/**
+	/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1530471772
+ * Time: 1532929917
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -15,8 +15,8 @@
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Db\OZSessionsQuery as OZSessionsQueryReal;
 
-	use OZONE\OZ\Db\OZClientsQuery as OZClientsQueryRealR;
-	use OZONE\OZ\Db\OZUsersQuery as OZUsersQueryRealR;
+		use OZONE\OZ\Db\OZClientsController as OZClientsControllerRealR;
+	use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
 
 
 	/**
@@ -28,7 +28,7 @@
 	{
 		const TABLE_NAME = 'oz_sessions';
 
-		const COL_ID = 'session_id';
+				const COL_ID = 'session_id';
 		const COL_CLIENT_API_KEY = 'session_client_api_key';
 		const COL_USER_ID = 'session_user_id';
 		const COL_TOKEN = 'session_token';
@@ -69,16 +69,25 @@
 		 */
 		protected $strict = true;
 
+		/**
+		 * Private columns
+		 *
+		 * @var array
+		 */
+		protected static $private_columns = [
+			
+		];
 
+		
 		/**
 		 * @var \OZONE\OZ\Db\OZClient
 		 */
-		protected $r_OZ_client;
+		protected $r_oz_client;
 
 		/**
 		 * @var \OZONE\OZ\Db\OZUser
 		 */
-		protected $r_OZ_user;
+		protected $r_oz_user;
 
 
 		/**
@@ -111,44 +120,50 @@
 				}
 			}
 		}
-
+		
         /**
          * ManyToOne relation between `oz_sessions` and `oz_clients`.
          *
          * @return null|\OZONE\OZ\Db\OZClient
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Gobl\CRUD\Exceptions\CRUDException
          */
         public function getOZClient()
         {
-            if (!isset($this->r_OZ_client)) {
-                $m = new OZClientsQueryRealR();
+            if (!isset($this->r_oz_client)) {
 
-                $m->filterByApiKey($this->getClientApiKey());
+                $filters['client_api_key'] = $this->getClientApiKey();
 
-                $this->r_OZ_client = $m->find()->fetchClass();
+                $m = new OZClientsControllerRealR(true);
+                $this->r_oz_client = $m->getItem($filters);
             }
 
-            return $this->r_OZ_client;
+            return $this->r_oz_client;
         }
 
         /**
          * ManyToOne relation between `oz_sessions` and `oz_users`.
          *
          * @return null|\OZONE\OZ\Db\OZUser
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Gobl\CRUD\Exceptions\CRUDException
          */
         public function getOZUser()
         {
-            if (!isset($this->r_OZ_user)) {
-                $m = new OZUsersQueryRealR();
+            if (!isset($this->r_oz_user)) {
 
-                $m->filterById($this->getUserId());
+                $filters['user_id'] = $this->getUserId();
 
-                $this->r_OZ_user = $m->find()->fetchClass();
+                $m = new OZUsersControllerRealR(true);
+                $this->r_oz_user = $m->getItem($filters);
             }
 
-            return $this->r_OZ_user;
+            return $this->r_oz_user;
         }
 
-
+		
 		/**
 		 * Getter for column `oz_sessions`.`id`.
 		 *
@@ -484,9 +499,9 @@
 					$value = $type->validate($value, $column->getName(), $this->table->getName());
 				} catch (TypesInvalidValueException $e) {
 					$debug = [
-						"column_name" => $column->getName(),
-						"table_name"  => $this->table->getName(),
-						"options"     => $type->getCleanOptions()
+						"field"      => $column->getName(),
+						"table_name" => $this->table->getName(),
+						"options"    => $type->getCleanOptions()
 					];
 
 					$e->setDebugData($debug);
@@ -530,8 +545,16 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public function asArray()
+		public function asArray($hide_private_column = true)
 		{
-			return $this->row;
+			$row = $this->row;
+
+			if ($hide_private_column) {
+				foreach (self::$private_columns as $key => $value) {
+					unset($row[$key]);
+				}
+			}
+
+			return $row;
 		}
 	}

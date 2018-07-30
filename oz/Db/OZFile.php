@@ -51,6 +51,7 @@
 
 		/**
 		 * {@inheritdoc}
+		 * @throws \Exception
 		 */
 		public function save()
 		{
@@ -124,6 +125,9 @@
 		 * Gets ozone file in OML text style.
 		 *
 		 * @return string the file OML
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
 		public function toOMLString()
 		{

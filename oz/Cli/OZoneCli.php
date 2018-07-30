@@ -2,7 +2,7 @@
 	/**
 	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
-	 * This file is part of the OZone package.
+	 * This file is part of OZone (O'Zone) package.
 	 *
 	 * For the full copyright and license information, please view the LICENSE
 	 * file that was distributed with this source code.
@@ -33,6 +33,7 @@
 	ClassLoader::addNamespace('\Gobl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'gobl' . DS . 'src');
 
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
+	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_gobl_plugins.php';
 
 	final class OZoneCli extends Kli
 	{
@@ -50,7 +51,6 @@
 		 *
 		 * @param array $arg
 		 *
-		 * @throws \Kli\Exceptions\KliInputException
 		 * @throws \Exception
 		 */
 		public function run(array $arg)

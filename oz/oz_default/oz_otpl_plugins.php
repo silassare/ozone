@@ -2,7 +2,7 @@
 	/**
 	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
-	 * This file is part of the OZone package.
+	 * This file is part of OZone (O'Zone) package.
 	 *
 	 * For the full copyright and license information, please view the LICENSE
 	 * file that was distributed with this source code.
@@ -19,6 +19,7 @@
 		 *
 		 * @return int|mixed|string
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		function oz_file_link($file_id, $file_key = "", $file_quality = 0, $def = "")
 		{

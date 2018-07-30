@@ -2,7 +2,7 @@
 	/**
 	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
-	 * This file is part of the OZone package.
+	 * This file is part of OZone (O'Zone) package.
 	 *
 	 * For the full copyright and license information, please view the LICENSE
 	 * file that was distributed with this source code.
@@ -198,7 +198,7 @@
 		public static function showCustomErrorPage(BaseException $e)
 		{
 			// TODO: find last url or go home
-			$back_url             = SettingsManager::get('oz.config', 'OZ_APP_MAIN_URL');
+			$back_url             = SettingsManager::get('oz.config', 'OZ_API_MAIN_URL');
 			$http_response_header = $e->getHeaderString();
 			$err_title            = str_replace('HTTP/1.1 ', '', $http_response_header);
 			$err_code             = $e->getCode();

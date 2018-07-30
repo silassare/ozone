@@ -2,7 +2,7 @@
 	/**
 	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
-	 * This file is part of the OZone package.
+	 * This file is part of OZone (O'Zone) package.
 	 *
 	 * For the full copyright and license information, please view the LICENSE
 	 * file that was distributed with this source code.
@@ -10,7 +10,7 @@
 
 	namespace OZONE\OZ\Cli\Cmd;
 
-	use Gobl\ORM\ORM;
+	use Gobl\ORM\Generators\Generator;
 	use Kli\Exceptions\KliInputException;
 	use Kli\KliAction;
 	use Kli\KliOption;
@@ -44,8 +44,8 @@
 				case 'build':
 					$this->build($options);
 					break;
-				case 'js-bundle':
-					$this->jsBundle($options);
+				case 'ts-bundle':
+					$this->tsBundle($options);
 					break;
 				case 'generate':
 					$this->generate($options);
@@ -97,7 +97,7 @@
 				$map[$ns] = $structure['project_db_folder'];
 			}
 
-			$gen = ORM::getClassGenerator();
+			$gen = new Generator($db, false, false);
 
 			foreach ($map as $ns => $dir) {
 				if ($all === false AND $ns === $structure['oz_db_namespace']) {
@@ -112,7 +112,7 @@
 			try {
 				$query = $db->generateDatabaseQuery();
 				// oz_logger($query);
-				$db->multipleQueryExecute($query);
+				//$db->multipleQueryExecute($query);
 				$cli->writeLn('Success: database build done.');
 			} catch (\Exception $e) {
 				oz_logger($e);
@@ -121,7 +121,7 @@
 		}
 
 		/**
-		 * Creates entities js classes bundle.
+		 * Creates entities TypeScript bundle.
 		 *
 		 * @param array $options
 		 *
@@ -129,7 +129,7 @@
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
-		private function jsBundle(array $options)
+		private function tsBundle(array $options)
 		{
 			Utils::assertDatabaseAccess();
 
@@ -137,10 +137,10 @@
 			$dir    = $options['d'];
 			$db     = DbManager::getInstance();
 			$tables = $db->getTables();
-			$gen    = ORM::getClassGenerator();
+			$gen    = new Generator($db, true, true);
 
-			$gen->generateJSClasses($tables, $dir);
-			$cli->writeLn("JS bundle generated in: $dir ");
+			$gen->generateTSClasses($tables, $dir);
+			$cli->writeLn("TypeScript entities bundle generated in: $dir");
 		}
 
 		/**
@@ -184,7 +184,7 @@
 			$query = $db->generateDatabaseQuery($namespace);
 			// we (re)generate classes only for tables
 			// in the given namespace
-			$gen    = ORM::getClassGenerator();
+			$gen    = new Generator($db, false, false);
 			$tables = $db->getTables($namespace);
 			$gen->generateORMClasses($tables, $dir);
 
@@ -315,9 +315,9 @@
 			$build = new KliAction('build');
 			$build->description('To build the entire database and generate required classes.');
 
-			// action: js bundle
-			$js_bundle = new KliAction('js-bundle');
-			$js_bundle->description('To generate entities classes for use in JS.');
+			// action: ts bundle
+			$ts_bundle = new KliAction('ts-bundle');
+			$ts_bundle->description('To generate entities classes for TypeScript.');
 
 			// action: generate database query
 			$generate = new KliAction('generate');
@@ -368,13 +368,13 @@
 			  ->description('The destination directory of the database file.');
 
 			// option: -d alias --dir
-			$js_d = new KliOption('d');
-			$js_d->alias('dir')
-				 ->offsets(1)
-				 ->type((new KliTypePath)->dir()
-										 ->writable())
-				 ->def('.')
-				 ->description('The destination directory of the js bundle file.');
+			$b_d = new KliOption('d');
+			$b_d->alias('dir')
+				->offsets(1)
+				->type((new KliTypePath)->dir()
+										->writable())
+				->def('.')
+				->description('The destination directory of the bundle file.');
 
 			$f = new KliOption('f');
 			$f->alias('file')
@@ -386,9 +386,9 @@
 			$refresh->addOption($rn, $rd);
 			$generate->addOption($d);
 			$backup->addOption($d);
-			$js_bundle->addOption($js_d);
+			$ts_bundle->addOption($b_d);
 			$source->addOption($f);
 
-			$this->addAction($build, $js_bundle, $refresh, $generate, $backup, $source);
+			$this->addAction($build, $ts_bundle, $refresh, $generate, $backup, $source);
 		}
 	}

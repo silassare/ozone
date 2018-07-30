@@ -2,7 +2,7 @@
 	/**
 	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
-	 * This file is part of the OZone package.
+	 * This file is part of OZone (O'Zone) package.
 	 *
 	 * For the full copyright and license information, please view the LICENSE
 	 * file that was distributed with this source code.
@@ -62,7 +62,7 @@
 			// so don't be 100% sure, lol
 			if (!self::isCrossSiteAllowed()) {
 				$origin   = self::getRequestOriginOrReferer();
-				$main_url = SettingsManager::get('oz.config', 'OZ_APP_MAIN_URL');
+				$main_url = SettingsManager::get('oz.config', 'OZ_API_MAIN_URL');
 
 				if (!($origin === $main_url)) {
 					self::attackProcedure(new ForbiddenException('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED', ['origin' => $origin]));
@@ -126,7 +126,7 @@
 
 			$client   = null;
 			$sid      = null;
-			$sid_name = SettingsManager::get('oz.config', 'OZ_APP_SESSION_ID_NAME');
+			$sid_name = SettingsManager::get('oz.config', 'OZ_API_SESSION_ID_NAME');
 
 			if (isset($_COOKIE[$sid_name])) {
 				$sid = $_COOKIE[$sid_name];
@@ -186,7 +186,7 @@
 		private static function setInitialHeaders(OZClient $client = null)
 		{
 			$rule        = SettingsManager::get('oz.clients', 'OZ_CORS_ALLOW_RULE');
-			$default_url = SettingsManager::get('oz.config', 'OZ_APP_MAIN_URL');
+			$default_url = SettingsManager::get('oz.config', 'OZ_API_MAIN_URL');
 			$life_time   = 86400;
 
 			if (!empty($client)) {
@@ -213,11 +213,11 @@
 			header("X-Frame-Options: DENY");
 
 			if (self::isOptions()) {
-				$allow_real_method_header = SettingsManager::get('oz.config', 'OZ_APP_ALLOW_REAL_METHOD_HEADER');
-				$custom_headers[]         = sprintf('x-%s', strtolower(SettingsManager::get('oz.config', 'OZ_APP_API_KEY_HEADER_NAME')));
+				$allow_real_method_header = SettingsManager::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
+				$custom_headers[]         = sprintf('x-%s', strtolower(SettingsManager::get('oz.config', 'OZ_API_KEY_HEADER_NAME')));
 
 				if ($allow_real_method_header) {
-					$custom_headers[] = sprintf('x-%s', strtolower(SettingsManager::get('oz.config', 'OZ_APP_REAL_METHOD_HEADER_NAME')));
+					$custom_headers[] = sprintf('x-%s', strtolower(SettingsManager::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME')));
 				}
 
 				// enable self made headers
@@ -270,7 +270,7 @@
 		public static function getRequestApiKey()
 		{
 			$key          = '';
-			$api_key_name = SettingsManager::get('oz.config', 'OZ_APP_API_KEY_HEADER_NAME');
+			$api_key_name = SettingsManager::get('oz.config', 'OZ_API_KEY_HEADER_NAME');
 			$header_key   = sprintf('HTTP_X_%s', strtoupper(str_replace('-', '_', $api_key_name)));
 
 			// test if already verified
@@ -345,7 +345,7 @@
 		 *
 		 * For server that does not support HEAD, PATCH, PUT, DELETE...
 		 * request methods you need to make sure that
-		 * - "OZ_APP_ALLOW_REAL_METHOD_HEADER" is set to "true" in "oz.config" file
+		 * - "OZ_API_ALLOW_REAL_METHOD_HEADER" is set to "true" in "oz.config" file
 		 * - the real method header (default x-ozone-real-method) is set to the real http method you want
 		 * - you use POST to send your request
 		 *
@@ -361,10 +361,10 @@
 				return true;
 			}
 
-			$allowed = SettingsManager::get('oz.config', 'OZ_APP_ALLOW_REAL_METHOD_HEADER');
+			$allowed = SettingsManager::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
 
 			if ($allowed) {
-				$real_method_header_name = SettingsManager::get('oz.config', 'OZ_APP_REAL_METHOD_HEADER_NAME');
+				$real_method_header_name = SettingsManager::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME');
 				$header_key              = sprintf('HTTP_X_%s', strtoupper(str_replace('-', '_', $real_method_header_name)));
 
 				if (self::isPost() AND isset($_SERVER[$header_key])) {
@@ -416,6 +416,7 @@
 		 *
 		 * @return bool
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function isForFile()
 		{

@@ -2,7 +2,7 @@
 	/**
 	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
 	 *
-	 * This file is part of the OZone package.
+	 * This file is part of OZone (O'Zone) package.
 	 *
 	 * For the full copyright and license information, please view the LICENSE
 	 * file that was distributed with this source code.
@@ -109,13 +109,13 @@
 				'OZ_PROJECT_NAMESPACE' => $namespace,
 				'OZ_PROJECT_CLASS'     => $class_name,
 				'OZ_PROJECT_PREFIX'    => $prefix,
-				'OZ_APP_DEBUG_MODE'    => 0,
-				'OZ_APP_MAIN_URL'      => 'http://localhost',
-				'OZ_APP_SESSION_ID_NAME' => 'OZONE_SID',
-				'OZ_APP_API_KEY_HEADER_NAME'   => 'ozone-api-key',
+				'OZ_DEBUG_MODE'    => 0,
+				'OZ_API_MAIN_URL'      => 'http://localhost',
+				'OZ_API_SESSION_ID_NAME' => 'OZONE_SID',
+				'OZ_API_KEY_HEADER_NAME'   => 'ozone-api-key',
 				':oz:comment:2'        => 'For server that does not support HEAD, PATCH, PUT, DELETE...',
-				'OZ_APP_ALLOW_REAL_METHOD_HEADER' => true,
-				'OZ_APP_REAL_METHOD_HEADER_NAME' => 'ozone-real-method'
+				'OZ_API_ALLOW_REAL_METHOD_HEADER' => true,
+				'OZ_API_REAL_METHOD_HEADER_NAME' => 'ozone-real-method'
 			]);
 
 			$oz_config = TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject);

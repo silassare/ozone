@@ -17,6 +17,8 @@
 	{
 		/**
 		 * {@inheritdoc}
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function save()
 		{
@@ -27,20 +29,6 @@
 				$emit_create_event = true;
 				$phone             = $this->getPhone();
 				$email             = $this->getEmail();
-
-				// if (!empty($phone)) {
-					// check if the phone is not already registered
-				// 	$phone_validator = new TypePhone();
-				// 	$phone_validator->notRegistered();
-				// 	$phone = $phone_validator->validate($phone);
-				// }
-
-				// if (!empty($email)) {
-					// check if the email is not already registered
-				// $email_validator = new TypeEmail();
-				// 	$email_validator->notRegistered();
-				// 	$email = $email_validator->validate($email);
-				// }
 
 				if (empty($phone) AND empty($email)) {
 					// Maybe "OZ_USERS_PHONE_REQUIRED" and "OZ_USERS_EMAIL_REQUIRED" are both set to "false" in "oz.users" settings file.
@@ -70,11 +58,11 @@
 		/**
 		 * {@inheritdoc}
 		 */
-		public function asArray()
+		public function asArray($hide_private_column = true)
 		{
-			$data = parent::asArray();
+			$data = parent::asArray($hide_private_column);
 
-			unset($data[OZUser::COL_PASS]);
+			$data[OZUser::COL_PASS] = "";
 
 			return $data;
 		}

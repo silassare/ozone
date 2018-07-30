@@ -1,9 +1,9 @@
 <?php
-/**
+	/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1530471772
+ * Time: 1532929917
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -122,7 +122,7 @@
 		public function update(array $set_columns)
 		{
 			if (!count($set_columns)) {
-				throw new ORMException('Empty columns, cannot update.');
+				throw new ORMException("Empty columns, can't update.");
 			}
 
 			$this->qb->update($this->table->getFullName(), $this->table_alias);
@@ -234,7 +234,7 @@
 			return $this;
 		}
 
-
+		
 		/**
 		 * Filters rows with condition on column `user_id` in the table `oz_administrators`.
 		 *
