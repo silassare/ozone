@@ -62,7 +62,7 @@
 		{
 			$data = parent::asArray($hide_private_column);
 
-			$data[OZUser::COL_PASS] = "";
+			$data[OZUser::COL_PASS] = null;
 
 			return $data;
 		}
