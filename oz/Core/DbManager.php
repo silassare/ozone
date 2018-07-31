@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Core;
 
+	use Gobl\CRUD\CRUD;
 	use Gobl\DBAL\Column;
 	use Gobl\DBAL\Db;
 	use Gobl\DBAL\Drivers\MySQL;
@@ -45,6 +46,7 @@
 		 *
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		protected function __construct()
 		{
@@ -59,6 +61,7 @@
 		 * @return \OZONE\OZ\Core\DbManager
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function getInstance()
 		{
@@ -73,8 +76,9 @@
 		 * Init OZone project database.
 		 *
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function init()
 		{
@@ -86,10 +90,13 @@
 				$columns_customs_types = SettingsManager::get('oz.db.columns.types');
 				$tables                = SettingsManager::get('oz.db.tables');
 				$tables_prefix         = SettingsManager::get('oz.db', 'OZ_DB_TABLE_PREFIX');
+				$crud_rules            = SettingsManager::get("oz.gobl.crud");
 
 				foreach ($columns_customs_types as $type => $class) {
 					Column::addCustomType($type, $class);
 				}
+
+				CRUD::loadOptions($crud_rules);
 
 				self::getInstance()
 					->addTablesFromOptions($oz_database, $structure['oz_db_namespace'], $tables_prefix)
@@ -126,6 +133,7 @@
 		 * @return \Gobl\DBAL\QueryBuilder
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function queryBuilder()
 		{
@@ -158,6 +166,7 @@
 		 *
 		 * @return \Gobl\DBAL\RDBMS
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private function initRDBMS()
 		{
@@ -190,6 +199,7 @@
 		 *
 		 * @return array
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function maskColumnsName(array $data, array $columns, array $mask_extend = null)
 		{
@@ -221,6 +231,7 @@
 		 *
 		 * @return array
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function tryRemoveColumnsNameMask(array $data)
 		{
@@ -254,6 +265,7 @@
 		 *
 		 * @return array
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function fetchAllWithMask(\PDOStatement $stm, array $columns, array $mask_extend = null, $column_as_key = null, $formatter = null)
 		{
