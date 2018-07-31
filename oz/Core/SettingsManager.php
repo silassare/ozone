@@ -177,7 +177,7 @@
 			$setting_file = OZ_APP_DIR . 'oz_settings' . DS . $setting_group_name . '.php';
 			$settings     = (isset(self::$as_loaded[$setting_file])) ? self::$as_loaded[$setting_file] : [];
 
-			$settings = $overwrite ? $data : array_merge($settings, $data);
+			$settings = $overwrite ? $data : array_replace_recursive($settings, $data);
 
 			$parts  = pathinfo($setting_file);
 			$inject = self::genExportInfo($setting_group_name, $settings);
@@ -251,7 +251,7 @@
 			if (!array_key_exists($setting_group_name, self::$settings_map)) {
 				self::$settings_map[$setting_group_name] = $data;
 			} else {
-				self::$settings_map[$setting_group_name] = array_merge(self::$settings_map[$setting_group_name], $data);
+				self::$settings_map[$setting_group_name] = array_replace_recursive(self::$settings_map[$setting_group_name], $data);
 			}
 		}
 
