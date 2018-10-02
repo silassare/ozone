@@ -112,7 +112,7 @@
 			try {
 				$query = $db->generateDatabaseQuery();
 				// oz_logger($query);
-				//$db->multipleQueryExecute($query);
+				$db->multipleQueryExecute($query);
 				$cli->writeLn('Success: database build done.');
 			} catch (\Exception $e) {
 				oz_logger($e);

@@ -61,7 +61,9 @@
 						break;
 				}
 
-				if ($ok === true) break;
+				if ($ok === true) {
+					break;
+				}
 			}
 
 			if ($ok === false) {
@@ -103,6 +105,7 @@
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 * @throws \Exception
 		 */
 		public static function assertIsAdmin($error_msg = 'OZ_ERROR_YOU_ARE_NOT_ADMIN', $error_data = null)
 		{
@@ -118,6 +121,9 @@
 				if (!self::isException($error_msg)) {
 					$error_msg = new ForbiddenException($error_msg, $error_data);
 				}
+
+				// force logout, take it serious, user try to access admin privilege
+				UsersUtils::logUserOut();
 
 				throw $error_msg;
 			}
@@ -153,7 +159,9 @@
 		 */
 		public static function assertOperationSuccess($result)
 		{
-			if (self::isException($result)) throw $result;
+			if (self::isException($result)) {
+				throw $result;
+			}
 		}
 
 		/**

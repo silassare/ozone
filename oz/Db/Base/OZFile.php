@@ -3,7 +3,7 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1533007932
+ * Time: 1538496196
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -135,7 +135,7 @@
 
                 $filters['user_id'] = $this->getUserId();
 
-                $m = new OZUsersControllerRealR(true);
+                $m = new OZUsersControllerRealR();
                 $this->r_oz_file_owner = $m->getItem($filters);
             }
 
@@ -161,7 +161,7 @@
 
             $filters['file_clone'] = $this->getId();
 
-            $ctrl = new OZFilesControllerRealR(true);
+            $ctrl = new OZFilesControllerRealR();
 
             return $ctrl->getAllItems($filters, $max, $offset, $order_by, $total);
         }

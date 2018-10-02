@@ -3,7 +3,7 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1533007932
+ * Time: 1538496195
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -139,7 +139,7 @@
 
             $filters['file_user_id'] = $this->getId();
 
-            $ctrl = new OZFilesControllerRealR(true);
+            $ctrl = new OZFilesControllerRealR();
 
             return $ctrl->getAllItems($filters, $max, $offset, $order_by, $total);
         }
@@ -158,7 +158,7 @@
 
                 $filters['country_cc2'] = $this->getCc2();
 
-                $m = new OZCountriesControllerRealR(true);
+                $m = new OZCountriesControllerRealR();
                 $this->r_oz_country = $m->getItem($filters);
             }
 

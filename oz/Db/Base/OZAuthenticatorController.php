@@ -3,7 +3,7 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1533007932
+ * Time: 1538496196
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -11,6 +11,8 @@
 	use Gobl\CRUD\CRUD;
 	use Gobl\DBAL\Rule;
 	use Gobl\ORM\Exceptions\ORMControllerFormException;
+	use Gobl\ORM\Exceptions\ORMException;
+	use Gobl\ORM\Exceptions\ORMQueryException;
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Db\OZAuth as OZAuthReal;
 	use OZONE\OZ\Db\OZAuthenticatorQuery as OZAuthenticatorQueryReal;
@@ -35,11 +37,10 @@
 		/**
 		 * OZAuthenticatorController constructor.
 		 *
-		 * @param bool $as_relation
-		 *
 		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
-		public function __construct($as_relation = false)
+		public function __construct()
 		{
 			$table   = ORM::getDatabase()
 						  ->getTable(OZAuth::TABLE_NAME);
@@ -57,7 +58,7 @@
 				$this->form_fields[$full_name] = $required;
 			}
 
-			$this->crud = new CRUD($table, $as_relation);
+			$this->crud = new CRUD($table);
 		}
 
 		/**
@@ -267,6 +268,8 @@
 			$my_entity->hydrate($values);
 			$my_entity->save();
 
+			$this->crud->getHandler()->onAfterCreateEntity($my_entity);
+
 			return $my_entity;
 		}
 
@@ -300,11 +303,12 @@
 			$my_entity = $results->fetchClass();
 
 			if ($my_entity) {
-				$this->crud->assertUpdateEntity($my_entity);
+				$this->crud->getHandler()->onBeforeUpdateEntity($my_entity);
 
 				$my_entity->hydrate($new_values);
 				$my_entity->save();
 
+				$this->crud->getHandler()->onAfterUpdateEntity($my_entity);
 				return $my_entity;
 			} else {
 				return false;
@@ -367,7 +371,7 @@
 
 			if ($my_entity) {
 
-				$this->crud->assertDeleteEntity($my_entity);
+				$this->crud->getHandler()->onBeforeDeleteEntity($my_entity);
 
 				$my_query = new OZAuthenticatorQueryReal();
 
@@ -375,6 +379,8 @@
 
 				$my_query->delete()
 						 ->execute();
+
+				$this->crud->getHandler()->onAfterDeleteEntity($my_entity);
 
 				return $my_entity;
 			} else {
@@ -436,7 +442,7 @@
 			$my_entity = $results->fetchClass();
 
 			if ($my_entity) {
-				$this->crud->assertReadEntity($my_entity);
+				$this->crud->getHandler()->onAfterReadEntity($my_entity);
 			}
 
 			return $my_entity;
@@ -481,6 +487,33 @@
 			}
 
 			return $items;
+		}
+
+		/**
+		 * Gets collection items from `oz_authenticator`.
+		 *
+		 * @param string   $name
+		 * @param array    $filters
+		 * @param null|int $max
+		 * @param int      $offset
+		 * @param array    $order_by
+		 * @param bool     $total_records
+		 *
+		 * @return \OZONE\OZ\Db\OZAuth[]
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+		 */
+		public function getCollectionItems($name, array $filters = [], $max = null, $offset = 0, array $order_by = [], &$total_records = false)
+		{
+			$table      = ORM::getDatabase()
+							 ->getTable(OZAuth::TABLE_NAME);
+			$collection = $table->getCollection($name);
+
+			if (!$collection) {
+				throw new ORMQueryException("QUERY_INVALID_COLLECTION");
+			}
+
+			return $collection->run($filters, $max, $offset, $order_by, $total_records);
 		}
 
 		/**

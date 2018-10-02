@@ -88,6 +88,7 @@
 
 				$fm = new FilesManager($project_folder);
 				$fm->cd($abs_folder, true)
+				   ->mkdir('assets')
 				   ->cd('oz_private', true)
 				   ->mkdir('oz_templates')
 				   ->mkdir('oz_settings')

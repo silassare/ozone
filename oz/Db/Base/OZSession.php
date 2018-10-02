@@ -3,7 +3,7 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1533007932
+ * Time: 1538496196
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -135,7 +135,7 @@
 
                 $filters['client_api_key'] = $this->getClientApiKey();
 
-                $m = new OZClientsControllerRealR(true);
+                $m = new OZClientsControllerRealR();
                 $this->r_oz_client = $m->getItem($filters);
             }
 
@@ -156,7 +156,7 @@
 
                 $filters['user_id'] = $this->getUserId();
 
-                $m = new OZUsersControllerRealR(true);
+                $m = new OZUsersControllerRealR();
                 $this->r_oz_user = $m->getItem($filters);
             }
 

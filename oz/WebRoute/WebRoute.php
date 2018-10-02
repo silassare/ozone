@@ -35,6 +35,8 @@
 		 * @param string $path a path
 		 *
 		 * @return string|null  the route id or null if none found
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function findRoute($path)
 		{
@@ -70,6 +72,8 @@
 		 * @param string $route_id the route id
 		 *
 		 * @return array|null
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function getRouteById($route_id)
 		{
@@ -88,6 +92,8 @@
 		 * @param string $path a path
 		 *
 		 * @return bool
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function routePathExists($path)
 		{
@@ -116,7 +122,10 @@
 		 * @param string $route_id the route id
 		 * @param array  $request  the request array to use
 		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+		 * @throws \ReflectionException
 		 */
 		public static function silentRedirectRoute($route_id, $request = [])
 		{
@@ -144,7 +153,9 @@
 		 * @param string $route_id the route id
 		 * @param array  $query    the query parameters
 		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 */
 		public static function redirectRoute($route_id, $query = [])
 		{
@@ -194,6 +205,11 @@
 		 * Show exception in a custom error page.
 		 *
 		 * @param $e \OZONE\OZ\Exceptions\BaseException
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+		 * @throws \ReflectionException
 		 */
 		public static function showCustomErrorPage(BaseException $e)
 		{
@@ -206,6 +222,7 @@
 			$err_data             = $e->getData();
 
 			$desc = [
+				'oz_error'          => $e,
 				'oz_error_code'     => $err_code,
 				'oz_error_title'    => $err_title,
 				'oz_error_desc'     => $err_desc,
@@ -224,6 +241,11 @@
 		 *
 		 * @param string $route_id
 		 * @param array  $request
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+		 * @throws \ReflectionException
 		 */
 		private static function runRouteById($route_id, array $request = [])
 		{
@@ -246,6 +268,11 @@
 		 *
 		 * @param string $route_path
 		 * @param array  $request
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+		 * @throws \ReflectionException
 		 */
 		public static function runRoutePath($route_path, array $request = [])
 		{

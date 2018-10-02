@@ -20,6 +20,7 @@
 
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
+	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
 	include_once OZ_OZONE_DIR . 'Loader' . DS . 'ClassLoader.php';
 
 	if (!OZ_OZONE_IS_CLI) {
@@ -27,13 +28,15 @@
 		exit(1);
 	}
 
-	ClassLoader::addNamespace('\OZONE\OZ', OZ_OZONE_DIR);
-	ClassLoader::addDir(OZ_OZONE_DIR . 'oz_vendors', true, 1);
-	ClassLoader::addNamespace('\Kli', OZ_OZONE_DIR . 'oz_vendors' . DS . 'kli' . DS . 'src');
-	ClassLoader::addNamespace('\Gobl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'gobl' . DS . 'src');
-
-	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
-	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_gobl_plugins.php';
+	try {
+		ClassLoader::addNamespace('\OZONE\OZ', OZ_OZONE_DIR);
+		ClassLoader::addDir(OZ_OZONE_DIR . 'oz_vendors', true, 1);
+		ClassLoader::addNamespace('\Kli', OZ_OZONE_DIR . 'oz_vendors' . DS . 'kli' . DS . 'src');
+		ClassLoader::addNamespace('\Gobl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'gobl' . DS . 'src');
+	} catch (\Exception $e) {
+		oz_logger($e);
+		exit(1);
+	}
 
 	final class OZoneCli extends Kli
 	{

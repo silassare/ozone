@@ -29,11 +29,20 @@
 			return URIHelper::getBaseURL();
 		}
 
+		/**
+		 * @return String
+		 * @throws \Exception
+		 */
 		public function getLanguage()
 		{
 			return Polyglot::getLanguage();
 		}
 
+		/**
+		 * @return null|string
+		 *
+		 * @throws \Exception
+		 */
 		public function getRequestViewId()
 		{
 			return WebRoute::findRoute(URIHelper::getUriExtra());

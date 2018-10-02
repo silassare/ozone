@@ -32,14 +32,17 @@
 
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
+	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
 	include_once OZ_OZONE_DIR . 'Loader' . DS . 'ClassLoader.php';
 
-	ClassLoader::addNamespace('\OZONE\OZ', OZ_OZONE_DIR);
-	ClassLoader::addDir(OZ_OZONE_DIR . 'oz_vendors', true, 1);
-	ClassLoader::addNamespace('\Gobl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'gobl' . DS . 'src');
-
-	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
-	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_gobl_plugins.php';
+	try {
+		ClassLoader::addNamespace('\OZONE\OZ', OZ_OZONE_DIR);
+		ClassLoader::addDir(OZ_OZONE_DIR . 'oz_vendors', true, 1);
+		ClassLoader::addNamespace('\Gobl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'gobl' . DS . 'src');
+	} catch (\Exception $e) {
+		oz_logger($e);
+		exit(1);
+	}
 
 	final class OZone
 	{
@@ -226,6 +229,7 @@
 		 * @param \OZONE\OZ\Core\ResponseHolder $response_holder
 		 *
 		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \Exception
 		 */
 		public static function sayJson(ResponseHolder $response_holder)
 		{
