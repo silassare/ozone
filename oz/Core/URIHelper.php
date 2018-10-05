@@ -46,7 +46,7 @@
 		 * parse request uri
 		 *
 		 * @return bool        true if valid uri, false if not valid
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public static function parseRequestUri()
 		{
@@ -87,12 +87,12 @@
 					return false;
 				}
 
-				// prevent request to any route like oz:error, oz:...
+				// prevent request to any route like oz:error, oz:web-route, oz:...
 				if (WebRoute::isInternalRoute($route_id)) {
 					return false;
 				}
 
-				$service       = 'oz_web_route';
+				$service       = 'oz:web-route';
 				$service_extra = $uri;
 			}
 

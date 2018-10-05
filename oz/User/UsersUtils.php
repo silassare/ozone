@@ -34,7 +34,6 @@
 		 * Gets the current user id.
 		 *
 		 * @return string|int
-		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 * @throws \Exception
 		 */
 		public static function getCurrentUserId()
@@ -43,6 +42,19 @@
 			$uid = SessionsData::get('ozone_user:id');
 
 			return $uid;
+		}
+
+		/**
+		 * Gets current user session token.
+		 *
+		 * @return string
+		 * @throws \Exception
+		 */
+		public static function getCurrentSessionToken()
+		{
+			Assert::assertUserVerified();
+
+			return SessionsData::get('ozone_user:token');
 		}
 
 		/**
@@ -91,7 +103,7 @@
 		{
 			$user_verified = SessionsData::get('ozone_user:verified');
 
-			return !empty($user_verified) AND $user_verified === true;
+			return $user_verified === true;
 		}
 
 		/**
@@ -100,7 +112,6 @@
 		 * @param \OZONE\OZ\Db\OZUser $user the user object
 		 *
 		 * @return string the login token
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 * @throws \Exception
 		 */
@@ -217,10 +228,6 @@
 		 * @param string $pass  the password
 		 *
 		 * @return \OZONE\OZ\Db\OZUser|string the user object or error string
-		 * @throws \OZONE\OZ\Exceptions\BaseException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 * @throws \Exception
 		 */
 		public static function tryLogOnWithPhone($phone, $pass)
@@ -262,10 +269,6 @@
 		 * @param string $pass  the password
 		 *
 		 * @return \OZONE\OZ\Db\OZUser|string the user object or error string
-		 * @throws \OZONE\OZ\Exceptions\BaseException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 * @throws \Exception
 		 */
 		public static function tryLogOnWithEmail($email, $pass)

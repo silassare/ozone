@@ -92,6 +92,10 @@
 				self::setNewSessionId();
 			}
 
+			// set default cookie params before session start
+			$params = self::getCookieParams();
+			session_set_cookie_params($params['lifetime'], $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+
 			session_start();
 
 			self::log(['start', session_id()]);
@@ -100,7 +104,7 @@
 		/**
 		 * Restart the session.
 		 *
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public static function restart()
 		{
@@ -117,7 +121,7 @@
 		/**
 		 * Register this session handler
 		 *
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		private static function register()
 		{
@@ -154,7 +158,8 @@
 		 *
 		 * @param string $session_id
 		 *
-		 * @return array;
+		 * @return array
+		 * @throws \Exception
 		 */
 		private static function fetch($session_id)
 		{
@@ -202,8 +207,7 @@
 		 * Useful when you have some foreign key constraint on session_id.
 		 *
 		 * @return string the active session id
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public static function persistActiveSession()
 		{
@@ -222,7 +226,7 @@
 		/**
 		 * Regenerate new session id.
 		 *
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		private static function setNewSessionId()
 		{
@@ -243,7 +247,7 @@
 		 * Gets cookie params to use for this request.
 		 *
 		 * @return array
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		private static function getCookieParams()
 		{
@@ -286,16 +290,14 @@
 		 *
 		 * @param string $session_id
 		 *
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @return bool
+		 * @throws \Exception
 		 */
 		private static function updateSessionCookieHeader($session_id)
 		{
 			self::log(['updateSessionCookieHeader', $session_id]);
 
-			$params = self::getCookieParams();
-			session_set_cookie_params($params['lifetime'], $params['path'], $params['domain'], $params['secure'], $params['httponly']);
-			$expire = time() + $params['lifetime'];
-			setcookie(session_name(), $session_id, $expire, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+			return self::setCookie(session_name(), $session_id);
 		}
 
 		/**
@@ -326,17 +328,13 @@
 		 * Note this value is returned internally to PHP for processing.
 		 * </p>
 		 *
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public function destroy($session_id)
 		{
 			self::log(['destroy', $session_id]);
 
-			$params = self::getCookieParams();
-			// delete from the browser
-			$time_in_the_past = time() - 43200;
-			setcookie(session_name(), '', $time_in_the_past, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+			self::deleteCookie(session_name());
 
 			$s_table = new OZSessionsQuery();
 			$s_table->filterById($session_id)
@@ -344,6 +342,66 @@
 					->execute();
 
 			return true;
+		}
+
+		/**
+		 * @param string $name
+		 * @param array  $params
+		 *
+		 * @return bool
+		 * @throws \Exception
+		 */
+		public static function deleteCookie($name, array $params = [])
+		{
+			$def    = self::getCookieParams();
+			$params = array_merge($def, $params);
+			// delete from the browser
+			$time_in_the_past = time() - 43200;
+
+			return setcookie($name, '', $time_in_the_past, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+		}
+
+		/**
+		 * @param string $name
+		 * @param string $value
+		 * @param array  $params
+		 *
+		 * @return bool
+		 * @throws \Exception
+		 */
+		public static function setCookie($name, $value = "", array $params = [])
+		{
+			$def    = self::getCookieParams();
+			$params = array_merge($def, $params);
+			$expire = time() + $params['lifetime'];
+
+			return setcookie($name, $value, $expire, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+		}
+
+		/**
+		 * @param $session_string
+		 *
+		 * @return mixed
+		 */
+		public static function decodeSessionString($session_string)
+		{
+			$current_session = session_encode();
+
+			foreach ($_SESSION as $key => $value) {
+				unset($_SESSION[$key]);
+			}
+
+			session_decode($session_string);
+
+			$data = $_SESSION;
+
+			foreach ($_SESSION as $key => $value) {
+				unset($_SESSION[$key]);
+			}
+
+			session_decode($current_session);
+
+			return $data;
 		}
 
 		/**
@@ -361,7 +419,7 @@
 		 * Note this value is returned internally to PHP for processing.
 		 * </p>
 		 *
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Exception
 		 */
 		public function gc($maxlifetime)
 		{
@@ -407,6 +465,7 @@
 		 * If nothing was read, it must return an empty string.
 		 * Note this value is returned internally to PHP for processing.
 		 * </p>
+		 * @throws \Exception
 		 */
 		public function read($session_id)
 		{
@@ -436,8 +495,6 @@
 		 * Note this value is returned internally to PHP for processing.
 		 * </p>
 		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \Exception
 		 */
 		public function write($session_id, $session_data)
@@ -476,7 +533,7 @@
 		 *
 		 * @param \OZONE\OZ\Db\OZUser $user
 		 *
-		 * @return OZSession the current session
+		 * @return \OZONE\OZ\Db\OZSession the current session
 		 * @throws \Exception
 		 */
 		public static function attachUser(OZUser $user)

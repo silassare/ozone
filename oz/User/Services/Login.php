@@ -12,7 +12,7 @@
 
 	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\BaseService;
-	use OZONE\OZ\Db\Base\OZUser;
+	use OZONE\OZ\Db\OZUser;
 	use OZONE\OZ\User\UsersUtils;
 	use OZONE\OZ\Exceptions\ForbiddenException;
 

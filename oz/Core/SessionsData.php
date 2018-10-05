@@ -60,19 +60,27 @@
 		/**
 		 * Sets session value for a given key.
 		 *
-		 * @param string $key
-		 * @param mixed  $value
+		 * @param string     $key
+		 * @param mixed      $value
+		 * @param array|null &$data
 		 *
 		 * @throws \Exception
 		 */
-		public static function set($key, $value)
+		public static function set($key, $value, array &$data = null)
 		{
-			// when called before session start
-			if (!isset($_SESSION)) return;
+			if (is_null($data)) {
+				// when called before session start
+				if (!isset($_SESSION)) {
+					oz_logger("Session not started, unable to set -> $key -> {json_encode($value)}");
+					return;
+				}
+
+				$data = &$_SESSION;
+			}
 
 			$parts   = self::keyCheck($key);
 			$counter = count($parts);
-			$next    = &$_SESSION;
+			$next    = &$data;
 
 			foreach ($parts as $part) {
 				$counter--;
@@ -89,19 +97,26 @@
 		/**
 		 * Gets session value for a given key.
 		 *
-		 * @param string $key the session key
+		 * @param string     $key the session key
+		 * @param array|null $data
 		 *
 		 * @return mixed
 		 * @throws \Exception
 		 */
-		public static function get($key)
+		public static function get($key, array $data = null)
 		{
-			// when called before session start
-			if (!isset($_SESSION)) return null;
+			if (is_null($data)) {
+				// when called before session start
+				if (!isset($_SESSION)) {
+					return null;
+				}
+
+				$data = $_SESSION;
+			}
 
 			$parts   = self::keyCheck($key);
 			$counter = count($parts);
-			$result  = $_SESSION;
+			$result  = $data;
 
 			foreach ($parts as $part) {
 				$result = self::getNext($result, $part);
@@ -119,18 +134,26 @@
 		/**
 		 * Remove session value for a given key.
 		 *
-		 * @param string $key the session key
+		 * @param string     $key the session key
+		 * @param array|null &$data
 		 *
 		 * @throws \Exception
 		 */
-		public static function remove($key)
+		public static function remove($key, array &$data = null)
 		{
-			// when called before session start
-			if (!isset($_SESSION)) return;
+			if (is_null($data)) {
+				// when called before session start
+				if (!isset($_SESSION)) {
+					oz_logger("Session not started, unable to remove -> $key");
+					return;
+				}
+
+				$data = &$_SESSION;
+			}
 
 			$parts   = self::keyCheck($key);
 			$counter = count($parts);
-			$next    = &$_SESSION;
+			$next    = &$data;
 
 			// the counter is useful for us to move until
 			// we reach the last part

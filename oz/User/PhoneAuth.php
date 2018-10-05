@@ -54,7 +54,7 @@
 		 * @param array $request
 		 *
 		 * @return $this
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \Exception
 		 */
 		public function authenticate(array $request)
 		{
@@ -73,11 +73,19 @@
 			return $this;
 		}
 
+		/**
+		 * @return mixed
+		 * @throws \Exception
+		 */
 		public function isAuthenticated()
 		{
 			return $this->getStoredData('authenticated');
 		}
 
+		/**
+		 * @return $this
+		 * @throws \Exception
+		 */
 		public function close()
 		{
 			$this->setStoredData(null, []);
@@ -85,11 +93,19 @@
 			return $this;
 		}
 
+		/**
+		 * @return mixed
+		 * @throws \Exception
+		 */
 		public function getAuthenticatedPhone()
 		{
 			return $this->getStoredData('phone');
 		}
 
+		/**
+		 * @return mixed
+		 * @throws \Exception
+		 */
 		public function getAuthenticatedPhoneCC2()
 		{
 			return $this->getStoredData('cc2');
@@ -188,9 +204,6 @@
 		/**
 		 * @param array $request
 		 *
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 * @throws \Exception
 		 */
 		private function stepValidate(array $request)

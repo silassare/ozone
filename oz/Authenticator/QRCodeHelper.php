@@ -47,10 +47,8 @@
 		 */
 		public function getQrCode()
 		{
-			$auth   = $this->auth;
-			$expire = 3600 * 24 * 7;
-
-			$generated   = $auth->generate(1, $expire)
+			$auth        = $this->auth;
+			$generated   = $auth->generate(1)
 								->getGenerated();
 			$label       = $auth->getLabel();
 			$for_value   = $auth->getForValue();
@@ -124,7 +122,7 @@
 			$format = SettingsManager::get("oz.files", "OZ_QR_CODE_URI_EXTRA_FORMAT");
 
 			$parts = [
-				"oz_qrcode_key"       => "([a-z0-9]{32})"
+				"oz_qrcode_key" => "([a-z0-9]{32})"
 			];
 
 			return StringUtils::stringFormatToRegExp($format, $parts, $fields);

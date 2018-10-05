@@ -86,6 +86,7 @@
 		 * Checks if an authentication process was already started
 		 *
 		 * @return bool
+		 * @throws \Exception
 		 */
 		public function exists()
 		{
@@ -226,8 +227,7 @@
 		 * @param int $code the code value
 		 *
 		 * @return bool            true when successful, false otherwise
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
 		public function validateCode($code)
 		{
@@ -273,7 +273,7 @@
 		 * @param string $token the token value
 		 *
 		 * @return bool                true when successful, false otherwise
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Exception
 		 */
 		public function validateToken($token)
 		{
@@ -305,6 +305,7 @@
 		 * Fetch the authentication data from database.
 		 *
 		 * @return null|\OZONE\OZ\Db\OZAuth
+		 * @throws \Exception
 		 */
 		private function get()
 		{
@@ -324,7 +325,7 @@
 		 * Cancel the authentication process.
 		 *
 		 * @return int
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Exception
 		 */
 		public function cancel()
 		{

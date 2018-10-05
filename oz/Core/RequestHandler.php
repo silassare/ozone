@@ -72,7 +72,7 @@
 			// is it a pre-filter request for CORS?
 			if (self::isOptions()) {
 				self::setInitialHeaders();
-				// no more things to do, just exit after
+				// no more things to do, just exit
 				exit;
 			}
 

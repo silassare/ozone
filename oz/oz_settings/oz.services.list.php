@@ -11,7 +11,10 @@
 	use OZONE\OZ\Core\SettingsManager;
 
 	return [
-		'oz_web_route' => [
+		// service that start with `oz:` are for internal use only
+		// any external request of such service will be rejected
+
+		'oz:web-route' => [
 			'service_class'   => 'OZONE\OZ\WebRoute\Services\RouteRunner',
 			'is_file_service' => false,
 			'can_serve_resp'  => true,
@@ -56,7 +59,7 @@
 			'cross_site'      => true,
 			'request_methods' => ['POST']
 		],
-		'password'       => [
+		'password'     => [
 			'service_class'   => 'OZONE\OZ\User\Services\Password',
 			'is_file_service' => false,
 			'can_serve_resp'  => false,
@@ -76,6 +79,13 @@
 			'can_serve_resp'  => false,
 			'cross_site'      => true,
 			'request_methods' => ['POST']
+		],
+		'account-auth' => [
+			'service_class'   => 'OZONE\OZ\Authenticator\Services\AccountAuth',
+			'is_file_service' => false,
+			'can_serve_resp'  => false,
+			'cross_site'      => true,
+			'request_methods' => ['GET']
 		],
 		'logout'       => [
 			'service_class'   => 'OZONE\OZ\User\Services\Logout',

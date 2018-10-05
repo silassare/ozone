@@ -185,7 +185,7 @@
 		 * @param array &$fields
 		 *
 		 * @return string
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public static function genCaptchaURIRegExp(array &$fields)
 		{

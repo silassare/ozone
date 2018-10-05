@@ -146,6 +146,7 @@
 		 * @param mixed $input the string to encode
 		 *
 		 * @return mixed
+		 * @throws \Exception
 		 */
 		public static function toUtf8($input)
 		{
@@ -165,6 +166,7 @@
 		 * @param bool  $encode_keys whether to encode keys if input is array or object
 		 *
 		 * @return mixed
+		 * @throws \Exception
 		 */
 		public static function encodeFix($input, $encode_keys = false)
 		{

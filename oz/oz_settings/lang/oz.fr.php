@@ -11,22 +11,23 @@
 
 	return [
 		// ---------START NEW
-		"OZ_ERROR_REQUEST_FAIL" => "Erreur: la requête a échoué.",
-		"OZ_ERROR_NETWORK"      => "Erreur: problèmes de connexion internet.",
-		"OZ_ERROR_SERVER"       => "Erreur: echec de récupération des informations.",
-		"OZ_ERROR_YOU_ARE_NOT_ADMIN"  => "Erreur: Vous n'etes pas un administrateur.",
+		"OZ_ERROR_REQUEST_FAIL"      => "Erreur: la requête a échoué.",
+		"OZ_ERROR_NETWORK"           => "Erreur: problèmes de connexion internet.",
+		"OZ_ERROR_SERVER"            => "Erreur: echec de récupération des informations.",
+		"OZ_ERROR_YOU_ARE_NOT_ADMIN" => "Erreur: Vous n'etes pas un administrateur.",
 
-		"OZ_ERROR_BAD_REQUEST"        => "Votre requête est invalide.",
-		"OZ_ERROR_INTERNAL"           => "Une erreur interne s'est produite.",
-		"OZ_ERROR_RUNTIME"            => "Une erreur interne s'est produite en cours d'exécution.",
-		"OZ_ERROR_METHOD_NOT_ALLOWED" => "La méthode de la requête n'est pas autorisée.",
-		"OZ_ERROR_NOT_FOUND"          => "La ressource recherchée n'est pas retrouvée.",
-		"OZ_ERROR_INVALID_FIELD"      => "Champs de formulaire invalide.",
-		"OZ_ERROR_INVALID_FORM"       => "La requête est invalide. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
-		"OZ_ERROR_YOU_MUST_LOGIN"     => "Vous devez vous connecter d'abord.",
-		"OZ_ERROR_NOT_ALLOWED"        => "Une erreur s'est produite. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
+		"OZ_ERROR_BAD_REQUEST"         => "Votre requête est invalide.",
+		"OZ_ERROR_INTERNAL"            => "Une erreur interne s'est produite.",
+		"OZ_ERROR_RUNTIME"             => "Une erreur interne s'est produite en cours d'exécution.",
+		"OZ_ERROR_METHOD_NOT_ALLOWED"  => "La méthode de la requête n'est pas autorisée.",
+		"OZ_ERROR_NOT_FOUND"           => "La ressource recherchée n'est pas retrouvée.",
+		"OZ_ERROR_INVALID_FIELD"       => "Champs de formulaire invalide.",
+		"OZ_ERROR_INVALID_FORM"        => "La requête est invalide. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
+		"OZ_ERROR_YOU_MUST_LOGIN"      => "Vous devez vous connecter d'abord.",
+		"OZ_ERROR_NOT_ALLOWED"         => "Une erreur s'est produite. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
+		"OZ_YOUR_API_KEY_IS_NOT_VALID" => "La clef API est invalide.",
 
-		"OZ_SMS_AUTH_CODE_MESSAGE" => "Votre code d'authentification est: {code}",
+		"OZ_SMS_AUTH_CODE_MESSAGE"               => "Votre code d'authentification est: {code}",
 		"OZ_SMS_AUTH_CODE_PASSWORD_EDIT_MESSAGE" => "Votre code d'authentification est: {code}",
 		// ---------END NEW
 
@@ -51,7 +52,7 @@
 		"OZ_AUTH_CODE_EXPIRED"              => "Le code a déjà expiré.",
 		"OZ_AUTH_PROCESS_INVALID"           => "Veuillez recommencer le processus d'authentification",
 
-		"OZ_PHONE_AUTH_NOT_STARTED" => "Vous n'avez pas validé l'étape 1.",
+		"OZ_PHONE_AUTH_NOT_STARTED"   => "Vous n'avez pas validé l'étape 1.",
 		"OZ_PHONE_AUTH_NOT_VALIDATED" => "Vous n'avez pas validé l'étape 2.",
 
 		"OZ_FIELD_USER_NAME_INVALID"           => "Le nom et prénoms contient des caractères non autorisés.",

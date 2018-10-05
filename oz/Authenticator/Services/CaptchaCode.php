@@ -39,8 +39,7 @@
 		 *
 		 * @param array $request
 		 *
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\NotFoundException
+		 * @throws \Exception
 		 */
 		public function execute(array $request = [])
 		{
