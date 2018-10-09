@@ -72,22 +72,21 @@
 		/**
 		 * adds settings sources directory.
 		 *
-		 * @param string $path          settings files directory path.
-		 * @param bool   $high_priority this .
+		 * @param string $path settings files directory path.
 		 *
 		 * @throws \Exception
 		 */
-		public static function addSource($path, $high_priority = false)
+		public static function addSource($path)
 		{
 			if (!in_array($path, self::$oz_sources_dir) AND !in_array($path, self::$app_sources_dir)) {
 				if (!is_dir($path)) {
 					throw new \Exception(sprintf('"%s" is not a directory.', $path));
 				}
 
-				if ($high_priority) {
-					self::$app_sources_dir[] = $path;
-				} else {
+				if (strpos($path, OZ_OZONE_DIR) === 0) {
 					self::$oz_sources_dir[] = $path;
+				} else {
+					self::$app_sources_dir[] = $path;
 				}
 			}
 		}
