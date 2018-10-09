@@ -168,7 +168,7 @@
 		}
 
 		/**
-		 * Build an URL based on URL fragments.
+		 * Build an URL based on URL parts.
 		 *
 		 * @param string $protocol    the protocol
 		 * @param string $domain_name the domain name
@@ -210,7 +210,7 @@
 		 *
 		 * @return string
 		 */
-		public static function getRequestURL($append_query = false)
+		public static function getRequestURL($append_query = true)
 		{
 			$url = self::buildURL(null, $_SERVER['HTTP_HOST'], $_SERVER['REQUEST_URI']);
 
