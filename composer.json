@@ -1,0 +1,38 @@
+{
+    "name": "ozone/oz",
+    "version": "2.0.0",
+    "description": "O'Zone framework for API and website.",
+    "keywords": [
+        "ozone",
+        "api-generator",
+        "ozone-framework",
+        "framework",
+        "php",
+        "api",
+        "website"
+    ],
+    "require": {
+        "php": ">=5.6.0",
+        "silassare/otpl": ">=1.1.6"
+    },
+    "homepage": "https://github.com/silassare/ozone#readme",
+    "archive": {
+        "exclude": [
+            "/ignore"
+        ]
+    },
+    "autoload": {
+        "psr-4": {
+            "OZONE\\OZ\\": "oz"
+        }
+    },
+    "authors": [
+        {
+            "name": "Emile Silas Sare",
+            "email": "emile.silas@gmail.com",
+            "homepage": "https://github.com/silassare"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
