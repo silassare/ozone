@@ -34,7 +34,8 @@
 		 * Gets the current user id.
 		 *
 		 * @return string|int
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function getCurrentUserId()
 		{
@@ -48,7 +49,8 @@
 		 * Gets current user session token.
 		 *
 		 * @return string
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
 		public static function getCurrentSessionToken()
 		{
@@ -63,8 +65,8 @@
 		 * @return \OZONE\OZ\Db\OZUser
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
-		 * @throws \Exception
 		 */
 		public static function getCurrentUserObject()
 		{
@@ -82,7 +84,6 @@
 		 * @return null|\OZONE\OZ\Db\OZUser
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \Exception
 		 */
 		public static function getUserObject($uid)
 		{

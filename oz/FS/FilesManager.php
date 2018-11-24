@@ -114,13 +114,14 @@
 		/**
 		 * Copy file/directory.
 		 *
-		 * @param string      $from the file/directory to copy
-		 * @param string|null $to   the destination path
+		 * @param string      $from    the file/directory to copy
+		 * @param string|null $to      the destination path
+		 * @param array|null  $options the options
 		 *
 		 * @return $this
 		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
-		public function cp($from, $to = null)
+		public function cp($from, $to = null, array $options = [])
 		{
 			$to = empty($to) ? $this->root : (string)$to;
 
@@ -134,7 +135,7 @@
 					}
 
 					$this->mkdir($abs_to);
-					self::recurseCopyDirAbsPath($abs_from, $abs_to);
+					self::recurseCopyDirAbsPath($abs_from, $abs_to, $options);
 				} else {
 					if (is_dir($abs_to)) {
 						$abs_to = PathUtils::resolve($abs_to, basename($abs_from));
@@ -244,21 +245,33 @@
 		 *
 		 * @param string $source
 		 * @param string $destination
+		 * @param array  $options
 		 */
-		private static function recurseCopyDirAbsPath($source, $destination)
+		private static function recurseCopyDirAbsPath($source, $destination, array $options)
 		{
 			$res = opendir($source);
 			if (!file_exists($destination)) {
 				mkdir($destination);
 			}
 
+			$exclude = isset($options["exclude"]) ? $options["exclude"] : null;
+			$include = isset($options["include"]) ? $options["include"] : null;
+
 			while (false !== ($file = readdir($res))) {
 				if ($file != '.' AND $file != '..') {
 					$from = $source . DS . $file;
 					$to   = $destination . DS . $file;
 
+					if (isset($exclude) AND is_string($exclude) AND preg_match($exclude, $from)) {
+						continue;
+					}
+
+					if (isset($include) AND is_string($include) AND !preg_match($include, $from)) {
+						continue;
+					}
+
 					if (is_dir($from)) {
-						self::recurseCopyDirAbsPath($from, $to);
+						self::recurseCopyDirAbsPath($from, $to, $options);
 					} else {
 						copy($from, $to);
 					}
@@ -277,7 +290,9 @@
 		 */
 		public static function isEmptyDir($dir)
 		{
-			if (!is_readable($dir)) return null;
+			if (!is_readable($dir)) {
+				return null;
+			}
 
 			$handle = opendir($dir);
 			$yes    = true;

@@ -10,7 +10,8 @@
 
 	namespace OZONE\OZ\FS;
 
-	use OZONE\OZ\Exceptions\InternalErrorException;
+	use OTpl\OTpl;
+    use OZONE\OZ\Exceptions\InternalErrorException;
 	use OZONE\OZ\Utils\StringUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
@@ -63,20 +64,21 @@
 			}
 		}
 
-		/**
-		 * compute a template file with a given data.
-		 *
-		 * @param string $template template file to compute.
-		 * @param array  $data     data to inject in template.
-		 *
-		 * @return string            the template result output.
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 */
+        /**
+         * compute a template file with a given data.
+         *
+         * @param string $template template file to compute.
+         * @param array $data data to inject in template.
+         *
+         * @return string            the template result output.
+         * @throws \OZONE\OZ\Exceptions\InternalErrorException
+         * @throws \Exception
+         */
 		public static function compute($template, array $data)
 		{
 			$template = self::localize($template);
 
-			$o = new \OTpl();
+			$o = new OTpl();
 
 			return $o->parse($template)
 					 ->runGet($data);

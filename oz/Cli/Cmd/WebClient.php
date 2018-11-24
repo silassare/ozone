@@ -27,9 +27,7 @@
 		/**
 		 * {@inheritdoc}
 		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \Kli\Exceptions\KliInputException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public function execute(KliAction $action, array $options, array $anonymous_options)
 		{

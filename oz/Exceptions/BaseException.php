@@ -112,7 +112,9 @@
 		}
 
 		/**
-		 * show exception according to accept header name or request type
+		 * Show exception according to accept header name or request type
+		 *
+		 * @throws \Exception
 		 */
 		protected function informClient()
 		{
@@ -121,20 +123,26 @@
 
 			// clear the output buffer, "Dirty linen should be washed as a family."
 			// loop until we get the top buffer level
-			while (ob_get_level()) @ob_end_clean();
+			while (ob_get_level()) {
+				@ob_end_clean();
+			}
 
 			if (self::$just_die === true) {
 				$err_msg = 'OZone: An "Error handling error" occurs. If you are an admin, please review the log file and correct it!';
 
-				if (OZ_OZONE_IS_CLI) die(PHP_EOL . $err_msg . PHP_EOL);
+				if (OZ_OZONE_IS_CLI) {
+					die(PHP_EOL . $err_msg . PHP_EOL);
+				}
 
-				if (!headers_sent()) header(self::$ERROR_HEADER_MAP[BaseException::INTERNAL_ERROR]);
+				if (!headers_sent()) {
+					header(self::$ERROR_HEADER_MAP[BaseException::INTERNAL_ERROR]);
+				}
 
 				$err_html = <<<ERROR_PAGE
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Error!</title>
+		<title>Error</title>
 		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
 		<style>
 			body{
@@ -175,16 +183,22 @@ ERROR_PAGE;
 		}
 
 		/**
-		 * show exception as json file
+		 * Show exception as json file
+		 *
+		 * @throws \Exception
 		 */
 		protected function showJson()
 		{
-			if (!headers_sent()) header($this->getHeaderString());
+			if (!headers_sent()) {
+				header($this->getHeaderString());
+			}
 
-			$this->response_holder->setError($this->getMessage())
-								  ->setData($this->getData());
+			$r = $this->response_holder;
+			$r->setError($this->getMessage())
+			  ->setData($this->getData());
 
-			OZone::sayJson($this->response_holder);
+			OZone::sayJson($r);
+
 			exit;
 		}
 

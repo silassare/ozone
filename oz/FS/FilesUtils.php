@@ -111,6 +111,7 @@
 		 *
 		 * @return string
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function getExtension($path, $type)
 		{
@@ -132,6 +133,7 @@
 		 *
 		 * @return string the mime type
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function extensionToMimeType($ext)
 		{
@@ -154,6 +156,7 @@
 		 *
 		 * @return string    the file extension that match to this file mime type
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function mimeTypeToExtension($type)
 		{
@@ -207,6 +210,7 @@
 		 *
 		 * @return bool true if successful, false if fails
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function makeThumb(OZFile $file, $destination)
 		{
@@ -261,6 +265,9 @@
 		 * @param string     $key the file key
 		 *
 		 * @return null|\OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
 		public static function getFileWithId($id, $key)
 		{
@@ -282,6 +289,8 @@
 		 * @param string $alias_src the alias file source path
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function getFileFromAlias($alias_src)
@@ -346,6 +355,7 @@
 		 *
 		 * @return string
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function genFileURIRegExp(array &$fields)
 		{

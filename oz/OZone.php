@@ -39,6 +39,7 @@
 		ClassLoader::addNamespace('\OZONE\OZ', OZ_OZONE_DIR);
 		ClassLoader::addDir(OZ_OZONE_DIR . 'oz_vendors', true, 1);
 		ClassLoader::addNamespace('\Gobl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'gobl' . DS . 'src');
+		ClassLoader::addNamespace('\OTpl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'otpl' . DS . 'src' . DS . 'OTpl');
 	} catch (\Exception $e) {
 		oz_logger($e);
 		exit(1);
@@ -116,6 +117,7 @@
 		 *
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \ReflectionException
+		 * @throws \Exception
 		 */
 		private static function runApp()
 		{
@@ -228,7 +230,6 @@
 		 *
 		 * @param \OZONE\OZ\Core\ResponseHolder $response_holder
 		 *
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 * @throws \Exception
 		 */
 		public static function sayJson(ResponseHolder $response_holder)
@@ -260,7 +261,7 @@
 		 *
 		 * @param \OZONE\OZ\Core\ResponseHolder $response_holder
 		 *
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \Exception
 		 */
 		public static function say(ResponseHolder $response_holder)
 		{

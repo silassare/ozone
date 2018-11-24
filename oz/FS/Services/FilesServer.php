@@ -37,6 +37,7 @@
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 * @throws \OZONE\OZ\Exceptions\NotFoundException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function execute(array $request = [])
 		{

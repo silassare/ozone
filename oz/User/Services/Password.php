@@ -13,13 +13,10 @@
 	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\BaseService;
 	use OZONE\OZ\Crypt\DoCrypt;
-	use OZONE\OZ\Db\OZUser;
-	use OZONE\OZ\Db\OZUsersController;
 	use OZONE\OZ\Exceptions\ForbiddenException;
-	use OZONE\OZ\Exceptions\InvalidFormException;
+	use OZONE\OZ\Exceptions\NotFoundException;
 	use OZONE\OZ\Exceptions\UnauthorizedActionException;
 	use OZONE\OZ\Ofv\OFormValidator;
-	use OZONE\OZ\User\PhoneAuth;
 	use OZONE\OZ\User\UsersUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
@@ -32,46 +29,59 @@
 	final class Password extends BaseService
 	{
 		/**
-		 * @var \OZONE\OZ\User\PhoneAuth
+		 * @param array $request
+		 *
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 * @throws \Exception
 		 */
-		private $phone_auth;
+		public function execute(array $request = [])
+		{
+			if (!isset($request["action"])) {
+				throw new ForbiddenException();
+			}
+
+			$action = $request["action"];
+
+			switch ($action) {
+				case 'edit':
+					$this->edit($request);
+					break;
+				default:
+					throw new NotFoundException();
+			}
+		}
 
 		/**
 		 * @param array $request
 		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
-		public function execute(array $request = [])
+		private function edit(array $request)
 		{
-			$this->phone_auth = new PhoneAuth('svc_password', true);
-
-			if (isset($request["step"])) {
-				$step = intval($request["step"]);
-
-				if ($step === 3) {
-					if ($this->phone_auth->isAuthenticated()) {
-						$request['cc2']   = $this->phone_auth->getAuthenticatedPhoneCC2();
-						$request['phone'] = $this->phone_auth->getAuthenticatedPhone();
-						$this->editPass($request);
-					} else {
-						throw new ForbiddenException('OZ_PHONE_AUTH_NOT_VALIDATED');
-					}
-				} else {
-					$response = $this->phone_auth->authenticate($request)
-												 ->getResponse();
-					$this->getResponseHolder()
-						 ->setResponse($response);
+			if (isset($request["uid"])) {
+				if (!is_numeric($request["uid"])) {
+					throw new ForbiddenException();
 				}
+
+				Assert::assertIsAdmin();
+
+				$this->editPassAdmin($request);
+
 			} else {
-				throw new InvalidFormException();
+				Assert::assertUserVerified();
+				$this->editPassUser($request);
 			}
 		}
 
 		/**
-		 * End password edit process with all required user data
+		 * Edit password: verified user only
 		 *
 		 * @param array $request
 		 *
@@ -80,9 +90,10 @@
 		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
-		private function editPass(array $request)
+		private function editPassUser(array $request)
 		{
-			Assert::assertForm($request, ['phone', 'cc2', 'pass', 'vpass']);
+			Assert::assertForm($request, ['cpass', 'pass', 'vpass']);
+			$user_obj = UsersUtils::getCurrentUserObject();
 
 			$fv_obj = new OFormValidator($request);
 
@@ -91,33 +102,68 @@
 				'vpass' => null
 			]);
 
-			$filters[OZUser::COL_PHONE] = $fv_obj->getField("phone");
-			$filters[OZUser::COL_VALID] = true;
-
-			$controller = new OZUsersController();
-			$user_obj   = $controller->getItem($filters);
-
-			if (!$user_obj) {
-				throw new ForbiddenException();
-			}
-
-			$old_pass  = $user_obj->getPass();// encrypted
+			$real_pass = $user_obj->getPass();// encrypted
+			$cpass     = $fv_obj->getField("cpass");
 			$new_pass  = $fv_obj->getField("pass");
 			$crypt_obj = new DoCrypt();
 
-			if ($crypt_obj->passCheck($new_pass, $old_pass)) {
+			if (!$crypt_obj->passCheck($cpass, $real_pass)) {
+				throw new UnauthorizedActionException("OZ_FIELD_PASS_INVALID");
+			}
+
+			if ($crypt_obj->passCheck($new_pass, $real_pass)) {
 				throw new UnauthorizedActionException("OZ_PASSWORD_SAME_OLD_AND_NEW_PASS");
 			}
 
 			$user_obj->setPass($new_pass)
 					 ->save();
 
-			UsersUtils::logUserIn($user_obj);
+			$this->getResponseHolder()
+				 ->setDone('OZ_PASSWORD_EDIT_SUCCESS')
+				 ->setData($user_obj->asArray());
+		}
+
+		/**
+		 * Edit password: admin only
+		 *
+		 * @param array $request
+		 *
+		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+		 */
+		private function editPassAdmin(array $request)
+		{
+			$uid = $request["uid"];
+
+			Assert::assertForm($request, ['pass', 'vpass']);
+
+			$user_obj = UsersUtils::getUserObject($uid);
+
+			if (!$user_obj) {
+				throw new ForbiddenException();
+			}
+
+			$fv_obj = new OFormValidator($request);
+
+			$fv_obj->checkForm([
+				'pass'  => null,
+				'vpass' => null
+			]);
+
+			$real_pass = $user_obj->getPass();// encrypted
+			$new_pass  = $fv_obj->getField("pass");
+			$crypt_obj = new DoCrypt();
+
+			if ($crypt_obj->passCheck($new_pass, $real_pass)) {
+				throw new UnauthorizedActionException("OZ_PASSWORD_SAME_OLD_AND_NEW_PASS");
+			}
+
+			$user_obj->setPass($new_pass)
+					 ->save();
 
 			$this->getResponseHolder()
 				 ->setDone('OZ_PASSWORD_EDIT_SUCCESS')
 				 ->setData($user_obj->asArray());
-
-			$this->phone_auth->close();
 		}
 	}

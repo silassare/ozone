@@ -66,6 +66,13 @@
 			'cross_site'      => true,
 			'request_methods' => ['POST']
 		],
+		'account-recovery'     => [
+			'service_class'   => 'OZONE\OZ\User\Services\AccountRecovery',
+			'is_file_service' => false,
+			'can_serve_resp'  => false,
+			'cross_site'      => true,
+			'request_methods' => ['POST']
+		],
 		'upicedit'     => [
 			'service_class'   => 'OZONE\OZ\User\Services\UserPicEdit',
 			'is_file_service' => false,

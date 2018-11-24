@@ -252,7 +252,7 @@
 		private static function getCookieParams()
 		{
 			if (!defined('OZ_SESSION_MAX_LIFE_TIME')) {
-				define('OZ_SESSION_MAX_LIFE_TIME', 24 * 60 * 60); // 1 jour
+				define('OZ_SESSION_MAX_LIFE_TIME', 24 * 60 * 60); // 1 day
 			}
 
 			$cookie = session_get_cookie_params();
@@ -263,12 +263,11 @@
 			$httponly = true;
 			$domain   = $_SERVER['SERVER_NAME'];
 
-			/*
-			 * TODO find a strong and secure way to set the domain in debug mode
-			 * Possible solutions:
-			 * 		- force user to disable debug mode before going to production
-			 * 		- or automatically/auto-magically detect production or development mode
-			 */
+			// TODO find a strong and secure way to set the domain in debug mode
+			// Possible solutions:
+			//  - force user to disable debug mode before going to production
+			//  - or automatically/auto-magically detect production or development mode
+
 			$is_debug_on = (bool)SettingsManager::get('oz.config', 'OZ_DEBUG_MODE');
 
 			if ($is_debug_on === true) {

@@ -71,17 +71,17 @@
 	<body>
 		<div id="error-box">
 			<span class="logo"></span>
-			<div class="error-title"><% $.oz_error_title %></div>
+			<div class="error-title"><%@oz_lang( $.oz_error_title, $.oz_error_data)%></div>
 			<div class="error-desc">
 				<ul>
-					<li><% $.oz_error_desc %></li>
-					<li><% $.oz_error_url %></li>
+					<li><%@oz_lang($.oz_error_desc, $.oz_error_data)%></li>
+					<li><%$.oz_error_url%></li>
 				</ul>
 			</div>
-			<% if( @has($ ,'oz_error_back_url') ){ %>
-				<a class="error-back-url" href="<% $.oz_error_back_url %>">Back</a>
+			<%if(@has($ ,'oz_error_back_url')){%>
+				<a class="error-back-url" href="<%$.oz_error_back_url%>">Back</a>
 			<%} else {%>
-				<a class="error-back-url" href="<% $.oz->getBaseURL() %>">Home</a>
+				<a class="error-back-url" href="<%$.oz->getBaseURL()%>">Home</a>
 			<%}%>
 		</div>
 	</body>

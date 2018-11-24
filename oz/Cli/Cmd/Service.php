@@ -25,9 +25,7 @@
 		/**
 		 * {@inheritdoc}
 		 *
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \Exception
 		 */
 		public function execute(KliAction $action, array $options, array $anonymous_options) {
 			switch ($action->getName()) {

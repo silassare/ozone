@@ -10,6 +10,9 @@
 
 	namespace OZONE\OZ\Core;
 
+
+	use OZONE\OZ\Exceptions\RuntimeException;
+
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	final class SessionsData
@@ -20,7 +23,7 @@
 		 * @param string $key the session key
 		 *
 		 * @return mixed
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private static function keyCheck($key)
 		{
@@ -28,13 +31,13 @@
 			$max_deep = 5;
 
 			if (!preg_match($key_reg, $key)) {
-				throw new \Exception("session key '$key' not well formed, use something like 'group:key' ");
+				throw new RuntimeException("session key '$key' not well formed, use something like 'group:key' ");
 			}
 
 			$route = explode(':', $key);
 
 			if (count($route) > $max_deep) {
-				throw new \Exception("session key '$key' is too deep, maximum deep is $max_deep");
+				throw new RuntimeException("session key '$key' is too deep, maximum deep is $max_deep");
 			}
 
 			return $route;
@@ -64,7 +67,7 @@
 		 * @param mixed      $value
 		 * @param array|null &$data
 		 *
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function set($key, $value, array &$data = null)
 		{
@@ -101,7 +104,7 @@
 		 * @param array|null $data
 		 *
 		 * @return mixed
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function get($key, array $data = null)
 		{
@@ -137,7 +140,7 @@
 		 * @param string     $key the session key
 		 * @param array|null &$data
 		 *
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function remove($key, array &$data = null)
 		{

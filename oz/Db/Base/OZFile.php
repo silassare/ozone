@@ -3,7 +3,7 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1538496196
+ * Time: 1543074680
  */
 
 	namespace OZONE\OZ\Db\Base;

@@ -3,19 +3,20 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1538496196
+ * Time: 1543074680
  */
 
 	namespace OZONE\OZ\Db\Base;
 
 	use Gobl\CRUD\CRUD;
+	use Gobl\DBAL\QueryBuilder;
 	use Gobl\DBAL\Rule;
 	use Gobl\ORM\Exceptions\ORMControllerFormException;
-	use Gobl\ORM\Exceptions\ORMException;
 	use Gobl\ORM\Exceptions\ORMQueryException;
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Db\OZAdmin as OZAdminReal;
 	use OZONE\OZ\Db\OZAdministratorsQuery as OZAdministratorsQueryReal;
+	use OZONE\OZ\Db\OZAdministratorsResults as OZAdministratorsResultsReal;
 
 	/**
 	 * Class OZAdministratorsController
@@ -24,10 +25,20 @@
 	 */
 	abstract class OZAdministratorsController
 	{
-		/** @var array */
+		/**
+		 * @var array
+		 */
 		protected $form_fields = [];
-		/** @var array */
+
+		/**
+		 * @var array
+		 */
 		protected $form_fields_mask = [];
+
+		/**
+		 * @var \Gobl\DBAL\Db
+		 */
+		protected $db;
 
 		/**
 		 * @var \Gobl\CRUD\CRUD
@@ -42,9 +53,9 @@
 		 */
 		public function __construct()
 		{
-			$table   = ORM::getDatabase()
-						  ->getTable(OZAdmin::TABLE_NAME);
-			$columns = $table->getColumns();
+			$this->db = ORM::getDatabase();
+			$table    = $this->db->getTable(OZAdmin::TABLE_NAME);
+			$columns  = $table->getColumns();
 
 			// we finds all required fields
 			foreach ($columns as $column) {
@@ -205,12 +216,27 @@
 				if (is_array($column_filters)) {
 					foreach ($column_filters as $filter) {
 						if (is_array($filter)) {
-							if (count($filter) !== 2 OR !isset($filter[0]) OR !isset($filter[1])) {
+							if (count($filter) < 2 OR !isset($filter[0]) OR !isset($filter[1])) {
 								throw new ORMControllerFormException('form_filters_invalid', [$column, $filter]);
 							}
 
 							$operator_key = $filter[0];
 							$value        = $filter[1];
+							$use_and      = false;
+
+							if (isset($filter[2])) {
+								$a = $filter[2];
+								if ($a === "and" OR $a === "AND" OR $a === 1 OR $a === true) {
+									$use_and = true;
+								} elseif ($a === "or" OR $a === "OR" OR $a === 0 OR $a === false) {
+									$use_and = false;
+								} else {
+									throw new ORMControllerFormException('form_filters_invalid', [
+										$column,
+										$filter
+									]);
+								}
+							}
 
 							if (!isset($operators_map[$operator_key])) {
 								throw new ORMControllerFormException('form_filters_unknown_operator', [
@@ -235,7 +261,12 @@
 								]);
 							}
 
-							$query->filterBy($column, $value, $operator, false);
+							$query->filterBy($column, $value, $operator, $use_and);
+						} else {
+							throw new ORMControllerFormException('form_filters_invalid', [
+								$column,
+								$filter
+							]);
 						}
 					}
 				} else {
@@ -263,14 +294,14 @@
 
 			$this->completeForm($values);
 
-			$my_entity = new OZAdminReal();
+			$entity = new OZAdminReal();
 
-			$my_entity->hydrate($values);
-			$my_entity->save();
+			$entity->hydrate($values);
+			$entity->save();
 
-			$this->crud->getHandler()->onAfterCreateEntity($my_entity);
+			$this->crud->getHandler()->onAfterCreateEntity($entity);
 
-			return $my_entity;
+			return $entity;
 		}
 
 		/**
@@ -300,16 +331,16 @@
 
 			$results = $this->findAllItems($filters, 1, 0);
 
-			$my_entity = $results->fetchClass();
+			$entity = $results->fetchClass();
 
-			if ($my_entity) {
-				$this->crud->getHandler()->onBeforeUpdateEntity($my_entity);
+			if ($entity) {
+				$this->crud->getHandler()->onBeforeUpdateEntity($entity);
 
-				$my_entity->hydrate($new_values);
-				$my_entity->save();
+				$entity->hydrate($new_values);
+				$entity->save();
 
-				$this->crud->getHandler()->onAfterUpdateEntity($my_entity);
-				return $my_entity;
+				$this->crud->getHandler()->onAfterUpdateEntity($entity);
+				return $entity;
 			} else {
 				return false;
 			}
@@ -333,12 +364,12 @@
 
 			self::assertFiltersNotEmpty($filters);
 
-			$my_query = new OZAdministratorsQueryReal();
+			$tableQuery = new OZAdministratorsQueryReal();
 
-			self::applyFilters($my_query, $filters);
+			self::applyFilters($tableQuery, $filters);
 
-			$affected = $my_query->update($new_values)
-								 ->execute();
+			$affected = $tableQuery->update($new_values)
+								   ->execute();
 
 			return $affected;
 		}
@@ -367,22 +398,22 @@
 
 			$results = $this->findAllItems($filters, 1, 0);
 
-			$my_entity = $results->fetchClass();
+			$entity = $results->fetchClass();
 
-			if ($my_entity) {
+			if ($entity) {
 
-				$this->crud->getHandler()->onBeforeDeleteEntity($my_entity);
+				$this->crud->getHandler()->onBeforeDeleteEntity($entity);
 
-				$my_query = new OZAdministratorsQueryReal();
+				$tableQuery = new OZAdministratorsQueryReal();
 
-				self::applyFilters($my_query, $filters);
+				self::applyFilters($tableQuery, $filters);
 
-				$my_query->delete()
-						 ->execute();
+				$tableQuery->delete()
+						   ->execute();
 
-				$this->crud->getHandler()->onAfterDeleteEntity($my_entity);
+				$this->crud->getHandler()->onAfterDeleteEntity($entity);
 
-				return $my_entity;
+				return $entity;
 			} else {
 				return false;
 			}
@@ -405,12 +436,12 @@
 
 			self::assertFiltersNotEmpty($filters);
 
-			$my_query = new OZAdministratorsQueryReal();
+			$tableQuery = new OZAdministratorsQueryReal();
 
-			self::applyFilters($my_query, $filters);
+			self::applyFilters($tableQuery, $filters);
 
-			$affected = $my_query->delete()
-								 ->execute();
+			$affected = $tableQuery->delete()
+								   ->execute();
 
 			return $affected;
 		}
@@ -439,13 +470,13 @@
 
 			$results = $this->findAllItems($filters, 1, 0, $order_by);
 
-			$my_entity = $results->fetchClass();
+			$entity = $results->fetchClass();
 
-			if ($my_entity) {
-				$this->crud->getHandler()->onAfterReadEntity($my_entity);
+			if ($entity) {
+				$this->crud->getHandler()->onAfterReadEntity($entity);
 			}
 
-			return $my_entity;
+			return $entity;
 		}
 
 		/**
@@ -471,8 +502,54 @@
 
 			$items = $results->fetchAllClass();
 
+			$total = self::totalResultsCount($results, count($items), $max, $offset);
+
+			return $items;
+		}
+
+		/**
+		 * Gets all items from `oz_administrators` with a custom query builder instance.
+		 *
+		 * @param \Gobl\DBAL\QueryBuilder $qb
+		 * @param null|int                $max    maximum row to retrieve
+		 * @param int                     $offset first row offset
+		 * @param int|bool                $total  total rows without limit
+		 *
+		 * @return \OZONE\OZ\Db\OZAdmin[]
+		 * @throws \Gobl\CRUD\Exceptions\CRUDException
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 */
+		public function getAllItemsCustom(QueryBuilder $qb, $max = null, $offset = 0, &$total = false)
+		{
+			$filters = [];
+
+			$this->crud->assertReadAll($filters);
+
+			$qb->limit($max, $offset);
+
+			$results = new OZAdministratorsResultsReal($this->db, $qb);
+
+			$items = $results->fetchAllClass(false);
+
+			$total = self::totalResultsCount($results, count($items), $max, $offset);
+
+			return $items;
+		}
+
+		/**
+		 * @param \OZONE\OZ\Db\OZAdministratorsResults $results
+		 * @param int                         $found
+		 * @param null|int                    $max
+		 * @param int                         $offset
+		 *
+		 * @return int
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 */
+		private static function totalResultsCount(OZAdministratorsResultsReal $results, $found = 0, $max = null, $offset = 0)
+		{
+			$total = 0;
 			if ($total !== false) {
-				$found = count($items);
 				if (isset($max)) {
 					if ($found < $max) {
 						$total = $offset + $found;
@@ -486,7 +563,7 @@
 				}
 			}
 
-			return $items;
+			return $total;
 		}
 
 		/**
@@ -531,13 +608,13 @@
 		 */
 		private function findAllItems(array $filters = [], $max = null, $offset = 0, array $order_by = [])
 		{
-			$my_query = new OZAdministratorsQueryReal();
+			$tableQuery = new OZAdministratorsQueryReal();
 
 			if (!empty($filters)) {
-				self::applyFilters($my_query, $filters);
+				self::applyFilters($tableQuery, $filters);
 			}
 
-			$results = $my_query->find($max, $offset, $order_by);
+			$results = $tableQuery->find($max, $offset, $order_by);
 
 			return $results;
 		}
@@ -546,7 +623,7 @@
 		 * @return \Gobl\CRUD\CRUD
 		 * @throws \Exception
 		 */
-		public function getCrud()
+		public function getCRUD()
 		{
 			if (!$this->crud) {
 				throw new \Exception("Not using CRUD rules");
@@ -554,16 +631,4 @@
 
 			return $this->crud;
 		}
-
-		// TODO
-		// public function addOneItemRelation(array $filters, $relation, array $relation_values){}
-
-		// TODO
-		// public function updateOneItemRelation(array $filters, $relation, array $new_values) {}
-
-		// TODO
-		// public function deleteOneItemRelation(array $filters, $relation, $delete_max = 1, $delete_offset = 0) {}
-
-		// TODO
-		// public function getOneItemWithRelations(array $filters, array $relations, $max = null, $offset = 0) {}
 	}

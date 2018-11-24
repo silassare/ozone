@@ -33,6 +33,7 @@
 		ClassLoader::addDir(OZ_OZONE_DIR . 'oz_vendors', true, 1);
 		ClassLoader::addNamespace('\Kli', OZ_OZONE_DIR . 'oz_vendors' . DS . 'kli' . DS . 'src');
 		ClassLoader::addNamespace('\Gobl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'gobl' . DS . 'src');
+		ClassLoader::addNamespace('\OTpl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'otpl' . DS . 'src' . DS . 'OTpl');
 	} catch (\Exception $e) {
 		oz_logger($e);
 		exit(1);

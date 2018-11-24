@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Lang;
 
+	use OTpl\OTpl;
 	use OZONE\OZ\Core\SessionsData;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
@@ -25,6 +26,7 @@
 		 * Should be called first and once, before any other call to this class method
 		 *
 		 * @return void
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function init()
 		{
@@ -34,7 +36,7 @@
 
 				// add template plugin
 				// usage: @oz_lang( $key [, $data [, $format [, $lang ] ] ] )
-				\OTpl::addPluginAlias('oz_lang', ['OZONE\OZ\Lang\Polyglot', 'translate']);
+				OTpl::addPluginAlias('oz_lang', [self::class, 'translate']);
 			}
 		}
 

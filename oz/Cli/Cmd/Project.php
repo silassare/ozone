@@ -63,7 +63,9 @@
 
 			$fm = new FilesManager($dir);
 			$fm->cd($backup_name, true)
-			   ->cp($project_fs->getRoot());
+			   ->cp($project_fs->getRoot(), null, [
+				   "exclude" => "#\.git|otpl_done|node_modules|debug.log#"
+			   ]);
 
 			$this->getCli()
 				 ->writeLn('Success: a backup of your project was created.')
@@ -103,19 +105,19 @@
 			$app_class_file = sprintf('%s.php', $class_name);
 
 			$inject = SettingsManager::genExportInfo('oz.config', [
-				':oz:comment:1'        => 'REQUIRED: FOR OZONE USAGE =======================================',
-				'OZ_OZONE_VERSION'     => OZ_OZONE_VERSION,
-				'OZ_PROJECT_NAME'      => $name,
-				'OZ_PROJECT_NAMESPACE' => $namespace,
-				'OZ_PROJECT_CLASS'     => $class_name,
-				'OZ_PROJECT_PREFIX'    => $prefix,
-				'OZ_DEBUG_MODE'    => 0,
-				'OZ_API_MAIN_URL'      => 'http://localhost',
-				'OZ_API_SESSION_ID_NAME' => 'OZONE_SID',
-				'OZ_API_KEY_HEADER_NAME'   => 'ozone-api-key',
-				':oz:comment:2'        => 'For server that does not support HEAD, PATCH, PUT, DELETE...',
+				':oz:comment:1'                   => 'REQUIRED: FOR OZONE USAGE =======================================',
+				'OZ_OZONE_VERSION'                => OZ_OZONE_VERSION,
+				'OZ_PROJECT_NAME'                 => $name,
+				'OZ_PROJECT_NAMESPACE'            => $namespace,
+				'OZ_PROJECT_CLASS'                => $class_name,
+				'OZ_PROJECT_PREFIX'               => $prefix,
+				'OZ_DEBUG_MODE'                   => 0,
+				'OZ_API_MAIN_URL'                 => 'http://localhost',
+				'OZ_API_SESSION_ID_NAME'          => 'OZONE_SID',
+				'OZ_API_KEY_HEADER_NAME'          => 'ozone-api-key',
+				':oz:comment:2'                   => 'For server that does not support HEAD, PATCH, PUT, DELETE...',
 				'OZ_API_ALLOW_REAL_METHOD_HEADER' => true,
-				'OZ_API_REAL_METHOD_HEADER_NAME' => 'ozone-real-method'
+				'OZ_API_REAL_METHOD_HEADER_NAME'  => 'ozone-real-method'
 			]);
 
 			$oz_config = TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject);
@@ -137,14 +139,14 @@
 			$oz_db = TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject);
 
 			$inject = SettingsManager::genExportInfo('oz.keygen.salt', [
-				':oz:comment:1'      => 'salt used to generate files tokens/keys.',
+				':oz:comment:1'          => 'salt used to generate files tokens/keys.',
 				'OZ_FILE_KEY_GEN_SALT'   => Hasher::genRandomString(rand(32, 64)),
-				':oz:comment:2'      => 'salt used to generate session identifiers.',
-				'OZ_SESSION_ID_GEN_SALT'    => Hasher::genRandomString(rand(32, 64)),
-				':oz:comment:3'      => 'salt used to generate authentication tokens.',
-				'OZ_AUTH_TOKEN_SALT' => Hasher::genRandomString(rand(32, 64)),
-				':oz:comment:4'      => 'salt used to generate client id/api_key.',
-				'OZ_CLIENT_ID_GEN_SALT'   => Hasher::genRandomString(rand(32, 64))
+				':oz:comment:2'          => 'salt used to generate session identifiers.',
+				'OZ_SESSION_ID_GEN_SALT' => Hasher::genRandomString(rand(32, 64)),
+				':oz:comment:3'          => 'salt used to generate authentication tokens.',
+				'OZ_AUTH_TOKEN_SALT'     => Hasher::genRandomString(rand(32, 64)),
+				':oz:comment:4'          => 'salt used to generate client id/api_key.',
+				'OZ_CLIENT_ID_GEN_SALT'  => Hasher::genRandomString(rand(32, 64))
 			]);
 
 			$oz_key_gen_salt = TemplatesUtils::compute('oz:gen/settings.warn.otpl', $inject);

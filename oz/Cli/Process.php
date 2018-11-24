@@ -28,6 +28,14 @@
 		private $output = '';
 		private $error  = '';
 
+		/**
+		 * Process constructor.
+		 *
+		 * @param        $cmd
+		 * @param string $cwd
+		 *
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 */
 		public function __construct($cmd, $cwd = '.')
 		{
 			$this->command = $cmd;

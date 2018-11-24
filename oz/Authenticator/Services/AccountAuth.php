@@ -101,8 +101,6 @@
 
 				$session_data = SessionsHandler::decodeSessionString($session->getData());
 				$verified     = SessionsData::get("ozone_user:verified", $session_data);
-
-				// oz_logger($session_data);
 			}
 
 			if (!$verified) {

@@ -214,8 +214,8 @@
 		{
 			$url = self::buildURL(null, $_SERVER['HTTP_HOST'], $_SERVER['REQUEST_URI']);
 
-			if ($append_query AND !empty($_SERVER['QUERY_STRING'])) {
-				$url .= '?' . $_SERVER['QUERY_STRING'];
+			if (!$append_query AND !empty($_SERVER['QUERY_STRING'])) {
+				$url = StringUtils::removeSuffix($url, '?' . $_SERVER['QUERY_STRING']);
 			}
 
 			return $url;

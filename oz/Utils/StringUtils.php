@@ -27,7 +27,7 @@
 			if (is_numeric($text)) return $text;
 			if (!is_string($text)) return '';
 
-			$text = rtrim($text);
+			$text = trim($text);
 			$text = htmlentities($text, ENT_QUOTES, 'UTF-8');
 			$text = str_replace("&amp;", "&", $text);
 

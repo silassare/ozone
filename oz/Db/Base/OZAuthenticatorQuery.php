@@ -3,7 +3,7 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1538496196
+ * Time: 1543074680
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -153,8 +153,8 @@
 		 * @param array $new_values new values
 		 *
 		 * @return \Gobl\DBAL\QueryBuilder
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \Exception
 		 */
 		public function safeUpdate(array $old_values, array $new_values)
 		{
@@ -194,8 +194,8 @@
 		 *                         to combine multiple rules on the same column
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZAuthenticatorQuery
-		 *
-		 * @throws \Exception
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function filterBy($column, $value, $operator = Rule::OP_EQ, $use_and = true)
 		{
@@ -219,7 +219,7 @@
 
 			if ($operator === Rule::OP_IN OR $operator === Rule::OP_NOT_IN) {
 				if (!is_array($value)) {
-					throw new \Exception("IN and NOT IN operators require an array value.");
+					throw new ORMException("IN and NOT IN operators require an array of values.",[$column,$value]);
 				}
 				$value = $this->qb->arrayToListItems($value);
 			} else {
@@ -242,7 +242,8 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZAuthenticatorQuery
-		 * @throws \Exception
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function filterByLabel($value, $operator = Rule::OP_EQ)
 		{
@@ -256,7 +257,8 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZAuthenticatorQuery
-		 * @throws \Exception
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function filterByFor($value, $operator = Rule::OP_EQ)
 		{
@@ -270,7 +272,8 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZAuthenticatorQuery
-		 * @throws \Exception
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function filterByCode($value, $operator = Rule::OP_EQ)
 		{
@@ -284,7 +287,8 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZAuthenticatorQuery
-		 * @throws \Exception
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function filterByToken($value, $operator = Rule::OP_EQ)
 		{
@@ -298,7 +302,8 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZAuthenticatorQuery
-		 * @throws \Exception
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function filterByTryMax($value, $operator = Rule::OP_EQ)
 		{
@@ -312,7 +317,8 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZAuthenticatorQuery
-		 * @throws \Exception
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function filterByTryCount($value, $operator = Rule::OP_EQ)
 		{
@@ -326,7 +332,8 @@
 		 * @param int    $operator the operator to use
 		 *
 		 * @return $this|\OZONE\OZ\Db\OZAuthenticatorQuery
-		 * @throws \Exception
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function filterByExpire($value, $operator = Rule::OP_EQ)
 		{

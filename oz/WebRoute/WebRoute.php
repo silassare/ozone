@@ -18,6 +18,7 @@
 	use OZONE\OZ\Exceptions\NotFoundException;
 	use OZONE\OZ\Exceptions\RuntimeException;
 	use OZONE\OZ\OZone;
+	use OZONE\OZ\Utils\StringUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -216,19 +217,21 @@
 			// TODO: find last url or go home
 			$back_url             = SettingsManager::get('oz.config', 'OZ_API_MAIN_URL');
 			$http_response_header = $e->getHeaderString();
-			$err_title            = str_replace('HTTP/1.1 ', '', $http_response_header);
-			$err_code             = $e->getCode();
+			$err_title            = StringUtils::removePrefix($http_response_header, 'HTTP/1.1 ');
+			$err_code             = explode(" ", $http_response_header)[1];
+			$err_code_real        = $e->getCode();
 			$err_desc             = $e->getMessage();
 			$err_data             = $e->getData();
 
 			$desc = [
-				'oz_error'          => $e,
-				'oz_error_code'     => $err_code,
-				'oz_error_title'    => $err_title,
-				'oz_error_desc'     => $err_desc,
-				'oz_error_data'     => $err_data,
-				'oz_error_url'      => $_SERVER['REQUEST_URI'],
-				'oz_error_back_url' => $back_url
+				'oz_error'           => $e,
+				'oz_error_code'      => $err_code,
+				'oz_error_code_real' => $err_code_real,
+				'oz_error_title'     => $err_title,
+				'oz_error_desc'      => $err_desc,
+				'oz_error_data'      => $err_data,
+				'oz_error_url'       => $_SERVER['REQUEST_URI'],
+				'oz_error_back_url'  => $back_url
 			];
 
 			header($http_response_header);

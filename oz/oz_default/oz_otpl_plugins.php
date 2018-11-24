@@ -8,6 +8,8 @@
 	 * file that was distributed with this source code.
 	 */
 
+	use OTpl\OTpl;
+
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	if (!function_exists("oz_file_link")) {
@@ -56,6 +58,6 @@
 			return \OZONE\OZ\User\UsersUtils::userVerified();
 		}
 
-		\OTpl::addPluginAlias("oz_file_link", "oz_file_link");
-		\OTpl::addPluginAlias("oz_verified_user", "oz_verified_user");
+		OTpl::addPluginAlias("oz_file_link", "oz_file_link");
+		OTpl::addPluginAlias("oz_verified_user", "oz_verified_user");
 	}

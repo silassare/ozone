@@ -1,9 +1,9 @@
 <?php
-/**
+	/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1538496196
+ * Time: 1543074680
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -33,10 +33,6 @@
 		protected $total_count_cache = null;
 		/** @var bool */
 		protected $trust_row_count = true;
-		/** @var \OZONE\OZ\Db\OZFile */
-		protected $entity = null;
-		/** @var int */
-		protected $fetch_style = \PDO::FETCH_ASSOC;
 		/** @var int */
 		protected $foreach_count = 0;
 		/** @var bool */
@@ -125,17 +121,12 @@
 		 */
 		public function fetchClass($strict = true)
 		{
-			if ($this->entity === null) {
-				$this->entity = new \OZONE\OZ\Db\OZFile(false, $strict);
-			}
+			$entity = new \OZONE\OZ\Db\OZFile(false, $strict);
+			$stmt   = $this->getStatement();
 
-			if ($this->fetch_style !== \PDO::FETCH_INTO) {
-				$this->getStatement()
-					 ->setFetchMode(\PDO::FETCH_INTO, $this->entity);
-			}
+			$stmt->setFetchMode(\PDO::FETCH_INTO, $entity);
 
-			return $this->getStatement()
-						->fetch();
+			return $stmt->fetch();
 		}
 
 		/**
@@ -148,11 +139,11 @@
 		 */
 		public function fetchAllClass($strict = true)
 		{
-			$this->fetch_style = \PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE;
-			$entity_class      = \OZONE\OZ\Db\OZFile::class;
+			$fetch_style  = \PDO::FETCH_CLASS | \PDO::FETCH_PROPS_LATE;
+			$entity_class = \OZONE\OZ\Db\OZFile::class;
 
 			return $this->getStatement()
-						->fetchAll($this->fetch_style, $entity_class, [false, $strict]);
+						->fetchAll($fetch_style, $entity_class, [false, $strict]);
 		}
 
 		/**
@@ -165,8 +156,6 @@
 		 */
 		public function fetch($fetch_style = \PDO::FETCH_ASSOC)
 		{
-			$this->fetch_style = $fetch_style;
-
 			return $this->getStatement()
 						->fetch($fetch_style);
 		}
@@ -181,8 +170,6 @@
 		 */
 		public function fetchAll($fetch_style = \PDO::FETCH_ASSOC)
 		{
-			$this->fetch_style = $fetch_style;
-
 			return $this->getStatement()
 						->fetchAll($fetch_style);
 		}
