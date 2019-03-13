@@ -37,7 +37,7 @@
 		const INVALID_FIELD       = 10004;
 		const RUNTIME             = 10005;
 
-		private static $ERROR_HEADER_MAP = [
+		private static $ERRORS_HEADER_MAP = [
 			self::BAD_REQUEST         => 'HTTP/1.1 400 Bad Request',
 			self::FORBIDDEN           => 'HTTP/1.1 403 Forbidden',
 			self::NOT_FOUND           => 'HTTP/1.1 404 Not Found',
@@ -104,11 +104,11 @@
 		{
 			$code = $this->getCode();
 
-			if (isset(self::$ERROR_HEADER_MAP[$code])) {
-				return self::$ERROR_HEADER_MAP[$code];
+			if (isset(self::$ERRORS_HEADER_MAP[$code])) {
+				return self::$ERRORS_HEADER_MAP[$code];
 			}
 
-			return self::$ERROR_HEADER_MAP[BaseException::UNKNOWN_ERROR];
+			return self::$ERRORS_HEADER_MAP[BaseException::UNKNOWN_ERROR];
 		}
 
 		/**
@@ -135,7 +135,7 @@
 				}
 
 				if (!headers_sent()) {
-					header(self::$ERROR_HEADER_MAP[BaseException::INTERNAL_ERROR]);
+					header(self::$ERRORS_HEADER_MAP[BaseException::INTERNAL_ERROR]);
 				}
 
 				$err_html = <<<ERROR_PAGE

@@ -262,12 +262,24 @@
 					$from = $source . DS . $file;
 					$to   = $destination . DS . $file;
 
-					if (isset($exclude) AND is_string($exclude) AND preg_match($exclude, $from)) {
-						continue;
+					if (isset($exclude)) {
+						if (is_callable($exclude)) {
+							if (call_user_func_array($exclude, [$file, $from, $to])) {
+								continue;
+							}
+						} elseif (is_string($exclude) AND preg_match($exclude, $from)) {
+							continue;
+						}
 					}
 
-					if (isset($include) AND is_string($include) AND !preg_match($include, $from)) {
-						continue;
+					if (isset($include)) {
+						if (is_callable($include)) {
+							if (!call_user_func_array($include, [$file, $from, $to])) {
+								continue;
+							}
+						} elseif (is_string($exclude) AND !preg_match($include, $from)) {
+							continue;
+						}
 					}
 
 					if (is_dir($from)) {

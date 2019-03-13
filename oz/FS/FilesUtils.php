@@ -337,7 +337,9 @@
 				$i++;
 			}
 
-			if (!$i) $i = 1;
+			if (!$i) {
+				$i = 1;
+			}
 
 			$parts = explode('.', $result);
 
@@ -369,5 +371,28 @@
 			];
 
 			return StringUtils::stringFormatToRegExp($format, $parts, $fields);
+		}
+
+		/**
+		 * Create a new file in temp directory with base64 data.
+		 *
+		 * @param string $base64_string
+		 *
+		 * @return bool|string|array
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 */
+		public static function base64ToFile($base64_string)
+		{
+			$output_file = tempnam(sys_get_temp_dir(), SettingsManager::get("oz.config", "OZ_PROJECT_PREFIX"));
+
+			$f    = fopen($output_file, 'wb');
+			$data = explode(',', $base64_string);
+
+			fwrite($f, base64_decode($data[1]));
+
+			fclose($f);
+
+			return $output_file;
 		}
 	}

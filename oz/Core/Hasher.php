@@ -21,10 +21,13 @@
 		const CHARS_ALL       = Hasher::CHARS_ALPHA_NUM . Hasher::CHARS_SYMBOLS;
 
 		/**
+		 * Returns a salt with a given name from settings
+		 *
 		 * @param string $name The 'oz.keygen.salt' settings salt key name.
 		 *
 		 * @return mixed|null
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private static function getSalt($name)
 		{
@@ -32,6 +35,8 @@
 		}
 
 		/**
+		 * Generate file key
+		 *
 		 * @param string $path The file path.
 		 *
 		 * @return string
@@ -54,7 +59,7 @@
 		}
 
 		/**
-		 * hash string with a given hash string length
+		 * Hash string with a given hash string length
 		 *
 		 * @param string $string The string to hash
 		 * @param int    $length The desired hash string length default 32
@@ -82,7 +87,27 @@
 		}
 
 		/**
-		 * generate random hash
+		 * Shorten url
+		 *
+		 * @param string $url url or string
+		 *
+		 * @return string
+		 */
+		public static function shorten($url)
+		{
+			$n         = crc32($url);
+			$chars     = self::CHARS_ALPHA_NUM;
+			$base      = strlen($chars);
+			$converted = "";
+			while ($n > 0) {
+				$converted = substr($chars, ($n % $base), 1) . $converted;
+				$n         = floor($n / $base);
+			}
+			return $converted;
+		}
+
+		/**
+		 * Generate random hash
 		 *
 		 * @param int $length The desired hash string length default 32
 		 *
@@ -94,7 +119,7 @@
 		}
 
 		/**
-		 * generate a seed
+		 * Generate a seed
 		 *
 		 * Test result:
 		 *  - Total seeds  -----> 1000000
@@ -114,7 +139,7 @@
 		}
 
 		/**
-		 * generate a random string for a given length
+		 * Generate a random string with a given length
 		 *
 		 * @param int    $length The desired random string length default 32 range is [1,512]
 		 * @param string $chars  The chars to use
@@ -126,11 +151,13 @@
 			$min = 1;
 			$max = 512;
 
-			if ($length < $min OR $length > $max)
+			if ($length < $min OR $length > $max) {
 				throw new \InvalidArgumentException(sprintf('Random string length must be between %d and %d.', $min, $max));
+			}
 
-			if (strlen($chars) < 2)
+			if (strlen($chars) < 2) {
 				throw new \InvalidArgumentException('Require at least 2 chars to generate random string.');
+			}
 
 			$chars_length = strlen($chars) - 1;
 			$string       = '';
@@ -144,10 +171,11 @@
 		}
 
 		/**
-		 * generate session id
+		 * Generate session id
 		 *
 		 * @return string
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function genSessionId()
 		{
@@ -157,12 +185,13 @@
 		}
 
 		/**
-		 * generate client id for a given client url
+		 * Generate client id for a given client url
 		 *
 		 * @param string $url the client url
 		 *
 		 * @return string
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function genClientId($url)
 		{
@@ -185,8 +214,9 @@
 			$min = 4;
 			$max = 32;
 
-			if ($length < $min OR $length > $max)
+			if ($length < $min OR $length > $max) {
 				throw new \InvalidArgumentException(sprintf('Auth code length must be between %d and %d.', $min, $max));
+			}
 
 			if ($alpha_num) {
 				return self::genRandomString($length, Hasher::CHARS_ALPHA_NUM);
@@ -211,6 +241,7 @@
 		 *
 		 * @return string
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function genAuthToken($key)
 		{

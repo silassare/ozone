@@ -103,6 +103,7 @@
 		public function load()
 		{
 			if (!$this->isValidImage()) return false;
+
 			$this->image = \WideImage::load($this->source_path);
 
 			return true;
@@ -292,6 +293,7 @@
 		 *
 		 * @return bool
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException when can't load 'oz.users' setting
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 
 		private function safeCoordinate(array $coordinate)
@@ -317,6 +319,7 @@
 		 *
 		 * @return \OZONE\OZ\FS\ImagesUtils
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function cropAndSave($destination_path, $quality, $max_width, $max_height, array $coordinate = null, $resize = true)
 		{

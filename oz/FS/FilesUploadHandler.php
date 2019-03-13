@@ -165,6 +165,8 @@
 		 * @param string $type the file mime type
 		 *
 		 * @return string
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private function genOptionalFileName($type)
 		{

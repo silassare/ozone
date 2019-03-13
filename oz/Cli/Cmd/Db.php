@@ -109,7 +109,7 @@
 			try {
 				$query = $db->generateDatabaseQuery();
 				// oz_logger($query);
-				$db->multipleQueryExecute($query);
+				$db->executeMulti($query);
 				$cli->writeLn('Success: database build done.');
 			} catch (\Exception $e) {
 				oz_logger($e);
@@ -188,7 +188,7 @@
 			$gen->generateORMClasses($tables, $dir);
 
 			try {
-				$db->multipleQueryExecute($query);
+				$db->executeMulti($query);
 				$cli->writeLn('Success: database refreshed.');
 			} catch (\Exception $e) {
 				oz_logger($e);
@@ -253,7 +253,7 @@
 			$db = DbManager::getInstance();
 
 			try {
-				$db->multipleQueryExecute($query);
+				$db->executeMulti($query);
 				$cli->writeLn('Success: database updated.');
 			} catch (\Exception $e) {
 				oz_logger($e);

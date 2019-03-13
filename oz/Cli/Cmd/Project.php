@@ -53,6 +53,9 @@
 		private function backup(array $options)
 		{
 			global $argv;
+
+			Utils::assertDatabaseAccess();
+
 			$dir         = $options['d'];
 			$project_fs  = new FilesManager();
 			$backup_name = sprintf('backup-%d', time());
@@ -64,7 +67,7 @@
 			$fm = new FilesManager($dir);
 			$fm->cd($backup_name, true)
 			   ->cp($project_fs->getRoot(), null, [
-				   "exclude" => "#\.git|otpl_done|node_modules|debug.log#"
+				   "exclude" => "#\.git|\.idea|otpl_done|node_modules|debug.log#"
 			   ]);
 
 			$this->getCli()

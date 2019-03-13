@@ -13,8 +13,7 @@
 	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\BaseService;
 	use OZONE\OZ\Crypt\DoCrypt;
-	use OZONE\OZ\Db\OZUser;
-	use OZONE\OZ\Db\OZUsersController;
+	use OZONE\OZ\Db\OZUsersQuery;
 	use OZONE\OZ\Exceptions\ForbiddenException;
 	use OZONE\OZ\Exceptions\InvalidFormException;
 	use OZONE\OZ\Exceptions\UnauthorizedActionException;
@@ -92,11 +91,12 @@
 				'vpass' => null
 			]);
 
-			$filters[OZUser::COL_PHONE] = $fv_obj->getField("phone");
-			$filters[OZUser::COL_VALID] = true;
+			$q = new OZUsersQuery();
 
-			$controller = new OZUsersController();
-			$user_obj   = $controller->getItem($filters);
+			$q->filterByPhone($fv_obj->getField("phone"))
+			  ->filterByValid(true);
+
+			$user_obj = $q->find()->fetchClass();
 
 			if (!$user_obj) {
 				throw new ForbiddenException();

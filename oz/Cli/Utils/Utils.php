@@ -38,7 +38,7 @@
 			}
 
 			if ($required) {
-				$err = 'Error: there is no ozone project in "%s". Are you in project root folder?';
+				$err = 'Error: there is no ozone project in "%s".' . PHP_EOL . 'Are you in project root folder?';
 				throw new RuntimeException(sprintf($err, $folder));
 			}
 
