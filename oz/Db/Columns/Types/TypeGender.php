@@ -26,6 +26,7 @@
 		/**
 		 * {@inheritdoc}
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
@@ -45,6 +46,14 @@
 		 */
 		public static function getInstance(array $options)
 		{
-			return new self;
+			$instance = new self;
+
+			if (self::getOptionKey($options, 'null', false))
+				$instance->nullAble();
+
+			if (array_key_exists('default', $options))
+				$instance->setDefault($options['default']);
+
+			return $instance;
 		}
 	}

@@ -23,6 +23,7 @@
 		 * {@inheritdoc}
 		 *
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function __construct()
 		{
@@ -40,6 +41,7 @@
 		/**
 		 * {@inheritdoc}
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function validate($value, $column_name, $table_name)
 		{

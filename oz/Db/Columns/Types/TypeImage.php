@@ -69,10 +69,6 @@
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
-			$debug = [
-				"value" => $value
-			];
-
 			return parent::validate($value, $column_name, $table_name);
 		}
 

@@ -149,17 +149,20 @@
 
 				$total = count($upload["name"]);
 
-				if ($total < $this->file_min_count OR $total > $this->file_max_count)
+				if ($total < $this->file_min_count OR $total > $this->file_max_count) {
 					throw new TypesInvalidValueException("OZ_FILE_COUNT_OUT_OF_LIMIT", $debug);
+				}
 
 				foreach ($upload['size'] as $index => $size) {
-					if (!$this->checkFileSize($size))
+					if (!$this->checkFileSize($size)) {
 						throw new TypesInvalidValueException("OZ_FILE_SIZE_OUT_OF_LIMIT", $debug);
+					}
 				}
 
 				foreach ($upload['type'] as $index => $mime) {
-					if (!$this->checkFileMime($mime))
+					if (!$this->checkFileMime($mime)) {
 						throw new TypesInvalidValueException("OZ_FILE_MIME_INVALID", $debug);
+					}
 				}
 
 				$files = self::computeMultipleFilesUploaded($upload, $uid, $this->file_label, $debug);
@@ -168,12 +171,14 @@
 				if (!empty($upload["tmp_name"])) {
 					$size = $upload['size'];
 
-					if (!$this->checkFileSize($size))
+					if (!$this->checkFileSize($size)) {
 						throw new TypesInvalidValueException("OZ_FILE_SIZE_OUT_OF_LIMIT", $debug);
+					}
 
 					$mime = $upload['type'];
-					if (!$this->checkFileMime($mime))
+					if (!$this->checkFileMime($mime)) {
 						throw new TypesInvalidValueException("OZ_FILE_MIME_INVALID", $debug);
+					}
 
 					$value = self::computeSingleFileUploaded($upload, $uid, $this->file_label, $debug);
 				} elseif ($default = $this->getDefault()) {
@@ -193,14 +198,17 @@
 		{
 			$instance = new self;
 
-			if (isset($options['multiple']) AND $options['multiple'])
+			if (isset($options['multiple']) AND $options['multiple']) {
 				$instance->multiple();
+			}
 
-			if (isset($options['mime_types']))
+			if (isset($options['mime_types'])) {
 				$instance->mimeTypes($options['mime_types']);
+			}
 
-			if (isset($options['file_label']))
+			if (isset($options['file_label'])) {
 				$instance->fileLabel($options['file_label']);
+			}
 
 			$instance->fileCountRange(
 				self::getOptionKey($options, "file_min_count", 1),
@@ -211,11 +219,13 @@
 				self::getOptionKey($options, "file_max_size", PHP_INT_MAX)
 			);
 
-			if (self::getOptionKey($options, 'null', false))
+			if (self::getOptionKey($options, 'null', false)) {
 				$instance->nullAble();
+			}
 
-			if (array_key_exists('default', $options))
+			if (array_key_exists('default', $options)) {
 				$instance->setDefault($options['default']);
+			}
 
 			return $instance;
 		}
@@ -244,8 +254,10 @@
 		 * @param $debug
 		 *
 		 * @return string
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \Exception
 		 */
 		public static function computeSingleFileUploaded($uploaded_file, $uid, $file_label, $debug)
 		{
@@ -273,9 +285,10 @@
 		 * @param $debug
 		 *
 		 * @return array
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \Exception
 		 */
 		public static function computeMultipleFilesUploaded($uploaded_files, $uid, $file_label, $debug)
 		{

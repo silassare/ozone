@@ -54,6 +54,10 @@
 
 		/**
 		 * {@inheritdoc}
+		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
