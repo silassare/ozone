@@ -3,7 +3,7 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1543074680
+ * Time: 1551653125
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -193,16 +193,18 @@
 			}
 
 			$operators_map = [
-				'eq'       => Rule::OP_EQ,
-				'neq'      => Rule::OP_NEQ,
-				'lt'       => Rule::OP_LT,
-				'lte'      => Rule::OP_LTE,
-				'gt'       => Rule::OP_GT,
-				'gte'      => Rule::OP_GTE,
-				'like'     => Rule::OP_LIKE,
-				'not_like' => Rule::OP_NOT_LIKE,
-				'in'       => Rule::OP_IN,
-				'not_in'   => Rule::OP_NOT_IN
+				'eq'          => Rule::OP_EQ,
+				'neq'         => Rule::OP_NEQ,
+				'lt'          => Rule::OP_LT,
+				'lte'         => Rule::OP_LTE,
+				'gt'          => Rule::OP_GT,
+				'gte'         => Rule::OP_GTE,
+				'like'        => Rule::OP_LIKE,
+				'not_like'    => Rule::OP_NOT_LIKE,
+				'in'          => Rule::OP_IN,
+				'not_in'      => Rule::OP_NOT_IN,
+				'is_null'     => Rule::OP_IS_NULL,
+				'is_not_null' => Rule::OP_IS_NOT_NULL
 			];
 
 			$table = ORM::getDatabase()
@@ -216,16 +218,54 @@
 				if (is_array($column_filters)) {
 					foreach ($column_filters as $filter) {
 						if (is_array($filter)) {
-							if (count($filter) < 2 OR !isset($filter[0]) OR !isset($filter[1])) {
+							if (!isset($filter[0])) {
 								throw new ORMControllerFormException('form_filters_invalid', [$column, $filter]);
 							}
 
 							$operator_key = $filter[0];
-							$value        = $filter[1];
-							$use_and      = false;
 
-							if (isset($filter[2])) {
-								$a = $filter[2];
+							if (!isset($operators_map[$operator_key])) {
+								throw new ORMControllerFormException('form_filters_unknown_operator', [
+									$column,
+									$filter
+								]);
+							}
+
+							$safe_value    = true;
+							$operator      = $operators_map[$operator_key];
+							$value         = null;
+							$use_and       = false;
+							$value_index   = 1;
+							$use_and_index = 2;
+
+							if ($operator === Rule::OP_IS_NULL OR $operator === Rule::OP_IS_NOT_NULL) {
+								$use_and_index = 1;// value not needed
+							} else {
+								if (!isset($filter[$value_index])) {
+									throw new ORMControllerFormException('form_filters_missing_value', [
+										$column,
+										$filter
+									]);
+								}
+
+								$value = $filter[$value_index];
+
+								if ($operator === Rule::OP_IN OR $operator === Rule::OP_NOT_IN) {
+									$safe_value = is_array($value) AND count($value) ? true : false;
+								} elseif (!is_scalar($value)) {
+									$safe_value = false;
+								}
+
+								if (!$safe_value) {
+									throw new ORMControllerFormException('form_filters_invalid_value', [
+										$column,
+										$filter
+									]);
+								}
+							}
+
+							if (isset($filter[$use_and_index])) {
+								$a = $filter[$use_and_index];
 								if ($a === "and" OR $a === "AND" OR $a === 1 OR $a === true) {
 									$use_and = true;
 								} elseif ($a === "or" OR $a === "OR" OR $a === 0 OR $a === false) {
@@ -238,29 +278,6 @@
 								}
 							}
 
-							if (!isset($operators_map[$operator_key])) {
-								throw new ORMControllerFormException('form_filters_unknown_operator', [
-									$column,
-									$filter
-								]);
-							}
-
-							$operator   = $operators_map[$operator_key];
-							$safe_value = true;
-
-							if ($operator === Rule::OP_IN OR $operator === Rule::OP_NOT_IN) {
-								$safe_value = is_array($value) AND count($value) ? true : false;
-							} elseif (!is_scalar($value)) {
-								$safe_value = false;
-							}
-
-							if (!$safe_value) {
-								throw new ORMControllerFormException('form_filters_invalid_value', [
-									$column,
-									$filter
-								]);
-							}
-
 							$query->filterBy($column, $value, $operator, $use_and);
 						} else {
 							throw new ORMControllerFormException('form_filters_invalid', [
@@ -271,7 +288,7 @@
 					}
 				} else {
 					$value = $column_filters;
-					$query->filterBy($column, $value, Rule::OP_EQ);
+					$query->filterBy($column, $value, is_null($value) ? Rule::OP_IS_NULL : Rule::OP_EQ);
 				}
 			}
 		}
@@ -299,7 +316,8 @@
 			$entity->hydrate($values);
 			$entity->save();
 
-			$this->crud->getHandler()->onAfterCreateEntity($entity);
+			$this->crud->getHandler()
+					   ->onAfterCreateEntity($entity);
 
 			return $entity;
 		}
@@ -334,12 +352,15 @@
 			$entity = $results->fetchClass();
 
 			if ($entity) {
-				$this->crud->getHandler()->onBeforeUpdateEntity($entity);
+				$this->crud->getHandler()
+						   ->onBeforeUpdateEntity($entity);
 
 				$entity->hydrate($new_values);
 				$entity->save();
 
-				$this->crud->getHandler()->onAfterUpdateEntity($entity);
+				$this->crud->getHandler()
+						   ->onAfterUpdateEntity($entity);
+
 				return $entity;
 			} else {
 				return false;
@@ -401,8 +422,8 @@
 			$entity = $results->fetchClass();
 
 			if ($entity) {
-
-				$this->crud->getHandler()->onBeforeDeleteEntity($entity);
+				$this->crud->getHandler()
+						   ->onBeforeDeleteEntity($entity);
 
 				$tableQuery = new OZFilesQueryReal();
 
@@ -411,7 +432,8 @@
 				$tableQuery->delete()
 						   ->execute();
 
-				$this->crud->getHandler()->onAfterDeleteEntity($entity);
+				$this->crud->getHandler()
+						   ->onAfterDeleteEntity($entity);
 
 				return $entity;
 			} else {
@@ -473,7 +495,8 @@
 			$entity = $results->fetchClass();
 
 			if ($entity) {
-				$this->crud->getHandler()->onAfterReadEntity($entity);
+				$this->crud->getHandler()
+						   ->onAfterReadEntity($entity);
 			}
 
 			return $entity;

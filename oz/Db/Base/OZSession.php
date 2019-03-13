@@ -3,7 +3,7 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1543074680
+ * Time: 1551653125
  */
 
 	namespace OZONE\OZ\Db\Base;
@@ -68,15 +68,6 @@
 		 * @var bool
 		 */
 		protected $strict = true;
-
-		/**
-		 * Private columns
-		 *
-		 * @var array
-		 */
-		protected static $private_columns = [
-			
-		];
 
 		
 		/**
@@ -550,8 +541,10 @@
 			$row = $this->row;
 
 			if ($hide_private_column) {
-				foreach (self::$private_columns as $key => $value) {
-					unset($row[$key]);
+				$privates_columns = $this->table->getPrivatesColumns();
+
+				foreach ($privates_columns as $column) {
+					unset($row[$column->getFullName()]);
 				}
 			}
 
