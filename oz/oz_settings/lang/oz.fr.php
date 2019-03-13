@@ -39,6 +39,7 @@
 		"OZ_FILE_IS_EMPTY"              => "Fichier vide.",
 
 		"OZ_FIELD_PHONE_ALREADY_REGISTERED" => "Le {phone} est déjà associé à un autre compte.",
+		"OZ_FIELD_EMAIL_ALREADY_REGISTERED" => "L'adresse mail {email} est déjà associé à un autre compte.",
 		"OZ_FIELD_PHONE_INVALID"            => "Le numéro est invalide.",
 		"OZ_FIELD_PHONE_NOT_REGISTERED"     => "Ce numéro n'est pas inscrit.",
 		"OZ_FIELD_EMAIL_NOT_REGISTERED"     => "Cette adresse mail n'est pas enrégistrée.",
