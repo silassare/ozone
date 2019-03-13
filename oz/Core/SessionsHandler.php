@@ -251,22 +251,24 @@
 		 */
 		private static function getCookieParams()
 		{
+			$cfg_domain   = SettingsManager::get("oz.cookie", "OZ_COOKIE_DOMAIN");
+			$cfg_lifetime = SettingsManager::get("oz.cookie", "OZ_COOKIE_LIFETIME");
+
 			if (!defined('OZ_SESSION_MAX_LIFE_TIME')) {
-				define('OZ_SESSION_MAX_LIFE_TIME', 24 * 60 * 60); // 1 day
+				define('OZ_SESSION_MAX_LIFE_TIME', $cfg_lifetime);
 			}
 
-			$cookie = session_get_cookie_params();
-
+			$cookie   = session_get_cookie_params();
 			$path     = str_replace('\\', '/', dirname($_SERVER['PHP_SELF']));
 			$path     = empty($path) ? '/' : $path;
 			$lifetime = OZ_SESSION_MAX_LIFE_TIME;
 			$httponly = true;
-			$domain   = $_SERVER['SERVER_NAME'];
+			$domain   = ($cfg_domain === "self") ? $_SERVER['SERVER_NAME'] : $cfg_domain;
 
 			// TODO find a strong and secure way to set the domain in debug mode
 			// Possible solutions:
 			//  - force user to disable debug mode before going to production
-			//  - or automatically/auto-magically detect production or development mode
+			//  - or automatically/auto-magically detect production or development server/mode
 
 			$is_debug_on = (bool)SettingsManager::get('oz.config', 'OZ_DEBUG_MODE');
 
