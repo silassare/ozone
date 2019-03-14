@@ -29,10 +29,10 @@
 		public static function isAdmin($uid)
 		{
 			$admins = new OZAdministratorsQuery();
-			$count = $admins->filterByUserId($uid)
-						   ->filterByValid(1)
-						   ->find(1)
-						   ->count();
+			$count  = $admins->filterByUserId($uid)
+							 ->filterByValid(1)
+							 ->find(1)
+							 ->count();
 
 			return ($count === 1 ? true : false);
 		}
