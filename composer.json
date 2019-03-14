@@ -13,7 +13,13 @@
     ],
     "require": {
         "php": ">=5.6.0",
-        "silassare/otpl": ">=1.1.6"
+        "silassare/otpl": "dev-master",
+        "silassare/gobl": "dev-master",
+        "silassare/kli": "dev-master",
+        "claviska/simpleimage": "^3.3"
+    },
+    "config": {
+        "vendor-dir": "oz/oz_vendors"
     },
     "homepage": "https://github.com/silassare/ozone#readme",
     "archive": {

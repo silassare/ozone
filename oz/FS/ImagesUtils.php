@@ -1,351 +1,327 @@
 <?php
-	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
-	 *
-	 * This file is part of OZone (O'Zone) package.
-	 *
-	 * For the full copyright and license information, please view the LICENSE
-	 * file that was distributed with this source code.
-	 */
+/**
+ * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+ *
+ * This file is part of OZone (O'Zone) package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-	namespace OZONE\OZ\FS;
+namespace OZONE\OZ\FS;
 
-	use OZONE\OZ\Core\SettingsManager;
+use claviska\SimpleImage;
+use OZONE\OZ\Core\SettingsManager;
 
-	defined('OZ_SELF_SECURITY_CHECK') or die;
+defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	require_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'wideimage' . DS . 'WideImage.php';
+class ImagesUtils
+{
+    /**
+     * SimpleImage object.
+     *
+     * @var \claviska\SimpleImage
+     */
+    protected $image;
 
-	class ImagesUtils
-	{
+    /**
+     * The current file source path.
+     *
+     * @var string
+     */
+    protected $source_path;
 
-		/**
-		 * @var \WideImage_Image
-		 */
-		protected $image;
+    /**
+     * Allowed image extension.
+     *
+     * @var array
+     */
+    protected $image_extensions = ['jpg', 'jpeg', 'png', 'gif', "webp"];
 
-		/**
-		 * the current file source path
-		 *
-		 * @var string
-		 */
-		protected $source_path;
+    /**
+     * ImagesUtils constructor.
+     *
+     * @param string $source_path the image file source path
+     */
+    public function __construct($source_path)
+    {
+        $this->source_path = $source_path;
+    }
 
-		/**
-		 * @var bool
-		 */
+    /**
+     * ImagesUtils destructor.
+     */
+    public function __destruct()
+    {
+        $this->destroy();
+    }
 
-		protected $image_resized = false;
+    /**
+     * Destroy image object.
+     */
+    public function destroy()
+    {
+        if ($this->image) {
+            $this->image = null;
+        }
+    }
 
-		/**
-		 * allowed image extension
-		 *
-		 * @var array
-		 */
-		protected $image_extensions = ['jpg', 'jpeg', 'png', 'gif'];
+    /**
+     * Outputs the image to browser in jpeg format.
+     *
+     * @param string $quality Image quality
+     */
+    function outputJpeg($quality)
+    {
+        // important because the size will change when response is gzipped
+        header_remove('Content-Length');
+        $this->image->toScreen('image/jpeg', $quality);
+    }
 
-		/**
-		 * ImagesUtils constructor.
-		 *
-		 * @param string $source_path the image file source path
-		 */
-		public function __construct($source_path)
-		{
-			$this->source_path = $source_path;
-		}
+    /**
+     * Loads the image file.
+     *
+     * @return bool The returned value is true if successful, false otherwise.
+     * @throws \Exception
+     */
+    public function load()
+    {
+        if (!$this->isValidImage()) return false;
 
-		/**
-		 * ImagesUtils destructor.
-		 */
-		public function __destruct()
-		{
-			$this->destroy();
-		}
+        $this->image = new SimpleImage;
 
-		/**
-		 * destroy WideImage_Image object
-		 */
-		public function destroy()
-		{
-			if ($this->image) {
-				$this->image->destroy();
-			}
-		}
+        $this->image->fromFile($this->source_path);
 
-		/**
-		 * Outputs the image to browser in jpeg format
-		 *
-		 * Sets headers Content-length and Content-type, and echoes the image in jpeg.
-		 * All other headers (such as Content-disposition) must be added manually.
-		 *
-		 * @param string $quality Image quality
-		 */
-		function outputJpeg($quality)
-		{
-			$data  = $this->image->asString('jpeg');
-			$img_r = imagecreatefromstring($data);
+        return true;
+    }
 
-			header('Content-type: image/jpeg');
-			// important car la taille changera a cause de la compresion
-			header_remove('Content-Length');
+    /**
+     * Checks if this image is valid.
+     *
+     * @return bool
+     */
+    public function isValidImage()
+    {
+        $src = $this->source_path;
+        $extension = strtolower(substr($src, (strrpos($src, '.') + 1)));
 
-			imagejpeg($img_r, null, $quality);
+        if (!in_array($extension, $this->image_extensions)) return false;
 
-			// free memory
-			imagedestroy($img_r);
-		}
+        $data = file_get_contents($src);
+        $r = @imagecreatefromstring($data);
 
-		/**
-		 * load the image file
-		 *
-		 * @return bool true if successful, false if fail
-		 */
-		public function load()
-		{
-			if (!$this->isValidImage()) return false;
+        return (is_resource($r) && get_resource_type($r) == 'gd');
+    }
 
-			$this->image = \WideImage::load($this->source_path);
+    /**
+     * Copy the current modified image to the desired destination path.
+     *
+     * @param string $destination_path
+     *
+     * @return \OZONE\OZ\FS\ImagesUtils
+     * @throws \Exception
+     */
+    public function copyImage($destination_path)
+    {
+        $this->image->toFile($destination_path);
 
-			return true;
-		}
+        return $this;
+    }
 
-		/**
-		 * Checks if this image is valid
-		 *
-		 * @return bool
-		 */
-		public function isValidImage()
-		{
-			$src       = $this->source_path;
-			$extension = strtolower(substr($src, (strrpos($src, '.') + 1)));
+    /**
+     * Advice on the best crop/resize width and height
+     * for the image with a given max output width and height.
+     *
+     * @param int $max_out_width The max output width in pixel.
+     * @param int $max_out_height The max output height in pixel.
+     *
+     * @return array
+     */
+    public function adviceBestSize($max_out_width, $max_out_height)
+    {
+        $iW = $this->getWidth();
+        $iH = $this->getHeight();
+        $ratio = ($iW > $iH) ? $iH / $iW : $iW / $iH;
+        $crop = ($ratio < 0.6) ? true : false;
 
-			if (!in_array($extension, $this->image_extensions)) return false;
+        if ($iW <= $max_out_width AND $iH <= $max_out_height) {
+            $W = $iW;
+            $H = $iH;
+            $crop = false;
+        } elseif (!$crop) {
+            if ($iW > $iH) {
+                $W = $max_out_width * $ratio;
+                $H = $W * $ratio;
+            } elseif ($iW < $iH) {
+                $H = $max_out_height * $ratio;
+                $W = $H * $ratio;
+            } else {
+                $W = min($max_out_width, $max_out_height) * $ratio;
+                $H = min($max_out_width, $max_out_height) * $ratio;
+            }
+        } else {
+            $W = min($max_out_width, $iW);
+            $H = min($max_out_height, $iH);
+        }
 
-			$data = file_get_contents($src);
-			$r    = @imagecreatefromstring($data);
+        return ['w' => ceil($W), 'h' => ceil($H), 'crop' => $crop];
+    }
 
-			return (is_resource($r) && get_resource_type($r) == 'gd');
-		}
+    /**
+     * Resize the image to the given width and height.
+     *
+     * @param int $width The desired width in pixel
+     * @param int $height The desired height in pixel
+     * @param bool $crop Should we crop when required? default is true
+     *
+     * @return \OZONE\OZ\FS\ImagesUtils
+     */
+    public function resizeImage($width, $height, $crop = true)
+    {
+        $iWidth = $this->getWidth();
+        $iHeight = $this->getHeight();
 
-		/**
-		 * copy the current modified image to the desired destination path
-		 *
-		 * @param string $destination_path
-		 *
-		 * @return \OZONE\OZ\FS\ImagesUtils
-		 */
-		public function copyImage($destination_path)
-		{
-			$this->image->saveToFile($destination_path);
+        if (!$width) {
+            $width = $iWidth;
+        } else {
+            $width = $width > $iWidth ? $iWidth : $width;
+        }
 
-			return $this;
-		}
+        if (!$height) {
+            $height = $iHeight;
+        } else {
+            $height = $height > $iHeight ? $iHeight : $height;
+        }
 
-		/**
-		 * advice on the best crop/resize width and height for the image with a given max output width and height
-		 *
-		 * @param int $max_out_width  the max output width in pixel
-		 * @param int $max_out_height the max output height in pixel
-		 *
-		 * @return array
-		 */
-		public function adviceBestSize($max_out_width, $max_out_height)
-		{
-			$iW    = $this->getWidth();
-			$iH    = $this->getHeight();
-			$ratio = ($iW > $iH) ? $iH / $iW : $iW / $iH;
-			$crop  = ($ratio < 0.6) ? true : false;
+        if ($crop) {
+            $this->image->thumbnail($width, $height, "center");
+        } else {
+            $this->image->resize($width, $height);
+        }
 
-			if ($iW <= $max_out_width AND $iH <= $max_out_height) {
-				$W    = $iW;
-				$H    = $iH;
-				$crop = false;
-			} elseif (!$crop) {
-				if ($iW > $iH) {
-					$W = $max_out_width * $ratio;
-					$H = $W * $ratio;
-				} elseif ($iW < $iH) {
-					$H = $max_out_height * $ratio;
-					$W = $H * $ratio;
-				} else {
-					$W = min($max_out_width, $max_out_height) * $ratio;
-					$H = min($max_out_width, $max_out_height) * $ratio;
-				}
-			} else {
-				$W = min($max_out_width, $iW);
-				$H = min($max_out_height, $iH);
-			}
+        return $this;
+    }
 
-			return ['w' => ceil($W), 'h' => ceil($H), 'crop' => $crop];
-		}
+    /**
+     * Crop the current image.
+     *
+     * @param int $left The left start position in pixel
+     * @param int $top The top start position in pixel
+     * @param int $width The output width in pixel
+     * @param int $height The output height in pixel
+     *
+     * @return \OZONE\OZ\FS\ImagesUtils
+     */
+    public function cropImage($left, $top, $width, $height)
+    {
+        $this->image = $this->image->crop($left, $top, $width, $height);
 
-		/**
-		 * @param int  $width  the desired width in pixel
-		 * @param int  $height the desired height in pixel
-		 * @param bool $crop   should we crop when required? default is true
-		 *
-		 * @return \OZONE\OZ\FS\ImagesUtils
-		 */
-		public function resizeImage($width, $height, $crop = true)
-		{
-			$iWidth  = $this->getWidth();
-			$iHeight = $this->getHeight();
+        return $this;
+    }
 
-			$this->image_resized = ($width <= $iWidth) || (isset($height) && $height <= $iHeight) ? true : false;
+    /**
+     * Save the current image to a given desired destination path.
+     *
+     * If no destination path, the source file will be overwrite.
+     *
+     * @param string|null $destination_path The destination file path
+     * @param int $quality The image quality between 0 and 100, default is 90
+     *
+     * @return \OZONE\OZ\FS\ImagesUtils
+     * @throws \Exception
+     */
+    public function saveImage($destination_path = null, $quality = 90)
+    {
+        if (!isset($destination_path)) {
+            $this->image->toFile($this->source_path, null, $quality);
+        } else {
+            $this->image->toFile($destination_path, null, $quality);
+        }
 
-			if (!$width) {
-				$width = $iWidth;
-			} else {
-				$width = $width > $iWidth ? $iWidth : $width;
-			}
+        return $this;
+    }
 
-			if (!$height) {
-				$height = $iHeight;
-			} else {
-				$height = $height > $iHeight ? $iHeight : $height;
-			}
+    /**
+     * Gets current image width.
+     *
+     * @return int
+     */
+    public function getWidth()
+    {
+        return $this->image->getWidth();
+    }
 
-			if ($crop) {
-				$wHalf = ceil($width / 2);
-				$hHalf = ceil($height / 2);
+    /**
+     * Gets current image height.
+     *
+     * @return int
+     */
+    public function getHeight()
+    {
+        return $this->image->getHeight();
+    }
 
-				$this->image = $this->image->resize($width, $height, 'outside')
-										   ->crop('50%-' . $wHalf, '50%-' . $hHalf, $width, $height);
-			} else {
-				$this->image = $this->image->resize($width, $height);
-			}
+    /**
+     * Checks if a given coordinate is safe for cropping.
+     *
+     * @param array $coordinate
+     *
+     * @return bool
+     * @throws \OZONE\OZ\Exceptions\InternalErrorException
+     * @throws \OZONE\OZ\Exceptions\RuntimeException
+     */
 
-			return $this;
-		}
+    private function safeCoordinate(array $coordinate)
+    {
+        $x = $coordinate['x'];
+        $y = $coordinate['y'];
+        $w = $coordinate['w'];
+        $h = $coordinate['h'];
+        $min_size = SettingsManager::get('oz.users', 'OZ_PPIC_MIN_SIZE');
 
-		/**
-		 * crop the current image
-		 *
-		 * @param int $left   the left start pos in pixel
-		 * @param int $top    the top start pos in pixel
-		 * @param int $width  the output width in pixel
-		 * @param int $height the output height in pixel
-		 *
-		 * @return \OZONE\OZ\FS\ImagesUtils
-		 */
-		public function cropImage($left, $top, $width, $height)
-		{
-			$this->image = $this->image->crop($left, $top, $width, $height);
+        return $x >= 0 AND $y >= 0 AND $w >= ($min_size + $x) AND $h >= ($min_size + $y) AND ($x + $w) <= $this->getWidth() AND ($y + $h) <= $this->getHeight();
+    }
 
-			return $this;
-		}
+    /**
+     * Crop the current image and save it to a given destination path.
+     *
+     * If no destination path, the source file will be overwrite.
+     *
+     * @param string $destination_path The destination file path
+     * @param int $quality The image quality between 0 and 100, default is 90
+     * @param int $max_width The max output width in pixel
+     * @param int $max_height The max output height in pixel
+     * @param array|null $coordinate The crop zone coordinate
+     * @param bool $resize Should we resize when required? default is true
+     *
+     * @return \OZONE\OZ\FS\ImagesUtils
+     * @throws \OZONE\OZ\Exceptions\InternalErrorException
+     * @throws \OZONE\OZ\Exceptions\RuntimeException
+     * @throws \Exception
+     */
+    public function cropAndSave($destination_path, $quality, $max_width, $max_height, array $coordinate = null, $resize = true)
+    {
+        $quality = empty($quality) ? 90 : $quality;
 
-		/**
-		 * save the current image to a given desired destination path
-		 *
-		 * if no destination path, the source file will be overwrite
-		 *
-		 * @param string|null $destination_path the destination file path
-		 * @param int         $quality          the image quality between 0 and 100, default is 90
-		 *
-		 * @return \OZONE\OZ\FS\ImagesUtils
-		 */
-		public function saveImage($destination_path = null, $quality = 90)
-		{
-			if (!isset($destination_path)) {
-				$this->image->saveToFile($this->source_path, $quality);
-			} else {
-				$this->image->saveToFile($destination_path, $quality);
-			}
+        if (!empty($coordinate)) {
+            if ($this->safeCoordinate($coordinate)) {
+                $x = $coordinate['x'];
+                $y = $coordinate['y'];
+                $w = $coordinate['w'];
+                $h = $coordinate['h'];
 
-			return $this;
-		}
+                if ($resize) {
+                    return $this->cropImage($x, $y, $w, $h)
+                        ->resizeImage($max_width, $max_height)
+                        ->saveImage($destination_path, $quality);
+                }
 
-		/**
-		 * Gets current image width
-		 *
-		 * @return int
-		 */
-		public function getWidth()
-		{
-			return $this->image->getWidth();
-		}
+                return $this->cropImage($x, $y, $w, $h)
+                    ->saveImage($destination_path, $quality);
+            }
+        }
 
-		/**
-		 * Gets current image height
-		 *
-		 * @return int
-		 */
-		public function getHeight()
-		{
-			return $this->image->getHeight();
-		}
-
-		/**
-		 * Checks if the image is resized
-		 *
-		 * @return bool
-		 */
-		public function imageResized()
-		{
-			return $this->image_resized;
-		}
-
-		/**
-		 * Checks if a given coordinate is safe for cropping
-		 *
-		 * @param array $coordinate
-		 *
-		 * @return bool
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException when can't load 'oz.users' setting
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 */
-
-		private function safeCoordinate(array $coordinate)
-		{
-			$x        = $coordinate['x'];
-			$y        = $coordinate['y'];
-			$w        = $coordinate['w'];
-			$h        = $coordinate['h'];
-			$min_size = SettingsManager::get('oz.users', 'OZ_PPIC_MIN_SIZE');
-
-			return $x >= 0 AND $y >= 0 AND $w >= ($min_size + $x) AND $h >= ($min_size + $y) AND ($x + $w) <= $this->getWidth() AND ($y + $h) <= $this->getHeight();
-		}
-
-		/**
-		 * crop the current image and save it to a given destination path
-		 *
-		 * @param string     $destination_path the destination file path
-		 * @param int        $quality          the image quality between 0 and 100, default is 90
-		 * @param int        $max_width        the max output width in pixel
-		 * @param int        $max_height       the max output height in pixel
-		 * @param array|null $coordinate       the crop zone coordinate
-		 * @param bool       $resize           should we resize when required? default is true
-		 *
-		 * @return \OZONE\OZ\FS\ImagesUtils
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 */
-		public function cropAndSave($destination_path, $quality, $max_width, $max_height, array $coordinate = null, $resize = true)
-		{
-			$quality = empty($quality) ? 90 : $quality;
-
-			if (!empty($coordinate)) {
-				if ($this->safeCoordinate($coordinate)) {
-					$x = $coordinate['x'];
-					$y = $coordinate['y'];
-					$w = $coordinate['w'];
-					$h = $coordinate['h'];
-
-					if ($resize) {
-						return $this->cropImage($x, $y, $w, $h)
-									->resizeImage($max_width, $max_height)
-									->saveImage($destination_path, $quality);
-					}
-
-					// permet de garder l'image tel qu'il a ete cropper par user
-					return $this->cropImage($x, $y, $w, $h)
-								->saveImage($destination_path, $quality);
-				}
-			}
-
-			// alors on fait un resize
-			return $this->resizeImage($max_width, $max_height)
-						->saveImage($destination_path, $quality);
-		}
-	}
+        return $this->resizeImage($max_width, $max_height)
+            ->saveImage($destination_path, $quality);
+    }
+}

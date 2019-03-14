@@ -1,0 +1,252 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "5a3a7134ec8ed2ab051ad0d459cd3ed8",
+    "packages": [
+        {
+            "name": "claviska/simpleimage",
+            "version": "3.3.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/claviska/SimpleImage.git",
+                "reference": "31ba5b8358e1663a2813e2ada7242fa8d97a96dc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/claviska/SimpleImage/zipball/31ba5b8358e1663a2813e2ada7242fa8d97a96dc",
+                "reference": "31ba5b8358e1663a2813e2ada7242fa8d97a96dc",
+                "shasum": ""
+            },
+            "require": {
+                "ext-gd": "*",
+                "league/color-extractor": "0.3.*",
+                "php": ">=5.6.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "claviska": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Cory LaViska",
+                    "homepage": "http://www.abeautifulsite.net/",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A PHP class that makes working with images as simple as possible.",
+            "time": "2017-09-12T09:03:56+00:00"
+        },
+        {
+            "name": "league/color-extractor",
+            "version": "0.3.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/thephpleague/color-extractor.git",
+                "reference": "837086ec60f50c84c611c613963e4ad2e2aec806"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/thephpleague/color-extractor/zipball/837086ec60f50c84c611c613963e4ad2e2aec806",
+                "reference": "837086ec60f50c84c611c613963e4ad2e2aec806",
+                "shasum": ""
+            },
+            "require": {
+                "ext-gd": "*",
+                "php": ">=5.4.0"
+            },
+            "replace": {
+                "matthecat/colorextractor": "*"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "~2",
+                "phpunit/phpunit": "~5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Mathieu Lechat",
+                    "email": "math.lechat@gmail.com",
+                    "homepage": "http://matthecat.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Extract colors from an image as a human would do.",
+            "homepage": "https://github.com/thephpleague/color-extractor",
+            "keywords": [
+                "color",
+                "extract",
+                "human",
+                "image",
+                "palette"
+            ],
+            "time": "2016-12-15T09:30:02+00:00"
+        },
+        {
+            "name": "silassare/gobl",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/silassare/gobl.git",
+                "reference": "3a2b0b424780fde8ed62cf73f04adf8f5f7b94ac"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/3a2b0b424780fde8ed62cf73f04adf8f5f7b94ac",
+                "reference": "3a2b0b424780fde8ed62cf73f04adf8f5f7b94ac",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6.0",
+                "silassare/otpl": ">=1.1.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Gobl\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Emile Silas Sare",
+                    "email": "emile.silas@gmail.com",
+                    "homepage": "https://github.com/silassare"
+                }
+            ],
+            "description": "Gobl allows you to use a Database Abstraction Layer (DBAL) and Object-Relational Mapping (ORM) to query your database with PHP.",
+            "homepage": "https://github.com/silassare/gobl#readme",
+            "keywords": [
+                "crud",
+                "dbal",
+                "gobl",
+                "mysql",
+                "orm"
+            ],
+            "time": "2019-03-14T10:25:39+00:00"
+        },
+        {
+            "name": "silassare/kli",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/silassare/kli.git",
+                "reference": "81cc22846e2c0262d89edd8627f7f0c2a5e3618a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/silassare/kli/zipball/81cc22846e2c0262d89edd8627f7f0c2a5e3618a",
+                "reference": "81cc22846e2c0262d89edd8627f7f0c2a5e3618a",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Kli\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Emile Silas Sare",
+                    "email": "emile.silas@gmail.com",
+                    "homepage": "https://github.com/silassare"
+                }
+            ],
+            "description": "Kli helps you add an interactive command-line interface to your php project.",
+            "homepage": "https://github.com/silassare/kli#readme",
+            "keywords": [
+                "cli",
+                "command",
+                "command-line",
+                "command-line-tool",
+                "kli",
+                "php-cli"
+            ],
+            "time": "2019-03-14T14:44:44+00:00"
+        },
+        {
+            "name": "silassare/otpl",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/silassare/otpl-php.git",
+                "reference": "f8709068bcc5ba5cf2cccc5da641ff854f5679d3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/silassare/otpl-php/zipball/f8709068bcc5ba5cf2cccc5da641ff854f5679d3",
+                "reference": "f8709068bcc5ba5cf2cccc5da641ff854f5679d3",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "OTpl\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Emile Silas Sare",
+                    "email": "emile.silas@gmail.com",
+                    "homepage": "https://github.com/silassare"
+                }
+            ],
+            "description": "A simple template system write once run everywhere!",
+            "homepage": "https://github.com/silassare/otpl-php#readme",
+            "keywords": [
+                "otemplate",
+                "otpl",
+                "template"
+            ],
+            "time": "2019-03-14T15:47:44+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "silassare/otpl": 20,
+        "silassare/gobl": 20,
+        "silassare/kli": 20
+    },
+    "prefer-stable": true,
+    "prefer-lowest": false,
+    "platform": {
+        "php": ">=5.6.0"
+    },
+    "platform-dev": []
+}
