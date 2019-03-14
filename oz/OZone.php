@@ -30,20 +30,10 @@
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
+    include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
-	include_once OZ_OZONE_DIR . 'Loader' . DS . 'ClassLoader.php';
-
-	try {
-		ClassLoader::addNamespace('\OZONE\OZ', OZ_OZONE_DIR);
-		ClassLoader::addDir(OZ_OZONE_DIR . 'oz_vendors', true, 1);
-		ClassLoader::addNamespace('\Gobl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'gobl' . DS . 'src');
-		ClassLoader::addNamespace('\OTpl', OZ_OZONE_DIR . 'oz_vendors' . DS . 'otpl' . DS . 'src' . DS . 'OTpl');
-	} catch (\Exception $e) {
-		oz_logger($e);
-		exit(1);
-	}
 
 	final class OZone
 	{

@@ -15,8 +15,6 @@
 	use OZONE\OZ\Exceptions\NotFoundException;
 	use OZONE\OZ\Utils\StringUtils;
 
-	require_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'phpqrcode' . DS . 'qrlib.php';
-
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	/**
@@ -39,9 +37,9 @@
 		}
 
 		/**
-		 * Gets QRCode image uri for authentication
+		 * Gets qr-code image uri for authentication
 		 *
-		 * @return array the qrcode info
+		 * @return array the qr-code info
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \Exception
 		 */
@@ -55,11 +53,11 @@
 			$qr_code_key = md5($label . $for_value . microtime());
 
 			$f_name      = SettingsManager::get('oz.files', 'OZ_QR_CODE_FILE_NAME');
-			$qr_code_src = str_replace(['{oz_qrcode_key}'], [$qr_code_key], $f_name);
+			$qr_code_src = str_replace(['{oz_qr_code_key}'], [$qr_code_key], $f_name);
 
-			SessionsData::set('_qrcode_cfg_:' . $qr_code_key, $generated);
+			SessionsData::set('_qr_code_cfg_:' . $qr_code_key, $generated);
 
-			return ['qrCodeSrc' => $qr_code_src, 'qrCodeKey' => $qr_code_key];
+			return ['qr_code_src' => $qr_code_src, 'qr_code_key' => $qr_code_key];
 		}
 
 		/**
@@ -67,13 +65,13 @@
 		 */
 		private static function cleanExpired()
 		{
-			$list = SessionsData::get('_qrcode_cfg_');
+			$list = SessionsData::get('_qr_code_cfg_');
 			$now  = time();
 
 			if (is_array($list)) {
 				foreach ($list as $key => $value) {
-					if ($value['authExpire'] <= $now) {
-						SessionsData::remove('_qrcode_cfg_:' . $key);
+					if ($value['auth_expire'] <= $now) {
+						SessionsData::remove('_qr_code_cfg_:' . $key);
 					}
 				}
 			}
@@ -94,19 +92,21 @@
 			$data = null;
 
 			if (is_string($qr_code_key)) {
-				$data = SessionsData::get('_qrcode_cfg_:' . $qr_code_key);
+				$data = SessionsData::get('_qr_code_cfg_:' . $qr_code_key);
 			}
 
 			if (empty($data)) {
 				throw new NotFoundException();
 			}
 
-			$label     = $data['authLabel'];
-			$token     = $data['authToken'];
-			$for_value = $data['authForValue'];
-			$content   = "$for_value:$label:$token";
+			$content = json_encode([
+				"auth_label"     => $data['auth_label'],
+				"auth_expire"    => $data['auth_expire'],
+				"auth_token"     => $data['auth_token'],
+				"auth_for_value" => $data['auth_for_value']
+			]);
 
-			\QRcode::png($content, 'php://output', QR_ECLEVEL_H, 20);
+			// \QRcode::png($content, 'php://output', QR_ECLEVEL_H, 20);
 		}
 
 		/**
@@ -116,13 +116,14 @@
 		 *
 		 * @return string
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function genQRCodeURIRegExp(array &$fields)
 		{
 			$format = SettingsManager::get("oz.files", "OZ_QR_CODE_URI_EXTRA_FORMAT");
 
 			$parts = [
-				"oz_qrcode_key" => "([a-z0-9]{32})"
+				"oz_qr_code_key" => "([a-z0-9]{32})"
 			];
 
 			return StringUtils::stringFormatToRegExp($format, $parts, $fields);

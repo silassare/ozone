@@ -57,10 +57,11 @@
 		{
 			Assert::assertUserVerified();
 
-			$data = [
-				"apiKey" => RequestHandler::getCurrentClient(true)->getApiKey(),
-				"token"  => UsersUtils::getCurrentSessionToken(),
-				"uid"    => UsersUtils::getCurrentUserId()
+			$client = RequestHandler::getCurrentClient(true);
+			$data   = [
+				"api_key" => $client->getApiKey(),
+				"token"   => UsersUtils::getCurrentSessionToken(),
+				"uid"     => UsersUtils::getCurrentUserId()
 			];
 
 			return self::encode($data);
@@ -80,16 +81,20 @@
 
 			$data = self::decode($str);
 
-			Assert::assertForm($data, ['token', 'apiKey', 'uid'], new ForbiddenException('OZ_ERROR_INVALID_ACCOUNT_AUTH'));
+			Assert::assertForm($data, [
+				'token',
+				'api_key',
+				'uid'
+			], new ForbiddenException('OZ_ERROR_INVALID_ACCOUNT_AUTH'));
 
 			$verified = false;
 			$user     = null;
-			$apiKey   = $data['apiKey'];
+			$api_key  = $data['api_key'];
 			$token    = $data['token'];
 			$uid      = $data['uid'];
 
 			$s_table = new OZSessionsQuery();
-			$session = $s_table->filterByClientApiKey($apiKey)
+			$session = $s_table->filterByClientApiKey($api_key)
 							   ->filterByToken($token)
 							   ->filterByUserId($uid)
 							   ->filterByExpire(time(), Rule::OP_GT)
@@ -97,8 +102,9 @@
 							   ->fetchClass();
 			$u_table = new OZUsersQuery();
 
-			if ($session AND $user = $u_table->filterById($uid)->find(1)->fetchClass()) {
-
+			if ($session AND $user = $u_table->filterById($uid)
+											 ->find(1)
+											 ->fetchClass()) {
 				$session_data = SessionsHandler::decodeSessionString($session->getData());
 				$verified     = SessionsData::get("ozone_user:verified", $session_data);
 			}

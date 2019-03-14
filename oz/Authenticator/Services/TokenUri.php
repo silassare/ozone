@@ -28,7 +28,7 @@
 		private static $REG_TOKEN_URI = '#^([a-z0-9]{32})/([a-z0-9]{32})\.auth$#';
 
 		/**
-		 * ServiceTokenUri constructor.
+		 * TokenUri constructor.
 		 */
 		public function __construct()
 		{
@@ -46,17 +46,18 @@
 		 */
 		public function execute(array $request = [])
 		{
-			$extra_ok = URIHelper::parseUriExtra(self::$REG_TOKEN_URI, ['label', 'token'], $request);
+			$out      = [];
+			$extra_ok = URIHelper::parseUriExtra(self::$REG_TOKEN_URI, ['label', 'token'], $out);
 
 			if (!$extra_ok) throw new NotFoundException();
 
-			Assert::assertForm($request, ['label', 'token'], new NotFoundException());
+			Assert::assertForm($out, ['label', 'token'], new NotFoundException());
 
 			$name       = "mail_validator";
 			$email      = "sample@mail.com";
 			$auth_obj   = new Authenticator($name, $email);
-			$auth_label = $request['label'];
-			$auth_token = $request['token'];
+			$auth_label = $out['label'];
+			$auth_token = $out['token'];
 			$valid      = false;
 
 			if ($auth_obj->canUseLabel($auth_label)) {
@@ -64,7 +65,7 @@
 				$valid = $auth_obj->validateToken($auth_token);
 			}
 
-			if ($valid){
+			if ($valid) {
 				// do something good here or inform, redirect user
 			} else {
 				throw new NotFoundException();

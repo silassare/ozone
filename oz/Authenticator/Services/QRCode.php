@@ -19,14 +19,14 @@
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	/**
-	 * Class QrCode
+	 * Class QRCode
 	 *
 	 * @package OZONE\OZ\Authenticator\Services
 	 */
-	final class QrCode extends BaseService
+	final class QRCode extends BaseService
 	{
 		/**
-		 * QrCode constructor.
+		 * QRCode constructor.
 		 */
 		public function __construct()
 		{
@@ -38,8 +38,10 @@
 		 *
 		 * @param array $request
 		 *
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 * @throws \OZONE\OZ\Exceptions\NotFoundException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public function execute(array $request = [])
 		{

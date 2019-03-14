@@ -134,11 +134,11 @@
 				 ->save();
 
 			$this->generated = [
-				'authForValue' => $this->for_value,
-				'authLabel'    => $this->label,
-				'authExpire'   => $expire,
-				'authCode'     => $code,
-				'authToken'    => $token
+				'auth_for_value' => $this->for_value,
+				'auth_label'     => $this->label,
+				'auth_expire'    => $expire,
+				'auth_code'      => $code,
+				'auth_token'     => $token
 			];
 
 			return $this;

@@ -45,15 +45,16 @@
 		{
 			$params_required = ['oz_captcha_key'];
 			$params_orders   = [];
+			$out             = [];
 			$file_uri_reg    = CaptchaCodeHelper::genCaptchaURIRegExp($params_orders);
-			$extra_ok        = URIHelper::parseUriExtra($file_uri_reg, $params_orders, $request);
+			$extra_ok        = URIHelper::parseUriExtra($file_uri_reg, $params_orders, $out);
 
 			if (!$extra_ok) {
 				throw new NotFoundException();
 			}
 
-			Assert::assertForm($request, $params_required, new NotFoundException());
+			Assert::assertForm($out, $params_required, new NotFoundException());
 
-			CaptchaCodeHelper::serveCaptchaImage($request['oz_captcha_key']);
+			CaptchaCodeHelper::serveCaptchaImage($out['oz_captcha_key']);
 		}
 	}

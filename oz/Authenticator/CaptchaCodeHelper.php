@@ -80,9 +80,9 @@
 			$f_name  = SettingsManager::get('oz.files', 'OZ_CAPTCHA_FILE_NAME');
 			$img_src = str_replace(['{oz_captcha_key}'], [$captcha_key], $f_name);
 
-			SessionsData::set('_captcha_cfg_:' . $captcha_key, $generated['authCode']);
+			SessionsData::set('_captcha_cfg_:' . $captcha_key, $generated['auth_code']);
 
-			return ['captchaSrc' => $img_src];
+			return ['captcha_src' => $img_src];
 		}
 
 		/**

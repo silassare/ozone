@@ -10,6 +10,8 @@
 
 	namespace OZONE\OZ\Authenticator;
 
+	use OZONE\OZ\Core\URIHelper;
+
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	/**
@@ -33,20 +35,22 @@
 		}
 
 		/**
-		 * Gets token url for authentication
+		 * Gets token url info for authentication
 		 *
-		 * @return array the token url info
+		 * @return array The token url info
 		 * @throws \Exception
 		 */
-		public function getTokenUrl()
+		public function getTokenInfo()
 		{
 			$auth      = $this->auth;
 			$generated = $auth->generate()
 							  ->getGenerated();
-			$label     = $auth->getLabel();
-			$token     = $generated['token'];
-			$uri       = "$label/$token.auth";
 
-			return ['tokenUrl' => $uri];
+			return [
+				"auth_label"     => $generated['auth_label'],
+				"auth_expire"    => $generated['auth_expire'],
+				"auth_token"     => $generated['auth_token'],
+				"auth_for_value" => $generated['auth_for_value']
+			];
 		}
 	}

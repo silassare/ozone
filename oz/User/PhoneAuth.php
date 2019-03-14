@@ -258,12 +258,12 @@
 
 			if ($sms_sender) {
 				$generated = $auth_obj->getGenerated();
-				$code      = $generated["authCode"];
+				$code      = $generated["auth_code"];
 				$message   = SMSUtils::getSMSMessage(SMSUtils::SMS_TYPE_AUTH_CODE, ['code' => $code]);
 				$sms_sender->sendToNumber($phone, $message);
 			}
 
 			$this->response->setDone($msg)
-						   ->setData(['phone' => $phone, 'captcha' => $captcha['captchaSrc']]);
+						   ->setData(['phone' => $phone, 'captcha' => $captcha['captcha_src']]);
 		}
 	}

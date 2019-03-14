@@ -28,6 +28,6 @@
 		'OZ_GET_FILE_ACCESS_LEVEL'     => 'session',
 		'OZ_CAPTCHA_FILE_NAME'         => 'oz-captcha-{oz_captcha_key}.png',
 		'OZ_CAPTCHA_URI_EXTRA_FORMAT'  => 'oz-captcha-{oz_captcha_key}.png',
-		'OZ_QR_CODE_FILE_NAME'         => 'oz-qrcode-{oz_qrcode_key}.png',
-		'OZ_QR_CODE_URI_EXTRA_FORMAT'  => 'oz-qrcode-{oz_qrcode_key}.png'
+		'OZ_QR_CODE_FILE_NAME'         => 'oz-qr-code-{oz_qr_code_key}.png',
+		'OZ_QR_CODE_URI_EXTRA_FORMAT'  => 'oz-qr-code-{oz_qr_code_key}.png'
 	];
