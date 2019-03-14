@@ -1,4 +1,5 @@
-/.idea
-/ignore
+.idea
+ignore
 **/otpl_done/*
-/oz/Db/Base/*
+**/oz/Db/Base/*
+**/oz/oz_vendors/*
