@@ -43,17 +43,18 @@
 		 */
 		public function execute(array $request = [])
 		{
-			$params_required = ['oz_qrcode_key'];
+			$params_required = ['oz_qr_code_key'];
 			$params_orders   = [];
+			$out             = [];
 			$file_uri_reg    = QRCodeHelper::genQRCodeURIRegExp($params_orders);
-			$extra_ok        = URIHelper::parseUriExtra($file_uri_reg, $params_orders, $request);
+			$extra_ok        = URIHelper::parseUriExtra($file_uri_reg, $params_orders, $out);
 
 			if (!$extra_ok) {
 				throw new NotFoundException();
 			}
 
-			Assert::assertForm($request, $params_required, new NotFoundException());
+			Assert::assertForm($out, $params_required, new NotFoundException());
 
-			QRCodeHelper::serveQrCodeImage($request['oz_qrcode_key']);
+			QRCodeHelper::serveQrCodeImage($out['oz_qr_code_key']);
 		}
 	}
