@@ -3,3 +3,4 @@ ignore
 **/otpl_done/*
 **/oz/Db/Base/*
 **/oz/oz_vendors/*
+composer.lock
