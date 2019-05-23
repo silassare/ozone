@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5a3a7134ec8ed2ab051ad0d459cd3ed8",
+    "content-hash": "2d8b7302f8e39c88e76139a82727a44a",
     "packages": [
         {
             "name": "claviska/simpleimage",
@@ -100,20 +100,72 @@
             "time": "2016-12-15T09:30:02+00:00"
         },
         {
+            "name": "psr/http-message",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-message.git",
+                "reference": "f6561bf28d520154e4b0ec72be95418abe6d9363"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/f6561bf28d520154e4b0ec72be95418abe6d9363",
+                "reference": "f6561bf28d520154e4b0ec72be95418abe6d9363",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Message\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "http://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for HTTP messages",
+            "homepage": "https://github.com/php-fig/http-message",
+            "keywords": [
+                "http",
+                "http-message",
+                "psr",
+                "psr-7",
+                "request",
+                "response"
+            ],
+            "time": "2016-08-06T14:39:51+00:00"
+        },
+        {
             "name": "silassare/gobl",
             "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "3a2b0b424780fde8ed62cf73f04adf8f5f7b94ac"
+                "reference": "c7854ff5af3f34115153f96199a9bfa81c040a7e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/3a2b0b424780fde8ed62cf73f04adf8f5f7b94ac",
-                "reference": "3a2b0b424780fde8ed62cf73f04adf8f5f7b94ac",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/c7854ff5af3f34115153f96199a9bfa81c040a7e",
+                "reference": "c7854ff5af3f34115153f96199a9bfa81c040a7e",
                 "shasum": ""
             },
             "require": {
+                "ext-json": "*",
+                "ext-pdo": "*",
                 "php": ">=5.6.0",
                 "silassare/otpl": ">=1.1.6"
             },
@@ -143,7 +195,7 @@
                 "mysql",
                 "orm"
             ],
-            "time": "2019-03-14T10:25:39+00:00"
+            "time": "2019-05-08T19:08:50+00:00"
         },
         {
             "name": "silassare/kli",
@@ -151,12 +203,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/kli.git",
-                "reference": "81cc22846e2c0262d89edd8627f7f0c2a5e3618a"
+                "reference": "03aed776111c2016cd20edb6d82e5636e5bec9d0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/kli/zipball/81cc22846e2c0262d89edd8627f7f0c2a5e3618a",
-                "reference": "81cc22846e2c0262d89edd8627f7f0c2a5e3618a",
+                "url": "https://api.github.com/repos/silassare/kli/zipball/03aed776111c2016cd20edb6d82e5636e5bec9d0",
+                "reference": "03aed776111c2016cd20edb6d82e5636e5bec9d0",
                 "shasum": ""
             },
             "require": {
@@ -189,7 +241,7 @@
                 "kli",
                 "php-cli"
             ],
-            "time": "2019-03-14T14:44:44+00:00"
+            "time": "2019-03-18T19:24:59+00:00"
         },
         {
             "name": "silassare/otpl",
@@ -197,12 +249,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/otpl-php.git",
-                "reference": "f8709068bcc5ba5cf2cccc5da641ff854f5679d3"
+                "reference": "0fd23dc0c3c69fdc613fc9de9af2022e0db90a77"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/otpl-php/zipball/f8709068bcc5ba5cf2cccc5da641ff854f5679d3",
-                "reference": "f8709068bcc5ba5cf2cccc5da641ff854f5679d3",
+                "url": "https://api.github.com/repos/silassare/otpl-php/zipball/0fd23dc0c3c69fdc613fc9de9af2022e0db90a77",
+                "reference": "0fd23dc0c3c69fdc613fc9de9af2022e0db90a77",
                 "shasum": ""
             },
             "require": {
@@ -232,7 +284,7 @@
                 "otpl",
                 "template"
             ],
-            "time": "2019-03-14T15:47:44+00:00"
+            "time": "2019-04-09T02:35:27+00:00"
         }
     ],
     "packages-dev": [],
@@ -246,7 +298,12 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=5.6.0"
+        "php": ">=5.6.0",
+        "ext-pdo": "*",
+        "ext-json": "*",
+        "ext-gd": "*",
+        "ext-libxml": "*",
+        "ext-simplexml": "*"
     },
     "platform-dev": []
 }

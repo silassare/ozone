@@ -13,8 +13,20 @@ server {
 	root /var/www/example/www;
 	index index.php;
 
-	# serve file or directory only if exists otherwise shout 
-	# pass it to OZone entry point index.php 
+	# disable access to oz_private directory
+	#
+	location ^~ /oz_private/ {
+		return 404;
+	}
+
+	# disable access to debug.log file
+	#
+	location ^~ ^/debug\.log$ {
+		return 404;
+	}
+
+	# serve file or directory only if exists otherwise
+	# pass it to O'Zone entry point index.php
 	#
 	location / {
 		try_files $uri $uri/ @handle;
@@ -25,14 +37,15 @@ server {
 	# for any other request rewrite to our OZone entry point index.php
 	#
 	location @handle {
-        	rewrite ^/.*$ /index.php last;
+		rewrite ^/.*$ /index.php last;
 	}
 
-	# pass OZone entry point index.php to PHP FastCGI server
+	# let PHP FastCGI server to handle PHP files
 	#
-	location /index.php {
+	location ~ [^/]\.php(/|$) {
 		include snippets/fastcgi-php.conf;
+
 		fastcgi_pass unix:/var/run/php/php7.0-fpm.sock;
-		fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+		fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
 	}
 }

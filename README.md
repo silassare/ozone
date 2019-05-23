@@ -1,6 +1,6 @@
 # O'Zone
 
-O'Zone framework for API and website.
+O'Zone is a framework to build RESTFul API and website.
 
 [+] Still in development
 

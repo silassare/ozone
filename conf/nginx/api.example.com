@@ -15,19 +15,25 @@ server {
 
 	# serve some basic file only if exists otherwise shout 404
 	#
-	location ~ ^/(favicon\.ico|robots\.txt)$ {
+	location ^~ ^/(favicon\.ico|robots\.txt)$ {
 		try_files $uri =404;
 		access_log off;
 		log_not_found off;
 	}
 
-	# for any other request rewrite to our OZone entry point index.php
+	# disable access to debug.log file
 	#
-	location / {
-        	rewrite ^/.*$ /index.php last;
+	location ^~ ^/debug\.log$ {
+		return 404;
 	}
 
-	# pass OZone entry point index.php to PHP FastCGI server
+	# for any other request rewrite to our O'Zone entry point index.php
+	#
+	location / {
+		rewrite ^/.*$ /index.php last;
+	}
+
+	# pass O'Zone entry point index.php to PHP FastCGI server
 	#
 	location /index.php {
 		include snippets/fastcgi-php.conf;

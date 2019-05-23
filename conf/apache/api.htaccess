@@ -1,17 +1,24 @@
 AddDefaultCharset UTF-8
 AddType text/cache-manifest .manifest
 
-# Disable files listing multiview and enable symbolique link
-
+# disable files listing multiview and enable symbolic link
+#
 Options -Indexes -Multiviews +FollowSymlinks
 
-# Start rewriter
+# disable access to debug.log file
+#
+<Files /debug.log>
+   Order Deny,allow
+   Deny from all
+</Files>
 
+# start rewrite
+#
 <IfModule mod_rewrite.c>
 	RewriteEngine on
 
-	RewriteCond %{REQUEST_URI} !^/index\.php
-	RewriteCond %{REQUEST_URI} !^/robots\.txt
-	RewriteCond %{REQUEST_URI} !^/favicon\.ico
-	RewriteRule (.*)           index.php [L]
+	RewriteCond %{REQUEST_URI}  !^/index\.php
+	RewriteCond %{REQUEST_URI}  !^/robots\.txt
+	RewriteCond %{REQUEST_URI}  !^/favicon\.ico
+	RewriteRule (.*)			index.php [L]
 </IfModule>
