@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -10,10 +10,8 @@
 
 	namespace OZONE\OZ\Core;
 
-	use Gobl\CRUD\CRUD;
 	use Gobl\DBAL\Column;
 	use Gobl\DBAL\Db;
-	use Gobl\DBAL\Drivers\MySQL;
 	use Gobl\DBAL\QueryBuilder;
 	use Gobl\ORM\ORM;
 	use OZONE\OZ\Exceptions\InternalErrorException;
@@ -21,131 +19,88 @@
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	final class DbManager extends Db
+	final class DbManager
 	{
 		/**
-		 * Instance of ozone db.
-		 *
-		 * @var \OZONE\OZ\Core\DbManager
+		 * @var \Gobl\DBAL\Db
 		 */
-		private static $instance = null;
+		private static $db = null;
 
 		/**
-		 * OZone db rdbms class setting shortcuts map
+		 * Initialize.
 		 *
-		 * @var array
-		 */
-		private static $oz_rdbms_map = [
-			'mysql' => MySQL::class
-		];
-
-		private static $initialized = false;
-
-		/**
-		 * DbManager constructor.
-		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
-		protected function __construct()
+		public static function init()
 		{
-			parent::__construct($this->initRDBMS());
+			$config    = SettingsManager::get('oz.db');
+			$db_config = [
+				'db_host'    => $config['OZ_DB_HOST'],
+				'db_name'    => $config['OZ_DB_NAME'],
+				'db_user'    => $config['OZ_DB_USER'],
+				'db_pass'    => $config['OZ_DB_PASS'],
+				'db_charset' => $config['OZ_DB_CHARSET']
+			];
 
-			ORM::setDatabase($this);
+			$rdbms_type = $config['OZ_DB_RDBMS'];
+
+			try {
+				self::$db = Db::instantiate($rdbms_type, $db_config);
+			} catch (\Throwable $e) {
+				throw new InternalErrorException(sprintf('Unable to init RDBMS defined in "oz.db": %s.', $rdbms_type), null, $e);
+			}
+
+			try {
+				self::register();
+			} catch (\Exception $e) {
+				throw new InternalErrorException("Unable to initialize database.", null, $e);
+			}
+		}
+
+		/**
+		 * Register.
+		 *
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 */
+		private static function register()
+		{
+			$oz_database           = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_database.php';
+			$structure             = self::getProjectDbDirectoryStructure();
+			$columns_customs_types = SettingsManager::get('oz.db.columns.types');
+			$tables                = SettingsManager::get('oz.db.tables');
+			$tables_prefix         = SettingsManager::get('oz.db', 'OZ_DB_TABLE_PREFIX');
+
+			foreach ($columns_customs_types as $type => $class) {
+				Column::addCustomType($type, $class);
+			}
+
+			ORM::setDatabase($structure['oz_db_namespace'], self::$db);
+			ORM::setDatabase($structure['project_db_namespace'], self::$db);
+
+			self::$db->addTablesFromOptions($oz_database, $structure['oz_db_namespace'], $tables_prefix)
+					 ->addTablesFromOptions($tables, $structure['project_db_namespace'], $tables_prefix);
 		}
 
 		/**
 		 * Gets instance.
 		 *
-		 * @return \OZONE\OZ\Core\DbManager
-		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @return \Gobl\DBAL\Db
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
-		public static function getInstance()
+		public static function getDb()
 		{
-			if (self::$instance === null) {
-				self::$instance = new self();
+			if (self::$db === null) {
+				self::init();
 			}
 
-			return self::$instance;
-		}
-
-		/**
-		 * Init OZone project database.
-		 *
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 */
-		public static function init()
-		{
-			if (!self::$initialized) {
-				self::$initialized = true;
-
-				$oz_database           = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_database.php';
-				$structure             = self::getProjectDbDirectoryStructure();
-				$columns_customs_types = SettingsManager::get('oz.db.columns.types');
-				$tables                = SettingsManager::get('oz.db.tables');
-				$tables_prefix         = SettingsManager::get('oz.db', 'OZ_DB_TABLE_PREFIX');
-				$crud_rules            = SettingsManager::get("oz.gobl.crud");
-
-				foreach ($columns_customs_types as $type => $class) {
-					Column::addCustomType($type, $class);
-				}
-
-				CRUD::loadOptions($crud_rules);
-
-				self::getInstance()
-					->addTablesFromOptions($oz_database, $structure['oz_db_namespace'], $tables_prefix)
-					->addTablesFromOptions($tables, $structure['project_db_namespace'], $tables_prefix);
-			}
-		}
-
-		/**
-		 * DbManager destructor.
-		 */
-		public function __destruct()
-		{
-			self::$instance = null;
-		}
-
-		/**
-		 * Gets database connection.
-		 *
-		 * @return \PDO
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 */
-		public function getConnection()
-		{
-			try {
-				return parent::getConnection();
-			} catch (\Exception $e) {
-				throw new InternalErrorException('OZ_DB_IS_DOWN', [$e->getMessage()]);
-			}
-		}
-
-		/**
-		 * Returns a new query builder instance.
-		 *
-		 * @return \Gobl\DBAL\QueryBuilder
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 */
-		public static function queryBuilder()
-		{
-			return new QueryBuilder(self::getInstance());
+			return self::$db;
 		}
 
 		/**
 		 * Returns the database folder structure of the current project.
 		 *
 		 * @return array
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \Exception
 		 */
 		public static function getProjectDbDirectoryStructure()
 		{
@@ -162,143 +117,40 @@
 		}
 
 		/**
-		 * Initialize rdbms.
+		 * Returns a new query builder instance.
 		 *
-		 * @return \Gobl\DBAL\RDBMS
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @return \Gobl\DBAL\QueryBuilder
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
-		private function initRDBMS()
+		public static function queryBuilder()
 		{
-			$config    = SettingsManager::get('oz.db');
-			$db_config = [
-				'db_host'    => $config['OZ_DB_HOST'],
-				'db_name'    => $config['OZ_DB_NAME'],
-				'db_user'    => $config['OZ_DB_USER'],
-				'db_pass'    => $config['OZ_DB_PASS'],
-				'db_charset' => $config['OZ_DB_CHARSET']
-			];
-
-			$oz_rdbms = $config['OZ_DB_RDBMS'];
-
-			if (isset(self::$oz_rdbms_map[$oz_rdbms])) {
-				$rdbms_class = self::$oz_rdbms_map[$oz_rdbms];
-
-				return new $rdbms_class($db_config);
-			} else {
-				throw new InternalErrorException(sprintf('Invalid rdbms "%s" defined in "oz.db".', $oz_rdbms));
-			}
+			return new QueryBuilder(self::getDb());
 		}
 
 		/**
-		 * Mask database columns names with external columns names.
+		 * Instantiate CRUD handler.
 		 *
-		 * @param array      $data        Database row object
-		 * @param array      $columns     Columns to conserve
-		 * @param array|null $mask_extend Extends 'oz.db.columns.mask' settings
+		 * @param \OZONE\OZ\Core\Context $context
+		 * @param string                 $table_name
 		 *
-		 * @return array
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @return \OZONE\OZ\Core\CRUDHandlerBase|null
 		 */
-		public static function maskColumnsName(array $data, array $columns, array $mask_extend = null)
+		public static function instantiateCRUDHandler(Context $context, $table_name)
 		{
-			$out = [];
-
-			$mask_default = SettingsManager::get('oz.db.columns.mask');
-
-			$mask = is_array($mask_extend) ? array_merge($mask_default, $mask_extend) : $mask_default;
-
-			foreach ($columns as $column) {
-				if (!array_key_exists($column, $mask)) {
-					throw new InternalErrorException(sprintf('The column "%s" is missing in "oz.db.columns.mask" settings.', $column));
-				}
-
-				$field_out_name = $mask[$column];
-
-				if (array_key_exists($column, $data)) {
-					$out[$field_out_name] = $data[$column];
-				}
-			}
-
-			return $out;
-		}
-
-		/**
-		 * Try to remove database columns names mask with external columns names.
-		 *
-		 * @param array $data
-		 *
-		 * @return array
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 */
-		public static function tryRemoveColumnsNameMask(array $data)
-		{
-			$out = [];
-
-			$mask_default = SettingsManager::get('oz.db.columns.mask');
-
-			$unmask = array_flip($mask_default);
-
-			foreach ($data as $column => $value) {
-				$key = $column;
-
-				if (isset($unmask[$column])) {
-					$key = $unmask[$column];
-				}
-
-				$out[$key] = $value;
-			}
-
-			return $out;
-		}
-
-		/**
-		 * Fetch all results in a given statement and mask database columns names with external columns names.
-		 *
-		 * @param \PDOStatement $stm           Database row object
-		 * @param array         $columns       Columns to conserve
-		 * @param array|null    $mask_extend   Extends 'oz.db.columns.mask' settings
-		 * @param string|null   $column_as_key The unique column name to use for result association
-		 * @param callable|null $formatter     The formatter to call for each row
-		 *
-		 * @return array
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 */
-		public static function fetchAllWithMask(\PDOStatement $stm, array $columns, array $mask_extend = null, $column_as_key = null, $formatter = null)
-		{
-			$out = [];
-
-			while ($row = $stm->fetch()) {
-				$data = self::maskColumnsName($row, $columns, $mask_extend);
-
-				if (!empty($formatter)) {
-					if (is_callable($formatter)) {
-						$data = call_user_func_array($formatter, [$data, $row]);
+			$crud_handler = SettingsManager::get('oz.gobl.crud', $table_name);
+			if ($crud_handler) {
+				try {
+					$rc = new \ReflectionClass($crud_handler);
+					if ($rc->isSubclassOf(CRUDHandlerBase::class)) {
+						return new $crud_handler($context);
 					} else {
-						throw new InternalErrorException('You should provide a valid callable as formatter.');
+						throw new \RuntimeException(sprintf('CRUD handler "%s" should extends "%s".', $table_name, CRUDHandlerBase::class));
 					}
-				}
-
-				if (!empty($column_as_key)) {
-					if (!isset($row[$column_as_key])) {
-						throw new InternalErrorException(sprintf('"%s" is not defined in fetched row.', $column_as_key));
-					}
-
-					$data_key = $row[$column_as_key];
-
-					if (empty($data_key)) {
-						throw new InternalErrorException(sprintf('Cannot use "%s" as result key, empty value found.', $column_as_key), ['row' => $row]);
-					}
-
-					$out[$data_key] = $data;
-				} else {
-					$out[] = $data;
+				} catch (\ReflectionException $e) {
+					throw new \RuntimeException(sprintf('Unable to instantiate CRUD handler: "%s" -> "%s"', $table_name, $crud_handler), $e);
 				}
 			}
 
-			return $out;
+			return null;
 		}
 	}

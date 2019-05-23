@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -23,7 +23,7 @@
 
 	final class Service extends Command {
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 *
 		 * @throws \Exception
 		 */
@@ -42,8 +42,7 @@
 		 *
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
 		private function generate(array $options) {
 			Utils::assertDatabaseAccess();
@@ -51,10 +50,10 @@
 			$table_name    = $options['t'];
 			$service_name  = $options['n'];
 			$service_class = $options['c'];
-			$service       = SettingsManager::get('oz.services.list', $service_name);
+			$service       = SettingsManager::get('oz.routes.api', $service_name);
 
 			if (is_null($service)) {
-				$db = DbManager::getInstance();
+				$db = DbManager::getDb();
 				$db->assertHasTable($table_name);
 				$table       = $db->getTable($table_name);
 				$fm          = new FilesManager(OZ_APP_DIR);
@@ -66,18 +65,18 @@
 				$generator         = new Generator($db, false, false);
 				$service           = $generator->generateOZServiceClass($table, $service_namespace, $service_dir, $service_name, $service_class);
 
-				SettingsManager::setKey('oz.services.list', $service_name, $service);
+				SettingsManager::setKey('oz.routes.api', $service_name, $service);
 
 				$this->getCli()
 					 ->writeLn(sprintf('Success: service "%s" generated.', $service_name));
 			} else {
 				$this->getCli()
-					 ->writeLn(sprintf('Error: Cannot overwrite service "%s" defined in "oz.services.list" settings.', $service_name));
+					 ->writeLn(sprintf('Error: Cannot overwrite service "%s" defined in "oz.routes.api" settings.', $service_name));
 			}
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 * @throws \Kli\Exceptions\KliException
 		 */
 		protected function describe() {

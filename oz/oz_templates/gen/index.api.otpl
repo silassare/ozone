@@ -25,15 +25,14 @@
 
 	include_once OZ_OZONE_DIR . 'OZone.php';
 
-	// Add project namespace root directory
+	// Adds project namespace root directory
 	\OZONE\OZ\Loader\ClassLoader::addNamespace('\<%$.oz_project_namespace%>', OZ_APP_DIR);
 
-	// Execute OZone only if the incoming request is for the api
-	// Else we are in www/index.php
-	if (defined('OZ_OZONE_IS_WWW')) {
+	// Run the app only if the incoming request is for the api
+	if (defined('OZ_OZONE_IS_WEB_CONTEXT')) {
 		if (!defined('OZ_OZONE_DEFAULT_API_KEY')) {
 			throw new \OZONE\OZ\Exceptions\InternalErrorException('OZ_DEFAULT_API_KEY_NOT_DEFINED');
 		}
 	} else {
-		\OZONE\OZ\OZone::execute(new \<%$.oz_project_namespace%>\<%$.oz_project_class%>());
+		\OZONE\OZ\OZone::run(new \<%$.oz_project_namespace%>\<%$.oz_project_class%>());
 	}

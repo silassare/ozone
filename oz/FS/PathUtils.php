@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -10,10 +10,13 @@
 
 	namespace OZONE\OZ\FS;
 
-	// original sources: https://gist.github.com/silassare/e048711c92ca9de0eca77e8e6d08a004
-
-	use OZONE\OZ\Exceptions\RuntimeException;
-
+	/**
+	 * Class PathUtils
+	 *
+	 * original sources: https://gist.github.com/silassare/e048711c92ca9de0eca77e8e6d08a004
+	 *
+	 * @package OZONE\OZ\FS
+	 */
 	class PathUtils
 	{
 		const DS = DIRECTORY_SEPARATOR;
@@ -25,7 +28,6 @@
 		 * @param string $path the path to resolve
 		 *
 		 * @return string    the absolute path
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function resolve($root, $path)
 		{
@@ -55,7 +57,6 @@
 		 * @param string $path the path to normalize
 		 *
 		 * @return string the resolved path
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private static function job($path)
 		{
@@ -79,7 +80,7 @@
 					array_pop($out);
 				} else {
 					// now here we don't like
-					throw new RuntimeException(sprintf("climbing above root is dangerous: %s", $path));
+					throw new \InvalidArgumentException(sprintf("Climbing above root is dangerous: %s", $path));
 				}
 			}
 

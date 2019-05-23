@@ -17,6 +17,7 @@
 	use OZONE\OZ\Cli\Command;
 	use OZONE\OZ\Cli\Utils\Utils;
 	use OZONE\OZ\Core\Hasher;
+	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Db\OZClient;
 	use OZONE\OZ\FS\FilesManager;
 	use OZONE\OZ\FS\PathUtils;
@@ -45,7 +46,6 @@
 		 *
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \Kli\Exceptions\KliInputException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \Exception
 		 */
 		private function add(array $options)
@@ -72,12 +72,18 @@
 					}
 				}
 
+				$inject = SettingsManager::genExportInfo('oz.config', [
+					'OZ_API_MAIN_URL' => $host
+				]);
+
+				$oz_config = TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject);
+
 				$inject = [
 					'oz_version_name'      => OZ_OZONE_VERSION_NAME,
 					'oz_time'              => time(),
 					'oz_project_namespace' => $namespace,
 					'oz_project_class'     => $class_name,
-					'oz_default_api_key'    => $api_key
+					'oz_default_api_key'   => $api_key
 				];
 
 				$www_index = TemplatesUtils::compute('oz:gen/index.www.otpl', $inject);
@@ -88,8 +94,10 @@
 				$fm->cd($abs_folder, true)
 				   ->mkdir('assets')
 				   ->cd('oz_private', true)
+				   ->cd('oz_settings', true)
+				   ->wf('oz.config.php', $oz_config)
+				   ->cd('..')
 				   ->mkdir('oz_templates')
-				   ->mkdir('oz_settings')
 				   ->cp($tpl_folder . 'gen/htaccess.deny.txt', '.htaccess')
 				   ->cd('..')
 				   ->wf('index.php', $www_index)
@@ -102,11 +110,11 @@
 			$wc->setApiKey($api_key)
 			   ->setAbout($about)
 			   ->setUrl($host)
-			   ->setCreateTime(time())
+			   ->setAddTime(time())
 			   ->setValid(true)
 			   ->save();
 
-		   $this->getCli()
+			$this->getCli()
 				 ->writeLn(sprintf('Success: web client added to project "%s".', $project_name))
 				 ->writeLn(sprintf('Client Host  : %s', $host))
 				 ->writeLn(sprintf('Client ApiKey: %s', $api_key));
@@ -147,7 +155,7 @@
 			  ->offsets(3)
 			  ->type(new KliTypeString)
 			  ->required()
-			  ->prompt(true,'Short text about the web client')
+			  ->prompt(true, 'Short text about the web client')
 			  ->description('Short text about the web client.');
 
 			$add->addOption($h, $f, $a);

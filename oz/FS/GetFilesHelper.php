@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,13 +11,13 @@
 	namespace OZONE\OZ\FS;
 
 	use OZONE\OZ\Core\Assert;
-	use OZONE\OZ\Core\SessionsData;
+	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Db\OZUsersQuery;
 	use OZONE\OZ\Exceptions\ForbiddenException;
+	use OZONE\OZ\Exceptions\InternalErrorException;
 	use OZONE\OZ\Exceptions\NotFoundException;
-	use OZONE\OZ\FS\Services\FilesServer;
-	use OZONE\OZ\User\UsersUtils;
+	use OZONE\OZ\Router\RouteInfo;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -26,32 +26,29 @@
 		/**
 		 * Process the 'get file' request
 		 *
-		 * @param $request
+		 * @param \OZONE\OZ\Router\RouteInfo $r
 		 *
-		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\NotFoundException
+		 * @return \OZONE\OZ\Http\Response
 		 * @throws \Exception
 		 */
-		public static function serveFile($request)
+		public static function process(RouteInfo $r)
 		{
 			$params_required = ['oz_file_id', 'oz_file_key', 'oz_file_quality'];
+			$args            = $r->getArgs();
 
-			Assert::assertForm($request, $params_required, new NotFoundException());
+			Assert::assertForm($args, $params_required, new NotFoundException());
 
-			$file_id      = $request['oz_file_id'];
-			$file_key     = $request['oz_file_key'];
-			$file_quality = intval($request['oz_file_quality']);
-			$file_src     = null;
+			$file_id       = $args['oz_file_id'];
+			$file_key      = $args['oz_file_key'];
+			$file_quality  = intval($args['oz_file_quality']);
+			$file_src      = null;
+			$access        = SettingsManager::get('oz.files', 'OZ_GET_FILE_ACCESS_LEVEL');
+			$users_manager = $r->getContext()
+							   ->getUsersManager();
 
-			$access = SettingsManager::get('oz.files', 'OZ_GET_FILE_ACCESS_LEVEL');
-
-			// we directly set the behavior in oz.services.list
-			// for 'session' and 'any' access level
 			if ($access === 'users') {
 				$picid = $file_id . '_' . $file_key;
-				if (!UsersUtils::userVerified() AND !self::isLastUserPic($picid)) {
+				if (!$users_manager->userVerified() AND !self::isLastUserPic($r->getContext(), $picid)) {
 					throw new ForbiddenException();
 				}
 			}
@@ -76,9 +73,12 @@
 
 			if (empty($file_src) || !file_exists($file_src) || !is_file($file_src) || !is_readable($file_src)) {
 				// NOTE keep this log, helpful for debugging
-				oz_logger(sprintf('The file_id: "%s" is in the database but not at "%s".', $file_id, $file_src));
+				$real_error = new InternalErrorException('The file is in the database but not at specified path.', [
+					"file_id"  => $file_id,
+					"file_src" => $file_src
+				]);
 
-				throw new NotFoundException();
+				throw new NotFoundException(null, null, $real_error);
 			}
 
 			$path_parts          = pathinfo($file_src);
@@ -89,8 +89,8 @@
 			// when the request provide an extension and the extension
 			// does not match the file extension
 			// we just return a not found
-			if (isset($request['oz_file_extension'])) {
-				$request_file_extension = strtolower($request['oz_file_extension']);
+			if (isset($args['oz_file_extension'])) {
+				$request_file_extension = strtolower($args['oz_file_extension']);
 
 				if ($request_file_extension !== $real_file_extension) {
 					throw new NotFoundException();
@@ -111,7 +111,9 @@
 				$file_name = $result->getName();
 			}
 
-			(new FilesServer())->execute([
+			$fis = new FilesServer();
+
+			return $fis->serve($r->getContext(), [
 				'file_src'     => $file_src,
 				'file_quality' => $file_quality,
 				'file_name'    => $file_name,
@@ -122,22 +124,25 @@
 		/**
 		 * Checks if a given picid is the current user profile picid
 		 *
-		 * @param string $picid the file picture file id
+		 * @param \OZONE\OZ\Core\Context $context
+		 * @param string                 $picid
 		 *
 		 * @return bool
-		 * @throws \Exception
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
-		private static function isLastUserPic($picid)
+		private static function isLastUserPic(Context $context, $picid)
 		{
-			$uid = SessionsData::get('ozone_user:id');
+			$uid = $context->getSession()
+						   ->get('ozone_user:id');
 
 			if (!empty($uid)) {
-				$u_table = new OZUsersQuery();
-				$u       = $u_table->filterById($uid)
-								   ->find(1)
-								   ->fetchClass();
-				if ($u) {
-					return ($u->getPicid() === $picid);
+				$uq   = new OZUsersQuery();
+				$user = $uq->filterById($uid)
+						   ->find(1)
+						   ->fetchClass();
+				if ($user) {
+					return ($user->getPicid() === $picid);
 				}
 			}
 

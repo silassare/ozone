@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -19,28 +19,15 @@
 	 */
 	class NotFoundException extends BaseException
 	{
-
 		/**
 		 * NotFoundException constructor.
 		 *
-		 * @param string|null          $message  the exception message
+		 * @param string|null     $message  the exception message
 		 * @param array|null      $data     additional exception data
-		 * @param null|\Throwable $previous previous exception if nested exception
+		 * @param null|\Exception $previous previous exception if nested exception
 		 */
-		public function __construct($message = null, array $data = null, \Throwable $previous = null)
+		public function __construct($message = null, array $data = null, \Exception $previous = null)
 		{
-			if (empty($data)) {
-				$data = ['uri' => $_SERVER['REQUEST_URI']];
-			}
-
-			parent::__construct((empty($message)? 'OZ_ERROR_NOT_FOUND' : $message), BaseException::NOT_FOUND, $data, $previous);
-		}
-
-		/**
-		 * {@inheritdoc}
-		 */
-		public function procedure()
-		{
-			$this->informClient();
+			parent::__construct((empty($message) ? 'OZ_ERROR_NOT_FOUND' : $message), BaseException::NOT_FOUND, $data, $previous);
 		}
 	}

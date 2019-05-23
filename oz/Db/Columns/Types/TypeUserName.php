@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -20,10 +20,7 @@
 		/**
 		 * TypeUserName constructor.
 		 *
-		 * {@inheritdoc}
-		 *
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @inheritdoc
 		 */
 		public function __construct()
 		{
@@ -39,15 +36,13 @@
 		}
 
 		/**
-		 * {@inheritdoc}
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @inheritdoc
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
 			$success = true;
-			$data    = [
-				"value" => $value
+			$debug   = [
+				'value' => $value
 			];
 
 			try {
@@ -57,7 +52,7 @@
 			}
 
 			if (!$success) {
-				throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_INVALID', $data);
+				throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_INVALID', $debug);
 			}
 
 			if (!empty($value)) {
@@ -80,7 +75,7 @@
 						$error_msg = 'OZ_FIELD_USER_NAME_TOO_LONG';
 					}
 
-					throw new TypesInvalidValueException($error_msg, $data);
+					throw new TypesInvalidValueException($error_msg, $debug);
 				}
 			}
 
@@ -88,7 +83,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public static function getInstance(array $options)
 		{

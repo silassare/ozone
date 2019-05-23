@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,6 +11,7 @@
 	namespace OZONE\OZ\Admin;
 
 	use OZONE\OZ\Db\OZAdministratorsQuery;
+	use OZONE\OZ\Exceptions\InternalErrorException;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -22,17 +23,20 @@
 		 * @param mixed $uid The user id
 		 *
 		 * @return bool
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
 		public static function isAdmin($uid)
 		{
-			$admins = new OZAdministratorsQuery();
-			$count  = $admins->filterByUserId($uid)
-							 ->filterByValid(1)
-							 ->find(1)
-							 ->count();
+			try {
+				$admins = new OZAdministratorsQuery();
+
+				$count = $admins->filterByUserId($uid)
+								->filterByValid(1)
+								->find(1)
+								->count();
+			} catch (\Exception $e) {
+				throw new InternalErrorException(null, null, $e);
+			}
 
 			return ($count === 1 ? true : false);
 		}

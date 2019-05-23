@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,10 +11,10 @@
 	namespace OZONE\OZ\Authenticator\Services;
 
 	use OZONE\OZ\Authenticator\CaptchaCodeHelper;
-	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\BaseService;
-	use OZONE\OZ\Core\URIHelper;
-	use OZONE\OZ\Exceptions\NotFoundException;
+	use OZONE\OZ\Core\SettingsManager;
+	use OZONE\OZ\Router\RouteInfo;
+	use OZONE\OZ\Router\Router;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -25,36 +25,19 @@
 	 */
 	final class CaptchaCode extends BaseService
 	{
-
 		/**
-		 * CaptchaCode constructor.
+		 * @inheritdoc
 		 */
-		public function __construct()
+		public static function registerRoutes(Router $router)
 		{
-			parent::__construct();
-		}
+			$format = SettingsManager::get("oz.files", "OZ_CAPTCHA_URI_EXTRA_FORMAT");
 
-		/**
-		 * {@inheritdoc}
-		 *
-		 * @param array $request
-		 *
-		 * @throws \Exception
-		 */
-		public function execute(array $request = [])
-		{
-			$params_required = ['oz_captcha_key'];
-			$params_orders   = [];
-			$out             = [];
-			$file_uri_reg    = CaptchaCodeHelper::genCaptchaURIRegExp($params_orders);
-			$extra_ok        = URIHelper::parseUriExtra($file_uri_reg, $params_orders, $out);
+			$options = [
+				'oz_captcha_key' => '[a-z0-9]{32}'
+			];
 
-			if (!$extra_ok) {
-				throw new NotFoundException();
-			}
-
-			Assert::assertForm($out, $params_required, new NotFoundException());
-
-			CaptchaCodeHelper::serveCaptchaImage($out['oz_captcha_key']);
+			$router->get('/captcha/' . $format, function (RouteInfo $r) {
+				return CaptchaCodeHelper::generateCaptchaImage($r->getContext(), $r->getArg('oz_captcha_key'));
+			}, $options);
 		}
 	}

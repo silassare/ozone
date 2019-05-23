@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -10,19 +10,18 @@
 
 	namespace OZONE\OZ\User\Services;
 
-	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
-	use Gobl\ORM\Exceptions\ORMControllerFormException;
 	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Db\OZUser;
 	use OZONE\OZ\Db\OZUsersController;
 	use OZONE\OZ\Exceptions\ForbiddenException;
-	use OZONE\OZ\Exceptions\InvalidFieldException;
 	use OZONE\OZ\Exceptions\InvalidFormException;
 	use OZONE\OZ\Ofv\OFormValidator;
+	use OZONE\OZ\Router\RouteInfo;
+	use OZONE\OZ\Router\Router;
 	use OZONE\OZ\User\PhoneAuth;
-	use OZONE\OZ\User\UsersUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -39,105 +38,52 @@
 		private $phone_auth;
 
 		/**
-		 * @param array $request
+		 * @param \OZONE\OZ\Core\Context $context
 		 *
-		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 * @throws \Exception
 		 */
-		public function executeSub(array $request = [])
+		public function actionSignUp(Context $context)
 		{
-			$this->phone_auth = new PhoneAuth('svc_sign_up', false);
+			try {
+				$params = $context->getRequest()
+								  ->getFormData();
 
-			if (isset($request["step"])) {
-				$step = intval($request["step"]);
+				$this->phone_auth = new PhoneAuth($context, self::class, false);
 
-				if ($step === 3) {
-					if ($this->phone_auth->isAuthenticated()) {
-						$request['cc2']   = $this->phone_auth->getAuthenticatedPhoneCC2();
-						$request['phone'] = $this->phone_auth->getAuthenticatedPhone();
-						$this->register($request);
+				if (isset($params['step'])) {
+					$step = intval($params['step']);
+
+					if ($step === 3) {
+						if ($this->phone_auth->isAuthenticated()) {
+							$params['cc2']   = $this->phone_auth->getAuthenticatedPhoneCC2();
+							$params['phone'] = $this->phone_auth->getAuthenticatedPhone();
+							$this->register($context, $params);
+						} else {
+							throw new ForbiddenException('OZ_PHONE_AUTH_NOT_VALIDATED');
+						}
 					} else {
-						throw new ForbiddenException('OZ_PHONE_AUTH_NOT_VALIDATED');
+						$response = $this->phone_auth->authenticate($params)
+													 ->getResponse();
+						$this->getResponseHolder()
+							 ->setResponse($response);
 					}
 				} else {
-					$response = $this->phone_auth->authenticate($request)
-												 ->getResponse();
-					$this->getResponseHolder()
-						 ->setResponse($response);
+					throw new InvalidFormException();
 				}
-			} else {
-				throw new InvalidFormException();
+			} catch (\Exception $e) {
+				self::tryConvertException($e);
 			}
-		}
-
-		/**
-		 * Executes the service.
-		 *
-		 * @param array $request the request parameters
-		 *
-		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFieldException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
-		 */
-		public function execute(array $request = [])
-		{
-			$success = true;
-			$error   = null;
-
-			try {
-				$this->executeSub($request);
-			} catch (ORMControllerFormException $e) {
-				$success = false;
-				$error   = $e;
-			} catch (TypesInvalidValueException $e) {
-				$success = false;
-				$error   = $e;
-			}
-
-			if (!$success) {
-				$this->tryConvertException($error);
-			}
-		}
-
-		/**
-		 * Converts Gobl exceptions unto OZone exceptions.
-		 *
-		 * @param \Exception $error the exception
-		 *
-		 * @throws \Exception
-		 * @throws \OZONE\OZ\Exceptions\InvalidFieldException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 */
-		public static function tryConvertException(\Exception $error)
-		{
-			if ($error instanceof ORMControllerFormException) {
-				throw new InvalidFormException(null, [$error->getMessage(), $error->getData()], $error);
-			}
-
-			if ($error instanceof TypesInvalidValueException) {
-				$data = $error->getData();
-				throw new InvalidFieldException($error->getMessage(), $data, $error);
-			}
-
-			throw $error;
 		}
 
 		/**
 		 * End the registration process with all required user data
 		 *
-		 * @param array $request
+		 * @param \OZONE\OZ\Core\Context $context
+		 * @param array                  $request
 		 *
 		 * @throws \Exception
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
-		private function register(array $request)
+		private function register(Context $context, array $request)
 		{
 			Assert::assertForm($request, ['cc2', 'phone', 'uname', 'pass', 'vpass', 'birth_date', 'gender']);
 
@@ -148,26 +94,41 @@
 				'vpass' => null,
 			]);
 
-			$form_data[OZUser::COL_PHONE]        = $request['phone'];
-			$form_data[OZUser::COL_EMAIL]        = isset($request['email']) ? $request['email'] : "";
-			$form_data[OZUser::COL_PASS]         = $request['pass'];
-			$form_data[OZUser::COL_NAME]         = $request['uname'];
-			$form_data[OZUser::COL_GENDER]       = $request['gender'];
-			$form_data[OZUser::COL_BIRTH_DATE]   = $request['birth_date'];
-			$form_data[OZUser::COL_SIGN_UP_TIME] = time();
-			$form_data[OZUser::COL_PICID]        = SettingsManager::get('oz.users', 'OZ_DEFAULT_PICID');
-			$form_data[OZUser::COL_CC2]          = $request['cc2'];
-			$form_data[OZUser::COL_VALID]        = true;
+			$form_data[OZUser::COL_PHONE]      = $request['phone'];
+			$form_data[OZUser::COL_EMAIL]      = isset($request['email']) ? $request['email'] : '';
+			$form_data[OZUser::COL_PASS]       = $request['pass'];
+			$form_data[OZUser::COL_NAME]       = $request['uname'];
+			$form_data[OZUser::COL_GENDER]     = $request['gender'];
+			$form_data[OZUser::COL_BIRTH_DATE] = $request['birth_date'];
+			$form_data[OZUser::COL_ADD_TIME]   = time();
+			$form_data[OZUser::COL_PICID]      = SettingsManager::get('oz.users', 'OZ_DEFAULT_PICID');
+			$form_data[OZUser::COL_CC2]        = $request['cc2'];
+			$form_data[OZUser::COL_VALID]      = true;
 
 			$controller = new OZUsersController();
 			$user_obj   = $controller->addItem($form_data);
 
-			UsersUtils::logUserIn($user_obj);
+			$context->getUsersManager()
+					->logUserIn($user_obj);
 
 			$this->getResponseHolder()
 				 ->setDone('OZ_SIGNUP_SUCCESS')
 				 ->setData($user_obj->asArray());
 
 			$this->phone_auth->close();
+		}
+
+		/**
+		 * @inheritdoc
+		 */
+		public static function registerRoutes(Router $router)
+		{
+			$router->post('/signup', function (RouteInfo $r) {
+				$context = $r->getContext();
+				$s       = new SignUp($context);
+				$s->actionSignUp($context);
+
+				return $s->writeResponse($context);
+			});
 		}
 	}

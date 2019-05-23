@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -12,12 +12,12 @@
 
 	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\BaseService;
-	use OZONE\OZ\Crypt\DoCrypt;
+	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\Exceptions\ForbiddenException;
-	use OZONE\OZ\Exceptions\NotFoundException;
-	use OZONE\OZ\Exceptions\UnauthorizedActionException;
 	use OZONE\OZ\Ofv\OFormValidator;
-	use OZONE\OZ\User\UsersUtils;
+	use OZONE\OZ\Router\RouteInfo;
+	use OZONE\OZ\Router\Router;
+	use OZONE\OZ\User\UsersManager;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -29,94 +29,34 @@
 	final class Password extends BaseService
 	{
 		/**
-		 * @param array $request
-		 *
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
-		 * @throws \Exception
-		 */
-		public function execute(array $request = [])
-		{
-			if (!isset($request["action"])) {
-				throw new ForbiddenException();
-			}
-
-			$action = $request["action"];
-
-			switch ($action) {
-				case 'edit':
-					$this->edit($request);
-					break;
-				default:
-					throw new NotFoundException();
-			}
-		}
-
-		/**
-		 * @param array $request
-		 *
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
-		 */
-		private function edit(array $request)
-		{
-			if (isset($request["uid"])) {
-				if (!is_numeric($request["uid"])) {
-					throw new ForbiddenException();
-				}
-
-				Assert::assertIsAdmin();
-
-				$this->editPassAdmin($request);
-
-			} else {
-				Assert::assertUserVerified();
-				$this->editPassUser($request);
-			}
-		}
-
-		/**
 		 * Edit password: verified user only
 		 *
-		 * @param array $request
+		 * @param \OZONE\OZ\Core\Context $context
 		 *
 		 * @throws \Exception
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
-		private function editPassUser(array $request)
+		public function actionEditOwnPass(Context $context)
 		{
-			Assert::assertForm($request, ['cpass', 'pass', 'vpass']);
-			$user_obj = UsersUtils::getCurrentUserObject();
+			$users_manager = $context->getUsersManager();
+			$users_manager->assertUserVerified();
 
-			$fv_obj = new OFormValidator($request);
+			$form_data = $context->getRequest()
+								 ->getFormData();
+
+			Assert::assertForm($form_data, ['cpass', 'pass', 'vpass']);
+
+			$user_obj = $users_manager->getCurrentUserObject();
+			$fv_obj   = new OFormValidator($form_data);
 
 			$fv_obj->checkForm([
 				'pass'  => null,
 				'vpass' => null
 			]);
 
-			$real_pass = $user_obj->getPass();// encrypted
-			$cpass     = $fv_obj->getField("cpass");
-			$new_pass  = $fv_obj->getField("pass");
-			$crypt_obj = new DoCrypt();
+			$current_pass = $fv_obj->getField('cpass');
+			$new_pass     = $fv_obj->getField('pass');
 
-			if (!$crypt_obj->passCheck($cpass, $real_pass)) {
-				throw new UnauthorizedActionException("OZ_FIELD_PASS_INVALID");
-			}
-
-			if ($crypt_obj->passCheck($new_pass, $real_pass)) {
-				throw new UnauthorizedActionException("OZ_PASSWORD_SAME_OLD_AND_NEW_PASS");
-			}
-
-			$user_obj->setPass($new_pass)
-					 ->save();
+			$users_manager->updateUserPass($user_obj, $new_pass, $current_pass);
 
 			$this->getResponseHolder()
 				 ->setDone('OZ_PASSWORD_EDIT_SUCCESS')
@@ -126,44 +66,62 @@
 		/**
 		 * Edit password: admin only
 		 *
-		 * @param array $request
+		 * @param \OZONE\OZ\Core\Context $context
+		 * @param string                 $uid
 		 *
 		 * @throws \Exception
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 */
-		private function editPassAdmin(array $request)
+		public function actionEditPassAdmin(Context $context, $uid)
 		{
-			$uid = $request["uid"];
+			$users_manager = $context->getUsersManager();
+			$users_manager->assertIsAdmin();
 
-			Assert::assertForm($request, ['pass', 'vpass']);
+			$params = $context->getRequest()
+							  ->getFormData();
 
-			$user_obj = UsersUtils::getUserObject($uid);
+			Assert::assertForm($params, ['pass', 'vpass']);
+
+			$user_obj = UsersManager::getUserObject($uid);
 
 			if (!$user_obj) {
 				throw new ForbiddenException();
 			}
 
-			$fv_obj = new OFormValidator($request);
+			$fv_obj = new OFormValidator($params);
 
 			$fv_obj->checkForm([
 				'pass'  => null,
 				'vpass' => null
 			]);
 
-			$real_pass = $user_obj->getPass();// encrypted
-			$new_pass  = $fv_obj->getField("pass");
-			$crypt_obj = new DoCrypt();
+			$new_pass = $fv_obj->getField("pass");
 
-			if ($crypt_obj->passCheck($new_pass, $real_pass)) {
-				throw new UnauthorizedActionException("OZ_PASSWORD_SAME_OLD_AND_NEW_PASS");
-			}
-
-			$user_obj->setPass($new_pass)
-					 ->save();
+			$users_manager->updateUserPass($user_obj, $new_pass);
 
 			$this->getResponseHolder()
 				 ->setDone('OZ_PASSWORD_EDIT_SUCCESS')
 				 ->setData($user_obj->asArray());
+		}
+
+		/**
+		 * @inheritdoc
+		 */
+		public static function registerRoutes(Router $router)
+		{
+			$router
+				->patch('/users/{uid}/password/edit', function (RouteInfo $r) {
+					$context = $r->getContext();
+					$s       = new Password($context);
+					$s->actionEditPassAdmin($context, $r->getArg('uid'));
+
+					return $s->writeResponse($context);
+				}, ['uid' => '\d+'])
+				->patch('/users/password/edit', function (RouteInfo $r) {
+					$context = $r->getContext();
+					$s       = new Password($context);
+					$s->actionEditOwnPass($context);
+
+					return $s->writeResponse($context);
+				});
 		}
 	}

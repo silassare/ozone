@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -18,19 +18,18 @@
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-    include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
+	include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
 
 	if (!OZ_OZONE_IS_CLI) {
-		echo 'This is the command line tool for OZone Framework.';
+		echo 'This is the command line tool for O\'Zone Framework.';
 		exit(1);
 	}
 
 	final class OZoneCli extends Kli
 	{
-
 		/**
 		 * OZoneCli constructor.
 		 */
@@ -40,7 +39,7 @@
 		}
 
 		/**
-		 * Run the commands.
+		 * Runs the commands.
 		 *
 		 * @param array $arg
 		 *
@@ -49,7 +48,7 @@
 		public function run(array $arg)
 		{
 			if ($config = Utils::loadProjectConfig()) {
-				// Add project namespace root directory
+				// Adds project namespace root directory
 				ClassLoader::addNamespace($config['OZ_PROJECT_NAMESPACE'], OZ_APP_DIR);
 				// Init database
 				DbManager::init();
@@ -63,7 +62,6 @@
 		/**
 		 * Loads all defined commands in oz.cli settings.
 		 *
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \Exception
 		 */
 		private function loadCommands()
@@ -89,7 +87,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function welcome()
 		{
@@ -97,11 +95,25 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function quit()
 		{
 			$this->writeLn('See you soon!');
 			parent::quit();
+		}
+
+		/**
+		 * Log anything.
+		 *
+		 * @param mixed $arg
+		 *
+		 * @return \OZONE\OZ\Cli\OZoneCli
+		 */
+		public function log($arg)
+		{
+			oz_logger($arg);
+
+			return $this;
 		}
 	}

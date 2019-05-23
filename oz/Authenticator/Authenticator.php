@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -24,6 +24,8 @@
 	 */
 	final class Authenticator
 	{
+		const LABEL_REG = '~^[a-z0-9]{32}$~';
+
 		/**
 		 * @var string
 		 */
@@ -53,23 +55,19 @@
 
 		/** @var int */
 		private $auth_code_length = 6;
+
 		/** @var bool */
 		private $auth_code_alpha_num = false;
 
 		/**
 		 * Authenticator constructor.
 		 *
-		 * @param string $name      The authentication process name.
 		 * @param string $for_value The value to authenticate : email/phone number etc.
 		 * @param array  $options   Options
 		 */
-		function __construct($name, $for_value, array $options = [])
+		function __construct($for_value, array $options = [])
 		{
-			if (empty($name)) {
-				$this->label = Hasher::genRandomHash(32);
-			} else {
-				$this->label = Hasher::hashIt($name);
-			}
+			$this->label = Hasher::genRandomHash(32);
 
 			if (isset($options["auth_code_length"])) {
 				$this->auth_code_length = (int)$options["auth_code_length"];
@@ -131,6 +129,7 @@
 				 ->setTryMax($try_max)
 				 ->setTryCount(0)
 				 ->setExpire($expire)
+				 ->setData(json_encode([]))
 				 ->save();
 
 			$this->generated = [
@@ -148,13 +147,11 @@
 		 * Gets the generated authentication code token ... in an array
 		 *
 		 * @return array
-		 *
-		 * @throws \Exception
 		 */
 		public function getGenerated()
 		{
 			if (empty($this->generated)) {
-				throw new \Exception('You should call Authenticator->generate() first.');
+				trigger_error('You should call Authenticator->generate() first.', E_USER_ERROR);
 			}
 
 			return $this->generated;
@@ -181,7 +178,7 @@
 		 */
 		public function canUseLabel($label)
 		{
-			if (!is_string($label) OR !preg_match('#^[a-z0-9]{32}$#', $label)) {
+			if (!is_string($label) OR !preg_match(self::LABEL_REG, $label)) {
 				return false;
 			}
 
@@ -241,7 +238,7 @@
 				$count   = $auth->getTryCount() + 1;
 				$rest    = $try_max - $count;
 
-				// check if auth process has expired
+				// checks if auth process has expired
 				if ($auth->getExpire() <= time()) {
 					$msg = 'OZ_AUTH_CODE_EXPIRED';
 					$this->cancel();
@@ -302,7 +299,7 @@
 		}
 
 		/**
-		 * Fetch the authentication data from database.
+		 * Fetches the authentication data from database.
 		 *
 		 * @return null|\OZONE\OZ\Db\OZAuth
 		 * @throws \Exception

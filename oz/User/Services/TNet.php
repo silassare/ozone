@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,7 +11,9 @@
 	namespace OZONE\OZ\User\Services;
 
 	use OZONE\OZ\Core\BaseService;
-	use OZONE\OZ\User\UsersUtils;
+	use OZONE\OZ\Core\Context;
+	use OZONE\OZ\Router\RouteInfo;
+	use OZONE\OZ\Router\Router;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -23,29 +25,37 @@
 	final class TNet extends BaseService
 	{
 		/**
-		 * {@inheritdoc}
-		 * @throws \Exception
+		 * @param \OZONE\OZ\Core\Context $context
+		 *
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
-		public function execute(array $request = [])
+		public function actionTNet(Context $context)
 		{
-			$data = [];
-			if (UsersUtils::userVerified()) {
-				$user_obj = UsersUtils::getCurrentUserObject();
-				// user is already logged
-				// UsersUtils::logUserIn($user_obj);
+			$data          = [];
+			$users_manager = $context->getUsersManager();
+			if ($users_manager->userVerified()) {
+				$user_obj              = $users_manager->getCurrentUserObject();
 				$data['ok']            = 1;
 				$data['_current_user'] = $user_obj->asArray();
 			} else {
 				$data['ok'] = 0;
-				//$step       = SessionsData::get('svc_sign_up:step');
-				//$phone      = SessionsData::get('svc_sign_up:phone');
-
-				//if (!empty($step) AND !empty($phone) AND $step === SignUp::SIGNUP_STEP_VALIDATE) {
-				//	$data['_info_sign_up'] = ['step' => $step, 'phone' => $phone];
-				//}
 			}
 
 			$this->getResponseHolder()
 				 ->setData($data);
+		}
+
+		/**
+		 * @inheritdoc
+		 */
+		public static function registerRoutes(Router $router)
+		{
+			$router->get('/tnet', function (RouteInfo $r) {
+				$context = $r->getContext();
+				$s       = new TNet($context);
+				$s->actionTNet($context);
+
+				return $s->writeResponse($context);
+			});
 		}
 	}

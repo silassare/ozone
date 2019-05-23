@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,15 +11,16 @@
 	namespace OZONE\OZ\Authenticator\Services;
 
 	use Gobl\DBAL\Rule;
+	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\BaseService;
-	use OZONE\OZ\Core\RequestHandler;
-	use OZONE\OZ\Core\SessionsData;
-	use OZONE\OZ\Core\SessionsHandler;
+	use OZONE\OZ\Core\Session;
+	use OZONE\OZ\Core\SessionDataStore;
 	use OZONE\OZ\Db\OZSessionsQuery;
 	use OZONE\OZ\Db\OZUsersQuery;
 	use OZONE\OZ\Exceptions\ForbiddenException;
-	use OZONE\OZ\User\UsersUtils;
+	use OZONE\OZ\Router\RouteInfo;
+	use OZONE\OZ\Router\Router;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -31,55 +32,44 @@
 	final class AccountAuth extends BaseService
 	{
 		/**
-		 * {@inheritdoc}
-		 * @throws \Exception
+		 * @param \OZONE\OZ\Core\Context $context
+		 *
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
-		public function execute(array $request = [])
+		public function actionCreate(Context $context)
 		{
-			if (isset($request["account"])) {
-				$user = self::check($request["account"]);
-				$this->getResponseHolder()
-					 ->setDone('OZ_USER_ONLINE')
-					 ->setData($user->asArray());
-			} else {
-				$this->getResponseHolder()
-					 ->setDone()
-					 ->setData([
-						 'account' => self::create()
-					 ]);
-			}
-		}
+			$users_manager = $context->getUsersManager();
 
-		/**
-		 * @throws \Exception
-		 */
-		public static function create()
-		{
-			Assert::assertUserVerified();
+			$users_manager->assertUserVerified();
 
-			$client = RequestHandler::getCurrentClient(true);
+			$client = $context->getClient();
 			$data   = [
-				"api_key" => $client->getApiKey(),
-				"token"   => UsersUtils::getCurrentSessionToken(),
-				"uid"     => UsersUtils::getCurrentUserId()
+				'api_key' => $client->getApiKey(),
+				'token'   => $users_manager->getCurrentSessionToken(),
+				'uid'     => $users_manager->getCurrentUserId()
 			];
 
-			return self::encode($data);
+			$this->getResponseHolder()
+				 ->setDone()
+				 ->setData([
+					 'account' => self::encode($data)
+				 ]);
 		}
 
 		/**
-		 * @param string $str
+		 * @param \OZONE\OZ\Core\Context $context
+		 * @param string                 $account
 		 *
-		 * @return \OZONE\OZ\Db\OZUser
 		 * @throws \Exception
 		 */
-		public static function check($str)
+		public function actionCheck(Context $context, $account)
 		{
 			// And yes! user sent us a form
 			// so we check that the form is valid.
-			UsersUtils::logUserOut();
+			$context->getUsersManager()
+					->logUserOut();
 
-			$data = self::decode($str);
+			$data = self::decode($account);
 
 			Assert::assertForm($data, [
 				'token',
@@ -93,29 +83,37 @@
 			$token    = $data['token'];
 			$uid      = $data['uid'];
 
-			$s_table = new OZSessionsQuery();
-			$session = $s_table->filterByClientApiKey($api_key)
-							   ->filterByToken($token)
-							   ->filterByUserId($uid)
-							   ->filterByExpire(time(), Rule::OP_GT)
-							   ->find(1)
-							   ->fetchClass();
-			$u_table = new OZUsersQuery();
+			$sq      = new OZSessionsQuery();
+			$session = $sq->filterByClientApiKey($api_key)
+						  ->filterByToken($token)
+						  ->filterByUserId($uid)
+						  ->filterByExpire(time(), Rule::OP_GT)
+						  ->find(1)
+						  ->fetchClass();
 
-			if ($session AND $user = $u_table->filterById($uid)
-											 ->find(1)
-											 ->fetchClass()) {
-				$session_data = SessionsHandler::decodeSessionString($session->getData());
-				$verified     = SessionsData::get("ozone_user:verified", $session_data);
+			$uq = new OZUsersQuery();
+
+			if ($session AND $user = $uq->filterById($uid)
+										->find(1)
+										->fetchClass()) {
+				$decoded = Session::decode($session->getData());
+
+				if (is_array($decoded)) {
+					$data_store = new SessionDataStore($decoded);
+					$verified   = $data_store->get('ozone_user:verified');
+				}
 			}
 
 			if (!$verified) {
 				throw new ForbiddenException('OZ_ERROR_INVALID_ACCOUNT_AUTH');
 			}
 
-			UsersUtils::logUserIn($user);
+			$context->getUsersManager()
+					->logUserIn($user);
 
-			return $user;
+			$this->getResponseHolder()
+				 ->setDone('OZ_USER_ONLINE')
+				 ->setData($user->asArray());
 		}
 
 		/**
@@ -123,7 +121,7 @@
 		 *
 		 * @return string
 		 */
-		static private function encode(array $data)
+		private static function encode(array $data)
 		{
 			return base64_encode(json_encode($data));
 		}
@@ -133,16 +131,36 @@
 		 *
 		 * @return array|false
 		 */
-		static private function decode($str)
+		private static function decode($str)
 		{
 			$data = false;
 
 			try {
 				$data = json_decode(base64_decode($str), true);
 			} catch (\Exception $e) {
-				oz_logger($e);
 			}
 
 			return $data;
+		}
+
+		/**
+		 * {@inheritdoc}
+		 */
+		public static function registerRoutes(Router $router)
+		{
+			$router->get('/account-auth', function (RouteInfo $r) {
+				$context  = $r->getContext();
+				$account  = $context->getRequest()
+									->getFormField('account', null);
+				$instance = new AccountAuth($context);
+
+				if (!is_null($account)) {
+					$instance->actionCheck($context, $account);
+				} else {
+					$instance->actionCreate($context);
+				}
+
+				return $instance->writeResponse($context);
+			});
 		}
 	}

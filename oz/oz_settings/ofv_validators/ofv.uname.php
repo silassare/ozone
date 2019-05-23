@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -13,6 +13,11 @@
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Utils\StringUtils;
 
+	/**
+	 * @param \OZONE\OZ\Ofv\OFormValidator $ofv
+	 *
+	 * @throws \Exception
+	 */
 	function ofv_uname(OFormValidator $ofv)
 	{
 		$name = preg_replace(SettingsManager::get('oz.ofv.const', 'OZ_UNWANTED_CHAR_REG'), ' ', $ofv->getField('uname'));

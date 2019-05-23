@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -20,7 +20,7 @@
 		/**
 		 * TypeImage constructor.
 		 *
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function __construct()
 		{
@@ -65,7 +65,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
@@ -73,7 +73,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public static function getInstance(array $options)
 		{
@@ -101,7 +101,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function getCleanOptions()
 		{

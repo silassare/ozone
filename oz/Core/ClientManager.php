@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -12,6 +12,7 @@
 
 	use OZONE\OZ\Db\OZClientsQuery;
 	use OZONE\OZ\Db\OZSessionsQuery;
+	use OZONE\OZ\Exceptions\InternalErrorException;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -23,15 +24,22 @@
 		 * @param string $api_key The client api key
 		 *
 		 * @return null|\OZONE\OZ\Db\OZClient
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getClientWithApiKey($api_key)
 		{
-			$c = new OZClientsQuery();
+			try {
+				$c = new OZClientsQuery();
 
-			return $c->filterByApiKey($api_key)
-					 ->filterByValid(1)
-					 ->find(1)
-					 ->fetchClass();
+				return $c->filterByApiKey($api_key)
+						 ->filterByValid(1)
+						 ->find(1)
+						 ->fetchClass();
+			} catch (\Exception $e) {
+				throw new InternalErrorException("Unable to get client with API key.", [
+					"api_key" => $api_key
+				], $e);
+			}
 		}
 
 		/**
@@ -40,16 +48,22 @@
 		 * @param string $sid The session id
 		 *
 		 * @return null|\OZONE\OZ\Db\OZClient
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getClientWithSessionId($sid)
 		{
-			$sc      = new OZSessionsQuery();
-			$session = $sc->filterById($sid)
-						  ->find(1)
-						  ->fetchClass();
+			try {
+				$sc = new OZSessionsQuery();
 
-			if ($session) {
-				return $session->getOZClient();
+				$session = $sc->filterById($sid)
+							  ->find(1)
+							  ->fetchClass();
+
+				if ($session) {
+					return $session->getOZClient();
+				}
+			} catch (\Exception $e) {
+				throw new InternalErrorException("Unable to get client with session id.", ["sid" => $sid], $e);
 			}
 
 			return null;
@@ -61,35 +75,23 @@
 		 * @param string $token The token
 		 *
 		 * @return null|\OZONE\OZ\Db\OZClient
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getClientWithSessionToken($token)
 		{
-			$sc      = new OZSessionsQuery();
-			$session = $sc->filterByToken($token)
-						  ->find(1)
-						  ->fetchClass();
+			try {
+				$sc      = new OZSessionsQuery();
+				$session = $sc->filterByToken($token)
+							  ->find(1)
+							  ->fetchClass();
 
-			if ($session) {
-				return $session->getOZClient();
+				if ($session) {
+					return $session->getOZClient();
+				}
+			} catch (\Exception $e) {
+				throw new InternalErrorException("Unable to get client with session token.", ["token" => $token], $e);
 			}
 
 			return null;
-		}
-
-		/**
-		 * Checks whether a given origin URL belongs to a valid client.
-		 *
-		 * @param string $url
-		 *
-		 * @return bool
-		 */
-		public static function checkSafeOriginUrl($url)
-		{
-			$c      = new OZClientsQuery();
-			$result = $c->filterByUrl($url)
-						->filterByValid(1)
-						->find(1);
-
-			return $result->count() > 0;
 		}
 	}

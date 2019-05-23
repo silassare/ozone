@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,10 +11,10 @@
 	namespace OZONE\OZ\Authenticator\Services;
 
 	use OZONE\OZ\Authenticator\QRCodeHelper;
-	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\BaseService;
-	use OZONE\OZ\Core\URIHelper;
-	use OZONE\OZ\Exceptions\NotFoundException;
+	use OZONE\OZ\Core\SettingsManager;
+	use OZONE\OZ\Router\RouteInfo;
+	use OZONE\OZ\Router\Router;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -26,37 +26,18 @@
 	final class QRCode extends BaseService
 	{
 		/**
-		 * QRCode constructor.
+		 * @inheritdoc
 		 */
-		public function __construct()
+		public static function registerRoutes(Router $router)
 		{
-			parent::__construct();
-		}
+			$format = SettingsManager::get("oz.files", "OZ_QR_CODE_URI_EXTRA_FORMAT");
 
-		/**
-		 * {@inheritdoc}
-		 *
-		 * @param array $request
-		 *
-		 * @throws \OZONE\OZ\Exceptions\NotFoundException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 */
-		public function execute(array $request = [])
-		{
-			$params_required = ['oz_qr_code_key'];
-			$params_orders   = [];
-			$out             = [];
-			$file_uri_reg    = QRCodeHelper::genQRCodeURIRegExp($params_orders);
-			$extra_ok        = URIHelper::parseUriExtra($file_uri_reg, $params_orders, $out);
+			$options = [
+				'oz_qr_code_key' => '[a-z0-9]{32}'
+			];
 
-			if (!$extra_ok) {
-				throw new NotFoundException();
-			}
-
-			Assert::assertForm($out, $params_required, new NotFoundException());
-
-			QRCodeHelper::serveQrCodeImage($out['oz_qr_code_key']);
+			$router->get('/qrcode/' . $format, function (RouteInfo $r) {
+				return QRCodeHelper::generateQrCodeImage($r->getContext(), $r->getArg('oz_qr_code_key'));
+			}, $options);
 		}
 	}

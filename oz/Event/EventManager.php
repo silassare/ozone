@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -106,8 +106,8 @@
 		 * Can accept an event object or will create one if not passed
 		 *
 		 * @param  string|\OZONE\OZ\Event\Event $event
-		 * @param  mixed                             $context
-		 * @param  array                             $params
+		 * @param  mixed                        $context
+		 * @param  array                        $params
 		 *
 		 * @return $this
 		 */

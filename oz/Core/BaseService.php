@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -10,38 +10,48 @@
 
 	namespace OZONE\OZ\Core;
 
+	use Gobl\CRUD\Exceptions\CRUDException;
+	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+	use Gobl\ORM\Exceptions\ORMControllerFormException;
+	use Gobl\ORM\Exceptions\ORMQueryException;
+	use OZONE\OZ\Exceptions\BadRequestException;
+	use OZONE\OZ\Exceptions\ForbiddenException;
+	use OZONE\OZ\Exceptions\InvalidFormException;
+	use OZONE\OZ\Router\RouteProviderInterface;
+
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	abstract class BaseService
+	abstract class BaseService implements RouteProviderInterface
 	{
-		/** @var \OZONE\OZ\Core\ResponseHolder */
+		/**
+		 * @var \OZONE\OZ\Core\ResponseHolder
+		 */
 		private $response_holder;
 
 		/**
-		 * BaseService constructor.
+		 * @var \OZONE\OZ\Core\Context
 		 */
-		public function __construct()
+		private $context;
+
+		/**
+		 * BaseService constructor.
+		 *
+		 * @param \OZONE\OZ\Core\Context $context
+		 */
+		public function __construct(Context $context)
 		{
-			$this->response_holder = new ResponseHolder($this->getServiceName());
+			$this->context         = $context;
+			$this->response_holder = new ResponseHolder(static::class);
 		}
 
 		/**
-		 * Called to execute the service with the request form.
+		 * Gets the context.
 		 *
-		 * @param array $request the request form
-		 *
-		 * @return void
+		 * @return \OZONE\OZ\Core\Context
 		 */
-		abstract public function execute(array $request = []);
-
-		/**
-		 * Gets the service name.
-		 *
-		 * @return string
-		 */
-		public function getServiceName()
+		public function getContext()
 		{
-			return get_class($this);
+			return $this->context;
 		}
 
 		/**
@@ -52,5 +62,67 @@
 		public function getResponseHolder()
 		{
 			return $this->response_holder;
+		}
+
+		/**
+		 * Write service response.
+		 *
+		 * @param \OZONE\OZ\Core\Context $context
+		 *
+		 * @return \OZONE\OZ\Http\Response
+		 */
+		public function writeResponse(Context $context)
+		{
+			$response_holder = $this->getResponseHolder();
+			$data            = $response_holder->getResponse();
+			$now             = time();
+			$data['utime']   = $now;
+
+			if ($context->getUsersManager()
+						->userVerified()) {
+				$lifetime      = 1 * $context->getClient()
+											 ->getSessionLifeTime();
+				$data["stime"] = $now + $lifetime;
+			}
+
+			return $context->getResponse()
+						   ->withJson($data);
+		}
+
+		/**
+		 * Converts Gobl exceptions unto O'Zone exceptions.
+		 *
+		 * @param \Exception $error the exception to convert
+		 *
+		 * @throws \OZONE\OZ\Exceptions\BadRequestException
+		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+		 * @throws \Exception
+		 */
+		public static function tryConvertException(\Exception $error)
+		{
+			if ($error instanceof ORMQueryException) {
+				throw new BadRequestException($error->getMessage(), $error->getData(), $error);
+			}
+
+			if ($error instanceof ORMControllerFormException) {
+				throw new InvalidFormException(null, [
+					'message' => $error->getMessage(),
+					'data'    => $error->getData()
+				], $error);
+			}
+
+			if ($error instanceof TypesInvalidValueException) {
+				throw new InvalidFormException(null, [
+					'message' => $error->getMessage(),
+					'data'    => $error->getData()
+				], $error);
+			}
+
+			if ($error instanceof CRUDException) {
+				throw new ForbiddenException($error->getMessage(), $error->getData(), $error);
+			}
+
+			throw $error;
 		}
 	}

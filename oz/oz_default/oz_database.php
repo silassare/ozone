@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -26,50 +26,54 @@
 				['type' => 'foreign_key', 'reference' => 'oz_countries', 'columns' => ['cc2' => 'cc2']]
 			],
 			'columns'       => [
-				'id'           => [
+				'id'         => [
 					'type'           => 'bigint',
 					'auto_increment' => true,
 					'unsigned'       => true
 				],
-				'phone'        => [
+				'phone'      => [
 					'type'       => 'phone',
 					'registered' => false,
 					'null'       => !SettingsManager::get('oz.users', 'OZ_USERS_PHONE_REQUIRED')
 				],
-				'email'        => [
+				'email'      => [
 					'type'       => 'email',
 					'registered' => false,
 					'null'       => !SettingsManager::get('oz.users', 'OZ_USERS_EMAIL_REQUIRED')
 				],
-				'pass'         => [
+				'pass'       => [
 					'type' => 'password'
 				],
-				'name'         => [
+				'name'       => [
 					'type' => 'user_name'
 				],
-				'gender'       => [
+				'gender'     => [
 					'type' => 'gender'
 				],
-				'birth_date'   => [
+				'birth_date' => [
 					'type'       => 'date',
 					'birth_date' => true,
 					'min_age'    => SettingsManager::get('oz.ofv.const', 'OZ_USER_MIN_AGE'),
 					'max_age'    => SettingsManager::get('oz.ofv.const', 'OZ_USER_MAX_AGE')
 				],
-				'sign_up_time' => [
-					'type' => 'timestamp',
-					'auto' => true
-				],
-				'picid'        => [
+				'picid'      => [
 					'type'    => 'string',
 					'default' => '0_0',
 					'max'     => 50
 				],
-				'cc2'          => [
+				'cc2'        => [
 					'type'       => 'cc2',
 					'authorized' => true
 				],
-				'valid'        => [
+				'data'       => [
+					'type'    => 'string',
+					'default' => '[]'
+				],
+				'add_time'   => [
+					'type' => 'timestamp',
+					'auto' => true
+				],
+				'valid'      => [
 					'type'    => 'bool',
 					'default' => true
 				]
@@ -87,12 +91,22 @@
 				['type' => 'foreign_key', 'reference' => 'oz_users', 'columns' => ['user_id' => 'id']]
 			],
 			'columns'       => [
-				'user_id' => 'ref:oz_users.id',
-				'time'    => [
+				'user_id'  => 'ref:oz_users.id',
+				'level'    => [
+					'type'    => 'int',
+					'min'     => 1,
+					'max'     => 60,
+					'default' => 1 // TODO 1: super admin, 2: admin, 3: editor, etc
+				],
+				'data'     => [
+					'type'    => 'string',
+					'default' => '[]'
+				],
+				'add_time' => [
 					'type' => 'timestamp',
 					'auto' => true
 				],
-				'valid'   => [
+				'valid'    => [
 					'type'    => 'bool',
 					'default' => true
 				]
@@ -134,7 +148,11 @@
 				'about'             => [
 					'type' => 'string'
 				],
-				'create_time'       => [
+				'data'              => [
+					'type'    => 'string',
+					'default' => '[]'
+				],
+				'add_time'          => [
 					'type' => 'timestamp',
 					'auto' => true
 				],
@@ -185,14 +203,23 @@
 					'min'  => 32,
 					'max'  => 250
 				],
-				'data'           => [
-					'type' => 'string'
-				],
 				'expire'         => [
 					'type' => 'timestamp'
 				],
 				'last_seen'      => [
 					'type' => 'timestamp'
+				],
+				'data'           => [
+					'type'    => 'string',
+					'default' => '[]'
+				],
+				'add_time'       => [
+					'type' => 'timestamp',
+					'auto' => true
+				],
+				'valid'          => [
+					'type'    => 'bool',
+					'default' => true
 				]
 			]
 		],
@@ -232,6 +259,18 @@
 				],
 				'expire'    => [
 					'type' => 'timestamp'
+				],
+				'data'      => [
+					'type'    => 'string',
+					'default' => '[]'
+				],
+				'add_time'  => [
+					'type' => 'timestamp',
+					'auto' => true
+				],
+				'valid'     => [
+					'type'    => 'bool',
+					'default' => true
 				]
 			]
 		],
@@ -256,6 +295,14 @@
 					'type' => 'string',
 					'max'  => 60
 				],
+				'data'      => [
+					'type'    => 'string',
+					'default' => '[]'
+				],
+				'add_time'  => [
+					'type' => 'timestamp',
+					'auto' => true
+				],
 				'valid'     => [
 					'type'    => 'bool',
 					'default' => true
@@ -275,55 +322,66 @@
 				['type' => 'foreign_key', 'reference' => 'oz_users', 'columns' => ['user_id' => 'id']]
 			],
 			'columns'       => [
-				'id'          => [
+				'id'       => [
 					'type'           => 'bigint',
 					'unsigned'       => true,
 					'auto_increment' => true
 				],
-				'user_id'     => 'ref:oz_users.id',
-				'key'         => [
+				'user_id'  => [
+					'type' => 'ref:oz_users.id',
+					'null' => true
+				],
+				'key'      => [
 					'type' => 'string',
 					'min'  => 32,
 					'max'  => 32
 				],
-				'clone'       => [
+				'clone'    => [
 					'type'     => 'bigint',
 					'unsigned' => true,
 					'default'  => 0
 				],
-				'origin'      => [
+				'origin'   => [
 					'type'     => 'bigint',
 					'unsigned' => true,
 					'default'  => 0
 				],
-				'size'        => [
+				'size'     => [
 					'type' => 'bigint'
 				],
-				'type'        => [
+				'type'     => [
 					'type' => 'string',
 					'max'  => 60,
 					'null' => true
 				],
-				'name'        => [
+				'name'     => [
 					'type' => 'string',
 					'max'  => 100,
 					'null' => true
 				],
-				'label'       => [
+				'label'    => [
 					'type' => 'string'
 				],
-				'path'        => [
+				'path'     => [
 					'type' => 'string',
 					'max'  => 255
 				],
-				'thumb'       => [
+				'thumb'    => [
 					'type' => 'string',
 					'max'  => 255,
 					'null' => true
 				],
-				'upload_time' => [
+				'data'     => [
+					'type'    => 'string',
+					'default' => '[]'
+				],
+				'add_time' => [
 					'type' => 'timestamp',
 					'auto' => true
+				],
+				'valid'    => [
+					'type'    => 'bool',
+					'default' => true
 				]
 			]
 		]

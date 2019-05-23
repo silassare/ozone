@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,6 +11,7 @@
 	namespace OZONE\OZ\Lang;
 
 	use OZONE\OZ\Core\SettingsManager;
+	use OZONE\OZ\Http\Environment;
 
 	class PolyglotUtils
 	{
@@ -37,7 +38,6 @@
 		 * Gets available languages list or check if a given one is defined
 		 *
 		 * @return array
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getAvailableLanguages()
 		{
@@ -48,7 +48,6 @@
 		 * Gets the default language.
 		 *
 		 * @return string
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getDefaultLanguage()
 		{
@@ -59,7 +58,6 @@
 		 * Gets enabled languages list from available languages
 		 *
 		 * @return array
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getEnabledLanguages()
 		{
@@ -206,24 +204,25 @@
 		 * Parse user browser 'Accept-Language' header and advice
 		 * for the best to use according to available languages
 		 *
+		 * @param \OZONE\OZ\Http\Environment $env
+		 *
 		 * @return array
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
-		public static function parseBrowserLanguage()
+		public static function parseBrowserLanguage(Environment $env)
 		{
 			$browser_languages = [];
 			$enabled_languages = self::getEnabledLanguages();
 			$advice            = null;
 
-			if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+			if ($env->has('HTTP_ACCEPT_LANGUAGE')) {
 				// break up string into pieces (languages and q factors)
-				preg_match_all(self::ACCEPT_LANGUAGE_REG, $_SERVER['HTTP_ACCEPT_LANGUAGE'], $lang_parse);
+				preg_match_all(self::ACCEPT_LANGUAGE_REG, $env->get('HTTP_ACCEPT_LANGUAGE'), $lang_parse);
 
 				if (count($lang_parse[1])) {
-					// create a list like "en" => 0.8
+					// creates a list like "en" => 0.8
 					$browser_languages = array_combine($lang_parse[1], $lang_parse[4]);
 
-					// set default to 1 for any without q factor
+					// sets default to 1 for any without q factor
 					foreach ($browser_languages as $lang => $q) {
 						if ($q === '') $browser_languages[$lang] = 1;
 					}
@@ -257,7 +256,7 @@
 
 					foreach ($browser_languages_groups as $group => $list) {
 						if (isset($enabled_languages_groups[$group])) {
-							// get the first language in this group
+							// gets the first language in this group
 							$advice = $enabled_languages_groups[$group][0];
 							break;
 						}

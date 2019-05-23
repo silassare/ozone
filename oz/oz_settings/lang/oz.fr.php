@@ -1,13 +1,14 @@
 <?php
-
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
 	 * For the full copyright and license information, please view the LICENSE
 	 * file that was distributed with this source code.
 	 */
+
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	return [
 		// ---------START NEW
@@ -21,7 +22,6 @@
 		"OZ_ERROR_RUNTIME"             => "Une erreur interne s'est produite en cours d'exécution.",
 		"OZ_ERROR_METHOD_NOT_ALLOWED"  => "La méthode de la requête n'est pas autorisée.",
 		"OZ_ERROR_NOT_FOUND"           => "La ressource recherchée n'est pas retrouvée.",
-		"OZ_ERROR_INVALID_FIELD"       => "Champs de formulaire invalide.",
 		"OZ_ERROR_INVALID_FORM"        => "La requête est invalide. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
 		"OZ_ERROR_YOU_MUST_LOGIN"      => "Vous devez vous connecter d'abord.",
 		"OZ_ERROR_NOT_ALLOWED"         => "Une erreur s'est produite. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
@@ -31,7 +31,7 @@
 		"OZ_SMS_AUTH_CODE_PASSWORD_EDIT_MESSAGE" => "Votre code d'authentification est: {code}",
 		// ---------END NEW
 
-		"OZ_IMAGE_NOT_VALID"            => "Fichier image invalide. Veuillez choisir une image de type png, jpg, jpeg, ou gif.",
+		"OZ_IMAGE_NOT_VALID"            => "Fichier image invalide. Veuillez choisir une image de type png, jpeg, ou gif.",
 		"OZ_PROFILE_PIC_SET_TO_DEFAULT" => "Photo de profil par défaut choisie.",
 		"OZ_PROFILE_PIC_CHANGED"        => "Photo de profil changer.",
 		"OZ_FORM_CONTAINS_EMPTY_FIELD"  => "Le champ `{label}` est vide.",
@@ -76,6 +76,10 @@
 		"OZ_FILE_UPLOAD_FAIL"       => "Échec de l'envoie du ou des fichiers",
 		"OZ_FILE_ALIAS_UNKNOWN"     => "Fichier alias inconu.",
 		"OZ_FILE_ALIAS_PARSE_ERROR" => "Fichier alias, erreur d'analyse.",
-		"OZ_FILE_ALIAS_NOT_FOUND"   => "Le fichier alias ou le fichier ciblé est introuvable..."
+		"OZ_FILE_ALIAS_NOT_FOUND"   => "Le fichier alias ou le fichier ciblé est introuvable...",
 
+		"OZ_ERROR_GO_HOME_BTN" => "Accueil",
+		"OZ_ERROR_GO_BACK_BTN" => "Retour",
+		"OZ_REDIRECT_TITLE"    => "Vous allez être rediriger.",
+		"OZ_REDIRECT_MESSAGE"  => "Si vous n'êtes pas redirigé automatiquement, suivez le <a href=\"{url}\">lien</a>.",
 	];

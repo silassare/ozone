@@ -1,11 +1,11 @@
 AddDefaultCharset UTF-8
 AddType text/cache-manifest .manifest
 
-# Disable files listing multiview and enable symbolique link
+# Disable files listing multiview and enable symbolic link
 
 Options -Indexes -Multiviews +FollowSymlinks
 
-# Start rewriter
+# Start rewrite
 
 <IfModule mod_rewrite.c>
 	RewriteEngine on

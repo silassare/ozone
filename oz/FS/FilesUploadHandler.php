@@ -10,7 +10,8 @@
 
 	use OZONE\OZ\Core\Hasher;
 	use OZONE\OZ\Db\OZFile;
-	use OZONE\OZ\Exceptions\RuntimeException;
+	use OZONE\OZ\Exceptions\InternalErrorException;
+	use OZONE\OZ\Http\UploadedFile;
 
 	class FilesUploadHandler
 	{
@@ -21,142 +22,69 @@
 		 */
 		private $message = null;
 
-		/**
-		 * the last uploaded file info at which the error occur
-		 *
-		 * @var array
-		 */
-		private $computed_file = null;
-
 		public function __construct() { }
 
 		/**
 		 * Move uploaded file to a given directory
 		 *
-		 * @param array  $uploaded_file the uploaded file info
-		 * @param string $to            the destination directory
+		 * @param \OZONE\OZ\Http\UploadedFile $upload the uploaded file info
+		 * @param string                      $to     the destination directory
 		 *
 		 * @return bool|\OZONE\OZ\Db\OZFile file object when successful, false otherwise
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 * @throws \Exception
 		 */
-		public function moveUploadedFile(array $uploaded_file, $to)
+		public function moveUploadedFile(UploadedFile $upload, $to)
 		{
-			$this->computed_file = $uploaded_file;
-
-			if (( int )$uploaded_file['error'] != UPLOAD_ERR_OK) {
-				$this->setLastError($uploaded_file['error']);
+			if ((int)$upload->getError() != UPLOAD_ERR_OK) {
+				$this->message = self::uploadErrorMessage($upload->getError());
 
 				return false;
 			}
 
-			if (!is_uploaded_file($uploaded_file['tmp_name'])) {
-				$this->message = 'OZ_FILE_UPLOAD_NOT_VALID';
-
-				return false;
-			}
-
-			$file_name = $uploaded_file['name'];// file name at client side
-			$file_type = $uploaded_file['type'];// file mime type
+			$file_name = $upload->getClientFilename();// file name at client side
+			$file_type = $upload->getClientMediaType();// file mime type
 
 			// live recorded blob files as audio/video/image don't have a valid name
 			if (!strlen($file_name) OR $file_name === 'blob') {
-				$file_name = $uploaded_file['name'] = $this->genOptionalFileName($file_type);
+				$file_name = $this->genOptionalFileName($file_type);
 			}
 
 			$gen_info          = FilesUtils::genNewFileInfo($to, $file_name, $file_type);
 			$destination       = $gen_info['path'];
 			$thumb_destination = $gen_info['thumbnail'];
 
-			if ($this->isFileAlias($uploaded_file)) {
-				$result = FilesUtils::getFileFromAlias($uploaded_file['tmp_name']);
+			if ($this->isFileAlias($upload)) {
+				$result = FilesUtils::getFileFromAlias($upload->getStream());
 
-				$file_obj = $result->cloneFile();
-
-				// move_uploaded_file($uploaded_file['tmp_name'], $destination);
-
-				return $file_obj;
+				return $result->cloneFile();
 			}
 
-			$file_obj = new OZFile();
+			$fo = new OZFile();
 
-			$this->safeDelete($file_obj);
+			try {
+				$upload->moveTo($destination);
 
-			// try move the uploaded file
-			$result = move_uploaded_file($uploaded_file['tmp_name'], $destination);
+				$safe_file_size = filesize($destination);
 
-			if ($result) {
-				$file_obj->setName($file_name)
-						 ->setPath($destination)
-						 ->setUploadTime(time())
-						 ->setType($file_type)
-						 ->setSize(filesize($destination));
+				$fo->setName($file_name)
+				   ->setPath($destination)
+				   ->setType($file_type)
+				   ->setSize($safe_file_size)
+				   ->setAddTime(time())
+				   ->setData(json_encode([]));
 
 				// make thumbnail if possible
-				$success = FilesUtils::makeThumb($file_obj, $thumb_destination);
-				if ($success) {
-					$file_obj->setThumb($thumb_destination);
+				if (FilesUtils::makeThumb($fo, $thumb_destination)) {
+					$fo->setThumb($thumb_destination);
 				}
-
-				$this->message = 'OZ_FILE_UPLOAD_SAVE_SUCCESS';
-
-				return $file_obj;
-			} else {
-				$this->message = 'OZ_FILE_UPLOAD_SAVE_FAIL';
-
-				return false;
-			}
-		}
-
-		/**
-		 * Move multiple uploaded files to a given directory
-		 *
-		 * @param array  $uploaded_files the files list
-		 * @param string $to             the destination directory
-		 *
-		 * @return bool|\OZONE\OZ\Db\OZFile[] array of file object when successful, false otherwise
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 */
-		public function moveMultipleFilesUpload(array $uploaded_files, $to)
-		{
-			/** @var \OZONE\OZ\Db\OZFile[] $file_obj_list */
-			$file_obj_list = [];
-			$tmp_file_list = [];
-			$error         = false;
-
-			if (!isset($uploaded_files["name"]) OR !is_array($uploaded_files["name"])) {
-				// this is not a valid tree dimensional array
-				// may be it is not a multiple file upload
-
-				throw new RuntimeException("OZ_MULTIPLE_FILES_UPLOAD_REQUIRED");
-			}
-			// multiple upload files
-			// transforming a three dimensional array into a two dimension array
-			foreach ($uploaded_files as $key => $values) {
-				foreach ($values as $i => $v) {
-					$tmp_file_list[$i][$key] = $v;
-				}
+			} catch (\Exception $e) {
+				$this->safeDelete($fo);
+				throw new InternalErrorException('OZ_FILE_UPLOAD_MOVE_FAIL', null, $e);
 			}
 
-			foreach ($tmp_file_list as $pos => $file) {
-				$file_obj = $this->moveUploadedFile($file, $to);
+			$this->message = 'OZ_FILE_UPLOAD_SAVE_SUCCESS';
 
-				if (!$file_obj) {
-					$error = true;
-					break;
-				}
-				$file_obj_list[$pos] = $file_obj;
-			}
-
-			if ($error) {
-				foreach ($file_obj_list as $f) {
-					$this->safeDelete($f);
-				}
-
-				return false;
-			}
-
-			return $file_obj_list;
+			return $fo;
 		}
 
 		/**
@@ -165,8 +93,6 @@
 		 * @param string $type the file mime type
 		 *
 		 * @return string
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private function genOptionalFileName($type)
 		{
@@ -190,42 +116,42 @@
 		/**
 		 * Checks if a file is an ozone file alias
 		 *
-		 * @param array $file the file info
+		 * @param \OZONE\OZ\Http\UploadedFile $file the file info
 		 *
 		 * @return bool true
 		 */
-		private function isFileAlias(array $file)
+		private function isFileAlias(UploadedFile $file)
 		{
-			// check file name and extension
-			if (!preg_match('#^[a-z0-9_]+\.ofa$#i', $file['name'])) return false;
+			// checks file name and extension
+			if (!preg_match('~^[a-z0-9_]+\.ofa$~i', $file->getClientFilename())) return false;
 			// the correct mime type
-			if ($file['type'] !== 'text/x-ozone-file-alias') return false;
-			// check alias file size 4ko
-			if ($file['size'] > 4 * 1024) return false;
+			if ($file->getClientMediaType() !== 'text/x-ozone-file-alias') return false;
+			// checks alias file size 4ko
+			if ($file->getSize() > 4 * 1024) return false;
 
 			return true;
 		}
 
 		/**
-		 * Maps upload error code to error message
+		 * Convert php upload error code to message.
 		 *
-		 * @param string $code the upload error code
+		 * @param int $error
+		 *
+		 * @return string
 		 */
-		private function setLastError($code)
+		public static function uploadErrorMessage($error)
 		{
-			switch ($code) {
+			switch ($error) {
 				case UPLOAD_ERR_INI_SIZE:
 					// 'The uploaded file exceeds the upload_max_filesize directive in php.ini'
 				case UPLOAD_ERR_FORM_SIZE:
 					// 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'
-					$this->message = 'OZ_FILE_UPLOAD_TOO_BIG';
+					$message = 'OZ_FILE_UPLOAD_TOO_BIG';
 					break;
-
 				case UPLOAD_ERR_NO_FILE:
 					// 'No file was uploaded'
-					$this->message = 'OZ_FILE_UPLOAD_IS_EMPTY';
+					$message = 'OZ_FILE_UPLOAD_IS_EMPTY';
 					break;
-
 				case UPLOAD_ERR_PARTIAL:
 					// 'The uploaded file was only partially uploaded'
 				case UPLOAD_ERR_NO_TMP_DIR:
@@ -236,8 +162,10 @@
 					// 'File upload stopped by extension'
 				default:
 					// 'Unknown upload error'
-					$this->message = 'OZ_FILE_UPLOAD_FAIL';
+					$message = 'OZ_FILE_UPLOAD_FAIL';
 			}
+
+			return $message;
 		}
 
 		/**
@@ -253,16 +181,6 @@
 		}
 
 		/**
-		 * Returns the last uploaded file info at which the error occur
-		 *
-		 * @return array
-		 */
-		public function lastErrorFile()
-		{
-			return $this->computed_file;
-		}
-
-		/**
 		 * Safe delete of an uploaded file
 		 *
 		 * @param \OZONE\OZ\Db\OZFile $file
@@ -273,13 +191,11 @@
 				return;
 			}
 
-			$path  = $file->getPath();
-			$thumb = $file->getThumb();
-			if (file_exists($path)) {
+			if ($path = $file->getPath() AND file_exists($path)) {
 				unlink($path);
 			}
 
-			if (file_exists($thumb)) {
+			if ($thumb = $file->getThumb() AND file_exists($thumb)) {
 				unlink($thumb);
 			}
 		}

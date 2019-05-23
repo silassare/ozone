@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -27,7 +27,7 @@
 	final class Db extends Command
 	{
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 *
 		 * @throws \Exception
 		 */
@@ -56,15 +56,13 @@
 		}
 
 		/**
-		 * Build database.
+		 * Builds database.
 		 *
 		 * You should backup your database first.
 		 *
 		 * @param array $options
 		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 * @throws \Exception
 		 */
 		private function build(array $options)
@@ -75,7 +73,7 @@
 			$all       = (bool)$options['a'];
 			$structure = DbManager::getProjectDbDirectoryStructure();
 
-			$db     = DbManager::getInstance();
+			$db     = DbManager::getDb();
 			$tables = $db->getTables();
 
 			$map = [
@@ -107,13 +105,12 @@
 			}
 
 			try {
-				$query = $db->generateDatabaseQuery();
-				// oz_logger($query);
+				$query = $db->buildDatabase();
 				$db->executeMulti($query);
 				$cli->writeLn('Success: database build done.');
 			} catch (\Exception $e) {
-				oz_logger($e);
-				$cli->writeLn('Error: database build fails. Open log file.');
+				$cli->log($e)
+					->writeLn('Error: database build fails. Open log file.');
 			}
 		}
 
@@ -122,9 +119,7 @@
 		 *
 		 * @param array $options
 		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 * @throws \Exception
 		 */
 		private function tsBundle(array $options)
@@ -133,7 +128,7 @@
 
 			$cli    = $this->getCli();
 			$dir    = $options['d'];
-			$db     = DbManager::getInstance();
+			$db     = DbManager::getDb();
 			$tables = $db->getTables();
 			$gen    = new Generator($db, true, true);
 
@@ -148,11 +143,8 @@
 		 *
 		 * @param array $options
 		 *
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \Kli\Exceptions\KliInputException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 * @throws \Exception
 		 */
 		private function refresh(array $options)
@@ -174,13 +166,13 @@
 				$dir       = empty($dir) ? $structure['project_db_folder'] : $dir;
 			}
 
-			$db    = DbManager::getInstance();
+			$db    = DbManager::getDb();
 			$found = $db->getTables($namespace);
 			if (empty($found)) {
 				throw new KliInputException(sprintf('There is no tables declared with "%s" namespace.', $namespace));
 			}
 
-			$query = $db->generateDatabaseQuery($namespace);
+			$query = $db->buildDatabase($namespace);
 			// we (re)generate classes only for tables
 			// in the given namespace
 			$gen    = new Generator($db, false, false);
@@ -191,8 +183,8 @@
 				$db->executeMulti($query);
 				$cli->writeLn('Success: database refreshed.');
 			} catch (\Exception $e) {
-				oz_logger($e);
-				$cli->writeLn('Error: database refresh fails. Open log file.');
+				$cli->log($e)
+					->writeLn('Error: database refresh fails. Open log file.');
 			}
 		}
 
@@ -201,18 +193,15 @@
 		 *
 		 * @param array $options
 		 *
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
 		private function generate(array $options)
 		{
 			Utils::assertProjectFolder();
 
 			$dir       = $options['d'];
-			$query     = DbManager::getInstance()
-								  ->generateDatabaseQuery();
+			$query     = DbManager::getDb()
+								  ->buildDatabase();
 			$file_name = sprintf('database-%s.sql', time());
 			$fm        = new FilesManager($dir);
 			$fm->wf($file_name, $query);
@@ -228,13 +217,11 @@
 		}
 
 		/**
-		 * Run database file.
+		 * Runs database file.
 		 *
 		 * @param array $options
 		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
 		private function source(array $options)
 		{
@@ -250,14 +237,14 @@
 				return;
 			}
 
-			$db = DbManager::getInstance();
+			$db = DbManager::getDb();
 
 			try {
 				$db->executeMulti($query);
 				$cli->writeLn('Success: database updated.');
 			} catch (\Exception $e) {
-				oz_logger($e);
-				$cli->writeLn('Error: database update fails. Open log file.');
+				$cli->log($e)
+					->writeLn('Error: database update fails. Open log file.');
 			}
 		}
 
@@ -266,9 +253,7 @@
 		 *
 		 * @param array $options
 		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
 		private function backup(array $options)
 		{
@@ -277,7 +262,6 @@
 			$dir = $options['d'];
 			$cli = $this->getCli();
 
-			// TODO each rdbms should have its own method to dump database
 			$cli->writeLn('Warning: this work only for MySQL database.');
 
 			$fm          = new FilesManager($dir);
@@ -302,7 +286,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 *
 		 * @throws \Kli\Exceptions\KliException
 		 */

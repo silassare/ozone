@@ -1,12 +1,14 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
 	 * For the full copyright and license information, please view the LICENSE
 	 * file that was distributed with this source code.
 	 */
+
+	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	return [
 		// the uri format you want for file access: must provide in order
@@ -17,7 +19,7 @@
 		// ex:
 		// 		/ozone-7000000000-fe5017db3a4b07eb5297c745ba198355-1.o
 		// 		/ozone-7000000000-fe5017db3a4b07eb5297c745ba198355-1
-		'OZ_GET_FILE_URI_EXTRA_FORMAT' => 'ozone-{oz_file_id}-{oz_file_key}-{oz_file_quality}',
+		'OZ_GET_FILE_URI_EXTRA_FORMAT' => 'ozone-{oz_file_id}-{oz_file_key}-{oz_file_quality}[.{oz_file_extension}]',
 		// the name used, when user download a file
 		// you can use oz_file_id, oz_file_quality and oz_file_extension
 		'OZ_GET_FILE_NAME'             => 'ozone-{oz_file_id}-{oz_file_quality}.{oz_file_extension}',

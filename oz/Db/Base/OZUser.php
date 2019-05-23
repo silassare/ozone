@@ -3,16 +3,13 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1551653125
+ * Time: 1557147498
  */
 
 	namespace OZONE\OZ\Db\Base;
 
-	use Gobl\DBAL\QueryBuilder;
-	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
-	use Gobl\ORM\ArrayCapable;
-	use Gobl\ORM\Exceptions\ORMException;
 	use Gobl\ORM\ORM;
+	use Gobl\ORM\ORMEntityBase;
 	use OZONE\OZ\Db\OZUsersQuery as OZUsersQueryReal;
 
 		use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
@@ -24,7 +21,7 @@
 	 *
 	 * @package OZONE\OZ\Db\Base
 	 */
-	abstract class OZUser extends ArrayCapable
+	abstract class OZUser extends ORMEntityBase
 	{
 		const TABLE_NAME = 'oz_users';
 
@@ -35,49 +32,17 @@
 		const COL_NAME = 'user_name';
 		const COL_GENDER = 'user_gender';
 		const COL_BIRTH_DATE = 'user_birth_date';
-		const COL_SIGN_UP_TIME = 'user_sign_up_time';
 		const COL_PICID = 'user_picid';
 		const COL_CC2 = 'user_cc2';
+		const COL_DATA = 'user_data';
+		const COL_ADD_TIME = 'user_add_time';
 		const COL_VALID = 'user_valid';
-
-		/** @var \Gobl\DBAL\Table */
-		protected $table;
-
-		/** @var  array */
-		protected $row;
-
-		/** @var  array */
-		protected $row_saved;
-
-		/**
-		 * @var bool
-		 */
-		protected $is_new = true;
-
-		/**
-		 * @var bool
-		 */
-		protected $is_saved = false;
-
-		/**
-		 * The auto_increment column full name.
-		 *
-		 * @var string
-		 */
-		protected $auto_increment_column = null;
-
-		/**
-		 * To enable/disable strict mode.
-		 *
-		 * @var bool
-		 */
-		protected $strict = true;
 
 		
 		/**
 		 * @var \OZONE\OZ\Db\OZCountry
 		 */
-		protected $r_oz_country;
+		protected $_r_oz_country;
 
 
 		/**
@@ -85,30 +50,11 @@
 		 *
 		 * @param bool $is_new True for new entity false for entity fetched
 		 *                     from the database, default is true.
-		 * @param bool $strict
-		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @param bool $strict Enable/disable strict mode
 		 */
 		public function __construct($is_new = true, $strict = true)
 		{
-			$this->table    = ORM::getDatabase()
-								 ->getTable(OZUser::TABLE_NAME);
-			$columns        = $this->table->getColumns();
-			$this->is_new   = (bool)$is_new;
-			$this->is_saved = !$this->is_new;
-			$this->strict   = (bool)$strict;
-
-			// we initialise row with default value
-			foreach ($columns as $column) {
-				$full_name             = $column->getFullName();
-				$type                  = $column->getTypeObject();
-				$this->row[$full_name] = $type->getDefault();
-
-				// the auto_increment column
-				if ($type->isAutoIncremented()) {
-					$this->auto_increment_column = $full_name;
-				}
-			}
+			parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), $is_new, $strict, OZUser::TABLE_NAME, OZUsersQueryReal::class);
 		}
 		
         /**
@@ -121,14 +67,18 @@
          * @param int|bool $total    total rows without limit
          *
          * @return \OZONE\OZ\Db\OZFile[]
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \Gobl\CRUD\Exceptions\CRUDException
+         * @throws \Gobl\DBAL\Exceptions\DBALException
+         * @throws \Gobl\ORM\Exceptions\ORMException
+         * @throws \Gobl\CRUD\Exceptions\CRUDException
          */
         function getOZFiles($filters = [], $max = null, $offset = 0, $order_by = [], &$total = false)
         {
-
-            $filters['file_user_id'] = $this->getId();
+            if(!is_null($v = $this->getId())){
+                $filters['file_user_id'] = $v;
+            }
+            if (empty($filters)){
+                return [];
+            }
 
             $ctrl = new OZFilesControllerRealR();
 
@@ -139,21 +89,26 @@
          * OneToOne relation between `oz_users` and `oz_countries`.
          *
          * @return null|\OZONE\OZ\Db\OZCountry
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \Gobl\CRUD\Exceptions\CRUDException
+         * @throws \Gobl\DBAL\Exceptions\DBALException
+         * @throws \Gobl\ORM\Exceptions\ORMException
+         * @throws \Gobl\CRUD\Exceptions\CRUDException
          */
         public function getOZCountry()
         {
-            if (!isset($this->r_oz_country)) {
-
-                $filters['country_cc2'] = $this->getCc2();
+            if (!isset($this->_r_oz_country)) {
+                $filters = [];
+                if(!is_null($v = $this->getCc2())){
+                    $filters['country_cc2'] = $v;
+                }
+                if (empty($filters)){
+                    return null;
+                }
 
                 $m = new OZCountriesControllerRealR();
-                $this->r_oz_country = $m->getItem($filters);
+                $this->_r_oz_country = $m->getItem($filters);
             }
 
-            return $this->r_oz_country;
+            return $this->_r_oz_country;
         }
 
 		
@@ -164,7 +119,8 @@
 		 */
 		public function getId()
 		{
-		    $v = $this->_getValue(self::COL_ID);
+			$column = self::COL_ID;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -178,12 +134,14 @@
 		 *
 		 * @param string $id
 		 *
-		 * @return \OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setId($id)
 		{
-			return $this->_setValue(self::COL_ID, $id);
+			$column = self::COL_ID;
+			$this->$column = $id;
+
+			return $this;
 		}
 
 		/**
@@ -193,7 +151,8 @@
 		 */
 		public function getPhone()
 		{
-		    $v = $this->_getValue(self::COL_PHONE);
+			$column = self::COL_PHONE;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -207,12 +166,14 @@
 		 *
 		 * @param string $phone
 		 *
-		 * @return \OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setPhone($phone)
 		{
-			return $this->_setValue(self::COL_PHONE, $phone);
+			$column = self::COL_PHONE;
+			$this->$column = $phone;
+
+			return $this;
 		}
 
 		/**
@@ -222,7 +183,8 @@
 		 */
 		public function getEmail()
 		{
-		    $v = $this->_getValue(self::COL_EMAIL);
+			$column = self::COL_EMAIL;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -236,12 +198,14 @@
 		 *
 		 * @param string $email
 		 *
-		 * @return \OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setEmail($email)
 		{
-			return $this->_setValue(self::COL_EMAIL, $email);
+			$column = self::COL_EMAIL;
+			$this->$column = $email;
+
+			return $this;
 		}
 
 		/**
@@ -251,7 +215,8 @@
 		 */
 		public function getPass()
 		{
-		    $v = $this->_getValue(self::COL_PASS);
+			$column = self::COL_PASS;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -265,12 +230,14 @@
 		 *
 		 * @param string $pass
 		 *
-		 * @return \OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setPass($pass)
 		{
-			return $this->_setValue(self::COL_PASS, $pass);
+			$column = self::COL_PASS;
+			$this->$column = $pass;
+
+			return $this;
 		}
 
 		/**
@@ -280,7 +247,8 @@
 		 */
 		public function getName()
 		{
-		    $v = $this->_getValue(self::COL_NAME);
+			$column = self::COL_NAME;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -294,12 +262,14 @@
 		 *
 		 * @param string $name
 		 *
-		 * @return \OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setName($name)
 		{
-			return $this->_setValue(self::COL_NAME, $name);
+			$column = self::COL_NAME;
+			$this->$column = $name;
+
+			return $this;
 		}
 
 		/**
@@ -309,7 +279,8 @@
 		 */
 		public function getGender()
 		{
-		    $v = $this->_getValue(self::COL_GENDER);
+			$column = self::COL_GENDER;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -323,12 +294,14 @@
 		 *
 		 * @param string $gender
 		 *
-		 * @return \OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setGender($gender)
 		{
-			return $this->_setValue(self::COL_GENDER, $gender);
+			$column = self::COL_GENDER;
+			$this->$column = $gender;
+
+			return $this;
 		}
 
 		/**
@@ -338,7 +311,8 @@
 		 */
 		public function getBirthDate()
 		{
-		    $v = $this->_getValue(self::COL_BIRTH_DATE);
+			$column = self::COL_BIRTH_DATE;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -352,41 +326,14 @@
 		 *
 		 * @param string $birth_date
 		 *
-		 * @return \OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setBirthDate($birth_date)
 		{
-			return $this->_setValue(self::COL_BIRTH_DATE, $birth_date);
-		}
+			$column = self::COL_BIRTH_DATE;
+			$this->$column = $birth_date;
 
-		/**
-		 * Getter for column `oz_users`.`sign_up_time`.
-		 *
-		 * @return string the real type is: bigint
-		 */
-		public function getSignUpTime()
-		{
-		    $v = $this->_getValue(self::COL_SIGN_UP_TIME);
-
-		    if( $v !== null){
-		        $v = (string)$v;
-		    }
-
-			return $v;
-		}
-
-		/**
-		 * Setter for column `oz_users`.`sign_up_time`.
-		 *
-		 * @param string $sign_up_time
-		 *
-		 * @return \OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-		 */
-		public function setSignUpTime($sign_up_time)
-		{
-			return $this->_setValue(self::COL_SIGN_UP_TIME, $sign_up_time);
+			return $this;
 		}
 
 		/**
@@ -396,7 +343,8 @@
 		 */
 		public function getPicid()
 		{
-		    $v = $this->_getValue(self::COL_PICID);
+			$column = self::COL_PICID;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -410,12 +358,14 @@
 		 *
 		 * @param string $picid
 		 *
-		 * @return \OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setPicid($picid)
 		{
-			return $this->_setValue(self::COL_PICID, $picid);
+			$column = self::COL_PICID;
+			$this->$column = $picid;
+
+			return $this;
 		}
 
 		/**
@@ -425,7 +375,8 @@
 		 */
 		public function getCc2()
 		{
-		    $v = $this->_getValue(self::COL_CC2);
+			$column = self::COL_CC2;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -439,12 +390,78 @@
 		 *
 		 * @param string $cc2
 		 *
-		 * @return \OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setCc2($cc2)
 		{
-			return $this->_setValue(self::COL_CC2, $cc2);
+			$column = self::COL_CC2;
+			$this->$column = $cc2;
+
+			return $this;
+		}
+
+		/**
+		 * Getter for column `oz_users`.`data`.
+		 *
+		 * @return string the real type is: string
+		 */
+		public function getData()
+		{
+			$column = self::COL_DATA;
+		    $v = $this->$column;
+
+		    if( $v !== null){
+		        $v = (string)$v;
+		    }
+
+			return $v;
+		}
+
+		/**
+		 * Setter for column `oz_users`.`data`.
+		 *
+		 * @param string $data
+		 *
+		 * @return static
+		 */
+		public function setData($data)
+		{
+			$column = self::COL_DATA;
+			$this->$column = $data;
+
+			return $this;
+		}
+
+		/**
+		 * Getter for column `oz_users`.`add_time`.
+		 *
+		 * @return string the real type is: bigint
+		 */
+		public function getAddTime()
+		{
+			$column = self::COL_ADD_TIME;
+		    $v = $this->$column;
+
+		    if( $v !== null){
+		        $v = (string)$v;
+		    }
+
+			return $v;
+		}
+
+		/**
+		 * Setter for column `oz_users`.`add_time`.
+		 *
+		 * @param string $add_time
+		 *
+		 * @return static
+		 */
+		public function setAddTime($add_time)
+		{
+			$column = self::COL_ADD_TIME;
+			$this->$column = $add_time;
+
+			return $this;
 		}
 
 		/**
@@ -454,7 +471,8 @@
 		 */
 		public function getValid()
 		{
-		    $v = $this->_getValue(self::COL_VALID);
+			$column = self::COL_VALID;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (bool)$v;
@@ -468,204 +486,14 @@
 		 *
 		 * @param bool $valid
 		 *
-		 * @return \OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setValid($valid)
 		{
-			return $this->_setValue(self::COL_VALID, $valid);
-		}
-
-		/**
-		 * Hydrate this entity with values from an array.
-		 *
-		 * @param array $row map column name to column value
-		 *
-		 * @return $this|\OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-		 */
-		public function hydrate(array $row)
-		{
-			foreach ($row as $column_name => $value) {
-				$this->_setValue($column_name, $value);
-			}
+			$column = self::COL_VALID;
+			$this->$column = $valid;
 
 			return $this;
 		}
 
-		/**
-		 * To check if this entity is new
-		 *
-		 * @return bool
-		 */
-		public function isNew()
-		{
-			return $this->is_new;
-		}
-
-		/**
-		 * To check if this entity is saved
-		 *
-		 * @return bool
-		 */
-		public function isSaved()
-		{
-			return $this->is_saved;
-		}
-
-		/**
-		 * Saves modifications to database.
-		 *
-		 * @return int|string int for affected row count on update, string for last insert id
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 */
-		public function save()
-		{
-			if ($this->isNew()) {
-				// add
-				$ai_column = $this->auto_increment_column;
-
-				if (!empty($ai_column)) {
-					$ai_column_value = $this->row[$ai_column];
-
-					if (!is_null($ai_column_value)) {
-						throw new ORMException(sprintf('Auto increment column "%s" should be set to null.', $ai_column));
-					}
-				}
-
-				$columns = array_keys($this->row);
-				$values  = array_values($this->row);
-				$qb      = new QueryBuilder(ORM::getDatabase());
-				$qb->insert()
-				   ->into($this->table->getFullName(), $columns)
-				   ->values($values);
-
-				$result = $qb->execute();
-
-				if (!empty($ai_column)) {
-					if (is_string($result)) {
-						$this->row[$ai_column] = $result;
-						$returns               = $result; // last insert id
-					} else {
-						throw new ORMException(sprintf('Unable to get last insert id for column "%s" in table "%s"', $ai_column, $this->table->getName()));
-					}
-				} else {
-					$returns = intval($result); // one row saved
-				}
-			} elseif (!$this->isSaved() AND isset($this->row_saved)) {
-				// update
-				$t       = new OZUsersQueryReal();
-				$returns = $t->safeUpdate($this->row_saved, $this->row)
-							 ->execute();
-			} else {
-				// nothing to do
-				$returns = 0;
-			}
-
-			$this->row_saved = $this->row;
-			$this->is_new    = false;
-			$this->is_saved  = true;
-
-			return $returns;
-		}
-
-		/**
-		 * Gets a column value.
-		 *
-		 * @param string $name the column name or full name.
-		 *
-		 * @return mixed
-		 */
-		protected function _getValue($name)
-		{
-			if ($this->table->hasColumn($name)) {
-				$column    = $this->table->getColumn($name);
-				$full_name = $column->getFullName();
-
-				return $this->row[$full_name];
-			}
-
-			return null;
-		}
-
-		/**
-		 * Sets a column value.
-		 *
-		 * @param string $name  the column name or full name.
-		 * @param mixed  $value the column new value.
-		 *
-		 * @return $this|\OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-		 */
-		protected function _setValue($name, $value)
-		{
-			if ($this->table->hasColumn($name)) {
-				$column = $this->table->getColumn($name);
-				$type   = $column->getTypeObject();
-
-				try {
-					$value = $type->validate($value, $column->getName(), $this->table->getName());
-				} catch (TypesInvalidValueException $e) {
-					$debug = [
-						"field"      => $column->getFullName(),
-						"table_name" => $this->table->getName(),
-						"options"    => $type->getCleanOptions()
-					];
-
-					$e->setDebugData($debug);
-
-					throw $e;
-				}
-
-				$full_name = $column->getFullName();
-				if ($this->row[$full_name] !== $value) {
-					$this->row[$full_name] = $value;
-					$this->is_saved        = false;
-				}
-			}
-
-			return $this;
-		}
-
-		/**
-		 * Magic setter for row fetched as class.
-		 *
-		 * @param string $full_name the column full name
-		 * @param mixed  $value     the column value
-		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 */
-		final public function __set($full_name, $value)
-		{
-			if ($this->isNew()) {
-				throw new ORMException(sprintf('You should not try to manually set properties on "%s" use appropriate getters and setters.', get_class($this)));
-			}
-
-			if ($this->table->hasColumn($full_name)) {
-				$this->row[$full_name]       = $value;
-				$this->row_saved[$full_name] = $value;
-				$this->is_saved              = true;
-			} elseif ($this->strict) {
-				throw new ORMException(sprintf('Could not set column "%s", not defined in table "%s".', $full_name, $this->table->getName()));
-			}
-		}
-
-		/**
-		 * {@inheritdoc}
-		 */
-		public function asArray($hide_private_column = true)
-		{
-			$row = $this->row;
-
-			if ($hide_private_column) {
-				$privates_columns = $this->table->getPrivatesColumns();
-
-				foreach ($privates_columns as $column) {
-					unset($row[$column->getFullName()]);
-				}
-			}
-
-			return $row;
-		}
 	}

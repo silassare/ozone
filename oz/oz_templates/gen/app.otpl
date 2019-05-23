@@ -1,0 +1,31 @@
+<?php
+<%@import('gen.info.otpl',$)%>
+
+	namespace <%$.oz_project_namespace%>;
+
+	use OZONE\OZ\App\AppInterface;
+
+	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
+
+	final class <%$.oz_project_class%> implements AppInterface
+	{
+		/**
+		 * <%$.oz_project_class%> constructor.
+		 */
+		public function __construct() { }
+
+		/**
+		 * @inheritdoc
+		 */
+		public function onInit() { }
+
+		/**
+		 * @inheritdoc
+		 */
+		public function onUnhandledException(\Exception $error) { }
+
+		/**
+		 * @inheritdoc
+		 */
+		public function onUnhandledError($code, $message, $file, $line) { }
+	}

@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,7 +11,6 @@
 	namespace OZONE\OZ\Sender;
 
 	use OZONE\OZ\Core\SettingsManager;
-	use OZONE\OZ\Lang\Polyglot;
 	use OZONE\OZ\Loader\ClassLoader;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
@@ -21,27 +20,26 @@
 		const SMS_TYPE_AUTH_CODE      = 1;
 		const SMS_TYPE_PASS_AUTH_CODE = 2;
 
-		static $sms_map = [
-			SMSUtils::SMS_TYPE_AUTH_CODE      => "OZ_SMS_AUTH_CODE_MESSAGE",
-			SMSUtils::SMS_TYPE_PASS_AUTH_CODE => "OZ_SMS_AUTH_CODE_PASSWORD_EDIT_MESSAGE",
-		];
-
 		/**
-		 * @param int   $sms_type
-		 * @param array $data
+		 * Map sms type to message.
 		 *
-		 * @return string
+		 * @param int $type
+		 *
+		 * @return string|null
 		 * @throws \Exception
 		 */
-		public static function getSMSMessage($sms_type, array $data = [])
+		public static function getSMSMessage($type)
 		{
-			if (isset(self::$sms_map[$sms_type])) {
-				$sms = self::$sms_map[$sms_type];
+			$sms_map = [
+				SMSUtils::SMS_TYPE_AUTH_CODE      => "OZ_SMS_AUTH_CODE_MESSAGE",
+				SMSUtils::SMS_TYPE_PASS_AUTH_CODE => "OZ_SMS_AUTH_CODE_PASSWORD_EDIT_MESSAGE",
+			];
 
-				return Polyglot::translate($sms, $data);
+			if (isset($sms_map[$type])) {
+				return $sms_map[$type];
 			}
 
-			return "";
+			return null;
 		}
 
 		/**
@@ -50,7 +48,6 @@
 		 * @param string $sender_name
 		 *
 		 * @return null|\OZONE\OZ\Sender\SMSSenderInterface
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
 		public static function getSenderInstance($sender_name = "")
 		{

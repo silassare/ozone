@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -77,7 +77,6 @@
 		 *
 		 * @return bool
 		 * @throws \OZONE\OZ\Exceptions\BaseException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 */
 		public function checkForm(array $rules_list)
 		{
@@ -102,7 +101,7 @@
 		 *
 		 * @param string $name the field name
 		 *
-		 * @return mixed|null
+		 * @return mixed
 		 */
 		public function getField($name)
 		{
@@ -129,7 +128,7 @@
 		 *
 		 * @param string $name the field name
 		 *
-		 * @return mixed|null
+		 * @return array
 		 */
 		public function getRules($name)
 		{
@@ -167,7 +166,6 @@
 		 * @param mixed $e_data the error data
 		 *
 		 * @throws \OZONE\OZ\Exceptions\BaseException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 */
 		public function addError($e_msg, $e_data = null)
 		{

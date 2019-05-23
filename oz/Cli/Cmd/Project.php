@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -26,7 +26,7 @@
 	final class Project extends Command
 	{
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 *
 		 * @throws \Exception
 		 */
@@ -79,7 +79,10 @@
 			$db_backup_dir = escapeshellarg($fm->getRoot());
 
 			// backup database to the same directory
-			echo `{$head} db backup -d={$db_backup_dir}`;
+			$result = `{$head} db backup -d={$db_backup_dir}`;
+
+			$this->getCli()
+				 ->writeLn($result);
 		}
 
 		/**
@@ -117,10 +120,10 @@
 				'OZ_DEBUG_MODE'                   => 0,
 				'OZ_API_MAIN_URL'                 => 'http://localhost',
 				'OZ_API_SESSION_ID_NAME'          => 'OZONE_SID',
-				'OZ_API_KEY_HEADER_NAME'          => 'ozone-api-key',
+				'OZ_API_KEY_HEADER_NAME'          => 'x-ozone-api-key',
 				':oz:comment:2'                   => 'For server that does not support HEAD, PATCH, PUT, DELETE...',
 				'OZ_API_ALLOW_REAL_METHOD_HEADER' => true,
-				'OZ_API_REAL_METHOD_HEADER_NAME'  => 'ozone-real-method'
+				'OZ_API_REAL_METHOD_HEADER_NAME'  => 'x-ozone-real-method'
 			]);
 
 			$oz_config = TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject);
@@ -161,7 +164,7 @@
 				'oz_project_class'     => $class_name
 			];
 
-			$app_class = TemplatesUtils::compute('oz:gen/sample.app.otpl', $inject);
+			$app_class = TemplatesUtils::compute('oz:gen/app.otpl', $inject);
 			$api_index = TemplatesUtils::compute('oz:gen/index.api.otpl', $inject);
 
 			$tpl_folder = OZ_OZONE_DIR . 'oz_templates' . DS;
@@ -191,7 +194,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 * @throws \Kli\Exceptions\KliException
 		 */
 		protected function describe()

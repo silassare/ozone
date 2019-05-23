@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -91,7 +91,7 @@
 		}
 
 		/**
-		 * run a command line
+		 * runs a command line
 		 *
 		 * @param string $cmd the command to execute
 		 */

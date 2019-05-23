@@ -12,14 +12,4 @@
 
 	class OZClient extends BaseOZClient
 	{
-		/**
-		 * Checks if whether the client support multi user or not
-		 *
-		 * @return bool
-		 */
-		public function isMultiUserSupported()
-		{
-			return empty($this->getUserId());
-		}
-
 	}

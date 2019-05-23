@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-  ~ Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+  ~ Copyright (c) 2017-present, Emile Silas Sare
   ~
   ~ This file is part of OZone (O'Zone) package.
   ~
@@ -8,80 +8,92 @@
   ~ file that was distributed with this source code.
   -->
 
-<html lang="fr">
+<html lang="<%$.oz->getLanguage()%>">
 	<head>
-		<title>OZone::Error</title>
-		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no" />
+		<meta charset="UTF-8">
+		<meta name="viewport"
+			  content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+
+		<title>Error</title>
+
 		<style rel="stylesheet">
-			body{
+			body {
 				font-family: 'Segoe UI Light', 'Calibri Light', Segoe, 'Segoe WP', Calibri, Arial, sans-serif;
 				font-size: 1.2em;
-				margin:0;
-				width:100%;
-				height:100%;
-				background-color:#FFF;
+				margin: 0;
+				width: 100%;
+				height: 100%;
+				background-color: #FFFFFF;
 			}
-			#error-box{
-				max-width:80%;
-				margin:0 auto;
-				padding:150px 0;
+
+			ul {
+				padding: 0;
 			}
-			.error-title{
+
+			li {
+				list-style-type: none;
+				padding: 5px;
+				background-color: #E6E6E6;
+				color: #333333;
+			}
+
+			li:nth-child(odd) {
+				background-color: #F7F7F7;
+			}
+
+			#oz-box {
+				max-width: 80%;
+				margin: 0 auto;
+				padding: 150px 0;
+			}
+
+			.oz-title {
 				font-size: 3em;
 				color: #FFBA3F;
 				text-align: center;
 			}
-			.error-desc{
+
+			.oz-desc {
 				color: #4F4F4F;
 			}
-			.error-back-url{
+
+			.oz-btn {
 				display: block;
 				text-align: center;
 				background-color: #FFBA3F;
 				margin: 10px 0;
 				padding: 5px;
 				text-decoration: none;
-				color: #FFF;
+				color: #FFFFFF;
 				text-transform: lowercase;
 				border-radius: 3px;
 			}
-			.error-back-url:hover{
+
+			.oz-btn:hover {
 				background-color: #797979;
 			}
-			ul{
-				padding: 0;
-			}
-			li{
-				list-style-type: none;
-			    padding: 5px;
-			    background-color: #E6E6E6;
-			    color: #333;
-			}
-			li:nth-child(odd){
-				background-color: #f7f7f7;
-			}
 
-			@media all and (max-width:360px){
-				.error-title{
-					font-size:2em;
+			@media all and (max-width: 360px) {
+				.oz-title {
+					font-size: 2em;
 				}
 			}
 		</style>
 	</head>
 	<body>
-		<div id="error-box">
-			<span class="logo"></span>
-			<div class="error-title"><%@oz_lang( $.oz_error_title, $.oz_error_data)%></div>
-			<div class="error-desc">
+		<div id="oz-box">
+			<span class="oz-logo"></span>
+			<div class="oz-title"><%$.i18n( $.oz_error_title, $.oz_error_data)%></div>
+			<div class="oz-desc">
 				<ul>
-					<li><%@oz_lang($.oz_error_desc, $.oz_error_data)%></li>
+					<li><%$.i18n($.oz_error_desc, $.oz_error_data)%></li>
 					<li><%$.oz_error_url%></li>
 				</ul>
 			</div>
 			<%if(@has($ ,'oz_error_back_url')){%>
-				<a class="error-back-url" href="<%$.oz_error_back_url%>">Back</a>
+			<a class="oz-btn" href="<%$.oz_error_back_url%>"><%$.i18n('OZ_ERROR_GO_BACK_BTN')%></a>
 			<%} else {%>
-				<a class="error-back-url" href="<%$.oz->getBaseURL()%>">Home</a>
+			<a class="oz-btn" href="<%$.oz->getBaseURL()%>"><%$.i18n('OZ_ERROR_GO_HOME_BTN')%></a>
 			<%}%>
 		</div>
 	</body>

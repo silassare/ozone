@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,12 +11,10 @@
 	namespace OZONE\OZ\FS;
 
 	use OTpl\OTpl;
-    use OZONE\OZ\Exceptions\InternalErrorException;
+	use OZONE\OZ\Exceptions\InternalErrorException;
 	use OZONE\OZ\Utils\StringUtils;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
-
-	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_otpl_plugins.php';
 
 	class TemplatesUtils
 	{
@@ -46,14 +44,12 @@
 		 * adds templates sources directory.
 		 *
 		 * @param string $path templates files directory path.
-		 *
-		 * @throws \Exception
 		 */
 		public static function addSource($path)
 		{
 			if (!in_array($path, self::$oz_sources_dir) AND !in_array($path, self::$app_sources_dir)) {
 				if (!is_dir($path)) {
-					throw new \Exception(sprintf('"%s" is not a directory.', $path));
+					trigger_error(sprintf('Invalid directory: %s', $path), E_USER_ERROR);
 				}
 
 				if (0 === strpos($path, OZ_OZONE_DIR)) {
@@ -64,24 +60,35 @@
 			}
 		}
 
-        /**
-         * compute a template file with a given data.
-         *
-         * @param string $template template file to compute.
-         * @param array $data data to inject in template.
-         *
-         * @return string            the template result output.
-         * @throws \OZONE\OZ\Exceptions\InternalErrorException
-         * @throws \Exception
-         */
+		/**
+		 * compute a template file with a given data.
+		 *
+		 * @param string $template template file to compute.
+		 * @param array  $data     data to inject in template.
+		 *
+		 * @return string            the template result output.
+		 *
+		 * @throws \OZONE\OZ\Exceptions\BaseException
+		 */
 		public static function compute($template, array $data)
 		{
-			$template = self::localize($template);
+			$src = self::localize($template);
 
-			$o = new OTpl();
+			if (!$src) {
+				throw new InternalErrorException('OZ_TEMPLATE_FILE_NOT_FOUND', [
+					'template' => $template
+				]);
+			}
 
-			return $o->parse($template)
-					 ->runGet($data);
+			try {
+				$o      = new OTpl();
+				$result = $o->parse($src)
+							->runGet($data);
+			} catch (\Exception $e) {
+				throw new InternalErrorException(null, null, $e);
+			}
+
+			return $result;
 		}
 
 		/**
@@ -92,9 +99,7 @@
 		 *
 		 * @param string $template the template file name.
 		 *
-		 * @return string            the template file path.
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException    when template file does not exists.
-		 * @throws \Exception
+		 * @return string|bool  the template file path, or false when template file does not exists.
 		 */
 		public static function localize($template)
 		{
@@ -132,6 +137,6 @@
 				return self::$found_cache[$template];
 			}
 
-			throw new InternalErrorException('OZ_TEMPLATE_FILE_NOT_FOUND', [$template]);
+			return false;
 		}
 	}

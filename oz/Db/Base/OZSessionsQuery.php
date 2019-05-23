@@ -3,242 +3,47 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1551653125
+ * Time: 1557147498
  */
 
 	namespace OZONE\OZ\Db\Base;
 
-	use Gobl\DBAL\QueryBuilder;
 	use Gobl\DBAL\Rule;
-	use Gobl\ORM\Exceptions\ORMException;
 	use Gobl\ORM\ORM;
+	use Gobl\ORM\ORMTableQueryBase;
 
 	/**
 	 * Class OZSessionsQuery
 	 *
 	 * @package OZONE\OZ\Db\Base
 	 */
-	abstract class OZSessionsQuery
+	abstract class OZSessionsQuery extends ORMTableQueryBase
 	{
-		/** @var \Gobl\DBAL\Table */
-		protected $table;
-		/** @var string */
-		protected $table_alias;
-		/** @var \Gobl\DBAL\Db */
-		protected $db;
-		/** @var int */
-		protected $gen_identifier_counter = 0;
-		/** @var \Gobl\DBAL\QueryBuilder */
-		protected $qb;
-		/** @var \Gobl\DBAL\Rule[] */
-		protected $filters = [];
-		/** @var array */
-		protected $params = [];
-
 		/**
 		 * OZSessionsQuery constructor.
-		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function __construct()
 		{
-			$this->db          = ORM::getDatabase();
-			$this->table       = $this->db->getTable('oz_sessions');
-			$this->table_alias = $this->genUniqueAlias();
-			$this->qb          = new QueryBuilder($this->db);
+			parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), OZSession::TABLE_NAME, \OZONE\OZ\Db\OZSessionsResults::class);
 		}
 
 		/**
-		 * Finds rows in the table `oz_sessions`.
+		 * Finds rows in the table `oz_sessions` and returns a new instance of the table's result iterator.
 		 *
-		 * When filters exists only rows that
-		 * satisfy the filters are returned.
-		 *
-		 * @param null|int $max      maximum row to retrieve
-		 * @param int      $offset   first row offset
-		 * @param array    $order_by order by rules
+		 * @param int|null $max
+		 * @param int      $offset
+		 * @param array    $order_by
 		 *
 		 * @return \OZONE\OZ\Db\OZSessionsResults
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function find($max = null, $offset = 0, array $order_by = [])
 		{
-			$this->qb->select()
-					 ->from($this->table->getFullName(), $this->table_alias);
+			/** @var \OZONE\OZ\Db\OZSessionsResults $results */
+			$results = parent::find($max, $offset, $order_by);
 
-			$rule = $this->_getFiltersRule();
-			if (!is_null($rule)) {
-				$this->qb->where($rule);
-			}
-
-			if (!empty($order_by)) {
-				$this->qb->orderBy($order_by);
-			}
-
-			$this->qb->limit($max, $offset)
-					 ->bindArray($this->params);
-
-			return new \OZONE\OZ\Db\OZSessionsResults($this->db, $this->resetQuery());
+			return $results;
 		}
-
-		/**
-		 * Delete rows in the table `oz_sessions`.
-		 *
-		 * When filters exists only rows that
-		 * satisfy the filters are deleted.
-		 *
-		 * @return \Gobl\DBAL\QueryBuilder
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 */
-		public function delete()
-		{
-			$this->qb->delete()
-					 ->from($this->table->getFullName(), $this->table_alias);
-
-			$rule = $this->_getFiltersRule();
-
-			if (!is_null($rule)) {
-				$this->qb->where($rule);
-			}
-
-			$this->qb->bindArray($this->params);
-
-			return $this->resetQuery();
-		}
-
-		/**
-		 * Update rows in the table `oz_sessions`.
-		 *
-		 * When filters exists only rows that
-		 * satisfy the filters are updated.
-		 *
-		 * @param array $set_columns new values
-		 *
-		 * @return \Gobl\DBAL\QueryBuilder
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 */
-		public function update(array $set_columns)
-		{
-			if (!count($set_columns)) {
-				throw new ORMException("Empty columns, can't update.");
-			}
-
-			$this->qb->update($this->table->getFullName(), $this->table_alias);
-
-			$rule = $this->_getFiltersRule();
-			if (!is_null($rule)) {
-				$this->qb->where($rule);
-			}
-
-			$columns = [];
-			foreach ($set_columns as $column => $value) {
-				$this->table->assertHasColumn($column);
-				$param_key                = $this->genUniqueParamKey();
-				$this->params[$param_key] = $value;
-				$columns[$column]         = ':' . $param_key;
-			}
-
-			$this->qb->set($columns)
-					 ->bindArray($this->params);
-
-			return $this->resetQuery();
-		}
-
-		/**
-		 * Safely update rows in the table `oz_sessions`.
-		 *
-		 * @param array $old_values old values
-		 * @param array $new_values new values
-		 *
-		 * @return \Gobl\DBAL\QueryBuilder
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 */
-		public function safeUpdate(array $old_values, array $new_values)
-		{
-			$this->resetQuery();
-
-			foreach ($this->table->getColumns() as $column) {
-				$column_name = $column->getFullName();
-				if (!array_key_exists($column_name, $old_values)) {
-					throw new ORMException(sprintf('Missing column "%s" in old_values.', $column_name));
-				}
-				if (!array_key_exists($column_name, $new_values)) {
-					throw new ORMException(sprintf('Missing column "%s" in new_values.', $column_name));
-				}
-			}
-
-			if ($this->table->hasPrimaryKeyConstraint()) {
-				$pk = $this->table->getPrimaryKeyConstraint();
-				foreach ($pk->getConstraintColumns() as $key) {
-					$this->filterBy($key, $old_values[$key]);
-				}
-			} else {
-				foreach ($old_values as $column => $value) {
-					$this->filterBy($column, $value);
-				}
-			}
-
-			return $this->update($new_values);
-		}
-
-		/**
-		 * Filters rows in the table `oz_sessions`.
-		 *
-		 * @param string $column   the column name or full name
-		 * @param mixed  $value    the filter value
-		 * @param int    $operator the operator to use
-		 * @param bool   $use_and  whether to use AND condition
-		 *                         to combine multiple rules on the same column
-		 *
-		 * @return $this|\OZONE\OZ\Db\OZSessionsQuery
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 */
-		public function filterBy($column, $value, $operator = Rule::OP_EQ, $use_and = true)
-		{
-			// maybe user make change to the table without regenerating the classes
-			$this->table->assertHasColumn($column);
-
-			$full_name = $this->table->getColumn($column)
-									 ->getFullName();
-
-			if (!isset($this->filters[$full_name])) {
-				$rule = $this->filters[$full_name] = new Rule($this->qb);
-			} else {
-				$rule = $this->filters[$full_name];
-
-				if ($use_and) {
-					$rule->andX();
-				} else {
-					$rule->orX();
-				}
-			}
-
-			if ($operator === Rule::OP_IN OR $operator === Rule::OP_NOT_IN) {
-				if (!is_array($value)) {
-					throw new ORMException("IN and NOT IN operators require an array of values.", [$column, $value]);
-				}
-				$value = $this->qb->arrayToListItems($value);
-			} else {
-				$param_key                = $this->genUniqueParamKey();
-				$this->params[$param_key] = $value;
-				$value                    = ':' . $param_key;
-			}
-
-			$a = $this->table_alias . '.' . $full_name;
-
-			if ($operator === Rule::OP_IS_NULL OR $operator === Rule::OP_IS_NOT_NULL) {
-				$rule->conditions([$a], $operator, false);
-			} else {
-				$rule->conditions([$a => $value], $operator, false);
-			}
-
-			return $this;
-		}
-
 		
 		/**
 		 * Filters rows with condition on column `id` in the table `oz_sessions`.
@@ -301,21 +106,6 @@
 		}
 
 		/**
-		 * Filters rows with condition on column `data` in the table `oz_sessions`.
-		 *
-		 * @param mixed  $value    the filter value
-		 * @param int    $operator the operator to use
-		 *
-		 * @return $this|\OZONE\OZ\Db\OZSessionsQuery
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 */
-		public function filterByData($value, $operator = Rule::OP_EQ)
-		{
-		    return $this->filterBy('data', $value, $operator);
-		}
-
-		/**
 		 * Filters rows with condition on column `expire` in the table `oz_sessions`.
 		 *
 		 * @param mixed  $value    the filter value
@@ -345,89 +135,49 @@
 		    return $this->filterBy('last_seen', $value, $operator);
 		}
 
-
 		/**
-		 * Creates new query builder and returns the old query builder.
+		 * Filters rows with condition on column `data` in the table `oz_sessions`.
 		 *
-		 * @return \Gobl\DBAL\QueryBuilder
-		 */
-		protected function resetQuery()
-		{
-			$qb           = $this->qb;
-			$this->qb     = new QueryBuilder($this->db);
-			$this->params = [];
-
-			return $qb;
-		}
-
-		/**
-		 * Returns a rule that include all filters rules.
+		 * @param mixed  $value    the filter value
+		 * @param int    $operator the operator to use
 		 *
-		 * @return \Gobl\DBAL\Rule|null
+		 * @return $this|\OZONE\OZ\Db\OZSessionsQuery
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
-		protected function _getFiltersRule()
+		public function filterByData($value, $operator = Rule::OP_EQ)
 		{
-			if (count($this->filters)) {
-				/** @var \Gobl\DBAL\Rule $rule */
-				$rule = null;
-				foreach ($this->filters as $r) {
-					if (!$rule) {
-						$rule = $r;
-					} else {
-						$rule->andX($r);
-					}
-				}
-
-				return $rule;
-			}
-
-			return null;
+		    return $this->filterBy('data', $value, $operator);
 		}
 
 		/**
-		 * Generate unique alias.
+		 * Filters rows with condition on column `add_time` in the table `oz_sessions`.
 		 *
-		 * @return string
+		 * @param mixed  $value    the filter value
+		 * @param int    $operator the operator to use
+		 *
+		 * @return $this|\OZONE\OZ\Db\OZSessionsQuery
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
-		protected function genUniqueAlias()
+		public function filterByAddTime($value, $operator = Rule::OP_EQ)
 		{
-			return '_' . $this->genIdentifier() . '_';
+		    return $this->filterBy('add_time', $value, $operator);
 		}
 
 		/**
-		 * Generate unique parameter key.
+		 * Filters rows with condition on column `valid` in the table `oz_sessions`.
 		 *
-		 * @return string
+		 * @param mixed  $value    the filter value
+		 * @param int    $operator the operator to use
+		 *
+		 * @return $this|\OZONE\OZ\Db\OZSessionsQuery
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
-		protected function genUniqueParamKey()
+		public function filterByValid($value, $operator = Rule::OP_EQ)
 		{
-			return '_val_' . $this->genIdentifier();
+		    return $this->filterBy('valid', $value, $operator);
 		}
 
-		/**
-		 * Generate unique char sequence.
-		 *
-		 * infinite possibilities
-		 * a,  b  ... z
-		 * aa, ab ... az
-		 * ba, bb ... bz
-		 *
-		 * @return string
-		 */
-		protected function genIdentifier()
-		{
-			$x    = $this->gen_identifier_counter++;
-			$list = range('a', 'z');
-			$len  = count($list);
-			$a    = '';
-			do {
-				$r = ($x % $len);
-				$n = ($x - $r) / $len;
-				$x = $n - 1;
-				$a = $list[$r] . $a;
-			} while ($n);
-
-			return $a;
-		}
 	}

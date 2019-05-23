@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -62,7 +62,7 @@
 	 *        $loader::addNamespace('Foo\Zoo', '/root/packages/FooZoo');
 	 *
 	 *    // to load namespace-less class
-	 *        // add the path to the class files
+	 *        // adds the path to the class files
 	 *    $loader::add( '/root/app/abo/' );
 	 *    $loader::add( '/root/app/lib/', true, 1 );
 	 *    $loader::add( '/root/app/test/', true, 2 );
@@ -303,7 +303,7 @@
 				if ($mapped_file) {
 					return $mapped_file;
 				}
-				// remove the trailing namespace separator for the next iteration
+				// removes the trailing namespace separator for the next iteration
 				$prefix = rtrim($prefix, '\\');
 			}
 
@@ -362,7 +362,7 @@
 		}
 
 		/**
-		 * Clean a given directory path.
+		 * Cleans a given directory path.
 		 *
 		 * @param string $dir_path The directory path.
 		 *
@@ -371,7 +371,7 @@
 		protected static function cleanPath($dir_path)
 		{
 			if (is_string($dir_path) AND strlen($dir_path) > 1) {
-				// remove last / or \
+				// removes last / or \
 				$dir_path = rtrim($dir_path, '\\/');
 
 				if (DIRECTORY_SEPARATOR === '\\') {
@@ -401,7 +401,7 @@
 		}
 
 		/**
-		 * Create instance of class for a given class name and arguments array list.
+		 * Creates instance of class for a given class name and arguments array list.
 		 *
 		 * @param string $class_name The class name.
 		 * @param array  $args       A list of arguments, used to instantiate.

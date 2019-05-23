@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -8,40 +8,31 @@
 	 * file that was distributed with this source code.
 	 */
 
-	namespace OZONE\OZ\FS\Services;
+	namespace OZONE\OZ\FS;
 
 	use OZONE\OZ\Core\Assert;
-	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Exceptions\InternalErrorException;
 	use OZONE\OZ\Exceptions\NotFoundException;
-	use OZONE\OZ\FS\ImagesUtils;
+	use OZONE\OZ\Http\Body;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	class FilesServer extends BaseService
+	class FilesServer
 	{
 		/**
-		 * FilesServer constructor.
-		 */
-		public function __construct()
-		{
-			parent::__construct();
-		}
-
-		/**
-		 * {@inheritdoc}
+		 * @param \OZONE\OZ\Core\Context $context
+		 * @param array                  $params
 		 *
-		 * @param array $request
-		 *
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @return \OZONE\OZ\Http\Response
 		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 * @throws \OZONE\OZ\Exceptions\NotFoundException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \Exception
 		 */
-		public function execute(array $request = [])
+		public function serve(Context $context, array $params)
 		{
-			Assert::assertForm($request, [
+			Assert::assertForm($params, [
 				'file_src',
 				'file_name',
 				'file_mime',
@@ -50,30 +41,31 @@
 
 			set_time_limit(0);
 
-			$src = $request['file_src'];
+			$response = $context->getResponse();
+			$src      = $params['file_src'];
 
 			if (empty($src) || !file_exists($src) || !is_file($src) || !is_readable($src)) {
 				throw new NotFoundException();
 			}
 
-			$file_name    = $request['file_name'];
-			$file_mime    = $request['file_mime'];
-			$file_quality = intval($request['file_quality']);
+			$file_name    = $params['file_name'];
+			$file_mime    = $params['file_mime'];
+			$file_quality = intval($params['file_quality']);
 			$size         = filesize($src);
 
 			// close the current session
 			if (session_id()) session_write_close();
 
-			// clean output buffer
+			// cleans output buffer
 			if (ob_get_contents()) ob_clean();
 
-			header('Pragma: public');
-			header('Expires: 99936000');
-			header('Cache-Control: public, max-age=99936000');
-			header('Content-Transfer-Encoding: binary');
-			header("Content-Length: $size");
-			header("Content-type: $file_mime");
-			header("Content-Disposition: attachment; filename='$file_name';");
+			$response = $response->withHeader('Pragma', 'public')
+								 ->withHeader('Expires', '99936000')
+								 ->withHeader('Cache-Control', 'public,max-age=99936000')
+								 ->withHeader('Content-Transfer-Encoding', 'binary')
+								 ->withHeader('Content-Length', $size)
+								 ->withHeader('Content-type', $file_mime)
+								 ->withHeader('Content-Disposition', "attachment; filename=\"$file_name\";");
 
 			if ($file_quality > 0) {
 				// thumbnails
@@ -88,26 +80,18 @@
 				if ($img_utils_obj->load()) {
 					$max_size = SettingsManager::get('oz.users', 'OZ_THUMB_MAX_SIZE');
 					$advice   = $img_utils_obj->adviceBestSize($max_size, $max_size);
-					$img_utils_obj->resizeImage($advice['w'], $advice['h'], $advice['crop'])
-								  ->outputJpeg($jpeg_quality);
-				} else {
-					$this->sendOriginal($src);
-				}
-			} else {
-				$this->sendOriginal($src);
-			}
-		}
+					$content  = $img_utils_obj->resizeImage($advice['w'], $advice['h'], $advice['crop'])
+											  ->getString('image/jpeg', $jpeg_quality);
+					$body     = Body::fromString($content);
 
-		/**
-		 * send a file at a given path to the client
-		 *
-		 * @param string $path the file path
-		 */
-		private function sendOriginal($path)
-		{
-			flush();
-			readfile($path);
-			exit;
+					return $response->withBody($body);
+				}
+			}
+
+			// open in readonly mode
+			$body = Body::fromPath($src, 'r');
+
+			return $response->withBody($body);
 		}
 
 		/**
@@ -122,11 +106,16 @@
 		 */
 		public static function startDownloadServer(array $options, $allow_resume = false, $is_stream = false)
 		{
+			// TODO Full rewrite
+
 			// - turn off compression on the server
-			@apache_setenv('no-gzip', 1);
+			if (function_exists("apache_setenv")) {
+				@apache_setenv('no-gzip', 1);
+			}
+
 			@ini_set('zlib.output_compression', 'Off');
 
-			$mime_default = "application/octet-stream";
+			$mime_default = 'application/octet-stream';
 			$file_src     = $options['file_src'];
 			$file_name    = isset($options['file_name']) ? $options['file_name'] : basename($file_src);
 			$expires_date = isset($options['file_expires_date']) ? $options['file_expires_date'] : -1;
@@ -142,23 +131,23 @@
 			// make sure file open success
 			if (!$file) throw new InternalErrorException('OZ_FILE_OPEN_ERROR', [$file_src]);
 
-			// set the headers, prevent caching
+			// sets the headers, prevent caching
 			header('Pragma: public');
 			header('Expires: ' . $expires_date);
 			header('Cache-Control: public, max-age=' . $expires_date . ', must-revalidate, post-check=0, pre-check=0');
 
-			// set appropriate headers for attachment or streamed file
+			// sets appropriate headers for attachment or streamed file
 			if (!$is_stream) {
-				header("Content-Disposition: attachment; filename='$file_name';");
+				header("Content-Disposition: attachment; filename=\"$file_name\";");
 			} else {
 				header('Content-Disposition: inline;');
 				header('Content-Transfer-Encoding: binary');
 			}
 
-			// set the mime type
+			// sets the mime type
 			header("Content-Type: " . $mime);
 
-			// check if http_range is sent by browser (or download manager)
+			// checks if http_range is sent by browser (or download manager)
 			if ($allow_resume AND isset($_SERVER['HTTP_RANGE'])) {
 				list($size_unit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
 				if ($size_unit === 'bytes') {
@@ -174,7 +163,7 @@
 			// figure out download piece from range (if set)
 			@list($seek_start, $seek_end) = explode('-', $range, 2);
 
-			// set start and end based on range (if set), else set defaults
+			// sets start and end based on range (if set), else set defaults
 			// also check for invalid ranges.
 			$seek_end   = (empty($seek_end)) ? ($file_size - 1) : min(abs(intval($seek_end)), ($file_size - 1));
 			$seek_start = (empty($seek_start) || $seek_end < abs(intval($seek_start))) ? 0 : max(abs(intval($seek_start)), 0);

@@ -12,13 +12,12 @@
 	use OZONE\OZ\Db\Base\OZFile as BaseOZFile;
 	use OZONE\OZ\FS\FilesUtils;
 	use OZONE\OZ\FS\PathUtils;
-	use OZONE\OZ\Utils\OMLTextHelper;
 	use OZONE\OZ\Utils\StringUtils;
 
 	class OZFile extends BaseOZFile
 	{
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function getPath()
 		{
@@ -26,7 +25,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function setPath($path)
 		{
@@ -34,7 +33,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function getThumb()
 		{
@@ -42,7 +41,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function setThumb($thumb)
 		{
@@ -50,7 +49,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 * @throws \Exception
 		 */
 		public function save()
@@ -75,8 +74,8 @@
 				throw new \Exception('You cannot clone unsaved file.');
 			}
 
-			$f = new self();
-			$f->hydrate($this->asArray());
+			$f = new static();
+			$f->hydrate($this->asArray(false));
 
 			$f->setId(null);// force new file id
 			$f->setClone($this->getId());
@@ -86,6 +85,17 @@
 			}
 
 			return $f;
+		}
+
+		/**
+		 * Clone helper.
+		 *
+		 * @return \OZONE\OZ\Db\OZFile
+		 * @throws \Exception
+		 */
+		public function __clone()
+		{
+			return $this->cloneFile();
 		}
 
 		/**
@@ -119,22 +129,5 @@
 			}
 
 			return $path;
-		}
-
-		/**
-		 * Gets ozone file in OML text style.
-		 *
-		 * @return string the file OML
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \Exception
-		 */
-		public function toOMLString()
-		{
-			if (!$this->isSaved()) {
-				$this->save();
-			}
-
-			return OMLTextHelper::formatText(OMLTextHelper::OML_FILE, $this);
 		}
 	}

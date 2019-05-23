@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -8,20 +8,22 @@
 	 * file that was distributed with this source code.
 	 */
 
+	defined('OZ_SELF_SECURITY_CHECK') or die;
+
 	return [
 		/**
 		 * how can we get stuff from OZone if set to:
 		 *
-		 *  - any
-		 *      request should contains:
-		 *          - a valid api key
+		 * - any
+		 *     - allow CORS for any host
 		 *
-		 *  - check
-		 *        request should contains:
-		 *          - a valid api key
-		 *          - an Origin header that is the same as the url of the api key owner
+		 * - check
+		 *     - the host of the request header 'Origin' must be the same as the host of the api key client url
 		 *
-		 * - default is always (even if you mistype the value): check
+		 * - deny
+		 *    - disable CORS
+		 *
+		 * - default: check (even if you mistype the value)
 		 */
 		'OZ_CORS_ALLOW_RULE' => 'check'
 	];

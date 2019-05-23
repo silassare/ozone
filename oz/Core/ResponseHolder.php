@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -60,18 +60,6 @@
 		}
 
 		/**
-		 * @param string $msg  the response message
-		 * @param int    $code the response code
-		 *
-		 * @return $this
-		 */
-		private function setMessage($msg, $code)
-		{
-			return $this->setKey('error', $code)
-						->setKey('msg', $msg);
-		}
-
-		/**
 		 * Sets an error message
 		 *
 		 * @param string $msg the error message
@@ -80,7 +68,10 @@
 		 */
 		public function setError($msg = 'OZ_ERROR_INTERNAL')
 		{
-			return $this->setMessage($msg, self::RESPONSE_CODE_ERROR);
+			self::$responses[$this->label]['error'] = self::RESPONSE_CODE_ERROR;
+			self::$responses[$this->label]['msg']   = $msg;
+
+			return $this;
 		}
 
 		/**
@@ -92,36 +83,58 @@
 		 */
 		public function setDone($msg = 'OK')
 		{
-			return $this->setMessage($msg, self::RESPONSE_CODE_DONE);
+			self::$responses[$this->label]['error'] = self::RESPONSE_CODE_DONE;
+			self::$responses[$this->label]['msg']   = $msg;
+
+			return $this;
 		}
 
 		/**
-		 * add data to the response
+		 * Adds data to the response
 		 *
 		 * @param array $data the data
 		 *
 		 * @return \OZONE\OZ\Core\ResponseHolder
 		 */
-		public function setData($data)
+		public function setData(array $data)
 		{
-			return $this->setKey('data', $data);
+			self::$responses[$this->label]['data'] = $data;
+
+			return $this;
 		}
 
 		/**
-		 * add a custom key/value to the response
+		 * Sets a custom key/value to the response data
 		 *
 		 * @param string $key   the key name
 		 * @param mixed  $value the value to be added
 		 *
 		 * @return $this
 		 */
-		public function setKey($key, $value)
+		public function setDataKey($key, $value)
 		{
 			if (!empty($key)) {
-				self::$responses[$this->label][$key] = $value;
+				self::$responses[$this->label]['data'][$key] = $value;
 			}
 
 			return $this;
+		}
+
+		/**
+		 * Gets a custom key/value from the response data
+		 *
+		 * @param string     $key the key name
+		 * @param null|mixed $def
+		 *
+		 * @return mixed|null
+		 */
+		public function getDataKey($key, $def = null)
+		{
+			if (isset(self::$responses[$this->label]['data'][$key])) {
+				return self::$responses[$this->label]['data'][$key];
+			}
+
+			return $def;
 		}
 
 		/**

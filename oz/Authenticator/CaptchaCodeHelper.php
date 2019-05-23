@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -10,11 +10,11 @@
 
 	namespace OZONE\OZ\Authenticator;
 
+	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\Core\Hasher;
-	use OZONE\OZ\Core\SessionsData;
 	use OZONE\OZ\Exceptions\NotFoundException;
 	use OZONE\OZ\Core\SettingsManager;
-	use OZONE\OZ\Utils\StringUtils;
+	use OZONE\OZ\Http\Body;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -23,7 +23,7 @@
 	 *
 	 * @package OZONE\OZ\Authenticator
 	 */
-	final class CaptchaCodeHelper implements AuthenticatorHelper
+	final class CaptchaCodeHelper
 	{
 
 		private static $default_config = [
@@ -49,29 +49,17 @@
 			'shadow_offset_y' => 1
 		];
 
-		private $auth = null;
-
-		/**
-		 * CaptchaCodeHelper constructor.
-		 *
-		 * @param \OZONE\OZ\Authenticator\Authenticator $auth
-		 */
-		public function __construct(Authenticator $auth)
-		{
-			$this->auth = $auth;
-		}
-
 		/**
 		 * Gets captcha image uri for authentication
 		 *
+		 * @param \OZONE\OZ\Core\Context                $context
+		 * @param \OZONE\OZ\Authenticator\Authenticator $auth
+		 *
 		 * @return array the captcha info
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 * @throws \Exception
 		 */
-		public function getCaptcha()
+		public static function getCaptcha(Context $context, Authenticator $auth)
 		{
-			$auth = $this->auth;
-
 			$generated = $auth->generate()
 							  ->getGenerated();
 
@@ -80,32 +68,36 @@
 			$f_name  = SettingsManager::get('oz.files', 'OZ_CAPTCHA_FILE_NAME');
 			$img_src = str_replace(['{oz_captcha_key}'], [$captcha_key], $f_name);
 
-			SessionsData::set('_captcha_cfg_:' . $captcha_key, $generated['auth_code']);
+			$context->getSession()
+					->set('captcha_cfg:' . $captcha_key, $generated['auth_code']);
 
 			return ['captcha_src' => $img_src];
 		}
 
 		/**
-		 * draw the captcha image
+		 * Creates the captcha image
 		 *
-		 * @param string $captcha_key the captcha image key
+		 * @param \OZONE\OZ\Core\Context $context
+		 * @param string                 $captcha_key
 		 *
+		 * @return \OZONE\OZ\Http\Response
 		 * @throws \OZONE\OZ\Exceptions\NotFoundException when captcha image key is not valid
-		 * @throws \Exception
 		 */
-		public static function serveCaptchaImage($captcha_key)
+		public static function generateCaptchaImage(Context $context, $captcha_key)
 		{
-			$code = null;
+			$code     = null;
+			$response = $context->getResponse();
+			$session  = $context->getSession();
 
 			if (is_string($captcha_key)) {
-				$code = SessionsData::get('_captcha_cfg_:' . $captcha_key);
+				$code = $session->get('captcha_cfg:' . $captcha_key);
 			}
 
 			if (empty($code)) {
 				throw new NotFoundException();
 			}
 
-			SessionsData::remove('_captcha_cfg_:' . $captcha_key);
+			$session->remove('captcha_cfg:' . $captcha_key);
 
 			$CAPTCHA_DIR = OZ_OZONE_DIR . 'oz_assets' . DS . 'captcha' . DS;
 
@@ -145,13 +137,21 @@
 
 			imagettftext($captcha, $font_size, $angle, $text_pos_x, $text_pos_y, $color, $font, $code);
 
-			header('Content-type: image/png');
-			flush();
+			ob_start();
 			imagepng($captcha);
+			$content = ob_get_contents();
+			ob_clean();
+
+			imagedestroy($captcha);
+
+			$body = Body::fromString($content);
+
+			return $response->withHeader('Content-type', 'image/png')
+							->withBody($body);
 		}
 
 		/**
-		 * convert hexadecimal color code to rgb
+		 * converts hexadecimal color code to rgb
 		 *
 		 * @param string $hex_str    the hexadecimal code string
 		 * @param bool   $get_string get result as string or in array
@@ -161,7 +161,7 @@
 		 */
 		private static function hex2rgb($hex_str, $get_string = false, $separator = ',')
 		{
-			$hex_str   = preg_replace("/[^0-9A-Fa-f]/", '', $hex_str); // Get  a proper hex string
+			$hex_str   = preg_replace("/[^0-9A-Fa-f]/", '', $hex_str); // Gets a proper hex string
 			$rgb_array = [];
 			if (strlen($hex_str) == 6) {
 				$color_val      = hexdec($hex_str);
@@ -178,24 +178,4 @@
 
 			return $get_string ? implode($separator, $rgb_array) : $rgb_array;
 		}
-
-		/**
-		 * Generate regexp used to match Captcha file URI.
-		 *
-		 * @param array &$fields
-		 *
-		 * @return string
-		 * @throws \Exception
-		 */
-		public static function genCaptchaURIRegExp(array &$fields)
-		{
-			$format = SettingsManager::get("oz.files", "OZ_CAPTCHA_URI_EXTRA_FORMAT");
-
-			$parts = [
-				"oz_captcha_key" => "([a-z0-9]{32})"
-			];
-
-			return StringUtils::stringFormatToRegExp($format, $parts, $fields);
-		}
-
 	}

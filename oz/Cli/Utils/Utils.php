@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,18 +11,16 @@
 	namespace OZONE\OZ\Cli\Utils;
 
 	use OZONE\OZ\Core\DbManager;
-	use OZONE\OZ\Exceptions\RuntimeException;
 
 	final class Utils
 	{
 		/**
-		 * Loads project config from a given project folder or current working dir.
+		 * Load project config from a given project folder or current working dir.
 		 *
 		 * @param string|null $folder   the project folder
 		 * @param bool        $required the config is required
 		 *
-		 * @return mixed|null
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @return mixed
 		 */
 		public static function loadProjectConfig($folder = null, $required = false)
 		{
@@ -39,14 +37,14 @@
 
 			if ($required) {
 				$err = 'Error: there is no ozone project in "%s".' . PHP_EOL . 'Are you in project root folder?';
-				throw new RuntimeException(sprintf($err, $folder));
+				throw new \RuntimeException(sprintf($err, $folder));
 			}
 
 			return null;
 		}
 
 		/**
-		 * Check for ozone config.
+		 * Checks for ozone config.
 		 *
 		 * @param mixed $config
 		 *
@@ -58,11 +56,9 @@
 		}
 
 		/**
-		 * Assert if a folder or current working directory contains OZone project.
+		 * Asserts if a folder or current working directory contains OZone project.
 		 *
 		 * @param string|null $folder the project folder
-		 *
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function assertProjectFolder($folder = null)
 		{
@@ -70,20 +66,18 @@
 		}
 
 		/**
-		 * Assert if whether we have access to the database.
+		 * Asserts if whether we have access to the database.
 		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
 		public static function assertDatabaseAccess()
 		{
 			self::assertProjectFolder();
 
-			// get connection to make sure that
+			// we get connection to make sure that
 			// we have access to the database
 			// will throw error when something went wrong
-			DbManager::getInstance()
+			DbManager::getDb()
 					 ->getConnection();
 		}
 	}

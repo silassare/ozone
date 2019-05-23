@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -12,9 +12,11 @@
 
 	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\Db\OZUser;
-	use OZONE\OZ\User\UsersUtils;
-	use OZONE\OZ\Exceptions\ForbiddenException;
+	use OZONE\OZ\Exceptions\InvalidFormException;
+	use OZONE\OZ\Router\RouteInfo;
+	use OZONE\OZ\Router\Router;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -26,25 +28,29 @@
 	final class Login extends BaseService
 	{
 		/**
-		 * {@inheritdoc}
+		 * @param \OZONE\OZ\Core\Context $context
+		 *
 		 * @throws \Exception
 		 */
-		public function execute(array $request = [])
+		public function actionLogin(Context $context)
 		{
+			$users_manager = $context->getUsersManager();
 			// And yes! user sent us a form
 			// so we check that the form is valid.
-			UsersUtils::logUserOut();
+			$users_manager->logUserOut();
 
 			$result = null;
+			$params = $context->getRequest()
+							  ->getFormData();
 
-			if (isset($request['phone'])) {
-				Assert::assertForm($request, ['phone', 'pass']);
-				$result = UsersUtils::tryLogOnWithPhone($request["phone"], $request["pass"]);
-			} elseif (isset($request['email'])) {
-				Assert::assertForm($request, ['email', 'pass']);
-				$result = UsersUtils::tryLogOnWithEmail($request["email"], $request["pass"]);
+			if (isset($params['phone'])) {
+				Assert::assertForm($params, ['phone', 'pass']);
+				$result = $users_manager->tryLogOnWithPhone($params["phone"], $params["pass"]);
+			} elseif (isset($params['email'])) {
+				Assert::assertForm($params, ['email', 'pass']);
+				$result = $users_manager->tryLogOnWithEmail($params["email"], $params["pass"]);
 			} else {
-				throw new ForbiddenException('OZ_ERROR_INVALID_FORM');
+				throw new InvalidFormException();
 			}
 
 			if ($result instanceof OZUser) {
@@ -55,5 +61,19 @@
 				$this->getResponseHolder()
 					 ->setError($result);
 			}
+		}
+
+		/**
+		 * @inheritdoc
+		 */
+		public static function registerRoutes(Router $router)
+		{
+			$router->get('/login', function (RouteInfo $r) {
+				$context = $r->getContext();
+				$s       = new Login($context);
+				$s->actionLogin($context);
+
+				return $s->writeResponse($context);
+			});
 		}
 	}

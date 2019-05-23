@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -10,6 +10,11 @@
 
 	namespace OZONE\OZ\Ofv;
 
+	/**
+	 * @param \OZONE\OZ\Ofv\OFormValidator $ofv
+	 *
+	 * @throws \Exception
+	 */
 	function ofv_vpass(OFormValidator $ofv)
 	{
 		if (!OFormUtils::equalFields($ofv, 'pass', 'vpass')) {

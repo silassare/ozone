@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,7 +11,6 @@
 	namespace OZONE\OZ\Core;
 
 	use OZONE\OZ\Exceptions\InternalErrorException;
-	use OZONE\OZ\Exceptions\RuntimeException;
 	use OZONE\OZ\FS\FilesManager;
 	use OZONE\OZ\FS\TemplatesUtils;
 
@@ -73,14 +72,12 @@
 		 * adds settings sources directory.
 		 *
 		 * @param string $path settings files directory path.
-		 *
-		 * @throws \Exception
 		 */
 		public static function addSource($path)
 		{
 			if (!in_array($path, self::$oz_sources_dir) AND !in_array($path, self::$app_sources_dir)) {
 				if (!is_dir($path)) {
-					throw new \Exception(sprintf('"%s" is not a directory.', $path));
+					throw new \InvalidArgumentException(sprintf('Invalid directory: %s', $path));
 				}
 
 				if (strpos($path, OZ_OZONE_DIR) === 0) {
@@ -95,8 +92,6 @@
 		 * Disable a given settings edit at runtime.
 		 *
 		 * @param string $setting_group_name the setting group name.
-		 *
-		 * @throws \Exception
 		 */
 		public static function disableRuntimeEdit($setting_group_name)
 		{
@@ -109,14 +104,11 @@
 		 *
 		 * @param string $setting_group_name the setting group name.
 		 * @param string $key                setting key name.
-		 * @param bool   $required           setting key name should be defined.
+		 * @param mixed  $def
 		 *
 		 * @return mixed
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException    when a setting group or required setting key is not
-		 *                                                        defined.
 		 */
-		public static function get($setting_group_name, $key = null, $required = false)
+		public static function get($setting_group_name, $key = null, $def = null)
 		{
 			self::checkSettingGroupName($setting_group_name);
 			self::loadAll($setting_group_name);
@@ -124,20 +116,18 @@
 			if (array_key_exists($setting_group_name, self::$settings_map)) {
 				$data = self::$settings_map[$setting_group_name];
 
-				if (empty($key)) {
+				if (is_null($key)) {
 					return $data;
 				}
 
 				if (array_key_exists($key, $data)) {
 					return $data[$key];
 				}
-
-				if (!$required) {
-					return null;
-				}
+			} else {
+				trigger_error(sprintf('Undefined setting group: %s', $setting_group_name), E_USER_NOTICE);
 			}
 
-			throw new InternalErrorException('OZ_SETTINGS_UNDEFINED', [$setting_group_name, $key]);
+			return $def;
 		}
 
 		/**
@@ -147,7 +137,7 @@
 		 * @param mixed  $key                a setting key.
 		 * @param mixed  $value              setting key value.
 		 *
-		 * @throws \Exception
+		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
 		public static function setKey($setting_group_name, $key, $value)
 		{
@@ -163,14 +153,13 @@
 		 * @param bool   $overwrite          overwrite setting with data.
 		 *
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function set($setting_group_name, array $data, $overwrite = false)
 		{
 			self::checkSettingGroupName($setting_group_name);
 
 			if (array_key_exists($setting_group_name, self::$settings_blacklist)) {
-				throw new RuntimeException(sprintf('You should not try to edit "%s" at runtime (try manually).', $setting_group_name));
+				trigger_error(sprintf('Runtime settings edit is disabled for "%s". Try manually.', $setting_group_name), E_USER_ERROR);
 			}
 
 			$setting_file = OZ_APP_DIR . 'oz_settings' . DS . $setting_group_name . '.php';
@@ -181,25 +170,26 @@
 			$parts  = pathinfo($setting_file);
 			$inject = self::genExportInfo($setting_group_name, $settings);
 
-			// why not backup setting file if exists before saving?
-			$fm = new FilesManager();
-			$fm->cd($parts['dirname'], true)
-			   ->wf($parts['basename'], TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject));
-
-			// update settings
+			try {
+				$fm = new FilesManager();
+				$fm->cd($parts['dirname'], true)
+				   ->wf($parts['basename'], TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject));
+			} catch (\Exception $e) {
+				throw new InternalErrorException("Unable to save settings.", null, $e);
+			}
+			// updates settings
 			self::$as_loaded[$setting_file] = $settings;
 			self::merge($setting_group_name, $settings);
 		}
 
 		/**
-		 * loads all settings file for a given setting group name.
+		 * Loads all settings file for a given setting group name.
 		 *
-		 * first load from default ozone settings sources dir
-		 * after load from customs app settings sources dir
+		 * Loading order:
+		 *  - first load from default ozone settings sources dir
+		 *  - after load from customs app settings sources dir
 		 *
 		 * @param string $setting_group_name the setting group name.
-		 *
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private static function loadAll($setting_group_name)
 		{
@@ -214,7 +204,7 @@
 							$result = include $setting_file;
 
 							if (!is_array($result)) {
-								throw new RuntimeException(sprintf('settings "%s" in "%s" should be of type "array" not "%s".', $setting_group_name, $setting_file, gettype($result)));
+								trigger_error(sprintf('Settings "%s" returned from "%s" should be of type "array" not "%s"', $setting_group_name, $setting_file, gettype($result)), E_USER_ERROR);
 							}
 
 							self::$as_loaded[$setting_file] = $result;
@@ -229,13 +219,11 @@
 		 * Checks a setting group name validity.
 		 *
 		 * @param string $setting_group_name the setting group name.
-		 *
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		private static function checkSettingGroupName($setting_group_name)
 		{
 			if (!preg_match(self::REG_SETTING_GROUP_NAME, $setting_group_name)) {
-				throw new RuntimeException(sprintf('"%s" is not a valid setting group name.', $setting_group_name));
+				trigger_error(sprintf('Invalid setting group name: %s', $setting_group_name), E_USER_ERROR);
 			}
 		}
 

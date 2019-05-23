@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -10,8 +10,8 @@
 
 	namespace OZONE\OZ\Lang;
 
-	use OTpl\OTpl;
-	use OZONE\OZ\Core\SessionsData;
+	use OZONE\OZ\Core\Context;
+	use OZONE\OZ\Http\Environment;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -25,33 +25,34 @@
 		 *
 		 * Should be called first and once, before any other call to this class method
 		 *
+		 * @param \OZONE\OZ\Http\Environment $env
+		 *
 		 * @return void
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
-		public static function init()
+		public static function init(Environment $env)
 		{
 			if (!self::$ready) {
 				self::$ready   = true;
-				self::$browser = PolyglotUtils::parseBrowserLanguage();
-
-				// add template plugin
-				// usage: @oz_lang( $key [, $data [, $format [, $lang ] ] ] )
-				OTpl::addPluginAlias('oz_lang', [self::class, 'translate']);
+				self::$browser = PolyglotUtils::parseBrowserLanguage($env);
 			}
 		}
 
 		/**
 		 * Gets language to use.
 		 *
-		 * @return String
-		 * @throws \Exception
+		 * @param \OZONE\OZ\Core\Context|null $context
+		 *
+		 * @return string
 		 */
-		public static function getLanguage()
+		public static function getLanguage(Context $context = null)
 		{
 			$browser_lang_advice = self::$browser['advice'];
-			$user_lang           = SessionsData::get('oz_lang:favorite');
 
-			if (!empty($user_lang)) return $user_lang;
+			if ($context) {
+				$user_lang = $context->getSession()
+									 ->get('ozone_lang:favorite');
+				if (!empty($user_lang)) return $user_lang;
+			}
 
 			if (!empty($browser_lang_advice)) return $browser_lang_advice;
 
@@ -61,17 +62,18 @@
 		/**
 		 * Sets user preferred language
 		 *
-		 * @param string $lang
+		 * @param \OZONE\OZ\Core\Context $context
+		 * @param string                 $lang
 		 *
 		 * @return void
-		 * @throws \Exception
 		 */
-		public static function setUserLanguage($lang)
+		public static function setUserLanguage(Context $context, $lang)
 		{
 			$list = PolyglotUtils::getEnabledLanguages();
 
 			if (isset($list[$lang])) {
-				SessionsData::set('oz_lang:favorite', $lang);
+				$context->getSession()
+						->set('ozone_lang:favorite', $lang);
 			}
 		}
 
@@ -87,21 +89,22 @@
 		 * Polyglot::translate('MY_LANG_KEY', $data, 'fr');
 		 * ```
 		 *
-		 * @param string $key  the human readable text key
-		 * @param array  $data data to use for replacement
-		 * @param string $lang use a specific lang
+		 * @param string                      $key     the human readable text key
+		 * @param array                       $data    data to use for replacement
+		 * @param string                      $lang    use a specific lang
+		 * @param \OZONE\OZ\Core\Context|null $context the context
 		 *
-		 * @return String | null    human readable text or null if none found
+		 * @return string    human readable text or null if none found
 		 * @throws \Exception
 		 */
-		public static function translate($key, array $data = [], $lang = null)
+		public static function translate($key, array $data = [], $lang = null, Context $context = null)
 		{
 			if (!PolyglotUtils::isLangKey($key)) {
 				return $key;
 			}
 
 			if ($lang === null) {
-				$lang = self::getLanguage();
+				$lang = self::getLanguage($context);
 			}
 
 			return PolyglotUtils::parseText($key, $data, $lang);

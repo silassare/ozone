@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -15,7 +15,7 @@
 	final class StringUtils
 	{
 		/**
-		 * clean a given text
+		 * cleans a given text
 		 *
 		 * @param string $text        the text to clean
 		 * @param bool   $disable_oml should we disable oml
@@ -71,7 +71,7 @@
 		}
 
 		/**
-		 * remove a given prefix from a given string
+		 * removes a given prefix from a given string
 		 *
 		 * @param string $str
 		 * @param string $prefix
@@ -91,7 +91,7 @@
 		}
 
 		/**
-		 * remove a given suffix from a given string
+		 * removes a given suffix from a given string
 		 *
 		 * @param string $str
 		 * @param string $suffix
@@ -137,11 +137,11 @@
 				return @iconv($from, $to, $data);
 			}
 
-			throw new \Exception('Make sure PHP module "iconv" or "mbstring" is installed.');
+			throw new \Exception('Make sure PHP module "iconv" or "mbstring" are installed.');
 		}
 
 		/**
-		 * convert to utf8
+		 * converts to utf8
 		 *
 		 * @param mixed $input the string to encode
 		 *
@@ -194,39 +194,6 @@
 		}
 
 		/**
-		 * Generate regexp with a given string format and regexp chunks.
-		 *
-		 * @param string $format
-		 * @param array  $regexp_chunks
-		 * @param array  &$fields
-		 *
-		 * @return string
-		 */
-		public static function stringFormatToRegExp($format, array $regexp_chunks, array &$fields)
-		{
-			$keys = array_keys($regexp_chunks);
-
-			if (count($keys)) {
-				$keys = implode("|", $keys);
-				$in   = [];
-
-				$format = preg_quote($format, "#");
-				$i      = 0;
-				$reg    = "#\\\{(" . $keys . ")\\\}#";
-
-				while ($i < count($regexp_chunks) AND preg_match($reg, $format, $in)) {
-					$k            = $in[1];
-					$fields[$i++] = $k;
-					$format       = str_replace($in[0], $regexp_chunks[$k], $format);
-				}
-
-				return "#^" . $format . "$#";
-			}
-
-			return "#^$#";
-		}
-
-		/**
 		 * Converts string to CamelCase.
 		 *
 		 * example:
@@ -242,7 +209,7 @@
 		}
 
 		/**
-		 * Create URL Slug from string (ex: Post Title)
+		 * Creates URL Slug from string (ex: Post Title)
 		 *
 		 * @param string $string
 		 *
@@ -252,13 +219,14 @@
 		{
 			$string = trim($string);
 			$string = self::removeAccents($string);
-			$string = preg_replace('#[^A-Za-z0-9-]+#', '-', $string);
+			$string = preg_replace('~[^a-zA-Z0-9-]+~', '-', $string);
+			$string = preg_replace('~[-]{2,}~', '-', $string);
 
-			return strtolower(preg_replace('#[-]{2,}#', '-', $string));
+			return trim(strtolower($string), '-');
 		}
 
 		/**
-		 * Remove accents from string.
+		 * Removes accents from string.
 		 *
 		 * @param string $string
 		 *

@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -31,10 +31,8 @@
 		/**
 		 * Process constructor.
 		 *
-		 * @param        $cmd
-		 * @param string $cwd
-		 *
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @param string $cmd the command to run
+		 * @param string $cwd the current working directory
 		 */
 		public function __construct($cmd, $cwd = '.')
 		{
@@ -66,6 +64,9 @@
 			return false;
 		}
 
+		/**
+		 * @return bool|string
+		 */
 		public function getOutput()
 		{
 			if (is_resource($this->pipes[1])) {
@@ -75,6 +76,9 @@
 			return $this->output;
 		}
 
+		/**
+		 * @return bool|string
+		 */
 		public function getError()
 		{
 			if (is_resource($this->pipes[2])) {
@@ -84,6 +88,9 @@
 			return $this->error;
 		}
 
+		/**
+		 * @return int
+		 */
 		public function close()
 		{
 			if ($this->pipes) {

@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -25,13 +25,17 @@
 		 *
 		 * @param string $name The 'oz.keygen.salt' settings salt key name.
 		 *
-		 * @return mixed|null
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @return string|null
 		 */
 		private static function getSalt($name)
 		{
-			return SettingsManager::get('oz.keygen.salt', $name);
+			$salt = SettingsManager::get('oz.keygen.salt', $name);
+
+			if (is_null($salt)) {
+				trigger_error(sprintf("Missing salt %s in %s", $name, 'oz.keygen.salt'), E_USER_ERROR);
+			}
+
+			return $salt;
 		}
 
 		/**
@@ -103,6 +107,7 @@
 				$converted = substr($chars, ($n % $base), 1) . $converted;
 				$n         = floor($n / $base);
 			}
+
 			return $converted;
 		}
 
@@ -123,16 +128,18 @@
 		 *
 		 * Test result:
 		 *  - Total seeds  -----> 1000000
-		 *  - Unique seeds -----> 999805
-		 *  - Redundancies -----> 195
-		 *  - Duration     -----> 1.3364629745483 s
+		 *  - Unique seeds -----> 999735
+		 *  - Redundancies -----> 99
+		 *  - Min value    -----> 55899
+		 *  - Max value    -----> 3100030173
+		 *  - Duration     -----> 1.2874000072479 s
 		 *
 		 * @return int
 		 */
 		public static function genSeed()
 		{
 			$m = explode(' ', microtime());
-			$m = ($m[0] * $m[1]) . '.';
+			$m = ($m[0] * $m[1]) . '.' . time();
 			$m = explode('.', $m);
 
 			return $m[0] + $m[1];
@@ -174,8 +181,6 @@
 		 * Generate session id
 		 *
 		 * @return string
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function genSessionId()
 		{
@@ -190,8 +195,6 @@
 		 * @param string $url the client url
 		 *
 		 * @return string
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function genClientId($url)
 		{
@@ -240,8 +243,6 @@
 		 * @param string|int $key the key to authenticate
 		 *
 		 * @return string
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function genAuthToken($key)
 		{

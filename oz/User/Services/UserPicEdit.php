@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -12,8 +12,10 @@
 
 	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\FS\PPicUtils;
-	use OZONE\OZ\User\UsersUtils;
+	use OZONE\OZ\Router\RouteInfo;
+	use OZONE\OZ\Router\Router;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -25,34 +27,31 @@
 	class UserPicEdit extends BaseService
 	{
 		/**
-		 * {@inheritdoc}
-		 * @param array $request
+		 * @param \OZONE\OZ\Core\Context $context
 		 *
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+		 * @throws \Exception
 		 */
-		public function execute(array $request = [])
+		public function actionPicEdit(Context $context)
 		{
-			Assert::assertUserVerified();
-			Assert::assertForm($request, ['for_id']);
+			$request = $context->getRequest();
+			$params  = $request->getFormData();
+
+			$users_manager = $context->getUsersManager();
+
+			$users_manager->assertUserVerified();
+			Assert::assertForm($params, ['for_id']);
 
 			$label = 'file';
 
-			if (isset($request['label'])) {
-				$label = $request['label'];
+			if (isset($params['label'])) {
+				$label = $params['label'];
 			}
 
 			Assert::assertAuthorizeAction(in_array($label, ['file', 'file_id', 'def']));
 
-			$for_id = $request['for_id'];
+			$for_id = $params['for_id'];
 
-			$user_obj   = UsersUtils::getCurrentUserObject();
+			$user_obj   = $users_manager->getCurrentUserObject();
 			$uid        = $user_obj->getId();
 			$file_label = 'OZ_FILE_LABEL_USER_PPIC';
 			$msg        = 'OZ_PROFILE_PIC_CHANGED';
@@ -62,11 +61,12 @@
 			$ppic_obj = new PPicUtils($uid);
 
 			if ($label === 'file_id') {
-				Assert::assertForm($request, ['file_id', 'file_key']);
-				$picid = $ppic_obj->fromFileId($request, $request['file_id'], $request['file_key'], $file_label);
+				Assert::assertForm($params, ['file_id', 'file_key']);
+				$picid = $ppic_obj->fromFileId($params['file_id'], $params['file_key'], $params, $file_label);
 			} elseif ($label === 'file') {
-				Assert::assertForm($_FILES, ['photo']);
-				$picid = $ppic_obj->fromUploadedFile($request, $_FILES['photo'], $file_label);
+				$uploaded_files = $request->getUploadedFiles();
+				Assert::assertForm($uploaded_files, ['photo']);
+				$picid = $ppic_obj->fromUploadedFile($uploaded_files['photo'], $params, $file_label);
 			} else {//def
 				$picid = PPicUtils::getDefault();
 				$msg   = 'OZ_PROFILE_PIC_SET_TO_DEFAULT';
@@ -75,7 +75,22 @@
 			$user_obj->setPicid($picid)
 					 ->save();
 
-			$this->getResponseHolder()->setDone($msg)
-					   ->setData($user_obj->asArray());
+			$this->getResponseHolder()
+				 ->setDone($msg)
+				 ->setData($user_obj->asArray());
+		}
+
+		/**
+		 * @inheritdoc
+		 */
+		public static function registerRoutes(Router $router)
+		{
+			$router->patch('/users/pic/edit', function (RouteInfo $r) {
+				$context = $r->getContext();
+				$s       = new UserPicEdit($context);
+				$s->actionPicEdit($context);
+
+				return $s->writeResponse($context);
+			});
 		}
 	}

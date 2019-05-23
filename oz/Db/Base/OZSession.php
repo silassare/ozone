@@ -3,16 +3,13 @@
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.0
- * Time: 1551653125
+ * Time: 1557147498
  */
 
 	namespace OZONE\OZ\Db\Base;
 
-	use Gobl\DBAL\QueryBuilder;
-	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
-	use Gobl\ORM\ArrayCapable;
-	use Gobl\ORM\Exceptions\ORMException;
 	use Gobl\ORM\ORM;
+	use Gobl\ORM\ORMEntityBase;
 	use OZONE\OZ\Db\OZSessionsQuery as OZSessionsQueryReal;
 
 		use OZONE\OZ\Db\OZClientsController as OZClientsControllerRealR;
@@ -24,7 +21,7 @@
 	 *
 	 * @package OZONE\OZ\Db\Base
 	 */
-	abstract class OZSession extends ArrayCapable
+	abstract class OZSession extends ORMEntityBase
 	{
 		const TABLE_NAME = 'oz_sessions';
 
@@ -32,53 +29,22 @@
 		const COL_CLIENT_API_KEY = 'session_client_api_key';
 		const COL_USER_ID = 'session_user_id';
 		const COL_TOKEN = 'session_token';
-		const COL_DATA = 'session_data';
 		const COL_EXPIRE = 'session_expire';
 		const COL_LAST_SEEN = 'session_last_seen';
-
-		/** @var \Gobl\DBAL\Table */
-		protected $table;
-
-		/** @var  array */
-		protected $row;
-
-		/** @var  array */
-		protected $row_saved;
-
-		/**
-		 * @var bool
-		 */
-		protected $is_new = true;
-
-		/**
-		 * @var bool
-		 */
-		protected $is_saved = false;
-
-		/**
-		 * The auto_increment column full name.
-		 *
-		 * @var string
-		 */
-		protected $auto_increment_column = null;
-
-		/**
-		 * To enable/disable strict mode.
-		 *
-		 * @var bool
-		 */
-		protected $strict = true;
+		const COL_DATA = 'session_data';
+		const COL_ADD_TIME = 'session_add_time';
+		const COL_VALID = 'session_valid';
 
 		
 		/**
 		 * @var \OZONE\OZ\Db\OZClient
 		 */
-		protected $r_oz_client;
+		protected $_r_oz_client;
 
 		/**
 		 * @var \OZONE\OZ\Db\OZUser
 		 */
-		protected $r_oz_user;
+		protected $_r_oz_user;
 
 
 		/**
@@ -86,72 +52,63 @@
 		 *
 		 * @param bool $is_new True for new entity false for entity fetched
 		 *                     from the database, default is true.
-		 * @param bool $strict
-		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @param bool $strict Enable/disable strict mode
 		 */
 		public function __construct($is_new = true, $strict = true)
 		{
-			$this->table    = ORM::getDatabase()
-								 ->getTable(OZSession::TABLE_NAME);
-			$columns        = $this->table->getColumns();
-			$this->is_new   = (bool)$is_new;
-			$this->is_saved = !$this->is_new;
-			$this->strict   = (bool)$strict;
-
-			// we initialise row with default value
-			foreach ($columns as $column) {
-				$full_name             = $column->getFullName();
-				$type                  = $column->getTypeObject();
-				$this->row[$full_name] = $type->getDefault();
-
-				// the auto_increment column
-				if ($type->isAutoIncremented()) {
-					$this->auto_increment_column = $full_name;
-				}
-			}
+			parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), $is_new, $strict, OZSession::TABLE_NAME, OZSessionsQueryReal::class);
 		}
 		
         /**
          * ManyToOne relation between `oz_sessions` and `oz_clients`.
          *
          * @return null|\OZONE\OZ\Db\OZClient
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \Gobl\CRUD\Exceptions\CRUDException
+         * @throws \Gobl\DBAL\Exceptions\DBALException
+         * @throws \Gobl\ORM\Exceptions\ORMException
+         * @throws \Gobl\CRUD\Exceptions\CRUDException
          */
         public function getOZClient()
         {
-            if (!isset($this->r_oz_client)) {
-
-                $filters['client_api_key'] = $this->getClientApiKey();
+            if (!isset($this->_r_oz_client)) {
+                $filters = [];
+                if(!is_null($v = $this->getClientApiKey())){
+                    $filters['client_api_key'] = $v;
+                }
+                if (empty($filters)){
+                    return null;
+                }
 
                 $m = new OZClientsControllerRealR();
-                $this->r_oz_client = $m->getItem($filters);
+                $this->_r_oz_client = $m->getItem($filters);
             }
 
-            return $this->r_oz_client;
+            return $this->_r_oz_client;
         }
 
         /**
          * ManyToOne relation between `oz_sessions` and `oz_users`.
          *
          * @return null|\OZONE\OZ\Db\OZUser
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \Gobl\CRUD\Exceptions\CRUDException
+         * @throws \Gobl\DBAL\Exceptions\DBALException
+         * @throws \Gobl\ORM\Exceptions\ORMException
+         * @throws \Gobl\CRUD\Exceptions\CRUDException
          */
         public function getOZUser()
         {
-            if (!isset($this->r_oz_user)) {
-
-                $filters['user_id'] = $this->getUserId();
+            if (!isset($this->_r_oz_user)) {
+                $filters = [];
+                if(!is_null($v = $this->getUserId())){
+                    $filters['user_id'] = $v;
+                }
+                if (empty($filters)){
+                    return null;
+                }
 
                 $m = new OZUsersControllerRealR();
-                $this->r_oz_user = $m->getItem($filters);
+                $this->_r_oz_user = $m->getItem($filters);
             }
 
-            return $this->r_oz_user;
+            return $this->_r_oz_user;
         }
 
 		
@@ -162,7 +119,8 @@
 		 */
 		public function getId()
 		{
-		    $v = $this->_getValue(self::COL_ID);
+			$column = self::COL_ID;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -176,12 +134,14 @@
 		 *
 		 * @param string $id
 		 *
-		 * @return \OZONE\OZ\Db\OZSession
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setId($id)
 		{
-			return $this->_setValue(self::COL_ID, $id);
+			$column = self::COL_ID;
+			$this->$column = $id;
+
+			return $this;
 		}
 
 		/**
@@ -191,7 +151,8 @@
 		 */
 		public function getClientApiKey()
 		{
-		    $v = $this->_getValue(self::COL_CLIENT_API_KEY);
+			$column = self::COL_CLIENT_API_KEY;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -205,12 +166,14 @@
 		 *
 		 * @param string $client_api_key
 		 *
-		 * @return \OZONE\OZ\Db\OZSession
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setClientApiKey($client_api_key)
 		{
-			return $this->_setValue(self::COL_CLIENT_API_KEY, $client_api_key);
+			$column = self::COL_CLIENT_API_KEY;
+			$this->$column = $client_api_key;
+
+			return $this;
 		}
 
 		/**
@@ -220,7 +183,8 @@
 		 */
 		public function getUserId()
 		{
-		    $v = $this->_getValue(self::COL_USER_ID);
+			$column = self::COL_USER_ID;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -234,12 +198,14 @@
 		 *
 		 * @param string $user_id
 		 *
-		 * @return \OZONE\OZ\Db\OZSession
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setUserId($user_id)
 		{
-			return $this->_setValue(self::COL_USER_ID, $user_id);
+			$column = self::COL_USER_ID;
+			$this->$column = $user_id;
+
+			return $this;
 		}
 
 		/**
@@ -249,7 +215,8 @@
 		 */
 		public function getToken()
 		{
-		    $v = $this->_getValue(self::COL_TOKEN);
+			$column = self::COL_TOKEN;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -263,41 +230,14 @@
 		 *
 		 * @param string $token
 		 *
-		 * @return \OZONE\OZ\Db\OZSession
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setToken($token)
 		{
-			return $this->_setValue(self::COL_TOKEN, $token);
-		}
+			$column = self::COL_TOKEN;
+			$this->$column = $token;
 
-		/**
-		 * Getter for column `oz_sessions`.`data`.
-		 *
-		 * @return string the real type is: string
-		 */
-		public function getData()
-		{
-		    $v = $this->_getValue(self::COL_DATA);
-
-		    if( $v !== null){
-		        $v = (string)$v;
-		    }
-
-			return $v;
-		}
-
-		/**
-		 * Setter for column `oz_sessions`.`data`.
-		 *
-		 * @param string $data
-		 *
-		 * @return \OZONE\OZ\Db\OZSession
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-		 */
-		public function setData($data)
-		{
-			return $this->_setValue(self::COL_DATA, $data);
+			return $this;
 		}
 
 		/**
@@ -307,7 +247,8 @@
 		 */
 		public function getExpire()
 		{
-		    $v = $this->_getValue(self::COL_EXPIRE);
+			$column = self::COL_EXPIRE;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -321,12 +262,14 @@
 		 *
 		 * @param string $expire
 		 *
-		 * @return \OZONE\OZ\Db\OZSession
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setExpire($expire)
 		{
-			return $this->_setValue(self::COL_EXPIRE, $expire);
+			$column = self::COL_EXPIRE;
+			$this->$column = $expire;
+
+			return $this;
 		}
 
 		/**
@@ -336,7 +279,8 @@
 		 */
 		public function getLastSeen()
 		{
-		    $v = $this->_getValue(self::COL_LAST_SEEN);
+			$column = self::COL_LAST_SEEN;
+		    $v = $this->$column;
 
 		    if( $v !== null){
 		        $v = (string)$v;
@@ -350,204 +294,110 @@
 		 *
 		 * @param string $last_seen
 		 *
-		 * @return \OZONE\OZ\Db\OZSession
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 * @return static
 		 */
 		public function setLastSeen($last_seen)
 		{
-			return $this->_setValue(self::COL_LAST_SEEN, $last_seen);
-		}
-
-		/**
-		 * Hydrate this entity with values from an array.
-		 *
-		 * @param array $row map column name to column value
-		 *
-		 * @return $this|\OZONE\OZ\Db\OZSession
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-		 */
-		public function hydrate(array $row)
-		{
-			foreach ($row as $column_name => $value) {
-				$this->_setValue($column_name, $value);
-			}
+			$column = self::COL_LAST_SEEN;
+			$this->$column = $last_seen;
 
 			return $this;
 		}
 
 		/**
-		 * To check if this entity is new
+		 * Getter for column `oz_sessions`.`data`.
 		 *
-		 * @return bool
+		 * @return string the real type is: string
 		 */
-		public function isNew()
+		public function getData()
 		{
-			return $this->is_new;
+			$column = self::COL_DATA;
+		    $v = $this->$column;
+
+		    if( $v !== null){
+		        $v = (string)$v;
+		    }
+
+			return $v;
 		}
 
 		/**
-		 * To check if this entity is saved
+		 * Setter for column `oz_sessions`.`data`.
 		 *
-		 * @return bool
+		 * @param string $data
+		 *
+		 * @return static
 		 */
-		public function isSaved()
+		public function setData($data)
 		{
-			return $this->is_saved;
-		}
-
-		/**
-		 * Saves modifications to database.
-		 *
-		 * @return int|string int for affected row count on update, string for last insert id
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 */
-		public function save()
-		{
-			if ($this->isNew()) {
-				// add
-				$ai_column = $this->auto_increment_column;
-
-				if (!empty($ai_column)) {
-					$ai_column_value = $this->row[$ai_column];
-
-					if (!is_null($ai_column_value)) {
-						throw new ORMException(sprintf('Auto increment column "%s" should be set to null.', $ai_column));
-					}
-				}
-
-				$columns = array_keys($this->row);
-				$values  = array_values($this->row);
-				$qb      = new QueryBuilder(ORM::getDatabase());
-				$qb->insert()
-				   ->into($this->table->getFullName(), $columns)
-				   ->values($values);
-
-				$result = $qb->execute();
-
-				if (!empty($ai_column)) {
-					if (is_string($result)) {
-						$this->row[$ai_column] = $result;
-						$returns               = $result; // last insert id
-					} else {
-						throw new ORMException(sprintf('Unable to get last insert id for column "%s" in table "%s"', $ai_column, $this->table->getName()));
-					}
-				} else {
-					$returns = intval($result); // one row saved
-				}
-			} elseif (!$this->isSaved() AND isset($this->row_saved)) {
-				// update
-				$t       = new OZSessionsQueryReal();
-				$returns = $t->safeUpdate($this->row_saved, $this->row)
-							 ->execute();
-			} else {
-				// nothing to do
-				$returns = 0;
-			}
-
-			$this->row_saved = $this->row;
-			$this->is_new    = false;
-			$this->is_saved  = true;
-
-			return $returns;
-		}
-
-		/**
-		 * Gets a column value.
-		 *
-		 * @param string $name the column name or full name.
-		 *
-		 * @return mixed
-		 */
-		protected function _getValue($name)
-		{
-			if ($this->table->hasColumn($name)) {
-				$column    = $this->table->getColumn($name);
-				$full_name = $column->getFullName();
-
-				return $this->row[$full_name];
-			}
-
-			return null;
-		}
-
-		/**
-		 * Sets a column value.
-		 *
-		 * @param string $name  the column name or full name.
-		 * @param mixed  $value the column new value.
-		 *
-		 * @return $this|\OZONE\OZ\Db\OZSession
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-		 */
-		protected function _setValue($name, $value)
-		{
-			if ($this->table->hasColumn($name)) {
-				$column = $this->table->getColumn($name);
-				$type   = $column->getTypeObject();
-
-				try {
-					$value = $type->validate($value, $column->getName(), $this->table->getName());
-				} catch (TypesInvalidValueException $e) {
-					$debug = [
-						"field"      => $column->getFullName(),
-						"table_name" => $this->table->getName(),
-						"options"    => $type->getCleanOptions()
-					];
-
-					$e->setDebugData($debug);
-
-					throw $e;
-				}
-
-				$full_name = $column->getFullName();
-				if ($this->row[$full_name] !== $value) {
-					$this->row[$full_name] = $value;
-					$this->is_saved        = false;
-				}
-			}
+			$column = self::COL_DATA;
+			$this->$column = $data;
 
 			return $this;
 		}
 
 		/**
-		 * Magic setter for row fetched as class.
+		 * Getter for column `oz_sessions`.`add_time`.
 		 *
-		 * @param string $full_name the column full name
-		 * @param mixed  $value     the column value
-		 *
-		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @return string the real type is: bigint
 		 */
-		final public function __set($full_name, $value)
+		public function getAddTime()
 		{
-			if ($this->isNew()) {
-				throw new ORMException(sprintf('You should not try to manually set properties on "%s" use appropriate getters and setters.', get_class($this)));
-			}
+			$column = self::COL_ADD_TIME;
+		    $v = $this->$column;
 
-			if ($this->table->hasColumn($full_name)) {
-				$this->row[$full_name]       = $value;
-				$this->row_saved[$full_name] = $value;
-				$this->is_saved              = true;
-			} elseif ($this->strict) {
-				throw new ORMException(sprintf('Could not set column "%s", not defined in table "%s".', $full_name, $this->table->getName()));
-			}
+		    if( $v !== null){
+		        $v = (string)$v;
+		    }
+
+			return $v;
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * Setter for column `oz_sessions`.`add_time`.
+		 *
+		 * @param string $add_time
+		 *
+		 * @return static
 		 */
-		public function asArray($hide_private_column = true)
+		public function setAddTime($add_time)
 		{
-			$row = $this->row;
+			$column = self::COL_ADD_TIME;
+			$this->$column = $add_time;
 
-			if ($hide_private_column) {
-				$privates_columns = $this->table->getPrivatesColumns();
-
-				foreach ($privates_columns as $column) {
-					unset($row[$column->getFullName()]);
-				}
-			}
-
-			return $row;
+			return $this;
 		}
+
+		/**
+		 * Getter for column `oz_sessions`.`valid`.
+		 *
+		 * @return bool the real type is: bool
+		 */
+		public function getValid()
+		{
+			$column = self::COL_VALID;
+		    $v = $this->$column;
+
+		    if( $v !== null){
+		        $v = (bool)$v;
+		    }
+
+			return $v;
+		}
+
+		/**
+		 * Setter for column `oz_sessions`.`valid`.
+		 *
+		 * @param bool $valid
+		 *
+		 * @return static
+		 */
+		public function setValid($valid)
+		{
+			$column = self::COL_VALID;
+			$this->$column = $valid;
+
+			return $this;
+		}
+
 	}

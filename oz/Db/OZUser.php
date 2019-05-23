@@ -12,13 +12,13 @@
 	use OZONE\OZ\Db\Base\OZUser as BaseOZUser;
 	use OZONE\OZ\Exceptions\InternalErrorException;
 	use OZONE\OZ\OZone;
+	use OZONE\OZ\User\UsersManager;
 
 	class OZUser extends BaseOZUser
 	{
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 		 */
 		public function save()
 		{
@@ -43,6 +43,12 @@
 			if (!$crypt->isHash($pass)) {
 				$pass = $crypt->passHash($pass);
 				$this->setPass($pass);
+
+				// when user password change, force login again
+				// on all sessions associated with user
+				if ($this->getId()) {
+					UsersManager::forceLoginOnUserAttachedSessions($this);
+				}
 			}
 
 			$result = parent::save();
@@ -56,7 +62,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function asArray($hide_private_column = true)
 		{

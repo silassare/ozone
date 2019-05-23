@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -19,14 +19,12 @@
 		/**
 		 * TypeGender constructor.
 		 *
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function __construct() { parent::__construct(1, 30); }
 
 		/**
-		 * {@inheritdoc}
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @inheritdoc
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
@@ -42,7 +40,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public static function getInstance(array $options)
 		{

@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -10,20 +10,55 @@
 
 	namespace OZONE\OZ\Core;
 
-
-	use OZONE\OZ\Exceptions\RuntimeException;
-
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-	final class SessionsData
+	class SessionDataStore
 	{
 		/**
-		 * Checks the given session key.
+		 * @var array
+		 */
+		private $store_data;
+
+		/**
+		 * OZoneSessionDataStore constructor.
+		 *
+		 * @param array $store
+		 */
+		public function __construct(array $store = [])
+		{
+			$this->store_data = $store;
+		}
+
+		/**
+		 * Gets the store data.
+		 *
+		 * @return array
+		 */
+		public function getStoreData()
+		{
+			return $this->store_data;
+		}
+
+		/**
+		 * Sets the store data.
+		 *
+		 * @param array $data
+		 *
+		 * @return $this
+		 */
+		public function setStoreData(array $data)
+		{
+			$this->store_data = $data;
+
+			return $this;
+		}
+
+		/**
+		 * Checks the given key.
 		 *
 		 * @param string $key the session key
 		 *
-		 * @return mixed
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @return array
 		 */
 		private static function keyCheck($key)
 		{
@@ -31,13 +66,13 @@
 			$max_deep = 5;
 
 			if (!preg_match($key_reg, $key)) {
-				throw new RuntimeException("session key '$key' not well formed, use something like 'group:key' ");
+				throw new \InvalidArgumentException(sprintf('Session key "%s" not well formed, use something like "%s"', $key, 'group:key'));
 			}
 
 			$route = explode(':', $key);
 
 			if (count($route) > $max_deep) {
-				throw new RuntimeException("session key '$key' is too deep, maximum deep is $max_deep");
+				throw new \InvalidArgumentException(sprintf('Session key "%s" is too deep, maximum deep is %s', $key, $max_deep));
 			}
 
 			return $route;
@@ -49,7 +84,7 @@
 		 * @param mixed  $source
 		 * @param string $next_key
 		 *
-		 * @return mixed|null
+		 * @return mixed
 		 */
 		private static function getNext($source, $next_key)
 		{
@@ -61,29 +96,18 @@
 		}
 
 		/**
-		 * Sets session value for a given key.
+		 * Sets value of the given key to the store.
 		 *
-		 * @param string     $key
-		 * @param mixed      $value
-		 * @param array|null &$data
+		 * @param string $key
+		 * @param mixed  $value
 		 *
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @return $this
 		 */
-		public static function set($key, $value, array &$data = null)
+		public function set($key, $value)
 		{
-			if (is_null($data)) {
-				// when called before session start
-				if (!isset($_SESSION)) {
-					oz_logger("Session not started, unable to set -> $key -> {json_encode($value)}");
-					return;
-				}
-
-				$data = &$_SESSION;
-			}
-
 			$parts   = self::keyCheck($key);
 			$counter = count($parts);
-			$next    = &$data;
+			$next    = &$this->store_data;
 
 			foreach ($parts as $part) {
 				$counter--;
@@ -95,31 +119,23 @@
 			}
 
 			$next = $value;
+
+			return $this;
 		}
 
 		/**
-		 * Gets session value for a given key.
+		 * Gets the given key value from store.
 		 *
-		 * @param string     $key the session key
-		 * @param array|null $data
+		 * @param string $key
+		 * @param mixed  $def
 		 *
 		 * @return mixed
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
-		public static function get($key, array $data = null)
+		public function get($key, $def = null)
 		{
-			if (is_null($data)) {
-				// when called before session start
-				if (!isset($_SESSION)) {
-					return null;
-				}
-
-				$data = $_SESSION;
-			}
-
 			$parts   = self::keyCheck($key);
 			$counter = count($parts);
-			$result  = $data;
+			$result  = $this->store_data;
 
 			foreach ($parts as $part) {
 				$result = self::getNext($result, $part);
@@ -131,32 +147,21 @@
 				}
 			}
 
-			return $result;
+			return is_null($result) ? $def : $result;
 		}
 
 		/**
-		 * Remove session value for a given key.
+		 * Removes value from the store.
 		 *
-		 * @param string     $key the session key
-		 * @param array|null &$data
+		 * @param string $key
 		 *
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @return $this
 		 */
-		public static function remove($key, array &$data = null)
+		public function remove($key)
 		{
-			if (is_null($data)) {
-				// when called before session start
-				if (!isset($_SESSION)) {
-					oz_logger("Session not started, unable to remove -> $key");
-					return;
-				}
-
-				$data = &$_SESSION;
-			}
-
 			$parts   = self::keyCheck($key);
 			$counter = count($parts);
-			$next    = &$data;
+			$next    = &$this->store_data;
 
 			// the counter is useful for us to move until
 			// we reach the last part
@@ -171,5 +176,19 @@
 					break;
 				}
 			}
+
+			return $this;
+		}
+
+		/**
+		 * Clears the store.
+		 *
+		 * @return $this
+		 */
+		public function clear()
+		{
+			$this->store_data = [];
+
+			return $this;
 		}
 	}

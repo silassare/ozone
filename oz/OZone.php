@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -10,63 +10,42 @@
 
 	namespace OZONE\OZ;
 
+	use Gobl\CRUD\CRUD;
 	use OZONE\OZ\App\AppInterface;
-	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\DbManager;
-	use OZONE\OZ\Core\RequestHandler;
-	use OZONE\OZ\Core\ResponseHolder;
-	use OZONE\OZ\Core\BaseService;
+	use OZONE\OZ\Core\Context;
+	use OZONE\OZ\Core\Interfaces\TableCollectionsProviderInterface;
+	use OZONE\OZ\Core\Interfaces\TableRelationsProviderInterface;
 	use OZONE\OZ\Core\SettingsManager;
-	use OZONE\OZ\Core\URIHelper;
-	use OZONE\OZ\Db\OZClient;
 	use OZONE\OZ\Event\EventManager;
 	use OZONE\OZ\Exceptions\BaseException;
-	use OZONE\OZ\Exceptions\ForbiddenException;
 	use OZONE\OZ\Exceptions\InternalErrorException;
-	use OZONE\OZ\Exceptions\NotFoundException;
+	use OZONE\OZ\Http\Environment;
 	use OZONE\OZ\Lang\Polyglot;
 	use OZONE\OZ\Loader\ClassLoader;
-	use OZONE\OZ\User\UsersUtils;
+	use OZONE\OZ\Router\Router;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
-    include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
+	include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
 	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
 
 	final class OZone
 	{
-		/**
-		 * service default config
-		 *
-		 * @var array
-		 */
-		private static $svc_default = [
-			"service_class"   => null,
-			"is_file_service" => false,
-			"can_serve_resp"  => false,
-			"cross_site"      => false,
-			"require_session" => true,
-			"request_methods" => ['POST', 'GET', 'PUT', 'PATCH', 'DELETE']
-		];
+		const API_KEY_REG          = '#^[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$#';
+		const INTERNAL_PATH_PREFIX = '/oz:';
+
+		private static $api_router;
+		private static $web_router;
 
 		/**
-		 * the current running app
+		 * The current running app
 		 *
 		 * @var AppInterface
 		 */
 		private static $current_app = null;
-
-		/**
-		 * Gets current running app.
-		 *
-		 * @return AppInterface
-		 */
-		public static function getCurrentApp()
-		{
-			return self::$current_app;
-		}
 
 		/**
 		 * Gets event manager instance.
@@ -79,101 +58,114 @@
 		}
 
 		/**
-		 * ozone main entry point
+		 * Gets current running app.
+		 *
+		 * @return \OZONE\OZ\App\AppInterface
+		 */
+		public static function getCurrentApp()
+		{
+			return self::$current_app;
+		}
+
+		/**
+		 * OZone main entry point.
 		 *
 		 * @param \OZONE\OZ\App\AppInterface $app
 		 *
-		 * @throws \Exception    when \OZONE\OZ\OZone::execute is called twice
+		 * @throws \Throwable
 		 */
-		public static function execute(AppInterface $app)
+		public static function run(AppInterface $app)
 		{
 			if (!empty(self::$current_app)) {
-				throw new \Exception("Your app is already running.");
+				trigger_error('The app is already running.', E_USER_NOTICE);
+
+				return;
 			}
 
 			self::$current_app = $app;
 
-			Polyglot::init();
-
+			$env = new Environment($_SERVER);
+			Polyglot::init($env);
 			DbManager::init();
 
-			RequestHandler::initCheck();
+			$is_api  = !defined('OZ_OZONE_IS_WEB_CONTEXT');
+			$context = new Context($env, null, false, $is_api);
 
-			self::runApp();
-		}
+			// The CRUD handler is instantiated with the first context
+			// So if we have a session,
+			// the current user access level will be used for CRUD validation
+			CRUD::setHandlerProvider(function ($table_name) use ($context) {
+				return DbManager::instantiateCRUDHandler($context, $table_name);
+			});
 
-		/**
-		 * The ozone app running logic is here
-		 *
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \ReflectionException
-		 * @throws \Exception
-		 */
-		private static function runApp()
-		{
-			self::getCurrentApp()
-				->onInit();
+			self::registerCustomRelations();
+			self::registerCustomCollections();
 
-			$req_svc = URIHelper::getUriService();
-
-			if (!empty($req_svc)) {
-				try {
-					$svc    = SettingsManager::get('oz.services.list', $req_svc);
-					$svc_ok = false;
-
-					if (!empty($svc)) {
-						$svc = array_merge(self::$svc_default, $svc);
-
-						if (!empty($svc['service_class']) AND ClassLoader::exists($svc['service_class'])) {
-							$svc_ok = true;
-						}
-					}
-
-					if ($svc_ok === true) {
-						Assert::assertSafeRequestMethod($svc['request_methods']);
-
-						/** @var BaseService $svc_obj */
-						$svc_obj = OZone::obj($svc['service_class']);
-
-						$svc_obj->execute($_REQUEST);
-
-						if (!$svc['can_serve_resp']) {
-							OZone::say($svc_obj->getResponseHolder());
-						}
-					} else {
-						throw new NotFoundException('OZ_SERVICE_NOT_FOUND');
-					}
-				} catch (InternalErrorException $e) {
-					throw $e;
-				} catch (BaseException $e) {
-					$cancel = self::getCurrentApp()
-								  ->onError($e);
-
-					if ($cancel) {
-						oz_logger('--------Error canceled--------');
-						oz_logger($e);
-						// TODO
-						// What happen after this? :)
-						// Silence is gold rule or ...?
-					} else {
-						oz_logger($e);
-						$e->procedure();
-					}
+			try {
+				$context->handle()
+						->respond();
+			} catch (\Throwable $e) {
+				if (!($e instanceof BaseException)) {
+					$e = new InternalErrorException(null, null, $e);
 				}
-			} else {
-				RequestHandler::attackProcedure(new ForbiddenException(), 'Requested service should not be empty here, something went wrong or we are under attack.');
+
+				$e->informClient($context);
 			}
 		}
 
 		/**
-		 * Create instance of class for a given class name and arguments.
+		 * Returns the router with all Api routes registered.
+		 */
+		public static function getApiRouter()
+		{
+			if (!isset(self::$api_router)) {
+				self::$api_router = new Router();
+
+				$api_routes = SettingsManager::get('oz.routes');
+				$api_routes += SettingsManager::get('oz.routes.api');
+
+				foreach ($api_routes as $options) {
+					/** @var \OZONE\OZ\Router\RouteProviderInterface $provider */
+					$provider = $options['provider'];
+
+					$provider::registerRoutes(self::$api_router);
+				}
+			}
+
+			return self::$api_router;
+		}
+
+		/**
+		 * Returns the router with all web routes registered.
+		 */
+		public static function getWebRouter()
+		{
+			if (!isset(self::$web_router)) {
+				self::$web_router = new Router();
+
+				$web_routes = SettingsManager::get('oz.routes');
+				$web_routes += SettingsManager::get('oz.routes.web');
+
+				foreach ($web_routes as $options) {
+					/** @var \OZONE\OZ\Router\RouteProviderInterface $provider */
+					$provider = $options['provider'];
+
+					$provider::registerRoutes(self::$web_router);
+				}
+			}
+
+			return self::$web_router;
+		}
+
+		/**
+		 * Creates instance of class for a given class name and arguments.
 		 *
 		 * @param string $class_name The full qualified class name to instantiate.
 		 *
 		 * @return object
 		 * @throws \ReflectionException
 		 */
-		public static function obj($class_name)
+		public static function createInstance($class_name)
 		{
 			$c_args = func_get_args();
 
@@ -183,79 +175,82 @@
 		}
 
 		/**
-		 * Gets all declared services
-		 *
-		 * @return array|null
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 */
-		public static function getAllServices()
-		{
-			return SettingsManager::get('oz.services.list');
-		}
-
-		/**
-		 * Gets all declared file services
-		 *
-		 * @return array
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 */
-		public static function getFileServices()
-		{
-			$services = self::getAllServices();
-			$ans      = [];
-
-			foreach ($services as $key => $svc) {
-				if ($svc['is_file_service']) {
-					$ans[$key] = $svc;
-				}
-			}
-
-			return $ans;
-		}
-
-		/**
-		 * Send response to client in json format
-		 *
-		 * @param \OZONE\OZ\Core\ResponseHolder $response_holder
+		 * Register custom relations.
 		 *
 		 * @throws \Exception
 		 */
-		public static function sayJson(ResponseHolder $response_holder)
+		private static function registerCustomRelations()
 		{
-			$data          = $response_holder->getResponse();
-			$now           = time();
-			$data['utime'] = $now;
+			$relations_settings = SettingsManager::get('oz.db.relations');
+			$db                 = DbManager::getDb();
 
-			if (UsersUtils::userVerified()) {
-				// set session expire time
-				/**
-				 * @var $client \OZONE\OZ\Db\OZClient
-				 */
-				$client = RequestHandler::getCurrentClient();
+			foreach ($relations_settings as $provider => $enabled) {
+				if ($enabled) {
+					try {
+						$rc = new \ReflectionClass($provider);
+						if (!$rc->implementsInterface(TableRelationsProviderInterface::class)) {
+							throw new \RuntimeException(sprintf('Custom relations provider "%s" should implements "%s".', $provider, TableRelationsProviderInterface::class));
+						}
+					} catch (\ReflectionException $e) {
+						throw new \RuntimeException(sprintf('Unable to check custom relations provider "%s".', $provider), $e);
+					}
 
-				if ($client instanceof OZClient) {
-					$lifetime      = 1 * $client->getSessionLifeTime();
-					$data["stime"] = $now + $lifetime;
+					/**@var TableRelationsProviderInterface $provider */
+					$def_list = $provider::getRelationsDefinition();
+
+					foreach ($def_list as $table_name => $relations) {
+						$table = $db->getTable($table_name);
+						foreach ($relations as $relation_name => $callable) {
+							if (is_callable($callable)) {
+								$table->defineVR($relation_name, $callable);
+							} else {
+								throw new \RuntimeException(sprintf(
+									'Custom relation "%s" defined in "%s" for table "%s" expected to be "callable" is "%s".',
+									$relation_name, $provider, $table_name, gettype($callable)));
+							}
+						}
+					}
 				}
 			}
-
-			header('Content-type: application/json');
-			echo json_encode($data);
-			exit;
 		}
 
 		/**
-		 * Send response to client in different format
-		 *
-		 * @param \OZONE\OZ\Core\ResponseHolder $response_holder
+		 * Register custom collections.
 		 *
 		 * @throws \Exception
 		 */
-		public static function say(ResponseHolder $response_holder)
+		private static function registerCustomCollections()
 		{
-			// TODO output in xml
-			self::sayJson($response_holder);
+			$collections_settings = SettingsManager::get('oz.db.collections');
+			$db                   = DbManager::getDb();
+
+			foreach ($collections_settings as $provider => $enabled) {
+				if ($enabled) {
+					try {
+						$rc = new \ReflectionClass($provider);
+						if (!$rc->implementsInterface(TableCollectionsProviderInterface::class)) {
+							throw new \RuntimeException(sprintf('Custom collections provider "%s" should implements "%s".', $provider, TableCollectionsProviderInterface::class));
+						}
+					} catch (\ReflectionException $e) {
+						throw new \RuntimeException(sprintf('Unable to check custom collections provider "%s".', $provider), $e);
+					}
+
+					/**@var TableCollectionsProviderInterface $provider */
+					$def_list = $provider::getCollectionsDefinition();
+
+					foreach ($def_list as $table_name => $relations) {
+						$table = $db->getTable($table_name);
+						foreach ($relations as $collection_name => $callable) {
+							if (is_callable($callable)) {
+								$table->defineCollection($collection_name, $callable);
+							} else {
+								throw new \RuntimeException(sprintf(
+									'Custom collection "%s" defined in "%s" for table "%s" expected to be "callable" is "%s".',
+									$collection_name, $provider, $table_name, gettype($callable)));
+							}
+						}
+					}
+				}
+			}
 		}
 	}

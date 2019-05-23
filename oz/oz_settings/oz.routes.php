@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -8,20 +8,22 @@
 	 * file that was distributed with this source code.
 	 */
 
+	defined('OZ_SELF_SECURITY_CHECK') or die;
+
 	return [
 		// routes that start with `/oz:` are for internal use only
 		// any external request of such route will be rejected
 
 		'oz:error'        => [
-			'path'    => '/oz:error',
-			'handler' => 'OZONE\OZ\WebRoute\Views\ErrorView'
+			'provider' => 'OZONE\OZ\Exceptions\Views\ErrorView'
+		],
+		'oz:redirect'     => [
+			'provider' => 'OZONE\OZ\Web\Views\RedirectView'
 		],
 		'oz-static'       => [
-			'~path'   => '#^/oz-static/.+$#',
-			'handler' => 'OZONE\OZ\FS\Views\GetFilesView'
+			'provider' => 'OZONE\OZ\FS\Views\GetFilesView'
 		],
 		'oz-account-auth' => [
-			'path'    => '/oz-account-auth',
-			'handler' => 'OZONE\OZ\User\Views\AccountAuthView'
+			'provider' => 'OZONE\OZ\User\Views\AccountAuthView'
 		]
 	];

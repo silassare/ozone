@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -42,7 +42,7 @@
 		 */
 		public function passCheck($pass, $known_hash);
 
-		// TODO
+		// TODO implements methods
 		// public function encrypt ( $pass_phrase, $input );
 		// public function decrypt ( $pass_phrase, $input );
 		// public function encryptFile ( $pass_phrase, $file_path, $destination_path );

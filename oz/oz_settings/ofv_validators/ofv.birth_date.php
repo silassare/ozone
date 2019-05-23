@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -12,6 +12,11 @@
 
 	use OZONE\OZ\Core\SettingsManager;
 
+	/**
+	 * @param \OZONE\OZ\Ofv\OFormValidator $ofv
+	 *
+	 * @throws \Exception
+	 */
 	function ofv_birth_date(OFormValidator $ofv)
 	{
 		$birth_date = $ofv->getField('birth_date');
@@ -19,7 +24,7 @@
 		$max_age    = SettingsManager::get('oz.ofv.const', 'OZ_USER_MAX_AGE');
 
 		if (!OFormUtils::isBirthDate($birth_date, $min_age, $max_age)) {
-			$ofv->addError('OZ_FIELD_BIRTH_DATE_INVALID',['input' => $value, 'min' => $min_age, 'max' => $max_age]);
+			$ofv->addError('OZ_FIELD_BIRTH_DATE_INVALID',['input' => $birth_date, 'min' => $min_age, 'max' => $max_age]);
 
 			return;
 		}

@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,44 +11,32 @@
 	namespace OZONE\OZ\FS\Services;
 
 	use OZONE\OZ\Core\BaseService;
-	use OZONE\OZ\Core\URIHelper;
-	use OZONE\OZ\Exceptions\NotFoundException;
-	use OZONE\OZ\FS\FilesUtils;
+	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\FS\GetFilesHelper;
+	use OZONE\OZ\Router\RouteInfo;
+	use OZONE\OZ\Router\Router;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	class GetFiles extends BaseService
 	{
 		/**
-		 * GetFiles constructor.
+		 * @inheritdoc
 		 */
-		public function __construct()
+		public static function registerRoutes(Router $router)
 		{
-			parent::__construct();
-		}
+			$format = SettingsManager::get("oz.files", "OZ_GET_FILE_URI_EXTRA_FORMAT");
 
-		/**
-		 * {@inheritdoc}
-		 *
-		 * @param array $request
-		 *
-		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-		 * @throws \OZONE\OZ\Exceptions\NotFoundException
-		 */
-		public function execute(array $request = [])
-		{
-			$params_orders = [];
+			$options = [
+				'route:name'        => 'oz:files',
+				'oz_file_id'        => '[0-9]+',
+				'oz_file_key'       => '[a-z0-9]+',
+				'oz_file_quality'   => '0|1|2|3',
+				'oz_file_extension' => '[a-z0-9]{1,10}'
+			];
 
-			$file_uri_reg = FilesUtils::genFileURIRegExp($params_orders);
-			$extra_ok     = URIHelper::parseUriExtra($file_uri_reg, $params_orders, $request);
-
-			if (!$extra_ok) {
-				throw new NotFoundException();
-			}
-
-			GetFilesHelper::serveFile($request);
+			$router->get('/files/' . $format, function (RouteInfo $r) {
+				return GetFilesHelper::process($r);
+			}, $options);
 		}
 	}

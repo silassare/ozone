@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -12,20 +12,22 @@
 
 	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 	use Gobl\DBAL\Types\TypeString;
-	use OZONE\OZ\User\UsersUtils;
+	use OZONE\OZ\User\UsersManager;
 
 	final class TypePhone extends TypeString
 	{
+		const PHONE_REG = '~^\+\d{6,15}$~';
+
 		private $registered = null;
 
 		/**
 		 * TypePhone constructor.
 		 *
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function __construct()
 		{
-			parent::__construct(1, 15, '#^\+\d{6,15}$#');
+			parent::__construct(1, 15, self::PHONE_REG);
 		}
 
 		/**
@@ -53,11 +55,14 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 *
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @param $value
+		 * @param $column_name
+		 * @param $table_name
+		 *
+		 * @return mixed|string|null
+		 * @throws \Exception
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
@@ -83,9 +88,9 @@
 			}
 
 			if (!empty($value)) {
-				if ($this->registered === false AND UsersUtils::searchUserWithPhone($value)) {
+				if ($this->registered === false AND UsersManager::searchUserWithPhone($value)) {
 					throw new TypesInvalidValueException('OZ_FIELD_PHONE_ALREADY_REGISTERED', $debug);
-				} elseif ($this->registered === true AND !UsersUtils::searchUserWithPhone($value)) {
+				} elseif ($this->registered === true AND !UsersManager::searchUserWithPhone($value)) {
 					throw new TypesInvalidValueException('OZ_FIELD_PHONE_NOT_REGISTERED', $debug);
 				}
 			}
@@ -94,7 +99,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public static function getInstance(array $options)
 		{
@@ -119,7 +124,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function getCleanOptions()
 		{

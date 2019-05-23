@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -12,20 +12,22 @@
 
 	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 	use Gobl\DBAL\Types\TypeString;
-	use OZONE\OZ\User\UsersUtils;
+	use OZONE\OZ\User\UsersManager;
 
 	final class TypeCC2 extends TypeString
 	{
+		const CC2_REG = '~^[a-zA-Z]{2}$~';
+
 		private $authorized = false;
 
 		/**
 		 * TypeCC2 constructor.
 		 *
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function __construct()
 		{
-			parent::__construct(2, 2, '#^[a-zA-Z]{2}$#');
+			parent::__construct(2, 2, self::CC2_REG);
 		}
 
 		/**
@@ -39,7 +41,12 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @param $value
+		 * @param $column_name
+		 * @param $table_name
+		 *
+		 * @return string
+		 * @throws \Exception
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
@@ -62,10 +69,10 @@
 			if (!empty($value)) {
 				$value = strtoupper($value); //<-- important
 				if ($this->authorized) {
-					if (!UsersUtils::authorizedCountry($value)) {
+					if (!UsersManager::authorizedCountry($value)) {
 						throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_NOT_ALLOWED', $debug);
 					}
-				} elseif (!UsersUtils::getCountryObject($value)) {
+				} elseif (!UsersManager::getCountryObject($value)) {
 					throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug);
 				}
 			}
@@ -74,7 +81,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public static function getInstance(array $options)
 		{
@@ -93,7 +100,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function getCleanOptions()
 		{

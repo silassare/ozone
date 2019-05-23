@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -11,15 +11,16 @@
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 // =============== GOOD PRACTICE
-	// Lets write clean code -1 same as E_ALL
+	// help us to write clean code -1 same as E_ALL
 	error_reporting(-1);
-	// error_reporting( 0 );
 
 	// Improves PHP configuration
 	ini_set('upload_max_filesize', '100M');
 	ini_set('post_max_size', '100M');
 	ini_set('default_charset', 'UTF-8');
 	ini_set('magic_quotes_runtime', 0);
+	// stop PHP sending a Content-Type automatically
+	ini_set('default_mimetype', '');
 
 	// Save bandwidth
 	ini_set("zlib.output_compression", 'On');

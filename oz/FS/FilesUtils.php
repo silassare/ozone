@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -14,8 +14,8 @@
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Db\OZFile;
 	use OZONE\OZ\Db\OZFilesQuery;
-	use OZONE\OZ\Exceptions\RuntimeException;
-	use OZONE\OZ\Utils\StringUtils;
+	use OZONE\OZ\Exceptions\InternalErrorException;
+	use OZONE\OZ\Http\Stream;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -110,8 +110,6 @@
 		 * @param string $type the file mime type
 		 *
 		 * @return string
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function getExtension($path, $type)
 		{
@@ -132,8 +130,6 @@
 		 * @param string $ext the file extension
 		 *
 		 * @return string the mime type
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function extensionToMimeType($ext)
 		{
@@ -155,8 +151,6 @@
 		 * @param string $type the file mime type
 		 *
 		 * @return string    the file extension that match to this file mime type
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function mimeTypeToExtension($type)
 		{
@@ -209,8 +203,7 @@
 		 * @param string              $destination the thumbnail destination path
 		 *
 		 * @return bool true if successful, false if fails
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \Exception
 		 */
 		public static function makeThumb(OZFile $file, $destination)
 		{
@@ -286,30 +279,25 @@
 		/**
 		 * Parse an alias file
 		 *
-		 * @param string $alias_src the alias file source path
+		 * @param \OZONE\OZ\Http\Stream $alias
 		 *
 		 * @return \OZONE\OZ\Db\OZFile
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
-		public static function getFileFromAlias($alias_src)
+		public static function getFileFromAlias(Stream $alias)
 		{
-			if (empty($alias_src) || !file_exists($alias_src) || !is_file($alias_src) || !is_readable($alias_src)) {
-				throw new RuntimeException('OZ_FILE_ALIAS_UNKNOWN');
-			}
-
-			$desc = file_get_contents($alias_src);
-			$data = json_decode($desc, true);
+			$data = json_decode($alias->getContents(), true);
 
 			if (!is_array($data) OR !array_key_exists('file_id', $data) OR !array_key_exists('file_key', $data)) {
-				throw new RuntimeException('OZ_FILE_ALIAS_PARSE_ERROR');
+				throw new InternalErrorException('OZ_FILE_ALIAS_PARSE_ERROR');
 			}
 
 			$f = FilesUtils::getFileWithId($data['file_id'], $data['file_key']);
 
 			if (!$f) {
-				throw new RuntimeException('OZ_FILE_ALIAS_NOT_FOUND', $data);
+				throw new InternalErrorException('OZ_FILE_ALIAS_NOT_FOUND', $data);
 			}
 
 			return $f;
@@ -351,36 +339,11 @@
 		}
 
 		/**
-		 * Generate regexp used to match file URI.
-		 *
-		 * @param array &$fields
-		 *
-		 * @return string
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 */
-		public static function genFileURIRegExp(array &$fields)
-		{
-			$format = SettingsManager::get("oz.files", "OZ_GET_FILE_URI_EXTRA_FORMAT");
-
-			$parts = [
-				"oz_file_id"        => "([0-9]+)",
-				"oz_file_key"       => "([a-z0-9]+)",
-				"oz_file_quality"   => "(0|1|2|3)",
-				"oz_file_extension" => "([a-zA-Z0-9]{1,10})"
-			];
-
-			return StringUtils::stringFormatToRegExp($format, $parts, $fields);
-		}
-
-		/**
-		 * Create a new file in temp directory with base64 data.
+		 * Creates a new file in temp directory with base64 data.
 		 *
 		 * @param string $base64_string
 		 *
 		 * @return bool|string|array
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
 		 */
 		public static function base64ToFile($base64_string)
 		{

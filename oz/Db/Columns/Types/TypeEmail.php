@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -12,7 +12,7 @@
 
 	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 	use Gobl\DBAL\Types\TypeString;
-	use OZONE\OZ\User\UsersUtils;
+	use OZONE\OZ\User\UsersManager;
 
 	final class TypeEmail extends TypeString
 	{
@@ -21,7 +21,7 @@
 		/**
 		 * TypeEmail constructor.
 		 *
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function __construct()
 		{
@@ -53,7 +53,12 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @param $value
+		 * @param $column_name
+		 * @param $table_name
+		 *
+		 * @return string
+		 * @throws \Exception
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
@@ -76,9 +81,9 @@
 			if (!empty($value)) {
 				if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
 					throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug);
-				} elseif ($this->registered === false AND UsersUtils::searchUserWithEmail($value)) {
+				} elseif ($this->registered === false AND UsersManager::searchUserWithEmail($value)) {
 					throw new TypesInvalidValueException('OZ_FIELD_EMAIL_ALREADY_REGISTERED', $debug);
-				} elseif ($this->registered === true AND !UsersUtils::searchUserWithEmail($value)) {
+				} elseif ($this->registered === true AND !UsersManager::searchUserWithEmail($value)) {
 					throw new TypesInvalidValueException('OZ_FIELD_EMAIL_NOT_REGISTERED', $debug);
 				}
 			}
@@ -87,7 +92,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public static function getInstance(array $options)
 		{
@@ -112,7 +117,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function getCleanOptions()
 		{

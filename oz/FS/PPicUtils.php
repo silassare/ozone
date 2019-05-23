@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -12,7 +12,8 @@
 
 	use OZONE\OZ\Core\Assert;
 	use OZONE\OZ\Core\SettingsManager;
-	use OZONE\OZ\Exceptions\RuntimeException;
+	use OZONE\OZ\Exceptions\InternalErrorException;
+	use OZONE\OZ\Http\UploadedFile;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -38,8 +39,7 @@
 		 * @param string $destination the profile pic destination
 		 * @param array  $coordinates the crop zone coordinates
 		 *
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
+		 * @throws \Exception
 		 */
 		private function makeProfilePic($source, $destination, array $coordinates)
 		{
@@ -64,26 +64,22 @@
 					$img_utils_obj->cropAndSave($destination, $quality, $size_x, $size_y, $coordinates, false);
 				}
 			} else { /*this file is not a valid image*/
-				throw new RuntimeException('OZ_IMAGE_NOT_VALID');
+				throw new InternalErrorException('OZ_IMAGE_NOT_VALID');
 			}
 		}
 
 		/**
 		 * Sets a profile picture with a given file id and key of an existing file
 		 *
-		 * @param array      $coordinate the crop zone coordinate
 		 * @param string|int $file_id    the file id
 		 * @param string     $file_key   the file key
+		 * @param array      $coordinate the crop zone coordinate
 		 * @param string     $file_label the file log label
 		 *
 		 * @return string    the profile picid
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 * @throws \Exception
 		 */
-		public function fromFileId(array $coordinate, $file_id, $file_key, $file_label = 'OZ_FILE_LABEL_PPIC')
+		public function fromFileId($file_id, $file_key, array $coordinate, $file_label = 'OZ_FILE_LABEL_PPIC')
 		{
 			$f = FilesUtils::getFileWithId($file_id, $file_key);
 
@@ -111,18 +107,14 @@
 		/**
 		 * Sets a profile picture from uploaded file
 		 *
-		 * @param array  $coordinate    the crop zone coordinate
-		 * @param array  $uploaded_file the uploaded file
-		 * @param string $file_label    the file log label
+		 * @param \OZONE\OZ\Http\UploadedFile $uploaded_file the uploaded file
+		 * @param array                       $coordinate    the crop zone coordinate
+		 * @param string                      $file_label    the file log label
 		 *
 		 * @return string    the profile picid
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-		 * @throws \OZONE\OZ\Exceptions\RuntimeException
-		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 * @throws \Exception
 		 */
-		public function fromUploadedFile(array $coordinate, $uploaded_file, $file_label = 'OZ_FILE_LABEL_PPIC')
+		public function fromUploadedFile(UploadedFile $uploaded_file, array $coordinate, $file_label = 'OZ_FILE_LABEL_PPIC')
 		{
 			$user_dir   = FilesUtils::getUserRootDirectory($this->uid);
 			$upload_obj = new FilesUploadHandler();

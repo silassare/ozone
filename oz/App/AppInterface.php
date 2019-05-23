@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -10,25 +10,46 @@
 
 	namespace OZONE\OZ\App;
 
-	use OZONE\OZ\Exceptions\BaseException;
-
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	interface AppInterface
 	{
 		/**
-		 * Is called before the requested service is executed.
+		 * AppInterface constructor.
+		 */
+		public function __construct();
+
+		/**
+		 * ==============================================================
+		 * HOOKS
+		 * ==============================================================
+		 */
+
+		/**
+		 * Init hook. Is called before the current request is executed.
 		 *
 		 * @return void
 		 */
-		public static function onInit();
+		public function onInit();
 
 		/**
-		 * Is called when some unhandled ozone error occurs.
+		 * Unhandled exception hook. Is called when an unhandled exception occurs.
 		 *
-		 * @param \OZONE\OZ\Exceptions\BaseException $err The ozone error object.
+		 * @param \Exception $e The exception.
 		 *
-		 * @return bool  Returns True for cancel error, False for log error and exit.
+		 * @return void
 		 */
-		public static function onError(BaseException $err);
+		public function onUnhandledException(\Exception $e);
+
+		/**
+		 * Unhandled error hook. Is called when an unhandled error occurs.
+		 *
+		 * @param int    $code    the error code
+		 * @param string $message the error message
+		 * @param string $file    the file where it occurs
+		 * @param int    $line    the file line where it occurs
+		 *
+		 * @return void
+		 */
+		public function onUnhandledError($code, $message, $file, $line);
 	}

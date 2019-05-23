@@ -1,6 +1,6 @@
 <?php
 	/**
-	 * Copyright (c) Emile Silas Sare <emile.silas@gmail.com>
+	 * Copyright (c) 2017-present, Emile Silas Sare
 	 *
 	 * This file is part of OZone (O'Zone) package.
 	 *
@@ -12,9 +12,11 @@
 
 	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 	use Gobl\DBAL\Types\TypeString;
-	use OZONE\OZ\Core\SessionsData;
+	use OZONE\OZ\Core\DbManager;
+	use OZONE\OZ\Exceptions\InternalErrorException;
 	use OZONE\OZ\FS\FilesUploadHandler;
 	use OZONE\OZ\FS\FilesUtils;
+	use OZONE\OZ\Http\UploadedFile;
 
 	class TypeFile extends TypeString
 	{
@@ -29,7 +31,7 @@
 		/**
 		 * TypeFile constructor.
 		 *
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function __construct()
 		{
@@ -123,64 +125,37 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 * @throws \Exception
 		 */
 		public function validate($value, $column_name, $table_name)
 		{
 			$debug = [
-				"value" => $value
+				'value' => $value
 			];
 
-			if (!isset($_FILES[$value])) {
-				throw new TypesInvalidValueException("OZ_FILE_FIELD_NOT_FOUND", $debug);
-			}
-
-			$upload = $_FILES[$value];
-			$uid    = SessionsData::get('ozone_user:id');
-			$uid    = empty($uid) ? 1 : $uid;
+			$upload = $value;
+			// TODO find a way to set the real user id
+			$uid = '1';
 
 			if ($this->isMultiple()) {
-				if (!isset($upload["name"]) OR !is_array($upload["name"])) {
-					// this is not a valid tree dimensional array
-					// may be it is not a multiple file upload
-					throw new TypesInvalidValueException("OZ_FILE_MULTIPLE_FILE_REQUIRED", $debug);
+				if (!is_array($value)) {
+					throw new TypesInvalidValueException("OZ_FILE_MULTIPLE_FILE_REQUIRED");
 				}
 
-				$total = count($upload["name"]);
+				$uploaded_files = $value;
+				$total          = count($uploaded_files);
 
 				if ($total < $this->file_min_count OR $total > $this->file_max_count) {
-					throw new TypesInvalidValueException("OZ_FILE_COUNT_OUT_OF_LIMIT", $debug);
+					throw new TypesInvalidValueException("OZ_FILE_COUNT_OUT_OF_LIMIT");
 				}
 
-				foreach ($upload['size'] as $index => $size) {
-					if (!$this->checkFileSize($size)) {
-						throw new TypesInvalidValueException("OZ_FILE_SIZE_OUT_OF_LIMIT", $debug);
-					}
-				}
-
-				foreach ($upload['type'] as $index => $mime) {
-					if (!$this->checkFileMime($mime)) {
-						throw new TypesInvalidValueException("OZ_FILE_MIME_INVALID", $debug);
-					}
-				}
-
-				$files = self::computeMultipleFilesUploaded($upload, $uid, $this->file_label, $debug);
+				$files = $this->computeUploadedFiles($uploaded_files, $uid, $this->file_label, $debug);
 				$value = json_encode($files);
 			} else {
-				if (!empty($upload["tmp_name"])) {
-					$size = $upload['size'];
-
-					if (!$this->checkFileSize($size)) {
-						throw new TypesInvalidValueException("OZ_FILE_SIZE_OUT_OF_LIMIT", $debug);
-					}
-
-					$mime = $upload['type'];
-					if (!$this->checkFileMime($mime)) {
-						throw new TypesInvalidValueException("OZ_FILE_MIME_INVALID", $debug);
-					}
-
-					$value = self::computeSingleFileUploaded($upload, $uid, $this->file_label, $debug);
+				if ($upload) {
+					$results = $this->computeUploadedFiles([$upload], $uid, $this->file_label, $debug);
+					$value   = $results[0];
 				} elseif ($default = $this->getDefault()) {
 					$value = $default;
 				} else {
@@ -192,7 +167,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public static function getInstance(array $options)
 		{
@@ -231,7 +206,7 @@
 		}
 
 		/**
-		 * {@inheritdoc}
+		 * @inheritdoc
 		 */
 		public function getCleanOptions()
 		{
@@ -248,75 +223,83 @@
 		}
 
 		/**
-		 * @param $uploaded_file
-		 * @param $uid
-		 * @param $file_label
-		 * @param $debug
+		 * @param \OZONE\OZ\Http\UploadedFile[] $uploaded_files
+		 * @param string                        $uid
+		 * @param string                        $file_label
+		 * @param array                         $debug
 		 *
-		 * @return string
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @return string[]
 		 * @throws \Exception
 		 */
-		public static function computeSingleFileUploaded($uploaded_file, $uid, $file_label, $debug)
+		protected function computeUploadedFiles(array $uploaded_files, $uid, $file_label, $debug)
 		{
-			$user_dir   = FilesUtils::getUserRootDirectory($uid);
-			$upload_obj = new FilesUploadHandler();
-
-			$f = $upload_obj->moveUploadedFile($uploaded_file, $user_dir);
-
-			if (!$f) {
-				throw new TypesInvalidValueException($upload_obj->lastErrorMessage(), $debug);
+			foreach ($uploaded_files as $k => $item) {
+				if ($item instanceof UploadedFile) {
+					$this->checkUploadedFile($item);
+				} elseif ($this->isMultiple()) {
+					$debug['index'] = $k;
+					throw new TypesInvalidValueException('invalid_file_upload', $debug);
+				} else {
+					throw new TypesInvalidValueException('invalid_file_upload', $debug);
+				}
 			}
 
-			$f->setUserId($uid)
-			  ->setLabel($file_label)
-				// don't forget to save
-			  ->save();
+			$user_dir = FilesUtils::getUserRootDirectory($uid);
+			$fuh      = new FilesUploadHandler();
+			$error    = false;
 
-			return $f->getId() . '_' . $f->getKey();
-		}
+			/**@var \OZONE\OZ\Db\OZFile[] $file_list */
+			$file_list = [];
 
-		/**
-		 * @param $uploaded_files
-		 * @param $uid
-		 * @param $file_label
-		 * @param $debug
-		 *
-		 * @return array
-		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-		 * @throws \Gobl\ORM\Exceptions\ORMException
-		 * @throws \Exception
-		 */
-		public static function computeMultipleFilesUploaded($uploaded_files, $uid, $file_label, $debug)
-		{
-			$user_dir   = FilesUtils::getUserRootDirectory($uid);
-			$upload_obj = new FilesUploadHandler();
+			foreach ($uploaded_files as $k => $file) {
+				$fo = $fuh->moveUploadedFile($file, $user_dir);
 
-			$f_list = $upload_obj->moveMultipleFilesUpload($uploaded_files, $user_dir);
+				if (!$fo) {
+					$error = true;
+					break;
+				}
 
-			if (!$f_list) {
-				throw new TypesInvalidValueException($upload_obj->lastErrorMessage(), $debug);
+				$file_list[$k] = $fo;
+			}
+
+			if ($error) {
+				foreach ($file_list as $f) {
+					$fuh->safeDelete($f);
+				}
+
+				throw new TypesInvalidValueException($fuh->lastErrorMessage(), $debug);
 			}
 
 			$data = [];
+			$db   = DbManager::getDb();
 
-			foreach ($f_list as $f) {
-				$f->setUserId($uid)
-				  ->setLabel($file_label);
-				// don't forget to save
-				$f->save();
+			try {
+				$db->beginTransaction();
 
-				$data[] = $f->getId() . '_' . $f->getKey();
+				foreach ($file_list as $f) {
+					$f->setUserId($uid)
+					  ->setLabel($file_label)
+					  ->save();
+
+					$data[] = $f->getId() . '_' . $f->getKey();
+				}
+			} catch (\Throwable $e) {
+				$db->rollBack();
+
+				foreach ($file_list as $f) {
+					$fuh->safeDelete($f);
+				}
+
+				throw new InternalErrorException('Unable to save uploaded files to database.', $debug, $e);
 			}
+
+			$db->commit();
 
 			return $data;
 		}
 
 		/**
-		 * Check file count.
+		 * Checks file count.
 		 *
 		 * @param integer $total
 		 *
@@ -328,7 +311,7 @@
 		}
 
 		/**
-		 * Check file size.
+		 * Checks file size.
 		 *
 		 * @param integer $size
 		 *
@@ -340,7 +323,7 @@
 		}
 
 		/**
-		 * Check file mime.
+		 * Checks file mime.
 		 *
 		 * @param string $mime
 		 *
@@ -349,5 +332,30 @@
 		protected function checkFileMime($mime)
 		{
 			return !count($this->mime_types) OR in_array($mime, $this->mime_types);
+		}
+
+		/**
+		 * Checks uploaded file.
+		 *
+		 * @param \OZONE\OZ\Http\UploadedFile $upload
+		 *
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+		 */
+		protected function checkUploadedFile(UploadedFile $upload)
+		{
+			$error              = $upload->getError();
+			$debug['file_name'] = $upload->getClientFilename();
+
+			if ($error != UPLOAD_ERR_OK) {
+				throw new TypesInvalidValueException(FilesUploadHandler::uploadErrorMessage($error), $debug);
+			}
+
+			if (!$this->checkFileSize($upload->getSize())) {
+				throw new TypesInvalidValueException("OZ_FILE_SIZE_OUT_OF_LIMIT", $debug);
+			}
+
+			if (!$this->checkFileMime($upload->getClientMediaType())) {
+				throw new TypesInvalidValueException("OZ_FILE_MIME_INVALID", $debug);
+			}
 		}
 	}
