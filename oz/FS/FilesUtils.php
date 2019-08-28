@@ -191,7 +191,7 @@
 		 */
 		public static function isFileKeyLike($str)
 		{
-			$file_key_reg = "#^[a-zA-Z0-9]{32}$#";
+			$file_key_reg = "~^[a-zA-Z0-9]{32}$~";
 
 			return is_string($str) AND preg_match($file_key_reg, $str);
 		}
