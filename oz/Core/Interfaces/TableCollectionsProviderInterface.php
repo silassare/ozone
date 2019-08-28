@@ -17,16 +17,14 @@
 		/**
 		 * Returns custom collections definition.
 		 *
-		 * ```
+		 * ```php
 		 * [
-		 *    'table_A_name' => [
+		 *    'table_name' => [
 		 *         'collection_1' => callable,
+		 *            ...
 		 *         'collection_n' => callable
 		 *     ],
-		 *    'table_B_name' => [
-		 *         'collection_1' => callable,
-		 *         'collection_n' => callable
-		 *     ]
+		 *      ...
 		 * ]
 		 * ```
 		 *

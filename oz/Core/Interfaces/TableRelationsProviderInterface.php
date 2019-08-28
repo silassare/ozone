@@ -17,16 +17,14 @@
 		/**
 		 * Returns custom relations definition.
 		 *
-		 * ```
+		 * ```php
 		 * [
-		 *    'table_A_name' => [
+		 *    'table_name' => [
 		 *         'relation_1' => callable,
+		 *            ...
 		 *         'relation_n' => callable
 		 *     ],
-		 *    'table_B_name' => [
-		 *         'relation_1' => callable,
-		 *         'relation_n' => callable
-		 *     ]
+		 *      ...
 		 * ]
 		 * ```
 		 *
