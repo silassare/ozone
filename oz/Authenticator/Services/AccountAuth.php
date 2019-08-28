@@ -42,11 +42,9 @@
 
 			$users_manager->assertUserVerified();
 
-			$client = $context->getClient();
-			$data   = [
-				'api_key' => $client->getApiKey(),
-				'token'   => $users_manager->getCurrentSessionToken(),
-				'uid'     => $users_manager->getCurrentUserId()
+			$data = [
+				'token' => $users_manager->getCurrentSessionToken(),
+				'uid'   => $users_manager->getCurrentUserId()
 			];
 
 			$this->getResponseHolder()
@@ -71,21 +69,15 @@
 
 			$data = self::decode($account);
 
-			Assert::assertForm($data, [
-				'token',
-				'api_key',
-				'uid'
-			], new ForbiddenException('OZ_ERROR_INVALID_ACCOUNT_AUTH'));
+			Assert::assertForm($data, ['token', 'uid'], new ForbiddenException('OZ_ERROR_INVALID_ACCOUNT_AUTH'));
 
 			$verified = false;
 			$user     = null;
-			$api_key  = $data['api_key'];
 			$token    = $data['token'];
 			$uid      = $data['uid'];
 
 			$sq      = new OZSessionsQuery();
-			$session = $sq->filterByClientApiKey($api_key)
-						  ->filterByToken($token)
+			$session = $sq->filterByToken($token)
 						  ->filterByUserId($uid)
 						  ->filterByExpire(time(), Rule::OP_GT)
 						  ->find(1)
