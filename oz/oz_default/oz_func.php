@@ -76,29 +76,23 @@
 		function oz_logger($in)
 		{
 			$prev_sep = "\n========previous========\n";
-			$date     = date('Y-m-d H:i:s ');
+			$date     = date('Y-m-d H:i:s');
 			$log_file = OZ_LOG_DIR . 'debug.log';
 
 			if (is_scalar($in)) {
 				$log = (string)$in;
-			} elseif ($in instanceof BaseException) {
-				$e   = $in;
-				$log = BaseException::throwableToString($e);
-
-				while ($e = $e->getPrevious()) {
-					$log .= $prev_sep . BaseException::throwableToString($e);
-				}
-			} elseif ($in instanceof Exception) {
-				$e   = $in;
-				$log = BaseException::throwableToString($e);
-
-				while ($e = $e->getPrevious()) {
-					$log .= $prev_sep . BaseException::throwableToString($e);
-				}
 			} elseif (is_array($in)) {
 				$log = var_export($in, true);
+			} elseif ($in instanceof Exception OR $in instanceof Error) {
+				$e   = $in;
+				$log = BaseException::throwableToString($e);
+
+				while ($e = $e->getPrevious()) {
+					$log .= $prev_sep . BaseException::throwableToString($e);
+				}
 			} else {
 				$log = gettype($in);
+				// $log = var_export(debug_backtrace(),true);
 			}
 
 			$log = str_replace(["\\n", "\\t", "\/"], ["\n", "\t", "/"], $log);
