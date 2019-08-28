@@ -20,16 +20,16 @@
 		/**
 		 * asserts if the result of a given expression is evaluated to true
 		 *
-		 * @param mixed                  $expression the expression
+		 * @param mixed                  $assertion the assertion
 		 * @param \Exception|string|null $error_msg  the error message
 		 * @param mixed                  $error_data the error data
 		 *
 		 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 		 * @throws string
 		 */
-		public static function assertAuthorizeAction($expression, $error_msg = 'OZ_ERROR_NOT_ALLOWED', $error_data = null)
+		public static function assertAuthorizeAction($assertion, $error_msg = 'OZ_ERROR_NOT_ALLOWED', $error_data = null)
 		{
-			if (!$expression) {
+			if (!$assertion) {
 				if (!self::isException($error_msg)) {
 					$error_msg = new UnauthorizedActionException($error_msg, $error_data);
 				}
