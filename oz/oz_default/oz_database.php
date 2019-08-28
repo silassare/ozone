@@ -355,9 +355,10 @@
 					'null' => true
 				],
 				'name'     => [
-					'type' => 'string',
-					'max'  => 100,
-					'null' => true
+					'type'     => 'string',
+					'max'      => 100,
+					'truncate' => true,
+					'null'     => true
 				],
 				'label'    => [
 					'type' => 'string'
