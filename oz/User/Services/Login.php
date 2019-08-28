@@ -68,7 +68,7 @@
 		 */
 		public static function registerRoutes(Router $router)
 		{
-			$router->get('/login', function (RouteInfo $r) {
+			$router->post('/login', function (RouteInfo $r) {
 				$context = $r->getContext();
 				$s       = new Login($context);
 				$s->actionLogin($context);

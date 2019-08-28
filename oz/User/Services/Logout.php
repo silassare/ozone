@@ -43,7 +43,7 @@
 		 */
 		public static function registerRoutes(Router $router)
 		{
-			$router->get('/logout', function (RouteInfo $r) {
+			$router->post('/logout', function (RouteInfo $r) {
 				$context = $r->getContext();
 				$s       = new Logout($context);
 				$s->actionLogout($context);

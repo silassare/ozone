@@ -109,14 +109,14 @@
 		public static function registerRoutes(Router $router)
 		{
 			$router
-				->patch('/users/{uid}/password/edit', function (RouteInfo $r) {
+				->map(['PATCH', 'POST'], '/users/{uid}/password/edit', function (RouteInfo $r) {
 					$context = $r->getContext();
 					$s       = new Password($context);
 					$s->actionEditPassAdmin($context, $r->getArg('uid'));
 
 					return $s->writeResponse($context);
 				}, ['uid' => '\d+'])
-				->patch('/users/password/edit', function (RouteInfo $r) {
+				->map(['PATCH', 'POST'], '/users/password/edit', function (RouteInfo $r) {
 					$context = $r->getContext();
 					$s       = new Password($context);
 					$s->actionEditOwnPass($context);

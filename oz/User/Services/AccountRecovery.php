@@ -111,7 +111,7 @@
 		 */
 		public static function registerRoutes(Router $router)
 		{
-			$router->get('/account-recovery', function (RouteInfo $r) {
+			$router->post('/account-recovery', function (RouteInfo $r) {
 				$context = $r->getContext();
 				$s       = new AccountRecovery($context);
 				$s->actionRecover($context);

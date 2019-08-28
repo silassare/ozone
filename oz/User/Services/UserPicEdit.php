@@ -85,7 +85,7 @@
 		 */
 		public static function registerRoutes(Router $router)
 		{
-			$router->patch('/users/pic/edit', function (RouteInfo $r) {
+			$router->map(['PATCH', 'POST'], '/users/pic/edit', function (RouteInfo $r) {
 				$context = $r->getContext();
 				$s       = new UserPicEdit($context);
 				$s->actionPicEdit($context);
