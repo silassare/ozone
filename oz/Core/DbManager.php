@@ -133,7 +133,7 @@
 		 * @param \OZONE\OZ\Core\Context $context
 		 * @param string                 $table_name
 		 *
-		 * @return \OZONE\OZ\Core\CRUDHandlerBase|null
+		 * @return \OZONE\OZ\Core\CRUDHandler|null
 		 */
 		public static function instantiateCRUDHandler(Context $context, $table_name)
 		{
@@ -141,10 +141,10 @@
 			if ($crud_handler) {
 				try {
 					$rc = new \ReflectionClass($crud_handler);
-					if ($rc->isSubclassOf(CRUDHandlerBase::class)) {
+					if ($rc->isSubclassOf(CRUDHandler::class)) {
 						return new $crud_handler($context);
 					} else {
-						throw new \RuntimeException(sprintf('CRUD handler "%s" should extends "%s".', $table_name, CRUDHandlerBase::class));
+						throw new \RuntimeException(sprintf('CRUD handler "%s" should extends "%s".', $table_name, CRUDHandler::class));
 					}
 				} catch (\ReflectionException $e) {
 					throw new \RuntimeException(sprintf('Unable to instantiate CRUD handler: "%s" -> "%s"', $table_name, $crud_handler), $e);
