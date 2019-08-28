@@ -16,9 +16,9 @@
 
 	class Router
 	{
-		const STATUS_NOT_FOUND          = 0;
-		const STATUS_FOUND              = 1;
-		const STATUS_METHOD_NOT_ALLOWED = 2;
+		const NOT_FOUND          = 0;
+		const FOUND              = 1;
+		const METHOD_NOT_ALLOWED = 2;
 
 		private $allowedMethods = [
 			'CONNECT' => 1,
@@ -139,11 +139,11 @@
 			}
 
 			if (isset($found)) {
-				$status = self::STATUS_FOUND;
+				$status = self::FOUND;
 			} elseif (!empty($static) OR !empty($dynamic)) {
-				$status = self::STATUS_METHOD_NOT_ALLOWED;
+				$status = self::METHOD_NOT_ALLOWED;
 			} else {
-				$status = self::STATUS_NOT_FOUND;
+				$status = self::NOT_FOUND;
 			}
 
 			return [

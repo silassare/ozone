@@ -408,14 +408,16 @@
 		 * @return \OZONE\OZ\Http\Response
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
-		public function responseReadyHook(Response $response)
+		public function responseReady(Response $response)
 		{
-			if ($this->started) {
-				$this->save();
+			if ($this->context->getClient()) {
+				if ($this->started) {
+					$this->save();
 
-				return $this->setCookie($response);
-			} elseif ($this->delete_cookie) {
-				return $this->deleteCookie($response);
+					return $this->setCookie($response);
+				} elseif ($this->delete_cookie) {
+					return $this->deleteCookie($response);
+				}
 			}
 
 			return $response;
@@ -431,7 +433,11 @@
 		{
 			$client = $this->context->getClient();
 
-			return self::persist($this->id, $this->store->getStoreData(), $client);
+			if ($client) {
+				return self::persist($this->id, $this->store->getStoreData(), $client);
+			}
+
+			return null;
 		}
 
 		/**
@@ -481,10 +487,16 @@
 
 			$context       = $this->context;
 			$cookie_params = session_get_cookie_params();
-			$lifetime      = min($cfg_lifetime, $context->getClient()
-														->getSessionLifeTime());
-			$httponly      = true;
-			$domain        = ($cfg_domain === 'self') ? $context->getHost() : $cfg_domain;
+			$lifetime      = 60 * 60;
+			$client        = $context->getClient();
+
+			if ($client) {
+				$lifetime = $client->getSessionLifeTime();
+			}
+
+			$lifetime = min($cfg_lifetime, $lifetime);
+			$httponly = true;
+			$domain   = ($cfg_domain === 'self') ? $context->getHost() : $cfg_domain;
 
 			$path = $context->getRequest()
 							->getUri()

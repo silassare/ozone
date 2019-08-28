@@ -179,7 +179,7 @@
 			}
 			// updates settings
 			self::$as_loaded[$setting_file] = $settings;
-			self::merge($setting_group_name, $settings);
+			self::override($setting_group_name, $settings);
 		}
 
 		/**
@@ -208,7 +208,7 @@
 							}
 
 							self::$as_loaded[$setting_file] = $result;
-							self::merge($setting_group_name, $result);
+							self::override($setting_group_name, $result);
 						}
 					}
 				}
@@ -228,18 +228,35 @@
 		}
 
 		/**
-		 * merge settings.
+		 * override settings.
 		 *
 		 * @param string $setting_group_name the setting group name.
 		 * @param array  $data
 		 */
-		private static function merge($setting_group_name, array $data)
+		private static function override($setting_group_name, array $data)
 		{
 			if (!array_key_exists($setting_group_name, self::$settings_map)) {
 				self::$settings_map[$setting_group_name] = $data;
 			} else {
-				self::$settings_map[$setting_group_name] = array_replace_recursive(self::$settings_map[$setting_group_name], $data);
+				self::$settings_map[$setting_group_name] = self::merge(self::$settings_map[$setting_group_name], $data);
 			}
+		}
+
+		/**
+		 * settings merge strategy.
+		 *
+		 * @param array $current
+		 * @param array $data
+		 *
+		 * @return array
+		 */
+		public static function merge(array $current, array $data)
+		{
+			if (is_int(key($current))) {
+				return array_merge($current, $data);
+			}
+
+			return array_replace_recursive($current, $data);
 		}
 
 		/**

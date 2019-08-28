@@ -20,6 +20,8 @@
 	use OZONE\OZ\Event\EventManager;
 	use OZONE\OZ\Exceptions\BaseException;
 	use OZONE\OZ\Exceptions\InternalErrorException;
+	use OZONE\OZ\Hooks\HooksManager;
+	use OZONE\OZ\Hooks\Interfaces\HookInterface;
 	use OZONE\OZ\Http\Environment;
 	use OZONE\OZ\Lang\Polyglot;
 	use OZONE\OZ\Loader\ClassLoader;
@@ -37,8 +39,20 @@
 		const API_KEY_REG          = '#^[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$#';
 		const INTERNAL_PATH_PREFIX = '/oz:';
 
+		/**
+		 * @var \OZONE\OZ\Router\Router
+		 */
 		private static $api_router;
+
+		/**
+		 * @var \OZONE\OZ\Router\Router
+		 */
 		private static $web_router;
+
+		/**
+		 * @var \OZONE\OZ\Hooks\HooksManager
+		 */
+		private static $hook_manager;
 
 		/**
 		 * The current running app
@@ -114,15 +128,18 @@
 		}
 
 		/**
-		 * Returns the router with all Api routes registered.
+		 * Returns the router with all API routes registered.
+		 *
+		 * @return \OZONE\OZ\Router\Router
 		 */
 		public static function getApiRouter()
 		{
 			if (!isset(self::$api_router)) {
 				self::$api_router = new Router();
 
-				$api_routes = SettingsManager::get('oz.routes');
-				$api_routes += SettingsManager::get('oz.routes.api');
+				$a          = SettingsManager::get('oz.routes');
+				$b          = SettingsManager::get('oz.routes.api');
+				$api_routes = SettingsManager::merge($a, $b);
 
 				foreach ($api_routes as $options) {
 					/** @var \OZONE\OZ\Router\RouteProviderInterface $provider */
@@ -136,15 +153,18 @@
 		}
 
 		/**
-		 * Returns the router with all web routes registered.
+		 * Returns the router with all WEB routes registered.
+		 *
+		 * @return \OZONE\OZ\Router\Router
 		 */
 		public static function getWebRouter()
 		{
 			if (!isset(self::$web_router)) {
 				self::$web_router = new Router();
 
-				$web_routes = SettingsManager::get('oz.routes');
-				$web_routes += SettingsManager::get('oz.routes.web');
+				$a          = SettingsManager::get('oz.routes');
+				$b          = SettingsManager::get('oz.routes.web');
+				$web_routes = SettingsManager::merge($a, $b);
 
 				foreach ($web_routes as $options) {
 					/** @var \OZONE\OZ\Router\RouteProviderInterface $provider */
@@ -158,20 +178,36 @@
 		}
 
 		/**
-		 * Creates instance of class for a given class name and arguments.
+		 * Returns the hook manager with all hooks registered.
 		 *
-		 * @param string $class_name The full qualified class name to instantiate.
-		 *
-		 * @return object
-		 * @throws \ReflectionException
+		 * @return \OZONE\OZ\Hooks\HooksManager
 		 */
-		public static function createInstance($class_name)
+		public static function getHooksManager()
 		{
-			$c_args = func_get_args();
+			if (!isset(self::$hook_manager)) {
+				self::$hook_manager = new HooksManager();
 
-			array_shift($c_args);
+				$hooks = SettingsManager::get('oz.hooks');
 
-			return ClassLoader::instantiateClass($class_name, $c_args);
+				foreach ($hooks as $options) {
+					/** @var \OZONE\OZ\Hooks\Interfaces\HookInterface $hook */
+					$hook     = $options['hook'];
+					$priority = isset($options['priority']) ? $options['priority'] : HookInterface::RUN_DEFAULT;
+
+					try {
+						$rc = new \ReflectionClass($hook);
+						if (!$rc->implementsInterface(HookInterface::class)) {
+							throw new \RuntimeException(sprintf('Hook class "%s" should implements "%s".', $hook, HookInterface::class));
+						}
+					} catch (\ReflectionException $e) {
+						throw new \RuntimeException(sprintf('Unable to check hook class "%s".', $hook), $e);
+					}
+
+					self::$hook_manager->register(new $hook, $priority);
+				}
+			}
+
+			return self::$hook_manager;
 		}
 
 		/**
@@ -205,7 +241,7 @@
 								$table->defineVR($relation_name, $callable);
 							} else {
 								throw new \RuntimeException(sprintf(
-									'Custom relation "%s" defined in "%s" for table "%s" expected to be "callable" is "%s".',
+									'Custom relation "%s" defined in "%s" for table "%s" expected to be "callable" not "%s".',
 									$relation_name, $provider, $table_name, gettype($callable)));
 							}
 						}
@@ -245,12 +281,29 @@
 								$table->defineCollection($collection_name, $callable);
 							} else {
 								throw new \RuntimeException(sprintf(
-									'Custom collection "%s" defined in "%s" for table "%s" expected to be "callable" is "%s".',
+									'Custom collection "%s" defined in "%s" for table "%s" expected to be "callable" not "%s".',
 									$collection_name, $provider, $table_name, gettype($callable)));
 							}
 						}
 					}
 				}
 			}
+		}
+
+		/**
+		 * Creates instance of class for a given class name and arguments.
+		 *
+		 * @param string $class_name The full qualified class name to instantiate.
+		 *
+		 * @return object
+		 * @throws \ReflectionException
+		 */
+		public static function createInstance($class_name)
+		{
+			$c_args = func_get_args();
+
+			array_shift($c_args);
+
+			return ClassLoader::instantiateClass($class_name, $c_args);
 		}
 	}

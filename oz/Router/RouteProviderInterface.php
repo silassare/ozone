@@ -10,8 +10,6 @@
 
 	namespace OZONE\OZ\Router;
 
-	use OZONE\OZ\Core\Context;
-
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	interface RouteProviderInterface
