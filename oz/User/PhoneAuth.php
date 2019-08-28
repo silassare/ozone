@@ -56,6 +56,7 @@
 		 */
 		public function __construct(Context $context, $tag, $registered = null)
 		{
+			$tag            = md5($tag);
 			$this->context  = $context;
 			$this->response = new ResponseHolder(get_class($this));
 
