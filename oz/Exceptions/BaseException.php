@@ -82,9 +82,9 @@
 		 * @param string          $message  the exception message
 		 * @param int             $code     the exception code
 		 * @param array|null      $data     additional error data
-		 * @param \Exception|null $previous previous exception if nested exception
+		 * @param \Throwable|null $previous previous throwable used for the exception chaining
 		 */
-		public function __construct($message, $code, array $data = null, \Exception $previous = null)
+		public function __construct($message, $code, array $data = null, \Throwable $previous = null)
 		{
 			parent::__construct($message, $code, $previous);
 
@@ -252,6 +252,8 @@ ERROR_PAGE;
 		 * Show exception as json
 		 *
 		 * @param \OZONE\OZ\Core\Context $context
+		 *
+		 * @throws \Exception
 		 */
 		private function showJson(Context $context)
 		{
@@ -299,11 +301,11 @@ ERROR_PAGE;
 		/**
 		 * Convert throwable to string.
 		 *
-		 * @param \Exception $e
+		 * @param \Throwable $e
 		 *
 		 * @return string
 		 */
-		public static function throwableToString(\Exception $e)
+		public static function throwableToString(\Throwable $e)
 		{
 			$data = [];
 
@@ -311,7 +313,8 @@ ERROR_PAGE;
 				$data = $e->getData(true);
 			}
 
-			$data = json_encode($data);
+			$data  = json_encode($data);
+			$class = get_class($e);
 
 			$msg = <<<STRING
 \tFile    : {$e->getFile()}
@@ -319,6 +322,7 @@ ERROR_PAGE;
 \tCode    : {$e->getCode()}
 \tMessage : {$e->getMessage()}
 \tData    : $data
+\tClass   : {$class}
 \tTrace   : {$e->getTraceAsString()}
 STRING;
 

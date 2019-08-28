@@ -27,9 +27,9 @@
 		 *
 		 * @param string|null     $message  the exception message
 		 * @param array|null      $data     additional exception data
-		 * @param null|\Exception $previous previous exception if nested exception
+		 * @param \Throwable|null $previous previous throwable used for the exception chaining
 		 */
-		public function __construct($message = null, array $data = null, \Exception $previous = null)
+		public function __construct($message = null, array $data = null, \Throwable $previous = null)
 		{
 			parent::__construct((empty($message) ? 'OZ_ERROR_INVALID_FORM' : $message), BaseException::INVALID_FORM, $data, $previous);
 		}
