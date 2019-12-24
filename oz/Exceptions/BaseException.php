@@ -108,6 +108,8 @@
 
 			self::clearOutPutBuffer();
 
+			$err_msg = preg_replace("~\"([^\"]+)\"~", "<span>$1</span>", $err_msg);
+
 			$err_html = <<<ERROR_PAGE
 <!DOCTYPE html>
 <html lang="en">
@@ -117,14 +119,17 @@
 		<style>
 			body{
 				margin: 0;
-				font-family: Tahoma, Verdana, Arial, sans-serif;
+				font-family: 'Ubuntu', sans-serif;
 			}
 			div.oz-error{
 				margin: 50px auto;
 				width: 80%;
 				padding: 10px 20px;
-				border-left: 3px solid #ff0000;
+				border-left: 3px solid #ff5064;
 				background-color: whitesmoke;
+			}
+			span{
+				color: #ff5064
 			}
 		</style>
 	</head>

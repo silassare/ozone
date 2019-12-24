@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Db\Columns\Types;
 
+	use Gobl\DBAL\Types\Exceptions\TypesException;
 	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 	use Gobl\DBAL\Types\TypeString;
 	use OZONE\OZ\Core\DbManager;
@@ -20,13 +21,14 @@
 
 	class TypeFile extends TypeString
 	{
-		private $multiple       = false;
-		private $mime_types     = [];
-		private $file_label     = "OZ_FILE_UPLOAD_LABEL";
-		private $file_min_count = 1;
-		private $file_max_count = 1;
-		private $file_min_size  = 1;// size in bytes per file
-		private $file_max_size  = PHP_INT_MAX;// size in bytes per file
+		private $multiple               = false;
+		private $mime_types             = [];
+		private $file_label             = "OZ_FILE_UPLOAD_LABEL";
+		private $file_min_count         = 1;
+		private $file_max_count         = 1;
+		private $file_min_size          = 1;// size in bytes per file
+		private $file_max_size          = PHP_INT_MAX;// size in bytes per file
+		private $file_upload_total_size = PHP_INT_MAX;// size in bytes
 
 		/**
 		 * TypeFile constructor.
@@ -59,18 +61,8 @@
 		}
 
 		/**
-		 * @param $label
+		 * Sets allowed mime types.
 		 *
-		 * @return $this
-		 */
-		public function fileLabel($label)
-		{
-			$this->file_label = $label;
-
-			return $this;
-		}
-
-		/**
 		 * @param $mime_type
 		 *
 		 * @return $this
@@ -87,10 +79,24 @@
 		}
 
 		/**
+		 * Sets upload file label.
+		 *
+		 * @param $label
+		 *
+		 * @return $this
+		 */
+		public function fileLabel($label)
+		{
+			$this->file_label = $label;
+
+			return $this;
+		}
+
+		/**
 		 * Sets file size range.
 		 *
-		 * @param int $min the minimum file size
-		 * @param int $max the maximum file size
+		 * @param int $min the minimum file size in bytes
+		 * @param int $max the maximum file size in bytes
 		 *
 		 * @return $this
 		 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
@@ -99,8 +105,31 @@
 		{
 			self::assertSafeIntRange($min, $max, 1);
 
-			$this->file_min_size = $min;
-			$this->file_max_size = $max;
+			$this->file_min_size = (int)$min;
+			$this->file_max_size = (int)$max;
+
+			return $this;
+		}
+
+		/**
+		 * Sets file upload total size.
+		 *
+		 * @param int $total total upload size in bytes.
+		 *
+		 * @return $this
+		 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
+		 */
+		public function fileUploadTotalSize($total)
+		{
+			if (!is_int($total)) {
+				throw new TypesException(sprintf('total=%s is not a valid integer.', $total));
+			}
+
+			if ($total <= 0) {
+				throw new TypesException(sprintf('total=%s is not greater than 0.', $total));
+			}
+
+			$this->file_upload_total_size = $total;
 
 			return $this;
 		}
@@ -118,8 +147,8 @@
 		{
 			self::assertSafeIntRange($min, $max, 1);
 
-			$this->file_min_count = $min;
-			$this->file_max_count = $max;
+			$this->file_min_count = (int)$min;
+			$this->file_max_count = (int)$max;
 
 			return $this;
 		}
@@ -146,8 +175,11 @@
 				$uploaded_files = $value;
 				$total          = count($uploaded_files);
 
-				if ($total < $this->file_min_count OR $total > $this->file_max_count) {
-					throw new TypesInvalidValueException("OZ_FILE_COUNT_OUT_OF_LIMIT");
+				if (!$this->checkFileCount($total)) {
+					throw new TypesInvalidValueException("OZ_FILE_COUNT_OUT_OF_LIMIT", [
+						'min' => $this->file_min_count,
+						'max' => $this->file_max_count
+					]);
 				}
 
 				$files = $this->computeUploadedFiles($uploaded_files, $uid, $this->file_label, $debug);
@@ -184,7 +216,9 @@
 			if (isset($options['file_label'])) {
 				$instance->fileLabel($options['file_label']);
 			}
-
+			if (isset($options['file_upload_total_size'])) {
+				$instance->fileUploadTotalSize($options['file_upload_total_size']);
+			}
 			$instance->fileCountRange(
 				self::getOptionKey($options, "file_min_count", 1),
 				self::getOptionKey($options, "file_max_count", PHP_INT_MAX)
@@ -210,14 +244,15 @@
 		 */
 		public function getCleanOptions()
 		{
-			$options                   = parent::getCleanOptions();
-			$options['multiple']       = $this->multiple;
-			$options['mime_types']     = $this->mime_types;
-			$options['file_label']     = $this->file_label;
-			$options['file_min_size']  = $this->file_min_size;
-			$options['file_max_size']  = $this->file_max_size;
-			$options['file_min_count'] = $this->file_min_count;
-			$options['file_max_count'] = $this->file_max_count;
+			$options                           = parent::getCleanOptions();
+			$options['multiple']               = $this->multiple;
+			$options['mime_types']             = $this->mime_types;
+			$options['file_label']             = $this->file_label;
+			$options['file_min_size']          = $this->file_min_size;
+			$options['file_max_size']          = $this->file_max_size;
+			$options['file_min_count']         = $this->file_min_count;
+			$options['file_max_count']         = $this->file_max_count;
+			$options['file_upload_total_size'] = $this->file_upload_total_size;
 
 			return $options;
 		}
@@ -233,15 +268,21 @@
 		 */
 		protected function computeUploadedFiles(array $uploaded_files, $uid, $file_label, $debug)
 		{
+			$total_size = 0;
 			foreach ($uploaded_files as $k => $item) {
 				if ($item instanceof UploadedFile) {
 					$this->checkUploadedFile($item);
+					$total_size += $item->getSize();
 				} elseif ($this->isMultiple()) {
 					$debug['index'] = $k;
 					throw new TypesInvalidValueException('invalid_file_upload', $debug);
 				} else {
 					throw new TypesInvalidValueException('invalid_file_upload', $debug);
 				}
+			}
+
+			if ($total_size > $this->file_upload_total_size) {
+				throw new TypesInvalidValueException("OZ_FILE_UPLOAD_TOTAL_SIZE_EXCEED_LIMIT", $debug);
 			}
 
 			$user_dir = FilesUtils::getUserRootDirectory($uid);
@@ -351,6 +392,9 @@
 			}
 
 			if (!$this->checkFileSize($upload->getSize())) {
+				$debug['min'] = $this->file_min_size;
+				$debug['max'] = $this->file_max_size;
+
 				throw new TypesInvalidValueException("OZ_FILE_SIZE_OUT_OF_LIMIT", $debug);
 			}
 

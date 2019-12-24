@@ -123,10 +123,8 @@
 		public function getCurrentUserId()
 		{
 			$this->assertUserVerified();
-			$uid = $this->context->getSession()
+			return $this->context->getSession()
 								 ->get('ozone_user:id');
-
-			return $uid;
 		}
 
 		/**

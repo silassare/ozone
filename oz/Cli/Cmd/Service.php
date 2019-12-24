@@ -15,6 +15,7 @@
 	use Kli\KliAction;
 	use Kli\KliOption;
 	use Kli\Types\KliTypeString;
+	use Kli\Types\KliTypeBool;
 	use OZONE\OZ\Cli\Command;
 	use OZONE\OZ\Cli\Utils\Utils;
 	use OZONE\OZ\Core\DbManager;
@@ -50,9 +51,10 @@
 			$table_name    = $options['t'];
 			$service_name  = $options['n'];
 			$service_class = $options['c'];
+			$override 	   = $options['o'];
 			$service       = SettingsManager::get('oz.routes.api', $service_name);
 
-			if (is_null($service)) {
+			if (is_null($service) OR $override) {
 				$db = DbManager::getDb();
 				$db->assertHasTable($table_name);
 				$table       = $db->getTable($table_name);
@@ -104,7 +106,7 @@
 			  ->prompt(true, 'The table name')
 			  ->description('The table name.');
 
-			// option: -t alias --service-class
+			// option: -c alias --service-class
 			$c = new KliOption('c');
 			$c->alias('service-class')
 			  ->type((new KliTypeString)->pattern('#^[a-zA-Z_][a-zA-Z0-9_]*$#', 'The service class name is invalid.'))
@@ -113,7 +115,14 @@
 			  ->prompt(true, 'The service class name')
 			  ->description('The service class name.');
 
-			$generate->addOption($n, $c, $t);
+			// option: -o alias --override
+			$o = new KliOption('o');
+			$o->alias('override')
+				->type(new KliTypeBool)
+				->def(false)
+				->description('To force override if a service with the same name exists.');
+
+			$generate->addOption($n, $c, $t, $o);
 
 			$this->addAction($generate);
 		}

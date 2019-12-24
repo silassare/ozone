@@ -14,6 +14,9 @@
 		'files'            => [
 			'provider' => 'OZONE\OZ\FS\Services\GetFiles'
 		],
+		'upload'            => [
+			'provider' => 'OZONE\OZ\FS\Services\UploadFiles'
+		],
 		'captcha'          => [
 			'provider' => 'OZONE\OZ\Authenticator\Services\CaptchaCode'
 		],

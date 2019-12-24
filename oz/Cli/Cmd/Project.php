@@ -56,9 +56,10 @@
 
 			Utils::assertDatabaseAccess();
 
-			$dir         = $options['d'];
-			$project_fs  = new FilesManager();
-			$backup_name = sprintf('backup-%d', time());
+			$dir          = $options['d'];
+			$project_fs   = new FilesManager();
+			$project_name = SettingsManager::get('oz.config', 'OZ_PROJECT_NAME');
+			$backup_name  = sprintf('backup-%s-%d', strtolower($project_name), time());
 
 			if ($project_fs->isSelf($dir) OR $project_fs->isParentOf($dir)) {
 				throw new KliInputException('You should not backup project to project directory or subdirectory.');

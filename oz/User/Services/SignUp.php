@@ -128,7 +128,7 @@
 				$s       = new SignUp($context);
 				$s->actionSignUp($context);
 
-				return $s->writeResponse($context);
+				return $s->respond();
 			});
 		}
 	}

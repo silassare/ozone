@@ -2,9 +2,10 @@
 	/**
  * Auto generated file, please don't edit.
  *
- * With: Gobl v1.0.0
- * Time: 1566582929
+ * With: Gobl v1.0.9
+ * Time: 1577196385
  */
+
 
 	namespace OZONE\OZ\Db\Base;
 

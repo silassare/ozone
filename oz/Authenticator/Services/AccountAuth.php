@@ -144,7 +144,7 @@
 				$context  = $r->getContext();
 				$account  = $context->getRequest()
 									->getFormField('account', null);
-				$instance = new AccountAuth($context);
+				$instance = new static($context);
 
 				if (!is_null($account)) {
 					$instance->actionCheck($context, $account);
@@ -152,7 +152,7 @@
 					$instance->actionCreate($context);
 				}
 
-				return $instance->writeResponse($context);
+				return $instance->respond();
 			});
 		}
 	}

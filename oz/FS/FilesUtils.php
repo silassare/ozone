@@ -306,36 +306,32 @@
 		/**
 		 * Format a given file size
 		 *
-		 * @param double $size the file size in byte
+		 * @param double $size the file size in bytes
+		 * @param string $decimal_point
+		 * @param string $thousands_sep
 		 *
 		 * @return string    the formatted file size
 		 */
-		public static function formatFileSize($size)
+		public static function formatFileSize($size, $decimal_point = '.', $thousands_sep = ' ')
 		{
-			$unites        = ['byte', 'Kb', 'Mb', 'Gb', 'Tb'];
-			$max_i         = count($unites);
-			$i             = 0;
-			$result        = 0;
-			$decimal_point = '.';// ',' for french
-			$sep           = ' ';
+			$unites = ['byte', 'Kb', 'Mb', 'Gb', 'Tb'];
+			$max_i  = count($unites);
+			$i      = 0;
+			$result = 0;
 
 			while ($size >= 1 AND $i < $max_i) {
 				$result = $size;
-				$size   /= 1024;
+				$size   /= 1000;// not 1024
 				$i++;
-			}
-
-			if (!$i) {
-				$i = 1;
 			}
 
 			$parts = explode('.', $result);
 
 			if ($parts[0] != $result) {
-				$result = number_format($result, 2, $decimal_point, $sep);
+				$result = number_format($result, 2, $decimal_point, $thousands_sep);
 			}
 
-			return $result . ' ' . $unites[$i - 1];
+			return $result . ' ' . $unites[$i == 0 ? 0 : $i - 1];
 		}
 
 		/**

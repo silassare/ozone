@@ -2,9 +2,10 @@
 	/**
  * Auto generated file, please don't edit.
  *
- * With: Gobl v1.0.0
- * Time: 1566582929
+ * With: Gobl v1.0.9
+ * Time: 1577196384
  */
+
 
 	namespace OZONE\OZ\Db\Base;
 
@@ -40,7 +41,7 @@
 		 * @return \OZONE\OZ\Db\OZAdmin
 		 * @throws \Gobl\CRUD\Exceptions\CRUDException
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function addItem(array $values = [])
@@ -64,7 +65,7 @@
 		 *
 		 * @return bool|\OZONE\OZ\Db\OZAdmin
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \Gobl\CRUD\Exceptions\CRUDException
 		 */
@@ -81,7 +82,7 @@
 		 *
 		 * @return int Affected row count.
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \Gobl\CRUD\Exceptions\CRUDException
 		 */
@@ -102,7 +103,7 @@
 		 *
 		 * @return bool|\OZONE\OZ\Db\OZAdmin
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \Gobl\CRUD\Exceptions\CRUDException
 		 */
@@ -118,7 +119,7 @@
 		 *
 		 * @return int Affected row count.
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \Gobl\CRUD\Exceptions\CRUDException
 		 */
@@ -140,7 +141,7 @@
 		 * @return \OZONE\OZ\Db\OZAdmin|null
 		 * @throws \Gobl\CRUD\Exceptions\CRUDException
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 */
 		public function getItem(array $filters, array $order_by = [])
@@ -162,7 +163,7 @@
 		 *
 		 * @return \OZONE\OZ\Db\OZAdmin[]
 		 * @throws \Gobl\DBAL\Exceptions\DBALException
-		 * @throws \Gobl\ORM\Exceptions\ORMControllerFormException
+		 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 		 * @throws \Gobl\ORM\Exceptions\ORMException
 		 * @throws \Gobl\CRUD\Exceptions\CRUDException
 		 */

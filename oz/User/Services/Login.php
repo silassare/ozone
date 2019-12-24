@@ -70,10 +70,10 @@
 		{
 			$router->post('/login', function (RouteInfo $r) {
 				$context = $r->getContext();
-				$s       = new Login($context);
+				$s       = new static($context);
 				$s->actionLogin($context);
 
-				return $s->writeResponse($context);
+				return $s->respond();
 			});
 		}
 	}

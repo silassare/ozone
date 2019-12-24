@@ -12,9 +12,7 @@
 
 	use Gobl\CRUD\Exceptions\CRUDException;
 	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
-	use Gobl\ORM\Exceptions\ORMControllerFormException;
 	use Gobl\ORM\Exceptions\ORMQueryException;
-	use OZONE\OZ\Exceptions\BadRequestException;
 	use OZONE\OZ\Exceptions\ForbiddenException;
 	use OZONE\OZ\Exceptions\InvalidFormException;
 	use OZONE\OZ\Router\RouteProviderInterface;
@@ -70,23 +68,35 @@
 		 * @param \OZONE\OZ\Core\Context $context
 		 *
 		 * @return \OZONE\OZ\Http\Response
+		 * @deprecated
+		 *
 		 */
 		public function writeResponse(Context $context)
+		{
+			return $this->respond();
+		}
+
+		/**
+		 * Return service response.
+		 *
+		 * @return \OZONE\OZ\Http\Response
+		 */
+		public function respond()
 		{
 			$response_holder = $this->getResponseHolder();
 			$data            = $response_holder->getResponse();
 			$now             = time();
 			$data['utime']   = $now;
 
-			if ($context->getUsersManager()
-						->userVerified()) {
-				$lifetime      = 1 * $context->getClient()
-											 ->getSessionLifeTime();
+			if ($this->context->getUsersManager()
+							  ->userVerified()) {
+				$lifetime      = 1 * $this->context->getClient()
+												   ->getSessionLifeTime();
 				$data["stime"] = $now + $lifetime;
 			}
 
-			return $context->getResponse()
-						   ->withJson($data);
+			return $this->context->getResponse()
+								 ->withJson($data);
 		}
 
 		/**
@@ -102,14 +112,7 @@
 		public static function tryConvertException(\Exception $error)
 		{
 			if ($error instanceof ORMQueryException) {
-				throw new BadRequestException($error->getMessage(), $error->getData(), $error);
-			}
-
-			if ($error instanceof ORMControllerFormException) {
-				throw new InvalidFormException(null, [
-					'message' => $error->getMessage(),
-					'data'    => $error->getData()
-				], $error);
+				throw new InvalidFormException($error->getMessage(), $error->getData(), $error);
 			}
 
 			if ($error instanceof TypesInvalidValueException) {

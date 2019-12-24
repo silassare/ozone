@@ -35,10 +35,10 @@
 		{
 			$request = $context->getRequest();
 			$params  = $request->getFormData();
+			$um      = $context->getUsersManager();
 
-			$users_manager = $context->getUsersManager();
+			$um->assertUserVerified();
 
-			$users_manager->assertUserVerified();
 			Assert::assertForm($params, ['for_id']);
 
 			$label = 'file';
@@ -51,33 +51,33 @@
 
 			$for_id = $params['for_id'];
 
-			$user_obj   = $users_manager->getCurrentUserObject();
-			$uid        = $user_obj->getId();
+			$user       = $um->getCurrentUserObject();
+			$uid        = $user->getId();
 			$file_label = 'OZ_FILE_LABEL_USER_PPIC';
 			$msg        = 'OZ_PROFILE_PIC_CHANGED';
 
 			Assert::assertAuthorizeAction($uid === $for_id);
 
-			$ppic_obj = new PPicUtils($uid);
+			$pu = new PPicUtils($uid);
 
 			if ($label === 'file_id') {
 				Assert::assertForm($params, ['file_id', 'file_key']);
-				$picid = $ppic_obj->fromFileId($params['file_id'], $params['file_key'], $params, $file_label);
+				$picid = $pu->fromFileId($params['file_id'], $params['file_key'], $params, $file_label);
 			} elseif ($label === 'file') {
-				$uploaded_files = $request->getUploadedFiles();
-				Assert::assertForm($uploaded_files, ['photo']);
-				$picid = $ppic_obj->fromUploadedFile($uploaded_files['photo'], $params, $file_label);
+				$files = $request->getUploadedFiles();
+				Assert::assertForm($files, ['photo']);
+				$picid = $pu->fromUploadedFile($files['photo'], $params, $file_label);
 			} else {//def
 				$picid = PPicUtils::getDefault();
 				$msg   = 'OZ_PROFILE_PIC_SET_TO_DEFAULT';
 			}
 
-			$user_obj->setPicid($picid)
-					 ->save();
+			$user->setPicid($picid)
+				 ->save();
 
 			$this->getResponseHolder()
 				 ->setDone($msg)
-				 ->setData($user_obj->asArray());
+				 ->setData($user->asArray());
 		}
 
 		/**
@@ -90,7 +90,7 @@
 				$s       = new UserPicEdit($context);
 				$s->actionPicEdit($context);
 
-				return $s->writeResponse($context);
+				return $s->respond();
 			});
 		}
 	}

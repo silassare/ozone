@@ -48,7 +48,7 @@
 				$s       = new Logout($context);
 				$s->actionLogout($context);
 
-				return $s->writeResponse($context);
+				return $s->respond();
 			});
 		}
 	}

@@ -65,15 +65,11 @@
 		{
 			$abs_path = PathUtils::resolve($this->root, $path);
 
-			if (file_exists($abs_path)) {
-				if (!is_dir($abs_path)) {
-					trigger_error(sprintf('Invalid directory: %s', $abs_path), E_USER_ERROR);
-				}
-			} elseif ($auto_create === true) {
+			if ($auto_create === true AND !file_exists($abs_path)) {
 				$this->mkdir($abs_path);
-			} else {
-				trigger_error(sprintf('Directory does not exists: %s', $abs_path),E_USER_ERROR);
 			}
+
+			self::assert($abs_path, ["directory" => true]);
 
 			$this->root = $abs_path;
 
@@ -93,11 +89,8 @@
 			$abs_target      = PathUtils::resolve($this->root, $target);
 			$abs_destination = PathUtils::resolve($this->root, $name);
 
-			if (!file_exists($abs_target)) {
-				trigger_error(sprintf('Directory does not exists: %s', $abs_target), E_USER_ERROR);
-			} elseif (file_exists($abs_destination)) {
-				trigger_error(sprintf('Cannot overwrite: %s', $abs_destination), E_USER_ERROR);
-			}
+			self::assert($abs_target);
+			self::assertDoesNotExists($abs_destination);
 
 			symlink($abs_target, $abs_destination);
 
@@ -120,27 +113,258 @@
 			$abs_from = PathUtils::resolve($this->root, (string)$from);
 			$abs_to   = PathUtils::resolve($this->root, $to);
 
-			if (file_exists($abs_from)) {
-				if (is_dir($abs_from)) {
-					if (file_exists($abs_to) AND !is_dir($abs_to)) {
-						trigger_error(sprintf('Cannot overwrite non-directory "%s" with directory "%s".', $abs_to, $abs_from), E_USER_ERROR);
-					}
+			self::assert($abs_from);
 
-					$this->mkdir($abs_to);
-					self::recurseCopyDirAbsPath($abs_from, $abs_to, $options);
+			if (is_dir($abs_from)) {
+				if (file_exists($abs_to)) {
+					if (!is_dir($abs_to)) {
+						trigger_error(sprintf('Cannot overwrite "%s" with "%s", the resource exists and is not a directory.', $abs_to, $abs_from), E_USER_ERROR);
+					}
 				} else {
-					if (is_dir($abs_to)) {
-						$abs_to = PathUtils::resolve($abs_to, basename($abs_from));
-					}
-
-					$this->mkdir(dirname($abs_to));
-					copy($abs_from, $abs_to);
+					$this->mkdir($abs_to);
 				}
+
+				$this->recursivelyCopyDirAbsPath($abs_from, $abs_to, $options);
 			} else {
-				trigger_error(sprintf('"%s" does not exists.', $abs_from), E_USER_ERROR);
+				if (is_dir($abs_to)) {
+					$abs_to = PathUtils::resolve($abs_to, basename($abs_from));
+				}
+
+				$this->mkdir(dirname($abs_to));
+				copy($abs_from, $abs_to);
 			}
 
 			return $this;
+		}
+
+		/**
+		 * Gets a given directory content info.
+		 *
+		 * @param string $path the directory path
+		 *
+		 * @return array
+		 */
+		public function info($path)
+		{
+			$abs_path = $this->resolve($path);
+
+			self::assert($abs_path, ["directory" => true]);
+
+			$result = [];
+			$files  = scandir($abs_path);
+
+			foreach ($files as $entry) {
+				if ($entry != "." AND $entry !== "..") {
+					$abs_entry = PathUtils::resolve($abs_path, $entry);
+
+					$deletable = ((!is_dir($abs_entry) && is_writable($abs_path)) ||
+								  (is_dir($abs_entry) && is_writable($abs_path) && $this->isRemovable($abs_entry)));
+					$stat      = stat($abs_entry);
+					$result[]  = [
+						'mtime'     => $stat['mtime'],
+						'size'      => $stat['size'],
+						'name'      => basename($abs_entry),
+						'delete'    => $deletable,
+						'directory' => is_dir($abs_entry),
+						'read'      => is_readable($abs_entry),
+						'write'     => is_writable($abs_entry),
+						'execute'   => is_executable($abs_entry),
+					];
+				}
+			}
+
+			return $result;
+		}
+
+		/**
+		 * Get path info
+		 *
+		 * Thanks to: https://www.php.net/manual/en/function.stat.php#87241
+		 *
+		 * @param $path
+		 *
+		 * @return array|bool
+		 */
+		public function pathInfo($path)
+		{
+			$abs_path = $this->resolve($path);
+
+			clearstatcache();
+
+			$ss = stat($abs_path);
+
+			if (!$ss) return false; // Couldn't stat file
+
+			$ts = [
+				0140000 => 'ssocket',
+				0120000 => 'llink',
+				0100000 => '-file',
+				0060000 => 'bblock',
+				0040000 => 'ddir',
+				0020000 => 'cchar',
+				0010000 => 'pfifo'
+			];
+
+			$p = $ss['mode'];
+			$t = decoct($p & 0170000); // File Encoding Bit
+
+			$str = (array_key_exists(octdec($t), $ts)) ? $ts[octdec($t)]{0} : 'u';
+			$str .= (($p & 0x0100) ? 'r' : '-') . (($p & 0x0080) ? 'w' : '-');
+			$str .= (($p & 0x0040) ? (($p & 0x0800) ? 's' : 'x') : (($p & 0x0800) ? 'S' : '-'));
+			$str .= (($p & 0x0020) ? 'r' : '-') . (($p & 0x0010) ? 'w' : '-');
+			$str .= (($p & 0x0008) ? (($p & 0x0400) ? 's' : 'x') : (($p & 0x0400) ? 'S' : '-'));
+			$str .= (($p & 0x0004) ? 'r' : '-') . (($p & 0x0002) ? 'w' : '-');
+			$str .= (($p & 0x0001) ? (($p & 0x0200) ? 't' : 'x') : (($p & 0x0200) ? 'T' : '-'));
+
+			$s = [
+				'umask'         => sprintf("%04o", umask()),
+				'human'         => $str,
+				'octal1'        => sprintf("%o", ($p & 000777)),
+				'octal2'        => sprintf("0%o", 0777 & $p),
+				'decimal'       => sprintf("%04o", $p),
+				'fileperms'     => fileperms($abs_path),
+				'mode'          => $p,
+				'filename'      => $abs_path,
+				'realpath'      => (realpath($abs_path) != $abs_path) ? realpath($abs_path) : '',
+				'dirname'       => dirname($abs_path),
+				'basename'      => basename($abs_path)
+				,
+				'type'          => substr($ts[octdec($t)], 1),
+				'type_octal'    => sprintf("%07o", octdec($t)),
+				'is_file'       => is_file($abs_path),
+				'is_dir'        => is_dir($abs_path),
+				'is_link'       => is_link($abs_path),
+				'is_readable'   => is_readable($abs_path),
+				'is_writable'   => is_writable($abs_path),
+				'is_executable' => is_executable($abs_path)
+				,
+				'size'          => $ss['size'], //Size of file, in bytes.
+				'blocks'        => $ss['blocks'], //Number 512-byte blocks allocated
+				'block_size'    => $ss['blksize'] //Optimal block size for I/O.
+				,
+				'mtime'         => $ss['mtime'], //Time of last modification
+				'atime'         => $ss['atime'], //Time of last access
+				'ctime'         => $ss['ctime'], //Time of last status change
+
+			];
+
+			$s['device'] = [
+				'device'        => $ss['dev'], // Device
+				'device_number' => $ss['rdev'], // Device number, if device.
+				'inode'         => $ss['ino'], // File serial number
+				'link_count'    => $ss['nlink'], // link count
+				'link_to'       => ($ss['filetype']['type'] == 'link') ? readlink($abs_path) : ''
+			];
+
+			clearstatcache();
+
+			return $s;
+		}
+
+		/**
+		 * Get full path info
+		 *
+		 * Thanks to: https://www.php.net/manual/en/function.stat.php#87241
+		 *
+		 * @param $path
+		 *
+		 * @return array|bool
+		 */
+		public function fullPathInfo($path)
+		{
+			$abs_path = $this->resolve($path);
+
+			clearstatcache();
+
+			$ss = stat($abs_path);
+
+			if (!$ss) return false; // Couldn't stat file
+
+			$ts = [
+				0140000 => 'ssocket',
+				0120000 => 'llink',
+				0100000 => '-file',
+				0060000 => 'bblock',
+				0040000 => 'ddir',
+				0020000 => 'cchar',
+				0010000 => 'pfifo'
+			];
+
+			$p = $ss['mode'];
+			$t = decoct($p & 0170000); // File Encoding Bit
+
+			$str = (array_key_exists(octdec($t), $ts)) ? $ts[octdec($t)]{0} : 'u';
+			$str .= (($p & 0x0100) ? 'r' : '-') . (($p & 0x0080) ? 'w' : '-');
+			$str .= (($p & 0x0040) ? (($p & 0x0800) ? 's' : 'x') : (($p & 0x0800) ? 'S' : '-'));
+			$str .= (($p & 0x0020) ? 'r' : '-') . (($p & 0x0010) ? 'w' : '-');
+			$str .= (($p & 0x0008) ? (($p & 0x0400) ? 's' : 'x') : (($p & 0x0400) ? 'S' : '-'));
+			$str .= (($p & 0x0004) ? 'r' : '-') . (($p & 0x0002) ? 'w' : '-');
+			$str .= (($p & 0x0001) ? (($p & 0x0200) ? 't' : 'x') : (($p & 0x0200) ? 'T' : '-'));
+
+			$s = [
+				'perms' => [
+					'umask'     => sprintf("%04o", umask()),
+					'human'     => $str,
+					'octal1'    => sprintf("%o", ($p & 000777)),
+					'octal2'    => sprintf("0%o", 0777 & $p),
+					'decimal'   => sprintf("%04o", $p),
+					'fileperms' => fileperms($abs_path),
+					'mode'      => $p
+				],
+
+				'owner' => [
+					'fileowner' => $ss['uid'],
+					'filegroup' => $ss['gid'],
+					'owner'     =>
+						(function_exists('posix_getpwuid')) ?
+							posix_getpwuid($ss['uid']) : '',
+					'group'     =>
+						(function_exists('posix_getgrgid')) ?
+							posix_getgrgid($ss['gid']) : ''
+				],
+
+				'file' => [
+					'filename' => $abs_path,
+					'realpath' => (realpath($abs_path) != $abs_path) ? realpath($abs_path) : '',
+					'dirname'  => dirname($abs_path),
+					'basename' => basename($abs_path)
+				],
+
+				'filetype' => [
+					'type'          => substr($ts[octdec($t)], 1),
+					'type_octal'    => sprintf("%07o", octdec($t)),
+					'is_file'       => is_file($abs_path),
+					'is_dir'        => is_dir($abs_path),
+					'is_link'       => is_link($abs_path),
+					'is_readable'   => is_readable($abs_path),
+					'is_writable'   => is_writable($abs_path),
+					'is_executable' => is_executable($abs_path)
+				],
+
+				'size' => [
+					'size'       => $ss['size'], //Size of file, in bytes.
+					'blocks'     => $ss['blocks'], //Number 512-byte blocks allocated
+					'block_size' => $ss['blksize'] //Optimal block size for I/O.
+				],
+
+				'time' => [
+					'mtime' => $ss['mtime'], //Time of last modification
+					'atime' => $ss['atime'], //Time of last access
+					'ctime' => $ss['ctime'], //Time of last status change
+				],
+			];
+
+			$s['device'] = [
+				'device'        => $ss['dev'], // Device
+				'device_number' => $ss['rdev'], // Device number, if device.
+				'inode'         => $ss['ino'], // File serial number
+				'link_count'    => $ss['nlink'], // link count
+				'link_to'       => ($ss['filetype']['type'] == 'link') ? readlink($abs_path) : ''
+			];
+
+			clearstatcache();
+
+			return $s;
 		}
 
 		/**
@@ -167,17 +391,21 @@
 		 * Creates a directory at a given path with all parents directories
 		 *
 		 * @param string $path The directory path
-		 * @param int    $mode The mode is 0777 by default, which means the widest possible access
+		 * @param int    $mode The mode is 0775 by default,
 		 *
 		 * @return $this
 		 */
-		public function mkdir($path, $mode = 0777)
+		public function mkdir($path, $mode = 0775)
 		{
 			$abs_path = PathUtils::resolve($this->root, $path);
 
+			if (file_exists($abs_path) AND !is_dir($abs_path)) {
+				trigger_error(sprintf('Cannot overwrite "%s", the resource exists and is not a directory.', $abs_path), E_USER_ERROR);
+			}
+
 			if (!is_dir($abs_path)) {
 				if (false === @mkdir($abs_path, $mode, true) AND !is_dir($abs_path)) {
-					trigger_error(sprintf('Cannot create directory: "%s"', $abs_path),E_USER_ERROR);
+					trigger_error(sprintf('Cannot create directory "%s".', $abs_path), E_USER_ERROR);
 				}
 			}
 
@@ -195,13 +423,49 @@
 		{
 			$abs_path = PathUtils::resolve($this->root, $path);
 
+			self::assert($abs_path, ["read" => true, "write" => true]);
+
 			if (is_file($abs_path)) {
 				unlink($abs_path);
 			} else {
-				self::recurseRemoveDirAbsPath($abs_path);
+				$this->recursivelyRemoveDirAbsPath($abs_path);
 			}
 
 			return $this;
+		}
+
+		/**
+		 * Checks if a path is removable.
+		 *
+		 * @param $path
+		 *
+		 * @return bool
+		 */
+		public function isRemovable($path)
+		{
+			$path = $this->resolve($path);
+
+			if (is_file($path)) {
+				return is_readable($path) && is_writable($path);
+			}
+
+			$stack = [$path];
+
+			while ($dir = array_pop($stack)) {
+				if (!is_readable($dir) || !is_writable($dir)) {
+					return false;
+				}
+
+				$files = array_diff(scandir($dir), ['.', '..']);
+
+				foreach ($files as $file) {
+					if (is_dir($file)) {
+						$stack[] = PathUtils::resolve($dir, $file);
+					}
+				}
+			}
+
+			return true;
 		}
 
 		/**
@@ -211,7 +475,7 @@
 		 *
 		 * @return bool
 		 */
-		private static function recurseRemoveDirAbsPath($path)
+		private function recursivelyRemoveDirAbsPath($path)
 		{
 			$files = scandir($path);
 
@@ -219,7 +483,7 @@
 				if (!($file === '.' OR $file === '..')) {
 					$src = $path . DS . $file;
 					if (is_dir($src)) {
-						self::recurseRemoveDirAbsPath($src);
+						$this->recursivelyRemoveDirAbsPath($src);
 					} else {
 						unlink($src);
 					}
@@ -236,9 +500,10 @@
 		 * @param string $destination
 		 * @param array  $options
 		 */
-		private static function recurseCopyDirAbsPath($source, $destination, array $options)
+		private function recursivelyCopyDirAbsPath($source, $destination, array $options)
 		{
 			$res = opendir($source);
+
 			if (!file_exists($destination)) {
 				mkdir($destination);
 			}
@@ -272,8 +537,12 @@
 					}
 
 					if (is_dir($from)) {
-						self::recurseCopyDirAbsPath($from, $to, $options);
+						$this->recursivelyCopyDirAbsPath($from, $to, $options);
 					} else {
+						if (file_exists($to) AND !is_file($to)) {
+							trigger_error(sprintf('Cannot overwrite "%s" the resource exists and is not a file.', $to), E_USER_ERROR);
+						}
+
 						copy($from, $to);
 					}
 				}
@@ -340,5 +609,58 @@
 			}
 
 			return (0 === strpos($path, $this->root)) ? true : false;
+		}
+
+		/**
+		 * Asserts the path existence and checks for some rules.
+		 *
+		 * @param string $abs_path the resource absolute path
+		 * @param array  $rules    the rules for required access
+		 */
+		private static function assert($abs_path, array $rules = null)
+		{
+			if (!file_exists($abs_path)) {
+				trigger_error(sprintf('"%s" does not exists.', $abs_path), E_USER_ERROR);
+			}
+
+			if (!empty($rules)) {
+				$is_file       = isset($rules["file"]) ? boolval($rules["file"]) : false;
+				$is_dir        = isset($rules["directory"]) ? boolval($rules["directory"]) : false;
+				$is_readable   = isset($rules["read"]) ? boolval($rules["read"]) : false;
+				$is_writable   = isset($rules["write"]) ? boolval($rules["write"]) : false;
+				$is_executable = isset($rules["execute"]) ? boolval($rules["execute"]) : false;
+
+				if ($is_file AND !is_file($abs_path)) {
+					trigger_error(sprintf('"%s" is not a valid file.', $abs_path), E_USER_ERROR);
+				}
+
+				if ($is_dir AND !is_dir($abs_path)) {
+					trigger_error(sprintf('"%s" is not a valid directory.', $abs_path), E_USER_ERROR);
+				}
+
+				if ($is_readable AND !is_readable($abs_path)) {
+					trigger_error(sprintf('The resource at "%s" is not readable.', $abs_path), E_USER_ERROR);
+				}
+
+				if ($is_writable AND !is_writeable($abs_path)) {
+					trigger_error(sprintf('The resource at "%s" is not writeable.', $abs_path), E_USER_ERROR);
+				}
+
+				if ($is_executable AND !is_executable($abs_path)) {
+					trigger_error(sprintf('The resource at "%s" is not executable.', $abs_path), E_USER_ERROR);
+				}
+			}
+		}
+
+		/**
+		 * Asserts the path does not exists.
+		 *
+		 * @param string $abs_path the resource absolute path
+		 */
+		private static function assertDoesNotExists($abs_path)
+		{
+			if (file_exists($abs_path)) {
+				trigger_error(sprintf('Cannot overwrite existing resource: %s', $abs_path), E_USER_ERROR);
+			}
 		}
 	}

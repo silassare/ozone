@@ -31,8 +31,12 @@
 		// 	any					=> serve file without restriction
 		'OZ_GET_FILE_ACCESS_LEVEL'     => 'session',
 
-		'OZ_CAPTCHA_FILE_NAME'         => 'oz-captcha-{oz_captcha_key}.png',
-		'OZ_CAPTCHA_URI_EXTRA_FORMAT'  => 'oz-captcha-{oz_captcha_key}.png',
-		'OZ_QR_CODE_FILE_NAME'         => 'oz-qr-code-{oz_qr_code_key}.png',
-		'OZ_QR_CODE_URI_EXTRA_FORMAT'  => 'oz-qr-code-{oz_qr_code_key}.png'
+		'OZ_CAPTCHA_FILE_NAME'        => 'oz-captcha-{oz_captcha_key}.png',
+		'OZ_CAPTCHA_URI_EXTRA_FORMAT' => 'oz-captcha-{oz_captcha_key}.png',
+		'OZ_QR_CODE_FILE_NAME'        => 'oz-qr-code-{oz_qr_code_key}.png',
+		'OZ_QR_CODE_URI_EXTRA_FORMAT' => 'oz-qr-code-{oz_qr_code_key}.png',
+
+		'OZ_UPLOAD_FILE_MAX_COUNT'      => 10,
+		'OZ_UPLOAD_FILE_MAX_SIZE'        => 10 * 1000 * 1000,// 10 Mb
+		'OZ_UPLOAD_FILE_MAX_TOTAL_SIZE' => 100 * 1000 * 1000 // 100 Mb
 	];

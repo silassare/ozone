@@ -52,14 +52,21 @@
 		/**
 		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
-		protected  function assertIsAdmin(){
-			$this->getContext()->getUsersManager()->assertIsAdmin();
+		protected function assertIsAdmin()
+		{
+			$this->getContext()
+				 ->getUsersManager()
+				 ->assertIsAdmin();
 		}
+
 		/**
 		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
-		protected  function assertUserVerified(){
-			$this->getContext()->getUsersManager()->assertUserVerified();
+		protected function assertUserVerified()
+		{
+			$this->getContext()
+				 ->getUsersManager()
+				 ->assertUserVerified();
 		}
 
 		/**

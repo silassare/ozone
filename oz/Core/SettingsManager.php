@@ -124,7 +124,7 @@
 					return $data[$key];
 				}
 			} else {
-				trigger_error(sprintf('Undefined setting group: %s', $setting_group_name), E_USER_NOTICE);
+				trigger_error(sprintf('Undefined setting group: %s', $setting_group_name), E_USER_ERROR);
 			}
 
 			return $def;

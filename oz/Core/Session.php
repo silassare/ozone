@@ -23,7 +23,8 @@
 
 	class Session
 	{
-		const SESSION_ID_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
+		const SESSION_ID_REG    = '~^[-,a-zA-Z0-9]{32,128}$~';
+		const SESSION_TOKEN_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
 
 		/**
 		 * @var \OZONE\OZ\Core\Context
@@ -72,6 +73,7 @@
 			$this->name    = SettingsManager::get('oz.config', 'OZ_API_SESSION_ID_NAME');
 			$this->id      = $context->getRequest()
 									 ->getCookieParam($this->name, null);
+
 			$this->init();
 		}
 
@@ -81,19 +83,41 @@
 		private function init()
 		{
 			try {
+				/*
+				 $token_name = SettingsManager::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_NAME');
+				$token      = $this->context->getRequest()
+											->getHeaderLine($token_name);
+
+				if (self::isSessionTokenLike($token)) {
+					$item = $this->loadWithToken($token);
+					if ($item) {
+						$this->id = $item->getId();
+						if (isset(self::$store_cache[$this->id])) {
+							$this->store = self::$store_cache[$this->id];
+						} else {
+							$data = self::decode($item->getData());
+							if (is_array($data)) {
+								self::$store_cache[$this->id] = $this->store->setStoreData($data);
+							}
+						}
+					} else {
+						$this->id = null;
+					}
+				} else
+				*/
+
 				if (isset($this->id) AND self::isSessionIdLike($this->id)) {
 					if (isset(self::$store_cache[$this->id])) {
 						$this->store = self::$store_cache[$this->id];
 					} else {
 						$item = $this->load($this->id);
-						$data = null;
 						if ($item) {
 							$data = self::decode($item->getData());
-						}
-						if (is_array($data)) {
-							self::$store_cache[$this->id] = $this->store->setStoreData($data);
+
+							if (is_array($data)) {
+								self::$store_cache[$this->id] = $this->store->setStoreData($data);
+							}
 						} else {
-							// the session is invalid
 							$this->id = null;
 						}
 					}
@@ -299,6 +323,18 @@
 		}
 
 		/**
+		 * Checks for session token string.
+		 *
+		 * @param mixed $value
+		 *
+		 * @return bool
+		 */
+		private static function isSessionTokenLike($value)
+		{
+			return is_string($value) AND preg_match(self::SESSION_TOKEN_REG, $value);
+		}
+
+		/**
 		 * Persist session data into database.
 		 *
 		 * @param string                $id
@@ -393,7 +429,42 @@
 						}
 					}
 				} catch (\Exception $e) {
-					throw new InternalErrorException('Unable to load session data.', ['session_id' => $id], $e);
+					throw new InternalErrorException('Unable to load session with id.', ['id' => $id], $e);
+				}
+			}
+
+			return null;
+		}
+
+		/**
+		 * Load session from database.
+		 *
+		 * @param string $token
+		 *
+		 * @return OZSession|null
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 */
+		private function loadWithToken($token)
+		{
+			if (self::isSessionTokenLike($token)) {
+				try {
+					$s_table = new OZSessionsQuery();
+
+					$result = $s_table->filterByToken($token)
+									  ->find(1);
+
+					$item = $result->fetchClass();
+
+					if ($item) {
+						if ($item->getExpire() > time()) {
+							return $item;
+						} else {
+							// we are lazy
+							$this->gc();
+						}
+					}
+				} catch (\Exception $e) {
+					throw new InternalErrorException('Unable to load session with token.', ['token' => $token], $e);
 				}
 			}
 
@@ -485,10 +556,12 @@
 			$cfg_domain   = SettingsManager::get("oz.cookie", "OZ_COOKIE_DOMAIN");
 			$cfg_lifetime = SettingsManager::get("oz.cookie", "OZ_COOKIE_LIFETIME");
 
-			$context       = $this->context;
-			$cookie_params = session_get_cookie_params();
-			$lifetime      = 60 * 60;
-			$client        = $context->getClient();
+			$context  = $this->context;
+			$secure   = ($context->getRequest()
+								 ->getUri()
+								 ->getScheme() === "https" ? true : false);
+			$lifetime = 60 * 60;
+			$client   = $context->getClient();
 
 			if ($client) {
 				$lifetime = $client->getSessionLifeTime();
@@ -508,7 +581,8 @@
 				'path'     => $path,
 				'domain'   => $domain,
 				'httponly' => $httponly,
-				'secure'   => $cookie_params['secure']
+				'secure'   => $secure,
+				'samesite' => "None"// None, Lax or Strict
 			];
 		}
 

@@ -536,7 +536,7 @@
 				$origin = $this->environment->get('HTTP_REFERER');
 			}
 
-			// ignore android-app://com.google.andr....
+			// ignore android-app://com.google.android....
 			if (preg_match('~^https?://~', $origin)) {
 				return $origin;
 			}
@@ -553,6 +553,7 @@
 		{
 			$custom_headers[]         = 'accept';
 			$custom_headers[]         = strtolower(SettingsManager::get('oz.config', 'OZ_API_KEY_HEADER_NAME'));
+			$custom_headers[]         = strtolower(SettingsManager::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_NAME'));
 			$allow_real_method_header = SettingsManager::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
 
 			if ($allow_real_method_header) {

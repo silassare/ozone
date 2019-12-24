@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Cli\Cmd;
 
+	use Gobl\DBAL\RDBMS;
 	use Gobl\ORM\Generators\Generator;
 	use Kli\Exceptions\KliInputException;
 	use Kli\KliAction;
@@ -21,6 +22,7 @@
 	use OZONE\OZ\Cli\Process;
 	use OZONE\OZ\Cli\Utils\Utils;
 	use OZONE\OZ\Core\DbManager;
+	use OZONE\OZ\Core\Hasher;
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\FS\FilesManager;
 
@@ -34,20 +36,20 @@
 		public function execute(KliAction $action, array $options, array $anonymous_options)
 		{
 			switch ($action->getName()) {
-				case 'refresh':
-					$this->refresh($options);
-					break;
 				case 'build':
 					$this->build($options);
+					break;
+				case 'refresh':
+					$this->refresh($options);
 					break;
 				case 'ts-bundle':
 					$this->tsBundle($options);
 					break;
-				case 'generate':
-					$this->generate($options);
-					break;
 				case 'backup':
 					$this->backup($options);
+					break;
+				case 'generate':
+					$this->generate($options);
 					break;
 				case 'source':
 					$this->source($options);
@@ -69,9 +71,10 @@
 		{
 			Utils::assertDatabaseAccess();
 
-			$cli       = $this->getCli();
-			$all       = (bool)$options['a'];
-			$structure = DbManager::getProjectDbDirectoryStructure();
+			$cli        = $this->getCli();
+			$all        = (bool)$options['a'];
+			$class_only = (bool)$options['c'];
+			$structure  = DbManager::getProjectDbDirectoryStructure();
 
 			$db     = DbManager::getDb();
 			$tables = $db->getTables();
@@ -95,22 +98,39 @@
 			$gen = new Generator($db, false, false);
 
 			foreach ($map as $ns => $dir) {
-				if ($all === false AND $ns === $structure['oz_db_namespace']) {
+				if ($all === false AND $ns !== $structure['project_db_namespace']) {
 					continue;
 				}
-				$tables = $db->getTables($ns);
+
 				// we (re)generate classes only for tables
 				// in the given namespace
+				$tables = $db->getTables($ns);
 				$gen->generateORMClasses($tables, $dir);
 			}
 
-			try {
-				$query = $db->buildDatabase();
-				$db->executeMulti($query);
-				$cli->writeLn('Success: database build done.');
-			} catch (\Exception $e) {
-				$cli->log($e)
-					->writeLn('Error: database build fails. Open log file.');
+			$cli->writeLn("\t- database classes generated.");
+			$queries = "";
+
+			if (!$class_only) {
+				try {
+					$queries = $db->buildDatabase();
+					$db->executeMulti($queries);
+
+					$cli->writeLn("\t- database queries executed.");
+				} catch (\Exception $e) {
+					$cli->log($e)
+						->writeLn('Error: database queries execution failed. Open log file.');
+
+					if (!empty($queries)) {
+						$queries_file = sprintf('debug.db.query.%s.%s.sql', date("Y-m-d"), Hasher::genRandomHash(32));
+
+						file_put_contents($queries_file, $queries);
+
+						$msg = sprintf('Error: see queries in: %s', $queries_file);
+						$cli->log($msg)
+							->writeLn($msg);
+					}
+				}
 			}
 		}
 
@@ -133,7 +153,7 @@
 			$gen    = new Generator($db, true, true);
 
 			$gen->generateTSClasses($tables, $dir);
-			$cli->writeLn("TypeScript entities bundle generated in: $dir");
+			$cli->writeLn("TypeScript entities bundle generated: $dir");
 		}
 
 		/**
@@ -232,7 +252,7 @@
 			$cli   = $this->getCli();
 
 			if (empty($query)) {
-				$cli->writeLn(sprintf('Error: the sql source file(%s) is empty.', $f));
+				$cli->writeLn(sprintf('Error: the database source file (%s) is empty.', $f));
 
 				return;
 			}
@@ -259,17 +279,22 @@
 		{
 			Utils::assertDatabaseAccess();
 
-			$dir = $options['d'];
-			$cli = $this->getCli();
+			$dir    = $options['d'];
+			$cli    = $this->getCli();
+			$config = SettingsManager::get('oz.db');
 
-			$cli->writeLn('Warning: this work only for MySQL database.');
+			if ($config["OZ_DB_RDBMS"] !== RDBMS::MYSQL) {
+				$cli->writeLn('Error: this work only for MySQL database.');
+
+				return;
+			}
+
+			$db_host = escapeshellarg($config['OZ_DB_HOST']);
+			$db_user = escapeshellarg($config['OZ_DB_USER']);
+			$db_pass = escapeshellarg($config['OZ_DB_PASS']);
+			$db_name = escapeshellarg($config['OZ_DB_NAME']);
 
 			$fm          = new FilesManager($dir);
-			$config      = SettingsManager::get('oz.db');
-			$db_host     = escapeshellarg($config['OZ_DB_HOST']);
-			$db_user     = escapeshellarg($config['OZ_DB_USER']);
-			$db_pass     = escapeshellarg($config['OZ_DB_PASS']);
-			$db_name     = escapeshellarg($config['OZ_DB_NAME']);
 			$outfile     = $fm->resolve(sprintf('backup-%s.sql', time()));
 			$cmd         = "mysqldump -h {$db_host} -u {$db_user} --password={$db_pass} {$db_name}";
 			$process     = new Process($cmd);
@@ -313,12 +338,20 @@
 			// action: refresh database
 			$refresh = new KliAction('refresh');
 			$refresh->description('Refresh database and regenerate table row classes.');
+
 			// option: -a alias --build-all
 			$all = new KliOption('a');
 			$all->alias('build-all')
 				->type(new KliTypeBool)
 				->def(false)
-				->description('To force rebuild ozone database classes.');
+				->description('To rebuild all tables in all namespaces.');
+
+			// option: -c alias --class-only
+			$class_only = new KliOption('c');
+			$class_only->alias('class-only')
+					   ->type(new KliTypeBool)
+					   ->def(false)
+					   ->description('To rebuild classes only.');
 
 			// option: -n alias --namespace
 			$rn = new KliOption('n');
@@ -335,7 +368,7 @@
 			   ->type((new KliTypePath)->dir()
 									   ->writable())
 			   ->def(null)
-			   ->description('The db classes directory.');
+			   ->description('The database classes directory.');
 
 			// action: source database
 			$source = new KliAction('source');
@@ -365,7 +398,7 @@
 			  ->type((new KliTypePath)->file())
 			  ->description('The database source file to run.');
 
-			$build->addOption($all);
+			$build->addOption($all, $class_only);
 			$refresh->addOption($rn, $rd);
 			$generate->addOption($d);
 			$backup->addOption($d);

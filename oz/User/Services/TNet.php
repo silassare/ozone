@@ -55,7 +55,7 @@
 				$s       = new TNet($context);
 				$s->actionTNet($context);
 
-				return $s->writeResponse($context);
+				return $s->respond();
 			});
 		}
 	}

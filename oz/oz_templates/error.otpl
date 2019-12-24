@@ -12,65 +12,71 @@
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport"
-			  content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+			  content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"/>
 
 		<title>Error</title>
 
+		<link href="https://fonts.googleapis.com/css?family=Ubuntu&display=swap" rel="stylesheet">
 		<style rel="stylesheet">
 			body {
-				font-family: 'Segoe UI Light', 'Calibri Light', Segoe, 'Segoe WP', Calibri, Arial, sans-serif;
+				font-family: Ubuntu, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Oxygen-Sans, Cantarell, "Helvetica Neue", "Open Sans", sans-serif;
+				-webkit-font-smoothing: antialiased;
+				-moz-osx-font-smoothing: grayscale;
 				font-size: 1.2em;
 				margin: 0;
 				width: 100%;
 				height: 100%;
-				background-color: #FFFFFF;
-			}
-
-			ul {
-				padding: 0;
-			}
-
-			li {
-				list-style-type: none;
-				padding: 5px;
-				background-color: #E6E6E6;
-				color: #333333;
-			}
-
-			li:nth-child(odd) {
-				background-color: #F7F7F7;
+				background-color: #F5F5F5;
 			}
 
 			#oz-box {
-				max-width: 80%;
-				margin: 0 auto;
-				padding: 150px 0;
+				width: 80%;
+				max-width: 800px;
+				margin: 100px auto auto auto;
+				padding: 50px 20px;
+				box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+				border: 1px solid white;
+				background: white;
+				border-radius: 3px;
 			}
 
 			.oz-title {
 				font-size: 3em;
-				color: #FFBA3F;
+				color: #ff5064;
 				text-align: center;
 			}
 
 			.oz-desc {
-				color: #4F4F4F;
+				color: #333333;
+				margin: 30px 0;
+			}
+
+			.oz-desc-item {
+				padding: 10px;
+				background-color: #E6E6E6;
+				word-break: break-word;
+			}
+
+			.oz-desc-item:nth-child(odd) {
+				background-color: #F7F7F7;
 			}
 
 			.oz-btn {
 				display: block;
 				text-align: center;
-				background-color: #FFBA3F;
-				margin: 10px 0;
-				padding: 5px;
+				background-color: #ff5064;
+				margin: 10px auto;
+				padding: 15px;
+				max-width: 50%;
 				text-decoration: none;
 				color: #FFFFFF;
-				text-transform: lowercase;
+				border: 2px solid #ff5064;
 				border-radius: 3px;
 			}
 
 			.oz-btn:hover {
-				background-color: #797979;
+				background-color: #ffffff;
+				color: #ff5064;
 			}
 
 			@media all and (max-width: 360px) {
@@ -85,10 +91,8 @@
 			<span class="oz-logo"></span>
 			<div class="oz-title"><%$.i18n( $.oz_error_title, $.oz_error_data)%></div>
 			<div class="oz-desc">
-				<ul>
-					<li><%$.i18n($.oz_error_desc, $.oz_error_data)%></li>
-					<li><%$.oz_error_url%></li>
-				</ul>
+				<div class="oz-desc-item"><%$.i18n($.oz_error_desc, $.oz_error_data)%></div>
+				<div class="oz-desc-item"><%$.oz_error_url%></div>
 			</div>
 			<%if(@has($ ,'oz_error_back_url')){%>
 			<a class="oz-btn" href="<%$.oz_error_back_url%>"><%$.i18n('OZ_ERROR_GO_BACK_BTN')%></a>

@@ -105,8 +105,8 @@
 		 */
 		public static function createFromEnvironment(Environment $env)
 		{
-			if ($env->has('oz_files') AND is_array($env['oz_files'])) {
-				return $env['oz_files'];
+			if ($env->has('oz:files') AND is_array($env['oz:files'])) {
+				return $env['oz:files'];
 			} elseif (isset($_FILES)) {
 				return static::parseUploadedFiles($_FILES);
 			}

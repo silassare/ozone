@@ -250,6 +250,6 @@
 
 			$str = $key . self::genRandomString() . microtime() . $salt;
 
-			return self::hashIt($str, 32);
+			return self::hashIt($str, 64);
 		}
 	}

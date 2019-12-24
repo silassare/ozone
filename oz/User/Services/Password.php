@@ -111,17 +111,17 @@
 			$router
 				->map(['PATCH', 'POST'], '/users/{uid}/password/edit', function (RouteInfo $r) {
 					$context = $r->getContext();
-					$s       = new Password($context);
+					$s       = new static($context);
 					$s->actionEditPassAdmin($context, $r->getArg('uid'));
 
-					return $s->writeResponse($context);
+					return $s->respond();
 				}, ['uid' => '\d+'])
 				->map(['PATCH', 'POST'], '/users/password/edit', function (RouteInfo $r) {
 					$context = $r->getContext();
-					$s       = new Password($context);
+					$s       = new static($context);
 					$s->actionEditOwnPass($context);
 
-					return $s->writeResponse($context);
+					return $s->respond();
 				});
 		}
 	}

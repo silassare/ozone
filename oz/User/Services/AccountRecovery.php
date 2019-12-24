@@ -116,7 +116,7 @@
 				$s       = new AccountRecovery($context);
 				$s->actionRecover($context);
 
-				return $s->writeResponse($context);
+				return $s->respond();
 			});
 		}
 	}

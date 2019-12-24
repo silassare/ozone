@@ -56,10 +56,10 @@
 		"OZ_PHONE_AUTH_NOT_STARTED"   => "Vous n'avez pas validé l'étape 1.",
 		"OZ_PHONE_AUTH_NOT_VALIDATED" => "Vous n'avez pas validé l'étape 2.",
 
-		"OZ_FIELD_USER_NAME_INVALID"           => "Le nom et prénoms contient des caractères non autorisés.",
-		"OZ_FIELD_USER_NAME_TOO_SHORT"         => "Le nom et prénoms est trop court.",
-		"OZ_FIELD_USER_NAME_TOO_LONG"          => "Le nom et prénoms est trop long.",
-		"OZ_FIELD_USER_NAME_CONTAINS_KEYWORDS" => "Le nom et prénoms ne doit pas contenir des mots clés...",
+		"OZ_FIELD_USER_NAME_INVALID"           => "Le nom d'utilisateur contient des caractères non autorisés.",
+		"OZ_FIELD_USER_NAME_TOO_SHORT"         => "Le nom d'utilisateur est trop court.",
+		"OZ_FIELD_USER_NAME_TOO_LONG"          => "Le nom d'utilisateur est trop long.",
+		"OZ_FIELD_USER_NAME_CONTAINS_KEYWORDS" => "Le nom d'utilisateur ne doit pas contenir des mots clés...",
 
 		"OZ_FIELD_EMAIL_INVALID"            => "L'adresse mail n'est pas valide.",
 		"OZ_FIELD_GENDER_INVALID"           => "Veuillez indiquer votre sexe.",
@@ -81,5 +81,5 @@
 		"OZ_ERROR_GO_HOME_BTN" => "Accueil",
 		"OZ_ERROR_GO_BACK_BTN" => "Retour",
 		"OZ_REDIRECT_TITLE"    => "Vous allez être rediriger.",
-		"OZ_REDIRECT_MESSAGE"  => "Si vous n'êtes pas redirigé automatiquement, suivez le <a href=\"{url}\">lien</a>.",
+		"OZ_REDIRECT_MESSAGE"  => "Si vous n'êtes pas redirigé automatiquement, suivez ce <a href=\"{url}\">lien</a>.",
 	];

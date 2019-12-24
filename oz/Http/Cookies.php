@@ -192,6 +192,7 @@
 			}
 
 			if (isset($properties['samesite']) && in_array(strtolower($properties['samesite']), [
+					'none',
 					'lax',
 					'strict'
 				], true)) {
