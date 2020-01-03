@@ -25,6 +25,7 @@
 	use OZONE\OZ\Core\Hasher;
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\FS\FilesManager;
+	use OZONE\OZ\FS\PathUtils;
 
 	final class Db extends Command
 	{
@@ -108,7 +109,7 @@
 				$gen->generateORMClasses($tables, $dir);
 			}
 
-			$cli->writeLn("\t- database classes generated.");
+			$cli->success("database classes generated.");
 			$queries = "";
 
 			if (!$class_only) {
@@ -116,19 +117,19 @@
 					$queries = $db->buildDatabase();
 					$db->executeMulti($queries);
 
-					$cli->writeLn("\t- database queries executed.");
+					$cli->success("database queries executed.");
 				} catch (\Exception $e) {
-					$cli->log($e)
-						->writeLn('Error: database queries execution failed. Open log file.');
+					$cli->error('database queries execution failed. Open log file.')
+						->log($e);
 
 					if (!empty($queries)) {
 						$queries_file = sprintf('debug.db.query.%s.%s.sql', date("Y-m-d"), Hasher::genRandomHash(32));
 
 						file_put_contents($queries_file, $queries);
 
-						$msg = sprintf('Error: see queries in: %s', $queries_file);
-						$cli->log($msg)
-							->writeLn($msg);
+						$msg = sprintf('see queries in: %s', $queries_file);
+						$cli->info($msg)
+							->log($msg);
 					}
 				}
 			}
@@ -153,7 +154,8 @@
 			$gen    = new Generator($db, true, true);
 
 			$gen->generateTSClasses($tables, $dir);
-			$cli->writeLn("TypeScript entities bundle generated: $dir");
+			$cli->success("TypeScript entities bundle generated.")
+				->info(PathUtils::resolve($dir, "gobl.bundle.ts"));
 		}
 
 		/**
@@ -201,10 +203,10 @@
 
 			try {
 				$db->executeMulti($query);
-				$cli->writeLn('Success: database refreshed.');
+				$cli->success('database refreshed.');
 			} catch (\Exception $e) {
-				$cli->log($e)
-					->writeLn('Error: database refresh fails. Open log file.');
+				$cli->error('database refresh fails. Open log file.')
+					->log($e);
 			}
 		}
 
@@ -228,11 +230,11 @@
 
 			if (file_exists($fm->resolve($file_name))) {
 				$this->getCli()
-					 ->writeLn('Success: database file generated.')
-					 ->writeLn($fm->resolve($file_name));
+					 ->success('database file generated.')
+					 ->info($fm->resolve($file_name));
 			} else {
 				$this->getCli()
-					 ->writeLn('Error: database file generation fails.');
+					 ->error('database file generation fails.');
 			}
 		}
 
@@ -252,7 +254,7 @@
 			$cli   = $this->getCli();
 
 			if (empty($query)) {
-				$cli->writeLn(sprintf('Error: the database source file (%s) is empty.', $f));
+				$cli->error(sprintf('the database source file (%s) is empty.', $f));
 
 				return;
 			}
@@ -261,10 +263,10 @@
 
 			try {
 				$db->executeMulti($query);
-				$cli->writeLn('Success: database updated.');
+				$cli->success('database updated.');
 			} catch (\Exception $e) {
-				$cli->log($e)
-					->writeLn('Error: database update fails. Open log file.');
+				$cli->error('database update fails. Open log file.')
+					->log($e);
 			}
 		}
 
@@ -284,7 +286,7 @@
 			$config = SettingsManager::get('oz.db');
 
 			if ($config["OZ_DB_RDBMS"] !== RDBMS::MYSQL) {
-				$cli->writeLn('Error: this work only for MySQL database.');
+				$cli->error('this work only for MySQL database.');
 
 				return;
 			}
@@ -302,11 +304,11 @@
 								   ->close();
 			if ($return_code === 0) {
 				$fm->wf($outfile, $process->getOutput());
-				$cli->writeLn('Success: database backup file created.')
-					->writeLn($outfile);
+				$cli->success('database backup file created.')
+					->info($outfile);
 			} else {
-				$cli->writeLn('Error: unable to backup database.')
-					->writeLn($process->getError());
+				$cli->error('unable to backup database.')
+					->error($process->getError());
 			}
 		}
 

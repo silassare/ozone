@@ -70,10 +70,10 @@
 				SettingsManager::setKey('oz.routes.api', $service_name, $service);
 
 				$this->getCli()
-					 ->writeLn(sprintf('Success: service "%s" generated.', $service_name));
+					 ->success(sprintf('service "%s" generated.', $service_name));
 			} else {
 				$this->getCli()
-					 ->writeLn(sprintf('Error: Cannot overwrite service "%s" defined in "oz.routes.api" settings.', $service_name));
+					 ->error(sprintf('cannot overwrite service "%s" defined in "oz.routes.api" settings.', $service_name));
 			}
 		}
 

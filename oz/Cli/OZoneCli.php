@@ -99,20 +99,21 @@
 		 */
 		public function quit()
 		{
-			$this->writeLn('See you soon!');
+			$this->info('See you soon!');
 			parent::quit();
 		}
 
 		/**
-		 * Log anything.
+		 * Creates log file or append to existing.
 		 *
-		 * @param mixed $arg
+		 * @param mixed $msg  the message to log
+		 * @param bool  $wrap to wrap string or not
 		 *
 		 * @return \OZONE\OZ\Cli\OZoneCli
 		 */
-		public function log($arg)
+		public function log($msg, $wrap = true)
 		{
-			oz_logger($arg);
+			oz_logger($msg);
 
 			return $this;
 		}

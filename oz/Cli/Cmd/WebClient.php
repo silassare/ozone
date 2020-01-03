@@ -115,9 +115,9 @@
 			   ->save();
 
 			$this->getCli()
-				 ->writeLn(sprintf('Success: web client added to project "%s".', $project_name))
-				 ->writeLn(sprintf('Client Host  : %s', $host))
-				 ->writeLn(sprintf('Client ApiKey: %s', $api_key));
+				 ->success(sprintf('web client added to project "%s".', $project_name))
+				 ->info(sprintf('Client Host  : %s', $host))
+				 ->info(sprintf('Client ApiKey: %s', $api_key));
 		}
 
 		/**

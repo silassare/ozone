@@ -52,8 +52,6 @@
 		 */
 		private function backup(array $options)
 		{
-			global $argv;
-
 			Utils::assertDatabaseAccess();
 
 			$dir          = $options['d'];
@@ -72,18 +70,16 @@
 			   ]);
 
 			$this->getCli()
-				 ->writeLn('Success: a backup of your project was created.')
-				 ->writeLn($fm->getRoot())
-				 ->writeLn('Info: we will try to backup your project database.');
+				 ->success('a backup of your project was created.')
+				 ->info($fm->getRoot())
+				 ->info('we will try to backup your project database.');
 
-			$head          = $argv[0];
 			$db_backup_dir = escapeshellarg($fm->getRoot());
 
 			// backup database to the same directory
-			$result = `{$head} db backup -d={$db_backup_dir}`;
 
 			$this->getCli()
-				 ->writeLn($result);
+				 ->executeString("db backup -d={$db_backup_dir}");
 		}
 
 		/**
@@ -103,7 +99,7 @@
 
 			if ($config !== null) {
 				$this->getCli()
-					 ->writeLn(sprintf('Error: project "%s" created with "OZone %s" exists in "%s".', $config['OZ_PROJECT_NAME'], $config['OZ_OZONE_VERSION'], $folder));
+					 ->error(sprintf('project "%s" created with "OZone %s" exists in "%s".', $config['OZ_PROJECT_NAME'], $config['OZ_OZONE_VERSION'], $folder));
 
 				return;
 			}
@@ -191,7 +187,7 @@
 			   ->cd('..');
 
 			$this->getCli()
-				 ->writeLn(sprintf('Success: project "%s" created in "%s".', $name, $root));
+				 ->success(sprintf('project "%s" created in "%s".', $name, $root));
 		}
 
 		/**
