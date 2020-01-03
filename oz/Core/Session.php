@@ -555,6 +555,7 @@
 		{
 			$cfg_domain   = SettingsManager::get("oz.cookie", "OZ_COOKIE_DOMAIN");
 			$cfg_lifetime = SettingsManager::get("oz.cookie", "OZ_COOKIE_LIFETIME");
+			$samesite     = SettingsManager::get("oz.cookie", "OZ_COOKIE_SAMESITE");
 
 			$context  = $this->context;
 			$secure   = ($context->getRequest()
@@ -567,7 +568,7 @@
 				$lifetime = $client->getSessionLifeTime();
 			}
 
-			$lifetime = min($cfg_lifetime, $lifetime);
+			$lifetime = max($cfg_lifetime, $lifetime);
 			$httponly = true;
 			$domain   = ($cfg_domain === 'self') ? $context->getHost() : $cfg_domain;
 
@@ -582,7 +583,7 @@
 				'domain'   => $domain,
 				'httponly' => $httponly,
 				'secure'   => $secure,
-				'samesite' => "None"// None, Lax or Strict
+				'samesite' => $samesite// None, Lax or Strict
 			];
 		}
 

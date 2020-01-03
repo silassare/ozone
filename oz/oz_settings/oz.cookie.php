@@ -13,4 +13,5 @@
 	return [
 		"OZ_COOKIE_DOMAIN"   => 'self',
 		"OZ_COOKIE_LIFETIME" => 24 * 60 * 60,// 1 day
+		"OZ_COOKIE_SAMESITE" => 'Lax'// None, Lax or Strict
 	];
