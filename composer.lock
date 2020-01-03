@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "claviska/simpleimage",
-            "version": "3.3.3",
+            "version": "3.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/claviska/SimpleImage.git",
-                "reference": "31ba5b8358e1663a2813e2ada7242fa8d97a96dc"
+                "reference": "3786d80af8e6d05e5e42f0350e5e5da5b92041a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/claviska/SimpleImage/zipball/31ba5b8358e1663a2813e2ada7242fa8d97a96dc",
-                "reference": "31ba5b8358e1663a2813e2ada7242fa8d97a96dc",
+                "url": "https://api.github.com/repos/claviska/SimpleImage/zipball/3786d80af8e6d05e5e42f0350e5e5da5b92041a0",
+                "reference": "3786d80af8e6d05e5e42f0350e5e5da5b92041a0",
                 "shasum": ""
             },
             "require": {
@@ -43,7 +43,7 @@
                 }
             ],
             "description": "A PHP class that makes working with images as simple as possible.",
-            "time": "2017-09-12T09:03:56+00:00"
+            "time": "2019-09-26T01:22:02+00:00"
         },
         {
             "name": "league/color-extractor",
@@ -155,12 +155,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "9b2dd2516a7efa3e52b5dc705447a455cd5cdbae"
+                "reference": "0d5897c1d408ba79d5e79e0a00f58fc923b23cca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/9b2dd2516a7efa3e52b5dc705447a455cd5cdbae",
-                "reference": "9b2dd2516a7efa3e52b5dc705447a455cd5cdbae",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/0d5897c1d408ba79d5e79e0a00f58fc923b23cca",
+                "reference": "0d5897c1d408ba79d5e79e0a00f58fc923b23cca",
                 "shasum": ""
             },
             "require": {
@@ -195,7 +195,7 @@
                 "mysql",
                 "orm"
             ],
-            "time": "2019-09-19T02:45:43+00:00"
+            "time": "2019-12-24T15:35:27+00:00"
         },
         {
             "name": "silassare/kli",
@@ -203,15 +203,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/kli.git",
-                "reference": "03aed776111c2016cd20edb6d82e5636e5bec9d0"
+                "reference": "9c92c434f268e9de0bfceafafd9bcc7396f6ba91"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/kli/zipball/03aed776111c2016cd20edb6d82e5636e5bec9d0",
-                "reference": "03aed776111c2016cd20edb6d82e5636e5bec9d0",
+                "url": "https://api.github.com/repos/silassare/kli/zipball/9c92c434f268e9de0bfceafafd9bcc7396f6ba91",
+                "reference": "9c92c434f268e9de0bfceafafd9bcc7396f6ba91",
                 "shasum": ""
             },
             "require": {
+                "ext-readline": "*",
                 "php": ">=5.6.0"
             },
             "type": "library",
@@ -241,7 +242,7 @@
                 "kli",
                 "php-cli"
             ],
-            "time": "2019-03-18T19:24:59+00:00"
+            "time": "2019-12-31T11:25:56+00:00"
         },
         {
             "name": "silassare/otpl",
