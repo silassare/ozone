@@ -104,7 +104,6 @@
 		 *
 		 * @param \Exception $error the exception to convert
 		 *
-		 * @throws \OZONE\OZ\Exceptions\BadRequestException
 		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 * @throws \Exception
@@ -116,9 +115,15 @@
 			}
 
 			if ($error instanceof TypesInvalidValueException) {
+				$msg = $error->getMessage();
+
+				if ($msg === strtoupper($msg)) {
+					throw new InvalidFormException($msg, $error->getData(), $error);
+				}
+
 				throw new InvalidFormException(null, [
-					'message' => $error->getMessage(),
-					'data'    => $error->getData()
+					'type' => $msg,
+					'data' => $error->getData()
 				], $error);
 			}
 
