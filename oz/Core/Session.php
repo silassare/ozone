@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Core;
 
+	use Exception;
 	use Gobl\DBAL\Rule;
 	use OZONE\OZ\Db\OZClient;
 	use OZONE\OZ\Db\OZSession;
@@ -18,6 +19,7 @@
 	use OZONE\OZ\Exceptions\InternalErrorException;
 	use OZONE\OZ\Http\Cookies;
 	use OZONE\OZ\Http\Response;
+	use RuntimeException;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -84,46 +86,51 @@
 		{
 			try {
 				/*
-				 $token_name = SettingsManager::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_NAME');
-				$token      = $this->context->getRequest()
-											->getHeaderLine($token_name);
-
-				if (self::isSessionTokenLike($token)) {
-					$item = $this->loadWithToken($token);
-					if ($item) {
-						$this->id = $item->getId();
+					1) if we have a cookie, we deal with it and only with it
+				  		- if the cookie is not valid ignore any other method
+					2) when we don't have cookie, we can use token header if enabled and provided
+				*/
+				if (isset($this->id)) {
+					if (self::isSessionIdLike($this->id)) {
 						if (isset(self::$store_cache[$this->id])) {
 							$this->store = self::$store_cache[$this->id];
 						} else {
-							$data = self::decode($item->getData());
-							if (is_array($data)) {
-								self::$store_cache[$this->id] = $this->store->setStoreData($data);
+							$item = $this->load($this->id);
+							if ($item) {
+								$data = self::decode($item->getData());
+
+								if (is_array($data)) {
+									self::$store_cache[$this->id] = $this->store->setStoreData($data);
+								}
 							}
 						}
-					} else {
-						$this->id = null;
 					}
-				} else
-				*/
+				} elseif (SettingsManager::get('oz.session', 'OZ_SESSION_TOKEN_HEADER_ENABLED')) {
+					$token_name = SettingsManager::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_NAME');
+					$token      = $this->context->getRequest()
+												->getHeaderLine($token_name);
 
-				if (isset($this->id) AND self::isSessionIdLike($this->id)) {
-					if (isset(self::$store_cache[$this->id])) {
-						$this->store = self::$store_cache[$this->id];
-					} else {
-						$item = $this->load($this->id);
+					if (self::isSessionTokenLike($token)) {
+						$item = $this->loadWithToken($token);
 						if ($item) {
-							$data = self::decode($item->getData());
-
-							if (is_array($data)) {
-								self::$store_cache[$this->id] = $this->store->setStoreData($data);
+							$this->id = $item->getId();
+							if (isset(self::$store_cache[$this->id])) {
+								$this->store = self::$store_cache[$this->id];
+							} else {
+								$data = self::decode($item->getData());
+								if (is_array($data)) {
+									self::$store_cache[$this->id] = $this->store->setStoreData($data);
+								}
 							}
-						} else {
-							$this->id = null;
 						}
 					}
 				}
-			} catch (\Exception $e) {
-				throw new \RuntimeException('Session init failed.', null, $e);
+
+				if (isset($this->id) AND !isset(self::$store_cache[$this->id])) {
+					$this->id = null;
+				}
+			} catch (Exception $e) {
+				throw new RuntimeException('Session init failed.', null, $e);
 			}
 		}
 
@@ -133,7 +140,7 @@
 		private function assertSessionStarted()
 		{
 			if (!$this->started) {
-				throw new \RuntimeException('Session not started.');
+				throw new RuntimeException('Session not started.');
 			}
 		}
 
@@ -371,7 +378,7 @@
 					  ->setToken($token)
 					  ->save();
 				}
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				throw new InternalErrorException('Unable to save session data.', null, $e);
 			}
 
@@ -394,7 +401,7 @@
 				$s_table->filterById($id)
 						->delete()
 						->execute();
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				throw new InternalErrorException("Unable to destroy session.", ["session_id" => $id], $e);
 			}
 
@@ -428,7 +435,7 @@
 							$this->gc();
 						}
 					}
-				} catch (\Exception $e) {
+				} catch (Exception $e) {
 					throw new InternalErrorException('Unable to load session with id.', ['id' => $id], $e);
 				}
 			}
@@ -463,7 +470,7 @@
 							$this->gc();
 						}
 					}
-				} catch (\Exception $e) {
+				} catch (Exception $e) {
 					throw new InternalErrorException('Unable to load session with token.', ['token' => $token], $e);
 				}
 			}
@@ -599,7 +606,7 @@
 				$s_table->filterByExpire(time(), Rule::OP_LTE)
 						->delete()
 						->execute();
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				throw new InternalErrorException('Unable to delete expired sessions.', null, $e);
 			}
 		}
@@ -614,10 +621,8 @@
 		static function decode($raw)
 		{
 			try {
-				$data = json_decode($raw, true);
-
-				return $data;
-			} catch (\Exception $e) {
+				return json_decode($raw, true);
+			} catch (Exception $e) {
 			}
 
 			return null;
