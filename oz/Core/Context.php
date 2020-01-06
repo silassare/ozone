@@ -10,6 +10,9 @@
 
 	namespace OZONE\OZ\Core;
 
+	use Closure;
+	use Exception;
+	use InvalidArgumentException;
 	use OZONE\OZ\Db\OZClient;
 	use OZONE\OZ\Exceptions\BaseException;
 	use OZONE\OZ\Exceptions\ForbiddenException;
@@ -24,6 +27,10 @@
 	use OZONE\OZ\Router\RouteInfo;
 	use OZONE\OZ\Router\Router;
 	use OZONE\OZ\User\UsersManager;
+	use ReflectionException;
+	use ReflectionFunction;
+	use ReflectionMethod;
+	use RuntimeException;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -164,7 +171,7 @@
 		public function handle()
 		{
 			if ($this->running) {
-				throw new \RuntimeException('The request is already handled.');
+				throw new RuntimeException('The request is already handled.');
 			}
 
 			$this->running = true;
@@ -280,7 +287,7 @@
 				ob_start();
 				$return  = call_user_func($route->getCallable(), $route_info);
 				$content = ob_get_clean();
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				ob_clean();
 				throw $e;
 			}
@@ -878,7 +885,7 @@
 			$this->checkRecursiveRedirection($url, ['status' => $status]);
 
 			if (!filter_var($url, FILTER_VALIDATE_URL)) {
-				throw new \InvalidArgumentException(sprintf('Invalid redirect url: %s', $url));
+				throw new InvalidArgumentException(sprintf('Invalid redirect url: %s', $url));
 			}
 
 			$this->hooks_manager->onRedirect(Uri::createFromString($url), $this);
@@ -959,10 +966,10 @@
 		{
 			$r = null;
 			try {
-				if ($c instanceof \Closure) {
-					$r = new \ReflectionFunction($c);
+				if ($c instanceof Closure) {
+					$r = new ReflectionFunction($c);
 				} elseif (is_callable($c)) {
-					$r = new \ReflectionMethod($c);
+					$r = new ReflectionMethod($c);
 				}
 				if ($r) {
 					return [
@@ -971,7 +978,7 @@
 						'end'   => $r->getEndLine()
 					];
 				}
-			} catch (\ReflectionException $e) {
+			} catch (ReflectionException $e) {
 			}
 
 			return false;
