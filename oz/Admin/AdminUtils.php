@@ -12,32 +12,41 @@
 
 	use OZONE\OZ\Db\OZAdministratorsQuery;
 	use OZONE\OZ\Exceptions\InternalErrorException;
+	use Exception;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	final class AdminUtils
 	{
+		private static $caches = [];
+
 		/**
 		 * Checks if a given user id belong to an admin.
 		 *
 		 * @param mixed $uid The user id
 		 *
+		 * @param bool  $use_cache
+		 *
 		 * @return bool
-		 * @throws \OZONE\OZ\Exceptions\BaseException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
-		public static function isAdmin($uid)
+		public static function isAdmin($uid, $use_cache = true)
 		{
-			try {
-				$admins = new OZAdministratorsQuery();
+			if (!$use_cache OR !isset(self::$caches[$uid])) {
+				try {
+					$admins = new OZAdministratorsQuery();
 
-				$count = $admins->filterByUserId($uid)
-								->filterByValid(1)
-								->find(1)
-								->count();
-			} catch (\Exception $e) {
-				throw new InternalErrorException(null, null, $e);
+					$count = $admins->filterByUserId($uid)
+									->filterByValid(1)
+									->find(1)
+									->count();
+
+					self::$caches[$uid] = ($count === 1 ? true : false);
+				} catch (Exception $e) {
+					throw new InternalErrorException(null, null, $e);
+				}
 			}
 
-			return ($count === 1 ? true : false);
+			return self::$caches[$uid];
 		}
 	}

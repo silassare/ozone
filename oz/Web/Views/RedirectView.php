@@ -29,7 +29,7 @@
 			}
 
 			$this->compileData = [
-				'oz_redirect_url' => $url
+				'oz_redirect_url' => filter_var($url, FILTER_SANITIZE_URL)
 			];
 
 			$response = $context->getResponse()

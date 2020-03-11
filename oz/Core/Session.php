@@ -105,7 +105,7 @@
 							}
 						}
 					}
-				} elseif (SettingsManager::get('oz.session', 'OZ_SESSION_TOKEN_HEADER_ENABLED')) {
+				} elseif (SettingsManager::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_ENABLED')) {
 					$token_name = SettingsManager::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_NAME');
 					$token      = $this->context->getRequest()
 												->getHeaderLine($token_name);
@@ -561,6 +561,7 @@
 		private function getCookieParams()
 		{
 			$cfg_domain   = SettingsManager::get("oz.cookie", "OZ_COOKIE_DOMAIN");
+			$cfg_path     = SettingsManager::get("oz.cookie", "OZ_COOKIE_PATH");
 			$cfg_lifetime = SettingsManager::get("oz.cookie", "OZ_COOKIE_LIFETIME");
 			$samesite     = SettingsManager::get("oz.cookie", "OZ_COOKIE_SAMESITE");
 
@@ -577,11 +578,9 @@
 
 			$lifetime = max($cfg_lifetime, $lifetime);
 			$httponly = true;
-			$domain   = ($cfg_domain === 'self') ? $context->getHost() : $cfg_domain;
+			$domain   = (empty($cfg_domain) OR $cfg_domain === 'self') ? $context->getHost() : $cfg_domain;
+			$path   = (empty($cfg_path) OR $cfg_path === 'self') ? $context->getRequest()->getUri()->getBasePath() : $cfg_path;
 
-			$path = $context->getRequest()
-							->getUri()
-							->getBasePath();
 			$path = empty($path) ? '/' : $path;
 
 			return [

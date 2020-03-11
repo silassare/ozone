@@ -25,6 +25,7 @@
 		"OZ_ERROR_INVALID_FORM"        => "La requête est invalide. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
 		"OZ_ERROR_YOU_MUST_LOGIN"      => "Vous devez vous connecter d'abord.",
 		"OZ_ERROR_NOT_ALLOWED"         => "Une erreur s'est produite. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
+		"OZ_MISSING_API_KEY"           => "Vous devez fournir une clé API.",
 		"OZ_YOUR_API_KEY_IS_NOT_VALID" => "La clef API est invalide.",
 
 		"OZ_SMS_AUTH_CODE_MESSAGE"               => "Votre code d'authentification est: {code}",
@@ -69,7 +70,6 @@
 		"OZ_FIELD_PASS_TOO_SHORT"           => "Le mot de passe est trop court.",
 		"OZ_SIGNUP_SUCCESS"                 => "Inscription Réussie.",
 
-		"OZ_SESSION_INVALID"        => "Session non valide. Relancer l'application.",
 		"OZ_USER_ONLINE"            => "Vous êtes connecté.",
 		"OZ_USER_LOGOUT"            => "Vous vous êtes déconnecté.",
 		"OZ_LOGOUT_FAIL"            => "La déconnexion a échoué.",

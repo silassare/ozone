@@ -10,7 +10,7 @@
 
 	namespace OZONE\OZ\Hooks;
 
-	use http\Exception\InvalidArgumentException;
+	use InvalidArgumentException;
 	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\Hooks\Interfaces\HookInterface;
 	use OZONE\OZ\Http\Uri;
@@ -210,5 +210,4 @@
 
 			return $hc->getResponse();
 		}
-
 	}

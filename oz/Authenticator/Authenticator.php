@@ -168,27 +168,9 @@
 		}
 
 		/**
-		 * Checks if you can use a given authentication label
-		 *
-		 * this doesn't check the validity of the label
-		 *
-		 * @param string $label
-		 *
-		 * @return bool
-		 */
-		public function canUseLabel($label)
-		{
-			if (!is_string($label) OR !preg_match(self::LABEL_REG, $label)) {
-				return false;
-			}
-
-			return true;
-		}
-
-		/**
 		 * Sets label.
 		 *
-		 * the label and the value should be unique otherwise if an authentication
+		 * The label and the value should be unique otherwise if an authentication
 		 * exists for the same label and value it'll be overwritten, so be aware
 		 *
 		 * @param string $label
@@ -199,7 +181,7 @@
 		 */
 		public function setLabel($label)
 		{
-			if (!$this->canUseLabel($label)) {
+			if (!is_string($label) OR !preg_match(self::LABEL_REG, $label)) {
 				throw new \Exception('Authenticator: invalid label');
 			}
 

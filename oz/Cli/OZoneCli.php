@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Cli;
 
+	use Exception;
 	use OZONE\OZ\Cli\Utils\Utils;
 	use OZONE\OZ\Core\DbManager;
 	use OZONE\OZ\Core\SettingsManager;
@@ -77,10 +78,10 @@
 						if ($cmd instanceof Command) {
 							$this->addCommand($cmd);
 						} else {
-							throw new \Exception(sprintf('Your custom command class "%s" should extends "%s".', $cmd_class, Command::class));
+							throw new Exception(sprintf('Your custom command class "%s" should extends "%s".', $cmd_class, Command::class));
 						}
 					} else {
-						throw new \Exception(sprintf('Class "%s" not found for command "%s".', $cmd_class, $cmd_name));
+						throw new Exception(sprintf('Class "%s" not found for command "%s".', $cmd_class, $cmd_name));
 					}
 				}
 			}

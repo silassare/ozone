@@ -63,6 +63,9 @@
 				throw new KliInputException('You should not backup project to project directory or subdirectory.');
 			}
 
+			$this->getCli()
+				 ->info('Copying the required files and directories may take some time ...');
+
 			$fm = new FilesManager($dir);
 			$fm->cd($backup_name, true)
 			   ->cp($project_fs->getRoot(), null, [
@@ -70,16 +73,17 @@
 			   ]);
 
 			$this->getCli()
-				 ->success('a backup of your project was created.')
-				 ->info($fm->getRoot())
-				 ->info('we will try to backup your project database.');
+				 ->info('Generating database backup for your project ...');
 
 			$db_backup_dir = escapeshellarg($fm->getRoot());
 
-			// backup database to the same directory
-
 			$this->getCli()
 				 ->executeString("db backup -d={$db_backup_dir}");
+
+			$this->getCli()
+				 ->success('A backup of your project was created.')
+				 ->info($fm->getRoot());
+
 		}
 
 		/**

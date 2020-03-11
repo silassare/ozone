@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\User;
 
+	use Exception;
 	use Gobl\DBAL\Rule;
 	use OZONE\OZ\Admin\AdminUtils;
 	use OZONE\OZ\Core\Context;
@@ -76,7 +77,7 @@
 		public function assertUserVerified($error_msg = 'OZ_ERROR_YOU_MUST_LOGIN', $error_data = null)
 		{
 			if (!$this->userVerified()) {
-				if (!($error_msg instanceof \Exception)) {
+				if (!($error_msg instanceof Exception)) {
 					$error_msg = new UnverifiedUserException($error_msg, $error_data);
 				}
 
@@ -95,7 +96,7 @@
 		public function assertIsAdmin($error_msg = 'OZ_ERROR_YOU_ARE_NOT_ADMIN', $error_data = null)
 		{
 			if (!$this->userVerified()) {
-				if (!($error_msg instanceof \Exception)) {
+				if (!($error_msg instanceof Exception)) {
 					$error_msg = new UnverifiedUserException($error_msg, $error_data);
 				}
 
@@ -103,7 +104,7 @@
 			}
 
 			if (!AdminUtils::isAdmin($this->getCurrentUserId())) {
-				if (!($error_msg instanceof \Exception)) {
+				if (!($error_msg instanceof Exception)) {
 					$error_msg = new ForbiddenException($error_msg, $error_data);
 				}
 
@@ -123,6 +124,7 @@
 		public function getCurrentUserId()
 		{
 			$this->assertUserVerified();
+
 			return $this->context->getSession()
 								 ->get('ozone_user:id');
 		}
@@ -212,7 +214,7 @@
 		{
 			if (!$user->isSaved()) {
 				// something is going wrong
-				throw new InternalErrorException('Unsaved user can\'t be logged.', $user->asArray());
+				throw new InternalErrorException('OZ_USER_CANT_LOG_ON', $user->asArray());
 			}
 
 			$session     = $this->context->getSession();
@@ -236,8 +238,8 @@
 
 				$token = $session->attachUser($user)
 								 ->getToken();
-			} catch (\Exception $e) {
-				throw new InternalErrorException('Unable to log user in.', null, $e);
+			} catch (Exception $e) {
+				throw new InternalErrorException('OZ_USER_LOG_ON_FAIL', null, $e);
 			}
 
 			$session->set('ozone_user:id', $user->getId())
@@ -267,8 +269,8 @@
 
 					// may be useful
 					$session->set('ozone_user:id', $current_user->getId());
-				} catch (\Exception $e) {
-					throw new InternalErrorException('Unable to log user out.', null, $e);
+				} catch (Exception $e) {
+					throw new InternalErrorException('OZ_USER_LOG_OUT_FAIL', null, $e);
 				}
 
 				OZone::getEventManager()
@@ -317,6 +319,44 @@
 			}
 
 			return false;
+		}
+
+		/**
+		 * Try to log on as the current client owner
+		 *
+		 * This is used when we have a user attached to the client
+		 * The user right will be used every time the api key of the client is used
+		 *
+		 * @return \OZONE\OZ\Db\OZUser the user object or error string
+		 * @throws \Gobl\DBAL\Exceptions\DBALException
+		 * @throws \Gobl\ORM\Exceptions\ORMException
+		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+		 */
+		public function tryLogOnAsClientOwner()
+		{
+			$client = $this->context->getClient();
+			$uid    = $client->getUserId();
+			$owner  = null;
+
+			if ($uid) {
+				$uq    = new OZUsersQuery();
+				$owner = $uq->filterById($uid)
+							->find(1)
+							->fetchClass();
+			}
+
+			if (!$owner) {
+				throw new ForbiddenException('OZ_CLIENT_OWNER_IS_NOT_DEFINED');
+			}
+
+			if (!$owner->getValid()) {
+				throw new ForbiddenException('OZ_CLIENT_OWNER_IS_DISABLED');
+			}
+
+			$this->logUserIn($owner);
+
+			return $owner;
 		}
 
 		/**
@@ -527,8 +567,8 @@
 				return $uq->filterById($uid)
 						  ->find(1)
 						  ->fetchClass();
-			} catch (\Exception $e) {
-				throw new InternalErrorException('Failed to load user object.', ['id' => $uid], $e);
+			} catch (Exception $e) {
+				throw new InternalErrorException('OZ_USER_CANT_LOAD_USER_ENTITY', ['id' => $uid], $e);
 			}
 		}
 	}

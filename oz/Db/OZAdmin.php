@@ -12,7 +12,4 @@
 	use OZONE\OZ\Db\Base\OZAdmin as BaseOZAdmin;
 
 
-	class OZAdmin extends BaseOZAdmin
-	{
-
-	}
+	class OZAdmin extends BaseOZAdmin { }

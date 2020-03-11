@@ -11,7 +11,6 @@
 	namespace OZONE\OZ\Ofv;
 
 	use OZONE\OZ\Core\SettingsManager;
-	use OZONE\OZ\Utils\StringUtils;
 
 	/**
 	 * @param \OZONE\OZ\Ofv\OFormValidator $ofv
@@ -23,7 +22,7 @@
 		$code = $ofv->getField('code');
 
 		if (preg_match(SettingsManager::get('oz.ofv.const', 'OZ_CODE_REG'), $code)) {
-			$ofv->setField('code', StringUtils::clean($code));
+			$ofv->setField('code', $code);
 		} else {
 			$ofv->addError('OZ_AUTH_CODE_INVALID');
 		}

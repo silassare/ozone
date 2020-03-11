@@ -10,8 +10,10 @@
 
 	namespace OZONE\OZ\Exceptions;
 
+	use Exception;
 	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\Core\ResponseHolder;
+	use Throwable;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -20,7 +22,7 @@
 	 *
 	 * @package OZONE\OZ\Exceptions
 	 */
-	abstract class BaseException extends \Exception
+	abstract class BaseException extends Exception
 	{
 		const BAD_REQUEST        = 400;
 		const FORBIDDEN          = 403;
@@ -84,7 +86,7 @@
 		 * @param array|null      $data     additional error data
 		 * @param \Throwable|null $previous previous throwable used for the exception chaining
 		 */
-		public function __construct($message, $code, array $data = null, \Throwable $previous = null)
+		public function __construct($message, $code, array $data = null, Throwable $previous = null)
 		{
 			parent::__construct($message, $code, $previous);
 
@@ -247,7 +249,7 @@ ERROR_PAGE;
 				} else {
 					$this->showJson($context);
 				}
-			} catch (\Throwable $e) {
+			} catch (Throwable $e) {
 				oz_logger($e);
 				$this->errorHandlingError();
 			}
@@ -310,7 +312,7 @@ ERROR_PAGE;
 		 *
 		 * @return string
 		 */
-		public static function throwableToString(\Throwable $e)
+		public static function throwableToString(Throwable $e)
 		{
 			$data = [];
 
@@ -321,7 +323,7 @@ ERROR_PAGE;
 			$data  = json_encode($data);
 			$class = get_class($e);
 
-			$msg = <<<STRING
+			return <<<STRING
 \tFile    : {$e->getFile()}
 \tLine    : {$e->getLine()}
 \tCode    : {$e->getCode()}
@@ -330,8 +332,6 @@ ERROR_PAGE;
 \tClass   : {$class}
 \tTrace   : {$e->getTraceAsString()}
 STRING;
-
-			return $msg;
 		}
 
 		/**

@@ -130,8 +130,10 @@
 			'columns'       => [
 				'api_key'           => [
 					'type' => 'string',
-					'max'  => 35
+					'max'  => 256,
 				],
+				// when specified, the user right will be used every time
+				// the api key of the client is used
 				'user_id'           => [
 					'type' => 'ref:oz_users.id',
 					'null' => true

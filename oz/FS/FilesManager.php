@@ -138,6 +138,46 @@
 		}
 
 		/**
+		 * Copy a file from a url to a destination on the server.
+		 *
+		 * @param string      $url The file url to copy
+		 * @param string|null $to  The destination path
+		 *
+		 * @return $this
+		 */
+		public function cpUrl($url, $to = null)
+		{
+			if (!filter_var($url, FILTER_VALIDATE_URL)) {
+				trigger_error(sprintf('Invalid url: "%s".', $url), E_USER_ERROR);
+			}
+
+			if (empty($to)) {
+				$to = basename($url);
+			}
+
+			$destination = PathUtils::resolve($this->root, $to);
+
+			self::assertDoesNotExists($destination);
+
+			$file = fopen($url, 'rb');
+
+			if (!$file) {
+				trigger_error(sprintf('Can\'t open file at: "%s".', $url), E_USER_ERROR);
+			} else {
+				$fc = fopen($destination, 'wb');
+
+				while (!feof($file)) {
+					$line = fread($file, 1028);
+					fwrite($fc, $line);
+				}
+
+				fclose($fc);
+			}
+
+			return $this;
+		}
+
+		/**
 		 * Gets a given directory content info.
 		 *
 		 * @param string $path the directory path

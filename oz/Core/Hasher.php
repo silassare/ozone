@@ -10,6 +10,9 @@
 
 	namespace OZONE\OZ\Core;
 
+	use Exception;
+	use InvalidArgumentException;
+
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	final class Hasher
@@ -49,7 +52,7 @@
 		public static function genFileKey($path)
 		{
 			if (!file_exists($path)) {
-				throw new \Exception("can't generate file key for: $path");
+				throw new Exception("can't generate file key for: $path");
 			}
 
 			// make sure to make differences between each cloned file key
@@ -78,7 +81,7 @@
 			if (!in_array($length, $accept)) {
 				$values = join($accept, ' , ');
 
-				throw new \InvalidArgumentException("hash length argument should be on of this list: $values");
+				throw new InvalidArgumentException("hash length argument should be on of this list: $values");
 			}
 
 			$string = hash('sha256', $string);
@@ -159,11 +162,11 @@
 			$max = 512;
 
 			if ($length < $min OR $length > $max) {
-				throw new \InvalidArgumentException(sprintf('Random string length must be between %d and %d.', $min, $max));
+				throw new InvalidArgumentException(sprintf('Random string length must be between %d and %d.', $min, $max));
 			}
 
 			if (strlen($chars) < 2) {
-				throw new \InvalidArgumentException('Require at least 2 chars to generate random string.');
+				throw new InvalidArgumentException('Require at least 2 chars to generate random string.');
 			}
 
 			$chars_length = strlen($chars) - 1;
@@ -186,7 +189,7 @@
 		{
 			$salt = self::getSalt('OZ_SESSION_ID_GEN_SALT');
 
-			return self::hashIt(self::genRandomString() . microtime() . $salt, 32);
+			return self::hashIt(json_encode($_SERVER) . self::genRandomString(128) . microtime() . $salt, 64);
 		}
 
 		/**
@@ -218,7 +221,7 @@
 			$max = 32;
 
 			if ($length < $min OR $length > $max) {
-				throw new \InvalidArgumentException(sprintf('Auth code length must be between %d and %d.', $min, $max));
+				throw new InvalidArgumentException(sprintf('Auth code length must be between %d and %d.', $min, $max));
 			}
 
 			if ($alpha_num) {

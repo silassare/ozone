@@ -93,14 +93,16 @@
 				throw new NotFoundException();
 			}
 
-			$content = json_encode([
+			// TODO QRcode
+			// The qrcode content should be a link
+			// then the scanner makes a request back to the qrcode to get action done OR retrieve data
+			/*$content = json_encode([
 				"auth_label"     => $data['auth_label'],
 				"auth_expire"    => $data['auth_expire'],
 				"auth_token"     => $data['auth_token'],
 				"auth_for_value" => $data['auth_for_value']
-			]);
+			]);*/
 
-			// TODO QRcode
 			// \QRcode::png($content, 'php://output', QR_ECLEVEL_H, 20);
 
 			return $response;

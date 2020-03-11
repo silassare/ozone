@@ -75,14 +75,9 @@
 		 */
 		function oz_logger($in)
 		{
-			$prev_sep          = "\n========previous========\n";
-			$date              = date('Y-m-d H:i:s');
-			$log_file          = OZ_LOG_DIR . 'debug.log';
-			$max_log_file_size = 254 * 1000;// Kb
-
-			if (file_exists($log_file) AND filesize($log_file) > $max_log_file_size) {
-				unlink($log_file);
-			}
+			$prev_sep = "\n========previous========\n";
+			$date     = date('Y-m-d H:i:s');
+			$log_file = OZ_LOG_DIR . 'debug.log';
 
 			if (is_scalar($in)) {
 				$log = (string)$in;
@@ -106,7 +101,10 @@
 				   . "========================\n"
 				   . $log . "\n\n";
 
-			file_put_contents($log_file, $log, FILE_APPEND);
+			$mode = (file_exists($log_file) AND filesize($log_file) <= 254000) ? 'a' : 'w';
+			$fp   = fopen($log_file, $mode);
+			fwrite($fp, $log);
+			fclose($fp);
 		}
 
 		/**

@@ -15,59 +15,29 @@
 	final class StringUtils
 	{
 		/**
-		 * cleans a given text
+		 * Cleans a given string.
 		 *
-		 * @param string $text        the text to clean
-		 * @param bool   $disable_oml should we disable oml
-		 *
-		 * @return string
-		 */
-		public static function clean($text = null, $disable_oml = true)
-		{
-			if (is_numeric($text)) return $text;
-			if (!is_string($text)) return '';
-
-			$text = trim($text);
-			$text = htmlentities($text, ENT_QUOTES, 'UTF-8');
-			$text = str_replace("&amp;", "&", $text);
-
-			if ($disable_oml) {
-				$text = str_replace("{", "{&#x0000;", $text);
-				$text = str_replace("&#x0000;&#x0000;", "&#x0000;", $text);
-			}
-
-			return self::emoFix($text);
-		}
-
-		/**
-		 * try to fix some emo unicode problem,
-		 *
-		 * @param string $text text to fix
+		 * @param string $str the string to clean
 		 *
 		 * @return string
 		 */
-		private static function emoFix($text)
+		public static function clean($str = null)
 		{
-			$text              = json_encode($text);
-			$text              = substr($text, 1, strlen($text) - 2);
-			$html_entities_emo = [
-				["&trade;", "\u2122"],
-				["&harr;", "\u2194"],
-				["&spades;", "\u2660"],
-				["&clubs;", "\u2663"],
-				["&hearts;", "\u2665"],
-				["&diams;", "\u2666"],
-				["&copy;", "\u00a9"],
-				["&reg;", "\u00ae"]
-			];
+			if (is_numeric($str)) return $str;
+			if (!is_string($str)) return '';
 
-			foreach ($html_entities_emo as $key => $emo) {
-				$text = str_replace($emo[0], $emo[1], $text);
-			}
+			// https://stackoverflow.com/a/34637891/6584810
+			// this will handle emoji code, we are using utf8
+			// and the utf8 used by MySql support characters up to U+FFFF
+			// but Most emoji use code points higher than U+FFFF.
+			// use json_decode (JavaScript: JSON.parse) to get the Emoji back to life
+			$str = json_encode($str);
+			// remove quote added by json_encode
+			$str = substr($str, 1, -1);
+			// convert some chars to html entities
+			$str = htmlentities($str, ENT_QUOTES, 'UTF-8', false /* this prevent for example: &amp; to become &amp;amp; */);
 
-			$text = str_replace("\\\\u", "\\u", $text);
-
-			return $text;
+			return $str;
 		}
 
 		/**
@@ -81,7 +51,7 @@
 		public static function removePrefix($str, $prefix)
 		{
 			if ($str === $prefix) {
-				return "";
+				return '';
 			}
 			if (strlen($str) AND strlen($prefix) AND 0 === strpos($str, $prefix)) {
 				$str = substr($str, strlen($prefix));
@@ -101,7 +71,7 @@
 		public static function removeSuffix($str, $suffix)
 		{
 			if ($str === $suffix) {
-				return "";
+				return '';
 			}
 			if (strlen($str) AND strlen($suffix) AND 0 < strpos($str, $suffix)) {
 				$str = substr($str, 0, strlen($str) - strlen($suffix));

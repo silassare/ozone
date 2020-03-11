@@ -8,7 +8,7 @@
 	 * file that was distributed with this source code.
 	 */
 
-	namespace OZONE\OZ\Authenticator\Services;
+	namespace OZONE\OZ\User\Services;
 
 	use Gobl\DBAL\Rule;
 	use OZONE\OZ\Core\Context;
@@ -25,11 +25,11 @@
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	/**
-	 * Class AccountAuth
+	 * Class SessionShare
 	 *
 	 * @package OZONE\OZ\User\Services
 	 */
-	final class AccountAuth extends BaseService
+	final class SessionShare extends BaseService
 	{
 		/**
 		 * @param \OZONE\OZ\Core\Context $context
@@ -50,24 +50,24 @@
 			$this->getResponseHolder()
 				 ->setDone()
 				 ->setData([
-					 'account' => self::encode($data)
+					 'token' => self::encode($data)
 				 ]);
 		}
 
 		/**
 		 * @param \OZONE\OZ\Core\Context $context
-		 * @param string                 $account
+		 * @param string                 $data
 		 *
 		 * @throws \Exception
 		 */
-		public function actionCheck(Context $context, $account)
+		public function actionCheck(Context $context, $data)
 		{
 			// And yes! user sent us a form
 			// so we check that the form is valid.
 			$context->getUsersManager()
 					->logUserOut();
 
-			$data = self::decode($account);
+			$data = self::decode($data);
 
 			Assert::assertForm($data, ['token', 'uid'], new ForbiddenException('OZ_ERROR_INVALID_ACCOUNT_AUTH'));
 
@@ -115,6 +115,7 @@
 		 */
 		private static function encode(array $data)
 		{
+			// TODO Not safe find a way to send a hash 
 			return base64_encode(json_encode($data));
 		}
 
@@ -140,14 +141,15 @@
 		 */
 		public static function registerRoutes(Router $router)
 		{
-			$router->get('/account-auth', function (RouteInfo $r) {
+			$router->get('/oz-session-share', function (RouteInfo $r) {
 				$context  = $r->getContext();
-				$account  = $context->getRequest()
-									->getFormField('account', null);
+				$token  = $context->getRequest()
+									->getFormField('token', null);
+
 				$instance = new static($context);
 
-				if (!is_null($account)) {
-					$instance->actionCheck($context, $account);
+				if (!is_null($token)) {
+					$instance->actionCheck($context, $token);
 				} else {
 					$instance->actionCreate($context);
 				}

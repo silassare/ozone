@@ -65,10 +65,8 @@
 			$root = self::getUsersFilesRootDirectory();
 			$fm   = new FilesManager($root);
 
-			$user_dir = $fm->cd($uid, true)
-						   ->getRoot();
-
-			return $user_dir;
+			return $fm->cd($uid, true)
+					  ->getRoot();
 		}
 
 		/**

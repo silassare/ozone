@@ -177,7 +177,7 @@
 		private function stepStart(array $request)
 		{
 			// do this before log out
-			$auth_label = $this->getStoredData('auth_label');
+			$stored_label = $this->getStoredData('auth_label');
 
 			Assert::assertForm($request, ['cc2', 'phone']);
 
@@ -197,11 +197,12 @@
 			$auth_obj     = new Authenticator($phone);
 			$started_once = false;
 
-			if ($auth_obj->canUseLabel($auth_label)) {
-				$auth_obj->setLabel($auth_label);
-				$started_once = $auth_obj->exists();
+			if(!empty($stored_label)){
+				$auth_obj->setLabel($stored_label);
 			}
 
+			$started_once = $auth_obj->exists();
+			
 			// we check if this user has already started the registration process or not
 			if ($started_once) {
 				$this->sendAuthCodeResp($auth_obj, $phone, 'OZ_AUTH_CODE_NEW_SENT');

@@ -23,7 +23,7 @@
 		'oz-static'       => [
 			'provider' => 'OZONE\OZ\FS\Views\GetFilesView'
 		],
-		'oz-account-auth' => [
-			'provider' => 'OZONE\OZ\User\Views\AccountAuthView'
+		'oz-session-share' => [
+			'provider' => 'OZONE\OZ\User\Views\SessionShareView'
 		]
 	];

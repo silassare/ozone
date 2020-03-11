@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Cli\Cmd;
 
+	use Exception;
 	use Gobl\DBAL\RDBMS;
 	use Gobl\ORM\Generators\Generator;
 	use Kli\Exceptions\KliInputException;
@@ -118,7 +119,7 @@
 					$db->executeMulti($queries);
 
 					$cli->success("database queries executed.");
-				} catch (\Exception $e) {
+				} catch (Exception $e) {
 					$cli->error('database queries execution failed. Open log file.')
 						->log($e);
 
@@ -204,7 +205,7 @@
 			try {
 				$db->executeMulti($query);
 				$cli->success('database refreshed.');
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				$cli->error('database refresh fails. Open log file.')
 					->log($e);
 			}
@@ -264,7 +265,7 @@
 			try {
 				$db->executeMulti($query);
 				$cli->success('database updated.');
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				$cli->error('database update fails. Open log file.')
 					->log($e);
 			}

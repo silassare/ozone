@@ -12,7 +12,7 @@
 
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\Exceptions\BadRequestException;
-	use OZONE\OZ\Authenticator\Services\AccountAuth;
+	use OZONE\OZ\User\Services\SessionAuth;
 	use OZONE\OZ\Router\RouteInfo;
 	use OZONE\OZ\Router\Router;
 	use OZONE\OZ\Web\WebViewBase;
@@ -20,11 +20,11 @@
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	/**
-	 * Class AccountAuthView
+	 * Class SessionShareView
 	 *
 	 * @package OZONE\OZ\User\Views
 	 */
-	final class AccountAuthView extends WebViewBase
+	final class SessionShareView extends WebViewBase
 	{
 		/**
 		 * @return \OZONE\OZ\Http\Response
@@ -38,16 +38,16 @@
 			$context     = $this->getContext();
 			$request     = $context->getRequest();
 
-			if (!$use_cookie OR !($account = $request->getCookieParam($cookie_name, null))) {
-				$account = $request->getFormField('account', false);
+			if (!$use_cookie OR !($token = $request->getCookieParam($cookie_name, null))) {
+				$token = $request->getFormField('token', false);
 			}
 
-			if (empty($account)) {
+			if (empty($token)) {
 				throw new BadRequestException();
 			}
 
-			$a = new AccountAuth($context);
-			$a->actionCheck($context, $account);
+			$a = new SessionShare($context);
+			$a->actionCheck($context, $token);
 
 			$response = $context->getResponse();
 
@@ -79,8 +79,8 @@
 		 */
 		public static function registerRoutes(Router $router)
 		{
-			$router->get('/oz-auth-account', function (RouteInfo $r) {
-				$view = new AccountAuthView($r);
+			$router->get('/oz-session-share', function (RouteInfo $r) {
+				$view = new static($r);
 
 				return $view->mainRoute();
 			});

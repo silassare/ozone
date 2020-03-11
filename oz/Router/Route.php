@@ -10,6 +10,8 @@
 
 	namespace OZONE\OZ\Router;
 
+	use InvalidArgumentException;
+
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
 	class Route
@@ -81,7 +83,7 @@
 		public function isDynamic()
 		{
 			if (!isset($this->is_dynamic)) {
-				$this->is_dynamic = (false !== strpos($this->route_path, "{") OR false !== strpos($this->route_path, "["));
+				$this->is_dynamic = (false !== strpos($this->route_path, '{') OR false !== strpos($this->route_path, '['));
 			}
 
 			return $this->is_dynamic;
@@ -244,15 +246,15 @@
 					$name = self::searchUntilCloseTag('{', '}', $route, $pos + 1, $pos, false);
 
 					if (!strlen($name)) {
-						throw new \InvalidArgumentException(sprintf('Placeholder should not be empty: %s', $original_route));
+						throw new InvalidArgumentException(sprintf('Placeholder should not be empty: %s', $original_route));
 					}
 
 					if (!preg_match('~^[a-z_][a-z0-9_]*$~', $name)) {
-						throw new \InvalidArgumentException(sprintf('Placeholder contains invalid characters: %s -> %s', $name, $original_route));
+						throw new InvalidArgumentException(sprintf('Placeholder contains invalid characters: %s -> %s', $name, $original_route));
 					}
 
 					if (array_key_exists($name, $placeholders)) {
-						throw new \InvalidArgumentException(sprintf('Placeholder name duplicated: %s -> %s', $name, $original_route));
+						throw new InvalidArgumentException(sprintf('Placeholder name duplicated: %s -> %s', $name, $original_route));
 					}
 
 					$placeholder_reg = '[^/]+';
@@ -261,7 +263,7 @@
 						$placeholder_reg = $options[$name];
 
 						if (self::hasCatchingGroupOrIsInvalid($placeholder_reg)) {
-							throw new \InvalidArgumentException(sprintf('Placeholder regexp should not contains invalid char or catching group. Keep it simple: %s -> %s', $name, $placeholder_reg));
+							throw new InvalidArgumentException(sprintf('Placeholder regexp should not contains invalid char or catching group. Keep it simple: %s -> %s', $name, $placeholder_reg));
 						}
 					}
 
@@ -272,7 +274,7 @@
 					$optional = self::searchUntilCloseTag('[', ']', $route, $pos + 1, $pos, true);
 
 					if (!strlen($optional)) {
-						throw new \InvalidArgumentException(sprintf('Optional part should not be empty: %s', $original_route));
+						throw new InvalidArgumentException(sprintf('Optional part should not be empty: %s', $original_route));
 					}
 
 					$optional_reg = self::parse($optional, $options, $placeholders, $original_route);
@@ -315,7 +317,7 @@
 					if (isset($args[$name])) {
 						$path .= (string)$args[$name];
 					} elseif ($required) {
-						throw new \InvalidArgumentException(sprintf('Missing required placeholder value: %s', $name));
+						throw new InvalidArgumentException(sprintf('Missing required placeholder value: %s', $name));
 					} else {
 						// we are in optional part and
 						// there is missing placeholder value
@@ -326,7 +328,7 @@
 					$optional = self::searchUntilCloseTag('[', ']', $route, $pos + 1, $pos, true);
 
 					if (!strlen($optional)) {
-						throw new \InvalidArgumentException(sprintf('Optional part should not be empty: %s', $original_route));
+						throw new InvalidArgumentException(sprintf('Optional part should not be empty: %s', $original_route));
 					}
 
 					$path .= self::pathBuilder($optional, $options, $args, $original_route);
@@ -367,7 +369,7 @@
 					if ($go_deeply) {
 						$stack++;
 					} else {
-						throw new \InvalidArgumentException(sprintf('The open tag %s at index %s was not closed before opening new tag at index %s', $open, $from - 1, $cursor));
+						throw new InvalidArgumentException(sprintf('The open tag %s at index %s was not closed before opening new tag at index %s', $open, $from - 1, $cursor));
 					}
 				}
 
@@ -386,7 +388,7 @@
 			}
 
 			if ($found === false) {
-				throw new \InvalidArgumentException(sprintf('Unexpected end of string missing close tag %s at the end of %s', $close, $string));
+				throw new InvalidArgumentException(sprintf('Unexpected end of string missing close tag %s at the end of %s', $close, $string));
 			}
 
 			return $ret;

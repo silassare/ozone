@@ -25,5 +25,5 @@
 		 *
 		 * - default: check (even if you mistype the value)
 		 */
-		'OZ_CORS_ALLOW_RULE' => 'check'
+		'OZ_CORS_ALLOW_RULE' => 'check',
 	];

@@ -41,8 +41,8 @@
 		'password'         => [
 			'provider' => 'OZONE\OZ\User\Services\Password'
 		],
-		'account-auth'     => [
-			'provider' => 'OZONE\OZ\Authenticator\Services\AccountAuth'
+		'session-share'     => [
+			'provider' => 'OZONE\OZ\User\Services\SessionShare'
 		],
 		'account-recovery' => [
 			'provider' => 'OZONE\OZ\User\Services\AccountRecovery'

@@ -22,7 +22,8 @@
 	use OZONE\OZ\Core\SettingsManager;
 	use OZONE\OZ\FS\FilesManager;
 
-	final class Service extends Command {
+	final class Service extends Command
+	{
 		/**
 		 * @inheritdoc
 		 *

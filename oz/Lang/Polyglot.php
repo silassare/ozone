@@ -49,9 +49,13 @@
 			$browser_lang_advice = self::$browser['advice'];
 
 			if ($context) {
-				$user_lang = $context->getSession()
+				try {
+					$user_lang = $context->getSession()
 									 ->get('ozone_lang:favorite');
-				if (!empty($user_lang)) return $user_lang;
+					if (!empty($user_lang)) return $user_lang;
+				} catch (\Exception $e) {
+					// session not started
+				}
 			}
 
 			if (!empty($browser_lang_advice)) return $browser_lang_advice;

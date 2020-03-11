@@ -26,6 +26,10 @@
 	use OZONE\OZ\Lang\Polyglot;
 	use OZONE\OZ\Loader\ClassLoader;
 	use OZONE\OZ\Router\Router;
+	use ReflectionClass;
+	use ReflectionException;
+	use RuntimeException;
+	use Throwable;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
 
@@ -105,7 +109,7 @@
 			$is_api  = !defined('OZ_OZONE_IS_WEB_CONTEXT');
 			$context = new Context($env, null, false, $is_api);
 
-			// The CRUD handler is instantiated with the first context
+			// [!IMPORTANT] The CRUD handler is instantiated with the first context
 			// So if we have a session,
 			// the current user access level will be used for CRUD validation
 			CRUD::setHandlerProvider(function ($table_name) use ($context) {
@@ -118,7 +122,7 @@
 			try {
 				$context->handle()
 						->respond();
-			} catch (\Throwable $e) {
+			} catch (Throwable $e) {
 				if (!($e instanceof BaseException)) {
 					$e = new InternalErrorException(null, null, $e);
 				}
@@ -195,12 +199,12 @@
 					$priority = isset($options['priority']) ? $options['priority'] : HookInterface::RUN_DEFAULT;
 
 					try {
-						$rc = new \ReflectionClass($hook);
+						$rc = new ReflectionClass($hook);
 						if (!$rc->implementsInterface(HookInterface::class)) {
-							throw new \RuntimeException(sprintf('Hook class "%s" should implements "%s".', $hook, HookInterface::class));
+							throw new RuntimeException(sprintf('Hook class "%s" should implements "%s".', $hook, HookInterface::class));
 						}
-					} catch (\ReflectionException $e) {
-						throw new \RuntimeException(sprintf('Unable to check hook class "%s".', $hook), $e);
+					} catch (ReflectionException $e) {
+						throw new RuntimeException(sprintf('Unable to check hook class "%s".', $hook), $e);
 					}
 
 					self::$hook_manager->register(new $hook, $priority);
@@ -223,12 +227,12 @@
 			foreach ($relations_settings as $provider => $enabled) {
 				if ($enabled) {
 					try {
-						$rc = new \ReflectionClass($provider);
+						$rc = new ReflectionClass($provider);
 						if (!$rc->implementsInterface(TableRelationsProviderInterface::class)) {
-							throw new \RuntimeException(sprintf('Custom relations provider "%s" should implements "%s".', $provider, TableRelationsProviderInterface::class));
+							throw new RuntimeException(sprintf('Custom relations provider "%s" should implements "%s".', $provider, TableRelationsProviderInterface::class));
 						}
-					} catch (\ReflectionException $e) {
-						throw new \RuntimeException(sprintf('Unable to check custom relations provider "%s".', $provider), $e);
+					} catch (ReflectionException $e) {
+						throw new RuntimeException(sprintf('Unable to check custom relations provider "%s".', $provider), $e);
 					}
 
 					/**@var TableRelationsProviderInterface $provider */
@@ -240,7 +244,7 @@
 							if (is_callable($callable)) {
 								$table->defineVR($relation_name, $callable);
 							} else {
-								throw new \RuntimeException(sprintf(
+								throw new RuntimeException(sprintf(
 									'Custom relation "%s" defined in "%s" for table "%s" expected to be "callable" not "%s".',
 									$relation_name, $provider, $table_name, gettype($callable)));
 							}
@@ -263,12 +267,12 @@
 			foreach ($collections_settings as $provider => $enabled) {
 				if ($enabled) {
 					try {
-						$rc = new \ReflectionClass($provider);
+						$rc = new ReflectionClass($provider);
 						if (!$rc->implementsInterface(TableCollectionsProviderInterface::class)) {
-							throw new \RuntimeException(sprintf('Custom collections provider "%s" should implements "%s".', $provider, TableCollectionsProviderInterface::class));
+							throw new RuntimeException(sprintf('Custom collections provider "%s" should implements "%s".', $provider, TableCollectionsProviderInterface::class));
 						}
-					} catch (\ReflectionException $e) {
-						throw new \RuntimeException(sprintf('Unable to check custom collections provider "%s".', $provider), $e);
+					} catch (ReflectionException $e) {
+						throw new RuntimeException(sprintf('Unable to check custom collections provider "%s".', $provider), $e);
 					}
 
 					/**@var TableCollectionsProviderInterface $provider */
@@ -280,7 +284,7 @@
 							if (is_callable($callable)) {
 								$table->defineCollection($collection_name, $callable);
 							} else {
-								throw new \RuntimeException(sprintf(
+								throw new RuntimeException(sprintf(
 									'Custom collection "%s" defined in "%s" for table "%s" expected to be "callable" not "%s".',
 									$collection_name, $provider, $table_name, gettype($callable)));
 							}

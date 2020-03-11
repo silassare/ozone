@@ -130,12 +130,16 @@
 			$this->fragment = $this->filterQuery($fragment);
 			$this->user     = $user;
 			$this->password = $password;
+
+			if ($this->path[0] !== '/') {
+				$this->path = '/' . $this->path;
+			}
 		}
 
 		/**
 		 * Filters Uri scheme.
 		 *
-		 * @param  string $scheme Raw Uri scheme.
+		 * @param string $scheme Raw Uri scheme.
 		 *
 		 * @return string
 		 *
@@ -165,7 +169,7 @@
 		/**
 		 * Filters Uri port.
 		 *
-		 * @param  null|int $port The Uri port number.
+		 * @param null|int $port The Uri port number.
 		 *
 		 * @return null|int
 		 *
@@ -192,7 +196,7 @@
 		 * will NOT double-encode characters that are already
 		 * percent-encoded.
 		 *
-		 * @param  string $path The raw uri path.
+		 * @param string $path The raw uri path.
 		 *
 		 * @return string       The RFC 3986 percent-encoded uri path.
 		 * @link   http://www.faqs.org/rfcs/rfc3986.html
@@ -273,7 +277,7 @@
 		/**
 		 * Creates new Uri from string.
 		 *
-		 * @param  string $uri Complete Uri string
+		 * @param string $uri  Complete Uri string
 		 *                     (i.e., https://user:pass@host:443/path?query).
 		 *
 		 * @return self
@@ -352,7 +356,7 @@
 			$basePath    = '';
 			$virtualPath = $requestUri;
 			if (stripos($requestUri, $requestScriptName) === 0) {
-				$basePath = $requestScriptName;
+				$basePath = ($requestUri === $requestScriptName)? $requestScriptDir : $requestScriptName;
 			} elseif ($requestScriptDir !== '/' && stripos($requestUri, $requestScriptDir) === 0) {
 				$basePath = $requestScriptDir;
 			}
@@ -411,7 +415,7 @@
 		 *
 		 * Note: This method is not part of the PSR-7 standard.
 		 *
-		 * @param  string $basePath
+		 * @param string $basePath
 		 *
 		 * @return self
 		 */

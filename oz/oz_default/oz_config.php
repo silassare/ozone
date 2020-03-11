@@ -46,8 +46,8 @@
 	// Only allow the session ID to come from cookies and nothing else.
 	ini_set('session.use_only_cookies', '1');
 
-	// Prevents user from setting self made sessions id
-	ini_set('session.use_strict_mode', 1);
-
 	// We should use UTC for any date
 	date_default_timezone_set('UTC');
+
+	// Prevents user from setting self made sessions id
+	ini_set('session.use_strict_mode', 1);

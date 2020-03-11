@@ -148,7 +148,9 @@
 		/**
 		 * Disable clone.
 		 */
-		private function __clone() { }
+		private function __clone()
+		{
+		}
 
 		/**
 		 * Init.
@@ -177,12 +179,12 @@
 			$this->running = true;
 
 			try {
-				$uri          = $this->request->getUri();
-				$internalPath = $this->isInternalPath($uri->getPath());
+				$uri           = $this->request->getUri();
+				$internal_path = $this->isInternalPath($uri->getPath());
 
 				// prevent request to any path like /oz:error, /oz:...
 				// this is allowed only in sub-request
-				if (!$this->isSubRequest() AND $internalPath) {
+				if (!$this->isSubRequest() and $internal_path) {
 					throw new ForbiddenException();
 				}
 
@@ -191,13 +193,15 @@
 				if ($this->request->isOptions()) {
 					$this->setInitialHeaders();
 				} else {
+					$try_logon_as_client_owner = false;
 					// set client
 					if ($api_key = $this->getApiKey()) {
-						$this->client = $this->getApiKeyClient($api_key);
+						$this->client              = $this->getApiKeyClient($api_key);
+						$try_logon_as_client_owner = ($this->client and $this->client->getUserId()) ? true : false;
 					} else {
 						$client = $this->getSessionClient();
 
-						if (!$client AND !$internalPath) {
+						if (!$client and !$internal_path) {
 							throw new ForbiddenException('OZ_MISSING_API_KEY');
 						}
 
@@ -207,6 +211,10 @@
 					$this->setInitialHeaders($this->client);
 
 					$this->session->start();
+
+					if ($try_logon_as_client_owner) {
+						$this->users_manager->tryLogOnAsClientOwner();
+					}
 
 					$this->processRequest();
 				}
@@ -384,7 +392,7 @@
 		 */
 		public function isApiKeyLike($str)
 		{
-			if (!is_string($str) OR empty($str)) {
+			if (!is_string($str) or empty($str)) {
 				return false;
 			}
 
@@ -493,8 +501,12 @@
 				$host = null;
 
 				foreach ($possibleHostSources as $source) {
-					if (!empty($host)) break;
-					if (!$this->environment->has($source)) continue;
+					if (!empty($host)) {
+						break;
+					}
+					if (!$this->environment->has($source)) {
+						continue;
+					}
 					$host = $this->environment->get($source);
 					if (array_key_exists($source, $sourceTransformations)) {
 						$host = $sourceTransformations[$source]($host);
@@ -628,7 +640,7 @@
 				$h_list['Access-Control-Allow-Headers'] = $this->getCustomHeadersNameList();
 				$h_list['Access-Control-Allow-Methods'] = ['OPTIONS', 'GET', 'POST', 'PATCH', 'PUT', 'DELETE'];
 				$h_list['Access-Control-Max-Age']       = $life_time;
-			} elseif (!$this->isSubRequest() AND $a->getHost() !== $b->getHost()) {
+			} elseif (!$this->isSubRequest() and $a->getHost() !== $b->getHost()) {
 				// we don't throw this exception in sub-request
 				// scenario:
 				//  - We want to show error page because the cross site request origin was not allowed
@@ -658,7 +670,7 @@
 		 *
 		 * @param string $api_key
 		 *
-		 * @return \OZONE\OZ\Db\OZClient|null
+		 * @return \OZONE\OZ\Db\OZClient
 		 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 		 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 		 */
@@ -666,8 +678,15 @@
 		{
 			$client = ClientManager::getClientWithApiKey($api_key);
 
-			if (!$client OR !$client->getValid()) {
+			if (!$client) {
 				throw new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID', [
+					'url'     => (string)$this->request->getUri(),
+					'api_key' => $api_key
+				]);
+			}
+
+			if (!$client->getValid()) {
+				throw new ForbiddenException('OZ_YOUR_API_KEY_CLIENT_IS_DISABLED', [
 					'url'     => (string)$this->request->getUri(),
 					'api_key' => $api_key
 				]);
@@ -679,7 +698,7 @@
 		/**
 		 * Gets client from session
 		 *
-		 * @return \OZONE\OZ\Db\OZClient|null
+		 * @return \OZONE\OZ\Db\OZClient
 		 * @throws \OZONE\OZ\Exceptions\BaseException
 		 */
 		private function getSessionClient()
@@ -693,8 +712,8 @@
 			if (!empty($sid)) {
 				$client = ClientManager::getClientWithSessionId($sid);
 
-				if (is_null($client) OR !$client->getValid()) {
-					throw new ForbiddenException('OZ_SESSION_INVALID');
+				if (!$client or !$client->getValid()) {
+					return null;
 				}
 			}
 
@@ -910,18 +929,20 @@
 		 */
 		public function redirectRoute($route_name, array $args = [], array $query = [], $inform_user = true)
 		{
-			$this->checkRecursiveRedirection($route_name,
+			$this->checkRecursiveRedirection(
+				$route_name,
 				[
 					'args'        => $args,
 					'$query'      => $query,
 					'inform_user' => $inform_user
-				]);
+				]
+			);
 
 			$path = $this->router->buildRoutePath($route_name, $args);
 
 			self::$redirect_history[$route_name] = ['path' => $path, 'args' => $args];
 
-			if (!$this->isInternalPath($path) AND $inform_user) {
+			if (!$this->isInternalPath($path) and $inform_user) {
 				$uri = Uri::createFromEnvironment($this->environment)
 						  ->withPath($path)
 						  ->withQueryArray($query);

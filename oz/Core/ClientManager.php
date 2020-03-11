@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Core;
 
+	use Exception;
 	use OZONE\OZ\Db\OZClientsQuery;
 	use OZONE\OZ\Db\OZSessionsQuery;
 	use OZONE\OZ\Exceptions\InternalErrorException;
@@ -32,10 +33,9 @@
 				$c = new OZClientsQuery();
 
 				return $c->filterByApiKey($api_key)
-						 ->filterByValid(1)
 						 ->find(1)
 						 ->fetchClass();
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				throw new InternalErrorException("Unable to get client with API key.", [
 					"api_key" => $api_key
 				], $e);
@@ -62,7 +62,7 @@
 				if ($session) {
 					return $session->getOZClient();
 				}
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				throw new InternalErrorException("Unable to get client with session id.", ["sid" => $sid], $e);
 			}
 
@@ -88,7 +88,7 @@
 				if ($session) {
 					return $session->getOZClient();
 				}
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
 				throw new InternalErrorException("Unable to get client with session token.", ["token" => $token], $e);
 			}
 

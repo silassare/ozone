@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Core;
 
+	use Exception;
 	use Gobl\CRUD\Exceptions\CRUDException;
 	use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 	use Gobl\ORM\Exceptions\ORMQueryException;
@@ -63,23 +64,10 @@
 		}
 
 		/**
-		 * Write service response.
-		 *
-		 * @param \OZONE\OZ\Core\Context $context
-		 *
-		 * @return \OZONE\OZ\Http\Response
-		 * @deprecated
-		 *
-		 */
-		public function writeResponse(Context $context)
-		{
-			return $this->respond();
-		}
-
-		/**
 		 * Return service response.
 		 *
 		 * @return \OZONE\OZ\Http\Response
+		 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 		 */
 		public function respond()
 		{
@@ -87,12 +75,16 @@
 			$data            = $response_holder->getResponse();
 			$now             = time();
 			$data['utime']   = $now;
+			$um              = $this->context->getUsersManager();
 
-			if ($this->context->getUsersManager()
-							  ->userVerified()) {
+			if ($um->userVerified()) {
 				$lifetime      = 1 * $this->context->getClient()
 												   ->getSessionLifeTime();
 				$data["stime"] = $now + $lifetime;
+
+				if (SettingsManager::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_ENABLED')) {
+					$data["stoken"] = $um->getCurrentSessionToken();
+				}
 			}
 
 			return $this->context->getResponse()
@@ -108,7 +100,7 @@
 		 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 		 * @throws \Exception
 		 */
-		public static function tryConvertException(\Exception $error)
+		public static function tryConvertException(Exception $error)
 		{
 			if ($error instanceof ORMQueryException) {
 				throw new InvalidFormException($error->getMessage(), $error->getData(), $error);

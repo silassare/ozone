@@ -11,7 +11,6 @@
 	namespace OZONE\OZ\Ofv;
 
 	use OZONE\OZ\User\UsersManager;
-	use OZONE\OZ\Utils\StringUtils;
 
 	/**
 	 * @param \OZONE\OZ\Ofv\OFormValidator $ofv
@@ -30,6 +29,6 @@
 		} elseif (in_array('registered', $rules) AND !UsersManager::searchUserWithEmail($email)) {
 			$ofv->addError('OZ_FIELD_EMAIL_NOT_REGISTERED');
 		} else {
-			$ofv->setField('email', StringUtils::clean($email));
+			$ofv->setField('email', $email);
 		}
 	}
