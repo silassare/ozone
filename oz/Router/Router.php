@@ -10,6 +10,7 @@
 
 	namespace OZONE\OZ\Router;
 
+	use InvalidArgumentException;
 	use OZONE\OZ\Exceptions\InternalErrorException;
 
 	defined('OZ_SELF_SECURITY_CHECK') or die;
@@ -45,6 +46,36 @@
 		 * Router constructor.
 		 */
 		public function __construct() { }
+
+		/**
+		 * Gets dynamic routes.
+		 *
+		 * @return \OZONE\OZ\Router\Route[]
+		 */
+		public function getDynamicRoutes()
+		{
+			return $this->dynamicRoutes;
+		}
+
+		/**
+		 * Gets static routes.
+		 *
+		 * @return \OZONE\OZ\Router\Route[]
+		 */
+		public function getStaticRoutes()
+		{
+			return $this->staticRoutes;
+		}
+
+		/**
+		 * Gets all routes.
+		 *
+		 * @return \OZONE\OZ\Router\Route[]
+		 */
+		public function getRoutes()
+		{
+			return $this->staticRoutes + $this->dynamicRoutes;
+		}
 
 		/**
 		 * Builds route path.
@@ -176,18 +207,18 @@
 				$method = strtoupper($method);
 				if (!is_string($method) OR !isset($this->allowedMethods[$method])) {
 					$allowed = implode('|', array_keys($this->allowedMethods));
-					throw new \InvalidArgumentException(sprintf('Invalid method name "%s" for route: %s . Allowed methods -> %s', $method, $route_path, $allowed));
+					throw new InvalidArgumentException(sprintf('Invalid method name "%s" for route: %s . Allowed methods -> %s', $method, $route_path, $allowed));
 				}
 
 				$methods_filtered[] = $method;
 			}
 
 			if (!is_string($route_path) OR !strlen($route_path)) {
-				throw new \InvalidArgumentException(sprintf('Empty or invalid route path: %s', $route_path));
+				throw new InvalidArgumentException(sprintf('Empty or invalid route path: %s', $route_path));
 			}
 
 			if (!is_callable($callable)) {
-				throw new \InvalidArgumentException(sprintf('Got "%s" while expecting callable for: %s', gettype($callable), $route_path));
+				throw new InvalidArgumentException(sprintf('Got "%s" while expecting callable for: %s', gettype($callable), $route_path));
 			}
 
 			$route = new Route($methods_filtered, $route_path, $callable, $options);
