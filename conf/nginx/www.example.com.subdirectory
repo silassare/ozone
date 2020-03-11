@@ -1,5 +1,7 @@
-# Virtual Host configuration for api.example.com
-# Use this when api is accessible from a subdomain
+# Virtual Host configuration for www.example.com
+# when
+#	- website is accessible from : www.example.com/ 
+#	- api is accessible from : www.example.com/api/
 
 # Upstream to abstract backend connection(s) for php
 upstream php {
@@ -17,10 +19,16 @@ server {
 	#
 	server_tokens off;
 
-	server_name api.example.com;
+	server_name www.example.com example.com;
 
-	root /var/www/example/api;
+	root /var/www/example/www;
 	index index.php;
+
+	# disable access to /oz_private/*
+	#
+	location ^~ /oz_private {
+		deny all;
+	}
 
 	# disable access to debug.log
 	#
@@ -35,10 +43,25 @@ server {
 		deny all;
 	}
 
-	# disable access to /app/* && /oz/*
+	# disable access to /api/debug.log
 	#
-	location ~* ^/(?:app|oz)/.*$ {
+	location = /api/debug.log {
 		deny all;
+	}
+
+	# disable access to /api/app/* && /api/oz/*
+	#
+	location ~* ^/api/(?:app|oz)/.*$ {
+		deny all;
+	}
+
+	# serve files or directories in /api/* only if they exist otherwise 
+	# for any other request, rewrite to our O'Zone API entry point
+	#
+	location /api {
+		try_files $uri $uri/ /api/index.php?$args;
+		access_log off;
+		log_not_found off;
 	}
 
 	# serve the robots.txt only if it exists
@@ -58,7 +81,7 @@ server {
 	}
 
 	# serve files or directories only if they exist otherwise 
-	# for any other request, rewrite to our O'Zone API entry point
+	# for any other request, rewrite to our O'Zone Web entry point
 	#
 	location / {
 		try_files $uri $uri/ /index.php?$args;

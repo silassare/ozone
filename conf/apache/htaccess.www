@@ -1,30 +1,38 @@
 AddDefaultCharset UTF-8
 AddType text/cache-manifest .manifest
 
-# disable files listing multiview and enable symbolic link
+# disable files listing, multiview and enable symbolic link
 #
 Options -Indexes -Multiviews +FollowSymlinks
 
-# disable access to oz_private directory
+# disable access to /oz_private/*
 #
 <Directory /oz_private>
    Order Deny,allow
    Deny from all
 </Directory>
 
-# disable access to debug.log file
+# disable access to /debug.log
 #
 <Files /debug.log>
    Order Deny,allow
    Deny from all
 </Files>
 
-# start rewrite
+# Mitigate https://httpoxy.org/ vulnerabilities
+#
+<IfModule mod_headers.c>
+   RequestHeader unset Proxy
+</IfModule>
+
+# start rewriting
 #
 <IfModule mod_rewrite.c>
 	RewriteEngine on
 
 	RewriteCond %{REQUEST_FILENAME} !-d
 	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_URI}      !^/robots\.txt
+	RewriteCond %{REQUEST_URI}      !^/favicon\.ico
 	RewriteRule (.*)				index.php [L]
 </IfModule>
