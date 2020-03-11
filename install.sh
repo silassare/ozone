@@ -90,7 +90,7 @@ install_php(){
 	shout "Installing php and required extensions..."
 
 	# install php and modules
-	apt-get -qq -o=Dpkg::Use-Pty=0 -y install php-fpm php-mysql php-gd php-xml php-curl < /dev/null
+	apt-get -qq -o=Dpkg::Use-Pty=0 -y install php-fpm php-mysql php-gd php-xml php-curl php-zip < /dev/null
 }
 
 configure_php(){
