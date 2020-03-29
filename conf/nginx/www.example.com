@@ -1,14 +1,6 @@
 # Virtual Host configuration for www.example.com
 # Use this for website
 
-# Upstream to abstract backend connection(s) for php
-upstream php {
-	# With php-fpm (or other unix sockets):
-	server unix:/var/run/php/php7.2-fpm.sock;
-	# With php-cgi (or other tcp sockets):
-	server 127.0.0.1:9000;
-}
-
 server {
 	listen 80;
 	listen [::]:80;
