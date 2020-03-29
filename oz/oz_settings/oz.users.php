@@ -1,14 +1,15 @@
 <?php
-	/**
-	 * Copyright (c) 2017-present, Emile Silas Sare
-	 *
-	 * This file is part of OZone (O'Zone) package.
-	 *
-	 * For the full copyright and license information, please view the LICENSE
-	 * file that was distributed with this source code.
-	 */
 
-	defined('OZ_SELF_SECURITY_CHECK') or die;
+/**
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone (O'Zone) package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+	
+	\defined('OZ_SELF_SECURITY_CHECK') || die;
 
 	return [
 		// default picid if there is none
@@ -22,5 +23,5 @@
 		// does email are required to register
 		'OZ_USERS_EMAIL_REQUIRED' => true,
 		// does phone number are required to register
-		'OZ_USERS_PHONE_REQUIRED' => false
+		'OZ_USERS_PHONE_REQUIRED' => false,
 	];

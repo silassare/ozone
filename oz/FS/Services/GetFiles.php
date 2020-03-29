@@ -1,42 +1,43 @@
 <?php
+
+/**
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone (O'Zone) package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace OZONE\OZ\FS\Services;
+
+use OZONE\OZ\Core\BaseService;
+use OZONE\OZ\Core\SettingsManager;
+use OZONE\OZ\FS\GetFilesHelper;
+use OZONE\OZ\Router\RouteInfo;
+use OZONE\OZ\Router\Router;
+
+\defined('OZ_SELF_SECURITY_CHECK') || die;
+
+class GetFiles extends BaseService
+{
 	/**
-	 * Copyright (c) 2017-present, Emile Silas Sare
-	 *
-	 * This file is part of OZone (O'Zone) package.
-	 *
-	 * For the full copyright and license information, please view the LICENSE
-	 * file that was distributed with this source code.
+	 * @inheritdoc
 	 */
-
-	namespace OZONE\OZ\FS\Services;
-
-	use OZONE\OZ\Core\BaseService;
-	use OZONE\OZ\Core\SettingsManager;
-	use OZONE\OZ\FS\GetFilesHelper;
-	use OZONE\OZ\Router\RouteInfo;
-	use OZONE\OZ\Router\Router;
-
-	defined('OZ_SELF_SECURITY_CHECK') or die;
-
-	class GetFiles extends BaseService
+	public static function registerRoutes(Router $router)
 	{
-		/**
-		 * @inheritdoc
-		 */
-		public static function registerRoutes(Router $router)
-		{
-			$format = SettingsManager::get("oz.files", "OZ_GET_FILE_URI_EXTRA_FORMAT");
+		$format = SettingsManager::get('oz.files', 'OZ_GET_FILE_URI_EXTRA_FORMAT');
 
-			$options = [
-				'route:name'        => 'oz:files',
-				'oz_file_id'        => '[0-9]+',
-				'oz_file_key'       => '[a-z0-9]+',
-				'oz_file_quality'   => '0|1|2|3',
-				'oz_file_extension' => '[a-z0-9]{1,10}'
-			];
+		$options = [
+			'route:name'        => 'oz:files',
+			'oz_file_id'        => '[0-9]+',
+			'oz_file_key'       => '[a-z0-9]+',
+			'oz_file_quality'   => '0|1|2|3',
+			'oz_file_extension' => '[a-z0-9]{1,10}',
+		];
 
-			$router->get('/files/' . $format, function (RouteInfo $r) {
-				return GetFilesHelper::process($r);
-			}, $options);
-		}
+		$router->get('/files/' . $format, function (RouteInfo $r) {
+			return GetFilesHelper::process($r);
+		}, $options);
 	}
+}

@@ -1,50 +1,51 @@
 <?php
-	/**
-	 * Copyright (c) 2017-present, Emile Silas Sare
-	 *
-	 * This file is part of OZone (O'Zone) package.
-	 *
-	 * For the full copyright and license information, please view the LICENSE
-	 * file that was distributed with this source code.
-	 */
 
-	defined('OZ_SELF_SECURITY_CHECK') or die;
+/**
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone (O'Zone) package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+	
+	\defined('OZ_SELF_SECURITY_CHECK') || die;
 
 	return [
 		'files'            => [
-			'provider' => 'OZONE\OZ\FS\Services\GetFiles'
+			'provider' => 'OZONE\OZ\FS\Services\GetFiles',
 		],
 		'upload'            => [
-			'provider' => 'OZONE\OZ\FS\Services\UploadFiles'
+			'provider' => 'OZONE\OZ\FS\Services\UploadFiles',
 		],
 		'captcha'          => [
-			'provider' => 'OZONE\OZ\Authenticator\Services\CaptchaCode'
+			'provider' => 'OZONE\OZ\Authenticator\Services\CaptchaCode',
 		],
 		'qrcode'           => [
-			'provider' => 'OZONE\OZ\Authenticator\Services\QRCode'
+			'provider' => 'OZONE\OZ\Authenticator\Services\QRCode',
 		],
 		'tnet'             => [
-			'provider' => 'OZONE\OZ\User\Services\TNet'
+			'provider' => 'OZONE\OZ\User\Services\TNet',
 		],
 		'signup'           => [
-			'provider' => 'OZONE\OZ\User\Services\SignUp'
+			'provider' => 'OZONE\OZ\User\Services\SignUp',
 		],
 		'login'            => [
-			'provider' => 'OZONE\OZ\User\Services\Login'
+			'provider' => 'OZONE\OZ\User\Services\Login',
 		],
 		'logout'           => [
-			'provider' => 'OZONE\OZ\User\Services\Logout'
+			'provider' => 'OZONE\OZ\User\Services\Logout',
 		],
 		'upicedit'         => [
-			'provider' => 'OZONE\OZ\User\Services\UserPicEdit'
+			'provider' => 'OZONE\OZ\User\Services\UserPicEdit',
 		],
 		'password'         => [
-			'provider' => 'OZONE\OZ\User\Services\Password'
+			'provider' => 'OZONE\OZ\User\Services\Password',
 		],
 		'session-share'     => [
-			'provider' => 'OZONE\OZ\User\Services\SessionShare'
+			'provider' => 'OZONE\OZ\User\Services\SessionShare',
 		],
 		'account-recovery' => [
-			'provider' => 'OZONE\OZ\User\Services\AccountRecovery'
-		]
+			'provider' => 'OZONE\OZ\User\Services\AccountRecovery',
+		],
 	];

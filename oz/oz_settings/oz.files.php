@@ -1,14 +1,15 @@
 <?php
-	/**
-	 * Copyright (c) 2017-present, Emile Silas Sare
-	 *
-	 * This file is part of OZone (O'Zone) package.
-	 *
-	 * For the full copyright and license information, please view the LICENSE
-	 * file that was distributed with this source code.
-	 */
 
-	defined('OZ_SELF_SECURITY_CHECK') or die;
+/**
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone (O'Zone) package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+	
+	\defined('OZ_SELF_SECURITY_CHECK') || die;
 
 	return [
 		// the uri format you want for file access: must provide in order
@@ -36,7 +37,7 @@
 		'OZ_QR_CODE_FILE_NAME'        => 'oz-qr-code-{oz_qr_code_key}.png',
 		'OZ_QR_CODE_URI_EXTRA_FORMAT' => 'oz-qr-code-{oz_qr_code_key}.png',
 
-		'OZ_UPLOAD_FILE_MAX_COUNT'      => 10,
-		'OZ_UPLOAD_FILE_MAX_SIZE'        => 10 * 1000 * 1000,// 10 Mb
-		'OZ_UPLOAD_FILE_MAX_TOTAL_SIZE' => 100 * 1000 * 1000 // 100 Mb
+		'OZ_UPLOAD_FILE_MAX_COUNT'       => 10,
+		'OZ_UPLOAD_FILE_MAX_SIZE'        => 10 * 1000 * 1000, // 10 Mb
+		'OZ_UPLOAD_FILE_MAX_TOTAL_SIZE'  => 100 * 1000 * 1000, // 100 Mb
 	];

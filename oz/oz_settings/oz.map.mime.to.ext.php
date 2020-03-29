@@ -1,14 +1,15 @@
 <?php
-	/**
-	 * Copyright (c) 2017-present, Emile Silas Sare
-	 *
-	 * This file is part of OZone (O'Zone) package.
-	 *
-	 * For the full copyright and license information, please view the LICENSE
-	 * file that was distributed with this source code.
-	 */
 
-	defined('OZ_SELF_SECURITY_CHECK') or die;
+/**
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone (O'Zone) package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+	
+	\defined('OZ_SELF_SECURITY_CHECK') || die;
 
 	return [
 		// CUSTOM OZONE FILE ALIAS
@@ -782,5 +783,5 @@
 		'video/x-msvideo'                                                           => 'avi',
 		'video/x-sgi-movie'                                                         => 'movie',
 		'video/x-smv'                                                               => 'smv',
-		'x-conference/x-cooltalk'                                                   => 'ice'
+		'x-conference/x-cooltalk'                                                   => 'ice',
 	];
