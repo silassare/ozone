@@ -155,12 +155,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "0d5897c1d408ba79d5e79e0a00f58fc923b23cca"
+                "reference": "3b3f7516bace1921ffa14fc3ec797c48fff7fc43"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/0d5897c1d408ba79d5e79e0a00f58fc923b23cca",
-                "reference": "0d5897c1d408ba79d5e79e0a00f58fc923b23cca",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/3b3f7516bace1921ffa14fc3ec797c48fff7fc43",
+                "reference": "3b3f7516bace1921ffa14fc3ec797c48fff7fc43",
                 "shasum": ""
             },
             "require": {
@@ -195,7 +195,7 @@
                 "mysql",
                 "orm"
             ],
-            "time": "2019-12-24T15:35:27+00:00"
+            "time": "2020-03-20T08:45:39+00:00"
         },
         {
             "name": "silassare/kli",
@@ -250,12 +250,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/otpl-php.git",
-                "reference": "0fd23dc0c3c69fdc613fc9de9af2022e0db90a77"
+                "reference": "6409fd17e5ed14c242d81722ae827011cdcdfd4a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/otpl-php/zipball/0fd23dc0c3c69fdc613fc9de9af2022e0db90a77",
-                "reference": "0fd23dc0c3c69fdc613fc9de9af2022e0db90a77",
+                "url": "https://api.github.com/repos/silassare/otpl-php/zipball/6409fd17e5ed14c242d81722ae827011cdcdfd4a",
+                "reference": "6409fd17e5ed14c242d81722ae827011cdcdfd4a",
                 "shasum": ""
             },
             "require": {
@@ -285,7 +285,7 @@
                 "otpl",
                 "template"
             ],
-            "time": "2019-04-09T02:35:27+00:00"
+            "time": "2020-02-04T17:07:28+00:00"
         }
     ],
     "packages-dev": [],
