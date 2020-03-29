@@ -22,34 +22,6 @@ final class TypePhone extends TypeString
 	private $registered;
 
 	/**
-	 * @inheritdoc
-	 */
-	public static function getInstance(array $options)
-	{
-		$instance = new self();
-
-		if (isset($options['registered'])) {
-			$registered = $options['registered'];
-
-			if ($registered === true) {
-				$instance->registered();
-			} else {
-				$instance->notRegistered();
-			}
-		}
-
-		if (self::getOptionKey($options, 'null', false)) {
-			$instance->nullAble();
-		}
-
-		if (\array_key_exists('default', $options)) {
-			$instance->setDefault($options['default']);
-		}
-
-		return $instance;
-	}
-
-	/**
 	 * TypePhone constructor.
 	 *
 	 * @inheritdoc
@@ -139,5 +111,33 @@ final class TypePhone extends TypeString
 		$options['registered'] = $this->registered;
 
 		return $options;
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function getInstance(array $options)
+	{
+		$instance = new self();
+
+		if (isset($options['registered'])) {
+			$registered = $options['registered'];
+
+			if ($registered === true) {
+				$instance->registered();
+			} else {
+				$instance->notRegistered();
+			}
+		}
+
+		if (self::getOptionKey($options, 'null', false)) {
+			$instance->nullAble();
+		}
+
+		if (\array_key_exists('default', $options)) {
+			$instance->setDefault($options['default']);
+		}
+
+		return $instance;
 	}
 }

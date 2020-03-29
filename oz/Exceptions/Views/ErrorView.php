@@ -26,18 +26,6 @@ final class ErrorView extends WebViewBase
 	private $compileData = [];
 
 	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->map('*', '/oz:error', function (RouteInfo $r) {
-			$view = new self($r);
-
-			return $view->mainRoute();
-		}, ['route:name' => 'oz:error']);
-	}
-
-	/**
 	 * @throws \OZONE\OZ\Exceptions\BaseException
 	 *
 	 * @return \OZONE\OZ\Http\Response
@@ -92,5 +80,17 @@ final class ErrorView extends WebViewBase
 	public function getTemplate()
 	{
 		return 'error.otpl';
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$router->map('*', '/oz:error', function (RouteInfo $r) {
+			$view = new self($r);
+
+			return $view->mainRoute();
+		}, ['route:name' => 'oz:error']);
 	}
 }

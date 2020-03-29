@@ -60,17 +60,6 @@ abstract class Message implements MessageInterface
 	 */
 	protected $body;
 
-	/**
-	 * Disable magic setter to ensure immutability
-	 *
-	 * @param $name
-	 * @param $value
-	 */
-	public function __set($name, $value)
-	{
-		// Do nothing
-	}
-
 	/*
 	 * Protocol
 	 */
@@ -317,5 +306,16 @@ abstract class Message implements MessageInterface
 		$clone->body = $body;
 
 		return $clone;
+	}
+
+	/**
+	 * Disable magic setter to ensure immutability
+	 *
+	 * @param $name
+	 * @param $value
+	 */
+	public function __set($name, $value)
+	{
+		// Do nothing
 	}
 }

@@ -125,41 +125,6 @@ class Request extends Message implements ServerRequestInterface
 		'TRACE'   => 1,
 	];
 
-	/*
-	 * Method
-	 */
-
-	/**
-	 * Creates new HTTP request with data extracted from the application
-	 * Environment object
-	 *
-	 * @param Environment $environment
-	 *
-	 * @return static
-	 */
-	public static function createFromEnvironment(Environment $environment)
-	{
-		$method        = $environment['REQUEST_METHOD'];
-		$uri           = Uri::createFromEnvironment($environment);
-		$headers       = Headers::createFromEnvironment($environment);
-		$cookies       = Cookies::parseCookieHeaderString($headers->get('Cookie', [''])[0]);
-		$serverParams  = $environment->all();
-		$body          = new RequestBody();
-		$uploadedFiles = UploadedFile::createFromEnvironment($environment);
-
-		$request = new static($method, $uri, $headers, $cookies, $serverParams, $body, $uploadedFiles);
-
-		if (
-			$method === 'POST' &&
-			\in_array($request->getMediaType(), ['application/x-www-form-urlencoded', 'multipart/form-data'])
-		) {
-			// parsed body must be $_POST
-			$request = $request->withParsedBody($_POST);
-		}
-
-		return $request;
-	}
-
 	/**
 	 * Creates new HTTP request.
 	 *
@@ -268,19 +233,6 @@ class Request extends Message implements ServerRequestInterface
 		if (isset($e) && $e instanceof \InvalidArgumentException) {
 			throw $e;
 		}
-	}
-
-	/**
-	 * This method is applied to the cloned object
-	 * after PHP performs an initial shallow-copy. This
-	 * method completes a deep-copy by creating new objects
-	 * for the cloned object's internal reference pointers.
-	 */
-	public function __clone()
-	{
-		$this->headers    = clone $this->headers;
-		$this->attributes = clone $this->attributes;
-		$this->body       = clone $this->body;
 	}
 
 	/**
@@ -1229,5 +1181,53 @@ class Request extends Message implements ServerRequestInterface
 		}
 
 		return $method;
+	}
+
+	/*
+	 * Method
+	 */
+
+	/**
+	 * Creates new HTTP request with data extracted from the application
+	 * Environment object
+	 *
+	 * @param Environment $environment
+	 *
+	 * @return static
+	 */
+	public static function createFromEnvironment(Environment $environment)
+	{
+		$method        = $environment['REQUEST_METHOD'];
+		$uri           = Uri::createFromEnvironment($environment);
+		$headers       = Headers::createFromEnvironment($environment);
+		$cookies       = Cookies::parseCookieHeaderString($headers->get('Cookie', [''])[0]);
+		$serverParams  = $environment->all();
+		$body          = new RequestBody();
+		$uploadedFiles = UploadedFile::createFromEnvironment($environment);
+
+		$request = new static($method, $uri, $headers, $cookies, $serverParams, $body, $uploadedFiles);
+
+		if (
+			$method === 'POST' &&
+			\in_array($request->getMediaType(), ['application/x-www-form-urlencoded', 'multipart/form-data'])
+		) {
+			// parsed body must be $_POST
+			$request = $request->withParsedBody($_POST);
+		}
+
+		return $request;
+	}
+
+	/**
+	 * This method is applied to the cloned object
+	 * after PHP performs an initial shallow-copy. This
+	 * method completes a deep-copy by creating new objects
+	 * for the cloned object's internal reference pointers.
+	 */
+	public function __clone()
+	{
+		$this->headers    = clone $this->headers;
+		$this->attributes = clone $this->attributes;
+		$this->body       = clone $this->body;
 	}
 }

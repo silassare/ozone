@@ -46,42 +46,6 @@ class Cookies
 	];
 
 	/**
-	 * Parse HTTP request `Cookie:` header and extract
-	 * into a PHP associative array.
-	 *
-	 * @param string $header The raw HTTP request `Cookie:` header
-	 *
-	 * @throws \InvalidArgumentException if the cookie data cannot be parsed
-	 *
-	 * @return array Associative array of cookie names and values
-	 */
-	public static function parseCookieHeaderString($header)
-	{
-		if (!\is_string($header)) {
-			throw new \InvalidArgumentException('Cannot parse Cookie data. Header value must be a string.');
-		}
-
-		$header  = \rtrim($header, "\r\n");
-		$pieces  = \preg_split('#[;]\s*#', $header);
-		$cookies = [];
-
-		foreach ($pieces as $cookie) {
-			$cookie = \explode('=', $cookie);
-
-			if (\count($cookie) === 2) {
-				$key   = \urldecode($cookie[0]);
-				$value = \urldecode($cookie[1]);
-
-				if (!isset($cookies[$key])) {
-					$cookies[$key] = $value;
-				}
-			}
-		}
-
-		return $cookies;
-	}
-
-	/**
 	 * Creates new cookies helper
 	 *
 	 * @param array $cookies
@@ -207,5 +171,41 @@ class Cookies
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Parse HTTP request `Cookie:` header and extract
+	 * into a PHP associative array.
+	 *
+	 * @param string $header The raw HTTP request `Cookie:` header
+	 *
+	 * @throws \InvalidArgumentException if the cookie data cannot be parsed
+	 *
+	 * @return array Associative array of cookie names and values
+	 */
+	public static function parseCookieHeaderString($header)
+	{
+		if (!\is_string($header)) {
+			throw new \InvalidArgumentException('Cannot parse Cookie data. Header value must be a string.');
+		}
+
+		$header  = \rtrim($header, "\r\n");
+		$pieces  = \preg_split('#[;]\s*#', $header);
+		$cookies = [];
+
+		foreach ($pieces as $cookie) {
+			$cookie = \explode('=', $cookie);
+
+			if (\count($cookie) === 2) {
+				$key   = \urldecode($cookie[0]);
+				$value = \urldecode($cookie[1]);
+
+				if (!isset($cookies[$key])) {
+					$cookies[$key] = $value;
+				}
+			}
+		}
+
+		return $cookies;
 	}
 }

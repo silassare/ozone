@@ -34,20 +34,6 @@ final class AccountRecovery extends BaseService
 	private $phone_auth;
 
 	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->post('/account-recovery', function (RouteInfo $r) {
-			$context = $r->getContext();
-			$s       = new self($context);
-			$s->actionRecover($context);
-
-			return $s->respond();
-		});
-	}
-
-	/**
 	 * @param \OZONE\OZ\Core\Context $context
 	 *
 	 * @throws \OZONE\OZ\Exceptions\BaseException
@@ -117,5 +103,19 @@ final class AccountRecovery extends BaseService
 			 ->setData($user_obj->asArray());
 
 		$this->phone_auth->close();
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$router->post('/account-recovery', function (RouteInfo $r) {
+			$context = $r->getContext();
+			$s       = new self($context);
+			$s->actionRecover($context);
+
+			return $s->respond();
+		});
 	}
 }

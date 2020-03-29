@@ -28,28 +28,6 @@ use OZONE\OZ\User\UsersManager;
 final class Password extends BaseService
 {
 	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router
-			->map(['PATCH', 'POST'], '/users/{uid}/password/edit', function (RouteInfo $r) {
-				$context = $r->getContext();
-				$s       = new static($context);
-				$s->actionEditPassAdmin($context, $r->getArg('uid'));
-
-				return $s->respond();
-			}, ['uid' => '\d+'])
-			->map(['PATCH', 'POST'], '/users/password/edit', function (RouteInfo $r) {
-				$context = $r->getContext();
-				$s       = new static($context);
-				$s->actionEditOwnPass($context);
-
-				return $s->respond();
-			});
-	}
-
-	/**
 	 * Edit password: verified user only
 	 *
 	 * @param \OZONE\OZ\Core\Context $context
@@ -122,5 +100,27 @@ final class Password extends BaseService
 		$this->getResponseHolder()
 			 ->setDone('OZ_PASSWORD_EDIT_SUCCESS')
 			 ->setData($user_obj->asArray());
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$router
+			->map(['PATCH', 'POST'], '/users/{uid}/password/edit', function (RouteInfo $r) {
+				$context = $r->getContext();
+				$s       = new static($context);
+				$s->actionEditPassAdmin($context, $r->getArg('uid'));
+
+				return $s->respond();
+			}, ['uid' => '\d+'])
+			->map(['PATCH', 'POST'], '/users/password/edit', function (RouteInfo $r) {
+				$context = $r->getContext();
+				$s       = new static($context);
+				$s->actionEditOwnPass($context);
+
+				return $s->respond();
+			});
 	}
 }

@@ -23,6 +23,84 @@ use OZONE\OZ\Http\Body;
 class FilesServer
 {
 	/**
+	 * @param \OZONE\OZ\Core\Context $context
+	 * @param array                  $params
+	 *
+	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \Exception
+	 *
+	 * @return \OZONE\OZ\Http\Response
+	 */
+	public function serve(Context $context, array $params)
+	{
+		Assert::assertForm($params, [
+			'file_src',
+			'file_name',
+			'file_mime',
+			'file_quality',
+		], new NotFoundException());
+
+		\set_time_limit(0);
+
+		$response = $context->getResponse();
+		$src      = $params['file_src'];
+
+		if (empty($src) || !\file_exists($src) || !\is_file($src) || !\is_readable($src)) {
+			throw new NotFoundException();
+		}
+
+		$file_name    = $params['file_name'];
+		$file_mime    = $params['file_mime'];
+		$file_quality = (int) ($params['file_quality']);
+		$size         = \filesize($src);
+
+		// close the current session
+		if (\session_id()) {
+			\session_write_close();
+		}
+
+		// cleans output buffer
+		if (\ob_get_contents()) {
+			\ob_clean();
+		}
+
+		$response = $response->withHeader('Pragma', 'public')
+							 ->withHeader('Expires', '99936000')
+							 ->withHeader('Cache-Control', 'public,max-age=99936000')
+							 ->withHeader('Content-Transfer-Encoding', 'binary')
+							 ->withHeader('Content-Length', $size)
+							 ->withHeader('Content-type', $file_mime)
+							 ->withHeader('Content-Disposition', "attachment; filename=\"$file_name\";");
+
+		if ($file_quality > 0) {
+			// thumbnails
+			// 0: 'original file'
+			// 1: 'low quality',
+			// 2: 'normal quality',
+			// 3: 'high quality'
+			$jpeg_quality_array = [60, 80, 100];
+			$jpeg_quality       = $jpeg_quality_array[$file_quality - 1];
+			$img_utils_obj      = new ImagesUtils($src);
+
+			if ($img_utils_obj->load()) {
+				$max_size = SettingsManager::get('oz.users', 'OZ_THUMB_MAX_SIZE');
+				$advice   = $img_utils_obj->adviceBestSize($max_size, $max_size);
+				$content  = $img_utils_obj->resizeImage($advice['w'], $advice['h'], $advice['crop'])
+										  ->getString('image/jpeg', $jpeg_quality);
+				$body     = Body::fromString($content);
+
+				return $response->withBody($body);
+			}
+		}
+
+		// open in readonly mode
+		$body = Body::fromPath($src, 'r');
+
+		return $response->withBody($body);
+	}
+
+	/**
 	 * starts a file download server
 	 *
 	 * @param array $options      the server options
@@ -129,83 +207,5 @@ class FilesServer
 		// file download was a success
 		@\fclose($file);
 		exit;
-	}
-
-	/**
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param array                  $params
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \Exception
-	 *
-	 * @return \OZONE\OZ\Http\Response
-	 */
-	public function serve(Context $context, array $params)
-	{
-		Assert::assertForm($params, [
-			'file_src',
-			'file_name',
-			'file_mime',
-			'file_quality',
-		], new NotFoundException());
-
-		\set_time_limit(0);
-
-		$response = $context->getResponse();
-		$src      = $params['file_src'];
-
-		if (empty($src) || !\file_exists($src) || !\is_file($src) || !\is_readable($src)) {
-			throw new NotFoundException();
-		}
-
-		$file_name    = $params['file_name'];
-		$file_mime    = $params['file_mime'];
-		$file_quality = (int) ($params['file_quality']);
-		$size         = \filesize($src);
-
-		// close the current session
-		if (\session_id()) {
-			\session_write_close();
-		}
-
-		// cleans output buffer
-		if (\ob_get_contents()) {
-			\ob_clean();
-		}
-
-		$response = $response->withHeader('Pragma', 'public')
-							 ->withHeader('Expires', '99936000')
-							 ->withHeader('Cache-Control', 'public,max-age=99936000')
-							 ->withHeader('Content-Transfer-Encoding', 'binary')
-							 ->withHeader('Content-Length', $size)
-							 ->withHeader('Content-type', $file_mime)
-							 ->withHeader('Content-Disposition', "attachment; filename=\"$file_name\";");
-
-		if ($file_quality > 0) {
-			// thumbnails
-			// 0: 'original file'
-			// 1: 'low quality',
-			// 2: 'normal quality',
-			// 3: 'high quality'
-			$jpeg_quality_array = [60, 80, 100];
-			$jpeg_quality       = $jpeg_quality_array[$file_quality - 1];
-			$img_utils_obj      = new ImagesUtils($src);
-
-			if ($img_utils_obj->load()) {
-				$max_size = SettingsManager::get('oz.users', 'OZ_THUMB_MAX_SIZE');
-				$advice   = $img_utils_obj->adviceBestSize($max_size, $max_size);
-				$content  = $img_utils_obj->resizeImage($advice['w'], $advice['h'], $advice['crop'])
-										  ->getString('image/jpeg', $jpeg_quality);
-				$body     = Body::fromString($content);
-
-				return $response->withBody($body);
-			}
-		}
-
-		// open in readonly mode
-		$body = Body::fromPath($src, 'r');
-
-		return $response->withBody($body);
 	}
 }

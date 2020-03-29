@@ -32,28 +32,6 @@ use OZONE\OZ\Router\Router;
 final class SessionShare extends BaseService
 {
 	/**
-	 * {@inheritdoc}
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->get('/oz-session-share', function (RouteInfo $r) {
-			$context  = $r->getContext();
-			$token  = $context->getRequest()
-								->getFormField('token', null);
-
-			$instance = new static($context);
-
-			if (null !== $token) {
-				$instance->actionCheck($context, $token);
-			} else {
-				$instance->actionCreate($context);
-			}
-
-			return $instance->respond();
-		});
-	}
-
-	/**
 	 * @param \OZONE\OZ\Core\Context $context
 	 *
 	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
@@ -128,6 +106,28 @@ final class SessionShare extends BaseService
 		$this->getResponseHolder()
 			 ->setDone('OZ_USER_ONLINE')
 			 ->setData($user->asArray());
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$router->get('/oz-session-share', function (RouteInfo $r) {
+			$context  = $r->getContext();
+			$token  = $context->getRequest()
+								->getFormField('token', null);
+
+			$instance = new static($context);
+
+			if (null !== $token) {
+				$instance->actionCheck($context, $token);
+			} else {
+				$instance->actionCreate($context);
+			}
+
+			return $instance->respond();
+		});
 	}
 
 	/**

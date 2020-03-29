@@ -22,25 +22,6 @@ use OZONE\OZ\Router\Router;
 class UploadFiles extends BaseService
 {
 	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$options = [
-			'route:name' => 'oz:upload',
-		];
-
-		$router->post('/upload[/]', function (RouteInfo $r) {
-			$ctx = $r->getContext();
-			$s   = new static($ctx);
-
-			$s->upload($r);
-
-			return $s->respond();
-		}, $options);
-	}
-
-	/**
 	 * @param \OZONE\OZ\Router\RouteInfo $r
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
@@ -71,5 +52,24 @@ class UploadFiles extends BaseService
 		$this->getResponseHolder()
 			 ->setDone()
 			 ->setDataKey($field, $data);
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$options = [
+			'route:name' => 'oz:upload',
+		];
+
+		$router->post('/upload[/]', function (RouteInfo $r) {
+			$ctx = $r->getContext();
+			$s   = new static($ctx);
+
+			$s->upload($r);
+
+			return $s->respond();
+		}, $options);
 	}
 }

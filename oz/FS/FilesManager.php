@@ -23,35 +23,6 @@ class FilesManager
 	private $root;
 
 	/**
-	 * Checks if a given directory is empty
-	 *
-	 * @param string $dir the directory path
-	 *
-	 * @return null|bool
-	 */
-	public static function isEmptyDir($dir)
-	{
-		if (!\is_readable($dir)) {
-			return null;
-		}
-
-		$handle = \opendir($dir);
-		$yes    = true;
-
-		while (false !== ($entry = \readdir($handle))) {
-			if ($entry !== '.' && $entry !== '..') {
-				$yes = false;
-
-				break;
-			}
-		}
-
-		\closedir($handle);
-
-		return $yes;
-	}
-
-	/**
 	 * FilesManager constructor.
 	 *
 	 * @param string $root the directory root path
@@ -651,6 +622,35 @@ class FilesManager
 		}
 
 		\closedir($res);
+	}
+
+	/**
+	 * Checks if a given directory is empty
+	 *
+	 * @param string $dir the directory path
+	 *
+	 * @return null|bool
+	 */
+	public static function isEmptyDir($dir)
+	{
+		if (!\is_readable($dir)) {
+			return null;
+		}
+
+		$handle = \opendir($dir);
+		$yes    = true;
+
+		while (false !== ($entry = \readdir($handle))) {
+			if ($entry !== '.' && $entry !== '..') {
+				$yes = false;
+
+				break;
+			}
+		}
+
+		\closedir($handle);
+
+		return $yes;
 	}
 
 	/**

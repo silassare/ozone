@@ -43,56 +43,6 @@ class Headers extends Collection
 	];
 
 	/**
-	 * Creates new headers collection with data extracted from
-	 * the application Environment object
-	 *
-	 * @param Environment $environment
-	 *
-	 * @return self
-	 */
-	public static function createFromEnvironment(Environment $environment)
-	{
-		$data        = [];
-		$environment = self::determineAuthorization($environment);
-
-		foreach ($environment as $key => $value) {
-			$key = \strtoupper($key);
-
-			if (isset(static::$special[$key]) || \strpos($key, 'HTTP_') === 0) {
-				if ($key !== 'HTTP_CONTENT_LENGTH') {
-					$data[$key] = $value;
-				}
-			}
-		}
-
-		return new static($data);
-	}
-
-	/**
-	 * If HTTP_AUTHORIZATION does not exist tries to get it from
-	 * getallheaders() when available.
-	 *
-	 * @param Environment $environment
-	 *
-	 * @return Environment
-	 */
-	public static function determineAuthorization(Environment $environment)
-	{
-		$authorization = $environment->get('HTTP_AUTHORIZATION');
-
-		if (null === $authorization && \is_callable('getallheaders')) {
-			$headers = getallheaders();
-			$headers = \array_change_key_case($headers, \CASE_LOWER);
-
-			if (isset($headers['authorization'])) {
-				$environment->set('HTTP_AUTHORIZATION', $headers['authorization']);
-			}
-		}
-
-		return $environment;
-	}
-
-	/**
 	 * Returns array of HTTP header names and values.
 	 * This method returns the _original_ header name
 	 * as specified by the end user.
@@ -224,5 +174,55 @@ class Headers extends Collection
 	public function remove($key)
 	{
 		parent::remove($this->normalizeKey($key));
+	}
+
+	/**
+	 * Creates new headers collection with data extracted from
+	 * the application Environment object
+	 *
+	 * @param Environment $environment
+	 *
+	 * @return self
+	 */
+	public static function createFromEnvironment(Environment $environment)
+	{
+		$data        = [];
+		$environment = self::determineAuthorization($environment);
+
+		foreach ($environment as $key => $value) {
+			$key = \strtoupper($key);
+
+			if (isset(static::$special[$key]) || \strpos($key, 'HTTP_') === 0) {
+				if ($key !== 'HTTP_CONTENT_LENGTH') {
+					$data[$key] = $value;
+				}
+			}
+		}
+
+		return new static($data);
+	}
+
+	/**
+	 * If HTTP_AUTHORIZATION does not exist tries to get it from
+	 * getallheaders() when available.
+	 *
+	 * @param Environment $environment
+	 *
+	 * @return Environment
+	 */
+	public static function determineAuthorization(Environment $environment)
+	{
+		$authorization = $environment->get('HTTP_AUTHORIZATION');
+
+		if (null === $authorization && \is_callable('getallheaders')) {
+			$headers = getallheaders();
+			$headers = \array_change_key_case($headers, \CASE_LOWER);
+
+			if (isset($headers['authorization'])) {
+				$environment->set('HTTP_AUTHORIZATION', $headers['authorization']);
+			}
+		}
+
+		return $environment;
 	}
 }

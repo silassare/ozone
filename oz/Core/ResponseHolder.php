@@ -36,38 +36,6 @@ final class ResponseHolder
 	private $label;
 
 	/**
-	 * Gets responses holder instance for a given label
-	 *
-	 * @param string $label the response label
-	 *
-	 * @return \OZONE\OZ\Core\ResponseHolder
-	 */
-	public static function getInstance($label)
-	{
-		return new self($label);
-	}
-
-	/**
-	 * Gets response with a given label or get all responses if no label is given
-	 *
-	 * @param null|string $label
-	 *
-	 * @return null|array
-	 */
-	public static function getResponses($label = null)
-	{
-		if (!empty($label)) {
-			if (\array_key_exists($label, self::$responses)) {
-				return self::$responses[$label];
-			}
-
-			return null;
-		}
-
-		return self::$responses;
-	}
-
-	/**
 	 * ResponseHolder constructor.
 	 *
 	 * @param string $label the response label
@@ -190,5 +158,37 @@ final class ResponseHolder
 		self::$responses[$this->label] = $response->getResponse();
 
 		return $this;
+	}
+
+	/**
+	 * Gets responses holder instance for a given label
+	 *
+	 * @param string $label the response label
+	 *
+	 * @return \OZONE\OZ\Core\ResponseHolder
+	 */
+	public static function getInstance($label)
+	{
+		return new self($label);
+	}
+
+	/**
+	 * Gets response with a given label or get all responses if no label is given
+	 *
+	 * @param null|string $label
+	 *
+	 * @return null|array
+	 */
+	public static function getResponses($label = null)
+	{
+		if (!empty($label)) {
+			if (\array_key_exists($label, self::$responses)) {
+				return self::$responses[$label];
+			}
+
+			return null;
+		}
+
+		return self::$responses;
 	}
 }

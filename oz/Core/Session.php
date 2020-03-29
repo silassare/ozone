@@ -64,35 +64,6 @@ final class Session
 	private $delete_cookie = false;
 
 	/**
-	 * Decode session data string.
-	 *
-	 * @param string $raw
-	 *
-	 * @return null|array is array on success, null otherwise
-	 */
-	public static function decode($raw)
-	{
-		try {
-			return \json_decode($raw, true);
-		} catch (Exception $e) {
-		}
-
-		return null;
-	}
-
-	/**
-	 * Encode session data.
-	 *
-	 * @param array $data
-	 *
-	 * @return string
-	 */
-	public static function encode(array $data)
-	{
-		return \json_encode($data);
-	}
-
-	/**
 	 * Session constructor.
 	 *
 	 * @param \OZONE\OZ\Core\Context $context
@@ -635,6 +606,35 @@ final class Session
 		} catch (Exception $e) {
 			throw new InternalErrorException('OZ_SESSION_EXPIRED_DELETION_FAILED', null, $e);
 		}
+	}
+
+	/**
+	 * Decode session data string.
+	 *
+	 * @param string $raw
+	 *
+	 * @return null|array is array on success, null otherwise
+	 */
+	public static function decode($raw)
+	{
+		try {
+			return \json_decode($raw, true);
+		} catch (Exception $e) {
+		}
+
+		return null;
+	}
+
+	/**
+	 * Encode session data.
+	 *
+	 * @param array $data
+	 *
+	 * @return string
+	 */
+	public static function encode(array $data)
+	{
+		return \json_encode($data);
 	}
 
 	/**

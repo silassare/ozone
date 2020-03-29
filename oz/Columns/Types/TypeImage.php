@@ -22,36 +22,6 @@ final class TypeImage extends TypeFile
 	private $image_max_height;
 
 	/**
-	 * @inheritdoc
-	 */
-	public static function getInstance(array $options)
-	{
-		$instance = new self();
-
-		$instance->mimeTypes(['image/jpeg']);
-
-		$instance->imageWidthRange(
-			self::getOptionKey($options, 'image_min_width', 1),
-			self::getOptionKey($options, 'image_max_width', \PHP_INT_MAX)
-		);
-
-		$instance->imageHeightRange(
-			self::getOptionKey($options, 'image_min_height', 1),
-			self::getOptionKey($options, 'image_max_height', \PHP_INT_MAX)
-		);
-
-		if (self::getOptionKey($options, 'null', false)) {
-			$instance->nullAble();
-		}
-
-		if (\array_key_exists('default', $options)) {
-			$instance->setDefault($options['default']);
-		}
-
-		return $instance;
-	}
-
-	/**
 	 * TypeImage constructor.
 	 *
 	 * @inheritdoc
@@ -120,5 +90,35 @@ final class TypeImage extends TypeFile
 		$options['image_max_height'] = $this->image_max_height;
 
 		return $options;
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function getInstance(array $options)
+	{
+		$instance = new self();
+
+		$instance->mimeTypes(['image/jpeg']);
+
+		$instance->imageWidthRange(
+			self::getOptionKey($options, 'image_min_width', 1),
+			self::getOptionKey($options, 'image_max_width', \PHP_INT_MAX)
+		);
+
+		$instance->imageHeightRange(
+			self::getOptionKey($options, 'image_min_height', 1),
+			self::getOptionKey($options, 'image_max_height', \PHP_INT_MAX)
+		);
+
+		if (self::getOptionKey($options, 'null', false)) {
+			$instance->nullAble();
+		}
+
+		if (\array_key_exists('default', $options)) {
+			$instance->setDefault($options['default']);
+		}
+
+		return $instance;
 	}
 }

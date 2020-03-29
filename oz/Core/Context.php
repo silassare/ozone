@@ -149,13 +149,6 @@ final class Context
 	}
 
 	/**
-	 * Disable clone.
-	 */
-	private function __clone()
-	{
-	}
-
-	/**
 	 * Handle the incoming request.
 	 *
 	 * @throws \Exception
@@ -1013,5 +1006,12 @@ final class Context
 		}
 
 		self::$redirect_history[$path] = $info;
+	}
+
+	/**
+	 * Disable clone.
+	 */
+	private function __clone()
+	{
 	}
 }

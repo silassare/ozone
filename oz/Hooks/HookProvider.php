@@ -30,38 +30,6 @@ abstract class HookProvider implements HookProviderInterface
 	];
 
 	/**
-	 * Gets a hook provider instance.
-	 *
-	 * @return $this
-	 */
-	public static function getInstance()
-	{
-		if (!isset(self::$instances[static::class])) {
-			self::$instances[static::class] = new static();
-		}
-
-		return self::$instances[static::class];
-	}
-
-	/**
-	 * Register a hook receiver class.
-	 *
-	 * @param string $hook_receiver_class
-	 * @param int    $priority
-	 *
-	 * @return $this
-	 */
-	public static function registerHookReceiverClass($hook_receiver_class, $priority = self::RUN_DEFAULT)
-	{
-		if (!static::isCompatibleHookReceiverClass($hook_receiver_class)) {
-			throw new InvalidArgumentException(\sprintf('"%s" is not a valid hook receiver class for "%s".', $hook_receiver_class, static::class));
-		}
-
-		return static::getInstance()
-					 ->addHookReceiverClass($hook_receiver_class, $priority);
-	}
-
-	/**
 	 * HookProvider constructor.
 	 */
 	protected function __construct()
@@ -184,5 +152,37 @@ abstract class HookProvider implements HookProviderInterface
 		}
 
 		return $this;
+	}
+
+	/**
+	 * Gets a hook provider instance.
+	 *
+	 * @return $this
+	 */
+	public static function getInstance()
+	{
+		if (!isset(self::$instances[static::class])) {
+			self::$instances[static::class] = new static();
+		}
+
+		return self::$instances[static::class];
+	}
+
+	/**
+	 * Register a hook receiver class.
+	 *
+	 * @param string $hook_receiver_class
+	 * @param int    $priority
+	 *
+	 * @return $this
+	 */
+	public static function registerHookReceiverClass($hook_receiver_class, $priority = self::RUN_DEFAULT)
+	{
+		if (!static::isCompatibleHookReceiverClass($hook_receiver_class)) {
+			throw new InvalidArgumentException(\sprintf('"%s" is not a valid hook receiver class for "%s".', $hook_receiver_class, static::class));
+		}
+
+		return static::getInstance()
+					 ->addHookReceiverClass($hook_receiver_class, $priority);
 	}
 }

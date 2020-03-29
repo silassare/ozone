@@ -23,29 +23,6 @@ use ReflectionException;
 final class MainHookProvider extends HookProvider
 {
 	/**
-	 * @inheritDoc
-	 */
-	public static function getReceiverInstance($receiver_class)
-	{
-		return new $receiver_class();
-	}
-
-	/**
-	 * @inheritDoc
-	 */
-	public static function isCompatibleHookReceiverClass($hook_receiver_class)
-	{
-		try {
-			$rc = new ReflectionClass($hook_receiver_class);
-
-			return $rc->implementsInterface(MainHookReceiverInterface::class);
-		} catch (ReflectionException $e) {
-		}
-
-		return false;
-	}
-
-	/**
 	 * @param \OZONE\OZ\Core\Context $context
 	 */
 	public function triggerInit(Context $context)
@@ -302,5 +279,28 @@ final class MainHookProvider extends HookProvider
 	public function onFinish(callable $cb, $priority = HookProvider::RUN_DEFAULT)
 	{
 		return $this->addHookReceiverCallable(__FUNCTION__, $cb, $priority);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function getReceiverInstance($receiver_class)
+	{
+		return new $receiver_class();
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function isCompatibleHookReceiverClass($hook_receiver_class)
+	{
+		try {
+			$rc = new ReflectionClass($hook_receiver_class);
+
+			return $rc->implementsInterface(MainHookReceiverInterface::class);
+		} catch (ReflectionException $e) {
+		}
+
+		return false;
 	}
 }

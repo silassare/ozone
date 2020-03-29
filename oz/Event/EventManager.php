@@ -22,30 +22,9 @@ final class EventManager
 	private static $instance;
 
 	/**
-	 * Gets event manager instance. (Singleton pattern)
-	 *
-	 * @return \OZONE\OZ\Event\EventManager
-	 */
-	public static function getInstance()
-	{
-		if (!isset(self::$instance)) {
-			self::$instance = new self();
-		}
-
-		return self::$instance;
-	}
-
-	/**
 	 * EventManager constructor. (Singleton pattern)
 	 */
 	private function __construct()
-	{
-	}
-
-	/**
-	 * Prevent external clone. (Singleton pattern)
-	 */
-	private function __clone()
 	{
 	}
 
@@ -137,5 +116,26 @@ final class EventManager
 		}
 
 		return $this;
+	}
+
+	/**
+	 * Gets event manager instance. (Singleton pattern)
+	 *
+	 * @return \OZONE\OZ\Event\EventManager
+	 */
+	public static function getInstance()
+	{
+		if (!isset(self::$instance)) {
+			self::$instance = new self();
+		}
+
+		return self::$instance;
+	}
+
+	/**
+	 * Prevent external clone. (Singleton pattern)
+	 */
+	private function __clone()
+	{
 	}
 }

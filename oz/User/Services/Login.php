@@ -27,20 +27,6 @@ use OZONE\OZ\Router\Router;
 final class Login extends BaseService
 {
 	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->post('/login', function (RouteInfo $r) {
-			$context = $r->getContext();
-			$s       = new static($context);
-			$s->actionLogin($context);
-
-			return $s->respond();
-		});
-	}
-
-	/**
 	 * @param \OZONE\OZ\Core\Context $context
 	 *
 	 * @throws \Exception
@@ -74,5 +60,19 @@ final class Login extends BaseService
 			$this->getResponseHolder()
 				 ->setError($result);
 		}
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$router->post('/login', function (RouteInfo $r) {
+			$context = $r->getContext();
+			$s       = new static($context);
+			$s->actionLogin($context);
+
+			return $s->respond();
+		});
 	}
 }

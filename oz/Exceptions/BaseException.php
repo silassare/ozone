@@ -89,87 +89,6 @@ abstract class BaseException extends Exception
 	protected $data;
 
 	/**
-	 * Try to send error message to the client.
-	 *
-	 * @param string $err_msg
-	 */
-	public static function criticalDie($err_msg)
-	{
-		if (OZ_OZONE_IS_CLI) {
-			die(\PHP_EOL . $err_msg . \PHP_EOL);
-		}
-
-		if (!\headers_sent()) {
-			\header(self::$ERRORS_HEADER_MAP[self::INTERNAL_ERROR]);
-		}
-
-		self::clearOutPutBuffer();
-
-		$err_msg = \preg_replace('~\"([^\"]+)\"~', '<span>$1</span>', $err_msg);
-
-		$err_html = <<<ERROR_PAGE
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<title>Error</title>
-		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-		<style>
-			body{
-				margin: 0;
-				font-family: 'Ubuntu', sans-serif;
-			}
-			div.oz-error{
-				margin: 50px auto;
-				width: 80%;
-				padding: 10px 20px;
-				border-left: 3px solid #ff5064;
-				background-color: whitesmoke;
-			}
-			span{
-				color: #ff5064
-			}
-		</style>
-	</head>
-	<body>
-		<div class="oz-error">
-			<p>$err_msg</p>
-		</div>
-	</body>
-</html>
-ERROR_PAGE;
-		die($err_html);
-	}
-
-	/**
-	 * Convert throwable to string.
-	 *
-	 * @param \Throwable $e
-	 *
-	 * @return string
-	 */
-	public static function throwableToString(Throwable $e)
-	{
-		$data = [];
-
-		if (\method_exists($e, 'getData')) {
-			$data = $e->getData(true);
-		}
-
-		$data  = \json_encode($data);
-		$class = \get_class($e);
-
-		return <<<STRING
-\tFile    : {$e->getFile()}
-\tLine    : {$e->getLine()}
-\tCode    : {$e->getCode()}
-\tMessage : {$e->getMessage()}
-\tData    : $data
-\tClass   : {$class}
-\tTrace   : {$e->getTraceAsString()}
-STRING;
-	}
-
-	/**
 	 * BaseException constructor.
 	 *
 	 * @param string          $message  the exception message
@@ -182,16 +101,6 @@ STRING;
 		parent::__construct($message, $code, $previous);
 
 		$this->data = \is_array($data) ? $data : [];// prevent null value
-	}
-
-	/**
-	 * O'Zone exception to string formatter
-	 *
-	 * @return string
-	 */
-	public function __toString()
-	{
-		return self::throwableToString($this);
 	}
 
 	/**
@@ -344,6 +253,87 @@ STRING;
 	}
 
 	/**
+	 * Try to send error message to the client.
+	 *
+	 * @param string $err_msg
+	 */
+	public static function criticalDie($err_msg)
+	{
+		if (OZ_OZONE_IS_CLI) {
+			die(\PHP_EOL . $err_msg . \PHP_EOL);
+		}
+
+		if (!\headers_sent()) {
+			\header(self::$ERRORS_HEADER_MAP[self::INTERNAL_ERROR]);
+		}
+
+		self::clearOutPutBuffer();
+
+		$err_msg = \preg_replace('~\"([^\"]+)\"~', '<span>$1</span>', $err_msg);
+
+		$err_html = <<<ERROR_PAGE
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Error</title>
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<style>
+			body{
+				margin: 0;
+				font-family: 'Ubuntu', sans-serif;
+			}
+			div.oz-error{
+				margin: 50px auto;
+				width: 80%;
+				padding: 10px 20px;
+				border-left: 3px solid #ff5064;
+				background-color: whitesmoke;
+			}
+			span{
+				color: #ff5064
+			}
+		</style>
+	</head>
+	<body>
+		<div class="oz-error">
+			<p>$err_msg</p>
+		</div>
+	</body>
+</html>
+ERROR_PAGE;
+		die($err_html);
+	}
+
+	/**
+	 * Convert throwable to string.
+	 *
+	 * @param \Throwable $e
+	 *
+	 * @return string
+	 */
+	public static function throwableToString(Throwable $e)
+	{
+		$data = [];
+
+		if (\method_exists($e, 'getData')) {
+			$data = $e->getData(true);
+		}
+
+		$data  = \json_encode($data);
+		$class = \get_class($e);
+
+		return <<<STRING
+\tFile    : {$e->getFile()}
+\tLine    : {$e->getLine()}
+\tCode    : {$e->getCode()}
+\tMessage : {$e->getMessage()}
+\tData    : $data
+\tClass   : {$class}
+\tTrace   : {$e->getTraceAsString()}
+STRING;
+	}
+
+	/**
 	 * Try clear output buffer.
 	 */
 	private static function clearOutPutBuffer()
@@ -353,5 +343,15 @@ STRING;
 		while (\ob_get_level()) {
 			@\ob_end_clean();
 		}
+	}
+
+	/**
+	 * O'Zone exception to string formatter
+	 *
+	 * @return string
+	 */
+	public function __toString()
+	{
+		return self::throwableToString($this);
 	}
 }

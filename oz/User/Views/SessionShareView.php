@@ -26,18 +26,6 @@ use OZONE\OZ\Web\WebViewBase;
 final class SessionShareView extends WebViewBase
 {
 	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->get('/oz-session-share', function (RouteInfo $r) {
-			$view = new static($r);
-
-			return $view->mainRoute();
-		});
-	}
-
-	/**
 	 * @throws \OZONE\OZ\Exceptions\BadRequestException
 	 * @throws \Exception
 	 *
@@ -84,5 +72,17 @@ final class SessionShareView extends WebViewBase
 	public function getTemplate()
 	{
 		return '';
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$router->get('/oz-session-share', function (RouteInfo $r) {
+			$view = new static($r);
+
+			return $view->mainRoute();
+		});
 	}
 }

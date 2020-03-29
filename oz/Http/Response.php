@@ -141,47 +141,6 @@ class Response extends Message implements ResponseInterface
 		$this->body    = $body ? $body : Body::create();
 	}
 
-	/*
-	 * Status
-	 */
-
-	/**
-	 * This method is applied to the cloned object
-	 * after PHP performs an initial shallow-copy. This
-	 * method completes a deep-copy by creating new objects
-	 * for the cloned object's internal reference pointers.
-	 */
-	public function __clone()
-	{
-		$this->headers = clone $this->headers;
-	}
-
-	/**
-	 * Converts response to string.
-	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
-	 * @return string
-	 */
-	public function __toString()
-	{
-		$output = \sprintf(
-			'HTTP/%s %s %s',
-			$this->getProtocolVersion(),
-			$this->getStatusCode(),
-			$this->getReasonPhrase()
-		);
-		$output .= self::EOL;
-
-		foreach ($this->getHeaders() as $name => $values) {
-			$output .= \sprintf('%s: %s', $name, $this->getHeaderLine($name)) . self::EOL;
-		}
-		$output .= self::EOL;
-		$output .= (string) $this->getBody();
-
-		return $output;
-	}
-
 	/**
 	 * Write data to the response body.
 	 *
@@ -498,5 +457,46 @@ class Response extends Message implements ResponseInterface
 		}
 
 		return $status;
+	}
+
+	/*
+	 * Status
+	 */
+
+	/**
+	 * This method is applied to the cloned object
+	 * after PHP performs an initial shallow-copy. This
+	 * method completes a deep-copy by creating new objects
+	 * for the cloned object's internal reference pointers.
+	 */
+	public function __clone()
+	{
+		$this->headers = clone $this->headers;
+	}
+
+	/**
+	 * Converts response to string.
+	 *
+	 * Note: This method is not part of the PSR-7 standard.
+	 *
+	 * @return string
+	 */
+	public function __toString()
+	{
+		$output = \sprintf(
+			'HTTP/%s %s %s',
+			$this->getProtocolVersion(),
+			$this->getStatusCode(),
+			$this->getReasonPhrase()
+		);
+		$output .= self::EOL;
+
+		foreach ($this->getHeaders() as $name => $values) {
+			$output .= \sprintf('%s: %s', $name, $this->getHeaderLine($name)) . self::EOL;
+		}
+		$output .= self::EOL;
+		$output .= (string) $this->getBody();
+
+		return $output;
 	}
 }

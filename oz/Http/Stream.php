@@ -103,36 +103,6 @@ class Stream implements StreamInterface
 	}
 
 	/**
-	 * Reads all data from the stream into a string, from the beginning to end.
-	 *
-	 * This method MUST attempt to seek to the beginning of the stream before
-	 * reading data and read the stream until the end is reached.
-	 *
-	 * Warning: This could attempt to load a large amount of data into memory.
-	 *
-	 * This method MUST NOT raise an exception in order to conform with PHP's
-	 * string casting operations.
-	 *
-	 * @see http://php.net/manual/en/language.oop5.magic.php#object.tostring
-	 *
-	 * @return string
-	 */
-	public function __toString()
-	{
-		if (!$this->isAttached()) {
-			return '';
-		}
-
-		try {
-			$this->rewind();
-
-			return $this->getContents();
-		} catch (\RuntimeException $e) {
-			return '';
-		}
-	}
-
-	/**
 	 * Separates any underlying resources from the stream.
 	 *
 	 * After the stream has been detached, the stream is in an unusable state.
@@ -460,5 +430,35 @@ class Stream implements StreamInterface
 	protected function isAttached()
 	{
 		return \is_resource($this->stream);
+	}
+
+	/**
+	 * Reads all data from the stream into a string, from the beginning to end.
+	 *
+	 * This method MUST attempt to seek to the beginning of the stream before
+	 * reading data and read the stream until the end is reached.
+	 *
+	 * Warning: This could attempt to load a large amount of data into memory.
+	 *
+	 * This method MUST NOT raise an exception in order to conform with PHP's
+	 * string casting operations.
+	 *
+	 * @see http://php.net/manual/en/language.oop5.magic.php#object.tostring
+	 *
+	 * @return string
+	 */
+	public function __toString()
+	{
+		if (!$this->isAttached()) {
+			return '';
+		}
+
+		try {
+			$this->rewind();
+
+			return $this->getContents();
+		} catch (\RuntimeException $e) {
+			return '';
+		}
 	}
 }

@@ -24,20 +24,6 @@ use OZONE\OZ\Router\Router;
 final class TNet extends BaseService
 {
 	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->get('/tnet', function (RouteInfo $r) {
-			$context = $r->getContext();
-			$s       = new self($context);
-			$s->actionTNet($context);
-
-			return $s->respond();
-		});
-	}
-
-	/**
 	 * @param \OZONE\OZ\Core\Context $context
 	 *
 	 * @throws \OZONE\OZ\Exceptions\BaseException
@@ -57,5 +43,19 @@ final class TNet extends BaseService
 
 		$this->getResponseHolder()
 			 ->setData($data);
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$router->get('/tnet', function (RouteInfo $r) {
+			$context = $r->getContext();
+			$s       = new self($context);
+			$s->actionTNet($context);
+
+			return $s->respond();
+		});
 	}
 }

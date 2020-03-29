@@ -24,16 +24,6 @@ class PPicUtils
 	private $uid;
 
 	/**
-	 * Gets the default profile picid
-	 *
-	 * @return string the profile picid
-	 */
-	public static function getDefault()
-	{
-		return '0_0';
-	}
-
-	/**
 	 * PPicUtils constructor.
 	 *
 	 * @param int|string $uid the user id
@@ -157,5 +147,15 @@ class PPicUtils
 		} else { /*this file is not a valid image*/
 			throw new InternalErrorException('OZ_IMAGE_NOT_VALID');
 		}
+	}
+
+	/**
+	 * Gets the default profile picid
+	 *
+	 * @return string the profile picid
+	 */
+	public static function getDefault()
+	{
+		return '0_0';
 	}
 }

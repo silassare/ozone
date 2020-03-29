@@ -25,44 +25,6 @@ class FilesUploadHandler
 	 */
 	private $message;
 
-	/**
-	 * Convert php upload error code to message.
-	 *
-	 * @param int $error
-	 *
-	 * @return string
-	 */
-	public static function uploadErrorMessage($error)
-	{
-		switch ($error) {
-			case \UPLOAD_ERR_INI_SIZE:
-				// 'The uploaded file exceeds the upload_max_filesize directive in php.ini'
-			case \UPLOAD_ERR_FORM_SIZE:
-				// 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'
-				$message = 'OZ_FILE_UPLOAD_TOO_BIG';
-
-				break;
-			case \UPLOAD_ERR_NO_FILE:
-				// 'No file was uploaded'
-				$message = 'OZ_FILE_UPLOAD_IS_EMPTY';
-
-				break;
-			case \UPLOAD_ERR_PARTIAL:
-				// 'The uploaded file was only partially uploaded'
-			case \UPLOAD_ERR_NO_TMP_DIR:
-				// 'Missing a temporary folder'
-			case \UPLOAD_ERR_CANT_WRITE:
-				// 'Failed to write file to disk'
-			case \UPLOAD_ERR_EXTENSION:
-				// 'File upload stopped by extension'
-			default:
-				// 'Unknown upload error'
-				$message = 'OZ_FILE_UPLOAD_FAIL';
-		}
-
-		return $message;
-	}
-
 	public function __construct()
 	{
 	}
@@ -215,5 +177,43 @@ class FilesUploadHandler
 		}
 
 		return true;
+	}
+
+	/**
+	 * Convert php upload error code to message.
+	 *
+	 * @param int $error
+	 *
+	 * @return string
+	 */
+	public static function uploadErrorMessage($error)
+	{
+		switch ($error) {
+			case \UPLOAD_ERR_INI_SIZE:
+				// 'The uploaded file exceeds the upload_max_filesize directive in php.ini'
+			case \UPLOAD_ERR_FORM_SIZE:
+				// 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'
+				$message = 'OZ_FILE_UPLOAD_TOO_BIG';
+
+				break;
+			case \UPLOAD_ERR_NO_FILE:
+				// 'No file was uploaded'
+				$message = 'OZ_FILE_UPLOAD_IS_EMPTY';
+
+				break;
+			case \UPLOAD_ERR_PARTIAL:
+				// 'The uploaded file was only partially uploaded'
+			case \UPLOAD_ERR_NO_TMP_DIR:
+				// 'Missing a temporary folder'
+			case \UPLOAD_ERR_CANT_WRITE:
+				// 'Failed to write file to disk'
+			case \UPLOAD_ERR_EXTENSION:
+				// 'File upload stopped by extension'
+			default:
+				// 'Unknown upload error'
+				$message = 'OZ_FILE_UPLOAD_FAIL';
+		}
+
+		return $message;
 	}
 }

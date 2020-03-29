@@ -38,20 +38,6 @@ final class SignUp extends BaseService
 	private $phone_auth;
 
 	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->post('/signup', function (RouteInfo $r) {
-			$context = $r->getContext();
-			$s       = new self($context);
-			$s->actionSignUp($context);
-
-			return $s->respond();
-		});
-	}
-
-	/**
 	 * @param \OZONE\OZ\Core\Context $context
 	 *
 	 * @throws \Exception
@@ -130,5 +116,19 @@ final class SignUp extends BaseService
 			 ->setData($user_obj->asArray());
 
 		$this->phone_auth->close();
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$router->post('/signup', function (RouteInfo $r) {
+			$context = $r->getContext();
+			$s       = new self($context);
+			$s->actionSignUp($context);
+
+			return $s->respond();
+		});
 	}
 }

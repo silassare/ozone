@@ -24,20 +24,6 @@ use OZONE\OZ\Router\Router;
 final class Logout extends BaseService
 {
 	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->post('/logout', function (RouteInfo $r) {
-			$context = $r->getContext();
-			$s       = new self($context);
-			$s->actionLogout($context);
-
-			return $s->respond();
-		});
-	}
-
-	/**
 	 * @param \OZONE\OZ\Core\Context $context
 	 *
 	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
@@ -49,5 +35,19 @@ final class Logout extends BaseService
 
 		$this->getResponseHolder()
 			 ->setDone('OZ_USER_LOGOUT');
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$router->post('/logout', function (RouteInfo $r) {
+			$context = $r->getContext();
+			$s       = new self($context);
+			$s->actionLogout($context);
+
+			return $s->respond();
+		});
 	}
 }

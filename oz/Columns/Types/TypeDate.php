@@ -24,35 +24,6 @@ final class TypeDate extends TypeString
 	private $max_age    = \PHP_INT_MAX;
 
 	/**
-	 * @inheritdoc
-	 */
-	public static function getInstance(array $options)
-	{
-		$instance = new self();
-
-		$instance->length(1, 10);
-
-		if (self::getOptionKey($options, 'birth_date', false)) {
-			$instance->birthDate();
-
-			$min_age = self::getOptionKey($options, 'min_age', 1);
-			$max_age = self::getOptionKey($options, 'max_age', \PHP_INT_MAX);
-
-			$instance->ageRange($min_age, $max_age);
-		}
-
-		if (self::getOptionKey($options, 'null', false)) {
-			$instance->nullAble();
-		}
-
-		if (\array_key_exists('default', $options)) {
-			$instance->setDefault($options['default']);
-		}
-
-		return $instance;
-	}
-
-	/**
 	 * TypeDate constructor.
 	 *
 	 * @inheritdoc
@@ -137,5 +108,34 @@ final class TypeDate extends TypeString
 		$options['max_age']    = $this->max_age;
 
 		return $options;
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function getInstance(array $options)
+	{
+		$instance = new self();
+
+		$instance->length(1, 10);
+
+		if (self::getOptionKey($options, 'birth_date', false)) {
+			$instance->birthDate();
+
+			$min_age = self::getOptionKey($options, 'min_age', 1);
+			$max_age = self::getOptionKey($options, 'max_age', \PHP_INT_MAX);
+
+			$instance->ageRange($min_age, $max_age);
+		}
+
+		if (self::getOptionKey($options, 'null', false)) {
+			$instance->nullAble();
+		}
+
+		if (\array_key_exists('default', $options)) {
+			$instance->setDefault($options['default']);
+		}
+
+		return $instance;
 	}
 }

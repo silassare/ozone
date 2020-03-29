@@ -87,26 +87,6 @@ class UploadedFile implements UploadedFileInterface
 	protected $moved = false;
 
 	/**
-	 * Creates a normalized tree of UploadedFile instances from the Environment.
-	 *
-	 * @param Environment $env The environment
-	 *
-	 * @return null|array a normalized tree of UploadedFile instances or null if none are provided
-	 */
-	public static function createFromEnvironment(Environment $env)
-	{
-		if ($env->has('oz:files') && \is_array($env['oz:files'])) {
-			return $env['oz:files'];
-		}
-
-		if (isset($_FILES)) {
-			return static::parseUploadedFiles($_FILES);
-		}
-
-		return [];
-	}
-
-	/**
 	 * Construct a new UploadedFile instance.
 	 *
 	 * @param string      $file  the full path to the uploaded file provided by the client
@@ -295,6 +275,26 @@ class UploadedFile implements UploadedFileInterface
 	public function getSize()
 	{
 		return $this->size;
+	}
+
+	/**
+	 * Creates a normalized tree of UploadedFile instances from the Environment.
+	 *
+	 * @param Environment $env The environment
+	 *
+	 * @return null|array a normalized tree of UploadedFile instances or null if none are provided
+	 */
+	public static function createFromEnvironment(Environment $env)
+	{
+		if ($env->has('oz:files') && \is_array($env['oz:files'])) {
+			return $env['oz:files'];
+		}
+
+		if (isset($_FILES)) {
+			return static::parseUploadedFiles($_FILES);
+		}
+
+		return [];
 	}
 
 	/**

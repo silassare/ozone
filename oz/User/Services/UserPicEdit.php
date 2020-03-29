@@ -26,20 +26,6 @@ use OZONE\OZ\Router\Router;
 class UserPicEdit extends BaseService
 {
 	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->map(['PATCH', 'POST'], '/users/pic/edit', function (RouteInfo $r) {
-			$context = $r->getContext();
-			$s       = new self($context);
-			$s->actionPicEdit($context);
-
-			return $s->respond();
-		});
-	}
-
-	/**
 	 * @param \OZONE\OZ\Core\Context $context
 	 *
 	 * @throws \Exception
@@ -91,5 +77,19 @@ class UserPicEdit extends BaseService
 		$this->getResponseHolder()
 			 ->setDone($msg)
 			 ->setData($user->asArray());
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$router->map(['PATCH', 'POST'], '/users/pic/edit', function (RouteInfo $r) {
+			$context = $r->getContext();
+			$s       = new self($context);
+			$s->actionPicEdit($context);
+
+			return $s->respond();
+		});
 	}
 }

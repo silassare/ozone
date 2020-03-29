@@ -18,14 +18,6 @@ use OZONE\OZ\Core\SettingsManager;
 final class TypePassword extends TypeString
 {
 	/**
-	 * @inheritdoc
-	 */
-	public static function getInstance(array $options)
-	{
-		return new self();
-	}
-
-	/**
 	 * TypePassword constructor.
 	 *
 	 * @inheritdoc
@@ -60,5 +52,13 @@ final class TypePassword extends TypeString
 		}
 
 		return $pass;
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function getInstance(array $options)
+	{
+		return new self();
 	}
 }

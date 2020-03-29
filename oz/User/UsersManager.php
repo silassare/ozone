@@ -42,207 +42,6 @@ final class UsersManager
 	private $context;
 
 	/**
-	 * @param \OZONE\OZ\Db\OZUser $user
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 *
-	 * @return \OZONE\OZ\Db\OZSession[]
-	 */
-	public static function getUserActiveSessions(OZUser $user)
-	{
-		$sq = new OZSessionsQuery();
-
-		return $sq->filterByUserId($user->getId())
-				  ->filterByExpire(\time(), Rule::OP_GT)
-				  ->find()
-				  ->fetchAllClass();
-	}
-
-	/**
-	 * @param \OZONE\OZ\Db\OZUser $user
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public static function forceLoginOnUserAttachedSessions(OZUser $user)
-	{
-		$sessions = self::getUserActiveSessions($user);
-
-		foreach ($sessions as $session) {
-			$decoded = Session::decode($session->getData());
-
-			if (\is_array($decoded)) {
-				$data_store = new SessionDataStore($decoded);
-				$verified   = $data_store->get('ozone_user:verified');
-
-				if ($verified) {
-					$new_data = $data_store->remove('ozone_user:verified')
-										   ->getStoreData();
-					$session->setData(Session::encode($new_data))
-							->save();
-				}
-			}
-		}
-	}
-
-	/**
-	 * Checks if a password match the user with a given phone number.
-	 *
-	 * @param string $phone the phone number
-	 * @param string $pass  the password
-	 *
-	 * @throws \Exception
-	 *
-	 * @return bool true if password is ok, false otherwise
-	 */
-	public static function checkUserPassWithPhone($phone, $pass)
-	{
-		$user = self::searchUserWithPhone($phone);
-
-		if ($user) {
-			$crypt_obj = new DoCrypt();
-
-			return $crypt_obj->passCheck($pass, $user->getPass());
-		}
-
-		return false;
-	}
-
-	/**
-	 * Checks if a password match the user with a given email address.
-	 *
-	 * @param string $email the email address
-	 * @param string $pass  the password
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 *
-	 * @return bool true if password is ok, false otherwise
-	 */
-	public static function checkUserPassWithEmail($email, $pass)
-	{
-		$user = self::searchUserWithEmail($email);
-
-		if ($user) {
-			$crypt_obj = new DoCrypt();
-
-			return $crypt_obj->passCheck($pass, $user->getPass());
-		}
-
-		return false;
-	}
-
-	/**
-	 * Search for registered user with a given phone number.
-	 *
-	 * No matter if user is valid or not.
-	 *
-	 * @param string $phone the phone number
-	 *
-	 * @throws \Exception
-	 *
-	 * @return null|\OZONE\OZ\Db\OZUser
-	 */
-	public static function searchUserWithPhone($phone)
-	{
-		$u_table = new OZUsersQuery();
-		$result  = $u_table->filterByPhone($phone)
-						   ->find(1);
-
-		return $result->fetchClass();
-	}
-
-	/**
-	 * Search for registered user with a given email address.
-	 *
-	 * No matter if user is valid or not.
-	 *
-	 * @param string $email the email address
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Exception
-	 *
-	 * @return null|\OZONE\OZ\Db\OZUser
-	 */
-	public static function searchUserWithEmail($email)
-	{
-		$u_table = new OZUsersQuery();
-		$result  = $u_table->filterByEmail($email)
-						   ->find(1);
-
-		return $result->fetchClass();
-	}
-
-	/**
-	 * Gets the country info with a given cc2 (country code 2).
-	 *
-	 * @param string $cc2 the country code 2
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Exception
-	 *
-	 * @return null|\OZONE\OZ\Db\OZCountry
-	 */
-	public static function getCountryObject($cc2)
-	{
-		if (!empty($cc2) && \is_string($cc2) && \strlen($cc2) === 2) {
-			$cq     = new OZCountriesQuery();
-			$result = $cq->filterByCc2($cc2)
-						 ->find(1);
-
-			return $result->fetchClass();
-		}
-
-		return null;
-	}
-
-	/**
-	 * Checks if a country (with a given cc2) is authorized or not.
-	 *
-	 * @param string $cc2 the country code 2
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 *
-	 * @return bool
-	 */
-	public static function authorizedCountry($cc2)
-	{
-		$country = self::getCountryObject($cc2);
-
-		if ($country) {
-			return $country->getValid();
-		}
-
-		return false;
-	}
-
-	/**
-	 * Gets the user object with a given user id.
-	 *
-	 * @param int|string $uid the user id
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-	 *
-	 * @return null|\OZONE\OZ\Db\OZUser
-	 */
-	public static function getUserObject($uid)
-	{
-		try {
-			$uq = new OZUsersQuery();
-
-			return $uq->filterById($uid)
-					  ->find(1)
-					  ->fetchClass();
-		} catch (Exception $e) {
-			throw new InternalErrorException('OZ_USER_CANT_LOAD_USER_ENTITY', ['id' => $uid], $e);
-		}
-	}
-
-	/**
 	 * UsersManager constructor.
 	 *
 	 * @param \OZONE\OZ\Core\Context $context
@@ -598,5 +397,206 @@ final class UsersManager
 			 ->save();
 
 		return $this;
+	}
+
+	/**
+	 * @param \OZONE\OZ\Db\OZUser $user
+	 *
+	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 *
+	 * @return \OZONE\OZ\Db\OZSession[]
+	 */
+	public static function getUserActiveSessions(OZUser $user)
+	{
+		$sq = new OZSessionsQuery();
+
+		return $sq->filterByUserId($user->getId())
+				  ->filterByExpire(\time(), Rule::OP_GT)
+				  ->find()
+				  ->fetchAllClass();
+	}
+
+	/**
+	 * @param \OZONE\OZ\Db\OZUser $user
+	 *
+	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 */
+	public static function forceLoginOnUserAttachedSessions(OZUser $user)
+	{
+		$sessions = self::getUserActiveSessions($user);
+
+		foreach ($sessions as $session) {
+			$decoded = Session::decode($session->getData());
+
+			if (\is_array($decoded)) {
+				$data_store = new SessionDataStore($decoded);
+				$verified   = $data_store->get('ozone_user:verified');
+
+				if ($verified) {
+					$new_data = $data_store->remove('ozone_user:verified')
+										   ->getStoreData();
+					$session->setData(Session::encode($new_data))
+							->save();
+				}
+			}
+		}
+	}
+
+	/**
+	 * Checks if a password match the user with a given phone number.
+	 *
+	 * @param string $phone the phone number
+	 * @param string $pass  the password
+	 *
+	 * @throws \Exception
+	 *
+	 * @return bool true if password is ok, false otherwise
+	 */
+	public static function checkUserPassWithPhone($phone, $pass)
+	{
+		$user = self::searchUserWithPhone($phone);
+
+		if ($user) {
+			$crypt_obj = new DoCrypt();
+
+			return $crypt_obj->passCheck($pass, $user->getPass());
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks if a password match the user with a given email address.
+	 *
+	 * @param string $email the email address
+	 * @param string $pass  the password
+	 *
+	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 *
+	 * @return bool true if password is ok, false otherwise
+	 */
+	public static function checkUserPassWithEmail($email, $pass)
+	{
+		$user = self::searchUserWithEmail($email);
+
+		if ($user) {
+			$crypt_obj = new DoCrypt();
+
+			return $crypt_obj->passCheck($pass, $user->getPass());
+		}
+
+		return false;
+	}
+
+	/**
+	 * Search for registered user with a given phone number.
+	 *
+	 * No matter if user is valid or not.
+	 *
+	 * @param string $phone the phone number
+	 *
+	 * @throws \Exception
+	 *
+	 * @return null|\OZONE\OZ\Db\OZUser
+	 */
+	public static function searchUserWithPhone($phone)
+	{
+		$u_table = new OZUsersQuery();
+		$result  = $u_table->filterByPhone($phone)
+						   ->find(1);
+
+		return $result->fetchClass();
+	}
+
+	/**
+	 * Search for registered user with a given email address.
+	 *
+	 * No matter if user is valid or not.
+	 *
+	 * @param string $email the email address
+	 *
+	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 * @throws \Exception
+	 *
+	 * @return null|\OZONE\OZ\Db\OZUser
+	 */
+	public static function searchUserWithEmail($email)
+	{
+		$u_table = new OZUsersQuery();
+		$result  = $u_table->filterByEmail($email)
+						   ->find(1);
+
+		return $result->fetchClass();
+	}
+
+	/**
+	 * Gets the country info with a given cc2 (country code 2).
+	 *
+	 * @param string $cc2 the country code 2
+	 *
+	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 * @throws \Exception
+	 *
+	 * @return null|\OZONE\OZ\Db\OZCountry
+	 */
+	public static function getCountryObject($cc2)
+	{
+		if (!empty($cc2) && \is_string($cc2) && \strlen($cc2) === 2) {
+			$cq     = new OZCountriesQuery();
+			$result = $cq->filterByCc2($cc2)
+						 ->find(1);
+
+			return $result->fetchClass();
+		}
+
+		return null;
+	}
+
+	/**
+	 * Checks if a country (with a given cc2) is authorized or not.
+	 *
+	 * @param string $cc2 the country code 2
+	 *
+	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 *
+	 * @return bool
+	 */
+	public static function authorizedCountry($cc2)
+	{
+		$country = self::getCountryObject($cc2);
+
+		if ($country) {
+			return $country->getValid();
+		}
+
+		return false;
+	}
+
+	/**
+	 * Gets the user object with a given user id.
+	 *
+	 * @param int|string $uid the user id
+	 *
+	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+	 *
+	 * @return null|\OZONE\OZ\Db\OZUser
+	 */
+	public static function getUserObject($uid)
+	{
+		try {
+			$uq = new OZUsersQuery();
+
+			return $uq->filterById($uid)
+					  ->find(1)
+					  ->fetchClass();
+		} catch (Exception $e) {
+			throw new InternalErrorException('OZ_USER_CANT_LOAD_USER_ENTITY', ['id' => $uid], $e);
+		}
 	}
 }

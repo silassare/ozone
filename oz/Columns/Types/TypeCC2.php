@@ -22,28 +22,6 @@ final class TypeCC2 extends TypeString
 	private $authorized = false;
 
 	/**
-	 * @inheritdoc
-	 */
-	public static function getInstance(array $options)
-	{
-		$instance = new self();
-
-		if (self::getOptionKey($options, 'authorized', false)) {
-			$instance->authorized();
-		}
-
-		if (self::getOptionKey($options, 'null', false)) {
-			$instance->nullAble();
-		}
-
-		if (\array_key_exists('default', $options)) {
-			$instance->setDefault($options['default']);
-		}
-
-		return $instance;
-	}
-
-	/**
 	 * TypeCC2 constructor.
 	 *
 	 * @inheritdoc
@@ -113,5 +91,27 @@ final class TypeCC2 extends TypeString
 		$options['authorized'] = $this->authorized;
 
 		return $options;
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function getInstance(array $options)
+	{
+		$instance = new self();
+
+		if (self::getOptionKey($options, 'authorized', false)) {
+			$instance->authorized();
+		}
+
+		if (self::getOptionKey($options, 'null', false)) {
+			$instance->nullAble();
+		}
+
+		if (\array_key_exists('default', $options)) {
+			$instance->setDefault($options['default']);
+		}
+
+		return $instance;
 	}
 }

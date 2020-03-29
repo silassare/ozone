@@ -24,6 +24,22 @@ class GetFilesView extends WebViewBase
 	/**
 	 * @inheritdoc
 	 */
+	public function getCompileData()
+	{
+		return [];
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function getTemplate()
+	{
+		return '';
+	}
+
+	/**
+	 * @inheritdoc
+	 */
 	public static function registerRoutes(Router $router)
 	{
 		$format = SettingsManager::get('oz.files', 'OZ_GET_FILE_URI_EXTRA_FORMAT');
@@ -39,21 +55,5 @@ class GetFilesView extends WebViewBase
 		$router->get('/oz-static/' . $format, function (RouteInfo $r) {
 			return GetFilesHelper::process($r);
 		}, $options);
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function getCompileData()
-	{
-		return [];
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function getTemplate()
-	{
-		return '';
 	}
 }

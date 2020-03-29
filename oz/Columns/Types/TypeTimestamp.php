@@ -19,28 +19,6 @@ final class TypeTimestamp extends TypeBigint
 	private $auto = false;
 
 	/**
-	 * @inheritdoc
-	 */
-	public static function getInstance(array $options)
-	{
-		$instance = new self();
-
-		if (self::getOptionKey($options, 'auto', false)) {
-			$instance->auto();
-		}
-
-		if (self::getOptionKey($options, 'null', false)) {
-			$instance->nullAble();
-		}
-
-		if (\array_key_exists('default', $options)) {
-			$instance->setDefault($options['default']);
-		}
-
-		return $instance;
-	}
-
-	/**
 	 * TypeTimestamp constructor.
 	 *
 	 * @inheritdoc
@@ -108,5 +86,27 @@ final class TypeTimestamp extends TypeBigint
 		$options['auto'] = $this->auto;
 
 		return $options;
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function getInstance(array $options)
+	{
+		$instance = new self();
+
+		if (self::getOptionKey($options, 'auto', false)) {
+			$instance->auto();
+		}
+
+		if (self::getOptionKey($options, 'null', false)) {
+			$instance->nullAble();
+		}
+
+		if (\array_key_exists('default', $options)) {
+			$instance->setDefault($options['default']);
+		}
+
+		return $instance;
 	}
 }

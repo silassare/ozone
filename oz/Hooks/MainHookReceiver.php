@@ -25,14 +25,6 @@ final class MainHookReceiver implements MainHookReceiverInterface
 	/**
 	 * @inheritDoc
 	 */
-	public static function register()
-	{
-		MainHookProvider::registerHookReceiverClass(self::class, MainHookProvider::RUN_LAST);
-	}
-
-	/**
-	 * @inheritDoc
-	 */
 	public function onInit(HookContext $context)
 	{
 	}
@@ -120,5 +112,13 @@ final class MainHookReceiver implements MainHookReceiverInterface
 						->responseReady($response);
 
 		$hc->setResponse($response);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public static function register()
+	{
+		MainHookProvider::registerHookReceiverClass(self::class, MainHookProvider::RUN_LAST);
 	}
 }

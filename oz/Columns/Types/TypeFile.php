@@ -39,48 +39,6 @@ class TypeFile extends TypeString
 	private $file_upload_total_size = \PHP_INT_MAX;// size in bytes
 
 	/**
-	 * @inheritdoc
-	 */
-	public static function getInstance(array $options)
-	{
-		$instance = new self();
-
-		if (isset($options['multiple']) && $options['multiple']) {
-			$instance->multiple();
-		}
-
-		if (isset($options['mime_types'])) {
-			$instance->mimeTypes($options['mime_types']);
-		}
-
-		if (isset($options['file_label'])) {
-			$instance->fileLabel($options['file_label']);
-		}
-
-		if (isset($options['file_upload_total_size'])) {
-			$instance->fileUploadTotalSize($options['file_upload_total_size']);
-		}
-		$instance->fileCountRange(
-			self::getOptionKey($options, 'file_min_count', 1),
-			self::getOptionKey($options, 'file_max_count', \PHP_INT_MAX)
-		);
-		$instance->fileSizeRange(
-			self::getOptionKey($options, 'file_min_size', 1),
-			self::getOptionKey($options, 'file_max_size', \PHP_INT_MAX)
-		);
-
-		if (self::getOptionKey($options, 'null', false)) {
-			$instance->nullAble();
-		}
-
-		if (\array_key_exists('default', $options)) {
-			$instance->setDefault($options['default']);
-		}
-
-		return $instance;
-	}
-
-	/**
 	 * TypeFile constructor.
 	 *
 	 * @inheritdoc
@@ -418,5 +376,47 @@ class TypeFile extends TypeString
 		if (!$this->checkFileMime($upload->getClientMediaType())) {
 			throw new TypesInvalidValueException('OZ_FILE_MIME_INVALID', $debug);
 		}
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function getInstance(array $options)
+	{
+		$instance = new self();
+
+		if (isset($options['multiple']) && $options['multiple']) {
+			$instance->multiple();
+		}
+
+		if (isset($options['mime_types'])) {
+			$instance->mimeTypes($options['mime_types']);
+		}
+
+		if (isset($options['file_label'])) {
+			$instance->fileLabel($options['file_label']);
+		}
+
+		if (isset($options['file_upload_total_size'])) {
+			$instance->fileUploadTotalSize($options['file_upload_total_size']);
+		}
+		$instance->fileCountRange(
+			self::getOptionKey($options, 'file_min_count', 1),
+			self::getOptionKey($options, 'file_max_count', \PHP_INT_MAX)
+		);
+		$instance->fileSizeRange(
+			self::getOptionKey($options, 'file_min_size', 1),
+			self::getOptionKey($options, 'file_max_size', \PHP_INT_MAX)
+		);
+
+		if (self::getOptionKey($options, 'null', false)) {
+			$instance->nullAble();
+		}
+
+		if (\array_key_exists('default', $options)) {
+			$instance->setDefault($options['default']);
+		}
+
+		return $instance;
 	}
 }

@@ -23,18 +23,6 @@ final class RedirectView extends WebViewBase
 	private $compile_data = [];
 
 	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->map('*', '/oz:redirect', function (RouteInfo $r) {
-			$view = new self($r);
-
-			return $view->mainRoute();
-		}, ['route:name' => 'oz:redirect']);
-	}
-
-	/**
 	 * @throws \OZONE\OZ\Exceptions\BaseException
 	 *
 	 * @return \OZONE\OZ\Http\Response
@@ -74,5 +62,17 @@ final class RedirectView extends WebViewBase
 	public function getTemplate()
 	{
 		return 'redirect.otpl';
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function registerRoutes(Router $router)
+	{
+		$router->map('*', '/oz:redirect', function (RouteInfo $r) {
+			$view = new self($r);
+
+			return $view->mainRoute();
+		}, ['route:name' => 'oz:redirect']);
 	}
 }

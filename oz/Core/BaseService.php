@@ -34,41 +34,6 @@ abstract class BaseService implements RouteProviderInterface
 	private $context;
 
 	/**
-	 * Converts Gobl exceptions unto O'Zone exceptions.
-	 *
-	 * @param \Exception $error the exception to convert
-	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 * @throws \Exception
-	 */
-	public static function tryConvertException(Exception $error)
-	{
-		if ($error instanceof ORMQueryException) {
-			throw new InvalidFormException($error->getMessage(), $error->getData(), $error);
-		}
-
-		if ($error instanceof TypesInvalidValueException) {
-			$msg = $error->getMessage();
-
-			if ($msg === \strtoupper($msg)) {
-				throw new InvalidFormException($msg, $error->getData(), $error);
-			}
-
-			throw new InvalidFormException(null, [
-				'type' => $msg,
-				'data' => $error->getData(),
-			], $error);
-		}
-
-		if ($error instanceof CRUDException) {
-			throw new ForbiddenException($error->getMessage(), $error->getData(), $error);
-		}
-
-		throw $error;
-	}
-
-	/**
 	 * BaseService constructor.
 	 *
 	 * @param \OZONE\OZ\Core\Context $context
@@ -126,5 +91,40 @@ abstract class BaseService implements RouteProviderInterface
 
 		return $this->context->getResponse()
 							 ->withJson($data);
+	}
+
+	/**
+	 * Converts Gobl exceptions unto O'Zone exceptions.
+	 *
+	 * @param \Exception $error the exception to convert
+	 *
+	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+	 * @throws \Exception
+	 */
+	public static function tryConvertException(Exception $error)
+	{
+		if ($error instanceof ORMQueryException) {
+			throw new InvalidFormException($error->getMessage(), $error->getData(), $error);
+		}
+
+		if ($error instanceof TypesInvalidValueException) {
+			$msg = $error->getMessage();
+
+			if ($msg === \strtoupper($msg)) {
+				throw new InvalidFormException($msg, $error->getData(), $error);
+			}
+
+			throw new InvalidFormException(null, [
+				'type' => $msg,
+				'data' => $error->getData(),
+			], $error);
+		}
+
+		if ($error instanceof CRUDException) {
+			throw new ForbiddenException($error->getMessage(), $error->getData(), $error);
+		}
+
+		throw $error;
 	}
 }
