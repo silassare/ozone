@@ -1,4 +1,5 @@
 <?php
+
 	/**
 	 * Auto generated file, please don't edit.
 	 *
@@ -10,6 +11,6 @@
 
 	use OZONE\OZ\Db\Base\OZClient as BaseOZClient;
 
-	class OZClient extends BaseOZClient
-	{
-	}
+class OZClient extends BaseOZClient
+{
+}

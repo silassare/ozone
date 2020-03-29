@@ -1,4 +1,5 @@
 <?php
+
 	/**
 	 * Auto generated file, please don't edit.
 	 *
@@ -6,10 +7,11 @@
 	 * Time: 1508868493
 	 */
 
-
 	namespace OZONE\OZ\Db;
 
 	use OZONE\OZ\Db\Base\OZAdmin as BaseOZAdmin;
 
+class OZAdmin extends BaseOZAdmin
+{
 
-	class OZAdmin extends BaseOZAdmin { }
+}

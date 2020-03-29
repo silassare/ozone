@@ -1,4 +1,5 @@
 <?php
+
 	/**
 	 * Auto generated file, please don't edit.
 	 *
@@ -6,13 +7,11 @@
 	 * Time: 1508868493
 	 */
 
-
 	namespace OZONE\OZ\Db;
 
 	use OZONE\OZ\Db\Base\OZAuthenticatorResults as BaseOZAuthenticatorResults;
 
+class OZAuthenticatorResults extends BaseOZAuthenticatorResults
+{
 
-	class OZAuthenticatorResults extends BaseOZAuthenticatorResults
-	{
-
-	}
+}

@@ -1,11 +1,11 @@
 <?php
+
 	/**
 	 * Auto generated file, please don't edit.
 	 *
 	 * With: Gobl v1.0.0
 	 * Time: 1509468609
 	 */
-
 
 	namespace OZONE\OZ\Db;
 
@@ -16,6 +16,6 @@
 	 *
 	 * @package OZONE\OZ\Db
 	 */
-	class OZFilesController extends BaseOZFilesController
-	{
-	}
+class OZFilesController extends BaseOZFilesController
+{
+}

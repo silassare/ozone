@@ -1,4 +1,5 @@
 <?php
+
 	/**
 	 * Auto generated file, please don't edit.
 	 *
@@ -6,13 +7,11 @@
 	 * Time: 1508868493
 	 */
 
-
 	namespace OZONE\OZ\Db;
 
 	use OZONE\OZ\Db\Base\OZClientsResults as BaseOZClientsResults;
 
+class OZClientsResults extends BaseOZClientsResults
+{
 
-	class OZClientsResults extends BaseOZClientsResults
-	{
-
-	}
+}
