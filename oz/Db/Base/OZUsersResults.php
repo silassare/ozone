@@ -1,23 +1,23 @@
 <?php
 
-	/**
+/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.9
- * Time: 1583761352
+ * Time: 1586982104
  */
 
-	namespace OZONE\OZ\Db\Base;
+namespace OZONE\OZ\Db\Base;
 
-	use Gobl\DBAL\Db;
-	use Gobl\DBAL\QueryBuilder;
-	use Gobl\ORM\ORMResultsBase;
+use Gobl\DBAL\Db;
+use Gobl\DBAL\QueryBuilder;
+use Gobl\ORM\ORMResultsBase;
 
-	/**
-	 * Class OZUsersResults
-	 *
-	 * @package OZONE\OZ\Db\Base
-	 */
+/**
+ * Class OZUsersResults
+ *
+ * @package OZONE\OZ\Db\Base
+ */
 abstract class OZUsersResults extends ORMResultsBase
 {
 	/**

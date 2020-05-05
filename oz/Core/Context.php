@@ -680,11 +680,10 @@ final class Context
 
 				break;
 			case Router::FOUND:
-				/**
-				 * @var \OZONE\OZ\Router\Route
-				 * @var array                  $args
-				 */
-				[$route, $args] = $results['found'];
+				/* @var \OZONE\OZ\Router\Route */
+				$route = $results['found'][0];
+				/* @var array */
+				$args = $results['found'][1];
 
 				$ri             = new RouteInfo($this, $route, $args);
 				$this->response = $mhp->triggerRouteFound($this, $ri);
@@ -889,8 +888,8 @@ final class Context
 	 *
 	 * @param string $api_key
 	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 *
 	 * @return \OZONE\OZ\Db\OZClient
 	 */

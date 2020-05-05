@@ -18,15 +18,15 @@ use InvalidArgumentException;
 
 final class Hasher
 {
-	const CHARS_ALPHA     = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	const CHARS_ALPHA = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-	const CHARS_NUM       = '0123456789';
+	const CHARS_NUM = '0123456789';
 
-	const CHARS_SYMBOLS   = '~!@#$£µ§²¨%^&()_-+={}[]:";\'<>?,./\\';
+	const CHARS_SYMBOLS = '~!@#$£µ§²¨%^&()_-+={}[]:";\'<>?,./\\';
 
 	const CHARS_ALPHA_NUM = self::CHARS_ALPHA . self::CHARS_NUM;
 
-	const CHARS_ALL       = self::CHARS_ALPHA_NUM . self::CHARS_SYMBOLS;
+	const CHARS_ALL = self::CHARS_ALPHA_NUM . self::CHARS_SYMBOLS;
 
 	/**
 	 * Generate file key
@@ -114,6 +114,22 @@ final class Hasher
 	public static function genRandomHash($length = 32)
 	{
 		return self::hashIt(self::genRandomString() . \microtime(), $length);
+	}
+
+	/**
+	 * Generate random file name.
+	 *
+	 * @param string $prefix
+	 * @param bool   $readable_date
+	 *
+	 * @return string
+	 */
+	public static function genRandomFileName($prefix = 'oz', $readable_date = true)
+	{
+		$hash = self::genRandomString(8, self::CHARS_ALPHA_NUM);
+		$date = $readable_date ? \date('Y-m-d-H-i-s') : \time();
+
+		return \sprintf('%s-%s-%s', $prefix, $date, $hash);
 	}
 
 	/**

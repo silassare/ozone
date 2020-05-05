@@ -98,7 +98,7 @@ class PolyglotUtils
 			$in = [];
 
 			while (\preg_match(self::SIMPLE_REPLACE_REG, $text, $in)) {
-				@[$found, $fn, $variable] = $in;
+				list($found, $fn, $variable) = $in;
 
 				$value = isset($data[$variable]) ? $data[$variable] : '';
 
@@ -231,7 +231,7 @@ class PolyglotUtils
 			$history[$lang_key] = true;
 
 			while (\preg_match(self::PORTION_COPY_REG, $text, $in)) {
-				@[$found, $lk] = $in;
+				@list($found, $lk) = $in;
 
 				if (isset($history[$lk])) {
 					throw new \Exception(\sprintf('Possible infinite loop in lang key: %s.', $lk));

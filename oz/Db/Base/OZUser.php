@@ -1,30 +1,31 @@
 <?php
 
-	/**
+/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.9
- * Time: 1583761352
+ * Time: 1586982104
  */
 
-	namespace OZONE\OZ\Db\Base;
+namespace OZONE\OZ\Db\Base;
 
-	use Gobl\ORM\ORM;
-	use Gobl\ORM\ORMEntityBase;
-	use OZONE\OZ\Db\OZUsersQuery as OZUsersQueryReal;
-		use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
-	use OZONE\OZ\Db\OZCountriesController as OZCountriesControllerRealR;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntityBase;
+use OZONE\OZ\Db\OZUsersQuery as OZUsersQueryReal;
+use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
+use OZONE\OZ\Db\OZCountriesController as OZCountriesControllerRealR;
 
-	/**
-	 * Class OZUser
-	 *
-	 * @package OZONE\OZ\Db\Base
-	 */
+/**
+ * Class OZUser
+ *
+ * @package OZONE\OZ\Db\Base
+ */
 abstract class OZUser extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_users';
 
-			const COL_ID = 'user_id';
+	
+	const COL_ID = 'user_id';
 	const COL_PHONE = 'user_phone';
 	const COL_EMAIL = 'user_email';
 	const COL_PASS = 'user_pass';
@@ -37,11 +38,12 @@ abstract class OZUser extends ORMEntityBase
 	const COL_ADD_TIME = 'user_add_time';
 	const COL_VALID = 'user_valid';
 
-		
+	
 	/**
 	 * @var \OZONE\OZ\Db\OZCountry
 	 */
 	protected $_r_oz_country;
+
 
 
 	/**
@@ -53,22 +55,26 @@ abstract class OZUser extends ORMEntityBase
 	 */
 	public function __construct($is_new = true, $strict = true)
 	{
-		parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), $is_new, $strict, OZUser::TABLE_NAME, OZUsersQueryReal::class);
+		parent::__construct(
+			ORM::getDatabase('OZONE\OZ\Db'),
+			$is_new,
+			$strict,
+			OZUser::TABLE_NAME,
+			OZUsersQueryReal::class
+		);
 	}
-		
+	
 	/**
 	 * OneToMany relation between `oz_users` and `oz_files`.
 	 *
-	 * @param array    $filters  the row filters
-	 * @param int|null $max      maximum row to retrieve
-	 * @param int      $offset   first row offset
-	 * @param array    $order_by order by rules
-	 * @param int|bool $total    total rows without limit
+	 * @param array	$filters  the row filters
+	 * @param int|null $max	  maximum row to retrieve
+	 * @param int	  $offset   first row offset
+	 * @param array	$order_by order by rules
+	 * @param int|bool $total	total rows without limit
 	 *
 	 * @return \OZONE\OZ\Db\OZFile[]
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	function getOZFiles($filters = [], $max = null, $offset = 0, $order_by = [], &$total = false)
 	{
@@ -88,9 +94,7 @@ abstract class OZUser extends ORMEntityBase
 	 * OneToOne relation between `oz_users` and `oz_countries`.
 	 *
 	 * @return null|\OZONE\OZ\Db\OZCountry
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	public function getOZCountry()
 	{
@@ -110,7 +114,8 @@ abstract class OZUser extends ORMEntityBase
 		return $this->_r_oz_country;
 	}
 
-		
+
+	
 	/**
 	 * Getter for column `oz_users`.`id`.
 	 *

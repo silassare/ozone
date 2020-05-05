@@ -157,12 +157,12 @@ class FilesServer
 
 		// checks if http_range is sent by browser (or download manager)
 		if ($allow_resume && isset($_SERVER['HTTP_RANGE'])) {
-			[$size_unit, $range_orig] = \explode('=', $_SERVER['HTTP_RANGE'], 2);
+			@list($size_unit, $range_orig) = \explode('=', $_SERVER['HTTP_RANGE'], 2);
 
 			if ($size_unit === 'bytes') {
 				// multiple ranges could be specified at the same time, but for simplicity only serve the first range
 				// http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
-				@[$range] = \explode(',', $range_orig, 2);
+				@list($range) = \explode(',', $range_orig, 2);
 			} else {
 				\header('HTTP/1.1 416 Requested Range Not Satisfiable');
 				exit;
@@ -170,7 +170,7 @@ class FilesServer
 		}
 
 		// figure out download piece from range (if set)
-		@[$seek_start, $seek_end] = \explode('-', $range, 2);
+		@list($seek_start, $seek_end) = \explode('-', $range, 2);
 
 		// sets start and end based on range (if set), else set defaults
 		// also check for invalid ranges.

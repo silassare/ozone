@@ -12,7 +12,6 @@
 namespace OZONE\OZ\Cli\Cmd;
 
 use Exception;
-use Gobl\DBAL\RDBMS;
 use Gobl\ORM\Generators\Generator;
 use Kli\Exceptions\KliInputException;
 use Kli\KliAction;
@@ -41,10 +40,6 @@ final class Db extends Command
 		switch ($action->getName()) {
 			case 'build':
 				$this->build($options);
-
-				break;
-			case 'refresh':
-				$this->refresh($options);
 
 				break;
 			case 'ts-bundle':
@@ -77,7 +72,7 @@ final class Db extends Command
 
 		// action: build database
 		$build = new KliAction('build');
-		$build->description('To build the entire database and generate required classes.');
+		$build->description('To build the database, generate required classes.');
 
 		// action: ts bundle
 		$ts_bundle = new KliAction('ts-bundle');
@@ -91,10 +86,6 @@ final class Db extends Command
 		$backup = new KliAction('backup');
 		$backup->description('Backup database.');
 
-		// action: refresh database
-		$refresh = new KliAction('refresh');
-		$refresh->description('Refresh database and regenerate table row classes.');
-
 		// option: -a alias --build-all
 		$all = new KliOption('a');
 		$all->alias('build-all')
@@ -103,48 +94,40 @@ final class Db extends Command
 			->description('To rebuild all tables in all namespaces.');
 
 		// option: -c alias --class-only
-		$class_only = new KliOption('c');
-		$class_only->alias('class-only')
-				   ->type(new KliTypeBool())
-				   ->def(false)
-				   ->description('To rebuild classes only.');
+		$class_only = (new KliOption('c'))
+			->alias('class-only')
+			->type(new KliTypeBool())
+			->def(false)
+			->description('To rebuild classes only.');
 
 		// option: -n alias --namespace
-		$rn = new KliOption('n');
-		$rn->alias('namespace')
-		   ->offsets(1)
-		   ->type((new KliTypeString())->pattern('#^(?:[a-zA-Z][a-zA-Z0-9_]*(?:\\\\[a-zA-Z][a-zA-Z0-9_]*)*)$#', 'You should provide valid php namespace.'))
-		   ->def(null)
-		   ->description('The namespace of the table to be generated.');
-
-		// option: -d alias --dir
-		$rd = new KliOption('d');
-		$rd->alias('dir')
-		   ->offsets(2)
-		   ->type((new KliTypePath())->dir()
-								   ->writable())
-		   ->def(null)
-		   ->description('The database classes directory.');
+		$n = (new KliOption('n'))
+			->alias('namespace')
+			->offsets(1)
+			->type((new KliTypeString())->pattern('#^(?:[a-zA-Z][a-zA-Z0-9_]*(?:\\\\[a-zA-Z][a-zA-Z0-9_]*)*)$#', 'You should provide valid php namespace.'))
+			->def(null)
+			->description('The namespace of the tables to be generated.');
 
 		// action: source database
-		$source = new KliAction('source');
-		$source->description('Run database query from source file.');
+		$source = (new KliAction('source'))->description('Run database query from source file.');
 
 		// option: -d alias --dir
-		$d = new KliOption('d');
-		$d->alias('dir')
-		  ->offsets(1)
-		  ->type((new KliTypePath())->dir()
-								  ->writable())
-		  ->def('.')
-		  ->description('The destination directory of the database file.');
-
-		// option: -d alias --dir
-		$b_d = new KliOption('d');
-		$b_d->alias('dir')
+		$d = (new KliOption('d'))
+			->alias('dir')
 			->offsets(1)
-			->type((new KliTypePath())->dir()
-									->writable())
+			->type((new KliTypePath())
+				->dir()
+				->writable())
+			->def('.')
+			->description('The destination directory of the database file.');
+
+		// option: -d alias --dir
+		$b_d = (new KliOption('d'))
+			->alias('dir')
+			->offsets(1)
+			->type((new KliTypePath())
+				->dir()
+				->writable())
 			->def('.')
 			->description('The destination directory of the bundle file.');
 
@@ -154,14 +137,13 @@ final class Db extends Command
 		  ->type((new KliTypePath())->file())
 		  ->description('The database source file to run.');
 
-		$build->addOption($all, $class_only);
-		$refresh->addOption($rn, $rd);
-		$generate->addOption($d);
+		$build->addOption($all, $n, $class_only);
+		$generate->addOption($n, (clone $d)->offsets(2));
 		$backup->addOption($d);
 		$ts_bundle->addOption($b_d);
 		$source->addOption($f);
 
-		$this->addAction($build, $ts_bundle, $refresh, $generate, $backup, $source);
+		$this->addAction($build, $ts_bundle, $generate, $backup, $source);
 	}
 
 	/**
@@ -181,41 +163,64 @@ final class Db extends Command
 		$cli        = $this->getCli();
 		$all        = (bool) $options['a'];
 		$class_only = (bool) $options['c'];
-		$structure  = DbManager::getProjectDbDirectoryStructure();
+		$namespace  = $options['n'];
 
-		$db     = DbManager::getDb();
-		$tables = $db->getTables();
+		$structure = DbManager::getProjectDbDirectoryStructure();
 
-		$map = [
-			$structure['oz_db_namespace']      => $structure['oz_db_folder'],
-			$structure['project_db_namespace'] => $structure['project_db_folder'],
+		$db            = DbManager::getDb();
+		$oz_db_ns      = $structure['oz_db_namespace'];
+		$project_db_ns = $structure['project_db_namespace'];
+		$default_dir   = [
+			$oz_db_ns      => $structure['oz_db_folder'],
+			$project_db_ns => $structure['project_db_folder'],
 		];
 
-		// for plugins
-		foreach ($tables as $table) {
-			$ns = $table->getNamespace();
+		$map             = [];
+		$plugins_out_dir = $structure['project_db_folder'];
 
-			if (isset($map[$ns])) {
-				continue;
+		if ($namespace) {
+			$map[$namespace] = 1;
+			$found           = $db->getTables($namespace);
+
+			if (empty($found)) {
+				throw new KliInputException(\sprintf('There is no tables declared in the namespace: "%s".', $namespace));
 			}
+		} else {
+			$map[$project_db_ns] = 1;
 
-			$map[$ns] = $structure['project_db_folder'];
+			if ($all) {
+				$map[$oz_db_ns] = 1;
+
+				// for plugins
+				$tables = $db->getTables();
+
+				foreach ($tables as $table) {
+					$ns = $table->getNamespace();
+
+					if (isset($map[$ns]) || $ns === $oz_db_ns || $ns === $project_db_ns) {
+						continue;
+					}
+
+					$map[$ns] = 1;
+				}
+			}
 		}
 
 		$gen = new Generator($db, false, false);
 
-		foreach ($map as $ns => $dir) {
-			if ($all === false && $ns !== $structure['project_db_namespace']) {
-				continue;
-			}
+		foreach ($map as $ns => $ok) {
+			if ($ok) {
+				$dir = isset($default_dir[$ns]) ? $default_dir[$ns] : $plugins_out_dir;
 
-			// we (re)generate classes only for tables
-			// in the given namespace
-			$tables = $db->getTables($ns);
-			$gen->generateORMClasses($tables, $dir);
+				// we (re)generate classes only for tables
+				// in the given namespace
+				$tables = $db->getTables($ns);
+				$gen->generateORMClasses($tables, $dir);
+
+				$cli->success(\sprintf('database classes generated: "%s".', $ns));
+			}
 		}
 
-		$cli->success('database classes generated.');
 		$queries = '';
 
 		if (!$class_only) {
@@ -229,7 +234,7 @@ final class Db extends Command
 					->log($e);
 
 				if (!empty($queries)) {
-					$queries_file = \sprintf('debug.db.query.%s.%s.sql', \date('Y-m-d'), Hasher::genRandomHash(32));
+					$queries_file = \sprintf('%s.sql', Hasher::genRandomFileName('debug-db-query'));
 
 					\file_put_contents($queries_file, $queries);
 
@@ -265,59 +270,6 @@ final class Db extends Command
 	}
 
 	/**
-	 * Refresh database.
-	 *
-	 * You should backup your database first.
-	 *
-	 * @param array $options
-	 *
-	 * @throws \Kli\Exceptions\KliInputException
-	 * @throws \OZONE\OZ\Exceptions\BaseException
-	 * @throws \Exception
-	 */
-	private function refresh(array $options)
-	{
-		Utils::assertDatabaseAccess();
-
-		$cli       = $this->getCli();
-		$namespace = $options['n'];
-		$dir       = $options['d'];
-
-		$structure = DbManager::getProjectDbDirectoryStructure();
-
-		if ($namespace === $structure['oz_db_namespace']) {
-			$dir = $structure['oz_db_folder'];
-		}
-
-		if (empty($namespace) || empty($dir)) {
-			$namespace = empty($namespace) ? $structure['project_db_namespace'] : $namespace;
-			$dir       = empty($dir) ? $structure['project_db_folder'] : $dir;
-		}
-
-		$db    = DbManager::getDb();
-		$found = $db->getTables($namespace);
-
-		if (empty($found)) {
-			throw new KliInputException(\sprintf('There is no tables declared with "%s" namespace.', $namespace));
-		}
-
-		$query = $db->buildDatabase($namespace);
-		// we (re)generate classes only for tables
-		// in the given namespace
-		$gen    = new Generator($db, false, false);
-		$tables = $db->getTables($namespace);
-		$gen->generateORMClasses($tables, $dir);
-
-		try {
-			$db->executeMulti($query);
-			$cli->success('database refreshed.');
-		} catch (Exception $e) {
-			$cli->error('database refresh fails. Open log file.')
-				->log($e);
-		}
-	}
-
-	/**
 	 * Generate database file.
 	 *
 	 * @param array $options
@@ -329,16 +281,22 @@ final class Db extends Command
 		Utils::assertProjectFolder();
 
 		$dir       = $options['d'];
-		$query     = DbManager::getDb()
-							  ->buildDatabase();
-		$file_name = \sprintf('database-%s.sql', \time());
+		$namespace = $options['n'];
+
+		if (empty($namespace)) {
+			$namespace = null;
+		}
+		$query = DbManager::getDb()
+						  ->buildDatabase($namespace);
+
+		$file_name = \sprintf('%s.sql', Hasher::genRandomFileName('db'));
 		$fm        = new FilesManager($dir);
 		$fm->wf($file_name, $query);
 
 		if (\file_exists($fm->resolve($file_name))) {
 			$this->getCli()
 				 ->success('database file generated.')
-				 ->info($fm->resolve($file_name));
+				 ->writeLn($fm->resolve($file_name));
 		} else {
 			$this->getCli()
 				 ->error('database file generation fails.');
@@ -392,31 +350,38 @@ final class Db extends Command
 		$cli    = $this->getCli();
 		$config = SettingsManager::get('oz.db');
 
-		if ($config['OZ_DB_RDBMS'] !== RDBMS::MYSQL) {
+		if ($config['OZ_DB_RDBMS'] !== \Gobl\DBAL\Db::MYSQL) {
 			$cli->error('this work only for MySQL database.');
 
 			return;
 		}
-
+		$fm      = new FilesManager($dir);
+		$outfile = $fm->resolve(\sprintf('%s.sql', Hasher::genRandomFileName('backup')));
 		$db_host = \escapeshellarg($config['OZ_DB_HOST']);
 		$db_user = \escapeshellarg($config['OZ_DB_USER']);
 		$db_pass = \escapeshellarg($config['OZ_DB_PASS']);
 		$db_name = \escapeshellarg($config['OZ_DB_NAME']);
+		$cmd     = \sprintf(
+			'mysqldump -h%s -u%s %s --result-file=%s -p%s',
+			$db_host,
+			$db_user,
+			$db_name,
+			\escapeshellarg($outfile),
+			$db_pass
+		);
+		$process = new Process($cmd, null);
 
-		$fm          = new FilesManager($dir);
-		$outfile     = $fm->resolve(\sprintf('backup-%s.sql', \time()));
-		$cmd         = "mysqldump -h {$db_host} -u {$db_user} --password={$db_pass} {$db_name}";
-		$process     = new Process($cmd);
-		$return_code = $process->run()
-							   ->close();
+		$process->open();
 
-		if ($return_code === 0) {
-			$fm->wf($outfile, $process->getOutput());
+		$error     = $process->readStderr();
+		$exit_code = $process->close();
+
+		if ($exit_code === 0) {
 			$cli->success('database backup file created.')
-				->info($outfile);
+				->writeLn($outfile);
 		} else {
 			$cli->error('unable to backup database.')
-				->error($process->getError());
+				->error($error);
 		}
 	}
 }

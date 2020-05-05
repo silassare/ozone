@@ -23,28 +23,28 @@ use Throwable;
  */
 abstract class BaseException extends Exception
 {
-	const BAD_REQUEST         = 400;
+	const BAD_REQUEST = 400;
 
 	const UNAUTHORIZED_ACTION = 401;
 
-	const FORBIDDEN           = 403;
+	const FORBIDDEN = 403;
 
-	const NOT_FOUND           = 404;
+	const NOT_FOUND = 404;
 
-	const METHOD_NOT_ALLOWED  = 405;
+	const METHOD_NOT_ALLOWED = 405;
 
-	const INTERNAL_ERROR      = 500;
+	const INTERNAL_ERROR = 500;
 
-	const UNKNOWN_ERROR       = 520;
+	const UNKNOWN_ERROR = 520;
 
 	// ozone custom error codes
 	const UNVERIFIED_USER = 10001;
 
-	const INVALID_FORM    = 10002;
+	const INVALID_FORM = 10002;
 
-	const MESSAGE_INTERNAL_ERROR       = 'An "Error" occurred. If you are an admin, please review the log file and correct it!';
+	const MESSAGE_INTERNAL_ERROR = 'An "Error" occurred. If you are an admin, please review the log file and correct it!';
 
-	const MESSAGE_ERROR_UNHANDLED      = 'An "unhandled error" occurred. If you are an admin, please review the log file and correct it!';
+	const MESSAGE_ERROR_UNHANDLED = 'An "unhandled error" occurred. If you are an admin, please review the log file and correct it!';
 
 	const MESSAGE_ERROR_HANDLING_ERROR = 'An "Error handling error" occurred. If you are an admin, please review the log file and correct it!';
 
@@ -55,7 +55,7 @@ abstract class BaseException extends Exception
 	 */
 	protected static $just_die = false;
 
-	private static $ERRORS_HEADER_MAP      = [
+	private static $ERRORS_HEADER_MAP = [
 		self::BAD_REQUEST         => 'HTTP/1.1 400 Bad Request',
 		self::UNAUTHORIZED_ACTION => 'HTTP/1.1 401 Unauthorized',
 		self::FORBIDDEN           => 'HTTP/1.1 403 Forbidden',
@@ -305,7 +305,7 @@ ERROR_PAGE;
 	}
 
 	/**
-	 * Convert throwable to string.
+	 * Convert a given throwable to string.
 	 *
 	 * @param \Throwable $e
 	 *
@@ -313,24 +313,44 @@ ERROR_PAGE;
 	 */
 	public static function throwableToString(Throwable $e)
 	{
+		$describe = self::throwableDescribe($e);
+		$data     = \json_encode($describe['data']);
+
+		return <<<STRING
+\tFile    : {$describe['file']},
+\tLine    : {$describe['line']},
+\tCode    : {$describe['code']},
+\tMessage : {$describe['message']},
+\tData    : {$data},
+\tClass   : {$describe['class']},
+\tTrace   : {$describe['trace']}
+STRING;
+	}
+
+	/**
+	 * Describe a given throwable.
+	 *
+	 * @param \Throwable $e
+	 *
+	 * @return array
+	 */
+	public static function throwableDescribe(Throwable $e)
+	{
 		$data = [];
 
 		if (\method_exists($e, 'getData')) {
 			$data = $e->getData(true);
 		}
 
-		$data  = \json_encode($data);
-		$class = \get_class($e);
-
-		return <<<STRING
-\tFile    : {$e->getFile()}
-\tLine    : {$e->getLine()}
-\tCode    : {$e->getCode()}
-\tMessage : {$e->getMessage()}
-\tData    : $data
-\tClass   : {$class}
-\tTrace   : {$e->getTraceAsString()}
-STRING;
+		return [
+			'file'    => $e->getFile(),
+			'line'    => $e->getLine(),
+			'code'    => $e->getCode(),
+			'message' => $e->getMessage(),
+			'data'    => $data,
+			'class'   => \get_class($e),
+			'trace'   => $e->getTraceAsString(),
+		];
 	}
 
 	/**

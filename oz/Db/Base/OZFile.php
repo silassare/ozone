@@ -1,30 +1,31 @@
 <?php
 
-	/**
+/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.9
- * Time: 1583761352
+ * Time: 1586982104
  */
 
-	namespace OZONE\OZ\Db\Base;
+namespace OZONE\OZ\Db\Base;
 
-	use Gobl\ORM\ORM;
-	use Gobl\ORM\ORMEntityBase;
-	use OZONE\OZ\Db\OZFilesQuery as OZFilesQueryReal;
-		use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
-	use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntityBase;
+use OZONE\OZ\Db\OZFilesQuery as OZFilesQueryReal;
+use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
+use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
 
-	/**
-	 * Class OZFile
-	 *
-	 * @package OZONE\OZ\Db\Base
-	 */
+/**
+ * Class OZFile
+ *
+ * @package OZONE\OZ\Db\Base
+ */
 abstract class OZFile extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_files';
 
-			const COL_ID = 'file_id';
+	
+	const COL_ID = 'file_id';
 	const COL_USER_ID = 'file_user_id';
 	const COL_KEY = 'file_key';
 	const COL_CLONE = 'file_clone';
@@ -39,11 +40,12 @@ abstract class OZFile extends ORMEntityBase
 	const COL_ADD_TIME = 'file_add_time';
 	const COL_VALID = 'file_valid';
 
-		
+	
 	/**
 	 * @var \OZONE\OZ\Db\OZUser
 	 */
 	protected $_r_oz_file_owner;
+
 
 
 	/**
@@ -55,16 +57,20 @@ abstract class OZFile extends ORMEntityBase
 	 */
 	public function __construct($is_new = true, $strict = true)
 	{
-		parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), $is_new, $strict, OZFile::TABLE_NAME, OZFilesQueryReal::class);
+		parent::__construct(
+			ORM::getDatabase('OZONE\OZ\Db'),
+			$is_new,
+			$strict,
+			OZFile::TABLE_NAME,
+			OZFilesQueryReal::class
+		);
 	}
-		
+	
 	/**
 	 * ManyToOne relation between `oz_files` and `oz_users`.
 	 *
 	 * @return null|\OZONE\OZ\Db\OZUser
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	public function getOZFileOwner()
 	{
@@ -87,16 +93,14 @@ abstract class OZFile extends ORMEntityBase
 	/**
 	 * OneToMany relation between `oz_files` and `oz_files`.
 	 *
-	 * @param array    $filters  the row filters
-	 * @param int|null $max      maximum row to retrieve
-	 * @param int      $offset   first row offset
-	 * @param array    $order_by order by rules
-	 * @param int|bool $total    total rows without limit
+	 * @param array	$filters  the row filters
+	 * @param int|null $max	  maximum row to retrieve
+	 * @param int	  $offset   first row offset
+	 * @param array	$order_by order by rules
+	 * @param int|bool $total	total rows without limit
 	 *
 	 * @return \OZONE\OZ\Db\OZFile[]
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	function getOZFileClones($filters = [], $max = null, $offset = 0, $order_by = [], &$total = false)
 	{
@@ -112,7 +116,8 @@ abstract class OZFile extends ORMEntityBase
 		return $ctrl->getAllItems($filters, $max, $offset, $order_by, $total);
 	}
 
-		
+
+	
 	/**
 	 * Getter for column `oz_files`.`id`.
 	 *

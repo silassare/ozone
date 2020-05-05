@@ -263,7 +263,7 @@ class TypeFile extends TypeString
 		$fuh      = new FilesUploadHandler();
 		$error    = false;
 
-		/*@var \OZONE\OZ\Db\OZFile[] $file_list */
+		/* @var \OZONE\OZ\Db\OZFile[] $file_list */
 		$file_list = [];
 
 		foreach ($uploaded_files as $k => $file) {

@@ -1,29 +1,30 @@
 <?php
 
-	/**
+/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.9
- * Time: 1583761352
+ * Time: 1586982104
  */
 
-	namespace OZONE\OZ\Db\Base;
+namespace OZONE\OZ\Db\Base;
 
-	use Gobl\ORM\ORM;
-	use Gobl\ORM\ORMEntityBase;
-	use OZONE\OZ\Db\OZClientsQuery as OZClientsQueryReal;
-		use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntityBase;
+use OZONE\OZ\Db\OZClientsQuery as OZClientsQueryReal;
+use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
 
-	/**
-	 * Class OZClient
-	 *
-	 * @package OZONE\OZ\Db\Base
-	 */
+/**
+ * Class OZClient
+ *
+ * @package OZONE\OZ\Db\Base
+ */
 abstract class OZClient extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_clients';
 
-			const COL_API_KEY = 'client_api_key';
+	
+	const COL_API_KEY = 'client_api_key';
 	const COL_USER_ID = 'client_user_id';
 	const COL_URL = 'client_url';
 	const COL_SESSION_LIFE_TIME = 'client_session_life_time';
@@ -32,11 +33,12 @@ abstract class OZClient extends ORMEntityBase
 	const COL_ADD_TIME = 'client_add_time';
 	const COL_VALID = 'client_valid';
 
-		
+	
 	/**
 	 * @var \OZONE\OZ\Db\OZUser
 	 */
 	protected $_r_oz_client_owner;
+
 
 
 	/**
@@ -48,16 +50,20 @@ abstract class OZClient extends ORMEntityBase
 	 */
 	public function __construct($is_new = true, $strict = true)
 	{
-		parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), $is_new, $strict, OZClient::TABLE_NAME, OZClientsQueryReal::class);
+		parent::__construct(
+			ORM::getDatabase('OZONE\OZ\Db'),
+			$is_new,
+			$strict,
+			OZClient::TABLE_NAME,
+			OZClientsQueryReal::class
+		);
 	}
-		
+	
 	/**
 	 * OneToOne relation between `oz_clients` and `oz_users`.
 	 *
 	 * @return null|\OZONE\OZ\Db\OZUser
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	public function getOZClientOwner()
 	{
@@ -77,7 +83,8 @@ abstract class OZClient extends ORMEntityBase
 		return $this->_r_oz_client_owner;
 	}
 
-		
+
+	
 	/**
 	 * Getter for column `oz_clients`.`api_key`.
 	 *

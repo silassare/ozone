@@ -1,23 +1,23 @@
 <?php
 
-	/**
+/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.9
- * Time: 1583761352
+ * Time: 1586982104
  */
 
-	namespace OZONE\OZ\Db\Base;
+namespace OZONE\OZ\Db\Base;
 
-	use Gobl\DBAL\Rule;
-	use Gobl\ORM\ORM;
-	use Gobl\ORM\ORMTableQueryBase;
+use Gobl\DBAL\Rule;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMTableQueryBase;
 
-	/**
-	 * Class OZAdministratorsQuery
-	 *
-	 * @package OZONE\OZ\Db\Base
-	 */
+/**
+ * Class OZAdministratorsQuery
+ *
+ * @package OZONE\OZ\Db\Base
+ */
 abstract class OZAdministratorsQuery extends ORMTableQueryBase
 {
 	/**
@@ -25,7 +25,11 @@ abstract class OZAdministratorsQuery extends ORMTableQueryBase
 	 */
 	public function __construct()
 	{
-		parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), OZAdmin::TABLE_NAME, \OZONE\OZ\Db\OZAdministratorsResults::class);
+		parent::__construct(
+			ORM::getDatabase('OZONE\OZ\Db'),
+			OZAdmin::TABLE_NAME,
+			\OZONE\OZ\Db\OZAdministratorsResults::class
+		);
 	}
 
 	/**
@@ -45,7 +49,7 @@ abstract class OZAdministratorsQuery extends ORMTableQueryBase
 
 		return $results;
 	}
-		
+	
 	/**
 	 * Filters rows with condition on column `user_id` in the table `oz_administrators`.
 	 *

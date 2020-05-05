@@ -1,26 +1,26 @@
 <?php
 
-	/**
+/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.9
- * Time: 1583761352
+ * Time: 1586982104
  */
 
-	namespace OZONE\OZ\Db\Base;
+namespace OZONE\OZ\Db\Base;
 
-	use Gobl\DBAL\QueryBuilder;
-	use Gobl\ORM\ORM;
-	use Gobl\ORM\ORMControllerBase;
-	use OZONE\OZ\Db\OZAdmin as OZAdminReal;
-	use OZONE\OZ\Db\OZAdministratorsResults as OZAdministratorsResultsReal;
-	use OZONE\OZ\Db\OZAdministratorsQuery as OZAdministratorsQueryReal;
+use Gobl\DBAL\QueryBuilder;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMControllerBase;
+use OZONE\OZ\Db\OZAdmin as OZAdminReal;
+use OZONE\OZ\Db\OZAdministratorsResults as OZAdministratorsResultsReal;
+use OZONE\OZ\Db\OZAdministratorsQuery as OZAdministratorsQueryReal;
 
-	/**
-	 * Class OZAdministratorsController
-	 *
-	 * @package OZONE\OZ\Db\Base
-	 */
+/**
+ * Class OZAdministratorsController
+ *
+ * @package OZONE\OZ\Db\Base
+ */
 abstract class OZAdministratorsController extends ORMControllerBase
 {
 	/**
@@ -30,7 +30,13 @@ abstract class OZAdministratorsController extends ORMControllerBase
 	 */
 	public function __construct()
 	{
-		parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), OZAdmin::TABLE_NAME, OZAdminReal::class, OZAdministratorsQueryReal::class, OZAdministratorsResultsReal::class);
+		parent::__construct(
+			ORM::getDatabase('OZONE\OZ\Db'),
+			OZAdmin::TABLE_NAME,
+			OZAdminReal::class,
+			OZAdministratorsQueryReal::class,
+			OZAdministratorsResultsReal::class
+		);
 	}
 
 	/**
@@ -39,10 +45,7 @@ abstract class OZAdministratorsController extends ORMControllerBase
 	 * @param array $values the row values
 	 *
 	 * @return \OZONE\OZ\Db\OZAdmin
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 * @throws \Throwable
 	 */
 	public function addItem(array $values = [])
 	{
@@ -64,10 +67,7 @@ abstract class OZAdministratorsController extends ORMControllerBase
 	 * @param array $new_values the new values
 	 *
 	 * @return bool|\OZONE\OZ\Db\OZAdmin
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	public function updateOneItem(array $filters, array $new_values)
 	{
@@ -81,10 +81,7 @@ abstract class OZAdministratorsController extends ORMControllerBase
 	 * @param array $new_values the new values
 	 *
 	 * @return int Affected row count.
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	public function updateAllItems(array $filters, array $new_values)
 	{
@@ -102,10 +99,7 @@ abstract class OZAdministratorsController extends ORMControllerBase
 	 * @param array $filters the row filters
 	 *
 	 * @return bool|\OZONE\OZ\Db\OZAdmin
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	public function deleteOneItem(array $filters)
 	{
@@ -118,10 +112,7 @@ abstract class OZAdministratorsController extends ORMControllerBase
 	 * @param array $filters the row filters
 	 *
 	 * @return int Affected row count.
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	public function deleteAllItems(array $filters)
 	{
@@ -139,10 +130,7 @@ abstract class OZAdministratorsController extends ORMControllerBase
 	 * @param array $order_by order by rules
 	 *
 	 * @return \OZONE\OZ\Db\OZAdmin|null
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 * @throws \Throwable
 	 */
 	public function getItem(array $filters, array $order_by = [])
 	{
@@ -162,10 +150,7 @@ abstract class OZAdministratorsController extends ORMControllerBase
 	 * @param int|bool $total    total rows without limit
 	 *
 	 * @return \OZONE\OZ\Db\OZAdmin[]
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	public function getAllItems(array $filters = [], $max = null, $offset = 0, array $order_by = [], &$total = false)
 	{
@@ -184,8 +169,7 @@ abstract class OZAdministratorsController extends ORMControllerBase
 	 * @param int|bool                $total  total rows without limit
 	 *
 	 * @return \OZONE\OZ\Db\OZAdmin[]
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 * @throws \Throwable
 	 */
 	public function getAllItemsCustom(QueryBuilder $qb, $max = null, $offset = 0, &$total = false)
 	{

@@ -1,28 +1,29 @@
 <?php
 
-	/**
+/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.9
- * Time: 1583761352
+ * Time: 1586982104
  */
 
-	namespace OZONE\OZ\Db\Base;
+namespace OZONE\OZ\Db\Base;
 
-	use Gobl\ORM\ORM;
-	use Gobl\ORM\ORMEntityBase;
-	use OZONE\OZ\Db\OZCountriesQuery as OZCountriesQueryReal;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntityBase;
+use OZONE\OZ\Db\OZCountriesQuery as OZCountriesQueryReal;
 
-	/**
-	 * Class OZCountry
-	 *
-	 * @package OZONE\OZ\Db\Base
-	 */
+/**
+ * Class OZCountry
+ *
+ * @package OZONE\OZ\Db\Base
+ */
 abstract class OZCountry extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_countries';
 
-			const COL_CC2 = 'country_cc2';
+	
+	const COL_CC2 = 'country_cc2';
 	const COL_CODE = 'country_code';
 	const COL_NAME = 'country_name';
 	const COL_NAME_REAL = 'country_name_real';
@@ -30,7 +31,8 @@ abstract class OZCountry extends ORMEntityBase
 	const COL_ADD_TIME = 'country_add_time';
 	const COL_VALID = 'country_valid';
 
-		
+	
+
 
 	/**
 	 * OZCountry constructor.
@@ -41,10 +43,17 @@ abstract class OZCountry extends ORMEntityBase
 	 */
 	public function __construct($is_new = true, $strict = true)
 	{
-		parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), $is_new, $strict, OZCountry::TABLE_NAME, OZCountriesQueryReal::class);
+		parent::__construct(
+			ORM::getDatabase('OZONE\OZ\Db'),
+			$is_new,
+			$strict,
+			OZCountry::TABLE_NAME,
+			OZCountriesQueryReal::class
+		);
 	}
-		
-		
+	
+
+	
 	/**
 	 * Getter for column `oz_countries`.`cc2`.
 	 *

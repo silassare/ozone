@@ -11,6 +11,8 @@
 
 namespace OZONE\OZ\Utils;
 
+use OZONE\OZ\Core\SettingsManager;
+
 \defined('OZ_SELF_SECURITY_CHECK') || die;
 
 final class StringUtils
@@ -32,14 +34,19 @@ final class StringUtils
 			return '';
 		}
 
-		// https://stackoverflow.com/a/34637891/6584810
-		// this will handle emoji code, we are using utf8
-		// and the utf8 used by MySql support characters up to U+FFFF
-		// but Most emoji use code points higher than U+FFFF.
-		// use json_decode (JavaScript: JSON.parse) to get the Emoji back to life
-		$str = \json_encode($str);
-		// remove quote added by json_encode
-		$str = \substr($str, 1, -1);
+		$db_charset = SettingsManager::get('oz.db', 'OZ_DB_CHARSET');
+
+		if (\strtolower($db_charset) === 'utf8') {
+			// https://stackoverflow.com/a/34637891/6584810
+			// this will handle emoji code, if we are using utf8 as DB charset
+			// and the utf8 used by MySql support characters up to U+FFFF
+			// but Most emoji use code points higher than U+FFFF.
+			// use json_decode (JavaScript: JSON.parse) to get the Emoji back to life
+			$str = \json_encode($str);
+			// remove quote added by json_encode
+			$str = \substr($str, 1, -1);
+		}
+
 		// convert some chars to html entities
 		return \htmlentities($str, \ENT_QUOTES, 'UTF-8', false /* this prevent for example: &amp; to become &amp;amp; */);
 	}
@@ -176,7 +183,8 @@ final class StringUtils
 	 * Converts string to CamelCase.
 	 *
 	 * example:
-	 *    my_name    => MyName
+	 *    foo_bar     => FooBar
+	 *    foo-bar-baz => FooBarBaz
 	 *
 	 * @param string $str the string to convert
 	 *
@@ -184,7 +192,14 @@ final class StringUtils
 	 */
 	public static function toCamelCase($str)
 	{
-		return \implode('', \array_map('ucfirst', \explode('_', $str)));
+		$str    = \str_replace('-', '_', $str);
+		$result = \implode('', \array_map('ucfirst', \explode('_', $str)));
+
+		if (\strlen($str) > 3 && $str[2] === '_') {
+			$result[1] = \strtoupper($result[1]);
+		}
+
+		return $result;
 	}
 
 	/**

@@ -70,7 +70,7 @@ class FilesManager
 			$this->mkdir($abs_path);
 		}
 
-		self::assert($abs_path, ['directory' => true]);
+		$this->assert($abs_path, ['directory' => true]);
 
 		$this->root = $abs_path;
 
@@ -90,8 +90,8 @@ class FilesManager
 		$abs_target      = PathUtils::resolve($this->root, $target);
 		$abs_destination = PathUtils::resolve($this->root, $name);
 
-		self::assert($abs_target);
-		self::assertDoesNotExists($abs_destination);
+		$this->assert($abs_target);
+		$this->assertDoesNotExists($abs_destination);
 
 		\symlink($abs_target, $abs_destination);
 
@@ -114,7 +114,7 @@ class FilesManager
 		$abs_from = PathUtils::resolve($this->root, (string) $from);
 		$abs_to   = PathUtils::resolve($this->root, $to);
 
-		self::assert($abs_from);
+		$this->assert($abs_from);
 
 		if (\is_dir($abs_from)) {
 			if (\file_exists($abs_to)) {
@@ -158,7 +158,7 @@ class FilesManager
 
 		$destination = PathUtils::resolve($this->root, $to);
 
-		self::assertDoesNotExists($destination);
+		$this->assertDoesNotExists($destination);
 
 		$file = \fopen($url, 'rb');
 
@@ -189,7 +189,7 @@ class FilesManager
 	{
 		$abs_path = $this->resolve($path);
 
-		self::assert($abs_path, ['directory' => true]);
+		$this->assert($abs_path, ['directory' => true]);
 
 		$result = [];
 		$files  = \scandir($abs_path);
@@ -359,9 +359,9 @@ class FilesManager
 				'fileowner' => $ss['uid'],
 				'filegroup' => $ss['gid'],
 				'owner'     => (\function_exists('posix_getpwuid')) ?
-						\posix_getpwuid($ss['uid']) : '',
+					\posix_getpwuid($ss['uid']) : '',
 				'group'     => (\function_exists('posix_getgrgid')) ?
-						\posix_getgrgid($ss['gid']) : '',
+					\posix_getgrgid($ss['gid']) : '',
 			],
 
 			'file' => [
@@ -464,7 +464,7 @@ class FilesManager
 	{
 		$abs_path = PathUtils::resolve($this->root, $path);
 
-		self::assert($abs_path, ['read' => true, 'write' => true]);
+		$this->assert($abs_path, ['read' => true, 'write' => true]);
 
 		if (\is_file($abs_path)) {
 			\unlink($abs_path);
@@ -539,6 +539,61 @@ class FilesManager
 		}
 
 		return (0 === \strpos($path, $this->root)) ? true : false;
+	}
+
+	/**
+	 * Asserts the path existence and checks for some rules.
+	 *
+	 * @param string $path  the resource path
+	 * @param array  $rules the rules for required access
+	 */
+	public function assert($path, array $rules = null)
+	{
+		$abs_path = $this->resolve($path);
+
+		if (!\file_exists($abs_path)) {
+			\trigger_error(\sprintf('"%s" does not exists.', $abs_path), \E_USER_ERROR);
+		}
+
+		if (!empty($rules)) {
+			$is_file       = isset($rules['file']) ? (bool) ($rules['file']) : false;
+			$is_dir        = isset($rules['directory']) ? (bool) ($rules['directory']) : false;
+			$is_readable   = isset($rules['read']) ? (bool) ($rules['read']) : false;
+			$is_writable   = isset($rules['write']) ? (bool) ($rules['write']) : false;
+			$is_executable = isset($rules['execute']) ? (bool) ($rules['execute']) : false;
+
+			if ($is_file && !\is_file($abs_path)) {
+				\trigger_error(\sprintf('"%s" is not a valid file.', $abs_path), \E_USER_ERROR);
+			}
+
+			if ($is_dir && !\is_dir($abs_path)) {
+				\trigger_error(\sprintf('"%s" is not a valid directory.', $abs_path), \E_USER_ERROR);
+			}
+
+			if ($is_readable && !\is_readable($abs_path)) {
+				\trigger_error(\sprintf('The resource at "%s" is not readable.', $abs_path), \E_USER_ERROR);
+			}
+
+			if ($is_writable && !\is_writable($abs_path)) {
+				\trigger_error(\sprintf('The resource at "%s" is not writeable.', $abs_path), \E_USER_ERROR);
+			}
+
+			if ($is_executable && !\is_executable($abs_path)) {
+				\trigger_error(\sprintf('The resource at "%s" is not executable.', $abs_path), \E_USER_ERROR);
+			}
+		}
+	}
+
+	/**
+	 * Asserts the path does not exists.
+	 *
+	 * @param string $abs_path the resource absolute path
+	 */
+	public function assertDoesNotExists($abs_path)
+	{
+		if (\file_exists($abs_path)) {
+			\trigger_error(\sprintf('Cannot overwrite existing resource: %s', $abs_path), \E_USER_ERROR);
+		}
 	}
 
 	/**
@@ -651,79 +706,5 @@ class FilesManager
 		\closedir($handle);
 
 		return $yes;
-	}
-
-	/**
-	 * @param mixed  $filter
-	 * @param string $file
-	 * @param string $from
-	 * @param string $to
-	 *
-	 * @return bool
-	 */
-	private static function passFilter($filter, $file, $from, $to)
-	{
-		if (\is_callable($filter)) {
-			return (bool) (\call_user_func_array($filter, [$file, $from, $to]));
-		}
-
-		if (\is_string($filter)) {
-			return (bool) (\preg_match($filter, $from));
-		}
-
-		return false;
-	}
-
-	/**
-	 * Asserts the path existence and checks for some rules.
-	 *
-	 * @param string $abs_path the resource absolute path
-	 * @param array  $rules    the rules for required access
-	 */
-	private static function assert($abs_path, array $rules = null)
-	{
-		if (!\file_exists($abs_path)) {
-			\trigger_error(\sprintf('"%s" does not exists.', $abs_path), \E_USER_ERROR);
-		}
-
-		if (!empty($rules)) {
-			$is_file       = isset($rules['file']) ? (bool) ($rules['file']) : false;
-			$is_dir        = isset($rules['directory']) ? (bool) ($rules['directory']) : false;
-			$is_readable   = isset($rules['read']) ? (bool) ($rules['read']) : false;
-			$is_writable   = isset($rules['write']) ? (bool) ($rules['write']) : false;
-			$is_executable = isset($rules['execute']) ? (bool) ($rules['execute']) : false;
-
-			if ($is_file && !\is_file($abs_path)) {
-				\trigger_error(\sprintf('"%s" is not a valid file.', $abs_path), \E_USER_ERROR);
-			}
-
-			if ($is_dir && !\is_dir($abs_path)) {
-				\trigger_error(\sprintf('"%s" is not a valid directory.', $abs_path), \E_USER_ERROR);
-			}
-
-			if ($is_readable && !\is_readable($abs_path)) {
-				\trigger_error(\sprintf('The resource at "%s" is not readable.', $abs_path), \E_USER_ERROR);
-			}
-
-			if ($is_writable && !\is_writable($abs_path)) {
-				\trigger_error(\sprintf('The resource at "%s" is not writeable.', $abs_path), \E_USER_ERROR);
-			}
-
-			if ($is_executable && !\is_executable($abs_path)) {
-				\trigger_error(\sprintf('The resource at "%s" is not executable.', $abs_path), \E_USER_ERROR);
-			}
-		}
-	}
-
-	/**
-	 * Asserts the path does not exists.
-	 *
-	 * @param string $abs_path the resource absolute path
-	 */
-	private static function assertDoesNotExists($abs_path)
-	{
-		if (\file_exists($abs_path)) {
-			\trigger_error(\sprintf('Cannot overwrite existing resource: %s', $abs_path), \E_USER_ERROR);
-		}
 	}
 }

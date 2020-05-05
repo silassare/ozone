@@ -155,15 +155,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "3b3f7516bace1921ffa14fc3ec797c48fff7fc43"
+                "reference": "808cee9ef6d7c7aea30977cc2f2c8767ad11f537"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/3b3f7516bace1921ffa14fc3ec797c48fff7fc43",
-                "reference": "3b3f7516bace1921ffa14fc3ec797c48fff7fc43",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/808cee9ef6d7c7aea30977cc2f2c8767ad11f537",
+                "reference": "808cee9ef6d7c7aea30977cc2f2c8767ad11f537",
                 "shasum": ""
             },
             "require": {
+                "ext-bcmath": "*",
                 "ext-json": "*",
                 "ext-pdo": "*",
                 "php": ">=5.6.0",
@@ -195,7 +196,7 @@
                 "mysql",
                 "orm"
             ],
-            "time": "2020-03-20T08:45:39+00:00"
+            "time": "2020-04-16T17:25:20+00:00"
         },
         {
             "name": "silassare/kli",

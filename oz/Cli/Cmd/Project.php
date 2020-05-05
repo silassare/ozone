@@ -67,7 +67,7 @@ final class Project extends Command
 		$bd->alias('dir')
 		   ->offsets(1)
 		   ->type((new KliTypePath())->dir()
-								   ->writable())
+									 ->writable())
 		   ->prompt(true, 'The backup directory path')
 		   ->description('The backup directory path.');
 
@@ -76,7 +76,7 @@ final class Project extends Command
 		$cr->alias('root-dir')
 		   ->offsets(1)
 		   ->type((new KliTypePath())->dir()
-								   ->writable())
+									 ->writable())
 		   ->def('.')
 		   ->prompt(true, 'The project root folder path')
 		   ->description('The project root folder path.');
@@ -130,10 +130,11 @@ final class Project extends Command
 	{
 		Utils::assertDatabaseAccess();
 
-		$dir          = $options['d'];
-		$project_fs   = new FilesManager();
-		$project_name = SettingsManager::get('oz.config', 'OZ_PROJECT_NAME');
-		$backup_name  = \sprintf('backup-%s-%d', \strtolower($project_name), \time());
+		$dir               = $options['d'];
+		$project_fs        = new FilesManager();
+		$project_name      = SettingsManager::get('oz.config', 'OZ_PROJECT_NAME');
+		$project_name_slug = \strtolower(StringUtils::stringToURLSlug($project_name));
+		$backup_name       = Hasher::genRandomFileName('backup-' . $project_name_slug);
 
 		if ($project_fs->isSelf($dir) || $project_fs->isParentOf($dir)) {
 			throw new KliInputException('You should not backup project to project directory or subdirectory.');
@@ -158,7 +159,7 @@ final class Project extends Command
 
 		$this->getCli()
 			 ->success('A backup of your project was created.')
-			 ->info($fm->getRoot());
+			 ->writeLn($fm->getRoot());
 	}
 
 	/**
@@ -220,7 +221,8 @@ final class Project extends Command
 			'OZ_DB_PASS'         => '__db_pass__',
 			':oz:comment:3'      => 'you could change the charset',
 			':oz:comment:4'      => 'but it is at your own risk',
-			'OZ_DB_CHARSET'      => 'utf8',
+			'OZ_DB_CHARSET'      => 'utf8mb4',
+			'OZ_DB_COLLATE'      => 'utf8mb4_unicode_ci',
 		]);
 
 		$oz_db = TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject);

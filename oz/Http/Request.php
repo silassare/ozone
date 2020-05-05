@@ -13,22 +13,22 @@ namespace OZONE\OZ\Http;
 
 \defined('OZ_SELF_SECURITY_CHECK') || die;
 
-	use OZONE\OZ\Core\SettingsManager;
-	use Psr\Http\Message\ServerRequestInterface;
-	use Psr\Http\Message\StreamInterface;
-	use Psr\Http\Message\UriInterface;
+use OZONE\OZ\Core\SettingsManager;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriInterface;
 
-	/**
-	 * Request
-	 *
-	 * This class represents an HTTP request. It manages
-	 * the request method, URI, headers, cookies, and body
-	 * according to the PSR-7 standard.
-	 *
-	 * @link https://github.com/php-fig/http-message/blob/master/src/MessageInterface.php
-	 * @link https://github.com/php-fig/http-message/blob/master/src/RequestInterface.php
-	 * @link https://github.com/php-fig/http-message/blob/master/src/ServerRequestInterface.php
-	 */
+/**
+ * Request
+ *
+ * This class represents an HTTP request. It manages
+ * the request method, URI, headers, cookies, and body
+ * according to the PSR-7 standard.
+ *
+ * @link https://github.com/php-fig/http-message/blob/master/src/MessageInterface.php
+ * @link https://github.com/php-fig/http-message/blob/master/src/RequestInterface.php
+ * @link https://github.com/php-fig/http-message/blob/master/src/ServerRequestInterface.php
+ */
 class Request extends Message implements ServerRequestInterface
 {
 	/**
@@ -186,7 +186,7 @@ class Request extends Message implements ServerRequestInterface
 		$this->registerMediaTypeParser('application/json', function ($input) {
 			$result = \json_decode($input, true);
 
-			if (!\is_array($result)) {
+			if (\json_last_error() !== \JSON_ERROR_NONE || !\is_array($result)) {
 				return null;
 			}
 
@@ -881,12 +881,12 @@ class Request extends Message implements ServerRequestInterface
 	 * This method obviates the need for a hasAttribute() method, as it allows
 	 * specifying a default value to return if the attribute is not found.
 	 *
-	 * @see getAttributes()
-	 *
 	 * @param string $name    the attribute name
 	 * @param mixed  $default default value to return if the attribute does not exist
 	 *
 	 * @return mixed
+	 *
+	 * @see getAttributes()
 	 */
 	public function getAttribute($name, $default = null)
 	{
@@ -903,12 +903,12 @@ class Request extends Message implements ServerRequestInterface
 	 * immutability of the message, and MUST return an instance that has the
 	 * updated attribute.
 	 *
-	 * @see getAttributes()
-	 *
 	 * @param string $name  the attribute name
 	 * @param mixed  $value the value of the attribute
 	 *
 	 * @return static
+	 *
+	 * @see getAttributes()
 	 */
 	public function withAttribute($name, $value)
 	{
@@ -928,11 +928,11 @@ class Request extends Message implements ServerRequestInterface
 	 * immutability of the message, and MUST return an instance that removes
 	 * the attribute.
 	 *
-	 * @see getAttributes()
-	 *
 	 * @param string $name the attribute name
 	 *
 	 * @return static
+	 *
+	 * @see getAttributes()
 	 */
 	public function withoutAttribute($name)
 	{
@@ -1019,9 +1019,11 @@ class Request extends Message implements ServerRequestInterface
 	 *
 	 * Note: This method is not part of the PSR-7 standard.
 	 *
+	 * @param bool $includeFiles
+	 *
 	 * @return array
 	 */
-	public function getFormData()
+	public function getFormData($includeFiles = true)
 	{
 		$params     = $this->getQueryParams();
 		$postParams = $this->getParsedBody();
@@ -1029,6 +1031,10 @@ class Request extends Message implements ServerRequestInterface
 
 		if ($postParams) {
 			$params = \array_merge($params, (array) $postParams);
+		}
+
+		if (!$includeFiles) {
+			return $params;
 		}
 
 		return \array_replace($params, $files);

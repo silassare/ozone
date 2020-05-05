@@ -1,39 +1,41 @@
 <?php
 
-	/**
+/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.9
- * Time: 1583761352
+ * Time: 1586982104
  */
 
-	namespace OZONE\OZ\Db\Base;
+namespace OZONE\OZ\Db\Base;
 
-	use Gobl\ORM\ORM;
-	use Gobl\ORM\ORMEntityBase;
-	use OZONE\OZ\Db\OZAdministratorsQuery as OZAdministratorsQueryReal;
-		use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntityBase;
+use OZONE\OZ\Db\OZAdministratorsQuery as OZAdministratorsQueryReal;
+use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
 
-	/**
-	 * Class OZAdmin
-	 *
-	 * @package OZONE\OZ\Db\Base
-	 */
+/**
+ * Class OZAdmin
+ *
+ * @package OZONE\OZ\Db\Base
+ */
 abstract class OZAdmin extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_administrators';
 
-			const COL_USER_ID = 'admin_user_id';
+	
+	const COL_USER_ID = 'admin_user_id';
 	const COL_LEVEL = 'admin_level';
 	const COL_DATA = 'admin_data';
 	const COL_ADD_TIME = 'admin_add_time';
 	const COL_VALID = 'admin_valid';
 
-		
+	
 	/**
 	 * @var \OZONE\OZ\Db\OZUser
 	 */
 	protected $_r_oz_user;
+
 
 
 	/**
@@ -45,16 +47,20 @@ abstract class OZAdmin extends ORMEntityBase
 	 */
 	public function __construct($is_new = true, $strict = true)
 	{
-		parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), $is_new, $strict, OZAdmin::TABLE_NAME, OZAdministratorsQueryReal::class);
+		parent::__construct(
+			ORM::getDatabase('OZONE\OZ\Db'),
+			$is_new,
+			$strict,
+			OZAdmin::TABLE_NAME,
+			OZAdministratorsQueryReal::class
+		);
 	}
-		
+	
 	/**
 	 * OneToOne relation between `oz_administrators` and `oz_users`.
 	 *
 	 * @return null|\OZONE\OZ\Db\OZUser
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	public function getOZUser()
 	{
@@ -74,7 +80,8 @@ abstract class OZAdmin extends ORMEntityBase
 		return $this->_r_oz_user;
 	}
 
-		
+
+	
 	/**
 	 * Getter for column `oz_administrators`.`user_id`.
 	 *

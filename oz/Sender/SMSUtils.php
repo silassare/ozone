@@ -57,9 +57,7 @@ final class SMSUtils
 		$sender = SettingsManager::get('oz.config', 'OZ_APP_SMS_SENDER_CLASS');
 
 		if ($sender && ClassLoader::exists($sender)) {
-			/*
-			 * @var \OZONE\OZ\Sender\SMSSenderInterface $instance
-			 */
+			/* @var \OZONE\OZ\Sender\SMSSenderInterface $instance */
 			return $instance = new $sender($sender_name);
 		}
 

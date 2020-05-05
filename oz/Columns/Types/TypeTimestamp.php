@@ -26,9 +26,6 @@ final class TypeTimestamp extends TypeBigint
 	public function __construct()
 	{
 		parent::__construct();
-
-		$this->min(0)
-			 ->unsigned();
 	}
 
 	/**

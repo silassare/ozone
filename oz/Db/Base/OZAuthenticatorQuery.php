@@ -1,23 +1,23 @@
 <?php
 
-	/**
+/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.9
- * Time: 1583761352
+ * Time: 1586982104
  */
 
-	namespace OZONE\OZ\Db\Base;
+namespace OZONE\OZ\Db\Base;
 
-	use Gobl\DBAL\Rule;
-	use Gobl\ORM\ORM;
-	use Gobl\ORM\ORMTableQueryBase;
+use Gobl\DBAL\Rule;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMTableQueryBase;
 
-	/**
-	 * Class OZAuthenticatorQuery
-	 *
-	 * @package OZONE\OZ\Db\Base
-	 */
+/**
+ * Class OZAuthenticatorQuery
+ *
+ * @package OZONE\OZ\Db\Base
+ */
 abstract class OZAuthenticatorQuery extends ORMTableQueryBase
 {
 	/**
@@ -25,7 +25,11 @@ abstract class OZAuthenticatorQuery extends ORMTableQueryBase
 	 */
 	public function __construct()
 	{
-		parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), OZAuth::TABLE_NAME, \OZONE\OZ\Db\OZAuthenticatorResults::class);
+		parent::__construct(
+			ORM::getDatabase('OZONE\OZ\Db'),
+			OZAuth::TABLE_NAME,
+			\OZONE\OZ\Db\OZAuthenticatorResults::class
+		);
 	}
 
 	/**
@@ -45,7 +49,7 @@ abstract class OZAuthenticatorQuery extends ORMTableQueryBase
 
 		return $results;
 	}
-		
+	
 	/**
 	 * Filters rows with condition on column `label` in the table `oz_authenticator`.
 	 *

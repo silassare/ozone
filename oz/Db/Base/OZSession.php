@@ -1,30 +1,31 @@
 <?php
 
-	/**
+/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.9
- * Time: 1583761352
+ * Time: 1586982104
  */
 
-	namespace OZONE\OZ\Db\Base;
+namespace OZONE\OZ\Db\Base;
 
-	use Gobl\ORM\ORM;
-	use Gobl\ORM\ORMEntityBase;
-	use OZONE\OZ\Db\OZSessionsQuery as OZSessionsQueryReal;
-		use OZONE\OZ\Db\OZClientsController as OZClientsControllerRealR;
-	use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntityBase;
+use OZONE\OZ\Db\OZSessionsQuery as OZSessionsQueryReal;
+use OZONE\OZ\Db\OZClientsController as OZClientsControllerRealR;
+use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
 
-	/**
-	 * Class OZSession
-	 *
-	 * @package OZONE\OZ\Db\Base
-	 */
+/**
+ * Class OZSession
+ *
+ * @package OZONE\OZ\Db\Base
+ */
 abstract class OZSession extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_sessions';
 
-			const COL_ID = 'session_id';
+	
+	const COL_ID = 'session_id';
 	const COL_CLIENT_API_KEY = 'session_client_api_key';
 	const COL_USER_ID = 'session_user_id';
 	const COL_TOKEN = 'session_token';
@@ -34,7 +35,7 @@ abstract class OZSession extends ORMEntityBase
 	const COL_ADD_TIME = 'session_add_time';
 	const COL_VALID = 'session_valid';
 
-		
+	
 	/**
 	 * @var \OZONE\OZ\Db\OZClient
 	 */
@@ -46,6 +47,7 @@ abstract class OZSession extends ORMEntityBase
 	protected $_r_oz_user;
 
 
+
 	/**
 	 * OZSession constructor.
 	 *
@@ -55,16 +57,20 @@ abstract class OZSession extends ORMEntityBase
 	 */
 	public function __construct($is_new = true, $strict = true)
 	{
-		parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), $is_new, $strict, OZSession::TABLE_NAME, OZSessionsQueryReal::class);
+		parent::__construct(
+			ORM::getDatabase('OZONE\OZ\Db'),
+			$is_new,
+			$strict,
+			OZSession::TABLE_NAME,
+			OZSessionsQueryReal::class
+		);
 	}
-		
+	
 	/**
 	 * ManyToOne relation between `oz_sessions` and `oz_clients`.
 	 *
 	 * @return null|\OZONE\OZ\Db\OZClient
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	public function getOZClient()
 	{
@@ -88,9 +94,7 @@ abstract class OZSession extends ORMEntityBase
 	 * ManyToOne relation between `oz_sessions` and `oz_users`.
 	 *
 	 * @return null|\OZONE\OZ\Db\OZUser
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 */
 	public function getOZUser()
 	{
@@ -110,7 +114,8 @@ abstract class OZSession extends ORMEntityBase
 		return $this->_r_oz_user;
 	}
 
-		
+
+	
 	/**
 	 * Getter for column `oz_sessions`.`id`.
 	 *

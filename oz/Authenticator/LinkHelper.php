@@ -32,10 +32,10 @@ final class LinkHelper
 	 */
 	public static function getUrl(Context $context, Authenticator $auth)
 	{
-		$generated   = $auth->generate(1)
-							->getGenerated();
+		$generated = $auth->generate(1)
+						  ->getGenerated();
 
-		$data = $generated['auth_token'];
+		$token = $generated['auth_token'];
 
 		return $context->buildRouteUri('oz:auth-link', [
 			'token' => $token,

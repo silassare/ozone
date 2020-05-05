@@ -1,28 +1,29 @@
 <?php
 
-	/**
+/**
  * Auto generated file, please don't edit.
  *
  * With: Gobl v1.0.9
- * Time: 1583761352
+ * Time: 1586982104
  */
 
-	namespace OZONE\OZ\Db\Base;
+namespace OZONE\OZ\Db\Base;
 
-	use Gobl\ORM\ORM;
-	use Gobl\ORM\ORMEntityBase;
-	use OZONE\OZ\Db\OZAuthenticatorQuery as OZAuthenticatorQueryReal;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntityBase;
+use OZONE\OZ\Db\OZAuthenticatorQuery as OZAuthenticatorQueryReal;
 
-	/**
-	 * Class OZAuth
-	 *
-	 * @package OZONE\OZ\Db\Base
-	 */
+/**
+ * Class OZAuth
+ *
+ * @package OZONE\OZ\Db\Base
+ */
 abstract class OZAuth extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_authenticator';
 
-			const COL_LABEL = 'auth_label';
+	
+	const COL_LABEL = 'auth_label';
 	const COL_FOR = 'auth_for';
 	const COL_CODE = 'auth_code';
 	const COL_TOKEN = 'auth_token';
@@ -33,7 +34,8 @@ abstract class OZAuth extends ORMEntityBase
 	const COL_ADD_TIME = 'auth_add_time';
 	const COL_VALID = 'auth_valid';
 
-		
+	
+
 
 	/**
 	 * OZAuth constructor.
@@ -44,10 +46,17 @@ abstract class OZAuth extends ORMEntityBase
 	 */
 	public function __construct($is_new = true, $strict = true)
 	{
-		parent::__construct(ORM::getDatabase('OZONE\OZ\Db'), $is_new, $strict, OZAuth::TABLE_NAME, OZAuthenticatorQueryReal::class);
+		parent::__construct(
+			ORM::getDatabase('OZONE\OZ\Db'),
+			$is_new,
+			$strict,
+			OZAuth::TABLE_NAME,
+			OZAuthenticatorQueryReal::class
+		);
 	}
-		
-		
+	
+
+	
 	/**
 	 * Getter for column `oz_authenticator`.`label`.
 	 *

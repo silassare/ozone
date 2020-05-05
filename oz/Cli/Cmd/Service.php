@@ -122,9 +122,9 @@ final class Service extends Command
 			$config            = SettingsManager::get('oz.config');
 			$service_namespace = $config['OZ_PROJECT_NAMESPACE'] . '\\Services';
 			$generator         = new Generator($db, false, false);
-			$service           = $generator->generateOZServiceClass($table, $service_namespace, $service_dir, $service_name, $service_class);
+			$info              = $generator->generateOZServiceClass($table, $service_namespace, $service_dir, $service_name, $service_class);
 
-			SettingsManager::setKey('oz.routes.api', $service_name, $service);
+			SettingsManager::setKey('oz.routes.api', $info['provider'], true);
 
 			$this->getCli()
 				 ->success(\sprintf('service "%s" generated.', $service_name));
