@@ -6,17 +6,11 @@ Options -Indexes -Multiviews +FollowSymlinks
 
 # disable access to /app/*
 #
-<Directory /app>
-   Order Deny,allow
-   Deny from all
-</Directory>
+RedirectMatch 403 ^/app/.*$
 
 # disable access to /oz/*
 #
-<Directory /oz>
-   Order Deny,allow
-   Deny from all
-</Directory>
+RedirectMatch 403 ^/oz/.*$
 
 # disable access to /debug.log
 #
@@ -34,10 +28,10 @@ Options -Indexes -Multiviews +FollowSymlinks
 # start rewriting
 #
 <IfModule mod_rewrite.c>
-	RewriteEngine on
+   RewriteEngine on
 
-	RewriteCond %{REQUEST_URI}  !^/index\.php
-	RewriteCond %{REQUEST_URI}  !^/robots\.txt
-	RewriteCond %{REQUEST_URI}  !^/favicon\.ico
-	RewriteRule (.*)			index.php [L]
+   RewriteCond %{REQUEST_URI}  !^/index\.php
+   RewriteCond %{REQUEST_URI}  !^/robots\.txt
+   RewriteCond %{REQUEST_URI}  !^/favicon\.ico
+   RewriteRule (.*)        index.php [L]
 </IfModule>

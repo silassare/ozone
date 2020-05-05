@@ -7,10 +7,7 @@ Options -Indexes -Multiviews +FollowSymlinks
 
 # disable access to /oz_private/*
 #
-<Directory /oz_private>
-   Order Deny,allow
-   Deny from all
-</Directory>
+RedirectMatch 403 ^/oz_private/.*$
 
 # disable access to /debug.log
 #

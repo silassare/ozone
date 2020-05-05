@@ -6,17 +6,11 @@ Options -Indexes -Multiviews +FollowSymlinks
 
 # disable access to /app/*
 #
-<Directory /app>
-   Order Deny,allow
-   Deny from all
-</Directory>
+RedirectMatch 403 ^/app/.*$
 
 # disable access to /oz/*
 #
-<Directory /oz>
-   Order Deny,allow
-   Deny from all
-</Directory>
+RedirectMatch 403 ^/oz/.*$
 
 # disable access to /debug.log
 #
