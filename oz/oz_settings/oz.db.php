@@ -22,5 +22,6 @@
 		'OZ_DB_PASS'         => '',
 		// you could change the charset,
 		// but it is at your own risk,
-		'OZ_DB_CHARSET'      => 'utf8',
+		'OZ_DB_CHARSET'      => 'utf8mb4',
+		'OZ_DB_COLLATE'      => 'utf8mb4_unicode_ci',
 	];

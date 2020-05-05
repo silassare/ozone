@@ -41,6 +41,7 @@ final class DbManager
 			'db_user'    => $config['OZ_DB_USER'],
 			'db_pass'    => $config['OZ_DB_PASS'],
 			'db_charset' => $config['OZ_DB_CHARSET'],
+			'db_collate' => $config['OZ_DB_COLLATE'],
 		];
 
 		$rdbms_type = $config['OZ_DB_RDBMS'];
@@ -155,7 +156,7 @@ final class DbManager
 		ORM::setDatabase($structure['oz_db_namespace'], self::$db);
 		ORM::setDatabase($structure['project_db_namespace'], self::$db);
 
-		self::$db->addTablesFromOptions($oz_database, $structure['oz_db_namespace'], $tables_prefix)
-				 ->addTablesFromOptions($tables, $structure['project_db_namespace'], $tables_prefix);
+		self::$db->addTablesToNamespace($structure['oz_db_namespace'], $oz_database, $tables_prefix)
+				 ->addTablesToNamespace($structure['project_db_namespace'], $tables, $tables_prefix);
 	}
 }
