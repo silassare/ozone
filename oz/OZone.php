@@ -26,6 +26,7 @@ use OZONE\OZ\Hooks\MainHookProvider;
 use OZONE\OZ\Http\Environment;
 use OZONE\OZ\Lang\Polyglot;
 use OZONE\OZ\Loader\ClassLoader;
+use OZONE\OZ\Router\RouteProviderInterface;
 use OZONE\OZ\Router\Router;
 use ReflectionClass;
 use ReflectionException;
@@ -34,17 +35,17 @@ use Throwable;
 
 \defined('OZ_SELF_SECURITY_CHECK') || die;
 
-	include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
+include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
 
-	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
+include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
 
-	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
+include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
 
-	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
+include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
 
 final class OZone
 {
-	const API_KEY_REG          = '~^[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$~';
+	const API_KEY_REG = '~^[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$~';
 
 	const INTERNAL_PATH_PREFIX = '/oz:';
 
@@ -144,16 +145,11 @@ final class OZone
 		if (!isset(self::$api_router)) {
 			self::$api_router = new Router();
 
-			$a          = SettingsManager::get('oz.routes');
-			$b          = SettingsManager::get('oz.routes.api');
-			$api_routes = SettingsManager::merge($a, $b);
+			$a      = SettingsManager::get('oz.routes');
+			$b      = SettingsManager::get('oz.routes.api');
+			$routes = SettingsManager::merge($a, $b);
 
-			foreach ($api_routes as $options) {
-				/** @var \OZONE\OZ\Router\RouteProviderInterface $provider */
-				$provider = $options['provider'];
-
-				$provider::registerRoutes(self::$api_router);
-			}
+			self::registerRoutes(self::$api_router, $routes);
 		}
 
 		return self::$api_router;
@@ -169,16 +165,11 @@ final class OZone
 		if (!isset(self::$web_router)) {
 			self::$web_router = new Router();
 
-			$a          = SettingsManager::get('oz.routes');
-			$b          = SettingsManager::get('oz.routes.web');
-			$web_routes = SettingsManager::merge($a, $b);
+			$a      = SettingsManager::get('oz.routes');
+			$b      = SettingsManager::get('oz.routes.web');
+			$routes = SettingsManager::merge($a, $b);
 
-			foreach ($web_routes as $options) {
-				/** @var \OZONE\OZ\Router\RouteProviderInterface $provider */
-				$provider = $options['provider'];
-
-				$provider::registerRoutes(self::$web_router);
-			}
+			self::registerRoutes(self::$web_router, $routes);
 		}
 
 		return self::$web_router;
@@ -189,9 +180,9 @@ final class OZone
 	 *
 	 * @param string $class_name the full qualified class name to instantiate
 	 *
+	 * @return object
 	 * @throws \ReflectionException
 	 *
-	 * @return object
 	 */
 	public static function createInstance($class_name)
 	{
@@ -200,6 +191,30 @@ final class OZone
 		\array_shift($c_args);
 
 		return ClassLoader::instantiateClass($class_name, $c_args);
+	}
+
+	/**
+	 * @param \OZONE\OZ\Router\Router $router
+	 * @param array                   $routes
+	 */
+	private static function registerRoutes(Router $router, $routes)
+	{
+		foreach ($routes as $provider => $enabled) {
+			if ($enabled) {
+				try {
+					$rc = new ReflectionClass($provider);
+
+					if (!$rc->implementsInterface(RouteProviderInterface::class)) {
+						throw new RuntimeException(\sprintf('Route provider "%s" should implements "%s".', $provider, RouteProviderInterface::class));
+					}
+
+					/* @var RouteProviderInterface $provider */
+					$provider::registerRoutes($router);
+				} catch (ReflectionException $e) {
+					throw new RuntimeException(\sprintf('Unable to register route provider: %s.', $provider), $e);
+				}
+			}
+		}
 	}
 
 	/**
@@ -215,7 +230,7 @@ final class OZone
 					$rc = new ReflectionClass($receiver);
 
 					if (!$rc->implementsInterface(HookReceiverInterface::class)) {
-						throw new RuntimeException(\sprintf('Hook class "%s" should implements "%s".', $receiver, HookReceiverInterface::class));
+						throw new RuntimeException(\sprintf('Hook receiver "%s" should implements "%s".', $receiver, HookReceiverInterface::class));
 					}
 					/* @var \OZONE\OZ\Hooks\Interfaces\HookReceiverInterface $receiver */
 					$receiver::register();
@@ -248,7 +263,7 @@ final class OZone
 					throw new RuntimeException(\sprintf('Unable to check custom relations provider "%s".', $provider), $e);
 				}
 
-				/*@var TableRelationsProviderInterface $provider */
+				/* @var TableRelationsProviderInterface $provider */
 				$def_list = $provider::getRelationsDefinition();
 
 				foreach ($def_list as $table_name => $relations) {
@@ -259,11 +274,12 @@ final class OZone
 							$table->defineVR($relation_name, $callable);
 						} else {
 							throw new RuntimeException(\sprintf(
-								'Custom relation "%s" defined in "%s" for table "%s" expected to be "callable" not "%s".',
+								'Custom relation "%s" defined in "%s" for table "%s" expected to be "callable" not "%s". %s',
 								$relation_name,
 								$provider,
 								$table_name,
-								\gettype($callable)
+								\gettype($callable),
+								'Maybe the class method is private or protected.'
 							));
 						}
 					}
@@ -294,7 +310,7 @@ final class OZone
 					throw new RuntimeException(\sprintf('Unable to check custom collections provider "%s".', $provider), $e);
 				}
 
-				/*@var TableCollectionsProviderInterface $provider */
+				/* @var TableCollectionsProviderInterface $provider */
 				$def_list = $provider::getCollectionsDefinition();
 
 				foreach ($def_list as $table_name => $relations) {

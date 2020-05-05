@@ -11,4 +11,6 @@
 	
 	\defined('OZ_SELF_SECURITY_CHECK') || die;
 
-	return [];
+	return [
+		// 'namespace\class' => true // enabled: true or false
+	];
