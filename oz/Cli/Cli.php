@@ -17,26 +17,27 @@ use OZONE\OZ\Cli\Utils\Utils;
 use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\Loader\ClassLoader;
+use OZONE\OZ\Utils\StringUtils;
 
 \defined('OZ_SELF_SECURITY_CHECK') || die;
 
-	include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
+include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
 
-	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
+include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
 
-	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
+include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
 
-	include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
+include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
 
 if (!OZ_OZONE_IS_CLI) {
 	print 'This is the command line tool for O\'Zone Framework.';
 	exit(1);
 }
 
-final class OZoneCli extends Kli
+final class Cli extends Kli
 {
 	/**
-	 * OZoneCli constructor.
+	 * Cli constructor.
 	 */
 	public function __construct()
 	{
@@ -52,12 +53,17 @@ final class OZoneCli extends Kli
 	 */
 	public function run(array $arg)
 	{
+		$title = 'oz';
+
 		if ($config = Utils::loadProjectConfig()) {
+			$title = 'oz: ' . StringUtils::stringToURLSlug($config['OZ_PROJECT_NAME']);
 			// Adds project namespace root directory
 			ClassLoader::addNamespace($config['OZ_PROJECT_NAMESPACE'], OZ_APP_DIR);
 			// Init database
 			DbManager::init();
 		}
+
+		\cli_set_process_title($title);
 
 		$this->loadCommands();
 
@@ -87,7 +93,7 @@ final class OZoneCli extends Kli
 	 * @param mixed $msg  the message to log
 	 * @param bool  $wrap to wrap string or not
 	 *
-	 * @return \OZONE\OZ\Cli\OZoneCli
+	 * @return \OZONE\OZ\Cli\Cli
 	 */
 	public function log($msg, $wrap = true)
 	{

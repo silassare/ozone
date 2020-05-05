@@ -18,12 +18,12 @@ abstract class Command extends KliCommand
 	/**
 	 * Command constructor.
 	 *
-	 * @param string                 $name command name
-	 * @param \OZONE\OZ\Cli\OZoneCli $cli  cli object to use
+	 * @param string            $name command name
+	 * @param \OZONE\OZ\Cli\Cli $cli  cli object to use
 	 *
 	 * @throws \Kli\Exceptions\KliException
 	 */
-	final public function __construct($name, OZoneCli $cli)
+	final public function __construct($name, Cli $cli)
 	{
 		parent::__construct($name, $cli);
 		$this->describe();
