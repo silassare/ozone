@@ -1,0 +1,19 @@
+# this prevents the unauthorized domain/host from pointing to our server
+# for this to work please remove /etc/nginx/sites-enabled/default
+# or replace all "default_server" seen after "listen"
+
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+
+	# listen 443 ssl default_server;
+	# listen [::]:443 ssl default_server;
+
+	# include path/to/the/ssl/certificate/file.conf;
+
+	location / {
+		# we just close the connection "Silence is golden"
+		return 444;
+	}
+	access_log /var/www/bad-hosts.log;
+}
