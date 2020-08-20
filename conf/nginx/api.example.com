@@ -29,7 +29,7 @@ server {
 
 	# disable access to /app/* && /oz/*
 	#
-	location ~* ^/(?:app|oz)/.*$ {
+	location ~* ^/(?:app|oz|oz_private)/.*$ {
 		deny all;
 	}
 

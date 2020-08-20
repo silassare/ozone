@@ -42,9 +42,9 @@ server {
 		deny all;
 	}
 
-	# disable access to /api/app/* && /api/oz/*
+	# disable access to /api/app/* && /api/oz/* && /api/oz_private/*
 	#
-	location ~* ^/api/(?:app|oz)/.*$ {
+	location ~* ^/api/(?:app|oz|oz_private)/.*$ {
 		deny all;
 	}
 
