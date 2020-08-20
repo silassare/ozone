@@ -24,7 +24,7 @@ use OZONE\OZ\FS\FilesManager;
 use OZONE\OZ\FS\PathUtils;
 use OZONE\OZ\FS\TemplatesUtils;
 
-final class WebClient extends Command
+final class Client extends Command
 {
 	/**
 	 * {@inheritdoc}
@@ -122,7 +122,7 @@ final class WebClient extends Command
 				'OZ_API_MAIN_URL' => $host,
 			]);
 
-			$oz_config = TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject);
+			$oz_config = TemplatesUtils::compute('oz://gen/settings.info.otpl', $inject);
 
 			$inject = [
 				'oz_version_name'      => OZ_OZONE_VERSION_NAME,
@@ -132,13 +132,19 @@ final class WebClient extends Command
 				'oz_default_api_key'   => $api_key,
 			];
 
-			$www_index = TemplatesUtils::compute('oz:gen/index.www.otpl', $inject);
+			$www_index = TemplatesUtils::compute('oz://gen/index.www.otpl', $inject);
 
 			$tpl_folder = OZ_OZONE_DIR . 'oz_templates' . DS;
 
 			$fm = new FilesManager($project_folder);
 			$fm->cd($abs_folder, true)
 			   ->mkdir('assets')
+			   ->cd('assets')
+			   ->mkdir('js')
+			   ->mkdir('styles')
+			   ->mkdir('images')
+			   ->mkdir('vendors')
+			   ->cd('..')
 			   ->cd('oz_private', true)
 			   ->cd('oz_settings', true)
 			   ->wf('oz.config.php', $oz_config)
