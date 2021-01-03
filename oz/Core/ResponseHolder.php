@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\Core;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class ResponseHolder
 {
 	/**

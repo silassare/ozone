@@ -14,8 +14,6 @@ namespace OZONE\OZ\Sender;
 use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\Loader\ClassLoader;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class SMSUtils
 {
 	const SMS_TYPE_AUTH_CODE      = 1;

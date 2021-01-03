@@ -17,8 +17,6 @@ use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\FS\FilesManager;
 use OZONE\OZ\FS\TemplatesUtils;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class SettingsManager
 {
 	/**

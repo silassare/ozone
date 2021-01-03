@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\Hooks\Interfaces;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 interface HookProviderInterface
 {
 	const RUN_FIRST   = 1;

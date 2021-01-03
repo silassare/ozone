@@ -14,8 +14,6 @@ namespace OZONE\OZ\Core;
 use Gobl\DBAL\Table;
 use Gobl\ORM\ORMRequestBase;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class ORMRequest extends ORMRequestBase
 {
 	/**

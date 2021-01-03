@@ -18,8 +18,6 @@ use OZONE\OZ\Db\OZFilesQuery;
 use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\Http\Stream;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class FilesUtils
 {
 	/**

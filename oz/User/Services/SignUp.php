@@ -25,8 +25,6 @@ use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
 use OZONE\OZ\User\PhoneAuth;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Class SignUp
  */

@@ -9,8 +9,6 @@
  * file that was distributed with this source code.
  */
 	
-	\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 	return [
 		'project'   => '\OZONE\OZ\Cli\Cmd\Project',
 		'webclient' => '\OZONE\OZ\Cli\Cmd\WebClient',

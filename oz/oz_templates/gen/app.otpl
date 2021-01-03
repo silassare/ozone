@@ -5,8 +5,6 @@
 
 	use OZONE\OZ\App\AppInterface;
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
-
 	final class <%$.oz_project_class%> implements AppInterface
 	{
 		/**

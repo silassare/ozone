@@ -13,8 +13,6 @@ namespace OZONE\OZ\Utils;
 
 use OZONE\OZ\Core\SettingsManager;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class StringUtils
 {
 	/**

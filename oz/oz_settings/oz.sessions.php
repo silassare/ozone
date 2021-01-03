@@ -9,8 +9,6 @@
  * file that was distributed with this source code.
  */
 	
-	\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 	return [
 		'OZ_SESSION_TOKEN_HEADER_NAME'    => 'x-ozone-session-token',
 		'OZ_SESSION_TOKEN_HEADER_ENABLED' => false,

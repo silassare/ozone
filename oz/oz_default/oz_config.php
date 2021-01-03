@@ -9,8 +9,6 @@
  * file that was distributed with this source code.
  */
 	
-	\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 // =============== GOOD PRACTICE
 	// help us to write clean code -1 same as E_ALL
 	\error_reporting(-1);

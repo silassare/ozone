@@ -1,6 +1,4 @@
 <?php
 <%@import('gen.warn.otpl',$)%>
 
-	defined( 'OZ_SELF_SECURITY_CHECK' ) or die;
-
-	return <%$.oz_settings_str%>;
+return <%$.oz_settings_str%>;

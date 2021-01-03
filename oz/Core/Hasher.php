@@ -14,8 +14,6 @@ namespace OZONE\OZ\Core;
 use Exception;
 use InvalidArgumentException;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class Hasher
 {
 	const CHARS_ALPHA = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';

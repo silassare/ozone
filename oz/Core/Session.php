@@ -20,8 +20,6 @@ use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\Http\Cookies;
 use OZONE\OZ\Http\Response;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class Session
 {
 	const SESSION_ID_REG    = '~^[-,a-zA-Z0-9]{32,128}$~';

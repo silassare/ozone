@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\Exceptions;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Class BadRequestException
  */

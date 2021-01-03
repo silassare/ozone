@@ -29,8 +29,6 @@ use OZONE\OZ\Exceptions\UnverifiedUserException;
 use OZONE\OZ\Ofv\OFormValidator;
 use OZONE\OZ\OZone;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Class UsersManager
  */

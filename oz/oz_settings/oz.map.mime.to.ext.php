@@ -9,8 +9,6 @@
  * file that was distributed with this source code.
  */
 	
-	\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 	return [
 		// CUSTOM OZONE FILE ALIAS
 		'text/x-ozone-file-alias' => 'ofa',

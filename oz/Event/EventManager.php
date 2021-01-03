@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\Event;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class EventManager
 {
 	/** @var array */

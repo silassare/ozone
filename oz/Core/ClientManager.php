@@ -16,8 +16,6 @@ use OZONE\OZ\Db\OZClientsQuery;
 use OZONE\OZ\Db\OZSessionsQuery;
 use OZONE\OZ\Exceptions\InternalErrorException;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class ClientManager
 {
 	/**

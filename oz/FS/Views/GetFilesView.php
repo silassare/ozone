@@ -17,8 +17,6 @@ use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
 use OZONE\OZ\Web\WebViewBase;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class GetFilesView extends WebViewBase
 {
 	/**

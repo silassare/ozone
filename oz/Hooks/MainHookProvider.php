@@ -18,8 +18,6 @@ use OZONE\OZ\Router\RouteInfo;
 use ReflectionClass;
 use ReflectionException;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class MainHookProvider extends HookProvider
 {
 	/**

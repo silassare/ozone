@@ -33,9 +33,6 @@ use ReflectionException;
 use RuntimeException;
 use Throwable;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
-include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
 
 include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
 

@@ -11,7 +11,6 @@
 
 namespace OZONE\OZ\Loader;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
 
 /**
  * OZone class loader comply with PSR-4.

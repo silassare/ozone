@@ -12,7 +12,6 @@
 	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\Exceptions\BaseException;
 
-	\defined('OZ_SELF_SECURITY_CHECK') || die;
 
 if (!\function_exists('oz_file_read')) {
 	/**

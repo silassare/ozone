@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\App;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 interface AppInterface
 {
 	/**

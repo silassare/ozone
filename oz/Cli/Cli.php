@@ -19,7 +19,6 @@ use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\Loader\ClassLoader;
 use OZONE\OZ\Utils\StringUtils;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
 
 include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
 

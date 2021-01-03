@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\FS;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class VideosUtils
 {
 	/**

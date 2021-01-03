@@ -17,8 +17,6 @@ use OZONE\OZ\Http\Response;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\RouteProviderInterface;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 abstract class WebViewBase implements RouteProviderInterface, WebSEOInterface
 {
 	/**

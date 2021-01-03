@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\Core\Interfaces;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 interface TableCollectionsProviderInterface
 {
 	/**

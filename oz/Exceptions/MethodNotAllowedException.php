@@ -13,8 +13,6 @@ namespace OZONE\OZ\Exceptions;
 
 use Throwable;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Class MethodNotAllowedException
  */

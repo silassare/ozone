@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\Web;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 interface WebSEOInterface
 {
 	/**

@@ -19,8 +19,6 @@ use OZONE\OZ\Router\Router;
 use OZONE\OZ\Utils\StringUtils;
 use OZONE\OZ\Web\WebViewBase;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class ErrorView extends WebViewBase
 {
 	private $compileData = [];

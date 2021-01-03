@@ -14,8 +14,6 @@ namespace OZONE\OZ\Core;
 use OZONE\OZ\Exceptions\InvalidFormException;
 use OZONE\OZ\Exceptions\UnauthorizedActionException;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class Assert
 {
 	/**

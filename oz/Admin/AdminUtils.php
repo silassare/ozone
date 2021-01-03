@@ -15,8 +15,6 @@ use Exception;
 use OZONE\OZ\Db\OZAdministratorsQuery;
 use OZONE\OZ\Exceptions\InternalErrorException;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class AdminUtils
 {
 	private static $caches = [];

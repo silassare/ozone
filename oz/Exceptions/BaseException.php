@@ -16,8 +16,6 @@ use OZONE\OZ\Core\Context;
 use OZONE\OZ\Core\ResponseHolder;
 use Throwable;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Class BaseException
  */

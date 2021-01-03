@@ -13,8 +13,6 @@ namespace OZONE\OZ\Crypt;
 
 use OZONE\OZ\Core\Hasher;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class DoCrypt implements CryptInterface
 {
 	/**

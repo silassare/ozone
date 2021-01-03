@@ -15,8 +15,6 @@ use OZONE\OZ\Core\Context;
 use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\Exceptions\NotFoundException;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Class QRCodeHelper
  */

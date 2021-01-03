@@ -30,8 +30,6 @@ use OZONE\OZ\Router\Router;
 use OZONE\OZ\User\UsersManager;
 use RuntimeException;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class Context
 {
 	/**

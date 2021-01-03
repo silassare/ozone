@@ -17,8 +17,6 @@ use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\Exceptions\NotFoundException;
 use OZONE\OZ\Http\Body;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Class CaptchaCodeHelper
  */

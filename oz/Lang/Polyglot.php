@@ -14,8 +14,6 @@ namespace OZONE\OZ\Lang;
 use OZONE\OZ\Core\Context;
 use OZONE\OZ\Http\Environment;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class Polyglot
 {
 	private static $ready = false;

@@ -14,8 +14,6 @@ namespace OZONE\OZ\Router;
 use InvalidArgumentException;
 use OZONE\OZ\Exceptions\InternalErrorException;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class Router
 {
 	const NOT_FOUND          = 0;

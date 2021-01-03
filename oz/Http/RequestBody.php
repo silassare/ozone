@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\Http;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Provides a PSR-7 implementation of a reusable raw request body
  */

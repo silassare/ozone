@@ -9,8 +9,6 @@
  * file that was distributed with this source code.
  */
 	
-	\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 	return [
 		// the uri format you want for file access: must provide in order
 		//		oz_file_id

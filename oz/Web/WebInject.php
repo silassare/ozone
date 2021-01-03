@@ -16,8 +16,6 @@ use OZONE\OZ\Core\Context;
 use OZONE\OZ\Lang\Polyglot;
 use RuntimeException;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class WebInject
 {
 	/**

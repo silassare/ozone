@@ -10,8 +10,7 @@
 	 * file that was distributed with this source code.
 	 */
 
-	// Protect from unauthorized access/include
-	\define('OZ_SELF_SECURITY_CHECK', 1);
+
 
 	// Don't forget to use DS instead of \ or / and always add the last DS to your directories path
 	\define('DS', \DIRECTORY_SEPARATOR);

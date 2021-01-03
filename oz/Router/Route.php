@@ -12,11 +12,16 @@
 namespace OZONE\OZ\Router;
 
 use InvalidArgumentException;
-
-\defined('OZ_SELF_SECURITY_CHECK') || die;
+use OZONE\OZ\Core\Context;
 
 class Route
 {
+	const OPTION_NAME = 'route:name';
+
+	const REG_PLACEHOLDER = '[^/]+';
+
+	const REG_DELIMITER = '~';
+
 	/**
 	 * @var string
 	 */
@@ -53,19 +58,26 @@ class Route
 	private $callable;
 
 	/**
+	 * @var \OZONE\OZ\Router\Router
+	 */
+	private $router;
+
+	/**
 	 * Route constructor.
 	 *
-	 * @param array    $methods
-	 * @param string   $route_path
-	 * @param callable $callable
-	 * @param array    $options
+	 * @param \OZONE\OZ\Router\Router $router
+	 * @param array                   $methods
+	 * @param string                  $route_path
+	 * @param callable                $callable
+	 * @param array                   $options
 	 */
-	public function __construct(array $methods, $route_path, callable $callable, array $options = [])
+	public function __construct(Router $router, array $methods, $route_path, callable $callable, array $options = [])
 	{
+		$this->router     = $router;
 		$this->route_path = $route_path;
 		$this->methods    = $methods;
 		$this->callable   = $callable;
-		$this->options    = $options;
+		$this->options    = \array_merge($router->getDefaultOptions(), $options);
 
 		if ($this->isDynamic()) {
 			$placeholders       = [];
@@ -95,17 +107,18 @@ class Route
 	/**
 	 * Builds the route with given placeholders value.
 	 *
-	 * @param array $args
+	 * @param \OZONE\OZ\Core\Context $context
+	 * @param array                  $args
 	 *
 	 * @return string
 	 */
-	public function toPath(array $args)
+	public function toPath(Context $context, array $args)
 	{
 		if (!$this->isDynamic()) {
 			return $this->route_path;
 		}
 
-		return self::pathBuilder($this->route_path, $this->options, $args);
+		return $this->pathBuilder($context, $this->route_path, $this->options, $args);
 	}
 
 	/**
@@ -211,18 +224,87 @@ class Route
 			return $path === $this->route_path;
 		}
 
-		$regexp  = '~^' . $this->parsed . '$~';
+		$regexp  = self::REG_DELIMITER . '^' . $this->parsed . '$' . self::REG_DELIMITER;
 		$matches = [];
 
-		$result = (1 === \preg_match($regexp, $path, $matches));
+		$passed = (1 === \preg_match($regexp, $path, $matches)) ? true : false;
 
-		if ($result) {
-			foreach ($this->placeholders as $name) {
-				$args[$name] = isset($matches[$name]) ? $matches[$name] : null;
-			}
+		if ($passed) {
+			$args = $matches;
 		}
 
-		return $result;
+		return $passed;
+	}
+
+	/**
+	 * Builds dynamic path.
+	 *
+	 * @param \OZONE\OZ\Core\Context $context
+	 * @param string                 $route
+	 * @param array                  $options
+	 * @param array                  $args
+	 * @param null|string            $original_route
+	 *
+	 * @return string
+	 */
+	private function pathBuilder(
+		Context $context,
+		$route,
+		array $options = [],
+		array $args = [],
+		$original_route = null
+	) {
+		$len            = \strlen($route);
+		$original_route = null === $original_route ? $route : $original_route;
+		$path           = '';
+		$pos            = 0;
+
+		while ($pos < $len) {
+			$char = $route[$pos];
+
+			if ($char === '{') {
+				$name = self::searchUntilCloseTag('{', '}', $route, $pos + 1, $pos, false);
+
+				$required = ($route === $original_route ? 1 : 0);
+
+				if (isset($args[$name])) {
+					$path .= (string) $args[$name];
+				} else {
+					$value = $this->router->getDeclaredPlaceholderValue($context, $name);
+
+					if (null !== $value) {
+						$path .= (string) $value;
+					} elseif ($required) {
+						throw new InvalidArgumentException(\sprintf(
+							'Missing required placeholder value: %s',
+							$name
+						));
+					} else {
+						// we are in optional part and
+						// there is missing placeholder value
+						// so we ignore the optional part
+						return '';
+					}
+				}
+			} elseif ($char === '[') {
+				$optional = self::searchUntilCloseTag('[', ']', $route, $pos + 1, $pos, true);
+
+				if (!\strlen($optional)) {
+					throw new InvalidArgumentException(\sprintf(
+						'Optional part should not be empty: %s',
+						$original_route
+					));
+				}
+
+				$path .= $this->pathBuilder($context, $optional, $options, $args, $original_route);
+			} else {
+				$path .= $char;
+			}
+
+			$pos++;
+		}
+
+		return $path;
 	}
 
 	/**
@@ -271,21 +353,22 @@ class Route
 					));
 				}
 
-				$placeholder_reg = '[^/]+';
+				$placeholder_reg = self::REG_PLACEHOLDER;
 
 				if (isset($options[$name])) {
 					$placeholder_reg = $options[$name];
 
-					if (self::hasCatchingGroupOrIsInvalid($placeholder_reg)) {
+					if (self::isInvalidOrComplex($placeholder_reg)) {
 						throw new InvalidArgumentException(\sprintf(
-							'Placeholder regexp should not contains invalid char or catching group. Keep it simple: %s -> %s',
+							'Placeholder regexp is not valid or is complex. Keep it simple: %s -> %s',
 							$name,
 							$placeholder_reg
 						));
 					}
 				}
 
-				$reg .= "(?<$name>$placeholder_reg)";
+				// use (?P<name> insteadof (?<name> for backward compatibility
+				$reg .= "(?P<$name>$placeholder_reg)";
 				$required            = ($route === $original_route ? 1 : 0);
 				$placeholders[$name] = $required;
 			} elseif ($c === '[') {
@@ -301,72 +384,13 @@ class Route
 				$optional_reg = self::parse($optional, $options, $placeholders, $original_route);
 				$reg .= '(?:' . $optional_reg . ')?';
 			} else {
-				$reg .= \preg_quote($c, '~');
+				$reg .= \preg_quote($c, self::REG_DELIMITER);
 			}
 
 			$pos++;
 		}
 
 		return $reg;
-	}
-
-	/**
-	 * Builds dynamic path.
-	 *
-	 * @param string      $route
-	 * @param array       $options
-	 * @param array       $args
-	 * @param null|string $original_route
-	 *
-	 * @return string
-	 */
-	private static function pathBuilder($route, array $options = [], array $args = [], $original_route = null)
-	{
-		$len            = \strlen($route);
-		$original_route = null === $original_route ? $route : $original_route;
-		$path           = '';
-		$pos            = 0;
-
-		while ($pos < $len) {
-			$char = $route[$pos];
-
-			if ($char === '{') {
-				$name = self::searchUntilCloseTag('{', '}', $route, $pos + 1, $pos, false);
-
-				$required = ($route === $original_route ? 1 : 0);
-
-				if (isset($args[$name])) {
-					$path .= (string) $args[$name];
-				} elseif ($required) {
-					throw new InvalidArgumentException(\sprintf(
-						'Missing required placeholder value: %s',
-						$name
-					));
-				} else {
-					// we are in optional part and
-					// there is missing placeholder value
-					// so we ignore the optional part
-					return '';
-				}
-			} elseif ($char === '[') {
-				$optional = self::searchUntilCloseTag('[', ']', $route, $pos + 1, $pos, true);
-
-				if (!\strlen($optional)) {
-					throw new InvalidArgumentException(\sprintf(
-						'Optional part should not be empty: %s',
-						$original_route
-					));
-				}
-
-				$path .= self::pathBuilder($optional, $options, $args, $original_route);
-			} else {
-				$path .= $char;
-			}
-
-			$pos++;
-		}
-
-		return $path;
 	}
 
 	/**
@@ -432,24 +456,30 @@ class Route
 	}
 
 	/**
-	 * Checks for invalid characters in regexp.
+	 * Checks if the placeholder is complex or is invalid.
+	 *
+	 * Should be valid regex
+	 * Should not starts with ^
+	 * Should not ends with $
 	 *
 	 * @param string $regexp
 	 *
 	 * @return bool
 	 */
-	private static function hasCatchingGroupOrIsInvalid($regexp)
+	private static function isInvalidOrComplex($regexp)
 	{
-		// we want to know if the regular expression has catching group
+		\set_error_handler(function () {
+		}, \E_WARNING);
+		$is_invalid = \preg_match(self::REG_DELIMITER . $regexp . self::REG_DELIMITER, '') === false;
+		\restore_error_handler();
+
+		if ($is_invalid) {
+			return true;
+		}
+
 		// or is complex
 		// we are dealing with path so let keep it simple
-
-		return
-			false !== \strpos($regexp, '(')
-			|| false !== \strpos($regexp, ')')
-			|| false !== \strpos($regexp, '?')
-			|| false !== \strpos($regexp, ':')
-			|| 0 === \strpos($regexp, '^') /* starts with ^ */
-			|| \strlen($regexp) - 1 === \strpos($regexp, '$'); /* ends with $ */
+		return 0 === \strpos($regexp, '^') /* starts with ^ */
+			   || \strlen($regexp) - 1 === \strpos($regexp, '$'); /* ends with $ */
 	}
 }

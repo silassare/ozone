@@ -11,7 +11,6 @@
 
 namespace OZONE\OZ\Http;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
 
 use OZONE\OZ\Core\SettingsManager;
 use Psr\Http\Message\ServerRequestInterface;

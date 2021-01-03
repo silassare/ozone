@@ -18,8 +18,6 @@ use OZONE\OZ\FS\PPicUtils;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Class UserPicEdit
  */

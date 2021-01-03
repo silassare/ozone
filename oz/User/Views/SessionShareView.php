@@ -18,8 +18,6 @@ use OZONE\OZ\Router\Router;
 use OZONE\OZ\User\Services\SessionShare;
 use OZONE\OZ\Web\WebViewBase;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Class SessionShareView
  */

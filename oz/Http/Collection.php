@@ -11,7 +11,7 @@
 
 namespace OZONE\OZ\Http;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
+
 
 class Collection implements \ArrayAccess, \Countable, \IteratorAggregate
 {

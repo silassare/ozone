@@ -21,8 +21,6 @@ use OZONE\OZ\Lang\Polyglot;
 use OZONE\OZ\Ofv\OFormValidator;
 use OZONE\OZ\Sender\SMSUtils;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class PhoneAuth
 {
 	const STEP_START    = 1;

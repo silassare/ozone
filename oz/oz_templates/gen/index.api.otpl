@@ -1,8 +1,7 @@
 <?php
 <%@import('gen.info.otpl',$)%>
 
-	// Protect from unauthorized access/include
-	define('OZ_SELF_SECURITY_CHECK', 1);
+
 
 	// Don't forget to use DS instead of \ or / and always add the last DS to your directories path
 	if (!defined('DS')) {

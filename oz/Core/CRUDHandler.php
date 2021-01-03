@@ -21,8 +21,6 @@ use Gobl\CRUD\CRUDUpdate;
 use Gobl\CRUD\CRUDUpdateAll;
 use Gobl\CRUD\Handler\Interfaces\CRUDHandlerInterface;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class CRUDHandler implements CRUDHandlerInterface
 {
 	/**

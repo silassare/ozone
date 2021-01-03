@@ -16,8 +16,6 @@ use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
 use OZONE\OZ\Web\WebViewBase;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class RedirectView extends WebViewBase
 {
 	private $compile_data = [];

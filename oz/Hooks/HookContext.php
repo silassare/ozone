@@ -15,8 +15,6 @@ use OZONE\OZ\Core\Context;
 use OZONE\OZ\Http\Response;
 use RuntimeException;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class HookContext
 {
 	/**

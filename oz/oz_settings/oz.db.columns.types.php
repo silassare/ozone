@@ -9,8 +9,6 @@
  * file that was distributed with this source code.
  */
 	
-	\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 	return [
 		'phone'     => '\OZONE\OZ\Columns\Types\TypePhone',
 		'email'     => '\OZONE\OZ\Columns\Types\TypeEmail',

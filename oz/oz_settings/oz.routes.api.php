@@ -9,8 +9,6 @@
  * file that was distributed with this source code.
  */
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 return [
 	'OZONE\OZ\FS\Services\GetFiles'               => true,
 	'OZONE\OZ\FS\Services\UploadFiles'            => true,

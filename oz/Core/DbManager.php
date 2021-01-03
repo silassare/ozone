@@ -18,8 +18,6 @@ use Gobl\ORM\ORM;
 use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\FS\FilesManager;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class DbManager
 {
 	/**

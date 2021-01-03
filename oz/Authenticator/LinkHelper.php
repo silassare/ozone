@@ -13,8 +13,6 @@ namespace OZONE\OZ\Authenticator;
 
 use OZONE\OZ\Core\Context;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Class QRCodeHelper
  */

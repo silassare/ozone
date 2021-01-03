@@ -9,8 +9,6 @@
  * file that was distributed with this source code.
  */
 	
-	\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 	return [
 		// default picid if there is none
 		'OZ_DEFAULT_PICID'        => '0_0',

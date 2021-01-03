@@ -16,8 +16,6 @@ use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\Db\OZAuth;
 use OZONE\OZ\Db\OZAuthenticatorQuery;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 /**
  * Class Authenticator
  */

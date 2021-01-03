@@ -16,8 +16,6 @@ use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\Http\UploadedFile;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class PPicUtils
 {
 	/** @var int|string */

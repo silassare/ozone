@@ -14,8 +14,6 @@ namespace OZONE\OZ\Hooks;
 use InvalidArgumentException;
 use OZONE\OZ\Hooks\Interfaces\HookProviderInterface;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 abstract class HookProvider implements HookProviderInterface
 {
 	/**

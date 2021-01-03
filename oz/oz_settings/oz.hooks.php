@@ -8,11 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-	
-	use OZONE\OZ\Hooks\MainHookReceiver;
 
-	\defined('OZ_SELF_SECURITY_CHECK') || die;
+use OZONE\OZ\Hooks\MainHookReceiver;
 
-	return [
-		MainHookReceiver::class => true,
-	];
+return [
+	MainHookReceiver::class => true,
+];

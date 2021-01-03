@@ -18,8 +18,6 @@ use OZONE\OZ\Hooks\Interfaces\MainHookReceiverInterface;
 use OZONE\OZ\Http\Uri;
 use OZONE\OZ\Router\RouteInfo;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class MainHookReceiver implements MainHookReceiverInterface
 {
 	/**

@@ -13,8 +13,6 @@ namespace OZONE\OZ\Sender;
 
 use OZONE\OZ\Db\OZUser;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 interface SMSSenderInterface
 {
 	/**

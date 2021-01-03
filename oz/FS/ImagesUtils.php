@@ -14,8 +14,6 @@ namespace OZONE\OZ\FS;
 use claviska\SimpleImage;
 use OZONE\OZ\Core\SettingsManager;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class ImagesUtils
 {
 	/**

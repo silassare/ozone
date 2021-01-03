@@ -18,8 +18,6 @@ use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\Exceptions\NotFoundException;
 use OZONE\OZ\Http\Body;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class FilesServer
 {
 	/**

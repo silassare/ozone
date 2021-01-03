@@ -15,8 +15,6 @@ use OTpl\OTpl;
 use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\Utils\StringUtils;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 class TemplatesUtils
 {
 	/**

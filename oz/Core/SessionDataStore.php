@@ -13,8 +13,6 @@ namespace OZONE\OZ\Core;
 
 use InvalidArgumentException;
 
-\defined('OZ_SELF_SECURITY_CHECK') || die;
-
 final class SessionDataStore
 {
 	/**
