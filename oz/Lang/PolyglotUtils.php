@@ -16,15 +16,15 @@ use OZONE\OZ\Http\Environment;
 
 class PolyglotUtils
 {
-	const ACCEPT_LANGUAGE_REG = "/([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.[0-9]+))?/i";
+	const ACCEPT_LANGUAGE_REG = "~([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.[0-9]+))?~i";
 
-	const LANG_KEY_REG        = '#^[A-Z][A-Z0-9_]+$#';
+	const LANG_KEY_REG = '~^[A-Z][A-Z0-9_.]+$~';
 
 	// for {{LANG_KEY}}
-	const PORTION_COPY_REG = "/{{\s*([A-Z][A-Z0-9_]+)\s*}}/";
+	const PORTION_COPY_REG = "~{{\s*([A-Z][A-Z0-9_.]+)\s*}}~";
 
 	// for {variable} and {fn:variable}
-	const SIMPLE_REPLACE_REG = "/{\s*(?:([a-zA-Z_]+):)?([a-zA-Z0-9_]+)\s*}/";
+	const SIMPLE_REPLACE_REG = "~{\s*(?:([a-zA-Z_]+):)?([a-zA-Z0-9_]+)\s*}~";
 
 	/**
 	 * Checks if we have a valid lang key
