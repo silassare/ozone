@@ -171,17 +171,25 @@ final class SessionDataStore
 	 */
 	private static function keyCheck($key)
 	{
-		$key_reg  = "~^(?:[a-zA-Z_][a-zA-Z0-9_]*)(?:\:[a-zA-Z0-9_]+)*$~";
+		$key_reg  = "~^(?:[a-zA-Z_][a-zA-Z0-9_]*)(?:\.[a-zA-Z0-9_]+)*$~";
 		$max_deep = 5;
 
 		if (!\preg_match($key_reg, $key)) {
-			throw new InvalidArgumentException(\sprintf('Session key "%s" not well formed, use something like "%s"', $key, 'group:key'));
+			throw new InvalidArgumentException(\sprintf(
+				'Session key "%s" not well formed, use something like "%s"',
+				$key,
+				'group.key'
+			));
 		}
 
-		$route = \explode(':', $key);
+		$route = \explode('.', $key);
 
 		if (\count($route) > $max_deep) {
-			throw new InvalidArgumentException(\sprintf('Session key "%s" is too deep, maximum deep is %s', $key, $max_deep));
+			throw new InvalidArgumentException(\sprintf(
+				'Session key "%s" is too deep, maximum deep is %s',
+				$key,
+				$max_deep
+			));
 		}
 
 		return $route;

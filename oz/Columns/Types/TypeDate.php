@@ -19,9 +19,9 @@ final class TypeDate extends TypeString
 {
 	private $birth_date = false;
 
-	private $min_age    = 0;
+	private $min_age = 0;
 
-	private $max_age    = \PHP_INT_MAX;
+	private $max_age = \PHP_INT_MAX;
 
 	/**
 	 * TypeDate constructor.
@@ -68,29 +68,24 @@ final class TypeDate extends TypeString
 	 */
 	public function validate($value, $column_name, $table_name)
 	{
-		$success = true;
-		$debug   = [
+		$debug = [
 			'value' => $value,
 		];
 
 		try {
 			$value = parent::validate($value, $column_name, $table_name);
 		} catch (TypesInvalidValueException $e) {
-			$success = false;
+			throw new TypesInvalidValueException('OZ_FIELD_DATE_INVALID', $debug, $e);
 		}
 
 		if (!empty($value)) {
-			if ($success && $this->birth_date) {
+			if ($this->birth_date) {
 				if (OFormUtils::isBirthDate($value, $this->min_age, $this->max_age)) {
 					$format = OFormUtils::parseDate($value);
 					$value  = $format['YYYY-MM-DD'];
 				} else {
-					$success = false;
+					throw new TypesInvalidValueException('OZ_FIELD_BIRTH_DATE_INVALID', $debug);
 				}
-			}
-
-			if (!$success) {
-				throw new TypesInvalidValueException('OZ_FIELD_BIRTH_DATE_INVALID', $debug);
 			}
 		}
 

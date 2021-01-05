@@ -22,7 +22,7 @@ use OZONE\OZ\Http\Response;
 
 final class Session
 {
-	const SESSION_ID_REG    = '~^[-,a-zA-Z0-9]{32,128}$~';
+	const SESSION_ID_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
 
 	const SESSION_TOKEN_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
 
@@ -148,10 +148,7 @@ final class Session
 	 *
 	 * @param \OZONE\OZ\Db\OZUser $user
 	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Throwable
 	 *
 	 * @return \OZONE\OZ\Db\OZSession
 	 */
@@ -166,8 +163,8 @@ final class Session
 		if (!$session) {
 			// the session is supposed to exists in the database but was not found
 			throw new InternalErrorException('OZ_SESSION_NOT_FOUND_CANT_ATTACH_USER', [
-				'session_id' => $this->id,
-				'user_id'    => $uid,
+				'user_id'     => $uid,
+				'_session_id' => $this->id,
 			]);
 		}
 
@@ -175,9 +172,9 @@ final class Session
 
 		if ($session_owner_id && $uid !== $session_owner_id) {
 			throw new InternalErrorException('OZ_SESSION_DISTINCT_USER_CANT_ATTACH_USER', [
-				'session_id' => $this->id,
-				'user_id'    => $uid,
-				'_owner'     => [
+				'user_id'     => $uid,
+				'_session_id' => $this->id,
+				'_owner'      => [
 					'session_owner_id' => $session_owner_id,
 				],
 			]);
@@ -188,9 +185,9 @@ final class Session
 
 		if ($client_owner_id && $client_owner_id !== $uid) {
 			throw new InternalErrorException('OZ_SESSION_PRIVATE_CLIENT_API_KEY_USED_CANT_ATTACH_ANOTHER_USER', [
-				'session_id' => $this->id,
-				'user_id'    => $uid,
-				'_owner'     => [
+				'user_id'     => $uid,
+				'_session_id' => $this->id,
+				'_owner'      => [
 					'client_api_key'  => $session->getClientApiKey(),
 					'client_owner_id' => $client_owner_id,
 				],
@@ -460,7 +457,11 @@ final class Session
 					$this->gc();
 				}
 			} catch (Exception $e) {
-				throw new InternalErrorException('OZ_SESSION_UNABLE_TO_LOAD_WITH_TOKEN', ['session_token' => $token], $e);
+				throw new InternalErrorException(
+					'OZ_SESSION_UNABLE_TO_LOAD_WITH_TOKEN',
+					['session_token' => $token],
+					$e
+				);
 			}
 		}
 
@@ -560,9 +561,9 @@ final class Session
 		$samesite     = SettingsManager::get('oz.cookie', 'OZ_COOKIE_SAMESITE');
 
 		$context  = $this->context;
-		$secure   = ($context->getRequest()
-							 ->getUri()
-							 ->getScheme() === 'https' ? true : false);
+		$secure   = $context->getRequest()
+							->getUri()
+							->getScheme() === 'https';
 		$lifetime = 60 * 60;
 		$client   = $context->getClient();
 

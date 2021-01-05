@@ -11,6 +11,7 @@
 
 namespace OZONE\OZ\Core;
 
+use Exception;
 use OZONE\OZ\Exceptions\InvalidFormException;
 use OZONE\OZ\Exceptions\UnauthorizedActionException;
 
@@ -62,8 +63,12 @@ final class Assert
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws string
 	 */
-	public static function assertForm($form, array $required_fields, $error_msg = 'OZ_ERROR_INVALID_FORM', $error_data = null)
-	{
+	public static function assertForm(
+		$form,
+		array $required_fields,
+		$error_msg = 'OZ_ERROR_INVALID_FORM',
+		array $error_data = null
+	) {
 		if (empty($form) || !\is_array($form)) {
 			$safe = false;
 		} else {
@@ -96,6 +101,6 @@ final class Assert
 	 */
 	private static function isException($e)
 	{
-		return $e instanceof \Exception;
+		return $e instanceof Exception;
 	}
 }

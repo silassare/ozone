@@ -11,20 +11,19 @@
 
 namespace OZONE\OZ\Http;
 
+use Psr\Http\Message\MessageInterface;
+use Psr\Http\Message\StreamInterface;
 
-	use Psr\Http\Message\MessageInterface;
-	use Psr\Http\Message\StreamInterface;
-
-	/**
-	 * Abstract message (base class for Request and Response)
-	 *
-	 * This class represents a general HTTP message. It provides common properties and methods for
-	 * the HTTP request and response, as defined in the PSR-7 MessageInterface.
-	 *
-	 * @link https://github.com/php-fig/http-message/blob/master/src/MessageInterface.php
-	 * @see  \OZONE\OZ\Http\Request
-	 * @see  \OZONE\OZ\Http\Response
-	 */
+/**
+ * Abstract message (base class for Request and Response)
+ *
+ * This class represents a general HTTP message. It provides common properties and methods for
+ * the HTTP request and response, as defined in the PSR-7 MessageInterface.
+ *
+ * @link https://github.com/php-fig/http-message/blob/master/src/MessageInterface.php
+ * @see  \OZONE\OZ\Http\Request
+ * @see  \OZONE\OZ\Http\Response
+ */
 abstract class Message implements MessageInterface
 {
 	/**

@@ -47,6 +47,7 @@ final class ClientManager
 	 *
 	 * @param string $sid The session id
 	 *
+	 * @throws \Throwable
 	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 	 *
 	 * @return null|\OZONE\OZ\Db\OZClient
@@ -76,6 +77,7 @@ final class ClientManager
 	 * @param string $token The token
 	 *
 	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+	 * @throws \Throwable
 	 *
 	 * @return null|\OZONE\OZ\Db\OZClient
 	 */

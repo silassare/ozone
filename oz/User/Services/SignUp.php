@@ -11,7 +11,6 @@
 
 namespace OZONE\OZ\User\Services;
 
-use Exception;
 use OZONE\OZ\Core\Assert;
 use OZONE\OZ\Core\BaseService;
 use OZONE\OZ\Core\Context;
@@ -38,38 +37,34 @@ final class SignUp extends BaseService
 	/**
 	 * @param \OZONE\OZ\Core\Context $context
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 */
 	public function actionSignUp(Context $context)
 	{
-		try {
-			$params = $context->getRequest()
-							  ->getFormData();
+		$params = $context->getRequest()
+						  ->getFormData();
 
-			$this->phone_auth = new PhoneAuth($context, self::class, false);
+		$this->phone_auth = new PhoneAuth($context, self::class, false);
 
-			if (isset($params['step'])) {
-				$step = (int) ($params['step']);
+		if (isset($params['step'])) {
+			$step = (int) ($params['step']);
 
-				if ($step === 3) {
-					if ($this->phone_auth->isAuthenticated()) {
-						$params['cc2']   = $this->phone_auth->getAuthenticatedPhoneCC2();
-						$params['phone'] = $this->phone_auth->getAuthenticatedPhone();
-						$this->register($context, $params);
-					} else {
-						throw new ForbiddenException('OZ_PHONE_AUTH_NOT_VALIDATED');
-					}
+			if ($step === 3) {
+				if ($this->phone_auth->isAuthenticated()) {
+					$params['cc2']   = $this->phone_auth->getAuthenticatedPhoneCC2();
+					$params['phone'] = $this->phone_auth->getAuthenticatedPhone();
+					$this->register($context, $params);
 				} else {
-					$response = $this->phone_auth->authenticate($params)
-												 ->getResponse();
-					$this->getResponseHolder()
-						 ->setResponse($response);
+					throw new ForbiddenException('OZ_PHONE_AUTH_NOT_VALIDATED');
 				}
 			} else {
-				throw new InvalidFormException();
+				$response = $this->phone_auth->authenticate($params)
+											 ->getResponse();
+				$this->getResponseHolder()
+					 ->setResponse($response);
 			}
-		} catch (Exception $e) {
-			self::tryConvertException($e);
+		} else {
+			throw new InvalidFormException();
 		}
 	}
 
@@ -79,7 +74,7 @@ final class SignUp extends BaseService
 	 * @param \OZONE\OZ\Core\Context $context
 	 * @param array                  $request
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 */
 	private function register(Context $context, array $request)
 	{

@@ -68,7 +68,10 @@ final class TypePhone extends TypeString
 	 */
 	public function validate($value, $column_name, $table_name)
 	{
-		$success = true;
+		$debug = [
+			'phone' => $value,
+			'value' => $value,
+		];
 
 		if (\is_string($value)) {
 			$value = \str_replace(' ', '', $value);
@@ -77,16 +80,7 @@ final class TypePhone extends TypeString
 		try {
 			$value = parent::validate($value, $column_name, $table_name);
 		} catch (TypesInvalidValueException $e) {
-			$success = false;
-		}
-
-		$debug = [
-			'phone' => $value,
-			'value' => $value,
-		];
-
-		if (!$success) {
-			throw new TypesInvalidValueException('OZ_FIELD_PHONE_INVALID', $debug);
+			throw new TypesInvalidValueException('OZ_FIELD_PHONE_INVALID', $debug, $e);
 		}
 
 		if (!empty($value)) {

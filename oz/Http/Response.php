@@ -11,21 +11,22 @@
 
 namespace OZONE\OZ\Http;
 
+use InvalidArgumentException;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UriInterface;
+use RuntimeException;
 
-	use Psr\Http\Message\ResponseInterface;
-	use Psr\Http\Message\StreamInterface;
-	use Psr\Http\Message\UriInterface;
-
-	/**
-	 * Response
-	 *
-	 * This class represents an HTTP response. It manages
-	 * the response status, headers, and body
-	 * according to the PSR-7 standard.
-	 *
-	 * @link https://github.com/php-fig/http-message/blob/master/src/MessageInterface.php
-	 * @link https://github.com/php-fig/http-message/blob/master/src/ResponseInterface.php
-	 */
+/**
+ * Response
+ *
+ * This class represents an HTTP response. It manages
+ * the response status, headers, and body
+ * according to the PSR-7 standard.
+ *
+ * @link https://github.com/php-fig/http-message/blob/master/src/MessageInterface.php
+ * @link https://github.com/php-fig/http-message/blob/master/src/ResponseInterface.php
+ */
 class Response extends Message implements ResponseInterface
 {
 	/**
@@ -232,7 +233,7 @@ class Response extends Message implements ResponseInterface
 		$code = $this->filterStatus($code);
 
 		if (!\is_string($reasonPhrase) && !\method_exists($reasonPhrase, '__toString')) {
-			throw new \InvalidArgumentException('ReasonPhrase must be a string');
+			throw new InvalidArgumentException('ReasonPhrase must be a string');
 		}
 
 		$clone         = clone $this;
@@ -243,7 +244,7 @@ class Response extends Message implements ResponseInterface
 		}
 
 		if ($reasonPhrase === '') {
-			throw new \InvalidArgumentException('ReasonPhrase must be supplied for this code');
+			throw new InvalidArgumentException('ReasonPhrase must be supplied for this code');
 		}
 
 		$clone->reasonPhrase = $reasonPhrase;
@@ -279,7 +280,7 @@ class Response extends Message implements ResponseInterface
 
 		// Ensure that the json encoding passed successfully
 		if ($json === false) {
-			throw new \RuntimeException(\json_last_error_msg(), \json_last_error());
+			throw new RuntimeException(\json_last_error_msg(), \json_last_error());
 		}
 
 		$responseWithJson = $response->withHeader('Content-Type', 'application/json;charset=utf-8');
@@ -452,7 +453,7 @@ class Response extends Message implements ResponseInterface
 	protected function filterStatus($status)
 	{
 		if (!\is_int($status) || $status < 100 || $status > 599) {
-			throw new \InvalidArgumentException('Invalid HTTP status code');
+			throw new InvalidArgumentException('Invalid HTTP status code');
 		}
 
 		return $status;

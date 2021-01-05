@@ -11,12 +11,16 @@
 
 namespace OZONE\OZ\Core;
 
+use Exception;
 use Gobl\DBAL\Column;
 use Gobl\DBAL\Db;
 use Gobl\DBAL\QueryBuilder;
 use Gobl\ORM\ORM;
 use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\FS\FilesManager;
+use ReflectionClass;
+use ReflectionException;
+use RuntimeException;
 
 final class DbManager
 {
@@ -46,13 +50,17 @@ final class DbManager
 
 		try {
 			self::$db = Db::instantiate($rdbms_type, $db_config);
-		} catch (\Throwable $e) {
-			throw new InternalErrorException(\sprintf('Unable to init RDBMS defined in "oz.db": %s.', $rdbms_type), null, $e);
+		} catch (Exception $e) {
+			throw new InternalErrorException(
+				\sprintf('Unable to init RDBMS defined in "oz.db": %s.', $rdbms_type),
+				null,
+				$e
+			);
 		}
 
 		try {
 			self::register();
-		} catch (\Exception $e) {
+		} catch (Exception $e) {
 			throw new InternalErrorException('Unable to initialize database.', null, $e);
 		}
 	}
@@ -82,7 +90,9 @@ final class DbManager
 	{
 		$config                       = SettingsManager::get('oz.config');
 		$info['oz_db_namespace']      = 'OZONE\\OZ\\Db';
-		$info['project_db_namespace'] = (isset($config['OZ_PROJECT_NAMESPACE']) ? $config['OZ_PROJECT_NAMESPACE'] : 'NO_PROJECT') . '\\Db';
+		$info['project_db_namespace'] = (
+			isset($config['OZ_PROJECT_NAMESPACE']) ? $config['OZ_PROJECT_NAMESPACE'] : 'NO_PROJECT'
+		) . '\\Db';
 		$fm                           = new FilesManager(OZ_OZONE_DIR);
 		$info['oz_db_folder']         = $fm->cd('Db', true)
 										   ->getRoot();
@@ -118,15 +128,23 @@ final class DbManager
 
 		if ($crud_handler) {
 			try {
-				$rc = new \ReflectionClass($crud_handler);
+				$rc = new ReflectionClass($crud_handler);
 
 				if ($rc->isSubclassOf(CRUDHandler::class)) {
 					return new $crud_handler($context);
 				}
 
-				throw new \RuntimeException(\sprintf('CRUD handler "%s" should extends "%s".', $table_name, CRUDHandler::class));
-			} catch (\ReflectionException $e) {
-				throw new \RuntimeException(\sprintf('Unable to instantiate CRUD handler: "%s" -> "%s"', $table_name, $crud_handler), $e);
+				throw new RuntimeException(\sprintf(
+					'CRUD handler "%s" should extends "%s".',
+					$table_name,
+					CRUDHandler::class
+				));
+			} catch (ReflectionException $e) {
+				throw new RuntimeException(\sprintf(
+					'Unable to instantiate CRUD handler: "%s" -> "%s"',
+					$table_name,
+					$crud_handler
+				), null, $e);
 			}
 		}
 

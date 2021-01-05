@@ -42,19 +42,14 @@ final class TypeUserName extends TypeString
 	 */
 	public function validate($value, $column_name, $table_name)
 	{
-		$success = true;
-		$debug   = [
+		$debug = [
 			'value' => $value,
 		];
 
 		try {
 			$value = parent::validate($value, $column_name, $table_name);
 		} catch (TypesInvalidValueException $e) {
-			$success = false;
-		}
-
-		if (!$success) {
-			throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_INVALID', $debug);
+			throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_INVALID', $debug, $e);
 		}
 
 		if (!empty($value)) {

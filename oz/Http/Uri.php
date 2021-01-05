@@ -11,29 +11,29 @@
 
 namespace OZONE\OZ\Http;
 
-	use InvalidArgumentException;
-	use Psr\Http\Message\UriInterface;
+use InvalidArgumentException;
+use Psr\Http\Message\UriInterface;
 
-	/**
-	 * Value object representing a URI.
-	 *
-	 * This interface is meant to represent URIs according to RFC 3986 and to
-	 * provide methods for most common operations. Additional functionality for
-	 * working with URIs can be provided on top of the interface or externally.
-	 * Its primary use is for HTTP requests, but may also be used in other
-	 * contexts.
-	 *
-	 * Instances of this interface are considered immutable; all methods that
-	 * might change state MUST be implemented such that they retain the internal
-	 * state of the current instance and return an instance that contains the
-	 * changed state.
-	 *
-	 * Typically the Host header will be also be present in the request message.
-	 * For server-side requests, the scheme will typically be discoverable in the
-	 * server parameters.
-	 *
-	 * @link http://tools.ietf.org/html/rfc3986 (the URI specification)
-	 */
+/**
+ * Value object representing a URI.
+ *
+ * This interface is meant to represent URIs according to RFC 3986 and to
+ * provide methods for most common operations. Additional functionality for
+ * working with URIs can be provided on top of the interface or externally.
+ * Its primary use is for HTTP requests, but may also be used in other
+ * contexts.
+ *
+ * Instances of this interface are considered immutable; all methods that
+ * might change state MUST be implemented such that they retain the internal
+ * state of the current instance and return an instance that contains the
+ * changed state.
+ *
+ * Typically the Host header will be also be present in the request message.
+ * For server-side requests, the scheme will typically be discoverable in the
+ * server parameters.
+ *
+ * @link http://tools.ietf.org/html/rfc3986 (the URI specification)
+ */
 class Uri implements UriInterface
 {
 	/**
@@ -459,7 +459,7 @@ class Uri implements UriInterface
 		$clone->path = $this->filterPath($path);
 
 		// if the path is absolute, then clear basePath
-		if ($preserve_base_path === false && \substr($path, 0, 1) == '/') {
+		if ($preserve_base_path === false && \substr($path, 0, 1) === '/') {
 			$clone->basePath = '';
 		}
 
@@ -612,8 +612,8 @@ class Uri implements UriInterface
 	 *
 	 * @param string $scheme raw Uri scheme
 	 *
-	 * @throws \InvalidArgumentException if the Uri scheme is not a string
 	 * @throws \InvalidArgumentException if Uri scheme is not "", "https", or "http"
+	 * @throws \InvalidArgumentException if the Uri scheme is not a string
 	 *
 	 * @return string
 	 */

@@ -11,11 +11,13 @@
 
 namespace OZONE\OZ\Http;
 
-
+use Closure;
+use InvalidArgumentException;
 use OZONE\OZ\Core\SettingsManager;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
+use RuntimeException;
 
 /**
  * Request
@@ -148,14 +150,15 @@ class Request extends Message implements ServerRequestInterface
 		StreamInterface $body,
 		array $uploadedFiles = []
 	) {
-		$this->method        = $this->filterMethod($method);
-		$this->uri           = $uri;
-		$this->headers       = $headers;
-		$this->cookies       = $cookies;
-		$this->serverParams  = $serverParams;
-		$this->attributes    = new Collection();
-		$this->body          = $body;
-		$this->uploadedFiles = $uploadedFiles;
+		$this->method         = $this->filterMethod($method);
+		$this->originalMethod = $this->method;
+		$this->uri            = $uri;
+		$this->headers        = $headers;
+		$this->cookies        = $cookies;
+		$this->serverParams   = $serverParams;
+		$this->attributes     = new Collection();
+		$this->body           = $body;
+		$this->uploadedFiles  = $uploadedFiles;
 
 		if ($this->method === 'POST') {
 			$allowed = SettingsManager::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
@@ -163,15 +166,12 @@ class Request extends Message implements ServerRequestInterface
 			if ($allowed) {
 				$realMethodHeaderName = SettingsManager::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME');
 				$realMethodHeaderName = \strtolower(\str_replace('_', '-', $realMethodHeaderName));
-				$customMethod         = $this->getHeaderLine($realMethodHeaderName);
+				$realMethod           = $this->getHeaderLine($realMethodHeaderName);
 
-				if (!empty($customMethod)) {
-					$this->originalMethod = $this->method;
-					$this->method         = $this->filterMethod($customMethod);
+				if (!empty($realMethod)) {
+					$this->method = $this->filterMethod($realMethod);
 				}
 			}
-		} else {
-			$this->originalMethod = $this->method;
 		}
 
 		if (isset($serverParams['SERVER_PROTOCOL'])) {
@@ -229,7 +229,7 @@ class Request extends Message implements ServerRequestInterface
 		});
 
 		// if the request had an invalid method, we can throw it now
-		if (isset($e) && $e instanceof \InvalidArgumentException) {
+		if (isset($e) && $e instanceof InvalidArgumentException) {
 			throw $e;
 		}
 	}
@@ -246,7 +246,7 @@ class Request extends Message implements ServerRequestInterface
 	 */
 	public function registerMediaTypeParser($mediaType, callable $callable)
 	{
-		if ($callable instanceof \Closure) {
+		if ($callable instanceof Closure) {
 			$callable = $callable->bindTo($this);
 		}
 		$this->bodyParsers[(string) $mediaType] = $callable;
@@ -319,7 +319,7 @@ class Request extends Message implements ServerRequestInterface
 	public function withParsedBody($data)
 	{
 		if (null !== $data && !\is_object($data) && !\is_array($data)) {
-			throw new \InvalidArgumentException('Parsed body value must be an array, an object, or null');
+			throw new InvalidArgumentException('Parsed body value must be an array, an object, or null');
 		}
 
 		$clone             = clone $this;
@@ -417,7 +417,7 @@ class Request extends Message implements ServerRequestInterface
 			$parsed = $this->bodyParsers[$mediaType]($body);
 
 			if (null !== $parsed && !\is_object($parsed) && !\is_array($parsed)) {
-				throw new \RuntimeException(
+				throw new RuntimeException(
 					'Request body media type parser return value must be an array, an object, or null'
 				);
 			}
@@ -524,7 +524,7 @@ class Request extends Message implements ServerRequestInterface
 	public function withRequestTarget($requestTarget)
 	{
 		if (\preg_match('#\s#', $requestTarget)) {
-			throw new \InvalidArgumentException(
+			throw new InvalidArgumentException(
 				'Invalid request target provided; must be a string and cannot contain whitespace'
 			);
 		}
@@ -1173,7 +1173,7 @@ class Request extends Message implements ServerRequestInterface
 	protected function filterMethod($method)
 	{
 		if (!\is_string($method)) {
-			throw new \InvalidArgumentException(\sprintf(
+			throw new InvalidArgumentException(\sprintf(
 				'Unsupported HTTP method; must be a string, received %s',
 				(\is_object($method) ? \get_class($method) : \gettype($method))
 			));
@@ -1182,7 +1182,7 @@ class Request extends Message implements ServerRequestInterface
 		$method = \strtoupper($method);
 
 		if (!\array_key_exists($method, $this->validMethods)) {
-			throw new \InvalidArgumentException(\sprintf("Invalid HTTP method '%s'", $method));
+			throw new InvalidArgumentException(\sprintf("Invalid HTTP method '%s'", $method));
 		}
 
 		return $method;

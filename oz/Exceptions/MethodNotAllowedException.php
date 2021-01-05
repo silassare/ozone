@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\Exceptions;
 
-use Throwable;
-
 /**
  * Class MethodNotAllowedException
  */
@@ -25,8 +23,13 @@ class MethodNotAllowedException extends BaseException
 	 * @param null|array      $data     additional exception data
 	 * @param null|\Throwable $previous previous throwable used for the exception chaining
 	 */
-	public function __construct($message = null, array $data = null, Throwable $previous = null)
+	public function __construct($message = null, array $data = null, $previous = null)
 	{
-		parent::__construct((empty($message) ? 'OZ_ERROR_METHOD_NOT_ALLOWED' : $message), BaseException::METHOD_NOT_ALLOWED, $data, $previous);
+		parent::__construct(
+			(empty($message) ? 'OZ_ERROR_METHOD_NOT_ALLOWED' : $message),
+			BaseException::METHOD_NOT_ALLOWED,
+			$data,
+			$previous
+		);
 	}
 }

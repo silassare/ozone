@@ -160,7 +160,13 @@ final class SettingsManager
 		self::checkSettingGroupName($setting_group_name);
 
 		if (\array_key_exists($setting_group_name, self::$settings_blacklist)) {
-			\trigger_error(\sprintf('Runtime settings edit is disabled for "%s". Try manually.', $setting_group_name), \E_USER_ERROR);
+			\trigger_error(
+				\sprintf(
+					'Runtime settings edit is disabled for "%s". Try manually.',
+					$setting_group_name
+				),
+				\E_USER_ERROR
+			);
 		}
 
 		$setting_file = OZ_APP_DIR . 'oz_settings' . DS . $setting_group_name . '.php';
@@ -174,7 +180,7 @@ final class SettingsManager
 		try {
 			$fm = new FilesManager();
 			$fm->cd($parts['dirname'], true)
-			   ->wf($parts['basename'], TemplatesUtils::compute('oz:gen/settings.info.otpl', $inject));
+			   ->wf($parts['basename'], TemplatesUtils::compute('oz://gen/settings.info.otpl', $inject));
 		} catch (Exception $e) {
 			throw new InternalErrorException('Unable to save settings.', null, $e);
 		}
@@ -241,7 +247,12 @@ final class SettingsManager
 						$result = include $setting_file;
 
 						if (!\is_array($result)) {
-							\trigger_error(\sprintf('Settings "%s" returned from "%s" should be of type "array" not "%s"', $setting_group_name, $setting_file, \gettype($result)), \E_USER_ERROR);
+							\trigger_error(\sprintf(
+								'Settings "%s" returned from "%s" should be of type "array" not "%s"',
+								$setting_group_name,
+								$setting_file,
+								\gettype($result)
+							), \E_USER_ERROR);
 						}
 
 						self::$as_loaded[$setting_file] = $result;
@@ -298,14 +309,16 @@ final class SettingsManager
 			$max_length = $align ? \max(\array_map('strlen', \array_map('trim', \array_keys($data)))) + 2 : 0;
 
 			foreach ($data as $key => $value) {
-				if (0 === \strpos($key, ':oz:comment:') && \is_string($value)) {
+				if (0 === \strpos($key, '::comment::') && \is_string($value)) {
 					$start   = "\t";
 					$comment = $start . '// ';
 					$comment .= \wordwrap($value, 75, \PHP_EOL . $comment);
 					$r[]     = $comment;
 				} else {
 					$key = self::export($key);
-					$r[] = $start . $indent_char . ($indexed ? '' : \str_pad($key, $max_length) . ' => ') . self::export($value, $indent + 1, $indent_char, $align);
+					$r[] = $start . $indent_char
+						   . ($indexed ? '' : \str_pad($key, $max_length) . ' => ')
+						   . self::export($value, $indent + 1, $indent_char, $align);
 				}
 			}
 

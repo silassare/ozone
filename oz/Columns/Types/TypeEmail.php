@@ -64,21 +64,15 @@ final class TypeEmail extends TypeString
 	 */
 	public function validate($value, $column_name, $table_name)
 	{
-		$success = true;
-
-		try {
-			$value = parent::validate($value, $column_name, $table_name);
-		} catch (TypesInvalidValueException $e) {
-			$success = false;
-		}
-
 		$debug = [
 			'email' => $value,
 			'value' => $value,
 		];
 
-		if (!$success) {
-			throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug);
+		try {
+			$value = parent::validate($value, $column_name, $table_name);
+		} catch (TypesInvalidValueException $e) {
+			throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug, $e);
 		}
 
 		if (!empty($value)) {

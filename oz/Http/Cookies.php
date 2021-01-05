@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\Http;
 
-
-
 class Cookies
 {
 	/**

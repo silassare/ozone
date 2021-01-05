@@ -52,8 +52,6 @@ final class TypeCC2 extends TypeString
 	 */
 	public function validate($value, $column_name, $table_name)
 	{
-		$success = true;
-
 		$debug = [
 			'value' => $value,
 		];
@@ -61,15 +59,12 @@ final class TypeCC2 extends TypeString
 		try {
 			$value = parent::validate($value, $column_name, $table_name);
 		} catch (TypesInvalidValueException $e) {
-			$success = false;
-		}
-
-		if (!$success) {
-			throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug);
+			throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug, $e);
 		}
 
 		if (!empty($value)) {
-			$value = \strtoupper($value); //<-- important
+			$value = \strtoupper($value);
+
 			if ($this->authorized) {
 				if (!UsersManager::authorizedCountry($value)) {
 					throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_NOT_ALLOWED', $debug);

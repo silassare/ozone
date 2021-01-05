@@ -24,8 +24,8 @@ use OZONE\OZ\Web\WebViewBase;
 final class SessionShareView extends WebViewBase
 {
 	/**
-	 * @throws \OZONE\OZ\Exceptions\BadRequestException
 	 * @throws \Exception
+	 * @throws \OZONE\OZ\Exceptions\BadRequestException
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */

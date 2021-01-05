@@ -40,7 +40,7 @@ final class AdminUtils
 								->find(1)
 								->count();
 
-				self::$caches[$uid] = ($count === 1 ? true : false);
+				self::$caches[$uid] = ($count === 1);
 			} catch (Exception $e) {
 				throw new InternalErrorException(null, null, $e);
 			}

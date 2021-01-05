@@ -11,8 +11,6 @@
 
 namespace OZONE\OZ\Http;
 
-
-
 class Collection implements \ArrayAccess, \Countable, \IteratorAggregate
 {
 	/**

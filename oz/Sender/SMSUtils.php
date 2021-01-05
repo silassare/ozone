@@ -16,7 +16,7 @@ use OZONE\OZ\Loader\ClassLoader;
 
 final class SMSUtils
 {
-	const SMS_TYPE_AUTH_CODE      = 1;
+	const SMS_TYPE_AUTH_CODE = 1;
 
 	const SMS_TYPE_PASS_AUTH_CODE = 2;
 

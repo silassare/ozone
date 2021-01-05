@@ -11,6 +11,7 @@
 
 namespace OZONE\OZ\Columns\Types;
 
+use Exception;
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\TypeString;
@@ -19,22 +20,23 @@ use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\FS\FilesUploadHandler;
 use OZONE\OZ\FS\FilesUtils;
 use OZONE\OZ\Http\UploadedFile;
+use Throwable;
 
 class TypeFile extends TypeString
 {
-	private $multiple               = false;
+	private $multiple = false;
 
-	private $mime_types             = [];
+	private $mime_types = [];
 
-	private $file_label             = 'OZ_FILE_UPLOAD_LABEL';
+	private $file_label = 'OZ_FILE_UPLOAD_LABEL';
 
-	private $file_min_count         = 1;
+	private $file_min_count = 1;
 
-	private $file_max_count         = 1;
+	private $file_max_count = 1;
 
-	private $file_min_size          = 1;// size in bytes per file
+	private $file_min_size = 1;// size in bytes per file
 
-	private $file_max_size          = \PHP_INT_MAX;// size in bytes per file
+	private $file_max_size = \PHP_INT_MAX;// size in bytes per file
 
 	private $file_upload_total_size = \PHP_INT_MAX;// size in bytes
 
@@ -180,11 +182,7 @@ class TypeFile extends TypeString
 		$uid = '1';
 
 		if ($this->isMultiple()) {
-			if (!\is_array($value)) {
-				throw new TypesInvalidValueException('OZ_FILE_MULTIPLE_FILE_REQUIRED');
-			}
-
-			$uploaded_files = $value;
+			$uploaded_files = !\is_array($value) ? [$value] : $value;
 			$total          = \count($uploaded_files);
 
 			if (!$this->checkFileCount($total)) {
@@ -299,7 +297,9 @@ class TypeFile extends TypeString
 
 				$data[] = $f->getId() . '_' . $f->getKey();
 			}
-		} catch (\Throwable $e) {
+		} catch (Exception $e) {
+			// php 5.6 and earlier
+
 			$db->rollBack();
 
 			foreach ($file_list as $f) {
@@ -307,6 +307,14 @@ class TypeFile extends TypeString
 			}
 
 			throw new InternalErrorException('Unable to save uploaded files to database.', $debug, $e);
+		} catch (Throwable $t) {
+			$db->rollBack();
+
+			foreach ($file_list as $f) {
+				$fuh->safeDelete($f);
+			}
+
+			throw new InternalErrorException('Unable to save uploaded files to database.', $debug, $t);
 		}
 
 		$db->commit();

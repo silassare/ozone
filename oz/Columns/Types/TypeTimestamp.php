@@ -68,7 +68,7 @@ final class TypeTimestamp extends TypeBigint
 		try {
 			$value = parent::validate($value, $column_name, $table_name);
 		} catch (TypesInvalidValueException $e) {
-			throw new TypesInvalidValueException('OZ_TIMESTAMP_IS_INVALID', $debug);
+			throw new TypesInvalidValueException('OZ_TIMESTAMP_IS_INVALID', $debug, $e);
 		}
 
 		return $value;

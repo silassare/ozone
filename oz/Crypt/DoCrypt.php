@@ -30,7 +30,7 @@ class DoCrypt implements CryptInterface
 	}
 
 	/**
-	 *@inheritdoc
+	 * @inheritdoc
 	 */
 	public function isHash($pass)
 	{
@@ -40,7 +40,7 @@ class DoCrypt implements CryptInterface
 	}
 
 	/**
-	 *@inheritdoc
+	 * @inheritdoc
 	 */
 	public function passHash($pass)
 	{

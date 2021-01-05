@@ -11,14 +11,15 @@
 
 namespace OZONE\OZ\Http;
 
+use InvalidArgumentException;
+use Psr\Http\Message\StreamInterface;
+use RuntimeException;
 
-	use Psr\Http\Message\StreamInterface;
-
-	/**
-	 * Represents a data stream as defined in PSR-7.
-	 *
-	 * @link https://github.com/php-fig/http-message/blob/master/src/StreamInterface.php
-	 */
+/**
+ * Represents a data stream as defined in PSR-7.
+ *
+ * @link https://github.com/php-fig/http-message/blob/master/src/StreamInterface.php
+ */
 class Stream implements StreamInterface
 {
 	/**
@@ -128,15 +129,15 @@ class Stream implements StreamInterface
 	 * If the stream is not seekable, this method will raise an exception;
 	 * otherwise, it will perform a seek(0).
 	 *
-	 * @see  seek()
-	 * @link http://www.php.net/manual/en/function.fseek.php
-	 *
 	 * @throws \RuntimeException on failure
+	 *
+	 * @link http://www.php.net/manual/en/function.fseek.php
+	 * @see  seek()
 	 */
 	public function rewind()
 	{
 		if (!$this->isSeekable() || \rewind($this->stream) === false) {
-			throw new \RuntimeException('Could not rewind stream');
+			throw new RuntimeException('Could not rewind stream');
 		}
 	}
 
@@ -214,7 +215,7 @@ class Stream implements StreamInterface
 	public function getContents()
 	{
 		if (!$this->isReadable() || ($contents = \stream_get_contents($this->stream)) === false) {
-			throw new \RuntimeException('Could not get contents of stream');
+			throw new RuntimeException('Could not get contents of stream');
 		}
 
 		return $contents;
@@ -291,7 +292,7 @@ class Stream implements StreamInterface
 	public function tell()
 	{
 		if (!$this->isAttached() || ($position = \ftell($this->stream)) === false || $this->isPipe()) {
-			throw new \RuntimeException('Could not get the position of the pointer in stream');
+			throw new RuntimeException('Could not get the position of the pointer in stream');
 		}
 
 		return $position;
@@ -325,7 +326,7 @@ class Stream implements StreamInterface
 	{
 		// Note that fseek returns 0 on success!
 		if (!$this->isSeekable() || \fseek($this->stream, $offset, $whence) === -1) {
-			throw new \RuntimeException('Could not seek in stream');
+			throw new RuntimeException('Could not seek in stream');
 		}
 	}
 
@@ -344,7 +345,7 @@ class Stream implements StreamInterface
 	public function read($length)
 	{
 		if (!$this->isReadable() || ($data = \fread($this->stream, $length)) === false) {
-			throw new \RuntimeException('Could not read from stream');
+			throw new RuntimeException('Could not read from stream');
 		}
 
 		return $data;
@@ -362,7 +363,7 @@ class Stream implements StreamInterface
 	public function write($string)
 	{
 		if (!$this->isWritable() || ($written = \fwrite($this->stream, $string)) === false) {
-			throw new \RuntimeException('Could not write to stream');
+			throw new RuntimeException('Could not write to stream');
 		}
 
 		// resets size so that it will be recalculated on next call to getSize()
@@ -409,7 +410,7 @@ class Stream implements StreamInterface
 	protected function attach($newStream)
 	{
 		if (\is_resource($newStream) === false) {
-			throw new \InvalidArgumentException(__METHOD__ . ' argument must be a valid PHP resource');
+			throw new InvalidArgumentException(__METHOD__ . ' argument must be a valid PHP resource');
 		}
 
 		if ($this->isAttached() === true) {
@@ -456,7 +457,7 @@ class Stream implements StreamInterface
 			$this->rewind();
 
 			return $this->getContents();
-		} catch (\RuntimeException $e) {
+		} catch (RuntimeException $e) {
 			return '';
 		}
 	}

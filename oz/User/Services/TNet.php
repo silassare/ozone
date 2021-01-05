@@ -28,11 +28,11 @@ final class TNet extends BaseService
 	 */
 	public function actionTNet(Context $context)
 	{
-		$data          = [];
-		$users_manager = $context->getUsersManager();
+		$data = [];
+		$um   = $context->getUsersManager();
 
-		if ($users_manager->userVerified()) {
-			$user_obj              = $users_manager->getCurrentUserObject();
+		if ($um->userVerified()) {
+			$user_obj              = $um->getCurrentUserObject();
 			$data['ok']            = 1;
 			$data['_current_user'] = $user_obj->asArray();
 		} else {

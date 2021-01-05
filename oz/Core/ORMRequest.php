@@ -26,6 +26,8 @@ final class ORMRequest extends ORMRequestBase
 	 *
 	 * @param \OZONE\OZ\Core\Context $context
 	 * @param array                  $form
+	 *
+	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 	 */
 	public function __construct(Context $context, array $form)
 	{
@@ -53,7 +55,9 @@ final class ORMRequest extends ORMRequestBase
 	/**
 	 * @param \Gobl\DBAL\Table $table
 	 *
-	 * @return \OZONE\OZ\Core\ORMRequest
+	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+	 *
+	 * @return \Gobl\ORM\ORMRequestBase|\OZONE\OZ\Core\ORMRequest
 	 */
 	public function createScopedInstance(Table $table)
 	{
