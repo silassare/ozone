@@ -23,7 +23,7 @@ use OZONE\OZ\Sender\SMSUtils;
 
 final class PhoneAuth
 {
-	const STEP_START    = 1;
+	const STEP_START = 1;
 
 	const STEP_VALIDATE = 2;
 
@@ -209,8 +209,7 @@ final class PhoneAuth
 		$cc2   = $form['cc2'];
 		$phone = $form['phone'];
 
-		$auth_obj     = new Authenticator($phone);
-		$started_once = false;
+		$auth_obj = new Authenticator($phone);
 
 		if (!empty($stored_label)) {
 			$auth_obj->setLabel($stored_label);

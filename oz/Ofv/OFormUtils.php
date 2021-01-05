@@ -11,6 +11,8 @@
 
 namespace OZONE\OZ\Ofv;
 
+use Exception;
+
 final class OFormUtils
 {
 	/**
@@ -43,7 +45,7 @@ final class OFormUtils
 	 */
 	public static function loadValidators($dir, $silent_mode = false)
 	{
-		if (\DIRECTORY_SEPARATOR == '\\') {
+		if (\DIRECTORY_SEPARATOR === '\\') {
 			$dir = \strtr($dir, '/', '\\');
 		}
 
@@ -62,7 +64,7 @@ final class OFormUtils
 
 			\closedir($res);
 		} elseif (!$silent_mode) {
-			throw new \Exception("OFormUtils: $dir not found or is not a valid directory.");
+			throw new Exception("OFormUtils: $dir not found or is not a valid directory.");
 		}
 	}
 
@@ -183,6 +185,6 @@ final class OFormUtils
 
 	private static function prefixZero($x)
 	{
-		return  (int) $x < 10 ? '0' . $x : $x;
+		return (int) $x < 10 ? '0' . $x : $x;
 	}
 }

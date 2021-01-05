@@ -11,7 +11,6 @@
 
 namespace OZONE\OZ\Loader;
 
-
 /**
  * OZone class loader comply with PSR-4.
  * Used to load:
