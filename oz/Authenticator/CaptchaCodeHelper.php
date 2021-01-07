@@ -60,7 +60,7 @@ final class CaptchaCodeHelper
 		$generated = $auth->generate()
 						  ->getGenerated();
 
-		$captcha_key = \md5($auth->getLabel() . $auth->getForValue() . \microtime());
+		$captcha_key = \md5($auth->getRef() . \microtime());
 
 		$f_name  = SettingsManager::get('oz.files', 'OZ_CAPTCHA_FILE_NAME');
 		$img_src = \str_replace(['{oz_captcha_key}'], [$captcha_key], $f_name);

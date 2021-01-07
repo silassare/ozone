@@ -31,7 +31,7 @@ final class Authenticator
 	/**
 	 * @var string
 	 */
-	private $for_value;
+	private $for_hash;
 
 	/**
 	 * Contains generated authentication code, token ...
@@ -64,7 +64,8 @@ final class Authenticator
 	 */
 	public function __construct($for_value, array $options = [])
 	{
-		$this->label = Hasher::genRandomHash(32);
+		$this->label    = Hasher::genRandomHash(32);
+		$this->for_hash = Hasher::hashIt($for_value);
 
 		if (isset($options['auth_code_length'])) {
 			$this->auth_code_length = (int) $options['auth_code_length'];
@@ -73,8 +74,6 @@ final class Authenticator
 		if (isset($options['auth_code_alpha_num'])) {
 			$this->auth_code_alpha_num = (bool) $options['auth_code_alpha_num'];
 		}
-
-		$this->for_value = $for_value;
 	}
 
 	/**
@@ -122,7 +121,7 @@ final class Authenticator
 
 		$auth = new OZAuth();
 		$auth->setLabel($this->label)
-			 ->setFor($this->for_value)
+			 ->setFor($this->for_hash)
 			 ->setCode($code)
 			 ->setToken($token)
 			 ->setTryMax($try_max)
@@ -132,11 +131,11 @@ final class Authenticator
 			 ->save();
 
 		$this->generated = [
-			'auth_for_value' => $this->for_value,
-			'auth_label'     => $this->label,
-			'auth_expire'    => $expire,
-			'auth_code'      => $code,
-			'auth_token'     => $token,
+			'auth_for'    => $this->for_hash,
+			'auth_label'  => $this->label,
+			'auth_expire' => $expire,
+			'auth_code'   => $code,
+			'auth_token'  => $token,
 		];
 
 		return $this;
@@ -194,9 +193,9 @@ final class Authenticator
 	 *
 	 * @return string
 	 */
-	public function getForValue()
+	public function getRef()
 	{
-		return $this->for_value;
+		return $this->label . $this->for_hash;
 	}
 
 	/**
@@ -293,7 +292,7 @@ final class Authenticator
 		$auth = new OZAuthenticatorQuery();
 
 		return $auth->filterByLabel($this->label)
-					->filterByFor($this->for_value)
+					->filterByFor($this->for_hash)
 					->delete()
 					->execute();
 	}
@@ -320,7 +319,7 @@ final class Authenticator
 		if (!$this->auth_object) {
 			$auth_table = new OZAuthenticatorQuery();
 			$result     = $auth_table->filterByLabel($this->label)
-									 ->filterByFor($this->for_value)
+									 ->filterByFor($this->for_hash)
 									 ->find(1);
 
 			$this->auth_object = $result->fetchClass();

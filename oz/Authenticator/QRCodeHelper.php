@@ -34,9 +34,7 @@ final class QRCodeHelper
 	{
 		$generated   = $auth->generate(1)
 							->getGenerated();
-		$label       = $auth->getLabel();
-		$for_value   = $auth->getForValue();
-		$qr_code_key = \md5($label . $for_value . \microtime());
+		$qr_code_key = \md5($auth->getRef() . \microtime());
 
 		$f_name      = SettingsManager::get('oz.files', 'OZ_QR_CODE_FILE_NAME');
 		$qr_code_src = \str_replace(['{oz_qr_code_key}'], [$qr_code_key], $f_name);
