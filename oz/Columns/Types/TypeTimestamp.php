@@ -65,6 +65,18 @@ final class TypeTimestamp extends TypeBigint
 			return \time();
 		}
 
+		if (\is_string($value)) {
+			if (\preg_match('~^[0-9]+$~', $value)) {
+				$value = (int) $value;
+			} else {
+				$converted = \strtotime($value);
+
+				if (false !== $converted) {
+					$value = $converted;
+				}
+			}
+		}
+
 		try {
 			$value = parent::validate($value, $column_name, $table_name);
 		} catch (TypesInvalidValueException $e) {
