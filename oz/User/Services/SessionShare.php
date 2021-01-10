@@ -83,14 +83,14 @@ final class SessionShare extends BaseService
 
 		if (
 			$session && $user = $uq->filterById($uid)
-									->find(1)
-									->fetchClass()
+								   ->find(1)
+								   ->fetchClass()
 		) {
 			$decoded = Session::decode($session->getData());
 
 			if (\is_array($decoded)) {
 				$data_store = new SessionDataStore($decoded);
-				$verified   = $data_store->get('ozone_user:verified');
+				$verified   = $data_store->get('ozone.user.verified');
 			}
 		}
 
@@ -112,9 +112,9 @@ final class SessionShare extends BaseService
 	public static function registerRoutes(Router $router)
 	{
 		$router->get('/oz-session-share', function (RouteInfo $r) {
-			$context  = $r->getContext();
-			$token  = $context->getRequest()
-								->getFormField('token', null);
+			$context = $r->getContext();
+			$token   = $context->getRequest()
+							   ->getFormField('token', null);
 
 			$instance = new static($context);
 

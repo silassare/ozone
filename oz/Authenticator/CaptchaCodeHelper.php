@@ -66,7 +66,7 @@ final class CaptchaCodeHelper
 		$img_src = \str_replace(['{oz_captcha_key}'], [$captcha_key], $f_name);
 
 		$context->getSession()
-				->set('captcha_cfg:' . $captcha_key, $generated['auth_code']);
+				->set('captcha_cfg.' . $captcha_key, $generated['auth_code']);
 
 		return ['captcha_src' => $img_src];
 	}
@@ -88,20 +88,21 @@ final class CaptchaCodeHelper
 		$session  = $context->getSession();
 
 		if (\is_string($captcha_key)) {
-			$code = $session->get('captcha_cfg:' . $captcha_key);
+			$code = $session->get('captcha_cfg.' . $captcha_key);
 		}
 
 		if (empty($code)) {
 			throw new NotFoundException();
 		}
 
-		$session->remove('captcha_cfg:' . $captcha_key);
+		$session->remove('captcha_cfg.' . $captcha_key);
 
 		$CAPTCHA_DIR = OZ_OZONE_DIR . 'oz_assets' . DS . 'captcha' . DS;
 
 		\srand(Hasher::genSeed());
 
-		$background = $CAPTCHA_DIR . self::$default_config['backgrounds'][\rand(0, \count(self::$default_config['backgrounds']) - 1)];
+		$rnd        = \rand(0, \count(self::$default_config['backgrounds']) - 1);
+		$background = $CAPTCHA_DIR . self::$default_config['backgrounds'][$rnd];
 
 		$captcha = \imagecreatefrompng($background);
 
@@ -111,7 +112,10 @@ final class CaptchaCodeHelper
 		$color = self::hex2rgb(self::$default_config['color']);
 		$color = \imagecolorallocate($captcha, $color['r'], $color['g'], $color['b']);
 
-		$angle = \rand(self::$default_config['angle_min'], self::$default_config['angle_max']) * (\rand(0, 1) == 1 ? -1 : 1);
+		$angle = \rand(
+			self::$default_config['angle_min'],
+			self::$default_config['angle_max']
+		) * (\rand(0, 1) == 1 ? -1 : 1);
 
 		$font = $CAPTCHA_DIR . self::$default_config['fonts'][\rand(0, \count(self::$default_config['fonts']) - 1)];
 
@@ -130,7 +134,16 @@ final class CaptchaCodeHelper
 		if (self::$default_config['shadow']) {
 			$shadow_color = self::hex2rgb(self::$default_config['shadow_color']);
 			$shadow_color = \imagecolorallocate($captcha, $shadow_color['r'], $shadow_color['g'], $shadow_color['b']);
-			\imagettftext($captcha, $font_size, $angle, $text_pos_x + self::$default_config['shadow_offset_x'], $text_pos_y + self::$default_config['shadow_offset_y'], $shadow_color, $font, $code);
+			\imagettftext(
+				$captcha,
+				$font_size,
+				$angle,
+				$text_pos_x + self::$default_config['shadow_offset_x'],
+				$text_pos_y + self::$default_config['shadow_offset_y'],
+				$shadow_color,
+				$font,
+				$code
+			);
 		}
 
 		\imagettftext($captcha, $font_size, $angle, $text_pos_x, $text_pos_y, $color, $font, $code);

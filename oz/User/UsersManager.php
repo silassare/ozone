@@ -65,7 +65,7 @@ final class UsersManager
 	public function userVerified()
 	{
 		$verified = $this->context->getSession()
-								  ->get('ozone_user:verified');
+								  ->get('ozone.user.verified');
 
 		return $verified === true;
 	}
@@ -132,7 +132,7 @@ final class UsersManager
 		$this->assertUserVerified();
 
 		return $this->context->getSession()
-							 ->get('ozone_user:id');
+							 ->get('ozone.user.id');
 	}
 
 	/**
@@ -147,7 +147,7 @@ final class UsersManager
 		$this->assertUserVerified();
 
 		return $this->context->getSession()
-							 ->get('ozone_user:token');
+							 ->get('ozone.user.token');
 	}
 
 	/**
@@ -162,7 +162,7 @@ final class UsersManager
 		$this->assertUserVerified();
 
 		$uid = $this->context->getSession()
-							 ->get('ozone_user:id');
+							 ->get('ozone.user.id');
 
 		return self::getUserObject($uid);
 	}
@@ -172,7 +172,7 @@ final class UsersManager
 	 *
 	 * @param \OZONE\OZ\Db\OZUser $user the user object
 	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+	 * @throws \Throwable
 	 *
 	 * @return string the login token
 	 */
@@ -184,7 +184,7 @@ final class UsersManager
 		}
 
 		$session     = $this->context->getSession();
-		$current_uid = $session->get('ozone_user:id', null);
+		$current_uid = $session->get('ozone.user.id', null);
 		$saved_data  = [];
 
 		if (!empty($current_uid)) {
@@ -208,12 +208,12 @@ final class UsersManager
 			throw new InternalErrorException('OZ_USER_LOG_ON_FAIL', null, $e);
 		}
 
-		$session->set('ozone_user:id', $user->getId())
-				->set('ozone_user:verified', true)
-				->set('ozone_user:token', $token);
+		$session->set('ozone.user.id', $user->getId())
+				->set('ozone.user.verified', true)
+				->set('ozone.user.token', $token);
 
 		OZone::getEventManager()
-			 ->trigger('OZ_EVENT:USER_LOGIN', $user, ['token' => $token]);
+			 ->trigger('OZ_EVENT_USER_LOGIN', $user, ['token' => $token]);
 
 		return $token;
 	}
@@ -234,13 +234,13 @@ final class UsersManager
 				$session->restart();
 
 				// may be useful
-				$session->set('ozone_user:id', $current_user->getId());
+				$session->set('ozone.user.id', $current_user->getId());
 			} catch (Exception $e) {
 				throw new InternalErrorException('OZ_USER_LOG_OUT_FAIL', null, $e);
 			}
 
 			OZone::getEventManager()
-				 ->trigger('OZ_EVENT:USER_LOGOUT', $current_user);
+				 ->trigger('OZ_EVENT_USER_LOGOUT', $current_user);
 		}
 	}
 
@@ -251,9 +251,7 @@ final class UsersManager
 	 * The user right will be used every time the api key of the client is used
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+	 * @throws \Throwable
 	 *
 	 * @return \OZONE\OZ\Db\OZUser the user object or error string
 	 */
@@ -289,7 +287,7 @@ final class UsersManager
 	 * @param string $phone the phone number
 	 * @param string $pass  the password
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 *
 	 * @return \OZONE\OZ\Db\OZUser|string the user object or error string
 	 */
@@ -330,7 +328,7 @@ final class UsersManager
 	 * @param string $email the email address
 	 * @param string $pass  the password
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 *
 	 * @return \OZONE\OZ\Db\OZUser|string the user object or error string
 	 */
@@ -430,10 +428,10 @@ final class UsersManager
 
 			if (\is_array($decoded)) {
 				$data_store = new SessionDataStore($decoded);
-				$verified   = $data_store->get('ozone_user:verified');
+				$verified   = $data_store->get('ozone.user.verified');
 
 				if ($verified) {
-					$new_data = $data_store->remove('ozone_user:verified')
+					$new_data = $data_store->remove('ozone.user.verified')
 										   ->getStoreData();
 					$session->setData(Session::encode($new_data))
 							->save();
@@ -516,9 +514,9 @@ final class UsersManager
 	 *
 	 * @param string $email the email address
 	 *
+	 * @throws \Exception
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Exception
 	 *
 	 * @return null|\OZONE\OZ\Db\OZUser
 	 */
@@ -536,9 +534,9 @@ final class UsersManager
 	 *
 	 * @param string $cc2 the country code 2
 	 *
+	 * @throws \Exception
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Exception
 	 *
 	 * @return null|\OZONE\OZ\Db\OZCountry
 	 */

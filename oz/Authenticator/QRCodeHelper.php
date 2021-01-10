@@ -40,7 +40,7 @@ final class QRCodeHelper
 		$qr_code_src = \str_replace(['{oz_qr_code_key}'], [$qr_code_key], $f_name);
 
 		$context->getSession()
-				->set('qr_code_cfg:' . $qr_code_key, $generated);
+				->set('qr_code_cfg.' . $qr_code_key, $generated);
 
 		return ['qr_code_src' => $qr_code_src, 'qr_code_key' => $qr_code_key];
 	}
@@ -64,7 +64,7 @@ final class QRCodeHelper
 
 		if (\is_string($qr_code_key)) {
 			$data = $context->getSession()
-							->get('qr_code_cfg:' . $qr_code_key);
+							->get('qr_code_cfg.' . $qr_code_key);
 		}
 
 		if (empty($data)) {
@@ -78,7 +78,7 @@ final class QRCodeHelper
 			"auth_label"     => $data['auth_label'],
 			"auth_expire"    => $data['auth_expire'],
 			"auth_token"     => $data['auth_token'],
-			"auth_for_value" => $data['auth_for_value']
+			"auth_for" => $data['auth_for']
 		]);*/
 
 		// \QRcode::png($content, 'php://output', QR_ECLEVEL_H, 20);
@@ -100,7 +100,7 @@ final class QRCodeHelper
 		if (\is_array($list)) {
 			foreach ($list as $key => $value) {
 				if ($value['auth_expire'] <= $now) {
-					$session->remove('qr_code_cfg:' . $key);
+					$session->remove('qr_code_cfg.' . $key);
 				}
 			}
 		}
