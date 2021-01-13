@@ -1,10 +1,12 @@
 <?php
 
 /**
- * Auto generated file, please don't edit.
+ * Auto generated file
  *
- * With: Gobl v1.0.9
- * Time: 1586982104
+ * WARNING: please don't edit.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
  */
 
 namespace OZONE\OZ\Db\Base;
@@ -16,14 +18,11 @@ use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
 
 /**
  * Class OZClient
- *
- * @package OZONE\OZ\Db\Base
  */
 abstract class OZClient extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_clients';
 
-	
 	const COL_API_KEY = 'client_api_key';
 	const COL_USER_ID = 'client_user_id';
 	const COL_URL = 'client_url';
@@ -33,19 +32,17 @@ abstract class OZClient extends ORMEntityBase
 	const COL_ADD_TIME = 'client_add_time';
 	const COL_VALID = 'client_valid';
 
-	
 	/**
 	 * @var \OZONE\OZ\Db\OZUser
 	 */
 	protected $_r_oz_client_owner;
 
 
-
 	/**
 	 * OZClient constructor.
 	 *
-	 * @param bool $is_new True for new entity false for entity fetched
-	 *                     from the database, default is true.
+	 * @param bool $is_new true for new entity false for entity fetched
+	 *                     from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
 	public function __construct($is_new = true, $strict = true)
@@ -54,11 +51,11 @@ abstract class OZClient extends ORMEntityBase
 			ORM::getDatabase('OZONE\OZ\Db'),
 			$is_new,
 			$strict,
-			OZClient::TABLE_NAME,
+			self::TABLE_NAME,
 			OZClientsQueryReal::class
 		);
 	}
-	
+
 	/**
 	 * OneToOne relation between `oz_clients` and `oz_users`.
 	 *
@@ -83,8 +80,6 @@ abstract class OZClient extends ORMEntityBase
 		return $this->_r_oz_client_owner;
 	}
 
-
-	
 	/**
 	 * Getter for column `oz_clients`.`api_key`.
 	 *

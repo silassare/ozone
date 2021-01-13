@@ -1,10 +1,12 @@
 <?php
 
 /**
- * Auto generated file, please don't edit.
+ * Auto generated file
  *
- * With: Gobl v1.0.9
- * Time: 1586982104
+ * WARNING: please don't edit.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
  */
 
 namespace OZONE\OZ\Db\Base;
@@ -17,14 +19,11 @@ use OZONE\OZ\Db\OZCountriesController as OZCountriesControllerRealR;
 
 /**
  * Class OZUser
- *
- * @package OZONE\OZ\Db\Base
  */
 abstract class OZUser extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_users';
 
-	
 	const COL_ID = 'user_id';
 	const COL_PHONE = 'user_phone';
 	const COL_EMAIL = 'user_email';
@@ -38,19 +37,17 @@ abstract class OZUser extends ORMEntityBase
 	const COL_ADD_TIME = 'user_add_time';
 	const COL_VALID = 'user_valid';
 
-	
 	/**
 	 * @var \OZONE\OZ\Db\OZCountry
 	 */
 	protected $_r_oz_country;
 
 
-
 	/**
 	 * OZUser constructor.
 	 *
-	 * @param bool $is_new True for new entity false for entity fetched
-	 *                     from the database, default is true.
+	 * @param bool $is_new true for new entity false for entity fetched
+	 *                     from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
 	public function __construct($is_new = true, $strict = true)
@@ -59,11 +56,11 @@ abstract class OZUser extends ORMEntityBase
 			ORM::getDatabase('OZONE\OZ\Db'),
 			$is_new,
 			$strict,
-			OZUser::TABLE_NAME,
+			self::TABLE_NAME,
 			OZUsersQueryReal::class
 		);
 	}
-	
+
 	/**
 	 * OneToMany relation between `oz_users` and `oz_files`.
 	 *
@@ -114,8 +111,6 @@ abstract class OZUser extends ORMEntityBase
 		return $this->_r_oz_country;
 	}
 
-
-	
 	/**
 	 * Getter for column `oz_users`.`id`.
 	 *

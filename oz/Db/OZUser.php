@@ -1,26 +1,32 @@
 <?php
 
-	/**
-	 * Auto generated file, please don't edit.
-	 *
-	 * With: Gobl v1.0.0
-	 * Time: 1508868493
-	 */
+/**
+ * Auto generated file,
+ *
+ * INFO: you are free to edit it,
+ * but make sure to know what you are doing.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
+ */
 
-	namespace OZONE\OZ\Db;
+namespace OZONE\OZ\Db;
 
-	use OZONE\OZ\Crypt\DoCrypt;
-	use OZONE\OZ\Db\Base\OZUser as BaseOZUser;
-	use OZONE\OZ\Exceptions\InternalErrorException;
-	use OZONE\OZ\OZone;
-	use OZONE\OZ\User\UsersManager;
+use OZONE\OZ\Crypt\DoCrypt;
+use OZONE\OZ\Db\Base\OZUser as BaseOZUser;
+use OZONE\OZ\Exceptions\InternalErrorException;
+use OZONE\OZ\OZone;
+use OZONE\OZ\User\UsersManager;
 
+/**
+ * Class OZUser
+ */
 class OZUser extends BaseOZUser
 {
 	/**
-	 * @inheritdoc
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-	 */
+	* @inheritdoc
+	* @throws \OZONE\OZ\Exceptions\InternalErrorException
+	*/
 	public function save()
 	{
 		$emit_create_event = false;
@@ -56,7 +62,7 @@ class OZUser extends BaseOZUser
 
 		if ($emit_create_event) {
 			OZone::getEventManager()
-				 ->trigger('OZ_EVENT:USER_ADDED', $this);
+				 ->trigger('OZ_EVENT_USER_ADDED', $this);
 		}
 
 		return $result;

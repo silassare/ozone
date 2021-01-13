@@ -1,10 +1,12 @@
 <?php
 
 /**
- * Auto generated file, please don't edit.
+ * Auto generated file
  *
- * With: Gobl v1.0.9
- * Time: 1586982104
+ * WARNING: please don't edit.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
  */
 
 namespace OZONE\OZ\Db\Base;
@@ -17,14 +19,11 @@ use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
 
 /**
  * Class OZFile
- *
- * @package OZONE\OZ\Db\Base
  */
 abstract class OZFile extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_files';
 
-	
 	const COL_ID = 'file_id';
 	const COL_USER_ID = 'file_user_id';
 	const COL_KEY = 'file_key';
@@ -40,19 +39,17 @@ abstract class OZFile extends ORMEntityBase
 	const COL_ADD_TIME = 'file_add_time';
 	const COL_VALID = 'file_valid';
 
-	
 	/**
 	 * @var \OZONE\OZ\Db\OZUser
 	 */
 	protected $_r_oz_file_owner;
 
 
-
 	/**
 	 * OZFile constructor.
 	 *
-	 * @param bool $is_new True for new entity false for entity fetched
-	 *                     from the database, default is true.
+	 * @param bool $is_new true for new entity false for entity fetched
+	 *                     from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
 	public function __construct($is_new = true, $strict = true)
@@ -61,11 +58,11 @@ abstract class OZFile extends ORMEntityBase
 			ORM::getDatabase('OZONE\OZ\Db'),
 			$is_new,
 			$strict,
-			OZFile::TABLE_NAME,
+			self::TABLE_NAME,
 			OZFilesQueryReal::class
 		);
 	}
-	
+
 	/**
 	 * ManyToOne relation between `oz_files` and `oz_users`.
 	 *
@@ -116,8 +113,6 @@ abstract class OZFile extends ORMEntityBase
 		return $ctrl->getAllItems($filters, $max, $offset, $order_by, $total);
 	}
 
-
-	
 	/**
 	 * Getter for column `oz_files`.`id`.
 	 *

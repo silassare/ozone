@@ -1,10 +1,12 @@
 <?php
 
 /**
- * Auto generated file, please don't edit.
+ * Auto generated file
  *
- * With: Gobl v1.0.9
- * Time: 1586982104
+ * WARNING: please don't edit.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
  */
 
 namespace OZONE\OZ\Db\Base;
@@ -15,8 +17,6 @@ use Gobl\ORM\ORMTableQueryBase;
 
 /**
  * Class OZCountriesQuery
- *
- * @package OZONE\OZ\Db\Base
  */
 abstract class OZCountriesQuery extends ORMTableQueryBase
 {
@@ -35,21 +35,22 @@ abstract class OZCountriesQuery extends ORMTableQueryBase
 	/**
 	 * Finds rows in the table `oz_countries` and returns a new instance of the table's result iterator.
 	 *
-	 * @param int|null $max
+	 * @param null|int $max
 	 * @param int      $offset
 	 * @param array    $order_by
 	 *
-	 * @return \OZONE\OZ\Db\OZCountriesResults
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 *
+	 * @return \OZONE\OZ\Db\OZCountriesResults
 	 */
 	public function find($max = null, $offset = 0, array $order_by = [])
 	{
-		/** @var \OZONE\OZ\Db\OZCountriesResults $results */
+		/* @var \OZONE\OZ\Db\OZCountriesResults $results */
 		$results = parent::find($max, $offset, $order_by);
 
 		return $results;
 	}
-	
+
 	/**
 	 * Filters rows with condition on column `cc2` in the table `oz_countries`.
 	 *

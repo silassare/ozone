@@ -1,10 +1,12 @@
 <?php
 
 /**
- * Auto generated file, please don't edit.
+ * Auto generated file
  *
- * With: Gobl v1.0.9
- * Time: 1586982104
+ * WARNING: please don't edit.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
  */
 
 namespace OZONE\OZ\Db\Base;
@@ -18,8 +20,6 @@ use OZONE\OZ\Db\OZClientsQuery as OZClientsQueryReal;
 
 /**
  * Class OZClientsController
- *
- * @package OZONE\OZ\Db\Base
  */
 abstract class OZClientsController extends ORMControllerBase
 {
@@ -44,8 +44,9 @@ abstract class OZClientsController extends ORMControllerBase
 	 *
 	 * @param array $values the row values
 	 *
-	 * @return \OZONE\OZ\Db\OZClient
 	 * @throws \Throwable
+	 *
+	 * @return \OZONE\OZ\Db\OZClient
 	 */
 	public function addItem(array $values = [])
 	{
@@ -66,8 +67,9 @@ abstract class OZClientsController extends ORMControllerBase
 	 * @param array $filters    the row filters
 	 * @param array $new_values the new values
 	 *
-	 * @return bool|\OZONE\OZ\Db\OZClient
 	 * @throws \Throwable
+	 *
+	 * @return bool|\OZONE\OZ\Db\OZClient
 	 */
 	public function updateOneItem(array $filters, array $new_values)
 	{
@@ -80,8 +82,9 @@ abstract class OZClientsController extends ORMControllerBase
 	 * @param array $filters    the row filters
 	 * @param array $new_values the new values
 	 *
-	 * @return int Affected row count.
 	 * @throws \Throwable
+	 *
+	 * @return int affected row count
 	 */
 	public function updateAllItems(array $filters, array $new_values)
 	{
@@ -98,8 +101,9 @@ abstract class OZClientsController extends ORMControllerBase
 	 *
 	 * @param array $filters the row filters
 	 *
-	 * @return bool|\OZONE\OZ\Db\OZClient
 	 * @throws \Throwable
+	 *
+	 * @return bool|\OZONE\OZ\Db\OZClient
 	 */
 	public function deleteOneItem(array $filters)
 	{
@@ -111,8 +115,9 @@ abstract class OZClientsController extends ORMControllerBase
 	 *
 	 * @param array $filters the row filters
 	 *
-	 * @return int Affected row count.
 	 * @throws \Throwable
+	 *
+	 * @return int affected row count
 	 */
 	public function deleteAllItems(array $filters)
 	{
@@ -129,12 +134,13 @@ abstract class OZClientsController extends ORMControllerBase
 	 * @param array $filters  the row filters
 	 * @param array $order_by order by rules
 	 *
-	 * @return \OZONE\OZ\Db\OZClient|null
 	 * @throws \Throwable
+	 *
+	 * @return null|\OZONE\OZ\Db\OZClient
 	 */
 	public function getItem(array $filters, array $order_by = [])
 	{
-		/** @var \OZONE\OZ\Db\OZClient|null $result */
+		/* @var null|\OZONE\OZ\Db\OZClient $result */
 		$result = parent::getItem($filters, $order_by);
 
 		return $result;
@@ -144,13 +150,14 @@ abstract class OZClientsController extends ORMControllerBase
 	 * Gets all items from `oz_clients` that match the given filters.
 	 *
 	 * @param array    $filters  the row filters
-	 * @param int|null $max      maximum row to retrieve
+	 * @param null|int $max      maximum row to retrieve
 	 * @param int      $offset   first row offset
 	 * @param array    $order_by order by rules
-	 * @param int|bool $total    total rows without limit
+	 * @param bool|int $total    total rows without limit
+	 *
+	 * @throws \Throwable
 	 *
 	 * @return \OZONE\OZ\Db\OZClient[]
-	 * @throws \Throwable
 	 */
 	public function getAllItems(array $filters = [], $max = null, $offset = 0, array $order_by = [], &$total = false)
 	{
@@ -164,12 +171,13 @@ abstract class OZClientsController extends ORMControllerBase
 	 * Gets all items from `oz_clients` with a custom query builder instance.
 	 *
 	 * @param \Gobl\DBAL\QueryBuilder $qb
-	 * @param int|null                $max    maximum row to retrieve
+	 * @param null|int                $max    maximum row to retrieve
 	 * @param int                     $offset first row offset
-	 * @param int|bool                $total  total rows without limit
+	 * @param bool|int                $total  total rows without limit
+	 *
+	 * @throws \Throwable
 	 *
 	 * @return \OZONE\OZ\Db\OZClient[]
-	 * @throws \Throwable
 	 */
 	public function getAllItemsCustom(QueryBuilder $qb, $max = null, $offset = 0, &$total = false)
 	{

@@ -1,10 +1,12 @@
 <?php
 
 /**
- * Auto generated file, please don't edit.
+ * Auto generated file
  *
- * With: Gobl v1.0.9
- * Time: 1586982104
+ * WARNING: please don't edit.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
  */
 
 namespace OZONE\OZ\Db\Base;
@@ -15,8 +17,6 @@ use Gobl\ORM\ORMTableQueryBase;
 
 /**
  * Class OZAuthenticatorQuery
- *
- * @package OZONE\OZ\Db\Base
  */
 abstract class OZAuthenticatorQuery extends ORMTableQueryBase
 {
@@ -35,21 +35,22 @@ abstract class OZAuthenticatorQuery extends ORMTableQueryBase
 	/**
 	 * Finds rows in the table `oz_authenticator` and returns a new instance of the table's result iterator.
 	 *
-	 * @param int|null $max
+	 * @param null|int $max
 	 * @param int      $offset
 	 * @param array    $order_by
 	 *
-	 * @return \OZONE\OZ\Db\OZAuthenticatorResults
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 *
+	 * @return \OZONE\OZ\Db\OZAuthenticatorResults
 	 */
 	public function find($max = null, $offset = 0, array $order_by = [])
 	{
-		/** @var \OZONE\OZ\Db\OZAuthenticatorResults $results */
+		/* @var \OZONE\OZ\Db\OZAuthenticatorResults $results */
 		$results = parent::find($max, $offset, $order_by);
 
 		return $results;
 	}
-	
+
 	/**
 	 * Filters rows with condition on column `label` in the table `oz_authenticator`.
 	 *

@@ -1,10 +1,12 @@
 <?php
 
 /**
- * Auto generated file, please don't edit.
+ * Auto generated file
  *
- * With: Gobl v1.0.9
- * Time: 1586982104
+ * WARNING: please don't edit.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
  */
 
 namespace OZONE\OZ\Db\Base;
@@ -16,33 +18,28 @@ use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
 
 /**
  * Class OZAdmin
- *
- * @package OZONE\OZ\Db\Base
  */
 abstract class OZAdmin extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_administrators';
 
-	
 	const COL_USER_ID = 'admin_user_id';
 	const COL_LEVEL = 'admin_level';
 	const COL_DATA = 'admin_data';
 	const COL_ADD_TIME = 'admin_add_time';
 	const COL_VALID = 'admin_valid';
 
-	
 	/**
 	 * @var \OZONE\OZ\Db\OZUser
 	 */
 	protected $_r_oz_user;
 
 
-
 	/**
 	 * OZAdmin constructor.
 	 *
-	 * @param bool $is_new True for new entity false for entity fetched
-	 *                     from the database, default is true.
+	 * @param bool $is_new true for new entity false for entity fetched
+	 *                     from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
 	public function __construct($is_new = true, $strict = true)
@@ -51,11 +48,11 @@ abstract class OZAdmin extends ORMEntityBase
 			ORM::getDatabase('OZONE\OZ\Db'),
 			$is_new,
 			$strict,
-			OZAdmin::TABLE_NAME,
+			self::TABLE_NAME,
 			OZAdministratorsQueryReal::class
 		);
 	}
-	
+
 	/**
 	 * OneToOne relation between `oz_administrators` and `oz_users`.
 	 *
@@ -80,8 +77,6 @@ abstract class OZAdmin extends ORMEntityBase
 		return $this->_r_oz_user;
 	}
 
-
-	
 	/**
 	 * Getter for column `oz_administrators`.`user_id`.
 	 *

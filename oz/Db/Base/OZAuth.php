@@ -1,10 +1,12 @@
 <?php
 
 /**
- * Auto generated file, please don't edit.
+ * Auto generated file
  *
- * With: Gobl v1.0.9
- * Time: 1586982104
+ * WARNING: please don't edit.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
  */
 
 namespace OZONE\OZ\Db\Base;
@@ -15,14 +17,11 @@ use OZONE\OZ\Db\OZAuthenticatorQuery as OZAuthenticatorQueryReal;
 
 /**
  * Class OZAuth
- *
- * @package OZONE\OZ\Db\Base
  */
 abstract class OZAuth extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_authenticator';
 
-	
 	const COL_LABEL = 'auth_label';
 	const COL_FOR = 'auth_for';
 	const COL_CODE = 'auth_code';
@@ -34,14 +33,12 @@ abstract class OZAuth extends ORMEntityBase
 	const COL_ADD_TIME = 'auth_add_time';
 	const COL_VALID = 'auth_valid';
 
-	
-
 
 	/**
 	 * OZAuth constructor.
 	 *
-	 * @param bool $is_new True for new entity false for entity fetched
-	 *                     from the database, default is true.
+	 * @param bool $is_new true for new entity false for entity fetched
+	 *                     from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
 	public function __construct($is_new = true, $strict = true)
@@ -50,13 +47,11 @@ abstract class OZAuth extends ORMEntityBase
 			ORM::getDatabase('OZONE\OZ\Db'),
 			$is_new,
 			$strict,
-			OZAuth::TABLE_NAME,
+			self::TABLE_NAME,
 			OZAuthenticatorQueryReal::class
 		);
 	}
-	
 
-	
 	/**
 	 * Getter for column `oz_authenticator`.`label`.
 	 *

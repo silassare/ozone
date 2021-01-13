@@ -1,20 +1,26 @@
 <?php
 
-	/**
-	 * Auto generated file, please don't edit.
-	 *
-	 * With: Gobl v1.0.0
-	 * Time: 1508868493
-	 */
+/**
+ * Auto generated file,
+ *
+ * INFO: you are free to edit it,
+ * but make sure to know what you are doing.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
+ */
 
-	namespace OZONE\OZ\Db;
+namespace OZONE\OZ\Db;
 
-	use OZONE\OZ\Core\Hasher;
-	use OZONE\OZ\Db\Base\OZFile as BaseOZFile;
-	use OZONE\OZ\FS\FilesUtils;
-	use OZONE\OZ\FS\PathUtils;
-	use OZONE\OZ\Utils\StringUtils;
+use OZONE\OZ\Core\Hasher;
+use OZONE\OZ\Db\Base\OZFile as BaseOZFile;
+use OZONE\OZ\FS\FilesUtils;
+use OZONE\OZ\FS\PathUtils;
+use OZONE\OZ\Utils\StringUtils;
 
+/**
+ * Class OZFile
+ */
 class OZFile extends BaseOZFile
 {
 	/**
@@ -72,7 +78,7 @@ class OZFile extends BaseOZFile
 	public function cloneFile()
 	{
 		if (!$this->isSaved()) {
-			throw new \Exception('You cannot clone unsaved file.');
+			throw new Exception('You cannot clone unsaved file.');
 		}
 
 		$f = new static();

@@ -1,10 +1,12 @@
 <?php
 
 /**
- * Auto generated file, please don't edit.
+ * Auto generated file
  *
- * With: Gobl v1.0.9
- * Time: 1586982104
+ * WARNING: please don't edit.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
  */
 
 namespace OZONE\OZ\Db\Base;
@@ -17,14 +19,11 @@ use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
 
 /**
  * Class OZSession
- *
- * @package OZONE\OZ\Db\Base
  */
 abstract class OZSession extends ORMEntityBase
 {
 	const TABLE_NAME = 'oz_sessions';
 
-	
 	const COL_ID = 'session_id';
 	const COL_CLIENT_API_KEY = 'session_client_api_key';
 	const COL_USER_ID = 'session_user_id';
@@ -35,7 +34,6 @@ abstract class OZSession extends ORMEntityBase
 	const COL_ADD_TIME = 'session_add_time';
 	const COL_VALID = 'session_valid';
 
-	
 	/**
 	 * @var \OZONE\OZ\Db\OZClient
 	 */
@@ -47,12 +45,11 @@ abstract class OZSession extends ORMEntityBase
 	protected $_r_oz_user;
 
 
-
 	/**
 	 * OZSession constructor.
 	 *
-	 * @param bool $is_new True for new entity false for entity fetched
-	 *                     from the database, default is true.
+	 * @param bool $is_new true for new entity false for entity fetched
+	 *                     from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
 	public function __construct($is_new = true, $strict = true)
@@ -61,11 +58,11 @@ abstract class OZSession extends ORMEntityBase
 			ORM::getDatabase('OZONE\OZ\Db'),
 			$is_new,
 			$strict,
-			OZSession::TABLE_NAME,
+			self::TABLE_NAME,
 			OZSessionsQueryReal::class
 		);
 	}
-	
+
 	/**
 	 * ManyToOne relation between `oz_sessions` and `oz_clients`.
 	 *
@@ -114,8 +111,6 @@ abstract class OZSession extends ORMEntityBase
 		return $this->_r_oz_user;
 	}
 
-
-	
 	/**
 	 * Getter for column `oz_sessions`.`id`.
 	 *

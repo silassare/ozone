@@ -1,10 +1,12 @@
 <?php
 
 /**
- * Auto generated file, please don't edit.
+ * Auto generated file
  *
- * With: Gobl v1.0.9
- * Time: 1586982104
+ * WARNING: please don't edit.
+ *
+ * Proudly With: gobl v1.5.0
+ * Time: 1617030519
  */
 
 namespace OZONE\OZ\Db\Base;
@@ -15,8 +17,6 @@ use Gobl\ORM\ORMResultsBase;
 
 /**
  * Class OZSessionsResults
- *
- * @package OZONE\OZ\Db\Base
  */
 abstract class OZSessionsResults extends ORMResultsBase
 {
@@ -36,7 +36,7 @@ abstract class OZSessionsResults extends ORMResultsBase
 	/**
 	 * This is to help editor infer type in loop (foreach or for...)
 	 *
-	 * @return array|null|\OZONE\OZ\Db\OZSession
+	 * @return null|array|\OZONE\OZ\Db\OZSession
 	 */
 	public function current()
 	{
@@ -48,8 +48,9 @@ abstract class OZSessionsResults extends ORMResultsBase
 	 *
 	 * @param bool $strict
 	 *
-	 * @return null|\OZONE\OZ\Db\OZSession
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 *
+	 * @return null|\OZONE\OZ\Db\OZSession
 	 */
 	public function fetchClass($strict = true)
 	{
@@ -61,8 +62,9 @@ abstract class OZSessionsResults extends ORMResultsBase
 	 *
 	 * @param bool $strict
 	 *
-	 * @return \OZONE\OZ\Db\OZSession[]
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 *
+	 * @return \OZONE\OZ\Db\OZSession[]
 	 */
 	public function fetchAllClass($strict = true)
 	{
