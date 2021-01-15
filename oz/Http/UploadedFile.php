@@ -11,19 +11,19 @@
 
 namespace OZONE\OZ\Http;
 
-	use InvalidArgumentException;
-	use Psr\Http\Message\StreamInterface;
-	use Psr\Http\Message\UploadedFileInterface;
-	use RuntimeException;
+use InvalidArgumentException;
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileInterface;
+use RuntimeException;
 
-	/**
-	 * Represents Uploaded Files.
-	 *
-	 * It manages and normalizes uploaded files according to the PSR-7 standard.
-	 *
-	 * @link https://github.com/php-fig/http-message/blob/master/src/UploadedFileInterface.php
-	 * @link https://github.com/php-fig/http-message/blob/master/src/StreamInterface.php
-	 */
+/**
+ * Represents Uploaded Files.
+ *
+ * It manages and normalizes uploaded files according to the PSR-7 standard.
+ *
+ * @link https://github.com/php-fig/http-message/blob/master/src/UploadedFileInterface.php
+ * @link https://github.com/php-fig/http-message/blob/master/src/StreamInterface.php
+ */
 class UploadedFile implements UploadedFileInterface
 {
 	/**
@@ -284,8 +284,8 @@ class UploadedFile implements UploadedFileInterface
 	 */
 	public static function createFromEnvironment(Environment $env)
 	{
-		if ($env->has('oz:files') && \is_array($env['oz:files'])) {
-			return $env['oz:files'];
+		if ($env->has('oz_files') && \is_array($env['oz_files'])) {
+			return $env['oz_files'];
 		}
 
 		if (isset($_FILES)) {
