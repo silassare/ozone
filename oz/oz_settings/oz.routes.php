@@ -14,4 +14,5 @@ return [
 	'OZONE\OZ\Web\Views\RedirectView'      => true,
 	'OZONE\OZ\FS\Views\GetFilesView'       => true,
 	'OZONE\OZ\User\Views\SessionShareView' => true,
+	'OZONE\OZ\Lang\PolyglotRoute'          => true,
 ];

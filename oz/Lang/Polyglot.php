@@ -11,11 +11,15 @@
 
 namespace OZONE\OZ\Lang;
 
+use Exception;
 use OZONE\OZ\Core\Context;
 use OZONE\OZ\Http\Environment;
+use Throwable;
 
 final class Polyglot
 {
+	const USER_LANG_SESSION_KEY = 'ozone.polyglot.favorite';
+
 	private static $ready = false;
 
 	private static $browser;
@@ -49,12 +53,15 @@ final class Polyglot
 		if ($context) {
 			try {
 				$user_lang = $context->getSession()
-								 ->get('ozone_lang:favorite');
+									 ->get(self::USER_LANG_SESSION_KEY);
 
 				if (!empty($user_lang)) {
 					return $user_lang;
 				}
-			} catch (\Exception $e) {
+			} catch (Exception $e) {
+				// php 5.6 and earlier
+				// session not started
+			} catch (Throwable $e) {
 				// session not started
 			}
 		}
@@ -71,6 +78,10 @@ final class Polyglot
 	 *
 	 * @param \OZONE\OZ\Core\Context $context
 	 * @param string                 $lang
+	 *
+	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+	 *
+	 * @return bool
 	 */
 	public static function setUserLanguage(Context $context, $lang)
 	{
@@ -78,8 +89,12 @@ final class Polyglot
 
 		if (isset($list[$lang])) {
 			$context->getSession()
-					->set('ozone_lang:favorite', $lang);
+					->set(self::USER_LANG_SESSION_KEY, $lang);
+
+			return true;
 		}
+
+		return false;
 	}
 
 	/**
@@ -91,6 +106,7 @@ final class Polyglot
 	 * $data = ["name" => "Dig Ma", "age" => 18 ];
 	 *
 	 * Polyglot::translate('MY_LANG_KEY', $data);
+	 * Polyglot::translate('group.based.LANG_KEY', $data);
 	 * Polyglot::translate('MY_LANG_KEY', $data, 'fr');
 	 * ```
 	 *
