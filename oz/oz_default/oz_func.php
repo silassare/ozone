@@ -12,26 +12,7 @@
 	use OZONE\OZ\Core\Context;
 	use OZONE\OZ\Exceptions\BaseException;
 
-
-if (!\function_exists('oz_file_read')) {
-	/**
-	 * Safely read file content.
-	 *
-	 * @param string $src the file path
-	 *
-	 * @throws \Exception
-	 *
-	 * @return bool|string
-	 */
-	function oz_file_read($src)
-	{
-		if (empty($src) || !\file_exists($src) || !\is_file($src) || !\is_readable($src)) {
-			throw new Exception(\sprintf('Unable to access file at : "%s".', $src));
-		}
-
-		return \file_get_contents($src);
-	}
-
+if (!\function_exists('oz_logger')) {
 	/**
 	 * Build file url.
 	 *
