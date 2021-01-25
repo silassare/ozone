@@ -8,9 +8,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-	
-	use OZONE\OZ\Core\Context;
-	use OZONE\OZ\Exceptions\BaseException;
+
+use OZONE\OZ\Core\Context;
+use OZONE\OZ\Exceptions\BaseException;
 
 if (!\function_exists('oz_logger')) {
 	/**
@@ -73,6 +73,8 @@ if (!\function_exists('oz_logger')) {
 			while ($e = $e->getPrevious()) {
 				$log .= $prev_sep . BaseException::throwableToString($e);
 			}
+		} elseif ($in instanceof JsonSerializable) {
+			$log = \json_encode($in, \JSON_PRETTY_PRINT);
 		} else {
 			$log = \gettype($in);
 			// $log = var_export(debug_backtrace(),true);
