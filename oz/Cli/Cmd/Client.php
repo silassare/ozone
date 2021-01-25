@@ -143,7 +143,7 @@ final class Client extends Command
 			   ->mkdir('js')
 			   ->mkdir('styles')
 			   ->mkdir('images')
-			   ->mkdir('vendors')
+			   ->mkdir('vendor')
 			   ->cd('..')
 			   ->cd('oz_private', true)
 			   ->cd('oz_settings', true)
