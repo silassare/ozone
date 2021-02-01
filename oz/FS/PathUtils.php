@@ -11,6 +11,8 @@
 
 namespace OZONE\OZ\FS;
 
+use InvalidArgumentException;
+
 /**
  * Class PathUtils
  *
@@ -36,8 +38,8 @@ class PathUtils
 		if (self::isRelative($path)) {
 			if ((self::DS === '/' && $path[0] === '/') || \preg_match("#^[\w]+:#", $path)) {
 				// path start form the root
-				// linux - unix	-> /
-				// windows		-> D:
+				// UNIX	-> /
+				// DOS	-> D:
 
 				$full_path = $path;
 			} else {
@@ -59,7 +61,7 @@ class PathUtils
 	 */
 	public static function normalize($path)
 	{
-		if (self::DS == '\\') {
+		if (self::DS === '\\') {
 			return \strtr($path, '/', '\\');
 		}
 
@@ -109,7 +111,7 @@ class PathUtils
 				\array_pop($out);
 			} else {
 				// now here we don't like
-				throw new \InvalidArgumentException(\sprintf('Climbing above root is dangerous: %s', $path));
+				throw new InvalidArgumentException(\sprintf('Climbing above root is dangerous: %s', $path));
 			}
 		}
 

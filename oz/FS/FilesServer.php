@@ -24,9 +24,9 @@ class FilesServer
 	 * @param \OZONE\OZ\Core\Context $context
 	 * @param array                  $params
 	 *
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\NotFoundException
 	 * @throws \Exception
+	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */
@@ -48,6 +48,13 @@ class FilesServer
 			throw new NotFoundException();
 		}
 
+		oz_logger('Find a way to use nginx directive "internal" feature to serve file.');
+
+		/* https://clubhouse.io/developer-how-to/how-to-use-internal-redirects-in-nginx/
+		if (SettingsManager::get('oz.files', 'OZ_USE_NGINX_FILE_FEATURE')){
+		// TODO Full rewrite
+		}
+		*/
 		$file_name    = $params['file_name'];
 		$file_mime    = $params['file_mime'];
 		$file_quality = (int) ($params['file_quality']);

@@ -11,12 +11,17 @@
 
 namespace OZONE\OZ\FS;
 
+use Exception;
 use OTpl\OTpl;
 use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\Utils\StringUtils;
 
 class TemplatesUtils
 {
+	const OZ_TEMPLATES_DIR = OZ_OZONE_DIR . 'oz_templates';
+
+	const APP_TEMPLATES_DIR = OZ_APP_DIR . 'oz_templates';
+
 	/**
 	 * templates path cache.
 	 *
@@ -29,14 +34,14 @@ class TemplatesUtils
 	 *
 	 * @var array
 	 */
-	private static $oz_sources_dir = [OZ_OZONE_DIR . 'oz_templates'];
+	private static $oz_sources_dir = [self::OZ_TEMPLATES_DIR];
 
 	/**
 	 * app templates sources directories
 	 *
 	 * @var array
 	 */
-	private static $app_sources_dir = [OZ_APP_DIR . 'oz_templates'];
+	private static $app_sources_dir = [self::APP_TEMPLATES_DIR];
 
 	/**
 	 * adds templates sources directory.
@@ -82,7 +87,7 @@ class TemplatesUtils
 			$o      = new OTpl();
 			$result = $o->parse($src)
 						->runGet($data);
-		} catch (\Exception $e) {
+		} catch (Exception $e) {
 			throw new InternalErrorException(null, null, $e);
 		}
 
@@ -92,7 +97,7 @@ class TemplatesUtils
 	/**
 	 * returns template according to available sources.
 	 *
-	 * when you use `oz:foo.tpl` it refer to template `foo.otpl`
+	 * when you use `oz://foo.tpl` it refer to template `foo.otpl`
 	 * in ozone templates directory
 	 *
 	 * @param string $template the template file name
@@ -101,10 +106,16 @@ class TemplatesUtils
 	 */
 	public static function localize($template)
 	{
-		$no_prefix = StringUtils::removePrefix($template, 'oz:');
+		$without_prefix = StringUtils::removePrefix($template, 'oz://');
 
-		if (!($no_prefix === $template)) {
-			return PathUtils::resolve(OZ_OZONE_DIR . 'oz_templates', $no_prefix);
+		if (!($without_prefix === $template)) {
+			return PathUtils::resolve(self::OZ_TEMPLATES_DIR, $without_prefix);
+		}
+
+		$without_prefix = StringUtils::removePrefix($template, 'app://');
+
+		if (!($without_prefix === $template)) {
+			return PathUtils::resolve(self::APP_TEMPLATES_DIR, $without_prefix);
 		}
 
 		if (!PathUtils::isRelative($template)) {
@@ -119,7 +130,7 @@ class TemplatesUtils
 		$found         = null;
 
 		foreach ($sources_group as $group) {
-			// we start search in the last added source
+			// we start in the last added source
 			for ($i = \count($group) - 1; $i >= 0; $i--) {
 				$source = $group[$i];
 				$path   = $source . DS . $template;

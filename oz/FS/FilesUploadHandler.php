@@ -11,6 +11,7 @@
 
 namespace OZONE\OZ\FS;
 
+use Exception;
 use OZONE\OZ\Core\Hasher;
 use OZONE\OZ\Db\OZFile;
 use OZONE\OZ\Exceptions\InternalErrorException;
@@ -83,7 +84,7 @@ class FilesUploadHandler
 			if (FilesUtils::makeThumb($fo, $thumb_destination)) {
 				$fo->setThumb($thumb_destination);
 			}
-		} catch (\Exception $e) {
+		} catch (Exception $e) {
 			$this->safeDelete($fo);
 
 			throw new InternalErrorException('OZ_FILE_UPLOAD_MOVE_FAIL', null, $e);
@@ -119,11 +120,15 @@ class FilesUploadHandler
 			return;
 		}
 
-		if ($path = $file->getPath() && \file_exists($path)) {
+		$path = $file->getPath();
+
+		if ($path && \file_exists($path)) {
 			\unlink($path);
 		}
 
-		if ($thumb = $file->getThumb() && \file_exists($thumb)) {
+		$thumb = $file->getThumb();
+
+		if ($thumb && \file_exists($thumb)) {
 			\unlink($thumb);
 		}
 	}

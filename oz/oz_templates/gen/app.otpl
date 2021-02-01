@@ -1,29 +1,29 @@
 <?php
 <%@import('gen.info.otpl',$)%>
 
-	namespace <%$.oz_project_namespace%>;
+namespace <%$.oz_project_namespace%>;
 
-	use OZONE\OZ\App\AppInterface;
+use OZONE\OZ\App\AppInterface;
 
-	final class <%$.oz_project_class%> implements AppInterface
-	{
-		/**
-		 * <%$.oz_project_class%> constructor.
-		 */
-		public function __construct() { }
+final class <%$.oz_project_class%> implements AppInterface
+{
+	/**
+	 * <%$.oz_project_class%> constructor.
+	 */
+	public function __construct() { }
 
-		/**
-		 * @inheritdoc
-		 */
-		public function onInit() { }
+	/**
+	 * @inheritdoc
+	 */
+	public function onInit() { }
 
-		/**
-		 * @inheritdoc
-		 */
-		public function onUnhandledException(\Exception $error) { }
+	/**
+	 * @inheritdoc
+	 */
+	public function onUnhandledException(\Exception $error) { }
 
-		/**
-		 * @inheritdoc
-		 */
-		public function onUnhandledError($code, $message, $file, $line) { }
-	}
+	/**
+	 * @inheritdoc
+	 */
+	public function onUnhandledError($code, $message, $file, $line) { }
+}

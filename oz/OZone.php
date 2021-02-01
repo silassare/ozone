@@ -11,6 +11,7 @@
 
 namespace OZONE\OZ;
 
+use Exception;
 use Gobl\CRUD\CRUD;
 use OZONE\OZ\App\AppInterface;
 use OZONE\OZ\Core\Context;
@@ -20,7 +21,6 @@ use OZONE\OZ\Core\Interfaces\TableRelationsProviderInterface;
 use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\Event\EventManager;
 use OZONE\OZ\Exceptions\BaseException;
-use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\Hooks\Interfaces\HookReceiverInterface;
 use OZONE\OZ\Hooks\MainHookProvider;
 use OZONE\OZ\Http\Environment;
@@ -32,7 +32,6 @@ use ReflectionClass;
 use ReflectionException;
 use RuntimeException;
 use Throwable;
-
 
 include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
 
@@ -78,7 +77,7 @@ final class OZone
 	 *
 	 * @return \OZONE\OZ\App\AppInterface
 	 */
-	public static function getCurrentApp()
+	public static function getRunningApp()
 	{
 		return self::$current_app;
 	}
@@ -123,10 +122,12 @@ final class OZone
 							->triggerInit($context);
 			$context->handle()
 					->respond();
+		} catch (Exception $e) {
+			$e = BaseException::tryConvert($e);
+
+			$e->informClient($context);
 		} catch (Throwable $e) {
-			if (!($e instanceof BaseException)) {
-				$e = new InternalErrorException(null, null, $e);
-			}
+			$e = BaseException::tryConvert($e);
 
 			$e->informClient($context);
 		}
@@ -177,9 +178,9 @@ final class OZone
 	 *
 	 * @param string $class_name the full qualified class name to instantiate
 	 *
-	 * @return object
 	 * @throws \ReflectionException
 	 *
+	 * @return object
 	 */
 	public static function createInstance($class_name)
 	{
@@ -202,13 +203,17 @@ final class OZone
 					$rc = new ReflectionClass($provider);
 
 					if (!$rc->implementsInterface(RouteProviderInterface::class)) {
-						throw new RuntimeException(\sprintf('Route provider "%s" should implements "%s".', $provider, RouteProviderInterface::class));
+						throw new RuntimeException(\sprintf(
+							'Route provider "%s" should implements "%s".',
+							$provider,
+							RouteProviderInterface::class
+						));
 					}
 
 					/* @var RouteProviderInterface $provider */
 					$provider::registerRoutes($router);
 				} catch (ReflectionException $e) {
-					throw new RuntimeException(\sprintf('Unable to register route provider: %s.', $provider), $e);
+					throw new RuntimeException(\sprintf('Unable to register route provider: %s.', $provider), null, $e);
 				}
 			}
 		}
@@ -227,12 +232,16 @@ final class OZone
 					$rc = new ReflectionClass($receiver);
 
 					if (!$rc->implementsInterface(HookReceiverInterface::class)) {
-						throw new RuntimeException(\sprintf('Hook receiver "%s" should implements "%s".', $receiver, HookReceiverInterface::class));
+						throw new RuntimeException(\sprintf(
+							'Hook receiver "%s" should implements "%s".',
+							$receiver,
+							HookReceiverInterface::class
+						));
 					}
 					/* @var \OZONE\OZ\Hooks\Interfaces\HookReceiverInterface $receiver */
 					$receiver::register();
 				} catch (ReflectionException $e) {
-					throw new RuntimeException(\sprintf('Unable to register hook receiver "%s".', $receiver), $e);
+					throw new RuntimeException(\sprintf('Unable to register hook receiver "%s".', $receiver), null, $e);
 				}
 			}
 		}
@@ -254,10 +263,17 @@ final class OZone
 					$rc = new ReflectionClass($provider);
 
 					if (!$rc->implementsInterface(TableRelationsProviderInterface::class)) {
-						throw new RuntimeException(\sprintf('Custom relations provider "%s" should implements "%s".', $provider, TableRelationsProviderInterface::class));
+						throw new RuntimeException(\sprintf(
+							'Custom relations provider "%s" should implements "%s".',
+							$provider,
+							TableRelationsProviderInterface::class
+						));
 					}
 				} catch (ReflectionException $e) {
-					throw new RuntimeException(\sprintf('Unable to check custom relations provider "%s".', $provider), $e);
+					throw new RuntimeException(\sprintf(
+						'Unable to register custom relations provider "%s".',
+						$provider
+					), null, $e);
 				}
 
 				/* @var TableRelationsProviderInterface $provider */
@@ -270,14 +286,17 @@ final class OZone
 						if (\is_callable($callable)) {
 							$table->defineVR($relation_name, $callable);
 						} else {
-							throw new RuntimeException(\sprintf(
-								'Custom relation "%s" defined in "%s" for table "%s" expected to be "callable" not "%s". %s',
-								$relation_name,
-								$provider,
-								$table_name,
-								\gettype($callable),
-								'Maybe the class method is private or protected.'
-							));
+							throw new RuntimeException(
+								\sprintf(
+									'Custom relation "%s" defined in "%s" for table "%s"'
+									. ' expected to be "callable" not "%s". %s',
+									$relation_name,
+									$provider,
+									$table_name,
+									\gettype($callable),
+									'Maybe the class method is private or protected.'
+								)
+							);
 						}
 					}
 				}
@@ -301,10 +320,17 @@ final class OZone
 					$rc = new ReflectionClass($provider);
 
 					if (!$rc->implementsInterface(TableCollectionsProviderInterface::class)) {
-						throw new RuntimeException(\sprintf('Custom collections provider "%s" should implements "%s".', $provider, TableCollectionsProviderInterface::class));
+						throw new RuntimeException(\sprintf(
+							'Custom collections provider "%s" should implements "%s".',
+							$provider,
+							TableCollectionsProviderInterface::class
+						));
 					}
 				} catch (ReflectionException $e) {
-					throw new RuntimeException(\sprintf('Unable to check custom collections provider "%s".', $provider), $e);
+					throw new RuntimeException(\sprintf(
+						'Unable to register custom collections provider "%s".',
+						$provider
+					), null, $e);
 				}
 
 				/* @var TableCollectionsProviderInterface $provider */
@@ -318,7 +344,8 @@ final class OZone
 							$table->defineCollection($collection_name, $callable);
 						} else {
 							throw new RuntimeException(\sprintf(
-								'Custom collection "%s" defined in "%s" for table "%s" expected to be "callable" not "%s".',
+								'Custom collection "%s" defined in "%s" for table "%s"'
+								. ' expected to be "callable" not "%s".',
 								$collection_name,
 								$provider,
 								$table_name,

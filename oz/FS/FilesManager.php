@@ -117,7 +117,11 @@ class FilesManager
 		if (\is_dir($abs_from)) {
 			if (\file_exists($abs_to)) {
 				if (!\is_dir($abs_to)) {
-					\trigger_error(\sprintf('Cannot overwrite "%s" with "%s", the resource exists and is not a directory.', $abs_to, $abs_from), \E_USER_ERROR);
+					\trigger_error(\sprintf(
+						'Cannot overwrite "%s" with "%s", the resource exists and is not a directory.',
+						$abs_to,
+						$abs_from
+					), \E_USER_ERROR);
 				}
 			} else {
 				$this->mkdir($abs_to);
@@ -292,7 +296,7 @@ class FilesManager
 			'device_number' => $ss['rdev'], // Device number, if device.
 			'inode'         => $ss['ino'], // File serial number
 			'link_count'    => $ss['nlink'], // link count
-			'link_to'       => ($ss['filetype']['type'] == 'link') ? \readlink($abs_path) : '',
+			'link_to'       => ($ss['filetype']['type'] === 'link') ? \readlink($abs_path) : '',
 		];
 
 		\clearstatcache();
@@ -398,7 +402,7 @@ class FilesManager
 			'device_number' => $ss['rdev'], // Device number, if device.
 			'inode'         => $ss['ino'], // File serial number
 			'link_count'    => $ss['nlink'], // link count
-			'link_to'       => ($ss['filetype']['type'] == 'link') ? \readlink($abs_path) : '',
+			'link_to'       => ($ss['filetype']['type'] === 'link') ? \readlink($abs_path) : '',
 		];
 
 		\clearstatcache();
@@ -439,7 +443,10 @@ class FilesManager
 		$abs_path = PathUtils::resolve($this->root, $path);
 
 		if (\file_exists($abs_path) && !\is_dir($abs_path)) {
-			\trigger_error(\sprintf('Cannot overwrite "%s", the resource exists and is not a directory.', $abs_path), \E_USER_ERROR);
+			\trigger_error(\sprintf(
+				'Cannot overwrite "%s", the resource exists and is not a directory.',
+				$abs_path
+			), \E_USER_ERROR);
 		}
 
 		if (!\is_dir($abs_path)) {
@@ -518,7 +525,7 @@ class FilesManager
 	{
 		$path = $this->resolve($path);
 
-		return ($path === $this->root) ? true : false;
+		return $path === $this->root;
 	}
 
 	/**
@@ -536,7 +543,7 @@ class FilesManager
 			return false;
 		}
 
-		return (0 === \strpos($path, $this->root)) ? true : false;
+		return 0 === \strpos($path, $this->root);
 	}
 
 	/**
@@ -666,7 +673,10 @@ class FilesManager
 					$this->recursivelyCopyDirAbsPath($from, $to, $options);
 				} else {
 					if (\file_exists($to) && !\is_file($to)) {
-						\trigger_error(\sprintf('Cannot overwrite "%s" the resource exists and is not a file.', $to), \E_USER_ERROR);
+						\trigger_error(\sprintf(
+							'Cannot overwrite "%s" the resource exists and is not a file.',
+							$to
+						), \E_USER_ERROR);
 					}
 
 					\copy($from, $to);

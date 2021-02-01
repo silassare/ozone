@@ -177,7 +177,11 @@ abstract class HookProvider implements HookProviderInterface
 	public static function registerHookReceiverClass($hook_receiver_class, $priority = self::RUN_DEFAULT)
 	{
 		if (!static::isCompatibleHookReceiverClass($hook_receiver_class)) {
-			throw new InvalidArgumentException(\sprintf('"%s" is not a valid hook receiver class for "%s".', $hook_receiver_class, static::class));
+			throw new InvalidArgumentException(\sprintf(
+				'"%s" is not a valid hook receiver class for "%s".',
+				$hook_receiver_class,
+				static::class
+			));
 		}
 
 		return static::getInstance()

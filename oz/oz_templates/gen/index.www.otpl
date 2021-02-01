@@ -1,28 +1,28 @@
 <?php
 <%@import('gen.info.otpl',$)%>
 
-	// Informs OZone that we are in www mode
-	define('OZ_OZONE_IS_WEB_CONTEXT', true);
+// Informs OZone that we are in www mode
+define('OZ_OZONE_IS_WEB_CONTEXT', true);
 
-	// Api key to use
-	define('OZ_OZONE_DEFAULT_API_KEY', '<%$.oz_default_api_key%>');
+// Api key to use
+define('OZ_OZONE_DEFAULT_API_KEY', '<%$.oz_default_api_key%>');
 
-	// Don't forget to use DS instead of \ or / and always add the last DS to your directories path
-	define('DS', DIRECTORY_SEPARATOR);
+// Don't forget to use DS instead of \ or / and always add the last DS to your directories path
+define('DS', \DIRECTORY_SEPARATOR);
 
-	// Logs directory
-	define('OZ_LOG_DIR', __DIR__ . DS);
+// Logs directory
+define('OZ_LOG_DIR', __DIR__ . DS);
 
-	include_once '../api/index.php';
+include_once '../api/index.php';
 
-	// Adds settings source
-	\OZONE\OZ\Core\SettingsManager::addSource(__DIR__ . DS . 'oz_private'. DS . 'oz_settings');
+// Adds settings source
+\OZONE\OZ\Core\SettingsManager::addSource(__DIR__ . DS . 'oz_private'. DS . 'oz_settings');
 
-	// Adds a new templates source
-	\OZONE\OZ\FS\TemplatesUtils::addSource(__DIR__ . DS . 'oz_private'. DS . 'oz_templates');
+// Adds a new templates source
+\OZONE\OZ\FS\TemplatesUtils::addSource(__DIR__ . DS . 'oz_private'. DS . 'oz_templates');
 
-	// Adds project namespace root directory
-	\OZONE\OZ\Loader\ClassLoader::addNamespace('\<%$.oz_project_namespace%>', __DIR__ . DS . 'oz_private');
+// Adds project namespace root directory
+\OZONE\OZ\Loader\ClassLoader::addNamespace('\<%$.oz_project_namespace%>', __DIR__ . DS . 'oz_private');
 
-	// Run the app
-	\OZONE\OZ\OZone::run(new \<%$.oz_project_namespace%>\<%$.oz_project_class%>());
+// Run the app
+\OZONE\OZ\OZone::run(new \<%$.oz_project_namespace%>\<%$.oz_project_class%>());

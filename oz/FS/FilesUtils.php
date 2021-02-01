@@ -260,9 +260,9 @@ class FilesUtils
 	 * @param int|string $id  the file id
 	 * @param string     $key the file key
 	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 * @throws \Gobl\ORM\Exceptions\ORMException
 	 * @throws \Exception
+	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 *
 	 * @return null|\OZONE\OZ\Db\OZFile
 	 */
@@ -285,9 +285,9 @@ class FilesUtils
 	 *
 	 * @param \OZONE\OZ\Http\Stream $alias
 	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 * @throws \Gobl\ORM\Exceptions\ORMException
 	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 *
 	 * @return \OZONE\OZ\Db\OZFile
 	 */

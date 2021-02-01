@@ -13,11 +13,11 @@ namespace OZONE\OZ\Hooks\Interfaces;
 
 interface HookProviderInterface
 {
-	const RUN_FIRST   = 1;
+	const RUN_FIRST = 1;
 
 	const RUN_DEFAULT = 2;
 
-	const RUN_LAST    = 3;
+	const RUN_LAST = 3;
 
 	/**
 	 * Gets a hook provider instance.

@@ -60,7 +60,7 @@ final class PhoneAuth
 		$this->context  = $context;
 		$this->response = new ResponseHolder(\get_class($this));
 
-		$this->tag = "phone_auth:{$tag}";
+		$this->tag = "phone_auth.{$tag}";
 
 		if ($registered === true) {
 			$this->registration_state = 'registered';
@@ -160,7 +160,7 @@ final class PhoneAuth
 	 */
 	private function getStoredData($key = '')
 	{
-		$key = $this->tag . (empty($key) ? '' : ':' . $key);
+		$key = $this->tag . (empty($key) ? '' : '.' . $key);
 
 		return $this->context->getSession()
 							 ->get($key);
@@ -176,7 +176,7 @@ final class PhoneAuth
 	 */
 	private function setStoredData($key, $value)
 	{
-		$key = $this->tag . (!empty($key) ? ':' . $key : '');
+		$key = $this->tag . (!empty($key) ? '.' . $key : '');
 
 		$this->context->getSession()
 					  ->set($key, $value);

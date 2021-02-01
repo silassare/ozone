@@ -128,15 +128,15 @@ class GetFilesHelper
 	 * @param \OZONE\OZ\Core\Context $context
 	 * @param string                 $picid
 	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 *
 	 * @return bool
 	 */
 	private static function isLastUserPic(Context $context, $picid)
 	{
 		$uid = $context->getSession()
-					   ->get('ozone_user:id');
+					   ->get('ozone.user.id');
 
 		if (!empty($uid)) {
 			$uq   = new OZUsersQuery();

@@ -123,10 +123,9 @@ class ImagesUtils
 			return false;
 		}
 
-		$data = \file_get_contents($src);
-		$r    = @\imagecreatefromstring($data);
+		$r = @\imagecreatefromstring(\file_get_contents($src));
 
-		return \is_resource($r) && \get_resource_type($r) == 'gd';
+		return \is_resource($r) && \get_resource_type($r) === 'gd';
 	}
 
 	/**
@@ -295,8 +294,14 @@ class ImagesUtils
 	 *
 	 * @return \OZONE\OZ\FS\ImagesUtils
 	 */
-	public function cropAndSave($destination_path, $quality, $max_width, $max_height, array $coordinate = null, $resize = true)
-	{
+	public function cropAndSave(
+		$destination_path,
+		$quality,
+		$max_width,
+		$max_height,
+		array $coordinate = null,
+		$resize = true
+	) {
 		$quality = empty($quality) ? 90 : $quality;
 
 		if (!empty($coordinate)) {
@@ -336,6 +341,11 @@ class ImagesUtils
 		$h        = $coordinate['h'];
 		$min_size = SettingsManager::get('oz.users', 'OZ_PPIC_MIN_SIZE');
 
-		return $x >= 0 && $y >= 0 && $w >= ($min_size + $x) && $h >= ($min_size + $y) && ($x + $w) <= $this->getWidth() && ($y + $h) <= $this->getHeight();
+		return $x >= 0
+			   && $y >= 0
+			   && $w >= ($min_size + $x)
+			   && $h >= ($min_size + $y)
+			   && ($x + $w) <= $this->getWidth()
+			   && ($y + $h) <= $this->getHeight();
 	}
 }
