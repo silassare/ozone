@@ -12,7 +12,9 @@
 namespace OZONE\OZ\Cli\Cmd;
 
 use Exception;
-use Gobl\ORM\Generators\Generator;
+use Gobl\ORM\Generators\GeneratorDart;
+use Gobl\ORM\Generators\GeneratorORM;
+use Gobl\ORM\Generators\GeneratorTS;
 use Kli\Exceptions\KliInputException;
 use Kli\KliAction;
 use Kli\KliOption;
@@ -46,6 +48,11 @@ final class Db extends Command
 				$this->tsBundle($options);
 
 				break;
+
+			case 'dart-bundle':
+				$this->dartBundle($options);
+
+				break;
 			case 'backup':
 				$this->backup($options);
 
@@ -77,6 +84,10 @@ final class Db extends Command
 		// action: ts bundle
 		$ts_bundle = new KliAction('ts-bundle');
 		$ts_bundle->description('To generate entities classes for TypeScript.');
+
+		// action: dart bundle
+		$dart_bundle = new KliAction('dart-bundle');
+		$dart_bundle->description('To generate entities classes for Dart.');
 
 		// action: generate database query
 		$generate = new KliAction('generate');
@@ -119,7 +130,7 @@ final class Db extends Command
 				->dir()
 				->writable())
 			->def('.')
-			->description('The destination directory of the database file.');
+			->description('The destination directory for the database classes.');
 
 		// option: -d alias --dir
 		$b_d = (new KliOption('d'))
@@ -129,7 +140,7 @@ final class Db extends Command
 				->dir()
 				->writable())
 			->def('.')
-			->description('The destination directory of the bundle file.');
+			->description('The destination directory for the bundle classes.');
 
 		$f = new KliOption('f');
 		$f->alias('file')
@@ -141,9 +152,10 @@ final class Db extends Command
 		$generate->addOption($n, (clone $d)->offsets(2));
 		$backup->addOption($d);
 		$ts_bundle->addOption($b_d);
+		$dart_bundle->addOption($b_d);
 		$source->addOption($f);
 
-		$this->addAction($build, $ts_bundle, $generate, $backup, $source);
+		$this->addAction($build, $ts_bundle, $dart_bundle, $generate, $backup, $source);
 	}
 
 	/**
@@ -206,7 +218,7 @@ final class Db extends Command
 			}
 		}
 
-		$gen = new Generator($db, false, false);
+		$gen = new GeneratorORM($db, false, false);
 
 		foreach ($map as $ns => $ok) {
 			if ($ok) {
@@ -215,7 +227,7 @@ final class Db extends Command
 				// we (re)generate classes only for tables
 				// in the given namespace
 				$tables = $db->getTables($ns);
-				$gen->generateORMClasses($tables, $dir);
+				$gen->generate($tables, $dir);
 
 				$cli->success(\sprintf('database classes generated: "%s".', $ns));
 			}
@@ -262,11 +274,34 @@ final class Db extends Command
 		$dir    = $options['d'];
 		$db     = DbManager::getDb();
 		$tables = $db->getTables();
-		$gen    = new Generator($db, true, true);
+		$gen    = new GeneratorTS($db, true, true);
 
-		$gen->generateTSClasses($tables, $dir);
+		$gen->generate($tables, $dir);
 		$cli->success('TypeScript entities bundle generated.')
-			->info(PathUtils::resolve($dir, 'gobl.bundle.ts'));
+			->info(PathUtils::resolve($dir, 'gobl'));
+	}
+
+	/**
+	 * Creates entities Dart bundle.
+	 *
+	 * @param array $options
+	 *
+	 * @throws \OZONE\OZ\Exceptions\BaseException
+	 * @throws \Exception
+	 */
+	private function dartBundle(array $options)
+	{
+		Utils::assertDatabaseAccess();
+
+		$cli    = $this->getCli();
+		$dir    = $options['d'];
+		$db     = DbManager::getDb();
+		$tables = $db->getTables();
+		$gen    = new GeneratorDart($db, true, true);
+
+		$gen->generate($tables, $dir);
+		$cli->success('Dart entities bundle generated.')
+			->info(PathUtils::resolve($dir, 'gobl'));
 	}
 
 	/**
