@@ -14,6 +14,7 @@ namespace OZONE\OZ\FS\Services;
 use OZONE\OZ\Core\BaseService;
 use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\FS\GetFilesHelper;
+use OZONE\OZ\Router\Route;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
 
@@ -27,7 +28,7 @@ class GetFiles extends BaseService
 		$format = SettingsManager::get('oz.files', 'OZ_GET_FILE_URI_EXTRA_FORMAT');
 
 		$options = [
-			'route:name'        => 'oz:files',
+			Route::OPTION_NAME  => 'oz:files',
 			'oz_file_id'        => '[0-9]+',
 			'oz_file_key'       => '[a-z0-9]+',
 			'oz_file_quality'   => '0|1|2|3',

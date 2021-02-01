@@ -14,6 +14,7 @@ namespace OZONE\OZ\FS\Services;
 use OZONE\OZ\Columns\Types\TypeFile;
 use OZONE\OZ\Core\BaseService;
 use OZONE\OZ\Core\SettingsManager;
+use OZONE\OZ\Router\Route;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
 
@@ -58,7 +59,7 @@ class UploadFiles extends BaseService
 	public static function registerRoutes(Router $router)
 	{
 		$options = [
-			'route:name' => 'oz:upload',
+			Route::OPTION_NAME => 'oz:upload',
 		];
 
 		$router->post('/upload[/]', function (RouteInfo $r) {

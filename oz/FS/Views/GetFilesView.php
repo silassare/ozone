@@ -13,6 +13,7 @@ namespace OZONE\OZ\FS\Views;
 
 use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\FS\GetFilesHelper;
+use OZONE\OZ\Router\Route;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
 use OZONE\OZ\Web\WebViewBase;
@@ -43,7 +44,7 @@ class GetFilesView extends WebViewBase
 		$format = SettingsManager::get('oz.files', 'OZ_GET_FILE_URI_EXTRA_FORMAT');
 
 		$options = [
-			'route:name'        => 'oz:files-static',
+			Route::OPTION_NAME  => 'oz:files-static',
 			'oz_file_id'        => '[0-9]+',
 			'oz_file_key'       => '[a-z0-9]+',
 			'oz_file_quality'   => '0|1|2|3',

@@ -12,6 +12,7 @@
 namespace OZONE\OZ\Web\Views;
 
 use OZONE\OZ\Exceptions\InternalErrorException;
+use OZONE\OZ\Router\Route;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
 use OZONE\OZ\Web\WebViewBase;
@@ -71,6 +72,6 @@ final class RedirectView extends WebViewBase
 			$view = new self($r);
 
 			return $view->mainRoute();
-		}, ['route:name' => 'oz:redirect']);
+		}, [Route::OPTION_NAME => 'oz:redirect']);
 	}
 }
