@@ -18,10 +18,12 @@ use Kli\KliOption;
 use Kli\Types\KliTypeBool;
 use Kli\Types\KliTypeString;
 use OZONE\OZ\Cli\Command;
+use OZONE\OZ\Cli\Utils\ServiceGenerator;
 use OZONE\OZ\Cli\Utils\Utils;
 use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\FS\FilesManager;
+use OZONE\OZ\FS\TemplatesUtils;
 
 final class Service extends Command
 {
@@ -83,9 +85,9 @@ final class Service extends Command
 		// option: -o alias --override
 		$o = new KliOption('o');
 		$o->alias('override')
-			->type(new KliTypeBool())
-			->def(false)
-			->description('To force override if a service with the same name exists.');
+		  ->type(new KliTypeBool())
+		  ->def(false)
+		  ->description('To force override if a service with the same name exists.');
 
 		$generate->addOption($n, $c, $t, $o);
 
@@ -108,7 +110,7 @@ final class Service extends Command
 		$table_name    = $options['t'];
 		$service_name  = $options['n'];
 		$service_class = $options['c'];
-		$override 	    = $options['o'];
+		$override      = $options['o'];
 		$service       = SettingsManager::get('oz.routes.api', $service_name);
 
 		if (null === $service || $override) {
@@ -119,10 +121,20 @@ final class Service extends Command
 			$service_dir = $fm->cd('Services', true)
 							  ->getRoot();
 
+			Generator::setTemplate(
+				'service.class',
+				TemplatesUtils::localize('gen/gobl/php/MyService.php'),
+				[
+					'MY_SERVICE_NS' => '<%$.service.namespace%>',
+					'MyService'     => '<%$.service.class%>',
+					'my_svc'        => '<%$.service.name%>',
+				]
+			);
+
 			$config            = SettingsManager::get('oz.config');
 			$service_namespace = $config['OZ_PROJECT_NAMESPACE'] . '\\Services';
-			$generator         = new Generator($db, false, false);
-			$info              = $generator->generateOZServiceClass(
+			$generator         = new ServiceGenerator($db, false, false);
+			$info              = $generator->generateServiceClass(
 				$table,
 				$service_namespace,
 				$service_dir,
