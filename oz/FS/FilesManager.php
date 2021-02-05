@@ -181,6 +181,44 @@ class FilesManager
 	}
 
 	/**
+	 * Walks in a given directory.
+	 *
+	 * When the current file is a directory, the walker callable
+	 * should return false in order to prevent recursion.
+	 *
+	 * @param string   $dir_path directory path
+	 * @param callable $walker   called for each file and directory
+	 *
+	 * @return $this
+	 */
+	public function walk($dir_path, callable $walker)
+	{
+		$abs_dir = PathUtils::resolve($this->root, (string) $dir_path);
+
+		$this->assert($abs_dir, ['directory' => true, 'read' => true]);
+
+		$res = \opendir($abs_dir);
+
+		while (false !== ($file = \readdir($res))) {
+			if ($file != '.' && $file != '..') {
+				$path = PathUtils::resolve($abs_dir, $file);
+
+				if (\is_dir($path)) {
+					$ret = \call_user_func_array($walker, [$file, $path, true]);
+
+					if ($ret !== false) {
+						$this->walk($path, $walker);
+					}
+				} elseif (\is_file($path)) {
+					\call_user_func_array($walker, [$file, $path, false]);
+				}
+			}
+		}
+
+		return $this;
+	}
+
+	/**
 	 * Gets a given directory content info.
 	 *
 	 * @param string $path the directory path
