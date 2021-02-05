@@ -41,6 +41,16 @@ interface MainHookReceiverInterface extends HookReceiverInterface
 	public function onSubRequest(HookContext $hc);
 
 	/**
+	 * Called when a route matches and will be executed.
+	 *
+	 * This is called until we get a route that returns a response.
+	 *
+	 * @param HookContext                $hc
+	 * @param \OZONE\OZ\Router\RouteInfo $route_info
+	 */
+	public function onBeforeRouteRun(HookContext $hc, RouteInfo $route_info);
+
+	/**
 	 * Called when a route is found.
 	 *
 	 * @param HookContext                $hc

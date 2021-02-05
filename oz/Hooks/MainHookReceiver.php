@@ -64,6 +64,13 @@ final class MainHookReceiver implements MainHookReceiverInterface
 
 	/**
 	 * @inheritDoc
+	 */
+	public function onBeforeRouteRun(HookContext $hc, RouteInfo $route_info)
+	{
+	}
+
+	/**
+	 * @inheritDoc
 	 *
 	 * @throws \Exception
 	 */

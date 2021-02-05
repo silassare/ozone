@@ -76,6 +76,25 @@ final class MainHookProvider extends HookProvider
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */
+	public function triggerBeforeRouteRun(Context $context, RouteInfo $route_info)
+	{
+		$hc = new HookContext($context);
+
+		$this->loop('onBeforeRouteRun', function (MainHookReceiverInterface $h) use ($hc, $route_info) {
+			$h->onBeforeRouteRun($hc, $route_info);
+		}, function (callable $cb) use ($hc, $route_info) {
+			\call_user_func($cb, $hc, $route_info);
+		});
+
+		return $hc->getResponse();
+	}
+
+	/**
+	 * @param \OZONE\OZ\Core\Context     $context
+	 * @param \OZONE\OZ\Router\RouteInfo $route_info
+	 *
+	 * @return \OZONE\OZ\Http\Response
+	 */
 	public function triggerRouteFound(Context $context, RouteInfo $route_info)
 	{
 		$hc = new HookContext($context);
@@ -231,6 +250,17 @@ final class MainHookProvider extends HookProvider
 	 * @return $this
 	 */
 	public function onRouteFound(callable $cb, $priority = HookProvider::RUN_DEFAULT)
+	{
+		return $this->addHookReceiverCallable(__FUNCTION__, $cb, $priority);
+	}
+
+	/**
+	 * @param callable $cb
+	 * @param int      $priority
+	 *
+	 * @return $this
+	 */
+	public function onBeforeRouteRun(callable $cb, $priority = HookProvider::RUN_DEFAULT)
 	{
 		return $this->addHookReceiverCallable(__FUNCTION__, $cb, $priority);
 	}
