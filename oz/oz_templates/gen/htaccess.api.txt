@@ -12,6 +12,10 @@ RedirectMatch 403 ^/app/.*$
 #
 RedirectMatch 403 ^/oz/.*$
 
+# disable access to /oz_private/*
+#
+RedirectMatch 403 ^/oz_private/.*$
+
 # disable access to /debug.log
 #
 <Files /debug.log>
@@ -28,10 +32,10 @@ RedirectMatch 403 ^/oz/.*$
 # start rewriting
 #
 <IfModule mod_rewrite.c>
-   RewriteEngine on
+	RewriteEngine on
 
-   RewriteCond %{REQUEST_URI}  !^/index\.php
-   RewriteCond %{REQUEST_URI}  !^/robots\.txt
-   RewriteCond %{REQUEST_URI}  !^/favicon\.ico
-   RewriteRule (.*)        index.php [L]
+	RewriteCond %{REQUEST_URI}  !^/index\.php
+	RewriteCond %{REQUEST_URI}  !^/robots\.txt
+	RewriteCond %{REQUEST_URI}  !^/favicon\.ico
+	RewriteRule (.*)			index.php [L]
 </IfModule>
