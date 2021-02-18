@@ -12,6 +12,9 @@
 namespace OZONE\OZ\Exceptions;
 
 use Exception;
+use Gobl\CRUD\Exceptions\CRUDException;
+use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\ORM\Exceptions\ORMQueryException;
 use OZONE\OZ\Core\Context;
 use OZONE\OZ\Core\ResponseHolder;
 use Throwable;
@@ -81,6 +84,8 @@ abstract class BaseException extends Exception
 		self::INVALID_FORM        => 400,
 	];
 
+	private static $force_json = false;
+
 	/**
 	 * @var array
 	 */
@@ -94,7 +99,7 @@ abstract class BaseException extends Exception
 	 * @param null|array      $data     additional error data
 	 * @param null|\Throwable $previous previous throwable used for the exception chaining
 	 */
-	public function __construct($message, $code, array $data = null, Throwable $previous = null)
+	public function __construct($message, $code, array $data = null, $previous = null)
 	{
 		parent::__construct($message, $code, $previous);
 
@@ -105,7 +110,7 @@ abstract class BaseException extends Exception
 	 * Gets data.
 	 *
 	 * We shouldn't expose all debug data to client, may contains sensitive data
-	 * like table structure, table name etc...
+	 * like table structure, table name etc.
 	 * all sensitive data should be set with the sensitive data prefix
 	 *
 	 * @param bool $show_sensitive
@@ -192,13 +197,16 @@ abstract class BaseException extends Exception
 			}
 			$accept = $request->getHeaderLine('HTTP_ACCEPT');
 
-			if (\is_int(\strpos($accept, 'text/html')) || $context->isWebContext()) {
+			if (!self::$force_json && (\is_int(\strpos($accept, 'text/html')) || $context->isWebContext())) {
 				$this->showCustomErrorPage($context);
 			} else {
 				$this->showJson($context);
 			}
-		} catch (Throwable $e) {
+		} catch (Exception $e) {
 			oz_logger($e);
+			$this->errorHandlingError();
+		} catch (Throwable $t) {
+			oz_logger($t);
 			$this->errorHandlingError();
 		}
 	}
@@ -240,7 +248,7 @@ abstract class BaseException extends Exception
 	 *
 	 * @param \OZONE\OZ\Core\Context $context
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 */
 	private function showCustomErrorPage(Context $context)
 	{
@@ -248,6 +256,16 @@ abstract class BaseException extends Exception
 			'exception' => $this,
 			'context'   => $context,
 		]);
+	}
+
+	/**
+	 * Sets whether json response should be forced for error.
+	 *
+	 * @param bool $force_json
+	 */
+	public static function setForceJson($force_json)
+	{
+		self::$force_json = (bool) $force_json;
 	}
 
 	/**
@@ -274,7 +292,10 @@ abstract class BaseException extends Exception
 <html lang="en">
 	<head>
 		<title>Error</title>
-		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<meta
+			name="viewport"
+			content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+		/>
 		<style>
 			body{
 				margin: 0;
@@ -305,13 +326,13 @@ ERROR_PAGE;
 	/**
 	 * Convert a given throwable to string.
 	 *
-	 * @param \Throwable $e
+	 * @param \Throwable $throwable
 	 *
 	 * @return string
 	 */
-	public static function throwableToString(Throwable $e)
+	public static function throwableToString($throwable)
 	{
-		$describe = self::throwableDescribe($e);
+		$describe = self::throwableDescribe($throwable);
 		$data     = \json_encode($describe['data']);
 
 		return <<<STRING
@@ -328,27 +349,60 @@ STRING;
 	/**
 	 * Describe a given throwable.
 	 *
-	 * @param \Throwable $e
+	 * @param \Throwable $throwable
 	 *
 	 * @return array
 	 */
-	public static function throwableDescribe(Throwable $e)
+	public static function throwableDescribe($throwable)
 	{
 		$data = [];
 
-		if (\method_exists($e, 'getData')) {
-			$data = $e->getData(true);
+		if (\method_exists($throwable, 'getData')) {
+			$data = $throwable->getData(true);
 		}
 
 		return [
-			'file'    => $e->getFile(),
-			'line'    => $e->getLine(),
-			'code'    => $e->getCode(),
-			'message' => $e->getMessage(),
+			'file'    => $throwable->getFile(),
+			'line'    => $throwable->getLine(),
+			'code'    => $throwable->getCode(),
+			'message' => $throwable->getMessage(),
 			'data'    => $data,
-			'class'   => \get_class($e),
-			'trace'   => $e->getTraceAsString(),
+			'class'   => \get_class($throwable),
+			'trace'   => $throwable->getTraceAsString(),
 		];
+	}
+
+	/**
+	 * Converts Gobl exceptions unto O'Zone exceptions.
+	 *
+	 * @param \Throwable $throwable the throwable to convert
+	 *
+	 * @return \OZONE\OZ\Exceptions\BaseException
+	 */
+	public static function tryConvert($throwable)
+	{
+		if ($throwable instanceof self) {
+			return $throwable;
+		}
+
+		if ($throwable instanceof TypesInvalidValueException || $throwable instanceof ORMQueryException) {
+			$msg = $throwable->getMessage();
+
+			if ($msg === \strtoupper($msg)) {
+				return new InvalidFormException($msg, $throwable->getData(), $throwable);
+			}
+
+			return new InvalidFormException(null, [
+				'type' => $msg,
+				'data' => $throwable->getData(),
+			], $throwable);
+		}
+
+		if ($throwable instanceof CRUDException) {
+			return new ForbiddenException($throwable->getMessage(), $throwable->getData(), $throwable);
+		}
+
+		return new InternalErrorException(null, null, $throwable);
 	}
 
 	/**
