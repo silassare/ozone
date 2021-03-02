@@ -29,6 +29,7 @@ use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
 use OZONE\OZ\User\UsersManager;
 use RuntimeException;
+use Throwable;
 
 final class Context
 {
@@ -149,7 +150,7 @@ final class Context
 	/**
 	 * Handle the incoming request.
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 *
 	 * @return \OZONE\OZ\Core\Context
 	 */
@@ -186,7 +187,7 @@ final class Context
 				// set client
 				if ($api_key = $this->getApiKey()) {
 					$this->client              = $this->getApiKeyClient($api_key);
-					$try_logon_as_client_owner = ($this->client && $this->client->getUserId()) ? true : false;
+					$try_logon_as_client_owner = ($this->client && $this->client->getUserId());
 				} else {
 					$client = $this->getSessionClient();
 
@@ -379,7 +380,7 @@ final class Context
 	 */
 	public function buildRouteUri($route_name, array $args = [], array $query = [])
 	{
-		$path = $this->router->buildRoutePath($route_name, $args);
+		$path = $this->router->buildRoutePath($this, $route_name, $args);
 
 		return $this->buildUri($path, $query);
 	}
@@ -535,13 +536,13 @@ final class Context
 	 * @param array  $query
 	 * @param bool   $respond
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */
 	public function subRequestRoute($route_name, array $args = [], array $query = [], $respond = true)
 	{
-		$path = $this->router->buildRoutePath($route_name, $args);
+		$path = $this->router->buildRoutePath($this, $route_name, $args);
 
 		return $this->subRequestPath($path, $args, $query, $respond);
 	}
@@ -554,7 +555,7 @@ final class Context
 	 * @param array  $query
 	 * @param bool   $respond
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */
@@ -586,7 +587,7 @@ final class Context
 	 * @param string   $url
 	 * @param null|int $status
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 */
 	public function redirect($url, $status = null)
 	{
@@ -617,7 +618,7 @@ final class Context
 	 * @param array  $query
 	 * @param bool   $inform_user
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 */
 	public function redirectRoute($route_name, array $args = [], array $query = [], $inform_user = true)
 	{
@@ -630,7 +631,7 @@ final class Context
 			]
 		);
 
-		$path = $this->router->buildRoutePath($route_name, $args);
+		$path = $this->router->buildRoutePath($this, $route_name, $args);
 
 		self::$redirect_history[$route_name] = ['path' => $path, 'args' => $args];
 
@@ -659,14 +660,14 @@ final class Context
 	/**
 	 * Process the request.
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 */
 	private function processRequest()
 	{
 		$request = $this->request;
 		$uri     = $request->getUri();
 		$mhp     = MainHookProvider::getInstance();
-		$results = $this->router->find($request->getMethod(), $uri->getPath());
+		$results = $this->router->find($request->getMethod(), $uri->getPath(), true);
 
 		switch ($results['status']) {
 			case Router::NOT_FOUND:
@@ -678,15 +679,36 @@ final class Context
 
 				break;
 			case Router::FOUND:
-				/* @var \OZONE\OZ\Router\Route */
-				$route = $results['found'][0];
-				/* @var array */
-				$args = $results['found'][1];
+				$all   = \array_merge($results['static'], $results['dynamic']);
+				$found = false;
 
-				$ri             = new RouteInfo($this, $route, $args);
-				$this->response = $mhp->triggerRouteFound($this, $ri);
-				$this->response = $this->runRoute($route, $ri);
-				$this->response = $mhp->triggerResponse($this);
+				// will loop until we found a route that return a response
+				// when a route return false we run the next route that matches
+				foreach ($all as $match) {
+					/* @var \OZONE\OZ\Router\Route */
+					$route = $match[0];
+					/* @var array */
+					$args = $match[1];
+
+					$ri = new RouteInfo($this, $route, $args);
+
+					$this->response = $mhp->triggerBeforeRouteRun($this, $ri);
+
+					$result = $this->runRoute($route, $ri);
+
+					if ($result instanceof Response) {
+						$this->response = $result;
+						$this->response = $mhp->triggerRouteFound($this, $ri);
+						$this->response = $mhp->triggerResponse($this);
+						$found          = true;
+
+						break;
+					}
+				}
+
+				if (!$found) {
+					$this->response = $mhp->triggerRouteNotFound($this);
+				}
 
 				break;
 		}
@@ -698,9 +720,9 @@ final class Context
 	 * @param \OZONE\OZ\Router\Route     $route
 	 * @param \OZONE\OZ\Router\RouteInfo $route_info
 	 *
-	 * @throws \Exception
+	 * @throws \Throwable
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return false|\OZONE\OZ\Http\Response
 	 */
 	private function runRoute(Route $route, RouteInfo $route_info)
 	{
@@ -723,20 +745,33 @@ final class Context
 
 		try {
 			\ob_start();
-			$return  = \call_user_func($route->getCallable(), $route_info);
-			$content = \ob_get_clean();
+			$return        = \call_user_func($route->getCallable(), $route_info);
+			$output_buffer = \ob_get_clean();
 		} catch (Exception $e) {
 			\ob_clean();
 
 			throw $e;
+		} catch (Throwable $t) {
+			\ob_clean();
+
+			throw $t;
 		}
 
-		if (!empty($content)) {
-			throw new InternalErrorException('Writing to output buffer is not allowed.', $debug_data($route, ['content' => $content]));
+		if (!empty($output_buffer)) {
+			throw new InternalErrorException(
+				'Writing to output buffer is not allowed.',
+				$debug_data($route, ['out_buffer' => $output_buffer])
+			);
 		}
 
 		if (!($return instanceof Response)) {
-			throw new InternalErrorException(\sprintf('Invalid return type, got "%s" will expecting "%s".', \gettype($return), Response::class), $debug_data($route));
+			if ($return !== false) {
+				throw new InternalErrorException(\sprintf(
+					'Invalid return type, got "%s" will expecting "%s" or "false".',
+					\gettype($return),
+					Response::class
+				), $debug_data($route));
+			}
 		}
 
 		return $return;
@@ -773,18 +808,18 @@ final class Context
 	 *
 	 * @return array
 	 */
-	private function getCustomHeadersNameList()
+	private function getAllowedHeadersNameList()
 	{
-		$custom_headers[]         = 'accept';
-		$custom_headers[]         = \strtolower(SettingsManager::get('oz.config', 'OZ_API_KEY_HEADER_NAME'));
-		$custom_headers[]         = \strtolower(SettingsManager::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_NAME'));
+		$headers                  = SettingsManager::get('oz.clients', 'OZ_CORS_ALLOWED_HEADERS');
+		$headers[]                = \strtolower(SettingsManager::get('oz.config', 'OZ_API_KEY_HEADER_NAME'));
+		$headers[]                = \strtolower(SettingsManager::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_NAME'));
 		$allow_real_method_header = SettingsManager::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
 
 		if ($allow_real_method_header) {
-			$custom_headers[] = \strtolower(SettingsManager::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME'));
+			$headers[] = \strtolower(SettingsManager::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME'));
 		}
 
-		return $custom_headers;
+		return $headers;
 	}
 
 	/**
@@ -839,8 +874,7 @@ final class Context
 		}
 
 		if ($this->request->isOptions()) {
-			// enable self made headers
-			$h_list['Access-Control-Allow-Headers'] = $this->getCustomHeadersNameList();
+			$h_list['Access-Control-Allow-Headers'] = $this->getAllowedHeadersNameList();
 			$h_list['Access-Control-Allow-Methods'] = ['OPTIONS', 'GET', 'POST', 'PATCH', 'PUT', 'DELETE'];
 			$h_list['Access-Control-Max-Age']       = $life_time;
 		} elseif (!$this->isSubRequest()) {
@@ -886,8 +920,8 @@ final class Context
 	 *
 	 * @param string $api_key
 	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 	 *
 	 * @return \OZONE\OZ\Db\OZClient
 	 */
@@ -915,7 +949,8 @@ final class Context
 	/**
 	 * Gets client from session
 	 *
-	 * @throws \OZONE\OZ\Exceptions\BaseException
+	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+	 * @throws \Throwable
 	 *
 	 * @return \OZONE\OZ\Db\OZClient
 	 */

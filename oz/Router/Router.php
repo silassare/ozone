@@ -11,14 +11,14 @@
 
 namespace OZONE\OZ\Router;
 
-use InvalidArgumentException;
+use OZONE\OZ\Core\Context;
 use OZONE\OZ\Exceptions\InternalErrorException;
 
 class Router
 {
-	const NOT_FOUND          = 0;
+	const NOT_FOUND = 0;
 
-	const FOUND              = 1;
+	const FOUND = 1;
 
 	const METHOD_NOT_ALLOWED = 2;
 
@@ -45,10 +45,81 @@ class Router
 	private $dynamicRoutes = [];
 
 	/**
+	 * @var array
+	 */
+	private $defaultPlaceholders = [];
+
+	/**
 	 * Router constructor.
 	 */
 	public function __construct()
 	{
+	}
+
+	/**
+	 * Gets default options.
+	 *
+	 * @return array
+	 */
+	public function getDefaultOptions()
+	{
+		$options = [];
+
+		foreach ($this->defaultPlaceholders as $placeholder => $dt) {
+			$options[$placeholder] = $dt['regex'];
+		}
+
+		return $options;
+	}
+
+	/**
+	 * Declare a route placeholder provider.
+	 *
+	 * @param string   $placeholder
+	 * @param string   $regex
+	 * @param callable $provider
+	 *
+	 * @return $this
+	 */
+	public function declarePlaceholder($placeholder, $regex, callable $provider)
+	{
+		$this->defaultPlaceholders[$placeholder] = [
+			'regex'    => $regex,
+			'provider' => $provider,
+		];
+
+		return $this;
+	}
+
+	/**
+	 * Gets a given declared placeholder value.
+	 *
+	 * @param \OZONE\OZ\Core\Context $context
+	 * @param string                 $placeholder
+	 *
+	 * @return null|string
+	 */
+	public function getDeclaredPlaceholderValue(Context $context, $placeholder)
+	{
+		if (isset($this->defaultPlaceholders[$placeholder])) {
+			$value = \call_user_func($this->defaultPlaceholders[$placeholder]['provider'], $context);
+
+			if (null === $value) {
+				return null;
+			}
+
+			if (\is_string($value) || \is_numeric($value)) {
+				return $value;
+			}
+
+			throw new \RuntimeException(\sprintf(
+				'Declared provider for route placeholder "%s" should return string or null value not %s.',
+				$placeholder,
+				\gettype($value)
+			));
+		}
+
+		return null;
 	}
 
 	/**
@@ -84,14 +155,15 @@ class Router
 	/**
 	 * Builds route path.
 	 *
-	 * @param string $route_name
-	 * @param array  $args
+	 * @param \OZONE\OZ\Core\Context $context
+	 * @param string                 $route_name
+	 * @param array                  $args
 	 *
 	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 	 *
 	 * @return string
 	 */
-	public function buildRoutePath($route_name, array $args = [])
+	public function buildRoutePath(Context $context, $route_name, array $args = [])
 	{
 		$route = $this->findWithName($route_name);
 
@@ -99,7 +171,7 @@ class Router
 			throw new InternalErrorException(\sprintf('There is no route named "%s".', $route_name));
 		}
 
-		return $route->toPath($args);
+		return $route->toPath($context, $args);
 	}
 
 	/**
@@ -112,13 +184,13 @@ class Router
 	public function findWithName($name)
 	{
 		foreach ($this->staticRoutes as $route) {
-			if ($route->getOption('route:name', null) === $name) {
+			if ($route->getOption(Route::OPTION_NAME, null) === $name) {
 				return $route;
 			}
 		}
 
 		foreach ($this->dynamicRoutes as $route) {
-			if ($route->getOption('route:name', null) === $name) {
+			if ($route->getOption(Route::OPTION_NAME, null) === $name) {
 				return $route;
 			}
 		}
@@ -137,20 +209,23 @@ class Router
 	 */
 	public function find($method, $path, $all = false)
 	{
-		$method  = \strtoupper($method);
-		$found   = null;
-		$static  = [];
-		$dynamic = [];
+		$method          = \strtoupper($method);
+		$first           = null;
+		$static          = [];
+		$dynamic         = [];
+		$static_matches  = [];
+		$dynamic_matches = [];
 
 		if (isset($this->allowedMethods[$method])) {
 			foreach ($this->staticRoutes as $route) {
 				$args = [];
 
 				if ($route->is($path, $args)) {
-					$static[] = $route;
+					$item             = [$route, $args];
+					$static_matches[] = $item;
 
 					if ($route->accept($method)) {
-						$found = [$route, $args];
+						$static[] = $item;
 
 						if (!$all) {
 							break;
@@ -159,15 +234,16 @@ class Router
 				}
 			}
 
-			if ($all || !isset($found)) {
+			if ($all || empty($static)) {
 				foreach ($this->dynamicRoutes as $route) {
 					$args = [];
 
 					if ($route->is($path, $args)) {
-						$dynamic[] = $route;
+						$item              = [$route, $args];
+						$dynamic_matches[] = $item;
 
 						if ($route->accept($method)) {
-							$found = [$route, $args];
+							$dynamic[] = $item;
 
 							if (!$all) {
 								break;
@@ -178,19 +254,25 @@ class Router
 			}
 		}
 
-		if (isset($found)) {
+		if (isset($static[0])) {
 			$status = self::FOUND;
-		} elseif (!empty($static) || !empty($dynamic)) {
+			$first  = $static[0];
+		} elseif (isset($dynamic[0])) {
+			$status = self::FOUND;
+			$first  = $dynamic[0];
+		} elseif (!empty($static_matches) || !empty($dynamic_matches)) {
 			$status = self::METHOD_NOT_ALLOWED;
 		} else {
 			$status = self::NOT_FOUND;
 		}
 
 		return [
-			'status'  => $status,
-			'found'   => $found,
-			'static'  => $static,
-			'dynamic' => $dynamic,
+			'status'          => $status,
+			'first'           => $first, // the first that matches the route and the method
+			'static'          => $all ? $static : [], // matches the route and method
+			'dynamic'         => $all ? $dynamic : [], // matches the route and the method
+			'static_matches'  => $all ? $static_matches : [], // matches the route and/or the method
+			'dynamic_matches' => $all ? $dynamic_matches : [], // matches the route and/or the method
 		];
 	}
 
@@ -218,21 +300,30 @@ class Router
 			if (!\is_string($method) || !isset($this->allowedMethods[$method])) {
 				$allowed = \implode('|', \array_keys($this->allowedMethods));
 
-				throw new InvalidArgumentException(\sprintf('Invalid method name "%s" for route: %s . Allowed methods -> %s', $method, $route_path, $allowed));
+				throw new \InvalidArgumentException(\sprintf(
+					'Invalid method name "%s" for route: %s . Allowed methods -> %s',
+					$method,
+					$route_path,
+					$allowed
+				));
 			}
 
 			$methods_filtered[] = $method;
 		}
 
 		if (!\is_string($route_path) || !\strlen($route_path)) {
-			throw new InvalidArgumentException(\sprintf('Empty or invalid route path: %s', $route_path));
+			throw new \InvalidArgumentException(\sprintf('Empty or invalid route path: %s', $route_path));
 		}
 
 		if (!\is_callable($callable)) {
-			throw new InvalidArgumentException(\sprintf('Got "%s" while expecting callable for: %s', \gettype($callable), $route_path));
+			throw new \InvalidArgumentException(\sprintf(
+				'Got "%s" while expecting callable for: %s',
+				\gettype($callable),
+				$route_path
+			));
 		}
 
-		$route = new Route($methods_filtered, $route_path, $callable, $options);
+		$route = new Route($this, $methods_filtered, $route_path, $callable, $options);
 
 		if ($route->isDynamic()) {
 			$this->dynamicRoutes[] = $route;
