@@ -14,6 +14,7 @@ namespace OZONE\OZ\Exceptions\Views;
 use OZONE\OZ\Core\Context;
 use OZONE\OZ\Exceptions\BaseException;
 use OZONE\OZ\Exceptions\InternalErrorException;
+use OZONE\OZ\Router\Route;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
 use OZONE\OZ\Utils\StringUtils;
@@ -89,6 +90,6 @@ final class ErrorView extends WebViewBase
 			$view = new self($r);
 
 			return $view->mainRoute();
-		}, ['route:name' => 'oz:error']);
+		}, [Route::OPTION_NAME => 'oz:error']);
 	}
 }
