@@ -19,8 +19,7 @@ use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\Loader\ClassLoader;
 use OZONE\OZ\Utils\StringUtils;
 
-
-include_once OZ_OZONE_DIR . 'oz_vendors' . DS . 'autoload.php';
+include_once OZ_OZONE_DIR . '..' . DS . 'vendor' . DS . 'autoload.php';
 
 include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
 
@@ -55,7 +54,7 @@ final class Cli extends Kli
 		$title = 'oz';
 
 		if ($config = Utils::loadProjectConfig()) {
-			$title = 'oz: ' . StringUtils::stringToURLSlug($config['OZ_PROJECT_NAME']);
+			$title .= ':' . StringUtils::stringToURLSlug($config['OZ_PROJECT_NAME']);
 			// Adds project namespace root directory
 			ClassLoader::addNamespace($config['OZ_PROJECT_NAMESPACE'], OZ_APP_DIR);
 			// Init database
@@ -119,7 +118,11 @@ final class Cli extends Kli
 					if ($cmd instanceof Command) {
 						$this->addCommand($cmd);
 					} else {
-						throw new Exception(\sprintf('Your custom command class "%s" should extends "%s".', $cmd_class, Command::class));
+						throw new Exception(\sprintf(
+							'Your custom command class "%s" should extends "%s".',
+							$cmd_class,
+							Command::class
+						));
 					}
 				} else {
 					throw new Exception(\sprintf('Class "%s" not found for command "%s".', $cmd_class, $cmd_name));
