@@ -66,7 +66,7 @@ final class Hasher
 		$accept = [32, 64];
 
 		if (!\in_array($length, $accept)) {
-			$values = \implode($accept, ' , ');
+			$values = \implode(' , ', $accept);
 
 			throw new InvalidArgumentException("hash length argument should be on of this list: $values");
 		}
