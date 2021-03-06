@@ -11,6 +11,7 @@
 
 namespace OZONE\OZ\Utils;
 
+use Exception;
 use OZONE\OZ\Core\SettingsManager;
 
 final class StringUtils
@@ -46,7 +47,8 @@ final class StringUtils
 		}
 
 		// convert some chars to html entities
-		return \htmlentities($str, \ENT_QUOTES, 'UTF-8', false /* this prevent for example: &amp; to become &amp;amp; */);
+		// third arg is 'false' to prevent for example: &amp; to become &amp;amp;
+		return \htmlentities($str, \ENT_QUOTES, 'UTF-8', false);
 	}
 
 	/**
@@ -63,7 +65,7 @@ final class StringUtils
 			return '';
 		}
 
-		if (\strlen($str) && \strlen($prefix) && 0 === \strpos($str, $prefix)) {
+		if (self::hasPrefix($str, $prefix)) {
 			$str = \substr($str, \strlen($prefix));
 		}
 
@@ -84,11 +86,37 @@ final class StringUtils
 			return '';
 		}
 
-		if (\strlen($str) && \strlen($suffix) && 0 < \strpos($str, $suffix)) {
+		if (self::hasSuffix($str, $suffix)) {
 			$str = \substr($str, 0, \strlen($str) - \strlen($suffix));
 		}
 
 		return $str;
+	}
+
+	/**
+	 * checks if a given string has a given suffix
+	 *
+	 * @param string $str
+	 * @param string $suffix
+	 *
+	 * @return string
+	 */
+	public static function hasSuffix($str, $suffix)
+	{
+		return \strlen($str) && \strlen($suffix) && \strpos($str, $suffix) === \strlen($str) - \strlen($suffix);
+	}
+
+	/**
+	 * checks if a given string has a given prefix
+	 *
+	 * @param string $str
+	 * @param string $prefix
+	 *
+	 * @return string
+	 */
+	public static function hasPrefix($str, $prefix)
+	{
+		return \strlen($str) && \strlen($prefix) && 0 === \strpos($str, $prefix);
 	}
 
 	/**
@@ -118,7 +146,7 @@ final class StringUtils
 			return @\iconv($from, $to, $data);
 		}
 
-		throw new \Exception('Make sure PHP module "iconv" or "mbstring" are installed.');
+		throw new Exception('Make sure PHP module "iconv" or "mbstring" are installed.');
 	}
 
 	/**
@@ -204,15 +232,16 @@ final class StringUtils
 	 * Creates URL Slug from string (ex: Post Title)
 	 *
 	 * @param string $string
+	 * @param string $sep
 	 *
 	 * @return string
 	 */
-	public static function stringToURLSlug($string)
+	public static function stringToURLSlug($string, $sep = '-')
 	{
 		$string = \trim($string);
 		$string = self::removeAccents($string);
-		$string = \preg_replace('~[^a-zA-Z0-9-]+~', '-', $string);
-		$string = \preg_replace('~[-]{2,}~', '-', $string);
+		$string = \preg_replace('~[^a-zA-Z0-9-]+~', $sep, $string);
+		$string = \preg_replace('~[' . $sep . ']{2,}~', $sep, $string);
 
 		return \trim(\strtolower($string), '-');
 	}
