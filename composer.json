@@ -19,6 +19,7 @@
     "ext-gd": "*",
     "ext-libxml": "*",
     "ext-simplexml": "*",
+		"ext-posix": "*",
     "silassare/otpl": "dev-master",
     "silassare/gobl": "dev-master",
     "silassare/kli": "dev-master",
