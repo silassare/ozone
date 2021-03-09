@@ -26,9 +26,15 @@
     "claviska/simpleimage": "^3.3",
     "psr/http-message": "^1.0"
   },
-  "config": {
-    "vendor-dir": "oz/oz_vendors"
+	"require-dev": {
+		"friendsofphp/php-cs-fixer": "^2.16",
+		"squizlabs/php_codesniffer": "^3.5",
+		"phpcompatibility/php-compatibility": "*"
   },
+	"scripts": {
+		"post-install-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths vendor/phpcompatibility/php-compatibility",
+		"post-update-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths vendor/phpcompatibility/php-compatibility"
+	},
   "homepage": "https://github.com/silassare/ozone#readme",
   "archive": {
     "exclude": [
