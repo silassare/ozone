@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 
 #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # This script is intended to be run like this:
 #
-# wget -q -O - https://github.com/silassare/ozone/raw/master/install.sh | sudo bash
+# wget -qO- https://raw.githubusercontent.com/silassare/ozone/master/install.sh | sudo bash
 #
 #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -11,23 +11,28 @@
 clear
 
 shout(){
-	case $2 in
-		error)
-		echo -e "\033[31;31m$1\033[0m"
-		;;
+	# Only use colors if connected to a terminal
+	if [ -t 1 ]; then
+		case $2 in
+			error)
+			echo -e "\033[31;31m$1\033[0m"
+			;;
 
-		success)
-		echo -e "\033[0;32m$1\033[0m"
-		;;
+			success)
+			echo -e "\033[0;32m$1\033[0m"
+			;;
 
-		info)
-		echo -e "\033[33;33m$1\033[0m"
-		;;
+			info)
+			echo -e "\033[33;33m$1\033[0m"
+			;;
 
-		*)
-		echo "$1"
-		;;
-	esac
+			*)
+			echo "$1"
+			;;
+		esac
+	else
+		echo "$1";
+	fi
 }
 
 shout_error(){
@@ -165,34 +170,37 @@ set_php_ini_value(){
 }
 
 create_oz_sh(){
-	local VERSION="$1"
-	local OUT="$2"
+	local INSTALL_PATH="$1"
+	local VERSION="$2"
+	local OUT="$3"
 
 	cat << "EOF" > "$OUT"
 #!/bin/bash
 
+# VERSION: __DEFAULT_VERSION__
 # When the current folder is that of an O'Zone project
 # we launch the version corresponding to that used in
 # the project or we use the default version
 
-INSTALL_DIR=/opt/ozone
-CONFIG_FILE="$(pwd)/api/app/oz_settings/oz.config.php"
-VERSION="__DEFAULT_VERSION__"
+OZ=__INSTALL_PATH__/vendor/bin/oz
+PROJECT_OZ="$(pwd)/api/vendor/bin/oz"
+PROJECT_CONFIG_FILE="$(pwd)/api/app/oz_settings/oz.config.php"
 
-if [ -f "$CONFIG_FILE" ]; then
+# makes sure we are in project root directory
+if [ -f "$PROJECT_CONFIG_FILE" ]; then
 
-	PROJECT_VERSION=$(grep "OZ_OZONE_VERSION" "$CONFIG_FILE" | sed -s 's/[^0-9\.]//g')
-
-	if [ "$PROJECT_VERSION" != "" ] && [ -d "$INSTALL_DIR/$PROJECT_VERSION" ]; then
-		VERSION=$PROJECT_VERSION
+	# do we have oz executable in this project
+	if [ -f "$PROJECT_OZ" ]; then
+		OZ=$PROJECT_OZ
 	fi
 fi
 
-"$INSTALL_DIR/$VERSION/oz/index.php" "$@"
+$OZ "$@"
 
 EOF
 
 	sed -i -e "s/__DEFAULT_VERSION__/$VERSION/g" "$OUT"
+	sed -i -e "s/__INSTALL_PATH__/$INSTALL_PATH/g" "$OUT"
 }
 
 #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -219,7 +227,8 @@ apt-get -qq -o=Dpkg::Use-Pty=0 -y install apt-utils < /dev/null
 
 shout "Getting latest O'Zone version"
 
-CURRENT_VERSION="$(wget -q -O - https://github.com/silassare/ozone/raw/master/VERSION | sed -s 's/[^0-9\.]//g')"
+
+CURRENT_VERSION="$(wget -q -O - https://raw.githubusercontent.com/silassare/ozone/master/VERSION | sed -s 's/[^0-9\.]//g')"
 INSTALL_PATH=/opt/ozone/$CURRENT_VERSION
 FRESH_INSTALL=0
 
@@ -310,10 +319,10 @@ composer install
 shout "Making O'Zone Cli globally executable..."
 
 OZ_EXECUTABLE=/usr/bin/oz
-OZ_INDEX=$INSTALL_PATH/oz/index.php
+OZ_INDEX=$INSTALL_PATH/vendor/bin/oz
 
 # O'Zone Cli should be accessible using "oz" or "ozone" command
-create_oz_sh "$CURRENT_VERSION" "$OZ_EXECUTABLE"
+create_oz_sh "$INSTALL_PATH" "$CURRENT_VERSION" "$OZ_EXECUTABLE"
 ln -s -f "$OZ_EXECUTABLE" /usr/bin/ozone
 
 # Set all directories permissions to 755 rwxr-xr-x
