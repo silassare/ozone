@@ -30,32 +30,6 @@ final class Cli extends Kli
 	}
 
 	/**
-	 * Runs the commands.
-	 *
-	 * @param array $arg
-	 *
-	 * @throws \Exception
-	 */
-	public function run(array $arg)
-	{
-		$title = 'oz';
-
-		if ($config = Utils::loadProjectConfig()) {
-			$title .= ':' . StringUtils::stringToURLSlug($config['OZ_PROJECT_NAME']);
-			// Adds project namespace root directory
-			ClassLoader::addNamespace($config['OZ_PROJECT_NAMESPACE'], OZ_APP_DIR);
-			// Init database
-			DbManager::init();
-		}
-
-		\cli_set_process_title($title);
-
-		$this->loadCommands();
-
-		parent::execute($arg);
-	}
-
-	/**
 	 * @inheritdoc
 	 */
 	public function welcome()
@@ -116,5 +90,33 @@ final class Cli extends Kli
 				}
 			}
 		}
+	}
+
+	/**
+	 * Runs the commands.
+	 *
+	 * @param array $arg
+	 *
+	 * @throws \Exception
+	 *
+	 * @return \OZONE\OZ\Cli\Cli
+	 */
+	public static function run(array $arg)
+	{
+		$title = 'oz';
+
+		if ($config = Utils::loadProjectConfig()) {
+			$title .= ':' . StringUtils::stringToURLSlug($config['OZ_PROJECT_NAME']);
+			// Adds project namespace root directory
+			ClassLoader::addNamespace($config['OZ_PROJECT_NAMESPACE'], OZ_APP_DIR);
+			// Init database
+			DbManager::init();
+		}
+
+		\cli_set_process_title($title);
+
+		$cli = new self();
+
+		return $cli->loadCommands()->execute($arg);
 	}
 }
