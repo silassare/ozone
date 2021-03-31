@@ -115,7 +115,10 @@ final class Db extends Command
 		$n = (new KliOption('n'))
 			->alias('namespace')
 			->offsets(1)
-			->type((new KliTypeString())->pattern('#^(?:[a-zA-Z][a-zA-Z0-9_]*(?:\\\\[a-zA-Z][a-zA-Z0-9_]*)*)$#', 'You should provide valid php namespace.'))
+			->type((new KliTypeString())->pattern(
+				'#^(?:[a-zA-Z][a-zA-Z0-9_]*(?:\\\\[a-zA-Z][a-zA-Z0-9_]*)*)$#',
+				'You should provide valid php namespace.'
+			))
 			->def(null)
 			->description('The namespace of the tables to be generated.');
 
@@ -148,8 +151,9 @@ final class Db extends Command
 		  ->type((new KliTypePath())->file())
 		  ->description('The database source file to run.');
 
+		$d_c = clone $d;
 		$build->addOption($all, $n, $class_only);
-		$generate->addOption($n, (clone $d)->offsets(2));
+		$generate->addOption($n, $d_c->offsets(2));
 		$backup->addOption($d);
 		$ts_bundle->addOption($b_d);
 		$dart_bundle->addOption($b_d);
@@ -195,7 +199,10 @@ final class Db extends Command
 			$found           = $db->getTables($namespace);
 
 			if (empty($found)) {
-				throw new KliInputException(\sprintf('There is no tables declared in the namespace: "%s".', $namespace));
+				throw new KliInputException(\sprintf(
+					'There is no tables declared in the namespace: "%s".',
+					$namespace
+				));
 			}
 		} else {
 			$map[$project_db_ns] = 1;
