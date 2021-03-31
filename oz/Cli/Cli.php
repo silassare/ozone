@@ -19,19 +19,6 @@ use OZONE\OZ\Core\SettingsManager;
 use OZONE\OZ\Loader\ClassLoader;
 use OZONE\OZ\Utils\StringUtils;
 
-include_once OZ_OZONE_DIR . '..' . DS . 'vendor' . DS . 'autoload.php';
-
-include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
-
-include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
-
-include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
-
-if (!OZ_OZONE_IS_CLI) {
-	print 'This is the command line tool for O\'Zone Framework.';
-	exit(1);
-}
-
 final class Cli extends Kli
 {
 	/**
