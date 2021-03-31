@@ -1,6 +1,6 @@
 ## v2.0.0 (2020-01-03)
 
--   O'Zone was fully refreshed and tested with projects in production since two years
+-   OZone was fully refreshed and tested with projects in production since two years
 
 ### Backup Commit (2018-07-09)
 

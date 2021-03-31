@@ -1,7 +1,7 @@
 {
 	"name": "silassare/ozone",
 	"version": "2.0.0",
-	"description": "O'Zone is a framework to build RESTFul API and website.",
+	"description": "OZone is a framework to build RESTFul API and website.",
 	"license": "MIT",
 	"keywords": [
 		"ozone",

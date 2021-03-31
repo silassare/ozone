@@ -3,7 +3,7 @@
 /**
  * Copyright (c) 2017-present, Emile Silas Sare
  *
- * This file is part of OZone (O'Zone) package.
+ * This file is part of OZone package.
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -29,7 +29,7 @@ class ServiceGenerator extends Generator
 	}
 
 	/**
-	 * Generate O'Zone service class for a given table.
+	 * Generate OZone service class for a given table.
 	 *
 	 * @param \Gobl\DBAL\Table $table             the table
 	 * @param string           $service_namespace the service class namespace
@@ -41,7 +41,7 @@ class ServiceGenerator extends Generator
 	 * @throws \Gobl\ORM\Exceptions\ORMException
 	 * @throws \Exception
 	 *
-	 * @return array the O'Zone setting for the service
+	 * @return array the OZone setting for the service
 	 */
 	public function generateServiceClass(
 		Table $table,

@@ -1,2 +1,3 @@
-## Feel free to contribute : 
- - [O'Zone](https://github.com/silassare/ozone/)
+## Feel free to contribute :
+
+-   [OZone](https://github.com/silassare/ozone/)

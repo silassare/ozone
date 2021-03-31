@@ -1,6 +1,6 @@
-# O'Zone
+# OZone
 
-O'Zone is a framework to build RESTFul API and website.
+OZone is a framework to build RESTFul API and website.
 
 [+] Still in development
 

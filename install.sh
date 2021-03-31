@@ -178,7 +178,7 @@ create_oz_sh(){
 #!/bin/bash
 
 # VERSION: __DEFAULT_VERSION__
-# When the current folder is that of an O'Zone project
+# When the current folder is that of an OZone project
 # we launch the version corresponding to that used in
 # the project or we use the default version
 
@@ -225,7 +225,7 @@ shout "Installing all required packages..."
 apt-get -qq -o=Dpkg::Use-Pty=0 -y install apt-utils < /dev/null
 
 
-shout "Getting latest O'Zone version"
+shout "Getting latest OZone version"
 
 
 CURRENT_VERSION="$(wget -q -O - https://raw.githubusercontent.com/silassare/ozone/master/VERSION | sed -s 's/[^0-9\.]//g')"
@@ -233,7 +233,7 @@ INSTALL_PATH=/opt/ozone/$CURRENT_VERSION
 FRESH_INSTALL=0
 
 if [ "$CURRENT_VERSION" == "" ]; then
-	shout_error "Unable to retrieve current O'Zone version."
+	shout_error "Unable to retrieve current OZone version."
 	exit
 fi
 
@@ -285,10 +285,10 @@ if [ "$(which composer)" == "" ]; then
 	echo
 fi
 
-# Clone the O'Zone repository if it doesn't exist.
+# Clone the OZone repository if it doesn't exist.
 
 if [ ! -d "$INSTALL_PATH" ]; then
-	shout "Downloading O'Zone v$CURRENT_VERSION..."
+	shout "Downloading OZone v$CURRENT_VERSION..."
 	git clone -b v"$CURRENT_VERSION" --depth 1 https://github.com/silassare/ozone "$INSTALL_PATH" < /dev/null 2> /dev/null
 	FRESH_INSTALL=1
 	echo
@@ -299,10 +299,10 @@ cd "$INSTALL_PATH" || exit
 
 
 if [ $FRESH_INSTALL == 0 ]; then
-	shout_info "O'Zone v$CURRENT_VERSION is already installed..."
+	shout_info "OZone v$CURRENT_VERSION is already installed..."
 	# Update it.
 	if [ "v$CURRENT_VERSION" != "$(git describe)" ]; then
-		shout "Updating O'Zone to $CURRENT_VERSION..."
+		shout "Updating OZone to $CURRENT_VERSION..."
 		git fetch --depth 1 --force --prune origin tag v"$CURRENT_VERSION"
 		if ! git checkout -q v"$CURRENT_VERSION"; then
 			shout_error "Update failed. Did you modify something in $(pwd)?"
@@ -316,12 +316,12 @@ fi
 shout "Running composer install..."
 composer install
 
-shout "Making O'Zone Cli globally executable..."
+shout "Making OZone Cli globally executable..."
 
 OZ_EXECUTABLE=/usr/bin/oz
 OZ_INDEX=$INSTALL_PATH/vendor/bin/oz
 
-# O'Zone Cli should be accessible using "oz" or "ozone" command
+# OZone Cli should be accessible using "oz" or "ozone" command
 create_oz_sh "$INSTALL_PATH" "$CURRENT_VERSION" "$OZ_EXECUTABLE"
 ln -s -f "$OZ_EXECUTABLE" /usr/bin/ozone
 
@@ -335,7 +335,7 @@ chmod ug+x $OZ_EXECUTABLE
 chmod ug+x "$OZ_INDEX"
 
 if [ $FRESH_INSTALL == 1 ]; then
-	shout_success "O'Zone v$CURRENT_VERSION successfuly installed..."
+	shout_success "OZone v$CURRENT_VERSION successfuly installed..."
 fi
 
 export DEBIAN_FRONTEND="$DEBIAN_FRONTEND_SAVED"

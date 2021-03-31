@@ -49,8 +49,8 @@ server {
 		log_not_found off;
 	}
 
-	# serve files or directories only if they exist otherwise 
-	# for any other request, rewrite to our O'Zone API entry point
+	# serve files or directories only if they exist otherwise
+	# for any other request, rewrite to our OZone API entry point
 	#
 	location / {
 		try_files $uri $uri/ /index.php?$args;

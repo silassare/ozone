@@ -1,6 +1,6 @@
 # Virtual Host configuration for www.example.com
 # when
-#	- website is accessible from : www.example.com/ 
+#	- website is accessible from : www.example.com/
 #	- api is accessible from : www.example.com/api/
 
 
@@ -48,8 +48,8 @@ server {
 		deny all;
 	}
 
-	# serve files or directories in /api/* only if they exist otherwise 
-	# for any other request, rewrite to our O'Zone API entry point
+	# serve files or directories in /api/* only if they exist otherwise
+	# for any other request, rewrite to our OZone API entry point
 	#
 	location /api {
 		try_files $uri $uri/ /api/index.php?$args;
@@ -73,8 +73,8 @@ server {
 		log_not_found off;
 	}
 
-	# serve files or directories only if they exist otherwise 
-	# for any other request, rewrite to our O'Zone Web entry point
+	# serve files or directories only if they exist otherwise
+	# for any other request, rewrite to our OZone Web entry point
 	#
 	location / {
 		try_files $uri $uri/ /index.php?$args;
