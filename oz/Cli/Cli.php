@@ -65,6 +65,8 @@ final class Cli extends Kli
 	 * Loads all defined commands in oz.cli settings.
 	 *
 	 * @throws \Exception
+	 *
+	 * @return \OZONE\OZ\Cli\Cli
 	 */
 	private function loadCommands()
 	{
@@ -90,6 +92,8 @@ final class Cli extends Kli
 				}
 			}
 		}
+
+		return $this;
 	}
 
 	/**
@@ -117,6 +121,8 @@ final class Cli extends Kli
 
 		$cli = new self();
 
-		return $cli->loadCommands()->execute($arg);
+		$cli->loadCommands()->execute($arg);
+
+		return $cli;
 	}
 }
