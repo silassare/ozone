@@ -1,35 +1,38 @@
 <?php
 <%@import('gen.info.otpl',$)%>
 
-// Don't forget to use DS instead of \ or / and always add the last DS to your directories path
-if (!defined('DS')) {
-	define('DS', \DIRECTORY_SEPARATOR);
+use OZONE\OZ\Loader\ClassLoader;
+use OZONE\OZ\OZone;
+use <%$.oz_project_namespace%>\<%$.oz_project_class%>;
+
+//=	Don't forget to use DS instead of \ or / and
+//= always add the last DS to your directories path
+if (!\defined('DS')) {
+	\define('DS', \DIRECTORY_SEPARATOR);
 }
 
-// Project directory
-define('OZ_PROJECT_DIR', dirname(__DIR__) . DS);
-
-// You can define the path to your specific ozone framework directory
-define('OZ_OZONE_DIR', __DIR__ . DS . 'oz' . DS);
-
-// You can define the path to your ozone app directory here
-define('OZ_APP_DIR', __DIR__ . DS . 'app' . DS);
-
-// Logs directory
-if (!defined('OZ_LOG_DIR')) {
-	define('OZ_LOG_DIR', __DIR__ . DS);
+//= Project directory
+if (!\defined('OZ_PROJECT_DIR')) {
+	\define('OZ_PROJECT_DIR', \dirname(__DIR__) . DS);
 }
 
-include_once OZ_OZONE_DIR . 'OZone.php';
+//= You can define the path to your ozone app directory here
+if (!\defined('OZ_APP_DIR')) {
+	\define('OZ_APP_DIR', __DIR__ . DS . 'app' . DS);
+}
 
-// Adds project namespace root directory
-\OZONE\OZ\Loader\ClassLoader::addNamespace('\<%$.oz_project_namespace%>', OZ_APP_DIR);
+//= Logs directory
+if (!\defined('OZ_LOG_DIR')) {
+	\define('OZ_LOG_DIR', __DIR__ . DS);
+}
 
-// Run the app only if the incoming request is for the api
-if (defined('OZ_OZONE_IS_WEB_CONTEXT')) {
-	if (!defined('OZ_OZONE_DEFAULT_API_KEY')) {
-		throw new \OZONE\OZ\Exceptions\InternalErrorException('OZ_DEFAULT_API_KEY_NOT_DEFINED');
-	}
-} else {
-	\OZONE\OZ\OZone::run(new \<%$.oz_project_namespace%>\<%$.oz_project_class%>());
+//= Load composer autoload
+require_once OZ_PROJECT_DIR . 'vendor' . DS . 'autoload.php';
+
+//= Adds project namespace root directory
+ClassLoader::addNamespace('\<%$.oz_project_namespace%>', OZ_APP_DIR);
+
+//= Run the app if we are not in web context
+if (!\defined('OZ_OZONE_IS_WEB_CONTEXT')) {
+	OZone::run(new <%$.oz_project_class%>());
 }
