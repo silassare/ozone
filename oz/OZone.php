@@ -33,12 +33,6 @@ use ReflectionException;
 use RuntimeException;
 use Throwable;
 
-include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
-
-include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
-
-include_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
-
 final class OZone
 {
 	const API_KEY_REG = '~^[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$~';
