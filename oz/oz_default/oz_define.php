@@ -11,6 +11,7 @@
 
 \define('OZ_OZONE_VERSION', '2.0.0');
 \define('OZ_OZONE_VERSION_NAME', 'O\'Zone v' . OZ_OZONE_VERSION);
+\define('OZ_OZONE_DIR', \dirname(__DIR__) . \DIRECTORY_SEPARATOR);
 \define('OZ_OZONE_IS_CLI', 'cli' === \php_sapi_name());
 
 if (!\defined('PHP_INT_MIN')) {
