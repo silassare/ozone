@@ -182,8 +182,8 @@ create_oz_sh(){
 # we launch the version corresponding to that used in
 # the project or we use the default version
 
-OZ=__INSTALL_PATH__/vendor/bin/oz
-PROJECT_OZ="$(pwd)/api/vendor/bin/oz"
+OZ="__INSTALL_PATH__/bin/oz"
+PROJECT_OZ="$(pwd)/vendor/bin/oz"
 PROJECT_CONFIG_FILE="$(pwd)/api/app/oz_settings/oz.config.php"
 
 # makes sure we are in project root directory
