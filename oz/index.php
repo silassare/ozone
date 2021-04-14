@@ -28,17 +28,8 @@ use OZONE\OZ\Cli\Cli;
 //= Logs directory
 \define('OZ_LOG_DIR', OZ_PROJECT_DIR);
 
-//= OZone root directory
-\define('OZ_OZONE_DIR', __DIR__ . DS);
-
 //= Load composer autoload
-require_once OZ_OZONE_DIR . '..' . DS . 'vendor' . DS . 'autoload.php';
-
-require_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_config.php';
-
-require_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_define.php';
-
-require_once OZ_OZONE_DIR . 'oz_default' . DS . 'oz_func.php';
+require_once OZ_PROJECT_DIR . DS . 'vendor' . DS . 'autoload.php';
 
 if (!\defined('OZ_OZONE_IS_CLI') || !OZ_OZONE_IS_CLI) {
 	print 'This is the command line tool for OZone Framework.';
