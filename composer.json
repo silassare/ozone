@@ -20,9 +20,9 @@
 		"ext-libxml": "*",
 		"ext-simplexml": "*",
 		"ext-posix": "*",
-		"silassare/otpl": "dev-master",
-		"silassare/gobl": "dev-master",
-		"silassare/kli": "dev-master",
+		"silassare/otpl": "=1.1.9",
+		"silassare/gobl": "=1.5.0",
+		"silassare/kli": "=1.0.4",
 		"claviska/simpleimage": "^3.3",
 		"psr/http-message": "^1.0"
 	},
@@ -48,7 +48,10 @@
 	"autoload": {
 		"psr-4": {
 			"OZONE\\OZ\\": "oz"
-		}
+		},
+		"files": [
+			"oz/oz_default/oz_bootstrap.php"
+		]
 	},
 	"authors": [
 		{
