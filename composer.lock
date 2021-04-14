@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f1b41924ff99802fd352adfa700314f2",
+    "content-hash": "1be881ccf1885a8cc70b747375e67133",
     "packages": [
         {
             "name": "claviska/simpleimage",
@@ -168,16 +168,16 @@
         },
         {
             "name": "silassare/gobl",
-            "version": "dev-master",
+            "version": "1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "1aeef6476889be1573a3215cbf1bdc5817185d8d"
+                "reference": "526b92dd5b219edd5f42873d7850c7f7d6c65c93"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/1aeef6476889be1573a3215cbf1bdc5817185d8d",
-                "reference": "1aeef6476889be1573a3215cbf1bdc5817185d8d",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/526b92dd5b219edd5f42873d7850c7f7d6c65c93",
+                "reference": "526b92dd5b219edd5f42873d7850c7f7d6c65c93",
                 "shasum": ""
             },
             "require": {
@@ -185,9 +185,13 @@
                 "ext-json": "*",
                 "ext-pdo": "*",
                 "php": ">=5.6.0",
-                "silassare/otpl": ">=1.1.6"
+                "silassare/otpl": "=1.1.9"
             },
-            "default-branch": true,
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.16",
+                "phpcompatibility/php-compatibility": "*",
+                "squizlabs/php_codesniffer": "^3.5"
+            },
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -216,29 +220,34 @@
             ],
             "support": {
                 "issues": "https://github.com/silassare/gobl/issues",
-                "source": "https://github.com/silassare/gobl/tree/master"
+                "source": "https://github.com/silassare/gobl/tree/v1.5.0"
             },
-            "time": "2021-03-26T13:14:17+00:00"
+            "time": "2021-04-14T10:32:13+00:00"
         },
         {
             "name": "silassare/kli",
-            "version": "dev-master",
+            "version": "1.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/kli.git",
-                "reference": "5320cf83999b64950b19e998ad27499ace812ea8"
+                "reference": "caad3e53436fdbe4f01f277e63a764f16b88c606"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/kli/zipball/5320cf83999b64950b19e998ad27499ace812ea8",
-                "reference": "5320cf83999b64950b19e998ad27499ace812ea8",
+                "url": "https://api.github.com/repos/silassare/kli/zipball/caad3e53436fdbe4f01f277e63a764f16b88c606",
+                "reference": "caad3e53436fdbe4f01f277e63a764f16b88c606",
                 "shasum": ""
             },
             "require": {
                 "ext-readline": "*",
                 "php": ">=5.6.0"
             },
-            "default-branch": true,
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.16",
+                "phpcompatibility/php-compatibility": "*",
+                "phpunit/phpunit": "^9",
+                "squizlabs/php_codesniffer": "^3.5"
+            },
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -268,28 +277,32 @@
             ],
             "support": {
                 "issues": "https://github.com/silassare/kli/issues",
-                "source": "https://github.com/silassare/kli/tree/master"
+                "source": "https://github.com/silassare/kli/tree/v1.0.4"
             },
-            "time": "2020-08-31T19:18:57+00:00"
+            "time": "2021-04-14T10:41:38+00:00"
         },
         {
             "name": "silassare/otpl",
-            "version": "dev-master",
+            "version": "1.1.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/otpl-php.git",
-                "reference": "6409fd17e5ed14c242d81722ae827011cdcdfd4a"
+                "reference": "0adc555ce7db76e8c70d25bb3afbeabf57f9901b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/otpl-php/zipball/6409fd17e5ed14c242d81722ae827011cdcdfd4a",
-                "reference": "6409fd17e5ed14c242d81722ae827011cdcdfd4a",
+                "url": "https://api.github.com/repos/silassare/otpl-php/zipball/0adc555ce7db76e8c70d25bb3afbeabf57f9901b",
+                "reference": "0adc555ce7db76e8c70d25bb3afbeabf57f9901b",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.6.0"
             },
-            "default-branch": true,
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^2.16",
+                "phpcompatibility/php-compatibility": "*",
+                "squizlabs/php_codesniffer": "^3.5"
+            },
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -316,9 +329,9 @@
             ],
             "support": {
                 "issues": "https://github.com/silassare/otpl-php/issues",
-                "source": "https://github.com/silassare/otpl-php/tree/master"
+                "source": "https://github.com/silassare/otpl-php/tree/v1.1.9"
             },
-            "time": "2020-02-04T17:07:28+00:00"
+            "time": "2021-03-28T11:14:51+00:00"
         }
     ],
     "packages-dev": [
@@ -619,16 +632,16 @@
         },
         {
             "name": "friendsofphp/php-cs-fixer",
-            "version": "v2.18.4",
+            "version": "v2.18.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/FriendsOfPHP/PHP-CS-Fixer.git",
-                "reference": "06f764e3cb6d60822d8f5135205f9d32b5508a31"
+                "reference": "e0f6d05c8b157f50029ca6c65c19ed2694f475bf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/FriendsOfPHP/PHP-CS-Fixer/zipball/06f764e3cb6d60822d8f5135205f9d32b5508a31",
-                "reference": "06f764e3cb6d60822d8f5135205f9d32b5508a31",
+                "url": "https://api.github.com/repos/FriendsOfPHP/PHP-CS-Fixer/zipball/e0f6d05c8b157f50029ca6c65c19ed2694f475bf",
+                "reference": "e0f6d05c8b157f50029ca6c65c19ed2694f475bf",
                 "shasum": ""
             },
             "require": {
@@ -711,7 +724,7 @@
             "description": "A tool to automatically fix PHP code style",
             "support": {
                 "issues": "https://github.com/FriendsOfPHP/PHP-CS-Fixer/issues",
-                "source": "https://github.com/FriendsOfPHP/PHP-CS-Fixer/tree/v2.18.4"
+                "source": "https://github.com/FriendsOfPHP/PHP-CS-Fixer/tree/v2.18.5"
             },
             "funding": [
                 {
@@ -719,7 +732,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-03-20T14:52:33+00:00"
+            "time": "2021-04-06T18:37:33+00:00"
         },
         {
             "name": "php-cs-fixer/diff",
@@ -988,16 +1001,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.5.8",
+            "version": "3.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/squizlabs/PHP_CodeSniffer.git",
-                "reference": "9d583721a7157ee997f235f327de038e7ea6dac4"
+                "reference": "ffced0d2c8fa8e6cdc4d695a743271fab6c38625"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/9d583721a7157ee997f235f327de038e7ea6dac4",
-                "reference": "9d583721a7157ee997f235f327de038e7ea6dac4",
+                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/ffced0d2c8fa8e6cdc4d695a743271fab6c38625",
+                "reference": "ffced0d2c8fa8e6cdc4d695a743271fab6c38625",
                 "shasum": ""
             },
             "require": {
@@ -1040,20 +1053,20 @@
                 "source": "https://github.com/squizlabs/PHP_CodeSniffer",
                 "wiki": "https://github.com/squizlabs/PHP_CodeSniffer/wiki"
             },
-            "time": "2020-10-23T02:01:07+00:00"
+            "time": "2021-04-09T00:54:41+00:00"
         },
         {
             "name": "symfony/console",
-            "version": "v5.2.5",
+            "version": "v5.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "938ebbadae1b0a9c9d1ec313f87f9708609f1b79"
+                "reference": "35f039df40a3b335ebf310f244cb242b3a83ac8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/938ebbadae1b0a9c9d1ec313f87f9708609f1b79",
-                "reference": "938ebbadae1b0a9c9d1ec313f87f9708609f1b79",
+                "url": "https://api.github.com/repos/symfony/console/zipball/35f039df40a3b335ebf310f244cb242b3a83ac8d",
+                "reference": "35f039df40a3b335ebf310f244cb242b3a83ac8d",
                 "shasum": ""
             },
             "require": {
@@ -1121,7 +1134,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v5.2.5"
+                "source": "https://github.com/symfony/console/tree/v5.2.6"
             },
             "funding": [
                 {
@@ -1137,7 +1150,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-03-06T13:42:15+00:00"
+            "time": "2021-03-28T09:42:18+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -1372,16 +1385,16 @@
         },
         {
             "name": "symfony/filesystem",
-            "version": "v5.2.4",
+            "version": "v5.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/filesystem.git",
-                "reference": "710d364200997a5afde34d9fe57bd52f3cc1e108"
+                "reference": "8c86a82f51658188119e62cff0a050a12d09836f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/filesystem/zipball/710d364200997a5afde34d9fe57bd52f3cc1e108",
-                "reference": "710d364200997a5afde34d9fe57bd52f3cc1e108",
+                "url": "https://api.github.com/repos/symfony/filesystem/zipball/8c86a82f51658188119e62cff0a050a12d09836f",
+                "reference": "8c86a82f51658188119e62cff0a050a12d09836f",
                 "shasum": ""
             },
             "require": {
@@ -1414,7 +1427,7 @@
             "description": "Provides basic utilities for the filesystem",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/filesystem/tree/v5.2.4"
+                "source": "https://github.com/symfony/filesystem/tree/v5.2.6"
             },
             "funding": [
                 {
@@ -1430,7 +1443,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-02-12T10:38:38+00:00"
+            "time": "2021-03-28T14:30:26+00:00"
         },
         {
             "name": "symfony/finder",
@@ -2397,16 +2410,16 @@
         },
         {
             "name": "symfony/string",
-            "version": "v5.2.4",
+            "version": "v5.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/string.git",
-                "reference": "4e78d7d47061fa183639927ec40d607973699609"
+                "reference": "ad0bd91bce2054103f5eaa18ebeba8d3bc2a0572"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/4e78d7d47061fa183639927ec40d607973699609",
-                "reference": "4e78d7d47061fa183639927ec40d607973699609",
+                "url": "https://api.github.com/repos/symfony/string/zipball/ad0bd91bce2054103f5eaa18ebeba8d3bc2a0572",
+                "reference": "ad0bd91bce2054103f5eaa18ebeba8d3bc2a0572",
                 "shasum": ""
             },
             "require": {
@@ -2460,7 +2473,7 @@
                 "utf8"
             ],
             "support": {
-                "source": "https://github.com/symfony/string/tree/v5.2.4"
+                "source": "https://github.com/symfony/string/tree/v5.2.6"
             },
             "funding": [
                 {
@@ -2476,16 +2489,12 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-02-16T10:20:28+00:00"
+            "time": "2021-03-17T17:12:15+00:00"
         }
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "silassare/otpl": 20,
-        "silassare/gobl": 20,
-        "silassare/kli": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -2494,7 +2503,8 @@
         "ext-json": "*",
         "ext-gd": "*",
         "ext-libxml": "*",
-        "ext-simplexml": "*"
+        "ext-simplexml": "*",
+        "ext-posix": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.0.0"
