@@ -1,6 +1,6 @@
 .idea
 ignore
 **/otpl_done/*
+**/blate_cache/*
 **/oz/Db/Base/*
 /vendor/
-composer.lock
