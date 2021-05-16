@@ -192,6 +192,13 @@ class CRUDHandler implements CRUDHandlerInterface
 	}
 
 	/**
+	 * @inheritDoc
+	 */
+	public function autoFillUpdateFormAndFilters(array &$form, array &$filters, $is_multiple)
+	{
+	}
+
+	/**
 	 * Gets the context.
 	 *
 	 * @return \OZONE\OZ\Core\Context
