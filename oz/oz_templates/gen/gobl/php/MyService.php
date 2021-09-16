@@ -604,8 +604,6 @@ final class MyService extends BaseService
 			   	$context     = $r->getContext();
 			   	$orm_request = new ORMRequest($context, $context->getRequest()
 																   ->getFormData());
-			   	$orm_request->addColumnFilter('my_id', $r->getArg('my_id'));
-
 			   	$service = new self($context);
 			   	$service->actionDeleteAll($orm_request);
 
