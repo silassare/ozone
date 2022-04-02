@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 return [
 	// Used to share same session
 	// Make sure you know what you're doing.

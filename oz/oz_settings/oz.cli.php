@@ -9,9 +9,16 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
+use OZONE\OZ\Cli\Cmd\Client;
+use OZONE\OZ\Cli\Cmd\Db;
+use OZONE\OZ\Cli\Cmd\Project;
+use OZONE\OZ\Cli\Cmd\Service;
+
 return [
-	'project' => '\OZONE\OZ\Cli\Cmd\Project',
-	'client'  => '\OZONE\OZ\Cli\Cmd\Client',
-	'db'      => '\OZONE\OZ\Cli\Cmd\Db',
-	'service' => '\OZONE\OZ\Cli\Cmd\Service',
+	'project' => Project::class,
+	'client'  => Client::class,
+	'db'      => Db::class,
+	'service' => Service::class,
 ];

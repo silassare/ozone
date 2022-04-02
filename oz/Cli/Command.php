@@ -9,10 +9,15 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Cli;
 
 use Kli\KliCommand;
 
+/**
+ * Class Command.
+ */
 abstract class Command extends KliCommand
 {
 	/**
@@ -23,7 +28,7 @@ abstract class Command extends KliCommand
 	 *
 	 * @throws \Kli\Exceptions\KliException
 	 */
-	final public function __construct($name, Cli $cli)
+	final public function __construct(string $name, Cli $cli)
 	{
 		parent::__construct($name, $cli);
 		$this->describe();
@@ -33,7 +38,7 @@ abstract class Command extends KliCommand
 	 * Describe your command.
 	 *
 	 * Is called once the cli start.
-	 * You can add Actions and Options to your command.
+	 * You can add Actions and Options to your command here.
 	 */
 	abstract protected function describe();
 }

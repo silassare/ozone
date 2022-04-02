@@ -9,8 +9,9 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 return [
-	// ---------START NEW
 	'OZ_ERROR_REQUEST_FAIL'      => 'Erreur: la requête a échoué.',
 	'OZ_ERROR_NETWORK'           => 'Erreur: problèmes de connexion internet.',
 	'OZ_ERROR_SERVER'            => 'Erreur: echec de récupération des informations.',
@@ -19,17 +20,13 @@ return [
 	'OZ_ERROR_BAD_REQUEST'         => 'Votre requête est invalide.',
 	'OZ_ERROR_INTERNAL'            => "Une erreur interne s'est produite.",
 	'OZ_ERROR_RUNTIME'             => "Une erreur interne s'est produite en cours d'exécution.",
-	'OZ_ERROR_METHOD_NOT_ALLOWED'  => "La méthode de la requête n'est pas autorisée.",
 	'OZ_ERROR_NOT_FOUND'           => "La ressource recherchée n'est pas retrouvée.",
+	'OZ_ERROR_METHOD_NOT_ALLOWED'  => "La méthode de la requête n'est pas autorisée.",
+	'OZ_ERROR_NOT_ALLOWED'         => "Une erreur s'est produite. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
 	'OZ_ERROR_INVALID_FORM'        => "La requête est invalide. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
 	'OZ_ERROR_YOU_MUST_LOGIN'      => "Vous devez vous connecter d'abord.",
-	'OZ_ERROR_NOT_ALLOWED'         => "Une erreur s'est produite. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
 	'OZ_MISSING_API_KEY'           => 'Vous devez fournir une clé API.',
 	'OZ_YOUR_API_KEY_IS_NOT_VALID' => 'La clef API est invalide.',
-
-	'OZ_SMS_AUTH_CODE_MESSAGE'               => "Votre code d'authentification est: {code}",
-	'OZ_SMS_AUTH_CODE_PASSWORD_EDIT_MESSAGE' => "Votre code d'authentification est: {code}",
-	// ---------END NEW
 
 	'OZ_IMAGE_NOT_VALID'            => 'Fichier image invalide. Veuillez choisir une image de type png, jpeg, ou gif.',
 	'OZ_PROFILE_PIC_SET_TO_DEFAULT' => 'Photo de profil par défaut choisie.',

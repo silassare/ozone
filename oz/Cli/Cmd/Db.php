@@ -9,9 +9,11 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Cli\Cmd;
 
-use Exception;
+use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\ORM\Generators\GeneratorDart;
 use Gobl\ORM\Generators\GeneratorORM;
 use Gobl\ORM\Generators\GeneratorTS;
@@ -24,26 +26,70 @@ use Kli\Types\KliTypeString;
 use OZONE\OZ\Cli\Command;
 use OZONE\OZ\Cli\Process;
 use OZONE\OZ\Cli\Utils\Utils;
+use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\Core\SettingsManager;
+use OZONE\OZ\Db\OZUsersFilters;
+use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\FS\FilesManager;
-use OZONE\OZ\FS\PathUtils;
+use PHPUtils\FS\PathUtils;
+use Throwable;
 
+/**
+ * Class Db.
+ */
 final class Db extends Command
 {
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 *
-	 * @throws \Exception
+	 * @param \Kli\KliAction $action
+	 * @param array          $options
+	 * @param array          $anonymous_options
+	 *
+	 * @throws Throwable
 	 */
-	public function execute(KliAction $action, array $options, array $anonymous_options)
+	public function execute(KliAction $action, array $options, array $anonymous_options): void
 	{
+		if (0) {
+			$uq = new OZUsersFilters();
+			if (!0) {
+				$qb = $uq->whereCc2Is('bj')
+					->and(
+						function (OZUsersFilters $sub) {
+							 	return $sub->whereIdIsGte(10)
+							 		->and()
+							 		->whereIdIsLte(20)
+							 		->or()
+							 		->whereValidIsTrue();
+							 }
+					)
+					->getTableQuery()
+					->select(100);
+			} else {
+				$qb = $uq->where([
+					'cc2',
+					'eq',
+					'bj',
+					'and',
+					[['id', 'gte', 10, 'and', 'id', 'lte', 20], 'or', 'valid', 'is_true'],
+				])
+					->getTableQuery()
+					->select(100);
+			}
+			oz_logger([
+				'query'  => $qb->getSqlQuery(),
+				'values' => $qb->getBoundValues(),
+				'types'  => $qb->getBoundValuesTypes(),
+			]);
+		}
+
 		switch ($action->getName()) {
 			case 'build':
 				$this->build($options);
 
 				break;
+
 			case 'ts-bundle':
 				$this->tsBundle($options);
 
@@ -53,14 +99,17 @@ final class Db extends Command
 				$this->dartBundle($options);
 
 				break;
+
 			case 'backup':
 				$this->backup($options);
 
 				break;
+
 			case 'generate':
 				$this->generate($options);
 
 				break;
+
 			case 'source':
 				$this->source($options);
 
@@ -69,11 +118,11 @@ final class Db extends Command
 	}
 
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 *
 	 * @throws \Kli\Exceptions\KliException
 	 */
-	protected function describe()
+	protected function describe(): void
 	{
 		$this->description('Manage your project database.');
 
@@ -116,7 +165,7 @@ final class Db extends Command
 			->alias('namespace')
 			->offsets(1)
 			->type((new KliTypeString())->pattern(
-				'#^(?:[a-zA-Z][a-zA-Z0-9_]*(?:\\\\[a-zA-Z][a-zA-Z0-9_]*)*)$#',
+				'#^[a-zA-Z][a-zA-Z0-9_]*(?:\\\\[a-zA-Z][a-zA-Z0-9_]*)*$#',
 				'You should provide valid php namespace.'
 			))
 			->def(null)
@@ -130,8 +179,8 @@ final class Db extends Command
 			->alias('dir')
 			->offsets(1)
 			->type((new KliTypePath())
-				->dir()
-				->writable())
+			->dir()
+			->writable())
 			->def('.')
 			->description('The destination directory for the database classes.');
 
@@ -140,16 +189,16 @@ final class Db extends Command
 			->alias('dir')
 			->offsets(1)
 			->type((new KliTypePath())
-				->dir()
-				->writable())
+			->dir()
+			->writable())
 			->def('.')
 			->description('The destination directory for the bundle classes.');
 
 		$f = new KliOption('f');
 		$f->alias('file')
-		  ->offsets(1)
-		  ->type((new KliTypePath())->file())
-		  ->description('The database source file to run.');
+			->offsets(1)
+			->type((new KliTypePath())->file())
+			->description('The database source file to run.');
 
 		$d_c = clone $d;
 		$build->addOption($all, $n, $class_only);
@@ -169,12 +218,11 @@ final class Db extends Command
 	 *
 	 * @param array $options
 	 *
-	 * @throws \OZONE\OZ\Exceptions\BaseException
-	 * @throws \Exception
+	 * @throws Throwable
 	 */
-	private function build(array $options)
+	private function build(array $options): void
 	{
-		Utils::assertDatabaseAccess();
+		Utils::assertProjectFolder();
 
 		$cli        = $this->getCli();
 		$all        = (bool) $options['a'];
@@ -229,7 +277,7 @@ final class Db extends Command
 
 		foreach ($map as $ns => $ok) {
 			if ($ok) {
-				$dir = isset($default_dir[$ns]) ? $default_dir[$ns] : $plugins_out_dir;
+				$dir = $default_dir[$ns] ?? $plugins_out_dir;
 
 				// we (re)generate classes only for tables
 				// in the given namespace
@@ -243,24 +291,25 @@ final class Db extends Command
 		$queries = '';
 
 		if (!$class_only) {
+			Utils::assertDatabaseAccess();
+
 			try {
-				$queries = $db->buildDatabase();
+				$queries = $db->getGenerator()
+					->buildDatabase();
 				$db->executeMulti($queries);
 
 				$cli->success('database queries executed.');
-			} catch (Exception $e) {
-				$cli->error('database queries execution failed. Open log file.')
-					->log($e);
-
+			} catch (Throwable $t) {
+				$error_data = [];
 				if (!empty($queries)) {
-					$queries_file = \sprintf('%s.sql', Hasher::genRandomFileName('debug-db-query'));
+					$q_file = \sprintf('%s.sql', Hasher::genFileName('debug-db-query'));
 
-					\file_put_contents($queries_file, $queries);
+					\file_put_contents($q_file, $queries);
 
-					$msg = \sprintf('see queries in: %s', $queries_file);
-					$cli->info($msg)
-						->log($msg);
+					$error_data['queries_file'] = $q_file;
 				}
+
+				throw new RuntimeException('database queries execution failed.', $error_data, $t);
 			}
 		}
 	}
@@ -270,12 +319,11 @@ final class Db extends Command
 	 *
 	 * @param array $options
 	 *
-	 * @throws \OZONE\OZ\Exceptions\BaseException
-	 * @throws \Exception
+	 * @throws Throwable
 	 */
-	private function tsBundle(array $options)
+	private function tsBundle(array $options): void
 	{
-		Utils::assertDatabaseAccess();
+		Utils::assertProjectFolder();
 
 		$cli    = $this->getCli();
 		$dir    = $options['d'];
@@ -293,12 +341,11 @@ final class Db extends Command
 	 *
 	 * @param array $options
 	 *
-	 * @throws \OZONE\OZ\Exceptions\BaseException
-	 * @throws \Exception
+	 * @throws Throwable
 	 */
-	private function dartBundle(array $options)
+	private function dartBundle(array $options): void
 	{
-		Utils::assertDatabaseAccess();
+		Utils::assertProjectFolder();
 
 		$cli    = $this->getCli();
 		$dir    = $options['d'];
@@ -315,10 +362,8 @@ final class Db extends Command
 	 * Generate database file.
 	 *
 	 * @param array $options
-	 *
-	 * @throws \OZONE\OZ\Exceptions\BaseException
 	 */
-	private function generate(array $options)
+	private function generate(array $options): void
 	{
 		Utils::assertProjectFolder();
 
@@ -329,19 +374,20 @@ final class Db extends Command
 			$namespace = null;
 		}
 		$query = DbManager::getDb()
-						  ->buildDatabase($namespace);
+			->getGenerator()
+			->buildDatabase($namespace);
 
-		$file_name = \sprintf('%s.sql', Hasher::genRandomFileName('db'));
+		$file_name = \sprintf('%s.sql', Hasher::genFileName('db'));
 		$fm        = new FilesManager($dir);
 		$fm->wf($file_name, $query);
 
 		if (\file_exists($fm->resolve($file_name))) {
 			$this->getCli()
-				 ->success('database file generated.')
-				 ->writeLn($fm->resolve($file_name));
+				->success('database file generated.')
+				->writeLn($fm->resolve($file_name));
 		} else {
 			$this->getCli()
-				 ->error('database file generation fails.');
+				->error('database file generation fails.');
 		}
 	}
 
@@ -349,10 +395,8 @@ final class Db extends Command
 	 * Runs database file.
 	 *
 	 * @param array $options
-	 *
-	 * @throws \OZONE\OZ\Exceptions\BaseException
 	 */
-	private function source(array $options)
+	private function source(array $options): void
 	{
 		Utils::assertDatabaseAccess();
 
@@ -371,9 +415,10 @@ final class Db extends Command
 		try {
 			$db->executeMulti($query);
 			$cli->success('database updated.');
-		} catch (Exception $e) {
-			$cli->error('database update fails. Open log file.')
-				->log($e);
+		} catch (Throwable $t) {
+			throw new RuntimeException('database update fails. Open log file.', [
+				'queries_file' => $f,
+			], $t);
 		}
 	}
 
@@ -381,24 +426,22 @@ final class Db extends Command
 	 * Backup database.
 	 *
 	 * @param array $options
-	 *
-	 * @throws \OZONE\OZ\Exceptions\BaseException
 	 */
-	private function backup(array $options)
+	private function backup(array $options): void
 	{
 		Utils::assertDatabaseAccess();
 
 		$dir    = $options['d'];
 		$cli    = $this->getCli();
-		$config = SettingsManager::get('oz.db');
+		$config = Configs::load('oz.db');
 
-		if ($config['OZ_DB_RDBMS'] !== \Gobl\DBAL\Db::MYSQL) {
+		if (RDBMSInterface::MYSQL !== $config['OZ_DB_RDBMS']) {
 			$cli->error('this work only for MySQL database.');
 
 			return;
 		}
 		$fm      = new FilesManager($dir);
-		$outfile = $fm->resolve(\sprintf('%s.sql', Hasher::genRandomFileName('backup')));
+		$outfile = $fm->resolve(\sprintf('%s.sql', Hasher::genFileName('backup')));
 		$db_host = \escapeshellarg($config['OZ_DB_HOST']);
 		$db_user = \escapeshellarg($config['OZ_DB_USER']);
 		$db_pass = \escapeshellarg($config['OZ_DB_PASS']);
@@ -411,14 +454,15 @@ final class Db extends Command
 			\escapeshellarg($outfile),
 			$db_pass
 		);
-		$process = new Process($cmd, null);
+
+		$process = new Process($cmd);
 
 		$process->open();
 
 		$error     = $process->readStderr();
 		$exit_code = $process->close();
 
-		if ($exit_code === 0) {
+		if (0 === $exit_code) {
 			$cli->success('database backup file created.')
 				->writeLn($outfile);
 		} else {

@@ -9,18 +9,23 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Crypt;
 
 use OZONE\OZ\Core\Hasher;
 
+/**
+ * Class DoCrypt.
+ */
 class DoCrypt implements CryptInterface
 {
 	/**
-	 * BCRYPT algorithm max input length is 72
+	 * BCRYPT algorithm max input length is 72.
 	 *
 	 * @var int
 	 */
-	const BCRYPT_MAX_INPUT_LENGTH = 72;
+	public const BCRYPT_MAX_INPUT_LENGTH = 72;
 
 	/**
 	 * DoCrypt constructor.
@@ -30,42 +35,42 @@ class DoCrypt implements CryptInterface
 	}
 
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 */
-	public function isHash($pass)
+	public function isHash(string $pass): bool
 	{
 		$pass_info = \password_get_info($pass);
 
-		return $pass_info['algo'] === \PASSWORD_BCRYPT;
+		return \PASSWORD_BCRYPT === $pass_info['algo'];
 	}
 
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 */
-	public function passHash($pass)
+	public function passHash(string $pass): string
 	{
 		return \password_hash(self::toShort($pass), \PASSWORD_BCRYPT);
 	}
 
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 */
-	public function passCheck($pass, $known_hash)
+	public function passCheck(string $pass, string $known_hash): bool
 	{
 		return \password_verify(self::toShort($pass), $known_hash);
 	}
 
 	/**
-	 * shorten password to comply with BCRYPT algorithm max input length (72)
+	 * shorten password to comply with BCRYPT algorithm max input length (72).
 	 *
 	 * @param string $pass the password
 	 *
 	 * @return string
 	 */
-	private static function toShort($pass)
+	private static function toShort(string $pass): string
 	{
 		if (\strlen($pass) > self::BCRYPT_MAX_INPUT_LENGTH) {
-			$pass = Hasher::hashIt($pass, 64);
+			$pass = Hasher::hash64($pass);
 		}
 
 		return $pass;

@@ -9,69 +9,53 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Web\Views;
 
-use OZONE\OZ\Exceptions\InternalErrorException;
-use OZONE\OZ\Router\Route;
+use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\OZ\Http\Response;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
-use OZONE\OZ\Web\WebViewBase;
+use OZONE\OZ\Web\WebView;
 
-final class RedirectView extends WebViewBase
+/**
+ * Class RedirectView.
+ */
+final class RedirectView extends WebView
 {
-	private $compile_data = [];
+	public const MAIN_ROUTE = 'oz:redirect';
 
 	/**
-	 * @throws \OZONE\OZ\Exceptions\BaseException
-	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */
-	public function mainRoute()
+	public function mainRoute(): Response
 	{
-		$context = $this->r->getContext();
+		$context = $this->getContext();
 		$request = $context->getRequest();
 		$url     = $request->getAttribute('url');
 		$status  = $request->getAttribute('status');
 
 		if (!\filter_var($url, \FILTER_VALIDATE_URL)) {
-			throw new InternalErrorException('Invalid redirect url.');
+			throw new RuntimeException('Invalid redirect url.', ['url' => $url]);
 		}
 
-		$this->compile_data = [
-			'oz_redirect_url' => \filter_var($url, \FILTER_SANITIZE_URL),
-		];
+		$this->injectKey('oz_redirect_url', \filter_var($url, \FILTER_SANITIZE_URL));
 
-		$response = $context->getResponse()
-							->withRedirect($url, $status);
-
-		return $this->renderTo($response);
+		return $this->setTemplate('redirect.otpl')
+			->respond()
+			->withRedirect($url, $status);
 	}
 
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 */
-	public function getCompileData()
+	public static function registerRoutes(Router $router): void
 	{
-		return $this->compile_data;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function getTemplate()
-	{
-		return 'redirect.otpl';
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->map('*', '/oz:redirect', function (RouteInfo $r) {
-			$view = new self($r);
+		$router->map('*', '/oz:redirect', function (RouteInfo $ri) {
+			$view = new self($ri->getContext());
 
 			return $view->mainRoute();
-		}, [Route::OPTION_NAME => 'oz:redirect']);
+		})->name(self::MAIN_ROUTE);
 	}
 }

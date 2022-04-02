@@ -1,7 +1,7 @@
 <?php
-<%@import('gen.info.otpl',$)%>
 
-use OZONE\OZ\Core\SettingsManager;
+<%@import('gen.info.otpl',$)%>
+use OZONE\OZ\Core\Configs;
 use OZONE\OZ\FS\TemplatesUtils;
 use OZONE\OZ\Loader\ClassLoader;
 use OZONE\OZ\OZone;
@@ -27,8 +27,8 @@ if (!defined('OZ_LOG_DIR')) {
 //= Require api index file
 require_once '../api/index.php';
 
-//= Adds additional settings source
-SettingsManager::addSource(__DIR__ . DS . 'oz_private' . DS . 'oz_settings');
+//= Adds additional configs source
+Configs::addSource(__DIR__ . DS . 'oz_private' . DS . 'oz_settings');
 
 //= Adds additional templates source
 TemplatesUtils::addSource(__DIR__ . DS . 'oz_private' . DS . 'oz_templates');

@@ -9,51 +9,60 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Cli;
 
+use OZONE\OZ\Cli\Utils\Utils;
+use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\FS\FilesManager;
-use RuntimeException;
 
+/**
+ * Class Process.
+ */
 final class Process
 {
-	const IN = 0;
+	public const IN = 0;
 
-	const OUT = 1;
+	public const OUT = 1;
 
-	const ERR = 2;
+	public const ERR = 2;
 
-	private $env;
+	private array $env;
 
-	private $command;
+	private string $command;
 
-	private $pipes;
+	private ?array $pipes = null;
 
-	private $files;
+	private array $files;
 
-	private $cwd;
+	private string $cwd;
 
+	/**
+	 * @var bool|resource
+	 */
 	private $process;
 
-	private $status;
+	private ?array $status = null;
 
-	private $descriptors = [
+	private array $descriptors = [
 		self::IN  => ['pipe', 'r'], // stdin
 		self::OUT => ['pipe', 'w'], // stdout
 		self::ERR => ['pipe', 'w'], // stderr
 	];
 
-	private $read_cb = [];
+	private array $read_cb = [];
 
-	private $tmp_stdout;
+	private mixed $tmp_stdout = null;
 
-	private $tmp_stderr;
+	private mixed $tmp_stderr = null;
 
 	/**
 	 * @var \OZONE\OZ\FS\FilesManager
 	 */
-	private $fm;
+	private FilesManager $fm;
 
-	private $unblocked = false;
+	private bool $unblocked = false;
 
 	/**
 	 * @param mixed $cmd
@@ -69,17 +78,9 @@ final class Process
 	 * @param string     $cwd the current working directory
 	 * @param null|array $env the environment variables for the command
 	 */
-	public function __construct($cmd, $cwd = '.', array $env = null)
+	public function __construct(string $cmd, string $cwd = '.', array $env = null)
 	{
-		if (!empty($descriptors)) {
-			$this->descriptors = $descriptors;
-		}
-
-		$this->env = ProcessUtils::getDefaultEnv();
-
-		if (!empty($env)) {
-			$this->env += $env;
-		}
+		$this->env = \array_merge(Utils::getDefaultEnv(), !empty($env) ? $env : []);
 
 		if (empty($cwd)) {
 			$cwd = '.';
@@ -104,17 +105,15 @@ final class Process
 	 *
 	 * @return $this
 	 */
-	public function open()
+	public function open(): self
 	{
 		$this->assertNoOpenedProcess(__METHOD__);
 
-		$command = $this->command;
 		$options = [];
+		$command = Utils::getPlatform()->format($this->command);
 
-		if (ProcessUtils::isWindows()) {
+		if (Utils::isDOS()) {
 			$options['bypass_shell'] = true;
-			$command                 = \str_replace('\n', ' ', $this->command);
-			$command                 = \sprintf('cmd /V:ON /E:ON /D /C (%s)', $command);
 		}
 
 		$this->process = \proc_open($command, $this->descriptors, $this->pipes, $this->cwd, $this->env, $options);
@@ -129,7 +128,7 @@ final class Process
 	 *
 	 * @return int
 	 */
-	public function close()
+	public function close(): int
 	{
 		$ret = 0;
 
@@ -175,15 +174,15 @@ final class Process
 	 *
 	 * @return $this
 	 */
-	public function setStdin($file_path)
+	public function setStdin(string $file_path): self
 	{
 		$this->assertNoOpenedProcess(__METHOD__);
 
 		$file_path = $this->fm->resolve($file_path);
 
-		$this->fm->assert($file_path, ['file' => true, 'read' => true, 'write' => true]);
+		$this->fm->filter()->isFile()->isReadable()->isWritable()->assert($file_path);
 
-		$this->descriptors[self::IN] = ['file', $file_path, 'r'];// the command need to read
+		$this->descriptors[self::IN] = ['file', $file_path, 'r']; // the command need to read
 		$this->files[self::IN]       = $file_path;
 
 		return $this;
@@ -196,15 +195,15 @@ final class Process
 	 *
 	 * @return $this
 	 */
-	public function setStdout($file_path)
+	public function setStdout(string $file_path): self
 	{
 		$this->assertNoOpenedProcess(__METHOD__);
 
 		$file_path = $this->fm->resolve($file_path);
 
-		$this->fm->assert($file_path, ['file' => true, 'read' => true, 'write' => true]);
+		$this->fm->filter()->isFile()->isReadable()->isWritable()->assert($file_path);
 
-		$this->descriptors[self::OUT] = ['file', $file_path, 'w'];// the command need to write
+		$this->descriptors[self::OUT] = ['file', $file_path, 'w']; // the command need to write
 		$this->files[self::OUT]       = $file_path;
 
 		return $this;
@@ -217,15 +216,15 @@ final class Process
 	 *
 	 * @return $this
 	 */
-	public function setStderr($file_path)
+	public function setStderr(string $file_path): self
 	{
 		$this->assertNoOpenedProcess(__METHOD__);
 
 		$file_path = $this->fm->resolve($file_path);
 
-		$this->fm->assert($file_path, ['file' => true, 'read' => true, 'write' => true]);
+		$this->fm->filter()->isFile()->isReadable()->isWritable()->assert($file_path);
 
-		$this->descriptors[self::ERR] = ['file', $file_path, 'w'];// the command need to write
+		$this->descriptors[self::ERR] = ['file', $file_path, 'w']; // the command need to write
 		$this->files[self::ERR]       = $file_path;
 
 		return $this;
@@ -238,16 +237,16 @@ final class Process
 	 *
 	 * @return bool|int returns the number of bytes written, or FALSE if an error occurs
 	 */
-	public function writeStdin($input)
+	public function writeStdin(string $input): bool|int
 	{
 		$this->assertOpenedProcess(__METHOD__);
 
 		if (isset($this->pipes[self::IN]) && \is_resource($this->pipes[0])) {
-			return \fwrite($this->pipes[self::IN], (string) $input);
+			return \fwrite($this->pipes[self::IN], $input);
 		}
 
 		if (isset($this->files[self::IN])) {
-			return \file_put_contents($this->files[self::IN], (string) $input, \FILE_APPEND);
+			return \file_put_contents($this->files[self::IN], $input, \FILE_APPEND);
 		}
 
 		return false;
@@ -261,7 +260,7 @@ final class Process
 	 *
 	 * @return $this
 	 */
-	public function watch(callable $stdout_cb, callable $stderr_cb)
+	public function watch(callable $stdout_cb, callable $stderr_cb): self
 	{
 		$this->assertOpenedProcess(__METHOD__);
 
@@ -278,7 +277,7 @@ final class Process
 	 *
 	 * @return false|string
 	 */
-	public function readStdout()
+	public function readStdout(): false|string
 	{
 		if (isset($this->tmp_stdout) && \is_resource($this->tmp_stdout)) {
 			return \stream_get_contents($this->tmp_stdout, -1, 0);
@@ -300,7 +299,7 @@ final class Process
 	 *
 	 * @return false|string
 	 */
-	public function readStderr()
+	public function readStderr(): false|string
 	{
 		if (isset($this->tmp_stderr) && \is_resource($this->tmp_stderr)) {
 			return \stream_get_contents($this->tmp_stderr, -1, 0);
@@ -322,25 +321,16 @@ final class Process
 	 *
 	 * @return bool
 	 */
-	public function kill()
+	public function kill(): bool
 	{
 		if ($this->isRunning()) {
 			$pid = $this->getPid();
 
-			if (ProcessUtils::isWindows()) {
-				$cmd = 'taskkill /T /F /PID ' . $pid;
-			} else {
-				$cmd = 'kill -9 ' . $pid;
-			}
+			$ok = Utils::getPlatform()->kill($pid);
 
-			$p = new self($cmd);
-
-			$p->open();
-			$out = $p->readStderr();
-			$p->close();
 			$this->close();
 
-			return empty($out);
+			return $ok;
 		}
 
 		return true;
@@ -351,7 +341,7 @@ final class Process
 	 *
 	 * @return mixed
 	 */
-	public function getPid()
+	public function getPid(): mixed
 	{
 		$this->assertOpenedProcess(__METHOD__);
 
@@ -363,7 +353,7 @@ final class Process
 	 *
 	 * @return bool
 	 */
-	public function isRunning()
+	public function isRunning(): bool
 	{
 		if ($this->process) {
 			$status = $this->getStatus(true);
@@ -379,16 +369,16 @@ final class Process
 	 *
 	 * @param bool $refresh
 	 *
-	 * @return array|false
+	 * @return null|array|false
 	 */
-	public function getStatus($refresh = false)
+	public function getStatus(bool $refresh = false): false|array|null
 	{
 		$this->assertOpenedProcess(__METHOD__);
 
 		if ($refresh || !$this->status) {
 			$this->status = \proc_get_status($this->process);
 
-			if (ProcessUtils::sigChildEnabled()) {
+			if (Utils::sigChildEnabled()) {
 				$this->status['signaled'] = true;
 				$this->status['exitcode'] = -1;
 				$this->status['termsig']  = -1;
@@ -405,24 +395,24 @@ final class Process
 	/**
 	 * Read helper.
 	 */
-	private function readHelper()
+	private function readHelper(): void
 	{
 		$this->assertOpenedProcess(__METHOD__);
 
 		$this->unblock();
-		$tv_usec = 200000;// 0.2 sec
+		$tv_usec = 200000; // 0.2 sec
 
 		$tmp_path         = 'php://temp/maxmemory:' . (1024 * 1024);
-		$this->tmp_stdout = \fopen($tmp_path, 'w+b');
-		$this->tmp_stderr = \fopen($tmp_path, 'w+b');
+		$this->tmp_stdout = \fopen($tmp_path, 'wb+');
+		$this->tmp_stderr = \fopen($tmp_path, 'wb+');
 		$read             = [];
 		$sources          = [];
 		$files_handles    = [];
 
 		if ($this->files) {
 			foreach ($this->files as $key => $path) {
-				if ($key === self::ERR || $key = self::OUT) {
-					$files_handles[$key] = $read[$key] = $sources[$key] = \fopen($path, 'r');
+				if (self::ERR === $key || $key = self::OUT) {
+					$files_handles[$key] = $read[$key] = $sources[$key] = \fopen($path, 'rb');
 				}
 			}
 		}
@@ -430,7 +420,7 @@ final class Process
 		while ($this->isRunning()) {
 			if ($this->pipes) {
 				foreach ($this->pipes as $key => $pipe) {
-					if ($key === self::ERR || $key = self::OUT) {
+					if (self::ERR === $key || $key = self::OUT) {
 						$read[$key] = $sources[$key] = $pipe;
 					}
 				}
@@ -445,7 +435,7 @@ final class Process
 					foreach ($types as $type) {
 						if (isset($sources[$type]) && $sources[$type] === $h) {
 							if ($data = $this->readRemainder($h)) {
-								\fwrite($type === self::ERR ? $this->tmp_stderr : $this->tmp_stdout, $data);
+								\fwrite(self::ERR === $type ? $this->tmp_stderr : $this->tmp_stdout, $data);
 
 								if (isset($this->read_cb[$type])) {
 									\call_user_func($this->read_cb[$type], $data);
@@ -468,18 +458,17 @@ final class Process
 	 * Reads remainder of a stream into a string.
 	 *
 	 * @param resource $handle
-	 * @param int      $chunk_size
 	 *
 	 * @return string
 	 */
-	private function readRemainder($handle, $chunk_size = 1024)
+	private function readRemainder($handle): string
 	{
 		$all = '';
 
 		do {
-			$data = \fread($handle, $chunk_size);
+			$data = \fread($handle, 1024);
 			$all .= $data;
-		} while (isset($data[0], $data[$chunk_size - 1]));
+		} while (isset($data[0], $data[1024 - 1]));
 
 		return $all;
 	}
@@ -487,13 +476,13 @@ final class Process
 	/**
 	 * Unblock mode to prevent deadlock in certain circumstance.
 	 */
-	private function unblock()
+	private function unblock(): void
 	{
 		if ($this->pipes && !$this->unblocked) {
 			$this->unblocked = true;
 
-			foreach ($this->pipes as $k => $pipe) {
-				\stream_set_blocking($pipe, 0);
+			foreach ($this->pipes as $pipe) {
+				\stream_set_blocking($pipe, false);
 			}
 		}
 	}
@@ -503,7 +492,7 @@ final class Process
 	 *
 	 * @param string $method
 	 */
-	private function assertOpenedProcess($method)
+	private function assertOpenedProcess(string $method): void
 	{
 		if (!$this->process) {
 			throw new RuntimeException(\sprintf('Makes sure process is opened before calling %s.', $method));
@@ -515,7 +504,7 @@ final class Process
 	 *
 	 * @param string $method
 	 */
-	private function assertNoOpenedProcess($method)
+	private function assertNoOpenedProcess(string $method): void
 	{
 		if ($this->process) {
 			throw new RuntimeException(\sprintf('You should not call %s after process is opened.', $method));

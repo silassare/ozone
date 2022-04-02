@@ -1,6 +1,3 @@
 #!/bin/sh
 
-./vendor/bin/php-cs-fixer fix --using-cache=no
-./vendor/bin/phpcbf .
-./vendor/bin/php-cs-fixer fix --using-cache=no
-./vendor/bin/phpcbf .
+./vendor/bin/oliup-cs fix

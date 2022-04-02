@@ -1,47 +1,70 @@
 <?php
 
 /**
- * Auto generated file
+ * Copyright (c) 2017-present, Emile Silas Sare
  *
- * WARNING: please don't edit.
+ * This file is part of OZone package.
  *
- * Proudly With: gobl v1.5.0
- * Time: 1617030519
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use Gobl\ORM\ORM;
-use Gobl\ORM\ORMEntityBase;
-use OZONE\OZ\Db\OZUsersQuery as OZUsersQueryReal;
-use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
-use OZONE\OZ\Db\OZCountriesController as OZCountriesControllerRealR;
+use OZONE\OZ\Db\OZClient as OZClientRealR;
+use OZONE\OZ\Db\OZCountry as OZCountryRealR;
+use OZONE\OZ\Db\OZFile as OZFileRealR;
+use OZONE\OZ\Db\OZSession as OZSessionRealR;
 
 /**
- * Class OZUser
+ * Class OZUser.
+ *
+ * @property string $id         Getter for
+ *                              column `oz_users`.`id`.
+ * @property string $phone      Getter for
+ *                              column `oz_users`.`phone`.
+ * @property string $email      Getter for
+ *                              column `oz_users`.`email`.
+ * @property string $pass       Getter for
+ *                              column `oz_users`.`pass`.
+ * @property string $name       Getter for
+ *                              column `oz_users`.`name`.
+ * @property string $gender     Getter for
+ *                              column `oz_users`.`gender`.
+ * @property string $birth_date Getter for
+ *                              column `oz_users`.`birth_date`.
+ * @property string $pic        Getter for
+ *                              column `oz_users`.`pic`.
+ * @property string $cc2        Getter for
+ *                              column `oz_users`.`cc2`.
+ * @property array  $data       Getter for
+ *                              column `oz_users`.`data`.
+ * @property string $created_at Getter for
+ *                              column `oz_users`.`created_at`.
+ * @property string $updated_at Getter for
+ *                              column `oz_users`.`updated_at`.
+ * @property bool   $valid      Getter for
+ *                              column `oz_users`.`valid`.
  */
-abstract class OZUser extends ORMEntityBase
+abstract class OZUser extends \Gobl\ORM\ORMEntity
 {
-	const TABLE_NAME = 'oz_users';
-
-	const COL_ID = 'user_id';
-	const COL_PHONE = 'user_phone';
-	const COL_EMAIL = 'user_email';
-	const COL_PASS = 'user_pass';
-	const COL_NAME = 'user_name';
-	const COL_GENDER = 'user_gender';
-	const COL_BIRTH_DATE = 'user_birth_date';
-	const COL_PICID = 'user_picid';
-	const COL_CC2 = 'user_cc2';
-	const COL_DATA = 'user_data';
-	const COL_ADD_TIME = 'user_add_time';
-	const COL_VALID = 'user_valid';
-
-	/**
-	 * @var \OZONE\OZ\Db\OZCountry
-	 */
-	protected $_r_oz_country;
-
+	public const TABLE_NAME      = 'oz_users';
+	public const TABLE_NAMESPACE = 'OZONE\\OZ\\Db';
+	public const COL_ID          = 'user_id';
+	public const COL_PHONE       = 'user_phone';
+	public const COL_EMAIL       = 'user_email';
+	public const COL_PASS        = 'user_pass';
+	public const COL_NAME        = 'user_name';
+	public const COL_GENDER      = 'user_gender';
+	public const COL_BIRTH_DATE  = 'user_birth_date';
+	public const COL_PIC         = 'user_pic';
+	public const COL_CC2         = 'user_cc2';
+	public const COL_DATA        = 'user_data';
+	public const COL_CREATED_AT  = 'user_created_at';
+	public const COL_UPDATED_AT  = 'user_updated_at';
+	public const COL_VALID       = 'user_valid';
 
 	/**
 	 * OZUser constructor.
@@ -50,95 +73,31 @@ abstract class OZUser extends ORMEntityBase
 	 *                     from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
-	public function __construct($is_new = true, $strict = true)
+	public function __construct(bool $is_new = true, bool $strict = true)
 	{
-		parent::__construct(
-			ORM::getDatabase('OZONE\OZ\Db'),
-			$is_new,
-			$strict,
-			self::TABLE_NAME,
-			OZUsersQueryReal::class
-		);
-	}
-
-	/**
-	 * OneToMany relation between `oz_users` and `oz_files`.
-	 *
-	 * @param array	$filters  the row filters
-	 * @param int|null $max	  maximum row to retrieve
-	 * @param int	  $offset   first row offset
-	 * @param array	$order_by order by rules
-	 * @param int|bool $total	total rows without limit
-	 *
-	 * @return \OZONE\OZ\Db\OZFile[]
-	 * @throws \Throwable
-	 */
-	function getOZFiles($filters = [], $max = null, $offset = 0, $order_by = [], &$total = false)
-	{
-		if (!is_null($v = $this->getId())) {
-			$filters['file_user_id'] = $v;
-		}
-		if (empty($filters)) {
-			return [];
-		}
-
-		$ctrl = new OZFilesControllerRealR();
-
-		return $ctrl->getAllItems($filters, $max, $offset, $order_by, $total);
-	}
-
-	/**
-	 * OneToOne relation between `oz_users` and `oz_countries`.
-	 *
-	 * @return null|\OZONE\OZ\Db\OZCountry
-	 * @throws \Throwable
-	 */
-	public function getOZCountry()
-	{
-		if (!isset($this->_r_oz_country)) {
-			$filters = [];
-			if (!is_null($v = $this->getCc2())) {
-				$filters['country_cc2'] = $v;
-			}
-			if (empty($filters)) {
-				return null;
-			}
-
-			$m = new OZCountriesControllerRealR();
-			$this->_r_oz_country = $m->getItem($filters);
-		}
-
-		return $this->_r_oz_country;
+		parent::__construct(self::TABLE_NAMESPACE, self::TABLE_NAME, $is_new, $strict);
 	}
 
 	/**
 	 * Getter for column `oz_users`.`id`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getId()
+	public function getID(): string
 	{
-		$column = self::COL_ID;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_ID};
 	}
 
 	/**
 	 * Setter for column `oz_users`.`id`.
 	 *
-	 * @param string $id
+	 * @param null|int|string $id
 	 *
 	 * @return static
 	 */
-	public function setId($id)
+	public function setID(string|int|null $id): self
 	{
-		$column = self::COL_ID;
-		$this->$column = $id;
+		$this->{self::COL_ID} = $id;
 
 		return $this;
 	}
@@ -146,31 +105,23 @@ abstract class OZUser extends ORMEntityBase
 	/**
 	 * Getter for column `oz_users`.`phone`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getPhone()
+	public function getPhone(): string
 	{
-		$column = self::COL_PHONE;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_PHONE};
 	}
 
 	/**
 	 * Setter for column `oz_users`.`phone`.
 	 *
-	 * @param string $phone
+	 * @param null|string $phone
 	 *
 	 * @return static
 	 */
-	public function setPhone($phone)
+	public function setPhone(string|null $phone): self
 	{
-		$column = self::COL_PHONE;
-		$this->$column = $phone;
+		$this->{self::COL_PHONE} = $phone;
 
 		return $this;
 	}
@@ -178,18 +129,11 @@ abstract class OZUser extends ORMEntityBase
 	/**
 	 * Getter for column `oz_users`.`email`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getEmail()
+	public function getEmail(): string
 	{
-		$column = self::COL_EMAIL;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_EMAIL};
 	}
 
 	/**
@@ -199,10 +143,9 @@ abstract class OZUser extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setEmail($email)
+	public function setEmail(string $email): self
 	{
-		$column = self::COL_EMAIL;
-		$this->$column = $email;
+		$this->{self::COL_EMAIL} = $email;
 
 		return $this;
 	}
@@ -210,18 +153,11 @@ abstract class OZUser extends ORMEntityBase
 	/**
 	 * Getter for column `oz_users`.`pass`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getPass()
+	public function getPass(): string
 	{
-		$column = self::COL_PASS;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_PASS};
 	}
 
 	/**
@@ -231,10 +167,9 @@ abstract class OZUser extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setPass($pass)
+	public function setPass(string $pass): self
 	{
-		$column = self::COL_PASS;
-		$this->$column = $pass;
+		$this->{self::COL_PASS} = $pass;
 
 		return $this;
 	}
@@ -242,18 +177,11 @@ abstract class OZUser extends ORMEntityBase
 	/**
 	 * Getter for column `oz_users`.`name`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getName()
+	public function getName(): string
 	{
-		$column = self::COL_NAME;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_NAME};
 	}
 
 	/**
@@ -263,10 +191,9 @@ abstract class OZUser extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setName($name)
+	public function setName(string $name): self
 	{
-		$column = self::COL_NAME;
-		$this->$column = $name;
+		$this->{self::COL_NAME} = $name;
 
 		return $this;
 	}
@@ -274,18 +201,11 @@ abstract class OZUser extends ORMEntityBase
 	/**
 	 * Getter for column `oz_users`.`gender`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getGender()
+	public function getGender(): string
 	{
-		$column = self::COL_GENDER;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_GENDER};
 	}
 
 	/**
@@ -295,10 +215,9 @@ abstract class OZUser extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setGender($gender)
+	public function setGender(string $gender): self
 	{
-		$column = self::COL_GENDER;
-		$this->$column = $gender;
+		$this->{self::COL_GENDER} = $gender;
 
 		return $this;
 	}
@@ -306,63 +225,47 @@ abstract class OZUser extends ORMEntityBase
 	/**
 	 * Getter for column `oz_users`.`birth_date`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getBirthDate()
+	public function getBirthDate(): string
 	{
-		$column = self::COL_BIRTH_DATE;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_BIRTH_DATE};
 	}
 
 	/**
 	 * Setter for column `oz_users`.`birth_date`.
 	 *
-	 * @param string $birth_date
+	 * @param int|string $birth_date
 	 *
 	 * @return static
 	 */
-	public function setBirthDate($birth_date)
+	public function setBirthDate(string|int $birth_date): self
 	{
-		$column = self::COL_BIRTH_DATE;
-		$this->$column = $birth_date;
+		$this->{self::COL_BIRTH_DATE} = $birth_date;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_users`.`picid`.
+	 * Getter for column `oz_users`.`pic`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getPicid()
+	public function getPic(): string
 	{
-		$column = self::COL_PICID;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_PIC};
 	}
 
 	/**
-	 * Setter for column `oz_users`.`picid`.
+	 * Setter for column `oz_users`.`pic`.
 	 *
-	 * @param string $picid
+	 * @param null|string $pic
 	 *
 	 * @return static
 	 */
-	public function setPicid($picid)
+	public function setPic(string|null $pic): self
 	{
-		$column = self::COL_PICID;
-		$this->$column = $picid;
+		$this->{self::COL_PIC} = $pic;
 
 		return $this;
 	}
@@ -370,18 +273,11 @@ abstract class OZUser extends ORMEntityBase
 	/**
 	 * Getter for column `oz_users`.`cc2`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getCc2()
+	public function getCc2(): string
 	{
-		$column = self::COL_CC2;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_CC2};
 	}
 
 	/**
@@ -391,10 +287,9 @@ abstract class OZUser extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setCc2($cc2)
+	public function setCc2(string $cc2): self
 	{
-		$column = self::COL_CC2;
-		$this->$column = $cc2;
+		$this->{self::COL_CC2} = $cc2;
 
 		return $this;
 	}
@@ -402,63 +297,71 @@ abstract class OZUser extends ORMEntityBase
 	/**
 	 * Getter for column `oz_users`.`data`.
 	 *
-	 * @return string the real type is: string
+	 * @return array
 	 */
-	public function getData()
+	public function getData(): array
 	{
-		$column = self::COL_DATA;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_DATA};
 	}
 
 	/**
 	 * Setter for column `oz_users`.`data`.
 	 *
-	 * @param string $data
+	 * @param array $data
 	 *
 	 * @return static
 	 */
-	public function setData($data)
+	public function setData(array $data): self
 	{
-		$column = self::COL_DATA;
-		$this->$column = $data;
+		$this->{self::COL_DATA} = $data;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_users`.`add_time`.
+	 * Getter for column `oz_users`.`created_at`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getAddTime()
+	public function getCreatedAT(): string
 	{
-		$column = self::COL_ADD_TIME;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_CREATED_AT};
 	}
 
 	/**
-	 * Setter for column `oz_users`.`add_time`.
+	 * Setter for column `oz_users`.`created_at`.
 	 *
-	 * @param string $add_time
+	 * @param int|string $created_at
 	 *
 	 * @return static
 	 */
-	public function setAddTime($add_time)
+	public function setCreatedAT(string|int $created_at): self
 	{
-		$column = self::COL_ADD_TIME;
-		$this->$column = $add_time;
+		$this->{self::COL_CREATED_AT} = $created_at;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_users`.`updated_at`.
+	 *
+	 * @return string
+	 */
+	public function getUpdatedAT(): string
+	{
+		return $this->{self::COL_UPDATED_AT};
+	}
+
+	/**
+	 * Setter for column `oz_users`.`updated_at`.
+	 *
+	 * @param int|string $updated_at
+	 *
+	 * @return static
+	 */
+	public function setUpdatedAT(string|int $updated_at): self
+	{
+		$this->{self::COL_UPDATED_AT} = $updated_at;
 
 		return $this;
 	}
@@ -466,18 +369,11 @@ abstract class OZUser extends ORMEntityBase
 	/**
 	 * Getter for column `oz_users`.`valid`.
 	 *
-	 * @return bool the real type is: bool
+	 * @return bool
 	 */
-	public function getValid()
+	public function getValid(): bool
 	{
-		$column = self::COL_VALID;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (bool)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_VALID};
 	}
 
 	/**
@@ -487,11 +383,114 @@ abstract class OZUser extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setValid($valid)
+	public function setValid(bool $valid): self
 	{
-		$column = self::COL_VALID;
-		$this->$column = $valid;
+		$this->{self::COL_VALID} = $valid;
 
 		return $this;
+	}
+
+	/**
+	 * OneToMany relation between `oz_users` and `oz_files`.
+	 *
+	 * @param array    $filters  the row filters
+	 * @param null|int $max      maximum row to retrieve
+	 * @param int      $offset   first row offset
+	 * @param array    $order_by order by rules
+	 * @param null|int $total    total rows without limit
+	 *
+	 * @return OZFileRealR[]
+	 */
+	public function getFiles(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = -1): array
+	{
+		$getters        = [\OZONE\OZ\Db\OZFile::COL_USER_ID => [$this, 'getID']];
+		$filters_bundle = $this->buildRelationFilter($getters, $filters);
+		if (null === $filters_bundle) {
+			return [];
+		}
+
+		return (new \OZONE\OZ\Db\OZFilesController())->getAllItems($filters_bundle, $max, $offset, $order_by, $total);
+	}
+
+	/**
+	 * OneToOne relation between `oz_users` and `oz_countries`.
+	 *
+	 * @return null|OZCountryRealR
+	 */
+	public function getCountry(): ?OZCountryRealR
+	{
+		$getters        = [\OZONE\OZ\Db\OZCountry::COL_CC2 => [$this, 'getCc2']];
+		$filters_bundle = $this->buildRelationFilter($getters, []);
+		if (null === $filters_bundle) {
+			return null;
+		}
+
+		return (new \OZONE\OZ\Db\OZCountriesController())->getItem($filters_bundle);
+	}
+
+	/**
+	 * OneToMany relation between `oz_users` and `oz_sessions`.
+	 *
+	 * @param array    $filters  the row filters
+	 * @param null|int $max      maximum row to retrieve
+	 * @param int      $offset   first row offset
+	 * @param array    $order_by order by rules
+	 * @param null|int $total    total rows without limit
+	 *
+	 * @return OZSessionRealR[]
+	 */
+	public function getSessions(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = -1): array
+	{
+		$getters        = [\OZONE\OZ\Db\OZSession::COL_USER_ID => [$this, 'getID']];
+		$filters_bundle = $this->buildRelationFilter($getters, $filters);
+		if (null === $filters_bundle) {
+			return [];
+		}
+
+		return (new \OZONE\OZ\Db\OZSessionsController())->getAllItems($filters_bundle, $max, $offset, $order_by, $total);
+	}
+
+	/**
+	 * OneToMany relation between `oz_users` and `oz_clients`.
+	 *
+	 * @param array    $filters  the row filters
+	 * @param null|int $max      maximum row to retrieve
+	 * @param int      $offset   first row offset
+	 * @param array    $order_by order by rules
+	 * @param null|int $total    total rows without limit
+	 *
+	 * @return OZClientRealR[]
+	 */
+	public function getAttachedClients(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = -1): array
+	{
+		$getters        = [\OZONE\OZ\Db\OZClient::COL_USER_ID => [$this, 'getID']];
+		$filters_bundle = $this->buildRelationFilter($getters, $filters);
+		if (null === $filters_bundle) {
+			return [];
+		}
+
+		return (new \OZONE\OZ\Db\OZClientsController())->getAllItems($filters_bundle, $max, $offset, $order_by, $total);
+	}
+
+	/**
+	 * OneToMany relation between `oz_users` and `oz_clients`.
+	 *
+	 * @param array    $filters  the row filters
+	 * @param null|int $max      maximum row to retrieve
+	 * @param int      $offset   first row offset
+	 * @param array    $order_by order by rules
+	 * @param null|int $total    total rows without limit
+	 *
+	 * @return OZClientRealR[]
+	 */
+	public function getOwnedClients(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = -1): array
+	{
+		$getters        = [\OZONE\OZ\Db\OZClient::COL_ADDED_BY => [$this, 'getID']];
+		$filters_bundle = $this->buildRelationFilter($getters, $filters);
+		if (null === $filters_bundle) {
+			return [];
+		}
+
+		return (new \OZONE\OZ\Db\OZClientsController())->getAllItems($filters_bundle, $max, $offset, $order_by, $total);
 	}
 }

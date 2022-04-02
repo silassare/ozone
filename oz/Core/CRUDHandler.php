@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Core;
 
 use Gobl\CRUD\CRUDColumnUpdate;
@@ -20,16 +22,21 @@ use Gobl\CRUD\CRUDReadAll;
 use Gobl\CRUD\CRUDUpdate;
 use Gobl\CRUD\CRUDUpdateAll;
 use Gobl\CRUD\Handler\Interfaces\CRUDHandlerInterface;
+use Gobl\DBAL\Column;
+use Gobl\ORM\ORMEntity;
 
+/**
+ * Class CRUDHandler.
+ */
 class CRUDHandler implements CRUDHandlerInterface
 {
 	/**
 	 * @var \OZONE\OZ\Core\Context
 	 */
-	private $context;
+	private Context $context;
 
 	/**
-	 * CRUDHandlerBase constructor.
+	 * CRUDHandler constructor.
 	 *
 	 * @param \OZONE\OZ\Core\Context $context
 	 */
@@ -39,7 +46,7 @@ class CRUDHandler implements CRUDHandlerInterface
 	}
 
 	/**
-	 * CRUDHandlerBase destructor.
+	 * CRUDHandler destructor.
 	 */
 	public function __destruct()
 	{
@@ -47,154 +54,138 @@ class CRUDHandler implements CRUDHandlerInterface
 	}
 
 	/**
-	 * @param \Gobl\CRUD\CRUDCreate $action
-	 *
-	 * @return bool
+	 * {@inheritDoc}
 	 */
-	public function onBeforeCreate(CRUDCreate $action)
+	public function onBeforeCreate(CRUDCreate $action): bool
 	{
 		return false;
 	}
 
 	/**
-	 * @param \Gobl\CRUD\CRUDRead $action
-	 *
-	 * @return bool
+	 * {@inheritDoc}
 	 */
-	public function onBeforeRead(CRUDRead $action)
+	public function onBeforeRead(CRUDRead $action): bool
 	{
 		return false;
 	}
 
 	/**
-	 * @param \Gobl\CRUD\CRUDUpdate $action
-	 *
-	 * @return bool
+	 * {@inheritDoc}
 	 */
-	public function onBeforeUpdate(CRUDUpdate $action)
+	public function onBeforeUpdate(CRUDUpdate $action): bool
 	{
 		return false;
 	}
 
 	/**
-	 * @param \Gobl\CRUD\CRUDDelete $action
-	 *
-	 * @return bool
+	 * {@inheritDoc}
 	 */
-	public function onBeforeDelete(CRUDDelete $action)
+	public function onBeforeDelete(CRUDDelete $action): bool
 	{
 		return false;
 	}
 
 	/**
-	 * @param \Gobl\CRUD\CRUDReadAll $action
-	 *
-	 * @return bool
+	 * {@inheritDoc}
 	 */
-	public function onBeforeReadAll(CRUDReadAll $action)
+	public function onBeforeReadAll(CRUDReadAll $action): bool
 	{
 		return false;
 	}
 
 	/**
-	 * @param \Gobl\CRUD\CRUDUpdateAll $action
-	 *
-	 * @return bool
+	 * {@inheritDoc}
 	 */
-	public function onBeforeUpdateAll(CRUDUpdateAll $action)
+	public function onBeforeUpdateAll(CRUDUpdateAll $action): bool
 	{
 		return false;
 	}
 
 	/**
-	 * @param \Gobl\CRUD\CRUDDeleteAll $action
-	 *
-	 * @return bool
+	 * {@inheritDoc}
 	 */
-	public function onBeforeDeleteAll(CRUDDeleteAll $action)
+	public function onBeforeDeleteAll(CRUDDeleteAll $action): bool
 	{
 		return false;
 	}
 
 	/**
-	 * @param \Gobl\CRUD\CRUDColumnUpdate $action
-	 *
-	 * @return bool
+	 * {@inheritDoc}
 	 */
-	public function onBeforeColumnUpdate(CRUDColumnUpdate $action)
+	public function onBeforeColumnUpdate(CRUDColumnUpdate $action): bool
 	{
 		return false;
 	}
 
 	/**
-	 * @param mixed $entity
+	 * {@inheritDoc}
 	 */
-	public function onAfterCreateEntity($entity)
+	public function onAfterCreateEntity(ORMEntity $entity): void
 	{
 	}
 
 	/**
-	 * @param mixed $entity
+	 * {@inheritDoc}
 	 */
-	public function onAfterReadEntity($entity)
+	public function onAfterReadEntity(ORMEntity $entity): void
 	{
 	}
 
 	/**
-	 * @param mixed $entity
+	 * {@inheritDoc}
 	 */
-	public function onBeforeUpdateEntity($entity)
+	public function onBeforeUpdateEntity(ORMEntity $entity): void
 	{
 	}
 
 	/**
-	 * @param mixed $entity
+	 * {@inheritDoc}
 	 */
-	public function onAfterUpdateEntity($entity)
+	public function onAfterUpdateEntity(ORMEntity $entity): void
 	{
 	}
 
 	/**
-	 * @param mixed $entity
+	 * {@inheritDoc}
 	 */
-	public function onBeforeDeleteEntity($entity)
+	public function onBeforeDeleteEntity(ORMEntity $entity): void
 	{
 	}
 
 	/**
-	 * @param mixed $entity
+	 * {@inheritDoc}
 	 */
-	public function onAfterDeleteEntity($entity)
+	public function onAfterDeleteEntity(ORMEntity $entity): void
 	{
 	}
 
 	/**
-	 * @return bool
+	 * {@inheritDoc}
 	 */
-	public function shouldWritePkColumn()
-	{
-		return false;
-	}
-
-	/**
-	 * @return bool
-	 */
-	public function shouldWritePrivateColumn()
+	public function shouldWritePkColumn(Column $column): bool
 	{
 		return false;
 	}
 
 	/**
-	 * @param array $form
+	 * {@inheritDoc}
 	 */
-	public function autoFillCreateForm(array &$form)
+	public function shouldWritePrivateColumn(Column $column): bool
+	{
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function autoFillCreateForm(CRUDCreate $action): void
 	{
 	}
 
 	/**
-	 * @inheritDoc
+	 * {@inheritDoc}
 	 */
-	public function autoFillUpdateFormAndFilters(array &$form, array &$filters, $is_multiple)
+	public function autoFillUpdateFormAndFilters(CRUDUpdate|CRUDUpdateAll $action): void
 	{
 	}
 
@@ -203,28 +194,29 @@ class CRUDHandler implements CRUDHandlerInterface
 	 *
 	 * @return \OZONE\OZ\Core\Context
 	 */
-	protected function getContext()
+	protected function getContext(): Context
 	{
 		return $this->context;
 	}
 
 	/**
-	 * @throws \OZONE\OZ\Exceptions\BaseException
+	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
-	protected function assertIsAdmin()
+	protected function assertIsAdmin(): void
 	{
 		$this->getContext()
-			 ->getUsersManager()
-			 ->assertIsAdmin();
+			->getUsersManager()
+			->assertIsAdmin();
 	}
 
 	/**
-	 * @throws \OZONE\OZ\Exceptions\BaseException
+	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
-	protected function assertUserVerified()
+	protected function assertUserVerified(): void
 	{
 		$this->getContext()
-			 ->getUsersManager()
-			 ->assertUserVerified();
+			->getUsersManager()
+			->assertUserVerified();
 	}
 }

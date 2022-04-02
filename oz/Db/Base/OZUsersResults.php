@@ -1,73 +1,34 @@
 <?php
 
 /**
- * Auto generated file
+ * Copyright (c) 2017-present, Emile Silas Sare
  *
- * WARNING: please don't edit.
+ * This file is part of OZone package.
  *
- * Proudly With: gobl v1.5.0
- * Time: 1617030519
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use Gobl\DBAL\Db;
-use Gobl\DBAL\QueryBuilder;
-use Gobl\ORM\ORMResultsBase;
-
 /**
- * Class OZUsersResults
+ * Class OZUsersResults.
+ *
+ * @method null|\OZONE\OZ\Db\OZUser current()
+ * @method null|\OZONE\OZ\Db\OZUser fetchClass(bool $strict = true)
+ * @method \OZONE\OZ\Db\OZUser[]    fetchAllClass(bool $strict = true)
  */
-abstract class OZUsersResults extends ORMResultsBase
+abstract class OZUsersResults extends \Gobl\ORM\ORMResults
 {
 	/**
 	 * OZUsersResults constructor.
 	 *
-	 * @param \Gobl\DBAL\Db           $db
-	 * @param \Gobl\DBAL\QueryBuilder $query
-	 *
-	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 * @param \Gobl\DBAL\Queries\QBSelect $query
 	 */
-	public function __construct(Db $db, QueryBuilder $query)
+	public function __construct(\Gobl\DBAL\Queries\QBSelect $query)
 	{
-		parent::__construct($db, $query, \OZONE\OZ\Db\OZUser::class);
-	}
-
-	/**
-	 * This is to help editor infer type in loop (foreach or for...)
-	 *
-	 * @return null|array|\OZONE\OZ\Db\OZUser
-	 */
-	public function current()
-	{
-		return parent::current();
-	}
-
-	/**
-	 * Fetches  the next row into table of the entity class instance.
-	 *
-	 * @param bool $strict
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 *
-	 * @return null|\OZONE\OZ\Db\OZUser
-	 */
-	public function fetchClass($strict = true)
-	{
-		return parent::fetchClass($strict);
-	}
-
-	/**
-	 * Fetches  all rows and return array of the entity class instance.
-	 *
-	 * @param bool $strict
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 *
-	 * @return \OZONE\OZ\Db\OZUser[]
-	 */
-	public function fetchAllClass($strict = true)
-	{
-		return parent::fetchAllClass($strict);
+		parent::__construct(\OZONE\OZ\Db\OZUser::TABLE_NAMESPACE, \OZONE\OZ\Db\OZUser::TABLE_NAME, $query);
 	}
 }

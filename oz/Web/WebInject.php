@@ -9,19 +9,23 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Web;
 
-use Exception;
 use OZONE\OZ\Core\Context;
+use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\OZ\Http\Uri;
+use OZONE\OZ\Lang\I18n;
 use OZONE\OZ\Lang\Polyglot;
-use RuntimeException;
+use Throwable;
 
+/**
+ * Class WebInject.
+ */
 class WebInject
 {
-	/**
-	 * @var \OZONE\OZ\Core\Context
-	 */
-	private $context;
+	private Context $context;
 
 	/**
 	 * WebInject constructor.
@@ -46,77 +50,83 @@ class WebInject
 	 *
 	 * @return \OZONE\OZ\Core\Context
 	 */
-	public function getContext()
+	public function getContext(): Context
 	{
 		return $this->context;
 	}
 
 	/**
-	 * I18n.
+	 * Shortcut for {@see I18n::t()}.
 	 *
 	 * usage: $.i18n( $key [, $data [, $format [, $lang ] ] ] )
 	 *
-	 * @param string $key
-	 * @param array  $data
-	 * @param string $lang
+	 * @param string      $key
+	 * @param array       $data
+	 * @param null|string $lang
 	 *
 	 * @return string
 	 */
-	public function i18n($key, array $data = [], $lang = null)
+	public function i18n(string $key, array $data = [], string $lang = null): string
 	{
 		try {
-			return Polyglot::translate($key, $data, $lang, $this->context);
-		} catch (Exception $e) {
-			throw new RuntimeException(\sprintf('Translation fail for %s:', $key), $e);
+			return I18n::t($key, $data, $lang, $this->context);
+		} catch (Throwable $t) {
+			throw new RuntimeException(\sprintf('Translation fail for: "%s"', $key), null, $t);
 		}
 	}
 
 	/**
+	 * Shortcut for {@see \OZONE\OZ\Http\Request::getUri()}.
+	 *
 	 * @return \OZONE\OZ\Http\Uri
 	 */
-	public function getRequestUri()
+	public function getRequestUri(): Uri
 	{
 		return $this->context->getRequest()
-							 ->getUri();
+			->getUri();
 	}
 
 	/**
+	 * Shortcut for {@see Context::buildUri()}.
+	 *
 	 * @param string $path
 	 * @param array  $query
 	 *
 	 * @return \OZONE\OZ\Http\Uri
 	 */
-	public function buildUri($path, array $query = [])
+	public function buildUri(string $path, array $query = []): Uri
 	{
 		return $this->context->buildUri($path, $query);
 	}
 
 	/**
-	 * @param string $route_name
-	 * @param array  $args
-	 * @param array  $query
+	 * Shortcut for {@see Context::buildRouteUri()}.
 	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+	 * @param string $route_name
+	 * @param array  $params
+	 * @param array  $query
 	 *
 	 * @return \OZONE\OZ\Http\Uri
 	 */
-	public function buildRouteUri($route_name, array $args, array $query = [])
+	public function buildRouteUri(string $route_name, array $params, array $query = []): Uri
 	{
-		return $this->context->buildRouteUri($route_name, $args, $query);
+		return $this->context->buildRouteUri($route_name, $params, $query);
 	}
 
 	/**
 	 * @return string
 	 */
-	public function getBaseURL()
+	public function getBaseURL(): string
 	{
 		return $this->context->getBaseUrl();
 	}
 
 	/**
+	 * Gets current language.
+	 *
 	 * @return string
 	 */
-	public function getLanguage()
+	public function getLanguage(): string
 	{
 		return Polyglot::getLanguage($this->context);
 	}

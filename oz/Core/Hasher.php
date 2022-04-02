@@ -9,109 +9,39 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Core;
 
-use Exception;
 use InvalidArgumentException;
+use OZONE\OZ\Exceptions\RuntimeException;
+use Throwable;
 
+/**
+ * Class Hasher.
+ */
 final class Hasher
 {
-	const CHARS_ALPHA = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	public const CHARS_ALPHA = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-	const CHARS_NUM = '0123456789';
+	public const CHARS_NUM = '0123456789';
 
-	const CHARS_SYMBOLS = '~!@#$£µ§²¨%^&()_-+={}[]:";\'<>?,./\\';
+	public const CHARS_SYMBOLS = '~!@#$£µ§²¨%^&()_-+={}[]:";\'<>?,./\\';
 
-	const CHARS_ALPHA_NUM = self::CHARS_ALPHA . self::CHARS_NUM;
+	public const CHARS_ALPHA_NUM = self::CHARS_ALPHA . self::CHARS_NUM;
 
-	const CHARS_ALL = self::CHARS_ALPHA_NUM . self::CHARS_SYMBOLS;
+	public const CHARS_ALL = self::CHARS_ALPHA_NUM . self::CHARS_SYMBOLS;
 
 	/**
-	 * Generate file key
-	 *
-	 * @param string $path the file path
-	 *
-	 * @throws \Exception When the file doesn't exists
+	 * Generate file key.
 	 *
 	 * @return string
 	 */
-	public static function genFileKey($path)
+	public static function genFileKey(): string
 	{
-		if (!\file_exists($path)) {
-			throw new Exception("can't generate file key for: $path");
-		}
-
 		// make sure to make differences between each cloned file key
 		// if not, all clone will have the same file_key as the original file
-		\srand(self::genSeed());
-
-		$file_salt = self::genRandomString() . \microtime() . self::getSalt('OZ_FILE_KEY_GEN_SALT');
-		$str       = \md5_file($path) . $file_salt;
-
-		return self::hashIt($str, 32);
-	}
-
-	/**
-	 * Hash string with a given hash string length
-	 *
-	 * @param string $string The string to hash
-	 * @param int    $length The desired hash string length default 32
-	 *
-	 * @throws \InvalidArgumentException
-	 *
-	 * @return string
-	 */
-	public static function hashIt($string, $length = 32)
-	{
-		$accept = [32, 64];
-
-		if (!\in_array($length, $accept)) {
-			$values = \implode(' , ', $accept);
-
-			throw new InvalidArgumentException("hash length argument should be on of this list: $values");
-		}
-
-		$string = \hash('sha256', $string);
-
-		if ($length === 32) {
-			return \md5($string);
-		}
-
-		return $string;
-	}
-
-	/**
-	 * Shorten url
-	 *
-	 * @param string $url url or string
-	 *
-	 * @return string
-	 */
-	public static function shorten($url)
-	{
-		$n         = \crc32($url);
-		$chars     = self::CHARS_ALPHA_NUM;
-		$base      = \strlen($chars);
-		$converted = '';
-
-		while ($n > 0) {
-			$converted = \substr($chars, ($n % $base), 1) . $converted;
-			$n         = \floor($n / $base);
-		}
-
-		return $converted;
-	}
-
-	/**
-	 * Generate random hash
-	 *
-	 * @param int $length The desired hash string length default 32
-	 *
-	 * @return string
-	 */
-	public static function genRandomHash($length = 32)
-	{
-		return self::hashIt(self::genRandomString() . \microtime(), $length);
+		return self::hash32(self::randomString() . \microtime() . self::getSalt('OZ_FILE_SALT'));
 	}
 
 	/**
@@ -122,45 +52,112 @@ final class Hasher
 	 *
 	 * @return string
 	 */
-	public static function genRandomFileName($prefix = 'oz', $readable_date = true)
+	public static function genFileName(string $prefix = 'oz', bool $readable_date = true): string
 	{
-		$hash = self::genRandomString(8, self::CHARS_ALPHA_NUM);
+		$hash = self::randomString(8, self::CHARS_ALPHA_NUM);
 		$date = $readable_date ? \date('Y-m-d-H-i-s') : \time();
 
 		return \sprintf('%s-%s-%s', $prefix, $date, $hash);
 	}
 
 	/**
-	 * Generate a seed
+	 * Returns a 32 string length hash of a given string.
 	 *
-	 * Test result:
-	 *  - Total seeds  -----> 1000000
-	 *  - Unique seeds -----> 999735
-	 *  - Redundancies -----> 99
-	 *  - Min value    -----> 55899
-	 *  - Max value    -----> 3100030173
-	 *  - Duration     -----> 1.2874000072479 s
+	 * When string is null or empty (length === 0) a random hash is generated.
 	 *
-	 * @return int
+	 * @param null|string $string The string to hash
+	 *
+	 * @return string
 	 */
-	public static function genSeed()
+	public static function hash32(?string $string = null): string
 	{
-		$m = \explode(' ', \microtime());
-		$m = ($m[0] * $m[1]) . '.' . \time();
-		$m = \explode('.', $m);
+		if (null === $string || '' === $string) {
+			$string = self::randomString(64) . \microtime();
+		}
 
-		return $m[0] + $m[1];
+		return \md5(\hash('sha256', $string));
 	}
 
 	/**
-	 * Generate a random string with a given length
+	 * Returns a 64 string length hash of a given string.
+	 *
+	 * When string is null or empty (length === 0) a random hash is generated.
+	 *
+	 * @param null|string $string The string to hash
+	 *
+	 * @return string
+	 */
+	public static function hash64(?string $string = null): string
+	{
+		if (null === $string || '' === $string) {
+			$string = self::randomString(64) . \microtime();
+		}
+
+		return \hash('sha256', $string);
+	}
+
+	/**
+	 * Shorten url (or any string).
+	 *
+	 * This is to shorten url string but it can also shorten any string.
+	 *
+	 * @param string $str
+	 *
+	 * @return string
+	 */
+	public static function shorten(string $str): string
+	{
+		$n         = \crc32($str);
+		$chars     = self::CHARS_ALPHA_NUM;
+		$base      = \strlen($chars);
+		$converted = '';
+
+		while ($n > 0) {
+			$converted = $chars[$n % $base] . $converted;
+			$n         = \floor($n / $base);
+		}
+
+		return $converted;
+	}
+
+	/**
+	 * Generate a random integer.
+	 *
+	 * @param int $min
+	 * @param int $max
+	 *
+	 * @return int
+	 */
+	public static function randomInt(int $min = 0, int $max = \PHP_INT_MAX): int
+	{
+		try {
+			return \random_int($min, $max);
+		} catch (Throwable $t) {
+			throw new RuntimeException('Unable to generate a secure random int.', null, $t);
+		}
+	}
+
+	/**
+	 * Randomly return true or false.
+	 *
+	 * @param int $frequency
+	 *
+	 * @return bool
+	 */
+	public static function randomBool(int $frequency = 10): bool
+	{
+		return (bool) (self::randomInt(0, \max($frequency, 1)) % 2);
+	}
+
+	/**
+	 * Generate a random string with a given length.
 	 *
 	 * @param int    $length The desired random string length default 32 range is [1,512]
 	 * @param string $chars  The chars to use
 	 *
 	 * @return string
 	 */
-	public static function genRandomString($length = 32, $chars = self::CHARS_ALL)
+	public static function randomString(int $length = 32, string $chars = self::CHARS_ALL): string
 	{
 		$min = 1;
 		$max = 512;
@@ -175,51 +172,62 @@ final class Hasher
 
 		$chars_length = \strlen($chars) - 1;
 		$string       = '';
-		\srand(self::genSeed());
 
 		for ($i = 0; $i < $length; ++$i) {
-			$string .= $chars[\rand(0, $chars_length)];
+			$string .= $chars[self::randomInt(0, $chars_length)];
 		}
 
 		return $string;
 	}
 
 	/**
-	 * Generate session id
+	 * Generate session id.
 	 *
 	 * @return string
 	 */
-	public static function genSessionId()
+	public static function genSessionID(): string
 	{
-		$salt = self::getSalt('OZ_SESSION_ID_GEN_SALT');
+		$salt = self::getSalt('OZ_SESSION_SALT');
 
-		return self::hashIt(\json_encode($_SERVER) . self::genRandomString(128) . \microtime() . $salt, 64);
+		return self::hash64(\serialize($_SERVER) . self::randomString(128) . \microtime() . $salt);
 	}
 
 	/**
-	 * Generate client id for a given client url
+	 * Generate session token.
+	 *
+	 * @return string
+	 */
+	public static function genSessionToken(): string
+	{
+		$salt = self::getSalt('OZ_SESSION_SALT');
+
+		return self::hash64(\serialize($_SERVER) . self::randomString(128) . \microtime() . $salt);
+	}
+
+	/**
+	 * Generate client id for a given client url.
 	 *
 	 * @param string $url the client url
 	 *
 	 * @return string
 	 */
-	public static function genClientId($url)
+	public static function genClientID(string $url): string
 	{
-		$salt = self::getSalt('OZ_CLIENT_ID_GEN_SALT');
-		$str  = self::hashIt($url . \microtime() . $salt, 32);
+		$salt = self::getSalt('OZ_DEFAULT_SALT');
+		$hash = self::hash32($url . \microtime() . $salt);
 
-		return \implode('-', \str_split(\strtoupper($str), 8));
+		return \implode('-', \str_split(\strtoupper($hash), 8));
 	}
 
 	/**
-	 * Generate auth code
+	 * Generate auth code.
 	 *
 	 * @param int  $length    the auth code length
 	 * @param bool $alpha_num whether to use digits or alpha_num
 	 *
 	 * @return string
 	 */
-	public static function genAuthCode($length = 4, $alpha_num = false)
+	public static function genAuthCode(int $length = 4, bool $alpha_num = false): string
 	{
 		$min = 4;
 		$max = 32;
@@ -228,51 +236,66 @@ final class Hasher
 			throw new InvalidArgumentException(\sprintf('Auth code length must be between %d and %d.', $min, $max));
 		}
 
-		if ($alpha_num) {
-			return self::genRandomString($length, self::CHARS_ALPHA_NUM);
-		}
-
-		\srand(self::genSeed());
-
-		$code = \rand(111111, 999999);
-		$code .= \rand(111111, 999999);
-		$code .= \rand(111111, 999999);
-		$code .= \rand(111111, 999999);
-		$code .= \rand(111111, 999999);
-		$code .= \rand(111111, 999999);
-
-		return \substr($code, 0, $length);
+		return self::randomString($length, $alpha_num ? self::CHARS_ALPHA_NUM : self::CHARS_NUM);
 	}
 
 	/**
-	 * Generate auth token
-	 *
-	 * @param int|string $key the key to authenticate
+	 * Generate auth token.
 	 *
 	 * @return string
 	 */
-	public static function genAuthToken($key)
+	public static function genAuthToken(): string
 	{
-		$salt = self::getSalt('OZ_AUTH_TOKEN_SALT');
+		$salt = self::getSalt('OZ_AUTH_SALT');
 
-		$str = $key . self::genRandomString() . \microtime() . $salt;
+		$str = self::randomString() . $salt;
 
-		return self::hashIt($str, 64);
+		return self::hash64($str);
 	}
 
 	/**
-	 * Returns a salt with a given name from settings
+	 * Generate auth refresh key.
+	 *
+	 * @param string $auth_ref the auth reference
+	 *
+	 * @return string
+	 */
+	public static function genAuthRefreshKey(string $auth_ref): string
+	{
+		$salt = self::getSalt('OZ_AUTH_SALT');
+
+		$str = $auth_ref . self::randomString() . $salt;
+
+		return self::hash64($str);
+	}
+
+	/**
+	 * Generate auth ref.
+	 *
+	 * @return string
+	 */
+	public static function genAuthReference(): string
+	{
+		$salt = self::getSalt('OZ_AUTH_SALT');
+
+		$str = self::randomString() . $salt;
+
+		return self::hash64($str);
+	}
+
+	/**
+	 * Returns a salt with a given name from settings.
 	 *
 	 * @param string $name The 'oz.keygen.salt' settings salt key name.
 	 *
-	 * @return null|string
+	 * @return string
 	 */
-	private static function getSalt($name)
+	public static function getSalt(string $name): string
 	{
-		$salt = SettingsManager::get('oz.keygen.salt', $name);
+		$salt = Configs::get('oz.keygen.salt', $name);
 
 		if (null === $salt) {
-			\trigger_error(\sprintf('Missing salt %s in %s', $name, 'oz.keygen.salt'), \E_USER_ERROR);
+			throw new RuntimeException(\sprintf('Missing salt %s in %s', $name, 'oz.keygen.salt'));
 		}
 
 		return $salt;

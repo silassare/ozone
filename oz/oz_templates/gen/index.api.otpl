@@ -1,6 +1,6 @@
 <?php
-<%@import('gen.info.otpl',$)%>
 
+<%@import('gen.info.otpl',$)%>
 use OZONE\OZ\Loader\ClassLoader;
 use OZONE\OZ\OZone;
 use <%$.oz_project_namespace%>\<%$.oz_project_class%>;
@@ -12,6 +12,7 @@ if (!\defined('DS')) {
 }
 
 //= Project directory
+//= any relative path will be resolved using this path as starting point
 if (!\defined('OZ_PROJECT_DIR')) {
 	\define('OZ_PROJECT_DIR', \dirname(__DIR__) . DS);
 }
@@ -19,6 +20,16 @@ if (!\defined('OZ_PROJECT_DIR')) {
 //= You can define the path to your ozone app directory here
 if (!\defined('OZ_APP_DIR')) {
 	\define('OZ_APP_DIR', __DIR__ . DS . 'app' . DS);
+}
+
+//= Files directory
+if (!\defined('OZ_FILES_DIR')) {
+	\define('OZ_FILES_DIR', OZ_APP_DIR . 'oz_users_files' . DS);
+}
+
+//= Cache directory
+if (!\defined('OZ_CACHE_DIR')) {
+	\define('OZ_CACHE_DIR', OZ_APP_DIR . 'oz_cache' . DS);
 }
 
 //= Logs directory

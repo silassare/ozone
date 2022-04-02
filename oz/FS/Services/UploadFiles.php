@@ -9,24 +9,30 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\FS\Services;
 
 use OZONE\OZ\Columns\Types\TypeFile;
-use OZONE\OZ\Core\BaseService;
-use OZONE\OZ\Core\SettingsManager;
-use OZONE\OZ\Router\Route;
+use OZONE\OZ\Core\Configs;
+use OZONE\OZ\Core\Service;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
 
-class UploadFiles extends BaseService
+/**
+ * Class UploadFiles.
+ */
+class UploadFiles extends Service
 {
+	public const MAIN_ROUTE = 'oz:upload';
+
 	/**
 	 * @param \OZONE\OZ\Router\RouteInfo $r
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 	 */
-	public function upload(RouteInfo $r)
+	public function upload(RouteInfo $r): void
 	{
 		$field = 'files';
 		$files = $r->getFormField($field);
@@ -35,33 +41,31 @@ class UploadFiles extends BaseService
 			$files = [$files];
 		}
 
-		$max_file_count = SettingsManager::get('oz.files', 'OZ_UPLOAD_FILE_MAX_COUNT');
-		$max_file_size  = SettingsManager::get('oz.files', 'OZ_UPLOAD_FILE_MAX_SIZE');
-		$max_total_size = SettingsManager::get('oz.files', 'OZ_UPLOAD_FILE_MAX_TOTAL_SIZE');
+		$max_file_count = Configs::get('oz.files', 'OZ_UPLOAD_FILE_MAX_COUNT');
+		$max_file_size  = Configs::get('oz.files', 'OZ_UPLOAD_FILE_MAX_SIZE');
+		$max_total_size = Configs::get('oz.files', 'OZ_UPLOAD_FILE_MAX_TOTAL_SIZE');
 		$type           = new TypeFile();
 
 		$type->multiple()
-			 ->fileCountRange(1, $max_file_count)
-			 ->fileSizeRange(1, $max_file_size)
-			 ->fileUploadTotalSize($max_total_size);
+			->fileMinCount(1)
+			->fileMinCount($max_file_count)
+			->fileMinSize(1)
+			->fileMaxSize($max_file_size)
+			->fileUploadTotalSize($max_total_size);
 
-		$data_json = $type->validate($files, '', '');
+		$data_json = $type->validate($files);
 		$data      = \json_decode($data_json, true);
 
-		$this->getResponseHolder()
-			 ->setDone()
-			 ->setDataKey($field, $data);
+		$this->getJSONResponse()
+			->setDone()
+			->setDataKey($field, $data);
 	}
 
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 */
-	public static function registerRoutes(Router $router)
+	public static function registerRoutes(Router $router): void
 	{
-		$options = [
-			Route::OPTION_NAME => 'oz:upload',
-		];
-
 		$router->post('/upload[/]', function (RouteInfo $r) {
 			$ctx = $r->getContext();
 			$s   = new static($ctx);
@@ -69,6 +73,6 @@ class UploadFiles extends BaseService
 			$s->upload($r);
 
 			return $s->respond();
-		}, $options);
+		})->name(self::MAIN_ROUTE);
 	}
 }

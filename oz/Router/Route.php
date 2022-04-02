@@ -9,83 +9,57 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Router;
 
 use InvalidArgumentException;
 use OZONE\OZ\Core\Context;
 
-class Route
+/**
+ * Class Route.
+ */
+final class Route
 {
-	const OPTION_NAME = 'route:name';
-
-	const REG_PLACEHOLDER = '[^/]+';
-
-	const REG_DELIMITER = '~';
-
-	/**
-	 * @var string
-	 */
-	private $route_path = '';
-
-	/**
-	 * @var string
-	 */
-	private $parsed = '';
-
-	/**
-	 * @var bool
-	 */
-	private $is_dynamic;
-
-	/**
-	 * @var array
-	 */
-	private $placeholders = [];
-
-	/**
-	 * @var array
-	 */
-	private $methods = [];
-
-	/**
-	 * @var array
-	 */
-	private $options = [];
+	public const DEFAULT_PARAM_PATTERN = '[^/]+';
+	public const REG_DELIMITER         = '~';
+	public const ROUTE_PARAM_REG       = '~^[a-z_][a-z0-9_]*$~';
 
 	/**
 	 * @var callable
 	 */
 	private $callable;
 
-	/**
-	 * @var \OZONE\OZ\Router\Router
-	 */
-	private $router;
+	private string $parsed;
+	private array  $params = [];
 
 	/**
 	 * Route constructor.
 	 *
-	 * @param \OZONE\OZ\Router\Router $router
-	 * @param array                   $methods
-	 * @param string                  $route_path
-	 * @param callable                $callable
-	 * @param array                   $options
+	 * @param \OZONE\OZ\Router\Router       $router
+	 * @param array                         $methods
+	 * @param string                        $path
+	 * @param callable                      $callable
+	 * @param \OZONE\OZ\Router\RouteOptions $options
 	 */
-	public function __construct(Router $router, array $methods, $route_path, callable $callable, array $options = [])
-	{
-		$this->router     = $router;
-		$this->route_path = $route_path;
-		$this->methods    = $methods;
-		$this->callable   = $callable;
-		$this->options    = \array_merge($router->getDefaultOptions(), $options);
+	public function __construct(
+		private Router $router,
+		private array $methods,
+		private string $path,
+		callable $callable,
+		private RouteOptions $options
+	) {
+		$this->callable = $callable;
+	}
 
-		if ($this->isDynamic()) {
-			$placeholders       = [];
-			$this->parsed       = self::parse($route_path, $options, $placeholders);
-			$this->placeholders = \array_keys($placeholders);
-		} else {
-			$this->parsed = $route_path;
-		}
+	/**
+	 * Gets route name.
+	 *
+	 * Shortcut of {@see \OZONE\OZ\Router\RouteOptions::getName()}
+	 */
+	public function getName(): string
+	{
+		return $this->options->getName();
 	}
 
 	/**
@@ -93,32 +67,30 @@ class Route
 	 *
 	 * @return bool
 	 */
-	public function isDynamic()
+	public function isDynamic(): bool
 	{
-		if (!isset($this->is_dynamic)) {
-			$this->is_dynamic = (
-				false !== \strpos($this->route_path, '{') || false !== \strpos($this->route_path, '[')
-			);
-		}
-
-		return $this->is_dynamic;
+		return \str_contains($this->path, '{')
+			   || \str_contains($this->path, ':')
+			   || \str_contains($this->path, '[');
 	}
 
 	/**
-	 * Builds the route with given placeholders value.
+	 * Builds the route with given parameters values.
 	 *
 	 * @param \OZONE\OZ\Core\Context $context
-	 * @param array                  $args
+	 * @param array                  $params
 	 *
 	 * @return string
 	 */
-	public function toPath(Context $context, array $args)
+	public function toPath(Context $context, array $params): string
 	{
 		if (!$this->isDynamic()) {
-			return $this->route_path;
+			return $this->path;
 		}
 
-		return $this->pathBuilder($context, $this->route_path, $this->options, $args);
+		$this->ensureParsed();
+
+		return $this->pathBuilder($context, $this->path, $params);
 	}
 
 	/**
@@ -126,9 +98,9 @@ class Route
 	 *
 	 * @return string
 	 */
-	public function getRoutePath()
+	public function getPath(): string
 	{
-		return $this->route_path;
+		return $this->path;
 	}
 
 	/**
@@ -136,7 +108,7 @@ class Route
 	 *
 	 * @return callable
 	 */
-	public function getCallable()
+	public function getCallable(): callable
 	{
 		return $this->callable;
 	}
@@ -144,28 +116,11 @@ class Route
 	/**
 	 * Returns the route options.
 	 *
-	 * @return array
+	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function getOptions()
+	public function getOptions(): RouteOptions
 	{
 		return $this->options;
-	}
-
-	/**
-	 * Returns the route option with the given name.
-	 *
-	 * @param string $name
-	 * @param mixed  $def
-	 *
-	 * @return null|mixed
-	 */
-	public function getOption($name, $def = null)
-	{
-		if (isset($this->options[$name])) {
-			return $this->options[$name];
-		}
-
-		return $def;
 	}
 
 	/**
@@ -173,7 +128,7 @@ class Route
 	 *
 	 * @return array
 	 */
-	public function getMethods()
+	public function getMethods(): array
 	{
 		return $this->methods;
 	}
@@ -185,9 +140,9 @@ class Route
 	 *
 	 * @return bool
 	 */
-	public function accept($method)
+	public function accept(string $method): bool
 	{
-		return \in_array(\strtoupper($method), $this->methods);
+		return \in_array(\strtoupper($method), $this->methods, true);
 	}
 
 	/**
@@ -195,45 +150,80 @@ class Route
 	 *
 	 * @return string
 	 */
-	public function getParsed()
+	public function getParsed(): string
 	{
+		$this->ensureParsed();
+
 		return $this->parsed;
 	}
 
 	/**
-	 * Returns placeholders.
+	 * Returns parameters.
 	 *
 	 * @return array
 	 */
-	public function getPlaceholders()
+	public function getParams(): array
 	{
-		return $this->placeholders;
+		$this->ensureParsed();
+
+		return $this->params;
 	}
 
 	/**
 	 * Checks if a given path matches this route.
 	 *
 	 * @param string     $path
-	 * @param null|array $args
+	 * @param null|array $params
 	 *
 	 * @return bool
 	 */
-	public function is($path, array &$args = [])
+	public function is(string $path, ?array &$params = []): bool
 	{
+		$this->ensureParsed();
+
 		if (!$this->isDynamic()) {
-			return $path === $this->route_path;
+			return $path === $this->path;
 		}
 
 		$regexp  = self::REG_DELIMITER . '^' . $this->parsed . '$' . self::REG_DELIMITER;
 		$matches = [];
 
-		$passed = (1 === \preg_match($regexp, $path, $matches)) ? true : false;
+		$passed = 1 === \preg_match($regexp, $path, $matches);
 
 		if ($passed) {
-			$args = $matches;
+			$params = $matches;
 		}
 
 		return $passed;
+	}
+
+	/**
+	 * Checks if a parameter is valid.
+	 *
+	 * @param $str
+	 *
+	 * @return bool
+	 */
+	public static function isValidParameter($str): bool
+	{
+		return 1 === \preg_match(self::ROUTE_PARAM_REG, $str);
+	}
+
+	/**
+	 * This will lazily parse the route path.
+	 */
+	private function ensureParsed(): void
+	{
+		if (!isset($this->parsed)) {
+			if ($this->isDynamic()) {
+				$params          = [];
+				$declared_params = \array_merge($this->router->getGlobalParams(), $this->options->getParams());
+				$this->parsed    = self::parse($this->path, $declared_params, $params);
+				$this->params    = \array_keys($params);
+			} else {
+				$this->parsed = $this->path;
+			}
+		}
 	}
 
 	/**
@@ -241,67 +231,66 @@ class Route
 	 *
 	 * @param \OZONE\OZ\Core\Context $context
 	 * @param string                 $route
-	 * @param array                  $options
-	 * @param array                  $args
+	 * @param array                  $params
 	 * @param null|string            $original_route
 	 *
 	 * @return string
 	 */
 	private function pathBuilder(
 		Context $context,
-		$route,
-		array $options = [],
-		array $args = [],
-		$original_route = null
-	) {
+		string $route,
+		array $params = [],
+		?string $original_route = null
+	): string {
 		$len            = \strlen($route);
-		$original_route = null === $original_route ? $route : $original_route;
+		$original_route = $original_route ?? $route;
 		$path           = '';
-		$pos            = 0;
+		$cursor         = 0;
 
-		while ($pos < $len) {
-			$char = $route[$pos];
+		while ($cursor < $len) {
+			$c = $route[$cursor];
 
-			if ($char === '{') {
-				$name = self::searchUntilCloseTag('{', '}', $route, $pos + 1, $pos, false);
+			if ('{' === $c || ':' === $c) {
+				$name = '{' === $c ? self::searchUntilCloseTag('{', '}', $route, $cursor + 1, $cursor, false)
+					: self::searchWhile($route, $cursor + 1, [self::class, 'isValidParameter']);
 
 				$required = ($route === $original_route ? 1 : 0);
 
-				if (isset($args[$name])) {
-					$path .= (string) $args[$name];
+				if (isset($params[$name])) {
+					$path .= $params[$name];
 				} else {
-					$value = $this->router->getDeclaredPlaceholderValue($context, $name);
+					$value = $this->router->getGlobalParamValue($context, $name);
 
 					if (null !== $value) {
-						$path .= (string) $value;
+						$path .= $value;
 					} elseif ($required) {
 						throw new InvalidArgumentException(\sprintf(
-							'Missing required placeholder value: %s',
+							'Missing required parameter value: %s',
 							$name
 						));
 					} else {
 						// we are in optional part and
-						// there is missing placeholder value
+						// there is missing param value
 						// so we ignore the optional part
 						return '';
 					}
 				}
-			} elseif ($char === '[') {
-				$optional = self::searchUntilCloseTag('[', ']', $route, $pos + 1, $pos, true);
+			} elseif ('[' === $c) {
+				$optional = self::searchUntilCloseTag('[', ']', $route, $cursor + 1, $cursor, true);
 
-				if (!\strlen($optional)) {
+				if ('' === $optional) {
 					throw new InvalidArgumentException(\sprintf(
 						'Optional part should not be empty: %s',
 						$original_route
 					));
 				}
 
-				$path .= $this->pathBuilder($context, $optional, $options, $args, $original_route);
+				$path .= $this->pathBuilder($context, $optional, $params, $original_route);
 			} else {
-				$path .= $char;
+				$path .= $c;
 			}
 
-			$pos++;
+			++$cursor;
 		}
 
 		return $path;
@@ -310,87 +299,80 @@ class Route
 	/**
 	 * Dynamic route parser.
 	 *
-	 * @param string      $route
-	 * @param array       $options
-	 * @param array       $placeholders
+	 * @param string      $route_path
+	 * @param array       $declared_params
+	 * @param array       &$params_found
 	 * @param null|string $original_route
 	 *
 	 * @return string
 	 */
-	private static function parse($route, array $options = [], &$placeholders = [], $original_route = null)
-	{
-		$len            = \strlen($route);
-		$original_route = null === $original_route ? $route : $original_route;
-		$reg            = '';
-		$pos            = 0;
+	private static function parse(
+		string $route_path,
+		array $declared_params = [],
+		array &$params_found = [],
+		?string $original_route = null
+	): string {
+		$len            = \strlen($route_path);
+		$original_route = $original_route ?? $route_path;
+		$pattern        = '';
+		$cursor         = 0;
 
-		while ($pos < $len) {
-			$c = $route[$pos];
+		while ($cursor < $len) {
+			$c = $route_path[$cursor];
 
-			if ($c === '{') {
-				$name = self::searchUntilCloseTag('{', '}', $route, $pos + 1, $pos, false);
+			if ('{' === $c || ':' === $c) {
+				$name = '{' === $c ? self::searchUntilCloseTag('{', '}', $route_path, $cursor + 1, $cursor, false)
+					: self::searchWhile($route_path, $cursor + 1, [self::class, 'isValidParameter']);
 
-				if (!\strlen($name)) {
+				if ('' === $name) {
 					throw new InvalidArgumentException(\sprintf(
-						'Placeholder should not be empty: %s',
+						'Route parameter name should not be empty: %s',
 						$original_route
 					));
 				}
 
-				if (!\preg_match('~^[a-z_][a-z0-9_]*$~', $name)) {
+				if (!\preg_match(self::ROUTE_PARAM_REG, $name)) {
 					throw new InvalidArgumentException(\sprintf(
-						'Placeholder contains invalid characters: %s -> %s',
+						'Route parameter name contains invalid characters: %s -> %s',
 						$name,
 						$original_route
 					));
 				}
 
-				if (\array_key_exists($name, $placeholders)) {
+				if (\array_key_exists($name, $params_found)) {
 					throw new InvalidArgumentException(\sprintf(
-						'Placeholder name duplicated: %s -> %s',
+						'Route parameter name duplicated: %s -> %s',
 						$name,
 						$original_route
 					));
 				}
 
-				$placeholder_reg = self::REG_PLACEHOLDER;
-
-				if (isset($options[$name])) {
-					$placeholder_reg = $options[$name];
-
-					if (self::isInvalidOrComplex($placeholder_reg)) {
-						throw new InvalidArgumentException(\sprintf(
-							'Placeholder regexp is not valid or is complex. Keep it simple: %s -> %s',
-							$name,
-							$placeholder_reg
-						));
-					}
-				}
+				$param_pattern = $declared_params[$name] ?? self::DEFAULT_PARAM_PATTERN;
 
 				// use (?P<name> insteadof (?<name> for backward compatibility
-				$reg .= "(?P<$name>$placeholder_reg)";
-				$required            = ($route === $original_route ? 1 : 0);
-				$placeholders[$name] = $required;
-			} elseif ($c === '[') {
-				$optional = self::searchUntilCloseTag('[', ']', $route, $pos + 1, $pos, true);
+				$pattern .= "(?P<{$name}>{$param_pattern})";
+				$required            = ($route_path === $original_route ? 1 : 0);
+				$params_found[$name] = $required;
+			} elseif ('[' === $c) {
+				$optional = self::searchUntilCloseTag('[', ']', $route_path, $cursor + 1, $cursor, true);
 
-				if (!\strlen($optional)) {
+				if ('' === $optional) {
 					throw new InvalidArgumentException(\sprintf(
 						'Optional part should not be empty: %s',
 						$original_route
 					));
 				}
 
-				$optional_reg = self::parse($optional, $options, $placeholders, $original_route);
-				$reg .= '(?:' . $optional_reg . ')?';
+				$optional_reg = self::parse($optional, $declared_params, $params_found, $original_route);
+				$pattern .= '(?:' . $optional_reg . ')?';
 			} else {
-				$reg .= \preg_quote($c, self::REG_DELIMITER);
+				$pattern .= \preg_quote($c, self::REG_DELIMITER);
 			}
 
-			$pos++;
+			++$cursor;
 		}
 
-		return $reg;
+		return $pattern;
 	}
 
 	/**
@@ -405,20 +387,26 @@ class Route
 	 *
 	 * @return string
 	 */
-	private static function searchUntilCloseTag($open, $close, $string, $from, &$found_at, $go_deeply = false)
-	{
-		$found  = false;
-		$ret    = '';
-		$cursor = $from;
-		$len    = \strlen($string);
-		$stack  = 0;
+	private static function searchUntilCloseTag(
+		string $open,
+		string $close,
+		string $string,
+		int $from,
+		int &$found_at,
+		bool $go_deeply
+	): string {
+		$found       = false;
+		$accumulator = '';
+		$cursor      = $from;
+		$len         = \strlen($string);
+		$stack       = 0;
 
 		while ($cursor < $len) {
-			$char = $string[$cursor];
+			$c = $string[$cursor];
 
-			if ($char === $open) {
+			if ($c === $open) {
 				if ($go_deeply) {
-					$stack++;
+					++$stack;
 				} else {
 					throw new InvalidArgumentException(\sprintf(
 						'The open tag %s at index %s was not closed before opening new tag at index %s',
@@ -429,9 +417,9 @@ class Route
 				}
 			}
 
-			if ($char === $close) {
+			if ($c === $close) {
 				if ($stack) {
-					$stack--;
+					--$stack;
 				} else {
 					$found    = true;
 					$found_at = $cursor;
@@ -440,11 +428,11 @@ class Route
 				}
 			}
 
-			$ret .= $char;
-			$cursor++;
+			$accumulator .= $c;
+			++$cursor;
 		}
 
-		if ($found === false) {
+		if (false === $found) {
 			throw new InvalidArgumentException(\sprintf(
 				'Unexpected end of string missing close tag %s at the end of %s',
 				$close,
@@ -452,34 +440,35 @@ class Route
 			));
 		}
 
-		return $ret;
+		return $accumulator;
 	}
 
 	/**
-	 * Checks if the placeholder is complex or is invalid.
+	 * Search while a given callable return true.
 	 *
-	 * Should be valid regex
-	 * Should not starts with ^
-	 * Should not ends with $
+	 * @param string   $string
+	 * @param int      $from
+	 * @param callable $fn     the current string while be passed as first argument
 	 *
-	 * @param string $regexp
-	 *
-	 * @return bool
+	 * @return string
 	 */
-	private static function isInvalidOrComplex($regexp)
+	private static function searchWhile(string $string, int $from, callable $fn): string
 	{
-		\set_error_handler(function () {
-		}, \E_WARNING);
-		$is_invalid = \preg_match(self::REG_DELIMITER . $regexp . self::REG_DELIMITER, '') === false;
-		\restore_error_handler();
+		$accumulator = '';
+		$cursor      = $from;
+		$len         = \strlen($string);
 
-		if ($is_invalid) {
-			return true;
+		while ($cursor < $len) {
+			$char = $string[$cursor];
+
+			if (!$fn($accumulator . $char)) {
+				break;
+			}
+
+			$accumulator .= $char;
+			++$cursor;
 		}
 
-		// or is complex
-		// we are dealing with path so let keep it simple
-		return 0 === \strpos($regexp, '^') /* starts with ^ */
-			   || \strlen($regexp) - 1 === \strpos($regexp, '$'); /* ends with $ */
+		return $accumulator;
 	}
 }

@@ -1,233 +1,30 @@
 <?php
 
 /**
- * Auto generated file
+ * Copyright (c) 2017-present, Emile Silas Sare
  *
- * WARNING: please don't edit.
+ * This file is part of OZone package.
  *
- * Proudly With: gobl v1.5.0
- * Time: 1617030519
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use Gobl\DBAL\Rule;
-use Gobl\ORM\ORM;
-use Gobl\ORM\ORMTableQueryBase;
-
 /**
- * Class OZUsersQuery
+ * Class OZUsersQuery.
+ *
+ * @method \OZONE\OZ\Db\OZUsersResults find(int $max = null, int $offset = 0, array $order_by = [])
  */
-abstract class OZUsersQuery extends ORMTableQueryBase
+abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 {
 	/**
 	 * OZUsersQuery constructor.
 	 */
-	public function __construct()
+	public function __construct(\OZONE\OZ\Db\OZUsersFilters $table_scoped_filters)
 	{
-		parent::__construct(
-			ORM::getDatabase('OZONE\OZ\Db'),
-			OZUser::TABLE_NAME,
-			\OZONE\OZ\Db\OZUsersResults::class
-		);
-	}
-
-	/**
-	 * Finds rows in the table `oz_users` and returns a new instance of the table's result iterator.
-	 *
-	 * @param null|int $max
-	 * @param int      $offset
-	 * @param array    $order_by
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 *
-	 * @return \OZONE\OZ\Db\OZUsersResults
-	 */
-	public function find($max = null, $offset = 0, array $order_by = [])
-	{
-		/* @var \OZONE\OZ\Db\OZUsersResults $results */
-		$results = parent::find($max, $offset, $order_by);
-
-		return $results;
-	}
-
-	/**
-	 * Filters rows with condition on column `id` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterById($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('id', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `phone` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByPhone($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('phone', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `email` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByEmail($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('email', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `pass` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByPass($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('pass', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `name` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByName($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('name', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `gender` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByGender($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('gender', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `birth_date` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByBirthDate($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('birth_date', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `picid` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByPicid($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('picid', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `cc2` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByCc2($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('cc2', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `data` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByData($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('data', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `add_time` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByAddTime($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('add_time', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `valid` in the table `oz_users`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZUsersQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByValid($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('valid', $value, $operator);
+		parent::__construct(\OZONE\OZ\Db\OZUser::TABLE_NAMESPACE, \OZONE\OZ\Db\OZUser::TABLE_NAME, $table_scoped_filters);
 	}
 }

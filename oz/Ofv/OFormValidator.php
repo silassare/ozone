@@ -9,46 +9,42 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Ofv;
 
+use Exception;
 use OZONE\OZ\Exceptions\BaseException;
-use OZONE\OZ\Exceptions\InternalErrorException;
 use OZONE\OZ\Exceptions\InvalidFormException;
+use OZONE\OZ\Exceptions\RuntimeException;
+use Throwable;
 
+/**
+ * Class OFormValidator.
+ */
 final class OFormValidator
 {
-	/**
-	 * @var bool
-	 */
-	private static $ofv_validators_loaded = false;
+	private static bool $ofv_validators_loaded = false;
 
 	/**
-	 * the form to validate
-	 *
-	 * @var array
+	 * the form to validate.
 	 */
-	private $form = [];
+	private array $form;
 
 	/**
-	 * the form validation rules
-	 *
-	 * @var array
+	 * should we log errors.
 	 */
-	private $rules_list = [];
+	private bool $log_error;
 
 	/**
-	 * should we log errors
-	 *
-	 * @var bool
+	 * the form validation rules.
 	 */
-	private $log_error = false;
+	private array $rules_list = [];
 
 	/**
-	 * errors cache list
-	 *
-	 * @var array
+	 * errors list.
 	 */
-	private $errors = [];
+	private array $errors = [];
 
 	/**
 	 * OFormValidator constructor.
@@ -56,9 +52,9 @@ final class OFormValidator
 	 * @param array $form      the form to validate
 	 * @param bool  $log_error should we log error?
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 */
-	public function __construct(array $form, $log_error = false)
+	public function __construct(array $form, bool $log_error = false)
 	{
 		$this->form      = $form;
 		$this->log_error = $log_error;
@@ -72,15 +68,15 @@ final class OFormValidator
 	}
 
 	/**
-	 * validate the form with a given rules list
+	 * validate the form with a given rules list.
 	 *
 	 * @param array $rules_list the rules to use for each field
 	 *
-	 * @throws \OZONE\OZ\Exceptions\BaseException
+	 * @throws Throwable
 	 *
 	 * @return bool
 	 */
-	public function checkForm(array $rules_list)
+	public function checkForm(array $rules_list): bool
 	{
 		$this->rules_list = $rules_list;
 
@@ -89,9 +85,9 @@ final class OFormValidator
 
 			// does this field validator exists?
 			if (\function_exists($ofv_func_name)) {
-				\call_user_func($ofv_func_name, $this);
+				$ofv_func_name($this);
 			} else {
-				$this->addError(new InternalErrorException('OZ_FIELD_UNKNOWN', [$field_name]));
+				$this->addError(new RuntimeException('OZ_FIELD_UNKNOWN', ['field' => $field_name]));
 			}
 		}
 
@@ -99,40 +95,40 @@ final class OFormValidator
 	}
 
 	/**
-	 * Gets the value of a given field name
+	 * Gets the value of a given field name.
 	 *
 	 * @param string $name the field name
 	 *
 	 * @return mixed
 	 */
-	public function getField($name)
+	public function getField(string $name): mixed
 	{
-		if (isset($this->form[$name])) {
-			return $this->form[$name];
-		}
-
-		return null;
+		return $this->form[$name] ?? null;
 	}
 
 	/**
-	 * Sets the value of a given field name
+	 * Sets the value of a given field name.
 	 *
 	 * @param string $name  the field name
 	 * @param mixed  $value the field value
+	 *
+	 * @return $this
 	 */
-	public function setField($name, $value)
+	public function setField(string $name, mixed $value): self
 	{
 		$this->form[$name] = $value;
+
+		return $this;
 	}
 
 	/**
-	 * Gets the rules of a given field name
+	 * Gets the rules of a given field name.
 	 *
 	 * @param string $name the field name
 	 *
 	 * @return array
 	 */
-	public function getRules($name)
+	public function getRules(string $name): array
 	{
 		if (!empty($this->rules_list[$name])) {
 			return $this->rules_list[$name];
@@ -142,47 +138,43 @@ final class OFormValidator
 	}
 
 	/**
-	 * Gets the current form
+	 * Gets the current form.
 	 *
 	 * @return array
 	 */
-	public function getForm()
+	public function getForm(): array
 	{
 		return $this->form;
 	}
 
 	/**
-	 * Gets form errors
+	 * Gets form errors.
 	 *
 	 * @return array
 	 */
-	public function getErrors()
+	public function getErrors(): array
 	{
 		return $this->errors;
 	}
 
 	/**
-	 * adds errors to invalidate this form
+	 * adds errors to invalidate this form.
 	 *
-	 * @param mixed $e_msg  the error message
-	 * @param mixed $e_data the error data
+	 * @param BaseException|string $e_msg  the error message
+	 * @param null|array           $e_data the error data
 	 *
-	 * @throws \OZONE\OZ\Exceptions\BaseException
+	 * @throws Throwable
 	 */
-	public function addError($e_msg, $e_data = null)
+	public function addError(Throwable|string $e_msg, ?array $e_data = null): void
 	{
-		$e = null;
-
 		if ($e_msg instanceof BaseException) {
-			$e      = $e_msg;
-			$e_msg  = $e->getMessage();
-			$e_data = $e->getData() || $e_data;
+			$e = $e_msg;
 		} else {
 			$e = new InvalidFormException($e_msg, $e_data);
 		}
 
 		if ($this->log_error) {
-			$this->errors[] = [$e_msg, $e_data];
+			$this->errors[] = $e;
 		} else {
 			throw $e;
 		}

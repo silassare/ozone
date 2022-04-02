@@ -1,38 +1,71 @@
 <?php
 
 /**
- * Auto generated file
+ * Copyright (c) 2017-present, Emile Silas Sare
  *
- * WARNING: please don't edit.
+ * This file is part of OZone package.
  *
- * Proudly With: gobl v1.5.0
- * Time: 1617030519
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use Gobl\ORM\ORM;
-use Gobl\ORM\ORMEntityBase;
-use OZONE\OZ\Db\OZAuthenticatorQuery as OZAuthenticatorQueryReal;
-
 /**
- * Class OZAuth
+ * Class OZAuth.
+ *
+ * @property string $ref         Getter for
+ *                               column `oz_auths`.`ref`.
+ * @property string $label       Getter for
+ *                               column `oz_auths`.`label`.
+ * @property string $refresh_key Getter for
+ *                               column `oz_auths`.`refresh_key`.
+ * @property string $for         Getter for
+ *                               column `oz_auths`.`for`.
+ * @property string $code_hash   Getter for
+ *                               column `oz_auths`.`code_hash`.
+ * @property string $token_hash  Getter for
+ *                               column `oz_auths`.`token_hash`.
+ * @property string $state       Getter for
+ *                               column `oz_auths`.`state`.
+ * @property int    $try_max     Getter for
+ *                               column `oz_auths`.`try_max`.
+ * @property int    $try_count   Getter for
+ *                               column `oz_auths`.`try_count`.
+ * @property int    $lifetime    Getter for
+ *                               column `oz_auths`.`lifetime`.
+ * @property string $expire      Getter for
+ *                               column `oz_auths`.`expire`.
+ * @property array  $data        Getter for
+ *                               column `oz_auths`.`data`.
+ * @property string $created_at  Getter for
+ *                               column `oz_auths`.`created_at`.
+ * @property string $updated_at  Getter for
+ *                               column `oz_auths`.`updated_at`.
+ * @property bool   $disabled    Getter for
+ *                               column `oz_auths`.`disabled`.
  */
-abstract class OZAuth extends ORMEntityBase
+abstract class OZAuth extends \Gobl\ORM\ORMEntity
 {
-	const TABLE_NAME = 'oz_authenticator';
-
-	const COL_LABEL = 'auth_label';
-	const COL_FOR = 'auth_for';
-	const COL_CODE = 'auth_code';
-	const COL_TOKEN = 'auth_token';
-	const COL_TRY_MAX = 'auth_try_max';
-	const COL_TRY_COUNT = 'auth_try_count';
-	const COL_EXPIRE = 'auth_expire';
-	const COL_DATA = 'auth_data';
-	const COL_ADD_TIME = 'auth_add_time';
-	const COL_VALID = 'auth_valid';
-
+	public const TABLE_NAME      = 'oz_auths';
+	public const TABLE_NAMESPACE = 'OZONE\\OZ\\Db';
+	public const COL_REF         = 'auth_ref';
+	public const COL_LABEL       = 'auth_label';
+	public const COL_REFRESH_KEY = 'auth_refresh_key';
+	public const COL_FOR         = 'auth_for';
+	public const COL_CODE_HASH   = 'auth_code_hash';
+	public const COL_TOKEN_HASH  = 'auth_token_hash';
+	public const COL_STATE       = 'auth_state';
+	public const COL_TRY_MAX     = 'auth_try_max';
+	public const COL_TRY_COUNT   = 'auth_try_count';
+	public const COL_LIFETIME    = 'auth_lifetime';
+	public const COL_EXPIRE      = 'auth_expire';
+	public const COL_DATA        = 'auth_data';
+	public const COL_CREATED_AT  = 'auth_created_at';
+	public const COL_UPDATED_AT  = 'auth_updated_at';
+	public const COL_DISABLED    = 'auth_disabled';
 
 	/**
 	 * OZAuth constructor.
@@ -41,333 +74,367 @@ abstract class OZAuth extends ORMEntityBase
 	 *                     from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
-	public function __construct($is_new = true, $strict = true)
+	public function __construct(bool $is_new = true, bool $strict = true)
 	{
-		parent::__construct(
-			ORM::getDatabase('OZONE\OZ\Db'),
-			$is_new,
-			$strict,
-			self::TABLE_NAME,
-			OZAuthenticatorQueryReal::class
-		);
+		parent::__construct(self::TABLE_NAMESPACE, self::TABLE_NAME, $is_new, $strict);
 	}
 
 	/**
-	 * Getter for column `oz_authenticator`.`label`.
+	 * Getter for column `oz_auths`.`ref`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getLabel()
+	public function getRef(): string
 	{
-		$column = self::COL_LABEL;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_REF};
 	}
 
 	/**
-	 * Setter for column `oz_authenticator`.`label`.
+	 * Setter for column `oz_auths`.`ref`.
+	 *
+	 * @param string $ref
+	 *
+	 * @return static
+	 */
+	public function setRef(string $ref): self
+	{
+		$this->{self::COL_REF} = $ref;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_auths`.`label`.
+	 *
+	 * @return string
+	 */
+	public function getLabel(): string
+	{
+		return $this->{self::COL_LABEL};
+	}
+
+	/**
+	 * Setter for column `oz_auths`.`label`.
 	 *
 	 * @param string $label
 	 *
 	 * @return static
 	 */
-	public function setLabel($label)
+	public function setLabel(string $label): self
 	{
-		$column = self::COL_LABEL;
-		$this->$column = $label;
+		$this->{self::COL_LABEL} = $label;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_authenticator`.`for`.
+	 * Getter for column `oz_auths`.`refresh_key`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getFor()
+	public function getRefreshKey(): string
 	{
-		$column = self::COL_FOR;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_REFRESH_KEY};
 	}
 
 	/**
-	 * Setter for column `oz_authenticator`.`for`.
+	 * Setter for column `oz_auths`.`refresh_key`.
+	 *
+	 * @param string $refresh_key
+	 *
+	 * @return static
+	 */
+	public function setRefreshKey(string $refresh_key): self
+	{
+		$this->{self::COL_REFRESH_KEY} = $refresh_key;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_auths`.`for`.
+	 *
+	 * @return string
+	 */
+	public function getFor(): string
+	{
+		return $this->{self::COL_FOR};
+	}
+
+	/**
+	 * Setter for column `oz_auths`.`for`.
 	 *
 	 * @param string $for
 	 *
 	 * @return static
 	 */
-	public function setFor($for)
+	public function setFor(string $for): self
 	{
-		$column = self::COL_FOR;
-		$this->$column = $for;
+		$this->{self::COL_FOR} = $for;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_authenticator`.`code`.
+	 * Getter for column `oz_auths`.`code_hash`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getCode()
+	public function getCodeHash(): string
 	{
-		$column = self::COL_CODE;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_CODE_HASH};
 	}
 
 	/**
-	 * Setter for column `oz_authenticator`.`code`.
+	 * Setter for column `oz_auths`.`code_hash`.
 	 *
-	 * @param string $code
+	 * @param string $code_hash
 	 *
 	 * @return static
 	 */
-	public function setCode($code)
+	public function setCodeHash(string $code_hash): self
 	{
-		$column = self::COL_CODE;
-		$this->$column = $code;
+		$this->{self::COL_CODE_HASH} = $code_hash;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_authenticator`.`token`.
+	 * Getter for column `oz_auths`.`token_hash`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getToken()
+	public function getTokenHash(): string
 	{
-		$column = self::COL_TOKEN;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_TOKEN_HASH};
 	}
 
 	/**
-	 * Setter for column `oz_authenticator`.`token`.
+	 * Setter for column `oz_auths`.`token_hash`.
 	 *
-	 * @param string $token
+	 * @param string $token_hash
 	 *
 	 * @return static
 	 */
-	public function setToken($token)
+	public function setTokenHash(string $token_hash): self
 	{
-		$column = self::COL_TOKEN;
-		$this->$column = $token;
+		$this->{self::COL_TOKEN_HASH} = $token_hash;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_authenticator`.`try_max`.
+	 * Getter for column `oz_auths`.`state`.
 	 *
-	 * @return int the real type is: int
+	 * @return string
 	 */
-	public function getTryMax()
+	public function getState(): string
 	{
-		$column = self::COL_TRY_MAX;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (int)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_STATE};
 	}
 
 	/**
-	 * Setter for column `oz_authenticator`.`try_max`.
+	 * Setter for column `oz_auths`.`state`.
+	 *
+	 * @param string $state
+	 *
+	 * @return static
+	 */
+	public function setState(string $state): self
+	{
+		$this->{self::COL_STATE} = $state;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_auths`.`try_max`.
+	 *
+	 * @return int
+	 */
+	public function getTryMax(): int
+	{
+		return $this->{self::COL_TRY_MAX};
+	}
+
+	/**
+	 * Setter for column `oz_auths`.`try_max`.
 	 *
 	 * @param int $try_max
 	 *
 	 * @return static
 	 */
-	public function setTryMax($try_max)
+	public function setTryMax(int $try_max): self
 	{
-		$column = self::COL_TRY_MAX;
-		$this->$column = $try_max;
+		$this->{self::COL_TRY_MAX} = $try_max;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_authenticator`.`try_count`.
+	 * Getter for column `oz_auths`.`try_count`.
 	 *
-	 * @return int the real type is: int
+	 * @return int
 	 */
-	public function getTryCount()
+	public function getTryCount(): int
 	{
-		$column = self::COL_TRY_COUNT;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (int)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_TRY_COUNT};
 	}
 
 	/**
-	 * Setter for column `oz_authenticator`.`try_count`.
+	 * Setter for column `oz_auths`.`try_count`.
 	 *
 	 * @param int $try_count
 	 *
 	 * @return static
 	 */
-	public function setTryCount($try_count)
+	public function setTryCount(int $try_count): self
 	{
-		$column = self::COL_TRY_COUNT;
-		$this->$column = $try_count;
+		$this->{self::COL_TRY_COUNT} = $try_count;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_authenticator`.`expire`.
+	 * Getter for column `oz_auths`.`lifetime`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return int
 	 */
-	public function getExpire()
+	public function getLifetime(): int
 	{
-		$column = self::COL_EXPIRE;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_LIFETIME};
 	}
 
 	/**
-	 * Setter for column `oz_authenticator`.`expire`.
+	 * Setter for column `oz_auths`.`lifetime`.
 	 *
-	 * @param string $expire
+	 * @param int $lifetime
 	 *
 	 * @return static
 	 */
-	public function setExpire($expire)
+	public function setLifetime(int $lifetime): self
 	{
-		$column = self::COL_EXPIRE;
-		$this->$column = $expire;
+		$this->{self::COL_LIFETIME} = $lifetime;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_authenticator`.`data`.
+	 * Getter for column `oz_auths`.`expire`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getData()
+	public function getExpire(): string
 	{
-		$column = self::COL_DATA;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_EXPIRE};
 	}
 
 	/**
-	 * Setter for column `oz_authenticator`.`data`.
+	 * Setter for column `oz_auths`.`expire`.
 	 *
-	 * @param string $data
+	 * @param int|string $expire
 	 *
 	 * @return static
 	 */
-	public function setData($data)
+	public function setExpire(string|int $expire): self
 	{
-		$column = self::COL_DATA;
-		$this->$column = $data;
+		$this->{self::COL_EXPIRE} = $expire;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_authenticator`.`add_time`.
+	 * Getter for column `oz_auths`.`data`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return array
 	 */
-	public function getAddTime()
+	public function getData(): array
 	{
-		$column = self::COL_ADD_TIME;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_DATA};
 	}
 
 	/**
-	 * Setter for column `oz_authenticator`.`add_time`.
+	 * Setter for column `oz_auths`.`data`.
 	 *
-	 * @param string $add_time
+	 * @param array $data
 	 *
 	 * @return static
 	 */
-	public function setAddTime($add_time)
+	public function setData(array $data): self
 	{
-		$column = self::COL_ADD_TIME;
-		$this->$column = $add_time;
+		$this->{self::COL_DATA} = $data;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_authenticator`.`valid`.
+	 * Getter for column `oz_auths`.`created_at`.
 	 *
-	 * @return bool the real type is: bool
+	 * @return string
 	 */
-	public function getValid()
+	public function getCreatedAT(): string
 	{
-		$column = self::COL_VALID;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (bool)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_CREATED_AT};
 	}
 
 	/**
-	 * Setter for column `oz_authenticator`.`valid`.
+	 * Setter for column `oz_auths`.`created_at`.
 	 *
-	 * @param bool $valid
+	 * @param int|string $created_at
 	 *
 	 * @return static
 	 */
-	public function setValid($valid)
+	public function setCreatedAT(string|int $created_at): self
 	{
-		$column = self::COL_VALID;
-		$this->$column = $valid;
+		$this->{self::COL_CREATED_AT} = $created_at;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_auths`.`updated_at`.
+	 *
+	 * @return string
+	 */
+	public function getUpdatedAT(): string
+	{
+		return $this->{self::COL_UPDATED_AT};
+	}
+
+	/**
+	 * Setter for column `oz_auths`.`updated_at`.
+	 *
+	 * @param int|string $updated_at
+	 *
+	 * @return static
+	 */
+	public function setUpdatedAT(string|int $updated_at): self
+	{
+		$this->{self::COL_UPDATED_AT} = $updated_at;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_auths`.`disabled`.
+	 *
+	 * @return bool
+	 */
+	public function getDisabled(): bool
+	{
+		return $this->{self::COL_DISABLED};
+	}
+
+	/**
+	 * Setter for column `oz_auths`.`disabled`.
+	 *
+	 * @param bool $disabled
+	 *
+	 * @return static
+	 */
+	public function setDisabled(bool $disabled): self
+	{
+		$this->{self::COL_DISABLED} = $disabled;
 
 		return $this;
 	}

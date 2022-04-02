@@ -4,3 +4,4 @@ ignore
 **/blate_cache/*
 **/oz/Db/Base/*
 /vendor/
+/benchmark

@@ -9,10 +9,14 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
+use OZONE\OZ\FS\Views\GetFilesView;
+use OZONE\OZ\Lang\PolyglotRoute;
+use OZONE\OZ\Web\Views\RedirectView;
+
 return [
-	'OZONE\OZ\Exceptions\Views\ErrorView'  => true,
-	'OZONE\OZ\Web\Views\RedirectView'      => true,
-	'OZONE\OZ\FS\Views\GetFilesView'       => true,
-	'OZONE\OZ\User\Views\SessionShareView' => true,
-	'OZONE\OZ\Lang\PolyglotRoute'          => true,
+	RedirectView::class     => true,
+	GetFilesView::class     => true,
+	PolyglotRoute::class    => true,
 ];

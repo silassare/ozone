@@ -9,17 +9,32 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
+use OZONE\OZ\Auth\Services\AuthPhoneService;
+use OZONE\OZ\FS\Services\UploadFiles;
+use OZONE\OZ\Services\CaptchaCode;
+use OZONE\OZ\Services\LinkTo;
+use OZONE\OZ\Services\QRCode;
+use OZONE\OZ\Users\Services\AccountRecovery;
+use OZONE\OZ\Users\Services\Login;
+use OZONE\OZ\Users\Services\Logout;
+use OZONE\OZ\Users\Services\Password;
+use OZONE\OZ\Users\Services\SignUp;
+use OZONE\OZ\Users\Services\TNet;
+use OZONE\OZ\Users\Services\UserPicEdit;
+
 return [
-	'OZONE\OZ\FS\Services\GetFiles'               => true,
-	'OZONE\OZ\FS\Services\UploadFiles'            => true,
-	'OZONE\OZ\Authenticator\Services\CaptchaCode' => true,
-	'OZONE\OZ\Authenticator\Services\QRCode'      => true,
-	'OZONE\OZ\User\Services\TNet'                 => true,
-	'OZONE\OZ\User\Services\SignUp'               => true,
-	'OZONE\OZ\User\Services\Login'                => true,
-	'OZONE\OZ\User\Services\Logout'               => true,
-	'OZONE\OZ\User\Services\UserPicEdit'          => true,
-	'OZONE\OZ\User\Services\Password'             => true,
-	'OZONE\OZ\User\Services\SessionShare'         => true,
-	'OZONE\OZ\User\Services\AccountRecovery'      => true,
+	UploadFiles::class      => true,
+	CaptchaCode::class      => true,
+	QRCode::class           => true,
+	LinkTo::class           => true,
+	TNet::class             => true,
+	SignUp::class           => true,
+	Login::class            => true,
+	Logout::class           => true,
+	UserPicEdit::class      => true,
+	Password::class         => true,
+	AccountRecovery::class  => true,
+	AuthPhoneService::class => true,
 ];

@@ -9,32 +9,38 @@
  * file that was distributed with this source code.
  */
 
-//@<%if(@length($.oz_header)){%><%$.oz_header%><%} else {%>
-// Auto generated file
-//
-// WARNING: please don't edit,
-//
-// Proudly With: <%$.oz_version_name%>
-// Time: <%$.oz_time%>
-//@<%}%>
+// @<%if(@length($.oz_header)){%><%$.oz_header%><%} else {%>
+/*
+ * Auto generated file
+ *
+ * WARNING: please don't edit,
+ *
+ * Proudly With: <%$.oz_version_name%>
+ * Time: <%$.oz_time%>
+ */
+// @<%}%>
+declare(strict_types=1);
+
 namespace MY_SERVICE_NS;
 
-use Gobl\DBAL\Relations\CallableVR;
 use Gobl\DBAL\Relations\Relation;
 use Gobl\DBAL\Relations\VirtualRelation;
+use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\TypeBigint;
 use Gobl\DBAL\Types\TypeInt;
 use Gobl\ORM\ORM;
 use MY_DB_NS\MyController;
 use MY_DB_NS\MyEntity;
-use OZONE\OZ\Core\BaseService;
 use OZONE\OZ\Core\ORMRequest;
+use OZONE\OZ\Core\Service;
+use OZONE\OZ\Exceptions\BadRequestException;
 use OZONE\OZ\Exceptions\NotFoundException;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
+use Throwable;
 
 /**
- * Class MyService
+ * Class MyService.
  *
  * to add item to my_svc
  * - POST    /my_svc
@@ -60,44 +66,44 @@ use OZONE\OZ\Router\Router;
  * to get relation for the item in `my_table` with the given :my_id
  * - GET     /my_svc/:my_id/relation
  */
-final class MyService extends BaseService
+final class MyService extends Service
 {
-	//========================================================
-	//=	POST REQUEST METHODS
-	//========================================================
+	// ========================================================
+	// =	POST REQUEST METHODS
+	// ========================================================
 
 	/**
-	 * Creates a new entry in the table `my_table`
+	 * Creates a new entry in the table `my_table`.
 	 *
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
 	 *
-	 * @throws \Throwable
+	 * @throws Throwable
 	 */
-	public function actionCreateEntity(ORMRequest $orm_request)
+	public function actionCreateEntity(ORMRequest $orm_request): void
 	{
 		$values = $orm_request->getFormData(self::table());
 
 		$controller = new MyController();
 		$entity     = $controller->addItem($values);
 
-		$this->getResponseHolder()
-			 ->setDone($controller->getCRUD()
-								  ->getMessage())
-			 ->setData(['item' => $entity]);
+		$this->getJSONResponse()
+			->setDone($controller->getCRUD()
+			->getMessage())
+			->setData(['item' => $entity]);
 	}
 
-	//========================================================
-	//=	PATCH REQUEST METHODS
-	//========================================================
+	// ========================================================
+	// =	PATCH REQUEST METHODS
+	// ========================================================
 
 	/**
-	 * Updates only one item in the table `my_table` that matches some filters
+	 * Updates only one item in the table `my_table` that matches some filters.
 	 *
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
 	 *
-	 * @throws \Throwable
+	 * @throws Throwable
 	 */
-	public function actionUpdateOneItem(ORMRequest $orm_request)
+	public function actionUpdateOneItem(ORMRequest $orm_request): void
 	{
 		$orm_request = $orm_request->createScopedInstance(self::table());
 		$values      = $orm_request->getFormData();
@@ -107,23 +113,23 @@ final class MyService extends BaseService
 		$entity     = $controller->updateOneItem($filters, $values);
 
 		if ($entity instanceof MyEntity) {
-			$this->getResponseHolder()
-				 ->setDone($controller->getCRUD()
-									  ->getMessage())
-				 ->setData(['item' => $entity]);
+			$this->getJSONResponse()
+				->setDone($controller->getCRUD()
+				->getMessage())
+				->setData(['item' => $entity]);
 		} else {
 			throw new NotFoundException();
 		}
 	}
 
 	/**
-	 * Updates all items in the table `my_table` that matches some filters
+	 * Updates all items in the table `my_table` that matches some filters.
 	 *
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
 	 *
-	 * @throws \Throwable
+	 * @throws Throwable
 	 */
-	public function actionUpdateAllItems(ORMRequest $orm_request)
+	public function actionUpdateAllItems(ORMRequest $orm_request): void
 	{
 		$orm_request = $orm_request->createScopedInstance(self::table());
 		$values      = $orm_request->getFormData();
@@ -132,24 +138,24 @@ final class MyService extends BaseService
 		$controller = new MyController();
 		$count      = $controller->updateAllItems($filters, $values);
 
-		$this->getResponseHolder()
-			 ->setDone($controller->getCRUD()
-								  ->getMessage())
-			 ->setData(['affected' => $count]);
+		$this->getJSONResponse()
+			->setDone($controller->getCRUD()
+			->getMessage())
+			->setData(['affected' => $count]);
 	}
 
-	//========================================================
-	//=	DELETE REQUEST METHODS
-	//========================================================
+	// ========================================================
+	// =	DELETE REQUEST METHODS
+	// ========================================================
 
 	/**
-	 * Deletes only one item in the table `my_table` that matches some filters
+	 * Deletes only one item in the table `my_table` that matches some filters.
 	 *
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
 	 *
-	 * @throws \Throwable
+	 * @throws Throwable
 	 */
-	public function actionDeleteEntity(ORMRequest $orm_request)
+	public function actionDeleteEntity(ORMRequest $orm_request): void
 	{
 		$filters = $orm_request->getFilters(self::table());
 
@@ -157,47 +163,47 @@ final class MyService extends BaseService
 		$entity     = $controller->deleteOneItem($filters);
 
 		if ($entity instanceof MyEntity) {
-			$this->getResponseHolder()
-				 ->setDone($controller->getCRUD()
-									  ->getMessage())
-				 ->setData(['item' => $entity]);
+			$this->getJSONResponse()
+				->setDone($controller->getCRUD()
+				->getMessage())
+				->setData(['item' => $entity]);
 		} else {
 			throw new NotFoundException();
 		}
 	}
 
 	/**
-	 * Deletes all items in the table `my_table` that matches some filters
+	 * Deletes all items in the table `my_table` that matches some filters.
 	 *
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
 	 *
-	 * @throws \Throwable
+	 * @throws Throwable
 	 */
-	public function actionDeleteAll(ORMRequest $orm_request)
+	public function actionDeleteAll(ORMRequest $orm_request): void
 	{
 		$filters = $orm_request->getFilters(self::table());
 
 		$controller = new MyController();
 		$count      = $controller->deleteAllItems($filters);
 
-		$this->getResponseHolder()
-			 ->setDone($controller->getCRUD()
-								  ->getMessage())
-			 ->setData(['affected' => $count]);
+		$this->getJSONResponse()
+			->setDone($controller->getCRUD()
+			->getMessage())
+			->setData(['affected' => $count]);
 	}
 
-	//========================================================
-	//=	GET REQUEST METHODS
-	//========================================================
+	// ========================================================
+	// =	GET REQUEST METHODS
+	// ========================================================
 
 	/**
-	 * Gets only one item from the table `my_table` that matches some filters
+	 * Gets only one item from the table `my_table` that matches some filters.
 	 *
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
 	 *
-	 * @throws \Throwable
+	 * @throws Throwable
 	 */
-	public function actionGetEntity(ORMRequest $orm_request)
+	public function actionGetEntity(ORMRequest $orm_request): void
 	{
 		$orm_request = $orm_request->createScopedInstance(self::table());
 		$filters     = $orm_request->getFilters();
@@ -210,25 +216,25 @@ final class MyService extends BaseService
 			throw new NotFoundException();
 		}
 
-		$relations = $this->listEntityRelations($entity, $orm_request);
+		$relations = $this->entityNotPaginatedRelations($entity, $orm_request);
 
-		$this->getResponseHolder()
-			 ->setDone($controller->getCRUD()
-								  ->getMessage())
-			 ->setData([
-			 	'item'      => $entity,
-			 	'relations' => $relations,
-			 ]);
+		$this->getJSONResponse()
+			->setDone($controller->getCRUD()
+			->getMessage())
+			->setData([
+				'item'      => $entity,
+				'relations' => $relations,
+			]);
 	}
 
 	/**
-	 * Gets all items from the table `my_table` that matches some filters
+	 * Gets all items from the table `my_table` that matches some filters.
 	 *
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
 	 *
-	 * @throws \Throwable
+	 * @throws Throwable
 	 */
-	public function actionGetAll(ORMRequest $orm_request)
+	public function actionGetAll(ORMRequest $orm_request): void
 	{
 		$collection = $orm_request->getCollection();
 
@@ -243,15 +249,14 @@ final class MyService extends BaseService
 		$controller = new MyController();
 
 		if ($collection) {
-			$table      = ORM::getDatabase('MY_DB_NS')
-							 ->getTable(MyEntity::TABLE_NAME);
+			$table      = self::table();
 			$collection = $table->getCollection($orm_request->getCollection());
 
 			if (!$collection) {
 				throw new NotFoundException();
 			}
 
-			$results = $collection->run($orm_request, $total_records);
+			$results = $collection->getItems($orm_request, $total_records);
 		} else {
 			$results = $controller->getAllItems($filters, $max, $offset, $order_by, $total_records);
 		}
@@ -259,36 +264,41 @@ final class MyService extends BaseService
 		$relations = [];
 
 		if (\count($results)) {
-			$relations = $this->listEntitiesRelations($results, $orm_request);
+			$relations = $this->entitiesNotPaginatedRelations($results, $orm_request);
 		}
 
-		$this->getResponseHolder()
-			 ->setDone($controller->getCRUD()
-								  ->getMessage())
-			 ->setData([
-			 	'items'     => $results,
-			 	'max'       => $max,
-			 	'page'      => $page,
-			 	'total'     => $total_records,
-			 	'relations' => $relations,
-			 ]);
+		$this->getJSONResponse()
+			->setDone($controller->getCRUD()
+			->getMessage())
+			->setData([
+				'items'     => $results,
+				'max'       => $max,
+				'page'      => $page,
+				'total'     => $total_records,
+				'relations' => $relations,
+			]);
 	}
 
 	/**
-	 * Gets relation item(s) that matches some filters
+	 * Gets relation item(s) that matches some filters.
 	 *
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
+	 * @param string                    $relation_name
 	 *
-	 * @throws \Throwable
+	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws Throwable
 	 */
-	public function actionGetRelation(ORMRequest $orm_request)
+	public function actionGetRelation(ORMRequest $orm_request, string $relation_name): void
 	{
 		if (!$orm_request->getColumnFilters('my_pk_column_const')) {
 			throw new NotFoundException();
 		}
 
-		$filters      = $orm_request->getFilters(self::table());
-		$req_rel_name = $orm_request->getRelations()[0];
+		$filters = $orm_request->getFilters(self::table());
+
+		if (!$relation_name) {
+			throw new NotFoundException();
+		}
 
 		$controller = new MyController();
 		$entity     = $controller->getItem($filters);
@@ -297,125 +307,242 @@ final class MyService extends BaseService
 			throw new NotFoundException();
 		}
 
-		$max           = $orm_request->getMax();
-		$page          = $orm_request->getPage();
-		$total_records = 0;
+		$max                = $orm_request->getMax();
+		$page               = $orm_request->getPage();
+		$total_records      = 0;
+		$paginated_relation = false;
 
-		$relations = $this->listEntityRelations($entity, $orm_request, $total_records);
-		$r         = $relations[$req_rel_name];
+		$table = self::table();
 
-		if (\is_array($r)) {
-			$data = [
-				'items' => $r,
-				'max'   => $max,
-				'page'  => $page,
-				'total' => $total_records,
-			];
+		if ($table->hasRelation($relation_name)) {
+			/** @var Relation $found */
+			$found = $table->getRelation($relation_name);
+
+			if ($found->isPaginated()) {
+				$paginated_relation = true;
+				$r                  = $this->getRelationItemsList($found, $entity, $orm_request, $total_records);
+			} else {
+				$r = $this->getRelationItem($found, $entity);
+			}
+		} elseif ($table->hasVirtualRelation($relation_name)) {
+			/** @var VirtualRelation $found */
+			$found              = $table->getVirtualRelation($relation_name);
+			$paginated_relation = $found->isPaginated();
+			$r                  = $found->get($entity, $orm_request, $total_records);
 		} else {
-			$data = [
-				'item' => $r,
-			];
+			throw new NotFoundException();
 		}
 
-		$this->getResponseHolder()
-			 ->setDone()
-			 ->setData($data);
+		if (null === $r) {
+			throw new NotFoundException();
+		}
+
+		$data[$relation_name] = $r;
+
+		if ($paginated_relation) {
+			$data['page']  = $page;
+			$data['max']   = $max;
+			$data['total'] = $total_records;
+		}
+
+		$this->getJSONResponse()
+			->setDone()
+			->setData($data);
+	}
+
+	/**
+	 * @return \Gobl\DBAL\Table
+	 */
+	public static function table(): Table
+	{
+		return ORM::getDatabase('MY_DB_NS')
+			->getTable(MyEntity::TABLE_NAME);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function registerRoutes(Router $router): void
+	{
+		/** @var \Gobl\DBAL\Column $column */
+		$column      = self::table()
+			->getColumn('my_pk_column_const');
+		$type_obj    = $column->getTypeObject();
+		$bigint_type = TypeBigint::class;
+		$int_type    = TypeInt::class;
+		$is_number   = ($type_obj instanceof $bigint_type || $type_obj instanceof $int_type);
+
+		$id_param       = $is_number ? '[0-9]+' : '[^/]+';
+		$relation_param = Relation::NAME_PATTERN;
+
+		$router->post('/my_svc', function (RouteInfo $r) {
+			$context     = $r->getContext();
+			$orm_request = new ORMRequest($context, $context->getRequest()
+				->getFormData());
+
+			$service = new self($context);
+			$service->actionCreateEntity($orm_request);
+
+			return $service->respond();
+		});
+		$router->get('/my_svc/{my_id}', function (RouteInfo $r) {
+			$context     = $r->getContext();
+			$orm_request = new ORMRequest($context, $context->getRequest()
+				->getFormData());
+			$orm_request->addColumnFilter('my_id', $r->getParam('my_id'));
+			$service = new self($context);
+			$service->actionGetEntity($orm_request);
+
+			return $service->respond();
+		})
+			->param('my_id', $id_param);
+		$router->get('/my_svc', function (RouteInfo $r) {
+			$context     = $r->getContext();
+			$orm_request = new ORMRequest($context, $context->getRequest()
+				->getFormData());
+			$service     = new self($context);
+			$service->actionGetAll($orm_request);
+
+			return $service->respond();
+		});
+		$router->get('/my_svc/{my_id}/{relation}', function (RouteInfo $r) {
+			$context     = $r->getContext();
+			$orm_request = new ORMRequest($context, $context->getRequest()
+				->getFormData());
+			$orm_request->addColumnFilter('my_id', $r->getParam('my_id'));
+
+			$service = new self($context);
+			$service->actionGetRelation($orm_request, $r->getParam('relation'));
+
+			return $service->respond();
+		})
+			->param('my_id', $id_param)
+			->param('relation', $relation_param);
+		$router->patch('/my_svc/{my_id}', function (RouteInfo $r) {
+			$context     = $r->getContext();
+			$orm_request = new ORMRequest($context, $context->getRequest()
+				->getFormData());
+			$orm_request->addColumnFilter('my_id', $r->getParam('my_id'));
+
+			$service = new self($context);
+			$service->actionUpdateOneItem($orm_request);
+
+			return $service->respond();
+		})
+			->param('my_id', $id_param);
+		$router->patch('/my_svc', function (RouteInfo $r) {
+			$context     = $r->getContext();
+			$orm_request = new ORMRequest($context, $context->getRequest()
+				->getFormData());
+			$service     = new self($context);
+			$service->actionUpdateAllItems($orm_request);
+
+			return $service->respond();
+		});
+		$router->delete('/my_svc/{my_id}', function (RouteInfo $r) {
+			$context     = $r->getContext();
+			$orm_request = new ORMRequest($context, $context->getRequest()
+				->getFormData());
+			$orm_request->addColumnFilter('my_id', $r->getParam('my_id'));
+
+			$service = new self($context);
+			$service->actionDeleteEntity($orm_request);
+
+			return $service->respond();
+		})
+			->param('my_id', $id_param);
+		$router->delete('/my_svc', function (RouteInfo $r) {
+			$context     = $r->getContext();
+			$orm_request = new ORMRequest($context, $context->getRequest()
+				->getFormData());
+			$service     = new self($context);
+			$service->actionDeleteAll($orm_request);
+
+			return $service->respond();
+		});
 	}
 
 	/**
 	 * @param \MY_DB_NS\MyEntity        $entity
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
-	 * @param int                       &$total_records
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\OZ\Exceptions\BadRequestException
 	 *
 	 * @return array
 	 */
-	private function listEntityRelations(MyEntity $entity, ORMRequest $orm_request, &$total_records = null)
+	private function entityNotPaginatedRelations(MyEntity $entity, ORMRequest $orm_request): array
 	{
 		$query_relations = $orm_request->getRelations();
-		$relations       = [];
+		$results         = [];
 
 		if (!empty($query_relations)) {
-			$rel_map = $this->resolveRelations($query_relations);
+			$list = $this->resolveRelations($query_relations, false);
 
-			foreach ($rel_map as $name => $rel) {
-				if ($rel instanceof Relation) {
-					/*@var Relation $rel */
-					$rel_type = $rel->getType();
+			/** @var Relation[] $relations */
+			$relations = $list[Relation::class] ?? [];
 
-					if ($rel_type === Relation::ONE_TO_MANY || $rel_type === Relation::MANY_TO_MANY) {
-						$relations[$name] = $this->getRelationItemsList($rel, $entity, $orm_request, $total_records);
-					} else {
-						$relations[$name] = $this->getRelationItem($rel, $entity);
-					}
-				} elseif ($rel instanceof VirtualRelation) {
-					/*@var VirtualRelation $rel */
-					$relations[$name] = $rel->run($entity, $orm_request, $total_records);
-				}
+			/** @var VirtualRelation[] $v_relations */
+			$v_relations = $list[VirtualRelation::class] ?? [];
+
+			foreach ($relations as $name => $rel) {
+				$results[$name] = $this->getRelationItem($rel, $entity);
+			}
+
+			foreach ($v_relations as $name => $rel) {
+				$results[$name] = $rel->get($entity, $orm_request);
 			}
 		}
 
-		return $relations;
+		return $results;
 	}
 
 	/**
 	 * @param \MY_DB_NS\MyEntity[]      $entities
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
-	 * @param int                       &$total_records
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\OZ\Exceptions\BadRequestException
 	 *
 	 * @return array
 	 */
-	private function listEntitiesRelations(array $entities, ORMRequest $orm_request, &$total_records = null)
+	private function entitiesNotPaginatedRelations(array $entities, ORMRequest $orm_request): array
 	{
 		$query_relations = $orm_request->getRelations();
-		$relations       = [];
+		$results         = [];
 
 		if (!empty($query_relations)) {
-			$rel_map = $this->resolveRelations($query_relations);
+			$list = $this->resolveRelations($query_relations, false);
 
-			foreach ($rel_map as $name => $rel) {
-				if ($rel instanceof Relation) {
-					foreach ($entities as $entity) {
-						$arr      = $entity->asArray(false);
-						$id       = $arr['my_pk_column_const'];
-						$rel_type = $rel->getType();
+			/** @var Relation[] $relations */
+			$relations = $list[Relation::class] ?? [];
 
-						if ($rel_type === Relation::ONE_TO_MANY || $rel_type === Relation::MANY_TO_MANY) {
-							$relations[$name][$id] = $this->getRelationItemsList(
-								$rel,
-								$entity,
-								$orm_request,
-								$total_records
-							);
-						} else {
-							$relations[$name][$id] = $this->getRelationItem($rel, $entity);
-						}
-					}
-				} elseif ($rel instanceof VirtualRelation) {
-					if ($rel instanceof CallableVR && $rel->canHandleList()) {
-						$relations[$name] = $rel->run($entities, $orm_request, $total_records);
-					} else {
-						foreach ($entities as $entity) {
-							$arr                   = $entity->asArray(false);
-							$id                    = $arr['my_pk_column_const'];
-							$relations[$name][$id] = $rel->run($entity, $orm_request, $total_records);
-						}
-					}
+			/** @var VirtualRelation[] $v_relations */
+			$v_relations = $list[VirtualRelation::class] ?? [];
+
+			foreach ($relations as $name => $rel) {
+				foreach ($entities as $entity) {
+					$id                  = $entity->{'my_id'};
+					$results[$name][$id] = $this->getRelationItem($rel, $entity);
+				}
+			}
+
+			foreach ($v_relations as $name => $rel) {
+				foreach ($entities as $entity) {
+					$id                  = $entity->{'my_id'};
+					$results[$name][$id] = $rel->get($entity, $orm_request);
 				}
 			}
 		}
 
-		return $relations;
+		return $results;
 	}
 
 	/**
 	 * @param \Gobl\DBAL\Relations\Relation $relation
 	 * @param \MY_DB_NS\MyEntity            $entity
 	 * @param \OZONE\OZ\Core\ORMRequest     $orm_request
-	 * @param int                           $total_records
+	 * @param int                           &$total_records
+	 *
+	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 	 *
 	 * @return array
 	 */
@@ -423,17 +550,10 @@ final class MyService extends BaseService
 		Relation $relation,
 		MyEntity $entity,
 		ORMRequest $orm_request,
-		&$total_records = null
-	) {
-		$target_columns_map = [];
-		$target             = $relation->getTargetTable();
-		$target_columns     = $target->getColumns();
-		$orm_request        = $orm_request->createScopedInstance($target);
-
-		foreach ($target_columns as $column) {
-			$target_columns_map[$column->getFullName()] = 1;
-		}
-
+		int &$total_records
+	): array {
+		$target          = $relation->getTargetTable();
+		$orm_request     = $orm_request->createScopedInstance($target);
 		$relation_getter = $relation->getGetterName();
 
 		return \call_user_func_array([
@@ -454,162 +574,53 @@ final class MyService extends BaseService
 	 *
 	 * @return mixed
 	 */
-	private function getRelationItem(Relation $relation, MyEntity $entity)
+	private function getRelationItem(Relation $relation, MyEntity $entity): mixed
 	{
-		$filters          = [];
-		$relation_columns = $relation->getRelationColumns();
-		$entity_data      = $entity->asArray();
-
-		foreach ($relation_columns as $from => $target) {
-			$filters[$target] = $entity_data[$from];
-		}
-
 		$relation_getter = $relation->getGetterName();
 
-		return \call_user_func([$entity, $relation_getter]);
+		return $entity->{$relation_getter}();
 	}
 
 	/**
-	 * @param array $relations
+	 * @param array $relations_names_list
+	 * @param bool  $allow_paginated
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\OZ\Exceptions\BadRequestException
 	 *
 	 * @return array
 	 */
-	private function resolveRelations(array $relations)
+	private function resolveRelations(array $relations_names_list, bool $allow_paginated): array
 	{
-		$table   = ORM::getDatabase('MY_DB_NS')
-					  ->getTable(MyEntity::TABLE_NAME);
-		$missing = [];
-		$rel_map = [];
+		$table       = self::table();
+		$missing     = [];
+		$relations   = [];
+		$v_relations = [];
 
 		// we firstly check all relation
-		foreach ($relations as $name) {
+		foreach ($relations_names_list as $name) {
+			$rel = null;
+
 			if ($table->hasRelation($name)) {
-				$rel_map[$name] = $table->getRelation($name);
+				$rel = $relations[$name] = $table->getRelation($name);
 			} elseif ($table->hasVirtualRelation($name)) {
-				$rel_map[$name] = $table->getVirtualRelation($name);
+				$rel = $v_relations[$name] = $table->getVirtualRelation($name);
 			} else {
 				$missing[] = $name;
+			}
+
+			if ($rel && !$allow_paginated && $rel->isPaginated()) {
+				throw new BadRequestException('OZ_RELATION_IS_PAGINATED_AND_SHOULD_BE_RETRIEVED_WITH_DEDICATED_ENDPOINT', ['relation' => $name]);
 			}
 		}
 
 		// checks if there are missing relations
 		if (\count($missing)) {
-			throw new NotFoundException(null, ['RELATIONS_MISSING', $missing]);
+			throw new BadRequestException('OZ_RELATION_NOT_DEFINED', ['relations' => $missing]);
 		}
 
-		return $rel_map;
-	}
-
-	/**
-	 * @return \Gobl\DBAL\Table
-	 */
-	public static function table()
-	{
-		return ORM::getDatabase('MY_DB_NS')
-				  ->getTable(MyEntity::TABLE_NAME);
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$type_obj    = self::table()
-						   ->getColumn('my_pk_column_const')
-						   ->getTypeObject();
-		$bigint_type = TypeBigint::class;
-		$int_type    = TypeInt::class;
-		$is_number   = ($type_obj instanceof $bigint_type || $type_obj instanceof $int_type);
-
-		$options = [
-			'my_id'    => $is_number ? '[0-9]+' : '[^/]+',
-			'relation' => Relation::NAME_PATTERN,
+		return [
+			Relation::class        => $relations,
+			VirtualRelation::class => $v_relations,
 		];
-
-		$router->post('/my_svc', function (RouteInfo $r) {
-			$context     = $r->getContext();
-			$orm_request = new ORMRequest($context, $context->getRequest()
-															->getFormData());
-
-			$service = new self($context);
-			$service->actionCreateEntity($orm_request);
-
-			return $service->respond();
-		}, $options)
-			   ->get('/my_svc/{my_id}', function (RouteInfo $r) {
-			   	$context     = $r->getContext();
-			   	$orm_request = new ORMRequest($context, $context->getRequest()
-																   ->getFormData());
-			   	$orm_request->addColumnFilter('my_id', $r->getArg('my_id'));
-			   	$service = new self($context);
-			   	$service->actionGetEntity($orm_request);
-
-			   	return $service->respond();
-			   }, $options)
-			   ->get('/my_svc', function (RouteInfo $r) {
-			   	$context     = $r->getContext();
-			   	$orm_request = new ORMRequest($context, $context->getRequest()
-																   ->getFormData());
-			   	$service     = new self($context);
-			   	$service->actionGetAll($orm_request);
-
-			   	return $service->respond();
-			   }, $options)
-			   ->get('/my_svc/{my_id}/{relation}', function (RouteInfo $r) {
-			   	$context     = $r->getContext();
-			   	$orm_request = new ORMRequest($context, $context->getRequest()
-																   ->getFormData());
-			   	$orm_request->addColumnFilter('my_id', $r->getArg('my_id'));
-			   	$orm_request->addRelation($r->getArg('relation'));
-
-			   	$service = new self($context);
-			   	$service->actionGetRelation($orm_request);
-
-			   	return $service->respond();
-			   }, $options)
-			   ->patch('/my_svc/{my_id}', function (RouteInfo $r) {
-			   	$context     = $r->getContext();
-			   	$orm_request = new ORMRequest($context, $context->getRequest()
-																   ->getFormData());
-			   	$orm_request->addColumnFilter('my_id', $r->getArg('my_id'));
-
-			   	$service = new self($context);
-			   	$service->actionUpdateOneItem($orm_request);
-
-			   	return $service->respond();
-			   }, $options)
-			   ->patch('/my_svc', function (RouteInfo $r) {
-			   	$context     = $r->getContext();
-			   	$orm_request = new ORMRequest($context, $context->getRequest()
-																   ->getFormData());
-			   	$service     = new self($context);
-			   	$service->actionUpdateAllItems($orm_request);
-
-			   	return $service->respond();
-			   }, $options)
-			   ->delete('/my_svc/{my_id}', function (RouteInfo $r) {
-			   	$context     = $r->getContext();
-			   	$orm_request = new ORMRequest($context, $context->getRequest()
-																   ->getFormData());
-			   	$orm_request->addColumnFilter('my_id', $r->getArg('my_id'));
-
-			   	$service = new self($context);
-			   	$service->actionDeleteEntity($orm_request);
-
-			   	return $service->respond();
-			   }, $options)
-			   ->delete('/my_svc', function (RouteInfo $r) {
-			   	$context     = $r->getContext();
-			   	$orm_request = new ORMRequest($context, $context->getRequest()
-																   ->getFormData());
-			   	$orm_request->addColumnFilter('my_id', $r->getArg('my_id'));
-
-			   	$service = new self($context);
-			   	$service->actionDeleteAll($orm_request);
-
-			   	return $service->respond();
-			   }, $options);
 	}
 }

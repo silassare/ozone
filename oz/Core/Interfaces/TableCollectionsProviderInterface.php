@@ -9,25 +9,19 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Core\Interfaces;
 
+/**
+ * Interface TableCollectionsProviderInterface.
+ */
 interface TableCollectionsProviderInterface
 {
 	/**
-	 * Returns custom collections definition.
-	 *
-	 * ```php
-	 * [
-	 *    'table_name' => [
-	 *         'collection_1' => callable,
-	 *            ...
-	 *         'collection_n' => callable
-	 *     ],
-	 *      ...
-	 * ]
-	 * ```
+	 * Define custom collections.
 	 *
 	 * @return array
 	 */
-	public static function getCollectionsDefinition();
+	public static function defineCollections(): array;
 }

@@ -9,120 +9,158 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\FS;
 
-use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\Core\SettingsManager;
+use InvalidArgumentException;
+use OZONE\OZ\Auth\Auth;
+use OZONE\OZ\Auth\Interfaces\AuthScopeInterface;
+use OZONE\OZ\Cache\CacheManager;
+use OZONE\OZ\Core\Configs;
+use OZONE\OZ\Core\Context;
 use OZONE\OZ\Db\OZFile;
 use OZONE\OZ\Db\OZFilesQuery;
-use OZONE\OZ\Exceptions\InternalErrorException;
-use OZONE\OZ\Http\Stream;
+use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\OZ\FS\Interfaces\FilesDriverInterface;
+use OZONE\OZ\FS\Views\GetFilesView;
+use OZONE\OZ\Http\UploadedFile;
+use OZONE\OZ\Http\Uri;
+use Throwable;
 
+/**
+ * Class FilesUtils.
+ */
 class FilesUtils
 {
 	/**
-	 * the default mime type for any file
-	 *
-	 * @var string
+	 * the default mime type for any file.
 	 */
-	const DEFAULT_FILE_MIME_TYPE = 'application/octet-stream';
+	public const DEFAULT_FILE_MIME_TYPE = 'application/octet-stream';
 
 	/**
-	 * the default extension for any file
-	 *
-	 * @var string
+	 * the default extension for any file.
 	 */
-	const DEFAULT_FILE_EXTENSION = 'ext';
+	public const DEFAULT_FILE_EXTENSION = 'ext';
 
 	/**
-	 * the default category for any file
-	 *
-	 * @var string
-	 */
-	const DEFAULT_FILE_CATEGORY = 'unknown';
-
-	/**
-	 * Gets users files directory root path.
+	 * Gets files upload directory path.
 	 *
 	 * @return string
 	 */
-	public static function getUsersFilesRootDirectory()
+	public static function getFilesUploadDirectory(): string
 	{
-		return OZ_APP_DIR . 'oz_users_files' . DS;
+		$fm = new FilesManager();
+
+		return $fm->cd(OZ_FILES_DIR . 'uploads' . DS, true)
+			->getRoot();
 	}
 
 	/**
-	 * Gets a user directory root path with a given user id.
+	 * Returns a newly created restricted access uri for the given file.
 	 *
-	 * @param int|string $uid the user id
+	 * @param \OZONE\OZ\Core\Context                       $context
+	 * @param \OZONE\OZ\Auth\Interfaces\AuthScopeInterface $scope
+	 * @param \OZONE\OZ\Db\OZFile                          $file
 	 *
-	 * @throws \Exception
+	 * @return \OZONE\OZ\Http\Uri
+	 */
+	public function createRestrictedUri(Context $context, AuthScopeInterface $scope, OZFile $file): Uri
+	{
+		$auth        = new Auth($context, $scope);
+		$credentials = $auth->generate()
+			->getCredentials();
+
+		$ref = $credentials->getReference();
+		$key = $credentials->getToken();
+
+		return $context->buildRouteUri(GetFilesView::MAIN_ROUTE, [
+			'oz_file_id'  => $file->getID(),
+			'oz_file_key' => $key,
+			'oz_file_ref' => $ref,
+		]);
+	}
+
+	/**
+	 * Returns the given file uri.
+	 *
+	 * @param \OZONE\OZ\Core\Context $context
+	 * @param \OZONE\OZ\Db\OZFile    $file
+	 *
+	 * @return \OZONE\OZ\Http\Uri
+	 */
+	public function getFileUri(Context $context, OZFile $file): Uri
+	{
+		return $context->buildRouteUri(GetFilesView::MAIN_ROUTE, [
+			'oz_file_id'  => $file->getID(),
+			'oz_file_key' => $file->getKey(),
+		]);
+	}
+
+	/**
+	 * Gets extension from a file with a given file name and expected mime type.
+	 *
+	 * when the file extension does not match the given mime type
+	 * we use the mime type to guess the extension.
+	 *
+	 * @param string $file_name          the file name
+	 * @param string $expected_mime_type the expected file mime type
 	 *
 	 * @return string
 	 */
-	public static function getUserRootDirectory($uid)
+	public static function getRealExtension(string $file_name, string $expected_mime_type): string
 	{
-		$root = self::getUsersFilesRootDirectory();
-		$fm   = new FilesManager($root);
+		$name_ext = \strtolower(\substr($file_name, (\strrpos($file_name, '.') + 1)));
 
-		return $fm->cd($uid, true)
-				  ->getRoot();
-	}
-
-	/**
-	 * Generate a file info: file name, file destination ...
-	 *
-	 * @param string $destination the destination directory path
-	 * @param string $real_name   the real file name
-	 * @param string $real_type   the real file mime type
-	 *
-	 * @throws \Exception
-	 *
-	 * @return array the generated file info
-	 */
-	public static function genNewFileInfo($destination, $real_name, $real_type)
-	{
-		$fm = new FilesManager($destination);
-
-		$dir       = $fm->getRoot();
-		$thumb_dir = $fm->cd('_thumb', true)
-						->getRoot();
-
-		$ext       = self::getExtension($real_name, $real_type);
-		$name      = \time() . '_' . Hasher::genRandomString(10, Hasher::CHARS_NUM);
-		$full_name = $name . '.' . $ext;
-		$path      = $dir . DS . $full_name;
-		$thumb     = $thumb_dir . DS . $name . '.jpg';
-
-		return [
-			'name'      => $name,
-			'full_name' => $full_name,
-			'path'      => $path,
-			'thumbnail' => $thumb,
-		];
-	}
-
-	/**
-	 * Gets extension from a file with a given file path and mime type
-	 *
-	 * @param string $path the file path
-	 * @param string $type the file mime type
-	 *
-	 * @return string
-	 */
-	public static function getExtension($path, $type)
-	{
-		$ext = \strtolower(\substr($path, (\strrpos($path, '.') + 1)));
-
-		if (empty($ext)) {
-			$ext = self::mimeTypeToExtension($type);
+		if ($name_ext && self::extensionToMimeType($name_ext) === $expected_mime_type) {
+			return $name_ext;
 		}
 
-		return $ext;
+		return self::mimeTypeToExtension($expected_mime_type);
 	}
 
 	/**
-	 * Guess mime type that match to a given file extension
+	 * Convert php upload error code to message.
+	 *
+	 * @param int $error
+	 *
+	 * @return string
+	 */
+	public static function uploadErrorMessage(int $error): string
+	{
+		switch ($error) {
+			case \UPLOAD_ERR_INI_SIZE:
+				// 'The uploaded file exceeds the upload_max_filesize directive in php.ini'
+			case \UPLOAD_ERR_FORM_SIZE:
+				// 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'
+				$message = 'OZ_FILE_UPLOAD_TOO_BIG';
+
+				break;
+
+			case \UPLOAD_ERR_NO_FILE:
+				// 'No file was uploaded'
+				$message = 'OZ_FILE_UPLOAD_IS_EMPTY';
+
+				break;
+
+			case \UPLOAD_ERR_PARTIAL:
+				// 'The uploaded file was only partially uploaded'
+			case \UPLOAD_ERR_NO_TMP_DIR:
+				// 'Missing a temporary folder'
+			case \UPLOAD_ERR_CANT_WRITE:
+				// 'Failed to write file to disk'
+			case \UPLOAD_ERR_EXTENSION:
+				// 'File upload stopped by extension'
+			default:
+				// 'Unknown upload error'
+				$message = 'OZ_FILE_UPLOAD_FAILS';
+		}
+
+		return $message;
+	}
+
+	/**
+	 * Guess mime type that match to a given file extension.
 	 *
 	 * when none found, default to \OZONE\OZ\FS\FilesUtils::DEFAULT_FILE_MIME_TYPE
 	 *
@@ -130,233 +168,213 @@ class FilesUtils
 	 *
 	 * @return string the mime type
 	 */
-	public static function extensionToMimeType($ext)
+	public static function extensionToMimeType(string $ext): string
 	{
-		$map = SettingsManager::get('oz.map.ext.to.mime');
+		$map = Configs::load('oz.map.ext.to.mime');
 		$ext = \strtolower($ext);
 
-		if (isset($map[$ext])) {
-			return $map[$ext];
-		}
-
-		return self::DEFAULT_FILE_MIME_TYPE;
+		return $map[$ext] ?? self::DEFAULT_FILE_MIME_TYPE;
 	}
 
 	/**
-	 * Guess file extension that match to a given file mime type
+	 * Guess file extension that match to a given file mime type.
 	 *
-	 * when none found, default to \OZONE\OZ\FS\FilesUtils::DEFAULT_FILE_EXTENSION
+	 * when none found, default to FilesUtils::DEFAULT_FILE_EXTENSION
 	 *
 	 * @param string $type the file mime type
 	 *
 	 * @return string the file extension that match to this file mime type
 	 */
-	public static function mimeTypeToExtension($type)
+	public static function mimeTypeToExtension(string $type): string
 	{
-		$map  = SettingsManager::get('oz.map.mime.to.ext');
+		$map  = Configs::load('oz.map.mime.to.ext');
 		$type = \strtolower($type);
 
-		if (isset($map[$type])) {
-			return $map[$type];
-		}
-
-		return self::DEFAULT_FILE_EXTENSION;
+		return $map[$type] ?? self::DEFAULT_FILE_EXTENSION;
 	}
 
 	/**
-	 * Guess the file category with a given file mime type (video/audio/image ...)
+	 * Gets file from database with a given file id.
 	 *
-	 * when none found, default to \OZONE\OZ\FS\FilesUtils::DEFAULT_FILE_CATEGORY
-	 *
-	 * @param string $mime the file mime type
-	 *
-	 * @return string
-	 */
-	public static function mimeTypeToCategory($mime)
-	{
-		if (!empty($mime)) {
-			return \strtolower(\substr($mime, 0, \strrpos($mime, '/')));
-		}
-
-		return self::DEFAULT_FILE_CATEGORY;
-	}
-
-	/**
-	 * Checks if a given string sequence is like a file key
-	 *
-	 * @param string $str the file key
-	 *
-	 * @return bool
-	 */
-	public static function isFileKeyLike($str)
-	{
-		$file_key_reg = '~^[a-zA-Z0-9]{32}$~';
-
-		return \is_string($str) && \preg_match($file_key_reg, $str);
-	}
-
-	/**
-	 * Generated a thumbnail for the file
-	 *
-	 * @param \OZONE\OZ\Db\OZFile $file        the file object
-	 * @param string              $destination the thumbnail destination path
-	 *
-	 * @throws \Exception
-	 *
-	 * @return bool true if successful, false if fails
-	 */
-	public static function makeThumb(OZFile $file, $destination)
-	{
-		$quality         = 50;
-		$max_thumb_width = $max_thumb_height = SettingsManager::get('oz.users', 'OZ_THUMB_MAX_SIZE');
-		$done            = false;
-		$file_category   = self::mimeTypeToCategory($file->getType());
-
-		$source = $file->getPath();
-
-		switch ($file_category) {
-			case 'image':
-				$img_utils_obj = new ImagesUtils($source);
-
-				if ($img_utils_obj->load()) {
-					$advice = $img_utils_obj->adviceBestSize($max_thumb_width, $max_thumb_height);
-
-					$img_utils_obj->resizeImage($advice['w'], $advice['h'], $advice['crop'])
-								  ->saveImage($destination, $quality);
-
-					$done = true;
-				}
-
-				break;
-			case 'video':
-				$vid_utils_obj = new VideosUtils($source);
-
-				if ($vid_utils_obj->load()) {
-					$done = $vid_utils_obj->makeVideoThumb($destination);
-
-					if ($done) {
-						$img_utils_obj = new ImagesUtils($destination);
-
-						if ($img_utils_obj->load()) {
-							$advice = $img_utils_obj->adviceBestSize($max_thumb_width, $max_thumb_height);
-
-							$img_utils_obj->resizeImage($advice['w'], $advice['h'], $advice['crop'])
-										  ->saveImage($destination, $quality);
-						}
-					}
-				}
-
-				break;
-			default:
-				// other files
-		}
-
-		return $done;
-	}
-
-	/**
-	 * Gets file from database with a given file id and file key
-	 *
-	 * @param int|string $id  the file id
-	 * @param string     $key the file key
-	 *
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Exception
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
+	 * @param string $id the file id
 	 *
 	 * @return null|\OZONE\OZ\Db\OZFile
 	 */
-	public static function getFileWithId($id, $key)
+	public static function getFileWithId(string $id): ?OZFile
 	{
-		if (empty($id) || !self::isFileKeyLike($key)) {
-			return null;
+		try {
+			$qb = new OZFilesQuery();
+
+			return $qb->whereIdIs($id)
+				->find(1)
+				->fetchClass();
+		} catch (Throwable $t) {
+			throw new RuntimeException(\sprintf('Unable to get file with id: %s', $id), null, $t);
 		}
-
-		$f_table = new OZFilesQuery();
-		$result  = $f_table->filterById($id)
-						   ->filterByKey($key)
-						   ->find(1);
-
-		return $result->fetchClass();
 	}
 
 	/**
-	 * Parse an alias file
+	 * Parse an alias file.
 	 *
-	 * @param \OZONE\OZ\Http\Stream $alias
+	 * @param \OZONE\OZ\Http\UploadedFile $upload
 	 *
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 *
-	 * @return \OZONE\OZ\Db\OZFile
+	 * @return null|\OZONE\OZ\Db\OZFile
 	 */
-	public static function getFileFromAlias(Stream $alias)
+	public static function parseFileAlias(UploadedFile $upload): ?OZFile
 	{
-		$data = \json_decode($alias->getContents(), true);
-
-		if (!\is_array($data) || !\array_key_exists('file_id', $data) || !\array_key_exists('file_key', $data)) {
-			throw new InternalErrorException('OZ_FILE_ALIAS_PARSE_ERROR');
+		// checks file name and extension
+		if (!\preg_match('~\.ofa$~i', $upload->getClientFilename())) {
+			return null;
 		}
 
-		$f = self::getFileWithId($data['file_id'], $data['file_key']);
+		// the correct mime type
+		if ('text/x-ozone-file-alias' !== $upload->getClientMediaType()) {
+			return null;
+		}
 
-		if (!$f) {
-			throw new InternalErrorException('OZ_FILE_ALIAS_NOT_FOUND', $data);
+		// checks alias file size 4ko
+		if ($upload->getSize() > 4 * 1024) {
+			return null;
+		}
+
+		$content = $upload->getStream()
+			->getContents();
+
+		try {
+			$data = \json_decode($content, true, 512, \JSON_THROW_ON_ERROR);
+		} catch (Throwable $t) {
+			throw new RuntimeException('Unable to parse file alias.', ['content' => $content], $t);
+		}
+
+		if (!\is_array($data) || !\array_key_exists('file_id', $data) || !\array_key_exists('file_key', $data)) {
+			throw new RuntimeException('File alias content is invalid.', ['content' => $content]);
+		}
+
+		$f = self::getFileWithId($data['file_id']);
+
+		if (!$f || $f->getValid()) {
+			throw new RuntimeException('Unable to identify aliased file.', ['content' => $content]);
+		}
+
+		if (!\hash_equals($f->getKey(), (string) $data['file_key'])) {
+			throw new RuntimeException('Invalid file alias key.', ['content' => $content]);
 		}
 
 		return $f;
 	}
 
 	/**
-	 * Format a given file size
+	 * Format a given file size.
 	 *
 	 * @param float  $size          the file size in bytes
-	 * @param string $decimal_point
-	 * @param string $thousands_sep
+	 * @param int    $precision     The number of decimal digit
+	 * @param int    $kb_size       The kb_size (Ex: use 1000 for data, or 1024 for file size)
+	 * @param string $decimal_point The decimal point to use (, for french users)
+	 * @param string $thousands_sep The thousands separation char
 	 *
 	 * @return string the formatted file size
 	 */
-	public static function formatFileSize($size, $decimal_point = '.', $thousands_sep = ' ')
+	public static function formatFileSize(float $size, int $precision = 2, int $kb_size = 1024, string $decimal_point = '.', string $thousands_sep = ' '): string
 	{
-		$unites = ['byte', 'Kb', 'Mb', 'Gb', 'Tb'];
-		$max_i  = \count($unites);
-		$i      = 0;
-		$result = 0;
+		$unites  = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+		$max_pow = 8;
+		$result  = $size;
+		$pow     = 0;
 
-		while ($size >= 1 && $i < $max_i) {
-			$result = $size;
-			$size /= 1000;// not 1024
-			$i++;
+		if ($size >= 1) {
+			while ($pow <= $max_pow) {
+				$div = $kb_size ** $pow;
+
+				if ($size < $div * $kb_size || $pow === $max_pow) {
+					$result = $div > 1 ? $size / $div : $size;
+
+					break;
+				}
+
+				++$pow;
+			}
+		} else {
+			$result = 0;
 		}
 
-		$parts = \explode('.', $result);
-
-		if ($parts[0] != $result) {
-			$result = \number_format($result, 2, $decimal_point, $thousands_sep);
-		}
-
-		return $result . ' ' . $unites[$i == 0 ? 0 : $i - 1];
+		return \number_format($result, $precision, $decimal_point, $thousands_sep) . ' ' . $unites[$pow];
 	}
 
 	/**
-	 * Creates a new file in temp directory with base64 data.
+	 * Converts base64 data to file stream.
 	 *
-	 * @param string $base64_string
+	 * @param string $base64
 	 *
-	 * @return array|bool|string
+	 * @return \OZONE\OZ\FS\FileStream
 	 */
-	public static function base64ToFile($base64_string)
+	public static function base64ToFile(string $base64): FileStream
 	{
-		$output_file = \tempnam(\sys_get_temp_dir(), SettingsManager::get('oz.config', 'OZ_PROJECT_PREFIX'));
+		// data urls: data:[<mediatype>][;base64],<data>
+		if (($pos = \strpos($base64, ',')) !== false) {
+			$base64 = \substr($base64, $pos + 1);
+		}
 
-		$f    = \fopen($output_file, 'wb');
-		$data = \explode(',', $base64_string);
+		$base64     = \str_replace(' ', '+', $base64);
+		$i          = 0;
+		$chunk_size = 1024;
+		$stream     = FileStream::create();
 
-		\fwrite($f, \base64_decode($data[1]));
+		// seems to the good way to handle big base64 data
+		while ($chunk = \substr($base64, $i, $chunk_size)) {
+			$decoded = \base64_decode($chunk, true);
 
-		\fclose($f);
+			if (false === $decoded) {
+				throw new InvalidArgumentException('Invalid base64 encoded data.');
+			}
 
-		return $output_file;
+			$stream->write($decoded);
+
+			$i += $chunk_size;
+		}
+
+		return $stream;
+	}
+
+	/**
+	 * Gets instance of the files driver with a given name.
+	 *
+	 * @param string $name
+	 *
+	 * @return \OZONE\OZ\FS\Interfaces\FilesDriverInterface
+	 */
+	public static function getFileDriver(string $name = 'default'): FilesDriverInterface
+	{
+		$driver = Configs::get('oz.files.drivers', $name);
+		$cache  = CacheManager::runtime(__METHOD__);
+
+		if (!$driver) {
+			throw new RuntimeException(\sprintf('Undefined file driver "%s".', $name));
+		}
+
+		$factory = function () use ($driver) {
+			if (!\is_subclass_of($driver, FilesDriverInterface::class)) {
+				throw new RuntimeException(\sprintf(
+					'Files driver "%s" should implements "%s".',
+					$driver,
+					FilesDriverInterface::class
+				));
+			}
+
+			/* @var FilesDriverInterface $driver */
+			return $driver::getInstance();
+		};
+
+		return $cache->getFactory($name, $factory)
+			->get();
+	}
+
+	/**
+	 * Returns a new temp file path.
+	 *
+	 * @return string
+	 */
+	public static function newTempFile(): string
+	{
+		return \tempnam(\sys_get_temp_dir(), Configs::get('oz.config', 'OZ_PROJECT_PREFIX', 'oz') . '_');
 	}
 }

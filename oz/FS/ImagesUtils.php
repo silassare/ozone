@@ -9,40 +9,38 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\FS;
 
 use claviska\SimpleImage;
-use OZONE\OZ\Core\SettingsManager;
+use Exception;
+use OZONE\OZ\Core\Configs;
 
 class ImagesUtils
 {
-	/**
-	 * SimpleImage object.
-	 *
-	 * @var \claviska\SimpleImage
-	 */
-	protected $image;
+	protected ?SimpleImage $image;
 
 	/**
 	 * The current file source path.
 	 *
 	 * @var string
 	 */
-	protected $source_path;
+	protected string $source_path;
 
 	/**
 	 * Allowed image extension.
 	 *
 	 * @var array
 	 */
-	protected $image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+	protected array $image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
 	/**
 	 * ImagesUtils constructor.
 	 *
 	 * @param string $source_path the image file source path
 	 */
-	public function __construct($source_path)
+	public function __construct(string $source_path)
 	{
 		$this->source_path = $source_path;
 	}
@@ -58,7 +56,7 @@ class ImagesUtils
 	/**
 	 * Destroy image object.
 	 */
-	public function destroy()
+	public function destroy(): void
 	{
 		if ($this->image) {
 			$this->image = null;
@@ -71,7 +69,7 @@ class ImagesUtils
 	 *
 	 * @return string
 	 */
-	public function getString($mime = 'image/jpeg', $quality = 100)
+	public function getString(string $mime = 'image/jpeg', int $quality = 100): string
 	{
 		return $this->image->toString($mime, $quality);
 	}
@@ -82,7 +80,7 @@ class ImagesUtils
 	 * @param string $mime
 	 * @param int    $quality Image quality
 	 */
-	public function output($mime = 'image/jpeg', $quality = 100)
+	public function output(string $mime = 'image/jpeg', int $quality = 100): void
 	{
 		// important because the size will change when response is gzipped
 		\header_remove('Content-Length');
@@ -92,11 +90,11 @@ class ImagesUtils
 	/**
 	 * Loads the image file.
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 *
 	 * @return bool the returned value is true if successful, false otherwise
 	 */
-	public function load()
+	public function load(): bool
 	{
 		if (!$this->isValidImage()) {
 			return false;
@@ -114,18 +112,18 @@ class ImagesUtils
 	 *
 	 * @return bool
 	 */
-	public function isValidImage()
+	public function isValidImage(): bool
 	{
 		$src       = $this->source_path;
 		$extension = \strtolower(\substr($src, (\strrpos($src, '.') + 1)));
 
-		if (!\in_array($extension, $this->image_extensions)) {
+		if (!\in_array($extension, $this->image_extensions, true)) {
 			return false;
 		}
 
 		$r = @\imagecreatefromstring(\file_get_contents($src));
 
-		return \is_resource($r) && \get_resource_type($r) === 'gd';
+		return \is_resource($r) && 'gd' === \get_resource_type($r);
 	}
 
 	/**
@@ -133,11 +131,11 @@ class ImagesUtils
 	 *
 	 * @param string $destination_path
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 *
 	 * @return \OZONE\OZ\FS\ImagesUtils
 	 */
-	public function copyImage($destination_path)
+	public function copyImage(string $destination_path): self
 	{
 		$this->image->toFile($destination_path);
 
@@ -153,12 +151,12 @@ class ImagesUtils
 	 *
 	 * @return array
 	 */
-	public function adviceBestSize($max_out_width, $max_out_height)
+	public function adviceBestSize(int $max_out_width, int $max_out_height): array
 	{
 		$iW    = $this->getWidth();
 		$iH    = $this->getHeight();
 		$ratio = ($iW > $iH) ? $iH / $iW : $iW / $iH;
-		$crop  = ($ratio < 0.6) ? true : false;
+		$crop  = $ratio < 0.6;
 
 		if ($iW <= $max_out_width && $iH <= $max_out_height) {
 			$W    = $iW;
@@ -192,7 +190,7 @@ class ImagesUtils
 	 *
 	 * @return \OZONE\OZ\FS\ImagesUtils
 	 */
-	public function resizeImage($width, $height, $crop = true)
+	public function resizeImage(int $width, int $height, bool $crop = true): self
 	{
 		$iWidth  = $this->getWidth();
 		$iHeight = $this->getHeight();
@@ -228,7 +226,7 @@ class ImagesUtils
 	 *
 	 * @return \OZONE\OZ\FS\ImagesUtils
 	 */
-	public function cropImage($left, $top, $width, $height)
+	public function cropImage(int $left, int $top, int $width, int $height): self
 	{
 		$this->image = $this->image->crop($left, $top, $width, $height);
 
@@ -243,11 +241,11 @@ class ImagesUtils
 	 * @param null|string $destination_path The destination file path
 	 * @param int         $quality          The image quality between 0 and 100, default is 90
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 *
 	 * @return \OZONE\OZ\FS\ImagesUtils
 	 */
-	public function saveImage($destination_path = null, $quality = 90)
+	public function saveImage(?string $destination_path = null, int $quality = 90): self
 	{
 		if (!isset($destination_path)) {
 			$this->image->toFile($this->source_path, null, $quality);
@@ -263,7 +261,7 @@ class ImagesUtils
 	 *
 	 * @return int
 	 */
-	public function getWidth()
+	public function getWidth(): int
 	{
 		return $this->image->getWidth();
 	}
@@ -273,7 +271,7 @@ class ImagesUtils
 	 *
 	 * @return int
 	 */
-	public function getHeight()
+	public function getHeight(): int
 	{
 		return $this->image->getHeight();
 	}
@@ -290,40 +288,38 @@ class ImagesUtils
 	 * @param null|array $coordinate       The crop zone coordinate
 	 * @param bool       $resize           Should we resize when required? default is true
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 *
 	 * @return \OZONE\OZ\FS\ImagesUtils
 	 */
 	public function cropAndSave(
-		$destination_path,
-		$quality,
-		$max_width,
-		$max_height,
+		string $destination_path,
+		int $quality,
+		int $max_width,
+		int $max_height,
 		array $coordinate = null,
-		$resize = true
-	) {
+		bool $resize = true
+	): self {
 		$quality = empty($quality) ? 90 : $quality;
 
-		if (!empty($coordinate)) {
-			if ($this->safeCoordinate($coordinate)) {
-				$x = $coordinate['x'];
-				$y = $coordinate['y'];
-				$w = $coordinate['w'];
-				$h = $coordinate['h'];
+		if (!empty($coordinate) && $this->safeCoordinate($coordinate)) {
+			$x = $coordinate['x'];
+			$y = $coordinate['y'];
+			$w = $coordinate['w'];
+			$h = $coordinate['h'];
 
-				if ($resize) {
-					return $this->cropImage($x, $y, $w, $h)
-								->resizeImage($max_width, $max_height)
-								->saveImage($destination_path, $quality);
-				}
-
+			if ($resize) {
 				return $this->cropImage($x, $y, $w, $h)
-							->saveImage($destination_path, $quality);
+					->resizeImage($max_width, $max_height)
+					->saveImage($destination_path, $quality);
 			}
+
+			return $this->cropImage($x, $y, $w, $h)
+				->saveImage($destination_path, $quality);
 		}
 
 		return $this->resizeImage($max_width, $max_height)
-					->saveImage($destination_path, $quality);
+			->saveImage($destination_path, $quality);
 	}
 
 	/**
@@ -333,13 +329,13 @@ class ImagesUtils
 	 *
 	 * @return bool
 	 */
-	private function safeCoordinate(array $coordinate)
+	private function safeCoordinate(array $coordinate): bool
 	{
 		$x        = $coordinate['x'];
 		$y        = $coordinate['y'];
 		$w        = $coordinate['w'];
 		$h        = $coordinate['h'];
-		$min_size = SettingsManager::get('oz.users', 'OZ_PPIC_MIN_SIZE');
+		$min_size = Configs::get('oz.users', 'OZ_USER_PIC_MIN_SIZE');
 
 		return $x >= 0
 			   && $y >= 0

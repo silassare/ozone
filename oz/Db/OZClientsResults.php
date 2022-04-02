@@ -1,22 +1,24 @@
 <?php
 
 /**
- * Auto generated file,
+ * Copyright (c) 2017-present, Emile Silas Sare
  *
- * INFO: you are free to edit it,
- * but make sure to know what you are doing.
+ * This file is part of OZone package.
  *
- * Proudly With: gobl v1.5.0
- * Time: 1617030519
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace OZONE\OZ\Db;
 
-use OZONE\OZ\Db\Base\OZClientsResults as BaseOZClientsResults;
-
 /**
- * Class OZClientsResults
+ * Class OZClientsResults.
  */
-class OZClientsResults extends BaseOZClientsResults
+class OZClientsResults extends \OZONE\OZ\Db\Base\OZClientsResults
 {
+	// ====================================================
+	// =	Your custom implementation goes here
+	// ====================================================
 }

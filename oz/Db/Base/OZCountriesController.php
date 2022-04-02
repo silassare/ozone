@@ -1,189 +1,38 @@
 <?php
 
 /**
- * Auto generated file
+ * Copyright (c) 2017-present, Emile Silas Sare
  *
- * WARNING: please don't edit.
+ * This file is part of OZone package.
  *
- * Proudly With: gobl v1.5.0
- * Time: 1617030519
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use Gobl\DBAL\QueryBuilder;
-use Gobl\ORM\ORM;
-use Gobl\ORM\ORMControllerBase;
-use OZONE\OZ\Db\OZCountry as OZCountryReal;
-use OZONE\OZ\Db\OZCountriesResults as OZCountriesResultsReal;
-use OZONE\OZ\Db\OZCountriesQuery as OZCountriesQueryReal;
-
 /**
- * Class OZCountriesController
+ * Class OZCountriesController.
+ *
+ * @method \OZONE\OZ\Db\OZCountry      addItem(array|\OZONE\OZ\Db\OZCountry $item = [])
+ * @method null|\OZONE\OZ\Db\OZCountry getItem(array $filters, array $order_by = [])
+ * @method null|\OZONE\OZ\Db\OZCountry deleteOneItem(array $filters)
+ * @method \OZONE\OZ\Db\OZCountry[]    getAllItems(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = -1)
+ * @method \OZONE\OZ\Db\OZCountry[]    getAllItemsCustom(\Gobl\DBAL\Queries\QBSelect $qb, int $max = null, int $offset = 0, &$total = false)
+ * @method null|\OZONE\OZ\Db\OZCountry updateOneItem(array $filters, array $new_values)
  */
-abstract class OZCountriesController extends ORMControllerBase
+abstract class OZCountriesController extends \Gobl\ORM\ORMController
 {
 	/**
 	 * OZCountriesController constructor.
-	 *
-	 * @inheritdoc
 	 */
 	public function __construct()
 	{
 		parent::__construct(
-			ORM::getDatabase('OZONE\OZ\Db'),
-			OZCountry::TABLE_NAME,
-			OZCountryReal::class,
-			OZCountriesQueryReal::class,
-			OZCountriesResultsReal::class
+			\OZONE\OZ\Db\OZCountry::TABLE_NAMESPACE,
+			\OZONE\OZ\Db\OZCountry::TABLE_NAME
 		);
-	}
-
-	/**
-	 * Adds item to `oz_countries`.
-	 *
-	 * @param array $values the row values
-	 *
-	 * @throws \Throwable
-	 *
-	 * @return \OZONE\OZ\Db\OZCountry
-	 */
-	public function addItem(array $values = [])
-	{
-		/** @var \OZONE\OZ\Db\OZCountry $result */
-		$result = parent::addItem($values);
-
-		return $result;
-	}
-
-	/**
-	 * Updates one item in `oz_countries`.
-	 *
-	 * The returned value will be:
-	 * - `false` when the item was not found
-	 * - `OZCountry` when the item was successfully updated,
-	 * when there is an error updating you can catch the exception
-	 *
-	 * @param array $filters    the row filters
-	 * @param array $new_values the new values
-	 *
-	 * @throws \Throwable
-	 *
-	 * @return bool|\OZONE\OZ\Db\OZCountry
-	 */
-	public function updateOneItem(array $filters, array $new_values)
-	{
-		return parent::updateOneItem($filters, $new_values);
-	}
-
-	/**
-	 * Updates all items in `oz_countries` that match the given item filters.
-	 *
-	 * @param array $filters    the row filters
-	 * @param array $new_values the new values
-	 *
-	 * @throws \Throwable
-	 *
-	 * @return int affected row count
-	 */
-	public function updateAllItems(array $filters, array $new_values)
-	{
-		return parent::updateAllItems($filters, $new_values);
-	}
-
-	/**
-	 * Deletes one item from `oz_countries`.
-	 *
-	 * The returned value will be:
-	 * - `false` when the item was not found
-	 * - `OZCountry` when the item was successfully deleted,
-	 * when there is an error deleting you can catch the exception
-	 *
-	 * @param array $filters the row filters
-	 *
-	 * @throws \Throwable
-	 *
-	 * @return bool|\OZONE\OZ\Db\OZCountry
-	 */
-	public function deleteOneItem(array $filters)
-	{
-		return parent::deleteOneItem($filters);
-	}
-
-	/**
-	 * Deletes all items in `oz_countries` that match the given item filters.
-	 *
-	 * @param array $filters the row filters
-	 *
-	 * @throws \Throwable
-	 *
-	 * @return int affected row count
-	 */
-	public function deleteAllItems(array $filters)
-	{
-		return parent::deleteAllItems($filters);
-	}
-
-	/**
-	 * Gets item from `oz_countries` that match the given filters.
-	 *
-	 * The returned value will be:
-	 * - `null` when the item was not found
-	 * - `OZCountry` otherwise
-	 *
-	 * @param array $filters  the row filters
-	 * @param array $order_by order by rules
-	 *
-	 * @throws \Throwable
-	 *
-	 * @return null|\OZONE\OZ\Db\OZCountry
-	 */
-	public function getItem(array $filters, array $order_by = [])
-	{
-		/* @var null|\OZONE\OZ\Db\OZCountry $result */
-		$result = parent::getItem($filters, $order_by);
-
-		return $result;
-	}
-
-	/**
-	 * Gets all items from `oz_countries` that match the given filters.
-	 *
-	 * @param array    $filters  the row filters
-	 * @param null|int $max      maximum row to retrieve
-	 * @param int      $offset   first row offset
-	 * @param array    $order_by order by rules
-	 * @param bool|int $total    total rows without limit
-	 *
-	 * @throws \Throwable
-	 *
-	 * @return \OZONE\OZ\Db\OZCountry[]
-	 */
-	public function getAllItems(array $filters = [], $max = null, $offset = 0, array $order_by = [], &$total = false)
-	{
-		/** @var \OZONE\OZ\Db\OZCountry[] $results */
-		$results = parent::getAllItems($filters, $max, $offset, $order_by, $total);
-
-		return $results;
-	}
-
-	/**
-	 * Gets all items from `oz_countries` with a custom query builder instance.
-	 *
-	 * @param \Gobl\DBAL\QueryBuilder $qb
-	 * @param null|int                $max    maximum row to retrieve
-	 * @param int                     $offset first row offset
-	 * @param bool|int                $total  total rows without limit
-	 *
-	 * @throws \Throwable
-	 *
-	 * @return \OZONE\OZ\Db\OZCountry[]
-	 */
-	public function getAllItemsCustom(QueryBuilder $qb, $max = null, $offset = 0, &$total = false)
-	{
-		/** @var \OZONE\OZ\Db\OZCountry[] $results */
-		$results = parent::getAllItemsCustom($qb, $max, $offset, $total);
-
-		return $results;
 	}
 }

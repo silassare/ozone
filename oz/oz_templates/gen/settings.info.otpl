@@ -1,4 +1,4 @@
 <?php
-<%@import('gen.info.otpl',$)%>
 
+<%@import('gen.info.otpl',$)%>
 return <%$.oz_settings_str%>;

@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 return [
 	// REQUIRED: DATABASE INFO =========================================,
 	'OZ_DB_TABLE_PREFIX' => '',
@@ -18,8 +20,7 @@ return [
 	'OZ_DB_NAME'         => '',
 	'OZ_DB_USER'         => '',
 	'OZ_DB_PASS'         => '',
-	// you could change the charset,
-	// but it is at your own risk,
+	// changing charset may lead to data corruption and many more nightmares,
 	'OZ_DB_CHARSET'      => 'utf8mb4',
 	'OZ_DB_COLLATE'      => 'utf8mb4_unicode_ci',
 ];

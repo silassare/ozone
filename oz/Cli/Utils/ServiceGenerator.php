@@ -9,23 +9,59 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Cli\Utils;
 
 use Gobl\DBAL\Table;
-use Gobl\ORM\Exceptions\ORMException;
+use Gobl\Gobl;
 use Gobl\ORM\Generators\Generator;
-use InvalidArgumentException;
+use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\OZ\FS\FilesManager;
+use OZONE\OZ\FS\TemplatesUtils;
+use PHPUtils\Str;
 
+/**
+ * Class ServiceGenerator.
+ */
 class ServiceGenerator extends Generator
 {
+	public const SERVICE_TEMPLATE_NAME = 'service.class';
+
+	private static bool $templates_registered = false;
+
 	/**
-	 * @inheritDoc
+	 * {@inheritDoc}
 	 */
-	public function generate(array $tables, $path, $header = '')
+	public function generate(array $tables, $path, $header = ''): self
 	{
-		foreach ($tables as $table) {
-			$this->generateServiceClass($table, $table->getNamespace() . '\\Services', $path, '', '', $header);
+		if (!self::$templates_registered) {
+			self::$templates_registered = true;
+
+			Gobl::addTemplate(
+				self::SERVICE_TEMPLATE_NAME,
+				TemplatesUtils::localize('gen/gobl/php/MyService.php'),
+				[
+					'MY_SERVICE_NS' => '<%$.service.namespace%>',
+					'MyService'     => '<%$.service.class%>',
+					'my_svc'        => '<%$.service.name%>',
+				]
+			);
 		}
+
+		foreach ($tables as $table) {
+			$this->generateServiceClass(
+				$table,
+				$table->getNamespace() . '\\Services',
+				$path,
+				'',
+				'',
+				$header,
+				true
+			);
+		}
+
+		return $this;
 	}
 
 	/**
@@ -38,33 +74,34 @@ class ServiceGenerator extends Generator
 	 * @param string           $service_class     the service class name to use
 	 * @param string           $header            the source header to use
 	 *
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Exception
-	 *
 	 * @return array the OZone setting for the service
 	 */
 	public function generateServiceClass(
 		Table $table,
-		$service_namespace,
-		$service_dir,
-		$service_name,
-		$service_class = '',
-		$header = ''
-	) {
-		if (!\file_exists($service_dir) || !\is_dir($service_dir)) {
-			throw new InvalidArgumentException(\sprintf('"%s" is not a valid directory path.', $service_dir));
-		}
-
+		string $service_namespace,
+		string $service_dir,
+		string $service_name,
+		string $service_class = '',
+		string $header = '',
+		bool $override = false
+	): array {
 		if (!$table->hasPrimaryKeyConstraint()) {
-			throw new ORMException(\sprintf('There is no primary key in the table "%s".', $table->getName()));
+			throw new RuntimeException(\sprintf('There is no primary key in the table "%s".', $table->getName()));
 		}
 
+		$fm = new FilesManager();
+
+		$fm->filter()
+			->isDir()
+			->assert($service_dir);
+
+		/** @var \Gobl\DBAL\Constraints\PrimaryKey $pk */
 		$pk           = $table->getPrimaryKeyConstraint();
 		$columns      = $pk->getConstraintColumns();
 		$pk_col_count = \count($columns);
 
-		if ($pk_col_count !== 1) {
-			throw new ORMException(\sprintf(
+		if (1 !== $pk_col_count) {
+			throw new RuntimeException(\sprintf(
 				'Table "%s" contains "%s" columns in primary key.'
 				. 'You can generate service only for tables with one column as primary key.',
 				$table->getName(),
@@ -73,10 +110,9 @@ class ServiceGenerator extends Generator
 		}
 
 		if (empty($service_class)) {
-			$service_class = \Gobl\DBAL\Utils::toClassName($table->getName() . '_service');
+			$service_class = Str::toClassName($table->getName() . '_service');
 		}
 
-		$service_class_tpl              = Generator::getTemplateCompiler('service.class');
 		$inject                         = $this->describeTable($table);
 		$inject['oz_header']            = $header;
 		$inject['oz_version_name']      = OZ_OZONE_VERSION_NAME;
@@ -85,13 +121,19 @@ class ServiceGenerator extends Generator
 		$inject['service']['namespace'] = $service_namespace;
 		$inject['service']['class']     = $service_class;
 		$qualified_class                = $service_namespace . '\\' . $inject['service']['class'];
-		$class_path                     = $service_dir . \DIRECTORY_SEPARATOR . $service_class . '.php';
 
-		if (\file_exists($class_path)) {
-			\rename($class_path, $class_path . '.old');
+		$class_path = $service_dir . \DIRECTORY_SEPARATOR . $service_class . '.php';
+
+		if ($override && \file_exists($class_path)) {
+			\rename($class_path, $class_path . '.backup');
 		}
 
-		\file_put_contents($class_path, $service_class_tpl->runGet($inject));
+		// we check if the class file is empty/not exists etc...
+		$fm->filter()
+			->isEmpty()
+			->assert($class_path);
+
+		\file_put_contents($class_path, Gobl::runTemplate(self::SERVICE_TEMPLATE_NAME, $inject));
 
 		return [
 			'provider' => $qualified_class,

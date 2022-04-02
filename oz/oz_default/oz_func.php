@@ -9,112 +9,102 @@
  * file that was distributed with this source code.
  */
 
-use OZONE\OZ\Core\Context;
+declare(strict_types=1);
+
 use OZONE\OZ\Exceptions\BaseException;
+use OZONE\OZ\OZone;
 
 if (!\function_exists('oz_logger')) {
 	/**
-	 * Build file url.
-	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param int                    $file_id
-	 * @param string                 $file_key
-	 * @param int                    $file_quality
-	 * @param string                 $def
-	 *
-	 * @throws \Exception
-	 *
-	 * @return int|mixed|string
-	 */
-	function oz_file_url(Context $context, $file_id, $file_key = '', $file_quality = 0, $def = '')
-	{
-		$args  = \func_get_args();
-		$parts = \explode('_', $args[1]);
-
-		if (\count($parts) === 2) { // oz_file_url($context, file_id + '_' + file_key,file_quality,def)
-			$def          = $file_quality;
-			$file_quality = $file_key;
-			$file_id      = $parts[0];
-			$file_key     = $parts[1];
-		}
-
-		$file_quality = \in_array($file_quality, [0, 1, 2, 3]) ? $file_quality : 0;
-
-		if ($def && ($file_id === '0' || $file_key === '0')) {
-			return $def;
-		}
-
-		return $context->buildRouteUri('oz:files-static', [
-			'oz_file_id'      => $file_id,
-			'oz_file_key'     => $file_key,
-			'oz_file_quality' => $file_quality,
-		]);
-	}
-
-	/**
 	 * Write to log file.
 	 *
-	 * @param mixed $in
+	 * @param mixed $value
 	 */
-	function oz_logger($in)
+	function oz_logger(mixed $value): void
 	{
+		if (\defined('OZ_LOG_DIR')) {
+			$dir = OZ_LOG_DIR;
+		} else {
+			$dir = \getcwd();
+		}
+
 		$prev_sep = "\n========previous========\n";
 		$date     = \date('Y-m-d H:i:s');
-		$log_file = OZ_LOG_DIR . 'debug.log';
+		$log_file = $dir . 'debug.log';
 
-		if (\is_scalar($in)) {
-			$log = (string) $in;
-		} elseif (\is_array($in)) {
-			$log = \var_export($in, true);
-		} elseif ($in instanceof Exception || $in instanceof Error) {
-			$e   = $in;
+		if (\is_scalar($value)) {
+			$log = (string) $value;
+		} elseif (\is_array($value)) {
+			$log = \var_export($value, true);
+		} elseif ($value instanceof Exception || $value instanceof Error) {
+			$e   = $value;
 			$log = BaseException::throwableToString($e);
 
 			while ($e = $e->getPrevious()) {
 				$log .= $prev_sep . BaseException::throwableToString($e);
 			}
-		} elseif ($in instanceof JsonSerializable) {
-			$log = \json_encode($in, \JSON_PRETTY_PRINT);
+		} elseif ($value instanceof JsonSerializable) {
+			$log = \json_encode($value, \JSON_PRETTY_PRINT);
 		} else {
-			$log = \gettype($in);
-			// $log = var_export(debug_backtrace(),true);
+			$log = \get_debug_type($value);
 		}
 
-		$log = \str_replace(['\\n', '\\t', "\/"], ["\n", "\t", '/'], $log);
+		$log = \str_replace(['\\n', '\\t', '\\/'], ["\n", "\t", '/'], $log);
 		$log = "================================================================================\n"
 			   . $date . "\n"
 			   . "========================\n"
 			   . $log . "\n\n";
 
 		$mode = (\file_exists($log_file) && \filesize($log_file) <= 254000) ? 'a' : 'w';
-		$fp   = \fopen($log_file, $mode);
-		\fwrite($fp, $log);
-		\fclose($fp);
+
+		if ($fp = \fopen($log_file, $mode)) {
+			\fwrite($fp, $log);
+			\fclose($fp);
+
+			if ('w' === $mode) {
+				\chmod($log_file, 0660);
+			}
+		}
 	}
 
 	/**
 	 * Called when we should shutdown and only admin
 	 * should know what is going wrong.
 	 */
-	function oz_critical_die_message()
+	function oz_critical_die_message(): void
 	{
-		BaseException::criticalDie(BaseException::MESSAGE_ERROR_UNHANDLED);
+		BaseException::dieWithAnUnhandledErrorOccurred();
 	}
 
 	/**
 	 * Handle unhandled exception.
 	 *
-	 * @param \Exception $e
+	 * @param \Throwable $t
 	 */
-	function oz_exception_handler($e)
+	function oz_exception_handler(Throwable $t): void
 	{
-		oz_logger($e);
+		oz_logger($t);
 
 		if (OZ_OZONE_IS_CLI) {
-			die(\PHP_EOL . $e->getMessage() . \PHP_EOL);
+			exit(\PHP_EOL . $t->getMessage() . \PHP_EOL);
 		}
 
+		OZone::getRunningApp()?->onUnhandledThrowable($t);
+
 		oz_critical_die_message();
+	}
+
+	/**
+	 * Handle unhandled error.
+	 *
+	 * @param int    $code    the error code
+	 * @param string $message the error message
+	 * @param string $file    the file where it occurs
+	 * @param int    $line    the file line where it occurs
+	 */
+	function oz_error_handler(int $code, string $message, string $file, int $line): void
+	{
+		oz_error_logger($code, $message, $file, $line, true);
 	}
 
 	/**
@@ -126,81 +116,58 @@ if (!\function_exists('oz_logger')) {
 	 * @param int    $line         the file line where it occurs
 	 * @param bool   $die_on_fatal when true we will interrupt on fatal error
 	 */
-	function oz_error_logger($code, $message, $file, $line, $die_on_fatal = false)
+	function oz_error_logger(int $code, string $message, string $file, int $line, bool $die_on_fatal = false): void
 	{
 		oz_logger("\n\tFile    : {$file}"
 				  . "\n\tLine    : {$line}"
 				  . "\n\tCode    : {$code}"
 				  . "\n\tMessage : {$message}");
 
+		if (!OZ_OZONE_IS_CLI) {
+			OZone::getRunningApp()?->onUnhandledError($code, $message, $file, $line);
+		}
+
 		if ($die_on_fatal) {
 			$fatalist = [\E_ERROR, \E_PARSE, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR];
 
-			if (\in_array($code, $fatalist)) {
+			if (\in_array($code, $fatalist, true)) {
 				oz_critical_die_message();
 			}
 		}
 	}
 
 	/**
-	 * Handle unhandled error.
-	 *
-	 * @param int    $code    the error code
-	 * @param string $message the error message
-	 * @param string $file    the file where it occurs
-	 * @param int    $line    the file line where it occurs
-	 */
-	function oz_error_handler($code, $message, $file, $line)
-	{
-		oz_error_logger($code, $message, $file, $line, true);
-	}
-
-	/**
 	 * Try to log error after shutdown.
 	 */
-	function oz_error_shutdown_function()
+	function oz_error_shutdown_function(): void
 	{
 		$error = \error_get_last();
 
 		if (null !== $error) {
 			oz_logger(
-				"::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\n"
+				'::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
+				. \PHP_EOL
 				. 'OZone shutdown error'
-				. "\n::::::::::::::::::::::::::::::"
+				. \PHP_EOL . '::::::::::::::::::::::::'
 			);
 			oz_error_logger($error['type'], $error['message'], $error['file'], $error['line'], true);
+		}
+
+		if (\defined('OZ_LOG_EXECUTION_TIME') && OZ_LOG_EXECUTION_TIME) {
+			oz_logger('::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
+					  . \PHP_EOL
+					  . 'OZone execution time'
+					  . \PHP_EOL . '::::::::::::::::::::::::'
+					  . \PHP_EOL . oz_execution_time() . 's');
 		}
 	}
 
 	/**
-	 * Try get callable file code source start and end line numbers.
-	 *
-	 * @param callable $c
-	 *
-	 * @return array|bool
+	 * @return string
 	 */
-	function oz_callable_info(callable $c)
+	function oz_execution_time(): string
 	{
-		$r = null;
-
-		try {
-			if ($c instanceof Closure) {
-				$r = new ReflectionFunction($c);
-			} elseif (\is_callable($c)) {
-				$r = new ReflectionMethod($c);
-			}
-
-			if ($r) {
-				return [
-					'file'  => $r->getFileName(),
-					'start' => $r->getStartLine() - 1,
-					'end'   => $r->getEndLine(),
-				];
-			}
-		} catch (ReflectionException $e) {
-		}
-
-		return false;
+		return \number_format(\microtime(true) - OZ_OZONE_START_TIME, 3);
 	}
 
 	\set_exception_handler('oz_exception_handler');

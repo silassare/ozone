@@ -9,72 +9,73 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Core;
 
-use Exception;
-use Gobl\DBAL\Column;
 use Gobl\DBAL\Db;
+use Gobl\DBAL\DbConfig;
+use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\QueryBuilder;
+use Gobl\DBAL\Types\Utils\TypeUtils;
+use Gobl\Gobl;
 use Gobl\ORM\ORM;
-use OZONE\OZ\Exceptions\InternalErrorException;
+use OZONE\OZ\Columns\TypeProvider;
+use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\FS\FilesManager;
-use ReflectionClass;
-use ReflectionException;
-use RuntimeException;
+use Throwable;
 
+/**
+ * Class DbManager.
+ */
 final class DbManager
 {
-	/**
-	 * @var \Gobl\DBAL\Db
-	 */
-	private static $db = null;
+	public const OZONE_DB_NAMESPACE = 'OZONE\\OZ\\Db';
+
+	private static RDBMSInterface $db;
 
 	/**
 	 * Initialize.
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 	 */
-	public static function init()
+	public static function init(): void
 	{
-		$config    = SettingsManager::get('oz.db');
-		$db_config = [
+		Gobl::setProjectRootDir(OZ_CACHE_DIR);
+
+		$config    = Configs::load('oz.db');
+		$db_config = new DbConfig([
 			'db_host'    => $config['OZ_DB_HOST'],
 			'db_name'    => $config['OZ_DB_NAME'],
 			'db_user'    => $config['OZ_DB_USER'],
 			'db_pass'    => $config['OZ_DB_PASS'],
 			'db_charset' => $config['OZ_DB_CHARSET'],
 			'db_collate' => $config['OZ_DB_COLLATE'],
-		];
+		]);
 
 		$rdbms_type = $config['OZ_DB_RDBMS'];
 
 		try {
 			self::$db = Db::instantiate($rdbms_type, $db_config);
-		} catch (Exception $e) {
-			throw new InternalErrorException(
+		} catch (Throwable $t) {
+			throw new RuntimeException(
 				\sprintf('Unable to init RDBMS defined in "oz.db": %s.', $rdbms_type),
 				null,
-				$e
+				$t
 			);
 		}
 
 		try {
 			self::register();
-		} catch (Exception $e) {
-			throw new InternalErrorException('Unable to initialize database.', null, $e);
+		} catch (Throwable $t) {
+			throw new RuntimeException('Unable to initialize database.', null, $t);
 		}
 	}
 
 	/**
 	 * Gets instance.
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-	 *
-	 * @return \Gobl\DBAL\Db
 	 */
-	public static function getDb()
+	public static function getDb(): RDBMSInterface
 	{
-		if (self::$db === null) {
+		if (null === self::$db) {
 			self::init();
 		}
 
@@ -86,18 +87,16 @@ final class DbManager
 	 *
 	 * @return array
 	 */
-	public static function getProjectDbDirectoryStructure()
+	public static function getProjectDbDirectoryStructure(): array
 	{
-		$config                       = SettingsManager::get('oz.config');
-		$info['oz_db_namespace']      = 'OZONE\\OZ\\Db';
-		$info['project_db_namespace'] = (
-			isset($config['OZ_PROJECT_NAMESPACE']) ? $config['OZ_PROJECT_NAMESPACE'] : 'NO_PROJECT'
-		) . '\\Db';
+		$config                       = Configs::load('oz.config');
+		$info['oz_db_namespace']      = self::OZONE_DB_NAMESPACE;
+		$info['project_db_namespace'] = \sprintf('%s\\Db', $config['OZ_PROJECT_NAMESPACE'] ?? 'NO_PROJECT');
 		$fm                           = new FilesManager(OZ_OZONE_DIR);
 		$info['oz_db_folder']         = $fm->cd('Db', true)
-										   ->getRoot();
+			->getRoot();
 		$info['project_db_folder']    = $fm->cd(OZ_APP_DIR . 'Db', true)
-										   ->getRoot();
+			->getRoot();
 
 		return $info;
 	}
@@ -105,50 +104,11 @@ final class DbManager
 	/**
 	 * Returns a new query builder instance.
 	 *
-	 * @throws \OZONE\OZ\Exceptions\BaseException
-	 *
 	 * @return \Gobl\DBAL\QueryBuilder
 	 */
-	public static function queryBuilder()
+	public static function queryBuilder(): QueryBuilder
 	{
 		return new QueryBuilder(self::getDb());
-	}
-
-	/**
-	 * Instantiate CRUD handler.
-	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $table_name
-	 *
-	 * @return null|\OZONE\OZ\Core\CRUDHandler
-	 */
-	public static function instantiateCRUDHandler(Context $context, $table_name)
-	{
-		$crud_handler = SettingsManager::get('oz.gobl.crud', $table_name);
-
-		if ($crud_handler) {
-			try {
-				$rc = new ReflectionClass($crud_handler);
-
-				if ($rc->isSubclassOf(CRUDHandler::class)) {
-					return new $crud_handler($context);
-				}
-
-				throw new RuntimeException(\sprintf(
-					'CRUD handler "%s" should extends "%s".',
-					$table_name,
-					CRUDHandler::class
-				));
-			} catch (ReflectionException $e) {
-				throw new RuntimeException(\sprintf(
-					'Unable to instantiate CRUD handler: "%s" -> "%s"',
-					$table_name,
-					$crud_handler
-				), null, $e);
-			}
-		}
-
-		return null;
 	}
 
 	/**
@@ -157,22 +117,19 @@ final class DbManager
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 * @throws \Gobl\ORM\Exceptions\ORMException
 	 */
-	private static function register()
+	private static function register(): void
 	{
-		$oz_database           = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_database.php';
-		$structure             = self::getProjectDbDirectoryStructure();
-		$columns_customs_types = SettingsManager::get('oz.db.columns.types');
-		$tables                = SettingsManager::get('oz.db.tables');
-		$tables_prefix         = SettingsManager::get('oz.db', 'OZ_DB_TABLE_PREFIX');
+		$oz_database   = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_database.php';
+		$structure     = self::getProjectDbDirectoryStructure();
+		$tables        = Configs::load('oz.db.tables');
+		$tables_prefix = Configs::get('oz.db', 'OZ_DB_TABLE_PREFIX');
 
-		foreach ($columns_customs_types as $type => $class) {
-			Column::addCustomType($type, $class);
-		}
+		TypeUtils::addTypeProvider(new TypeProvider());
 
 		ORM::setDatabase($structure['oz_db_namespace'], self::$db);
 		ORM::setDatabase($structure['project_db_namespace'], self::$db);
 
 		self::$db->addTablesToNamespace($structure['oz_db_namespace'], $oz_database, $tables_prefix)
-				 ->addTablesToNamespace($structure['project_db_namespace'], $tables, $tables_prefix);
+			->addTablesToNamespace($structure['project_db_namespace'], $tables, $tables_prefix);
 	}
 }

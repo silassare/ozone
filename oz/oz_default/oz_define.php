@@ -9,10 +9,13 @@
  * file that was distributed with this source code.
  */
 
-\define('OZ_OZONE_VERSION', '2.0.0');
-\define('OZ_OZONE_VERSION_NAME', 'O\'Zone v' . OZ_OZONE_VERSION);
+declare(strict_types=1);
+
+const OZ_OZONE_VERSION      = '2.0.0';
+const OZ_OZONE_VERSION_NAME = 'OZone v' . OZ_OZONE_VERSION;
+const OZ_OZONE_IS_CLI       = ('cli' === \PHP_SAPI);
 \define('OZ_OZONE_DIR', \dirname(__DIR__) . \DIRECTORY_SEPARATOR);
-\define('OZ_OZONE_IS_CLI', 'cli' === \php_sapi_name());
+\define('OZ_OZONE_START_TIME', \microtime(true));
 
 if (!\defined('PHP_INT_MIN')) {
 	// Available since PHP 7.0.0 http://php.net/manual/en/reserved.constants.php

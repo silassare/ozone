@@ -9,10 +9,12 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Http;
 
 /**
- * Provides a PSR-7 implementation of a reusable raw request body
+ * Class RequestBody.
  */
 class RequestBody extends Body
 {
@@ -21,8 +23,8 @@ class RequestBody extends Body
 	 */
 	public function __construct()
 	{
-		$stream = \fopen('php://temp', 'w+');
-		\stream_copy_to_stream(\fopen('php://input', 'r'), $stream);
+		$stream = \fopen('php://temp', 'wb+');
+		\stream_copy_to_stream(\fopen('php://input', 'rb'), $stream);
 		\rewind($stream);
 
 		parent::__construct($stream);

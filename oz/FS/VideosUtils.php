@@ -9,52 +9,54 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\FS;
 
 class VideosUtils
 {
 	/**
-	 * the video source file path
+	 * the video source file path.
 	 *
 	 * @var string
 	 */
-	private $source_path;
+	private string $source_path;
 
 	/**
-	 * we use ffmpeg for video
+	 * we use ffmpeg for video.
 	 *
 	 * @var string
 	 */
-	private $ffmpeg = 'ffmpeg';
+	private string $ffmpeg = 'ffmpeg';
 
 	/**
 	 * VideosUtils constructor.
 	 *
 	 * @param string $video_source_path the video file source path
 	 */
-	public function __construct($video_source_path)
+	public function __construct(string $video_source_path)
 	{
 		$this->source_path = $video_source_path;
 	}
 
 	/**
-	 * load the current video file
+	 * load the current video file.
 	 *
 	 * @return bool
 	 */
-	public function load()
+	public function load(): bool
 	{
 		return $this->canLoadVideo();
 	}
 
 	/**
-	 * make thumbnail of the current video
+	 * make thumbnail of the current video.
 	 *
 	 * @param string $destination_path the destination thumbnail path
 	 *
 	 * @return bool true if successful, false otherwise
 	 */
-	public function makeVideoThumb($destination_path)
+	public function makeVideoThumb(string $destination_path): bool
 	{
 		if (\file_exists($destination_path)) {
 			\unlink($destination_path);
@@ -72,7 +74,7 @@ class VideosUtils
 		// use this to run in background
 		// $cmd = "$ffmpeg -i $src -an -ss 00:00:$sec -r 1 -vframes 1 -f mjpeg -y $dest </dev/null >/dev/null 2>/dev/null &";
 		// we want a result now, so we do it now and wait until job end
-		$cmd = "$ffmpeg -i $src -an -ss 00:00:$sec -r 1 -vframes 1 -f mjpeg -y $destination_path";
+		$cmd = "{$ffmpeg} -i {$src} -an -ss 00:00:{$sec} -r 1 -vframes 1 -f mjpeg -y {$destination_path}";
 
 		$this->execute($cmd);
 
@@ -80,11 +82,11 @@ class VideosUtils
 	}
 
 	/**
-	 * Checks if the current video is loadable
+	 * Checks if the current video is loadable.
 	 *
 	 * @return bool
 	 */
-	public function canLoadVideo()
+	public function canLoadVideo(): bool
 	{
 		$src = $this->source_path;
 
@@ -92,21 +94,21 @@ class VideosUtils
 	}
 
 	/**
-	 * Gets random video frame second for thumbnail
+	 * Gets random video frame second for thumbnail.
 	 *
 	 * @return string
 	 */
-	private function getRandFrameSec()
+	private function getRandFrameSec(): string
 	{
 		return '02';
 	}
 
 	/**
-	 * runs a command line
+	 * runs a command line.
 	 *
 	 * @param string $cmd the command to execute
 	 */
-	private function execute($cmd)
+	private function execute(string $cmd): void
 	{
 		@\shell_exec($cmd);
 	}

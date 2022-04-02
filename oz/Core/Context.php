@@ -9,111 +9,61 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Core;
 
-use Exception;
 use InvalidArgumentException;
-use OZONE\OZ\Db\OZClient;
 use OZONE\OZ\Exceptions\BaseException;
 use OZONE\OZ\Exceptions\ForbiddenException;
-use OZONE\OZ\Exceptions\InternalErrorException;
-use OZONE\OZ\Hooks\MainHookProvider;
+use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\OZ\Hooks\Events\RedirectHook;
+use OZONE\OZ\Hooks\Events\RequestHook;
+use OZONE\OZ\Hooks\Events\ResponseHook;
 use OZONE\OZ\Http\Environment;
 use OZONE\OZ\Http\Headers;
 use OZONE\OZ\Http\Request;
 use OZONE\OZ\Http\Response;
 use OZONE\OZ\Http\Uri;
 use OZONE\OZ\OZone;
-use OZONE\OZ\Router\Route;
-use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
-use OZONE\OZ\User\UsersManager;
-use RuntimeException;
+use OZONE\OZ\Sessions\Session;
+use OZONE\OZ\Users\UsersManager;
+use PHPUtils\Store\StoreNotEditable;
+use PHPUtils\Events\Event;
 use Throwable;
 
+/**
+ * Class Context.
+ */
 final class Context
 {
-	/**
-	 * API context
-	 */
-	const CONTEXT_TYPE_API = 1;
+	public const CONTEXT_TYPE_API = 1;
 
-	/**
-	 * WebSite context
-	 */
-	const CONTEXT_TYPE_WEB = 2;
+	public const CONTEXT_TYPE_WEB = 2;
 
-	/**
-	 * Redirection history
-	 *
-	 * @var array
-	 */
-	private static $redirect_history = [];
+	private static array $redirect_history = [];
 
-	/**
-	 * @var string
-	 */
-	private $host = '';
+	private string $host           = '';
+	private string $host_with_port = '';
 
-	/**
-	 * @var bool
-	 */
-	private $running = false;
+	private bool $running = false;
 
-	/**
-	 * @var bool
-	 */
-	private $is_sub_request;
+	private bool $is_sub_request;
 
-	/**
-	 * The request context
-	 *
-	 * @var int
-	 */
-	private $context_type;
+	private int $context_type;
 
-	/**
-	 * @var \OZONE\OZ\Router\Router
-	 */
-	private $router;
+	private Router $router;
 
-	/**
-	 * The current client object
-	 *
-	 * @var null|\OZONE\OZ\Db\OZClient
-	 */
-	private $client;
+	private Environment $environment;
 
-	/**
-	 * The environment
-	 *
-	 * @var \OZONE\OZ\Http\Environment
-	 */
-	private $environment;
+	private Request $request;
 
-	/**
-	 * The request
-	 *
-	 * @var \OZONE\OZ\Http\Request
-	 */
-	private $request;
+	private Response $response;
 
-	/**
-	 * The response
-	 *
-	 * @var \OZONE\OZ\Http\Response
-	 */
-	private $response;
+	private Session $session;
 
-	/**
-	 * @var \OZONE\OZ\Core\Session
-	 */
-	private $session;
-
-	/**
-	 * @var \OZONE\OZ\User\UsersManager
-	 */
-	private $users_manager;
+	private UsersManager $users_manager;
 
 	/**
 	 * RequestHandler constructor.
@@ -122,21 +72,24 @@ final class Context
 	 * @param null|\OZONE\OZ\Http\Request $request
 	 * @param bool                        $is_sub_request
 	 * @param bool                        $is_api
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 	 */
-	public function __construct(Environment $env, Request $request = null, $is_sub_request = false, $is_api = true)
-	{
-		$this->is_sub_request = (bool) $is_sub_request;
+	public function __construct(
+		Environment $env,
+		?Request $request = null,
+		bool $is_sub_request = false,
+		bool $is_api = true
+	) {
+		$this->is_sub_request = $is_sub_request;
 		$this->context_type   = $is_api ? self::CONTEXT_TYPE_API : self::CONTEXT_TYPE_WEB;
 		$this->router         = $is_api ? OZone::getApiRouter() : OZone::getWebRouter();
 		$this->environment    = $env;
-		$this->request        = isset($request) ? $request : Request::createFromEnvironment($env);
+		$this->request        = $request ?? Request::createFromEnvironment($env);
 		$headers              = new Headers(['Content-Type' => 'text/html; charset=UTF-8']);
 		$response             = new Response(200, $headers);
 		$this->response       = $response->withProtocolVersion($this->request->getProtocolVersion());
 
-		$this->init();
+		$this->session       = new Session($this);
+		$this->users_manager = new UsersManager($this);
 	}
 
 	/**
@@ -144,17 +97,48 @@ final class Context
 	 */
 	public function __destruct()
 	{
-		unset($this->session, $this->users_manager, $this->response, $this->request, $this->environment, $this->router);
+		unset(
+			$this->session,
+			$this->users_manager,
+			$this->response,
+			$this->request,
+			$this->environment,
+			$this->router,
+			$this->client,
+		);
+	}
+
+	/**
+	 * Disable clone.
+	 */
+	private function __clone()
+	{
+	}
+
+	/**
+	 * Checks whether json response should be returned.
+	 *
+	 * @param bool $prefer_json
+	 *
+	 * @return bool
+	 */
+	public function shouldReturnJSON(bool $prefer_json = false): bool
+	{
+		$accept = $this->request->getHeaderLine('HTTP_ACCEPT');
+
+		if ($this->isApiContext()) {
+			return \is_int(\strpos($accept, 'application/json'));
+		}
+
+		return $prefer_json || \is_int(\strpos($accept, 'application/json'));
 	}
 
 	/**
 	 * Handle the incoming request.
 	 *
-	 * @throws \Throwable
-	 *
 	 * @return \OZONE\OZ\Core\Context
 	 */
-	public function handle()
+	public function handle(): self
 	{
 		if ($this->running) {
 			throw new RuntimeException('The request is already handled.');
@@ -166,58 +150,31 @@ final class Context
 			$uri           = $this->request->getUri();
 			$internal_path = $this->isInternalPath($uri->getPath());
 
-			// prevent request to any path like /oz:error, /oz:...
+			// prevent request to any path like /oz:redirect, /oz:...
 			// this is allowed only in sub-request
-			if (!$this->isSubRequest() && $internal_path) {
+			if ($internal_path && !$this->isSubRequest()) {
 				throw new ForbiddenException();
 			}
 
-			if ($this->isSubRequest()) {
-				$this->response = MainHookProvider::getInstance()
-												  ->triggerSubRequest($this);
-			} else {
-				$this->response = MainHookProvider::getInstance()
-												  ->triggerRequest($this);
-			}
+			Event::trigger(new RequestHook($this));
 
-			if ($this->request->isOptions()) {
-				$this->setInitialHeaders();
-			} else {
-				$try_logon_as_client_owner = false;
-				// set client
-				if ($api_key = $this->getApiKey()) {
-					$this->client              = $this->getApiKeyClient($api_key);
-					$try_logon_as_client_owner = ($this->client && $this->client->getUserId());
-				} else {
-					$client = $this->getSessionClient();
-
-					if (!$client && !$internal_path) {
-						throw new ForbiddenException('OZ_MISSING_API_KEY');
-					}
-
-					$this->client = $client;
-				}
-
-				$this->setInitialHeaders($this->client);
-
-				$this->session->start();
-
-				if ($try_logon_as_client_owner) {
-					$this->users_manager->tryLogOnAsClientOwner();
-				}
-
-				$this->processRequest();
-			}
-		} catch (BaseException $e) {
-			// throw again internal error.
-			if ($e instanceof InternalErrorException) {
-				throw $e;
-			}
-
-			$e->informClient($this);
+			$this->router->handle($this);
+		} catch (Throwable $t) {
+			BaseException::tryConvert($t)
+				->informClient($this);
 		}
 
 		return $this;
+	}
+
+	/**
+	 * Gets env.
+	 *
+	 * @return \PHPUtils\Store\StoreNotEditable
+	 */
+	public function getEnv(): StoreNotEditable
+	{
+		return new StoreNotEditable($this->environment->all());
 	}
 
 	/**
@@ -225,27 +182,41 @@ final class Context
 	 *
 	 * @return \OZONE\OZ\Http\Request
 	 */
-	public function getRequest()
+	public function getRequest(): Request
 	{
 		return $this->request;
 	}
 
 	/**
-	 * Gets response instance object.
+	 * Gets response.
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */
-	public function getResponse()
+	public function getResponse(): Response
 	{
 		return $this->response;
 	}
 
 	/**
+	 * Sets response.
+	 *
+	 * @param \OZONE\OZ\Http\Response $response
+	 *
+	 * @return $this
+	 */
+	public function setResponse(Response $response): self
+	{
+		$this->response = $response;
+
+		return $this;
+	}
+
+	/**
 	 * Gets session instance object.
 	 *
-	 * @return \OZONE\OZ\Core\Session
+	 * @return \OZONE\OZ\Sessions\Session
 	 */
-	public function getSession()
+	public function getSession(): Session
 	{
 		return $this->session;
 	}
@@ -253,9 +224,9 @@ final class Context
 	/**
 	 * Gets users manager instance object.
 	 *
-	 * @return \OZONE\OZ\User\UsersManager
+	 * @return \OZONE\OZ\Users\UsersManager
 	 */
-	public function getUsersManager()
+	public function getUsersManager(): UsersManager
 	{
 		return $this->users_manager;
 	}
@@ -265,19 +236,9 @@ final class Context
 	 *
 	 * @return \OZONE\OZ\Router\Router
 	 */
-	public function getRouter()
+	public function getRouter(): Router
 	{
 		return $this->router;
-	}
-
-	/**
-	 * Gets ozone client object.
-	 *
-	 * @return null|\OZONE\OZ\Db\OZClient
-	 */
-	public function getClient()
-	{
-		return $this->client;
 	}
 
 	/**
@@ -287,25 +248,9 @@ final class Context
 	 *
 	 * @return bool
 	 */
-	public function isInternalPath($path)
+	public function isInternalPath(string $path): bool
 	{
-		return 0 === \strpos($path, OZone::INTERNAL_PATH_PREFIX);
-	}
-
-	/**
-	 * Checks if a given string is like an API key.
-	 *
-	 * @param string $str
-	 *
-	 * @return bool
-	 */
-	public function isApiKeyLike($str)
-	{
-		if (!\is_string($str) || empty($str)) {
-			return false;
-		}
-
-		return 1 === \preg_match(OZone::API_KEY_REG, $str);
+		return \str_starts_with($path, OZone::INTERNAL_PATH_PREFIX);
 	}
 
 	/**
@@ -313,9 +258,9 @@ final class Context
 	 *
 	 * @return bool
 	 */
-	public function isWebContext()
+	public function isWebContext(): bool
 	{
-		return $this->context_type === self::CONTEXT_TYPE_WEB;
+		return self::CONTEXT_TYPE_WEB === $this->context_type;
 	}
 
 	/**
@@ -323,9 +268,9 @@ final class Context
 	 *
 	 * @return bool
 	 */
-	public function isApiContext()
+	public function isApiContext(): bool
 	{
-		return $this->context_type === self::CONTEXT_TYPE_API;
+		return self::CONTEXT_TYPE_API === $this->context_type;
 	}
 
 	/**
@@ -333,7 +278,7 @@ final class Context
 	 *
 	 * @return bool
 	 */
-	public function isSubRequest()
+	public function isSubRequest(): bool
 	{
 		return $this->is_sub_request;
 	}
@@ -343,10 +288,10 @@ final class Context
 	 *
 	 * @return string
 	 */
-	public function getBaseUrl()
+	public function getBaseUrl(): string
 	{
 		return $this->buildUri('/')
-					->getBaseUrl();
+			->getBaseUrl();
 	}
 
 	/**
@@ -357,52 +302,125 @@ final class Context
 	 *
 	 * @return \OZONE\OZ\Http\Uri
 	 */
-	public function buildUri($path, array $query = [])
+	public function buildUri(string $path, array $query = []): Uri
 	{
-		// we don't use (trust) the request uri host
-		// so we use our host
 		return $this->request->getUri()
-							 ->withHost($this->getHost())
-							 ->withPath($path, true)
-							 ->withQueryArray($query);
+			->withHost($this->getHost())
+			->withPath($path, true)
+			->withQueryArray($query);
 	}
 
 	/**
 	 * Builds URI with a given path and query data.
 	 *
-	 * @param string $route_name
-	 * @param array  $args
+	 * @param string $name
+	 * @param array  $params
 	 * @param array  $query
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 	 *
 	 * @return \OZONE\OZ\Http\Uri
 	 */
-	public function buildRouteUri($route_name, array $args = [], array $query = [])
+	public function buildRouteUri(string $name, array $params = [], array $query = []): Uri
 	{
-		$path = $this->router->buildRoutePath($this, $route_name, $args);
+		$path = $this->router->buildRoutePath($this, $name, $params);
 
 		return $this->buildUri($path, $query);
 	}
 
 	/**
+	 * Gets user IP address.
+	 *
+	 * @param bool $with_port            Should we append port to the IP address ? Default: false. (Mostly for user
+	 *                                   under IPS...)
+	 * @param bool $risky                Should we use risky method ? Default: false. (For user under ISP/Proxy...)
+	 * @param bool $allowed_proxies_only In risky mode should we accept allowed proxies only ? Default: true
+	 *
+	 * @return null|string
+	 */
+	public function getUserIP(bool $with_port = false, bool $risky = false, bool $allowed_proxies_only = true): ?string
+	{
+		// You're crazy to rely on something other than this :)
+		$user_ip   = $this->environment->get('REMOTE_ADDR');
+		$user_port = $this->environment->get('REMOTE_PORT');
+
+		if (empty($user_ip)) { // we can't trust this request
+			return null;
+		}
+
+		if ($risky) {
+			if (false === $allowed_proxies_only || true === Configs::get('oz.proxies', $user_ip)) {
+				$sources = [
+					'HTTP_CLIENT_IP',
+					'HTTP_X_FORWARDED_FOR',
+					'HTTP_X_FORWARDED',
+					'HTTP_X_CLUSTER_CLIENT_IP',
+					'HTTP_FORWARDED_FOR',
+					'HTTP_FORWARDED',
+				];
+
+				foreach ($sources as $source) {
+					$value = $this->environment->get($source);
+					if ($value) {
+						$value = \strtolower($value);
+
+						if (\preg_match_all('~(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[[a-f0-9:]+])(?::(\d+))?~', $value, $matches)) {
+							$ips   = $matches[1] ?? [];
+							$ports = $matches[2] ?? [];
+							foreach ($ips as $index => $unsafe_ip) {
+								$unsafe_ip   = \str_replace(['[', ']'], '', $unsafe_ip);
+								$unsafe_port = $ports[$index] ?? null;
+
+								if (($unsafe_ip = \filter_var(
+									$unsafe_ip,
+									\FILTER_VALIDATE_IP,
+									\FILTER_FLAG_IPV4 |
+										\FILTER_FLAG_IPV6 |
+										\FILTER_FLAG_NO_PRIV_RANGE |
+										\FILTER_FLAG_NO_RES_RANGE
+								)) !== false) {
+									$user_ip   = $unsafe_ip;
+									$user_port = $unsafe_port;
+
+									break 2;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if ($with_port && !empty($user_port)) {
+			if (\str_contains($user_ip, ':')) {
+				// Woo hah!!! we got an IPV6 address,
+				// In order to append the port,
+				// We should enclose it in square brackets []
+				$user_ip = '[' . $user_ip . ']';
+			}
+
+			$user_ip .= ':' . $user_port;
+		}
+
+		return $user_ip;
+	}
+
+	/**
 	 * Gets the host.
+	 *
+	 * @param bool $with_port
 	 *
 	 * @return string
 	 */
-	public function getHost()
+	public function getHost(bool $with_port = false): string
 	{
 		if (empty($this->host)) {
-			// this comes from https://stackoverflow.com/a/8909559
-
-			$possibleHostSources = [
+			$sources = [
 				'HTTP_X_FORWARDED_HOST',
 				'HTTP_HOST',
 				'SERVER_NAME',
 				'SERVER_ADDR',
 			];
 
-			$sourceTransformations['HTTP_X_FORWARDED_HOST'] = function ($value) {
+			$transformers['HTTP_X_FORWARDED_HOST'] = static function ($value) {
 				$parts = \explode(',', $value);
 
 				return \trim(\end($parts));
@@ -410,7 +428,7 @@ final class Context
 
 			$host = null;
 
-			foreach ($possibleHostSources as $source) {
+			foreach ($sources as $source) {
 				if (!empty($host)) {
 					break;
 				}
@@ -420,23 +438,22 @@ final class Context
 				}
 				$host = $this->environment->get($source);
 
-				if (\array_key_exists($source, $sourceTransformations)) {
-					$host = $sourceTransformations[$source]($host);
+				if (\array_key_exists($source, $transformers)) {
+					$host = $transformers[$source]($host);
 				}
 			}
 
-			if (!$host) {
-				$host = Uri::createFromString($this->getMainUrl())
-						   ->getHost();
-			} else {
-				// Remove port number from host
-				$host = \preg_replace('~:\d+$~', '', $host);
-			}
+			$uri                  = Uri::createFromString($host ?? $this->getMainUrl());
+			$this->host           = $uri->getHost();
+			$port                 = $uri->getPort();
+			$this->host_with_port = $this->host;
 
-			$this->host = \trim($host);
+			if ($port) {
+				$this->host_with_port .= ':' . $port;
+			}
 		}
 
-		return $this->host;
+		return $with_port ? $this->host_with_port : $this->host;
 	}
 
 	/**
@@ -444,29 +461,27 @@ final class Context
 	 *
 	 * @return string
 	 */
-	public function getMainUrl()
+	public function getMainUrl(): string
 	{
-		return Uri::createFromString(SettingsManager::get('oz.config', 'OZ_API_MAIN_URL'));
+		return (string) Uri::createFromString(Configs::get('oz.config', 'OZ_API_MAIN_URL'));
 	}
 
 	/**
 	 * Sends response to the client.
 	 *
 	 * @param null|\OZONE\OZ\Http\Response $with
-	 *
-	 * @throws \Exception
 	 */
-	public function respond(Response $with = null)
+	public function respond(Response $with = null): void
 	{
-		if ($with) {
+		if (null !== $with) {
 			$this->response = $with;
 		}
 
-		$response = MainHookProvider::getInstance()
-									->triggerFinish($this);
-		$response = $this->fixResponse($response);
+		Event::trigger(new ResponseHook($this));
 
-		$chunkSize = 4096;
+		$response = $this->response = $this->fixResponse($this->response);
+
+		$chunk_size = 4096;
 
 		// Send response
 		if (!\headers_sent()) {
@@ -474,14 +489,15 @@ final class Context
 			\header(\sprintf(
 				'HTTP/%s %s %s',
 				$response->getProtocolVersion(),
-				$response->getStatusCode(),
+				$status_code = $response->getStatusCode(),
 				$response->getReasonPhrase()
 			));
 
 			// Headers
 			foreach ($response->getHeaders() as $name => $values) {
+				$replace = (0 === \strcasecmp($name, 'Content-Type'));
 				foreach ($values as $value) {
-					\header(\sprintf('%s: %s', $name, $value), false);
+					\header(\sprintf('%s: %s', $name, $value), $replace, $status_code);
 				}
 			}
 		}
@@ -494,7 +510,7 @@ final class Context
 				$body->rewind();
 			}
 
-			$contentLength = $response->getHeaderLine('Content-Length');
+			$contentLength = (int) $response->getHeaderLine('Content-Length');
 
 			if (!$contentLength) {
 				$contentLength = $body->getSize();
@@ -504,47 +520,50 @@ final class Context
 				$amountToRead = $contentLength;
 
 				while ($amountToRead > 0 && !$body->eof()) {
-					$data = $body->read(\min($chunkSize, $amountToRead));
-					print $data;
+					$data = $body->read(\min($chunk_size, $amountToRead));
+					echo $data;
 
 					$amountToRead -= \strlen($data);
 
-					if (\connection_status() != \CONNECTION_NORMAL) {
+					if (\CONNECTION_NORMAL !== \connection_status()) {
+						$body->close();
+
 						break;
 					}
 				}
 			} else {
 				while (!$body->eof()) {
-					print $body->read($chunkSize);
+					echo $body->read($chunk_size);
 
-					if (\connection_status() != \CONNECTION_NORMAL) {
+					if (\CONNECTION_NORMAL !== \connection_status()) {
+						$body->close();
+
 						break;
 					}
 				}
 			}
 		}
-
-		// we finish
-		exit;
 	}
 
 	/**
 	 * Makes sub-request with a given route name.
 	 *
 	 * @param string $route_name
-	 * @param array  $args
+	 * @param array  $params
 	 * @param array  $query
-	 * @param bool   $respond
-	 *
-	 * @throws \Throwable
+	 * @param bool   $override_response
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */
-	public function subRequestRoute($route_name, array $args = [], array $query = [], $respond = true)
-	{
-		$path = $this->router->buildRoutePath($this, $route_name, $args);
+	public function subRequestRoute(
+		string $route_name,
+		array $params = [],
+		array $query = [],
+		bool $override_response = true
+	): Response {
+		$path = $this->router->buildRoutePath($this, $route_name, $params);
 
-		return $this->subRequestPath($path, $args, $query, $respond);
+		return $this->subRequestPath($path, $params, $query, $override_response);
 	}
 
 	/**
@@ -553,29 +572,31 @@ final class Context
 	 * @param string $path
 	 * @param array  $attributes
 	 * @param array  $query
-	 * @param bool   $respond
-	 *
-	 * @throws \Throwable
+	 * @param bool   $override_response
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */
-	public function subRequestPath($path, array $attributes = [], array $query = [], $respond = true)
-	{
+	public function subRequestPath(
+		string $path,
+		array $attributes = [],
+		array $query = [],
+		bool $override_response = true
+	): Response {
 		$env     = $this->environment;
 		$request = Request::createFromEnvironment($env);
 		$uri     = $request->getUri()
-						   ->withPath($path, true)
-						   ->withQueryArray($query);
+			->withPath($path, true)
+			->withQueryArray($query);
 
 		$request = $request->withAttributes($attributes)
-						   ->withUri($uri);
+			->withUri($uri);
 
 		$context  = new self($env, $request, true, $this->isApiContext());
 		$response = $context->handle()
-							->getResponse();
+			->getResponse();
 
-		if ($respond) {
-			$this->respond($response);
+		if ($override_response) {
+			$this->setResponse($response);
 		}
 
 		return $response;
@@ -586,25 +607,20 @@ final class Context
 	 *
 	 * @param string   $url
 	 * @param null|int $status
-	 *
-	 * @throws \Throwable
 	 */
-	public function redirect($url, $status = null)
+	public function redirect(string $url, ?int $status = null): void
 	{
-		$url = (string) $url;
-
 		$this->checkRecursiveRedirection($url, ['status' => $status]);
 
 		if (!\filter_var($url, \FILTER_VALIDATE_URL)) {
 			throw new InvalidArgumentException(\sprintf('Invalid redirect url: %s', $url));
 		}
 
-		$this->response = MainHookProvider::getInstance()
-										  ->triggerRedirect($this, Uri::createFromString($url));
+		Event::trigger(new RedirectHook($this, Uri::createFromString($url)));
 
 		if ($this->isApiContext()) {
 			$response = $this->response->withRedirect($url, $status);
-			$this->respond($response);
+			$this->setResponse($response);
 		} else {
 			$this->redirectRoute('oz:redirect', ['url' => $url, 'status' => $status]);
 		}
@@ -614,177 +630,48 @@ final class Context
 	 * Redirect to route.
 	 *
 	 * @param string $route_name
-	 * @param array  $args
+	 * @param array  $params
 	 * @param array  $query
 	 * @param bool   $inform_user
-	 *
-	 * @throws \Throwable
 	 */
-	public function redirectRoute($route_name, array $args = [], array $query = [], $inform_user = true)
-	{
+	public function redirectRoute(
+		string $route_name,
+		array $params = [],
+		array $query = [],
+		bool $inform_user = true
+	): void {
 		$this->checkRecursiveRedirection(
 			$route_name,
 			[
-				'args'        => $args,
+				'params'      => $params,
 				'query'       => $query,
 				'inform_user' => $inform_user,
 			]
 		);
 
-		$path = $this->router->buildRoutePath($this, $route_name, $args);
+		$path = $this->router->buildRoutePath($this, $route_name, $params);
 
-		self::$redirect_history[$route_name] = ['path' => $path, 'args' => $args];
+		self::$redirect_history[$route_name] = ['path' => $path, 'params' => $params];
 
-		if (!$this->isInternalPath($path) && $inform_user) {
+		if ($inform_user && !$this->isInternalPath($path)) {
 			$uri = Uri::createFromEnvironment($this->environment)
-					  ->withPath($path, true)
-					  ->withQueryArray($query);
+				->withPath($path, true)
+				->withQueryArray($query);
 
 			$this->redirect((string) $uri);
 		} else {
-			$this->subRequestPath($path, $args, $query);
+			$this->subRequestPath($path, $params, $query);
 		}
 	}
 
 	/**
-	 * Init.
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-	 */
-	private function init()
-	{
-		$this->session       = new Session($this);
-		$this->users_manager = new UsersManager($this);
-	}
-
-	/**
-	 * Process the request.
-	 *
-	 * @throws \Throwable
-	 */
-	private function processRequest()
-	{
-		$request = $this->request;
-		$uri     = $request->getUri();
-		$mhp     = MainHookProvider::getInstance();
-		$results = $this->router->find($request->getMethod(), $uri->getPath(), true);
-
-		switch ($results['status']) {
-			case Router::NOT_FOUND:
-				$this->response = $mhp->triggerRouteNotFound($this);
-
-				break;
-			case Router::METHOD_NOT_ALLOWED:
-				$this->response = $mhp->triggerMethodNotAllowed($this);
-
-				break;
-			case Router::FOUND:
-				$all   = \array_merge($results['static'], $results['dynamic']);
-				$found = false;
-
-				// will loop until we found a route that return a response
-				// when a route return false we run the next route that matches
-				foreach ($all as $match) {
-					/* @var \OZONE\OZ\Router\Route */
-					$route = $match[0];
-					/* @var array */
-					$args = $match[1];
-
-					$ri = new RouteInfo($this, $route, $args);
-
-					$this->response = $mhp->triggerBeforeRouteRun($this, $ri);
-
-					$result = $this->runRoute($route, $ri);
-
-					if ($result instanceof Response) {
-						$this->response = $result;
-						$this->response = $mhp->triggerRouteFound($this, $ri);
-						$this->response = $mhp->triggerResponse($this);
-						$found          = true;
-
-						break;
-					}
-				}
-
-				if (!$found) {
-					$this->response = $mhp->triggerRouteNotFound($this);
-				}
-
-				break;
-		}
-	}
-
-	/**
-	 * Run the route that match the current request path.
-	 *
-	 * @param \OZONE\OZ\Router\Route     $route
-	 * @param \OZONE\OZ\Router\RouteInfo $route_info
-	 *
-	 * @throws \Throwable
-	 *
-	 * @return false|\OZONE\OZ\Http\Response
-	 */
-	private function runRoute(Route $route, RouteInfo $route_info)
-	{
-		static $history = [];
-
-		$history[] = $route->getOptions();
-
-		if (\count($history) >= 10) {
-			throw new InternalErrorException('Possible recursive redirection.', $history);
-		}
-
-		$debug_data = function (Route $route, array $data = []) {
-			$info = oz_callable_info($route->getCallable());
-
-			return [
-				'location' => $info,
-				'route'    => $route->getRoutePath(),
-			] + $data;
-		};
-
-		try {
-			\ob_start();
-			$return        = \call_user_func($route->getCallable(), $route_info);
-			$output_buffer = \ob_get_clean();
-		} catch (Exception $e) {
-			\ob_clean();
-
-			throw $e;
-		} catch (Throwable $t) {
-			\ob_clean();
-
-			throw $t;
-		}
-
-		if (!empty($output_buffer)) {
-			throw new InternalErrorException(
-				'Writing to output buffer is not allowed.',
-				$debug_data($route, ['out_buffer' => $output_buffer])
-			);
-		}
-
-		if (!($return instanceof Response)) {
-			if ($return !== false) {
-				throw new InternalErrorException(\sprintf(
-					'Invalid return type, got "%s" will expecting "%s" or "false".',
-					\gettype($return),
-					Response::class
-				), $debug_data($route));
-			}
-		}
-
-		return $return;
-	}
-
-	/**
-	 * Gets the request origin or referer
+	 * Gets the request origin or referer.
 	 *
 	 * don't trust on what you get from this
 	 *
 	 * @return string
 	 */
-	private function getRequestOriginOrReferer()
+	public function getRequestOriginOrReferer(): string
 	{
 		$origin = '';
 
@@ -804,193 +691,22 @@ final class Context
 	}
 
 	/**
-	 * Returns custom headers name for use in CORS
+	 * Returns custom headers name for use in CORS.
 	 *
 	 * @return array
 	 */
-	private function getAllowedHeadersNameList()
+	public function getAllowedHeadersNameList(): array
 	{
-		$headers                  = SettingsManager::get('oz.clients', 'OZ_CORS_ALLOWED_HEADERS');
-		$headers[]                = \strtolower(SettingsManager::get('oz.config', 'OZ_API_KEY_HEADER_NAME'));
-		$headers[]                = \strtolower(SettingsManager::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_NAME'));
-		$allow_real_method_header = SettingsManager::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
+		$headers                  = Configs::get('oz.clients', 'OZ_CORS_ALLOWED_HEADERS');
+		$headers[]                = \strtolower(Configs::get('oz.config', 'OZ_API_KEY_HEADER_NAME'));
+		$headers[]                = \strtolower(Configs::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_NAME'));
+		$allow_real_method_header = Configs::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
 
 		if ($allow_real_method_header) {
-			$headers[] = \strtolower(SettingsManager::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME'));
+			$headers[] = \strtolower(Configs::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME'));
 		}
 
 		return $headers;
-	}
-
-	/**
-	 * Sets required http headers
-	 *
-	 * @param null|\OZONE\OZ\Db\OZClient $client
-	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 *
-	 * @return $this
-	 */
-	private function setInitialHeaders(OZClient $client = null)
-	{
-		if (!$client) {
-			$client_url = $this->getRequestOriginOrReferer();
-			$life_time  = 60 * 60;
-		} else {
-			$client_url = $client->getUrl();
-			$life_time  = $client->getSessionLifeTime();
-		}
-
-		$h_list = [];
-
-		// header spoofing can help hacker bypass this
-		// so don't be 100% sure, lol
-		$origin         = $this->getRequestOriginOrReferer();
-		$allowed_origin = $this->getMainUrl();
-		$rule           = SettingsManager::get('oz.clients', 'OZ_CORS_ALLOW_RULE');
-
-		switch ($rule) {
-			case 'deny':
-				if (empty($origin)) {
-					$origin = $allowed_origin;
-				}
-
-				break;
-			case 'any':
-				if (empty($origin)) {
-					$origin = $allowed_origin;
-				} else {
-					$allowed_origin = $origin;
-				}
-
-				break;
-			case 'check':
-			default:
-				if (empty($origin)) {
-					$origin = $allowed_origin;
-				} else {
-					$allowed_origin = $client_url;
-				}
-		}
-
-		if ($this->request->isOptions()) {
-			$h_list['Access-Control-Allow-Headers'] = $this->getAllowedHeadersNameList();
-			$h_list['Access-Control-Allow-Methods'] = ['OPTIONS', 'GET', 'POST', 'PATCH', 'PUT', 'DELETE'];
-			$h_list['Access-Control-Max-Age']       = $life_time;
-		} elseif (!$this->isSubRequest()) {
-			$allowed_host = Uri::createFromString($allowed_origin)
-							   ->getHost();
-			$origin_host  = Uri::createFromString($origin)
-							   ->getHost();
-
-			if ($allowed_host !== $origin_host) {
-				// we don't throw this exception in sub-request
-				// scenario:
-				//  - We want to show error page because the cross site request origin was not allowed
-				//  - The sub-request is made with the original request environment
-				throw new ForbiddenException('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED', [
-					'origin'        => (string) $origin,
-					'_origin_host'  => $origin_host,
-					'_allowed_host' => $allowed_host,
-				]);
-			}
-		}
-		// Remember: CORS is not security. Do not rely on CORS to secure your web site/application.
-		// If you are serving protected data, use cookies or OAuth tokens or something
-		// other than the Origin header to secure that data. The Access-Control-Allow-Origin header
-		// in CORS only dictates which origins should be allowed to make cross-origin requests.
-		// Don't rely on it for anything more.
-		// allow browser to make CORS request
-		$h_list['Access-Control-Allow-Origin'] = $origin;
-		// allow browser to send CORS request with cookies
-		$h_list['Access-Control-Allow-Credentials'] = 'true';
-
-		// let's avoid the click-jacking
-		$h_list['X-Frame-Options'] = 'DENY';
-
-		foreach ($h_list as $key => $value) {
-			$this->response = $this->response->withHeader($key, $value);
-		}
-
-		return $this;
-	}
-
-	/**
-	 * Gets client with api key
-	 *
-	 * @param string $api_key
-	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-	 *
-	 * @return \OZONE\OZ\Db\OZClient
-	 */
-	private function getApiKeyClient($api_key)
-	{
-		$client = ClientManager::getClientWithApiKey($api_key);
-
-		if (!$client) {
-			throw new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID', [
-				'url'     => (string) $this->request->getUri(),
-				'api_key' => $api_key,
-			]);
-		}
-
-		if (!$client->getValid()) {
-			throw new ForbiddenException('OZ_YOUR_API_KEY_CLIENT_IS_DISABLED', [
-				'url'     => (string) $this->request->getUri(),
-				'api_key' => $api_key,
-			]);
-		}
-
-		return $client;
-	}
-
-	/**
-	 * Gets client from session
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
-	 * @throws \Throwable
-	 *
-	 * @return \OZONE\OZ\Db\OZClient
-	 */
-	private function getSessionClient()
-	{
-		// please BE AWARE!!!
-
-		$sid_name = SettingsManager::get('oz.config', 'OZ_API_SESSION_ID_NAME');
-		$sid      = $this->request->getCookieParam($sid_name);
-		$client   = null;
-
-		if (!empty($sid)) {
-			$client = ClientManager::getClientWithSessionId($sid);
-
-			if (!$client || !$client->getValid()) {
-				return null;
-			}
-		}
-
-		return $client;
-	}
-
-	/**
-	 * Gets the api key
-	 *
-	 * @return null|string
-	 */
-	private function getApiKey()
-	{
-		$api_key      = null;
-		$api_key_name = SettingsManager::get('oz.config', 'OZ_API_KEY_HEADER_NAME');
-		$env_key      = \sprintf('HTTP_%s', \strtoupper(\str_replace('-', '_', $api_key_name)));
-
-		if ($this->environment->has($env_key)) {
-			$api_key = $this->environment->get($env_key);
-		} elseif (\defined('OZ_OZONE_DEFAULT_API_KEY')) {
-			$api_key = OZ_OZONE_DEFAULT_API_KEY;
-		}
-
-		return $this->isApiKeyLike($api_key) ? $api_key : null;
 	}
 
 	/**
@@ -1000,18 +716,18 @@ final class Context
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */
-	private function fixResponse(Response $response)
+	private function fixResponse(Response $response): Response
 	{
 		if ($response->isEmpty()) {
 			return $response->withoutHeader('Content-Type')
-							->withoutHeader('Content-Length');
+				->withoutHeader('Content-Length');
 		}
 
 		$size = $response->getBody()
-						 ->getSize();
+			->getSize();
 
-		if ($size !== null) {
-			$response = $response->withHeader('Content-Length', (string) $size);
+		if (null !== $size) {
+			return $response->withHeader('Content-Length', (string) $size);
 		}
 
 		return $response;
@@ -1022,10 +738,8 @@ final class Context
 	 *
 	 * @param string $path
 	 * @param array  $info
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
 	 */
-	private function checkRecursiveRedirection($path, array $info)
+	private function checkRecursiveRedirection(string $path, array $info): void
 	{
 		if (isset(self::$redirect_history[$path])) {
 			$debug = [
@@ -1034,16 +748,9 @@ final class Context
 				'history' => self::$redirect_history,
 			];
 
-			throw new InternalErrorException('OZ_RECURSIVE_REDIRECTION', $debug);
+			throw new RuntimeException('OZ_RECURSIVE_REDIRECTION', $debug);
 		}
 
 		self::$redirect_history[$path] = $info;
-	}
-
-	/**
-	 * Disable clone.
-	 */
-	private function __clone()
-	{
 	}
 }

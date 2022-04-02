@@ -1,35 +1,52 @@
 <?php
 
 /**
- * Auto generated file
+ * Copyright (c) 2017-present, Emile Silas Sare
  *
- * WARNING: please don't edit.
+ * This file is part of OZone package.
  *
- * Proudly With: gobl v1.5.0
- * Time: 1617030519
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use Gobl\ORM\ORM;
-use Gobl\ORM\ORMEntityBase;
-use OZONE\OZ\Db\OZCountriesQuery as OZCountriesQueryReal;
+use OZONE\OZ\Db\OZUser as OZUserRealR;
 
 /**
- * Class OZCountry
+ * Class OZCountry.
+ *
+ * @property string $cc2        Getter for
+ *                              column `oz_countries`.`cc2`.
+ * @property string $code       Getter for
+ *                              column `oz_countries`.`code`.
+ * @property string $name       Getter for
+ *                              column `oz_countries`.`name`.
+ * @property string $name_real  Getter for
+ *                              column `oz_countries`.`name_real`.
+ * @property array  $data       Getter for
+ *                              column `oz_countries`.`data`.
+ * @property string $created_at Getter for
+ *                              column `oz_countries`.`created_at`.
+ * @property string $updated_at Getter for
+ *                              column `oz_countries`.`updated_at`.
+ * @property bool   $valid      Getter for
+ *                              column `oz_countries`.`valid`.
  */
-abstract class OZCountry extends ORMEntityBase
+abstract class OZCountry extends \Gobl\ORM\ORMEntity
 {
-	const TABLE_NAME = 'oz_countries';
-
-	const COL_CC2 = 'country_cc2';
-	const COL_CODE = 'country_code';
-	const COL_NAME = 'country_name';
-	const COL_NAME_REAL = 'country_name_real';
-	const COL_DATA = 'country_data';
-	const COL_ADD_TIME = 'country_add_time';
-	const COL_VALID = 'country_valid';
-
+	public const TABLE_NAME      = 'oz_countries';
+	public const TABLE_NAMESPACE = 'OZONE\\OZ\\Db';
+	public const COL_CC2         = 'country_cc2';
+	public const COL_CODE        = 'country_code';
+	public const COL_NAME        = 'country_name';
+	public const COL_NAME_REAL   = 'country_name_real';
+	public const COL_DATA        = 'country_data';
+	public const COL_CREATED_AT  = 'country_created_at';
+	public const COL_UPDATED_AT  = 'country_updated_at';
+	public const COL_VALID       = 'country_valid';
 
 	/**
 	 * OZCountry constructor.
@@ -38,32 +55,19 @@ abstract class OZCountry extends ORMEntityBase
 	 *                     from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
-	public function __construct($is_new = true, $strict = true)
+	public function __construct(bool $is_new = true, bool $strict = true)
 	{
-		parent::__construct(
-			ORM::getDatabase('OZONE\OZ\Db'),
-			$is_new,
-			$strict,
-			self::TABLE_NAME,
-			OZCountriesQueryReal::class
-		);
+		parent::__construct(self::TABLE_NAMESPACE, self::TABLE_NAME, $is_new, $strict);
 	}
 
 	/**
 	 * Getter for column `oz_countries`.`cc2`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getCc2()
+	public function getCc2(): string
 	{
-		$column = self::COL_CC2;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_CC2};
 	}
 
 	/**
@@ -73,10 +77,9 @@ abstract class OZCountry extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setCc2($cc2)
+	public function setCc2(string $cc2): self
 	{
-		$column = self::COL_CC2;
-		$this->$column = $cc2;
+		$this->{self::COL_CC2} = $cc2;
 
 		return $this;
 	}
@@ -84,18 +87,11 @@ abstract class OZCountry extends ORMEntityBase
 	/**
 	 * Getter for column `oz_countries`.`code`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getCode()
+	public function getCode(): string
 	{
-		$column = self::COL_CODE;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_CODE};
 	}
 
 	/**
@@ -105,10 +101,9 @@ abstract class OZCountry extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setCode($code)
+	public function setCode(string $code): self
 	{
-		$column = self::COL_CODE;
-		$this->$column = $code;
+		$this->{self::COL_CODE} = $code;
 
 		return $this;
 	}
@@ -116,18 +111,11 @@ abstract class OZCountry extends ORMEntityBase
 	/**
 	 * Getter for column `oz_countries`.`name`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getName()
+	public function getName(): string
 	{
-		$column = self::COL_NAME;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_NAME};
 	}
 
 	/**
@@ -137,10 +125,9 @@ abstract class OZCountry extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setName($name)
+	public function setName(string $name): self
 	{
-		$column = self::COL_NAME;
-		$this->$column = $name;
+		$this->{self::COL_NAME} = $name;
 
 		return $this;
 	}
@@ -148,18 +135,11 @@ abstract class OZCountry extends ORMEntityBase
 	/**
 	 * Getter for column `oz_countries`.`name_real`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getNameReal()
+	public function getNameReal(): string
 	{
-		$column = self::COL_NAME_REAL;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_NAME_REAL};
 	}
 
 	/**
@@ -169,10 +149,9 @@ abstract class OZCountry extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setNameReal($name_real)
+	public function setNameReal(string $name_real): self
 	{
-		$column = self::COL_NAME_REAL;
-		$this->$column = $name_real;
+		$this->{self::COL_NAME_REAL} = $name_real;
 
 		return $this;
 	}
@@ -180,63 +159,71 @@ abstract class OZCountry extends ORMEntityBase
 	/**
 	 * Getter for column `oz_countries`.`data`.
 	 *
-	 * @return string the real type is: string
+	 * @return array
 	 */
-	public function getData()
+	public function getData(): array
 	{
-		$column = self::COL_DATA;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_DATA};
 	}
 
 	/**
 	 * Setter for column `oz_countries`.`data`.
 	 *
-	 * @param string $data
+	 * @param array $data
 	 *
 	 * @return static
 	 */
-	public function setData($data)
+	public function setData(array $data): self
 	{
-		$column = self::COL_DATA;
-		$this->$column = $data;
+		$this->{self::COL_DATA} = $data;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_countries`.`add_time`.
+	 * Getter for column `oz_countries`.`created_at`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getAddTime()
+	public function getCreatedAT(): string
 	{
-		$column = self::COL_ADD_TIME;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_CREATED_AT};
 	}
 
 	/**
-	 * Setter for column `oz_countries`.`add_time`.
+	 * Setter for column `oz_countries`.`created_at`.
 	 *
-	 * @param string $add_time
+	 * @param int|string $created_at
 	 *
 	 * @return static
 	 */
-	public function setAddTime($add_time)
+	public function setCreatedAT(string|int $created_at): self
 	{
-		$column = self::COL_ADD_TIME;
-		$this->$column = $add_time;
+		$this->{self::COL_CREATED_AT} = $created_at;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_countries`.`updated_at`.
+	 *
+	 * @return string
+	 */
+	public function getUpdatedAT(): string
+	{
+		return $this->{self::COL_UPDATED_AT};
+	}
+
+	/**
+	 * Setter for column `oz_countries`.`updated_at`.
+	 *
+	 * @param int|string $updated_at
+	 *
+	 * @return static
+	 */
+	public function setUpdatedAT(string|int $updated_at): self
+	{
+		$this->{self::COL_UPDATED_AT} = $updated_at;
 
 		return $this;
 	}
@@ -244,18 +231,11 @@ abstract class OZCountry extends ORMEntityBase
 	/**
 	 * Getter for column `oz_countries`.`valid`.
 	 *
-	 * @return bool the real type is: bool
+	 * @return bool
 	 */
-	public function getValid()
+	public function getValid(): bool
 	{
-		$column = self::COL_VALID;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (bool)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_VALID};
 	}
 
 	/**
@@ -265,11 +245,32 @@ abstract class OZCountry extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setValid($valid)
+	public function setValid(bool $valid): self
 	{
-		$column = self::COL_VALID;
-		$this->$column = $valid;
+		$this->{self::COL_VALID} = $valid;
 
 		return $this;
+	}
+
+	/**
+	 * OneToMany relation between `oz_countries` and `oz_users`.
+	 *
+	 * @param array    $filters  the row filters
+	 * @param null|int $max      maximum row to retrieve
+	 * @param int      $offset   first row offset
+	 * @param array    $order_by order by rules
+	 * @param null|int $total    total rows without limit
+	 *
+	 * @return OZUserRealR[]
+	 */
+	public function getUsers(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = -1): array
+	{
+		$getters        = [\OZONE\OZ\Db\OZUser::COL_CC2 => [$this, 'getCc2']];
+		$filters_bundle = $this->buildRelationFilter($getters, $filters);
+		if (null === $filters_bundle) {
+			return [];
+		}
+
+		return (new \OZONE\OZ\Db\OZUsersController())->getAllItems($filters_bundle, $max, $offset, $order_by, $total);
 	}
 }

@@ -9,23 +9,40 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Cli\Utils;
 
+use OZONE\OZ\Cli\Platforms\Interfaces\PlatformInterface;
+use OZONE\OZ\Cli\Platforms\PlatformDOS;
+use OZONE\OZ\Cli\Platforms\PlatformLinux;
 use OZONE\OZ\Core\DbManager;
+use OZONE\OZ\Exceptions\RuntimeException;
+use Throwable;
 
+/**
+ * Class Utils.
+ */
 final class Utils
 {
+	private static bool $sig_child;
+
+	private static array $env;
+
 	/**
 	 * Load project config from a given project folder or current working dir.
 	 *
 	 * @param null|string $folder   the project folder
 	 * @param bool        $required the config is required
 	 *
-	 * @return mixed
+	 * @return null|array
 	 */
-	public static function loadProjectConfig($folder = null, $required = false)
+	public static function loadProjectConfig(?string $folder = null, bool $required = false): ?array
 	{
-		$folder    = empty($folder) ? \getcwd() : $folder;
+		if (empty($folder)) {
+			$folder = \getcwd();
+		}
+
 		$oz_config = $folder . DS . 'api' . DS . 'app' . DS . 'oz_settings' . DS . 'oz.config.php';
 
 		if (\file_exists($oz_config)) {
@@ -39,7 +56,7 @@ final class Utils
 		if ($required) {
 			$err = 'Error: there is no ozone project in "%s".' . \PHP_EOL . 'Are you in project root folder?';
 
-			throw new \RuntimeException(\sprintf($err, $folder));
+			throw new RuntimeException(\sprintf($err, $folder));
 		}
 
 		return null;
@@ -52,7 +69,7 @@ final class Utils
 	 *
 	 * @return bool
 	 */
-	public static function isProjectConfigLike($config)
+	public static function isProjectConfigLike(mixed $config): bool
 	{
 		return \is_array($config) && isset($config['OZ_PROJECT_NAME']);
 	}
@@ -62,24 +79,97 @@ final class Utils
 	 *
 	 * @param null|string $folder the project folder
 	 */
-	public static function assertProjectFolder($folder = null)
+	public static function assertProjectFolder(?string $folder = null): void
 	{
 		self::loadProjectConfig($folder, true);
 	}
 
 	/**
 	 * Asserts if whether we have access to the database.
-	 *
-	 * @throws \OZONE\OZ\Exceptions\BaseException
 	 */
-	public static function assertDatabaseAccess()
+	public static function assertDatabaseAccess(): void
 	{
-		self::assertProjectFolder();
+		try {
+			self::assertProjectFolder();
 
-		// we get connection to make sure that
-		// we have access to the database
-		// will throw error when something went wrong
-		DbManager::getDb()
-				 ->getConnection();
+			// we get connection to make sure that
+			// we have access to the database
+			// will throw error when something went wrong
+			DbManager::getDb()
+				->getConnection();
+		} catch (Throwable $t) {
+			throw new RuntimeException('Database access assertion failed.', null, $t);
+		}
+	}
+
+	/**
+	 * Checks for Windows environment.
+	 *
+	 * @return bool
+	 */
+	public static function isDOS(): bool
+	{
+		return '\\' === \DIRECTORY_SEPARATOR;
+	}
+
+	/**
+	 * Returns the current platform.
+	 *
+	 * @return \OZONE\OZ\Cli\Platforms\Interfaces\PlatformInterface
+	 */
+	public static function getPlatform(): PlatformInterface
+	{
+		if (self::isDOS()) {
+			return new PlatformDOS();
+		}
+
+		return new PlatformLinux();
+	}
+
+	/**
+	 * Checks if PHP has been compiled with the '--enable-sigchild' option or not.
+	 *
+	 * @return bool
+	 */
+	public static function sigChildEnabled(): bool
+	{
+		if (null !== self::$sig_child) {
+			return self::$sig_child;
+		}
+
+		\ob_start();
+		\phpinfo(\INFO_GENERAL);
+		$info = \ob_get_clean();
+
+		if (\str_contains($info, '--enable-sigchild')) {
+			self::$sig_child = true;
+		}
+
+		return self::$sig_child = false;
+	}
+
+	/**
+	 * Returns default env.
+	 *
+	 * @return array
+	 */
+	public static function getDefaultEnv(): array
+	{
+		if (!isset(self::$env)) {
+			$env     = [];
+			$sources = [$_SERVER, $_ENV];
+
+			foreach ($sources as $source) {
+				foreach ($source as $k => $v) {
+					if (\is_string($v) && false !== ($v = \getenv($k))) {
+						$env[$k] = $v;
+					}
+				}
+			}
+
+			self::$env = $env;
+		}
+
+		return self::$env;
 	}
 }

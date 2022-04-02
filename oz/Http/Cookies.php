@@ -9,30 +9,31 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Http;
 
+use InvalidArgumentException;
+
+/**
+ * Class Cookies.
+ */
 class Cookies
 {
 	/**
-	 * Cookies from HTTP request
-	 *
-	 * @var array
+	 * Cookies from HTTP request.
 	 */
-	protected $request_cookies = [];
+	protected array $request_cookies = [];
 
 	/**
-	 * Cookies for HTTP response
-	 *
-	 * @var array
+	 * Cookies for HTTP response.
 	 */
-	protected $response_cookies = [];
+	protected array $response_cookies = [];
 
 	/**
-	 * Default cookie properties
-	 *
-	 * @var array
+	 * Default cookie properties.
 	 */
-	protected $defaults_properties = [
+	protected array $defaults_properties = [
 		'value'    => '',
 		'domain'   => null,
 		'hostonly' => null,
@@ -44,7 +45,7 @@ class Cookies
 	];
 
 	/**
-	 * Creates new cookies helper
+	 * Creates new cookies helper.
 	 *
 	 * @param array $cookies
 	 */
@@ -54,13 +55,13 @@ class Cookies
 	}
 
 	/**
-	 * Sets default cookie properties
+	 * Sets default cookie properties.
 	 *
 	 * @param array $properties
 	 *
 	 * @return \OZONE\OZ\Http\Cookies
 	 */
-	public function setDefaultsProperties(array $properties)
+	public function setDefaultsProperties(array $properties): self
 	{
 		$this->defaults_properties = \array_replace($this->defaults_properties, $properties);
 
@@ -68,27 +69,27 @@ class Cookies
 	}
 
 	/**
-	 * Gets request cookie
+	 * Gets request cookie.
 	 *
-	 * @param string $name    Cookie name
-	 * @param mixed  $default Cookie default value
+	 * @param string     $name    Cookie name
+	 * @param null|mixed $default Cookie default value
 	 *
 	 * @return mixed Cookie value if present, else default
 	 */
-	public function get($name, $default = null)
+	public function get(string $name, mixed $default = null): mixed
 	{
-		return isset($this->request_cookies[$name]) ? $this->request_cookies[$name] : $default;
+		return $this->request_cookies[$name] ?? $default;
 	}
 
 	/**
-	 * Sets response cookie
+	 * Sets response cookie.
 	 *
 	 * @param string       $name  Cookie name
 	 * @param array|string $value Cookie value, or cookie properties
 	 *
 	 * @return \OZONE\OZ\Http\Cookies
 	 */
-	public function set($name, $value)
+	public function set(string $name, string|array $value): self
 	{
 		if (!\is_array($value)) {
 			$value = ['value' => (string) $value];
@@ -99,11 +100,11 @@ class Cookies
 	}
 
 	/**
-	 * Converts to `Set-Cookie` headers
+	 * Converts to `Set-Cookie` headers.
 	 *
 	 * @return string[]
 	 */
-	public function toHeaders()
+	public function toHeaders(): array
 	{
 		$headers = [];
 
@@ -115,14 +116,50 @@ class Cookies
 	}
 
 	/**
-	 * Converts to `Set-Cookie` header
+	 * Parse HTTP request `Cookie:` header and extract
+	 * into a PHP associative array.
+	 *
+	 * @param string $header The raw HTTP request `Cookie:` header
+	 *
+	 * @throws InvalidArgumentException if the cookie data cannot be parsed
+	 *
+	 * @return array Associative array of cookie names and values
+	 */
+	public static function parseCookieHeaderString(string $header): array
+	{
+		if (!\is_string($header)) {
+			throw new InvalidArgumentException('Cannot parse Cookie data. Header value must be a string.');
+		}
+
+		$header  = \rtrim($header, "\r\n");
+		$pieces  = \preg_split('#[;]\s*#', $header);
+		$cookies = [];
+
+		foreach ($pieces as $cookie) {
+			$cookie = \explode('=', $cookie);
+
+			if (2 === \count($cookie)) {
+				$key   = \urldecode($cookie[0]);
+				$value = \urldecode($cookie[1]);
+
+				if (!isset($cookies[$key])) {
+					$cookies[$key] = $value;
+				}
+			}
+		}
+
+		return $cookies;
+	}
+
+	/**
+	 * Converts to `Set-Cookie` header.
 	 *
 	 * @param string $name       Cookie name
 	 * @param array  $properties Cookie properties
 	 *
 	 * @return string
 	 */
-	protected function toHeader($name, array $properties)
+	protected function toHeader(string $name, array $properties): string
 	{
 		$result = \urlencode($name) . '=' . \urlencode($properties['value']);
 
@@ -141,7 +178,7 @@ class Cookies
 				$timestamp = (int) $properties['expires'];
 			}
 
-			if ($timestamp !== 0) {
+			if (0 !== $timestamp) {
 				$result .= '; expires=' . \gmdate('D, d-M-Y H:i:s e', $timestamp);
 			}
 		}
@@ -169,41 +206,5 @@ class Cookies
 		}
 
 		return $result;
-	}
-
-	/**
-	 * Parse HTTP request `Cookie:` header and extract
-	 * into a PHP associative array.
-	 *
-	 * @param string $header The raw HTTP request `Cookie:` header
-	 *
-	 * @throws \InvalidArgumentException if the cookie data cannot be parsed
-	 *
-	 * @return array Associative array of cookie names and values
-	 */
-	public static function parseCookieHeaderString($header)
-	{
-		if (!\is_string($header)) {
-			throw new \InvalidArgumentException('Cannot parse Cookie data. Header value must be a string.');
-		}
-
-		$header  = \rtrim($header, "\r\n");
-		$pieces  = \preg_split('#[;]\s*#', $header);
-		$cookies = [];
-
-		foreach ($pieces as $cookie) {
-			$cookie = \explode('=', $cookie);
-
-			if (\count($cookie) === 2) {
-				$key   = \urldecode($cookie[0]);
-				$value = \urldecode($cookie[1]);
-
-				if (!isset($cookies[$key])) {
-					$cookies[$key] = $value;
-				}
-			}
-		}
-
-		return $cookies;
 	}
 }

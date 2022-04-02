@@ -9,17 +9,24 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 return [
-	// default picid if there is none
-	'OZ_DEFAULT_PICID'        => '0_0',
-	// maximum crop size of a profile image: in pixels
-	'OZ_PPIC_MIN_SIZE'        => 150,
-	// maximum size of a thumbnail: in pixels
-	'OZ_THUMB_MAX_SIZE'       => 640,
+	'OZ_USER_MIN_AGE' => 16,
+	'OZ_USER_MAX_AGE' => 77,
+
+	'OZ_USER_PASS_MIN_LENGTH' => 6,
+	'OZ_USER_PASS_MAX_LENGTH' => 60,
+
+	'OZ_USER_NAME_MIN_LENGTH' => 3,
+	'OZ_USER_NAME_MAX_LENGTH' => 60,
+
+	// minimum crop size of a user pic: in pixels
+	'OZ_USER_PIC_MIN_SIZE'    => 150,
 	// allowed gender list
 	'OZ_USER_ALLOWED_GENDERS' => ['Male', 'Female', 'None', 'Other'],
 	// does email are required to register
-	'OZ_USERS_EMAIL_REQUIRED' => true,
+	'OZ_USER_EMAIL_REQUIRED' => true,
 	// does phone number are required to register
-	'OZ_USERS_PHONE_REQUIRED' => false,
+	'OZ_USER_PHONE_REQUIRED' => false,
 ];

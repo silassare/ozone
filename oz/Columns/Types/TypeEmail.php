@@ -9,60 +9,82 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
-use OZONE\OZ\User\UsersManager;
+use OZONE\OZ\Users\UsersManager;
 
-final class TypeEmail extends TypeString
+/**
+ * Class TypeEmail.
+ */
+class TypeEmail extends Type
 {
-	private $registered;
+	public const NAME = 'email';
 
 	/**
 	 * TypeEmail constructor.
 	 *
-	 * @inheritdoc
+	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
 	public function __construct()
 	{
-		parent::__construct(1, 255);
+		parent::__construct(new TypeString(1, 255));
 	}
 
 	/**
-	 * To accept email that are not registered only
+	 * {@inheritDoc}
+	 */
+	public static function getInstance(array $options): self
+	{
+		return (new static())->configure($options);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getName(): string
+	{
+		return self::NAME;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function setDefault($default): self
+	{
+		$this->base_type->setDefault($default);
+
+		return parent::setDefault($default);
+	}
+
+	/**
+	 * To accept email that are registered only.
 	 *
 	 * @return $this
 	 */
-	public function registered()
+	public function registered(): self
 	{
-		$this->registered = true;
-
-		return $this;
+		return $this->setOption('registered', true);
 	}
 
 	/**
-	 * To accept email that are not registered only
+	 * To accept email that are not registered only.
 	 *
 	 * @return $this
 	 */
-	public function notRegistered()
+	public function notRegistered(): self
 	{
-		$this->registered = false;
-
-		return $this;
+		return $this->setOption('registered', false);
 	}
 
 	/**
-	 * @param $value
-	 * @param $column_name
-	 * @param $table_name
-	 *
-	 * @throws \Exception
-	 *
-	 * @return string
+	 * {@inheritDoc}
 	 */
-	public function validate($value, $column_name, $table_name)
+	public function validate($value): ?string
 	{
 		$debug = [
 			'email' => $value,
@@ -70,7 +92,7 @@ final class TypeEmail extends TypeString
 		];
 
 		try {
-			$value = parent::validate($value, $column_name, $table_name);
+			$value = $this->base_type->validate($value);
 		} catch (TypesInvalidValueException $e) {
 			throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug, $e);
 		}
@@ -80,11 +102,13 @@ final class TypeEmail extends TypeString
 				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug);
 			}
 
-			if ($this->registered === false && UsersManager::searchUserWithEmail($value)) {
+			$registered = $this->getOption('registered');
+
+			if (false === $registered && UsersManager::searchUserWithEmail($value)) {
 				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_ALREADY_REGISTERED', $debug);
 			}
 
-			if ($this->registered === true && !UsersManager::searchUserWithEmail($value)) {
+			if (true === $registered && !UsersManager::searchUserWithEmail($value)) {
 				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_NOT_REGISTERED', $debug);
 			}
 		}
@@ -93,41 +117,18 @@ final class TypeEmail extends TypeString
 	}
 
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 */
-	public function getCleanOptions()
+	public function configure(array $options): Type
 	{
-		$options               = parent::getCleanOptions();
-		$options['registered'] = $this->registered;
-
-		return $options;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public static function getInstance(array $options)
-	{
-		$instance = new self();
-
 		if (isset($options['registered'])) {
-			$registered = $options['registered'];
-
-			if ($registered === true) {
-				$instance->registered();
+			if ($options['registered']) {
+				$this->registered();
 			} else {
-				$instance->notRegistered();
+				$this->notRegistered();
 			}
 		}
 
-		if (self::getOptionKey($options, 'null', false)) {
-			$instance->nullAble();
-		}
-
-		if (\array_key_exists('default', $options)) {
-			$instance->setDefault($options['default']);
-		}
-
-		return $instance;
+		return parent::configure($options);
 	}
 }

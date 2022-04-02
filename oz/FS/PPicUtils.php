@@ -9,93 +9,108 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\FS;
 
-use OZONE\OZ\Core\Assert;
-use OZONE\OZ\Core\SettingsManager;
-use OZONE\OZ\Exceptions\InternalErrorException;
+use Exception;
+use OZONE\OZ\Core\Configs;
+use OZONE\OZ\Db\OZFile;
+use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\OZ\Exceptions\UnauthorizedActionException;
 use OZONE\OZ\Http\UploadedFile;
 
 class PPicUtils
 {
-	/** @var int|string */
-	private $uid;
+	/** @var string */
+	private string $uid;
 
 	/**
 	 * PPicUtils constructor.
 	 *
-	 * @param int|string $uid the user id
+	 * @param string $uid the user id
 	 */
-	public function __construct($uid)
+	public function __construct(string $uid)
 	{
 		$this->uid = $uid;
 	}
 
 	/**
-	 * Sets a profile picture with a given file id and key of an existing file
+	 * Sets a profile picture with a given file id and key of an existing file.
 	 *
-	 * @param int|string $file_id    the file id
-	 * @param string     $file_key   the file key
-	 * @param array      $coordinate the crop zone coordinate
-	 * @param string     $file_label the file log label
+	 * @param string $file_id    the file id
+	 * @param string $file_key   the file key
+	 * @param array  $coordinate the crop zone coordinate
+	 * @param string $file_label the file log label
 	 *
-	 * @throws \Exception
+	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+	 * @throws Exception
 	 *
-	 * @return string the profile picid
+	 * @return string the profile pic_id
 	 */
-	public function fromFileId($file_id, $file_key, array $coordinate, $file_label = 'OZ_FILE_LABEL_PPIC')
-	{
-		$f = FilesUtils::getFileWithId($file_id, $file_key);
+	public function fromFileID(
+		string $file_id,
+		string $file_key,
+		array $coordinate,
+		string $file_label = 'OZ_FILE_LABEL_USER_PIC'
+	): string {
+		$f = FilesUtils::getFileWithId($file_id);
 
-		Assert::assertAuthorizeAction($f);
+		if (!$f || $f->getKey() !== $file_key) {
+			throw new UnauthorizedActionException();
+		}
 
 		$clone = $f->cloneFile();
-		$clone->setUserId($this->uid)
-			  ->setLabel($file_label);
+		$clone->setUserID($this->uid)
+			->setLabel($file_label);
 
 		// each file clone should have its own thumbnail
 		// because crop zone coordinates may be different from a clone to another
 
 		$user_dir          = FilesUtils::getUserRootDirectory($this->uid);
-		$gen_info          = FilesUtils::genNewFileInfo($user_dir, $clone->getName(), $clone->getType());
+		$gen_info          = FilesUtils::genNewFileInfo($user_dir, $clone->getName(), $clone->getMimeType());
 		$thumb_destination = $gen_info['thumbnail'];
 
-		$this->makeProfilePic($clone->getPath(), $thumb_destination, $coordinate);
+		$this->makeProfilePic($clone, $thumb_destination, $coordinate);
 
-		$clone->setThumb($thumb_destination)
-			  ->save();
+		$clone->save();
 
-		return $clone->getId() . '_' . $clone->getKey();
+		return $clone->getID();
 	}
 
 	/**
-	 * Sets a profile picture from uploaded file
+	 * Sets a profile picture from uploaded file.
 	 *
 	 * @param \OZONE\OZ\Http\UploadedFile $uploaded_file the uploaded file
 	 * @param array                       $coordinate    the crop zone coordinate
 	 * @param string                      $file_label    the file log label
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 *
 	 * @return string the profile picid
 	 */
-	public function fromUploadedFile(UploadedFile $uploaded_file, array $coordinate, $file_label = 'OZ_FILE_LABEL_PPIC')
-	{
+	public function fromUploadedFile(
+		UploadedFile $uploaded_file,
+		array $coordinate,
+		string $file_label = 'OZ_FILE_LABEL_USER_PIC'
+	): string {
 		$user_dir   = FilesUtils::getUserRootDirectory($this->uid);
 		$upload_obj = new FilesUploadHandler();
 
 		$f = $upload_obj->moveUploadedFile($uploaded_file, $user_dir);
 
-		Assert::assertAuthorizeAction($f, $upload_obj->lastErrorMessage());
+		if (!$f) {
+			throw new UnauthorizedActionException($upload_obj->lastErrorMessage());
+		}
 
-		$f->setUserId($this->uid)
-		  ->setLabel($file_label);
+		$f->setUserID($this->uid)
+			->setLabel($file_label);
 
-		if ($f->getClone()) {
+		if ($f->getCloneID()) {
 			// the uploaded file is an alias file
 			// we shouldn't overwrite existing thumbnail
 			$user_dir          = FilesUtils::getUserRootDirectory($this->uid);
-			$gen_info          = FilesUtils::genNewFileInfo($user_dir, $f->getName(), $f->getType());
+			$gen_info          = FilesUtils::genNewFileInfo($user_dir, $f->getName(), $f->getMimeType());
 			$thumb_destination = $gen_info['thumbnail'];
 
 			$this->makeProfilePic($f->getPath(), $thumb_destination, $coordinate);
@@ -108,22 +123,22 @@ class PPicUtils
 		// don't forget to save
 		$f->save();
 
-		return $f->getId() . '_' . $f->getKey();
+		return $f->getID() . '_' . $f->getKey();
 	}
 
 	/**
-	 * Make a thumbnail of the current file with a given crop zone coordinates, for profile pic
+	 * Make a thumbnail of the current file with a given crop zone coordinates, for profile pic.
 	 *
-	 * @param string $source      the source file path
-	 * @param string $destination the profile pic destination
-	 * @param array  $coordinates the crop zone coordinates
+	 * @param \OZONE\OZ\Db\OZFile $source      the source file
+	 * @param string              $destination the profile pic destination
+	 * @param array               $coordinates the crop zone coordinates
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 */
-	private function makeProfilePic($source, $destination, array $coordinates)
+	private function makeProfilePic(OZFile $source, string $destination, array $coordinates): void
 	{
 		$img_utils_obj     = new ImagesUtils($source);
-		$size_x            = $size_y = SettingsManager::get('oz.users', 'OZ_PPIC_MIN_SIZE');
+		$size_x            = $size_y = Configs::get('oz.users', 'OZ_USER_PIC_MIN_SIZE');
 		$quality           = 100; // jpeg image quality: 0 to 100
 		$clean_coordinates = null;
 
@@ -142,18 +157,8 @@ class PPicUtils
 			} else {
 				$img_utils_obj->cropAndSave($destination, $quality, $size_x, $size_y, $coordinates, false);
 			}
-		} else { /*this file is not a valid image*/
-			throw new InternalErrorException('OZ_IMAGE_NOT_VALID');
+		} else { /* this file is not a valid image */
+			throw new RuntimeException('OZ_IMAGE_NOT_VALID');
 		}
-	}
-
-	/**
-	 * Gets the default profile picid
-	 *
-	 * @return string the profile picid
-	 */
-	public static function getDefault()
-	{
-		return '0_0';
 	}
 }

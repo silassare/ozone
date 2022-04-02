@@ -9,137 +9,140 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Router;
 
 use OZONE\OZ\Core\Context;
+use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\OZ\Forms\FormData;
+use OZONE\OZ\Http\Uri;
 
-class RouteInfo
+/**
+ * Class RouteInfo.
+ */
+final class RouteInfo
 {
 	/**
-	 * @var \OZONE\OZ\Core\Context
-	 */
-	private $context;
-
-	/**
-	 * @var \OZONE\OZ\Router\Route
-	 */
-	private $route;
-
-	/**
-	 * @var array
-	 */
-	private $args;
-
-	/**
-	 * RouteContext constructor.
+	 * RouteInfo constructor.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param \OZONE\OZ\Router\Route $route
-	 * @param array                  $args
+	 * @param \OZONE\OZ\Core\Context        $context         The context
+	 * @param \OZONE\OZ\Router\Route        $route           The current route
+	 * @param array                         $params          The route params
+	 * @param null|\OZONE\OZ\Forms\FormData $auth_form_data  The route guard authorization form data
+	 * @param null|\OZONE\OZ\Forms\FormData $clean_form_data The clean form data
 	 */
-	public function __construct(Context $context, Route $route, array $args)
-	{
-		$this->context = $context;
-		$this->route   = $route;
-		$this->args    = $args;
+	public function __construct(
+		private Context $context,
+		private Route $route,
+		private array $params,
+		private ?FormData $auth_form_data = null,
+		private ?FormData $clean_form_data = null
+	) {
 	}
 
 	/**
-	 * @return \OZONE\OZ\Http\Uri
-	 */
-	public function getUri()
-	{
-		return $this->context->getRequest()
-							 ->getUri();
-	}
-
-	/**
-	 * @return \OZONE\OZ\Http\UploadedFile[]
-	 */
-	public function getUploadedFiles()
-	{
-		return $this->context->getRequest()
-							 ->getUploadedFiles();
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getFormData()
-	{
-		return $this->context->getRequest()
-							 ->getFormData();
-	}
-
-	/**
-	 * @param string $name
-	 * @param mixed  $def
+	 * Gets current request context.
 	 *
-	 * @return mixed
-	 */
-	public function getFormField($name, $def = null)
-	{
-		return $this->context->getRequest()
-							 ->getFormField($name, $def);
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getQueryParams()
-	{
-		return $this->context->getRequest()
-							 ->getQueryParams();
-	}
-
-	/**
-	 * @param string $key
-	 * @param mixed  $def
-	 *
-	 * @return array
-	 */
-	public function getQueryParam($key, $def = null)
-	{
-		return $this->context->getRequest()
-							 ->getQueryParam($key, $def);
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getArgs()
-	{
-		return $this->args;
-	}
-
-	/**
 	 * @return \OZONE\OZ\Core\Context
 	 */
-	public function getContext()
+	public function getContext(): Context
 	{
 		return $this->context;
 	}
 
 	/**
-	 * @param string $name
-	 * @param mixed  $def
+	 * Gets current route.
 	 *
-	 * @return mixed
+	 * @return \OZONE\OZ\Router\Route
 	 */
-	public function getArg($name, $def = null)
+	public function getRoute(): Route
 	{
-		if (isset($this->args[$name])) {
-			return $this->args[$name];
-		}
-
-		return $def;
+		return $this->route;
 	}
 
 	/**
-	 * @return \OZONE\OZ\Router\Route
+	 * Gets current route parameters.
+	 *
+	 * @return array
 	 */
-	public function getRoute()
+	public function getParams(): array
 	{
-		return $this->route;
+		return $this->params;
+	}
+
+	/**
+	 * Gets current route parameter value with a given name.
+	 *
+	 * @param string     $name
+	 * @param null|mixed $def
+	 *
+	 * @return mixed
+	 */
+	public function getParam(string $name, mixed $def = null): mixed
+	{
+		return $this->params[$name] ?? $def;
+	}
+
+	/**
+	 * Shortcut for {@see \OZONE\OZ\Http\Request::getUri()}.
+	 *
+	 * @return \OZONE\OZ\Http\Uri
+	 */
+	public function getUri(): Uri
+	{
+		return $this->context->getRequest()
+			->getUri();
+	}
+
+	/**
+	 * Gets validated form data.
+	 *
+	 * @return \OZONE\OZ\Forms\FormData
+	 */
+	public function getCleanFormData(): FormData
+	{
+		if (null === $this->clean_form_data) {
+			throw new RuntimeException('Undefined clean form data as no route form was provided.');
+		}
+
+		return $this->clean_form_data;
+	}
+
+	/**
+	 * Gets current route guard authorization form data.
+	 *
+	 * @return null|\OZONE\OZ\Forms\FormData
+	 */
+	public function getAuthFormData(): ?FormData
+	{
+		return $this->auth_form_data;
+	}
+
+	/**
+	 * Shortcut for {@see \OZONE\OZ\Http\Request::getFormData()}.
+	 *
+	 * @param bool $include_files
+	 *
+	 * @return FormData
+	 */
+	public function getFormData(bool $include_files = true): FormData
+	{
+		return $this->context->getRequest()
+			->getFormData($include_files);
+	}
+
+	/**
+	 * Shortcut for {@see \OZONE\OZ\Http\Request::getFormField()}.
+	 *
+	 * @param string     $name
+	 * @param null|mixed $def
+	 *
+	 * @return mixed
+	 */
+	public function getFormField(string $name, mixed $def = null): mixed
+	{
+		return $this->context->getRequest()
+			->getFormField($name, $def);
 	}
 }

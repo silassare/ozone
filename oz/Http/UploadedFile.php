@@ -9,80 +9,61 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Http;
 
 use InvalidArgumentException;
+use OZONE\OZ\Core\Hasher;
+use OZONE\OZ\FS\FilesUtils;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use RuntimeException;
 
 /**
- * Represents Uploaded Files.
- *
- * It manages and normalizes uploaded files according to the PSR-7 standard.
- *
- * @link https://github.com/php-fig/http-message/blob/master/src/UploadedFileInterface.php
- * @link https://github.com/php-fig/http-message/blob/master/src/StreamInterface.php
+ * Class UploadedFile.
  */
 class UploadedFile implements UploadedFileInterface
 {
 	/**
-	 * The client-provided full path to the file
-	 *
-	 * @note this is public to maintain BC with 3.1.0 and earlier.
-	 *
-	 * @var string
+	 * The client-provided full path to the file.
 	 */
-	public $file;
+	protected string $file;
 
 	/**
 	 * The client-provided file name.
-	 *
-	 * @var string
 	 */
-	protected $name;
+	protected string $name;
 
 	/**
 	 * The client-provided media type of the file.
-	 *
-	 * @var string
 	 */
-	protected $type;
+	protected ?string $type;
 
 	/**
 	 * The size of the file in bytes.
-	 *
-	 * @var int
 	 */
-	protected $size;
+	protected ?int $size;
 
 	/**
 	 * A valid PHP UPLOAD_ERR_xxx code for the file upload.
-	 *
-	 * @var int
 	 */
-	protected $error = \UPLOAD_ERR_OK;
+	protected int $error = \UPLOAD_ERR_OK;
 
 	/**
 	 * Indicates if the upload is from a SAPI environment.
-	 *
-	 * @var bool
 	 */
-	protected $sapi = false;
+	protected bool $sapi = false;
 
 	/**
 	 * An optional StreamInterface wrapping the file resource.
-	 *
-	 * @var StreamInterface
 	 */
-	protected $stream;
+	protected ?StreamInterface $stream = null;
 
 	/**
 	 * Indicates if the uploaded file has already been moved.
-	 *
-	 * @var bool
 	 */
-	protected $moved = false;
+	protected bool $moved = false;
 
 	/**
 	 * Construct a new UploadedFile instance.
@@ -94,8 +75,20 @@ class UploadedFile implements UploadedFileInterface
 	 * @param int         $error the UPLOAD_ERR_XXX code representing the status of the upload
 	 * @param bool        $sapi  indicates if the upload is in a SAPI environment
 	 */
-	public function __construct($file, $name = null, $type = null, $size = null, $error = \UPLOAD_ERR_OK, $sapi = false)
-	{
+	public function __construct(
+		string $file,
+		?string $name = null,
+		?string $type = null,
+		?int $size = null,
+		int $error = \UPLOAD_ERR_OK,
+		bool $sapi = false
+	) {
+		// live recorded blob files as audio/video/image doesn't have a valid name
+		if (empty($name) || 'blob' === $name) {
+			$ext  = FilesUtils::mimeTypeToExtension($type ?? '');
+			$name = Hasher::genFileName('upload') . '.' . $ext;
+		}
+
 		$this->file  = $file;
 		$this->name  = $name;
 		$this->type  = $type;
@@ -105,70 +98,25 @@ class UploadedFile implements UploadedFileInterface
 	}
 
 	/**
-	 * Retrieve a stream representing the uploaded file.
-	 *
-	 * This method MUST return a StreamInterface instance, representing the
-	 * uploaded file. The purpose of this method is to allow utilizing native PHP
-	 * stream functionality to manipulate the file upload, such as
-	 * stream_copy_to_stream() (though the result will need to be decorated in a
-	 * native PHP stream wrapper to work with such functions).
-	 *
-	 * If the moveTo() method has been called previously, this method MUST raise
-	 * an exception.
-	 *
-	 * @throws \RuntimeException in cases when no stream is available or can be
-	 *                           created
-	 *
-	 * @return \OZONE\OZ\Http\Stream stream representation of the uploaded file
+	 * {@inheritDoc}
 	 */
-	public function getStream()
+	public function getStream(): Stream
 	{
 		if ($this->moved) {
 			throw new RuntimeException(\sprintf('Uploaded file %1s has already been moved', $this->name));
 		}
 
-		if ($this->stream === null) {
-			$this->stream = new Stream(\fopen($this->file, 'r'));
+		if (null === $this->stream) {
+			$this->stream = new Stream(\fopen($this->file, 'rb'));
 		}
 
 		return $this->stream;
 	}
 
 	/**
-	 * Move the uploaded file to a new location.
-	 *
-	 * Use this method as an alternative to move_uploaded_file(). This method is
-	 * guaranteed to work in both SAPI and non-SAPI environments.
-	 * Implementations must determine which environment they are in, and use the
-	 * appropriate method (move_uploaded_file(), rename(), or a stream
-	 * operation) to perform the operation.
-	 *
-	 * $targetPath may be an absolute path, or a relative path. If it is a
-	 * relative path, resolution should be the same as used by PHP's rename()
-	 * function.
-	 *
-	 * The original file or stream MUST be removed on completion.
-	 *
-	 * If this method is called more than once, any subsequent calls MUST raise
-	 * an exception.
-	 *
-	 * When used in an SAPI environment where $_FILES is populated, when writing
-	 * files via moveTo(), is_uploaded_file() and move_uploaded_file() SHOULD be
-	 * used to ensure permissions and upload status are verified correctly.
-	 *
-	 * If you wish to move to a stream, use getStream(), as SAPI operations
-	 * cannot guarantee writing to stream destinations.
-	 *
-	 * @see http://php.net/is_uploaded_file
-	 * @see http://php.net/move_uploaded_file
-	 *
-	 * @param string $targetPath path to which to move the uploaded file
-	 *
-	 * @throws \InvalidArgumentException if the $path specified is invalid
-	 * @throws \RuntimeException         on any error during the move operation, or on
-	 *                                   the second or subsequent call to the method
+	 * {@inheritDoc}
 	 */
-	public function moveTo($targetPath)
+	public function moveTo($targetPath): void
 	{
 		if ($this->moved) {
 			throw new RuntimeException('Uploaded file already moved');
@@ -196,83 +144,43 @@ class UploadedFile implements UploadedFileInterface
 			if (!\move_uploaded_file($this->file, $targetPath)) {
 				throw new RuntimeException(\sprintf('Error moving uploaded file %1s to %2s', $this->name, $targetPath));
 			}
-		} else {
-			if (!\rename($this->file, $targetPath)) {
-				throw new RuntimeException(\sprintf('Error moving uploaded file %1s to %2s', $this->name, $targetPath));
-			}
+		} elseif (!\rename($this->file, $targetPath)) {
+			throw new RuntimeException(\sprintf('Error moving uploaded file %1s to %2s', $this->name, $targetPath));
 		}
 
 		$this->moved = true;
 	}
 
 	/**
-	 * Retrieve the error associated with the uploaded file.
-	 *
-	 * The return value MUST be one of PHP's UPLOAD_ERR_XXX constants.
-	 *
-	 * If the file was uploaded successfully, this method MUST return
-	 * UPLOAD_ERR_OK.
-	 *
-	 * Implementations SHOULD return the value stored in the "error" key of
-	 * the file in the $_FILES array.
-	 *
-	 * @see http://php.net/manual/en/features.file-upload.errors.php
-	 *
-	 * @return int one of PHP's UPLOAD_ERR_XXX constants
+	 * {@inheritDoc}
 	 */
-	public function getError()
+	public function getError(): int
 	{
 		return $this->error;
 	}
 
 	/**
-	 * Retrieve the filename sent by the client.
-	 *
-	 * Do not trust the value returned by this method. A client could send
-	 * a malicious filename with the intention to corrupt or hack your
-	 * application.
-	 *
-	 * Implementations SHOULD return the value stored in the "name" key of
-	 * the file in the $_FILES array.
-	 *
-	 * @return null|string the filename sent by the client or null if none
-	 *                     was provided
+	 * {@inheritDoc}
 	 */
-	public function getClientFilename()
+	public function getClientFilename(): string
 	{
 		return $this->name;
 	}
 
 	/**
-	 * Retrieve the media type sent by the client.
-	 *
-	 * Do not trust the value returned by this method. A client could send
-	 * a malicious media type with the intention to corrupt or hack your
-	 * application.
-	 *
-	 * Implementations SHOULD return the value stored in the "type" key of
-	 * the file in the $_FILES array.
-	 *
-	 * @return null|string the media type sent by the client or null if none
-	 *                     was provided
+	 * {@inheritDoc}
 	 */
-	public function getClientMediaType()
+	public function getClientMediaType(): ?string
 	{
 		return $this->type;
 	}
 
 	/**
-	 * Retrieve the file size.
-	 *
-	 * Implementations SHOULD return the value stored in the "size" key of
-	 * the file in the $_FILES array if available, as PHP calculates this based
-	 * on the actual size transmitted.
-	 *
-	 * @return null|int the file size in bytes or null if unknown
+	 * {@inheritDoc}
 	 */
-	public function getSize()
+	public function getSize(): int
 	{
-		return $this->size;
+		return $this->size ?? 0;
 	}
 
 	/**
@@ -282,7 +190,7 @@ class UploadedFile implements UploadedFileInterface
 	 *
 	 * @return null|array a normalized tree of UploadedFile instances or null if none are provided
 	 */
-	public static function createFromEnvironment(Environment $env)
+	public static function createFromEnvironment(Environment $env): ?array
 	{
 		if ($env->has('oz_files') && \is_array($env['oz_files'])) {
 			return $env['oz_files'];
@@ -302,7 +210,7 @@ class UploadedFile implements UploadedFileInterface
 	 *
 	 * @return array a normalized tree of UploadedFile instances
 	 */
-	private static function parseUploadedFiles(array $uploadedFiles)
+	private static function parseUploadedFiles(array $uploadedFiles): array
 	{
 		$parsed = [];
 
@@ -320,9 +228,9 @@ class UploadedFile implements UploadedFileInterface
 			if (!\is_array($uploadedFile['error'])) {
 				$parsed[$field] = new static(
 					$uploadedFile['tmp_name'],
-					isset($uploadedFile['name']) ? $uploadedFile['name'] : null,
-					isset($uploadedFile['type']) ? $uploadedFile['type'] : null,
-					isset($uploadedFile['size']) ? $uploadedFile['size'] : null,
+					$uploadedFile['name'] ?? null,
+					$uploadedFile['type'] ?? null,
+					$uploadedFile['size'] ?? null,
 					$uploadedFile['error'],
 					true
 				);

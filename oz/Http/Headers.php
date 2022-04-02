@@ -9,29 +9,21 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Http;
 
 /**
- * Headers
- *
- * This class represents a collection of HTTP headers
- * that is used in both the HTTP request and response objects.
- * It also enables header name case-insensitivity when
- * getting or setting a header value.
- *
- * Each HTTP header can have multiple values. This class
- * stores values into an array for each header name. When
- * you request a header value, you receive an array of values
- * for that header.
+ * Class Headers.
  */
 class Headers extends Collection
 {
 	/**
-	 * Special HTTP headers that do not have the "HTTP_" prefix
+	 * Special HTTP headers that do not have the "HTTP_" prefix.
 	 *
 	 * @var array
 	 */
-	protected static $special = [
+	protected static array $special = [
 		'CONTENT_TYPE'    => 1,
 		'CONTENT_LENGTH'  => 1,
 		'PHP_AUTH_USER'   => 1,
@@ -41,18 +33,18 @@ class Headers extends Collection
 	];
 
 	/**
+	 * {@inheritDoc}
+	 *
 	 * Returns array of HTTP header names and values.
 	 * This method returns the _original_ header name
 	 * as specified by the end user.
-	 *
-	 * @return array
 	 */
-	public function all()
+	public function all(): array
 	{
 		$all = parent::all();
 		$out = [];
 
-		foreach ($all as $key => $props) {
+		foreach ($all as /* $key => */ $props) {
 			$out[$props['originalKey']] = $props['value'];
 		}
 
@@ -60,14 +52,14 @@ class Headers extends Collection
 	}
 
 	/**
-	 * Gets HTTP header key as originally specified
+	 * Gets HTTP header key as originally specified.
 	 *
-	 * @param string $key     The case-insensitive header name
-	 * @param mixed  $default The default value if key does not exist
+	 * @param string     $key     The case-insensitive header name
+	 * @param null|mixed $default The default value if key does not exist
 	 *
 	 * @return string
 	 */
-	public function getOriginalKey($key, $default = null)
+	public function getOriginalKey(string $key, mixed $default = null): string
 	{
 		if ($this->has($key)) {
 			return parent::get($this->normalizeKey($key))['originalKey'];
@@ -77,19 +69,15 @@ class Headers extends Collection
 	}
 
 	/**
-	 * Does this collection have a given header?
-	 *
-	 * @param string $key The case-insensitive header name
-	 *
-	 * @return bool
+	 * {@inheritDoc}
 	 */
-	public function has($key)
+	public function has(string $key): bool
 	{
 		return parent::has($this->normalizeKey($key));
 	}
 
 	/**
-	 * Normalize header name
+	 * Normalize header name.
 	 *
 	 * This method transforms header names into a
 	 * normalized form. This is how we enable case-insensitive
@@ -99,11 +87,11 @@ class Headers extends Collection
 	 *
 	 * @return string Normalized header name
 	 */
-	public function normalizeKey($key)
+	public function normalizeKey(string $key): string
 	{
-		$key = \strtr(\strtolower($key), '_', '-');
+		$key = \strtolower(\str_replace('_', '-', $key));
 
-		if (\strpos($key, 'http-') === 0) {
+		if (\str_starts_with($key, 'http-')) {
 			$key = \substr($key, 5);
 		}
 
@@ -111,7 +99,7 @@ class Headers extends Collection
 	}
 
 	/**
-	 * Adds HTTP header value
+	 * Adds HTTP header value.
 	 *
 	 * This method appends a header value. Unlike the set() method,
 	 * this method _appends_ this new value to any values
@@ -120,7 +108,7 @@ class Headers extends Collection
 	 * @param string       $key   The case-insensitive header name
 	 * @param array|string $value The new header value(s)
 	 */
-	public function add($key, $value)
+	public function add(string $key, string|array $value): void
 	{
 		$oldValues = $this->get($key, []);
 		$newValues = \is_array($value) ? $value : [$value];
@@ -128,14 +116,9 @@ class Headers extends Collection
 	}
 
 	/**
-	 * Gets HTTP header value
-	 *
-	 * @param string $key     The case-insensitive header name
-	 * @param mixed  $default The default value if key does not exist
-	 *
-	 * @return string[]
+	 * {@inheritDoc}
 	 */
-	public function get($key, $default = null)
+	public function get(string $key, mixed $default = null): array
 	{
 		if ($this->has($key)) {
 			return parent::get($this->normalizeKey($key))['value'];
@@ -145,15 +128,12 @@ class Headers extends Collection
 	}
 
 	/**
-	 * Sets HTTP header value
+	 * {@inheritDoc}
 	 *
 	 * This method sets a header value. It replaces
 	 * any values that may already exist for the header name.
-	 *
-	 * @param string $key   The case-insensitive header name
-	 * @param mixed  $value The header value
 	 */
-	public function set($key, $value)
+	public function set(string $key, mixed $value): void
 	{
 		if (!\is_array($value)) {
 			$value = [$value];
@@ -165,24 +145,22 @@ class Headers extends Collection
 	}
 
 	/**
-	 * Removes header from collection
-	 *
-	 * @param string $key The case-insensitive header name
+	 * {@inheritDoc}
 	 */
-	public function remove($key)
+	public function remove(string $key): void
 	{
 		parent::remove($this->normalizeKey($key));
 	}
 
 	/**
 	 * Creates new headers collection with data extracted from
-	 * the application Environment object
+	 * the application Environment object.
 	 *
 	 * @param Environment $environment
 	 *
 	 * @return self
 	 */
-	public static function createFromEnvironment(Environment $environment)
+	public static function createFromEnvironment(Environment $environment): self
 	{
 		$data        = [];
 		$environment = self::determineAuthorization($environment);
@@ -190,8 +168,8 @@ class Headers extends Collection
 		foreach ($environment as $key => $value) {
 			$key = \strtoupper($key);
 
-			if (isset(static::$special[$key]) || \strpos($key, 'HTTP_') === 0) {
-				if ($key !== 'HTTP_CONTENT_LENGTH') {
+			if (isset(static::$special[$key]) || \str_starts_with($key, 'HTTP_')) {
+				if ('HTTP_CONTENT_LENGTH' !== $key) {
 					$data[$key] = $value;
 				}
 			}
@@ -208,7 +186,7 @@ class Headers extends Collection
 	 *
 	 * @return Environment
 	 */
-	public static function determineAuthorization(Environment $environment)
+	public static function determineAuthorization(Environment $environment): Environment
 	{
 		$authorization = $environment->get('HTTP_AUTHORIZATION');
 

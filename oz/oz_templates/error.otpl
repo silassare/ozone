@@ -89,9 +89,9 @@
 	<body>
 		<div id="oz-box">
 			<span class="oz-logo"></span>
-			<div class="oz-title"><%$.i18n( $.oz_error_title, $.oz_error_data)%></div>
+			<div class="oz-title"><% $.oz_error_http_status %> <%$.i18n( $.oz_error_title, $.oz_error_data)%></div>
 			<div class="oz-desc">
-				<div class="oz-desc-item"><%$.i18n($.oz_error_desc, $.oz_error_data)%></div>
+				<div class="oz-desc-item"><%$.i18n($.oz_error_message, $.oz_error_data)%></div>
 				<div class="oz-desc-item"><%$.oz_error_url%></div>
 			</div>
 			<%if(@has($ ,'oz_error_back_url')){%>

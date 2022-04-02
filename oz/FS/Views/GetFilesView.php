@@ -9,50 +9,105 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\FS\Views;
 
-use OZONE\OZ\Core\SettingsManager;
-use OZONE\OZ\FS\GetFilesHelper;
-use OZONE\OZ\Router\Route;
+use OZONE\OZ\Core\Configs;
+use OZONE\OZ\Exceptions\NotFoundException;
+use OZONE\OZ\FS\FileAccess;
+use OZONE\OZ\FS\FileStream;
+use OZONE\OZ\FS\FilesUtils;
+use OZONE\OZ\Http\Response;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
-use OZONE\OZ\Web\WebViewBase;
+use OZONE\OZ\Web\WebView;
 
-class GetFilesView extends WebViewBase
+/**
+ * Class GetFilesView.
+ */
+class GetFilesView extends WebView
 {
+	public const MAIN_ROUTE = 'oz:files';
+
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 */
-	public function getCompileData()
+	public static function registerRoutes(Router $router): void
 	{
-		return [];
+		$format = Configs::get('oz.files', 'OZ_GET_FILE_URI_PATH_FORMAT');
+
+		$router->get($format, function (RouteInfo $r) {
+			return self::handle($r);
+		})
+			->name(self::MAIN_ROUTE)
+			->params([
+				'oz_file_id'        => '[0-9]+',
+				'oz_file_key'       => '[a-z0-9]{32,}',
+				'oz_file_ref'       => '[a-z0-9]{32,}',
+				'oz_file_filter'    => '[a-z0-9]+',
+				'oz_file_extension' => '[a-z0-9]{1,10}',
+			]);
 	}
 
 	/**
-	 * @inheritdoc
+	 * @param \OZONE\OZ\Router\RouteInfo $r
+	 *
+	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+	 *
+	 * @return \OZONE\OZ\Http\Response
 	 */
-	public function getTemplate()
+	public static function handle(RouteInfo $r): Response
 	{
-		return '';
+		$context         = $r->getContext();
+		$req_file_id     = $r->getParam('oz_file_id');
+		$req_file_key    = $r->getParam('oz_file_key');
+		$req_file_ref    = $r->getParam('oz_file_ref');
+		$req_file_filter = $r->getParam('oz_file_filter');
+		$req_file_ext    = $r->getParam('oz_file_extension');
+
+		$file = FilesUtils::getFileWithId($req_file_id);
+
+		if (!$file || !$file->getValid()) {
+			throw new NotFoundException();
+		}
+
+		// when the request provide an extension and the extension
+		// does not match the file extension
+		// we just return a not found
+		if ($req_file_ext && $req_file_ext !== $file->getExtension() && FilesUtils::extensionToMimeType($req_file_ext) !== $file->getMimeType()) {
+			throw new NotFoundException();
+		}
+
+		$fa = new FileAccess($context, $file);
+		$fa->check($req_file_key, $req_file_ref);
+
+		$driver = FilesUtils::getFileDriver($file->getDriver());
+
+		$response = $context->getResponse();
+
+		if ($req_file_filter) {
+			$response = self::applyFilter($response, $driver->getStream($file), $req_file_filter);
+		} else {
+			$response = $driver->serve($file, $response);
+
+			if (Configs::get('oz.files', 'OZ_GET_FILE_DOWNLOAD_REAL_NAME')) {
+				$filename = $file->getName();
+				$response = $response->withHeader('Content-Disposition', "attachment; filename=\"{$filename}\";");
+			}
+		}
+
+		return $response;
 	}
 
-	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
+	private static function applyFilter(Response $response, FileStream $file, string $filter): Response
 	{
-		$format = SettingsManager::get('oz.files', 'OZ_GET_FILE_URI_EXTRA_FORMAT');
+		/* {@see \OZONE\OZ\FS\FilesServer::serve()} */
 
-		$options = [
-			Route::OPTION_NAME  => 'oz:files-static',
-			'oz_file_id'        => '[0-9]+',
-			'oz_file_key'       => '[a-z0-9]+',
-			'oz_file_quality'   => '0|1|2|3',
-			'oz_file_extension' => '[a-z0-9]{1,10}',
-		];
-
-		$router->get('/oz-static/' . $format, function (RouteInfo $r) {
-			return GetFilesHelper::process($r);
-		}, $options);
+		return $response;
 	}
 }

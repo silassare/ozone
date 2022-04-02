@@ -9,25 +9,19 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Core\Interfaces;
 
+/**
+ * Interface TableRelationsProviderInterface.
+ */
 interface TableRelationsProviderInterface
 {
 	/**
-	 * Returns custom relations definition.
-	 *
-	 * ```php
-	 * [
-	 *    'table_name' => [
-	 *         'relation_1' => callable,
-	 *            ...
-	 *         'relation_n' => callable
-	 *     ],
-	 *      ...
-	 * ]
-	 * ```
+	 * Define custom relations.
 	 *
 	 * @return array
 	 */
-	public static function getRelationsDefinition();
+	public static function defineRelations(): array;
 }

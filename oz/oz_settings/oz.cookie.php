@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 return [
 	'OZ_COOKIE_DOMAIN'   => 'self',
 	'OZ_COOKIE_PATH'     => 'self',

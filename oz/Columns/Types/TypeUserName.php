@@ -9,91 +9,91 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
-use OZONE\OZ\Core\SettingsManager;
-use OZONE\OZ\Utils\StringUtils;
+use OZONE\OZ\Core\Configs;
+use OZONE\OZ\Utils\Utils;
 
-final class TypeUserName extends TypeString
+/**
+ * Class TypeUserName.
+ */
+class TypeUserName extends Type
 {
+	public const NAME = 'user_name';
+
 	/**
 	 * TypeUserName constructor.
 	 *
-	 * @inheritdoc
+	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
 	public function __construct()
 	{
-		parent::__construct();
+		$max = (int) (Configs::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH'));
 
-		$max     = (int) (SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_MAX_LENGTH'));
-		$pattern = SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_REG');
-
-		$this->length(1, \max(3, $max));
-
-		if (isset($pattern)) {
-			$this->pattern($pattern);
-		}
+		parent::__construct(new TypeString(1, \max(3, $max)));
 	}
 
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 */
-	public function validate($value, $column_name, $table_name)
+	public static function getInstance(array $options): self
+	{
+		return (new static())->configure($options);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getName(): string
+	{
+		return self::NAME;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function setDefault($default): self
+	{
+		$this->base_type->setDefault($default);
+
+		return parent::setDefault($default);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function validate($value): ?string
 	{
 		$debug = [
 			'value' => $value,
 		];
 
 		try {
-			$value = parent::validate($value, $column_name, $table_name);
+			$value = $this->base_type->validate($value);
 		} catch (TypesInvalidValueException $e) {
 			throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_INVALID', $debug, $e);
 		}
 
 		if (!empty($value)) {
-			$unwanted = SettingsManager::get('oz.ofv.const', 'OZ_UNWANTED_CHAR_REG');
-			$value    = \preg_replace($unwanted, ' ', $value);
-			$value    = \trim($value);
+			$len   = \strlen($value);
+			$value = \trim($value);
 
-			$contains_key_words = \preg_match(SettingsManager::get('oz.ofv.const', 'OZ_EXCLUDE_KEY_WORDS'), $value);
-
-			if (!$contains_key_words) {
-				$value = StringUtils::clean($value);
-			} else {
-				$error_msg = 'OZ_FIELD_USER_NAME_INVALID';
-
-				if ($contains_key_words) {
-					$error_msg = 'OZ_FIELD_USER_NAME_CONTAINS_KEYWORDS';
-				} elseif (\strlen($value) < SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_MIN_LENGTH')) {
-					$error_msg = 'OZ_FIELD_USER_NAME_TOO_SHORT';
-				} elseif (\strlen($value) > SettingsManager::get('oz.ofv.const', 'OZ_USER_NAME_MAX_LENGTH')) {
-					$error_msg = 'OZ_FIELD_USER_NAME_TOO_LONG';
-				}
-
-				throw new TypesInvalidValueException($error_msg, $debug);
+			if ($len < Configs::get('oz.users', 'OZ_USER_NAME_MIN_LENGTH')) {
+				throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_SHORT', $debug);
 			}
+
+			if ($len > Configs::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH')) {
+				throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_LONG', $debug);
+			}
+
+			$value = Utils::cleanStrForDb($value);
 		}
 
 		return $value;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public static function getInstance(array $options)
-	{
-		$instance = new self();
-
-		if (self::getOptionKey($options, 'null', false)) {
-			$instance->nullAble();
-		}
-
-		if (\array_key_exists('default', $options)) {
-			$instance->setDefault($options['default']);
-		}
-
-		return $instance;
 	}
 }

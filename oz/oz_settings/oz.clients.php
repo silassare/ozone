@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 return [
 	/*
 		* how can we get stuff from OZone if set to:
@@ -22,7 +24,7 @@ return [
 		* - deny
 		*    - disable CORS
 		*
-		* - default: check (even if you mistype the value)
+		* - default: check
 		*/
 	'OZ_CORS_ALLOW_RULE' => 'check',
 

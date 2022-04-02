@@ -9,16 +9,24 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
+use OZONE\OZ\Columns\Types\TypeCC2;
+use OZONE\OZ\Columns\Types\TypeEmail;
+use OZONE\OZ\Columns\Types\TypeFile;
+use OZONE\OZ\Columns\Types\TypeGender;
+use OZONE\OZ\Columns\Types\TypePassword;
+use OZONE\OZ\Columns\Types\TypePhone;
+use OZONE\OZ\Columns\Types\TypeUrl;
+use OZONE\OZ\Columns\Types\TypeUserName;
+
 return [
-	'phone'     => '\OZONE\OZ\Columns\Types\TypePhone',
-	'email'     => '\OZONE\OZ\Columns\Types\TypeEmail',
-	'url'       => '\OZONE\OZ\Columns\Types\TypeUrl',
-	'date'      => '\OZONE\OZ\Columns\Types\TypeDate',
-	'user_name' => '\OZONE\OZ\Columns\Types\TypeUserName',
-	'password'  => '\OZONE\OZ\Columns\Types\TypePassword',
-	'cc2'       => '\OZONE\OZ\Columns\Types\TypeCC2',
-	'gender'    => '\OZONE\OZ\Columns\Types\TypeGender',
-	'timestamp' => '\OZONE\OZ\Columns\Types\TypeTimestamp',
-	'file'      => '\OZONE\OZ\Columns\Types\TypeFile',
-	// 'image' => '\OZONE\OZ\Columns\Types\TypeImage'
+	TypePhone::NAME     => TypePhone::class,
+	TypeEmail::NAME     => TypeEmail::class,
+	TypeUrl::NAME       => TypeUrl::class,
+	TypeUserName::NAME  => TypeUserName::class,
+	TypePassword::NAME  => TypePassword::class,
+	TypeCC2::NAME       => TypeCC2::class,
+	TypeGender::NAME    => TypeGender::class,
+	TypeFile::NAME      => TypeFile::class,
 ];

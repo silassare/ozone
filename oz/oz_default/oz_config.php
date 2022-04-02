@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 // =============== GOOD PRACTICE
 // help us to write clean code -1 same as E_ALL
 \error_reporting(-1);
@@ -48,4 +50,4 @@ if (\function_exists('header_remove')) {
 \date_default_timezone_set('UTC');
 
 // Prevents user from setting self made sessions id
-\ini_set('session.use_strict_mode', 1);
+\ini_set('session.use_strict_mode', '1');

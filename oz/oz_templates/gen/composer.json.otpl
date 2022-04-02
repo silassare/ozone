@@ -1,0 +1,18 @@
+{
+  "name": "ozone/new-project",
+  "description": "A newly created project with ozone",
+  "require": {
+    "silassare/ozone": "@dev"
+  },
+  "repositories": {
+    "silassare/ozone": {
+      "type": "path",
+      "url": "<%$.oz_install_path%>",
+      "options": {
+        "symlink": true
+      }
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

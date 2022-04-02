@@ -1,49 +1,77 @@
 <?php
 
 /**
- * Auto generated file
+ * Copyright (c) 2017-present, Emile Silas Sare
  *
- * WARNING: please don't edit.
+ * This file is part of OZone package.
  *
- * Proudly With: gobl v1.5.0
- * Time: 1617030519
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use Gobl\ORM\ORM;
-use Gobl\ORM\ORMEntityBase;
-use OZONE\OZ\Db\OZFilesQuery as OZFilesQueryReal;
-use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
-use OZONE\OZ\Db\OZFilesController as OZFilesControllerRealR;
+use OZONE\OZ\Db\OZFile as OZFileRealR;
+use OZONE\OZ\Db\OZUser as OZUserRealR;
 
 /**
- * Class OZFile
+ * Class OZFile.
+ *
+ * @property string $id         Getter for
+ *                              column `oz_files`.`id`.
+ * @property string $user_id    Getter for
+ *                              column `oz_files`.`user_id`.
+ * @property string $key        Getter for
+ *                              column `oz_files`.`key`.
+ * @property string $ref        Getter for
+ *                              column `oz_files`.`ref`.
+ * @property string $driver     Getter for
+ *                              column `oz_files`.`driver`.
+ * @property string $clone_id   Getter for
+ *                              column `oz_files`.`clone_id`.
+ * @property string $source_id  Getter for
+ *                              column `oz_files`.`source_id`.
+ * @property int    $size       Getter for
+ *                              column `oz_files`.`size`.
+ * @property string $mime_type  Getter for
+ *                              column `oz_files`.`mime_type`.
+ * @property string $extension  Getter for
+ *                              column `oz_files`.`extension`.
+ * @property string $name       Getter for
+ *                              column `oz_files`.`name`.
+ * @property string $label      Getter for
+ *                              column `oz_files`.`label`.
+ * @property array  $data       Getter for
+ *                              column `oz_files`.`data`.
+ * @property string $created_at Getter for
+ *                              column `oz_files`.`created_at`.
+ * @property string $updated_at Getter for
+ *                              column `oz_files`.`updated_at`.
+ * @property bool   $valid      Getter for
+ *                              column `oz_files`.`valid`.
  */
-abstract class OZFile extends ORMEntityBase
+abstract class OZFile extends \Gobl\ORM\ORMEntity
 {
-	const TABLE_NAME = 'oz_files';
-
-	const COL_ID = 'file_id';
-	const COL_USER_ID = 'file_user_id';
-	const COL_KEY = 'file_key';
-	const COL_CLONE = 'file_clone';
-	const COL_ORIGIN = 'file_origin';
-	const COL_SIZE = 'file_size';
-	const COL_TYPE = 'file_type';
-	const COL_NAME = 'file_name';
-	const COL_LABEL = 'file_label';
-	const COL_PATH = 'file_path';
-	const COL_THUMB = 'file_thumb';
-	const COL_DATA = 'file_data';
-	const COL_ADD_TIME = 'file_add_time';
-	const COL_VALID = 'file_valid';
-
-	/**
-	 * @var \OZONE\OZ\Db\OZUser
-	 */
-	protected $_r_oz_file_owner;
-
+	public const TABLE_NAME      = 'oz_files';
+	public const TABLE_NAMESPACE = 'OZONE\\OZ\\Db';
+	public const COL_ID          = 'file_id';
+	public const COL_USER_ID     = 'file_user_id';
+	public const COL_KEY         = 'file_key';
+	public const COL_REF         = 'file_ref';
+	public const COL_DRIVER      = 'file_driver';
+	public const COL_CLONE_ID    = 'file_clone_id';
+	public const COL_SOURCE_ID   = 'file_source_id';
+	public const COL_SIZE        = 'file_size';
+	public const COL_MIME_TYPE   = 'file_mime_type';
+	public const COL_EXTENSION   = 'file_extension';
+	public const COL_NAME        = 'file_name';
+	public const COL_LABEL       = 'file_label';
+	public const COL_DATA        = 'file_data';
+	public const COL_CREATED_AT  = 'file_created_at';
+	public const COL_UPDATED_AT  = 'file_updated_at';
+	public const COL_VALID       = 'file_valid';
 
 	/**
 	 * OZFile constructor.
@@ -52,95 +80,31 @@ abstract class OZFile extends ORMEntityBase
 	 *                     from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
-	public function __construct($is_new = true, $strict = true)
+	public function __construct(bool $is_new = true, bool $strict = true)
 	{
-		parent::__construct(
-			ORM::getDatabase('OZONE\OZ\Db'),
-			$is_new,
-			$strict,
-			self::TABLE_NAME,
-			OZFilesQueryReal::class
-		);
-	}
-
-	/**
-	 * ManyToOne relation between `oz_files` and `oz_users`.
-	 *
-	 * @return null|\OZONE\OZ\Db\OZUser
-	 * @throws \Throwable
-	 */
-	public function getOZFileOwner()
-	{
-		if (!isset($this->_r_oz_file_owner)) {
-			$filters = [];
-			if (!is_null($v = $this->getUserId())) {
-				$filters['user_id'] = $v;
-			}
-			if (empty($filters)) {
-				return null;
-			}
-
-			$m = new OZUsersControllerRealR();
-			$this->_r_oz_file_owner = $m->getItem($filters);
-		}
-
-		return $this->_r_oz_file_owner;
-	}
-
-	/**
-	 * OneToMany relation between `oz_files` and `oz_files`.
-	 *
-	 * @param array	$filters  the row filters
-	 * @param int|null $max	  maximum row to retrieve
-	 * @param int	  $offset   first row offset
-	 * @param array	$order_by order by rules
-	 * @param int|bool $total	total rows without limit
-	 *
-	 * @return \OZONE\OZ\Db\OZFile[]
-	 * @throws \Throwable
-	 */
-	function getOZFileClones($filters = [], $max = null, $offset = 0, $order_by = [], &$total = false)
-	{
-		if (!is_null($v = $this->getId())) {
-			$filters['file_clone'] = $v;
-		}
-		if (empty($filters)) {
-			return [];
-		}
-
-		$ctrl = new OZFilesControllerRealR();
-
-		return $ctrl->getAllItems($filters, $max, $offset, $order_by, $total);
+		parent::__construct(self::TABLE_NAMESPACE, self::TABLE_NAME, $is_new, $strict);
 	}
 
 	/**
 	 * Getter for column `oz_files`.`id`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getId()
+	public function getID(): string
 	{
-		$column = self::COL_ID;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_ID};
 	}
 
 	/**
 	 * Setter for column `oz_files`.`id`.
 	 *
-	 * @param string $id
+	 * @param null|int|string $id
 	 *
 	 * @return static
 	 */
-	public function setId($id)
+	public function setID(string|int|null $id): self
 	{
-		$column = self::COL_ID;
-		$this->$column = $id;
+		$this->{self::COL_ID} = $id;
 
 		return $this;
 	}
@@ -148,31 +112,23 @@ abstract class OZFile extends ORMEntityBase
 	/**
 	 * Getter for column `oz_files`.`user_id`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getUserId()
+	public function getUserID(): string
 	{
-		$column = self::COL_USER_ID;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_USER_ID};
 	}
 
 	/**
 	 * Setter for column `oz_files`.`user_id`.
 	 *
-	 * @param string $user_id
+	 * @param null|int|string $user_id
 	 *
 	 * @return static
 	 */
-	public function setUserId($user_id)
+	public function setUserID(string|int|null $user_id): self
 	{
-		$column = self::COL_USER_ID;
-		$this->$column = $user_id;
+		$this->{self::COL_USER_ID} = $user_id;
 
 		return $this;
 	}
@@ -180,18 +136,11 @@ abstract class OZFile extends ORMEntityBase
 	/**
 	 * Getter for column `oz_files`.`key`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getKey()
+	public function getKey(): string
 	{
-		$column = self::COL_KEY;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_KEY};
 	}
 
 	/**
@@ -201,74 +150,105 @@ abstract class OZFile extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setKey($key)
+	public function setKey(string $key): self
 	{
-		$column = self::COL_KEY;
-		$this->$column = $key;
+		$this->{self::COL_KEY} = $key;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_files`.`clone`.
+	 * Getter for column `oz_files`.`ref`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getClone()
+	public function getRef(): string
 	{
-		$column = self::COL_CLONE;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_REF};
 	}
 
 	/**
-	 * Setter for column `oz_files`.`clone`.
+	 * Setter for column `oz_files`.`ref`.
 	 *
-	 * @param string $clone
+	 * @param string $ref
 	 *
 	 * @return static
 	 */
-	public function setClone($clone)
+	public function setRef(string $ref): self
 	{
-		$column = self::COL_CLONE;
-		$this->$column = $clone;
+		$this->{self::COL_REF} = $ref;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_files`.`origin`.
+	 * Getter for column `oz_files`.`driver`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getOrigin()
+	public function getDriver(): string
 	{
-		$column = self::COL_ORIGIN;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_DRIVER};
 	}
 
 	/**
-	 * Setter for column `oz_files`.`origin`.
+	 * Setter for column `oz_files`.`driver`.
 	 *
-	 * @param string $origin
+	 * @param string $driver
 	 *
 	 * @return static
 	 */
-	public function setOrigin($origin)
+	public function setDriver(string $driver): self
 	{
-		$column = self::COL_ORIGIN;
-		$this->$column = $origin;
+		$this->{self::COL_DRIVER} = $driver;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_files`.`clone_id`.
+	 *
+	 * @return string
+	 */
+	public function getCloneID(): string
+	{
+		return $this->{self::COL_CLONE_ID};
+	}
+
+	/**
+	 * Setter for column `oz_files`.`clone_id`.
+	 *
+	 * @param null|int|string $clone_id
+	 *
+	 * @return static
+	 */
+	public function setCloneID(string|int|null $clone_id): self
+	{
+		$this->{self::COL_CLONE_ID} = $clone_id;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_files`.`source_id`.
+	 *
+	 * @return string
+	 */
+	public function getSourceID(): string
+	{
+		return $this->{self::COL_SOURCE_ID};
+	}
+
+	/**
+	 * Setter for column `oz_files`.`source_id`.
+	 *
+	 * @param null|int|string $source_id
+	 *
+	 * @return static
+	 */
+	public function setSourceID(string|int|null $source_id): self
+	{
+		$this->{self::COL_SOURCE_ID} = $source_id;
 
 		return $this;
 	}
@@ -276,63 +256,71 @@ abstract class OZFile extends ORMEntityBase
 	/**
 	 * Getter for column `oz_files`.`size`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return int
 	 */
-	public function getSize()
+	public function getSize(): int
 	{
-		$column = self::COL_SIZE;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_SIZE};
 	}
 
 	/**
 	 * Setter for column `oz_files`.`size`.
 	 *
-	 * @param string $size
+	 * @param int $size
 	 *
 	 * @return static
 	 */
-	public function setSize($size)
+	public function setSize(int $size): self
 	{
-		$column = self::COL_SIZE;
-		$this->$column = $size;
+		$this->{self::COL_SIZE} = $size;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_files`.`type`.
+	 * Getter for column `oz_files`.`mime_type`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getType()
+	public function getMimeType(): string
 	{
-		$column = self::COL_TYPE;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_MIME_TYPE};
 	}
 
 	/**
-	 * Setter for column `oz_files`.`type`.
+	 * Setter for column `oz_files`.`mime_type`.
 	 *
-	 * @param string $type
+	 * @param string $mime_type
 	 *
 	 * @return static
 	 */
-	public function setType($type)
+	public function setMimeType(string $mime_type): self
 	{
-		$column = self::COL_TYPE;
-		$this->$column = $type;
+		$this->{self::COL_MIME_TYPE} = $mime_type;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_files`.`extension`.
+	 *
+	 * @return string
+	 */
+	public function getExtension(): string
+	{
+		return $this->{self::COL_EXTENSION};
+	}
+
+	/**
+	 * Setter for column `oz_files`.`extension`.
+	 *
+	 * @param string $extension
+	 *
+	 * @return static
+	 */
+	public function setExtension(string $extension): self
+	{
+		$this->{self::COL_EXTENSION} = $extension;
 
 		return $this;
 	}
@@ -340,18 +328,11 @@ abstract class OZFile extends ORMEntityBase
 	/**
 	 * Getter for column `oz_files`.`name`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getName()
+	public function getName(): string
 	{
-		$column = self::COL_NAME;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_NAME};
 	}
 
 	/**
@@ -361,10 +342,9 @@ abstract class OZFile extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setName($name)
+	public function setName(string $name): self
 	{
-		$column = self::COL_NAME;
-		$this->$column = $name;
+		$this->{self::COL_NAME} = $name;
 
 		return $this;
 	}
@@ -372,18 +352,11 @@ abstract class OZFile extends ORMEntityBase
 	/**
 	 * Getter for column `oz_files`.`label`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getLabel()
+	public function getLabel(): string
 	{
-		$column = self::COL_LABEL;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_LABEL};
 	}
 
 	/**
@@ -393,74 +366,9 @@ abstract class OZFile extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setLabel($label)
+	public function setLabel(string $label): self
 	{
-		$column = self::COL_LABEL;
-		$this->$column = $label;
-
-		return $this;
-	}
-
-	/**
-	 * Getter for column `oz_files`.`path`.
-	 *
-	 * @return string the real type is: string
-	 */
-	public function getPath()
-	{
-		$column = self::COL_PATH;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
-	}
-
-	/**
-	 * Setter for column `oz_files`.`path`.
-	 *
-	 * @param string $path
-	 *
-	 * @return static
-	 */
-	public function setPath($path)
-	{
-		$column = self::COL_PATH;
-		$this->$column = $path;
-
-		return $this;
-	}
-
-	/**
-	 * Getter for column `oz_files`.`thumb`.
-	 *
-	 * @return string the real type is: string
-	 */
-	public function getThumb()
-	{
-		$column = self::COL_THUMB;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
-	}
-
-	/**
-	 * Setter for column `oz_files`.`thumb`.
-	 *
-	 * @param string $thumb
-	 *
-	 * @return static
-	 */
-	public function setThumb($thumb)
-	{
-		$column = self::COL_THUMB;
-		$this->$column = $thumb;
+		$this->{self::COL_LABEL} = $label;
 
 		return $this;
 	}
@@ -468,63 +376,71 @@ abstract class OZFile extends ORMEntityBase
 	/**
 	 * Getter for column `oz_files`.`data`.
 	 *
-	 * @return string the real type is: string
+	 * @return array
 	 */
-	public function getData()
+	public function getData(): array
 	{
-		$column = self::COL_DATA;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_DATA};
 	}
 
 	/**
 	 * Setter for column `oz_files`.`data`.
 	 *
-	 * @param string $data
+	 * @param array $data
 	 *
 	 * @return static
 	 */
-	public function setData($data)
+	public function setData(array $data): self
 	{
-		$column = self::COL_DATA;
-		$this->$column = $data;
+		$this->{self::COL_DATA} = $data;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_files`.`add_time`.
+	 * Getter for column `oz_files`.`created_at`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getAddTime()
+	public function getCreatedAT(): string
 	{
-		$column = self::COL_ADD_TIME;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_CREATED_AT};
 	}
 
 	/**
-	 * Setter for column `oz_files`.`add_time`.
+	 * Setter for column `oz_files`.`created_at`.
 	 *
-	 * @param string $add_time
+	 * @param int|string $created_at
 	 *
 	 * @return static
 	 */
-	public function setAddTime($add_time)
+	public function setCreatedAT(string|int $created_at): self
 	{
-		$column = self::COL_ADD_TIME;
-		$this->$column = $add_time;
+		$this->{self::COL_CREATED_AT} = $created_at;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_files`.`updated_at`.
+	 *
+	 * @return string
+	 */
+	public function getUpdatedAT(): string
+	{
+		return $this->{self::COL_UPDATED_AT};
+	}
+
+	/**
+	 * Setter for column `oz_files`.`updated_at`.
+	 *
+	 * @param int|string $updated_at
+	 *
+	 * @return static
+	 */
+	public function setUpdatedAT(string|int $updated_at): self
+	{
+		$this->{self::COL_UPDATED_AT} = $updated_at;
 
 		return $this;
 	}
@@ -532,18 +448,11 @@ abstract class OZFile extends ORMEntityBase
 	/**
 	 * Getter for column `oz_files`.`valid`.
 	 *
-	 * @return bool the real type is: bool
+	 * @return bool
 	 */
-	public function getValid()
+	public function getValid(): bool
 	{
-		$column = self::COL_VALID;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (bool)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_VALID};
 	}
 
 	/**
@@ -553,11 +462,80 @@ abstract class OZFile extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setValid($valid)
+	public function setValid(bool $valid): self
 	{
-		$column = self::COL_VALID;
-		$this->$column = $valid;
+		$this->{self::COL_VALID} = $valid;
 
 		return $this;
+	}
+
+	/**
+	 * ManyToOne relation between `oz_files` and `oz_users`.
+	 *
+	 * @return null|OZUserRealR
+	 */
+	public function getOwner(): ?OZUserRealR
+	{
+		$getters        = [\OZONE\OZ\Db\OZUser::COL_ID => [$this, 'getUserID']];
+		$filters_bundle = $this->buildRelationFilter($getters, []);
+		if (null === $filters_bundle) {
+			return null;
+		}
+
+		return (new \OZONE\OZ\Db\OZUsersController())->getItem($filters_bundle);
+	}
+
+	/**
+	 * OneToMany relation between `oz_files` and `oz_files`.
+	 *
+	 * @param array    $filters  the row filters
+	 * @param null|int $max      maximum row to retrieve
+	 * @param int      $offset   first row offset
+	 * @param array    $order_by order by rules
+	 * @param null|int $total    total rows without limit
+	 *
+	 * @return OZFileRealR[]
+	 */
+	public function getClones(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = -1): array
+	{
+		$getters        = [\OZONE\OZ\Db\OZFile::COL_CLONE_ID => [$this, 'getID']];
+		$filters_bundle = $this->buildRelationFilter($getters, $filters);
+		if (null === $filters_bundle) {
+			return [];
+		}
+
+		return (new \OZONE\OZ\Db\OZFilesController())->getAllItems($filters_bundle, $max, $offset, $order_by, $total);
+	}
+
+	/**
+	 * ManyToOne relation between `oz_files` and `oz_files`.
+	 *
+	 * @return null|OZFileRealR
+	 */
+	public function getClonedFrom(): ?OZFileRealR
+	{
+		$getters        = [\OZONE\OZ\Db\OZFile::COL_ID => [$this, 'getCloneID']];
+		$filters_bundle = $this->buildRelationFilter($getters, []);
+		if (null === $filters_bundle) {
+			return null;
+		}
+
+		return (new \OZONE\OZ\Db\OZFilesController())->getItem($filters_bundle);
+	}
+
+	/**
+	 * ManyToOne relation between `oz_files` and `oz_files`.
+	 *
+	 * @return null|OZFileRealR
+	 */
+	public function getSource(): ?OZFileRealR
+	{
+		$getters        = [\OZONE\OZ\Db\OZFile::COL_SOURCE_ID => [$this, 'getID']];
+		$filters_bundle = $this->buildRelationFilter($getters, []);
+		if (null === $filters_bundle) {
+			return null;
+		}
+
+		return (new \OZONE\OZ\Db\OZFilesController())->getItem($filters_bundle);
 	}
 }

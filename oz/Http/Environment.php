@@ -9,24 +9,23 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Http;
 
 /**
- * Environment
- *
- * This is particularly useful for unit testing, but it also lets us create
- * custom sub-requests.
+ * Class Environment.
  */
 class Environment extends Collection
 {
 	/**
-	 * Creates mock environment
+	 * Creates mock environment.
 	 *
 	 * @param array $userData Array of custom environment keys and values
 	 *
 	 * @return self
 	 */
-	public static function mock(array $userData = [])
+	public static function mock(array $userData = []): self
 	{
 		$data = \array_merge([
 			'SERVER_PROTOCOL'      => 'HTTP/1.1',
@@ -40,7 +39,7 @@ class Environment extends Collection
 			'HTTP_ACCEPT'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 			'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.8',
 			'HTTP_ACCEPT_CHARSET'  => 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-			'HTTP_USER_AGENT'      => 'O\'Zone Framework',
+			'HTTP_USER_AGENT'      => 'OZone Framework',
 			'REMOTE_ADDR'          => '127.0.0.1',
 			'REQUEST_TIME'         => \time(),
 			'REQUEST_TIME_FLOAT'   => \microtime(true),

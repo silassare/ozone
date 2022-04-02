@@ -1,4 +1,4 @@
 <?php
-<%@import('gen.warn.otpl',$)%>
 
+<%@import('gen.warn.otpl',$)%>
 return <%$.oz_settings_str%>;

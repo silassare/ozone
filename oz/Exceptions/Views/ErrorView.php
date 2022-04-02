@@ -9,87 +9,49 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Exceptions\Views;
 
-use OZONE\OZ\Core\Context;
 use OZONE\OZ\Exceptions\BaseException;
 use OZONE\OZ\Exceptions\InternalErrorException;
-use OZONE\OZ\Router\Route;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
-use OZONE\OZ\Utils\StringUtils;
-use OZONE\OZ\Web\WebViewBase;
+use OZONE\OZ\Http\Response;
+use OZONE\OZ\Web\WebView;
 
-final class ErrorView extends WebViewBase
+/**
+ * Class ErrorView.
+ */
+final class ErrorView extends WebView
 {
-	private $compileData = [];
-
 	/**
-	 * @throws \OZONE\OZ\Exceptions\BaseException
+	 * @param \OZONE\OZ\Exceptions\BaseException $error
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */
-	public function mainRoute()
+	public function renderError(BaseException $error): Response
 	{
-		$context          = $this->r->getContext();
-		$request          = $context->getRequest();
-		$e                = $request->getAttribute('exception');
-		$original_context = $request->getAttribute('context');
-		$masked_message   = BaseException::MESSAGE_INTERNAL_ERROR;
+		$context        = $this->getContext();
+		$request        = $context->getRequest();
+		$masked_message = BaseException::anErrorOccurredMessage();
 
-		if ($e instanceof BaseException && $original_context instanceof Context) {
-			$request = $original_context->getRequest();
-		} else {
-			$e = new InternalErrorException($masked_message);
-		}
+		$back_url    = $context->getMainUrl();
+		$err_message = ($error instanceof InternalErrorException ? $masked_message : $error->getMessage());
+		$err_data    = $error->getData();
+		$status      = $error->getHTTPStatusCode();
 
-		$back_url             = $context->getMainUrl();
-		$http_response_header = $e->getHeaderString();
-		$err_title            = StringUtils::removePrefix($http_response_header, 'HTTP/1.1 ');
-		$err_desc             = $e instanceof InternalErrorException ? $masked_message : $e->getMessage();
-		$err_data             = $e->getData();
-		$status               = $e->getResponseStatusCode();
+		$this->inject([
+			'oz_error'             => $error,
+			'oz_error_code'        => $error->getCode(),
+			'oz_error_http_status' => $status,
+			'oz_error_title'       => $error->getHTTPReasonPhrase(),
+			'oz_error_message'     => $err_message,
+			'oz_error_data'        => $err_data,
+			'oz_error_url'         => $request->getUri(),
+			'oz_error_back_url'    => $back_url,
+		]);
 
-		$this->compileData = [
-			'oz_error'           => $e,
-			'oz_error_code'      => $status,
-			'oz_error_code_real' => $e->getCode(),
-			'oz_error_title'     => $err_title,
-			'oz_error_desc'      => $err_desc,
-			'oz_error_data'      => $err_data,
-			'oz_error_url'       => $request->getUri(),
-			'oz_error_back_url'  => $back_url,
-		];
-		$response          = $context->getResponse();
-
-		return $this->renderTo($response->withStatus($status));
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function getCompileData()
-	{
-		return $this->compileData;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function getTemplate()
-	{
-		return 'error.otpl';
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->map('*', '/oz:error', function (RouteInfo $r) {
-			$view = new self($r);
-
-			return $view->mainRoute();
-		}, [Route::OPTION_NAME => 'oz:error']);
+		return $this->setTemplate('error.otpl')
+			->respond()
+			->withStatus($status);
 	}
 }

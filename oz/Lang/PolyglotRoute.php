@@ -9,38 +9,44 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Lang;
 
 use OZONE\OZ\Core\Context;
-use OZONE\OZ\Hooks\HookContext;
-use OZONE\OZ\Hooks\HookProvider;
-use OZONE\OZ\Hooks\MainHookProvider;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\RouteProviderInterface;
+use OZONE\OZ\Router\Events\RouteBeforeRun;
+use OZONE\OZ\Router\Interfaces\RouteProviderInterface;
 use OZONE\OZ\Router\Router;
+use PHPUtils\Events\Event;
 
+/**
+ * Class PolyglotRoute.
+ */
 final class PolyglotRoute implements RouteProviderInterface
 {
-	const REG_LANG = '[a-z]{1,8}(-[a-z]{1,8})?';
-
-	const ROUTE_LANG_PLACEHOLDER = 'oz_lang';
+	public const ROUTE_LANG_PARAM         = 'oz_lang';
+	public const ROUTE_LANG_PARAM_PATTERN = '[a-z]{1,8}(-[a-z]{1,8})?';
 
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 */
-	public static function registerRoutes(Router $router)
+	public static function registerRoutes(Router $router): void
 	{
-		$router->declarePlaceholder(self::ROUTE_LANG_PLACEHOLDER, self::REG_LANG, function (Context $context) {
-			return Polyglot::getLanguage($context);
-		});
+		$router->addGlobalParam(
+			self::ROUTE_LANG_PARAM,
+			self::ROUTE_LANG_PARAM_PATTERN,
+			static function (Context $context) {
+				return Polyglot::getLanguage($context);
+			}
+		);
 
-		MainHookProvider::getInstance()
-						->onBeforeRouteRun(function (HookContext $hc, RouteInfo $ri) {
-							$lang = $ri->getArg(self::ROUTE_LANG_PLACEHOLDER, null);
+		RouteBeforeRun::handle(static function (RouteBeforeRun $ev): void {
+			$lang = $ev->getRouteInfo()
+				->getParam(self::ROUTE_LANG_PARAM);
 
-							if ($lang) {
-								Polyglot::setUserLanguage($hc->getContext(), $lang);
-							}
-						}, HookProvider::RUN_FIRST);
+			if ($lang) {
+				Polyglot::setUserLanguage($ev->getContext(), $lang);
+			}
+		}, Event::RUN_FIRST);
 	}
 }

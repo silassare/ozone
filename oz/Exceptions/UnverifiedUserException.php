@@ -9,27 +9,31 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Exceptions;
 
+use Throwable;
+
 /**
- * Class UnverifiedUserException
+ * Class UnverifiedUserException.
  */
 class UnverifiedUserException extends BaseException
 {
 	/**
 	 * UnverifiedUserException constructor.
 	 *
-	 * @param null|string     $message  the exception message
-	 * @param null|array      $data     additional exception data
-	 * @param null|\Throwable $previous previous throwable used for the exception chaining
+	 * @param null|string    $message  the exception message
+	 * @param null|array     $data     additional exception data
+	 * @param null|Throwable $previous previous throwable used for the exception chaining
 	 */
-	public function __construct($message = null, array $data = null, $previous = null)
+	public function __construct(string $message = null, array $data = null, Throwable $previous = null)
 	{
 		parent::__construct(
 			(empty($message) ? 'OZ_ERROR_YOU_MUST_LOGIN' : $message),
-			BaseException::UNVERIFIED_USER,
 			$data,
-			$previous
+			$previous,
+			BaseException::UNVERIFIED_USER,
 		);
 	}
 }

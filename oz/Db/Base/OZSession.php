@@ -1,49 +1,62 @@
 <?php
 
 /**
- * Auto generated file
+ * Copyright (c) 2017-present, Emile Silas Sare
  *
- * WARNING: please don't edit.
+ * This file is part of OZone package.
  *
- * Proudly With: gobl v1.5.0
- * Time: 1617030519
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use Gobl\ORM\ORM;
-use Gobl\ORM\ORMEntityBase;
-use OZONE\OZ\Db\OZSessionsQuery as OZSessionsQueryReal;
-use OZONE\OZ\Db\OZClientsController as OZClientsControllerRealR;
-use OZONE\OZ\Db\OZUsersController as OZUsersControllerRealR;
+use OZONE\OZ\Db\OZClient as OZClientRealR;
+use OZONE\OZ\Db\OZUser as OZUserRealR;
 
 /**
- * Class OZSession
+ * Class OZSession.
+ *
+ * @property string $id         Getter for
+ *                              column `oz_sessions`.`id`.
+ * @property string $client_id  Getter for
+ *                              column `oz_sessions`.`client_id`.
+ * @property string $user_id    Getter for
+ *                              column `oz_sessions`.`user_id`.
+ * @property string $token      Getter for
+ *                              column `oz_sessions`.`token`.
+ * @property string $expire     Getter for
+ *                              column `oz_sessions`.`expire`.
+ * @property bool   $verified   Getter for
+ *                              column `oz_sessions`.`verified`.
+ * @property string $last_seen  Getter for
+ *                              column `oz_sessions`.`last_seen`.
+ * @property array  $data       Getter for
+ *                              column `oz_sessions`.`data`.
+ * @property string $created_at Getter for
+ *                              column `oz_sessions`.`created_at`.
+ * @property string $updated_at Getter for
+ *                              column `oz_sessions`.`updated_at`.
+ * @property bool   $valid      Getter for
+ *                              column `oz_sessions`.`valid`.
  */
-abstract class OZSession extends ORMEntityBase
+abstract class OZSession extends \Gobl\ORM\ORMEntity
 {
-	const TABLE_NAME = 'oz_sessions';
-
-	const COL_ID = 'session_id';
-	const COL_CLIENT_API_KEY = 'session_client_api_key';
-	const COL_USER_ID = 'session_user_id';
-	const COL_TOKEN = 'session_token';
-	const COL_EXPIRE = 'session_expire';
-	const COL_LAST_SEEN = 'session_last_seen';
-	const COL_DATA = 'session_data';
-	const COL_ADD_TIME = 'session_add_time';
-	const COL_VALID = 'session_valid';
-
-	/**
-	 * @var \OZONE\OZ\Db\OZClient
-	 */
-	protected $_r_oz_client;
-
-	/**
-	 * @var \OZONE\OZ\Db\OZUser
-	 */
-	protected $_r_oz_user;
-
+	public const TABLE_NAME      = 'oz_sessions';
+	public const TABLE_NAMESPACE = 'OZONE\\OZ\\Db';
+	public const COL_ID          = 'session_id';
+	public const COL_CLIENT_ID   = 'session_client_id';
+	public const COL_USER_ID     = 'session_user_id';
+	public const COL_TOKEN       = 'session_token';
+	public const COL_EXPIRE      = 'session_expire';
+	public const COL_VERIFIED    = 'session_verified';
+	public const COL_LAST_SEEN   = 'session_last_seen';
+	public const COL_DATA        = 'session_data';
+	public const COL_CREATED_AT  = 'session_created_at';
+	public const COL_UPDATED_AT  = 'session_updated_at';
+	public const COL_VALID       = 'session_valid';
 
 	/**
 	 * OZSession constructor.
@@ -52,80 +65,19 @@ abstract class OZSession extends ORMEntityBase
 	 *                     from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
-	public function __construct($is_new = true, $strict = true)
+	public function __construct(bool $is_new = true, bool $strict = true)
 	{
-		parent::__construct(
-			ORM::getDatabase('OZONE\OZ\Db'),
-			$is_new,
-			$strict,
-			self::TABLE_NAME,
-			OZSessionsQueryReal::class
-		);
-	}
-
-	/**
-	 * ManyToOne relation between `oz_sessions` and `oz_clients`.
-	 *
-	 * @return null|\OZONE\OZ\Db\OZClient
-	 * @throws \Throwable
-	 */
-	public function getOZClient()
-	{
-		if (!isset($this->_r_oz_client)) {
-			$filters = [];
-			if (!is_null($v = $this->getClientApiKey())) {
-				$filters['client_api_key'] = $v;
-			}
-			if (empty($filters)) {
-				return null;
-			}
-
-			$m = new OZClientsControllerRealR();
-			$this->_r_oz_client = $m->getItem($filters);
-		}
-
-		return $this->_r_oz_client;
-	}
-
-	/**
-	 * ManyToOne relation between `oz_sessions` and `oz_users`.
-	 *
-	 * @return null|\OZONE\OZ\Db\OZUser
-	 * @throws \Throwable
-	 */
-	public function getOZUser()
-	{
-		if (!isset($this->_r_oz_user)) {
-			$filters = [];
-			if (!is_null($v = $this->getUserId())) {
-				$filters['user_id'] = $v;
-			}
-			if (empty($filters)) {
-				return null;
-			}
-
-			$m = new OZUsersControllerRealR();
-			$this->_r_oz_user = $m->getItem($filters);
-		}
-
-		return $this->_r_oz_user;
+		parent::__construct(self::TABLE_NAMESPACE, self::TABLE_NAME, $is_new, $strict);
 	}
 
 	/**
 	 * Getter for column `oz_sessions`.`id`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getId()
+	public function getID(): string
 	{
-		$column = self::COL_ID;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_ID};
 	}
 
 	/**
@@ -135,42 +87,33 @@ abstract class OZSession extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setId($id)
+	public function setID(string $id): self
 	{
-		$column = self::COL_ID;
-		$this->$column = $id;
+		$this->{self::COL_ID} = $id;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_sessions`.`client_api_key`.
+	 * Getter for column `oz_sessions`.`client_id`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getClientApiKey()
+	public function getClientID(): string
 	{
-		$column = self::COL_CLIENT_API_KEY;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_CLIENT_ID};
 	}
 
 	/**
-	 * Setter for column `oz_sessions`.`client_api_key`.
+	 * Setter for column `oz_sessions`.`client_id`.
 	 *
-	 * @param string $client_api_key
+	 * @param int|string $client_id
 	 *
 	 * @return static
 	 */
-	public function setClientApiKey($client_api_key)
+	public function setClientID(string|int $client_id): self
 	{
-		$column = self::COL_CLIENT_API_KEY;
-		$this->$column = $client_api_key;
+		$this->{self::COL_CLIENT_ID} = $client_id;
 
 		return $this;
 	}
@@ -178,31 +121,23 @@ abstract class OZSession extends ORMEntityBase
 	/**
 	 * Getter for column `oz_sessions`.`user_id`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getUserId()
+	public function getUserID(): string
 	{
-		$column = self::COL_USER_ID;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_USER_ID};
 	}
 
 	/**
 	 * Setter for column `oz_sessions`.`user_id`.
 	 *
-	 * @param string $user_id
+	 * @param null|int|string $user_id
 	 *
 	 * @return static
 	 */
-	public function setUserId($user_id)
+	public function setUserID(string|int|null $user_id): self
 	{
-		$column = self::COL_USER_ID;
-		$this->$column = $user_id;
+		$this->{self::COL_USER_ID} = $user_id;
 
 		return $this;
 	}
@@ -210,18 +145,11 @@ abstract class OZSession extends ORMEntityBase
 	/**
 	 * Getter for column `oz_sessions`.`token`.
 	 *
-	 * @return string the real type is: string
+	 * @return string
 	 */
-	public function getToken()
+	public function getToken(): string
 	{
-		$column = self::COL_TOKEN;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_TOKEN};
 	}
 
 	/**
@@ -231,10 +159,9 @@ abstract class OZSession extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setToken($token)
+	public function setToken(string $token): self
 	{
-		$column = self::COL_TOKEN;
-		$this->$column = $token;
+		$this->{self::COL_TOKEN} = $token;
 
 		return $this;
 	}
@@ -242,31 +169,47 @@ abstract class OZSession extends ORMEntityBase
 	/**
 	 * Getter for column `oz_sessions`.`expire`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getExpire()
+	public function getExpire(): string
 	{
-		$column = self::COL_EXPIRE;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_EXPIRE};
 	}
 
 	/**
 	 * Setter for column `oz_sessions`.`expire`.
 	 *
-	 * @param string $expire
+	 * @param int|string $expire
 	 *
 	 * @return static
 	 */
-	public function setExpire($expire)
+	public function setExpire(string|int $expire): self
 	{
-		$column = self::COL_EXPIRE;
-		$this->$column = $expire;
+		$this->{self::COL_EXPIRE} = $expire;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_sessions`.`verified`.
+	 *
+	 * @return bool
+	 */
+	public function getVerified(): bool
+	{
+		return $this->{self::COL_VERIFIED};
+	}
+
+	/**
+	 * Setter for column `oz_sessions`.`verified`.
+	 *
+	 * @param bool $verified
+	 *
+	 * @return static
+	 */
+	public function setVerified(bool $verified): self
+	{
+		$this->{self::COL_VERIFIED} = $verified;
 
 		return $this;
 	}
@@ -274,31 +217,23 @@ abstract class OZSession extends ORMEntityBase
 	/**
 	 * Getter for column `oz_sessions`.`last_seen`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getLastSeen()
+	public function getLastSeen(): string
 	{
-		$column = self::COL_LAST_SEEN;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_LAST_SEEN};
 	}
 
 	/**
 	 * Setter for column `oz_sessions`.`last_seen`.
 	 *
-	 * @param string $last_seen
+	 * @param int|string $last_seen
 	 *
 	 * @return static
 	 */
-	public function setLastSeen($last_seen)
+	public function setLastSeen(string|int $last_seen): self
 	{
-		$column = self::COL_LAST_SEEN;
-		$this->$column = $last_seen;
+		$this->{self::COL_LAST_SEEN} = $last_seen;
 
 		return $this;
 	}
@@ -306,63 +241,71 @@ abstract class OZSession extends ORMEntityBase
 	/**
 	 * Getter for column `oz_sessions`.`data`.
 	 *
-	 * @return string the real type is: string
+	 * @return array
 	 */
-	public function getData()
+	public function getData(): array
 	{
-		$column = self::COL_DATA;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_DATA};
 	}
 
 	/**
 	 * Setter for column `oz_sessions`.`data`.
 	 *
-	 * @param string $data
+	 * @param array $data
 	 *
 	 * @return static
 	 */
-	public function setData($data)
+	public function setData(array $data): self
 	{
-		$column = self::COL_DATA;
-		$this->$column = $data;
+		$this->{self::COL_DATA} = $data;
 
 		return $this;
 	}
 
 	/**
-	 * Getter for column `oz_sessions`.`add_time`.
+	 * Getter for column `oz_sessions`.`created_at`.
 	 *
-	 * @return string the real type is: bigint
+	 * @return string
 	 */
-	public function getAddTime()
+	public function getCreatedAT(): string
 	{
-		$column = self::COL_ADD_TIME;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (string)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_CREATED_AT};
 	}
 
 	/**
-	 * Setter for column `oz_sessions`.`add_time`.
+	 * Setter for column `oz_sessions`.`created_at`.
 	 *
-	 * @param string $add_time
+	 * @param int|string $created_at
 	 *
 	 * @return static
 	 */
-	public function setAddTime($add_time)
+	public function setCreatedAT(string|int $created_at): self
 	{
-		$column = self::COL_ADD_TIME;
-		$this->$column = $add_time;
+		$this->{self::COL_CREATED_AT} = $created_at;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_sessions`.`updated_at`.
+	 *
+	 * @return string
+	 */
+	public function getUpdatedAT(): string
+	{
+		return $this->{self::COL_UPDATED_AT};
+	}
+
+	/**
+	 * Setter for column `oz_sessions`.`updated_at`.
+	 *
+	 * @param int|string $updated_at
+	 *
+	 * @return static
+	 */
+	public function setUpdatedAT(string|int $updated_at): self
+	{
+		$this->{self::COL_UPDATED_AT} = $updated_at;
 
 		return $this;
 	}
@@ -370,18 +313,11 @@ abstract class OZSession extends ORMEntityBase
 	/**
 	 * Getter for column `oz_sessions`.`valid`.
 	 *
-	 * @return bool the real type is: bool
+	 * @return bool
 	 */
-	public function getValid()
+	public function getValid(): bool
 	{
-		$column = self::COL_VALID;
-		$v = $this->$column;
-
-		if ($v !== null) {
-			$v = (bool)$v;
-		}
-
-		return $v;
+		return $this->{self::COL_VALID};
 	}
 
 	/**
@@ -391,11 +327,42 @@ abstract class OZSession extends ORMEntityBase
 	 *
 	 * @return static
 	 */
-	public function setValid($valid)
+	public function setValid(bool $valid): self
 	{
-		$column = self::COL_VALID;
-		$this->$column = $valid;
+		$this->{self::COL_VALID} = $valid;
 
 		return $this;
+	}
+
+	/**
+	 * ManyToOne relation between `oz_sessions` and `oz_clients`.
+	 *
+	 * @return null|OZClientRealR
+	 */
+	public function getClient(): ?OZClientRealR
+	{
+		$getters        = [\OZONE\OZ\Db\OZClient::COL_ID => [$this, 'getClientID']];
+		$filters_bundle = $this->buildRelationFilter($getters, []);
+		if (null === $filters_bundle) {
+			return null;
+		}
+
+		return (new \OZONE\OZ\Db\OZClientsController())->getItem($filters_bundle);
+	}
+
+	/**
+	 * ManyToOne relation between `oz_sessions` and `oz_users`.
+	 *
+	 * @return null|OZUserRealR
+	 */
+	public function getUser(): ?OZUserRealR
+	{
+		$getters        = [\OZONE\OZ\Db\OZUser::COL_ID => [$this, 'getUserID']];
+		$filters_bundle = $this->buildRelationFilter($getters, []);
+		if (null === $filters_bundle) {
+			return null;
+		}
+
+		return (new \OZONE\OZ\Db\OZUsersController())->getItem($filters_bundle);
 	}
 }

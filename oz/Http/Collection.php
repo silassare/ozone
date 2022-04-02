@@ -9,19 +9,27 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Http;
 
-class Collection implements \ArrayAccess, \Countable, \IteratorAggregate
+use ArrayAccess;
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+
+/**
+ * Class Collection.
+ */
+class Collection implements ArrayAccess, Countable, IteratorAggregate
 {
 	/**
-	 * The source data
-	 *
-	 * @var array
+	 * The source data.
 	 */
-	protected $data = [];
+	protected array $data = [];
 
 	/**
-	 * Creates new collection
+	 * Creates new collection.
 	 *
 	 * @param array $items Pre-populate collection with this key-value array
 	 */
@@ -31,35 +39,35 @@ class Collection implements \ArrayAccess, \Countable, \IteratorAggregate
 	}
 
 	/**
-	 * Sets collection item
+	 * Sets collection item.
 	 *
 	 * @param string $key   The data key
 	 * @param mixed  $value The data value
 	 */
-	public function set($key, $value)
+	public function set(string $key, mixed $value): void
 	{
 		$this->data[$key] = $value;
 	}
 
 	/**
-	 * Gets collection item for key
+	 * Gets collection item for key.
 	 *
-	 * @param string $key     The data key
-	 * @param mixed  $default The default value to return if data key does not exist
+	 * @param string     $key     The data key
+	 * @param null|mixed $default The default value to return if data key does not exist
 	 *
 	 * @return mixed The key's value, or the default value
 	 */
-	public function get($key, $default = null)
+	public function get(string $key, mixed $default = null): mixed
 	{
 		return $this->has($key) ? $this->data[$key] : $default;
 	}
 
 	/**
-	 * Adds item to collection, replacing existing items with the same data key
+	 * Adds item to collection, replacing existing items with the same data key.
 	 *
 	 * @param array $items Key-value array of data to append to this collection
 	 */
-	public function replace(array $items)
+	public function replace(array $items): void
 	{
 		foreach ($items as $key => $value) {
 			$this->set($key, $value);
@@ -67,21 +75,21 @@ class Collection implements \ArrayAccess, \Countable, \IteratorAggregate
 	}
 
 	/**
-	 * Gets all items in collection
+	 * Gets all items in collection.
 	 *
 	 * @return array The collection's source data
 	 */
-	public function all()
+	public function all(): array
 	{
 		return $this->data;
 	}
 
 	/**
-	 * Gets collection keys
+	 * Gets collection keys.
 	 *
 	 * @return array The collection's source data keys
 	 */
-	public function keys()
+	public function keys(): array
 	{
 		return \array_keys($this->data);
 	}
@@ -93,103 +101,74 @@ class Collection implements \ArrayAccess, \Countable, \IteratorAggregate
 	 *
 	 * @return bool
 	 */
-	public function has($key)
+	public function has(string $key): bool
 	{
 		return \array_key_exists($key, $this->data);
 	}
 
 	/**
-	 * Removes item from collection
+	 * Removes item from collection.
 	 *
 	 * @param string $key The data key
 	 */
-	public function remove($key)
+	public function remove(string $key): void
 	{
 		unset($this->data[$key]);
 	}
 
 	/**
-	 * Removes all items from collection
+	 * Removes all items from collection.
 	 */
-	public function clear()
+	public function clear(): void
 	{
 		$this->data = [];
 	}
 
 	/**
-	 * Does this collection have a given key?
-	 *
-	 * @param string $key The data key
-	 *
-	 * @return bool
-	 *
-	 * @see \ArrayAccess::offsetExists()
+	 * {@inheritDoc}
 	 */
-	public function offsetExists($key)
+	public function offsetExists($offset): bool
 	{
-		return $this->has($key);
+		return $this->has($offset);
 	}
 
 	/**
-	 * Gets collection item for key
-	 *
-	 * @param string $key The data key
-	 *
-	 * @return mixed The key's value, or the default value
-	 *
-	 * @see \ArrayAccess::offsetGet()
+	 * {@inheritDoc}
 	 */
-	public function offsetGet($key)
+	public function offsetGet($offset): mixed
 	{
-		return $this->get($key);
+		return $this->get($offset);
 	}
 
 	/**
-	 * Sets collection item
-	 *
-	 * @param string $key   The data key
-	 * @param mixed  $value The data value
-	 *
-	 * @see \ArrayAccess::offsetSet()
+	 * {@inheritDoc}
 	 */
-	public function offsetSet($key, $value)
+	public function offsetSet($offset, $value): void
 	{
-		$this->set($key, $value);
+		$this->set($offset, $value);
 	}
 
 	/**
-	 * Removes item from collection
-	 *
-	 * @param string $key The data key
-	 *
-	 * @see \ArrayAccess::offsetUnset()
+	 * {@inheritDoc}
 	 */
-	public function offsetUnset($key)
+	public function offsetUnset($offset): void
 	{
-		$this->remove($key);
+		$this->remove($offset);
 	}
 
 	/**
-	 * Gets number of items in collection
-	 *
-	 * @return int
-	 *
-	 * @see \Countable::count()
+	 * {@inheritDoc}
 	 */
-	public function count()
+	public function count(): int
 	{
 		return \count($this->data);
 	}
 
 	/**
-	 * Gets collection iterator
-	 *
-	 * @return \ArrayIterator
-	 *
-	 * @see \IteratorAggregate::getIterator()
+	 * {@inheritDoc}
 	 */
-	public function getIterator()
+	public function getIterator(): ArrayIterator
 	{
-		return new \ArrayIterator($this->data);
+		return new ArrayIterator($this->data);
 	}
 }

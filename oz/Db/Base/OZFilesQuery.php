@@ -1,263 +1,30 @@
 <?php
 
 /**
- * Auto generated file
+ * Copyright (c) 2017-present, Emile Silas Sare
  *
- * WARNING: please don't edit.
+ * This file is part of OZone package.
  *
- * Proudly With: gobl v1.5.0
- * Time: 1617030519
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
+declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use Gobl\DBAL\Rule;
-use Gobl\ORM\ORM;
-use Gobl\ORM\ORMTableQueryBase;
-
 /**
- * Class OZFilesQuery
+ * Class OZFilesQuery.
+ *
+ * @method \OZONE\OZ\Db\OZFilesResults find(int $max = null, int $offset = 0, array $order_by = [])
  */
-abstract class OZFilesQuery extends ORMTableQueryBase
+abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 {
 	/**
 	 * OZFilesQuery constructor.
 	 */
-	public function __construct()
+	public function __construct(\OZONE\OZ\Db\OZFilesFilters $table_scoped_filters)
 	{
-		parent::__construct(
-			ORM::getDatabase('OZONE\OZ\Db'),
-			OZFile::TABLE_NAME,
-			\OZONE\OZ\Db\OZFilesResults::class
-		);
-	}
-
-	/**
-	 * Finds rows in the table `oz_files` and returns a new instance of the table's result iterator.
-	 *
-	 * @param null|int $max
-	 * @param int      $offset
-	 * @param array    $order_by
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 *
-	 * @return \OZONE\OZ\Db\OZFilesResults
-	 */
-	public function find($max = null, $offset = 0, array $order_by = [])
-	{
-		/* @var \OZONE\OZ\Db\OZFilesResults $results */
-		$results = parent::find($max, $offset, $order_by);
-
-		return $results;
-	}
-
-	/**
-	 * Filters rows with condition on column `id` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterById($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('id', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `user_id` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByUserId($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('user_id', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `key` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByKey($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('key', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `clone` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByClone($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('clone', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `origin` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByOrigin($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('origin', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `size` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterBySize($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('size', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `type` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByType($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('type', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `name` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByName($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('name', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `label` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByLabel($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('label', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `path` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByPath($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('path', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `thumb` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByThumb($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('thumb', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `data` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByData($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('data', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `add_time` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByAddTime($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('add_time', $value, $operator);
-	}
-
-	/**
-	 * Filters rows with condition on column `valid` in the table `oz_files`.
-	 *
-	 * @param mixed  $value    the filter value
-	 * @param int    $operator the operator to use
-	 *
-	 * @return $this|\OZONE\OZ\Db\OZFilesQuery
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 */
-	public function filterByValid($value, $operator = Rule::OP_EQ)
-	{
-		return $this->filterBy('valid', $value, $operator);
+		parent::__construct(\OZONE\OZ\Db\OZFile::TABLE_NAMESPACE, \OZONE\OZ\Db\OZFile::TABLE_NAME, $table_scoped_filters);
 	}
 }

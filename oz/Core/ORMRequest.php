@@ -9,29 +9,35 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\OZ\Core;
 
 use Gobl\DBAL\Table;
 use Gobl\ORM\ORMRequestBase;
+use OZONE\OZ\Forms\FormData;
 
+/**
+ * Class ORMRequest.
+ */
 final class ORMRequest extends ORMRequestBase
 {
 	/**
 	 * @var \OZONE\OZ\Core\Context
 	 */
-	private $context;
+	private Context $context;
 
 	/**
 	 * ORMRequest constructor.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param array                  $form
+	 * @param \OZONE\OZ\Core\Context         $context
+	 * @param array|\OZONE\OZ\Forms\FormData $form
 	 *
 	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 	 */
-	public function __construct(Context $context, array $form)
+	public function __construct(Context $context, array|FormData $form)
 	{
-		parent::__construct($form);
+		parent::__construct(\is_array($form) ? $form : $form->getData());
 
 		$this->context = $context;
 	}
@@ -47,7 +53,7 @@ final class ORMRequest extends ORMRequestBase
 	/**
 	 * @return \OZONE\OZ\Core\Context
 	 */
-	public function getContext()
+	public function getContext(): Context
 	{
 		return $this->context;
 	}
@@ -57,9 +63,9 @@ final class ORMRequest extends ORMRequestBase
 	 *
 	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 	 *
-	 * @return \Gobl\ORM\ORMRequestBase|\OZONE\OZ\Core\ORMRequest
+	 * @return \OZONE\OZ\Core\ORMRequest
 	 */
-	public function createScopedInstance(Table $table)
+	public function createScopedInstance(Table $table): self
 	{
 		$request = $this->getParsedRequest($table);
 
