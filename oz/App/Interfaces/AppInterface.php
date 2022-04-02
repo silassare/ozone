@@ -9,8 +9,15 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\App;
+declare(strict_types=1);
 
+namespace OZONE\OZ\App\Interfaces;
+
+use Throwable;
+
+/**
+ * Interface AppInterface.
+ */
 interface AppInterface
 {
 	/**
@@ -21,20 +28,20 @@ interface AppInterface
 	/**
 	 * ==============================================================
 	 * HOOKS
-	 * ==============================================================
+	 * ==============================================================.
 	 */
 
 	/**
-	 * Init hook. Is called before the current request is executed.
+	 * Called when ozone boot.
 	 */
-	public function onInit();
+	public function boot(): void;
 
 	/**
-	 * Unhandled exception hook. Is called when an unhandled exception occurs.
+	 * Unhandled throwable hook. Is called when an unhandled throwable occurs.
 	 *
-	 * @param \Exception $e the exception
+	 * @param Throwable $t the throwable (exception/error)
 	 */
-	public function onUnhandledException(\Exception $e);
+	public function onUnhandledThrowable(Throwable $t);
 
 	/**
 	 * Unhandled error hook. Is called when an unhandled error occurs.
@@ -44,5 +51,5 @@ interface AppInterface
 	 * @param string $file    the file where it occurs
 	 * @param int    $line    the file line where it occurs
 	 */
-	public function onUnhandledError($code, $message, $file, $line);
+	public function onUnhandledError(int $code, string $message, string $file, int $line);
 }
