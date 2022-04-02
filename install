@@ -1,14 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
 #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 # This script is intended to be run like this:
 #
-# wget -qO- https://raw.githubusercontent.com/silassare/ozone/master/install.sh | sudo bash
+# wget -qO- https://raw.githubusercontent.com/silassare/ozone/master/install | sudo bash
 #
 #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 # clear the screen
 clear
+
+PHP_VERSION=php8.1
 
 shout(){
 	# Only use colors if connected to a terminal
@@ -50,10 +52,12 @@ shout_success(){
 install_composer(){
 	shout "Installing composer..."
 
+	local EXPECTED_SIGNATURE ACTUAL_SIGNATURE;
+
 	# https://getcomposer.org/doc/faqs/how-to-install-composer-programmatically.md
-	local EXPECTED_SIGNATURE="$(wget -q -O - https://composer.github.io/installer.sig)"
+	EXPECTED_SIGNATURE="$(wget -q -O - https://composer.github.io/installer.sig)"
 	php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-	local ACTUAL_SIGNATURE="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
+	ACTUAL_SIGNATURE="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
 
 	if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
 		shout_error 'Composer - Invalid installer signature'
@@ -95,14 +99,16 @@ install_php(){
 	shout "Installing php and required extensions..."
 
 	# install php and modules
-	apt-get -qq -o=Dpkg::Use-Pty=0 -y install php-fpm php-mysql php-gd php-xml php-curl php-zip < /dev/null
+	apt-get -qq -o=Dpkg::Use-Pty=0 -y install $PHP_VERSION-fpm $PHP_VERSION-mysql $PHP_VERSION-xml $PHP_VERSION-gd $PHP_VERSION-curl $PHP_VERSION-mbstring $PHP_VERSION-bcmath $PHP_VERSION-zip < /dev/null
 }
 
 configure_php(){
 
-	shout "Updating php-fpm ini file..."
+	local PHP_INSTALL_DIR
 
-	local PHP_INSTALL_DIR="$(php -r "echo str_replace('/cli/php.ini', '', php_ini_loaded_file());")"
+	shout "Updating $PHP_VERSION-fpm ini file..."
+
+	PHP_INSTALL_DIR="$($PHP_VERSION -r "echo str_replace('/cli/php.ini', '', php_ini_loaded_file());")"
 
 	set_php_ini_value date.timezone utc "$PHP_INSTALL_DIR"/fpm/php.ini
 	set_php_ini_value cgi.fix_pathinfo 0 "$PHP_INSTALL_DIR"/fpm/php.ini
@@ -127,7 +133,7 @@ install_mysql(){
 	# mysql_install_db deprecated using mysqld --initialize
 	mysqld --initialize
 
-	shout "Securring mysql..."
+	shout "Securing mysql..."
 
 	# alternative to　"mysql_secure_installation"
 	service mysql restart
@@ -165,7 +171,7 @@ set_php_ini_value(){
 	local VALUE="$2"
 	local INI_FILE="$3"
 
-	shout "Settings $KEY = $VALUE in $INI_FILE"
+	shout "Setting => $KEY = $VALUE in $INI_FILE"
 	sed -i -e "s/;\?$KEY\s*=\s*.*/$KEY = $VALUE/g" "$INI_FILE"
 }
 
@@ -182,8 +188,8 @@ create_oz_sh(){
 # we launch the version corresponding to that used in
 # the project or we use the default version
 
-OZ="__INSTALL_PATH__/bin/oz"
-PROJECT_OZ="$(pwd)/vendor/bin/oz"
+OZ=__INSTALL_PATH__/vendor/bin/oz
+PROJECT_OZ="$(pwd)/api/vendor/bin/oz"
 PROJECT_CONFIG_FILE="$(pwd)/api/app/oz_settings/oz.config.php"
 
 # makes sure we are in project root directory

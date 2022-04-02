@@ -12,8 +12,13 @@
 		"api",
 		"website"
 	],
+	"config": {
+		"platform": {
+			"php": "8.1"
+		}
+	},
 	"require": {
-		"php": ">=5.6.0",
+		"php": ">=8.1",
 		"ext-pdo": "*",
 		"ext-json": "*",
 		"ext-gd": "*",
@@ -21,19 +26,34 @@
 		"ext-simplexml": "*",
 		"ext-posix": "*",
 		"silassare/otpl": "=1.1.9",
-		"silassare/gobl": "=1.5.0",
-		"silassare/kli": "=1.0.4",
-		"claviska/simpleimage": "^3.3",
+		"silassare/gobl": "@dev",
+		"silassare/kli": "@dev",
+		"silassare/php-utils": "@dev",
+		"claviska/simpleimage": "^3.6.3",
 		"psr/http-message": "^1.0"
 	},
 	"require-dev": {
-		"friendsofphp/php-cs-fixer": "^2.16",
-		"squizlabs/php_codesniffer": "^3.5",
-		"phpcompatibility/php-compatibility": "*"
+		"roave/security-advisories": "dev-latest",
+		"oliup/oliup-cs-php": "dev-main",
+		"phpunit/phpunit": "^9.5.9"
 	},
-	"scripts": {
-		"post-install-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths vendor/phpcompatibility/php-compatibility",
-		"post-update-cmd": "\"vendor/bin/phpcs\" --config-set installed_paths vendor/phpcompatibility/php-compatibility"
+	"repositories": {
+		"oliup/oliup-cs-php": {
+			"type": "vcs",
+			"url": "https://github.com/oliup-io/oliup-cs-php"
+		},
+		"silassare/gobl": {
+			"type": "vcs",
+			"url": "https://github.com/silassare/gobl"
+		},
+		"silassare/kli": {
+			"type": "vcs",
+			"url": "https://github.com/silassare/kli"
+		},
+		"silassare/php-utils": {
+			"type": "vcs",
+			"url": "https://github.com/silassare/php-utils"
+		}
 	},
 	"bin": [
 		"bin/oz",
@@ -47,7 +67,8 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"OZONE\\OZ\\": "oz"
+			"OZONE\\OZ\\": "oz",
+			"OZONE\\OZ\\Tests\\": "tests"
 		},
 		"files": [
 			"oz/oz_default/oz_bootstrap.php"
@@ -60,6 +81,5 @@
 			"homepage": "https://github.com/silassare"
 		}
 	],
-	"minimum-stability": "dev",
 	"prefer-stable": true
 }
