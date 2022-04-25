@@ -323,6 +323,20 @@ final class MyService extends BaseService
 	}
 
 	/**
+	 * Makes sure we do not use the target page offset as the relation page offset
+	 *
+	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
+	 *
+	 * @return \OZONE\OZ\Core\ORMRequest
+	 */
+	private function cleanORMRequestForRelations(ORMRequest  $orm_request){
+		$req = $orm_request->getParsedRequest();
+		unset($req['page']);
+
+		return new ORMRequest($this->getContext(), $req);
+	}
+
+	/**
 	 * @param \MY_DB_NS\MyEntity        $entity
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
 	 * @param int                       &$total_records
@@ -333,6 +347,7 @@ final class MyService extends BaseService
 	 */
 	private function listEntityRelations(MyEntity $entity, ORMRequest $orm_request, &$total_records = null)
 	{
+		$orm_request     = $this->cleanORMRequestForRelations($orm_request);
 		$query_relations = $orm_request->getRelations();
 		$relations       = [];
 
@@ -370,6 +385,7 @@ final class MyService extends BaseService
 	 */
 	private function listEntitiesRelations(array $entities, ORMRequest $orm_request, &$total_records = null)
 	{
+		$orm_request     = $this->cleanORMRequestForRelations($orm_request);
 		$query_relations = $orm_request->getRelations();
 		$relations       = [];
 
