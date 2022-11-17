@@ -30,7 +30,7 @@ class MethodNotAllowedException extends BaseException
 	public function __construct(string $message = null, array $data = null, Throwable $previous = null)
 	{
 		parent::__construct(
-			(empty($message) ? 'OZ_ERROR_METHOD_NOT_ALLOWED' : $message),
+			empty($message) ? 'OZ_ERROR_METHOD_NOT_ALLOWED' : $message,
 			$data,
 			$previous,
 			BaseException::METHOD_NOT_ALLOWED,

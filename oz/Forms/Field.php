@@ -133,9 +133,9 @@ class Field implements ArrayCapableInterface
 	 * @param mixed                    $value
 	 * @param \OZONE\OZ\Forms\FormData $cleaned_fd
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-	 *
 	 * @return mixed
+	 *
+	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 	 */
 	public function validate(mixed $value, FormData $cleaned_fd): mixed
 	{
@@ -163,7 +163,7 @@ class Field implements ArrayCapableInterface
 			$type = $this->validator->getCleanOptions();
 		} elseif ($this->validator instanceof TypesSwitcher) {
 			$type = $this->validator->toArray();
-		} else /* if (is_callable($this->validator)) */ {
+		} else { /* if (is_callable($this->validator)) */
 			$type = (new TypeString())->getCleanOptions();
 		}
 

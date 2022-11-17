@@ -30,7 +30,7 @@ class NotFoundException extends BaseException
 	public function __construct(string $message = null, array $data = null, Throwable $previous = null)
 	{
 		parent::__construct(
-			(empty($message) ? 'OZ_ERROR_NOT_FOUND' : $message),
+			empty($message) ? 'OZ_ERROR_NOT_FOUND' : $message,
 			$data,
 			$previous,
 			BaseException::NOT_FOUND,

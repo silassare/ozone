@@ -83,7 +83,7 @@ return [
 				'authorized' => true,
 			],
 			'data'       => [
-				'type'    => 'array',
+				'type'    => 'map',
 				'default' => [],
 			],
 			'created_at' => [
@@ -134,7 +134,7 @@ return [
 				'max'  => 60,
 			],
 			'data'       => [
-				'type'    => 'array',
+				'type'    => 'map',
 				'default' => [],
 			],
 			'created_at' => [
@@ -223,7 +223,7 @@ return [
 				'type' => 'string',
 			],
 			'data'              => [
-				'type'    => 'array',
+				'type'    => 'map',
 				'default' => [],
 			],
 			'created_at'        => [
@@ -298,7 +298,7 @@ return [
 				'format' => 'timestamp',
 			],
 			'data'       => [
-				'type'    => 'array',
+				'type'    => 'map',
 				'default' => [],
 			],
 			'created_at' => [
@@ -379,7 +379,7 @@ return [
 				'format' => 'timestamp',
 			],
 			'data'        => [
-				'type'    => 'array',
+				'type'    => 'map',
 				'default' => [],
 			],
 			'created_at'  => [
@@ -423,7 +423,7 @@ return [
 				'max'  => 255,
 			],
 			'data'       => [
-				'type'    => 'array',
+				'type'    => 'map',
 				'default' => [],
 			],
 			'created_at' => [
@@ -534,7 +534,7 @@ return [
 				'max'  => 255,
 			],
 			'data'       => [
-				'type'    => 'array',
+				'type'    => 'map',
 				'default' => [],
 			],
 			'created_at' => [

@@ -53,13 +53,13 @@ class GetFilesView extends WebView
 	/**
 	 * @param \OZONE\OZ\Router\RouteInfo $r
 	 *
+	 * @return \OZONE\OZ\Http\Response
+	 *
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\NotFoundException
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
-	 *
-	 * @return \OZONE\OZ\Http\Response
 	 */
 	public static function handle(RouteInfo $r): Response
 	{

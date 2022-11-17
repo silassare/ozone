@@ -13,44 +13,25 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use OZONE\OZ\Db\OZFile as OZFileRealR;
-use OZONE\OZ\Db\OZUser as OZUserRealR;
-
 /**
  * Class OZFile.
  *
- * @property string $id         Getter for
- *                              column `oz_files`.`id`.
- * @property string $user_id    Getter for
- *                              column `oz_files`.`user_id`.
- * @property string $key        Getter for
- *                              column `oz_files`.`key`.
- * @property string $ref        Getter for
- *                              column `oz_files`.`ref`.
- * @property string $driver     Getter for
- *                              column `oz_files`.`driver`.
- * @property string $clone_id   Getter for
- *                              column `oz_files`.`clone_id`.
- * @property string $source_id  Getter for
- *                              column `oz_files`.`source_id`.
- * @property int    $size       Getter for
- *                              column `oz_files`.`size`.
- * @property string $mime_type  Getter for
- *                              column `oz_files`.`mime_type`.
- * @property string $extension  Getter for
- *                              column `oz_files`.`extension`.
- * @property string $name       Getter for
- *                              column `oz_files`.`name`.
- * @property string $label      Getter for
- *                              column `oz_files`.`label`.
- * @property array  $data       Getter for
- *                              column `oz_files`.`data`.
- * @property string $created_at Getter for
- *                              column `oz_files`.`created_at`.
- * @property string $updated_at Getter for
- *                              column `oz_files`.`updated_at`.
- * @property bool   $valid      Getter for
- *                              column `oz_files`.`valid`.
+ * @property null|string $id         Getter for column `oz_files`.`id`.
+ * @property null|string $user_id    Getter for column `oz_files`.`user_id`.
+ * @property string      $key        Getter for column `oz_files`.`key`.
+ * @property string      $ref        Getter for column `oz_files`.`ref`.
+ * @property string      $driver     Getter for column `oz_files`.`driver`.
+ * @property null|string $clone_id   Getter for column `oz_files`.`clone_id`.
+ * @property null|string $source_id  Getter for column `oz_files`.`source_id`.
+ * @property int         $size       Getter for column `oz_files`.`size`.
+ * @property string      $mime_type  Getter for column `oz_files`.`mime_type`.
+ * @property string      $extension  Getter for column `oz_files`.`extension`.
+ * @property string      $name       Getter for column `oz_files`.`name`.
+ * @property string      $label      Getter for column `oz_files`.`label`.
+ * @property array       $data       Getter for column `oz_files`.`data`.
+ * @property string      $created_at Getter for column `oz_files`.`created_at`.
+ * @property string      $updated_at Getter for column `oz_files`.`updated_at`.
+ * @property bool        $valid      Getter for column `oz_files`.`valid`.
  */
 abstract class OZFile extends \Gobl\ORM\ORMEntity
 {
@@ -82,15 +63,30 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 */
 	public function __construct(bool $is_new = true, bool $strict = true)
 	{
-		parent::__construct(self::TABLE_NAMESPACE, self::TABLE_NAME, $is_new, $strict);
+		parent::__construct(
+			self::TABLE_NAMESPACE,
+			self::TABLE_NAME,
+			$is_new,
+			$strict
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return static
+	 */
+	public static function createInstance(bool $is_new = true, bool $strict = true): static
+	{
+		return new \OZONE\OZ\Db\OZFile($is_new, $strict);
 	}
 
 	/**
 	 * Getter for column `oz_files`.`id`.
 	 *
-	 * @return string
+	 * @return null|string
 	 */
-	public function getID(): string
+	public function getID(): string|null
 	{
 		return $this->{self::COL_ID};
 	}
@@ -102,7 +98,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setID(string|int|null $id): self
+	public function setID(string|int|null $id): static
 	{
 		$this->{self::COL_ID} = $id;
 
@@ -112,9 +108,9 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	/**
 	 * Getter for column `oz_files`.`user_id`.
 	 *
-	 * @return string
+	 * @return null|string
 	 */
-	public function getUserID(): string
+	public function getUserID(): string|null
 	{
 		return $this->{self::COL_USER_ID};
 	}
@@ -126,7 +122,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUserID(string|int|null $user_id): self
+	public function setUserID(string|int|null $user_id): static
 	{
 		$this->{self::COL_USER_ID} = $user_id;
 
@@ -150,7 +146,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setKey(string $key): self
+	public function setKey(string $key): static
 	{
 		$this->{self::COL_KEY} = $key;
 
@@ -174,7 +170,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setRef(string $ref): self
+	public function setRef(string $ref): static
 	{
 		$this->{self::COL_REF} = $ref;
 
@@ -198,7 +194,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setDriver(string $driver): self
+	public function setDriver(string $driver): static
 	{
 		$this->{self::COL_DRIVER} = $driver;
 
@@ -208,9 +204,9 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	/**
 	 * Getter for column `oz_files`.`clone_id`.
 	 *
-	 * @return string
+	 * @return null|string
 	 */
-	public function getCloneID(): string
+	public function getCloneID(): string|null
 	{
 		return $this->{self::COL_CLONE_ID};
 	}
@@ -222,7 +218,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCloneID(string|int|null $clone_id): self
+	public function setCloneID(string|int|null $clone_id): static
 	{
 		$this->{self::COL_CLONE_ID} = $clone_id;
 
@@ -232,9 +228,9 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	/**
 	 * Getter for column `oz_files`.`source_id`.
 	 *
-	 * @return string
+	 * @return null|string
 	 */
-	public function getSourceID(): string
+	public function getSourceID(): string|null
 	{
 		return $this->{self::COL_SOURCE_ID};
 	}
@@ -246,7 +242,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setSourceID(string|int|null $source_id): self
+	public function setSourceID(string|int|null $source_id): static
 	{
 		$this->{self::COL_SOURCE_ID} = $source_id;
 
@@ -270,7 +266,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setSize(int $size): self
+	public function setSize(int $size): static
 	{
 		$this->{self::COL_SIZE} = $size;
 
@@ -294,7 +290,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setMimeType(string $mime_type): self
+	public function setMimeType(string $mime_type): static
 	{
 		$this->{self::COL_MIME_TYPE} = $mime_type;
 
@@ -318,7 +314,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setExtension(string $extension): self
+	public function setExtension(string $extension): static
 	{
 		$this->{self::COL_EXTENSION} = $extension;
 
@@ -342,7 +338,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setName(string $name): self
+	public function setName(string $name): static
 	{
 		$this->{self::COL_NAME} = $name;
 
@@ -366,7 +362,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setLabel(string $label): self
+	public function setLabel(string $label): static
 	{
 		$this->{self::COL_LABEL} = $label;
 
@@ -390,7 +386,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setData(array $data): self
+	public function setData(array $data): static
 	{
 		$this->{self::COL_DATA} = $data;
 
@@ -414,7 +410,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCreatedAT(string|int $created_at): self
+	public function setCreatedAT(string|int $created_at): static
 	{
 		$this->{self::COL_CREATED_AT} = $created_at;
 
@@ -438,7 +434,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUpdatedAT(string|int $updated_at): self
+	public function setUpdatedAT(string|int $updated_at): static
 	{
 		$this->{self::COL_UPDATED_AT} = $updated_at;
 
@@ -462,7 +458,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setValid(bool $valid): self
+	public function setValid(bool $valid): static
 	{
 		$this->{self::COL_VALID} = $valid;
 
@@ -472,12 +468,13 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	/**
 	 * ManyToOne relation between `oz_files` and `oz_users`.
 	 *
-	 * @return null|OZUserRealR
+	 * @return ?\OZONE\OZ\Db\OZUser
 	 */
-	public function getOwner(): ?OZUserRealR
+	public function getOwner(): ?\OZONE\OZ\Db\OZUser
 	{
-		$getters        = [\OZONE\OZ\Db\OZUser::COL_ID => [$this, 'getUserID']];
+		$getters        = [\OZONE\OZ\Db\OZUser::COL_ID => $this->getUserID(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, []);
+
 		if (null === $filters_bundle) {
 			return null;
 		}
@@ -494,12 +491,15 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 * @param array    $order_by order by rules
 	 * @param null|int $total    total rows without limit
 	 *
-	 * @return OZFileRealR[]
+	 * @return \OZONE\OZ\Db\OZFile[]
 	 */
-	public function getClones(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = -1): array
+	public function getClones(array $filters = [
+	], ?int $max = null, int $offset = 0, array $order_by = [
+	], ?int &$total = -1): array
 	{
-		$getters        = [\OZONE\OZ\Db\OZFile::COL_CLONE_ID => [$this, 'getID']];
+		$getters        = [\OZONE\OZ\Db\OZFile::COL_CLONE_ID => $this->getID(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, $filters);
+
 		if (null === $filters_bundle) {
 			return [];
 		}
@@ -510,12 +510,13 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	/**
 	 * ManyToOne relation between `oz_files` and `oz_files`.
 	 *
-	 * @return null|OZFileRealR
+	 * @return ?\OZONE\OZ\Db\OZFile
 	 */
-	public function getClonedFrom(): ?OZFileRealR
+	public function getClonedFrom(): ?\OZONE\OZ\Db\OZFile
 	{
-		$getters        = [\OZONE\OZ\Db\OZFile::COL_ID => [$this, 'getCloneID']];
+		$getters        = [\OZONE\OZ\Db\OZFile::COL_ID => $this->getCloneID(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, []);
+
 		if (null === $filters_bundle) {
 			return null;
 		}
@@ -526,12 +527,13 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	/**
 	 * ManyToOne relation between `oz_files` and `oz_files`.
 	 *
-	 * @return null|OZFileRealR
+	 * @return ?\OZONE\OZ\Db\OZFile
 	 */
-	public function getSource(): ?OZFileRealR
+	public function getSource(): ?\OZONE\OZ\Db\OZFile
 	{
-		$getters        = [\OZONE\OZ\Db\OZFile::COL_SOURCE_ID => [$this, 'getID']];
+		$getters        = [\OZONE\OZ\Db\OZFile::COL_SOURCE_ID => $this->getID(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, []);
+
 		if (null === $filters_bundle) {
 			return null;
 		}

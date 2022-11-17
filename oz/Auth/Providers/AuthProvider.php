@@ -313,10 +313,10 @@ abstract class AuthProvider implements AuthProviderInterface
 	 * @param string $ref
 	 * @param bool   $no_disabled
 	 *
+	 * @return \OZONE\OZ\Db\OZAuth
+	 *
 	 * @throws \OZONE\OZ\Exceptions\NotFoundException           when not found
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException $no_disabled is true and the auth is disabled
-	 *
-	 * @return \OZONE\OZ\Db\OZAuth
 	 */
 	public static function getRequiredByRef(string $ref, bool $no_disabled = true): OZAuth
 	{

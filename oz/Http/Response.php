@@ -405,9 +405,9 @@ class Response extends Message implements ResponseInterface
 	 *
 	 * @param int $status HTTP status code
 	 *
-	 * @throws InvalidArgumentException if an invalid HTTP status code is provided
-	 *
 	 * @return int
+	 *
+	 * @throws InvalidArgumentException if an invalid HTTP status code is provided
 	 */
 	protected function filterStatus(int $status): int
 	{

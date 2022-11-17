@@ -15,7 +15,7 @@ namespace OZONE\OZ\Cli\Utils;
 
 use Gobl\DBAL\Table;
 use Gobl\Gobl;
-use Gobl\ORM\Generators\Generator;
+use Gobl\ORM\Generators\CSGeneratorORM;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\FS\FilesManager;
 use OZONE\OZ\FS\TemplatesUtils;
@@ -24,7 +24,7 @@ use PHPUtils\Str;
 /**
  * Class ServiceGenerator.
  */
-class ServiceGenerator extends Generator
+class ServiceGenerator extends CSGeneratorORM
 {
 	public const SERVICE_TEMPLATE_NAME = 'service.class';
 
@@ -97,7 +97,7 @@ class ServiceGenerator extends Generator
 
 		/** @var \Gobl\DBAL\Constraints\PrimaryKey $pk */
 		$pk           = $table->getPrimaryKeyConstraint();
-		$columns      = $pk->getConstraintColumns();
+		$columns      = $pk->getColumns();
 		$pk_col_count = \count($columns);
 
 		if (1 !== $pk_col_count) {

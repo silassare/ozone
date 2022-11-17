@@ -837,9 +837,9 @@ class Request extends Message implements ServerRequestInterface
 	 *
 	 * @param string $method
 	 *
-	 * @throws InvalidArgumentException on invalid HTTP method
-	 *
 	 * @return string
+	 *
+	 * @throws InvalidArgumentException on invalid HTTP method
 	 */
 	public static function filterMethod(string $method): string
 	{

@@ -53,7 +53,7 @@ final class Assert
 		}
 
 		if (!$safe) {
-			if (!($error_msg instanceof Exception)) {
+			if (!$error_msg instanceof Exception) {
 				$error_msg = new InvalidFormException($error_msg, $error_data);
 			}
 

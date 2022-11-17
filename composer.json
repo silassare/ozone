@@ -1,6 +1,6 @@
 {
 	"name": "silassare/ozone",
-	"version": "2.0.0",
+	"version": "3.0.0",
 	"description": "OZone is a framework to build RESTFul API and website.",
 	"license": "MIT",
 	"keywords": [
@@ -26,34 +26,16 @@
 		"ext-simplexml": "*",
 		"ext-posix": "*",
 		"silassare/otpl": "=1.1.9",
-		"silassare/gobl": "@dev",
-		"silassare/kli": "@dev",
-		"silassare/php-utils": "@dev",
-		"claviska/simpleimage": "^3.6.3",
+		"silassare/gobl": "dev-dev",
+		"silassare/kli": "dev-dev",
+		"silassare/php-utils": "dev-main",
+		"claviska/simpleimage": "^3.7.0",
 		"psr/http-message": "^1.0"
 	},
 	"require-dev": {
 		"roave/security-advisories": "dev-latest",
 		"oliup/oliup-cs-php": "dev-main",
-		"phpunit/phpunit": "^9.5.9"
-	},
-	"repositories": {
-		"oliup/oliup-cs-php": {
-			"type": "vcs",
-			"url": "https://github.com/oliup-io/oliup-cs-php"
-		},
-		"silassare/gobl": {
-			"type": "vcs",
-			"url": "https://github.com/silassare/gobl"
-		},
-		"silassare/kli": {
-			"type": "vcs",
-			"url": "https://github.com/silassare/kli"
-		},
-		"silassare/php-utils": {
-			"type": "vcs",
-			"url": "https://github.com/silassare/php-utils"
-		}
+		"phpunit/phpunit": "^9.5.26"
 	},
 	"bin": [
 		"bin/oz",
@@ -81,5 +63,6 @@
 			"homepage": "https://github.com/silassare"
 		}
 	],
-	"prefer-stable": true
+	"prefer-stable": true,
+	"minimum-stability": "dev"
 }

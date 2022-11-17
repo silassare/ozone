@@ -14,8 +14,10 @@ declare(strict_types=1);
 namespace OZONE\OZ\Hooks;
 
 use Exception;
-use Gobl\ORM\Events\ORMTableClassesGenerated;
+use Gobl\ORM\Events\ORMTableFilesGenerated;
 use Gobl\ORM\Utils\ORMClassKind;
+use OLIUP\CG\PHPTrait;
+use OLIUP\CG\PHPUseTrait;
 use OZONE\OZ\Cli\Cli;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\CRUDHandlerTrait;
@@ -30,7 +32,6 @@ use OZONE\OZ\Http\Uri;
 use OZONE\OZ\Router\Events\RouteMethodNotAllowed;
 use OZONE\OZ\Router\Events\RouteNotFound;
 use OZONE\OZ\Users\Traits\UserEntityTrait;
-use PhpParser\Builder\TraitUse;
 use PHPUtils\Events\Event;
 
 /**
@@ -202,10 +203,9 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	/**
 	 * @throws Exception
 	 */
-	public static function onTableClassesGenerated(ORMTableClassesGenerated $event): void
+	public static function onTableFilesGenerated(ORMTableFilesGenerated $event): void
 	{
-		$classes = $event->getClasses();
-		$table   = $classes->getTable();
+		$table   = $event->getTable();
 
 		if (DbManager::OZONE_DB_NAMESPACE === $table->getNamespace()) {
 			$name  = $table->getName();
@@ -218,18 +218,13 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 			}
 
 			if ($trait) {
-				$entity_class = $classes->getClassFile(ORMClassKind::ENTITY)
-					->getClassNode();
-				if ($entity_class) {
-					$entity_class->stmts[] = (new TraitUse('\\' . $trait))->getNode();
-				}
+				$event->getClass(ORMClassKind::ENTITY)->useTrait(new PHPUseTrait(new PHPTrait($trait)));
 			}
 		}
 
-		$crud_class = $classes->getClassFile(ORMClassKind::CRUD)->getClassNode();
-		if ($crud_class) {
-			$crud_class->stmts[] = (new TraitUse('\\' . CRUDHandlerTrait::class))->getNode();
-		}
+		$event->getClass(ORMClassKind::CRUD)->useTrait(
+			new PHPUseTrait(new PHPTrait(CRUDHandlerTrait::class))
+		);
 	}
 
 	/**
@@ -249,7 +244,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	public static function bootCli(Cli $cli): void
 	{
 		if ($cli->inProjectRoot()) {
-			ORMTableClassesGenerated::handle([self::class, 'onTableClassesGenerated'], Event::RUN_FIRST);
+			ORMTableFilesGenerated::handle([self::class, 'onTableFilesGenerated'], Event::RUN_FIRST);
 		}
 	}
 }

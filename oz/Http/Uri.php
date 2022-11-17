@@ -473,10 +473,10 @@ class Uri implements UriInterface
 	 *
 	 * @param string $scheme raw Uri scheme
 	 *
+	 * @return string
+	 *
 	 * @throws InvalidArgumentException if Uri scheme is not "", "https", or "http"
 	 * @throws InvalidArgumentException if the Uri scheme is not a string
-	 *
-	 * @return string
 	 */
 	protected function filterScheme(string $scheme): string
 	{
@@ -504,9 +504,9 @@ class Uri implements UriInterface
 	 *
 	 * @param null|int $port the Uri port number
 	 *
-	 * @throws InvalidArgumentException if the port is invalid
-	 *
 	 * @return null|int
+	 *
+	 * @throws InvalidArgumentException if the port is invalid
 	 */
 	protected function filterPort(?int $port): ?int
 	{

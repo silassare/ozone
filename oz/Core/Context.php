@@ -29,8 +29,8 @@ use OZONE\OZ\OZone;
 use OZONE\OZ\Router\Router;
 use OZONE\OZ\Sessions\Session;
 use OZONE\OZ\Users\UsersManager;
-use PHPUtils\Store\StoreNotEditable;
 use PHPUtils\Events\Event;
+use PHPUtils\Store\StoreNotEditable;
 use Throwable;
 
 /**

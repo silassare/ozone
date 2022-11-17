@@ -30,7 +30,7 @@ class UnauthorizedActionException extends BaseException
 	public function __construct(string $message = null, array $data = null, Throwable $previous = null)
 	{
 		parent::__construct(
-			(empty($message) ? 'OZ_ERROR_NOT_ALLOWED' : $message),
+			empty($message) ? 'OZ_ERROR_NOT_ALLOWED' : $message,
 			$data,
 			$previous,
 			BaseException::UNAUTHORIZED_ACTION,

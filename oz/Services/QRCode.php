@@ -64,9 +64,9 @@ final class QRCode extends Service
 	 * @param \OZONE\OZ\Core\Context $context
 	 * @param string                 $qr_code_key
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 *
 	 * @return \OZONE\OZ\Http\Response
+	 *
+	 * @throws \OZONE\OZ\Exceptions\NotFoundException
 	 */
 	public static function generateQrCodeImage(Context $context, string $qr_code_key): Response
 	{

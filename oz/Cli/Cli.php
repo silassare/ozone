@@ -82,9 +82,9 @@ final class Cli extends Kli
 	 *
 	 * @param array $arg
 	 *
-	 * @throws \Kli\Exceptions\KliException
-	 *
 	 * @return \OZONE\OZ\Cli\Cli
+	 *
+	 * @throws \Kli\Exceptions\KliException
 	 */
 	public static function run(array $arg): self
 	{

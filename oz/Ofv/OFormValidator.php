@@ -72,9 +72,9 @@ final class OFormValidator
 	 *
 	 * @param array $rules_list the rules to use for each field
 	 *
-	 * @throws Throwable
-	 *
 	 * @return bool
+	 *
+	 * @throws Throwable
 	 */
 	public function checkForm(array $rules_list): bool
 	{

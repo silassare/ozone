@@ -110,7 +110,7 @@ class FilesUtils
 	 */
 	public static function getRealExtension(string $file_name, string $expected_mime_type): string
 	{
-		$name_ext = \strtolower(\substr($file_name, (\strrpos($file_name, '.') + 1)));
+		$name_ext = \strtolower(\substr($file_name, \strrpos($file_name, '.') + 1));
 
 		if ($name_ext && self::extensionToMimeType($name_ext) === $expected_mime_type) {
 			return $name_ext;

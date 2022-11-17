@@ -369,11 +369,11 @@ class RouteGuard implements RouteGuardInterface
 	/**
 	 * This will show a password form.
 	 *
+	 * @return FormData
+	 *
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 *
-	 * @return FormData
 	 */
 	protected function requirePassword(): FormData
 	{
@@ -396,11 +396,11 @@ class RouteGuard implements RouteGuardInterface
 	/**
 	 * This will show a login form.
 	 *
+	 * @return FormData
+	 *
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 *
-	 * @return FormData
 	 */
 	protected function requireLogin(): FormData
 	{
@@ -502,10 +502,10 @@ class RouteGuard implements RouteGuardInterface
 	/**
 	 * This makes sure client/user provide http auth credentials.
 	 *
+	 * @return \OZONE\OZ\Forms\FormData
+	 *
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 *
-	 * @return \OZONE\OZ\Forms\FormData
 	 */
 	protected function requireHTTPAuth(): FormData
 	{
@@ -576,9 +576,9 @@ class RouteGuard implements RouteGuardInterface
 	/**
 	 * Handle basic auth request.
 	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 *
 	 * @return \OZONE\OZ\Forms\FormData
+	 *
+	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
 	protected function handleBasicAuth(): FormData
 	{
@@ -619,9 +619,9 @@ class RouteGuard implements RouteGuardInterface
 	/**
 	 * Handle bearer auth request.
 	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 *
 	 * @return \OZONE\OZ\Forms\FormData
+	 *
+	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
 	protected function handleBearerAuth(): FormData
 	{
@@ -652,9 +652,9 @@ class RouteGuard implements RouteGuardInterface
 	/**
 	 * Handle digest auth request.
 	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 *
 	 * @return \OZONE\OZ\Forms\FormData
+	 *
+	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
 	protected function handleDigestAuth(): FormData
 	{

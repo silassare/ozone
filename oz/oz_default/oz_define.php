@@ -11,9 +11,10 @@
 
 declare(strict_types=1);
 
-const OZ_OZONE_VERSION      = '2.0.0';
-const OZ_OZONE_VERSION_NAME = 'OZone v' . OZ_OZONE_VERSION;
-const OZ_OZONE_IS_CLI       = ('cli' === \PHP_SAPI);
+const OZ_OZONE_VERSION           = '3.0.0';
+const OZ_OZONE_VERSION_NAME      = 'OZone v' . OZ_OZONE_VERSION;
+const OZ_OZONE_PACKAGE_NAME      = 'silassare/ozone';
+const OZ_OZONE_IS_CLI            = ('cli' === \PHP_SAPI);
 \define('OZ_OZONE_DIR', \dirname(__DIR__) . \DIRECTORY_SEPARATOR);
 \define('OZ_OZONE_START_TIME', \microtime(true));
 

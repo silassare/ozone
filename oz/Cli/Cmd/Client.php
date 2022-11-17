@@ -94,7 +94,7 @@ final class Client extends Command
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Kli\Exceptions\KliInputException
+	 * @throws \Gobl\CRUD\Exceptions\CRUDException
 	 */
 	private function add(array $options): void
 	{

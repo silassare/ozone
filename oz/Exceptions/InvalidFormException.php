@@ -33,7 +33,7 @@ class InvalidFormException extends BaseException
 	public function __construct(string $message = null, array $data = null, Throwable $previous = null)
 	{
 		parent::__construct(
-			(empty($message) ? 'OZ_ERROR_INVALID_FORM' : $message),
+			empty($message) ? 'OZ_ERROR_INVALID_FORM' : $message,
 			$data,
 			$previous,
 			BaseException::INVALID_FORM,

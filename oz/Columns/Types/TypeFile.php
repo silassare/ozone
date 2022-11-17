@@ -128,9 +128,9 @@ class TypeFile extends Type
 	 *
 	 * @param int $min
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
-	 *
 	 * @return $this
+	 *
+	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
 	public function fileMinSize(int $min): self
 	{
@@ -146,9 +146,9 @@ class TypeFile extends Type
 	 *
 	 * @param int $max
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
-	 *
 	 * @return $this
+	 *
+	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
 	public function fileMaxSize(int $max): self
 	{
@@ -164,9 +164,9 @@ class TypeFile extends Type
 	 *
 	 * @param int $min
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
-	 *
 	 * @return $this
+	 *
+	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
 	public function fileMinCount(int $min): self
 	{
@@ -182,9 +182,9 @@ class TypeFile extends Type
 	 *
 	 * @param int $max
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
-	 *
 	 * @return $this
+	 *
+	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
 	public function fileMaxCount(int $max): self
 	{
@@ -200,9 +200,9 @@ class TypeFile extends Type
 	 *
 	 * @param int $total total upload size in bytes
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
-	 *
 	 * @return $this
+	 *
+	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
 	public function fileUploadTotalSize(int $total): self
 	{
@@ -345,9 +345,9 @@ class TypeFile extends Type
 	 * @param \OZONE\OZ\Http\UploadedFile[] $uploaded_files
 	 * @param array                         $debug
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
-	 *
 	 * @return string[]
+	 *
+	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 	 */
 	protected function computeUploadedFiles(array $uploaded_files, array $debug): array
 	{

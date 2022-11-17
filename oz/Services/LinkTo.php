@@ -75,10 +75,10 @@ final class LinkTo extends Service
 	/**
 	 * @param \OZONE\OZ\Router\RouteInfo $ri
 	 *
+	 * @return \OZONE\OZ\Http\Response
+	 *
 	 * @throws \OZONE\OZ\Exceptions\NotFoundException
 	 * @throws Throwable
-	 *
-	 * @return \OZONE\OZ\Http\Response
 	 */
 	private function handleRequest(RouteInfo $ri): Response
 	{

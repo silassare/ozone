@@ -43,10 +43,10 @@ class PPicUtils
 	 * @param array  $coordinate the crop zone coordinate
 	 * @param string $file_label the file log label
 	 *
+	 * @return string the profile pic_id
+	 *
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 * @throws Exception
-	 *
-	 * @return string the profile pic_id
 	 */
 	public function fromFileID(
 		string $file_id,
@@ -85,9 +85,9 @@ class PPicUtils
 	 * @param array                       $coordinate    the crop zone coordinate
 	 * @param string                      $file_label    the file log label
 	 *
-	 * @throws Exception
-	 *
 	 * @return string the profile picid
+	 *
+	 * @throws Exception
 	 */
 	public function fromUploadedFile(
 		UploadedFile $uploaded_file,
@@ -144,10 +144,10 @@ class PPicUtils
 
 		if (!empty($coordinates) && isset($coordinates['x'], $coordinates['y'], $coordinates['w'], $coordinates['h'])) {
 			$clean_coordinates = [
-				'x' => (int) ($coordinates['x']),
-				'y' => (int) ($coordinates['y']),
-				'w' => (int) ($coordinates['w']),
-				'h' => (int) ($coordinates['h']),
+				'x' => (int) $coordinates['x'],
+				'y' => (int) $coordinates['y'],
+				'w' => (int) $coordinates['w'],
+				'h' => (int) $coordinates['h'],
 			];
 		}
 

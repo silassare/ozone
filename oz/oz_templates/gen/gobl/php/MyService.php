@@ -88,7 +88,7 @@ final class MyService extends Service
 
 		$this->getJSONResponse()
 			->setDone($controller->getCRUD()
-			->getMessage())
+				->getMessage())
 			->setData(['item' => $entity]);
 	}
 
@@ -115,7 +115,7 @@ final class MyService extends Service
 		if ($entity instanceof MyEntity) {
 			$this->getJSONResponse()
 				->setDone($controller->getCRUD()
-				->getMessage())
+					->getMessage())
 				->setData(['item' => $entity]);
 		} else {
 			throw new NotFoundException();
@@ -140,7 +140,7 @@ final class MyService extends Service
 
 		$this->getJSONResponse()
 			->setDone($controller->getCRUD()
-			->getMessage())
+				->getMessage())
 			->setData(['affected' => $count]);
 	}
 
@@ -165,7 +165,7 @@ final class MyService extends Service
 		if ($entity instanceof MyEntity) {
 			$this->getJSONResponse()
 				->setDone($controller->getCRUD()
-				->getMessage())
+					->getMessage())
 				->setData(['item' => $entity]);
 		} else {
 			throw new NotFoundException();
@@ -188,7 +188,7 @@ final class MyService extends Service
 
 		$this->getJSONResponse()
 			->setDone($controller->getCRUD()
-			->getMessage())
+				->getMessage())
 			->setData(['affected' => $count]);
 	}
 
@@ -220,7 +220,7 @@ final class MyService extends Service
 
 		$this->getJSONResponse()
 			->setDone($controller->getCRUD()
-			->getMessage())
+				->getMessage())
 			->setData([
 				'item'      => $entity,
 				'relations' => $relations,
@@ -269,7 +269,7 @@ final class MyService extends Service
 
 		$this->getJSONResponse()
 			->setDone($controller->getCRUD()
-			->getMessage())
+				->getMessage())
 			->setData([
 				'items'     => $results,
 				'max'       => $max,
@@ -466,9 +466,9 @@ final class MyService extends Service
 	 * @param \MY_DB_NS\MyEntity        $entity
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
 	 *
-	 * @throws \OZONE\OZ\Exceptions\BadRequestException
-	 *
 	 * @return array
+	 *
+	 * @throws \OZONE\OZ\Exceptions\BadRequestException
 	 */
 	private function entityNotPaginatedRelations(MyEntity $entity, ORMRequest $orm_request): array
 	{
@@ -500,9 +500,9 @@ final class MyService extends Service
 	 * @param \MY_DB_NS\MyEntity[]      $entities
 	 * @param \OZONE\OZ\Core\ORMRequest $orm_request
 	 *
-	 * @throws \OZONE\OZ\Exceptions\BadRequestException
-	 *
 	 * @return array
+	 *
+	 * @throws \OZONE\OZ\Exceptions\BadRequestException
 	 */
 	private function entitiesNotPaginatedRelations(array $entities, ORMRequest $orm_request): array
 	{
@@ -542,9 +542,9 @@ final class MyService extends Service
 	 * @param \OZONE\OZ\Core\ORMRequest     $orm_request
 	 * @param int                           &$total_records
 	 *
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
-	 *
 	 * @return array
+	 *
+	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 	 */
 	private function getRelationItemsList(
 		Relation $relation,
@@ -585,9 +585,9 @@ final class MyService extends Service
 	 * @param array $relations_names_list
 	 * @param bool  $allow_paginated
 	 *
-	 * @throws \OZONE\OZ\Exceptions\BadRequestException
-	 *
 	 * @return array
+	 *
+	 * @throws \OZONE\OZ\Exceptions\BadRequestException
 	 */
 	private function resolveRelations(array $relations_names_list, bool $allow_paginated): array
 	{

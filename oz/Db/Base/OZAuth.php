@@ -16,36 +16,21 @@ namespace OZONE\OZ\Db\Base;
 /**
  * Class OZAuth.
  *
- * @property string $ref         Getter for
- *                               column `oz_auths`.`ref`.
- * @property string $label       Getter for
- *                               column `oz_auths`.`label`.
- * @property string $refresh_key Getter for
- *                               column `oz_auths`.`refresh_key`.
- * @property string $for         Getter for
- *                               column `oz_auths`.`for`.
- * @property string $code_hash   Getter for
- *                               column `oz_auths`.`code_hash`.
- * @property string $token_hash  Getter for
- *                               column `oz_auths`.`token_hash`.
- * @property string $state       Getter for
- *                               column `oz_auths`.`state`.
- * @property int    $try_max     Getter for
- *                               column `oz_auths`.`try_max`.
- * @property int    $try_count   Getter for
- *                               column `oz_auths`.`try_count`.
- * @property int    $lifetime    Getter for
- *                               column `oz_auths`.`lifetime`.
- * @property string $expire      Getter for
- *                               column `oz_auths`.`expire`.
- * @property array  $data        Getter for
- *                               column `oz_auths`.`data`.
- * @property string $created_at  Getter for
- *                               column `oz_auths`.`created_at`.
- * @property string $updated_at  Getter for
- *                               column `oz_auths`.`updated_at`.
- * @property bool   $disabled    Getter for
- *                               column `oz_auths`.`disabled`.
+ * @property string $ref         Getter for column `oz_auths`.`ref`.
+ * @property string $label       Getter for column `oz_auths`.`label`.
+ * @property string $refresh_key Getter for column `oz_auths`.`refresh_key`.
+ * @property string $for         Getter for column `oz_auths`.`for`.
+ * @property string $code_hash   Getter for column `oz_auths`.`code_hash`.
+ * @property string $token_hash  Getter for column `oz_auths`.`token_hash`.
+ * @property string $state       Getter for column `oz_auths`.`state`.
+ * @property int    $try_max     Getter for column `oz_auths`.`try_max`.
+ * @property int    $try_count   Getter for column `oz_auths`.`try_count`.
+ * @property int    $lifetime    Getter for column `oz_auths`.`lifetime`.
+ * @property string $expire      Getter for column `oz_auths`.`expire`.
+ * @property array  $data        Getter for column `oz_auths`.`data`.
+ * @property string $created_at  Getter for column `oz_auths`.`created_at`.
+ * @property string $updated_at  Getter for column `oz_auths`.`updated_at`.
+ * @property bool   $disabled    Getter for column `oz_auths`.`disabled`.
  */
 abstract class OZAuth extends \Gobl\ORM\ORMEntity
 {
@@ -76,7 +61,22 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function __construct(bool $is_new = true, bool $strict = true)
 	{
-		parent::__construct(self::TABLE_NAMESPACE, self::TABLE_NAME, $is_new, $strict);
+		parent::__construct(
+			self::TABLE_NAMESPACE,
+			self::TABLE_NAME,
+			$is_new,
+			$strict
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return static
+	 */
+	public static function createInstance(bool $is_new = true, bool $strict = true): static
+	{
+		return new \OZONE\OZ\Db\OZAuth($is_new, $strict);
 	}
 
 	/**
@@ -96,7 +96,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setRef(string $ref): self
+	public function setRef(string $ref): static
 	{
 		$this->{self::COL_REF} = $ref;
 
@@ -120,7 +120,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setLabel(string $label): self
+	public function setLabel(string $label): static
 	{
 		$this->{self::COL_LABEL} = $label;
 
@@ -144,7 +144,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setRefreshKey(string $refresh_key): self
+	public function setRefreshKey(string $refresh_key): static
 	{
 		$this->{self::COL_REFRESH_KEY} = $refresh_key;
 
@@ -168,7 +168,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setFor(string $for): self
+	public function setFor(string $for): static
 	{
 		$this->{self::COL_FOR} = $for;
 
@@ -192,7 +192,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCodeHash(string $code_hash): self
+	public function setCodeHash(string $code_hash): static
 	{
 		$this->{self::COL_CODE_HASH} = $code_hash;
 
@@ -216,7 +216,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setTokenHash(string $token_hash): self
+	public function setTokenHash(string $token_hash): static
 	{
 		$this->{self::COL_TOKEN_HASH} = $token_hash;
 
@@ -240,7 +240,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setState(string $state): self
+	public function setState(string $state): static
 	{
 		$this->{self::COL_STATE} = $state;
 
@@ -264,7 +264,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setTryMax(int $try_max): self
+	public function setTryMax(int $try_max): static
 	{
 		$this->{self::COL_TRY_MAX} = $try_max;
 
@@ -288,7 +288,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setTryCount(int $try_count): self
+	public function setTryCount(int $try_count): static
 	{
 		$this->{self::COL_TRY_COUNT} = $try_count;
 
@@ -312,7 +312,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setLifetime(int $lifetime): self
+	public function setLifetime(int $lifetime): static
 	{
 		$this->{self::COL_LIFETIME} = $lifetime;
 
@@ -336,7 +336,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setExpire(string|int $expire): self
+	public function setExpire(string|int $expire): static
 	{
 		$this->{self::COL_EXPIRE} = $expire;
 
@@ -360,7 +360,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setData(array $data): self
+	public function setData(array $data): static
 	{
 		$this->{self::COL_DATA} = $data;
 
@@ -384,7 +384,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCreatedAT(string|int $created_at): self
+	public function setCreatedAT(string|int $created_at): static
 	{
 		$this->{self::COL_CREATED_AT} = $created_at;
 
@@ -408,7 +408,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUpdatedAT(string|int $updated_at): self
+	public function setUpdatedAT(string|int $updated_at): static
 	{
 		$this->{self::COL_UPDATED_AT} = $updated_at;
 
@@ -432,7 +432,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setDisabled(bool $disabled): self
+	public function setDisabled(bool $disabled): static
 	{
 		$this->{self::COL_DISABLED} = $disabled;
 

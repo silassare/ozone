@@ -80,11 +80,11 @@ class AuthPhoneService extends Service
 	 * @param \OZONE\OZ\Router\RouteInfo $ri
 	 * @param \OZONE\OZ\Forms\FormData   $fd
 	 *
+	 * @return \OZONE\OZ\Http\Response
+	 *
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\NotFoundException
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 *
-	 * @return \OZONE\OZ\Http\Response
 	 */
 	public function refresh(RouteInfo $ri, FormData $fd): Response
 	{
@@ -108,10 +108,10 @@ class AuthPhoneService extends Service
 	/**
 	 * @param \OZONE\OZ\Router\RouteInfo $ri
 	 *
+	 * @return \OZONE\OZ\Http\Response
+	 *
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 *
-	 * @return \OZONE\OZ\Http\Response
 	 */
 	public function state(RouteInfo $ri): Response
 	{
@@ -133,10 +133,10 @@ class AuthPhoneService extends Service
 	/**
 	 * @param \OZONE\OZ\Router\RouteInfo $ri
 	 *
+	 * @return \OZONE\OZ\Http\Response
+	 *
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 *
-	 * @return \OZONE\OZ\Http\Response
 	 */
 	public function cancel(RouteInfo $ri): Response
 	{
@@ -158,11 +158,11 @@ class AuthPhoneService extends Service
 	 * @param \OZONE\OZ\Router\RouteInfo $ri
 	 * @param \OZONE\OZ\Forms\FormData   $fd
 	 *
+	 * @return \OZONE\OZ\Http\Response
+	 *
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\NotFoundException
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 *
-	 * @return \OZONE\OZ\Http\Response
 	 */
 	public function authorize(RouteInfo $ri, FormData $fd): Response
 	{
@@ -236,9 +236,9 @@ class AuthPhoneService extends Service
 	}
 
 	/**
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
-	 *
 	 * @return \OZONE\OZ\Forms\Form
+	 *
+	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
 	private static function buildRefreshForm(): Form
 	{

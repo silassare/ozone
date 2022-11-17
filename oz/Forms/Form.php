@@ -130,9 +130,9 @@ class Form implements ArrayCapableInterface
 	 * @param null|\OZONE\OZ\Forms\FormData $cleaned_fd
 	 * @param string                        $step_prefix
 	 *
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 *
 	 * @return \OZONE\OZ\Forms\FormData
+	 *
+	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 */
 	public function validate(FormData $unsafe_fd, ?FormData $cleaned_fd = null, string $step_prefix = ''): FormData
 	{

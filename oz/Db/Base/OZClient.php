@@ -13,34 +13,20 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use OZONE\OZ\Db\OZSession as OZSessionRealR;
-use OZONE\OZ\Db\OZUser as OZUserRealR;
-
 /**
  * Class OZClient.
  *
- * @property string $id                Getter for
- *                                     column `oz_clients`.`id`.
- * @property string $api_key           Getter for
- *                                     column `oz_clients`.`api_key`.
- * @property string $added_by          Getter for
- *                                     column `oz_clients`.`added_by`.
- * @property string $user_id           Getter for
- *                                     column `oz_clients`.`user_id`.
- * @property string $url               Getter for
- *                                     column `oz_clients`.`url`.
- * @property string $session_life_time Getter for
- *                                     column `oz_clients`.`session_life_time`.
- * @property string $about             Getter for
- *                                     column `oz_clients`.`about`.
- * @property array  $data              Getter for
- *                                     column `oz_clients`.`data`.
- * @property string $created_at        Getter for
- *                                     column `oz_clients`.`created_at`.
- * @property string $updated_at        Getter for
- *                                     column `oz_clients`.`updated_at`.
- * @property bool   $valid             Getter for
- *                                     column `oz_clients`.`valid`.
+ * @property null|string $id                Getter for column `oz_clients`.`id`.
+ * @property string      $api_key           Getter for column `oz_clients`.`api_key`.
+ * @property string      $added_by          Getter for column `oz_clients`.`added_by`.
+ * @property null|string $user_id           Getter for column `oz_clients`.`user_id`.
+ * @property string      $url               Getter for column `oz_clients`.`url`.
+ * @property string      $session_life_time Getter for column `oz_clients`.`session_life_time`.
+ * @property string      $about             Getter for column `oz_clients`.`about`.
+ * @property array       $data              Getter for column `oz_clients`.`data`.
+ * @property string      $created_at        Getter for column `oz_clients`.`created_at`.
+ * @property string      $updated_at        Getter for column `oz_clients`.`updated_at`.
+ * @property bool        $valid             Getter for column `oz_clients`.`valid`.
  */
 abstract class OZClient extends \Gobl\ORM\ORMEntity
 {
@@ -67,15 +53,30 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 */
 	public function __construct(bool $is_new = true, bool $strict = true)
 	{
-		parent::__construct(self::TABLE_NAMESPACE, self::TABLE_NAME, $is_new, $strict);
+		parent::__construct(
+			self::TABLE_NAMESPACE,
+			self::TABLE_NAME,
+			$is_new,
+			$strict
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return static
+	 */
+	public static function createInstance(bool $is_new = true, bool $strict = true): static
+	{
+		return new \OZONE\OZ\Db\OZClient($is_new, $strict);
 	}
 
 	/**
 	 * Getter for column `oz_clients`.`id`.
 	 *
-	 * @return string
+	 * @return null|string
 	 */
-	public function getID(): string
+	public function getID(): string|null
 	{
 		return $this->{self::COL_ID};
 	}
@@ -87,7 +88,7 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setID(string|int|null $id): self
+	public function setID(string|int|null $id): static
 	{
 		$this->{self::COL_ID} = $id;
 
@@ -111,7 +112,7 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setApiKey(string $api_key): self
+	public function setApiKey(string $api_key): static
 	{
 		$this->{self::COL_API_KEY} = $api_key;
 
@@ -135,7 +136,7 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setAddedBY(string|int $added_by): self
+	public function setAddedBY(string|int $added_by): static
 	{
 		$this->{self::COL_ADDED_BY} = $added_by;
 
@@ -145,9 +146,9 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	/**
 	 * Getter for column `oz_clients`.`user_id`.
 	 *
-	 * @return string
+	 * @return null|string
 	 */
-	public function getUserID(): string
+	public function getUserID(): string|null
 	{
 		return $this->{self::COL_USER_ID};
 	}
@@ -159,7 +160,7 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUserID(string|int|null $user_id): self
+	public function setUserID(string|int|null $user_id): static
 	{
 		$this->{self::COL_USER_ID} = $user_id;
 
@@ -183,7 +184,7 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUrl(string $url): self
+	public function setUrl(string $url): static
 	{
 		$this->{self::COL_URL} = $url;
 
@@ -207,7 +208,7 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setSessionLifeTime(string|int $session_life_time): self
+	public function setSessionLifeTime(string|int $session_life_time): static
 	{
 		$this->{self::COL_SESSION_LIFE_TIME} = $session_life_time;
 
@@ -231,7 +232,7 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setAbout(string $about): self
+	public function setAbout(string $about): static
 	{
 		$this->{self::COL_ABOUT} = $about;
 
@@ -255,7 +256,7 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setData(array $data): self
+	public function setData(array $data): static
 	{
 		$this->{self::COL_DATA} = $data;
 
@@ -279,7 +280,7 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCreatedAT(string|int $created_at): self
+	public function setCreatedAT(string|int $created_at): static
 	{
 		$this->{self::COL_CREATED_AT} = $created_at;
 
@@ -303,7 +304,7 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUpdatedAT(string|int $updated_at): self
+	public function setUpdatedAT(string|int $updated_at): static
 	{
 		$this->{self::COL_UPDATED_AT} = $updated_at;
 
@@ -327,7 +328,7 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setValid(bool $valid): self
+	public function setValid(bool $valid): static
 	{
 		$this->{self::COL_VALID} = $valid;
 
@@ -337,12 +338,13 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	/**
 	 * ManyToOne relation between `oz_clients` and `oz_users`.
 	 *
-	 * @return null|OZUserRealR
+	 * @return ?\OZONE\OZ\Db\OZUser
 	 */
-	public function getOwner(): ?OZUserRealR
+	public function getOwner(): ?\OZONE\OZ\Db\OZUser
 	{
-		$getters        = [\OZONE\OZ\Db\OZUser::COL_ID => [$this, 'getAddedBY']];
+		$getters        = [\OZONE\OZ\Db\OZUser::COL_ID => $this->getAddedBY(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, []);
+
 		if (null === $filters_bundle) {
 			return null;
 		}
@@ -353,12 +355,13 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	/**
 	 * ManyToOne relation between `oz_clients` and `oz_users`.
 	 *
-	 * @return null|OZUserRealR
+	 * @return ?\OZONE\OZ\Db\OZUser
 	 */
-	public function getUser(): ?OZUserRealR
+	public function getUser(): ?\OZONE\OZ\Db\OZUser
 	{
-		$getters        = [\OZONE\OZ\Db\OZUser::COL_ID => [$this, 'getUserID']];
+		$getters        = [\OZONE\OZ\Db\OZUser::COL_ID => $this->getUserID(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, []);
+
 		if (null === $filters_bundle) {
 			return null;
 		}
@@ -375,12 +378,15 @@ abstract class OZClient extends \Gobl\ORM\ORMEntity
 	 * @param array    $order_by order by rules
 	 * @param null|int $total    total rows without limit
 	 *
-	 * @return OZSessionRealR[]
+	 * @return \OZONE\OZ\Db\OZSession[]
 	 */
-	public function getSessions(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = -1): array
+	public function getSessions(array $filters = [
+	], ?int $max = null, int $offset = 0, array $order_by = [
+	], ?int &$total = -1): array
 	{
-		$getters        = [\OZONE\OZ\Db\OZSession::COL_CLIENT_ID => [$this, 'getID']];
+		$getters        = [\OZONE\OZ\Db\OZSession::COL_CLIENT_ID => $this->getID(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, $filters);
+
 		if (null === $filters_bundle) {
 			return [];
 		}

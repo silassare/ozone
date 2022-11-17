@@ -121,9 +121,9 @@ class Cookies
 	 *
 	 * @param string $header The raw HTTP request `Cookie:` header
 	 *
-	 * @throws InvalidArgumentException if the cookie data cannot be parsed
-	 *
 	 * @return array Associative array of cookie names and values
+	 *
+	 * @throws InvalidArgumentException if the cookie data cannot be parsed
 	 */
 	public static function parseCookieHeaderString(string $header): array
 	{

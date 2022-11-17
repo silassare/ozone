@@ -554,7 +554,7 @@ final class Router
 			))->suspectCallable($route->getCallable());
 		}
 
-		if (!($return instanceof Response)) {
+		if (!$return instanceof Response) {
 			throw (new RuntimeException(\sprintf(
 				'Invalid return type, got "%s" will expecting "%s".',
 				\get_debug_type($return),

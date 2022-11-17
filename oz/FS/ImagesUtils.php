@@ -90,9 +90,9 @@ class ImagesUtils
 	/**
 	 * Loads the image file.
 	 *
-	 * @throws Exception
-	 *
 	 * @return bool the returned value is true if successful, false otherwise
+	 *
+	 * @throws Exception
 	 */
 	public function load(): bool
 	{
@@ -115,7 +115,7 @@ class ImagesUtils
 	public function isValidImage(): bool
 	{
 		$src       = $this->source_path;
-		$extension = \strtolower(\substr($src, (\strrpos($src, '.') + 1)));
+		$extension = \strtolower(\substr($src, \strrpos($src, '.') + 1));
 
 		if (!\in_array($extension, $this->image_extensions, true)) {
 			return false;
@@ -131,9 +131,9 @@ class ImagesUtils
 	 *
 	 * @param string $destination_path
 	 *
-	 * @throws Exception
-	 *
 	 * @return \OZONE\OZ\FS\ImagesUtils
+	 *
+	 * @throws Exception
 	 */
 	public function copyImage(string $destination_path): self
 	{
@@ -241,9 +241,9 @@ class ImagesUtils
 	 * @param null|string $destination_path The destination file path
 	 * @param int         $quality          The image quality between 0 and 100, default is 90
 	 *
-	 * @throws Exception
-	 *
 	 * @return \OZONE\OZ\FS\ImagesUtils
+	 *
+	 * @throws Exception
 	 */
 	public function saveImage(?string $destination_path = null, int $quality = 90): self
 	{
@@ -288,9 +288,9 @@ class ImagesUtils
 	 * @param null|array $coordinate       The crop zone coordinate
 	 * @param bool       $resize           Should we resize when required? default is true
 	 *
-	 * @throws Exception
-	 *
 	 * @return \OZONE\OZ\FS\ImagesUtils
+	 *
+	 * @throws Exception
 	 */
 	public function cropAndSave(
 		string $destination_path,

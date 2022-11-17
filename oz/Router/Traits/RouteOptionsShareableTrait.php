@@ -246,6 +246,6 @@ trait RouteOptionsShareableTrait
 		$reason     = \preg_last_error_msg();
 		\restore_error_handler();
 
-		return !($is_invalid);
+		return !$is_invalid;
 	}
 }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\OZ\Cli\Cmd;
 
 use Exception;
+use JsonException;
 use Kli\Exceptions\KliInputException;
 use Kli\KliAction;
 use Kli\KliOption;
@@ -80,7 +81,7 @@ final class Project extends Command
 		$bd->alias('dir')
 			->offsets(1)
 			->type((new KliTypePath())->dir()
-			->writable())
+				->writable())
 			->def('..')
 			->prompt(true, 'The backup directory path')
 			->description('The backup directory path.');
@@ -98,7 +99,7 @@ final class Project extends Command
 		$cr->alias('root-dir')
 			->offsets(1)
 			->type((new KliTypePath())->dir()
-			->writable())
+				->writable())
 			->def('.')
 			->prompt(true, 'The project root folder path')
 			->description('The project root folder path.');
@@ -145,7 +146,7 @@ final class Project extends Command
 	 *
 	 * @param array $options
 	 *
-	 * @throws \Kli\Exceptions\KliInputException
+	 * @throws \Kli\Exceptions\KliException|\Kli\Exceptions\KliInputException
 	 */
 	private function backup(array $options): void
 	{
@@ -189,7 +190,7 @@ final class Project extends Command
 	 *
 	 * @param array $options
 	 *
-	 * @throws \Kli\Exceptions\KliInputException
+	 * @throws \Kli\Exceptions\KliException|\Kli\Exceptions\KliInputException
 	 */
 	private function build(array $options): void
 	{
@@ -232,6 +233,8 @@ final class Project extends Command
 	 * Creates new project.
 	 *
 	 * @param array $options
+	 *
+	 * @throws JsonException
 	 */
 	private function create(array $options): void
 	{
@@ -309,6 +312,7 @@ final class Project extends Command
 		$oz_key_gen_salt = TemplatesUtils::compile('oz://gen/settings.warn.otpl', $inject);
 
 		$inject = [
+			'oz_version'           => OZ_OZONE_VERSION,
 			'oz_version_name'      => OZ_OZONE_VERSION_NAME,
 			'oz_time'              => \time(),
 			'oz_project_namespace' => $namespace,
@@ -333,20 +337,36 @@ final class Project extends Command
 			->wf('oz.keygen.salt.php', $oz_key_gen_salt)
 			->cd('..')
 			->cd('oz_templates', true)
-			->wf('.keep', '')
+			->wf('.keep')
 			->cd('../oz_users_files', true)
-			->wf('.keep', '')
+			->wf('.keep')
 			->cd('../oz_cache', true)
-			->wf('.keep', '')
+			->wf('.keep')
 			->cd('..')
 			->wf($app_class_file, $app_class)
 			->cd('..')
 			->wf('index.php', $api_index)
 			->cp($tpl_folder . 'gen/robots.txt', 'robots.txt')
 			->cp($tpl_folder . 'gen/favicon.ico', 'favicon.ico')
-			->cp($tpl_folder . 'gen/htaccess.api.txt', '.htaccess')
-			->cd('..')
-			->wf('composer.json', $project_composer);
+			->cp($tpl_folder . 'gen/htaccess.api.txt', '.htaccess');
+
+		$fm->cd('..');
+
+		$composer_config_path = $fm->resolve('composer.json');
+
+		if ($fm->filter()->exists()->check($composer_config_path)) {
+			$content         = \file_get_contents($composer_config_path);
+			$composer_config = \json_decode($content, true, 512, \JSON_THROW_ON_ERROR);
+
+			$composer_config['require'][OZ_OZONE_PACKAGE_NAME] =  '^' . OZ_OZONE_VERSION;
+
+			$fm->wf($composer_config_path, \json_encode(
+				$composer_config,
+				\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES
+			));
+		} else {
+			$fm->wf('composer.json', $project_composer);
+		}
 
 		$this->getCli()
 			->success(\sprintf('project "%s" created in "%s".', $name, $root))

@@ -202,9 +202,9 @@ final class UsersManager
 	/**
 	 * Gets the current user object.
 	 *
-	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
-	 *
 	 * @return \OZONE\OZ\Db\OZUser
+	 *
+	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
 	public function getCurrentUserObject(): OZUser
 	{
@@ -290,9 +290,9 @@ final class UsersManager
 	 * This is used when we have a user attached to the api client
 	 * The user right will be used every time the api key of the client is used
 	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 *
 	 * @return \OZONE\OZ\Db\OZUser the user object or error string
+	 *
+	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
 	public function tryLogOnAsApiClientOwner(): OZUser
 	{
@@ -341,9 +341,9 @@ final class UsersManager
 	 * @param \OZONE\OZ\Core\Context   $context
 	 * @param \OZONE\OZ\Forms\FormData $form_data
 	 *
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 *
 	 * @return \OZONE\OZ\Db\OZUser|string the user object or error string
+	 *
+	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 */
 	public function tryLogOnWithPhone(Context $context, FormData $form_data): OZUser|string
 	{
@@ -384,9 +384,9 @@ final class UsersManager
 	 * @param \OZONE\OZ\Core\Context $context
 	 * @param FormData               $form_data
 	 *
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 *
 	 * @return \OZONE\OZ\Db\OZUser|string the user object or error string
+	 *
+	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 */
 	public function tryLogOnWithEmail(Context $context, FormData $form_data): OZUser|string
 	{
@@ -428,9 +428,9 @@ final class UsersManager
 	 * @param string              $new_pass     the new password
 	 * @param null|string         $current_pass the current pass
 	 *
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 *
 	 * @return \OZONE\OZ\Users\UsersManager
+	 *
+	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 */
 	public function updateUserPass(OZUser $user, string $new_pass, ?string $current_pass = null): self
 	{
@@ -535,10 +535,10 @@ final class UsersManager
 	/**
 	 * @param \OZONE\OZ\Db\OZUser $user
 	 *
+	 * @return \OZONE\OZ\Db\OZSession[]
+	 *
 	 * @throws \Gobl\ORM\Exceptions\ORMException
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
-	 *
-	 * @return \OZONE\OZ\Db\OZSession[]
 	 */
 	public static function getUserActiveSessions(OZUser $user): array
 	{

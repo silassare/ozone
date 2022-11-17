@@ -21,6 +21,7 @@ use PHPUnit\Framework\TestCase;
  * Class FilesUtilsTest.
  *
  * @internal
+ *
  * @coversNothing
  */
 final class FilesUtilsTest extends TestCase

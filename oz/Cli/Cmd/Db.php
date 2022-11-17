@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cli\Cmd;
 
-use Gobl\DBAL\Interfaces\RDBMSInterface;
-use Gobl\ORM\Generators\GeneratorDart;
-use Gobl\ORM\Generators\GeneratorORM;
-use Gobl\ORM\Generators\GeneratorTS;
+use Gobl\DBAL\Drivers\MySQL\MySQL;
+use Gobl\ORM\Generators\CSGeneratorDart;
+use Gobl\ORM\Generators\CSGeneratorORM;
+use Gobl\ORM\Generators\CSGeneratorTS;
 use Kli\Exceptions\KliInputException;
 use Kli\KliAction;
 use Kli\KliOption;
@@ -29,7 +29,6 @@ use OZONE\OZ\Cli\Utils\Utils;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\Db\OZUsersFilters;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\FS\FilesManager;
 use PHPUtils\FS\PathUtils;
@@ -51,39 +50,6 @@ final class Db extends Command
 	 */
 	public function execute(KliAction $action, array $options, array $anonymous_options): void
 	{
-		if (0) {
-			$uq = new OZUsersFilters();
-			if (!0) {
-				$qb = $uq->whereCc2Is('bj')
-					->and(
-						function (OZUsersFilters $sub) {
-							 	return $sub->whereIdIsGte(10)
-							 		->and()
-							 		->whereIdIsLte(20)
-							 		->or()
-							 		->whereValidIsTrue();
-							 }
-					)
-					->getTableQuery()
-					->select(100);
-			} else {
-				$qb = $uq->where([
-					'cc2',
-					'eq',
-					'bj',
-					'and',
-					[['id', 'gte', 10, 'and', 'id', 'lte', 20], 'or', 'valid', 'is_true'],
-				])
-					->getTableQuery()
-					->select(100);
-			}
-			oz_logger([
-				'query'  => $qb->getSqlQuery(),
-				'values' => $qb->getBoundValues(),
-				'types'  => $qb->getBoundValuesTypes(),
-			]);
-		}
-
 		switch ($action->getName()) {
 			case 'build':
 				$this->build($options);
@@ -179,8 +145,8 @@ final class Db extends Command
 			->alias('dir')
 			->offsets(1)
 			->type((new KliTypePath())
-			->dir()
-			->writable())
+				->dir()
+				->writable())
 			->def('.')
 			->description('The destination directory for the database classes.');
 
@@ -189,8 +155,8 @@ final class Db extends Command
 			->alias('dir')
 			->offsets(1)
 			->type((new KliTypePath())
-			->dir()
-			->writable())
+				->dir()
+				->writable())
 			->def('.')
 			->description('The destination directory for the bundle classes.');
 
@@ -273,7 +239,7 @@ final class Db extends Command
 			}
 		}
 
-		$gen = new GeneratorORM($db, false, false);
+		$gen = new CSGeneratorORM($db, false, false);
 
 		foreach ($map as $ns => $ok) {
 			if ($ok) {
@@ -329,7 +295,7 @@ final class Db extends Command
 		$dir    = $options['d'];
 		$db     = DbManager::getDb();
 		$tables = $db->getTables();
-		$gen    = new GeneratorTS($db, true, true);
+		$gen    = new CSGeneratorTS($db, true, true);
 
 		$gen->generate($tables, $dir);
 		$cli->success('TypeScript entities bundle generated.')
@@ -351,7 +317,7 @@ final class Db extends Command
 		$dir    = $options['d'];
 		$db     = DbManager::getDb();
 		$tables = $db->getTables();
-		$gen    = new GeneratorDart($db, true, true);
+		$gen    = new CSGeneratorDart($db, true, true);
 
 		$gen->generate($tables, $dir);
 		$cli->success('Dart entities bundle generated.')
@@ -435,7 +401,7 @@ final class Db extends Command
 		$cli    = $this->getCli();
 		$config = Configs::load('oz.db');
 
-		if (RDBMSInterface::MYSQL !== $config['OZ_DB_RDBMS']) {
+		if (MySQL::NAME !== $config['OZ_DB_RDBMS']) {
 			$cli->error('this work only for MySQL database.');
 
 			return;

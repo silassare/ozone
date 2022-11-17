@@ -13,27 +13,17 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
-use OZONE\OZ\Db\OZUser as OZUserRealR;
-
 /**
  * Class OZCountry.
  *
- * @property string $cc2        Getter for
- *                              column `oz_countries`.`cc2`.
- * @property string $code       Getter for
- *                              column `oz_countries`.`code`.
- * @property string $name       Getter for
- *                              column `oz_countries`.`name`.
- * @property string $name_real  Getter for
- *                              column `oz_countries`.`name_real`.
- * @property array  $data       Getter for
- *                              column `oz_countries`.`data`.
- * @property string $created_at Getter for
- *                              column `oz_countries`.`created_at`.
- * @property string $updated_at Getter for
- *                              column `oz_countries`.`updated_at`.
- * @property bool   $valid      Getter for
- *                              column `oz_countries`.`valid`.
+ * @property string $cc2        Getter for column `oz_countries`.`cc2`.
+ * @property string $code       Getter for column `oz_countries`.`code`.
+ * @property string $name       Getter for column `oz_countries`.`name`.
+ * @property string $name_real  Getter for column `oz_countries`.`name_real`.
+ * @property array  $data       Getter for column `oz_countries`.`data`.
+ * @property string $created_at Getter for column `oz_countries`.`created_at`.
+ * @property string $updated_at Getter for column `oz_countries`.`updated_at`.
+ * @property bool   $valid      Getter for column `oz_countries`.`valid`.
  */
 abstract class OZCountry extends \Gobl\ORM\ORMEntity
 {
@@ -57,7 +47,22 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function __construct(bool $is_new = true, bool $strict = true)
 	{
-		parent::__construct(self::TABLE_NAMESPACE, self::TABLE_NAME, $is_new, $strict);
+		parent::__construct(
+			self::TABLE_NAMESPACE,
+			self::TABLE_NAME,
+			$is_new,
+			$strict
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return static
+	 */
+	public static function createInstance(bool $is_new = true, bool $strict = true): static
+	{
+		return new \OZONE\OZ\Db\OZCountry($is_new, $strict);
 	}
 
 	/**
@@ -77,7 +82,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCc2(string $cc2): self
+	public function setCc2(string $cc2): static
 	{
 		$this->{self::COL_CC2} = $cc2;
 
@@ -101,7 +106,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCode(string $code): self
+	public function setCode(string $code): static
 	{
 		$this->{self::COL_CODE} = $code;
 
@@ -125,7 +130,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setName(string $name): self
+	public function setName(string $name): static
 	{
 		$this->{self::COL_NAME} = $name;
 
@@ -149,7 +154,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setNameReal(string $name_real): self
+	public function setNameReal(string $name_real): static
 	{
 		$this->{self::COL_NAME_REAL} = $name_real;
 
@@ -173,7 +178,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setData(array $data): self
+	public function setData(array $data): static
 	{
 		$this->{self::COL_DATA} = $data;
 
@@ -197,7 +202,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCreatedAT(string|int $created_at): self
+	public function setCreatedAT(string|int $created_at): static
 	{
 		$this->{self::COL_CREATED_AT} = $created_at;
 
@@ -221,7 +226,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUpdatedAT(string|int $updated_at): self
+	public function setUpdatedAT(string|int $updated_at): static
 	{
 		$this->{self::COL_UPDATED_AT} = $updated_at;
 
@@ -245,7 +250,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setValid(bool $valid): self
+	public function setValid(bool $valid): static
 	{
 		$this->{self::COL_VALID} = $valid;
 
@@ -261,12 +266,15 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 * @param array    $order_by order by rules
 	 * @param null|int $total    total rows without limit
 	 *
-	 * @return OZUserRealR[]
+	 * @return \OZONE\OZ\Db\OZUser[]
 	 */
-	public function getUsers(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = -1): array
+	public function getUsers(array $filters = [
+	], ?int $max = null, int $offset = 0, array $order_by = [
+	], ?int &$total = -1): array
 	{
-		$getters        = [\OZONE\OZ\Db\OZUser::COL_CC2 => [$this, 'getCc2']];
+		$getters        = [\OZONE\OZ\Db\OZUser::COL_CC2 => $this->getCc2(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, $filters);
+
 		if (null === $filters_bundle) {
 			return [];
 		}

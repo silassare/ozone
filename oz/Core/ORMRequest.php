@@ -61,9 +61,9 @@ final class ORMRequest extends ORMRequestBase
 	/**
 	 * @param \Gobl\DBAL\Table $table
 	 *
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
-	 *
 	 * @return \OZONE\OZ\Core\ORMRequest
+	 *
+	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 	 */
 	public function createScopedInstance(Table $table): self
 	{

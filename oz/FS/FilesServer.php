@@ -31,11 +31,11 @@ class FilesServer
 	 * @param \OZONE\OZ\Core\Context $context
 	 * @param array                  $params
 	 *
+	 * @return \OZONE\OZ\Http\Response
+	 *
 	 * @throws Exception
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 *
-	 * @return \OZONE\OZ\Http\Response
 	 */
 	public function serve(Context $context, array $params): Response
 	{
@@ -64,7 +64,7 @@ class FilesServer
 		*/
 		$file_name    = $params['file_name'];
 		$file_mime    = $params['file_mime'];
-		$file_quality = (int) ($params['file_quality']);
+		$file_quality = (int) $params['file_quality'];
 		$size         = \filesize($src);
 
 		// close the current session
@@ -190,7 +190,7 @@ class FilesServer
 
 		// sets start and end based on range (if set), else set defaults
 		// also check for invalid ranges.
-		$seek_end   = (empty($seek_end)) ? ($file_size - 1) : \min(\abs((int) $seek_end), ($file_size - 1));
+		$seek_end   = (empty($seek_end)) ? ($file_size - 1) : \min(\abs((int) $seek_end), $file_size - 1);
 		$seek_start = (empty($seek_start) || $seek_end < \abs((int) $seek_start))
 			? 0 : \max(\abs((int) $seek_start), 0);
 

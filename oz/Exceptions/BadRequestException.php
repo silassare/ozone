@@ -30,7 +30,7 @@ class BadRequestException extends BaseException
 	public function __construct(string $message = null, array $data = null, Throwable $previous = null)
 	{
 		parent::__construct(
-			(empty($message) ? 'OZ_ERROR_BAD_REQUEST' : $message),
+			empty($message) ? 'OZ_ERROR_BAD_REQUEST' : $message,
 			$data,
 			$previous,
 			BaseException::BAD_REQUEST,

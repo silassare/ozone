@@ -101,8 +101,6 @@ final class Service extends Command
 	 * Generate service for a table in the database.
 	 *
 	 * @param array $options
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	private function generate(array $options): void
 	{

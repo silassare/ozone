@@ -88,9 +88,9 @@ final class CaptchaCode extends Service
 	 * @param \OZONE\OZ\Core\Context $context
 	 * @param string                 $captcha_key
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 *
 	 * @return \OZONE\OZ\Http\Response
+	 *
+	 * @throws \OZONE\OZ\Exceptions\NotFoundException
 	 */
 	public static function generateCaptchaImage(Context $context, string $captcha_key): Response
 	{
@@ -141,10 +141,10 @@ final class CaptchaCode extends Service
 		$box_width      = \abs($text_box_size[6] - $text_box_size[2]);
 		$box_height     = \abs($text_box_size[5] - $text_box_size[1]);
 		$text_pos_x_min = 0;
-		$text_pos_x_max = ($bg_width) - ($box_width);
+		$text_pos_x_max = $bg_width - $box_width;
 		$text_pos_x     = Hasher::randomInt($text_pos_x_min, $text_pos_x_max);
 		$text_pos_y_min = $box_height;
-		$text_pos_y_max = ($bg_height) - ($box_height / 2);
+		$text_pos_y_max = $bg_height - ($box_height / 2);
 		$text_pos_y     = Hasher::randomInt($text_pos_y_min, $text_pos_y_max);
 
 		if (self::$default_config['shadow']) {

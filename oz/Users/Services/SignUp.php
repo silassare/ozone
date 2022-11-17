@@ -49,7 +49,7 @@ final class SignUp extends Service
 		$this->phone_auth = new PhoneAuth($context, self::class, false);
 
 		if (isset($params['step'])) {
-			$step = (int) ($params['step']);
+			$step = (int) $params['step'];
 
 			if (3 === $step) {
 				if ($this->phone_auth->isAuthenticated()) {

@@ -2,7 +2,7 @@
   "name": "ozone/new-project",
   "description": "A newly created project with ozone",
   "require": {
-    "silassare/ozone": "@dev"
+    "silassare/ozone": "^<%$.oz_version%>"
   },
   "repositories": {
     "silassare/ozone": {

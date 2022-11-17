@@ -96,9 +96,9 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Start the session.
 	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 *
 	 * @return $this
+	 *
+	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
 	public function start(): self
 	{
@@ -131,9 +131,9 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Restart the session.
 	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 *
 	 * @return $this
+	 *
+	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
 	public function restart(): self
 	{

@@ -358,7 +358,7 @@ final class Process
 		if ($this->process) {
 			$status = $this->getStatus(true);
 
-			return (bool) ($status['running']);
+			return (bool) $status['running'];
 		}
 
 		return false;

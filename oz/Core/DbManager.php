@@ -16,7 +16,6 @@ namespace OZONE\OZ\Core;
 use Gobl\DBAL\Db;
 use Gobl\DBAL\DbConfig;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
-use Gobl\DBAL\QueryBuilder;
 use Gobl\DBAL\Types\Utils\TypeUtils;
 use Gobl\Gobl;
 use Gobl\ORM\ORM;
@@ -43,21 +42,22 @@ final class DbManager
 
 		$config    = Configs::load('oz.db');
 		$db_config = new DbConfig([
-			'db_host'    => $config['OZ_DB_HOST'],
-			'db_name'    => $config['OZ_DB_NAME'],
-			'db_user'    => $config['OZ_DB_USER'],
-			'db_pass'    => $config['OZ_DB_PASS'],
-			'db_charset' => $config['OZ_DB_CHARSET'],
-			'db_collate' => $config['OZ_DB_COLLATE'],
+			'db_table_prefix'    => Configs::get('oz.db', 'OZ_DB_TABLE_PREFIX'),
+			'db_host'            => $config['OZ_DB_HOST'],
+			'db_name'            => $config['OZ_DB_NAME'],
+			'db_user'            => $config['OZ_DB_USER'],
+			'db_pass'            => $config['OZ_DB_PASS'],
+			'db_charset'         => $config['OZ_DB_CHARSET'],
+			'db_collate'         => $config['OZ_DB_COLLATE'],
 		]);
 
 		$rdbms_type = $config['OZ_DB_RDBMS'];
 
 		try {
-			self::$db = Db::instantiate($rdbms_type, $db_config);
+			self::$db = Db::createInstanceWithName($rdbms_type, $db_config);
 		} catch (Throwable $t) {
 			throw new RuntimeException(
-				\sprintf('Unable to init RDBMS defined in "oz.db": %s.', $rdbms_type),
+				\sprintf('Unable to init "%s" RDBMS defined in "oz.db".', $rdbms_type),
 				null,
 				$t
 			);
@@ -102,16 +102,6 @@ final class DbManager
 	}
 
 	/**
-	 * Returns a new query builder instance.
-	 *
-	 * @return \Gobl\DBAL\QueryBuilder
-	 */
-	public static function queryBuilder(): QueryBuilder
-	{
-		return new QueryBuilder(self::getDb());
-	}
-
-	/**
 	 * Register.
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
@@ -122,14 +112,13 @@ final class DbManager
 		$oz_database   = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_database.php';
 		$structure     = self::getProjectDbDirectoryStructure();
 		$tables        = Configs::load('oz.db.tables');
-		$tables_prefix = Configs::get('oz.db', 'OZ_DB_TABLE_PREFIX');
 
 		TypeUtils::addTypeProvider(new TypeProvider());
 
 		ORM::setDatabase($structure['oz_db_namespace'], self::$db);
 		ORM::setDatabase($structure['project_db_namespace'], self::$db);
 
-		self::$db->addTablesToNamespace($structure['oz_db_namespace'], $oz_database, $tables_prefix)
-			->addTablesToNamespace($structure['project_db_namespace'], $tables, $tables_prefix);
+		self::$db->addTablesToNamespace($structure['oz_db_namespace'], $oz_database)
+			->addTablesToNamespace($structure['project_db_namespace'], $tables);
 	}
 }
