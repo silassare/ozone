@@ -96,9 +96,9 @@ class Field implements ArrayCapableInterface
 	}
 
 	/**
-	 * @return callable|TypeInterface
+	 * @return callable|TypesSwitcher|TypeInterface
 	 */
-	public function getValidator(): callable|TypeInterface
+	public function getValidator(): callable|TypesSwitcher|TypeInterface
 	{
 		return $this->validator;
 	}
@@ -160,11 +160,11 @@ class Field implements ArrayCapableInterface
 	public function toArray(): array
 	{
 		if ($this->validator instanceof TypeInterface) {
-			$type = $this->validator->getCleanOptions();
+			$type = $this->validator->toArray();
 		} elseif ($this->validator instanceof TypesSwitcher) {
 			$type = $this->validator->toArray();
 		} else { /* if (is_callable($this->validator)) */
-			$type = (new TypeString())->getCleanOptions();
+			$type = (new TypeString())->toArray();
 		}
 
 		return [

@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace OZONE\OZ\FS;
 
 use InvalidArgumentException;
-use OZONE\OZ\Auth\Auth;
 use OZONE\OZ\Auth\Interfaces\AuthScopeInterface;
+use OZONE\OZ\Auth\Providers\AuthFile;
 use OZONE\OZ\Cache\CacheManager;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\Context;
@@ -67,7 +67,7 @@ class FilesUtils
 	 */
 	public function createRestrictedUri(Context $context, AuthScopeInterface $scope, OZFile $file): Uri
 	{
-		$auth        = new Auth($context, $scope);
+		$auth        = new AuthFile($context, $scope);
 		$credentials = $auth->generate()
 			->getCredentials();
 

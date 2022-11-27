@@ -16,6 +16,9 @@ namespace OZONE\OZ\Senders\Events;
 use OZONE\OZ\Senders\Messages\NotificationMessage;
 use PHPUtils\Events\Event;
 
+/**
+ * Class SendNotification.
+ */
 final class SendNotification extends Event
 {
 	protected NotificationMessage $message;

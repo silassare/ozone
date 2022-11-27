@@ -14,13 +14,13 @@ declare(strict_types=1);
 namespace OZONE\OZ\Core;
 
 use Gobl\DBAL\Table;
-use Gobl\ORM\ORMRequestBase;
+use Gobl\ORM\ORMRequest as GoblORMRequest;
 use OZONE\OZ\Forms\FormData;
 
 /**
  * Class ORMRequest.
  */
-final class ORMRequest extends ORMRequestBase
+final class ORMRequest extends GoblORMRequest
 {
 	/**
 	 * @var \OZONE\OZ\Core\Context

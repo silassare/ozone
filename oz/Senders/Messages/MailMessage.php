@@ -17,12 +17,22 @@ use OZONE\OZ\FS\TemplatesUtils;
 use OZONE\OZ\Senders\Events\SendMail;
 use PHPUtils\Events\Event;
 
+/**
+ * Class MailMessage.
+ */
 class MailMessage extends Message
 {
+	/**
+	 * MailMessage Constructor.
+	 *
+	 * @param string      $template
+	 * @param null|string $template_rich
+	 * @param array       $attributes
+	 */
 	public function __construct(
-		string $template,
-		private ?string $template_rich = null,
-		array $attributes = []
+		string                   $template,
+		private readonly ?string $template_rich = null,
+		array                    $attributes = []
 	) {
 		parent::__construct($template, $attributes);
 	}
@@ -35,14 +45,13 @@ class MailMessage extends Message
 		return TemplatesUtils::compile($this->template_rich ?? $this->template, $this->data);
 	}
 
+
 	/**
-	 * @param string $email
-	 *
-	 * @return $this
+	 * {@inheritDoc}
 	 */
-	public function sendTo(string $email): static
+	public function send(string $to): static
 	{
-		Event::trigger(new SendMail($email, $this));
+		Event::trigger(new SendMail($to, $this));
 
 		return $this;
 	}

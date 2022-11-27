@@ -118,11 +118,11 @@ final class CacheItem
 		if (null === $lifetime) {
 			$this->expire = null;
 		} elseif ($lifetime instanceof DateInterval) {
-			$duration     = DateTime::createFromFormat('U', 0)
+			$duration     = DateTime::createFromFormat('U', '0')
 				->add($lifetime)
 				->format('U.u');
 			$this->expire = \microtime(true) + (float) $duration;
-		} elseif (\is_float($lifetime)) {
+		} else {
 			$this->expire = $lifetime + \microtime(true);
 		}
 

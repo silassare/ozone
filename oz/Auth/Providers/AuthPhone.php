@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Auth\Providers;
 
+use OZONE\OZ\Auth\Interfaces\AuthScopeInterface;
+use OZONE\OZ\Core\Context;
 use OZONE\OZ\Db\OZAuth;
 use OZONE\OZ\Senders\Messages\SMSMessage;
 
@@ -21,6 +23,22 @@ use OZONE\OZ\Senders\Messages\SMSMessage;
  */
 class AuthPhone extends AuthProvider
 {
+	public const NAME = 'phone';
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function getInstance(Context $context, ?AuthScopeInterface $scope = null): self{
+		return new self($context, $scope);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function getName():string {
+		return self::NAME;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -51,7 +69,7 @@ class AuthPhone extends AuthProvider
 		$message = new SMSMessage('auth.messages.sms.otpl');
 
 		$message->inject($this->credentials->toArray())
-			->sendTo($phone);
+			->send($phone);
 
 		$this->json_response->setDone()
 			->setData([

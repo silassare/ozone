@@ -550,7 +550,7 @@ final class MyService extends Service
 		Relation $relation,
 		MyEntity $entity,
 		ORMRequest $orm_request,
-		int &$total_records
+		?int &$total_records = null
 	): array {
 		$target          = $relation->getTargetTable();
 		$orm_request     = $orm_request->createScopedInstance($target);

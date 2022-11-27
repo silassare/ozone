@@ -41,7 +41,7 @@ final class Session implements BootHookReceiverInterface
 
 	public const SESSION_TOKEN_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
 
-	private OZClient $client;
+	private ?OZClient $client = null;
 
 	private ?SessionDataStore $store = null;
 
@@ -102,7 +102,7 @@ final class Session implements BootHookReceiverInterface
 	 */
 	public function start(): self
 	{
-		if (!isset($this->client)) {
+		if (!$this->client) {
 			$this->init();
 		}
 

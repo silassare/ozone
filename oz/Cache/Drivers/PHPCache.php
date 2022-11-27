@@ -25,7 +25,12 @@ class PHPCache implements CacheProviderInterface
 	{
 	}
 
-	public function getFilePath(string $key)
+	/**
+	 * @param string $key
+	 *
+	 * @return string
+	 */
+	public function getFilePath(string $key): string
 	{
 		$hash = \md5($this->namespace . '/' . $key);
 		$dir1 = \substr($hash, 0, 2);
@@ -71,11 +76,11 @@ class PHPCache implements CacheProviderInterface
 
 	public function increment(string $key, float $factor = 1): bool
 	{
-		// TODO: Implement increment() method.
+		return true;
 	}
 
 	public function decrement(string $key, float $factor = 1): bool
 	{
-		// TODO: Implement decrement() method.
+		return true;
 	}
 }

@@ -149,23 +149,23 @@ trait RouteOptionsShareableTrait
 	 */
 	public function getForm(RouteInfo $ri): ?Form
 	{
-		if (null !== $this->route_form && \is_callable($this->route_form)) {
-			$form_builder = $this->route_form;
-			$form         = $form_builder($ri);
-
-			if (null === $form || $form instanceof Form) {
-				return $form;
-			}
-
-			throw (new RuntimeException(\sprintf(
-				'Route form builder should return instance of "%s" or "null" not: %s',
-				Form::class,
-				\get_debug_type($form)
-			))
-			)->suspectCallable($form_builder);
+		if (null === $this->route_form || $this->route_form instanceof Form) {
+			return $this->route_form;
 		}
 
-		return $this->route_form;
+		$form_builder = $this->route_form;
+		$form         = $form_builder($ri);
+
+		if (null === $form || $form instanceof Form) {
+			return $form;
+		}
+
+		throw (new RuntimeException(\sprintf(
+			'Route form builder should return instance of "%s" or "null" not: %s',
+			Form::class,
+			\get_debug_type($form)
+		))
+		)->suspectCallable($form_builder);
 	}
 
 	/**

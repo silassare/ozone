@@ -57,9 +57,9 @@ class Headers extends Collection
 	 * @param string     $key     The case-insensitive header name
 	 * @param null|mixed $default The default value if key does not exist
 	 *
-	 * @return string
+	 * @return null|string
 	 */
-	public function getOriginalKey(string $key, mixed $default = null): string
+	public function getOriginalKey(string $key, ?string $default = null): ?string
 	{
 		if ($this->has($key)) {
 			return parent::get($this->normalizeKey($key))['originalKey'];
@@ -118,7 +118,7 @@ class Headers extends Collection
 	/**
 	 * {@inheritDoc}
 	 */
-	public function get(string $key, mixed $default = null): array
+	public function get(string $key, mixed $default = null): mixed
 	{
 		if ($this->has($key)) {
 			return parent::get($this->normalizeKey($key))['value'];

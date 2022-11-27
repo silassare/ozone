@@ -11,7 +11,9 @@
 
 declare(strict_types=1);
 
+use OZONE\OZ\Auth\Services\AuthEmailService;
 use OZONE\OZ\Auth\Services\AuthPhoneService;
+use OZONE\OZ\Auth\Services\AuthService;
 use OZONE\OZ\FS\Services\UploadFiles;
 use OZONE\OZ\Services\CaptchaCode;
 use OZONE\OZ\Services\LinkTo;
@@ -36,5 +38,7 @@ return [
 	UserPicEdit::class      => true,
 	Password::class         => true,
 	AccountRecovery::class  => true,
+	AuthService::class => true,
 	AuthPhoneService::class => true,
+	AuthEmailService::class => true,
 ];

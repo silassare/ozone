@@ -63,7 +63,7 @@ class Form implements ArrayCapableInterface
 	 *
 	 * @param \OZONE\OZ\Http\Uri $uri
 	 *
-	 * @return \OZONE\OZ\Forms\Form
+	 * @return $this
 	 */
 	public function setSubmitTo(Uri $uri): static
 	{
@@ -148,7 +148,6 @@ class Form implements ArrayCapableInterface
 						$cleaned_fd->set($name, $field->validate($unsafe_fd->get($name), $cleaned_fd));
 					} catch (TypesInvalidValueException $e) {
 						/** @var InvalidFormException $e */
-						/** @noinspection PhpUnnecessaryLocalVariableInspection */
 						$e = InvalidFormException::tryConvert($e);
 
 						throw $e;

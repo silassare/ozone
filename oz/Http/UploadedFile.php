@@ -196,7 +196,7 @@ class UploadedFile implements UploadedFileInterface
 			return $env['oz_files'];
 		}
 
-		if (isset($_FILES)) {
+		if (!empty($_FILES)) {
 			return static::parseUploadedFiles($_FILES);
 		}
 

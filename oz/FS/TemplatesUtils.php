@@ -99,9 +99,9 @@ class TemplatesUtils
 	 *
 	 * @param string $template the template file name
 	 *
-	 * @return bool|string the template file path, or false when template file does not exists
+	 * @return false|string the template file path, or false when template file does not exists
 	 */
-	public static function localize(string $template): bool|string
+	public static function localize(string $template): false|string
 	{
 		$without_prefix = Str::removePrefix($template, 'oz://');
 

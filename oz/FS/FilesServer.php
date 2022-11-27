@@ -21,6 +21,7 @@ use OZONE\OZ\Exceptions\NotFoundException;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\Http\Body;
 use OZONE\OZ\Http\Response;
+use OZONE\OZ\Logger\Logger;
 
 /**
  * Class FilesServer.
@@ -55,7 +56,7 @@ class FilesServer
 			throw new NotFoundException();
 		}
 
-		oz_logger('Find a way to use nginx directive "internal" feature to serve file.');
+		Logger::log('Find a way to use nginx directive "internal" feature to serve file.');
 
 		/* https://clubhouse.io/developer-how-to/how-to-use-internal-redirects-in-nginx/
 		if (Configs::get('oz.files', 'OZ_USE_NGINX_FILE_FEATURE')){
@@ -81,7 +82,7 @@ class FilesServer
 			->withHeader('Expires', '99936000')
 			->withHeader('Cache-Control', 'public,max-age=99936000')
 			->withHeader('Content-Transfer-Encoding', 'binary')
-			->withHeader('Content-Length', $size)
+			->withHeader('Content-Length', (string)$size)
 			->withHeader('Content-type', $file_mime)
 			->withHeader('Content-Disposition', "attachment; filename=\"{$file_name}\";");
 
@@ -129,7 +130,7 @@ class FilesServer
 
 		// - turn off compression on the server
 		if (\function_exists('apache_setenv')) {
-			@apache_setenv('no-gzip', 1);
+			@apache_setenv('no-gzip', '1');
 		}
 
 		@\ini_set('zlib.output_compression', 'Off');

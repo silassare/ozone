@@ -14,12 +14,11 @@ declare(strict_types=1);
 namespace OZONE\OZ\Auth\Services;
 
 use Gobl\DBAL\Types\TypeBool;
-use Gobl\DBAL\Types\TypeString;
-use OZONE\OZ\Auth\AuthSecretType;
+use OZONE\OZ\Auth\Auth;
+use OZONE\OZ\Auth\AuthScope;
 use OZONE\OZ\Auth\Providers\AuthPhone;
 use OZONE\OZ\Columns\Types\TypePhone;
 use OZONE\OZ\Core\Service;
-use OZONE\OZ\Exceptions\InvalidFormException;
 use OZONE\OZ\Forms\Field;
 use OZONE\OZ\Forms\Form;
 use OZONE\OZ\Forms\FormData;
@@ -40,159 +39,9 @@ class AuthPhoneService extends Service
 	public static function registerRoutes(Router $router): void
 	{
 		$router->post('/auth/phone', static function (RouteInfo $ri) {
-			$s = new self($ri->getContext());
-
-			return $s->initPhone($ri, $ri->getCleanFormData());
+			return (new self($ri->getContext()))->init($ri, $ri->getCleanFormData());
 		})
-			->form(function () {
-				return self::buildInitForm();
-			});
-
-		$router->post('/auth/:auth_ref/authorize', static function (RouteInfo $ri) {
-			$s = new self($ri->getContext());
-
-			return $s->authorize($ri, $ri->getCleanFormData());
-		})
-			->form(function () {
-				return self::buildAuthorizeForm();
-			});
-		$router->get('/auth/:auth_ref/state', static function (RouteInfo $ri) {
-			$s = new self($ri->getContext());
-
-			return $s->state($ri);
-		});
-		$router->post('/auth/:auth_ref/refresh', static function (RouteInfo $ri) {
-			$s = new self($ri->getContext());
-
-			return $s->refresh($ri, $ri->getCleanFormData());
-		})
-			->form(function () {
-				return self::buildRefreshForm();
-			});
-		$router->post('/auth/:auth_ref/cancel', static function (RouteInfo $ri) {
-			$s = new self($ri->getContext());
-
-			return $s->cancel($ri);
-		});
-	}
-
-	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
-	 * @param \OZONE\OZ\Forms\FormData   $fd
-	 *
-	 * @return \OZONE\OZ\Http\Response
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 */
-	public function refresh(RouteInfo $ri, FormData $fd): Response
-	{
-		$ref         = $ri->getParam('auth_ref');
-		$refresh_key = $fd->get('refresh_key');
-
-		$auth = new AuthPhone($ri->getContext());
-
-		$auth->getCredentials()
-			->setReference($ref)
-			->setRefreshKey($refresh_key);
-
-		$auth->refresh();
-
-		$this->getJSONResponse()
-			->merge($auth->getJSONResponse());
-
-		return $this->respond();
-	}
-
-	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
-	 *
-	 * @return \OZONE\OZ\Http\Response
-	 *
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 */
-	public function state(RouteInfo $ri): Response
-	{
-		$ref  = $ri->getParam('auth_ref');
-		$auth = new AuthPhone($ri->getContext());
-
-		$auth->getCredentials()
-			->setReference($ref);
-
-		$this->getJSONResponse()
-			->setDone()
-			->setData([
-				'auth_state' => $auth->getState()->value,
-			]);
-
-		return $this->respond();
-	}
-
-	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
-	 *
-	 * @return \OZONE\OZ\Http\Response
-	 *
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 */
-	public function cancel(RouteInfo $ri): Response
-	{
-		$ref  = $ri->getParam('auth_ref');
-		$auth = new AuthPhone($ri->getContext());
-
-		$auth->getCredentials()
-			->setReference($ref);
-
-		$auth->cancel();
-
-		$this->getJSONResponse()
-			->merge($auth->getJSONResponse());
-
-		return $this->respond();
-	}
-
-	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
-	 * @param \OZONE\OZ\Forms\FormData   $fd
-	 *
-	 * @return \OZONE\OZ\Http\Response
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 */
-	public function authorize(RouteInfo $ri, FormData $fd): Response
-	{
-		$ref  = $ri->getParam('auth_ref');
-		$auth = new AuthPhone($ri->getContext());
-
-		$auth->getCredentials()
-			->setReference($ref);
-
-		$code  = $fd->get('code');
-		$token = $fd->get('token');
-
-		if (null !== $code) {
-			$type = AuthSecretType::CODE;
-			$auth->getCredentials()
-				->setCode($code);
-		} elseif (null !== $token) {
-			$type = AuthSecretType::TOKEN;
-			$auth->getCredentials()
-				->setToken($token);
-		} else {
-			throw new InvalidFormException();
-		}
-
-		$auth->authorize($type);
-
-		$this->getJSONResponse()
-			->merge($auth->getJSONResponse());
-
-		return $this->respond();
+			   ->form(self::buildInitForm(...));
 	}
 
 	/**
@@ -201,17 +50,17 @@ class AuthPhoneService extends Service
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 */
-	private function initPhone(RouteInfo $ri, FormData $fd): Response
+	private function init(RouteInfo $ri, FormData $fd): Response
 	{
 		$phone = $fd->get('phone');
+		$scope = new AuthScope($phone);
 
-		$auth = new AuthPhone($ri->getContext());
+		$provider = Auth::getAuthProvider(AuthPhone::NAME, $ri->getContext(), $scope);
 
-		$auth->getScope()->setValue($phone);
-		$auth->generate();
+		$provider->generate();
 
 		$this->getJSONResponse()
-			->merge($auth->getJSONResponse());
+			 ->merge($provider->getJSONResponse());
 
 		return $this->respond();
 	}
@@ -227,37 +76,10 @@ class AuthPhoneService extends Service
 
 		$phone = new TypesSwitcher();
 		$phone->when((new FormRule())->isNull('registered'), new TypePhone())
-			->when((new FormRule())->eq('registered', true), (new TypePhone())->registered())
-			->when((new FormRule())->eq('registered', false), (new TypePhone())->notRegistered());
+			  ->when((new FormRule())->eq('registered', true), (new TypePhone())->registered())
+			  ->when((new FormRule())->eq('registered', false), (new TypePhone())->notRegistered());
 
 		$fb->addField(new Field('phone', $phone, true));
-
-		return $fb;
-	}
-
-	/**
-	 * @return \OZONE\OZ\Forms\Form
-	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
-	 */
-	private static function buildRefreshForm(): Form
-	{
-		$fb = new Form();
-
-		$fb->addField(new Field('refresh_key', new TypeString(1), true));
-
-		return $fb;
-	}
-
-	/**
-	 * @return \OZONE\OZ\Forms\Form
-	 */
-	private static function buildAuthorizeForm(): Form
-	{
-		$fb = new Form();
-
-		$fb->addField(new Field('code', new TypeString(), false));
-		$fb->addField(new Field('token', new TypeString(), false));
 
 		return $fb;
 	}

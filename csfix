@@ -1,3 +1,5 @@
 #!/bin/sh
 
+./vendor/bin/psalm --no-cache
+
 ./vendor/bin/oliup-cs fix

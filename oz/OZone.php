@@ -21,6 +21,7 @@ use OZONE\OZ\Core\CRUDHandlerProvider;
 use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Core\Interfaces\TableCollectionsProviderInterface;
 use OZONE\OZ\Core\Interfaces\TableRelationsProviderInterface;
+use OZONE\OZ\Exceptions\BaseException;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\Hooks\Events\FinishHook;
 use OZONE\OZ\Hooks\Events\InitHook;
@@ -39,21 +40,21 @@ final class OZone
 	public const INTERNAL_PATH_PREFIX = '/oz:';
 
 	/**
-	 * @var \OZONE\OZ\Router\Router
+	 * @var null|\OZONE\OZ\Router\Router
 	 */
-	private static Router $api_router;
+	private static ?Router $api_router;
 
 	/**
-	 * @var \OZONE\OZ\Router\Router
+	 * @var null|\OZONE\OZ\Router\Router
 	 */
-	private static Router $web_router;
+	private static ?Router $web_router;
 
 	/**
 	 * The current running app.
 	 *
-	 * @var AppInterface
+	 * @var null|AppInterface
 	 */
-	private static AppInterface $current_app;
+	private static ?AppInterface $current_app = null;
 
 	/**
 	 * Gets current running app.
@@ -62,7 +63,7 @@ final class OZone
 	 */
 	public static function getRunningApp(): null|AppInterface
 	{
-		return self::$current_app ?? null;
+		return self::$current_app;
 	}
 
 	/**
@@ -250,4 +251,5 @@ final class OZone
 			}
 		}
 	}
+
 }

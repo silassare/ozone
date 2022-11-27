@@ -1,54 +1,51 @@
 <?php
-
 /**
- * Copyright (c) 2017-present, Emile Silas Sare
- *
- * This file is part of OZone package.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * Auto generated file
+ * 
+ * WARNING: please don't edit.
+ * 
+ * Proudly With: gobl v1.5.0
+ * Time: 2022-11-21T17:43:33+00:00
  */
-
 declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
 /**
  * Class OZSession.
- *
- * @property string      $id         Getter for column `oz_sessions`.`id`.
- * @property string      $client_id  Getter for column `oz_sessions`.`client_id`.
- * @property null|string $user_id    Getter for column `oz_sessions`.`user_id`.
- * @property string      $token      Getter for column `oz_sessions`.`token`.
- * @property string      $expire     Getter for column `oz_sessions`.`expire`.
- * @property bool        $verified   Getter for column `oz_sessions`.`verified`.
- * @property string      $last_seen  Getter for column `oz_sessions`.`last_seen`.
- * @property array       $data       Getter for column `oz_sessions`.`data`.
- * @property string      $created_at Getter for column `oz_sessions`.`created_at`.
- * @property string      $updated_at Getter for column `oz_sessions`.`updated_at`.
- * @property bool        $valid      Getter for column `oz_sessions`.`valid`.
+ * 
+ * @property-read string $id Getter for column `oz_sessions`.`id`.
+ * @property-read string $client_id Getter for column `oz_sessions`.`client_id`.
+ * @property-read string|null $user_id Getter for column `oz_sessions`.`user_id`.
+ * @property-read string $token Getter for column `oz_sessions`.`token`.
+ * @property-read string $expire Getter for column `oz_sessions`.`expire`.
+ * @property-read bool $verified Getter for column `oz_sessions`.`verified`.
+ * @property-read string $last_seen Getter for column `oz_sessions`.`last_seen`.
+ * @property-read array $data Getter for column `oz_sessions`.`data`.
+ * @property-read string $created_at Getter for column `oz_sessions`.`created_at`.
+ * @property-read string $updated_at Getter for column `oz_sessions`.`updated_at`.
+ * @property-read bool $valid Getter for column `oz_sessions`.`valid`.
  */
 abstract class OZSession extends \Gobl\ORM\ORMEntity
 {
-	public const TABLE_NAME      = 'oz_sessions';
+	public const TABLE_NAME = 'oz_sessions';
 	public const TABLE_NAMESPACE = 'OZONE\\OZ\\Db';
-	public const COL_ID          = 'session_id';
-	public const COL_CLIENT_ID   = 'session_client_id';
-	public const COL_USER_ID     = 'session_user_id';
-	public const COL_TOKEN       = 'session_token';
-	public const COL_EXPIRE      = 'session_expire';
-	public const COL_VERIFIED    = 'session_verified';
-	public const COL_LAST_SEEN   = 'session_last_seen';
-	public const COL_DATA        = 'session_data';
-	public const COL_CREATED_AT  = 'session_created_at';
-	public const COL_UPDATED_AT  = 'session_updated_at';
-	public const COL_VALID       = 'session_valid';
-
+	public const COL_ID = 'session_id';
+	public const COL_CLIENT_ID = 'session_client_id';
+	public const COL_USER_ID = 'session_user_id';
+	public const COL_TOKEN = 'session_token';
+	public const COL_EXPIRE = 'session_expire';
+	public const COL_VERIFIED = 'session_verified';
+	public const COL_LAST_SEEN = 'session_last_seen';
+	public const COL_DATA = 'session_data';
+	public const COL_CREATED_AT = 'session_created_at';
+	public const COL_UPDATED_AT = 'session_updated_at';
+	public const COL_VALID = 'session_valid';
 	/**
 	 * OZSession constructor.
-	 *
+	 * 
 	 * @param bool $is_new true for new entity false for entity fetched
-	 *                     from the database, default is true
+	 *                      from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
 	public function __construct(bool $is_new = true, bool $strict = true)
@@ -59,11 +56,12 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 			$is_new,
 			$strict
 		);
+
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
+	 * @inheritDoc
+	 * 
 	 * @return static
 	 */
 	public static function createInstance(bool $is_new = true, bool $strict = true): static
@@ -73,7 +71,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_sessions`.`id`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getID(): string
@@ -83,9 +81,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_sessions`.`id`.
-	 *
+	 * 
 	 * @param string $id
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setID(string $id): static
@@ -97,7 +95,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_sessions`.`client_id`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getClientID(): string
@@ -107,9 +105,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_sessions`.`client_id`.
-	 *
-	 * @param int|string $client_id
-	 *
+	 * 
+	 * @param string|int $client_id
+	 * 
 	 * @return static
 	 */
 	public function setClientID(string|int $client_id): static
@@ -121,8 +119,8 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_sessions`.`user_id`.
-	 *
-	 * @return null|string
+	 * 
+	 * @return string|null
 	 */
 	public function getUserID(): string|null
 	{
@@ -131,9 +129,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_sessions`.`user_id`.
-	 *
-	 * @param null|int|string $user_id
-	 *
+	 * 
+	 * @param string|int|null $user_id
+	 * 
 	 * @return static
 	 */
 	public function setUserID(string|int|null $user_id): static
@@ -145,7 +143,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_sessions`.`token`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getToken(): string
@@ -155,9 +153,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_sessions`.`token`.
-	 *
+	 * 
 	 * @param string $token
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setToken(string $token): static
@@ -169,7 +167,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_sessions`.`expire`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getExpire(): string
@@ -179,9 +177,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_sessions`.`expire`.
-	 *
-	 * @param int|string $expire
-	 *
+	 * 
+	 * @param string|int $expire
+	 * 
 	 * @return static
 	 */
 	public function setExpire(string|int $expire): static
@@ -193,7 +191,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_sessions`.`verified`.
-	 *
+	 * 
 	 * @return bool
 	 */
 	public function getVerified(): bool
@@ -203,9 +201,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_sessions`.`verified`.
-	 *
+	 * 
 	 * @param bool $verified
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setVerified(bool $verified): static
@@ -217,7 +215,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_sessions`.`last_seen`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getLastSeen(): string
@@ -227,9 +225,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_sessions`.`last_seen`.
-	 *
-	 * @param int|string $last_seen
-	 *
+	 * 
+	 * @param string|int $last_seen
+	 * 
 	 * @return static
 	 */
 	public function setLastSeen(string|int $last_seen): static
@@ -241,7 +239,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_sessions`.`data`.
-	 *
+	 * 
 	 * @return array
 	 */
 	public function getData(): array
@@ -251,9 +249,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_sessions`.`data`.
-	 *
+	 * 
 	 * @param array $data
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setData(array $data): static
@@ -265,7 +263,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_sessions`.`created_at`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getCreatedAT(): string
@@ -275,9 +273,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_sessions`.`created_at`.
-	 *
-	 * @param int|string $created_at
-	 *
+	 * 
+	 * @param string|int $created_at
+	 * 
 	 * @return static
 	 */
 	public function setCreatedAT(string|int $created_at): static
@@ -289,7 +287,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_sessions`.`updated_at`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getUpdatedAT(): string
@@ -299,9 +297,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_sessions`.`updated_at`.
-	 *
-	 * @param int|string $updated_at
-	 *
+	 * 
+	 * @param string|int $updated_at
+	 * 
 	 * @return static
 	 */
 	public function setUpdatedAT(string|int $updated_at): static
@@ -313,7 +311,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_sessions`.`valid`.
-	 *
+	 * 
 	 * @return bool
 	 */
 	public function getValid(): bool
@@ -323,9 +321,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_sessions`.`valid`.
-	 *
+	 * 
 	 * @param bool $valid
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setValid(bool $valid): static
@@ -337,12 +335,12 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * ManyToOne relation between `oz_sessions` and `oz_clients`.
-	 *
+	 * 
 	 * @return ?\OZONE\OZ\Db\OZClient
 	 */
 	public function getClient(): ?\OZONE\OZ\Db\OZClient
 	{
-		$getters        = [\OZONE\OZ\Db\OZClient::COL_ID => $this->getClientID(...)];
+		$getters = [\OZONE\OZ\Db\OZClient::COL_ID => $this->getClientID(...),];
 		$filters_bundle = $this->buildRelationFilter($getters, []);
 
 		if (null === $filters_bundle) {
@@ -354,12 +352,12 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * ManyToOne relation between `oz_sessions` and `oz_users`.
-	 *
+	 * 
 	 * @return ?\OZONE\OZ\Db\OZUser
 	 */
 	public function getUser(): ?\OZONE\OZ\Db\OZUser
 	{
-		$getters        = [\OZONE\OZ\Db\OZUser::COL_ID => $this->getUserID(...)];
+		$getters = [\OZONE\OZ\Db\OZUser::COL_ID => $this->getUserID(...),];
 		$filters_bundle = $this->buildRelationFilter($getters, []);
 
 		if (null === $filters_bundle) {

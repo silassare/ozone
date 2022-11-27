@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\FS;
 
-use OZONE\OZ\Auth\Auth;
 use OZONE\OZ\Auth\AuthSecretType;
+use OZONE\OZ\Auth\Providers\AuthFile;
 use OZONE\OZ\Core\Context;
 use OZONE\OZ\Db\OZFile;
 use OZONE\OZ\Exceptions\NotFoundException;
@@ -61,7 +61,7 @@ class FileAccess
 				]);
 			}
 		} else {
-			$auth = new Auth($this->context);
+			$auth = new AuthFile($this->context);
 			$auth->getScope()->setValue($this->file->getID());
 			$auth->getCredentials()
 				->setReference($ref)

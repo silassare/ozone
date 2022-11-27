@@ -337,6 +337,11 @@ return [
 				'min'  => 1,
 				'max'  => 128,
 			],
+			'provider'       => [
+				'type' => 'string',
+				'min'  => 1,
+				'max'  => 128,
+			],
 			'refresh_key' => [
 				'type' => 'string',
 				'min'  => 32,
@@ -392,9 +397,9 @@ return [
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'disabled'    => [
+			'valid'      => [
 				'type'    => 'bool',
-				'default' => false,
+				'default' => true,
 			],
 		],
 	],

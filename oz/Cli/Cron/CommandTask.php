@@ -13,19 +13,18 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cli\Cron;
 
-use OZONE\OZ\Cli\Cron\Interfaces\TaskInterface;
+use OZONE\OZ\Cli\Cron\Traits\TaskBase;
 use OZONE\OZ\Cli\Process;
 
-class CommandTask implements TaskInterface
+/**
+ * Class CommandTask.
+ */
+class CommandTask extends TaskBase
 {
-	private string $name;
-
 	private string $command;
 
-	private string $description;
-
 	/**
-	 * Task constructor.
+	 * CommandTask constructor.
 	 *
 	 * @param string $name
 	 * @param string $command
@@ -33,25 +32,9 @@ class CommandTask implements TaskInterface
 	 */
 	public function __construct(string $name, string $command, string $description = '')
 	{
-		$this->name        = $name;
-		$this->description = $description;
-		$this->command     = $command;
-	}
+		parent::__construct($name, $description);
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public function getName(): string
-	{
-		return $this->name;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function getDescription(): string
-	{
-		return $this->description;
+		$this->command = $command;
 	}
 
 	/**
@@ -63,4 +46,5 @@ class CommandTask implements TaskInterface
 
 		$process->open();
 	}
+
 }

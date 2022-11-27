@@ -29,7 +29,7 @@ class SessionDataStore extends Store
 	 */
 	private function __construct(private OZSession $session)
 	{
-		parent::__construct($this->session->getData() ?? []);
+		parent::__construct($this->session->getData());
 	}
 
 	/**

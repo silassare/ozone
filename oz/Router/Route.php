@@ -43,11 +43,11 @@ final class Route
 	 * @param \OZONE\OZ\Router\RouteOptions $options
 	 */
 	public function __construct(
-		private Router $router,
-		private array $methods,
-		private string $path,
-		callable $callable,
-		private RouteOptions $options
+		private readonly Router $router,
+		private readonly array  $methods,
+		private readonly string $path,
+		callable                $callable,
+		private readonly RouteOptions $options
 	) {
 		$this->callable = $callable;
 	}

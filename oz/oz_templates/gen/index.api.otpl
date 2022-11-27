@@ -5,7 +5,7 @@ use OZONE\OZ\Loader\ClassLoader;
 use OZONE\OZ\OZone;
 use <%$.oz_project_namespace%>\<%$.oz_project_class%>;
 
-//=	Don't forget to use DS instead of \ or / and
+//= Don't forget to use DS instead of \ or / and
 //= always add the last DS to your directories path
 if (!\defined('DS')) {
 	\define('DS', \DIRECTORY_SEPARATOR);

@@ -55,7 +55,7 @@ final class CacheManager
 	 * @param string     $key
 	 * @param null|mixed $default
 	 *
-	 * @return bool
+	 * @return mixed
 	 */
 	public function get(string $key, mixed $default = null): mixed
 	{

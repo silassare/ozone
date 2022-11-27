@@ -37,7 +37,7 @@ trait ExceptionWithCustomResponseTrait
 	 *
 	 * @param \OZONE\OZ\Http\Response $response
 	 *
-	 * @return \OZONE\OZ\Exceptions\Traits\ExceptionWithCustomResponseTrait
+	 * @return static
 	 */
 	public function setCustomResponse(Response $response): static
 	{

@@ -43,7 +43,7 @@ final class Process
 	 */
 	private $process;
 
-	private ?array $status = null;
+	private false|array|null $status = null;
 
 	private array $descriptors = [
 		self::IN  => ['pipe', 'r'], // stdin
@@ -67,8 +67,6 @@ final class Process
 	/**
 	 * @param mixed $cmd
 	 * @param mixed $cwd
-	 *
-	 * @var false|resource
 	 */
 
 	/**
@@ -110,7 +108,8 @@ final class Process
 		$this->assertNoOpenedProcess(__METHOD__);
 
 		$options = [];
-		$command = Utils::getPlatform()->format($this->command);
+		$command = Utils::getPlatform()
+						->format($this->command);
 
 		if (Utils::isDOS()) {
 			$options['bypass_shell'] = true;
@@ -180,7 +179,11 @@ final class Process
 
 		$file_path = $this->fm->resolve($file_path);
 
-		$this->fm->filter()->isFile()->isReadable()->isWritable()->assert($file_path);
+		$this->fm->filter()
+				 ->isFile()
+				 ->isReadable()
+				 ->isWritable()
+				 ->assert($file_path);
 
 		$this->descriptors[self::IN] = ['file', $file_path, 'r']; // the command need to read
 		$this->files[self::IN]       = $file_path;
@@ -201,7 +204,11 @@ final class Process
 
 		$file_path = $this->fm->resolve($file_path);
 
-		$this->fm->filter()->isFile()->isReadable()->isWritable()->assert($file_path);
+		$this->fm->filter()
+				 ->isFile()
+				 ->isReadable()
+				 ->isWritable()
+				 ->assert($file_path);
 
 		$this->descriptors[self::OUT] = ['file', $file_path, 'w']; // the command need to write
 		$this->files[self::OUT]       = $file_path;
@@ -222,7 +229,11 @@ final class Process
 
 		$file_path = $this->fm->resolve($file_path);
 
-		$this->fm->filter()->isFile()->isReadable()->isWritable()->assert($file_path);
+		$this->fm->filter()
+				 ->isFile()
+				 ->isReadable()
+				 ->isWritable()
+				 ->assert($file_path);
 
 		$this->descriptors[self::ERR] = ['file', $file_path, 'w']; // the command need to write
 		$this->files[self::ERR]       = $file_path;
@@ -326,7 +337,8 @@ final class Process
 		if ($this->isRunning()) {
 			$pid = $this->getPid();
 
-			$ok = Utils::getPlatform()->kill($pid);
+			$ok = Utils::getPlatform()
+					   ->kill($pid);
 
 			$this->close();
 
@@ -358,7 +370,7 @@ final class Process
 		if ($this->process) {
 			$status = $this->getStatus(true);
 
-			return (bool) $status['running'];
+			return (bool)$status['running'];
 		}
 
 		return false;
@@ -376,16 +388,19 @@ final class Process
 		$this->assertOpenedProcess(__METHOD__);
 
 		if ($refresh || !$this->status) {
-			$this->status = \proc_get_status($this->process);
+			/** @var false|array $result */
+			$result = \proc_get_status($this->process);
+
+			if (!$result) {
+				throw new RuntimeException('Unable to get running process status.');
+			}
+
+			$this->status = $result;
 
 			if (Utils::sigChildEnabled()) {
 				$this->status['signaled'] = true;
 				$this->status['exitcode'] = -1;
 				$this->status['termsig']  = -1;
-			}
-
-			if (!$this->status) {
-				throw new RuntimeException('Unable to get running process status.');
 			}
 		}
 
@@ -467,7 +482,7 @@ final class Process
 
 		do {
 			$data = \fread($handle, 1024);
-			$all .= $data;
+			$all  .= $data;
 		} while (isset($data[0], $data[1024 - 1]));
 
 		return $all;

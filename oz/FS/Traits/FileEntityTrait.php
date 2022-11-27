@@ -64,7 +64,7 @@ trait FileEntityTrait
 	 */
 	public function hasClones(): bool
 	{
-		return (bool) \count($this->getClones(null, 1));
+		return (bool) \count($this->getClones([], 1));
 	}
 
 	/**

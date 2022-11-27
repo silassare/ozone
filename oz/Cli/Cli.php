@@ -20,6 +20,7 @@ use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\OZ\Loader\ClassLoader;
+use OZONE\OZ\Logger\Logger;
 use PHPUtils\Str;
 
 /**
@@ -72,7 +73,7 @@ final class Cli extends Kli
 	 */
 	public function log(mixed $msg, bool $wrap = true): self
 	{
-		oz_logger($msg);
+		Logger::log($msg);
 
 		return $this;
 	}
@@ -161,7 +162,7 @@ final class Cli extends Kli
 					));
 				}
 
-				/* @var \OZONE\OZ\Cli\Command $cmd_class */
+				/* @var class-string<\OZONE\OZ\Cli\Command> $cmd_class */
 				$this->addCommand(new $cmd_class($cmd_name, $this));
 			}
 		}

@@ -49,7 +49,7 @@ class Fields
 	/**
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 */
-	public static function checkPassVPass(array $request): string
+	public static function checkPassVPass(FormData $request): string
 	{
 		$form = new Form();
 		$form->addField(new Field('pass', new TypePassword(), true));

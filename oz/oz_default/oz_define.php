@@ -18,7 +18,34 @@ const OZ_OZONE_IS_CLI            = ('cli' === \PHP_SAPI);
 \define('OZ_OZONE_DIR', \dirname(__DIR__) . \DIRECTORY_SEPARATOR);
 \define('OZ_OZONE_START_TIME', \microtime(true));
 
-if (!\defined('PHP_INT_MIN')) {
-	// Available since PHP 7.0.0 http://php.net/manual/en/reserved.constants.php
-	\define('PHP_INT_MIN', ~\PHP_INT_MAX);
+// = Don't forget to use DS instead of \ or / and
+// = always add the last DS to your directories path
+if (!\defined('DS')) {
+	\define('DS', \DIRECTORY_SEPARATOR);
+}
+
+// = Project directory
+// = any relative path will be resolved using this path as starting point
+if (!\defined('OZ_PROJECT_DIR')) {
+	\define('OZ_PROJECT_DIR', \getcwd() . DS);
+}
+
+// = App directory
+if (!\defined('OZ_APP_DIR')) {
+	\define('OZ_APP_DIR', OZ_PROJECT_DIR . 'api' . DS . 'app' . DS);
+}
+
+// = Files directory
+if (!\defined('OZ_FILES_DIR')) {
+	\define('OZ_FILES_DIR', OZ_APP_DIR . 'oz_users_files' . DS);
+}
+
+// = Cache directory
+if (!\defined('OZ_CACHE_DIR')) {
+	\define('OZ_CACHE_DIR', OZ_APP_DIR . 'oz_cache' . DS);
+}
+
+// = Logs directory
+if (!\defined('OZ_LOG_DIR')) {
+	\define('OZ_LOG_DIR', \getcwd() . DS);
 }

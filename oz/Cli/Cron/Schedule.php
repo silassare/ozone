@@ -16,7 +16,7 @@ namespace OZONE\OZ\Cli\Cron;
 /**
  * Class Scheduler.
  */
-final class Schedule
+final class Schedule implements \Stringable
 {
 	private string $minute = '*';
 
@@ -122,5 +122,13 @@ final class Schedule
 		return $sc->everyYear()
 			->month(2)
 			->day(5);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function __toString()
+	{
+		return '';
 	}
 }

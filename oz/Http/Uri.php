@@ -164,10 +164,6 @@ class Uri implements UriInterface
 	 */
 	public function withBasePath(string $basePath): self
 	{
-		if (!\is_string($basePath)) {
-			throw new InvalidArgumentException('Uri path must be a string');
-		}
-
 		if (!empty($basePath)) {
 			$basePath = '/' . \trim($basePath, '/'); // <-- Trim on both sides
 		}
@@ -361,12 +357,12 @@ class Uri implements UriInterface
 	/**
 	 * Creates new Uri from string.
 	 *
-	 * @param string $uri Complete Uri string
-	 *                    (i.e., https://user:pass@host:443/path?query).
+	 * @param string|\Stringable $uri Complete Uri string
+	 *                                (i.e., https://user:pass@host:443/path?query).
 	 *
 	 * @return self
 	 */
-	public static function createFromString(string $uri): self
+	public static function createFromString(string|\Stringable $uri): self
 	{
 		if (!\is_string($uri) && !\method_exists($uri, '__toString')) {
 			throw new InvalidArgumentException('Uri must be a string');
@@ -471,14 +467,14 @@ class Uri implements UriInterface
 	/**
 	 * Filters Uri scheme.
 	 *
-	 * @param string $scheme raw Uri scheme
+	 * @param string|\Stringable $scheme raw Uri scheme
 	 *
 	 * @return string
 	 *
 	 * @throws InvalidArgumentException if Uri scheme is not "", "https", or "http"
 	 * @throws InvalidArgumentException if the Uri scheme is not a string
 	 */
-	protected function filterScheme(string $scheme): string
+	protected function filterScheme(string|\Stringable $scheme): string
 	{
 		static $valid = [
 			''      => true,
@@ -510,7 +506,7 @@ class Uri implements UriInterface
 	 */
 	protected function filterPort(?int $port): ?int
 	{
-		if (null === $port || (\is_int($port) && ($port >= 1 && $port <= 65535))) {
+		if (null === $port || ($port >= 1 && $port <= 65535)) {
 			return $port;
 		}
 

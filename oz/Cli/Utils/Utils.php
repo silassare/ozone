@@ -25,9 +25,9 @@ use Throwable;
  */
 final class Utils
 {
-	private static bool $sig_child;
+	private static ?bool $sig_child = null;
 
-	private static array $env;
+	private static ?array $env = null;
 
 	/**
 	 * Load project config from a given project folder or current working dir.
@@ -155,7 +155,7 @@ final class Utils
 	 */
 	public static function getDefaultEnv(): array
 	{
-		if (!isset(self::$env)) {
+		if (null === self::$env) {
 			$env     = [];
 			$sources = [$_SERVER, $_ENV];
 

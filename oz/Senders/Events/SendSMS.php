@@ -16,6 +16,9 @@ namespace OZONE\OZ\Senders\Events;
 use OZONE\OZ\Senders\Messages\SMSMessage;
 use PHPUtils\Events\Event;
 
+/**
+ * Class SendSMS.
+ */
 final class SendSMS extends Event
 {
 	protected SMSMessage $message;

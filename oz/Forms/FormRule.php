@@ -27,89 +27,97 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * @param string                $field
 	 * @param bool|float|int|string $value
+	 * @param bool                  $is_field
 	 *
 	 * @return $this
 	 */
-	public function eq(string $field, int|string|float|bool $value): self
+	public function eq(string $field, int|string|float|bool $value, bool $is_field = false): self
 	{
-		return $this->add($field, 'eq', $value);
+		return $this->add($field, 'eq', $value, $is_field);
 	}
 
 	/**
 	 * @param string                $field
 	 * @param bool|float|int|string $value
+	 * @param bool                  $is_field
 	 *
 	 * @return $this
 	 */
-	public function neq(string $field, int|string|float|bool $value): self
+	public function neq(string $field, int|string|float|bool $value, bool $is_field = false): self
 	{
-		return $this->add($field, 'neq', $value);
+		return $this->add($field, 'neq', $value, $is_field);
 	}
 
 	/**
 	 * @param string           $field
 	 * @param float|int|string $value
+	 * @param bool             $is_field
 	 *
 	 * @return $this
 	 */
-	public function gt(string $field, int|string|float $value): self
+	public function gt(string $field, int|string|float $value, bool $is_field = false): self
 	{
-		return $this->add($field, 'gt', $value);
+		return $this->add($field, 'gt', $value, $is_field);
 	}
 
 	/**
 	 * @param string           $field
 	 * @param float|int|string $value
+	 * @param bool             $is_field
 	 *
 	 * @return $this
 	 */
-	public function gte(string $field, int|string|float $value): self
+	public function gte(string $field, int|string|float $value, bool $is_field = false): self
 	{
-		return $this->add($field, 'gte', $value);
+		return $this->add($field, 'gte', $value, $is_field);
 	}
 
 	/**
 	 * @param string           $field
 	 * @param float|int|string $value
+	 * @param bool             $is_field
 	 *
 	 * @return $this
 	 */
-	public function lt(string $field, int|string|float $value): self
+	public function lt(string $field, int|string|float $value, bool $is_field = false): self
 	{
-		return $this->add($field, 'lt', $value);
+		return $this->add($field, 'lt', $value, $is_field);
 	}
 
 	/**
 	 * @param string           $field
 	 * @param float|int|string $value
+	 * @param bool             $is_field
 	 *
 	 * @return $this
 	 */
-	public function lte(string $field, int|string|float $value): self
+	public function lte(string $field, int|string|float $value, bool $is_field = false): self
 	{
-		return $this->add($field, 'lte', $value);
+		return $this->add($field, 'lte', $value, $is_field);
 	}
 
 	/**
 	 * @param string $field
 	 * @param array  $value
+	 * @param bool   $is_field
 	 *
 	 * @return $this
 	 */
-	public function in(string $field, array $value): self
+	public function in(string $field, array $value, bool $is_field = false): self
 	{
-		return $this->add($field, 'in', $value);
+		return $this->add($field, 'in', $value, $is_field);
 	}
 
 	/**
 	 * @param string $field
 	 * @param array  $value
+	 * @param bool   $is_field
 	 *
 	 * @return $this
 	 */
-	public function notIn(string $field, array $value): self
+	public function notIn(string $field, array $value, bool $is_field = false): self
 	{
-		return $this->add($field, 'not_in', $value);
+		return $this->add($field, 'not_in', $value, $is_field);
 	}
 
 	/**
@@ -143,6 +151,10 @@ class FormRule implements ArrayCapableInterface
 			$a = $fd->get($item['field']);
 			$b = $item['value'];
 
+			if ($item['is_field']){
+				$b = $fd->get($b);
+			}
+
 			$ok = match ($item['rule']) {
 				'eq'          => ($a === $b),
 				'neq'         => ($a !== $b),
@@ -150,8 +162,8 @@ class FormRule implements ArrayCapableInterface
 				'gte'         => ($a >= $b),
 				'lt'          => ($a < $b),
 				'lte'         => ($a <= $b),
-				'in'          => \in_array($a, $b, true),
-				'not_in'      => !\in_array($a, $b, true),
+				'in'          => \is_array($b) && \in_array($a, $b, true),
+				'not_in'      => !\is_array($b) || !\in_array($a, $b, true),
 				'is_null'     => null === $a,
 				'is_not_null' => null !== $a,
 			};
@@ -173,16 +185,18 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param string $field
-	 * @param string $rule
-	 * @param        $value
+	 * @param string     $field
+	 * @param string     $rule
+	 * @param null|mixed $value
+	 * @param bool       $is_field
 	 *
 	 * @return $this
 	 */
-	private function add(string $field, string $rule, $value = null): self
+	private function add(string $field, string $rule, mixed $value = null, bool $is_field = false): self
 	{
 		$this->rules[] = [
 			'field' => $field,
+			'is_field' => $is_field,
 			'rule'  => $rule,
 			'value' => $value,
 		];

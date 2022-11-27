@@ -162,9 +162,9 @@ final class Db extends Command
 
 		$f = new KliOption('f');
 		$f->alias('file')
-			->offsets(1)
-			->type((new KliTypePath())->file())
-			->description('The database source file to run.');
+		  ->offsets(1)
+		  ->type((new KliTypePath())->file())
+		  ->description('The database source file to run.');
 
 		$d_c = clone $d;
 		$build->addOption($all, $n, $class_only);
@@ -191,8 +191,8 @@ final class Db extends Command
 		Utils::assertProjectFolder();
 
 		$cli        = $this->getCli();
-		$all        = (bool) $options['a'];
-		$class_only = (bool) $options['c'];
+		$all        = (bool)$options['a'];
+		$class_only = (bool)$options['c'];
 		$namespace  = $options['n'];
 
 		$structure = DbManager::getProjectDbDirectoryStructure();
@@ -241,17 +241,15 @@ final class Db extends Command
 
 		$gen = new CSGeneratorORM($db, false, false);
 
-		foreach ($map as $ns => $ok) {
-			if ($ok) {
-				$dir = $default_dir[$ns] ?? $plugins_out_dir;
+		foreach ($map as $ns => $_) {
+			$dir = $default_dir[$ns] ?? $plugins_out_dir;
 
-				// we (re)generate classes only for tables
-				// in the given namespace
-				$tables = $db->getTables($ns);
-				$gen->generate($tables, $dir);
+			// we (re)generate classes only for tables
+			// in the given namespace
+			$tables = $db->getTables($ns);
+			$gen->generate($tables, $dir);
 
-				$cli->success(\sprintf('database classes generated: "%s".', $ns));
-			}
+			$cli->success(\sprintf('database classes generated: "%s".', $ns));
 		}
 
 		$queries = '';
@@ -261,7 +259,7 @@ final class Db extends Command
 
 			try {
 				$queries = $db->getGenerator()
-					->buildDatabase();
+							  ->buildDatabase();
 				$db->executeMulti($queries);
 
 				$cli->success('database queries executed.');
@@ -340,8 +338,8 @@ final class Db extends Command
 			$namespace = null;
 		}
 		$query = DbManager::getDb()
-			->getGenerator()
-			->buildDatabase($namespace);
+						  ->getGenerator()
+						  ->buildDatabase($namespace);
 
 		$file_name = \sprintf('%s.sql', Hasher::genFileName('db'));
 		$fm        = new FilesManager($dir);
@@ -349,11 +347,11 @@ final class Db extends Command
 
 		if (\file_exists($fm->resolve($file_name))) {
 			$this->getCli()
-				->success('database file generated.')
-				->writeLn($fm->resolve($file_name));
+				 ->success('database file generated.')
+				 ->writeLn($fm->resolve($file_name));
 		} else {
 			$this->getCli()
-				->error('database file generation fails.');
+				 ->error('database file generation fails.');
 		}
 	}
 

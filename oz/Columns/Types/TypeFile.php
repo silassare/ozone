@@ -389,7 +389,8 @@ class TypeFile extends Type
 
 			foreach ($uploaded_files as $file) {
 				if ($file instanceof OZFile) {
-					$data[] = $file->getID();
+					/** @var string $fid */
+					$fid = $file->getID();
 				} else {
 					$fo = $driver->upload($file);
 					$fo->setDriver($driver_name)
@@ -398,8 +399,11 @@ class TypeFile extends Type
 
 					$new_file_list[] = $fo;
 
-					$data[] = $fo->getID();
+					/** @var string $fid */
+					$fid = $fo->getID();
 				}
+
+				$data[] = $fid;
 			}
 		} catch (Throwable $t) {
 			$db->rollBack();

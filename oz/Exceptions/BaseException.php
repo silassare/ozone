@@ -23,6 +23,7 @@ use OZONE\OZ\Exceptions\Traits\ExceptionCustomSuspectTrait;
 use OZONE\OZ\Exceptions\Traits\ExceptionWithCustomResponseTrait;
 use OZONE\OZ\Exceptions\Views\ErrorView;
 use OZONE\OZ\Http\Response;
+use OZONE\OZ\Logger\Logger;
 use OZONE\OZ\OZone;
 use OZONE\OZ\Utils\Utils;
 use PHPUtils\Interfaces\RichExceptionInterface;
@@ -135,7 +136,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 		$this->data['_url']    = (string) $request->getUri();
 		$this->data['_method'] = $request->getMethod();
 
-		oz_logger($this);
+		Logger::log($this);
 
 		self::clearOutPutBuffer();
 
@@ -165,7 +166,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 			$context->setResponse($response->withStatus($this->getHTTPStatusCode()));
 		} catch (Throwable $t) {
-			oz_logger($t);
+			Logger::log($t);
 			self::dieWithAnErrorHandlingErrorOccurred();
 		}
 	}

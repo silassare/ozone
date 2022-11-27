@@ -16,16 +16,17 @@ namespace OZONE\OZ\Senders\Messages;
 use OZONE\OZ\Senders\Events\SendNotification;
 use PHPUtils\Events\Event;
 
+/**
+ * Class NotificationMessage.
+ */
 class NotificationMessage extends Message
 {
 	/**
-	 * @param string $target
-	 *
-	 * @return $this
+	 * {@inheritDoc}
 	 */
-	public function sendTo(string $target): static
+	public function send(string $to): static
 	{
-		Event::trigger(new SendNotification($target, $this));
+		Event::trigger(new SendNotification($to, $this));
 
 		return $this;
 	}

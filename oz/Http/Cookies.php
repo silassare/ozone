@@ -92,7 +92,7 @@ class Cookies
 	public function set(string $name, string|array $value): self
 	{
 		if (!\is_array($value)) {
-			$value = ['value' => (string) $value];
+			$value = ['value' => $value];
 		}
 		$this->response_cookies[$name] = \array_replace($this->defaults_properties, $value);
 
@@ -127,10 +127,6 @@ class Cookies
 	 */
 	public static function parseCookieHeaderString(string $header): array
 	{
-		if (!\is_string($header)) {
-			throw new InvalidArgumentException('Cannot parse Cookie data. Header value must be a string.');
-		}
-
 		$header  = \rtrim($header, "\r\n");
 		$pieces  = \preg_split('#[;]\s*#', $header);
 		$cookies = [];

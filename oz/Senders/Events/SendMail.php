@@ -16,6 +16,9 @@ namespace OZONE\OZ\Senders\Events;
 use OZONE\OZ\Senders\Messages\MailMessage;
 use PHPUtils\Events\Event;
 
+/**
+ * Class SendMail.
+ */
 final class SendMail extends Event
 {
 	protected MailMessage $message;

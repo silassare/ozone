@@ -325,7 +325,7 @@ class Request extends Message implements ServerRequestInterface
 			return $this->bodyParsed;
 		}
 
-		if (!$this->body) {
+		if (empty($this->body)) {
 			return null;
 		}
 
@@ -377,7 +377,7 @@ class Request extends Message implements ServerRequestInterface
 			return $this->requestTarget;
 		}
 
-		if (null === $this->uri) {
+		if (empty($this->uri)) {
 			return '/';
 		}
 
@@ -741,11 +741,11 @@ class Request extends Message implements ServerRequestInterface
 	 */
 	public function getQueryParams(): array
 	{
-		if (\is_array($this->queryParams)) {
+		if (!empty($this->queryParams)) {
 			return $this->queryParams;
 		}
 
-		if (null === $this->uri) {
+		if (empty($this->uri)) {
 			return [];
 		}
 

@@ -351,12 +351,15 @@ final class Router
 			$methods = '*' === $methods ? \array_keys($this->allowed_methods) : [$methods];
 		}
 
+		if (empty($route_path)) {
+			throw new InvalidArgumentException(\sprintf('Invalid route path: %s', $route_path));
+		}
+
 		$methods_filtered = [];
 
 		foreach ($methods as $method) {
-			$method = \strtoupper($method);
 
-			if (!\is_string($method) || !isset($this->allowed_methods[$method])) {
+			if (!\is_string($method) || !isset($this->allowed_methods[\strtoupper($method)])) {
 				$allowed = \implode('|', \array_keys($this->allowed_methods));
 
 				throw new InvalidArgumentException(\sprintf(
@@ -367,12 +370,9 @@ final class Router
 				));
 			}
 
-			$methods_filtered[] = $method;
+			$methods_filtered[] = \strtoupper($method);
 		}
 
-		if (!\is_string($route_path) || '' === $route_path) {
-			throw new InvalidArgumentException(\sprintf('Empty or invalid route path: %s', $route_path));
-		}
 
 		if (!\is_callable($callable)) {
 			throw new InvalidArgumentException(\sprintf(
@@ -514,6 +514,8 @@ final class Router
 	 * Run the route that match the current request path.
 	 *
 	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 *
+	 * @throws \Throwable
 	 */
 	private function runRoute(RouteInfo $ri): void
 	{

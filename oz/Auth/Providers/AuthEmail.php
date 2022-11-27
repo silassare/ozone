@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Auth\Providers;
 
+use OZONE\OZ\Auth\Interfaces\AuthScopeInterface;
+use OZONE\OZ\Core\Context;
 use OZONE\OZ\Db\OZAuth;
 use OZONE\OZ\Senders\Messages\MailMessage;
 
@@ -21,6 +23,22 @@ use OZONE\OZ\Senders\Messages\MailMessage;
  */
 class AuthEmail extends AuthProvider
 {
+	public const NAME = 'email';
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function getInstance(Context $context, ?AuthScopeInterface $scope = null): self{
+		return new self($context, $scope);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function getName():string {
+		return self::NAME;
+	}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -49,7 +67,7 @@ class AuthEmail extends AuthProvider
 		$message = new MailMessage('auth.message.mail.otpl', 'auth.message.mail.rich.otpl');
 
 		$message->inject($this->credentials->toArray())
-			->sendTo($email);
+			->send($email);
 
 		$this->json_response->setDone()
 			->setData([

@@ -15,10 +15,10 @@ namespace OZONE\OZ\Http;
 
 use InvalidArgumentException;
 use JsonException;
+use OZONE\OZ\Exceptions\RuntimeException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
-use RuntimeException;
 
 /**
  * Class Response.
@@ -261,7 +261,7 @@ class Response extends Message implements ResponseInterface
 		try {
 			$json = \json_encode($data, \JSON_THROW_ON_ERROR | $jsonEncodingOptions);
 		} catch (JsonException $j) {
-			throw new RuntimeException('Unable to encode data.', $j);
+			throw new RuntimeException('Unable to encode data.', null, $j);
 		}
 
 		$body     = Body::fromString($json);
@@ -411,7 +411,7 @@ class Response extends Message implements ResponseInterface
 	 */
 	protected function filterStatus(int $status): int
 	{
-		if (!\is_int($status) || $status < 100 || $status > 599) {
+		if ($status < 100 || $status > 599) {
 			throw new InvalidArgumentException('Invalid HTTP status code');
 		}
 

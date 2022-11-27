@@ -24,16 +24,16 @@ use OZONE\OZ\Exceptions\RuntimeException;
 final class CronManager
 {
 	/**
-	 * @var TaskInterface[]
+	 * @var array<string, TaskInterface>
 	 */
 	private array $tasks = [];
 
 	/**
 	 * Schedule a cron task.
 	 */
-	public function scheduleTask(TaskInterface $task, Schedule $schedule): void
+	public function addTask(TaskInterface $task): void
 	{
-		$this->tasks[$task->getName()] = ['task' => $task, 'schedule' => $schedule];
+		$this->tasks[$task->getName()] = $task;
 	}
 
 	/**
