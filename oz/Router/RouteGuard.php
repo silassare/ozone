@@ -44,9 +44,14 @@ class RouteGuard implements RouteGuardInterface
 	protected const PASSWORD = 'password';
 	protected const TOKEN    = 'token';
 
+	protected const VERIFIED_USER_ONLY =  'verified_user_only';
+
 	protected array     $clean   = [];
+	/**
+	 * @var \PHPUtils\Store\Store<array>
+	 */
 	protected Store     $rules;
-	protected ?FormData $auth_fd = null;
+	protected FormData $auth_fd;
 
 	/**
 	 * RouteGuard constructor.
@@ -57,6 +62,7 @@ class RouteGuard implements RouteGuardInterface
 	public function __construct(protected Context $context, array $rules = [])
 	{
 		$this->rules = new Store($rules);
+		$this->auth_fd = new FormData();
 	}
 
 	/**
@@ -276,13 +282,21 @@ class RouteGuard implements RouteGuardInterface
 
 	/**
 	 * {@inheritDoc}
+	 */
+	public function getAuthData(): FormData
+	{
+		return $this->auth_fd;
+	}
+
+	/**
+	 * {@inheritDoc}
 	 *
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
-	public function assertHasAccess(): ?FormData
+	public function assertHasAccess(): void
 	{
 		$session = $this->context->getSession();
 
@@ -344,18 +358,16 @@ class RouteGuard implements RouteGuardInterface
 		}
 
 		if ($this->rules->has('http_auth')) {
-			$this->auth_fd = $this->requireHTTPAuth();
+			$this->requireHTTPAuth();
 		}
 
 		if ($this->rules->has('login')) {
-			$this->auth_fd = $this->requireLogin();
+			$this->requireLogin();
 		}
 
 		if ($this->rules->has('password_protected')) {
-			$this->auth_fd = $this->requirePassword();
+			$this->requirePassword();
 		}
-
-		return $this->auth_fd;
 	}
 
 	/**
@@ -396,13 +408,11 @@ class RouteGuard implements RouteGuardInterface
 	/**
 	 * This will show a login form.
 	 *
-	 * @return FormData
-	 *
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
-	protected function requireLogin(): FormData
+	protected function requireLogin()
 	{
 		$user_type = $this->rules->get('login.user_type');
 
@@ -442,7 +452,7 @@ class RouteGuard implements RouteGuardInterface
 			}
 		}
 
-		return $clean_form;
+		$this->auth_fd->merge($clean_form);
 	}
 
 	/**
@@ -502,12 +512,10 @@ class RouteGuard implements RouteGuardInterface
 	/**
 	 * This makes sure client/user provide http auth credentials.
 	 *
-	 * @return \OZONE\OZ\Forms\FormData
-	 *
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 */
-	protected function requireHTTPAuth(): FormData
+	protected function requireHTTPAuth(): void
 	{
 		$request = $this->context->getRequest();
 
@@ -517,14 +525,17 @@ class RouteGuard implements RouteGuardInterface
 		if (!empty($request->getHeaderLine('Authorization'))) {
 			switch (HTTPAuthType::from($type)) {
 				case HTTPAuthType::BASIC:
-					return $this->handleBasicAuth();
+					$this->handleBasicAuth();
+					return;
 
 				case HTTPAuthType::BEARER:
-					return $this->handleBearerAuth();
+					$this->handleBearerAuth();
+					return;
 
 				case HTTPAuthType::DIGEST:
 				case HTTPAuthType::DIGEST_RFC_2617:
-					return $this->handleDigestAuth();
+					$this->handleDigestAuth();
+					return;
 			}
 		}
 
@@ -576,11 +587,9 @@ class RouteGuard implements RouteGuardInterface
 	/**
 	 * Handle basic auth request.
 	 *
-	 * @return \OZONE\OZ\Forms\FormData
-	 *
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
-	protected function handleBasicAuth(): FormData
+	protected function handleBasicAuth(): void
 	{
 		$env          = $this->context->getEnv();
 		$req_user     = $env->get('PHP_AUTH_USER');
@@ -610,20 +619,16 @@ class RouteGuard implements RouteGuardInterface
 			}
 		}
 
-		return new FormData([
-			self::USER     => $req_user,
-			self::PASSWORD => $req_password,
-		]);
+		$this->auth_fd->set('http_auth.user', $req_user)
+					  ->set('http_auth.password', $req_password);
 	}
 
 	/**
 	 * Handle bearer auth request.
 	 *
-	 * @return \OZONE\OZ\Forms\FormData
-	 *
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
-	protected function handleBearerAuth(): FormData
+	protected function handleBearerAuth(): void
 	{
 		$header = $this->context->getRequest()
 			->getHeaderLine('HTTP_AUTHORIZATION');
@@ -644,19 +649,15 @@ class RouteGuard implements RouteGuardInterface
 			}
 		}
 
-		return new FormData([
-			self::TOKEN => $req_token,
-		]);
+		$this->auth_fd->set('http_auth.token', $req_token);
 	}
 
 	/**
 	 * Handle digest auth request.
 	 *
-	 * @return \OZONE\OZ\Forms\FormData
-	 *
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
-	protected function handleDigestAuth(): FormData
+	protected function handleDigestAuth(): void
 	{
 		$request    = $this->context->getRequest();
 		$env        = $this->context->getEnv();
@@ -707,7 +708,7 @@ class RouteGuard implements RouteGuardInterface
 			throw new ForbiddenException();
 		}
 
-		return new FormData($parsed);
+		$this->auth_fd->set('http_auth', $parsed);
 	}
 
 	/**

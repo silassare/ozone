@@ -31,7 +31,7 @@ final class RouteOptions
 	/**
 	 * RouteOptions constructor.
 	 */
-	public function __construct()
+	public function __construct(private readonly string $path)
 	{
 		$this->name('route_' . (++self::$route_count));
 	}
@@ -73,5 +73,15 @@ final class RouteOptions
 	public function getName(): string
 	{
 		return $this->name;
+	}
+
+	/**
+	 * Gets route path.
+	 *
+	 * @return string
+	 */
+	public function getPath(): string
+	{
+		return $this->path;
 	}
 }

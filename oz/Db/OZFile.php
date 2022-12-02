@@ -17,7 +17,7 @@ namespace OZONE\OZ\Db;
  */
 class OZFile extends \OZONE\OZ\Db\Base\OZFile
 {
-	use OZONE\OZ\FS\Traits\FileEntityTrait;
+	use \OZONE\OZ\FS\Traits\FileEntityTrait;
 
 	//====================================================
 	//=	Your custom implementation goes here

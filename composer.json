@@ -26,9 +26,9 @@
 		"ext-simplexml": "*",
 		"ext-posix": "*",
 		"silassare/otpl": "=1.1.9",
-		"silassare/gobl": "dev-dev",
-		"silassare/kli": "dev-dev",
-		"silassare/php-utils": "dev-main",
+		"silassare/gobl": "^2.0.0",
+		"silassare/kli": "^2.0.0",
+		"silassare/php-utils": "^1.0.0",
 		"claviska/simpleimage": "^3.7.0",
 		"psr/http-message": "^1.0"
 	},
@@ -65,5 +65,10 @@
 		}
 	],
 	"prefer-stable": true,
-	"minimum-stability": "dev"
+	"minimum-stability": "dev",
+	"extra": {
+		"branch-alias": {
+			"dev-dev": "3.0.x-dev"
+		}
+	}
 }

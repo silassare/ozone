@@ -22,7 +22,14 @@ use PHPUtils\Interfaces\ArrayCapableInterface;
 interface RouteGuardInterface extends ArrayCapableInterface
 {
 	/**
-	 * Check if user has access and returns authorization form data if any was provided.
+	 * Check if user has access.
 	 */
-	public function assertHasAccess(): ?FormData;
+	public function assertHasAccess(): void;
+
+	/**
+	 * Returns clean auth form data.
+	 *
+	 * @return \OZONE\OZ\Forms\FormData
+	 */
+	public function getAuthData(): FormData;
 }

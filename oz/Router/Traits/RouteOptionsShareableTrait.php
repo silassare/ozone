@@ -20,7 +20,6 @@ use OZONE\OZ\Forms\Form;
 use OZONE\OZ\Router\Interfaces\RouteGuardInterface;
 use OZONE\OZ\Router\Interfaces\RouteGuardProviderInterface;
 use OZONE\OZ\Router\Route;
-use OZONE\OZ\Router\RouteGuard;
 use OZONE\OZ\Router\RouteInfo;
 
 /**
@@ -31,9 +30,9 @@ trait RouteOptionsShareableTrait
 	protected array $route_params = [];
 
 	/**
-	 * @var null|callable|\OZONE\OZ\Router\Interfaces\RouteGuardInterface
+	 * @var array<callable|\OZONE\OZ\Router\Interfaces\RouteGuardInterface>
 	 */
-	protected $route_guard;
+	protected array $route_guards = [];
 
 	/**
 	 * @var null|callable|\OZONE\OZ\Forms\Form
@@ -41,7 +40,7 @@ trait RouteOptionsShareableTrait
 	protected $route_form;
 
 	/**
-	 * Sets route guard.
+	 * Add route guard.
 	 *
 	 * The route guard may be a:
 	 * - name in configs `oz.routes.guards`
@@ -82,7 +81,7 @@ trait RouteOptionsShareableTrait
 			$guard = [$provider_class, 'getGuard'];
 		}
 
-		$this->route_guard = $guard;
+		$this->route_guards[] = $guard;
 
 		return $this;
 	}
@@ -179,39 +178,34 @@ trait RouteOptionsShareableTrait
 	}
 
 	/**
-	 * Gets route guard.
+	 * Run all route guards.
 	 *
 	 * @param \OZONE\OZ\Router\RouteInfo $ri
-	 *
-	 * @return \OZONE\OZ\Router\Interfaces\RouteGuardInterface
 	 */
-	public function getGuard(RouteInfo $ri): RouteGuardInterface
+	public function runGuards(RouteInfo $ri): void
 	{
-		$guard = $this->route_guard;
+		$fd = $ri->getAuthFormData();
 
-		if (\is_callable($guard)) {
-			$ret = $guard($ri);
+		foreach ($this->route_guards as $guard) {
+			 if (\is_callable($guard)) {
+				$provider = $guard;
+				$guard = $provider($ri);
 
-			if (null !== $ret) {
-				if ($ret instanceof RouteGuardInterface) {
-					return $ret;
+				if ((null !== $guard) && !($guard instanceof RouteGuardInterface)) {
+					throw (new RuntimeException(\sprintf(
+						'Route guard provider should return instance of "%s" or "null" not: %s',
+						RouteGuardInterface::class,
+						\get_debug_type($guard)
+					))
+					)->suspectCallable($provider);
 				}
+			}
 
-				throw (new RuntimeException(\sprintf(
-					'Route guard provider should return instance of "%s" or "null" not: %s',
-					RouteGuardInterface::class,
-					\get_debug_type($ret)
-				))
-				)->suspectCallable($guard);
+			if ($guard instanceof RouteGuardInterface) {
+				$guard->assertHasAccess();
+				$fd->merge($guard->getAuthData());
 			}
 		}
-
-		if ($guard instanceof RouteGuardInterface) {
-			return $guard;
-		}
-
-		// default
-		return new RouteGuard($ri->getContext());
 	}
 
 	/**

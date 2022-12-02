@@ -537,7 +537,6 @@ final class UsersManager
 	 *
 	 * @return \OZONE\OZ\Db\OZSession[]
 	 *
-	 * @throws \Gobl\ORM\Exceptions\ORMException
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public static function getUserActiveSessions(OZUser $user): array
@@ -557,6 +556,7 @@ final class UsersManager
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 * @throws \Gobl\CRUD\Exceptions\CRUDException
 	 */
 	public static function forceUserLogoutOnActiveSessions(OZUser $user): void
 	{

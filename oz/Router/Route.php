@@ -34,6 +34,11 @@ final class Route
 	private array  $params = [];
 
 	/**
+	 * @var \OZONE\OZ\Router\RouteGroup[]
+	 */
+	private array  $groups = [];
+
+	/**
 	 * Route constructor.
 	 *
 	 * @param \OZONE\OZ\Router\Router       $router

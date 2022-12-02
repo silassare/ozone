@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\OZ\Router;
 
 use OZONE\OZ\Core\Context;
-use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\Forms\FormData;
 use OZONE\OZ\Http\Uri;
 
@@ -23,6 +22,9 @@ use OZONE\OZ\Http\Uri;
  */
 final class RouteInfo
 {
+	private FormData $auth_form_data;
+	private FormData $clean_form_data;
+
 	/**
 	 * RouteInfo constructor.
 	 *
@@ -33,12 +35,14 @@ final class RouteInfo
 	 * @param null|\OZONE\OZ\Forms\FormData $clean_form_data The clean form data
 	 */
 	public function __construct(
-		private Context $context,
-		private Route $route,
-		private array $params,
-		private ?FormData $auth_form_data = null,
-		private ?FormData $clean_form_data = null
+		private readonly Context $context,
+		private readonly Route   $route,
+		private readonly array   $params,
+		?FormData                $auth_form_data = null,
+		?FormData                $clean_form_data = null
 	) {
+		$this->auth_form_data = $auth_form_data ?? new FormData();
+		$this->clean_form_data = $clean_form_data ?? new FormData();
 	}
 
 	/**
@@ -102,19 +106,15 @@ final class RouteInfo
 	 */
 	public function getCleanFormData(): FormData
 	{
-		if (null === $this->clean_form_data) {
-			throw new RuntimeException('Undefined clean form data as no route form was provided.');
-		}
-
 		return $this->clean_form_data;
 	}
 
 	/**
 	 * Gets current route guard authorization form data.
 	 *
-	 * @return null|\OZONE\OZ\Forms\FormData
+	 * @return \OZONE\OZ\Forms\FormData
 	 */
-	public function getAuthFormData(): ?FormData
+	public function getAuthFormData(): FormData
 	{
 		return $this->auth_form_data;
 	}

@@ -162,7 +162,7 @@ class CRUDHandler implements CRUDHandlerInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function shouldWritePkColumn(Column $column): bool
+	public function shouldWritePkColumn(Column $column, mixed $value): bool
 	{
 		return false;
 	}
@@ -170,7 +170,7 @@ class CRUDHandler implements CRUDHandlerInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function shouldWritePrivateColumn(Column $column): bool
+	public function shouldWritePrivateColumn(Column $column, mixed $value): bool
 	{
 		return false;
 	}

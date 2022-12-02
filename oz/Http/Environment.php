@@ -21,13 +21,13 @@ class Environment extends Collection
 	/**
 	 * Creates mock environment.
 	 *
-	 * @param array $userData Array of custom environment keys and values
+	 * @param array $env Array of custom environment keys and values
 	 *
 	 * @return self
 	 */
-	public static function mock(array $userData = []): self
+	public static function mock(array $env = []): self
 	{
-		$data = \array_merge([
+		$env = \array_merge([
 			'SERVER_PROTOCOL'      => 'HTTP/1.1',
 			'REQUEST_METHOD'       => 'GET',
 			'SCRIPT_NAME'          => '',
@@ -39,12 +39,12 @@ class Environment extends Collection
 			'HTTP_ACCEPT'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 			'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.8',
 			'HTTP_ACCEPT_CHARSET'  => 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-			'HTTP_USER_AGENT'      => 'OZone Framework',
+			'HTTP_USER_AGENT'      => OZ_OZONE_VERSION_NAME,
 			'REMOTE_ADDR'          => '127.0.0.1',
 			'REQUEST_TIME'         => \time(),
 			'REQUEST_TIME_FLOAT'   => \microtime(true),
-		], $userData);
+		], $env);
 
-		return new static($data);
+		return new static($env);
 	}
 }

@@ -16,6 +16,7 @@ namespace OZONE\OZ\Router;
 use InvalidArgumentException;
 use OZONE\OZ\Core\Context;
 use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\OZ\Forms\FormData;
 use OZONE\OZ\Http\Response;
 use OZONE\OZ\Router\Events\RouteBeforeRun;
 use OZONE\OZ\Router\Events\RouteMethodNotAllowed;
@@ -47,6 +48,11 @@ final class Router
 	];
 
 	/**
+	 * @var \OZONE\OZ\Router\RouteGroup[]
+	 */
+	private array $groups = [];
+
+	/**
 	 * @var \OZONE\OZ\Router\Route[]
 	 */
 	private array $static_routes = [];
@@ -68,6 +74,27 @@ final class Router
 	 */
 	public function __construct()
 	{
+	}
+
+	/**
+	 * Create a new route group.
+	 *
+	 * @param string   $path
+	 * @param callable<Router> $factory
+	 *
+	 * @return \OZONE\OZ\Router\RouteGroup
+	 */
+	public function group(string $path, callable $factory): RouteGroup
+	{
+		$group =  new RouteGroup($path, $this);
+
+		$this->groups[] = $group;
+
+		$factory($this);
+
+		array_pop($this->groups);
+
+		return $group;
 	}
 
 	/**
@@ -317,16 +344,14 @@ final class Router
 
 				$options = $route->getOptions();
 
-				$guard = $options->getGuard($ri);
+				$options->runGuards($ri);
 
-				// check route access right
-				$auth_fd = $guard->assertHasAccess();
-
-				$ri       = new RouteInfo($context, $route, $params, $auth_fd);
 				$clean_fd = $options->getForm($ri)?->validate($context->getRequest()
-					->getFormData(true));
+					->getFormData());
 
-				$ri = new RouteInfo($context, $route, $params, $auth_fd, $clean_fd);
+				if($clean_fd){
+					$ri->getCleanFormData()->merge($clean_fd);
+				}
 
 				Event::trigger(new RouteBeforeRun($ri));
 

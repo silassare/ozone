@@ -16,8 +16,6 @@ namespace OZONE\OZ\Hooks;
 use Exception;
 use Gobl\ORM\Events\ORMTableFilesGenerated;
 use Gobl\ORM\Utils\ORMClassKind;
-use OLIUP\CG\PHPTrait;
-use OLIUP\CG\PHPUseTrait;
 use OZONE\OZ\Cli\Cli;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\CRUDHandlerTrait;
@@ -218,13 +216,11 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 			}
 
 			if ($trait) {
-				$event->getClass(ORMClassKind::ENTITY)->useTrait(new PHPUseTrait(new PHPTrait($trait)));
+				$event->getClass(ORMClassKind::ENTITY)->useTrait($trait);
 			}
 		}
 
-		$event->getClass(ORMClassKind::CRUD)->useTrait(
-			new PHPUseTrait(new PHPTrait(CRUDHandlerTrait::class))
-		);
+		$event->getClass(ORMClassKind::CRUD)->useTrait(CRUDHandlerTrait::class);
 	}
 
 	/**
