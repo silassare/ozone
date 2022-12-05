@@ -47,8 +47,8 @@ final class Auth implements BootHookReceiverInterface
 			$qb = new OZAuthsQuery();
 
 			return $qb->whereRefIs($ref)
-					  ->find(1)
-					  ->fetchClass();
+				->find(1)
+				->fetchClass();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to load auth data.', null, $t);
 		}

@@ -19,7 +19,6 @@ use OZONE\OZ\Auth\AuthScope;
 use OZONE\OZ\Auth\AuthSecretType;
 use OZONE\OZ\Core\Service;
 use OZONE\OZ\Exceptions\InvalidFormException;
-use OZONE\OZ\Forms\Field;
 use OZONE\OZ\Forms\Form;
 use OZONE\OZ\Forms\FormData;
 use OZONE\OZ\Http\Response;
@@ -36,23 +35,22 @@ class AuthService extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->post('/auth/:auth_ref/authorize', static function (RouteInfo $ri) {
-			return (new self($ri->getContext()))->authorize($ri, $ri->getCleanFormData());
-		})
-			   ->form(function () {
-				   return self::buildAuthorizeForm();
-			   });
-		$router->get('/auth/:auth_ref/state', static function (RouteInfo $ri) {
-			return (new self($ri->getContext()))->state($ri);
-		});
-		$router->post('/auth/:auth_ref/refresh', static function (RouteInfo $ri) {
-			return (new self($ri->getContext()))->refresh($ri, $ri->getCleanFormData());
-		})
-			   ->form(function () {
-				   return self::buildRefreshForm();
-			   });
-		$router->post('/auth/:auth_ref/cancel', static function (RouteInfo $ri) {
-			return (new self($ri->getContext()))->cancel($ri);
+		$router->group('/auth/:auth_ref', function (Router $router) {
+			$router->post('/authorize', static function (RouteInfo $ri) {
+				return (new self($ri))->authorize($ri, $ri->getCleanFormData());
+			})->form(self::buildAuthorizeForm(...));
+
+			$router->post('/refresh', static function (RouteInfo $ri) {
+				return (new self($ri))->refresh($ri, $ri->getCleanFormData());
+			})->form(self::buildRefreshForm(...));
+
+			$router->get('/state', static function (RouteInfo $ri) {
+				return (new self($ri))->state($ri);
+			});
+
+			$router->post('/cancel', static function (RouteInfo $ri) {
+				return (new self($ri))->cancel($ri);
+			});
 		});
 	}
 
@@ -75,13 +73,13 @@ class AuthService extends Service
 		$provider = Auth::getAuthProvider($auth->provider, $ri->getContext(), AuthScope::from($auth));
 
 		$provider->getCredentials()
-				 ->setReference($ref)
-				 ->setRefreshKey($refresh_key);
+			->setReference($ref)
+			->setRefreshKey($refresh_key);
 
 		$provider->refresh();
 
 		$this->getJSONResponse()
-			 ->merge($provider->getJSONResponse());
+			->merge($provider->getJSONResponse());
 
 		return $this->respond();
 	}
@@ -103,13 +101,13 @@ class AuthService extends Service
 		$provider = Auth::getAuthProvider($auth->provider, $ri->getContext(), AuthScope::from($auth));
 
 		$provider->getCredentials()
-			 ->setReference($ref);
+			->setReference($ref);
 
 		$this->getJSONResponse()
-			 ->setDone()
-			 ->setData([
-				 'auth_state' => $provider->getState()->value,
-			 ]);
+			->setDone()
+			->setData([
+				'auth_state' => $provider->getState()->value,
+			]);
 
 		return $this->respond();
 	}
@@ -131,12 +129,12 @@ class AuthService extends Service
 		$provider = Auth::getAuthProvider($auth->provider, $ri->getContext(), AuthScope::from($auth));
 
 		$provider->getCredentials()
-			 ->setReference($ref);
+			->setReference($ref);
 
 		$provider->cancel();
 
 		$this->getJSONResponse()
-			 ->merge($provider->getJSONResponse());
+			->merge($provider->getJSONResponse());
 
 		return $this->respond();
 	}
@@ -160,7 +158,7 @@ class AuthService extends Service
 		$provider = Auth::getAuthProvider($auth->provider, $ri->getContext(), AuthScope::from($auth));
 
 		$provider->getCredentials()
-			 ->setReference($ref);
+			->setReference($ref);
 
 		$code  = $fd->get('code');
 		$token = $fd->get('token');
@@ -168,11 +166,11 @@ class AuthService extends Service
 		if (null !== $code) {
 			$type = AuthSecretType::CODE;
 			$provider->getCredentials()
-				 ->setCode($code);
+				->setCode($code);
 		} elseif (null !== $token) {
 			$type = AuthSecretType::TOKEN;
 			$provider->getCredentials()
-				 ->setToken($token);
+				->setToken($token);
 		} else {
 			throw new InvalidFormException();
 		}
@@ -180,7 +178,7 @@ class AuthService extends Service
 		$provider->authorize($type);
 
 		$this->getJSONResponse()
-			 ->merge($provider->getJSONResponse());
+			->merge($provider->getJSONResponse());
 
 		return $this->respond();
 	}
@@ -194,7 +192,7 @@ class AuthService extends Service
 	{
 		$fb = new Form();
 
-		$fb->addField(new Field('refresh_key', new TypeString(1), true));
+		$fb->field('refresh_key')->type(new TypeString(16))->required();
 
 		return $fb;
 	}
@@ -206,8 +204,8 @@ class AuthService extends Service
 	{
 		$fb = new Form();
 
-		$fb->addField(new Field('code', new TypeString(), false));
-		$fb->addField(new Field('token', new TypeString(), false));
+		$fb->field('code');
+		$fb->field('token');
 
 		return $fb;
 	}

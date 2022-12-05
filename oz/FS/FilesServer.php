@@ -82,7 +82,7 @@ class FilesServer
 			->withHeader('Expires', '99936000')
 			->withHeader('Cache-Control', 'public,max-age=99936000')
 			->withHeader('Content-Transfer-Encoding', 'binary')
-			->withHeader('Content-Length', (string)$size)
+			->withHeader('Content-Length', (string) $size)
 			->withHeader('Content-type', $file_mime)
 			->withHeader('Content-Disposition', "attachment; filename=\"{$file_name}\";");
 

@@ -104,7 +104,6 @@ final class Context
 			$this->request,
 			$this->environment,
 			$this->router,
-			$this->client,
 		);
 	}
 

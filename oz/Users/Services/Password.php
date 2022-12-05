@@ -13,14 +13,13 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Users\Services;
 
-use Exception;
-use OZONE\OZ\Core\Assert;
-use OZONE\OZ\Core\Context;
+use OZONE\OZ\Columns\Types\TypePassword;
 use OZONE\OZ\Core\Service;
-use OZONE\OZ\Exceptions\ForbiddenException;
-use OZONE\OZ\Ofv\OFormValidator;
+use OZONE\OZ\Exceptions\NotFoundException;
+use OZONE\OZ\Forms\Form;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
+use OZONE\OZ\Users\UserRole;
 use OZONE\OZ\Users\UsersManager;
 
 /**
@@ -28,79 +27,62 @@ use OZONE\OZ\Users\UsersManager;
  */
 final class Password extends Service
 {
+	public const ROUTE_PASS_EDIT_BY_ADMIN      = 'oz:pass-edit-admin';
+	public const ROUTE_PASS_EDIT_SELF          = 'oz:pass-edit-self';
+	public const ROUTE_PASS_EDIT_SELF_WITH_2FA = 'oz:pass-edit-self-with-2fa';
+
+	protected const FIELD_PASS_NEW     = 'pass_new';
+	protected const FIELD_PASS_CURRENT = 'pass_current';
+
 	/**
 	 * Edit password: verified user only.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
+	 * @param \OZONE\OZ\Router\RouteInfo $ri
 	 *
-	 * @throws Exception
+	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
-	public function actionEditOwnPass(Context $context): void
+	public function actionEditOwnPass(RouteInfo $ri): void
 	{
-		$users_manager = $context->getUsersManager();
-		$users_manager->assertUserVerified();
+		$um   = $ri->getContext()
+			->getUsersManager();
+		$user = $um->getCurrentUserObject();
 
-		$form_data = $context->getRequest()
-			->getFormData();
-
-		Assert::assertForm($form_data, ['cpass', 'pass', 'vpass']);
-
-		$user_obj = $users_manager->getCurrentUserObject();
-		$fv_obj   = new OFormValidator($form_data);
-
-		$fv_obj->checkForm([
-			'pass'  => null,
-			'vpass' => null,
-		]);
-
-		$current_pass = $fv_obj->getField('cpass');
-		$new_pass     = $fv_obj->getField('pass');
-
-		$users_manager->updateUserPass($user_obj, $new_pass, $current_pass);
+		$um->updateUserPass(
+			$user,
+			$ri->getCleanFormField(self::FIELD_PASS_NEW),
+			$ri->getCleanFormField(self::FIELD_PASS_CURRENT)
+		);
 
 		$this->getJSONResponse()
 			->setDone('OZ_PASSWORD_EDIT_SUCCESS')
-			->setData($user_obj->toArray());
+			->setData($user);
 	}
 
 	/**
 	 * Edit password: admin only.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $uid
+	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 * @param string                     $uid
 	 *
-	 * @throws Exception
+	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 */
-	public function actionEditPassAdmin(Context $context, string $uid): void
+	public function actionEditPassAdmin(RouteInfo $ri, string $uid): void
 	{
-		$users_manager = $context->getUsersManager();
-		$users_manager->assertIsAdmin();
+		$um   = $ri->getContext()
+			->getUsersManager();
+		$user = UsersManager::getUserObject($uid);
 
-		$params = $context->getRequest()
-			->getFormData();
-
-		Assert::assertForm($params, ['pass', 'vpass']);
-
-		$user_obj = UsersManager::getUserObject($uid);
-
-		if (!$user_obj) {
-			throw new ForbiddenException();
+		if (!$user) {
+			throw new NotFoundException();
 		}
 
-		$fv_obj = new OFormValidator($params);
-
-		$fv_obj->checkForm([
-			'pass'  => null,
-			'vpass' => null,
-		]);
-
-		$new_pass = $fv_obj->getField('pass');
-
-		$users_manager->updateUserPass($user_obj, $new_pass);
+		$um->updateUserPass($user, $ri->getCleanFormField(self::FIELD_PASS_NEW));
 
 		$this->getJSONResponse()
 			->setDone('OZ_PASSWORD_EDIT_SUCCESS')
-			->setData($user_obj->toArray());
+			->setData($user);
 	}
 
 	/**
@@ -108,20 +90,48 @@ final class Password extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router
-			->map(['PATCH', 'POST'], '/users/{uid}/password/edit', function (RouteInfo $r) {
-				$context = $r->getContext();
-				$s       = new self($context);
-				$s->actionEditPassAdmin($context, $r->getParam('uid'));
+		$router->group('/users', function (Router $r) {
+			$r->map(['PATCH', 'POST'], '/{uid}/password/edit', function (RouteInfo $ri) {
+				$s = new self($ri);
+				$s->actionEditPassAdmin($ri, $ri->getParam('uid'));
 
 				return $s->respond();
-			}, ['uid' => '\d+']);
-		$router->map(['PATCH', 'POST'], '/users/password/edit', function (RouteInfo $r) {
-			$context = $r->getContext();
-			$s       = new self($context);
-			$s->actionEditOwnPass($context);
+			})
+				->name(self::ROUTE_PASS_EDIT_BY_ADMIN)
+				->params(['uid' => '\d+'])
+				->withRole(UserRole::ROLE_ADMIN);
 
-			return $s->respond();
-		});
+			$r->map(['PATCH', 'POST'], '/password/edit', function (RouteInfo $ri) {
+				$s = new self($ri);
+				$s->actionEditOwnPass($ri);
+
+				return $s->respond();
+			})
+				->name(self::ROUTE_PASS_EDIT_SELF)
+				->form(function () {
+					$form = new Form();
+					$form->field(self::FIELD_PASS_CURRENT);
+
+					return $form;
+				});
+
+			$r->map(['PATCH', 'POST'], '/password/edit-with-2fa', function (RouteInfo $ri) {
+				$s = new self($ri);
+				$s->actionEditOwnPass($ri);
+
+				return $s->respond();
+			})
+				->name(self::ROUTE_PASS_EDIT_SELF_WITH_2FA)
+				->with2FA();
+		})
+			->form(function () {
+				$form = new Form();
+
+				$form->doubleCheck($form->field(self::FIELD_PASS_NEW)
+					->type(new TypePassword())
+					->required());
+
+				return $form;
+			});
 	}
 }

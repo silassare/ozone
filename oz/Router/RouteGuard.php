@@ -14,6 +14,11 @@ declare(strict_types=1);
 namespace OZONE\OZ\Router;
 
 use Gobl\DBAL\Types\TypeString;
+use OZONE\OZ\Auth\Auth;
+use OZONE\OZ\Auth\AuthScope;
+use OZONE\OZ\Auth\AuthState;
+use OZONE\OZ\Auth\Providers\AuthEmail;
+use OZONE\OZ\Auth\Providers\AuthPhone;
 use OZONE\OZ\Columns\Types\TypeEmail;
 use OZONE\OZ\Columns\Types\TypePassword;
 use OZONE\OZ\Columns\Types\TypePhone;
@@ -25,11 +30,11 @@ use OZONE\OZ\Db\OZClient;
 use OZONE\OZ\Db\OZUser;
 use OZONE\OZ\Exceptions\ForbiddenException;
 use OZONE\OZ\Exceptions\UnauthorizedActionException;
-use OZONE\OZ\Forms\Field;
 use OZONE\OZ\Forms\Form;
 use OZONE\OZ\Forms\FormData;
 use OZONE\OZ\Router\Interfaces\RouteGuardInterface;
 use OZONE\OZ\Router\Views\AccessGrantView;
+use OZONE\OZ\Users\UserRole;
 use PHPUtils\Store\Store;
 use PHPUtils\Traits\ArrayCapableTrait;
 
@@ -42,15 +47,13 @@ class RouteGuard implements RouteGuardInterface
 
 	protected const USER     = 'user';
 	protected const PASSWORD = 'password';
-	protected const TOKEN    = 'token';
 
-	protected const VERIFIED_USER_ONLY =  'verified_user_only';
+	protected array $clean = [];
 
-	protected array     $clean   = [];
 	/**
 	 * @var \PHPUtils\Store\Store<array>
 	 */
-	protected Store     $rules;
+	protected Store    $rules;
 	protected FormData $auth_fd;
 
 	/**
@@ -61,7 +64,7 @@ class RouteGuard implements RouteGuardInterface
 	 */
 	public function __construct(protected Context $context, array $rules = [])
 	{
-		$this->rules = new Store($rules);
+		$this->rules   = new Store($rules);
 		$this->auth_fd = new FormData();
 	}
 
@@ -204,6 +207,23 @@ class RouteGuard implements RouteGuardInterface
 	}
 
 	/**
+	 * @param string[] $allowed_providers_name
+	 *
+	 * @return $this
+	 */
+	public function with2FA(string ...$allowed_providers_name): static
+	{
+		$this->rules->set('2fa', [
+			'providers' => empty($allowed_providers_name) ? [
+				AuthPhone::NAME,
+				AuthEmail::NAME,
+			] : $allowed_providers_name,
+		]);
+
+		return $this;
+	}
+
+	/**
 	 * @param \OZONE\OZ\Db\OZClient $client
 	 *
 	 * @return $this
@@ -230,11 +250,11 @@ class RouteGuard implements RouteGuardInterface
 	}
 
 	/**
-	 * @param string $role
+	 * @param \OZONE\OZ\Users\UserRole|string $role
 	 *
 	 * @return $this
 	 */
-	public function withRole(string $role): self
+	public function withRole(string|UserRole $role): self
 	{
 		$key = \sprintf('roles_allowed.%s', $role);
 		$this->rules->set($key, 1);
@@ -295,8 +315,9 @@ class RouteGuard implements RouteGuardInterface
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+	 * @throws \OZONE\OZ\Exceptions\NotFoundException
 	 */
-	public function assertHasAccess(): void
+	public function checkAccess(): void
 	{
 		$session = $this->context->getSession();
 
@@ -350,7 +371,7 @@ class RouteGuard implements RouteGuardInterface
 			$roles = $this->rules->get('roles_allowed');
 			$roles = \array_keys($roles);
 
-			if (!$um::hasOneRoleAtLeast($um->getCurrentUserID(), $roles)) {
+			if (!$um::hasOneRoleAtLeast($um->getCurrentUserID(), $roles, /* we need to be strict */ false)) {
 				throw new ForbiddenException(null, [
 					'_reason' => 'User role is not in allowed list.',
 				]);
@@ -359,6 +380,10 @@ class RouteGuard implements RouteGuardInterface
 
 		if ($this->rules->has('http_auth')) {
 			$this->requireHTTPAuth();
+		}
+
+		if ($this->rules->has('2fa')) {
+			$this->require2FA();
 		}
 
 		if ($this->rules->has('login')) {
@@ -379,18 +404,52 @@ class RouteGuard implements RouteGuardInterface
 	}
 
 	/**
+	 * This will require a successful auth ref.
+	 *
+	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 */
+	protected function require2FA(): void
+	{
+		$allowed_providers = $this->rules->get('2fa.providers');
+		$auth_ref          = $this->context->getRequest()
+			->getUnsafeFormField('auth_ref');
+
+		$auth = Auth::getRequiredByRef($auth_ref);
+
+		if (!\in_array($auth->provider, $allowed_providers, true)) {
+			throw new ForbiddenException('OZ_2FA_PROVIDER_NOT_ALLOWED', [
+				// don't reveal the provider to attacker,
+				// it's like sending the attacker in the right direction
+				'_allowed_2fa' => $allowed_providers,
+				'_provider'    => $auth->provider,
+			]);
+		}
+
+		$provider = Auth::getAuthProvider($auth->provider, $this->context, AuthScope::from($auth));
+
+		if (AuthState::AUTHORIZED !== $provider->getState()) {
+			throw new UnauthorizedActionException();
+		}
+
+		$this->auth_fd->set('2fa', $auth);
+	}
+
+	/**
 	 * This will show a password form.
 	 *
-	 * @return FormData
-	 *
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 */
-	protected function requirePassword(): FormData
+	protected function requirePassword(): void
 	{
 		$form = new Form();
-		$form->addField(new Field(self::PASSWORD, new TypePassword(), true));
+		$form->field(self::PASSWORD)
+			->type(new TypePassword())
+			->required();
+
 		$fd = $this->requireForm($form);
 
 		$known_password_hash = $this->rules->get('password_protected.password_hash');
@@ -402,7 +461,7 @@ class RouteGuard implements RouteGuardInterface
 			throw new ForbiddenException();
 		}
 
-		return $fd;
+		$this->auth_fd->merge($fd);
 	}
 
 	/**
@@ -412,7 +471,7 @@ class RouteGuard implements RouteGuardInterface
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
-	protected function requireLogin()
+	protected function requireLogin(): void
 	{
 		$user_type = $this->rules->get('login.user_type');
 
@@ -425,8 +484,12 @@ class RouteGuard implements RouteGuardInterface
 		}
 
 		$form = new Form();
-		$form->addField(new Field(self::USER, $type, true));
-		$form->addField(new Field(self::PASSWORD, new TypePassword(), true));
+		$form->field(self::USER)
+			->type($type)
+			->required();
+		$form->field(self::PASSWORD)
+			->type(new TypePassword())
+			->required();
 
 		$clean_form = $this->requireForm($form);
 
@@ -452,7 +515,8 @@ class RouteGuard implements RouteGuardInterface
 			}
 		}
 
-		$this->auth_fd->merge($clean_form);
+		$this->auth_fd->set('login.user', $req_user)
+			->set('login.password', $req_password);
 	}
 
 	/**
@@ -478,10 +542,10 @@ class RouteGuard implements RouteGuardInterface
 			return new FormData($clean_form);
 		}
 
-		$req_grant_ref = $request->getFormField('grant_form_ref');
+		$req_grant_ref = $request->getUnsafeFormField('grant_form_ref');
 
 		if ($req_grant_ref === $reference) {
-			$clean_form = $form->validate($request->getFormData());
+			$clean_form = $form->validate($request->getUnsafeFormData());
 
 			$s->set($form_key, $clean_form);
 
@@ -489,7 +553,9 @@ class RouteGuard implements RouteGuardInterface
 		}
 
 		$form->setSubmitTo($uri);
-		$form->addField(new Field('grant_form_ref', (new TypeString())->setDefault($reference), true));
+		$form->field('grant_form_ref')
+			->type((new TypeString())->setDefault($reference))
+			->required();
 
 		$exception = new UnauthorizedActionException();
 
@@ -526,15 +592,18 @@ class RouteGuard implements RouteGuardInterface
 			switch (HTTPAuthType::from($type)) {
 				case HTTPAuthType::BASIC:
 					$this->handleBasicAuth();
+
 					return;
 
 				case HTTPAuthType::BEARER:
 					$this->handleBearerAuth();
+
 					return;
 
 				case HTTPAuthType::DIGEST:
 				case HTTPAuthType::DIGEST_RFC_2617:
 					$this->handleDigestAuth();
+
 					return;
 			}
 		}
@@ -620,7 +689,7 @@ class RouteGuard implements RouteGuardInterface
 		}
 
 		$this->auth_fd->set('http_auth.user', $req_user)
-					  ->set('http_auth.password', $req_password);
+			->set('http_auth.password', $req_password);
 	}
 
 	/**

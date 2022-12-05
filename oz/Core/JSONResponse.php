@@ -93,13 +93,13 @@ final class JSONResponse implements ArrayCapableInterface
 	/**
 	 * Adds data to the response.
 	 *
-	 * @param array $data the data
+	 * @param array|\PHPUtils\Interfaces\ArrayCapableInterface $data the data
 	 *
 	 * @return \OZONE\OZ\Core\JSONResponse
 	 */
-	public function setData(array $data): self
+	public function setData(array|ArrayCapableInterface $data): self
 	{
-		$this->response['data'] = $data;
+		$this->response['data'] = $data instanceof ArrayCapableInterface ? $data->toArray() : $data;
 
 		return $this;
 	}

@@ -1,13 +1,14 @@
 <?php
+
 /**
- * Auto generated file,
- * 
- * INFO: you are free to edit it,
- * but make sure to know what you are doing.
- * 
- * Proudly With: gobl v1.5.0
- * Time: 2022-11-21T17:43:33+00:00
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace OZONE\OZ\Db;
@@ -19,8 +20,7 @@ class OZFile extends \OZONE\OZ\Db\Base\OZFile
 {
 	use \OZONE\OZ\FS\Traits\FileEntityTrait;
 
-	//====================================================
-	//=	Your custom implementation goes here
-	//====================================================
-
+	// ====================================================
+	// =	Your custom implementation goes here
+	// ====================================================
 }

@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cli\Cron;
 
+use Stringable;
+
 /**
  * Class Scheduler.
  */
-final class Schedule implements \Stringable
+final class Schedule implements Stringable
 {
 	private string $minute = '*';
 
@@ -29,6 +31,14 @@ final class Schedule implements \Stringable
 	private string $month = '*';
 
 	private string $year = '*';
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function __toString()
+	{
+		return '';
+	}
 
 	public function everyYear(): self
 	{
@@ -122,13 +132,5 @@ final class Schedule implements \Stringable
 		return $sc->everyYear()
 			->month(2)
 			->day(5);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function __toString()
-	{
-		return '';
 	}
 }

@@ -23,19 +23,21 @@ use OZONE\OZ\Senders\Messages\SMSMessage;
  */
 class AuthPhone extends AuthProvider
 {
-	public const NAME = 'phone';
+	public const NAME = 'auth:provider:phone';
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function getInstance(Context $context, ?AuthScopeInterface $scope = null): self{
+	public static function getInstance(Context $context, ?AuthScopeInterface $scope = null): self
+	{
 		return new self($context, $scope);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function getName():string {
+	public static function getName(): string
+	{
 		return self::NAME;
 	}
 

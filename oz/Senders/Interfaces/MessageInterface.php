@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Senders\Interfaces;
 
-
 /**
  * Interface MessageInterface.
  */

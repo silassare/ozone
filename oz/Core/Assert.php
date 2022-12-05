@@ -18,11 +18,15 @@ use OZONE\OZ\Exceptions\InvalidFormException;
 
 /**
  * Class Assert.
+ *
+ * @deprecated
  */
 final class Assert
 {
 	/**
 	 * asserts if a given form contains has all required fields.
+	 *
+	 * @deprecated
 	 *
 	 * @param mixed                 $form            the form to be checked
 	 * @param array                 $required_fields the required fields
@@ -30,7 +34,6 @@ final class Assert
 	 * @param mixed                 $error_data      the error data
 	 *
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 * @throws string
 	 */
 	public static function assertForm(
 		mixed $form,

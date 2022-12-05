@@ -26,41 +26,50 @@ class Field implements ArrayCapableInterface
 	use ArrayCapableTrait;
 
 	/**
-	 * @var callable|TypeInterface|TypesSwitcher
+	 * @var \Gobl\DBAL\Types\Interfaces\TypeInterface|\OZONE\OZ\Forms\TypesSwitcher
 	 */
-	protected $validator;
+	protected TypeInterface|TypesSwitcher $_type;
 
-	private bool $hide = false;
+	/**
+	 * @var callable(mixed, \OZONE\OZ\Forms\FormData):null|bool
+	 */
+	protected $_validator;
+
+	protected string    $_name;
+	protected bool      $_hide     = false;
+	protected bool      $_required = false;
+	protected ?FormRule $_if       = null;
 
 	/**
 	 * Field constructor.
 	 *
-	 * @param string                                    $name
-	 * @param null|callable|TypeInterface|TypesSwitcher $validator
-	 * @param bool                                      $required
-	 * @param null|\OZONE\OZ\Forms\FormRule             $only_if
+	 * @param string                           $name
+	 * @param null|TypeInterface|TypesSwitcher $type
+	 * @param bool                             $required
+	 * @param null|\OZONE\OZ\Forms\FormRule    $if
 	 */
 	public function __construct(
-		protected string $name,
-		TypeInterface|TypesSwitcher|callable|null $validator,
-		protected bool $required = false,
-		protected ?FormRule $only_if = null
+		string $name,
+		TypeInterface|TypesSwitcher|null $type = null,
+		bool $required = false,
+		?FormRule $if = null
 	) {
-		$this->validator = $validator ?? new TypeString();
+		$this->_name     = $name;
+		$this->_type     = $type ?? new TypeString();
+		$this->_required = $required;
+		$this->_if       = $if;
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\FormData $fd
+	 * @param string $name
 	 *
-	 * @return bool
+	 * @return $this
 	 */
-	public function isEnabled(FormData $fd): bool
+	public function name(string $name): static
 	{
-		if (null === $this->only_if) {
-			return true;
-		}
+		$this->_name = $name;
 
-		return $this->only_if->check($fd);
+		return $this;
 	}
 
 	/**
@@ -70,7 +79,7 @@ class Field implements ArrayCapableInterface
 	 */
 	public function hidden(bool $hide = true): static
 	{
-		$this->hide = $hide;
+		$this->_hide = $hide;
 
 		return $this;
 	}
@@ -82,9 +91,57 @@ class Field implements ArrayCapableInterface
 	 */
 	public function required(bool $required = true): static
 	{
-		$this->required = $required;
+		$this->_required = $required;
 
 		return $this;
+	}
+
+	/**
+	 * @return FormRule
+	 */
+	public function if(): FormRule
+	{
+		$this->_if = new FormRule();
+
+		return $this->_if;
+	}
+
+	/**
+	 * @param \Gobl\DBAL\Types\Interfaces\TypeInterface|\OZONE\OZ\Forms\TypesSwitcher $type
+	 *
+	 * @return $this
+	 */
+	public function type(TypeInterface|TypesSwitcher $type): static
+	{
+		$this->_type = $type;
+
+		return $this;
+	}
+
+	/**
+	 * @param callable(mixed, \OZONE\OZ\Forms\FormData):bool $validator
+	 *
+	 * @return $this
+	 */
+	public function validator(callable $validator): static
+	{
+		$this->_validator = $validator;
+
+		return $this;
+	}
+
+	/**
+	 * @param \OZONE\OZ\Forms\FormData $fd
+	 *
+	 * @return bool
+	 */
+	public function isEnabled(FormData $fd): bool
+	{
+		if (null === $this->_if) {
+			return true;
+		}
+
+		return $this->_if->check($fd);
 	}
 
 	/**
@@ -92,23 +149,15 @@ class Field implements ArrayCapableInterface
 	 */
 	public function getName(): string
 	{
-		return $this->name;
+		return $this->_name;
 	}
 
 	/**
-	 * @return callable|TypesSwitcher|TypeInterface
+	 * @return callable|TypeInterface|TypesSwitcher
 	 */
-	public function getValidator(): callable|TypesSwitcher|TypeInterface
+	public function getType(): callable|TypesSwitcher|TypeInterface
 	{
-		return $this->validator;
-	}
-
-	/**
-	 * @param callable|TypeInterface|TypesSwitcher $validator
-	 */
-	public function setValidator(callable|TypeInterface|TypesSwitcher $validator): void
-	{
-		$this->validator = $validator;
+		return $this->_type;
 	}
 
 	/**
@@ -116,7 +165,7 @@ class Field implements ArrayCapableInterface
 	 */
 	public function isRequired(): bool
 	{
-		return $this->required;
+		return $this->_required;
 	}
 
 	/**
@@ -124,7 +173,7 @@ class Field implements ArrayCapableInterface
 	 */
 	public function isHidden(): bool
 	{
-		return $this->hide;
+		return $this->_hide;
 	}
 
 	/**
@@ -139,19 +188,20 @@ class Field implements ArrayCapableInterface
 	 */
 	public function validate(mixed $value, FormData $cleaned_fd): mixed
 	{
-		if (\is_callable($this->validator)) {
-			$v = $this->validator;
-
-			return $v($value, $cleaned_fd);
-		}
-
-		$type = $this->validator;
+		$type = $this->_type;
 
 		if ($type instanceof TypesSwitcher) {
-			$type = $this->validator->getType($cleaned_fd);
+			$type = $this->_type->getType($cleaned_fd);
 		}
 
-		return $type->validate($value);
+		$value = $type->validate($value);
+
+		if (\is_callable($this->_validator)) {
+			$v     = $this->_validator;
+			$value = $v($value, $cleaned_fd);
+		}
+
+		return $value;
 	}
 
 	/**
@@ -159,20 +209,12 @@ class Field implements ArrayCapableInterface
 	 */
 	public function toArray(): array
 	{
-		if ($this->validator instanceof TypeInterface) {
-			$type = $this->validator->toArray();
-		} elseif ($this->validator instanceof TypesSwitcher) {
-			$type = $this->validator->toArray();
-		} else { /* if (is_callable($this->validator)) */
-			$type = (new TypeString())->toArray();
-		}
-
 		return [
-			'name'     => $this->name,
-			'type'     => $type,
-			'required' => $this->required,
-			'hidden'   => $this->hide,
-			'only_if'  => $this->only_if?->toArray(),
+			'name'     => $this->_name,
+			'type'     => $this->_type->toArray(),
+			'required' => $this->_required,
+			'hidden'   => $this->_hide,
+			'if'       => $this->_if?->toArray(),
 		];
 	}
 }

@@ -35,7 +35,7 @@ class UserPicEdit extends Service
 	{
 		$context = $ri->getContext();
 		$request = $context->getRequest();
-		$params  = $request->getFormData();
+		$params  = $request->getUnsafeFormData();
 		$um      = $context->getUsersManager();
 		$for_id  = $ri->getParam('user_id');
 
@@ -75,7 +75,7 @@ class UserPicEdit extends Service
 
 		$this->getJSONResponse()
 			->setDone($msg)
-			->setData($user->toArray());
+			->setData($user);
 	}
 
 	/**
@@ -83,10 +83,9 @@ class UserPicEdit extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->patch('/users/:user_id/pic/edit', function (RouteInfo $r) {
-			$context = $r->getContext();
-			$s       = new self($context);
-			$s->actionPicEdit($r);
+		$router->patch('/users/:user_id/pic/edit', function (RouteInfo $ri) {
+			$s       = new self($ri);
+			$s->actionPicEdit($ri);
 
 			return $s->respond();
 		})

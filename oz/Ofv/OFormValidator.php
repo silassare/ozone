@@ -21,6 +21,8 @@ use Throwable;
 
 /**
  * Class OFormValidator.
+ *
+ * @deprecated
  */
 final class OFormValidator
 {

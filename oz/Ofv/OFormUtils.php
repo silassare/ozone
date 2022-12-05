@@ -18,11 +18,15 @@ use OZONE\OZ\Exceptions\RuntimeException;
 
 /**
  * Class OFormUtils.
+ *
+ * @deprecated
  */
 final class OFormUtils
 {
 	/**
 	 * Loads form validators in a given directory.
+	 *
+	 * @deprecated
 	 *
 	 * @param string $dir         the directory path
 	 * @param bool   $silent_mode whether to throw exception when directory was not found

@@ -192,7 +192,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		$h_list['X-Frame-Options'] = 'DENY';
 
 		foreach ($h_list as $key => $value) {
-			$response = $response->withHeader($key, (string)$value);
+			$response = $response->withHeader($key, (string) $value);
 		}
 
 		$context->setResponse($response);

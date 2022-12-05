@@ -75,7 +75,7 @@ class FileAccess
 		if (isset($data['access_rules'])) {
 			$guard = new RouteGuard($this->context, $data['access_rules'] ?? []);
 
-			$guard->assertHasAccess();
+			$guard->checkAccess();
 		}
 	}
 

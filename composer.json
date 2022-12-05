@@ -25,13 +25,14 @@
 		"ext-libxml": "*",
 		"ext-simplexml": "*",
 		"ext-posix": "*",
+		"ext-bcmath": "*",
 		"silassare/otpl": "=1.1.9",
 		"silassare/gobl": "^2.0.0",
 		"silassare/kli": "^2.0.0",
 		"silassare/php-utils": "^1.0.0",
 		"claviska/simpleimage": "^3.7.0",
 		"psr/http-message": "^1.0"
-	},
+    },
 	"require-dev": {
 		"roave/security-advisories": "dev-latest",
 		"oliup/oliup-cs-php": "dev-main",

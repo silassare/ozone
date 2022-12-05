@@ -23,17 +23,17 @@ class FormStep
 	/**
 	 * @var callable
 	 */
-	protected $builder;
+	protected $_builder;
 
 	/**
 	 * @var callable
 	 */
-	protected $only_if;
+	protected $_if;
 
-	public function __construct(protected string $name, callable $builder, ?callable $only_if = null)
+	public function __construct(protected string $name, callable $builder, ?callable $if = null)
 	{
-		$this->only_if = $only_if;
-		$this->builder = $builder;
+		$this->_if      = $if;
+		$this->_builder = $builder;
 	}
 
 	/**
@@ -43,11 +43,11 @@ class FormStep
 	 */
 	public function getForm(FormData $fd): ?Form
 	{
-		if ($this->only_if && !\call_user_func($this->only_if, $fd)) {
+		if ($this->_if && !\call_user_func($this->_if, $fd)) {
 			return null;
 		}
 
-		$form = \call_user_func($this->builder, $fd);
+		$form = \call_user_func($this->_builder, $fd);
 
 		if (null !== $form && !($form instanceof Form)) {
 			throw (new RuntimeException(
@@ -56,7 +56,7 @@ class FormStep
 					self::class,
 					\get_debug_type($form)
 				)
-			))->suspectCallable($this->builder);
+			))->suspectCallable($this->_builder);
 		}
 
 		return $form;

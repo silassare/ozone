@@ -38,7 +38,7 @@ return [
 	UserPicEdit::class      => true,
 	Password::class         => true,
 	AccountRecovery::class  => true,
-	AuthService::class => true,
+	AuthService::class      => true,
 	AuthPhoneService::class => true,
 	AuthEmailService::class => true,
 ];

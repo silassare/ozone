@@ -21,7 +21,6 @@ use OZONE\OZ\Core\CRUDHandlerProvider;
 use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Core\Interfaces\TableCollectionsProviderInterface;
 use OZONE\OZ\Core\Interfaces\TableRelationsProviderInterface;
-use OZONE\OZ\Exceptions\BaseException;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\Hooks\Events\FinishHook;
 use OZONE\OZ\Hooks\Events\InitHook;
@@ -251,5 +250,4 @@ final class OZone
 			}
 		}
 	}
-
 }

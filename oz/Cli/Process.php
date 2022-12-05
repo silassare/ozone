@@ -109,7 +109,7 @@ final class Process
 
 		$options = [];
 		$command = Utils::getPlatform()
-						->format($this->command);
+			->format($this->command);
 
 		if (Utils::isDOS()) {
 			$options['bypass_shell'] = true;
@@ -180,10 +180,10 @@ final class Process
 		$file_path = $this->fm->resolve($file_path);
 
 		$this->fm->filter()
-				 ->isFile()
-				 ->isReadable()
-				 ->isWritable()
-				 ->assert($file_path);
+			->isFile()
+			->isReadable()
+			->isWritable()
+			->assert($file_path);
 
 		$this->descriptors[self::IN] = ['file', $file_path, 'r']; // the command need to read
 		$this->files[self::IN]       = $file_path;
@@ -205,10 +205,10 @@ final class Process
 		$file_path = $this->fm->resolve($file_path);
 
 		$this->fm->filter()
-				 ->isFile()
-				 ->isReadable()
-				 ->isWritable()
-				 ->assert($file_path);
+			->isFile()
+			->isReadable()
+			->isWritable()
+			->assert($file_path);
 
 		$this->descriptors[self::OUT] = ['file', $file_path, 'w']; // the command need to write
 		$this->files[self::OUT]       = $file_path;
@@ -230,10 +230,10 @@ final class Process
 		$file_path = $this->fm->resolve($file_path);
 
 		$this->fm->filter()
-				 ->isFile()
-				 ->isReadable()
-				 ->isWritable()
-				 ->assert($file_path);
+			->isFile()
+			->isReadable()
+			->isWritable()
+			->assert($file_path);
 
 		$this->descriptors[self::ERR] = ['file', $file_path, 'w']; // the command need to write
 		$this->files[self::ERR]       = $file_path;
@@ -338,7 +338,7 @@ final class Process
 			$pid = $this->getPid();
 
 			$ok = Utils::getPlatform()
-					   ->kill($pid);
+				->kill($pid);
 
 			$this->close();
 
@@ -370,7 +370,7 @@ final class Process
 		if ($this->process) {
 			$status = $this->getStatus(true);
 
-			return (bool)$status['running'];
+			return (bool) $status['running'];
 		}
 
 		return false;
@@ -388,7 +388,7 @@ final class Process
 		$this->assertOpenedProcess(__METHOD__);
 
 		if ($refresh || !$this->status) {
-			/** @var false|array $result */
+			/** @var array|false $result */
 			$result = \proc_get_status($this->process);
 
 			if (!$result) {
@@ -482,7 +482,7 @@ final class Process
 
 		do {
 			$data = \fread($handle, 1024);
-			$all  .= $data;
+			$all .= $data;
 		} while (isset($data[0], $data[1024 - 1]));
 
 		return $all;

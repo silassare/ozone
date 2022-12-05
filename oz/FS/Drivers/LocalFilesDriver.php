@@ -167,7 +167,7 @@ class LocalFilesDriver implements FilesDriverInterface
 		$body      = Body::fromPath($src);
 
 		return $response->withHeader('Content-Transfer-Encoding', 'binary')
-			->withHeader('Content-Length', $size)
+			->withHeader('Content-Length', (string) $size)
 			->withHeader('Content-type', $mime_type)
 			->withBody($body);
 	}

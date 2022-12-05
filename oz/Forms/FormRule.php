@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Forms;
 
+use OZONE\OZ\Lang\I18nMessage;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
 
@@ -22,122 +23,126 @@ use PHPUtils\Traits\ArrayCapableTrait;
 class FormRule implements ArrayCapableInterface
 {
 	use ArrayCapableTrait;
-	private array $rules = [];
+
+	private array                   $rules   = [];
+	private null|string|I18nMessage $message = null;
 
 	/**
-	 * @param string                $field
-	 * @param bool|float|int|string $value
-	 * @param bool                  $is_field
+	 * @param \OZONE\OZ\Forms\Field|string           $field
+	 * @param bool|float|int|string                  $value
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function eq(string $field, int|string|float|bool $value, bool $is_field = false): self
+	public function eq(string|Field $field, Field|null|int|string|float|bool $value, null|string|I18nMessage $message = null): self
 	{
-		return $this->add($field, 'eq', $value, $is_field);
+		return $this->add($field, 'eq', $value, $message);
 	}
 
 	/**
-	 * @param string                $field
-	 * @param bool|float|int|string $value
-	 * @param bool                  $is_field
+	 * @param \OZONE\OZ\Forms\Field|string           $field
+	 * @param bool|float|int|string                  $value
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function neq(string $field, int|string|float|bool $value, bool $is_field = false): self
+	public function neq(string|Field $field, Field|null|int|string|float|bool $value, null|string|I18nMessage $message = null): self
 	{
-		return $this->add($field, 'neq', $value, $is_field);
+		return $this->add($field, 'neq', $value, $message);
 	}
 
 	/**
-	 * @param string           $field
-	 * @param float|int|string $value
-	 * @param bool             $is_field
+	 * @param \OZONE\OZ\Forms\Field|string           $field
+	 * @param float|int|\OZONE\OZ\Forms\Field|string $value
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function gt(string $field, int|string|float $value, bool $is_field = false): self
+	public function gt(string|Field $field, Field|int|string|float $value, null|string|I18nMessage $message = null): self
 	{
-		return $this->add($field, 'gt', $value, $is_field);
+		return $this->add($field, 'gt', $value, $message);
 	}
 
 	/**
-	 * @param string           $field
-	 * @param float|int|string $value
-	 * @param bool             $is_field
+	 * @param \OZONE\OZ\Forms\Field|string           $field
+	 * @param float|int|\OZONE\OZ\Forms\Field|string $value
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function gte(string $field, int|string|float $value, bool $is_field = false): self
+	public function gte(string|Field $field, Field|int|string|float $value, null|string|I18nMessage $message = null): self
 	{
-		return $this->add($field, 'gte', $value, $is_field);
+		return $this->add($field, 'gte', $value, $message);
 	}
 
 	/**
-	 * @param string           $field
-	 * @param float|int|string $value
-	 * @param bool             $is_field
+	 * @param \OZONE\OZ\Forms\Field|string           $field
+	 * @param float|int|\OZONE\OZ\Forms\Field|string $value
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function lt(string $field, int|string|float $value, bool $is_field = false): self
+	public function lt(string|Field $field, Field|int|string|float $value, null|string|I18nMessage $message = null): self
 	{
-		return $this->add($field, 'lt', $value, $is_field);
+		return $this->add($field, 'lt', $value, $message);
 	}
 
 	/**
-	 * @param string           $field
-	 * @param float|int|string $value
-	 * @param bool             $is_field
+	 * @param \OZONE\OZ\Forms\Field|string           $field
+	 * @param float|int|\OZONE\OZ\Forms\Field|string $value
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function lte(string $field, int|string|float $value, bool $is_field = false): self
+	public function lte(string|Field $field, Field|int|string|float $value, null|string|I18nMessage $message = null): self
 	{
-		return $this->add($field, 'lte', $value, $is_field);
+		return $this->add($field, 'lte', $value, $message);
 	}
 
 	/**
-	 * @param string $field
-	 * @param array  $value
-	 * @param bool   $is_field
+	 * @param \OZONE\OZ\Forms\Field|string           $field
+	 * @param array|\OZONE\OZ\Forms\Field            $value
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function in(string $field, array $value, bool $is_field = false): self
+	public function in(string|Field $field, Field|array $value, null|string|I18nMessage $message = null): self
 	{
-		return $this->add($field, 'in', $value, $is_field);
+		return $this->add($field, 'in', $value, $message);
 	}
 
 	/**
-	 * @param string $field
-	 * @param array  $value
-	 * @param bool   $is_field
+	 * @param \OZONE\OZ\Forms\Field|string           $field
+	 * @param array|\OZONE\OZ\Forms\Field            $value
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function notIn(string $field, array $value, bool $is_field = false): self
+	public function notIn(string|Field $field, Field|array $value, null|string|I18nMessage $message = null): self
 	{
-		return $this->add($field, 'not_in', $value, $is_field);
+		return $this->add($field, 'not_in', $value, $message);
 	}
 
 	/**
-	 * @param string $field
+	 * @param \OZONE\OZ\Forms\Field|string           $field
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function isNull(string $field): self
+	public function isNull(string|Field $field, null|string|I18nMessage $message = null): self
 	{
-		return $this->add($field, 'is_null');
+		return $this->add($field, 'is_null', null, $message);
 	}
 
 	/**
-	 * @param string $field
+	 * @param \OZONE\OZ\Forms\Field|string           $field
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function isNotNull(string $field): self
+	public function isNotNull(string|Field $field, null|string|I18nMessage $message = null): self
 	{
-		return $this->add($field, 'is_not_null');
+		return $this->add($field, 'is_not_null', null, $message);
 	}
 
 	/**
@@ -147,15 +152,17 @@ class FormRule implements ArrayCapableInterface
 	 */
 	public function check(FormData $fd): bool
 	{
-		foreach ($this->rules as $item) {
-			$a = $fd->get($item['field']);
-			$b = $item['value'];
+		foreach ($this->rules as $entry) {
+			$a = $fd->get($entry['field']);
+			$b = $entry['value'];
 
-			if ($item['is_field']){
+			if ($entry['is_field']) {
 				$b = $fd->get($b);
 			}
 
-			$ok = match ($item['rule']) {
+			$this->message = $entry['message'];
+
+			$ok = match ($entry['rule']) {
 				'eq'          => ($a === $b),
 				'neq'         => ($a !== $b),
 				'gt'          => ($a > $b),
@@ -177,6 +184,14 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
+	 * @return null|\OZONE\OZ\Lang\I18nMessage|string
+	 */
+	public function getErrorMessage(): string|I18nMessage|null
+	{
+		return $this->message;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	public function toArray(): array
@@ -185,20 +200,27 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param string     $field
-	 * @param string     $rule
-	 * @param null|mixed $value
-	 * @param bool       $is_field
+	 * @param \OZONE\OZ\Forms\Field|string           $field
+	 * @param string                                 $rule
+	 * @param null|mixed                             $value
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	private function add(string $field, string $rule, mixed $value = null, bool $is_field = false): self
-	{
+	private function add(
+		string|Field $field,
+		string $rule,
+		mixed $value = null,
+		null|string|I18nMessage $message = null
+	): self {
+		$is_field = $value instanceof Field;
+
 		$this->rules[] = [
-			'field' => $field,
+			'field'    => $field instanceof Field ? $field->getName() : $field,
 			'is_field' => $is_field,
-			'rule'  => $rule,
-			'value' => $value,
+			'rule'     => $rule,
+			'value'    => $is_field ? null : $value,
+			'message'  => $message,
 		];
 
 		return $this;

@@ -75,7 +75,7 @@ final class DbManager
 	 */
 	public static function getDb(): RDBMSInterface
 	{
-		if (null === self::$db) {
+		if (!isset(self::$db)) {
 			self::init();
 		}
 

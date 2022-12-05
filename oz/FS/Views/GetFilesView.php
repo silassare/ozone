@@ -51,7 +51,7 @@ class GetFilesView extends WebView
 	}
 
 	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $r
+	 * @param \OZONE\OZ\Router\RouteInfo $ri
 	 *
 	 * @return \OZONE\OZ\Http\Response
 	 *
@@ -61,14 +61,14 @@ class GetFilesView extends WebView
 	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
 	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
-	public static function handle(RouteInfo $r): Response
+	public static function handle(RouteInfo $ri): Response
 	{
-		$context         = $r->getContext();
-		$req_file_id     = $r->getParam('oz_file_id');
-		$req_file_key    = $r->getParam('oz_file_key');
-		$req_file_ref    = $r->getParam('oz_file_ref');
-		$req_file_filter = $r->getParam('oz_file_filter');
-		$req_file_ext    = $r->getParam('oz_file_extension');
+		$context         = $ri->getContext();
+		$req_file_id     = $ri->getParam('oz_file_id');
+		$req_file_key    = $ri->getParam('oz_file_key');
+		$req_file_ref    = $ri->getParam('oz_file_ref');
+		$req_file_filter = $ri->getParam('oz_file_filter');
+		$req_file_ext    = $ri->getParam('oz_file_extension');
 
 		$file = FilesUtils::getFileWithId($req_file_id);
 

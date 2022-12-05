@@ -18,5 +18,5 @@ use OZONE\OZ\Auth\Providers\AuthPhone;
 return [
 	AuthPhone::NAME => AuthPhone::class,
 	AuthEmail::NAME => AuthEmail::class,
-	AuthFile::NAME => AuthFile::class,
+	AuthFile::NAME  => AuthFile::class,
 ];

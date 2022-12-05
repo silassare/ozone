@@ -30,9 +30,9 @@ class MailMessage extends Message
 	 * @param array       $attributes
 	 */
 	public function __construct(
-		string                   $template,
+		string $template,
 		private readonly ?string $template_rich = null,
-		array                    $attributes = []
+		array $attributes = []
 	) {
 		parent::__construct($template, $attributes);
 	}
@@ -44,7 +44,6 @@ class MailMessage extends Message
 	{
 		return TemplatesUtils::compile($this->template_rich ?? $this->template, $this->data);
 	}
-
 
 	/**
 	 * {@inheritDoc}

@@ -15,6 +15,7 @@ namespace OZONE\OZ\Core;
 
 use OZONE\OZ\Http\Response;
 use OZONE\OZ\Router\Interfaces\RouteProviderInterface;
+use OZONE\OZ\Router\RouteInfo;
 
 /**
  * Class Service.
@@ -34,11 +35,11 @@ abstract class Service implements RouteProviderInterface
 	/**
 	 * Service constructor.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
+	 * @param \OZONE\OZ\Core\Context|\OZONE\OZ\Router\RouteInfo $context
 	 */
-	public function __construct(Context $context)
+	public function __construct(Context|RouteInfo $context)
 	{
-		$this->context       = $context;
+		$this->context       = $context instanceof RouteInfo ? $context->getContext() : $context;
 		$this->json_response = new JSONResponse();
 	}
 
@@ -78,7 +79,9 @@ abstract class Service implements RouteProviderInterface
 		if ($um->userVerified()) {
 			$session            = $this->context->getSession();
 			$client             = $session->getClient();
-			$lifetime           = 1 * $client->getSessionLifeTime();
+
+			/** @var int $lifetime */
+			$lifetime           = $client->getSessionLifeTime();
 			$data['stime']      = $now + $lifetime;
 
 			if (Configs::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_ENABLED')) {

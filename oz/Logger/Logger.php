@@ -13,8 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Logger;
 
+use Error;
+use Exception;
+use JsonSerializable;
 use OZONE\OZ\Exceptions\BaseException;
 use OZONE\OZ\OZone;
+use Throwable;
 
 /**
  * Class Log.
@@ -39,17 +43,17 @@ class Logger
 		$log_file = $dir . 'debug.log';
 
 		if (\is_scalar($value)) {
-			$log = (string)$value;
+			$log = (string) $value;
 		} elseif (\is_array($value)) {
 			$log = \var_export($value, true);
-		} elseif ($value instanceof \Exception || $value instanceof \Error) {
+		} elseif ($value instanceof Exception || $value instanceof Error) {
 			$e   = $value;
 			$log = BaseException::throwableToString($e);
 
 			while ($e = $e->getPrevious()) {
 				$log .= $prev_sep . BaseException::throwableToString($e);
 			}
-		} elseif ($value instanceof \JsonSerializable) {
+		} elseif ($value instanceof JsonSerializable) {
 			$log = \json_encode($value, \JSON_PRETTY_PRINT);
 		} else {
 			$log = \get_debug_type($value);
@@ -74,6 +78,28 @@ class Logger
 	}
 
 	/**
+	 * @return string
+	 */
+	public static function executionTime(): string
+	{
+		return \number_format(\microtime(true) - OZ_OZONE_START_TIME, 3);
+	}
+
+	/**
+	 * Register error handlers and shutdown function.
+	 */
+	public static function registerHandlers(): void
+	{
+		\set_exception_handler(self::exceptionHandler(...));
+		\set_error_handler(static function (int $code, string $message, string $file, int $line) {
+			self::errorHandler($code, $message, $file, $line, true);
+
+			return null;
+		});
+		\register_shutdown_function(self::shutdownErrorFunction(...));
+	}
+
+	/**
 	 * Called when we should shutdown and only admin
 	 * should know what is going wrong.
 	 */
@@ -85,9 +111,9 @@ class Logger
 	/**
 	 * Handle unhandled exception.
 	 *
-	 * @param \Throwable $t
+	 * @param Throwable $t
 	 */
-	protected static function exceptionHandler(\Throwable $t): void
+	protected static function exceptionHandler(Throwable $t): void
 	{
 		self::log($t);
 
@@ -96,7 +122,7 @@ class Logger
 		}
 
 		OZone::getRunningApp()
-			 ?->onUnhandledThrowable($t);
+			?->onUnhandledThrowable($t);
 
 		self::criticalDieMessage();
 	}
@@ -119,7 +145,7 @@ class Logger
 
 		if (!OZ_OZONE_IS_CLI) {
 			OZone::getRunningApp()
-				 ?->onUnhandledError($code, $message, $file, $line);
+				?->onUnhandledError($code, $message, $file, $line);
 		}
 
 		if ($die_on_fatal) {
@@ -155,29 +181,5 @@ class Logger
 					  . \PHP_EOL . '::::::::::::::::::::::::'
 					  . \PHP_EOL . self::executionTime() . 's');
 		}
-	}
-
-	/**
-	 * @return string
-	 */
-	public static function executionTime(): string
-	{
-		return \number_format(\microtime(true) - OZ_OZONE_START_TIME, 3);
-	}
-
-	/**
-	 * Register error handlers and shutdown function.
-	 *
-	 * @return void
-	 */
-	public static function registerHandlers(): void
-	{
-		\set_exception_handler(self::exceptionHandler(...));
-		\set_error_handler(static function (int $code, string $message, string $file, int $line) {
-			self::errorHandler($code, $message, $file, $line, true);
-
-			return null;
-		});
-		\register_shutdown_function(self::shutdownErrorFunction(...));
 	}
 }

@@ -13,11 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Forms;
 
+use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\TypeDate;
+use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\CSRF\CSRF;
 use OZONE\OZ\Exceptions\InvalidFormException;
+use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\Http\Request;
 use OZONE\OZ\Http\Uri;
+use OZONE\OZ\Lang\I18n;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
 
@@ -37,6 +42,11 @@ class Form implements ArrayCapableInterface
 	 * @var \OZONE\OZ\Forms\FormStep[]
 	 */
 	public array $steps = [];
+
+	/**
+	 * @var \OZONE\OZ\Forms\FormRule[]
+	 */
+	public array $rules = [];
 
 	/**
 	 * Form constructor.
@@ -120,6 +130,58 @@ class Form implements ArrayCapableInterface
 		return $this;
 	}
 
+	public function field(string $name): Field
+	{
+		$field = new Field($name);
+
+		$this->addField($field);
+
+		return $field;
+	}
+
+	/**
+	 * Adds a double check fields for an existing field.
+	 *
+	 * @param \OZONE\OZ\Forms\Field|string $field
+	 *
+	 * @return $this
+	 */
+	public function doubleCheck(string|Field $field): static
+	{
+		if (\is_string($field)) {
+			$name  = $field;
+			$field = $this->getField($field);
+
+			if (!$field) {
+				throw new RuntimeException(\sprintf('Undefined field %s.', $name));
+			}
+		} else {
+			// ensure it's already added
+			$this->addField($field);
+		}
+
+		$field_verify = $this->field($field->getName() . '_verify')
+			->type($field->getType())
+			->required($field->isRequired());
+
+		$this->rule()
+			->eq($field, $field_verify, I18n::m('OZ_FIELDS_SHOULD_HAVE_SAME_VALUE', [
+				'field'        => $field->getName(),
+				'field_verify' => $field_verify->getName(),
+			]));
+
+		return $this;
+	}
+
+	public function rule(): FormRule
+	{
+		$rule = new FormRule();
+
+		$this->rules[] = $rule;
+
+		return $rule;
+	}
+
 	public function getField(string $name): ?Field
 	{
 		return $this->fields[$name] ?? null;
@@ -158,6 +220,15 @@ class Form implements ArrayCapableInterface
 			}
 		}
 
+		foreach ($this->rules as $rule) {
+			if (!$rule->check($cleaned_fd)) {
+				throw new InvalidFormException($rule->getErrorMessage(), [
+					// rule is prefixed by "_" because it may contain sensitive data
+					'_rule' => $rule,
+				]);
+			}
+		}
+
 		foreach ($this->steps as $step) {
 			if ($step_form = $step->getForm($cleaned_fd)) {
 				$step_prefix .= $step->getName() . '.';
@@ -181,6 +252,70 @@ class Form implements ArrayCapableInterface
 			'fields' => $this->fields,
 			'steps'  => $this->steps,
 		];
+	}
+
+	/**
+	 * Merges a given form to this.
+	 *
+	 * @param \OZONE\OZ\Forms\Form $from
+	 *
+	 * @return $this
+	 */
+	public function merge(self $from): static
+	{
+		if (!$this->csrf) {
+			$this->csrf = $from->csrf;
+		}
+
+		if (!$this->method) {
+			$this->method = $from->method;
+		}
+
+		if (!$this->submit_to) {
+			$this->submit_to = $from->submit_to;
+		}
+
+		$this->fields = \array_merge($this->fields, $from->fields);
+		$this->steps  = \array_merge($this->steps, $from->steps);
+
+		return $this;
+	}
+
+	/**
+	 * Generates a form for a given table.
+	 *
+	 * @param \Gobl\DBAL\Table|string $table
+	 *
+	 * @return \OZONE\OZ\Forms\Form
+	 */
+	public static function fromTable(string|Table $table): self
+	{
+		if (\is_string($table)) {
+			$table = DbManager::getDb()
+				->getTable($table);
+		}
+
+		$columns = $table->getColumns(false);
+
+		$form = new self();
+
+		foreach ($columns as $column) {
+			$type = $column->getType();
+
+			if ($type->isAutoIncremented()) {
+				continue;
+			}
+
+			if (TypeDate::NAME === $type->getName() && true === $type->getOption('auto')) {
+				continue;
+			}
+
+			$form->field($column->getName())
+				->type($type)
+				->required(!$type->isNullAble());
+		}
+
+		return $form;
 	}
 
 	/**

@@ -378,7 +378,7 @@ final class MyService extends Service
 		$router->post('/my_svc', function (RouteInfo $r) {
 			$context     = $r->getContext();
 			$orm_request = new ORMRequest($context, $context->getRequest()
-				->getFormData());
+				->getUnsafeFormData());
 
 			$service = new self($context);
 			$service->actionCreateEntity($orm_request);
@@ -388,7 +388,7 @@ final class MyService extends Service
 		$router->get('/my_svc/{my_id}', function (RouteInfo $r) {
 			$context     = $r->getContext();
 			$orm_request = new ORMRequest($context, $context->getRequest()
-				->getFormData());
+				->getUnsafeFormData());
 			$orm_request->addColumnFilter('my_id', $r->getParam('my_id'));
 			$service = new self($context);
 			$service->actionGetEntity($orm_request);
@@ -399,7 +399,7 @@ final class MyService extends Service
 		$router->get('/my_svc', function (RouteInfo $r) {
 			$context     = $r->getContext();
 			$orm_request = new ORMRequest($context, $context->getRequest()
-				->getFormData());
+				->getUnsafeFormData());
 			$service     = new self($context);
 			$service->actionGetAll($orm_request);
 
@@ -408,7 +408,7 @@ final class MyService extends Service
 		$router->get('/my_svc/{my_id}/{relation}', function (RouteInfo $r) {
 			$context     = $r->getContext();
 			$orm_request = new ORMRequest($context, $context->getRequest()
-				->getFormData());
+				->getUnsafeFormData());
 			$orm_request->addColumnFilter('my_id', $r->getParam('my_id'));
 
 			$service = new self($context);
@@ -421,7 +421,7 @@ final class MyService extends Service
 		$router->patch('/my_svc/{my_id}', function (RouteInfo $r) {
 			$context     = $r->getContext();
 			$orm_request = new ORMRequest($context, $context->getRequest()
-				->getFormData());
+				->getUnsafeFormData());
 			$orm_request->addColumnFilter('my_id', $r->getParam('my_id'));
 
 			$service = new self($context);
@@ -433,7 +433,7 @@ final class MyService extends Service
 		$router->patch('/my_svc', function (RouteInfo $r) {
 			$context     = $r->getContext();
 			$orm_request = new ORMRequest($context, $context->getRequest()
-				->getFormData());
+				->getUnsafeFormData());
 			$service     = new self($context);
 			$service->actionUpdateAllItems($orm_request);
 
@@ -442,7 +442,7 @@ final class MyService extends Service
 		$router->delete('/my_svc/{my_id}', function (RouteInfo $r) {
 			$context     = $r->getContext();
 			$orm_request = new ORMRequest($context, $context->getRequest()
-				->getFormData());
+				->getUnsafeFormData());
 			$orm_request->addColumnFilter('my_id', $r->getParam('my_id'));
 
 			$service = new self($context);
@@ -454,7 +454,7 @@ final class MyService extends Service
 		$router->delete('/my_svc', function (RouteInfo $r) {
 			$context     = $r->getContext();
 			$orm_request = new ORMRequest($context, $context->getRequest()
-				->getFormData());
+				->getUnsafeFormData());
 			$service     = new self($context);
 			$service->actionDeleteAll($orm_request);
 

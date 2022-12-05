@@ -46,5 +46,4 @@ class CommandTask extends TaskBase
 
 		$process->open();
 	}
-
 }

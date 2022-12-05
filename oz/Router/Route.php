@@ -34,24 +34,17 @@ final class Route
 	private array  $params = [];
 
 	/**
-	 * @var \OZONE\OZ\Router\RouteGroup[]
-	 */
-	private array  $groups = [];
-
-	/**
 	 * Route constructor.
 	 *
 	 * @param \OZONE\OZ\Router\Router       $router
 	 * @param array                         $methods
-	 * @param string                        $path
 	 * @param callable                      $callable
 	 * @param \OZONE\OZ\Router\RouteOptions $options
 	 */
 	public function __construct(
 		private readonly Router $router,
-		private readonly array  $methods,
-		private readonly string $path,
-		callable                $callable,
+		private readonly array $methods,
+		callable $callable,
 		private readonly RouteOptions $options
 	) {
 		$this->callable = $callable;
@@ -74,9 +67,11 @@ final class Route
 	 */
 	public function isDynamic(): bool
 	{
-		return \str_contains($this->path, '{')
-			   || \str_contains($this->path, ':')
-			   || \str_contains($this->path, '[');
+		$path = $this->options->getPath();
+
+		return \str_contains($path, '{')
+			   || \str_contains($path, ':')
+			   || \str_contains($path, '[');
 	}
 
 	/**
@@ -89,23 +84,26 @@ final class Route
 	 */
 	public function toPath(Context $context, array $params): string
 	{
+		$path = $this->options->getPath();
 		if (!$this->isDynamic()) {
-			return $this->path;
+			return $path;
 		}
 
 		$this->ensureParsed();
 
-		return $this->pathBuilder($context, $this->path, $params);
+		return $this->pathBuilder($context, $path, $params);
 	}
 
 	/**
 	 * Returns the route path as defined.
 	 *
+	 * @param bool $full
+	 *
 	 * @return string
 	 */
-	public function getPath(): string
+	public function getPath(bool $full = true): string
 	{
-		return $this->path;
+		return $this->options->getPath($full);
 	}
 
 	/**
@@ -187,7 +185,7 @@ final class Route
 		$this->ensureParsed();
 
 		if (!$this->isDynamic()) {
-			return $path === $this->path;
+			return $path === $this->options->getPath();
 		}
 
 		$regexp  = self::REG_DELIMITER . '^' . $this->parsed . '$' . self::REG_DELIMITER;
@@ -219,14 +217,15 @@ final class Route
 	 */
 	private function ensureParsed(): void
 	{
+		$path = $this->options->getPath();
 		if (!isset($this->parsed)) {
 			if ($this->isDynamic()) {
 				$params          = [];
 				$declared_params = \array_merge($this->router->getGlobalParams(), $this->options->getParams());
-				$this->parsed    = self::parse($this->path, $declared_params, $params);
+				$this->parsed    = self::parse($path, $declared_params, $params);
 				$this->params    = \array_keys($params);
 			} else {
-				$this->parsed = $this->path;
+				$this->parsed = $path;
 			}
 		}
 	}

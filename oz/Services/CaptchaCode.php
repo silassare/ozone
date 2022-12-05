@@ -184,8 +184,8 @@ final class CaptchaCode extends Service
 	{
 		$route_path = Configs::get('oz.paths', 'OZ_CAPTCHA_ROUTE_PATH');
 
-		$router->get($route_path, function (RouteInfo $r) {
-			return self::generateCaptchaImage($r->getContext(), $r->getParam(self::CAPTCHA_KEY));
+		$router->get($route_path, function (RouteInfo $ri) {
+			return self::generateCaptchaImage($ri->getContext(), $ri->getParam(self::CAPTCHA_KEY));
 		})
 			->name(self::CAPTCHA_ROUTE)
 			->param(self::CAPTCHA_KEY, '[a-z0-9]{32}');

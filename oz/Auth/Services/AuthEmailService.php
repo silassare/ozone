@@ -39,9 +39,8 @@ class AuthEmailService extends Service
 	public static function registerRoutes(Router $router): void
 	{
 		$router->post('/auth/email', static function (RouteInfo $ri) {
-			return (new self($ri->getContext()))->init($ri, $ri->getCleanFormData());
-		})
-			   ->form(self::buildInitForm(...));
+			return (new self($ri))->init($ri, $ri->getCleanFormData());
+		})->form(self::buildInitForm(...));
 	}
 
 	/**
@@ -60,7 +59,7 @@ class AuthEmailService extends Service
 		$provider->generate();
 
 		$this->getJSONResponse()
-			 ->merge($provider->getJSONResponse());
+			->merge($provider->getJSONResponse());
 
 		return $this->respond();
 	}
@@ -72,12 +71,12 @@ class AuthEmailService extends Service
 	{
 		$fb = new Form();
 
-		$fb->addField(new Field('registered', new TypeBool(), false));
+		$fb->addField($registered = new Field('registered', new TypeBool(), false));
 
 		$email = new TypesSwitcher();
-		$email->when((new FormRule())->isNull('registered'), new TypeEmail())
-			  ->when((new FormRule())->eq('registered', true), (new TypeEmail())->registered())
-			  ->when((new FormRule())->eq('registered', false), (new TypeEmail())->notRegistered());
+		$email->when((new FormRule())->isNull($registered), new TypeEmail())
+			->when((new FormRule())->eq($registered, true), (new TypeEmail())->registered())
+			->when((new FormRule())->eq($registered, false), (new TypeEmail())->notRegistered());
 
 		$fb->addField(new Field('email', $email, true));
 

@@ -57,9 +57,9 @@ abstract class AuthProvider implements AuthProviderInterface
 		$code_length        = (int) Configs::get('oz.auth', 'OZ_AUTH_CODE_LENGTH');
 		$code_use_alpha_num = (bool) Configs::get('oz.auth', 'OZ_AUTH_CODE_USE_ALPHA_NUM');
 
-		$this->scope = $scope ?? new AuthScope();
+		$this->scope         = $scope ?? new AuthScope();
 		$this->json_response = new JSONResponse();
-		$this->credentials = new AuthCredentials($this->context, $code_length, $code_use_alpha_num);
+		$this->credentials   = new AuthCredentials($this->context, $code_length, $code_use_alpha_num);
 	}
 
 	/**

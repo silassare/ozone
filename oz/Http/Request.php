@@ -692,7 +692,7 @@ class Request extends Message implements ServerRequestInterface
 	 *
 	 * @return mixed the parameter value
 	 */
-	public function getFormField(string $key, string $default = null): mixed
+	public function getUnsafeFormField(string $key, string $default = null): mixed
 	{
 		$postParams = $this->getParsedBody();
 		$getParams  = $this->getQueryParams();
@@ -719,7 +719,7 @@ class Request extends Message implements ServerRequestInterface
 	 *
 	 * @return FormData
 	 */
-	public function getFormData(bool $includeFiles = true): FormData
+	public function getUnsafeFormData(bool $includeFiles = true): FormData
 	{
 		$params     = $this->getQueryParams();
 		$postParams = $this->getParsedBody();

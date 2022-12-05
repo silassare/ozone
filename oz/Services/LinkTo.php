@@ -65,10 +65,8 @@ final class LinkTo extends Service
 	{
 		$route_path = Configs::get('oz.paths', 'OZ_LINK_TO_ROUTE_PATH');
 
-		$router->get($route_path, function (RouteInfo $r) {
-			$svc = new self($r->getContext());
-
-			return $svc->handleRequest($r);
+		$router->get($route_path, function (RouteInfo $ri) {
+			return (new self($ri->getContext()))->handleRequest($ri);
 		})->name(self::MAIN_ROUTE)->param(self::URI_KEY, '[a-z0-9]{32}');
 	}
 

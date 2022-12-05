@@ -53,7 +53,7 @@ final class RedirectView extends WebView
 	public static function registerRoutes(Router $router): void
 	{
 		$router->map('*', '/oz:redirect', function (RouteInfo $ri) {
-			$view = new self($ri->getContext());
+			$view = new self($ri);
 
 			return $view->mainRoute();
 		})->name(self::MAIN_ROUTE);

@@ -15,6 +15,7 @@ namespace OZONE\OZ\Http;
 
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
+use Stringable;
 
 /**
  * Class Uri.
@@ -357,12 +358,12 @@ class Uri implements UriInterface
 	/**
 	 * Creates new Uri from string.
 	 *
-	 * @param string|\Stringable $uri Complete Uri string
-	 *                                (i.e., https://user:pass@host:443/path?query).
+	 * @param string|Stringable $uri Complete Uri string
+	 *                               (i.e., https://user:pass@host:443/path?query).
 	 *
 	 * @return self
 	 */
-	public static function createFromString(string|\Stringable $uri): self
+	public static function createFromString(string|Stringable $uri): self
 	{
 		if (!\is_string($uri) && !\method_exists($uri, '__toString')) {
 			throw new InvalidArgumentException('Uri must be a string');
@@ -467,14 +468,14 @@ class Uri implements UriInterface
 	/**
 	 * Filters Uri scheme.
 	 *
-	 * @param string|\Stringable $scheme raw Uri scheme
+	 * @param string|Stringable $scheme raw Uri scheme
 	 *
 	 * @return string
 	 *
 	 * @throws InvalidArgumentException if Uri scheme is not "", "https", or "http"
 	 * @throws InvalidArgumentException if the Uri scheme is not a string
 	 */
-	protected function filterScheme(string|\Stringable $scheme): string
+	protected function filterScheme(string|Stringable $scheme): string
 	{
 		static $valid = [
 			''      => true,

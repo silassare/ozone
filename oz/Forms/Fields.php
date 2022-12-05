@@ -16,8 +16,6 @@ namespace OZONE\OZ\Forms;
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeDate;
-use OZONE\OZ\Columns\Types\TypePassword;
-use OZONE\OZ\Exceptions\InvalidFormException;
 use OZONE\OZ\Exceptions\RuntimeException;
 
 /**
@@ -44,23 +42,5 @@ class Fields
 		} catch (TypesException $e) {
 			throw new RuntimeException(null, null, $e);
 		}
-	}
-
-	/**
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 */
-	public static function checkPassVPass(FormData $request): string
-	{
-		$form = new Form();
-		$form->addField(new Field('pass', new TypePassword(), true));
-		$form->addField(new Field('vpass', new TypePassword(), true));
-
-		$data = $form->validate($request);
-
-		if ($data['pass'] !== $data['vpass']) {
-			throw new InvalidFormException('OZ_FIELD_PASS_AND_VPASS_NOT_EQUAL');
-		}
-
-		return $data['pass'];
 	}
 }

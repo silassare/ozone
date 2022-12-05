@@ -16,7 +16,6 @@ namespace OZONE\OZ\Router;
 use InvalidArgumentException;
 use OZONE\OZ\Core\Context;
 use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Forms\FormData;
 use OZONE\OZ\Http\Response;
 use OZONE\OZ\Router\Events\RouteBeforeRun;
 use OZONE\OZ\Router\Events\RouteMethodNotAllowed;
@@ -48,9 +47,9 @@ final class Router
 	];
 
 	/**
-	 * @var \OZONE\OZ\Router\RouteGroup[]
+	 * @var null|\OZONE\OZ\Router\RouteGroup
 	 */
-	private array $groups = [];
+	private ?RouteGroup $current_group = null;
 
 	/**
 	 * @var \OZONE\OZ\Router\Route[]
@@ -79,20 +78,20 @@ final class Router
 	/**
 	 * Create a new route group.
 	 *
-	 * @param string   $path
-	 * @param callable<Router> $factory
+	 * @param string                $path
+	 * @param callable(Router):void $factory
 	 *
 	 * @return \OZONE\OZ\Router\RouteGroup
 	 */
 	public function group(string $path, callable $factory): RouteGroup
 	{
-		$group =  new RouteGroup($path, $this);
+		$group = new RouteGroup($path, $this->current_group);
 
-		$this->groups[] = $group;
+		$this->current_group = $group;
 
 		$factory($this);
 
-		array_pop($this->groups);
+		$this->current_group = $group->getParent();
 
 		return $group;
 	}
@@ -340,17 +339,24 @@ final class Router
 				/** @var array $params */
 				[$route, $params] = $results['found'];
 
-				$ri = new RouteInfo($context, $route, $params);
-
 				$options = $route->getOptions();
+				$ri      = new RouteInfo($context, $route, $params);
 
-				$options->runGuards($ri);
+				$route_guards = $options->getGuards($ri);
 
-				$clean_fd = $options->getForm($ri)?->validate($context->getRequest()
-					->getFormData());
+				foreach ($route_guards as $guard) {
+					$guard->checkAccess();
+					$ri->getAuthFormData()
+						->merge($guard->getAuthData());
+				}
 
-				if($clean_fd){
-					$ri->getCleanFormData()->merge($clean_fd);
+				$clean_fd = $options->getFormBundle($ri)
+					?->validate($context->getRequest()
+						->getUnsafeFormData());
+
+				if ($clean_fd) {
+					$ri->getCleanFormData()
+						->merge($clean_fd);
 				}
 
 				Event::trigger(new RouteBeforeRun($ri));
@@ -365,32 +371,31 @@ final class Router
 	 * Registers route.
 	 *
 	 * @param string|string[] $methods
-	 * @param string          $route_path
+	 * @param string          $path
 	 * @param callable        $callable
 	 *
 	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function map(string|array $methods, string $route_path, callable $callable): RouteOptions
+	public function map(string|array $methods, string $path, callable $callable): RouteOptions
 	{
 		if (!\is_array($methods)) {
 			$methods = '*' === $methods ? \array_keys($this->allowed_methods) : [$methods];
 		}
 
-		if (empty($route_path)) {
-			throw new InvalidArgumentException(\sprintf('Invalid route path: %s', $route_path));
+		if (empty($path)) {
+			throw new InvalidArgumentException(\sprintf('Invalid route path: %s', $path));
 		}
 
 		$methods_filtered = [];
 
 		foreach ($methods as $method) {
-
 			if (!\is_string($method) || !isset($this->allowed_methods[\strtoupper($method)])) {
 				$allowed = \implode('|', \array_keys($this->allowed_methods));
 
 				throw new InvalidArgumentException(\sprintf(
 					'Invalid method name "%s" for route "%s", allowed methods: %s',
 					$method,
-					$route_path,
+					$path,
 					$allowed
 				));
 			}
@@ -398,16 +403,15 @@ final class Router
 			$methods_filtered[] = \strtoupper($method);
 		}
 
-
 		if (!\is_callable($callable)) {
 			throw new InvalidArgumentException(\sprintf(
 				'Got "%s" while expecting callable for: %s',
 				\get_debug_type($callable),
-				$route_path
+				$path
 			));
 		}
 
-		$route = new Route($this, $methods_filtered, $route_path, $callable, $options = new RouteOptions());
+		$route = new Route($this, $methods_filtered, $callable, $options = new RouteOptions($path, $this->current_group));
 
 		if ($route->isDynamic()) {
 			$this->dynamic_routes[] = $route;
@@ -540,7 +544,7 @@ final class Router
 	 *
 	 * @param \OZONE\OZ\Router\RouteInfo $ri
 	 *
-	 * @throws \Throwable
+	 * @throws Throwable
 	 */
 	private function runRoute(RouteInfo $ri): void
 	{

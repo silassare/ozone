@@ -36,12 +36,12 @@ final class RouteInfo
 	 */
 	public function __construct(
 		private readonly Context $context,
-		private readonly Route   $route,
-		private readonly array   $params,
-		?FormData                $auth_form_data = null,
-		?FormData                $clean_form_data = null
+		private readonly Route $route,
+		private readonly array $params,
+		?FormData $auth_form_data = null,
+		?FormData $clean_form_data = null
 	) {
-		$this->auth_form_data = $auth_form_data ?? new FormData();
+		$this->auth_form_data  = $auth_form_data ?? new FormData();
 		$this->clean_form_data = $clean_form_data ?? new FormData();
 	}
 
@@ -110,6 +110,19 @@ final class RouteInfo
 	}
 
 	/**
+	 * Gets validated form field value.
+	 *
+	 * @param string     $name
+	 * @param null|mixed $def
+	 *
+	 * @return mixed
+	 */
+	public function getCleanFormField(string $name, mixed $def = null): mixed
+	{
+		return $this->clean_form_data->get($name, $def);
+	}
+
+	/**
 	 * Gets current route guard authorization form data.
 	 *
 	 * @return \OZONE\OZ\Forms\FormData
@@ -120,29 +133,42 @@ final class RouteInfo
 	}
 
 	/**
-	 * Shortcut for {@see \OZONE\OZ\Http\Request::getFormData()}.
-	 *
-	 * @param bool $include_files
-	 *
-	 * @return FormData
-	 */
-	public function getFormData(bool $include_files = true): FormData
-	{
-		return $this->context->getRequest()
-			->getFormData($include_files);
-	}
-
-	/**
-	 * Shortcut for {@see \OZONE\OZ\Http\Request::getFormField()}.
+	 * Gets auth form field value.
 	 *
 	 * @param string     $name
 	 * @param null|mixed $def
 	 *
 	 * @return mixed
 	 */
-	public function getFormField(string $name, mixed $def = null): mixed
+	public function getAuthFormField(string $name, mixed $def = null): mixed
+	{
+		return $this->clean_form_data->get($name, $def);
+	}
+
+	/**
+	 * Shortcut for {@see \OZONE\OZ\Http\Request::getUnsafeFormData()}.
+	 *
+	 * @param bool $include_files
+	 *
+	 * @return FormData
+	 */
+	public function getUnsafeFormData(bool $include_files = true): FormData
 	{
 		return $this->context->getRequest()
-			->getFormField($name, $def);
+			->getUnsafeFormData($include_files);
+	}
+
+	/**
+	 * Shortcut for {@see \OZONE\OZ\Http\Request::getUnsafeFormField()}.
+	 *
+	 * @param string     $name
+	 * @param null|mixed $def
+	 *
+	 * @return mixed
+	 */
+	public function getUnsafeFormField(string $name, mixed $def = null): mixed
+	{
+		return $this->context->getRequest()
+			->getUnsafeFormField($name, $def);
 	}
 }

@@ -22,9 +22,9 @@ use PHPUtils\Interfaces\ArrayCapableInterface;
 interface RouteGuardInterface extends ArrayCapableInterface
 {
 	/**
-	 * Check if user has access.
+	 * Check if access.
 	 */
-	public function assertHasAccess(): void;
+	public function checkAccess(): void;
 
 	/**
 	 * Returns clean auth form data.

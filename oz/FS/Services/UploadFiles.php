@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\FS\Services;
 
+use JsonException;
 use OZONE\OZ\Columns\Types\TypeFile;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\Service;
@@ -31,11 +32,12 @@ class UploadFiles extends Service
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+	 * @throws JsonException
 	 */
 	public function upload(RouteInfo $r): void
 	{
 		$field = 'files';
-		$files = $r->getFormField($field);
+		$files = $r->getUnsafeFormField($field);
 
 		if (!\is_array($files)) {
 			$files = [$files];
@@ -54,7 +56,7 @@ class UploadFiles extends Service
 			->fileUploadTotalSize($max_total_size);
 
 		$data_json = $type->validate($files);
-		$data      = \json_decode($data_json, true);
+		$data      = \json_decode($data_json, true, 512, \JSON_THROW_ON_ERROR);
 
 		$this->getJSONResponse()
 			->setDone()
@@ -66,11 +68,10 @@ class UploadFiles extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->post('/upload[/]', function (RouteInfo $r) {
-			$ctx = $r->getContext();
-			$s   = new static($ctx);
+		$router->post('/upload[/]', function (RouteInfo $ri) {
+			$s   = new static($ri);
 
-			$s->upload($r);
+			$s->upload($ri);
 
 			return $s->respond();
 		})->name(self::MAIN_ROUTE);

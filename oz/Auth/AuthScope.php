@@ -31,6 +31,7 @@ class AuthScope implements AuthScopeInterface
 	protected string $label    = '';
 	protected int    $try_max  = 0;
 	protected int    $lifetime = 0;
+
 	/**
 	 * @var \PHPUtils\Store\Store<array>
 	 */

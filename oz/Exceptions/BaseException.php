@@ -23,6 +23,7 @@ use OZONE\OZ\Exceptions\Traits\ExceptionCustomSuspectTrait;
 use OZONE\OZ\Exceptions\Traits\ExceptionWithCustomResponseTrait;
 use OZONE\OZ\Exceptions\Views\ErrorView;
 use OZONE\OZ\Http\Response;
+use OZONE\OZ\Lang\I18nMessage;
 use OZONE\OZ\Logger\Logger;
 use OZONE\OZ\OZone;
 use OZONE\OZ\Utils\Utils;
@@ -80,16 +81,20 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	/**
 	 * BaseException constructor.
 	 *
-	 * @param string         $message  the exception message
-	 * @param null|array     $data     additional error data
-	 * @param null|Throwable $previous previous throwable used for the exception chaining
-	 * @param int            $code     the exception code
+	 * @param I18nMessage|string $message  the exception message
+	 * @param null|array         $data     additional error data
+	 * @param null|Throwable     $previous previous throwable used for the exception chaining
+	 * @param int                $code     the exception code
 	 */
-	public function __construct(string $message, ?array $data = null, Throwable $previous = null, int $code = 0)
+	public function __construct(string|I18nMessage $message, ?array $data = null, Throwable $previous = null, int $code = 0)
 	{
-		parent::__construct($message, $code, $previous);
-
 		$this->data = $data ?? [];
+		if ($message instanceof I18nMessage) {
+			$this->data    = \array_merge($message->getInject(), $this->data);
+			$message       = $message->getText();
+		}
+
+		parent::__construct($message, $code, $previous);
 	}
 
 	/**
@@ -109,7 +114,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	 */
 	public function getHTTPReasonPhrase(): string
 	{
-		return Response::statusToReasonPhrase($this->getHTTPStatusCode());
+		return Response::statusToReasonPhrase($this->getHTTPStatusCode()) ?? '';
 	}
 
 	/**
@@ -361,7 +366,8 @@ STRING;
 		$json->setError($this->getMessage())
 			->setData($this->getData());
 
-		return $context->getResponse()->withJson($json);
+		return $context->getResponse()
+			->withJson($json);
 	}
 
 	/**

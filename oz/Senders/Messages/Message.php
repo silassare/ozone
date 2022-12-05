@@ -43,7 +43,6 @@ abstract class Message implements MessageInterface
 		return $this;
 	}
 
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -52,7 +51,6 @@ abstract class Message implements MessageInterface
 		return TemplatesUtils::compile($this->template, $this->data);
 	}
 
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -60,7 +58,6 @@ abstract class Message implements MessageInterface
 	{
 		return $this->attributes;
 	}
-
 
 	/**
 	 * {@inheritDoc}

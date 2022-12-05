@@ -38,7 +38,7 @@ interface AuthProviderInterface
 	 *
 	 * @return string
 	 */
-	public static function getName():string;
+	public static function getName(): string;
 
 	/**
 	 * Returns json response.

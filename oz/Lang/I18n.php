@@ -23,15 +23,34 @@ class I18n
 	/**
 	 * Shortcut for {@see \OZONE\OZ\Lang\Polyglot::translate()}.
 	 *
-	 * @param string                      $key     the human readable text key
-	 * @param array                       $inject  data to use for replacement
-	 * @param null|string                 $lang    use a specific lang
-	 * @param null|\OZONE\OZ\Core\Context $context the context
+	 * @param \OZONE\OZ\Lang\I18nMessage|string $message the message
+	 * @param array                             $inject  data to use for replacement
+	 * @param null|string                       $lang    use a specific lang
+	 * @param null|\OZONE\OZ\Core\Context       $context the context
 	 *
 	 * @return string
 	 */
-	public static function t(string $key, array $inject = [], string $lang = null, Context $context = null): string
+	public static function t(string|I18nMessage $message, array $inject = [], string $lang = null, Context $context = null): string
 	{
-		return Polyglot::translate($key, $inject, $lang, $context);
+		if (\is_string($message)) {
+			return Polyglot::translate($message, $inject, $lang, $context);
+		}
+
+		$inject = \array_merge($message->getInject(), $inject);
+
+		return Polyglot::translate($message->getText(), $inject, $lang, $context);
+	}
+
+	/**
+	 * Creates an instance of {@see \OZONE\OZ\Lang\I18nMessage}.
+	 *
+	 * @param string $message
+	 * @param array  $inject
+	 *
+	 * @return \OZONE\OZ\Lang\I18nMessage
+	 */
+	public static function m(string $message, array $inject): I18nMessage
+	{
+		return new I18nMessage($message, $inject);
 	}
 }

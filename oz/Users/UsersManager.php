@@ -30,7 +30,6 @@ use OZONE\OZ\Exceptions\ForbiddenException;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\Exceptions\UnauthorizedActionException;
 use OZONE\OZ\Exceptions\UnverifiedUserException;
-use OZONE\OZ\Forms\Field;
 use OZONE\OZ\Forms\Form;
 use OZONE\OZ\Forms\FormData;
 use OZONE\OZ\Sessions\SessionDataStore;
@@ -46,12 +45,6 @@ use Throwable;
  */
 final class UsersManager
 {
-	public const ROLE_SUPER_ADMIN = 'super-admin'; // Owner(s)
-
-	public const ROLE_ADMIN = 'admin';
-
-	public const ROLE_EDITOR = 'editor';
-
 	/**
 	 * @var \OZONE\OZ\Core\Context
 	 */
@@ -214,6 +207,7 @@ final class UsersManager
 			->getDataStore()
 			->getUserID();
 
+		/** @var OZUser $user */
 		return self::getUserObject($uid);
 	}
 
@@ -316,21 +310,25 @@ final class UsersManager
 	/**
 	 * Build a logon form.
 	 *
-	 * @param bool $phone
-	 *
 	 * @return \OZONE\OZ\Forms\Form
 	 */
-	public function buildLogOnForm(bool $phone): Form
+	public static function logOnForm(): Form
 	{
 		$form = new Form();
 
-		if ($phone) {
-			$form->addField(new Field('phone', new TypePhone(), true));
-		} else {
-			$form->addField(new Field('email', new TypeEmail(), true));
-		}
-
-		$form->addField(new Field('pass', new TypePassword(), true));
+		$form->field('pass')
+			->type(new TypePassword())
+			->required();
+		$form->field('phone')
+			->type(new TypePhone())
+			->required()
+			->if()
+			->isNull('email');
+		$form->field('email')
+			->type(new TypeEmail())
+			->required()
+			->if()
+			->isNull('phone');
 
 		return $form;
 	}
@@ -345,9 +343,9 @@ final class UsersManager
 	 *
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 */
-	public function tryLogOnWithPhone(Context $context, FormData $form_data): OZUser|string
+	public function tryPhoneLogIn(Context $context, FormData $form_data): OZUser|string
 	{
-		$form = $this->buildLogOnForm(true)
+		$form = self::logOnForm()
 			->validate($form_data);
 
 		$phone = $form['phone'];
@@ -388,9 +386,9 @@ final class UsersManager
 	 *
 	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
 	 */
-	public function tryLogOnWithEmail(Context $context, FormData $form_data): OZUser|string
+	public function tryEmailLogIn(Context $context, FormData $form_data): OZUser|string
 	{
-		$form = $this->buildLogOnForm(false)
+		$form = self::logOnForm()
 			->validate($form_data);
 
 		$email = $form['email'];
@@ -464,7 +462,7 @@ final class UsersManager
 	 */
 	public static function isSuperAdmin(string $uid): bool
 	{
-		return self::hasRole($uid, self::ROLE_SUPER_ADMIN, false);
+		return self::hasRole($uid, UserRole::ROLE_SUPER_ADMIN, false);
 	}
 
 	/**
@@ -476,7 +474,7 @@ final class UsersManager
 	 */
 	public static function isAdmin(string $uid): bool
 	{
-		return self::hasRole($uid, self::ROLE_ADMIN);
+		return self::hasRole($uid, UserRole::ROLE_ADMIN);
 	}
 
 	/**
@@ -488,20 +486,22 @@ final class UsersManager
 	 */
 	public static function isEditor(string $uid): bool
 	{
-		return self::hasRole($uid, self::ROLE_EDITOR);
+		return self::hasRole($uid, UserRole::ROLE_EDITOR);
 	}
 
 	/**
 	 * Checks if the user with the given id has a given role.
 	 *
-	 * @param string $uid      The user id
-	 * @param string $role     The role
-	 * @param bool   $or_admin Returns true if the user is an admin or super-admin
+	 * @param string                          $uid      The user id
+	 * @param \OZONE\OZ\Users\UserRole|string $role     The role
+	 * @param bool                            $or_admin Returns true if the user is an admin or super-admin
 	 *
 	 * @return bool
 	 */
-	public static function hasRole(string $uid, string $role, bool $or_admin = true): bool
+	public static function hasRole(string $uid, string|UserRole $role, bool $or_admin = true): bool
 	{
+		$role = \is_string($role) ? $role : $role->value;
+
 		return self::hasOneRoleAtLeast($uid, [$role], $or_admin);
 	}
 
@@ -517,19 +517,19 @@ final class UsersManager
 	public static function hasOneRoleAtLeast(string $uid, array $allowed_roles, bool $or_admin = true): bool
 	{
 		$roles         = self::getUserRoles($uid);
-		$is_admin      = false;
 		$allowed_roles = \array_fill_keys(\array_values($allowed_roles), 1);
 		foreach ($roles as $entry) {
 			$r = $entry->getName();
 			if (isset($allowed_roles[$r])) {
 				return true;
 			}
-			if (self::ROLE_ADMIN === $r || self::ROLE_SUPER_ADMIN === $r) {
-				$is_admin = true;
+
+			if ($or_admin && (UserRole::ROLE_ADMIN->value === $r || UserRole::ROLE_SUPER_ADMIN->value === $r)) {
+				return true;
 			}
 		}
 
-		return $or_admin ? $is_admin : false;
+		return false;
 	}
 
 	/**
@@ -630,7 +630,7 @@ final class UsersManager
 	{
 		if (!empty($cc2) && 2 === \strlen($cc2)) {
 			try {
-				$cq     = new OZCountriesQuery();
+				$cq = new OZCountriesQuery();
 
 				return $cq->whereCc2Is($cc2)
 					->find(1)

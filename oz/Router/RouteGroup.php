@@ -13,25 +13,13 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Router;
 
-use OZONE\OZ\Router\Traits\RouteOptionsShareableTrait;
-
 /**
  * Class RouteGroup.
  */
-final class RouteGroup
+final class RouteGroup extends RouteSharedOptions
 {
-	use RouteOptionsShareableTrait;
-
-	public function __construct(protected Router $router)
+	public function __construct(string $path, ?self $parent = null)
 	{
-	}
-
-	public function group(callable $group): Router
-	{
-		$this->router->pushGroup($this);
-		$group($this->router);
-		$this->router->popGroup($this);
-
-		return $this->router;
+		parent::__construct($path, $parent);
 	}
 }

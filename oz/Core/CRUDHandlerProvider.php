@@ -54,7 +54,7 @@ class CRUDHandlerProvider implements CRUDHandlerProviderInterface
 				));
 			}
 
-			/** @var class-string<\OZONE\OZ\Core\CRUDHandler> $crud_handler*/
+			/** @var class-string<\OZONE\OZ\Core\CRUDHandler> $crud_handler */
 			return new $crud_handler($this->context);
 		}
 

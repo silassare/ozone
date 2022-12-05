@@ -22,10 +22,15 @@ use OZONE\OZ\Cli\Cron\Schedule;
 abstract class TaskBase implements TaskInterface
 {
 	/**
+	 * @var \OZONE\OZ\Cli\Cron\Schedule[]
+	 */
+	private array $schedules = [];
+
+	/**
 	 * TaskBase constructor.
 	 *
-	 * @param string   $name
-	 * @param string   $description
+	 * @param string $name
+	 * @param string $description
 	 */
 	public function __construct(protected string $name, protected string $description = '')
 	{
@@ -46,10 +51,6 @@ abstract class TaskBase implements TaskInterface
 	{
 		return $this->description;
 	}
-	/**
-	 * @var \OZONE\OZ\Cli\Cron\Schedule[]
-	 */
-	private array $schedules = [];
 
 	/**
 	 * {@inheritDoc}
@@ -66,7 +67,7 @@ abstract class TaskBase implements TaskInterface
 	 */
 	public function removeSchedule(Schedule $schedule): static
 	{
-		$this->schedules = array_filter($this->schedules, static fn($entry) => $entry !== $schedule);
+		$this->schedules = \array_filter($this->schedules, static fn ($entry) => $entry !== $schedule);
 
 		return $this;
 	}

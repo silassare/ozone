@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Users\Services;
 
-use OZONE\OZ\Core\Context;
 use OZONE\OZ\Core\Service;
 use OZONE\OZ\Router\RouteInfo;
 use OZONE\OZ\Router\Router;
@@ -23,15 +22,15 @@ use OZONE\OZ\Router\Router;
  */
 final class TNet extends Service
 {
+	public const ROUTE_TNET = 'oz:tnet';
+
 	/**
-	 * @param \OZONE\OZ\Core\Context $context
-	 *
 	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
-	public function actionTNet(Context $context): void
+	public function actionTNet(): void
 	{
 		$data = [];
-		$um   = $context->getUsersManager();
+		$um   = $this->getContext()->getUsersManager();
 
 		if ($um->userVerified()) {
 			$user_obj              = $um->getCurrentUserObject();
@@ -50,12 +49,11 @@ final class TNet extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->get('/tnet', function (RouteInfo $r) {
-			$context = $r->getContext();
-			$s       = new self($context);
-			$s->actionTNet($context);
+		$router->get('/tnet', function (RouteInfo $ri) {
+			$s       = new self($ri);
+			$s->actionTNet();
 
 			return $s->respond();
-		});
+		})->name(self::ROUTE_TNET);
 	}
 }

@@ -191,12 +191,11 @@ final class Polyglot
 		$list   = self::getAvailableLanguages();
 		$result = [];
 
-			foreach ($list as $lang => $value) {
-				if (true === $value) {
-					$result[$lang] = true;
-				}
+		foreach ($list as $lang => $value) {
+			if (true === $value) {
+				$result[$lang] = true;
 			}
-
+		}
 
 		return $result;
 	}
