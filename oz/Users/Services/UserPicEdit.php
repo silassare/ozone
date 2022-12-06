@@ -26,7 +26,7 @@ use OZONE\OZ\Router\Router;
  */
 class UserPicEdit extends Service
 {
-	public const PIC_EDIT_ROUTE = 'oz:user-pic-edit';
+	public const ROUTE_PIC_EDIT = 'oz:user-pic-edit';
 
 	/**
 	 * @throws Exception
@@ -41,9 +41,9 @@ class UserPicEdit extends Service
 
 		$um->assertUserVerified();
 
-		$label = $params['label'] ?? 'file';
+		$kind = $params['kind'] ?? 'file';
 
-		if (!\in_array($label, ['file', 'file_id', 'def'], true)) {
+		if (!\in_array($kind, ['file', 'file_id', 'def'], true)) {
 			throw new UnauthorizedActionException();
 		}
 
@@ -58,13 +58,13 @@ class UserPicEdit extends Service
 
 		$pu = new PPicUtils($uid);
 
-		if ('file_id' === $label) {
+		if ('file_id' === $kind) {
 			Assert::assertForm($params, ['file_id', 'file_key']);
-			$pic_id = $pu->fromFileID($params['file_id'], $params['file_key'], $params, $file_label);
-		} elseif ('file' === $label) {
+			$pic_id = $pu->fromFileID($params['file_id'], $params['file_key'], $params->getData(), $file_label);
+		} elseif ('file' === $kind) {
 			$files = $request->getUploadedFiles();
 			Assert::assertForm($files, ['photo']);
-			$pic_id = $pu->fromUploadedFile($files['photo'], $params, $file_label);
+			$pic_id = $pu->fromUploadedFile($files['photo'], $params->getData(), $file_label);
 		} else {// def
 			$pic_id = null;
 			$msg    = 'OZ_PROFILE_PIC_SET_TO_DEFAULT';
@@ -89,7 +89,7 @@ class UserPicEdit extends Service
 
 			return $s->respond();
 		})
-			->name(self::PIC_EDIT_ROUTE)
+			->name(self::ROUTE_PIC_EDIT)
 			->param('user_id', '\d+');
 	}
 }
