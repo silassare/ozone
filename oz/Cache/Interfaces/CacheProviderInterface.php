@@ -21,13 +21,6 @@ use OZONE\OZ\Cache\CacheItem;
 interface CacheProviderInterface
 {
 	/**
-	 * CacheProviderInterface constructor.
-	 *
-	 * @param string $namespace
-	 */
-	public function __construct(string $namespace);
-
-	/**
 	 * Gets a cache entry.
 	 *
 	 * @param string $key

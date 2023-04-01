@@ -1,13 +1,13 @@
 <?php
 
-use OZONE\OZ\Db\OZUsersFilters;
+use OZONE\OZ\Db\OZUsersQuery;
 
 if (0) {
-	$uq = new OZUsersFilters();
+	$uq = new OZUsersQuery();
 	if (!0) {
 		$qb = $uq->whereCc2Is('bj')
 				 ->and(
-					 function (OZUsersFilters $sub) {
+					 function (OZUsersQuery $sub) {
 						 return $sub->whereIdIsGte(10)
 									->and()
 									->whereIdIsLte(20)
@@ -15,7 +15,6 @@ if (0) {
 									->whereValidIsTrue();
 					 }
 				 )
-				 ->getTableQuery()
 				 ->select(100);
 	} else {
 		$qb = $uq->where([
@@ -25,7 +24,6 @@ if (0) {
 			'and',
 			[['id', 'gte', 10, 'and', 'id', 'lte', 20], 'or', 'valid', 'is_true'],
 		])
-				 ->getTableQuery()
 				 ->select(100);
 	}
 	oz_logger([

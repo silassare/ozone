@@ -24,7 +24,7 @@ use OZONE\OZ\Web\WebView;
  */
 final class RedirectView extends WebView
 {
-	public const MAIN_ROUTE = 'oz:redirect';
+	public const REDIRECT_ROUTE = 'oz:redirect';
 
 	/**
 	 * @return \OZONE\OZ\Http\Response
@@ -42,7 +42,7 @@ final class RedirectView extends WebView
 
 		$this->injectKey('oz_redirect_url', \filter_var($url, \FILTER_SANITIZE_URL));
 
-		return $this->setTemplate('redirect.otpl')
+		return $this->setTemplate('oz.redirect.otpl')
 			->respond()
 			->withRedirect($url, $status);
 	}
@@ -53,9 +53,8 @@ final class RedirectView extends WebView
 	public static function registerRoutes(Router $router): void
 	{
 		$router->map('*', '/oz:redirect', function (RouteInfo $ri) {
-			$view = new self($ri);
-
-			return $view->mainRoute();
-		})->name(self::MAIN_ROUTE);
+			return (new self($ri))->mainRoute();
+		})
+			->name(self::REDIRECT_ROUTE);
 	}
 }

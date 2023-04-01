@@ -19,6 +19,7 @@ use Gobl\ORM\Generators\CSGeneratorORM;
 use Gobl\ORM\Generators\CSGeneratorTS;
 use Kli\Exceptions\KliInputException;
 use Kli\KliAction;
+use Kli\KliArgs;
 use Kli\KliOption;
 use Kli\Types\KliTypeBool;
 use Kli\Types\KliTypePath;
@@ -43,41 +44,39 @@ final class Db extends Command
 	 * {@inheritDoc}
 	 *
 	 * @param \Kli\KliAction $action
-	 * @param array          $options
-	 * @param array          $anonymous_options
 	 *
 	 * @throws Throwable
 	 */
-	public function execute(KliAction $action, array $options, array $anonymous_options): void
+	public function execute(KliAction $action, KliArgs $args): void
 	{
 		switch ($action->getName()) {
 			case 'build':
-				$this->build($options);
+				$this->build($args);
 
 				break;
 
 			case 'ts-bundle':
-				$this->tsBundle($options);
+				$this->tsBundle($args);
 
 				break;
 
 			case 'dart-bundle':
-				$this->dartBundle($options);
+				$this->dartBundle($args);
 
 				break;
 
 			case 'backup':
-				$this->backup($options);
+				$this->backup($args);
 
 				break;
 
 			case 'generate':
-				$this->generate($options);
+				$this->generate($args);
 
 				break;
 
 			case 'source':
-				$this->source($options);
+				$this->source($args);
 
 				break;
 		}
@@ -162,9 +161,9 @@ final class Db extends Command
 
 		$f = new KliOption('f');
 		$f->alias('file')
-			->offsets(1)
-			->type((new KliTypePath())->file())
-			->description('The database source file to run.');
+		  ->offsets(1)
+		  ->type((new KliTypePath())->file())
+		  ->description('The database source file to run.');
 
 		$d_c = clone $d;
 		$build->addOption($all, $n, $class_only);
@@ -182,18 +181,19 @@ final class Db extends Command
 	 *
 	 * You should backup your database first.
 	 *
-	 * @param array $options
+	 * @param \Kli\KliArgs $args
 	 *
-	 * @throws Throwable
+	 * @throws \Kli\Exceptions\KliException
+	 * @throws \Kli\Exceptions\KliInputException
 	 */
-	private function build(array $options): void
+	private function build(KliArgs $args): void
 	{
 		Utils::assertProjectFolder();
 
 		$cli        = $this->getCli();
-		$all        = (bool) $options['a'];
-		$class_only = (bool) $options['c'];
-		$namespace  = $options['n'];
+		$all        = (bool)$args->get('build-all');
+		$class_only = (bool)$args->get('class-only');
+		$namespace  = $args->get('namespace');
 
 		$structure = DbManager::getProjectDbDirectoryStructure();
 
@@ -259,7 +259,7 @@ final class Db extends Command
 
 			try {
 				$queries = $db->getGenerator()
-					->buildDatabase();
+							  ->buildDatabase();
 				$db->executeMulti($queries);
 
 				$cli->success('database queries executed.');
@@ -281,16 +281,17 @@ final class Db extends Command
 	/**
 	 * Creates entities TypeScript bundle.
 	 *
-	 * @param array $options
+	 * @param \Kli\KliArgs $args
 	 *
-	 * @throws Throwable
+	 * @throws \Kli\Exceptions\KliException
+	 * @throws \Exception
 	 */
-	private function tsBundle(array $options): void
+	private function tsBundle(KliArgs $args): void
 	{
 		Utils::assertProjectFolder();
 
 		$cli    = $this->getCli();
-		$dir    = $options['d'];
+		$dir    = $args->get('dir');
 		$db     = DbManager::getDb();
 		$tables = $db->getTables();
 		$gen    = new CSGeneratorTS($db, true, true);
@@ -303,16 +304,17 @@ final class Db extends Command
 	/**
 	 * Creates entities Dart bundle.
 	 *
-	 * @param array $options
+	 * @param \Kli\KliArgs $args
 	 *
-	 * @throws Throwable
+	 * @throws \Kli\Exceptions\KliException
+	 * @throws \Exception
 	 */
-	private function dartBundle(array $options): void
+	private function dartBundle(KliArgs $args): void
 	{
 		Utils::assertProjectFolder();
 
 		$cli    = $this->getCli();
-		$dir    = $options['d'];
+		$dir    = $args->get('dir');
 		$db     = DbManager::getDb();
 		$tables = $db->getTables();
 		$gen    = new CSGeneratorDart($db, true, true);
@@ -325,21 +327,23 @@ final class Db extends Command
 	/**
 	 * Generate database file.
 	 *
-	 * @param array $options
+	 * @param \Kli\KliArgs $args
+	 *
+	 * @throws \Kli\Exceptions\KliException
 	 */
-	private function generate(array $options): void
+	private function generate(KliArgs $args): void
 	{
 		Utils::assertProjectFolder();
 
-		$dir       = $options['d'];
-		$namespace = $options['n'];
+		$dir       = $args->get('dir');
+		$namespace = $args->get('namespace');
 
 		if (empty($namespace)) {
 			$namespace = null;
 		}
 		$query = DbManager::getDb()
-			->getGenerator()
-			->buildDatabase($namespace);
+						  ->getGenerator()
+						  ->buildDatabase($namespace);
 
 		$file_name = \sprintf('%s.sql', Hasher::genFileName('db'));
 		$fm        = new FilesManager($dir);
@@ -347,29 +351,31 @@ final class Db extends Command
 
 		if (\file_exists($fm->resolve($file_name))) {
 			$this->getCli()
-				->success('database file generated.')
-				->writeLn($fm->resolve($file_name));
+				 ->success('database file generated.')
+				 ->writeLn($fm->resolve($file_name));
 		} else {
 			$this->getCli()
-				->error('database file generation fails.');
+				 ->error('database file generation fails.');
 		}
 	}
 
 	/**
 	 * Runs database file.
 	 *
-	 * @param array $options
+	 * @param \Kli\KliArgs $args
+	 *
+	 * @throws \Kli\Exceptions\KliException
 	 */
-	private function source(array $options): void
+	private function source(KliArgs $args): void
 	{
 		Utils::assertDatabaseAccess();
 
-		$f     = $options['f'];
-		$query = \file_get_contents($f);
+		$file  = $args->get('file');
+		$query = \file_get_contents($file);
 		$cli   = $this->getCli();
 
 		if (empty($query)) {
-			$cli->error(\sprintf('the database source file (%s) is empty.', $f));
+			$cli->error(\sprintf('the database source file (%s) is empty.', $file));
 
 			return;
 		}
@@ -381,7 +387,7 @@ final class Db extends Command
 			$cli->success('database updated.');
 		} catch (Throwable $t) {
 			throw new RuntimeException('database update fails. Open log file.', [
-				'queries_file' => $f,
+				'queries_file' => $file,
 			], $t);
 		}
 	}
@@ -389,13 +395,15 @@ final class Db extends Command
 	/**
 	 * Backup database.
 	 *
-	 * @param array $options
+	 * @param \Kli\KliArgs $args
+	 *
+	 * @throws \Kli\Exceptions\KliException
 	 */
-	private function backup(array $options): void
+	private function backup(KliArgs $args): void
 	{
 		Utils::assertDatabaseAccess();
 
-		$dir    = $options['d'];
+		$dir    = $args->get('dir');
 		$cli    = $this->getCli();
 		$config = Configs::load('oz.db');
 

@@ -26,6 +26,7 @@ use OZONE\OZ\Core\Context;
 use OZONE\OZ\Core\Hasher;
 use OZONE\OZ\Core\JSONResponse;
 use OZONE\OZ\Crypt\DoCrypt;
+use OZONE\OZ\Db\OZAuth;
 use OZONE\OZ\Db\OZClient;
 use OZONE\OZ\Db\OZUser;
 use OZONE\OZ\Exceptions\ForbiddenException;
@@ -414,7 +415,7 @@ class RouteGuard implements RouteGuardInterface
 	{
 		$allowed_providers = $this->rules->get('2fa.providers');
 		$auth_ref          = $this->context->getRequest()
-			->getUnsafeFormField('auth_ref');
+			->getUnsafeFormField(OZAuth::COL_REF);
 
 		$auth = Auth::getRequiredByRef($auth_ref);
 

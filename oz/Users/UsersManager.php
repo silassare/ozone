@@ -76,8 +76,8 @@ final class UsersManager
 	public function userVerified(): bool
 	{
 		return $this->context->getSession()
-			->getDataStore()
-			->getUserIsVerified();
+							 ->getDataStore()
+							 ->getUserIsVerified();
 	}
 
 	/**
@@ -90,10 +90,11 @@ final class UsersManager
 	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
 	public function assertUserVerified(
-		string $message = 'OZ_ERROR_YOU_MUST_LOGIN',
-		?array $data = [],
+		string     $message = 'OZ_ERROR_YOU_MUST_LOGIN',
+		?array     $data = [],
 		?Throwable $previous = null
-	): void {
+	): void
+	{
 		if (!$this->userVerified()) {
 			throw new UnverifiedUserException($message, $data, $previous);
 		}
@@ -110,10 +111,11 @@ final class UsersManager
 	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
 	public function assertIsSuperAdmin(
-		string $message = 'OZ_ERROR_YOU_ARE_NOT_SUPER_ADMIN',
-		?array $data = [],
+		string     $message = 'OZ_ERROR_YOU_ARE_NOT_SUPER_ADMIN',
+		?array     $data = [],
 		?Throwable $previous = null
-	): void {
+	): void
+	{
 		$this->assertUserVerified($message, $data, $previous);
 
 		$uid = $this->getCurrentUserID();
@@ -137,10 +139,11 @@ final class UsersManager
 	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
 	public function assertIsAdmin(
-		string $message = 'OZ_ERROR_YOU_ARE_NOT_ADMIN',
-		?array $data = [],
+		string     $message = 'OZ_ERROR_YOU_ARE_NOT_ADMIN',
+		?array     $data = [],
 		?Throwable $previous = null
-	): void {
+	): void
+	{
 		$this->assertUserVerified($message, $data, $previous);
 
 		$uid = $this->getCurrentUserID();
@@ -164,10 +167,11 @@ final class UsersManager
 	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
 	public function assertIsEditor(
-		string $message = 'OZ_ERROR_YOU_ARE_NOT_EDITOR',
-		?array $data = [],
+		string     $message = 'OZ_ERROR_YOU_ARE_NOT_EDITOR',
+		?array     $data = [],
 		?Throwable $previous = null
-	): void {
+	): void
+	{
 		$this->assertUserVerified($message, $data, $previous);
 
 		$uid = $this->getCurrentUserID();
@@ -188,8 +192,8 @@ final class UsersManager
 	public function getCurrentUserID(): ?string
 	{
 		return $this->context->getSession()
-			->getDataStore()
-			->getUserID();
+							 ->getDataStore()
+							 ->getUserID();
 	}
 
 	/**
@@ -204,8 +208,8 @@ final class UsersManager
 		$this->assertUserVerified();
 
 		$uid = $this->context->getSession()
-			->getDataStore()
-			->getUserID();
+							 ->getDataStore()
+							 ->getUserID();
 
 		/** @var OZUser $user */
 		return self::getUserObject($uid);
@@ -227,21 +231,21 @@ final class UsersManager
 
 		$session     = $this->context->getSession();
 		$current_uid = $session->getDataStore()
-			->getUserID();
+							   ->getUserID();
 		$saved_data  = [];
 
 		// if the current user is the previous one,
 		// hold the data of the current session
 		if (!empty($current_uid) && $current_uid === $user->getID()) {
 			$saved_data = \array_merge($saved_data, $session->getDataStore()
-				->getData());
+															->getData());
 		}
 
 		try {
 			$session->restart();
 
 			$session->getDataStore()
-				->merge($saved_data);
+					->merge($saved_data);
 
 			$session->attachUser($user);
 		} catch (Throwable $t) {
@@ -249,7 +253,7 @@ final class UsersManager
 		}
 
 		$session->getDataStore()
-			->setUserIsVerified(true);
+				->setUserIsVerified(true);
 
 		Event::trigger(new UserLoggedIn($user));
 
@@ -317,18 +321,18 @@ final class UsersManager
 		$form = new Form();
 
 		$form->field('pass')
-			->type(new TypePassword())
-			->required();
+			 ->type(new TypePassword())
+			 ->required();
 		$form->field('phone')
-			->type(new TypePhone())
-			->required()
-			->if()
-			->isNull('email');
+			 ->type(new TypePhone())
+			 ->required()
+			 ->if()
+			 ->isNull('email');
 		$form->field('email')
-			->type(new TypeEmail())
-			->required()
-			->if()
-			->isNull('phone');
+			 ->type(new TypeEmail())
+			 ->required()
+			 ->if()
+			 ->isNull('phone');
 
 		return $form;
 	}
@@ -346,7 +350,7 @@ final class UsersManager
 	public function tryPhoneLogIn(Context $context, FormData $form_data): OZUser|string
 	{
 		$form = self::logOnForm()
-			->validate($form_data);
+					->validate($form_data);
 
 		$phone = $form['phone'];
 		$pass  = $form['pass'];
@@ -389,7 +393,7 @@ final class UsersManager
 	public function tryEmailLogIn(Context $context, FormData $form_data): OZUser|string
 	{
 		$form = self::logOnForm()
-			->validate($form_data);
+					->validate($form_data);
 
 		$email = $form['email'];
 		$pass  = $form['pass'];
@@ -445,7 +449,7 @@ final class UsersManager
 
 		try {
 			$user->setPass($new_pass)
-				->save();
+				 ->save();
 		} catch (Throwable $t) {
 			throw new RuntimeException('OZ_USER_CANT_UPDATE_PASS', null, $t);
 		}
@@ -544,9 +548,9 @@ final class UsersManager
 		$sq = new OZSessionsQuery();
 
 		return $sq->whereUserIdIs($user->getID())
-			->whereExpireIsGt(\time())
-			->find()
-			->fetchAllClass();
+				  ->whereExpireIsGt(\time())
+				  ->find()
+				  ->fetchAllClass();
 	}
 
 	/**
@@ -568,9 +572,9 @@ final class UsersManager
 
 			if ($verified) {
 				$new_data = $data_store->setUserIsVerified(false)
-					->getData();
+									   ->getData();
 				$session->setData($new_data)
-					->save();
+						->save();
 			}
 		}
 	}
@@ -590,10 +594,10 @@ final class UsersManager
 			$u_table = new OZUsersQuery();
 
 			return $u_table->wherePhoneIs($phone)
-				->find(1)
-				->fetchClass();
+						   ->find(1)
+						   ->fetchClass();
 		} catch (Throwable $t) {
-			throw new RuntimeException(\sprintf('Unable to load user with "%s" entity object.', $phone), null, $t);
+			throw new RuntimeException(\sprintf('Unable to load user with phone "%s".', $phone), null, $t);
 		}
 	}
 
@@ -612,10 +616,10 @@ final class UsersManager
 			$u_table = new OZUsersQuery();
 
 			return $u_table->whereEmailIs($email)
-				->find(1)
-				->fetchClass();
+						   ->find(1)
+						   ->fetchClass();
 		} catch (Throwable $t) {
-			throw new RuntimeException(\sprintf('Unable to load user with "%s" entity object.', $email), null, $t);
+			throw new RuntimeException(\sprintf('Unable to load user with email "%s".', $email), null, $t);
 		}
 	}
 
@@ -633,10 +637,10 @@ final class UsersManager
 				$cq = new OZCountriesQuery();
 
 				return $cq->whereCc2Is($cc2)
-					->find(1)
-					->fetchClass();
+						  ->find(1)
+						  ->fetchClass();
 			} catch (Throwable $t) {
-				throw new RuntimeException(\sprintf('Unable to load country "%s" entity object.', $cc2), null, $t);
+				throw new RuntimeException(\sprintf('Unable to load country "%s".', $cc2), null, $t);
 			}
 		}
 
@@ -674,10 +678,10 @@ final class UsersManager
 			$uq = new OZUsersQuery();
 
 			return $uq->whereIdIs($uid)
-				->find(1)
-				->fetchClass();
+					  ->find(1)
+					  ->fetchClass();
 		} catch (Throwable $t) {
-			throw new RuntimeException(\sprintf('Unable to load user "%s" entity object.', $uid), null, $t);
+			throw new RuntimeException(\sprintf('Unable to load user by id "%s".', $uid), null, $t);
 		}
 	}
 
@@ -695,9 +699,9 @@ final class UsersManager
 				$qb = new OZRolesQuery();
 
 				return $qb->whereUserIdIs($uid)
-					->whereValidIsTrue()
-					->find(1)
-					->fetchAllClass();
+						  ->whereValidIsTrue()
+						  ->find(1)
+						  ->fetchAllClass();
 			} catch (Throwable $t) {
 				throw new RuntimeException(
 					\sprintf(
@@ -711,7 +715,7 @@ final class UsersManager
 		};
 
 		return CacheManager::runtime(__METHOD__)
-			->getFactory($uid, $factory)
-			->get();
+						   ->getFactory($uid, $factory)
+						   ->get();
 	}
 }

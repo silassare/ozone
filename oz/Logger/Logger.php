@@ -21,7 +21,7 @@ use OZONE\OZ\OZone;
 use Throwable;
 
 /**
- * Class Log.
+ * Class Logger.
  */
 class Logger
 {
@@ -43,7 +43,7 @@ class Logger
 		$log_file = $dir . 'debug.log';
 
 		if (\is_scalar($value)) {
-			$log = (string) $value;
+			$log = (string)$value;
 		} elseif (\is_array($value)) {
 			$log = \var_export($value, true);
 		} elseif ($value instanceof Exception || $value instanceof Error) {
@@ -122,7 +122,7 @@ class Logger
 		}
 
 		OZone::getRunningApp()
-			?->onUnhandledThrowable($t);
+			 ?->onUnhandledThrowable($t);
 
 		self::criticalDieMessage();
 	}
@@ -145,7 +145,7 @@ class Logger
 
 		if (!OZ_OZONE_IS_CLI) {
 			OZone::getRunningApp()
-				?->onUnhandledError($code, $message, $file, $line);
+				 ?->onUnhandledError($code, $message, $file, $line);
 		}
 
 		if ($die_on_fatal) {

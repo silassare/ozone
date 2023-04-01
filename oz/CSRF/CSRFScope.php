@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\CSRF;
 
+/**
+ * Enum CSRFScope.
+ */
 enum CSRFScope: string
 {
 	case SESSION = 'SESSION'; // user session

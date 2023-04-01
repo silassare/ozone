@@ -18,6 +18,7 @@ use OZONE\OZ\Auth\Auth;
 use OZONE\OZ\Auth\AuthScope;
 use OZONE\OZ\Auth\AuthSecretType;
 use OZONE\OZ\Core\Service;
+use OZONE\OZ\Db\OZAuth;
 use OZONE\OZ\Exceptions\InvalidFormException;
 use OZONE\OZ\Forms\Form;
 use OZONE\OZ\Forms\FormData;
@@ -35,14 +36,16 @@ class AuthService extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->group('/auth/:auth_ref', function (Router $router) {
+		$router->group('/auth/:' . OZAuth::COL_REF, function (Router $router) {
 			$router->post('/authorize', static function (RouteInfo $ri) {
 				return (new self($ri))->authorize($ri, $ri->getCleanFormData());
-			})->form(self::buildAuthorizeForm(...));
+			})
+				->form(self::buildAuthorizeForm(...));
 
 			$router->post('/refresh', static function (RouteInfo $ri) {
 				return (new self($ri))->refresh($ri, $ri->getCleanFormData());
-			})->form(self::buildRefreshForm(...));
+			})
+				->form(self::buildRefreshForm(...));
 
 			$router->get('/state', static function (RouteInfo $ri) {
 				return (new self($ri))->state($ri);
@@ -65,7 +68,7 @@ class AuthService extends Service
 	 */
 	public function refresh(RouteInfo $ri, FormData $fd): Response
 	{
-		$ref         = $ri->getParam('auth_ref');
+		$ref         = $ri->getParam(OZAuth::COL_REF);
 		$refresh_key = $fd->get('refresh_key');
 
 		$auth = Auth::getRequiredByRef($ref);
@@ -94,7 +97,7 @@ class AuthService extends Service
 	 */
 	public function state(RouteInfo $ri): Response
 	{
-		$ref = $ri->getParam('auth_ref');
+		$ref = $ri->getParam(OZAuth::COL_REF);
 
 		$auth = Auth::getRequiredByRef($ref);
 
@@ -106,7 +109,7 @@ class AuthService extends Service
 		$this->getJSONResponse()
 			->setDone()
 			->setData([
-				'auth_state' => $provider->getState()->value,
+				OZAuth::COL_STATE => $provider->getState()->value,
 			]);
 
 		return $this->respond();
@@ -122,7 +125,7 @@ class AuthService extends Service
 	 */
 	public function cancel(RouteInfo $ri): Response
 	{
-		$ref = $ri->getParam('auth_ref');
+		$ref = $ri->getParam(OZAuth::COL_REF);
 
 		$auth = Auth::getRequiredByRef($ref);
 
@@ -151,7 +154,7 @@ class AuthService extends Service
 	 */
 	public function authorize(RouteInfo $ri, FormData $fd): Response
 	{
-		$ref = $ri->getParam('auth_ref');
+		$ref = $ri->getParam(OZAuth::COL_REF);
 
 		$auth = Auth::getRequiredByRef($ref);
 
@@ -192,7 +195,9 @@ class AuthService extends Service
 	{
 		$fb = new Form();
 
-		$fb->field('refresh_key')->type(new TypeString(16))->required();
+		$fb->field('refresh_key')
+			->type(new TypeString(16))
+			->required();
 
 		return $fb;
 	}

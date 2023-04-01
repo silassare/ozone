@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\OZ\Auth;
 
 use OZONE\OZ\Auth\Interfaces\AuthCredentialsInterface;
+use OZONE\OZ\Auth\Views\AuthLinkView;
 use OZONE\OZ\Core\Context;
 use OZONE\OZ\Core\Hasher;
 use OZONE\OZ\Http\Uri;
@@ -142,7 +143,8 @@ class AuthCredentials implements AuthCredentialsInterface
 	 */
 	public function getLink(): Uri
 	{
-		return $this->context->buildRouteUri('oz:auth_link', [
+		return $this->context->buildRouteUri(AuthLinkView::AUTH_LINK_ROUTE, [
+			'ref'   => $this->reference,
 			'token' => $this->token,
 		]);
 	}

@@ -68,7 +68,7 @@ class AuthPhone extends AuthProvider
 	{
 		$phone = $this->scope->getValue();
 
-		$message = new SMSMessage('auth.messages.sms.otpl');
+		$message = new SMSMessage('oz.auth.messages.sms.otpl');
 
 		$message->inject($this->credentials->toArray())
 			->send($phone);

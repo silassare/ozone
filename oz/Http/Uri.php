@@ -82,13 +82,14 @@ class Uri implements UriInterface
 	public function __construct(
 		string $scheme,
 		string $host,
-		?int $port = null,
+		?int   $port = null,
 		string $path = '/',
 		string $query = '',
 		string $fragment = '',
 		string $user = '',
 		string $password = ''
-	) {
+	)
+	{
 		$this->scheme   = $this->filterScheme($scheme);
 		$this->host     = $host;
 		$this->port     = $this->filterPort($port);
@@ -313,7 +314,7 @@ class Uri implements UriInterface
 		if (!\is_string($query) && !\method_exists($query, '__toString')) {
 			throw new InvalidArgumentException('Uri query must be a string');
 		}
-		$query        = \ltrim((string) $query, '?');
+		$query        = \ltrim((string)$query, '?');
 		$clone        = clone $this;
 		$clone->query = $this->filterQuery($query);
 
@@ -329,7 +330,7 @@ class Uri implements UriInterface
 	 */
 	public function withQueryArray(array $query): self
 	{
-		return $this->withQuery(\http_build_query($query));
+		return $this->withQuery(\http_build_query($query, '', '&', \PHP_QUERY_RFC3986));
 	}
 
 	/**
@@ -407,19 +408,19 @@ class Uri implements UriInterface
 		}
 
 		// Authority: Port
-		$port = (int) $env->get('SERVER_PORT', 80);
+		$port = (int)$env->get('SERVER_PORT', 80);
 
 		if (\preg_match('~^(\[[a-fA-F0-9:.]+])(:\d+)?\z~', $host, $matches)) {
 			$host = $matches[1];
 
 			if ($matches[2]) {
-				$port = (int) \substr($matches[2], 1);
+				$port = (int)\substr($matches[2], 1);
 			}
 		} else {
 			$pos = \strpos($host, ':');
 
 			if (false !== $pos) {
-				$port = (int) \substr($host, $pos + 1);
+				$port = (int)\substr($host, $pos + 1);
 				$host = \strstr($host, ':', true);
 			}
 		}

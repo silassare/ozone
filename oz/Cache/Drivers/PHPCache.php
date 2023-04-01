@@ -13,74 +13,77 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cache\Drivers;
 
-use OZONE\OZ\Cache\CacheItem;
-use OZONE\OZ\Cache\Interfaces\CacheProviderInterface;
+use OZONE\OZ\FS\FilesManager;
 
 /**
  * Class PHPCache.
  */
-class PHPCache implements CacheProviderInterface
+class PHPCache extends RuntimeCache
 {
-	public function __construct(protected string $namespace)
-	{
-	}
+	private ?string $cache_path = null;
 
 	/**
-	 * @param string $key
-	 *
-	 * @return string
+	 * {@inheritDoc}
 	 */
-	public function getFilePath(string $key): string
-	{
-		$hash = \md5($this->namespace . '/' . $key);
-		$dir1 = \substr($hash, 0, 2);
-		$dir2 = \substr($hash, 2, 2);
-
-		return OZ_CACHE_DIR . 'php_cache' . DS . $dir1 . DS . $dir2 . DS . $hash . '.cache';
-	}
-
-	public function get(string $key): ?CacheItem
-	{
-		return null;
-	}
-
-	public function getMultiple(array $keys): array
-	{
-		return [];
-	}
-
-	public function set(CacheItem $item): bool
-	{
-		return true;
-	}
-
-	public function delete(string $key): bool
-	{
-		return true;
-	}
-
-	public function deleteMultiple(array $keys): bool
-	{
-		return true;
-	}
-
-	public function clear(): bool
-	{
-		return true;
-	}
-
 	public static function getSharedInstance(?string $namespace = null): self
 	{
 		return new self($namespace);
 	}
 
-	public function increment(string $key, float $factor = 1): bool
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function save(): bool
 	{
+		$path = $this->getCachePath();
+		$fm   = new FilesManager();
+		$fm->wf($path, \serialize(self::$cache_data[$this->namespace]));
+
 		return true;
 	}
 
-	public function decrement(string $key, float $factor = 1): bool
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function load(): array
 	{
-		return true;
+		$path   = $this->getCachePath();
+		$filter = (new FilesManager())->filter();
+		if ($filter->isFile()
+				   ->check($path)) {
+			$cache = \file_get_contents($path);
+
+			if ($cache) {
+				$value = \unserialize($cache, ['allowed_classes' => true]);
+				if (\is_array($value)) {
+					return $value;
+				}
+			}
+		}
+
+		return [];
+	}
+
+	/**
+	 * Gets the cache path.
+	 *
+	 * @return string
+	 */
+	protected function getCachePath(): string
+	{
+		if (empty($this->cache_path)) {
+			$hash = \md5($this->namespace);
+			$dir1 = \substr($hash, 0, 2);
+			$dir2 = \substr($hash, 2, 2);
+
+			$fm = new FilesManager(OZ_CACHE_DIR);
+			$fm->cd('php_cache', true)
+			   ->cd($dir1, true)
+			   ->cd($dir2, true);
+
+			$this->cache_path = $fm->resolve($hash . '.cache');
+		}
+
+		return $this->cache_path;
 	}
 }

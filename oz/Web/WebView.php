@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Web;
 
-use Closure;
 use OZONE\OZ\Core\Service;
 use OZONE\OZ\FS\TemplatesUtils;
 use OZONE\OZ\Http\Body;
@@ -141,7 +140,7 @@ class WebView extends Service
 		$data            = $this->getCompileData();
 		$data['context'] = $context;
 		$data['oz']      = $wi;
-		$data['i18n']    = Closure::fromCallable([$wi, 'i18n']);
+		$data['i18n']    = $wi->i18n(...);
 		$data['seo']     = $this->getSEOInjectData();
 
 		return TemplatesUtils::compile($this->getTemplate(), $data);

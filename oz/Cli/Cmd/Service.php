@@ -16,6 +16,7 @@ namespace OZONE\OZ\Cli\Cmd;
 use Exception;
 use Gobl\DBAL\Table;
 use Kli\KliAction;
+use Kli\KliArgs;
 use Kli\KliOption;
 use Kli\Types\KliTypeBool;
 use Kli\Types\KliTypeString;
@@ -36,12 +37,12 @@ final class Service extends Command
 	 *
 	 * @throws Exception
 	 */
-	public function execute(KliAction $action, array $options, array $anonymous_options): void
+	public function execute(KliAction $action, KliArgs $args): void
 	{
 		$name = $action->getName();
 
 		if ('generate' === $name) {
-			$this->generate($options);
+			$this->generate($args);
 		}
 	}
 
@@ -61,36 +62,36 @@ final class Service extends Command
 		// option: -n alias --service-name
 		$n = new KliOption('n');
 		$n->alias('service-name')
-			->type((new KliTypeString())->pattern('#^[a-zA-Z0-9_-]+$#', 'The service name is invalid.'))
-			->required()
-			->offsets(1)
-			->prompt(true, 'The service name')
-			->description('The service name.');
+		  ->type((new KliTypeString())->pattern('#^[a-zA-Z0-9_-]+$#', 'The service name is invalid.'))
+		  ->required()
+		  ->offsets(1)
+		  ->prompt(true, 'The service name')
+		  ->description('The service name.');
 
 		// option: -t alias --table-name
 		$t = new KliOption('t');
 		$t->alias('table-name')
-			->type((new KliTypeString())->pattern(Table::NAME_REG, 'The table name is invalid.'))
-			->required()
-			->offsets(2)
-			->prompt(true, 'The table name')
-			->description('The table name.');
+		  ->type((new KliTypeString())->pattern(Table::NAME_REG, 'The table name is invalid.'))
+		  ->required()
+		  ->offsets(2)
+		  ->prompt(true, 'The table name')
+		  ->description('The table name.');
 
 		// option: -c alias --service-class
 		$c = new KliOption('c');
 		$c->alias('service-class')
-			->type((new KliTypeString())->pattern('#^[a-zA-Z_][a-zA-Z0-9_]*$#', 'The service class name is invalid.'))
-			->offsets(3)
-			->def('')
-			->prompt(true, 'The service class name')
-			->description('The service class name.');
+		  ->type((new KliTypeString())->pattern('#^[a-zA-Z_][a-zA-Z0-9_]*$#', 'The service class name is invalid.'))
+		  ->offsets(3)
+		  ->def('')
+		  ->prompt(true, 'The service class name')
+		  ->description('The service class name.');
 
 		// option: -o alias --override
 		$o = new KliOption('o');
 		$o->alias('override')
-			->type(new KliTypeBool())
-			->def(false)
-			->description('To force override if a service with the same class name exists.');
+		  ->type(new KliTypeBool())
+		  ->def(false)
+		  ->description('To force override if a service with the same class name exists.');
 
 		$generate->addOption($n, $c, $t, $o);
 
@@ -100,16 +101,18 @@ final class Service extends Command
 	/**
 	 * Generate service for a table in the database.
 	 *
-	 * @param array $options
+	 * @param \Kli\KliArgs $args
+	 *
+	 * @throws \Kli\Exceptions\KliException
 	 */
-	private function generate(array $options): void
+	private function generate(KliArgs $args): void
 	{
 		Utils::assertDatabaseAccess();
 
-		$table_name    = $options['t'];
-		$service_name  = $options['n'];
-		$service_class = $options['c'];
-		$override      = $options['o'];
+		$table_name    = $args->get('table-name');
+		$service_name  = $args->get('service-name');
+		$service_class = $args->get('service-class');
+		$override      = $args->get('override');
 
 		$db = DbManager::getDb();
 
@@ -119,7 +122,7 @@ final class Service extends Command
 		$table       = $db->getTable($table_name);
 		$fm          = new FilesManager(OZ_APP_DIR);
 		$service_dir = $fm->cd('Services', true)
-			->getRoot();
+						  ->getRoot();
 
 		$config            = Configs::load('oz.config');
 		$service_namespace = $config['OZ_PROJECT_NAMESPACE'] . '\\Services';
@@ -132,12 +135,12 @@ final class Service extends Command
 			$service_name,
 			$service_class,
 			'',
-			(bool) $override
+			(bool)$override
 		);
 
 		Configs::set('oz.routes.api', $info['provider'], true);
 
 		$this->getCli()
-			->success(\sprintf('service "%s" generated.', $service_name));
+			 ->success(\sprintf('service "%s" generated.', $service_name));
 	}
 }

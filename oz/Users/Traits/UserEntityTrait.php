@@ -19,6 +19,9 @@ use OZONE\OZ\Users\Events\UserCreated;
 use OZONE\OZ\Users\UsersManager;
 use PHPUtils\Events\Event;
 
+/**
+ * Trait UserEntityTrait.
+ */
 trait UserEntityTrait
 {
 	/**

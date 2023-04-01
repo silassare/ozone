@@ -29,7 +29,7 @@ final class AccessGrantView extends WebView
 	 */
 	public function renderAccessGrantForm(Form $form): Response
 	{
-		return $this->setTemplate('route.access.grant.form.otpl')
+		return $this->setTemplate('oz.route.access.grant.form.otpl')
 			->inject([
 				'form' => $form,
 			])
@@ -43,7 +43,7 @@ final class AccessGrantView extends WebView
 	 */
 	public function renderAccessGrantAuth(string $realm): Response
 	{
-		return $this->setTemplate('route.access.grant.auth.otpl')
+		return $this->setTemplate('oz.route.access.grant.auth.otpl')
 			->inject([
 				'realm' => $realm,
 			])

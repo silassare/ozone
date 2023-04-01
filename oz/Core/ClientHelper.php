@@ -76,10 +76,10 @@ final class ClientHelper
 			$c = new OZClientsQuery();
 
 			return $c->whereApiKeyIs($api_key)
-				->find(1)
-				->fetchClass();
+					 ->find(1)
+					 ->fetchClass();
 		} catch (Throwable $t) {
-			throw new RuntimeException(\sprintf('Unable to load client entity object with client API Key: %s', $api_key), null, $t);
+			throw new RuntimeException(\sprintf('Unable to load client with API Key: %s', $api_key), null, $t);
 		}
 	}
 
@@ -96,14 +96,14 @@ final class ClientHelper
 			$sc = new OZSessionsQuery();
 
 			$session = $sc->whereIdIs($sid)
-				->find(1)
-				->fetchClass();
+						  ->find(1)
+						  ->fetchClass();
 
 			if ($session) {
 				return $session->getClient();
 			}
 		} catch (Throwable $t) {
-			throw new RuntimeException(\sprintf('Unable to load client entity object with session id: %s', $sid), null, $t);
+			throw new RuntimeException(\sprintf('Unable to load client with session id: %s', $sid), null, $t);
 		}
 
 		return null;
@@ -121,14 +121,14 @@ final class ClientHelper
 		try {
 			$sc      = new OZSessionsQuery();
 			$session = $sc->whereTokenIs($token)
-				->find(1)
-				->fetchClass();
+						  ->find(1)
+						  ->fetchClass();
 
 			if ($session) {
 				return $session->getClient();
 			}
 		} catch (Throwable $t) {
-			throw new RuntimeException(\sprintf('Unable to load client entity object with session token: %s', $token), null, $t);
+			throw new RuntimeException(\sprintf('Unable to load client with session token: %s', $token), null, $t);
 		}
 
 		return null;

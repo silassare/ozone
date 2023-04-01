@@ -7,10 +7,13 @@
 #
 #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-# clear the screen
-clear
-
 PHP_VERSION=php8.1
+
+#"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+#
+# Helper functions
+#
+#"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 shout(){
 	# Only use colors if connected to a terminal
@@ -121,9 +124,9 @@ install_mysql(){
 	local DB_USER="$3"
 	local DB_PASS="$4"
 
-	if [ "$ROOT_PASS" == "" ]; then
-		ROOT_PASS="root"
-	fi
+  if [ "$ROOT_PASS" == "" ]; then
+    ROOT_PASS="root"
+  fi
 
 	# install mysql server
 	shout "Installing mysql server..."
@@ -144,7 +147,7 @@ install_mysql(){
 	mysql -u root -p$ROOT_PASS -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
 
 	if [ "$DB_NAME" != "" ] && [ "$DB_USER" != "" ] && [ "$DB_PASS" != "" ] ; then
-		mysql -u root -p$ROOT_PASS -e "CREATE DATABASE $DB_NAME DEFAULT CHARACTER SET utf8;"
+		mysql -u root -p$ROOT_PASS -e "CREATE DATABASE $DB_NAME DEFAULT CHARACTER SET utf8mb4;"
 		mysql -u root -p$ROOT_PASS -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO $DB_USER@'%' IDENTIFIED BY '$DB_PASS' WITH GRANT OPTION;"
 	fi
 
@@ -209,7 +212,14 @@ EOF
 	sed -i -e "s/__INSTALL_PATH__/$INSTALL_PATH/g" "$OUT"
 }
 
-#"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+#"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+#
+# Program
+#
+#"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+# clear the screen
+clear
 
 # Are we running as root?
 if [ $EUID -ne 0 ]; then
@@ -221,6 +231,22 @@ fi
 DEBIAN_FRONTEND_SAVED="$DEBIAN_FRONTEND"
 export DEBIAN_FRONTEND=noninteractive
 
+shout "Getting latest OZone version"
+
+CURRENT_VERSION="$(wget -q -O - https://raw.githubusercontent.com/silassare/ozone/master/VERSION | sed -s 's/[^0-9\.]//g')"
+
+if [ "$CURRENT_VERSION" == "" ]; then
+	shout_error "Unable to retrieve current OZone version."
+	exit
+fi
+
+shout_info "Current version is: v$CURRENT_VERSION"
+
+OZ_INSTALL_PATH=/opt/ozone/$CURRENT_VERSION
+OZ_FRESH_INSTALL=0
+OZ_EXECUTABLE=/usr/bin/oz
+OZ_INDEX=$OZ_INSTALL_PATH/vendor/bin/oz
+
 # install all required packages
 shout "Updating packages list..."
 
@@ -229,21 +255,6 @@ apt-get -qq -o=Dpkg::Use-Pty=0 -y update < /dev/null
 shout "Installing all required packages..."
 
 apt-get -qq -o=Dpkg::Use-Pty=0 -y install apt-utils < /dev/null
-
-
-shout "Getting latest OZone version"
-
-
-CURRENT_VERSION="$(wget -q -O - https://raw.githubusercontent.com/silassare/ozone/master/VERSION | sed -s 's/[^0-9\.]//g')"
-INSTALL_PATH=/opt/ozone/$CURRENT_VERSION
-FRESH_INSTALL=0
-
-if [ "$CURRENT_VERSION" == "" ]; then
-	shout_error "Unable to retrieve current OZone version."
-	exit
-fi
-
-shout_info "Current verion is: v$CURRENT_VERSION"
 
 # install mysql
 
@@ -293,18 +304,18 @@ fi
 
 # Clone the OZone repository if it doesn't exist.
 
-if [ ! -d "$INSTALL_PATH" ]; then
+if [ ! -d "$OZ_INSTALL_PATH" ]; then
 	shout "Downloading OZone v$CURRENT_VERSION..."
-	git clone -b v"$CURRENT_VERSION" --depth 1 https://github.com/silassare/ozone "$INSTALL_PATH" < /dev/null 2> /dev/null
-	FRESH_INSTALL=1
+	git clone -b v"$CURRENT_VERSION" --depth 1 https://github.com/silassare/ozone "$OZ_INSTALL_PATH" < /dev/null 2> /dev/null
+	OZ_FRESH_INSTALL=1
 	echo
 fi
 
 # Change directory to install path.
-cd "$INSTALL_PATH" || exit
+cd "$OZ_INSTALL_PATH" || exit
 
 
-if [ $FRESH_INSTALL == 0 ]; then
+if [ $OZ_FRESH_INSTALL == 0 ]; then
 	shout_info "OZone v$CURRENT_VERSION is already installed..."
 	# Update it.
 	if [ "v$CURRENT_VERSION" != "$(git describe)" ]; then
@@ -324,11 +335,8 @@ composer install
 
 shout "Making OZone Cli globally executable..."
 
-OZ_EXECUTABLE=/usr/bin/oz
-OZ_INDEX=$INSTALL_PATH/vendor/bin/oz
-
 # OZone Cli should be accessible using "oz" or "ozone" command
-create_oz_sh "$INSTALL_PATH" "$CURRENT_VERSION" "$OZ_EXECUTABLE"
+create_oz_sh "$OZ_INSTALL_PATH" "$CURRENT_VERSION" "$OZ_EXECUTABLE"
 ln -s -f "$OZ_EXECUTABLE" /usr/bin/ozone
 
 # Set all directories permissions to 755 rwxr-xr-x
@@ -340,8 +348,9 @@ find . -type f -exec chmod 644 {} \;
 chmod ug+x $OZ_EXECUTABLE
 chmod ug+x "$OZ_INDEX"
 
-if [ $FRESH_INSTALL == 1 ]; then
-	shout_success "OZone v$CURRENT_VERSION successfuly installed..."
+if [ $OZ_FRESH_INSTALL == 1 ]; then
+	shout_success "OZone v$CURRENT_VERSION successfully installed..."
 fi
 
 export DEBIAN_FRONTEND="$DEBIAN_FRONTEND_SAVED"
+

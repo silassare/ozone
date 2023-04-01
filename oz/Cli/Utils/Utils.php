@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cli\Utils;
 
+use Gobl\DBAL\Table;
+use Kli\KliOption;
+use Kli\Types\KliTypeString;
 use OZONE\OZ\Cli\Platforms\Interfaces\PlatformInterface;
 use OZONE\OZ\Cli\Platforms\PlatformDOS;
 use OZONE\OZ\Cli\Platforms\PlatformLinux;
@@ -96,7 +99,7 @@ final class Utils
 			// we have access to the database
 			// will throw error when something went wrong
 			DbManager::getDb()
-				->getConnection();
+					 ->getConnection();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Database access assertion failed.', null, $t);
 		}
@@ -171,5 +174,53 @@ final class Utils
 		}
 
 		return self::$env;
+	}
+
+	/**
+	 * Builds cli options from a table.
+	 *
+	 * @param \Gobl\DBAL\Table $table
+	 * @param array            $includes
+	 * @param array            $excludes
+	 *
+	 * @return KliOption[]
+	 * @throws \Kli\Exceptions\KliException
+	 */
+	public static function buildTableCliOptions(Table $table, array $includes = [], array $excludes = []): array
+	{
+		$options = [];
+		foreach ($table->getColumns() as $column) {
+			$name = $column->getFullName();
+			if (!empty($includes) && !\in_array($name, $includes, true)) {
+				continue;
+			}
+			if (\in_array($name, $excludes, true)) {
+				continue;
+			}
+
+			$db_type = $column->getType();
+
+			if ($column->isPrivate() || $db_type->isAutoIncremented()) {
+				continue;
+			}
+
+			$option   = new KliOption($name);
+			$kli_type = new KliTypeString();
+
+			$kli_type->validator(function ($value) use ($db_type) {
+				return $db_type->validate($value);
+			});
+
+			$option->type($kli_type)
+				   ->prompt(true, $name);
+
+			if (!$db_type->isNullAble() && !$db_type->hasDefault()) {
+				$option->required();
+			}
+
+			$options[$name] = $option;
+		}
+
+		return $options;
 	}
 }

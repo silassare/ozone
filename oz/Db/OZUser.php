@@ -1,14 +1,13 @@
 <?php
-
 /**
- * Copyright (c) 2017-present, Emile Silas Sare
- *
- * This file is part of OZone package.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * Auto generated file,
+ * 
+ * INFO: you are free to edit it,
+ * but make sure to know what you are doing.
+ * 
+ * Proudly With: gobl v2.0.0
+ * Time: 2023-03-31T23:17:37+00:00
  */
-
 declare(strict_types=1);
 
 namespace OZONE\OZ\Db;
@@ -18,9 +17,10 @@ namespace OZONE\OZ\Db;
  */
 class OZUser extends \OZONE\OZ\Db\Base\OZUser
 {
-	use OZONE\OZ\Users\Traits\UserEntityTrait;
+	use \OZONE\OZ\Users\Traits\UserEntityTrait;
 
-	// ====================================================
-	// =	Your custom implementation goes here
-	// ====================================================
+	//====================================================
+	//=	Your custom implementation goes here
+	//====================================================
+
 }

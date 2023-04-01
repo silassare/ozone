@@ -1,21 +1,19 @@
 <?php
-
 /**
- * Copyright (c) 2017-present, Emile Silas Sare
- *
- * This file is part of OZone package.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * Auto generated file
+ * 
+ * WARNING: please don't edit.
+ * 
+ * Proudly With: gobl v2.0.0
+ * Time: 2023-03-31T23:29:45+00:00
  */
-
 declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
 /**
  * Class OZUsersQuery.
- *
+ * 
  * @method \OZONE\OZ\Db\OZUsersResults find(?int $max = null, int $offset = 0, array $order_by = [])
  */
 abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
@@ -29,16 +27,17 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 			\OZONE\OZ\Db\OZUser::TABLE_NAMESPACE,
 			\OZONE\OZ\Db\OZUser::TABLE_NAME
 		);
+
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
+	 * @inheritDoc
+	 * 
 	 * @return static
 	 */
 	public static function createInstance(): static
 	{
-		return new \OZONE\OZ\Db\OZUsersQuery();
+		return new \OZONE\OZ\Db\OZUsersQuery;
 	}
 
 	/**
@@ -56,11 +55,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIs(string|int $value): self
@@ -74,11 +72,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsNot(string|int $value): self
@@ -92,11 +89,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_users`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsLt(string|int $value): self
@@ -110,11 +106,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_users`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsLte(string|int $value): self
@@ -128,11 +123,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_users`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsGt(string|int $value): self
@@ -146,11 +140,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_users`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsGte(string|int $value): self
@@ -164,11 +157,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`id`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsLike(string $value): self
@@ -182,11 +174,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`id`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsNotLike(string $value): self
@@ -200,11 +191,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_users`.`id`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsIn(array $value): self
@@ -218,11 +208,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_users`.`id`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsNotIn(array $value): self
@@ -236,11 +225,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIs(string $value): self
@@ -254,11 +242,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIsNot(string $value): self
@@ -272,11 +259,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIsLt(string $value): self
@@ -290,11 +276,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIsLte(string $value): self
@@ -308,11 +293,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIsGt(string $value): self
@@ -326,11 +310,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIsGte(string $value): self
@@ -344,11 +327,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIsLike(string $value): self
@@ -362,11 +344,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIsNotLike(string $value): self
@@ -380,9 +361,8 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_null` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIsNull(): self
@@ -395,9 +375,8 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_not_null` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIsNotNull(): self
@@ -410,11 +389,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIsIn(array $value): self
@@ -428,11 +406,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_users`.`phone`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePhoneIsNotIn(array $value): self
@@ -446,11 +423,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`email`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereEmailIs(string $value): self
@@ -464,11 +440,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`email`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereEmailIsNot(string $value): self
@@ -482,11 +457,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_users`.`email`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereEmailIsLt(string $value): self
@@ -500,11 +474,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_users`.`email`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereEmailIsLte(string $value): self
@@ -518,11 +491,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_users`.`email`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereEmailIsGt(string $value): self
@@ -536,11 +508,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_users`.`email`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereEmailIsGte(string $value): self
@@ -554,11 +525,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`email`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereEmailIsLike(string $value): self
@@ -572,11 +542,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`email`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereEmailIsNotLike(string $value): self
@@ -590,11 +559,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_users`.`email`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereEmailIsIn(array $value): self
@@ -608,11 +576,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_users`.`email`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereEmailIsNotIn(array $value): self
@@ -626,11 +593,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`pass`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePassIs(string $value): self
@@ -644,11 +610,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`pass`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePassIsNot(string $value): self
@@ -662,11 +627,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_users`.`pass`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePassIsLt(string $value): self
@@ -680,11 +644,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_users`.`pass`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePassIsLte(string $value): self
@@ -698,11 +661,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_users`.`pass`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePassIsGt(string $value): self
@@ -716,11 +678,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_users`.`pass`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePassIsGte(string $value): self
@@ -734,11 +695,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`pass`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePassIsLike(string $value): self
@@ -752,11 +712,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`pass`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePassIsNotLike(string $value): self
@@ -770,11 +729,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_users`.`pass`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePassIsIn(array $value): self
@@ -788,11 +746,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_users`.`pass`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePassIsNotIn(array $value): self
@@ -806,11 +763,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIs(string $value): self
@@ -824,11 +780,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsNot(string $value): self
@@ -842,11 +797,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_users`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsLt(string $value): self
@@ -860,11 +814,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_users`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsLte(string $value): self
@@ -878,11 +831,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_users`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsGt(string $value): self
@@ -896,11 +848,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_users`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsGte(string $value): self
@@ -914,11 +865,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsLike(string $value): self
@@ -932,11 +882,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsNotLike(string $value): self
@@ -950,11 +899,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_users`.`name`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsIn(array $value): self
@@ -968,11 +916,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_users`.`name`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsNotIn(array $value): self
@@ -986,11 +933,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`gender`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereGenderIs(string $value): self
@@ -1004,11 +950,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`gender`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereGenderIsNot(string $value): self
@@ -1022,11 +967,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_users`.`gender`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereGenderIsLt(string $value): self
@@ -1040,11 +984,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_users`.`gender`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereGenderIsLte(string $value): self
@@ -1058,11 +1001,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_users`.`gender`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereGenderIsGt(string $value): self
@@ -1076,11 +1018,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_users`.`gender`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereGenderIsGte(string $value): self
@@ -1094,11 +1035,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`gender`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereGenderIsLike(string $value): self
@@ -1112,11 +1052,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`gender`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereGenderIsNotLike(string $value): self
@@ -1130,11 +1069,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_users`.`gender`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereGenderIsIn(array $value): self
@@ -1148,11 +1086,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_users`.`gender`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereGenderIsNotIn(array $value): self
@@ -1166,11 +1103,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`birth_date`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereBirthDateIs(string|int $value): self
@@ -1184,11 +1120,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`birth_date`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereBirthDateIsNot(string|int $value): self
@@ -1202,11 +1137,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_users`.`birth_date`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereBirthDateIsLt(string|int $value): self
@@ -1220,11 +1154,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_users`.`birth_date`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereBirthDateIsLte(string|int $value): self
@@ -1238,11 +1171,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_users`.`birth_date`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereBirthDateIsGt(string|int $value): self
@@ -1256,11 +1188,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_users`.`birth_date`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereBirthDateIsGte(string|int $value): self
@@ -1274,11 +1205,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`birth_date`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereBirthDateIsLike(string $value): self
@@ -1292,11 +1222,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`birth_date`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereBirthDateIsNotLike(string $value): self
@@ -1310,11 +1239,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_users`.`birth_date`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereBirthDateIsIn(array $value): self
@@ -1328,11 +1256,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_users`.`birth_date`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereBirthDateIsNotIn(array $value): self
@@ -1346,11 +1273,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIs(string $value): self
@@ -1364,11 +1290,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIsNot(string $value): self
@@ -1382,11 +1307,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIsLt(string $value): self
@@ -1400,11 +1324,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIsLte(string $value): self
@@ -1418,11 +1341,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIsGt(string $value): self
@@ -1436,11 +1358,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIsGte(string $value): self
@@ -1454,11 +1375,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIsLike(string $value): self
@@ -1472,11 +1392,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIsNotLike(string $value): self
@@ -1490,9 +1409,8 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_null` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIsNull(): self
@@ -1505,9 +1423,8 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_not_null` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIsNotNull(): self
@@ -1520,11 +1437,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIsIn(array $value): self
@@ -1538,11 +1454,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_users`.`pic`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function wherePicIsNotIn(array $value): self
@@ -1556,11 +1471,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`cc2`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCc2Is(string $value): self
@@ -1574,11 +1488,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`cc2`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCc2IsNot(string $value): self
@@ -1592,11 +1505,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_users`.`cc2`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCc2IsLt(string $value): self
@@ -1610,11 +1522,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_users`.`cc2`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCc2IsLte(string $value): self
@@ -1628,11 +1539,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_users`.`cc2`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCc2IsGt(string $value): self
@@ -1646,11 +1556,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_users`.`cc2`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCc2IsGte(string $value): self
@@ -1664,11 +1573,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`cc2`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCc2IsLike(string $value): self
@@ -1682,11 +1590,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`cc2`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCc2IsNotLike(string $value): self
@@ -1700,11 +1607,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_users`.`cc2`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCc2IsIn(array $value): self
@@ -1718,11 +1624,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_users`.`cc2`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCc2IsNotIn(array $value): self
@@ -1736,11 +1641,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`data`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDataIs(array $value): self
@@ -1754,11 +1658,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`data`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDataIsNot(array $value): self
@@ -1772,11 +1675,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`data`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDataIsLike(string $value): self
@@ -1790,11 +1692,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`data`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDataIsNotLike(string $value): self
@@ -1808,11 +1709,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIs(string|int $value): self
@@ -1826,11 +1726,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsNot(string|int $value): self
@@ -1844,11 +1743,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_users`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsLt(string|int $value): self
@@ -1862,11 +1760,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_users`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsLte(string|int $value): self
@@ -1880,11 +1777,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_users`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsGt(string|int $value): self
@@ -1898,11 +1794,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_users`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsGte(string|int $value): self
@@ -1916,11 +1811,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`created_at`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsLike(string $value): self
@@ -1934,11 +1828,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`created_at`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsNotLike(string $value): self
@@ -1952,11 +1845,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_users`.`created_at`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsIn(array $value): self
@@ -1970,11 +1862,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_users`.`created_at`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsNotIn(array $value): self
@@ -1988,11 +1879,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIs(string|int $value): self
@@ -2006,11 +1896,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsNot(string|int $value): self
@@ -2024,11 +1913,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_users`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsLt(string|int $value): self
@@ -2042,11 +1930,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_users`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsLte(string|int $value): self
@@ -2060,11 +1947,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_users`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsGt(string|int $value): self
@@ -2078,11 +1964,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_users`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsGte(string|int $value): self
@@ -2096,11 +1981,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_users`.`updated_at`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsLike(string $value): self
@@ -2114,11 +1998,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_users`.`updated_at`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsNotLike(string $value): self
@@ -2132,11 +2015,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_users`.`updated_at`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsIn(array $value): self
@@ -2150,11 +2032,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_users`.`updated_at`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsNotIn(array $value): self
@@ -2168,11 +2049,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_users`.`valid`.
-	 *
+	 * 
 	 * @param bool $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereValidIs(bool $value): self
@@ -2186,11 +2066,10 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_users`.`valid`.
-	 *
+	 * 
 	 * @param bool $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereValidIsNot(bool $value): self
@@ -2204,9 +2083,8 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_false` condition on column `oz_users`.`valid`.
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereValidIsFalse(): self
@@ -2219,9 +2097,8 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_true` condition on column `oz_users`.`valid`.
-	 *
+	 * 
 	 * @return static
-	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereValidIsTrue(): self

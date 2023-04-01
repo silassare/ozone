@@ -32,8 +32,8 @@ trait AuthProviderEventTrait
 		$this->json_response
 			->setDone()
 			->setData([
-				'auth_ref'         => $auth->getRef(),
-				'auth_refresh_key' => $auth->getRefreshKey(),
+				OZAuth::COL_REF         => $auth->getRef(),
+				OZAuth::COL_REFRESH_KEY => $auth->getRefreshKey(),
 			]);
 	}
 
@@ -47,8 +47,8 @@ trait AuthProviderEventTrait
 		$this->json_response
 			->setDone()
 			->setData([
-				'auth_ref'         => $auth->getRef(),
-				'auth_refresh_key' => $auth->getRefreshKey(),
+				OZAuth::COL_REF         => $auth->getRef(),
+				OZAuth::COL_REFRESH_KEY => $auth->getRefreshKey(),
 			]);
 	}
 
@@ -61,7 +61,7 @@ trait AuthProviderEventTrait
 	 */
 	protected function onInvalidRefreshKey(OZAuth $auth): void
 	{
-		throw new InvalidFormException('OZ_AUTH_INVALID_REFRESH_KEY');
+		throw new InvalidFormException('OZ_AUTH_INVALID_REFRESH_KEY', $this->debug($auth));
 	}
 
 	/**
@@ -71,7 +71,10 @@ trait AuthProviderEventTrait
 	 */
 	protected function onCancel(OZAuth $auth): void
 	{
-		$this->json_response->setDone();
+		$this->json_response->setDone()
+			->setData([
+				OZAuth::COL_REF => $auth->ref,
+			]);
 	}
 
 	/**
@@ -83,8 +86,8 @@ trait AuthProviderEventTrait
 	{
 		$this->json_response->setDone()
 			->setData([
-				'auth_ref'         => $auth->getRef(),
-				'auth_refresh_key' => $auth->getRefreshKey(),
+				OZAuth::COL_REF         => $auth->getRef(),
+				OZAuth::COL_REFRESH_KEY => $auth->getRefreshKey(),
 			]);
 	}
 
@@ -97,7 +100,7 @@ trait AuthProviderEventTrait
 	 */
 	protected function onExpired(OZAuth $auth): void
 	{
-		throw new UnauthorizedActionException('OZ_AUTH_HAS_EXPIRED');
+		throw new UnauthorizedActionException('OZ_AUTH_HAS_EXPIRED', $this->debug($auth));
 	}
 
 	/**
@@ -109,7 +112,7 @@ trait AuthProviderEventTrait
 	 */
 	protected function onInvalidCode(OZAuth $auth): void
 	{
-		throw new InvalidFormException('OZ_AUTH_INVALID_CODE');
+		throw new InvalidFormException('OZ_AUTH_INVALID_CODE', $this->debug($auth));
 	}
 
 	/**
@@ -121,7 +124,7 @@ trait AuthProviderEventTrait
 	 */
 	protected function onInvalidToken(OZAuth $auth): void
 	{
-		throw new InvalidFormException('OZ_AUTH_INVALID_TOKEN');
+		throw new InvalidFormException('OZ_AUTH_INVALID_TOKEN', $this->debug($auth));
 	}
 
 	/**
@@ -133,6 +136,18 @@ trait AuthProviderEventTrait
 	 */
 	protected function onTooMuchRetry(OZAuth $auth): void
 	{
-		throw new UnauthorizedActionException('OZ_AUTH_TOO_MUCH_ATTEMPT');
+		throw new UnauthorizedActionException('OZ_AUTH_TOO_MUCH_ATTEMPT', $this->debug($auth));
+	}
+
+	/**
+	 * Generate debug info to be passed to exception.
+	 *
+	 * @param \OZONE\OZ\Db\OZAuth $auth
+	 *
+	 * @return array[]
+	 */
+	private function debug(OZAuth $auth): array
+	{
+		return ['_debug' => [OZAuth::COL_REF => $auth->ref]];
 	}
 }

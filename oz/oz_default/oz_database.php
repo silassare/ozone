@@ -43,8 +43,8 @@ return [
 		],
 		'constraints'   => [
 			['type' => 'primary_key', 'columns' => ['id']],
-			['type' => 'unique', 'columns' => ['phone']],
-			['type' => 'unique', 'columns' => ['email']],
+			['type' => 'unique_key', 'columns' => ['phone']],
+			['type' => 'unique_key', 'columns' => ['email']],
 			['type' => 'foreign_key', 'reference' => 'oz_countries', 'columns' => ['cc2' => 'cc2']],
 		],
 		'columns'       => [
@@ -74,9 +74,9 @@ return [
 			],
 			'birth_date' => Fields::birthDate(Configs::get('oz.users', 'OZ_USER_MIN_AGE'), Configs::get('oz.users', 'OZ_USER_MAX_AGE')),
 			'pic'        => [
-				'type'    => 'file',
-				'mime'    => ['image/png', 'image/jpeg'],
-				'null'    => true,
+				'type' => 'file',
+				'mime' => ['image/png', 'image/jpeg'],
+				'null' => true,
 			],
 			'cc2'        => [
 				'type'       => 'cc2',
@@ -112,7 +112,7 @@ return [
 		],
 		'constraints'   => [
 			['type' => 'primary_key', 'columns' => ['id']],
-			['type' => 'unique', 'columns' => ['user_id', 'name']],
+			['type' => 'unique_key', 'columns' => ['user_id', 'name']],
 			[
 				'type'      => 'foreign_key',
 				'reference' => 'oz_users',
@@ -176,7 +176,7 @@ return [
 		],
 		'constraints'   => [
 			['type' => 'primary_key', 'columns' => ['id']],
-			['type' => 'unique', 'columns' => ['api_key']],
+			['type' => 'unique_key', 'columns' => ['api_key']],
 			[
 				'type'      => 'foreign_key',
 				'reference' => 'oz_users',
@@ -253,7 +253,7 @@ return [
 		],
 		'constraints'   => [
 			['type' => 'primary_key', 'columns' => ['id']],
-			['type' => 'unique', 'columns' => ['token']],
+			['type' => 'unique_key', 'columns' => ['token']],
 			[
 				'type'      => 'foreign_key',
 				'reference' => 'oz_clients',
@@ -324,7 +324,7 @@ return [
 		'column_prefix' => 'auth',
 		'constraints'   => [
 			['type' => 'primary_key', 'columns' => ['ref']],
-			['type' => 'unique', 'columns' => ['refresh_key']],
+			['type' => 'unique_key', 'columns' => ['refresh_key']],
 		],
 		'columns'       => [
 			'ref'         => [
@@ -337,7 +337,7 @@ return [
 				'min'  => 1,
 				'max'  => 128,
 			],
-			'provider'       => [
+			'provider'    => [
 				'type' => 'string',
 				'min'  => 1,
 				'max'  => 128,
@@ -350,11 +350,11 @@ return [
 			'for'         => [
 				'type' => 'string',
 			],
-			'code_hash'        => [
+			'code_hash'   => [
 				'type' => 'string',
 				'max'  => 128,
 			],
-			'token_hash'       => [
+			'token_hash'  => [
 				'type' => 'string',
 				'min'  => 32,
 				'max'  => 128,
@@ -375,7 +375,7 @@ return [
 				'unsigned' => true,
 				'default'  => 0,
 			],
-			'lifetime'      => [
+			'lifetime'    => [
 				'type'     => 'int',
 				'unsigned' => true,
 			],
@@ -397,7 +397,7 @@ return [
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'valid'      => [
+			'valid'       => [
 				'type'    => 'bool',
 				'default' => true,
 			],
@@ -533,6 +533,61 @@ return [
 				'type'     => 'string',
 				'max'      => 100,
 				'truncate' => true,
+			],
+			'label'      => [
+				'type' => 'string',
+				'max'  => 255,
+			],
+			'data'       => [
+				'type'    => 'map',
+				'default' => [],
+			],
+			'created_at' => [
+				'type'   => 'date',
+				'format' => 'timestamp',
+				'auto'   => true,
+			],
+			'updated_at' => [
+				'type'   => 'date',
+				'format' => 'timestamp',
+				'auto'   => true,
+			],
+			'valid'      => [
+				'type'    => 'bool',
+				'default' => true,
+			],
+		],
+	],
+	'oz_db_stores' => [
+		'plural_name'   => 'oz_db_stores',
+		'singular_name' => 'oz_db_store',
+		'column_prefix' => 'store',
+		'constraints'   => [
+			['type' => 'primary_key', 'columns' => ['id']],
+			[
+				'type'    => 'unique_key',
+				'columns' => ['group', 'key'],
+			],
+		],
+		'columns'       => [
+			'id'         => [
+				'type'           => 'bigint',
+				'unsigned'       => true,
+				'auto_increment' => true,
+			],
+			'group'      => [
+				'type' => 'string',
+				'min'  => 1,
+				'max'  => 128,
+			],
+			'key'        => [
+				'type' => 'string',
+				'min'  => 32,
+				'max'  => 128,
+			],
+			'value'      => [
+				'type' => 'string',
+				'null' => true,
 			],
 			'label'      => [
 				'type' => 'string',

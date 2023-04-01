@@ -66,7 +66,7 @@ class AuthEmail extends AuthProvider
 	{
 		$email = $this->scope->getValue();
 
-		$message = new MailMessage('auth.message.mail.otpl', 'auth.message.mail.rich.otpl');
+		$message = new MailMessage('oz.auth.message.mail.otpl', 'oz.auth.message.mail.rich.otpl');
 
 		$message->inject($this->credentials->toArray())
 			->send($email);

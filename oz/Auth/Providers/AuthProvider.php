@@ -41,7 +41,7 @@ abstract class AuthProvider implements AuthProviderInterface
 {
 	use AuthProviderEventTrait;
 
-	protected JSONResponse $json_response;
+	protected JSONResponse       $json_response;
 	protected AuthScopeInterface $scope;
 
 	protected AuthCredentialsInterface $credentials;
@@ -188,7 +188,7 @@ abstract class AuthProvider implements AuthProviderInterface
 
 		if (Auth::getByRef($ref)) {
 			throw new RuntimeException('An auth ref conflict occurred, newly generated auth ref already in use.', [
-				'auth_ref' => $ref,
+				OZAuth::COL_REF => $ref,
 			]);
 		}
 
@@ -231,29 +231,27 @@ abstract class AuthProvider implements AuthProviderInterface
 
 		if (!\hash_equals($auth->getRefreshKey(), $this->credentials->getRefreshKey())) {
 			$this->onInvalidRefreshKey($auth);
+		} else {
+			$expire = \time() + $this->scope->getLifetime();
 
-			return $this;
+			$code_hash  = Hasher::hash64($this->credentials->newCode());
+			$token_hash = Hasher::hash64($this->credentials->newToken());
+
+			$auth->setCodeHash($code_hash)
+				->setTokenHash($token_hash)
+				->setTryMax($this->scope->getTryMax())
+				->setTryCount($this->scope->getLifetime())
+				->setTryCount(0)
+				->setExpire((string) $expire);
+
+			if ($re_authorize) {
+				$auth->setState(AuthState::PENDING->value);
+			}
+
+			$this->save($auth);
+
+			$this->onRefresh($auth);
 		}
-
-		$expire = \time() + $this->scope->getLifetime();
-
-		$code_hash  = Hasher::hash64($this->credentials->newCode());
-		$token_hash = Hasher::hash64($this->credentials->newToken());
-
-		$auth->setCodeHash($code_hash)
-			->setTokenHash($token_hash)
-			->setTryMax($this->scope->getTryMax())
-			->setTryCount($this->scope->getLifetime())
-			->setTryCount(0)
-			->setExpire((string) $expire);
-
-		if ($re_authorize) {
-			$auth->setState(AuthState::PENDING->value);
-		}
-
-		$this->save($auth);
-
-		$this->onRefresh($auth);
 
 		return $this;
 	}

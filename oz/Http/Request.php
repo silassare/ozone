@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Http;
 
-use Closure;
 use InvalidArgumentException;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Forms\FormData;
@@ -221,8 +220,7 @@ class Request extends Message implements ServerRequestInterface
 	 */
 	public function registerMediaTypeParser(string $mediaType, callable $callable): void
 	{
-		$callable_t = Closure::fromCallable($callable)
-			->bindTo($this);
+		$callable_t = $callable(...)->bindTo($this);
 
 		if ($callable_t) {
 			$callable = $callable_t;

@@ -17,6 +17,9 @@ use claviska\SimpleImage;
 use Exception;
 use OZONE\OZ\Core\Configs;
 
+/**
+ * Class ImagesUtils.
+ */
 class ImagesUtils
 {
 	protected ?SimpleImage $image;
@@ -198,13 +201,13 @@ class ImagesUtils
 		if (!$width) {
 			$width = $iWidth;
 		} else {
-			$width = $width > $iWidth ? $iWidth : $width;
+			$width = min($width, $iWidth);
 		}
 
 		if (!$height) {
 			$height = $iHeight;
 		} else {
-			$height = $height > $iHeight ? $iHeight : $height;
+			$height = min($height, $iHeight);
 		}
 
 		if ($crop) {
@@ -294,12 +297,13 @@ class ImagesUtils
 	 */
 	public function cropAndSave(
 		string $destination_path,
-		int $quality,
-		int $max_width,
-		int $max_height,
-		array $coordinate = null,
-		bool $resize = true
-	): self {
+		int    $quality,
+		int    $max_width,
+		int    $max_height,
+		array  $coordinate = null,
+		bool   $resize = true
+	): self
+	{
 		$quality = empty($quality) ? 90 : $quality;
 
 		if (!empty($coordinate) && $this->safeCoordinate($coordinate)) {
@@ -310,16 +314,16 @@ class ImagesUtils
 
 			if ($resize) {
 				return $this->cropImage($x, $y, $w, $h)
-					->resizeImage($max_width, $max_height)
-					->saveImage($destination_path, $quality);
+							->resizeImage($max_width, $max_height)
+							->saveImage($destination_path, $quality);
 			}
 
 			return $this->cropImage($x, $y, $w, $h)
-				->saveImage($destination_path, $quality);
+						->saveImage($destination_path, $quality);
 		}
 
 		return $this->resizeImage($max_width, $max_height)
-			->saveImage($destination_path, $quality);
+					->saveImage($destination_path, $quality);
 	}
 
 	/**

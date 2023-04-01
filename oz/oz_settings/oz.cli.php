@@ -15,10 +15,12 @@ use OZONE\OZ\Cli\Cmd\Client;
 use OZONE\OZ\Cli\Cmd\Db;
 use OZONE\OZ\Cli\Cmd\Project;
 use OZONE\OZ\Cli\Cmd\Service;
+use OZONE\OZ\Cli\Cmd\User;
 
 return [
 	'project' => Project::class,
 	'client'  => Client::class,
 	'db'      => Db::class,
 	'service' => Service::class,
+	'user'    => User::class,
 ];

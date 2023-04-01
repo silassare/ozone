@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace OZONE\OZ\Cli\Cmd;
 
 use Exception;
-use JsonException;
 use Kli\Exceptions\KliInputException;
 use Kli\KliAction;
+use Kli\KliArgs;
 use Kli\KliOption;
 use Kli\Types\KliTypeBool;
 use Kli\Types\KliTypePath;
@@ -39,21 +39,21 @@ final class Project extends Command
 	 *
 	 * @throws Exception
 	 */
-	public function execute(KliAction $action, array $options, array $anonymous_options): void
+	public function execute(KliAction $action, KliArgs $args): void
 	{
 		switch ($action->getName()) {
 			case 'create':
-				$this->create($options);
+				$this->create($args);
 
 				break;
 
 			case 'backup':
-				$this->backup($options);
+				$this->backup($args);
 
 				break;
 
 			case 'build':
-				$this->build($options);
+				$this->build($args);
 
 				break;
 		}
@@ -79,61 +79,61 @@ final class Project extends Command
 		// option: -d alias --dir
 		$bd = new KliOption('d');
 		$bd->alias('dir')
-			->offsets(1)
-			->type((new KliTypePath())->dir()
-				->writable())
-			->def('..')
-			->prompt(true, 'The backup directory path')
-			->description('The backup directory path.');
+		   ->offsets(1)
+		   ->type((new KliTypePath())->dir()
+									 ->writable())
+		   ->def('..')
+		   ->prompt(true, 'The backup directory path')
+		   ->description('The backup directory path.');
 
 		// option: -f alias --full
 		$full = new KliOption('f');
 		$full->alias('full')
-			->type(new KliTypeBool(false))
-			->def(true)
-			->prompt(true, 'Full backup? yes/no')
-			->description('Enable or disable full backup.');
+			 ->type(new KliTypeBool(false))
+			 ->def(true)
+			 ->prompt(true, 'Full backup? yes/no')
+			 ->description('Enable or disable full backup.');
 
 		// option: -r alias --root-dir
 		$cr = new KliOption('r');
 		$cr->alias('root-dir')
-			->offsets(1)
-			->type((new KliTypePath())->dir()
-				->writable())
-			->def('.')
-			->prompt(true, 'The project root folder path')
-			->description('The project root folder path.');
+		   ->offsets(1)
+		   ->type((new KliTypePath())->dir()
+									 ->writable())
+		   ->def('.')
+		   ->prompt(true, 'The project root folder path')
+		   ->description('The project root folder path.');
 
 		// option: -n alias --name
 		$n = new KliOption('n');
 		$n->alias('name')
-			->offsets(2)
-			->required()
-			->type(new KliTypeString(1, 60))
-			->prompt(true, 'Your new project name')
-			->description('Your new project name.');
+		  ->offsets(2)
+		  ->required()
+		  ->type(new KliTypeString(1, 60))
+		  ->prompt(true, 'Your new project name')
+		  ->description('Your new project name.');
 
 		// option: -c alias --class-name
 		$c = new KliOption('c');
 		$c->alias('class-name')
-			->offsets(3)
-			->required()
+		  ->offsets(3)
+		  ->required()
 			// according to "http://php.net/manual/en/language.oop5.basic.php" visited on 1st Sept. 2017
 			// php class name in regexp should be : ^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$
-			->type((new KliTypeString(2, 30))->pattern('#^[a-zA-Z][a-zA-Z0-9_]+$#'))
-			->def('SampleApp')
-			->prompt(true, 'Your new project main class name to use')
-			->description('Your new project main class name.');
+		  ->type((new KliTypeString(2, 30))->pattern('#^[a-zA-Z][a-zA-Z0-9_]+$#'))
+		  ->def('SampleApp')
+		  ->prompt(true, 'Your new project main class name to use')
+		  ->description('Your new project main class name.');
 
 		// option: -p alias --prefix
 		$p = new KliOption('p');
 		$p->alias('prefix')
-			->offsets(4)
-			->required()
-			->type((new KliTypeString(2, 2))->pattern('#^[a-zA-Z][a-zA-Z0-9]$#', 'invalid project prefix.'))
-			->def('SA')
-			->prompt(true, 'Your new project prefix')
-			->description('Your new project prefix.');
+		  ->offsets(4)
+		  ->required()
+		  ->type((new KliTypeString(2, 2))->pattern('#^[a-zA-Z][a-zA-Z0-9]$#', 'invalid project prefix.'))
+		  ->def('SA')
+		  ->prompt(true, 'Your new project prefix')
+		  ->description('Your new project prefix.');
 
 		$create->addOption($cr, $n, $c, $p);
 		$backup->addOption($bd, $full);
@@ -144,14 +144,15 @@ final class Project extends Command
 	/**
 	 * Creates project backup.
 	 *
-	 * @param array $options
+	 * @param \Kli\KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException|\Kli\Exceptions\KliInputException
+	 * @throws \Kli\Exceptions\KliException
+	 * @throws \Kli\Exceptions\KliInputException
 	 */
-	private function backup(array $options): void
+	private function backup(KliArgs $args): void
 	{
-		$dir               = $options['d'];
-		$full              = $options['f'];
+		$dir               = $args->get('dir');
+		$full              = $args->get('full');
 		$project_fm        = new FilesManager();
 		$project_name      = Configs::get('oz.config', 'OZ_PROJECT_NAME');
 		$project_name_slug = \strtolower(Str::stringToURLSlug($project_name));
@@ -161,41 +162,42 @@ final class Project extends Command
 			throw new KliInputException('You should not backup project to project directory or subdirectory.');
 		}
 		$this->getCli()
-			->info('Copying the required files and directories may take some time ...');
+			 ->info('Copying the required files and directories may take some time ...');
 
 		$target_fm = new FilesManager($dir);
 		$filter    = $project_fm->filter()
-			->notIn('./vendor')
-			->notName('~^(?:\.git|\.idea|otpl_done|blate_cache|node_modules|debug\.log)$~');
+								->notIn('./vendor')
+								->notName('~^(?:\.git|\.idea|otpl_done|blate_cache|node_modules|debug\.log)$~');
 
 		$target_fm->cd($backup_name, true)
-			->cp($project_fm->getRoot(), null, $filter);
+				  ->cp($project_fm->getRoot(), null, $filter);
 
 		if ($full) {
 			$this->getCli()
-				->info('Generating database backup for your project ...');
+				 ->info('Generating database backup for your project ...');
 
 			$db_backup_dir = \escapeshellarg($target_fm->getRoot());
 			$this->getCli()
-				->executeString("db backup -d={$db_backup_dir}");
+				 ->executeString("db backup --dir={$db_backup_dir}");
 		}
 
 		$this->getCli()
-			->success('A backup of your project was created.')
-			->writeLn($target_fm->getRoot());
+			 ->success('A backup of your project was created.')
+			 ->writeLn($target_fm->getRoot());
 	}
 
 	/**
 	 * Creates project build for production.
 	 *
-	 * @param array $options
+	 * @param \Kli\KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException|\Kli\Exceptions\KliInputException
+	 * @throws \Kli\Exceptions\KliException
+	 * @throws \Kli\Exceptions\KliInputException
 	 */
-	private function build(array $options): void
+	private function build(KliArgs $args): void
 	{
-		$dir               = $options['d'];
-		$full              = $options['f'];
+		$dir               = $args->get('dir');
+		$full              = $args->get('full');
 		$project_fm        = new FilesManager();
 		$project_name      = Configs::get('oz.config', 'OZ_PROJECT_NAME');
 		$project_name_slug = \strtolower(Str::stringToURLSlug($project_name));
@@ -205,53 +207,54 @@ final class Project extends Command
 			throw new KliInputException('You should not build project to project directory or subdirectory.');
 		}
 		$this->getCli()
-			->info('Copying the required files and directories may take some time ...');
+			 ->info('Copying the required files and directories may take some time ...');
 
 		$target_fm = new FilesManager($dir);
 		$filter    = $project_fm->filter()
-			->notIn('./vendor')
-			->notName('~^(?:\.git|\.idea|otpl_done|blate_cache|node_modules|debug\.log)$~');
+								->notIn('./vendor')
+								->notName('~^(?:\.git|\.idea|otpl_done|blate_cache|node_modules|debug\.log)$~');
 
 		$target_fm->cd($backup_name, true)
-			->cp($project_fm->getRoot(), null, $filter);
+				  ->cp($project_fm->getRoot(), null, $filter);
 
 		if ($full) {
 			$this->getCli()
-				->info('Generating database script for your project ...');
+				 ->info('Generating database script for your project ...');
 
 			$db_backup_dir = \escapeshellarg($target_fm->getRoot());
 			$this->getCli()
-				->executeString("db build -d={$db_backup_dir}");
+				 ->executeString("db build -d={$db_backup_dir}");
 		}
 
 		$this->getCli()
-			->success('A production build of your project was created.')
-			->writeLn($target_fm->getRoot());
+			 ->success('A production build of your project was created.')
+			 ->writeLn($target_fm->getRoot());
 	}
 
 	/**
 	 * Creates new project.
 	 *
-	 * @param array $options
+	 * @param \Kli\KliArgs $args
 	 *
-	 * @throws JsonException
+	 * @throws \JsonException
+	 * @throws \Kli\Exceptions\KliException
 	 */
-	private function create(array $options): void
+	private function create(KliArgs $args): void
 	{
-		$name       = $options['n'];
-		$folder     = $options['r'];
-		$class_name = $options['c'];
-		$prefix     = \strtoupper($options['p']);
+		$name       = $args->get('name');
+		$folder     = $args->get('root-dir');
+		$class_name = $args->get('class-name');
+		$prefix     = \strtoupper($args->get('prefix'));
 		$config     = Utils::loadProjectConfig($folder);
 
 		if (null !== $config) {
 			$this->getCli()
-				->error(\sprintf(
-					'project "%s" created with "OZone %s" exists in "%s".',
-					$config['OZ_PROJECT_NAME'],
-					$config['OZ_OZONE_VERSION'],
-					$folder
-				));
+				 ->error(\sprintf(
+					 'project "%s" created with "OZone %s" exists in "%s".',
+					 $config['OZ_PROJECT_NAME'],
+					 $config['OZ_OZONE_VERSION'],
+					 $folder
+				 ));
 
 			return;
 		}
@@ -329,36 +332,38 @@ final class Project extends Command
 		$fm   = new FilesManager($folder);
 		$root = $fm->getRoot();
 		$fm->cd('api', true)
-			->cd('app', true)
-			->cp($tpl_folder . 'gen/htaccess.deny.txt', '.htaccess')
-			->cd('oz_settings', true)
-			->wf('oz.config.php', $oz_config)
-			->wf('oz.db.php', $oz_db)
-			->wf('oz.keygen.salt.php', $oz_key_gen_salt)
-			->cd('..')
-			->cd('oz_templates', true)
-			->wf('.keep')
-			->cd('../oz_users_files', true)
-			->wf('.keep')
-			->cd('../oz_cache', true)
-			->wf('.keep')
-			->cd('..')
-			->wf($app_class_file, $app_class)
-			->cd('..')
-			->wf('index.php', $api_index)
-			->cp($tpl_folder . 'gen/robots.txt', 'robots.txt')
-			->cp($tpl_folder . 'gen/favicon.ico', 'favicon.ico')
-			->cp($tpl_folder . 'gen/htaccess.api.txt', '.htaccess');
+		   ->cd('app', true)
+		   ->cp($tpl_folder . 'gen/htaccess.deny.txt', '.htaccess')
+		   ->cd('oz_settings', true)
+		   ->wf('oz.config.php', $oz_config)
+		   ->wf('oz.db.php', $oz_db)
+		   ->wf('oz.keygen.salt.php', $oz_key_gen_salt)
+		   ->cd('..')
+		   ->cd('oz_templates', true)
+		   ->wf('.keep')
+		   ->cd('../oz_users_files', true)
+		   ->wf('.keep')
+		   ->cd('../oz_cache', true)
+		   ->wf('.keep')
+		   ->cd('..')
+		   ->wf($app_class_file, $app_class)
+		   ->cd('..')
+		   ->wf('index.php', $api_index)
+		   ->cp($tpl_folder . 'gen/robots.txt', 'robots.txt')
+		   ->cp($tpl_folder . 'gen/favicon.ico', 'favicon.ico')
+		   ->cp($tpl_folder . 'gen/htaccess.api.txt', '.htaccess');
 
 		$fm->cd('..');
 
 		$composer_config_path = $fm->resolve('composer.json');
 
-		if ($fm->filter()->exists()->check($composer_config_path)) {
+		if ($fm->filter()
+			   ->exists()
+			   ->check($composer_config_path)) {
 			$content         = \file_get_contents($composer_config_path);
 			$composer_config = \json_decode($content, true, 512, \JSON_THROW_ON_ERROR);
 
-			$composer_config['require'][OZ_OZONE_PACKAGE_NAME] =  '^' . OZ_OZONE_VERSION;
+			$composer_config['require'][OZ_OZONE_PACKAGE_NAME] = '^' . OZ_OZONE_VERSION;
 
 			$fm->wf($composer_config_path, \json_encode(
 				$composer_config,
@@ -369,8 +374,8 @@ final class Project extends Command
 		}
 
 		$this->getCli()
-			->success(\sprintf('project "%s" created in "%s".', $name, $root))
-			->info('You need to run:')
-			->writeLn("\tcomposer update");
+			 ->success(\sprintf('project "%s" created in "%s".', $name, $root))
+			 ->info('You need to run:')
+			 ->writeLn("\tcomposer update");
 	}
 }

@@ -20,6 +20,15 @@ use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\Exceptions\UnauthorizedActionException;
 use OZONE\OZ\Http\UploadedFile;
 
+// TODO remove this dependency, I don't think we need it anymore
+// Image manipulation should be made on the client side or on dedicated server,
+// there are many useful tool to tod that
+
+/**
+ * Class PPicUtils.
+ *
+ * @deprecated
+ */
 class PPicUtils
 {
 	/** @var string */
@@ -51,9 +60,10 @@ class PPicUtils
 	public function fromFileID(
 		string $file_id,
 		string $file_key,
-		array $coordinate,
+		array  $coordinate,
 		string $file_label = 'OZ_FILE_LABEL_USER_PIC'
-	): string {
+	): string
+	{
 		$f = FilesUtils::getFileWithId($file_id);
 
 		if (!$f || $f->getKey() !== $file_key) {
@@ -62,7 +72,7 @@ class PPicUtils
 
 		$clone = $f->cloneFile();
 		$clone->setUserID($this->uid)
-			->setLabel($file_label);
+			  ->setLabel($file_label);
 
 		// each file clone should have its own thumbnail
 		// because crop zone coordinates may be different from a clone to another
@@ -91,9 +101,10 @@ class PPicUtils
 	 */
 	public function fromUploadedFile(
 		UploadedFile $uploaded_file,
-		array $coordinate,
-		string $file_label = 'OZ_FILE_LABEL_USER_PIC'
-	): string {
+		array        $coordinate,
+		string       $file_label = 'OZ_FILE_LABEL_USER_PIC'
+	): string
+	{
 		$user_dir   = FilesUtils::getUserRootDirectory($this->uid);
 		$upload_obj = new FilesUploadHandler();
 
@@ -104,7 +115,7 @@ class PPicUtils
 		}
 
 		$f->setUserID($this->uid)
-			->setLabel($file_label);
+		  ->setLabel($file_label);
 
 		if ($f->getCloneID()) {
 			// the uploaded file is an alias file
@@ -144,10 +155,10 @@ class PPicUtils
 
 		if (!empty($coordinates) && isset($coordinates['x'], $coordinates['y'], $coordinates['w'], $coordinates['h'])) {
 			$clean_coordinates = [
-				'x' => (int) $coordinates['x'],
-				'y' => (int) $coordinates['y'],
-				'w' => (int) $coordinates['w'],
-				'h' => (int) $coordinates['h'],
+				'x' => (int)$coordinates['x'],
+				'y' => (int)$coordinates['y'],
+				'w' => (int)$coordinates['w'],
+				'h' => (int)$coordinates['h'],
 			];
 		}
 
