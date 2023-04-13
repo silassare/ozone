@@ -22,7 +22,7 @@ use OZONE\OZ\Forms\FormData;
  */
 class CSRF
 {
-	public const TOKEN_SEP = '.';
+	public const TOKEN_SEP      = '.';
 	private string $csrf_token  = '_csrf';
 	private string $csrf_header = 'X-XSRF-TOKEN';
 	private string $scope_ref;
@@ -37,8 +37,8 @@ class CSRF
 		switch ($this->scope) {
 			case CSRFScope::SESSION:
 				$this->scope_ref = $this->context->getSession()
-												 ->getDataStore()
-												 ->getToken();
+					->getDataStore()
+					->getToken();
 
 				break;
 
@@ -54,10 +54,10 @@ class CSRF
 
 			case CSRFScope::ACTIVE_USER:
 				$this->context->getUsersManager()
-							  ->assertUserVerified();
+					->assertUserVerified();
 				$this->scope_ref = $this->context->getSession()
-												 ->getDataStore()
-												 ->getUserID();
+					->getDataStore()
+					->getUserID();
 
 				break;
 		}
@@ -85,7 +85,7 @@ class CSRF
 			$id    = $parts[0] ?? null;
 			$key   = $parts[1] ?? null;
 		} elseif ($header = $this->context->getRequest()
-										  ->getHeaderLine($this->csrf_header)) {
+			->getHeaderLine($this->csrf_header)) {
 			$parts = \explode(self::TOKEN_SEP, $header);
 			$id    = $parts[0] ?? null;
 			$key   = $parts[1] ?? null;
@@ -107,7 +107,7 @@ class CSRF
 	 */
 	public function genCsrfToken(): string
 	{
-		$id  = (string)Hasher::randomInt();
+		$id  = (string) Hasher::randomInt();
 		$key = $this->buildKey($id);
 
 		return $id . self::TOKEN_SEP . $key;

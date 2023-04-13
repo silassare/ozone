@@ -13,10 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cli\Cmd;
 
-use Kli\KliAction;
 use Kli\KliArgs;
-use Kli\KliOption;
-use Kli\Types\KliTypeString;
 use OZONE\OZ\Cli\Command;
 use OZONE\OZ\Cli\Utils\Utils;
 use OZONE\OZ\Core\Configs;
@@ -24,27 +21,12 @@ use OZONE\OZ\Core\Hasher;
 use OZONE\OZ\Db\OZClient;
 use OZONE\OZ\FS\FilesManager;
 use OZONE\OZ\FS\TemplatesUtils;
-use Throwable;
 
 /**
  * Class Client.
  */
 final class Client extends Command
 {
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @throws Throwable
-	 */
-	public function execute(KliAction $action, KliArgs $args): void
-	{
-		$name = $action->getName();
-
-		if ('add' === $name) {
-			$this->add($args);
-		}
-	}
-
 	/**
 	 * @throws \Kli\Exceptions\KliException
 	 */
@@ -55,37 +37,25 @@ final class Client extends Command
 					. '(?:\.(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]))*$~';
 
 		// action: add web client
-		$add = new KliAction('add');
-		$add->description('Add new web client to project.');
-
-		// option: -h alias --host
-		$h = new KliOption('h');
-		$h->alias('host')
-		  ->offsets(1)
-		  ->required()
-		  ->type((new KliTypeString())->pattern($host_reg, '"%s" is not a valid hostname.'))
-		  ->prompt(true, 'The web client hostname')
-		  ->description('The web client hostname.');
-
-		// option: -f alias --folder
-		$f = new KliOption('f');
-		$f->alias('folder')
-		  ->offsets(2)
-		  ->type((new KliTypeString())->pattern('#^[^\\/?%*:|"<>]+$#'))
-		  ->description('The web client folder name.');
-
-		// option: -a alias --about
-		$a = new KliOption('a');
-		$a->alias('about')
-		  ->offsets(3)
-		  ->type(new KliTypeString())
-		  ->required()
-		  ->prompt(true, 'Short text about the web client')
-		  ->description('Short text about the web client.');
-
-		$add->addOption($h, $f, $a);
-
-		$this->addAction($add);
+		$add = $this->action('add', 'Add new web client to project.');
+		$add->option('host', 'h', [], 1)
+			->required()
+			->prompt(true, 'The web client hostname')
+			->description('The web client hostname.')
+			->string()
+			->pattern($host_reg, '"%s" is not a valid hostname.');
+		$add->option('folder', 'f', [], 2)
+			->required()
+			->prompt(true, 'The web client folder name')
+			->description('The web client folder name.')
+			->string()
+			->pattern('#^[^\\/?%*:|"<>]+$#', '"%s" is not a valid folder name.');
+		$add->option('about', 'a', [], 3)
+			->required()
+			->prompt(true, 'Short text about the web client')
+			->description('Short text about the web client.')
+			->string();
+		$add->handler($this->add(...));
 	}
 
 	/**
@@ -107,7 +77,7 @@ final class Client extends Command
 		$folder_name    = $args->get('folder');
 		$about          = $args->get('about');
 		$project_folder = \getcwd();
-		$config         = Utils::loadProjectConfig($project_folder, true);
+		$config         = Utils::tryGetProjectConfig($project_folder);
 
 		$project_name = $config['OZ_PROJECT_NAME'];
 		$namespace    = $config['OZ_PROJECT_NAMESPACE'];
@@ -120,9 +90,9 @@ final class Client extends Command
 
 			if (\file_exists($abs_folder)) {
 				$fm->filter()
-				   ->isDir()
-				   ->isEmpty()
-				   ->assert($folder_name);
+					->isDir()
+					->isEmpty()
+					->assert($folder_name);
 			}
 
 			$inject = Configs::genExportInfo('oz.config', [
@@ -144,35 +114,35 @@ final class Client extends Command
 			$tpl_folder = OZ_OZONE_DIR . 'oz_templates' . DS;
 
 			$fm->cd($abs_folder, true)
-			   ->mkdir('assets')
-			   ->cd('assets')
-			   ->mkdir('js')
-			   ->mkdir('styles')
-			   ->mkdir('images')
-			   ->mkdir('vendor')
-			   ->cd('..')
-			   ->cd('oz_private', true)
-			   ->cd('oz_settings', true)
-			   ->wf('oz.config.php', $oz_config)
-			   ->cd('..')
-			   ->mkdir('oz_templates')
-			   ->cp($tpl_folder . 'gen/htaccess.deny.txt', '.htaccess')
-			   ->cd('..')
-			   ->wf('index.php', $www_index)
-			   ->cp($tpl_folder . 'gen/robots.txt', 'robots.txt')
-			   ->cp($tpl_folder . 'gen/favicon.ico', 'favicon.ico')
-			   ->cp($tpl_folder . 'gen/htaccess.www.txt', '.htaccess');
+				->mkdir('assets')
+				->cd('assets')
+				->mkdir('js')
+				->mkdir('styles')
+				->mkdir('images')
+				->mkdir('vendor')
+				->cd('..')
+				->cd('oz_private', true)
+				->cd('oz_settings', true)
+				->wf('oz.config.php', $oz_config)
+				->cd('..')
+				->mkdir('oz_templates')
+				->cp($tpl_folder . 'gen/htaccess.deny.txt', '.htaccess')
+				->cd('..')
+				->wf('index.php', $www_index)
+				->cp($tpl_folder . 'gen/robots.txt', 'robots.txt')
+				->cp($tpl_folder . 'gen/favicon.ico', 'favicon.ico')
+				->cp($tpl_folder . 'gen/htaccess.www.txt', '.htaccess');
 		}
 
 		$wc = new OZClient();
 		$wc->setApiKey($api_key)
-		   ->setAbout($about)
-		   ->setUrl($host)
-		   ->save();
+			->setAbout($about)
+			->setUrl($host)
+			->save();
 
 		$this->getCli()
-			 ->success(\sprintf('web client added to project "%s".', $project_name))
-			 ->info(\sprintf('Client Host  : %s', $host))
-			 ->info(\sprintf('Client ApiKey: %s', $api_key));
+			->success(\sprintf('web client added to project "%s".', $project_name))
+			->info(\sprintf('Client Host  : %s', $host))
+			->info(\sprintf('Client ApiKey: %s', $api_key));
 	}
 }

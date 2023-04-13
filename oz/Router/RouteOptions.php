@@ -23,12 +23,12 @@ final class RouteOptions extends RouteSharedOptions
 	/**
 	 * RouteOptions constructor.
 	 *
-	 * @param string                      $path
-	 * @param \OZONE\OZ\Router\RouteGroup $group
+	 * @param string                           $path
+	 * @param null|\OZONE\OZ\Router\RouteGroup $group
 	 */
 	public function __construct(
 		string $path,
-		RouteGroup $group
+		?RouteGroup $group = null
 	) {
 		parent::__construct($path, $group);
 

@@ -32,7 +32,7 @@ class DbCache extends RuntimeCache
 	}
 
 	/**
-	 * @inheritDoc
+	 * {@inheritDoc}
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
@@ -42,13 +42,13 @@ class DbCache extends RuntimeCache
 	protected function save(): bool
 	{
 		$this->db_store->setValue(\serialize(self::$cache_data[$this->namespace]))
-					   ->save();
+			->save();
 
 		return true;
 	}
 
 	/**
-	 * @inheritDoc
+	 * {@inheritDoc}
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
@@ -58,9 +58,9 @@ class DbCache extends RuntimeCache
 		$qb  = new OZDbStoresQuery();
 
 		$found = $qb->whereGroupIs(self::class)
-					->whereKeyIs($ref)
-					->find(1)
-					->fetchClass();
+			->whereKeyIs($ref)
+			->find(1)
+			->fetchClass();
 
 		if ($found) {
 			$this->db_store = $found;
@@ -72,8 +72,8 @@ class DbCache extends RuntimeCache
 		} else {
 			$this->db_store = new OZDbStore();
 			$this->db_store->setGroup(self::class)
-						   ->setKey($ref)
-						   ->setLabel($this->namespace);
+				->setKey($ref)
+				->setLabel($this->namespace);
 		}
 
 		return [];

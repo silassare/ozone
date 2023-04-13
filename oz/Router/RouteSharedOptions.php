@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\OZ\Router;
 
 use InvalidArgumentException;
-use OZONE\OZ\Cli\Cmd\User;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\Forms\Form;
@@ -41,7 +40,7 @@ class RouteSharedOptions
 
 	protected readonly string      $_path;
 	protected readonly ?RouteGroup $_parent;
-	private string $_name = '';
+	private string                 $_name = '';
 
 	/**
 	 * RouteSharedOptions constructor.
@@ -51,7 +50,7 @@ class RouteSharedOptions
 	 */
 	protected function __construct(
 		string $path,
-		?RouteGroup $parent
+		?RouteGroup $parent = null
 	) {
 		$this->_path   = $path;
 		$this->_parent = $parent;

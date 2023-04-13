@@ -13,13 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cli\Cmd;
 
-use Exception;
 use Gobl\DBAL\Table;
-use Kli\KliAction;
 use Kli\KliArgs;
-use Kli\KliOption;
-use Kli\Types\KliTypeBool;
-use Kli\Types\KliTypeString;
 use OZONE\OZ\Cli\Command;
 use OZONE\OZ\Cli\Utils\ServiceGenerator;
 use OZONE\OZ\Cli\Utils\Utils;
@@ -35,20 +30,6 @@ final class Service extends Command
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws Exception
-	 */
-	public function execute(KliAction $action, KliArgs $args): void
-	{
-		$name = $action->getName();
-
-		if ('generate' === $name) {
-			$this->generate($args);
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws \Kli\Exceptions\KliException
 	 */
 	protected function describe(): void
@@ -56,46 +37,30 @@ final class Service extends Command
 		$this->description('Manage your project service.');
 
 		// action: generate service for a table
-		$generate = new KliAction('generate');
-		$generate->description('Generate service for a table in the database.');
-
-		// option: -n alias --service-name
-		$n = new KliOption('n');
-		$n->alias('service-name')
-		  ->type((new KliTypeString())->pattern('#^[a-zA-Z0-9_-]+$#', 'The service name is invalid.'))
-		  ->required()
-		  ->offsets(1)
-		  ->prompt(true, 'The service name')
-		  ->description('The service name.');
-
-		// option: -t alias --table-name
-		$t = new KliOption('t');
-		$t->alias('table-name')
-		  ->type((new KliTypeString())->pattern(Table::NAME_REG, 'The table name is invalid.'))
-		  ->required()
-		  ->offsets(2)
-		  ->prompt(true, 'The table name')
-		  ->description('The table name.');
-
-		// option: -c alias --service-class
-		$c = new KliOption('c');
-		$c->alias('service-class')
-		  ->type((new KliTypeString())->pattern('#^[a-zA-Z_][a-zA-Z0-9_]*$#', 'The service class name is invalid.'))
-		  ->offsets(3)
-		  ->def('')
-		  ->prompt(true, 'The service class name')
-		  ->description('The service class name.');
-
-		// option: -o alias --override
-		$o = new KliOption('o');
-		$o->alias('override')
-		  ->type(new KliTypeBool())
-		  ->def(false)
-		  ->description('To force override if a service with the same class name exists.');
-
-		$generate->addOption($n, $c, $t, $o);
-
-		$this->addAction($generate);
+		$generate = $this->action('generate', 'Generate service for a table in the database.');
+		$generate->option('service-name', 'n', [], 1)
+			->required()
+			->prompt(true, 'The service name')
+			->description('The service name.')
+			->string()
+			->pattern('#^[a-zA-Z0-9_-]+$#', 'The service name is invalid.');
+		$generate->option('table-name', 't', [], 2)
+			->required()
+			->prompt(true, 'The table name')
+			->description('The table name.')
+			->string()
+			->pattern(Table::NAME_REG, 'The table name is invalid.');
+		$generate->option('service-class', 'c', [], 3)
+			->prompt(true, 'The service class name')
+			->description('The service class name.')
+			->string()
+			->def('')
+			->pattern('#^[a-zA-Z_][a-zA-Z0-9_]*$#', 'The service class name is invalid.');
+		$generate->option('override', 'o', [], 4)
+			->description('To force override if a service with the same class name exists.')
+			->bool()
+			->def(false);
+		$generate->handler($this->generate(...));
 	}
 
 	/**
@@ -122,7 +87,7 @@ final class Service extends Command
 		$table       = $db->getTable($table_name);
 		$fm          = new FilesManager(OZ_APP_DIR);
 		$service_dir = $fm->cd('Services', true)
-						  ->getRoot();
+			->getRoot();
 
 		$config            = Configs::load('oz.config');
 		$service_namespace = $config['OZ_PROJECT_NAMESPACE'] . '\\Services';
@@ -135,12 +100,12 @@ final class Service extends Command
 			$service_name,
 			$service_class,
 			'',
-			(bool)$override
+			(bool) $override
 		);
 
 		Configs::set('oz.routes.api', $info['provider'], true);
 
 		$this->getCli()
-			 ->success(\sprintf('service "%s" generated.', $service_name));
+			->success(\sprintf('service "%s" generated.', $service_name));
 	}
 }

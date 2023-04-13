@@ -71,7 +71,11 @@ class WebInject
 		try {
 			return I18n::t($key, $data, $lang, $this->context);
 		} catch (Throwable $t) {
-			throw new RuntimeException(\sprintf('Translation fail for: "%s"', $key), null, $t);
+			throw new RuntimeException('Translation failed.', [
+				'key'  => $key,
+				'data' => $data,
+				'lang' => $lang,
+			], $t);
 		}
 	}
 

@@ -98,7 +98,7 @@ final class Cli extends Kli
 		$title          = 'oz';
 		$project_loaded = false;
 
-		if ($config = Utils::loadProjectConfig()) {
+		if ($config = Utils::tryGetProjectConfig()) {
 			$title .= ':' . Str::stringToURLSlug($config['OZ_PROJECT_NAME']);
 			// Adds project namespace root directory
 			ClassLoader::addNamespace($config['OZ_PROJECT_NAMESPACE'], OZ_APP_DIR);

@@ -41,9 +41,9 @@ final class CacheItem
 	/**
 	 * CacheItem constructor.
 	 *
-	 * @param string     $key    The key under which to store the value.
-	 * @param mixed      $value  The value to store.
-	 * @param null|float $expire The expiration time, defaults to null.
+	 * @param string     $key    the key under which to store the value
+	 * @param mixed      $value  the value to store
+	 * @param null|float $expire the expiration time, defaults to null
 	 */
 	public function __construct(string $key, mixed $value, ?float $expire = null)
 	{
@@ -119,9 +119,9 @@ final class CacheItem
 			$this->expire = null;
 		} elseif ($lifetime instanceof DateInterval) {
 			$duration     = DateTime::createFromFormat('U', '0')
-									->add($lifetime)
-									->format('U.u');
-			$this->expire = \microtime(true) + (float)$duration;
+				->add($lifetime)
+				->format('U.u');
+			$this->expire = \microtime(true) + (float) $duration;
 		} else {
 			$this->expire = $lifetime + \microtime(true);
 		}

@@ -47,8 +47,8 @@ final class Auth implements BootHookReceiverInterface
 			$qb = new OZAuthsQuery();
 
 			return $qb->whereRefIs($ref)
-					  ->find(1)
-					  ->fetchClass();
+				->find(1)
+				->fetchClass();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to load auth data.', null, $t);
 		}
@@ -136,9 +136,9 @@ final class Auth implements BootHookReceiverInterface
 				$qb = new OZAuthsQuery();
 
 				$qb->whereExpireIsGt(0)
-				   ->whereExpireIsLte($an_hour_ago)
-				   ->delete()
-				   ->execute();
+					->whereExpireIsLte($an_hour_ago)
+					->delete()
+					->execute();
 			} catch (Throwable $t) {
 				throw new RuntimeException('Unable to delete expired authorization.', null, $t);
 			}

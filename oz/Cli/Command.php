@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cli;
 
+use Kli\KliAction;
+use Kli\KliArgs;
 use Kli\KliCommand;
 
 /**
@@ -32,6 +34,13 @@ abstract class Command extends KliCommand
 	{
 		parent::__construct($name, $cli);
 		$this->describe();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function execute(KliAction $action, KliArgs $args): void
+	{
 	}
 
 	/**

@@ -13,17 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cli\Cmd;
 
+use Exception;
 use Gobl\DBAL\Drivers\MySQL\MySQL;
+use Gobl\DBAL\Interfaces\MigrationInterface;
 use Gobl\ORM\Generators\CSGeneratorDart;
 use Gobl\ORM\Generators\CSGeneratorORM;
 use Gobl\ORM\Generators\CSGeneratorTS;
 use Kli\Exceptions\KliInputException;
-use Kli\KliAction;
+use Kli\Kli;
 use Kli\KliArgs;
-use Kli\KliOption;
-use Kli\Types\KliTypeBool;
-use Kli\Types\KliTypePath;
-use Kli\Types\KliTypeString;
+use Kli\Table\KliTableFormatter;
 use OZONE\OZ\Cli\Command;
 use OZONE\OZ\Cli\Process;
 use OZONE\OZ\Cli\Utils\Utils;
@@ -32,6 +31,7 @@ use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Core\Hasher;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\FS\FilesManager;
+use OZONE\OZ\Migration\MigrationsManager;
 use PHPUtils\FS\PathUtils;
 use Throwable;
 
@@ -41,45 +41,21 @@ use Throwable;
 final class Db extends Command
 {
 	/**
-	 * {@inheritDoc}
+	 * Ensures database backup.
 	 *
-	 * @param \Kli\KliAction $action
+	 * @param \Kli\Kli                       $cli
+	 * @param null|\OZONE\OZ\FS\FilesManager $fm
 	 *
-	 * @throws Throwable
+	 * @throws \Kli\Exceptions\KliException
 	 */
-	public function execute(KliAction $action, KliArgs $args): void
+	public static function ensureDBBackup(Kli $cli, FilesManager $fm = null): void
 	{
-		switch ($action->getName()) {
-			case 'build':
-				$this->build($args);
+		$fm = $fm ?? new FilesManager(OZ_PROJECT_DIR);
 
-				break;
+		$cli->info('Generating database backup ...');
 
-			case 'ts-bundle':
-				$this->tsBundle($args);
-
-				break;
-
-			case 'dart-bundle':
-				$this->dartBundle($args);
-
-				break;
-
-			case 'backup':
-				$this->backup($args);
-
-				break;
-
-			case 'generate':
-				$this->generate($args);
-
-				break;
-
-			case 'source':
-				$this->source($args);
-
-				break;
-		}
+		$db_backup_dir = \escapeshellarg($fm->getRoot());
+		$cli->executeString("db backup --dir={$db_backup_dir}");
 	}
 
 	/**
@@ -90,90 +66,98 @@ final class Db extends Command
 	protected function describe(): void
 	{
 		$this->description('Manage your project database.');
+		$namespace_pattern = '#^[a-zA-Z][a-zA-Z0-9_]*(?:\\\\[a-zA-Z][a-zA-Z0-9_]*)*$#';
 
 		// action: build database
-		$build = new KliAction('build');
-		$build->description('To build the database, generate required classes.');
+		$build = $this->action('build', 'To build the database, generate required classes.');
+
+		$build->option('build-all', 'a')
+			->description('To build all tables in all namespaces.')
+			->bool()
+			->def(false);
+		$build->option('class-only', 'c')
+			->description('To build classes only.')
+			->bool()
+			->def(false);
+		$build->option('namespace', 'n')
+			->description('The namespace of the tables to be generated.')
+			->string()
+			->pattern($namespace_pattern)
+			->def(null);
+		$build->handler($this->build(...));
 
 		// action: ts bundle
-		$ts_bundle = new KliAction('ts-bundle');
-		$ts_bundle->description('To generate entities classes for TypeScript.');
+		$ts_bundle = $this->action('ts-bundle', 'To generate entities classes for TypeScript.');
+		$ts_bundle->option('dir', 'd', [], 1)
+			->description('The destination directory for the bundle classes.')
+			->path()
+			->dir()
+			->writable()
+			->def('.');
+		$ts_bundle->handler($this->tsBundle(...));
 
 		// action: dart bundle
-		$dart_bundle = new KliAction('dart-bundle');
-		$dart_bundle->description('To generate entities classes for Dart.');
+		$dart_bundle = $this->action('dart-bundle', 'To generate entities classes for Dart.');
+		$dart_bundle->option('dir', 'd', [], 1)
+			->description('The destination directory for the bundle classes.')
+			->path()
+			->dir()
+			->writable()
+			->def('.');
+		$dart_bundle->handler($this->dartBundle(...));
 
 		// action: generate database query
-		$generate = new KliAction('generate');
-		$generate->description('Generate database file.');
+		$generate = $this->action('generate', 'Generate database file.');
+		$generate->option('dir', 'd', [], 1)
+			->description('The destination directory for the database file.')
+			->path()
+			->dir()
+			->writable()
+			->def('.');
+		$generate->option('namespace', 'n', [], 2)
+			->description('The namespace of the tables to be generated.')
+			->string()
+			->pattern($namespace_pattern)
+			->def(null);
+		$generate->handler($this->generate(...));
 
 		// action: backup database
-		$backup = new KliAction('backup');
-		$backup->description('Backup database.');
+		$backup = $this->action('backup', 'Backup database.');
+		$backup->option('dir', 'd', [], 1)
+			->description('The destination directory for the database backup file.')
+			->path()
+			->dir()
+			->writable()
+			->def('.');
+		$backup->handler($this->backup(...));
 
-		// option: -a alias --build-all
-		$all = new KliOption('a');
-		$all->alias('build-all')
-			->type(new KliTypeBool())
-			->def(false)
-			->description('To rebuild all tables in all namespaces.');
+		// action: db migration:create
+		$this->action('migrations:create', 'Create database migrations.')
+			->handler($this->migrationsCreate(...));
 
-		// option: -c alias --class-only
-		$class_only = (new KliOption('c'))
-			->alias('class-only')
-			->type(new KliTypeBool())
-			->def(false)
-			->description('To rebuild classes only.');
+		// action: db migration:check
+		$this->action('migrations:check', 'Check database migrations.')
+			->handler($this->migrationsCheck(...));
 
-		// option: -n alias --namespace
-		$n = (new KliOption('n'))
-			->alias('namespace')
-			->offsets(1)
-			->type((new KliTypeString())->pattern(
-				'#^[a-zA-Z][a-zA-Z0-9_]*(?:\\\\[a-zA-Z][a-zA-Z0-9_]*)*$#',
-				'You should provide valid php namespace.'
-			))
-			->def(null)
-			->description('The namespace of the tables to be generated.');
+		// action: db migration:run
+		$migrationRun = $this->action('migrations:run', 'Run database migrations.');
+		$migrationRun->handler($this->migrationsRun(...));
+
+		// action: db migration:rollback
+		$migrationRollback = $this->action('migrations:rollback', 'Rollback database migrations.');
+		$migrationRollback->option('to-version')
+			->description('The migration version to rollback to.')
+			->required()
+			->number(0);
+		$migrationRollback->handler($this->migrationsRollback(...));
 
 		// action: source database
-		$source = (new KliAction('source'))->description('Run database query from source file.');
-
-		// option: -d alias --dir
-		$d = (new KliOption('d'))
-			->alias('dir')
-			->offsets(1)
-			->type((new KliTypePath())
-				->dir()
-				->writable())
-			->def('.')
-			->description('The destination directory for the database classes.');
-
-		// option: -d alias --dir
-		$b_d = (new KliOption('d'))
-			->alias('dir')
-			->offsets(1)
-			->type((new KliTypePath())
-				->dir()
-				->writable())
-			->def('.')
-			->description('The destination directory for the bundle classes.');
-
-		$f = new KliOption('f');
-		$f->alias('file')
-		  ->offsets(1)
-		  ->type((new KliTypePath())->file())
-		  ->description('The database source file to run.');
-
-		$d_c = clone $d;
-		$build->addOption($all, $n, $class_only);
-		$generate->addOption($n, $d_c->offsets(2));
-		$backup->addOption($d);
-		$ts_bundle->addOption($b_d);
-		$dart_bundle->addOption($b_d);
-		$source->addOption($f);
-
-		$this->addAction($build, $ts_bundle, $dart_bundle, $generate, $backup, $source);
+		$source = $this->action('source', 'Run database query from source file.');
+		$source->option('file', 'f', [], 1)
+			->description('The database source file.')
+			->path()
+			->file();
+		$source->handler($this->source(...));
 	}
 
 	/**
@@ -191,8 +175,8 @@ final class Db extends Command
 		Utils::assertProjectFolder();
 
 		$cli        = $this->getCli();
-		$all        = (bool)$args->get('build-all');
-		$class_only = (bool)$args->get('class-only');
+		$all        = (bool) $args->get('build-all');
+		$class_only = (bool) $args->get('class-only');
 		$namespace  = $args->get('namespace');
 
 		$structure = DbManager::getProjectDbDirectoryStructure();
@@ -259,7 +243,7 @@ final class Db extends Command
 
 			try {
 				$queries = $db->getGenerator()
-							  ->buildDatabase();
+					->buildDatabase();
 				$db->executeMulti($queries);
 
 				$cli->success('database queries executed.');
@@ -284,7 +268,7 @@ final class Db extends Command
 	 * @param \Kli\KliArgs $args
 	 *
 	 * @throws \Kli\Exceptions\KliException
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	private function tsBundle(KliArgs $args): void
 	{
@@ -307,7 +291,7 @@ final class Db extends Command
 	 * @param \Kli\KliArgs $args
 	 *
 	 * @throws \Kli\Exceptions\KliException
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	private function dartBundle(KliArgs $args): void
 	{
@@ -342,8 +326,8 @@ final class Db extends Command
 			$namespace = null;
 		}
 		$query = DbManager::getDb()
-						  ->getGenerator()
-						  ->buildDatabase($namespace);
+			->getGenerator()
+			->buildDatabase($namespace);
 
 		$file_name = \sprintf('%s.sql', Hasher::genFileName('db'));
 		$fm        = new FilesManager($dir);
@@ -351,11 +335,10 @@ final class Db extends Command
 
 		if (\file_exists($fm->resolve($file_name))) {
 			$this->getCli()
-				 ->success('database file generated.')
-				 ->writeLn($fm->resolve($file_name));
+				->success('database installation file generated.')
+				->writeLn($fm->resolve($file_name));
 		} else {
-			$this->getCli()
-				 ->error('database file generation fails.');
+			throw new RuntimeException('database installation file generation fails.');
 		}
 	}
 
@@ -408,10 +391,9 @@ final class Db extends Command
 		$config = Configs::load('oz.db');
 
 		if (MySQL::NAME !== $config['OZ_DB_RDBMS']) {
-			$cli->error('this work only for MySQL database.');
-
-			return;
+			throw new RuntimeException('this work only for MySQL database.');
 		}
+
 		$fm      = new FilesManager($dir);
 		$outfile = $fm->resolve(\sprintf('%s.sql', Hasher::genFileName('backup')));
 		$db_host = \escapeshellarg($config['OZ_DB_HOST']);
@@ -438,8 +420,167 @@ final class Db extends Command
 			$cli->success('database backup file created.')
 				->writeLn($outfile);
 		} else {
-			$cli->error('unable to backup database.')
-				->error($error);
+			throw new RuntimeException('unable to backup database.', [
+				'mysqldump_error_message' => $error,
+			]);
 		}
+	}
+
+	/**
+	 * Creates migration file.
+	 */
+	private function migrationsCreate(): void
+	{
+		$mg   = new MigrationsManager();
+		$path = $mg->createMigration();
+
+		if ($path) {
+			$this->getCli()
+				->success('Migration file created.')
+				->writeLn($path);
+		} else {
+			$this->getCli()
+				->info('No changes detected.');
+		}
+	}
+
+	/**
+	 * Checks pending migrations.
+	 */
+	private function migrationsCheck(): void
+	{
+		$mg  = new MigrationsManager();
+		$cli = $this->getCli();
+		if ($mg->hasPendingMigrations()) {
+			$cli->info('There are pending migrations.');
+
+			$table = $cli->table();
+			$table->addHeader('Label', 'label');
+			$table->addHeader('Version', 'version');
+			$table->addHeader('Date', 'date')
+				->setCellFormatter(KliTableFormatter::date('jS F Y, g:i:s a'));
+
+			$table->addRows(\array_map(static function (MigrationInterface $migration) {
+				return [
+					'label'   => $migration->getLabel(),
+					'version' => $migration->getVersion(),
+					'date'    => $migration->getTimestamp(),
+				];
+			}, $mg->getPendingMigrations()));
+
+			$cli->writeLn($table->render(), false);
+		} else {
+			$cli->success('There are no pending migrations.');
+		}
+	}
+
+	/**
+	 * Runs pending migrations.
+	 *
+	 * @param \Kli\KliArgs $args
+	 *
+	 * @throws \Kli\Exceptions\KliException
+	 */
+	private function migrationsRun(KliArgs $args): void
+	{
+		$mg         = new MigrationsManager();
+		$migrations = $mg->getPendingMigrations();
+
+		if (empty($migrations)) {
+			$this->getCli()
+				->info('There are no pending migrations.');
+
+			return;
+		}
+
+		// backup db before running migrations
+		self::ensureDBBackup($this->getCli());
+		foreach ($migrations as $migration) {
+			$this->getCli()
+				->info(\sprintf(
+					'Running migration "%s" generated on "%s" ...',
+					$migration->getLabel(),
+					\date('jS F Y, g:i:s a', $migration->getTimestamp())
+				));
+
+			try {
+				$mg->runMigration($migration);
+			} catch (Throwable $t) {
+				$error_message = \sprintf(
+					'Migration "%s" generated on "%s" failed.',
+					$migration->getLabel(),
+					\date('jS F Y, g:i:s a', $migration->getTimestamp())
+				);
+
+				throw new RuntimeException($error_message, [
+					'label'   => $migration->getLabel(),
+					'version' => $migration->getVersion(),
+				], $t);
+			}
+		}
+	}
+
+	/**
+	 * Rolls back migrations.
+	 *
+	 * @param \Kli\KliArgs $args
+	 *
+	 * @throws \Kli\Exceptions\KliException
+	 */
+	private function migrationsRollback(KliArgs $args): void
+	{
+		$mg                 = new MigrationsManager();
+		$target_version     = $args->get('to-version');
+		$current_db_version = $mg->getCurrentDbVersion();
+
+		// make sure target version is less than current version
+		if ($target_version >= $current_db_version) {
+			$this->getCli()
+				->info(\sprintf('Target version "%s" is not less than current version "%s".', $target_version, $current_db_version));
+
+			return;
+		}
+
+		// gets all migration between target version and current db version
+		$migrations = $mg->getMigrationBetween($target_version, $current_db_version);
+
+		if (empty($migrations)) {
+			$this->getCli()
+				->info(\sprintf('There are no migrations to rollback from current version "%s" to "%s".', $current_db_version, $target_version));
+
+			return;
+		}
+
+		$cli = $this->getCli();
+
+		$cli->info(\sprintf('Rolling back migrations from current version "%s" to "%s" ...', $current_db_version, $target_version));
+
+		// backup db before migrations
+		self::ensureDBBackup($this->getCli());
+
+		$cli->info('This may take a while ...');
+
+		$migrations = \array_reverse($migrations);
+
+		foreach ($migrations as $migration) {
+			if ($migration->getVersion() !== $target_version) {
+				$cli->info(\sprintf(
+					'Rolling back migration "%s" generated on "%s" ...',
+					$migration->getLabel(),
+					\date('jS F Y, g:i:s a', $migration->getTimestamp())
+				));
+
+				try {
+					$mg->rollbackMigration($migration);
+				} catch (Throwable $e) {
+					throw new RuntimeException('Error rolling back migration.', [
+						'label'   => $migration->getLabel(),
+						'version' => $migration->getVersion(),
+					], $e);
+				}
+			}
+		}
+
+		$cli->success('Migrations rolled back successfully.');
 	}
 }

@@ -50,7 +50,7 @@ class PHPCache extends RuntimeCache
 		$path   = $this->getCachePath();
 		$filter = (new FilesManager())->filter();
 		if ($filter->isFile()
-				   ->check($path)) {
+			->check($path)) {
 			$cache = \file_get_contents($path);
 
 			if ($cache) {
@@ -78,8 +78,8 @@ class PHPCache extends RuntimeCache
 
 			$fm = new FilesManager(OZ_CACHE_DIR);
 			$fm->cd('php_cache', true)
-			   ->cd($dir1, true)
-			   ->cd($dir2, true);
+				->cd($dir1, true)
+				->cd($dir2, true);
 
 			$this->cache_path = $fm->resolve($hash . '.cache');
 		}

@@ -11,4 +11,6 @@
 
 declare(strict_types=1);
 
-return [];
+return [
+	'db_version' => OZONE\OZ\Migration\MigrationsManager::DB_NOT_INSTALLED_VERSION,
+];

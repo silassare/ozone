@@ -23,7 +23,6 @@ use Stringable;
  */
 final class Schedule implements Stringable
 {
-
 	public const SUNDAY = 0;
 
 	public const MONDAY  = 1;
@@ -52,7 +51,7 @@ final class Schedule implements Stringable
 	/**
 	 * Scheduler constructor.
 	 *
-	 * @param string $expression The Cron expression representing the event's frequency.
+	 * @param string $expression the Cron expression representing the event's frequency
 	 */
 	public function __construct(string $expression = '* * * * *')
 	{
@@ -70,7 +69,7 @@ final class Schedule implements Stringable
 	 */
 	public function __toString()
 	{
-		return implode(' ', [$this->minute, $this->hour, $this->dayOfMonth, $this->month, $this->dayOfWeek]);
+		return \implode(' ', [$this->minute, $this->hour, $this->dayOfMonth, $this->month, $this->dayOfWeek]);
 	}
 
 	/**
@@ -209,7 +208,7 @@ final class Schedule implements Stringable
 	public function everyOddHour(): self
 	{
 		return $this->setPosition(1, 0)
-					->setPosition(2, '1-23/2');
+			->setPosition(2, '1-23/2');
 	}
 
 	/**
@@ -220,7 +219,7 @@ final class Schedule implements Stringable
 	public function everyTwoHours(): self
 	{
 		return $this->setPosition(1, 0)
-					->setPosition(2, '*/2');
+			->setPosition(2, '*/2');
 	}
 
 	/**
@@ -231,7 +230,7 @@ final class Schedule implements Stringable
 	public function everyThreeHours(): self
 	{
 		return $this->setPosition(1, 0)
-					->setPosition(2, '*/3');
+			->setPosition(2, '*/3');
 	}
 
 	/**
@@ -242,7 +241,7 @@ final class Schedule implements Stringable
 	public function everyFourHours(): self
 	{
 		return $this->setPosition(1, 0)
-					->setPosition(2, '*/4');
+			->setPosition(2, '*/4');
 	}
 
 	/**
@@ -253,7 +252,7 @@ final class Schedule implements Stringable
 	public function everySixHours(): self
 	{
 		return $this->setPosition(1, 0)
-					->setPosition(2, '*/6');
+			->setPosition(2, '*/6');
 	}
 
 	/**
@@ -264,7 +263,7 @@ final class Schedule implements Stringable
 	public function daily(): self
 	{
 		return $this->setPosition(1, 0)
-					->setPosition(2, 0);
+			->setPosition(2, 0);
 	}
 
 	/**
@@ -290,8 +289,8 @@ final class Schedule implements Stringable
 	{
 		$segments = \explode(':', $time);
 
-		return $this->setPosition(2, (int)$segments[0])
-					->setPosition(1, 2 === \count($segments) ? (int)$segments[1] : '0');
+		return $this->setPosition(2, (int) $segments[0])
+			->setPosition(1, 2 === \count($segments) ? (int) $segments[1] : '0');
 	}
 
 	/**
@@ -321,7 +320,7 @@ final class Schedule implements Stringable
 		$hours = $first . ',' . $second;
 
 		return $this->setPosition(1, $offset)
-					->setPosition(2, $hours);
+			->setPosition(2, $hours);
 	}
 
 	/**
@@ -422,8 +421,8 @@ final class Schedule implements Stringable
 	public function weekly(): self
 	{
 		return $this->setPosition(1, 0)
-					->setPosition(2, 0)
-					->setPosition(5, 0);
+			->setPosition(2, 0)
+			->setPosition(5, 0);
 	}
 
 	/**
@@ -449,8 +448,8 @@ final class Schedule implements Stringable
 	public function monthly(): self
 	{
 		return $this->setPosition(1, 0)
-					->setPosition(2, 0)
-					->setPosition(3, 1);
+			->setPosition(2, 0)
+			->setPosition(3, 1);
 	}
 
 	/**
@@ -498,7 +497,7 @@ final class Schedule implements Stringable
 		$this->dailyAt($time);
 
 		return $this->setPosition(3, Carbon::now()
-										   ->endOfMonth()->day);
+			->endOfMonth()->day);
 	}
 
 	/**
@@ -509,9 +508,9 @@ final class Schedule implements Stringable
 	public function quarterly(): self
 	{
 		return $this->setPosition(1, 0)
-					->setPosition(2, 0)
-					->setPosition(3, 1)
-					->setPosition(4, '1-12/3');
+			->setPosition(2, 0)
+			->setPosition(3, 1)
+			->setPosition(4, '1-12/3');
 	}
 
 	/**
@@ -527,7 +526,7 @@ final class Schedule implements Stringable
 		$this->dailyAt($time);
 
 		return $this->setPosition(3, $dayOfQuarter)
-					->setPosition(4, '1-12/3');
+			->setPosition(4, '1-12/3');
 	}
 
 	/**
@@ -538,9 +537,9 @@ final class Schedule implements Stringable
 	public function yearly(): self
 	{
 		return $this->setPosition(1, 0)
-					->setPosition(2, 0)
-					->setPosition(3, 1)
-					->setPosition(4, 1);
+			->setPosition(2, 0)
+			->setPosition(3, 1)
+			->setPosition(4, 1);
 	}
 
 	/**
@@ -557,7 +556,7 @@ final class Schedule implements Stringable
 		$this->dailyAt($time);
 
 		return $this->setPosition(3, $dayOfMonth)
-					->setPosition(4, $month);
+			->setPosition(4, $month);
 	}
 
 	/**
@@ -621,21 +620,21 @@ final class Schedule implements Stringable
 	 * Set the position of the given value.
 	 *
 	 * @param int        $position
-	 * @param string|int $value
+	 * @param int|string $value
 	 *
 	 * @return $this
 	 */
 	private function setPosition(int $position, string|int $value): self
 	{
-		if ($position === 1) {
+		if (1 === $position) {
 			$this->minute = $value;
-		} elseif ($position === 2) {
+		} elseif (2 === $position) {
 			$this->hour = $value;
-		} elseif ($position === 3) {
+		} elseif (3 === $position) {
 			$this->dayOfMonth = $value;
-		} elseif ($position === 4) {
+		} elseif (4 === $position) {
 			$this->month = $value;
-		} elseif ($position === 5) {
+		} elseif (5 === $position) {
 			$this->dayOfWeek = $value;
 		}
 

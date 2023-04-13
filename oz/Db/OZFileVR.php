@@ -1,13 +1,14 @@
 <?php
+
 /**
- * Auto generated file,
- * 
- * INFO: you are free to edit it,
- * but make sure to know what you are doing.
- * 
- * Proudly With: gobl v2.0.0
- * Time: 2023-03-31T23:17:37+00:00
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace OZONE\OZ\Db;
@@ -17,9 +18,7 @@ namespace OZONE\OZ\Db;
  */
 abstract class OZFileVR extends \OZONE\OZ\Db\Base\OZFileVR
 {
-	
-	//====================================================
-	//=	Your custom implementation goes here
-	//====================================================
-
+	// ====================================================
+	// =	Your custom implementation goes here
+	// ====================================================
 }

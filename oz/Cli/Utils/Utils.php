@@ -33,14 +33,13 @@ final class Utils
 	private static ?array $env = null;
 
 	/**
-	 * Load project config from a given project folder or current working dir.
+	 * Try load project config from a given project folder or current working dir.
 	 *
-	 * @param null|string $folder   the project folder
-	 * @param bool        $required the config is required
+	 * @param null|string $folder
 	 *
 	 * @return null|array
 	 */
-	public static function loadProjectConfig(?string $folder = null, bool $required = false): ?array
+	public static function tryGetProjectConfig(?string $folder = null): ?array
 	{
 		if (empty($folder)) {
 			$folder = \getcwd();
@@ -56,13 +55,22 @@ final class Utils
 			}
 		}
 
-		if ($required) {
-			$err = 'Error: there is no ozone project in "%s".' . \PHP_EOL . 'Are you in project root folder?';
-
-			throw new RuntimeException(\sprintf($err, $folder));
-		}
-
 		return null;
+	}
+
+	/**
+	 * Checks if provided folder is an ozone project root directory.
+	 * If provided folder is null, it will use current working directory.
+	 *
+	 * @param null|string $folder
+	 *
+	 * @return bool
+	 */
+	public static function isProjectRootDir(?string $folder = null): bool
+	{
+		$config = self::tryGetProjectConfig($folder);
+
+		return null !== $config;
 	}
 
 	/**
@@ -84,7 +92,11 @@ final class Utils
 	 */
 	public static function assertProjectFolder(?string $folder = null): void
 	{
-		self::loadProjectConfig($folder, true);
+		if (!self::isProjectRootDir($folder)) {
+			$err = 'Error: there is no ozone project in "%s".' . \PHP_EOL . 'Are you in project root folder?';
+
+			throw new RuntimeException(\sprintf($err, $folder));
+		}
 	}
 
 	/**
@@ -99,7 +111,7 @@ final class Utils
 			// we have access to the database
 			// will throw error when something went wrong
 			DbManager::getDb()
-					 ->getConnection();
+				->getConnection();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Database access assertion failed.', null, $t);
 		}
@@ -184,6 +196,7 @@ final class Utils
 	 * @param array            $excludes
 	 *
 	 * @return KliOption[]
+	 *
 	 * @throws \Kli\Exceptions\KliException
 	 */
 	public static function buildTableCliOptions(Table $table, array $includes = [], array $excludes = []): array
@@ -212,9 +225,13 @@ final class Utils
 			});
 
 			$option->type($kli_type)
-				   ->prompt(true, $name);
+				->prompt(true, $name);
 
-			if (!$db_type->isNullAble() && !$db_type->hasDefault()) {
+			if ($db_type->hasDefault()) {
+				$kli_type->def($db_type->getDefault());
+			}
+
+			if (!$db_type->isNullAble()) {
 				$option->required();
 			}
 

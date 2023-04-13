@@ -13,12 +13,14 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cache\Drivers;
 
+use Memcached;
 use OZONE\OZ\Cache\CacheItem;
 use OZONE\OZ\Cache\Interfaces\CacheProviderInterface;
 use OZONE\OZ\Core\Hasher;
+use RuntimeException;
 
-if (!class_exists('\Memcached')) {
-	throw new \RuntimeException('Memcached extension is not installed.');
+if (!\class_exists('\Memcached')) {
+	throw new RuntimeException('Memcached extension is not installed.');
 }
 
 /**
@@ -26,14 +28,13 @@ if (!class_exists('\Memcached')) {
  */
 class MemcachedCache implements CacheProviderInterface
 {
-
 	/**
 	 * MemcachedCache constructor.
 	 *
-	 * @param \Memcached $memcached
-	 * @param string     $namespace
+	 * @param Memcached $memcached
+	 * @param string    $namespace
 	 */
-	protected function __construct(protected \Memcached $memcached, protected string $namespace)
+	protected function __construct(protected Memcached $memcached, protected string $namespace)
 	{
 	}
 
@@ -44,18 +45,18 @@ class MemcachedCache implements CacheProviderInterface
 	{
 		$value = $this->memcached->get($key);
 
-		if ($this->memcached->getResultCode() === \Memcached::RES_NOTFOUND) {
+		if (Memcached::RES_NOTFOUND === $this->memcached->getResultCode()) {
 			return null;
 		}
 
 		$expire = $this->memcached->get($key . ':expire');
 
-		if ($this->memcached->getResultCode() === \Memcached::RES_NOTFOUND) {
+		if (Memcached::RES_NOTFOUND === $this->memcached->getResultCode()) {
 			return new CacheItem($key, $value);
 		}
 
 		if ($expire > \microtime(true)) {
-			return new CacheItem($key, $value, (float)$expire);
+			return new CacheItem($key, $value, (float) $expire);
 		}
 
 		return null;
@@ -86,11 +87,11 @@ class MemcachedCache implements CacheProviderInterface
 	{
 		$key                    = $item->getKey();
 		$expire                 = $item->getExpire();
-		$expire_in_milliseconds = (null !== $expire) ? (int)($expire * 1000) : null;
+		$expire_in_milliseconds = (null !== $expire) ? (int) ($expire * 1000) : null;
 
 		$this->memcached->set($key, $item->get(), $expire_in_milliseconds);
 
-		if ($this->memcached->getResultCode() !== \Memcached::RES_SUCCESS) {
+		if (Memcached::RES_SUCCESS !== $this->memcached->getResultCode()) {
 			return false;
 		}
 
@@ -98,7 +99,7 @@ class MemcachedCache implements CacheProviderInterface
 			$this->memcached->set($key . ':expire', $expire, $expire_in_milliseconds);
 		}
 
-		return $this->memcached->getResultCode() === \Memcached::RES_SUCCESS;
+		return Memcached::RES_SUCCESS === $this->memcached->getResultCode();
 	}
 
 	/**
@@ -163,18 +164,18 @@ class MemcachedCache implements CacheProviderInterface
 		if (isset($memcached_instances[$namespace])) {
 			$instance = $memcached_instances[$namespace];
 		} else {
-			$instance = new \Memcached($namespace);
+			$instance = new Memcached($namespace);
 			// Add servers if no connections listed.
 			// In a production environment with multiple server sets you may wish to prevent typos from silently adding data
 			// to the default pool, in which case return an error on no match instead of defaulting
-			if (!count($instance->getServerList())) {
+			if (!\count($instance->getServerList())) {
 				$prefix = Hasher::shorten($namespace);
-				$instance->setOption(\Memcached::OPT_PREFIX_KEY, $prefix . ':');
+				$instance->setOption(Memcached::OPT_PREFIX_KEY, $prefix . ':');
 				// advisable option
-				$instance->setOption(\Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
-				$instance->setOption(\Memcached::OPT_RECV_TIMEOUT, 1000);
-				$instance->setOption(\Memcached::OPT_SEND_TIMEOUT, 3000);
-				$instance->setOption(\Memcached::OPT_TCP_NODELAY, true);
+				$instance->setOption(Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
+				$instance->setOption(Memcached::OPT_RECV_TIMEOUT, 1000);
+				$instance->setOption(Memcached::OPT_SEND_TIMEOUT, 3000);
+				$instance->setOption(Memcached::OPT_TCP_NODELAY, true);
 
 				$instance->addServers($servers);
 			}

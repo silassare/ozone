@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-const OZ_OZONE_VERSION           = '3.0.0';
-const OZ_OZONE_VERSION_NAME      = 'OZone v' . OZ_OZONE_VERSION;
-const OZ_OZONE_PACKAGE_NAME      = 'silassare/ozone';
-const OZ_OZONE_IS_CLI            = ('cli' === \PHP_SAPI);
+const OZ_OZONE_VERSION      = '3.0.0';
+const OZ_OZONE_VERSION_NAME = 'OZone v' . OZ_OZONE_VERSION;
+const OZ_OZONE_PACKAGE_NAME = 'silassare/ozone';
+const OZ_OZONE_IS_CLI       = ('cli' === \PHP_SAPI);
 \define('OZ_OZONE_DIR', \dirname(__DIR__) . \DIRECTORY_SEPARATOR);
 \define('OZ_OZONE_START_TIME', \microtime(true));
 
@@ -37,12 +37,17 @@ if (!\defined('OZ_APP_DIR')) {
 
 // = Files directory
 if (!\defined('OZ_FILES_DIR')) {
-	\define('OZ_FILES_DIR', OZ_APP_DIR . 'oz_users_files' . DS);
+	\define('OZ_FILES_DIR', OZ_APP_DIR . 'oz_files' . DS);
 }
 
 // = Cache directory
 if (!\defined('OZ_CACHE_DIR')) {
 	\define('OZ_CACHE_DIR', OZ_APP_DIR . 'oz_cache' . DS);
+}
+
+// = Migration directory
+if (!\defined('OZ_MIGRATIONS_DIR')) {
+	\define('OZ_MIGRATIONS_DIR', OZ_APP_DIR . 'oz_migrations' . DS);
 }
 
 // = Logs directory

@@ -38,17 +38,17 @@ final class DbManager
 	 */
 	public static function init(): void
 	{
-		Gobl::setProjectRootDir(OZ_CACHE_DIR);
+		Gobl::setRootDir(OZ_CACHE_DIR);
 
 		$config    = Configs::load('oz.db');
 		$db_config = new DbConfig([
-			'db_table_prefix'    => Configs::get('oz.db', 'OZ_DB_TABLE_PREFIX'),
-			'db_host'            => $config['OZ_DB_HOST'],
-			'db_name'            => $config['OZ_DB_NAME'],
-			'db_user'            => $config['OZ_DB_USER'],
-			'db_pass'            => $config['OZ_DB_PASS'],
-			'db_charset'         => $config['OZ_DB_CHARSET'],
-			'db_collate'         => $config['OZ_DB_COLLATE'],
+			'db_table_prefix' => Configs::get('oz.db', 'OZ_DB_TABLE_PREFIX'),
+			'db_host'         => $config['OZ_DB_HOST'],
+			'db_name'         => $config['OZ_DB_NAME'],
+			'db_user'         => $config['OZ_DB_USER'],
+			'db_pass'         => $config['OZ_DB_PASS'],
+			'db_charset'      => $config['OZ_DB_CHARSET'],
+			'db_collate'      => $config['OZ_DB_COLLATE'],
 		]);
 
 		$rdbms_type = $config['OZ_DB_RDBMS'];
@@ -109,9 +109,9 @@ final class DbManager
 	 */
 	private static function register(): void
 	{
-		$oz_database   = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_database.php';
-		$structure     = self::getProjectDbDirectoryStructure();
-		$tables        = Configs::load('oz.db.tables');
+		$oz_database = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_database.php';
+		$structure   = self::getProjectDbDirectoryStructure();
+		$tables      = Configs::load('oz.db.tables');
 
 		TypeUtils::addTypeProvider(new TypeProvider());
 

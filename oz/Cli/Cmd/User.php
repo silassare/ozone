@@ -13,13 +13,11 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cli\Cmd;
 
-use Kli\KliAction;
 use Kli\KliArgs;
 use OZONE\OZ\Cli\Command;
 use OZONE\OZ\Cli\Utils\Utils;
 use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Db\OZUser;
-use Throwable;
 
 /**
  * Class User.
@@ -27,41 +25,28 @@ use Throwable;
 final class User extends Command
 {
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @throws Throwable
-	 */
-	public function execute(KliAction $action, KliArgs $args): void
-	{
-		$name = $action->getName();
-
-		if ('add' === $name) {
-			$this->add($args);
-		}
-	}
-
-	/**
 	 * @throws \Kli\Exceptions\KliException
 	 */
 	protected function describe(): void
 	{
 		$this->description('Manage users.');
 
-		// action: add a new user
-		$add = new KliAction('add');
-		$add->description('Add a new user.');
+		if (Utils::isProjectRootDir()) {
+			// action: add a new user
+			$add = $this->action('add', 'Add a new user.');
 
-		$user_tbl = DbManager::getDb()
-							 ->getTableOrFail(OZUser::TABLE_NAME);
+			$db       = DbManager::getDb();
+			$user_tbl = $db->getTableOrFail(OZUser::TABLE_NAME);
 
-		$add->addOption(...Utils::buildTableCliOptions($user_tbl, [], [
-			OZUser::COL_DATA,
-			OZUser::COL_CREATED_AT,
-			OZUser::COL_UPDATED_AT,
-			OZUser::COL_VALID,
-		]));
+			$add->addOption(...Utils::buildTableCliOptions($user_tbl, [], [
+				OZUser::COL_DATA,
+				OZUser::COL_CREATED_AT,
+				OZUser::COL_UPDATED_AT,
+				OZUser::COL_VALID,
+			]));
 
-		$this->addAction($add);
+			$add->handler($this->add(...));
+		}
 	}
 
 	/**
@@ -81,6 +66,6 @@ final class User extends Command
 		$user = new OZUser();
 
 		$user->hydrate($args->getNamedArgs())
-			 ->save();
+			->save();
 	}
 }
