@@ -11,11 +11,11 @@
 
 return [
 	// = salt for any usage purpose,
-	'OZ_DEFAULT_SALT' => 'UNcÂ&=YÂ;QQe2XV&4v80N0gNQ\'µJk>Y%2/ygha',
+	'OZ_DEFAULT_SALT' => '!pgÂf)g9cxN8§RyawXu]~fplqq-fJLvNU¨\\{pTÂv+p<+zBTo.It',
 	// = salt used to generate files keys,
-	'OZ_FILE_SALT'    => 'gÂ?£m"ÂC(_,4DQKQm:Â+^"²qe²',
+	'OZ_FILE_SALT'    => '],f",~9@8a1WSF+;Ha+0L=k/Â{kK¨ÂyP§M',
 	// = salt used to generate session id/token,
-	'OZ_SESSION_SALT' => 'QvW+ÂpO<Urms1^ÂTl¨16µ4e&²r$Âj)}LsQw@YJJH6Z"',
+	'OZ_SESSION_SALT' => 'C"I6µXc9§@oUQ~%"u7p',
 	// = salt used to generate authorization tokens,
-	'OZ_AUTH_SALT'    => 'Vl={G,Atek§osV~wv=pAn£\'/',
+	'OZ_AUTH_SALT'    => '_NNL[3!Ys53Km]\'9U$m"ÂzÂ£"@ÂZeJ23@t~E9/#P78(ÂÂ$;lIxT^B$xM<',
 ];

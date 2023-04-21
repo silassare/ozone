@@ -10,8 +10,8 @@
  */
 
 return [
-	'OZ_OZONE_VERSION'                => '2.0.0',
-	'OZ_PROJECT_NAME'                 => 'Test',
+	'OZ_OZONE_VERSION'                => '3.0.0',
+	'OZ_PROJECT_NAME'                 => 'Sample',
 	'OZ_PROJECT_NAMESPACE'            => 'SAMPLE\\App',
 	'OZ_PROJECT_CLASS'                => 'SampleApp',
 	'OZ_PROJECT_PREFIX'               => 'SA',

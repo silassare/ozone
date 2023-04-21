@@ -10,7 +10,7 @@
  */
 
 return [
-	'OZ_DB_TABLE_PREFIX' => 'NKkN',
+	'OZ_DB_TABLE_PREFIX' => 'lFy',
 	// = we use and support MySQL RDBMS by default,
 	'OZ_DB_RDBMS'        => 'mysql',
 	'OZ_DB_HOST'         => '__db_host__',

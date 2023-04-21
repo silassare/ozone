@@ -13,7 +13,7 @@ use OZONE\OZ\Loader\ClassLoader;
 use OZONE\OZ\OZone;
 use SAMPLE\App\SampleApp;
 
-// =	Don't forget to use DS instead of \ or / and
+// = Don't forget to use DS instead of \ or / and
 // = always add the last DS to your directories path
 if (!\defined('DS')) {
 	\define('DS', \DIRECTORY_SEPARATOR);
@@ -32,12 +32,17 @@ if (!\defined('OZ_APP_DIR')) {
 
 // = Files directory
 if (!\defined('OZ_FILES_DIR')) {
-	\define('OZ_FILES_DIR', OZ_APP_DIR . 'oz_users_files' . DS);
+	\define('OZ_FILES_DIR', OZ_APP_DIR . 'oz_files' . DS);
 }
 
 // = Cache directory
 if (!\defined('OZ_CACHE_DIR')) {
 	\define('OZ_CACHE_DIR', OZ_APP_DIR . 'oz_cache' . DS);
+}
+
+// = Migration directory
+if (!\defined('OZ_MIGRATIONS_DIR')) {
+	\define('OZ_MIGRATIONS_DIR', OZ_APP_DIR . 'oz_migrations' . DS);
 }
 
 // = Logs directory
