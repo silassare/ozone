@@ -128,7 +128,7 @@ class Cookies
 	public static function parseCookieHeaderString(string $header): array
 	{
 		$header  = \rtrim($header, "\r\n");
-		$pieces  = \preg_split('#[;]\s*#', $header);
+		$pieces  = \preg_split('#;\s*#', $header);
 		$cookies = [];
 
 		foreach ($pieces as $cookie) {

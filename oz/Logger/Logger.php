@@ -117,12 +117,12 @@ class Logger
 	{
 		self::log($t);
 
-		if (OZ_OZONE_IS_CLI) {
-			exit(\PHP_EOL . $t->getMessage() . \PHP_EOL);
-		}
-
 		OZone::getRunningApp()
 			?->onUnhandledThrowable($t);
+
+		if (OZone::isCliMode()) {
+			exit(\PHP_EOL . $t->getMessage() . \PHP_EOL);
+		}
 
 		self::criticalDieMessage();
 	}
@@ -143,10 +143,8 @@ class Logger
 				  . "\n\tCode    : {$code}"
 				  . "\n\tMessage : {$message}");
 
-		if (!OZ_OZONE_IS_CLI) {
-			OZone::getRunningApp()
-				?->onUnhandledError($code, $message, $file, $line);
-		}
+		OZone::getRunningApp()
+			?->onUnhandledError($code, $message, $file, $line);
 
 		if ($die_on_fatal) {
 			$fatalist = [\E_ERROR, \E_PARSE, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR];

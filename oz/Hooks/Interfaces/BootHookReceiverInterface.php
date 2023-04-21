@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Hooks\Interfaces;
 
-use OZONE\OZ\Cli\Cli;
-
 /**
  * Interface BootHookReceiverInterface.
+ *
+ * Note that on boot, the context and the database are not yet initialized.
+ * Just use this interface to register your own events handlers.
  */
 interface BootHookReceiverInterface
 {
@@ -24,9 +25,4 @@ interface BootHookReceiverInterface
 	 * Called on boot.
 	 */
 	public static function boot();
-
-	/**
-	 * Called on boot in CLI mode.
-	 */
-	public static function bootCli(Cli $cli);
 }

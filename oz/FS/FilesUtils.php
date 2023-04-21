@@ -124,39 +124,30 @@ class FilesUtils
 	 *
 	 * @param int $error
 	 *
-	 * @return string
+	 * @return array{message: string, reason: string}
 	 */
-	public static function uploadErrorMessage(int $error): string
+	public static function uploadErrorInfo(int $error): array
 	{
-		switch ($error) {
-			case \UPLOAD_ERR_INI_SIZE:
-				// 'The uploaded file exceeds the upload_max_filesize directive in php.ini'
-			case \UPLOAD_ERR_FORM_SIZE:
-				// 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'
-				$message = 'OZ_FILE_UPLOAD_TOO_BIG';
+		$message = match ($error) {
+			\UPLOAD_ERR_INI_SIZE, \UPLOAD_ERR_FORM_SIZE => 'OZ_FILE_UPLOAD_TOO_BIG',
+			\UPLOAD_ERR_NO_FILE => 'OZ_FILE_UPLOAD_IS_EMPTY',
+			default             => 'OZ_FILE_UPLOAD_FAILS',
+		};
+		$reason  = match ($error) {
+			\UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
+			\UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
+			\UPLOAD_ERR_NO_FILE    => 'No file was uploaded',
+			\UPLOAD_ERR_PARTIAL    => 'The uploaded file was only partially uploaded',
+			\UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder',
+			\UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+			\UPLOAD_ERR_EXTENSION  => 'File upload stopped by extension',
+			default                => 'Unknown upload error',
+		};
 
-				break;
-
-			case \UPLOAD_ERR_NO_FILE:
-				// 'No file was uploaded'
-				$message = 'OZ_FILE_UPLOAD_IS_EMPTY';
-
-				break;
-
-			case \UPLOAD_ERR_PARTIAL:
-				// 'The uploaded file was only partially uploaded'
-			case \UPLOAD_ERR_NO_TMP_DIR:
-				// 'Missing a temporary folder'
-			case \UPLOAD_ERR_CANT_WRITE:
-				// 'Failed to write file to disk'
-			case \UPLOAD_ERR_EXTENSION:
-				// 'File upload stopped by extension'
-			default:
-				// 'Unknown upload error'
-				$message = 'OZ_FILE_UPLOAD_FAILS';
-		}
-
-		return $message;
+		return [
+			'message' => $message,
+			'reason'  => $reason,
+		];
 	}
 
 	/**
@@ -345,7 +336,6 @@ class FilesUtils
 	public static function getFileDriver(string $name = 'default'): FilesDriverInterface
 	{
 		$driver = Configs::get('oz.files.drivers', $name);
-		$cache  = CacheManager::runtime(__METHOD__);
 
 		if (!$driver) {
 			throw new RuntimeException(\sprintf('Undefined file driver "%s".', $name));
@@ -364,7 +354,8 @@ class FilesUtils
 			return $driver::getInstance();
 		};
 
-		return $cache->getFactory($name, $factory)
+		return CacheManager::runtime(__METHOD__)
+			->factory($name, $factory)
 			->get();
 	}
 

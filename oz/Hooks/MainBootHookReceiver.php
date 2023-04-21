@@ -16,17 +16,21 @@ namespace OZONE\OZ\Hooks;
 use Exception;
 use Gobl\ORM\Events\ORMTableFilesGenerated;
 use Gobl\ORM\Utils\ORMClassKind;
-use OZONE\OZ\Cli\Cli;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\CRUDHandlerTrait;
 use OZONE\OZ\Core\DbManager;
+use OZONE\OZ\Core\Interfaces\TableCollectionsProviderInterface;
+use OZONE\OZ\Core\Interfaces\TableRelationsProviderInterface;
 use OZONE\OZ\Exceptions\ForbiddenException;
 use OZONE\OZ\Exceptions\MethodNotAllowedException;
 use OZONE\OZ\Exceptions\NotFoundException;
+use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\FS\Traits\FileEntityTrait;
+use OZONE\OZ\Hooks\Events\DbBeforeLockHook;
 use OZONE\OZ\Hooks\Events\ResponseHook;
 use OZONE\OZ\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\OZ\Http\Uri;
+use OZONE\OZ\OZone;
 use OZONE\OZ\Router\Events\RouteMethodNotAllowed;
 use OZONE\OZ\Router\Events\RouteNotFound;
 use OZONE\OZ\Users\Traits\UserEntityTrait;
@@ -203,7 +207,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	 */
 	public static function onTableFilesGenerated(ORMTableFilesGenerated $event): void
 	{
-		$table   = $event->getTable();
+		$table = $event->getTable();
 
 		if (DbManager::OZONE_DB_NAMESPACE === $table->getNamespace()) {
 			$name  = $table->getName();
@@ -216,11 +220,13 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 			}
 
 			if ($trait) {
-				$event->getClass(ORMClassKind::ENTITY)->useTrait($trait);
+				$event->getClass(ORMClassKind::ENTITY)
+					->useTrait($trait);
 			}
 		}
 
-		$event->getClass(ORMClassKind::CRUD)->useTrait(CRUDHandlerTrait::class);
+		$event->getClass(ORMClassKind::CRUD)
+			->useTrait(CRUDHandlerTrait::class);
 	}
 
 	/**
@@ -229,18 +235,62 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	public static function boot(): void
 	{
 		RouteNotFound::handle([self::class, 'onRouteNotFound'], Event::RUN_LAST);
+
 		RouteMethodNotAllowed::handle([self::class, 'onMethodNotAllowed'], Event::RUN_LAST);
 
 		ResponseHook::handle([self::class, 'onResponse'], Event::RUN_FIRST);
+
+		DbBeforeLockHook::handle([self::class, 'registerCustomRelations'], Event::RUN_FIRST);
+		DbBeforeLockHook::handle([self::class, 'registerCustomCollections'], Event::RUN_FIRST);
+
+		if (OZone::isCliMode()) {
+			ORMTableFilesGenerated::handle([self::class, 'onTableFilesGenerated'], Event::RUN_FIRST);
+		}
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Register custom relations.
 	 */
-	public static function bootCli(Cli $cli): void
+	public static function registerCustomRelations(): void
 	{
-		if ($cli->inProjectRoot()) {
-			ORMTableFilesGenerated::handle([self::class, 'onTableFilesGenerated'], Event::RUN_FIRST);
+		$relations_settings = Configs::load('oz.db.relations');
+
+		foreach ($relations_settings as $provider => $enabled) {
+			if ($enabled) {
+				if (!\is_subclass_of($provider, TableRelationsProviderInterface::class)) {
+					throw new RuntimeException(\sprintf(
+						'Custom relations provider "%s" should implements "%s".',
+						$provider,
+						TableRelationsProviderInterface::class
+					));
+				}
+
+				/* @var TableRelationsProviderInterface $provider */
+				$provider::defineRelations();
+			}
+		}
+	}
+
+	/**
+	 * Register custom collections.
+	 */
+	public static function registerCustomCollections(): void
+	{
+		$collections_settings = Configs::load('oz.db.collections');
+
+		foreach ($collections_settings as $provider => $enabled) {
+			if ($enabled) {
+				if (!\is_subclass_of($provider, TableCollectionsProviderInterface::class)) {
+					throw new RuntimeException(\sprintf(
+						'Custom collections provider "%s" should implements "%s".',
+						$provider,
+						TableCollectionsProviderInterface::class
+					));
+				}
+
+				/* @var TableCollectionsProviderInterface $provider */
+				$provider::defineCollections();
+			}
 		}
 	}
 }

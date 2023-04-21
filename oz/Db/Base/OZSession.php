@@ -342,8 +342,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function getClient(): ?\OZONE\OZ\Db\OZClient
 	{
-		$getters        = [\OZONE\OZ\Db\OZClient::COL_ID => $this->getClientID(...)];
-		$filters_bundle = $this->buildRelationFilter($getters, []);
+		$filters_bundle = $this->buildRelationFilter([]);
 
 		if (null === $filters_bundle) {
 			return null;
@@ -359,8 +358,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function getUser(): ?\OZONE\OZ\Db\OZUser
 	{
-		$getters        = [\OZONE\OZ\Db\OZUser::COL_ID => $this->getUserID(...)];
-		$filters_bundle = $this->buildRelationFilter($getters, []);
+		$filters_bundle = $this->buildRelationFilter([]);
 
 		if (null === $filters_bundle) {
 			return null;

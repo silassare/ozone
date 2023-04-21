@@ -70,7 +70,7 @@ class PPicUtils
 		}
 
 		$clone = $f->cloneFile();
-		$clone->setUserID($this->uid)
+		$clone->setOwnerID($this->uid)
 			->setLabel($file_label);
 
 		// each file clone should have its own thumbnail

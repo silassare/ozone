@@ -235,7 +235,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	}
 
 	/**
-	 * Filters rows with `eq` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `eq` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @param int|string $value the filter value
 	 *
@@ -243,17 +243,17 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIs(string|int $value): self
+	public function whereOwnerIdIs(string|int $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID,
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `neq` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `neq` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @param int|string $value the filter value
 	 *
@@ -261,17 +261,17 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIsNot(string|int $value): self
+	public function whereOwnerIdIsNot(string|int $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID,
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `lt` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `lt` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @param int|string $value the filter value
 	 *
@@ -279,17 +279,17 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIsLt(string|int $value): self
+	public function whereOwnerIdIsLt(string|int $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID,
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `lte` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `lte` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @param int|string $value the filter value
 	 *
@@ -297,17 +297,17 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIsLte(string|int $value): self
+	public function whereOwnerIdIsLte(string|int $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID,
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `gt` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `gt` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @param int|string $value the filter value
 	 *
@@ -315,17 +315,17 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIsGt(string|int $value): self
+	public function whereOwnerIdIsGt(string|int $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID,
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `gte` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `gte` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @param int|string $value the filter value
 	 *
@@ -333,17 +333,17 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIsGte(string|int $value): self
+	public function whereOwnerIdIsGte(string|int $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID,
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `like` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `like` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @param string $value the filter value
 	 *
@@ -351,17 +351,17 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIsLike(string $value): self
+	public function whereOwnerIdIsLike(string $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID,
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `not_like` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `not_like` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @param string $value the filter value
 	 *
@@ -369,47 +369,47 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIsNotLike(string $value): self
+	public function whereOwnerIdIsNotLike(string $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID,
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `is_null` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `is_null` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @return static
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIsNull(): self
+	public function whereOwnerIdIsNull(): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('is_null'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID
 		);
 	}
 
 	/**
-	 * Filters rows with `is_not_null` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `is_not_null` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @return static
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIsNotNull(): self
+	public function whereOwnerIdIsNotNull(): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('is_not_null'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID
 		);
 	}
 
 	/**
-	 * Filters rows with `in` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `in` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @param array $value the filter value
 	 *
@@ -417,17 +417,17 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIsIn(array $value): self
+	public function whereOwnerIdIsIn(array $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID,
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `not_in` condition on column `oz_files`.`user_id`.
+	 * Filters rows with `not_in` condition on column `oz_files`.`owner_id`.
 	 *
 	 * @param array $value the filter value
 	 *
@@ -435,11 +435,11 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 *
 	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereUserIdIsNotIn(array $value): self
+	public function whereOwnerIdIsNotIn(array $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_USER_ID,
+			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}

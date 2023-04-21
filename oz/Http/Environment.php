@@ -30,8 +30,8 @@ class Environment extends Collection
 		$env = \array_merge([
 			'SERVER_PROTOCOL'      => 'HTTP/1.1',
 			'REQUEST_METHOD'       => 'GET',
-			'SCRIPT_NAME'          => '',
-			'REQUEST_URI'          => '',
+			'SCRIPT_NAME'          => '/index.php',
+			'REQUEST_URI'          => '/',
 			'QUERY_STRING'         => '',
 			'SERVER_NAME'          => 'localhost',
 			'SERVER_PORT'          => 80,

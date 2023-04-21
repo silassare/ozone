@@ -402,7 +402,6 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	], ?int $max = null, int $offset = 0, array $order_by = [
 	], ?int &$total = -1): array
 	{
-		$getters        = [\OZONE\OZ\Db\OZFile::COL_USER_ID => $this->getID(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, $filters);
 
 		if (null === $filters_bundle) {
@@ -419,8 +418,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 */
 	public function getCountry(): ?\OZONE\OZ\Db\OZCountry
 	{
-		$getters        = [\OZONE\OZ\Db\OZCountry::COL_CC2 => $this->getCc2(...)];
-		$filters_bundle = $this->buildRelationFilter($getters, []);
+		$filters_bundle = $this->buildRelationFilter([]);
 
 		if (null === $filters_bundle) {
 			return null;
@@ -444,7 +442,6 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	], ?int $max = null, int $offset = 0, array $order_by = [
 	], ?int &$total = -1): array
 	{
-		$getters        = [\OZONE\OZ\Db\OZSession::COL_USER_ID => $this->getID(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, $filters);
 
 		if (null === $filters_bundle) {
@@ -469,7 +466,6 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	], ?int $max = null, int $offset = 0, array $order_by = [
 	], ?int &$total = -1): array
 	{
-		$getters        = [\OZONE\OZ\Db\OZClient::COL_USER_ID => $this->getID(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, $filters);
 
 		if (null === $filters_bundle) {
@@ -494,7 +490,6 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	], ?int $max = null, int $offset = 0, array $order_by = [
 	], ?int &$total = -1): array
 	{
-		$getters        = [\OZONE\OZ\Db\OZClient::COL_ADDED_BY => $this->getID(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, $filters);
 
 		if (null === $filters_bundle) {

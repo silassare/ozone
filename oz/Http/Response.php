@@ -220,13 +220,9 @@ class Response extends Message implements ResponseInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withStatus($code, $reasonPhrase = ''): self
+	public function withStatus(int $code, string $reasonPhrase = ''): self
 	{
 		$code = $this->filterStatus($code);
-
-		if (!\is_string($reasonPhrase) && !\method_exists($reasonPhrase, '__toString')) {
-			throw new InvalidArgumentException('Reason phrase must be a string');
-		}
 
 		$clone         = clone $this;
 		$clone->status = $code;

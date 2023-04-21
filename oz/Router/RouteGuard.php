@@ -555,7 +555,7 @@ class RouteGuard implements RouteGuardInterface
 
 		$form->setSubmitTo($uri);
 		$form->field('grant_form_ref')
-			->type((new TypeString())->setDefault($reference))
+			->type((new TypeString())->default($reference))
 			->required();
 
 		$exception = new UnauthorizedActionException();

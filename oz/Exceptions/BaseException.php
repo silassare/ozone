@@ -90,8 +90,8 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	{
 		$this->data = $data ?? [];
 		if ($message instanceof I18nMessage) {
-			$this->data    = \array_merge($message->getInject(), $this->data);
-			$message       = $message->getText();
+			$this->data = \array_merge($message->getInject(), $this->data);
+			$message    = $message->getText();
 		}
 
 		parent::__construct($message, $code, $previous);
@@ -145,17 +145,17 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 		self::clearOutPutBuffer();
 
-		// We must avoid any other error, if there is one after this,
-		// then we are in a critical situation: 'Error handling error'
+		// We are in a critical situation: 'Error handling error'
 		if (true === self::$just_die) {
 			self::dieWithAnErrorHandlingErrorOccurred();
 		}
 
 		// Any other error or exception should not be tolerated
+		// We must avoid any other error, if there is another error we must die
 		self::$just_die = true;
 
 		try {
-			if (OZ_OZONE_IS_CLI) {
+			if (OZone::isCliMode()) {
 				exit(\PHP_EOL . $this->getMessage() . \PHP_EOL);
 			}
 
@@ -214,7 +214,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	 */
 	public static function criticalDie(string $err_msg): void
 	{
-		if (OZ_OZONE_IS_CLI) {
+		if (OZone::isCliMode()) {
 			exit(\PHP_EOL . $err_msg . \PHP_EOL);
 		}
 

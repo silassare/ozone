@@ -11,11 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Migration;
+namespace OZONE\OZ\Migrations;
 
 use Gobl\DBAL\Db;
 use Gobl\DBAL\Diff\Diff;
 use Gobl\DBAL\Interfaces\MigrationInterface;
+use OZONE\OZ\Cache\CacheManager;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Core\Hasher;
@@ -46,7 +47,7 @@ class MigrationsManager
 	 */
 	public function getCurrentDbVersion(): int
 	{
-		return Configs::get('oz.db.migrations', 'db_version', 0);
+		return Configs::get('oz.db.migrations', 'OZ_MIGRATION_VERSION', self::DB_NOT_INSTALLED_VERSION);
 	}
 
 	/**
@@ -61,7 +62,7 @@ class MigrationsManager
 			DbManager::getDb()
 				->executeMulti($query);
 
-			$this->setDbVersion($migration->getVersion());
+			$this->setCurrentDbVersion($migration->getVersion());
 		}
 	}
 
@@ -84,7 +85,7 @@ class MigrationsManager
 				$version = $previous->getVersion();
 			}
 
-			$this->setDbVersion($version);
+			$this->setCurrentDbVersion($version);
 		}
 	}
 
@@ -95,20 +96,19 @@ class MigrationsManager
 	 */
 	public function createMigration(): ?string
 	{
-		if ($this->hasPendingMigrations()) {
-			// as we are using the latest migration to create the new one,
-			// any migration created w
-			throw new RuntimeException('There are pending migrations, please run them first.');
-		}
+		$fm        = new FilesManager(OZ_MIGRATIONS_DIR);
+		$latest    = $this->getLatestMigration();
+		$db_actual = DbManager::getDb();
+		$config    = $db_actual->getConfig();
 
-		$fm      = new FilesManager(OZ_MIGRATIONS_DIR);
-		$latest  = $this->getLatestMigration();
-		$db_to   = DbManager::getDb();
-		$config  = $db_to->getConfig();
-		$db_from = Db::createInstanceOf($db_to->getType(), $config);
+		$db_from = Db::createInstanceOf($db_actual->getType(), $config);
+		$db_to   = Db::createInstanceOf($db_actual->getType(), $config);
+
+		DbManager::collectTablesTo($db_to);
 
 		if ($latest) {
-			$db_from->addTablesToNamespace('Migrations', $latest->getTables());
+			$db_from->ns('Migrations')
+				->addTables($latest->getTables());
 			$version = $latest->getVersion() + 1;
 		} else {
 			$version = self::FIRST_VERSION;
@@ -133,48 +133,51 @@ class MigrationsManager
 	 */
 	public function migrations(): array
 	{
-		$fm = new FilesManager(OZ_MIGRATIONS_DIR);
+		$cm = CacheManager::runtime(self::class);
 
-		$filter     = $fm->filter()
-			->isFile()
-			->isReadable()
-			->name('#\.php$#');
-		$migrations = [];
+		return $cm->factory('migrations', function () {
+			$fm = new FilesManager(OZ_MIGRATIONS_DIR);
 
-		$duplicates = [];
+			$filter     = $fm->filter()
+				->isFile()
+				->isReadable()
+				->name('#\.php$#');
+			$migrations = [];
 
-		foreach ($filter->find() as $file) {
-			$migration = require $file;
+			$duplicates = [];
 
-			if ($migration instanceof MigrationInterface) {
-				$version = $migration->getVersion();
+			foreach ($filter->find() as $file) {
+				$migration = require $file;
 
-				if (isset($duplicates[$version])) {
+				if ($migration instanceof MigrationInterface) {
+					$version = $migration->getVersion();
+
+					if (isset($duplicates[$version])) {
+						throw new RuntimeException(\sprintf(
+							'Duplicate migration version "%s" found in "%s" and "%s"',
+							$version,
+							$duplicates[$version],
+							$file
+						));
+					}
+
+					$duplicates[$migration->getVersion()] = $file;
+					$migrations[]                         = $migration;
+				} else {
 					throw new RuntimeException(\sprintf(
-						'Duplicate migration version "%s" found in "%s" and "%s"',
-						$version,
-						$duplicates[$version],
-						$file
+						'Invalid migration file "%s", it must return an instance of "%s" not "%s"',
+						$file,
+						MigrationInterface::class,
+						\get_debug_type($migration),
 					));
 				}
-
-				$duplicates[$migration->getVersion()] = $file;
-				$migrations[]                         = $migration;
-			} else {
-				throw new RuntimeException(\sprintf(
-					'Invalid migration file "%s", it must return an instance of "%s" not "%s"',
-					$file,
-					MigrationInterface::class,
-					\get_debug_type($migration),
-				));
 			}
-		}
 
-		\usort($migrations, static function (MigrationInterface $a, MigrationInterface $b) {
-			return $a->getVersion() <=> $b->getVersion();
-		});
+			\usort($migrations, static fn (MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion());
 
-		return $migrations;
+			return $migrations;
+		})
+			->get();
 	}
 
 	/**
@@ -320,8 +323,8 @@ class MigrationsManager
 	 *
 	 * @param int $version
 	 */
-	private function setDbVersion(int $version): void
+	private function setCurrentDbVersion(int $version): void
 	{
-		Configs::set('oz.db.migrations', 'db_version', $version);
+		Configs::set('oz.db.migrations', 'OZ_MIGRATION_VERSION', $version);
 	}
 }

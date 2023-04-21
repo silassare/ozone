@@ -509,20 +509,20 @@ final class Context
 				$body->rewind();
 			}
 
-			$contentLength = (int) $response->getHeaderLine('Content-Length');
+			$content_length = (int) $response->getHeaderLine('Content-Length');
 
-			if (!$contentLength) {
-				$contentLength = $body->getSize();
+			if (!$content_length) {
+				$content_length = $body->getSize();
 			}
 
-			if (isset($contentLength)) {
-				$amountToRead = $contentLength;
+			if (isset($content_length)) {
+				$amount_to_read = $content_length;
 
-				while ($amountToRead > 0 && !$body->eof()) {
-					$data = $body->read(\min($chunk_size, $amountToRead));
+				while ($amount_to_read > 0 && !$body->eof()) {
+					$data = $body->read(\min($chunk_size, $amount_to_read));
 					echo $data;
 
-					$amountToRead -= \strlen($data);
+					$amount_to_read -= \strlen($data);
 
 					if (\CONNECTION_NORMAL !== \connection_status()) {
 						$body->close();

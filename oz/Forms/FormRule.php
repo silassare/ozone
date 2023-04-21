@@ -28,9 +28,9 @@ class FormRule implements ArrayCapableInterface
 	private null|string|I18nMessage $message = null;
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string           $field
-	 * @param bool|float|int|string                  $value
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
+	 * @param \OZONE\OZ\Forms\Field|string                     $field
+	 * @param null|bool|float|int|\OZONE\OZ\Forms\Field|string $value
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string           $message
 	 *
 	 * @return $this
 	 */
@@ -40,9 +40,9 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string           $field
-	 * @param bool|float|int|string                  $value
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
+	 * @param \OZONE\OZ\Forms\Field|string                     $field
+	 * @param null|bool|float|int|\OZONE\OZ\Forms\Field|string $value
+	 * @param null|\OZONE\OZ\Lang\I18nMessage|string           $message
 	 *
 	 * @return $this
 	 */

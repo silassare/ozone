@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\OZ\Sessions;
 
 use OZONE\OZ\Cache\CacheManager;
-use OZONE\OZ\Cli\Cli;
 use OZONE\OZ\Core\ClientHelper;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\Context;
@@ -238,13 +237,6 @@ final class Session implements BootHookReceiverInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 */
-	public static function bootCli(Cli $cli): void
-	{
-	}
-
-	/**
 	 * Initialize session.
 	 *
 	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
@@ -380,7 +372,7 @@ final class Session implements BootHookReceiverInterface
 		};
 
 		return CacheManager::runtime(__METHOD__)
-			->getFactory($sid, $factory)
+			->factory($sid, $factory)
 			->get();
 	}
 
@@ -422,7 +414,7 @@ final class Session implements BootHookReceiverInterface
 		};
 
 		return CacheManager::runtime(__METHOD__)
-			->getFactory($token, $factory)
+			->factory($token, $factory)
 			->get();
 	}
 

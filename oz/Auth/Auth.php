@@ -15,7 +15,6 @@ namespace OZONE\OZ\Auth;
 
 use OZONE\OZ\Auth\Interfaces\AuthProviderInterface;
 use OZONE\OZ\Auth\Interfaces\AuthScopeInterface;
-use OZONE\OZ\Cli\Cli;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\Context;
 use OZONE\OZ\Core\Hasher;
@@ -87,13 +86,6 @@ final class Auth implements BootHookReceiverInterface
 		FinishHook::handle(static function () {
 			self::gc();
 		}, Event::RUN_LAST);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public static function bootCli(Cli $cli): void
-	{
 	}
 
 	/**

@@ -272,7 +272,6 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	], ?int $max = null, int $offset = 0, array $order_by = [
 	], ?int &$total = -1): array
 	{
-		$getters        = [\OZONE\OZ\Db\OZUser::COL_CC2 => $this->getCc2(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, $filters);
 
 		if (null === $filters_bundle) {

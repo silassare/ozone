@@ -23,6 +23,7 @@ use Kli\Exceptions\KliInputException;
 use Kli\Kli;
 use Kli\KliArgs;
 use Kli\Table\KliTableFormatter;
+use OLIUP\CG\PHPNamespace;
 use OZONE\OZ\Cli\Command;
 use OZONE\OZ\Cli\Process;
 use OZONE\OZ\Cli\Utils\Utils;
@@ -31,7 +32,7 @@ use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Core\Hasher;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\FS\FilesManager;
-use OZONE\OZ\Migration\MigrationsManager;
+use OZONE\OZ\Migrations\MigrationsManager;
 use PHPUtils\FS\PathUtils;
 use Throwable;
 
@@ -66,7 +67,6 @@ final class Db extends Command
 	protected function describe(): void
 	{
 		$this->description('Manage your project database.');
-		$namespace_pattern = '#^[a-zA-Z][a-zA-Z0-9_]*(?:\\\\[a-zA-Z][a-zA-Z0-9_]*)*$#';
 
 		// action: build database
 		$build = $this->action('build', 'To build the database, generate required classes.');
@@ -82,7 +82,7 @@ final class Db extends Command
 		$build->option('namespace', 'n')
 			->description('The namespace of the tables to be generated.')
 			->string()
-			->pattern($namespace_pattern)
+			->pattern(PHPNamespace::NAMESPACE_PATTERN)
 			->def(null);
 		$build->handler($this->build(...));
 
@@ -117,7 +117,7 @@ final class Db extends Command
 		$generate->option('namespace', 'n', [], 2)
 			->description('The namespace of the tables to be generated.')
 			->string()
-			->pattern($namespace_pattern)
+			->pattern(PHPNamespace::NAMESPACE_PATTERN)
 			->def(null);
 		$generate->handler($this->generate(...));
 
@@ -431,6 +431,7 @@ final class Db extends Command
 	 */
 	private function migrationsCreate(): void
 	{
+		Utils::assertProjectFolder();
 		$mg   = new MigrationsManager();
 		$path = $mg->createMigration();
 
@@ -449,6 +450,7 @@ final class Db extends Command
 	 */
 	private function migrationsCheck(): void
 	{
+		Utils::assertProjectFolder();
 		$mg  = new MigrationsManager();
 		$cli = $this->getCli();
 		if ($mg->hasPendingMigrations()) {
@@ -483,6 +485,8 @@ final class Db extends Command
 	 */
 	private function migrationsRun(KliArgs $args): void
 	{
+		Utils::assertDatabaseAccess();
+
 		$mg         = new MigrationsManager();
 		$migrations = $mg->getPendingMigrations();
 
@@ -529,6 +533,8 @@ final class Db extends Command
 	 */
 	private function migrationsRollback(KliArgs $args): void
 	{
+		Utils::assertDatabaseAccess();
+
 		$mg                 = new MigrationsManager();
 		$target_version     = $args->get('to-version');
 		$current_db_version = $mg->getCurrentDbVersion();

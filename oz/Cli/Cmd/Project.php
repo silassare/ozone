@@ -16,6 +16,7 @@ namespace OZONE\OZ\Cli\Cmd;
 use JsonException;
 use Kli\Exceptions\KliInputException;
 use Kli\KliArgs;
+use OLIUP\CG\PHPClass;
 use OZONE\OZ\Cli\Command;
 use OZONE\OZ\Cli\Process;
 use OZONE\OZ\Cli\Utils\Utils;
@@ -68,11 +69,6 @@ final class Project extends Command
 	{
 		$this->description('Manage your ozone project.');
 
-		// according to "http://php.net/manual/en/language.oop5.basic.php" visited on 1st Sept. 2017
-		// php class name in regexp should be : ^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$
-		// but we constrain the class name to start with a letter
-		// and to contain only letters, numbers and underscores
-		$class_name_reg     = '#^[a-zA-Z][a-zA-Z0-9_]+$#';
 		$project_prefix_reg = '#^[a-zA-Z][a-zA-Z0-9]$#';
 
 		// action: project create
@@ -95,7 +91,7 @@ final class Project extends Command
 			->required()
 			->string(2, 30)
 			->def('SampleApp')
-			->pattern($class_name_reg);
+			->pattern(PHPClass::CLASS_NAME_PATTERN);
 		$create->option('prefix', 'p', [], 4)
 			->description('Your new project prefix.')
 			->prompt(true, 'Your new project prefix')
@@ -131,7 +127,7 @@ final class Project extends Command
 		$serve->option('port', 'p')
 			->description('The port to use.')
 			->prompt(true, 'The port to use')
-			->number(1024, 65535)
+			->number(0, 65535)
 			->def(8080);
 		$serve->option('doc-root', 'r')
 			->description('The document root to use.')

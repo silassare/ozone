@@ -323,7 +323,7 @@ class Request extends Message implements ServerRequestInterface
 			return $this->bodyParsed;
 		}
 
-		if (empty($this->body)) {
+		if (empty((string) $this->body)) {
 			return null;
 		}
 
@@ -356,7 +356,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withMethod($method): self
+	public function withMethod(string $method): self
 	{
 		$method                = self::filterMethod($method);
 		$clone                 = clone $this;
@@ -375,7 +375,7 @@ class Request extends Message implements ServerRequestInterface
 			return $this->requestTarget;
 		}
 
-		if (empty($this->uri)) {
+		if (empty((string) $this->uri)) {
 			return '/';
 		}
 
@@ -396,7 +396,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withRequestTarget($requestTarget): self
+	public function withRequestTarget(string $requestTarget): self
 	{
 		if (\preg_match('#\s#', $requestTarget)) {
 			throw new InvalidArgumentException(
@@ -420,7 +420,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withUri(UriInterface $uri, $preserveHost = false): self
+	public function withUri(UriInterface $uri, bool $preserveHost = false): self
 	{
 		$clone      = clone $this;
 		$clone->uri = $uri;
@@ -621,7 +621,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getAttribute($name, $default = null): mixed
+	public function getAttribute(string $name, $default = null): mixed
 	{
 		return $this->attributes->get($name, $default);
 	}
@@ -629,7 +629,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withAttribute($name, $value): self
+	public function withAttribute(string $name, $value): self
 	{
 		$clone = clone $this;
 		$clone->attributes->set($name, $value);
@@ -640,7 +640,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withoutAttribute($name): self
+	public function withoutAttribute(string $name): self
 	{
 		$clone = clone $this;
 		$clone->attributes->remove($name);
@@ -743,7 +743,7 @@ class Request extends Message implements ServerRequestInterface
 			return $this->queryParams;
 		}
 
-		if (empty($this->uri)) {
+		if (empty((string) $this->uri)) {
 			return [];
 		}
 

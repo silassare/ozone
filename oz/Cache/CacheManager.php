@@ -134,7 +134,7 @@ final class CacheManager
 	 *
 	 * @return \OZONE\OZ\Cache\CacheItem
 	 */
-	public function getFactory(string $key, callable $factory, float|DateInterval|null $lifetime = null): CacheItem
+	public function factory(string $key, callable $factory, float|DateInterval|null $lifetime = null): CacheItem
 	{
 		$item = $this->getItem($key);
 

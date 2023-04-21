@@ -15,7 +15,6 @@ namespace OZONE\OZ\Http;
 
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
-use Stringable;
 
 /**
  * Class Uri.
@@ -135,7 +134,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withScheme($scheme): self
+	public function withScheme(string $scheme): self
 	{
 		$scheme        = $this->filterScheme($scheme);
 		$clone         = clone $this;
@@ -212,7 +211,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withUserInfo($user, $password = null): self
+	public function withUserInfo(string $user, ?string $password = null): self
 	{
 		$clone           = clone $this;
 		$clone->user     = $user;
@@ -232,7 +231,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withHost($host): self
+	public function withHost(string $host): self
 	{
 		$clone       = clone $this;
 		$clone->host = $host;
@@ -251,7 +250,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withPort($port): self
+	public function withPort(?int $port): self
 	{
 		$port        = $this->filterPort($port);
 		$clone       = clone $this;
@@ -271,7 +270,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withPath($path, bool $preserve_base_path = false): self
+	public function withPath(string $path, bool $preserve_base_path = false): self
 	{
 		$clone       = clone $this;
 		$clone->path = $this->filterPath($path);
@@ -308,12 +307,9 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withQuery($query): self
+	public function withQuery(string $query): self
 	{
-		if (!\is_string($query) && !\method_exists($query, '__toString')) {
-			throw new InvalidArgumentException('Uri query must be a string');
-		}
-		$query        = \ltrim((string) $query, '?');
+		$query        = \ltrim($query, '?');
 		$clone        = clone $this;
 		$clone->query = $this->filterQuery($query);
 
@@ -343,11 +339,8 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withFragment($fragment): self
+	public function withFragment(string $fragment): self
 	{
-		if (!\is_string($fragment) && !\method_exists($fragment, '__toString')) {
-			throw new InvalidArgumentException('Uri fragment must be a string');
-		}
 		$fragment        = \ltrim($fragment, '#');
 		$clone           = clone $this;
 		$clone->fragment = $this->filterQuery($fragment);
@@ -358,17 +351,12 @@ class Uri implements UriInterface
 	/**
 	 * Creates new Uri from string.
 	 *
-	 * @param string|Stringable $uri Complete Uri string
-	 *                               (i.e., https://user:pass@host:443/path?query).
+	 * @param string $uri Complete Uri string (i.e., https://user:pass@host:443/path?query).
 	 *
 	 * @return self
 	 */
-	public static function createFromString(string|Stringable $uri): self
+	public static function createFromString(string $uri): self
 	{
-		if (!\is_string($uri) && !\method_exists($uri, '__toString')) {
-			throw new InvalidArgumentException('Uri must be a string');
-		}
-
 		$parts    = \parse_url($uri);
 		$scheme   = $parts['scheme'] ?? '';
 		$user     = $parts['user'] ?? '';
@@ -468,24 +456,20 @@ class Uri implements UriInterface
 	/**
 	 * Filters Uri scheme.
 	 *
-	 * @param string|Stringable $scheme raw Uri scheme
+	 * @param string $scheme raw Uri scheme
 	 *
 	 * @return string
 	 *
 	 * @throws InvalidArgumentException if Uri scheme is not "", "https", or "http"
 	 * @throws InvalidArgumentException if the Uri scheme is not a string
 	 */
-	protected function filterScheme(string|Stringable $scheme): string
+	protected function filterScheme(string $scheme): string
 	{
 		static $valid = [
 			''      => true,
 			'https' => true,
 			'http'  => true,
 		];
-
-		if (!\is_string($scheme) && !\method_exists($scheme, '__toString')) {
-			throw new InvalidArgumentException('Uri scheme must be a string');
-		}
 
 		$scheme = \str_replace('://', '', \strtolower($scheme));
 

@@ -715,7 +715,7 @@ final class UsersManager
 		};
 
 		return CacheManager::runtime(__METHOD__)
-			->getFactory($uid, $factory)
+			->factory($uid, $factory)
 			->get();
 	}
 }

@@ -56,12 +56,12 @@ return [
 			'phone'      => [
 				'type'       => 'phone',
 				'registered' => false,
-				'null'       => !Configs::get('oz.users', 'OZ_USER_PHONE_REQUIRED'),
+				'nullable'   => !Configs::get('oz.users', 'OZ_USER_PHONE_REQUIRED'),
 			],
 			'email'      => [
 				'type'       => 'email',
 				'registered' => false,
-				'null'       => !Configs::get('oz.users', 'OZ_USER_EMAIL_REQUIRED'),
+				'nullable'   => !Configs::get('oz.users', 'OZ_USER_EMAIL_REQUIRED'),
 			],
 			'pass'       => [
 				'type' => 'password',
@@ -74,9 +74,9 @@ return [
 			],
 			'birth_date' => Fields::birthDate(Configs::get('oz.users', 'OZ_USER_MIN_AGE'), Configs::get('oz.users', 'OZ_USER_MAX_AGE')),
 			'pic'        => [
-				'type' => 'file',
-				'mime' => ['image/png', 'image/jpeg'],
-				'null' => true,
+				'type'     => 'file',
+				'mime'     => ['image/png', 'image/jpeg'],
+				'nullable' => true,
 			],
 			'cc2'        => [
 				'type'       => 'cc2',
@@ -207,8 +207,8 @@ return [
 			// when specified, the attached user right will be used every time
 			// the api key of the client is used
 			'user_id'           => [
-				'type' => 'ref:oz_users.id',
-				'null' => true,
+				'type'     => 'ref:oz_users.id',
+				'nullable' => true,
 			],
 			'url'               => [
 				'type' => 'string',
@@ -277,8 +277,8 @@ return [
 			],
 			'client_id'  => 'ref:oz_clients.id',
 			'user_id'    => [
-				'type' => 'ref:oz_users.id',
-				'null' => true,
+				'type'     => 'ref:oz_users.id',
+				'nullable' => true,
 			],
 			'token'      => [
 				'type' => 'string',
@@ -462,7 +462,7 @@ return [
 			[
 				'type'      => 'foreign_key',
 				'reference' => 'oz_users',
-				'columns'   => ['user_id' => 'id'],
+				'columns'   => ['owner_id' => 'id'],
 				'update'    => 'cascade',
 				'delete'    => 'set_null',
 			],
@@ -487,9 +487,9 @@ return [
 				'unsigned'       => true,
 				'auto_increment' => true,
 			],
-			'user_id'    => [
-				'type' => 'ref:oz_users.id',
-				'null' => true,
+			'owner_id'   => [
+				'type'     => 'ref:oz_users.id',
+				'nullable' => true,
 			],
 			'key'        => [
 				'type' => 'string',
@@ -508,13 +508,13 @@ return [
 			'clone_id'   => [
 				'type'     => 'bigint',
 				'unsigned' => true,
-				'null'     => true,
+				'nullable' => true,
 				'default'  => null,
 			],
 			'source_id'  => [
 				'type'     => 'bigint',
 				'unsigned' => true,
-				'null'     => true,
+				'nullable' => true,
 				'default'  => null,
 			],
 			'size'       => [
@@ -586,8 +586,8 @@ return [
 				'max'  => 128,
 			],
 			'value'      => [
-				'type' => 'string',
-				'null' => true,
+				'type'     => 'string',
+				'nullable' => true,
 			],
 			'label'      => [
 				'type' => 'string',

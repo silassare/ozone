@@ -153,7 +153,7 @@ class Stream implements StreamInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getMetadata($key = null): mixed
+	public function getMetadata(?string $key = null): mixed
 	{
 		$this->meta = \stream_get_meta_data($this->stream);
 
@@ -283,7 +283,7 @@ class Stream implements StreamInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function seek($offset, $whence = \SEEK_SET): void
+	public function seek(int $offset, int $whence = \SEEK_SET): void
 	{
 		// Note that fseek returns 0 on success!
 		if (!$this->isSeekable() || -1 === \fseek($this->stream, $offset, $whence)) {
@@ -294,7 +294,7 @@ class Stream implements StreamInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function read($length): string
+	public function read(int $length): string
 	{
 		if (!$this->isReadable() || ($data = \fread($this->stream, $length)) === false) {
 			throw new RuntimeException('Could not read from stream');
@@ -306,7 +306,7 @@ class Stream implements StreamInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function write($string): int
+	public function write(string $string): int
 	{
 		if (!$this->isWritable() || ($written = \fwrite($this->stream, $string)) === false) {
 			throw new RuntimeException('Could not write to stream');

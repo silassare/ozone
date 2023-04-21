@@ -26,13 +26,7 @@ interface AppInterface
 	public function __construct();
 
 	/**
-	 * ==============================================================
-	 * HOOKS
-	 * ==============================================================.
-	 */
-
-	/**
-	 * Called when ozone boot.
+	 * Called when ozone is booting.
 	 */
 	public function boot(): void;
 

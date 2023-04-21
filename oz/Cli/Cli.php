@@ -16,11 +16,10 @@ namespace OZONE\OZ\Cli;
 use Kli\Kli;
 use OZONE\OZ\Cli\Utils\Utils;
 use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\OZ\Loader\ClassLoader;
 use OZONE\OZ\Logger\Logger;
+use OZONE\OZ\OZone;
 use PHPUtils\Str;
 
 /**
@@ -89,57 +88,39 @@ final class Cli extends Kli
 	 */
 	public static function run(array $arg): self
 	{
-		if (!\defined('OZ_OZONE_IS_CLI') || !OZ_OZONE_IS_CLI) {
+		if (!OZone::isCliMode()) {
 			echo 'This is the command line tool for OZone Framework.';
 
 			exit(1);
 		}
 
-		$title          = 'oz';
-		$project_loaded = false;
+		$title           = 'oz';
+		$in_project_root = false;
 
 		if ($config = Utils::tryGetProjectConfig()) {
 			$title .= ':' . Str::stringToURLSlug($config['OZ_PROJECT_NAME']);
 			// Adds project namespace root directory
 			ClassLoader::addNamespace($config['OZ_PROJECT_NAMESPACE'], OZ_APP_DIR);
-			// Init database
-			DbManager::init();
-			$project_loaded = true;
+
+			$in_project_root = true;
 		}
 
 		\cli_set_process_title($title);
 
-		$cli = new self($project_loaded);
+		$cli = new self($in_project_root);
 
-		self::notifyBootHookReceivers($cli);
+		if ($in_project_root) {
+			$app_class = $config['OZ_PROJECT_NAMESPACE'] . '\\' . $config['OZ_PROJECT_CLASS'];
+
+			/** @var \OZONE\OZ\App\Interfaces\AppInterface $app */
+			$app = new $app_class();
+			OZone::run($app);
+		}
 
 		$cli->loadCommands()
 			->execute($arg);
 
 		return $cli;
-	}
-
-	/**
-	 * Notify all boot hook receivers.
-	 */
-	private static function notifyBootHookReceivers(self $cli): void
-	{
-		$hook_receivers = Configs::load('oz.boot');
-
-		foreach ($hook_receivers as $receiver => $enabled) {
-			if ($enabled) {
-				if (!\is_subclass_of($receiver, BootHookReceiverInterface::class)) {
-					throw new RuntimeException(\sprintf(
-						'Boot hook receiver "%s" should implements "%s".',
-						$receiver,
-						BootHookReceiverInterface::class
-					));
-				}
-
-				/* @var \OZONE\OZ\Hooks\Interfaces\BootHookReceiverInterface $receiver */
-				$receiver::bootCli($cli);
-			}
-		}
 	}
 
 	/**

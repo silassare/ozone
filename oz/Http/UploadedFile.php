@@ -116,7 +116,7 @@ class UploadedFile implements UploadedFileInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function moveTo($targetPath): void
+	public function moveTo(string $targetPath): void
 	{
 		if ($this->moved) {
 			throw new RuntimeException('Uploaded file already moved');

@@ -60,11 +60,11 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function setDefault($default): self
+	public function default($default): self
 	{
-		$this->base_type->setDefault($default);
+		$this->base_type->default($default);
 
-		return parent::setDefault($default);
+		return parent::default($default);
 	}
 
 	/**
@@ -481,7 +481,10 @@ class TypeFile extends Type
 		$debug['file_name'] = $upload->getClientFilename();
 
 		if (\UPLOAD_ERR_OK !== $error) {
-			throw new TypesInvalidValueException(FilesUtils::uploadErrorMessage($error), $debug);
+			$info             = FilesUtils::uploadErrorInfo($error);
+			$debug['_reason'] = $info['reason'];
+
+			throw new TypesInvalidValueException($info['message'], $debug);
 		}
 
 		if (!$this->checkFileSize($upload->getSize())) {

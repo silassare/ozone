@@ -30,7 +30,8 @@ final class Route
 	 */
 	private $callable;
 
-	private string $parsed;
+	private bool   $parsed = false;
+	private string $parser_result;
 	private array  $params = [];
 
 	/**
@@ -149,15 +150,15 @@ final class Route
 	}
 
 	/**
-	 * Returns parsed route.
+	 * Returns parser result.
 	 *
 	 * @return string
 	 */
-	public function getParsed(): string
+	public function getParserResult(): string
 	{
 		$this->ensureParsed();
 
-		return $this->parsed;
+		return $this->parser_result;
 	}
 
 	/**
@@ -188,7 +189,7 @@ final class Route
 			return $path === $this->options->getPath();
 		}
 
-		$regexp  = self::REG_DELIMITER . '^' . $this->parsed . '$' . self::REG_DELIMITER;
+		$regexp  = self::REG_DELIMITER . '^' . $this->parser_result . '$' . self::REG_DELIMITER;
 		$matches = [];
 
 		$passed = 1 === \preg_match($regexp, $path, $matches);
@@ -217,16 +218,18 @@ final class Route
 	 */
 	private function ensureParsed(): void
 	{
-		$path = $this->options->getPath();
-		if (!isset($this->parsed)) {
+		if (!$this->parsed) {
+			$path = $this->options->getPath();
 			if ($this->isDynamic()) {
-				$params          = [];
-				$declared_params = \array_merge($this->router->getGlobalParams(), $this->options->getParams());
-				$this->parsed    = self::parse($path, $declared_params, $params);
-				$this->params    = \array_keys($params);
+				$params              = [];
+				$declared_params     = \array_merge($this->router->getGlobalParams(), $this->options->getParams());
+				$this->parser_result = self::parse($path, $declared_params, $params);
+				$this->params        = \array_keys($params);
 			} else {
-				$this->parsed = $path;
+				$this->parser_result = $path;
 			}
+
+			$this->parsed = true;
 		}
 	}
 

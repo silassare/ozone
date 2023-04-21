@@ -31,7 +31,7 @@ class Field implements ArrayCapableInterface
 	protected TypeInterface|TypesSwitcher $_type;
 
 	/**
-	 * @var callable(mixed, \OZONE\OZ\Forms\FormData):null|bool
+	 * @var callable(mixed, \OZONE\OZ\Forms\FormData):(bool|null)
 	 */
 	protected $_validator;
 
@@ -119,7 +119,7 @@ class Field implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param callable(mixed, \OZONE\OZ\Forms\FormData):bool $validator
+	 * @param callable(mixed, \OZONE\OZ\Forms\FormData):(bool|null) $validator
 	 *
 	 * @return $this
 	 */

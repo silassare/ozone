@@ -18,10 +18,7 @@ use OZONE\OZ\Hooks\Hook;
 /**
  * Class InitHook.
  *
- * This event is triggered when ozone is fully initialized.
- * Just before processing the request.
- *
- * !This event is not triggered for sub-request.
+ * This hook is triggered when ozone is fully booted.
  */
 final class InitHook extends Hook
 {

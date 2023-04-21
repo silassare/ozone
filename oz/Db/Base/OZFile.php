@@ -17,7 +17,7 @@ namespace OZONE\OZ\Db\Base;
  * Class OZFile.
  *
  * @property null|string $id         Getter for column `oz_files`.`id`.
- * @property null|string $user_id    Getter for column `oz_files`.`user_id`.
+ * @property null|string $owner_id   Getter for column `oz_files`.`owner_id`.
  * @property string      $key        Getter for column `oz_files`.`key`.
  * @property string      $ref        Getter for column `oz_files`.`ref`.
  * @property string      $driver     Getter for column `oz_files`.`driver`.
@@ -38,7 +38,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	public const TABLE_NAME      = 'oz_files';
 	public const TABLE_NAMESPACE = 'OZONE\\OZ\\Db';
 	public const COL_ID          = 'file_id';
-	public const COL_USER_ID     = 'file_user_id';
+	public const COL_OWNER_ID    = 'file_owner_id';
 	public const COL_KEY         = 'file_key';
 	public const COL_REF         = 'file_ref';
 	public const COL_DRIVER      = 'file_driver';
@@ -106,25 +106,25 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_files`.`user_id`.
+	 * Getter for column `oz_files`.`owner_id`.
 	 *
 	 * @return null|string
 	 */
-	public function getUserID(): string|null
+	public function getOwnerID(): string|null
 	{
-		return $this->{self::COL_USER_ID};
+		return $this->{self::COL_OWNER_ID};
 	}
 
 	/**
-	 * Setter for column `oz_files`.`user_id`.
+	 * Setter for column `oz_files`.`owner_id`.
 	 *
-	 * @param null|int|string $user_id
+	 * @param null|int|string $owner_id
 	 *
 	 * @return static
 	 */
-	public function setUserID(string|int|null $user_id): static
+	public function setOwnerID(string|int|null $owner_id): static
 	{
-		$this->{self::COL_USER_ID} = $user_id;
+		$this->{self::COL_OWNER_ID} = $owner_id;
 
 		return $this;
 	}
@@ -472,8 +472,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 */
 	public function getOwner(): ?\OZONE\OZ\Db\OZUser
 	{
-		$getters        = [\OZONE\OZ\Db\OZUser::COL_ID => $this->getUserID(...)];
-		$filters_bundle = $this->buildRelationFilter($getters, []);
+		$filters_bundle = $this->buildRelationFilter([]);
 
 		if (null === $filters_bundle) {
 			return null;
@@ -497,7 +496,6 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	], ?int $max = null, int $offset = 0, array $order_by = [
 	], ?int &$total = -1): array
 	{
-		$getters        = [\OZONE\OZ\Db\OZFile::COL_CLONE_ID => $this->getID(...)];
 		$filters_bundle = $this->buildRelationFilter($getters, $filters);
 
 		if (null === $filters_bundle) {
@@ -514,8 +512,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 */
 	public function getClonedFrom(): ?\OZONE\OZ\Db\OZFile
 	{
-		$getters        = [\OZONE\OZ\Db\OZFile::COL_ID => $this->getCloneID(...)];
-		$filters_bundle = $this->buildRelationFilter($getters, []);
+		$filters_bundle = $this->buildRelationFilter([]);
 
 		if (null === $filters_bundle) {
 			return null;
@@ -531,8 +528,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 */
 	public function getSource(): ?\OZONE\OZ\Db\OZFile
 	{
-		$getters        = [\OZONE\OZ\Db\OZFile::COL_SOURCE_ID => $this->getID(...)];
-		$filters_bundle = $this->buildRelationFilter($getters, []);
+		$filters_bundle = $this->buildRelationFilter([]);
 
 		if (null === $filters_bundle) {
 			return null;

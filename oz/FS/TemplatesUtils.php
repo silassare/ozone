@@ -54,7 +54,10 @@ class TemplatesUtils
 			$fm   = new FilesManager();
 			$path = $fm->resolve($path);
 
-			$fm->filter()->isDir()->isReadable()->assert($path);
+			$fm->filter()
+				->isDir()
+				->isReadable()
+				->assert($path);
 
 			if (\str_starts_with($path, OZ_OZONE_DIR)) {
 				self::$oz_sources_dir[] = $path;
@@ -119,7 +122,7 @@ class TemplatesUtils
 			return $template;
 		}
 
-		return CacheManager::runtime(self::class)->getFactory($template, function () use ($template) {
+		$factory = function () use ($template) {
 			$sources_group = [self::$app_sources_dir, self::$oz_sources_dir];
 			$found         = false;
 
@@ -138,6 +141,10 @@ class TemplatesUtils
 			}
 
 			return $found;
-		})->get();
+		};
+		$cm      = CacheManager::runtime(self::class);
+
+		return $cm->factory($template, $factory)
+			->get();
 	}
 }

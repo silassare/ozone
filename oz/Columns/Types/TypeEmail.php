@@ -54,11 +54,11 @@ class TypeEmail extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function setDefault($default): self
+	public function default($default): self
 	{
-		$this->base_type->setDefault($default);
+		$this->base_type->default($default);
 
-		return parent::setDefault($default);
+		return parent::default($default);
 	}
 
 	/**

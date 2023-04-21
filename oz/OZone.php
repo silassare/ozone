@@ -19,8 +19,6 @@ use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\Context;
 use OZONE\OZ\Core\CRUDHandlerProvider;
 use OZONE\OZ\Core\DbManager;
-use OZONE\OZ\Core\Interfaces\TableCollectionsProviderInterface;
-use OZONE\OZ\Core\Interfaces\TableRelationsProviderInterface;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\Hooks\Events\FinishHook;
 use OZONE\OZ\Hooks\Events\InitHook;
@@ -56,6 +54,13 @@ final class OZone
 	private static ?AppInterface $current_app = null;
 
 	/**
+	 * The main context.
+	 *
+	 * @var null|\OZONE\OZ\Core\Context
+	 */
+	private static ?Context $main_context = null;
+
+	/**
 	 * Gets current running app.
 	 *
 	 * @return null|\OZONE\OZ\App\Interfaces\AppInterface
@@ -63,6 +68,36 @@ final class OZone
 	public static function getRunningApp(): null|AppInterface
 	{
 		return self::$current_app;
+	}
+
+	/**
+	 * Gets main context.
+	 *
+	 * @return null|\OZONE\OZ\Core\Context
+	 */
+	public static function getMainContext(): ?Context
+	{
+		return self::$main_context;
+	}
+
+	/**
+	 * Checks if the app is running in cli mode.
+	 *
+	 * @return bool
+	 */
+	public static function isCliMode(): bool
+	{
+		return \defined('OZ_OZONE_IS_CLI') && OZ_OZONE_IS_CLI;
+	}
+
+	/**
+	 * Checks if the app is running in web mode.
+	 *
+	 * @return bool
+	 */
+	public static function isWebMode(): bool
+	{
+		return !self::isCliMode();
 	}
 
 	/**
@@ -80,42 +115,34 @@ final class OZone
 
 		self::$current_app = $app;
 
-		DbManager::init();
-
-		self::registerCustomRelations();
-		self::registerCustomCollections();
-
 		$app->boot();
 
 		self::notifyBootHookReceivers();
 
-		$is_web = \defined('OZ_OZONE_IS_WEB_CONTEXT');
-		$is_api = !$is_web;
+		DbManager::init();
 
-		if ($is_web && !\defined('OZ_OZONE_DEFAULT_API_KEY')) {
-			throw new RuntimeException('OZ_DEFAULT_API_KEY_NOT_DEFINED');
-		}
-
-		$env     = new Environment($_SERVER);
-		$context = new Context($env, null, false, $is_api);
+		$context = self::createMainContext();
 
 		// The current user access level will be used for CRUD validation
 		CRUD::setHandlerProvider(new CRUDHandlerProvider($context));
 
 		Event::trigger(new InitHook($context));
 
-		$context->handle()->respond();
+		if (self::isWebMode()) {
+			$context->handle()
+				->respond();
 
-		// Finish the request
-		if (\function_exists('fastcgi_finish_request')) {
-			fastcgi_finish_request();
-		} elseif (!\in_array(\PHP_SAPI, ['cli', 'phpdbg'], true)) {
-			Utils::closeOutputBuffers(0, true);
+			// Finish the request
+			if (\function_exists('fastcgi_finish_request')) {
+				fastcgi_finish_request();
+			} elseif (!\in_array(\PHP_SAPI, ['cli', 'phpdbg'], true)) {
+				Utils::closeOutputBuffers(0, true);
+			}
+
+			Event::trigger(new FinishHook($context->getRequest(), $context->getResponse()));
+
+			exit;
 		}
-
-		Event::trigger(new FinishHook($context->getRequest(), $context->getResponse()));
-
-		exit;
 	}
 
 	/**
@@ -156,6 +183,39 @@ final class OZone
 		}
 
 		return self::$web_router;
+	}
+
+	/**
+	 * Creates the main context.
+	 *
+	 * @return \OZONE\OZ\Core\Context
+	 */
+	private static function createMainContext(): Context
+	{
+		if (null === self::$main_context) {
+			$is_cli_mode    = self::isCliMode();
+			$is_web_context = \defined('OZ_OZONE_IS_WEB_CONTEXT');
+			$is_api_context = !$is_web_context;
+
+			if ($is_cli_mode) {
+				$api_key_name = Configs::get('oz.config', 'OZ_API_KEY_HEADER_NAME');
+				$api_key_env  = \sprintf('HTTP_%s', \strtoupper(\str_replace('-', '_', $api_key_name)));
+
+				$env = Environment::mock([
+					$api_key_env => '',
+				]);
+			} else {
+				if ($is_web_context && !\defined('OZ_OZONE_DEFAULT_API_KEY')) {
+					throw new RuntimeException('OZ_DEFAULT_API_KEY_NOT_DEFINED');
+				}
+
+				$env = new Environment($_SERVER);
+			}
+
+			self::$main_context = new Context($env, null, false, $is_api_context);
+		}
+
+		return self::$main_context;
 	}
 
 	/**
@@ -201,52 +261,6 @@ final class OZone
 
 				/* @var \OZONE\OZ\Hooks\Interfaces\BootHookReceiverInterface $receiver */
 				$receiver::boot();
-			}
-		}
-	}
-
-	/**
-	 * Register custom relations.
-	 */
-	private static function registerCustomRelations(): void
-	{
-		$relations_settings = Configs::load('oz.db.relations');
-
-		foreach ($relations_settings as $provider => $enabled) {
-			if ($enabled) {
-				if (!\is_subclass_of($provider, TableRelationsProviderInterface::class)) {
-					throw new RuntimeException(\sprintf(
-						'Custom relations provider "%s" should implements "%s".',
-						$provider,
-						TableRelationsProviderInterface::class
-					));
-				}
-
-				/* @var TableRelationsProviderInterface $provider */
-				$provider::defineRelations();
-			}
-		}
-	}
-
-	/**
-	 * Register custom collections.
-	 */
-	private static function registerCustomCollections(): void
-	{
-		$collections_settings = Configs::load('oz.db.collections');
-
-		foreach ($collections_settings as $provider => $enabled) {
-			if ($enabled) {
-				if (!\is_subclass_of($provider, TableCollectionsProviderInterface::class)) {
-					throw new RuntimeException(\sprintf(
-						'Custom collections provider "%s" should implements "%s".',
-						$provider,
-						TableCollectionsProviderInterface::class
-					));
-				}
-
-				/* @var TableCollectionsProviderInterface $provider */
-				$provider::defineCollections();
 			}
 		}
 	}

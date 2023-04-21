@@ -57,7 +57,7 @@ class SessionDataStore extends Store
 			return new self($session);
 		};
 
-		return $cache->getFactory($sid, $factory)
+		return $cache->factory($sid, $factory)
 			->get();
 	}
 

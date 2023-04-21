@@ -56,7 +56,10 @@ class LocalFilesDriver implements FilesDriverInterface
 	public function upload(UploadedFile $upload): OZFile
 	{
 		if (($error = $upload->getError()) !== \UPLOAD_ERR_OK) {
-			throw new RuntimeException(FilesUtils::uploadErrorMessage($error));
+			$info             = FilesUtils::uploadErrorInfo($error);
+			$debug['_reason'] = $info['reason'];
+
+			throw new RuntimeException($info['message'], $debug);
 		}
 
 		if (null !== ($result = FilesUtils::parseFileAlias($upload))) {

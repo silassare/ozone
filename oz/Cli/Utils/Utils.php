@@ -100,7 +100,7 @@ final class Utils
 	}
 
 	/**
-	 * Asserts if whether we have access to the database.
+	 * Asserts if we are in a project folder with database access.
 	 */
 	public static function assertDatabaseAccess(): void
 	{
@@ -113,7 +113,7 @@ final class Utils
 			DbManager::getDb()
 				->getConnection();
 		} catch (Throwable $t) {
-			throw new RuntimeException('Database access assertion failed.', null, $t);
+			throw new RuntimeException('Unable to access database.', null, $t);
 		}
 	}
 

@@ -320,7 +320,7 @@ final class Configs
 		if (\is_array($data)) {
 			$r          = [];
 			$start      = \str_repeat($indent_char, $indent);
-			$indexed    = \array_keys($data) === \range(0, \count($data) - 1);
+			$indexed    = \array_is_list($data);
 			$max_length = $align ? \max(\array_map('\strlen', \array_map('trim', \array_keys($data)))) + 2 : 0;
 
 			foreach ($data as $key => $value) {
