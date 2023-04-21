@@ -19,6 +19,7 @@ use Gobl\DBAL\Interfaces\MigrationInterface;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Core\Hasher;
+use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\FS\FilesManager;
 
 /**
@@ -27,6 +28,7 @@ use OZONE\OZ\FS\FilesManager;
 class MigrationsManager
 {
 	public const DB_NOT_INSTALLED_VERSION = 0;
+	public const FIRST_VERSION            = 1;
 
 	/**
 	 * MigrationsManager constructor.
@@ -93,21 +95,30 @@ class MigrationsManager
 	 */
 	public function createMigration(): ?string
 	{
+		if ($this->hasPendingMigrations()) {
+			// as we are using the latest migration to create the new one,
+			// any migration created w
+			throw new RuntimeException('There are pending migrations, please run them first.');
+		}
+
 		$fm      = new FilesManager(OZ_MIGRATIONS_DIR);
 		$latest  = $this->getLatestMigration();
 		$db_to   = DbManager::getDb();
 		$config  = $db_to->getConfig();
-		$db_from = Db::createInstanceWithName($db_to->getType(), $config);
+		$db_from = Db::createInstanceOf($db_to->getType(), $config);
 
 		if ($latest) {
 			$db_from->addTablesToNamespace('Migrations', $latest->getTables());
+			$version = $latest->getVersion() + 1;
+		} else {
+			$version = self::FIRST_VERSION;
 		}
 
 		$diff = new Diff($db_from, $db_to);
 
 		if ($diff->hasChanges()) {
 			$outfile = $fm->resolve(\sprintf('%s.php', Hasher::genFileName('migration')));
-			$fm->wf($outfile, (string) $diff->generateMigrationFile());
+			$fm->wf($outfile, (string) $diff->generateMigrationFile($version));
 
 			return $outfile;
 		}
@@ -130,11 +141,32 @@ class MigrationsManager
 			->name('#\.php$#');
 		$migrations = [];
 
+		$duplicates = [];
+
 		foreach ($filter->find() as $file) {
 			$migration = require $file;
 
 			if ($migration instanceof MigrationInterface) {
-				$migrations[] = $migration;
+				$version = $migration->getVersion();
+
+				if (isset($duplicates[$version])) {
+					throw new RuntimeException(\sprintf(
+						'Duplicate migration version "%s" found in "%s" and "%s"',
+						$version,
+						$duplicates[$version],
+						$file
+					));
+				}
+
+				$duplicates[$migration->getVersion()] = $file;
+				$migrations[]                         = $migration;
+			} else {
+				throw new RuntimeException(\sprintf(
+					'Invalid migration file "%s", it must return an instance of "%s" not "%s"',
+					$file,
+					MigrationInterface::class,
+					\get_debug_type($migration),
+				));
 			}
 		}
 
