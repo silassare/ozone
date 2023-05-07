@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Core;
 
-use Gobl\DBAL\Table;
 use Gobl\ORM\ORMRequest as GoblORMRequest;
 use OZONE\OZ\Forms\FormData;
 
@@ -32,12 +31,13 @@ final class ORMRequest extends GoblORMRequest
 	 *
 	 * @param \OZONE\OZ\Core\Context         $context
 	 * @param array|\OZONE\OZ\Forms\FormData $form
+	 * @param null|string                    $scope
 	 *
 	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 	 */
-	public function __construct(Context $context, array|FormData $form)
+	public function __construct(Context $context, array|FormData $form, string $scope = null)
 	{
-		parent::__construct(\is_array($form) ? $form : $form->getData());
+		parent::__construct(\is_array($form) ? $form : $form->getData(), $scope);
 
 		$this->context = $context;
 	}
@@ -51,6 +51,8 @@ final class ORMRequest extends GoblORMRequest
 	}
 
 	/**
+	 * Gets the context.
+	 *
 	 * @return \OZONE\OZ\Core\Context
 	 */
 	public function getContext(): Context
@@ -59,16 +61,12 @@ final class ORMRequest extends GoblORMRequest
 	}
 
 	/**
-	 * @param \Gobl\DBAL\Table $table
+	 * {@inheritDoc}
 	 *
 	 * @return \OZONE\OZ\Core\ORMRequest
-	 *
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 	 */
-	public function createScopedInstance(Table $table): self
+	public function createScopedInstance(string $scope): self
 	{
-		$request = $this->getParsedRequest($table);
-
-		return new self($this->context, $request);
+		return new self($this->context, $this->payload, $scope);
 	}
 }

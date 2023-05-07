@@ -713,11 +713,11 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Fetches associative array of body, query string parameters and uploaded files.
 	 *
-	 * @param bool $includeFiles
+	 * @param bool $include_files
 	 *
 	 * @return FormData
 	 */
-	public function getUnsafeFormData(bool $includeFiles = true): FormData
+	public function getUnsafeFormData(bool $include_files = true): FormData
 	{
 		$params     = $this->getQueryParams();
 		$postParams = $this->getParsedBody();
@@ -727,7 +727,7 @@ class Request extends Message implements ServerRequestInterface
 			$params = \array_merge($params, (array) $postParams);
 		}
 
-		if ($includeFiles) {
+		if ($include_files) {
 			$params = \array_replace($params, $files);
 		}
 

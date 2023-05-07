@@ -17,14 +17,14 @@ use Gobl\DBAL\Interfaces\RDBMSInterface;
 use PHPUtils\Events\Event;
 
 /**
- * Class DbCollectHook.
+ * Class DbSchemaCollectHook.
  *
- * This event is triggered to collect db tables to a given database.
+ * This event is triggered to collect db schema to a given database.
  * The event may be triggered multiple times but only once per database instance.
  * And all the hook listeners should add their tables to the provided db instance.
  * And is useful when you want to add tables to a database from a module/plugin.
  */
-final class DbCollectHook extends Event
+final class DbSchemaCollectHook extends Event
 {
 	/**
 	 * DbCollectHook constructor.
@@ -36,7 +36,7 @@ final class DbCollectHook extends Event
 	}
 
 	/**
-	 * DbCollectHook destructor.
+	 * DbSchemaCollectHook destructor.
 	 */
 	public function __destruct()
 	{

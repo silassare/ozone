@@ -21,9 +21,9 @@ use Gobl\Gobl;
 use OZONE\OZ\Columns\TypeProvider;
 use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\FS\FilesManager;
-use OZONE\OZ\Hooks\Events\DbBeforeLockHook;
-use OZONE\OZ\Hooks\Events\DbCollectHook;
 use OZONE\OZ\Hooks\Events\DbReadyHook;
+use OZONE\OZ\Hooks\Events\DbSchemaCollectHook;
+use OZONE\OZ\Hooks\Events\DbSchemaReadyHook;
 use OZONE\OZ\Migrations\MigrationsManager;
 use PHPUtils\Events\Event;
 use Throwable;
@@ -33,8 +33,6 @@ use Throwable;
  */
 final class DbManager
 {
-	public const OZONE_DB_NAMESPACE = 'OZONE\\OZ\\Db';
-
 	private static ?RDBMSInterface $db = null;
 
 	/**
@@ -43,7 +41,7 @@ final class DbManager
 	public static function init(): RDBMSInterface
 	{
 		if (!self::$db) {
-			Gobl::setRootDir(OZ_CACHE_DIR);
+			Gobl::setProjectCacheDir(OZ_CACHE_DIR);
 
 			$config    = Configs::load('oz.db');
 			$db_config = new DbConfig([
@@ -70,9 +68,6 @@ final class DbManager
 
 			try {
 				self::register();
-
-				// trigger db ready hook
-				Event::trigger(new DbReadyHook(self::$db));
 			} catch (Throwable $t) {
 				throw new RuntimeException('Unable to initialize database.', null, $t);
 			}
@@ -90,51 +85,63 @@ final class DbManager
 	}
 
 	/**
-	 * Returns the database folder structure of the current project.
-	 *
-	 * @return array{'oz_db_namespace':string,'project_db_namespace':string,'oz_db_folder':string,'project_db_folder':string}
+	 * Returns the OZone db namespace.
 	 */
-	public static function getProjectDbDirectoryStructure(): array
+	public static function getOZoneDbNamespace(): string
+	{
+		return 'OZONE\\OZ\\Db';
+	}
+
+	/**
+	 * Returns the project db namespace.
+	 */
+	public static function getProjectDbNamespace(): string
 	{
 		$project_namespace = Configs::get('oz.config', 'OZ_PROJECT_NAMESPACE');
 
-		$info['oz_db_namespace']      = self::OZONE_DB_NAMESPACE;
-		$info['project_db_namespace'] = \sprintf('%s\\Db', $project_namespace ?? 'NO_PROJECT');
+		return \sprintf('%s\\Db', $project_namespace ?? 'NO_PROJECT');
+	}
 
+	/**
+	 * Returns the OZone db folder.
+	 */
+	public static function getOZoneDbFolder(): string
+	{
 		$fm = new FilesManager(OZ_OZONE_DIR);
 
-		$info['oz_db_folder']      = $fm->cd('Db', true)
-			->getRoot();
-		$info['project_db_folder'] = $fm->cd(OZ_APP_DIR . 'Db', true)
-			->getRoot();
+		return $fm->cd('Db', true)
+				  ->getRoot();
+	}
 
-		return $info;
+	/**
+	 * Returns the project db folder.
+	 */
+	public static function getProjectDbFolder(): string
+	{
+		$fm = new FilesManager(OZ_OZONE_DIR);
+
+		return $fm->cd(OZ_APP_DIR . 'Db', true)
+				  ->getRoot();
 	}
 
 	/**
 	 * Collects all tables from the project and OZone to a given db instance.
 	 *
 	 * @param \Gobl\DBAL\Interfaces\RDBMSInterface $db
-	 * @param bool                                 $enable_orm
 	 */
-	public static function collectTablesTo(RDBMSInterface $db, bool $enable_orm = false): void
+	public static function loadSchemaTo(RDBMSInterface $db): void
 	{
-		$structure = self::getProjectDbDirectoryStructure();
+		$db->ns(self::getOZoneDbNamespace())
+		   ->schema(include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_schema.php');
 
-		$oz_database = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_database.php';
-		$oz_ns       = $db->ns($structure['oz_db_namespace'])
-			->addTables($oz_database);
+		Event::trigger(new DbSchemaCollectHook($db));
 
-		$project_tables = Configs::load('oz.db.tables');
-		$project_ns     = $db->ns($structure['project_db_namespace'])
-			->addTables($project_tables);
+		// the project schema is the last to be loaded as its
+		// may require some tables from OZone or plugins
+		$db->ns(self::getProjectDbNamespace())
+		   ->schema(Configs::load('oz.db.schema'));
 
-		if ($enable_orm) {
-			$oz_ns->enableORM();
-			$project_ns->enableORM();
-		}
-
-		Event::trigger(new DbCollectHook($db));
+		Event::trigger(new DbSchemaReadyHook($db));
 	}
 
 	/**
@@ -148,11 +155,7 @@ final class DbManager
 		$db_version = $mg->getCurrentDbVersion();
 
 		if (MigrationsManager::DB_NOT_INSTALLED_VERSION === $db_version) {
-			self::collectTablesTo(self::$db, true);
-
-			Event::trigger(new DbBeforeLockHook(self::$db));
-
-			self::$db->lock();
+			self::loadSchemaTo(self::$db);
 		} else {
 			$current = $mg->getMigration($db_version);
 			if (!$current) {
@@ -162,21 +165,21 @@ final class DbManager
 				)))->suspectConfig('oz.db.migrations', 'OZ_MIGRATION_VERSION');
 			}
 
-			$tables   = $current->getTables();
-			$ns_cache = [];
+			self::$db->loadSchema($current->getSchema());
 
-			self::$db->addTables($tables);
-
-			// we need to enable ORM for each namespace in our migration tables definitions
-			foreach ($tables as $table) {
-				$ns = $table['namespace'];
-
-				if (!isset($ns_cache[$ns])) {
-					self::$db->ns($ns)
-						->enableORM();
-					$ns_cache[$ns] = 1;
-				}
-			}
+			Event::trigger(new DbSchemaReadyHook(self::$db));
 		}
+
+		self::$db
+			->ns(self::getOZoneDbNamespace())
+			->enableORM(self::getOZoneDbFolder());
+
+		self::$db
+			->ns(self::getProjectDbNamespace())
+			->enableORM(self::getProjectDbFolder());
+
+		self::$db->lock();
+
+		Event::trigger(new DbReadyHook(self::$db));
 	}
 }

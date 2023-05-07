@@ -19,6 +19,7 @@ use Gobl\DBAL\Interfaces\MigrationInterface;
 use Gobl\ORM\Generators\CSGeneratorDart;
 use Gobl\ORM\Generators\CSGeneratorORM;
 use Gobl\ORM\Generators\CSGeneratorTS;
+use Gobl\ORM\ORM;
 use Kli\Exceptions\KliInputException;
 use Kli\Kli;
 use Kli\KliArgs;
@@ -72,72 +73,72 @@ final class Db extends Command
 		$build = $this->action('build', 'To build the database, generate required classes.');
 
 		$build->option('build-all', 'a')
-			->description('To build all tables in all namespaces.')
-			->bool()
-			->def(false);
+			  ->description('To build all tables in all namespaces.')
+			  ->bool()
+			  ->def(false);
 		$build->option('class-only', 'c')
-			->description('To build classes only.')
-			->bool()
-			->def(false);
+			  ->description('To build classes only.')
+			  ->bool()
+			  ->def(false);
 		$build->option('namespace', 'n')
-			->description('The namespace of the tables to be generated.')
-			->string()
-			->pattern(PHPNamespace::NAMESPACE_PATTERN)
-			->def(null);
+			  ->description('The namespace of the tables to be generated.')
+			  ->string()
+			  ->pattern(PHPNamespace::NAMESPACE_PATTERN)
+			  ->def(null);
 		$build->handler($this->build(...));
 
 		// action: ts bundle
 		$ts_bundle = $this->action('ts-bundle', 'To generate entities classes for TypeScript.');
 		$ts_bundle->option('dir', 'd', [], 1)
-			->description('The destination directory for the bundle classes.')
-			->path()
-			->dir()
-			->writable()
-			->def('.');
+				  ->description('The destination directory for the bundle classes.')
+				  ->path()
+				  ->dir()
+				  ->writable()
+				  ->def('.');
 		$ts_bundle->handler($this->tsBundle(...));
 
 		// action: dart bundle
 		$dart_bundle = $this->action('dart-bundle', 'To generate entities classes for Dart.');
 		$dart_bundle->option('dir', 'd', [], 1)
-			->description('The destination directory for the bundle classes.')
-			->path()
-			->dir()
-			->writable()
-			->def('.');
+					->description('The destination directory for the bundle classes.')
+					->path()
+					->dir()
+					->writable()
+					->def('.');
 		$dart_bundle->handler($this->dartBundle(...));
 
 		// action: generate database query
 		$generate = $this->action('generate', 'Generate database file.');
 		$generate->option('dir', 'd', [], 1)
-			->description('The destination directory for the database file.')
-			->path()
-			->dir()
-			->writable()
-			->def('.');
+				 ->description('The destination directory for the database file.')
+				 ->path()
+				 ->dir()
+				 ->writable()
+				 ->def('.');
 		$generate->option('namespace', 'n', [], 2)
-			->description('The namespace of the tables to be generated.')
-			->string()
-			->pattern(PHPNamespace::NAMESPACE_PATTERN)
-			->def(null);
+				 ->description('The namespace of the tables to be generated.')
+				 ->string()
+				 ->pattern(PHPNamespace::NAMESPACE_PATTERN)
+				 ->def(null);
 		$generate->handler($this->generate(...));
 
 		// action: backup database
 		$backup = $this->action('backup', 'Backup database.');
 		$backup->option('dir', 'd', [], 1)
-			->description('The destination directory for the database backup file.')
-			->path()
-			->dir()
-			->writable()
-			->def('.');
+			   ->description('The destination directory for the database backup file.')
+			   ->path()
+			   ->dir()
+			   ->writable()
+			   ->def('.');
 		$backup->handler($this->backup(...));
 
 		// action: db migration:create
 		$this->action('migrations:create', 'Create database migrations.')
-			->handler($this->migrationsCreate(...));
+			 ->handler($this->migrationsCreate(...));
 
 		// action: db migration:check
 		$this->action('migrations:check', 'Check database migrations.')
-			->handler($this->migrationsCheck(...));
+			 ->handler($this->migrationsCheck(...));
 
 		// action: db migration:run
 		$migrationRun = $this->action('migrations:run', 'Run database migrations.');
@@ -146,17 +147,17 @@ final class Db extends Command
 		// action: db migration:rollback
 		$migrationRollback = $this->action('migrations:rollback', 'Rollback database migrations.');
 		$migrationRollback->option('to-version')
-			->description('The migration version to rollback to.')
-			->required()
-			->number(0);
+						  ->description('The migration version to rollback to.')
+						  ->required()
+						  ->number(0);
 		$migrationRollback->handler($this->migrationsRollback(...));
 
 		// action: source database
 		$source = $this->action('source', 'Run database query from source file.');
 		$source->option('file', 'f', [], 1)
-			->description('The database source file.')
-			->path()
-			->file();
+			   ->description('The database source file.')
+			   ->path()
+			   ->file();
 		$source->handler($this->source(...));
 	}
 
@@ -175,26 +176,19 @@ final class Db extends Command
 		Utils::assertProjectFolder();
 
 		$cli        = $this->getCli();
-		$all        = (bool) $args->get('build-all');
-		$class_only = (bool) $args->get('class-only');
+		$all        = (bool)$args->get('build-all');
+		$class_only = (bool)$args->get('class-only');
 		$namespace  = $args->get('namespace');
 
-		$structure = DbManager::getProjectDbDirectoryStructure();
-
 		$db            = DbManager::getDb();
-		$oz_db_ns      = $structure['oz_db_namespace'];
-		$project_db_ns = $structure['project_db_namespace'];
-		$default_dir   = [
-			$oz_db_ns      => $structure['oz_db_folder'],
-			$project_db_ns => $structure['project_db_folder'],
-		];
+		$oz_db_ns      = DbManager::getOZoneDbNamespace();
+		$project_db_ns = DbManager::getProjectDbNamespace();
 
-		$map             = [];
-		$plugins_out_dir = $structure['project_db_folder'];
+		$ns_map = [];
 
 		if ($namespace) {
-			$map[$namespace] = 1;
-			$found           = $db->getTables($namespace);
+			$ns_map[$namespace] = 1;
+			$found              = $db->getTables($namespace);
 
 			if (empty($found)) {
 				throw new KliInputException(\sprintf(
@@ -203,10 +197,10 @@ final class Db extends Command
 				));
 			}
 		} else {
-			$map[$project_db_ns] = 1;
+			$ns_map[$project_db_ns] = 1;
 
 			if ($all) {
-				$map[$oz_db_ns] = 1;
+				$ns_map[$oz_db_ns] = 1;
 
 				// for plugins
 				$tables = $db->getTables();
@@ -214,24 +208,21 @@ final class Db extends Command
 				foreach ($tables as $table) {
 					$ns = $table->getNamespace();
 
-					if (isset($map[$ns]) || $ns === $oz_db_ns || $ns === $project_db_ns) {
+					if (isset($ns_map[$ns]) || $ns === $oz_db_ns || $ns === $project_db_ns) {
 						continue;
 					}
 
-					$map[$ns] = 1;
+					$ns_map[$ns] = 1;
 				}
 			}
 		}
 
 		$gen = new CSGeneratorORM($db, false, false);
 
-		foreach ($map as $ns => $_) {
-			$dir = $default_dir[$ns] ?? $plugins_out_dir;
-
+		foreach ($ns_map as $ns => $_) {
 			// we (re)generate classes only for tables
 			// in the given namespace
-			$tables = $db->getTables($ns);
-			$gen->generate($tables, $dir);
+			$gen->generate($db->getTables($ns), ORM::getOutputDirectory($ns));
 
 			$cli->success(\sprintf('database classes generated: "%s".', $ns));
 		}
@@ -243,7 +234,7 @@ final class Db extends Command
 
 			try {
 				$queries = $db->getGenerator()
-					->buildDatabase();
+							  ->buildDatabase();
 				$db->executeMulti($queries);
 
 				$cli->success('database queries executed.');
@@ -326,8 +317,8 @@ final class Db extends Command
 			$namespace = null;
 		}
 		$query = DbManager::getDb()
-			->getGenerator()
-			->buildDatabase($namespace);
+						  ->getGenerator()
+						  ->buildDatabase($namespace);
 
 		$file_name = \sprintf('%s.sql', Hasher::genFileName('db'));
 		$fm        = new FilesManager($dir);
@@ -335,8 +326,8 @@ final class Db extends Command
 
 		if (\file_exists($fm->resolve($file_name))) {
 			$this->getCli()
-				->success('database installation file generated.')
-				->writeLn($fm->resolve($file_name));
+				 ->success('database installation file generated.')
+				 ->writeLn($fm->resolve($file_name));
 		} else {
 			throw new RuntimeException('database installation file generation fails.');
 		}
@@ -437,11 +428,11 @@ final class Db extends Command
 
 		if ($path) {
 			$this->getCli()
-				->success('Migration file created.')
-				->writeLn($path);
+				 ->success('Migration file created.')
+				 ->writeLn($path);
 		} else {
 			$this->getCli()
-				->info('No changes detected.');
+				 ->info('No changes detected.');
 		}
 	}
 
@@ -460,7 +451,7 @@ final class Db extends Command
 			$table->addHeader('Label', 'label');
 			$table->addHeader('Version', 'version');
 			$table->addHeader('Date', 'date')
-				->setCellFormatter(KliTableFormatter::date('jS F Y, g:i:s a'));
+				  ->setCellFormatter(KliTableFormatter::date('jS F Y, g:i:s a'));
 
 			$table->addRows(\array_map(static function (MigrationInterface $migration) {
 				return [
@@ -492,7 +483,7 @@ final class Db extends Command
 
 		if (empty($migrations)) {
 			$this->getCli()
-				->info('There are no pending migrations.');
+				 ->info('There are no pending migrations.');
 
 			return;
 		}
@@ -501,11 +492,11 @@ final class Db extends Command
 		self::ensureDBBackup($this->getCli());
 		foreach ($migrations as $migration) {
 			$this->getCli()
-				->info(\sprintf(
-					'Running migration "%s" generated on "%s" ...',
-					$migration->getLabel(),
-					\date('jS F Y, g:i:s a', $migration->getTimestamp())
-				));
+				 ->info(\sprintf(
+					 'Running migration "%s" generated on "%s" ...',
+					 $migration->getLabel(),
+					 \date('jS F Y, g:i:s a', $migration->getTimestamp())
+				 ));
 
 			try {
 				$mg->runMigration($migration);
@@ -542,7 +533,7 @@ final class Db extends Command
 		// make sure target version is less than current version
 		if ($target_version >= $current_db_version) {
 			$this->getCli()
-				->info(\sprintf('Target version "%s" is not less than current version "%s".', $target_version, $current_db_version));
+				 ->info(\sprintf('Target version "%s" is not less than current version "%s".', $target_version, $current_db_version));
 
 			return;
 		}
@@ -552,7 +543,7 @@ final class Db extends Command
 
 		if (empty($migrations)) {
 			$this->getCli()
-				->info(\sprintf('There are no migrations to rollback from current version "%s" to "%s".', $current_db_version, $target_version));
+				 ->info(\sprintf('There are no migrations to rollback from current version "%s" to "%s".', $current_db_version, $target_version));
 
 			return;
 		}

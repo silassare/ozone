@@ -321,7 +321,7 @@ final class Router
 	{
 		$request = $context->getRequest();
 		$uri     = $request->getUri();
-		$results = $this->find($request->getMethod(), $uri->getPath(), true);
+		$results = $this->find($request->getMethod(), $uri->getPath());
 
 		switch ($results['status']) {
 			case self::NOT_FOUND:
@@ -371,19 +371,24 @@ final class Router
 	 * Registers route.
 	 *
 	 * @param string|string[] $methods
-	 * @param string          $path
-	 * @param callable        $callable
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
 	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function map(string|array $methods, string $path, callable $callable): RouteOptions
+	public function map(string|array $methods, string|callable $path, callable $factory = null): RouteOptions
 	{
+		if (\is_callable($path)) {
+			$factory = $path;
+			$path    = '';
+		}
+
 		if (!\is_array($methods)) {
 			$methods = '*' === $methods ? \array_keys($this->allowed_methods) : [$methods];
 		}
 
-		if (empty($path)) {
-			throw new InvalidArgumentException(\sprintf('Invalid route path: %s', $path));
+		if (empty($path) && !$this->current_group) {
+			throw new InvalidArgumentException('Route path cannot be empty outside of a group.');
 		}
 
 		$methods_filtered = [];
@@ -403,15 +408,15 @@ final class Router
 			$methods_filtered[] = \strtoupper($method);
 		}
 
-		if (!\is_callable($callable)) {
+		if (!\is_callable($factory)) {
 			throw new InvalidArgumentException(\sprintf(
 				'Got "%s" while expecting callable for: %s',
-				\get_debug_type($callable),
+				\get_debug_type($factory),
 				$path
 			));
 		}
 
-		$route = new Route($this, $methods_filtered, $callable, $options = new RouteOptions($path, $this->current_group));
+		$route = new Route($this, $methods_filtered, $factory, $options = new RouteOptions($path, $this->current_group));
 
 		if ($route->isDynamic()) {
 			$this->dynamic_routes[] = $route;
@@ -425,118 +430,118 @@ final class Router
 	/**
 	 * Register route for CONNECT request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
 	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function connect(string $route_path, callable $callable): RouteOptions
+	public function connect(string|callable $path, callable $factory = null): RouteOptions
 	{
-		return $this->map('connect', $route_path, $callable);
+		return $this->map('connect', $path, $factory);
 	}
 
 	/**
 	 * Register route for DELETE request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
 	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function delete(string $route_path, callable $callable): RouteOptions
+	public function delete(string|callable $path, callable $factory = null): RouteOptions
 	{
-		return $this->map(['delete'], $route_path, $callable);
+		return $this->map(['delete'], $path, $factory);
 	}
 
 	/**
 	 * Register route for GET request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
 	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function get(string $route_path, callable $callable): RouteOptions
+	public function get(string|callable $path, callable $factory = null): RouteOptions
 	{
-		return $this->map(['get'], $route_path, $callable);
+		return $this->map(['get'], $path, $factory);
 	}
 
 	/**
 	 * Register route for HEAD request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
 	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function head(string $route_path, callable $callable): RouteOptions
+	public function head(string|callable $path, callable $factory = null): RouteOptions
 	{
-		return $this->map(['head'], $route_path, $callable);
+		return $this->map(['head'], $path, $factory);
 	}
 
 	/**
 	 * Register route for OPTIONS request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
 	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function options(string $route_path, callable $callable): RouteOptions
+	public function options(string|callable $path, callable $factory = null): RouteOptions
 	{
-		return $this->map(['options'], $route_path, $callable);
+		return $this->map(['options'], $path, $factory);
 	}
 
 	/**
 	 * Register route for PATCH request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
 	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function patch(string $route_path, callable $callable): RouteOptions
+	public function patch(string|callable $path, callable $factory = null): RouteOptions
 	{
-		return $this->map(['patch'], $route_path, $callable);
+		return $this->map(['patch'], $path, $factory);
 	}
 
 	/**
 	 * Register route for POST request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
 	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function post(string $route_path, callable $callable): RouteOptions
+	public function post(string|callable $path, callable $factory = null): RouteOptions
 	{
-		return $this->map(['post'], $route_path, $callable);
+		return $this->map(['post'], $path, $factory);
 	}
 
 	/**
 	 * Register route for PUT request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
 	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function put(string $route_path, callable $callable): RouteOptions
+	public function put(string|callable $path, callable $factory = null): RouteOptions
 	{
-		return $this->map(['put'], $route_path, $callable);
+		return $this->map(['put'], $path, $factory);
 	}
 
 	/**
 	 * Register route for TRACE request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
 	 * @return \OZONE\OZ\Router\RouteOptions
 	 */
-	public function trace(string $route_path, callable $callable): RouteOptions
+	public function trace(string|callable $path, callable $factory = null): RouteOptions
 	{
-		return $this->map(['trace'], $route_path, $callable);
+		return $this->map(['trace'], $path, $factory);
 	}
 
 	/**

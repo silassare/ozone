@@ -72,7 +72,7 @@ final class Service extends Command
 	 */
 	private function generate(KliArgs $args): void
 	{
-		Utils::assertDatabaseAccess();
+		Utils::assertProjectFolder();
 
 		$table_name    = $args->get('table-name');
 		$service_name  = $args->get('service-name');

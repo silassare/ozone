@@ -94,7 +94,7 @@ class TypeFile extends Type
 	 */
 	public function isMultiple(): bool
 	{
-		return (bool) $this->getOption('multiple', false);
+		return (bool)$this->getOption('multiple', false);
 	}
 
 	/**
@@ -303,39 +303,39 @@ class TypeFile extends Type
 	public function configure(array $options): self
 	{
 		if (isset($options['multiple'])) {
-			$this->multiple((bool) $options['multiple']);
+			$this->multiple((bool)$options['multiple']);
 		}
 
 		if (isset($options['driver'])) {
-			$this->driver((string) $options['driver']);
+			$this->driver((string)$options['driver']);
 		}
 
 		if (isset($options['mime_types'])) {
-			$this->mimeTypes((array) $options['mime_types']);
+			$this->mimeTypes((array)$options['mime_types']);
 		}
 
 		if (isset($options['file_label'])) {
-			$this->fileLabel((string) $options['file_label']);
+			$this->fileLabel((string)$options['file_label']);
 		}
 
 		if (isset($options['file_min_size'])) {
-			$this->fileMinSize((int) $options['file_min_size']);
+			$this->fileMinSize((int)$options['file_min_size']);
 		}
 
 		if (isset($options['file_max_size'])) {
-			$this->fileMaxSize((int) $options['file_max_size']);
+			$this->fileMaxSize((int)$options['file_max_size']);
 		}
 
 		if (isset($options['file_min_count'])) {
-			$this->fileMinCount((int) $options['file_min_count']);
+			$this->fileMinCount((int)$options['file_min_count']);
 		}
 
 		if (isset($options['file_max_count'])) {
-			$this->fileMaxCount((int) $options['file_max_count']);
+			$this->fileMaxCount((int)$options['file_max_count']);
 		}
 
 		if (isset($this->file_upload_total_size)) {
-			$this->fileUploadTotalSize((int) $options['file_upload_total_size']);
+			$this->fileUploadTotalSize((int)$options['file_upload_total_size']);
 		}
 
 		return parent::configure($options);
@@ -394,8 +394,8 @@ class TypeFile extends Type
 				} else {
 					$fo = $driver->upload($file);
 					$fo->setDriver($driver_name)
-						->setLabel($file_label)
-						->save();
+					   ->setForLabel($file_label)
+					   ->save();
 
 					$new_file_list[] = $fo;
 

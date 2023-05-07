@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\OZ\Cli\Utils;
 
+use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Table;
 use Gobl\Gobl;
 use Gobl\ORM\Generators\CSGeneratorORM;
@@ -31,13 +32,17 @@ class ServiceGenerator extends CSGeneratorORM
 	private static bool $templates_registered = false;
 
 	/**
-	 * {@inheritDoc}
+	 * ServiceGenerator constructor.
+	 *
+	 * @param \Gobl\DBAL\Interfaces\RDBMSInterface $db
+	 * @param bool                                 $ignore_private_table
+	 * @param bool                                 $ignore_private_column
 	 */
-	public function generate(array $tables, $path, $header = ''): self
+	public function __construct(RDBMSInterface $db, bool $ignore_private_table = true, bool $ignore_private_column = true)
 	{
-		if (!self::$templates_registered) {
-			self::$templates_registered = true;
+		parent::__construct($db, $ignore_private_table, $ignore_private_column);
 
+		if (!self::$templates_registered) {
 			Gobl::addTemplate(
 				self::SERVICE_TEMPLATE_NAME,
 				TemplatesUtils::localize('gen/gobl/php/MyService.php'),
@@ -47,8 +52,16 @@ class ServiceGenerator extends CSGeneratorORM
 					'my_svc'        => '<%$.service.name%>',
 				]
 			);
-		}
 
+			self::$templates_registered = true;
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function generate(array $tables, string $path, string $header = ''): self
+	{
 		foreach ($tables as $table) {
 			$this->generateServiceClass(
 				$table,

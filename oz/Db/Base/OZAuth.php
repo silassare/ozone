@@ -1,64 +1,61 @@
 <?php
-
 /**
- * Copyright (c) 2017-present, Emile Silas Sare
- *
- * This file is part of OZone package.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * Auto generated file
+ * 
+ * WARNING: please don't edit.
+ * 
+ * Proudly With: gobl v2.0.0
+ * Time: 2023-05-06T15:46:01+00:00
  */
-
 declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
 /**
  * Class OZAuth.
- *
- * @property string $ref         Getter for column `oz_auths`.`ref`.
- * @property string $label       Getter for column `oz_auths`.`label`.
- * @property string $provider    Getter for column `oz_auths`.`provider`.
- * @property string $refresh_key Getter for column `oz_auths`.`refresh_key`.
- * @property string $for         Getter for column `oz_auths`.`for`.
- * @property string $code_hash   Getter for column `oz_auths`.`code_hash`.
- * @property string $token_hash  Getter for column `oz_auths`.`token_hash`.
- * @property string $state       Getter for column `oz_auths`.`state`.
- * @property int    $try_max     Getter for column `oz_auths`.`try_max`.
- * @property int    $try_count   Getter for column `oz_auths`.`try_count`.
- * @property int    $lifetime    Getter for column `oz_auths`.`lifetime`.
- * @property string $expire      Getter for column `oz_auths`.`expire`.
- * @property array  $data        Getter for column `oz_auths`.`data`.
- * @property string $created_at  Getter for column `oz_auths`.`created_at`.
- * @property string $updated_at  Getter for column `oz_auths`.`updated_at`.
- * @property bool   $valid       Getter for column `oz_auths`.`valid`.
+ * 
+ * @property-read string $ref Getter for column `oz_auths`.`ref`.
+ * @property-read string $label Getter for column `oz_auths`.`label`.
+ * @property-read string $provider Getter for column `oz_auths`.`provider`.
+ * @property-read string $refresh_key Getter for column `oz_auths`.`refresh_key`.
+ * @property-read string $for Getter for column `oz_auths`.`for`.
+ * @property-read string $code_hash Getter for column `oz_auths`.`code_hash`.
+ * @property-read string $token_hash Getter for column `oz_auths`.`token_hash`.
+ * @property-read string $state Getter for column `oz_auths`.`state`.
+ * @property-read int $try_max Getter for column `oz_auths`.`try_max`.
+ * @property-read int $try_count Getter for column `oz_auths`.`try_count`.
+ * @property-read int $lifetime Getter for column `oz_auths`.`lifetime`.
+ * @property-read string $expire Getter for column `oz_auths`.`expire`.
+ * @property-read array $data Getter for column `oz_auths`.`data`.
+ * @property-read string $created_at Getter for column `oz_auths`.`created_at`.
+ * @property-read string $updated_at Getter for column `oz_auths`.`updated_at`.
+ * @property-read bool $valid Getter for column `oz_auths`.`valid`.
  */
 abstract class OZAuth extends \Gobl\ORM\ORMEntity
 {
-	public const TABLE_NAME      = 'oz_auths';
+	public const TABLE_NAME = 'oz_auths';
 	public const TABLE_NAMESPACE = 'OZONE\\OZ\\Db';
-	public const COL_REF         = 'auth_ref';
-	public const COL_LABEL       = 'auth_label';
-	public const COL_PROVIDER    = 'auth_provider';
+	public const COL_REF = 'auth_ref';
+	public const COL_LABEL = 'auth_label';
+	public const COL_PROVIDER = 'auth_provider';
 	public const COL_REFRESH_KEY = 'auth_refresh_key';
-	public const COL_FOR         = 'auth_for';
-	public const COL_CODE_HASH   = 'auth_code_hash';
-	public const COL_TOKEN_HASH  = 'auth_token_hash';
-	public const COL_STATE       = 'auth_state';
-	public const COL_TRY_MAX     = 'auth_try_max';
-	public const COL_TRY_COUNT   = 'auth_try_count';
-	public const COL_LIFETIME    = 'auth_lifetime';
-	public const COL_EXPIRE      = 'auth_expire';
-	public const COL_DATA        = 'auth_data';
-	public const COL_CREATED_AT  = 'auth_created_at';
-	public const COL_UPDATED_AT  = 'auth_updated_at';
-	public const COL_VALID       = 'auth_valid';
-
+	public const COL_FOR = 'auth_for';
+	public const COL_CODE_HASH = 'auth_code_hash';
+	public const COL_TOKEN_HASH = 'auth_token_hash';
+	public const COL_STATE = 'auth_state';
+	public const COL_TRY_MAX = 'auth_try_max';
+	public const COL_TRY_COUNT = 'auth_try_count';
+	public const COL_LIFETIME = 'auth_lifetime';
+	public const COL_EXPIRE = 'auth_expire';
+	public const COL_DATA = 'auth_data';
+	public const COL_CREATED_AT = 'auth_created_at';
+	public const COL_UPDATED_AT = 'auth_updated_at';
+	public const COL_VALID = 'auth_valid';
 	/**
 	 * OZAuth constructor.
-	 *
+	 * 
 	 * @param bool $is_new true for new entity false for entity fetched
-	 *                     from the database, default is true
+	 *                      from the database, default is true
 	 * @param bool $strict Enable/disable strict mode
 	 */
 	public function __construct(bool $is_new = true, bool $strict = true)
@@ -69,11 +66,12 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 			$is_new,
 			$strict
 		);
+
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
+	 * @inheritDoc
+	 * 
 	 * @return static
 	 */
 	public static function createInstance(bool $is_new = true, bool $strict = true): static
@@ -83,7 +81,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`ref`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getRef(): string
@@ -93,9 +91,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`ref`.
-	 *
+	 * 
 	 * @param string $ref
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setRef(string $ref): static
@@ -107,7 +105,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`label`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getLabel(): string
@@ -117,9 +115,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`label`.
-	 *
+	 * 
 	 * @param string $label
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setLabel(string $label): static
@@ -131,7 +129,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`provider`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getProvider(): string
@@ -141,9 +139,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`provider`.
-	 *
+	 * 
 	 * @param string $provider
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setProvider(string $provider): static
@@ -155,7 +153,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`refresh_key`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getRefreshKey(): string
@@ -165,9 +163,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`refresh_key`.
-	 *
+	 * 
 	 * @param string $refresh_key
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setRefreshKey(string $refresh_key): static
@@ -179,7 +177,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`for`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getFor(): string
@@ -189,9 +187,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`for`.
-	 *
+	 * 
 	 * @param string $for
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setFor(string $for): static
@@ -203,7 +201,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`code_hash`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getCodeHash(): string
@@ -213,9 +211,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`code_hash`.
-	 *
+	 * 
 	 * @param string $code_hash
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setCodeHash(string $code_hash): static
@@ -227,7 +225,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`token_hash`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getTokenHash(): string
@@ -237,9 +235,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`token_hash`.
-	 *
+	 * 
 	 * @param string $token_hash
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setTokenHash(string $token_hash): static
@@ -251,7 +249,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`state`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getState(): string
@@ -261,9 +259,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`state`.
-	 *
+	 * 
 	 * @param string $state
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setState(string $state): static
@@ -275,7 +273,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`try_max`.
-	 *
+	 * 
 	 * @return int
 	 */
 	public function getTryMax(): int
@@ -285,9 +283,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`try_max`.
-	 *
+	 * 
 	 * @param int $try_max
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setTryMax(int $try_max): static
@@ -299,7 +297,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`try_count`.
-	 *
+	 * 
 	 * @return int
 	 */
 	public function getTryCount(): int
@@ -309,9 +307,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`try_count`.
-	 *
+	 * 
 	 * @param int $try_count
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setTryCount(int $try_count): static
@@ -323,7 +321,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`lifetime`.
-	 *
+	 * 
 	 * @return int
 	 */
 	public function getLifetime(): int
@@ -333,9 +331,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`lifetime`.
-	 *
+	 * 
 	 * @param int $lifetime
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setLifetime(int $lifetime): static
@@ -347,7 +345,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`expire`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getExpire(): string
@@ -357,9 +355,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`expire`.
-	 *
-	 * @param int|string $expire
-	 *
+	 * 
+	 * @param string|int $expire
+	 * 
 	 * @return static
 	 */
 	public function setExpire(string|int $expire): static
@@ -371,7 +369,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`data`.
-	 *
+	 * 
 	 * @return array
 	 */
 	public function getData(): array
@@ -381,9 +379,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`data`.
-	 *
+	 * 
 	 * @param array $data
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setData(array $data): static
@@ -395,7 +393,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`created_at`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getCreatedAT(): string
@@ -405,9 +403,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`created_at`.
-	 *
-	 * @param int|string $created_at
-	 *
+	 * 
+	 * @param string|int $created_at
+	 * 
 	 * @return static
 	 */
 	public function setCreatedAT(string|int $created_at): static
@@ -419,7 +417,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`updated_at`.
-	 *
+	 * 
 	 * @return string
 	 */
 	public function getUpdatedAT(): string
@@ -429,9 +427,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`updated_at`.
-	 *
-	 * @param int|string $updated_at
-	 *
+	 * 
+	 * @param string|int $updated_at
+	 * 
 	 * @return static
 	 */
 	public function setUpdatedAT(string|int $updated_at): static
@@ -443,7 +441,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Getter for column `oz_auths`.`valid`.
-	 *
+	 * 
 	 * @return bool
 	 */
 	public function getValid(): bool
@@ -453,9 +451,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 
 	/**
 	 * Setter for column `oz_auths`.`valid`.
-	 *
+	 * 
 	 * @param bool $valid
-	 *
+	 * 
 	 * @return static
 	 */
 	public function setValid(bool $valid): static

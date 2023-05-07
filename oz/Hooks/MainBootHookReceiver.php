@@ -19,14 +19,10 @@ use Gobl\ORM\Utils\ORMClassKind;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Core\CRUDHandlerTrait;
 use OZONE\OZ\Core\DbManager;
-use OZONE\OZ\Core\Interfaces\TableCollectionsProviderInterface;
-use OZONE\OZ\Core\Interfaces\TableRelationsProviderInterface;
 use OZONE\OZ\Exceptions\ForbiddenException;
 use OZONE\OZ\Exceptions\MethodNotAllowedException;
 use OZONE\OZ\Exceptions\NotFoundException;
-use OZONE\OZ\Exceptions\RuntimeException;
 use OZONE\OZ\FS\Traits\FileEntityTrait;
-use OZONE\OZ\Hooks\Events\DbBeforeLockHook;
 use OZONE\OZ\Hooks\Events\ResponseHook;
 use OZONE\OZ\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\OZ\Http\Uri;
@@ -81,10 +77,10 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	public static function onMethodNotAllowed(RouteMethodNotAllowed $ev): void
 	{
 		if (!$ev->getRequest()
-			->isOptions()) { // not a prefetch request
+				->isOptions()) { // not a prefetch request
 			throw new MethodNotAllowedException(null, [
 				'method' => $ev->getRequest()
-					->getMethod(),
+							   ->getMethod(),
 			]);
 		}
 	}
@@ -102,7 +98,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		$request   = $ev->getRequest();
 		$response  = $ev->getResponse();
 		$session   = $ev->getContext()
-			->getSession();
+						->getSession();
 		$life_time = 60 * 60;
 		// header spoofing can help hacker bypass this
 		// so don't be 100% sure, :-)
@@ -163,9 +159,9 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 			}
 
 			$allowed_host = Uri::createFromString($allowed_origin)
-				->getHost();
+							   ->getHost();
 			$origin_host  = Uri::createFromString($origin)
-				->getHost();
+							   ->getHost();
 
 			if ($allowed_host !== $origin_host) {
 				// we don't throw this exception in sub-request
@@ -196,7 +192,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		$h_list['X-Frame-Options'] = 'DENY';
 
 		foreach ($h_list as $key => $value) {
-			$response = $response->withHeader($key, (string) $value);
+			$response = $response->withHeader($key, (string)$value);
 		}
 
 		$context->setResponse($response);
@@ -209,7 +205,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	{
 		$table = $event->getTable();
 
-		if (DbManager::OZONE_DB_NAMESPACE === $table->getNamespace()) {
+		if (DbManager::getOZoneDbNamespace() === $table->getNamespace()) {
 			$name  = $table->getName();
 			$trait = null;
 
@@ -221,12 +217,12 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 
 			if ($trait) {
 				$event->getClass(ORMClassKind::ENTITY)
-					->useTrait($trait);
+					  ->useTrait($trait);
 			}
 		}
 
 		$event->getClass(ORMClassKind::CRUD)
-			->useTrait(CRUDHandlerTrait::class);
+			  ->useTrait(CRUDHandlerTrait::class);
 	}
 
 	/**
@@ -240,57 +236,8 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 
 		ResponseHook::handle([self::class, 'onResponse'], Event::RUN_FIRST);
 
-		DbBeforeLockHook::handle([self::class, 'registerCustomRelations'], Event::RUN_FIRST);
-		DbBeforeLockHook::handle([self::class, 'registerCustomCollections'], Event::RUN_FIRST);
-
 		if (OZone::isCliMode()) {
 			ORMTableFilesGenerated::handle([self::class, 'onTableFilesGenerated'], Event::RUN_FIRST);
-		}
-	}
-
-	/**
-	 * Register custom relations.
-	 */
-	public static function registerCustomRelations(): void
-	{
-		$relations_settings = Configs::load('oz.db.relations');
-
-		foreach ($relations_settings as $provider => $enabled) {
-			if ($enabled) {
-				if (!\is_subclass_of($provider, TableRelationsProviderInterface::class)) {
-					throw new RuntimeException(\sprintf(
-						'Custom relations provider "%s" should implements "%s".',
-						$provider,
-						TableRelationsProviderInterface::class
-					));
-				}
-
-				/* @var TableRelationsProviderInterface $provider */
-				$provider::defineRelations();
-			}
-		}
-	}
-
-	/**
-	 * Register custom collections.
-	 */
-	public static function registerCustomCollections(): void
-	{
-		$collections_settings = Configs::load('oz.db.collections');
-
-		foreach ($collections_settings as $provider => $enabled) {
-			if ($enabled) {
-				if (!\is_subclass_of($provider, TableCollectionsProviderInterface::class)) {
-					throw new RuntimeException(\sprintf(
-						'Custom collections provider "%s" should implements "%s".',
-						$provider,
-						TableCollectionsProviderInterface::class
-					));
-				}
-
-				/* @var TableCollectionsProviderInterface $provider */
-				$provider::defineCollections();
-			}
 		}
 	}
 }

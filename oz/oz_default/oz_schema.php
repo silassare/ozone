@@ -534,9 +534,26 @@ return [
 				'max'      => 100,
 				'truncate' => true,
 			],
-			'label'      => [
+			// this is a morph field: user_id
+			// ex:
+			// 	- user have an avatar/profile pic
+			//	- post has an image/video/audio/file/attachment
+			'for_id'     => [
+				'type'     => 'string',
+				'max'      => 128,
+				'nullable' => true,
+			],
+			// this is a morph field: oz_users...
+			'for_type'   => [
+				'type'     => 'string',
+				'max'      => 64,
+				'nullable' => true,
+			],
+			// this file is used for what
+			// ex: avatar, profile_pic, post_image, post_video, post_audio, post_file, post_attachment etc...
+			'for_label'  => [
 				'type' => 'string',
-				'max'  => 255,
+				'max'  => 64,
 			],
 			'data'       => [
 				'type'    => 'map',

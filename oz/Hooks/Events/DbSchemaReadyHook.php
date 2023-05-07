@@ -17,16 +17,15 @@ use Gobl\DBAL\Interfaces\RDBMSInterface;
 use PHPUtils\Events\Event;
 
 /**
- * Class DbBeforeLockHook.
+ * Class DbSchemaReadyHook.
  *
- * This event is triggered before locking the database.
- * The event may be triggered multiple times but only once per database instance.
- * And is useful when you want to be sure that required tables are added before you add relations.
+ * This event is triggered when the database schema is ready.
+ * And is useful when you want to be sure that all tables are loaded.
  */
-final class DbBeforeLockHook extends Event
+final class DbSchemaReadyHook extends Event
 {
 	/**
-	 * DbBeforeLockHook constructor.
+	 * DbSchemaReadyHook constructor.
 	 *
 	 * @param \Gobl\DBAL\Interfaces\RDBMSInterface $db
 	 */
@@ -35,7 +34,7 @@ final class DbBeforeLockHook extends Event
 	}
 
 	/**
-	 * DbBeforeLockHook destructor.
+	 * DbSchemaReadyHook destructor.
 	 */
 	public function __destruct()
 	{

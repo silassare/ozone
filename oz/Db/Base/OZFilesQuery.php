@@ -1,21 +1,19 @@
 <?php
-
 /**
- * Copyright (c) 2017-present, Emile Silas Sare
- *
- * This file is part of OZone package.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * Auto generated file
+ * 
+ * WARNING: please don't edit.
+ * 
+ * Proudly With: gobl v2.0.0
+ * Time: 2023-05-06T15:46:01+00:00
  */
-
 declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
 /**
  * Class OZFilesQuery.
- *
+ * 
  * @method \OZONE\OZ\Db\OZFilesResults find(?int $max = null, int $offset = 0, array $order_by = [])
  */
 abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
@@ -29,16 +27,17 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 			\OZONE\OZ\Db\OZFile::TABLE_NAMESPACE,
 			\OZONE\OZ\Db\OZFile::TABLE_NAME
 		);
+
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
+	 * @inheritDoc
+	 * 
 	 * @return static
 	 */
 	public static function createInstance(): static
 	{
-		return new \OZONE\OZ\Db\OZFilesQuery();
+		return new \OZONE\OZ\Db\OZFilesQuery;
 	}
 
 	/**
@@ -56,12 +55,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIs(string|int $value): self
 	{
@@ -74,12 +71,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsNot(string|int $value): self
 	{
@@ -92,12 +87,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsLt(string|int $value): self
 	{
@@ -110,12 +103,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsLte(string|int $value): self
 	{
@@ -128,12 +119,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsGt(string|int $value): self
 	{
@@ -146,12 +135,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsGte(string|int $value): self
 	{
@@ -164,12 +151,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`id`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsLike(string $value): self
 	{
@@ -182,12 +167,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`id`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsNotLike(string $value): self
 	{
@@ -200,12 +183,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`id`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsIn(array $value): self
 	{
@@ -218,12 +199,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`id`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereIdIsNotIn(array $value): self
 	{
@@ -236,12 +215,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`owner_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIs(string|int $value): self
 	{
@@ -254,12 +231,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`owner_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIsNot(string|int $value): self
 	{
@@ -272,12 +247,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`owner_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIsLt(string|int $value): self
 	{
@@ -290,12 +263,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`owner_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIsLte(string|int $value): self
 	{
@@ -308,12 +279,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`owner_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIsGt(string|int $value): self
 	{
@@ -326,12 +295,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`owner_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIsGte(string|int $value): self
 	{
@@ -344,12 +311,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`owner_id`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIsLike(string $value): self
 	{
@@ -362,12 +327,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`owner_id`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIsNotLike(string $value): self
 	{
@@ -380,10 +343,8 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_null` condition on column `oz_files`.`owner_id`.
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIsNull(): self
 	{
@@ -395,10 +356,8 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_not_null` condition on column `oz_files`.`owner_id`.
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIsNotNull(): self
 	{
@@ -410,12 +369,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`owner_id`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIsIn(array $value): self
 	{
@@ -428,12 +385,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`owner_id`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereOwnerIdIsNotIn(array $value): self
 	{
@@ -446,12 +401,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`key`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereKeyIs(string $value): self
 	{
@@ -464,12 +417,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`key`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereKeyIsNot(string $value): self
 	{
@@ -482,12 +433,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`key`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereKeyIsLt(string $value): self
 	{
@@ -500,12 +449,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`key`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereKeyIsLte(string $value): self
 	{
@@ -518,12 +465,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`key`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereKeyIsGt(string $value): self
 	{
@@ -536,12 +481,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`key`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereKeyIsGte(string $value): self
 	{
@@ -554,12 +497,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`key`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereKeyIsLike(string $value): self
 	{
@@ -572,12 +513,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`key`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereKeyIsNotLike(string $value): self
 	{
@@ -590,12 +529,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`key`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereKeyIsIn(array $value): self
 	{
@@ -608,12 +545,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`key`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereKeyIsNotIn(array $value): self
 	{
@@ -626,12 +561,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`ref`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereRefIs(string $value): self
 	{
@@ -644,12 +577,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`ref`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereRefIsNot(string $value): self
 	{
@@ -662,12 +593,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`ref`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereRefIsLt(string $value): self
 	{
@@ -680,12 +609,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`ref`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereRefIsLte(string $value): self
 	{
@@ -698,12 +625,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`ref`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereRefIsGt(string $value): self
 	{
@@ -716,12 +641,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`ref`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereRefIsGte(string $value): self
 	{
@@ -734,12 +657,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`ref`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereRefIsLike(string $value): self
 	{
@@ -752,12 +673,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`ref`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereRefIsNotLike(string $value): self
 	{
@@ -770,12 +689,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`ref`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereRefIsIn(array $value): self
 	{
@@ -788,12 +705,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`ref`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereRefIsNotIn(array $value): self
 	{
@@ -806,12 +721,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`driver`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDriverIs(string $value): self
 	{
@@ -824,12 +737,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`driver`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDriverIsNot(string $value): self
 	{
@@ -842,12 +753,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`driver`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDriverIsLt(string $value): self
 	{
@@ -860,12 +769,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`driver`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDriverIsLte(string $value): self
 	{
@@ -878,12 +785,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`driver`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDriverIsGt(string $value): self
 	{
@@ -896,12 +801,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`driver`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDriverIsGte(string $value): self
 	{
@@ -914,12 +817,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`driver`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDriverIsLike(string $value): self
 	{
@@ -932,12 +833,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`driver`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDriverIsNotLike(string $value): self
 	{
@@ -950,12 +849,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`driver`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDriverIsIn(array $value): self
 	{
@@ -968,12 +865,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`driver`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDriverIsNotIn(array $value): self
 	{
@@ -986,12 +881,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`clone_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIs(string|int $value): self
 	{
@@ -1004,12 +897,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`clone_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIsNot(string|int $value): self
 	{
@@ -1022,12 +913,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`clone_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIsLt(string|int $value): self
 	{
@@ -1040,12 +929,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`clone_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIsLte(string|int $value): self
 	{
@@ -1058,12 +945,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`clone_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIsGt(string|int $value): self
 	{
@@ -1076,12 +961,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`clone_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIsGte(string|int $value): self
 	{
@@ -1094,12 +977,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`clone_id`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIsLike(string $value): self
 	{
@@ -1112,12 +993,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`clone_id`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIsNotLike(string $value): self
 	{
@@ -1130,10 +1009,8 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_null` condition on column `oz_files`.`clone_id`.
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIsNull(): self
 	{
@@ -1145,10 +1022,8 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_not_null` condition on column `oz_files`.`clone_id`.
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIsNotNull(): self
 	{
@@ -1160,12 +1035,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`clone_id`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIsIn(array $value): self
 	{
@@ -1178,12 +1051,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`clone_id`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCloneIdIsNotIn(array $value): self
 	{
@@ -1196,12 +1067,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`source_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIs(string|int $value): self
 	{
@@ -1214,12 +1083,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`source_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIsNot(string|int $value): self
 	{
@@ -1232,12 +1099,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`source_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIsLt(string|int $value): self
 	{
@@ -1250,12 +1115,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`source_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIsLte(string|int $value): self
 	{
@@ -1268,12 +1131,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`source_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIsGt(string|int $value): self
 	{
@@ -1286,12 +1147,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`source_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIsGte(string|int $value): self
 	{
@@ -1304,12 +1163,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`source_id`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIsLike(string $value): self
 	{
@@ -1322,12 +1179,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`source_id`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIsNotLike(string $value): self
 	{
@@ -1340,10 +1195,8 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_null` condition on column `oz_files`.`source_id`.
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIsNull(): self
 	{
@@ -1355,10 +1208,8 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_not_null` condition on column `oz_files`.`source_id`.
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIsNotNull(): self
 	{
@@ -1370,12 +1221,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`source_id`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIsIn(array $value): self
 	{
@@ -1388,12 +1237,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`source_id`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSourceIdIsNotIn(array $value): self
 	{
@@ -1406,12 +1253,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`size`.
-	 *
+	 * 
 	 * @param int $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSizeIs(int $value): self
 	{
@@ -1424,12 +1269,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`size`.
-	 *
+	 * 
 	 * @param int $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSizeIsNot(int $value): self
 	{
@@ -1442,12 +1285,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`size`.
-	 *
+	 * 
 	 * @param int $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSizeIsLt(int $value): self
 	{
@@ -1460,12 +1301,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`size`.
-	 *
+	 * 
 	 * @param int $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSizeIsLte(int $value): self
 	{
@@ -1478,12 +1317,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`size`.
-	 *
+	 * 
 	 * @param int $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSizeIsGt(int $value): self
 	{
@@ -1496,12 +1333,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`size`.
-	 *
+	 * 
 	 * @param int $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSizeIsGte(int $value): self
 	{
@@ -1514,12 +1349,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`size`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSizeIsLike(string $value): self
 	{
@@ -1532,12 +1365,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`size`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSizeIsNotLike(string $value): self
 	{
@@ -1550,12 +1381,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`size`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSizeIsIn(array $value): self
 	{
@@ -1568,12 +1397,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`size`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereSizeIsNotIn(array $value): self
 	{
@@ -1586,12 +1413,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`mime_type`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereMimeTypeIs(string $value): self
 	{
@@ -1604,12 +1429,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`mime_type`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereMimeTypeIsNot(string $value): self
 	{
@@ -1622,12 +1445,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`mime_type`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereMimeTypeIsLt(string $value): self
 	{
@@ -1640,12 +1461,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`mime_type`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereMimeTypeIsLte(string $value): self
 	{
@@ -1658,12 +1477,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`mime_type`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereMimeTypeIsGt(string $value): self
 	{
@@ -1676,12 +1493,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`mime_type`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereMimeTypeIsGte(string $value): self
 	{
@@ -1694,12 +1509,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`mime_type`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereMimeTypeIsLike(string $value): self
 	{
@@ -1712,12 +1525,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`mime_type`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereMimeTypeIsNotLike(string $value): self
 	{
@@ -1730,12 +1541,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`mime_type`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereMimeTypeIsIn(array $value): self
 	{
@@ -1748,12 +1557,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`mime_type`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereMimeTypeIsNotIn(array $value): self
 	{
@@ -1766,12 +1573,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`extension`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereExtensionIs(string $value): self
 	{
@@ -1784,12 +1589,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`extension`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereExtensionIsNot(string $value): self
 	{
@@ -1802,12 +1605,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`extension`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereExtensionIsLt(string $value): self
 	{
@@ -1820,12 +1621,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`extension`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereExtensionIsLte(string $value): self
 	{
@@ -1838,12 +1637,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`extension`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereExtensionIsGt(string $value): self
 	{
@@ -1856,12 +1653,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`extension`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereExtensionIsGte(string $value): self
 	{
@@ -1874,12 +1669,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`extension`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereExtensionIsLike(string $value): self
 	{
@@ -1892,12 +1685,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`extension`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereExtensionIsNotLike(string $value): self
 	{
@@ -1910,12 +1701,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`extension`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereExtensionIsIn(array $value): self
 	{
@@ -1928,12 +1717,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`extension`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereExtensionIsNotIn(array $value): self
 	{
@@ -1946,12 +1733,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIs(string $value): self
 	{
@@ -1964,12 +1749,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsNot(string $value): self
 	{
@@ -1982,12 +1765,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsLt(string $value): self
 	{
@@ -2000,12 +1781,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsLte(string $value): self
 	{
@@ -2018,12 +1797,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsGt(string $value): self
 	{
@@ -2036,12 +1813,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsGte(string $value): self
 	{
@@ -2054,12 +1829,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsLike(string $value): self
 	{
@@ -2072,12 +1845,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`name`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsNotLike(string $value): self
 	{
@@ -2090,12 +1861,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`name`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsIn(array $value): self
 	{
@@ -2108,12 +1877,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`name`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereNameIsNotIn(array $value): self
 	{
@@ -2125,193 +1892,543 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	}
 
 	/**
-	 * Filters rows with `eq` condition on column `oz_files`.`label`.
-	 *
+	 * Filters rows with `eq` condition on column `oz_files`.`for_id`.
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereLabelIs(string $value): self
+	public function whereForIdIs(string $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_LABEL,
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `neq` condition on column `oz_files`.`label`.
-	 *
+	 * Filters rows with `neq` condition on column `oz_files`.`for_id`.
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereLabelIsNot(string $value): self
+	public function whereForIdIsNot(string $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_LABEL,
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `lt` condition on column `oz_files`.`label`.
-	 *
+	 * Filters rows with `lt` condition on column `oz_files`.`for_id`.
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereLabelIsLt(string $value): self
+	public function whereForIdIsLt(string $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_LABEL,
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `lte` condition on column `oz_files`.`label`.
-	 *
+	 * Filters rows with `lte` condition on column `oz_files`.`for_id`.
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereLabelIsLte(string $value): self
+	public function whereForIdIsLte(string $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_LABEL,
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `gt` condition on column `oz_files`.`label`.
-	 *
+	 * Filters rows with `gt` condition on column `oz_files`.`for_id`.
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereLabelIsGt(string $value): self
+	public function whereForIdIsGt(string $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_LABEL,
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `gte` condition on column `oz_files`.`label`.
-	 *
+	 * Filters rows with `gte` condition on column `oz_files`.`for_id`.
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereLabelIsGte(string $value): self
+	public function whereForIdIsGte(string $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_LABEL,
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `like` condition on column `oz_files`.`label`.
-	 *
+	 * Filters rows with `like` condition on column `oz_files`.`for_id`.
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereLabelIsLike(string $value): self
+	public function whereForIdIsLike(string $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_LABEL,
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `not_like` condition on column `oz_files`.`label`.
-	 *
+	 * Filters rows with `not_like` condition on column `oz_files`.`for_id`.
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereLabelIsNotLike(string $value): self
+	public function whereForIdIsNotLike(string $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_LABEL,
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `in` condition on column `oz_files`.`label`.
-	 *
-	 * @param array $value the filter value
-	 *
+	 * Filters rows with `is_null` condition on column `oz_files`.`for_id`.
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereLabelIsIn(array $value): self
+	public function whereForIdIsNull(): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('is_null'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID
+		);
+	}
+
+	/**
+	 * Filters rows with `is_not_null` condition on column `oz_files`.`for_id`.
+	 * 
+	 * @return static
+	 */
+	public function whereForIdIsNotNull(): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('is_not_null'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID
+		);
+	}
+
+	/**
+	 * Filters rows with `in` condition on column `oz_files`.`for_id`.
+	 * 
+	 * @param array $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForIdIsIn(array $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_LABEL,
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `not_in` condition on column `oz_files`.`label`.
-	 *
+	 * Filters rows with `not_in` condition on column `oz_files`.`for_id`.
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
-	public function whereLabelIsNotIn(array $value): self
+	public function whereForIdIsNotIn(array $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_LABEL,
+			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `eq` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIs(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('eq'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `neq` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIsNot(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('neq'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `lt` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIsLt(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('lt'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `lte` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIsLte(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('lte'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `gt` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIsGt(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('gt'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `gte` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIsGte(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('gte'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `like` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIsLike(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('like'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `not_like` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIsNotLike(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('not_like'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `is_null` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIsNull(): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('is_null'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE
+		);
+	}
+
+	/**
+	 * Filters rows with `is_not_null` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIsNotNull(): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('is_not_null'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE
+		);
+	}
+
+	/**
+	 * Filters rows with `in` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @param array $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIsIn(array $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('in'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `not_in` condition on column `oz_files`.`for_type`.
+	 * 
+	 * @param array $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForTypeIsNotIn(array $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('not_in'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `eq` condition on column `oz_files`.`for_label`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForLabelIs(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('eq'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `neq` condition on column `oz_files`.`for_label`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForLabelIsNot(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('neq'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `lt` condition on column `oz_files`.`for_label`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForLabelIsLt(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('lt'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `lte` condition on column `oz_files`.`for_label`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForLabelIsLte(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('lte'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `gt` condition on column `oz_files`.`for_label`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForLabelIsGt(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('gt'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `gte` condition on column `oz_files`.`for_label`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForLabelIsGte(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('gte'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `like` condition on column `oz_files`.`for_label`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForLabelIsLike(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('like'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `not_like` condition on column `oz_files`.`for_label`.
+	 * 
+	 * @param string $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForLabelIsNotLike(string $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('not_like'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `in` condition on column `oz_files`.`for_label`.
+	 * 
+	 * @param array $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForLabelIsIn(array $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('in'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			$value
+		);
+	}
+
+	/**
+	 * Filters rows with `not_in` condition on column `oz_files`.`for_label`.
+	 * 
+	 * @param array $value the filter value
+	 * 
+	 * @return static
+	 */
+	public function whereForLabelIsNotIn(array $value): self
+	{
+		return $this->filterBy(
+			\Gobl\DBAL\Operator::from('not_in'),
+			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
 			$value
 		);
 	}
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`data`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDataIs(array $value): self
 	{
@@ -2324,12 +2441,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`data`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDataIsNot(array $value): self
 	{
@@ -2342,12 +2457,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`data`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDataIsLike(string $value): self
 	{
@@ -2360,12 +2473,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`data`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereDataIsNotLike(string $value): self
 	{
@@ -2378,12 +2489,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIs(string|int $value): self
 	{
@@ -2396,12 +2505,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsNot(string|int $value): self
 	{
@@ -2414,12 +2521,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsLt(string|int $value): self
 	{
@@ -2432,12 +2537,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsLte(string|int $value): self
 	{
@@ -2450,12 +2553,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsGt(string|int $value): self
 	{
@@ -2468,12 +2569,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`created_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsGte(string|int $value): self
 	{
@@ -2486,12 +2585,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`created_at`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsLike(string $value): self
 	{
@@ -2504,12 +2601,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`created_at`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsNotLike(string $value): self
 	{
@@ -2522,12 +2617,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`created_at`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsIn(array $value): self
 	{
@@ -2540,12 +2633,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`created_at`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereCreatedAtIsNotIn(array $value): self
 	{
@@ -2558,12 +2649,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIs(string|int $value): self
 	{
@@ -2576,12 +2665,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsNot(string|int $value): self
 	{
@@ -2594,12 +2681,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lt` condition on column `oz_files`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsLt(string|int $value): self
 	{
@@ -2612,12 +2697,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `lte` condition on column `oz_files`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsLte(string|int $value): self
 	{
@@ -2630,12 +2713,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gt` condition on column `oz_files`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsGt(string|int $value): self
 	{
@@ -2648,12 +2729,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `gte` condition on column `oz_files`.`updated_at`.
-	 *
-	 * @param int|string $value the filter value
-	 *
+	 * 
+	 * @param string|int $value the filter value
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsGte(string|int $value): self
 	{
@@ -2666,12 +2745,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `like` condition on column `oz_files`.`updated_at`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsLike(string $value): self
 	{
@@ -2684,12 +2761,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_like` condition on column `oz_files`.`updated_at`.
-	 *
+	 * 
 	 * @param string $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsNotLike(string $value): self
 	{
@@ -2702,12 +2777,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `in` condition on column `oz_files`.`updated_at`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsIn(array $value): self
 	{
@@ -2720,12 +2793,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `not_in` condition on column `oz_files`.`updated_at`.
-	 *
+	 * 
 	 * @param array $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereUpdatedAtIsNotIn(array $value): self
 	{
@@ -2738,12 +2809,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `eq` condition on column `oz_files`.`valid`.
-	 *
+	 * 
 	 * @param bool $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereValidIs(bool $value): self
 	{
@@ -2756,12 +2825,10 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `neq` condition on column `oz_files`.`valid`.
-	 *
+	 * 
 	 * @param bool $value the filter value
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereValidIsNot(bool $value): self
 	{
@@ -2774,10 +2841,8 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_false` condition on column `oz_files`.`valid`.
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereValidIsFalse(): self
 	{
@@ -2789,10 +2854,8 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 
 	/**
 	 * Filters rows with `is_true` condition on column `oz_files`.`valid`.
-	 *
+	 * 
 	 * @return static
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	public function whereValidIsTrue(): self
 	{
