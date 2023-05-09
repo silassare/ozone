@@ -111,8 +111,8 @@ final class Session implements BootHookReceiverInterface
 
 			$this->sess_entry = new OZSession();
 			$this->sess_entry->setID($sid)
-				->setClientID($this->client->getID())
-				->setToken($token);
+							 ->setClientID($this->client->getID())
+							 ->setToken($token);
 		}
 
 		$this->store         = SessionDataStore::getInstance($this->sess_entry);
@@ -121,7 +121,7 @@ final class Session implements BootHookReceiverInterface
 
 		if ($this->client->getUserID()) {
 			$this->context->getUsersManager()
-				->tryLogOnAsApiClientOwner();
+						  ->tryLogOnAsApiClientOwner();
 		}
 
 		return $this;
@@ -139,7 +139,7 @@ final class Session implements BootHookReceiverInterface
 		$this->assertSessionStarted();
 
 		return $this->destroy()
-			->start();
+					->start();
 	}
 
 	/**
@@ -227,8 +227,8 @@ final class Session implements BootHookReceiverInterface
 	{
 		ResponseHook::handle(static function (ResponseHook $ev) {
 			$ev->getContext()
-				->getSession()
-				->responseReady();
+			   ->getSession()
+			   ->responseReady();
 		}, Event::RUN_LAST);
 
 		FinishHook::handle(static function () {
@@ -267,7 +267,7 @@ final class Session implements BootHookReceiverInterface
 
 			if (!$client) {
 				throw new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID', [
-					'url'     => (string) $request->getUri(),
+					'url'     => (string)$request->getUri(),
 					'api_key' => $api_key,
 				]);
 			}
@@ -279,9 +279,9 @@ final class Session implements BootHookReceiverInterface
 			throw new ForbiddenException('OZ_API_CLIENT_IS_REQUIRED');
 		}
 
-		if (!$client->getValid()) {
+		if (!$client->isValid()) {
 			throw new ForbiddenException('OZ_YOUR_API_CLIENT_IS_DISABLED', [
-				'_url'     => (string) $request->getUri(),
+				'_url'     => (string)$request->getUri(),
 				'_api_key' => $api_key,
 			]);
 		}
@@ -356,8 +356,8 @@ final class Session implements BootHookReceiverInterface
 				$sqb = new OZSessionsQuery();
 
 				$result = $sqb->whereIdIs($sid)
-					->whereValidIsTrue()
-					->find(1);
+							  ->whereIsValid()
+							  ->find(1);
 
 				$item = $result->fetchClass();
 
@@ -372,8 +372,8 @@ final class Session implements BootHookReceiverInterface
 		};
 
 		return CacheManager::runtime(__METHOD__)
-			->factory($sid, $factory)
-			->get();
+						   ->factory($sid, $factory)
+						   ->get();
 	}
 
 	/**
@@ -394,8 +394,8 @@ final class Session implements BootHookReceiverInterface
 				$s_table = new OZSessionsQuery();
 
 				$result = $s_table->whereTokenIs($token)
-					->whereValidIsTrue()
-					->find(1);
+								  ->whereIsValid()
+								  ->find(1);
 
 				$item = $result->fetchClass();
 
@@ -414,8 +414,8 @@ final class Session implements BootHookReceiverInterface
 		};
 
 		return CacheManager::runtime(__METHOD__)
-			->factory($token, $factory)
-			->get();
+						   ->factory($token, $factory)
+						   ->get();
 	}
 
 	/**
@@ -426,15 +426,15 @@ final class Session implements BootHookReceiverInterface
 		$sid = $this->sess_entry->getID();
 
 		try {
-			$expire = (\time() + ((int) $this->client->getSessionLifeTime()));
+			$expire = (\time() + ((int)$this->client->getSessionLifeTime()));
 
 			$data = $this->store->getData();
 
 			$this->sess_entry->setData($data)
-				->setExpire($expire)
-				->setLastSeen(\time())
-				->setUpdatedAT(\time())
-				->save();
+							 ->setExpire($expire)
+							 ->setLastSeen(\time())
+							 ->setUpdatedAT(\time())
+							 ->save();
 		} catch (Throwable $t) {
 			throw new RuntimeException('OZ_SESSION_SAVING_FAILED', ['_session_id' => $sid], $t);
 		}
@@ -480,8 +480,8 @@ final class Session implements BootHookReceiverInterface
 		try {
 			$s_table = new OZSessionsQuery();
 			$s_table->whereExpireIsLte(\time())
-				->delete()
-				->execute();
+					->delete()
+					->execute();
 		} catch (Throwable $t) {
 			throw new RuntimeException('OZ_SESSION_EXPIRED_DELETION_FAILED', null, $t);
 		}
@@ -522,8 +522,8 @@ final class Session implements BootHookReceiverInterface
 			$s_table = new OZSessionsQuery();
 
 			$s_table->whereIdIs($sid)
-				->delete()
-				->execute();
+					->delete()
+					->execute();
 		} catch (Throwable $t) {
 			throw new RuntimeException('OZ_SESSION_REMOVE_FAILED', ['_session_id' => $sid], $t);
 		}

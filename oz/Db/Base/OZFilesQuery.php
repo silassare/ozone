@@ -5,7 +5,7 @@
  * WARNING: please don't edit.
  * 
  * Proudly With: gobl v2.0.0
- * Time: 2023-05-06T15:46:01+00:00
+ * Time: 2023-05-09T07:41:19+00:00
  */
 declare(strict_types=1);
 
@@ -2808,60 +2808,60 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	}
 
 	/**
-	 * Filters rows with `eq` condition on column `oz_files`.`valid`.
+	 * Filters rows with `eq` condition on column `oz_files`.`is_valid`.
 	 * 
 	 * @param bool $value the filter value
 	 * 
 	 * @return static
 	 */
-	public function whereValidIs(bool $value): self
+	public function whereIsValidIs(bool $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_VALID,
+			\OZONE\OZ\Db\OZFile::COL_IS_VALID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `neq` condition on column `oz_files`.`valid`.
+	 * Filters rows with `neq` condition on column `oz_files`.`is_valid`.
 	 * 
 	 * @param bool $value the filter value
 	 * 
 	 * @return static
 	 */
-	public function whereValidIsNot(bool $value): self
+	public function whereIsValidIsNot(bool $value): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_VALID,
+			\OZONE\OZ\Db\OZFile::COL_IS_VALID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `is_false` condition on column `oz_files`.`valid`.
+	 * Filters rows with `is_false` condition on column `oz_files`.`is_valid`.
 	 * 
 	 * @return static
 	 */
-	public function whereValidIsFalse(): self
+	public function whereIsNotValid(): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('is_false'),
-			\OZONE\OZ\Db\OZFile::COL_VALID
+			\OZONE\OZ\Db\OZFile::COL_IS_VALID
 		);
 	}
 
 	/**
-	 * Filters rows with `is_true` condition on column `oz_files`.`valid`.
+	 * Filters rows with `is_true` condition on column `oz_files`.`is_valid`.
 	 * 
 	 * @return static
 	 */
-	public function whereValidIsTrue(): self
+	public function whereIsValid(): self
 	{
 		return $this->filterBy(
 			\Gobl\DBAL\Operator::from('is_true'),
-			\OZONE\OZ\Db\OZFile::COL_VALID
+			\OZONE\OZ\Db\OZFile::COL_IS_VALID
 		);
 	}
 }

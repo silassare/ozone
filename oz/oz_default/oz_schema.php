@@ -96,7 +96,7 @@ return [
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'valid'      => [
+			'is_valid'   => [
 				'type'    => 'bool',
 				'default' => true,
 			],
@@ -147,7 +147,7 @@ return [
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'valid'      => [
+			'is_valid'   => [
 				'type'    => 'bool',
 				'default' => true,
 			],
@@ -236,7 +236,7 @@ return [
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'valid'             => [
+			'is_valid'          => [
 				'type'    => 'bool',
 				'default' => true,
 			],
@@ -311,7 +311,7 @@ return [
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'valid'      => [
+			'is_valid'   => [
 				'type'    => 'bool',
 				'default' => true,
 			],
@@ -397,7 +397,7 @@ return [
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'valid'       => [
+			'is_valid'    => [
 				'type'    => 'bool',
 				'default' => true,
 			],
@@ -441,7 +441,7 @@ return [
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'valid'      => [
+			'is_valid'   => [
 				'type'    => 'bool',
 				'default' => true,
 			],
@@ -569,7 +569,7 @@ return [
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'valid'      => [
+			'is_valid'   => [
 				'type'    => 'bool',
 				'default' => true,
 			],
@@ -624,7 +624,7 @@ return [
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'valid'      => [
+			'is_valid'   => [
 				'type'    => 'bool',
 				'default' => true,
 			],

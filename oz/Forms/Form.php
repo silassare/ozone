@@ -161,14 +161,14 @@ class Form implements ArrayCapableInterface
 		}
 
 		$field_verify = $this->field($field->getName() . '_verify')
-			->type($field->getType())
-			->required($field->isRequired());
+							 ->type($field->getType())
+							 ->required($field->isRequired());
 
 		$this->rule()
-			->eq($field, $field_verify, I18n::m('OZ_FIELDS_SHOULD_HAVE_SAME_VALUE', [
-				'field'        => $field->getName(),
-				'field_verify' => $field_verify->getName(),
-			]));
+			 ->eq($field, $field_verify, I18n::m('OZ_FIELDS_SHOULD_HAVE_SAME_VALUE', [
+				 'field'        => $field->getName(),
+				 'field_verify' => $field_verify->getName(),
+			 ]));
 
 		return $this;
 	}
@@ -247,7 +247,7 @@ class Form implements ArrayCapableInterface
 	{
 		return [
 			'_csrf'  => $this->csrf?->genCsrfToken(),
-			'action' => (string) ($this->submit_to ?? ''),
+			'action' => (string)($this->submit_to ?? ''),
 			'method' => $this->method,
 			'fields' => $this->fields,
 			'steps'  => $this->steps,
@@ -292,7 +292,7 @@ class Form implements ArrayCapableInterface
 	{
 		if (\is_string($table)) {
 			$table = DbManager::getDb()
-				->getTable($table);
+							  ->getTable($table);
 		}
 
 		$columns = $table->getColumns(false);
@@ -311,8 +311,8 @@ class Form implements ArrayCapableInterface
 			}
 
 			$form->field($column->getName())
-				->type($type)
-				->required(!$type->isNullAble());
+				 ->type($type)
+				 ->required(!$type->isNullable());
 		}
 
 		return $form;

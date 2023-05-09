@@ -5,7 +5,7 @@
  * WARNING: please don't edit.
  * 
  * Proudly With: gobl v2.0.0
- * Time: 2023-05-06T15:46:01+00:00
+ * Time: 2023-05-09T07:41:19+00:00
  */
 declare(strict_types=1);
 

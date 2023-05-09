@@ -45,18 +45,18 @@ final class AccountRecovery extends Service
 
 		$user = $um::searchUserWithPhone($for) ?? $um::searchUserWithEmail($for);
 
-		if (!$user || !$user->getValid()) {
+		if (!$user || !$user->setIsValid()) {
 			throw new ForbiddenException();
 		}
 
 		$new_pass = $ri->getCleanFormField('pass');
 
 		$um->updateUserPass($user, $new_pass)
-			->logUserIn($user);
+		   ->logUserIn($user);
 
 		$this->getJSONResponse()
-			->setDone('OZ_PASSWORD_EDIT_SUCCESS')
-			->setData($user);
+			 ->setDone('OZ_PASSWORD_EDIT_SUCCESS')
+			 ->setData($user);
 	}
 
 	/**
@@ -71,9 +71,9 @@ final class AccountRecovery extends Service
 
 			return $s->respond();
 		})
-			->name(self::ROUTE_ACCOUNT_RECOVERY)
-			->with2FA()
-			->form(self::editPassForm(...));
+			   ->name(self::ROUTE_ACCOUNT_RECOVERY)
+			   ->with2FA()
+			   ->form(self::editPassForm(...));
 	}
 
 	/**
@@ -83,8 +83,8 @@ final class AccountRecovery extends Service
 	{
 		$form = new Form();
 		$pass = $form->field('pass')
-			->type(new TypePassword())
-			->required();
+					 ->type(new TypePassword())
+					 ->required();
 
 		return $form->doubleCheck($pass);
 	}

@@ -25,6 +25,8 @@ use Throwable;
 
 /**
  * Class Utils.
+ *
+ * @internal
  */
 final class Utils
 {
@@ -111,7 +113,7 @@ final class Utils
 			// we have access to the database
 			// will throw error when something went wrong
 			DbManager::getDb()
-				->getConnection();
+					 ->getConnection();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to access database.', null, $t);
 		}
@@ -225,13 +227,13 @@ final class Utils
 			});
 
 			$option->type($kli_type)
-				->prompt(true, $name);
+				   ->prompt(true, $name);
 
 			if ($db_type->hasDefault()) {
 				$kli_type->def($db_type->getDefault());
 			}
 
-			if (!$db_type->isNullAble()) {
+			if (!$db_type->isNullable()) {
 				$option->required();
 			}
 

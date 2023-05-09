@@ -105,6 +105,7 @@ class MigrationsManager
 		$db_to   = Db::createInstanceOf($db_actual->getType(), $config);
 
 		DbManager::loadSchemaTo($db_to);
+		$db_to->lock();
 
 		if ($latest) {
 			$db_from->ns('Migrations')

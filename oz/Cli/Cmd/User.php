@@ -42,7 +42,7 @@ final class User extends Command
 				OZUser::COL_DATA,
 				OZUser::COL_CREATED_AT,
 				OZUser::COL_UPDATED_AT,
-				OZUser::COL_VALID,
+				OZUser::COL_IS_VALID,
 			]));
 
 			$add->handler($this->add(...));
@@ -66,6 +66,6 @@ final class User extends Command
 		$user = new OZUser();
 
 		$user->hydrate($args->getNamedArgs())
-			->save();
+			 ->save();
 	}
 }

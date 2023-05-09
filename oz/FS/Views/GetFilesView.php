@@ -40,14 +40,14 @@ class GetFilesView extends WebView
 		$router->get($format, function (RouteInfo $r) {
 			return self::handle($r);
 		})
-			->name(self::MAIN_ROUTE)
-			->params([
-				'oz_file_id'        => '[0-9]+',
-				'oz_file_key'       => '[a-z0-9]{32,}',
-				'oz_file_ref'       => '[a-z0-9]{32,}',
-				'oz_file_filter'    => '[a-z0-9]+',
-				'oz_file_extension' => '[a-z0-9]{1,10}',
-			]);
+			   ->name(self::MAIN_ROUTE)
+			   ->params([
+				   'oz_file_id'        => '[0-9]+',
+				   'oz_file_key'       => '[a-z0-9]{32,}',
+				   'oz_file_ref'       => '[a-z0-9]{32,}',
+				   'oz_file_filter'    => '[a-z0-9]+',
+				   'oz_file_extension' => '[a-z0-9]{1,10}',
+			   ]);
 	}
 
 	/**
@@ -72,7 +72,7 @@ class GetFilesView extends WebView
 
 		$file = FilesUtils::getFileWithId($req_file_id);
 
-		if (!$file || !$file->getValid()) {
+		if (!$file || !$file->isValid()) {
 			throw new NotFoundException();
 		}
 

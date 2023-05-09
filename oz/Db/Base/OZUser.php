@@ -5,7 +5,7 @@
  * WARNING: please don't edit.
  * 
  * Proudly With: gobl v2.0.0
- * Time: 2023-05-06T15:46:01+00:00
+ * Time: 2023-05-09T07:41:19+00:00
  */
 declare(strict_types=1);
 
@@ -26,7 +26,7 @@ namespace OZONE\OZ\Db\Base;
  * @property-read array $data Getter for column `oz_users`.`data`.
  * @property-read string $created_at Getter for column `oz_users`.`created_at`.
  * @property-read string $updated_at Getter for column `oz_users`.`updated_at`.
- * @property-read bool $valid Getter for column `oz_users`.`valid`.
+ * @property-read bool $is_valid Getter for column `oz_users`.`is_valid`.
  */
 abstract class OZUser extends \Gobl\ORM\ORMEntity
 {
@@ -44,7 +44,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	public const COL_DATA = 'user_data';
 	public const COL_CREATED_AT = 'user_created_at';
 	public const COL_UPDATED_AT = 'user_updated_at';
-	public const COL_VALID = 'user_valid';
+	public const COL_IS_VALID = 'user_is_valid';
 	/**
 	 * OZUser constructor.
 	 * 
@@ -362,25 +362,25 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_users`.`valid`.
+	 * Getter for column `oz_users`.`is_valid`.
 	 * 
 	 * @return bool
 	 */
-	public function getValid(): bool
+	public function isValid(): bool
 	{
-		return $this->{self::COL_VALID};
+		return $this->{self::COL_IS_VALID};
 	}
 
 	/**
-	 * Setter for column `oz_users`.`valid`.
+	 * Setter for column `oz_users`.`is_valid`.
 	 * 
-	 * @param bool $valid
+	 * @param bool $is_valid
 	 * 
 	 * @return static
 	 */
-	public function setValid(bool $valid): static
+	public function setISValid(bool $is_valid): static
 	{
-		$this->{self::COL_VALID} = $valid;
+		$this->{self::COL_IS_VALID} = $is_valid;
 
 		return $this;
 	}
