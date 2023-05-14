@@ -18,8 +18,9 @@ use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
-use Gobl\ORM\Utils\ORMTypeHint;
+use Gobl\ORM\ORMTypeHint;
 use JsonException;
+use OLIUP\CG\PHPType;
 use OZONE\OZ\Core\DbManager;
 use OZONE\OZ\Db\OZFile;
 use OZONE\OZ\FS\FilesUtils;
@@ -94,7 +95,7 @@ class TypeFile extends Type
 	 */
 	public function isMultiple(): bool
 	{
-		return (bool)$this->getOption('multiple', false);
+		return (bool) $this->getOption('multiple', false);
 	}
 
 	/**
@@ -282,17 +283,19 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getWriteTypeHint(): array
+	public function getWriteTypeHint(): ORMTypeHint
 	{
-		return [$this->isMultiple() ? ORMTypeHint::ARRAY : ORMTypeHint::STRING];
+		return $this->isMultiple() ? ORMTypeHint::array()
+			->setPHPType(new PHPType('string[]')) : ORMTypeHint::string();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getReadTypeHint(): array
+	public function getReadTypeHint(): ORMTypeHint
 	{
-		return [$this->isMultiple() ? ORMTypeHint::ARRAY : ORMTypeHint::STRING];
+		return $this->isMultiple() ? ORMTypeHint::array()
+			->setPHPType(new PHPType('string[]')) : ORMTypeHint::string();
 	}
 
 	/**
@@ -303,39 +306,39 @@ class TypeFile extends Type
 	public function configure(array $options): self
 	{
 		if (isset($options['multiple'])) {
-			$this->multiple((bool)$options['multiple']);
+			$this->multiple((bool) $options['multiple']);
 		}
 
 		if (isset($options['driver'])) {
-			$this->driver((string)$options['driver']);
+			$this->driver((string) $options['driver']);
 		}
 
 		if (isset($options['mime_types'])) {
-			$this->mimeTypes((array)$options['mime_types']);
+			$this->mimeTypes((array) $options['mime_types']);
 		}
 
 		if (isset($options['file_label'])) {
-			$this->fileLabel((string)$options['file_label']);
+			$this->fileLabel((string) $options['file_label']);
 		}
 
 		if (isset($options['file_min_size'])) {
-			$this->fileMinSize((int)$options['file_min_size']);
+			$this->fileMinSize((int) $options['file_min_size']);
 		}
 
 		if (isset($options['file_max_size'])) {
-			$this->fileMaxSize((int)$options['file_max_size']);
+			$this->fileMaxSize((int) $options['file_max_size']);
 		}
 
 		if (isset($options['file_min_count'])) {
-			$this->fileMinCount((int)$options['file_min_count']);
+			$this->fileMinCount((int) $options['file_min_count']);
 		}
 
 		if (isset($options['file_max_count'])) {
-			$this->fileMaxCount((int)$options['file_max_count']);
+			$this->fileMaxCount((int) $options['file_max_count']);
 		}
 
 		if (isset($this->file_upload_total_size)) {
-			$this->fileUploadTotalSize((int)$options['file_upload_total_size']);
+			$this->fileUploadTotalSize((int) $options['file_upload_total_size']);
 		}
 
 		return parent::configure($options);
@@ -394,8 +397,8 @@ class TypeFile extends Type
 				} else {
 					$fo = $driver->upload($file);
 					$fo->setDriver($driver_name)
-					   ->setForLabel($file_label)
-					   ->save();
+						->setForLabel($file_label)
+						->save();
 
 					$new_file_list[] = $fo;
 

@@ -53,7 +53,7 @@ class FilesUtils
 		$fm = new FilesManager();
 
 		return $fm->cd(OZ_FILES_DIR . 'uploads' . DS, true)
-				  ->getRoot();
+			->getRoot();
 	}
 
 	/**
@@ -69,7 +69,7 @@ class FilesUtils
 	{
 		$auth        = new AuthFile($context, $scope);
 		$credentials = $auth->generate()
-							->getCredentials();
+			->getCredentials();
 
 		$ref = $credentials->getReference();
 		$key = $credentials->getToken();
@@ -131,17 +131,17 @@ class FilesUtils
 		$message = match ($error) {
 			\UPLOAD_ERR_INI_SIZE, \UPLOAD_ERR_FORM_SIZE => 'OZ_FILE_UPLOAD_TOO_BIG',
 			\UPLOAD_ERR_NO_FILE => 'OZ_FILE_UPLOAD_IS_EMPTY',
-			default => 'OZ_FILE_UPLOAD_FAILS',
+			default             => 'OZ_FILE_UPLOAD_FAILS',
 		};
 		$reason  = match ($error) {
-			\UPLOAD_ERR_INI_SIZE => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
-			\UPLOAD_ERR_FORM_SIZE => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
-			\UPLOAD_ERR_NO_FILE => 'No file was uploaded',
-			\UPLOAD_ERR_PARTIAL => 'The uploaded file was only partially uploaded',
+			\UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
+			\UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
+			\UPLOAD_ERR_NO_FILE    => 'No file was uploaded',
+			\UPLOAD_ERR_PARTIAL    => 'The uploaded file was only partially uploaded',
 			\UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder',
 			\UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
-			\UPLOAD_ERR_EXTENSION => 'File upload stopped by extension',
-			default => 'Unknown upload error',
+			\UPLOAD_ERR_EXTENSION  => 'File upload stopped by extension',
+			default                => 'Unknown upload error',
 		};
 
 		return [
@@ -197,8 +197,8 @@ class FilesUtils
 			$qb = new OZFilesQuery();
 
 			return $qb->whereIdIs($id)
-					  ->find(1)
-					  ->fetchClass();
+				->find(1)
+				->fetchClass();
 		} catch (Throwable $t) {
 			throw new RuntimeException(\sprintf('Unable to get file with id: %s', $id), null, $t);
 		}
@@ -229,7 +229,7 @@ class FilesUtils
 		}
 
 		$content = $upload->getStream()
-						  ->getContents();
+			->getContents();
 
 		try {
 			$data = \json_decode($content, true, 512, \JSON_THROW_ON_ERROR);
@@ -247,7 +247,7 @@ class FilesUtils
 			throw new RuntimeException('Unable to identify aliased file.', ['content' => $content]);
 		}
 
-		if (!\hash_equals($f->getKey(), (string)$data['file_key'])) {
+		if (!\hash_equals($f->getKey(), (string) $data['file_key'])) {
 			throw new RuntimeException('Invalid file alias key.', ['content' => $content]);
 		}
 
@@ -355,8 +355,8 @@ class FilesUtils
 		};
 
 		return CacheManager::runtime(__METHOD__)
-						   ->factory($name, $factory)
-						   ->get();
+			->factory($name, $factory)
+			->get();
 	}
 
 	/**

@@ -77,10 +77,10 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	public static function onMethodNotAllowed(RouteMethodNotAllowed $ev): void
 	{
 		if (!$ev->getRequest()
-				->isOptions()) { // not a prefetch request
+			->isOptions()) { // not a prefetch request
 			throw new MethodNotAllowedException(null, [
 				'method' => $ev->getRequest()
-							   ->getMethod(),
+					->getMethod(),
 			]);
 		}
 	}
@@ -98,7 +98,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		$request   = $ev->getRequest();
 		$response  = $ev->getResponse();
 		$session   = $ev->getContext()
-						->getSession();
+			->getSession();
 		$life_time = 60 * 60;
 		// header spoofing can help hacker bypass this
 		// so don't be 100% sure, :-)
@@ -159,9 +159,9 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 			}
 
 			$allowed_host = Uri::createFromString($allowed_origin)
-							   ->getHost();
+				->getHost();
 			$origin_host  = Uri::createFromString($origin)
-							   ->getHost();
+				->getHost();
 
 			if ($allowed_host !== $origin_host) {
 				// we don't throw this exception in sub-request
@@ -192,7 +192,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		$h_list['X-Frame-Options'] = 'DENY';
 
 		foreach ($h_list as $key => $value) {
-			$response = $response->withHeader($key, (string)$value);
+			$response = $response->withHeader($key, (string) $value);
 		}
 
 		$context->setResponse($response);
@@ -217,12 +217,12 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 
 			if ($trait) {
 				$event->getClass(ORMClassKind::ENTITY)
-					  ->useTrait($trait);
+					->useTrait($trait);
 			}
 		}
 
 		$event->getClass(ORMClassKind::CRUD)
-			  ->useTrait(CRUDHandlerTrait::class);
+			->useTrait(CRUDHandlerTrait::class);
 	}
 
 	/**

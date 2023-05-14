@@ -143,6 +143,7 @@ final class Cli extends Kli
 					));
 				}
 
+				// @psalm-suppress UndefinedClass
 				/* @var class-string<\OZONE\OZ\Cli\Command> $cmd_class */
 				$this->addCommand(new $cmd_class($cmd_name, $this));
 			}

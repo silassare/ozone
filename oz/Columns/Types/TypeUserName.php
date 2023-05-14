@@ -16,6 +16,7 @@ namespace OZONE\OZ\Columns\Types;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
+use JsonException;
 use OZONE\OZ\Core\Configs;
 use OZONE\OZ\Utils\Utils;
 
@@ -33,7 +34,7 @@ class TypeUserName extends Type
 	 */
 	public function __construct()
 	{
-		$max = (int)Configs::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH');
+		$max = (int) Configs::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH');
 
 		parent::__construct(new TypeString(1, \max(3, $max)));
 	}
@@ -66,7 +67,8 @@ class TypeUserName extends Type
 
 	/**
 	 * {@inheritDoc}
-	 * @throws \JsonException
+	 *
+	 * @throws JsonException
 	 */
 	public function validate($value): ?string
 	{

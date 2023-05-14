@@ -66,6 +66,6 @@ final class User extends Command
 		$user = new OZUser();
 
 		$user->hydrate($args->getNamedArgs())
-			 ->save();
+			->save();
 	}
 }

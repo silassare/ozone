@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\OZ\Auth\Providers;
 
 use Gobl\CRUD\Exceptions\CRUDException;
-use Gobl\DBAL\Exceptions\DBALException;
 use Gobl\ORM\Exceptions\ORMException;
 use OZONE\OZ\Auth\Auth;
 use OZONE\OZ\Auth\AuthCredentials;
@@ -171,8 +170,8 @@ abstract class AuthProvider implements AuthProviderInterface
 	{
 		$ref = $this->credentials->getReference();
 
-		return AuthState::from(Auth::getRequiredByRef($ref)
-			->getState());
+		return Auth::getRequiredByRef($ref)
+			->getState();
 	}
 
 	/**
@@ -291,7 +290,7 @@ abstract class AuthProvider implements AuthProviderInterface
 			$auth->setUpdatedAT((string) \time())
 				->setData($this->scope->toArray())
 				->save();
-		} catch (DBALException|ORMException|CRUDException $e) {
+		} catch (ORMException|CRUDException $e) {
 			throw new RuntimeException('Unable to save authorization process data.', null, $e);
 		}
 	}

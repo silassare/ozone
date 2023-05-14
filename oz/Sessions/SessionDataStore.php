@@ -68,7 +68,7 @@ class SessionDataStore extends Store
 	 */
 	public function getUserIsVerified(): bool
 	{
-		return $this->session->getVerified();
+		return $this->session->isVerified();
 	}
 
 	/**

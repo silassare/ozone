@@ -360,10 +360,9 @@ return [
 				'max'  => 128,
 			],
 			'state'       => [
-				'type'    => 'string',
-				'max'     => 32,
-				'one_of'  => [AuthState::PENDING->value, AuthState::AUTHORIZED->value, AuthState::REFUSED->value],
-				'default' => AuthState::PENDING->value,
+				'type'       => 'enum',
+				'enum_class' => AuthState::class,
+				'default'    => AuthState::PENDING,
 			],
 			'try_max'     => [
 				'type'     => 'int',

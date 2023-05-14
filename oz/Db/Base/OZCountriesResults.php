@@ -1,22 +1,24 @@
 <?php
+
 /**
- * Auto generated file
- * 
- * WARNING: please don't edit.
- * 
- * Proudly With: gobl v2.0.0
- * Time: 2023-05-09T07:41:19+00:00
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
+
 declare(strict_types=1);
 
 namespace OZONE\OZ\Db\Base;
 
 /**
  * Class OZCountriesResults.
- * 
+ *
  * @method null|\OZONE\OZ\Db\OZCountry current()
  * @method null|\OZONE\OZ\Db\OZCountry fetchClass(bool $strict = true)
- * @method \OZONE\OZ\Db\OZCountry[] fetchAllClass(bool $strict = true)
+ * @method \OZONE\OZ\Db\OZCountry[]    fetchAllClass(bool $strict = true)
  * @method null|\OZONE\OZ\Db\OZCountry updateOneItem(array $filters, array $new_values)
  */
 abstract class OZCountriesResults extends \Gobl\ORM\ORMResults
@@ -31,12 +33,11 @@ abstract class OZCountriesResults extends \Gobl\ORM\ORMResults
 			\OZONE\OZ\Db\OZCountry::TABLE_NAME,
 			$query
 		);
-
 	}
 
 	/**
-	 * @inheritDoc
-	 * 
+	 * {@inheritDoc}
+	 *
 	 * @return static
 	 */
 	public static function createInstance(\Gobl\DBAL\Queries\QBSelect $query): static

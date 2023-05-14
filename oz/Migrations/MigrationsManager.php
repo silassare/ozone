@@ -60,7 +60,7 @@ class MigrationsManager
 		$query = $migration->up();
 		if ($query) {
 			DbManager::getDb()
-					 ->executeMulti($query);
+				->executeMulti($query);
 
 			$this->setCurrentDbVersion($migration->getVersion());
 		}
@@ -76,7 +76,7 @@ class MigrationsManager
 		$query = $migration->down();
 		if ($query) {
 			DbManager::getDb()
-					 ->executeMulti($query);
+				->executeMulti($query);
 
 			$version  = self::DB_NOT_INSTALLED_VERSION;
 			$previous = $this->getPreviousMigration($migration->getVersion());
@@ -109,7 +109,7 @@ class MigrationsManager
 
 		if ($latest) {
 			$db_from->ns('Migrations')
-					->schema($latest->getSchema());
+				->schema($latest->getSchema());
 			$version = $latest->getVersion() + 1;
 		} else {
 			$version = self::FIRST_VERSION;
@@ -119,7 +119,7 @@ class MigrationsManager
 
 		if ($diff->hasChanges()) {
 			$outfile = $fm->resolve(\sprintf('%s.php', Hasher::genFileName('migration')));
-			$fm->wf($outfile, (string)$diff->generateMigrationFile($version));
+			$fm->wf($outfile, (string) $diff->generateMigrationFile($version));
 
 			return $outfile;
 		}
@@ -140,9 +140,9 @@ class MigrationsManager
 			$fm = new FilesManager(OZ_MIGRATIONS_DIR);
 
 			$filter     = $fm->filter()
-							 ->isFile()
-							 ->isReadable()
-							 ->name('#\.php$#');
+				->isFile()
+				->isReadable()
+				->name('#\.php$#');
 			$migrations = [];
 
 			$duplicates = [];
@@ -174,11 +174,11 @@ class MigrationsManager
 				}
 			}
 
-			\usort($migrations, static fn(MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion());
+			\usort($migrations, static fn (MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion());
 
 			return $migrations;
 		})
-				  ->get();
+			->get();
 	}
 
 	/**

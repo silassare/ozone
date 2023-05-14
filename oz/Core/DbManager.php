@@ -110,7 +110,7 @@ final class DbManager
 		$fm = new FilesManager(OZ_OZONE_DIR);
 
 		return $fm->cd('Db', true)
-				  ->getRoot();
+			->getRoot();
 	}
 
 	/**
@@ -121,7 +121,7 @@ final class DbManager
 		$fm = new FilesManager(OZ_OZONE_DIR);
 
 		return $fm->cd(OZ_APP_DIR . 'Db', true)
-				  ->getRoot();
+			->getRoot();
 	}
 
 	/**
@@ -132,14 +132,14 @@ final class DbManager
 	public static function loadSchemaTo(RDBMSInterface $db): void
 	{
 		$db->ns(self::getOZoneDbNamespace())
-		   ->schema(include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_schema.php');
+			->schema(include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_schema.php');
 
 		Event::trigger(new DbSchemaCollectHook($db));
 
 		// the project schema is the last to be loaded as its
 		// may require some tables from OZone or plugins
 		$db->ns(self::getProjectDbNamespace())
-		   ->schema(Configs::load('oz.db.schema'));
+			->schema(Configs::load('oz.db.schema'));
 
 		Event::trigger(new DbSchemaReadyHook($db));
 	}

@@ -71,7 +71,7 @@ final class Auth implements BootHookReceiverInterface
 			throw new NotFoundException('OZ_AUTH_INVALID_OR_DELETED_REF');
 		}
 
-		if (!$auth->valid) {
+		if (!$auth->isValid()) {
 			throw new UnauthorizedActionException('OZ_AUTH_DISABLED');
 		}
 
