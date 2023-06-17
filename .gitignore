@@ -8,8 +8,14 @@ ignore
 **/oz_cache/*
 **/debug.log
 
+# cs fixer
+.php-cs-fixer.cache
+
 # composer
 /vendor/
 
 # node
 **/node_modules/**
+
+# tests
+/noop/
