@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db\Base;
+namespace OZONE\Core\Db\Base;
 
 use Gobl\DBAL\Operator;
 
 /**
  * Class OZCountriesQuery.
  *
- * @method \OZONE\OZ\Db\OZCountriesResults find(?int $max = null, int $offset = 0, array $order_by = [])
+ * @method \OZONE\Core\Db\OZCountriesResults find(?int $max = null, int $offset = 0, array $order_by = [])
  */
 abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 {
@@ -28,8 +28,8 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\OZ\Db\OZCountry::TABLE_NAMESPACE,
-			\OZONE\OZ\Db\OZCountry::TABLE_NAME
+			\OZONE\Core\Db\OZCountry::TABLE_NAMESPACE,
+			\OZONE\Core\Db\OZCountry::TABLE_NAME
 		);
 	}
 
@@ -40,7 +40,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function createInstance(): static
 	{
-		return new \OZONE\OZ\Db\OZCountriesQuery();
+		return new \OZONE\Core\Db\OZCountriesQuery();
 	}
 
 	/**
@@ -67,7 +67,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZCountry::COL_CC2,
+			\OZONE\Core\Db\OZCountry::COL_CC2,
 			$value
 		);
 	}
@@ -83,7 +83,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZCountry::COL_CC2,
+			\OZONE\Core\Db\OZCountry::COL_CC2,
 			$value
 		);
 	}
@@ -99,7 +99,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZCountry::COL_CC2,
+			\OZONE\Core\Db\OZCountry::COL_CC2,
 			$value
 		);
 	}
@@ -115,7 +115,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZCountry::COL_CC2,
+			\OZONE\Core\Db\OZCountry::COL_CC2,
 			$value
 		);
 	}
@@ -131,7 +131,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZCountry::COL_CC2,
+			\OZONE\Core\Db\OZCountry::COL_CC2,
 			$value
 		);
 	}
@@ -147,7 +147,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZCountry::COL_CC2,
+			\OZONE\Core\Db\OZCountry::COL_CC2,
 			$value
 		);
 	}
@@ -163,7 +163,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZCountry::COL_CC2,
+			\OZONE\Core\Db\OZCountry::COL_CC2,
 			$value
 		);
 	}
@@ -179,7 +179,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZCountry::COL_CC2,
+			\OZONE\Core\Db\OZCountry::COL_CC2,
 			$value
 		);
 	}
@@ -195,7 +195,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZCountry::COL_CC2,
+			\OZONE\Core\Db\OZCountry::COL_CC2,
 			$value
 		);
 	}
@@ -211,7 +211,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZCountry::COL_CC2,
+			\OZONE\Core\Db\OZCountry::COL_CC2,
 			$value
 		);
 	}
@@ -227,7 +227,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZCountry::COL_CODE,
+			\OZONE\Core\Db\OZCountry::COL_CODE,
 			$value
 		);
 	}
@@ -243,7 +243,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZCountry::COL_CODE,
+			\OZONE\Core\Db\OZCountry::COL_CODE,
 			$value
 		);
 	}
@@ -259,7 +259,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZCountry::COL_CODE,
+			\OZONE\Core\Db\OZCountry::COL_CODE,
 			$value
 		);
 	}
@@ -275,7 +275,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZCountry::COL_CODE,
+			\OZONE\Core\Db\OZCountry::COL_CODE,
 			$value
 		);
 	}
@@ -291,7 +291,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZCountry::COL_CODE,
+			\OZONE\Core\Db\OZCountry::COL_CODE,
 			$value
 		);
 	}
@@ -307,7 +307,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZCountry::COL_CODE,
+			\OZONE\Core\Db\OZCountry::COL_CODE,
 			$value
 		);
 	}
@@ -323,7 +323,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZCountry::COL_CODE,
+			\OZONE\Core\Db\OZCountry::COL_CODE,
 			$value
 		);
 	}
@@ -339,7 +339,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZCountry::COL_CODE,
+			\OZONE\Core\Db\OZCountry::COL_CODE,
 			$value
 		);
 	}
@@ -355,7 +355,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZCountry::COL_CODE,
+			\OZONE\Core\Db\OZCountry::COL_CODE,
 			$value
 		);
 	}
@@ -371,7 +371,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZCountry::COL_CODE,
+			\OZONE\Core\Db\OZCountry::COL_CODE,
 			$value
 		);
 	}
@@ -387,7 +387,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME,
+			\OZONE\Core\Db\OZCountry::COL_NAME,
 			$value
 		);
 	}
@@ -403,7 +403,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME,
+			\OZONE\Core\Db\OZCountry::COL_NAME,
 			$value
 		);
 	}
@@ -419,7 +419,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME,
+			\OZONE\Core\Db\OZCountry::COL_NAME,
 			$value
 		);
 	}
@@ -435,7 +435,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME,
+			\OZONE\Core\Db\OZCountry::COL_NAME,
 			$value
 		);
 	}
@@ -451,7 +451,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME,
+			\OZONE\Core\Db\OZCountry::COL_NAME,
 			$value
 		);
 	}
@@ -467,7 +467,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME,
+			\OZONE\Core\Db\OZCountry::COL_NAME,
 			$value
 		);
 	}
@@ -483,7 +483,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME,
+			\OZONE\Core\Db\OZCountry::COL_NAME,
 			$value
 		);
 	}
@@ -499,7 +499,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME,
+			\OZONE\Core\Db\OZCountry::COL_NAME,
 			$value
 		);
 	}
@@ -515,7 +515,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME,
+			\OZONE\Core\Db\OZCountry::COL_NAME,
 			$value
 		);
 	}
@@ -531,7 +531,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME,
+			\OZONE\Core\Db\OZCountry::COL_NAME,
 			$value
 		);
 	}
@@ -547,7 +547,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME_REAL,
+			\OZONE\Core\Db\OZCountry::COL_NAME_REAL,
 			$value
 		);
 	}
@@ -563,7 +563,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME_REAL,
+			\OZONE\Core\Db\OZCountry::COL_NAME_REAL,
 			$value
 		);
 	}
@@ -579,7 +579,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME_REAL,
+			\OZONE\Core\Db\OZCountry::COL_NAME_REAL,
 			$value
 		);
 	}
@@ -595,7 +595,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME_REAL,
+			\OZONE\Core\Db\OZCountry::COL_NAME_REAL,
 			$value
 		);
 	}
@@ -611,7 +611,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME_REAL,
+			\OZONE\Core\Db\OZCountry::COL_NAME_REAL,
 			$value
 		);
 	}
@@ -627,7 +627,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME_REAL,
+			\OZONE\Core\Db\OZCountry::COL_NAME_REAL,
 			$value
 		);
 	}
@@ -643,7 +643,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME_REAL,
+			\OZONE\Core\Db\OZCountry::COL_NAME_REAL,
 			$value
 		);
 	}
@@ -659,7 +659,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME_REAL,
+			\OZONE\Core\Db\OZCountry::COL_NAME_REAL,
 			$value
 		);
 	}
@@ -675,7 +675,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME_REAL,
+			\OZONE\Core\Db\OZCountry::COL_NAME_REAL,
 			$value
 		);
 	}
@@ -691,7 +691,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZCountry::COL_NAME_REAL,
+			\OZONE\Core\Db\OZCountry::COL_NAME_REAL,
 			$value
 		);
 	}
@@ -707,7 +707,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZCountry::COL_DATA,
+			\OZONE\Core\Db\OZCountry::COL_DATA,
 			$value
 		);
 	}
@@ -723,7 +723,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZCountry::COL_DATA,
+			\OZONE\Core\Db\OZCountry::COL_DATA,
 			$value
 		);
 	}
@@ -739,7 +739,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZCountry::COL_DATA,
+			\OZONE\Core\Db\OZCountry::COL_DATA,
 			$value
 		);
 	}
@@ -755,7 +755,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZCountry::COL_DATA,
+			\OZONE\Core\Db\OZCountry::COL_DATA,
 			$value
 		);
 	}
@@ -771,7 +771,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZCountry::COL_CREATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -787,7 +787,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZCountry::COL_CREATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -803,7 +803,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZCountry::COL_CREATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -819,7 +819,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZCountry::COL_CREATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -835,7 +835,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZCountry::COL_CREATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -851,7 +851,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZCountry::COL_CREATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -867,7 +867,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZCountry::COL_CREATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -883,7 +883,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZCountry::COL_CREATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -899,7 +899,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZCountry::COL_CREATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -915,7 +915,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZCountry::COL_CREATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -931,7 +931,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZCountry::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -947,7 +947,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZCountry::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -963,7 +963,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZCountry::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -979,7 +979,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZCountry::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -995,7 +995,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZCountry::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1011,7 +1011,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZCountry::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1027,7 +1027,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZCountry::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1043,7 +1043,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZCountry::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1059,7 +1059,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZCountry::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1075,7 +1075,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZCountry::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZCountry::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1091,7 +1091,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZCountry::COL_IS_VALID,
+			\OZONE\Core\Db\OZCountry::COL_IS_VALID,
 			$value
 		);
 	}
@@ -1107,7 +1107,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZCountry::COL_IS_VALID,
+			\OZONE\Core\Db\OZCountry::COL_IS_VALID,
 			$value
 		);
 	}
@@ -1121,7 +1121,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_false'),
-			\OZONE\OZ\Db\OZCountry::COL_IS_VALID
+			\OZONE\Core\Db\OZCountry::COL_IS_VALID
 		);
 	}
 
@@ -1134,7 +1134,7 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_true'),
-			\OZONE\OZ\Db\OZCountry::COL_IS_VALID
+			\OZONE\Core\Db\OZCountry::COL_IS_VALID
 		);
 	}
 }

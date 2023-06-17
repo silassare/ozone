@@ -11,13 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Logger;
+namespace OZONE\Core\Logger;
 
 use Error;
 use Exception;
 use JsonSerializable;
-use OZONE\OZ\Exceptions\BaseException;
-use OZONE\OZ\OZone;
+use OZONE\Core\App\Interfaces\AppInterface;
+use OZONE\Core\Exceptions\BaseException;
+use OZONE\Core\OZone;
 use Throwable;
 
 /**
@@ -109,6 +110,22 @@ class Logger
 	}
 
 	/**
+	 * Get the running app or null.
+	 *
+	 * @return null|\OZONE\Core\App\Interfaces\AppInterface
+	 */
+	protected static function optionalApp(): ?AppInterface
+	{
+		try {
+			$app = app();
+		} catch (Throwable) {
+			$app = null;
+		}
+
+		return $app;
+	}
+
+	/**
 	 * Handle unhandled exception.
 	 *
 	 * @param Throwable $t
@@ -117,7 +134,7 @@ class Logger
 	{
 		self::log($t);
 
-		OZone::getRunningApp()
+		self::optionalApp()
 			?->onUnhandledThrowable($t);
 
 		if (OZone::isCliMode()) {
@@ -143,7 +160,7 @@ class Logger
 				  . "\n\tCode    : {$code}"
 				  . "\n\tMessage : {$message}");
 
-		OZone::getRunningApp()
+		self::optionalApp()
 			?->onUnhandledError($code, $message, $file, $line);
 
 		if ($die_on_fatal) {

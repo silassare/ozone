@@ -2,13 +2,7 @@
 declare(strict_types=1);
 
 <%@import('gen.info.otpl',$)%>
-namespace <%$.oz_project_namespace%>;
 
-use OZONE\OZ\App\AppBase;
+use <%$.oz_project_namespace%>\<%$.oz_project_app_class_name%>;
 
-/**
- * Class <%$.oz_project_class%>
- */
-final class <%$.oz_project_class%> extends AppBase
-{
-}
+return new <%$.oz_project_app_class_name%>();

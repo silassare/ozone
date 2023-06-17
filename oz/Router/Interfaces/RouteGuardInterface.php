@@ -11,25 +11,39 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router\Interfaces;
+namespace OZONE\Core\Router\Interfaces;
 
-use OZONE\OZ\Forms\FormData;
-use PHPUtils\Interfaces\ArrayCapableInterface;
+use OZONE\Core\Forms\FormData;
+use OZONE\Core\Router\RouteInfo;
 
 /**
  * Interface RouteGuardInterface.
  */
-interface RouteGuardInterface extends ArrayCapableInterface
+interface RouteGuardInterface
 {
+	/**
+	 * Returns rules.
+	 */
+	public function getRules(): array;
+
+	/**
+	 * Creates a new instance from rules.
+	 *
+	 * @param array $rules
+	 *
+	 * @return self
+	 */
+	public static function fromRules(array $rules): self;
+
 	/**
 	 * Check if access.
 	 */
-	public function checkAccess(): void;
+	public function checkAccess(RouteInfo $ri): void;
 
 	/**
-	 * Returns clean auth form data.
+	 * Returns clean grant form data.
 	 *
-	 * @return \OZONE\OZ\Forms\FormData
+	 * @return \OZONE\Core\Forms\FormData
 	 */
-	public function getAuthData(): FormData;
+	public function getFormData(): FormData;
 }

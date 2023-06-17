@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cli\Cron\Interfaces;
+namespace OZONE\Core\Cli\Cron\Interfaces;
 
-use OZONE\OZ\Cli\Cron\Schedule;
+use OZONE\Core\Cli\Cron\Schedule;
 
 /**
  * Interface TaskInterface.
@@ -21,30 +21,47 @@ use OZONE\OZ\Cli\Cron\Schedule;
 interface TaskInterface
 {
 	/**
+	 * Get task name.
+	 *
 	 * @return string
 	 */
 	public function getName(): string;
 
 	/**
+	 * Get task description.
+	 *
 	 * @return string
 	 */
 	public function getDescription(): string;
 
 	/**
-	 * @param \OZONE\OZ\Cli\Cron\Schedule $schedule
+	 * Set task description.
 	 *
 	 * @return $this
 	 */
-	public function addSchedule(Schedule $schedule): static;
+	public function setDescription(string $description): self;
 
 	/**
-	 * @param \OZONE\OZ\Cli\Cron\Schedule $schedule
+	 * Add a schedule to the task.
+	 *
+	 * @param \OZONE\Core\Cli\Cron\Schedule $schedule
 	 *
 	 * @return $this
 	 */
-	public function removeSchedule(Schedule $schedule): static;
+	public function addSchedule(Schedule $schedule): self;
 
 	/**
+	 * Create a new schedule.
+	 *
+	 * This is a shortcut to {@link addSchedule()}.
+	 *
+	 * @return \OZONE\Core\Cli\Cron\Schedule
+	 */
+	public function schedule(): Schedule;
+
+	/**
+	 * Get all schedules.
+	 *
 	 * @return Schedule[]
 	 */
 	public function getSchedules(): array;
@@ -53,4 +70,51 @@ interface TaskInterface
 	 * Runs the task.
 	 */
 	public function run(): void;
+
+	/**
+	 * Get the task result.
+	 *
+	 * @return array
+	 */
+	public function getResult(): array;
+
+	/**
+	 * Mark the task as background task.
+	 *
+	 * @return $this
+	 */
+	public function inBackground(): self;
+
+	/**
+	 * Should run in background?
+	 */
+	public function shouldRunInBackground(): bool;
+
+	/**
+	 * Mark the task as one at a time.
+	 *
+	 * @return $this
+	 */
+	public function oneAtATime(): self;
+
+	/**
+	 * Gets the task timeout in seconds.
+	 *
+	 * @return null|int
+	 */
+	public function getTimeout(): ?int;
+
+	/**
+	 * Sets the task timeout in seconds.
+	 *
+	 * @param null|int $timeout
+	 *
+	 * @return $this
+	 */
+	public function setTimeout(?int $timeout = null): self;
+
+	/**
+	 * Should run one at a time?
+	 */
+	public function shouldRunOneAtATime(): bool;
 }

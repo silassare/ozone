@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Utils;
+namespace OZONE\Core\Utils;
 
 use JsonException;
-use OZONE\OZ\Core\Configs;
+use OZONE\Core\App\Settings;
 
 /**
  * Class Utils.
@@ -40,7 +40,7 @@ class Utils
 			return '';
 		}
 
-		$db_charset = Configs::get('oz.db', 'OZ_DB_CHARSET');
+		$db_charset = Settings::get('oz.db', 'OZ_DB_CHARSET');
 
 		if ('utf8' === \strtolower($db_charset)) {
 			// https://stackoverflow.com/a/34637891/6584810

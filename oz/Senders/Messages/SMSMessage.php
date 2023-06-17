@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Senders\Messages;
+namespace OZONE\Core\Senders\Messages;
 
-use OZONE\OZ\Senders\Events\SendSMS;
+use OZONE\Core\Senders\Events\SendSMS;
 use PHPUtils\Events\Event;
 
 /**

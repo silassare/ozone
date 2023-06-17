@@ -11,13 +11,13 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Auth;
+namespace OZONE\Core\Auth;
 
-use OZONE\OZ\Auth\Interfaces\AuthCredentialsInterface;
-use OZONE\OZ\Auth\Views\AuthLinkView;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\Http\Uri;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Keys;
+use OZONE\Core\Auth\Interfaces\AuthCredentialsInterface;
+use OZONE\Core\Auth\Views\AuthLinkView;
+use OZONE\Core\Http\Uri;
 use PHPUtils\Traits\ArrayCapableTrait;
 
 /**
@@ -42,8 +42,8 @@ class AuthCredentials implements AuthCredentialsInterface
 		protected int $auth_code_length = 6,
 		protected bool $auth_code_alpha_num = false
 	) {
-		$this->reference   = Hasher::genAuthReference();
-		$this->refresh_key = Hasher::genAuthRefreshKey($this->reference);
+		$this->reference   = Keys::newAuthReference();
+		$this->refresh_key = Keys::newAuthRefreshKey($this->reference);
 	}
 
 	/**
@@ -51,7 +51,7 @@ class AuthCredentials implements AuthCredentialsInterface
 	 */
 	public function newCode(): string
 	{
-		$this->code = Hasher::genAuthCode($this->auth_code_length, $this->auth_code_alpha_num);
+		$this->code = Keys::newAuthCode($this->auth_code_length, $this->auth_code_alpha_num);
 
 		return $this->code;
 	}
@@ -61,7 +61,7 @@ class AuthCredentials implements AuthCredentialsInterface
 	 */
 	public function newToken(): string
 	{
-		$this->token = Hasher::genAuthToken();
+		$this->token = Keys::newAuthToken();
 
 		return $this->token;
 	}

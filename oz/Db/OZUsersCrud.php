@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db;
+namespace OZONE\Core\Db;
 
 /**
  * Class OZUsersCrud.
  */
-abstract class OZUsersCrud extends \OZONE\OZ\Db\Base\OZUsersCrud
+abstract class OZUsersCrud extends \OZONE\Core\Db\Base\OZUsersCrud implements \OZONE\Core\CRUD\Interfaces\TableCRUDHandlerInterface
 {
-	use \OZONE\OZ\Core\CRUDHandlerTrait;
+	use \OZONE\Core\CRUD\Traits\TableCRUDHandlerTrait;
 
 	// ====================================================
 	// =	Your custom implementation goes here

@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db\Base;
+namespace OZONE\Core\Db\Base;
 
 use Gobl\DBAL\Operator;
 
 /**
  * Class OZUsersQuery.
  *
- * @method \OZONE\OZ\Db\OZUsersResults find(?int $max = null, int $offset = 0, array $order_by = [])
+ * @method \OZONE\Core\Db\OZUsersResults find(?int $max = null, int $offset = 0, array $order_by = [])
  */
 abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 {
@@ -28,8 +28,8 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\OZ\Db\OZUser::TABLE_NAMESPACE,
-			\OZONE\OZ\Db\OZUser::TABLE_NAME
+			\OZONE\Core\Db\OZUser::TABLE_NAMESPACE,
+			\OZONE\Core\Db\OZUser::TABLE_NAME
 		);
 	}
 
@@ -40,7 +40,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function createInstance(): static
 	{
-		return new \OZONE\OZ\Db\OZUsersQuery();
+		return new \OZONE\Core\Db\OZUsersQuery();
 	}
 
 	/**
@@ -67,7 +67,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_ID,
+			\OZONE\Core\Db\OZUser::COL_ID,
 			$value
 		);
 	}
@@ -83,7 +83,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_ID,
+			\OZONE\Core\Db\OZUser::COL_ID,
 			$value
 		);
 	}
@@ -99,7 +99,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZUser::COL_ID,
+			\OZONE\Core\Db\OZUser::COL_ID,
 			$value
 		);
 	}
@@ -115,7 +115,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZUser::COL_ID,
+			\OZONE\Core\Db\OZUser::COL_ID,
 			$value
 		);
 	}
@@ -131,7 +131,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZUser::COL_ID,
+			\OZONE\Core\Db\OZUser::COL_ID,
 			$value
 		);
 	}
@@ -147,7 +147,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZUser::COL_ID,
+			\OZONE\Core\Db\OZUser::COL_ID,
 			$value
 		);
 	}
@@ -163,7 +163,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_ID,
+			\OZONE\Core\Db\OZUser::COL_ID,
 			$value
 		);
 	}
@@ -179,7 +179,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_ID,
+			\OZONE\Core\Db\OZUser::COL_ID,
 			$value
 		);
 	}
@@ -195,7 +195,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZUser::COL_ID,
+			\OZONE\Core\Db\OZUser::COL_ID,
 			$value
 		);
 	}
@@ -211,7 +211,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZUser::COL_ID,
+			\OZONE\Core\Db\OZUser::COL_ID,
 			$value
 		);
 	}
@@ -227,7 +227,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE,
+			\OZONE\Core\Db\OZUser::COL_PHONE,
 			$value
 		);
 	}
@@ -243,7 +243,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE,
+			\OZONE\Core\Db\OZUser::COL_PHONE,
 			$value
 		);
 	}
@@ -259,7 +259,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE,
+			\OZONE\Core\Db\OZUser::COL_PHONE,
 			$value
 		);
 	}
@@ -275,7 +275,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE,
+			\OZONE\Core\Db\OZUser::COL_PHONE,
 			$value
 		);
 	}
@@ -291,7 +291,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE,
+			\OZONE\Core\Db\OZUser::COL_PHONE,
 			$value
 		);
 	}
@@ -307,7 +307,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE,
+			\OZONE\Core\Db\OZUser::COL_PHONE,
 			$value
 		);
 	}
@@ -323,7 +323,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE,
+			\OZONE\Core\Db\OZUser::COL_PHONE,
 			$value
 		);
 	}
@@ -339,7 +339,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE,
+			\OZONE\Core\Db\OZUser::COL_PHONE,
 			$value
 		);
 	}
@@ -353,7 +353,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_null'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE
+			\OZONE\Core\Db\OZUser::COL_PHONE
 		);
 	}
 
@@ -366,7 +366,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_not_null'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE
+			\OZONE\Core\Db\OZUser::COL_PHONE
 		);
 	}
 
@@ -381,7 +381,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE,
+			\OZONE\Core\Db\OZUser::COL_PHONE,
 			$value
 		);
 	}
@@ -397,7 +397,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZUser::COL_PHONE,
+			\OZONE\Core\Db\OZUser::COL_PHONE,
 			$value
 		);
 	}
@@ -413,7 +413,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_EMAIL,
+			\OZONE\Core\Db\OZUser::COL_EMAIL,
 			$value
 		);
 	}
@@ -429,7 +429,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_EMAIL,
+			\OZONE\Core\Db\OZUser::COL_EMAIL,
 			$value
 		);
 	}
@@ -445,7 +445,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZUser::COL_EMAIL,
+			\OZONE\Core\Db\OZUser::COL_EMAIL,
 			$value
 		);
 	}
@@ -461,7 +461,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZUser::COL_EMAIL,
+			\OZONE\Core\Db\OZUser::COL_EMAIL,
 			$value
 		);
 	}
@@ -477,7 +477,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZUser::COL_EMAIL,
+			\OZONE\Core\Db\OZUser::COL_EMAIL,
 			$value
 		);
 	}
@@ -493,7 +493,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZUser::COL_EMAIL,
+			\OZONE\Core\Db\OZUser::COL_EMAIL,
 			$value
 		);
 	}
@@ -509,7 +509,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_EMAIL,
+			\OZONE\Core\Db\OZUser::COL_EMAIL,
 			$value
 		);
 	}
@@ -525,7 +525,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_EMAIL,
+			\OZONE\Core\Db\OZUser::COL_EMAIL,
 			$value
 		);
 	}
@@ -541,7 +541,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZUser::COL_EMAIL,
+			\OZONE\Core\Db\OZUser::COL_EMAIL,
 			$value
 		);
 	}
@@ -557,7 +557,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZUser::COL_EMAIL,
+			\OZONE\Core\Db\OZUser::COL_EMAIL,
 			$value
 		);
 	}
@@ -573,7 +573,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_PASS,
+			\OZONE\Core\Db\OZUser::COL_PASS,
 			$value
 		);
 	}
@@ -589,7 +589,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_PASS,
+			\OZONE\Core\Db\OZUser::COL_PASS,
 			$value
 		);
 	}
@@ -605,7 +605,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZUser::COL_PASS,
+			\OZONE\Core\Db\OZUser::COL_PASS,
 			$value
 		);
 	}
@@ -621,7 +621,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZUser::COL_PASS,
+			\OZONE\Core\Db\OZUser::COL_PASS,
 			$value
 		);
 	}
@@ -637,7 +637,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZUser::COL_PASS,
+			\OZONE\Core\Db\OZUser::COL_PASS,
 			$value
 		);
 	}
@@ -653,7 +653,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZUser::COL_PASS,
+			\OZONE\Core\Db\OZUser::COL_PASS,
 			$value
 		);
 	}
@@ -669,7 +669,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_PASS,
+			\OZONE\Core\Db\OZUser::COL_PASS,
 			$value
 		);
 	}
@@ -685,7 +685,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_PASS,
+			\OZONE\Core\Db\OZUser::COL_PASS,
 			$value
 		);
 	}
@@ -701,7 +701,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZUser::COL_PASS,
+			\OZONE\Core\Db\OZUser::COL_PASS,
 			$value
 		);
 	}
@@ -717,7 +717,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZUser::COL_PASS,
+			\OZONE\Core\Db\OZUser::COL_PASS,
 			$value
 		);
 	}
@@ -733,7 +733,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_NAME,
+			\OZONE\Core\Db\OZUser::COL_NAME,
 			$value
 		);
 	}
@@ -749,7 +749,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_NAME,
+			\OZONE\Core\Db\OZUser::COL_NAME,
 			$value
 		);
 	}
@@ -765,7 +765,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZUser::COL_NAME,
+			\OZONE\Core\Db\OZUser::COL_NAME,
 			$value
 		);
 	}
@@ -781,7 +781,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZUser::COL_NAME,
+			\OZONE\Core\Db\OZUser::COL_NAME,
 			$value
 		);
 	}
@@ -797,7 +797,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZUser::COL_NAME,
+			\OZONE\Core\Db\OZUser::COL_NAME,
 			$value
 		);
 	}
@@ -813,7 +813,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZUser::COL_NAME,
+			\OZONE\Core\Db\OZUser::COL_NAME,
 			$value
 		);
 	}
@@ -829,7 +829,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_NAME,
+			\OZONE\Core\Db\OZUser::COL_NAME,
 			$value
 		);
 	}
@@ -845,7 +845,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_NAME,
+			\OZONE\Core\Db\OZUser::COL_NAME,
 			$value
 		);
 	}
@@ -861,7 +861,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZUser::COL_NAME,
+			\OZONE\Core\Db\OZUser::COL_NAME,
 			$value
 		);
 	}
@@ -877,7 +877,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZUser::COL_NAME,
+			\OZONE\Core\Db\OZUser::COL_NAME,
 			$value
 		);
 	}
@@ -893,7 +893,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_GENDER,
+			\OZONE\Core\Db\OZUser::COL_GENDER,
 			$value
 		);
 	}
@@ -909,7 +909,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_GENDER,
+			\OZONE\Core\Db\OZUser::COL_GENDER,
 			$value
 		);
 	}
@@ -925,7 +925,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZUser::COL_GENDER,
+			\OZONE\Core\Db\OZUser::COL_GENDER,
 			$value
 		);
 	}
@@ -941,7 +941,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZUser::COL_GENDER,
+			\OZONE\Core\Db\OZUser::COL_GENDER,
 			$value
 		);
 	}
@@ -957,7 +957,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZUser::COL_GENDER,
+			\OZONE\Core\Db\OZUser::COL_GENDER,
 			$value
 		);
 	}
@@ -973,7 +973,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZUser::COL_GENDER,
+			\OZONE\Core\Db\OZUser::COL_GENDER,
 			$value
 		);
 	}
@@ -989,7 +989,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_GENDER,
+			\OZONE\Core\Db\OZUser::COL_GENDER,
 			$value
 		);
 	}
@@ -1005,7 +1005,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_GENDER,
+			\OZONE\Core\Db\OZUser::COL_GENDER,
 			$value
 		);
 	}
@@ -1021,7 +1021,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZUser::COL_GENDER,
+			\OZONE\Core\Db\OZUser::COL_GENDER,
 			$value
 		);
 	}
@@ -1037,7 +1037,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZUser::COL_GENDER,
+			\OZONE\Core\Db\OZUser::COL_GENDER,
 			$value
 		);
 	}
@@ -1053,7 +1053,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_BIRTH_DATE,
+			\OZONE\Core\Db\OZUser::COL_BIRTH_DATE,
 			$value
 		);
 	}
@@ -1069,7 +1069,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_BIRTH_DATE,
+			\OZONE\Core\Db\OZUser::COL_BIRTH_DATE,
 			$value
 		);
 	}
@@ -1085,7 +1085,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZUser::COL_BIRTH_DATE,
+			\OZONE\Core\Db\OZUser::COL_BIRTH_DATE,
 			$value
 		);
 	}
@@ -1101,7 +1101,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZUser::COL_BIRTH_DATE,
+			\OZONE\Core\Db\OZUser::COL_BIRTH_DATE,
 			$value
 		);
 	}
@@ -1117,7 +1117,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZUser::COL_BIRTH_DATE,
+			\OZONE\Core\Db\OZUser::COL_BIRTH_DATE,
 			$value
 		);
 	}
@@ -1133,7 +1133,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZUser::COL_BIRTH_DATE,
+			\OZONE\Core\Db\OZUser::COL_BIRTH_DATE,
 			$value
 		);
 	}
@@ -1149,7 +1149,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_BIRTH_DATE,
+			\OZONE\Core\Db\OZUser::COL_BIRTH_DATE,
 			$value
 		);
 	}
@@ -1165,7 +1165,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_BIRTH_DATE,
+			\OZONE\Core\Db\OZUser::COL_BIRTH_DATE,
 			$value
 		);
 	}
@@ -1181,7 +1181,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZUser::COL_BIRTH_DATE,
+			\OZONE\Core\Db\OZUser::COL_BIRTH_DATE,
 			$value
 		);
 	}
@@ -1197,7 +1197,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZUser::COL_BIRTH_DATE,
+			\OZONE\Core\Db\OZUser::COL_BIRTH_DATE,
 			$value
 		);
 	}
@@ -1213,7 +1213,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_PIC,
+			\OZONE\Core\Db\OZUser::COL_PIC,
 			$value
 		);
 	}
@@ -1229,7 +1229,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_PIC,
+			\OZONE\Core\Db\OZUser::COL_PIC,
 			$value
 		);
 	}
@@ -1245,7 +1245,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZUser::COL_PIC,
+			\OZONE\Core\Db\OZUser::COL_PIC,
 			$value
 		);
 	}
@@ -1261,7 +1261,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZUser::COL_PIC,
+			\OZONE\Core\Db\OZUser::COL_PIC,
 			$value
 		);
 	}
@@ -1277,7 +1277,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZUser::COL_PIC,
+			\OZONE\Core\Db\OZUser::COL_PIC,
 			$value
 		);
 	}
@@ -1293,7 +1293,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZUser::COL_PIC,
+			\OZONE\Core\Db\OZUser::COL_PIC,
 			$value
 		);
 	}
@@ -1309,7 +1309,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_PIC,
+			\OZONE\Core\Db\OZUser::COL_PIC,
 			$value
 		);
 	}
@@ -1325,7 +1325,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_PIC,
+			\OZONE\Core\Db\OZUser::COL_PIC,
 			$value
 		);
 	}
@@ -1339,7 +1339,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_null'),
-			\OZONE\OZ\Db\OZUser::COL_PIC
+			\OZONE\Core\Db\OZUser::COL_PIC
 		);
 	}
 
@@ -1352,7 +1352,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_not_null'),
-			\OZONE\OZ\Db\OZUser::COL_PIC
+			\OZONE\Core\Db\OZUser::COL_PIC
 		);
 	}
 
@@ -1367,7 +1367,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZUser::COL_PIC,
+			\OZONE\Core\Db\OZUser::COL_PIC,
 			$value
 		);
 	}
@@ -1383,7 +1383,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZUser::COL_PIC,
+			\OZONE\Core\Db\OZUser::COL_PIC,
 			$value
 		);
 	}
@@ -1399,7 +1399,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_CC2,
+			\OZONE\Core\Db\OZUser::COL_CC2,
 			$value
 		);
 	}
@@ -1415,7 +1415,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_CC2,
+			\OZONE\Core\Db\OZUser::COL_CC2,
 			$value
 		);
 	}
@@ -1431,7 +1431,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZUser::COL_CC2,
+			\OZONE\Core\Db\OZUser::COL_CC2,
 			$value
 		);
 	}
@@ -1447,7 +1447,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZUser::COL_CC2,
+			\OZONE\Core\Db\OZUser::COL_CC2,
 			$value
 		);
 	}
@@ -1463,7 +1463,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZUser::COL_CC2,
+			\OZONE\Core\Db\OZUser::COL_CC2,
 			$value
 		);
 	}
@@ -1479,7 +1479,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZUser::COL_CC2,
+			\OZONE\Core\Db\OZUser::COL_CC2,
 			$value
 		);
 	}
@@ -1495,7 +1495,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_CC2,
+			\OZONE\Core\Db\OZUser::COL_CC2,
 			$value
 		);
 	}
@@ -1511,7 +1511,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_CC2,
+			\OZONE\Core\Db\OZUser::COL_CC2,
 			$value
 		);
 	}
@@ -1527,7 +1527,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZUser::COL_CC2,
+			\OZONE\Core\Db\OZUser::COL_CC2,
 			$value
 		);
 	}
@@ -1543,7 +1543,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZUser::COL_CC2,
+			\OZONE\Core\Db\OZUser::COL_CC2,
 			$value
 		);
 	}
@@ -1559,7 +1559,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_DATA,
+			\OZONE\Core\Db\OZUser::COL_DATA,
 			$value
 		);
 	}
@@ -1575,7 +1575,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_DATA,
+			\OZONE\Core\Db\OZUser::COL_DATA,
 			$value
 		);
 	}
@@ -1591,7 +1591,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_DATA,
+			\OZONE\Core\Db\OZUser::COL_DATA,
 			$value
 		);
 	}
@@ -1607,7 +1607,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_DATA,
+			\OZONE\Core\Db\OZUser::COL_DATA,
 			$value
 		);
 	}
@@ -1623,7 +1623,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_CREATED_AT,
+			\OZONE\Core\Db\OZUser::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1639,7 +1639,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_CREATED_AT,
+			\OZONE\Core\Db\OZUser::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1655,7 +1655,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZUser::COL_CREATED_AT,
+			\OZONE\Core\Db\OZUser::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1671,7 +1671,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZUser::COL_CREATED_AT,
+			\OZONE\Core\Db\OZUser::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1687,7 +1687,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZUser::COL_CREATED_AT,
+			\OZONE\Core\Db\OZUser::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1703,7 +1703,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZUser::COL_CREATED_AT,
+			\OZONE\Core\Db\OZUser::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1719,7 +1719,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_CREATED_AT,
+			\OZONE\Core\Db\OZUser::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1735,7 +1735,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_CREATED_AT,
+			\OZONE\Core\Db\OZUser::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1751,7 +1751,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZUser::COL_CREATED_AT,
+			\OZONE\Core\Db\OZUser::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1767,7 +1767,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZUser::COL_CREATED_AT,
+			\OZONE\Core\Db\OZUser::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1783,7 +1783,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZUser::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1799,7 +1799,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZUser::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1815,7 +1815,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZUser::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZUser::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1831,7 +1831,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZUser::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZUser::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1847,7 +1847,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZUser::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZUser::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1863,7 +1863,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZUser::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZUser::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1879,7 +1879,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZUser::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZUser::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1895,7 +1895,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZUser::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZUser::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1911,7 +1911,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZUser::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZUser::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1927,7 +1927,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZUser::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZUser::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1943,7 +1943,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZUser::COL_IS_VALID,
+			\OZONE\Core\Db\OZUser::COL_IS_VALID,
 			$value
 		);
 	}
@@ -1959,7 +1959,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZUser::COL_IS_VALID,
+			\OZONE\Core\Db\OZUser::COL_IS_VALID,
 			$value
 		);
 	}
@@ -1973,7 +1973,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_false'),
-			\OZONE\OZ\Db\OZUser::COL_IS_VALID
+			\OZONE\Core\Db\OZUser::COL_IS_VALID
 		);
 	}
 
@@ -1986,7 +1986,7 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_true'),
-			\OZONE\OZ\Db\OZUser::COL_IS_VALID
+			\OZONE\Core\Db\OZUser::COL_IS_VALID
 		);
 	}
 }

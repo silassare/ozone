@@ -11,26 +11,26 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Auth\Providers;
+namespace OZONE\Core\Auth\Providers;
 
 use Gobl\CRUD\Exceptions\CRUDException;
 use Gobl\ORM\Exceptions\ORMException;
-use OZONE\OZ\Auth\Auth;
-use OZONE\OZ\Auth\AuthCredentials;
-use OZONE\OZ\Auth\AuthScope;
-use OZONE\OZ\Auth\AuthSecretType;
-use OZONE\OZ\Auth\AuthState;
-use OZONE\OZ\Auth\Interfaces\AuthCredentialsInterface;
-use OZONE\OZ\Auth\Interfaces\AuthProviderInterface;
-use OZONE\OZ\Auth\Interfaces\AuthScopeInterface;
-use OZONE\OZ\Auth\Traits\AuthProviderEventTrait;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\Core\JSONResponse;
-use OZONE\OZ\Db\OZAuth;
-use OZONE\OZ\Exceptions\InvalidFormException;
-use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\JSONResponse;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Auth;
+use OZONE\Core\Auth\AuthCredentials;
+use OZONE\Core\Auth\AuthScope;
+use OZONE\Core\Auth\AuthSecretType;
+use OZONE\Core\Auth\AuthState;
+use OZONE\Core\Auth\Interfaces\AuthCredentialsInterface;
+use OZONE\Core\Auth\Interfaces\AuthProviderInterface;
+use OZONE\Core\Auth\Interfaces\AuthScopeInterface;
+use OZONE\Core\Auth\Traits\AuthProviderEventTrait;
+use OZONE\Core\Db\OZAuth;
+use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Utils\Hasher;
 use Throwable;
 
 /**
@@ -48,35 +48,16 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * AuthProvider constructor.
 	 *
-	 * @param \OZONE\OZ\Core\Context                            $context
-	 * @param null|\OZONE\OZ\Auth\Interfaces\AuthScopeInterface $scope
+	 * @param \OZONE\Core\App\Context $context
 	 */
-	public function __construct(protected Context $context, ?AuthScopeInterface $scope = null)
+	public function __construct(Context $context)
 	{
-		$code_length        = (int) Configs::get('oz.auth', 'OZ_AUTH_CODE_LENGTH');
-		$code_use_alpha_num = (bool) Configs::get('oz.auth', 'OZ_AUTH_CODE_USE_ALPHA_NUM');
+		$code_length        = (int) Settings::get('oz.auth', 'OZ_AUTH_CODE_LENGTH');
+		$code_use_alpha_num = (bool) Settings::get('oz.auth', 'OZ_AUTH_CODE_USE_ALPHA_NUM');
 
-		$this->scope         = $scope ?? new AuthScope();
+		$this->scope         = new AuthScope();
 		$this->json_response = new JSONResponse();
-		$this->credentials   = new AuthCredentials($this->context, $code_length, $code_use_alpha_num);
-	}
-
-	/**
-	 * AuthProvider destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->context);
-	}
-
-	/**
-	 * Gets context.
-	 *
-	 * @return \OZONE\OZ\Core\Context
-	 */
-	public function getContext(): Context
-	{
-		return $this->context;
+		$this->credentials   = new AuthCredentials($context, $code_length, $code_use_alpha_num);
 	}
 
 	/**
@@ -98,6 +79,16 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	public function setScope(AuthScopeInterface $scope): self
+	{
+		$this->scope = $scope;
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public function getJSONResponse(): JSONResponse
 	{
 		return $this->json_response;
@@ -106,9 +97,9 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
 	 */
 	public function authorize(AuthSecretType $type): void
 	{
@@ -126,7 +117,7 @@ abstract class AuthProvider implements AuthProviderInterface
 			throw new InvalidFormException('OZ_AUTH_MISSING_SECRET');
 		}
 
-		$auth = Auth::getRequiredByRef($ref);
+		$auth = Auth::getRequired($ref);
 
 		$this->scope = $this->scope::from($auth);
 
@@ -140,7 +131,7 @@ abstract class AuthProvider implements AuthProviderInterface
 		if ($auth->expire <= \time()) {
 			$this->save($auth->setState(AuthState::REFUSED->value));
 			$this->onExpired($auth);
-		} elseif ((0 === $try_max || $remainder >= 0) && \hash_equals($known_hash, Hasher::hash64($secret))) {
+		} elseif ((0 === $try_max || $remainder >= 0) && \hash_equals($known_hash, $this->hash($secret))) {
 			// we don't exceed the auth_try_max and the token/code is valid
 			$this->save($auth->setState(AuthState::AUTHORIZED->value));
 			$this->onAuthorized($auth);
@@ -163,14 +154,14 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
 	 */
 	public function getState(): AuthState
 	{
 		$ref = $this->credentials->getReference();
 
-		return Auth::getRequiredByRef($ref)
+		return Auth::getRequired($ref)
 			->getState();
 	}
 
@@ -179,13 +170,13 @@ abstract class AuthProvider implements AuthProviderInterface
 	 */
 	public function generate(): self
 	{
-		$code_hash   = Hasher::hash64($this->credentials->newCode());
-		$token_hash  = Hasher::hash64($this->credentials->newToken());
+		$code_hash   = $this->hash($this->credentials->newCode());
+		$token_hash  = $this->hash($this->credentials->newToken());
 		$ref         = $this->credentials->getReference();
 		$refresh_key = $this->credentials->getRefreshKey();
 		$expire      = \time() + $this->scope->getLifetime();
 
-		if (Auth::getByRef($ref)) {
+		if (Auth::get($ref)) {
 			throw new RuntimeException('An auth ref conflict occurred, newly generated auth ref already in use.', [
 				OZAuth::COL_REF => $ref,
 			]);
@@ -197,13 +188,14 @@ abstract class AuthProvider implements AuthProviderInterface
 				->setRefreshKey($refresh_key)
 				->setProvider(static::getName())
 				->setLabel($this->scope->getLabel())
-				->setFor($this->scope->getValue())
+				->setPayload($this->getPayload())
 				->setTryMax($this->scope->getTryMax())
 				->setLifetime($this->scope->getLifetime())
 				->setCodeHash($code_hash)
 				->setTokenHash($token_hash)
 				->setTryCount(0)
 				->setExpire((string) $expire)
+				->setOptions($this->scope->getOptions())
 				->save();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to save authorization data.', null, $t);
@@ -217,14 +209,14 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\Core\Exceptions\InvalidFormException
 	 */
 	public function refresh(bool $re_authorize = true): self
 	{
 		$ref  = $this->credentials->getReference();
-		$auth = Auth::getRequiredByRef($ref);
+		$auth = Auth::getRequired($ref);
 
 		$this->scope = $this->scope::from($auth);
 
@@ -233,8 +225,8 @@ abstract class AuthProvider implements AuthProviderInterface
 		} else {
 			$expire = \time() + $this->scope->getLifetime();
 
-			$code_hash  = Hasher::hash64($this->credentials->newCode());
-			$token_hash = Hasher::hash64($this->credentials->newToken());
+			$code_hash  = $this->hash($this->credentials->newCode());
+			$token_hash = $this->hash($this->credentials->newToken());
 
 			$auth->setCodeHash($code_hash)
 				->setTokenHash($token_hash)
@@ -258,13 +250,13 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
 	 */
 	public function cancel(): self
 	{
 		$ref  = $this->credentials->getReference();
-		$auth = Auth::getRequiredByRef($ref);
+		$auth = Auth::getRequired($ref);
 
 		$this->scope = $this->scope::from($auth);
 
@@ -280,15 +272,27 @@ abstract class AuthProvider implements AuthProviderInterface
 	}
 
 	/**
+	 * Used to hash a code or a token.
+	 *
+	 * @param string $secret
+	 *
+	 * @return string
+	 */
+	protected function hash(string $secret): string
+	{
+		return Hasher::hash64($secret);
+	}
+
+	/**
 	 * Save authorisation process into the database.
 	 *
-	 * @param \OZONE\OZ\Db\OZAuth $auth
+	 * @param \OZONE\Core\Db\OZAuth $auth
 	 */
 	protected function save(OZAuth $auth): void
 	{
 		try {
 			$auth->setUpdatedAT((string) \time())
-				->setData($this->scope->toArray())
+				->setOptions($this->scope->getOptions())
 				->save();
 		} catch (ORMException|CRUDException $e) {
 			throw new RuntimeException('Unable to save authorization process data.', null, $e);

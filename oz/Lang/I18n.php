@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Lang;
+namespace OZONE\Core\Lang;
 
-use OZONE\OZ\Core\Context;
+use OZONE\Core\App\Context;
 
 /**
  * Class I18n.
@@ -21,12 +21,12 @@ use OZONE\OZ\Core\Context;
 class I18n
 {
 	/**
-	 * Shortcut for {@see \OZONE\OZ\Lang\Polyglot::translate()}.
+	 * Shortcut for {@see \OZONE\Core\Lang\Polyglot::translate()}.
 	 *
-	 * @param \OZONE\OZ\Lang\I18nMessage|string $message the message
-	 * @param array                             $inject  data to use for replacement
-	 * @param null|string                       $lang    use a specific lang
-	 * @param null|\OZONE\OZ\Core\Context       $context the context
+	 * @param \OZONE\Core\Lang\I18nMessage|string $message the message
+	 * @param array                               $inject  data to use for replacement
+	 * @param null|string                         $lang    use a specific lang
+	 * @param null|\OZONE\Core\App\Context        $context the context
 	 *
 	 * @return string
 	 */
@@ -42,12 +42,12 @@ class I18n
 	}
 
 	/**
-	 * Creates an instance of {@see \OZONE\OZ\Lang\I18nMessage}.
+	 * Creates an instance of {@see \OZONE\Core\Lang\I18nMessage}.
 	 *
 	 * @param string $message
 	 * @param array  $inject
 	 *
-	 * @return \OZONE\OZ\Lang\I18nMessage
+	 * @return \OZONE\Core\Lang\I18nMessage
 	 */
 	public static function m(string $message, array $inject): I18nMessage
 	{

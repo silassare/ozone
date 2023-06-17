@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cache\Drivers;
+namespace OZONE\Core\Cache\Drivers;
 
-use OZONE\OZ\Cache\CacheItem;
-use OZONE\OZ\Cache\Interfaces\CacheProviderInterface;
+use OZONE\Core\Cache\CacheItem;
+use OZONE\Core\Cache\Interfaces\CacheProviderInterface;
 
 /**
  * Class RuntimeCache.
@@ -90,9 +90,7 @@ class RuntimeCache implements CacheProviderInterface
 			self::CACHE_EXPIRE_PROP => $item->getExpire(),
 		];
 
-		$this->save();
-
-		return true;
+		return $this->save();
 	}
 
 	/**
@@ -102,9 +100,7 @@ class RuntimeCache implements CacheProviderInterface
 	{
 		unset(self::$cache_data[$this->namespace][$key]);
 
-		$this->save();
-
-		return true;
+		return $this->save();
 	}
 
 	/**
@@ -116,9 +112,7 @@ class RuntimeCache implements CacheProviderInterface
 			unset(self::$cache_data[$this->namespace][$key]);
 		}
 
-		$this->save();
-
-		return true;
+		return $this->save();
 	}
 
 	/**
@@ -128,9 +122,7 @@ class RuntimeCache implements CacheProviderInterface
 	{
 		self::$cache_data[$this->namespace] = [];
 
-		$this->save();
-
-		return true;
+		return $this->save();
 	}
 
 	/**
@@ -138,15 +130,13 @@ class RuntimeCache implements CacheProviderInterface
 	 */
 	public function increment(string $key, float $factor = 1): bool
 	{
-		if (isset(self::$cache_data[$this->namespace][$key])) {
-			self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] += $factor;
-
-			return true;
+		if (!isset(self::$cache_data[$this->namespace][$key])) {
+			return false;
 		}
 
-		$this->save();
+		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] += $factor;
 
-		return false;
+		return $this->save();
 	}
 
 	/**
@@ -154,15 +144,13 @@ class RuntimeCache implements CacheProviderInterface
 	 */
 	public function decrement(string $key, float $factor = 1): bool
 	{
-		if (isset(self::$cache_data[$this->namespace][$key])) {
-			self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] -= $factor;
-
-			return true;
+		if (!isset(self::$cache_data[$this->namespace][$key])) {
+			return false;
 		}
 
-		$this->save();
+		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] -= $factor;
 
-		return false;
+		return $this->save();
 	}
 
 	/**

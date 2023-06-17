@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Hooks\Events;
+namespace OZONE\Core\Hooks\Events;
 
-use OZONE\OZ\Hooks\Hook;
+use OZONE\Core\Hooks\Hook;
 
 /**
  * Class RequestHook.
@@ -24,7 +24,7 @@ use OZONE\OZ\Hooks\Hook;
 final class RequestHook extends Hook
 {
 	/**
-	 * Shortcut for {@see \OZONE\OZ\Core\Context::isSubRequest()}.
+	 * Shortcut for {@see \OZONE\Core\App\Context::isSubRequest()}.
 	 *
 	 * @return bool
 	 */

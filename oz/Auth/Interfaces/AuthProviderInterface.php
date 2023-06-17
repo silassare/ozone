@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Auth\Interfaces;
+namespace OZONE\Core\Auth\Interfaces;
 
-use OZONE\OZ\Auth\AuthSecretType;
-use OZONE\OZ\Auth\AuthState;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\JSONResponse;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\JSONResponse;
+use OZONE\Core\Auth\AuthSecretType;
+use OZONE\Core\Auth\AuthState;
 
 /**
  * Interface AuthProviderInterface.
@@ -24,54 +24,70 @@ use OZONE\OZ\Core\JSONResponse;
 interface AuthProviderInterface
 {
 	/**
-	 * Get provider instance.
-	 *
-	 * @param \OZONE\OZ\Core\Context                            $context
-	 * @param null|\OZONE\OZ\Auth\Interfaces\AuthScopeInterface $scope
-	 *
-	 * @return self
-	 */
-	public static function getInstance(Context $context, ?AuthScopeInterface $scope = null): self;
-
-	/**
-	 * Get provider name.
+	 * Get auth provider name.
 	 *
 	 * @return string
 	 */
 	public static function getName(): string;
 
 	/**
+	 * Get auth provider instance.
+	 *
+	 * @param \OZONE\Core\App\Context $context
+	 * @param array                   $payload
+	 *
+	 * @return self
+	 */
+	public static function get(Context $context, array $payload): self;
+
+	/**
+	 * Get payload.
+	 *
+	 * @return array
+	 */
+	public function getPayload(): array;
+
+	/**
 	 * Returns json response.
 	 *
-	 * @return \OZONE\OZ\Core\JSONResponse
+	 * @return \OZONE\Core\App\JSONResponse
 	 */
 	public function getJSONResponse(): JSONResponse;
 
 	/**
 	 * Gets credentials.
 	 *
-	 * @return \OZONE\OZ\Auth\Interfaces\AuthCredentialsInterface
+	 * @return \OZONE\Core\Auth\Interfaces\AuthCredentialsInterface
 	 */
 	public function getCredentials(): AuthCredentialsInterface;
 
 	/**
 	 * Gets scope.
 	 *
-	 * @return \OZONE\OZ\Auth\Interfaces\AuthScopeInterface
+	 * @return \OZONE\Core\Auth\Interfaces\AuthScopeInterface
 	 */
 	public function getScope(): AuthScopeInterface;
 
 	/**
+	 * Sets scope.
+	 *
+	 * @param \OZONE\Core\Auth\Interfaces\AuthScopeInterface $scope
+	 *
+	 * @return $this
+	 */
+	public function setScope(AuthScopeInterface $scope): self;
+
+	/**
 	 * Validate an authorization with current credentials.
 	 *
-	 * @param \OZONE\OZ\Auth\AuthSecretType $type
+	 * @param \OZONE\Core\Auth\AuthSecretType $type
 	 */
 	public function authorize(AuthSecretType $type): void;
 
 	/**
 	 * Get an authorization process state.
 	 *
-	 * @return \OZONE\OZ\Auth\AuthState
+	 * @return \OZONE\Core\Auth\AuthState
 	 */
 	public function getState(): AuthState;
 

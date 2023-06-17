@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Columns\Types;
+namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
-use OZONE\OZ\Core\Configs;
+use OZONE\Core\App\Settings;
 
 /**
  * Class TypePassword.
@@ -66,8 +66,8 @@ class TypePassword extends Type
 	 */
 	public function validate($value): ?string
 	{
-		$min   = Configs::get('oz.users', 'OZ_USER_PASS_MIN_LENGTH');
-		$max   = Configs::get('oz.users', 'OZ_USER_PASS_MAX_LENGTH');
+		$min   = Settings::get('oz.users', 'OZ_USER_PASS_MIN_LENGTH');
+		$max   = Settings::get('oz.users', 'OZ_USER_PASS_MAX_LENGTH');
 		$debug = [
 			'value' => $value,
 			'min'   => $min,

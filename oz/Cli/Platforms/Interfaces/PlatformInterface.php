@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cli\Platforms\Interfaces;
+namespace OZONE\Core\Cli\Platforms\Interfaces;
 
 /**
  * Interface PlatformInterface.
@@ -31,8 +31,9 @@ interface PlatformInterface
 	 * Command format helper.
 	 *
 	 * @param string $command
+	 * @param bool   $run_in_background
 	 *
 	 * @return string
 	 */
-	public function format(string $command): string;
+	public function format(string $command, bool $run_in_background = false): string;
 }

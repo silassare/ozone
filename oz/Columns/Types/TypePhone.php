@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Columns\Types;
+namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
-use OZONE\OZ\Users\UsersManager;
+use OZONE\Core\Users\Users;
 
 /**
  * Class TypePhone.
@@ -106,11 +106,11 @@ class TypePhone extends Type
 		if (!empty($value)) {
 			$registered = $this->getOption('registered');
 
-			if (false === $registered && UsersManager::searchUserWithPhone($value)) {
+			if (false === $registered && Users::withPhone($value)) {
 				throw new TypesInvalidValueException('OZ_FIELD_PHONE_ALREADY_REGISTERED', $debug);
 			}
 
-			if (true === $registered && !UsersManager::searchUserWithPhone($value)) {
+			if (true === $registered && !Users::withPhone($value)) {
 				throw new TypesInvalidValueException('OZ_FIELD_PHONE_NOT_REGISTERED', $debug);
 			}
 		}

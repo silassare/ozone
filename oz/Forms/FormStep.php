@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Forms;
+namespace OZONE\Core\Forms;
 
-use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\RuntimeException;
 
 /**
  * Class FormStep.
@@ -37,9 +37,9 @@ class FormStep
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\FormData $fd
+	 * @param \OZONE\Core\Forms\FormData $fd
 	 *
-	 * @return null|\OZONE\OZ\Forms\Form
+	 * @return null|\OZONE\Core\Forms\Form
 	 */
 	public function getForm(FormData $fd): ?Form
 	{

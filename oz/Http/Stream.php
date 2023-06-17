@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Http;
+namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
-use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\RuntimeException;
 use Psr\Http\Message\StreamInterface;
 
 /**

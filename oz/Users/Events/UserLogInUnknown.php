@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Users\Events;
+namespace OZONE\Core\Users\Events;
 
-use OZONE\OZ\Core\Context;
+use OZONE\Core\App\Context;
 use PHPUtils\Events\Event;
 
 /**
@@ -24,7 +24,7 @@ final class UserLogInUnknown extends Event
 	}
 
 	/**
-	 * @return \OZONE\OZ\Core\Context
+	 * @return \OZONE\Core\App\Context
 	 */
 	public function getContext(): Context
 	{

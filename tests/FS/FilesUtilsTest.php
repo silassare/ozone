@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Tests\FS;
+namespace OZONE\Tests\FS;
 
-use OZONE\OZ\FS\FilesManager;
-use OZONE\OZ\FS\FilesUtils;
+use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\FS;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,64 +26,63 @@ use PHPUnit\Framework\TestCase;
  */
 final class FilesUtilsTest extends TestCase
 {
-	public function testGetFilesUploadDirectory(): void
-	{
-		static::assertSame(OZ_FILES_DIR . 'uploads' . DS, FilesUtils::getFilesUploadDirectory());
-	}
-
 	public function testGetRealExtension(): void
 	{
-		static::assertSame('jpeg', FilesUtils::getRealExtension('file-with-no-ext', 'image/jpeg'));
-		static::assertSame('txt', FilesUtils::getRealExtension('foo.', 'text/plain'));
-		static::assertSame('ofa', FilesUtils::getRealExtension('foo-bar.png', 'text/x-ozone-file-alias'));
-		static::assertSame('png', FilesUtils::getRealExtension('foo-bar.baz.jpeg', 'image/png'));
+		self::assertSame('jpeg', FS::getRealExtension('file-with-no-ext', 'image/jpeg'));
+		self::assertSame('txt', FS::getRealExtension('foo.', 'text/plain'));
+		self::assertSame('ofa', FS::getRealExtension('foo-bar.png', 'text/x-ozone-file-alias'));
+		self::assertSame('png', FS::getRealExtension('foo-bar.baz.jpeg', 'image/png'));
 	}
 
 	public function testExtensionToMimeType(): void
 	{
-		static::assertSame('image/jpeg', FilesUtils::extensionToMimeType('jpeg'));
-		static::assertSame('text/plain', FilesUtils::extensionToMimeType('txt'));
-		static::assertSame('text/x-ozone-file-alias', FilesUtils::extensionToMimeType('ofa'));
-		static::assertSame('image/png', FilesUtils::extensionToMimeType('png'));
-		static::assertSame(FilesUtils::DEFAULT_FILE_MIME_TYPE, FilesUtils::extensionToMimeType(''));
+		self::assertSame('image/jpeg', FS::extensionToMimeType('jpeg'));
+		self::assertSame('text/plain', FS::extensionToMimeType('txt'));
+		self::assertSame('text/x-ozone-file-alias', FS::extensionToMimeType('ofa'));
+		self::assertSame('image/png', FS::extensionToMimeType('png'));
+		self::assertSame(FS::DEFAULT_FILE_MIME_TYPE, FS::extensionToMimeType(''));
 	}
 
 	public function testMimeTypeToExtension(): void
 	{
-		static::assertSame('jpeg', FilesUtils::mimeTypeToExtension('image/jpeg'));
-		static::assertSame('txt', FilesUtils::mimeTypeToExtension('text/plain'));
-		static::assertSame('ofa', FilesUtils::mimeTypeToExtension('text/x-ozone-file-alias'));
-		static::assertSame('png', FilesUtils::mimeTypeToExtension('image/png'));
-		static::assertSame(FilesUtils::DEFAULT_FILE_EXTENSION, FilesUtils::mimeTypeToExtension('unknown/type'));
+		self::assertSame('jpeg', FS::mimeTypeToExtension('image/jpeg'));
+		self::assertSame('txt', FS::mimeTypeToExtension('text/plain'));
+		self::assertSame('ofa', FS::mimeTypeToExtension('text/x-ozone-file-alias'));
+		self::assertSame('png', FS::mimeTypeToExtension('image/png'));
+		self::assertSame(FS::DEFAULT_FILE_EXTENSION, FS::mimeTypeToExtension('unknown/type'));
 	}
 
 	public function testBase64ToFile(): void
 	{
 		$b64 = \base64_encode($expected = 'Africa loves you!');
 
-		$content = (string) FilesUtils::base64ToFile($b64);
+		$content = (string) FS::base64ToFile($b64);
 
-		static::assertSame($expected, $content);
+		self::assertSame($expected, $content);
 
 		$b64_uri = 'data:text/plain;base64,' . $b64;
 
-		$content = (string) FilesUtils::base64ToFile($b64_uri);
+		$content = (string) FS::base64ToFile($b64_uri);
 
-		static::assertSame($expected, $content);
+		self::assertSame($expected, $content);
 
 		$b64_big = \base64_encode($expected = \str_repeat($expected, 12083));
 
-		$content = (string) FilesUtils::base64ToFile($b64_big);
+		$content = (string) FS::base64ToFile($b64_big);
 
-		static::assertSame($expected, $content);
+		self::assertSame($expected, $content);
 	}
 
 	public function testTempFileName(): void
 	{
-		$file = FilesUtils::newTempFile();
+		$file = FS::newTempFile();
 		$fm   = new FilesManager();
 
-		static::assertTrue($fm->filter()->isReadable()->isWritable()->isFile()->check($file));
+		self::assertTrue($fm->filter()
+			->isReadable()
+			->isWritable()
+			->isFile()
+			->check($file));
 	}
 
 	public function testFormatFileSize(): void
@@ -123,23 +122,11 @@ final class FilesUtilsTest extends TestCase
 
 		for ($i = 0; $i < $len; ++$i) {
 			$size                 = 1.962 * (1000 ** $i);
-			$results_data_sizes[] = FilesUtils::formatFileSize($size, 2, 1000);
-			$results_file_sizes[] = FilesUtils::formatFileSize($size, 2, 1024);
+			$results_data_sizes[] = FS::formatFileSize($size, 2, 1000);
+			$results_file_sizes[] = FS::formatFileSize($size, 2, 1024);
 		}
 
-		static::assertSame($expected_data_sizes, $results_data_sizes);
-		static::assertSame($expected_file_sizes, $results_file_sizes);
-	}
-
-	public function testGetFileDriver(): void
-	{
-	}
-
-	public function testGetFileWithId(): void
-	{
-	}
-
-	public function testParseFileAlias(): void
-	{
+		self::assertSame($expected_data_sizes, $results_data_sizes);
+		self::assertSame($expected_file_sizes, $results_file_sizes);
 	}
 }

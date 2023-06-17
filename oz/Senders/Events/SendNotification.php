@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Senders\Events;
+namespace OZONE\Core\Senders\Events;
 
-use OZONE\OZ\Senders\Messages\NotificationMessage;
+use OZONE\Core\Senders\Messages\NotificationMessage;
 use PHPUtils\Events\Event;
 
 /**
@@ -37,7 +37,7 @@ final class SendNotification extends Event
 	}
 
 	/**
-	 * @return \OZONE\OZ\Senders\Messages\NotificationMessage
+	 * @return \OZONE\Core\Senders\Messages\NotificationMessage
 	 */
 	public function getMessage(): NotificationMessage
 	{

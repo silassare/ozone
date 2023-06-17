@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Forms;
+namespace OZONE\Core\Forms;
 
-use OZONE\OZ\Lang\I18nMessage;
+use OZONE\Core\Lang\I18nMessage;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
 
@@ -28,9 +28,9 @@ class FormRule implements ArrayCapableInterface
 	private null|string|I18nMessage $message = null;
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string                     $field
-	 * @param null|bool|float|int|\OZONE\OZ\Forms\Field|string $value
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string           $message
+	 * @param \OZONE\Core\Forms\Field|string                     $field
+	 * @param null|bool|float|int|\OZONE\Core\Forms\Field|string $value
+	 * @param null|\OZONE\Core\Lang\I18nMessage|string           $message
 	 *
 	 * @return $this
 	 */
@@ -40,9 +40,9 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string                     $field
-	 * @param null|bool|float|int|\OZONE\OZ\Forms\Field|string $value
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string           $message
+	 * @param \OZONE\Core\Forms\Field|string                     $field
+	 * @param null|bool|float|int|\OZONE\Core\Forms\Field|string $value
+	 * @param null|\OZONE\Core\Lang\I18nMessage|string           $message
 	 *
 	 * @return $this
 	 */
@@ -52,9 +52,9 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string           $field
-	 * @param float|int|\OZONE\OZ\Forms\Field|string $value
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
+	 * @param \OZONE\Core\Forms\Field|string           $field
+	 * @param float|int|\OZONE\Core\Forms\Field|string $value
+	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -64,9 +64,9 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string           $field
-	 * @param float|int|\OZONE\OZ\Forms\Field|string $value
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
+	 * @param \OZONE\Core\Forms\Field|string           $field
+	 * @param float|int|\OZONE\Core\Forms\Field|string $value
+	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -76,9 +76,9 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string           $field
-	 * @param float|int|\OZONE\OZ\Forms\Field|string $value
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
+	 * @param \OZONE\Core\Forms\Field|string           $field
+	 * @param float|int|\OZONE\Core\Forms\Field|string $value
+	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -88,9 +88,9 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string           $field
-	 * @param float|int|\OZONE\OZ\Forms\Field|string $value
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
+	 * @param \OZONE\Core\Forms\Field|string           $field
+	 * @param float|int|\OZONE\Core\Forms\Field|string $value
+	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -100,9 +100,9 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string           $field
-	 * @param array|\OZONE\OZ\Forms\Field            $value
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
+	 * @param \OZONE\Core\Forms\Field|string           $field
+	 * @param array|\OZONE\Core\Forms\Field            $value
+	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -112,9 +112,9 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string           $field
-	 * @param array|\OZONE\OZ\Forms\Field            $value
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
+	 * @param \OZONE\Core\Forms\Field|string           $field
+	 * @param array|\OZONE\Core\Forms\Field            $value
+	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -124,8 +124,8 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string           $field
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
+	 * @param \OZONE\Core\Forms\Field|string           $field
+	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -135,8 +135,8 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string           $field
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
+	 * @param \OZONE\Core\Forms\Field|string           $field
+	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -146,7 +146,7 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\FormData $fd
+	 * @param \OZONE\Core\Forms\FormData $fd
 	 *
 	 * @return bool
 	 */
@@ -184,7 +184,7 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @return null|\OZONE\OZ\Lang\I18nMessage|string
+	 * @return null|\OZONE\Core\Lang\I18nMessage|string
 	 */
 	public function getErrorMessage(): string|I18nMessage|null
 	{
@@ -200,10 +200,10 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\Field|string           $field
-	 * @param string                                 $rule
-	 * @param null|mixed                             $value
-	 * @param null|\OZONE\OZ\Lang\I18nMessage|string $message
+	 * @param \OZONE\Core\Forms\Field|string           $field
+	 * @param string                                   $rule
+	 * @param null|mixed                               $value
+	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */

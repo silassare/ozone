@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Web;
+namespace OZONE\Core\Web;
 
-use OZONE\OZ\Core\Service;
-use OZONE\OZ\FS\TemplatesUtils;
-use OZONE\OZ\Http\Body;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Router\Router;
-use OZONE\OZ\Web\Traits\WebSEOTrait;
+use OZONE\Core\App\Service;
+use OZONE\Core\FS\Templates;
+use OZONE\Core\Http\Body;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Router\Router;
+use OZONE\Core\Web\Traits\WebSEOTrait;
 
 /**
  * Class WebView.
@@ -42,7 +42,7 @@ class WebView extends Service
 	/**
 	 * @param array $data
 	 *
-	 * @return \OZONE\OZ\Web\WebView
+	 * @return \OZONE\Core\Web\WebView
 	 */
 	public function inject(array $data): self
 	{
@@ -57,7 +57,7 @@ class WebView extends Service
 	 * @param string $key
 	 * @param mixed  $value
 	 *
-	 * @return \OZONE\OZ\Web\WebView
+	 * @return \OZONE\Core\Web\WebView
 	 */
 	public function injectKey(string $key, mixed $value): self
 	{
@@ -91,7 +91,7 @@ class WebView extends Service
 	 *
 	 * @param string $template
 	 *
-	 * @return \OZONE\OZ\Web\WebView
+	 * @return \OZONE\Core\Web\WebView
 	 */
 	public function setTemplate(string $template): self
 	{
@@ -113,7 +113,7 @@ class WebView extends Service
 	/**
 	 * Render the view and return response.
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 */
 	public function respond(): Response
 	{
@@ -143,16 +143,16 @@ class WebView extends Service
 		$data['i18n']    = $wi->i18n(...);
 		$data['seo']     = $this->getSEOInjectData();
 
-		return TemplatesUtils::compile($this->getTemplate(), $data);
+		return Templates::compile($this->getTemplate(), $data);
 	}
 
 	/**
 	 * Render the view to a given response object.
 	 *
-	 * @param \OZONE\OZ\Http\Response $response
-	 * @param string                  $mode     one of: append, prepend, overwrite
+	 * @param \OZONE\Core\Http\Response $response
+	 * @param string                    $mode     one of: append, prepend, overwrite
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 */
 	protected function renderTo(Response $response, string $mode = 'append'): Response
 	{

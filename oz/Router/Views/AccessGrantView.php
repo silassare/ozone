@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router\Views;
+namespace OZONE\Core\Router\Views;
 
-use OZONE\OZ\Forms\Form;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Web\WebView;
+use OZONE\Core\Forms\Form;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Web\WebView;
 
 /**
  * Class AccessGrantView.
@@ -23,9 +23,9 @@ use OZONE\OZ\Web\WebView;
 final class AccessGrantView extends WebView
 {
 	/**
-	 * @param \OZONE\OZ\Forms\Form $form
+	 * @param \OZONE\Core\Forms\Form $form
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 */
 	public function renderAccessGrantForm(Form $form): Response
 	{
@@ -39,7 +39,7 @@ final class AccessGrantView extends WebView
 	/**
 	 * @param string $realm
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 */
 	public function renderAccessGrantAuth(string $realm): Response
 	{

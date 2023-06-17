@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Users\Services;
+namespace OZONE\Core\Users\Services;
 
-use OZONE\OZ\Core\Service;
-use OZONE\OZ\Db\OZUser;
-use OZONE\OZ\Exceptions\InvalidFormException;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
-use OZONE\OZ\Users\UsersManager;
+use OZONE\Core\App\Service;
+use OZONE\Core\Db\OZUser;
+use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
+use OZONE\Core\Users\Users;
 
 /**
  * Class Login.
@@ -28,12 +28,12 @@ final class Login extends Service
 	public const ROUTE_LOGIN = 'oz:login';
 
 	/**
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+	 * @throws \OZONE\Core\Exceptions\InvalidFormException
 	 */
 	public function actionLogin(): void
 	{
 		$context       = $this->getContext();
-		$users_manager = $context->getUsersManager();
+		$users_manager = $context->getUsers();
 		// And yes! user sent us a form
 		// so we check that the form is valid.
 		$users_manager->logUserOut();
@@ -42,9 +42,9 @@ final class Login extends Service
 			->getUnsafeFormData();
 
 		if (isset($form['phone'])) {
-			$result = $users_manager->tryPhoneLogIn($context, $form);
+			$result = $users_manager->tryPhoneLogIn($form);
 		} elseif (isset($form['email'])) {
-			$result = $users_manager->tryEmailLogIn($context, $form);
+			$result = $users_manager->tryEmailLogIn($form);
 		} else {
 			throw new InvalidFormException();
 		}
@@ -65,11 +65,12 @@ final class Login extends Service
 	public static function registerRoutes(Router $router): void
 	{
 		$router->post('/login', function (RouteInfo $ri) {
-			$s       = new self($ri);
+			$s = new self($ri);
 			$s->actionLogin();
 
 			return $s->respond();
-		})->name(self::ROUTE_LOGIN)
-			->form(UsersManager::logOnForm(...));
+		})
+			->name(self::ROUTE_LOGIN)
+			->form(Users::logOnForm(...));
 	}
 }

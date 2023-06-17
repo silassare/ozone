@@ -12,8 +12,7 @@
 declare(strict_types=1);
 
 return [
-	// Used to share same session
-	// Make sure you know what you're doing.
-	'OZ_SESSION_TOKEN_HEADER_NAME'    => 'x-ozone-session-token',
-	'OZ_SESSION_TOKEN_HEADER_ENABLED' => false,
+	'OZ_SESSION_COOKIE_NAME' => 'OZONE_SID',
+	// session life time in seconds
+	'OZ_SESSION_LIFE_TIME'   => 3600 * 24 * 30, // 30 days
 ];

@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\FS;
+namespace OZONE\Core\FS;
 
-use OZONE\OZ\Auth\AuthSecretType;
-use OZONE\OZ\Auth\Providers\AuthFile;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Db\OZFile;
-use OZONE\OZ\Exceptions\NotFoundException;
-use OZONE\OZ\Router\RouteGuard;
+use OZONE\Core\Auth\AuthSecretType;
+use OZONE\Core\Auth\Providers\FileAccessAuthProvider;
+use OZONE\Core\Db\OZFile;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Router\Guards;
+use OZONE\Core\Router\RouteInfo;
 
 /**
  * Class FileAccess.
@@ -26,33 +26,18 @@ use OZONE\OZ\Router\RouteGuard;
 class FileAccess
 {
 	/**
-	 * FileAccess constructor.
+	 * @param \OZONE\Core\Db\OZFile        $file
+	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param string                       $key
+	 * @param null|string                  $ref
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param \OZONE\OZ\Db\OZFile    $file
+	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
 	 */
-	public function __construct(protected Context $context, protected OZFile $file)
+	public static function check(OZFile $file, RouteInfo $ri, string $key, ?string $ref = null): void
 	{
-	}
-
-	/**
-	 * FileAccess destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->context, $this->file);
-	}
-
-	/**
-	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 */
-	public function check(string $key, ?string $ref = null): void
-	{
-		$expected = $this->file->getKey();
+		$expected = $file->getKey();
 
 		if (!$ref) {
 			if (!\hash_equals($expected, $key)) {
@@ -61,8 +46,8 @@ class FileAccess
 				]);
 			}
 		} else {
-			$auth = new AuthFile($this->context);
-			$auth->getScope()->setValue($this->file->getID());
+			$context = $ri->getContext();
+			$auth    = new FileAccessAuthProvider($context, $file);
 			$auth->getCredentials()
 				->setReference($ref)
 				->setToken($key);
@@ -70,20 +55,14 @@ class FileAccess
 			$auth->authorize(AuthSecretType::TOKEN);
 		}
 
-		$data = $this->file->getData();
+		$data = $file->getData();
 
-		if (isset($data['access_rules'])) {
-			$guard = new RouteGuard($this->context, $data['access_rules'] ?? []);
+		if (isset($data['guards_rules']) && \is_array($data['guards_rules'])) {
+			$guards = Guards::resolve($data['guards_rules']);
 
-			$guard->checkAccess();
+			foreach ($guards as $guard) {
+				$guard->checkAccess($ri);
+			}
 		}
-	}
-
-	/**
-	 * @return \OZONE\OZ\Db\OZFile
-	 */
-	public function getFile(): OZFile
-	{
-		return $this->file;
 	}
 }

@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cli\Platforms;
+namespace OZONE\Core\Cli\Platforms;
 
-use OZONE\OZ\Cli\Platforms\Interfaces\PlatformInterface;
-use OZONE\OZ\Cli\Process;
+use OZONE\Core\Cli\Platforms\Interfaces\PlatformInterface;
+use OZONE\Core\Cli\Process;
 
 /**
  * Class PlatformDOS.
@@ -40,10 +40,15 @@ class PlatformDOS implements PlatformInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function format(string $command): string
+	public function format(string $command, bool $run_in_background = false): string
 	{
 		$command = \str_replace("\n", ' ', $command);
+		$command = \sprintf('cmd /V:ON /E:ON /D /C "(%s)"', $command);
 
-		return \sprintf('cmd /V:ON /E:ON /D /C (%s)', $command);
+		if ($run_in_background) {
+			$command = \sprintf('start /B "" %s', $command);
+		}
+
+		return $command;
 	}
 }

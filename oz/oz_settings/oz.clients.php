@@ -12,21 +12,11 @@
 declare(strict_types=1);
 
 return [
-	/*
-		* how can we get stuff from OZone if set to:
-		*
-		* - any
-		*     - allow CORS for any host
-		*
-		* - check
-		*     - the host of the request header 'Origin' must be the same as the host of the api key client url
-		*
-		* - deny
-		*    - disable CORS
-		*
-		* - default: check
-		*/
-	'OZ_CORS_ALLOW_RULE' => 'check',
-
 	'OZ_CORS_ALLOWED_HEADERS' => ['accept', 'content-type'],
+
+	// allowed origin:
+	// - '*' for any
+	// - 'http://example.com' for a specific host
+	// - 'self' for the request url host
+	'OZ_CORS_ALLOWED_ORIGIN'  => '*',
 ];

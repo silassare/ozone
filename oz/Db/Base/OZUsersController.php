@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db\Base;
+namespace OZONE\Core\Db\Base;
 
 use Gobl\DBAL\Queries\QBSelect;
 use Gobl\DBAL\Relations\Relation;
@@ -20,14 +20,14 @@ use Gobl\ORM\ORMEntity;
 /**
  * Class OZUsersController.
  *
- * @method \OZONE\OZ\Db\OZUser      addItem(array|\OZONE\OZ\Db\OZUser $item = [])
- * @method null|\OZONE\OZ\Db\OZUser getItem(array $filters, array $order_by = [])
- * @method null|\OZONE\OZ\Db\OZUser deleteOneItem(array $filters)
- * @method \OZONE\OZ\Db\OZUser[]    getAllItems(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = null)
- * @method \OZONE\OZ\Db\OZUser[]    getAllItemsCustom(QBSelect $qb, int $max = null, int $offset = 0, ?int &$total = null)
- * @method \OZONE\OZ\Db\OZUser      getRelative(ORMEntity $entity, Relation $relation, array $filters = [], array $order_by = [])
- * @method \OZONE\OZ\Db\OZUser[]    getAllRelatives(ORMEntity $entity, Relation $relation, array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = null)
- * @method null|\OZONE\OZ\Db\OZUser updateOneItem(array $filters, array $new_values)
+ * @method \OZONE\Core\Db\OZUser      addItem(array|\OZONE\Core\Db\OZUser $item = [])
+ * @method null|\OZONE\Core\Db\OZUser getItem(array $filters, array $order_by = [])
+ * @method null|\OZONE\Core\Db\OZUser deleteOneItem(array $filters)
+ * @method \OZONE\Core\Db\OZUser[]    getAllItems(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = null)
+ * @method \OZONE\Core\Db\OZUser[]    getAllItemsCustom(QBSelect $qb, int $max = null, int $offset = 0, ?int &$total = null)
+ * @method \OZONE\Core\Db\OZUser      getRelative(ORMEntity $entity, Relation $relation, array $filters = [], array $order_by = [])
+ * @method \OZONE\Core\Db\OZUser[]    getAllRelatives(ORMEntity $entity, Relation $relation, array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = null)
+ * @method null|\OZONE\Core\Db\OZUser updateOneItem(array $filters, array $new_values)
  */
 abstract class OZUsersController extends \Gobl\ORM\ORMController
 {
@@ -37,8 +37,8 @@ abstract class OZUsersController extends \Gobl\ORM\ORMController
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\OZ\Db\OZUser::TABLE_NAMESPACE,
-			\OZONE\OZ\Db\OZUser::TABLE_NAME
+			\OZONE\Core\Db\OZUser::TABLE_NAMESPACE,
+			\OZONE\Core\Db\OZUser::TABLE_NAME
 		);
 	}
 
@@ -49,6 +49,6 @@ abstract class OZUsersController extends \Gobl\ORM\ORMController
 	 */
 	public static function createInstance(): static
 	{
-		return new \OZONE\OZ\Db\OZUsersController();
+		return new \OZONE\Core\Db\OZUsersController();
 	}
 }

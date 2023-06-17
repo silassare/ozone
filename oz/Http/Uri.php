@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Http;
+namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
 use Psr\Http\Message\UriInterface;
@@ -373,11 +373,11 @@ class Uri implements UriInterface
 	/**
 	 * Creates new Uri from environment.
 	 *
-	 * @param Environment $env
+	 * @param HTTPEnvironment $env
 	 *
 	 * @return self
 	 */
-	public static function createFromEnvironment(Environment $env): self
+	public static function createFromEnvironment(HTTPEnvironment $env): self
 	{
 		// Scheme
 		$isSecure = $env->get('HTTPS');
@@ -465,7 +465,7 @@ class Uri implements UriInterface
 	 */
 	protected function filterScheme(string $scheme): string
 	{
-		static $valid = [
+		$valid = [
 			''      => true,
 			'https' => true,
 			'http'  => true,

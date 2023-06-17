@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Users\Services;
+namespace OZONE\Core\Users\Services;
 
-use OZONE\OZ\Core\Service;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
+use OZONE\Core\App\Service;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
 
 /**
  * Class Logout.
@@ -26,7 +26,9 @@ final class Logout extends Service
 
 	public function actionLogout(): void
 	{
-		$this->getContext()->getUsersManager()->logUserOut();
+		$this->getContext()
+			->getUsers()
+			->logUserOut();
 
 		$this->getJSONResponse()
 			->setDone('OZ_USER_LOGOUT');
@@ -38,10 +40,11 @@ final class Logout extends Service
 	public static function registerRoutes(Router $router): void
 	{
 		$router->post('/logout', function (RouteInfo $ri) {
-			$s       = new self($ri);
+			$s = new self($ri);
 			$s->actionLogout();
 
 			return $s->respond();
-		})->name(self::ROUTE_LOGOUT);
+		})
+			->name(self::ROUTE_LOGOUT);
 	}
 }

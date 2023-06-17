@@ -7,7 +7,6 @@ $finder = Finder::create();
 
 $finder->in([
 	__DIR__ . '/oz',
-	__DIR__ . '/api',
 	__DIR__ . '/tests',
 ])
 	   ->notPath('otpl_done')

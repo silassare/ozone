@@ -11,9 +11,11 @@
 
 declare(strict_types=1);
 
-use OZONE\OZ\Auth\AuthState;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Forms\Fields;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\AuthState;
+use OZONE\Core\Forms\Fields;
+use OZONE\Core\Queue\JobState;
+use OZONE\Core\Queue\Queue;
 
 return [
 	'oz_users'     => [
@@ -21,24 +23,14 @@ return [
 		'singular_name' => 'oz_user',
 		'column_prefix' => 'user',
 		'relations'     => [
-			'files'            => ['type' => 'one-to-many', 'target' => 'oz_files'],
-			'country'          => [
+			'files'    => ['type' => 'one-to-many', 'target' => 'oz_files'],
+			'country'  => [
 				'type'   => 'one-to-one',
 				'target' => 'oz_countries',
 			],
-			'sessions'         => [
+			'sessions' => [
 				'type'   => 'one-to-many',
 				'target' => 'oz_sessions',
-			],
-			'attached-clients' => [
-				'type'    => 'one-to-many',
-				'target'  => 'oz_clients',
-				'columns' => ['id' => 'user_id'],
-			],
-			'owned-clients'    => [
-				'type'    => 'one-to-many',
-				'target'  => 'oz_clients',
-				'columns' => ['id' => 'added_by'],
 			],
 		],
 		'constraints'   => [
@@ -56,12 +48,12 @@ return [
 			'phone'      => [
 				'type'       => 'phone',
 				'registered' => false,
-				'nullable'   => !Configs::get('oz.users', 'OZ_USER_PHONE_REQUIRED'),
+				'nullable'   => !Settings::get('oz.users', 'OZ_USER_PHONE_REQUIRED'),
 			],
 			'email'      => [
 				'type'       => 'email',
 				'registered' => false,
-				'nullable'   => !Configs::get('oz.users', 'OZ_USER_EMAIL_REQUIRED'),
+				'nullable'   => !Settings::get('oz.users', 'OZ_USER_EMAIL_REQUIRED'),
 			],
 			'pass'       => [
 				'type' => 'password',
@@ -72,7 +64,7 @@ return [
 			'gender'     => [
 				'type' => 'gender',
 			],
-			'birth_date' => Fields::birthDate(Configs::get('oz.users', 'OZ_USER_MIN_AGE'), Configs::get('oz.users', 'OZ_USER_MAX_AGE')),
+			'birth_date' => Fields::birthDate(Settings::get('oz.users', 'OZ_USER_MIN_AGE'), Settings::get('oz.users', 'OZ_USER_MAX_AGE')),
 			'pic'        => [
 				'type'     => 'file',
 				'mime'     => ['image/png', 'image/jpeg'],
@@ -153,114 +145,16 @@ return [
 			],
 		],
 	],
-	'oz_clients'   => [
-		'private'       => true,
-		'plural_name'   => 'oz_clients',
-		'singular_name' => 'oz_client',
-		'column_prefix' => 'client',
-		'relations'     => [
-			'owner'    => [
-				'type'    => 'many-to-one',
-				'target'  => 'oz_users',
-				'columns' => ['added_by' => 'id'],
-			],
-			'user'     => [
-				'type'    => 'many-to-one',
-				'target'  => 'oz_users',
-				'columns' => ['user_id' => 'id'],
-			],
-			'sessions' => [
-				'type'   => 'one-to-many',
-				'target' => 'oz_sessions',
-			],
-		],
-		'constraints'   => [
-			['type' => 'primary_key', 'columns' => ['id']],
-			['type' => 'unique_key', 'columns' => ['api_key']],
-			[
-				'type'      => 'foreign_key',
-				'reference' => 'oz_users',
-				'columns'   => ['added_by' => 'id'],
-				'update'    => 'cascade',
-				'delete'    => 'cascade',
-			],
-			[
-				'type'      => 'foreign_key',
-				'reference' => 'oz_users',
-				'columns'   => ['user_id' => 'id'],
-				'update'    => 'cascade',
-				'delete'    => 'cascade',
-			],
-		],
-		'columns'       => [
-			'id'                => [
-				'type'           => 'bigint',
-				'unsigned'       => true,
-				'auto_increment' => true,
-			],
-			'api_key'           => [
-				'type' => 'string',
-				'max'  => 64,
-			],
-			// this client owner
-			'added_by'          => 'ref:oz_users.id',
-			// when specified, the attached user right will be used every time
-			// the api key of the client is used
-			'user_id'           => [
-				'type'     => 'ref:oz_users.id',
-				'nullable' => true,
-			],
-			'url'               => [
-				'type' => 'string',
-				'max'  => 255,
-			],
-			'session_life_time' => [
-				'type'     => 'bigint',
-				'unsigned' => true,
-				'default'  => 86400,
-			],
-			'about'             => [
-				'type' => 'string',
-			],
-			'data'              => [
-				'type'    => 'map',
-				'default' => [],
-			],
-			'created_at'        => [
-				'type'   => 'date',
-				'format' => 'timestamp',
-				'auto'   => true,
-			],
-			'updated_at'        => [
-				'type'   => 'date',
-				'format' => 'timestamp',
-				'auto'   => true,
-			],
-			'is_valid'          => [
-				'type'    => 'bool',
-				'default' => true,
-			],
-		],
-	],
 	'oz_sessions'  => [
 		'private'       => true,
 		'plural_name'   => 'oz_sessions',
 		'singular_name' => 'oz_session',
 		'column_prefix' => 'session',
 		'relations'     => [
-			'client' => ['type' => 'many-to-one', 'target' => 'oz_clients'],
-			'user'   => ['type' => 'many-to-one', 'target' => 'oz_users'],
+			'user' => ['type' => 'many-to-one', 'target' => 'oz_users'],
 		],
 		'constraints'   => [
 			['type' => 'primary_key', 'columns' => ['id']],
-			['type' => 'unique_key', 'columns' => ['token']],
-			[
-				'type'      => 'foreign_key',
-				'reference' => 'oz_clients',
-				'columns'   => ['client_id' => 'id'],
-				'update'    => 'cascade',
-				'delete'    => 'cascade',
-			],
 			[
 				'type'      => 'foreign_key',
 				'reference' => 'oz_users',
@@ -270,48 +164,44 @@ return [
 			],
 		],
 		'columns'       => [
-			'id'         => [
+			'id'                 => [
 				'type' => 'string',
 				'min'  => 6,
 				'max'  => 128,
 			],
-			'client_id'  => 'ref:oz_clients.id',
-			'user_id'    => [
+			'user_id'            => [
 				'type'     => 'ref:oz_users.id',
 				'nullable' => true,
 			],
-			'token'      => [
+			'request_source_key' => [
+				// used to prevent session hijacking
 				'type' => 'string',
-				'min'  => 32,
+				'min'  => 6,
 				'max'  => 250,
 			],
-			'expire'     => [
+			'expire'             => [
 				'type'   => 'date',
 				'format' => 'timestamp',
 			],
-			'verified'   => [
-				'type'    => 'bool',
-				'default' => false,
-			],
-			'last_seen'  => [
+			'last_seen'          => [
 				'type'   => 'date',
 				'format' => 'timestamp',
 			],
-			'data'       => [
+			'data'               => [
 				'type'    => 'map',
 				'default' => [],
 			],
-			'created_at' => [
+			'created_at'         => [
 				'type'   => 'date',
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'updated_at' => [
+			'updated_at'         => [
 				'type'   => 'date',
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'is_valid'   => [
+			'is_valid'           => [
 				'type'    => 'bool',
 				'default' => true,
 			],
@@ -325,6 +215,7 @@ return [
 		'constraints'   => [
 			['type' => 'primary_key', 'columns' => ['ref']],
 			['type' => 'unique_key', 'columns' => ['refresh_key']],
+			['type' => 'unique_key', 'columns' => ['token_hash']],
 		],
 		'columns'       => [
 			'ref'         => [
@@ -337,18 +228,19 @@ return [
 				'min'  => 1,
 				'max'  => 128,
 			],
-			'provider'    => [
-				'type' => 'string',
-				'min'  => 1,
-				'max'  => 128,
-			],
 			'refresh_key' => [
 				'type' => 'string',
 				'min'  => 32,
 				'max'  => 128,
 			],
-			'for'         => [
+			'provider'    => [
 				'type' => 'string',
+				'min'  => 1,
+				'max'  => 128,
+			],
+			'payload'     => [
+				'type'    => 'map',
+				'default' => [],
 			],
 			'code_hash'   => [
 				'type' => 'string',
@@ -382,7 +274,7 @@ return [
 				'type'   => 'date',
 				'format' => 'timestamp',
 			],
-			'data'        => [
+			'options'     => [
 				'type'    => 'map',
 				'default' => [],
 			],
@@ -500,9 +392,9 @@ return [
 				'min'  => 32,
 				'max'  => 128,
 			],
-			'driver'     => [
+			'storage'    => [
 				'type' => 'string',
-				'max'  => 32,
+				'max'  => 128,
 			],
 			'clone_id'   => [
 				'type'     => 'bigint',
@@ -571,6 +463,109 @@ return [
 			'is_valid'   => [
 				'type'    => 'bool',
 				'default' => true,
+			],
+		],
+	],
+	'oz_jobs'      => [
+		'plural_name'   => 'oz_jobs',
+		'singular_name' => 'oz_job',
+		'column_prefix' => 'job',
+		'constraints'   => [
+			['type' => 'primary_key', 'columns' => ['id']],
+			[
+				'type'    => 'unique_key',
+				'columns' => ['ref'],
+			],
+		],
+		'columns'       => [
+			'id'          => [
+				'type'           => 'bigint',
+				'unsigned'       => true,
+				'auto_increment' => true,
+			],
+			'ref'         => [
+				'type' => 'string',
+				'min'  => 32,
+				'max'  => 128,
+			],
+			'state'       => [
+				'type'       => 'enum',
+				'enum_class' => JobState::class,
+				'default'    => JobState::PENDING,
+			],
+			'queue'       => [
+				'type'    => 'string',
+				'min'     => 1,
+				'max'     => 128,
+				'default' => Queue::DEFAULT,
+			],
+			'name'        => [
+				'type' => 'string',
+				'min'  => 1,
+				'max'  => 128,
+			],
+			'worker'      => [
+				'type' => 'string',
+				'min'  => 1,
+				'max'  => 128,
+			],
+			'priority'    => [
+				'type'     => 'int',
+				'unsigned' => true,
+				'default'  => 0,
+			],
+			'try_count'   => [
+				'type'     => 'int',
+				'unsigned' => true,
+				'default'  => 0,
+			],
+			'retry_max'   => [
+				'type'     => 'int',
+				'unsigned' => true,
+				'default'  => 3,
+			],
+			'retry_delay' => [
+				'type'     => 'int',
+				'unsigned' => true,
+				'default'  => 60, // 1 minute
+			],
+			'payload'     => [
+				'type'    => 'map',
+				'default' => [],
+			],
+			'result'      => [
+				'type'    => 'map',
+				'default' => [],
+			],
+			'errors'      => [
+				'type'    => 'map',
+				'default' => [],
+			],
+			'locked'      => [
+				'type'    => 'bool',
+				'default' => false,
+			],
+			'started_at'  => [
+				'type'      => 'date',
+				'format'    => 'timestamp',
+				'precision' => 'microseconds',
+				'nullable'  => true,
+			],
+			'ended_at'    => [
+				'type'      => 'date',
+				'format'    => 'timestamp',
+				'precision' => 'microseconds',
+				'nullable'  => true,
+			],
+			'created_at'  => [
+				'type'   => 'date',
+				'format' => 'timestamp',
+				'auto'   => true,
+			],
+			'updated_at'  => [
+				'type'   => 'date',
+				'format' => 'timestamp',
+				'auto'   => true,
 			],
 		],
 	],

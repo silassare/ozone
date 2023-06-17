@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Hooks\Events;
+namespace OZONE\Core\Hooks\Events;
 
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use PHPUtils\Events\Event;

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Loader;
+namespace OZONE\Core\Loader;
 
 use InvalidArgumentException;
 use RuntimeException;
@@ -57,7 +57,7 @@ use RuntimeException;
  *    require_once "/root/packages/OZone/Loader/ClassLoader.php" ;
  *
  *    // no need to instantiate the loader nor register class loader
- *    $loader = \OZONE\OZ\Loader\ClassLoader;
+ *    $loader = \OZONE\Core\Loader\ClassLoader;
  *
  *    // to load class with namespace
  *        // register the base directories for your namespace prefixes
@@ -124,6 +124,20 @@ class ClassLoader
 	 * @var bool
 	 */
 	private static bool $registered = false;
+
+	/**
+	 * Returns a report of the class loader.
+	 *
+	 * @return array
+	 */
+	public static function report(): array
+	{
+		return [
+			'indexed_dirs' => self::$indexed_dirs,
+			'class_map'    => self::$class_map,
+			'namespaces'   => self::$psr4_namespaces_map,
+		];
+	}
 
 	/**
 	 * Adds directory to the indexed directories list.

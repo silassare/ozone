@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Lang;
+namespace OZONE\Core\Lang;
 
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;

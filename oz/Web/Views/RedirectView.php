@@ -11,13 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Web\Views;
+namespace OZONE\Core\Web\Views;
 
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
-use OZONE\OZ\Web\WebView;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Http\Response;
+use OZONE\Core\OZone;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
+use OZONE\Core\Web\WebView;
 
 /**
  * Class RedirectView.
@@ -27,7 +28,7 @@ final class RedirectView extends WebView
 	public const REDIRECT_ROUTE = 'oz:redirect';
 
 	/**
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 */
 	public function mainRoute(): Response
 	{
@@ -52,7 +53,7 @@ final class RedirectView extends WebView
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->map('*', '/oz:redirect', function (RouteInfo $ri) {
+		$router->map('*', OZone::INTERNAL_PATH_PREFIX . 'redirect', function (RouteInfo $ri) {
 			return (new self($ri))->mainRoute();
 		})
 			->name(self::REDIRECT_ROUTE);

@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Columns\Types;
+namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
-use OZONE\OZ\Users\UsersManager;
+use OZONE\Core\Users\Countries;
 
 /**
  * Class TypeCC2.
@@ -90,10 +90,10 @@ class TypeCC2 extends Type
 			$value = \strtoupper($value);
 
 			if ($this->getOption('authorized')) {
-				if (!UsersManager::authorizedCountry($value)) {
+				if (!Countries::allowed($value)) {
 					throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_NOT_ALLOWED', $debug);
 				}
-			} elseif (!UsersManager::getCountryObject($value)) {
+			} elseif (!Countries::get($value)) {
 				throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug);
 			}
 		}

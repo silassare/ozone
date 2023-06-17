@@ -11,11 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cli\Cron;
+namespace OZONE\Core\Cli\Cron;
 
 use Carbon\Carbon;
 use Closure;
+use Cron\CronExpression;
+use DateTime;
 use DateTimeZone;
+use Exception;
 use Stringable;
 
 /**
@@ -25,7 +28,8 @@ final class Schedule implements Stringable
 {
 	public const SUNDAY = 0;
 
-	public const MONDAY  = 1;
+	public const MONDAY = 1;
+
 	public const TUESDAY = 2;
 
 	public const WEDNESDAY = 3;
@@ -48,10 +52,13 @@ final class Schedule implements Stringable
 
 	private string|DateTimeZone $timezone = 'UTC';
 
+	/** @var array<callable():bool> */
+	private array $only_if = [];
+
 	/**
 	 * Scheduler constructor.
 	 *
-	 * @param string $expression the Cron expression representing the event's frequency
+	 * @param string $expression the Cron expression representing the task's frequency
 	 */
 	public function __construct(string $expression = '* * * * *')
 	{
@@ -73,7 +80,53 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run between start and end time.
+	 * Checks if the task is due to run based on the cron expression.
+	 *
+	 * @param int $time
+	 *
+	 * @return bool
+	 *
+	 * @throws Exception
+	 */
+	public function isDue(int $time): bool
+	{
+		$dt = new DateTime('@' . $time);
+
+		return (new CronExpression((string) $this))->isDue($dt);
+	}
+
+	/**
+	 * Checks if all conditions are met for the current schedule.
+	 *
+	 * @return bool
+	 */
+	public function shouldRun(): bool
+	{
+		foreach ($this->only_if as $fn) {
+			if (!$fn()) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns next run time.
+	 *
+	 * @throws Exception
+	 */
+	public function getNextRunTime(int $time_from): int
+	{
+		$dt   = new DateTime('@' . $time_from);
+		$cron = new CronExpression((string) $this);
+
+		return $cron->getNextRunDate($dt)
+			->getTimestamp();
+	}
+
+	/**
+	 * Schedule the task to run between start and end time.
 	 *
 	 * @param string $startTime
 	 * @param string $endTime
@@ -82,24 +135,28 @@ final class Schedule implements Stringable
 	 */
 	public function between(string $startTime, string $endTime): self
 	{
-		return $this->when($this->inTimeInterval($startTime, $endTime));
+		return $this->onlyIf($this->inTimeInterval($startTime, $endTime));
 	}
 
 	/**
-	 * Schedule the event to not run between start and end time.
+	 * Schedule the task to not run between start and end time.
 	 *
 	 * @param string $startTime
 	 * @param string $endTime
 	 *
 	 * @return $this
 	 */
-	public function notBetween($startTime, $endTime): self
+	public function notBetween(string $startTime, string $endTime): self
 	{
-		return $this->skip($this->inTimeInterval($startTime, $endTime));
+		return $this->onlyIf(function () use ($endTime, $startTime) {
+			$predicate = $this->inTimeInterval($startTime, $endTime);
+
+			return !$predicate();
+		});
 	}
 
 	/**
-	 * Schedule the event to run every minute.
+	 * Schedule the task to run every minute.
 	 *
 	 * @return $this
 	 */
@@ -109,7 +166,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every two minutes.
+	 * Schedule the task to run every two minutes.
 	 *
 	 * @return $this
 	 */
@@ -119,7 +176,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every three minutes.
+	 * Schedule the task to run every three minutes.
 	 *
 	 * @return $this
 	 */
@@ -129,7 +186,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every four minutes.
+	 * Schedule the task to run every four minutes.
 	 *
 	 * @return $this
 	 */
@@ -139,7 +196,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every five minutes.
+	 * Schedule the task to run every five minutes.
 	 *
 	 * @return $this
 	 */
@@ -149,7 +206,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every ten minutes.
+	 * Schedule the task to run every ten minutes.
 	 *
 	 * @return $this
 	 */
@@ -159,7 +216,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every fifteen minutes.
+	 * Schedule the task to run every fifteen minutes.
 	 *
 	 * @return $this
 	 */
@@ -169,7 +226,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every thirty minutes.
+	 * Schedule the task to run every thirty minutes.
 	 *
 	 * @return $this
 	 */
@@ -179,7 +236,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run hourly.
+	 * Schedule the task to run hourly.
 	 *
 	 * @return $this
 	 */
@@ -189,7 +246,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run hourly at a given offset in the hour.
+	 * Schedule the task to run hourly at a given offset in the hour.
 	 *
 	 * @param int|int[] $offset
 	 *
@@ -201,7 +258,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every odd hour.
+	 * Schedule the task to run every odd hour.
 	 *
 	 * @return $this
 	 */
@@ -212,7 +269,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every two hours.
+	 * Schedule the task to run every two hours.
 	 *
 	 * @return $this
 	 */
@@ -223,7 +280,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every three hours.
+	 * Schedule the task to run every three hours.
 	 *
 	 * @return $this
 	 */
@@ -234,7 +291,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every four hours.
+	 * Schedule the task to run every four hours.
 	 *
 	 * @return $this
 	 */
@@ -245,7 +302,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run every six hours.
+	 * Schedule the task to run every six hours.
 	 *
 	 * @return $this
 	 */
@@ -256,7 +313,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run daily.
+	 * Schedule the task to run daily.
 	 *
 	 * @return $this
 	 */
@@ -267,7 +324,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the command at a given time.
+	 * Schedule the task at a given time.
 	 *
 	 * @param string $time
 	 *
@@ -279,7 +336,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run daily at a given time (10:00, 19:30, etc).
+	 * Schedule the task to run daily at a given time (10:00, 19:30, etc).
 	 *
 	 * @param string $time
 	 *
@@ -294,7 +351,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run twice daily.
+	 * Schedule the task to run twice daily.
 	 *
 	 * @param int $first
 	 * @param int $second
@@ -307,7 +364,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run twice daily at a given offset.
+	 * Schedule the task to run twice daily at a given offset.
 	 *
 	 * @param int $first
 	 * @param int $second
@@ -324,7 +381,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run only on weekdays.
+	 * Schedule the task to run only on weekdays.
 	 *
 	 * @return $this
 	 */
@@ -334,7 +391,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run only on weekends.
+	 * Schedule the task to run only on weekends.
 	 *
 	 * @return $this
 	 */
@@ -344,7 +401,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run only on Mondays.
+	 * Schedule the task to run only on Mondays.
 	 *
 	 * @return $this
 	 */
@@ -354,7 +411,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run only on Tuesdays.
+	 * Schedule the task to run only on Tuesdays.
 	 *
 	 * @return $this
 	 */
@@ -364,7 +421,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run only on Wednesdays.
+	 * Schedule the task to run only on Wednesdays.
 	 *
 	 * @return $this
 	 */
@@ -374,7 +431,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run only on Thursdays.
+	 * Schedule the task to run only on Thursdays.
 	 *
 	 * @return $this
 	 */
@@ -384,7 +441,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run only on Fridays.
+	 * Schedule the task to run only on Fridays.
 	 *
 	 * @return $this
 	 */
@@ -394,7 +451,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run only on Saturdays.
+	 * Schedule the task to run only on Saturdays.
 	 *
 	 * @return $this
 	 */
@@ -404,7 +461,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run only on Sundays.
+	 * Schedule the task to run only on Sundays.
 	 *
 	 * @return $this
 	 */
@@ -414,7 +471,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run weekly.
+	 * Schedule the task to run weekly.
 	 *
 	 * @return $this
 	 */
@@ -426,14 +483,14 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run weekly on a given day and time.
+	 * Schedule the task to run weekly on a given day and time.
 	 *
 	 * @param array|mixed $dayOfWeek
 	 * @param string      $time
 	 *
 	 * @return $this
 	 */
-	public function weeklyOn(mixed $dayOfWeek, $time = '0:0'): self
+	public function weeklyOn(mixed $dayOfWeek, string $time = '0:0'): self
 	{
 		$this->dailyAt($time);
 
@@ -441,7 +498,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run monthly.
+	 * Schedule the task to run monthly.
 	 *
 	 * @return $this
 	 */
@@ -453,14 +510,14 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run monthly on a given day and time.
+	 * Schedule the task to run monthly on a given day and time.
 	 *
 	 * @param int    $dayOfMonth
 	 * @param string $time
 	 *
 	 * @return $this
 	 */
-	public function monthlyOn($dayOfMonth = 1, $time = '0:0'): self
+	public function monthlyOn(int $dayOfMonth = 1, string $time = '0:0'): self
 	{
 		$this->dailyAt($time);
 
@@ -468,7 +525,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run twice monthly at a given time.
+	 * Schedule the task to run twice monthly at a given time.
 	 *
 	 * @param int    $first
 	 * @param int    $second
@@ -476,7 +533,7 @@ final class Schedule implements Stringable
 	 *
 	 * @return $this
 	 */
-	public function twiceMonthly($first = 1, $second = 16, $time = '0:0'): self
+	public function twiceMonthly(int $first = 1, int $second = 16, string $time = '0:0'): self
 	{
 		$daysOfMonth = $first . ',' . $second;
 
@@ -486,13 +543,13 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run on the last day of the month.
+	 * Schedule the task to run on the last day of the month.
 	 *
 	 * @param string $time
 	 *
 	 * @return $this
 	 */
-	public function lastDayOfMonth($time = '0:0'): self
+	public function lastDayOfMonth(string $time = '0:0'): self
 	{
 		$this->dailyAt($time);
 
@@ -501,7 +558,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run quarterly.
+	 * Schedule the task to run quarterly.
 	 *
 	 * @return $this
 	 */
@@ -514,7 +571,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run quarterly on a given day and time.
+	 * Schedule the task to run quarterly on a given day and time.
 	 *
 	 * @param int|string $dayOfQuarter
 	 * @param string     $time
@@ -530,7 +587,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run yearly.
+	 * Schedule the task to run yearly.
 	 *
 	 * @return $this
 	 */
@@ -543,7 +600,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run yearly on a given month, day, and time.
+	 * Schedule the task to run yearly on a given month, day, and time.
 	 *
 	 * @param int|string $month
 	 * @param int|string $dayOfMonth
@@ -560,7 +617,7 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Set the days of the week the command should run on.
+	 * Set the days of the week the task should run on.
 	 *
 	 * @param array|mixed $days
 	 *
@@ -588,14 +645,28 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the event to run between start and end time.
+	 * Add runs predicate.
+	 *
+	 * @param callable $fn
+	 *
+	 * @return $this
+	 */
+	private function onlyIf(callable $fn): self
+	{
+		$this->only_if[] = $fn;
+
+		return $this;
+	}
+
+	/**
+	 * Schedule the task to run between start and end time.
 	 *
 	 * @param string $startTime
 	 * @param string $endTime
 	 *
 	 * @return Closure
 	 */
-	private function inTimeInterval(string $startTime, string $endTime): self
+	private function inTimeInterval(string $startTime, string $endTime): Closure
 	{
 		[$now, $start, $end] = [
 			Carbon::now($this->timezone),

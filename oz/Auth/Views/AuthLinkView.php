@@ -11,15 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Auth\Views;
+namespace OZONE\Core\Auth\Views;
 
-use OZONE\OZ\Auth\Auth;
-use OZONE\OZ\Auth\AuthScope;
-use OZONE\OZ\Auth\AuthSecretType;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
-use OZONE\OZ\Web\WebView;
+use OZONE\Core\Auth\Auth;
+use OZONE\Core\Auth\AuthSecretType;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
+use OZONE\Core\Web\WebView;
 
 /**
  * Class AuthLinkView.
@@ -29,20 +28,20 @@ final class AuthLinkView extends WebView
 	public const AUTH_LINK_ROUTE = 'oz:auth_link';
 
 	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Router\RouteInfo $ri
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
 	 */
 	public function authorize(RouteInfo $ri): Response
 	{
 		$ref   = $ri->getParam('ref');
 		$token = $ri->getParam('token');
-		$auth  = Auth::getRequiredByRef($ref);
+		$auth  = Auth::getRequired($ref);
 
-		$provider = Auth::getAuthProvider($auth->provider, $ri->getContext(), AuthScope::from($auth));
+		$provider = Auth::provider($ri->getContext(), $auth);
 
 		$provider->getCredentials()
 			->setReference($ref);

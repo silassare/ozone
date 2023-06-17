@@ -11,13 +11,13 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cache;
+namespace OZONE\Core\Cache;
 
 use DateInterval;
 use InvalidArgumentException;
-use OZONE\OZ\Cache\Interfaces\CacheProviderInterface;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Cache\Interfaces\CacheProviderInterface;
+use OZONE\Core\Exceptions\RuntimeException;
 
 /**
  * Class CacheManager.
@@ -25,7 +25,7 @@ use OZONE\OZ\Exceptions\RuntimeException;
 final class CacheManager
 {
 	/**
-	 * @var \OZONE\OZ\Cache\CacheManager[]
+	 * @var \OZONE\Core\Cache\CacheManager[]
 	 */
 	private static array $sharedCM = [];
 
@@ -34,7 +34,7 @@ final class CacheManager
 	/**
 	 * CacheManager constructor.
 	 *
-	 * @param \OZONE\OZ\Cache\Interfaces\CacheProviderInterface $cache
+	 * @param \OZONE\Core\Cache\Interfaces\CacheProviderInterface $cache
 	 */
 	private function __construct(CacheProviderInterface $cache)
 	{
@@ -90,7 +90,7 @@ final class CacheManager
 	/**
 	 * Set cache item.
 	 *
-	 * @param \OZONE\OZ\Cache\CacheItem $item
+	 * @param \OZONE\Core\Cache\CacheItem $item
 	 *
 	 * @return bool
 	 */
@@ -132,7 +132,7 @@ final class CacheManager
 	 * @param callable                $factory
 	 * @param null|DateInterval|float $lifetime
 	 *
-	 * @return \OZONE\OZ\Cache\CacheItem
+	 * @return \OZONE\Core\Cache\CacheItem
 	 */
 	public function factory(string $key, callable $factory, float|DateInterval|null $lifetime = null): CacheItem
 	{
@@ -152,7 +152,7 @@ final class CacheManager
 	 *
 	 * @param string $key
 	 *
-	 * @return \OZONE\OZ\Cache\CacheItem
+	 * @return \OZONE\Core\Cache\CacheItem
 	 */
 	public function getItem(string $key): CacheItem
 	{
@@ -172,7 +172,7 @@ final class CacheManager
 	 *
 	 * @param string[] $keys
 	 *
-	 * @return \OZONE\OZ\Cache\CacheItem[]
+	 * @return \OZONE\Core\Cache\CacheItem[]
 	 */
 	public function getItems(array $keys = []): array
 	{
@@ -250,11 +250,11 @@ final class CacheManager
 	 *
 	 * @param null|string $namespace
 	 *
-	 * @return \OZONE\OZ\Cache\CacheManager
+	 * @return \OZONE\Core\Cache\CacheManager
 	 */
 	public static function runtime(?string $namespace = null): self
 	{
-		$class_fqn = Configs::get('oz.cache', 'OZ_RUNTIME_CACHE_PROVIDER');
+		$class_fqn = Settings::get('oz.cache', 'OZ_RUNTIME_CACHE_PROVIDER');
 
 		return self::sharedInstance($class_fqn, $namespace);
 	}
@@ -264,11 +264,11 @@ final class CacheManager
 	 *
 	 * @param null|string $namespace
 	 *
-	 * @return \OZONE\OZ\Cache\CacheManager
+	 * @return \OZONE\Core\Cache\CacheManager
 	 */
 	public static function persistent(?string $namespace = null): self
 	{
-		$class_fqn = Configs::get('oz.cache', 'OZ_PERSISTENT_CACHE_PROVIDER');
+		$class_fqn = Settings::get('oz.cache', 'OZ_PERSISTENT_CACHE_PROVIDER');
 
 		return self::sharedInstance($class_fqn, $namespace);
 	}
@@ -279,7 +279,7 @@ final class CacheManager
 	 * @param string      $class_fqn
 	 * @param null|string $namespace
 	 *
-	 * @return \OZONE\OZ\Cache\CacheManager
+	 * @return \OZONE\Core\Cache\CacheManager
 	 */
 	private static function sharedInstance(string $class_fqn, ?string $namespace = null): self
 	{
@@ -314,7 +314,7 @@ final class CacheManager
 	/**
 	 * @param string $key
 	 *
-	 * @return \OZONE\OZ\Cache\CacheItem
+	 * @return \OZONE\Core\Cache\CacheItem
 	 */
 	private static function notFound(string $key): CacheItem
 	{

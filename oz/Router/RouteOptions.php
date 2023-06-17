@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router;
+namespace OZONE\Core\Router;
 
 /**
  * Class RouteOptions.
@@ -23,8 +23,8 @@ final class RouteOptions extends RouteSharedOptions
 	/**
 	 * RouteOptions constructor.
 	 *
-	 * @param string                           $path
-	 * @param null|\OZONE\OZ\Router\RouteGroup $group
+	 * @param string                             $path
+	 * @param null|\OZONE\Core\Router\RouteGroup $group
 	 */
 	public function __construct(
 		string $path,

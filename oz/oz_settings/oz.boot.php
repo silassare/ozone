@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-use OZONE\OZ\Auth\Auth;
-use OZONE\OZ\Hooks\MainBootHookReceiver;
-use OZONE\OZ\Sessions\Session;
+use OZONE\Core\Auth\Auth;
+use OZONE\Core\Hooks\MainBootHookReceiver;
+use OZONE\Core\Sessions\Session;
 
 return [
 	MainBootHookReceiver::class => true,

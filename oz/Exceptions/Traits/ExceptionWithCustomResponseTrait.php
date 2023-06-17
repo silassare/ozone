@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Exceptions\Traits;
+namespace OZONE\Core\Exceptions\Traits;
 
-use OZONE\OZ\Http\Response;
+use OZONE\Core\Http\Response;
 
 /**
  * Trait.
@@ -25,7 +25,7 @@ trait ExceptionWithCustomResponseTrait
 	/**
 	 * Gets custom response.
 	 *
-	 * @return null|\OZONE\OZ\Http\Response
+	 * @return null|\OZONE\Core\Http\Response
 	 */
 	public function getCustomResponse(): ?Response
 	{
@@ -35,7 +35,7 @@ trait ExceptionWithCustomResponseTrait
 	/**
 	 * Sets custom response.
 	 *
-	 * @param \OZONE\OZ\Http\Response $response
+	 * @param \OZONE\Core\Http\Response $response
 	 *
 	 * @return static
 	 */

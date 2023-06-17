@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace OZONE\Core\Cli\Cron\Tasks;
+
+use OZONE\Core\Cli\Process;
+
+/**
+ * Class CommandTask.
+ */
+class CommandTask extends AbstractTask
+{
+	protected string $command;
+
+	/**
+	 * CommandTask constructor.
+	 *
+	 * @param string $name
+	 * @param string $command
+	 * @param string $description
+	 */
+	public function __construct(string $name, string $command, string $description = '')
+	{
+		parent::__construct($name, $description);
+
+		$this->command = $command;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function run(): void
+	{
+		Process::run($this->command, $this->shouldRunInBackground());
+	}
+}

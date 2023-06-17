@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router;
+namespace OZONE\Core\Router;
 
 /**
  * Class RouteGroup.

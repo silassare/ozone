@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Users\Events;
+namespace OZONE\Core\Users\Events;
 
-use OZONE\OZ\Db\OZUser;
+use OZONE\Core\Db\OZUser;
 use PHPUtils\Events\Event;
 
 /**
@@ -24,7 +24,7 @@ final class UserLoggedIn extends Event
 	}
 
 	/**
-	 * @return \OZONE\OZ\Db\OZUser
+	 * @return \OZONE\Core\Db\OZUser
 	 */
 	public function getUser(): OZUser
 	{

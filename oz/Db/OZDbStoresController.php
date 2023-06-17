@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db;
+namespace OZONE\Core\Db;
 
 /**
  * Class OZDbStoresController.
  */
-class OZDbStoresController extends \OZONE\OZ\Db\Base\OZDbStoresController
+class OZDbStoresController extends \OZONE\Core\Db\Base\OZDbStoresController
 {
 	// ====================================================
 	// =	Your custom implementation goes here

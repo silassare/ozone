@@ -11,7 +11,4 @@
 
 declare(strict_types=1);
 
-const OZ_TEST               = 1;
 const OZ_LOG_EXECUTION_TIME = 1;
-
-require_once \dirname(__DIR__) . '/oz/index.php';

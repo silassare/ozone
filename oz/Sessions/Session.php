@@ -11,23 +11,22 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Sessions;
+namespace OZONE\Core\Sessions;
 
-use OZONE\OZ\Cache\CacheManager;
-use OZONE\OZ\Core\ClientHelper;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\Db\OZClient;
-use OZONE\OZ\Db\OZSession;
-use OZONE\OZ\Db\OZSessionsQuery;
-use OZONE\OZ\Db\OZUser;
-use OZONE\OZ\Exceptions\ForbiddenException;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Hooks\Events\FinishHook;
-use OZONE\OZ\Hooks\Events\ResponseHook;
-use OZONE\OZ\Hooks\Interfaces\BootHookReceiverInterface;
-use OZONE\OZ\Http\Cookies;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Keys;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Db\OZSession;
+use OZONE\Core\Db\OZSessionsQuery;
+use OZONE\Core\Db\OZUser;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Hooks\Events\FinishHook;
+use OZONE\Core\Hooks\Events\ResponseHook;
+use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Http\Cookies;
+use OZONE\Core\OZone;
+use OZONE\Core\Utils\Random;
 use PHPUtils\Events\Event;
 use Throwable;
 
@@ -36,17 +35,13 @@ use Throwable;
  */
 final class Session implements BootHookReceiverInterface
 {
-	public const SESSION_ID_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
+	private const SESSION_ID_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
 
-	public const SESSION_TOKEN_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
+	private string $request_source_key;
 
-	private ?OZClient $client = null;
-
-	private ?SessionDataStore $store = null;
+	private ?SessionState $state = null;
 
 	private ?OZSession $sess_entry = null;
-
-	private string $cookie_name;
 
 	private bool $started = false;
 
@@ -55,11 +50,11 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Session constructor.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
+	 * @param \OZONE\Core\App\Context $context
 	 */
 	public function __construct(protected Context $context)
 	{
-		$this->cookie_name = Configs::get('oz.config', 'OZ_API_SESSION_ID_NAME');
+		$this->request_source_key = $this->context->getUserIP();
 	}
 
 	/**
@@ -67,19 +62,47 @@ final class Session implements BootHookReceiverInterface
 	 */
 	public function __destruct()
 	{
-		unset($this->context, $this->client, $this->store, $this->sess_entry);
+		unset($this->context, $this->state, $this->sess_entry);
 	}
 
 	/**
-	 * Returns request client.
+	 * Returns session lifetime in seconds from settings.
 	 *
-	 * @return \OZONE\OZ\Db\OZClient
+	 * @return int
 	 */
-	public function getClient(): OZClient
+	public static function lifetime(): int
+	{
+		return (int) Settings::get('oz.sessions', 'OZ_SESSION_LIFE_TIME');
+	}
+
+	/**
+	 * Returns session cookie name from setting.
+	 */
+	public static function cookieName(): string
+	{
+		return Settings::get('oz.sessions', 'OZ_SESSION_COOKIE_NAME');
+	}
+
+	/**
+	 * Returns session attached user ID.
+	 */
+	public function attachedUserID(): ?string
 	{
 		$this->assertSessionStarted();
 
-		return $this->client;
+		return $this->sess_entry->getUserID();
+	}
+
+	/**
+	 * Returns session ID.
+	 *
+	 * @return string
+	 */
+	public function id(): string
+	{
+		$this->assertSessionStarted();
+
+		return $this->sess_entry->getID();
 	}
 
 	/**
@@ -96,33 +119,24 @@ final class Session implements BootHookReceiverInterface
 	 * Start the session.
 	 *
 	 * @return $this
-	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
-	public function start(): self
+	public function start(?string $session_id = null): self
 	{
-		if (!$this->client) {
-			$this->init();
+		if ($session_id) {
+			$this->sess_entry = self::findSessionByID($session_id);
 		}
 
 		if (!$this->sess_entry) {
-			$sid   = Hasher::genSessionID();
-			$token = Hasher::genSessionToken();
+			$sid = Keys::newSessionID();
 
 			$this->sess_entry = new OZSession();
 			$this->sess_entry->setID($sid)
-				->setClientID($this->client->getID())
-				->setToken($token);
+				->setRequestSourceKey($this->request_source_key);
 		}
 
-		$this->store         = SessionDataStore::getInstance($this->sess_entry);
+		$this->state         = SessionState::getInstance($this->sess_entry);
 		$this->started       = true;
 		$this->delete_cookie = false;
-
-		if ($this->client->getUserID()) {
-			$this->context->getUsersManager()
-				->tryLogOnAsApiClientOwner();
-		}
 
 		return $this;
 	}
@@ -131,8 +145,6 @@ final class Session implements BootHookReceiverInterface
 	 * Restart the session.
 	 *
 	 * @return $this
-	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
 	 */
 	public function restart(): self
 	{
@@ -152,11 +164,11 @@ final class Session implements BootHookReceiverInterface
 		$this->assertSessionStarted();
 
 		if (!$this->sess_entry->isNew()) {
-			self::removeSession($this->sess_entry->getID());
+			self::delete($this->sess_entry->getID());
 		}
 
 		$this->sess_entry    = null;
-		$this->store         = null;
+		$this->state         = null;
 		$this->started       = false;
 		$this->delete_cookie = true;
 
@@ -166,7 +178,7 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Attach user to this session.
 	 *
-	 * @param \OZONE\OZ\Db\OZUser $user
+	 * @param \OZONE\Core\Db\OZUser $user
 	 *
 	 * @return $this
 	 */
@@ -189,20 +201,6 @@ final class Session implements BootHookReceiverInterface
 			]);
 		}
 
-		$client          = $this->sess_entry->getClient();
-		$client_owner_id = $client?->getUserID();
-
-		if ($client_owner_id && $client_owner_id !== $uid) {
-			throw new RuntimeException('OZ_SESSION_PRIVATE_CLIENT_API_KEY_USED_CANT_ATTACH_ANOTHER_USER', [
-				'user_id'     => $uid,
-				'_session_id' => $sid,
-				'_owner'      => [
-					'client_id'       => $sid,
-					'client_owner_id' => $client_owner_id,
-				],
-			]);
-		}
-
 		$this->sess_entry->setUserID($uid);
 
 		return $this;
@@ -211,13 +209,13 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Gets the session data store.
 	 *
-	 * @return \OZONE\OZ\Sessions\SessionDataStore
+	 * @return \OZONE\Core\Sessions\SessionState
 	 */
-	public function getDataStore(): SessionDataStore
+	public function state(): SessionState
 	{
 		$this->assertSessionStarted();
 
-		return $this->store;
+		return $this->state;
 	}
 
 	/**
@@ -226,9 +224,11 @@ final class Session implements BootHookReceiverInterface
 	public static function boot(): void
 	{
 		ResponseHook::handle(static function (ResponseHook $ev) {
-			$ev->getContext()
-				->getSession()
-				->responseReady();
+			$context = $ev->getContext();
+			if ($context->hasSession()) {
+				$context->session()
+					->responseReady();
+			}
 		}, Event::RUN_LAST);
 
 		FinishHook::handle(static function () {
@@ -237,115 +237,13 @@ final class Session implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Initialize session.
-	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 */
-	private function init(): void
-	{
-		$request = $this->context->getRequest();
-
-		// 1) if we have a cookie, we deal with it and only with it
-		//    - if the cookie is not valid ignore any other method
-		// 2) else we can use token header if enabled and provided
-
-		$sid = $request->getCookieParam($this->cookie_name);
-
-		if ($sid) {
-			$this->sess_entry = self::loadWithSessionID($sid);
-		} elseif (Configs::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_ENABLED')) {
-			$token_header_name = Configs::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_NAME');
-			$token             = $request->getHeaderLine($token_header_name);
-
-			$this->sess_entry = self::loadWithSessionToken($token);
-		}
-
-		$client = null;
-
-		if ($api_key = ClientHelper::getApiKey($request)) {
-			$client = ClientHelper::getClientWithApiKey($api_key);
-
-			if (!$client) {
-				throw new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID', [
-					'url'     => (string) $request->getUri(),
-					'api_key' => $api_key,
-				]);
-			}
-		} elseif ($this->sess_entry) {
-			$client = $this->sess_entry->getClient();
-		}
-
-		if (!$client) {
-			throw new ForbiddenException('OZ_API_CLIENT_IS_REQUIRED');
-		}
-
-		if (!$client->isValid()) {
-			throw new ForbiddenException('OZ_YOUR_API_CLIENT_IS_DISABLED', [
-				'_url'     => (string) $request->getUri(),
-				'_api_key' => $api_key,
-			]);
-		}
-
-		if ($this->sess_entry && $this->sess_entry->getClientID() !== $client->getID()) {
-			throw new ForbiddenException(null, [
-				'_reason'                 => 'The current api client is trying to use a session ID started with another api client.',
-				'_session_id'             => $this->sess_entry->getID(),
-				'_expected_api_client_id' => $this->sess_entry->getClientID(),
-				'_api_client_id'          => $client->getID(),
-			]);
-		}
-
-		$this->client = $client;
-	}
-
-	/**
-	 * Response ready hook.
-	 */
-	private function responseReady(): void
-	{
-		$response = $this->context->getResponse();
-
-		if ($this->started) {
-			$this->save();
-			$params          = $this->getCookieParams();
-			$params['value'] = $this->sess_entry->getID();
-			$cookie          = new Cookies();
-			$cookie->set($this->cookie_name, $params);
-
-			$response = $response->withHeader('Set-Cookie', $cookie->toHeaders());
-		}
-
-		if ($this->delete_cookie) {
-			$params            = $this->getCookieParams();
-			$params['expires'] = \time() - 86400;
-			$params['value']   = '';
-			$cookie            = new Cookies();
-			$cookie->set($this->cookie_name, $params);
-
-			$response = $response->withHeader('Set-Cookie', $cookie->toHeaders());
-		}
-
-		$this->context->setResponse($response);
-	}
-
-	/**
-	 * Assert if the session started.
-	 */
-	private function assertSessionStarted(): void
-	{
-		if (!$this->started || !isset($this->sess_entry, $this->store, $this->client)) {
-			throw new RuntimeException('OZ_SESSION_NOT_STARTED');
-		}
-	}
-
-	/**
-	 * Load session from database.
+	 * Find session by ID.
 	 *
 	 * @param string $sid
 	 *
 	 * @return null|OZSession
 	 */
-	private static function loadWithSessionID(string $sid): ?OZSession
+	public static function findSessionByID(string $sid): ?OZSession
 	{
 		if (!self::isSessionIdLike($sid)) {
 			return null;
@@ -365,7 +263,7 @@ final class Session implements BootHookReceiverInterface
 					return $item;
 				}
 			} catch (Throwable $t) {
-				throw new RuntimeException('OZ_SESSION_UNABLE_TO_LOAD_WITH_ID', ['_session_id' => $sid], $t);
+				throw new RuntimeException('Unable to load session with session ID.', ['_session_id' => $sid], $t);
 			}
 
 			return null;
@@ -377,45 +275,44 @@ final class Session implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Load session from database.
-	 *
-	 * @param string $token
-	 *
-	 * @return null|OZSession
+	 * Response ready hook.
 	 */
-	private static function loadWithSessionToken(string $token): ?OZSession
+	private function responseReady(): void
 	{
-		if (!self::isSessionTokenLike($token)) {
-			return null;
+		$response    = $this->context->getResponse();
+		$cookie_name = self::cookieName();
+
+		if ($this->started) {
+			$this->save();
+			$params          = $this->getCookieParams();
+			$params['value'] = $this->sess_entry->getID();
+			$cookie          = new Cookies();
+			$cookie->set($cookie_name, $params);
+
+			$response = $response->withHeader('Set-Cookie', $cookie->toHeaders());
 		}
 
-		$factory = function () use ($token) {
-			try {
-				$s_table = new OZSessionsQuery();
+		if ($this->delete_cookie) {
+			$params            = $this->getCookieParams();
+			$params['expires'] = \time() - 86400;
+			$params['value']   = '';
+			$cookie            = new Cookies();
+			$cookie->set($cookie_name, $params);
 
-				$result = $s_table->whereTokenIs($token)
-					->whereIsValid()
-					->find(1);
+			$response = $response->withHeader('Set-Cookie', $cookie->toHeaders());
+		}
 
-				$item = $result->fetchClass();
+		$this->context->setResponse($response);
+	}
 
-				if ($item && $item->getExpire() > \time()) {
-					return $item;
-				}
-			} catch (Throwable $t) {
-				throw new RuntimeException(
-					'OZ_SESSION_UNABLE_TO_LOAD_WITH_TOKEN',
-					['_session_token' => $token],
-					$t
-				);
-			}
-
-			return null;
-		};
-
-		return CacheManager::runtime(__METHOD__)
-			->factory($token, $factory)
-			->get();
+	/**
+	 * Assert if the session started.
+	 */
+	private function assertSessionStarted(): void
+	{
+		if (!$this->started || !isset($this->sess_entry, $this->state, $this->client)) {
+			throw new RuntimeException('Session not yet started.');
+		}
 	}
 
 	/**
@@ -426,9 +323,9 @@ final class Session implements BootHookReceiverInterface
 		$sid = $this->sess_entry->getID();
 
 		try {
-			$expire = (\time() + ((int) $this->client->getSessionLifeTime()));
+			$expire = \time() + self::lifetime();
 
-			$data = $this->store->getData();
+			$data = $this->state->getData();
 
 			$this->sess_entry->setData($data)
 				->setExpire($expire)
@@ -436,7 +333,7 @@ final class Session implements BootHookReceiverInterface
 				->setUpdatedAT(\time())
 				->save();
 		} catch (Throwable $t) {
-			throw new RuntimeException('OZ_SESSION_SAVING_FAILED', ['_session_id' => $sid], $t);
+			throw new RuntimeException('Unable to save session.', ['_session_id' => $sid], $t);
 		}
 	}
 
@@ -447,16 +344,16 @@ final class Session implements BootHookReceiverInterface
 	 */
 	private function getCookieParams(): array
 	{
-		$cfg_domain   = Configs::get('oz.cookie', 'OZ_COOKIE_DOMAIN');
-		$cfg_path     = Configs::get('oz.cookie', 'OZ_COOKIE_PATH');
-		$cfg_lifetime = Configs::get('oz.cookie', 'OZ_COOKIE_LIFETIME');
-		$samesite     = Configs::get('oz.cookie', 'OZ_COOKIE_SAMESITE');
+		$cfg_domain   = Settings::get('oz.cookie', 'OZ_COOKIE_DOMAIN');
+		$cfg_path     = Settings::get('oz.cookie', 'OZ_COOKIE_PATH');
+		$cfg_lifetime = Settings::get('oz.cookie', 'OZ_COOKIE_LIFETIME');
+		$samesite     = Settings::get('oz.cookie', 'OZ_COOKIE_SAMESITE');
 
 		$context  = $this->context;
 		$request  = $context->getRequest();
 		$uri      = $request->getUri();
 		$secure   = 'https' === $uri->getScheme();
-		$lifetime = \max($cfg_lifetime, $this->client->getSessionLifeTime());
+		$lifetime = \max($cfg_lifetime, self::lifetime());
 		$domain   = (empty($cfg_domain) || 'self' === $cfg_domain) ? $context->getHost() : $cfg_domain;
 		$path     = (empty($cfg_path) || 'self' === $cfg_path) ? $uri->getBasePath() : $cfg_path;
 
@@ -466,7 +363,7 @@ final class Session implements BootHookReceiverInterface
 			'expires'  => \time() + $lifetime,
 			'path'     => $path,
 			'domain'   => $domain,
-			'httponly' => true,
+			'httponly' => true, // prevent access from javascript
 			'secure'   => $secure,
 			'samesite' => $samesite, // None, Lax or Strict
 		];
@@ -477,13 +374,15 @@ final class Session implements BootHookReceiverInterface
 	 */
 	private static function gc(): void
 	{
-		try {
-			$s_table = new OZSessionsQuery();
-			$s_table->whereExpireIsLte(\time())
-				->delete()
-				->execute();
-		} catch (Throwable $t) {
-			throw new RuntimeException('OZ_SESSION_EXPIRED_DELETION_FAILED', null, $t);
+		if (Random::bool() && OZone::hasDbAccess()) {
+			try {
+				$s_table = new OZSessionsQuery();
+				$s_table->whereExpireIsLte(\time())
+					->delete()
+					->execute();
+			} catch (Throwable $t) {
+				throw new RuntimeException('Unable to delete expired session.', null, $t);
+			}
 		}
 	}
 
@@ -500,23 +399,11 @@ final class Session implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Checks for session token string.
-	 *
-	 * @param mixed $value
-	 *
-	 * @return bool
-	 */
-	private static function isSessionTokenLike(mixed $value): bool
-	{
-		return \is_string($value) && \preg_match(self::SESSION_TOKEN_REG, $value);
-	}
-
-	/**
-	 * Remove session from database.
+	 * Delete session from database.
 	 *
 	 * @param string $sid
 	 */
-	private static function removeSession(string $sid): void
+	private static function delete(string $sid): void
 	{
 		try {
 			$s_table = new OZSessionsQuery();
@@ -525,7 +412,7 @@ final class Session implements BootHookReceiverInterface
 				->delete()
 				->execute();
 		} catch (Throwable $t) {
-			throw new RuntimeException('OZ_SESSION_REMOVE_FAILED', ['_session_id' => $sid], $t);
+			throw new RuntimeException('OZ_SESSION_DELETION_FAILED', ['_session_id' => $sid], $t);
 		}
 	}
 }

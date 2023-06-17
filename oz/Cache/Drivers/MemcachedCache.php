@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cache\Drivers;
+namespace OZONE\Core\Cache\Drivers;
 
 use Memcached;
-use OZONE\OZ\Cache\CacheItem;
-use OZONE\OZ\Cache\Interfaces\CacheProviderInterface;
-use OZONE\OZ\Core\Hasher;
+use OZONE\Core\Cache\CacheItem;
+use OZONE\Core\Cache\Interfaces\CacheProviderInterface;
+use OZONE\Core\Utils\Hasher;
 use RuntimeException;
 
 if (!\class_exists('\Memcached')) {

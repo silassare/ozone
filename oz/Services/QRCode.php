@@ -11,44 +11,43 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Services;
+namespace OZONE\Core\Services;
 
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\Core\Service;
-use OZONE\OZ\Exceptions\NotFoundException;
-use OZONE\OZ\Http\Body;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Http\Uri;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Service;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Http\Body;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Http\Uri;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
+use OZONE\Core\Utils\Hasher;
 
 /**
  * Class QRCode.
  */
 final class QRCode extends Service
 {
-	public const QR_CODE_KEY   = 'oz_qr_code_key';
+	public const QR_CODE_KEY = 'oz_qr_code_key';
 
 	public const QR_CODE_ROUTE = 'oz:qr-code';
 
 	/**
 	 * Gets qr-code image uri.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $data
-	 * @param int                    $expire_at
+	 * @param \OZONE\Core\App\Context $context
+	 * @param string                  $data
+	 * @param int                     $expire_at
 	 *
-	 * @return \OZONE\OZ\Http\Uri the qr-code info
+	 * @return \OZONE\Core\Http\Uri the qr-code info
 	 */
 	public static function buildQrCodeUri(Context $context, string $data, int $expire_at): Uri
 	{
 		$qr_code_key = Hasher::hash32();
 
-		$context->getSession()
-			->getDataStore()
-			->set('qr_code_cfg.' . $qr_code_key, [
+		$context->requireState()
+			->set('oz.qr_code_cfg.' . $qr_code_key, [
 				'expire_at' => $expire_at,
 				'data'      => $data,
 			]);
@@ -61,19 +60,19 @@ final class QRCode extends Service
 	/**
 	 * Returns a response with the qrcode image.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $qr_code_key
+	 * @param \OZONE\Core\App\Context $context
+	 * @param string                  $qr_code_key
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
 	 */
 	public static function generateQrCodeImage(Context $context, string $qr_code_key): Response
 	{
-		$response      = $context->getResponse();
-		$session       = $context->getSession();
-		$key           = 'qr_code_cfg.' . $qr_code_key;
-		$data          = $session->getDataStore()->get($key);
+		$response = $context->getResponse();
+		$key      = 'oz.qr_code_cfg.' . $qr_code_key;
+		$data     = $context->requireState()
+			->get($key);
 
 		if (empty($data)) {
 			throw new NotFoundException();
@@ -102,10 +101,12 @@ final class QRCode extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$route_path = Configs::get('oz.paths', 'OZ_QR_CODE_ROUTE_PATH');
+		$route_path = Settings::get('oz.paths', 'OZ_QR_CODE_ROUTE_PATH');
 
 		$router->get($route_path, function (RouteInfo $ri) {
 			return self::generateQrCodeImage($ri->getContext(), $ri->getParam(self::QR_CODE_KEY));
-		})->name(self::QR_CODE_ROUTE)->param(self::QR_CODE_KEY, '[a-z0-9]{32}');
+		})
+			->name(self::QR_CODE_ROUTE)
+			->param(self::QR_CODE_KEY, '[a-z0-9]{32}');
 	}
 }

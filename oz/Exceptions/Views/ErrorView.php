@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Exceptions\Views;
+namespace OZONE\Core\Exceptions\Views;
 
-use OZONE\OZ\Exceptions\BaseException;
-use OZONE\OZ\Exceptions\InternalErrorException;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Web\WebView;
+use OZONE\Core\Exceptions\BaseException;
+use OZONE\Core\Exceptions\InternalErrorException;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Web\WebView;
 
 /**
  * Class ErrorView.
@@ -24,9 +24,9 @@ use OZONE\OZ\Web\WebView;
 final class ErrorView extends WebView
 {
 	/**
-	 * @param \OZONE\OZ\Exceptions\BaseException $error
+	 * @param \OZONE\Core\Exceptions\BaseException $error
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 */
 	public function renderError(BaseException $error): Response
 	{
@@ -34,7 +34,7 @@ final class ErrorView extends WebView
 		$request        = $context->getRequest();
 		$masked_message = BaseException::anErrorOccurredMessage();
 
-		$back_url    = $context->getMainUrl();
+		$back_url    = $context->getDefaultOrigin();
 		$err_message = ($error instanceof InternalErrorException ? $masked_message : $error->getMessage());
 		$err_data    = $error->getData();
 		$status      = $error->getHTTPStatusCode();

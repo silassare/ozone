@@ -4,18 +4,6 @@ AddDefaultCharset UTF-8
 #
 Options -Indexes -Multiviews +FollowSymlinks
 
-# disable access to /app/*
-#
-RedirectMatch 403 ^/app/.*$
-
-# disable access to /oz/*
-#
-RedirectMatch 403 ^/oz/.*$
-
-# disable access to /oz_private/*
-#
-RedirectMatch 403 ^/oz_private/.*$
-
 # disable access to /debug.log
 #
 <Files /debug.log>
@@ -33,6 +21,11 @@ RedirectMatch 403 ^/oz_private/.*$
 #
 <IfModule mod_rewrite.c>
 	RewriteEngine on
+
+	# Authorization Header
+	#
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 	RewriteCond %{REQUEST_URI}  !^/index\.php
 	RewriteCond %{REQUEST_URI}  !^/robots\.txt

@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cli;
+namespace OZONE\Core\Cli;
 
-use OZONE\OZ\Cli\Utils\Utils;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\FS\FilesManager;
+use OZONE\Core\Cli\Utils\Utils;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\FS\FilesManager;
 
 /**
  * Class Process.
@@ -58,7 +58,7 @@ final class Process
 	private mixed $tmp_stderr = null;
 
 	/**
-	 * @var \OZONE\OZ\FS\FilesManager
+	 * @var \OZONE\Core\FS\FilesManager
 	 */
 	private FilesManager $fm;
 
@@ -103,13 +103,13 @@ final class Process
 	 *
 	 * @return $this
 	 */
-	public function open(): self
+	public function open(bool $in_background = false): self
 	{
 		$this->assertNoOpenedProcess(__METHOD__);
 
 		$options = [];
 		$command = Utils::getPlatform()
-			->format($this->command);
+			->format($this->command, $in_background);
 
 		if (Utils::isDOS()) {
 			$options['bypass_shell'] = true;
@@ -405,6 +405,19 @@ final class Process
 		}
 
 		return $this->status;
+	}
+
+	/**
+	 * Run a command.
+	 *
+	 * @param string $command
+	 * @param bool   $in_background
+	 *
+	 * @return Process
+	 */
+	public static function run(string $command, bool $in_background = false): self
+	{
+		return (new self($command))->open($in_background);
 	}
 
 	/**

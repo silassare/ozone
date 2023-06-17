@@ -11,14 +11,8 @@ server {
 
 	server_name www.example.com example.com;
 
-	root /var/www/example/www;
+	root /var/www/example/public/www;
 	index index.php;
-
-	# disable access to /oz_private/*
-	#
-	location ^~ /oz_private {
-		deny all;
-	}
 
 	# disable access to debug.log
 	#

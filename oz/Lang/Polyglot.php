@@ -11,19 +11,18 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Lang;
+namespace OZONE\Core\Lang;
 
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Exceptions\RuntimeException;
-use Throwable;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\RuntimeException;
 
 /**
  * Class Polyglot.
  */
 final class Polyglot
 {
-	public const CLIENT_LANG_SESSION_KEY = 'ozone.polyglot.favorite';
+	public const CLIENT_LANG_SESSION_KEY = 'oz.polyglot.favorite';
 
 	public const ACCEPT_LANGUAGE_REG = '~([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.\d+))?~i';
 
@@ -56,33 +55,29 @@ final class Polyglot
 	/**
 	 * Gets language to use.
 	 *
-	 * @param null|\OZONE\OZ\Core\Context $context
+	 * @param null|\OZONE\Core\App\Context $context
 	 *
 	 * @return string
 	 */
 	public static function getLanguage(Context $context = null): string
 	{
 		if ($context) {
-			try {
-				$sds       = $context->getSession()
-					->getDataStore();
-				$user_lang = $sds->get(self::CLIENT_LANG_SESSION_KEY);
+			$state = $context->state();
 
-				if (!empty($user_lang)) {
-					return $user_lang;
-				}
+			$user_lang = $state?->get(self::CLIENT_LANG_SESSION_KEY);
 
-				$accept_language = $context->getRequest()
-					->getHeaderLine('HTTP_ACCEPT_LANGUAGE');
-				$browser         = self::parseBrowserLanguage($accept_language);
+			if (!empty($user_lang)) {
+				return $user_lang;
+			}
 
-				if (!empty($browser['advice'])) {
-					$sds->set(self::CLIENT_LANG_SESSION_KEY, $browser['advice']);
+			$accept_language = $context->getRequest()
+				->getHeaderLine('HTTP_ACCEPT_LANGUAGE');
+			$browser         = self::parseBrowserLanguage($accept_language);
 
-					return $browser['advice'];
-				}
-			} catch (Throwable) {
-				// session not started
+			if (!empty($browser['advice'])) {
+				$state?->set(self::CLIENT_LANG_SESSION_KEY, $browser['advice']);
+
+				return $browser['advice'];
 			}
 		}
 
@@ -92,8 +87,8 @@ final class Polyglot
 	/**
 	 * Sets user preferred language.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $lang
+	 * @param \OZONE\Core\App\Context $context
+	 * @param string                  $lang
 	 *
 	 * @return bool
 	 */
@@ -102,9 +97,8 @@ final class Polyglot
 		$list = self::getEnabledLanguages();
 
 		if (isset($list[$lang])) {
-			$context->getSession()
-				->getDataStore()
-				->set(self::CLIENT_LANG_SESSION_KEY, $lang);
+			$context->state()
+				?->set(self::CLIENT_LANG_SESSION_KEY, $lang);
 
 			return true;
 		}
@@ -125,10 +119,10 @@ final class Polyglot
 	 * Polyglot::translate('MY_LANG_KEY', $data, 'fr');
 	 * ```
 	 *
-	 * @param string                      $key     the human readable text key
-	 * @param array                       $inject  data to use for replacement
-	 * @param null|string                 $lang    use a specific lang
-	 * @param null|\OZONE\OZ\Core\Context $context the context
+	 * @param string                       $key     the human readable text key
+	 * @param array                        $inject  data to use for replacement
+	 * @param null|string                  $lang    use a specific lang
+	 * @param null|\OZONE\Core\App\Context $context the context
 	 *
 	 * @return string human readable text or null if none found
 	 */
@@ -168,7 +162,7 @@ final class Polyglot
 	 */
 	public static function getAvailableLanguages(): array
 	{
-		return Configs::load('lang/oz.lang.list');
+		return Settings::load('lang/oz.lang.list');
 	}
 
 	/**
@@ -178,7 +172,7 @@ final class Polyglot
 	 */
 	public static function getDefaultLanguage(): string
 	{
-		return Configs::get('lang/oz.lang.list', 'default');
+		return Settings::get('lang/oz.lang.list', 'default');
 	}
 
 	/**
@@ -350,11 +344,11 @@ final class Polyglot
 	private static function getI18n(string $i18n_key, string $lang, array $history = []): mixed
 	{
 		// for 'fr-bj' lang settings should be 'lang/oz.fr-bj'
-		$text = Configs::get('lang/oz.' . $lang, $i18n_key);
+		$text = Settings::get('lang/oz.' . $lang, $i18n_key);
 
 		if (null === $text) {
 			$default = self::getDefaultLanguage();
-			$text    = Configs::get('lang/oz.' . $default, $i18n_key);
+			$text    = Settings::get('lang/oz.' . $default, $i18n_key);
 		}
 
 		// could be string or array or anything else

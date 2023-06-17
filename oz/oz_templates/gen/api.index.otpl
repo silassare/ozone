@@ -1,0 +1,22 @@
+<?php
+declare(strict_types=1);
+
+<%@import('gen.info.otpl',$)%>
+use OZONE\Core\OZone;
+
+//= Don't forget to use DS instead of \ or / and
+//= always add the last DS to your directories path
+if (!\defined('DS')) {
+	\define('DS', \DIRECTORY_SEPARATOR);
+}
+
+//= Logs directory
+if (!\defined('OZ_LOG_DIR')) {
+	\define('OZ_LOG_DIR', __DIR__ . DS);
+}
+
+//= Require boot file
+require_once __DIR__ . DS . '..' . DS . '..' . DS . 'app' . DS . 'boot.php';
+
+//= Run application
+OZone::run(require OZ_APP_DIR . 'app.php');

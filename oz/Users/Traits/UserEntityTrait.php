@@ -11,12 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Users\Traits;
+namespace OZONE\Core\Users\Traits;
 
-use OZONE\OZ\Crypt\DoCrypt;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Users\Events\UserCreated;
-use OZONE\OZ\Users\UsersManager;
+use OZONE\Core\Auth\AuthAccessRights;
+use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
+use OZONE\Core\Crypt\Password;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Users\Events\UserCreated;
+use OZONE\Core\Users\Users;
 use PHPUtils\Events\Event;
 
 /**
@@ -44,18 +46,17 @@ trait UserEntityTrait
 			}
 		}
 
-		$crypt = new DoCrypt();
-		$pass  = $this->getPass();
+		$pass = $this->getPass();
 
-		// we should not store unencrypted password
-		if (!$crypt->isHash($pass)) {
-			$pass = $crypt->passHash($pass);
+		// we should not store non-hashed password
+		if (!Password::isHash($pass)) {
+			$pass = Password::hash($pass);
 			$this->setPass($pass);
 
 			// when user password change, force login again
 			// on all sessions associated with user
 			if ($this->getID()) {
-				UsersManager::forceUserLogoutOnActiveSessions($this);
+				Users::forceUserLogoutOnAllActiveSessions($this->getID());
 			}
 		}
 
@@ -78,5 +79,34 @@ trait UserEntityTrait
 		$arr[self::COL_PASS] = null;
 
 		return $arr;
+	}
+
+	/**
+	 * Gets user access rights.
+	 *
+	 * @return \OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface
+	 */
+	public function getAccessRights(): AuthAccessRightsInterface
+	{
+		$data   = $this->getData();
+		$rights = $data['access_rights'] ?? [];
+
+		return new AuthAccessRights($rights);
+	}
+
+	/**
+	 * Sets user access rights.
+	 *
+	 * @param \OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface $rights
+	 *
+	 * @return \OZONE\Core\Db\OZUser|\OZONE\Core\Users\Traits\UserEntityTrait
+	 */
+	public function setAccessRights(AuthAccessRightsInterface $rights): self
+	{
+		$data                  = $this->getData();
+		$data['access_rights'] = $rights->getOptions();
+		$this->setData($data);
+
+		return $this;
 	}
 }

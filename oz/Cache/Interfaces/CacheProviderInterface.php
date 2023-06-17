@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cache\Interfaces;
+namespace OZONE\Core\Cache\Interfaces;
 
-use OZONE\OZ\Cache\CacheItem;
+use OZONE\Core\Cache\CacheItem;
 
 /**
  * Interface CacheProviderInterface.
@@ -25,7 +25,7 @@ interface CacheProviderInterface
 	 *
 	 * @param string $key
 	 *
-	 * @return null|\OZONE\OZ\Cache\CacheItem
+	 * @return null|\OZONE\Core\Cache\CacheItem
 	 */
 	public function get(string $key): ?CacheItem;
 
@@ -34,14 +34,14 @@ interface CacheProviderInterface
 	 *
 	 * @param string[] $keys
 	 *
-	 * @return \OZONE\OZ\Cache\CacheItem[]
+	 * @return \OZONE\Core\Cache\CacheItem[]
 	 */
 	public function getMultiple(array $keys): array;
 
 	/**
 	 * Add or update a new cache entry.
 	 *
-	 * @param \OZONE\OZ\Cache\CacheItem $item
+	 * @param \OZONE\Core\Cache\CacheItem $item
 	 *
 	 * @return bool
 	 */

@@ -11,18 +11,17 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Forms;
+namespace OZONE\Core\Forms;
 
 use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\TypeDate;
-use OZONE\OZ\Core\DbManager;
-use OZONE\OZ\CSRF\CSRF;
-use OZONE\OZ\Exceptions\InvalidFormException;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Http\Request;
-use OZONE\OZ\Http\Uri;
-use OZONE\OZ\Lang\I18n;
+use OZONE\Core\CSRF\CSRF;
+use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Http\Request;
+use OZONE\Core\Http\Uri;
+use OZONE\Core\Lang\I18n;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
 
@@ -34,29 +33,32 @@ class Form implements ArrayCapableInterface
 	use ArrayCapableTrait;
 
 	/**
-	 * @var \OZONE\OZ\Forms\Field[]
+	 * @var \OZONE\Core\Forms\Field[]
 	 */
 	public array $fields = [];
 
 	/**
-	 * @var \OZONE\OZ\Forms\FormStep[]
+	 * @var \OZONE\Core\Forms\FormStep[]
 	 */
 	public array $steps = [];
 
 	/**
-	 * @var \OZONE\OZ\Forms\FormRule[]
+	 * @var \OZONE\Core\Forms\FormRule[]
 	 */
 	public array $rules = [];
 
 	/**
 	 * Form constructor.
 	 *
-	 * @param null|\OZONE\OZ\Http\Uri  $submit_to
-	 * @param string                   $method
-	 * @param null|\OZONE\OZ\CSRF\CSRF $csrf
+	 * @param null|\OZONE\Core\Http\Uri  $submit_to
+	 * @param string                     $method
+	 * @param null|\OZONE\Core\CSRF\CSRF $csrf
 	 */
-	public function __construct(protected ?Uri $submit_to = null, protected string $method = 'POST', protected ?CSRF $csrf = null)
-	{
+	public function __construct(
+		protected ?Uri $submit_to = null,
+		protected string $method = 'POST',
+		protected ?CSRF $csrf = null
+	) {
 		$this->method = Request::filterMethod($this->method);
 	}
 
@@ -71,7 +73,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Set form submit to uri.
 	 *
-	 * @param \OZONE\OZ\Http\Uri $uri
+	 * @param \OZONE\Core\Http\Uri $uri
 	 *
 	 * @return $this
 	 */
@@ -85,7 +87,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Gets form submit uri.
 	 *
-	 * @return null|\OZONE\OZ\Http\Uri
+	 * @return null|\OZONE\Core\Http\Uri
 	 */
 	public function getSubmitTo(): ?Uri
 	{
@@ -107,7 +109,7 @@ class Form implements ArrayCapableInterface
 	 *
 	 * @param string $method
 	 *
-	 * @return \OZONE\OZ\Forms\Form
+	 * @return \OZONE\Core\Forms\Form
 	 */
 	public function setMethod(string $method): self
 	{
@@ -116,6 +118,18 @@ class Form implements ArrayCapableInterface
 		return $this;
 	}
 
+	/**
+	 * Adds a step to the form.
+	 *
+	 * A step is a group of fields that will be validated together.
+	 * Use this when some fields depends on others fields.
+	 *
+	 * @param string                          $name
+	 * @param callable                        $builder
+	 * @param null|\OZONE\Core\Forms\FormRule $rule
+	 *
+	 * @return $this
+	 */
 	public function addStep(string $name, callable $builder, ?FormRule $rule = null): static
 	{
 		$this->steps[] = new FormStep($name, $builder, $rule ? [$rule, 'check'] : null);
@@ -123,6 +137,15 @@ class Form implements ArrayCapableInterface
 		return $this;
 	}
 
+	/**
+	 * Adds a field to the form.
+	 *
+	 * If the field is already added, it will be replaced.
+	 *
+	 * @param \OZONE\Core\Forms\Field $field
+	 *
+	 * @return $this
+	 */
 	public function addField(Field $field): static
 	{
 		$this->fields[$field->getName()] = $field;
@@ -130,6 +153,13 @@ class Form implements ArrayCapableInterface
 		return $this;
 	}
 
+	/**
+	 * Creates a new field and adds it to the form.
+	 *
+	 * @param string $name
+	 *
+	 * @return \OZONE\Core\Forms\Field
+	 */
 	public function field(string $name): Field
 	{
 		$field = new Field($name);
@@ -142,7 +172,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Adds a double check fields for an existing field.
 	 *
-	 * @param \OZONE\OZ\Forms\Field|string $field
+	 * @param \OZONE\Core\Forms\Field|string $field
 	 *
 	 * @return $this
 	 */
@@ -173,6 +203,11 @@ class Form implements ArrayCapableInterface
 		return $this;
 	}
 
+	/**
+	 * Creates a new rule and adds it to the form.
+	 *
+	 * @return \OZONE\Core\Forms\FormRule
+	 */
 	public function rule(): FormRule
 	{
 		$rule = new FormRule();
@@ -182,19 +217,28 @@ class Form implements ArrayCapableInterface
 		return $rule;
 	}
 
+	/**
+	 * Gets a field by its name.
+	 *
+	 * @param string $name
+	 *
+	 * @return null|\OZONE\Core\Forms\Field
+	 */
 	public function getField(string $name): ?Field
 	{
 		return $this->fields[$name] ?? null;
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\FormData      $unsafe_fd
-	 * @param null|\OZONE\OZ\Forms\FormData $cleaned_fd
-	 * @param string                        $step_prefix
+	 * Validates the form.
 	 *
-	 * @return \OZONE\OZ\Forms\FormData
+	 * @param \OZONE\Core\Forms\FormData      $unsafe_fd
+	 * @param null|\OZONE\Core\Forms\FormData $cleaned_fd
+	 * @param string                          $step_prefix
 	 *
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
+	 * @return \OZONE\Core\Forms\FormData
+	 *
+	 * @throws \OZONE\Core\Exceptions\InvalidFormException
 	 */
 	public function validate(FormData $unsafe_fd, ?FormData $cleaned_fd = null, string $step_prefix = ''): FormData
 	{
@@ -257,7 +301,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Merges a given form to this.
 	 *
-	 * @param \OZONE\OZ\Forms\Form $from
+	 * @param \OZONE\Core\Forms\Form $from
 	 *
 	 * @return $this
 	 */
@@ -286,12 +330,12 @@ class Form implements ArrayCapableInterface
 	 *
 	 * @param \Gobl\DBAL\Table|string $table
 	 *
-	 * @return \OZONE\OZ\Forms\Form
+	 * @return \OZONE\Core\Forms\Form
 	 */
 	public static function fromTable(string|Table $table): self
 	{
 		if (\is_string($table)) {
-			$table = DbManager::getDb()
+			$table = db()
 				->getTable($table);
 		}
 
@@ -306,7 +350,7 @@ class Form implements ArrayCapableInterface
 				continue;
 			}
 
-			if (TypeDate::NAME === $type->getName() && true === $type->getOption('auto')) {
+			if ($type instanceof TypeDate && $type->isAuto()) {
 				continue;
 			}
 
@@ -321,7 +365,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Checks for the CSRF token validity.
 	 *
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException When the CSRF token is invalid
+	 * @throws \OZONE\Core\Exceptions\InvalidFormException When the CSRF token is invalid
 	 */
 	private function assertValidCSRFToken(FormData $form): void
 	{

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cache;
+namespace OZONE\Core\Cache;
 
 use DateInterval;
 use DateTime;

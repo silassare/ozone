@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db;
+namespace OZONE\Core\Db;
 
 /**
  * Class OZUsersQuery.
  */
-class OZUsersQuery extends \OZONE\OZ\Db\Base\OZUsersQuery
+class OZUsersQuery extends \OZONE\Core\Db\Base\OZUsersQuery
 {
 	// ====================================================
 	// =	Your custom implementation goes here

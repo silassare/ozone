@@ -11,8 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\App\Interfaces;
+namespace OZONE\Core\App\Interfaces;
 
+use OZONE\Core\FS\FilesManager;
 use Throwable;
 
 /**
@@ -21,12 +22,9 @@ use Throwable;
 interface AppInterface
 {
 	/**
-	 * AppInterface constructor.
-	 */
-	public function __construct();
-
-	/**
 	 * Called when ozone is booting.
+	 *
+	 * You should register your plugins here.
 	 */
 	public function boot(): void;
 
@@ -46,4 +44,66 @@ interface AppInterface
 	 * @param int    $line    the file line where it occurs
 	 */
 	public function onUnhandledError(int $code, string $message, string $file, int $line);
+
+	/**
+	 * Returns environment variables files.
+	 *
+	 * @return string[]
+	 */
+	public function getEnvFiles(): array;
+
+	/**
+	 * Returns the app directory.
+	 *
+	 * @return \OZONE\Core\FS\FilesManager
+	 */
+	public function getAppDir(): FilesManager;
+
+	/**
+	 * Returns the settings directory.
+	 *
+	 * @return \OZONE\Core\FS\FilesManager
+	 */
+	public function getSettingsDir(): FilesManager;
+
+	/**
+	 * Returns the templates directory.
+	 *
+	 * @return \OZONE\Core\FS\FilesManager
+	 */
+	public function getTemplatesDir(): FilesManager;
+
+	/**
+	 * Returns the cache directory.
+	 *
+	 * @return \OZONE\Core\FS\FilesManager
+	 */
+	public function getCacheDir(): FilesManager;
+
+	/**
+	 * Returns the private files directory.
+	 *
+	 * This directory should be protected from public access.
+	 * This is where you should store your private files.
+	 *
+	 * @return \OZONE\Core\FS\FilesManager
+	 */
+	public function getPrivateFilesDir(): FilesManager;
+
+	/**
+	 * Returns public directory.
+	 *
+	 * This directory is accessible from the web.
+	 * This is where public files should be stored.
+	 *
+	 * @return \OZONE\Core\FS\FilesManager
+	 */
+	public function getPublicFilesDir(): FilesManager;
+
+	/**
+	 * Returns the migrations directory.
+	 *
+	 * @return \OZONE\Core\FS\FilesManager
+	 */
+	public function getMigrationsDir(): FilesManager;
 }

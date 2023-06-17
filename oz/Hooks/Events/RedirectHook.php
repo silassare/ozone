@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Hooks\Events;
+namespace OZONE\Core\Hooks\Events;
 
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Hooks\Hook;
-use OZONE\OZ\Http\Uri;
+use OZONE\Core\App\Context;
+use OZONE\Core\Hooks\Hook;
+use OZONE\Core\Http\Uri;
 
 /**
  * Class RedirectHook.
@@ -27,8 +27,8 @@ final class RedirectHook extends Hook
 	/**
 	 * RedirectHook constructor.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param \OZONE\OZ\Http\Uri     $redirect_uri
+	 * @param \OZONE\Core\App\Context $context
+	 * @param \OZONE\Core\Http\Uri    $redirect_uri
 	 */
 	public function __construct(Context $context, protected Uri $redirect_uri)
 	{
@@ -48,7 +48,7 @@ final class RedirectHook extends Hook
 	/**
 	 * Gets the redirect uri.
 	 *
-	 * @return \OZONE\OZ\Http\Uri
+	 * @return \OZONE\Core\Http\Uri
 	 */
 	public function getRedirectUri(): Uri
 	{

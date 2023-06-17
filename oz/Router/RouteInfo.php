@@ -11,44 +11,47 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router;
+namespace OZONE\Core\Router;
 
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Forms\FormData;
-use OZONE\OZ\Http\Uri;
+use InvalidArgumentException;
+use OZONE\Core\App\Context;
+use OZONE\Core\Forms\FormData;
+use OZONE\Core\Http\Uri;
+use PHPUtils\Store\Store;
 
 /**
  * Class RouteInfo.
  */
 final class RouteInfo
 {
-	private FormData $auth_form_data;
+	private Store    $guards_data;
 	private FormData $clean_form_data;
 
 	/**
 	 * RouteInfo constructor.
 	 *
-	 * @param \OZONE\OZ\Core\Context        $context         The context
-	 * @param \OZONE\OZ\Router\Route        $route           The current route
-	 * @param array                         $params          The route params
-	 * @param null|\OZONE\OZ\Forms\FormData $auth_form_data  The route guard authorization form data
-	 * @param null|\OZONE\OZ\Forms\FormData $clean_form_data The clean form data
+	 * @param \OZONE\Core\App\Context  $context The context
+	 * @param \OZONE\Core\Router\Route $route   The current route
+	 * @param array                    $params  The route params
+	 *
+	 * @throws \OZONE\Core\Exceptions\InvalidFormException
 	 */
 	public function __construct(
 		private readonly Context $context,
 		private readonly Route $route,
-		private readonly array $params,
-		?FormData $auth_form_data = null,
-		?FormData $clean_form_data = null
+		private readonly array $params
 	) {
-		$this->auth_form_data  = $auth_form_data ?? new FormData();
-		$this->clean_form_data = $clean_form_data ?? new FormData();
+		$this->guards_data     = new Store([]);
+		$this->clean_form_data = new FormData();
+
+		$this->callGuards();
+		$this->checkForm();
 	}
 
 	/**
 	 * Gets current request context.
 	 *
-	 * @return \OZONE\OZ\Core\Context
+	 * @return \OZONE\Core\App\Context
 	 */
 	public function getContext(): Context
 	{
@@ -58,7 +61,7 @@ final class RouteInfo
 	/**
 	 * Gets current route.
 	 *
-	 * @return \OZONE\OZ\Router\Route
+	 * @return \OZONE\Core\Router\Route
 	 */
 	public function getRoute(): Route
 	{
@@ -89,11 +92,11 @@ final class RouteInfo
 	}
 
 	/**
-	 * Shortcut for {@see \OZONE\OZ\Http\Request::getUri()}.
+	 * Shortcut for {@see \OZONE\Core\Http\Request::getUri()}.
 	 *
-	 * @return \OZONE\OZ\Http\Uri
+	 * @return \OZONE\Core\Http\Uri
 	 */
-	public function getUri(): Uri
+	public function uri(): Uri
 	{
 		return $this->context->getRequest()
 			->getUri();
@@ -102,7 +105,7 @@ final class RouteInfo
 	/**
 	 * Gets validated form data.
 	 *
-	 * @return \OZONE\OZ\Forms\FormData
+	 * @return \OZONE\Core\Forms\FormData
 	 */
 	public function getCleanFormData(): FormData
 	{
@@ -123,30 +126,27 @@ final class RouteInfo
 	}
 
 	/**
-	 * Gets current route guard authorization form data.
+	 * Gets guard form data.
 	 *
-	 * @return \OZONE\OZ\Forms\FormData
+	 * @param string $guard
+	 *
+	 * @return \OZONE\Core\Forms\FormData
 	 */
-	public function getAuthFormData(): FormData
+	public function getGuardFormData(string $guard): FormData
 	{
-		return $this->auth_form_data;
+		$guard_class = Guards::get($guard);
+
+		$guard_data = $this->guards_data->get($guard_class);
+
+		if ($guard_data instanceof FormData) {
+			return $guard_data;
+		}
+
+		throw new InvalidArgumentException(\sprintf('Guard "%s" has no form data.', $guard));
 	}
 
 	/**
-	 * Gets auth form field value.
-	 *
-	 * @param string     $name
-	 * @param null|mixed $def
-	 *
-	 * @return mixed
-	 */
-	public function getAuthFormField(string $name, mixed $def = null): mixed
-	{
-		return $this->clean_form_data->get($name, $def);
-	}
-
-	/**
-	 * Shortcut for {@see \OZONE\OZ\Http\Request::getUnsafeFormData()}.
+	 * Shortcut for {@see \OZONE\Core\Http\Request::getUnsafeFormData()}.
 	 *
 	 * @param bool $include_files
 	 *
@@ -159,7 +159,7 @@ final class RouteInfo
 	}
 
 	/**
-	 * Shortcut for {@see \OZONE\OZ\Http\Request::getUnsafeFormField()}.
+	 * Shortcut for {@see \OZONE\Core\Http\Request::getUnsafeFormField()}.
 	 *
 	 * @param string     $name
 	 * @param null|mixed $def
@@ -170,5 +170,39 @@ final class RouteInfo
 	{
 		return $this->context->getRequest()
 			->getUnsafeFormField($name, $def);
+	}
+
+	/**
+	 * Run all guards.
+	 */
+	private function callGuards(): void
+	{
+		$options      = $this->route->getOptions();
+		$route_guards = $options->getGuards($this);
+
+		foreach ($route_guards as $guard) {
+			$guard->checkAccess($this);
+			$this->guards_data->set($guard::class, $guard->getFormData());
+		}
+	}
+
+	/**
+	 * Validates the form data if any.
+	 *
+	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 */
+	private function checkForm(): void
+	{
+		$options = $this->route->getOptions();
+		$bundle  = $options->getFormBundle($this);
+
+		if ($bundle) {
+			$unsafe_fd = $this->context->getRequest()
+				->getUnsafeFormData();
+
+			$clean_fd = $bundle->validate($unsafe_fd);
+
+			$this->clean_form_data->merge($clean_fd);
+		}
 	}
 }

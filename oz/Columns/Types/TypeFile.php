@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Columns\Types;
+namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Types\Exceptions\TypesException;
@@ -21,10 +21,9 @@ use Gobl\DBAL\Types\TypeString;
 use Gobl\ORM\ORMTypeHint;
 use JsonException;
 use OLIUP\CG\PHPType;
-use OZONE\OZ\Core\DbManager;
-use OZONE\OZ\Db\OZFile;
-use OZONE\OZ\FS\FilesUtils;
-use OZONE\OZ\Http\UploadedFile;
+use OZONE\Core\Db\OZFile;
+use OZONE\Core\FS\FS;
+use OZONE\Core\Http\UploadedFile;
 use Throwable;
 
 /**
@@ -69,13 +68,13 @@ class TypeFile extends Type
 	}
 
 	/**
-	 * Sets file driver.
+	 * Sets file storage.
 	 *
 	 * @return $this
 	 */
-	public function driver(string $driver): self
+	public function storage(string $storage): self
 	{
-		return $this->setOption('driver', $driver);
+		return $this->setOption('storage', $storage);
 	}
 
 	/**
@@ -309,8 +308,8 @@ class TypeFile extends Type
 			$this->multiple((bool) $options['multiple']);
 		}
 
-		if (isset($options['driver'])) {
-			$this->driver((string) $options['driver']);
+		if (isset($options['storage'])) {
+			$this->storage((string) $options['storage']);
 		}
 
 		if (isset($options['mime_types'])) {
@@ -345,8 +344,8 @@ class TypeFile extends Type
 	}
 
 	/**
-	 * @param \OZONE\OZ\Http\UploadedFile[] $uploaded_files
-	 * @param array                         $debug
+	 * @param \OZONE\Core\Http\UploadedFile[] $uploaded_files
+	 * @param array                           $debug
 	 *
 	 * @return string[]
 	 *
@@ -379,13 +378,13 @@ class TypeFile extends Type
 			throw new TypesInvalidValueException('OZ_FILE_TOTAL_SIZE_EXCEED_LIMIT', $debug);
 		}
 
-		$driver_name = $this->getOption('driver', 'default');
-		$driver      = FilesUtils::getFileDriver($driver_name);
+		$storage_name = $this->getOption('storage', FS::DEFAULT_STORAGE);
+		$storage      = FS::getStorage($storage_name);
 
-		/** @var \OZONE\OZ\Db\OZFile[] $new_file_list */
+		/** @var \OZONE\Core\Db\OZFile[] $new_file_list */
 		$new_file_list = [];
 		$data          = [];
-		$db            = DbManager::getDb();
+		$db            = db();
 
 		try {
 			$db->beginTransaction();
@@ -395,8 +394,8 @@ class TypeFile extends Type
 					/** @var string $fid */
 					$fid = $file->getID();
 				} else {
-					$fo = $driver->upload($file);
-					$fo->setDriver($driver_name)
+					$fo = $storage->upload($file);
+					$fo->setStorage($storage_name)
 						->setForLabel($file_label)
 						->save();
 
@@ -412,7 +411,7 @@ class TypeFile extends Type
 			$db->rollBack();
 
 			foreach ($new_file_list as $f) {
-				$driver->delete($f);
+				$storage->delete($f);
 			}
 
 			throw new TypesInvalidValueException('OZ_FILE_UPLOAD_FAILS', null, $t);
@@ -474,7 +473,7 @@ class TypeFile extends Type
 	/**
 	 * Checks uploaded file.
 	 *
-	 * @param \OZONE\OZ\Http\UploadedFile $upload
+	 * @param \OZONE\Core\Http\UploadedFile $upload
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 	 */
@@ -484,7 +483,7 @@ class TypeFile extends Type
 		$debug['file_name'] = $upload->getClientFilename();
 
 		if (\UPLOAD_ERR_OK !== $error) {
-			$info             = FilesUtils::uploadErrorInfo($error);
+			$info             = FS::uploadErrorInfo($error);
 			$debug['_reason'] = $info['reason'];
 
 			throw new TypesInvalidValueException($info['message'], $debug);
@@ -505,7 +504,7 @@ class TypeFile extends Type
 	/**
 	 * Checks ozone file.
 	 *
-	 * @param \OZONE\OZ\Db\OZFile $file
+	 * @param \OZONE\Core\Db\OZFile $file
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 	 */

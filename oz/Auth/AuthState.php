@@ -11,8 +11,11 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Auth;
+namespace OZONE\Core\Auth;
 
+/**
+ * Enum AuthState.
+ */
 enum AuthState: string
 {
 	case PENDING = 'PENDING';

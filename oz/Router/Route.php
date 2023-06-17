@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router;
+namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
-use OZONE\OZ\Core\Context;
+use OZONE\Core\App\Context;
 
 /**
  * Class Route.
@@ -28,7 +28,7 @@ final class Route
 	/**
 	 * @var callable
 	 */
-	private $callable;
+	private $handler;
 
 	private bool   $parsed = false;
 	private string $parser_result;
@@ -37,10 +37,10 @@ final class Route
 	/**
 	 * Route constructor.
 	 *
-	 * @param \OZONE\OZ\Router\Router       $router
-	 * @param array                         $methods
-	 * @param callable                      $callable
-	 * @param \OZONE\OZ\Router\RouteOptions $options
+	 * @param \OZONE\Core\Router\Router       $router
+	 * @param array                           $methods
+	 * @param callable                        $callable
+	 * @param \OZONE\Core\Router\RouteOptions $options
 	 */
 	public function __construct(
 		private readonly Router $router,
@@ -48,13 +48,13 @@ final class Route
 		callable $callable,
 		private readonly RouteOptions $options
 	) {
-		$this->callable = $callable;
+		$this->handler = $callable;
 	}
 
 	/**
 	 * Gets route name.
 	 *
-	 * Shortcut of {@see \OZONE\OZ\Router\RouteOptions::getName()}
+	 * Shortcut of {@see \OZONE\Core\Router\RouteOptions::getName()}
 	 */
 	public function getName(): string
 	{
@@ -78,8 +78,8 @@ final class Route
 	/**
 	 * Builds the route with given parameters values.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param array                  $params
+	 * @param \OZONE\Core\App\Context $context
+	 * @param array                   $params
 	 *
 	 * @return string
 	 */
@@ -108,19 +108,19 @@ final class Route
 	}
 
 	/**
-	 * Returns the route callable.
+	 * Returns the route handler callable.
 	 *
 	 * @return callable
 	 */
-	public function getCallable(): callable
+	public function getHandler(): callable
 	{
-		return $this->callable;
+		return $this->handler;
 	}
 
 	/**
 	 * Returns the route options.
 	 *
-	 * @return \OZONE\OZ\Router\RouteOptions
+	 * @return \OZONE\Core\Router\RouteOptions
 	 */
 	public function getOptions(): RouteOptions
 	{
@@ -236,10 +236,10 @@ final class Route
 	/**
 	 * Builds dynamic path.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $route
-	 * @param array                  $params
-	 * @param null|string            $original_route
+	 * @param \OZONE\Core\App\Context $context
+	 * @param string                  $route
+	 * @param array                   $params
+	 * @param null|string             $original_route
 	 *
 	 * @return string
 	 */

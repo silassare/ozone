@@ -11,14 +11,16 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\FS;
+namespace OZONE\Core\FS;
 
 use claviska\SimpleImage;
 use Exception;
-use OZONE\OZ\Core\Configs;
+use OZONE\Core\App\Settings;
 
 /**
  * Class ImagesUtils.
+ *
+ * @deprecated
  */
 class ImagesUtils
 {
@@ -134,7 +136,7 @@ class ImagesUtils
 	 *
 	 * @param string $destination_path
 	 *
-	 * @return \OZONE\OZ\FS\ImagesUtils
+	 * @return \OZONE\Core\FS\ImagesUtils
 	 *
 	 * @throws Exception
 	 */
@@ -191,7 +193,7 @@ class ImagesUtils
 	 * @param int  $height The desired height in pixel
 	 * @param bool $crop   Should we crop when required? default is true
 	 *
-	 * @return \OZONE\OZ\FS\ImagesUtils
+	 * @return \OZONE\Core\FS\ImagesUtils
 	 */
 	public function resizeImage(int $width, int $height, bool $crop = true): self
 	{
@@ -227,7 +229,7 @@ class ImagesUtils
 	 * @param int $width  The output width in pixel
 	 * @param int $height The output height in pixel
 	 *
-	 * @return \OZONE\OZ\FS\ImagesUtils
+	 * @return \OZONE\Core\FS\ImagesUtils
 	 */
 	public function cropImage(int $left, int $top, int $width, int $height): self
 	{
@@ -244,7 +246,7 @@ class ImagesUtils
 	 * @param null|string $destination_path The destination file path
 	 * @param int         $quality          The image quality between 0 and 100, default is 90
 	 *
-	 * @return \OZONE\OZ\FS\ImagesUtils
+	 * @return \OZONE\Core\FS\ImagesUtils
 	 *
 	 * @throws Exception
 	 */
@@ -291,7 +293,7 @@ class ImagesUtils
 	 * @param null|array $coordinate       The crop zone coordinate
 	 * @param bool       $resize           Should we resize when required? default is true
 	 *
-	 * @return \OZONE\OZ\FS\ImagesUtils
+	 * @return \OZONE\Core\FS\ImagesUtils
 	 *
 	 * @throws Exception
 	 */
@@ -338,7 +340,7 @@ class ImagesUtils
 		$y        = $coordinate['y'];
 		$w        = $coordinate['w'];
 		$h        = $coordinate['h'];
-		$min_size = Configs::get('oz.users', 'OZ_USER_PIC_MIN_SIZE');
+		$min_size = Settings::get('oz.users', 'OZ_USER_PIC_MIN_SIZE');
 
 		return $x >= 0
 			   && $y >= 0

@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cache\Drivers;
+namespace OZONE\Core\Cache\Drivers;
 
-use OZONE\OZ\Db\OZDbStore;
-use OZONE\OZ\Db\OZDbStoresQuery;
+use OZONE\Core\Db\OZDbStore;
+use OZONE\Core\Db\OZDbStoresQuery;
 
 /**
  * Class DbCache.
@@ -34,7 +34,6 @@ class DbCache extends RuntimeCache
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 	 * @throws \Gobl\ORM\Exceptions\ORMException
 	 * @throws \Gobl\CRUD\Exceptions\CRUDException
@@ -49,8 +48,6 @@ class DbCache extends RuntimeCache
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 */
 	protected function load(): array
 	{

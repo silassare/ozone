@@ -11,22 +11,22 @@
 
 declare(strict_types=1);
 
-use OZONE\OZ\Columns\Types\TypeCC2;
-use OZONE\OZ\Columns\Types\TypeEmail;
-use OZONE\OZ\Columns\Types\TypeFile;
-use OZONE\OZ\Columns\Types\TypeGender;
-use OZONE\OZ\Columns\Types\TypePassword;
-use OZONE\OZ\Columns\Types\TypePhone;
-use OZONE\OZ\Columns\Types\TypeUrl;
-use OZONE\OZ\Columns\Types\TypeUserName;
+use OZONE\Core\Columns\Types\TypeCC2;
+use OZONE\Core\Columns\Types\TypeEmail;
+use OZONE\Core\Columns\Types\TypeFile;
+use OZONE\Core\Columns\Types\TypeGender;
+use OZONE\Core\Columns\Types\TypePassword;
+use OZONE\Core\Columns\Types\TypePhone;
+use OZONE\Core\Columns\Types\TypeUrl;
+use OZONE\Core\Columns\Types\TypeUserName;
 
 return [
-	TypePhone::NAME     => TypePhone::class,
-	TypeEmail::NAME     => TypeEmail::class,
-	TypeUrl::NAME       => TypeUrl::class,
-	TypeUserName::NAME  => TypeUserName::class,
-	TypePassword::NAME  => TypePassword::class,
-	TypeCC2::NAME       => TypeCC2::class,
-	TypeGender::NAME    => TypeGender::class,
-	TypeFile::NAME      => TypeFile::class,
+	TypePhone::NAME    => TypePhone::class,
+	TypeEmail::NAME    => TypeEmail::class,
+	TypeUrl::NAME      => TypeUrl::class,
+	TypeUserName::NAME => TypeUserName::class,
+	TypePassword::NAME => TypePassword::class,
+	TypeCC2::NAME      => TypeCC2::class,
+	TypeGender::NAME   => TypeGender::class,
+	TypeFile::NAME     => TypeFile::class,
 ];

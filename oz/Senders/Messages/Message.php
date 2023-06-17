@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Senders\Messages;
+namespace OZONE\Core\Senders\Messages;
 
-use OZONE\OZ\FS\TemplatesUtils;
-use OZONE\OZ\Senders\Interfaces\MessageInterface;
+use OZONE\Core\FS\Templates;
+use OZONE\Core\Senders\Interfaces\MessageInterface;
 
 /**
  * Class Message.
@@ -48,7 +48,7 @@ abstract class Message implements MessageInterface
 	 */
 	public function getContent(): string
 	{
-		return TemplatesUtils::compile($this->template, $this->data);
+		return Templates::compile($this->template, $this->data);
 	}
 
 	/**

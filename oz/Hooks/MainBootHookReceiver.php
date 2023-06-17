@@ -11,25 +11,27 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Hooks;
+namespace OZONE\Core\Hooks;
 
 use Exception;
 use Gobl\ORM\Events\ORMTableFilesGenerated;
 use Gobl\ORM\Utils\ORMClassKind;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Core\CRUDHandlerTrait;
-use OZONE\OZ\Core\DbManager;
-use OZONE\OZ\Exceptions\ForbiddenException;
-use OZONE\OZ\Exceptions\MethodNotAllowedException;
-use OZONE\OZ\Exceptions\NotFoundException;
-use OZONE\OZ\FS\Traits\FileEntityTrait;
-use OZONE\OZ\Hooks\Events\ResponseHook;
-use OZONE\OZ\Hooks\Interfaces\BootHookReceiverInterface;
-use OZONE\OZ\Http\Uri;
-use OZONE\OZ\OZone;
-use OZONE\OZ\Router\Events\RouteMethodNotAllowed;
-use OZONE\OZ\Router\Events\RouteNotFound;
-use OZONE\OZ\Users\Traits\UserEntityTrait;
+use OZONE\Core\App\Db;
+use OZONE\Core\App\Settings;
+use OZONE\Core\CRUD\Interfaces\TableCRUDHandlerInterface;
+use OZONE\Core\CRUD\Traits\TableCRUDHandlerTrait;
+use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Exceptions\MethodNotAllowedException;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\FS\Traits\FileEntityTrait;
+use OZONE\Core\Hooks\Events\ResponseHook;
+use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Http\Uri;
+use OZONE\Core\OZone;
+use OZONE\Core\Router\Events\RouteMethodNotAllowed;
+use OZONE\Core\Router\Events\RouteNotFound;
+use OZONE\Core\Sessions\Session;
+use OZONE\Core\Users\Traits\UserEntityTrait;
 use PHPUtils\Events\Event;
 
 /**
@@ -42,10 +44,10 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	/**
 	 * Main handler for {@see RouteNotFound} Event.
 	 *
-	 * @param \OZONE\OZ\Router\Events\RouteNotFound $ev
+	 * @param \OZONE\Core\Router\Events\RouteNotFound $ev
 	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
 	 */
 	public static function onRouteNotFound(RouteNotFound $ev): void
 	{
@@ -56,11 +58,11 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		// is it root
 		if ($context->isApiContext() && '/' === $uri->getPath()) {
 			// TODO api doc
-			// show api usage doc when this condition are met:
-			//  - we are in api mode
-			//	- debugging mode or allowed in settings
-			// show welcome friendly page when this conditions are met:
-			//  - we are in web mode
+			// 1) show api usage doc when this condition are met:
+			//		- we are in api context
+			//		- debugging mode or allowed in settings
+			// 2) show welcome friendly page when this conditions are met:
+			//		- we are in web context
 			throw new ForbiddenException();
 		}
 
@@ -70,9 +72,9 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	/**
 	 * Main handler for {@see RouteMethodNotAllowed} Event.
 	 *
-	 * @param \OZONE\OZ\Router\Events\RouteMethodNotAllowed $ev
+	 * @param \OZONE\Core\Router\Events\RouteMethodNotAllowed $ev
 	 *
-	 * @throws \OZONE\OZ\Exceptions\MethodNotAllowedException
+	 * @throws \OZONE\Core\Exceptions\MethodNotAllowedException
 	 */
 	public static function onMethodNotAllowed(RouteMethodNotAllowed $ev): void
 	{
@@ -88,34 +90,23 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	/**
 	 * Main handler for {@see ResponseHook} Event.
 	 *
-	 * @param \OZONE\OZ\Hooks\Events\ResponseHook $ev
+	 * @param \OZONE\Core\Hooks\Events\ResponseHook $ev
 	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
+	 * @throws \OZONE\Core\Exceptions\ForbiddenException
 	 */
 	public static function onResponse(ResponseHook $ev): void
 	{
 		$context   = $ev->getContext();
 		$request   = $ev->getRequest();
 		$response  = $ev->getResponse();
-		$session   = $ev->getContext()
-			->getSession();
-		$life_time = 60 * 60;
-		// header spoofing can help hacker bypass this
-		// so don't be 100% sure, :-)
-		$origin     = $context->getRequestOriginOrReferer();
-		$client_url = $origin;
-		$client     = null;
+		$life_time = Session::lifetime();
+		$h_list    = [];
 
-		if ($session->isStarted()) {
-			$client = $session->getClient();
+		$allowed_origin = Settings::get('oz.clients', 'OZ_CORS_ALLOWED_ORIGIN');
+
+		if ('self' === $allowed_origin) {
+			$allowed_origin = $context->getDefaultOrigin();
 		}
-
-		if ($client) {
-			$client_url = $client->getUrl();
-			$life_time  = $client->getSessionLifeTime();
-		}
-
-		$h_list = [];
 
 		if ($request->isOptions()) {
 			$h_list['Access-Control-Allow-Headers'] = \implode(', ', $context->getAllowedHeadersNameList());
@@ -128,62 +119,43 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 				'DELETE',
 			]);
 			$h_list['Access-Control-Max-Age']       = $life_time;
-		} elseif (!$context->isSubRequest()) {
-			$rule           = Configs::get('oz.clients', 'OZ_CORS_ALLOW_RULE');
-			$allowed_origin = $context->getMainUrl();
+		} else {
+			// header spoofing can help hacker bypass this
+			// so don't be 100% sure, :-)
+			$request_origin = $context->getRequestOriginOrReferer();
 
-			switch ($rule) {
-				case 'deny':
-					if (empty($origin)) {
-						$origin = $allowed_origin;
+			if (!empty($request_origin)) {
+				if ('*' === $allowed_origin) {
+					// CORS doesn't allow wildcard with Access-Control-Allow-Credentials header set to true
+					$allowed_origin = $request_origin;
+				} elseif (!$context->isSubRequest()) {
+					// we don't check for sub-request here because of the following scenario:
+					//  - The sub-request is made with the original request environment
+
+					$allowed_host = Uri::createFromString($allowed_origin)
+						->getHost();
+					$origin_host  = Uri::createFromString($request_origin)
+						->getHost();
+					if ($allowed_host !== $origin_host) {
+						throw new ForbiddenException('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED', [
+							'origin'        => $request_origin,
+							'_origin_host'  => $origin_host,
+							'_allowed_host' => $allowed_host,
+						]);
 					}
-
-					break;
-
-				case 'any':
-					if (empty($origin)) {
-						$origin = $allowed_origin;
-					} else {
-						$allowed_origin = $origin;
-					}
-
-					break;
-
-				case 'check':
-				default:
-					if (empty($origin)) {
-						$origin = $allowed_origin;
-					} else {
-						$allowed_origin = $client_url;
-					}
-			}
-
-			$allowed_host = Uri::createFromString($allowed_origin)
-				->getHost();
-			$origin_host  = Uri::createFromString($origin)
-				->getHost();
-
-			if ($allowed_host !== $origin_host) {
-				// we don't throw this exception in sub-request
-				// scenario:
-				//  - We want to show error page because the cross site request origin was not allowed
-				//  - The sub-request is made with the original request environment
-				throw new ForbiddenException('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED', [
-					'origin'        => $origin,
-					'_origin_host'  => $origin_host,
-					'_allowed_host' => $allowed_host,
-				]);
+				}
 			}
 		}
 
 		// Remember: CORS is not security. Do not rely on CORS to secure your web site/application.
-		// If you are serving protected data, use cookies or OAuth tokens or something
-		// other than the Origin header to secure that data. The Access-Control-Allow-Origin header
-		// in CORS only dictates which origins should be allowed to make cross-origin requests.
+		// The Access-Control-Allow-Origin header in CORS only dictates
+		// which origins should be allowed to make cross-origin requests.
+		// Its can be spoofed by the client.
 		// Don't rely on it for anything more.
 
 		// allow browser to make CORS request
-		$h_list['Access-Control-Allow-Origin'] = $origin;
+		$h_list['Access-Control-Allow-Origin'] = $allowed_origin;
+		$h_list['Vary']                        = 'Origin';
 
 		// allow browser to send CORS request with cookies
 		$h_list['Access-Control-Allow-Credentials'] = 'true';
@@ -205,7 +177,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	{
 		$table = $event->getTable();
 
-		if (DbManager::getOZoneDbNamespace() === $table->getNamespace()) {
+		if (Db::getOZoneDbNamespace() === $table->getNamespace()) {
 			$name  = $table->getName();
 			$trait = null;
 
@@ -222,7 +194,8 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		}
 
 		$event->getClass(ORMClassKind::CRUD)
-			->useTrait(CRUDHandlerTrait::class);
+			->implements(TableCRUDHandlerInterface::class)
+			->useTrait(TableCRUDHandlerTrait::class);
 	}
 
 	/**

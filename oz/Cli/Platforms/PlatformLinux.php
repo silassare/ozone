@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cli\Platforms;
+namespace OZONE\Core\Cli\Platforms;
 
-use OZONE\OZ\Cli\Platforms\Interfaces\PlatformInterface;
-use OZONE\OZ\Cli\Process;
+use OZONE\Core\Cli\Platforms\Interfaces\PlatformInterface;
+use OZONE\Core\Cli\Process;
 
 /**
  * Class PlatformLinux.
@@ -40,8 +40,12 @@ class PlatformLinux implements PlatformInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function format(string $command): string
+	public function format(string $command, bool $run_in_background = false): string
 	{
+		if ($run_in_background) {
+			$command = \sprintf('nohup %s > /dev/null 2>&1 &', $command);
+		}
+
 		return $command;
 	}
 }

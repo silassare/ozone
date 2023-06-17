@@ -11,17 +11,17 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\FS\Views;
+namespace OZONE\Core\FS\Views;
 
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Exceptions\NotFoundException;
-use OZONE\OZ\FS\FileAccess;
-use OZONE\OZ\FS\FileStream;
-use OZONE\OZ\FS\FilesUtils;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
-use OZONE\OZ\Web\WebView;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\FS\FileAccess;
+use OZONE\Core\FS\FileStream;
+use OZONE\Core\FS\FS;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
+use OZONE\Core\Web\WebView;
 
 /**
  * Class GetFilesView.
@@ -35,7 +35,7 @@ class GetFilesView extends WebView
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$format = Configs::get('oz.files', 'OZ_GET_FILE_URI_PATH_FORMAT');
+		$format = Settings::get('oz.files', 'OZ_GET_FILE_URI_PATH_FORMAT');
 
 		$router->get($format, function (RouteInfo $r) {
 			return self::handle($r);
@@ -51,15 +51,15 @@ class GetFilesView extends WebView
 	}
 
 	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Router\RouteInfo $ri
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 *
-	 * @throws \OZONE\OZ\Exceptions\ForbiddenException
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
+	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\Core\Exceptions\UnverifiedUserException
 	 */
 	public static function handle(RouteInfo $ri): Response
 	{
@@ -70,7 +70,7 @@ class GetFilesView extends WebView
 		$req_file_filter = $ri->getParam('oz_file_filter');
 		$req_file_ext    = $ri->getParam('oz_file_extension');
 
-		$file = FilesUtils::getFileWithId($req_file_id);
+		$file = FS::getFileWithId($req_file_id);
 
 		if (!$file || !$file->isValid()) {
 			throw new NotFoundException();
@@ -79,14 +79,17 @@ class GetFilesView extends WebView
 		// when the request provide an extension and the extension
 		// does not match the file extension
 		// we just return a not found
-		if ($req_file_ext && $req_file_ext !== $file->getExtension() && FilesUtils::extensionToMimeType($req_file_ext) !== $file->getMimeType()) {
+		if (
+			$req_file_ext
+			&& $req_file_ext !== $file->getExtension()
+			&& FS::extensionToMimeType($req_file_ext) !== $file->getMimeType()
+		) {
 			throw new NotFoundException();
 		}
 
-		$fa = new FileAccess($context, $file);
-		$fa->check($req_file_key, $req_file_ref);
+		FileAccess::check($file, $ri, $req_file_key, $req_file_ref);
 
-		$driver = FilesUtils::getFileDriver($file->getDriver());
+		$driver = FS::getStorage($file->getStorage());
 
 		$response = $context->getResponse();
 
@@ -95,7 +98,7 @@ class GetFilesView extends WebView
 		} else {
 			$response = $driver->serve($file, $response);
 
-			if (Configs::get('oz.files', 'OZ_GET_FILE_DOWNLOAD_REAL_NAME')) {
+			if (Settings::get('oz.files', 'OZ_GET_FILE_SHOW_REAL_NAME')) {
 				$filename = $file->getName();
 				$response = $response->withHeader('Content-Disposition', "attachment; filename=\"{$filename}\";");
 			}
@@ -106,7 +109,7 @@ class GetFilesView extends WebView
 
 	private static function applyFilter(Response $response, FileStream $file, string $filter): Response
 	{
-		/* {@see \OZONE\OZ\FS\FilesServer::serve()} */
+		/** @see \OZONE\Core\FS\FilesServer::serve() */
 
 		return $response;
 	}

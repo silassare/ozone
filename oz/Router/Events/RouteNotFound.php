@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router\Events;
+namespace OZONE\Core\Router\Events;
 
-use OZONE\OZ\Hooks\Hook;
+use OZONE\Core\Hooks\Hook;
 
 /**
  * Class RouteNotFound.

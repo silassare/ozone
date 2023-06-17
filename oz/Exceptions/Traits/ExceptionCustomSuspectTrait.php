@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Exceptions\Traits;
+namespace OZONE\Core\Exceptions\Traits;
 
 /**
  * Trait ExceptionCustomSuspectTrait.
@@ -32,6 +32,21 @@ trait ExceptionCustomSuspectTrait
 			'type'  => 'config',
 			'group' => $group,
 			'key'   => $key,
+		]);
+	}
+
+	/**
+	 * Specify the environment variable that cause the error.
+	 *
+	 * @param string $key
+	 *
+	 * @return $this
+	 */
+	public function suspectEnv(string $key): static
+	{
+		return $this->suspect([
+			'type' => 'env',
+			'key'  => $key,
 		]);
 	}
 }

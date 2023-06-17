@@ -11,15 +11,15 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cli\Utils;
+namespace OZONE\Core\Cli\Utils;
 
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Table;
 use Gobl\Gobl;
 use Gobl\ORM\Generators\CSGeneratorORM;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\FS\FilesManager;
-use OZONE\OZ\FS\TemplatesUtils;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\Templates;
 use PHPUtils\Str;
 
 /**
@@ -45,7 +45,7 @@ class ServiceGenerator extends CSGeneratorORM
 		if (!self::$templates_registered) {
 			Gobl::addTemplate(
 				self::SERVICE_TEMPLATE_NAME,
-				TemplatesUtils::localize('gen/gobl/php/MyService.php'),
+				Templates::localize('gen/gobl/php/MyService.php'),
 				[
 					'MY_SERVICE_NS' => '<%$.service.namespace%>',
 					'MyService'     => '<%$.service.class%>',

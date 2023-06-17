@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cache\Drivers;
+namespace OZONE\Core\Cache\Drivers;
 
-use OZONE\OZ\FS\FilesManager;
+use OZONE\Core\FS\FilesManager;
 
 /**
  * Class PHPCache.
@@ -76,12 +76,12 @@ class PHPCache extends RuntimeCache
 			$dir1 = \substr($hash, 0, 2);
 			$dir2 = \substr($hash, 2, 2);
 
-			$fm = new FilesManager(OZ_CACHE_DIR);
-			$fm->cd('php_cache', true)
+			$cache_fm = app()->getCacheDir();
+			$cache_fm->cd('php_cache', true)
 				->cd($dir1, true)
 				->cd($dir2, true);
 
-			$this->cache_path = $fm->resolve($hash . '.cache');
+			$this->cache_path = $cache_fm->resolve($hash . '.cache');
 		}
 
 		return $this->cache_path;

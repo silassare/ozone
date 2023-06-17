@@ -11,15 +11,18 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db\Base;
+namespace OZONE\Core\Db\Base;
+
+use Generator;
 
 /**
  * Class OZUsersResults.
  *
- * @method null|\OZONE\OZ\Db\OZUser current()
- * @method null|\OZONE\OZ\Db\OZUser fetchClass(bool $strict = true)
- * @method \OZONE\OZ\Db\OZUser[]    fetchAllClass(bool $strict = true)
- * @method null|\OZONE\OZ\Db\OZUser updateOneItem(array $filters, array $new_values)
+ * @method null|\OZONE\Core\Db\OZUser       current()
+ * @method null|\OZONE\Core\Db\OZUser       fetchClass(bool $strict = true)
+ * @method \OZONE\Core\Db\OZUser[]          fetchAllClass(bool $strict = true)
+ * @method Generator<\OZONE\Core\Db\OZUser> lazy(bool $strict = true, int $max = 100)
+ * @method null|\OZONE\Core\Db\OZUser       updateOneItem(array $filters, array $new_values)
  */
 abstract class OZUsersResults extends \Gobl\ORM\ORMResults
 {
@@ -29,8 +32,8 @@ abstract class OZUsersResults extends \Gobl\ORM\ORMResults
 	public function __construct(\Gobl\DBAL\Queries\QBSelect $query)
 	{
 		parent::__construct(
-			\OZONE\OZ\Db\OZUser::TABLE_NAMESPACE,
-			\OZONE\OZ\Db\OZUser::TABLE_NAME,
+			\OZONE\Core\Db\OZUser::TABLE_NAMESPACE,
+			\OZONE\Core\Db\OZUser::TABLE_NAME,
 			$query
 		);
 	}
@@ -42,6 +45,6 @@ abstract class OZUsersResults extends \Gobl\ORM\ORMResults
 	 */
 	public static function createInstance(\Gobl\DBAL\Queries\QBSelect $query): static
 	{
-		return new \OZONE\OZ\Db\OZUsersResults($query);
+		return new \OZONE\Core\Db\OZUsersResults($query);
 	}
 }

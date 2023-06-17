@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Forms;
+namespace OZONE\Core\Forms;
 
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Gobl\DBAL\Types\TypeString;
@@ -24,12 +24,13 @@ use PHPUtils\Traits\ArrayCapableTrait;
 class TypesSwitcher implements ArrayCapableInterface
 {
 	use ArrayCapableTrait;
+
 	private array $types = [];
 
 	/**
 	 * Adds type to the switcher.
 	 *
-	 * @param \OZONE\OZ\Forms\FormRule                  $rule
+	 * @param \OZONE\Core\Forms\FormRule                $rule
 	 * @param \Gobl\DBAL\Types\Interfaces\TypeInterface $type
 	 *
 	 * @return $this
@@ -47,7 +48,7 @@ class TypesSwitcher implements ArrayCapableInterface
 	/**
 	 * Gets the appropriate type.
 	 *
-	 * @param \OZONE\OZ\Forms\FormData $fd
+	 * @param \OZONE\Core\Forms\FormData $fd
 	 *
 	 * @return \Gobl\DBAL\Types\Interfaces\TypeInterface
 	 */
@@ -55,8 +56,8 @@ class TypesSwitcher implements ArrayCapableInterface
 	{
 		foreach ($this->types as $item) {
 			/**
-			 * @var \OZONE\OZ\Forms\FormRule $rule
-			 * @var TypeInterface            $type
+			 * @var \OZONE\Core\Forms\FormRule $rule
+			 * @var TypeInterface              $type
 			 */
 			$type = $item['type'];
 			$rule = $item['rule'];

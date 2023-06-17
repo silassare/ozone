@@ -11,16 +11,22 @@
 
 declare(strict_types=1);
 
-use OZONE\OZ\Cli\Cmd\Client;
-use OZONE\OZ\Cli\Cmd\Db;
-use OZONE\OZ\Cli\Cmd\Project;
-use OZONE\OZ\Cli\Cmd\Service;
-use OZONE\OZ\Cli\Cmd\User;
+use OZONE\Core\Cli\Cmd\ContextsCmd;
+use OZONE\Core\Cli\Cmd\CronCmd;
+use OZONE\Core\Cli\Cmd\DbCmd;
+use OZONE\Core\Cli\Cmd\ProjectCmd;
+use OZONE\Core\Cli\Cmd\ServicesCmd;
+use OZONE\Core\Migrations\Cli\MigrationsCmd;
+use OZONE\Core\Queue\Cli\JobsCmd;
+use OZONE\Core\Users\Cli\UsersCmd;
 
 return [
-	'project' => Project::class,
-	'client'  => Client::class,
-	'db'      => Db::class,
-	'service' => Service::class,
-	'user'    => User::class,
+	'project'    => ProjectCmd::class,
+	'contexts'   => ContextsCmd::class,
+	'db'         => DbCmd::class,
+	'migrations' => MigrationsCmd::class,
+	'services'   => ServicesCmd::class,
+	'users'      => UsersCmd::class,
+	'cron'       => CronCmd::class,
+	'jobs'       => JobsCmd::class,
 ];

@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db;
+namespace OZONE\Core\Db;
 
 /**
  * Class OZFile.
  */
-class OZFile extends \OZONE\OZ\Db\Base\OZFile
+class OZFile extends \OZONE\Core\Db\Base\OZFile
 {
-	use \OZONE\OZ\FS\Traits\FileEntityTrait;
+	use \OZONE\Core\FS\Traits\FileEntityTrait;
 
 	// ====================================================
 	// =	Your custom implementation goes here

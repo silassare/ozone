@@ -11,20 +11,21 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Auth;
+namespace OZONE\Core\Auth;
 
-use OZONE\OZ\Auth\Interfaces\AuthProviderInterface;
-use OZONE\OZ\Auth\Interfaces\AuthScopeInterface;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\Db\OZAuth;
-use OZONE\OZ\Db\OZAuthsQuery;
-use OZONE\OZ\Exceptions\NotFoundException;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Exceptions\UnauthorizedActionException;
-use OZONE\OZ\Hooks\Events\FinishHook;
-use OZONE\OZ\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
+use OZONE\Core\Auth\Interfaces\AuthProviderInterface;
+use OZONE\Core\Db\OZAuth;
+use OZONE\Core\Db\OZAuthsQuery;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Hooks\Events\FinishHook;
+use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\OZone;
+use OZONE\Core\Utils\Random;
 use PHPUtils\Events\Event;
 use Throwable;
 
@@ -38,14 +39,36 @@ final class Auth implements BootHookReceiverInterface
 	 *
 	 * @param string $ref
 	 *
-	 * @return null|\OZONE\OZ\Db\OZAuth
+	 * @return null|\OZONE\Core\Db\OZAuth
 	 */
-	public static function getByRef(string $ref): ?OZAuth
+	public static function get(string $ref): ?OZAuth
 	{
 		try {
 			$qb = new OZAuthsQuery();
+			$qb->whereRefIs($ref);
 
-			return $qb->whereRefIs($ref)
+			return $qb
+				->find(1)
+				->fetchClass();
+		} catch (Throwable $t) {
+			throw new RuntimeException('Unable to load auth data.', null, $t);
+		}
+	}
+
+	/**
+	 * Get an auth by token.
+	 *
+	 * @param string $token_hash
+	 *
+	 * @return null|\OZONE\Core\Db\OZAuth
+	 */
+	public static function getByTokenHash(string $token_hash): ?OZAuth
+	{
+		try {
+			$qb = new OZAuthsQuery();
+			$qb->whereTokenHashIs($token_hash);
+
+			return $qb
 				->find(1)
 				->fetchClass();
 		} catch (Throwable $t) {
@@ -58,14 +81,14 @@ final class Auth implements BootHookReceiverInterface
 	 *
 	 * @param string $ref
 	 *
-	 * @return \OZONE\OZ\Db\OZAuth
+	 * @return \OZONE\Core\Db\OZAuth
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException           when not found
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException auth is disabled
+	 * @throws \OZONE\Core\Exceptions\NotFoundException           when not found
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException auth is disabled
 	 */
-	public static function getRequiredByRef(string $ref): OZAuth
+	public static function getRequired(string $ref): OZAuth
 	{
-		$auth = self::getByRef($ref);
+		$auth = self::get($ref);
 
 		if (!$auth) {
 			throw new NotFoundException('OZ_AUTH_INVALID_OR_DELETED_REF');
@@ -91,15 +114,15 @@ final class Auth implements BootHookReceiverInterface
 	/**
 	 * Gets instance of the a given auth provider name.
 	 *
-	 * @param string                                            $name
-	 * @param \OZONE\OZ\Core\Context                            $context
-	 * @param null|\OZONE\OZ\Auth\Interfaces\AuthScopeInterface $scope
+	 * @param \OZONE\Core\App\Context $context
+	 * @param \OZONE\Core\Db\OZAuth   $auth
 	 *
-	 * @return \OZONE\OZ\Auth\Interfaces\AuthProviderInterface
+	 * @return \OZONE\Core\Auth\Interfaces\AuthProviderInterface
 	 */
-	public static function getAuthProvider(string $name, Context $context, ?AuthScopeInterface $scope = null): AuthProviderInterface
+	public static function provider(Context $context, OZAuth $auth): AuthProviderInterface
 	{
-		$provider = Configs::get('oz.auth.providers', $name);
+		$name     = $auth->getProvider();
+		$provider = Settings::get('oz.auth.providers', $name);
 
 		if (!$provider) {
 			throw new RuntimeException(\sprintf('Undefined auth provider "%s".', $name));
@@ -113,7 +136,37 @@ final class Auth implements BootHookReceiverInterface
 		}
 
 		/* @var AuthProviderInterface $provider */
-		return $provider::getInstance($context, $scope);
+		return $provider::get($context, $auth->getPayload())
+			->setScope(AuthScope::from($auth));
+	}
+
+	/**
+	 * Gets the auth method class from settings.
+	 *
+	 * @param string $name
+	 *
+	 * @return class-string<\OZONE\Core\Auth\Interfaces\AuthMethodInterface>
+	 */
+	public static function method(string $name): string
+	{
+		$class = Settings::get('oz.auth.methods', $name);
+
+		if (!$class) {
+			throw (new RuntimeException(\sprintf(
+				'Auth method "%s" not found in settings.',
+				$name
+			)))->suspectConfig('oz.auth.methods', $name);
+		}
+
+		if (!\class_exists($class) || !\is_subclass_of($class, AuthMethodInterface::class)) {
+			throw (new RuntimeException(\sprintf(
+				'Auth method "%s" should be subclass of: %s',
+				$class,
+				AuthMethodInterface::class
+			)))->suspectConfig('oz.auth.methods', $name);
+		}
+
+		return $class;
 	}
 
 	/**
@@ -121,8 +174,9 @@ final class Auth implements BootHookReceiverInterface
 	 */
 	private static function gc(): void
 	{
-		if (Hasher::randomBool()) {
+		if (Random::bool() && OZone::hasDbAccess()) {
 			try {
+				// delete auth that expired more than an hour ago
 				$an_hour_ago = \time() - 3600;
 
 				$qb = new OZAuthsQuery();

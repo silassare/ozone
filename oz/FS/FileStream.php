@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\FS;
+namespace OZONE\Core\FS;
 
-use OZONE\OZ\Http\Stream as HttpStream;
-use OZONE\OZ\Http\Traits\StreamSourcesTraits;
+use OZONE\Core\Http\Stream as HttpStream;
+use OZONE\Core\Http\Traits\StreamSourcesTraits;
 
 /**
  * Class Stream.

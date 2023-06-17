@@ -187,21 +187,15 @@ create_oz_sh(){
 #!/bin/bash
 
 # VERSION: __DEFAULT_VERSION__
-# When the current folder is that of an OZone project
-# we launch the version corresponding to that used in
-# the project or we use the default version
+# When the current folder is that of an O'Zone project
+# we use the local oz executable, otherwise we use the global one
 
 OZ=__INSTALL_PATH__/vendor/bin/oz
-PROJECT_OZ="$(pwd)/api/vendor/bin/oz"
-PROJECT_CONFIG_FILE="$(pwd)/api/app/oz_settings/oz.config.php"
+PROJECT_OZ="$(pwd)/vendor/bin/oz"
 
-# makes sure we are in project root directory
-if [ -f "$PROJECT_CONFIG_FILE" ]; then
-
-	# do we have oz executable in this project
-	if [ -f "$PROJECT_OZ" ]; then
-		OZ=$PROJECT_OZ
-	fi
+# do we have oz executable in this project
+if [ -f "$PROJECT_OZ" ]; then
+  OZ=$PROJECT_OZ
 fi
 
 $OZ "$@"

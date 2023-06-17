@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Http;
+namespace OZONE\Core\Http;
 
-use OZONE\OZ\Http\Traits\StreamSourcesTraits;
+use OZONE\Core\Http\Traits\StreamSourcesTraits;
 
 /**
  * Class Body.

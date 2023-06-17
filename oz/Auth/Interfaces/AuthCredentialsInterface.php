@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Auth\Interfaces;
+namespace OZONE\Core\Auth\Interfaces;
 
-use OZONE\OZ\Http\Uri;
+use OZONE\Core\Http\Uri;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 
 /**
@@ -102,7 +102,7 @@ interface AuthCredentialsInterface extends ArrayCapableInterface
 	/**
 	 * Gets authorization link.
 	 *
-	 * @return \OZONE\OZ\Http\Uri
+	 * @return \OZONE\Core\Http\Uri
 	 */
 	public function getLink(): Uri;
 }

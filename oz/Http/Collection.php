@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Http;
+namespace OZONE\Core\Http;
 
 use ArrayAccess;
 use ArrayIterator;

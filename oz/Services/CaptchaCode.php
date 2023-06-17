@@ -11,18 +11,19 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Services;
+namespace OZONE\Core\Services;
 
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\Core\Service;
-use OZONE\OZ\Exceptions\NotFoundException;
-use OZONE\OZ\Http\Body;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Http\Uri;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Service;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Http\Body;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Http\Uri;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
+use OZONE\Core\Utils\Hasher;
+use OZONE\Core\Utils\Random;
 use PHPUtils\Str;
 
 /**
@@ -60,19 +61,18 @@ final class CaptchaCode extends Service
 	/**
 	 * Gets captcha image uri.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $code
-	 * @param int                    $expire_at
+	 * @param \OZONE\Core\App\Context $context
+	 * @param string                  $code
+	 * @param int                     $expire_at
 	 *
-	 * @return \OZONE\OZ\Http\Uri the captcha uri
+	 * @return \OZONE\Core\Http\Uri the captcha uri
 	 */
 	public static function buildCaptchaUri(Context $context, string $code, int $expire_at = 0): Uri
 	{
 		$captcha_key = Hasher::hash32();
 
-		$context->getSession()
-			->getDataStore()
-			->set('captcha_cfg.' . $captcha_key, [
+		$context->requireState()
+			->set('oz.captcha_cfg.' . $captcha_key, [
 				'expire_at' => $expire_at,
 				'code'      => $code,
 			]);
@@ -85,19 +85,18 @@ final class CaptchaCode extends Service
 	/**
 	 * Returns a response with the captcha image.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $captcha_key
+	 * @param \OZONE\Core\App\Context $context
+	 * @param string                  $captcha_key
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
 	 */
 	public static function generateCaptchaImage(Context $context, string $captcha_key): Response
 	{
-		$response      = $context->getResponse();
-		$session       = $context->getSession();
-		$key           = 'captcha_cfg.' . $captcha_key;
-		$data          = $session->getDataStore()
+		$response = $context->getResponse();
+		$key      = 'oz.captcha_cfg.' . $captcha_key;
+		$data     = $context->requireState()
 			->get($key);
 
 		if (empty($data)) {
@@ -113,7 +112,7 @@ final class CaptchaCode extends Service
 
 		$CAPTCHA_DIR = OZ_OZONE_DIR . 'oz_assets' . DS . 'captcha' . DS;
 
-		$rnd        = Hasher::randomInt(0, \count(self::$default_config['backgrounds']) - 1);
+		$rnd        = Random::int(0, \count(self::$default_config['backgrounds']) - 1);
 		$background = $CAPTCHA_DIR . self::$default_config['backgrounds'][$rnd];
 
 		$captcha = \imagecreatefrompng($background);
@@ -124,15 +123,15 @@ final class CaptchaCode extends Service
 		$color = Str::hex2rgb(self::$default_config['color']);
 		$color = \imagecolorallocate($captcha, $color['r'], $color['g'], $color['b']);
 
-		$angle = Hasher::randomInt(
+		$angle = Random::int(
 			self::$default_config['angle_min'],
 			self::$default_config['angle_max']
-		) * (1 === Hasher::randomInt(0, 1) ? -1 : 1);
+		) * (1 === Random::int(0, 1) ? -1 : 1);
 
 		$font = $CAPTCHA_DIR .
-				self::$default_config['fonts'][Hasher::randomInt(0, \count(self::$default_config['fonts']) - 1)];
+				self::$default_config['fonts'][Random::int(0, \count(self::$default_config['fonts']) - 1)];
 
-		$font_size     = Hasher::randomInt(
+		$font_size     = Random::int(
 			self::$default_config['min_font_size'],
 			self::$default_config['max_font_size']
 		);
@@ -142,10 +141,10 @@ final class CaptchaCode extends Service
 		$box_height     = \abs($text_box_size[5] - $text_box_size[1]);
 		$text_pos_x_min = 0;
 		$text_pos_x_max = $bg_width - $box_width;
-		$text_pos_x     = Hasher::randomInt($text_pos_x_min, $text_pos_x_max);
+		$text_pos_x     = Random::int($text_pos_x_min, $text_pos_x_max);
 		$text_pos_y_min = $box_height;
 		$text_pos_y_max = $bg_height - ($box_height / 2);
-		$text_pos_y     = Hasher::randomInt($text_pos_y_min, $text_pos_y_max);
+		$text_pos_y     = Random::int($text_pos_y_min, $text_pos_y_max);
 
 		if (self::$default_config['shadow']) {
 			$shadow_color = Str::hex2rgb(self::$default_config['shadow_color']);
@@ -182,7 +181,7 @@ final class CaptchaCode extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$route_path = Configs::get('oz.paths', 'OZ_CAPTCHA_ROUTE_PATH');
+		$route_path = Settings::get('oz.paths', 'OZ_CAPTCHA_ROUTE_PATH');
 
 		$router->get($route_path, function (RouteInfo $ri) {
 			return self::generateCaptchaImage($ri->getContext(), $ri->getParam(self::CAPTCHA_KEY));

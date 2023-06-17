@@ -11,12 +11,14 @@
 
 declare(strict_types=1);
 
-use OZONE\OZ\Auth\Providers\AuthEmail;
-use OZONE\OZ\Auth\Providers\AuthFile;
-use OZONE\OZ\Auth\Providers\AuthPhone;
+use OZONE\Core\Auth\Providers\EmailVerificationProvider;
+use OZONE\Core\Auth\Providers\FileAccessAuthProvider;
+use OZONE\Core\Auth\Providers\PhoneVerificationAuthProvider;
+use OZONE\Core\Auth\Providers\UserAuthProvider;
 
 return [
-	AuthPhone::NAME => AuthPhone::class,
-	AuthEmail::NAME => AuthEmail::class,
-	AuthFile::NAME  => AuthFile::class,
+	PhoneVerificationAuthProvider::NAME => PhoneVerificationAuthProvider::class,
+	EmailVerificationProvider::NAME     => EmailVerificationProvider::class,
+	FileAccessAuthProvider::NAME        => FileAccessAuthProvider::class,
+	UserAuthProvider::NAME              => UserAuthProvider::class,
 ];

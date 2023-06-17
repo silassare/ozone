@@ -11,19 +11,19 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\FS;
+namespace OZONE\Core\FS;
 
 use Exception;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Db\OZFile;
-use OZONE\OZ\Db\OZUser;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Exceptions\UnauthorizedActionException;
-use OZONE\OZ\Http\UploadedFile;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Db\OZFile;
+use OZONE\Core\Db\OZUser;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Http\UploadedFile;
 
 // TODO remove this dependency, I don't think we need it anymore
 // Image manipulation should be made on the client side or on dedicated server,
-// there are many useful tool to tod that
+// there are many useful tool to do that
 
 /**
  * Class PPicUtils.
@@ -55,7 +55,7 @@ class PPicUtils
 	 *
 	 * @return string the profile pic_id
 	 *
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
 	 * @throws Exception
 	 */
 	public function fromFileID(
@@ -64,7 +64,7 @@ class PPicUtils
 		array $coordinate,
 		string $file_label = 'OZ_FILE_LABEL_USER_PIC'
 	): string {
-		$f = FilesUtils::getFileWithId($file_id);
+		$f = FS::getFileWithId($file_id);
 
 		if (!$f || $f->getKey() !== $file_key) {
 			throw new UnauthorizedActionException();
@@ -79,8 +79,8 @@ class PPicUtils
 		// each file clone should have its own thumbnail
 		// because crop zone coordinates may be different from a clone to another
 
-		$user_dir          = FilesUtils::getUserRootDirectory($this->uid);
-		$gen_info          = FilesUtils::genNewFileInfo($user_dir, $clone->getName(), $clone->getMimeType());
+		$user_dir          = FS::getUserRootDirectory($this->uid);
+		$gen_info          = FS::genNewFileInfo($user_dir, $clone->getName(), $clone->getMimeType());
 		$thumb_destination = $gen_info['thumbnail'];
 
 		$this->makeProfilePic($clone, $thumb_destination, $coordinate);
@@ -93,9 +93,9 @@ class PPicUtils
 	/**
 	 * Sets a profile picture from uploaded file.
 	 *
-	 * @param \OZONE\OZ\Http\UploadedFile $uploaded_file the uploaded file
-	 * @param array                       $coordinate    the crop zone coordinate
-	 * @param string                      $file_label    the file log label
+	 * @param \OZONE\Core\Http\UploadedFile $uploaded_file the uploaded file
+	 * @param array                         $coordinate    the crop zone coordinate
+	 * @param string                        $file_label    the file log label
 	 *
 	 * @return string the profile picid
 	 *
@@ -106,7 +106,7 @@ class PPicUtils
 		array $coordinate,
 		string $file_label = 'OZ_FILE_LABEL_USER_PIC'
 	): string {
-		$user_dir   = FilesUtils::getUserRootDirectory($this->uid);
+		$user_dir   = FS::getUserRootDirectory($this->uid);
 		$upload_obj = new FilesUploadHandler();
 
 		$f = $upload_obj->moveUploadedFile($uploaded_file, $user_dir);
@@ -121,8 +121,8 @@ class PPicUtils
 		if ($f->getCloneID()) {
 			// the uploaded file is an alias file
 			// we shouldn't overwrite existing thumbnail
-			$user_dir          = FilesUtils::getUserRootDirectory($this->uid);
-			$gen_info          = FilesUtils::genNewFileInfo($user_dir, $f->getName(), $f->getMimeType());
+			$user_dir          = FS::getUserRootDirectory($this->uid);
+			$gen_info          = FS::genNewFileInfo($user_dir, $f->getName(), $f->getMimeType());
 			$thumb_destination = $gen_info['thumbnail'];
 
 			$this->makeProfilePic($f->getPath(), $thumb_destination, $coordinate);
@@ -141,17 +141,17 @@ class PPicUtils
 	/**
 	 * Make a thumbnail of the current file with a given crop zone coordinates, for profile pic.
 	 *
-	 * @param \OZONE\OZ\Db\OZFile $source      the source file
-	 * @param string              $destination the profile pic destination
-	 * @param array               $coordinates the crop zone coordinates
+	 * @param \OZONE\Core\Db\OZFile $source      the source file
+	 * @param string                $destination the profile pic destination
+	 * @param array                 $coordinates the crop zone coordinates
 	 *
 	 * @throws Exception
 	 */
 	private function makeProfilePic(OZFile $source, string $destination, array $coordinates): void
 	{
-		$img_utils_obj     = new ImagesUtils($source);
-		$size_x            = $size_y = Configs::get('oz.users', 'OZ_USER_PIC_MIN_SIZE');
-		$quality           = 100; // jpeg image quality: 0 to 100
+		$drive             = FS::getStorage($source->getStorage());
+		$img_utils_obj     = new ImagesUtils($drive->getStream($source));
+		$size_x            = $size_y = Settings::get('oz.users', 'OZ_USER_PIC_MIN_SIZE');
 		$clean_coordinates = null;
 
 		if (!empty($coordinates) && isset($coordinates['x'], $coordinates['y'], $coordinates['w'], $coordinates['h'])) {
@@ -165,9 +165,9 @@ class PPicUtils
 
 		if ($img_utils_obj->load()) {
 			if (null === $clean_coordinates) {
-				$img_utils_obj->cropAndSave($destination, $quality, $size_x, $size_y);
+				$img_utils_obj->cropAndSave($destination, 100, $size_x, $size_y);
 			} else {
-				$img_utils_obj->cropAndSave($destination, $quality, $size_x, $size_y, $coordinates, false);
+				$img_utils_obj->cropAndSave($destination, 100, $size_x, $size_y, $coordinates, false);
 			}
 		} else { /* this file is not a valid image */
 			throw new RuntimeException('OZ_IMAGE_NOT_VALID');

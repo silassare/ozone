@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Http;
+namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
-use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\FS\FilesUtils;
+use OZONE\Core\FS\FS;
+use OZONE\Core\Utils\Random;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 use RuntimeException;
@@ -85,8 +85,8 @@ class UploadedFile implements UploadedFileInterface
 	) {
 		// live recorded blob files as audio/video/image doesn't have a valid name
 		if (empty($name) || 'blob' === $name) {
-			$ext  = FilesUtils::mimeTypeToExtension($type ?? '');
-			$name = Hasher::genFileName('upload') . '.' . $ext;
+			$ext  = FS::mimeTypeToExtension($type ?? '');
+			$name = Random::fileName('upload') . '.' . $ext;
 		}
 
 		$this->file  = $file;
@@ -103,7 +103,7 @@ class UploadedFile implements UploadedFileInterface
 	public function getStream(): Stream
 	{
 		if ($this->moved) {
-			throw new RuntimeException(\sprintf('Uploaded file %1s has already been moved', $this->name));
+			throw new RuntimeException(\sprintf('Uploaded file "%s" has already been moved', $this->name));
 		}
 
 		if (null === $this->stream) {
@@ -130,22 +130,22 @@ class UploadedFile implements UploadedFileInterface
 
 		if ($targetIsStream) {
 			if (!\copy($this->file, $targetPath)) {
-				throw new RuntimeException(\sprintf('Error moving uploaded file %1s to %2s', $this->name, $targetPath));
+				throw new RuntimeException(\sprintf('Error moving uploaded file "%s" to "%s"', $this->name, $targetPath));
 			}
 
 			if (!\unlink($this->file)) {
-				throw new RuntimeException(\sprintf('Error removing uploaded file %1s', $this->name));
+				throw new RuntimeException(\sprintf('Error removing uploaded file "%s"', $this->name));
 			}
 		} elseif ($this->sapi) {
 			if (!\is_uploaded_file($this->file)) {
-				throw new RuntimeException(\sprintf('%1s is not a valid uploaded file', $this->file));
+				throw new RuntimeException(\sprintf('"%s" is not a valid uploaded file', $this->file));
 			}
 
 			if (!\move_uploaded_file($this->file, $targetPath)) {
-				throw new RuntimeException(\sprintf('Error moving uploaded file %1s to %2s', $this->name, $targetPath));
+				throw new RuntimeException(\sprintf('Error moving uploaded file "%s" to "%s"', $this->name, $targetPath));
 			}
 		} elseif (!\rename($this->file, $targetPath)) {
-			throw new RuntimeException(\sprintf('Error moving uploaded file %1s to %2s', $this->name, $targetPath));
+			throw new RuntimeException(\sprintf('Error moving uploaded file "%s" to "%s"', $this->name, $targetPath));
 		}
 
 		$this->moved = true;
@@ -186,11 +186,11 @@ class UploadedFile implements UploadedFileInterface
 	/**
 	 * Creates a normalized tree of UploadedFile instances from the Environment.
 	 *
-	 * @param Environment $env The environment
+	 * @param HTTPEnvironment $env The environment
 	 *
 	 * @return null|array a normalized tree of UploadedFile instances or null if none are provided
 	 */
-	public static function createFromEnvironment(Environment $env): ?array
+	public static function createFromEnvironment(HTTPEnvironment $env): ?array
 	{
 		if ($env->has('oz_files') && \is_array($env['oz_files'])) {
 			return $env['oz_files'];

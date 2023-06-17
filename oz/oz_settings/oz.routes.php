@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-use OZONE\OZ\Auth\Views\AuthLinkView;
-use OZONE\OZ\FS\Views\GetFilesView;
-use OZONE\OZ\Lang\PolyglotRoute;
-use OZONE\OZ\Web\Views\RedirectView;
+use OZONE\Core\Auth\Views\AuthLinkView;
+use OZONE\Core\FS\Views\GetFilesView;
+use OZONE\Core\Lang\PolyglotRoute;
+use OZONE\Core\Web\Views\RedirectView;
 
 return [
 	RedirectView::class  => true,

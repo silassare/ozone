@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Forms;
+namespace OZONE\Core\Forms;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeDate;
-use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\RuntimeException;
 
 /**
  * Class Fields.

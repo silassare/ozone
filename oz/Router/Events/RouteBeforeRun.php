@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router\Events;
+namespace OZONE\Core\Router\Events;
 
-use OZONE\OZ\Hooks\Hook;
-use OZONE\OZ\Router\RouteInfo;
+use OZONE\Core\Hooks\Hook;
+use OZONE\Core\Router\RouteInfo;
 
 /**
  * Class RouteBeforeRun.
@@ -26,7 +26,7 @@ final class RouteBeforeRun extends Hook
 	/**
 	 * RouteBeforeRun constructor.
 	 *
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Router\RouteInfo $ri
 	 */
 	public function __construct(protected RouteInfo $ri)
 	{
@@ -45,7 +45,7 @@ final class RouteBeforeRun extends Hook
 	/**
 	 * Gets route info.
 	 *
-	 * @return \OZONE\OZ\Router\RouteInfo
+	 * @return \OZONE\Core\Router\RouteInfo
 	 */
 	public function getRouteInfo(): RouteInfo
 	{

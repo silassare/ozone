@@ -11,62 +11,59 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\FS;
+namespace OZONE\Core\FS;
 
 use Exception;
-use OZONE\OZ\Core\Assert;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Exceptions\NotFoundException;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Http\Body;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Logger\Logger;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Http\Body;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Logger\Logger;
 
 /**
  * Class FilesServer.
+ *
+ * @deprecated
  */
 class FilesServer
 {
 	/**
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param array                  $params
+	 * @param \OZONE\Core\App\Context $context
+	 * @param array                   $params
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 *
 	 * @throws Exception
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
 	 */
 	public function serve(Context $context, array $params): Response
 	{
-		Assert::assertForm($params, [
-			'file_src',
-			'file_name',
-			'file_mime',
-			'file_quality',
-		], new NotFoundException());
+		if (empty($params['file_src']) || empty($params['file_name']) || empty($params['file_mime']) || empty($params['file_quality'])) {
+			throw new NotFoundException();
+		}
 
 		\set_time_limit(0);
 
-		$response = $context->getResponse();
-		$src      = $params['file_src'];
+		$response     = $context->getResponse();
+		$src          = $params['file_src'];
+		$file_name    = $params['file_name'];
+		$file_mime    = $params['file_mime'];
+		$file_quality = (int) $params['file_quality'];
 
-		if (empty($src) || !\file_exists($src) || !\is_file($src) || !\is_readable($src)) {
+		if (!\file_exists($src) || !\is_file($src) || !\is_readable($src)) {
 			throw new NotFoundException();
 		}
 
 		Logger::log('Find a way to use nginx directive "internal" feature to serve file.');
 
 		/* https://clubhouse.io/developer-how-to/how-to-use-internal-redirects-in-nginx/
-		if (Configs::get('oz.files', 'OZ_USE_NGINX_FILE_FEATURE')){
+		if (Settings::get('oz.files', 'OZ_USE_NGINX_FILE_FEATURE')){
 		// TODO Full rewrite
 		}
 		*/
-		$file_name    = $params['file_name'];
-		$file_mime    = $params['file_mime'];
-		$file_quality = (int) $params['file_quality'];
-		$size         = \filesize($src);
+		$size = \filesize($src);
 
 		// close the current session
 		if (\session_id()) {
@@ -97,7 +94,7 @@ class FilesServer
 			$img_utils_obj      = new ImagesUtils($src);
 
 			if ($img_utils_obj->load()) {
-				$max_size = Configs::get('oz.files', 'OZ_THUMBNAIL_MAX_SIZE');
+				$max_size = Settings::get('oz.files', 'OZ_THUMBNAIL_MAX_SIZE');
 				$advice   = $img_utils_obj->adviceBestSize($max_size, $max_size);
 				$content  = $img_utils_obj->resizeImage($advice['w'], $advice['h'], $advice['crop'])
 					->getString('image/jpeg', $jpeg_quality);
@@ -119,7 +116,7 @@ class FilesServer
 	 * @param bool  $allow_resume should we support download resuming
 	 * @param bool  $is_stream    is it a stream
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
 	 */
 	public static function startDownloadServer(
 		array $options,

@@ -11,15 +11,15 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cli;
+namespace OZONE\Core\Cli;
 
 use Kli\Kli;
-use OZONE\OZ\Cli\Utils\Utils;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Loader\ClassLoader;
-use OZONE\OZ\Logger\Logger;
-use OZONE\OZ\OZone;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Cli\Cron\Cron;
+use OZONE\Core\Cli\Utils\Utils;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Logger\Logger;
+use OZONE\Core\OZone;
 use PHPUtils\Str;
 
 /**
@@ -28,21 +28,53 @@ use PHPUtils\Str;
 final class Cli extends Kli
 {
 	/**
+	 * @var null|\OZONE\Core\Cli\Cli The Cli singleton instance
+	 */
+	private static ?Cli $instance = null;
+
+	/**
 	 * Cli constructor.
 	 */
-	protected function __construct(protected bool $in_project_root)
+	private function __construct()
 	{
 		parent::__construct('oz', true);
 	}
 
 	/**
-	 * Are we in a project root.
+	 * Gets the Cli instance.
 	 *
-	 * @return bool
+	 * @return \OZONE\Core\Cli\Cli
 	 */
-	public function inProjectRoot(): bool
+	public static function getInstance(): self
 	{
-		return $this->in_project_root;
+		if (!OZone::isCliMode()) {
+			echo 'This is the command line tool for OZone Framework.';
+
+			exit(1);
+		}
+
+		if (null === self::$instance) {
+			$title = 'oz';
+
+			if ($app = Utils::tryGetProjectApp()) {
+				$project_name = Settings::get('oz.config', 'OZ_PROJECT_NAME');
+
+				$title = \sprintf('oz:%s', Str::stringToURLSlug($project_name));
+
+				OZone::run($app);
+			}
+
+			\cli_set_process_title($title);
+
+			self::$instance = $cli = new self();
+
+			$cli->loadCommands();
+
+			// collect cron tasks
+			Cron::collect();
+		}
+
+		return self::$instance;
 	}
 
 	/**
@@ -68,7 +100,7 @@ final class Cli extends Kli
 	 * @param mixed $msg  the message to log
 	 * @param bool  $wrap to wrap string or not
 	 *
-	 * @return \OZONE\OZ\Cli\Cli
+	 * @return \OZONE\Core\Cli\Cli
 	 */
 	public function log(mixed $msg, bool $wrap = true): self
 	{
@@ -80,57 +112,22 @@ final class Cli extends Kli
 	/**
 	 * Runs the commands.
 	 *
-	 * @param array $arg
-	 *
-	 * @return \OZONE\OZ\Cli\Cli
+	 * @param array $args
 	 *
 	 * @throws \Kli\Exceptions\KliException
 	 */
-	public static function run(array $arg): self
+	public static function run(array $args): void
 	{
-		if (!OZone::isCliMode()) {
-			echo 'This is the command line tool for OZone Framework.';
-
-			exit(1);
-		}
-
-		$title           = 'oz';
-		$in_project_root = false;
-
-		if ($config = Utils::tryGetProjectConfig()) {
-			$title .= ':' . Str::stringToURLSlug($config['OZ_PROJECT_NAME']);
-			// Adds project namespace root directory
-			ClassLoader::addNamespace($config['OZ_PROJECT_NAMESPACE'], OZ_APP_DIR);
-
-			$in_project_root = true;
-		}
-
-		\cli_set_process_title($title);
-
-		$cli = new self($in_project_root);
-
-		if ($in_project_root) {
-			$app_class = $config['OZ_PROJECT_NAMESPACE'] . '\\' . $config['OZ_PROJECT_CLASS'];
-
-			/** @var \OZONE\OZ\App\Interfaces\AppInterface $app */
-			$app = new $app_class();
-			OZone::run($app);
-		}
-
-		$cli->loadCommands()
-			->execute($arg);
-
-		return $cli;
+		self::getInstance()
+			->execute($args);
 	}
 
 	/**
 	 * Loads all defined commands in oz.cli settings.
-	 *
-	 * @return \OZONE\OZ\Cli\Cli
 	 */
-	private function loadCommands(): self
+	private function loadCommands(): void
 	{
-		$list = Configs::load('oz.cli');
+		$list = Settings::load('oz.cli');
 
 		if (\is_array($list) && \count($list)) {
 			foreach ($list as $cmd_name => $cmd_class) {
@@ -143,12 +140,10 @@ final class Cli extends Kli
 					));
 				}
 
+				/* @var class-string<\OZONE\Core\Cli\Command> $cmd_class */
 				// @psalm-suppress UndefinedClass
-				/* @var class-string<\OZONE\OZ\Cli\Command> $cmd_class */
 				$this->addCommand(new $cmd_class($cmd_name, $this));
 			}
 		}
-
-		return $this;
 	}
 }

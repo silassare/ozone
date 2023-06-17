@@ -11,20 +11,20 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Auth\Services;
+namespace OZONE\Core\Auth\Services;
 
 use Gobl\DBAL\Types\TypeString;
-use OZONE\OZ\Auth\Auth;
-use OZONE\OZ\Auth\AuthScope;
-use OZONE\OZ\Auth\AuthSecretType;
-use OZONE\OZ\Core\Service;
-use OZONE\OZ\Db\OZAuth;
-use OZONE\OZ\Exceptions\InvalidFormException;
-use OZONE\OZ\Forms\Form;
-use OZONE\OZ\Forms\FormData;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
+use OZONE\Core\App\Service;
+use OZONE\Core\Auth\Auth;
+use OZONE\Core\Auth\AuthSecretType;
+use OZONE\Core\Db\OZAuth;
+use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Forms\Form;
+use OZONE\Core\Forms\FormData;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
+use Throwable;
 
 /**
  * Class AuthService.
@@ -33,6 +33,8 @@ class AuthService extends Service
 {
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws Throwable
 	 */
 	public static function registerRoutes(Router $router): void
 	{
@@ -58,22 +60,22 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
-	 * @param \OZONE\OZ\Forms\FormData   $fd
+	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Forms\FormData   $fd
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 *
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
 	 */
 	public function refresh(RouteInfo $ri, FormData $fd): Response
 	{
 		$ref         = $ri->getParam(OZAuth::COL_REF);
 		$refresh_key = $fd->get('refresh_key');
 
-		$auth = Auth::getRequiredByRef($ref);
+		$auth = Auth::getRequired($ref);
 
-		$provider = Auth::getAuthProvider($auth->provider, $ri->getContext(), AuthScope::from($auth));
+		$provider = Auth::provider($ri->getContext(), $auth);
 
 		$provider->getCredentials()
 			->setReference($ref)
@@ -88,20 +90,20 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Router\RouteInfo $ri
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 *
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
 	 */
 	public function state(RouteInfo $ri): Response
 	{
 		$ref = $ri->getParam(OZAuth::COL_REF);
 
-		$auth = Auth::getRequiredByRef($ref);
+		$auth = Auth::getRequired($ref);
 
-		$provider = Auth::getAuthProvider($auth->provider, $ri->getContext(), AuthScope::from($auth));
+		$provider = Auth::provider($ri->getContext(), $auth);
 
 		$provider->getCredentials()
 			->setReference($ref);
@@ -116,20 +118,20 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Router\RouteInfo $ri
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 *
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
 	 */
 	public function cancel(RouteInfo $ri): Response
 	{
 		$ref = $ri->getParam(OZAuth::COL_REF);
 
-		$auth = Auth::getRequiredByRef($ref);
+		$auth = Auth::getRequired($ref);
 
-		$provider = Auth::getAuthProvider($auth->provider, $ri->getContext(), AuthScope::from($auth));
+		$provider = Auth::provider($ri->getContext(), $auth);
 
 		$provider->getCredentials()
 			->setReference($ref);
@@ -143,22 +145,22 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
-	 * @param \OZONE\OZ\Forms\FormData   $fd
+	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Forms\FormData   $fd
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 *
-	 * @throws \OZONE\OZ\Exceptions\InvalidFormException
-	 * @throws \OZONE\OZ\Exceptions\NotFoundException
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
+	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
 	 */
 	public function authorize(RouteInfo $ri, FormData $fd): Response
 	{
 		$ref = $ri->getParam(OZAuth::COL_REF);
 
-		$auth = Auth::getRequiredByRef($ref);
+		$auth = Auth::getRequired($ref);
 
-		$provider = Auth::getAuthProvider($auth->provider, $ri->getContext(), AuthScope::from($auth));
+		$provider = Auth::provider($ri->getContext(), $auth);
 
 		$provider->getCredentials()
 			->setReference($ref);
@@ -187,7 +189,7 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @return \OZONE\OZ\Forms\Form
+	 * @return \OZONE\Core\Forms\Form
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
@@ -203,7 +205,7 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @return \OZONE\OZ\Forms\Form
+	 * @return \OZONE\Core\Forms\Form
 	 */
 	private static function buildAuthorizeForm(): Form
 	{

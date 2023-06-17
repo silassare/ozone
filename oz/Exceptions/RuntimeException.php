@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Exceptions;
+namespace OZONE\Core\Exceptions;
 
-use OZONE\OZ\Exceptions\Traits\ExceptionCustomSuspectTrait;
-use OZONE\OZ\Lang\I18nMessage;
+use OZONE\Core\Exceptions\Traits\ExceptionCustomSuspectTrait;
+use OZONE\Core\Lang\I18nMessage;
 use PHPUtils\Interfaces\RichExceptionInterface;
 use PHPUtils\Traits\RichExceptionTrait;
 use Throwable;

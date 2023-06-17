@@ -11,10 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router\Interfaces;
+namespace OZONE\Core\Router\Interfaces;
 
-use OZONE\OZ\Router\RouteGuard;
-use OZONE\OZ\Router\RouteInfo;
+use OZONE\Core\Router\RouteInfo;
 
 /**
  * Interface RouteGuardProviderInterface.
@@ -24,9 +23,9 @@ interface RouteGuardProviderInterface
 	/**
 	 * Returns route guard.
 	 *
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Router\RouteInfo $ri
 	 *
-	 * @return null|\OZONE\OZ\Router\RouteGuard
+	 * @return null|\OZONE\Core\Router\Interfaces\RouteGuardInterface
 	 */
-	public static function getGuard(RouteInfo $ri): ?RouteGuard;
+	public static function getGuard(RouteInfo $ri): ?RouteGuardInterface;
 }

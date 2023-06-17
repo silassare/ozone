@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Senders\Interfaces;
+namespace OZONE\Core\Senders\Interfaces;
 
 /**
  * Interface MessageInterface.

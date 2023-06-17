@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router\Interfaces;
+namespace OZONE\Core\Router\Interfaces;
 
-use OZONE\OZ\Router\Router;
+use OZONE\Core\Router\Router;
 
 /**
  * Interface RouteProviderInterface.
@@ -23,7 +23,7 @@ interface RouteProviderInterface
 	/**
 	 * Called to register the service routes.
 	 *
-	 * @param \OZONE\OZ\Router\Router $router
+	 * @param \OZONE\Core\Router\Router $router
 	 */
 	public static function registerRoutes(Router $router);
 }

@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db;
+namespace OZONE\Core\Db;
 
 /**
  * Class OZCountriesQuery.
  */
-class OZCountriesQuery extends \OZONE\OZ\Db\Base\OZCountriesQuery
+class OZCountriesQuery extends \OZONE\Core\Db\Base\OZCountriesQuery
 {
 	// ====================================================
 	// =	Your custom implementation goes here

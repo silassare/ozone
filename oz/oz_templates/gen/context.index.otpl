@@ -1,0 +1,41 @@
+<?php
+declare(strict_types=1);
+
+<%@import('gen.info.otpl',$)%>
+use OZONE\Core\App\Settings;
+use OZONE\Core\FS\Templates;
+use OZONE\Core\Loader\ClassLoader;
+use OZONE\Core\OZone;
+use <%$.oz_project_namespace%>\<%$.oz_project_app_class_name%>;
+<%if(!$.oz_is_api_context){%>
+//= Informs OZone that we are in Web Context
+\define('OZ_OZONE_IS_WEB_CONTEXT', true);
+<%}%>
+//=	Don't forget to use DS instead of \ or / and
+//= always add the last DS to your directories path
+if (!\defined('DS')) {
+	\define('DS', DIRECTORY_SEPARATOR);
+}
+
+//= Logs directory
+if (!\defined('OZ_LOG_DIR')) {
+	\define('OZ_LOG_DIR', __DIR__ . DS);
+}
+
+//= Require boot file
+require_once __DIR__ . DS . '..' . DS . '..' . DS . 'app' . DS . 'boot.php';
+
+//= Get application instance
+$app = require OZ_APP_DIR . 'app.php';
+
+//= Adds additional settings source
+Settings::addSource(__DIR__ . DS . '..' . DS . '..' . DS . '<%$.oz_folder_name%>' . DS . 'oz_settings');
+
+//= Adds additional templates source
+Templates::addSource(__DIR__ . DS . '..' . DS . '..' . DS . '<%$.oz_folder_name%>' . DS . 'oz_templates');
+
+//= Adds new directory to project namespace
+ClassLoader::addNamespace('\<%$.oz_project_namespace%>', __DIR__ . DS . '..' . DS . '..' . DS . '<%$.oz_folder_name%>');
+
+//= Run application
+OZone::run($app);

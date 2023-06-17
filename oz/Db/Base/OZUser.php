@@ -11,10 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db\Base;
+namespace OZONE\Core\Db\Base;
 
 /**
  * Class OZUser.
+ *
+ * @psalm-suppress UndefinedThisPropertyFetch
  *
  * @property null|string $id         Getter for column `oz_users`.`id`.
  * @property null|string $phone      Getter for column `oz_users`.`phone`.
@@ -33,7 +35,7 @@ namespace OZONE\OZ\Db\Base;
 abstract class OZUser extends \Gobl\ORM\ORMEntity
 {
 	public const TABLE_NAME      = 'oz_users';
-	public const TABLE_NAMESPACE = 'OZONE\\OZ\\Db';
+	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
 	public const COL_ID          = 'user_id';
 	public const COL_PHONE       = 'user_phone';
 	public const COL_EMAIL       = 'user_email';
@@ -72,7 +74,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 */
 	public static function createInstance(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\OZ\Db\OZUser($is_new, $strict);
+		return new \OZONE\Core\Db\OZUser($is_new, $strict);
 	}
 
 	/**
@@ -396,7 +398,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 * @param array    $order_by order by rules
 	 * @param null|int $total    total rows without limit
 	 *
-	 * @return \OZONE\OZ\Db\OZFile[]
+	 * @return \OZONE\Core\Db\OZFile[]
 	 *
 	 * @throws \Gobl\CRUD\Exceptions\CRUDException
 	 */
@@ -404,7 +406,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	], ?int $max = null, int $offset = 0, array $order_by = [
 	], ?int &$total = -1): array
 	{
-		return (new \OZONE\OZ\Db\OZFilesController())->getAllRelatives(
+		return (new \OZONE\Core\Db\OZFilesController())->getAllRelatives(
 			$this,
 			$this->_oeb_table->getRelation('files'),
 			$filters,
@@ -418,13 +420,13 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	/**
 	 * OneToOne relation between `oz_users` and `oz_countries`.
 	 *
-	 * @return ?\OZONE\OZ\Db\OZCountry
+	 * @return ?\OZONE\Core\Db\OZCountry
 	 *
 	 * @throws \Gobl\CRUD\Exceptions\CRUDException
 	 */
-	public function getCountry(): ?\OZONE\OZ\Db\OZCountry
+	public function getCountry(): ?\OZONE\Core\Db\OZCountry
 	{
-		return (new \OZONE\OZ\Db\OZCountriesController())->getRelative(
+		return (new \OZONE\Core\Db\OZCountriesController())->getRelative(
 			$this,
 			$this->_oeb_table->getRelation('country')
 		);
@@ -439,7 +441,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 * @param array    $order_by order by rules
 	 * @param null|int $total    total rows without limit
 	 *
-	 * @return \OZONE\OZ\Db\OZSession[]
+	 * @return \OZONE\Core\Db\OZSession[]
 	 *
 	 * @throws \Gobl\CRUD\Exceptions\CRUDException
 	 */
@@ -447,65 +449,9 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	], ?int $max = null, int $offset = 0, array $order_by = [
 	], ?int &$total = -1): array
 	{
-		return (new \OZONE\OZ\Db\OZSessionsController())->getAllRelatives(
+		return (new \OZONE\Core\Db\OZSessionsController())->getAllRelatives(
 			$this,
 			$this->_oeb_table->getRelation('sessions'),
-			$filters,
-			$max,
-			$offset,
-			$order_by,
-			$total
-		);
-	}
-
-	/**
-	 * OneToMany relation between `oz_users` and `oz_clients`.
-	 *
-	 * @param array    $filters  the row filters
-	 * @param null|int $max      maximum row to retrieve
-	 * @param int      $offset   first row offset
-	 * @param array    $order_by order by rules
-	 * @param null|int $total    total rows without limit
-	 *
-	 * @return \OZONE\OZ\Db\OZClient[]
-	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 */
-	public function getAttachedClients(array $filters = [
-	], ?int $max = null, int $offset = 0, array $order_by = [
-	], ?int &$total = -1): array
-	{
-		return (new \OZONE\OZ\Db\OZClientsController())->getAllRelatives(
-			$this,
-			$this->_oeb_table->getRelation('attached-clients'),
-			$filters,
-			$max,
-			$offset,
-			$order_by,
-			$total
-		);
-	}
-
-	/**
-	 * OneToMany relation between `oz_users` and `oz_clients`.
-	 *
-	 * @param array    $filters  the row filters
-	 * @param null|int $max      maximum row to retrieve
-	 * @param int      $offset   first row offset
-	 * @param array    $order_by order by rules
-	 * @param null|int $total    total rows without limit
-	 *
-	 * @return \OZONE\OZ\Db\OZClient[]
-	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 */
-	public function getOwnedClients(array $filters = [
-	], ?int $max = null, int $offset = 0, array $order_by = [
-	], ?int &$total = -1): array
-	{
-		return (new \OZONE\OZ\Db\OZClientsController())->getAllRelatives(
-			$this,
-			$this->_oeb_table->getRelation('owned-clients'),
 			$filters,
 			$max,
 			$offset,

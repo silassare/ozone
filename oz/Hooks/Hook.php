@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Hooks;
+namespace OZONE\Core\Hooks;
 
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Http\Request;
-use OZONE\OZ\Http\Response;
+use OZONE\Core\App\Context;
+use OZONE\Core\Http\Request;
+use OZONE\Core\Http\Response;
 use PHPUtils\Events\Event;
 
 /**
@@ -26,7 +26,7 @@ class Hook extends Event
 	/**
 	 * Hook constructor.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
+	 * @param \OZONE\Core\App\Context $context
 	 */
 	public function __construct(protected Context $context)
 	{
@@ -43,7 +43,7 @@ class Hook extends Event
 	/**
 	 * Gets context.
 	 *
-	 * @return \OZONE\OZ\Core\Context
+	 * @return \OZONE\Core\App\Context
 	 */
 	public function getContext(): Context
 	{
@@ -51,9 +51,9 @@ class Hook extends Event
 	}
 
 	/**
-	 * Shortcut for {@see \OZONE\OZ\Core\Context::getRequest()}.
+	 * Shortcut for {@see \OZONE\Core\App\Context::getRequest()}.
 	 *
-	 * @return \OZONE\OZ\Http\Request
+	 * @return \OZONE\Core\Http\Request
 	 */
 	public function getRequest(): Request
 	{
@@ -61,9 +61,9 @@ class Hook extends Event
 	}
 
 	/**
-	 * Shortcut for {@see \OZONE\OZ\Core\Context::getResponse()}.
+	 * Shortcut for {@see \OZONE\Core\App\Context::getResponse()}.
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 */
 	public function getResponse(): Response
 	{
@@ -71,9 +71,9 @@ class Hook extends Event
 	}
 
 	/**
-	 * Shortcut for {@see \OZONE\OZ\Core\Context::setResponse()}.
+	 * Shortcut for {@see \OZONE\Core\App\Context::setResponse()}.
 	 *
-	 * @param \OZONE\OZ\Http\Response $response
+	 * @param \OZONE\Core\Http\Response $response
 	 *
 	 * @return $this
 	 */

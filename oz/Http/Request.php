@@ -11,11 +11,11 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Http;
+namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Forms\FormData;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Forms\FormData;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
@@ -81,7 +81,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * List of uploaded files.
 	 *
-	 * @var \OZONE\OZ\Http\UploadedFile[]
+	 * @var \OZONE\Core\Http\UploadedFile[]
 	 */
 	protected array $uploadedFiles;
 
@@ -135,10 +135,10 @@ class Request extends Message implements ServerRequestInterface
 		$this->uploadedFiles  = $uploadedFiles;
 
 		if ('POST' === $this->method) {
-			$allowed = Configs::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
+			$allowed = Settings::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
 
 			if ($allowed) {
-				$realMethodHeaderName = Configs::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME');
+				$realMethodHeaderName = Settings::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME');
 				$realMethodHeaderName = \strtolower(\str_replace('_', '-', $realMethodHeaderName));
 				$realMethod           = $this->getHeaderLine($realMethodHeaderName);
 
@@ -766,7 +766,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\OZ\Http\UploadedFile[]
+	 * @return \OZONE\Core\Http\UploadedFile[]
 	 */
 	public function getUploadedFiles(): array
 	{
@@ -800,14 +800,13 @@ class Request extends Message implements ServerRequestInterface
 	}
 
 	/**
-	 * Creates new HTTP request with data extracted from the application
-	 * Environment object.
+	 * Creates new HTTP request with data extracted from the application HTTP Environment object.
 	 *
-	 * @param Environment $environment
+	 * @param HTTPEnvironment $environment
 	 *
 	 * @return static
 	 */
-	public static function createFromEnvironment(Environment $environment): self
+	public static function createFromHTTPEnvironment(HTTPEnvironment $environment): self
 	{
 		$method        = $environment['REQUEST_METHOD'];
 		$uri           = Uri::createFromEnvironment($environment);

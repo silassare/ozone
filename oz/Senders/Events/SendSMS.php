@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Senders\Events;
+namespace OZONE\Core\Senders\Events;
 
-use OZONE\OZ\Senders\Messages\SMSMessage;
+use OZONE\Core\Senders\Messages\SMSMessage;
 use PHPUtils\Events\Event;
 
 /**
@@ -37,7 +37,7 @@ final class SendSMS extends Event
 	}
 
 	/**
-	 * @return \OZONE\OZ\Senders\Messages\SMSMessage
+	 * @return \OZONE\Core\Senders\Messages\SMSMessage
 	 */
 	public function getMessage(): SMSMessage
 	{

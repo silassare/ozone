@@ -19,10 +19,11 @@ return [
 	// 		/files/ozone-7000000000-fe5017db3a4b07eb5297c745ba198355-thumb.png
 	// 		/files/ozone-7000000000-fe5017db3a4b07eb5297c745ba198355-thumb
 	// 		/files/ozone-7000000000-eaabf4cdc3f909a61be62e1fa4d231ed-fe5017db3a4b07eb5297c745ba198355-thumb
-	'OZ_GET_FILE_URI_PATH_FORMAT'    => '/files/ozone-{oz_file_id}[-{oz_file_ref}]-{oz_file_key}[-{oz_file_filter}][.{oz_file_extension}]',
+	'OZ_GET_FILE_URI_PATH_FORMAT' => '/files/ozone-{oz_file_id}[-{oz_file_ref}]-{oz_file_key}[-{oz_file_filter}][.{oz_file_extension}]',
 
-	// when user download a file should we set filename header as uploaded file name
-	'OZ_GET_FILE_DOWNLOAD_REAL_NAME' => false,
+	// when user download a file should we
+	// specify the uploaded file name in the response headers ?
+	'OZ_GET_FILE_SHOW_REAL_NAME'  => false,
 
 	'OZ_UPLOAD_FILE_MAX_COUNT'         => 10,
 	'OZ_UPLOAD_FILE_MAX_SIZE'          => 10 * 1000 * 1000, // 10 Mb

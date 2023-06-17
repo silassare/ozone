@@ -11,13 +11,13 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Web;
+namespace OZONE\Core\Web;
 
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Http\Uri;
-use OZONE\OZ\Lang\I18n;
-use OZONE\OZ\Lang\Polyglot;
+use OZONE\Core\App\Context;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Http\Uri;
+use OZONE\Core\Lang\I18n;
+use OZONE\Core\Lang\Polyglot;
 use Throwable;
 
 /**
@@ -30,7 +30,7 @@ class WebInject
 	/**
 	 * WebInject constructor.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
+	 * @param \OZONE\Core\App\Context $context
 	 */
 	public function __construct(Context $context)
 	{
@@ -48,7 +48,7 @@ class WebInject
 	/**
 	 * Gets the context.
 	 *
-	 * @return \OZONE\OZ\Core\Context
+	 * @return \OZONE\Core\App\Context
 	 */
 	public function getContext(): Context
 	{
@@ -80,9 +80,9 @@ class WebInject
 	}
 
 	/**
-	 * Shortcut for {@see \OZONE\OZ\Http\Request::getUri()}.
+	 * Shortcut for {@see \OZONE\Core\Http\Request::getUri()}.
 	 *
-	 * @return \OZONE\OZ\Http\Uri
+	 * @return \OZONE\Core\Http\Uri
 	 */
 	public function getRequestUri(): Uri
 	{
@@ -96,7 +96,7 @@ class WebInject
 	 * @param string $path
 	 * @param array  $query
 	 *
-	 * @return \OZONE\OZ\Http\Uri
+	 * @return \OZONE\Core\Http\Uri
 	 */
 	public function buildUri(string $path, array $query = []): Uri
 	{
@@ -110,7 +110,7 @@ class WebInject
 	 * @param array  $params
 	 * @param array  $query
 	 *
-	 * @return \OZONE\OZ\Http\Uri
+	 * @return \OZONE\Core\Http\Uri
 	 */
 	public function buildRouteUri(string $route_name, array $params, array $query = []): Uri
 	{

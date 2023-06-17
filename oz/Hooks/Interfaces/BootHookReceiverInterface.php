@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Hooks\Interfaces;
+namespace OZONE\Core\Hooks\Interfaces;
 
 /**
  * Interface BootHookReceiverInterface.

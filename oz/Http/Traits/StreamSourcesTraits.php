@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Http\Traits;
+namespace OZONE\Core\Http\Traits;
 
 /**
  * Trait StreamSourcesTraits.

@@ -11,49 +11,57 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router;
+namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Forms\Form;
-use OZONE\OZ\Router\Interfaces\RouteGuardInterface;
-use OZONE\OZ\Router\Interfaces\RouteGuardProviderInterface;
-use OZONE\OZ\Users\UserRole;
+use OZONE\Core\Auth\Auth;
+use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Forms\Form;
+use OZONE\Core\Router\Guards\TwoFactorRouteGuard;
+use OZONE\Core\Router\Guards\UserRoleRouteGuard;
+use OZONE\Core\Router\Interfaces\RouteGuardInterface;
+use OZONE\Core\Router\Interfaces\RouteGuardProviderInterface;
+use OZONE\Core\Users\Users;
 
 /**
  * Class SharedOptions.
  */
 class RouteSharedOptions
 {
-	protected array $_params = [];
+	protected readonly string $path;
+	protected array           $params = [];
 
 	/**
-	 * @var array<callable|\OZONE\OZ\Router\Interfaces\RouteGuardInterface>
+	 * @var array<callable|\OZONE\Core\Router\Interfaces\RouteGuardInterface>
 	 */
-	protected array $_guards = [];
+	protected array $guards = [];
 
 	/**
-	 * @var null|callable|\OZONE\OZ\Forms\Form
+	 * @var null|callable|\OZONE\Core\Forms\Form
 	 */
-	protected $_form;
+	protected $form;
 
-	protected readonly string      $_path;
-	protected readonly ?RouteGroup $_parent;
-	private string                 $_name = '';
+	protected readonly ?RouteGroup $parent;
+	private string                 $name = '';
+
+	/**
+	 * @var array<class-string<\OZONE\Core\Auth\Interfaces\AuthMethodInterface>>
+	 */
+	private array $auths_methods = [];
 
 	/**
 	 * RouteSharedOptions constructor.
 	 *
-	 * @param string                           $path
-	 * @param null|\OZONE\OZ\Router\RouteGroup $parent
+	 * @param string                             $path
+	 * @param null|\OZONE\Core\Router\RouteGroup $parent
 	 */
 	protected function __construct(
 		string $path,
 		?RouteGroup $parent = null
 	) {
-		$this->_path   = $path;
-		$this->_parent = $parent;
+		$this->path   = $path;
+		$this->parent = $parent;
 	}
 
 	/**
@@ -61,7 +69,7 @@ class RouteSharedOptions
 	 */
 	public function __destruct()
 	{
-		unset($this->_guards, $this->_form, $this->_params);
+		unset($this->guards, $this->form, $this->params);
 	}
 
 	/**
@@ -73,7 +81,36 @@ class RouteSharedOptions
 	 */
 	public function name(string $name): static
 	{
-		$this->_name = $name;
+		$this->name = $name;
+
+		return $this;
+	}
+
+	/**
+	 * Defines allowed auth methods.
+	 *
+	 * @param string ...$auths
+	 *
+	 * @return $this
+	 */
+	public function auths(string ...$auths): static
+	{
+		foreach ($auths as $entry) {
+			if (\class_exists($entry)) {
+				if (!\is_subclass_of($entry, AuthMethodInterface::class)) {
+					throw new RuntimeException(\sprintf(
+						'Auth method "%s" should be subclass of: %s',
+						$entry,
+						AuthMethodInterface::class
+					));
+				}
+				$auth = $entry;
+			} else {
+				$auth = Auth::method($entry);
+			}
+
+			$this->auths_methods[] = $auth;
+		}
 
 		return $this;
 	}
@@ -83,22 +120,58 @@ class RouteSharedOptions
 	 *
 	 * @return $this
 	 */
-	public function with2FA(): static
+	public function with2FA(string ...$allowed_providers_name): static
 	{
-		return $this->guard(function (RouteInfo $ri) {
-			return (new RouteGuard($ri->getContext()))->with2FA();
+		return $this->guard(function () use ($allowed_providers_name) {
+			return new TwoFactorRouteGuard(...$allowed_providers_name);
 		});
 	}
 
 	/**
-	 * Adds a guard that check user role.
+	 * Adds a guard that check user has one of the given roles.
 	 *
 	 * @return $this
 	 */
-	public function withRole(string|UserRole $role): static
+	public function withRole(string ...$roles): static
 	{
-		return $this->guard(function (RouteInfo $ri) use ($role) {
-			return (new RouteGuard($ri->getContext()))->withRole($role);
+		return $this->guard(function () use ($roles) {
+			return new UserRoleRouteGuard(...$roles);
+		});
+	}
+
+	/**
+	 * Adds a guard that check user has one of the given roles or is admin.
+	 *
+	 * @return $this
+	 */
+	public function withRoleOrAdmin(string ...$roles): static
+	{
+		return $this->guard(function () use ($roles) {
+			return (new UserRoleRouteGuard(...$roles))->strict(false);
+		});
+	}
+
+	/**
+	 * Adds a guard that check if user has admin or super admin role.
+	 *
+	 * @return $this
+	 */
+	public function withAdminRole(): static
+	{
+		return $this->guard(function () {
+			return new UserRoleRouteGuard(Users::ADMIN, Users::SUPER_ADMIN);
+		});
+	}
+
+	/**
+	 * Adds a guard that check if user super admin role.
+	 *
+	 * @return $this
+	 */
+	public function withSuperAdminRole(): static
+	{
+		return $this->guard(function () {
+			return new UserRoleRouteGuard(Users::SUPER_ADMIN);
 		});
 	}
 
@@ -106,45 +179,37 @@ class RouteSharedOptions
 	 * Add guard.
 	 *
 	 * The route guard may be a:
-	 * - name in configs `oz.routes.guards`
-	 * - a fully qualified classname implementing {@see \OZONE\OZ\Router\Interfaces\RouteGuardProviderInterface}
-	 * - an instance of {@see \OZONE\OZ\Router\Interfaces\RouteGuardInterface}
-	 * - or a callable that will be called with {@see \OZONE\OZ\Router\RouteInfo} as argument
-	 *   and should return an instance of {@see \OZONE\OZ\Router\Interfaces\RouteGuardInterface} or null.
+	 * - guard provider name in configs `oz.guards.providers`
+	 * - a fully qualified classname implementing {@see RouteGuardProviderInterface}
+	 * - an instance of {@see RouteGuardInterface}
+	 * - or a callable that will be called with {@see RouteInfo} as argument
+	 *   and should return an instance of {@see RouteGuardInterface} or null.
 	 *
-	 * @param callable|\OZONE\OZ\Router\Interfaces\RouteGuardInterface|string $guard
+	 * @param callable|RouteGuardInterface|string $guard
 	 *
 	 * @return static
 	 */
 	public function guard(string|callable|RouteGuardInterface $guard): static
 	{
-		if (\is_string($guard)) {
-			if (\class_exists($guard)) {
+		if (\is_string($guard)) { // class FQN or provider name
+			if (\class_exists($guard)) {// class FQN
 				$provider_class = $guard;
-			} else {
-				$provider_class = Configs::get('oz.routes.guards', $guard);
-
-				if (!$provider_class) {
+				if (!\is_subclass_of($provider_class, RouteGuardProviderInterface::class)) {
 					throw new RuntimeException(\sprintf(
-						'Unknown route guard provider name "%s".',
-						$provider_class
+						'Route guard provider "%s" should be subclass of: %s',
+						$provider_class,
+						RouteGuardProviderInterface::class
 					));
 				}
-			}
-
-			if (!\is_subclass_of($provider_class, RouteGuardProviderInterface::class)) {
-				throw new RuntimeException(\sprintf(
-					'Route guard provider "%s" should be subclass of: %s',
-					$provider_class,
-					RouteGuardProviderInterface::class
-				));
+			} else {// provider name
+				$provider_class = Guards::provider($guard);
 			}
 
 			/** @var RouteGuardProviderInterface $provider_class */
 			$guard = [$provider_class, 'getGuard'];
 		}
 
-		$this->_guards[] = $guard;
+		$this->guards[] = $guard;
 
 		return $this;
 	}
@@ -152,13 +217,13 @@ class RouteSharedOptions
 	/**
 	 * Sets form.
 	 *
-	 * @param callable|\OZONE\OZ\Forms\Form $form
+	 * @param callable|\OZONE\Core\Forms\Form $form
 	 *
 	 * @return static
 	 */
 	public function form(callable|Form $form): static
 	{
-		$this->_form = $form;
+		$this->form = $form;
 
 		return $this;
 	}
@@ -181,7 +246,7 @@ class RouteSharedOptions
 			));
 		}
 
-		$this->_params[$name] = $pattern;
+		$this->params[$name] = $pattern;
 
 		return $this;
 	}
@@ -205,11 +270,11 @@ class RouteSharedOptions
 	/**
 	 * Gets parent.
 	 *
-	 * @return null|\OZONE\OZ\Router\RouteGroup
+	 * @return null|\OZONE\Core\Router\RouteGroup
 	 */
 	public function getParent(): ?RouteGroup
 	{
-		return $this->_parent;
+		return $this->parent;
 	}
 
 	/**
@@ -221,14 +286,14 @@ class RouteSharedOptions
 	 */
 	public function getName(bool $full = true): string
 	{
-		if ($full && $this->_parent) {
-			$parent_name = $this->_parent->getName();
+		if ($full && $this->parent) {
+			$parent_name = $this->parent->getName();
 			if (!empty($parent_name)) {
-				return $parent_name . '.' . $this->_name;
+				return $parent_name . '.' . $this->name;
 			}
 		}
 
-		return $this->_name;
+		return $this->name;
 	}
 
 	/**
@@ -240,22 +305,22 @@ class RouteSharedOptions
 	 */
 	public function getPath(bool $full = true): string
 	{
-		if ($full && $this->_parent) {
-			$parent_path = $this->_parent->getPath();
+		if ($full && $this->parent) {
+			$parent_path = $this->parent->getPath();
 			if (!empty($parent_path)) {
-				return self::safePathConcat($parent_path, $this->_path);
+				return self::safePathConcat($parent_path, $this->path);
 			}
 		}
 
-		return $this->_path;
+		return $this->path;
 	}
 
 	/**
 	 * Gets route form bundle.
 	 *
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Router\RouteInfo $ri
 	 *
-	 * @return null|\OZONE\OZ\Forms\Form
+	 * @return null|\OZONE\Core\Forms\Form
 	 */
 	public function getFormBundle(RouteInfo $ri): ?Form
 	{
@@ -277,19 +342,19 @@ class RouteSharedOptions
 	/**
 	 * Gets route forms.
 	 *
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Router\RouteInfo $ri
 	 *
-	 * @return \OZONE\OZ\Forms\Form[]
+	 * @return \OZONE\Core\Forms\Form[]
 	 */
 	public function getForms(RouteInfo $ri): array
 	{
-		$forms = $this->_parent?->getForms($ri) ?? [];
+		$forms = $this->parent?->getForms($ri) ?? [];
 
-		if (null !== $this->_form) {
-			if ($this->_form instanceof Form) {
-				$forms[] = $this->_form;
+		if (null !== $this->form) {
+			if ($this->form instanceof Form) {
+				$forms[] = $this->form;
 			} else {
-				$form_builder = $this->_form;
+				$form_builder = $this->form;
 				$result       = $form_builder($ri);
 
 				if (null !== $result) {
@@ -317,25 +382,41 @@ class RouteSharedOptions
 	 */
 	public function getParams(): array
 	{
-		$params = $this->_parent?->getParams() ?? [];
+		$params = $this->parent?->getParams() ?? [];
 
-		return \array_merge($params, $this->_params);
+		return \array_merge($params, $this->params);
+	}
+
+	/**
+	 * Gets routes auth methods.
+	 *
+	 * @return array<class-string<\OZONE\Core\Auth\Interfaces\AuthMethodInterface>>
+	 */
+	public function getAuthMethods(): array
+	{
+		$list = $this->parent?->getAuthMethods() ?? [];
+
+		return \array_unique(\array_merge($list, $this->auths_methods));
 	}
 
 	/**
 	 * Gets route guards.
 	 *
-	 * @return array<RouteGuardInterface>
+	 * @return RouteGuardInterface[]
 	 */
 	public function getGuards(RouteInfo $ri): array
 	{
-		$results = $this->_parent?->getGuards($ri) ?? [];
-		foreach ($this->_guards as $guard) {
+		$results = $this->parent?->getGuards($ri) ?? [];
+		foreach ($this->guards as $guard) {
 			if (\is_callable($guard)) {
 				$provider = $guard;
 				$guard    = $provider($ri);
 
-				if ((null !== $guard) && !($guard instanceof RouteGuardInterface)) {
+				if (null === $guard) {
+					continue;
+				}
+
+				if (!$guard instanceof RouteGuardInterface) {
 					throw (new RuntimeException(\sprintf(
 						'Route guard provider should return instance of "%s" or "null" not: %s',
 						RouteGuardInterface::class,

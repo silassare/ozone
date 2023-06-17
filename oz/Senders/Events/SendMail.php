@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Senders\Events;
+namespace OZONE\Core\Senders\Events;
 
-use OZONE\OZ\Senders\Messages\MailMessage;
+use OZONE\Core\Senders\Messages\MailMessage;
 use PHPUtils\Events\Event;
 
 /**
@@ -37,7 +37,7 @@ final class SendMail extends Event
 	}
 
 	/**
-	 * @return \OZONE\OZ\Senders\Messages\MailMessage
+	 * @return \OZONE\Core\Senders\Messages\MailMessage
 	 */
 	public function getMessage(): MailMessage
 	{

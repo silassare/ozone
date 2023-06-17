@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Forms;
+namespace OZONE\Core\Forms;
 
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Gobl\DBAL\Types\TypeString;
@@ -26,12 +26,12 @@ class Field implements ArrayCapableInterface
 	use ArrayCapableTrait;
 
 	/**
-	 * @var \Gobl\DBAL\Types\Interfaces\TypeInterface|\OZONE\OZ\Forms\TypesSwitcher
+	 * @var \Gobl\DBAL\Types\Interfaces\TypeInterface|\OZONE\Core\Forms\TypesSwitcher
 	 */
 	protected TypeInterface|TypesSwitcher $_type;
 
 	/**
-	 * @var callable(mixed, \OZONE\OZ\Forms\FormData):(bool|null)
+	 * @var callable(mixed, \OZONE\Core\Forms\FormData):(null|bool)
 	 */
 	protected $_validator;
 
@@ -46,7 +46,7 @@ class Field implements ArrayCapableInterface
 	 * @param string                           $name
 	 * @param null|TypeInterface|TypesSwitcher $type
 	 * @param bool                             $required
-	 * @param null|\OZONE\OZ\Forms\FormRule    $if
+	 * @param null|\OZONE\Core\Forms\FormRule  $if
 	 */
 	public function __construct(
 		string $name,
@@ -107,7 +107,7 @@ class Field implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \Gobl\DBAL\Types\Interfaces\TypeInterface|\OZONE\OZ\Forms\TypesSwitcher $type
+	 * @param \Gobl\DBAL\Types\Interfaces\TypeInterface|\OZONE\Core\Forms\TypesSwitcher $type
 	 *
 	 * @return $this
 	 */
@@ -119,7 +119,7 @@ class Field implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param callable(mixed, \OZONE\OZ\Forms\FormData):(bool|null) $validator
+	 * @param callable(mixed, \OZONE\Core\Forms\FormData):(null|bool) $validator
 	 *
 	 * @return $this
 	 */
@@ -131,7 +131,7 @@ class Field implements ArrayCapableInterface
 	}
 
 	/**
-	 * @param \OZONE\OZ\Forms\FormData $fd
+	 * @param \OZONE\Core\Forms\FormData $fd
 	 *
 	 * @return bool
 	 */
@@ -179,8 +179,8 @@ class Field implements ArrayCapableInterface
 	/**
 	 * Validate a given value.
 	 *
-	 * @param mixed                    $value
-	 * @param \OZONE\OZ\Forms\FormData $cleaned_fd
+	 * @param mixed                      $value
+	 * @param \OZONE\Core\Forms\FormData $cleaned_fd
 	 *
 	 * @return mixed
 	 *

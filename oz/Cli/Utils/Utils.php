@@ -11,16 +11,17 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cli\Utils;
+namespace OZONE\Core\Cli\Utils;
 
 use Gobl\DBAL\Table;
 use Kli\KliOption;
 use Kli\Types\KliTypeString;
-use OZONE\OZ\Cli\Platforms\Interfaces\PlatformInterface;
-use OZONE\OZ\Cli\Platforms\PlatformDOS;
-use OZONE\OZ\Cli\Platforms\PlatformLinux;
-use OZONE\OZ\Core\DbManager;
-use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\Core\App\Interfaces\AppInterface;
+use OZONE\Core\Cli\Platforms\Interfaces\PlatformInterface;
+use OZONE\Core\Cli\Platforms\PlatformDOS;
+use OZONE\Core\Cli\Platforms\PlatformLinux;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\FS\FilesManager;
 use Throwable;
 
 /**
@@ -35,69 +36,76 @@ final class Utils
 	private static ?array $env = null;
 
 	/**
-	 * Try load project config from a given project folder or current working dir.
-	 *
-	 * @param null|string $folder
-	 *
-	 * @return null|array
-	 */
-	public static function tryGetProjectConfig(?string $folder = null): ?array
-	{
-		if (empty($folder)) {
-			$folder = \getcwd();
-		}
-
-		$oz_config = $folder . DS . 'api' . DS . 'app' . DS . 'oz_settings' . DS . 'oz.config.php';
-
-		if (\file_exists($oz_config)) {
-			$config = include $oz_config;
-
-			if (self::isProjectConfigLike($config)) {
-				return $config;
-			}
-		}
-
-		return null;
-	}
-
-	/**
 	 * Checks if provided folder is an ozone project root directory.
 	 * If provided folder is null, it will use current working directory.
 	 *
 	 * @param null|string $folder
 	 *
-	 * @return bool
+	 * @return null|string
 	 */
-	public static function isProjectRootDir(?string $folder = null): bool
+	public static function isProjectFolder(?string $folder = null): ?string
 	{
-		$config = self::tryGetProjectConfig($folder);
+		if (empty($folder)) {
+			$folder = \getcwd();
+		}
 
-		return null !== $config;
+		$fm   = new FilesManager($folder);
+		$path = $fm->resolve('app/app.php');
+
+		return $fm->filter()
+			->isFile()
+			->check($path) ? $path : null;
 	}
 
 	/**
-	 * Checks for ozone config.
-	 *
-	 * @param mixed $config
+	 * Checks if a project is loaded.
 	 *
 	 * @return bool
 	 */
-	public static function isProjectConfigLike(mixed $config): bool
+	public static function isProjectLoaded(): bool
 	{
-		return \is_array($config) && isset($config['OZ_PROJECT_NAME']);
+		return null !== self::tryGetProjectApp();
 	}
 
 	/**
-	 * Asserts if a folder or current working directory contains OZone project.
+	 * Checks if a project is loaded and returns the app instance.
 	 *
-	 * @param null|string $folder the project folder
+	 * @return null|\OZONE\Core\App\Interfaces\AppInterface
 	 */
-	public static function assertProjectFolder(?string $folder = null): void
+	public static function tryGetProjectApp(): ?AppInterface
 	{
-		if (!self::isProjectRootDir($folder)) {
-			$err = 'Error: there is no ozone project in "%s".' . \PHP_EOL . 'Are you in project root folder?';
+		static $app = null;
 
-			throw new RuntimeException(\sprintf($err, $folder));
+		if (null === $app && \defined('OZ_APP_DIR') && \file_exists($app_file = OZ_APP_DIR . 'app.php')) {
+			/** @psalm-suppress MissingFile */
+			$return = require $app_file;
+
+			if (!$return instanceof AppInterface) {
+				throw new RuntimeException(\sprintf(
+					'Invalid app instance in "%s", found "%s" while expecting "%s".',
+					$app_file,
+					\gettype($return),
+					AppInterface::class
+				));
+			}
+
+			$app = $return;
+		}
+
+		return $app;
+	}
+
+	/**
+	 * Asserts if a project is loaded.
+	 */
+	public static function assertProjectLoaded(): void
+	{
+		if (!self::tryGetProjectApp()) {
+			throw new RuntimeException(\sprintf(
+				'Error: there is no ozone project in "%s".'
+				. \PHP_EOL . 'Are you in project root folder?',
+				\getcwd()
+			));
 		}
 	}
 
@@ -107,13 +115,12 @@ final class Utils
 	public static function assertDatabaseAccess(): void
 	{
 		try {
-			self::assertProjectFolder();
+			self::assertProjectLoaded();
 
 			// we get connection to make sure that
 			// we have access to the database
 			// will throw error when something went wrong
-			DbManager::getDb()
-				->getConnection();
+			db()->getConnection();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to access database.', null, $t);
 		}
@@ -132,7 +139,7 @@ final class Utils
 	/**
 	 * Returns the current platform.
 	 *
-	 * @return \OZONE\OZ\Cli\Platforms\Interfaces\PlatformInterface
+	 * @return \OZONE\Core\Cli\Platforms\Interfaces\PlatformInterface
 	 */
 	public static function getPlatform(): PlatformInterface
 	{

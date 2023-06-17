@@ -11,22 +11,24 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ;
+namespace OZONE\Core;
 
 use Gobl\CRUD\CRUD;
-use OZONE\OZ\App\Interfaces\AppInterface;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\CRUDHandlerProvider;
-use OZONE\OZ\Core\DbManager;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Hooks\Events\FinishHook;
-use OZONE\OZ\Hooks\Events\InitHook;
-use OZONE\OZ\Hooks\Interfaces\BootHookReceiverInterface;
-use OZONE\OZ\Http\Environment;
-use OZONE\OZ\Router\Interfaces\RouteProviderInterface;
-use OZONE\OZ\Router\Router;
-use OZONE\OZ\Utils\Utils;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Db;
+use OZONE\Core\App\Interfaces\AppInterface;
+use OZONE\Core\App\Settings;
+use OZONE\Core\CRUD\TableCRUDHandlerProvider;
+use OZONE\Core\Db\OZRolesQuery;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Hooks\Events\FinishHook;
+use OZONE\Core\Hooks\Events\InitHook;
+use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Http\HTTPEnvironment;
+use OZONE\Core\Router\Interfaces\RouteProviderInterface;
+use OZONE\Core\Router\Router;
+use OZONE\Core\Users\Users;
+use OZONE\Core\Utils\Utils;
 use PHPUtils\Events\Event;
 
 /**
@@ -34,15 +36,15 @@ use PHPUtils\Events\Event;
  */
 final class OZone
 {
-	public const INTERNAL_PATH_PREFIX = '/oz:';
+	public const INTERNAL_PATH_PREFIX = '/~ozone-internal~/';
 
 	/**
-	 * @var null|\OZONE\OZ\Router\Router
+	 * @var null|\OZONE\Core\Router\Router
 	 */
 	private static ?Router $api_router;
 
 	/**
-	 * @var null|\OZONE\OZ\Router\Router
+	 * @var null|\OZONE\Core\Router\Router
 	 */
 	private static ?Router $web_router;
 
@@ -56,28 +58,34 @@ final class OZone
 	/**
 	 * The main context.
 	 *
-	 * @var null|\OZONE\OZ\Core\Context
+	 * @var null|\OZONE\Core\App\Context
 	 */
 	private static ?Context $main_context = null;
 
 	/**
 	 * Gets current running app.
 	 *
-	 * @return null|\OZONE\OZ\App\Interfaces\AppInterface
+	 * @return \OZONE\Core\App\Interfaces\AppInterface
 	 */
-	public static function getRunningApp(): null|AppInterface
+	public static function app(): AppInterface
 	{
+		if (null === self::$current_app) {
+			throw new RuntimeException('No app is running.');
+		}
+
 		return self::$current_app;
 	}
 
 	/**
-	 * Gets main context.
+	 * Checks if a given path is an internal path.
 	 *
-	 * @return null|\OZONE\OZ\Core\Context
+	 * @param string $path
+	 *
+	 * @return bool
 	 */
-	public static function getMainContext(): ?Context
+	public static function isInternalPath(string $path): bool
 	{
-		return self::$main_context;
+		return \str_starts_with($path, self::INTERNAL_PATH_PREFIX);
 	}
 
 	/**
@@ -103,11 +111,11 @@ final class OZone
 	/**
 	 * OZone main entry point.
 	 *
-	 * @param \OZONE\OZ\App\Interfaces\AppInterface $app
+	 * @param \OZONE\Core\App\Interfaces\AppInterface $app
 	 */
 	public static function run(AppInterface $app): void
 	{
-		if (!empty(self::$current_app)) {
+		if (null !== self::$current_app) {
 			\trigger_error('The app is already running.', \E_USER_NOTICE);
 
 			return;
@@ -119,12 +127,12 @@ final class OZone
 
 		self::notifyBootHookReceivers();
 
-		DbManager::init();
+		Db::init();
 
 		$context = self::createMainContext();
 
 		// The current user access level will be used for CRUD validation
-		CRUD::setHandlerProvider(new CRUDHandlerProvider($context));
+		CRUD::setHandlerProvider(new TableCRUDHandlerProvider($context));
 
 		Event::trigger(new InitHook($context));
 
@@ -148,16 +156,16 @@ final class OZone
 	/**
 	 * Returns the router with all API routes registered.
 	 *
-	 * @return \OZONE\OZ\Router\Router
+	 * @return \OZONE\Core\Router\Router
 	 */
 	public static function getApiRouter(): Router
 	{
 		if (!isset(self::$api_router)) {
 			self::$api_router = new Router();
 
-			$a      = Configs::load('oz.routes');
-			$b      = Configs::load('oz.routes.api');
-			$routes = Configs::merge($a, $b);
+			$a      = Settings::load('oz.routes');
+			$b      = Settings::load('oz.routes.api');
+			$routes = Settings::merge($a, $b);
 
 			self::registerRoutes(self::$api_router, $routes);
 		}
@@ -168,16 +176,16 @@ final class OZone
 	/**
 	 * Returns the router with all WEB routes registered.
 	 *
-	 * @return \OZONE\OZ\Router\Router
+	 * @return \OZONE\Core\Router\Router
 	 */
 	public static function getWebRouter(): Router
 	{
 		if (!isset(self::$web_router)) {
 			self::$web_router = new Router();
 
-			$a      = Configs::load('oz.routes');
-			$b      = Configs::load('oz.routes.web');
-			$routes = Configs::merge($a, $b);
+			$a      = Settings::load('oz.routes');
+			$b      = Settings::load('oz.routes.web');
+			$routes = Settings::merge($a, $b);
 
 			self::registerRoutes(self::$web_router, $routes);
 		}
@@ -186,9 +194,70 @@ final class OZone
 	}
 
 	/**
+	 * Check if we already completed installation process.
+	 *
+	 * @return bool
+	 */
+	public static function isInstalled(): bool
+	{
+		return self::hasDbAccess() && self::hasSuperAdmin();
+	}
+
+	/**
+	 * Check if we have database access.
+	 *
+	 * @return bool
+	 */
+	public static function hasDbAccess(): bool
+	{
+		static $has_db_access = null;
+
+		if (null === $has_db_access) {
+			try {
+				db()->getConnection();
+
+				$has_db_access = true;
+			} catch (\Throwable) {
+				$has_db_access = false;
+			}
+		}
+
+		return $has_db_access;
+	}
+
+	/**
+	 * Check if we have a super admin.
+	 *
+	 * @return bool
+	 */
+	public static function hasSuperAdmin(): bool
+	{
+		if (!self::hasDbAccess()) {
+			return false;
+		}
+
+		static $has_super_admin = null;
+
+		if (null === $has_super_admin) {
+			try {
+				$roles_qb = new OZRolesQuery();
+				$results  = $roles_qb->whereNameIs(Users::SUPER_ADMIN)
+					->whereIsValid()
+					->find(1);
+
+				$has_super_admin = (bool) $results->count();
+			} catch (\Throwable) {
+				$has_super_admin = false;
+			}
+		}
+
+		return $has_super_admin;
+	}
+
+	/**
 	 * Creates the main context.
 	 *
-	 * @return \OZONE\OZ\Core\Context
+	 * @return \OZONE\Core\App\Context
 	 */
 	private static function createMainContext(): Context
 	{
@@ -198,21 +267,17 @@ final class OZone
 			$is_api_context = !$is_web_context;
 
 			if ($is_cli_mode) {
-				$api_key_name = Configs::get('oz.config', 'OZ_API_KEY_HEADER_NAME');
+				$api_key_name = Settings::get('oz.config', 'OZ_API_KEY_HEADER_NAME');
 				$api_key_env  = \sprintf('HTTP_%s', \strtoupper(\str_replace('-', '_', $api_key_name)));
 
-				$env = Environment::mock([
+				$http_env = HTTPEnvironment::mock([
 					$api_key_env => '',
 				]);
 			} else {
-				if ($is_web_context && !\defined('OZ_OZONE_DEFAULT_API_KEY')) {
-					throw new RuntimeException('OZ_DEFAULT_API_KEY_NOT_DEFINED');
-				}
-
-				$env = new Environment($_SERVER);
+				$http_env = new HTTPEnvironment($_SERVER);
 			}
 
-			self::$main_context = new Context($env, null, false, $is_api_context);
+			self::$main_context = new Context($http_env, null, null, $is_api_context);
 		}
 
 		return self::$main_context;
@@ -221,8 +286,8 @@ final class OZone
 	/**
 	 * Register all route provider.
 	 *
-	 * @param \OZONE\OZ\Router\Router $router
-	 * @param array                   $routes
+	 * @param \OZONE\Core\Router\Router $router
+	 * @param array                     $routes
 	 */
 	private static function registerRoutes(Router $router, array $routes): void
 	{
@@ -247,7 +312,7 @@ final class OZone
 	 */
 	private static function notifyBootHookReceivers(): void
 	{
-		$hook_receivers = Configs::load('oz.boot');
+		$hook_receivers = Settings::load('oz.boot');
 
 		foreach ($hook_receivers as $receiver => $enabled) {
 			if ($enabled) {
@@ -259,7 +324,7 @@ final class OZone
 					));
 				}
 
-				/* @var \OZONE\OZ\Hooks\Interfaces\BootHookReceiverInterface $receiver */
+				/* @var \OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface $receiver */
 				$receiver::boot();
 			}
 		}

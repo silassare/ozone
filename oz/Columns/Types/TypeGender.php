@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Columns\Types;
+namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
-use OZONE\OZ\Core\Configs;
+use OZONE\Core\App\Settings;
 
 /**
  * Class TypeGender.
@@ -77,7 +77,7 @@ class TypeGender extends Type
 		}
 
 		if (!empty($value)) {
-			$allowed = Configs::get('oz.users', 'OZ_USER_ALLOWED_GENDERS');
+			$allowed = Settings::get('oz.users', 'OZ_USER_ALLOWED_GENDERS');
 
 			if (!\in_array($value, $allowed, true)) {
 				throw new TypesInvalidValueException('OZ_FIELD_GENDER_INVALID', $debug);

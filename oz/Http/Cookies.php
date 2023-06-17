@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Http;
+namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
 
@@ -59,7 +59,7 @@ class Cookies
 	 *
 	 * @param array $properties
 	 *
-	 * @return \OZONE\OZ\Http\Cookies
+	 * @return \OZONE\Core\Http\Cookies
 	 */
 	public function setDefaultsProperties(array $properties): self
 	{
@@ -87,7 +87,7 @@ class Cookies
 	 * @param string       $name  Cookie name
 	 * @param array|string $value Cookie value, or cookie properties
 	 *
-	 * @return \OZONE\OZ\Http\Cookies
+	 * @return \OZONE\Core\Http\Cookies
 	 */
 	public function set(string $name, string|array $value): self
 	{

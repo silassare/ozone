@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Http;
+namespace OZONE\Core\Http;
 
 /**
  * Class Headers.
@@ -93,6 +93,9 @@ class Headers extends Collection
 
 		if (\str_starts_with($key, 'http-')) {
 			$key = \substr($key, 5);
+		} elseif (\str_starts_with($key, 'redirect-http-')) {
+			// Apache prefixes any environment variables set via RewriteRule with REDIRECT_
+			$key = \substr($key, 14);
 		}
 
 		return $key;
@@ -156,11 +159,11 @@ class Headers extends Collection
 	 * Creates new headers collection with data extracted from
 	 * the application Environment object.
 	 *
-	 * @param Environment $environment
+	 * @param HTTPEnvironment $environment
 	 *
 	 * @return self
 	 */
-	public static function createFromEnvironment(Environment $environment): self
+	public static function createFromEnvironment(HTTPEnvironment $environment): self
 	{
 		$data        = [];
 		$environment = self::determineAuthorization($environment);
@@ -182,11 +185,11 @@ class Headers extends Collection
 	 * If HTTP_AUTHORIZATION does not exist tries to get it from
 	 * getallheaders() when available.
 	 *
-	 * @param Environment $environment
+	 * @param HTTPEnvironment $environment
 	 *
-	 * @return Environment
+	 * @return HTTPEnvironment
 	 */
-	public static function determineAuthorization(Environment $environment): Environment
+	public static function determineAuthorization(HTTPEnvironment $environment): HTTPEnvironment
 	{
 		$authorization = $environment->get('HTTP_AUTHORIZATION');
 

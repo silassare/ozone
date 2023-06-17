@@ -11,14 +11,19 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Users\Services;
+namespace OZONE\Core\Users\Services;
 
-use OZONE\OZ\Core\Service;
-use OZONE\OZ\Db\OZUser;
-use OZONE\OZ\Db\OZUsersController;
-use OZONE\OZ\Forms\Form;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
+use OZONE\Core\App\Service;
+use OZONE\Core\Auth\Auth;
+use OZONE\Core\Auth\Providers\EmailVerificationProvider;
+use OZONE\Core\Auth\Providers\PhoneVerificationAuthProvider;
+use OZONE\Core\Db\OZUser;
+use OZONE\Core\Db\OZUsersController;
+use OZONE\Core\Exceptions\InternalErrorException;
+use OZONE\Core\Forms\Form;
+use OZONE\Core\Router\Guards\TwoFactorRouteGuard;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
 
 /**
  * Class SignUp.
@@ -26,20 +31,38 @@ use OZONE\OZ\Router\Router;
 final class SignUp extends Service
 {
 	/**
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Router\RouteInfo $ri
 	 *
 	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 * @throws \Gobl\DBAL\Exceptions\DBALException
 	 * @throws \Gobl\ORM\Exceptions\ORMException
 	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+	 * @throws \OZONE\Core\Exceptions\InternalErrorException
 	 */
 	public function actionSignUp(RouteInfo $ri): void
 	{
+		$data = $ri->getCleanFormData()
+			->getData();
+
+		/** @var \OZONE\Core\Db\OZAuth $auth */
+		$auth = $ri->getGuardFormData(TwoFactorRouteGuard::class)
+			->get('auth');
+
+		$provider = Auth::provider($this->getContext(), $auth);
+
+		if ($provider instanceof EmailVerificationProvider) {
+			$data[OZUser::COL_EMAIL] = $provider->getEmail();
+		} elseif ($provider instanceof PhoneVerificationAuthProvider) {
+			$data[OZUser::COL_PHONE] = $provider->getPhone();
+		} else {
+			// this is a logic error or someone is playing with us
+			throw new InternalErrorException();
+		}
+
 		$controller = new OZUsersController();
-		$user       = $controller->addItem($ri->getCleanFormData()->getData());
+		$user       = $controller->addItem($data);
 
 		$ri->getContext()
-			->getUsersManager()
+			->getUsers()
 			->logUserIn($user);
 
 		$this->getJSONResponse()
@@ -53,11 +76,12 @@ final class SignUp extends Service
 	public static function registerRoutes(Router $router): void
 	{
 		$router->post('/signup', function (RouteInfo $r) {
-			$s       = new self($r);
+			$s = new self($r);
 			$s->actionSignUp($r);
 
 			return $s->respond();
-		})->form(Form::fromTable(OZUser::TABLE_NAME))
-			->with2FA();
+		})
+			->form(Form::fromTable(OZUser::TABLE_NAME))
+			->with2FA(EmailVerificationProvider::NAME, PhoneVerificationAuthProvider::NAME);
 	}
 }

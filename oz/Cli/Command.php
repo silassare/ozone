@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Cli;
+namespace OZONE\Core\Cli;
 
 use Kli\KliAction;
 use Kli\KliArgs;
@@ -25,8 +25,8 @@ abstract class Command extends KliCommand
 	/**
 	 * Command constructor.
 	 *
-	 * @param string            $name command name
-	 * @param \OZONE\OZ\Cli\Cli $cli  cli object to use
+	 * @param string              $name command name
+	 * @param \OZONE\Core\Cli\Cli $cli  cli object to use
 	 *
 	 * @throws \Kli\Exceptions\KliException
 	 */

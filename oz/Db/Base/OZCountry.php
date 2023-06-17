@@ -11,10 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db\Base;
+namespace OZONE\Core\Db\Base;
 
 /**
  * Class OZCountry.
+ *
+ * @psalm-suppress UndefinedThisPropertyFetch
  *
  * @property string $cc2        Getter for column `oz_countries`.`cc2`.
  * @property string $code       Getter for column `oz_countries`.`code`.
@@ -28,7 +30,7 @@ namespace OZONE\OZ\Db\Base;
 abstract class OZCountry extends \Gobl\ORM\ORMEntity
 {
 	public const TABLE_NAME      = 'oz_countries';
-	public const TABLE_NAMESPACE = 'OZONE\\OZ\\Db';
+	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
 	public const COL_CC2         = 'country_cc2';
 	public const COL_CODE        = 'country_code';
 	public const COL_NAME        = 'country_name';
@@ -62,7 +64,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public static function createInstance(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\OZ\Db\OZCountry($is_new, $strict);
+		return new \OZONE\Core\Db\OZCountry($is_new, $strict);
 	}
 
 	/**
@@ -266,7 +268,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 * @param array    $order_by order by rules
 	 * @param null|int $total    total rows without limit
 	 *
-	 * @return \OZONE\OZ\Db\OZUser[]
+	 * @return \OZONE\Core\Db\OZUser[]
 	 *
 	 * @throws \Gobl\CRUD\Exceptions\CRUDException
 	 */
@@ -274,7 +276,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	], ?int $max = null, int $offset = 0, array $order_by = [
 	], ?int &$total = -1): array
 	{
-		return (new \OZONE\OZ\Db\OZUsersController())->getAllRelatives(
+		return (new \OZONE\Core\Db\OZUsersController())->getAllRelatives(
 			$this,
 			$this->_oeb_table->getRelation('users'),
 			$filters,

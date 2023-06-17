@@ -11,34 +11,34 @@
 
 declare(strict_types=1);
 
-use OZONE\OZ\Auth\Services\AuthEmailService;
-use OZONE\OZ\Auth\Services\AuthPhoneService;
-use OZONE\OZ\Auth\Services\AuthService;
-use OZONE\OZ\FS\Services\UploadFiles;
-use OZONE\OZ\Services\CaptchaCode;
-use OZONE\OZ\Services\LinkTo;
-use OZONE\OZ\Services\QRCode;
-use OZONE\OZ\Users\Services\AccountRecovery;
-use OZONE\OZ\Users\Services\Login;
-use OZONE\OZ\Users\Services\Logout;
-use OZONE\OZ\Users\Services\Password;
-use OZONE\OZ\Users\Services\SignUp;
-use OZONE\OZ\Users\Services\TNet;
-use OZONE\OZ\Users\Services\UserPicEdit;
+use OZONE\Core\Auth\Services\AuthService;
+use OZONE\Core\Auth\Services\EmailVerificationAuthService;
+use OZONE\Core\Auth\Services\PhoneVerificationAuthService;
+use OZONE\Core\FS\Services\UploadFiles;
+use OZONE\Core\Services\CaptchaCode;
+use OZONE\Core\Services\LinkTo;
+use OZONE\Core\Services\QRCode;
+use OZONE\Core\Users\Services\AccountRecovery;
+use OZONE\Core\Users\Services\Login;
+use OZONE\Core\Users\Services\Logout;
+use OZONE\Core\Users\Services\Password;
+use OZONE\Core\Users\Services\SignUp;
+use OZONE\Core\Users\Services\TNet;
+use OZONE\Core\Users\Services\UserPicEdit;
 
 return [
-	UploadFiles::class      => true,
-	CaptchaCode::class      => true,
-	QRCode::class           => true,
-	LinkTo::class           => true,
-	TNet::class             => true,
-	SignUp::class           => true,
-	Login::class            => true,
-	Logout::class           => true,
-	UserPicEdit::class      => true,
-	Password::class         => true,
-	AccountRecovery::class  => true,
-	AuthService::class      => true,
-	AuthPhoneService::class => true,
-	AuthEmailService::class => true,
+	UploadFiles::class                  => true,
+	CaptchaCode::class                  => true,
+	QRCode::class                       => true,
+	LinkTo::class                       => true,
+	TNet::class                         => true,
+	SignUp::class                       => true,
+	Login::class                        => true,
+	Logout::class                       => true,
+	UserPicEdit::class                  => true,
+	Password::class                     => true,
+	AccountRecovery::class              => true,
+	AuthService::class                  => true,
+	PhoneVerificationAuthService::class => true,
+	EmailVerificationAuthService::class => true,
 ];

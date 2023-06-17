@@ -15,4 +15,12 @@
             <directory name="tests"/>
         </ignoreFiles>
     </projectFiles>
+
+    <issueHandlers>
+        <UndefinedClass>
+            <errorLevel type="suppress">
+                <referencedClass name="Memcached"/>
+            </errorLevel>
+        </UndefinedClass>
+    </issueHandlers>
 </psalm>

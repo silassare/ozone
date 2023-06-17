@@ -11,15 +11,15 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Router;
+namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Exceptions\RuntimeException;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Router\Events\RouteBeforeRun;
-use OZONE\OZ\Router\Events\RouteMethodNotAllowed;
-use OZONE\OZ\Router\Events\RouteNotFound;
+use OZONE\Core\App\Context;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Router\Events\RouteBeforeRun;
+use OZONE\Core\Router\Events\RouteMethodNotAllowed;
+use OZONE\Core\Router\Events\RouteNotFound;
 use PHPUtils\Events\Event;
 use Throwable;
 
@@ -47,17 +47,17 @@ final class Router
 	];
 
 	/**
-	 * @var null|\OZONE\OZ\Router\RouteGroup
+	 * @var null|\OZONE\Core\Router\RouteGroup
 	 */
 	private ?RouteGroup $current_group = null;
 
 	/**
-	 * @var \OZONE\OZ\Router\Route[]
+	 * @var \OZONE\Core\Router\Route[]
 	 */
 	private array $static_routes = [];
 
 	/**
-	 * @var \OZONE\OZ\Router\Route[]
+	 * @var \OZONE\Core\Router\Route[]
 	 */
 	private array $dynamic_routes = [];
 
@@ -78,10 +78,10 @@ final class Router
 	/**
 	 * Create a new route group.
 	 *
-	 * @param string                $path
-	 * @param callable(Router):void $factory
+	 * @param string                                               $path
+	 * @param callable(Router, \OZONE\Core\Router\RouteGroup):void $factory
 	 *
-	 * @return \OZONE\OZ\Router\RouteGroup
+	 * @return \OZONE\Core\Router\RouteGroup
 	 */
 	public function group(string $path, callable $factory): RouteGroup
 	{
@@ -89,7 +89,7 @@ final class Router
 
 		$this->current_group = $group;
 
-		$factory($this);
+		$factory($this, $group);
 
 		$this->current_group = $group->getParent();
 
@@ -126,8 +126,8 @@ final class Router
 	/**
 	 * Gets a given global parameter value.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $param
+	 * @param \OZONE\Core\App\Context $context
+	 * @param string                  $param
 	 *
 	 * @return null|string
 	 */
@@ -157,7 +157,7 @@ final class Router
 	/**
 	 * Gets dynamic routes.
 	 *
-	 * @return \OZONE\OZ\Router\Route[]
+	 * @return \OZONE\Core\Router\Route[]
 	 */
 	public function getDynamicRoutes(): array
 	{
@@ -167,7 +167,7 @@ final class Router
 	/**
 	 * Gets static routes.
 	 *
-	 * @return \OZONE\OZ\Router\Route[]
+	 * @return \OZONE\Core\Router\Route[]
 	 */
 	public function getStaticRoutes(): array
 	{
@@ -177,7 +177,7 @@ final class Router
 	/**
 	 * Gets all routes.
 	 *
-	 * @return \OZONE\OZ\Router\Route[]
+	 * @return \OZONE\Core\Router\Route[]
 	 */
 	public function getRoutes(): array
 	{
@@ -193,9 +193,9 @@ final class Router
 	/**
 	 * Builds route path.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $route_name
-	 * @param array                  $params
+	 * @param \OZONE\Core\App\Context $context
+	 * @param string                  $route_name
+	 * @param array                   $params
 	 *
 	 * @return string
 	 */
@@ -215,7 +215,7 @@ final class Router
 	 *
 	 * @param string $name
 	 *
-	 * @return null|\OZONE\OZ\Router\Route
+	 * @return null|\OZONE\Core\Router\Route
 	 */
 	public function getRoute(string $name): ?Route
 	{
@@ -315,9 +315,14 @@ final class Router
 	/**
 	 * Handle the request in a given context.
 	 *
+	 * @param \OZONE\Core\App\Context       $context
+	 * @param null|callable(RouteInfo):void $if_found_fn
+	 *
+	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws \OZONE\Core\Exceptions\InvalidFormException
 	 * @throws Throwable
 	 */
-	public function handle(Context $context): void
+	public function handle(Context $context, ?callable $if_found_fn = null): void
 	{
 		$request = $context->getRequest();
 		$uri     = $request->getUri();
@@ -335,29 +340,13 @@ final class Router
 				break;
 
 			case self::FOUND:
-				/** @var \OZONE\OZ\Router\Route $route */
+				/** @var \OZONE\Core\Router\Route $route */
 				/** @var array $params */
 				[$route, $params] = $results['found'];
 
-				$options = $route->getOptions();
-				$ri      = new RouteInfo($context, $route, $params);
+				$ri = new RouteInfo($context, $route, $params);
 
-				$route_guards = $options->getGuards($ri);
-
-				foreach ($route_guards as $guard) {
-					$guard->checkAccess();
-					$ri->getAuthFormData()
-						->merge($guard->getAuthData());
-				}
-
-				$clean_fd = $options->getFormBundle($ri)
-					?->validate($context->getRequest()
-						->getUnsafeFormData());
-
-				if ($clean_fd) {
-					$ri->getCleanFormData()
-						->merge($clean_fd);
-				}
+				$if_found_fn && $if_found_fn($ri);
 
 				Event::trigger(new RouteBeforeRun($ri));
 
@@ -374,7 +363,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\OZ\Router\RouteOptions
+	 * @return \OZONE\Core\Router\RouteOptions
 	 */
 	public function map(string|array $methods, string|callable $path, callable $factory = null): RouteOptions
 	{
@@ -433,7 +422,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\OZ\Router\RouteOptions
+	 * @return \OZONE\Core\Router\RouteOptions
 	 */
 	public function connect(string|callable $path, callable $factory = null): RouteOptions
 	{
@@ -446,7 +435,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\OZ\Router\RouteOptions
+	 * @return \OZONE\Core\Router\RouteOptions
 	 */
 	public function delete(string|callable $path, callable $factory = null): RouteOptions
 	{
@@ -459,7 +448,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\OZ\Router\RouteOptions
+	 * @return \OZONE\Core\Router\RouteOptions
 	 */
 	public function get(string|callable $path, callable $factory = null): RouteOptions
 	{
@@ -472,7 +461,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\OZ\Router\RouteOptions
+	 * @return \OZONE\Core\Router\RouteOptions
 	 */
 	public function head(string|callable $path, callable $factory = null): RouteOptions
 	{
@@ -485,7 +474,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\OZ\Router\RouteOptions
+	 * @return \OZONE\Core\Router\RouteOptions
 	 */
 	public function options(string|callable $path, callable $factory = null): RouteOptions
 	{
@@ -498,7 +487,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\OZ\Router\RouteOptions
+	 * @return \OZONE\Core\Router\RouteOptions
 	 */
 	public function patch(string|callable $path, callable $factory = null): RouteOptions
 	{
@@ -511,7 +500,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\OZ\Router\RouteOptions
+	 * @return \OZONE\Core\Router\RouteOptions
 	 */
 	public function post(string|callable $path, callable $factory = null): RouteOptions
 	{
@@ -524,7 +513,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\OZ\Router\RouteOptions
+	 * @return \OZONE\Core\Router\RouteOptions
 	 */
 	public function put(string|callable $path, callable $factory = null): RouteOptions
 	{
@@ -537,7 +526,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\OZ\Router\RouteOptions
+	 * @return \OZONE\Core\Router\RouteOptions
 	 */
 	public function trace(string|callable $path, callable $factory = null): RouteOptions
 	{
@@ -547,7 +536,7 @@ final class Router
 	/**
 	 * Run the route that match the current request path.
 	 *
-	 * @param \OZONE\OZ\Router\RouteInfo $ri
+	 * @param \OZONE\Core\Router\RouteInfo $ri
 	 *
 	 * @throws Throwable
 	 */
@@ -574,7 +563,7 @@ final class Router
 
 		try {
 			\ob_start();
-			$return        = \call_user_func($route->getCallable(), $ri);
+			$return        = \call_user_func($route->getHandler(), $ri);
 			$output_buffer = \ob_get_clean();
 		} catch (Throwable $t) {
 			\ob_clean();
@@ -587,7 +576,7 @@ final class Router
 			throw (new RuntimeException(
 				'Writing to output buffer is not allowed.',
 				$debug_data($route, ['output_buffer' => $output_buffer])
-			))->suspectCallable($route->getCallable());
+			))->suspectCallable($route->getHandler());
 		}
 
 		if (!$return instanceof Response) {
@@ -595,7 +584,7 @@ final class Router
 				'Invalid return type, got "%s" will expecting "%s".',
 				\get_debug_type($return),
 				Response::class
-			), $debug_data($route)))->suspectCallable($route->getCallable());
+			), $debug_data($route)))->suspectCallable($route->getHandler());
 		}
 
 		$ri->getContext()

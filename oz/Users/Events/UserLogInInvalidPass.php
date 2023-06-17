@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Users\Events;
+namespace OZONE\Core\Users\Events;
 
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Db\OZUser;
+use OZONE\Core\App\Context;
+use OZONE\Core\Db\OZUser;
 use PHPUtils\Events\Event;
 
 /**
@@ -25,7 +25,7 @@ final class UserLogInInvalidPass extends Event
 	}
 
 	/**
-	 * @return \OZONE\OZ\Core\Context
+	 * @return \OZONE\Core\App\Context
 	 */
 	public function getContext(): Context
 	{
@@ -33,7 +33,7 @@ final class UserLogInInvalidPass extends Event
 	}
 
 	/**
-	 * @return \OZONE\OZ\Db\OZUser
+	 * @return \OZONE\Core\Db\OZUser
 	 */
 	public function getUser(): OZUser
 	{

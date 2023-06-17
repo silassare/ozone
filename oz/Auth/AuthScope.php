@@ -11,38 +11,31 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Auth;
+namespace OZONE\Core\Auth;
 
 use InvalidArgumentException;
-use OZONE\OZ\Auth\Interfaces\AuthScopeInterface;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Db\OZAuth;
-use OZONE\OZ\Exceptions\UnauthorizedActionException;
-use PHPUtils\Store\Store;
-use PHPUtils\Traits\ArrayCapableTrait;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Interfaces\AuthScopeInterface;
+use OZONE\Core\Db\OZAuth;
 
 /**
  * Class AuthScope.
  */
-class AuthScope implements AuthScopeInterface
+class AuthScope extends AuthAccessRights implements AuthScopeInterface
 {
-	use ArrayCapableTrait;
-
 	protected string $label    = '';
 	protected int    $try_max  = 0;
 	protected int    $lifetime = 0;
 
 	/**
-	 * @var \PHPUtils\Store\Store<array>
+	 * AuthScope constructor.
 	 */
-	protected Store  $store;
-
-	public function __construct(protected string $value = '')
+	public function __construct(array $options = [])
 	{
-		$this->store = new Store([]);
+		parent::__construct($options);
 
-		$this->setTryMax((int) Configs::get('oz.auth', 'OZ_AUTH_CODE_TRY_MAX'))
-			->setLifetime((int) Configs::get('oz.auth', 'OZ_AUTH_CODE_LIFE_TIME'));
+		$this->setTryMax((int) Settings::get('oz.auth', 'OZ_AUTH_CODE_TRY_MAX'))
+			->setLifetime((int) Settings::get('oz.auth', 'OZ_AUTH_CODE_LIFE_TIME'));
 	}
 
 	/**
@@ -66,24 +59,6 @@ class AuthScope implements AuthScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getValue(): string
-	{
-		return $this->value;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function setValue(string $value): self
-	{
-		$this->value = $value;
-
-		return $this;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function getLifetime(): int
 	{
 		return $this->lifetime;
@@ -95,7 +70,10 @@ class AuthScope implements AuthScopeInterface
 	public function setLifetime(int $lifetime): self
 	{
 		if ($lifetime <= 0) {
-			throw new InvalidArgumentException(\sprintf('lifetime=%s should be a positive integer greater than 0.', $lifetime));
+			throw new InvalidArgumentException(\sprintf(
+				'lifetime=%s should be a positive integer greater than 0.',
+				$lifetime
+			));
 		}
 		$this->lifetime = $lifetime;
 
@@ -116,7 +94,10 @@ class AuthScope implements AuthScopeInterface
 	public function setTryMax(int $try_max): self
 	{
 		if ($try_max <= 0) {
-			throw new InvalidArgumentException(\sprintf('try_max=%s should be a positive integer greater than 0.', $try_max));
+			throw new InvalidArgumentException(\sprintf(
+				'try_max=%s should be a positive integer greater than 0.',
+				$try_max
+			));
 		}
 
 		$this->try_max = $try_max;
@@ -127,86 +108,12 @@ class AuthScope implements AuthScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function allow(string $action): self
-	{
-		$this->store->set($action, 1);
-
-		return $this;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function deny(string $action): self
-	{
-		$this->store->set($action, 0);
-
-		return $this;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function can(string ...$actions): bool
-	{
-		foreach ($actions as $action) {
-			if (!$this->store->has($action)) {
-				$parts       = \explode('.', $action);
-				$full_access = false;
-				$tree        = null;
-
-				foreach ($parts as $k) {
-					$tree = $tree ? $tree . '.' . $k : $k;
-
-					if (true === (bool) $this->store->get($tree . '.*')) {
-						$full_access = true;
-
-						break;
-					}
-				}
-
-				if (!$full_access) {
-					return false;
-				}
-			} elseif (true !== (bool) $this->store->get($action)) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @throws \OZONE\OZ\Exceptions\UnauthorizedActionException
-	 */
-	public function assertCan(string ...$actions): void
-	{
-		if (!$this->can(...$actions)) {
-			throw new UnauthorizedActionException();
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public static function from(OZAuth $auth): self
 	{
-		$scope = new self();
+		$scope = new self($auth->getOptions());
 
-		$scope->store = new Store($auth->getData());
-
-		return $scope->setValue($auth->getFor())
-			->setTryMax($auth->getTryMax())
-			->setLifetime($auth->getLifetime());
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function toArray(): array
-	{
-		return $this->store->getData();
+		return $scope->setTryMax($auth->getTryMax())
+			->setLifetime($auth->getLifetime())
+			->setLabel($auth->getLabel());
 	}
 }

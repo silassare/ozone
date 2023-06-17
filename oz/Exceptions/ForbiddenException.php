@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Exceptions;
+namespace OZONE\Core\Exceptions;
 
-use OZONE\OZ\Lang\I18nMessage;
+use OZONE\Core\Lang\I18nMessage;
 use Throwable;
 
 /**

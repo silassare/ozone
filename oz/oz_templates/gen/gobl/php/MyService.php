@@ -25,11 +25,10 @@ namespace MY_SERVICE_NS;
 
 use Gobl\DBAL\Types\TypeBigint;
 use Gobl\DBAL\Types\TypeInt;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\DbManager;
-use OZONE\OZ\Core\ORMService;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\ORMService;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
 use Throwable;
 
 /**
@@ -64,7 +63,7 @@ final class MyService extends ORMService
 	/**
 	 * MyService constructor.
 	 *
-	 * @param \OZONE\OZ\Core\Context|\OZONE\OZ\Router\RouteInfo $context
+	 * @param \OZONE\Core\App\Context|\OZONE\Core\Router\RouteInfo $context
 	 */
 	public function __construct(RouteInfo|Context $context)
 	{
@@ -78,7 +77,7 @@ final class MyService extends ORMService
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$table       = DbManager::getDb()
+		$table       = db()
 			->getTableOrFail('my_table');
 		$key_column  = $table->getColumnOrFail('my_pk_column_const');
 		$type_obj    = $key_column->getType();

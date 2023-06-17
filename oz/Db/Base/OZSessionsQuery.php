@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db\Base;
+namespace OZONE\Core\Db\Base;
 
 use Gobl\DBAL\Operator;
 
 /**
  * Class OZSessionsQuery.
  *
- * @method \OZONE\OZ\Db\OZSessionsResults find(?int $max = null, int $offset = 0, array $order_by = [])
+ * @method \OZONE\Core\Db\OZSessionsResults find(?int $max = null, int $offset = 0, array $order_by = [])
  */
 abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 {
@@ -28,8 +28,8 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\OZ\Db\OZSession::TABLE_NAMESPACE,
-			\OZONE\OZ\Db\OZSession::TABLE_NAME
+			\OZONE\Core\Db\OZSession::TABLE_NAMESPACE,
+			\OZONE\Core\Db\OZSession::TABLE_NAME
 		);
 	}
 
@@ -40,7 +40,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function createInstance(): static
 	{
-		return new \OZONE\OZ\Db\OZSessionsQuery();
+		return new \OZONE\Core\Db\OZSessionsQuery();
 	}
 
 	/**
@@ -67,7 +67,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZSession::COL_ID,
+			\OZONE\Core\Db\OZSession::COL_ID,
 			$value
 		);
 	}
@@ -83,7 +83,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZSession::COL_ID,
+			\OZONE\Core\Db\OZSession::COL_ID,
 			$value
 		);
 	}
@@ -99,7 +99,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZSession::COL_ID,
+			\OZONE\Core\Db\OZSession::COL_ID,
 			$value
 		);
 	}
@@ -115,7 +115,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZSession::COL_ID,
+			\OZONE\Core\Db\OZSession::COL_ID,
 			$value
 		);
 	}
@@ -131,7 +131,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZSession::COL_ID,
+			\OZONE\Core\Db\OZSession::COL_ID,
 			$value
 		);
 	}
@@ -147,7 +147,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZSession::COL_ID,
+			\OZONE\Core\Db\OZSession::COL_ID,
 			$value
 		);
 	}
@@ -163,7 +163,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZSession::COL_ID,
+			\OZONE\Core\Db\OZSession::COL_ID,
 			$value
 		);
 	}
@@ -179,7 +179,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZSession::COL_ID,
+			\OZONE\Core\Db\OZSession::COL_ID,
 			$value
 		);
 	}
@@ -195,7 +195,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZSession::COL_ID,
+			\OZONE\Core\Db\OZSession::COL_ID,
 			$value
 		);
 	}
@@ -211,167 +211,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZSession::COL_ID,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `eq` condition on column `oz_sessions`.`client_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereClientIdIs(string|int $value): self
-	{
-		return $this->filterBy(
-			Operator::from('eq'),
-			\OZONE\OZ\Db\OZSession::COL_CLIENT_ID,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `neq` condition on column `oz_sessions`.`client_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereClientIdIsNot(string|int $value): self
-	{
-		return $this->filterBy(
-			Operator::from('neq'),
-			\OZONE\OZ\Db\OZSession::COL_CLIENT_ID,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `lt` condition on column `oz_sessions`.`client_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereClientIdIsLt(string|int $value): self
-	{
-		return $this->filterBy(
-			Operator::from('lt'),
-			\OZONE\OZ\Db\OZSession::COL_CLIENT_ID,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `lte` condition on column `oz_sessions`.`client_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereClientIdIsLte(string|int $value): self
-	{
-		return $this->filterBy(
-			Operator::from('lte'),
-			\OZONE\OZ\Db\OZSession::COL_CLIENT_ID,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `gt` condition on column `oz_sessions`.`client_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereClientIdIsGt(string|int $value): self
-	{
-		return $this->filterBy(
-			Operator::from('gt'),
-			\OZONE\OZ\Db\OZSession::COL_CLIENT_ID,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `gte` condition on column `oz_sessions`.`client_id`.
-	 *
-	 * @param int|string $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereClientIdIsGte(string|int $value): self
-	{
-		return $this->filterBy(
-			Operator::from('gte'),
-			\OZONE\OZ\Db\OZSession::COL_CLIENT_ID,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `like` condition on column `oz_sessions`.`client_id`.
-	 *
-	 * @param string $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereClientIdIsLike(string $value): self
-	{
-		return $this->filterBy(
-			Operator::from('like'),
-			\OZONE\OZ\Db\OZSession::COL_CLIENT_ID,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `not_like` condition on column `oz_sessions`.`client_id`.
-	 *
-	 * @param string $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereClientIdIsNotLike(string $value): self
-	{
-		return $this->filterBy(
-			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZSession::COL_CLIENT_ID,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `in` condition on column `oz_sessions`.`client_id`.
-	 *
-	 * @param array $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereClientIdIsIn(array $value): self
-	{
-		return $this->filterBy(
-			Operator::from('in'),
-			\OZONE\OZ\Db\OZSession::COL_CLIENT_ID,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `not_in` condition on column `oz_sessions`.`client_id`.
-	 *
-	 * @param array $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereClientIdIsNotIn(array $value): self
-	{
-		return $this->filterBy(
-			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZSession::COL_CLIENT_ID,
+			\OZONE\Core\Db\OZSession::COL_ID,
 			$value
 		);
 	}
@@ -387,7 +227,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID,
+			\OZONE\Core\Db\OZSession::COL_USER_ID,
 			$value
 		);
 	}
@@ -403,7 +243,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID,
+			\OZONE\Core\Db\OZSession::COL_USER_ID,
 			$value
 		);
 	}
@@ -419,7 +259,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID,
+			\OZONE\Core\Db\OZSession::COL_USER_ID,
 			$value
 		);
 	}
@@ -435,7 +275,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID,
+			\OZONE\Core\Db\OZSession::COL_USER_ID,
 			$value
 		);
 	}
@@ -451,7 +291,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID,
+			\OZONE\Core\Db\OZSession::COL_USER_ID,
 			$value
 		);
 	}
@@ -467,7 +307,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID,
+			\OZONE\Core\Db\OZSession::COL_USER_ID,
 			$value
 		);
 	}
@@ -483,7 +323,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID,
+			\OZONE\Core\Db\OZSession::COL_USER_ID,
 			$value
 		);
 	}
@@ -499,7 +339,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID,
+			\OZONE\Core\Db\OZSession::COL_USER_ID,
 			$value
 		);
 	}
@@ -513,7 +353,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_null'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID
+			\OZONE\Core\Db\OZSession::COL_USER_ID
 		);
 	}
 
@@ -526,7 +366,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_not_null'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID
+			\OZONE\Core\Db\OZSession::COL_USER_ID
 		);
 	}
 
@@ -541,7 +381,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID,
+			\OZONE\Core\Db\OZSession::COL_USER_ID,
 			$value
 		);
 	}
@@ -557,167 +397,167 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZSession::COL_USER_ID,
+			\OZONE\Core\Db\OZSession::COL_USER_ID,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `eq` condition on column `oz_sessions`.`token`.
+	 * Filters rows with `eq` condition on column `oz_sessions`.`request_source_key`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereTokenIs(string $value): self
+	public function whereRequestSourceKeyIs(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZSession::COL_TOKEN,
+			\OZONE\Core\Db\OZSession::COL_REQUEST_SOURCE_KEY,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `neq` condition on column `oz_sessions`.`token`.
+	 * Filters rows with `neq` condition on column `oz_sessions`.`request_source_key`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereTokenIsNot(string $value): self
+	public function whereRequestSourceKeyIsNot(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZSession::COL_TOKEN,
+			\OZONE\Core\Db\OZSession::COL_REQUEST_SOURCE_KEY,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `lt` condition on column `oz_sessions`.`token`.
+	 * Filters rows with `lt` condition on column `oz_sessions`.`request_source_key`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereTokenIsLt(string $value): self
+	public function whereRequestSourceKeyIsLt(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZSession::COL_TOKEN,
+			\OZONE\Core\Db\OZSession::COL_REQUEST_SOURCE_KEY,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `lte` condition on column `oz_sessions`.`token`.
+	 * Filters rows with `lte` condition on column `oz_sessions`.`request_source_key`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereTokenIsLte(string $value): self
+	public function whereRequestSourceKeyIsLte(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZSession::COL_TOKEN,
+			\OZONE\Core\Db\OZSession::COL_REQUEST_SOURCE_KEY,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `gt` condition on column `oz_sessions`.`token`.
+	 * Filters rows with `gt` condition on column `oz_sessions`.`request_source_key`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereTokenIsGt(string $value): self
+	public function whereRequestSourceKeyIsGt(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZSession::COL_TOKEN,
+			\OZONE\Core\Db\OZSession::COL_REQUEST_SOURCE_KEY,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `gte` condition on column `oz_sessions`.`token`.
+	 * Filters rows with `gte` condition on column `oz_sessions`.`request_source_key`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereTokenIsGte(string $value): self
+	public function whereRequestSourceKeyIsGte(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZSession::COL_TOKEN,
+			\OZONE\Core\Db\OZSession::COL_REQUEST_SOURCE_KEY,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `like` condition on column `oz_sessions`.`token`.
+	 * Filters rows with `like` condition on column `oz_sessions`.`request_source_key`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereTokenIsLike(string $value): self
+	public function whereRequestSourceKeyIsLike(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZSession::COL_TOKEN,
+			\OZONE\Core\Db\OZSession::COL_REQUEST_SOURCE_KEY,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `not_like` condition on column `oz_sessions`.`token`.
+	 * Filters rows with `not_like` condition on column `oz_sessions`.`request_source_key`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereTokenIsNotLike(string $value): self
+	public function whereRequestSourceKeyIsNotLike(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZSession::COL_TOKEN,
+			\OZONE\Core\Db\OZSession::COL_REQUEST_SOURCE_KEY,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `in` condition on column `oz_sessions`.`token`.
+	 * Filters rows with `in` condition on column `oz_sessions`.`request_source_key`.
 	 *
 	 * @param array $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereTokenIsIn(array $value): self
+	public function whereRequestSourceKeyIsIn(array $value): self
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZSession::COL_TOKEN,
+			\OZONE\Core\Db\OZSession::COL_REQUEST_SOURCE_KEY,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `not_in` condition on column `oz_sessions`.`token`.
+	 * Filters rows with `not_in` condition on column `oz_sessions`.`request_source_key`.
 	 *
 	 * @param array $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereTokenIsNotIn(array $value): self
+	public function whereRequestSourceKeyIsNotIn(array $value): self
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZSession::COL_TOKEN,
+			\OZONE\Core\Db\OZSession::COL_REQUEST_SOURCE_KEY,
 			$value
 		);
 	}
@@ -733,7 +573,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZSession::COL_EXPIRE,
+			\OZONE\Core\Db\OZSession::COL_EXPIRE,
 			$value
 		);
 	}
@@ -749,7 +589,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZSession::COL_EXPIRE,
+			\OZONE\Core\Db\OZSession::COL_EXPIRE,
 			$value
 		);
 	}
@@ -765,7 +605,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZSession::COL_EXPIRE,
+			\OZONE\Core\Db\OZSession::COL_EXPIRE,
 			$value
 		);
 	}
@@ -781,7 +621,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZSession::COL_EXPIRE,
+			\OZONE\Core\Db\OZSession::COL_EXPIRE,
 			$value
 		);
 	}
@@ -797,7 +637,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZSession::COL_EXPIRE,
+			\OZONE\Core\Db\OZSession::COL_EXPIRE,
 			$value
 		);
 	}
@@ -813,7 +653,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZSession::COL_EXPIRE,
+			\OZONE\Core\Db\OZSession::COL_EXPIRE,
 			$value
 		);
 	}
@@ -829,7 +669,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZSession::COL_EXPIRE,
+			\OZONE\Core\Db\OZSession::COL_EXPIRE,
 			$value
 		);
 	}
@@ -845,7 +685,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZSession::COL_EXPIRE,
+			\OZONE\Core\Db\OZSession::COL_EXPIRE,
 			$value
 		);
 	}
@@ -861,7 +701,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZSession::COL_EXPIRE,
+			\OZONE\Core\Db\OZSession::COL_EXPIRE,
 			$value
 		);
 	}
@@ -877,66 +717,8 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZSession::COL_EXPIRE,
+			\OZONE\Core\Db\OZSession::COL_EXPIRE,
 			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `eq` condition on column `oz_sessions`.`verified`.
-	 *
-	 * @param bool $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereVerifiedIs(bool $value): self
-	{
-		return $this->filterBy(
-			Operator::from('eq'),
-			\OZONE\OZ\Db\OZSession::COL_VERIFIED,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `neq` condition on column `oz_sessions`.`verified`.
-	 *
-	 * @param bool $value the filter value
-	 *
-	 * @return static
-	 */
-	public function whereVerifiedIsNot(bool $value): self
-	{
-		return $this->filterBy(
-			Operator::from('neq'),
-			\OZONE\OZ\Db\OZSession::COL_VERIFIED,
-			$value
-		);
-	}
-
-	/**
-	 * Filters rows with `is_false` condition on column `oz_sessions`.`verified`.
-	 *
-	 * @return static
-	 */
-	public function whereIsNotVerified(): self
-	{
-		return $this->filterBy(
-			Operator::from('is_false'),
-			\OZONE\OZ\Db\OZSession::COL_VERIFIED
-		);
-	}
-
-	/**
-	 * Filters rows with `is_true` condition on column `oz_sessions`.`verified`.
-	 *
-	 * @return static
-	 */
-	public function whereIsVerified(): self
-	{
-		return $this->filterBy(
-			Operator::from('is_true'),
-			\OZONE\OZ\Db\OZSession::COL_VERIFIED
 		);
 	}
 
@@ -951,7 +733,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZSession::COL_LAST_SEEN,
+			\OZONE\Core\Db\OZSession::COL_LAST_SEEN,
 			$value
 		);
 	}
@@ -967,7 +749,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZSession::COL_LAST_SEEN,
+			\OZONE\Core\Db\OZSession::COL_LAST_SEEN,
 			$value
 		);
 	}
@@ -983,7 +765,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZSession::COL_LAST_SEEN,
+			\OZONE\Core\Db\OZSession::COL_LAST_SEEN,
 			$value
 		);
 	}
@@ -999,7 +781,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZSession::COL_LAST_SEEN,
+			\OZONE\Core\Db\OZSession::COL_LAST_SEEN,
 			$value
 		);
 	}
@@ -1015,7 +797,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZSession::COL_LAST_SEEN,
+			\OZONE\Core\Db\OZSession::COL_LAST_SEEN,
 			$value
 		);
 	}
@@ -1031,7 +813,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZSession::COL_LAST_SEEN,
+			\OZONE\Core\Db\OZSession::COL_LAST_SEEN,
 			$value
 		);
 	}
@@ -1047,7 +829,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZSession::COL_LAST_SEEN,
+			\OZONE\Core\Db\OZSession::COL_LAST_SEEN,
 			$value
 		);
 	}
@@ -1063,7 +845,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZSession::COL_LAST_SEEN,
+			\OZONE\Core\Db\OZSession::COL_LAST_SEEN,
 			$value
 		);
 	}
@@ -1079,7 +861,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZSession::COL_LAST_SEEN,
+			\OZONE\Core\Db\OZSession::COL_LAST_SEEN,
 			$value
 		);
 	}
@@ -1095,7 +877,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZSession::COL_LAST_SEEN,
+			\OZONE\Core\Db\OZSession::COL_LAST_SEEN,
 			$value
 		);
 	}
@@ -1111,7 +893,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZSession::COL_DATA,
+			\OZONE\Core\Db\OZSession::COL_DATA,
 			$value
 		);
 	}
@@ -1127,7 +909,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZSession::COL_DATA,
+			\OZONE\Core\Db\OZSession::COL_DATA,
 			$value
 		);
 	}
@@ -1143,7 +925,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZSession::COL_DATA,
+			\OZONE\Core\Db\OZSession::COL_DATA,
 			$value
 		);
 	}
@@ -1159,7 +941,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZSession::COL_DATA,
+			\OZONE\Core\Db\OZSession::COL_DATA,
 			$value
 		);
 	}
@@ -1175,7 +957,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZSession::COL_CREATED_AT,
+			\OZONE\Core\Db\OZSession::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1191,7 +973,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZSession::COL_CREATED_AT,
+			\OZONE\Core\Db\OZSession::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1207,7 +989,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZSession::COL_CREATED_AT,
+			\OZONE\Core\Db\OZSession::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1223,7 +1005,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZSession::COL_CREATED_AT,
+			\OZONE\Core\Db\OZSession::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1239,7 +1021,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZSession::COL_CREATED_AT,
+			\OZONE\Core\Db\OZSession::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1255,7 +1037,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZSession::COL_CREATED_AT,
+			\OZONE\Core\Db\OZSession::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1271,7 +1053,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZSession::COL_CREATED_AT,
+			\OZONE\Core\Db\OZSession::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1287,7 +1069,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZSession::COL_CREATED_AT,
+			\OZONE\Core\Db\OZSession::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1303,7 +1085,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZSession::COL_CREATED_AT,
+			\OZONE\Core\Db\OZSession::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1319,7 +1101,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZSession::COL_CREATED_AT,
+			\OZONE\Core\Db\OZSession::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -1335,7 +1117,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZSession::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZSession::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1351,7 +1133,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZSession::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZSession::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1367,7 +1149,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZSession::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZSession::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1383,7 +1165,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZSession::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZSession::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1399,7 +1181,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZSession::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZSession::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1415,7 +1197,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZSession::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZSession::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1431,7 +1213,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZSession::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZSession::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1447,7 +1229,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZSession::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZSession::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1463,7 +1245,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZSession::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZSession::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1479,7 +1261,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZSession::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZSession::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -1495,7 +1277,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZSession::COL_IS_VALID,
+			\OZONE\Core\Db\OZSession::COL_IS_VALID,
 			$value
 		);
 	}
@@ -1511,7 +1293,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZSession::COL_IS_VALID,
+			\OZONE\Core\Db\OZSession::COL_IS_VALID,
 			$value
 		);
 	}
@@ -1525,7 +1307,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_false'),
-			\OZONE\OZ\Db\OZSession::COL_IS_VALID
+			\OZONE\Core\Db\OZSession::COL_IS_VALID
 		);
 	}
 
@@ -1538,7 +1320,7 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_true'),
-			\OZONE\OZ\Db\OZSession::COL_IS_VALID
+			\OZONE\Core\Db\OZSession::COL_IS_VALID
 		);
 	}
 }

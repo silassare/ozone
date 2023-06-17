@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db;
+namespace OZONE\Core\Db;
 
 /**
  * Class OZCountryVR.
  */
-abstract class OZCountryVR extends \OZONE\OZ\Db\Base\OZCountryVR
+abstract class OZCountryVR extends \OZONE\Core\Db\Base\OZCountryVR
 {
 	// ====================================================
 	// =	Your custom implementation goes here

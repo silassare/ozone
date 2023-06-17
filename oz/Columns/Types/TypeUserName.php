@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Columns\Types;
+namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use JsonException;
-use OZONE\OZ\Core\Configs;
-use OZONE\OZ\Utils\Utils;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Utils\Utils;
 
 /**
  * Class TypeUserName.
@@ -34,7 +34,7 @@ class TypeUserName extends Type
 	 */
 	public function __construct()
 	{
-		$max = (int) Configs::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH');
+		$max = (int) Settings::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH');
 
 		parent::__construct(new TypeString(1, \max(3, $max)));
 	}
@@ -86,11 +86,11 @@ class TypeUserName extends Type
 			$len   = \strlen($value);
 			$value = \trim($value);
 
-			if ($len < Configs::get('oz.users', 'OZ_USER_NAME_MIN_LENGTH')) {
+			if ($len < Settings::get('oz.users', 'OZ_USER_NAME_MIN_LENGTH')) {
 				throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_SHORT', $debug);
 			}
 
-			if ($len > Configs::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH')) {
+			if ($len > Settings::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH')) {
 				throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_LONG', $debug);
 			}
 

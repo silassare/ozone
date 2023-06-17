@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\FS\Traits;
+namespace OZONE\Core\FS\Traits;
 
-use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\Exceptions\RuntimeException;
+use OZONE\Core\App\Keys;
+use OZONE\Core\Exceptions\RuntimeException;
 
 /**
  * Trait FileEntityTrait.
@@ -40,7 +40,7 @@ trait FileEntityTrait
 		unset($data[self::COL_ID]); // we want a new file id
 
 		$data[self::COL_CLONE_ID] = $this->getID();
-		$data[self::COL_KEY]      = Hasher::genFileKey();
+		$data[self::COL_KEY]      = Keys::newFileKey();
 
 		if (!$this->getSourceID()) {// first level clone
 			$data[self::COL_SOURCE_ID] = $this->getID();

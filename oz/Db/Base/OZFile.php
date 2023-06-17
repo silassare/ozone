@@ -11,16 +11,18 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db\Base;
+namespace OZONE\Core\Db\Base;
 
 /**
  * Class OZFile.
+ *
+ * @psalm-suppress UndefinedThisPropertyFetch
  *
  * @property null|string $id         Getter for column `oz_files`.`id`.
  * @property null|string $owner_id   Getter for column `oz_files`.`owner_id`.
  * @property string      $key        Getter for column `oz_files`.`key`.
  * @property string      $ref        Getter for column `oz_files`.`ref`.
- * @property string      $driver     Getter for column `oz_files`.`driver`.
+ * @property string      $storage    Getter for column `oz_files`.`storage`.
  * @property null|string $clone_id   Getter for column `oz_files`.`clone_id`.
  * @property null|string $source_id  Getter for column `oz_files`.`source_id`.
  * @property int         $size       Getter for column `oz_files`.`size`.
@@ -38,12 +40,12 @@ namespace OZONE\OZ\Db\Base;
 abstract class OZFile extends \Gobl\ORM\ORMEntity
 {
 	public const TABLE_NAME      = 'oz_files';
-	public const TABLE_NAMESPACE = 'OZONE\\OZ\\Db';
+	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
 	public const COL_ID          = 'file_id';
 	public const COL_OWNER_ID    = 'file_owner_id';
 	public const COL_KEY         = 'file_key';
 	public const COL_REF         = 'file_ref';
-	public const COL_DRIVER      = 'file_driver';
+	public const COL_STORAGE     = 'file_storage';
 	public const COL_CLONE_ID    = 'file_clone_id';
 	public const COL_SOURCE_ID   = 'file_source_id';
 	public const COL_SIZE        = 'file_size';
@@ -82,7 +84,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 */
 	public static function createInstance(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\OZ\Db\OZFile($is_new, $strict);
+		return new \OZONE\Core\Db\OZFile($is_new, $strict);
 	}
 
 	/**
@@ -182,25 +184,25 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_files`.`driver`.
+	 * Getter for column `oz_files`.`storage`.
 	 *
 	 * @return string
 	 */
-	public function getDriver(): string
+	public function getStorage(): string
 	{
-		return $this->{self::COL_DRIVER};
+		return $this->{self::COL_STORAGE};
 	}
 
 	/**
-	 * Setter for column `oz_files`.`driver`.
+	 * Setter for column `oz_files`.`storage`.
 	 *
-	 * @param string $driver
+	 * @param string $storage
 	 *
 	 * @return static
 	 */
-	public function setDriver(string $driver): static
+	public function setStorage(string $storage): static
 	{
-		$this->{self::COL_DRIVER} = $driver;
+		$this->{self::COL_STORAGE} = $storage;
 
 		return $this;
 	}
@@ -520,13 +522,13 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	/**
 	 * ManyToOne relation between `oz_files` and `oz_users`.
 	 *
-	 * @return ?\OZONE\OZ\Db\OZUser
+	 * @return ?\OZONE\Core\Db\OZUser
 	 *
 	 * @throws \Gobl\CRUD\Exceptions\CRUDException
 	 */
-	public function getOwner(): ?\OZONE\OZ\Db\OZUser
+	public function getOwner(): ?\OZONE\Core\Db\OZUser
 	{
-		return (new \OZONE\OZ\Db\OZUsersController())->getRelative(
+		return (new \OZONE\Core\Db\OZUsersController())->getRelative(
 			$this,
 			$this->_oeb_table->getRelation('owner')
 		);
@@ -541,7 +543,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 * @param array    $order_by order by rules
 	 * @param null|int $total    total rows without limit
 	 *
-	 * @return \OZONE\OZ\Db\OZFile[]
+	 * @return \OZONE\Core\Db\OZFile[]
 	 *
 	 * @throws \Gobl\CRUD\Exceptions\CRUDException
 	 */
@@ -549,7 +551,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	], ?int $max = null, int $offset = 0, array $order_by = [
 	], ?int &$total = -1): array
 	{
-		return (new \OZONE\OZ\Db\OZFilesController())->getAllRelatives(
+		return (new \OZONE\Core\Db\OZFilesController())->getAllRelatives(
 			$this,
 			$this->_oeb_table->getRelation('clones'),
 			$filters,
@@ -563,13 +565,13 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	/**
 	 * ManyToOne relation between `oz_files` and `oz_files`.
 	 *
-	 * @return ?\OZONE\OZ\Db\OZFile
+	 * @return ?\OZONE\Core\Db\OZFile
 	 *
 	 * @throws \Gobl\CRUD\Exceptions\CRUDException
 	 */
-	public function getClonedFrom(): ?\OZONE\OZ\Db\OZFile
+	public function getClonedFrom(): ?\OZONE\Core\Db\OZFile
 	{
-		return (new \OZONE\OZ\Db\OZFilesController())->getRelative(
+		return (new \OZONE\Core\Db\OZFilesController())->getRelative(
 			$this,
 			$this->_oeb_table->getRelation('cloned_from')
 		);
@@ -578,13 +580,13 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	/**
 	 * ManyToOne relation between `oz_files` and `oz_files`.
 	 *
-	 * @return ?\OZONE\OZ\Db\OZFile
+	 * @return ?\OZONE\Core\Db\OZFile
 	 *
 	 * @throws \Gobl\CRUD\Exceptions\CRUDException
 	 */
-	public function getSource(): ?\OZONE\OZ\Db\OZFile
+	public function getSource(): ?\OZONE\Core\Db\OZFile
 	{
-		return (new \OZONE\OZ\Db\OZFilesController())->getRelative(
+		return (new \OZONE\Core\Db\OZFilesController())->getRelative(
 			$this,
 			$this->_oeb_table->getRelation('source')
 		);

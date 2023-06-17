@@ -11,10 +11,10 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Hooks\Events;
+namespace OZONE\Core\Hooks\Events;
 
-use OZONE\OZ\Http\Request;
-use OZONE\OZ\Http\Response;
+use OZONE\Core\Http\Request;
+use OZONE\Core\Http\Response;
 use PHPUtils\Events\Event;
 
 /**
@@ -30,8 +30,8 @@ final class FinishHook extends Event
 	/**
 	 * FinishHook constructor.
 	 *
-	 * @param \OZONE\OZ\Http\Request  $request
-	 * @param \OZONE\OZ\Http\Response $response
+	 * @param \OZONE\Core\Http\Request  $request
+	 * @param \OZONE\Core\Http\Response $response
 	 */
 	public function __construct(protected Request $request, protected Response $response)
 	{
@@ -48,7 +48,7 @@ final class FinishHook extends Event
 	/**
 	 * Gets the handled request.
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 */
 	public function getResponse(): Response
 	{
@@ -58,7 +58,7 @@ final class FinishHook extends Event
 	/**
 	 * Gets the request response.
 	 *
-	 * @return \OZONE\OZ\Http\Request
+	 * @return \OZONE\Core\Http\Request
 	 */
 	public function getRequest(): Request
 	{

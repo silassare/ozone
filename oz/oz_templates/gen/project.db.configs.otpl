@@ -1,0 +1,16 @@
+<?php
+declare(strict_types=1);
+
+<%@import('gen.info.otpl',$)%>
+
+return [
+	'OZ_DB_TABLE_PREFIX' => '<%$.oz_db_table_prefix%>',
+	'OZ_DB_RDBMS'        => env('OZ_DB_RDBMS', 'mysql'),
+	'OZ_DB_HOST'         => env('OZ_DB_HOST', 'localhost'),
+	'OZ_DB_NAME'         => env('OZ_DB_NAME', ''),
+	'OZ_DB_USER'         => env('OZ_DB_USER', ''),
+	'OZ_DB_PASS'         => env('OZ_DB_PASS', ''),
+	// changing charset may lead to data corruption and many more nightmares,
+	'OZ_DB_CHARSET'      => 'utf8mb4',
+	'OZ_DB_COLLATE'      => 'utf8mb4_unicode_ci',
+];

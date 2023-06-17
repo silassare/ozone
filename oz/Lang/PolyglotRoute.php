@@ -11,12 +11,12 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Lang;
+namespace OZONE\Core\Lang;
 
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Router\Events\RouteBeforeRun;
-use OZONE\OZ\Router\Interfaces\RouteProviderInterface;
-use OZONE\OZ\Router\Router;
+use OZONE\Core\App\Context;
+use OZONE\Core\Router\Events\RouteBeforeRun;
+use OZONE\Core\Router\Interfaces\RouteProviderInterface;
+use OZONE\Core\Router\Router;
 use PHPUtils\Events\Event;
 
 /**

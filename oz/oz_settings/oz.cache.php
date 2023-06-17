@@ -11,8 +11,8 @@
 
 declare(strict_types=1);
 
-use OZONE\OZ\Cache\Drivers\DbCache;
-use OZONE\OZ\Cache\Drivers\RuntimeCache;
+use OZONE\Core\Cache\Drivers\DbCache;
+use OZONE\Core\Cache\Drivers\RuntimeCache;
 
 return [
 	// Cache Driver that destroy data after runtime

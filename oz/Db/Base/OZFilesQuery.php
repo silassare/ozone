@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Db\Base;
+namespace OZONE\Core\Db\Base;
 
 use Gobl\DBAL\Operator;
 
 /**
  * Class OZFilesQuery.
  *
- * @method \OZONE\OZ\Db\OZFilesResults find(?int $max = null, int $offset = 0, array $order_by = [])
+ * @method \OZONE\Core\Db\OZFilesResults find(?int $max = null, int $offset = 0, array $order_by = [])
  */
 abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 {
@@ -28,8 +28,8 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\OZ\Db\OZFile::TABLE_NAMESPACE,
-			\OZONE\OZ\Db\OZFile::TABLE_NAME
+			\OZONE\Core\Db\OZFile::TABLE_NAMESPACE,
+			\OZONE\Core\Db\OZFile::TABLE_NAME
 		);
 	}
 
@@ -40,7 +40,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function createInstance(): static
 	{
-		return new \OZONE\OZ\Db\OZFilesQuery();
+		return new \OZONE\Core\Db\OZFilesQuery();
 	}
 
 	/**
@@ -67,7 +67,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_ID,
+			\OZONE\Core\Db\OZFile::COL_ID,
 			$value
 		);
 	}
@@ -83,7 +83,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_ID,
+			\OZONE\Core\Db\OZFile::COL_ID,
 			$value
 		);
 	}
@@ -99,7 +99,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_ID,
+			\OZONE\Core\Db\OZFile::COL_ID,
 			$value
 		);
 	}
@@ -115,7 +115,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_ID,
+			\OZONE\Core\Db\OZFile::COL_ID,
 			$value
 		);
 	}
@@ -131,7 +131,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_ID,
+			\OZONE\Core\Db\OZFile::COL_ID,
 			$value
 		);
 	}
@@ -147,7 +147,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_ID,
+			\OZONE\Core\Db\OZFile::COL_ID,
 			$value
 		);
 	}
@@ -163,7 +163,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_ID,
+			\OZONE\Core\Db\OZFile::COL_ID,
 			$value
 		);
 	}
@@ -179,7 +179,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_ID,
+			\OZONE\Core\Db\OZFile::COL_ID,
 			$value
 		);
 	}
@@ -195,7 +195,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_ID,
+			\OZONE\Core\Db\OZFile::COL_ID,
 			$value
 		);
 	}
@@ -211,7 +211,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_ID,
+			\OZONE\Core\Db\OZFile::COL_ID,
 			$value
 		);
 	}
@@ -227,7 +227,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
@@ -243,7 +243,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
@@ -259,7 +259,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
@@ -275,7 +275,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
@@ -291,7 +291,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
@@ -307,7 +307,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
@@ -323,7 +323,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
@@ -339,7 +339,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
@@ -353,7 +353,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_null'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID
 		);
 	}
 
@@ -366,7 +366,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_not_null'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID
 		);
 	}
 
@@ -381,7 +381,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
@@ -397,7 +397,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_OWNER_ID,
+			\OZONE\Core\Db\OZFile::COL_OWNER_ID,
 			$value
 		);
 	}
@@ -413,7 +413,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_KEY,
+			\OZONE\Core\Db\OZFile::COL_KEY,
 			$value
 		);
 	}
@@ -429,7 +429,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_KEY,
+			\OZONE\Core\Db\OZFile::COL_KEY,
 			$value
 		);
 	}
@@ -445,7 +445,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_KEY,
+			\OZONE\Core\Db\OZFile::COL_KEY,
 			$value
 		);
 	}
@@ -461,7 +461,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_KEY,
+			\OZONE\Core\Db\OZFile::COL_KEY,
 			$value
 		);
 	}
@@ -477,7 +477,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_KEY,
+			\OZONE\Core\Db\OZFile::COL_KEY,
 			$value
 		);
 	}
@@ -493,7 +493,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_KEY,
+			\OZONE\Core\Db\OZFile::COL_KEY,
 			$value
 		);
 	}
@@ -509,7 +509,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_KEY,
+			\OZONE\Core\Db\OZFile::COL_KEY,
 			$value
 		);
 	}
@@ -525,7 +525,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_KEY,
+			\OZONE\Core\Db\OZFile::COL_KEY,
 			$value
 		);
 	}
@@ -541,7 +541,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_KEY,
+			\OZONE\Core\Db\OZFile::COL_KEY,
 			$value
 		);
 	}
@@ -557,7 +557,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_KEY,
+			\OZONE\Core\Db\OZFile::COL_KEY,
 			$value
 		);
 	}
@@ -573,7 +573,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_REF,
+			\OZONE\Core\Db\OZFile::COL_REF,
 			$value
 		);
 	}
@@ -589,7 +589,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_REF,
+			\OZONE\Core\Db\OZFile::COL_REF,
 			$value
 		);
 	}
@@ -605,7 +605,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_REF,
+			\OZONE\Core\Db\OZFile::COL_REF,
 			$value
 		);
 	}
@@ -621,7 +621,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_REF,
+			\OZONE\Core\Db\OZFile::COL_REF,
 			$value
 		);
 	}
@@ -637,7 +637,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_REF,
+			\OZONE\Core\Db\OZFile::COL_REF,
 			$value
 		);
 	}
@@ -653,7 +653,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_REF,
+			\OZONE\Core\Db\OZFile::COL_REF,
 			$value
 		);
 	}
@@ -669,7 +669,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_REF,
+			\OZONE\Core\Db\OZFile::COL_REF,
 			$value
 		);
 	}
@@ -685,7 +685,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_REF,
+			\OZONE\Core\Db\OZFile::COL_REF,
 			$value
 		);
 	}
@@ -701,7 +701,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_REF,
+			\OZONE\Core\Db\OZFile::COL_REF,
 			$value
 		);
 	}
@@ -717,167 +717,167 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_REF,
+			\OZONE\Core\Db\OZFile::COL_REF,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `eq` condition on column `oz_files`.`driver`.
+	 * Filters rows with `eq` condition on column `oz_files`.`storage`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereDriverIs(string $value): self
+	public function whereStorageIs(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_DRIVER,
+			\OZONE\Core\Db\OZFile::COL_STORAGE,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `neq` condition on column `oz_files`.`driver`.
+	 * Filters rows with `neq` condition on column `oz_files`.`storage`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereDriverIsNot(string $value): self
+	public function whereStorageIsNot(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_DRIVER,
+			\OZONE\Core\Db\OZFile::COL_STORAGE,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `lt` condition on column `oz_files`.`driver`.
+	 * Filters rows with `lt` condition on column `oz_files`.`storage`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereDriverIsLt(string $value): self
+	public function whereStorageIsLt(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_DRIVER,
+			\OZONE\Core\Db\OZFile::COL_STORAGE,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `lte` condition on column `oz_files`.`driver`.
+	 * Filters rows with `lte` condition on column `oz_files`.`storage`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereDriverIsLte(string $value): self
+	public function whereStorageIsLte(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_DRIVER,
+			\OZONE\Core\Db\OZFile::COL_STORAGE,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `gt` condition on column `oz_files`.`driver`.
+	 * Filters rows with `gt` condition on column `oz_files`.`storage`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereDriverIsGt(string $value): self
+	public function whereStorageIsGt(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_DRIVER,
+			\OZONE\Core\Db\OZFile::COL_STORAGE,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `gte` condition on column `oz_files`.`driver`.
+	 * Filters rows with `gte` condition on column `oz_files`.`storage`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereDriverIsGte(string $value): self
+	public function whereStorageIsGte(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_DRIVER,
+			\OZONE\Core\Db\OZFile::COL_STORAGE,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `like` condition on column `oz_files`.`driver`.
+	 * Filters rows with `like` condition on column `oz_files`.`storage`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereDriverIsLike(string $value): self
+	public function whereStorageIsLike(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_DRIVER,
+			\OZONE\Core\Db\OZFile::COL_STORAGE,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `not_like` condition on column `oz_files`.`driver`.
+	 * Filters rows with `not_like` condition on column `oz_files`.`storage`.
 	 *
 	 * @param string $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereDriverIsNotLike(string $value): self
+	public function whereStorageIsNotLike(string $value): self
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_DRIVER,
+			\OZONE\Core\Db\OZFile::COL_STORAGE,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `in` condition on column `oz_files`.`driver`.
+	 * Filters rows with `in` condition on column `oz_files`.`storage`.
 	 *
 	 * @param array $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereDriverIsIn(array $value): self
+	public function whereStorageIsIn(array $value): self
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_DRIVER,
+			\OZONE\Core\Db\OZFile::COL_STORAGE,
 			$value
 		);
 	}
 
 	/**
-	 * Filters rows with `not_in` condition on column `oz_files`.`driver`.
+	 * Filters rows with `not_in` condition on column `oz_files`.`storage`.
 	 *
 	 * @param array $value the filter value
 	 *
 	 * @return static
 	 */
-	public function whereDriverIsNotIn(array $value): self
+	public function whereStorageIsNotIn(array $value): self
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_DRIVER,
+			\OZONE\Core\Db\OZFile::COL_STORAGE,
 			$value
 		);
 	}
@@ -893,7 +893,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID,
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID,
 			$value
 		);
 	}
@@ -909,7 +909,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID,
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID,
 			$value
 		);
 	}
@@ -925,7 +925,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID,
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID,
 			$value
 		);
 	}
@@ -941,7 +941,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID,
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID,
 			$value
 		);
 	}
@@ -957,7 +957,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID,
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID,
 			$value
 		);
 	}
@@ -973,7 +973,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID,
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID,
 			$value
 		);
 	}
@@ -989,7 +989,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID,
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID,
 			$value
 		);
 	}
@@ -1005,7 +1005,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID,
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID,
 			$value
 		);
 	}
@@ -1019,7 +1019,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_null'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID
 		);
 	}
 
@@ -1032,7 +1032,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_not_null'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID
 		);
 	}
 
@@ -1047,7 +1047,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID,
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID,
 			$value
 		);
 	}
@@ -1063,7 +1063,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_CLONE_ID,
+			\OZONE\Core\Db\OZFile::COL_CLONE_ID,
 			$value
 		);
 	}
@@ -1079,7 +1079,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID,
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID,
 			$value
 		);
 	}
@@ -1095,7 +1095,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID,
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID,
 			$value
 		);
 	}
@@ -1111,7 +1111,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID,
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID,
 			$value
 		);
 	}
@@ -1127,7 +1127,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID,
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID,
 			$value
 		);
 	}
@@ -1143,7 +1143,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID,
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID,
 			$value
 		);
 	}
@@ -1159,7 +1159,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID,
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID,
 			$value
 		);
 	}
@@ -1175,7 +1175,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID,
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID,
 			$value
 		);
 	}
@@ -1191,7 +1191,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID,
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID,
 			$value
 		);
 	}
@@ -1205,7 +1205,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_null'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID
 		);
 	}
 
@@ -1218,7 +1218,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_not_null'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID
 		);
 	}
 
@@ -1233,7 +1233,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID,
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID,
 			$value
 		);
 	}
@@ -1249,7 +1249,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_SOURCE_ID,
+			\OZONE\Core\Db\OZFile::COL_SOURCE_ID,
 			$value
 		);
 	}
@@ -1265,7 +1265,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_SIZE,
+			\OZONE\Core\Db\OZFile::COL_SIZE,
 			$value
 		);
 	}
@@ -1281,7 +1281,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_SIZE,
+			\OZONE\Core\Db\OZFile::COL_SIZE,
 			$value
 		);
 	}
@@ -1297,7 +1297,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_SIZE,
+			\OZONE\Core\Db\OZFile::COL_SIZE,
 			$value
 		);
 	}
@@ -1313,7 +1313,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_SIZE,
+			\OZONE\Core\Db\OZFile::COL_SIZE,
 			$value
 		);
 	}
@@ -1329,7 +1329,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_SIZE,
+			\OZONE\Core\Db\OZFile::COL_SIZE,
 			$value
 		);
 	}
@@ -1345,7 +1345,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_SIZE,
+			\OZONE\Core\Db\OZFile::COL_SIZE,
 			$value
 		);
 	}
@@ -1361,7 +1361,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_SIZE,
+			\OZONE\Core\Db\OZFile::COL_SIZE,
 			$value
 		);
 	}
@@ -1377,7 +1377,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_SIZE,
+			\OZONE\Core\Db\OZFile::COL_SIZE,
 			$value
 		);
 	}
@@ -1393,7 +1393,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_SIZE,
+			\OZONE\Core\Db\OZFile::COL_SIZE,
 			$value
 		);
 	}
@@ -1409,7 +1409,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_SIZE,
+			\OZONE\Core\Db\OZFile::COL_SIZE,
 			$value
 		);
 	}
@@ -1425,7 +1425,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_MIME_TYPE,
+			\OZONE\Core\Db\OZFile::COL_MIME_TYPE,
 			$value
 		);
 	}
@@ -1441,7 +1441,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_MIME_TYPE,
+			\OZONE\Core\Db\OZFile::COL_MIME_TYPE,
 			$value
 		);
 	}
@@ -1457,7 +1457,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_MIME_TYPE,
+			\OZONE\Core\Db\OZFile::COL_MIME_TYPE,
 			$value
 		);
 	}
@@ -1473,7 +1473,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_MIME_TYPE,
+			\OZONE\Core\Db\OZFile::COL_MIME_TYPE,
 			$value
 		);
 	}
@@ -1489,7 +1489,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_MIME_TYPE,
+			\OZONE\Core\Db\OZFile::COL_MIME_TYPE,
 			$value
 		);
 	}
@@ -1505,7 +1505,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_MIME_TYPE,
+			\OZONE\Core\Db\OZFile::COL_MIME_TYPE,
 			$value
 		);
 	}
@@ -1521,7 +1521,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_MIME_TYPE,
+			\OZONE\Core\Db\OZFile::COL_MIME_TYPE,
 			$value
 		);
 	}
@@ -1537,7 +1537,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_MIME_TYPE,
+			\OZONE\Core\Db\OZFile::COL_MIME_TYPE,
 			$value
 		);
 	}
@@ -1553,7 +1553,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_MIME_TYPE,
+			\OZONE\Core\Db\OZFile::COL_MIME_TYPE,
 			$value
 		);
 	}
@@ -1569,7 +1569,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_MIME_TYPE,
+			\OZONE\Core\Db\OZFile::COL_MIME_TYPE,
 			$value
 		);
 	}
@@ -1585,7 +1585,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_EXTENSION,
+			\OZONE\Core\Db\OZFile::COL_EXTENSION,
 			$value
 		);
 	}
@@ -1601,7 +1601,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_EXTENSION,
+			\OZONE\Core\Db\OZFile::COL_EXTENSION,
 			$value
 		);
 	}
@@ -1617,7 +1617,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_EXTENSION,
+			\OZONE\Core\Db\OZFile::COL_EXTENSION,
 			$value
 		);
 	}
@@ -1633,7 +1633,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_EXTENSION,
+			\OZONE\Core\Db\OZFile::COL_EXTENSION,
 			$value
 		);
 	}
@@ -1649,7 +1649,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_EXTENSION,
+			\OZONE\Core\Db\OZFile::COL_EXTENSION,
 			$value
 		);
 	}
@@ -1665,7 +1665,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_EXTENSION,
+			\OZONE\Core\Db\OZFile::COL_EXTENSION,
 			$value
 		);
 	}
@@ -1681,7 +1681,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_EXTENSION,
+			\OZONE\Core\Db\OZFile::COL_EXTENSION,
 			$value
 		);
 	}
@@ -1697,7 +1697,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_EXTENSION,
+			\OZONE\Core\Db\OZFile::COL_EXTENSION,
 			$value
 		);
 	}
@@ -1713,7 +1713,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_EXTENSION,
+			\OZONE\Core\Db\OZFile::COL_EXTENSION,
 			$value
 		);
 	}
@@ -1729,7 +1729,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_EXTENSION,
+			\OZONE\Core\Db\OZFile::COL_EXTENSION,
 			$value
 		);
 	}
@@ -1745,7 +1745,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_NAME,
+			\OZONE\Core\Db\OZFile::COL_NAME,
 			$value
 		);
 	}
@@ -1761,7 +1761,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_NAME,
+			\OZONE\Core\Db\OZFile::COL_NAME,
 			$value
 		);
 	}
@@ -1777,7 +1777,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_NAME,
+			\OZONE\Core\Db\OZFile::COL_NAME,
 			$value
 		);
 	}
@@ -1793,7 +1793,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_NAME,
+			\OZONE\Core\Db\OZFile::COL_NAME,
 			$value
 		);
 	}
@@ -1809,7 +1809,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_NAME,
+			\OZONE\Core\Db\OZFile::COL_NAME,
 			$value
 		);
 	}
@@ -1825,7 +1825,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_NAME,
+			\OZONE\Core\Db\OZFile::COL_NAME,
 			$value
 		);
 	}
@@ -1841,7 +1841,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_NAME,
+			\OZONE\Core\Db\OZFile::COL_NAME,
 			$value
 		);
 	}
@@ -1857,7 +1857,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_NAME,
+			\OZONE\Core\Db\OZFile::COL_NAME,
 			$value
 		);
 	}
@@ -1873,7 +1873,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_NAME,
+			\OZONE\Core\Db\OZFile::COL_NAME,
 			$value
 		);
 	}
@@ -1889,7 +1889,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_NAME,
+			\OZONE\Core\Db\OZFile::COL_NAME,
 			$value
 		);
 	}
@@ -1905,7 +1905,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
+			\OZONE\Core\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
@@ -1921,7 +1921,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
+			\OZONE\Core\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
@@ -1937,7 +1937,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
+			\OZONE\Core\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
@@ -1953,7 +1953,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
+			\OZONE\Core\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
@@ -1969,7 +1969,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
+			\OZONE\Core\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
@@ -1985,7 +1985,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
+			\OZONE\Core\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
@@ -2001,7 +2001,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
+			\OZONE\Core\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
@@ -2017,7 +2017,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
+			\OZONE\Core\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
@@ -2031,7 +2031,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_null'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID
+			\OZONE\Core\Db\OZFile::COL_FOR_ID
 		);
 	}
 
@@ -2044,7 +2044,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_not_null'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID
+			\OZONE\Core\Db\OZFile::COL_FOR_ID
 		);
 	}
 
@@ -2059,7 +2059,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
+			\OZONE\Core\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
@@ -2075,7 +2075,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_ID,
+			\OZONE\Core\Db\OZFile::COL_FOR_ID,
 			$value
 		);
 	}
@@ -2091,7 +2091,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE,
 			$value
 		);
 	}
@@ -2107,7 +2107,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE,
 			$value
 		);
 	}
@@ -2123,7 +2123,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE,
 			$value
 		);
 	}
@@ -2139,7 +2139,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE,
 			$value
 		);
 	}
@@ -2155,7 +2155,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE,
 			$value
 		);
 	}
@@ -2171,7 +2171,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE,
 			$value
 		);
 	}
@@ -2187,7 +2187,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE,
 			$value
 		);
 	}
@@ -2203,7 +2203,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE,
 			$value
 		);
 	}
@@ -2217,7 +2217,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_null'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE
 		);
 	}
 
@@ -2230,7 +2230,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_not_null'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE
 		);
 	}
 
@@ -2245,7 +2245,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE,
 			$value
 		);
 	}
@@ -2261,7 +2261,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_TYPE,
+			\OZONE\Core\Db\OZFile::COL_FOR_TYPE,
 			$value
 		);
 	}
@@ -2277,7 +2277,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			\OZONE\Core\Db\OZFile::COL_FOR_LABEL,
 			$value
 		);
 	}
@@ -2293,7 +2293,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			\OZONE\Core\Db\OZFile::COL_FOR_LABEL,
 			$value
 		);
 	}
@@ -2309,7 +2309,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			\OZONE\Core\Db\OZFile::COL_FOR_LABEL,
 			$value
 		);
 	}
@@ -2325,7 +2325,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			\OZONE\Core\Db\OZFile::COL_FOR_LABEL,
 			$value
 		);
 	}
@@ -2341,7 +2341,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			\OZONE\Core\Db\OZFile::COL_FOR_LABEL,
 			$value
 		);
 	}
@@ -2357,7 +2357,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			\OZONE\Core\Db\OZFile::COL_FOR_LABEL,
 			$value
 		);
 	}
@@ -2373,7 +2373,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			\OZONE\Core\Db\OZFile::COL_FOR_LABEL,
 			$value
 		);
 	}
@@ -2389,7 +2389,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			\OZONE\Core\Db\OZFile::COL_FOR_LABEL,
 			$value
 		);
 	}
@@ -2405,7 +2405,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			\OZONE\Core\Db\OZFile::COL_FOR_LABEL,
 			$value
 		);
 	}
@@ -2421,7 +2421,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_FOR_LABEL,
+			\OZONE\Core\Db\OZFile::COL_FOR_LABEL,
 			$value
 		);
 	}
@@ -2437,7 +2437,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_DATA,
+			\OZONE\Core\Db\OZFile::COL_DATA,
 			$value
 		);
 	}
@@ -2453,7 +2453,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_DATA,
+			\OZONE\Core\Db\OZFile::COL_DATA,
 			$value
 		);
 	}
@@ -2469,7 +2469,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_DATA,
+			\OZONE\Core\Db\OZFile::COL_DATA,
 			$value
 		);
 	}
@@ -2485,7 +2485,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_DATA,
+			\OZONE\Core\Db\OZFile::COL_DATA,
 			$value
 		);
 	}
@@ -2501,7 +2501,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_CREATED_AT,
+			\OZONE\Core\Db\OZFile::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -2517,7 +2517,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_CREATED_AT,
+			\OZONE\Core\Db\OZFile::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -2533,7 +2533,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_CREATED_AT,
+			\OZONE\Core\Db\OZFile::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -2549,7 +2549,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_CREATED_AT,
+			\OZONE\Core\Db\OZFile::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -2565,7 +2565,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_CREATED_AT,
+			\OZONE\Core\Db\OZFile::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -2581,7 +2581,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_CREATED_AT,
+			\OZONE\Core\Db\OZFile::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -2597,7 +2597,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_CREATED_AT,
+			\OZONE\Core\Db\OZFile::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -2613,7 +2613,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_CREATED_AT,
+			\OZONE\Core\Db\OZFile::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -2629,7 +2629,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_CREATED_AT,
+			\OZONE\Core\Db\OZFile::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -2645,7 +2645,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_CREATED_AT,
+			\OZONE\Core\Db\OZFile::COL_CREATED_AT,
 			$value
 		);
 	}
@@ -2661,7 +2661,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZFile::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -2677,7 +2677,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZFile::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -2693,7 +2693,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lt'),
-			\OZONE\OZ\Db\OZFile::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZFile::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -2709,7 +2709,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('lte'),
-			\OZONE\OZ\Db\OZFile::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZFile::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -2725,7 +2725,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gt'),
-			\OZONE\OZ\Db\OZFile::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZFile::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -2741,7 +2741,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('gte'),
-			\OZONE\OZ\Db\OZFile::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZFile::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -2757,7 +2757,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('like'),
-			\OZONE\OZ\Db\OZFile::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZFile::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -2773,7 +2773,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_like'),
-			\OZONE\OZ\Db\OZFile::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZFile::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -2789,7 +2789,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('in'),
-			\OZONE\OZ\Db\OZFile::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZFile::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -2805,7 +2805,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('not_in'),
-			\OZONE\OZ\Db\OZFile::COL_UPDATED_AT,
+			\OZONE\Core\Db\OZFile::COL_UPDATED_AT,
 			$value
 		);
 	}
@@ -2821,7 +2821,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('eq'),
-			\OZONE\OZ\Db\OZFile::COL_IS_VALID,
+			\OZONE\Core\Db\OZFile::COL_IS_VALID,
 			$value
 		);
 	}
@@ -2837,7 +2837,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('neq'),
-			\OZONE\OZ\Db\OZFile::COL_IS_VALID,
+			\OZONE\Core\Db\OZFile::COL_IS_VALID,
 			$value
 		);
 	}
@@ -2851,7 +2851,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_false'),
-			\OZONE\OZ\Db\OZFile::COL_IS_VALID
+			\OZONE\Core\Db\OZFile::COL_IS_VALID
 		);
 	}
 
@@ -2864,7 +2864,7 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	{
 		return $this->filterBy(
 			Operator::from('is_true'),
-			\OZONE\OZ\Db\OZFile::COL_IS_VALID
+			\OZONE\Core\Db\OZFile::COL_IS_VALID
 		);
 	}
 }

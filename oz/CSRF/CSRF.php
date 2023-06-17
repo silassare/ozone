@@ -11,34 +11,39 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\CSRF;
+namespace OZONE\Core\CSRF;
 
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\Hasher;
-use OZONE\OZ\Forms\FormData;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Keys;
+use OZONE\Core\Forms\FormData;
+use OZONE\Core\Utils\Hasher;
+use OZONE\Core\Utils\Random;
 
 /**
  * Class CSRF.
  */
 class CSRF
 {
-	public const TOKEN_SEP      = '.';
-	private string $csrf_token  = '_csrf';
-	private string $csrf_header = 'X-XSRF-TOKEN';
+	public const TOKEN_SEP    = '.';
+	public const TOKEN_PARAM  = '_csrf';
+	public const TOKEN_HEADER = 'X-XSRF-TOKEN';
 	private string $scope_ref;
 
 	/**
 	 * CSRF constructor.
-	 *
-	 * @throws \OZONE\OZ\Exceptions\UnverifiedUserException
 	 */
 	public function __construct(private Context $context, private CSRFScope $scope)
 	{
 		switch ($this->scope) {
 			case CSRFScope::SESSION:
-				$this->scope_ref = $this->context->getSession()
-					->getDataStore()
-					->getToken();
+				$this->scope_ref = $this->context->session()
+					->id();
+
+				break;
+
+			case CSRFScope::ACTIVE_USER:
+				$this->scope_ref = $this->context->user()
+					->getID();
 
 				break;
 
@@ -49,15 +54,6 @@ class CSRF
 
 			case CSRFScope::HOST:
 				$this->scope_ref = $this->context->getHost(true);
-
-				break;
-
-			case CSRFScope::ACTIVE_USER:
-				$this->context->getUsersManager()
-					->assertUserVerified();
-				$this->scope_ref = $this->context->getSession()
-					->getDataStore()
-					->getUserID();
 
 				break;
 		}
@@ -74,18 +70,18 @@ class CSRF
 	/**
 	 * Check a csrf token validity in a given form.
 	 *
-	 * @param \OZONE\OZ\Forms\FormData $fd
+	 * @param \OZONE\Core\Forms\FormData $fd
 	 *
 	 * @return bool
 	 */
 	public function check(FormData $fd): bool
 	{
-		if ($token = $fd->get($this->csrf_token)) {
+		if ($token = $fd->get(self::TOKEN_PARAM)) {
 			$parts = \explode(self::TOKEN_SEP, $token);
 			$id    = $parts[0] ?? null;
 			$key   = $parts[1] ?? null;
 		} elseif ($header = $this->context->getRequest()
-			->getHeaderLine($this->csrf_header)) {
+			->getHeaderLine(self::TOKEN_HEADER)) {
 			$parts = \explode(self::TOKEN_SEP, $header);
 			$id    = $parts[0] ?? null;
 			$key   = $parts[1] ?? null;
@@ -107,7 +103,7 @@ class CSRF
 	 */
 	public function genCsrfToken(): string
 	{
-		$id  = (string) Hasher::randomInt();
+		$id  = Random::num();
 		$key = $this->buildKey($id);
 
 		return $id . self::TOKEN_SEP . $key;
@@ -122,10 +118,8 @@ class CSRF
 	 */
 	public function obfuscate(string $human_readable_str): string
 	{
-		$salt = Hasher::getSalt('OZ_AUTH_TOKEN_SALT');
-
 		// obfuscation is not security keep it simple
-		return Hasher::shorten($this->scope_ref . $human_readable_str . $salt);
+		return Hasher::shorten($this->scope_ref . $human_readable_str . Keys::salt());
 	}
 
 	/**
@@ -137,8 +131,6 @@ class CSRF
 	 */
 	private function buildKey(string $id): string
 	{
-		$salt = Hasher::getSalt('OZ_DEFAULT_SALT');
-
-		return Hasher::hash64($id . $this->scope_ref . $salt);
+		return Hasher::hash64($id . $this->scope_ref . Keys::salt());
 	}
 }

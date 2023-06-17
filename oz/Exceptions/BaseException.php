@@ -11,22 +11,22 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Exceptions;
+namespace OZONE\Core\Exceptions;
 
 use Exception;
 use Gobl\CRUD\Exceptions\CRUDException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\ORM\Exceptions\ORMQueryException;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\JSONResponse;
-use OZONE\OZ\Exceptions\Traits\ExceptionCustomSuspectTrait;
-use OZONE\OZ\Exceptions\Traits\ExceptionWithCustomResponseTrait;
-use OZONE\OZ\Exceptions\Views\ErrorView;
-use OZONE\OZ\Http\Response;
-use OZONE\OZ\Lang\I18nMessage;
-use OZONE\OZ\Logger\Logger;
-use OZONE\OZ\OZone;
-use OZONE\OZ\Utils\Utils;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\JSONResponse;
+use OZONE\Core\Exceptions\Traits\ExceptionCustomSuspectTrait;
+use OZONE\Core\Exceptions\Traits\ExceptionWithCustomResponseTrait;
+use OZONE\Core\Exceptions\Views\ErrorView;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Lang\I18nMessage;
+use OZONE\Core\Logger\Logger;
+use OZONE\Core\OZone;
+use OZONE\Core\Utils\Utils;
 use PHPUtils\Interfaces\RichExceptionInterface;
 use PHPUtils\Traits\RichExceptionTrait;
 use Throwable;
@@ -132,7 +132,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	/**
 	 * Show exception according to accept header name or request type.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
+	 * @param \OZONE\Core\App\Context $context
 	 */
 	public function informClient(Context $context): void
 	{
@@ -356,9 +356,9 @@ STRING;
 	/**
 	 * Returns json response.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
+	 * @param \OZONE\Core\App\Context $context
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 */
 	private function getJSONResponse(Context $context): Response
 	{
@@ -373,9 +373,9 @@ STRING;
 	/**
 	 * Returns default error page response.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
+	 * @param \OZONE\Core\App\Context $context
 	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return \OZONE\Core\Http\Response
 	 */
 	private function getDefaultErrorPage(Context $context): Response
 	{

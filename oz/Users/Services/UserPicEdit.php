@@ -11,15 +11,15 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Users\Services;
+namespace OZONE\Core\Users\Services;
 
 use Exception;
-use OZONE\OZ\Core\Assert;
-use OZONE\OZ\Core\Service;
-use OZONE\OZ\Exceptions\UnauthorizedActionException;
-use OZONE\OZ\FS\PPicUtils;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
+use OZONE\Core\App\Service;
+use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\FS\PPicUtils;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
 
 /**
  * Class UserPicEdit.
@@ -36,7 +36,7 @@ class UserPicEdit extends Service
 		$context = $ri->getContext();
 		$request = $context->getRequest();
 		$params  = $request->getUnsafeFormData();
-		$um      = $context->getUsersManager();
+		$um      = $context->getUsers();
 		$for_id  = $ri->getParam('user_id');
 
 		$um->assertUserVerified();
@@ -47,7 +47,7 @@ class UserPicEdit extends Service
 			throw new UnauthorizedActionException();
 		}
 
-		$user       = $um->getCurrentUserObject();
+		$user       = $context->user();
 		$uid        = $user->getID();
 		$file_label = 'OZ_FILE_LABEL_USER_PPIC';
 		$msg        = 'OZ_PROFILE_PIC_CHANGED';
@@ -59,11 +59,15 @@ class UserPicEdit extends Service
 		$pu = new PPicUtils($uid);
 
 		if ('file_id' === $kind) {
-			Assert::assertForm($params, ['file_id', 'file_key']);
+			if (empty($params['file_id']) || empty($params['file_key'])) {
+				new InvalidFormException();
+			}
 			$pic_id = $pu->fromFileID($params['file_id'], $params['file_key'], $params->getData(), $file_label);
 		} elseif ('file' === $kind) {
 			$files = $request->getUploadedFiles();
-			Assert::assertForm($files, ['photo']);
+			if (empty($files['photo'])) {
+				new InvalidFormException();
+			}
 			$pic_id = $pu->fromUploadedFile($files['photo'], $params->getData(), $file_label);
 		} else {// def
 			$pic_id = null;
@@ -84,7 +88,7 @@ class UserPicEdit extends Service
 	public static function registerRoutes(Router $router): void
 	{
 		$router->patch('/users/:user_id/pic/edit', function (RouteInfo $ri) {
-			$s       = new self($ri);
+			$s = new self($ri);
 			$s->actionPicEdit($ri);
 
 			return $s->respond();

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\OZ\Tests;
+namespace OZONE\Tests;
 
 use LogicException;
 
