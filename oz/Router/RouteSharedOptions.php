@@ -286,14 +286,15 @@ class RouteSharedOptions
 	 */
 	public function getName(bool $full = true): string
 	{
+		$name = $this->name;
 		if ($full && $this->parent) {
 			$parent_name = $this->parent->getName();
 			if (!empty($parent_name)) {
-				return $parent_name . '.' . $this->name;
+				$name = $parent_name . '.' . $this->name;
 			}
 		}
 
-		return $this->name;
+		return \trim(\str_replace('..', '.', $name), '.');
 	}
 
 	/**
