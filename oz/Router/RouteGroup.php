@@ -18,8 +18,12 @@ namespace OZONE\Core\Router;
  */
 final class RouteGroup extends RouteSharedOptions
 {
+	private static int $group_count = 0;
+
 	public function __construct(string $path, ?self $parent = null)
 	{
 		parent::__construct($path, $parent);
+
+		$this->name('route_group_' . (++self::$group_count));
 	}
 }
