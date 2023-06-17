@@ -28,12 +28,6 @@ use Throwable;
  */
 final class Router
 {
-	public const NOT_FOUND = 0;
-
-	public const FOUND = 1;
-
-	public const METHOD_NOT_ALLOWED = 2;
-
 	private array $allowed_methods = [
 		'CONNECT' => 1,
 		'DELETE'  => 1,
@@ -207,7 +201,7 @@ final class Router
 			throw new RuntimeException(\sprintf('There is no route named "%s".', $route_name));
 		}
 
-		return $route->toPath($context, $params);
+		return $route->buildPath($context, $params);
 	}
 
 	/**
@@ -241,9 +235,9 @@ final class Router
 	 * @param string $path   The request path
 	 * @param bool   $all    True to stop searching when a route match
 	 *
-	 * @return array
+	 * @return \OZONE\Core\Router\RouteSearchResult
 	 */
-	public function find(string $method, string $path, bool $all = false): array
+	public function find(string $method, string $path, bool $all = false): RouteSearchResult
 	{
 		$method          = \strtoupper($method);
 		$found           = null;
@@ -257,7 +251,7 @@ final class Router
 				$params = [];
 
 				if ($route->is($path, $params)) {
-					$item             = [$route, $params];
+					$item             = ['route' => $route, 'params' => $params];
 					$static_matches[] = $item;
 
 					if ($route->accept($method)) {
@@ -275,7 +269,7 @@ final class Router
 					$params = [];
 
 					if ($route->is($path, $params)) {
-						$item              = [$route, $params];
+						$item              = ['route' => $route, 'params' => $params];
 						$dynamic_matches[] = $item;
 
 						if ($route->accept($method)) {
@@ -291,25 +285,25 @@ final class Router
 		}
 
 		if (isset($static[0])) {
-			$status = self::FOUND;
+			$status = RouteSearchStatus::FOUND;
 			$found  = $static[0];
 		} elseif (isset($dynamic[0])) {
-			$status = self::FOUND;
+			$status = RouteSearchStatus::FOUND;
 			$found  = $dynamic[0];
 		} elseif (!empty($static_matches) || !empty($dynamic_matches)) {
-			$status = self::METHOD_NOT_ALLOWED;
+			$status = RouteSearchStatus::METHOD_NOT_ALLOWED;
 		} else {
-			$status = self::NOT_FOUND;
+			$status = RouteSearchStatus::NOT_FOUND;
 		}
 
-		return [
-			'status'          => $status,
-			'found'           => $found, // the first route that matches the route and the method
-			'static'          => $all ? $static : [], // matches the route and method
-			'dynamic'         => $all ? $dynamic : [], // matches the route and the method
-			'static_matches'  => $all ? $static_matches : [], // matches the route and/or the method
-			'dynamic_matches' => $all ? $dynamic_matches : [], // matches the route and/or the method
-		];
+		return new RouteSearchResult(
+			$status,
+			$found,
+			$static,
+			$dynamic,
+			$static_matches,
+			$dynamic_matches
+		);
 	}
 
 	/**
@@ -326,25 +320,22 @@ final class Router
 	{
 		$request = $context->getRequest();
 		$uri     = $request->getUri();
-		$results = $this->find($request->getMethod(), $uri->getPath());
+		$result  = $this->find($request->getMethod(), $uri->getPath());
 
-		switch ($results['status']) {
-			case self::NOT_FOUND:
+		switch ($result->status()) {
+			case RouteSearchStatus::NOT_FOUND:
 				Event::trigger(new RouteNotFound($context));
 
 				break;
 
-			case self::METHOD_NOT_ALLOWED:
+			case RouteSearchStatus::METHOD_NOT_ALLOWED:
 				Event::trigger(new RouteMethodNotAllowed($context));
 
 				break;
 
-			case self::FOUND:
-				/** @var \OZONE\Core\Router\Route $route */
-				/** @var array $params */
-				[$route, $params] = $results['found'];
-
-				$ri = new RouteInfo($context, $route, $params);
+			case RouteSearchStatus::FOUND:
+				['route' => $route, 'params' => $params] = $result->found();
+				$ri                                      = new RouteInfo($context, $route, $params);
 
 				$if_found_fn && $if_found_fn($ri);
 

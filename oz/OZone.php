@@ -56,13 +56,6 @@ final class OZone
 	private static ?AppInterface $current_app = null;
 
 	/**
-	 * The main context.
-	 *
-	 * @var null|\OZONE\Core\App\Context
-	 */
-	private static ?Context $main_context = null;
-
-	/**
 	 * Gets current running app.
 	 *
 	 * @return \OZONE\Core\App\Interfaces\AppInterface
@@ -129,7 +122,7 @@ final class OZone
 
 		Db::init();
 
-		$context = self::createMainContext();
+		$context = self::getMainContext();
 
 		// The current user access level will be used for CRUD validation
 		CRUD::setHandlerProvider(new TableCRUDHandlerProvider($context));
@@ -255,32 +248,28 @@ final class OZone
 	}
 
 	/**
-	 * Creates the main context.
+	 * Returns the main context.
 	 *
 	 * @return \OZONE\Core\App\Context
 	 */
-	private static function createMainContext(): Context
+	public static function getMainContext(): Context
 	{
-		if (null === self::$main_context) {
+		static $main_context = null;
+		if (null === $main_context) {
 			$is_cli_mode    = self::isCliMode();
 			$is_web_context = \defined('OZ_OZONE_IS_WEB_CONTEXT');
 			$is_api_context = !$is_web_context;
 
 			if ($is_cli_mode) {
-				$api_key_name = Settings::get('oz.config', 'OZ_API_KEY_HEADER_NAME');
-				$api_key_env  = \sprintf('HTTP_%s', \strtoupper(\str_replace('-', '_', $api_key_name)));
-
-				$http_env = HTTPEnvironment::mock([
-					$api_key_env => '',
-				]);
+				$http_env = HTTPEnvironment::mock();
 			} else {
 				$http_env = new HTTPEnvironment($_SERVER);
 			}
 
-			self::$main_context = new Context($http_env, null, null, $is_api_context);
+			$main_context = new Context($http_env, null, null, $is_api_context);
 		}
 
-		return self::$main_context;
+		return $main_context;
 	}
 
 	/**
