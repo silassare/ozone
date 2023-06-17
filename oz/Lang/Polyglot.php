@@ -32,7 +32,7 @@ final class Polyglot
 	public const PORTION_COPY_REG = '~{{\s*([A-Z][A-Z0-9_.]+)\s*}}~';
 
 	// for {variable} and {variable | filter1 | filter2}
-	public const SIMPLE_REPLACE_REG = '~{\s*([a-zA-Z0-9_]+)\s*((?:\|\s*[a-zA-Z_]+\s*)+)?}~';
+	public const SIMPLE_REPLACE_REG = '~{\s*([a-zA-Z0-9_]+)\s*((?:\|\s*[a-zA-Z_][a-zA-Z0-9_]*\s*)+)?}~';
 	public const FILTERS_SEP        = '|';
 
 	private static array $filters = [];
@@ -284,7 +284,8 @@ final class Polyglot
 			$in = [];
 
 			while (\preg_match(self::SIMPLE_REPLACE_REG, $text, $in)) {
-				[$found, $variable, $filters] = $in;
+				[$found, $variable] = $in;
+				$filters            = $in[2] ?? '';
 
 				$value = (string) ($inject[$variable] ?? '');
 
