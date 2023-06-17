@@ -76,14 +76,14 @@ final class Route
 	}
 
 	/**
-	 * Builds the route with given parameters values.
+	 * Builds the route path with given parameters values.
 	 *
 	 * @param \OZONE\Core\App\Context $context
 	 * @param array                   $params
 	 *
 	 * @return string
 	 */
-	public function toPath(Context $context, array $params): string
+	public function buildPath(Context $context, array $params = []): string
 	{
 		$path = $this->options->getPath();
 		if (!$this->isDynamic()) {
@@ -191,8 +191,7 @@ final class Route
 
 		$regexp  = self::REG_DELIMITER . '^' . $this->parser_result . '$' . self::REG_DELIMITER;
 		$matches = [];
-
-		$passed = 1 === \preg_match($regexp, $path, $matches);
+		$passed  = 1 === \preg_match($regexp, $path, $matches);
 
 		if ($passed) {
 			$params = $matches;
@@ -258,8 +257,12 @@ final class Route
 			$c = $route[$cursor];
 
 			if ('{' === $c || ':' === $c) {
-				$name = '{' === $c ? self::searchUntilCloseTag('{', '}', $route, $cursor + 1, $cursor, false)
-					: self::searchWhile($route, $cursor + 1, [self::class, 'isValidParameter']);
+				if ('{' === $c) {
+					$name = self::searchUntilCloseTag('{', '}', $route, $cursor + 1, $cursor, false);
+				} else {
+					$name   = self::searchWhile($route, $cursor + 1, [self::class, 'isValidParameter']);
+					$cursor += \strlen($name);
+				}
 
 				$required = ($route === $original_route ? 1 : 0);
 
@@ -328,8 +331,12 @@ final class Route
 			$c = $route_path[$cursor];
 
 			if ('{' === $c || ':' === $c) {
-				$name = '{' === $c ? self::searchUntilCloseTag('{', '}', $route_path, $cursor + 1, $cursor, false)
-					: self::searchWhile($route_path, $cursor + 1, [self::class, 'isValidParameter']);
+				if ('{' === $c) {
+					$name = self::searchUntilCloseTag('{', '}', $route_path, $cursor + 1, $cursor, false);
+				} else {
+					$name   = self::searchWhile($route_path, $cursor + 1, [self::class, 'isValidParameter']);
+					$cursor += \strlen($name);
+				}
 
 				if ('' === $name) {
 					throw new InvalidArgumentException(\sprintf(
@@ -385,12 +392,12 @@ final class Route
 	/**
 	 * Search for close tag.
 	 *
-	 * @param string $open
-	 * @param string $close
-	 * @param string $string
-	 * @param int    $from
-	 * @param int    $found_at
-	 * @param bool   $go_deeply
+	 * @param string $open      open tag
+	 * @param string $close     close tag
+	 * @param string $string    string to search in
+	 * @param int    $from      start index
+	 * @param int    $found_at  found index
+	 * @param bool   $go_deeply go deeply
 	 *
 	 * @return string
 	 */
@@ -416,7 +423,7 @@ final class Route
 					++$stack;
 				} else {
 					throw new InvalidArgumentException(\sprintf(
-						'The open tag %s at index %s was not closed before opening new tag at index %s',
+						'The open tag "%s" at index %s was not closed before opening new tag at index %s',
 						$open,
 						$from - 1,
 						$cursor
@@ -441,7 +448,7 @@ final class Route
 
 		if (false === $found) {
 			throw new InvalidArgumentException(\sprintf(
-				'Unexpected end of string missing close tag %s at the end of %s',
+				'Unexpected end of string missing close tag "%s" at the end of "%s"',
 				$close,
 				$string
 			));
@@ -453,13 +460,13 @@ final class Route
 	/**
 	 * Search while a given callable return true.
 	 *
-	 * @param string   $string
-	 * @param int      $from
-	 * @param callable $fn     the current string while be passed as first argument
+	 * @param string   $string    the string to search in
+	 * @param int      $from      the index to start searching from
+	 * @param callable $predicate the predicate function
 	 *
 	 * @return string
 	 */
-	private static function searchWhile(string $string, int $from, callable $fn): string
+	private static function searchWhile(string $string, int $from, callable $predicate): string
 	{
 		$accumulator = '';
 		$cursor      = $from;
@@ -468,7 +475,7 @@ final class Route
 		while ($cursor < $len) {
 			$char = $string[$cursor];
 
-			if (!$fn($accumulator . $char)) {
+			if (!$predicate($accumulator . $char)) {
 				break;
 			}
 
