@@ -162,7 +162,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 			$response = $this->getCustomResponse();
 
 			if (null === $response) {
-				if ($context->shouldReturnJSON(true)) {
+				if ($context->shouldReturnJSON()) {
 					$response = $this->getJSONResponse($context);
 				} else {
 					$response = $this->getDefaultErrorPage($context);

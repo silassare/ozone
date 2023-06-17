@@ -124,19 +124,22 @@ final class Context
 	/**
 	 * Checks whether json response should be returned.
 	 *
-	 * @param bool $prefer_json
-	 *
 	 * @return bool
 	 */
-	public function shouldReturnJSON(bool $prefer_json = false): bool
+	public function shouldReturnJSON(): bool
 	{
 		$accept = $this->request->getHeaderLine('HTTP_ACCEPT');
 
+		// in api context, we always return json
+		// if the request accept contains application/json
 		if ($this->isApiContext()) {
 			return \is_int(\strpos($accept, 'application/json'));
 		}
 
-		return $prefer_json || \is_int(\strpos($accept, 'application/json'));
+		// in web context, we return json
+		// if the request accept does not contains text/html
+		// and contains application/json
+		return !\is_int(\strpos($accept, 'text/html')) && \is_int(\strpos($accept, 'application/json'));
 	}
 
 	/**
