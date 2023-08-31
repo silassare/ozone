@@ -16,10 +16,8 @@ namespace OZONE\Core\Db;
 /**
  * Class OZAuthsCrud.
  */
-abstract class OZAuthsCrud extends \OZONE\Core\Db\Base\OZAuthsCrud implements \OZONE\Core\CRUD\Interfaces\TableCRUDHandlerInterface
+abstract class OZAuthsCrud extends \OZONE\Core\Db\Base\OZAuthsCrud
 {
-	use \OZONE\Core\CRUD\Traits\TableCRUDHandlerTrait;
-
 	// ====================================================
 	// =	Your custom implementation goes here
 	// ====================================================

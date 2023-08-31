@@ -124,26 +124,25 @@ final class Cli extends Kli
 
 	/**
 	 * Loads all defined commands in oz.cli settings.
+	 *
+	 * @throws \Kli\Exceptions\KliException
 	 */
 	private function loadCommands(): void
 	{
 		$list = Settings::load('oz.cli');
 
-		if (\is_array($list) && \count($list)) {
-			foreach ($list as $cmd_name => $cmd_class) {
-				if (!\is_subclass_of($cmd_class, Command::class)) {
-					throw new RuntimeException(\sprintf(
-						'Your custom command "%s" class "%s" should extends "%s".',
-						$cmd_name,
-						$cmd_class,
-						Command::class
-					));
-				}
-
-				/* @var class-string<\OZONE\Core\Cli\Command> $cmd_class */
-				// @psalm-suppress UndefinedClass
-				$this->addCommand(new $cmd_class($cmd_name, $this));
+		foreach ($list as $cmd_name => $cmd_class) {
+			if (!\is_subclass_of($cmd_class, Command::class)) {
+				throw new RuntimeException(\sprintf(
+					'Your custom command "%s" class "%s" should extends "%s".',
+					$cmd_name,
+					$cmd_class,
+					Command::class
+				));
 			}
+
+			/* @var \OZONE\Core\Cli\Command $cmd_class */
+			$this->addCommand($cmd_class::instance($cmd_name, $this));
 		}
 	}
 }

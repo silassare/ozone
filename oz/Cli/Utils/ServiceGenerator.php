@@ -38,8 +38,11 @@ class ServiceGenerator extends CSGeneratorORM
 	 * @param bool                                 $ignore_private_table
 	 * @param bool                                 $ignore_private_column
 	 */
-	public function __construct(RDBMSInterface $db, bool $ignore_private_table = true, bool $ignore_private_column = true)
-	{
+	public function __construct(
+		RDBMSInterface $db,
+		bool $ignore_private_table = true,
+		bool $ignore_private_column = true
+	) {
 		parent::__construct($db, $ignore_private_table, $ignore_private_column);
 
 		if (!self::$templates_registered) {
@@ -60,7 +63,7 @@ class ServiceGenerator extends CSGeneratorORM
 	/**
 	 * {@inheritDoc}
 	 */
-	public function generate(array $tables, string $path, string $header = ''): self
+	public function generate(array $tables, string $path, string $header = ''): static
 	{
 		foreach ($tables as $table) {
 			$this->generateServiceClass(
@@ -114,12 +117,14 @@ class ServiceGenerator extends CSGeneratorORM
 		$pk_col_count = \count($columns);
 
 		if (1 !== $pk_col_count) {
-			throw new RuntimeException(\sprintf(
-				'Table "%s" contains "%s" columns in primary key.'
-				. 'You can generate service only for tables with one column as primary key.',
-				$table->getName(),
-				$pk_col_count
-			));
+			throw new RuntimeException(
+				\sprintf(
+					'Table "%s" contains "%s" columns in primary key.'
+					. 'You can generate service only for tables with one column as primary key.',
+					$table->getName(),
+					$pk_col_count
+				)
+			);
 		}
 
 		if (empty($service_class)) {

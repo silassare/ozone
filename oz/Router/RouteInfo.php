@@ -24,7 +24,7 @@ use PHPUtils\Store\Store;
  */
 final class RouteInfo
 {
-	private Store    $guards_data;
+	private Store $guards_data;
 	private FormData $clean_form_data;
 
 	/**
@@ -63,7 +63,7 @@ final class RouteInfo
 	 *
 	 * @return \OZONE\Core\Router\Route
 	 */
-	public function getRoute(): Route
+	public function route(): Route
 	{
 		return $this->route;
 	}
@@ -73,7 +73,7 @@ final class RouteInfo
 	 *
 	 * @return array
 	 */
-	public function getParams(): array
+	public function params(): array
 	{
 		return $this->params;
 	}
@@ -86,7 +86,7 @@ final class RouteInfo
 	 *
 	 * @return mixed
 	 */
-	public function getParam(string $name, mixed $def = null): mixed
+	public function param(string $name, mixed $def = null): mixed
 	{
 		return $this->params[$name] ?? $def;
 	}

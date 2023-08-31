@@ -40,9 +40,9 @@ class TypeCC2 extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function getInstance(array $options): self
+	public static function getInstance(array $options): static
 	{
-		return (new static())->configure($options);
+		return (new self())->configure($options);
 	}
 
 	/**
@@ -56,7 +56,7 @@ class TypeCC2 extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function default($default): self
+	public function default($default): static
 	{
 		$this->base_type->default($default);
 
@@ -66,7 +66,7 @@ class TypeCC2 extends Type
 	/**
 	 * @return $this
 	 */
-	public function authorized(bool $authorized = true): self
+	public function authorized(bool $authorized = true): static
 	{
 		return $this->setOption('authorized', $authorized);
 	}
@@ -104,7 +104,7 @@ class TypeCC2 extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function configure(array $options): self
+	public function configure(array $options): static
 	{
 		if (isset($options['authorized'])) {
 			$this->authorized((bool) $options['authorized']);

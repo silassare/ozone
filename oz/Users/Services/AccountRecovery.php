@@ -71,7 +71,7 @@ final class AccountRecovery extends Service
 
 		$um->logUserIn($user);
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone('OZ_PASSWORD_EDIT_SUCCESS')
 			->setData($user);
 	}
@@ -81,13 +81,14 @@ final class AccountRecovery extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->post('/account-recovery', function (RouteInfo $ri) {
-			$s = new self($ri);
+		$router
+			->post('/account-recovery', static function (RouteInfo $ri) {
+				$s = new self($ri);
 
-			$s->actionRecover($ri);
+				$s->actionRecover($ri);
 
-			return $s->respond();
-		})
+				return $s->respond();
+			})
 			->name(self::ROUTE_ACCOUNT_RECOVERY)
 			->with2FA(PhoneVerificationAuthProvider::NAME, EmailVerificationProvider::NAME)
 			->form(self::editPassForm(...));

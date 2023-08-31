@@ -17,9 +17,6 @@ use Gobl\DBAL\Table;
 use Kli\KliOption;
 use Kli\Types\KliTypeString;
 use OZONE\Core\App\Interfaces\AppInterface;
-use OZONE\Core\Cli\Platforms\Interfaces\PlatformInterface;
-use OZONE\Core\Cli\Platforms\PlatformDOS;
-use OZONE\Core\Cli\Platforms\PlatformLinux;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
 use Throwable;
@@ -31,10 +28,6 @@ use Throwable;
  */
 final class Utils
 {
-	private static ?bool $sig_child = null;
-
-	private static ?array $env = null;
-
 	/**
 	 * Checks if provided folder is an ozone project root directory.
 	 * If provided folder is null, it will use current working directory.
@@ -127,77 +120,6 @@ final class Utils
 	}
 
 	/**
-	 * Checks for Windows environment.
-	 *
-	 * @return bool
-	 */
-	public static function isDOS(): bool
-	{
-		return '\\' === \DIRECTORY_SEPARATOR;
-	}
-
-	/**
-	 * Returns the current platform.
-	 *
-	 * @return \OZONE\Core\Cli\Platforms\Interfaces\PlatformInterface
-	 */
-	public static function getPlatform(): PlatformInterface
-	{
-		if (self::isDOS()) {
-			return new PlatformDOS();
-		}
-
-		return new PlatformLinux();
-	}
-
-	/**
-	 * Checks if PHP has been compiled with the '--enable-sigchild' option or not.
-	 *
-	 * @return bool
-	 */
-	public static function sigChildEnabled(): bool
-	{
-		if (null !== self::$sig_child) {
-			return self::$sig_child;
-		}
-
-		\ob_start();
-		\phpinfo(\INFO_GENERAL);
-		$info = \ob_get_clean();
-
-		if (\str_contains($info, '--enable-sigchild')) {
-			self::$sig_child = true;
-		}
-
-		return self::$sig_child = false;
-	}
-
-	/**
-	 * Returns default env.
-	 *
-	 * @return array
-	 */
-	public static function getDefaultEnv(): array
-	{
-		if (null === self::$env) {
-			$env     = [];
-			$sources = [$_SERVER, $_ENV];
-
-			foreach ($sources as $source) {
-				foreach ($source as $k => $v) {
-					if (\is_string($v) && false !== ($v = \getenv($k))) {
-						$env[$k] = $v;
-					}
-				}
-			}
-
-			self::$env = $env;
-		}
-
-		return self::$env;
-	}
-
-	/**
 	 * Builds cli options from a table.
 	 *
 	 * @param \Gobl\DBAL\Table $table
@@ -229,7 +151,7 @@ final class Utils
 			$option   = new KliOption($name);
 			$kli_type = new KliTypeString();
 
-			$kli_type->validator(function ($value) use ($db_type) {
+			$kli_type->validator(static function ($value) use ($db_type) {
 				return $db_type->validate($value);
 			});
 

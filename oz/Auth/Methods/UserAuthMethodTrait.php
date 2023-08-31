@@ -27,7 +27,7 @@ use OZONE\Core\Users\Users;
  */
 trait UserAuthMethodTrait
 {
-	protected OZUser           $user;
+	protected OZUser $user;
 	protected UserAuthProvider $provider;
 
 	/**

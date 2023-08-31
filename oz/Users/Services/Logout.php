@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Users\Services;
 
 use OZONE\Core\App\Service;
+use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
@@ -30,8 +31,8 @@ final class Logout extends Service
 			->getUsers()
 			->logUserOut();
 
-		$this->getJSONResponse()
-			->setDone('OZ_USER_LOGOUT');
+		$this->json()
+			->setDone('OZ_USER_LOGOUT_DONE');
 	}
 
 	/**
@@ -39,12 +40,14 @@ final class Logout extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->post('/logout', function (RouteInfo $ri) {
-			$s = new self($ri);
-			$s->actionLogout();
+		$router
+			->post('/logout', static function (RouteInfo $ri) {
+				$s = new self($ri);
+				$s->actionLogout();
 
-			return $s->respond();
-		})
-			->name(self::ROUTE_LOGOUT);
+				return $s->respond();
+			})
+			->name(self::ROUTE_LOGOUT)
+			->auths(AuthMethodType::SESSION);
 	}
 }

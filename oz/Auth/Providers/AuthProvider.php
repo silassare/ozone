@@ -40,7 +40,7 @@ abstract class AuthProvider implements AuthProviderInterface
 {
 	use AuthProviderEventTrait;
 
-	protected JSONResponse       $json_response;
+	protected JSONResponse $json_response;
 	protected AuthScopeInterface $scope;
 
 	protected AuthCredentialsInterface $credentials;

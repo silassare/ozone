@@ -18,8 +18,6 @@ use Gobl\ORM\Events\ORMTableFilesGenerated;
 use Gobl\ORM\Utils\ORMClassKind;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Settings;
-use OZONE\Core\CRUD\Interfaces\TableCRUDHandlerInterface;
-use OZONE\Core\CRUD\Traits\TableCRUDHandlerTrait;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\MethodNotAllowedException;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -96,16 +94,21 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	 */
 	public static function onResponse(ResponseHook $ev): void
 	{
-		$context   = $ev->getContext();
-		$request   = $ev->getRequest();
-		$response  = $ev->getResponse();
-		$life_time = Session::lifetime();
-		$h_list    = [];
-
-		$allowed_origin = Settings::get('oz.clients', 'OZ_CORS_ALLOWED_ORIGIN');
+		$context        = $ev->getContext();
+		$request        = $ev->getRequest();
+		$response       = $ev->getResponse();
+		$life_time      = Session::lifetime();
+		$h_list         = [];
+		$allowed_origin = Settings::get('oz.request', 'OZ_CORS_ALLOWED_ORIGIN');
+		// header spoofing can help hacker bypass this
+		// so don't be 100% sure, :-)
+		$request_origin = $context->getRequestOriginOrReferer();
 
 		if ('self' === $allowed_origin) {
 			$allowed_origin = $context->getDefaultOrigin();
+		} elseif ('*' === $allowed_origin) {
+			// CORS doesn't allow wildcard with Access-Control-Allow-Credentials header set to true
+			$allowed_origin = $request_origin ?? $context->getDefaultOrigin();
 		}
 
 		if ($request->isOptions()) {
@@ -119,30 +122,20 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 				'DELETE',
 			]);
 			$h_list['Access-Control-Max-Age']       = $life_time;
-		} else {
-			// header spoofing can help hacker bypass this
-			// so don't be 100% sure, :-)
-			$request_origin = $context->getRequestOriginOrReferer();
-
-			if (!empty($request_origin)) {
-				if ('*' === $allowed_origin) {
-					// CORS doesn't allow wildcard with Access-Control-Allow-Credentials header set to true
-					$allowed_origin = $request_origin;
-				} elseif (!$context->isSubRequest()) {
-					// we don't check for sub-request here because of the following scenario:
-					//  - The sub-request is made with the original request environment
-
-					$allowed_host = Uri::createFromString($allowed_origin)
-						->getHost();
-					$origin_host  = Uri::createFromString($request_origin)
-						->getHost();
-					if ($allowed_host !== $origin_host) {
-						throw new ForbiddenException('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED', [
-							'origin'        => $request_origin,
-							'_origin_host'  => $origin_host,
-							'_allowed_host' => $allowed_host,
-						]);
-					}
+		} elseif (!$context->isSubRequest()) {
+			// we don't check for sub-request here because often sub-request are made
+			// with the original request environment
+			if (!empty($request_origin) && $allowed_origin !== $request_origin) {
+				$allowed_host = Uri::createFromString($allowed_origin)
+					->getHost();
+				$origin_host  = Uri::createFromString($request_origin)
+					->getHost();
+				if ($allowed_host !== $origin_host) {
+					throw new ForbiddenException('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED', [
+						'origin'        => $request_origin,
+						'_origin_host'  => $origin_host,
+						'_allowed_host' => $allowed_host,
+					]);
 				}
 			}
 		}
@@ -192,10 +185,6 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 					->useTrait($trait);
 			}
 		}
-
-		$event->getClass(ORMClassKind::CRUD)
-			->implements(TableCRUDHandlerInterface::class)
-			->useTrait(TableCRUDHandlerTrait::class);
 	}
 
 	/**
@@ -203,14 +192,14 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	 */
 	public static function boot(): void
 	{
-		RouteNotFound::handle([self::class, 'onRouteNotFound'], Event::RUN_LAST);
+		RouteNotFound::listen([self::class, 'onRouteNotFound'], Event::RUN_LAST);
 
-		RouteMethodNotAllowed::handle([self::class, 'onMethodNotAllowed'], Event::RUN_LAST);
+		RouteMethodNotAllowed::listen([self::class, 'onMethodNotAllowed'], Event::RUN_LAST);
 
-		ResponseHook::handle([self::class, 'onResponse'], Event::RUN_FIRST);
+		ResponseHook::listen([self::class, 'onResponse'], Event::RUN_FIRST);
 
 		if (OZone::isCliMode()) {
-			ORMTableFilesGenerated::handle([self::class, 'onTableFilesGenerated'], Event::RUN_FIRST);
+			ORMTableFilesGenerated::listen([self::class, 'onTableFilesGenerated'], Event::RUN_FIRST);
 		}
 	}
 }

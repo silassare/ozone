@@ -24,140 +24,202 @@ class FormRule implements ArrayCapableInterface
 {
 	use ArrayCapableTrait;
 
-	private array                   $rules   = [];
+	/**
+	 * @var array<int, array{field: string, rule: string, value?: mixed, target?: string, message:
+	 *      null|\OZONE\Core\Lang\I18nMessage|string}>
+	 */
+	private array $rules                     = [];
 	private null|string|I18nMessage $message = null;
 
 	/**
+	 * Add a rule to check if a field value is equal to a value.
+	 *
 	 * @param \OZONE\Core\Forms\Field|string                     $field
 	 * @param null|bool|float|int|\OZONE\Core\Forms\Field|string $value
 	 * @param null|\OZONE\Core\Lang\I18nMessage|string           $message
 	 *
 	 * @return $this
 	 */
-	public function eq(string|Field $field, Field|null|int|string|float|bool $value, null|string|I18nMessage $message = null): self
-	{
+	public function eq(
+		string|Field $field,
+		Field|null|int|string|float|bool $value,
+		null|string|I18nMessage $message = null
+	): self {
 		return $this->add($field, 'eq', $value, $message);
 	}
 
 	/**
+	 * Add a rule to check if a field value is not equal to a value.
+	 *
 	 * @param \OZONE\Core\Forms\Field|string                     $field
 	 * @param null|bool|float|int|\OZONE\Core\Forms\Field|string $value
 	 * @param null|\OZONE\Core\Lang\I18nMessage|string           $message
 	 *
 	 * @return $this
 	 */
-	public function neq(string|Field $field, Field|null|int|string|float|bool $value, null|string|I18nMessage $message = null): self
-	{
+	public function neq(
+		string|Field $field,
+		Field|null|int|string|float|bool $value,
+		null|string|I18nMessage $message = null
+	): self {
 		return $this->add($field, 'neq', $value, $message);
 	}
 
 	/**
+	 * Add a rule to check if a field value is greater than a value.
+	 *
 	 * @param \OZONE\Core\Forms\Field|string           $field
 	 * @param float|int|\OZONE\Core\Forms\Field|string $value
 	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function gt(string|Field $field, Field|int|string|float $value, null|string|I18nMessage $message = null): self
-	{
+	public function gt(
+		string|Field $field,
+		Field|int|string|float $value,
+		null|string|I18nMessage $message = null
+	): self {
 		return $this->add($field, 'gt', $value, $message);
 	}
 
 	/**
+	 * Add a rule to check if a field value is greater than or equal to a value.
+	 *
 	 * @param \OZONE\Core\Forms\Field|string           $field
 	 * @param float|int|\OZONE\Core\Forms\Field|string $value
 	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function gte(string|Field $field, Field|int|string|float $value, null|string|I18nMessage $message = null): self
-	{
+	public function gte(
+		string|Field $field,
+		Field|int|string|float $value,
+		null|string|I18nMessage $message = null
+	): self {
 		return $this->add($field, 'gte', $value, $message);
 	}
 
 	/**
+	 * Add a rule to check if a field value is less than a value.
+	 *
 	 * @param \OZONE\Core\Forms\Field|string           $field
 	 * @param float|int|\OZONE\Core\Forms\Field|string $value
 	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function lt(string|Field $field, Field|int|string|float $value, null|string|I18nMessage $message = null): self
-	{
+	public function lt(
+		string|Field $field,
+		Field|int|string|float $value,
+		null|string|I18nMessage $message = null
+	): self {
 		return $this->add($field, 'lt', $value, $message);
 	}
 
 	/**
+	 * Add a rule to check if a field value is less than or equal to a value.
+	 *
 	 * @param \OZONE\Core\Forms\Field|string           $field
 	 * @param float|int|\OZONE\Core\Forms\Field|string $value
 	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function lte(string|Field $field, Field|int|string|float $value, null|string|I18nMessage $message = null): self
-	{
+	public function lte(
+		string|Field $field,
+		Field|int|string|float $value,
+		null|string|I18nMessage $message = null
+	): self {
 		return $this->add($field, 'lte', $value, $message);
 	}
 
 	/**
+	 * Add a rule to check if a field value is in a list of values.
+	 *
 	 * @param \OZONE\Core\Forms\Field|string           $field
 	 * @param array|\OZONE\Core\Forms\Field            $value
 	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function in(string|Field $field, Field|array $value, null|string|I18nMessage $message = null): self
-	{
+	public function in(
+		string|Field $field,
+		Field|array $value,
+		null|string|I18nMessage $message = null
+	): self {
 		return $this->add($field, 'in', $value, $message);
 	}
 
 	/**
+	 * Add a rule to check if a field value is not in a list of values.
+	 *
 	 * @param \OZONE\Core\Forms\Field|string           $field
 	 * @param array|\OZONE\Core\Forms\Field            $value
 	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function notIn(string|Field $field, Field|array $value, null|string|I18nMessage $message = null): self
-	{
+	public function notIn(
+		string|Field $field,
+		Field|array $value,
+		null|string|I18nMessage $message = null
+	): self {
 		return $this->add($field, 'not_in', $value, $message);
 	}
 
 	/**
+	 * Add a rule to check if a field value is null.
+	 *
 	 * @param \OZONE\Core\Forms\Field|string           $field
 	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function isNull(string|Field $field, null|string|I18nMessage $message = null): self
-	{
+	public function isNull(
+		string|Field $field,
+		null|string|I18nMessage $message = null
+	): self {
 		return $this->add($field, 'is_null', null, $message);
 	}
 
 	/**
+	 * Add a rule to check if a field value is not null.
+	 *
 	 * @param \OZONE\Core\Forms\Field|string           $field
 	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
-	public function isNotNull(string|Field $field, null|string|I18nMessage $message = null): self
-	{
+	public function isNotNull(
+		string|Field $field,
+		null|string|I18nMessage $message = null
+	): self {
 		return $this->add($field, 'is_not_null', null, $message);
 	}
 
 	/**
-	 * @param \OZONE\Core\Forms\FormData $fd
+	 * Evaluates the rule conditions.
+	 *
+	 * Note: the value used in the rule is the unsafe value as provided in the request.
+	 * We are not using the clean value because:
+	 *  - We can't guarantee the order in which fields are validated.
+	 *  - This should be portable to client side validation.
+	 *
+	 * @param \OZONE\Core\Forms\FormValidationContext $fvc
 	 *
 	 * @return bool
 	 */
-	public function check(FormData $fd): bool
+	public function check(FormValidationContext $fvc): bool
 	{
+		$unsafe_fd = $fvc->getUnsafeFormData();
 		foreach ($this->rules as $entry) {
-			$a = $fd->get($entry['field']);
-			$b = $entry['value'];
+			$a = $unsafe_fd->get($entry['field']);
+			$b = null;
 
-			if ($entry['is_field']) {
-				$b = $fd->get($b);
+			if (isset($entry['target'])) {
+				$b = $unsafe_fd->get($entry['target']);
+			} elseif (isset($entry['value'])) {
+				$b = $entry['value'];
 			}
 
 			$this->message = $entry['message'];
@@ -184,6 +246,8 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
+	 * Gets the error message.
+	 *
 	 * @return null|\OZONE\Core\Lang\I18nMessage|string
 	 */
 	public function getErrorMessage(): string|I18nMessage|null
@@ -200,6 +264,8 @@ class FormRule implements ArrayCapableInterface
 	}
 
 	/**
+	 * Adds a rule.
+	 *
 	 * @param \OZONE\Core\Forms\Field|string           $field
 	 * @param string                                   $rule
 	 * @param null|mixed                               $value
@@ -213,15 +279,23 @@ class FormRule implements ArrayCapableInterface
 		mixed $value = null,
 		null|string|I18nMessage $message = null
 	): self {
-		$is_field = $value instanceof Field;
+		$field_name = $field instanceof Field ? $field->getName() : $field;
 
-		$this->rules[] = [
-			'field'    => $field instanceof Field ? $field->getName() : $field,
-			'is_field' => $is_field,
-			'rule'     => $rule,
-			'value'    => $is_field ? null : $value,
-			'message'  => $message,
-		];
+		if ($value instanceof Field) {
+			$this->rules[] = [
+				'field'   => $field_name,
+				'rule'    => $rule,
+				'target'  => $value->getName(),
+				'message' => $message,
+			];
+		} else {
+			$this->rules[] = [
+				'field'   => $field_name,
+				'rule'    => $rule,
+				'value'   => $value,
+				'message' => $message,
+			];
+		}
 
 		return $this;
 	}

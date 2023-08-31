@@ -44,9 +44,9 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function getInstance(array $options): self
+	public static function getInstance(array $options): static
 	{
-		return (new static())->configure($options);
+		return (new self())->configure($options);
 	}
 
 	/**
@@ -60,7 +60,7 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function default($default): self
+	public function default($default): static
 	{
 		$this->base_type->default($default);
 
@@ -72,7 +72,7 @@ class TypeFile extends Type
 	 *
 	 * @return $this
 	 */
-	public function storage(string $storage): self
+	public function storage(string $storage): static
 	{
 		return $this->setOption('storage', $storage);
 	}
@@ -82,7 +82,7 @@ class TypeFile extends Type
 	 *
 	 * @return $this
 	 */
-	public function multiple(bool $multiple = true): self
+	public function multiple(bool $multiple = true): static
 	{
 		return $this->setOption('multiple', $multiple);
 	}
@@ -104,7 +104,7 @@ class TypeFile extends Type
 	 *
 	 * @return $this
 	 */
-	public function mimeTypes(array $mime_types): self
+	public function mimeTypes(array $mime_types): static
 	{
 		$mime_types = \array_unique($mime_types);
 
@@ -118,7 +118,7 @@ class TypeFile extends Type
 	 *
 	 * @return $this
 	 */
-	public function fileLabel(string $label): self
+	public function fileLabel(string $label): static
 	{
 		return $this->setOption('file_label', $label);
 	}
@@ -132,7 +132,7 @@ class TypeFile extends Type
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
-	public function fileMinSize(int $min): self
+	public function fileMinSize(int $min): static
 	{
 		$max = $this->getOption('file_max_size', \INF);
 
@@ -150,7 +150,7 @@ class TypeFile extends Type
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
-	public function fileMaxSize(int $max): self
+	public function fileMaxSize(int $max): static
 	{
 		$min = $this->getOption('file_min_size', 1);
 
@@ -168,7 +168,7 @@ class TypeFile extends Type
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
-	public function fileMinCount(int $min): self
+	public function fileMinCount(int $min): static
 	{
 		$max = $this->getOption('file_max_count', \INF);
 
@@ -186,7 +186,7 @@ class TypeFile extends Type
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
-	public function fileMaxCount(int $max): self
+	public function fileMaxCount(int $max): static
 	{
 		$min = $this->getOption('file_min_count', 1);
 
@@ -204,7 +204,7 @@ class TypeFile extends Type
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
-	public function fileUploadTotalSize(int $total): self
+	public function fileUploadTotalSize(int $total): static
 	{
 		if ($total <= 0) {
 			throw new TypesException(\sprintf('total=%s is not greater than 0.', $total));
@@ -302,7 +302,7 @@ class TypeFile extends Type
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
 	 */
-	public function configure(array $options): self
+	public function configure(array $options): static
 	{
 		if (isset($options['multiple'])) {
 			$this->multiple((bool) $options['multiple']);

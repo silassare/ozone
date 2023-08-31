@@ -28,9 +28,9 @@ class DigestAuth implements AuthMethodInterface
 	use UserAuthMethodTrait;
 
 	protected AuthMethodType $type;
-	protected string         $digest = '';
-	protected string         $nonce;
-	protected string         $opaque;
+	protected string $digest = '';
+	protected string $nonce;
+	protected string $opaque;
 
 	/**
 	 * DigestAuth constructor.

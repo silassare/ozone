@@ -13,20 +13,18 @@ declare(strict_types=1);
 
 namespace OZONE\Core\CRUD\Interfaces;
 
-use Gobl\CRUD\Handler\Interfaces\CRUDHandlerInterface;
+use Gobl\CRUD\Interfaces\CRUDEventListenerInterface;
 use OZONE\Core\App\Context;
 
 /**
- * Class TableCRUDHandlerInterface.
+ * Class TableCRUDListenerInterface.
  */
-interface TableCRUDHandlerInterface extends CRUDHandlerInterface
+interface TableCRUDListenerInterface extends CRUDEventListenerInterface
 {
 	/**
-	 * Gets the CRUD handler instance.
+	 * Gets the CRUD listener should be able to register itself.
 	 *
 	 * @param \OZONE\Core\App\Context $context
-	 *
-	 * @return self
 	 */
-	public static function get(Context $context): self;
+	public static function register(Context $context): void;
 }

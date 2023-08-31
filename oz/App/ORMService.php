@@ -67,7 +67,7 @@ abstract class ORMService extends Service
 		$controller = $this->controller();
 		$entity     = $controller->addItem($values);
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone($controller->getCRUD()
 				->getMessage())
 			->setData(['item' => $entity]);
@@ -96,7 +96,7 @@ abstract class ORMService extends Service
 			throw new NotFoundException();
 		}
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone($controller->getCRUD()
 				->getMessage())
 			->setData(['item' => $entity]);
@@ -117,7 +117,7 @@ abstract class ORMService extends Service
 		$controller = $this->controller();
 		$count      = $controller->updateAllItems($filters, $values);
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone($controller->getCRUD()
 				->getMessage())
 			->setData(['affected' => $count]);
@@ -145,7 +145,7 @@ abstract class ORMService extends Service
 			throw new NotFoundException();
 		}
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone($controller->getCRUD()
 				->getMessage())
 			->setData(['item' => $entity]);
@@ -165,7 +165,7 @@ abstract class ORMService extends Service
 		$controller = $this->controller();
 		$count      = $controller->deleteAllItems($filters);
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone($controller->getCRUD()
 				->getMessage())
 			->setData(['affected' => $count]);
@@ -196,7 +196,7 @@ abstract class ORMService extends Service
 
 		$relations = $this->entityNonPaginatedRelations($entity, $orm_request);
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone($controller->getCRUD()
 				->getMessage())
 			->setData([
@@ -243,7 +243,7 @@ abstract class ORMService extends Service
 			$relations = $this->entitiesNonPaginatedRelations($results, $orm_request);
 		}
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone($controller->getCRUD()
 				->getMessage())
 			->setData([
@@ -321,7 +321,7 @@ abstract class ORMService extends Service
 			$data['total'] = $total_records;
 		}
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone()
 			->setData($data);
 	}

@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\Core\Senders\Messages;
 
 use OZONE\Core\Senders\Events\SendNotification;
-use PHPUtils\Events\Event;
 
 /**
  * Class NotificationMessage.
@@ -26,7 +25,7 @@ class NotificationMessage extends Message
 	 */
 	public function send(string $to): static
 	{
-		Event::trigger(new SendNotification($to, $this));
+		(new SendNotification($to, $this))->dispatch();
 
 		return $this;
 	}

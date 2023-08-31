@@ -38,7 +38,7 @@ class TypeEmail extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function getInstance(array $options): self
+	public static function getInstance(array $options): static
 	{
 		return (new static())->configure($options);
 	}
@@ -54,7 +54,7 @@ class TypeEmail extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function default($default): self
+	public function default($default): static
 	{
 		$this->base_type->default($default);
 
@@ -66,7 +66,7 @@ class TypeEmail extends Type
 	 *
 	 * @return $this
 	 */
-	public function registered(): self
+	public function registered(): static
 	{
 		return $this->setOption('registered', true);
 	}
@@ -76,7 +76,7 @@ class TypeEmail extends Type
 	 *
 	 * @return $this
 	 */
-	public function notRegistered(): self
+	public function notRegistered(): static
 	{
 		return $this->setOption('registered', false);
 	}
@@ -119,7 +119,7 @@ class TypeEmail extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function configure(array $options): Type
+	public function configure(array $options): static
 	{
 		if (isset($options['registered'])) {
 			if ($options['registered']) {

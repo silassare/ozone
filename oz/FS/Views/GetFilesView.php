@@ -37,9 +37,10 @@ class GetFilesView extends WebView
 	{
 		$format = Settings::get('oz.files', 'OZ_GET_FILE_URI_PATH_FORMAT');
 
-		$router->get($format, function (RouteInfo $r) {
-			return self::handle($r);
-		})
+		$router
+			->get($format, static function (RouteInfo $r) {
+				return self::handle($r);
+			})
 			->name(self::MAIN_ROUTE)
 			->params([
 				'oz_file_id'        => '[0-9]+',
@@ -64,11 +65,11 @@ class GetFilesView extends WebView
 	public static function handle(RouteInfo $ri): Response
 	{
 		$context         = $ri->getContext();
-		$req_file_id     = $ri->getParam('oz_file_id');
-		$req_file_key    = $ri->getParam('oz_file_key');
-		$req_file_ref    = $ri->getParam('oz_file_ref');
-		$req_file_filter = $ri->getParam('oz_file_filter');
-		$req_file_ext    = $ri->getParam('oz_file_extension');
+		$req_file_id     = $ri->param('oz_file_id');
+		$req_file_key    = $ri->param('oz_file_key');
+		$req_file_ref    = $ri->param('oz_file_ref');
+		$req_file_filter = $ri->param('oz_file_filter');
+		$req_file_ext    = $ri->param('oz_file_extension');
 
 		$file = FS::getFileWithId($req_file_id);
 

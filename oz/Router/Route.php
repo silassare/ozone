@@ -30,9 +30,9 @@ final class Route
 	 */
 	private $handler;
 
-	private bool   $parsed = false;
+	private bool $parsed = false;
 	private string $parser_result;
-	private array  $params = [];
+	private array $params = [];
 
 	/**
 	 * Route constructor.

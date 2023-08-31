@@ -32,8 +32,8 @@ final class Queue
 	private static array $queues = [];
 
 	private bool $stop_on_error                = false;
-	private int  $max_consecutive_errors_count = 3;
-	private int  $max_errors_count             = 10;
+	private int $max_consecutive_errors_count  = 3;
+	private int $max_errors_count              = 10;
 
 	/**
 	 * Queue constructor.

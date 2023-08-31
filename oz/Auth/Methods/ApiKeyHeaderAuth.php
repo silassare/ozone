@@ -27,7 +27,7 @@ class ApiKeyHeaderAuth implements AuthMethodInterface
 	use UserAuthMethodTrait;
 
 	protected AuthMethodType $type    = AuthMethodType::API_KEY_HEADER;
-	protected string         $api_key = '';
+	protected string $api_key         = '';
 
 	/**
 	 * ApiKeyHeaderAuth constructor.
@@ -59,7 +59,7 @@ class ApiKeyHeaderAuth implements AuthMethodInterface
 	 */
 	public function satisfied(): bool
 	{
-		$api_key_name = Settings::get('oz.config', 'OZ_API_KEY_HEADER_NAME');
+		$api_key_name = Settings::get('oz.auth', 'OZ_AUTH_API_KEY_HEADER_NAME');
 		$header_name  = \sprintf('HTTP_%s', \strtoupper(\str_replace('-', '_', $api_key_name)));
 
 		$context = $this->ri->getContext();
@@ -103,14 +103,11 @@ class ApiKeyHeaderAuth implements AuthMethodInterface
 	public function ask(): void
 	{
 		if (empty($this->api_key)) {
-			throw new ForbiddenException('OZ_MISSING_API_KEY', [
-				'url' => (string) $this->ri->uri(),
-			]);
+			throw new ForbiddenException('OZ_MISSING_API_KEY');
 		}
 
 		throw new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID', [
-			'url'     => (string) $this->ri->uri(),
-			'api_key' => $this->api_key,
+			'_api_key' => $this->api_key,
 		]);
 	}
 }

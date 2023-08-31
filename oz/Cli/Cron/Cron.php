@@ -23,7 +23,6 @@ use OZONE\Core\Cli\Cron\Workers\CronWorker;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
 use OZONE\Core\Queue\Queue;
-use PHPUtils\Events\Event;
 use PHPUtils\Str;
 
 /**
@@ -132,24 +131,29 @@ final class Cron
 
 		self::$collected = true;
 
-		Event::trigger(new CronCollect());
+		(new CronCollect())->dispatch();
 	}
 
 	/**
 	 * Schedule a command task.
 	 *
-	 * @param string $name
-	 * @param string $command
-	 * @param string $description
-	 * @param bool   $in_background
+	 * @param array|string $command
+	 * @param string       $name
+	 * @param string       $description
+	 * @param bool         $in_background
 	 *
 	 * @return \OZONE\Core\Cli\Cron\Schedule
 	 */
-	public static function command(string $command, string $name = '', string $description = '', bool $in_background = true): Schedule
-	{
-		$name = empty($name) ? $command : $name;
+	public static function command(
+		string|array $command,
+		string $name = '',
+		string $description = '',
+		bool $in_background = true
+	): Schedule {
+		$fallback_name = \is_string($command) ? $command : \implode(' ', $command);
+		$name          = empty($name) ? $fallback_name : $name;
 
-		self::addTask($task = new CommandTask($name, $command, $description));
+		self::addTask($task = new CommandTask($command, $name, $description));
 
 		if ($in_background) {
 			$task->inBackground();

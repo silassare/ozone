@@ -26,7 +26,7 @@ class BearerAuth implements AuthMethodInterface
 	use UserAuthMethodTrait;
 
 	protected AuthMethodType $type  = AuthMethodType::BEARER;
-	protected string         $token = '';
+	protected string $token         = '';
 
 	/**
 	 * BearerAuth constructor.

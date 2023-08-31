@@ -21,33 +21,42 @@ use OZONE\Core\Exceptions\RuntimeException;
 class FormStep
 {
 	/**
-	 * @var callable
+	 * @var callable(\OZONE\Core\Forms\FormValidationContext):(null|\OZONE\Core\Forms\Form)
 	 */
-	protected $_builder;
+	protected $factory;
 
 	/**
-	 * @var callable
+	 * @var null|callable(\OZONE\Core\Forms\FormValidationContext):bool
 	 */
-	protected $_if;
+	protected $t_if;
 
-	public function __construct(protected string $name, callable $builder, ?callable $if = null)
+	/**
+	 * FormStep constructor.
+	 *
+	 * @param string                                                                          $name
+	 * @param callable(\OZONE\Core\Forms\FormValidationContext):(null|\OZONE\Core\Forms\Form) $factory
+	 * @param null|callable(\OZONE\Core\Forms\FormValidationContext):bool                     $if
+	 */
+	public function __construct(protected string $name, callable $factory, ?callable $if = null)
 	{
-		$this->_if      = $if;
-		$this->_builder = $builder;
+		$this->t_if    = $if;
+		$this->factory = $factory;
 	}
 
 	/**
-	 * @param \OZONE\Core\Forms\FormData $fd
+	 * Builds this step form.
+	 *
+	 * @param \OZONE\Core\Forms\FormValidationContext $fvc
 	 *
 	 * @return null|\OZONE\Core\Forms\Form
 	 */
-	public function getForm(FormData $fd): ?Form
+	public function build(FormValidationContext $fvc): ?Form
 	{
-		if ($this->_if && !\call_user_func($this->_if, $fd)) {
+		if ($this->t_if && !\call_user_func($this->t_if, $fvc)) {
 			return null;
 		}
 
-		$form = \call_user_func($this->_builder, $fd);
+		$form = \call_user_func($this->factory, $fvc);
 
 		if (null !== $form && !($form instanceof Form)) {
 			throw (new RuntimeException(
@@ -56,13 +65,15 @@ class FormStep
 					self::class,
 					\get_debug_type($form)
 				)
-			))->suspectCallable($this->_builder);
+			))->suspectCallable($this->factory);
 		}
 
 		return $form;
 	}
 
 	/**
+	 * Gets the step name.
+	 *
 	 * @return string
 	 */
 	public function getName(): string

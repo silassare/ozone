@@ -16,6 +16,7 @@ namespace OZONE\Core\Users\Traits;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Db\Base\OZSession;
+use OZONE\Core\Db\OZRole;
 use OZONE\Core\Db\OZRolesQuery;
 use OZONE\Core\Db\OZSessionsQuery;
 use OZONE\Core\Db\OZUser;
@@ -189,6 +190,86 @@ trait UsersUtilsTrait
 	}
 
 	/**
+	 * Gets role entry for a given user id and role.
+	 *
+	 * @param string $uid        the user id
+	 * @param string $role       the role
+	 * @param bool   $valid_only if true, only valid role will be returned
+	 *
+	 * @return null|\OZONE\Core\Db\OZRole
+	 */
+	public static function roleEntry(string $uid, string $role, bool $valid_only): ?OZRole
+	{
+		$qb = new OZRolesQuery();
+
+		$qb->whereUserIdIs($uid)
+			->whereNameIs($role);
+
+		if ($valid_only) {
+			$qb->whereIsValid();
+		}
+
+		return $qb->find(1)
+			->fetchClass();
+	}
+
+	/**
+	 * Assigns a role to a given user.
+	 *
+	 * @param string $uid     the user id
+	 * @param string $role    the role
+	 * @param bool   $restore if true and the role is invalid, it will be restored
+	 *
+	 * @return \OZONE\Core\Db\OZRole
+	 *
+	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+	 */
+	public static function assignRole(string $uid, string $role, bool $restore = false): OZRole
+	{
+		$entry = self::roleEntry($uid, $role, false);
+
+		if ($entry) {
+			if ($restore && !$entry->isValid()) {
+				$entry->setIsValid(true)
+					->save();
+			}
+		} else {
+			$entry = new OZRole();
+
+			$entry->setUserId($uid)
+				->setName($role)
+				->setIsValid(true)
+				->save();
+		}
+
+		return $entry;
+	}
+
+	/**
+	 * Revokes a role from a given user.
+	 *
+	 * @param string $uid  the user id
+	 * @param string $role the role
+	 *
+	 * @return bool
+	 *
+	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Gobl\ORM\Exceptions\ORMException
+	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+	 */
+	public static function revokeRole(string $uid, string $role): bool
+	{
+		if ($entry = self::roleEntry($uid, $role, false)) {
+			$entry->setIsValid(false)
+				->save();
+		}
+
+		return true;
+	}
+
+	/**
 	 * Gets a given user roles.
 	 *
 	 * @param string $uid The user id
@@ -197,7 +278,7 @@ trait UsersUtilsTrait
 	 */
 	public static function roles(string $uid): array
 	{
-		$factory = function () use ($uid) {
+		$factory = static function () use ($uid) {
 			try {
 				$qb = new OZRolesQuery();
 

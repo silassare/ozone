@@ -18,27 +18,27 @@ namespace OZONE\Core\Db\Base;
  *
  * @psalm-suppress UndefinedThisPropertyFetch
  *
- * @property string $cc2        Getter for column `oz_countries`.`cc2`.
- * @property string $code       Getter for column `oz_countries`.`code`.
- * @property string $name       Getter for column `oz_countries`.`name`.
- * @property string $name_real  Getter for column `oz_countries`.`name_real`.
- * @property array  $data       Getter for column `oz_countries`.`data`.
- * @property string $created_at Getter for column `oz_countries`.`created_at`.
- * @property string $updated_at Getter for column `oz_countries`.`updated_at`.
- * @property bool   $is_valid   Getter for column `oz_countries`.`is_valid`.
+ * @property string $cc2          Getter for column `oz_countries`.`cc2`.
+ * @property string $calling_code Getter for column `oz_countries`.`calling_code`.
+ * @property string $name         Getter for column `oz_countries`.`name`.
+ * @property string $name_real    Getter for column `oz_countries`.`name_real`.
+ * @property array  $data         Getter for column `oz_countries`.`data`.
+ * @property string $created_at   Getter for column `oz_countries`.`created_at`.
+ * @property string $updated_at   Getter for column `oz_countries`.`updated_at`.
+ * @property bool   $is_valid     Getter for column `oz_countries`.`is_valid`.
  */
 abstract class OZCountry extends \Gobl\ORM\ORMEntity
 {
-	public const TABLE_NAME      = 'oz_countries';
-	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
-	public const COL_CC2         = 'country_cc2';
-	public const COL_CODE        = 'country_code';
-	public const COL_NAME        = 'country_name';
-	public const COL_NAME_REAL   = 'country_name_real';
-	public const COL_DATA        = 'country_data';
-	public const COL_CREATED_AT  = 'country_created_at';
-	public const COL_UPDATED_AT  = 'country_updated_at';
-	public const COL_IS_VALID    = 'country_is_valid';
+	public const TABLE_NAME       = 'oz_countries';
+	public const TABLE_NAMESPACE  = 'OZONE\\Core\\Db';
+	public const COL_CC2          = 'country_cc2';
+	public const COL_CALLING_CODE = 'country_calling_code';
+	public const COL_NAME         = 'country_name';
+	public const COL_NAME_REAL    = 'country_name_real';
+	public const COL_DATA         = 'country_data';
+	public const COL_CREATED_AT   = 'country_created_at';
+	public const COL_UPDATED_AT   = 'country_updated_at';
+	public const COL_IS_VALID     = 'country_is_valid';
 
 	/**
 	 * OZCountry constructor.
@@ -92,25 +92,25 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_countries`.`code`.
+	 * Getter for column `oz_countries`.`calling_code`.
 	 *
 	 * @return string
 	 */
-	public function getCode(): string
+	public function getCallingCode(): string
 	{
-		return $this->{self::COL_CODE};
+		return $this->{self::COL_CALLING_CODE};
 	}
 
 	/**
-	 * Setter for column `oz_countries`.`code`.
+	 * Setter for column `oz_countries`.`calling_code`.
 	 *
-	 * @param string $code
+	 * @param string $calling_code
 	 *
 	 * @return static
 	 */
-	public function setCode(string $code): static
+	public function setCallingCode(string $calling_code): static
 	{
-		$this->{self::COL_CODE} = $code;
+		$this->{self::COL_CALLING_CODE} = $calling_code;
 
 		return $this;
 	}

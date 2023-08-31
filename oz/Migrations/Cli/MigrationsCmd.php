@@ -137,7 +137,7 @@ final class MigrationsCmd extends Command
 				));
 
 			try {
-				$mg->runMigration($migration);
+				$mg->run($migration);
 			} catch (Throwable $t) {
 				$error_message = \sprintf(
 					'Migration "%s" generated on "%s" failed.',
@@ -166,12 +166,16 @@ final class MigrationsCmd extends Command
 
 		$mg                 = new Migrations();
 		$target_version     = $args->get('to-version');
-		$current_db_version = $mg->getCurrentDbVersion();
+		$current_db_version = $mg::getCurrentDbVersion();
 
 		// make sure target version is less than current version
 		if ($target_version >= $current_db_version) {
 			$this->getCli()
-				->info(\sprintf('Target version "%s" is not less than current version "%s".', $target_version, $current_db_version));
+				->info(\sprintf(
+					'Target version "%s" is not less than current version "%s".',
+					$target_version,
+					$current_db_version
+				));
 
 			return;
 		}
@@ -181,14 +185,22 @@ final class MigrationsCmd extends Command
 
 		if (empty($migrations)) {
 			$this->getCli()
-				->info(\sprintf('There are no migrations to rollback from current version "%s" to "%s".', $current_db_version, $target_version));
+				->info(\sprintf(
+					'There are no migrations to rollback from current version "%s" to "%s".',
+					$current_db_version,
+					$target_version
+				));
 
 			return;
 		}
 
 		$cli = $this->getCli();
 
-		$cli->info(\sprintf('Rolling back migrations from current version "%s" to "%s" ...', $current_db_version, $target_version));
+		$cli->info(\sprintf(
+			'Rolling back migrations from current version "%s" to "%s" ...',
+			$current_db_version,
+			$target_version
+		));
 
 		// backup db before migrations
 		DbCmd::ensureDBBackup($this->getCli());
@@ -200,9 +212,9 @@ final class MigrationsCmd extends Command
 		foreach ($migrations as $migration) {
 			if ($migration->getVersion() !== $target_version) {
 				$cli->info(\sprintf(
-					'Rolling back migration "%s" generated on "%s" ...',
+					'%s => %s ...',
+					\date('jS F Y, g:i:s a', $migration->getTimestamp()),
 					$migration->getLabel(),
-					\date('jS F Y, g:i:s a', $migration->getTimestamp())
 				));
 
 				try {

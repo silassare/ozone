@@ -96,7 +96,7 @@ final class ContextsCmd extends Command
 				->assert($folder_name);
 		}
 
-		$settings_inject = Settings::genExportInfo('oz.config', [
+		$settings_inject = Settings::genExportInfo('oz.request', [
 			'OZ_DEFAULT_ORIGIN' => $origin,
 		]);
 
@@ -109,7 +109,7 @@ final class ContextsCmd extends Command
 			'oz_is_api_context'         => $is_api_context,
 		];
 
-		$oz_config     = Templates::compile('oz://gen/settings.info.otpl', $settings_inject);
+		$oz_request    = Templates::compile('oz://gen/settings.info.otpl', $settings_inject);
 		$context_index = Templates::compile('oz://gen/context.index.otpl', $inject);
 
 		$tpl_folder = OZ_OZONE_DIR . 'oz_templates' . DS;
@@ -118,9 +118,9 @@ final class ContextsCmd extends Command
 			'oz_settings'  => [
 				'type'     => 'dir',
 				'children' => [
-					'oz.config.php' => [
+					'oz.request.php' => [
 						'type'    => 'file',
-						'content' => $oz_config,
+						'content' => $oz_request,
 					],
 				],
 			],

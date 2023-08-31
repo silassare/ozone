@@ -98,40 +98,40 @@ final class MyService extends ORMService
 		$relation_param = \implode('|', $relations_names);
 
 		$router->group('/my_svc', static function (Router $router) {
-			$router->post(function (RouteInfo $r) {
+			$router->post(static function (RouteInfo $r) {
 				$service = new self($r);
 				$service->actionCreateEntity(self::toORMRequest($r));
 
 				return $service->respond();
 			});
 
-			$router->get(function (RouteInfo $r) {
+			$router->get(static function (RouteInfo $r) {
 				$service = new self($r);
 				$service->actionGetAll(self::toORMRequest($r));
 
 				return $service->respond();
 			});
 
-			$router->patch(function (RouteInfo $r) {
+			$router->patch(static function (RouteInfo $r) {
 				$service = new self($r);
 				$service->actionUpdateAllItems(self::toORMRequest($r));
 
 				return $service->respond();
 			});
 
-			$router->delete(function (RouteInfo $r) {
+			$router->delete(static function (RouteInfo $r) {
 				$service = new self($r);
 				$service->actionDeleteAll(self::toORMRequest($r));
 
 				return $service->respond();
 			});
 
-			$router->group('/:my_id', function (Router $router) {
-				$router->get(function (RouteInfo $r) {
+			$router->group('/:my_id', static function (Router $router) {
+				$router->get(static function (RouteInfo $r) {
 					$orm_request = self::toORMRequest($r, [
 						'my_id',
 						'eq',
-						$r->getParam('my_id'),
+						$r->param('my_id'),
 					]);
 
 					$service = new self($r);
@@ -140,11 +140,11 @@ final class MyService extends ORMService
 					return $service->respond();
 				});
 
-				$router->patch(function (RouteInfo $r) {
+				$router->patch(static function (RouteInfo $r) {
 					$orm_request = self::toORMRequest($r, [
 						'my_id',
 						'eq',
-						$r->getParam('my_id'),
+						$r->param('my_id'),
 					]);
 
 					$service = new self($r);
@@ -152,11 +152,11 @@ final class MyService extends ORMService
 
 					return $service->respond();
 				});
-				$router->delete(function (RouteInfo $r) {
+				$router->delete(static function (RouteInfo $r) {
 					$orm_request = self::toORMRequest($r, [
 						'my_id',
 						'eq',
-						$r->getParam('my_id'),
+						$r->param('my_id'),
 					]);
 
 					$service = new self($r);
@@ -165,13 +165,13 @@ final class MyService extends ORMService
 					return $service->respond();
 				});
 
-				$router->get('/:relation', function (RouteInfo $r) {
+				$router->get('/:relation', static function (RouteInfo $r) {
 					$service = new self($r);
 					$service->actionGetRelation(self::toORMRequest($r), [
 						'my_id',
 						'eq',
-						$r->getParam('my_id'),
-					], $r->getParam('relation'));
+						$r->param('my_id'),
+					], $r->param('relation'));
 
 					return $service->respond();
 				});

@@ -20,7 +20,6 @@ use OZONE\Core\Queue\Hooks\BeforeJobStart;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
-use PHPUtils\Events\Event;
 use Throwable;
 
 /**
@@ -199,7 +198,7 @@ final class JobsManager
 	public static function runJob(JobContractInterface $job_contract): bool
 	{
 		if ($job_contract->lock()) {
-			Event::trigger(new BeforeJobStart($job_contract));
+			(new BeforeJobStart($job_contract))->dispatch();
 
 			$job_contract->setState(JobState::RUNNING);
 			$job_contract->incrementTryCount();
@@ -244,7 +243,7 @@ final class JobsManager
 		$job_contract->unlock();
 
 		if (JobState::DONE === $job_contract->getState()) {
-			Event::trigger(new AfterJobFinished($job_contract));
+			(new AfterJobFinished($job_contract))->dispatch();
 		}
 	}
 

@@ -53,7 +53,7 @@ class SessionState extends Store
 	{
 		$sid     = $session->getID();
 		$cache   = CacheManager::runtime(__METHOD__);
-		$factory = function () use ($session) {
+		$factory = static function () use ($session) {
 			return new self($session);
 		};
 

@@ -31,7 +31,7 @@ final class UsersCmd extends Command
 	{
 		$this->description('Manage users.');
 
-		if (Utils::isProjectLoaded() && OZone::hasDbAccess()) {
+		if (Utils::isProjectLoaded() && OZone::hasDbInstalled()) {
 			// action: add a new user
 			$add = $this->action('add', 'Add a new user.');
 

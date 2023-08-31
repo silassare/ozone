@@ -16,10 +16,8 @@ namespace OZONE\Core\Db;
 /**
  * Class OZJobsCrud.
  */
-abstract class OZJobsCrud extends \OZONE\Core\Db\Base\OZJobsCrud implements \OZONE\Core\CRUD\Interfaces\TableCRUDHandlerInterface
+abstract class OZJobsCrud extends \OZONE\Core\Db\Base\OZJobsCrud
 {
-	use \OZONE\Core\CRUD\Traits\TableCRUDHandlerTrait;
-
 	// ====================================================
 	// =	Your custom implementation goes here
 	// ====================================================

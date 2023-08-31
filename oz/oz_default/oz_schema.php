@@ -95,7 +95,6 @@ return [
 		],
 	],
 	'oz_roles'     => [
-		'private'       => true,
 		'plural_name'   => 'oz_roles',
 		'singular_name' => 'oz_role',
 		'column_prefix' => 'role',
@@ -145,155 +144,6 @@ return [
 			],
 		],
 	],
-	'oz_sessions'  => [
-		'private'       => true,
-		'plural_name'   => 'oz_sessions',
-		'singular_name' => 'oz_session',
-		'column_prefix' => 'session',
-		'relations'     => [
-			'user' => ['type' => 'many-to-one', 'target' => 'oz_users'],
-		],
-		'constraints'   => [
-			['type' => 'primary_key', 'columns' => ['id']],
-			[
-				'type'      => 'foreign_key',
-				'reference' => 'oz_users',
-				'columns'   => ['user_id' => 'id'],
-				'update'    => 'cascade',
-				'delete'    => 'cascade',
-			],
-		],
-		'columns'       => [
-			'id'                 => [
-				'type' => 'string',
-				'min'  => 6,
-				'max'  => 128,
-			],
-			'user_id'            => [
-				'type'     => 'ref:oz_users.id',
-				'nullable' => true,
-			],
-			'request_source_key' => [
-				// used to prevent session hijacking
-				'type' => 'string',
-				'min'  => 6,
-				'max'  => 250,
-			],
-			'expire'             => [
-				'type'   => 'date',
-				'format' => 'timestamp',
-			],
-			'last_seen'          => [
-				'type'   => 'date',
-				'format' => 'timestamp',
-			],
-			'data'               => [
-				'type'    => 'map',
-				'default' => [],
-			],
-			'created_at'         => [
-				'type'   => 'date',
-				'format' => 'timestamp',
-				'auto'   => true,
-			],
-			'updated_at'         => [
-				'type'   => 'date',
-				'format' => 'timestamp',
-				'auto'   => true,
-			],
-			'is_valid'           => [
-				'type'    => 'bool',
-				'default' => true,
-			],
-		],
-	],
-	'oz_auths'     => [
-		'private'       => true,
-		'plural_name'   => 'oz_auths',
-		'singular_name' => 'oz_auth',
-		'column_prefix' => 'auth',
-		'constraints'   => [
-			['type' => 'primary_key', 'columns' => ['ref']],
-			['type' => 'unique_key', 'columns' => ['refresh_key']],
-			['type' => 'unique_key', 'columns' => ['token_hash']],
-		],
-		'columns'       => [
-			'ref'         => [
-				'type' => 'string',
-				'min'  => 32,
-				'max'  => 128,
-			],
-			'label'       => [
-				'type' => 'string',
-				'min'  => 1,
-				'max'  => 128,
-			],
-			'refresh_key' => [
-				'type' => 'string',
-				'min'  => 32,
-				'max'  => 128,
-			],
-			'provider'    => [
-				'type' => 'string',
-				'min'  => 1,
-				'max'  => 128,
-			],
-			'payload'     => [
-				'type'    => 'map',
-				'default' => [],
-			],
-			'code_hash'   => [
-				'type' => 'string',
-				'max'  => 128,
-			],
-			'token_hash'  => [
-				'type' => 'string',
-				'min'  => 32,
-				'max'  => 128,
-			],
-			'state'       => [
-				'type'       => 'enum',
-				'enum_class' => AuthState::class,
-				'default'    => AuthState::PENDING,
-			],
-			'try_max'     => [
-				'type'     => 'int',
-				'unsigned' => true,
-				'default'  => 1,
-			],
-			'try_count'   => [
-				'type'     => 'int',
-				'unsigned' => true,
-				'default'  => 0,
-			],
-			'lifetime'    => [
-				'type'     => 'int',
-				'unsigned' => true,
-			],
-			'expire'      => [
-				'type'   => 'date',
-				'format' => 'timestamp',
-			],
-			'options'     => [
-				'type'    => 'map',
-				'default' => [],
-			],
-			'created_at'  => [
-				'type'   => 'date',
-				'format' => 'timestamp',
-				'auto'   => true,
-			],
-			'updated_at'  => [
-				'type'   => 'date',
-				'format' => 'timestamp',
-				'auto'   => true,
-			],
-			'is_valid'    => [
-				'type'    => 'bool',
-				'default' => true,
-			],
-		],
-	],
 	'oz_countries' => [
 		'plural_name'   => 'oz_countries',
 		'singular_name' => 'oz_country',
@@ -303,36 +153,38 @@ return [
 		],
 		'constraints'   => [['type' => 'primary_key', 'columns' => ['cc2']]],
 		'columns'       => [
-			'cc2'        => [
-				'type' => 'cc2',
+			'cc2'          => [
+				'type' => 'string',
+				'min'  => 2,
+				'max'  => 2,
 			],
-			'code'       => [
+			'calling_code' => [
 				'type' => 'string',
 				'max'  => 6,
 			],
-			'name'       => [
+			'name'         => [
 				'type' => 'string',
 				'max'  => 255,
 			],
-			'name_real'  => [
+			'name_real'    => [
 				'type' => 'string',
 				'max'  => 255,
 			],
-			'data'       => [
+			'data'         => [
 				'type'    => 'map',
 				'default' => [],
 			],
-			'created_at' => [
+			'created_at'   => [
 				'type'   => 'date',
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'updated_at' => [
+			'updated_at'   => [
 				'type'   => 'date',
 				'format' => 'timestamp',
 				'auto'   => true,
 			],
-			'is_valid'   => [
+			'is_valid'     => [
 				'type'    => 'bool',
 				'default' => true,
 			],
@@ -569,7 +421,11 @@ return [
 			],
 		],
 	],
+
+	// private tables that should not
+	// be exposed to the public
 	'oz_db_stores' => [
+		'private'       => true,
 		'plural_name'   => 'oz_db_stores',
 		'singular_name' => 'oz_db_store',
 		'column_prefix' => 'store',
@@ -619,6 +475,155 @@ return [
 				'auto'   => true,
 			],
 			'is_valid'   => [
+				'type'    => 'bool',
+				'default' => true,
+			],
+		],
+	],
+	'oz_sessions'  => [
+		'private'       => true,
+		'plural_name'   => 'oz_sessions',
+		'singular_name' => 'oz_session',
+		'column_prefix' => 'session',
+		'relations'     => [
+			'user' => ['type' => 'many-to-one', 'target' => 'oz_users'],
+		],
+		'constraints'   => [
+			['type' => 'primary_key', 'columns' => ['id']],
+			[
+				'type'      => 'foreign_key',
+				'reference' => 'oz_users',
+				'columns'   => ['user_id' => 'id'],
+				'update'    => 'cascade',
+				'delete'    => 'cascade',
+			],
+		],
+		'columns'       => [
+			'id'                 => [
+				'type' => 'string',
+				'min'  => 6,
+				'max'  => 128,
+			],
+			'user_id'            => [
+				'type'     => 'ref:oz_users.id',
+				'nullable' => true,
+			],
+			'request_source_key' => [
+				// used to prevent session hijacking
+				'type' => 'string',
+				'min'  => 6,
+				'max'  => 250,
+			],
+			'expire'             => [
+				'type'   => 'date',
+				'format' => 'timestamp',
+			],
+			'last_seen'          => [
+				'type'   => 'date',
+				'format' => 'timestamp',
+			],
+			'data'               => [
+				'type'    => 'map',
+				'default' => [],
+			],
+			'created_at'         => [
+				'type'   => 'date',
+				'format' => 'timestamp',
+				'auto'   => true,
+			],
+			'updated_at'         => [
+				'type'   => 'date',
+				'format' => 'timestamp',
+				'auto'   => true,
+			],
+			'is_valid'           => [
+				'type'    => 'bool',
+				'default' => true,
+			],
+		],
+	],
+	'oz_auths'     => [
+		'private'       => true,
+		'plural_name'   => 'oz_auths',
+		'singular_name' => 'oz_auth',
+		'column_prefix' => 'auth',
+		'constraints'   => [
+			['type' => 'primary_key', 'columns' => ['ref']],
+			['type' => 'unique_key', 'columns' => ['refresh_key']],
+			['type' => 'unique_key', 'columns' => ['token_hash']],
+		],
+		'columns'       => [
+			'ref'         => [
+				'type' => 'string',
+				'min'  => 32,
+				'max'  => 128,
+			],
+			'label'       => [
+				'type' => 'string',
+				'min'  => 1,
+				'max'  => 128,
+			],
+			'refresh_key' => [
+				'type' => 'string',
+				'min'  => 32,
+				'max'  => 128,
+			],
+			'provider'    => [
+				'type' => 'string',
+				'min'  => 1,
+				'max'  => 128,
+			],
+			'payload'     => [
+				'type'    => 'map',
+				'default' => [],
+			],
+			'code_hash'   => [
+				'type' => 'string',
+				'max'  => 128,
+			],
+			'token_hash'  => [
+				'type' => 'string',
+				'min'  => 32,
+				'max'  => 128,
+			],
+			'state'       => [
+				'type'       => 'enum',
+				'enum_class' => AuthState::class,
+				'default'    => AuthState::PENDING,
+			],
+			'try_max'     => [
+				'type'     => 'int',
+				'unsigned' => true,
+				'default'  => 1,
+			],
+			'try_count'   => [
+				'type'     => 'int',
+				'unsigned' => true,
+				'default'  => 0,
+			],
+			'lifetime'    => [
+				'type'     => 'int',
+				'unsigned' => true,
+			],
+			'expire'      => [
+				'type'   => 'date',
+				'format' => 'timestamp',
+			],
+			'options'     => [
+				'type'    => 'map',
+				'default' => [],
+			],
+			'created_at'  => [
+				'type'   => 'date',
+				'format' => 'timestamp',
+				'auto'   => true,
+			],
+			'updated_at'  => [
+				'type'   => 'date',
+				'format' => 'timestamp',
+				'auto'   => true,
+			],
+			'is_valid'    => [
 				'type'    => 'bool',
 				'default' => true,
 			],

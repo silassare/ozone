@@ -12,5 +12,5 @@
 declare(strict_types=1);
 
 return [
-	// 'table_name' => 'namespace\class'
+	// 'namespace\class' => bool,
 ];

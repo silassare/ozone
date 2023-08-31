@@ -42,7 +42,7 @@ final class Migrations
 	 *
 	 * @return int
 	 */
-	public function getCurrentDbVersion(): int
+	public static function getCurrentDbVersion(): int
 	{
 		return Settings::get('oz.db.migrations', 'OZ_MIGRATION_VERSION', self::DB_NOT_INSTALLED_VERSION);
 	}
@@ -52,7 +52,7 @@ final class Migrations
 	 *
 	 * @param \Gobl\DBAL\Interfaces\MigrationInterface $migration
 	 */
-	public function runMigration(MigrationInterface $migration): void
+	public function run(MigrationInterface $migration): void
 	{
 		$query = $migration->up();
 		if ($query) {
@@ -198,7 +198,7 @@ final class Migrations
 	{
 		$latest = $this->getLatestMigration();
 		if ($latest) {
-			return $this->getCurrentDbVersion() < $latest->getVersion();
+			return self::getCurrentDbVersion() < $latest->getVersion();
 		}
 
 		return false;
@@ -212,7 +212,7 @@ final class Migrations
 	public function getPendingMigrations(): array
 	{
 		$pending         = [];
-		$current_version = $this->getCurrentDbVersion();
+		$current_version = self::getCurrentDbVersion();
 		$migrations      = $this->migrations();
 
 		foreach ($migrations as $migration) {

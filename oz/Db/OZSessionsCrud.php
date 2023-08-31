@@ -16,10 +16,8 @@ namespace OZONE\Core\Db;
 /**
  * Class OZSessionsCrud.
  */
-abstract class OZSessionsCrud extends \OZONE\Core\Db\Base\OZSessionsCrud implements \OZONE\Core\CRUD\Interfaces\TableCRUDHandlerInterface
+abstract class OZSessionsCrud extends \OZONE\Core\Db\Base\OZSessionsCrud
 {
-	use \OZONE\Core\CRUD\Traits\TableCRUDHandlerTrait;
-
 	// ====================================================
 	// =	Your custom implementation goes here
 	// ====================================================

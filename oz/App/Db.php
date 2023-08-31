@@ -25,7 +25,6 @@ use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Hooks\Events\DbSchemaCollectHook;
 use OZONE\Core\Hooks\Events\DbSchemaReadyHook;
 use OZONE\Core\Migrations\Migrations;
-use PHPUtils\Events\Event;
 use Throwable;
 
 /**
@@ -136,14 +135,14 @@ final class Db
 		$db->ns(self::getOZoneDbNamespace())
 			->schema(include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_schema.php');
 
-		Event::trigger(new DbSchemaCollectHook($db));
+		(new DbSchemaCollectHook($db))->dispatch();
 
 		// the project schema is the last to be loaded as its
 		// may require some tables from OZone or plugins
 		$db->ns(self::getProjectDbNamespace())
 			->schema(Settings::load('oz.db.schema'));
 
-		Event::trigger(new DbSchemaReadyHook($db));
+		(new DbSchemaReadyHook($db))->dispatch();
 	}
 
 	/**
@@ -154,7 +153,7 @@ final class Db
 		TypeUtils::addTypeProvider(new TypeProvider());
 
 		$mg         = new Migrations();
-		$db_version = $mg->getCurrentDbVersion();
+		$db_version = $mg::getCurrentDbVersion();
 
 		if (Migrations::DB_NOT_INSTALLED_VERSION === $db_version) {
 			self::loadSchemaTo(self::$db);
@@ -169,7 +168,7 @@ final class Db
 
 			self::$db->loadSchema($current->getSchema());
 
-			Event::trigger(new DbSchemaReadyHook(self::$db));
+			(new DbSchemaReadyHook(self::$db))->dispatch();
 		}
 
 		self::$db
@@ -182,6 +181,6 @@ final class Db
 
 		self::$db->lock();
 
-		Event::trigger(new DbReadyHook(self::$db));
+		(new DbReadyHook(self::$db))->dispatch();
 	}
 }

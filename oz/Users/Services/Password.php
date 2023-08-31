@@ -51,7 +51,7 @@ final class Password extends Service
 			$ri->getCleanFormField(self::FIELD_PASS_CURRENT)
 		);
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone('OZ_PASSWORD_EDIT_SUCCESS')
 			->setData($user);
 	}
@@ -75,7 +75,7 @@ final class Password extends Service
 
 		Users::updatePass($user, $ri->getCleanFormField(self::FIELD_PASS_NEW));
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone('OZ_PASSWORD_EDIT_SUCCESS')
 			->setData($user);
 	}
@@ -87,26 +87,29 @@ final class Password extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->group('/users', function (Router $r) {
-			$r->map(['PATCH', 'POST'], '/{uid}/password/edit', function (RouteInfo $ri) {
-				$s = new self($ri);
-				$s->actionEditPassAdmin($ri, $ri->getParam('uid'));
+		$router
+			->group('/users', static function (Router $router) {
+				$router
+					->map(['PATCH', 'POST'], '/{uid}/password/edit', static function (RouteInfo $ri) {
+						$s = new self($ri);
+						$s->actionEditPassAdmin($ri, $ri->param('uid'));
 
-				return $s->respond();
+						return $s->respond();
+					})
+					->name(self::ROUTE_PASS_EDIT_BY_ADMIN)
+					->params(['uid' => '\d+'])
+					->withRole(Users::ADMIN);
+
+				$router
+					->map(['PATCH', 'POST'], '/password/edit', static function (RouteInfo $ri) {
+						$s = new self($ri);
+						$s->actionEditOwnPass($ri);
+
+						return $s->respond();
+					})
+					->name(self::ROUTE_PASS_EDIT_SELF)
+					->form(self::currentPassForm(...));
 			})
-				->name(self::ROUTE_PASS_EDIT_BY_ADMIN)
-				->params(['uid' => '\d+'])
-				->withRole(Users::ADMIN);
-
-			$r->map(['PATCH', 'POST'], '/password/edit', function (RouteInfo $ri) {
-				$s = new self($ri);
-				$s->actionEditOwnPass($ri);
-
-				return $s->respond();
-			})
-				->name(self::ROUTE_PASS_EDIT_SELF)
-				->form(self::currentPassForm(...));
-		})
 			->form(self::newPassForm(...));
 	}
 
@@ -117,9 +120,12 @@ final class Password extends Service
 	{
 		$form = new Form();
 
-		$form->doubleCheck($form->field(self::FIELD_PASS_NEW)
-			->type(new TypePassword())
-			->required());
+		$form->doubleCheck(
+			$form
+				->field(self::FIELD_PASS_NEW)
+				->type(new TypePassword())
+				->required()
+		);
 
 		return $form;
 	}

@@ -20,20 +20,19 @@ use OZONE\Core\Cli\Process;
  */
 class CommandTask extends AbstractTask
 {
-	protected string $command;
-
 	/**
 	 * CommandTask constructor.
 	 *
-	 * @param string $name
-	 * @param string $command
-	 * @param string $description
+	 * @param array|string $command
+	 * @param string       $name
+	 * @param string       $description
 	 */
-	public function __construct(string $name, string $command, string $description = '')
-	{
+	public function __construct(
+		protected array|string $command,
+		string $name,
+		string $description = ''
+	) {
 		parent::__construct($name, $description);
-
-		$this->command = $command;
 	}
 
 	/**
@@ -41,6 +40,16 @@ class CommandTask extends AbstractTask
 	 */
 	public function run(): void
 	{
-		Process::run($this->command, $this->shouldRunInBackground());
+		if (\is_string($this->command)) {
+			$process = Process::fromShellCommandline($this->command);
+		} else {
+			$process = new Process($this->command);
+		}
+
+		if ($this->shouldRunInBackground()) {
+			$process->start();
+		} else {
+			$process->run();
+		}
 	}
 }

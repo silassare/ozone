@@ -35,7 +35,6 @@ use OZONE\Core\Router\Router;
 use OZONE\Core\Sessions\Session;
 use OZONE\Core\Sessions\SessionState;
 use OZONE\Core\Users\Users;
-use PHPUtils\Events\Event;
 use PHPUtils\Store\StoreNotEditable;
 use Throwable;
 
@@ -67,7 +66,7 @@ final class Context
 
 	private Response $response;
 
-	private Users                $users;
+	private Users $users;
 	private ?AuthMethodInterface $auth;
 
 	private ?RouteInfo $route_info = null;
@@ -165,7 +164,7 @@ final class Context
 				throw new ForbiddenException();
 			}
 
-			Event::trigger(new RequestHook($this));
+			(new RequestHook($this))->dispatch();
 
 			$this->router->handle($this, function (RouteInfo $route_info) {
 				$this->authenticate($route_info);
@@ -238,20 +237,14 @@ final class Context
 
 			if (!isset($this->route_info)) {
 				throw new RuntimeException(
-					\sprintf('"%s" was called before a route was found.', __METHOD__),
-					[
-						'uri' => (string) $uri,
-					]
+					\sprintf('"%s" was called before a route was found.', __METHOD__)
 				);
 			}
 
 			throw (new RuntimeException(
-				\sprintf('No auth method was defined for the current route but "%s" was called.', __METHOD__),
-				[
-					'uri' => (string) $uri,
-				]
+				\sprintf('No auth method was defined for the current route but "%s" was called.', __METHOD__)
 			)
-			)->suspectCallable($this->route_info->getRoute()
+			)->suspectCallable($this->route_info->route()
 				->getHandler());
 		}
 
@@ -574,7 +567,7 @@ final class Context
 	 */
 	public function getDefaultOrigin(): string
 	{
-		return (string) Uri::createFromString(Settings::get('oz.config', 'OZ_DEFAULT_ORIGIN'));
+		return (string) Uri::createFromString(Settings::get('oz.request', 'OZ_DEFAULT_ORIGIN'));
 	}
 
 	/**
@@ -588,7 +581,7 @@ final class Context
 			$this->response = $with;
 		}
 
-		Event::trigger(new ResponseHook($this));
+		(new ResponseHook($this))->dispatch();
 
 		$response = $this->response = $this->fixResponse($this->response);
 
@@ -727,7 +720,7 @@ final class Context
 			throw new InvalidArgumentException(\sprintf('Invalid redirect url: %s', $url));
 		}
 
-		Event::trigger(new RedirectHook($this, Uri::createFromString($url)));
+		(new RedirectHook($this, Uri::createFromString($url)))->dispatch();
 
 		if ($this->isApiContext()) {
 			$response = $this->response->withRedirect($url, $status);
@@ -810,16 +803,25 @@ final class Context
 	 */
 	public function getAllowedHeadersNameList(): array
 	{
-		$headers                  = Settings::get('oz.clients', 'OZ_CORS_ALLOWED_HEADERS');
-		$headers[]                = \strtolower(Settings::get('oz.config', 'OZ_API_KEY_HEADER_NAME'));
-		$headers[]                = \strtolower(Settings::get('oz.sessions', 'OZ_SESSION_TOKEN_HEADER_NAME'));
-		$allow_real_method_header = Settings::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
-
-		if ($allow_real_method_header) {
-			$headers[] = \strtolower(Settings::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME'));
+		$access_control_headers = $this->request->getHeaderLine('HTTP_ACCESS_CONTROL_REQUEST_HEADERS');
+		$provided               = [];
+		if (!empty($access_control_headers)) {
+			$provided = \explode(',', $access_control_headers);
 		}
 
-		return $headers;
+		$declared                 = Settings::get('oz.request', 'OZ_CORS_ALLOWED_HEADERS');
+		$declared[]               = \strtolower(Settings::get('oz.auth', 'OZ_AUTH_API_KEY_HEADER_NAME'));
+		$allow_real_method_header = Settings::get('oz.request', 'OZ_ALLOW_REAL_METHOD_HEADER');
+
+		if ($allow_real_method_header) {
+			$declared[] = \strtolower(Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_NAME'));
+		}
+
+		$bundle = \array_merge($declared, $provided);
+
+		return \array_unique(\array_map(static function ($entry) {
+			return \strtolower(\trim($entry));
+		}, $bundle));
 	}
 
 	/**
@@ -841,7 +843,7 @@ final class Context
 		}
 
 		$this->route_info = $ri;
-		$route            = $ri->getRoute();
+		$route            = $ri->route();
 		$auths_methods    = $route->getOptions()
 			->getAuthMethods();
 
@@ -858,7 +860,9 @@ final class Context
 			}
 
 			if (!\in_array($parent_auth::class, $auths_methods, true)) {
-				throw new RuntimeException('Sub request require authentication but the main request auth method is not defined for the current route.');
+				throw new RuntimeException(
+					'Sub request require authentication but the main request auth method is not defined for the current route.'
+				);
 			}
 
 			$this->auth = $parent_auth;

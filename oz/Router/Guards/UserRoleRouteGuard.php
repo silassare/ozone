@@ -24,7 +24,7 @@ use OZONE\Core\Users\Users;
 class UserRoleRouteGuard extends AbstractRouteGuard
 {
 	private FormData $form_data;
-	private bool     $strict = true;
+	private bool $strict = true;
 
 	/**
 	 * @var array<string, 1>

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Users\Services;
 
 use OZONE\Core\App\Service;
+use OZONE\Core\OZone;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
@@ -29,6 +30,13 @@ final class TNet extends Service
 		$data    = [];
 		$context = $this->getContext();
 
+		$data['_health'] = [
+			'is_installed'     => OZone::isInstalled(),
+			'has_db_access'    => OZone::hasDbAccess(),
+			'has_db_installed' => OZone::hasDbInstalled(),
+			'has_super_admin'  => OZone::hasSuperAdmin(),
+		];
+
 		if ($context->hasAuthenticatedUser()) {
 			$data['ok']            = 1;
 			$data['_current_user'] = $context->user()
@@ -37,7 +45,7 @@ final class TNet extends Service
 			$data['ok'] = 0;
 		}
 
-		$this->getJSONResponse()
+		$this->json()
 			->setData($data);
 	}
 
@@ -46,12 +54,13 @@ final class TNet extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->get('/tnet', function (RouteInfo $ri) {
-			$s = new self($ri);
-			$s->actionTNet();
+		$router
+			->get('/tnet', static function (RouteInfo $ri) {
+				$s = new self($ri);
+				$s->actionTNet();
 
-			return $s->respond();
-		})
+				return $s->respond();
+			})
 			->name(self::ROUTE_TNET);
 	}
 }

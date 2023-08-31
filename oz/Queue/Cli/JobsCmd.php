@@ -64,7 +64,7 @@ final class JobsCmd extends Command
 				->description('The maximum number of jobs to run.')
 				->number();
 
-			$jobs_run->handler(function (KliArgs $args) {
+			$jobs_run->handler(static function (KliArgs $args) {
 				$store    = $args->get('store');
 				$worker   = $args->get('worker');
 				$queue    = $args->get('driver');
@@ -86,7 +86,7 @@ final class JobsCmd extends Command
 				->required()
 				->string();
 
-			$jobs_finish->handler(function (KliArgs $args) {
+			$jobs_finish->handler(static function (KliArgs $args) {
 				$store = $args->get('store');
 				$ref   = $args->get('ref');
 

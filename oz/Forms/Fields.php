@@ -24,6 +24,8 @@ use OZONE\Core\Exceptions\RuntimeException;
 class Fields
 {
 	/**
+	 * Returns a birth date field.
+	 *
 	 * @param int $min_age
 	 * @param int $max_age
 	 *

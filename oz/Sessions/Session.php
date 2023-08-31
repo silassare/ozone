@@ -223,7 +223,7 @@ final class Session implements BootHookReceiverInterface
 	 */
 	public static function boot(): void
 	{
-		ResponseHook::handle(static function (ResponseHook $ev) {
+		ResponseHook::listen(static function (ResponseHook $ev) {
 			$context = $ev->getContext();
 			if ($context->hasSession()) {
 				$context->session()
@@ -231,7 +231,7 @@ final class Session implements BootHookReceiverInterface
 			}
 		}, Event::RUN_LAST);
 
-		FinishHook::handle(static function () {
+		FinishHook::listen(static function () {
 			self::gc();
 		}, Event::RUN_LAST);
 	}
@@ -249,7 +249,7 @@ final class Session implements BootHookReceiverInterface
 			return null;
 		}
 
-		$factory = function () use ($sid) {
+		$factory = static function () use ($sid) {
 			try {
 				$sqb = new OZSessionsQuery();
 
@@ -310,7 +310,7 @@ final class Session implements BootHookReceiverInterface
 	 */
 	private function assertSessionStarted(): void
 	{
-		if (!$this->started || !isset($this->sess_entry, $this->state, $this->client)) {
+		if (!$this->started || !isset($this->sess_entry, $this->state)) {
 			throw new RuntimeException('Session not yet started.');
 		}
 	}
@@ -374,7 +374,7 @@ final class Session implements BootHookReceiverInterface
 	 */
 	private static function gc(): void
 	{
-		if (Random::bool() && OZone::hasDbAccess()) {
+		if (Random::bool() && OZone::hasDbInstalled()) {
 			try {
 				$s_table = new OZSessionsQuery();
 				$s_table->whereExpireIsLte(\time())

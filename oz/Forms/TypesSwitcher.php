@@ -25,6 +25,9 @@ class TypesSwitcher implements ArrayCapableInterface
 {
 	use ArrayCapableTrait;
 
+	/**
+	 * @var array<int, array{type: \Gobl\DBAL\Types\Interfaces\TypeInterface, rule: \OZONE\Core\Forms\FormRule}>
+	 */
 	private array $types = [];
 
 	/**
@@ -48,21 +51,17 @@ class TypesSwitcher implements ArrayCapableInterface
 	/**
 	 * Gets the appropriate type.
 	 *
-	 * @param \OZONE\Core\Forms\FormData $fd
+	 * @param \OZONE\Core\Forms\FormValidationContext $fvc
 	 *
 	 * @return \Gobl\DBAL\Types\Interfaces\TypeInterface
 	 */
-	public function getType(FormData $fd): TypeInterface
+	public function getType(FormValidationContext $fvc): TypeInterface
 	{
 		foreach ($this->types as $item) {
-			/**
-			 * @var \OZONE\Core\Forms\FormRule $rule
-			 * @var TypeInterface              $type
-			 */
 			$type = $item['type'];
 			$rule = $item['rule'];
 
-			if ($rule->check($fd)) {
+			if ($rule->check($fvc)) {
 				return $type;
 			}
 		}

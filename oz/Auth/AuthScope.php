@@ -24,8 +24,8 @@ use OZONE\Core\Db\OZAuth;
 class AuthScope extends AuthAccessRights implements AuthScopeInterface
 {
 	protected string $label    = '';
-	protected int    $try_max  = 0;
-	protected int    $lifetime = 0;
+	protected int $try_max     = 0;
+	protected int $lifetime    = 0;
 
 	/**
 	 * AuthScope constructor.

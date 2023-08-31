@@ -25,9 +25,9 @@ abstract class AbstractTask implements TaskInterface
 	 * @var \OZONE\Core\Cli\Cron\Schedule[]
 	 */
 	protected array $schedules     = [];
-	protected bool  $in_background = false;
-	protected bool  $one_at_a_time = false;
-	protected ?int  $timeout       = null;
+	protected bool $in_background  = false;
+	protected bool $one_at_a_time  = false;
+	protected ?int $timeout        = null;
 	protected array $result        = [];
 
 	protected readonly string $cache_key;

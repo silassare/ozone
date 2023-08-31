@@ -13,23 +13,23 @@ declare(strict_types=1);
 
 namespace OZONE\Core;
 
-use Gobl\CRUD\CRUD;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\App\Settings;
-use OZONE\Core\CRUD\TableCRUDHandlerProvider;
+use OZONE\Core\CRUD\TableCRUD;
 use OZONE\Core\Db\OZRolesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Events\InitHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\HTTPEnvironment;
+use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Users\Users;
 use OZONE\Core\Utils\Utils;
-use PHPUtils\Events\Event;
+use Throwable;
 
 /**
  * Class OZone.
@@ -125,9 +125,9 @@ final class OZone
 		$context = self::getMainContext();
 
 		// The current user access level will be used for CRUD validation
-		CRUD::setHandlerProvider(new TableCRUDHandlerProvider($context));
+		TableCRUD::registerListeners($context);
 
-		Event::trigger(new InitHook($context));
+		(new InitHook($context))->dispatch();
 
 		if (self::isWebMode()) {
 			$context->handle()
@@ -140,7 +140,7 @@ final class OZone
 				Utils::closeOutputBuffers(0, true);
 			}
 
-			Event::trigger(new FinishHook($context->getRequest(), $context->getResponse()));
+			(new FinishHook($context->getRequest(), $context->getResponse()))->dispatch();
 
 			exit;
 		}
@@ -193,7 +193,7 @@ final class OZone
 	 */
 	public static function isInstalled(): bool
 	{
-		return self::hasDbAccess() && self::hasSuperAdmin();
+		return self::hasDbAccess() && self::hasDbInstalled() && self::hasSuperAdmin();
 	}
 
 	/**
@@ -210,12 +210,22 @@ final class OZone
 				db()->getConnection();
 
 				$has_db_access = true;
-			} catch (\Throwable) {
+			} catch (Throwable) {
 				$has_db_access = false;
 			}
 		}
 
 		return $has_db_access;
+	}
+
+	/**
+	 * Check if we have database installed.
+	 *
+	 * @return bool
+	 */
+	public static function hasDbInstalled(): bool
+	{
+		return self::hasDbAccess() && Migrations::DB_NOT_INSTALLED_VERSION !== Migrations::getCurrentDbVersion();
 	}
 
 	/**
@@ -239,7 +249,7 @@ final class OZone
 					->find(1);
 
 				$has_super_admin = (bool) $results->count();
-			} catch (\Throwable) {
+			} catch (Throwable) {
 				$has_super_admin = false;
 			}
 		}
@@ -283,11 +293,13 @@ final class OZone
 		foreach ($routes as $provider => $enabled) {
 			if ($enabled) {
 				if (!\is_subclass_of($provider, RouteProviderInterface::class)) {
-					throw new RuntimeException(\sprintf(
-						'Route provider "%s" should implements "%s".',
-						$provider,
-						RouteProviderInterface::class
-					));
+					throw new RuntimeException(
+						\sprintf(
+							'Route provider "%s" should implements "%s".',
+							$provider,
+							RouteProviderInterface::class
+						)
+					);
 				}
 
 				/* @var RouteProviderInterface $provider */
@@ -306,11 +318,13 @@ final class OZone
 		foreach ($hook_receivers as $receiver => $enabled) {
 			if ($enabled) {
 				if (!\is_subclass_of($receiver, BootHookReceiverInterface::class)) {
-					throw new RuntimeException(\sprintf(
-						'Boot hook receiver "%s" should implements "%s".',
-						$receiver,
-						BootHookReceiverInterface::class
-					));
+					throw new RuntimeException(
+						\sprintf(
+							'Boot hook receiver "%s" should implements "%s".',
+							$receiver,
+							BootHookReceiverInterface::class
+						)
+					);
 				}
 
 				/* @var \OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface $receiver */

@@ -13,27 +13,28 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
-use InvalidArgumentException;
-
 /**
  * Class OZSessionVR.
+ *
+ * @template TRelationResult
+ *
+ * @extends \Gobl\DBAL\Relations\VirtualRelation<\OZONE\Core\Db\OZSession, TRelationResult>
  */
 abstract class OZSessionVR extends \Gobl\DBAL\Relations\VirtualRelation
 {
 	/**
-	 * {@inheritDoc}
+	 * {class_name} constructor.
+	 *
+	 * @param string $name      the relation name
+	 * @param bool   $paginated true if the relation returns paginated items
 	 */
-	public function get(\Gobl\ORM\ORMEntity $target, \Gobl\ORM\ORMRequest $request, ?int &$total_records = null): mixed
+	public function __construct(string $name, bool $paginated)
 	{
-		if ($target instanceof \OZONE\Core\Db\OZSession) {
-			return $this->getItemRelation($target, $request, $total_records);
-		}
-
-		throw new InvalidArgumentException('Target item should be an instance of: ' . \OZONE\Core\Db\OZSession::class);
+		parent::__construct(
+			\OZONE\Core\Db\OZSession::TABLE_NAMESPACE,
+			\OZONE\Core\Db\OZSession::TABLE_NAME,
+			$name,
+			$paginated
+		);
 	}
-
-	/**
-	 * Gets a relation for a given target item.
-	 */
-	abstract protected function getItemRelation(\Gobl\ORM\ORMEntity $target, \Gobl\ORM\ORMRequest $request, ?int &$total_records = null): mixed;
 }

@@ -28,17 +28,16 @@ class Field implements ArrayCapableInterface
 	/**
 	 * @var \Gobl\DBAL\Types\Interfaces\TypeInterface|\OZONE\Core\Forms\TypesSwitcher
 	 */
-	protected TypeInterface|TypesSwitcher $_type;
+	protected TypeInterface|TypesSwitcher $t_type;
 
 	/**
-	 * @var callable(mixed, \OZONE\Core\Forms\FormData):(null|bool)
+	 * @var callable(mixed, \OZONE\Core\Forms\FormValidationContext):mixed
 	 */
-	protected $_validator;
-
-	protected string    $_name;
-	protected bool      $_hide     = false;
-	protected bool      $_required = false;
-	protected ?FormRule $_if       = null;
+	protected $t_validator;
+	protected string $t_name;
+	protected bool $t_hide          = false;
+	protected bool $t_required      = false;
+	protected ?FormRule $t_if       = null;
 
 	/**
 	 * Field constructor.
@@ -54,110 +53,130 @@ class Field implements ArrayCapableInterface
 		bool $required = false,
 		?FormRule $if = null
 	) {
-		$this->_name     = $name;
-		$this->_type     = $type ?? new TypeString();
-		$this->_required = $required;
-		$this->_if       = $if;
+		$this->t_name     = $name;
+		$this->t_type     = $type ?? new TypeString();
+		$this->t_required = $required;
+		$this->t_if       = $if;
 	}
 
 	/**
+	 * Define the field name.
+	 *
 	 * @param string $name
 	 *
 	 * @return $this
 	 */
 	public function name(string $name): static
 	{
-		$this->_name = $name;
+		$this->t_name = $name;
 
 		return $this;
 	}
 
 	/**
+	 * Define whether the field should be hidden or not.
+	 *
 	 * @param bool $hide
 	 *
 	 * @return $this
 	 */
 	public function hidden(bool $hide = true): static
 	{
-		$this->_hide = $hide;
+		$this->t_hide = $hide;
 
 		return $this;
 	}
 
 	/**
+	 * Define whether the field is required or not.
+	 *
 	 * @param bool $required
 	 *
 	 * @return $this
 	 */
 	public function required(bool $required = true): static
 	{
-		$this->_required = $required;
+		$this->t_required = $required;
 
 		return $this;
 	}
 
 	/**
+	 * Set the field visibility condition.
+	 *
 	 * @return FormRule
 	 */
 	public function if(): FormRule
 	{
-		$this->_if = new FormRule();
+		if (!isset($this->t_if)) {
+			$this->t_if = new FormRule();
+		}
 
-		return $this->_if;
+		return $this->t_if;
 	}
 
 	/**
+	 * Set the field type.
+	 *
 	 * @param \Gobl\DBAL\Types\Interfaces\TypeInterface|\OZONE\Core\Forms\TypesSwitcher $type
 	 *
 	 * @return $this
 	 */
 	public function type(TypeInterface|TypesSwitcher $type): static
 	{
-		$this->_type = $type;
+		$this->t_type = $type;
 
 		return $this;
 	}
 
 	/**
-	 * @param callable(mixed, \OZONE\Core\Forms\FormData):(null|bool) $validator
+	 * Set the field validator.
+	 *
+	 * @param callable(mixed, \OZONE\Core\Forms\FormValidationContext):mixed $validator
 	 *
 	 * @return $this
 	 */
 	public function validator(callable $validator): static
 	{
-		$this->_validator = $validator;
+		$this->t_validator = $validator;
 
 		return $this;
 	}
 
 	/**
-	 * @param \OZONE\Core\Forms\FormData $fd
+	 * Check if the field is enabled.
+	 *
+	 * @param \OZONE\Core\Forms\FormValidationContext $fvc
 	 *
 	 * @return bool
 	 */
-	public function isEnabled(FormData $fd): bool
+	public function isEnabled(FormValidationContext $fvc): bool
 	{
-		if (null === $this->_if) {
+		if (null === $this->t_if) {
 			return true;
 		}
 
-		return $this->_if->check($fd);
+		return $this->t_if->check($fvc);
 	}
 
 	/**
+	 * Gets the field name.
+	 *
 	 * @return string
 	 */
 	public function getName(): string
 	{
-		return $this->_name;
+		return $this->t_name;
 	}
 
 	/**
-	 * @return callable|TypeInterface|TypesSwitcher
+	 * Gets the field type.
+	 *
+	 * @return TypeInterface|TypesSwitcher
 	 */
-	public function getType(): callable|TypesSwitcher|TypeInterface
+	public function getType(): TypesSwitcher|TypeInterface
 	{
-		return $this->_type;
+		return $this->t_type;
 	}
 
 	/**
@@ -165,40 +184,41 @@ class Field implements ArrayCapableInterface
 	 */
 	public function isRequired(): bool
 	{
-		return $this->_required;
+		return $this->t_required;
 	}
 
 	/**
+	 * Check if the field is hidden.
+	 *
 	 * @return bool
 	 */
 	public function isHidden(): bool
 	{
-		return $this->_hide;
+		return $this->t_hide;
 	}
 
 	/**
 	 * Validate a given value.
 	 *
-	 * @param mixed                      $value
-	 * @param \OZONE\Core\Forms\FormData $cleaned_fd
+	 * @param mixed                                   $value
+	 * @param \OZONE\Core\Forms\FormValidationContext $fvc
 	 *
 	 * @return mixed
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 	 */
-	public function validate(mixed $value, FormData $cleaned_fd): mixed
+	public function validate(mixed $value, FormValidationContext $fvc): mixed
 	{
-		$type = $this->_type;
+		$type = $this->t_type;
 
 		if ($type instanceof TypesSwitcher) {
-			$type = $this->_type->getType($cleaned_fd);
+			$type = $this->t_type->getType($fvc);
 		}
 
 		$value = $type->validate($value);
 
-		if (\is_callable($this->_validator)) {
-			$v     = $this->_validator;
-			$value = $v($value, $cleaned_fd);
+		if (isset($this->t_validator)) {
+			$value = \call_user_func($this->t_validator, $value, $fvc);
 		}
 
 		return $value;
@@ -210,11 +230,11 @@ class Field implements ArrayCapableInterface
 	public function toArray(): array
 	{
 		return [
-			'name'     => $this->_name,
-			'type'     => $this->_type->toArray(),
-			'required' => $this->_required,
-			'hidden'   => $this->_hide,
-			'if'       => $this->_if?->toArray(),
+			'name'     => $this->t_name,
+			'type'     => $this->t_type->toArray(),
+			'required' => $this->t_required,
+			'hidden'   => $this->t_hide,
+			'if'       => $this->t_if?->toArray(),
 		];
 	}
 }

@@ -34,7 +34,8 @@
     "claviska/simpleimage": "^3.7.0",
     "psr/http-message": "^1.0",
     "dragonmantank/cron-expression": "^3.3",
-    "nesbot/carbon": "^2.66"
+    "nesbot/carbon": "^2.66",
+    "symfony/process": "^6.3"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",

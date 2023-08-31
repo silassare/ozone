@@ -15,117 +15,19 @@ namespace OZONE\Core\Db\Base;
 
 /**
  * Class OZCountriesCrud.
+ *
+ * @extends \Gobl\CRUD\CRUDEventProducer<\OZONE\Core\Db\OZCountry>
  */
-abstract class OZCountriesCrud implements \Gobl\CRUD\Handler\Interfaces\CRUDHandlerInterface
+abstract class OZCountriesCrud extends \Gobl\CRUD\CRUDEventProducer
 {
 	/**
-	 * {@inheritDoc}
+	 * OZCountriesCrud constructor.
 	 */
-	public function onEntityEvent(\Gobl\ORM\ORMEntity $entity, \Gobl\CRUD\CRUDEntityEvent $event): void
+	public function __construct()
 	{
-		/** @var \OZONE\Core\Db\OZCountry $entity */
-		switch ($event) {
-			case \Gobl\CRUD\CRUDEntityEvent::AFTER_CREATE:
-				$this->onAfterCreateEntity($entity);
-
-				break;
-
-			case \Gobl\CRUD\CRUDEntityEvent::AFTER_READ:
-				$this->onAfterReadEntity($entity);
-
-				break;
-
-			case \Gobl\CRUD\CRUDEntityEvent::BEFORE_UPDATE:
-				$this->onBeforeUpdateEntity($entity);
-
-				break;
-
-			case \Gobl\CRUD\CRUDEntityEvent::AFTER_UPDATE:
-				$this->onAfterUpdateEntity($entity);
-
-				break;
-
-			case \Gobl\CRUD\CRUDEntityEvent::BEFORE_DELETE:
-				$this->onBeforeDeleteEntity($entity);
-
-				break;
-
-			case \Gobl\CRUD\CRUDEntityEvent::AFTER_DELETE:
-				$this->onAfterDeleteEntity($entity);
-
-				break;
-		}
-	}
-
-	/**
-	 * Called when an entity is created.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZCountry $entity
-	 */
-	public function onAfterCreateEntity(\OZONE\Core\Db\OZCountry $entity): void
-	{
-	}
-
-	/**
-	 * Called when we read an entity.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZCountry $entity
-	 */
-	public function onAfterReadEntity(\OZONE\Core\Db\OZCountry $entity): void
-	{
-	}
-
-	/**
-	 * Called before an entity is updated.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZCountry $entity
-	 */
-	public function onBeforeUpdateEntity(\OZONE\Core\Db\OZCountry $entity): void
-	{
-	}
-
-	/**
-	 * Called after an entity is updated.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZCountry $entity
-	 */
-	public function onAfterUpdateEntity(\OZONE\Core\Db\OZCountry $entity): void
-	{
-	}
-
-	/**
-	 * Called before an entity is deleted.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZCountry $entity
-	 */
-	public function onBeforeDeleteEntity(\OZONE\Core\Db\OZCountry $entity): void
-	{
-	}
-
-	/**
-	 * Called after an entity is deleted.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZCountry $entity
-	 */
-	public function onAfterDeleteEntity(\OZONE\Core\Db\OZCountry $entity): void
-	{
+		parent::__construct(
+			\OZONE\Core\Db\OZCountry::TABLE_NAMESPACE,
+			\OZONE\Core\Db\OZCountry::TABLE_NAME
+		);
 	}
 }

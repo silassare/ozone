@@ -124,15 +124,16 @@ class Form implements ArrayCapableInterface
 	 * A step is a group of fields that will be validated together.
 	 * Use this when some fields depends on others fields.
 	 *
-	 * @param string                          $name
-	 * @param callable                        $builder
-	 * @param null|\OZONE\Core\Forms\FormRule $rule
+	 * @param string                                                                          $name
+	 * @param callable(\OZONE\Core\Forms\FormValidationContext):(null|\OZONE\Core\Forms\Form) $factory
+	 * @param null|\OZONE\Core\Forms\FormRule                                                 $rule
 	 *
 	 * @return $this
 	 */
-	public function addStep(string $name, callable $builder, ?FormRule $rule = null): static
+	public function addStep(string $name, callable $factory, ?FormRule $rule = null): static
 	{
-		$this->steps[] = new FormStep($name, $builder, $rule ? [$rule, 'check'] : null);
+		$if            = $rule ? static fn (FormValidationContext $fvc) => $rule->check($fvc) : null;
+		$this->steps[] = new FormStep($name, $factory, $if);
 
 		return $this;
 	}
@@ -190,14 +191,14 @@ class Form implements ArrayCapableInterface
 			$this->addField($field);
 		}
 
-		$field_verify = $this->field($field->getName() . '_verify')
+		$field_confirm = $this->field($field->getName() . '_confirm')
 			->type($field->getType())
 			->required($field->isRequired());
 
 		$this->rule()
-			->eq($field, $field_verify, I18n::m('OZ_FIELDS_SHOULD_HAVE_SAME_VALUE', [
-				'field'        => $field->getName(),
-				'field_verify' => $field_verify->getName(),
+			->eq($field, $field_confirm, I18n::m('OZ_FIELD_SHOULD_HAVE_SAME_VALUE', [
+				'field'         => $field->getName(),
+				'field_confirm' => $field_confirm->getName(),
 			]));
 
 		return $this;
@@ -245,13 +246,14 @@ class Form implements ArrayCapableInterface
 		$this->assertValidCSRFToken($unsafe_fd);
 
 		$cleaned_fd = $cleaned_fd ?? new FormData();
+		$fvc        = new FormValidationContext($unsafe_fd, $cleaned_fd);
 
 		foreach ($this->fields as $field) {
 			$name = $step_prefix . $field->getName();
-			if ($field->isEnabled($cleaned_fd)) {
+			if ($field->isEnabled($fvc)) {
 				if ($unsafe_fd->has($name)) {
 					try {
-						$cleaned_fd->set($name, $field->validate($unsafe_fd->get($name), $cleaned_fd));
+						$cleaned_fd->set($name, $field->validate($unsafe_fd->get($name), $fvc));
 					} catch (TypesInvalidValueException $e) {
 						/** @var InvalidFormException $e */
 						$e = InvalidFormException::tryConvert($e);
@@ -259,13 +261,17 @@ class Form implements ArrayCapableInterface
 						throw $e;
 					}
 				} elseif ($field->isRequired()) {
-					throw new InvalidFormException('OZ_FORM_MISSING_REQUIRED_FIELD', ['field' => $name]);
+					throw new InvalidFormException('OZ_FORM_MISSING_REQUIRED_FIELD', [
+						'field' => $name,
+						'_form' => $this,
+						'_data' => $unsafe_fd->getData(),
+					]);
 				}
 			}
 		}
 
 		foreach ($this->rules as $rule) {
-			if (!$rule->check($cleaned_fd)) {
+			if (!$rule->check($fvc)) {
 				throw new InvalidFormException($rule->getErrorMessage(), [
 					// rule is prefixed by "_" because it may contain sensitive data
 					'_rule' => $rule,
@@ -274,7 +280,7 @@ class Form implements ArrayCapableInterface
 		}
 
 		foreach ($this->steps as $step) {
-			if ($step_form = $step->getForm($cleaned_fd)) {
+			if ($step_form = $step->build($fvc)) {
 				$step_prefix .= $step->getName() . '.';
 
 				$step_form->validate($unsafe_fd, $cleaned_fd, $step_prefix);

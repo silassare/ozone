@@ -56,7 +56,7 @@ class EmailVerificationAuthService extends Service
 
 		$provider->generate();
 
-		$this->getJSONResponse()
+		$this->json()
 			->merge($provider->getJSONResponse());
 
 		return $this->respond();

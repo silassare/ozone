@@ -13,16 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
-use Generator;
-
 /**
  * Class OZSessionsResults.
  *
- * @method null|\OZONE\Core\Db\OZSession       current()
- * @method null|\OZONE\Core\Db\OZSession       fetchClass(bool $strict = true)
- * @method \OZONE\Core\Db\OZSession[]          fetchAllClass(bool $strict = true)
- * @method Generator<\OZONE\Core\Db\OZSession> lazy(bool $strict = true, int $max = 100)
- * @method null|\OZONE\Core\Db\OZSession       updateOneItem(array $filters, array $new_values)
+ * @extends \Gobl\ORM\ORMResults<\OZONE\Core\Db\OZSession>
  */
 abstract class OZSessionsResults extends \Gobl\ORM\ORMResults
 {

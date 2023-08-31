@@ -53,7 +53,7 @@ abstract class Service implements RouteProviderInterface
 	 *
 	 * @return \OZONE\Core\App\JSONResponse
 	 */
-	public function getJSONResponse(): JSONResponse
+	public function json(): JSONResponse
 	{
 		return $this->json_response;
 	}
@@ -65,7 +65,7 @@ abstract class Service implements RouteProviderInterface
 	 */
 	public function respond(): Response
 	{
-		$json_response = $this->getJSONResponse();
+		$json_response = $this->json();
 		$data          = $json_response->toArray();
 		$now           = \time();
 		$data['utime'] = $now;

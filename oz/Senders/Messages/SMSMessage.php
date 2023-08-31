@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\Core\Senders\Messages;
 
 use OZONE\Core\Senders\Events\SendSMS;
-use PHPUtils\Events\Event;
 
 /**
  * Class SMSMessage.
@@ -26,7 +25,7 @@ class SMSMessage extends Message
 	 */
 	public function send(string $to): static
 	{
-		Event::trigger(new SendSMS($to, $this));
+		(new SendSMS($to, $this))->dispatch();
 
 		return $this;
 	}

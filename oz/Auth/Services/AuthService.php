@@ -38,7 +38,7 @@ class AuthService extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->group('/auth/:' . OZAuth::COL_REF, function (Router $router) {
+		$router->group('/auth/:' . OZAuth::COL_REF, static function (Router $router) {
 			$router->post('/authorize', static function (RouteInfo $ri) {
 				return (new self($ri))->authorize($ri, $ri->getCleanFormData());
 			})
@@ -70,7 +70,7 @@ class AuthService extends Service
 	 */
 	public function refresh(RouteInfo $ri, FormData $fd): Response
 	{
-		$ref         = $ri->getParam(OZAuth::COL_REF);
+		$ref         = $ri->param(OZAuth::COL_REF);
 		$refresh_key = $fd->get('refresh_key');
 
 		$auth = Auth::getRequired($ref);
@@ -83,7 +83,7 @@ class AuthService extends Service
 
 		$provider->refresh();
 
-		$this->getJSONResponse()
+		$this->json()
 			->merge($provider->getJSONResponse());
 
 		return $this->respond();
@@ -99,7 +99,7 @@ class AuthService extends Service
 	 */
 	public function state(RouteInfo $ri): Response
 	{
-		$ref = $ri->getParam(OZAuth::COL_REF);
+		$ref = $ri->param(OZAuth::COL_REF);
 
 		$auth = Auth::getRequired($ref);
 
@@ -108,7 +108,7 @@ class AuthService extends Service
 		$provider->getCredentials()
 			->setReference($ref);
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone()
 			->setData([
 				OZAuth::COL_STATE => $provider->getState()->value,
@@ -127,7 +127,7 @@ class AuthService extends Service
 	 */
 	public function cancel(RouteInfo $ri): Response
 	{
-		$ref = $ri->getParam(OZAuth::COL_REF);
+		$ref = $ri->param(OZAuth::COL_REF);
 
 		$auth = Auth::getRequired($ref);
 
@@ -138,7 +138,7 @@ class AuthService extends Service
 
 		$provider->cancel();
 
-		$this->getJSONResponse()
+		$this->json()
 			->merge($provider->getJSONResponse());
 
 		return $this->respond();
@@ -156,7 +156,7 @@ class AuthService extends Service
 	 */
 	public function authorize(RouteInfo $ri, FormData $fd): Response
 	{
-		$ref = $ri->getParam(OZAuth::COL_REF);
+		$ref = $ri->param(OZAuth::COL_REF);
 
 		$auth = Auth::getRequired($ref);
 
@@ -182,7 +182,7 @@ class AuthService extends Service
 
 		$provider->authorize($type);
 
-		$this->getJSONResponse()
+		$this->json()
 			->merge($provider->getJSONResponse());
 
 		return $this->respond();

@@ -15,117 +15,19 @@ namespace OZONE\Core\Db\Base;
 
 /**
  * Class OZDbStoresCrud.
+ *
+ * @extends \Gobl\CRUD\CRUDEventProducer<\OZONE\Core\Db\OZDbStore>
  */
-abstract class OZDbStoresCrud implements \Gobl\CRUD\Handler\Interfaces\CRUDHandlerInterface
+abstract class OZDbStoresCrud extends \Gobl\CRUD\CRUDEventProducer
 {
 	/**
-	 * {@inheritDoc}
+	 * OZDbStoresCrud constructor.
 	 */
-	public function onEntityEvent(\Gobl\ORM\ORMEntity $entity, \Gobl\CRUD\CRUDEntityEvent $event): void
+	public function __construct()
 	{
-		/** @var \OZONE\Core\Db\OZDbStore $entity */
-		switch ($event) {
-			case \Gobl\CRUD\CRUDEntityEvent::AFTER_CREATE:
-				$this->onAfterCreateEntity($entity);
-
-				break;
-
-			case \Gobl\CRUD\CRUDEntityEvent::AFTER_READ:
-				$this->onAfterReadEntity($entity);
-
-				break;
-
-			case \Gobl\CRUD\CRUDEntityEvent::BEFORE_UPDATE:
-				$this->onBeforeUpdateEntity($entity);
-
-				break;
-
-			case \Gobl\CRUD\CRUDEntityEvent::AFTER_UPDATE:
-				$this->onAfterUpdateEntity($entity);
-
-				break;
-
-			case \Gobl\CRUD\CRUDEntityEvent::BEFORE_DELETE:
-				$this->onBeforeDeleteEntity($entity);
-
-				break;
-
-			case \Gobl\CRUD\CRUDEntityEvent::AFTER_DELETE:
-				$this->onAfterDeleteEntity($entity);
-
-				break;
-		}
-	}
-
-	/**
-	 * Called when an entity is created.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZDbStore $entity
-	 */
-	public function onAfterCreateEntity(\OZONE\Core\Db\OZDbStore $entity): void
-	{
-	}
-
-	/**
-	 * Called when we read an entity.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZDbStore $entity
-	 */
-	public function onAfterReadEntity(\OZONE\Core\Db\OZDbStore $entity): void
-	{
-	}
-
-	/**
-	 * Called before an entity is updated.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZDbStore $entity
-	 */
-	public function onBeforeUpdateEntity(\OZONE\Core\Db\OZDbStore $entity): void
-	{
-	}
-
-	/**
-	 * Called after an entity is updated.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZDbStore $entity
-	 */
-	public function onAfterUpdateEntity(\OZONE\Core\Db\OZDbStore $entity): void
-	{
-	}
-
-	/**
-	 * Called before an entity is deleted.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZDbStore $entity
-	 */
-	public function onBeforeDeleteEntity(\OZONE\Core\Db\OZDbStore $entity): void
-	{
-	}
-
-	/**
-	 * Called after an entity is deleted.
-	 *
-	 * You can run your own business logic, verify ownership,
-	 * or other access right on the entity
-	 *
-	 * @param \OZONE\Core\Db\OZDbStore $entity
-	 */
-	public function onAfterDeleteEntity(\OZONE\Core\Db\OZDbStore $entity): void
-	{
+		parent::__construct(
+			\OZONE\Core\Db\OZDbStore::TABLE_NAMESPACE,
+			\OZONE\Core\Db\OZDbStore::TABLE_NAME
+		);
 	}
 }

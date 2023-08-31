@@ -30,6 +30,8 @@ use OZONE\Core\Router\Router;
  */
 final class SignUp extends Service
 {
+	public const ROUTE_SIGN_UP = 'oz:signup';
+
 	/**
 	 * @param \OZONE\Core\Router\RouteInfo $ri
 	 *
@@ -65,8 +67,8 @@ final class SignUp extends Service
 			->getUsers()
 			->logUserIn($user);
 
-		$this->getJSONResponse()
-			->setDone('OZ_SIGNUP_SUCCESS')
+		$this->json()
+			->setDone('OZ_USER_SIGN_UP_SUCCESS')
 			->setData($user);
 	}
 
@@ -75,12 +77,14 @@ final class SignUp extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->post('/signup', function (RouteInfo $r) {
-			$s = new self($r);
-			$s->actionSignUp($r);
+		$router
+			->post('/signup', static function (RouteInfo $r) {
+				$s = new self($r);
+				$s->actionSignUp($r);
 
-			return $s->respond();
-		})
+				return $s->respond();
+			})
+			->name(self::ROUTE_SIGN_UP)
 			->form(Form::fromTable(OZUser::TABLE_NAME))
 			->with2FA(EmailVerificationProvider::NAME, PhoneVerificationAuthProvider::NAME);
 	}

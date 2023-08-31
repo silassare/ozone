@@ -34,7 +34,7 @@ final class CronCmd extends Command
 			// action: run scheduled cron tasks
 			$run = $this->action('run', 'Run scheduled cron tasks.');
 
-			$run->handler(function () {
+			$run->handler(static function () {
 				Cron::runDues();
 			});
 
@@ -45,7 +45,7 @@ final class CronCmd extends Command
 				->required()
 				->string();
 
-			$start->handler(function (KliArgs $args) {
+			$start->handler(static function (KliArgs $args) {
 				Cron::start($args->get('name'));
 			});
 		}

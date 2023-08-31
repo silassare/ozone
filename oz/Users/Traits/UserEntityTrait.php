@@ -19,7 +19,6 @@ use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Users\Events\UserCreated;
 use OZONE\Core\Users\Users;
-use PHPUtils\Events\Event;
 
 /**
  * Trait UserEntityTrait.
@@ -63,7 +62,7 @@ trait UserEntityTrait
 		$result = parent::save();
 
 		if ($emit_create_event) {
-			Event::trigger(new UserCreated($this));
+			(new UserCreated($this))->dispatch();
 		}
 
 		return $result;
@@ -99,9 +98,9 @@ trait UserEntityTrait
 	 *
 	 * @param \OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface $rights
 	 *
-	 * @return \OZONE\Core\Db\OZUser|\OZONE\Core\Users\Traits\UserEntityTrait
+	 * @return $this
 	 */
-	public function setAccessRights(AuthAccessRightsInterface $rights): self
+	public function setAccessRights(AuthAccessRightsInterface $rights): static
 	{
 		$data                  = $this->getData();
 		$data['access_rights'] = $rights->getOptions();

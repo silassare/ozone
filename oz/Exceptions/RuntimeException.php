@@ -41,6 +41,6 @@ class RuntimeException extends \RuntimeException implements RichExceptionInterfa
 			$this->data = \array_merge($message->getInject(), $this->data);
 			$message    = $message->getText();
 		}
-		parent::__construct(empty($message) ? 'OZ_RUNTIME_EXCEPTION' : $message, 0, $previous);
+		parent::__construct(empty($message) ? 'OZ_ERROR_RUNTIME' : $message, 0, $previous);
 	}
 }

@@ -15,7 +15,6 @@ namespace OZONE\Core\Senders\Messages;
 
 use OZONE\Core\FS\Templates;
 use OZONE\Core\Senders\Events\SendMail;
-use PHPUtils\Events\Event;
 
 /**
  * Class MailMessage.
@@ -50,7 +49,7 @@ class MailMessage extends Message
 	 */
 	public function send(string $to): static
 	{
-		Event::trigger(new SendMail($to, $this));
+		(new SendMail($to, $this))->dispatch();
 
 		return $this;
 	}

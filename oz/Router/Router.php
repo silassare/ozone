@@ -20,7 +20,6 @@ use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Events\RouteBeforeRun;
 use OZONE\Core\Router\Events\RouteMethodNotAllowed;
 use OZONE\Core\Router\Events\RouteNotFound;
-use PHPUtils\Events\Event;
 use Throwable;
 
 /**
@@ -324,12 +323,12 @@ final class Router
 
 		switch ($result->status()) {
 			case RouteSearchStatus::NOT_FOUND:
-				Event::trigger(new RouteNotFound($context));
+				(new RouteNotFound($context))->dispatch();
 
 				break;
 
 			case RouteSearchStatus::METHOD_NOT_ALLOWED:
-				Event::trigger(new RouteMethodNotAllowed($context));
+				(new RouteMethodNotAllowed($context))->dispatch();
 
 				break;
 
@@ -339,7 +338,7 @@ final class Router
 
 				$if_found_fn && $if_found_fn($ri);
 
-				Event::trigger(new RouteBeforeRun($ri));
+				(new RouteBeforeRun($ri))->dispatch();
 
 				$this->runRoute($ri);
 
@@ -535,7 +534,7 @@ final class Router
 	{
 		static $history = [];
 
-		$route = $ri->getRoute();
+		$route = $ri->route();
 
 		$history[] = ['name' => $route->getName(), 'path' => $route->getPath()];
 

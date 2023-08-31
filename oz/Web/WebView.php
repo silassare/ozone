@@ -42,9 +42,9 @@ class WebView extends Service
 	/**
 	 * @param array $data
 	 *
-	 * @return \OZONE\Core\Web\WebView
+	 * @return $this
 	 */
-	public function inject(array $data): self
+	public function inject(array $data): static
 	{
 		foreach ($data as $key => $value) {
 			$this->compile_data[$key] = $value;
@@ -57,9 +57,9 @@ class WebView extends Service
 	 * @param string $key
 	 * @param mixed  $value
 	 *
-	 * @return \OZONE\Core\Web\WebView
+	 * @return $this
 	 */
-	public function injectKey(string $key, mixed $value): self
+	public function injectKey(string $key, mixed $value): static
 	{
 		$this->compile_data[$key] = $value;
 
@@ -91,9 +91,9 @@ class WebView extends Service
 	 *
 	 * @param string $template
 	 *
-	 * @return \OZONE\Core\Web\WebView
+	 * @return $this
 	 */
-	public function setTemplate(string $template): self
+	public function setTemplate(string $template): static
 	{
 		$this->template = $template;
 
@@ -117,8 +117,10 @@ class WebView extends Service
 	 */
 	public function respond(): Response
 	{
-		return $this->renderTo($this->getContext()
-			->getResponse());
+		return $this->renderTo(
+			$this->getContext()
+				->getResponse()
+		);
 	}
 
 	/**

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Users\Services;
 
 use OZONE\Core\App\Service;
+use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Router\RouteInfo;
@@ -50,11 +51,11 @@ final class Login extends Service
 		}
 
 		if ($result instanceof OZUser) {
-			$this->getJSONResponse()
-				->setDone('OZ_USER_ONLINE')
+			$this->json()
+				->setDone('OZ_USER_SIGN_IN_DONE')
 				->setData($result);
 		} else {
-			$this->getJSONResponse()
+			$this->json()
 				->setError($result);
 		}
 	}
@@ -64,13 +65,15 @@ final class Login extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->post('/login', function (RouteInfo $ri) {
-			$s = new self($ri);
-			$s->actionLogin();
+		$router
+			->post('/login', static function (RouteInfo $ri) {
+				$s = new self($ri);
+				$s->actionLogin();
 
-			return $s->respond();
-		})
+				return $s->respond();
+			})
 			->name(self::ROUTE_LOGIN)
+			->auths(AuthMethodType::SESSION)
 			->form(Users::logOnForm(...));
 	}
 }

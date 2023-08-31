@@ -106,7 +106,7 @@ final class Auth implements BootHookReceiverInterface
 	 */
 	public static function boot(): void
 	{
-		FinishHook::handle(static function () {
+		FinishHook::listen(static function () {
 			self::gc();
 		}, Event::RUN_LAST);
 	}
@@ -143,19 +143,23 @@ final class Auth implements BootHookReceiverInterface
 	/**
 	 * Gets the auth method class from settings.
 	 *
-	 * @param string $name
+	 * @param \OZONE\Core\Auth\AuthMethodType|string $method
 	 *
 	 * @return class-string<\OZONE\Core\Auth\Interfaces\AuthMethodInterface>
 	 */
-	public static function method(string $name): string
+	public static function method(string|AuthMethodType $method): string
 	{
-		$class = Settings::get('oz.auth.methods', $name);
+		if (!\is_string($method)) {
+			$method = $method->value;
+		}
+
+		$class = Settings::get('oz.auth.methods', $method);
 
 		if (!$class) {
 			throw (new RuntimeException(\sprintf(
 				'Auth method "%s" not found in settings.',
-				$name
-			)))->suspectConfig('oz.auth.methods', $name);
+				$method
+			)))->suspectConfig('oz.auth.methods', $method);
 		}
 
 		if (!\class_exists($class) || !\is_subclass_of($class, AuthMethodInterface::class)) {
@@ -163,7 +167,7 @@ final class Auth implements BootHookReceiverInterface
 				'Auth method "%s" should be subclass of: %s',
 				$class,
 				AuthMethodInterface::class
-			)))->suspectConfig('oz.auth.methods', $name);
+			)))->suspectConfig('oz.auth.methods', $method);
 		}
 
 		return $class;
@@ -174,7 +178,7 @@ final class Auth implements BootHookReceiverInterface
 	 */
 	private static function gc(): void
 	{
-		if (Random::bool() && OZone::hasDbAccess()) {
+		if (Random::bool() && OZone::hasDbInstalled()) {
 			try {
 				// delete auth that expired more than an hour ago
 				$an_hour_ago = \time() - 3600;

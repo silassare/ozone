@@ -364,32 +364,31 @@ final class DbCmd extends Command
 
 		$fm      = new FilesManager($dir);
 		$outfile = $fm->resolve(\sprintf('%s.sql', Random::fileName('backup')));
-		$db_host = \escapeshellarg($config['OZ_DB_HOST']);
-		$db_user = \escapeshellarg($config['OZ_DB_USER']);
-		$db_pass = \escapeshellarg($config['OZ_DB_PASS']);
-		$db_name = \escapeshellarg($config['OZ_DB_NAME']);
-		$cmd     = \sprintf(
-			'mysqldump -h%s -u%s %s --result-file=%s -p%s',
-			$db_host,
-			$db_user,
+		$db_host = $config['OZ_DB_HOST'];
+		$db_user = $config['OZ_DB_USER'];
+		$db_pass = $config['OZ_DB_PASS'];
+		$db_name = $config['OZ_DB_NAME'];
+
+		$cmd = [
+			'mysqldump',
+			'-h' . $db_host,
+			'-u' . $db_user,
 			$db_name,
-			\escapeshellarg($outfile),
-			$db_pass
-		);
+			'--result-file=' . $outfile,
+			'-p' . $db_pass,
+		];
 
 		$process = new Process($cmd);
 
-		$process->open();
+		$process->run();
 
-		$error     = $process->readStderr();
-		$exit_code = $process->close();
-
-		if (0 === $exit_code) {
+		if ($process->isSuccessful()) {
 			$cli->success('database backup file created.')
 				->writeLn($outfile);
 		} else {
 			throw new RuntimeException('unable to backup database.', [
-				'mysqldump_error_message' => $error,
+				'mysqldump_error'     => $process->getErrorOutput(),
+				'mysqldump_exit_code' => $process->getExitCode(),
 			]);
 		}
 	}

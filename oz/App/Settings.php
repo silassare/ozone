@@ -17,6 +17,7 @@ use InvalidArgumentException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\Templates;
+use OZONE\Core\Utils\Random;
 use Throwable;
 
 /**
@@ -25,15 +26,22 @@ use Throwable;
 final class Settings
 {
 	/**
-	 * setting group name regular expression.
+	 * setting group name pattern.
 	 *
+	 * ```
 	 * foo.bar.baz        -> ok
 	 * foo/bar.baz        -> ok
 	 * foo/bar/pop.bob    -> ok
 	 * foo.bar.           -> no
 	 * foo/./pop.bob      -> no
+	 * ```
 	 */
-	public const REG_SETTING_GROUP_NAME = '#^(?:[a-z0-9]+/)*[a-z0-9]+(?:\.[a-z0-9]+)*$#';
+	public const PATTERN_SETTING_GROUP_NAME = '(?:[a-z0-9]+/)*[a-z0-9]+(?:\.[a-z0-9]+)*';
+
+	/**
+	 * setting group name regular expression.
+	 */
+	public const REG_SETTING_GROUP_NAME = '#^' . self::PATTERN_SETTING_GROUP_NAME . '$#';
 
 	/**
 	 * settings map array.
@@ -45,32 +53,35 @@ final class Settings
 	/**
 	 * list of not editable settings at runtime.
 	 *
-	 * @var array
+	 * @var array<string, null>
 	 */
 	private static array $settings_blacklist = ['oz.config' => null];
 
 	/**
 	 * settings as loaded array.
 	 *
-	 * @var array
+	 * @var array<string, array>
 	 */
 	private static array $as_loaded = [];
 
 	/**
 	 * ozone settings sources directories.
 	 *
-	 * we look in that source first
-	 *
-	 * @var array
+	 * @var string[]
 	 */
 	private static array $oz_sources_dir = [OZ_OZONE_DIR . 'oz_settings'];
 
 	/**
+	 * plugins settings sources directories.
+	 *
+	 * @var string[]
+	 */
+	private static array $plugins_sources_dir = [];
+
+	/**
 	 * app settings sources directories.
 	 *
-	 * we look in that source at end
-	 *
-	 * @var array
+	 * @var string[]
 	 */
 	private static array $app_sources_dir = [];
 
@@ -81,13 +92,17 @@ final class Settings
 	 */
 	public static function addSource(string $path): void
 	{
-		if (!\in_array($path, self::$oz_sources_dir, true) && !\in_array($path, self::$app_sources_dir, true)) {
+		static $sources = [];
+		if (!isset($sources[$path])) {
 			if (!\is_dir($path)) {
 				throw new InvalidArgumentException(\sprintf('Invalid directory: %s', $path));
 			}
 
+			$sources[$path] = true;
 			if (\str_starts_with($path, OZ_OZONE_DIR)) {
 				self::$oz_sources_dir[] = $path;
+			} elseif (\str_starts_with($path, OZ_PROJECT_DIR . '/vendor')) {
+				self::$plugins_sources_dir[] = $path;
 			} else {
 				self::$app_sources_dir[] = $path;
 			}
@@ -109,13 +124,14 @@ final class Settings
 	 * returns settings group data.
 	 *
 	 * @param string $setting_group the setting group
+	 * @param bool   $reload        reload settings from sources
 	 *
-	 * @return mixed
+	 * @return array
 	 */
-	public static function load(string $setting_group): mixed
+	public static function load(string $setting_group, bool $reload = false): array
 	{
 		self::checkSettingGroupName($setting_group);
-		self::loadAll($setting_group);
+		self::loadAll($setting_group, $reload);
 
 		if (\array_key_exists($setting_group, self::$settings_map)) {
 			return self::$settings_map[$setting_group];
@@ -135,17 +151,10 @@ final class Settings
 	 */
 	public static function get(string $setting_group, string $key, mixed $def = null): mixed
 	{
-		self::checkSettingGroupName($setting_group);
-		self::loadAll($setting_group);
+		$settings = self::load($setting_group);
 
-		if (\array_key_exists($setting_group, self::$settings_map)) {
-			$data = self::$settings_map[$setting_group];
-
-			if (\array_key_exists($key, $data)) {
-				return $data[$key];
-			}
-		} else {
-			throw new RuntimeException(\sprintf('Undefined setting group: %s', $setting_group));
+		if (\array_key_exists($key, $settings)) {
+			return $settings[$key];
 		}
 
 		return $def;
@@ -161,18 +170,50 @@ final class Settings
 	public static function set(string $setting_group_name, string $key, mixed $value): void
 	{
 		$data[$key] = $value;
-		self::save($setting_group_name, $data, false);
+		self::save($setting_group_name, $data, true);
+	}
+
+	/**
+	 * checks if a given setting group exists.
+	 * if a key is given, checks if the key exists in the setting group.
+	 *
+	 * @param string      $setting_group the setting group
+	 * @param null|string $key           the setting key name
+	 *
+	 * @return bool
+	 */
+	public static function has(string $setting_group, ?string $key = null): bool
+	{
+		try {
+			if (null !== $key) {
+				$def = Random::string();
+				$val = self::get($setting_group, $key, $def);
+
+				return $val !== $def;
+			}
+
+			self::load($setting_group);
+
+			return true;
+		} catch (Throwable) {
+			return false;
+		}
 	}
 
 	/**
 	 * sets settings data.
 	 *
-	 * @param string $setting_group_name the setting group name
-	 * @param mixed  $data               setting data
-	 * @param bool   $overwrite          overwrite setting with data
+	 * @param string      $setting_group_name the setting group name
+	 * @param mixed       $data               settings data
+	 * @param bool        $merge              merge with existing data or not
+	 * @param null|string $source_dir         settings source directory
 	 */
-	public static function save(string $setting_group_name, array $data, bool $overwrite = false): void
-	{
+	public static function save(
+		string $setting_group_name,
+		array $data,
+		bool $merge = false,
+		?string $source_dir = null
+	): void {
 		self::checkSettingGroupName($setting_group_name);
 
 		if (\array_key_exists($setting_group_name, self::$settings_blacklist)) {
@@ -184,26 +225,29 @@ final class Settings
 			);
 		}
 
-		$setting_file = app()
-			->getSettingsDir()
-			->resolve($setting_group_name . '.php');
-		$settings     = self::$as_loaded[$setting_file] ?? [];
+		$source_dir_fm         = $source_dir ? new FilesManager($source_dir) : app()->getSettingsDir();
+		$setting_relative_path = $setting_group_name . '.php';
+		$setting_abs_path      = $source_dir_fm->resolve($setting_relative_path);
 
-		$settings = $overwrite ? $data : \array_replace_recursive($settings, $data);
+		$current = self::$as_loaded[$setting_abs_path] ?? [];
+
+		$settings = $merge ? self::merge($current, $data) : $data;
 
 		$inject = self::genExportInfo($setting_group_name, $settings);
 
 		try {
-			$parts = \pathinfo($setting_file);
-			$fm    = new FilesManager();
-			$fm->cd($parts['dirname'], true)
-				->wf($parts['basename'], Templates::compile('oz://gen/settings.info.otpl', $inject));
+			$parts = \pathinfo($setting_abs_path);
+			$source_dir_fm->cd($parts['dirname'], true)
+				->wf(
+					$parts['basename'],
+					Templates::compile('oz://gen/settings.info.otpl', $inject)
+				);
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to save settings.', null, $t);
 		}
+
 		// updates settings
-		self::$as_loaded[$setting_file] = $settings;
-		self::override($setting_group_name, $settings);
+		self::loadAll($setting_group_name, true);
 	}
 
 	/**
@@ -250,30 +294,42 @@ final class Settings
 	 *  - after load from customs app settings sources dir
 	 *
 	 * @param string $setting_group_name the setting group name
+	 * @param bool   $reload             reload settings from sources
 	 */
-	private static function loadAll(string $setting_group_name): void
+	private static function loadAll(string $setting_group_name, bool $reload = false): void
 	{
+		if ($reload) {
+			unset(self::$settings_map[$setting_group_name]);
+		}
+
 		if (!\array_key_exists($setting_group_name, self::$settings_map)) {
-			$list = [self::$oz_sources_dir, self::$app_sources_dir];
+			$list = [self::$oz_sources_dir, self::$plugins_sources_dir, self::$app_sources_dir];
 
 			foreach ($list as $sources) {
 				foreach ($sources as $source) {
-					$setting_file = $source . DS . $setting_group_name . '.php';
+					$fm               = new FilesManager($source);
+					$setting_abs_path = $fm->resolve($setting_group_name . '.php');
 
-					if (\file_exists($setting_file)) {
-						$result = include $setting_file;
+					if (\file_exists($setting_abs_path)) {
+						$result = require $setting_abs_path;
 
 						if (!\is_array($result)) {
 							throw new RuntimeException(\sprintf(
 								'Settings "%s" returned from "%s" should be of type "array" not "%s"',
 								$setting_group_name,
-								$setting_file,
+								$setting_abs_path,
 								\get_debug_type($result)
 							));
 						}
 
-						self::$as_loaded[$setting_file] = $result;
-						self::override($setting_group_name, $result);
+						self::$as_loaded[$setting_abs_path] = $result;
+
+						if (!\array_key_exists($setting_group_name, self::$settings_map)) {
+							self::$settings_map[$setting_group_name] = $result;
+						} else {
+							$current                                 = self::$settings_map[$setting_group_name];
+							self::$settings_map[$setting_group_name] = self::merge($current, $result);
+						}
 					}
 				}
 			}
@@ -293,22 +349,7 @@ final class Settings
 	}
 
 	/**
-	 * override settings.
-	 *
-	 * @param string $setting_group_name the setting group name
-	 * @param array  $data
-	 */
-	private static function override(string $setting_group_name, array $data): void
-	{
-		if (!\array_key_exists($setting_group_name, self::$settings_map)) {
-			self::$settings_map[$setting_group_name] = $data;
-		} else {
-			self::$settings_map[$setting_group_name] = self::merge(self::$settings_map[$setting_group_name], $data);
-		}
-	}
-
-	/**
-	 * a custom var_export function.
+	 * a custom var_export function for settings.
 	 *
 	 * @param mixed  $data        the data to export
 	 * @param int    $indent      indent start
@@ -317,8 +358,12 @@ final class Settings
 	 *
 	 * @return string
 	 */
-	private static function export(mixed $data, int $indent = 0, string $indent_char = "\t", bool $align = false): string
-	{
+	private static function export(
+		mixed $data,
+		int $indent = 0,
+		string $indent_char = "\t",
+		bool $align = false
+	): string {
 		if (\is_array($data)) {
 			$r          = [];
 			$start      = \str_repeat($indent_char, $indent);

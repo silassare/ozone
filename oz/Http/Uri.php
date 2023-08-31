@@ -171,6 +171,8 @@ class Uri implements UriInterface
 
 		if ('/' !== $basePath) {
 			$clone->basePath = $this->filterPath($basePath);
+		} else {
+			$clone->basePath = '';
 		}
 
 		return $clone;
@@ -422,11 +424,12 @@ class Uri implements UriInterface
 
 		$basePath    = '';
 		$virtualPath = $requestUri;
-
-		if (0 === \stripos($requestUri, $requestScriptName)) {
-			$basePath = ($requestUri === $requestScriptName) ? $requestScriptDir : $requestScriptName;
-		} elseif ('/' !== $requestScriptDir && 0 === \stripos($requestUri, $requestScriptDir)) {
-			$basePath = $requestScriptDir;
+		if ($requestUri !== $requestScriptName) {
+			if (0 === \stripos($requestUri, $requestScriptName)) {
+				$basePath = $requestScriptName;
+			} elseif ('/' !== $requestScriptDir && 0 === \stripos($requestUri, $requestScriptDir)) {
+				$basePath = $requestScriptDir;
+			}
 		}
 
 		if ($basePath) {
@@ -533,7 +536,7 @@ class Uri implements UriInterface
 	protected function filterQuery(string $query): string
 	{
 		return \preg_replace_callback(
-			'~[^a-zA-Z0-9_\-.\~!\$&\'()*+,;=%:@/?]+|%(?![A-Fa-f0-9]{2})~',
+			'~[^a-zA-Z0-9_\-.\~!$&\'()*+,;=%:@/?]+|%(?![A-Fa-f0-9]{2})~',
 			static function ($match) {
 				return \rawurlencode($match[0]);
 			},

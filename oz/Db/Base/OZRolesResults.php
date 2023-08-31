@@ -13,16 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
-use Generator;
-
 /**
  * Class OZRolesResults.
  *
- * @method null|\OZONE\Core\Db\OZRole       current()
- * @method null|\OZONE\Core\Db\OZRole       fetchClass(bool $strict = true)
- * @method \OZONE\Core\Db\OZRole[]          fetchAllClass(bool $strict = true)
- * @method Generator<\OZONE\Core\Db\OZRole> lazy(bool $strict = true, int $max = 100)
- * @method null|\OZONE\Core\Db\OZRole       updateOneItem(array $filters, array $new_values)
+ * @extends \Gobl\ORM\ORMResults<\OZONE\Core\Db\OZRole>
  */
 abstract class OZRolesResults extends \Gobl\ORM\ORMResults
 {

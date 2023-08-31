@@ -37,7 +37,7 @@ class UserPicEdit extends Service
 		$request = $context->getRequest();
 		$params  = $request->getUnsafeFormData();
 		$um      = $context->getUsers();
-		$for_id  = $ri->getParam('user_id');
+		$for_id  = $ri->param('user_id');
 
 		$um->assertUserVerified();
 
@@ -50,7 +50,7 @@ class UserPicEdit extends Service
 		$user       = $context->user();
 		$uid        = $user->getID();
 		$file_label = 'OZ_FILE_LABEL_USER_PPIC';
-		$msg        = 'OZ_PROFILE_PIC_CHANGED';
+		$msg        = 'OZ_PROFILE_PIC_UPDATED';
 
 		if ($uid !== $for_id) {
 			throw new UnauthorizedActionException();
@@ -77,7 +77,7 @@ class UserPicEdit extends Service
 		$user->setPic($pic_id)
 			->save();
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone($msg)
 			->setData($user);
 	}
@@ -87,12 +87,13 @@ class UserPicEdit extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->patch('/users/:user_id/pic/edit', function (RouteInfo $ri) {
-			$s = new self($ri);
-			$s->actionPicEdit($ri);
+		$router
+			->patch('/users/:user_id/pic/edit', static function (RouteInfo $ri) {
+				$s = new self($ri);
+				$s->actionPicEdit($ri);
 
-			return $s->respond();
-		})
+				return $s->respond();
+			})
 			->name(self::ROUTE_PIC_EDIT)
 			->param('user_id', '\d+');
 	}

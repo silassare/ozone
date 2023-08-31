@@ -16,6 +16,5 @@ return [
 	'OZ_AUTH_CODE_LIFE_TIME'      => 60 * 60,
 	'OZ_AUTH_CODE_LENGTH'         => 6,
 	'OZ_AUTH_CODE_USE_ALPHA_NUM'  => false,
-	'OZ_API_CONTEXT_AUTH_METHODS' => [],
-	'OZ_WEB_CONTEXT_AUTH_METHODS' => [],
+	'OZ_AUTH_API_KEY_HEADER_NAME' => 'x-ozone-api-key',
 ];

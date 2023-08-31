@@ -32,9 +32,9 @@ class BasicAuth implements AuthMethodInterface
 	use HTTPAuthMethodTrait;
 
 	protected AuthMethodType $type     = AuthMethodType::BASIC;
-	protected string         $username = '';
-	protected string         $password = '';
-	protected OZUser         $user;
+	protected string $username         = '';
+	protected string $password         = '';
+	protected OZUser $user;
 
 	/**
 	 * BasicAuth constructor.

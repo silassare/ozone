@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
+use JsonException;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Forms\FormData;
 use Psr\Http\Message\ServerRequestInterface;
@@ -49,7 +50,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * The request query string params.
 	 */
-	protected array $queryParams;
+	protected array $queryParams = [];
 
 	/**
 	 * The request cookies.
@@ -135,10 +136,10 @@ class Request extends Message implements ServerRequestInterface
 		$this->uploadedFiles  = $uploadedFiles;
 
 		if ('POST' === $this->method) {
-			$allowed = Settings::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
+			$allowed = Settings::get('oz.request', 'OZ_ALLOW_REAL_METHOD_HEADER');
 
 			if ($allowed) {
-				$realMethodHeaderName = Settings::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME');
+				$realMethodHeaderName = Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_NAME');
 				$realMethodHeaderName = \strtolower(\str_replace('_', '-', $realMethodHeaderName));
 				$realMethod           = $this->getHeaderLine($realMethodHeaderName);
 
@@ -156,20 +157,20 @@ class Request extends Message implements ServerRequestInterface
 			$this->headers->set('Host', $this->uri->getHost());
 		}
 
-		$json_parser = function ($input) {
+		$json_parser = static function ($input) {
 			try {
 				$result = \json_decode($input, true, 512, \JSON_THROW_ON_ERROR);
 
-				if (!\is_array($result)) {
+				if (\is_array($result)) {
 					return $result;
 				}
-			} catch (\JsonException) {
+			} catch (JsonException) {
 			}
 
 			return null;
 		};
 
-		$xml_parser = function ($input) {
+		$xml_parser = static function ($input) {
 			$backup        = (\PHP_VERSION_ID < 80000) ? \libxml_disable_entity_loader(true) : null;
 			$backup_errors = \libxml_use_internal_errors(true);
 			$result        = \simplexml_load_string($input);
@@ -190,7 +191,7 @@ class Request extends Message implements ServerRequestInterface
 		$this->registerMediaTypeParser('application/xml', $xml_parser);
 		$this->registerMediaTypeParser('text/xml', $xml_parser);
 
-		$this->registerMediaTypeParser('application/x-www-form-urlencoded', function ($input) {
+		$this->registerMediaTypeParser('application/x-www-form-urlencoded', static function ($input) {
 			\parse_str($input, $data);
 
 			return $data;
@@ -220,12 +221,6 @@ class Request extends Message implements ServerRequestInterface
 	 */
 	public function registerMediaTypeParser(string $mediaType, callable $callable): void
 	{
-		$callable_t = $callable(...)->bindTo($this);
-
-		if ($callable_t) {
-			$callable = $callable_t;
-		}
-
 		$this->bodyParsers[$mediaType] = $callable;
 	}
 
@@ -345,6 +340,7 @@ class Request extends Message implements ServerRequestInterface
 					'Request body media type parser return value must be an array, an object, or null'
 				);
 			}
+
 			$this->bodyParsed = $parsed;
 
 			return $this->bodyParsed;

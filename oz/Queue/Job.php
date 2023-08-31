@@ -20,19 +20,19 @@ use OZONE\Core\Queue\Interfaces\JobContractInterface;
  */
 class Job implements Interfaces\JobInterface
 {
-	protected string   $queue       = Queue::DEFAULT;
-	protected string   $name        = '';
+	protected string $queue         = Queue::DEFAULT;
+	protected string $name          = '';
 	protected JobState $state       = JobState::PENDING;
-	protected ?float   $started_at  = null;
-	protected ?float   $ended_at    = null;
-	protected int      $created_at;
-	protected int      $updated_at;
-	protected array    $result      = [];
-	protected array    $errors      = [];
-	protected int      $try_count   = 0;
-	protected int      $retry_max   = 3;
-	protected int      $priority    = 0;
-	protected int      $retry_delay = 60; // 1 minute
+	protected ?float $started_at    = null;
+	protected ?float $ended_at      = null;
+	protected int $created_at;
+	protected int $updated_at;
+	protected array $result      = [];
+	protected array $errors      = [];
+	protected int $try_count     = 0;
+	protected int $retry_max     = 3;
+	protected int $priority      = 0;
+	protected int $retry_delay   = 60; // 1 minute
 
 	/**
 	 * Job constructor.

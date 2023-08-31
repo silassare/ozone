@@ -16,7 +16,7 @@ use OZONE\Core\App\Db;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\Logger\Logger;
 use OZONE\Core\OZone;
-use PHPUtils\EnvParser;
+use PHPUtils\Env\EnvParser;
 
 if (!\function_exists('oz_logger')) {
 	/**

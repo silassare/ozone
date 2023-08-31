@@ -25,7 +25,7 @@ use OZONE\Core\Router\RouteInfo;
  */
 class PasswordProtectedRouteGuard extends AbstractRouteGuard
 {
-	private string   $password_hash;
+	private string $password_hash;
 	private FormData $form_data;
 
 	/**

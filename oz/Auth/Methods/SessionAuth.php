@@ -32,9 +32,9 @@ use OZONE\Core\Users\Users;
 class SessionAuth implements SessionBasedAuthMethodInterface
 {
 	protected AuthMethodType $type       = AuthMethodType::SESSION;
-	protected ?string        $session_id = null;
-	protected ?Session       $session;
-	protected OZUser         $user;
+	protected ?string $session_id        = null;
+	protected ?Session $session;
+	protected OZUser $user;
 
 	/**
 	 * SessionAuth constructor.
@@ -67,19 +67,16 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 		$request = $this->ri->getContext()
 			->getRequest();
 
-		// 1) if we have a cookie, we deal with it and only with it
-		//    - if the cookie is not valid ignore any other method
-		// 2) else we can use token header if enabled and provided
-
+		// get session id from cookie
+		// if session id is not found in cookie
+		// or session is not found in database
+		// just ignore it we will create a new session later
 		$sid = $request->getCookieParam(Session::cookieName());
-
 		if ($sid && null !== Session::findSessionByID($sid)) {
 			$this->session_id = $sid;
-
-			return true;
 		}
 
-		return false;
+		return true;
 	}
 
 	/**
@@ -87,31 +84,15 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	 */
 	public function ask(): void
 	{
-		$this->currentOrNewSession();
+		$this->startCurrentOrNewSession();
 	}
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
 	 */
 	public function authenticate(): void
 	{
-		if (!$this->session_id) {
-			throw new ForbiddenException(null, [
-				'_reason' => 'Missing session id.',
-				'_help'   => 'Please login first.',
-			]);
-		}
-
-		$entry = Session::findSessionByID($this->session_id);
-
-		if (!$entry) {
-			throw new ForbiddenException(null, [
-				'_reason' => 'Invalid session id.',
-				'_help'   => 'Please login first.',
-			]);
-		}
+		$this->startCurrentOrNewSession();
 	}
 
 	/**
@@ -137,9 +118,10 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 
 				throw new ForbiddenException(null, [
 					'_reason' => 'User not valid.',
-					// may be the user was invalidated after session started
+					// maybe the user was invalidated after session started
 					// we should normally clear all sessions for user when invalidating the user
-					'_help'   => 'Logic error.',
+					'_help'   => 'Logic error: all user session should be cleared when user is invalidated.',
+					'_uid'    => $user->getID(),
 				]);
 			}
 
@@ -168,7 +150,7 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	 */
 	public function session(): Session
 	{
-		return $this->currentOrNewSession();
+		return $this->startCurrentOrNewSession();
 	}
 
 	/**
@@ -185,7 +167,7 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	 */
 	public function id(): string
 	{
-		return $this->currentOrNewSession()
+		return $this->startCurrentOrNewSession()
 			->id();
 	}
 
@@ -194,9 +176,9 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	 *
 	 * @return \OZONE\Core\Sessions\Session
 	 */
-	protected function currentOrNewSession(): Session
+	protected function startCurrentOrNewSession(): Session
 	{
-		if (!$this->session) {
+		if (!isset($this->session)) {
 			$this->session = new Session($this->ri->getContext());
 
 			$this->session->start($this->session_id);

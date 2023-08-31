@@ -38,7 +38,7 @@ final class RedirectView extends WebView
 		$status  = $request->getAttribute('status');
 
 		if (!\filter_var($url, \FILTER_VALIDATE_URL)) {
-			throw new RuntimeException('Invalid redirect url.', ['url' => $url]);
+			throw new RuntimeException('Invalid redirect url.', ['_redirecting_to' => $url]);
 		}
 
 		$this->injectKey('oz_redirect_url', \filter_var($url, \FILTER_SANITIZE_URL));
@@ -53,9 +53,10 @@ final class RedirectView extends WebView
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->map('*', OZone::INTERNAL_PATH_PREFIX . 'redirect', function (RouteInfo $ri) {
-			return (new self($ri))->mainRoute();
-		})
+		$router
+			->map('*', OZone::INTERNAL_PATH_PREFIX . 'redirect', static function (RouteInfo $ri) {
+				return (new self($ri))->mainRoute();
+			})
 			->name(self::REDIRECT_ROUTE);
 	}
 }

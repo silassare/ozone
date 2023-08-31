@@ -13,16 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
-use Generator;
-
 /**
  * Class OZCountriesResults.
  *
- * @method null|\OZONE\Core\Db\OZCountry       current()
- * @method null|\OZONE\Core\Db\OZCountry       fetchClass(bool $strict = true)
- * @method \OZONE\Core\Db\OZCountry[]          fetchAllClass(bool $strict = true)
- * @method Generator<\OZONE\Core\Db\OZCountry> lazy(bool $strict = true, int $max = 100)
- * @method null|\OZONE\Core\Db\OZCountry       updateOneItem(array $filters, array $new_values)
+ * @extends \Gobl\ORM\ORMResults<\OZONE\Core\Db\OZCountry>
  */
 abstract class OZCountriesResults extends \Gobl\ORM\ORMResults
 {

@@ -13,21 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
-use Gobl\DBAL\Queries\QBSelect;
-use Gobl\DBAL\Relations\Relation;
-use Gobl\ORM\ORMEntity;
-
 /**
  * Class OZCountriesController.
  *
- * @method \OZONE\Core\Db\OZCountry      addItem(array|\OZONE\Core\Db\OZCountry $item = [])
- * @method null|\OZONE\Core\Db\OZCountry getItem(array $filters, array $order_by = [])
- * @method null|\OZONE\Core\Db\OZCountry deleteOneItem(array $filters)
- * @method \OZONE\Core\Db\OZCountry[]    getAllItems(array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = null)
- * @method \OZONE\Core\Db\OZCountry[]    getAllItemsCustom(QBSelect $qb, int $max = null, int $offset = 0, ?int &$total = null)
- * @method \OZONE\Core\Db\OZCountry      getRelative(ORMEntity $entity, Relation $relation, array $filters = [], array $order_by = [])
- * @method \OZONE\Core\Db\OZCountry[]    getAllRelatives(ORMEntity $entity, Relation $relation, array $filters = [], int $max = null, int $offset = 0, array $order_by = [], ?int &$total = null)
- * @method null|\OZONE\Core\Db\OZCountry updateOneItem(array $filters, array $new_values)
+ * @extends \Gobl\ORM\ORMController<\OZONE\Core\Db\OZCountry, \OZONE\Core\Db\OZCountriesQuery, \OZONE\Core\Db\OZCountriesResults>
  */
 abstract class OZCountriesController extends \Gobl\ORM\ORMController
 {

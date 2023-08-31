@@ -15,6 +15,7 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\Auth\Auth;
+use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
@@ -30,7 +31,7 @@ use OZONE\Core\Users\Users;
 class RouteSharedOptions
 {
 	protected readonly string $path;
-	protected array           $params = [];
+	protected array $route_params = [];
 
 	/**
 	 * @var array<callable|\OZONE\Core\Router\Interfaces\RouteGuardInterface>
@@ -40,10 +41,10 @@ class RouteSharedOptions
 	/**
 	 * @var null|callable|\OZONE\Core\Forms\Form
 	 */
-	protected $form;
+	protected $route_form;
 
 	protected readonly ?RouteGroup $parent;
-	private string                 $name = '';
+	private string $name = '';
 
 	/**
 	 * @var array<class-string<\OZONE\Core\Auth\Interfaces\AuthMethodInterface>>
@@ -69,7 +70,7 @@ class RouteSharedOptions
 	 */
 	public function __destruct()
 	{
-		unset($this->guards, $this->form, $this->params);
+		unset($this->guards, $this->route_form, $this->route_params);
 	}
 
 	/**
@@ -89,13 +90,17 @@ class RouteSharedOptions
 	/**
 	 * Defines allowed auth methods.
 	 *
-	 * @param string ...$auths
+	 * @param AuthMethodType|string ...$auths
 	 *
 	 * @return $this
 	 */
-	public function auths(string ...$auths): static
+	public function auths(string|AuthMethodType ...$auths): static
 	{
 		foreach ($auths as $entry) {
+			if (!\is_string($entry)) {
+				$entry = $entry->value;
+			}
+
 			if (\class_exists($entry)) {
 				if (!\is_subclass_of($entry, AuthMethodInterface::class)) {
 					throw new RuntimeException(\sprintf(
@@ -122,7 +127,7 @@ class RouteSharedOptions
 	 */
 	public function with2FA(string ...$allowed_providers_name): static
 	{
-		return $this->guard(function () use ($allowed_providers_name) {
+		return $this->guard(static function () use ($allowed_providers_name) {
 			return new TwoFactorRouteGuard(...$allowed_providers_name);
 		});
 	}
@@ -134,7 +139,7 @@ class RouteSharedOptions
 	 */
 	public function withRole(string ...$roles): static
 	{
-		return $this->guard(function () use ($roles) {
+		return $this->guard(static function () use ($roles) {
 			return new UserRoleRouteGuard(...$roles);
 		});
 	}
@@ -146,7 +151,7 @@ class RouteSharedOptions
 	 */
 	public function withRoleOrAdmin(string ...$roles): static
 	{
-		return $this->guard(function () use ($roles) {
+		return $this->guard(static function () use ($roles) {
 			return (new UserRoleRouteGuard(...$roles))->strict(false);
 		});
 	}
@@ -158,7 +163,7 @@ class RouteSharedOptions
 	 */
 	public function withAdminRole(): static
 	{
-		return $this->guard(function () {
+		return $this->guard(static function () {
 			return new UserRoleRouteGuard(Users::ADMIN, Users::SUPER_ADMIN);
 		});
 	}
@@ -170,7 +175,7 @@ class RouteSharedOptions
 	 */
 	public function withSuperAdminRole(): static
 	{
-		return $this->guard(function () {
+		return $this->guard(static function () {
 			return new UserRoleRouteGuard(Users::SUPER_ADMIN);
 		});
 	}
@@ -223,7 +228,7 @@ class RouteSharedOptions
 	 */
 	public function form(callable|Form $form): static
 	{
-		$this->form = $form;
+		$this->route_form = $form;
 
 		return $this;
 	}
@@ -246,7 +251,7 @@ class RouteSharedOptions
 			));
 		}
 
-		$this->params[$name] = $pattern;
+		$this->route_params[$name] = $pattern;
 
 		return $this;
 	}
@@ -351,11 +356,11 @@ class RouteSharedOptions
 	{
 		$forms = $this->parent?->getForms($ri) ?? [];
 
-		if (null !== $this->form) {
-			if ($this->form instanceof Form) {
-				$forms[] = $this->form;
+		if (isset($this->route_form)) {
+			if ($this->route_form instanceof Form) {
+				$forms[] = $this->route_form;
 			} else {
-				$form_builder = $this->form;
+				$form_builder = $this->route_form;
 				$result       = $form_builder($ri);
 
 				if (null !== $result) {
@@ -385,7 +390,7 @@ class RouteSharedOptions
 	{
 		$params = $this->parent?->getParams() ?? [];
 
-		return \array_merge($params, $this->params);
+		return \array_merge($params, $this->route_params);
 	}
 
 	/**

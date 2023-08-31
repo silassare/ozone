@@ -16,6 +16,7 @@ namespace OZONE\Core\Lang;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\RuntimeException;
+use Throwable;
 
 /**
  * Class Polyglot.
@@ -325,7 +326,7 @@ final class Polyglot
 
 		try {
 			return $fn($value, $lang);
-		} catch (\Throwable) {
+		} catch (Throwable) {
 		}
 
 		return $value;

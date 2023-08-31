@@ -28,7 +28,6 @@ use OZONE\Core\Users\Events\UserLoggedOut;
 use OZONE\Core\Users\Events\UserLogInInvalidPass;
 use OZONE\Core\Users\Events\UserLogInUnknown;
 use OZONE\Core\Users\Traits\UsersUtilsTrait;
-use PHPUtils\Events\Event;
 use PHPUtils\Store\Store;
 use Throwable;
 
@@ -38,6 +37,7 @@ use Throwable;
 final class Users
 {
 	use UsersUtilsTrait;
+
 	public const SUPER_ADMIN = 'super-admin'; // Owner(s)
 	public const ADMIN       = 'admin';
 	public const EDITOR      = 'editor';
@@ -93,7 +93,7 @@ final class Users
 			throw new RuntimeException('OZ_USER_LOG_ON_FAIL', null, $t);
 		}
 
-		Event::trigger(new UserLoggedIn($user));
+		(new UserLoggedIn($user))->dispatch();
 
 		return $this;
 	}
@@ -103,9 +103,15 @@ final class Users
 	 */
 	public function logUserOut(): self
 	{
-		if ($this->context->hasAuthenticatedUser()) {
-			$session = $this->context->session();
+		// we require a session to log out
+		// this make sure that we raise an exception
+		// if a call to this method is made without
+		// defining a session based authentication method
+		$session = $this->context->session();
 
+		// then we check if we have an authenticated user
+		// attached to the session
+		if ($this->context->hasAuthenticatedUser()) {
 			try {
 				$current_user = $this->context->user();
 				$data         = $session->state()
@@ -118,7 +124,7 @@ final class Users
 				throw new RuntimeException('OZ_USER_LOG_OUT_FAIL', null, $t);
 			}
 
-			Event::trigger(new UserLoggedOut($current_user));
+			(new UserLoggedOut($current_user))->dispatch();
 		}
 
 		return $this;
@@ -170,7 +176,7 @@ final class Users
 		$user = self::withPhone($phone);
 
 		if (!$user) {
-			Event::trigger(new UserLogInUnknown($this->context));
+			(new UserLogInUnknown($this->context))->dispatch();
 
 			return 'OZ_FIELD_PHONE_NOT_REGISTERED';
 		}
@@ -198,7 +204,7 @@ final class Users
 		$user = self::withEmail($email);
 
 		if (!$user) {
-			Event::trigger(new UserLogInUnknown($this->context));
+			(new UserLogInUnknown($this->context))->dispatch();
 
 			return 'OZ_FIELD_EMAIL_NOT_REGISTERED';
 		}
@@ -221,7 +227,7 @@ final class Users
 		}
 
 		if (!Password::verify($pass, $user->getPass())) {
-			Event::trigger(new UserLogInInvalidPass($this->context, $user));
+			(new UserLogInInvalidPass($this->context, $user))->dispatch();
 
 			return 'OZ_FIELD_PASS_INVALID';
 		}
@@ -242,10 +248,12 @@ final class Users
 		// TODO
 		// if user enable 2FA, we need to verify it first
 		// before attaching the user to the session
-		// To do that we start a 2FA auth process
-		// and make sure we store the session id
-		// in the 2FA auth process data
-		// so after the user verify the 2FA
-		// we can attach the user to the session
+		// To do that:
+		// 1) we start a 2FA auth process
+		// 2) we make sure to attach
+		// 		- the 2FA process to the current session
+		//		- and the session to the 2FA process
+		// 3) after the 2FA process is done we can attach the user to the session
+		throw new RuntimeException('User 2FA not yet implemented.');
 	}
 }

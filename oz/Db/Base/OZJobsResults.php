@@ -13,16 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
-use Generator;
-
 /**
  * Class OZJobsResults.
  *
- * @method null|\OZONE\Core\Db\OZJob       current()
- * @method null|\OZONE\Core\Db\OZJob       fetchClass(bool $strict = true)
- * @method \OZONE\Core\Db\OZJob[]          fetchAllClass(bool $strict = true)
- * @method Generator<\OZONE\Core\Db\OZJob> lazy(bool $strict = true, int $max = 100)
- * @method null|\OZONE\Core\Db\OZJob       updateOneItem(array $filters, array $new_values)
+ * @extends \Gobl\ORM\ORMResults<\OZONE\Core\Db\OZJob>
  */
 abstract class OZJobsResults extends \Gobl\ORM\ORMResults
 {

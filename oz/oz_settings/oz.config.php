@@ -11,4 +11,10 @@
 
 declare(strict_types=1);
 
-return [];
+return [
+	'OZ_OZONE_VERSION'          => OZ_OZONE_VERSION,
+	'OZ_PROJECT_NAME'           => 'Sample App',
+	'OZ_PROJECT_NAMESPACE'      => 'NOOP',
+	'OZ_PROJECT_APP_CLASS_NAME' => 'NoopApp',
+	'OZ_PROJECT_PREFIX'         => 'SA',
+];

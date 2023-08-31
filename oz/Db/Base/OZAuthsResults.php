@@ -13,16 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
-use Generator;
-
 /**
  * Class OZAuthsResults.
  *
- * @method null|\OZONE\Core\Db\OZAuth       current()
- * @method null|\OZONE\Core\Db\OZAuth       fetchClass(bool $strict = true)
- * @method \OZONE\Core\Db\OZAuth[]          fetchAllClass(bool $strict = true)
- * @method Generator<\OZONE\Core\Db\OZAuth> lazy(bool $strict = true, int $max = 100)
- * @method null|\OZONE\Core\Db\OZAuth       updateOneItem(array $filters, array $new_values)
+ * @extends \Gobl\ORM\ORMResults<\OZONE\Core\Db\OZAuth>
  */
 abstract class OZAuthsResults extends \Gobl\ORM\ORMResults
 {

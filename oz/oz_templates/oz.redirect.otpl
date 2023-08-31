@@ -94,9 +94,9 @@
 	<body>
 		<div id="oz-box">
 			<span class="oz-logo"></span>
-			<div class="oz-title"><%$.i18n('OZ_REDIRECT_TITLE')%></div>
+			<div class="oz-title"><%$.i18n('OZ_VIEW_REDIRECT_TITLE')%></div>
 			<div class="oz-desc">
-				<div class="oz-desc-item" style="text-align: center;"><%$.i18n('OZ_REDIRECT_MESSAGE', ['url'=>$.oz_redirect_url] )%></div>
+				<div class="oz-desc-item" style="text-align: center;"><%$.i18n('OZ_VIEW_REDIRECT_MESSAGE', ['url'=>$.oz_redirect_url] )%></div>
 			</div>
 		</div>
 	</body>

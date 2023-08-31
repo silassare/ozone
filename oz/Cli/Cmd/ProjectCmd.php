@@ -33,42 +33,7 @@ use PHPUtils\Str;
  */
 final class ProjectCmd extends Command
 {
-	/**
-	 * Serve project.
-	 *
-	 * @param \Kli\KliArgs $args
-	 *
-	 * @throws \Kli\Exceptions\KliException
-	 */
-	public function serve(KliArgs $args): void
-	{
-		Utils::assertProjectLoaded();
-
-		$host     = $args->get('host');
-		$port     = $args->get('port');
-		$doc_root = $args->get('doc-root');
-		$cli      = $this->getCli();
-
-		$cli->info("Serving project on {$host}:{$port} ...");
-		$cli->info("Document root: {$doc_root}");
-		$cli->info('Press Ctrl-C to quit.');
-		$cli->writeLn();
-
-		$router = OZ_OZONE_DIR . 'server.php';
-
-		$php = \PHP_BINARY;
-		$cmd = "{$php} -S {$host}:{$port} -t {$doc_root} {$router}";
-
-		$process = new Process($cmd);
-
-		exit($process->open()
-			->watch(function ($data) use ($cli) {
-				$cli->write($data);
-			}, function ($data) use ($cli) {
-				$cli->write($data);
-			})
-			->close());
-	}
+	private const NAMESPACE_PLACEHOLDER = '_Default_';
 
 	/**
 	 * {@inheritDoc}
@@ -101,7 +66,7 @@ final class ProjectCmd extends Command
 			->required()
 			->string()
 			->pattern(PHPNamespace::NAMESPACE_PATTERN)
-			->def('_Default_');
+			->def(self::NAMESPACE_PLACEHOLDER);
 		$create->option('class-name', 'c', [], 3)
 			->description('App class name.')
 			->prompt(true, 'Project app class name')
@@ -150,9 +115,52 @@ final class ProjectCmd extends Command
 			->description('The document root to use.')
 			->prompt(true, 'The document root to use')
 			->path()
-			->def((new FilesManager())->resolve('./public'))
+			->def((new FilesManager())->resolve('./public/api'))
 			->dir();
 		$serve->handler($this->serve(...));
+	}
+
+	/**
+	 * Serve project.
+	 *
+	 * @param \Kli\KliArgs $args
+	 *
+	 * @throws \Kli\Exceptions\KliException
+	 */
+	private function serve(KliArgs $args): void
+	{
+		Utils::assertProjectLoaded();
+
+		$host     = $args->get('host');
+		$port     = $args->get('port');
+		$doc_root = $args->get('doc-root');
+		$cli      = $this->getCli();
+
+		$cli->info("Serving project on {$host}:{$port} ...");
+		$cli->info("Document root: {$doc_root}");
+		$cli->info('Press Ctrl-C to quit.');
+		$cli->writeLn();
+
+		$router = OZ_OZONE_DIR . 'server.php';
+
+		$cmd = [
+			\PHP_BINARY,
+			'-S',
+			"{$host}:{$port}",
+			'-t',
+			$doc_root,
+			$router,
+		];
+
+		$process = new Process($cmd);
+
+		$process->setTty(true);
+
+		$exit_code = $process->run(static function ($type, $data) use ($cli) {
+			$cli->write($data);
+		});
+
+		exit($exit_code);
 	}
 
 	/**
@@ -219,7 +227,7 @@ final class ProjectCmd extends Command
 			return;
 		}
 
-		if ('_Default_' === $namespace) {
+		if (self::NAMESPACE_PLACEHOLDER === $namespace) {
 			$namespace = Str::removeSuffix(\strtoupper($class_name), 'APP');
 
 			// when class_name is App
@@ -230,20 +238,20 @@ final class ProjectCmd extends Command
 
 		$app_class_file = \sprintf('%s.php', $class_name);
 
-		$oz_config = Templates::compile(
+		$oz_config  = Templates::compile(
 			'oz://gen/settings.info.otpl',
 			Settings::genExportInfo('oz.config', [
-				'OZ_OZONE_VERSION'                => OZ_OZONE_VERSION,
-				'OZ_PROJECT_NAME'                 => $name,
-				'OZ_PROJECT_NAMESPACE'            => $namespace,
-				'OZ_PROJECT_APP_CLASS_NAME'       => $class_name,
-				'OZ_PROJECT_PREFIX'               => $prefix,
-				'OZ_DEBUG_MODE'                   => 0,
-				'OZ_DEFAULT_ORIGIN'               => 'http://localhost',
-				'OZ_API_KEY_HEADER_NAME'          => 'x-ozone-api-key',
-				'::comment::1'                    => 'For server that does not support HEAD, PATCH, PUT, DELETE...',
-				'OZ_API_ALLOW_REAL_METHOD_HEADER' => true,
-				'OZ_API_REAL_METHOD_HEADER_NAME'  => 'x-ozone-real-method',
+				'OZ_OZONE_VERSION'          => OZ_OZONE_VERSION,
+				'OZ_PROJECT_NAME'           => $name,
+				'OZ_PROJECT_NAMESPACE'      => $namespace,
+				'OZ_PROJECT_APP_CLASS_NAME' => $class_name,
+				'OZ_PROJECT_PREFIX'         => $prefix,
+			])
+		);
+		$oz_request = Templates::compile(
+			'oz://gen/settings.info.otpl',
+			Settings::genExportInfo('oz.request', [
+				'OZ_DEFAULT_ORIGIN' => 'http://localhost',
 			])
 		);
 
@@ -294,11 +302,15 @@ final class ProjectCmd extends Command
 					'oz_settings'   => [
 						'type'     => 'dir',
 						'children' => [
-							'oz.config.php' => [
+							'oz.config.php'  => [
 								'type'    => 'file',
 								'content' => $oz_config,
 							],
-							'oz.db.php'     => [
+							'oz.request.php' => [
+								'type'    => 'file',
+								'content' => $oz_request,
+							],
+							'oz.db.php'      => [
 								'type'    => 'file',
 								'content' => $oz_db,
 							],

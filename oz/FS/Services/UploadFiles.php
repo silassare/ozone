@@ -58,7 +58,7 @@ class UploadFiles extends Service
 		$data_json = $type->validate($files);
 		$data      = \json_decode($data_json, true, 512, \JSON_THROW_ON_ERROR);
 
-		$this->getJSONResponse()
+		$this->json()
 			->setDone()
 			->setDataKey($field, $data);
 	}
@@ -68,13 +68,14 @@ class UploadFiles extends Service
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->post('/upload[/]', function (RouteInfo $ri) {
-			$s = new static($ri);
+		$router
+			->post('/upload[/]', static function (RouteInfo $ri) {
+				$s = new static($ri);
 
-			$s->upload($ri);
+				$s->upload($ri);
 
-			return $s->respond();
-		})
+				return $s->respond();
+			})
 			->name(self::MAIN_ROUTE);
 	}
 }

@@ -38,7 +38,7 @@ class TypeGender extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function getInstance(array $options): self
+	public static function getInstance(array $options): static
 	{
 		return (new static())->configure($options);
 	}
@@ -54,7 +54,7 @@ class TypeGender extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function default($default): self
+	public function default($default): static
 	{
 		$this->base_type->default($default);
 

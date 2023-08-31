@@ -30,10 +30,25 @@ abstract class Command extends KliCommand
 	 *
 	 * @throws \Kli\Exceptions\KliException
 	 */
-	final public function __construct(string $name, Cli $cli)
+	protected function __construct(string $name, Cli $cli)
 	{
 		parent::__construct($name, $cli);
 		$this->describe();
+	}
+
+	/**
+	 * Should return a new instance.
+	 *
+	 * @param string              $name
+	 * @param \OZONE\Core\Cli\Cli $cli
+	 *
+	 * @return self
+	 *
+	 * @throws \Kli\Exceptions\KliException
+	 */
+	public static function instance(string $name, Cli $cli): self
+	{
+		return new static($name, $cli);
 	}
 
 	/**

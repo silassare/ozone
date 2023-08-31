@@ -120,7 +120,7 @@ class Templates
 			return $template;
 		}
 
-		$factory = function () use ($template, $sources_group) {
+		$factory = static function () use ($template, $sources_group) {
 			$found = false;
 
 			foreach ($sources_group as $group) {

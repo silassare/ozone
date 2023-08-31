@@ -177,6 +177,12 @@ final class JSONResponse implements ArrayCapableInterface
 	 */
 	public function toArray(): array
 	{
-		return $this->response;
+		$res = $this->response;
+
+		if (empty($res['form'])) {
+			unset($res['form']);
+		}
+
+		return $res;
 	}
 }
