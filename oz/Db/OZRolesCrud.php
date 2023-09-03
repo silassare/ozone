@@ -16,7 +16,7 @@ namespace OZONE\Core\Db;
 /**
  * Class OZRolesCrud.
  */
-abstract class OZRolesCrud extends \OZONE\Core\Db\Base\OZRolesCrud
+class OZRolesCrud extends \OZONE\Core\Db\Base\OZRolesCrud
 {
 	// ====================================================
 	// =	Your custom implementation goes here

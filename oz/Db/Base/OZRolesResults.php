@@ -37,7 +37,7 @@ abstract class OZRolesResults extends \Gobl\ORM\ORMResults
 	 *
 	 * @return static
 	 */
-	public static function createInstance(\Gobl\DBAL\Queries\QBSelect $query): static
+	public static function new(\Gobl\DBAL\Queries\QBSelect $query): static
 	{
 		return new \OZONE\Core\Db\OZRolesResults($query);
 	}

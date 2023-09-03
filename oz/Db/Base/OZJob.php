@@ -16,8 +16,6 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZJob.
  *
- * @psalm-suppress UndefinedThisPropertyFetch
- *
  * @property null|string                $id          Getter for column `oz_jobs`.`id`.
  * @property string                     $ref         Getter for column `oz_jobs`.`ref`.
  * @property \OZONE\Core\Queue\JobState $state       Getter for column `oz_jobs`.`state`.
@@ -82,9 +80,57 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public static function createInstance(bool $is_new = true, bool $strict = true): static
+	public static function new(bool $is_new = true, bool $strict = true): static
 	{
 		return new \OZONE\Core\Db\OZJob($is_new, $strict);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZJobsCrud
+	 */
+	public static function crud(): \OZONE\Core\Db\OZJobsCrud
+	{
+		return \OZONE\Core\Db\OZJobsCrud::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZJobsController
+	 */
+	public static function ctrl(): \OZONE\Core\Db\OZJobsController
+	{
+		return \OZONE\Core\Db\OZJobsController::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZJobsQuery
+	 */
+	public static function qb(): \OZONE\Core\Db\OZJobsQuery
+	{
+		return \OZONE\Core\Db\OZJobsQuery::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZJobsResults
+	 */
+	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZJobsResults
+	{
+		return \OZONE\Core\Db\OZJobsResults::new($query);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function table(): \Gobl\DBAL\Table
+	{
+		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -94,7 +140,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getID(): string|null
 	{
-		return $this->{self::COL_ID};
+		return $this->id;
 	}
 
 	/**
@@ -106,7 +152,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setID(string|int|null $id): static
 	{
-		$this->{self::COL_ID} = $id;
+		$this->id = $id;
 
 		return $this;
 	}
@@ -118,7 +164,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getRef(): string
 	{
-		return $this->{self::COL_REF};
+		return $this->ref;
 	}
 
 	/**
@@ -130,7 +176,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setRef(string $ref): static
 	{
-		$this->{self::COL_REF} = $ref;
+		$this->ref = $ref;
 
 		return $this;
 	}
@@ -142,7 +188,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getState(): \OZONE\Core\Queue\JobState
 	{
-		return $this->{self::COL_STATE};
+		return $this->state;
 	}
 
 	/**
@@ -154,7 +200,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setState(\OZONE\Core\Queue\JobState|string $state): static
 	{
-		$this->{self::COL_STATE} = $state;
+		$this->state = $state;
 
 		return $this;
 	}
@@ -166,7 +212,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getQueue(): string
 	{
-		return $this->{self::COL_QUEUE};
+		return $this->queue;
 	}
 
 	/**
@@ -178,7 +224,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setQueue(string $queue): static
 	{
-		$this->{self::COL_QUEUE} = $queue;
+		$this->queue = $queue;
 
 		return $this;
 	}
@@ -190,7 +236,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getName(): string
 	{
-		return $this->{self::COL_NAME};
+		return $this->name;
 	}
 
 	/**
@@ -202,7 +248,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setName(string $name): static
 	{
-		$this->{self::COL_NAME} = $name;
+		$this->name = $name;
 
 		return $this;
 	}
@@ -214,7 +260,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getWorker(): string
 	{
-		return $this->{self::COL_WORKER};
+		return $this->worker;
 	}
 
 	/**
@@ -226,7 +272,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setWorker(string $worker): static
 	{
-		$this->{self::COL_WORKER} = $worker;
+		$this->worker = $worker;
 
 		return $this;
 	}
@@ -238,7 +284,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getPriority(): int
 	{
-		return $this->{self::COL_PRIORITY};
+		return $this->priority;
 	}
 
 	/**
@@ -250,7 +296,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setPriority(int $priority): static
 	{
-		$this->{self::COL_PRIORITY} = $priority;
+		$this->priority = $priority;
 
 		return $this;
 	}
@@ -262,7 +308,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getTryCount(): int
 	{
-		return $this->{self::COL_TRY_COUNT};
+		return $this->try_count;
 	}
 
 	/**
@@ -274,7 +320,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setTryCount(int $try_count): static
 	{
-		$this->{self::COL_TRY_COUNT} = $try_count;
+		$this->try_count = $try_count;
 
 		return $this;
 	}
@@ -286,7 +332,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getRetryMax(): int
 	{
-		return $this->{self::COL_RETRY_MAX};
+		return $this->retry_max;
 	}
 
 	/**
@@ -298,7 +344,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setRetryMax(int $retry_max): static
 	{
-		$this->{self::COL_RETRY_MAX} = $retry_max;
+		$this->retry_max = $retry_max;
 
 		return $this;
 	}
@@ -310,7 +356,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getRetryDelay(): int
 	{
-		return $this->{self::COL_RETRY_DELAY};
+		return $this->retry_delay;
 	}
 
 	/**
@@ -322,7 +368,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setRetryDelay(int $retry_delay): static
 	{
-		$this->{self::COL_RETRY_DELAY} = $retry_delay;
+		$this->retry_delay = $retry_delay;
 
 		return $this;
 	}
@@ -334,7 +380,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getPayload(): array
 	{
-		return $this->{self::COL_PAYLOAD};
+		return $this->payload;
 	}
 
 	/**
@@ -346,7 +392,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setPayload(array $payload): static
 	{
-		$this->{self::COL_PAYLOAD} = $payload;
+		$this->payload = $payload;
 
 		return $this;
 	}
@@ -358,7 +404,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getResult(): array
 	{
-		return $this->{self::COL_RESULT};
+		return $this->result;
 	}
 
 	/**
@@ -370,7 +416,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setResult(array $result): static
 	{
-		$this->{self::COL_RESULT} = $result;
+		$this->result = $result;
 
 		return $this;
 	}
@@ -382,7 +428,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getErrors(): array
 	{
-		return $this->{self::COL_ERRORS};
+		return $this->errors;
 	}
 
 	/**
@@ -394,7 +440,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setErrors(array $errors): static
 	{
-		$this->{self::COL_ERRORS} = $errors;
+		$this->errors = $errors;
 
 		return $this;
 	}
@@ -406,7 +452,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function isLocked(): bool
 	{
-		return $this->{self::COL_LOCKED};
+		return $this->locked;
 	}
 
 	/**
@@ -418,7 +464,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setLocked(bool $locked): static
 	{
-		$this->{self::COL_LOCKED} = $locked;
+		$this->locked = $locked;
 
 		return $this;
 	}
@@ -430,7 +476,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getStartedAT(): string|null
 	{
-		return $this->{self::COL_STARTED_AT};
+		return $this->started_at;
 	}
 
 	/**
@@ -442,7 +488,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setStartedAT(string|float|int|null $started_at): static
 	{
-		$this->{self::COL_STARTED_AT} = $started_at;
+		$this->started_at = $started_at;
 
 		return $this;
 	}
@@ -454,7 +500,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getEndedAT(): string|null
 	{
-		return $this->{self::COL_ENDED_AT};
+		return $this->ended_at;
 	}
 
 	/**
@@ -466,7 +512,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setEndedAT(string|float|int|null $ended_at): static
 	{
-		$this->{self::COL_ENDED_AT} = $ended_at;
+		$this->ended_at = $ended_at;
 
 		return $this;
 	}
@@ -478,7 +524,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getCreatedAT(): string
 	{
-		return $this->{self::COL_CREATED_AT};
+		return $this->created_at;
 	}
 
 	/**
@@ -490,7 +536,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setCreatedAT(string|int $created_at): static
 	{
-		$this->{self::COL_CREATED_AT} = $created_at;
+		$this->created_at = $created_at;
 
 		return $this;
 	}
@@ -502,7 +548,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function getUpdatedAT(): string
 	{
-		return $this->{self::COL_UPDATED_AT};
+		return $this->updated_at;
 	}
 
 	/**
@@ -514,7 +560,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public function setUpdatedAT(string|int $updated_at): static
 	{
-		$this->{self::COL_UPDATED_AT} = $updated_at;
+		$this->updated_at = $updated_at;
 
 		return $this;
 	}

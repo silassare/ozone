@@ -16,8 +16,6 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZAuth.
  *
- * @psalm-suppress UndefinedThisPropertyFetch
- *
  * @property string                     $ref         Getter for column `oz_auths`.`ref`.
  * @property string                     $label       Getter for column `oz_auths`.`label`.
  * @property string                     $refresh_key Getter for column `oz_auths`.`refresh_key`.
@@ -78,9 +76,57 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public static function createInstance(bool $is_new = true, bool $strict = true): static
+	public static function new(bool $is_new = true, bool $strict = true): static
 	{
 		return new \OZONE\Core\Db\OZAuth($is_new, $strict);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZAuthsCrud
+	 */
+	public static function crud(): \OZONE\Core\Db\OZAuthsCrud
+	{
+		return \OZONE\Core\Db\OZAuthsCrud::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZAuthsController
+	 */
+	public static function ctrl(): \OZONE\Core\Db\OZAuthsController
+	{
+		return \OZONE\Core\Db\OZAuthsController::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZAuthsQuery
+	 */
+	public static function qb(): \OZONE\Core\Db\OZAuthsQuery
+	{
+		return \OZONE\Core\Db\OZAuthsQuery::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZAuthsResults
+	 */
+	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZAuthsResults
+	{
+		return \OZONE\Core\Db\OZAuthsResults::new($query);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function table(): \Gobl\DBAL\Table
+	{
+		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -90,7 +136,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getRef(): string
 	{
-		return $this->{self::COL_REF};
+		return $this->ref;
 	}
 
 	/**
@@ -102,7 +148,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setRef(string $ref): static
 	{
-		$this->{self::COL_REF} = $ref;
+		$this->ref = $ref;
 
 		return $this;
 	}
@@ -114,7 +160,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getLabel(): string
 	{
-		return $this->{self::COL_LABEL};
+		return $this->label;
 	}
 
 	/**
@@ -126,7 +172,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setLabel(string $label): static
 	{
-		$this->{self::COL_LABEL} = $label;
+		$this->label = $label;
 
 		return $this;
 	}
@@ -138,7 +184,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getRefreshKey(): string
 	{
-		return $this->{self::COL_REFRESH_KEY};
+		return $this->refresh_key;
 	}
 
 	/**
@@ -150,7 +196,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setRefreshKey(string $refresh_key): static
 	{
-		$this->{self::COL_REFRESH_KEY} = $refresh_key;
+		$this->refresh_key = $refresh_key;
 
 		return $this;
 	}
@@ -162,7 +208,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getProvider(): string
 	{
-		return $this->{self::COL_PROVIDER};
+		return $this->provider;
 	}
 
 	/**
@@ -174,7 +220,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setProvider(string $provider): static
 	{
-		$this->{self::COL_PROVIDER} = $provider;
+		$this->provider = $provider;
 
 		return $this;
 	}
@@ -186,7 +232,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getPayload(): array
 	{
-		return $this->{self::COL_PAYLOAD};
+		return $this->payload;
 	}
 
 	/**
@@ -198,7 +244,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setPayload(array $payload): static
 	{
-		$this->{self::COL_PAYLOAD} = $payload;
+		$this->payload = $payload;
 
 		return $this;
 	}
@@ -210,7 +256,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getCodeHash(): string
 	{
-		return $this->{self::COL_CODE_HASH};
+		return $this->code_hash;
 	}
 
 	/**
@@ -222,7 +268,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setCodeHash(string $code_hash): static
 	{
-		$this->{self::COL_CODE_HASH} = $code_hash;
+		$this->code_hash = $code_hash;
 
 		return $this;
 	}
@@ -234,7 +280,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getTokenHash(): string
 	{
-		return $this->{self::COL_TOKEN_HASH};
+		return $this->token_hash;
 	}
 
 	/**
@@ -246,7 +292,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setTokenHash(string $token_hash): static
 	{
-		$this->{self::COL_TOKEN_HASH} = $token_hash;
+		$this->token_hash = $token_hash;
 
 		return $this;
 	}
@@ -258,7 +304,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getState(): \OZONE\Core\Auth\AuthState
 	{
-		return $this->{self::COL_STATE};
+		return $this->state;
 	}
 
 	/**
@@ -270,7 +316,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setState(\OZONE\Core\Auth\AuthState|string $state): static
 	{
-		$this->{self::COL_STATE} = $state;
+		$this->state = $state;
 
 		return $this;
 	}
@@ -282,7 +328,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getTryMax(): int
 	{
-		return $this->{self::COL_TRY_MAX};
+		return $this->try_max;
 	}
 
 	/**
@@ -294,7 +340,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setTryMax(int $try_max): static
 	{
-		$this->{self::COL_TRY_MAX} = $try_max;
+		$this->try_max = $try_max;
 
 		return $this;
 	}
@@ -306,7 +352,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getTryCount(): int
 	{
-		return $this->{self::COL_TRY_COUNT};
+		return $this->try_count;
 	}
 
 	/**
@@ -318,7 +364,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setTryCount(int $try_count): static
 	{
-		$this->{self::COL_TRY_COUNT} = $try_count;
+		$this->try_count = $try_count;
 
 		return $this;
 	}
@@ -330,7 +376,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getLifetime(): int
 	{
-		return $this->{self::COL_LIFETIME};
+		return $this->lifetime;
 	}
 
 	/**
@@ -342,7 +388,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setLifetime(int $lifetime): static
 	{
-		$this->{self::COL_LIFETIME} = $lifetime;
+		$this->lifetime = $lifetime;
 
 		return $this;
 	}
@@ -354,7 +400,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getExpire(): string
 	{
-		return $this->{self::COL_EXPIRE};
+		return $this->expire;
 	}
 
 	/**
@@ -366,7 +412,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setExpire(string|int $expire): static
 	{
-		$this->{self::COL_EXPIRE} = $expire;
+		$this->expire = $expire;
 
 		return $this;
 	}
@@ -378,7 +424,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getOptions(): array
 	{
-		return $this->{self::COL_OPTIONS};
+		return $this->options;
 	}
 
 	/**
@@ -390,7 +436,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setOptions(array $options): static
 	{
-		$this->{self::COL_OPTIONS} = $options;
+		$this->options = $options;
 
 		return $this;
 	}
@@ -402,7 +448,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getCreatedAT(): string
 	{
-		return $this->{self::COL_CREATED_AT};
+		return $this->created_at;
 	}
 
 	/**
@@ -414,7 +460,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setCreatedAT(string|int $created_at): static
 	{
-		$this->{self::COL_CREATED_AT} = $created_at;
+		$this->created_at = $created_at;
 
 		return $this;
 	}
@@ -426,7 +472,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function getUpdatedAT(): string
 	{
-		return $this->{self::COL_UPDATED_AT};
+		return $this->updated_at;
 	}
 
 	/**
@@ -438,7 +484,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setUpdatedAT(string|int $updated_at): static
 	{
-		$this->{self::COL_UPDATED_AT} = $updated_at;
+		$this->updated_at = $updated_at;
 
 		return $this;
 	}
@@ -450,7 +496,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function isValid(): bool
 	{
-		return $this->{self::COL_IS_VALID};
+		return $this->is_valid;
 	}
 
 	/**
@@ -462,7 +508,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public function setISValid(bool $is_valid): static
 	{
-		$this->{self::COL_IS_VALID} = $is_valid;
+		$this->is_valid = $is_valid;
 
 		return $this;
 	}

@@ -16,7 +16,7 @@ namespace OZONE\Core\Db;
 /**
  * Class OZFilesCrud.
  */
-abstract class OZFilesCrud extends \OZONE\Core\Db\Base\OZFilesCrud
+class OZFilesCrud extends \OZONE\Core\Db\Base\OZFilesCrud
 {
 	// ====================================================
 	// =	Your custom implementation goes here

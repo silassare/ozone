@@ -15,6 +15,10 @@ namespace OZONE\Core\Db;
 
 /**
  * Class OZCountryVR.
+ *
+ * @template TRelationResult
+ *
+ * @extends \OZONE\Core\Db\Base\OZCountryVR<TRelationResult>
  */
 abstract class OZCountryVR extends \OZONE\Core\Db\Base\OZCountryVR
 {

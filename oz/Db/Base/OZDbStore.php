@@ -16,8 +16,6 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZDbStore.
  *
- * @psalm-suppress UndefinedThisPropertyFetch
- *
  * @property null|string $id         Getter for column `oz_db_stores`.`id`.
  * @property string      $group      Getter for column `oz_db_stores`.`group`.
  * @property string      $key        Getter for column `oz_db_stores`.`key`.
@@ -64,9 +62,57 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public static function createInstance(bool $is_new = true, bool $strict = true): static
+	public static function new(bool $is_new = true, bool $strict = true): static
 	{
 		return new \OZONE\Core\Db\OZDbStore($is_new, $strict);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZDbStoresCrud
+	 */
+	public static function crud(): \OZONE\Core\Db\OZDbStoresCrud
+	{
+		return \OZONE\Core\Db\OZDbStoresCrud::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZDbStoresController
+	 */
+	public static function ctrl(): \OZONE\Core\Db\OZDbStoresController
+	{
+		return \OZONE\Core\Db\OZDbStoresController::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZDbStoresQuery
+	 */
+	public static function qb(): \OZONE\Core\Db\OZDbStoresQuery
+	{
+		return \OZONE\Core\Db\OZDbStoresQuery::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZDbStoresResults
+	 */
+	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZDbStoresResults
+	{
+		return \OZONE\Core\Db\OZDbStoresResults::new($query);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function table(): \Gobl\DBAL\Table
+	{
+		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -76,7 +122,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function getID(): string|null
 	{
-		return $this->{self::COL_ID};
+		return $this->id;
 	}
 
 	/**
@@ -88,7 +134,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function setID(string|int|null $id): static
 	{
-		$this->{self::COL_ID} = $id;
+		$this->id = $id;
 
 		return $this;
 	}
@@ -100,7 +146,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function getGroup(): string
 	{
-		return $this->{self::COL_GROUP};
+		return $this->group;
 	}
 
 	/**
@@ -112,7 +158,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function setGroup(string $group): static
 	{
-		$this->{self::COL_GROUP} = $group;
+		$this->group = $group;
 
 		return $this;
 	}
@@ -124,7 +170,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function getKey(): string
 	{
-		return $this->{self::COL_KEY};
+		return $this->key;
 	}
 
 	/**
@@ -136,7 +182,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function setKey(string $key): static
 	{
-		$this->{self::COL_KEY} = $key;
+		$this->key = $key;
 
 		return $this;
 	}
@@ -148,7 +194,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function getValue(): string|null
 	{
-		return $this->{self::COL_VALUE};
+		return $this->value;
 	}
 
 	/**
@@ -160,7 +206,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function setValue(string|null $value): static
 	{
-		$this->{self::COL_VALUE} = $value;
+		$this->value = $value;
 
 		return $this;
 	}
@@ -172,7 +218,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function getLabel(): string
 	{
-		return $this->{self::COL_LABEL};
+		return $this->label;
 	}
 
 	/**
@@ -184,7 +230,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function setLabel(string $label): static
 	{
-		$this->{self::COL_LABEL} = $label;
+		$this->label = $label;
 
 		return $this;
 	}
@@ -196,7 +242,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function getData(): array
 	{
-		return $this->{self::COL_DATA};
+		return $this->data;
 	}
 
 	/**
@@ -208,7 +254,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function setData(array $data): static
 	{
-		$this->{self::COL_DATA} = $data;
+		$this->data = $data;
 
 		return $this;
 	}
@@ -220,7 +266,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function getCreatedAT(): string
 	{
-		return $this->{self::COL_CREATED_AT};
+		return $this->created_at;
 	}
 
 	/**
@@ -232,7 +278,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function setCreatedAT(string|int $created_at): static
 	{
-		$this->{self::COL_CREATED_AT} = $created_at;
+		$this->created_at = $created_at;
 
 		return $this;
 	}
@@ -244,7 +290,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function getUpdatedAT(): string
 	{
-		return $this->{self::COL_UPDATED_AT};
+		return $this->updated_at;
 	}
 
 	/**
@@ -256,7 +302,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function setUpdatedAT(string|int $updated_at): static
 	{
-		$this->{self::COL_UPDATED_AT} = $updated_at;
+		$this->updated_at = $updated_at;
 
 		return $this;
 	}
@@ -268,7 +314,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function isValid(): bool
 	{
-		return $this->{self::COL_IS_VALID};
+		return $this->is_valid;
 	}
 
 	/**
@@ -280,7 +326,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public function setISValid(bool $is_valid): static
 	{
-		$this->{self::COL_IS_VALID} = $is_valid;
+		$this->is_valid = $is_valid;
 
 		return $this;
 	}

@@ -16,8 +16,6 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZRole.
  *
- * @psalm-suppress UndefinedThisPropertyFetch
- *
  * @property null|string $id         Getter for column `oz_roles`.`id`.
  * @property string      $user_id    Getter for column `oz_roles`.`user_id`.
  * @property string      $name       Getter for column `oz_roles`.`name`.
@@ -60,9 +58,57 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public static function createInstance(bool $is_new = true, bool $strict = true): static
+	public static function new(bool $is_new = true, bool $strict = true): static
 	{
 		return new \OZONE\Core\Db\OZRole($is_new, $strict);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZRolesCrud
+	 */
+	public static function crud(): \OZONE\Core\Db\OZRolesCrud
+	{
+		return \OZONE\Core\Db\OZRolesCrud::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZRolesController
+	 */
+	public static function ctrl(): \OZONE\Core\Db\OZRolesController
+	{
+		return \OZONE\Core\Db\OZRolesController::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZRolesQuery
+	 */
+	public static function qb(): \OZONE\Core\Db\OZRolesQuery
+	{
+		return \OZONE\Core\Db\OZRolesQuery::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZRolesResults
+	 */
+	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZRolesResults
+	{
+		return \OZONE\Core\Db\OZRolesResults::new($query);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function table(): \Gobl\DBAL\Table
+	{
+		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -72,7 +118,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function getID(): string|null
 	{
-		return $this->{self::COL_ID};
+		return $this->id;
 	}
 
 	/**
@@ -84,7 +130,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function setID(string|int|null $id): static
 	{
-		$this->{self::COL_ID} = $id;
+		$this->id = $id;
 
 		return $this;
 	}
@@ -96,7 +142,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function getUserID(): string
 	{
-		return $this->{self::COL_USER_ID};
+		return $this->user_id;
 	}
 
 	/**
@@ -108,7 +154,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function setUserID(string|int $user_id): static
 	{
-		$this->{self::COL_USER_ID} = $user_id;
+		$this->user_id = $user_id;
 
 		return $this;
 	}
@@ -120,7 +166,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function getName(): string
 	{
-		return $this->{self::COL_NAME};
+		return $this->name;
 	}
 
 	/**
@@ -132,7 +178,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function setName(string $name): static
 	{
-		$this->{self::COL_NAME} = $name;
+		$this->name = $name;
 
 		return $this;
 	}
@@ -144,7 +190,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function getData(): array
 	{
-		return $this->{self::COL_DATA};
+		return $this->data;
 	}
 
 	/**
@@ -156,7 +202,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function setData(array $data): static
 	{
-		$this->{self::COL_DATA} = $data;
+		$this->data = $data;
 
 		return $this;
 	}
@@ -168,7 +214,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function getCreatedAT(): string
 	{
-		return $this->{self::COL_CREATED_AT};
+		return $this->created_at;
 	}
 
 	/**
@@ -180,7 +226,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function setCreatedAT(string|int $created_at): static
 	{
-		$this->{self::COL_CREATED_AT} = $created_at;
+		$this->created_at = $created_at;
 
 		return $this;
 	}
@@ -192,7 +238,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function getUpdatedAT(): string
 	{
-		return $this->{self::COL_UPDATED_AT};
+		return $this->updated_at;
 	}
 
 	/**
@@ -204,7 +250,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function setUpdatedAT(string|int $updated_at): static
 	{
-		$this->{self::COL_UPDATED_AT} = $updated_at;
+		$this->updated_at = $updated_at;
 
 		return $this;
 	}
@@ -216,7 +262,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function isValid(): bool
 	{
-		return $this->{self::COL_IS_VALID};
+		return $this->is_valid;
 	}
 
 	/**
@@ -228,7 +274,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public function setISValid(bool $is_valid): static
 	{
-		$this->{self::COL_IS_VALID} = $is_valid;
+		$this->is_valid = $is_valid;
 
 		return $this;
 	}
@@ -238,13 +284,13 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return ?\OZONE\Core\Db\OZUser
 	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Gobl\Exceptions\GoblException
 	 */
 	public function getUser(): ?\OZONE\Core\Db\OZUser
 	{
-		return (new \OZONE\Core\Db\OZUsersController())->getRelative(
+		return \OZONE\Core\Db\OZUser::ctrl()->getRelative(
 			$this,
-			$this->_oeb_table->getRelation('user')
+			static::table()->getRelation('user')
 		);
 	}
 }

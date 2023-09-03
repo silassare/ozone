@@ -16,8 +16,6 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZCountry.
  *
- * @psalm-suppress UndefinedThisPropertyFetch
- *
  * @property string $cc2          Getter for column `oz_countries`.`cc2`.
  * @property string $calling_code Getter for column `oz_countries`.`calling_code`.
  * @property string $name         Getter for column `oz_countries`.`name`.
@@ -62,9 +60,57 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public static function createInstance(bool $is_new = true, bool $strict = true): static
+	public static function new(bool $is_new = true, bool $strict = true): static
 	{
 		return new \OZONE\Core\Db\OZCountry($is_new, $strict);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZCountriesCrud
+	 */
+	public static function crud(): \OZONE\Core\Db\OZCountriesCrud
+	{
+		return \OZONE\Core\Db\OZCountriesCrud::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZCountriesController
+	 */
+	public static function ctrl(): \OZONE\Core\Db\OZCountriesController
+	{
+		return \OZONE\Core\Db\OZCountriesController::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZCountriesQuery
+	 */
+	public static function qb(): \OZONE\Core\Db\OZCountriesQuery
+	{
+		return \OZONE\Core\Db\OZCountriesQuery::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZCountriesResults
+	 */
+	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZCountriesResults
+	{
+		return \OZONE\Core\Db\OZCountriesResults::new($query);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function table(): \Gobl\DBAL\Table
+	{
+		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -74,7 +120,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function getCc2(): string
 	{
-		return $this->{self::COL_CC2};
+		return $this->cc2;
 	}
 
 	/**
@@ -86,7 +132,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function setCc2(string $cc2): static
 	{
-		$this->{self::COL_CC2} = $cc2;
+		$this->cc2 = $cc2;
 
 		return $this;
 	}
@@ -98,7 +144,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function getCallingCode(): string
 	{
-		return $this->{self::COL_CALLING_CODE};
+		return $this->calling_code;
 	}
 
 	/**
@@ -110,7 +156,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function setCallingCode(string $calling_code): static
 	{
-		$this->{self::COL_CALLING_CODE} = $calling_code;
+		$this->calling_code = $calling_code;
 
 		return $this;
 	}
@@ -122,7 +168,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function getName(): string
 	{
-		return $this->{self::COL_NAME};
+		return $this->name;
 	}
 
 	/**
@@ -134,7 +180,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function setName(string $name): static
 	{
-		$this->{self::COL_NAME} = $name;
+		$this->name = $name;
 
 		return $this;
 	}
@@ -146,7 +192,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function getNameReal(): string
 	{
-		return $this->{self::COL_NAME_REAL};
+		return $this->name_real;
 	}
 
 	/**
@@ -158,7 +204,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function setNameReal(string $name_real): static
 	{
-		$this->{self::COL_NAME_REAL} = $name_real;
+		$this->name_real = $name_real;
 
 		return $this;
 	}
@@ -170,7 +216,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function getData(): array
 	{
-		return $this->{self::COL_DATA};
+		return $this->data;
 	}
 
 	/**
@@ -182,7 +228,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function setData(array $data): static
 	{
-		$this->{self::COL_DATA} = $data;
+		$this->data = $data;
 
 		return $this;
 	}
@@ -194,7 +240,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function getCreatedAT(): string
 	{
-		return $this->{self::COL_CREATED_AT};
+		return $this->created_at;
 	}
 
 	/**
@@ -206,7 +252,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function setCreatedAT(string|int $created_at): static
 	{
-		$this->{self::COL_CREATED_AT} = $created_at;
+		$this->created_at = $created_at;
 
 		return $this;
 	}
@@ -218,7 +264,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function getUpdatedAT(): string
 	{
-		return $this->{self::COL_UPDATED_AT};
+		return $this->updated_at;
 	}
 
 	/**
@@ -230,7 +276,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function setUpdatedAT(string|int $updated_at): static
 	{
-		$this->{self::COL_UPDATED_AT} = $updated_at;
+		$this->updated_at = $updated_at;
 
 		return $this;
 	}
@@ -242,7 +288,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function isValid(): bool
 	{
-		return $this->{self::COL_IS_VALID};
+		return $this->is_valid;
 	}
 
 	/**
@@ -254,7 +300,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public function setISValid(bool $is_valid): static
 	{
-		$this->{self::COL_IS_VALID} = $is_valid;
+		$this->is_valid = $is_valid;
 
 		return $this;
 	}
@@ -270,15 +316,15 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return \OZONE\Core\Db\OZUser[]
 	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Gobl\Exceptions\GoblException
 	 */
 	public function getUsers(array $filters = [
 	], ?int $max = null, int $offset = 0, array $order_by = [
 	], ?int &$total = -1): array
 	{
-		return (new \OZONE\Core\Db\OZUsersController())->getAllRelatives(
+		return \OZONE\Core\Db\OZUser::ctrl()->getAllRelatives(
 			$this,
-			$this->_oeb_table->getRelation('users'),
+			static::table()->getRelation('users'),
 			$filters,
 			$max,
 			$offset,

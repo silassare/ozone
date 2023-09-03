@@ -15,6 +15,10 @@ namespace OZONE\Core\Db;
 
 /**
  * Class OZDbStoreVR.
+ *
+ * @template TRelationResult
+ *
+ * @extends \OZONE\Core\Db\Base\OZDbStoreVR<TRelationResult>
  */
 abstract class OZDbStoreVR extends \OZONE\Core\Db\Base\OZDbStoreVR
 {

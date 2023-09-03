@@ -15,6 +15,10 @@ namespace OZONE\Core\Db;
 
 /**
  * Class OZJobVR.
+ *
+ * @template TRelationResult
+ *
+ * @extends \OZONE\Core\Db\Base\OZJobVR<TRelationResult>
  */
 abstract class OZJobVR extends \OZONE\Core\Db\Base\OZJobVR
 {

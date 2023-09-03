@@ -16,7 +16,7 @@ namespace OZONE\Core\Db;
 /**
  * Class OZCountriesCrud.
  */
-abstract class OZCountriesCrud extends \OZONE\Core\Db\Base\OZCountriesCrud
+class OZCountriesCrud extends \OZONE\Core\Db\Base\OZCountriesCrud
 {
 	// ====================================================
 	// =	Your custom implementation goes here

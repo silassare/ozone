@@ -16,8 +16,6 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZSession.
  *
- * @psalm-suppress UndefinedThisPropertyFetch
- *
  * @property string      $id                 Getter for column `oz_sessions`.`id`.
  * @property null|string $user_id            Getter for column `oz_sessions`.`user_id`.
  * @property string      $request_source_key Getter for column `oz_sessions`.`request_source_key`.
@@ -64,9 +62,57 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public static function createInstance(bool $is_new = true, bool $strict = true): static
+	public static function new(bool $is_new = true, bool $strict = true): static
 	{
 		return new \OZONE\Core\Db\OZSession($is_new, $strict);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZSessionsCrud
+	 */
+	public static function crud(): \OZONE\Core\Db\OZSessionsCrud
+	{
+		return \OZONE\Core\Db\OZSessionsCrud::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZSessionsController
+	 */
+	public static function ctrl(): \OZONE\Core\Db\OZSessionsController
+	{
+		return \OZONE\Core\Db\OZSessionsController::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZSessionsQuery
+	 */
+	public static function qb(): \OZONE\Core\Db\OZSessionsQuery
+	{
+		return \OZONE\Core\Db\OZSessionsQuery::new();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return \OZONE\Core\Db\OZSessionsResults
+	 */
+	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZSessionsResults
+	{
+		return \OZONE\Core\Db\OZSessionsResults::new($query);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function table(): \Gobl\DBAL\Table
+	{
+		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -76,7 +122,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function getID(): string
 	{
-		return $this->{self::COL_ID};
+		return $this->id;
 	}
 
 	/**
@@ -88,7 +134,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function setID(string $id): static
 	{
-		$this->{self::COL_ID} = $id;
+		$this->id = $id;
 
 		return $this;
 	}
@@ -100,7 +146,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function getUserID(): string|null
 	{
-		return $this->{self::COL_USER_ID};
+		return $this->user_id;
 	}
 
 	/**
@@ -112,7 +158,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function setUserID(string|int|null $user_id): static
 	{
-		$this->{self::COL_USER_ID} = $user_id;
+		$this->user_id = $user_id;
 
 		return $this;
 	}
@@ -124,7 +170,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function getRequestSourceKey(): string
 	{
-		return $this->{self::COL_REQUEST_SOURCE_KEY};
+		return $this->request_source_key;
 	}
 
 	/**
@@ -136,7 +182,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function setRequestSourceKey(string $request_source_key): static
 	{
-		$this->{self::COL_REQUEST_SOURCE_KEY} = $request_source_key;
+		$this->request_source_key = $request_source_key;
 
 		return $this;
 	}
@@ -148,7 +194,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function getExpire(): string
 	{
-		return $this->{self::COL_EXPIRE};
+		return $this->expire;
 	}
 
 	/**
@@ -160,7 +206,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function setExpire(string|int $expire): static
 	{
-		$this->{self::COL_EXPIRE} = $expire;
+		$this->expire = $expire;
 
 		return $this;
 	}
@@ -172,7 +218,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function getLastSeen(): string
 	{
-		return $this->{self::COL_LAST_SEEN};
+		return $this->last_seen;
 	}
 
 	/**
@@ -184,7 +230,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function setLastSeen(string|int $last_seen): static
 	{
-		$this->{self::COL_LAST_SEEN} = $last_seen;
+		$this->last_seen = $last_seen;
 
 		return $this;
 	}
@@ -196,7 +242,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function getData(): array
 	{
-		return $this->{self::COL_DATA};
+		return $this->data;
 	}
 
 	/**
@@ -208,7 +254,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function setData(array $data): static
 	{
-		$this->{self::COL_DATA} = $data;
+		$this->data = $data;
 
 		return $this;
 	}
@@ -220,7 +266,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function getCreatedAT(): string
 	{
-		return $this->{self::COL_CREATED_AT};
+		return $this->created_at;
 	}
 
 	/**
@@ -232,7 +278,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function setCreatedAT(string|int $created_at): static
 	{
-		$this->{self::COL_CREATED_AT} = $created_at;
+		$this->created_at = $created_at;
 
 		return $this;
 	}
@@ -244,7 +290,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function getUpdatedAT(): string
 	{
-		return $this->{self::COL_UPDATED_AT};
+		return $this->updated_at;
 	}
 
 	/**
@@ -256,7 +302,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function setUpdatedAT(string|int $updated_at): static
 	{
-		$this->{self::COL_UPDATED_AT} = $updated_at;
+		$this->updated_at = $updated_at;
 
 		return $this;
 	}
@@ -268,7 +314,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function isValid(): bool
 	{
-		return $this->{self::COL_IS_VALID};
+		return $this->is_valid;
 	}
 
 	/**
@@ -280,7 +326,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public function setISValid(bool $is_valid): static
 	{
-		$this->{self::COL_IS_VALID} = $is_valid;
+		$this->is_valid = $is_valid;
 
 		return $this;
 	}
@@ -290,13 +336,13 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return ?\OZONE\Core\Db\OZUser
 	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Gobl\Exceptions\GoblException
 	 */
 	public function getUser(): ?\OZONE\Core\Db\OZUser
 	{
-		return (new \OZONE\Core\Db\OZUsersController())->getRelative(
+		return \OZONE\Core\Db\OZUser::ctrl()->getRelative(
 			$this,
-			$this->_oeb_table->getRelation('user')
+			static::table()->getRelation('user')
 		);
 	}
 }

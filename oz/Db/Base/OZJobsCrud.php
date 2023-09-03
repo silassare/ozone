@@ -16,9 +16,9 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZJobsCrud.
  *
- * @extends \Gobl\CRUD\CRUDEventProducer<\OZONE\Core\Db\OZJob>
+ * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZJob>
  */
-abstract class OZJobsCrud extends \Gobl\CRUD\CRUDEventProducer
+class OZJobsCrud extends \Gobl\ORM\ORMEntityCRUD
 {
 	/**
 	 * OZJobsCrud constructor.
@@ -29,5 +29,15 @@ abstract class OZJobsCrud extends \Gobl\CRUD\CRUDEventProducer
 			\OZONE\Core\Db\OZJob::TABLE_NAMESPACE,
 			\OZONE\Core\Db\OZJob::TABLE_NAME
 		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return static
+	 */
+	public static function new(): static
+	{
+		return new \OZONE\Core\Db\OZJobsCrud();
 	}
 }

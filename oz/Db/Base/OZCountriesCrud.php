@@ -16,9 +16,9 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZCountriesCrud.
  *
- * @extends \Gobl\CRUD\CRUDEventProducer<\OZONE\Core\Db\OZCountry>
+ * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZCountry>
  */
-abstract class OZCountriesCrud extends \Gobl\CRUD\CRUDEventProducer
+class OZCountriesCrud extends \Gobl\ORM\ORMEntityCRUD
 {
 	/**
 	 * OZCountriesCrud constructor.
@@ -29,5 +29,15 @@ abstract class OZCountriesCrud extends \Gobl\CRUD\CRUDEventProducer
 			\OZONE\Core\Db\OZCountry::TABLE_NAMESPACE,
 			\OZONE\Core\Db\OZCountry::TABLE_NAME
 		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return static
+	 */
+	public static function new(): static
+	{
+		return new \OZONE\Core\Db\OZCountriesCrud();
 	}
 }

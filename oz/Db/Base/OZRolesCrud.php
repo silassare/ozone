@@ -16,9 +16,9 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZRolesCrud.
  *
- * @extends \Gobl\CRUD\CRUDEventProducer<\OZONE\Core\Db\OZRole>
+ * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZRole>
  */
-abstract class OZRolesCrud extends \Gobl\CRUD\CRUDEventProducer
+class OZRolesCrud extends \Gobl\ORM\ORMEntityCRUD
 {
 	/**
 	 * OZRolesCrud constructor.
@@ -29,5 +29,15 @@ abstract class OZRolesCrud extends \Gobl\CRUD\CRUDEventProducer
 			\OZONE\Core\Db\OZRole::TABLE_NAMESPACE,
 			\OZONE\Core\Db\OZRole::TABLE_NAME
 		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return static
+	 */
+	public static function new(): static
+	{
+		return new \OZONE\Core\Db\OZRolesCrud();
 	}
 }

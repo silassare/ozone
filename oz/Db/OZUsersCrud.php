@@ -16,7 +16,7 @@ namespace OZONE\Core\Db;
 /**
  * Class OZUsersCrud.
  */
-abstract class OZUsersCrud extends \OZONE\Core\Db\Base\OZUsersCrud
+class OZUsersCrud extends \OZONE\Core\Db\Base\OZUsersCrud
 {
 	// ====================================================
 	// =	Your custom implementation goes here

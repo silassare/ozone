@@ -16,9 +16,9 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZAuthsCrud.
  *
- * @extends \Gobl\CRUD\CRUDEventProducer<\OZONE\Core\Db\OZAuth>
+ * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZAuth>
  */
-abstract class OZAuthsCrud extends \Gobl\CRUD\CRUDEventProducer
+class OZAuthsCrud extends \Gobl\ORM\ORMEntityCRUD
 {
 	/**
 	 * OZAuthsCrud constructor.
@@ -29,5 +29,15 @@ abstract class OZAuthsCrud extends \Gobl\CRUD\CRUDEventProducer
 			\OZONE\Core\Db\OZAuth::TABLE_NAMESPACE,
 			\OZONE\Core\Db\OZAuth::TABLE_NAME
 		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return static
+	 */
+	public static function new(): static
+	{
+		return new \OZONE\Core\Db\OZAuthsCrud();
 	}
 }

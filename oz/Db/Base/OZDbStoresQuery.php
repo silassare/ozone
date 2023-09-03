@@ -117,7 +117,7 @@ abstract class OZDbStoresQuery extends \Gobl\ORM\ORMTableQuery
 	 *
 	 * @return static
 	 */
-	public static function createInstance(): static
+	public static function new(): static
 	{
 		return new \OZONE\Core\Db\OZDbStoresQuery();
 	}

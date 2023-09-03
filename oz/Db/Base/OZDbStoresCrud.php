@@ -16,9 +16,9 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZDbStoresCrud.
  *
- * @extends \Gobl\CRUD\CRUDEventProducer<\OZONE\Core\Db\OZDbStore>
+ * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZDbStore>
  */
-abstract class OZDbStoresCrud extends \Gobl\CRUD\CRUDEventProducer
+class OZDbStoresCrud extends \Gobl\ORM\ORMEntityCRUD
 {
 	/**
 	 * OZDbStoresCrud constructor.
@@ -29,5 +29,15 @@ abstract class OZDbStoresCrud extends \Gobl\CRUD\CRUDEventProducer
 			\OZONE\Core\Db\OZDbStore::TABLE_NAMESPACE,
 			\OZONE\Core\Db\OZDbStore::TABLE_NAME
 		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @return static
+	 */
+	public static function new(): static
+	{
+		return new \OZONE\Core\Db\OZDbStoresCrud();
 	}
 }

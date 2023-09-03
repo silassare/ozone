@@ -16,7 +16,7 @@ namespace OZONE\Core\Db;
 /**
  * Class OZSessionsCrud.
  */
-abstract class OZSessionsCrud extends \OZONE\Core\Db\Base\OZSessionsCrud
+class OZSessionsCrud extends \OZONE\Core\Db\Base\OZSessionsCrud
 {
 	// ====================================================
 	// =	Your custom implementation goes here
