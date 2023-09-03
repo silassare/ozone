@@ -44,16 +44,18 @@ final class Cli extends Kli
 	 * Gets the Cli instance.
 	 *
 	 * @return \OZONE\Core\Cli\Cli
+	 *
+	 * @throws \Kli\Exceptions\KliException
 	 */
 	public static function getInstance(): self
 	{
-		if (!OZone::isCliMode()) {
-			echo 'This is the command line tool for OZone Framework.';
-
-			exit(1);
-		}
-
 		if (null === self::$instance) {
+			if (!OZone::isCliMode()) {
+				echo 'This is the command line tool for OZone Framework.';
+
+				exit(1);
+			}
+
 			$title = 'oz';
 
 			if ($app = Utils::tryGetProjectApp()) {
@@ -133,12 +135,14 @@ final class Cli extends Kli
 
 		foreach ($list as $cmd_name => $cmd_class) {
 			if (!\is_subclass_of($cmd_class, Command::class)) {
-				throw new RuntimeException(\sprintf(
-					'Your custom command "%s" class "%s" should extends "%s".',
-					$cmd_name,
-					$cmd_class,
-					Command::class
-				));
+				throw new RuntimeException(
+					\sprintf(
+						'Your custom command "%s" class "%s" should extends "%s".',
+						$cmd_name,
+						$cmd_class,
+						Command::class
+					)
+				);
 			}
 
 			/* @var \OZONE\Core\Cli\Command $cmd_class */

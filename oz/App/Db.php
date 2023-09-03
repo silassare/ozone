@@ -40,9 +40,11 @@ final class Db
 	public static function init(): RDBMSInterface
 	{
 		if (!self::$db) {
-			Gobl::setProjectCacheDir(app()
-				->getCacheDir()
-				->getRoot());
+			Gobl::setProjectCacheDir(
+				app()
+					->getCacheDir()
+					->getRoot()
+			);
 
 			$config    = Settings::load('oz.db');
 			$db_config = new DbConfig([
@@ -58,7 +60,7 @@ final class Db
 			$rdbms_type = $config['OZ_DB_RDBMS'];
 
 			try {
-				self::$db = GoblDb::createInstanceOf($rdbms_type, $db_config);
+				self::$db = GoblDb::newInstanceOf($rdbms_type, $db_config);
 			} catch (Throwable $t) {
 				throw new RuntimeException(
 					\sprintf('Unable to init "%s" RDBMS defined in "oz.db".', $rdbms_type),
@@ -160,10 +162,12 @@ final class Db
 		} else {
 			$current = $mg->getMigration($db_version);
 			if (!$current) {
-				throw (new RuntimeException(\sprintf(
-					'Unable to find migration, using db version "%s" defined in settings.',
-					$db_version
-				)))->suspectConfig('oz.db.migrations', 'OZ_MIGRATION_VERSION');
+				throw (new RuntimeException(
+					\sprintf(
+						'Unable to find migration, using db version "%s" defined in settings.',
+						$db_version
+					)
+				))->suspectConfig('oz.db.migrations', 'OZ_MIGRATION_VERSION');
 			}
 
 			self::$db->loadSchema($current->getSchema());

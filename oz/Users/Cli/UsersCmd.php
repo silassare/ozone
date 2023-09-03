@@ -38,12 +38,14 @@ final class UsersCmd extends Command
 			$db       = db();
 			$user_tbl = $db->getTableOrFail(OZUser::TABLE_NAME);
 
-			$add->addOption(...Utils::buildTableCliOptions($user_tbl, [], [
-				OZUser::COL_DATA,
-				OZUser::COL_CREATED_AT,
-				OZUser::COL_UPDATED_AT,
-				OZUser::COL_IS_VALID,
-			]));
+			$add->addOption(
+				...Utils::buildTableCliOptions($user_tbl, [], [
+					OZUser::COL_DATA,
+					OZUser::COL_CREATED_AT,
+					OZUser::COL_UPDATED_AT,
+					OZUser::COL_IS_VALID,
+				])
+			);
 
 			$add->handler($this->add(...));
 		}

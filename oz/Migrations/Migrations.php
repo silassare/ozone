@@ -149,27 +149,34 @@ final class Migrations
 					$version = $migration->getVersion();
 
 					if (isset($duplicates[$version])) {
-						throw new RuntimeException(\sprintf(
-							'Duplicate migration version "%s" found in "%s" and "%s"',
-							$version,
-							$duplicates[$version],
-							$file
-						));
+						throw new RuntimeException(
+							\sprintf(
+								'Duplicate migration version "%s" found in "%s" and "%s"',
+								$version,
+								$duplicates[$version],
+								$file
+							)
+						);
 					}
 
 					$duplicates[$migration->getVersion()] = $file;
 					$migrations[]                         = $migration;
 				} else {
-					throw new RuntimeException(\sprintf(
-						'Invalid migration file "%s", it must return an instance of "%s" not "%s"',
-						$file,
-						MigrationInterface::class,
-						\get_debug_type($migration),
-					));
+					throw new RuntimeException(
+						\sprintf(
+							'Invalid migration file "%s", it must return an instance of "%s" not "%s"',
+							$file,
+							MigrationInterface::class,
+							\get_debug_type($migration),
+						)
+					);
 				}
 			}
 
-			\usort($migrations, static fn (MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion());
+			\usort(
+				$migrations,
+				static fn (MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
+			);
 
 			return $migrations;
 		})
