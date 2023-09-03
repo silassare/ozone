@@ -21,6 +21,7 @@ use OZONE\Core\Db\OZSession;
 use OZONE\Core\Db\OZSessionsQuery;
 use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
@@ -234,6 +235,11 @@ final class Session implements BootHookReceiverInterface
 		FinishHook::listen(static function () {
 			self::gc();
 		}, Event::RUN_LAST);
+
+		DbReadyHook::listen(static function () {
+			OZSession::crud()
+				->onBeforePKColumnWrite(static fn () => true);
+		});
 	}
 
 	/**
