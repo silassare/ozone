@@ -58,7 +58,7 @@ final class Context
 
 	private int $context_type;
 
-	private Router $router;
+	private Router $t_router;
 
 	private HTTPEnvironment $http_environment;
 
@@ -85,9 +85,9 @@ final class Context
 		private readonly ?self $parent = null,
 		bool $is_api = true
 	) {
-		$this->is_sub_request   = null !== $this->parent;
-		$this->context_type     = $is_api ? self::CONTEXT_TYPE_API : self::CONTEXT_TYPE_WEB;
-		$this->router           = $is_api ? OZone::getApiRouter() : OZone::getWebRouter();
+		$this->is_sub_request = null !== $this->parent;
+		$this->context_type   = $is_api ? self::CONTEXT_TYPE_API : self::CONTEXT_TYPE_WEB;
+
 		$this->http_environment = $http_env;
 		$this->request          = $request ?? Request::createFromHTTPEnvironment($http_env);
 		$headers                = new Headers(['Content-Type' => 'text/html; charset=UTF-8']);
@@ -107,7 +107,7 @@ final class Context
 			$this->response,
 			$this->request,
 			$this->http_environment,
-			$this->router,
+			$this->t_router,
 			$this->route_info,
 			$this->auth,
 		);
@@ -166,9 +166,10 @@ final class Context
 
 			(new RequestHook($this))->dispatch();
 
-			$this->router->handle($this, function (RouteInfo $route_info) {
-				$this->authenticate($route_info);
-			});
+			$this->getRouter()
+				->handle($this, function (RouteInfo $route_info) {
+					$this->authenticate($route_info);
+				});
 		} catch (Throwable $t) {
 			BaseException::tryConvert($t)
 				->informClient($this);
@@ -232,9 +233,6 @@ final class Context
 		// as this seems to be required but not defined
 		// in the route options or called before the route was found
 		if (!isset($this->auth)) {
-			$uri = $this->getRequest()
-				->getUri();
-
 			if (!isset($this->route_info)) {
 				throw new RuntimeException(
 					\sprintf('"%s" was called before a route was found.', __METHOD__)
@@ -244,8 +242,10 @@ final class Context
 			throw (new RuntimeException(
 				\sprintf('No auth method was defined for the current route but "%s" was called.', __METHOD__)
 			)
-			)->suspectCallable($this->route_info->route()
-				->getHandler());
+			)->suspectCallable(
+				$this->route_info->route()
+					->getHandler()
+			);
 		}
 
 		return $this->auth;
@@ -354,7 +354,11 @@ final class Context
 	 */
 	public function getRouter(): Router
 	{
-		return $this->router;
+		if (!isset($this->t_router)) {
+			$this->t_router = $this->isApiContext() ? OZone::getApiRouter() : OZone::getWebRouter();
+		}
+
+		return $this->t_router;
 	}
 
 	/**
@@ -425,7 +429,8 @@ final class Context
 	 */
 	public function buildRouteUri(string $name, array $params = [], array $query = []): Uri
 	{
-		$path = $this->router->buildRoutePath($this, $name, $params);
+		$path = $this->getRouter()
+			->buildRoutePath($this, $name, $params);
 
 		return $this->buildUri($path, $query);
 	}
@@ -466,21 +471,29 @@ final class Context
 					if ($value) {
 						$value = \strtolower($value);
 
-						if (\preg_match_all('~(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[[a-f0-9:]+])(?::(\d+))?~', $value, $matches)) {
+						if (
+							\preg_match_all(
+								'~(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[[a-f0-9:]+])(?::(\d+))?~',
+								$value,
+								$matches
+							)
+						) {
 							$ips   = $matches[1] ?? [];
 							$ports = $matches[2] ?? [];
 							foreach ($ips as $index => $unsafe_ip) {
 								$unsafe_ip   = \str_replace(['[', ']'], '', $unsafe_ip);
 								$unsafe_port = $ports[$index] ?? null;
 
-								if (($unsafe_ip = \filter_var(
-									$unsafe_ip,
-									\FILTER_VALIDATE_IP,
-									\FILTER_FLAG_IPV4 |
+								if (
+									($unsafe_ip = \filter_var(
+										$unsafe_ip,
+										\FILTER_VALIDATE_IP,
+										\FILTER_FLAG_IPV4 |
 										\FILTER_FLAG_IPV6 |
 										\FILTER_FLAG_NO_PRIV_RANGE |
 										\FILTER_FLAG_NO_RES_RANGE
-								)) !== false) {
+									)) !== false
+								) {
 									$user_ip   = $unsafe_ip;
 									$user_port = $unsafe_port;
 
@@ -590,12 +603,14 @@ final class Context
 		// Send response
 		if (!\headers_sent()) {
 			// Status
-			\header(\sprintf(
-				'HTTP/%s %s %s',
-				$response->getProtocolVersion(),
-				$status_code = $response->getStatusCode(),
-				$response->getReasonPhrase()
-			));
+			\header(
+				\sprintf(
+					'HTTP/%s %s %s',
+					$response->getProtocolVersion(),
+					$status_code = $response->getStatusCode(),
+					$response->getReasonPhrase()
+				)
+			);
 
 			// Headers
 			foreach ($response->getHeaders() as $name => $values) {
@@ -665,7 +680,8 @@ final class Context
 		array $query = [],
 		bool $override_response = true
 	): Response {
-		$path = $this->router->buildRoutePath($this, $route_name, $params);
+		$path = $this->getRouter()
+			->buildRoutePath($this, $route_name, $params);
 
 		return $this->callPath($path, $params, $query, $override_response);
 	}
@@ -755,7 +771,8 @@ final class Context
 			]
 		);
 
-		$path = $this->router->buildRoutePath($this, $route_name, $params);
+		$path = $this->getRouter()
+			->buildRoutePath($this, $route_name, $params);
 
 		self::$redirect_history[$route_name] = ['path' => $path, 'params' => $params];
 
@@ -819,9 +836,11 @@ final class Context
 
 		$bundle = \array_merge($declared, $provided);
 
-		return \array_unique(\array_map(static function ($entry) {
-			return \strtolower(\trim($entry));
-		}, $bundle));
+		return \array_unique(
+			\array_map(static function ($entry) {
+				return \strtolower(\trim($entry));
+			}, $bundle)
+		);
 	}
 
 	/**
@@ -856,12 +875,14 @@ final class Context
 		if ($this->is_sub_request) {
 			$parent_auth = $this->parent->auth;
 			if (null === $parent_auth) {
-				throw new RuntimeException('Sub request require authentication but the main request has no auth method.');
+				throw new RuntimeException(
+					'Sub request require authentication but the main request has no auth method.'
+				);
 			}
 
 			if (!\in_array($parent_auth::class, $auths_methods, true)) {
 				throw new RuntimeException(
-					'Sub request require authentication but the main request auth method is not defined for the current route.'
+					'Sub request require authentication, but the main request auth method is not defined for the current route.'
 				);
 			}
 
