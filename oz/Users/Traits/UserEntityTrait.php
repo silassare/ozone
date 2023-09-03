@@ -17,7 +17,6 @@ use OZONE\Core\Auth\AuthAccessRights;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Users\Events\UserCreated;
 use OZONE\Core\Users\Users;
 
 /**
@@ -30,11 +29,8 @@ trait UserEntityTrait
 	 */
 	public function save(): bool
 	{
-		$emit_create_event = false;
-
 		if (!$this->getID()) {
 			// new user will be added
-			$emit_create_event = true;
 			$phone             = $this->getPhone();
 			$email             = $this->getEmail();
 
@@ -59,13 +55,7 @@ trait UserEntityTrait
 			}
 		}
 
-		$result = parent::save();
-
-		if ($emit_create_event) {
-			(new UserCreated($this))->dispatch();
-		}
-
-		return $result;
+		return parent::save();
 	}
 
 	/**
