@@ -7,11 +7,8 @@
   },
   "repositories": {
     "silassare/ozone": {
-      "type": "path",
-      "url": "<%$.oz_install_path%>",
-      "options": {
-        "symlink": true
-      }
+      "type": "vcs",
+      "url": "<%$.oz_install_path%>"
     }
   },
   "minimum-stability": "dev",
