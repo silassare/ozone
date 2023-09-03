@@ -96,8 +96,8 @@ final class Migrations
 		$db_actual = db();
 		$config    = $db_actual->getConfig();
 
-		$db_from = GoblDb::createInstanceOf($db_actual->getType(), $config);
-		$db_to   = GoblDb::createInstanceOf($db_actual->getType(), $config);
+		$db_from = GoblDb::newInstanceOf($db_actual->getType(), $config);
+		$db_to   = GoblDb::newInstanceOf($db_actual->getType(), $config);
 
 		Db::loadSchemaTo($db_to);
 		$db_to->lock();
