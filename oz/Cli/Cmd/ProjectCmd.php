@@ -109,8 +109,7 @@ final class ProjectCmd extends Command
 		$serve->option('port', 'p')
 			->description('The port to use.')
 			->prompt(true, 'The port to use')
-			->number(0, 65535)
-			->def(8080);
+			->number(0, 65535);
 		$serve->option('doc-root', 'r')
 			->description('The document root to use.')
 			->prompt(true, 'The document root to use')
@@ -127,14 +126,24 @@ final class ProjectCmd extends Command
 	 *
 	 * @throws \Kli\Exceptions\KliException
 	 */
-	private function serve(KliArgs $args): void
-	{
+	private function serve(
+		KliArgs $args
+	): void {
 		Utils::assertProjectLoaded();
 
 		$host     = $args->get('host');
 		$port     = $args->get('port');
 		$doc_root = $args->get('doc-root');
 		$cli      = $this->getCli();
+
+		if (null === $port) {
+			$port = Utils::getOpenPort([
+				8080,
+				8888,
+				9000,
+				2227,
+			], $host);
+		}
 
 		$cli->info("Serving project on {$host}:{$port} ...");
 		$cli->info("Document root: {$doc_root}");
@@ -219,10 +228,12 @@ final class ProjectCmd extends Command
 		$cli        = $this->getCli();
 
 		if (Utils::isProjectFolder($folder)) {
-			$cli->error(\sprintf(
-				'Folder "%s" already contains an O\'Zone project.',
-				$folder
-			));
+			$cli->error(
+				\sprintf(
+					'Folder "%s" already contains an O\'Zone project.',
+					$folder
+				)
+			);
 
 			return;
 		}
@@ -402,10 +413,13 @@ final class ProjectCmd extends Command
 
 			$composer_config['require'][$oz_package_name] = '^' . OZ_OZONE_VERSION;
 
-			$fm->wf($composer_config_path, \json_encode(
-				$composer_config,
-				\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES
-			));
+			$fm->wf(
+				$composer_config_path,
+				\json_encode(
+					$composer_config,
+					\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES
+				)
+			);
 		} else {
 			$fm->wf('composer.json', $project_composer);
 		}

@@ -61,6 +61,72 @@ final class Utils
 	}
 
 	/**
+	 * Checks if a port is open.
+	 *
+	 * @param int    $port
+	 * @param string $host
+	 *
+	 * @return bool
+	 */
+	public static function isPortOpen(int $port, string $host = '127.0.0.1'): bool
+	{
+		// disable error reporting
+		\set_error_handler(static function () {
+		});
+		$open = false;
+		$fp   = \fsockopen($host, $port, $errno, $err_str, 1);
+		if ($fp) {
+			\fclose($fp);
+
+			$open = true;
+		}
+		\restore_error_handler();
+
+		return $open;
+	}
+
+	/**
+	 * Returns an open port in a range.
+	 *
+	 * @param int[]       $favorites favorite ports
+	 * @param null|string $host      the host
+	 * @param null|int    $start     start port
+	 * @param null|int    $end       end port
+	 *
+	 * @return null|int
+	 */
+	public static function getOpenPort(
+		array $favorites = [],
+		?string $host = '127.0.0.1',
+		?int $start = 3000,
+		?int $end = 9000,
+	): ?int {
+		$start = \max(1, $start);
+		$end   = \min(65535, $end);
+
+		$checked = [];
+		// check for favorites ports first
+		foreach ($favorites as $port) {
+			$checked[$port] = true;
+			if (!self::isPortOpen($port, $host)) {
+				return $port;
+			}
+		}
+
+		// check if port in range is open
+		/** @var int[] $ports */
+		$ports = \range($start, $end);
+
+		foreach ($ports as $port) {
+			if (!isset($checked[$port]) && !self::isPortOpen($port, $host)) {
+				return $port;
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * Checks if a project is loaded and returns the app instance.
 	 *
 	 * @return null|\OZONE\Core\App\Interfaces\AppInterface
@@ -74,12 +140,14 @@ final class Utils
 			$return = require $app_file;
 
 			if (!$return instanceof AppInterface) {
-				throw new RuntimeException(\sprintf(
-					'Invalid app instance in "%s", found "%s" while expecting "%s".',
-					$app_file,
-					\gettype($return),
-					AppInterface::class
-				));
+				throw new RuntimeException(
+					\sprintf(
+						'Invalid app instance in "%s", found "%s" while expecting "%s".',
+						$app_file,
+						\gettype($return),
+						AppInterface::class
+					)
+				);
 			}
 
 			$app = $return;
@@ -94,11 +162,13 @@ final class Utils
 	public static function assertProjectLoaded(): void
 	{
 		if (!self::tryGetProjectApp()) {
-			throw new RuntimeException(\sprintf(
-				'Error: there is no ozone project in "%s".'
-				. \PHP_EOL . 'Are you in project root folder?',
-				\getcwd()
-			));
+			throw new RuntimeException(
+				\sprintf(
+					'Error: there is no ozone project in "%s".'
+					. \PHP_EOL . 'Are you in project root folder?',
+					\getcwd()
+				)
+			);
 		}
 	}
 
