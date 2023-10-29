@@ -33,9 +33,7 @@ final class Migrations
 	/**
 	 * Migrations constructor.
 	 */
-	public function __construct()
-	{
-	}
+	public function __construct() {}
 
 	/**
 	 * Gets the current database version.

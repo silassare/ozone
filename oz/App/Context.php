@@ -58,7 +58,7 @@ final class Context
 
 	private int $context_type;
 
-	private Router $t_router;
+	private ?Router $t_router = null;
 
 	private HTTPEnvironment $http_environment;
 
@@ -116,9 +116,7 @@ final class Context
 	/**
 	 * Disable clone.
 	 */
-	private function __clone()
-	{
-	}
+	private function __clone() {}
 
 	/**
 	 * Checks whether json response should be returned.
@@ -272,7 +270,9 @@ final class Context
 		try {
 			return $this->user()
 				->isValid();
-		} catch (Throwable) {
+		} catch (Throwable $t) {
+			oz_logger($t);
+
 			return false;
 		}
 	}

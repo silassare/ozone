@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\SessionBasedAuthMethodInterface;
@@ -39,9 +40,7 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	/**
 	 * SessionAuth constructor.
 	 */
-	protected function __construct(protected RouteInfo $ri, protected string $realm)
-	{
-	}
+	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
 
 	/**
 	 * SessionAuth destructor.
@@ -81,6 +80,8 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws \OZONE\Core\Exceptions\ForbiddenException
 	 */
 	public function ask(): void
 	{
@@ -89,6 +90,8 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws \OZONE\Core\Exceptions\ForbiddenException
 	 */
 	public function authenticate(): void
 	{
@@ -147,6 +150,8 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws \OZONE\Core\Exceptions\ForbiddenException
 	 */
 	public function session(): Session
 	{
@@ -155,6 +160,8 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws \OZONE\Core\Exceptions\ForbiddenException
 	 */
 	public function state(): SessionState
 	{
@@ -164,6 +171,8 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws \OZONE\Core\Exceptions\ForbiddenException
 	 */
 	public function id(): string
 	{
@@ -175,15 +184,38 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	 * Start current or new session.
 	 *
 	 * @return \OZONE\Core\Sessions\Session
+	 *
+	 * @throws \OZONE\Core\Exceptions\ForbiddenException
 	 */
 	protected function startCurrentOrNewSession(): Session
 	{
+		$context    = $this->ri->getContext();
+		$source_key = $context->getUserIP();
 		if (!isset($this->session)) {
-			$this->session = new Session($this->ri->getContext());
+			$this->session = new Session($context, $source_key);
 
 			$this->session->start($this->session_id);
 
 			$this->session_id = $this->session->id();
+		} elseif ($this->session->sourceKey() !== $source_key) {
+			$force_same_source = (bool) Settings::get('oz.sessions', 'OZ_SESSION_HIJACKING_FORCE_SAME_SOURCE');
+
+			if ($force_same_source) {
+				if ($this->session->attachedUserID()) {
+					// TODO: we may inform the user about this
+					// we can't just restart the session
+					// because the user may be doing something important
+					// and we don't want to interrupt him
+					// so we just throw an exception
+					throw new ForbiddenException(null, [
+						'_reason' => 'Session source key mismatch.',
+						'_help'   => 'This is possible session hijacking attempt.'
+									 . ' It may also be that the user is using a proxy, a VPN'
+									 . ' or his IP address has changed, usual under mobile network.',
+					]);
+				}
+				$this->session->restart();
+			}
 		}
 
 		return $this->session;

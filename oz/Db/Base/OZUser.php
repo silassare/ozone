@@ -128,7 +128,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getID(): string|null
+	public function getID(): null|string
 	{
 		return $this->id;
 	}
@@ -140,7 +140,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setID(string|int|null $id): static
+	public function setID(null|int|string $id): static
 	{
 		$this->id = $id;
 
@@ -152,7 +152,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getPhone(): string|null
+	public function getPhone(): null|string
 	{
 		return $this->phone;
 	}
@@ -164,7 +164,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setPhone(string|null $phone): static
+	public function setPhone(null|string $phone): static
 	{
 		$this->phone = $phone;
 
@@ -284,7 +284,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setBirthDate(string|int $birth_date): static
+	public function setBirthDate(int|string $birth_date): static
 	{
 		$this->birth_date = $birth_date;
 
@@ -296,7 +296,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getPic(): string|null
+	public function getPic(): null|string
 	{
 		return $this->pic;
 	}
@@ -308,7 +308,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setPic(string|null $pic): static
+	public function setPic(null|string $pic): static
 	{
 		$this->pic = $pic;
 
@@ -380,7 +380,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCreatedAT(string|int $created_at): static
+	public function setCreatedAT(int|string $created_at): static
 	{
 		$this->created_at = $created_at;
 
@@ -404,7 +404,7 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUpdatedAT(string|int $updated_at): static
+	public function setUpdatedAT(int|string $updated_at): static
 	{
 		$this->updated_at = $updated_at;
 

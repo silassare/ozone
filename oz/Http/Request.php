@@ -312,7 +312,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getParsedBody(): object|array|null
+	public function getParsedBody(): null|array|object
 	{
 		if (null !== $this->bodyParsed) {
 			return $this->bodyParsed;

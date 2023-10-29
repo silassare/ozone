@@ -31,8 +31,7 @@ class FormValidationContext
 	public function __construct(
 		protected readonly FormData $unsafe_fd,
 		protected readonly FormData $clean_fd,
-	) {
-	}
+	) {}
 
 	/**
 	 * Gets the unsafe form data.

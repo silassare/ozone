@@ -34,9 +34,7 @@ class MemcachedCache implements CacheProviderInterface
 	 * @param Memcached $memcached
 	 * @param string    $namespace
 	 */
-	protected function __construct(protected Memcached $memcached, protected string $namespace)
-	{
-	}
+	protected function __construct(protected Memcached $memcached, protected string $namespace) {}
 
 	/**
 	 * {@inheritDoc}

@@ -194,7 +194,7 @@ class Response extends Message implements ResponseInterface
 	 *
 	 * @return static
 	 */
-	public function withRedirect(UriInterface|string $url, ?int $status = null): self
+	public function withRedirect(string|UriInterface $url, ?int $status = null): self
 	{
 		$responseWithRedirect = $this->withHeader('Location', (string) $url);
 

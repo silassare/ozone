@@ -116,7 +116,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getID(): string|null
+	public function getID(): null|string
 	{
 		return $this->id;
 	}
@@ -128,7 +128,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setID(string|int|null $id): static
+	public function setID(null|int|string $id): static
 	{
 		$this->id = $id;
 
@@ -152,7 +152,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUserID(string|int $user_id): static
+	public function setUserID(int|string $user_id): static
 	{
 		$this->user_id = $user_id;
 
@@ -224,7 +224,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCreatedAT(string|int $created_at): static
+	public function setCreatedAT(int|string $created_at): static
 	{
 		$this->created_at = $created_at;
 
@@ -248,7 +248,7 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUpdatedAT(string|int $updated_at): static
+	public function setUpdatedAT(int|string $updated_at): static
 	{
 		$this->updated_at = $updated_at;
 

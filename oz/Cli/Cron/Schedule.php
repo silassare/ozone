@@ -50,7 +50,7 @@ final class Schedule implements Stringable
 
 	private string $dayOfWeek;
 
-	private string|DateTimeZone $timezone = 'UTC';
+	private DateTimeZone|string $timezone = 'UTC';
 
 	/** @var array<callable():bool> */
 	private array $only_if = [];
@@ -695,7 +695,7 @@ final class Schedule implements Stringable
 	 *
 	 * @return $this
 	 */
-	private function setPosition(int $position, string|int $value): self
+	private function setPosition(int $position, int|string $value): self
 	{
 		if (1 === $position) {
 			$this->minute = $value;

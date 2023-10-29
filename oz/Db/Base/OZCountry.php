@@ -250,7 +250,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCreatedAT(string|int $created_at): static
+	public function setCreatedAT(int|string $created_at): static
 	{
 		$this->created_at = $created_at;
 
@@ -274,7 +274,7 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUpdatedAT(string|int $updated_at): static
+	public function setUpdatedAT(int|string $updated_at): static
 	{
 		$this->updated_at = $updated_at;
 

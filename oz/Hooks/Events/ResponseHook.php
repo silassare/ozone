@@ -20,6 +20,4 @@ use OZONE\Core\Hooks\Hook;
  *
  * This event is triggered when the response is ready to be sent to the client.
  */
-final class ResponseHook extends Hook
-{
-}
+final class ResponseHook extends Hook {}

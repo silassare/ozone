@@ -15,6 +15,7 @@ namespace OZONE\Core\Users\Services;
 
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Auth;
+use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Auth\Providers\EmailVerificationProvider;
 use OZONE\Core\Auth\Providers\PhoneVerificationAuthProvider;
 use OZONE\Core\Columns\Types\TypePassword;
@@ -90,6 +91,7 @@ final class AccountRecovery extends Service
 				return $s->respond();
 			})
 			->name(self::ROUTE_ACCOUNT_RECOVERY)
+			->auths(AuthMethodType::SESSION)
 			->with2FA(PhoneVerificationAuthProvider::NAME, EmailVerificationProvider::NAME)
 			->form(self::editPassForm(...));
 	}

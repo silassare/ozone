@@ -120,7 +120,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getID(): string|null
+	public function getID(): null|string
 	{
 		return $this->id;
 	}
@@ -132,7 +132,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setID(string|int|null $id): static
+	public function setID(null|int|string $id): static
 	{
 		$this->id = $id;
 
@@ -192,7 +192,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getValue(): string|null
+	public function getValue(): null|string
 	{
 		return $this->value;
 	}
@@ -204,7 +204,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setValue(string|null $value): static
+	public function setValue(null|string $value): static
 	{
 		$this->value = $value;
 
@@ -276,7 +276,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCreatedAT(string|int $created_at): static
+	public function setCreatedAT(int|string $created_at): static
 	{
 		$this->created_at = $created_at;
 
@@ -300,7 +300,7 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUpdatedAT(string|int $updated_at): static
+	public function setUpdatedAT(int|string $updated_at): static
 	{
 		$this->updated_at = $updated_at;
 

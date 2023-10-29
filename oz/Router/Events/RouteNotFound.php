@@ -20,6 +20,4 @@ use OZONE\Core\Hooks\Hook;
  *
  * This event is triggered when no route was found for the requested resource.
  */
-final class RouteNotFound extends Hook
-{
-}
+final class RouteNotFound extends Hook {}

@@ -86,7 +86,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	 * @param null|Throwable     $previous previous throwable used for the exception chaining
 	 * @param int                $code     the exception code
 	 */
-	public function __construct(string|I18nMessage $message, ?array $data = null, Throwable $previous = null, int $code = 0)
+	public function __construct(I18nMessage|string $message, ?array $data = null, Throwable $previous = null, int $code = 0)
 	{
 		$this->data = $data ?? [];
 		if ($message instanceof I18nMessage) {

@@ -28,9 +28,7 @@ final class AfterJobFinished extends Event
 	 *
 	 * @param \OZONE\Core\Queue\Interfaces\JobContractInterface $job_contract
 	 */
-	public function __construct(protected JobContractInterface $job_contract)
-	{
-	}
+	public function __construct(protected JobContractInterface $job_contract) {}
 
 	/**
 	 * AfterJobFinished destructor.

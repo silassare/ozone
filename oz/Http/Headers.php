@@ -111,7 +111,7 @@ class Headers extends Collection
 	 * @param string       $key   The case-insensitive header name
 	 * @param array|string $value The new header value(s)
 	 */
-	public function add(string $key, string|array $value): void
+	public function add(string $key, array|string $value): void
 	{
 		$oldValues = $this->get($key, []);
 		$newValues = \is_array($value) ? $value : [$value];

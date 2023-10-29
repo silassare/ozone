@@ -11,31 +11,29 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\App;
+namespace OZONE\Core\REST;
 
 use Gobl\ORM\ORMRequest as GoblORMRequest;
+use OZONE\Core\App\Context;
 use OZONE\Core\Forms\FormData;
 
 /**
- * Class ORMRequest.
+ * Class RESTFulAPIRequest.
  */
-final class ORMRequest extends GoblORMRequest
+class RESTFulAPIRequest extends GoblORMRequest
 {
-	/**
-	 * @var \OZONE\Core\App\Context
-	 */
 	private Context $context;
 
 	/**
-	 * ORMRequest constructor.
+	 * RESTFulAPIRequest constructor.
 	 *
 	 * @param \OZONE\Core\App\Context          $context
 	 * @param array|\OZONE\Core\Forms\FormData $form
-	 * @param null|string                      $scope
+	 * @param string                           $scope
 	 *
 	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
 	 */
-	public function __construct(Context $context, array|FormData $form, string $scope = null)
+	public function __construct(Context $context, array|FormData $form, string $scope = '')
 	{
 		parent::__construct(\is_array($form) ? $form : $form->getData(), $scope);
 
@@ -63,9 +61,9 @@ final class ORMRequest extends GoblORMRequest
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\App\ORMRequest
+	 * @return static
 	 */
-	public function createScopedInstance(string $scope): self
+	public function createScopedInstance(string $scope): static
 	{
 		return new self($this->context, $this->payload, $scope);
 	}

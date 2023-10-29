@@ -138,7 +138,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getID(): string|null
+	public function getID(): null|string
 	{
 		return $this->id;
 	}
@@ -150,7 +150,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setID(string|int|null $id): static
+	public function setID(null|int|string $id): static
 	{
 		$this->id = $id;
 
@@ -162,7 +162,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getOwnerID(): string|null
+	public function getOwnerID(): null|string
 	{
 		return $this->owner_id;
 	}
@@ -174,7 +174,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setOwnerID(string|int|null $owner_id): static
+	public function setOwnerID(null|int|string $owner_id): static
 	{
 		$this->owner_id = $owner_id;
 
@@ -258,7 +258,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getCloneID(): string|null
+	public function getCloneID(): null|string
 	{
 		return $this->clone_id;
 	}
@@ -270,7 +270,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCloneID(string|int|null $clone_id): static
+	public function setCloneID(null|int|string $clone_id): static
 	{
 		$this->clone_id = $clone_id;
 
@@ -282,7 +282,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getSourceID(): string|null
+	public function getSourceID(): null|string
 	{
 		return $this->source_id;
 	}
@@ -294,7 +294,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setSourceID(string|int|null $source_id): static
+	public function setSourceID(null|int|string $source_id): static
 	{
 		$this->source_id = $source_id;
 
@@ -402,7 +402,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getForID(): string|null
+	public function getForID(): null|string
 	{
 		return $this->for_id;
 	}
@@ -414,7 +414,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setForID(string|null $for_id): static
+	public function setForID(null|string $for_id): static
 	{
 		$this->for_id = $for_id;
 
@@ -426,7 +426,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getForType(): string|null
+	public function getForType(): null|string
 	{
 		return $this->for_type;
 	}
@@ -438,7 +438,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setForType(string|null $for_type): static
+	public function setForType(null|string $for_type): static
 	{
 		$this->for_type = $for_type;
 
@@ -510,7 +510,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCreatedAT(string|int $created_at): static
+	public function setCreatedAT(int|string $created_at): static
 	{
 		$this->created_at = $created_at;
 
@@ -534,7 +534,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUpdatedAT(string|int $updated_at): static
+	public function setUpdatedAT(int|string $updated_at): static
 	{
 		$this->updated_at = $updated_at;
 

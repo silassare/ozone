@@ -28,9 +28,7 @@ class Hook extends Event
 	 *
 	 * @param \OZONE\Core\App\Context $context
 	 */
-	public function __construct(protected Context $context)
-	{
-	}
+	public function __construct(protected Context $context) {}
 
 	/**
 	 * Hook destructor.

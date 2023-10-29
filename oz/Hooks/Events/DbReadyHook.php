@@ -28,9 +28,7 @@ final class DbReadyHook extends Event
 	 *
 	 * @param \Gobl\DBAL\Interfaces\RDBMSInterface $db
 	 */
-	public function __construct(protected RDBMSInterface $db)
-	{
-	}
+	public function __construct(protected RDBMSInterface $db) {}
 
 	/**
 	 * DbReadyHook destructor.

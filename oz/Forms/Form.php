@@ -177,7 +177,7 @@ class Form implements ArrayCapableInterface
 	 *
 	 * @return $this
 	 */
-	public function doubleCheck(string|Field $field): static
+	public function doubleCheck(Field|string $field): static
 	{
 		if (\is_string($field)) {
 			$name  = $field;

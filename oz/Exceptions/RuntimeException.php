@@ -34,7 +34,7 @@ class RuntimeException extends \RuntimeException implements RichExceptionInterfa
 	 * @param null|array              $data     additional exception data
 	 * @param null|Throwable          $previous previous throwable used for the exception chaining
 	 */
-	public function __construct(string|I18nMessage $message = null, array $data = null, Throwable $previous = null)
+	public function __construct(I18nMessage|string $message = null, array $data = null, Throwable $previous = null)
 	{
 		$this->data = $data ?? [];
 		if ($message instanceof I18nMessage) {

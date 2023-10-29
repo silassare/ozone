@@ -94,7 +94,7 @@ class RouteSharedOptions
 	 *
 	 * @return $this
 	 */
-	public function auths(string|AuthMethodType ...$auths): static
+	public function auths(AuthMethodType|string ...$auths): static
 	{
 		foreach ($auths as $entry) {
 			if (!\is_string($entry)) {
@@ -194,7 +194,7 @@ class RouteSharedOptions
 	 *
 	 * @return static
 	 */
-	public function guard(string|callable|RouteGuardInterface $guard): static
+	public function guard(callable|RouteGuardInterface|string $guard): static
 	{
 		if (\is_string($guard)) { // class FQN or provider name
 			if (\class_exists($guard)) {// class FQN
@@ -466,8 +466,7 @@ class RouteSharedOptions
 			return false;
 		}
 
-		\set_error_handler(static function (): void {
-		}, \E_WARNING);
+		\set_error_handler(static function (): void {}, \E_WARNING);
 		$is_invalid = false === \preg_match(Route::REG_DELIMITER . $pattern . Route::REG_DELIMITER, '');
 		$reason     = \preg_last_error_msg();
 		\restore_error_handler();

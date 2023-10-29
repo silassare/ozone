@@ -35,8 +35,7 @@ class RouteSearchResult
 		protected array $dynamic_full_matches,
 		protected array $static_path_matches,
 		protected array $dynamic_path_matches
-	) {
-	}
+	) {}
 
 	/**
 	 * Gets the status.

@@ -203,7 +203,7 @@ class DigestAuth implements AuthMethodInterface
 	 *
 	 * @return array|false
 	 */
-	protected function digestProperties(string $digest): false|array
+	protected function digestProperties(string $digest): array|false
 	{
 		$required_props = [
 			'nonce',

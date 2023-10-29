@@ -64,9 +64,7 @@ final class Router
 	/**
 	 * Router constructor.
 	 */
-	public function __construct()
-	{
-	}
+	public function __construct() {}
 
 	/**
 	 * Create a new route group.
@@ -355,7 +353,7 @@ final class Router
 	 *
 	 * @return \OZONE\Core\Router\RouteOptions
 	 */
-	public function map(string|array $methods, string|callable $path, callable $factory = null): RouteOptions
+	public function map(array|string $methods, callable|string $path, callable $factory = null): RouteOptions
 	{
 		if (\is_callable($path)) {
 			$factory = $path;
@@ -414,7 +412,7 @@ final class Router
 	 *
 	 * @return \OZONE\Core\Router\RouteOptions
 	 */
-	public function connect(string|callable $path, callable $factory = null): RouteOptions
+	public function connect(callable|string $path, callable $factory = null): RouteOptions
 	{
 		return $this->map('connect', $path, $factory);
 	}
@@ -427,7 +425,7 @@ final class Router
 	 *
 	 * @return \OZONE\Core\Router\RouteOptions
 	 */
-	public function delete(string|callable $path, callable $factory = null): RouteOptions
+	public function delete(callable|string $path, callable $factory = null): RouteOptions
 	{
 		return $this->map(['delete'], $path, $factory);
 	}
@@ -440,7 +438,7 @@ final class Router
 	 *
 	 * @return \OZONE\Core\Router\RouteOptions
 	 */
-	public function get(string|callable $path, callable $factory = null): RouteOptions
+	public function get(callable|string $path, callable $factory = null): RouteOptions
 	{
 		return $this->map(['get'], $path, $factory);
 	}
@@ -453,7 +451,7 @@ final class Router
 	 *
 	 * @return \OZONE\Core\Router\RouteOptions
 	 */
-	public function head(string|callable $path, callable $factory = null): RouteOptions
+	public function head(callable|string $path, callable $factory = null): RouteOptions
 	{
 		return $this->map(['head'], $path, $factory);
 	}
@@ -466,7 +464,7 @@ final class Router
 	 *
 	 * @return \OZONE\Core\Router\RouteOptions
 	 */
-	public function options(string|callable $path, callable $factory = null): RouteOptions
+	public function options(callable|string $path, callable $factory = null): RouteOptions
 	{
 		return $this->map(['options'], $path, $factory);
 	}
@@ -479,7 +477,7 @@ final class Router
 	 *
 	 * @return \OZONE\Core\Router\RouteOptions
 	 */
-	public function patch(string|callable $path, callable $factory = null): RouteOptions
+	public function patch(callable|string $path, callable $factory = null): RouteOptions
 	{
 		return $this->map(['patch'], $path, $factory);
 	}
@@ -492,7 +490,7 @@ final class Router
 	 *
 	 * @return \OZONE\Core\Router\RouteOptions
 	 */
-	public function post(string|callable $path, callable $factory = null): RouteOptions
+	public function post(callable|string $path, callable $factory = null): RouteOptions
 	{
 		return $this->map(['post'], $path, $factory);
 	}
@@ -505,7 +503,7 @@ final class Router
 	 *
 	 * @return \OZONE\Core\Router\RouteOptions
 	 */
-	public function put(string|callable $path, callable $factory = null): RouteOptions
+	public function put(callable|string $path, callable $factory = null): RouteOptions
 	{
 		return $this->map(['put'], $path, $factory);
 	}
@@ -518,7 +516,7 @@ final class Router
 	 *
 	 * @return \OZONE\Core\Router\RouteOptions
 	 */
-	public function trace(string|callable $path, callable $factory = null): RouteOptions
+	public function trace(callable|string $path, callable $factory = null): RouteOptions
 	{
 		return $this->map(['trace'], $path, $factory);
 	}

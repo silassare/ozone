@@ -11,6 +11,7 @@
 
 namespace OZONE\Core\Users\Events;
 
+use OZONE\Core\App\Context;
 use OZONE\Core\Db\OZUser;
 use PHPUtils\Events\Event;
 
@@ -19,8 +20,14 @@ use PHPUtils\Events\Event;
  */
 final class UserLoggedIn extends Event
 {
-	public function __construct(private OZUser $user)
+	public function __construct(private readonly Context $context, private readonly OZUser $user) {}
+
+	/**
+	 * @return \OZONE\Core\App\Context
+	 */
+	public function getContext(): Context
 	{
+		return $this->context;
 	}
 
 	/**

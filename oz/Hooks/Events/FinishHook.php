@@ -33,9 +33,7 @@ final class FinishHook extends Event
 	 * @param \OZONE\Core\Http\Request  $request
 	 * @param \OZONE\Core\Http\Response $response
 	 */
-	public function __construct(protected Request $request, protected Response $response)
-	{
-	}
+	public function __construct(protected Request $request, protected Response $response) {}
 
 	/**
 	 * FinishHook destructor.

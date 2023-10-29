@@ -20,6 +20,4 @@ use OZONE\Core\Hooks\Hook;
  *
  * This event is triggered when the route was found but the request method is not allowed.
  */
-final class RouteMethodNotAllowed extends Hook
-{
-}
+final class RouteMethodNotAllowed extends Hook {}

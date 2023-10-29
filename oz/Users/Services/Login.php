@@ -74,6 +74,6 @@ final class Login extends Service
 			})
 			->name(self::ROUTE_LOGIN)
 			->auths(AuthMethodType::SESSION)
-			->form(Users::logOnForm(...));
+			->form(Users::logInForm(...));
 	}
 }

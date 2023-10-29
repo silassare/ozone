@@ -40,9 +40,7 @@ final class Cron
 	/**
 	 * Cron constructor.
 	 */
-	private function __construct()
-	{
-	}
+	private function __construct() {}
 
 	/**
 	 * Schedule a cron task.
@@ -145,7 +143,7 @@ final class Cron
 	 * @return \OZONE\Core\Cli\Cron\Schedule
 	 */
 	public static function command(
-		string|array $command,
+		array|string $command,
 		string $name = '',
 		string $description = '',
 		bool $in_background = true

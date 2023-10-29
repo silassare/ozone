@@ -31,9 +31,7 @@ class BearerAuth implements AuthMethodInterface
 	/**
 	 * BearerAuth constructor.
 	 */
-	protected function __construct(protected RouteInfo $ri, protected string $realm)
-	{
-	}
+	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
 
 	/**
 	 * BearerAuth destructor.

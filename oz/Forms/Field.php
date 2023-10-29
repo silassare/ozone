@@ -31,7 +31,7 @@ class Field implements ArrayCapableInterface
 	protected TypeInterface|TypesSwitcher $t_type;
 
 	/**
-	 * @var callable(mixed, \OZONE\Core\Forms\FormValidationContext):mixed
+	 * @var null|callable(mixed, \OZONE\Core\Forms\FormValidationContext):mixed
 	 */
 	protected $t_validator;
 	protected string $t_name;
@@ -49,7 +49,7 @@ class Field implements ArrayCapableInterface
 	 */
 	public function __construct(
 		string $name,
-		TypeInterface|TypesSwitcher|null $type = null,
+		null|TypeInterface|TypesSwitcher $type = null,
 		bool $required = false,
 		?FormRule $if = null
 	) {
@@ -174,7 +174,7 @@ class Field implements ArrayCapableInterface
 	 *
 	 * @return TypeInterface|TypesSwitcher
 	 */
-	public function getType(): TypesSwitcher|TypeInterface
+	public function getType(): TypeInterface|TypesSwitcher
 	{
 		return $this->t_type;
 	}

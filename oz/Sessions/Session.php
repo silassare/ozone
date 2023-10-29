@@ -38,8 +38,6 @@ final class Session implements BootHookReceiverInterface
 {
 	private const SESSION_ID_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
 
-	private string $request_source_key;
-
 	private ?SessionState $state = null;
 
 	private ?OZSession $sess_entry = null;
@@ -52,11 +50,9 @@ final class Session implements BootHookReceiverInterface
 	 * Session constructor.
 	 *
 	 * @param \OZONE\Core\App\Context $context
+	 * @param string                  $request_source_key
 	 */
-	public function __construct(protected Context $context)
-	{
-		$this->request_source_key = $this->context->getUserIP();
-	}
+	public function __construct(protected Context $context, private readonly string $request_source_key) {}
 
 	/**
 	 * Session destructor.
@@ -104,6 +100,16 @@ final class Session implements BootHookReceiverInterface
 		$this->assertSessionStarted();
 
 		return $this->sess_entry->getID();
+	}
+
+	/**
+	 * Returns session source key.
+	 *
+	 * @return string
+	 */
+	public function sourceKey(): string
+	{
+		return $this->request_source_key;
 	}
 
 	/**
@@ -251,7 +257,7 @@ final class Session implements BootHookReceiverInterface
 	 */
 	public static function findSessionByID(string $sid): ?OZSession
 	{
-		if (!self::isSessionIdLike($sid)) {
+		if (!OZone::hasDbInstalled() || !self::isSessionIdLike($sid)) {
 			return null;
 		}
 
@@ -326,6 +332,9 @@ final class Session implements BootHookReceiverInterface
 	 */
 	private function save(): void
 	{
+		if (!OZone::hasDbInstalled()) {
+			return;
+		}
 		$sid = $this->sess_entry->getID();
 
 		try {
@@ -411,6 +420,10 @@ final class Session implements BootHookReceiverInterface
 	 */
 	private static function delete(string $sid): void
 	{
+		if (!OZone::hasDbInstalled()) {
+			return;
+		}
+
 		try {
 			$s_table = new OZSessionsQuery();
 

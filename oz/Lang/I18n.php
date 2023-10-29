@@ -30,7 +30,7 @@ class I18n
 	 *
 	 * @return string
 	 */
-	public static function t(string|I18nMessage $message, array $inject = [], string $lang = null, Context $context = null): string
+	public static function t(I18nMessage|string $message, array $inject = [], string $lang = null, Context $context = null): string
 	{
 		if (\is_string($message)) {
 			return Polyglot::translate($message, $inject, $lang, $context);

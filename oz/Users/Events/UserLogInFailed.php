@@ -16,13 +16,11 @@ use OZONE\Core\Db\OZUser;
 use PHPUtils\Events\Event;
 
 /**
- * Class UserLogInInvalidPass.
+ * Class UserLogInFailed.
  */
-final class UserLogInInvalidPass extends Event
+final class UserLogInFailed extends Event
 {
-	public function __construct(private Context $context, private OZUser $user)
-	{
-	}
+	public function __construct(private readonly Context $context, private readonly OZUser $user) {}
 
 	/**
 	 * @return \OZONE\Core\App\Context

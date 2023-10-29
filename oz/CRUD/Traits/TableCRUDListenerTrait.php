@@ -52,9 +52,7 @@ trait TableCRUDListenerTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onBeforeCreateFlush(BeforeCreateFlush $action): void
-	{
-	}
+	public function onBeforeCreateFlush(BeforeCreateFlush $action): void {}
 
 	/**
 	 * {@inheritDoc}
@@ -83,9 +81,7 @@ trait TableCRUDListenerTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onBeforeUpdateFlush(BeforeUpdateFlush $action): void
-	{
-	}
+	public function onBeforeUpdateFlush(BeforeUpdateFlush $action): void {}
 
 	/**
 	 * {@inheritDoc}
@@ -98,9 +94,7 @@ trait TableCRUDListenerTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onBeforeUpdateAllFlush(BeforeUpdateAllFlush $action): void
-	{
-	}
+	public function onBeforeUpdateAllFlush(BeforeUpdateAllFlush $action): void {}
 
 	/**
 	 * {@inheritDoc}
@@ -113,9 +107,7 @@ trait TableCRUDListenerTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onBeforeDeleteFlush(BeforeDeleteFlush $action): void
-	{
-	}
+	public function onBeforeDeleteFlush(BeforeDeleteFlush $action): void {}
 
 	/**
 	 * {@inheritDoc}
@@ -128,9 +120,7 @@ trait TableCRUDListenerTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onBeforeDeleteAllFlush(BeforeDeleteAllFlush $action): void
-	{
-	}
+	public function onBeforeDeleteAllFlush(BeforeDeleteAllFlush $action): void {}
 
 	/**
 	 * {@inheritDoc}
@@ -159,42 +149,30 @@ trait TableCRUDListenerTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onAfterEntityRead(ORMEntity $entity, AfterEntityRead $event): void
-	{
-	}
+	public function onAfterEntityRead(ORMEntity $entity, AfterEntityRead $event): void {}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onBeforeEntityUpdate(ORMEntity $entity, BeforeEntityUpdate $event): void
-	{
-	}
+	public function onBeforeEntityUpdate(ORMEntity $entity, BeforeEntityUpdate $event): void {}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onAfterEntityUpdate(ORMEntity $entity, AfterEntityUpdate $event): void
-	{
-	}
+	public function onAfterEntityUpdate(ORMEntity $entity, AfterEntityUpdate $event): void {}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onBeforeEntityDeletion(ORMEntity $entity, BeforeEntityDeletion $event): void
-	{
-	}
+	public function onBeforeEntityDeletion(ORMEntity $entity, BeforeEntityDeletion $event): void {}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onAfterEntityDeletion(ORMEntity $entity, AfterEntityDeletion $event): void
-	{
-	}
+	public function onAfterEntityDeletion(ORMEntity $entity, AfterEntityDeletion $event): void {}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onAfterEntityCreation(ORMEntity $entity, AfterEntityCreation $event): void
-	{
-	}
+	public function onAfterEntityCreation(ORMEntity $entity, AfterEntityCreation $event): void {}
 }

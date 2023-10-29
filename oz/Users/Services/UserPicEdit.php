@@ -15,6 +15,7 @@ namespace OZONE\Core\Users\Services;
 
 use Exception;
 use OZONE\Core\App\Service;
+use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\FS\PPicUtils;
@@ -95,6 +96,7 @@ class UserPicEdit extends Service
 				return $s->respond();
 			})
 			->name(self::ROUTE_PIC_EDIT)
+			->auths(AuthMethodType::SESSION)
 			->param('user_id', '\d+');
 	}
 }

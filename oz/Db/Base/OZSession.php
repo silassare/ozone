@@ -144,7 +144,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getUserID(): string|null
+	public function getUserID(): null|string
 	{
 		return $this->user_id;
 	}
@@ -156,7 +156,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUserID(string|int|null $user_id): static
+	public function setUserID(null|int|string $user_id): static
 	{
 		$this->user_id = $user_id;
 
@@ -204,7 +204,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setExpire(string|int $expire): static
+	public function setExpire(int|string $expire): static
 	{
 		$this->expire = $expire;
 
@@ -228,7 +228,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setLastSeen(string|int $last_seen): static
+	public function setLastSeen(int|string $last_seen): static
 	{
 		$this->last_seen = $last_seen;
 
@@ -276,7 +276,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCreatedAT(string|int $created_at): static
+	public function setCreatedAT(int|string $created_at): static
 	{
 		$this->created_at = $created_at;
 
@@ -300,7 +300,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUpdatedAT(string|int $updated_at): static
+	public function setUpdatedAT(int|string $updated_at): static
 	{
 		$this->updated_at = $updated_at;
 

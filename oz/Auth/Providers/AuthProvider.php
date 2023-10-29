@@ -294,7 +294,7 @@ abstract class AuthProvider implements AuthProviderInterface
 			$auth->setUpdatedAT((string) \time())
 				->setOptions($this->scope->getOptions())
 				->save();
-		} catch (ORMException|CRUDException $e) {
+		} catch (CRUDException|ORMException $e) {
 			throw new RuntimeException('Unable to save authorization process data.', null, $e);
 		}
 	}

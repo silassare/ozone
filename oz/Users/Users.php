@@ -25,7 +25,7 @@ use OZONE\Core\Forms\FormData;
 use OZONE\Core\Sessions\Session;
 use OZONE\Core\Users\Events\UserLoggedIn;
 use OZONE\Core\Users\Events\UserLoggedOut;
-use OZONE\Core\Users\Events\UserLogInInvalidPass;
+use OZONE\Core\Users\Events\UserLogInFailed;
 use OZONE\Core\Users\Events\UserLogInUnknown;
 use OZONE\Core\Users\Traits\UsersUtilsTrait;
 use PHPUtils\Store\Store;
@@ -47,9 +47,7 @@ final class Users
 	 *
 	 * @param \OZONE\Core\App\Context $context
 	 */
-	public function __construct(private readonly Context $context)
-	{
-	}
+	public function __construct(private readonly Context $context) {}
 
 	/**
 	 * Logon the user that have the given user id.
@@ -60,7 +58,7 @@ final class Users
 	 */
 	public function logUserIn(OZUser $user): self
 	{
-		if (!$user->isSaved()) {
+		if (!$user->isSaved() || !$user->isValid()) {
 			// something is going wrong
 			throw new RuntimeException('OZ_USER_CANT_LOG_ON', $user->toArray());
 		}
@@ -93,7 +91,7 @@ final class Users
 			throw new RuntimeException('OZ_USER_LOG_ON_FAIL', null, $t);
 		}
 
-		(new UserLoggedIn($user))->dispatch();
+		(new UserLoggedIn($this->context, $user))->dispatch();
 
 		return $this;
 	}
@@ -124,7 +122,7 @@ final class Users
 				throw new RuntimeException('OZ_USER_LOG_OUT_FAIL', null, $t);
 			}
 
-			(new UserLoggedOut($current_user))->dispatch();
+			(new UserLoggedOut($this->context, $current_user))->dispatch();
 		}
 
 		return $this;
@@ -135,7 +133,7 @@ final class Users
 	 *
 	 * @return \OZONE\Core\Forms\Form
 	 */
-	public static function logOnForm(): Form
+	public static function logInForm(): Form
 	{
 		$form = new Form();
 
@@ -167,7 +165,7 @@ final class Users
 	 */
 	public function tryPhoneLogIn(FormData $form_data): OZUser|string
 	{
-		$form = self::logOnForm()
+		$form = self::logInForm()
 			->validate($form_data);
 
 		$phone = $form['phone'];
@@ -195,7 +193,7 @@ final class Users
 	 */
 	public function tryEmailLogIn(FormData $form_data): OZUser|string
 	{
-		$form = self::logOnForm()
+		$form = self::logInForm()
 			->validate($form_data);
 
 		$email = $form['email'];
@@ -227,7 +225,7 @@ final class Users
 		}
 
 		if (!Password::verify($pass, $user->getPass())) {
-			(new UserLogInInvalidPass($this->context, $user))->dispatch();
+			(new UserLogInFailed($this->context, $user))->dispatch();
 
 			return 'OZ_FIELD_PASS_INVALID';
 		}

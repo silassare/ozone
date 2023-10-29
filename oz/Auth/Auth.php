@@ -128,11 +128,13 @@ final class Auth implements BootHookReceiverInterface
 			throw new RuntimeException(\sprintf('Undefined auth provider "%s".', $name));
 		}
 		if (!\is_subclass_of($provider, AuthProviderInterface::class)) {
-			throw new RuntimeException(\sprintf(
-				'Auth provider "%s" should implements "%s".',
-				$provider,
-				AuthProviderInterface::class
-			));
+			throw new RuntimeException(
+				\sprintf(
+					'Auth provider "%s" should implements "%s".',
+					$provider,
+					AuthProviderInterface::class
+				)
+			);
 		}
 
 		/* @var AuthProviderInterface $provider */
@@ -147,7 +149,7 @@ final class Auth implements BootHookReceiverInterface
 	 *
 	 * @return class-string<\OZONE\Core\Auth\Interfaces\AuthMethodInterface>
 	 */
-	public static function method(string|AuthMethodType $method): string
+	public static function method(AuthMethodType|string $method): string
 	{
 		if (!\is_string($method)) {
 			$method = $method->value;
@@ -156,21 +158,35 @@ final class Auth implements BootHookReceiverInterface
 		$class = Settings::get('oz.auth.methods', $method);
 
 		if (!$class) {
-			throw (new RuntimeException(\sprintf(
-				'Auth method "%s" not found in settings.',
-				$method
-			)))->suspectConfig('oz.auth.methods', $method);
+			throw (new RuntimeException(
+				\sprintf(
+					'Auth method "%s" not found in settings.',
+					$method
+				)
+			))->suspectConfig('oz.auth.methods', $method);
 		}
 
 		if (!\class_exists($class) || !\is_subclass_of($class, AuthMethodInterface::class)) {
-			throw (new RuntimeException(\sprintf(
-				'Auth method "%s" should be subclass of: %s',
-				$class,
-				AuthMethodInterface::class
-			)))->suspectConfig('oz.auth.methods', $method);
+			throw (new RuntimeException(
+				\sprintf(
+					'Auth method "%s" should be subclass of: %s',
+					$class,
+					AuthMethodInterface::class
+				)
+			))->suspectConfig('oz.auth.methods', $method);
 		}
 
 		return $class;
+	}
+
+	/**
+	 * Gets the list of enabled auth methods to use for api requests.
+	 *
+	 * @return \OZONE\Core\Auth\AuthMethodType[]
+	 */
+	public static function apiAuthMethods(): array
+	{
+		return Settings::get('oz.auth', 'OZ_AUTH_API_AUTH_METHODS');
 	}
 
 	/**

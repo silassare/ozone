@@ -218,7 +218,7 @@ class TypeFile extends Type
 	 *
 	 * @return null|string|string[]
 	 */
-	public function validate($value): string|array|null
+	public function validate($value): null|array|string
 	{
 		$debug = [
 			'value' => $value,
@@ -256,7 +256,7 @@ class TypeFile extends Type
 	 *
 	 * @throws JsonException
 	 */
-	public function dbToPhp($value, RDBMSInterface $rdbms): string|array|null
+	public function dbToPhp($value, RDBMSInterface $rdbms): null|array|string
 	{
 		if (null === $value) {
 			return null;

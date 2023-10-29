@@ -58,6 +58,12 @@ final class ServicesCmd extends Command
 			->description('To force override if a service with the same class name exists.')
 			->bool()
 			->def(false);
+
+		$generate->option('service-dir', 'd', [], 5)
+			->description('The service directory.')
+			->path()
+			->dir();
+
 		$generate->handler($this->generate(...));
 	}
 
@@ -75,18 +81,22 @@ final class ServicesCmd extends Command
 		$table_name    = $args->get('table-name');
 		$service_name  = $args->get('service-name');
 		$service_class = $args->get('service-class');
+		$service_dir   = $args->get('service-dir');
 		$override      = $args->get('override');
+
+		if (!$service_dir) {
+			$service_dir = app()
+				->getAppDir()
+				->cd('Services', true)
+				->getRoot();
+		}
 
 		$db = db();
 
 		$db->assertHasTable($table_name);
 
 		/** @var Table $table */
-		$table       = $db->getTable($table_name);
-		$service_dir = app()
-			->getAppDir()
-			->cd('Services', true)
-			->getRoot();
+		$table = $db->getTable($table_name);
 
 		$p_ns              = Settings::get('oz.config', 'OZ_PROJECT_NAMESPACE');
 		$service_namespace = \sprintf('%s\\Services', $p_ns);

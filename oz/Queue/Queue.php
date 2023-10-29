@@ -40,9 +40,7 @@ final class Queue
 	 *
 	 * @param string $name
 	 */
-	public function __construct(protected readonly string $name)
-	{
-	}
+	public function __construct(protected readonly string $name) {}
 
 	/**
 	 * Gets queue name.

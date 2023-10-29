@@ -138,7 +138,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getID(): string|null
+	public function getID(): null|string
 	{
 		return $this->id;
 	}
@@ -150,7 +150,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setID(string|int|null $id): static
+	public function setID(null|int|string $id): static
 	{
 		$this->id = $id;
 
@@ -474,7 +474,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getStartedAT(): string|null
+	public function getStartedAT(): null|string
 	{
 		return $this->started_at;
 	}
@@ -486,7 +486,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setStartedAT(string|float|int|null $started_at): static
+	public function setStartedAT(null|float|int|string $started_at): static
 	{
 		$this->started_at = $started_at;
 
@@ -498,7 +498,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return null|string
 	 */
-	public function getEndedAT(): string|null
+	public function getEndedAT(): null|string
 	{
 		return $this->ended_at;
 	}
@@ -510,7 +510,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setEndedAT(string|float|int|null $ended_at): static
+	public function setEndedAT(null|float|int|string $ended_at): static
 	{
 		$this->ended_at = $ended_at;
 
@@ -534,7 +534,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setCreatedAT(string|int $created_at): static
+	public function setCreatedAT(int|string $created_at): static
 	{
 		$this->created_at = $created_at;
 
@@ -558,7 +558,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setUpdatedAT(string|int $updated_at): static
+	public function setUpdatedAT(int|string $updated_at): static
 	{
 		$this->updated_at = $updated_at;
 

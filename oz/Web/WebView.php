@@ -126,9 +126,7 @@ class WebView extends Service
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function registerRoutes(Router $router): void
-	{
-	}
+	public static function registerRoutes(Router $router): void {}
 
 	/**
 	 * Render the view.

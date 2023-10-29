@@ -40,23 +40,17 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function boot(): void
-	{
-	}
+	public function boot(): void {}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onUnhandledThrowable(Throwable $t): void
-	{
-	}
+	public function onUnhandledThrowable(Throwable $t): void {}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function onUnhandledError(int $code, string $message, string $file, int $line): void
-	{
-	}
+	public function onUnhandledError(int $code, string $message, string $file, int $line): void {}
 
 	/**
 	 * {@inheritDoc}

@@ -22,10 +22,11 @@ $finder->in([
 	__DIR__ . '/oz',
 	__DIR__ . '/tests',
 ])
-	   ->notPath('otpl_done')
-	   ->notPath('blate_cache')
-	   ->ignoreDotFiles(true)
-	   ->ignoreVCS(true);
+	->notPath('otpl_done')
+	->notPath('blate_cache')
+	->notPath('vendor')
+	->ignoreDotFiles(true)
+	->ignoreVCS(true);
 
 $header = <<<'EOF'
 Copyright (c) 2017-present, Emile Silas Sare
@@ -47,4 +48,4 @@ $rules = [
 ];
 
 return (new PhpCS())->mergeRules($finder, $rules)
-					->setRiskyAllowed(true);
+	->setRiskyAllowed(true);

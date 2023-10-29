@@ -20,6 +20,4 @@ use OZONE\Core\Hooks\Hook;
  *
  * This hook is triggered when ozone is fully booted.
  */
-final class InitHook extends Hook
-{
-}
+final class InitHook extends Hook {}

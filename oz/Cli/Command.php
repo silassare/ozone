@@ -54,9 +54,7 @@ abstract class Command extends KliCommand
 	/**
 	 * {@inheritDoc}
 	 */
-	public function execute(KliAction $action, KliArgs $args): void
-	{
-	}
+	public function execute(KliAction $action, KliArgs $args): void {}
 
 	/**
 	 * Describe your command.

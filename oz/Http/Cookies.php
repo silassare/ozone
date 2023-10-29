@@ -89,7 +89,7 @@ class Cookies
 	 *
 	 * @return \OZONE\Core\Http\Cookies
 	 */
-	public function set(string $name, string|array $value): self
+	public function set(string $name, array|string $value): self
 	{
 		if (!\is_array($value)) {
 			$value = ['value' => $value];

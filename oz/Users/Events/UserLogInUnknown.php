@@ -19,9 +19,7 @@ use PHPUtils\Events\Event;
  */
 final class UserLogInUnknown extends Event
 {
-	public function __construct(private Context $context)
-	{
-	}
+	public function __construct(private readonly Context $context) {}
 
 	/**
 	 * @return \OZONE\Core\App\Context

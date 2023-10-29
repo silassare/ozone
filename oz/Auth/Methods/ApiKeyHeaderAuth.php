@@ -32,9 +32,7 @@ class ApiKeyHeaderAuth implements AuthMethodInterface
 	/**
 	 * ApiKeyHeaderAuth constructor.
 	 */
-	protected function __construct(protected RouteInfo $ri, protected string $realm)
-	{
-	}
+	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
 
 	/**
 	 * ApiKeyHeaderAuth destructor.

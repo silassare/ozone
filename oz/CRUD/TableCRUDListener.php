@@ -29,9 +29,7 @@ abstract class TableCRUDListener implements TableCRUDListenerInterface
 	 *
 	 * @param \OZONE\Core\App\Context $context
 	 */
-	public function __construct(protected readonly Context $context)
-	{
-	}
+	public function __construct(protected readonly Context $context) {}
 
 	/**
 	 * TableCRUDListener destructor.

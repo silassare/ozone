@@ -18,6 +18,4 @@ use OZONE\Core\App\AbstractApp;
 /**
  * Class App.
  */
-class App extends AbstractApp
-{
-}
+class App extends AbstractApp {}

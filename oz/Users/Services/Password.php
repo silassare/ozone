@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Users\Services;
 
 use OZONE\Core\App\Service;
+use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Forms\Form;
@@ -110,6 +111,7 @@ final class Password extends Service
 					->name(self::ROUTE_PASS_EDIT_SELF)
 					->form(self::currentPassForm(...));
 			})
+			->auths(AuthMethodType::SESSION)
 			->form(self::newPassForm(...));
 	}
 

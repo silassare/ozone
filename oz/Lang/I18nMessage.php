@@ -23,9 +23,7 @@ class I18nMessage implements ArrayCapableInterface
 {
 	use ArrayCapableTrait;
 
-	public function __construct(protected string $text, protected array $inject = [])
-	{
-	}
+	public function __construct(protected string $text, protected array $inject = []) {}
 
 	/**
 	 * @return string

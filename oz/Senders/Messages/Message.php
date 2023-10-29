@@ -29,9 +29,7 @@ abstract class Message implements MessageInterface
 	 * @param string $template
 	 * @param array  $attributes
 	 */
-	public function __construct(protected string $template, protected array $attributes = [])
-	{
-	}
+	public function __construct(protected string $template, protected array $attributes = []) {}
 
 	/**
 	 * {@inheritDoc}
