@@ -19,6 +19,7 @@ use Gobl\DBAL\Types\TypeDate;
 use OZONE\Core\CSRF\CSRF;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Forms\Traits\FormFieldsTrait;
 use OZONE\Core\Http\Request;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\Lang\I18n;
@@ -31,6 +32,7 @@ use PHPUtils\Traits\ArrayCapableTrait;
 class Form implements ArrayCapableInterface
 {
 	use ArrayCapableTrait;
+	use FormFieldsTrait;
 
 	/**
 	 * @var \OZONE\Core\Forms\Field[]
