@@ -27,7 +27,10 @@ use OZONE\Core\Http\Body;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\UploadedFile;
 use OZONE\Core\Http\Uri;
+use OZONE\Core\Utils\Hasher;
 use OZONE\Core\Utils\Random;
+use PHPUtils\Str;
+use Throwable;
 
 /**
  * Class AbstractLocalStorage.
@@ -65,10 +68,9 @@ abstract class AbstractLocalStorage implements StorageInterface
 		$mimetype = $upload->getClientMediaType();
 
 		$ext = FS::getRealExtension($filename, $mimetype);
-		$ref = Random::fileName('upload') . '.' . $ext;
+		$ref = self::safeRef($filename, $ext);
 
-		$destination = $this->uploadsDir()
-			->resolve($ref);
+		$destination = $this->getDestinationWithRef($ref);
 
 		$f = new OZFile();
 
@@ -93,10 +95,9 @@ abstract class AbstractLocalStorage implements StorageInterface
 		$f = new OZFile();
 
 		$ext = FS::getRealExtension($filename, $mimetype);
-		$ref = Random::fileName('save') . '.' . $ext;
+		$ref = self::safeRef($filename, $ext, 'save');
 
-		$destination = $this->uploadsDir()
-			->resolve($ref);
+		$destination = $this->getDestinationWithRef($ref);
 
 		$fw = \fopen($destination, 'wb');
 
@@ -164,29 +165,20 @@ abstract class AbstractLocalStorage implements StorageInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function publicUri(Context $context, OZFile $file): Uri
-	{
-		$this->require($file->getRef());
-
-		// TODO for local files, we could send the public file uri to let the web server handle the file serving
-		return $context->buildRouteUri(GetFilesView::MAIN_ROUTE, [
-			'oz_file_id'  => $file->getID(),
-			'oz_file_key' => $file->getKey(),
-		]);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function serve(OZFile $file, Response $response): Response
 	{
 		$abs_path = $this->require($file->getRef());
 
-		// TODO should we keep this? see publicUri
 		if (Settings::get('oz.files', 'OZ_SERVER_SENDFILE_ENABLED')) {
-			$path = Settings::get('oz.files', 'OZ_SERVER_SENDFILE_REDIRECT_PATH') . $file->getRef();
+			$base_path = Settings::get('oz.files', 'OZ_SERVER_SENDFILE_REDIRECT_PATH');
+			$path      = app()->getProjectDir()->relativePath($abs_path);
+			$new_path  = $base_path . $path;
 
-			return $response->withHeader('X-Accel-Redirect', $path);
+			return $response
+				// for nginx
+				->withHeader('X-Accel-Redirect', $new_path)
+				// for apache
+				->withHeader('X-Sendfile', $abs_path);
 		}
 
 		$size      = $file->getSize();
@@ -201,36 +193,60 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws Throwable
 	 */
-	public function write(OZFile $file, string $content): self
+	public function write(OZFile $file, FileStream|string $content): self
 	{
 		$abs_path = $this->require($file->getRef());
 
+		if (\file_exists($abs_path)) {
+			$f = \fopen($abs_path, 'wb');
+			\ftruncate($f, 0);
+			\fclose($f);
+		}
+
 		(new FilesManager())->wf($abs_path, $content);
+
+		\clearstatcache(true, $abs_path);
+
+		$file->setSize(\filesize($abs_path))->setUpdatedAt(\time())->save();
 
 		return $this;
 	}
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws Throwable
 	 */
-	public function append(OZFile $file, string $data): self
+	public function append(OZFile $file, FileStream|string $data): self
 	{
 		$abs_path = $this->require($file->getRef());
 
 		(new FilesManager())->append($abs_path, $data);
 
+		\clearstatcache(true, $abs_path);
+
+		$file->setSize(\filesize($abs_path))->setUpdatedAt(\time())->save();
+
 		return $this;
 	}
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws Throwable
 	 */
-	public function prepend(OZFile $file, string $data): self
+	public function prepend(OZFile $file, FileStream|string $data): self
 	{
 		$abs_path = $this->require($file->getRef());
 
 		(new FilesManager())->prepend($abs_path, $data);
+
+		\clearstatcache(true, $abs_path);
+
+		$file->setSize(\filesize($abs_path))->setUpdatedAt(\time())->save();
 
 		return $this;
 	}
@@ -263,19 +279,74 @@ abstract class AbstractLocalStorage implements StorageInterface
 	abstract protected function uploadsDir(): FilesManager;
 
 	/**
+	 * Creates a safe reference.
+	 *
+	 * The reference here is a unique filename built from the given filename.
+	 *
+	 * @param string $filename
+	 * @param string $ext
+	 * @param string $prefix
+	 *
+	 * @return string
+	 */
+	protected static function safeRef(string $filename, string $ext, string $prefix = 'upload'): string
+	{
+		$name = Str::stringToURLSlug($filename);
+
+		if (!$name) {
+			$name = Random::fileName($prefix);
+		}
+
+		// ensure the name has less than 100 char before we add the hash
+		$name = \trim(\substr($name, 0, 100), '-');
+
+		// the hash is used to avoid name collision
+		$name .= '-' . Hasher::shorten(Random::string());
+		$ext = \strtolower($ext);
+
+		if (\str_contains($ext, 'php') || \str_contains($ext, 'inc') || \str_contains($ext, 'phtml')) {
+			return $name;
+		}
+
+		return $name . '.' . $ext;
+	}
+
+	/**
+	 * Returns file absolute path with the given ref.
+	 *
+	 * @param string $ref
+	 *
+	 * @return string
+	 */
+	protected function getDestinationWithRef(string $ref): string
+	{
+		$hash = \md5($ref);
+		$dir1 = \substr($hash, 0, 2);
+		$dir2 = \substr($hash, 2, 2);
+		$fs   = new FilesManager();
+		$path = $this->uploadsDir()
+			->resolve('.' . DS . $dir1 . DS . $dir2);
+
+		return $fs->cd($path, true)->resolve($ref);
+	}
+
+	/**
 	 * Returns file absolute path with the given ref.
 	 *
 	 * @param string $ref
 	 *
 	 * @return null|string
 	 */
-	private function localize(string $ref): ?string
+	protected function localize(string $ref): ?string
 	{
-		$dir = $this->uploadsDir();
-		if ($dir->filter()
-			->isFile()
-			->check($ref)) {
-			return $dir->resolve($ref);
+		$fs          = new FilesManager();
+		$destination = $this->getDestinationWithRef($ref);
+		if (
+			$fs->filter()
+				->isFile()
+				->check($destination)
+		) {
+			return $destination;
 		}
 
 		return null;
@@ -289,7 +360,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	 *
 	 * @return string
 	 */
-	private function require(string $ref): string
+	protected function require(string $ref): string
 	{
 		$abs_path = $this->localize($ref);
 

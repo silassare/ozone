@@ -14,11 +14,11 @@ declare(strict_types=1);
 namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FS;
 use OZONE\Core\Utils\Random;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
-use RuntimeException;
 
 /**
  * Class UploadedFile.
@@ -120,6 +120,14 @@ class UploadedFile implements UploadedFileInterface
 	{
 		if ($this->moved) {
 			throw new RuntimeException('Uploaded file already moved');
+		}
+
+		if (\UPLOAD_ERR_OK !== $this->error) {
+			$info             = FS::uploadErrorInfo($this->error);
+			$debug['_name']   = $this->name;
+			$debug['_reason'] = $info['reason'];
+
+			throw new RuntimeException($info['message'], $debug);
 		}
 
 		$targetIsStream = \strpos($targetPath, '://') > 0;

@@ -107,4 +107,28 @@ class FilesManager extends FSUtils
 
 		return $this;
 	}
+
+	/**
+	 * Returns a relative path from a given path.
+	 *
+	 * @param string $path
+	 * @param string $from
+	 *
+	 * @return string
+	 */
+	public function relativePath(string $path, string $from = '.'): string
+	{
+		$from = $this->resolve($from);
+		$to   = $this->resolve($path);
+
+		$explode_from = \explode(DS, $from);
+		$explode_to   = \explode(DS, $to);
+
+		while (!empty($explode_from) && !empty($explode_to) && $explode_from[0] === $explode_to[0]) {
+			\array_shift($explode_from);
+			\array_shift($explode_to);
+		}
+
+		return \str_repeat('..' . DS, \count($explode_from)) . \implode(DS, $explode_to);
+	}
 }

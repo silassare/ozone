@@ -56,11 +56,9 @@ class GetFilesView extends WebView
 	 *
 	 * @return \OZONE\Core\Http\Response
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
 	 * @throws \OZONE\Core\Exceptions\InvalidFormException
 	 * @throws \OZONE\Core\Exceptions\NotFoundException
 	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\Core\Exceptions\UnverifiedUserException
 	 */
 	public static function handle(RouteInfo $ri): Response
 	{
@@ -71,7 +69,7 @@ class GetFilesView extends WebView
 		$req_file_filter = $ri->param('oz_file_filter');
 		$req_file_ext    = $ri->param('oz_file_extension');
 
-		$file = FS::getFileWithId($req_file_id);
+		$file = FS::getFileByID($req_file_id);
 
 		if (!$file || !$file->isValid()) {
 			throw new NotFoundException();

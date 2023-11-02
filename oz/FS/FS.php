@@ -78,7 +78,7 @@ class FS
 			\UPLOAD_ERR_NO_FILE => 'OZ_FILE_UPLOAD_IS_EMPTY',
 			default             => 'OZ_FILE_UPLOAD_FAILS',
 		};
-		$reason  = match ($error) {
+		$reason = match ($error) {
 			\UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
 			\UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
 			\UPLOAD_ERR_NO_FILE    => 'No file was uploaded',
@@ -130,13 +130,13 @@ class FS
 	}
 
 	/**
-	 * Gets file from database with a given file id.
+	 * Gets file by id.
 	 *
 	 * @param string $id the file id
 	 *
 	 * @return null|\OZONE\Core\Db\OZFile
 	 */
-	public static function getFileWithId(string $id): ?OZFile
+	public static function getFileByID(string $id): ?OZFile
 	{
 		try {
 			$qb = new OZFilesQuery();
@@ -146,6 +146,27 @@ class FS
 				->fetchClass();
 		} catch (Throwable $t) {
 			throw new RuntimeException(\sprintf('Unable to get file with id: %s', $id), null, $t);
+		}
+	}
+
+	/**
+	 * Delete file by id.
+	 *
+	 * @param string $id the file id
+	 */
+	public static function deleteFileByID(string $id): void
+	{
+		try {
+			$f = self::getFileByID($id);
+
+			if ($f) {
+				$storage = self::getStorage($f->storage);
+				$storage->delete($f);
+
+				$f->selfDelete();
+			}
+		} catch (Throwable $t) {
+			throw new RuntimeException(\sprintf('Unable to delete file with id: %s', $id), null, $t);
 		}
 	}
 
@@ -186,7 +207,7 @@ class FS
 			throw new RuntimeException('File alias content is invalid.', ['content' => $content]);
 		}
 
-		$f = self::getFileWithId($data['file_id']);
+		$f = self::getFileByID($data['file_id']);
 
 		if (!$f || $f->isValid()) {
 			throw new RuntimeException('Unable to identify aliased file.', ['content' => $content]);

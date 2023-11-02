@@ -64,7 +64,7 @@ class PPicUtils
 		array $coordinate,
 		string $file_label = 'OZ_FILE_LABEL_USER_PIC'
 	): string {
-		$f = FS::getFileWithId($file_id);
+		$f = FS::getFileByID($file_id);
 
 		if (!$f || $f->getKey() !== $file_key) {
 			throw new UnauthorizedActionException();

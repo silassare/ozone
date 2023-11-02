@@ -133,31 +133,31 @@ interface StorageInterface
 	 * Writes data to the given file, this should overwrite the file content.
 	 *
 	 * @param \OZONE\Core\Db\OZFile $file
-	 * @param string                $content
+	 * @param FileStream|string     $content
 	 *
 	 * @return $this
 	 */
-	public function write(OZFile $file, string $content): self;
+	public function write(OZFile $file, FileStream|string $content): self;
 
 	/**
 	 * Appends data to the given file.
 	 *
 	 * @param \OZONE\Core\Db\OZFile $file
-	 * @param string                $data
+	 * @param FileStream|string     $data
 	 *
 	 * @return $this
 	 */
-	public function append(OZFile $file, string $data): self;
+	public function append(OZFile $file, FileStream|string $data): self;
 
 	/**
 	 * Prepends data to the given file.
 	 *
 	 * @param \OZONE\Core\Db\OZFile $file
-	 * @param string                $data
+	 * @param FileStream|string     $data
 	 *
 	 * @return $this
 	 */
-	public function prepend(OZFile $file, string $data): self;
+	public function prepend(OZFile $file, FileStream|string $data): self;
 
 	/**
 	 * Delete a file.
