@@ -216,7 +216,7 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return null|string|string[]
+	 * @return null|string|string[] the file(s) id(s)
 	 */
 	public function validate($value): null|array|string
 	{
@@ -344,17 +344,18 @@ class TypeFile extends Type
 	}
 
 	/**
-	 * @param \OZONE\Core\Http\UploadedFile[] $uploaded_files
-	 * @param array                           $debug
+	 * Computes uploaded files.
 	 *
-	 * @return string[]
+	 * @param array<OZFile|UploadedFile> $uploaded_files
+	 * @param array                      $debug
+	 *
+	 * @return string[] the list of file ids
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 	 */
 	protected function computeUploadedFiles(array $uploaded_files, array $debug): array
 	{
 		$total_size = 0;
-		$file_label = $this->getOption('file_label', '');
 
 		foreach ($uploaded_files as $k => $item) {
 			$debug['index'] = $k;
@@ -378,6 +379,7 @@ class TypeFile extends Type
 			throw new TypesInvalidValueException('OZ_FILE_TOTAL_SIZE_EXCEED_LIMIT', $debug);
 		}
 
+		$file_label   = $this->getOption('file_label', '');
 		$storage_name = $this->getOption('storage', FS::DEFAULT_STORAGE);
 		$storage      = FS::getStorage($storage_name);
 
