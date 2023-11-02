@@ -149,13 +149,19 @@ class Form implements ArrayCapableInterface
 	 */
 	public function addField(Field $field): static
 	{
-		$this->fields[$field->getName()] = $field;
+		$name = $field->getName();
+
+		if (isset($this->fields[$name])) {
+			throw new RuntimeException(\sprintf('Field %s already exists.', $name));
+		}
+
+		$this->fields[$name] = $field;
 
 		return $this;
 	}
 
 	/**
-	 * Creates a new field and adds it to the form.
+	 * Returns existing field or creates a new one.
 	 *
 	 * @param string $name
 	 *
@@ -163,9 +169,12 @@ class Form implements ArrayCapableInterface
 	 */
 	public function field(string $name): Field
 	{
-		$field = new Field($name);
+		$field = $this->getField($name);
+		if (!$field) {
+			$field = new Field($name);
 
-		$this->addField($field);
+			$this->addField($field);
+		}
 
 		return $field;
 	}
