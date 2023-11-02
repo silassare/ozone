@@ -53,35 +53,42 @@ interface AppInterface
 	public function getEnvFiles(): array;
 
 	/**
-	 * Returns the app directory.
+	 * Returns an instance of the files manager with the project directory as root.
+	 *
+	 * @return \OZONE\Core\FS\FilesManager
+	 */
+	public function getProjectDir(): FilesManager;
+
+	/**
+	 * Returns an instance of the files manager with the app directory as root.
 	 *
 	 * @return \OZONE\Core\FS\FilesManager
 	 */
 	public function getAppDir(): FilesManager;
 
 	/**
-	 * Returns the settings directory.
+	 * Returns an instance of the files manager with the settings directory as root.
 	 *
 	 * @return \OZONE\Core\FS\FilesManager
 	 */
 	public function getSettingsDir(): FilesManager;
 
 	/**
-	 * Returns the templates directory.
+	 * Returns an instance of the files manager with the templates directory as root.
 	 *
 	 * @return \OZONE\Core\FS\FilesManager
 	 */
 	public function getTemplatesDir(): FilesManager;
 
 	/**
-	 * Returns the cache directory.
+	 * Returns an instance of the files manager with the cache directory as root.
 	 *
 	 * @return \OZONE\Core\FS\FilesManager
 	 */
 	public function getCacheDir(): FilesManager;
 
 	/**
-	 * Returns the private files directory.
+	 * Returns an instance of the files manager with the private files directory as root.
 	 *
 	 * This directory should be protected from public access.
 	 * This is where you should store your private files.
@@ -91,7 +98,7 @@ interface AppInterface
 	public function getPrivateFilesDir(): FilesManager;
 
 	/**
-	 * Returns public directory.
+	 * Returns an instance of the files manager with the public files directory as root.
 	 *
 	 * This directory is accessible from the web.
 	 * This is where public files should be stored.
@@ -101,7 +108,7 @@ interface AppInterface
 	public function getPublicFilesDir(): FilesManager;
 
 	/**
-	 * Returns the migrations directory.
+	 * Returns an instance of the files manager with the migrations directory as root.
 	 *
 	 * @return \OZONE\Core\FS\FilesManager
 	 */

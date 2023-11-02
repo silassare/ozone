@@ -65,6 +65,14 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	public function getProjectDir(): FilesManager
+	{
+		return new FilesManager(OZ_PROJECT_DIR);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public function getAppDir(): FilesManager
 	{
 		return new FilesManager(OZ_APP_DIR);
