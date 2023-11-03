@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\Core\Users\Services;
 
 use OZONE\Core\App\Service;
-use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\OZone;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -62,7 +61,6 @@ final class TNet extends Service
 
 				return $s->respond();
 			})
-			->name(self::ROUTE_TNET)
-			->auths(AuthMethodType::SESSION);
+			->name(self::ROUTE_TNET);
 	}
 }

@@ -17,6 +17,8 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Auth;
+use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\CRUD\TableCRUD;
 use OZONE\Core\Db\OZRolesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -25,7 +27,9 @@ use OZONE\Core\Hooks\Events\InitHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Migrations\Migrations;
+use OZONE\Core\Router\Events\RouterCreated;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
+use OZONE\Core\Router\RouteGroup;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Users\Users;
 use OZONE\Core\Utils\Utils;
@@ -154,13 +158,16 @@ final class OZone
 	public static function getApiRouter(): Router
 	{
 		if (!isset(self::$api_router)) {
-			self::$api_router = new Router();
+			$router = self::$api_router = new Router();
+			$group  = $router->group('/', static function () {
+				$a      = Settings::load('oz.routes');
+				$b      = Settings::load('oz.routes.api');
+				$routes = Settings::merge($a, $b);
 
-			$a      = Settings::load('oz.routes');
-			$b      = Settings::load('oz.routes.api');
-			$routes = Settings::merge($a, $b);
+				self::registerRoutes(self::$api_router, $routes);
+			})->auths(...Auth::apiAuthMethods());
 
-			self::registerRoutes(self::$api_router, $routes);
+			(new RouterCreated($router, $group, true))->dispatch();
 		}
 
 		return self::$api_router;
@@ -174,13 +181,17 @@ final class OZone
 	public static function getWebRouter(): Router
 	{
 		if (!isset(self::$web_router)) {
-			self::$web_router = new Router();
+			$router = self::$web_router = new Router();
 
-			$a      = Settings::load('oz.routes');
-			$b      = Settings::load('oz.routes.web');
-			$routes = Settings::merge($a, $b);
+			$group = $router->group('/', static function (Router $router, RouteGroup $group) {
+				$a      = Settings::load('oz.routes');
+				$b      = Settings::load('oz.routes.web');
+				$routes = Settings::merge($a, $b);
 
-			self::registerRoutes(self::$web_router, $routes);
+				self::registerRoutes(self::$web_router, $routes);
+			})->auths(AuthMethodType::SESSION);
+
+			(new RouterCreated($router, $group, false))->dispatch();
 		}
 
 		return self::$web_router;

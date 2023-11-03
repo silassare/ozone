@@ -15,7 +15,6 @@ namespace OZONE\Core\Users\Services;
 
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Auth\Providers\EmailVerificationProvider;
 use OZONE\Core\Auth\Providers\PhoneVerificationAuthProvider;
 use OZONE\Core\Db\OZUser;
@@ -88,7 +87,6 @@ final class SignUp extends Service
 			})
 			->name(self::ROUTE_SIGN_UP)
 			->form(Form::fromTable(OZUser::TABLE_NAME))
-			->auths(AuthMethodType::SESSION)
 			->with2FA(EmailVerificationProvider::NAME, PhoneVerificationAuthProvider::NAME);
 	}
 }

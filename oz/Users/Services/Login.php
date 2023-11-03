@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\Core\Users\Services;
 
 use OZONE\Core\App\Service;
-use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Router\RouteInfo;
@@ -73,7 +72,6 @@ final class Login extends Service
 				return $s->respond();
 			})
 			->name(self::ROUTE_LOGIN)
-			->auths(AuthMethodType::SESSION)
 			->form(Users::logInForm(...));
 	}
 }

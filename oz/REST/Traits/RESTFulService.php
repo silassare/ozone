@@ -21,7 +21,6 @@ use Gobl\ORM\Exceptions\ORMQueryException;
 use Gobl\ORM\ORMController;
 use Gobl\ORM\ORMEntity;
 use Gobl\ORM\Utils\ORMClassKind;
-use OZONE\Core\Auth\Auth;
 use OZONE\Core\Exceptions\BadRequestException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\REST\RESTFulAPIRequest;
@@ -442,8 +441,7 @@ trait RESTFulService
 			});
 		})
 			->param('relation', $relation_param)
-			->param(self::KEY_COLUMN, $id_param)
-			->auths(...Auth::apiAuthMethods());
+			->param(self::KEY_COLUMN, $id_param);
 	}
 
 	/**
