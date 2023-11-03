@@ -27,7 +27,7 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 	/**
 	 * RouteRateLimiter constructor.
 	 *
-	 * @param RouteInfo $ri
+	 * @param RouteInfo               $ri
 	 * @param RouteRateLimitInterface $limit
 	 */
 	public function __construct(protected RouteInfo $ri, protected RouteRateLimitInterface $limit)
@@ -48,12 +48,12 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 	 */
 	public function hit(): bool
 	{
-		$key = $this->limit->key();
+		$key      = $this->limit->key();
 		$interval = $this->limit->interval();
-		$weight = $this->limit->weight();
-		$rate = $this->limit->rate();
-		$now = \microtime(true);
-		$hits = $this->cache->get($key . ':hits', 0);
+		$weight   = $this->limit->weight();
+		$rate     = $this->limit->rate();
+		$now      = \microtime(true);
+		$hits     = $this->cache->get($key . ':hits', 0);
 		$last_hit = $this->cache->get($key . ':last_hit', $now);
 
 		if ($now - $last_hit > $interval) {
@@ -95,18 +95,18 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 	 */
 	public function status(): array
 	{
-		$key = $this->limit->key();
+		$key      = $this->limit->key();
 		$interval = $this->limit->interval();
-		$rate = $this->limit->rate();
-		$now = \microtime(true);
+		$rate     = $this->limit->rate();
+		$now      = \microtime(true);
 
 		$first_hits = $this->cache->get($key . ':first_hits', $now);
-		$hits = $this->cache->get($key . ':hits', 0);
+		$hits       = $this->cache->get($key . ':hits', 0);
 
 		return [
-			'limit' => $rate,
+			'limit'     => $rate,
 			'remaining' => $rate - $hits,
-			'reset' => $first_hits + $interval,
+			'reset'     => $first_hits + $interval,
 		];
 	}
 }

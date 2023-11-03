@@ -121,14 +121,14 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 				'PUT',
 				'DELETE',
 			]);
-			$h_list['Access-Control-Max-Age']       = $life_time;
+			$h_list['Access-Control-Max-Age'] = $life_time;
 		} elseif (!$context->isSubRequest()) {
 			// we don't check for sub-request here because often sub-request are made
 			// with the original request environment
 			if (!empty($request_origin) && $allowed_origin !== $request_origin) {
 				$allowed_host = Uri::createFromString($allowed_origin)
 					->getHost();
-				$origin_host  = Uri::createFromString($request_origin)
+				$origin_host = Uri::createFromString($request_origin)
 					->getHost();
 				if ($allowed_host !== $origin_host) {
 					throw new ForbiddenException('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED', [
