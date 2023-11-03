@@ -17,12 +17,16 @@ use InvalidArgumentException;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
+use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Guards\TwoFactorRouteGuard;
 use OZONE\Core\Router\Guards\UserRoleRouteGuard;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 use OZONE\Core\Router\Interfaces\RouteGuardProviderInterface;
+use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
+use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
 use OZONE\Core\Users\Users;
 
 /**
@@ -37,6 +41,11 @@ class RouteSharedOptions
 	 * @var array<callable|\OZONE\Core\Router\Interfaces\RouteGuardInterface>
 	 */
 	protected array $guards = [];
+
+	/**
+	 * @var array<callable(RouteInfo):(null|Response)|\OZONE\Core\Router\Interfaces\RouteMiddlewareInterface>
+	 */
+	protected array $middlewares = [];
 
 	/**
 	 * @var null|callable|\OZONE\Core\Forms\Form
@@ -70,7 +79,7 @@ class RouteSharedOptions
 	 */
 	public function __destruct()
 	{
-		unset($this->guards, $this->route_form, $this->route_params);
+		unset($this->guards, $this->middlewares, $this->route_form, $this->route_params);
 	}
 
 	/**
@@ -85,6 +94,52 @@ class RouteSharedOptions
 		$this->name = $name;
 
 		return $this;
+	}
+
+	/**
+	 * Defines a rate limit.
+	 *
+	 * @param callable(RouteInfo):(null|RouteRateLimitInterface)|RouteRateLimitInterface $limit_provider
+	 *
+	 * @return $this
+	 */
+	public function rateLimit(callable|RouteRateLimitInterface $limit_provider): static
+	{
+		return $this->middleware(static function (RouteInfo $ri) use ($limit_provider) {
+			if ($limit_provider instanceof RouteRateLimitInterface) {
+				$limit = $limit_provider;
+			} else {
+				$limit = $limit_provider($ri);
+
+				if (null === $limit) {
+					return null;
+				}
+
+				if (!$limit instanceof RouteRateLimitInterface) {
+					throw (new RuntimeException(\sprintf(
+						'Route rate limit provider should return instance of "%s" or "null" not: %s',
+						RouteRateLimitInterface::class,
+						\get_debug_type($limit)
+					)))->suspectCallable($limit_provider);
+				}
+			}
+
+			$rate_limiter = RouteRateLimiter::get($ri, $limit);
+
+			if (!$rate_limiter->hit()) {
+				throw new RateLimitReachedException();
+			}
+
+			$status = $rate_limiter->status();
+
+			$context  = $ri->getContext();
+			$response = $context->getResponse();
+
+			return $response
+				->withHeader('X-RateLimit-Limit', (string) $status['limit'])
+				->withHeader('X-RateLimit-Remaining', (string) $status['remaining'])
+				->withHeader('X-RateLimit-Reset', (string) $status['reset']);
+		});
 	}
 
 	/**
@@ -215,6 +270,40 @@ class RouteSharedOptions
 		}
 
 		$this->guards[] = $guard;
+
+		return $this;
+	}
+
+	/**
+	 * Add a middleware.
+	 *
+	 * @param callable(RouteInfo):void|RouteMiddlewareInterface|string $middleware
+	 *
+	 * @return static
+	 */
+	public function middleware(callable|RouteMiddlewareInterface|string $middleware): static
+	{
+		if (\is_string($middleware)) { // class FQN or provider name
+			if (\class_exists($middleware)) {// class FQN
+				$mdl_class = $middleware;
+				if (!\is_subclass_of($mdl_class, RouteMiddlewareInterface::class)) {
+					throw new RuntimeException(\sprintf(
+						'Route middleware "%s" should be subclass of: %s',
+						$mdl_class,
+						RouteMiddlewareInterface::class
+					));
+				}
+			} else {// middleware name
+				$mdl_class = Middlewares::get($middleware);
+			}
+
+			/** @var RouteMiddlewareInterface $mdl_class */
+			$mdl = $mdl_class::get();
+
+			$this->middlewares[] = $mdl;
+		} else {
+			$this->middlewares[] = $middleware;
+		}
 
 		return $this;
 	}
@@ -438,6 +527,18 @@ class RouteSharedOptions
 		}
 
 		return $results;
+	}
+
+	/**
+	 * Gets route middlewares.
+	 *
+	 * @return array<callable(RouteInfo):(null|Response)|\OZONE\Core\Router\Interfaces\RouteMiddlewareInterface>
+	 */
+	public function getMiddlewares(): array
+	{
+		$middlewares = $this->parent?->getMiddlewares() ?? [];
+
+		return \array_merge($middlewares, $this->middlewares);
 	}
 
 	/**
