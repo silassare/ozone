@@ -23,6 +23,7 @@ use OZONE\Core\Forms\Form;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Interfaces\StorageInterface;
 use OZONE\Core\Http\UploadedFile;
+use OZONE\Core\Router\Rates\IPRateLimit;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Utils\Hasher;
@@ -293,6 +294,12 @@ class UploadFiles extends Service
 
 				return $s->respond();
 			})->param('ref', '[a-zA-Z0-9_-]+');
+		})->rateLimit(static function (RouteInfo $ri) {
+			if ($ri->getContext()->hasAuthenticatedUser()) {
+				return new IPRateLimit($ri, 100, 60);
+			}
+
+			return new IPRateLimit($ri, 10, 60);
 		});
 	}
 
