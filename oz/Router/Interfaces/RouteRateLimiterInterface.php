@@ -13,59 +13,41 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Interfaces;
 
+use OZONE\Core\Router\RouteInfo;
+
 /**
  * Interface RouteRateLimiterInterface.
  */
 interface RouteRateLimiterInterface
 {
 	/**
-	 * Should return the rate limit instance for the given key.
+	 * Should return the rate limiter instance for the given key.
 	 *
-	 * @param string $key
+	 * @param RouteInfo               $ri
+	 * @param RouteRateLimitInterface $limit
 	 *
-	 * @return \OZONE\Core\Router\Interfaces\RouteRateLimiterInterface
+	 * @return RouteRateLimiterInterface
 	 */
-	public static function get(string $key): self;
-
-	/**
-	 * Sets the max allowed attempts in the given interval.
-	 *
-	 * @param int $max_attempts
-	 * @param int $interval
-	 *
-	 * @return self
-	 */
-	public function setRate(int $max_attempts, int $interval): self;
-
-	/**
-	 * Sets the interval in seconds.
-	 *
-	 * @param int $interval
-	 *
-	 * @return $this
-	 */
-	public function setInterval(int $interval): self;
-
-	/**
-	 * Should allow or not consecutive attempts.
-	 *
-	 * @param bool $allow
-	 *
-	 * @return bool
-	 */
-	public function allowConsecutiveAttempts(bool $allow): bool;
+	public static function get(RouteInfo $ri, RouteRateLimitInterface $limit): self;
 
 	/**
 	 * Should check if the rate limit is not reached.
 	 *
-	 * @param int $weight The weight of the request, some requests may be heavier than others
+	 * @return bool true if the rate limit is not reached
 	 */
-	public function hit(int $weight = 1): void;
+	public function hit(): bool;
 
 	/**
-	 * Returns the rate limit reports.
+	 * Should reset the rate limit.
 	 *
-	 * @return array
+	 * @return $this
 	 */
-	public function reports(): array;
+	public function reset(): self;
+
+	/**
+	 * Should return the rate limit status.
+	 *
+	 * @return array{limit:int, remaining:int, reset:int}
+	 */
+	public function status(): array;
 }
