@@ -307,13 +307,13 @@ final class Router
 	 * Handle the request in a given context.
 	 *
 	 * @param \OZONE\Core\App\Context       $context
-	 * @param null|callable(RouteInfo):void $if_found_fn
+	 * @param null|callable(RouteInfo):void $authenticator
 	 *
 	 * @throws \OZONE\Core\Exceptions\ForbiddenException
 	 * @throws \OZONE\Core\Exceptions\InvalidFormException
 	 * @throws Throwable
 	 */
-	public function handle(Context $context, ?callable $if_found_fn = null): void
+	public function handle(Context $context, ?callable $authenticator = null): void
 	{
 		$request = $context->getRequest();
 		$uri     = $request->getUri();
@@ -332,9 +332,7 @@ final class Router
 
 			case RouteSearchStatus::FOUND:
 				['route' => $route, 'params' => $params] = $result->found();
-				$ri                                      = new RouteInfo($context, $route, $params);
-
-				$if_found_fn && $if_found_fn($ri);
+				$ri                                      = new RouteInfo($context, $route, $params, $authenticator);
 
 				(new RouteBeforeRun($ri))->dispatch();
 

@@ -15,8 +15,10 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
+use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Http\Uri;
+use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
 use PHPUtils\Store\Store;
 
 /**
@@ -30,21 +32,25 @@ final class RouteInfo
 	/**
 	 * RouteInfo constructor.
 	 *
-	 * @param \OZONE\Core\App\Context  $context The context
-	 * @param \OZONE\Core\Router\Route $route   The current route
-	 * @param array                    $params  The route params
+	 * @param Context                   $context       The context
+	 * @param Route                     $route         The current route
+	 * @param array                     $params        The route params
+	 * @param null|callable($this):void $authenticator The authenticator
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws InvalidFormException
 	 */
 	public function __construct(
 		private readonly Context $context,
 		private readonly Route $route,
-		private readonly array $params
+		private readonly array $params,
+		?callable $authenticator = null
 	) {
 		$this->guards_data     = new Store([]);
 		$this->clean_form_data = new FormData();
 
+		$authenticator && $authenticator($this);
 		$this->callGuards();
+		$this->runMiddlewares();
 		$this->checkForm();
 	}
 
@@ -177,12 +183,31 @@ final class RouteInfo
 	 */
 	private function callGuards(): void
 	{
-		$options      = $this->route->getOptions();
-		$route_guards = $options->getGuards($this);
+		$route_guards = $this->route->getOptions()->getGuards($this);
 
 		foreach ($route_guards as $guard) {
 			$guard->checkAccess($this);
 			$this->guards_data->set($guard::class, $guard->getFormData());
+		}
+	}
+
+	/**
+	 * Run all middlewares.
+	 */
+	private function runMiddlewares(): void
+	{
+		$middlewares = $this->route->getOptions()->getMiddlewares();
+
+		foreach ($middlewares as $mdl) {
+			if ($mdl instanceof RouteMiddlewareInterface) {
+				$response = $mdl->run($this);
+			} else {
+				$response = $mdl($this);
+			}
+
+			if ($response) {
+				$this->context->setResponse($response);
+			}
 		}
 	}
 
@@ -193,8 +218,7 @@ final class RouteInfo
 	 */
 	private function checkForm(): void
 	{
-		$options = $this->route->getOptions();
-		$bundle  = $options->getFormBundle($this);
+		$bundle = $this->route->getOptions()->getFormBundle($this);
 
 		if ($bundle) {
 			$unsafe_fd = $this->context->getRequest()
