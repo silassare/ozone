@@ -28,17 +28,15 @@ final class RouterCreated extends Event
 	/**
 	 * RouterCreated constructor.
 	 *
-	 * @param Router $router
+	 * @param Router     $router
 	 * @param RouteGroup $top_level_group
-	 * @param bool $is_api
+	 * @param bool       $is_api
 	 */
 	public function __construct(
-		protected Router     $router,
+		protected Router $router,
 		protected RouteGroup $top_level_group,
-		protected bool       $is_api,
-	)
-	{
-	}
+		protected bool $is_api,
+	) {}
 
 	/**
 	 * RouterCreated destructor.
