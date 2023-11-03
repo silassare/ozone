@@ -21,6 +21,7 @@ return [
 	'OZ_ERROR_NOT_ALLOWED'              => "Une erreur s'est produite. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
 	'OZ_ERROR_INVALID_FORM'             => "La requête est invalide. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
 	'OZ_ERROR_YOU_MUST_LOGIN'           => "Vous devez vous connecter d'abord.",
+	'OZ_ERROR_RATE_LIMIT_REACHED'       => 'Vous avez atteint la limite de requêtes.',
 	'OZ_MISSING_API_KEY'                => 'Vous devez fournir une clé API.',
 	'OZ_YOUR_API_KEY_IS_NOT_VALID'      => 'La clef API est invalide.',
 	'OZ_IMAGE_NOT_VALID'                => 'Fichier image invalide. Veuillez choisir une image de type png, jpeg, ou gif.',
@@ -47,8 +48,8 @@ return [
 	'OZ_FILE_UPLOAD_FAIL'               => "Échec de l'envoie du ou des fichiers",
 
 	// used in views templates
-	'OZ_VIEW_GO_HOME_BTN'               => 'Accueil',
-	'OZ_VIEW_GO_BACK_BTN'               => 'Retour',
-	'OZ_VIEW_REDIRECT_TITLE'            => 'Vous allez être rediriger.',
-	'OZ_VIEW_REDIRECT_MESSAGE'          => "Si vous n'êtes pas redirigé automatiquement, suivez ce <a href=\"{url}\">lien</a>.",
+	'OZ_VIEW_GO_HOME_BTN'      => 'Accueil',
+	'OZ_VIEW_GO_BACK_BTN'      => 'Retour',
+	'OZ_VIEW_REDIRECT_TITLE'   => 'Vous allez être rediriger.',
+	'OZ_VIEW_REDIRECT_MESSAGE' => "Si vous n'êtes pas redirigé automatiquement, suivez ce <a href=\"{url}\">lien</a>.",
 ];
