@@ -99,7 +99,7 @@ class TempFS implements BootHookReceiverInterface
 	 */
 	public static function get(int $lifetime): self
 	{
-		$ref = Random::alpha(8) . '-' . \time();
+		$ref = \date('Y-m-d') . '-' . Random::alpha(8);
 
 		return (new self($ref))->setLifetime($lifetime);
 	}
