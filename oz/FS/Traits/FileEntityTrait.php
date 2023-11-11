@@ -22,6 +22,18 @@ use OZONE\Core\Exceptions\RuntimeException;
 trait FileEntityTrait
 {
 	/**
+	 * {@inheritDoc}
+	 */
+	public function save(): bool
+	{
+		if ($this->isNew()) {
+			$this->setKey(Keys::newFileKey());
+		}
+
+		return parent::save();
+	}
+
+	/**
 	 * Clone the current ozone file.
 	 *
 	 * !This doesn't work as php object clone feature.
