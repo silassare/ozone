@@ -20,13 +20,12 @@ use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\UnverifiedUserException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
-use OZONE\Core\FS\Interfaces\StorageInterface;
 use OZONE\Core\Http\UploadedFile;
 use OZONE\Core\Router\Rates\IPRateLimit;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Utils\Hasher;
 use OZONE\Core\Utils\Random;
 use Throwable;
 
@@ -45,9 +44,7 @@ class UploadFiles extends Service
 	public const PARAM_CHUNK       = 'chunk';
 	public const PARAM_CHUNK_INDEX = 'chunk_index';
 	public const PARAM_FILES       = 'files';
-
-	public const CHUNK_MAX_SIZE   = 1024 * 1024; // 1MB
-	public const CHUNK_FILE_LABEL = 'oz:upload:chunk';
+	public const CHUNK_MAX_SIZE    = 1000 * 1000; // 1MB
 
 	/**
 	 * @param RouteInfo $r
@@ -58,11 +55,15 @@ class UploadFiles extends Service
 	{
 		$r->getContext()->getUsers()->assertUserVerified();
 
-		$files = $r->getCleanFormField(self::PARAM_FILES);
+		$files_ids = $r->getCleanFormField(self::PARAM_FILES);
+		$ref       = self::newRef();
+
+		$this->saveUploadedFilesIds($ref, $files_ids);
 
 		$this->json()
 			->setDone()
-			->setDataKey(self::PARAM_FILES, $files);
+			->setDataKey(self::PARAM_FILES, $files_ids)
+			->setDataKey(self::PARAM_REF, $ref);
 	}
 
 	public function uploadChunkStart(RouteInfo $r): void
@@ -71,14 +72,11 @@ class UploadFiles extends Service
 		$size = $r->getCleanFormField(self::PARAM_SIZE);
 		$type = $r->getCleanFormField(self::PARAM_TYPE);
 
-		$ref = Hasher::hash64($name . $size . $type . Random::string());
+		$ref = self::newRef();
 
-		$key = self::getKey($ref);
-
-		$session = $r->getContext()->session();
-		$session->state()->set($key, [
+		$this->saveChunksInfo($ref, [
 			'name'   => $name,
-			'size'   => $size,
+			'size'   => (int) $size,
 			'type'   => $type,
 			'chunks' => [],
 		]);
@@ -95,13 +93,9 @@ class UploadFiles extends Service
 	{
 		$ref         = $r->getCleanFormField(self::PARAM_REF);
 		$chunk_index = $r->getCleanFormField(self::PARAM_CHUNK_INDEX);
-		$chunk       = $r->getCleanFormField(self::PARAM_CHUNK);
+		$chunk_path  = $r->getCleanFormField(self::PARAM_CHUNK);
 
-		$key = self::getKey($ref);
-
-		$session = $r->getContext()->session();
-		$state   = $session->state();
-		$info    = $state->get($key);
+		$info = $this->loadChunksInfo($ref);
 
 		if (!$info) {
 			throw new InvalidFormException(
@@ -112,11 +106,10 @@ class UploadFiles extends Service
 			);
 		}
 
-		/** @var array<int, array{chunk:string,   chunk_size:int}> $chunks */
 		$chunks = $info['chunks'];
 
 		if (isset($chunks[$chunk_index])) {
-			FS::deleteFileByID($chunk);
+			\unlink($chunk_path);
 
 			// we are not throwing an exception here
 			// because the client may have sent the same
@@ -128,21 +121,23 @@ class UploadFiles extends Service
 		$uploaded = $r->getUnsafeFormField(self::PARAM_CHUNK);
 
 		$chunks[$chunk_index] = [
-			'chunk'      => $chunk,
+			'chunk_path' => (string) $chunk_path,
 			'chunk_size' => $uploaded->getSize(),
 		];
 
 		$info['chunks'] = $chunks;
 
 		$total_size    = 0;
-		$expected_size = $info['size'];
+		$expected_size = (int) $info['size'];
 
 		foreach ($chunks as $c) {
 			$total_size += $c['chunk_size'];
 		}
 
 		if ($total_size > $expected_size) {
-			$this->deleteChunks($r, $ref);
+			foreach ($chunks as $chunk) {
+				\unlink($chunk['chunk_path']);
+			}
 
 			throw new InvalidFormException(
 				'Total size of chunks is greater than the file size.',
@@ -159,34 +154,58 @@ class UploadFiles extends Service
 
 			/** @var null|OZFile $target_file */
 			$target_file = null;
-
-			/** @var StorageInterface $target_storage */
-			$target_storage = null;
+			$storage     = FS::getStorage();
 
 			foreach ($chunks as $c) {
-				$chunk_file = FS::getFileByID($c['chunk']);
+				$path = $c['chunk_path'];
+				if (null === $target_file) {
+					$target_file = $storage->saveFromPath($path, $info['type'], $info['name']);
+				} else {
+					$storage->append($target_file, FileStream::fromPath($path));
+				}
 
-				if ($chunk_file) {
-					$storage = FS::getStorage($chunk_file->storage);
-					$stream  = $storage->getStream($chunk_file);
+				\unlink($path);
+			}
 
-					if (null === $target_file) {
-						$target_file    = $storage->saveStream($stream, $info['type'], $info['name']);
-						$target_storage = $storage;
-					} else {
-						$target_storage->append($target_file, $stream);
-					}
+			$target_file->save();
 
-					$storage->delete($chunk_file);
+			/** @var string $file_id */
+			$file_id = $target_file->getID();
+
+			$this->saveUploadedFilesIds($ref, [$file_id]);
+
+			$this->json()->setDataKey('file_id', $file_id);
+
+			return;
+		}
+
+		$this->saveChunksInfo($ref, $info);
+	}
+
+	public function deleteUpload(string $ref): void
+	{
+		$key   = self::getKey($ref);
+		$state = $this->getContext()->requireState();
+		$data  = $state->get($key);
+
+		if (isset($data['chunks'])) {
+			$chunks = $data['chunks'];
+
+			foreach ($chunks as $c) {
+				$path = $c['chunk_path'];
+				if (\file_exists($path)) {
+					\unlink($path);
 				}
 			}
 
-			$this->json()->setDataKey('file', $target_file->getID());
+			$state->remove($key);
+		} elseif (\is_array($data)) {
+			foreach ($data as $file_id) {
+				FS::deleteFileByID($file_id);
+			}
 
 			$state->remove($key);
 		}
-
-		$state->set($key, $info);
 	}
 
 	/**
@@ -196,18 +215,9 @@ class UploadFiles extends Service
 	 */
 	public static function uploadForm(): Form
 	{
-		$max_file_count = Settings::get('oz.files', 'OZ_UPLOAD_FILE_MAX_COUNT');
-		$max_file_size  = Settings::get('oz.files', 'OZ_UPLOAD_FILE_MAX_SIZE');
-		$max_total_size = Settings::get('oz.files', 'OZ_UPLOAD_FILE_MAX_TOTAL_SIZE');
-
 		$form = new Form();
-
 		$form->file(self::PARAM_FILES)->multiple()
-			->fileMinCount(1)
-			->fileMaxCount($max_file_count)
-			->fileMinSize(1)
-			->fileMaxSize($max_file_size)
-			->fileUploadTotalSize($max_total_size);
+			->fileMinCount(1);
 
 		return $form;
 	}
@@ -241,9 +251,10 @@ class UploadFiles extends Service
 		$form = new Form();
 
 		$form->string(self::PARAM_REF, true);
-		$form->int(self::PARAM_CHUNK_INDEX, true)->min(1);
+		$form->int(self::PARAM_CHUNK_INDEX, true)
+			->unsigned();
 		$form->file(self::PARAM_CHUNK, true)
-			->fileLabel(self::CHUNK_FILE_LABEL)
+			->temp()
 			->fileMaxSize(self::CHUNK_MAX_SIZE);
 
 		return $form;
@@ -265,7 +276,7 @@ class UploadFiles extends Service
 
 					return $s->respond();
 				})->name(self::MAIN_ROUTE)
-				->form(self::uploadForm());
+				->form(self::uploadForm(...));
 
 			$router->post('/chunk/start', static function (RouteInfo $ri) {
 				$s = new static($ri);
@@ -275,7 +286,7 @@ class UploadFiles extends Service
 				return $s->respond();
 			})
 				->name(self::CHUNK_START_ROUTE)
-				->form(self::uploadChunkStartForm());
+				->form(self::uploadChunkStartForm(...));
 
 			$router->post('/chunk/add', static function (RouteInfo $ri) {
 				$s = new static($ri);
@@ -285,25 +296,67 @@ class UploadFiles extends Service
 				return $s->respond();
 			})
 				->name(self::CHUNK_ADD_ROUTE)
-				->form(self::uploadChunkAddForm());
+				->form(self::uploadChunkAddForm(...));
 
 			$router->delete('/chunk/:ref', static function (RouteInfo $ri) {
 				$s = new static($ri);
 
-				$s->deleteChunks($ri, $ri->param('ref'));
+				$s->deleteUpload($ri->param('ref'));
 
 				return $s->respond();
 			})->param('ref', '[a-zA-Z0-9_-]+');
 		})->rateLimit(static function (RouteInfo $ri) {
-			if ($ri->getContext()->hasAuthenticatedUser()) {
-				return new IPRateLimit($ri, 100, 60);
-			}
+			$has_user = $ri->getContext()->hasAuthenticatedUser();
+			$key      = $has_user ? 'OZ_UPLOAD_AUTHENTICATED_RATE_LIMIT' : 'OZ_UPLOAD_ANONYMOUS_RATE_LIMIT';
+			$limit    = Settings::get('oz.files', $key);
 
-			return new IPRateLimit($ri, 10, 60);
+			return new IPRateLimit($ri, $limit, 60);
 		});
 	}
 
 	/**
+	 * Saves the uploaded files info.
+	 *
+	 * @param string   $ref
+	 * @param string[] $files_ids
+	 */
+	private function saveUploadedFilesIds(string $ref, array $files_ids): void
+	{
+		$key   = self::getKey($ref);
+		$state = $this->getContext()->requireState();
+		$state->set($key, $files_ids);
+	}
+
+	/**
+	 * Saves the chunks info.
+	 *
+	 * @param string                                                                                            $ref
+	 * @param array{name:string, size:int, type:string, chunks:array<array{chunk_path:string, chunk_size:int}>} $info
+	 */
+	private function saveChunksInfo(string $ref, array $info): void
+	{
+		$key   = self::getKey($ref);
+		$state = $this->getContext()->requireState();
+		$state->set($key, $info);
+	}
+
+	/**
+	 * Loads the chunks info.
+	 *
+	 * @param string $ref
+	 *
+	 * @return null|array{name:string, size:int, type:string, chunks:array<array{chunk_path:string, chunk_size:int}>}
+	 */
+	private function loadChunksInfo(string $ref): ?array
+	{
+		$key = self::getKey($ref);
+
+		return $this->getContext()->requireState()->get($key);
+	}
+
+	/**
+	 * Gets the state key.
+	 *
 	 * @param string $ref
 	 *
 	 * @return string
@@ -313,26 +366,13 @@ class UploadFiles extends Service
 		return 'oz_upload_files.' . $ref;
 	}
 
-	private function deleteChunks(RouteInfo $r, string $ref): void
+	/**
+	 * Generates a new upload ref.
+	 *
+	 * @return string
+	 */
+	private static function newRef(): string
 	{
-		$key = self::getKey($ref);
-
-		$session = $r
-			->getContext()
-			->session();
-
-		$state = $session->state();
-		$info  = $state->get($key);
-
-		if ($info) {
-			/** @var array<int, array{chunk:string, chunk_size:int}> $chunks */
-			$chunks = $info->get($key . '.chunks');
-
-			foreach ($chunks as $c) {
-				FS::deleteFileByID($c['chunk']);
-			}
-
-			$state->remove($key);
-		}
+		return Random::alphaNum(16);
 	}
 }

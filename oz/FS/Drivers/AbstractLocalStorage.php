@@ -27,9 +27,6 @@ use OZONE\Core\Http\Body;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\UploadedFile;
 use OZONE\Core\Http\Uri;
-use OZONE\Core\Utils\Hasher;
-use OZONE\Core\Utils\Random;
-use PHPUtils\Str;
 use Throwable;
 
 /**
@@ -37,6 +34,13 @@ use Throwable;
  */
 abstract class AbstractLocalStorage implements StorageInterface
 {
+	/**
+	 * AbstractLocalStorage constructor.
+	 *
+	 * @param string $name the driver assigned name
+	 */
+	public function __construct(protected readonly string $name) {}
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -63,23 +67,26 @@ abstract class AbstractLocalStorage implements StorageInterface
 			return $result->cloneFile();
 		}
 
-		// should we replace client filename extension with our extension ?
-		$filename = $upload->getClientFilename();
+		$filename = \trim($upload->getClientFilename());
 		$mimetype = $upload->getClientMediaType();
 
-		$ext = FS::getRealExtension($filename, $mimetype);
-		$ref = self::safeRef($filename, $ext);
+		$ext        = FS::getRealExtension($filename, $mimetype);
+		$clean_name = FS::safeUploadFilename($upload);
 
-		$destination = $this->getDestinationWithRef($ref);
+		if (empty($filename)) {
+			$filename = $clean_name;
+		}
 
-		$f = new OZFile();
+		$destination = $this->createDestinationPath($clean_name, $ref);
 
 		$upload->moveTo($destination);
 
 		$filesize = \filesize($destination);
 
+		$f = new OZFile();
 		$f->setName($filename)
 			->setRef($ref)
+			->setStorage($this->name)
 			->setMimeType($mimetype)
 			->setExtension($ext)
 			->setSize($filesize);
@@ -92,12 +99,15 @@ abstract class AbstractLocalStorage implements StorageInterface
 	 */
 	public function saveStream(FileStream $source, string $mimetype, string $filename): OZFile
 	{
-		$f = new OZFile();
+		$filename   = \trim($filename);
+		$ext        = FS::getRealExtension($filename, $mimetype);
+		$clean_name = FS::safeFilename($filename, $ext, 'save');
 
-		$ext = FS::getRealExtension($filename, $mimetype);
-		$ref = self::safeRef($filename, $ext, 'save');
+		if (empty($filename)) {
+			$filename = $clean_name;
+		}
 
-		$destination = $this->getDestinationWithRef($ref);
+		$destination = $this->createDestinationPath($clean_name, $ref);
 
 		$fw = \fopen($destination, 'wb');
 
@@ -109,8 +119,10 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 		$filesize = \filesize($destination);
 
+		$f = new OZFile();
 		$f->setName($filename)
 			->setRef($ref)
+			->setStorage($this->name)
 			->setMimeType($mimetype)
 			->setExtension($ext)
 			->setSize($filesize);
@@ -279,55 +291,21 @@ abstract class AbstractLocalStorage implements StorageInterface
 	abstract protected function uploadsDir(): FilesManager;
 
 	/**
-	 * Creates a safe reference.
+	 * Creates a file destination with a ref.
 	 *
-	 * The reference here is a unique filename built from the given filename.
-	 *
-	 * @param string $filename
-	 * @param string $ext
-	 * @param string $prefix
+	 * @param string      $clean_name
+	 * @param null|string &$ref
 	 *
 	 * @return string
 	 */
-	protected static function safeRef(string $filename, string $ext, string $prefix = 'upload'): string
+	protected function createDestinationPath(string $clean_name, ?string &$ref = null): string
 	{
-		$name = Str::stringToURLSlug($filename);
+		$year  = \date('Y');
+		$month = \date('m');
+		$dir   = $year . DS . $month;
+		$ref   = $dir . DS . $clean_name;
 
-		if (!$name) {
-			$name = Random::fileName($prefix);
-		}
-
-		// ensure the name has less than 100 char before we add the hash
-		$name = \trim(\substr($name, 0, 100), '-');
-
-		// the hash is used to avoid name collision
-		$name .= '-' . Hasher::shorten(Random::string());
-		$ext = \strtolower($ext);
-
-		if (\str_contains($ext, 'php') || \str_contains($ext, 'inc') || \str_contains($ext, 'phtml')) {
-			return $name;
-		}
-
-		return $name . '.' . $ext;
-	}
-
-	/**
-	 * Returns file absolute path with the given ref.
-	 *
-	 * @param string $ref
-	 *
-	 * @return string
-	 */
-	protected function getDestinationWithRef(string $ref): string
-	{
-		$hash = \md5($ref);
-		$dir1 = \substr($hash, 0, 2);
-		$dir2 = \substr($hash, 2, 2);
-		$fs   = new FilesManager();
-		$path = $this->uploadsDir()
-			->resolve('.' . DS . $dir1 . DS . $dir2);
-
-		return $fs->cd($path, true)->resolve($ref);
+		return $this->uploadsDir()->cd($dir, true)->resolve($clean_name);
 	}
 
 	/**
@@ -340,7 +318,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	protected function localize(string $ref): ?string
 	{
 		$fs          = new FilesManager();
-		$destination = $this->getDestinationWithRef($ref);
+		$destination = $this->uploadsDir()->resolve($ref);
 		if (
 			$fs->filter()
 				->isFile()

@@ -27,9 +27,9 @@ final class PrivateLocalStorage extends AbstractLocalStorage
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function get(): self
+	public static function get(string $name): self
 	{
-		return new self();
+		return new self($name);
 	}
 
 	/**

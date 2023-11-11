@@ -21,8 +21,10 @@ use Gobl\DBAL\Types\TypeString;
 use Gobl\ORM\ORMTypeHint;
 use JsonException;
 use OLIUP\CG\PHPType;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\FS;
+use OZONE\Core\FS\TempFS;
 use OZONE\Core\Http\UploadedFile;
 use Throwable;
 
@@ -31,7 +33,8 @@ use Throwable;
  */
 class TypeFile extends Type
 {
-	public const NAME = 'file';
+	public const NAME               = 'file';
+	public const TEMP_FILE_LIFETIME = 3600;
 
 	/**
 	 * TypeFile constructor.
@@ -75,6 +78,33 @@ class TypeFile extends Type
 	public function storage(string $storage): static
 	{
 		return $this->setOption('storage', $storage);
+	}
+
+	/**
+	 * Sets upload as temporary.
+	 *
+	 * @param bool     $temp     true to enable temporary upload
+	 * @param null|int $lifetime the file lifetime in seconds
+	 *
+	 * @return $this
+	 */
+	public function temp(bool $temp = true, ?int $lifetime = null): static
+	{
+		if ($lifetime) {
+			$this->setOption('temp_lifetime', $lifetime);
+		}
+
+		return $this->setOption('temp', $temp);
+	}
+
+	/**
+	 * Checks if upload is temporary.
+	 *
+	 * @return bool
+	 */
+	public function isTemporary(): bool
+	{
+		return (bool) $this->getOption('temp');
 	}
 
 	/**
@@ -134,7 +164,7 @@ class TypeFile extends Type
 	 */
 	public function fileMinSize(int $min): static
 	{
-		$max = $this->getOption('file_max_size', \INF);
+		$max = $this->getOption('file_max_size', \PHP_INT_MAX);
 
 		self::assertSafeIntRange($min, $max, 1);
 
@@ -170,7 +200,7 @@ class TypeFile extends Type
 	 */
 	public function fileMinCount(int $min): static
 	{
-		$max = $this->getOption('file_max_count', \INF);
+		$max = $this->getOption('file_max_count', \PHP_INT_MAX);
 
 		self::assertSafeIntRange($min, $max, 1);
 
@@ -216,7 +246,7 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return null|string|string[] the file(s) id(s)
+	 * @return null|string|string[] the file(s) id(s) or path(s)
 	 */
 	public function validate($value): null|array|string
 	{
@@ -308,6 +338,16 @@ class TypeFile extends Type
 			$this->multiple((bool) $options['multiple']);
 		}
 
+		if (isset($options['temp'])) {
+			$lifetime = null;
+
+			if (isset($options['temp_lifetime'])) {
+				$lifetime = (int) $options['temp_lifetime'];
+			}
+
+			$this->temp((bool) $options['temp'], $lifetime);
+		}
+
 		if (isset($options['storage'])) {
 			$this->storage((string) $options['storage']);
 		}
@@ -349,7 +389,7 @@ class TypeFile extends Type
 	 * @param array<OZFile|UploadedFile> $uploaded_files
 	 * @param array                      $debug
 	 *
-	 * @return string[] the list of file ids
+	 * @return string[] the list of file ids or paths
 	 *
 	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
 	 */
@@ -360,11 +400,13 @@ class TypeFile extends Type
 		foreach ($uploaded_files as $k => $item) {
 			$debug['index'] = $k;
 
+			// in case of temporary upload
+			// only UploadedFile instances are allowed
 			if ($item instanceof UploadedFile) {
 				$this->checkUploadedFile($item);
 
 				$total_size += $item->getSize();
-			} elseif ($item instanceof OZFile) {
+			} elseif ($item instanceof OZFile && !$this->isTemporary()) {
 				$this->checkOZFile($item);
 
 				$total_size += $item->getSize();
@@ -373,13 +415,19 @@ class TypeFile extends Type
 			}
 		}
 
-		$file_upload_total_size = $this->getOption('file_upload_total_size');
+		$max_total_size         = Settings::get('oz.files', 'OZ_UPLOAD_FILE_MAX_TOTAL_SIZE');
+		$file_upload_total_size = $this->getOption('file_upload_total_size', $max_total_size);
 
 		if (null !== $file_upload_total_size && $total_size > $file_upload_total_size) {
 			throw new TypesInvalidValueException('OZ_FILE_TOTAL_SIZE_EXCEED_LIMIT', $debug);
 		}
 
-		$file_label   = $this->getOption('file_label', '');
+		if ($this->isTemporary()) {
+			/** @var UploadedFile[] $uploaded_files */
+			return $this->computeTemporaryUploadedFiles($uploaded_files);
+		}
+
+		$label        = $this->getOption('file_label', '');
 		$storage_name = $this->getOption('storage', FS::DEFAULT_STORAGE);
 		$storage      = FS::getStorage($storage_name);
 
@@ -397,8 +445,7 @@ class TypeFile extends Type
 					$fid = $file->getID();
 				} else {
 					$fo = $storage->upload($file);
-					$fo->setStorage($storage_name)
-						->setForLabel($file_label)
+					$fo->setForLabel($label)
 						->save();
 
 					$new_file_list[] = $fo;
@@ -425,6 +472,34 @@ class TypeFile extends Type
 	}
 
 	/**
+	 * Computes temporary uploaded files.
+	 *
+	 * @param array<UploadedFile> $uploaded_files
+	 *
+	 * @return string[] the list of file paths
+	 */
+	protected function computeTemporaryUploadedFiles(array $uploaded_files): array
+	{
+		$lifetime = $this->getOption('temp_lifetime', self::TEMP_FILE_LIFETIME);
+
+		$tmp_fs_dir = TempFS::get($lifetime)->dir();
+
+		/** @var string[] $list */
+		$list = [];
+
+		foreach ($uploaded_files as $upload) {
+			$name = FS::safeUploadFilename($upload);
+			$path = $tmp_fs_dir->resolve($name);
+
+			$upload->moveTo($path);
+
+			$list[] = $path;
+		}
+
+		return $list;
+	}
+
+	/**
 	 * Checks file count.
 	 *
 	 * @param int $total
@@ -437,8 +512,9 @@ class TypeFile extends Type
 			return 1 === $total;
 		}
 
-		$min = $this->getOption('file_min_count', 1);
-		$max = $this->getOption('file_max_count', 1);
+		$max_file_count = Settings::get('oz.files', 'OZ_UPLOAD_FILE_MAX_COUNT');
+		$min            = $this->getOption('file_min_count', 1);
+		$max            = $this->getOption('file_max_count', $max_file_count);
 
 		return $total >= $min && $total <= $max;
 	}
@@ -452,8 +528,9 @@ class TypeFile extends Type
 	 */
 	protected function checkFileSize(int $size): bool
 	{
-		$min = $this->getOption('file_min_size', 1);
-		$max = $this->getOption('file_max_size', \PHP_INT_MAX);
+		$max_file_size = Settings::get('oz.files', 'OZ_UPLOAD_FILE_MAX_SIZE');
+		$min           = $this->getOption('file_min_size', 1);
+		$max           = $this->getOption('file_max_size', $max_file_size);
 
 		return $size >= $min && $size <= $max;
 	}

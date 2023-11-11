@@ -236,13 +236,13 @@ return [
 			],
 			'key'        => [
 				'type' => 'string',
-				'min'  => 32,
+				'min'  => 8,
 				'max'  => 128,
 			],
 			'ref'        => [
 				'type' => 'string',
-				'min'  => 32,
-				'max'  => 128,
+				'min'  => 1,
+				'max'  => 255,
 			],
 			'storage'    => [
 				'type' => 'string',
@@ -293,10 +293,11 @@ return [
 				'nullable' => true,
 			],
 			// this file is used for what
-			// ex: avatar, profile_pic, post_image, post_video, post_audio, post_file, post_attachment etc...
+			// ex: asset, avatar, profile_pic, post_image, post_video, post_audio, post_file, post_attachment etc...
 			'for_label'  => [
-				'type' => 'string',
-				'max'  => 64,
+				'type'    => 'string',
+				'default' => 'asset',
+				'max'     => 64,
 			],
 			'data'       => [
 				'type'    => 'map',

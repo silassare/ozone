@@ -21,6 +21,9 @@ use OZONE\Core\Db\OZFilesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Interfaces\StorageInterface;
 use OZONE\Core\Http\UploadedFile;
+use OZONE\Core\Utils\Hasher;
+use OZONE\Core\Utils\Random;
+use PHPUtils\Str;
 use Throwable;
 
 /**
@@ -75,10 +78,10 @@ class FS
 	{
 		$message = match ($error) {
 			\UPLOAD_ERR_INI_SIZE, \UPLOAD_ERR_FORM_SIZE => 'OZ_FILE_UPLOAD_TOO_BIG',
-			\UPLOAD_ERR_NO_FILE => 'OZ_FILE_UPLOAD_IS_EMPTY',
-			default             => 'OZ_FILE_UPLOAD_FAILS',
+			\UPLOAD_ERR_NO_FILE                         => 'OZ_FILE_UPLOAD_IS_EMPTY',
+			default                                     => 'OZ_FILE_UPLOAD_FAILS',
 		};
-		$reason = match ($error) {
+		$reason  = match ($error) {
 			\UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
 			\UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
 			\UPLOAD_ERR_NO_FILE    => 'No file was uploaded',
@@ -189,8 +192,8 @@ class FS
 			return null;
 		}
 
-		// checks alias file size 4ko
-		if ($upload->getSize() > 4 * 1024) {
+		// checks alias file size 4KB
+		if ($upload->getSize() > 4 * 1000) {
 			return null;
 		}
 
@@ -225,14 +228,19 @@ class FS
 	 *
 	 * @param float  $size          the file size in bytes
 	 * @param int    $precision     The number of decimal digit
-	 * @param int    $kb_size       The kb_size (Ex: use 1000 for data, or 1024 for file size)
+	 * @param int    $kb_size       The size of 1KB in bytes (1000 or 1024) as you like
 	 * @param string $decimal_point The decimal point to use (, for french users)
 	 * @param string $thousands_sep The thousands separation char
 	 *
 	 * @return string the formatted file size
 	 */
-	public static function formatFileSize(float $size, int $precision = 2, int $kb_size = 1024, string $decimal_point = '.', string $thousands_sep = ' '): string
-	{
+	public static function formatFileSize(
+		float $size,
+		int $precision = 2,
+		int $kb_size = 1000,
+		string $decimal_point = '.',
+		string $thousands_sep = ' '
+	): string {
 		$unites  = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
 		$max_pow = 8;
 		$result  = $size;
@@ -276,7 +284,7 @@ class FS
 		$chunk_size = 1024;
 		$stream     = FileStream::create();
 
-		// seems to the good way to handle big base64 data
+		// seems to be the good way to handle big base64 data
 		while ($chunk = \substr($base64, $i, $chunk_size)) {
 			$decoded = \base64_decode($chunk, true);
 
@@ -327,7 +335,7 @@ class FS
 			throw new RuntimeException(\sprintf('Undefined file storage driver: %s', $name));
 		}
 
-		$factory = static function () use ($driver) {
+		$factory = static function () use ($driver, $name) {
 			if (!\is_subclass_of($driver, StorageInterface::class)) {
 				throw new RuntimeException(\sprintf(
 					'Files storage driver "%s" should implements "%s".',
@@ -337,7 +345,7 @@ class FS
 			}
 
 			/* @var StorageInterface $driver */
-			return $driver::get();
+			return $driver::get($name);
 		};
 
 		return CacheManager::runtime(__METHOD__)
@@ -353,5 +361,62 @@ class FS
 	public static function newTempFile(): string
 	{
 		return \tempnam(\sys_get_temp_dir(), Settings::get('oz.config', 'OZ_PROJECT_PREFIX', 'oz') . '_');
+	}
+
+	/**
+	 * Creates a file name to be used to safely store an uploaded file.
+	 *
+	 * @param UploadedFile $upload the uploaded file
+	 * @param string       $prefix the prefix to use when a new filename is generated
+	 *
+	 * @return string
+	 */
+	public static function safeUploadFilename(UploadedFile $upload, string $prefix = 'upload'): string
+	{
+		$filename = $upload->getClientFilename();
+		$mimetype = $upload->getClientMediaType();
+
+		$ext = self::getRealExtension($filename, $mimetype);
+
+		return self::safeFilename($filename, $ext, $prefix);
+	}
+
+	/**
+	 * Creates a file name to be used to safely store a file.
+	 *
+	 * @param string $filename the filename
+	 * @param string $ext      the file extension
+	 * @param string $prefix   the prefix to use when a new filename is generated
+	 *
+	 * @return string
+	 */
+	public static function safeFilename(string $filename, string $ext, string $prefix = 'upload'): string
+	{
+		$filename = \strtolower($filename);
+		// remove the extension
+		$name = \preg_replace('/\.' . \preg_quote($ext, '/') . '$/', '', $filename);
+
+		// slugify the name
+		$name   = Str::stringToURLSlug($name);
+		$suffix = '';
+
+		if (!$name) {
+			$name = Random::fileName($prefix);
+		} else {
+			// the hash is used to avoid name collision
+			// add a hash to the name
+			$suffix = '-' . Hasher::shorten(Random::string());
+		}
+
+		// ensure the name has a reasonable length before adding the suffix
+		$name = \trim(\substr($name, 0, 60), '-');
+		$name .= $suffix;
+		$ext  = \strtolower($ext);
+
+		if (\str_contains($ext, 'php') || \str_contains($ext, 'inc') || \str_contains($ext, 'phtml')) {
+			return $name;
+		}
+
+		return $name . '.' . $ext;
 	}
 }

@@ -28,9 +28,11 @@ interface StorageInterface
 	/**
 	 * Gets driver instance.
 	 *
+	 * @param string $name the driver assigned name
+	 *
 	 * @return $this
 	 */
-	public static function get(): self;
+	public static function get(string $name): self;
 
 	/**
 	 * Should return stream.
