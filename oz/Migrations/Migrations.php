@@ -52,12 +52,12 @@ final class Migrations
 	 */
 	public function run(MigrationInterface $migration): void
 	{
-		$query = $migration->up();
+		$query = \trim($migration->up());
 		if ($query) {
 			db()->executeMulti($query);
-
-			$this->setCurrentDbVersion($migration->getVersion());
 		}
+
+		$this->setCurrentDbVersion($migration->getVersion());
 	}
 
 	/**
@@ -67,27 +67,46 @@ final class Migrations
 	 */
 	public function rollbackMigration(MigrationInterface $migration): void
 	{
-		$query = $migration->down();
+		$version  = self::DB_NOT_INSTALLED_VERSION;
+		$previous = $this->getPreviousMigration($migration->getVersion());
+
+		if ($previous) {
+			$version = $previous->getVersion();
+		}
+
+		$query = \trim($migration->down());
 		if ($query) {
 			db()->executeMulti($query);
-
-			$version  = self::DB_NOT_INSTALLED_VERSION;
-			$previous = $this->getPreviousMigration($migration->getVersion());
-
-			if ($previous) {
-				$version = $previous->getVersion();
-			}
-
-			$this->setCurrentDbVersion($version);
 		}
+
+		$this->setCurrentDbVersion($version);
 	}
 
 	/**
 	 * Create a new migration.
 	 *
+	 * The {@see $force} parameter is useful when the diff algorithm fails to detect changes but some changes are made.
+	 * Like for this case where the `min` and `max` values changes doesn't affect the SQL query generated:
+	 *
+	 * ```
+	 * $nameV1 = [
+	 *  'type' => 'string',
+	 *  'min'  => 10,
+	 *  'max'  => 20,
+	 * ];
+	 *
+	 * $nameV2 = [
+	 *  'type' => 'string',
+	 *  'min'  => 5,
+	 *  'max'  => 30,
+	 * ];
+	 * ```
+	 *
+	 * @param bool $force if true, a migration file will be created even if there are no changes
+	 *
 	 * @return null|string
 	 */
-	public function create(): ?string
+	public function create(bool $force = false): ?string
 	{
 		$fm        = app()->getMigrationsDir();
 		$latest    = $this->getLatestMigration();
@@ -110,7 +129,7 @@ final class Migrations
 
 		$diff = new Diff($db_from, $db_to);
 
-		if ($diff->hasChanges()) {
+		if ($force || $diff->hasChanges()) {
 			$outfile = $fm->resolve(\sprintf('%s.php', Random::fileName('migration')));
 			$fm->wf($outfile, (string) $diff->generateMigrationFile($version));
 
@@ -141,7 +160,8 @@ final class Migrations
 			$duplicates = [];
 
 			foreach ($filter->find() as $file) {
-				$migration = require $file;
+				$path      = $file->getPathname();
+				$migration = require $path;
 
 				if ($migration instanceof MigrationInterface) {
 					$version = $migration->getVersion();
@@ -152,7 +172,7 @@ final class Migrations
 								'Duplicate migration version "%s" found in "%s" and "%s"',
 								$version,
 								$duplicates[$version],
-								$file
+								$path
 							)
 						);
 					}

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Migrations\Cli;
 
 use Gobl\DBAL\Interfaces\MigrationInterface;
+use Kli\Exceptions\KliException;
 use Kli\KliArgs;
 use Kli\Table\KliTableFormatter;
 use OZONE\Core\Cli\Cmd\DbCmd;
@@ -38,7 +39,10 @@ final class MigrationsCmd extends Command
 		$this->description('Manage your project database.');
 
 		$this->action('create', 'Create database migrations.')
-			->handler($this->create(...));
+			->handler($this->create(...))
+			->option('force', 'f')
+			->description('Force creation even if no changes is detected by the diff algorithm.')
+			->bool();
 
 		$this->action('check', 'Check database migrations.')
 			->handler($this->check(...));
@@ -56,13 +60,16 @@ final class MigrationsCmd extends Command
 
 	/**
 	 * Creates migration file.
+	 *
+	 * @throws KliException
 	 */
-	private function create(): void
+	private function create(KliArgs $args): void
 	{
 		Utils::assertProjectLoaded();
+		$force = (bool) $args->get('force');
 
 		$mg   = new Migrations();
-		$path = $mg->create();
+		$path = $mg->create($force);
 
 		if ($path) {
 			$this->getCli()
