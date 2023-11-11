@@ -34,9 +34,7 @@ class DbCache extends RuntimeCache
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
+	 * @throws \Gobl\Exceptions\GoblException
 	 */
 	protected function save(): bool
 	{

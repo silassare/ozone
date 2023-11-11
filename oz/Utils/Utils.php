@@ -67,9 +67,14 @@ class Utils
 	{
 		$status = \ob_get_status(true);
 		$level  = \count($status);
-		$flags  = \PHP_OUTPUT_HANDLER_REMOVABLE | ($flush ? \PHP_OUTPUT_HANDLER_FLUSHABLE : \PHP_OUTPUT_HANDLER_CLEANABLE);
+		$flags  = \PHP_OUTPUT_HANDLER_REMOVABLE
+			| ($flush ? \PHP_OUTPUT_HANDLER_FLUSHABLE : \PHP_OUTPUT_HANDLER_CLEANABLE);
 
-		while ($level-- > $target_level && ($s = $status[$level]) && ($s['del'] ?? (!isset($s['flags']) || ($s['flags'] & $flags) === $flags))) {
+		while (
+			$level-- > $target_level
+			&& ($s = $status[$level])
+			&& ($s['del'] ?? (!isset($s['flags']) || ($s['flags'] & $flags) === $flags))
+		) {
 			if ($flush) {
 				\ob_end_flush();
 			} else {
