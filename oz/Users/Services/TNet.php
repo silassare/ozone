@@ -27,26 +27,25 @@ final class TNet extends Service
 
 	public function actionTNet(): void
 	{
-		$data    = [];
 		$context = $this->getContext();
-
-		$data['_health'] = [
+		$health  = [
 			'is_installed'     => OZone::isInstalled(),
 			'has_db_access'    => OZone::hasDbAccess(),
 			'has_db_installed' => OZone::hasDbInstalled(),
 			'has_super_admin'  => OZone::hasSuperAdmin(),
 		];
 
+		$user = null;
 		if ($context->hasAuthenticatedUser()) {
-			$data['ok']            = 1;
-			$data['_current_user'] = $context->user()
-				->toArray();
-		} else {
-			$data['ok'] = 0;
+			$user = $context->user();
 		}
 
 		$this->json()
-			->setData($data);
+			->setData([
+				'ok'            => null !== $user,
+				'_current_user' => $user?->toArray(),
+				'_health'       => $health,
+			]);
 	}
 
 	/**

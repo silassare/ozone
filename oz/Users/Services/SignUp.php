@@ -86,7 +86,7 @@ final class SignUp extends Service
 				return $s->respond();
 			})
 			->name(self::ROUTE_SIGN_UP)
-			->form(Form::fromTable(OZUser::TABLE_NAME))
+			->form(static fn () => Form::fromTable(OZUser::TABLE_NAME))
 			->with2FA(EmailVerificationProvider::NAME, PhoneVerificationAuthProvider::NAME);
 	}
 }
