@@ -122,7 +122,7 @@ final class FilesUtilsTest extends TestCase
 
 		for ($i = 0; $i < $len; ++$i) {
 			$size                 = 1.962 * (1000 ** $i);
-			$results_data_sizes[] = FS::formatFileSize($size, 2, 1000);
+			$results_data_sizes[] = FS::formatFileSize($size);
 			$results_file_sizes[] = FS::formatFileSize($size, 2, 1024);
 		}
 
