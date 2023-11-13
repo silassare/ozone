@@ -39,7 +39,7 @@ final class PrivateLocalStorage extends AbstractLocalStorage
 	 */
 	public function publicUri(Context $context, OZFile $file): Uri
 	{
-		throw new UnauthorizedActionException('Private files are not accessible publicly.');
+		throw new UnauthorizedActionException('Private files cannot be publicly accessed.');
 	}
 
 	/**

@@ -39,7 +39,9 @@ abstract class AbstractLocalStorage implements StorageInterface
 	 *
 	 * @param string $name the driver assigned name
 	 */
-	public function __construct(protected readonly string $name) {}
+	public function __construct(protected readonly string $name)
+	{
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -157,7 +159,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function restrictedUri(Context $context, FileAuthProviderInterface $provider): Uri
+	public function revocableAccessUri(Context $context, FileAuthProviderInterface $provider): Uri
 	{
 		$file = $provider->getFile();
 		$this->require($file->getRef());
@@ -195,7 +197,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 		$body      = Body::fromPath($abs_path);
 
 		return $response->withHeader('Content-Transfer-Encoding', 'binary')
-			->withHeader('Content-Length', (string) $size)
+			->withHeader('Content-Length', (string)$size)
 			->withHeader('Content-type', $mime_type)
 			->withBody($body);
 	}
@@ -290,7 +292,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	/**
 	 * Creates a file destination with a ref.
 	 *
-	 * @param string      $clean_name
+	 * @param string $clean_name
 	 * @param null|string &$ref
 	 *
 	 * @return string

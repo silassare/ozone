@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "504c8b031c37c0d8eca49cee795237d0",
+    "content-hash": "34f19718c9ef5711637c659fa45ef914",
     "packages": [
         {
             "name": "claviska/simpleimage",
@@ -285,8 +285,14 @@
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "/mnt/Emile/oliup/code-generator",
+                "url": "https://github.com/oliup-io/code-generator.git",
                 "reference": "5a2f47fd9a6be7ca6705147d1d648e71055dd239"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/oliup-io/code-generator/zipball/5a2f47fd9a6be7ca6705147d1d648e71055dd239",
+                "reference": "5a2f47fd9a6be7ca6705147d1d648e71055dd239",
+                "shasum": ""
             },
             "require": {
                 "php": ">=8.1",
@@ -320,6 +326,10 @@
                 }
             ],
             "description": "Simple code generator for PHP.",
+            "support": {
+                "source": "https://github.com/oliup-io/code-generator/tree/main",
+                "issues": "https://github.com/oliup-io/code-generator/issues"
+            },
             "time": "2023-05-14T01:45:48+00:00"
         },
         {
@@ -614,8 +624,14 @@
             "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "/mnt/Emile/silassare/php-utils",
+                "url": "https://github.com/silassare/php-utils.git",
                 "reference": "34be86bcf9959131c5387ec74545409db3392b62"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/silassare/php-utils/zipball/34be86bcf9959131c5387ec74545409db3392b62",
+                "reference": "34be86bcf9959131c5387ec74545409db3392b62",
+                "shasum": ""
             },
             "require": {
                 "ext-json": "*",
@@ -663,6 +679,10 @@
                 "utilities",
                 "utils"
             ],
+            "support": {
+                "source": "https://github.com/silassare/php-utils/tree/main",
+                "issues": "https://github.com/silassare/php-utils/issues"
+            },
             "time": "2023-11-01T23:35:23+00:00"
         },
         {
@@ -3222,12 +3242,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "387a415b0a301c7c1f6fd9caa74bb4bf382ab99c"
+                "reference": "46ed208a0bc44f90d8248bc94adf8a490cff9ef1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/387a415b0a301c7c1f6fd9caa74bb4bf382ab99c",
-                "reference": "387a415b0a301c7c1f6fd9caa74bb4bf382ab99c",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/46ed208a0bc44f90d8248bc94adf8a490cff9ef1",
+                "reference": "46ed208a0bc44f90d8248bc94adf8a490cff9ef1",
                 "shasum": ""
             },
             "conflict": {
@@ -3404,7 +3424,7 @@
                 "friendsoftypo3/mediace": ">=7.6.2,<7.6.5",
                 "friendsoftypo3/openid": ">=4.5,<4.5.31|>=4.7,<4.7.16|>=6,<6.0.11|>=6.1,<6.1.6",
                 "froala/wysiwyg-editor": "<3.2.7|>=4.0.1,<=4.1.1",
-                "froxlor/froxlor": "<2.1",
+                "froxlor/froxlor": "<2.1.0.0-beta1",
                 "fuel/core": "<1.8.1",
                 "funadmin/funadmin": "<=3.2|>=3.3.2,<=3.3.3",
                 "gaoming13/wechat-php-sdk": "<=1.10.2",
@@ -3700,7 +3720,7 @@
                 "spoonity/tcpdf": "<6.2.22",
                 "squizlabs/php_codesniffer": ">=1,<2.8.1|>=3,<3.0.1",
                 "ssddanbrown/bookstack": "<22.02.3",
-                "statamic/cms": "<4.10",
+                "statamic/cms": "<4.33",
                 "stormpath/sdk": "<9.9.99",
                 "studio-42/elfinder": "<2.1.62",
                 "subhh/libconnect": "<7.0.8|>=8,<8.1",
@@ -3908,7 +3928,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-11-10T18:04:24+00:00"
+            "time": "2023-11-12T16:04:17+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -6154,7 +6174,8 @@
         "ext-libxml": "*",
         "ext-simplexml": "*",
         "ext-posix": "*",
-        "ext-bcmath": "*"
+        "ext-bcmath": "*",
+        "ext-fileinfo": "*"
     },
     "platform-dev": [],
     "platform-overrides": {
