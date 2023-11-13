@@ -75,13 +75,13 @@ class TempFS implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Checks if a ref exists.
+	 * Checks if a ref is valid and not expired.
 	 *
 	 * @param string $ref
 	 *
 	 * @return bool
 	 */
-	public static function exists(string $ref): bool
+	public static function canUse(string $ref): bool
 	{
 		$dir = self::getTempDir()->resolve($ref);
 
@@ -93,13 +93,15 @@ class TempFS implements BootHookReceiverInterface
 	/**
 	 * Gets a new instance.
 	 *
-	 * @param int $lifetime the lifetime in seconds
+	 * @param int    $lifetime the lifetime in seconds
+	 * @param string $prefix   the prefix
 	 *
 	 * @return self
 	 */
-	public static function get(int $lifetime): self
+	public static function get(int $lifetime, string $prefix = ''): self
 	{
-		$ref = \date('Y-m-d') . '-' . Random::alpha(8);
+		$prefix = \trim($prefix);
+		$ref    = ($prefix ? $prefix . '-' : '') . \date('Y-m-d') . '-' . Random::alpha(8);
 
 		return (new self($ref))->setLifetime($lifetime);
 	}
@@ -114,7 +116,7 @@ class TempFS implements BootHookReceiverInterface
 	 */
 	public static function use(string $ref, ?int $lifetime = null): self
 	{
-		$has = self::exists($ref);
+		$has = self::canUse($ref);
 
 		if (!$has) {
 			throw new RuntimeException(\sprintf('%s: invalid or expired ref "%s".', self::class, $ref));
@@ -181,25 +183,25 @@ class TempFS implements BootHookReceiverInterface
 	{
 		if (Random::bool()) {
 			$root = self::getTempDir();
+			$root->walk('.', static function (string $name, string $path, bool $is_dir) {
+				if ($is_dir) {
+					$expires = self::getExpirationTime($path);
+					if (!$expires) {
+						// we simply ignore as its maybe a new temporary directory in creation process
+						return false;
+					}
 
-			$filter = $root->filter()->isDir();
-
-			foreach ($filter->find() as $entry) {
-				$dir     = $entry->getPathname();
-				$expires = self::getExpirationTime($dir);
-				if (!$expires) {
-					// we simply ignore as its maybe a new temporary directory in creation process
-					return;
-				}
-
-				if ($expires < \time()) {
-					try {
-						// this may fail if other process is using or deleting the directory
-						(new FilesManager())->rmdir($dir);
-					} catch (Throwable) {
+					if ($expires < \time()) {
+						try {
+							// this may fail if other process is using or deleting the directory
+							(new FilesManager())->rmdir($path);
+						} catch (Throwable) {
+						}
 					}
 				}
-			}
+
+				return false;
+			});
 		}
 	}
 }

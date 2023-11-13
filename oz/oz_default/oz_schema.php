@@ -14,6 +14,7 @@ declare(strict_types=1);
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\AuthState;
 use OZONE\Core\Forms\Fields;
+use OZONE\Core\FS\Enums\FileType;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
 
@@ -263,6 +264,10 @@ return [
 			'size'       => [
 				'type'     => 'int',
 				'unsigned' => true,
+			],
+			'type'       => [
+				'type'       => 'enum',
+				'enum_class' => FileType::class,
 			],
 			'mime_type'  => [
 				'type' => 'string',

@@ -17,7 +17,6 @@ use OZONE\Core\Auth\AuthSecretType;
 use OZONE\Core\Auth\Providers\FileAccessAuthProvider;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Router\Guards;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -26,21 +25,26 @@ use OZONE\Core\Router\RouteInfo;
 class FileAccess
 {
 	/**
+	 * Checks if the given file can be accessed.
+	 *
+	 * If the file has guards rules, they will be checked.
+	 *
 	 * @param \OZONE\Core\Db\OZFile        $file
 	 * @param \OZONE\Core\Router\RouteInfo $ri
-	 * @param string                       $key
-	 * @param null|string                  $ref
+	 * @param string                       $auth_key
+	 * @param null|string                  $auth_ref
 	 *
 	 * @throws \OZONE\Core\Exceptions\InvalidFormException
 	 * @throws \OZONE\Core\Exceptions\NotFoundException
 	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
 	 */
-	public static function check(OZFile $file, RouteInfo $ri, string $key, ?string $ref = null): void
+	public static function check(OZFile $file, RouteInfo $ri, string $auth_key, ?string $auth_ref = null): void
 	{
 		$expected = $file->getKey();
 
-		if (!$ref) {
-			if (!\hash_equals($expected, $key)) {
+		// if no auth ref, we check the file key as this is a direct access
+		if (!$auth_ref) {
+			if (!\hash_equals($expected, $auth_key)) {
 				throw new NotFoundException(null, [
 					'_reason' => 'Invalid file key.',
 				]);
@@ -49,17 +53,15 @@ class FileAccess
 			$context = $ri->getContext();
 			$auth    = new FileAccessAuthProvider($context, $file);
 			$auth->getCredentials()
-				->setReference($ref)
-				->setToken($key);
+				->setReference($auth_ref)
+				->setToken($auth_key);
 
 			$auth->authorize(AuthSecretType::TOKEN);
 		}
 
-		$data = $file->getData();
+		$guards = $file->getAccessGuards();
 
-		if (isset($data['guards_rules']) && \is_array($data['guards_rules'])) {
-			$guards = Guards::resolve($data['guards_rules']);
-
+		if (!empty($guards)) {
 			foreach ($guards as $guard) {
 				$guard->checkAccess($ri);
 			}

@@ -448,8 +448,8 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @throws \Gobl\Exceptions\GoblException
 	 */
-	public function getFiles(array $filters = [
-	], ?int $max = null, int $offset = 0, array $order_by = [
+	public function getFiles(array $filters =  [
+	], ?int $max = null, int $offset = 0, array $order_by =  [
 	], ?int &$total = -1): array
 	{
 		return \OZONE\Core\Db\OZFile::ctrl()->getAllRelatives(
@@ -491,8 +491,8 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @throws \Gobl\Exceptions\GoblException
 	 */
-	public function getSessions(array $filters = [
-	], ?int $max = null, int $offset = 0, array $order_by = [
+	public function getSessions(array $filters =  [
+	], ?int $max = null, int $offset = 0, array $order_by =  [
 	], ?int &$total = -1): array
 	{
 		return \OZONE\Core\Db\OZSession::ctrl()->getAllRelatives(

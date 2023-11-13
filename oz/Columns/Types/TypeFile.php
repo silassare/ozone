@@ -482,13 +482,13 @@ class TypeFile extends Type
 	{
 		$lifetime = $this->getOption('temp_lifetime', self::TEMP_FILE_LIFETIME);
 
-		$tmp_fs_dir = TempFS::get($lifetime)->dir();
+		$tmp_fs_dir = TempFS::get($lifetime, 'upload')->dir();
 
 		/** @var string[] $list */
 		$list = [];
 
 		foreach ($uploaded_files as $upload) {
-			$name = FS::safeUploadFilename($upload);
+			$name = $upload->getSafeFileName();
 			$path = $tmp_fs_dir->resolve($name);
 
 			$upload->moveTo($path);
@@ -575,7 +575,14 @@ class TypeFile extends Type
 			throw new TypesInvalidValueException('OZ_FILE_SIZE_OUT_OF_RANGE', $debug);
 		}
 
-		if (!$this->checkFileMime($upload->getClientMediaType())) {
+		$client_media = $upload->getClientMediaType();
+		$safe_media   = $upload->getSafeMediaType();
+
+		if (!$this->checkFileMime($client_media)) {
+			throw new TypesInvalidValueException('OZ_FILE_MIME_INVALID', $debug);
+		}
+
+		if ($client_media !== $safe_media && !$this->checkFileMime($safe_media)) {
 			throw new TypesInvalidValueException('OZ_FILE_MIME_INVALID', $debug);
 		}
 	}

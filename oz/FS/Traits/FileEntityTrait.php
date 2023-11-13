@@ -15,6 +15,9 @@ namespace OZONE\Core\FS\Traits;
 
 use OZONE\Core\App\Keys;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\FS\Enums\FileType;
+use OZONE\Core\Router\Guards;
+use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 
 /**
  * Trait FileEntityTrait.
@@ -28,6 +31,12 @@ trait FileEntityTrait
 	{
 		if ($this->isNew()) {
 			$this->setKey(Keys::newFileKey());
+		}
+
+		$mime = $this->getMimeType();
+
+		if ($mime) {
+			$this->setType(FileType::fromMime($mime));
 		}
 
 		return parent::save();
@@ -72,11 +81,53 @@ trait FileEntityTrait
 	}
 
 	/**
+	 * Checks if this file has clones.
+	 *
 	 * @return bool
 	 */
 	public function hasClones(): bool
 	{
 		return (bool) \count($this->getClones([], 1));
+	}
+
+	/**
+	 * Gets the file access guards.
+	 *
+	 * @return RouteGuardInterface[]
+	 */
+	public function getAccessGuards(): array
+	{
+		$data = $this->getData();
+
+		if (isset($data['guards_rules']) && \is_array($data['guards_rules'])) {
+			return Guards::resolve($data['guards_rules']);
+		}
+
+		return [];
+	}
+
+	/**
+	 * Sets the file access guards.
+	 *
+	 * @param RouteGuardInterface[] $guards
+	 *
+	 * @return $this
+	 */
+	public function setAccessGuards(array $guards): static
+	{
+		$data = $this->getData();
+
+		$map = [];
+
+		foreach ($guards as $guard) {
+			$map[$guard::class] = $guard->getRules();
+		}
+
+		$data['guards_rules'] = $map;
+
+		$this->setData($data);
+
+		return $this;
 	}
 
 	/**
@@ -86,7 +137,8 @@ trait FileEntityTrait
 	{
 		$arr = parent::toArray($hide_sensitive_data);
 
-		$arr[self::COL_KEY] = null;
+		$arr[self::COL_KEY] = '';
+		$arr[self::COL_REF] = '';
 
 		return $arr;
 	}

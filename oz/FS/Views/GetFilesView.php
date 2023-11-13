@@ -44,8 +44,8 @@ class GetFilesView extends WebView
 			->name(self::MAIN_ROUTE)
 			->params([
 				'oz_file_id'        => '[0-9]+',
-				'oz_file_key'       => '[a-z0-9]{32,}',
-				'oz_file_ref'       => '[a-z0-9]{32,}',
+				'oz_file_auth_ref'  => '[a-z0-9]{32,}',
+				'oz_file_auth_key'  => '[a-z0-9]{32,}',
 				'oz_file_filter'    => '[a-z0-9]+',
 				'oz_file_extension' => '[a-z0-9]{1,10}',
 			]);
@@ -62,12 +62,12 @@ class GetFilesView extends WebView
 	 */
 	public static function handle(RouteInfo $ri): Response
 	{
-		$context         = $ri->getContext();
-		$req_file_id     = $ri->param('oz_file_id');
-		$req_file_key    = $ri->param('oz_file_key');
-		$req_file_ref    = $ri->param('oz_file_ref');
-		$req_file_filter = $ri->param('oz_file_filter');
-		$req_file_ext    = $ri->param('oz_file_extension');
+		$context           = $ri->getContext();
+		$req_file_id       = $ri->param('oz_file_id');
+		$req_file_auth_key = $ri->param('oz_file_auth_key');
+		$req_file_auth_ref = $ri->param('oz_file_auth_ref');
+		$req_file_filter   = $ri->param('oz_file_filter');
+		$req_file_ext      = $ri->param('oz_file_extension');
 
 		$file = FS::getFileByID($req_file_id);
 
@@ -86,7 +86,7 @@ class GetFilesView extends WebView
 			throw new NotFoundException();
 		}
 
-		FileAccess::check($file, $ri, $req_file_key, $req_file_ref);
+		FileAccess::check($file, $ri, $req_file_auth_key, $req_file_auth_ref);
 
 		$driver = FS::getStorage($file->getStorage());
 

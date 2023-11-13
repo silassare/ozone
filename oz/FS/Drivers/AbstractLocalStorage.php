@@ -68,16 +68,16 @@ abstract class AbstractLocalStorage implements StorageInterface
 		}
 
 		$filename = \trim($upload->getClientFilename());
-		$mimetype = $upload->getClientMediaType();
+		$mimetype = $upload->getSafeMediaType();
 
-		$ext        = FS::getRealExtension($filename, $mimetype);
-		$clean_name = FS::safeUploadFilename($upload);
+		$safe_name = $upload->getSafeFileName();
+		$ext       = FS::getRealExtension($safe_name, $mimetype);
 
 		if (empty($filename)) {
-			$filename = $clean_name;
+			$filename = $safe_name;
 		}
 
-		$destination = $this->createDestinationPath($clean_name, $ref);
+		$destination = $this->createDestinationPath($safe_name, $ref);
 
 		$upload->moveTo($destination);
 
@@ -101,7 +101,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	{
 		$filename   = \trim($filename);
 		$ext        = FS::getRealExtension($filename, $mimetype);
-		$clean_name = FS::safeFilename($filename, $ext, 'save');
+		$clean_name = FS::sanitizeFilename($filename, $ext, 'save');
 
 		if (empty($filename)) {
 			$filename = $clean_name;
@@ -164,13 +164,10 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 		$credentials = $provider->getCredentials();
 
-		$ref = $credentials->getReference();
-		$key = $credentials->getToken();
-
 		return $context->buildRouteUri(GetFilesView::MAIN_ROUTE, [
-			'oz_file_id'  => $file->getID(),
-			'oz_file_key' => $key,
-			'oz_file_ref' => $ref,
+			'oz_file_id'       => $file->getID(),
+			'oz_file_auth_key' => $credentials->getToken(),
+			'oz_file_auth_ref' => $credentials->getReference(),
 		]);
 	}
 

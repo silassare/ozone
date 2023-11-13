@@ -318,8 +318,8 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @throws \Gobl\Exceptions\GoblException
 	 */
-	public function getUsers(array $filters = [
-	], ?int $max = null, int $offset = 0, array $order_by = [
+	public function getUsers(array $filters =  [
+	], ?int $max = null, int $offset = 0, array $order_by =  [
 	], ?int &$total = -1): array
 	{
 		return \OZONE\Core\Db\OZUser::ctrl()->getAllRelatives(

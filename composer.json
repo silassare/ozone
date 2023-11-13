@@ -27,6 +27,7 @@
     "ext-simplexml": "*",
     "ext-posix": "*",
     "ext-bcmath": "*",
+    "ext-fileinfo": "*",
     "silassare/otpl": "=1.1.9",
     "silassare/gobl": "^2.0.0",
     "silassare/kli": "^2.0.0",

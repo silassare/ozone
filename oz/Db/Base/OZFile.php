@@ -16,24 +16,25 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZFile.
  *
- * @property null|string $id         Getter for column `oz_files`.`id`.
- * @property null|string $owner_id   Getter for column `oz_files`.`owner_id`.
- * @property string      $key        Getter for column `oz_files`.`key`.
- * @property string      $ref        Getter for column `oz_files`.`ref`.
- * @property string      $storage    Getter for column `oz_files`.`storage`.
- * @property null|string $clone_id   Getter for column `oz_files`.`clone_id`.
- * @property null|string $source_id  Getter for column `oz_files`.`source_id`.
- * @property int         $size       Getter for column `oz_files`.`size`.
- * @property string      $mime_type  Getter for column `oz_files`.`mime_type`.
- * @property string      $extension  Getter for column `oz_files`.`extension`.
- * @property string      $name       Getter for column `oz_files`.`name`.
- * @property null|string $for_id     Getter for column `oz_files`.`for_id`.
- * @property null|string $for_type   Getter for column `oz_files`.`for_type`.
- * @property string      $for_label  Getter for column `oz_files`.`for_label`.
- * @property array       $data       Getter for column `oz_files`.`data`.
- * @property string      $created_at Getter for column `oz_files`.`created_at`.
- * @property string      $updated_at Getter for column `oz_files`.`updated_at`.
- * @property bool        $is_valid   Getter for column `oz_files`.`is_valid`.
+ * @property null|string                   $id         Getter for column `oz_files`.`id`.
+ * @property null|string                   $owner_id   Getter for column `oz_files`.`owner_id`.
+ * @property string                        $key        Getter for column `oz_files`.`key`.
+ * @property string                        $ref        Getter for column `oz_files`.`ref`.
+ * @property string                        $storage    Getter for column `oz_files`.`storage`.
+ * @property null|string                   $clone_id   Getter for column `oz_files`.`clone_id`.
+ * @property null|string                   $source_id  Getter for column `oz_files`.`source_id`.
+ * @property int                           $size       Getter for column `oz_files`.`size`.
+ * @property \OZONE\Core\FS\Enums\FileType $type       Getter for column `oz_files`.`type`.
+ * @property string                        $mime_type  Getter for column `oz_files`.`mime_type`.
+ * @property string                        $extension  Getter for column `oz_files`.`extension`.
+ * @property string                        $name       Getter for column `oz_files`.`name`.
+ * @property null|string                   $for_id     Getter for column `oz_files`.`for_id`.
+ * @property null|string                   $for_type   Getter for column `oz_files`.`for_type`.
+ * @property string                        $for_label  Getter for column `oz_files`.`for_label`.
+ * @property array                         $data       Getter for column `oz_files`.`data`.
+ * @property string                        $created_at Getter for column `oz_files`.`created_at`.
+ * @property string                        $updated_at Getter for column `oz_files`.`updated_at`.
+ * @property bool                          $is_valid   Getter for column `oz_files`.`is_valid`.
  */
 abstract class OZFile extends \Gobl\ORM\ORMEntity
 {
@@ -47,6 +48,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	public const COL_CLONE_ID    = 'file_clone_id';
 	public const COL_SOURCE_ID   = 'file_source_id';
 	public const COL_SIZE        = 'file_size';
+	public const COL_TYPE        = 'file_type';
 	public const COL_MIME_TYPE   = 'file_mime_type';
 	public const COL_EXTENSION   = 'file_extension';
 	public const COL_NAME        = 'file_name';
@@ -326,6 +328,30 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
+	 * Getter for column `oz_files`.`type`.
+	 *
+	 * @return \OZONE\Core\FS\Enums\FileType
+	 */
+	public function getType(): \OZONE\Core\FS\Enums\FileType
+	{
+		return $this->type;
+	}
+
+	/**
+	 * Setter for column `oz_files`.`type`.
+	 *
+	 * @param \OZONE\Core\FS\Enums\FileType|string $type
+	 *
+	 * @return static
+	 */
+	public function setType(\OZONE\Core\FS\Enums\FileType|string $type): static
+	{
+		$this->type = $type;
+
+		return $this;
+	}
+
+	/**
 	 * Getter for column `oz_files`.`mime_type`.
 	 *
 	 * @return string
@@ -593,8 +619,8 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @throws \Gobl\Exceptions\GoblException
 	 */
-	public function getClones(array $filters = [
-	], ?int $max = null, int $offset = 0, array $order_by = [
+	public function getClones(array $filters =  [
+	], ?int $max = null, int $offset = 0, array $order_by =  [
 	], ?int &$total = -1): array
 	{
 		return \OZONE\Core\Db\OZFile::ctrl()->getAllRelatives(

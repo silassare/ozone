@@ -44,8 +44,8 @@ final class PublicLocalStorage extends AbstractLocalStorage
 
 		if (!$allow_direct_access) {
 			return $context->buildRouteUri(GetFilesView::MAIN_ROUTE, [
-				'oz_file_id'  => $file->getID(),
-				'oz_file_key' => $file->getKey(),
+				'oz_file_id'       => $file->getID(),
+				'oz_file_auth_key' => $file->getKey(),
 			]);
 		}
 

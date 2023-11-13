@@ -16,10 +16,10 @@ namespace OZONE\Core\FS\Services;
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\UnverifiedUserException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
 use OZONE\Core\Http\UploadedFile;
@@ -152,20 +152,31 @@ class UploadFiles extends Service
 			// sort by chunk index
 			\ksort($chunks);
 
-			/** @var null|OZFile $target_file */
-			$target_file = null;
+			/** @var null|string $target_path */
+			$target_path = null;
 			$storage     = FS::getStorage();
+			$fm          = new FilesManager();
 
 			foreach ($chunks as $c) {
 				$path = $c['chunk_path'];
-				if (null === $target_file) {
-					$target_file = $storage->saveFromPath($path, $info['type'], $info['name']);
+				if (null === $target_path) {
+					$target_path = $path;
 				} else {
-					$storage->append($target_file, FileStream::fromPath($path));
+					$fm->append($target_path, FileStream::fromPath($path));
+					\unlink($path);
 				}
-
-				\unlink($path);
 			}
+
+			$upload = new UploadedFile(
+				$target_path,
+				$info['name'],
+				$info['type'],
+				$total_size,
+				\UPLOAD_ERR_OK,
+				false
+			);
+
+			$target_file = $storage->upload($upload);
 
 			$target_file->save();
 

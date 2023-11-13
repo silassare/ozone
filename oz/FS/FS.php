@@ -364,25 +364,7 @@ class FS
 	}
 
 	/**
-	 * Creates a file name to be used to safely store an uploaded file.
-	 *
-	 * @param UploadedFile $upload the uploaded file
-	 * @param string       $prefix the prefix to use when a new filename is generated
-	 *
-	 * @return string
-	 */
-	public static function safeUploadFilename(UploadedFile $upload, string $prefix = 'upload'): string
-	{
-		$filename = $upload->getClientFilename();
-		$mimetype = $upload->getClientMediaType();
-
-		$ext = self::getRealExtension($filename, $mimetype);
-
-		return self::safeFilename($filename, $ext, $prefix);
-	}
-
-	/**
-	 * Creates a file name to be used to safely store a file.
+	 * Sanitize a filename.
 	 *
 	 * @param string $filename the filename
 	 * @param string $ext      the file extension
@@ -390,7 +372,7 @@ class FS
 	 *
 	 * @return string
 	 */
-	public static function safeFilename(string $filename, string $ext, string $prefix = 'upload'): string
+	public static function sanitizeFilename(string $filename, string $ext, string $prefix = 'upload'): string
 	{
 		$filename = \strtolower($filename);
 		// remove the extension
@@ -418,5 +400,40 @@ class FS
 		}
 
 		return $name . '.' . $ext;
+	}
+
+	/**
+	 * Gets mime type of a file.
+	 *
+	 * @param string $file_path
+	 *
+	 * @return false|string
+	 */
+	public static function getMimeType(string $file_path): bool|string
+	{
+		if (\function_exists('finfo_open')) {
+			$finfo = \finfo_open(\FILEINFO_MIME_TYPE);
+			$mime  = \finfo_file($finfo, $file_path);
+			\finfo_close($finfo);
+
+			return $mime;
+		}
+		if (\function_exists('mime_content_type')) {
+			return \mime_content_type($file_path);
+		}
+		if (false === \stripos(\ini_get('disable_functions'), 'shell_exec')) {
+			$file = \escapeshellarg($file_path);
+
+			/** @psalm-suppress ForbiddenCode */
+			$mime = \shell_exec('file -bi ' . $file);
+
+			if ($mime) {
+				$parts = \explode(';', $mime);
+
+				return \trim($parts[0]);
+			}
+		}
+
+		return false;
 	}
 }

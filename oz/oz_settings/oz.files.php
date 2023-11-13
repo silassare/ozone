@@ -16,14 +16,14 @@ return [
 	 * the uri format you want for file access must use/provide.
 	 *
 	 *  oz_file_id
-	 *  oz_file_key
+	 *  oz_file_auth_key
 	 *
 	 * eg:
 	 *  /files/ozone-7000000000-fe5017db3a4b07eb5297c745ba198355-thumb.png
 	 *  /files/ozone-7000000000-fe5017db3a4b07eb5297c745ba198355-thumb
 	 *  /files/ozone-7000000000-eaabf4cdc3f909a61be62e1fa4d231ed-fe5017db3a4b07eb5297c745ba198355-thumb
 	 */
-	'OZ_GET_FILE_URI_PATH_FORMAT'         => '/files/ozone-{oz_file_id}[-{oz_file_ref}]-{oz_file_key}[-{oz_file_filter}][.{oz_file_extension}]',
+	'OZ_GET_FILE_URI_PATH_FORMAT'         => '/files/ozone-{oz_file_id}[-{oz_file_auth_ref}]-{oz_file_auth_key}[-{oz_file_filter}][.{oz_file_extension}]',
 
 	/**
 	 * when user download a file should we
