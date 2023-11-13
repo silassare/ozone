@@ -14,10 +14,35 @@ declare(strict_types=1);
 use OZONE\Core\Auth\AuthMethodType;
 
 return [
+	/**
+	 * Max number of auth code try.
+	 *
+	 * @default 3
+	 */
 	'OZ_AUTH_CODE_TRY_MAX'        => 3,
-	'OZ_AUTH_CODE_LIFE_TIME'      => 60 * 60,
+
+	/**
+	 * Auth code life time in seconds.
+	 *
+	 * @default 3600 (1 hour)
+	 */
+	'OZ_AUTH_CODE_LIFE_TIME'      => 3600,
+
+	/**
+	 * Auth code length.
+	 */
 	'OZ_AUTH_CODE_LENGTH'         => 6,
+
+	/**
+	 * Enable alpha numeric auth code.
+	 *
+	 * @default false
+	 */
 	'OZ_AUTH_CODE_USE_ALPHA_NUM'  => false,
+
+	/**
+	 * Auth by api key header name.
+	 */
 	'OZ_AUTH_API_KEY_HEADER_NAME' => 'x-ozone-api-key',
 
 	/**
