@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\FS;
 
 use OZONE\Core\Auth\AuthSecretType;
-use OZONE\Core\Auth\Providers\FileAccessAuthProvider;
+use OZONE\Core\Auth\Providers\FileAuthProvider;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Router\RouteInfo;
@@ -51,7 +51,7 @@ class FileAccess
 			}
 		} else {
 			$context = $ri->getContext();
-			$auth    = new FileAccessAuthProvider($context, $file);
+			$auth    = new FileAuthProvider($context, $file);
 			$auth->getCredentials()
 				->setReference($auth_ref)
 				->setToken($auth_key);

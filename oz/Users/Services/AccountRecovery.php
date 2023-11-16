@@ -16,7 +16,7 @@ namespace OZONE\Core\Users\Services;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Providers\EmailVerificationProvider;
-use OZONE\Core\Auth\Providers\PhoneVerificationAuthProvider;
+use OZONE\Core\Auth\Providers\PhoneVerificationProvider;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InternalErrorException;
@@ -54,7 +54,7 @@ final class AccountRecovery extends Service
 
 		if ($provider instanceof EmailVerificationProvider) {
 			$user = Users::withEmail($provider->getEmail());
-		} elseif ($provider instanceof PhoneVerificationAuthProvider) {
+		} elseif ($provider instanceof PhoneVerificationProvider) {
 			$user = Users::withPhone($provider->getPhone());
 		} else {
 			// this is a logic error or someone is playing with us
@@ -90,7 +90,7 @@ final class AccountRecovery extends Service
 				return $s->respond();
 			})
 			->name(self::ROUTE_ACCOUNT_RECOVERY)
-			->with2FA(PhoneVerificationAuthProvider::NAME, EmailVerificationProvider::NAME)
+			->with2FA(PhoneVerificationProvider::NAME, EmailVerificationProvider::NAME)
 			->form(self::editPassForm(...));
 	}
 

@@ -27,7 +27,7 @@ interface AuthAccessRightsInterface
 	 *
 	 * @return static
 	 */
-	public static function from(OZAuth $auth): self;
+	public static function from(OZAuth $auth): static;
 
 	/**
 	 * Gets options.

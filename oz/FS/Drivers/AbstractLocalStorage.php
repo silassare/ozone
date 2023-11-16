@@ -15,12 +15,12 @@ namespace OZONE\Core\FS\Drivers;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Providers\FileAuthProvider;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
-use OZONE\Core\FS\Interfaces\FileAuthProviderInterface;
 use OZONE\Core\FS\Interfaces\StorageInterface;
 use OZONE\Core\FS\Views\GetFilesView;
 use OZONE\Core\Http\Body;
@@ -39,9 +39,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	 *
 	 * @param string $name the driver assigned name
 	 */
-	public function __construct(protected readonly string $name)
-	{
-	}
+	public function __construct(protected readonly string $name) {}
 
 	/**
 	 * {@inheritDoc}
@@ -89,7 +87,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 		$f->setName($filename)
 			->setRef($ref)
 			->setStorage($this->name)
-			->setMimeType($mimetype)
+			->setMime($mimetype)
 			->setExtension($ext)
 			->setSize($filesize);
 
@@ -125,7 +123,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 		$f->setName($filename)
 			->setRef($ref)
 			->setStorage($this->name)
-			->setMimeType($mimetype)
+			->setMime($mimetype)
 			->setExtension($ext)
 			->setSize($filesize);
 
@@ -159,7 +157,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function revocableAccessUri(Context $context, FileAuthProviderInterface $provider): Uri
+	public function revocableAccessUri(Context $context, FileAuthProvider $provider): Uri
 	{
 		$file = $provider->getFile();
 		$this->require($file->getRef());
@@ -193,11 +191,11 @@ abstract class AbstractLocalStorage implements StorageInterface
 		}
 
 		$size      = $file->getSize();
-		$mime_type = $file->getMimeType();
+		$mime_type = $file->getMime();
 		$body      = Body::fromPath($abs_path);
 
 		return $response->withHeader('Content-Transfer-Encoding', 'binary')
-			->withHeader('Content-Length', (string)$size)
+			->withHeader('Content-Length', (string) $size)
 			->withHeader('Content-type', $mime_type)
 			->withBody($body);
 	}
@@ -292,7 +290,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	/**
 	 * Creates a file destination with a ref.
 	 *
-	 * @param string $clean_name
+	 * @param string      $clean_name
 	 * @param null|string &$ref
 	 *
 	 * @return string

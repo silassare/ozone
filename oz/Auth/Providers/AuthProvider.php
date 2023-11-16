@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Providers;
 
 use Gobl\CRUD\Exceptions\CRUDException;
+use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\JSONResponse;
@@ -195,7 +196,7 @@ abstract class AuthProvider implements AuthProviderInterface
 				->setTokenHash($token_hash)
 				->setTryCount(0)
 				->setExpire((string) $expire)
-				->setOptions($this->scope->getOptions())
+				->setOptions($this->scope->getAccessRight()->getOptions())
 				->save();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to save authorization data.', null, $t);
@@ -287,12 +288,14 @@ abstract class AuthProvider implements AuthProviderInterface
 	 * Save authorisation process into the database.
 	 *
 	 * @param \OZONE\Core\Db\OZAuth $auth
+	 *
+	 * @throws GoblException
 	 */
 	protected function save(OZAuth $auth): void
 	{
 		try {
 			$auth->setUpdatedAT((string) \time())
-				->setOptions($this->scope->getOptions())
+				->setOptions($this->scope->getAccessRight()->getOptions())
 				->save();
 		} catch (CRUDException|ORMException $e) {
 			throw new RuntimeException('Unable to save authorization process data.', null, $e);

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\FS\Interfaces;
 
 use OZONE\Core\App\Context;
+use OZONE\Core\Auth\Providers\FileAuthProvider;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\Http\Response;
@@ -56,8 +57,8 @@ interface StorageInterface
 	 * Add a file with content from a given stream.
 	 *
 	 * @param \OZONE\Core\FS\FileStream $source
-	 * @param string $mimetype
-	 * @param string $filename
+	 * @param string                    $mimetype
+	 * @param string                    $filename
 	 *
 	 * @return \OZONE\Core\Db\OZFile
 	 */
@@ -99,23 +100,24 @@ interface StorageInterface
 	 *
 	 * The file auth provider has all information needed to check if the request is authorized or not.
 	 * The given auth provider credentials can be used to contact the auth server.
+	 * The file provider is responsible for contacting the auth server to check if the credential is still valid.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param \OZONE\Core\FS\Interfaces\FileAuthProviderInterface $provider
+	 * @param Context          $context
+	 * @param FileAuthProvider $provider
 	 *
-	 * @return \OZONE\Core\Http\Uri
+	 * @return Uri
 	 *
 	 * @see \OZONE\Core\Auth\Services\AuthService for more information on how to check if the credential
 	 *      still valid or not.
 	 */
-	public function revocableAccessUri(Context $context, FileAuthProviderInterface $provider): Uri;
+	public function revocableAccessUri(Context $context, FileAuthProvider $provider): Uri;
 
 	/**
 	 * Should returns a public access uri for the given file.
 	 * Or fail if the file is not public.
 	 *
 	 * @param \OZONE\Core\App\Context $context
-	 * @param \OZONE\Core\Db\OZFile $file
+	 * @param \OZONE\Core\Db\OZFile   $file
 	 *
 	 * @return \OZONE\Core\Http\Uri
 	 */
@@ -124,7 +126,7 @@ interface StorageInterface
 	/**
 	 * Should serve the file to the HTTP client.
 	 *
-	 * @param \OZONE\Core\Db\OZFile $file
+	 * @param \OZONE\Core\Db\OZFile     $file
 	 * @param \OZONE\Core\Http\Response $response
 	 *
 	 * @return \OZONE\Core\Http\Response
@@ -135,7 +137,7 @@ interface StorageInterface
 	 * Writes data to the given file, this should overwrite the file content.
 	 *
 	 * @param \OZONE\Core\Db\OZFile $file
-	 * @param FileStream|string $content
+	 * @param FileStream|string     $content
 	 *
 	 * @return $this
 	 */
@@ -145,7 +147,7 @@ interface StorageInterface
 	 * Appends data to the given file.
 	 *
 	 * @param \OZONE\Core\Db\OZFile $file
-	 * @param FileStream|string $data
+	 * @param FileStream|string     $data
 	 *
 	 * @return $this
 	 */
@@ -155,7 +157,7 @@ interface StorageInterface
 	 * Prepends data to the given file.
 	 *
 	 * @param \OZONE\Core\Db\OZFile $file
-	 * @param FileStream|string $data
+	 * @param FileStream|string     $data
 	 *
 	 * @return $this
 	 */

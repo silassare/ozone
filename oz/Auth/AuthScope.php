@@ -15,27 +15,29 @@ namespace OZONE\Core\Auth;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthScopeInterface;
 use OZONE\Core\Db\OZAuth;
 
 /**
  * Class AuthScope.
  */
-class AuthScope extends AuthAccessRights implements AuthScopeInterface
+class AuthScope implements AuthScopeInterface
 {
-	protected string $label    = '';
-	protected int $try_max     = 0;
-	protected int $lifetime    = 0;
+	protected string $label = '';
+	protected int $try_max  = 0;
+	protected int $lifetime = 0;
+	protected AuthAccessRightsInterface $access_right;
 
 	/**
 	 * AuthScope constructor.
 	 */
-	public function __construct(array $options = [])
+	public function __construct()
 	{
-		parent::__construct($options);
-
 		$this->setTryMax((int) Settings::get('oz.auth', 'OZ_AUTH_CODE_TRY_MAX'))
 			->setLifetime((int) Settings::get('oz.auth', 'OZ_AUTH_CODE_LIFE_TIME'));
+
+		$this->access_right = new AuthAccessRights();
 	}
 
 	/**
@@ -108,12 +110,32 @@ class AuthScope extends AuthAccessRights implements AuthScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function from(OZAuth $auth): self
+	public function getAccessRight(): AuthAccessRightsInterface
 	{
-		$scope = new self($auth->getOptions());
+		return $this->access_right;
+	}
 
-		return $scope->setTryMax($auth->getTryMax())
+	/**
+	 * {@inheritDoc}
+	 */
+	public function setAccessRight(AuthAccessRightsInterface $access_right): self
+	{
+		$this->access_right = $access_right;
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function from(OZAuth $auth): static
+	{
+		$scope = new self();
+
+		return $scope
+			->setTryMax($auth->getTryMax())
 			->setLifetime($auth->getLifetime())
-			->setLabel($auth->getLabel());
+			->setLabel($auth->getLabel())
+			->setAccessRight(AuthAccessRights::from($auth));
 	}
 }

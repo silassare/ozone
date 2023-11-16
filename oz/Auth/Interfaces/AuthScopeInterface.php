@@ -13,11 +13,22 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Interfaces;
 
+use OZONE\Core\Db\OZAuth;
+
 /**
  * Interface AuthScopeInterface.
  */
-interface AuthScopeInterface extends AuthAccessRightsInterface
+interface AuthScopeInterface
 {
+	/**
+	 * Loads scope info from auth.
+	 *
+	 * @param \OZONE\Core\Db\OZAuth $auth
+	 *
+	 * @return static
+	 */
+	public static function from(OZAuth $auth): static;
+
 	/**
 	 * Gets the authorization label.
 	 *
@@ -65,4 +76,20 @@ interface AuthScopeInterface extends AuthAccessRightsInterface
 	 * @return $this
 	 */
 	public function setLifetime(int $lifetime): self;
+
+	/**
+	 * Gets the access rights.
+	 *
+	 * @return AuthAccessRightsInterface
+	 */
+	public function getAccessRight(): AuthAccessRightsInterface;
+
+	/**
+	 * Sets the access rights.
+	 *
+	 * @param AuthAccessRightsInterface $access_right
+	 *
+	 * @return $this
+	 */
+	public function setAccessRight(AuthAccessRightsInterface $access_right): self;
 }

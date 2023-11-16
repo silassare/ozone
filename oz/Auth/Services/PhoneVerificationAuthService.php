@@ -15,7 +15,7 @@ namespace OZONE\Core\Auth\Services;
 
 use Gobl\DBAL\Types\TypeBool;
 use OZONE\Core\App\Service;
-use OZONE\Core\Auth\Providers\PhoneVerificationAuthProvider;
+use OZONE\Core\Auth\Providers\PhoneVerificationProvider;
 use OZONE\Core\Columns\Types\TypePhone;
 use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
@@ -52,7 +52,7 @@ class PhoneVerificationAuthService extends Service
 	{
 		$phone = $fd->get('phone');
 
-		$provider = new PhoneVerificationAuthProvider($this->getContext(), $phone);
+		$provider = new PhoneVerificationProvider($this->getContext(), $phone);
 
 		$provider->generate();
 

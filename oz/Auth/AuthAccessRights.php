@@ -105,7 +105,7 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function from(OZAuth $auth): self
+	public static function from(OZAuth $auth): static
 	{
 		return new self($auth->getOptions());
 	}

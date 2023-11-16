@@ -16,7 +16,7 @@ namespace OZONE\Core\Users\Services;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Providers\EmailVerificationProvider;
-use OZONE\Core\Auth\Providers\PhoneVerificationAuthProvider;
+use OZONE\Core\Auth\Providers\PhoneVerificationProvider;
 use OZONE\Core\Db\OZUser;
 use OZONE\Core\Db\OZUsersController;
 use OZONE\Core\Exceptions\InternalErrorException;
@@ -54,7 +54,7 @@ final class SignUp extends Service
 
 		if ($provider instanceof EmailVerificationProvider) {
 			$data[OZUser::COL_EMAIL] = $provider->getEmail();
-		} elseif ($provider instanceof PhoneVerificationAuthProvider) {
+		} elseif ($provider instanceof PhoneVerificationProvider) {
 			$data[OZUser::COL_PHONE] = $provider->getPhone();
 		} else {
 			// this is a logic error or someone is playing with us
@@ -87,6 +87,6 @@ final class SignUp extends Service
 			})
 			->name(self::ROUTE_SIGN_UP)
 			->form(static fn () => Form::fromTable(OZUser::TABLE_NAME))
-			->with2FA(EmailVerificationProvider::NAME, PhoneVerificationAuthProvider::NAME);
+			->with2FA(EmailVerificationProvider::NAME, PhoneVerificationProvider::NAME);
 	}
 }

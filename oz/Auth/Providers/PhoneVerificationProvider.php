@@ -19,14 +19,14 @@ use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Senders\Messages\SMSMessage;
 
 /**
- * Class PhoneVerificationAuthProvider.
+ * Class PhoneVerificationProvider.
  */
-class PhoneVerificationAuthProvider extends AuthProvider
+class PhoneVerificationProvider extends AuthProvider
 {
 	public const NAME = 'auth:provider:phone:verify';
 
 	/**
-	 * PhoneVerificationAuthProvider constructor.
+	 * PhoneVerificationProvider constructor.
 	 *
 	 * @param \OZONE\Core\App\Context $context
 	 * @param string                  $phone

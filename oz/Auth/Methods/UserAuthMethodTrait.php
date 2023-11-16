@@ -65,7 +65,7 @@ trait UserAuthMethodTrait
 			$this->authenticate();
 		}
 
-		return $this->provider->getScope();
+		return $this->provider->getScope()->getAccessRight();
 	}
 
 	/**
