@@ -29,9 +29,11 @@ namespace OZONE\Core\Db\Base;
  * @property int                        $lifetime    Getter for column `oz_auths`.`lifetime`.
  * @property string                     $expire      Getter for column `oz_auths`.`expire`.
  * @property array                      $options     Getter for column `oz_auths`.`options`.
+ * @property bool                       $is_valid    Getter for column `oz_auths`.`is_valid`.
  * @property string                     $created_at  Getter for column `oz_auths`.`created_at`.
  * @property string                     $updated_at  Getter for column `oz_auths`.`updated_at`.
- * @property bool                       $is_valid    Getter for column `oz_auths`.`is_valid`.
+ * @property bool                       $deleted     Getter for column `oz_auths`.`deleted`.
+ * @property null|string                $deleted_at  Getter for column `oz_auths`.`deleted_at`.
  */
 abstract class OZAuth extends \Gobl\ORM\ORMEntity
 {
@@ -50,9 +52,11 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	public const COL_LIFETIME    = 'auth_lifetime';
 	public const COL_EXPIRE      = 'auth_expire';
 	public const COL_OPTIONS     = 'auth_options';
+	public const COL_IS_VALID    = 'auth_is_valid';
 	public const COL_CREATED_AT  = 'auth_created_at';
 	public const COL_UPDATED_AT  = 'auth_updated_at';
-	public const COL_IS_VALID    = 'auth_is_valid';
+	public const COL_DELETED     = 'auth_deleted';
+	public const COL_DELETED_AT  = 'auth_deleted_at';
 
 	/**
 	 * OZAuth constructor.
@@ -442,6 +446,30 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
+	 * Getter for column `oz_auths`.`is_valid`.
+	 *
+	 * @return bool
+	 */
+	public function isValid(): bool
+	{
+		return $this->is_valid;
+	}
+
+	/**
+	 * Setter for column `oz_auths`.`is_valid`.
+	 *
+	 * @param bool $is_valid
+	 *
+	 * @return static
+	 */
+	public function setISValid(bool $is_valid): static
+	{
+		$this->is_valid = $is_valid;
+
+		return $this;
+	}
+
+	/**
 	 * Getter for column `oz_auths`.`created_at`.
 	 *
 	 * @return string
@@ -490,25 +518,49 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_auths`.`is_valid`.
+	 * Getter for column `oz_auths`.`deleted`.
 	 *
 	 * @return bool
 	 */
-	public function isValid(): bool
+	public function isDeleted(): bool
 	{
-		return $this->is_valid;
+		return $this->deleted;
 	}
 
 	/**
-	 * Setter for column `oz_auths`.`is_valid`.
+	 * Setter for column `oz_auths`.`deleted`.
 	 *
-	 * @param bool $is_valid
+	 * @param bool $deleted
 	 *
 	 * @return static
 	 */
-	public function setISValid(bool $is_valid): static
+	public function setDeleted(bool $deleted): static
 	{
-		$this->is_valid = $is_valid;
+		$this->deleted = $deleted;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_auths`.`deleted_at`.
+	 *
+	 * @return null|string
+	 */
+	public function getDeletedAT(): null|string
+	{
+		return $this->deleted_at;
+	}
+
+	/**
+	 * Setter for column `oz_auths`.`deleted_at`.
+	 *
+	 * @param null|int|string $deleted_at
+	 *
+	 * @return static
+	 */
+	public function setDeletedAT(null|int|string $deleted_at): static
+	{
+		$this->deleted_at = $deleted_at;
 
 		return $this;
 	}

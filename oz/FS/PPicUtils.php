@@ -80,7 +80,7 @@ class PPicUtils
 		// because crop zone coordinates may be different from a clone to another
 
 		$user_dir          = FS::getUserRootDirectory($this->uid);
-		$gen_info          = FS::genNewFileInfo($user_dir, $clone->getName(), $clone->getMimeType());
+		$gen_info          = FS::genNewFileInfo($user_dir, $clone->getName(), $clone->getMime());
 		$thumb_destination = $gen_info['thumbnail'];
 
 		$this->makeProfilePic($clone, $thumb_destination, $coordinate);
@@ -122,7 +122,7 @@ class PPicUtils
 			// the uploaded file is an alias file
 			// we shouldn't overwrite existing thumbnail
 			$user_dir          = FS::getUserRootDirectory($this->uid);
-			$gen_info          = FS::genNewFileInfo($user_dir, $f->getName(), $f->getMimeType());
+			$gen_info          = FS::genNewFileInfo($user_dir, $f->getName(), $f->getMime());
 			$thumb_destination = $gen_info['thumbnail'];
 
 			$this->makeProfilePic($f->getPath(), $thumb_destination, $coordinate);

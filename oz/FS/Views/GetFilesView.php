@@ -81,7 +81,7 @@ class GetFilesView extends WebView
 		if (
 			$req_file_ext
 			&& $req_file_ext !== $file->getExtension()
-			&& FS::extensionToMimeType($req_file_ext) !== $file->getMimeType()
+			&& FS::extensionToMimeType($req_file_ext) !== $file->getMime()
 		) {
 			throw new NotFoundException();
 		}

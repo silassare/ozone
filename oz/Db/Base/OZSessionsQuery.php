@@ -74,6 +74,10 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereDataIsNot(array $value)                  Filters rows with `neq` condition on column `oz_sessions`.`data`.
  * @method $this whereDataIsLike(string $value)                Filters rows with `like` condition on column `oz_sessions`.`data`.
  * @method $this whereDataIsNotLike(string $value)             Filters rows with `not_like` condition on column `oz_sessions`.`data`.
+ * @method $this whereIsValidIs(bool $value)                   Filters rows with `eq` condition on column `oz_sessions`.`is_valid`.
+ * @method $this whereIsValidIsNot(bool $value)                Filters rows with `neq` condition on column `oz_sessions`.`is_valid`.
+ * @method $this whereIsNotValid()                             Filters rows with `is_false` condition on column `oz_sessions`.`is_valid`.
+ * @method $this whereIsValid()                                Filters rows with `is_true` condition on column `oz_sessions`.`is_valid`.
  * @method $this whereCreatedAtIs(int|string $value)           Filters rows with `eq` condition on column `oz_sessions`.`created_at`.
  * @method $this whereCreatedAtIsNot(int|string $value)        Filters rows with `neq` condition on column `oz_sessions`.`created_at`.
  * @method $this whereCreatedAtIsLt(int|string $value)         Filters rows with `lt` condition on column `oz_sessions`.`created_at`.
@@ -94,10 +98,6 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereUpdatedAtIsNotLike(string $value)        Filters rows with `not_like` condition on column `oz_sessions`.`updated_at`.
  * @method $this whereUpdatedAtIsIn(array $value)              Filters rows with `in` condition on column `oz_sessions`.`updated_at`.
  * @method $this whereUpdatedAtIsNotIn(array $value)           Filters rows with `not_in` condition on column `oz_sessions`.`updated_at`.
- * @method $this whereIsValidIs(bool $value)                   Filters rows with `eq` condition on column `oz_sessions`.`is_valid`.
- * @method $this whereIsValidIsNot(bool $value)                Filters rows with `neq` condition on column `oz_sessions`.`is_valid`.
- * @method $this whereIsNotValid()                             Filters rows with `is_false` condition on column `oz_sessions`.`is_valid`.
- * @method $this whereIsValid()                                Filters rows with `is_true` condition on column `oz_sessions`.`is_valid`.
  */
 abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 {

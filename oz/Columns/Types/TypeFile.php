@@ -605,7 +605,7 @@ class TypeFile extends Type
 			throw new TypesInvalidValueException('OZ_FILE_SIZE_OUT_OF_RANGE', $debug);
 		}
 
-		if (!$this->checkFileMime($file->getMimeType())) {
+		if (!$this->checkFileMime($file->getMime())) {
 			throw new TypesInvalidValueException('OZ_FILE_MIME_INVALID', $debug);
 		}
 	}

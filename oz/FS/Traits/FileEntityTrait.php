@@ -33,7 +33,7 @@ trait FileEntityTrait
 			$this->setKey(Keys::newFileKey());
 		}
 
-		$mime = $this->getMimeType();
+		$mime = $this->getMime();
 
 		if ($mime) {
 			$this->setType(FileType::fromMime($mime));

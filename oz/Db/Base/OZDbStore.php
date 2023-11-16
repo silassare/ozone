@@ -24,7 +24,8 @@ namespace OZONE\Core\Db\Base;
  * @property array       $data       Getter for column `oz_db_stores`.`data`.
  * @property string      $created_at Getter for column `oz_db_stores`.`created_at`.
  * @property string      $updated_at Getter for column `oz_db_stores`.`updated_at`.
- * @property bool        $is_valid   Getter for column `oz_db_stores`.`is_valid`.
+ * @property bool        $deleted    Getter for column `oz_db_stores`.`deleted`.
+ * @property null|string $deleted_at Getter for column `oz_db_stores`.`deleted_at`.
  */
 abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 {
@@ -38,7 +39,8 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	public const COL_DATA        = 'store_data';
 	public const COL_CREATED_AT  = 'store_created_at';
 	public const COL_UPDATED_AT  = 'store_updated_at';
-	public const COL_IS_VALID    = 'store_is_valid';
+	public const COL_DELETED     = 'store_deleted';
+	public const COL_DELETED_AT  = 'store_deleted_at';
 
 	/**
 	 * OZDbStore constructor.
@@ -308,25 +310,49 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_db_stores`.`is_valid`.
+	 * Getter for column `oz_db_stores`.`deleted`.
 	 *
 	 * @return bool
 	 */
-	public function isValid(): bool
+	public function isDeleted(): bool
 	{
-		return $this->is_valid;
+		return $this->deleted;
 	}
 
 	/**
-	 * Setter for column `oz_db_stores`.`is_valid`.
+	 * Setter for column `oz_db_stores`.`deleted`.
 	 *
-	 * @param bool $is_valid
+	 * @param bool $deleted
 	 *
 	 * @return static
 	 */
-	public function setISValid(bool $is_valid): static
+	public function setDeleted(bool $deleted): static
 	{
-		$this->is_valid = $is_valid;
+		$this->deleted = $deleted;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_db_stores`.`deleted_at`.
+	 *
+	 * @return null|string
+	 */
+	public function getDeletedAT(): null|string
+	{
+		return $this->deleted_at;
+	}
+
+	/**
+	 * Setter for column `oz_db_stores`.`deleted_at`.
+	 *
+	 * @param null|int|string $deleted_at
+	 *
+	 * @return static
+	 */
+	public function setDeletedAT(null|int|string $deleted_at): static
+	{
+		$this->deleted_at = $deleted_at;
 
 		return $this;
 	}

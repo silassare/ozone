@@ -18,23 +18,25 @@ namespace OZONE\Core\Db\Base;
  *
  * @property null|string                   $id         Getter for column `oz_files`.`id`.
  * @property null|string                   $owner_id   Getter for column `oz_files`.`owner_id`.
+ * @property null|string                   $clone_id   Getter for column `oz_files`.`clone_id`.
+ * @property null|string                   $source_id  Getter for column `oz_files`.`source_id`.
  * @property string                        $key        Getter for column `oz_files`.`key`.
  * @property string                        $ref        Getter for column `oz_files`.`ref`.
  * @property string                        $storage    Getter for column `oz_files`.`storage`.
- * @property null|string                   $clone_id   Getter for column `oz_files`.`clone_id`.
- * @property null|string                   $source_id  Getter for column `oz_files`.`source_id`.
  * @property int                           $size       Getter for column `oz_files`.`size`.
  * @property \OZONE\Core\FS\Enums\FileType $type       Getter for column `oz_files`.`type`.
- * @property string                        $mime_type  Getter for column `oz_files`.`mime_type`.
+ * @property string                        $mime       Getter for column `oz_files`.`mime`.
  * @property string                        $extension  Getter for column `oz_files`.`extension`.
  * @property string                        $name       Getter for column `oz_files`.`name`.
  * @property null|string                   $for_id     Getter for column `oz_files`.`for_id`.
  * @property null|string                   $for_type   Getter for column `oz_files`.`for_type`.
  * @property string                        $for_label  Getter for column `oz_files`.`for_label`.
  * @property array                         $data       Getter for column `oz_files`.`data`.
+ * @property bool                          $is_valid   Getter for column `oz_files`.`is_valid`.
  * @property string                        $created_at Getter for column `oz_files`.`created_at`.
  * @property string                        $updated_at Getter for column `oz_files`.`updated_at`.
- * @property bool                          $is_valid   Getter for column `oz_files`.`is_valid`.
+ * @property bool                          $deleted    Getter for column `oz_files`.`deleted`.
+ * @property null|string                   $deleted_at Getter for column `oz_files`.`deleted_at`.
  */
 abstract class OZFile extends \Gobl\ORM\ORMEntity
 {
@@ -42,23 +44,25 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
 	public const COL_ID          = 'file_id';
 	public const COL_OWNER_ID    = 'file_owner_id';
+	public const COL_CLONE_ID    = 'file_clone_id';
+	public const COL_SOURCE_ID   = 'file_source_id';
 	public const COL_KEY         = 'file_key';
 	public const COL_REF         = 'file_ref';
 	public const COL_STORAGE     = 'file_storage';
-	public const COL_CLONE_ID    = 'file_clone_id';
-	public const COL_SOURCE_ID   = 'file_source_id';
 	public const COL_SIZE        = 'file_size';
 	public const COL_TYPE        = 'file_type';
-	public const COL_MIME_TYPE   = 'file_mime_type';
+	public const COL_MIME        = 'file_mime';
 	public const COL_EXTENSION   = 'file_extension';
 	public const COL_NAME        = 'file_name';
 	public const COL_FOR_ID      = 'file_for_id';
 	public const COL_FOR_TYPE    = 'file_for_type';
 	public const COL_FOR_LABEL   = 'file_for_label';
 	public const COL_DATA        = 'file_data';
+	public const COL_IS_VALID    = 'file_is_valid';
 	public const COL_CREATED_AT  = 'file_created_at';
 	public const COL_UPDATED_AT  = 'file_updated_at';
-	public const COL_IS_VALID    = 'file_is_valid';
+	public const COL_DELETED     = 'file_deleted';
+	public const COL_DELETED_AT  = 'file_deleted_at';
 
 	/**
 	 * OZFile constructor.
@@ -184,6 +188,54 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
+	 * Getter for column `oz_files`.`clone_id`.
+	 *
+	 * @return null|string
+	 */
+	public function getCloneID(): null|string
+	{
+		return $this->clone_id;
+	}
+
+	/**
+	 * Setter for column `oz_files`.`clone_id`.
+	 *
+	 * @param null|int|string $clone_id
+	 *
+	 * @return static
+	 */
+	public function setCloneID(null|int|string $clone_id): static
+	{
+		$this->clone_id = $clone_id;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_files`.`source_id`.
+	 *
+	 * @return null|string
+	 */
+	public function getSourceID(): null|string
+	{
+		return $this->source_id;
+	}
+
+	/**
+	 * Setter for column `oz_files`.`source_id`.
+	 *
+	 * @param null|int|string $source_id
+	 *
+	 * @return static
+	 */
+	public function setSourceID(null|int|string $source_id): static
+	{
+		$this->source_id = $source_id;
+
+		return $this;
+	}
+
+	/**
 	 * Getter for column `oz_files`.`key`.
 	 *
 	 * @return string
@@ -256,54 +308,6 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_files`.`clone_id`.
-	 *
-	 * @return null|string
-	 */
-	public function getCloneID(): null|string
-	{
-		return $this->clone_id;
-	}
-
-	/**
-	 * Setter for column `oz_files`.`clone_id`.
-	 *
-	 * @param null|int|string $clone_id
-	 *
-	 * @return static
-	 */
-	public function setCloneID(null|int|string $clone_id): static
-	{
-		$this->clone_id = $clone_id;
-
-		return $this;
-	}
-
-	/**
-	 * Getter for column `oz_files`.`source_id`.
-	 *
-	 * @return null|string
-	 */
-	public function getSourceID(): null|string
-	{
-		return $this->source_id;
-	}
-
-	/**
-	 * Setter for column `oz_files`.`source_id`.
-	 *
-	 * @param null|int|string $source_id
-	 *
-	 * @return static
-	 */
-	public function setSourceID(null|int|string $source_id): static
-	{
-		$this->source_id = $source_id;
-
-		return $this;
-	}
-
-	/**
 	 * Getter for column `oz_files`.`size`.
 	 *
 	 * @return int
@@ -352,25 +356,25 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_files`.`mime_type`.
+	 * Getter for column `oz_files`.`mime`.
 	 *
 	 * @return string
 	 */
-	public function getMimeType(): string
+	public function getMime(): string
 	{
-		return $this->mime_type;
+		return $this->mime;
 	}
 
 	/**
-	 * Setter for column `oz_files`.`mime_type`.
+	 * Setter for column `oz_files`.`mime`.
 	 *
-	 * @param string $mime_type
+	 * @param string $mime
 	 *
 	 * @return static
 	 */
-	public function setMimeType(string $mime_type): static
+	public function setMime(string $mime): static
 	{
-		$this->mime_type = $mime_type;
+		$this->mime = $mime;
 
 		return $this;
 	}
@@ -520,6 +524,30 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
+	 * Getter for column `oz_files`.`is_valid`.
+	 *
+	 * @return bool
+	 */
+	public function isValid(): bool
+	{
+		return $this->is_valid;
+	}
+
+	/**
+	 * Setter for column `oz_files`.`is_valid`.
+	 *
+	 * @param bool $is_valid
+	 *
+	 * @return static
+	 */
+	public function setISValid(bool $is_valid): static
+	{
+		$this->is_valid = $is_valid;
+
+		return $this;
+	}
+
+	/**
 	 * Getter for column `oz_files`.`created_at`.
 	 *
 	 * @return string
@@ -568,25 +596,49 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_files`.`is_valid`.
+	 * Getter for column `oz_files`.`deleted`.
 	 *
 	 * @return bool
 	 */
-	public function isValid(): bool
+	public function isDeleted(): bool
 	{
-		return $this->is_valid;
+		return $this->deleted;
 	}
 
 	/**
-	 * Setter for column `oz_files`.`is_valid`.
+	 * Setter for column `oz_files`.`deleted`.
 	 *
-	 * @param bool $is_valid
+	 * @param bool $deleted
 	 *
 	 * @return static
 	 */
-	public function setISValid(bool $is_valid): static
+	public function setDeleted(bool $deleted): static
 	{
-		$this->is_valid = $is_valid;
+		$this->deleted = $deleted;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_files`.`deleted_at`.
+	 *
+	 * @return null|string
+	 */
+	public function getDeletedAT(): null|string
+	{
+		return $this->deleted_at;
+	}
+
+	/**
+	 * Setter for column `oz_files`.`deleted_at`.
+	 *
+	 * @param null|int|string $deleted_at
+	 *
+	 * @return static
+	 */
+	public function setDeletedAT(null|int|string $deleted_at): static
+	{
+		$this->deleted_at = $deleted_at;
 
 		return $this;
 	}

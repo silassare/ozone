@@ -40,6 +40,30 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereOwnerIdIsNotNull()                                     Filters rows with `is_not_null` condition on column `oz_files`.`owner_id`.
  * @method $this whereOwnerIdIsIn(array $value)                              Filters rows with `in` condition on column `oz_files`.`owner_id`.
  * @method $this whereOwnerIdIsNotIn(array $value)                           Filters rows with `not_in` condition on column `oz_files`.`owner_id`.
+ * @method $this whereCloneIdIs(int|string $value)                           Filters rows with `eq` condition on column `oz_files`.`clone_id`.
+ * @method $this whereCloneIdIsNot(int|string $value)                        Filters rows with `neq` condition on column `oz_files`.`clone_id`.
+ * @method $this whereCloneIdIsLt(int|string $value)                         Filters rows with `lt` condition on column `oz_files`.`clone_id`.
+ * @method $this whereCloneIdIsLte(int|string $value)                        Filters rows with `lte` condition on column `oz_files`.`clone_id`.
+ * @method $this whereCloneIdIsGt(int|string $value)                         Filters rows with `gt` condition on column `oz_files`.`clone_id`.
+ * @method $this whereCloneIdIsGte(int|string $value)                        Filters rows with `gte` condition on column `oz_files`.`clone_id`.
+ * @method $this whereCloneIdIsLike(string $value)                           Filters rows with `like` condition on column `oz_files`.`clone_id`.
+ * @method $this whereCloneIdIsNotLike(string $value)                        Filters rows with `not_like` condition on column `oz_files`.`clone_id`.
+ * @method $this whereCloneIdIsNull()                                        Filters rows with `is_null` condition on column `oz_files`.`clone_id`.
+ * @method $this whereCloneIdIsNotNull()                                     Filters rows with `is_not_null` condition on column `oz_files`.`clone_id`.
+ * @method $this whereCloneIdIsIn(array $value)                              Filters rows with `in` condition on column `oz_files`.`clone_id`.
+ * @method $this whereCloneIdIsNotIn(array $value)                           Filters rows with `not_in` condition on column `oz_files`.`clone_id`.
+ * @method $this whereSourceIdIs(int|string $value)                          Filters rows with `eq` condition on column `oz_files`.`source_id`.
+ * @method $this whereSourceIdIsNot(int|string $value)                       Filters rows with `neq` condition on column `oz_files`.`source_id`.
+ * @method $this whereSourceIdIsLt(int|string $value)                        Filters rows with `lt` condition on column `oz_files`.`source_id`.
+ * @method $this whereSourceIdIsLte(int|string $value)                       Filters rows with `lte` condition on column `oz_files`.`source_id`.
+ * @method $this whereSourceIdIsGt(int|string $value)                        Filters rows with `gt` condition on column `oz_files`.`source_id`.
+ * @method $this whereSourceIdIsGte(int|string $value)                       Filters rows with `gte` condition on column `oz_files`.`source_id`.
+ * @method $this whereSourceIdIsLike(string $value)                          Filters rows with `like` condition on column `oz_files`.`source_id`.
+ * @method $this whereSourceIdIsNotLike(string $value)                       Filters rows with `not_like` condition on column `oz_files`.`source_id`.
+ * @method $this whereSourceIdIsNull()                                       Filters rows with `is_null` condition on column `oz_files`.`source_id`.
+ * @method $this whereSourceIdIsNotNull()                                    Filters rows with `is_not_null` condition on column `oz_files`.`source_id`.
+ * @method $this whereSourceIdIsIn(array $value)                             Filters rows with `in` condition on column `oz_files`.`source_id`.
+ * @method $this whereSourceIdIsNotIn(array $value)                          Filters rows with `not_in` condition on column `oz_files`.`source_id`.
  * @method $this whereKeyIs(string $value)                                   Filters rows with `eq` condition on column `oz_files`.`key`.
  * @method $this whereKeyIsNot(string $value)                                Filters rows with `neq` condition on column `oz_files`.`key`.
  * @method $this whereKeyIsLt(string $value)                                 Filters rows with `lt` condition on column `oz_files`.`key`.
@@ -70,30 +94,6 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereStorageIsNotLike(string $value)                        Filters rows with `not_like` condition on column `oz_files`.`storage`.
  * @method $this whereStorageIsIn(array $value)                              Filters rows with `in` condition on column `oz_files`.`storage`.
  * @method $this whereStorageIsNotIn(array $value)                           Filters rows with `not_in` condition on column `oz_files`.`storage`.
- * @method $this whereCloneIdIs(int|string $value)                           Filters rows with `eq` condition on column `oz_files`.`clone_id`.
- * @method $this whereCloneIdIsNot(int|string $value)                        Filters rows with `neq` condition on column `oz_files`.`clone_id`.
- * @method $this whereCloneIdIsLt(int|string $value)                         Filters rows with `lt` condition on column `oz_files`.`clone_id`.
- * @method $this whereCloneIdIsLte(int|string $value)                        Filters rows with `lte` condition on column `oz_files`.`clone_id`.
- * @method $this whereCloneIdIsGt(int|string $value)                         Filters rows with `gt` condition on column `oz_files`.`clone_id`.
- * @method $this whereCloneIdIsGte(int|string $value)                        Filters rows with `gte` condition on column `oz_files`.`clone_id`.
- * @method $this whereCloneIdIsLike(string $value)                           Filters rows with `like` condition on column `oz_files`.`clone_id`.
- * @method $this whereCloneIdIsNotLike(string $value)                        Filters rows with `not_like` condition on column `oz_files`.`clone_id`.
- * @method $this whereCloneIdIsNull()                                        Filters rows with `is_null` condition on column `oz_files`.`clone_id`.
- * @method $this whereCloneIdIsNotNull()                                     Filters rows with `is_not_null` condition on column `oz_files`.`clone_id`.
- * @method $this whereCloneIdIsIn(array $value)                              Filters rows with `in` condition on column `oz_files`.`clone_id`.
- * @method $this whereCloneIdIsNotIn(array $value)                           Filters rows with `not_in` condition on column `oz_files`.`clone_id`.
- * @method $this whereSourceIdIs(int|string $value)                          Filters rows with `eq` condition on column `oz_files`.`source_id`.
- * @method $this whereSourceIdIsNot(int|string $value)                       Filters rows with `neq` condition on column `oz_files`.`source_id`.
- * @method $this whereSourceIdIsLt(int|string $value)                        Filters rows with `lt` condition on column `oz_files`.`source_id`.
- * @method $this whereSourceIdIsLte(int|string $value)                       Filters rows with `lte` condition on column `oz_files`.`source_id`.
- * @method $this whereSourceIdIsGt(int|string $value)                        Filters rows with `gt` condition on column `oz_files`.`source_id`.
- * @method $this whereSourceIdIsGte(int|string $value)                       Filters rows with `gte` condition on column `oz_files`.`source_id`.
- * @method $this whereSourceIdIsLike(string $value)                          Filters rows with `like` condition on column `oz_files`.`source_id`.
- * @method $this whereSourceIdIsNotLike(string $value)                       Filters rows with `not_like` condition on column `oz_files`.`source_id`.
- * @method $this whereSourceIdIsNull()                                       Filters rows with `is_null` condition on column `oz_files`.`source_id`.
- * @method $this whereSourceIdIsNotNull()                                    Filters rows with `is_not_null` condition on column `oz_files`.`source_id`.
- * @method $this whereSourceIdIsIn(array $value)                             Filters rows with `in` condition on column `oz_files`.`source_id`.
- * @method $this whereSourceIdIsNotIn(array $value)                          Filters rows with `not_in` condition on column `oz_files`.`source_id`.
  * @method $this whereSizeIs(int $value)                                     Filters rows with `eq` condition on column `oz_files`.`size`.
  * @method $this whereSizeIsNot(int $value)                                  Filters rows with `neq` condition on column `oz_files`.`size`.
  * @method $this whereSizeIsLt(int $value)                                   Filters rows with `lt` condition on column `oz_files`.`size`.
@@ -114,16 +114,16 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereTypeIsNotLike(string $value)                           Filters rows with `not_like` condition on column `oz_files`.`type`.
  * @method $this whereTypeIsIn(array $value)                                 Filters rows with `in` condition on column `oz_files`.`type`.
  * @method $this whereTypeIsNotIn(array $value)                              Filters rows with `not_in` condition on column `oz_files`.`type`.
- * @method $this whereMimeTypeIs(string $value)                              Filters rows with `eq` condition on column `oz_files`.`mime_type`.
- * @method $this whereMimeTypeIsNot(string $value)                           Filters rows with `neq` condition on column `oz_files`.`mime_type`.
- * @method $this whereMimeTypeIsLt(string $value)                            Filters rows with `lt` condition on column `oz_files`.`mime_type`.
- * @method $this whereMimeTypeIsLte(string $value)                           Filters rows with `lte` condition on column `oz_files`.`mime_type`.
- * @method $this whereMimeTypeIsGt(string $value)                            Filters rows with `gt` condition on column `oz_files`.`mime_type`.
- * @method $this whereMimeTypeIsGte(string $value)                           Filters rows with `gte` condition on column `oz_files`.`mime_type`.
- * @method $this whereMimeTypeIsLike(string $value)                          Filters rows with `like` condition on column `oz_files`.`mime_type`.
- * @method $this whereMimeTypeIsNotLike(string $value)                       Filters rows with `not_like` condition on column `oz_files`.`mime_type`.
- * @method $this whereMimeTypeIsIn(array $value)                             Filters rows with `in` condition on column `oz_files`.`mime_type`.
- * @method $this whereMimeTypeIsNotIn(array $value)                          Filters rows with `not_in` condition on column `oz_files`.`mime_type`.
+ * @method $this whereMimeIs(string $value)                                  Filters rows with `eq` condition on column `oz_files`.`mime`.
+ * @method $this whereMimeIsNot(string $value)                               Filters rows with `neq` condition on column `oz_files`.`mime`.
+ * @method $this whereMimeIsLt(string $value)                                Filters rows with `lt` condition on column `oz_files`.`mime`.
+ * @method $this whereMimeIsLte(string $value)                               Filters rows with `lte` condition on column `oz_files`.`mime`.
+ * @method $this whereMimeIsGt(string $value)                                Filters rows with `gt` condition on column `oz_files`.`mime`.
+ * @method $this whereMimeIsGte(string $value)                               Filters rows with `gte` condition on column `oz_files`.`mime`.
+ * @method $this whereMimeIsLike(string $value)                              Filters rows with `like` condition on column `oz_files`.`mime`.
+ * @method $this whereMimeIsNotLike(string $value)                           Filters rows with `not_like` condition on column `oz_files`.`mime`.
+ * @method $this whereMimeIsIn(array $value)                                 Filters rows with `in` condition on column `oz_files`.`mime`.
+ * @method $this whereMimeIsNotIn(array $value)                              Filters rows with `not_in` condition on column `oz_files`.`mime`.
  * @method $this whereExtensionIs(string $value)                             Filters rows with `eq` condition on column `oz_files`.`extension`.
  * @method $this whereExtensionIsNot(string $value)                          Filters rows with `neq` condition on column `oz_files`.`extension`.
  * @method $this whereExtensionIsLt(string $value)                           Filters rows with `lt` condition on column `oz_files`.`extension`.
@@ -182,6 +182,10 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereDataIsNot(array $value)                                Filters rows with `neq` condition on column `oz_files`.`data`.
  * @method $this whereDataIsLike(string $value)                              Filters rows with `like` condition on column `oz_files`.`data`.
  * @method $this whereDataIsNotLike(string $value)                           Filters rows with `not_like` condition on column `oz_files`.`data`.
+ * @method $this whereIsValidIs(bool $value)                                 Filters rows with `eq` condition on column `oz_files`.`is_valid`.
+ * @method $this whereIsValidIsNot(bool $value)                              Filters rows with `neq` condition on column `oz_files`.`is_valid`.
+ * @method $this whereIsNotValid()                                           Filters rows with `is_false` condition on column `oz_files`.`is_valid`.
+ * @method $this whereIsValid()                                              Filters rows with `is_true` condition on column `oz_files`.`is_valid`.
  * @method $this whereCreatedAtIs(int|string $value)                         Filters rows with `eq` condition on column `oz_files`.`created_at`.
  * @method $this whereCreatedAtIsNot(int|string $value)                      Filters rows with `neq` condition on column `oz_files`.`created_at`.
  * @method $this whereCreatedAtIsLt(int|string $value)                       Filters rows with `lt` condition on column `oz_files`.`created_at`.
@@ -202,10 +206,22 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereUpdatedAtIsNotLike(string $value)                      Filters rows with `not_like` condition on column `oz_files`.`updated_at`.
  * @method $this whereUpdatedAtIsIn(array $value)                            Filters rows with `in` condition on column `oz_files`.`updated_at`.
  * @method $this whereUpdatedAtIsNotIn(array $value)                         Filters rows with `not_in` condition on column `oz_files`.`updated_at`.
- * @method $this whereIsValidIs(bool $value)                                 Filters rows with `eq` condition on column `oz_files`.`is_valid`.
- * @method $this whereIsValidIsNot(bool $value)                              Filters rows with `neq` condition on column `oz_files`.`is_valid`.
- * @method $this whereIsNotValid()                                           Filters rows with `is_false` condition on column `oz_files`.`is_valid`.
- * @method $this whereIsValid()                                              Filters rows with `is_true` condition on column `oz_files`.`is_valid`.
+ * @method $this whereDeletedIs(bool $value)                                 Filters rows with `eq` condition on column `oz_files`.`deleted`.
+ * @method $this whereDeletedIsNot(bool $value)                              Filters rows with `neq` condition on column `oz_files`.`deleted`.
+ * @method $this whereIsNotDeleted()                                         Filters rows with `is_false` condition on column `oz_files`.`deleted`.
+ * @method $this whereIsDeleted()                                            Filters rows with `is_true` condition on column `oz_files`.`deleted`.
+ * @method $this whereDeletedAtIs(int|string $value)                         Filters rows with `eq` condition on column `oz_files`.`deleted_at`.
+ * @method $this whereDeletedAtIsNot(int|string $value)                      Filters rows with `neq` condition on column `oz_files`.`deleted_at`.
+ * @method $this whereDeletedAtIsLt(int|string $value)                       Filters rows with `lt` condition on column `oz_files`.`deleted_at`.
+ * @method $this whereDeletedAtIsLte(int|string $value)                      Filters rows with `lte` condition on column `oz_files`.`deleted_at`.
+ * @method $this whereDeletedAtIsGt(int|string $value)                       Filters rows with `gt` condition on column `oz_files`.`deleted_at`.
+ * @method $this whereDeletedAtIsGte(int|string $value)                      Filters rows with `gte` condition on column `oz_files`.`deleted_at`.
+ * @method $this whereDeletedAtIsLike(string $value)                         Filters rows with `like` condition on column `oz_files`.`deleted_at`.
+ * @method $this whereDeletedAtIsNotLike(string $value)                      Filters rows with `not_like` condition on column `oz_files`.`deleted_at`.
+ * @method $this whereDeletedAtIsNull()                                      Filters rows with `is_null` condition on column `oz_files`.`deleted_at`.
+ * @method $this whereDeletedAtIsNotNull()                                   Filters rows with `is_not_null` condition on column `oz_files`.`deleted_at`.
+ * @method $this whereDeletedAtIsIn(array $value)                            Filters rows with `in` condition on column `oz_files`.`deleted_at`.
+ * @method $this whereDeletedAtIsNotIn(array $value)                         Filters rows with `not_in` condition on column `oz_files`.`deleted_at`.
  */
 abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 {

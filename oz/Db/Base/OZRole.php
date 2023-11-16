@@ -17,24 +17,28 @@ namespace OZONE\Core\Db\Base;
  * Class OZRole.
  *
  * @property null|string $id         Getter for column `oz_roles`.`id`.
- * @property string      $user_id    Getter for column `oz_roles`.`user_id`.
  * @property string      $name       Getter for column `oz_roles`.`name`.
  * @property array       $data       Getter for column `oz_roles`.`data`.
+ * @property bool        $is_valid   Getter for column `oz_roles`.`is_valid`.
  * @property string      $created_at Getter for column `oz_roles`.`created_at`.
  * @property string      $updated_at Getter for column `oz_roles`.`updated_at`.
- * @property bool        $is_valid   Getter for column `oz_roles`.`is_valid`.
+ * @property bool        $deleted    Getter for column `oz_roles`.`deleted`.
+ * @property null|string $deleted_at Getter for column `oz_roles`.`deleted_at`.
+ * @property string      $user_id    Getter for column `oz_roles`.`user_id`.
  */
 abstract class OZRole extends \Gobl\ORM\ORMEntity
 {
 	public const TABLE_NAME      = 'oz_roles';
 	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
 	public const COL_ID          = 'role_id';
-	public const COL_USER_ID     = 'role_user_id';
 	public const COL_NAME        = 'role_name';
 	public const COL_DATA        = 'role_data';
+	public const COL_IS_VALID    = 'role_is_valid';
 	public const COL_CREATED_AT  = 'role_created_at';
 	public const COL_UPDATED_AT  = 'role_updated_at';
-	public const COL_IS_VALID    = 'role_is_valid';
+	public const COL_DELETED     = 'role_deleted';
+	public const COL_DELETED_AT  = 'role_deleted_at';
+	public const COL_USER_ID     = 'role_user_id';
 
 	/**
 	 * OZRole constructor.
@@ -136,30 +140,6 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_roles`.`user_id`.
-	 *
-	 * @return string
-	 */
-	public function getUserID(): string
-	{
-		return $this->user_id;
-	}
-
-	/**
-	 * Setter for column `oz_roles`.`user_id`.
-	 *
-	 * @param int|string $user_id
-	 *
-	 * @return static
-	 */
-	public function setUserID(int|string $user_id): static
-	{
-		$this->user_id = $user_id;
-
-		return $this;
-	}
-
-	/**
 	 * Getter for column `oz_roles`.`name`.
 	 *
 	 * @return string
@@ -203,6 +183,30 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	public function setData(array $data): static
 	{
 		$this->data = $data;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_roles`.`is_valid`.
+	 *
+	 * @return bool
+	 */
+	public function isValid(): bool
+	{
+		return $this->is_valid;
+	}
+
+	/**
+	 * Setter for column `oz_roles`.`is_valid`.
+	 *
+	 * @param bool $is_valid
+	 *
+	 * @return static
+	 */
+	public function setISValid(bool $is_valid): static
+	{
+		$this->is_valid = $is_valid;
 
 		return $this;
 	}
@@ -256,41 +260,74 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_roles`.`is_valid`.
+	 * Getter for column `oz_roles`.`deleted`.
 	 *
 	 * @return bool
 	 */
-	public function isValid(): bool
+	public function isDeleted(): bool
 	{
-		return $this->is_valid;
+		return $this->deleted;
 	}
 
 	/**
-	 * Setter for column `oz_roles`.`is_valid`.
+	 * Setter for column `oz_roles`.`deleted`.
 	 *
-	 * @param bool $is_valid
+	 * @param bool $deleted
 	 *
 	 * @return static
 	 */
-	public function setISValid(bool $is_valid): static
+	public function setDeleted(bool $deleted): static
 	{
-		$this->is_valid = $is_valid;
+		$this->deleted = $deleted;
 
 		return $this;
 	}
 
 	/**
-	 * OneToOne relation between `oz_roles` and `oz_users`.
+	 * Getter for column `oz_roles`.`deleted_at`.
 	 *
-	 * @return ?\OZONE\Core\Db\OZUser
-	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @return null|string
 	 */
-	public function getUser(): ?\OZONE\Core\Db\OZUser
+	public function getDeletedAT(): null|string
 	{
-		return \OZONE\Core\Db\OZUser::ctrl()->getRelative(
-			$this,
-			static::table()->getRelation('user')
-		);
+		return $this->deleted_at;
+	}
+
+	/**
+	 * Setter for column `oz_roles`.`deleted_at`.
+	 *
+	 * @param null|int|string $deleted_at
+	 *
+	 * @return static
+	 */
+	public function setDeletedAT(null|int|string $deleted_at): static
+	{
+		$this->deleted_at = $deleted_at;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_roles`.`user_id`.
+	 *
+	 * @return string
+	 */
+	public function getUserID(): string
+	{
+		return $this->user_id;
+	}
+
+	/**
+	 * Setter for column `oz_roles`.`user_id`.
+	 *
+	 * @param int|string $user_id
+	 *
+	 * @return static
+	 */
+	public function setUserID(int|string $user_id): static
+	{
+		$this->user_id = $user_id;
+
+		return $this;
 	}
 }

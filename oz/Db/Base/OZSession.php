@@ -22,9 +22,9 @@ namespace OZONE\Core\Db\Base;
  * @property string      $expire             Getter for column `oz_sessions`.`expire`.
  * @property string      $last_seen          Getter for column `oz_sessions`.`last_seen`.
  * @property array       $data               Getter for column `oz_sessions`.`data`.
+ * @property bool        $is_valid           Getter for column `oz_sessions`.`is_valid`.
  * @property string      $created_at         Getter for column `oz_sessions`.`created_at`.
  * @property string      $updated_at         Getter for column `oz_sessions`.`updated_at`.
- * @property bool        $is_valid           Getter for column `oz_sessions`.`is_valid`.
  */
 abstract class OZSession extends \Gobl\ORM\ORMEntity
 {
@@ -36,9 +36,9 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	public const COL_EXPIRE             = 'session_expire';
 	public const COL_LAST_SEEN          = 'session_last_seen';
 	public const COL_DATA               = 'session_data';
+	public const COL_IS_VALID           = 'session_is_valid';
 	public const COL_CREATED_AT         = 'session_created_at';
 	public const COL_UPDATED_AT         = 'session_updated_at';
-	public const COL_IS_VALID           = 'session_is_valid';
 
 	/**
 	 * OZSession constructor.
@@ -260,6 +260,30 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
+	 * Getter for column `oz_sessions`.`is_valid`.
+	 *
+	 * @return bool
+	 */
+	public function isValid(): bool
+	{
+		return $this->is_valid;
+	}
+
+	/**
+	 * Setter for column `oz_sessions`.`is_valid`.
+	 *
+	 * @param bool $is_valid
+	 *
+	 * @return static
+	 */
+	public function setISValid(bool $is_valid): static
+	{
+		$this->is_valid = $is_valid;
+
+		return $this;
+	}
+
+	/**
 	 * Getter for column `oz_sessions`.`created_at`.
 	 *
 	 * @return string
@@ -303,30 +327,6 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	public function setUpdatedAT(int|string $updated_at): static
 	{
 		$this->updated_at = $updated_at;
-
-		return $this;
-	}
-
-	/**
-	 * Getter for column `oz_sessions`.`is_valid`.
-	 *
-	 * @return bool
-	 */
-	public function isValid(): bool
-	{
-		return $this->is_valid;
-	}
-
-	/**
-	 * Setter for column `oz_sessions`.`is_valid`.
-	 *
-	 * @param bool $is_valid
-	 *
-	 * @return static
-	 */
-	public function setISValid(bool $is_valid): static
-	{
-		$this->is_valid = $is_valid;
 
 		return $this;
 	}

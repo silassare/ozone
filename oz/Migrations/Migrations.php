@@ -13,14 +13,20 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Migrations;
 
+use Gobl\CRUD\Exceptions\CRUDException;
 use Gobl\DBAL\Db as GoblDb;
 use Gobl\DBAL\Diff\Diff;
 use Gobl\DBAL\Interfaces\MigrationInterface;
+use Gobl\Exceptions\GoblException;
+use Gobl\ORM\Exceptions\ORMException;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Db\OZMigration;
+use OZONE\Core\Db\OZMigrationsQuery;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Utils\Random;
+use Throwable;
 
 /**
  * Class Migrations.
@@ -36,19 +42,69 @@ final class Migrations
 	public function __construct() {}
 
 	/**
+	 * Gets the database migration state.
+	 */
+	public static function getMigrationState(): MigrationState
+	{
+		$src_version = self::getSourceCodeDbVersion();
+		$db_version  = self::getCurrentDbVersion();
+
+		if (self::DB_NOT_INSTALLED_VERSION === $db_version) {
+			return MigrationState::NOT_INSTALLED;
+		}
+
+		if ($db_version === $src_version) {
+			return MigrationState::INSTALLED;
+		}
+
+		if ($db_version < $src_version) {
+			return MigrationState::PENDING;
+		}
+
+		return MigrationState::ROLLBACK;
+	}
+
+	/**
+	 * Gets the database version supported by the source code.
+	 *
+	 * @return int
+	 */
+	public static function getSourceCodeDbVersion(): int
+	{
+		return Settings::get('oz.db.migrations', 'OZ_MIGRATION_VERSION', self::DB_NOT_INSTALLED_VERSION);
+	}
+
+	/**
 	 * Gets the current database version.
 	 *
 	 * @return int
 	 */
 	public static function getCurrentDbVersion(): int
 	{
-		return Settings::get('oz.db.migrations', 'OZ_MIGRATION_VERSION', self::DB_NOT_INSTALLED_VERSION);
+		return self::cache()->factory('db_version', static function () {
+			try {
+				$qb    = new OZMigrationsQuery();
+				$found = $qb->find(1)->fetchClass();
+
+				if ($found) {
+					return $found->getVersion();
+				}
+			} catch (Throwable $t) {
+				oz_trace('Failed to get current database version.', null, $t);
+			}
+
+			return self::DB_NOT_INSTALLED_VERSION;
+		})->get();
 	}
 
 	/**
 	 * Runs a given migration.
 	 *
-	 * @param \Gobl\DBAL\Interfaces\MigrationInterface $migration
+	 * @param MigrationInterface $migration
+	 *
+	 * @throws CRUDException
+	 * @throws GoblException
+	 * @throws ORMException
 	 */
 	public function run(MigrationInterface $migration): void
 	{
@@ -63,7 +119,11 @@ final class Migrations
 	/**
 	 * Rolls back a given migration.
 	 *
-	 * @param \Gobl\DBAL\Interfaces\MigrationInterface $migration
+	 * @param MigrationInterface $migration
+	 *
+	 * @throws CRUDException
+	 * @throws GoblException
+	 * @throws ORMException
 	 */
 	public function rollbackMigration(MigrationInterface $migration): void
 	{
@@ -116,7 +176,7 @@ final class Migrations
 		$db_from = GoblDb::newInstanceOf($db_actual->getType(), $config);
 		$db_to   = GoblDb::newInstanceOf($db_actual->getType(), $config);
 
-		Db::loadSchemaTo($db_to);
+		Db::loadDevelopmentSchemaTo($db_to);
 		$db_to->lock();
 
 		if ($latest) {
@@ -133,10 +193,23 @@ final class Migrations
 			$outfile = $fm->resolve(\sprintf('%s.php', Random::fileName('migration')));
 			$fm->wf($outfile, (string) $diff->generateMigrationFile($version));
 
+			// clear cache
+			self::clearCache();
+
 			return $outfile;
 		}
 
 		return null;
+	}
+
+	/**
+	 * Clears the migrations cache.
+	 *
+	 * @return bool
+	 */
+	public static function clearCache(): bool
+	{
+		return self::cache()->clear();
 	}
 
 	/**
@@ -146,9 +219,7 @@ final class Migrations
 	 */
 	public function migrations(): array
 	{
-		$cm = CacheManager::runtime(self::class);
-
-		return $cm->factory('migrations', function () {
+		return self::cache()->factory('migrations', function () {
 			$fm = app()->getMigrationsDir();
 
 			$filter     = $fm->filter()
@@ -340,12 +411,41 @@ final class Migrations
 	}
 
 	/**
+	 * Gets the migrations cache.
+	 *
+	 * @return CacheManager
+	 */
+	private static function cache(): CacheManager
+	{
+		return CacheManager::runtime(self::class);
+	}
+
+	/**
 	 * Sets the current database version.
 	 *
 	 * @param int $version
+	 *
+	 * @throws CRUDException
+	 * @throws GoblException
+	 * @throws ORMException
 	 */
 	private function setCurrentDbVersion(int $version): void
 	{
+		if (self::DB_NOT_INSTALLED_VERSION !== $version) {
+			$qb    = new OZMigrationsQuery();
+			$found = $qb->find()->fetchClass();
+			if ($found) {
+				$found->setVersion($version)
+					->save();
+			} else {
+				OZMigration::new()
+					->setVersion($version)
+					->setUpdatedAT(\time())
+					->save();
+			}
+		}
+
+		self::clearCache();
 		Settings::set('oz.db.migrations', 'OZ_MIGRATION_VERSION', $version);
 	}
 }

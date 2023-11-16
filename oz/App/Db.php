@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\App;
 
+use Gobl\DBAL\Builders\NamespaceBuilder;
 use Gobl\DBAL\Db as GoblDb;
 use Gobl\DBAL\DbConfig;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
@@ -25,6 +26,7 @@ use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Hooks\Events\DbSchemaCollectHook;
 use OZONE\Core\Hooks\Events\DbSchemaReadyHook;
 use OZONE\Core\Migrations\Migrations;
+use OZONE\Core\OZone;
 use Throwable;
 
 /**
@@ -35,11 +37,23 @@ final class Db
 	private static ?RDBMSInterface $db = null;
 
 	/**
-	 * Initialize.
+	 * Initialize the database.
+	 *
+	 * This method should be called only after all boot hooks are registered.
 	 */
 	public static function init(): RDBMSInterface
 	{
 		if (!self::$db) {
+			OZone::dieIfBookHookReceiversAreNotNotified(
+				\sprintf(
+					'%s should be called only after all boot hooks are registered.' .
+					' A call to %s before all boot hooks are registered may cause '
+					. 'some boot hooks to not be notified and lead to inconsistent state.',
+					__METHOD__,
+					__METHOD__
+				)
+			);
+
 			Gobl::setProjectCacheDir(
 				app()
 					->getCacheDir()
@@ -132,10 +146,11 @@ final class Db
 	 *
 	 * @param \Gobl\DBAL\Interfaces\RDBMSInterface $db
 	 */
-	public static function loadSchemaTo(RDBMSInterface $db): void
+	public static function loadDevelopmentSchemaTo(RDBMSInterface $db): void
 	{
-		$db->ns(self::getOZoneDbNamespace())
-			->schema(include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_schema.php');
+		/** @var callable(NamespaceBuilder):void $factory */
+		$factory = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_schema.php';
+		$factory($db->ns(self::getOZoneDbNamespace()));
 
 		(new DbSchemaCollectHook($db))->dispatch();
 
@@ -154,18 +169,18 @@ final class Db
 	{
 		TypeUtils::addTypeProvider(new TypeProvider());
 
-		$mg         = new Migrations();
-		$db_version = $mg::getCurrentDbVersion();
+		$mg      = new Migrations();
+		$version = $mg::getSourceCodeDbVersion();
 
-		if (Migrations::DB_NOT_INSTALLED_VERSION === $db_version) {
-			self::loadSchemaTo(self::$db);
+		if (Migrations::DB_NOT_INSTALLED_VERSION === $version) {
+			self::loadDevelopmentSchemaTo(self::$db);
 		} else {
-			$current = $mg->getMigration($db_version);
+			$current = $mg->getMigration($version);
 			if (!$current) {
 				throw (new RuntimeException(
 					\sprintf(
 						'Unable to find migration, using db version "%s" defined in settings.',
-						$db_version
+						$version
 					)
 				))->suspectConfig('oz.db.migrations', 'OZ_MIGRATION_VERSION');
 			}
@@ -174,7 +189,6 @@ final class Db
 
 			(new DbSchemaReadyHook(self::$db))->dispatch();
 		}
-
 		self::$db
 			->ns(self::getOZoneDbNamespace())
 			->enableORM(self::getOZoneDbFolder());

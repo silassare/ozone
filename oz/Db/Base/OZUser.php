@@ -24,11 +24,13 @@ namespace OZONE\Core\Db\Base;
  * @property string      $gender     Getter for column `oz_users`.`gender`.
  * @property string      $birth_date Getter for column `oz_users`.`birth_date`.
  * @property null|string $pic        Getter for column `oz_users`.`pic`.
- * @property string      $cc2        Getter for column `oz_users`.`cc2`.
  * @property array       $data       Getter for column `oz_users`.`data`.
+ * @property bool        $is_valid   Getter for column `oz_users`.`is_valid`.
  * @property string      $created_at Getter for column `oz_users`.`created_at`.
  * @property string      $updated_at Getter for column `oz_users`.`updated_at`.
- * @property bool        $is_valid   Getter for column `oz_users`.`is_valid`.
+ * @property bool        $deleted    Getter for column `oz_users`.`deleted`.
+ * @property null|string $deleted_at Getter for column `oz_users`.`deleted_at`.
+ * @property string      $cc2        Getter for column `oz_users`.`cc2`.
  */
 abstract class OZUser extends \Gobl\ORM\ORMEntity
 {
@@ -42,11 +44,13 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	public const COL_GENDER      = 'user_gender';
 	public const COL_BIRTH_DATE  = 'user_birth_date';
 	public const COL_PIC         = 'user_pic';
-	public const COL_CC2         = 'user_cc2';
 	public const COL_DATA        = 'user_data';
+	public const COL_IS_VALID    = 'user_is_valid';
 	public const COL_CREATED_AT  = 'user_created_at';
 	public const COL_UPDATED_AT  = 'user_updated_at';
-	public const COL_IS_VALID    = 'user_is_valid';
+	public const COL_DELETED     = 'user_deleted';
+	public const COL_DELETED_AT  = 'user_deleted_at';
+	public const COL_CC2         = 'user_cc2';
 
 	/**
 	 * OZUser constructor.
@@ -316,30 +320,6 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_users`.`cc2`.
-	 *
-	 * @return string
-	 */
-	public function getCc2(): string
-	{
-		return $this->cc2;
-	}
-
-	/**
-	 * Setter for column `oz_users`.`cc2`.
-	 *
-	 * @param string $cc2
-	 *
-	 * @return static
-	 */
-	public function setCc2(string $cc2): static
-	{
-		$this->cc2 = $cc2;
-
-		return $this;
-	}
-
-	/**
 	 * Getter for column `oz_users`.`data`.
 	 *
 	 * @return array
@@ -359,6 +339,30 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	public function setData(array $data): static
 	{
 		$this->data = $data;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_users`.`is_valid`.
+	 *
+	 * @return bool
+	 */
+	public function isValid(): bool
+	{
+		return $this->is_valid;
+	}
+
+	/**
+	 * Setter for column `oz_users`.`is_valid`.
+	 *
+	 * @param bool $is_valid
+	 *
+	 * @return static
+	 */
+	public function setISValid(bool $is_valid): static
+	{
+		$this->is_valid = $is_valid;
 
 		return $this;
 	}
@@ -412,27 +416,103 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_users`.`is_valid`.
+	 * Getter for column `oz_users`.`deleted`.
 	 *
 	 * @return bool
 	 */
-	public function isValid(): bool
+	public function isDeleted(): bool
 	{
-		return $this->is_valid;
+		return $this->deleted;
 	}
 
 	/**
-	 * Setter for column `oz_users`.`is_valid`.
+	 * Setter for column `oz_users`.`deleted`.
 	 *
-	 * @param bool $is_valid
+	 * @param bool $deleted
 	 *
 	 * @return static
 	 */
-	public function setISValid(bool $is_valid): static
+	public function setDeleted(bool $deleted): static
 	{
-		$this->is_valid = $is_valid;
+		$this->deleted = $deleted;
 
 		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_users`.`deleted_at`.
+	 *
+	 * @return null|string
+	 */
+	public function getDeletedAT(): null|string
+	{
+		return $this->deleted_at;
+	}
+
+	/**
+	 * Setter for column `oz_users`.`deleted_at`.
+	 *
+	 * @param null|int|string $deleted_at
+	 *
+	 * @return static
+	 */
+	public function setDeletedAT(null|int|string $deleted_at): static
+	{
+		$this->deleted_at = $deleted_at;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_users`.`cc2`.
+	 *
+	 * @return string
+	 */
+	public function getCc2(): string
+	{
+		return $this->cc2;
+	}
+
+	/**
+	 * Setter for column `oz_users`.`cc2`.
+	 *
+	 * @param string $cc2
+	 *
+	 * @return static
+	 */
+	public function setCc2(string $cc2): static
+	{
+		$this->cc2 = $cc2;
+
+		return $this;
+	}
+
+	/**
+	 * OneToMany relation between `oz_users` and `oz_roles`.
+	 *
+	 * @param array    $filters  the row filters
+	 * @param null|int $max      maximum row to retrieve
+	 * @param int      $offset   first row offset
+	 * @param array    $order_by order by rules
+	 * @param null|int $total    total rows without limit
+	 *
+	 * @return \OZONE\Core\Db\OZRole[]
+	 *
+	 * @throws \Gobl\Exceptions\GoblException
+	 */
+	public function getRoles(array $filters =  [
+	], ?int $max = null, int $offset = 0, array $order_by =  [
+	], ?int &$total = -1): array
+	{
+		return \OZONE\Core\Db\OZRole::ctrl()->getAllRelatives(
+			$this,
+			static::table()->getRelation('roles'),
+			$filters,
+			$max,
+			$offset,
+			$order_by,
+			$total
+		);
 	}
 
 	/**
@@ -464,21 +544,6 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * OneToOne relation between `oz_users` and `oz_countries`.
-	 *
-	 * @return ?\OZONE\Core\Db\OZCountry
-	 *
-	 * @throws \Gobl\Exceptions\GoblException
-	 */
-	public function getCountry(): ?\OZONE\Core\Db\OZCountry
-	{
-		return \OZONE\Core\Db\OZCountry::ctrl()->getRelative(
-			$this,
-			static::table()->getRelation('country')
-		);
-	}
-
-	/**
 	 * OneToMany relation between `oz_users` and `oz_sessions`.
 	 *
 	 * @param array    $filters  the row filters
@@ -503,6 +568,21 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 			$offset,
 			$order_by,
 			$total
+		);
+	}
+
+	/**
+	 * ManyToOne relation between `oz_users` and `oz_countries`.
+	 *
+	 * @return ?\OZONE\Core\Db\OZCountry
+	 *
+	 * @throws \Gobl\Exceptions\GoblException
+	 */
+	public function getCountry(): ?\OZONE\Core\Db\OZCountry
+	{
+		return \OZONE\Core\Db\OZCountry::ctrl()->getRelative(
+			$this,
+			static::table()->getRelation('country')
 		);
 	}
 }

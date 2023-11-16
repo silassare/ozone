@@ -16,14 +16,16 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZCountry.
  *
- * @property string $cc2          Getter for column `oz_countries`.`cc2`.
- * @property string $calling_code Getter for column `oz_countries`.`calling_code`.
- * @property string $name         Getter for column `oz_countries`.`name`.
- * @property string $name_real    Getter for column `oz_countries`.`name_real`.
- * @property array  $data         Getter for column `oz_countries`.`data`.
- * @property string $created_at   Getter for column `oz_countries`.`created_at`.
- * @property string $updated_at   Getter for column `oz_countries`.`updated_at`.
- * @property bool   $is_valid     Getter for column `oz_countries`.`is_valid`.
+ * @property string      $cc2          Getter for column `oz_countries`.`cc2`.
+ * @property string      $calling_code Getter for column `oz_countries`.`calling_code`.
+ * @property string      $name         Getter for column `oz_countries`.`name`.
+ * @property string      $name_real    Getter for column `oz_countries`.`name_real`.
+ * @property array       $data         Getter for column `oz_countries`.`data`.
+ * @property bool        $is_valid     Getter for column `oz_countries`.`is_valid`.
+ * @property string      $created_at   Getter for column `oz_countries`.`created_at`.
+ * @property string      $updated_at   Getter for column `oz_countries`.`updated_at`.
+ * @property bool        $deleted      Getter for column `oz_countries`.`deleted`.
+ * @property null|string $deleted_at   Getter for column `oz_countries`.`deleted_at`.
  */
 abstract class OZCountry extends \Gobl\ORM\ORMEntity
 {
@@ -34,9 +36,11 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	public const COL_NAME         = 'country_name';
 	public const COL_NAME_REAL    = 'country_name_real';
 	public const COL_DATA         = 'country_data';
+	public const COL_IS_VALID     = 'country_is_valid';
 	public const COL_CREATED_AT   = 'country_created_at';
 	public const COL_UPDATED_AT   = 'country_updated_at';
-	public const COL_IS_VALID     = 'country_is_valid';
+	public const COL_DELETED      = 'country_deleted';
+	public const COL_DELETED_AT   = 'country_deleted_at';
 
 	/**
 	 * OZCountry constructor.
@@ -234,6 +238,30 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
+	 * Getter for column `oz_countries`.`is_valid`.
+	 *
+	 * @return bool
+	 */
+	public function isValid(): bool
+	{
+		return $this->is_valid;
+	}
+
+	/**
+	 * Setter for column `oz_countries`.`is_valid`.
+	 *
+	 * @param bool $is_valid
+	 *
+	 * @return static
+	 */
+	public function setISValid(bool $is_valid): static
+	{
+		$this->is_valid = $is_valid;
+
+		return $this;
+	}
+
+	/**
 	 * Getter for column `oz_countries`.`created_at`.
 	 *
 	 * @return string
@@ -282,25 +310,49 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_countries`.`is_valid`.
+	 * Getter for column `oz_countries`.`deleted`.
 	 *
 	 * @return bool
 	 */
-	public function isValid(): bool
+	public function isDeleted(): bool
 	{
-		return $this->is_valid;
+		return $this->deleted;
 	}
 
 	/**
-	 * Setter for column `oz_countries`.`is_valid`.
+	 * Setter for column `oz_countries`.`deleted`.
 	 *
-	 * @param bool $is_valid
+	 * @param bool $deleted
 	 *
 	 * @return static
 	 */
-	public function setISValid(bool $is_valid): static
+	public function setDeleted(bool $deleted): static
 	{
-		$this->is_valid = $is_valid;
+		$this->deleted = $deleted;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_countries`.`deleted_at`.
+	 *
+	 * @return null|string
+	 */
+	public function getDeletedAT(): null|string
+	{
+		return $this->deleted_at;
+	}
+
+	/**
+	 * Setter for column `oz_countries`.`deleted_at`.
+	 *
+	 * @param null|int|string $deleted_at
+	 *
+	 * @return static
+	 */
+	public function setDeletedAT(null|int|string $deleted_at): static
+	{
+		$this->deleted_at = $deleted_at;
 
 		return $this;
 	}
@@ -318,13 +370,13 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @throws \Gobl\Exceptions\GoblException
 	 */
-	public function getUsers(array $filters =  [
+	public function getCitizens(array $filters =  [
 	], ?int $max = null, int $offset = 0, array $order_by =  [
 	], ?int &$total = -1): array
 	{
 		return \OZONE\Core\Db\OZUser::ctrl()->getAllRelatives(
 			$this,
-			static::table()->getRelation('users'),
+			static::table()->getRelation('citizens'),
 			$filters,
 			$max,
 			$offset,

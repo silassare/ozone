@@ -27,13 +27,13 @@ use OZONE\Core\Hooks\Events\InitHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Migrations\Migrations;
+use OZONE\Core\Migrations\MigrationState;
 use OZONE\Core\Router\Events\RouterCreated;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
-use OZONE\Core\Router\RouteGroup;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Users\Users;
 use OZONE\Core\Utils\Utils;
-use Throwable;
+use PDOException;
 
 /**
  * Class OZone.
@@ -57,7 +57,8 @@ final class OZone
 	 *
 	 * @var null|AppInterface
 	 */
-	private static ?AppInterface $current_app = null;
+	private static ?AppInterface $current_app         = null;
+	private static bool $boot_hook_receivers_notified = false;
 
 	/**
 	 * Gets current running app.
@@ -106,6 +107,22 @@ final class OZone
 	}
 
 	/**
+	 * Make sure that the boot hook receivers are notified.
+	 *
+	 * @param string $message the message to display if the boot hook receivers are not notified
+	 */
+	public static function dieIfBookHookReceiversAreNotNotified(string $message): void
+	{
+		if (!self::$boot_hook_receivers_notified) {
+			// this is to make sure that the dev will be notified by all means
+			// and look at the log file to fix the issue
+			oz_trace($message);
+
+			exit('Boot hook receivers not notified. If you are an admin, please review the log file and correct it!' . \PHP_EOL);
+		}
+	}
+
+	/**
 	 * OZone main entry point.
 	 *
 	 * @param \OZONE\Core\App\Interfaces\AppInterface $app
@@ -113,7 +130,7 @@ final class OZone
 	public static function run(AppInterface $app): void
 	{
 		if (null !== self::$current_app) {
-			\trigger_error('The app is already running.', \E_USER_NOTICE);
+			\trigger_error('The app is already running.');
 
 			return;
 		}
@@ -183,7 +200,7 @@ final class OZone
 		if (!isset(self::$web_router)) {
 			$router = self::$web_router = new Router();
 
-			$group = $router->group('/', static function (Router $router, RouteGroup $group) {
+			$group = $router->group('/', static function () {
 				$a      = Settings::load('oz.routes');
 				$b      = Settings::load('oz.routes.web');
 				$routes = Settings::merge($a, $b);
@@ -221,7 +238,7 @@ final class OZone
 				db()->getConnection();
 
 				$has_db_access = true;
-			} catch (Throwable) {
+			} catch (PDOException) {
 				$has_db_access = false;
 			}
 		}
@@ -236,7 +253,7 @@ final class OZone
 	 */
 	public static function hasDbInstalled(): bool
 	{
-		return self::hasDbAccess() && Migrations::DB_NOT_INSTALLED_VERSION !== Migrations::getCurrentDbVersion();
+		return self::hasDbAccess() && MigrationState::NOT_INSTALLED !== Migrations::getMigrationState();
 	}
 
 	/**
@@ -246,23 +263,19 @@ final class OZone
 	 */
 	public static function hasSuperAdmin(): bool
 	{
-		if (!self::hasDbAccess()) {
+		if (!self::hasDbInstalled()) {
 			return false;
 		}
 
 		static $has_super_admin = null;
 
 		if (null === $has_super_admin) {
-			try {
-				$roles_qb = new OZRolesQuery();
-				$results  = $roles_qb->whereNameIs(Users::SUPER_ADMIN)
-					->whereIsValid()
-					->find(1);
+			$roles_qb = new OZRolesQuery();
+			$results  = $roles_qb->whereNameIs(Users::SUPER_ADMIN)
+				->whereIsValid()
+				->find(1);
 
-				$has_super_admin = (bool) $results->count();
-			} catch (Throwable) {
-				$has_super_admin = false;
-			}
+			$has_super_admin = (bool) $results->count();
 		}
 
 		return $has_super_admin;
@@ -342,5 +355,7 @@ final class OZone
 				$receiver::boot();
 			}
 		}
+
+		self::$boot_hook_receivers_notified = true;
 	}
 }

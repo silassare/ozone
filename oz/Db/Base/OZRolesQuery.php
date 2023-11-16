@@ -28,16 +28,6 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereIdIsNotLike(string $value)        Filters rows with `not_like` condition on column `oz_roles`.`id`.
  * @method $this whereIdIsIn(array $value)              Filters rows with `in` condition on column `oz_roles`.`id`.
  * @method $this whereIdIsNotIn(array $value)           Filters rows with `not_in` condition on column `oz_roles`.`id`.
- * @method $this whereUserIdIs(int|string $value)       Filters rows with `eq` condition on column `oz_roles`.`user_id`.
- * @method $this whereUserIdIsNot(int|string $value)    Filters rows with `neq` condition on column `oz_roles`.`user_id`.
- * @method $this whereUserIdIsLt(int|string $value)     Filters rows with `lt` condition on column `oz_roles`.`user_id`.
- * @method $this whereUserIdIsLte(int|string $value)    Filters rows with `lte` condition on column `oz_roles`.`user_id`.
- * @method $this whereUserIdIsGt(int|string $value)     Filters rows with `gt` condition on column `oz_roles`.`user_id`.
- * @method $this whereUserIdIsGte(int|string $value)    Filters rows with `gte` condition on column `oz_roles`.`user_id`.
- * @method $this whereUserIdIsLike(string $value)       Filters rows with `like` condition on column `oz_roles`.`user_id`.
- * @method $this whereUserIdIsNotLike(string $value)    Filters rows with `not_like` condition on column `oz_roles`.`user_id`.
- * @method $this whereUserIdIsIn(array $value)          Filters rows with `in` condition on column `oz_roles`.`user_id`.
- * @method $this whereUserIdIsNotIn(array $value)       Filters rows with `not_in` condition on column `oz_roles`.`user_id`.
  * @method $this whereNameIs(string $value)             Filters rows with `eq` condition on column `oz_roles`.`name`.
  * @method $this whereNameIsNot(string $value)          Filters rows with `neq` condition on column `oz_roles`.`name`.
  * @method $this whereNameIsLt(string $value)           Filters rows with `lt` condition on column `oz_roles`.`name`.
@@ -52,6 +42,10 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereDataIsNot(array $value)           Filters rows with `neq` condition on column `oz_roles`.`data`.
  * @method $this whereDataIsLike(string $value)         Filters rows with `like` condition on column `oz_roles`.`data`.
  * @method $this whereDataIsNotLike(string $value)      Filters rows with `not_like` condition on column `oz_roles`.`data`.
+ * @method $this whereIsValidIs(bool $value)            Filters rows with `eq` condition on column `oz_roles`.`is_valid`.
+ * @method $this whereIsValidIsNot(bool $value)         Filters rows with `neq` condition on column `oz_roles`.`is_valid`.
+ * @method $this whereIsNotValid()                      Filters rows with `is_false` condition on column `oz_roles`.`is_valid`.
+ * @method $this whereIsValid()                         Filters rows with `is_true` condition on column `oz_roles`.`is_valid`.
  * @method $this whereCreatedAtIs(int|string $value)    Filters rows with `eq` condition on column `oz_roles`.`created_at`.
  * @method $this whereCreatedAtIsNot(int|string $value) Filters rows with `neq` condition on column `oz_roles`.`created_at`.
  * @method $this whereCreatedAtIsLt(int|string $value)  Filters rows with `lt` condition on column `oz_roles`.`created_at`.
@@ -72,10 +66,32 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereUpdatedAtIsNotLike(string $value) Filters rows with `not_like` condition on column `oz_roles`.`updated_at`.
  * @method $this whereUpdatedAtIsIn(array $value)       Filters rows with `in` condition on column `oz_roles`.`updated_at`.
  * @method $this whereUpdatedAtIsNotIn(array $value)    Filters rows with `not_in` condition on column `oz_roles`.`updated_at`.
- * @method $this whereIsValidIs(bool $value)            Filters rows with `eq` condition on column `oz_roles`.`is_valid`.
- * @method $this whereIsValidIsNot(bool $value)         Filters rows with `neq` condition on column `oz_roles`.`is_valid`.
- * @method $this whereIsNotValid()                      Filters rows with `is_false` condition on column `oz_roles`.`is_valid`.
- * @method $this whereIsValid()                         Filters rows with `is_true` condition on column `oz_roles`.`is_valid`.
+ * @method $this whereDeletedIs(bool $value)            Filters rows with `eq` condition on column `oz_roles`.`deleted`.
+ * @method $this whereDeletedIsNot(bool $value)         Filters rows with `neq` condition on column `oz_roles`.`deleted`.
+ * @method $this whereIsNotDeleted()                    Filters rows with `is_false` condition on column `oz_roles`.`deleted`.
+ * @method $this whereIsDeleted()                       Filters rows with `is_true` condition on column `oz_roles`.`deleted`.
+ * @method $this whereDeletedAtIs(int|string $value)    Filters rows with `eq` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereDeletedAtIsNot(int|string $value) Filters rows with `neq` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereDeletedAtIsLt(int|string $value)  Filters rows with `lt` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereDeletedAtIsLte(int|string $value) Filters rows with `lte` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereDeletedAtIsGt(int|string $value)  Filters rows with `gt` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereDeletedAtIsGte(int|string $value) Filters rows with `gte` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereDeletedAtIsLike(string $value)    Filters rows with `like` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereDeletedAtIsNotLike(string $value) Filters rows with `not_like` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereDeletedAtIsNull()                 Filters rows with `is_null` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereDeletedAtIsNotNull()              Filters rows with `is_not_null` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereDeletedAtIsIn(array $value)       Filters rows with `in` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereDeletedAtIsNotIn(array $value)    Filters rows with `not_in` condition on column `oz_roles`.`deleted_at`.
+ * @method $this whereUserIdIs(int|string $value)       Filters rows with `eq` condition on column `oz_roles`.`user_id`.
+ * @method $this whereUserIdIsNot(int|string $value)    Filters rows with `neq` condition on column `oz_roles`.`user_id`.
+ * @method $this whereUserIdIsLt(int|string $value)     Filters rows with `lt` condition on column `oz_roles`.`user_id`.
+ * @method $this whereUserIdIsLte(int|string $value)    Filters rows with `lte` condition on column `oz_roles`.`user_id`.
+ * @method $this whereUserIdIsGt(int|string $value)     Filters rows with `gt` condition on column `oz_roles`.`user_id`.
+ * @method $this whereUserIdIsGte(int|string $value)    Filters rows with `gte` condition on column `oz_roles`.`user_id`.
+ * @method $this whereUserIdIsLike(string $value)       Filters rows with `like` condition on column `oz_roles`.`user_id`.
+ * @method $this whereUserIdIsNotLike(string $value)    Filters rows with `not_like` condition on column `oz_roles`.`user_id`.
+ * @method $this whereUserIdIsIn(array $value)          Filters rows with `in` condition on column `oz_roles`.`user_id`.
+ * @method $this whereUserIdIsNotIn(array $value)       Filters rows with `not_in` condition on column `oz_roles`.`user_id`.
  */
 abstract class OZRolesQuery extends \Gobl\ORM\ORMTableQuery
 {
