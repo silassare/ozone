@@ -141,7 +141,7 @@ final class MigrationsCmd extends Command
 					'Running migration "%s" generated on "%s" ...',
 					$migration->getLabel(),
 					\date('jS F Y, g:i:s a', $migration->getTimestamp())
-				));
+				), false);
 
 			try {
 				$mg->run($migration);
