@@ -12,5 +12,11 @@
 declare(strict_types=1);
 
 return [
+	/**
+	 * This is the desired migration version for which the code is written.
+	 *
+	 * The migrator will check for the database version and compare it with this value
+	 * to decide what to do with the database.
+	 */
 	'OZ_MIGRATION_VERSION' => OZONE\Core\Migrations\Migrations::DB_NOT_INSTALLED_VERSION,
 ];
