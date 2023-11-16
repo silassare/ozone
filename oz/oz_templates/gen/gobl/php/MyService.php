@@ -27,49 +27,49 @@ use Throwable;
  *
  * - Add item to `my_table`
  * ```
- * POST /my_svc
+ * POST /my_path
  * ```
  *
  * - Get the item with the given `:my_id`
  * ```
- * GET /my_svc/:my_id
+ * GET /my_path/:my_id
  * ```
  *
  * - Get all items in my_table
  * ```
- * GET /my_svc
+ * GET /my_path
  * ```
  *
  * - Get relation for the item in `my_table` with the given `:my_id`
  * ```
- * GET /my_svc/:my_id/relation
+ * GET /my_path/:my_id/relation
  * ```
  *
  * - Update property(ies) of the item with the given `:my_id`
  * ```
- * PATCH /my_svc/:my_id
+ * PATCH /my_path/:my_id
  * ```
  *
  * - Update property(ies) of all items in `my_table`
  * ```
- * PATCH /my_svc
+ * PATCH /my_path
  * ```
  *
  * - Delete item with the given `:my_id`
  * ```
- * DELETE /my_svc/:my_id
+ * DELETE /my_path/:my_id
  * ```
  *
  * - Delete all items in `my_table`
  * ```
- * DELETE  /my_svc
+ * DELETE  /my_path
  * ```
  */
 final class MyService extends Service
 {
 	use RESTFulService;
 
-	public const SERVICE_PATH = '/my_svc';
+	public const SERVICE_PATH = '/my_path';
 	public const TABLE_NAME   = 'my_table';
 	public const KEY_COLUMN   = 'my_id';
 

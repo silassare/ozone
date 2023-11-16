@@ -19,6 +19,7 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\ServiceGenerator;
 use OZONE\Core\Cli\Utils\Utils;
+use PHPUtils\Str;
 
 /**
  * Class ServicesCmd.
@@ -36,12 +37,12 @@ final class ServicesCmd extends Command
 
 		// action: generate service for a table
 		$generate = $this->action('generate', 'Generate service for a table in the database.');
-		$generate->option('service-name', 'n', [], 1)
+		$generate->option('service-path', 'p', [], 1)
 			->required()
-			->prompt(true, 'The service name')
-			->description('The service name.')
+			->prompt(true, 'The service path')
+			->description('The service path.')
 			->string()
-			->pattern('#^[a-zA-Z0-9_-]+$#', 'The service name is invalid.');
+			->pattern('~^/([a-zA-Z0-9-]+/)*[a-zA-Z0-9-]+$~', 'The service path is invalid.');
 		$generate->option('table-name', 't', [], 2)
 			->required()
 			->prompt(true, 'The table name')
@@ -79,7 +80,7 @@ final class ServicesCmd extends Command
 		Utils::assertProjectLoaded();
 
 		$table_name    = $args->get('table-name');
-		$service_name  = $args->get('service-name');
+		$service_path  = $args->get('service-path');
 		$service_class = $args->get('service-class');
 		$service_dir   = $args->get('service-dir');
 		$override      = $args->get('override');
@@ -98,6 +99,10 @@ final class ServicesCmd extends Command
 		/** @var Table $table */
 		$table = $db->getTable($table_name);
 
+		if (empty($service_class)) {
+			$service_class = Str::toClassName($table->getName() . '_service');
+		}
+
 		$p_ns              = Settings::get('oz.config', 'OZ_PROJECT_NAMESPACE');
 		$service_namespace = \sprintf('%s\\Services', $p_ns);
 
@@ -106,7 +111,7 @@ final class ServicesCmd extends Command
 			$table,
 			$service_namespace,
 			$service_dir,
-			$service_name,
+			$service_path,
 			$service_class,
 			'',
 			(bool) $override
@@ -115,6 +120,6 @@ final class ServicesCmd extends Command
 		Settings::set('oz.routes.api', $info['provider'], true);
 
 		$this->getCli()
-			->success(\sprintf('service "%s" generated.', $service_name));
+			->success(\sprintf('service "%s" generated for "/%s => %s".', $service_class, $service_path, $table_name));
 	}
 }

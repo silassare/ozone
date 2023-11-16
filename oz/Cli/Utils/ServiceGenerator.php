@@ -20,7 +20,6 @@ use Gobl\ORM\Generators\CSGeneratorORM;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\Templates;
-use PHPUtils\Str;
 
 /**
  * Class ServiceGenerator.
@@ -52,7 +51,7 @@ class ServiceGenerator extends CSGeneratorORM
 				[
 					'MY_SERVICE_NS' => '<%$.service.namespace%>',
 					'MyService'     => '<%$.service.class%>',
-					'my_svc'        => '<%$.service.name%>',
+					'my_path'       => '<%$.service.path%>',
 				]
 			);
 
@@ -86,7 +85,7 @@ class ServiceGenerator extends CSGeneratorORM
 	 * @param \Gobl\DBAL\Table $table             the table
 	 * @param string           $service_namespace the service class namespace
 	 * @param string           $service_dir       the destination folder path
-	 * @param string           $service_name      the service name
+	 * @param string           $service_path      the service path
 	 * @param string           $service_class     the service class name to use
 	 * @param string           $header            the source header to use
 	 *
@@ -96,8 +95,8 @@ class ServiceGenerator extends CSGeneratorORM
 		Table $table,
 		string $service_namespace,
 		string $service_dir,
-		string $service_name,
-		string $service_class = '',
+		string $service_path,
+		string $service_class,
 		string $header = '',
 		bool $override = false
 	): array {
@@ -127,15 +126,13 @@ class ServiceGenerator extends CSGeneratorORM
 			);
 		}
 
-		if (empty($service_class)) {
-			$service_class = Str::toClassName($table->getName() . '_service');
-		}
+		$service_path = \trim($service_path, '/');
 
 		$inject                         = $this->describeTable($table);
 		$inject['oz_header']            = $header;
 		$inject['oz_version_name']      = OZ_OZONE_VERSION_NAME;
 		$inject['oz_time']              = \time();
-		$inject['service']['name']      = $service_name;
+		$inject['service']['path']      = $service_path;
 		$inject['service']['namespace'] = $service_namespace;
 		$inject['service']['class']     = $service_class;
 		$qualified_class                = $service_namespace . '\\' . $inject['service']['class'];
