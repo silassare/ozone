@@ -64,11 +64,23 @@ class TypeCC2 extends Type
 	}
 
 	/**
+	 * Only allow authorized countries.
+	 *
 	 * @return $this
 	 */
 	public function authorized(bool $authorized = true): static
 	{
 		return $this->setOption('authorized', $authorized);
+	}
+
+	/**
+	 * Only allow countries that are in the database.
+	 *
+	 * @return $this
+	 */
+	public function check(bool $check = true): static
+	{
+		return $this->setOption('check', $check);
 	}
 
 	/**
@@ -93,8 +105,10 @@ class TypeCC2 extends Type
 				if (!Countries::allowed($value)) {
 					throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_NOT_ALLOWED', $debug);
 				}
-			} elseif (!Countries::get($value)) {
-				throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug);
+			} elseif (false !== $this->getOption('check')) {
+				if (!Countries::get($value)) {
+					throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug);
+				}
 			}
 		}
 
@@ -108,6 +122,9 @@ class TypeCC2 extends Type
 	{
 		if (isset($options['authorized'])) {
 			$this->authorized((bool) $options['authorized']);
+		}
+		if (isset($options['check'])) {
+			$this->check((bool) $options['check']);
 		}
 
 		return parent::configure($options);
