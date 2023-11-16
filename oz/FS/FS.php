@@ -212,7 +212,7 @@ class FS
 
 		$f = self::getFileByID($data['file_id']);
 
-		if (!$f || $f->isValid()) {
+		if (!$f || !$f->isValid()) {
 			throw new RuntimeException('Unable to identify aliased file.', ['content' => $content]);
 		}
 
