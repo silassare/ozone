@@ -233,6 +233,8 @@ class Stream implements StreamInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @psalm-suppress InvalidPropertyAssignmentValue
 	 */
 	public function close(): void
 	{
