@@ -49,20 +49,7 @@ if (!\function_exists('oz_logger')) {
 	 */
 	function env(string $key, mixed $default = null): null|bool|float|int|string
 	{
-		static $env = null;
-
-		if (null === $env) {
-			$env   = new EnvParser('');
-			$files = app()->getEnvFiles();
-
-			foreach ($files as $file) {
-				if (\is_file($file)) {
-					$env->mergeFromFile($file);
-				}
-			}
-		}
-
-		return $env->getEnv($key, $default);
+		return app()->getEnv()->get($key, $default);
 	}
 
 	/**

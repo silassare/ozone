@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\App\Interfaces;
 
 use OZONE\Core\FS\FilesManager;
+use OZONE\Core\Utils\Env;
 use Throwable;
 
 /**
@@ -46,11 +47,9 @@ interface AppInterface
 	public function onUnhandledError(int $code, string $message, string $file, int $line);
 
 	/**
-	 * Returns environment variables files.
-	 *
-	 * @return string[]
+	 * Returns the environment instance.
 	 */
-	public function getEnvFiles(): array;
+	public function getEnv(): Env;
 
 	/**
 	 * Returns an instance of the files manager with the project directory as root.

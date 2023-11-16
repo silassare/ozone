@@ -16,6 +16,7 @@ namespace OZONE\Core\App;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\Templates;
+use OZONE\Core\Utils\Env;
 use Throwable;
 
 /**
@@ -55,11 +56,15 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getEnvFiles(): array
+	public function getEnv(): Env
 	{
-		return [
-			OZ_PROJECT_DIR . '.env',
-		];
+		static $env = null;
+
+		if (null === $env) {
+			$env = new Env($this->getProjectDir()->resolve('.env'));
+		}
+
+		return $env;
 	}
 
 	/**
