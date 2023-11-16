@@ -35,6 +35,8 @@ final class ServicesCmd extends Command
 	{
 		$this->description('Manage your project service.');
 
+		$class_name_reg = '~^[a-zA-Z_][a-zA-Z0-9_]*$~';
+		$path_reg       = '~^[a-zA-Z_][a-zA-Z0-9_]*$~';
 		// action: generate service for a table
 		$generate = $this->action('generate', 'Generate service for a table in the database.');
 		$generate->option('service-path', 'p', [], 1)
@@ -42,19 +44,20 @@ final class ServicesCmd extends Command
 			->prompt(true, 'The service path')
 			->description('The service path.')
 			->string()
-			->pattern('~^/([a-zA-Z0-9-]+/)*[a-zA-Z0-9-]+$~', 'The service path is invalid.');
+			->pattern($path_reg, \sprintf('The service path is invalid, required pattern: "%s"', \trim($path_reg, $path_reg[0])));
+
 		$generate->option('table-name', 't', [], 2)
 			->required()
 			->prompt(true, 'The table name')
 			->description('The table name.')
 			->string()
-			->pattern(Table::NAME_REG, 'The table name is invalid.');
+			->pattern(Table::NAME_REG, \sprintf('The table name is invalid, required pattern: "%s"', Table::NAME_PATTERN));
 		$generate->option('service-class', 'c', [], 3)
 			->prompt(true, 'The service class name')
 			->description('The service class name.')
 			->string()
 			->def('')
-			->pattern('#^[a-zA-Z_][a-zA-Z0-9_]*$#', 'The service class name is invalid.');
+			->pattern($class_name_reg, \sprintf('The service class name is invalid, required pattern: "%s"', \trim($class_name_reg, $class_name_reg[0])));
 		$generate->option('override', 'o', [], 4)
 			->description('To force override if a service with the same class name exists.')
 			->bool()
@@ -120,6 +123,6 @@ final class ServicesCmd extends Command
 		Settings::set('oz.routes.api', $info['provider'], true);
 
 		$this->getCli()
-			->success(\sprintf('service "%s" generated for "/%s => %s".', $service_class, $service_path, $table_name));
+			->success(\sprintf('service "%s" generated for "%s => %s".', $service_class, $service_path, $table_name));
 	}
 }
