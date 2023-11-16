@@ -197,8 +197,7 @@ class Form implements ArrayCapableInterface
 			if (!$field) {
 				throw new RuntimeException(\sprintf('Undefined field %s.', $name));
 			}
-		} else {
-			// ensure it's already added
+		} elseif (!$this->getField($field->getName())) {// ensure it's already added
 			$this->addField($field);
 		}
 
