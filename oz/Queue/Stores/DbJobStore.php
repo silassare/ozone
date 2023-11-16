@@ -14,6 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Core\Queue\Stores;
 
 use Generator;
+use Gobl\CRUD\Exceptions\CRUDException;
+use Gobl\Exceptions\GoblException;
+use Gobl\ORM\Exceptions\ORMException;
 use InvalidArgumentException;
 use OZONE\Core\Db\OZJob;
 use OZONE\Core\Db\OZJobsQuery;
@@ -69,9 +72,13 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+	 * @param JobInterface $job
+	 *
+	 * @return JobContractInterface
+	 *
+	 * @throws CRUDException
+	 * @throws GoblException
+	 * @throws ORMException
 	 */
 	public function add(JobInterface $job): JobContractInterface
 	{
@@ -85,9 +92,13 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+	 * @param JobContractInterface $job_contract
+	 *
+	 * @return JobStoreInterface
+	 *
+	 * @throws CRUDException
+	 * @throws GoblException
+	 * @throws ORMException
 	 */
 	public function update(JobContractInterface $job_contract): JobStoreInterface
 	{

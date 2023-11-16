@@ -242,10 +242,12 @@ final class Session implements BootHookReceiverInterface
 			self::gc();
 		}, Event::RUN_LAST);
 
-		DbReadyHook::listen(static function () {
-			OZSession::crud()
-				->onBeforePKColumnWrite(static fn () => true);
-		});
+		if (\class_exists(OZSession::class)) {
+			DbReadyHook::listen(static function () {
+				OZSession::crud()
+					->onBeforePKColumnWrite(static fn () => true);
+			});
+		}
 	}
 
 	/**

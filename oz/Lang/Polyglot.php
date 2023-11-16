@@ -16,7 +16,6 @@ namespace OZONE\Core\Lang;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\RuntimeException;
-use Throwable;
 
 /**
  * Class Polyglot.
@@ -73,7 +72,7 @@ final class Polyglot
 
 			$accept_language = $context->getRequest()
 				->getHeaderLine('HTTP_ACCEPT_LANGUAGE');
-			$browser         = self::parseBrowserLanguage($accept_language);
+			$browser = self::parseBrowserLanguage($accept_language);
 
 			if (!empty($browser['advice'])) {
 				$state?->set(self::CLIENT_LANG_SESSION_KEY, $browser['advice']);
@@ -324,12 +323,7 @@ final class Polyglot
 			throw new RuntimeException(\sprintf('Undefined translation filter: %s', $filter));
 		}
 
-		try {
-			return $fn($value, $lang);
-		} catch (Throwable) {
-		}
-
-		return $value;
+		return $fn($value, $lang);
 	}
 
 	/**

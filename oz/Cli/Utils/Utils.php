@@ -66,12 +66,14 @@ final class Utils
 	 * @param int    $port
 	 * @param string $host
 	 *
+	 * @psalm-suppress InvalidArgument
+	 *
 	 * @return bool
 	 */
 	public static function isPortOpen(int $port, string $host = '127.0.0.1'): bool
 	{
 		// disable error reporting
-		\set_error_handler(static function () {});
+		\set_error_handler(static fn () => null);
 		$open = false;
 		$fp   = \fsockopen($host, $port, $errno, $err_str, 1);
 		if ($fp) {

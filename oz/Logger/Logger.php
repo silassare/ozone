@@ -62,9 +62,9 @@ class Logger
 
 		$log = \str_replace(['\\n', '\\t', '\\/'], ["\n", "\t", '/'], $log);
 		$log = "================================================================================\n"
-			   . $date . "\n"
-			   . "========================\n"
-			   . $log . "\n\n";
+			. $date . "\n"
+			. "========================\n"
+			. $log . "\n\n";
 
 		$mode = (\file_exists($log_file) && \filesize($log_file) <= 254000) ? 'a' : 'w';
 
@@ -88,6 +88,8 @@ class Logger
 
 	/**
 	 * Register error handlers and shutdown function.
+	 *
+	 * @psalm-suppress InvalidArgument
 	 */
 	public static function registerHandlers(): void
 	{
@@ -156,9 +158,9 @@ class Logger
 	protected static function errorHandler(int $code, string $message, string $file, int $line, bool $die_on_fatal = false): void
 	{
 		self::log("\n\tFile    : {$file}"
-				  . "\n\tLine    : {$line}"
-				  . "\n\tCode    : {$code}"
-				  . "\n\tMessage : {$message}");
+			. "\n\tLine    : {$line}"
+			. "\n\tCode    : {$code}"
+			. "\n\tMessage : {$message}");
 
 		self::optionalApp()
 			?->onUnhandledError($code, $message, $file, $line);
@@ -191,10 +193,10 @@ class Logger
 
 		if (\defined('OZ_LOG_EXECUTION_TIME') && OZ_LOG_EXECUTION_TIME) {
 			self::log('::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
-					  . \PHP_EOL
-					  . 'OZone execution time'
-					  . \PHP_EOL . '::::::::::::::::::::::::'
-					  . \PHP_EOL . self::executionTime() . 's');
+				. \PHP_EOL
+				. 'OZone execution time'
+				. \PHP_EOL . '::::::::::::::::::::::::'
+				. \PHP_EOL . self::executionTime() . 's');
 		}
 	}
 }

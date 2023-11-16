@@ -548,6 +548,8 @@ class RouteSharedOptions
 	 * Should not starts with ^
 	 * Should not ends with $
 	 *
+	 * @psalm-suppress InvalidArgument
+	 *
 	 * @param string      $pattern
 	 * @param null|string &$reason
 	 *
