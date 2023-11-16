@@ -11,17 +11,20 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Forms;
+namespace OZONE\Core\Columns;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeDate;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Columns\Types\TypeEmail;
+use OZONE\Core\Columns\Types\TypePhone;
 use OZONE\Core\Exceptions\RuntimeException;
 
 /**
- * Class Fields.
+ * Class TypeUtils.
  */
-class Fields
+class TypeUtils
 {
 	/**
 	 * Returns a birth date field.
@@ -44,5 +47,33 @@ class Fields
 		} catch (TypesException $e) {
 			throw new RuntimeException(null, null, $e);
 		}
+	}
+
+	/**
+	 * Creates a user phone type.
+	 *
+	 * @return TypePhone
+	 */
+	public static function userPhone(): TypePhone
+	{
+		$phone = new TypePhone();
+		$phone->notRegistered()
+			->nullable(!Settings::get('oz.users', 'OZ_USER_PHONE_REQUIRED'));
+
+		return $phone;
+	}
+
+	/**
+	 * Creates a user name type.
+	 *
+	 * @return TypeEmail
+	 */
+	public static function userMailAddress(): TypeEmail
+	{
+		$email = new TypeEmail();
+		$email->notRegistered()
+			->nullable(!Settings::get('oz.users', 'OZ_USER_EMAIL_REQUIRED'));
+
+		return $email;
 	}
 }
