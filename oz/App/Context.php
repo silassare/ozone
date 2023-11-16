@@ -268,8 +268,7 @@ final class Context
 	public function hasAuthenticatedUser(): bool
 	{
 		try {
-			return $this->user()
-				->isValid();
+			return $this->user()->isValid();
 		} catch (Throwable $t) {
 			oz_logger($t);
 
