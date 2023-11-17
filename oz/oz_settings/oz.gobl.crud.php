@@ -11,6 +11,8 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\FS\Handlers\FilesHandler;
+
 return [
-	// 'namespace\class' => bool,
+	FilesHandler::class => true,
 ];
