@@ -16,6 +16,7 @@ namespace OZONE\Core\Cli\Utils;
 use Gobl\DBAL\Table;
 use Kli\KliOption;
 use Kli\Types\KliTypeString;
+use OZONE\Core\App\AbstractApp;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
@@ -152,6 +153,9 @@ final class Utils
 			}
 
 			$app = $return;
+		} elseif (\file_exists(OZ_PROJECT_DIR . 'oz/OZone.php')) {
+			// we are in ozone source folder
+			$app = new class() extends AbstractApp {};
 		}
 
 		return $app;
