@@ -229,6 +229,9 @@ final class Settings
 		$setting_relative_path = $setting_group_name . '.php';
 		$setting_abs_path      = $source_dir_fm->resolve($setting_relative_path);
 
+		// make sure that settings are loaded
+		self::loadAll($setting_group_name, true);
+
 		$current = self::$as_loaded[$setting_abs_path] ?? [];
 
 		$settings = $merge ? self::merge($current, $data) : $data;
@@ -378,8 +381,8 @@ final class Settings
 				} else {
 					$key = self::export($key);
 					$r[] = $start . $indent_char
-						   . ($indexed ? '' : \str_pad($key, $max_length) . ' => ')
-						   . self::export($value, $indent + 1, $indent_char, $align);
+						. ($indexed ? '' : \str_pad($key, $max_length) . ' => ')
+						. self::export($value, $indent + 1, $indent_char, $align);
 				}
 			}
 
