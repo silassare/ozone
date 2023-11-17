@@ -16,34 +16,34 @@ namespace OZONE\Core\Db\Base;
 /**
  * Class OZFile.
  *
- * @property null|string                   $id         Getter for column `oz_files`.`id`.
- * @property null|string                   $owner_id   Getter for column `oz_files`.`owner_id`.
- * @property null|string                   $clone_id   Getter for column `oz_files`.`clone_id`.
- * @property null|string                   $source_id  Getter for column `oz_files`.`source_id`.
- * @property string                        $key        Getter for column `oz_files`.`key`.
- * @property string                        $ref        Getter for column `oz_files`.`ref`.
- * @property string                        $storage    Getter for column `oz_files`.`storage`.
- * @property int                           $size       Getter for column `oz_files`.`size`.
- * @property \OZONE\Core\FS\Enums\FileType $type       Getter for column `oz_files`.`type`.
- * @property string                        $mime       Getter for column `oz_files`.`mime`.
- * @property string                        $extension  Getter for column `oz_files`.`extension`.
- * @property string                        $name       Getter for column `oz_files`.`name`.
- * @property null|string                   $for_id     Getter for column `oz_files`.`for_id`.
- * @property null|string                   $for_type   Getter for column `oz_files`.`for_type`.
- * @property string                        $for_label  Getter for column `oz_files`.`for_label`.
- * @property array                         $data       Getter for column `oz_files`.`data`.
- * @property bool                          $is_valid   Getter for column `oz_files`.`is_valid`.
- * @property string                        $created_at Getter for column `oz_files`.`created_at`.
- * @property string                        $updated_at Getter for column `oz_files`.`updated_at`.
- * @property bool                          $deleted    Getter for column `oz_files`.`deleted`.
- * @property null|string                   $deleted_at Getter for column `oz_files`.`deleted_at`.
+ * @property null|string                   $id          Getter for column `oz_files`.`id`.
+ * @property null|string                   $uploaded_by Getter for column `oz_files`.`uploaded_by`.
+ * @property null|string                   $clone_id    Getter for column `oz_files`.`clone_id`.
+ * @property null|string                   $source_id   Getter for column `oz_files`.`source_id`.
+ * @property string                        $key         Getter for column `oz_files`.`key`.
+ * @property string                        $ref         Getter for column `oz_files`.`ref`.
+ * @property string                        $storage     Getter for column `oz_files`.`storage`.
+ * @property int                           $size        Getter for column `oz_files`.`size`.
+ * @property \OZONE\Core\FS\Enums\FileType $type        Getter for column `oz_files`.`type`.
+ * @property string                        $mime        Getter for column `oz_files`.`mime`.
+ * @property string                        $extension   Getter for column `oz_files`.`extension`.
+ * @property string                        $name        Getter for column `oz_files`.`name`.
+ * @property null|string                   $for_id      Getter for column `oz_files`.`for_id`.
+ * @property null|string                   $for_type    Getter for column `oz_files`.`for_type`.
+ * @property string                        $for_label   Getter for column `oz_files`.`for_label`.
+ * @property array                         $data        Getter for column `oz_files`.`data`.
+ * @property bool                          $is_valid    Getter for column `oz_files`.`is_valid`.
+ * @property string                        $created_at  Getter for column `oz_files`.`created_at`.
+ * @property string                        $updated_at  Getter for column `oz_files`.`updated_at`.
+ * @property bool                          $deleted     Getter for column `oz_files`.`deleted`.
+ * @property null|string                   $deleted_at  Getter for column `oz_files`.`deleted_at`.
  */
 abstract class OZFile extends \Gobl\ORM\ORMEntity
 {
 	public const TABLE_NAME      = 'oz_files';
 	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
 	public const COL_ID          = 'file_id';
-	public const COL_OWNER_ID    = 'file_owner_id';
+	public const COL_UPLOADED_BY = 'file_uploaded_by';
 	public const COL_CLONE_ID    = 'file_clone_id';
 	public const COL_SOURCE_ID   = 'file_source_id';
 	public const COL_KEY         = 'file_key';
@@ -164,25 +164,25 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_files`.`owner_id`.
+	 * Getter for column `oz_files`.`uploaded_by`.
 	 *
 	 * @return null|string
 	 */
-	public function getOwnerID(): null|string
+	public function getUploadedBY(): null|string
 	{
-		return $this->owner_id;
+		return $this->uploaded_by;
 	}
 
 	/**
-	 * Setter for column `oz_files`.`owner_id`.
+	 * Setter for column `oz_files`.`uploaded_by`.
 	 *
-	 * @param null|int|string $owner_id
+	 * @param null|int|string $uploaded_by
 	 *
 	 * @return static
 	 */
-	public function setOwnerID(null|int|string $owner_id): static
+	public function setUploadedBY(null|int|string $uploaded_by): static
 	{
-		$this->owner_id = $owner_id;
+		$this->uploaded_by = $uploaded_by;
 
 		return $this;
 	}
@@ -650,11 +650,11 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @throws \Gobl\Exceptions\GoblException
 	 */
-	public function getOwner(): ?\OZONE\Core\Db\OZUser
+	public function getUploader(): ?\OZONE\Core\Db\OZUser
 	{
 		return \OZONE\Core\Db\OZUser::ctrl()->getRelative(
 			$this,
-			static::table()->getRelation('owner')
+			static::table()->getRelation('uploader')
 		);
 	}
 

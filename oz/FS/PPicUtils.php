@@ -71,8 +71,7 @@ class PPicUtils
 		}
 
 		$clone = $f->cloneFile();
-		$clone->setOwnerID($this->uid)
-			->setForID($this->uid)
+		$clone->setForID($this->uid)
 			->setForType(OZUser::TABLE_NAME)
 			->setForLabel($file_label);
 

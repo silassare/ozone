@@ -123,7 +123,7 @@ return static function (NamespaceBuilder $ns) {
 		// columns
 		$tb->id();
 		$tb->foreign(
-			'owner_id',
+			'uploaded_by',
 			'oz_users',
 			'id',
 			static fn (Column $column) => $column->getType()->nullable()
@@ -169,7 +169,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->softDeletable();
 
 		// relations
-		$tb->belongsTo('owner')->from('oz_users');
+		$tb->belongsTo('uploader')->from('oz_users');
 		$tb->hasMany('clones')->from('oz_files')->usingColumns([
 			'id' => 'clone_id',
 		]);
