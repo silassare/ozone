@@ -89,7 +89,7 @@ class ServiceGenerator extends CSGeneratorORM
 	 * @param string           $service_class     the service class name to use
 	 * @param string           $header            the source header to use
 	 *
-	 * @return array the OZone setting for the service
+	 * @return array{provider:string} the generated service info
 	 */
 	public function generateServiceClass(
 		Table $table,
