@@ -94,9 +94,12 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 
 		$roles = \array_keys($this->roles);
 
-		if (Users::hasOneRoleAtLeast($uid, $roles, $this->strict)) {
+		if (!Users::hasOneRoleAtLeast($uid, $roles, $this->strict)) {
 			throw new ForbiddenException(null, [
 				'_reason' => 'User role is not in allowed list.',
+				'_roles'  => $roles,
+				'_strict' => $this->strict,
+				'_uid'    => $uid,
 			]);
 		}
 	}
