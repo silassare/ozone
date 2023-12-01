@@ -29,16 +29,15 @@ final class ScopesCmd extends Command
 	/**
 	 * Adds new scope.
 	 *
-	 * @param Kli $cli
-	 * @param FilesManager $fm
+	 * @param Kli                                                                                                  $cli
+	 * @param FilesManager                                                                                         $fm
 	 * @param array{api:bool, name:string, origin:string, project_name:string, namespace:string, app_class:string} $options
 	 */
 	public static function addScope(
-		Kli          $cli,
+		Kli $cli,
 		FilesManager $fm,
-		array        $options
-	): void
-	{
+		array $options
+	): void {
 		$scope_name      = $options['name'];
 		$origin          = $options['origin'];
 		$use_api_context = $options['api'];
