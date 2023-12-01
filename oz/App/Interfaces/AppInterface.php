@@ -20,7 +20,7 @@ use Throwable;
 /**
  * Interface AppInterface.
  */
-interface AppInterface
+interface AppInterface extends AppScopeInterface
 {
 	/**
 	 * Called when ozone is booting.
@@ -59,25 +59,13 @@ interface AppInterface
 	public function getProjectDir(): FilesManager;
 
 	/**
-	 * Returns an instance of the files manager with the app directory as root.
+	 * Returns the project scope with the given name.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
-	 */
-	public function getAppDir(): FilesManager;
-
-	/**
-	 * Returns an instance of the files manager with the settings directory as root.
+	 * @param string $scope the scope name
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return AppScopeInterface
 	 */
-	public function getSettingsDir(): FilesManager;
-
-	/**
-	 * Returns an instance of the files manager with the templates directory as root.
-	 *
-	 * @return \OZONE\Core\FS\FilesManager
-	 */
-	public function getTemplatesDir(): FilesManager;
+	public function getScope(string $scope): AppScopeInterface;
 
 	/**
 	 * Returns an instance of the files manager with the cache directory as root.
@@ -85,26 +73,6 @@ interface AppInterface
 	 * @return \OZONE\Core\FS\FilesManager
 	 */
 	public function getCacheDir(): FilesManager;
-
-	/**
-	 * Returns an instance of the files manager with the private files directory as root.
-	 *
-	 * This directory should be protected from public access.
-	 * This is where you should store your private files.
-	 *
-	 * @return \OZONE\Core\FS\FilesManager
-	 */
-	public function getPrivateFilesDir(): FilesManager;
-
-	/**
-	 * Returns an instance of the files manager with the public files directory as root.
-	 *
-	 * This directory is accessible from the web.
-	 * This is where public files should be stored.
-	 *
-	 * @return \OZONE\Core\FS\FilesManager
-	 */
-	public function getPublicFilesDir(): FilesManager;
 
 	/**
 	 * Returns an instance of the files manager with the migrations directory as root.
