@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\App;
 
+use InvalidArgumentException;
 use OZONE\Core\App\Interfaces\AppInterface;
+use OZONE\Core\App\Interfaces\AppScopeInterface;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\Templates;
 use OZONE\Core\Utils\Env;
@@ -41,6 +43,14 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	final public function getName(): string
+	{
+		return AppScopeInterface::ROOT_SCOPE;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public function boot(): void {}
 
 	/**
@@ -52,6 +62,51 @@ abstract class AbstractApp implements AppInterface
 	 * {@inheritDoc}
 	 */
 	public function onUnhandledError(int $code, string $message, string $file, int $line): void {}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getScope(string $scope): AppScopeInterface
+	{
+		if (AppScopeInterface::ROOT_SCOPE === $scope) {
+			return $this;
+		}
+
+		/** @var array<string, AppScopeInterface> $scopes */
+		static $scopes = [];
+
+		if (!isset($scopes[$scope])) {
+			try {
+				$this->getProjectDir()
+					->filter()
+					->isDir()
+					->assert('scopes' . DS . $scope);
+			} catch (Throwable $t) {
+				throw new InvalidArgumentException(\sprintf('Scope "%s" not found.', $scope), 0, $t);
+			}
+
+			$scopes[$scope] = new AppScope($scope);
+		}
+
+		return $scopes[$scope];
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getPrivateDir(): FilesManager
+	{
+		return new FilesManager(OZ_APP_DIR);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getPublicDir(): FilesManager
+	{
+		return $this->getProjectDir()
+			->cd('public/static', true);
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -78,18 +133,10 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getAppDir(): FilesManager
-	{
-		return new FilesManager(OZ_APP_DIR);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function getSettingsDir(): FilesManager
 	{
-		return $this->getAppDir()
-			->cd('oz_settings', true);
+		return $this->getPrivateDir()
+			->cd('settings', true);
 	}
 
 	/**
@@ -97,8 +144,8 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getTemplatesDir(): FilesManager
 	{
-		return $this->getAppDir()
-			->cd('oz_templates', true);
+		return $this->getPrivateDir()
+			->cd('templates', true);
 	}
 
 	/**
@@ -106,8 +153,8 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getCacheDir(): FilesManager
 	{
-		return $this->getAppDir()
-			->cd('oz_cache', true);
+		return $this->getProjectDir()
+			->cd('.ozone/cache/', true);
 	}
 
 	/**
@@ -115,8 +162,8 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getPrivateFilesDir(): FilesManager
 	{
-		return $this->getAppDir()
-			->cd('oz_files', true);
+		return $this->getPrivateDir()
+			->cd('files', true);
 	}
 
 	/**
@@ -124,8 +171,7 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getPublicFilesDir(): FilesManager
 	{
-		return $this->getAppDir()
-			->cd('../public/static', true);
+		return $this->getPublicDir();
 	}
 
 	/**
@@ -133,7 +179,7 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getMigrationsDir(): FilesManager
 	{
-		return $this->getAppDir()
-			->cd('oz_migrations', true);
+		return $this->getPrivateDir()
+			->cd('migrations', true);
 	}
 }
