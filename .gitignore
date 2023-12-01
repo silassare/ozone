@@ -2,10 +2,10 @@
 
 # ozone
 .env
+.ozone
 ignore
 **/otpl_done/*
 **/blate_cache/*
-**/oz_cache/*
 **/debug.log
 
 # cs fixer
