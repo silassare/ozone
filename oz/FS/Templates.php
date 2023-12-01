@@ -26,11 +26,18 @@ use Throwable;
 class Templates
 {
 	/**
+	 * ozone templates directory.
+	 *
+	 * @var string
+	 */
+	public const OZ_TEMPLATE_DIR = OZ_OZONE_DIR . 'oz_templates' . DS;
+
+	/**
 	 * ozone templates sources directories.
 	 *
 	 * @var array
 	 */
-	private static array $oz_sources_dir = [OZ_OZONE_DIR . 'oz_templates'];
+	private static array $oz_sources_dir = [self::OZ_TEMPLATE_DIR];
 
 	/**
 	 * app templates sources directories.
