@@ -1,8 +1,8 @@
 # 
 # This file contains rules to prevent the crawling and indexing of certain parts 
-# of your web site by spiders of a major search engines likes Google and Yahoo. 
+# of your website by spiders of a major search engines likes Google and Yahoo.
 # By managing these rules you can allow or disallow access to specific folders
-# and files for such spyders. 
+# and files for such spiders.
 # The good way to hide private data or save a lot of bandwidth. 
 #
 #
