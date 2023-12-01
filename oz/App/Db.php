@@ -136,7 +136,7 @@ final class Db
 	public static function getProjectDbFolder(): string
 	{
 		return app()
-			->getAppDir()
+			->getPrivateDir()
 			->cd('Db', true)
 			->getRoot();
 	}

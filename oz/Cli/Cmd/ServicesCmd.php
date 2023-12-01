@@ -90,7 +90,7 @@ final class ServicesCmd extends Command
 
 		if (!$service_dir) {
 			$service_dir = app()
-				->getAppDir()
+				->getPrivateDir()
 				->cd('Services', true)
 				->getRoot();
 		}

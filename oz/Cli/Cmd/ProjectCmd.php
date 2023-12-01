@@ -226,6 +226,7 @@ final class ProjectCmd extends Command
 		$class_name = $args->get('class-name');
 		$prefix     = \strtoupper($args->get('prefix'));
 		$cli        = $this->getCli();
+		$origin_url = 'http://localhost';
 
 		if (Utils::isProjectFolder($folder)) {
 			$cli->error(
@@ -262,7 +263,7 @@ final class ProjectCmd extends Command
 		$oz_request = Templates::compile(
 			'oz://gen/settings.info.otpl',
 			Settings::genExportInfo('oz.request', [
-				'OZ_DEFAULT_ORIGIN' => 'http://localhost',
+				'OZ_DEFAULT_ORIGIN' => $origin_url,
 			])
 		);
 
@@ -294,10 +295,9 @@ final class ProjectCmd extends Command
 		$app_class        = Templates::compile('oz://gen/app_class.otpl', $inject);
 		$app_instance     = Templates::compile('oz://gen/app.otpl', $inject);
 		$boot_content     = Templates::compile('oz://gen/boot.otpl', $inject);
-		$api_index        = Templates::compile('oz://gen/api.index.otpl', $inject);
 		$project_composer = Templates::compile('oz://gen/composer.json.otpl', $inject);
 
-		$tpl_folder = OZ_OZONE_DIR . 'oz_templates' . DS;
+		$tpl_folder = Templates::OZ_TEMPLATE_DIR;
 
 		$fm   = new FilesManager($folder);
 		$root = $fm->getRoot();
@@ -310,7 +310,7 @@ final class ProjectCmd extends Command
 						'type'    => 'file',
 						'content' => 'deny from all',
 					],
-					'oz_settings'   => [
+					'settings'      => [
 						'type'     => 'dir',
 						'children' => [
 							'oz.config.php'  => [
@@ -327,7 +327,7 @@ final class ProjectCmd extends Command
 							],
 						],
 					],
-					'oz_templates'  => [
+					'templates'     => [
 						'type'     => 'dir',
 						'children' => [
 							'.keep' => [
@@ -335,7 +335,7 @@ final class ProjectCmd extends Command
 							],
 						],
 					],
-					'oz_files'      => [
+					'files'         => [
 						'type'     => 'dir',
 						'children' => [
 							'.keep' => [
@@ -354,32 +354,6 @@ final class ProjectCmd extends Command
 					'boot.php'      => [
 						'type'    => 'file',
 						'content' => $boot_content,
-					],
-				],
-			],
-			'public'       => [
-				'type'     => 'dir',
-				'children' => [
-					'api' => [
-						'type'     => 'dir',
-						'children' => [
-							'index.php'   => [
-								'type'    => 'file',
-								'content' => $api_index,
-							],
-							'.htaccess'   => [
-								'type' => 'file',
-								'copy' => $tpl_folder . 'gen/api.htaccess',
-							],
-							'favicon.ico' => [
-								'type' => 'file',
-								'copy' => $tpl_folder . 'gen/favicon.ico',
-							],
-							'robots.txt'  => [
-								'type' => 'file',
-								'copy' => $tpl_folder . 'gen/robots.txt',
-							],
-						],
 					],
 				],
 			],
@@ -424,8 +398,18 @@ final class ProjectCmd extends Command
 			$fm->wf('composer.json', $project_composer);
 		}
 
-		$cli->success(\sprintf('project "%s" created in "%s".', $name, $root))
-			->info('You need to run:')
+		$cli->success(\sprintf('project "%s" created in "%s".', $name, $root));
+
+		ScopesCmd::addScope($cli, $fm, [
+			'api'          => true,
+			'name'         => 'api',
+			'origin'       => $origin_url,
+			'project_name' => $name,
+			'namespace'    => $namespace,
+			'app_class'    => $class_name,
+		]);
+
+		$cli->info('You need to run:')
 			->writeLn("\tcomposer update");
 	}
 }
