@@ -91,7 +91,12 @@ final class ScopesCmd extends Command
 				],
 			],
 			'templates' => [
-				'type' => 'dir',
+				'type'     => 'dir',
+				'children' => [
+					'.keep' => [
+						'type' => 'file',
+					],
+				],
 			],
 			'.htaccess' => [
 				'type'    => 'file',
