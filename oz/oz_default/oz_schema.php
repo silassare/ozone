@@ -52,7 +52,7 @@ return static function (NamespaceBuilder $ns) {
 
 		// constraints
 		$tb->collectFk(static function () use ($tb) {
-			$tb->foreign('cc2', 'oz_countries', 'cc2', static function (Column $column) {
+			$tb->foreign('cc2', 'oz_countries', 'cc2', false, static function (Column $column) {
 				/** @var TypeCC2 $cc2_type */
 				$cc2_type = $column->getType();
 				$cc2_type->authorized();
@@ -61,9 +61,10 @@ return static function (NamespaceBuilder $ns) {
 				->onDeleteRestrict();
 		});
 
-		$tb->unique('phone');
-
-		$tb->unique('email');
+		$tb->collectIndex(static function (TableBuilder $tb) {
+			$tb->unique('phone');
+			$tb->unique('email');
+		});
 
 		// relations
 		$tb->collectRelation(static function () use ($tb) {
@@ -88,10 +89,15 @@ return static function (NamespaceBuilder $ns) {
 		$tb->softDeletable();
 
 		// constraints
-		$tb->foreign('user_id', 'oz_users', 'id')
-			->onUpdateCascade()
-			->onDeleteCascade();
-		$tb->unique('user_id', 'name');
+		$tb->collectFk(static function (TableBuilder $tb) {
+			$tb->foreign('user_id', 'oz_users', 'id')
+				->onUpdateCascade()
+				->onDeleteCascade();
+		});
+
+		$tb->collectIndex(static function (TableBuilder $tb) {
+			$tb->unique('user_id', 'name');
+		});
 	});
 
 	$ns->table('oz_countries', static function (TableBuilder $tb) {
@@ -111,6 +117,7 @@ return static function (NamespaceBuilder $ns) {
 
 		// constraints
 		$tb->primary('cc2');
+
 		// relations
 		$tb->collectRelation(static fn () => $tb->hasMany('citizens')->from('oz_users'));
 	});
@@ -122,30 +129,6 @@ return static function (NamespaceBuilder $ns) {
 
 		// columns
 		$tb->id();
-		$tb->foreign(
-			'uploaded_by',
-			'oz_users',
-			'id',
-			static fn (Column $column) => $column->getType()->nullable()
-		)
-			->onUpdateCascade()
-			->onDeleteSetNull();
-		$tb->foreign(
-			'clone_id',
-			'oz_files',
-			'id',
-			static fn (Column $column) => $column->getType()->nullable()
-		)
-			->onUpdateCascade()
-			->onDeleteSetNull();
-		$tb->foreign(
-			'source_id',
-			'oz_files',
-			'id',
-			static fn (Column $column) => $column->getType()->nullable()
-		)
-			->onUpdateCascade()
-			->onDeleteSetNull();
 		$tb->string('key')->min(8)->max(128);
 		$tb->string('ref')->min(1)->max(255);
 		$tb->string('storage')->min(1)->max(128);
@@ -164,25 +147,39 @@ return static function (NamespaceBuilder $ns) {
 		$tb->string('for_label')->max(64)->default('asset');
 		$tb->map('data')->default([]);
 		$tb->bool('is_valid')->default(true);
-
 		$tb->timestamps();
 		$tb->softDeletable();
 
+		// constraints
+		$tb->collectFk(static function (TableBuilder $tb) {
+			$tb->foreign('uploaded_by', 'oz_users', 'id', true)
+				->onUpdateCascade()
+				->onDeleteSetNull();
+			$tb->foreign('clone_id', 'oz_files', 'id', true)
+				->onUpdateCascade()
+				->onDeleteSetNull();
+			$tb->foreign('source_id', 'oz_files', 'id', true)
+				->onUpdateCascade()
+				->onDeleteSetNull();
+		});
+
 		// relations
-		$tb->belongsTo('uploader')->from('oz_users');
-		$tb->hasMany('clones')->from('oz_files')->usingColumns([
-			'id' => 'clone_id',
-		]);
-		$tb->belongsTo('cloned_from')
-			->from('oz_files')
-			->usingColumns([
-				'clone_id' => 'id',
+		$tb->collectRelation(static function (TableBuilder $tb) {
+			$tb->belongsTo('uploader')->from('oz_users');
+			$tb->hasMany('clones')->from('oz_files')->usingColumns([
+				'id' => 'clone_id',
 			]);
-		$tb->belongsTo('source')
-			->from('oz_files')
-			->usingColumns([
-				'source_id' => 'id',
-			]);
+			$tb->belongsTo('cloned_from')
+				->from('oz_files')
+				->usingColumns([
+					'clone_id' => 'id',
+				]);
+			$tb->belongsTo('source')
+				->from('oz_files')
+				->usingColumns([
+					'source_id' => 'id',
+				]);
+		});
 	});
 
 	$ns->table('oz_jobs', static function (TableBuilder $tb) {
@@ -207,11 +204,12 @@ return static function (NamespaceBuilder $ns) {
 		$tb->bool('locked')->default(false);
 		$tb->timestamp('started_at')->microseconds()->nullable();
 		$tb->timestamp('ended_at')->microseconds()->nullable();
-
 		$tb->timestamps();
 
 		// constraints
-		$tb->unique('ref');
+		$tb->collectIndex(static function (TableBuilder $tb) {
+			$tb->unique('ref');
+		});
 	});
 
 	// START OF TABLES THAT SHOULD BE KEPT PRIVATE
@@ -225,27 +223,26 @@ return static function (NamespaceBuilder $ns) {
 
 		// columns
 		$tb->string('id')->min(6)->max(128);
-		$tb->foreign(
-			'user_id',
-			'oz_users',
-			'id',
-			static fn (Column $column) => $column->getType()->nullable()
-		)
-			->onUpdateCascade()
-			->onDeleteCascade();
 		$tb->string('request_source_key')->min(6)->max(250);
 		$tb->timestamp('expire');
 		$tb->timestamp('last_seen');
 		$tb->map('data')->default([]);
 		$tb->bool('is_valid')->default(true);
-
 		$tb->timestamps();
 
 		// constraints
 		$tb->primary('id');
 
+		$tb->collectFk(static function (TableBuilder $tb) {
+			$tb->foreign('user_id', 'oz_users', 'id', true)
+				->onUpdateCascade()
+				->onDeleteCascade();
+		});
+
 		// relations
-		$tb->belongsTo('user')->from('oz_users');
+		$tb->collectRelation(static function (TableBuilder $tb) {
+			$tb->belongsTo('user')->from('oz_users');
+		});
 	});
 
 	$ns->table('oz_db_stores', static function (TableBuilder $tb) {
@@ -262,12 +259,13 @@ return static function (NamespaceBuilder $ns) {
 		$tb->string('value')->nullable();
 		$tb->string('label')->max(255);
 		$tb->map('data')->default([]);
-
 		$tb->timestamps();
 		$tb->softDeletable();
 
 		// constraints
-		$tb->unique('group', 'key');
+		$tb->collectIndex(static function (TableBuilder $tb) {
+			$tb->unique('group', 'key');
+		});
 	});
 
 	$ns->table('oz_auths', static function (TableBuilder $tb) {
@@ -292,14 +290,16 @@ return static function (NamespaceBuilder $ns) {
 		$tb->timestamp('expire');
 		$tb->map('options')->default([]);
 		$tb->bool('is_valid')->default(true);
-
 		$tb->timestamps();
 		$tb->softDeletable();
 
 		// constraints
 		$tb->primary('ref');
-		$tb->unique('refresh_key');
-		$tb->unique('token_hash');
+
+		$tb->collectIndex(static function (TableBuilder $tb) {
+			$tb->unique('refresh_key');
+			$tb->unique('token_hash');
+		});
 	});
 
 	// this table is supposed to have only one entry

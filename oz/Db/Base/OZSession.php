@@ -17,7 +17,6 @@ namespace OZONE\Core\Db\Base;
  * Class OZSession.
  *
  * @property string      $id                 Getter for column `oz_sessions`.`id`.
- * @property null|string $user_id            Getter for column `oz_sessions`.`user_id`.
  * @property string      $request_source_key Getter for column `oz_sessions`.`request_source_key`.
  * @property string      $expire             Getter for column `oz_sessions`.`expire`.
  * @property string      $last_seen          Getter for column `oz_sessions`.`last_seen`.
@@ -25,13 +24,13 @@ namespace OZONE\Core\Db\Base;
  * @property bool        $is_valid           Getter for column `oz_sessions`.`is_valid`.
  * @property string      $created_at         Getter for column `oz_sessions`.`created_at`.
  * @property string      $updated_at         Getter for column `oz_sessions`.`updated_at`.
+ * @property null|string $user_id            Getter for column `oz_sessions`.`user_id`.
  */
 abstract class OZSession extends \Gobl\ORM\ORMEntity
 {
 	public const TABLE_NAME             = 'oz_sessions';
 	public const TABLE_NAMESPACE        = 'OZONE\\Core\\Db';
 	public const COL_ID                 = 'session_id';
-	public const COL_USER_ID            = 'session_user_id';
 	public const COL_REQUEST_SOURCE_KEY = 'session_request_source_key';
 	public const COL_EXPIRE             = 'session_expire';
 	public const COL_LAST_SEEN          = 'session_last_seen';
@@ -39,6 +38,7 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	public const COL_IS_VALID           = 'session_is_valid';
 	public const COL_CREATED_AT         = 'session_created_at';
 	public const COL_UPDATED_AT         = 'session_updated_at';
+	public const COL_USER_ID            = 'session_user_id';
 
 	/**
 	 * OZSession constructor.
@@ -135,30 +135,6 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	public function setID(string $id): static
 	{
 		$this->id = $id;
-
-		return $this;
-	}
-
-	/**
-	 * Getter for column `oz_sessions`.`user_id`.
-	 *
-	 * @return null|string
-	 */
-	public function getUserID(): null|string
-	{
-		return $this->user_id;
-	}
-
-	/**
-	 * Setter for column `oz_sessions`.`user_id`.
-	 *
-	 * @param null|int|string $user_id
-	 *
-	 * @return static
-	 */
-	public function setUserID(null|int|string $user_id): static
-	{
-		$this->user_id = $user_id;
 
 		return $this;
 	}
@@ -327,6 +303,30 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	public function setUpdatedAT(int|string $updated_at): static
 	{
 		$this->updated_at = $updated_at;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_sessions`.`user_id`.
+	 *
+	 * @return null|string
+	 */
+	public function getUserID(): null|string
+	{
+		return $this->user_id;
+	}
+
+	/**
+	 * Setter for column `oz_sessions`.`user_id`.
+	 *
+	 * @param null|int|string $user_id
+	 *
+	 * @return static
+	 */
+	public function setUserID(null|int|string $user_id): static
+	{
+		$this->user_id = $user_id;
 
 		return $this;
 	}

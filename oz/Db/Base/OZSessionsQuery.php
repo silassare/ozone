@@ -28,18 +28,6 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereIdIsNotLike(string $value)               Filters rows with `not_like` condition on column `oz_sessions`.`id`.
  * @method $this whereIdIsIn(array $value)                     Filters rows with `in` condition on column `oz_sessions`.`id`.
  * @method $this whereIdIsNotIn(array $value)                  Filters rows with `not_in` condition on column `oz_sessions`.`id`.
- * @method $this whereUserIdIs(int|string $value)              Filters rows with `eq` condition on column `oz_sessions`.`user_id`.
- * @method $this whereUserIdIsNot(int|string $value)           Filters rows with `neq` condition on column `oz_sessions`.`user_id`.
- * @method $this whereUserIdIsLt(int|string $value)            Filters rows with `lt` condition on column `oz_sessions`.`user_id`.
- * @method $this whereUserIdIsLte(int|string $value)           Filters rows with `lte` condition on column `oz_sessions`.`user_id`.
- * @method $this whereUserIdIsGt(int|string $value)            Filters rows with `gt` condition on column `oz_sessions`.`user_id`.
- * @method $this whereUserIdIsGte(int|string $value)           Filters rows with `gte` condition on column `oz_sessions`.`user_id`.
- * @method $this whereUserIdIsLike(string $value)              Filters rows with `like` condition on column `oz_sessions`.`user_id`.
- * @method $this whereUserIdIsNotLike(string $value)           Filters rows with `not_like` condition on column `oz_sessions`.`user_id`.
- * @method $this whereUserIdIsNull()                           Filters rows with `is_null` condition on column `oz_sessions`.`user_id`.
- * @method $this whereUserIdIsNotNull()                        Filters rows with `is_not_null` condition on column `oz_sessions`.`user_id`.
- * @method $this whereUserIdIsIn(array $value)                 Filters rows with `in` condition on column `oz_sessions`.`user_id`.
- * @method $this whereUserIdIsNotIn(array $value)              Filters rows with `not_in` condition on column `oz_sessions`.`user_id`.
  * @method $this whereRequestSourceKeyIs(string $value)        Filters rows with `eq` condition on column `oz_sessions`.`request_source_key`.
  * @method $this whereRequestSourceKeyIsNot(string $value)     Filters rows with `neq` condition on column `oz_sessions`.`request_source_key`.
  * @method $this whereRequestSourceKeyIsLt(string $value)      Filters rows with `lt` condition on column `oz_sessions`.`request_source_key`.
@@ -98,6 +86,18 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereUpdatedAtIsNotLike(string $value)        Filters rows with `not_like` condition on column `oz_sessions`.`updated_at`.
  * @method $this whereUpdatedAtIsIn(array $value)              Filters rows with `in` condition on column `oz_sessions`.`updated_at`.
  * @method $this whereUpdatedAtIsNotIn(array $value)           Filters rows with `not_in` condition on column `oz_sessions`.`updated_at`.
+ * @method $this whereUserIdIs(int|string $value)              Filters rows with `eq` condition on column `oz_sessions`.`user_id`.
+ * @method $this whereUserIdIsNot(int|string $value)           Filters rows with `neq` condition on column `oz_sessions`.`user_id`.
+ * @method $this whereUserIdIsLt(int|string $value)            Filters rows with `lt` condition on column `oz_sessions`.`user_id`.
+ * @method $this whereUserIdIsLte(int|string $value)           Filters rows with `lte` condition on column `oz_sessions`.`user_id`.
+ * @method $this whereUserIdIsGt(int|string $value)            Filters rows with `gt` condition on column `oz_sessions`.`user_id`.
+ * @method $this whereUserIdIsGte(int|string $value)           Filters rows with `gte` condition on column `oz_sessions`.`user_id`.
+ * @method $this whereUserIdIsLike(string $value)              Filters rows with `like` condition on column `oz_sessions`.`user_id`.
+ * @method $this whereUserIdIsNotLike(string $value)           Filters rows with `not_like` condition on column `oz_sessions`.`user_id`.
+ * @method $this whereUserIdIsNull()                           Filters rows with `is_null` condition on column `oz_sessions`.`user_id`.
+ * @method $this whereUserIdIsNotNull()                        Filters rows with `is_not_null` condition on column `oz_sessions`.`user_id`.
+ * @method $this whereUserIdIsIn(array $value)                 Filters rows with `in` condition on column `oz_sessions`.`user_id`.
+ * @method $this whereUserIdIsNotIn(array $value)              Filters rows with `not_in` condition on column `oz_sessions`.`user_id`.
  */
 abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 {

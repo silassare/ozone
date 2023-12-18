@@ -17,9 +17,6 @@ namespace OZONE\Core\Db\Base;
  * Class OZFile.
  *
  * @property null|string                   $id          Getter for column `oz_files`.`id`.
- * @property null|string                   $uploaded_by Getter for column `oz_files`.`uploaded_by`.
- * @property null|string                   $clone_id    Getter for column `oz_files`.`clone_id`.
- * @property null|string                   $source_id   Getter for column `oz_files`.`source_id`.
  * @property string                        $key         Getter for column `oz_files`.`key`.
  * @property string                        $ref         Getter for column `oz_files`.`ref`.
  * @property string                        $storage     Getter for column `oz_files`.`storage`.
@@ -37,15 +34,15 @@ namespace OZONE\Core\Db\Base;
  * @property string                        $updated_at  Getter for column `oz_files`.`updated_at`.
  * @property bool                          $deleted     Getter for column `oz_files`.`deleted`.
  * @property null|string                   $deleted_at  Getter for column `oz_files`.`deleted_at`.
+ * @property null|string                   $uploaded_by Getter for column `oz_files`.`uploaded_by`.
+ * @property null|string                   $clone_id    Getter for column `oz_files`.`clone_id`.
+ * @property null|string                   $source_id   Getter for column `oz_files`.`source_id`.
  */
 abstract class OZFile extends \Gobl\ORM\ORMEntity
 {
 	public const TABLE_NAME      = 'oz_files';
 	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
 	public const COL_ID          = 'file_id';
-	public const COL_UPLOADED_BY = 'file_uploaded_by';
-	public const COL_CLONE_ID    = 'file_clone_id';
-	public const COL_SOURCE_ID   = 'file_source_id';
 	public const COL_KEY         = 'file_key';
 	public const COL_REF         = 'file_ref';
 	public const COL_STORAGE     = 'file_storage';
@@ -63,6 +60,9 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	public const COL_UPDATED_AT  = 'file_updated_at';
 	public const COL_DELETED     = 'file_deleted';
 	public const COL_DELETED_AT  = 'file_deleted_at';
+	public const COL_UPLOADED_BY = 'file_uploaded_by';
+	public const COL_CLONE_ID    = 'file_clone_id';
+	public const COL_SOURCE_ID   = 'file_source_id';
 
 	/**
 	 * OZFile constructor.
@@ -159,78 +159,6 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	public function setID(null|int|string $id): static
 	{
 		$this->id = $id;
-
-		return $this;
-	}
-
-	/**
-	 * Getter for column `oz_files`.`uploaded_by`.
-	 *
-	 * @return null|string
-	 */
-	public function getUploadedBY(): null|string
-	{
-		return $this->uploaded_by;
-	}
-
-	/**
-	 * Setter for column `oz_files`.`uploaded_by`.
-	 *
-	 * @param null|int|string $uploaded_by
-	 *
-	 * @return static
-	 */
-	public function setUploadedBY(null|int|string $uploaded_by): static
-	{
-		$this->uploaded_by = $uploaded_by;
-
-		return $this;
-	}
-
-	/**
-	 * Getter for column `oz_files`.`clone_id`.
-	 *
-	 * @return null|string
-	 */
-	public function getCloneID(): null|string
-	{
-		return $this->clone_id;
-	}
-
-	/**
-	 * Setter for column `oz_files`.`clone_id`.
-	 *
-	 * @param null|int|string $clone_id
-	 *
-	 * @return static
-	 */
-	public function setCloneID(null|int|string $clone_id): static
-	{
-		$this->clone_id = $clone_id;
-
-		return $this;
-	}
-
-	/**
-	 * Getter for column `oz_files`.`source_id`.
-	 *
-	 * @return null|string
-	 */
-	public function getSourceID(): null|string
-	{
-		return $this->source_id;
-	}
-
-	/**
-	 * Setter for column `oz_files`.`source_id`.
-	 *
-	 * @param null|int|string $source_id
-	 *
-	 * @return static
-	 */
-	public function setSourceID(null|int|string $source_id): static
-	{
-		$this->source_id = $source_id;
 
 		return $this;
 	}
@@ -639,6 +567,78 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	public function setDeletedAT(null|int|string $deleted_at): static
 	{
 		$this->deleted_at = $deleted_at;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_files`.`uploaded_by`.
+	 *
+	 * @return null|string
+	 */
+	public function getUploadedBY(): null|string
+	{
+		return $this->uploaded_by;
+	}
+
+	/**
+	 * Setter for column `oz_files`.`uploaded_by`.
+	 *
+	 * @param null|int|string $uploaded_by
+	 *
+	 * @return static
+	 */
+	public function setUploadedBY(null|int|string $uploaded_by): static
+	{
+		$this->uploaded_by = $uploaded_by;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_files`.`clone_id`.
+	 *
+	 * @return null|string
+	 */
+	public function getCloneID(): null|string
+	{
+		return $this->clone_id;
+	}
+
+	/**
+	 * Setter for column `oz_files`.`clone_id`.
+	 *
+	 * @param null|int|string $clone_id
+	 *
+	 * @return static
+	 */
+	public function setCloneID(null|int|string $clone_id): static
+	{
+		$this->clone_id = $clone_id;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_files`.`source_id`.
+	 *
+	 * @return null|string
+	 */
+	public function getSourceID(): null|string
+	{
+		return $this->source_id;
+	}
+
+	/**
+	 * Setter for column `oz_files`.`source_id`.
+	 *
+	 * @param null|int|string $source_id
+	 *
+	 * @return static
+	 */
+	public function setSourceID(null|int|string $source_id): static
+	{
+		$this->source_id = $source_id;
 
 		return $this;
 	}
