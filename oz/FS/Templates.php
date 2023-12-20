@@ -33,18 +33,22 @@ class Templates
 	public const OZ_TEMPLATE_DIR = OZ_OZONE_DIR . 'oz_templates' . DS;
 
 	/**
-	 * ozone templates sources directories.
+	 * Gets templates path sources.
 	 *
-	 * @var array
+	 * @return PathSources
 	 */
-	private static array $oz_sources_dir = [self::OZ_TEMPLATE_DIR];
+	public static function getSources(): PathSources
+	{
+		/** @var null|PathSources $sources */
+		static $sources = null;
 
-	/**
-	 * app templates sources directories.
-	 *
-	 * @var array
-	 */
-	private static array $app_sources_dir = [];
+		if (null === $sources) {
+			$sources = new PathSources();
+			$sources->add(self::OZ_TEMPLATE_DIR);
+		}
+
+		return $sources;
+	}
 
 	/**
 	 * adds templates sources directory.
@@ -53,21 +57,16 @@ class Templates
 	 */
 	public static function addSource(string $path): void
 	{
-		if (!\in_array($path, self::$oz_sources_dir, true) && !\in_array($path, self::$app_sources_dir, true)) {
-			$fm   = new FilesManager();
-			$path = $fm->resolve($path);
+		$fm   = new FilesManager();
+		$path = $fm->resolve($path);
 
-			$fm->filter()
-				->isDir()
-				->isReadable()
-				->assert($path);
+		$fm->filter()
+			->isDir()
+			->isReadable()
+			->assert($path);
 
-			if (\str_starts_with($path, OZ_OZONE_DIR)) {
-				self::$oz_sources_dir[] = $path;
-			} else {
-				self::$app_sources_dir[] = $path;
-			}
-		}
+		self::getSources()
+			->add($path);
 	}
 
 	/**
@@ -112,15 +111,20 @@ class Templates
 		$oz_only_prefix  = 'oz://';
 		$app_only_prefix = 'app://';
 		$cache_key       = $template;
+		$sources         = self::getSources();
 
 		if (\str_starts_with($template, $oz_only_prefix)) {
-			$sources_group = [self::$oz_sources_dir];
+			$sources_group = [$sources->getInternalSources()];
 			$template      = Str::removePrefix($template, $oz_only_prefix);
 		} elseif (\str_starts_with($template, $app_only_prefix)) {
-			$sources_group = [self::$app_sources_dir];
+			$sources_group = [$sources->getProjectSources()];
 			$template      = Str::removePrefix($template, $app_only_prefix);
 		} else {
-			$sources_group = [self::$app_sources_dir, self::$oz_sources_dir];
+			$sources_group = [
+				$sources->getProjectSources(),
+				$sources->getPluginsSources(),
+				$sources->getInternalSources(),
+			];
 		}
 
 		if (!PathUtils::isRelative($template)) {

@@ -16,7 +16,9 @@ namespace OZONE\Core\App;
 use InvalidArgumentException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\PathSources;
 use OZONE\Core\FS\Templates;
+use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use OZONE\Core\Utils\Random;
 use Throwable;
 
@@ -65,25 +67,22 @@ final class Settings
 	private static array $as_loaded = [];
 
 	/**
-	 * ozone settings sources directories.
+	 * Gets settings path sources.
 	 *
-	 * @var string[]
+	 * @return PathSources
 	 */
-	private static array $oz_sources_dir = [OZ_OZONE_DIR . 'oz_settings'];
+	public static function getSources(): PathSources
+	{
+		/** @var null|PathSources $sources */
+		static $sources = null;
 
-	/**
-	 * plugins settings sources directories.
-	 *
-	 * @var string[]
-	 */
-	private static array $plugins_sources_dir = [];
+		if (null === $sources) {
+			$sources = new PathSources();
+			$sources->add(OZ_OZONE_DIR . 'oz_settings');
+		}
 
-	/**
-	 * app settings sources directories.
-	 *
-	 * @var string[]
-	 */
-	private static array $app_sources_dir = [];
+		return $sources;
+	}
 
 	/**
 	 * adds settings sources directory.
@@ -92,21 +91,11 @@ final class Settings
 	 */
 	public static function addSource(string $path): void
 	{
-		static $sources = [];
-		if (!isset($sources[$path])) {
-			if (!\is_dir($path)) {
-				throw new InvalidArgumentException(\sprintf('Invalid directory: %s', $path));
-			}
-
-			$sources[$path] = true;
-			if (\str_starts_with($path, OZ_OZONE_DIR)) {
-				self::$oz_sources_dir[] = $path;
-			} elseif (\str_starts_with($path, OZ_PROJECT_DIR . '/vendor')) {
-				self::$plugins_sources_dir[] = $path;
-			} else {
-				self::$app_sources_dir[] = $path;
-			}
+		if (!\is_dir($path)) {
+			throw new InvalidArgumentException(\sprintf('Invalid directory: %s', $path));
 		}
+
+		self::getSources()->add($path);
 	}
 
 	/**
@@ -163,14 +152,19 @@ final class Settings
 	/**
 	 * sets value of a given key in a setting group.
 	 *
-	 * @param string $setting_group_name the setting group name
-	 * @param string $key                the setting key
-	 * @param mixed  $value              the setting value
+	 * @param string              $setting_group_name the setting group name
+	 * @param string              $key                the setting key
+	 * @param mixed               $value              the setting value
+	 * @param null|ScopeInterface $scope              the scope to use
 	 */
-	public static function set(string $setting_group_name, string $key, mixed $value): void
-	{
+	public static function set(
+		string $setting_group_name,
+		string $key,
+		mixed $value,
+		?ScopeInterface $scope = null
+	): void {
 		$data[$key] = $value;
-		self::save($setting_group_name, $data, true);
+		self::save($setting_group_name, $data, true, $scope);
 	}
 
 	/**
@@ -203,16 +197,16 @@ final class Settings
 	/**
 	 * sets settings data.
 	 *
-	 * @param string      $setting_group_name the setting group name
-	 * @param mixed       $data               settings data
-	 * @param bool        $merge              merge with existing data or not
-	 * @param null|string $source_dir         settings source directory
+	 * @param string              $setting_group_name the setting group name
+	 * @param mixed               $data               settings data
+	 * @param bool                $merge              merge with existing data or not
+	 * @param null|ScopeInterface $scope              the scope
 	 */
 	public static function save(
 		string $setting_group_name,
 		array $data,
 		bool $merge = false,
-		?string $source_dir = null
+		?ScopeInterface $scope = null
 	): void {
 		self::checkSettingGroupName($setting_group_name);
 
@@ -225,7 +219,7 @@ final class Settings
 			);
 		}
 
-		$source_dir_fm         = $source_dir ? new FilesManager($source_dir) : app()->getSettingsDir();
+		$source_dir_fm         = ($scope ?? app())->getSettingsDir();
 		$setting_relative_path = $setting_group_name . '.php';
 		$setting_abs_path      = $source_dir_fm->resolve($setting_relative_path);
 
@@ -306,33 +300,31 @@ final class Settings
 		}
 
 		if (!\array_key_exists($setting_group_name, self::$settings_map)) {
-			$list = [self::$oz_sources_dir, self::$plugins_sources_dir, self::$app_sources_dir];
+			$list = self::getSources()->getAllSources();
 
-			foreach ($list as $sources) {
-				foreach ($sources as $source) {
-					$fm               = new FilesManager($source);
-					$setting_abs_path = $fm->resolve($setting_group_name . '.php');
+			foreach ($list as $source) {
+				$fm               = new FilesManager($source);
+				$setting_abs_path = $fm->resolve($setting_group_name . '.php');
 
-					if (\file_exists($setting_abs_path)) {
-						$result = require $setting_abs_path;
+				if (\file_exists($setting_abs_path)) {
+					$result = require $setting_abs_path;
 
-						if (!\is_array($result)) {
-							throw new RuntimeException(\sprintf(
-								'Settings "%s" returned from "%s" should be of type "array" not "%s"',
-								$setting_group_name,
-								$setting_abs_path,
-								\get_debug_type($result)
-							));
-						}
+					if (!\is_array($result)) {
+						throw new RuntimeException(\sprintf(
+							'Settings "%s" returned from "%s" should be of type "array" not "%s"',
+							$setting_group_name,
+							$setting_abs_path,
+							\get_debug_type($result)
+						));
+					}
 
-						self::$as_loaded[$setting_abs_path] = $result;
+					self::$as_loaded[$setting_abs_path] = $result;
 
-						if (!\array_key_exists($setting_group_name, self::$settings_map)) {
-							self::$settings_map[$setting_group_name] = $result;
-						} else {
-							$current                                 = self::$settings_map[$setting_group_name];
-							self::$settings_map[$setting_group_name] = self::merge($current, $result);
-						}
+					if (!\array_key_exists($setting_group_name, self::$settings_map)) {
+						self::$settings_map[$setting_group_name] = $result;
+					} else {
+						$current                                 = self::$settings_map[$setting_group_name];
+						self::$settings_map[$setting_group_name] = self::merge($current, $result);
 					}
 				}
 			}
