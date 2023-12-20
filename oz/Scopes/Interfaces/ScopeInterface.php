@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\App\Interfaces;
+namespace OZONE\Core\Scopes\Interfaces;
 
 use OZONE\Core\FS\FilesManager;
 
 /**
- * Interface AppScopeInterface.
+ * Interface ScopeInterface.
  */
-interface AppScopeInterface
+interface ScopeInterface
 {
 	/**
 	 * The root scope name.

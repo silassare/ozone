@@ -13,13 +13,13 @@ declare(strict_types=1);
 
 namespace OZONE\Core\App;
 
-use OZONE\Core\App\Interfaces\AppScopeInterface;
 use OZONE\Core\FS\FilesManager;
+use OZONE\Core\Scopes\AbstractScope;
 
 /**
  * Class AppScope.
  */
-class AppScope implements AppScopeInterface
+final class AppScope extends AbstractScope
 {
 	/**
 	 * AppScope constructor.
@@ -29,7 +29,7 @@ class AppScope implements AppScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	final public function getName(): string
+	public function getName(): string
 	{
 		return $this->name;
 	}
@@ -48,37 +48,5 @@ class AppScope implements AppScopeInterface
 	public function getPublicDir(): FilesManager
 	{
 		return app()->getProjectDir()->cd('public' . DS . $this->name, true);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function getSettingsDir(): FilesManager
-	{
-		return $this->getPrivateDir()->cd('settings', true);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function getTemplatesDir(): FilesManager
-	{
-		return $this->getPrivateDir()->cd('templates', true);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function getPrivateFilesDir(): FilesManager
-	{
-		return $this->getPrivateDir()->cd('files', true);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function getPublicFilesDir(): FilesManager
-	{
-		return $this->getPublicDir()->cd('static', true);
 	}
 }

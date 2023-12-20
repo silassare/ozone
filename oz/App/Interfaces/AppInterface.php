@@ -14,13 +14,14 @@ declare(strict_types=1);
 namespace OZONE\Core\App\Interfaces;
 
 use OZONE\Core\FS\FilesManager;
+use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use OZONE\Core\Utils\Env;
 use Throwable;
 
 /**
  * Interface AppInterface.
  */
-interface AppInterface extends AppScopeInterface
+interface AppInterface extends ScopeInterface
 {
 	/**
 	 * Called when ozone is booting.
@@ -63,9 +64,9 @@ interface AppInterface extends AppScopeInterface
 	 *
 	 * @param string $scope the scope name
 	 *
-	 * @return AppScopeInterface
+	 * @return ScopeInterface
 	 */
-	public function getScope(string $scope): AppScopeInterface;
+	public function getScope(string $scope): ScopeInterface;
 
 	/**
 	 * Returns an instance of the files manager with the cache directory as root.
@@ -73,6 +74,13 @@ interface AppInterface extends AppScopeInterface
 	 * @return \OZONE\Core\FS\FilesManager
 	 */
 	public function getCacheDir(): FilesManager;
+
+	/**
+	 * Returns an instance of the files manager with the plugins directory as root.
+	 *
+	 * @return \OZONE\Core\FS\FilesManager
+	 */
+	public function getPluginsDir(): FilesManager;
 
 	/**
 	 * Returns an instance of the files manager with the migrations directory as root.

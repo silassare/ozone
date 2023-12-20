@@ -15,9 +15,9 @@ namespace OZONE\Core\App;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Interfaces\AppInterface;
-use OZONE\Core\App\Interfaces\AppScopeInterface;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\Templates;
+use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use OZONE\Core\Utils\Env;
 use Throwable;
 
@@ -45,7 +45,7 @@ abstract class AbstractApp implements AppInterface
 	 */
 	final public function getName(): string
 	{
-		return AppScopeInterface::ROOT_SCOPE;
+		return ScopeInterface::ROOT_SCOPE;
 	}
 
 	/**
@@ -66,13 +66,13 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getScope(string $scope): AppScopeInterface
+	public function getScope(string $scope): ScopeInterface
 	{
-		if (AppScopeInterface::ROOT_SCOPE === $scope) {
+		if (ScopeInterface::ROOT_SCOPE === $scope) {
 			return $this;
 		}
 
-		/** @var array<string, AppScopeInterface> $scopes */
+		/** @var array<string, ScopeInterface> $scopes */
 		static $scopes = [];
 
 		if (!isset($scopes[$scope])) {
@@ -146,6 +146,15 @@ abstract class AbstractApp implements AppInterface
 	{
 		return $this->getPrivateDir()
 			->cd('templates', true);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getPluginsDir(): FilesManager
+	{
+		return $this->getProjectDir()
+			->cd('plugins', true);
 	}
 
 	/**
