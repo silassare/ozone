@@ -509,12 +509,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "676d52307da85f90a9fc762fbee3b57f54cdbfe6"
+                "reference": "fbb8b497e18c555ddf72391f5a7782d833bc424a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/676d52307da85f90a9fc762fbee3b57f54cdbfe6",
-                "reference": "676d52307da85f90a9fc762fbee3b57f54cdbfe6",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/fbb8b497e18c555ddf72391f5a7782d833bc424a",
+                "reference": "fbb8b497e18c555ddf72391f5a7782d833bc424a",
                 "shasum": ""
             },
             "require": {
@@ -571,7 +571,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/dev"
             },
-            "time": "2023-12-18T09:07:39+00:00"
+            "time": "2023-12-18T20:55:09+00:00"
         },
         {
             "name": "silassare/kli",
@@ -3310,12 +3310,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "3c2385497f806decca1e5abeba3cb8fd7caba4e0"
+                "reference": "6d3d49988325b4f65dc4a115ff808c1a9d70803b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/3c2385497f806decca1e5abeba3cb8fd7caba4e0",
-                "reference": "3c2385497f806decca1e5abeba3cb8fd7caba4e0",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/6d3d49988325b4f65dc4a115ff808c1a9d70803b",
+                "reference": "6d3d49988325b4f65dc4a115ff808c1a9d70803b",
                 "shasum": ""
             },
             "conflict": {
@@ -3699,7 +3699,7 @@
                 "phpoffice/phpspreadsheet": "<1.16",
                 "phpseclib/phpseclib": "<2.0.31|>=3,<3.0.34",
                 "phpservermon/phpservermon": "<3.6",
-                "phpsysinfo/phpsysinfo": "<3.2.5",
+                "phpsysinfo/phpsysinfo": "<3.4.3",
                 "phpunit/phpunit": ">=4.8.19,<4.8.28|>=5,<5.6.3",
                 "phpwhois/phpwhois": "<=4.2.5",
                 "phpxmlrpc/extras": "<0.6.1",
@@ -3936,6 +3936,7 @@
                 "yii2mod/yii2-cms": "<1.9.2",
                 "yiisoft/yii": "<1.1.29",
                 "yiisoft/yii2": "<2.0.38",
+                "yiisoft/yii2-authclient": "<2.2.15",
                 "yiisoft/yii2-bootstrap": "<2.0.4",
                 "yiisoft/yii2-dev": "<2.0.43",
                 "yiisoft/yii2-elasticsearch": "<2.0.5",
@@ -4019,7 +4020,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-12-15T16:04:17+00:00"
+            "time": "2023-12-19T22:03:59+00:00"
         },
         {
             "name": "sebastian/cli-parser",
