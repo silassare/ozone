@@ -28,6 +28,7 @@ use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\Migrations\MigrationState;
+use OZONE\Core\Plugins\Plugins;
 use OZONE\Core\Router\Events\RouterCreated;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
 use OZONE\Core\Router\Router;
@@ -138,6 +139,8 @@ final class OZone
 		self::$current_app = $app;
 
 		$app->boot();
+
+		Plugins::boot();
 
 		self::notifyBootHookReceivers();
 
