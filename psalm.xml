@@ -10,7 +10,6 @@
         <directory name="oz"/>
         <ignoreFiles>
             <directory name="oz/oz_templates"/>
-            <directory name="oz/Db"/>
             <directory name="vendor"/>
             <directory name="tests"/>
         </ignoreFiles>
