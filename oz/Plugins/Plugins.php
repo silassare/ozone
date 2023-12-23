@@ -65,4 +65,34 @@ class Plugins
 			}
 		}
 	}
+
+	/**
+	 * Returns the plugin scope.
+	 *
+	 * @param PluginInterface $plugin
+	 *
+	 * @return PluginScope
+	 */
+	public static function scopeOf(PluginInterface $plugin): PluginScope
+	{
+		static $scopes = [];
+
+		$class = \get_class($plugin);
+
+		if (!isset($scopes[$class])) {
+			$scopes[$class] = new PluginScope($plugin);
+		}
+
+		return $scopes[$class];
+	}
+
+	/**
+	 * Returns the default plugin.
+	 *
+	 * @return PluginInterface
+	 */
+	public static function default(): PluginInterface
+	{
+		return self::getPlugin(DefaultPlugin::class);
+	}
 }

@@ -13,68 +13,77 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Plugins;
 
-use Gobl\DBAL\Exceptions\DBALException;
-use OZONE\Core\App\Db;
-use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
-use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Plugins\Interfaces\PluginInterface;
-use OZONE\Core\Scopes\AbstractScope;
-use OZONE\Core\Utils\Hasher;
+use OZONE\Core\Utils\ComposerJSON;
 
 /**
  * Class AbstractPlugin.
  */
-abstract class AbstractPlugin extends AbstractScope implements PluginInterface
+abstract class AbstractPlugin implements PluginInterface
 {
-	/**
-	 * Plugin id, if empty it will be generated.
-	 *
-	 * @var string
-	 */
-	private string $id;
+	private ComposerJSON $composer_json;
 
 	/**
 	 * AbstractPlugin constructor.
 	 *
-	 * @param string $namespace Plugin namespace
-	 *
-	 * @throws DBALException
+	 * @param string $namespace    Plugin namespace
+	 * @param string $install_path Plugin install path
 	 */
-	public function __construct(protected string $namespace)
-	{
-		if ($this->isEnabled() && $this->inPluginMode()) {
-			$dir = $this->getPrivateDir()->cd('Db', true)->resolve('./');
-			db()->ns($this->getDbNamespace())->enableORM($dir);
-		}
+	public function __construct(
+		protected string $name,
+		protected string $namespace,
+		protected string $install_path
+	) {
+		$this->composer_json = new ComposerJSON($this->install_path . DS . 'composer.json');
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getPrivateDir(): FilesManager
+	public function getScope(): PluginScope
 	{
-		return app()->getPluginsDir()->cd($this->getID(), true);
+		return Plugins::scopeOf($this);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getPublicDir(): FilesManager
+	public function getName(): string
 	{
-		return app()->getPublicDir()->cd('plugins' . DS . $this->getID(), true);
+		return $this->name;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	final public function getID(): string
+	public function getPackageName(): string
 	{
-		if (empty($this->id)) {
-			$this->id = Hasher::shorten($this->getNamespace() . $this->getName() . Keys::salt());
-		}
+		return $this->composer_json->get('name', '');
+	}
 
-		return $this->id;
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getDescription(): string
+	{
+		return $this->composer_json->get('description', '');
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getAuthor(): string
+	{
+		return $this->composer_json->get('authors.0.name', '');
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getVersion(): string
+	{
+		return $this->composer_json->get('version', '0.0.0');
 	}
 
 	/**
@@ -91,14 +100,6 @@ abstract class AbstractPlugin extends AbstractScope implements PluginInterface
 	final public function getDbNamespace(): string
 	{
 		return $this->namespace . '\\Db';
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	final public function inPluginMode(): bool
-	{
-		return $this->getDbNamespace() !== Db::getProjectDbNamespace();
 	}
 
 	/**

@@ -18,14 +18,14 @@ use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 /**
  * Interface PluginInterface.
  */
-interface PluginInterface extends ScopeInterface
+interface PluginInterface
 {
 	/**
-	 * Returns the plugin ID.
+	 * Returns the plugin scope.
 	 *
-	 * @return string
+	 * @return ScopeInterface
 	 */
-	public function getID(): string;
+	public function getScope(): ScopeInterface;
 
 	/**
 	 * Returns the plugin name.
@@ -33,6 +33,13 @@ interface PluginInterface extends ScopeInterface
 	 * @return string
 	 */
 	public function getName(): string;
+
+	/**
+	 * Returns the plugin package name.
+	 *
+	 * @return string
+	 */
+	public function getPackageName(): string;
 
 	/**
 	 * Returns the plugin description.
@@ -75,13 +82,6 @@ interface PluginInterface extends ScopeInterface
 	 * @return bool
 	 */
 	public function isEnabled(): bool;
-
-	/**
-	 * Check if we are being used as a plugin.
-	 *
-	 * @return bool
-	 */
-	public function inPluginMode(): bool;
 
 	/**
 	 * Called on boot.
