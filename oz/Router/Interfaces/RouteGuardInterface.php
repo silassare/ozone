@@ -36,7 +36,7 @@ interface RouteGuardInterface
 	public static function fromRules(array $rules): self;
 
 	/**
-	 * Check if access.
+	 * Check access.
 	 */
 	public function checkAccess(RouteInfo $ri): void;
 
