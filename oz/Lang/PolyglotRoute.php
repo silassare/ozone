@@ -24,7 +24,7 @@ use PHPUtils\Events\Event;
  */
 final class PolyglotRoute implements RouteProviderInterface
 {
-	public const ROUTE_LANG_PARAM         = 'oz_lang';
+	public const ROUTE_LANG_PARAM         = 'lang';
 	public const ROUTE_LANG_PARAM_PATTERN = '[a-z]{1,8}(-[a-z]{1,8})?';
 
 	/**
