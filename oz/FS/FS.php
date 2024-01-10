@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS;
 
+use Generator;
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
@@ -154,6 +155,26 @@ class FS
 				->fetchClass();
 		} catch (Throwable $t) {
 			throw new RuntimeException(\sprintf('Unable to get file with id: %s', $id), null, $t);
+		}
+	}
+
+	/**
+	 * Gets files by ids.
+	 *
+	 * @param string[] $ids
+	 *
+	 * @return Generator<\OZONE\Core\Db\OZFile>
+	 */
+	public static function getFilesByIDs(array $ids): Generator
+	{
+		try {
+			$qb = new OZFilesQuery();
+
+			return $qb->whereIdIsIn($ids)
+				->find()
+				->lazy();
+		} catch (Throwable $t) {
+			throw new RuntimeException(\sprintf('Unable to get files with ids: %s', \implode(', ', $ids)), null, $t);
 		}
 	}
 

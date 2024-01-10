@@ -13,17 +13,28 @@ declare(strict_types=1);
 
 return [
 	/**
-	 * the uri format you want for file access must use/provide.
+	 * File uri path format.
+	 *
+	 * All available parameters:
+	 * - oz_file_id
+	 * - oz_file_auth_key
+	 * - oz_file_auth_ref
+	 * - oz_file_name
+	 * - oz_file_extension
+	 * - oz_file_filters
+	 *
+	 * the uri format you want for file access must use.
 	 *
 	 *  oz_file_id
 	 *  oz_file_auth_key
+	 *  oz_file_auth_ref (Required to create scoped access, so may be in optional part)
 	 *
 	 * eg:
 	 *  /files/ozone-7000000000-fe5017db3a4b07eb5297c745ba198355-thumb.png
 	 *  /files/ozone-7000000000-fe5017db3a4b07eb5297c745ba198355-thumb
 	 *  /files/ozone-7000000000-eaabf4cdc3f909a61be62e1fa4d231ed-fe5017db3a4b07eb5297c745ba198355-thumb
 	 */
-	'OZ_GET_FILE_URI_PATH_FORMAT'         => '/files/ozone-{oz_file_id}[-{oz_file_auth_ref}]-{oz_file_auth_key}[-{oz_file_filter}][.{oz_file_extension}]',
+	'OZ_GET_FILE_URI_PATH_FORMAT'         => '/files/ozone-{oz_file_id}[-{oz_file_auth_ref}]-{oz_file_auth_key}[-{oz_file_filters}][.{oz_file_extension}]',
 
 	/**
 	 * when user download a file should we

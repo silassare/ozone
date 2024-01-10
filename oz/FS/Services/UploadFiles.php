@@ -60,10 +60,12 @@ class UploadFiles extends Service
 
 		$this->saveUploadedFilesIds($ref, $files_ids);
 
+		$files = FS::getFilesByIDs($files_ids);
+
 		$this->json()
 			->setDone()
-			->setDataKey(self::PARAM_FILES, $files_ids)
-			->setDataKey(self::PARAM_REF, $ref);
+			->setDataKey(self::PARAM_REF, $ref)
+			->setDataKey(self::PARAM_FILES, \iterator_to_array($files));
 	}
 
 	public function uploadChunkStart(RouteInfo $r): void
@@ -185,7 +187,7 @@ class UploadFiles extends Service
 
 			$this->saveUploadedFilesIds($ref, [$file_id]);
 
-			$this->json()->setDataKey('file_id', $file_id);
+			$this->json()->setDataKey(self::PARAM_FILES, [$target_file]);
 
 			return;
 		}

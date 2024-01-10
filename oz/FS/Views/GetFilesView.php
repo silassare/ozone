@@ -46,7 +46,7 @@ class GetFilesView extends WebView
 				'oz_file_id'        => '[0-9]+',
 				'oz_file_auth_ref'  => '[a-z0-9]{32,}',
 				'oz_file_auth_key'  => '[a-z0-9]{32,}',
-				'oz_file_filter'    => '[a-z0-9]+',
+				'oz_file_filters'   => '[a-z0-9~]+',
 				'oz_file_extension' => '[a-z0-9]{1,10}',
 			]);
 	}
@@ -66,7 +66,8 @@ class GetFilesView extends WebView
 		$req_file_id       = $ri->param('oz_file_id');
 		$req_file_auth_key = $ri->param('oz_file_auth_key');
 		$req_file_auth_ref = $ri->param('oz_file_auth_ref');
-		$req_file_filter   = $ri->param('oz_file_filter');
+		$req_file_filters  = $ri->param('oz_file_filters');
+		$req_file_name     = $ri->param('oz_file_name');
 		$req_file_ext      = $ri->param('oz_file_extension');
 
 		$file = FS::getFileByID($req_file_id);
@@ -86,14 +87,21 @@ class GetFilesView extends WebView
 			throw new NotFoundException();
 		}
 
+		// when the request provide a name and the name
+		// does not match the file name
+		// we just return a not found
+		if ($req_file_name && $req_file_name !== $file->getName()) {
+			throw new NotFoundException();
+		}
+
 		FileAccess::check($file, $ri, $req_file_auth_key, $req_file_auth_ref);
 
 		$driver = FS::getStorage($file->getStorage());
 
 		$response = $context->getResponse();
 
-		if ($req_file_filter) {
-			$response = self::applyFilter($response, $driver->getStream($file), $req_file_filter);
+		if ($req_file_filters) {
+			$response = self::applyFilters($response, $driver->getStream($file), $req_file_filters);
 		} else {
 			$response = $driver->serve($file, $response);
 
@@ -106,9 +114,19 @@ class GetFilesView extends WebView
 		return $response;
 	}
 
-	private static function applyFilter(Response $response, FileStream $file, string $filter): Response
+	/**
+	 * Should apply filters to the file.
+	 *
+	 * @param Response   $response The request response object
+	 * @param FileStream $file     The file stream
+	 * @param string     $filters  The filters to apply
+	 *
+	 * @return Response
+	 */
+	private static function applyFilters(Response $response, FileStream $file, string $filters): Response
 	{
 		/** @see \OZONE\Core\FS\FilesServer::serve() */
+		$filters_list = \explode(FS::FILTERS_SEPARATOR, $filters);
 
 		return $response;
 	}
