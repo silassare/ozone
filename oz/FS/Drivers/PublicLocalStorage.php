@@ -17,7 +17,7 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\FilesManager;
-use OZONE\Core\FS\Views\GetFilesView;
+use OZONE\Core\FS\FS;
 use OZONE\Core\Http\Uri;
 
 /**
@@ -43,10 +43,7 @@ final class PublicLocalStorage extends AbstractLocalStorage
 		$allow_direct_access = (bool) Settings::get('oz.files', 'OZ_PUBLIC_URI_DIRECT_ACCESS_ENABLED');
 
 		if (!$allow_direct_access) {
-			return $context->buildRouteUri(GetFilesView::MAIN_ROUTE, [
-				'oz_file_id'       => $file->getID(),
-				'oz_file_auth_key' => $file->getKey(),
-			]);
+			return FS::buildFileUri($context, $file);
 		}
 
 		$relative_path = app()->getPublicFilesDir()->relativePath($abs_path);

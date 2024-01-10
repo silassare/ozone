@@ -14,13 +14,17 @@ declare(strict_types=1);
 namespace OZONE\Core\FS;
 
 use InvalidArgumentException;
+use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Interfaces\AuthCredentialsInterface;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Db\OZFilesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Interfaces\StorageInterface;
+use OZONE\Core\FS\Views\GetFilesView;
 use OZONE\Core\Http\UploadedFile;
+use OZONE\Core\Http\Uri;
 use OZONE\Core\Utils\Hasher;
 use OZONE\Core\Utils\Random;
 use PHPUtils\Str;
@@ -41,9 +45,10 @@ class FS
 	 */
 	public const DEFAULT_FILE_EXTENSION = 'ext';
 
-	public const DEFAULT_STORAGE = 'default';
-	public const PUBLIC_STORAGE  = 'public';
-	public const PRIVATE_STORAGE = 'private';
+	public const DEFAULT_STORAGE   = 'default';
+	public const PUBLIC_STORAGE    = 'public';
+	public const PRIVATE_STORAGE   = 'private';
+	public const FILTERS_SEPARATOR = '~';
 
 	/**
 	 * Gets extension from a file with a given file name and expected mime type.
@@ -435,5 +440,40 @@ class FS
 		}
 
 		return false;
+	}
+
+	/**
+	 * Builds a file uri.
+	 *
+	 * @param Context                       $context
+	 * @param OZFile                        $file
+	 * @param null|AuthCredentialsInterface $credentials
+	 * @param string[]                      $filters
+	 *
+	 * @return Uri
+	 */
+	public static function buildFileUri(
+		Context $context,
+		OZFile $file,
+		?AuthCredentialsInterface $credentials = null,
+		?array $filters = []
+	): Uri {
+		$params = [
+			'oz_file_id'        => $file->getID(),
+			'oz_file_auth_key'  => $file->getKey(),
+			'oz_file_name'      => $file->getName(),
+			'oz_file_extension' => $file->getExtension(),
+		];
+
+		if (!empty($filters)) {
+			$params['oz_file_filters'] = \implode(self::FILTERS_SEPARATOR, $filters);
+		}
+
+		if ($credentials) {
+			$params['oz_file_auth_key'] = $credentials->getToken();
+			$params['oz_file_auth_ref'] = $credentials->getReference();
+		}
+
+		return $context->buildRouteUri(GetFilesView::MAIN_ROUTE, $params);
 	}
 }

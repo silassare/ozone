@@ -22,7 +22,6 @@ use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Interfaces\StorageInterface;
-use OZONE\Core\FS\Views\GetFilesView;
 use OZONE\Core\Http\Body;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\UploadedFile;
@@ -164,11 +163,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 		$credentials = $provider->getCredentials();
 
-		return $context->buildRouteUri(GetFilesView::MAIN_ROUTE, [
-			'oz_file_id'       => $file->getID(),
-			'oz_file_auth_key' => $credentials->getToken(),
-			'oz_file_auth_ref' => $credentials->getReference(),
-		]);
+		return FS::buildFileUri($context, $file, $credentials);
 	}
 
 	/**
