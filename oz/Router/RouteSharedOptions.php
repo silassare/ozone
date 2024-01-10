@@ -570,6 +570,7 @@ class RouteSharedOptions
 		}
 
 		\set_error_handler(static function (): void {}, \E_WARNING);
+		$pattern    = \preg_quote($pattern, Route::REG_DELIMITER);
 		$is_invalid = false === \preg_match(Route::REG_DELIMITER . $pattern . Route::REG_DELIMITER, '');
 		$reason     = \preg_last_error_msg();
 		\restore_error_handler();
