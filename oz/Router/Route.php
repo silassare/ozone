@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router;
 
-use InvalidArgumentException;
 use OZONE\Core\App\Context;
 
 /**
@@ -23,7 +22,7 @@ final class Route
 {
 	public const DEFAULT_PARAM_PATTERN = '[^/]+';
 	public const REG_DELIMITER         = '~';
-	public const ROUTE_PARAM_REG       = '~^[a-z_][a-z0-9_]*$~';
+	public const ROUTE_PARAM_REG       = '~^[a-zA-Z_][a-zA-Z0-9_]*$~';
 
 	/**
 	 * @var callable
@@ -32,7 +31,7 @@ final class Route
 
 	private bool $parsed = false;
 	private string $parser_result;
-	private array $params = [];
+	private array $params_found = [];
 
 	/**
 	 * Route constructor.
@@ -71,8 +70,8 @@ final class Route
 		$path = $this->options->getPath();
 
 		return \str_contains($path, '{')
-			   || \str_contains($path, ':')
-			   || \str_contains($path, '[');
+			|| \str_contains($path, ':')
+			|| \str_contains($path, '[');
 	}
 
 	/**
@@ -90,9 +89,7 @@ final class Route
 			return $path;
 		}
 
-		$this->ensureParsed();
-
-		return $this->pathBuilder($context, $path, $params);
+		return (new RoutePathParser($path, $this->router))->buildPath($context, $params);
 	}
 
 	/**
@@ -170,7 +167,7 @@ final class Route
 	{
 		$this->ensureParsed();
 
-		return $this->params;
+		return $this->params_found;
 	}
 
 	/**
@@ -201,18 +198,6 @@ final class Route
 	}
 
 	/**
-	 * Checks if a parameter is valid.
-	 *
-	 * @param $str
-	 *
-	 * @return bool
-	 */
-	public static function isValidParameter($str): bool
-	{
-		return 1 === \preg_match(self::ROUTE_PARAM_REG, $str);
-	}
-
-	/**
 	 * This will lazily parse the route path.
 	 */
 	private function ensureParsed(): void
@@ -220,269 +205,16 @@ final class Route
 		if (!$this->parsed) {
 			$path = $this->options->getPath();
 			if ($this->isDynamic()) {
-				$params              = [];
+				$params_found        = [];
 				$declared_params     = \array_merge($this->router->getGlobalParams(), $this->options->getParams());
-				$this->parser_result = self::parse($path, $declared_params, $params);
-				$this->params        = \array_keys($params);
+				$parser              = new RoutePathParser($path, $this->router);
+				$this->parser_result = $parser->parse($path, $declared_params, $params_found);
+				$this->params_found  = \array_keys($params_found);
 			} else {
 				$this->parser_result = $path;
 			}
 
 			$this->parsed = true;
 		}
-	}
-
-	/**
-	 * Builds dynamic path.
-	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param string                  $route
-	 * @param array                   $params
-	 * @param null|string             $original_route
-	 *
-	 * @return string
-	 */
-	private function pathBuilder(
-		Context $context,
-		string $route,
-		array $params = [],
-		?string $original_route = null
-	): string {
-		$len            = \strlen($route);
-		$original_route = $original_route ?? $route;
-		$path           = '';
-		$cursor         = 0;
-
-		while ($cursor < $len) {
-			$c = $route[$cursor];
-
-			if ('{' === $c || ':' === $c) {
-				if ('{' === $c) {
-					$name = self::searchUntilCloseTag('{', '}', $route, $cursor + 1, $cursor, false);
-				} else {
-					$name   = self::searchWhile($route, $cursor + 1, [self::class, 'isValidParameter']);
-					$cursor += \strlen($name);
-				}
-
-				$required = ($route === $original_route ? 1 : 0);
-
-				if (isset($params[$name])) {
-					$path .= $params[$name];
-				} else {
-					$value = $this->router->getGlobalParamValue($context, $name);
-
-					if (null !== $value) {
-						$path .= $value;
-					} elseif ($required) {
-						throw new InvalidArgumentException(\sprintf(
-							'Missing required parameter value: %s',
-							$name
-						));
-					} else {
-						// we are in optional part and
-						// there is missing param value
-						// so we ignore the optional part
-						return '';
-					}
-				}
-			} elseif ('[' === $c) {
-				$optional = self::searchUntilCloseTag('[', ']', $route, $cursor + 1, $cursor, true);
-
-				if ('' === $optional) {
-					throw new InvalidArgumentException(\sprintf(
-						'Optional part should not be empty: %s',
-						$original_route
-					));
-				}
-
-				$path .= $this->pathBuilder($context, $optional, $params, $original_route);
-			} else {
-				$path .= $c;
-			}
-
-			++$cursor;
-		}
-
-		return $path;
-	}
-
-	/**
-	 * Dynamic route parser.
-	 *
-	 * @param string      $route_path
-	 * @param array       $declared_params
-	 * @param array       &$params_found
-	 * @param null|string $original_route
-	 *
-	 * @return string
-	 */
-	private static function parse(
-		string $route_path,
-		array $declared_params = [],
-		array &$params_found = [],
-		?string $original_route = null
-	): string {
-		$len            = \strlen($route_path);
-		$original_route = $original_route ?? $route_path;
-		$pattern        = '';
-		$cursor         = 0;
-
-		while ($cursor < $len) {
-			$c = $route_path[$cursor];
-
-			if ('{' === $c || ':' === $c) {
-				if ('{' === $c) {
-					$name = self::searchUntilCloseTag('{', '}', $route_path, $cursor + 1, $cursor, false);
-				} else {
-					$name   = self::searchWhile($route_path, $cursor + 1, [self::class, 'isValidParameter']);
-					$cursor += \strlen($name);
-				}
-
-				if ('' === $name) {
-					throw new InvalidArgumentException(\sprintf(
-						'Route parameter name should not be empty: %s',
-						$original_route
-					));
-				}
-
-				if (!\preg_match(self::ROUTE_PARAM_REG, $name)) {
-					throw new InvalidArgumentException(\sprintf(
-						'Route parameter name contains invalid characters: %s -> %s',
-						$name,
-						$original_route
-					));
-				}
-
-				if (\array_key_exists($name, $params_found)) {
-					throw new InvalidArgumentException(\sprintf(
-						'Route parameter name duplicated: %s -> %s',
-						$name,
-						$original_route
-					));
-				}
-
-				$param_pattern = $declared_params[$name] ?? self::DEFAULT_PARAM_PATTERN;
-
-				// use (?P<name> insteadof (?<name> for backward compatibility
-				$pattern .= "(?P<{$name}>{$param_pattern})";
-				$required            = ($route_path === $original_route ? 1 : 0);
-				$params_found[$name] = $required;
-			} elseif ('[' === $c) {
-				$optional = self::searchUntilCloseTag('[', ']', $route_path, $cursor + 1, $cursor, true);
-
-				if ('' === $optional) {
-					throw new InvalidArgumentException(\sprintf(
-						'Optional part should not be empty: %s',
-						$original_route
-					));
-				}
-
-				$optional_reg = self::parse($optional, $declared_params, $params_found, $original_route);
-				$pattern .= '(?:' . $optional_reg . ')?';
-			} else {
-				$pattern .= \preg_quote($c, self::REG_DELIMITER);
-			}
-
-			++$cursor;
-		}
-
-		return $pattern;
-	}
-
-	/**
-	 * Search for close tag.
-	 *
-	 * @param string $open      open tag
-	 * @param string $close     close tag
-	 * @param string $string    string to search in
-	 * @param int    $from      start index
-	 * @param int    $found_at  found index
-	 * @param bool   $go_deeply go deeply
-	 *
-	 * @return string
-	 */
-	private static function searchUntilCloseTag(
-		string $open,
-		string $close,
-		string $string,
-		int $from,
-		int &$found_at,
-		bool $go_deeply
-	): string {
-		$found       = false;
-		$accumulator = '';
-		$cursor      = $from;
-		$len         = \strlen($string);
-		$stack       = 0;
-
-		while ($cursor < $len) {
-			$c = $string[$cursor];
-
-			if ($c === $open) {
-				if ($go_deeply) {
-					++$stack;
-				} else {
-					throw new InvalidArgumentException(\sprintf(
-						'The open tag "%s" at index %s was not closed before opening new tag at index %s',
-						$open,
-						$from - 1,
-						$cursor
-					));
-				}
-			}
-
-			if ($c === $close) {
-				if ($stack) {
-					--$stack;
-				} else {
-					$found    = true;
-					$found_at = $cursor;
-
-					break;
-				}
-			}
-
-			$accumulator .= $c;
-			++$cursor;
-		}
-
-		if (false === $found) {
-			throw new InvalidArgumentException(\sprintf(
-				'Unexpected end of string missing close tag "%s" at the end of "%s"',
-				$close,
-				$string
-			));
-		}
-
-		return $accumulator;
-	}
-
-	/**
-	 * Search while a given callable return true.
-	 *
-	 * @param string   $string    the string to search in
-	 * @param int      $from      the index to start searching from
-	 * @param callable $predicate the predicate function
-	 *
-	 * @return string
-	 */
-	private static function searchWhile(string $string, int $from, callable $predicate): string
-	{
-		$accumulator = '';
-		$cursor      = $from;
-		$len         = \strlen($string);
-
-		while ($cursor < $len) {
-			$char = $string[$cursor];
-
-			if (!$predicate($accumulator . $char)) {
-				break;
-			}
-
-			$accumulator .= $char;
-			++$cursor;
-		}
-
-		return $accumulator;
 	}
 }
