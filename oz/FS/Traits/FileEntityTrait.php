@@ -137,7 +137,6 @@ trait FileEntityTrait
 	{
 		$arr = parent::toArray($hide_sensitive_data);
 
-		$arr[self::COL_KEY] = '';
 		$arr[self::COL_REF] = '';
 
 		return $arr;
