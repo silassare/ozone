@@ -46,7 +46,7 @@ class GetFilesView extends WebView
 				'oz_file_id'        => '[0-9]+',
 				'oz_file_auth_ref'  => '[a-z0-9]{32,}',
 				'oz_file_auth_key'  => '[a-z0-9]{32,}',
-				'oz_file_filters'   => '[a-z0-9~]+',
+				'oz_file_filters'   => '[a-z0-9\~]+',
 				'oz_file_extension' => '[a-z0-9]{1,10}',
 			]);
 	}
