@@ -25,6 +25,7 @@ namespace OZONE\Core\Db\Base;
  * @property string                        $mime        Getter for column `oz_files`.`mime`.
  * @property string                        $extension   Getter for column `oz_files`.`extension`.
  * @property string                        $name        Getter for column `oz_files`.`name`.
+ * @property string                        $real_name   Getter for column `oz_files`.`real_name`.
  * @property null|string                   $for_id      Getter for column `oz_files`.`for_id`.
  * @property null|string                   $for_type    Getter for column `oz_files`.`for_type`.
  * @property string                        $for_label   Getter for column `oz_files`.`for_label`.
@@ -51,6 +52,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	public const COL_MIME        = 'file_mime';
 	public const COL_EXTENSION   = 'file_extension';
 	public const COL_NAME        = 'file_name';
+	public const COL_REAL_NAME   = 'file_real_name';
 	public const COL_FOR_ID      = 'file_for_id';
 	public const COL_FOR_TYPE    = 'file_for_type';
 	public const COL_FOR_LABEL   = 'file_for_label';
@@ -351,6 +353,30 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	public function setName(string $name): static
 	{
 		$this->name = $name;
+
+		return $this;
+	}
+
+	/**
+	 * Getter for column `oz_files`.`real_name`.
+	 *
+	 * @return string
+	 */
+	public function getRealName(): string
+	{
+		return $this->real_name;
+	}
+
+	/**
+	 * Setter for column `oz_files`.`real_name`.
+	 *
+	 * @param string $real_name
+	 *
+	 * @return static
+	 */
+	public function setRealName(string $real_name): static
+	{
+		$this->real_name = $real_name;
 
 		return $this;
 	}

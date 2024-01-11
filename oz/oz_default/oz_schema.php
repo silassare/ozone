@@ -137,6 +137,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->string('mime')->max(60);
 		$tb->string('extension')->max(20);
 		$tb->string('name')->max(100)->truncate();
+		$tb->string('real_name')->max(100)->truncate();
 		// this is a morph field: user_id
 		// ex:
 		// 	- user have an avatar/profile pic

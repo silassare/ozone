@@ -106,7 +106,7 @@ class GetFilesView extends WebView
 			$response = $driver->serve($file, $response);
 
 			if (Settings::get('oz.files', 'OZ_GET_FILE_SHOW_REAL_NAME')) {
-				$filename = $file->getName();
+				$filename = $file->getRealName();
 				$response = $response->withHeader('Content-Disposition', "attachment; filename=\"{$filename}\";");
 			}
 		}

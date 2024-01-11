@@ -108,6 +108,16 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereNameIsNotLike(string $value)                           Filters rows with `not_like` condition on column `oz_files`.`name`.
  * @method $this whereNameIsIn(array $value)                                 Filters rows with `in` condition on column `oz_files`.`name`.
  * @method $this whereNameIsNotIn(array $value)                              Filters rows with `not_in` condition on column `oz_files`.`name`.
+ * @method $this whereRealNameIs(string $value)                              Filters rows with `eq` condition on column `oz_files`.`real_name`.
+ * @method $this whereRealNameIsNot(string $value)                           Filters rows with `neq` condition on column `oz_files`.`real_name`.
+ * @method $this whereRealNameIsLt(string $value)                            Filters rows with `lt` condition on column `oz_files`.`real_name`.
+ * @method $this whereRealNameIsLte(string $value)                           Filters rows with `lte` condition on column `oz_files`.`real_name`.
+ * @method $this whereRealNameIsGt(string $value)                            Filters rows with `gt` condition on column `oz_files`.`real_name`.
+ * @method $this whereRealNameIsGte(string $value)                           Filters rows with `gte` condition on column `oz_files`.`real_name`.
+ * @method $this whereRealNameIsLike(string $value)                          Filters rows with `like` condition on column `oz_files`.`real_name`.
+ * @method $this whereRealNameIsNotLike(string $value)                       Filters rows with `not_like` condition on column `oz_files`.`real_name`.
+ * @method $this whereRealNameIsIn(array $value)                             Filters rows with `in` condition on column `oz_files`.`real_name`.
+ * @method $this whereRealNameIsNotIn(array $value)                          Filters rows with `not_in` condition on column `oz_files`.`real_name`.
  * @method $this whereForIdIs(string $value)                                 Filters rows with `eq` condition on column `oz_files`.`for_id`.
  * @method $this whereForIdIsNot(string $value)                              Filters rows with `neq` condition on column `oz_files`.`for_id`.
  * @method $this whereForIdIsLt(string $value)                               Filters rows with `lt` condition on column `oz_files`.`for_id`.

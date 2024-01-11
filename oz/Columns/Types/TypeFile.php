@@ -596,7 +596,8 @@ class TypeFile extends Type
 	 */
 	protected function checkOZFile(OZFile $file): void
 	{
-		$debug['file_name'] = $file->getName();
+		$debug['file_real_name'] = $file->getRealName();
+		$debug['file_name']      = $file->getName();
 
 		if (!$this->checkFileSize($file->getSize())) {
 			$debug['min'] = $this->getOption('file_min_size');

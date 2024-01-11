@@ -79,7 +79,7 @@ class PPicUtils
 		// because crop zone coordinates may be different from a clone to another
 
 		$user_dir          = FS::getUserRootDirectory($this->uid);
-		$gen_info          = FS::genNewFileInfo($user_dir, $clone->getName(), $clone->getMime());
+		$gen_info          = FS::genNewFileInfo($user_dir, $clone->getRealName(), $clone->getMime());
 		$thumb_destination = $gen_info['thumbnail'];
 
 		$this->makeProfilePic($clone, $thumb_destination, $coordinate);
