@@ -23,7 +23,7 @@ use OZONE\Core\Columns\Types\TypeGender;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Columns\Types\TypeUserName;
 use OZONE\Core\Columns\TypeUtils;
-use OZONE\Core\FS\Enums\FileType;
+use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
 
@@ -133,7 +133,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->string('ref')->min(1)->max(255);
 		$tb->string('storage')->min(1)->max(128);
 		$tb->int('size')->unsigned();
-		$tb->enum('type', FileType::class);
+		$tb->enum('kind', FileKind::class);
 		$tb->string('mime')->max(60);
 		$tb->string('extension')->max(20);
 		$tb->string('name')->max(100)->truncate();

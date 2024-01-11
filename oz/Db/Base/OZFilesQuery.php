@@ -68,16 +68,16 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereSizeIsNotLike(string $value)                           Filters rows with `not_like` condition on column `oz_files`.`size`.
  * @method $this whereSizeIsIn(array $value)                                 Filters rows with `in` condition on column `oz_files`.`size`.
  * @method $this whereSizeIsNotIn(array $value)                              Filters rows with `not_in` condition on column `oz_files`.`size`.
- * @method $this whereTypeIs(\OZONE\Core\FS\Enums\FileType|string $value)    Filters rows with `eq` condition on column `oz_files`.`type`.
- * @method $this whereTypeIsNot(\OZONE\Core\FS\Enums\FileType|string $value) Filters rows with `neq` condition on column `oz_files`.`type`.
- * @method $this whereTypeIsLt(\OZONE\Core\FS\Enums\FileType|string $value)  Filters rows with `lt` condition on column `oz_files`.`type`.
- * @method $this whereTypeIsLte(\OZONE\Core\FS\Enums\FileType|string $value) Filters rows with `lte` condition on column `oz_files`.`type`.
- * @method $this whereTypeIsGt(\OZONE\Core\FS\Enums\FileType|string $value)  Filters rows with `gt` condition on column `oz_files`.`type`.
- * @method $this whereTypeIsGte(\OZONE\Core\FS\Enums\FileType|string $value) Filters rows with `gte` condition on column `oz_files`.`type`.
- * @method $this whereTypeIsLike(string $value)                              Filters rows with `like` condition on column `oz_files`.`type`.
- * @method $this whereTypeIsNotLike(string $value)                           Filters rows with `not_like` condition on column `oz_files`.`type`.
- * @method $this whereTypeIsIn(array $value)                                 Filters rows with `in` condition on column `oz_files`.`type`.
- * @method $this whereTypeIsNotIn(array $value)                              Filters rows with `not_in` condition on column `oz_files`.`type`.
+ * @method $this whereKindIs(\OZONE\Core\FS\Enums\FileKind|string $value)    Filters rows with `eq` condition on column `oz_files`.`kind`.
+ * @method $this whereKindIsNot(\OZONE\Core\FS\Enums\FileKind|string $value) Filters rows with `neq` condition on column `oz_files`.`kind`.
+ * @method $this whereKindIsLt(\OZONE\Core\FS\Enums\FileKind|string $value)  Filters rows with `lt` condition on column `oz_files`.`kind`.
+ * @method $this whereKindIsLte(\OZONE\Core\FS\Enums\FileKind|string $value) Filters rows with `lte` condition on column `oz_files`.`kind`.
+ * @method $this whereKindIsGt(\OZONE\Core\FS\Enums\FileKind|string $value)  Filters rows with `gt` condition on column `oz_files`.`kind`.
+ * @method $this whereKindIsGte(\OZONE\Core\FS\Enums\FileKind|string $value) Filters rows with `gte` condition on column `oz_files`.`kind`.
+ * @method $this whereKindIsLike(string $value)                              Filters rows with `like` condition on column `oz_files`.`kind`.
+ * @method $this whereKindIsNotLike(string $value)                           Filters rows with `not_like` condition on column `oz_files`.`kind`.
+ * @method $this whereKindIsIn(array $value)                                 Filters rows with `in` condition on column `oz_files`.`kind`.
+ * @method $this whereKindIsNotIn(array $value)                              Filters rows with `not_in` condition on column `oz_files`.`kind`.
  * @method $this whereMimeIs(string $value)                                  Filters rows with `eq` condition on column `oz_files`.`mime`.
  * @method $this whereMimeIsNot(string $value)                               Filters rows with `neq` condition on column `oz_files`.`mime`.
  * @method $this whereMimeIsLt(string $value)                                Filters rows with `lt` condition on column `oz_files`.`mime`.

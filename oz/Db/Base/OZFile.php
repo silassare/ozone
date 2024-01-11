@@ -21,7 +21,7 @@ namespace OZONE\Core\Db\Base;
  * @property string                        $ref         Getter for column `oz_files`.`ref`.
  * @property string                        $storage     Getter for column `oz_files`.`storage`.
  * @property int                           $size        Getter for column `oz_files`.`size`.
- * @property \OZONE\Core\FS\Enums\FileType $type        Getter for column `oz_files`.`type`.
+ * @property \OZONE\Core\FS\Enums\FileKind $kind        Getter for column `oz_files`.`kind`.
  * @property string                        $mime        Getter for column `oz_files`.`mime`.
  * @property string                        $extension   Getter for column `oz_files`.`extension`.
  * @property string                        $name        Getter for column `oz_files`.`name`.
@@ -48,7 +48,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	public const COL_REF         = 'file_ref';
 	public const COL_STORAGE     = 'file_storage';
 	public const COL_SIZE        = 'file_size';
-	public const COL_TYPE        = 'file_type';
+	public const COL_KIND        = 'file_kind';
 	public const COL_MIME        = 'file_mime';
 	public const COL_EXTENSION   = 'file_extension';
 	public const COL_NAME        = 'file_name';
@@ -262,25 +262,25 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	}
 
 	/**
-	 * Getter for column `oz_files`.`type`.
+	 * Getter for column `oz_files`.`kind`.
 	 *
-	 * @return \OZONE\Core\FS\Enums\FileType
+	 * @return \OZONE\Core\FS\Enums\FileKind
 	 */
-	public function getType(): \OZONE\Core\FS\Enums\FileType
+	public function getKind(): \OZONE\Core\FS\Enums\FileKind
 	{
-		return $this->type;
+		return $this->kind;
 	}
 
 	/**
-	 * Setter for column `oz_files`.`type`.
+	 * Setter for column `oz_files`.`kind`.
 	 *
-	 * @param \OZONE\Core\FS\Enums\FileType|string $type
+	 * @param \OZONE\Core\FS\Enums\FileKind|string $kind
 	 *
 	 * @return static
 	 */
-	public function setType(\OZONE\Core\FS\Enums\FileType|string $type): static
+	public function setKind(\OZONE\Core\FS\Enums\FileKind|string $kind): static
 	{
-		$this->type = $type;
+		$this->kind = $kind;
 
 		return $this;
 	}

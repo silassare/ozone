@@ -15,7 +15,7 @@ namespace OZONE\Core\FS\Traits;
 
 use OZONE\Core\App\Keys;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\FS\Enums\FileType;
+use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\Router\Guards;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 
@@ -36,7 +36,7 @@ trait FileEntityTrait
 		$mime = $this->getMime();
 
 		if ($mime) {
-			$this->setType(FileType::fromMime($mime));
+			$this->setKind(FileKind::fromMime($mime));
 		}
 
 		return parent::save();

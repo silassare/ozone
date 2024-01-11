@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Core\FS\Enums;
 
 /**
- * Class FileType.
+ * Class FileKind.
  */
-enum FileType: string
+enum FileKind: string
 {
 	case IMAGE    = 'image';
 	case AUDIO    = 'audio';
@@ -25,13 +25,13 @@ enum FileType: string
 	case OTHER    = 'other';
 
 	/**
-	 * Gets the file type from a given mime type.
+	 * Gets the file kind from a given mime type.
 	 *
 	 * @param string $mime the mime type
 	 *
-	 * @return FileType
+	 * @return FileKind
 	 */
-	public static function fromMime(string $mime): FileType
+	public static function fromMime(string $mime): FileKind
 	{
 		$mime = \strtolower($mime);
 
