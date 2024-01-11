@@ -67,23 +67,24 @@ abstract class AbstractLocalStorage implements StorageInterface
 		}
 
 		$filename = \trim($upload->getClientFilename());
-		$mimetype = $upload->getSafeMediaType();
+		$mimetype = $upload->getCleanMediaType();
 
-		$safe_name = $upload->getSafeFileName();
-		$ext       = FS::getRealExtension($safe_name, $mimetype);
+		$clean_name = $upload->getCleanFileName();
+		$ext        = FS::getRealExtension($clean_name, $mimetype);
 
 		if (empty($filename)) {
-			$filename = $safe_name;
+			$filename = $clean_name;
 		}
 
-		$destination = $this->createDestinationPath($safe_name, $ref);
+		$destination = $this->createDestinationPath($clean_name, $ref);
 
 		$upload->moveTo($destination);
 
 		$filesize = \filesize($destination);
 
 		$f = new OZFile();
-		$f->setName($filename)
+		$f->setName($clean_name)
+			->setRealName($filename)
 			->setRef($ref)
 			->setStorage($this->name)
 			->setMime($mimetype)
@@ -119,7 +120,8 @@ abstract class AbstractLocalStorage implements StorageInterface
 		$filesize = \filesize($destination);
 
 		$f = new OZFile();
-		$f->setName($filename)
+		$f->setName($clean_name)
+			->setRealName($filename)
 			->setRef($ref)
 			->setStorage($this->name)
 			->setMime($mimetype)

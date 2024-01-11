@@ -488,7 +488,7 @@ class TypeFile extends Type
 		$list = [];
 
 		foreach ($uploaded_files as $upload) {
-			$name = $upload->getSafeFileName();
+			$name = $upload->getCleanFileName();
 			$path = $tmp_fs_dir->resolve($name);
 
 			$upload->moveTo($path);
@@ -576,13 +576,13 @@ class TypeFile extends Type
 		}
 
 		$client_media = $upload->getClientMediaType();
-		$safe_media   = $upload->getSafeMediaType();
+		$clean_media  = $upload->getCleanMediaType();
 
 		if (!$this->checkFileMime($client_media)) {
 			throw new TypesInvalidValueException('OZ_FILE_MIME_INVALID', $debug);
 		}
 
-		if ($client_media !== $safe_media && !$this->checkFileMime($safe_media)) {
+		if ($client_media !== $clean_media && !$this->checkFileMime($clean_media)) {
 			throw new TypesInvalidValueException('OZ_FILE_MIME_INVALID', $debug);
 		}
 	}

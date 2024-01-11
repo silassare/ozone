@@ -208,7 +208,7 @@ class UploadedFile implements UploadedFileInterface
 	 *
 	 * @return string
 	 */
-	public function getSafeMediaType(): string
+	public function getCleanMediaType(): string
 	{
 		return $this->clean_type;
 	}
@@ -218,7 +218,7 @@ class UploadedFile implements UploadedFileInterface
 	 *
 	 * @return string
 	 */
-	public function getSafeFileName(): string
+	public function getCleanFileName(): string
 	{
 		return $this->clean_name;
 	}
