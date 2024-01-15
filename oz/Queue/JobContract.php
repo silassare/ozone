@@ -20,7 +20,7 @@ use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 /**
  * Class JobContract.
  */
-class JobContract extends Job implements Interfaces\JobContractInterface
+class JobContract extends Job implements JobContractInterface
 {
 	/**
 	 * JobContract constructor.
