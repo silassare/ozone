@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cmd;
 
 use JsonException;
+use Kli\Exceptions\KliException;
 use Kli\Exceptions\KliInputException;
 use Kli\KliArgs;
 use OLIUP\CG\PHPClass;
@@ -38,7 +39,7 @@ final class ProjectCmd extends Command
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	protected function describe(): void
 	{
@@ -122,9 +123,9 @@ final class ProjectCmd extends Command
 	/**
 	 * Serve project.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	private function serve(
 		KliArgs $args
@@ -175,10 +176,10 @@ final class ProjectCmd extends Command
 	/**
 	 * Creates project backup.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException
-	 * @throws \Kli\Exceptions\KliInputException
+	 * @throws KliException
+	 * @throws KliInputException
 	 */
 	private function backup(KliArgs $args): void
 	{
@@ -213,10 +214,10 @@ final class ProjectCmd extends Command
 	/**
 	 * Creates new project.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
 	 * @throws JsonException
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	private function create(KliArgs $args): void
 	{

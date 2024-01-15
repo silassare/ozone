@@ -36,10 +36,10 @@ final class Route
 	/**
 	 * Route constructor.
 	 *
-	 * @param \OZONE\Core\Router\Router       $router
-	 * @param array                           $methods
-	 * @param callable                        $callable
-	 * @param \OZONE\Core\Router\RouteOptions $options
+	 * @param Router       $router
+	 * @param array        $methods
+	 * @param callable     $callable
+	 * @param RouteOptions $options
 	 */
 	public function __construct(
 		private readonly Router $router,
@@ -77,8 +77,8 @@ final class Route
 	/**
 	 * Builds the route path with given parameters values.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param array                   $params
+	 * @param Context $context
+	 * @param array   $params
 	 *
 	 * @return string
 	 */
@@ -117,7 +117,7 @@ final class Route
 	/**
 	 * Returns the route options.
 	 *
-	 * @return \OZONE\Core\Router\RouteOptions
+	 * @return RouteOptions
 	 */
 	public function getOptions(): RouteOptions
 	{

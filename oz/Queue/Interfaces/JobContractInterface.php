@@ -33,7 +33,7 @@ interface JobContractInterface extends JobInterface
 	 *
 	 * @param string $tracking_code
 	 *
-	 * @return \OZONE\Core\Queue\Interfaces\JobContractInterface
+	 * @return JobContractInterface
 	 */
 	public static function fromTrackingCode(string $tracking_code): self;
 

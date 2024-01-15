@@ -41,7 +41,7 @@ abstract class Service implements RouteProviderInterface
 	/**
 	 * Gets the context.
 	 *
-	 * @return \OZONE\Core\App\Context
+	 * @return Context
 	 */
 	public function getContext(): Context
 	{
@@ -51,7 +51,7 @@ abstract class Service implements RouteProviderInterface
 	/**
 	 * Gets the service json response.
 	 *
-	 * @return \OZONE\Core\App\JSONResponse
+	 * @return JSONResponse
 	 */
 	public function json(): JSONResponse
 	{
@@ -61,7 +61,7 @@ abstract class Service implements RouteProviderInterface
 	/**
 	 * Return service response.
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function respond(): Response
 	{

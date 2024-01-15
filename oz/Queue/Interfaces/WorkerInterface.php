@@ -28,7 +28,7 @@ interface WorkerInterface
 	/**
 	 * Instructs the worker to do the job.
 	 *
-	 * @param \OZONE\Core\Queue\Interfaces\JobContractInterface $job_contract
+	 * @param JobContractInterface $job_contract
 	 *
 	 * @return $this
 	 */

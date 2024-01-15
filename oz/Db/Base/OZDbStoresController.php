@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMController;
+use OZONE\Core\Db\OZDbStore;
+use OZONE\Core\Db\OZDbStoresController as OZDbStoresControllerReal;
+
 /**
  * Class OZDbStoresController.
  *
  * @extends \Gobl\ORM\ORMController<\OZONE\Core\Db\OZDbStore, \OZONE\Core\Db\OZDbStoresQuery, \OZONE\Core\Db\OZDbStoresResults>
  */
-abstract class OZDbStoresController extends \Gobl\ORM\ORMController
+abstract class OZDbStoresController extends ORMController
 {
 	/**
 	 * OZDbStoresController constructor.
@@ -26,8 +30,8 @@ abstract class OZDbStoresController extends \Gobl\ORM\ORMController
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZDbStore::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZDbStore::TABLE_NAME
+			OZDbStore::TABLE_NAMESPACE,
+			OZDbStore::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ abstract class OZDbStoresController extends \Gobl\ORM\ORMController
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZDbStoresController();
+		return new OZDbStoresControllerReal();
 	}
 }

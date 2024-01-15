@@ -23,7 +23,7 @@ final class UserLoggedIn extends Event
 	public function __construct(private readonly Context $context, private readonly OZUser $user) {}
 
 	/**
-	 * @return \OZONE\Core\App\Context
+	 * @return Context
 	 */
 	public function getContext(): Context
 	{
@@ -31,7 +31,7 @@ final class UserLoggedIn extends Event
 	}
 
 	/**
-	 * @return \OZONE\Core\Db\OZUser
+	 * @return OZUser
 	 */
 	public function getUser(): OZUser
 	{

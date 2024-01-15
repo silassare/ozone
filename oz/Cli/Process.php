@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli;
 
+use Symfony\Component\Process\Process as SymfonyProcess;
+
 /**
  * Class Process.
  */
-final class Process extends \Symfony\Component\Process\Process
+final class Process extends SymfonyProcess
 {
 	/**
 	 * Process constructor.

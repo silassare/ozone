@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMTableQuery;
+use OZONE\Core\Db\OZAuth;
+use OZONE\Core\Db\OZAuthsQuery as OZAuthsQueryReal;
+
 /**
  * Class OZAuthsQuery.
  *
@@ -177,7 +181,7 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereDeletedAtIsIn(array $value)                          Filters rows with `in` condition on column `oz_auths`.`deleted_at`.
  * @method $this whereDeletedAtIsNotIn(array $value)                       Filters rows with `not_in` condition on column `oz_auths`.`deleted_at`.
  */
-abstract class OZAuthsQuery extends \Gobl\ORM\ORMTableQuery
+abstract class OZAuthsQuery extends ORMTableQuery
 {
 	/**
 	 * OZAuthsQuery constructor.
@@ -185,8 +189,8 @@ abstract class OZAuthsQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZAuth::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZAuth::TABLE_NAME
+			OZAuth::TABLE_NAMESPACE,
+			OZAuth::TABLE_NAME
 		);
 	}
 
@@ -197,6 +201,6 @@ abstract class OZAuthsQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZAuthsQuery();
+		return new OZAuthsQueryReal();
 	}
 }

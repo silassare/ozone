@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZSession as OZSessionBase;
+
 /**
  * Class OZSession.
  */
-class OZSession extends \OZONE\Core\Db\Base\OZSession
+class OZSession extends OZSessionBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

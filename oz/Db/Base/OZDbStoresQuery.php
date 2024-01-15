@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMTableQuery;
+use OZONE\Core\Db\OZDbStore;
+use OZONE\Core\Db\OZDbStoresQuery as OZDbStoresQueryReal;
+
 /**
  * Class OZDbStoresQuery.
  *
@@ -111,7 +115,7 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereDeletedAtIsIn(array $value)       Filters rows with `in` condition on column `oz_db_stores`.`deleted_at`.
  * @method $this whereDeletedAtIsNotIn(array $value)    Filters rows with `not_in` condition on column `oz_db_stores`.`deleted_at`.
  */
-abstract class OZDbStoresQuery extends \Gobl\ORM\ORMTableQuery
+abstract class OZDbStoresQuery extends ORMTableQuery
 {
 	/**
 	 * OZDbStoresQuery constructor.
@@ -119,8 +123,8 @@ abstract class OZDbStoresQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZDbStore::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZDbStore::TABLE_NAME
+			OZDbStore::TABLE_NAMESPACE,
+			OZDbStore::TABLE_NAME
 		);
 	}
 
@@ -131,6 +135,6 @@ abstract class OZDbStoresQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZDbStoresQuery();
+		return new OZDbStoresQueryReal();
 	}
 }

@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMController;
+use OZONE\Core\Db\OZMigration;
+use OZONE\Core\Db\OZMigrationsController as OZMigrationsControllerReal;
+
 /**
  * Class OZMigrationsController.
  *
  * @extends \Gobl\ORM\ORMController<\OZONE\Core\Db\OZMigration, \OZONE\Core\Db\OZMigrationsQuery, \OZONE\Core\Db\OZMigrationsResults>
  */
-abstract class OZMigrationsController extends \Gobl\ORM\ORMController
+abstract class OZMigrationsController extends ORMController
 {
 	/**
 	 * OZMigrationsController constructor.
@@ -26,8 +30,8 @@ abstract class OZMigrationsController extends \Gobl\ORM\ORMController
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZMigration::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZMigration::TABLE_NAME
+			OZMigration::TABLE_NAMESPACE,
+			OZMigration::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ abstract class OZMigrationsController extends \Gobl\ORM\ORMController
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZMigrationsController();
+		return new OZMigrationsControllerReal();
 	}
 }

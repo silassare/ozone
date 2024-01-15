@@ -23,7 +23,7 @@ interface AuthAccessRightsInterface
 	/**
 	 * Loads access rights info from auth.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 *
 	 * @return static
 	 */

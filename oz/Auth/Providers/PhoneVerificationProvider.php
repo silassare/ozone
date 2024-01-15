@@ -28,8 +28,8 @@ class PhoneVerificationProvider extends AuthProvider
 	/**
 	 * PhoneVerificationProvider constructor.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param string                  $phone
+	 * @param Context $context
+	 * @param string  $phone
 	 */
 	public function __construct(Context $context, protected string $phone)
 	{

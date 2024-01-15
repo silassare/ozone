@@ -24,8 +24,8 @@ interface AuthMethodInterface
 	/**
 	 * This should return a new instance.
 	 *
-	 * @param \OZONE\Core\Router\RouteInfo $ri
-	 * @param string                       $realm
+	 * @param RouteInfo $ri
+	 * @param string    $realm
 	 *
 	 * @return self
 	 */
@@ -55,7 +55,7 @@ interface AuthMethodInterface
 	 * and should return an instance of {@link OZUser}
 	 * or throw an exception if no user was authenticated.
 	 *
-	 * @return \OZONE\Core\Db\OZUser
+	 * @return OZUser
 	 */
 	public function user(): OZUser;
 
@@ -65,7 +65,7 @@ interface AuthMethodInterface
 	 * As a user may generate multiple tokens with different access rights.
 	 * This is useful to override the default access rights of the user depending on the token used.
 	 *
-	 * @return \OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface
+	 * @return AuthAccessRightsInterface
 	 */
 	public function accessRights(): AuthAccessRightsInterface;
 

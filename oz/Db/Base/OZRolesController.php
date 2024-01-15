@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMController;
+use OZONE\Core\Db\OZRole;
+use OZONE\Core\Db\OZRolesController as OZRolesControllerReal;
+
 /**
  * Class OZRolesController.
  *
  * @extends \Gobl\ORM\ORMController<\OZONE\Core\Db\OZRole, \OZONE\Core\Db\OZRolesQuery, \OZONE\Core\Db\OZRolesResults>
  */
-abstract class OZRolesController extends \Gobl\ORM\ORMController
+abstract class OZRolesController extends ORMController
 {
 	/**
 	 * OZRolesController constructor.
@@ -26,8 +30,8 @@ abstract class OZRolesController extends \Gobl\ORM\ORMController
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZRole::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZRole::TABLE_NAME
+			OZRole::TABLE_NAMESPACE,
+			OZRole::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ abstract class OZRolesController extends \Gobl\ORM\ORMController
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZRolesController();
+		return new OZRolesControllerReal();
 	}
 }

@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMEntityCRUD;
+use OZONE\Core\Db\OZUser;
+use OZONE\Core\Db\OZUsersCrud as OZUsersCrudReal;
+
 /**
  * Class OZUsersCrud.
  *
  * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZUser>
  */
-class OZUsersCrud extends \Gobl\ORM\ORMEntityCRUD
+class OZUsersCrud extends ORMEntityCRUD
 {
 	/**
 	 * OZUsersCrud constructor.
@@ -26,8 +30,8 @@ class OZUsersCrud extends \Gobl\ORM\ORMEntityCRUD
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZUser::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZUser::TABLE_NAME
+			OZUser::TABLE_NAMESPACE,
+			OZUser::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ class OZUsersCrud extends \Gobl\ORM\ORMEntityCRUD
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZUsersCrud();
+		return new OZUsersCrudReal();
 	}
 }

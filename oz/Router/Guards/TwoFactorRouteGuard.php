@@ -18,6 +18,7 @@ use OZONE\Core\Auth\AuthState;
 use OZONE\Core\Auth\Providers\UserAuthProvider;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Router\RouteInfo;
@@ -67,9 +68,9 @@ class TwoFactorRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws ForbiddenException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public function checkAccess(RouteInfo $ri): void
 	{

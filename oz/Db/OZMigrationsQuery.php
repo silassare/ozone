@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZMigrationsQuery as OZMigrationsQueryBase;
+
 /**
  * Class OZMigrationsQuery.
  */
-class OZMigrationsQuery extends \OZONE\Core\Db\Base\OZMigrationsQuery
+class OZMigrationsQuery extends OZMigrationsQueryBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

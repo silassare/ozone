@@ -27,8 +27,8 @@ final class RedirectHook extends Hook
 	/**
 	 * RedirectHook constructor.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param \OZONE\Core\Http\Uri    $redirect_uri
+	 * @param Context $context
+	 * @param Uri     $redirect_uri
 	 */
 	public function __construct(Context $context, protected Uri $redirect_uri)
 	{
@@ -48,7 +48,7 @@ final class RedirectHook extends Hook
 	/**
 	 * Gets the redirect uri.
 	 *
-	 * @return \OZONE\Core\Http\Uri
+	 * @return Uri
 	 */
 	public function getRedirectUri(): Uri
 	{

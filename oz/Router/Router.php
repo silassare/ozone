@@ -15,6 +15,8 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
+use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Events\RouteBeforeRun;
@@ -72,7 +74,7 @@ final class Router
 	 * @param string                                               $path
 	 * @param callable(Router, \OZONE\Core\Router\RouteGroup):void $factory
 	 *
-	 * @return \OZONE\Core\Router\RouteGroup
+	 * @return RouteGroup
 	 */
 	public function group(string $path, callable $factory): RouteGroup
 	{
@@ -117,8 +119,8 @@ final class Router
 	/**
 	 * Gets a given global parameter value.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param string                  $param
+	 * @param Context $context
+	 * @param string  $param
 	 *
 	 * @return null|string
 	 */
@@ -184,9 +186,9 @@ final class Router
 	/**
 	 * Builds route path.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param string                  $route_name
-	 * @param array                   $params
+	 * @param Context $context
+	 * @param string  $route_name
+	 * @param array   $params
 	 *
 	 * @return string
 	 */
@@ -232,7 +234,7 @@ final class Router
 	 * @param string $path   The request path
 	 * @param bool   $all    True to stop searching when a route match
 	 *
-	 * @return \OZONE\Core\Router\RouteSearchResult
+	 * @return RouteSearchResult
 	 */
 	public function find(string $method, string $path, bool $all = false): RouteSearchResult
 	{
@@ -306,11 +308,11 @@ final class Router
 	/**
 	 * Handle the request in a given context.
 	 *
-	 * @param \OZONE\Core\App\Context       $context
+	 * @param Context                       $context
 	 * @param null|callable(RouteInfo):void $authenticator
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws ForbiddenException
+	 * @throws InvalidFormException
 	 * @throws Throwable
 	 */
 	public function handle(Context $context, ?callable $authenticator = null): void
@@ -349,7 +351,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\Core\Router\RouteOptions
+	 * @return RouteOptions
 	 */
 	public function map(array|string $methods, callable|string $path, callable $factory = null): RouteOptions
 	{
@@ -408,7 +410,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\Core\Router\RouteOptions
+	 * @return RouteOptions
 	 */
 	public function connect(callable|string $path, callable $factory = null): RouteOptions
 	{
@@ -421,7 +423,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\Core\Router\RouteOptions
+	 * @return RouteOptions
 	 */
 	public function delete(callable|string $path, callable $factory = null): RouteOptions
 	{
@@ -434,7 +436,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\Core\Router\RouteOptions
+	 * @return RouteOptions
 	 */
 	public function get(callable|string $path, callable $factory = null): RouteOptions
 	{
@@ -447,7 +449,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\Core\Router\RouteOptions
+	 * @return RouteOptions
 	 */
 	public function head(callable|string $path, callable $factory = null): RouteOptions
 	{
@@ -460,7 +462,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\Core\Router\RouteOptions
+	 * @return RouteOptions
 	 */
 	public function options(callable|string $path, callable $factory = null): RouteOptions
 	{
@@ -473,7 +475,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\Core\Router\RouteOptions
+	 * @return RouteOptions
 	 */
 	public function patch(callable|string $path, callable $factory = null): RouteOptions
 	{
@@ -486,7 +488,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\Core\Router\RouteOptions
+	 * @return RouteOptions
 	 */
 	public function post(callable|string $path, callable $factory = null): RouteOptions
 	{
@@ -499,7 +501,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\Core\Router\RouteOptions
+	 * @return RouteOptions
 	 */
 	public function put(callable|string $path, callable $factory = null): RouteOptions
 	{
@@ -512,7 +514,7 @@ final class Router
 	 * @param callable|string $path
 	 * @param null|callable   $factory
 	 *
-	 * @return \OZONE\Core\Router\RouteOptions
+	 * @return RouteOptions
 	 */
 	public function trace(callable|string $path, callable $factory = null): RouteOptions
 	{
@@ -522,7 +524,7 @@ final class Router
 	/**
 	 * Run the route that match the current request path.
 	 *
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
 	 * @throws Throwable
 	 */

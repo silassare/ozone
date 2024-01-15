@@ -33,8 +33,8 @@ interface AuthProviderInterface
 	/**
 	 * Get auth provider instance.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param array                   $payload
+	 * @param Context $context
+	 * @param array   $payload
 	 *
 	 * @return self
 	 */
@@ -50,28 +50,28 @@ interface AuthProviderInterface
 	/**
 	 * Returns json response.
 	 *
-	 * @return \OZONE\Core\App\JSONResponse
+	 * @return JSONResponse
 	 */
 	public function getJSONResponse(): JSONResponse;
 
 	/**
 	 * Gets credentials.
 	 *
-	 * @return \OZONE\Core\Auth\Interfaces\AuthCredentialsInterface
+	 * @return AuthCredentialsInterface
 	 */
 	public function getCredentials(): AuthCredentialsInterface;
 
 	/**
 	 * Gets scope.
 	 *
-	 * @return \OZONE\Core\Auth\Interfaces\AuthScopeInterface
+	 * @return AuthScopeInterface
 	 */
 	public function getScope(): AuthScopeInterface;
 
 	/**
 	 * Sets scope.
 	 *
-	 * @param \OZONE\Core\Auth\Interfaces\AuthScopeInterface $scope
+	 * @param AuthScopeInterface $scope
 	 *
 	 * @return $this
 	 */
@@ -80,14 +80,14 @@ interface AuthProviderInterface
 	/**
 	 * Validate an authorization with current credentials.
 	 *
-	 * @param \OZONE\Core\Auth\AuthSecretType $type
+	 * @param AuthSecretType $type
 	 */
 	public function authorize(AuthSecretType $type): void;
 
 	/**
 	 * Get an authorization process state.
 	 *
-	 * @return \OZONE\Core\Auth\AuthState
+	 * @return AuthState
 	 */
 	public function getState(): AuthState;
 

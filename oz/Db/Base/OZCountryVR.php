@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Relations\VirtualRelation;
+use OZONE\Core\Db\OZCountry;
+
 /**
  * Class OZCountryVR.
  *
@@ -20,7 +23,7 @@ namespace OZONE\Core\Db\Base;
  *
  * @extends \Gobl\DBAL\Relations\VirtualRelation<\OZONE\Core\Db\OZCountry, TRelationResult>
  */
-abstract class OZCountryVR extends \Gobl\DBAL\Relations\VirtualRelation
+abstract class OZCountryVR extends VirtualRelation
 {
 	/**
 	 * {class_name} constructor.
@@ -31,8 +34,8 @@ abstract class OZCountryVR extends \Gobl\DBAL\Relations\VirtualRelation
 	public function __construct(string $name, bool $paginated)
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZCountry::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZCountry::TABLE_NAME,
+			OZCountry::TABLE_NAMESPACE,
+			OZCountry::TABLE_NAME,
 			$name,
 			$paginated
 		);

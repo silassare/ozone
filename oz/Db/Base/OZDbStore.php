@@ -13,6 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Queries\QBSelect;
+use Gobl\DBAL\Table;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntity;
+use OZONE\Core\Db\OZDbStore as OZDbStoreReal;
+use OZONE\Core\Db\OZDbStoresController;
+use OZONE\Core\Db\OZDbStoresCrud;
+use OZONE\Core\Db\OZDbStoresQuery;
+use OZONE\Core\Db\OZDbStoresResults;
+
 /**
  * Class OZDbStore.
  *
@@ -27,7 +37,7 @@ namespace OZONE\Core\Db\Base;
  * @property bool        $deleted    Getter for column `oz_db_stores`.`deleted`.
  * @property null|string $deleted_at Getter for column `oz_db_stores`.`deleted_at`.
  */
-abstract class OZDbStore extends \Gobl\ORM\ORMEntity
+abstract class OZDbStore extends ORMEntity
 {
 	public const TABLE_NAME      = 'oz_db_stores';
 	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
@@ -66,55 +76,55 @@ abstract class OZDbStore extends \Gobl\ORM\ORMEntity
 	 */
 	public static function new(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\Core\Db\OZDbStore($is_new, $strict);
+		return new OZDbStoreReal($is_new, $strict);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZDbStoresCrud
+	 * @return OZDbStoresCrud
 	 */
-	public static function crud(): \OZONE\Core\Db\OZDbStoresCrud
+	public static function crud(): OZDbStoresCrud
 	{
-		return \OZONE\Core\Db\OZDbStoresCrud::new();
+		return OZDbStoresCrud::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZDbStoresController
+	 * @return OZDbStoresController
 	 */
-	public static function ctrl(): \OZONE\Core\Db\OZDbStoresController
+	public static function ctrl(): OZDbStoresController
 	{
-		return \OZONE\Core\Db\OZDbStoresController::new();
+		return OZDbStoresController::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZDbStoresQuery
+	 * @return OZDbStoresQuery
 	 */
-	public static function qb(): \OZONE\Core\Db\OZDbStoresQuery
+	public static function qb(): OZDbStoresQuery
 	{
-		return \OZONE\Core\Db\OZDbStoresQuery::new();
+		return OZDbStoresQuery::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZDbStoresResults
+	 * @return OZDbStoresResults
 	 */
-	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZDbStoresResults
+	public static function results(QBSelect $query): OZDbStoresResults
 	{
-		return \OZONE\Core\Db\OZDbStoresResults::new($query);
+		return OZDbStoresResults::new($query);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function table(): \Gobl\DBAL\Table
+	public static function table(): Table
 	{
-		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
+		return ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**

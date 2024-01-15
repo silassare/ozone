@@ -29,8 +29,8 @@ class FileAuthProvider extends AuthProvider
 	/**
 	 * FileAuthProvider constructor.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param \OZONE\Core\Db\OZFile   $file
+	 * @param Context $context
+	 * @param OZFile  $file
 	 */
 	public function __construct(Context $context, protected OZFile $file)
 	{
@@ -40,7 +40,7 @@ class FileAuthProvider extends AuthProvider
 	/**
 	 * Gets the file.
 	 *
-	 * @return \OZONE\Core\Db\OZFile
+	 * @return OZFile
 	 */
 	public function getFile(): OZFile
 	{

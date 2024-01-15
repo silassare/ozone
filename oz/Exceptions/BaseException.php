@@ -135,7 +135,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	/**
 	 * Show exception according to accept header name or request type.
 	 *
-	 * @param \OZONE\Core\App\Context $context
+	 * @param Context $context
 	 */
 	public function informClient(Context $context): void
 	{
@@ -359,9 +359,9 @@ STRING;
 	/**
 	 * Returns json response.
 	 *
-	 * @param \OZONE\Core\App\Context $context
+	 * @param Context $context
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	private function getJSONResponse(Context $context): Response
 	{
@@ -376,9 +376,9 @@ STRING;
 	/**
 	 * Returns default error page response.
 	 *
-	 * @param \OZONE\Core\App\Context $context
+	 * @param Context $context
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	private function getDefaultErrorPage(Context $context): Response
 	{

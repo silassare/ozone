@@ -24,9 +24,9 @@ use OZONE\Core\Web\WebView;
 final class ErrorView extends WebView
 {
 	/**
-	 * @param \OZONE\Core\Exceptions\BaseException $error
+	 * @param BaseException $error
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function renderError(BaseException $error): Response
 	{

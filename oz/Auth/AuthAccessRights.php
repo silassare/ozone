@@ -91,7 +91,7 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws UnauthorizedActionException
 	 */
 	public function assertCan(string ...$actions): void
 	{

@@ -16,7 +16,9 @@ namespace OZONE\Core\FS;
 use OZONE\Core\Auth\AuthSecretType;
 use OZONE\Core\Auth\Providers\FileAuthProvider;
 use OZONE\Core\Db\OZFile;
+use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -29,14 +31,14 @@ class FileAccess
 	 *
 	 * If the file has guards rules, they will be checked.
 	 *
-	 * @param \OZONE\Core\Db\OZFile        $file
-	 * @param \OZONE\Core\Router\RouteInfo $ri
-	 * @param string                       $auth_key
-	 * @param null|string                  $auth_ref
+	 * @param OZFile      $file
+	 * @param RouteInfo   $ri
+	 * @param string      $auth_key
+	 * @param null|string $auth_ref
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws InvalidFormException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public static function check(OZFile $file, RouteInfo $ri, string $auth_key, ?string $auth_ref = null): void
 	{

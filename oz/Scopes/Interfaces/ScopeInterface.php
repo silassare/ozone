@@ -35,28 +35,28 @@ interface ScopeInterface
 	/**
 	 * Returns an instance of the files manager with the scope private directory as root.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return FilesManager
 	 */
 	public function getPrivateDir(): FilesManager;
 
 	/**
 	 * Returns an instance of the files manager with the scope public directory as root.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return FilesManager
 	 */
 	public function getPublicDir(): FilesManager;
 
 	/**
 	 * Returns an instance of the files manager with the scope settings directory as root.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return FilesManager
 	 */
 	public function getSettingsDir(): FilesManager;
 
 	/**
 	 * Returns an instance of the files manager with the scope templates directory as root.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return FilesManager
 	 */
 	public function getTemplatesDir(): FilesManager;
 
@@ -66,7 +66,7 @@ interface ScopeInterface
 	 * This directory should be protected from public access.
 	 * This is where you should store your private files.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return FilesManager
 	 */
 	public function getPrivateFilesDir(): FilesManager;
 
@@ -76,7 +76,7 @@ interface ScopeInterface
 	 * This directory is accessible from the web.
 	 * This is where public files should be stored.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return FilesManager
 	 */
 	public function getPublicFilesDir(): FilesManager;
 }

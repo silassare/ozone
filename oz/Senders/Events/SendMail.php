@@ -37,7 +37,7 @@ final class SendMail extends Event
 	}
 
 	/**
-	 * @return \OZONE\Core\Senders\Messages\MailMessage
+	 * @return MailMessage
 	 */
 	public function getMessage(): MailMessage
 	{

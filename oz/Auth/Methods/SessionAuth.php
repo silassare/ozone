@@ -81,7 +81,7 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws ForbiddenException
 	 */
 	public function ask(): void
 	{
@@ -91,7 +91,7 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws ForbiddenException
 	 */
 	public function authenticate(): void
 	{
@@ -101,8 +101,8 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\UnverifiedUserException
+	 * @throws ForbiddenException
+	 * @throws UnverifiedUserException
 	 */
 	public function user(): OZUser
 	{
@@ -137,10 +137,10 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface
+	 * @return AuthAccessRightsInterface
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\UnverifiedUserException
+	 * @throws ForbiddenException
+	 * @throws UnverifiedUserException
 	 */
 	public function accessRights(): AuthAccessRightsInterface
 	{
@@ -151,7 +151,7 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws ForbiddenException
 	 */
 	public function session(): Session
 	{
@@ -161,7 +161,7 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws ForbiddenException
 	 */
 	public function state(): SessionState
 	{
@@ -172,7 +172,7 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws ForbiddenException
 	 */
 	public function id(): string
 	{
@@ -183,9 +183,9 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	/**
 	 * Start current or new session.
 	 *
-	 * @return \OZONE\Core\Sessions\Session
+	 * @return Session
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws ForbiddenException
 	 */
 	protected function startCurrentOrNewSession(): Session
 	{

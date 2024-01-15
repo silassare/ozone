@@ -205,7 +205,7 @@ class FormRule implements ArrayCapableInterface
 	 *  - We can't guarantee the order in which fields are validated.
 	 *  - This should be portable to client side validation.
 	 *
-	 * @param \OZONE\Core\Forms\FormValidationContext $fvc
+	 * @param FormValidationContext $fvc
 	 *
 	 * @return bool
 	 */

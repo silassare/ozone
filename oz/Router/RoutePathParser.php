@@ -52,9 +52,9 @@ final class RoutePathParser
 	/**
 	 * Builds dynamic path.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param array                   $params
-	 * @param null|string             $original_route_path
+	 * @param Context     $context
+	 * @param array       $params
+	 * @param null|string $original_route_path
 	 *
 	 * @return string
 	 */

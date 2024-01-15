@@ -140,7 +140,7 @@ final class Cron
 	 * @param string       $description
 	 * @param bool         $in_background
 	 *
-	 * @return \OZONE\Core\Cli\Cron\Schedule
+	 * @return Schedule
 	 */
 	public static function command(
 		array|string $command,
@@ -167,7 +167,7 @@ final class Cron
 	 * @param callable():array $callable
 	 * @param string           $description
 	 *
-	 * @return \OZONE\Core\Cli\Cron\Schedule
+	 * @return Schedule
 	 */
 	public static function call(callable $callable, string $name = '', string $description = ''): Schedule
 	{
@@ -181,11 +181,11 @@ final class Cron
 	/**
 	 * Schedule a worker job.
 	 *
-	 * @param \OZONE\Core\Queue\Interfaces\WorkerInterface $worker
-	 * @param string                                       $queue
-	 * @param string                                       $store
+	 * @param WorkerInterface $worker
+	 * @param string          $queue
+	 * @param string          $store
 	 *
-	 * @return \OZONE\Core\Cli\Cron\Schedule
+	 * @return Schedule
 	 */
 	public static function work(
 		WorkerInterface $worker,

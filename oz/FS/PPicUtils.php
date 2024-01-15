@@ -55,7 +55,7 @@ class PPicUtils
 	 *
 	 * @return string the profile pic_id
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws UnauthorizedActionException
 	 * @throws Exception
 	 */
 	public function fromFileID(
@@ -92,9 +92,9 @@ class PPicUtils
 	/**
 	 * Sets a profile picture from uploaded file.
 	 *
-	 * @param \OZONE\Core\Http\UploadedFile $uploaded_file the uploaded file
-	 * @param array                         $coordinate    the crop zone coordinate
-	 * @param string                        $file_label    the file log label
+	 * @param UploadedFile $uploaded_file the uploaded file
+	 * @param array        $coordinate    the crop zone coordinate
+	 * @param string       $file_label    the file log label
 	 *
 	 * @return string the profile picid
 	 *
@@ -140,9 +140,9 @@ class PPicUtils
 	/**
 	 * Make a thumbnail of the current file with a given crop zone coordinates, for profile pic.
 	 *
-	 * @param \OZONE\Core\Db\OZFile $source      the source file
-	 * @param string                $destination the profile pic destination
-	 * @param array                 $coordinates the crop zone coordinates
+	 * @param OZFile $source      the source file
+	 * @param string $destination the profile pic destination
+	 * @param array  $coordinates the crop zone coordinates
 	 *
 	 * @throws Exception
 	 */

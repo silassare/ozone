@@ -13,6 +13,18 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Queries\QBSelect;
+use Gobl\DBAL\Table;
+use Gobl\Exceptions\GoblException;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntity;
+use OZONE\Core\Db\OZCountriesController;
+use OZONE\Core\Db\OZCountriesCrud;
+use OZONE\Core\Db\OZCountriesQuery;
+use OZONE\Core\Db\OZCountriesResults;
+use OZONE\Core\Db\OZCountry as OZCountryReal;
+use OZONE\Core\Db\OZUser;
+
 /**
  * Class OZCountry.
  *
@@ -27,7 +39,7 @@ namespace OZONE\Core\Db\Base;
  * @property bool        $deleted      Getter for column `oz_countries`.`deleted`.
  * @property null|string $deleted_at   Getter for column `oz_countries`.`deleted_at`.
  */
-abstract class OZCountry extends \Gobl\ORM\ORMEntity
+abstract class OZCountry extends ORMEntity
 {
 	public const TABLE_NAME       = 'oz_countries';
 	public const TABLE_NAMESPACE  = 'OZONE\\Core\\Db';
@@ -66,55 +78,55 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 */
 	public static function new(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\Core\Db\OZCountry($is_new, $strict);
+		return new OZCountryReal($is_new, $strict);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZCountriesCrud
+	 * @return OZCountriesCrud
 	 */
-	public static function crud(): \OZONE\Core\Db\OZCountriesCrud
+	public static function crud(): OZCountriesCrud
 	{
-		return \OZONE\Core\Db\OZCountriesCrud::new();
+		return OZCountriesCrud::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZCountriesController
+	 * @return OZCountriesController
 	 */
-	public static function ctrl(): \OZONE\Core\Db\OZCountriesController
+	public static function ctrl(): OZCountriesController
 	{
-		return \OZONE\Core\Db\OZCountriesController::new();
+		return OZCountriesController::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZCountriesQuery
+	 * @return OZCountriesQuery
 	 */
-	public static function qb(): \OZONE\Core\Db\OZCountriesQuery
+	public static function qb(): OZCountriesQuery
 	{
-		return \OZONE\Core\Db\OZCountriesQuery::new();
+		return OZCountriesQuery::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZCountriesResults
+	 * @return OZCountriesResults
 	 */
-	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZCountriesResults
+	public static function results(QBSelect $query): OZCountriesResults
 	{
-		return \OZONE\Core\Db\OZCountriesResults::new($query);
+		return OZCountriesResults::new($query);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function table(): \Gobl\DBAL\Table
+	public static function table(): Table
 	{
-		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
+		return ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -368,13 +380,13 @@ abstract class OZCountry extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return \OZONE\Core\Db\OZUser[]
 	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws GoblException
 	 */
 	public function getCitizens(array $filters =  [
 	], ?int $max = null, int $offset = 0, array $order_by =  [
 	], ?int &$total = -1): array
 	{
-		return \OZONE\Core\Db\OZUser::ctrl()->getAllRelatives(
+		return OZUser::ctrl()->getAllRelatives(
 			$this,
 			static::table()->getRelation('citizens'),
 			$filters,

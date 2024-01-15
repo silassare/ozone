@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMController;
+use OZONE\Core\Db\OZFile;
+use OZONE\Core\Db\OZFilesController as OZFilesControllerReal;
+
 /**
  * Class OZFilesController.
  *
  * @extends \Gobl\ORM\ORMController<\OZONE\Core\Db\OZFile, \OZONE\Core\Db\OZFilesQuery, \OZONE\Core\Db\OZFilesResults>
  */
-abstract class OZFilesController extends \Gobl\ORM\ORMController
+abstract class OZFilesController extends ORMController
 {
 	/**
 	 * OZFilesController constructor.
@@ -26,8 +30,8 @@ abstract class OZFilesController extends \Gobl\ORM\ORMController
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZFile::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZFile::TABLE_NAME
+			OZFile::TABLE_NAMESPACE,
+			OZFile::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ abstract class OZFilesController extends \Gobl\ORM\ORMController
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZFilesController();
+		return new OZFilesControllerReal();
 	}
 }

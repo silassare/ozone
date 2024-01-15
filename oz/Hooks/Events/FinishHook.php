@@ -30,8 +30,8 @@ final class FinishHook extends Event
 	/**
 	 * FinishHook constructor.
 	 *
-	 * @param \OZONE\Core\Http\Request  $request
-	 * @param \OZONE\Core\Http\Response $response
+	 * @param Request  $request
+	 * @param Response $response
 	 */
 	public function __construct(protected Request $request, protected Response $response) {}
 
@@ -46,7 +46,7 @@ final class FinishHook extends Event
 	/**
 	 * Gets the handled request.
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function getResponse(): Response
 	{
@@ -56,7 +56,7 @@ final class FinishHook extends Event
 	/**
 	 * Gets the request response.
 	 *
-	 * @return \OZONE\Core\Http\Request
+	 * @return Request
 	 */
 	public function getRequest(): Request
 	{

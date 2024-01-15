@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli;
 
+use Kli\Exceptions\KliException;
 use Kli\Kli;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Cron\Cron;
@@ -43,9 +44,9 @@ final class Cli extends Kli
 	/**
 	 * Gets the Cli instance.
 	 *
-	 * @return \OZONE\Core\Cli\Cli
+	 * @return Cli
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	public static function getInstance(): self
 	{
@@ -102,7 +103,7 @@ final class Cli extends Kli
 	 * @param mixed $msg  the message to log
 	 * @param bool  $wrap to wrap string or not
 	 *
-	 * @return \OZONE\Core\Cli\Cli
+	 * @return Cli
 	 */
 	public function log(mixed $msg, bool $wrap = true): self
 	{
@@ -116,7 +117,7 @@ final class Cli extends Kli
 	 *
 	 * @param array $args
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	public static function run(array $args): void
 	{
@@ -127,7 +128,7 @@ final class Cli extends Kli
 	/**
 	 * Loads all defined commands in oz.cli settings.
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	private function loadCommands(): void
 	{

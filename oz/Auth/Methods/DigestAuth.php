@@ -16,6 +16,8 @@ namespace OZONE\Core\Auth\Methods;
 use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
 use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Utils\Hasher;
 
@@ -99,9 +101,9 @@ class DigestAuth implements AuthMethodInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws ForbiddenException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public function authenticate(): void
 	{

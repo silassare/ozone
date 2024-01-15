@@ -25,8 +25,8 @@ class FormValidationContext
 	/**
 	 * ValidationContext constructor.
 	 *
-	 * @param \OZONE\Core\Forms\FormData $unsafe_fd
-	 * @param \OZONE\Core\Forms\FormData $clean_fd
+	 * @param FormData $unsafe_fd
+	 * @param FormData $clean_fd
 	 */
 	public function __construct(
 		protected readonly FormData $unsafe_fd,
@@ -36,7 +36,7 @@ class FormValidationContext
 	/**
 	 * Gets the unsafe form data.
 	 *
-	 * @return \OZONE\Core\Forms\FormData
+	 * @return FormData
 	 */
 	public function getUnsafeFormData(): FormData
 	{
@@ -46,7 +46,7 @@ class FormValidationContext
 	/**
 	 * Gets the clean form data.
 	 *
-	 * @return \OZONE\Core\Forms\FormData
+	 * @return FormData
 	 */
 	public function getCleanFormData(): FormData
 	{

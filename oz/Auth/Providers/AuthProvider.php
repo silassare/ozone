@@ -30,7 +30,9 @@ use OZONE\Core\Auth\Interfaces\AuthScopeInterface;
 use OZONE\Core\Auth\Traits\AuthProviderEventTrait;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Utils\Hasher;
 use Throwable;
 
@@ -49,7 +51,7 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * AuthProvider constructor.
 	 *
-	 * @param \OZONE\Core\App\Context $context
+	 * @param Context $context
 	 */
 	public function __construct(Context $context)
 	{
@@ -98,9 +100,9 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws InvalidFormException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public function authorize(AuthSecretType $type): void
 	{
@@ -155,8 +157,8 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public function getState(): AuthState
 	{
@@ -210,9 +212,9 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
+	 * @throws InvalidFormException
 	 */
 	public function refresh(bool $re_authorize = true): self
 	{
@@ -251,8 +253,8 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public function cancel(): self
 	{
@@ -287,7 +289,7 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * Save authorisation process into the database.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 *
 	 * @throws GoblException
 	 */

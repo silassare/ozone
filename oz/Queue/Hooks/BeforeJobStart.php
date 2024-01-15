@@ -26,7 +26,7 @@ final class BeforeJobStart extends Event
 	/**
 	 * BeforeJobStart constructor.
 	 *
-	 * @param \OZONE\Core\Queue\Interfaces\JobContractInterface $job_contract
+	 * @param JobContractInterface $job_contract
 	 */
 	public function __construct(protected JobContractInterface $job_contract) {}
 
@@ -41,7 +41,7 @@ final class BeforeJobStart extends Event
 	/**
 	 * Returns the job contract.
 	 *
-	 * @return \OZONE\Core\Queue\Interfaces\JobContractInterface
+	 * @return JobContractInterface
 	 */
 	public function getJobContract(): JobContractInterface
 	{

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Guards;
 
+use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Gobl\DBAL\Types\TypeString;
 use Gobl\DBAL\Types\Utils\TypeUtils;
@@ -20,6 +21,8 @@ use InvalidArgumentException;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Router\RouteInfo;
@@ -75,7 +78,7 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
+	 * @throws TypesException
 	 */
 	public static function fromRules(array $rules): self
 	{
@@ -93,9 +96,9 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws ForbiddenException
+	 * @throws InvalidFormException
+	 * @throws UnauthorizedActionException
 	 */
 	public function checkAccess(RouteInfo $ri): void
 	{

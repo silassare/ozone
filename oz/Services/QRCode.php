@@ -36,11 +36,11 @@ final class QRCode extends Service
 	/**
 	 * Gets qr-code image uri.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param string                  $data
-	 * @param int                     $expire_at
+	 * @param Context $context
+	 * @param string  $data
+	 * @param int     $expire_at
 	 *
-	 * @return \OZONE\Core\Http\Uri the qr-code info
+	 * @return Uri the qr-code info
 	 */
 	public static function buildQrCodeUri(Context $context, string $data, int $expire_at): Uri
 	{
@@ -60,12 +60,12 @@ final class QRCode extends Service
 	/**
 	 * Returns a response with the qrcode image.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param string                  $qr_code_key
+	 * @param Context $context
+	 * @param string  $qr_code_key
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 *
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws NotFoundException
 	 */
 	public static function generateQrCodeImage(Context $context, string $qr_code_key): Response
 	{

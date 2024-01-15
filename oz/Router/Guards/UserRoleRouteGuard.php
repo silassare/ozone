@@ -84,7 +84,7 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws ForbiddenException
 	 */
 	public function checkAccess(RouteInfo $ri): void
 	{

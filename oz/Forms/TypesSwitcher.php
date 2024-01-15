@@ -33,8 +33,8 @@ class TypesSwitcher implements ArrayCapableInterface
 	/**
 	 * Adds type to the switcher.
 	 *
-	 * @param \OZONE\Core\Forms\FormRule                $rule
-	 * @param \Gobl\DBAL\Types\Interfaces\TypeInterface $type
+	 * @param FormRule      $rule
+	 * @param TypeInterface $type
 	 *
 	 * @return $this
 	 */
@@ -51,9 +51,9 @@ class TypesSwitcher implements ArrayCapableInterface
 	/**
 	 * Gets the appropriate type.
 	 *
-	 * @param \OZONE\Core\Forms\FormValidationContext $fvc
+	 * @param FormValidationContext $fvc
 	 *
-	 * @return \Gobl\DBAL\Types\Interfaces\TypeInterface
+	 * @return TypeInterface
 	 */
 	public function getType(FormValidationContext $fvc): TypeInterface
 	{

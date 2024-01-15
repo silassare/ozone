@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMEntityCRUD;
+use OZONE\Core\Db\OZDbStore;
+use OZONE\Core\Db\OZDbStoresCrud as OZDbStoresCrudReal;
+
 /**
  * Class OZDbStoresCrud.
  *
  * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZDbStore>
  */
-class OZDbStoresCrud extends \Gobl\ORM\ORMEntityCRUD
+class OZDbStoresCrud extends ORMEntityCRUD
 {
 	/**
 	 * OZDbStoresCrud constructor.
@@ -26,8 +30,8 @@ class OZDbStoresCrud extends \Gobl\ORM\ORMEntityCRUD
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZDbStore::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZDbStore::TABLE_NAME
+			OZDbStore::TABLE_NAMESPACE,
+			OZDbStore::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ class OZDbStoresCrud extends \Gobl\ORM\ORMEntityCRUD
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZDbStoresCrud();
+		return new OZDbStoresCrudReal();
 	}
 }

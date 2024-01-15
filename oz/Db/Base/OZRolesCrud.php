@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMEntityCRUD;
+use OZONE\Core\Db\OZRole;
+use OZONE\Core\Db\OZRolesCrud as OZRolesCrudReal;
+
 /**
  * Class OZRolesCrud.
  *
  * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZRole>
  */
-class OZRolesCrud extends \Gobl\ORM\ORMEntityCRUD
+class OZRolesCrud extends ORMEntityCRUD
 {
 	/**
 	 * OZRolesCrud constructor.
@@ -26,8 +30,8 @@ class OZRolesCrud extends \Gobl\ORM\ORMEntityCRUD
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZRole::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZRole::TABLE_NAME
+			OZRole::TABLE_NAMESPACE,
+			OZRole::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ class OZRolesCrud extends \Gobl\ORM\ORMEntityCRUD
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZRolesCrud();
+		return new OZRolesCrudReal();
 	}
 }

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Queue\Cli;
 
+use Kli\Exceptions\KliException;
 use Kli\KliArgs;
 use Kli\Types\KliTypeString;
 use OZONE\Core\Cli\Command;
@@ -26,7 +27,7 @@ use OZONE\Core\Queue\Queue;
 final class JobsCmd extends Command
 {
 	/**
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	protected function describe(): void
 	{

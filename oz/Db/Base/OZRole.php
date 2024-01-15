@@ -13,6 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Queries\QBSelect;
+use Gobl\DBAL\Table;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntity;
+use OZONE\Core\Db\OZRole as OZRoleReal;
+use OZONE\Core\Db\OZRolesController;
+use OZONE\Core\Db\OZRolesCrud;
+use OZONE\Core\Db\OZRolesQuery;
+use OZONE\Core\Db\OZRolesResults;
+
 /**
  * Class OZRole.
  *
@@ -26,7 +36,7 @@ namespace OZONE\Core\Db\Base;
  * @property null|string $deleted_at Getter for column `oz_roles`.`deleted_at`.
  * @property string      $user_id    Getter for column `oz_roles`.`user_id`.
  */
-abstract class OZRole extends \Gobl\ORM\ORMEntity
+abstract class OZRole extends ORMEntity
 {
 	public const TABLE_NAME      = 'oz_roles';
 	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
@@ -64,55 +74,55 @@ abstract class OZRole extends \Gobl\ORM\ORMEntity
 	 */
 	public static function new(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\Core\Db\OZRole($is_new, $strict);
+		return new OZRoleReal($is_new, $strict);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZRolesCrud
+	 * @return OZRolesCrud
 	 */
-	public static function crud(): \OZONE\Core\Db\OZRolesCrud
+	public static function crud(): OZRolesCrud
 	{
-		return \OZONE\Core\Db\OZRolesCrud::new();
+		return OZRolesCrud::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZRolesController
+	 * @return OZRolesController
 	 */
-	public static function ctrl(): \OZONE\Core\Db\OZRolesController
+	public static function ctrl(): OZRolesController
 	{
-		return \OZONE\Core\Db\OZRolesController::new();
+		return OZRolesController::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZRolesQuery
+	 * @return OZRolesQuery
 	 */
-	public static function qb(): \OZONE\Core\Db\OZRolesQuery
+	public static function qb(): OZRolesQuery
 	{
-		return \OZONE\Core\Db\OZRolesQuery::new();
+		return OZRolesQuery::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZRolesResults
+	 * @return OZRolesResults
 	 */
-	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZRolesResults
+	public static function results(QBSelect $query): OZRolesResults
 	{
-		return \OZONE\Core\Db\OZRolesResults::new($query);
+		return OZRolesResults::new($query);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function table(): \Gobl\DBAL\Table
+	public static function table(): Table
 	{
-		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
+		return ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**

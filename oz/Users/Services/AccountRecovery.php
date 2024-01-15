@@ -18,8 +18,10 @@ use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Providers\EmailVerificationProvider;
 use OZONE\Core\Auth\Providers\PhoneVerificationProvider;
 use OZONE\Core\Columns\Types\TypePassword;
+use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InternalErrorException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Router\Guards\TwoFactorRouteGuard;
 use OZONE\Core\Router\RouteInfo;
@@ -34,17 +36,17 @@ final class AccountRecovery extends Service
 	public const ROUTE_ACCOUNT_RECOVERY = 'oz:account-recovery';
 
 	/**
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\Core\Exceptions\InternalErrorException
+	 * @throws ForbiddenException
+	 * @throws UnauthorizedActionException
+	 * @throws InternalErrorException
 	 */
 	public function actionRecover(RouteInfo $ri): void
 	{
 		$context = $ri->getContext();
 
-		/** @var \OZONE\Core\Db\OZAuth $auth */
+		/** @var OZAuth $auth */
 		$auth = $ri->getGuardFormData(TwoFactorRouteGuard::class)
 			->get('auth');
 
@@ -95,7 +97,7 @@ final class AccountRecovery extends Service
 	}
 
 	/**
-	 * @return \OZONE\Core\Forms\Form
+	 * @return Form
 	 */
 	public static function editPassForm(): Form
 	{

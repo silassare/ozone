@@ -13,6 +13,18 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Queries\QBSelect;
+use Gobl\DBAL\Table;
+use Gobl\Exceptions\GoblException;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntity;
+use OZONE\Core\Db\OZSession as OZSessionReal;
+use OZONE\Core\Db\OZSessionsController;
+use OZONE\Core\Db\OZSessionsCrud;
+use OZONE\Core\Db\OZSessionsQuery;
+use OZONE\Core\Db\OZSessionsResults;
+use OZONE\Core\Db\OZUser;
+
 /**
  * Class OZSession.
  *
@@ -26,7 +38,7 @@ namespace OZONE\Core\Db\Base;
  * @property string      $updated_at         Getter for column `oz_sessions`.`updated_at`.
  * @property null|string $user_id            Getter for column `oz_sessions`.`user_id`.
  */
-abstract class OZSession extends \Gobl\ORM\ORMEntity
+abstract class OZSession extends ORMEntity
 {
 	public const TABLE_NAME             = 'oz_sessions';
 	public const TABLE_NAMESPACE        = 'OZONE\\Core\\Db';
@@ -64,55 +76,55 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 */
 	public static function new(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\Core\Db\OZSession($is_new, $strict);
+		return new OZSessionReal($is_new, $strict);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZSessionsCrud
+	 * @return OZSessionsCrud
 	 */
-	public static function crud(): \OZONE\Core\Db\OZSessionsCrud
+	public static function crud(): OZSessionsCrud
 	{
-		return \OZONE\Core\Db\OZSessionsCrud::new();
+		return OZSessionsCrud::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZSessionsController
+	 * @return OZSessionsController
 	 */
-	public static function ctrl(): \OZONE\Core\Db\OZSessionsController
+	public static function ctrl(): OZSessionsController
 	{
-		return \OZONE\Core\Db\OZSessionsController::new();
+		return OZSessionsController::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZSessionsQuery
+	 * @return OZSessionsQuery
 	 */
-	public static function qb(): \OZONE\Core\Db\OZSessionsQuery
+	public static function qb(): OZSessionsQuery
 	{
-		return \OZONE\Core\Db\OZSessionsQuery::new();
+		return OZSessionsQuery::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZSessionsResults
+	 * @return OZSessionsResults
 	 */
-	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZSessionsResults
+	public static function results(QBSelect $query): OZSessionsResults
 	{
-		return \OZONE\Core\Db\OZSessionsResults::new($query);
+		return OZSessionsResults::new($query);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function table(): \Gobl\DBAL\Table
+	public static function table(): Table
 	{
-		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
+		return ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -336,11 +348,11 @@ abstract class OZSession extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return ?\OZONE\Core\Db\OZUser
 	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws GoblException
 	 */
-	public function getUser(): ?\OZONE\Core\Db\OZUser
+	public function getUser(): ?OZUser
 	{
-		return \OZONE\Core\Db\OZUser::ctrl()->getRelative(
+		return OZUser::ctrl()->getRelative(
 			$this,
 			static::table()->getRelation('user')
 		);

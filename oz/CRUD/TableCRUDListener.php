@@ -16,6 +16,8 @@ namespace OZONE\Core\CRUD;
 use OZONE\Core\App\Context;
 use OZONE\Core\CRUD\Interfaces\TableCRUDListenerInterface;
 use OZONE\Core\CRUD\Traits\TableCRUDListenerTrait;
+use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Exceptions\UnverifiedUserException;
 
 /**
  * Class TableCRUDListener.
@@ -27,7 +29,7 @@ abstract class TableCRUDListener implements TableCRUDListenerInterface
 	/**
 	 * TableCRUDListener constructor.
 	 *
-	 * @param \OZONE\Core\App\Context $context
+	 * @param Context $context
 	 */
 	public function __construct(protected readonly Context $context) {}
 
@@ -42,8 +44,8 @@ abstract class TableCRUDListener implements TableCRUDListenerInterface
 	/**
 	 * Asserts that the current user is an admin.
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\UnverifiedUserException
+	 * @throws ForbiddenException
+	 * @throws UnverifiedUserException
 	 */
 	protected function assertIsAdmin(): void
 	{

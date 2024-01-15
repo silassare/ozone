@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMController;
+use OZONE\Core\Db\OZAuth;
+use OZONE\Core\Db\OZAuthsController as OZAuthsControllerReal;
+
 /**
  * Class OZAuthsController.
  *
  * @extends \Gobl\ORM\ORMController<\OZONE\Core\Db\OZAuth, \OZONE\Core\Db\OZAuthsQuery, \OZONE\Core\Db\OZAuthsResults>
  */
-abstract class OZAuthsController extends \Gobl\ORM\ORMController
+abstract class OZAuthsController extends ORMController
 {
 	/**
 	 * OZAuthsController constructor.
@@ -26,8 +30,8 @@ abstract class OZAuthsController extends \Gobl\ORM\ORMController
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZAuth::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZAuth::TABLE_NAME
+			OZAuth::TABLE_NAMESPACE,
+			OZAuth::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ abstract class OZAuthsController extends \Gobl\ORM\ORMController
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZAuthsController();
+		return new OZAuthsControllerReal();
 	}
 }

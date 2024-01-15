@@ -19,6 +19,7 @@ use Gobl\ORM\Generators\CSGeneratorDart;
 use Gobl\ORM\Generators\CSGeneratorORM;
 use Gobl\ORM\Generators\CSGeneratorTS;
 use Gobl\ORM\ORM;
+use Kli\Exceptions\KliException;
 use Kli\Exceptions\KliInputException;
 use Kli\Kli;
 use Kli\KliArgs;
@@ -42,10 +43,10 @@ final class DbCmd extends Command
 	/**
 	 * Ensures database backup.
 	 *
-	 * @param \Kli\Kli                         $cli
+	 * @param Kli                              $cli
 	 * @param null|\OZONE\Core\FS\FilesManager $fm
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	public static function ensureDBBackup(Kli $cli, FilesManager $fm = null): void
 	{
@@ -60,7 +61,7 @@ final class DbCmd extends Command
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	protected function describe(): void
 	{
@@ -143,10 +144,10 @@ final class DbCmd extends Command
 	 *
 	 * You should backup your database first.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException
-	 * @throws \Kli\Exceptions\KliInputException
+	 * @throws KliException
+	 * @throws KliInputException
 	 */
 	private function build(KliArgs $args): void
 	{
@@ -233,9 +234,9 @@ final class DbCmd extends Command
 	/**
 	 * Creates entities TypeScript bundle.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 * @throws Exception
 	 */
 	private function tsBundle(KliArgs $args): void
@@ -256,9 +257,9 @@ final class DbCmd extends Command
 	/**
 	 * Creates entities Dart bundle.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 * @throws Exception
 	 */
 	private function dartBundle(KliArgs $args): void
@@ -279,9 +280,9 @@ final class DbCmd extends Command
 	/**
 	 * Generate database file.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	private function generate(KliArgs $args): void
 	{
@@ -313,9 +314,9 @@ final class DbCmd extends Command
 	/**
 	 * Runs database file.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	private function source(KliArgs $args): void
 	{
@@ -346,9 +347,9 @@ final class DbCmd extends Command
 	/**
 	 * Backup database.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	private function backup(KliArgs $args): void
 	{

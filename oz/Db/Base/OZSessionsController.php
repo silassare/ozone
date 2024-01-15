@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMController;
+use OZONE\Core\Db\OZSession;
+use OZONE\Core\Db\OZSessionsController as OZSessionsControllerReal;
+
 /**
  * Class OZSessionsController.
  *
  * @extends \Gobl\ORM\ORMController<\OZONE\Core\Db\OZSession, \OZONE\Core\Db\OZSessionsQuery, \OZONE\Core\Db\OZSessionsResults>
  */
-abstract class OZSessionsController extends \Gobl\ORM\ORMController
+abstract class OZSessionsController extends ORMController
 {
 	/**
 	 * OZSessionsController constructor.
@@ -26,8 +30,8 @@ abstract class OZSessionsController extends \Gobl\ORM\ORMController
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZSession::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZSession::TABLE_NAME
+			OZSession::TABLE_NAMESPACE,
+			OZSession::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ abstract class OZSessionsController extends \Gobl\ORM\ORMController
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZSessionsController();
+		return new OZSessionsControllerReal();
 	}
 }

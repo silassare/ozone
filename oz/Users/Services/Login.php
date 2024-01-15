@@ -28,7 +28,7 @@ final class Login extends Service
 	public const ROUTE_LOGIN = 'oz:login';
 
 	/**
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws InvalidFormException
 	 */
 	public function actionLogin(): void
 	{

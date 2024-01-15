@@ -22,7 +22,7 @@ final class UserLogInUnknown extends Event
 	public function __construct(private readonly Context $context) {}
 
 	/**
-	 * @return \OZONE\Core\App\Context
+	 * @return Context
 	 */
 	public function getContext(): Context
 	{

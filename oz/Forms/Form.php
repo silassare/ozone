@@ -75,7 +75,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Set form submit to uri.
 	 *
-	 * @param \OZONE\Core\Http\Uri $uri
+	 * @param Uri $uri
 	 *
 	 * @return $this
 	 */
@@ -111,7 +111,7 @@ class Form implements ArrayCapableInterface
 	 *
 	 * @param string $method
 	 *
-	 * @return \OZONE\Core\Forms\Form
+	 * @return Form
 	 */
 	public function setMethod(string $method): self
 	{
@@ -145,7 +145,7 @@ class Form implements ArrayCapableInterface
 	 *
 	 * If the field is already added, it will be replaced.
 	 *
-	 * @param \OZONE\Core\Forms\Field $field
+	 * @param Field $field
 	 *
 	 * @return $this
 	 */
@@ -167,7 +167,7 @@ class Form implements ArrayCapableInterface
 	 *
 	 * @param string $name
 	 *
-	 * @return \OZONE\Core\Forms\Field
+	 * @return Field
 	 */
 	public function field(string $name): Field
 	{
@@ -217,7 +217,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Creates a new rule and adds it to the form.
 	 *
-	 * @return \OZONE\Core\Forms\FormRule
+	 * @return FormRule
 	 */
 	public function rule(): FormRule
 	{
@@ -243,13 +243,13 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Validates the form.
 	 *
-	 * @param \OZONE\Core\Forms\FormData      $unsafe_fd
+	 * @param FormData                        $unsafe_fd
 	 * @param null|\OZONE\Core\Forms\FormData $cleaned_fd
 	 * @param string                          $step_prefix
 	 *
-	 * @return \OZONE\Core\Forms\FormData
+	 * @return FormData
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws InvalidFormException
 	 */
 	public function validate(FormData $unsafe_fd, ?FormData $cleaned_fd = null, string $step_prefix = ''): FormData
 	{
@@ -319,7 +319,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Merges a given form to this.
 	 *
-	 * @param \OZONE\Core\Forms\Form $from
+	 * @param Form $from
 	 *
 	 * @return $this
 	 */
@@ -348,7 +348,7 @@ class Form implements ArrayCapableInterface
 	 *
 	 * @param \Gobl\DBAL\Table|string $table
 	 *
-	 * @return \OZONE\Core\Forms\Form
+	 * @return Form
 	 */
 	public static function fromTable(string|Table $table): self
 	{
@@ -383,7 +383,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Checks for the CSRF token validity.
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException When the CSRF token is invalid
+	 * @throws InvalidFormException When the CSRF token is invalid
 	 */
 	private function assertValidCSRFToken(FormData $form): void
 	{

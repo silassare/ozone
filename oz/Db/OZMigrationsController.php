@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZMigrationsController as OZMigrationsControllerBase;
+
 /**
  * Class OZMigrationsController.
  */
-class OZMigrationsController extends \OZONE\Core\Db\Base\OZMigrationsController
+class OZMigrationsController extends OZMigrationsControllerBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

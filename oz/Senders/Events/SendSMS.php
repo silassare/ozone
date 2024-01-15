@@ -37,7 +37,7 @@ final class SendSMS extends Event
 	}
 
 	/**
-	 * @return \OZONE\Core\Senders\Messages\SMSMessage
+	 * @return SMSMessage
 	 */
 	public function getMessage(): SMSMessage
 	{

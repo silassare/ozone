@@ -16,6 +16,8 @@ namespace OZONE\Core\Router\Guards;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Router\RouteInfo;
@@ -61,9 +63,9 @@ class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws ForbiddenException
+	 * @throws InvalidFormException
+	 * @throws UnauthorizedActionException
 	 */
 	public function checkAccess(RouteInfo $ri): void
 	{

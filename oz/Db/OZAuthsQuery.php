@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZAuthsQuery as OZAuthsQueryBase;
+
 /**
  * Class OZAuthsQuery.
  */
-class OZAuthsQuery extends \OZONE\Core\Db\Base\OZAuthsQuery
+class OZAuthsQuery extends OZAuthsQueryBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

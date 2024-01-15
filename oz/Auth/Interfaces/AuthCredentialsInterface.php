@@ -102,7 +102,7 @@ interface AuthCredentialsInterface extends ArrayCapableInterface
 	/**
 	 * Gets authorization link.
 	 *
-	 * @return \OZONE\Core\Http\Uri
+	 * @return Uri
 	 */
 	public function getLink(): Uri;
 }

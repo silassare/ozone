@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMTableQuery;
+use OZONE\Core\Db\OZJob;
+use OZONE\Core\Db\OZJobsQuery as OZJobsQueryReal;
+
 /**
  * Class OZJobsQuery.
  *
@@ -179,7 +183,7 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereUpdatedAtIsIn(array $value)                          Filters rows with `in` condition on column `oz_jobs`.`updated_at`.
  * @method $this whereUpdatedAtIsNotIn(array $value)                       Filters rows with `not_in` condition on column `oz_jobs`.`updated_at`.
  */
-abstract class OZJobsQuery extends \Gobl\ORM\ORMTableQuery
+abstract class OZJobsQuery extends ORMTableQuery
 {
 	/**
 	 * OZJobsQuery constructor.
@@ -187,8 +191,8 @@ abstract class OZJobsQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZJob::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZJob::TABLE_NAME
+			OZJob::TABLE_NAMESPACE,
+			OZJob::TABLE_NAME
 		);
 	}
 
@@ -199,6 +203,6 @@ abstract class OZJobsQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZJobsQuery();
+		return new OZJobsQueryReal();
 	}
 }

@@ -57,7 +57,7 @@ final class RouteInfo
 	/**
 	 * Gets current request context.
 	 *
-	 * @return \OZONE\Core\App\Context
+	 * @return Context
 	 */
 	public function getContext(): Context
 	{
@@ -67,7 +67,7 @@ final class RouteInfo
 	/**
 	 * Gets current route.
 	 *
-	 * @return \OZONE\Core\Router\Route
+	 * @return Route
 	 */
 	public function route(): Route
 	{
@@ -100,7 +100,7 @@ final class RouteInfo
 	/**
 	 * Shortcut for {@see \OZONE\Core\Http\Request::getUri()}.
 	 *
-	 * @return \OZONE\Core\Http\Uri
+	 * @return Uri
 	 */
 	public function uri(): Uri
 	{
@@ -111,7 +111,7 @@ final class RouteInfo
 	/**
 	 * Gets validated form data.
 	 *
-	 * @return \OZONE\Core\Forms\FormData
+	 * @return FormData
 	 */
 	public function getCleanFormData(): FormData
 	{
@@ -136,7 +136,7 @@ final class RouteInfo
 	 *
 	 * @param string $guard
 	 *
-	 * @return \OZONE\Core\Forms\FormData
+	 * @return FormData
 	 */
 	public function getGuardFormData(string $guard): FormData
 	{
@@ -214,7 +214,7 @@ final class RouteInfo
 	/**
 	 * Validates the form data if any.
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws InvalidFormException
 	 */
 	private function checkForm(): void
 	{

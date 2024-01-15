@@ -59,7 +59,7 @@ class Cookies
 	 *
 	 * @param array $properties
 	 *
-	 * @return \OZONE\Core\Http\Cookies
+	 * @return Cookies
 	 */
 	public function setDefaultsProperties(array $properties): self
 	{
@@ -87,7 +87,7 @@ class Cookies
 	 * @param string       $name  Cookie name
 	 * @param array|string $value Cookie value, or cookie properties
 	 *
-	 * @return \OZONE\Core\Http\Cookies
+	 * @return Cookies
 	 */
 	public function set(string $name, array|string $value): self
 	{

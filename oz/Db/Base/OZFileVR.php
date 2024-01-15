@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Relations\VirtualRelation;
+use OZONE\Core\Db\OZFile;
+
 /**
  * Class OZFileVR.
  *
@@ -20,7 +23,7 @@ namespace OZONE\Core\Db\Base;
  *
  * @extends \Gobl\DBAL\Relations\VirtualRelation<\OZONE\Core\Db\OZFile, TRelationResult>
  */
-abstract class OZFileVR extends \Gobl\DBAL\Relations\VirtualRelation
+abstract class OZFileVR extends VirtualRelation
 {
 	/**
 	 * {class_name} constructor.
@@ -31,8 +34,8 @@ abstract class OZFileVR extends \Gobl\DBAL\Relations\VirtualRelation
 	public function __construct(string $name, bool $paginated)
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZFile::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZFile::TABLE_NAME,
+			OZFile::TABLE_NAMESPACE,
+			OZFile::TABLE_NAME,
 			$name,
 			$paginated
 		);

@@ -26,7 +26,7 @@ final class RouteBeforeRun extends Hook
 	/**
 	 * RouteBeforeRun constructor.
 	 *
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 */
 	public function __construct(protected RouteInfo $ri)
 	{
@@ -45,7 +45,7 @@ final class RouteBeforeRun extends Hook
 	/**
 	 * Gets route info.
 	 *
-	 * @return \OZONE\Core\Router\RouteInfo
+	 * @return RouteInfo
 	 */
 	public function getRouteInfo(): RouteInfo
 	{

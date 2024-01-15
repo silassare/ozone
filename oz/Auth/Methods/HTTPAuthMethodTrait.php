@@ -25,7 +25,7 @@ trait HTTPAuthMethodTrait
 	/**
 	 * Ask the client for authentication.
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws UnauthorizedActionException
 	 */
 	public function ask(): void
 	{

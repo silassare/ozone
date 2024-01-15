@@ -44,7 +44,7 @@ interface TaskInterface
 	/**
 	 * Add a schedule to the task.
 	 *
-	 * @param \OZONE\Core\Cli\Cron\Schedule $schedule
+	 * @param Schedule $schedule
 	 *
 	 * @return $this
 	 */
@@ -55,7 +55,7 @@ interface TaskInterface
 	 *
 	 * This is a shortcut to {@link addSchedule()}.
 	 *
-	 * @return \OZONE\Core\Cli\Cron\Schedule
+	 * @return Schedule
 	 */
 	public function schedule(): Schedule;
 

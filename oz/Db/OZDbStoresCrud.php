@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZDbStoresCrud as OZDbStoresCrudBase;
+
 /**
  * Class OZDbStoresCrud.
  */
-class OZDbStoresCrud extends \OZONE\Core\Db\Base\OZDbStoresCrud
+class OZDbStoresCrud extends OZDbStoresCrudBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

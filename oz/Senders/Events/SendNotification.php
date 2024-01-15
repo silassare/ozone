@@ -37,7 +37,7 @@ final class SendNotification extends Event
 	}
 
 	/**
-	 * @return \OZONE\Core\Senders\Messages\NotificationMessage
+	 * @return NotificationMessage
 	 */
 	public function getMessage(): NotificationMessage
 	{

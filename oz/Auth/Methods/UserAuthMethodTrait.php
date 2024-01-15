@@ -20,6 +20,8 @@ use OZONE\Core\Auth\Providers\UserAuthProvider;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Users\Users;
 
 /**
@@ -33,11 +35,11 @@ trait UserAuthMethodTrait
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZUser
+	 * @return OZUser
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws ForbiddenException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public function user(): OZUser
 	{
@@ -52,11 +54,11 @@ trait UserAuthMethodTrait
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface
+	 * @return AuthAccessRightsInterface
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws ForbiddenException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public function accessRights(): AuthAccessRightsInterface
 	{
@@ -73,9 +75,9 @@ trait UserAuthMethodTrait
 	 *
 	 * @param string $token
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws ForbiddenException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	protected function authenticateWithToken(string $token): void
 	{
@@ -125,11 +127,11 @@ trait UserAuthMethodTrait
 	 * @param string $uid
 	 * @param string $auth_ref
 	 *
-	 * @return \OZONE\Core\Db\OZAuth
+	 * @return OZAuth
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws ForbiddenException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	protected function getUserAuthWithRef(string $uid, string $auth_ref): OZAuth
 	{

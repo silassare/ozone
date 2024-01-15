@@ -13,29 +13,40 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Queries\QBSelect;
+use Gobl\DBAL\Table;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntity;
+use OZONE\Core\Auth\AuthState;
+use OZONE\Core\Db\OZAuth as OZAuthReal;
+use OZONE\Core\Db\OZAuthsController;
+use OZONE\Core\Db\OZAuthsCrud;
+use OZONE\Core\Db\OZAuthsQuery;
+use OZONE\Core\Db\OZAuthsResults;
+
 /**
  * Class OZAuth.
  *
- * @property string                     $ref         Getter for column `oz_auths`.`ref`.
- * @property string                     $label       Getter for column `oz_auths`.`label`.
- * @property string                     $refresh_key Getter for column `oz_auths`.`refresh_key`.
- * @property string                     $provider    Getter for column `oz_auths`.`provider`.
- * @property array                      $payload     Getter for column `oz_auths`.`payload`.
- * @property string                     $code_hash   Getter for column `oz_auths`.`code_hash`.
- * @property string                     $token_hash  Getter for column `oz_auths`.`token_hash`.
- * @property \OZONE\Core\Auth\AuthState $state       Getter for column `oz_auths`.`state`.
- * @property int                        $try_max     Getter for column `oz_auths`.`try_max`.
- * @property int                        $try_count   Getter for column `oz_auths`.`try_count`.
- * @property int                        $lifetime    Getter for column `oz_auths`.`lifetime`.
- * @property string                     $expire      Getter for column `oz_auths`.`expire`.
- * @property array                      $options     Getter for column `oz_auths`.`options`.
- * @property bool                       $is_valid    Getter for column `oz_auths`.`is_valid`.
- * @property string                     $created_at  Getter for column `oz_auths`.`created_at`.
- * @property string                     $updated_at  Getter for column `oz_auths`.`updated_at`.
- * @property bool                       $deleted     Getter for column `oz_auths`.`deleted`.
- * @property null|string                $deleted_at  Getter for column `oz_auths`.`deleted_at`.
+ * @property string      $ref         Getter for column `oz_auths`.`ref`.
+ * @property string      $label       Getter for column `oz_auths`.`label`.
+ * @property string      $refresh_key Getter for column `oz_auths`.`refresh_key`.
+ * @property string      $provider    Getter for column `oz_auths`.`provider`.
+ * @property array       $payload     Getter for column `oz_auths`.`payload`.
+ * @property string      $code_hash   Getter for column `oz_auths`.`code_hash`.
+ * @property string      $token_hash  Getter for column `oz_auths`.`token_hash`.
+ * @property AuthState   $state       Getter for column `oz_auths`.`state`.
+ * @property int         $try_max     Getter for column `oz_auths`.`try_max`.
+ * @property int         $try_count   Getter for column `oz_auths`.`try_count`.
+ * @property int         $lifetime    Getter for column `oz_auths`.`lifetime`.
+ * @property string      $expire      Getter for column `oz_auths`.`expire`.
+ * @property array       $options     Getter for column `oz_auths`.`options`.
+ * @property bool        $is_valid    Getter for column `oz_auths`.`is_valid`.
+ * @property string      $created_at  Getter for column `oz_auths`.`created_at`.
+ * @property string      $updated_at  Getter for column `oz_auths`.`updated_at`.
+ * @property bool        $deleted     Getter for column `oz_auths`.`deleted`.
+ * @property null|string $deleted_at  Getter for column `oz_auths`.`deleted_at`.
  */
-abstract class OZAuth extends \Gobl\ORM\ORMEntity
+abstract class OZAuth extends ORMEntity
 {
 	public const TABLE_NAME      = 'oz_auths';
 	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
@@ -82,55 +93,55 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 */
 	public static function new(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\Core\Db\OZAuth($is_new, $strict);
+		return new OZAuthReal($is_new, $strict);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZAuthsCrud
+	 * @return OZAuthsCrud
 	 */
-	public static function crud(): \OZONE\Core\Db\OZAuthsCrud
+	public static function crud(): OZAuthsCrud
 	{
-		return \OZONE\Core\Db\OZAuthsCrud::new();
+		return OZAuthsCrud::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZAuthsController
+	 * @return OZAuthsController
 	 */
-	public static function ctrl(): \OZONE\Core\Db\OZAuthsController
+	public static function ctrl(): OZAuthsController
 	{
-		return \OZONE\Core\Db\OZAuthsController::new();
+		return OZAuthsController::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZAuthsQuery
+	 * @return OZAuthsQuery
 	 */
-	public static function qb(): \OZONE\Core\Db\OZAuthsQuery
+	public static function qb(): OZAuthsQuery
 	{
-		return \OZONE\Core\Db\OZAuthsQuery::new();
+		return OZAuthsQuery::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZAuthsResults
+	 * @return OZAuthsResults
 	 */
-	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZAuthsResults
+	public static function results(QBSelect $query): OZAuthsResults
 	{
-		return \OZONE\Core\Db\OZAuthsResults::new($query);
+		return OZAuthsResults::new($query);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function table(): \Gobl\DBAL\Table
+	public static function table(): Table
 	{
-		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
+		return ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -304,9 +315,9 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	/**
 	 * Getter for column `oz_auths`.`state`.
 	 *
-	 * @return \OZONE\Core\Auth\AuthState
+	 * @return AuthState
 	 */
-	public function getState(): \OZONE\Core\Auth\AuthState
+	public function getState(): AuthState
 	{
 		return $this->state;
 	}
@@ -318,7 +329,7 @@ abstract class OZAuth extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setState(\OZONE\Core\Auth\AuthState|string $state): static
+	public function setState(AuthState|string $state): static
 	{
 		$this->state = $state;
 

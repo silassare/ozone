@@ -16,6 +16,7 @@ namespace OZONE\Core\Router\Guards;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\JSONResponse;
+use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
@@ -35,8 +36,8 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 	 * This will show a custom form,
 	 * and makes sure the form is submitted and is valid.
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws UnauthorizedActionException
+	 * @throws InvalidFormException
 	 */
 	protected function requireForm(Context $context, Form $form): FormData
 	{

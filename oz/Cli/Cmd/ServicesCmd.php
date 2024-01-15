@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cmd;
 
 use Gobl\DBAL\Table;
+use Kli\Exceptions\KliException;
 use Kli\KliArgs;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
@@ -29,7 +30,7 @@ final class ServicesCmd extends Command
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	protected function describe(): void
 	{
@@ -74,9 +75,9 @@ final class ServicesCmd extends Command
 	/**
 	 * Generate service for a table in the database.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	private function generate(KliArgs $args): void
 	{

@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMController;
+use OZONE\Core\Db\OZUser;
+use OZONE\Core\Db\OZUsersController as OZUsersControllerReal;
+
 /**
  * Class OZUsersController.
  *
  * @extends \Gobl\ORM\ORMController<\OZONE\Core\Db\OZUser, \OZONE\Core\Db\OZUsersQuery, \OZONE\Core\Db\OZUsersResults>
  */
-abstract class OZUsersController extends \Gobl\ORM\ORMController
+abstract class OZUsersController extends ORMController
 {
 	/**
 	 * OZUsersController constructor.
@@ -26,8 +30,8 @@ abstract class OZUsersController extends \Gobl\ORM\ORMController
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZUser::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZUser::TABLE_NAME
+			OZUser::TABLE_NAMESPACE,
+			OZUser::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ abstract class OZUsersController extends \Gobl\ORM\ORMController
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZUsersController();
+		return new OZUsersControllerReal();
 	}
 }

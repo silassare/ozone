@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Users\Cli;
 
+use Gobl\CRUD\Exceptions\CRUDException;
+use Gobl\ORM\Exceptions\ORMException;
+use Gobl\ORM\Exceptions\ORMQueryException;
+use Kli\Exceptions\KliException;
 use Kli\KliArgs;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
@@ -25,7 +29,7 @@ use OZONE\Core\OZone;
 final class UsersCmd extends Command
 {
 	/**
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	protected function describe(): void
 	{
@@ -54,11 +58,11 @@ final class UsersCmd extends Command
 	/**
 	 * Adds new user.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+	 * @throws CRUDException
+	 * @throws ORMException
+	 * @throws ORMQueryException
 	 */
 	private function add(KliArgs $args): void
 	{

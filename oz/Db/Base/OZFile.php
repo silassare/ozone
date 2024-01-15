@@ -13,33 +13,46 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Queries\QBSelect;
+use Gobl\DBAL\Table;
+use Gobl\Exceptions\GoblException;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntity;
+use OZONE\Core\Db\OZFile as OZFileReal;
+use OZONE\Core\Db\OZFilesController;
+use OZONE\Core\Db\OZFilesCrud;
+use OZONE\Core\Db\OZFilesQuery;
+use OZONE\Core\Db\OZFilesResults;
+use OZONE\Core\Db\OZUser;
+use OZONE\Core\FS\Enums\FileKind;
+
 /**
  * Class OZFile.
  *
- * @property null|string                   $id          Getter for column `oz_files`.`id`.
- * @property string                        $key         Getter for column `oz_files`.`key`.
- * @property string                        $ref         Getter for column `oz_files`.`ref`.
- * @property string                        $storage     Getter for column `oz_files`.`storage`.
- * @property int                           $size        Getter for column `oz_files`.`size`.
- * @property \OZONE\Core\FS\Enums\FileKind $kind        Getter for column `oz_files`.`kind`.
- * @property string                        $mime        Getter for column `oz_files`.`mime`.
- * @property string                        $extension   Getter for column `oz_files`.`extension`.
- * @property string                        $name        Getter for column `oz_files`.`name`.
- * @property string                        $real_name   Getter for column `oz_files`.`real_name`.
- * @property null|string                   $for_id      Getter for column `oz_files`.`for_id`.
- * @property null|string                   $for_type    Getter for column `oz_files`.`for_type`.
- * @property string                        $for_label   Getter for column `oz_files`.`for_label`.
- * @property array                         $data        Getter for column `oz_files`.`data`.
- * @property bool                          $is_valid    Getter for column `oz_files`.`is_valid`.
- * @property string                        $created_at  Getter for column `oz_files`.`created_at`.
- * @property string                        $updated_at  Getter for column `oz_files`.`updated_at`.
- * @property bool                          $deleted     Getter for column `oz_files`.`deleted`.
- * @property null|string                   $deleted_at  Getter for column `oz_files`.`deleted_at`.
- * @property null|string                   $uploaded_by Getter for column `oz_files`.`uploaded_by`.
- * @property null|string                   $clone_id    Getter for column `oz_files`.`clone_id`.
- * @property null|string                   $source_id   Getter for column `oz_files`.`source_id`.
+ * @property null|string $id          Getter for column `oz_files`.`id`.
+ * @property string      $key         Getter for column `oz_files`.`key`.
+ * @property string      $ref         Getter for column `oz_files`.`ref`.
+ * @property string      $storage     Getter for column `oz_files`.`storage`.
+ * @property int         $size        Getter for column `oz_files`.`size`.
+ * @property FileKind    $kind        Getter for column `oz_files`.`kind`.
+ * @property string      $mime        Getter for column `oz_files`.`mime`.
+ * @property string      $extension   Getter for column `oz_files`.`extension`.
+ * @property string      $name        Getter for column `oz_files`.`name`.
+ * @property string      $real_name   Getter for column `oz_files`.`real_name`.
+ * @property null|string $for_id      Getter for column `oz_files`.`for_id`.
+ * @property null|string $for_type    Getter for column `oz_files`.`for_type`.
+ * @property string      $for_label   Getter for column `oz_files`.`for_label`.
+ * @property array       $data        Getter for column `oz_files`.`data`.
+ * @property bool        $is_valid    Getter for column `oz_files`.`is_valid`.
+ * @property string      $created_at  Getter for column `oz_files`.`created_at`.
+ * @property string      $updated_at  Getter for column `oz_files`.`updated_at`.
+ * @property bool        $deleted     Getter for column `oz_files`.`deleted`.
+ * @property null|string $deleted_at  Getter for column `oz_files`.`deleted_at`.
+ * @property null|string $uploaded_by Getter for column `oz_files`.`uploaded_by`.
+ * @property null|string $clone_id    Getter for column `oz_files`.`clone_id`.
+ * @property null|string $source_id   Getter for column `oz_files`.`source_id`.
  */
-abstract class OZFile extends \Gobl\ORM\ORMEntity
+abstract class OZFile extends ORMEntity
 {
 	public const TABLE_NAME      = 'oz_files';
 	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
@@ -90,55 +103,55 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 */
 	public static function new(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\Core\Db\OZFile($is_new, $strict);
+		return new OZFileReal($is_new, $strict);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZFilesCrud
+	 * @return OZFilesCrud
 	 */
-	public static function crud(): \OZONE\Core\Db\OZFilesCrud
+	public static function crud(): OZFilesCrud
 	{
-		return \OZONE\Core\Db\OZFilesCrud::new();
+		return OZFilesCrud::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZFilesController
+	 * @return OZFilesController
 	 */
-	public static function ctrl(): \OZONE\Core\Db\OZFilesController
+	public static function ctrl(): OZFilesController
 	{
-		return \OZONE\Core\Db\OZFilesController::new();
+		return OZFilesController::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZFilesQuery
+	 * @return OZFilesQuery
 	 */
-	public static function qb(): \OZONE\Core\Db\OZFilesQuery
+	public static function qb(): OZFilesQuery
 	{
-		return \OZONE\Core\Db\OZFilesQuery::new();
+		return OZFilesQuery::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZFilesResults
+	 * @return OZFilesResults
 	 */
-	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZFilesResults
+	public static function results(QBSelect $query): OZFilesResults
 	{
-		return \OZONE\Core\Db\OZFilesResults::new($query);
+		return OZFilesResults::new($query);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function table(): \Gobl\DBAL\Table
+	public static function table(): Table
 	{
-		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
+		return ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -264,9 +277,9 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	/**
 	 * Getter for column `oz_files`.`kind`.
 	 *
-	 * @return \OZONE\Core\FS\Enums\FileKind
+	 * @return FileKind
 	 */
-	public function getKind(): \OZONE\Core\FS\Enums\FileKind
+	public function getKind(): FileKind
 	{
 		return $this->kind;
 	}
@@ -278,7 +291,7 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setKind(\OZONE\Core\FS\Enums\FileKind|string $kind): static
+	public function setKind(FileKind|string $kind): static
 	{
 		$this->kind = $kind;
 
@@ -674,11 +687,11 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return ?\OZONE\Core\Db\OZUser
 	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws GoblException
 	 */
-	public function getUploader(): ?\OZONE\Core\Db\OZUser
+	public function getUploader(): ?OZUser
 	{
-		return \OZONE\Core\Db\OZUser::ctrl()->getRelative(
+		return OZUser::ctrl()->getRelative(
 			$this,
 			static::table()->getRelation('uploader')
 		);
@@ -695,13 +708,13 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return \OZONE\Core\Db\OZFile[]
 	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws GoblException
 	 */
 	public function getClones(array $filters =  [
 	], ?int $max = null, int $offset = 0, array $order_by =  [
 	], ?int &$total = -1): array
 	{
-		return \OZONE\Core\Db\OZFile::ctrl()->getAllRelatives(
+		return OZFileReal::ctrl()->getAllRelatives(
 			$this,
 			static::table()->getRelation('clones'),
 			$filters,
@@ -717,11 +730,11 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return ?\OZONE\Core\Db\OZFile
 	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws GoblException
 	 */
-	public function getClonedFrom(): ?\OZONE\Core\Db\OZFile
+	public function getClonedFrom(): ?OZFileReal
 	{
-		return \OZONE\Core\Db\OZFile::ctrl()->getRelative(
+		return OZFileReal::ctrl()->getRelative(
 			$this,
 			static::table()->getRelation('cloned_from')
 		);
@@ -732,11 +745,11 @@ abstract class OZFile extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return ?\OZONE\Core\Db\OZFile
 	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws GoblException
 	 */
-	public function getSource(): ?\OZONE\Core\Db\OZFile
+	public function getSource(): ?OZFileReal
 	{
-		return \OZONE\Core\Db\OZFile::ctrl()->getRelative(
+		return OZFileReal::ctrl()->getRelative(
 			$this,
 			static::table()->getRelation('source')
 		);

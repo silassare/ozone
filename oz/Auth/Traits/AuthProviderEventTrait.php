@@ -25,7 +25,7 @@ trait AuthProviderEventTrait
 	/**
 	 * Called when a new authorization process start.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 */
 	protected function onInit(OZAuth $auth): void
 	{
@@ -40,7 +40,7 @@ trait AuthProviderEventTrait
 	/**
 	 * Called when the authorization process is refreshed.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 */
 	protected function onRefresh(OZAuth $auth): void
 	{
@@ -55,9 +55,9 @@ trait AuthProviderEventTrait
 	/**
 	 * Called when the provided refresh key is invalid.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws InvalidFormException
 	 */
 	protected function onInvalidRefreshKey(OZAuth $auth): void
 	{
@@ -67,7 +67,7 @@ trait AuthProviderEventTrait
 	/**
 	 * Called when the authorization process is canceled.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 */
 	protected function onCancel(OZAuth $auth): void
 	{
@@ -80,7 +80,7 @@ trait AuthProviderEventTrait
 	/**
 	 * Called when the authorization process succeeded.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 */
 	protected function onAuthorized(OZAuth $auth): void
 	{
@@ -94,9 +94,9 @@ trait AuthProviderEventTrait
 	/**
 	 * Called when the authorization has expired.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws UnauthorizedActionException
 	 */
 	protected function onExpired(OZAuth $auth): void
 	{
@@ -106,9 +106,9 @@ trait AuthProviderEventTrait
 	/**
 	 * Called when the provided code is invalid.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws InvalidFormException
 	 */
 	protected function onInvalidCode(OZAuth $auth): void
 	{
@@ -118,9 +118,9 @@ trait AuthProviderEventTrait
 	/**
 	 * Called when the provided token is invalid.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws InvalidFormException
 	 */
 	protected function onInvalidToken(OZAuth $auth): void
 	{
@@ -130,9 +130,9 @@ trait AuthProviderEventTrait
 	/**
 	 * Called when authorization attempt exceeded try_max.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws UnauthorizedActionException
 	 */
 	protected function onTooMuchRetry(OZAuth $auth): void
 	{
@@ -142,7 +142,7 @@ trait AuthProviderEventTrait
 	/**
 	 * Generate debug info to be passed to exception.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 *
 	 * @return array[]
 	 */

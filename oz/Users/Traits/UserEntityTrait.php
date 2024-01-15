@@ -73,7 +73,7 @@ trait UserEntityTrait
 	/**
 	 * Gets user access rights.
 	 *
-	 * @return \OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface
+	 * @return AuthAccessRightsInterface
 	 */
 	public function getAccessRights(): AuthAccessRightsInterface
 	{
@@ -86,7 +86,7 @@ trait UserEntityTrait
 	/**
 	 * Sets user access rights.
 	 *
-	 * @param \OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface $rights
+	 * @param AuthAccessRightsInterface $rights
 	 *
 	 * @return $this
 	 */

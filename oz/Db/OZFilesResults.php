@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZFilesResults as OZFilesResultsBase;
+
 /**
  * Class OZFilesResults.
  */
-class OZFilesResults extends \OZONE\Core\Db\Base\OZFilesResults
+class OZFilesResults extends OZFilesResultsBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

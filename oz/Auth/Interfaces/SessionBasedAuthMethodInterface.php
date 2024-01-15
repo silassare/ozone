@@ -24,14 +24,14 @@ interface SessionBasedAuthMethodInterface extends AuthMethodInterface
 	/**
 	 * Returns the session instance.
 	 *
-	 * @return \OZONE\Core\Sessions\Session
+	 * @return Session
 	 */
 	public function session(): Session;
 
 	/**
 	 * Alias of {@link Session::state()}.
 	 *
-	 * @return \OZONE\Core\Sessions\SessionState
+	 * @return SessionState
 	 */
 	public function state(): SessionState;
 

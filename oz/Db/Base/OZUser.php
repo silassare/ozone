@@ -13,6 +13,21 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Queries\QBSelect;
+use Gobl\DBAL\Table;
+use Gobl\Exceptions\GoblException;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntity;
+use OZONE\Core\Db\OZCountry;
+use OZONE\Core\Db\OZFile;
+use OZONE\Core\Db\OZRole;
+use OZONE\Core\Db\OZSession;
+use OZONE\Core\Db\OZUser as OZUserReal;
+use OZONE\Core\Db\OZUsersController;
+use OZONE\Core\Db\OZUsersCrud;
+use OZONE\Core\Db\OZUsersQuery;
+use OZONE\Core\Db\OZUsersResults;
+
 /**
  * Class OZUser.
  *
@@ -32,7 +47,7 @@ namespace OZONE\Core\Db\Base;
  * @property null|string $deleted_at Getter for column `oz_users`.`deleted_at`.
  * @property string      $cc2        Getter for column `oz_users`.`cc2`.
  */
-abstract class OZUser extends \Gobl\ORM\ORMEntity
+abstract class OZUser extends ORMEntity
 {
 	public const TABLE_NAME      = 'oz_users';
 	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
@@ -76,55 +91,55 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 */
 	public static function new(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\Core\Db\OZUser($is_new, $strict);
+		return new OZUserReal($is_new, $strict);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZUsersCrud
+	 * @return OZUsersCrud
 	 */
-	public static function crud(): \OZONE\Core\Db\OZUsersCrud
+	public static function crud(): OZUsersCrud
 	{
-		return \OZONE\Core\Db\OZUsersCrud::new();
+		return OZUsersCrud::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZUsersController
+	 * @return OZUsersController
 	 */
-	public static function ctrl(): \OZONE\Core\Db\OZUsersController
+	public static function ctrl(): OZUsersController
 	{
-		return \OZONE\Core\Db\OZUsersController::new();
+		return OZUsersController::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZUsersQuery
+	 * @return OZUsersQuery
 	 */
-	public static function qb(): \OZONE\Core\Db\OZUsersQuery
+	public static function qb(): OZUsersQuery
 	{
-		return \OZONE\Core\Db\OZUsersQuery::new();
+		return OZUsersQuery::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZUsersResults
+	 * @return OZUsersResults
 	 */
-	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZUsersResults
+	public static function results(QBSelect $query): OZUsersResults
 	{
-		return \OZONE\Core\Db\OZUsersResults::new($query);
+		return OZUsersResults::new($query);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function table(): \Gobl\DBAL\Table
+	public static function table(): Table
 	{
-		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
+		return ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -498,13 +513,13 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return \OZONE\Core\Db\OZRole[]
 	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws GoblException
 	 */
 	public function getRoles(array $filters =  [
 	], ?int $max = null, int $offset = 0, array $order_by =  [
 	], ?int &$total = -1): array
 	{
-		return \OZONE\Core\Db\OZRole::ctrl()->getAllRelatives(
+		return OZRole::ctrl()->getAllRelatives(
 			$this,
 			static::table()->getRelation('roles'),
 			$filters,
@@ -526,13 +541,13 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return \OZONE\Core\Db\OZFile[]
 	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws GoblException
 	 */
 	public function getFiles(array $filters =  [
 	], ?int $max = null, int $offset = 0, array $order_by =  [
 	], ?int &$total = -1): array
 	{
-		return \OZONE\Core\Db\OZFile::ctrl()->getAllRelatives(
+		return OZFile::ctrl()->getAllRelatives(
 			$this,
 			static::table()->getRelation('files'),
 			$filters,
@@ -554,13 +569,13 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return \OZONE\Core\Db\OZSession[]
 	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws GoblException
 	 */
 	public function getSessions(array $filters =  [
 	], ?int $max = null, int $offset = 0, array $order_by =  [
 	], ?int &$total = -1): array
 	{
-		return \OZONE\Core\Db\OZSession::ctrl()->getAllRelatives(
+		return OZSession::ctrl()->getAllRelatives(
 			$this,
 			static::table()->getRelation('sessions'),
 			$filters,
@@ -576,11 +591,11 @@ abstract class OZUser extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return ?\OZONE\Core\Db\OZCountry
 	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws GoblException
 	 */
-	public function getCountry(): ?\OZONE\Core\Db\OZCountry
+	public function getCountry(): ?OZCountry
 	{
-		return \OZONE\Core\Db\OZCountry::ctrl()->getRelative(
+		return OZCountry::ctrl()->getRelative(
 			$this,
 			static::table()->getRelation('country')
 		);

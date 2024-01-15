@@ -42,10 +42,10 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	/**
 	 * Main handler for {@see RouteNotFound} Event.
 	 *
-	 * @param \OZONE\Core\Router\Events\RouteNotFound $ev
+	 * @param RouteNotFound $ev
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws ForbiddenException
+	 * @throws NotFoundException
 	 */
 	public static function onRouteNotFound(RouteNotFound $ev): void
 	{
@@ -70,9 +70,9 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	/**
 	 * Main handler for {@see RouteMethodNotAllowed} Event.
 	 *
-	 * @param \OZONE\Core\Router\Events\RouteMethodNotAllowed $ev
+	 * @param RouteMethodNotAllowed $ev
 	 *
-	 * @throws \OZONE\Core\Exceptions\MethodNotAllowedException
+	 * @throws MethodNotAllowedException
 	 */
 	public static function onMethodNotAllowed(RouteMethodNotAllowed $ev): void
 	{
@@ -88,9 +88,9 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	/**
 	 * Main handler for {@see ResponseHook} Event.
 	 *
-	 * @param \OZONE\Core\Hooks\Events\ResponseHook $ev
+	 * @param ResponseHook $ev
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws ForbiddenException
 	 */
 	public static function onResponse(ResponseHook $ev): void
 	{

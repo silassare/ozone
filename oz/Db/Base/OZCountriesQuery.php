@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMTableQuery;
+use OZONE\Core\Db\OZCountriesQuery as OZCountriesQueryReal;
+use OZONE\Core\Db\OZCountry;
+
 /**
  * Class OZCountriesQuery.
  *
@@ -103,7 +107,7 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereDeletedAtIsIn(array $value)         Filters rows with `in` condition on column `oz_countries`.`deleted_at`.
  * @method $this whereDeletedAtIsNotIn(array $value)      Filters rows with `not_in` condition on column `oz_countries`.`deleted_at`.
  */
-abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
+abstract class OZCountriesQuery extends ORMTableQuery
 {
 	/**
 	 * OZCountriesQuery constructor.
@@ -111,8 +115,8 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZCountry::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZCountry::TABLE_NAME
+			OZCountry::TABLE_NAMESPACE,
+			OZCountry::TABLE_NAME
 		);
 	}
 
@@ -123,6 +127,6 @@ abstract class OZCountriesQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZCountriesQuery();
+		return new OZCountriesQueryReal();
 	}
 }

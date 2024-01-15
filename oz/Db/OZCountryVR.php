@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZCountryVR as OZCountryVRBase;
+
 /**
  * Class OZCountryVR.
  *
@@ -20,7 +22,7 @@ namespace OZONE\Core\Db;
  *
  * @extends \OZONE\Core\Db\Base\OZCountryVR<TRelationResult>
  */
-abstract class OZCountryVR extends \OZONE\Core\Db\Base\OZCountryVR
+abstract class OZCountryVR extends OZCountryVRBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

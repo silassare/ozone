@@ -43,7 +43,7 @@ interface RouteGuardInterface
 	/**
 	 * Returns clean grant form data.
 	 *
-	 * @return \OZONE\Core\Forms\FormData
+	 * @return FormData
 	 */
 	public function getFormData(): FormData;
 }

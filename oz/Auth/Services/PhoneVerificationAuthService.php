@@ -43,10 +43,10 @@ class PhoneVerificationAuthService extends Service
 	}
 
 	/**
-	 * @param \OZONE\Core\Router\RouteInfo $ri
-	 * @param \OZONE\Core\Forms\FormData   $fd
+	 * @param RouteInfo $ri
+	 * @param FormData  $fd
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	private function init(RouteInfo $ri, FormData $fd): Response
 	{
@@ -63,7 +63,7 @@ class PhoneVerificationAuthService extends Service
 	}
 
 	/**
-	 * @return \OZONE\Core\Forms\Form
+	 * @return Form
 	 */
 	private static function buildInitForm(): Form
 	{

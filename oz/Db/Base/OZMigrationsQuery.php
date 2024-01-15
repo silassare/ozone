@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMTableQuery;
+use OZONE\Core\Db\OZMigration;
+use OZONE\Core\Db\OZMigrationsQuery as OZMigrationsQueryReal;
+
 /**
  * Class OZMigrationsQuery.
  *
@@ -59,7 +63,7 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereUpdatedAtIsIn(array $value)       Filters rows with `in` condition on column `oz_migrations`.`updated_at`.
  * @method $this whereUpdatedAtIsNotIn(array $value)    Filters rows with `not_in` condition on column `oz_migrations`.`updated_at`.
  */
-abstract class OZMigrationsQuery extends \Gobl\ORM\ORMTableQuery
+abstract class OZMigrationsQuery extends ORMTableQuery
 {
 	/**
 	 * OZMigrationsQuery constructor.
@@ -67,8 +71,8 @@ abstract class OZMigrationsQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZMigration::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZMigration::TABLE_NAME
+			OZMigration::TABLE_NAMESPACE,
+			OZMigration::TABLE_NAME
 		);
 	}
 
@@ -79,6 +83,6 @@ abstract class OZMigrationsQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZMigrationsQuery();
+		return new OZMigrationsQueryReal();
 	}
 }

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cache\Drivers;
 
+use Gobl\Exceptions\GoblException;
 use OZONE\Core\Db\OZDbStore;
 use OZONE\Core\Db\OZDbStoresQuery;
 
@@ -34,7 +35,7 @@ class DbCache extends RuntimeCache
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws GoblException
 	 */
 	protected function save(): bool
 	{

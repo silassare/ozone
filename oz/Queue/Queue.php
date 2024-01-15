@@ -57,7 +57,7 @@ final class Queue
 	 *
 	 * @param bool $stop_on_error
 	 *
-	 * @return \OZONE\Core\Queue\Queue
+	 * @return Queue
 	 */
 	public function enableStopOnError(bool $stop_on_error = true): self
 	{
@@ -81,7 +81,7 @@ final class Queue
 	 *
 	 * @param int $max_consecutive_errors_count
 	 *
-	 * @return \OZONE\Core\Queue\Queue
+	 * @return Queue
 	 */
 	public function setMaxConsecutiveErrorsCount(int $max_consecutive_errors_count): self
 	{
@@ -105,7 +105,7 @@ final class Queue
 	 *
 	 * @param int $max_errors
 	 *
-	 * @return \OZONE\Core\Queue\Queue
+	 * @return Queue
 	 */
 	public function setMaxErrorsCount(int $max_errors): self
 	{
@@ -127,9 +127,9 @@ final class Queue
 	/**
 	 * Adds a job to the queue.
 	 *
-	 * @param \OZONE\Core\Queue\Interfaces\WorkerInterface $worker
+	 * @param WorkerInterface $worker
 	 *
-	 * @return \OZONE\Core\Queue\Job
+	 * @return Job
 	 */
 	public function push(WorkerInterface $worker): Job
 	{
@@ -143,7 +143,7 @@ final class Queue
 	 *
 	 * @param string $name
 	 *
-	 * @return \OZONE\Core\Queue\Queue
+	 * @return Queue
 	 */
 	public static function get(string $name): self
 	{

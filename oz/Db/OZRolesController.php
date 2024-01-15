@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZRolesController as OZRolesControllerBase;
+
 /**
  * Class OZRolesController.
  */
-class OZRolesController extends \OZONE\Core\Db\Base\OZRolesController
+class OZRolesController extends OZRolesControllerBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

@@ -28,7 +28,7 @@ final class RedirectView extends WebView
 	public const REDIRECT_ROUTE = 'oz:redirect';
 
 	/**
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function mainRoute(): Response
 	{

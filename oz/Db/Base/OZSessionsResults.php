@@ -13,21 +13,26 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Queries\QBSelect;
+use Gobl\ORM\ORMResults;
+use OZONE\Core\Db\OZSession;
+use OZONE\Core\Db\OZSessionsResults as OZSessionsResultsReal;
+
 /**
  * Class OZSessionsResults.
  *
  * @extends \Gobl\ORM\ORMResults<\OZONE\Core\Db\OZSession>
  */
-abstract class OZSessionsResults extends \Gobl\ORM\ORMResults
+abstract class OZSessionsResults extends ORMResults
 {
 	/**
 	 * OZSessionsResults constructor.
 	 */
-	public function __construct(\Gobl\DBAL\Queries\QBSelect $query)
+	public function __construct(QBSelect $query)
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZSession::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZSession::TABLE_NAME,
+			OZSession::TABLE_NAMESPACE,
+			OZSession::TABLE_NAME,
 			$query
 		);
 	}
@@ -37,8 +42,8 @@ abstract class OZSessionsResults extends \Gobl\ORM\ORMResults
 	 *
 	 * @return static
 	 */
-	public static function new(\Gobl\DBAL\Queries\QBSelect $query): static
+	public static function new(QBSelect $query): static
 	{
-		return new \OZONE\Core\Db\OZSessionsResults($query);
+		return new OZSessionsResultsReal($query);
 	}
 }

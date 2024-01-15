@@ -81,10 +81,10 @@ final class Auth implements BootHookReceiverInterface
 	 *
 	 * @param string $ref
 	 *
-	 * @return \OZONE\Core\Db\OZAuth
+	 * @return OZAuth
 	 *
-	 * @throws \OZONE\Core\Exceptions\NotFoundException           when not found
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException auth is disabled
+	 * @throws NotFoundException           when not found
+	 * @throws UnauthorizedActionException auth is disabled
 	 */
 	public static function getRequired(string $ref): OZAuth
 	{
@@ -114,10 +114,10 @@ final class Auth implements BootHookReceiverInterface
 	/**
 	 * Gets instance of the a given auth provider name.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param \OZONE\Core\Db\OZAuth   $auth
+	 * @param Context $context
+	 * @param OZAuth  $auth
 	 *
-	 * @return \OZONE\Core\Auth\Interfaces\AuthProviderInterface
+	 * @return AuthProviderInterface
 	 */
 	public static function provider(Context $context, OZAuth $auth): AuthProviderInterface
 	{

@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Relations\VirtualRelation;
+use OZONE\Core\Db\OZAuth;
+
 /**
  * Class OZAuthVR.
  *
@@ -20,7 +23,7 @@ namespace OZONE\Core\Db\Base;
  *
  * @extends \Gobl\DBAL\Relations\VirtualRelation<\OZONE\Core\Db\OZAuth, TRelationResult>
  */
-abstract class OZAuthVR extends \Gobl\DBAL\Relations\VirtualRelation
+abstract class OZAuthVR extends VirtualRelation
 {
 	/**
 	 * {class_name} constructor.
@@ -31,8 +34,8 @@ abstract class OZAuthVR extends \Gobl\DBAL\Relations\VirtualRelation
 	public function __construct(string $name, bool $paginated)
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZAuth::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZAuth::TABLE_NAME,
+			OZAuth::TABLE_NAMESPACE,
+			OZAuth::TABLE_NAME,
 			$name,
 			$paginated
 		);

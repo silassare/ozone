@@ -23,9 +23,9 @@ use OZONE\Core\Web\WebView;
 final class AccessGrantView extends WebView
 {
 	/**
-	 * @param \OZONE\Core\Forms\Form $form
+	 * @param Form $form
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function renderAccessGrantForm(Form $form): Response
 	{
@@ -39,7 +39,7 @@ final class AccessGrantView extends WebView
 	/**
 	 * @param string $realm
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function renderAccessGrantAuth(string $realm): Response
 	{

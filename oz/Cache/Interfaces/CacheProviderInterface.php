@@ -41,7 +41,7 @@ interface CacheProviderInterface
 	/**
 	 * Add or update a new cache entry.
 	 *
-	 * @param \OZONE\Core\Cache\CacheItem $item
+	 * @param CacheItem $item
 	 *
 	 * @return bool
 	 */

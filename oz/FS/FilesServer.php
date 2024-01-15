@@ -30,13 +30,13 @@ use OZONE\Core\Logger\Logger;
 class FilesServer
 {
 	/**
-	 * @param \OZONE\Core\App\Context $context
-	 * @param array                   $params
+	 * @param Context $context
+	 * @param array   $params
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 *
 	 * @throws Exception
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws NotFoundException
 	 */
 	public function serve(Context $context, array $params): Response
 	{
@@ -116,7 +116,7 @@ class FilesServer
 	 * @param bool  $allow_resume should we support download resuming
 	 * @param bool  $is_stream    is it a stream
 	 *
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws NotFoundException
 	 */
 	public static function startDownloadServer(
 		array $options,

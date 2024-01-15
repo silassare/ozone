@@ -202,7 +202,7 @@ class FS
 	/**
 	 * Parse an alias file.
 	 *
-	 * @param \OZONE\Core\Http\UploadedFile $upload
+	 * @param UploadedFile $upload
 	 *
 	 * @return null|\OZONE\Core\Db\OZFile
 	 */
@@ -296,7 +296,7 @@ class FS
 	 *
 	 * @param string $base64
 	 *
-	 * @return \OZONE\Core\FS\FileStream
+	 * @return FileStream
 	 */
 	public static function base64ToFile(string $base64): FileStream
 	{
@@ -329,7 +329,7 @@ class FS
 	/**
 	 * Gets instance of the public files storage driver.
 	 *
-	 * @return \OZONE\Core\FS\Interfaces\StorageInterface
+	 * @return StorageInterface
 	 */
 	public static function getPublicStorage(): StorageInterface
 	{
@@ -339,7 +339,7 @@ class FS
 	/**
 	 * Gets instance of the private files storage driver.
 	 *
-	 * @return \OZONE\Core\FS\Interfaces\StorageInterface
+	 * @return StorageInterface
 	 */
 	public static function getPrivateStorage(): StorageInterface
 	{
@@ -351,7 +351,7 @@ class FS
 	 *
 	 * @param string $name
 	 *
-	 * @return \OZONE\Core\FS\Interfaces\StorageInterface
+	 * @return StorageInterface
 	 */
 	public static function getStorage(string $name = self::DEFAULT_STORAGE): StorageInterface
 	{

@@ -51,23 +51,23 @@ interface JobStoreInterface
 	 *
 	 * @param JobInterface $job
 	 *
-	 * @return \OZONE\Core\Queue\Interfaces\JobContractInterface
+	 * @return JobContractInterface
 	 */
 	public function add(JobInterface $job): JobContractInterface;
 
 	/**
 	 * Update a job.
 	 *
-	 * @param \OZONE\Core\Queue\Interfaces\JobContractInterface $job_contract
+	 * @param JobContractInterface $job_contract
 	 *
-	 * @return \OZONE\Core\Queue\Interfaces\JobStoreInterface
+	 * @return JobStoreInterface
 	 */
 	public function update(JobContractInterface $job_contract): self;
 
 	/**
 	 * Delete a job.
 	 *
-	 * @param \OZONE\Core\Queue\Interfaces\JobContractInterface $job_contract
+	 * @param JobContractInterface $job_contract
 	 *
 	 * @return $this
 	 */

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\REST;
 
+use Gobl\ORM\Exceptions\ORMQueryException;
 use Gobl\ORM\ORMRequest as GoblORMRequest;
 use OZONE\Core\App\Context;
 use OZONE\Core\Forms\FormData;
@@ -27,11 +28,11 @@ class RESTFulAPIRequest extends GoblORMRequest
 	/**
 	 * RESTFulAPIRequest constructor.
 	 *
-	 * @param \OZONE\Core\App\Context          $context
+	 * @param Context                          $context
 	 * @param array|\OZONE\Core\Forms\FormData $form
 	 * @param string                           $scope
 	 *
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+	 * @throws ORMQueryException
 	 */
 	public function __construct(Context $context, array|FormData $form, string $scope = '')
 	{
@@ -51,7 +52,7 @@ class RESTFulAPIRequest extends GoblORMRequest
 	/**
 	 * Gets the context.
 	 *
-	 * @return \OZONE\Core\App\Context
+	 * @return Context
 	 */
 	public function getContext(): Context
 	{

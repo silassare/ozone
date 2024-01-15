@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZUsersController as OZUsersControllerBase;
+
 /**
  * Class OZUsersController.
  */
-class OZUsersController extends \OZONE\Core\Db\Base\OZUsersController
+class OZUsersController extends OZUsersControllerBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

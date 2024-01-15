@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZFileVR as OZFileVRBase;
+
 /**
  * Class OZFileVR.
  *
@@ -20,7 +22,7 @@ namespace OZONE\Core\Db;
  *
  * @extends \OZONE\Core\Db\Base\OZFileVR<TRelationResult>
  */
-abstract class OZFileVR extends \OZONE\Core\Db\Base\OZFileVR
+abstract class OZFileVR extends OZFileVRBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

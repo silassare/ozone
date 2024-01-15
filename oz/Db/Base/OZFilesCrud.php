@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMEntityCRUD;
+use OZONE\Core\Db\OZFile;
+use OZONE\Core\Db\OZFilesCrud as OZFilesCrudReal;
+
 /**
  * Class OZFilesCrud.
  *
  * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZFile>
  */
-class OZFilesCrud extends \Gobl\ORM\ORMEntityCRUD
+class OZFilesCrud extends ORMEntityCRUD
 {
 	/**
 	 * OZFilesCrud constructor.
@@ -26,8 +30,8 @@ class OZFilesCrud extends \Gobl\ORM\ORMEntityCRUD
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZFile::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZFile::TABLE_NAME
+			OZFile::TABLE_NAMESPACE,
+			OZFile::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ class OZFilesCrud extends \Gobl\ORM\ORMEntityCRUD
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZFilesCrud();
+		return new OZFilesCrudReal();
 	}
 }

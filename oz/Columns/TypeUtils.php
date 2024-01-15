@@ -32,7 +32,7 @@ class TypeUtils
 	 * @param int $min_age
 	 * @param int $max_age
 	 *
-	 * @return \Gobl\DBAL\Types\Type
+	 * @return Type
 	 */
 	public static function birthDate(int $min_age, int $max_age): Type
 	{

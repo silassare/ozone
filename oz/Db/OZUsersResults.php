@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZUsersResults as OZUsersResultsBase;
+
 /**
  * Class OZUsersResults.
  */
-class OZUsersResults extends \OZONE\Core\Db\Base\OZUsersResults
+class OZUsersResults extends OZUsersResultsBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

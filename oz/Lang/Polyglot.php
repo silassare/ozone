@@ -87,8 +87,8 @@ final class Polyglot
 	/**
 	 * Sets user preferred language.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param string                  $lang
+	 * @param Context $context
+	 * @param string  $lang
 	 *
 	 * @return bool
 	 */

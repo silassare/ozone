@@ -25,10 +25,10 @@ class JobContract extends Job implements Interfaces\JobContractInterface
 	/**
 	 * JobContract constructor.
 	 *
-	 * @param string                                         $ref
-	 * @param string                                         $worker
-	 * @param array                                          $payload
-	 * @param \OZONE\Core\Queue\Interfaces\JobStoreInterface $store
+	 * @param string            $ref
+	 * @param string            $worker
+	 * @param array             $payload
+	 * @param JobStoreInterface $store
 	 */
 	public function __construct(string $ref, string $worker, array $payload, protected readonly JobStoreInterface $store)
 	{

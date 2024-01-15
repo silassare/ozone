@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Relations\VirtualRelation;
+use OZONE\Core\Db\OZMigration;
+
 /**
  * Class OZMigrationVR.
  *
@@ -20,7 +23,7 @@ namespace OZONE\Core\Db\Base;
  *
  * @extends \Gobl\DBAL\Relations\VirtualRelation<\OZONE\Core\Db\OZMigration, TRelationResult>
  */
-abstract class OZMigrationVR extends \Gobl\DBAL\Relations\VirtualRelation
+abstract class OZMigrationVR extends VirtualRelation
 {
 	/**
 	 * {class_name} constructor.
@@ -31,8 +34,8 @@ abstract class OZMigrationVR extends \Gobl\DBAL\Relations\VirtualRelation
 	public function __construct(string $name, bool $paginated)
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZMigration::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZMigration::TABLE_NAME,
+			OZMigration::TABLE_NAMESPACE,
+			OZMigration::TABLE_NAME,
 			$name,
 			$paginated
 		);

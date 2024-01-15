@@ -17,6 +17,7 @@ use Generator;
 use Gobl\CRUD\Exceptions\CRUDException;
 use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
+use Gobl\ORM\Exceptions\ORMQueryException;
 use InvalidArgumentException;
 use OZONE\Core\Db\OZJob;
 use OZONE\Core\Db\OZJobsQuery;
@@ -182,9 +183,9 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+	 * @throws CRUDException
+	 * @throws ORMException
+	 * @throws ORMQueryException
 	 */
 	public function lock(JobContractInterface $job_contract): bool
 	{
@@ -236,7 +237,7 @@ class DbJobStore implements JobStoreInterface
 	 * @param JobInterface              $job
 	 * @param null|\OZONE\Core\Db\OZJob $oz_job
 	 *
-	 * @return \OZONE\Core\Db\OZJob
+	 * @return OZJob
 	 */
 	protected function toEntity(JobInterface $job, OZJob $oz_job = null): OZJob
 	{
@@ -264,10 +265,10 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * Convert a {@link \OZONE\Core\Db\OZJob} to {@link JobInterface}.
 	 *
-	 * @param \OZONE\Core\Db\OZJob $oz_job
-	 * @param null|JobInterface    $job
+	 * @param OZJob             $oz_job
+	 * @param null|JobInterface $job
 	 *
-	 * @return \OZONE\Core\Queue\Interfaces\JobContractInterface
+	 * @return JobContractInterface
 	 */
 	protected function fromEntity(OZJob $oz_job, JobInterface $job = null): JobContractInterface
 	{

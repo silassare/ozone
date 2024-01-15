@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMTableQuery;
+use OZONE\Core\Db\OZUser;
+use OZONE\Core\Db\OZUsersQuery as OZUsersQueryReal;
+
 /**
  * Class OZUsersQuery.
  *
@@ -157,7 +161,7 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereCc2IsIn(array $value)             Filters rows with `in` condition on column `oz_users`.`cc2`.
  * @method $this whereCc2IsNotIn(array $value)          Filters rows with `not_in` condition on column `oz_users`.`cc2`.
  */
-abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
+abstract class OZUsersQuery extends ORMTableQuery
 {
 	/**
 	 * OZUsersQuery constructor.
@@ -165,8 +169,8 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZUser::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZUser::TABLE_NAME
+			OZUser::TABLE_NAMESPACE,
+			OZUser::TABLE_NAME
 		);
 	}
 
@@ -177,6 +181,6 @@ abstract class OZUsersQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZUsersQuery();
+		return new OZUsersQueryReal();
 	}
 }

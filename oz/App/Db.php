@@ -144,7 +144,7 @@ final class Db
 	/**
 	 * Collects all tables from the project and OZone to a given db instance.
 	 *
-	 * @param \Gobl\DBAL\Interfaces\RDBMSInterface $db
+	 * @param RDBMSInterface $db
 	 */
 	public static function loadDevelopmentSchemaTo(RDBMSInterface $db): void
 	{

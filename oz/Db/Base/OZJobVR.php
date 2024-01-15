@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Relations\VirtualRelation;
+use OZONE\Core\Db\OZJob;
+
 /**
  * Class OZJobVR.
  *
@@ -20,7 +23,7 @@ namespace OZONE\Core\Db\Base;
  *
  * @extends \Gobl\DBAL\Relations\VirtualRelation<\OZONE\Core\Db\OZJob, TRelationResult>
  */
-abstract class OZJobVR extends \Gobl\DBAL\Relations\VirtualRelation
+abstract class OZJobVR extends VirtualRelation
 {
 	/**
 	 * {class_name} constructor.
@@ -31,8 +34,8 @@ abstract class OZJobVR extends \Gobl\DBAL\Relations\VirtualRelation
 	public function __construct(string $name, bool $paginated)
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZJob::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZJob::TABLE_NAME,
+			OZJob::TABLE_NAMESPACE,
+			OZJob::TABLE_NAME,
 			$name,
 			$paginated
 		);

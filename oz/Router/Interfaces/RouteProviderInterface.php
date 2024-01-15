@@ -23,7 +23,7 @@ interface RouteProviderInterface
 	/**
 	 * Called to register the service routes.
 	 *
-	 * @param \OZONE\Core\Router\Router $router
+	 * @param Router $router
 	 */
 	public static function registerRoutes(Router $router);
 }

@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMEntityCRUD;
+use OZONE\Core\Db\OZJob;
+use OZONE\Core\Db\OZJobsCrud as OZJobsCrudReal;
+
 /**
  * Class OZJobsCrud.
  *
  * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZJob>
  */
-class OZJobsCrud extends \Gobl\ORM\ORMEntityCRUD
+class OZJobsCrud extends ORMEntityCRUD
 {
 	/**
 	 * OZJobsCrud constructor.
@@ -26,8 +30,8 @@ class OZJobsCrud extends \Gobl\ORM\ORMEntityCRUD
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZJob::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZJob::TABLE_NAME
+			OZJob::TABLE_NAMESPACE,
+			OZJob::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ class OZJobsCrud extends \Gobl\ORM\ORMEntityCRUD
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZJobsCrud();
+		return new OZJobsCrudReal();
 	}
 }

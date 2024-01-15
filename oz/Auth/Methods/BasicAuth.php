@@ -116,7 +116,7 @@ class BasicAuth implements AuthMethodInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws ForbiddenException
 	 */
 	public function authenticate(): void
 	{

@@ -70,7 +70,7 @@ if (!\function_exists('oz_logger')) {
 	/**
 	 * Alias for {@see OZone::app()}.
 	 *
-	 * @return \OZONE\Core\App\Interfaces\AppInterface
+	 * @return AppInterface
 	 */
 	function app(): AppInterface
 	{
@@ -93,7 +93,7 @@ if (!\function_exists('oz_logger')) {
 	/**
 	 * Alias for {@see Db::get()}.
 	 *
-	 * @return \Gobl\DBAL\Interfaces\RDBMSInterface
+	 * @return RDBMSInterface
 	 */
 	function db(): RDBMSInterface
 	{

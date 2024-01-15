@@ -26,7 +26,7 @@ class TestUtils
 	/**
 	 * Returns a mock context.
 	 *
-	 * @return \OZONE\Core\App\Context
+	 * @return Context
 	 */
 	public static function context(): Context
 	{
@@ -43,7 +43,7 @@ class TestUtils
 	/**
 	 * Returns a mock router.
 	 *
-	 * @return \OZONE\Core\Router\Router
+	 * @return Router
 	 */
 	public static function router(): Router
 	{

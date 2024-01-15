@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Forms;
 
+use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Gobl\DBAL\Types\TypeString;
 use PHPUtils\Interfaces\ArrayCapableInterface;
@@ -146,7 +147,7 @@ class Field implements ArrayCapableInterface
 	/**
 	 * Check if the field is enabled.
 	 *
-	 * @param \OZONE\Core\Forms\FormValidationContext $fvc
+	 * @param FormValidationContext $fvc
 	 *
 	 * @return bool
 	 */
@@ -200,12 +201,12 @@ class Field implements ArrayCapableInterface
 	/**
 	 * Validate a given value.
 	 *
-	 * @param mixed                                   $value
-	 * @param \OZONE\Core\Forms\FormValidationContext $fvc
+	 * @param mixed                 $value
+	 * @param FormValidationContext $fvc
 	 *
 	 * @return mixed
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+	 * @throws TypesInvalidValueException
 	 */
 	public function validate(mixed $value, FormValidationContext $fvc): mixed
 	{

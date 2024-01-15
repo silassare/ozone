@@ -413,7 +413,7 @@ class RouteSharedOptions
 	/**
 	 * Gets route form bundle.
 	 *
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
 	 * @return null|\OZONE\Core\Forms\Form
 	 */
@@ -437,7 +437,7 @@ class RouteSharedOptions
 	/**
 	 * Gets route forms.
 	 *
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
 	 * @return \OZONE\Core\Forms\Form[]
 	 */

@@ -29,8 +29,8 @@ class UserAuthProvider extends AuthProvider
 	/**
 	 * UserAuthProvider constructor.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param \OZONE\Core\Db\OZUser   $user
+	 * @param Context $context
+	 * @param OZUser  $user
 	 */
 	public function __construct(Context $context, protected OZUser $user)
 	{
@@ -40,7 +40,7 @@ class UserAuthProvider extends AuthProvider
 	/**
 	 * Gets the user.
 	 *
-	 * @return \OZONE\Core\Db\OZUser
+	 * @return OZUser
 	 */
 	public function getUser(): OZUser
 	{

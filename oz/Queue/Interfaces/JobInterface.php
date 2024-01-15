@@ -125,14 +125,14 @@ interface JobInterface
 	/**
 	 * Gets the job state.
 	 *
-	 * @return \OZONE\Core\Queue\JobState
+	 * @return JobState
 	 */
 	public function getState(): JobState;
 
 	/**
 	 * Sets the job state.
 	 *
-	 * @param \OZONE\Core\Queue\JobState $state
+	 * @param JobState $state
 	 *
 	 * @return $this
 	 */
@@ -262,7 +262,7 @@ interface JobInterface
 	 *
 	 * @param string $store_name
 	 *
-	 * @return \OZONE\Core\Queue\Interfaces\JobContractInterface
+	 * @return JobContractInterface
 	 */
 	public function dispatch(string $store_name = Queue::DEFAULT_STORE): JobContractInterface;
 }

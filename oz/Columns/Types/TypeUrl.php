@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Columns\Types;
 
+use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
@@ -27,7 +28,7 @@ class TypeUrl extends Type
 	/**
 	 * TypeUrl constructor.
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
+	 * @throws TypesException
 	 */
 	public function __construct()
 	{

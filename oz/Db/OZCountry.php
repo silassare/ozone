@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZCountry as OZCountryBase;
+
 /**
  * Class OZCountry.
  */
-class OZCountry extends \OZONE\Core\Db\Base\OZCountry
+class OZCountry extends OZCountryBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

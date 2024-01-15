@@ -19,6 +19,7 @@ use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Columns\Types\TypePhone;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Db\OZUser;
+use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
@@ -45,14 +46,14 @@ final class Users
 	/**
 	 * Users constructor.
 	 *
-	 * @param \OZONE\Core\App\Context $context
+	 * @param Context $context
 	 */
 	public function __construct(private readonly Context $context) {}
 
 	/**
 	 * Logon the user that have the given user id.
 	 *
-	 * @param \OZONE\Core\Db\OZUser $user the user object
+	 * @param OZUser $user the user object
 	 *
 	 * @return $this
 	 */
@@ -131,7 +132,7 @@ final class Users
 	/**
 	 * Build a logon form.
 	 *
-	 * @return \OZONE\Core\Forms\Form
+	 * @return Form
 	 */
 	public static function logInForm(): Form
 	{
@@ -157,11 +158,11 @@ final class Users
 	/**
 	 * Try to log on a user with a given phone number and password.
 	 *
-	 * @param \OZONE\Core\Forms\FormData $form_data
+	 * @param FormData $form_data
 	 *
 	 * @return \OZONE\Core\Db\OZUser|string the user object or error string
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws InvalidFormException
 	 */
 	public function tryPhoneLogIn(FormData $form_data): OZUser|string
 	{
@@ -189,7 +190,7 @@ final class Users
 	 *
 	 * @return \OZONE\Core\Db\OZUser|string the user object or error string
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
+	 * @throws InvalidFormException
 	 */
 	public function tryEmailLogIn(FormData $form_data): OZUser|string
 	{
@@ -213,8 +214,8 @@ final class Users
 	/**
 	 * Try to log on a user.
 	 *
-	 * @param \OZONE\Core\Db\OZUser $user
-	 * @param string                $pass
+	 * @param OZUser $user
+	 * @param string $pass
 	 *
 	 * @return \OZONE\Core\Db\OZUser|string
 	 */
@@ -238,8 +239,8 @@ final class Users
 	/**
 	 * Starts a 2FA auth process for login.
 	 *
-	 * @param \OZONE\Core\Db\OZUser        $user
-	 * @param \OZONE\Core\Sessions\Session $session
+	 * @param OZUser  $user
+	 * @param Session $session
 	 */
 	private function start2FAAuthProcess(OZUser $user, Session $session): void
 	{

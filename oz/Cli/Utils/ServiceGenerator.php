@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Utils;
 
+use Gobl\DBAL\Constraints\PrimaryKey;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Table;
 use Gobl\Gobl;
@@ -33,9 +34,9 @@ class ServiceGenerator extends CSGeneratorORM
 	/**
 	 * ServiceGenerator constructor.
 	 *
-	 * @param \Gobl\DBAL\Interfaces\RDBMSInterface $db
-	 * @param bool                                 $ignore_private_table
-	 * @param bool                                 $ignore_private_column
+	 * @param RDBMSInterface $db
+	 * @param bool           $ignore_private_table
+	 * @param bool           $ignore_private_column
 	 */
 	public function __construct(
 		RDBMSInterface $db,
@@ -82,12 +83,12 @@ class ServiceGenerator extends CSGeneratorORM
 	/**
 	 * Generate OZone service class for a given table.
 	 *
-	 * @param \Gobl\DBAL\Table $table             the table
-	 * @param string           $service_namespace the service class namespace
-	 * @param string           $service_dir       the destination folder path
-	 * @param string           $service_path      the service path
-	 * @param string           $service_class     the service class name to use
-	 * @param string           $header            the source header to use
+	 * @param Table  $table             the table
+	 * @param string $service_namespace the service class namespace
+	 * @param string $service_dir       the destination folder path
+	 * @param string $service_path      the service path
+	 * @param string $service_class     the service class name to use
+	 * @param string $header            the source header to use
 	 *
 	 * @return array{provider:string} the generated service info
 	 */
@@ -110,7 +111,7 @@ class ServiceGenerator extends CSGeneratorORM
 			->isDir()
 			->assert($service_dir);
 
-		/** @var \Gobl\DBAL\Constraints\PrimaryKey $pk */
+		/** @var PrimaryKey $pk */
 		$pk           = $table->getPrimaryKeyConstraint();
 		$columns      = $pk->getColumns();
 		$pk_col_count = \count($columns);

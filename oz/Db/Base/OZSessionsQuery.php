@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMTableQuery;
+use OZONE\Core\Db\OZSession;
+use OZONE\Core\Db\OZSessionsQuery as OZSessionsQueryReal;
+
 /**
  * Class OZSessionsQuery.
  *
@@ -99,7 +103,7 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereUserIdIsIn(array $value)                 Filters rows with `in` condition on column `oz_sessions`.`user_id`.
  * @method $this whereUserIdIsNotIn(array $value)              Filters rows with `not_in` condition on column `oz_sessions`.`user_id`.
  */
-abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
+abstract class OZSessionsQuery extends ORMTableQuery
 {
 	/**
 	 * OZSessionsQuery constructor.
@@ -107,8 +111,8 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZSession::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZSession::TABLE_NAME
+			OZSession::TABLE_NAMESPACE,
+			OZSession::TABLE_NAME
 		);
 	}
 
@@ -119,6 +123,6 @@ abstract class OZSessionsQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZSessionsQuery();
+		return new OZSessionsQueryReal();
 	}
 }

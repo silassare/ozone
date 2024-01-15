@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZRoleVR as OZRoleVRBase;
+
 /**
  * Class OZRoleVR.
  *
@@ -20,7 +22,7 @@ namespace OZONE\Core\Db;
  *
  * @extends \OZONE\Core\Db\Base\OZRoleVR<TRelationResult>
  */
-abstract class OZRoleVR extends \OZONE\Core\Db\Base\OZRoleVR
+abstract class OZRoleVR extends OZRoleVRBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

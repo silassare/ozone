@@ -13,21 +13,26 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Queries\QBSelect;
+use Gobl\ORM\ORMResults;
+use OZONE\Core\Db\OZJob;
+use OZONE\Core\Db\OZJobsResults as OZJobsResultsReal;
+
 /**
  * Class OZJobsResults.
  *
  * @extends \Gobl\ORM\ORMResults<\OZONE\Core\Db\OZJob>
  */
-abstract class OZJobsResults extends \Gobl\ORM\ORMResults
+abstract class OZJobsResults extends ORMResults
 {
 	/**
 	 * OZJobsResults constructor.
 	 */
-	public function __construct(\Gobl\DBAL\Queries\QBSelect $query)
+	public function __construct(QBSelect $query)
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZJob::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZJob::TABLE_NAME,
+			OZJob::TABLE_NAMESPACE,
+			OZJob::TABLE_NAME,
 			$query
 		);
 	}
@@ -37,8 +42,8 @@ abstract class OZJobsResults extends \Gobl\ORM\ORMResults
 	 *
 	 * @return static
 	 */
-	public static function new(\Gobl\DBAL\Queries\QBSelect $query): static
+	public static function new(QBSelect $query): static
 	{
-		return new \OZONE\Core\Db\OZJobsResults($query);
+		return new OZJobsResultsReal($query);
 	}
 }

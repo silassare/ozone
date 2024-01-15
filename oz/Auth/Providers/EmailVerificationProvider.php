@@ -28,8 +28,8 @@ class EmailVerificationProvider extends AuthProvider
 	/**
 	 * EmailVerificationProvider constructor.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param string                  $email
+	 * @param Context $context
+	 * @param string  $email
 	 */
 	public function __construct(Context $context, protected string $email)
 	{

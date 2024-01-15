@@ -46,7 +46,7 @@ class FormStep
 	/**
 	 * Builds this step form.
 	 *
-	 * @param \OZONE\Core\Forms\FormValidationContext $fvc
+	 * @param FormValidationContext $fvc
 	 *
 	 * @return null|\OZONE\Core\Forms\Form
 	 */

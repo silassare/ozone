@@ -35,7 +35,7 @@ final class PrivateLocalStorage extends AbstractLocalStorage
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws UnauthorizedActionException
 	 */
 	public function publicUri(Context $context, OZFile $file): Uri
 	{

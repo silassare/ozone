@@ -13,6 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Queries\QBSelect;
+use Gobl\DBAL\Table;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntity;
+use OZONE\Core\Db\OZMigration as OZMigrationReal;
+use OZONE\Core\Db\OZMigrationsController;
+use OZONE\Core\Db\OZMigrationsCrud;
+use OZONE\Core\Db\OZMigrationsQuery;
+use OZONE\Core\Db\OZMigrationsResults;
+
 /**
  * Class OZMigration.
  *
@@ -21,7 +31,7 @@ namespace OZONE\Core\Db\Base;
  * @property string      $created_at Getter for column `oz_migrations`.`created_at`.
  * @property string      $updated_at Getter for column `oz_migrations`.`updated_at`.
  */
-abstract class OZMigration extends \Gobl\ORM\ORMEntity
+abstract class OZMigration extends ORMEntity
 {
 	public const TABLE_NAME      = 'oz_migrations';
 	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
@@ -54,55 +64,55 @@ abstract class OZMigration extends \Gobl\ORM\ORMEntity
 	 */
 	public static function new(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\Core\Db\OZMigration($is_new, $strict);
+		return new OZMigrationReal($is_new, $strict);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZMigrationsCrud
+	 * @return OZMigrationsCrud
 	 */
-	public static function crud(): \OZONE\Core\Db\OZMigrationsCrud
+	public static function crud(): OZMigrationsCrud
 	{
-		return \OZONE\Core\Db\OZMigrationsCrud::new();
+		return OZMigrationsCrud::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZMigrationsController
+	 * @return OZMigrationsController
 	 */
-	public static function ctrl(): \OZONE\Core\Db\OZMigrationsController
+	public static function ctrl(): OZMigrationsController
 	{
-		return \OZONE\Core\Db\OZMigrationsController::new();
+		return OZMigrationsController::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZMigrationsQuery
+	 * @return OZMigrationsQuery
 	 */
-	public static function qb(): \OZONE\Core\Db\OZMigrationsQuery
+	public static function qb(): OZMigrationsQuery
 	{
-		return \OZONE\Core\Db\OZMigrationsQuery::new();
+		return OZMigrationsQuery::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZMigrationsResults
+	 * @return OZMigrationsResults
 	 */
-	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZMigrationsResults
+	public static function results(QBSelect $query): OZMigrationsResults
 	{
-		return \OZONE\Core\Db\OZMigrationsResults::new($query);
+		return OZMigrationsResults::new($query);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function table(): \Gobl\DBAL\Table
+	public static function table(): Table
 	{
-		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
+		return ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**

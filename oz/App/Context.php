@@ -74,10 +74,10 @@ final class Context
 	/**
 	 * Context constructor.
 	 *
-	 * @param \OZONE\Core\Http\HTTPEnvironment $http_env
-	 * @param null|\OZONE\Core\Http\Request    $request
-	 * @param null|\OZONE\Core\App\Context     $parent
-	 * @param bool                             $is_api
+	 * @param HTTPEnvironment               $http_env
+	 * @param null|\OZONE\Core\Http\Request $request
+	 * @param null|\OZONE\Core\App\Context  $parent
+	 * @param bool                          $is_api
 	 */
 	public function __construct(
 		HTTPEnvironment $http_env,
@@ -142,7 +142,7 @@ final class Context
 	/**
 	 * Handle the incoming request.
 	 *
-	 * @return \OZONE\Core\App\Context
+	 * @return Context
 	 */
 	public function handle(): self
 	{
@@ -179,7 +179,7 @@ final class Context
 	/**
 	 * Gets HTTP environment.
 	 *
-	 * @return \PHPUtils\Store\StoreNotEditable
+	 * @return StoreNotEditable
 	 */
 	public function getHTTPEnvironment(): StoreNotEditable
 	{
@@ -189,7 +189,7 @@ final class Context
 	/**
 	 * Gets request instance object.
 	 *
-	 * @return \OZONE\Core\Http\Request
+	 * @return Request
 	 */
 	public function getRequest(): Request
 	{
@@ -199,7 +199,7 @@ final class Context
 	/**
 	 * Gets response.
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function getResponse(): Response
 	{
@@ -209,7 +209,7 @@ final class Context
 	/**
 	 * Sets response.
 	 *
-	 * @param \OZONE\Core\Http\Response $response
+	 * @param Response $response
 	 *
 	 * @return $this
 	 */
@@ -223,7 +223,7 @@ final class Context
 	/**
 	 * Gets current auth.
 	 *
-	 * @return \OZONE\Core\Auth\Interfaces\AuthMethodInterface
+	 * @return AuthMethodInterface
 	 */
 	public function auth(): AuthMethodInterface
 	{
@@ -252,7 +252,7 @@ final class Context
 	/**
 	 * Gets current user.
 	 *
-	 * @return \OZONE\Core\Db\OZUser
+	 * @return OZUser
 	 */
 	public function user(): OZUser
 	{
@@ -293,7 +293,7 @@ final class Context
 	/**
 	 * Gets session instance object.
 	 *
-	 * @return \OZONE\Core\Sessions\Session
+	 * @return Session
 	 */
 	public function session(): Session
 	{
@@ -328,7 +328,7 @@ final class Context
 	/**
 	 * Make sure we have a session based auth method and return its state.
 	 *
-	 * @return \OZONE\Core\Sessions\SessionState
+	 * @return SessionState
 	 */
 	public function requireState(): SessionState
 	{
@@ -339,7 +339,7 @@ final class Context
 	/**
 	 * Gets users manager instance object.
 	 *
-	 * @return \OZONE\Core\Users\Users
+	 * @return Users
 	 */
 	public function getUsers(): Users
 	{
@@ -349,7 +349,7 @@ final class Context
 	/**
 	 * Gets the router instance object.
 	 *
-	 * @return \OZONE\Core\Router\Router
+	 * @return Router
 	 */
 	public function getRouter(): Router
 	{
@@ -407,7 +407,7 @@ final class Context
 	 * @param string $path
 	 * @param array  $query
 	 *
-	 * @return \OZONE\Core\Http\Uri
+	 * @return Uri
 	 */
 	public function buildUri(string $path, array $query = []): Uri
 	{
@@ -424,7 +424,7 @@ final class Context
 	 * @param array  $params
 	 * @param array  $query
 	 *
-	 * @return \OZONE\Core\Http\Uri
+	 * @return Uri
 	 */
 	public function buildRouteUri(string $name, array $params = [], array $query = []): Uri
 	{
@@ -671,7 +671,7 @@ final class Context
 	 * @param array  $query             query parameters
 	 * @param bool   $override_response if true, the response will be set to the current context
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function callRoute(
 		string $route_name,
@@ -693,7 +693,7 @@ final class Context
 	 * @param array  $query             query parameters to be passed to the request
 	 * @param bool   $override_response if true, the response will be set to the current context
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function callPath(
 		string $path,
@@ -850,9 +850,9 @@ final class Context
 	 *  - If the request didn't satisfy none of them, an exception is thrown.
 	 *  - The first auth method that satisfies the request is used to authenticate the request.
 	 *
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
+	 * @throws ForbiddenException
 	 */
 	private function authenticate(RouteInfo $ri): void
 	{
@@ -890,7 +890,7 @@ final class Context
 			return;
 		}
 
-		/** @var \OZONE\Core\Auth\Interfaces\AuthMethodInterface $class */
+		/** @var AuthMethodInterface $class */
 		foreach ($auths_methods as $class) {
 			$instance = $class::get($ri, 'Authentication required.');
 
@@ -909,9 +909,9 @@ final class Context
 	/**
 	 * Try fix response.
 	 *
-	 * @param \OZONE\Core\Http\Response $response
+	 * @param Response $response
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	private function fixResponse(Response $response): Response
 	{

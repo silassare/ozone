@@ -280,7 +280,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	/**
 	 * Gets the files uploads directory.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return FilesManager
 	 */
 	abstract protected function uploadsDir(): FilesManager;
 

@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Core\FS\Views;
 
 use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\FS\FileAccess;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
@@ -52,13 +54,13 @@ class GetFilesView extends WebView
 	}
 
 	/**
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws InvalidFormException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public static function handle(RouteInfo $ri): Response
 	{

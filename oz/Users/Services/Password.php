@@ -16,6 +16,7 @@ namespace OZONE\Core\Users\Services;
 use OZONE\Core\App\Service;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -36,9 +37,9 @@ final class Password extends Service
 	/**
 	 * Edit password: verified user only.
 	 *
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws UnauthorizedActionException
 	 */
 	public function actionEditOwnPass(RouteInfo $ri): void
 	{
@@ -59,11 +60,11 @@ final class Password extends Service
 	/**
 	 * Edit password: admin only.
 	 *
-	 * @param \OZONE\Core\Router\RouteInfo $ri
-	 * @param string                       $uid
+	 * @param RouteInfo $ri
+	 * @param string    $uid
 	 *
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public function actionEditPassAdmin(RouteInfo $ri, string $uid): void
 	{
@@ -114,7 +115,7 @@ final class Password extends Service
 	}
 
 	/**
-	 * @return \OZONE\Core\Forms\Form
+	 * @return Form
 	 */
 	public static function newPassForm(): Form
 	{
@@ -131,7 +132,7 @@ final class Password extends Service
 	}
 
 	/**
-	 * @return \OZONE\Core\Forms\Form
+	 * @return Form
 	 */
 	public static function currentPassForm(): Form
 	{

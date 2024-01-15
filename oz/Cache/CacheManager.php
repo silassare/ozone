@@ -34,7 +34,7 @@ final class CacheManager
 	/**
 	 * CacheManager constructor.
 	 *
-	 * @param \OZONE\Core\Cache\Interfaces\CacheProviderInterface $cache
+	 * @param CacheProviderInterface $cache
 	 */
 	private function __construct(CacheProviderInterface $cache)
 	{
@@ -90,7 +90,7 @@ final class CacheManager
 	/**
 	 * Set cache item.
 	 *
-	 * @param \OZONE\Core\Cache\CacheItem $item
+	 * @param CacheItem $item
 	 *
 	 * @return bool
 	 */
@@ -132,7 +132,7 @@ final class CacheManager
 	 * @param callable                $factory
 	 * @param null|DateInterval|float $lifetime
 	 *
-	 * @return \OZONE\Core\Cache\CacheItem
+	 * @return CacheItem
 	 */
 	public function factory(string $key, callable $factory, null|DateInterval|float $lifetime = null): CacheItem
 	{
@@ -152,7 +152,7 @@ final class CacheManager
 	 *
 	 * @param string $key
 	 *
-	 * @return \OZONE\Core\Cache\CacheItem
+	 * @return CacheItem
 	 */
 	public function getItem(string $key): CacheItem
 	{
@@ -250,7 +250,7 @@ final class CacheManager
 	 *
 	 * @param null|string $namespace
 	 *
-	 * @return \OZONE\Core\Cache\CacheManager
+	 * @return CacheManager
 	 */
 	public static function runtime(?string $namespace = null): self
 	{
@@ -264,7 +264,7 @@ final class CacheManager
 	 *
 	 * @param null|string $namespace
 	 *
-	 * @return \OZONE\Core\Cache\CacheManager
+	 * @return CacheManager
 	 */
 	public static function persistent(?string $namespace = null): self
 	{
@@ -279,7 +279,7 @@ final class CacheManager
 	 * @param string      $class_fqn
 	 * @param null|string $namespace
 	 *
-	 * @return \OZONE\Core\Cache\CacheManager
+	 * @return CacheManager
 	 */
 	private static function sharedInstance(string $class_fqn, ?string $namespace = null): self
 	{
@@ -314,7 +314,7 @@ final class CacheManager
 	/**
 	 * @param string $key
 	 *
-	 * @return \OZONE\Core\Cache\CacheItem
+	 * @return CacheItem
 	 */
 	private static function notFound(string $key): CacheItem
 	{

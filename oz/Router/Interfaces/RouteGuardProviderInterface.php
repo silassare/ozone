@@ -23,7 +23,7 @@ interface RouteGuardProviderInterface
 	/**
 	 * Returns route guard.
 	 *
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
 	 * @return null|\OZONE\Core\Router\Interfaces\RouteGuardInterface
 	 */

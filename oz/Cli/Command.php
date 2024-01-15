@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli;
 
+use Kli\Exceptions\KliException;
 use Kli\KliAction;
 use Kli\KliArgs;
 use Kli\KliCommand;
@@ -25,10 +26,10 @@ abstract class Command extends KliCommand
 	/**
 	 * Command constructor.
 	 *
-	 * @param string              $name command name
-	 * @param \OZONE\Core\Cli\Cli $cli  cli object to use
+	 * @param string $name command name
+	 * @param Cli    $cli  cli object to use
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	protected function __construct(string $name, Cli $cli)
 	{
@@ -39,12 +40,12 @@ abstract class Command extends KliCommand
 	/**
 	 * Should return a new instance.
 	 *
-	 * @param string              $name
-	 * @param \OZONE\Core\Cli\Cli $cli
+	 * @param string $name
+	 * @param Cli    $cli
 	 *
 	 * @return self
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	public static function instance(string $name, Cli $cli): self
 	{

@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMEntityCRUD;
+use OZONE\Core\Db\OZCountriesCrud as OZCountriesCrudReal;
+use OZONE\Core\Db\OZCountry;
+
 /**
  * Class OZCountriesCrud.
  *
  * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZCountry>
  */
-class OZCountriesCrud extends \Gobl\ORM\ORMEntityCRUD
+class OZCountriesCrud extends ORMEntityCRUD
 {
 	/**
 	 * OZCountriesCrud constructor.
@@ -26,8 +30,8 @@ class OZCountriesCrud extends \Gobl\ORM\ORMEntityCRUD
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZCountry::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZCountry::TABLE_NAME
+			OZCountry::TABLE_NAMESPACE,
+			OZCountry::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ class OZCountriesCrud extends \Gobl\ORM\ORMEntityCRUD
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZCountriesCrud();
+		return new OZCountriesCrudReal();
 	}
 }

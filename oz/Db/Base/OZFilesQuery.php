@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMTableQuery;
+use OZONE\Core\Db\OZFile;
+use OZONE\Core\Db\OZFilesQuery as OZFilesQueryReal;
+
 /**
  * Class OZFilesQuery.
  *
@@ -233,7 +237,7 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereSourceIdIsIn(array $value)                             Filters rows with `in` condition on column `oz_files`.`source_id`.
  * @method $this whereSourceIdIsNotIn(array $value)                          Filters rows with `not_in` condition on column `oz_files`.`source_id`.
  */
-abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
+abstract class OZFilesQuery extends ORMTableQuery
 {
 	/**
 	 * OZFilesQuery constructor.
@@ -241,8 +245,8 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZFile::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZFile::TABLE_NAME
+			OZFile::TABLE_NAMESPACE,
+			OZFile::TABLE_NAME
 		);
 	}
 
@@ -253,6 +257,6 @@ abstract class OZFilesQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZFilesQuery();
+		return new OZFilesQueryReal();
 	}
 }

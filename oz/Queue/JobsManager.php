@@ -84,7 +84,7 @@ final class JobsManager
 	/**
 	 * Register a job store.
 	 *
-	 * @param \OZONE\Core\Queue\Interfaces\JobStoreInterface $store
+	 * @param JobStoreInterface $store
 	 */
 	public static function registerStore(JobStoreInterface $store): void
 	{
@@ -110,7 +110,7 @@ final class JobsManager
 	 *
 	 * @param string $store_name
 	 *
-	 * @return \OZONE\Core\Queue\Interfaces\JobStoreInterface
+	 * @return JobStoreInterface
 	 */
 	public static function getStore(string $store_name): JobStoreInterface
 	{
@@ -191,7 +191,7 @@ final class JobsManager
 	/**
 	 * Run a job.
 	 *
-	 * @param \OZONE\Core\Queue\Interfaces\JobContractInterface $job_contract
+	 * @param JobContractInterface $job_contract
 	 *
 	 * @return bool
 	 */
@@ -232,7 +232,7 @@ final class JobsManager
 	/**
 	 * Finish a job.
 	 *
-	 * @param \OZONE\Core\Queue\Interfaces\JobContractInterface $job_contract
+	 * @param JobContractInterface $job_contract
 	 */
 	public static function finish(
 		JobContractInterface $job_contract
@@ -250,8 +250,8 @@ final class JobsManager
 	/**
 	 * Run a job asynchronously.
 	 *
-	 * @param \OZONE\Core\Queue\Interfaces\WorkerInterface      $worker
-	 * @param \OZONE\Core\Queue\Interfaces\JobContractInterface $job_contract
+	 * @param WorkerInterface      $worker
+	 * @param JobContractInterface $job_contract
 	 */
 	private static function workAsync(
 		WorkerInterface $worker,

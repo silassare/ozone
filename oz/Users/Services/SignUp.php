@@ -13,10 +13,15 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Users\Services;
 
+use Gobl\CRUD\Exceptions\CRUDException;
+use Gobl\Exceptions\GoblException;
+use Gobl\ORM\Exceptions\ORMException;
+use Gobl\ORM\Exceptions\ORMQueryException;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Providers\EmailVerificationProvider;
 use OZONE\Core\Auth\Providers\PhoneVerificationProvider;
+use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Db\OZUser;
 use OZONE\Core\Db\OZUsersController;
 use OZONE\Core\Exceptions\InternalErrorException;
@@ -33,20 +38,20 @@ final class SignUp extends Service
 	public const ROUTE_SIGN_UP = 'oz:signup';
 
 	/**
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
-	 * @throws \OZONE\Core\Exceptions\InternalErrorException
-	 * @throws \Gobl\Exceptions\GoblException
+	 * @throws CRUDException
+	 * @throws ORMException
+	 * @throws ORMQueryException
+	 * @throws InternalErrorException
+	 * @throws GoblException
 	 */
 	public function actionSignUp(RouteInfo $ri): void
 	{
 		$data = $ri->getCleanFormData()
 			->getData();
 
-		/** @var \OZONE\Core\Db\OZAuth $auth */
+		/** @var OZAuth $auth */
 		$auth = $ri->getGuardFormData(TwoFactorRouteGuard::class)
 			->get('auth');
 

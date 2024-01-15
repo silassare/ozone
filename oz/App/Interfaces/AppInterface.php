@@ -55,7 +55,7 @@ interface AppInterface extends ScopeInterface
 	/**
 	 * Returns an instance of the files manager with the project directory as root.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return FilesManager
 	 */
 	public function getProjectDir(): FilesManager;
 
@@ -71,21 +71,21 @@ interface AppInterface extends ScopeInterface
 	/**
 	 * Returns an instance of the files manager with the cache directory as root.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return FilesManager
 	 */
 	public function getCacheDir(): FilesManager;
 
 	/**
 	 * Returns an instance of the files manager with the plugins directory as root.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return FilesManager
 	 */
 	public function getPluginsDir(): FilesManager;
 
 	/**
 	 * Returns an instance of the files manager with the migrations directory as root.
 	 *
-	 * @return \OZONE\Core\FS\FilesManager
+	 * @return FilesManager
 	 */
 	public function getMigrationsDir(): FilesManager;
 }

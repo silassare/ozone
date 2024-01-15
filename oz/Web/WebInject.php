@@ -30,7 +30,7 @@ class WebInject
 	/**
 	 * WebInject constructor.
 	 *
-	 * @param \OZONE\Core\App\Context $context
+	 * @param Context $context
 	 */
 	public function __construct(Context $context)
 	{
@@ -48,7 +48,7 @@ class WebInject
 	/**
 	 * Gets the context.
 	 *
-	 * @return \OZONE\Core\App\Context
+	 * @return Context
 	 */
 	public function getContext(): Context
 	{
@@ -82,7 +82,7 @@ class WebInject
 	/**
 	 * Shortcut for {@see \OZONE\Core\Http\Request::getUri()}.
 	 *
-	 * @return \OZONE\Core\Http\Uri
+	 * @return Uri
 	 */
 	public function getRequestUri(): Uri
 	{
@@ -96,7 +96,7 @@ class WebInject
 	 * @param string $path
 	 * @param array  $query
 	 *
-	 * @return \OZONE\Core\Http\Uri
+	 * @return Uri
 	 */
 	public function buildUri(string $path, array $query = []): Uri
 	{
@@ -110,7 +110,7 @@ class WebInject
 	 * @param array  $params
 	 * @param array  $query
 	 *
-	 * @return \OZONE\Core\Http\Uri
+	 * @return Uri
 	 */
 	public function buildRouteUri(string $route_name, array $params, array $query = []): Uri
 	{

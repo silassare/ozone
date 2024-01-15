@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMController;
+use OZONE\Core\Db\OZCountriesController as OZCountriesControllerReal;
+use OZONE\Core\Db\OZCountry;
+
 /**
  * Class OZCountriesController.
  *
  * @extends \Gobl\ORM\ORMController<\OZONE\Core\Db\OZCountry, \OZONE\Core\Db\OZCountriesQuery, \OZONE\Core\Db\OZCountriesResults>
  */
-abstract class OZCountriesController extends \Gobl\ORM\ORMController
+abstract class OZCountriesController extends ORMController
 {
 	/**
 	 * OZCountriesController constructor.
@@ -26,8 +30,8 @@ abstract class OZCountriesController extends \Gobl\ORM\ORMController
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZCountry::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZCountry::TABLE_NAME
+			OZCountry::TABLE_NAMESPACE,
+			OZCountry::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ abstract class OZCountriesController extends \Gobl\ORM\ORMController
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZCountriesController();
+		return new OZCountriesControllerReal();
 	}
 }

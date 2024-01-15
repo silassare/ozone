@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZJobsController as OZJobsControllerBase;
+
 /**
  * Class OZJobsController.
  */
-class OZJobsController extends \OZONE\Core\Db\Base\OZJobsController
+class OZJobsController extends OZJobsControllerBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

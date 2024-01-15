@@ -113,7 +113,7 @@ class WebView extends Service
 	/**
 	 * Render the view and return response.
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function respond(): Response
 	{
@@ -149,10 +149,10 @@ class WebView extends Service
 	/**
 	 * Render the view to a given response object.
 	 *
-	 * @param \OZONE\Core\Http\Response $response
-	 * @param string                    $mode     one of: append, prepend, overwrite
+	 * @param Response $response
+	 * @param string   $mode     one of: append, prepend, overwrite
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	protected function renderTo(Response $response, string $mode = 'append'): Response
 	{

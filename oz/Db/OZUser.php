@@ -13,12 +13,15 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZUser as OZUserBase;
+use OZONE\Core\Users\Traits\UserEntityTrait;
+
 /**
  * Class OZUser.
  */
-class OZUser extends \OZONE\Core\Db\Base\OZUser
+class OZUser extends OZUserBase
 {
-	use \OZONE\Core\Users\Traits\UserEntityTrait;
+	use UserEntityTrait;
 
 	// ====================================================
 	// =	Your custom implementation goes here

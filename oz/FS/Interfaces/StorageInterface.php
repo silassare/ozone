@@ -15,6 +15,7 @@ namespace OZONE\Core\FS\Interfaces;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\Auth\Providers\FileAuthProvider;
+use OZONE\Core\Auth\Services\AuthService;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\Http\Response;
@@ -38,29 +39,29 @@ interface StorageInterface
 	/**
 	 * Should return stream.
 	 *
-	 * @param \OZONE\Core\Db\OZFile $file
+	 * @param OZFile $file
 	 *
-	 * @return \OZONE\Core\FS\FileStream
+	 * @return FileStream
 	 */
 	public function getStream(OZFile $file): FileStream;
 
 	/**
 	 * Handle uploaded file.
 	 *
-	 * @param \OZONE\Core\Http\UploadedFile $upload
+	 * @param UploadedFile $upload
 	 *
-	 * @return \OZONE\Core\Db\OZFile
+	 * @return OZFile
 	 */
 	public function upload(UploadedFile $upload): OZFile;
 
 	/**
 	 * Add a file with content from a given stream.
 	 *
-	 * @param \OZONE\Core\FS\FileStream $source
-	 * @param string                    $mimetype
-	 * @param string                    $filename
+	 * @param FileStream $source
+	 * @param string     $mimetype
+	 * @param string     $filename
 	 *
-	 * @return \OZONE\Core\Db\OZFile
+	 * @return OZFile
 	 */
 	public function saveStream(FileStream $source, string $mimetype, string $filename): OZFile;
 
@@ -71,7 +72,7 @@ interface StorageInterface
 	 * @param string $mimetype
 	 * @param string $filename
 	 *
-	 * @return \OZONE\Core\Db\OZFile
+	 * @return OZFile
 	 */
 	public function saveFromPath(string $path, string $mimetype, string $filename): OZFile;
 
@@ -82,14 +83,14 @@ interface StorageInterface
 	 * @param string $mimetype
 	 * @param string $filename
 	 *
-	 * @return \OZONE\Core\Db\OZFile
+	 * @return OZFile
 	 */
 	public function saveRaw(string $content, string $mimetype, string $filename): OZFile;
 
 	/**
 	 * Checks if a given file exists.
 	 *
-	 * @param \OZONE\Core\Db\OZFile $file
+	 * @param OZFile $file
 	 *
 	 * @return bool
 	 */
@@ -107,7 +108,7 @@ interface StorageInterface
 	 *
 	 * @return Uri
 	 *
-	 * @see \OZONE\Core\Auth\Services\AuthService for more information on how to check if the credential
+	 * @see AuthService for more information on how to check if the credential
 	 *      still valid or not.
 	 */
 	public function revocableAccessUri(Context $context, FileAuthProvider $provider): Uri;
@@ -116,28 +117,28 @@ interface StorageInterface
 	 * Should returns a public access uri for the given file.
 	 * Or fail if the file is not public.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param \OZONE\Core\Db\OZFile   $file
+	 * @param Context $context
+	 * @param OZFile  $file
 	 *
-	 * @return \OZONE\Core\Http\Uri
+	 * @return Uri
 	 */
 	public function publicUri(Context $context, OZFile $file): Uri;
 
 	/**
 	 * Should serve the file to the HTTP client.
 	 *
-	 * @param \OZONE\Core\Db\OZFile     $file
-	 * @param \OZONE\Core\Http\Response $response
+	 * @param OZFile   $file
+	 * @param Response $response
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function serve(OZFile $file, Response $response): Response;
 
 	/**
 	 * Writes data to the given file, this should overwrite the file content.
 	 *
-	 * @param \OZONE\Core\Db\OZFile $file
-	 * @param FileStream|string     $content
+	 * @param OZFile            $file
+	 * @param FileStream|string $content
 	 *
 	 * @return $this
 	 */
@@ -146,8 +147,8 @@ interface StorageInterface
 	/**
 	 * Appends data to the given file.
 	 *
-	 * @param \OZONE\Core\Db\OZFile $file
-	 * @param FileStream|string     $data
+	 * @param OZFile            $file
+	 * @param FileStream|string $data
 	 *
 	 * @return $this
 	 */
@@ -156,8 +157,8 @@ interface StorageInterface
 	/**
 	 * Prepends data to the given file.
 	 *
-	 * @param \OZONE\Core\Db\OZFile $file
-	 * @param FileStream|string     $data
+	 * @param OZFile            $file
+	 * @param FileStream|string $data
 	 *
 	 * @return $this
 	 */
@@ -166,7 +167,7 @@ interface StorageInterface
 	/**
 	 * Delete a file.
 	 *
-	 * @param \OZONE\Core\Db\OZFile $file
+	 * @param OZFile $file
 	 *
 	 * @return bool
 	 */

@@ -61,11 +61,11 @@ final class CaptchaCode extends Service
 	/**
 	 * Gets captcha image uri.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param string                  $code
-	 * @param int                     $expire_at
+	 * @param Context $context
+	 * @param string  $code
+	 * @param int     $expire_at
 	 *
-	 * @return \OZONE\Core\Http\Uri the captcha uri
+	 * @return Uri the captcha uri
 	 */
 	public static function buildCaptchaUri(Context $context, string $code, int $expire_at = 0): Uri
 	{
@@ -85,12 +85,12 @@ final class CaptchaCode extends Service
 	/**
 	 * Returns a response with the captcha image.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param string                  $captcha_key
+	 * @param Context $context
+	 * @param string  $captcha_key
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 *
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws NotFoundException
 	 */
 	public static function generateCaptchaImage(Context $context, string $captcha_key): Response
 	{

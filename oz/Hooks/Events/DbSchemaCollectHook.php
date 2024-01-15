@@ -29,7 +29,7 @@ final class DbSchemaCollectHook extends Event
 	/**
 	 * DbCollectHook constructor.
 	 *
-	 * @param \Gobl\DBAL\Interfaces\RDBMSInterface $db
+	 * @param RDBMSInterface $db
 	 */
 	public function __construct(protected RDBMSInterface $db) {}
 
@@ -44,7 +44,7 @@ final class DbSchemaCollectHook extends Event
 	/**
 	 * Returns the database.
 	 *
-	 * @return \Gobl\DBAL\Interfaces\RDBMSInterface
+	 * @return RDBMSInterface
 	 */
 	public function getDb(): RDBMSInterface
 	{

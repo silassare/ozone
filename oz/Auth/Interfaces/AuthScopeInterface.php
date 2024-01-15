@@ -23,7 +23,7 @@ interface AuthScopeInterface
 	/**
 	 * Loads scope info from auth.
 	 *
-	 * @param \OZONE\Core\Db\OZAuth $auth
+	 * @param OZAuth $auth
 	 *
 	 * @return static
 	 */

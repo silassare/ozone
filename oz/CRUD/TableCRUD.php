@@ -26,7 +26,7 @@ final class TableCRUD
 	/**
 	 * Register CRUD event listeners.
 	 *
-	 * @param \OZONE\Core\App\Context $context
+	 * @param Context $context
 	 */
 	public static function registerListeners(Context $context): void
 	{

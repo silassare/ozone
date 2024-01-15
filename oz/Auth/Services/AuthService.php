@@ -13,12 +13,15 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Services;
 
+use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthSecretType;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Http\Response;
@@ -60,13 +63,13 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @param \OZONE\Core\Router\RouteInfo $ri
-	 * @param \OZONE\Core\Forms\FormData   $fd
+	 * @param RouteInfo $ri
+	 * @param FormData  $fd
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 *
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public function refresh(RouteInfo $ri, FormData $fd): Response
 	{
@@ -90,12 +93,12 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws UnauthorizedActionException
+	 * @throws NotFoundException
 	 */
 	public function state(RouteInfo $ri): Response
 	{
@@ -118,12 +121,12 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws UnauthorizedActionException
+	 * @throws NotFoundException
 	 */
 	public function cancel(RouteInfo $ri): Response
 	{
@@ -145,14 +148,14 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @param \OZONE\Core\Router\RouteInfo $ri
-	 * @param \OZONE\Core\Forms\FormData   $fd
+	 * @param RouteInfo $ri
+	 * @param FormData  $fd
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 *
-	 * @throws \OZONE\Core\Exceptions\InvalidFormException
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws InvalidFormException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public function authorize(RouteInfo $ri, FormData $fd): Response
 	{
@@ -189,9 +192,9 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @return \OZONE\Core\Forms\Form
+	 * @return Form
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
+	 * @throws TypesException
 	 */
 	private static function buildRefreshForm(): Form
 	{
@@ -205,7 +208,7 @@ class AuthService extends Service
 	}
 
 	/**
-	 * @return \OZONE\Core\Forms\Form
+	 * @return Form
 	 */
 	private static function buildAuthorizeForm(): Form
 	{

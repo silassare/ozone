@@ -24,7 +24,7 @@ interface TableCRUDListenerInterface extends CRUDEventListenerInterface
 	/**
 	 * Gets the CRUD listener should be able to register itself.
 	 *
-	 * @param \OZONE\Core\App\Context $context
+	 * @param Context $context
 	 */
 	public static function register(Context $context): void;
 }

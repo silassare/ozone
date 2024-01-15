@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Users\Traits;
 
+use Gobl\CRUD\Exceptions\CRUDException;
+use Gobl\ORM\Exceptions\ORMException;
+use Gobl\ORM\Exceptions\ORMQueryException;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Db\Base\OZSession;
@@ -159,11 +162,11 @@ trait UsersUtilsTrait
 	/**
 	 * Update the given user password.
 	 *
-	 * @param \OZONE\Core\Db\OZUser $user         the target user
-	 * @param string                $new_pass     the new password
-	 * @param null|string           $current_pass the current pass
+	 * @param OZUser      $user         the target user
+	 * @param string      $new_pass     the new password
+	 * @param null|string $current_pass the current pass
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws UnauthorizedActionException
 	 */
 	public static function updatePass(OZUser $user, string $new_pass, ?string $current_pass = null): void
 	{
@@ -220,11 +223,11 @@ trait UsersUtilsTrait
 	 * @param string $role    the role
 	 * @param bool   $restore if true and the role is invalid, it will be restored
 	 *
-	 * @return \OZONE\Core\Db\OZRole
+	 * @return OZRole
 	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+	 * @throws CRUDException
+	 * @throws ORMException
+	 * @throws ORMQueryException
 	 */
 	public static function assignRole(string $uid, string $role, bool $restore = false): OZRole
 	{
@@ -255,9 +258,9 @@ trait UsersUtilsTrait
 	 *
 	 * @return bool
 	 *
-	 * @throws \Gobl\CRUD\Exceptions\CRUDException
-	 * @throws \Gobl\ORM\Exceptions\ORMException
-	 * @throws \Gobl\ORM\Exceptions\ORMQueryException
+	 * @throws CRUDException
+	 * @throws ORMException
+	 * @throws ORMQueryException
 	 */
 	public static function revokeRole(string $uid, string $role): bool
 	{
@@ -305,7 +308,7 @@ trait UsersUtilsTrait
 	 * @param null|array     $data
 	 * @param null|Throwable $previous
 	 *
-	 * @throws \OZONE\Core\Exceptions\UnverifiedUserException
+	 * @throws UnverifiedUserException
 	 */
 	public function assertUserVerified(
 		?string $message = null,
@@ -330,8 +333,8 @@ trait UsersUtilsTrait
 	 * @param null|array     $data
 	 * @param null|Throwable $previous
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\UnverifiedUserException
+	 * @throws ForbiddenException
+	 * @throws UnverifiedUserException
 	 */
 	public function assertIsAdmin(
 		string $message = 'OZ_ERROR_YOU_ARE_NOT_ADMIN',
@@ -355,8 +358,8 @@ trait UsersUtilsTrait
 	 * @param null|array     $data
 	 * @param null|Throwable $previous
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\UnverifiedUserException
+	 * @throws ForbiddenException
+	 * @throws UnverifiedUserException
 	 */
 	public function assertIsEditor(
 		string $message = 'OZ_ERROR_YOU_ARE_NOT_EDITOR',
@@ -380,8 +383,8 @@ trait UsersUtilsTrait
 	 * @param null|array     $data
 	 * @param null|Throwable $previous
 	 *
-	 * @throws \OZONE\Core\Exceptions\ForbiddenException
-	 * @throws \OZONE\Core\Exceptions\UnverifiedUserException
+	 * @throws ForbiddenException
+	 * @throws UnverifiedUserException
 	 */
 	public function assertIsSuperAdmin(
 		string $message = 'OZ_ERROR_YOU_ARE_NOT_SUPER_ADMIN',

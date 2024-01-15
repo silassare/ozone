@@ -13,12 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMEntityCRUD;
+use OZONE\Core\Db\OZMigration;
+use OZONE\Core\Db\OZMigrationsCrud as OZMigrationsCrudReal;
+
 /**
  * Class OZMigrationsCrud.
  *
  * @extends \Gobl\ORM\ORMEntityCRUD<\OZONE\Core\Db\OZMigration>
  */
-class OZMigrationsCrud extends \Gobl\ORM\ORMEntityCRUD
+class OZMigrationsCrud extends ORMEntityCRUD
 {
 	/**
 	 * OZMigrationsCrud constructor.
@@ -26,8 +30,8 @@ class OZMigrationsCrud extends \Gobl\ORM\ORMEntityCRUD
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZMigration::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZMigration::TABLE_NAME
+			OZMigration::TABLE_NAMESPACE,
+			OZMigration::TABLE_NAME
 		);
 	}
 
@@ -38,6 +42,6 @@ class OZMigrationsCrud extends \Gobl\ORM\ORMEntityCRUD
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZMigrationsCrud();
+		return new OZMigrationsCrudReal();
 	}
 }

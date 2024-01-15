@@ -136,7 +136,7 @@ class ImagesUtils
 	 *
 	 * @param string $destination_path
 	 *
-	 * @return \OZONE\Core\FS\ImagesUtils
+	 * @return ImagesUtils
 	 *
 	 * @throws Exception
 	 */
@@ -193,7 +193,7 @@ class ImagesUtils
 	 * @param int  $height The desired height in pixel
 	 * @param bool $crop   Should we crop when required? default is true
 	 *
-	 * @return \OZONE\Core\FS\ImagesUtils
+	 * @return ImagesUtils
 	 */
 	public function resizeImage(int $width, int $height, bool $crop = true): self
 	{
@@ -229,7 +229,7 @@ class ImagesUtils
 	 * @param int $width  The output width in pixel
 	 * @param int $height The output height in pixel
 	 *
-	 * @return \OZONE\Core\FS\ImagesUtils
+	 * @return ImagesUtils
 	 */
 	public function cropImage(int $left, int $top, int $width, int $height): self
 	{
@@ -246,7 +246,7 @@ class ImagesUtils
 	 * @param null|string $destination_path The destination file path
 	 * @param int         $quality          The image quality between 0 and 100, default is 90
 	 *
-	 * @return \OZONE\Core\FS\ImagesUtils
+	 * @return ImagesUtils
 	 *
 	 * @throws Exception
 	 */
@@ -293,7 +293,7 @@ class ImagesUtils
 	 * @param null|array $coordinate       The crop zone coordinate
 	 * @param bool       $resize           Should we resize when required? default is true
 	 *
-	 * @return \OZONE\Core\FS\ImagesUtils
+	 * @return ImagesUtils
 	 *
 	 * @throws Exception
 	 */

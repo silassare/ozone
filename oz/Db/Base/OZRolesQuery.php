@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\ORM\ORMTableQuery;
+use OZONE\Core\Db\OZRole;
+use OZONE\Core\Db\OZRolesQuery as OZRolesQueryReal;
+
 /**
  * Class OZRolesQuery.
  *
@@ -93,7 +97,7 @@ namespace OZONE\Core\Db\Base;
  * @method $this whereUserIdIsIn(array $value)          Filters rows with `in` condition on column `oz_roles`.`user_id`.
  * @method $this whereUserIdIsNotIn(array $value)       Filters rows with `not_in` condition on column `oz_roles`.`user_id`.
  */
-abstract class OZRolesQuery extends \Gobl\ORM\ORMTableQuery
+abstract class OZRolesQuery extends ORMTableQuery
 {
 	/**
 	 * OZRolesQuery constructor.
@@ -101,8 +105,8 @@ abstract class OZRolesQuery extends \Gobl\ORM\ORMTableQuery
 	public function __construct()
 	{
 		parent::__construct(
-			\OZONE\Core\Db\OZRole::TABLE_NAMESPACE,
-			\OZONE\Core\Db\OZRole::TABLE_NAME
+			OZRole::TABLE_NAMESPACE,
+			OZRole::TABLE_NAME
 		);
 	}
 
@@ -113,6 +117,6 @@ abstract class OZRolesQuery extends \Gobl\ORM\ORMTableQuery
 	 */
 	public static function new(): static
 	{
-		return new \OZONE\Core\Db\OZRolesQuery();
+		return new OZRolesQueryReal();
 	}
 }

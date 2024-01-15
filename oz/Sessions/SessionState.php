@@ -25,7 +25,7 @@ class SessionState extends Store
 	/**
 	 * SessionState constructor.
 	 *
-	 * @param \OZONE\Core\Db\OZSession $session
+	 * @param OZSession $session
 	 */
 	private function __construct(private OZSession $session)
 	{
@@ -45,7 +45,7 @@ class SessionState extends Store
 	/**
 	 * Create instance with a given session entry.
 	 *
-	 * @param \OZONE\Core\Db\OZSession $session
+	 * @param OZSession $session
 	 *
 	 * @return $this
 	 */

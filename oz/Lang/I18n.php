@@ -42,12 +42,12 @@ class I18n
 	}
 
 	/**
-	 * Creates an instance of {@see \OZONE\Core\Lang\I18nMessage}.
+	 * Creates an instance of {@see I18nMessage}.
 	 *
 	 * @param string $message
 	 * @param array  $inject
 	 *
-	 * @return \OZONE\Core\Lang\I18nMessage
+	 * @return I18nMessage
 	 */
 	public static function m(string $message, array $inject): I18nMessage
 	{

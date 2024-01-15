@@ -13,29 +13,40 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db\Base;
 
+use Gobl\DBAL\Queries\QBSelect;
+use Gobl\DBAL\Table;
+use Gobl\ORM\ORM;
+use Gobl\ORM\ORMEntity;
+use OZONE\Core\Db\OZJob as OZJobReal;
+use OZONE\Core\Db\OZJobsController;
+use OZONE\Core\Db\OZJobsCrud;
+use OZONE\Core\Db\OZJobsQuery;
+use OZONE\Core\Db\OZJobsResults;
+use OZONE\Core\Queue\JobState;
+
 /**
  * Class OZJob.
  *
- * @property null|string                $id          Getter for column `oz_jobs`.`id`.
- * @property string                     $ref         Getter for column `oz_jobs`.`ref`.
- * @property \OZONE\Core\Queue\JobState $state       Getter for column `oz_jobs`.`state`.
- * @property string                     $queue       Getter for column `oz_jobs`.`queue`.
- * @property string                     $name        Getter for column `oz_jobs`.`name`.
- * @property string                     $worker      Getter for column `oz_jobs`.`worker`.
- * @property int                        $priority    Getter for column `oz_jobs`.`priority`.
- * @property int                        $try_count   Getter for column `oz_jobs`.`try_count`.
- * @property int                        $retry_max   Getter for column `oz_jobs`.`retry_max`.
- * @property int                        $retry_delay Getter for column `oz_jobs`.`retry_delay`.
- * @property array                      $payload     Getter for column `oz_jobs`.`payload`.
- * @property array                      $result      Getter for column `oz_jobs`.`result`.
- * @property array                      $errors      Getter for column `oz_jobs`.`errors`.
- * @property bool                       $locked      Getter for column `oz_jobs`.`locked`.
- * @property null|string                $started_at  Getter for column `oz_jobs`.`started_at`.
- * @property null|string                $ended_at    Getter for column `oz_jobs`.`ended_at`.
- * @property string                     $created_at  Getter for column `oz_jobs`.`created_at`.
- * @property string                     $updated_at  Getter for column `oz_jobs`.`updated_at`.
+ * @property null|string $id          Getter for column `oz_jobs`.`id`.
+ * @property string      $ref         Getter for column `oz_jobs`.`ref`.
+ * @property JobState    $state       Getter for column `oz_jobs`.`state`.
+ * @property string      $queue       Getter for column `oz_jobs`.`queue`.
+ * @property string      $name        Getter for column `oz_jobs`.`name`.
+ * @property string      $worker      Getter for column `oz_jobs`.`worker`.
+ * @property int         $priority    Getter for column `oz_jobs`.`priority`.
+ * @property int         $try_count   Getter for column `oz_jobs`.`try_count`.
+ * @property int         $retry_max   Getter for column `oz_jobs`.`retry_max`.
+ * @property int         $retry_delay Getter for column `oz_jobs`.`retry_delay`.
+ * @property array       $payload     Getter for column `oz_jobs`.`payload`.
+ * @property array       $result      Getter for column `oz_jobs`.`result`.
+ * @property array       $errors      Getter for column `oz_jobs`.`errors`.
+ * @property bool        $locked      Getter for column `oz_jobs`.`locked`.
+ * @property null|string $started_at  Getter for column `oz_jobs`.`started_at`.
+ * @property null|string $ended_at    Getter for column `oz_jobs`.`ended_at`.
+ * @property string      $created_at  Getter for column `oz_jobs`.`created_at`.
+ * @property string      $updated_at  Getter for column `oz_jobs`.`updated_at`.
  */
-abstract class OZJob extends \Gobl\ORM\ORMEntity
+abstract class OZJob extends ORMEntity
 {
 	public const TABLE_NAME      = 'oz_jobs';
 	public const TABLE_NAMESPACE = 'OZONE\\Core\\Db';
@@ -82,55 +93,55 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 */
 	public static function new(bool $is_new = true, bool $strict = true): static
 	{
-		return new \OZONE\Core\Db\OZJob($is_new, $strict);
+		return new OZJobReal($is_new, $strict);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZJobsCrud
+	 * @return OZJobsCrud
 	 */
-	public static function crud(): \OZONE\Core\Db\OZJobsCrud
+	public static function crud(): OZJobsCrud
 	{
-		return \OZONE\Core\Db\OZJobsCrud::new();
+		return OZJobsCrud::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZJobsController
+	 * @return OZJobsController
 	 */
-	public static function ctrl(): \OZONE\Core\Db\OZJobsController
+	public static function ctrl(): OZJobsController
 	{
-		return \OZONE\Core\Db\OZJobsController::new();
+		return OZJobsController::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZJobsQuery
+	 * @return OZJobsQuery
 	 */
-	public static function qb(): \OZONE\Core\Db\OZJobsQuery
+	public static function qb(): OZJobsQuery
 	{
-		return \OZONE\Core\Db\OZJobsQuery::new();
+		return OZJobsQuery::new();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Db\OZJobsResults
+	 * @return OZJobsResults
 	 */
-	public static function results(\Gobl\DBAL\Queries\QBSelect $query): \OZONE\Core\Db\OZJobsResults
+	public static function results(QBSelect $query): OZJobsResults
 	{
-		return \OZONE\Core\Db\OZJobsResults::new($query);
+		return OZJobsResults::new($query);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function table(): \Gobl\DBAL\Table
+	public static function table(): Table
 	{
-		return \Gobl\ORM\ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
+		return ORM::table(static::TABLE_NAMESPACE, static::TABLE_NAME);
 	}
 
 	/**
@@ -184,9 +195,9 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	/**
 	 * Getter for column `oz_jobs`.`state`.
 	 *
-	 * @return \OZONE\Core\Queue\JobState
+	 * @return JobState
 	 */
-	public function getState(): \OZONE\Core\Queue\JobState
+	public function getState(): JobState
 	{
 		return $this->state;
 	}
@@ -198,7 +209,7 @@ abstract class OZJob extends \Gobl\ORM\ORMEntity
 	 *
 	 * @return static
 	 */
-	public function setState(\OZONE\Core\Queue\JobState|string $state): static
+	public function setState(JobState|string $state): static
 	{
 		$this->state = $state;
 

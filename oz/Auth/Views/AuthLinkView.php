@@ -15,6 +15,8 @@ namespace OZONE\Core\Auth\Views;
 
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthSecretType;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -28,12 +30,12 @@ final class AuthLinkView extends WebView
 	public const AUTH_LINK_ROUTE = 'oz:auth_link';
 
 	/**
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 *
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
-	 * @throws \OZONE\Core\Exceptions\UnauthorizedActionException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedActionException
 	 */
 	public function authorize(RouteInfo $ri): Response
 	{

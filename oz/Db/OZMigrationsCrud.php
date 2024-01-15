@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZMigrationsCrud as OZMigrationsCrudBase;
+
 /**
  * Class OZMigrationsCrud.
  */
-class OZMigrationsCrud extends \OZONE\Core\Db\Base\OZMigrationsCrud
+class OZMigrationsCrud extends OZMigrationsCrudBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

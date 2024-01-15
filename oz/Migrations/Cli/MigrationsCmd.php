@@ -32,7 +32,7 @@ final class MigrationsCmd extends Command
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	protected function describe(): void
 	{
@@ -116,7 +116,7 @@ final class MigrationsCmd extends Command
 	/**
 	 * Runs pending migrations.
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	private function run(): void
 	{
@@ -163,9 +163,9 @@ final class MigrationsCmd extends Command
 	/**
 	 * Rolls back migrations.
 	 *
-	 * @param \Kli\KliArgs $args
+	 * @param KliArgs $args
 	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @throws KliException
 	 */
 	private function rollback(KliArgs $args): void
 	{

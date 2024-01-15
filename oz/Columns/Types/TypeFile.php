@@ -160,7 +160,7 @@ class TypeFile extends Type
 	 *
 	 * @return $this
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
+	 * @throws TypesException
 	 */
 	public function fileMinSize(int $min): static
 	{
@@ -178,7 +178,7 @@ class TypeFile extends Type
 	 *
 	 * @return $this
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
+	 * @throws TypesException
 	 */
 	public function fileMaxSize(int $max): static
 	{
@@ -196,7 +196,7 @@ class TypeFile extends Type
 	 *
 	 * @return $this
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
+	 * @throws TypesException
 	 */
 	public function fileMinCount(int $min): static
 	{
@@ -214,7 +214,7 @@ class TypeFile extends Type
 	 *
 	 * @return $this
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
+	 * @throws TypesException
 	 */
 	public function fileMaxCount(int $max): static
 	{
@@ -232,7 +232,7 @@ class TypeFile extends Type
 	 *
 	 * @return $this
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
+	 * @throws TypesException
 	 */
 	public function fileUploadTotalSize(int $total): static
 	{
@@ -330,7 +330,7 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesException
+	 * @throws TypesException
 	 */
 	public function configure(array $options): static
 	{
@@ -391,7 +391,7 @@ class TypeFile extends Type
 	 *
 	 * @return string[] the list of file ids or paths
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+	 * @throws TypesInvalidValueException
 	 */
 	protected function computeUploadedFiles(array $uploaded_files, array $debug): array
 	{
@@ -552,9 +552,9 @@ class TypeFile extends Type
 	/**
 	 * Checks uploaded file.
 	 *
-	 * @param \OZONE\Core\Http\UploadedFile $upload
+	 * @param UploadedFile $upload
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+	 * @throws TypesInvalidValueException
 	 */
 	protected function checkUploadedFile(UploadedFile $upload): void
 	{
@@ -590,9 +590,9 @@ class TypeFile extends Type
 	/**
 	 * Checks ozone file.
 	 *
-	 * @param \OZONE\Core\Db\OZFile $file
+	 * @param OZFile $file
 	 *
-	 * @throws \Gobl\DBAL\Types\Exceptions\TypesInvalidValueException
+	 * @throws TypesInvalidValueException
 	 */
 	protected function checkOZFile(OZFile $file): void
 	{

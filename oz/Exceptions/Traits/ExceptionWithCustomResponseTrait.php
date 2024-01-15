@@ -35,7 +35,7 @@ trait ExceptionWithCustomResponseTrait
 	/**
 	 * Sets custom response.
 	 *
-	 * @param \OZONE\Core\Http\Response $response
+	 * @param Response $response
 	 *
 	 * @return static
 	 */

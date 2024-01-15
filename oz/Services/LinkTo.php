@@ -36,11 +36,11 @@ final class LinkTo extends Service
 	/**
 	 * Gets link for authorization.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param \OZONE\Core\Http\Uri    $next
-	 * @param int                     $expire_at
+	 * @param Context $context
+	 * @param Uri     $next
+	 * @param int     $expire_at
 	 *
-	 * @return \OZONE\Core\Http\Uri
+	 * @return Uri
 	 */
 	public static function buildHiddenUri(Context $context, Uri $next, int $expire_at = 0): Uri
 	{
@@ -73,11 +73,11 @@ final class LinkTo extends Service
 	}
 
 	/**
-	 * @param \OZONE\Core\Router\RouteInfo $ri
+	 * @param RouteInfo $ri
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 *
-	 * @throws \OZONE\Core\Exceptions\NotFoundException
+	 * @throws NotFoundException
 	 * @throws Throwable
 	 */
 	private function handleRequest(RouteInfo $ri): Response

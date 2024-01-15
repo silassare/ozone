@@ -27,7 +27,7 @@ final class DbSchemaReadyHook extends Event
 	/**
 	 * DbSchemaReadyHook constructor.
 	 *
-	 * @param \Gobl\DBAL\Interfaces\RDBMSInterface $db
+	 * @param RDBMSInterface $db
 	 */
 	public function __construct(protected RDBMSInterface $db) {}
 
@@ -42,7 +42,7 @@ final class DbSchemaReadyHook extends Event
 	/**
 	 * Returns the database.
 	 *
-	 * @return \Gobl\DBAL\Interfaces\RDBMSInterface
+	 * @return RDBMSInterface
 	 */
 	public function getDb(): RDBMSInterface
 	{

@@ -26,7 +26,7 @@ class Hook extends Event
 	/**
 	 * Hook constructor.
 	 *
-	 * @param \OZONE\Core\App\Context $context
+	 * @param Context $context
 	 */
 	public function __construct(protected Context $context) {}
 
@@ -41,7 +41,7 @@ class Hook extends Event
 	/**
 	 * Gets context.
 	 *
-	 * @return \OZONE\Core\App\Context
+	 * @return Context
 	 */
 	public function getContext(): Context
 	{
@@ -51,7 +51,7 @@ class Hook extends Event
 	/**
 	 * Shortcut for {@see \OZONE\Core\App\Context::getRequest()}.
 	 *
-	 * @return \OZONE\Core\Http\Request
+	 * @return Request
 	 */
 	public function getRequest(): Request
 	{
@@ -61,7 +61,7 @@ class Hook extends Event
 	/**
 	 * Shortcut for {@see \OZONE\Core\App\Context::getResponse()}.
 	 *
-	 * @return \OZONE\Core\Http\Response
+	 * @return Response
 	 */
 	public function getResponse(): Response
 	{
@@ -71,7 +71,7 @@ class Hook extends Event
 	/**
 	 * Shortcut for {@see \OZONE\Core\App\Context::setResponse()}.
 	 *
-	 * @param \OZONE\Core\Http\Response $response
+	 * @param Response $response
 	 *
 	 * @return $this
 	 */

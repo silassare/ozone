@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Db;
 
+use OZONE\Core\Db\Base\OZMigrationVR as OZMigrationVRBase;
+
 /**
  * Class OZMigrationVR.
  *
@@ -20,7 +22,7 @@ namespace OZONE\Core\Db;
  *
  * @extends \OZONE\Core\Db\Base\OZMigrationVR<TRelationResult>
  */
-abstract class OZMigrationVR extends \OZONE\Core\Db\Base\OZMigrationVR
+abstract class OZMigrationVR extends OZMigrationVRBase
 {
 	// ====================================================
 	// =	Your custom implementation goes here

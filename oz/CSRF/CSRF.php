@@ -70,7 +70,7 @@ class CSRF
 	/**
 	 * Check a csrf token validity in a given form.
 	 *
-	 * @param \OZONE\Core\Forms\FormData $fd
+	 * @param FormData $fd
 	 *
 	 * @return bool
 	 */

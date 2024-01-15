@@ -49,8 +49,8 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Session constructor.
 	 *
-	 * @param \OZONE\Core\App\Context $context
-	 * @param string                  $request_source_key
+	 * @param Context $context
+	 * @param string  $request_source_key
 	 */
 	public function __construct(protected Context $context, private readonly string $request_source_key) {}
 
@@ -185,7 +185,7 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Attach user to this session.
 	 *
-	 * @param \OZONE\Core\Db\OZUser $user
+	 * @param OZUser $user
 	 *
 	 * @return $this
 	 */
@@ -216,7 +216,7 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Gets the session data store.
 	 *
-	 * @return \OZONE\Core\Sessions\SessionState
+	 * @return SessionState
 	 */
 	public function state(): SessionState
 	{

@@ -27,7 +27,7 @@ use OZONE\Core\Hooks\Events\InitHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Migrations\Migrations;
-use OZONE\Core\Migrations\MigrationState;
+use OZONE\Core\Migrations\MigrationsState;
 use OZONE\Core\Plugins\Plugins;
 use OZONE\Core\Router\Events\RouterCreated;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
@@ -64,7 +64,7 @@ final class OZone
 	/**
 	 * Gets current running app.
 	 *
-	 * @return \OZONE\Core\App\Interfaces\AppInterface
+	 * @return AppInterface
 	 */
 	public static function app(): AppInterface
 	{
@@ -126,7 +126,7 @@ final class OZone
 	/**
 	 * OZone main entry point.
 	 *
-	 * @param \OZONE\Core\App\Interfaces\AppInterface $app
+	 * @param AppInterface $app
 	 */
 	public static function run(AppInterface $app): void
 	{
@@ -173,7 +173,7 @@ final class OZone
 	/**
 	 * Returns the router with all API routes registered.
 	 *
-	 * @return \OZONE\Core\Router\Router
+	 * @return Router
 	 */
 	public static function getApiRouter(): Router
 	{
@@ -196,7 +196,7 @@ final class OZone
 	/**
 	 * Returns the router with all WEB routes registered.
 	 *
-	 * @return \OZONE\Core\Router\Router
+	 * @return Router
 	 */
 	public static function getWebRouter(): Router
 	{
@@ -256,7 +256,7 @@ final class OZone
 	 */
 	public static function hasDbInstalled(): bool
 	{
-		return self::hasDbAccess() && MigrationState::NOT_INSTALLED !== Migrations::getMigrationState();
+		return self::hasDbAccess() && MigrationsState::NOT_INSTALLED !== Migrations::getState();
 	}
 
 	/**
@@ -287,7 +287,7 @@ final class OZone
 	/**
 	 * Returns the main context.
 	 *
-	 * @return \OZONE\Core\App\Context
+	 * @return Context
 	 */
 	public static function getMainContext(): Context
 	{
@@ -312,8 +312,8 @@ final class OZone
 	/**
 	 * Register all route provider.
 	 *
-	 * @param \OZONE\Core\Router\Router $router
-	 * @param array                     $routes
+	 * @param Router $router
+	 * @param array  $routes
 	 */
 	private static function registerRoutes(Router $router, array $routes): void
 	{
