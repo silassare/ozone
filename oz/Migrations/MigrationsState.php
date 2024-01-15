@@ -14,14 +14,13 @@ declare(strict_types=1);
 namespace OZONE\Core\Migrations;
 
 /**
- * Class MigrationState.
+ * Class MigrationsState.
  */
-enum MigrationState: int
+enum MigrationsState: int
 {
 	/**
-	 * The migration is not installed.
-	 *
 	 * No migration table found.
+	 *
 	 * This is a fresh install.
 	 */
 	case NOT_INSTALLED = 0;

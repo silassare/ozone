@@ -42,26 +42,26 @@ final class Migrations
 	public function __construct() {}
 
 	/**
-	 * Gets the database migration state.
+	 * Gets the database migrations state.
 	 */
-	public static function getMigrationState(): MigrationState
+	public static function getState(): MigrationsState
 	{
 		$src_version = self::getSourceCodeDbVersion();
 		$db_version  = self::getCurrentDbVersion();
 
 		if (self::DB_NOT_INSTALLED_VERSION === $db_version) {
-			return MigrationState::NOT_INSTALLED;
+			return MigrationsState::NOT_INSTALLED;
 		}
 
 		if ($db_version === $src_version) {
-			return MigrationState::INSTALLED;
+			return MigrationsState::INSTALLED;
 		}
 
 		if ($db_version < $src_version) {
-			return MigrationState::PENDING;
+			return MigrationsState::PENDING;
 		}
 
-		return MigrationState::ROLLBACK;
+		return MigrationsState::ROLLBACK;
 	}
 
 	/**
