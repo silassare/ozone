@@ -509,12 +509,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "4bbf02ab2d47f47a718adc98c4a498ee2bf6142c"
+                "reference": "da18c556c41114b75d8d91d4a9c081efa228e872"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/4bbf02ab2d47f47a718adc98c4a498ee2bf6142c",
-                "reference": "4bbf02ab2d47f47a718adc98c4a498ee2bf6142c",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/da18c556c41114b75d8d91d4a9c081efa228e872",
+                "reference": "da18c556c41114b75d8d91d4a9c081efa228e872",
                 "shasum": ""
             },
             "require": {
@@ -571,7 +571,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/dev"
             },
-            "time": "2024-01-15T13:41:23+00:00"
+            "time": "2024-01-15T16:48:50+00:00"
         },
         {
             "name": "silassare/kli",
@@ -1996,16 +1996,16 @@
         },
         {
             "name": "friendsofphp/php-cs-fixer",
-            "version": "v3.46.0",
+            "version": "v3.47.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHP-CS-Fixer/PHP-CS-Fixer.git",
-                "reference": "be6831c9af1740470d2a773119b9273f8ac1c3d2"
+                "reference": "184dd992fe49169a18300dba4435212db55220f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHP-CS-Fixer/PHP-CS-Fixer/zipball/be6831c9af1740470d2a773119b9273f8ac1c3d2",
-                "reference": "be6831c9af1740470d2a773119b9273f8ac1c3d2",
+                "url": "https://api.github.com/repos/PHP-CS-Fixer/PHP-CS-Fixer/zipball/184dd992fe49169a18300dba4435212db55220f7",
+                "reference": "184dd992fe49169a18300dba4435212db55220f7",
                 "shasum": ""
             },
             "require": {
@@ -2075,7 +2075,7 @@
             ],
             "support": {
                 "issues": "https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/issues",
-                "source": "https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/tree/v3.46.0"
+                "source": "https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/tree/v3.47.0"
             },
             "funding": [
                 {
@@ -2083,7 +2083,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-01-03T21:38:46+00:00"
+            "time": "2024-01-15T15:35:57+00:00"
         },
         {
             "name": "myclabs/deep-copy",
