@@ -25,6 +25,9 @@ use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Db\OZMigration;
 use OZONE\Core\Db\OZMigrationsQuery;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Migrations\Events\MigrationAfterRun;
+use OZONE\Core\Migrations\Events\MigrationBeforeRun;
+use OZONE\Core\Migrations\Events\MigrationCreated;
 use OZONE\Core\Utils\Random;
 use Throwable;
 
@@ -108,12 +111,16 @@ final class Migrations
 	 */
 	public function run(MigrationInterface $migration): void
 	{
+		(new MigrationBeforeRun($migration, false))->dispatch();
+
 		$query = \trim($migration->up());
 		if ($query) {
 			db()->executeMulti($query);
 		}
 
 		$this->setCurrentDbVersion($migration->getVersion());
+
+		(new MigrationAfterRun($migration, false))->dispatch();
 	}
 
 	/**
@@ -134,12 +141,17 @@ final class Migrations
 			$version = $previous->getVersion();
 		}
 
+		(new MigrationBeforeRun($migration, true))->dispatch();
+
 		$query = \trim($migration->down());
+
 		if ($query) {
 			db()->executeMulti($query);
 		}
 
 		$this->setCurrentDbVersion($version);
+
+		(new MigrationAfterRun($migration, true))->dispatch();
 	}
 
 	/**
@@ -191,10 +203,13 @@ final class Migrations
 
 		if ($force || $diff->hasChanges()) {
 			$outfile = $fm->resolve(\sprintf('%s.php', Random::fileName('migration')));
+
 			$fm->wf($outfile, (string) $diff->generateMigrationFile($version));
 
 			// clear cache
 			self::clearCache();
+
+			(new MigrationCreated($version))->dispatch();
 
 			return $outfile;
 		}
