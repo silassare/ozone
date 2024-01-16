@@ -140,7 +140,7 @@ abstract class AbstractPlugin implements PluginInterface
 	public function boot(): void
 	{
 		if ($this->isEnabled()) {
-			$plugin_scope_root_dir = $this->getScope()->getPublicDir()->getRoot();
+			$plugin_scope_root_dir = $this->getScope()->getPrivateDir()->getRoot();
 			ClassLoader::addNamespace($this->namespace, $plugin_scope_root_dir);
 		}
 	}
