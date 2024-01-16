@@ -35,6 +35,15 @@ interface PluginInterface
 	public function getName(): string;
 
 	/**
+	 * Returns the plugin install path.
+	 *
+	 * This is where the composer.json file is located.
+	 *
+	 * @return string
+	 */
+	public function getInstallPath(): string;
+
+	/**
 	 * Returns the plugin package name.
 	 *
 	 * @return string
