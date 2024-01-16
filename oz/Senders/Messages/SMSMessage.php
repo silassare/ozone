@@ -13,19 +13,22 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Senders\Messages;
 
+use OZONE\Core\Db\OZUser;
 use OZONE\Core\Senders\Events\SendSMS;
 
 /**
  * Class SMSMessage.
+ *
+ * @extends Message<string|OZUser>
  */
 class SMSMessage extends Message
 {
 	/**
 	 * {@inheritDoc}
 	 */
-	public function send(string $to): static
+	public function send(): static
 	{
-		(new SendSMS($to, $this))->dispatch();
+		(new SendSMS($this))->dispatch();
 
 		return $this;
 	}

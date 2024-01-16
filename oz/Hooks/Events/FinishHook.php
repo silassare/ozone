@@ -30,36 +30,11 @@ final class FinishHook extends Event
 	/**
 	 * FinishHook constructor.
 	 *
-	 * @param Request  $request
-	 * @param Response $response
+	 * @param Request  $request  the request
+	 * @param Response $response the response
 	 */
-	public function __construct(protected Request $request, protected Response $response) {}
-
-	/**
-	 * FinishHook destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->response, $this->request);
-	}
-
-	/**
-	 * Gets the handled request.
-	 *
-	 * @return Response
-	 */
-	public function getResponse(): Response
-	{
-		return $this->response;
-	}
-
-	/**
-	 * Gets the request response.
-	 *
-	 * @return Request
-	 */
-	public function getRequest(): Request
-	{
-		return $this->request;
-	}
+	public function __construct(
+		public readonly Request $request,
+		public readonly Response $response
+	) {}
 }

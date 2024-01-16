@@ -15,17 +15,16 @@ use OZONE\Core\App\Context;
 use PHPUtils\Events\Event;
 
 /**
- * Class UserLogInUnknown.
+ * Class UserUnknown.
+ *
+ * This event is triggered when a user try to log in but the user is unknown.
  */
-final class UserLogInUnknown extends Event
+final class UserUnknown extends Event
 {
-	public function __construct(private readonly Context $context) {}
-
 	/**
-	 * @return Context
+	 * UserUnknown constructor.
+	 *
+	 * @param Context $context the context
 	 */
-	public function getContext(): Context
-	{
-		return $this->context;
-	}
+	public function __construct(public readonly Context $context) {}
 }

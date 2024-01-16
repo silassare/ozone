@@ -17,24 +17,19 @@ use PHPUtils\Events\Event;
 
 /**
  * Class UserLogInFailed.
+ *
+ * This event is triggered when a user failed to log in.
  */
 final class UserLogInFailed extends Event
 {
-	public function __construct(private readonly Context $context, private readonly OZUser $user) {}
-
 	/**
-	 * @return Context
+	 * UserLogInFailed constructor.
+	 *
+	 * @param Context $context the context
+	 * @param OZUser  $user    the user who failed to log in
 	 */
-	public function getContext(): Context
-	{
-		return $this->context;
-	}
-
-	/**
-	 * @return OZUser
-	 */
-	public function getUser(): OZUser
-	{
-		return $this->user;
-	}
+	public function __construct(
+		public readonly Context $context,
+		public readonly OZUser $user
+	) {}
 }

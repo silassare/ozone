@@ -26,29 +26,10 @@ final class RouteBeforeRun extends Hook
 	/**
 	 * RouteBeforeRun constructor.
 	 *
-	 * @param RouteInfo $ri
+	 * @param RouteInfo $target The route info
 	 */
-	public function __construct(protected RouteInfo $ri)
+	public function __construct(public readonly RouteInfo $target)
 	{
-		parent::__construct($ri->getContext());
-	}
-
-	/**
-	 * RouteBeforeRun destructor.
-	 */
-	public function __destruct()
-	{
-		parent::__destruct();
-		unset($this->ri);
-	}
-
-	/**
-	 * Gets route info.
-	 *
-	 * @return RouteInfo
-	 */
-	public function getRouteInfo(): RouteInfo
-	{
-		return $this->ri;
+		parent::__construct($target->getContext());
 	}
 }

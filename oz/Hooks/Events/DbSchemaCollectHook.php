@@ -29,25 +29,7 @@ final class DbSchemaCollectHook extends Event
 	/**
 	 * DbCollectHook constructor.
 	 *
-	 * @param RDBMSInterface $db
+	 * @param RDBMSInterface $db the database instance
 	 */
-	public function __construct(protected RDBMSInterface $db) {}
-
-	/**
-	 * DbSchemaCollectHook destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->db);
-	}
-
-	/**
-	 * Returns the database.
-	 *
-	 * @return RDBMSInterface
-	 */
-	public function getDb(): RDBMSInterface
-	{
-		return $this->db;
-	}
+	public function __construct(public readonly RDBMSInterface $db) {}
 }

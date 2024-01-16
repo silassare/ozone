@@ -52,9 +52,7 @@ interface MessageInterface
 	/**
 	 * Send message.
 	 *
-	 * @param string $to
-	 *
 	 * @return $this
 	 */
-	public function send(string $to): static;
+	public function send(): static;
 }

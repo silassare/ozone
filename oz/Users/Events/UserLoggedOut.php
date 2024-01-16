@@ -17,24 +17,19 @@ use PHPUtils\Events\Event;
 
 /**
  * Class UserLoggedOut.
+ *
+ * This event is triggered when a user is logged out.
  */
 final class UserLoggedOut extends Event
 {
-	public function __construct(private readonly Context $context, private readonly OZUser $user) {}
-
 	/**
-	 * @return Context
+	 * UserLoggedOut constructor.
+	 *
+	 * @param Context $context the context
+	 * @param OZUser  $user    the user that was logged out
 	 */
-	public function getContext(): Context
-	{
-		return $this->context;
-	}
-
-	/**
-	 * @return OZUser
-	 */
-	public function getUser(): OZUser
-	{
-		return $this->user;
-	}
+	public function __construct(
+		public readonly Context $context,
+		public readonly OZUser $user
+	) {}
 }

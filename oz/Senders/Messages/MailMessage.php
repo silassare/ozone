@@ -13,11 +13,14 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Senders\Messages;
 
+use OZONE\Core\Db\OZUser;
 use OZONE\Core\FS\Templates;
 use OZONE\Core\Senders\Events\SendMail;
 
 /**
  * Class MailMessage.
+ *
+ * @extends Message<string|OZUser>
  */
 class MailMessage extends Message
 {
@@ -37,6 +40,8 @@ class MailMessage extends Message
 	}
 
 	/**
+	 * Gets the rich content.
+	 *
 	 * @return string
 	 */
 	public function getRichContent(): string
@@ -47,9 +52,9 @@ class MailMessage extends Message
 	/**
 	 * {@inheritDoc}
 	 */
-	public function send(string $to): static
+	public function send(): static
 	{
-		(new SendMail($to, $this))->dispatch();
+		(new SendMail($this))->dispatch();
 
 		return $this;
 	}

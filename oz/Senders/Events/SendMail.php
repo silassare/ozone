@@ -18,29 +18,19 @@ use PHPUtils\Events\Event;
 
 /**
  * Class SendMail.
+ *
+ * This event is triggered to send an email.
+ * Please note that the email is not sent.
+ * The mailer should catch this event and send the email.
  */
 final class SendMail extends Event
 {
-	protected MailMessage $message;
-
-	public function __construct(protected string $email, MailMessage $message)
-	{
-		$this->message = clone $message;
-	}
-
 	/**
-	 * @return string
+	 * SendMail constructor.
+	 *
+	 * @param MailMessage $message the message
 	 */
-	public function getEmail(): string
-	{
-		return $this->email;
-	}
-
-	/**
-	 * @return MailMessage
-	 */
-	public function getMessage(): MailMessage
-	{
-		return $this->message;
-	}
+	public function __construct(
+		public readonly MailMessage $message
+	) {}
 }

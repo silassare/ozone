@@ -21,15 +21,4 @@ use OZONE\Core\Hooks\Hook;
  * This event is triggered before the request is handled.
  * This may be called multiple times. Ex: when there is a sub-request.
  */
-final class RequestHook extends Hook
-{
-	/**
-	 * Shortcut for {@see \OZONE\Core\App\Context::isSubRequest()}.
-	 *
-	 * @return bool
-	 */
-	public function isSubRequest(): bool
-	{
-		return $this->context->isSubRequest();
-	}
-}
+final class RequestHook extends Hook {}

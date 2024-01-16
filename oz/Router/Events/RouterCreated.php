@@ -28,51 +28,13 @@ final class RouterCreated extends Event
 	/**
 	 * RouterCreated constructor.
 	 *
-	 * @param Router     $router
-	 * @param RouteGroup $top_level_group
-	 * @param bool       $is_api
+	 * @param Router     $router        the router
+	 * @param RouteGroup $topLevelGroup the top level group
+	 * @param bool       $isApi         true if the router is for api
 	 */
 	public function __construct(
-		protected Router $router,
-		protected RouteGroup $top_level_group,
-		protected bool $is_api,
+		public readonly Router $router,
+		public readonly RouteGroup $topLevelGroup,
+		public readonly bool $isApi,
 	) {}
-
-	/**
-	 * RouterCreated destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->router, $this->top_level_group);
-	}
-
-	/**
-	 * Gets the router.
-	 *
-	 * @return Router
-	 */
-	public function getRouter(): Router
-	{
-		return $this->router;
-	}
-
-	/**
-	 * Gets the top level group.
-	 *
-	 * @return RouteGroup
-	 */
-	public function getTopLevelGroup(): RouteGroup
-	{
-		return $this->top_level_group;
-	}
-
-	/**
-	 * Is API router.
-	 *
-	 * @return bool
-	 */
-	public function isApi(): bool
-	{
-		return $this->is_api;
-	}
 }

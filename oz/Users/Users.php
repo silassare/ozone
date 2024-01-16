@@ -27,7 +27,7 @@ use OZONE\Core\Sessions\Session;
 use OZONE\Core\Users\Events\UserLoggedIn;
 use OZONE\Core\Users\Events\UserLoggedOut;
 use OZONE\Core\Users\Events\UserLogInFailed;
-use OZONE\Core\Users\Events\UserLogInUnknown;
+use OZONE\Core\Users\Events\UserUnknown;
 use OZONE\Core\Users\Traits\UsersUtilsTrait;
 use PHPUtils\Store\Store;
 use Throwable;
@@ -175,7 +175,7 @@ final class Users
 		$user = self::withPhone($phone);
 
 		if (!$user) {
-			(new UserLogInUnknown($this->context))->dispatch();
+			(new UserUnknown($this->context))->dispatch();
 
 			return 'OZ_FIELD_PHONE_NOT_REGISTERED';
 		}
@@ -203,7 +203,7 @@ final class Users
 		$user = self::withEmail($email);
 
 		if (!$user) {
-			(new UserLogInUnknown($this->context))->dispatch();
+			(new UserUnknown($this->context))->dispatch();
 
 			return 'OZ_FIELD_EMAIL_NOT_REGISTERED';
 		}

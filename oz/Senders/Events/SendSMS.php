@@ -18,29 +18,19 @@ use PHPUtils\Events\Event;
 
 /**
  * Class SendSMS.
+ *
+ * This event is triggered to send an SMS.
+ * Please note that the SMS is not sent.
+ * The SMS sender should catch this event and send the SMS.
  */
 final class SendSMS extends Event
 {
-	protected SMSMessage $message;
-
-	public function __construct(protected string $phone, SMSMessage $message)
-	{
-		$this->message = clone $message;
-	}
-
 	/**
-	 * @return string
+	 * SendSMS constructor.
+	 *
+	 * @param SMSMessage $message the message to send
 	 */
-	public function getPhone(): string
-	{
-		return $this->phone;
-	}
-
-	/**
-	 * @return SMSMessage
-	 */
-	public function getMessage(): SMSMessage
-	{
-		return $this->message;
-	}
+	public function __construct(
+		public readonly SMSMessage $message
+	) {}
 }

@@ -27,31 +27,11 @@ final class RedirectHook extends Hook
 	/**
 	 * RedirectHook constructor.
 	 *
-	 * @param Context $context
-	 * @param Uri     $redirect_uri
+	 * @param Context $context The context
+	 * @param Uri     $to      The redirection target
 	 */
-	public function __construct(Context $context, protected Uri $redirect_uri)
+	public function __construct(Context $context, public readonly Uri $to)
 	{
 		parent::__construct($context);
-	}
-
-	/**
-	 * RedirectHook destructor.
-	 */
-	public function __destruct()
-	{
-		parent::__destruct();
-
-		unset($this->redirect_uri);
-	}
-
-	/**
-	 * Gets the redirect uri.
-	 *
-	 * @return Uri
-	 */
-	public function getRedirectUri(): Uri
-	{
-		return $this->redirect_uri;
 	}
 }

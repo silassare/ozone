@@ -18,29 +18,19 @@ use PHPUtils\Events\Event;
 
 /**
  * Class SendNotification.
+ *
+ * This event is triggered to send a notification.
+ * Please note that the notification is not sent.
+ * The notification sender should catch this event and send the notification.
  */
 final class SendNotification extends Event
 {
-	protected NotificationMessage $message;
-
-	public function __construct(protected string $target, NotificationMessage $message)
-	{
-		$this->message = clone $message;
-	}
-
 	/**
-	 * @return string
+	 * SendNotification constructor.
+	 *
+	 * @param NotificationMessage $message the message to send
 	 */
-	public function getTarget(): string
-	{
-		return $this->target;
-	}
-
-	/**
-	 * @return NotificationMessage
-	 */
-	public function getMessage(): NotificationMessage
-	{
-		return $this->message;
-	}
+	public function __construct(
+		public readonly NotificationMessage $message
+	) {}
 }

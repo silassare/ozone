@@ -49,8 +49,8 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	 */
 	public static function onRouteNotFound(RouteNotFound $ev): void
 	{
-		$context = $ev->getContext();
-		$request = $ev->getRequest();
+		$context = $ev->context;
+		$request = $context->getRequest();
 		$uri     = $request->getUri();
 
 		// is it root
@@ -76,11 +76,10 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	 */
 	public static function onMethodNotAllowed(RouteMethodNotAllowed $ev): void
 	{
-		if (!$ev->getRequest()
-			->isOptions()) { // not a prefetch request
+		$request = $ev->context->getRequest();
+		if (!$request->isOptions()) { // not a prefetch request
 			throw new MethodNotAllowedException(null, [
-				'method' => $ev->getRequest()
-					->getMethod(),
+				'method' => $request->getMethod(),
 			]);
 		}
 	}
@@ -94,9 +93,9 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	 */
 	public static function onResponse(ResponseHook $ev): void
 	{
-		$context        = $ev->getContext();
-		$request        = $ev->getRequest();
-		$response       = $ev->getResponse();
+		$context        = $ev->context;
+		$request        = $context->getRequest();
+		$response       = $context->getResponse();
 		$life_time      = Session::lifetime();
 		$h_list         = [];
 		$allowed_origin = Settings::get('oz.request', 'OZ_CORS_ALLOWED_ORIGIN');
@@ -121,14 +120,14 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 				'PUT',
 				'DELETE',
 			]);
-			$h_list['Access-Control-Max-Age'] = $life_time;
+			$h_list['Access-Control-Max-Age']       = $life_time;
 		} elseif (!$context->isSubRequest()) {
 			// we don't check for sub-request here because often sub-request are made
 			// with the original request environment
 			if (!empty($request_origin) && $allowed_origin !== $request_origin) {
 				$allowed_host = Uri::createFromString($allowed_origin)
 					->getHost();
-				$origin_host = Uri::createFromString($request_origin)
+				$origin_host  = Uri::createFromString($request_origin)
 					->getHost();
 				if ($allowed_host !== $origin_host) {
 					throw new ForbiddenException('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED', [

@@ -18,10 +18,19 @@ use OZONE\Core\Senders\Interfaces\MessageInterface;
 
 /**
  * Class Message.
+ *
+ * @template T
  */
 abstract class Message implements MessageInterface
 {
 	protected array $data = [];
+
+	/**
+	 * The recipients of this message.
+	 *
+	 * @var T[]
+	 */
+	protected array $recipients = [];
 
 	/**
 	 * Message Constructor.
@@ -29,7 +38,32 @@ abstract class Message implements MessageInterface
 	 * @param string $template
 	 * @param array  $attributes
 	 */
-	public function __construct(protected string $template, protected array $attributes = []) {}
+	public function __construct(
+		protected string $template,
+		protected array $attributes = []
+	) {}
+
+	/**
+	 * Adds a recipient.
+	 *
+	 * @param T $recipient
+	 */
+	public function addRecipient($recipient): static
+	{
+		$this->recipients[] = $recipient;
+
+		return $this;
+	}
+
+	/**
+	 * Gets the recipients.
+	 *
+	 * @return T[]
+	 */
+	public function getRecipients(): array
+	{
+		return $this->recipients;
+	}
 
 	/**
 	 * {@inheritDoc}

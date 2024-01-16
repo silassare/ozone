@@ -26,25 +26,7 @@ final class DbReadyHook extends Event
 	/**
 	 * DbReadyHook constructor.
 	 *
-	 * @param RDBMSInterface $db
+	 * @param RDBMSInterface $db the database instance
 	 */
-	public function __construct(protected RDBMSInterface $db) {}
-
-	/**
-	 * DbReadyHook destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->db);
-	}
-
-	/**
-	 * Returns the database.
-	 *
-	 * @return RDBMSInterface
-	 */
-	public function getDb(): RDBMSInterface
-	{
-		return $this->db;
-	}
+	public function __construct(public readonly RDBMSInterface $db) {}
 }

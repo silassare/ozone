@@ -15,8 +15,8 @@ namespace OZONE\Core\Queue;
 
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Queue\Hooks\AfterJobFinished;
-use OZONE\Core\Queue\Hooks\BeforeJobStart;
+use OZONE\Core\Queue\Hooks\JobBeforeStart;
+use OZONE\Core\Queue\Hooks\JobFinished;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
@@ -198,7 +198,7 @@ final class JobsManager
 	public static function runJob(JobContractInterface $job_contract): bool
 	{
 		if ($job_contract->lock()) {
-			(new BeforeJobStart($job_contract))->dispatch();
+			(new JobBeforeStart($job_contract))->dispatch();
 
 			$job_contract->setState(JobState::RUNNING);
 			$job_contract->incrementTryCount();
@@ -243,7 +243,7 @@ final class JobsManager
 		$job_contract->unlock();
 
 		if (JobState::DONE === $job_contract->getState()) {
-			(new AfterJobFinished($job_contract))->dispatch();
+			(new JobFinished($job_contract))->dispatch();
 		}
 	}
 

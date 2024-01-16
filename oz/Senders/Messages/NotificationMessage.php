@@ -13,19 +13,22 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Senders\Messages;
 
+use OZONE\Core\Db\OZUser;
 use OZONE\Core\Senders\Events\SendNotification;
 
 /**
  * Class NotificationMessage.
+ *
+ * @extends Message<string|OZUser>
  */
 class NotificationMessage extends Message
 {
 	/**
 	 * {@inheritDoc}
 	 */
-	public function send(string $to): static
+	public function send(): static
 	{
-		(new SendNotification($to, $this))->dispatch();
+		(new SendNotification($this))->dispatch();
 
 		return $this;
 	}

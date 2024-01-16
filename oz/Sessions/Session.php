@@ -231,7 +231,7 @@ final class Session implements BootHookReceiverInterface
 	public static function boot(): void
 	{
 		ResponseHook::listen(static function (ResponseHook $ev) {
-			$context = $ev->getContext();
+			$context = $ev->context;
 			if ($context->hasSession()) {
 				$context->session()
 					->responseReady();
