@@ -57,7 +57,7 @@ class Templates
 	 */
 	public static function addSource(string $path): void
 	{
-		$fm   = new FilesManager();
+		$fm   = FS::fromRoot();
 		$path = $fm->resolve($path);
 
 		$fm->filter()

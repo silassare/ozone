@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cache\Drivers;
 
-use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\FS;
 
 /**
  * Class PHPCache.
@@ -36,8 +36,8 @@ class PHPCache extends RuntimeCache
 	protected function save(): bool
 	{
 		$path = $this->getCachePath();
-		$fm   = new FilesManager();
-		$fm->wf($path, \serialize(self::$cache_data[$this->namespace]));
+
+		FS::fromRoot()->wf($path, \serialize(self::$cache_data[$this->namespace]));
 
 		return true;
 	}
@@ -48,7 +48,7 @@ class PHPCache extends RuntimeCache
 	protected function load(): array
 	{
 		$path   = $this->getCachePath();
-		$filter = (new FilesManager())->filter();
+		$filter = FS::fromRoot()->filter();
 		if ($filter->isFile()
 			->check($path)) {
 			$cache = \file_get_contents($path);

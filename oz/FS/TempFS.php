@@ -160,8 +160,7 @@ class TempFS implements BootHookReceiverInterface
 	 */
 	protected static function getExpirationTime(string $tmp_dir): ?int
 	{
-		$fs        = new FilesManager($tmp_dir);
-		$info_path = $fs->resolve('./info.json');
+		$info_path = FS::from($tmp_dir)->resolve('./info.json');
 
 		if (\file_exists($info_path)) {
 			try {
@@ -194,7 +193,7 @@ class TempFS implements BootHookReceiverInterface
 					if ($expires < \time()) {
 						try {
 							// this may fail if other process is using or deleting the directory
-							(new FilesManager())->rmdir($path);
+							FS::fromRoot()->rmdir($path);
 						} catch (Throwable) {
 						}
 					}

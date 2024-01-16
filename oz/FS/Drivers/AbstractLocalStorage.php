@@ -212,7 +212,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 			\fclose($f);
 		}
 
-		(new FilesManager())->wf($abs_path, $content);
+		FS::fromRoot()->wf($abs_path, $content);
 
 		\clearstatcache(true, $abs_path);
 
@@ -230,7 +230,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	{
 		$abs_path = $this->require($file->getRef());
 
-		(new FilesManager())->append($abs_path, $data);
+		FS::fromRoot()->append($abs_path, $data);
 
 		\clearstatcache(true, $abs_path);
 
@@ -248,7 +248,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	{
 		$abs_path = $this->require($file->getRef());
 
-		(new FilesManager())->prepend($abs_path, $data);
+		FS::fromRoot()->prepend($abs_path, $data);
 
 		\clearstatcache(true, $abs_path);
 
@@ -272,7 +272,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 			return false;
 		}
 
-		(new FilesManager())->rm($abs_path);
+		FS::fromRoot()->rm($abs_path);
 
 		return true;
 	}
@@ -311,7 +311,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	 */
 	protected function localize(string $ref): ?string
 	{
-		$fs          = new FilesManager();
+		$fs          = FS::fromRoot();
 		$destination = $this->uploadsDir()->resolve($ref);
 		if (
 			$fs->filter()

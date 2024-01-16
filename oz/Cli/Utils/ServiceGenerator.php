@@ -19,7 +19,7 @@ use Gobl\DBAL\Table;
 use Gobl\Gobl;
 use Gobl\ORM\Generators\CSGeneratorORM;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Templates;
 
 /**
@@ -105,7 +105,7 @@ class ServiceGenerator extends CSGeneratorORM
 			throw new RuntimeException(\sprintf('There is no primary key in the table "%s".', $table->getName()));
 		}
 
-		$fm = new FilesManager();
+		$fm = FS::fromRoot();
 
 		$fm->filter()
 			->isDir()

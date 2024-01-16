@@ -36,8 +36,7 @@ class PathSources
 	 */
 	public function add(string $path): self
 	{
-		$fm   = new FilesManager();
-		$path = $fm->resolve($path);
+		$path = FS::fromRoot()->resolve($path);
 
 		if (\str_starts_with($path, OZ_OZONE_DIR)) {
 			$this->sources['oz'][$path] = true;

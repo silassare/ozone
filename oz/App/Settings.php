@@ -15,7 +15,7 @@ namespace OZONE\Core\App;
 
 use InvalidArgumentException;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\FS;
 use OZONE\Core\FS\PathSources;
 use OZONE\Core\FS\Templates;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
@@ -303,7 +303,7 @@ final class Settings
 			$list = self::getSources()->getAllSources();
 
 			foreach ($list as $source) {
-				$fm               = new FilesManager($source);
+				$fm               = FS::from($source);
 				$setting_abs_path = $fm->resolve($setting_group_name . '.php');
 
 				if (\file_exists($setting_abs_path)) {

@@ -20,7 +20,7 @@ use Kli\Types\KliTypeString;
 use OZONE\Core\App\AbstractApp;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\FS;
 use Throwable;
 
 /**
@@ -44,7 +44,7 @@ final class Utils
 			$folder = \getcwd();
 		}
 
-		$fm   = new FilesManager($folder);
+		$fm   = FS::from($folder);
 		$path = $fm->resolve('app/app.php');
 
 		return $fm->filter()

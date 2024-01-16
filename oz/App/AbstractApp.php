@@ -16,6 +16,7 @@ namespace OZONE\Core\App;
 use InvalidArgumentException;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Templates;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use OZONE\Core\Utils\Env;
@@ -96,7 +97,7 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getPrivateDir(): FilesManager
 	{
-		return new FilesManager(OZ_APP_DIR);
+		return FS::from(OZ_APP_DIR);
 	}
 
 	/**
@@ -127,7 +128,7 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getProjectDir(): FilesManager
 	{
-		return new FilesManager(OZ_PROJECT_DIR);
+		return FS::from(OZ_PROJECT_DIR);
 	}
 
 	/**

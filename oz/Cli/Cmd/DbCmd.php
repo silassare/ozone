@@ -31,6 +31,7 @@ use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\FS;
 use OZONE\Core\Utils\Random;
 use PHPUtils\FS\PathUtils;
 use Throwable;
@@ -50,7 +51,7 @@ final class DbCmd extends Command
 	 */
 	public static function ensureDBBackup(Kli $cli, FilesManager $fm = null): void
 	{
-		$fm = $fm ?? new FilesManager();
+		$fm = $fm ?? FS::fromRoot();
 
 		$cli->info('Generating database backup ...');
 
@@ -299,7 +300,7 @@ final class DbCmd extends Command
 			->buildDatabase($namespace);
 
 		$file_name = \sprintf('%s.sql', Random::fileName('db'));
-		$fm        = new FilesManager($dir);
+		$fm        = FS::from($dir);
 		$fm->wf($file_name, $query);
 
 		if (\file_exists($fm->resolve($file_name))) {
@@ -363,7 +364,7 @@ final class DbCmd extends Command
 			throw new RuntimeException('this work only for MySQL database.');
 		}
 
-		$fm      = new FilesManager($dir);
+		$fm      = FS::from($dir);
 		$outfile = $fm->resolve(\sprintf('%s.sql', Random::fileName('backup')));
 		$db_host = $config['OZ_DB_HOST'];
 		$db_user = $config['OZ_DB_USER'];

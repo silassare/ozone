@@ -24,7 +24,7 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Utils\Utils;
-use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Templates;
 use OZONE\Core\Utils\Random;
 use PHPUtils\Str;
@@ -115,7 +115,7 @@ final class ProjectCmd extends Command
 			->description('The document root to use.')
 			->prompt(true, 'The document root to use')
 			->path()
-			->def((new FilesManager())->resolve('./public/api'))
+			->def(FS::fromRoot()->resolve('./public/api'))
 			->dir();
 		$serve->handler($this->serve(...));
 	}
@@ -185,7 +185,7 @@ final class ProjectCmd extends Command
 	{
 		$dir               = $args->get('dir');
 		$full              = $args->get('full');
-		$project_fm        = new FilesManager();
+		$project_fm        = FS::fromRoot();
 		$project_name      = Settings::get('oz.config', 'OZ_PROJECT_NAME');
 		$project_name_slug = \strtolower(Str::stringToURLSlug($project_name));
 		$backup_name       = Random::fileName('backup-' . $project_name_slug);
@@ -196,7 +196,7 @@ final class ProjectCmd extends Command
 		}
 		$cli->info('Copying the required files and directories may take some time ...');
 
-		$target_fm = new FilesManager($dir);
+		$target_fm = FS::from($dir);
 		$filter    = $project_fm->filter()
 			->notIn('./vendor')
 			->notName('~^(?:\.git|\.idea|otpl_done|blate_cache|node_modules|debug\.log)$~');
@@ -300,7 +300,7 @@ final class ProjectCmd extends Command
 
 		$tpl_folder = Templates::OZ_TEMPLATE_DIR;
 
-		$fm   = new FilesManager($folder);
+		$fm   = FS::from($folder);
 		$root = $fm->getRoot();
 
 		$structures = [

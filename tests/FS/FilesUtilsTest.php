@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\FS;
 
-use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FS;
 use PHPUnit\Framework\TestCase;
 
@@ -76,9 +75,8 @@ final class FilesUtilsTest extends TestCase
 	public function testTempFileName(): void
 	{
 		$file = FS::newTempFile();
-		$fm   = new FilesManager();
 
-		self::assertTrue($fm->filter()
+		self::assertTrue(FS::fromRoot()->filter()
 			->isReadable()
 			->isWritable()
 			->isFile()

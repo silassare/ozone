@@ -19,7 +19,6 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\UnverifiedUserException;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
 use OZONE\Core\Http\UploadedFile;
@@ -157,7 +156,7 @@ class UploadFiles extends Service
 			/** @var null|string $target_path */
 			$target_path = null;
 			$storage     = FS::getStorage();
-			$fm          = new FilesManager();
+			$fm          = FS::fromRoot();
 
 			foreach ($chunks as $c) {
 				$path = $c['chunk_path'];
