@@ -497,4 +497,26 @@ class FS
 
 		return $context->buildRouteUri(GetFilesView::MAIN_ROUTE, $params);
 	}
+
+	/**
+	 * Creates a new instance of {@see FilesManager} with the given root path.
+	 *
+	 * @param string $root the root path
+	 *
+	 * @return FilesManager
+	 */
+	public static function from(string $root): FilesManager
+	{
+		return new FilesManager($root);
+	}
+
+	/**
+	 * Creates a new instance of {@see FilesManager} with the project root path.
+	 *
+	 * @return FilesManager
+	 */
+	public static function fromRoot(): FilesManager
+	{
+		return new FilesManager();
+	}
 }
