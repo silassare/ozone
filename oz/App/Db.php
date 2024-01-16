@@ -16,17 +16,18 @@ namespace OZONE\Core\App;
 use Gobl\DBAL\Builders\NamespaceBuilder;
 use Gobl\DBAL\Db as GoblDb;
 use Gobl\DBAL\DbConfig;
+use Gobl\DBAL\Exceptions\DBALException;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Types\Utils\TypeUtils;
 use Gobl\Gobl;
 use OZONE\Core\Columns\TypeProvider;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Hooks\Events\DbSchemaCollectHook;
 use OZONE\Core\Hooks\Events\DbSchemaReadyHook;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
+use OZONE\Core\Plugins\Plugins;
 use Throwable;
 
 /**
@@ -106,7 +107,7 @@ final class Db
 	 */
 	public static function getOZoneDbNamespace(): string
 	{
-		return 'OZONE\\Core\\Db';
+		return Plugins::default()->getDbNamespace();
 	}
 
 	/**
@@ -124,10 +125,9 @@ final class Db
 	 */
 	public static function getOZoneDbFolder(): string
 	{
-		$fm = new FilesManager(OZ_OZONE_DIR);
+		$fm = Plugins::default()->getScope()->getPrivateDir();
 
-		return $fm->cd('Db', true)
-			->getRoot();
+		return $fm->cd('Db', true)->getRoot();
 	}
 
 	/**
@@ -164,6 +164,8 @@ final class Db
 
 	/**
 	 * Register.
+	 *
+	 * @throws DBALException
 	 */
 	private static function register(): void
 	{
