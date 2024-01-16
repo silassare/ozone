@@ -16,7 +16,6 @@ namespace OZONE\Core\Plugins;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Plugins\Interfaces\PluginInterface;
 use OZONE\Core\Scopes\AbstractScope;
-use OZONE\Core\Utils\Hasher;
 use PHPUtils\Str;
 
 /**
@@ -49,8 +48,7 @@ class PluginScope extends AbstractScope
 	{
 		$namespace               = $plugin->getNamespace();
 		$this->scope_psr4_ns_dir = \str_replace('\\', DS, $namespace);
-		$unique_name             = $this->plugin->getName() . '-' . Hasher::shorten($namespace);
-		$this->scope_name        = Str::stringToURLSlug($unique_name);
+		$this->scope_name        = Str::stringToURLSlug($this->plugin->getName());
 	}
 
 	/**
