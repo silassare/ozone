@@ -154,7 +154,7 @@ abstract class AbstractApp implements AppInterface
 	public function getPluginsDir(): FilesManager
 	{
 		return $this->getProjectDir()
-			->cd('plugins/', true);
+			->cd('.ozone/plugins/', true);
 	}
 
 	/**

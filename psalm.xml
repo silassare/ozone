@@ -8,7 +8,7 @@
 >
     <projectFiles>
         <directory name="oz"/>
-        <directory name="plugins"/>
+        <directory name=".ozone/plugins"/>
         <ignoreFiles>
             <directory name="oz/oz_templates"/>
             <directory name="vendor"/>
