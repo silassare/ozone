@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Plugins;
 
 use OZONE\Core\App\Settings;
-use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\FS;
 use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\Plugins\Interfaces\PluginInterface;
@@ -38,7 +38,7 @@ abstract class AbstractPlugin implements PluginInterface
 		protected string $namespace,
 		protected string $install_path
 	) {
-		$fs = new FilesManager();
+		$fs = FS::fromRoot();
 
 		// this wil fail if the install path is not a directory
 		$fs->cd($this->install_path);
@@ -172,8 +172,9 @@ abstract class AbstractPlugin implements PluginInterface
 		}
 
 		// if we are in plugin development project it's already handled
-		$fm = new FilesManager();
+		$plugin_fm  = FS::from($this->getInstallPath());
+		$project_fm = FS::from(OZ_PROJECT_DIR);
 
-		return !($this->getInstallPath() === $fm->resolve(OZ_PROJECT_DIR));
+		return !($plugin_fm->resolve('./') === $project_fm->resolve('./'));
 	}
 }
