@@ -15,6 +15,7 @@ namespace OZONE\Core\Plugins;
 
 use OZONE\Core\App\Settings;
 use OZONE\Core\FS\FilesManager;
+use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\Plugins\Interfaces\PluginInterface;
 use OZONE\Core\Utils\ComposerJSON;
@@ -141,7 +142,38 @@ abstract class AbstractPlugin implements PluginInterface
 	{
 		if ($this->isEnabled()) {
 			$plugin_scope_root_dir = $this->getScope()->getPrivateDir()->getRoot();
+
+			// add directory to the plugin namespace
 			ClassLoader::addNamespace($this->namespace, $plugin_scope_root_dir);
+
+			// enable ORM for the plugin if applicable
+			if ($this->shouldEnableORM()) {
+				DbReadyHook::listen(function (DbReadyHook $hook) {
+					$fm = $this->getScope()->getPrivateDir();
+
+					$dir = $fm->cd('Db', true)->getRoot();
+
+					$hook->db->ns($this->getDbNamespace())->enableORM($dir);
+				});
+			}
 		}
+	}
+
+	/**
+	 * Check if the plugin ORM should be enabled.
+	 *
+	 * @return bool
+	 */
+	protected function shouldEnableORM(): bool
+	{
+		// for default plugin it's already handled
+		if ($this instanceof DefaultPlugin) {
+			return false;
+		}
+
+		// if we are in plugin development project it's already handled
+		$fm = new FilesManager();
+
+		return !($this->getInstallPath() === $fm->resolve(OZ_PROJECT_DIR));
 	}
 }
