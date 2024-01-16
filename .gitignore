@@ -3,6 +3,8 @@
 # ozone
 .env
 .ozone
+plugins
+public
 ignore
 **/otpl_done/*
 **/blate_cache/*
