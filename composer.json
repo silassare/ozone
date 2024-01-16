@@ -54,7 +54,9 @@
   "homepage": "https://github.com/silassare/ozone#readme",
   "archive": {
     "exclude": [
-      "/ignore"
+      "/.ozone/",
+      "/noop/",
+      "/public/"
     ]
   },
   "autoload": {
