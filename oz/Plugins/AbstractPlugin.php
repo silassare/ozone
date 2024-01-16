@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Plugins;
 
 use OZONE\Core\App\Settings;
+use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\Plugins\Interfaces\PluginInterface;
 use OZONE\Core\Utils\ComposerJSON;
@@ -29,14 +30,25 @@ abstract class AbstractPlugin implements PluginInterface
 	 * AbstractPlugin constructor.
 	 *
 	 * @param string $namespace    Plugin namespace
-	 * @param string $install_path Plugin install path
+	 * @param string $install_path Plugin install path this is where the composer.json file is located
 	 */
 	public function __construct(
 		protected string $name,
 		protected string $namespace,
 		protected string $install_path
 	) {
-		$this->composer_json = new ComposerJSON($this->install_path . DS . 'composer.json');
+		$fs = new FilesManager();
+
+		// this wil fail if the install path is not a directory
+		$fs->cd($this->install_path);
+
+		$this->install_path = $fs->resolve('.');
+
+		$composer_file = './composer.json';
+
+		$fs->filter()->isFile()->isReadable()->assert($composer_file);
+
+		$this->composer_json = new ComposerJSON($fs->resolve($composer_file));
 	}
 
 	/**
@@ -53,6 +65,14 @@ abstract class AbstractPlugin implements PluginInterface
 	public function getName(): string
 	{
 		return $this->name;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getInstallPath(): string
+	{
+		return $this->install_path;
 	}
 
 	/**
