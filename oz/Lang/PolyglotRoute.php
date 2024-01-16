@@ -41,11 +41,10 @@ final class PolyglotRoute implements RouteProviderInterface
 		);
 
 		RouteBeforeRun::listen(static function (RouteBeforeRun $ev): void {
-			$lang = $ev->getRouteInfo()
-				->param(self::ROUTE_LANG_PARAM);
+			$lang = $ev->target->param(self::ROUTE_LANG_PARAM);
 
 			if ($lang) {
-				Polyglot::setUserLanguage($ev->getContext(), $lang);
+				Polyglot::setUserLanguage($ev->context, $lang);
 			}
 		}, Event::RUN_FIRST);
 	}
