@@ -29,11 +29,6 @@ class DefaultPlugin extends AbstractPlugin
 	/**
 	 * {@inheritDoc}
 	 */
-	public function boot(): void {}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public static function instance(): Interfaces\PluginInterface
 	{
 		return new self();

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Plugins;
 
 use OZONE\Core\App\Settings;
+use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\Plugins\Interfaces\PluginInterface;
 use OZONE\Core\Utils\ComposerJSON;
 
@@ -111,5 +112,16 @@ abstract class AbstractPlugin implements PluginInterface
 		$class   = static::class;
 
 		return isset($plugins[$class]) && $plugins[$class];
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function boot(): void
+	{
+		if ($this->isEnabled()) {
+			$plugin_scope_root_dir = $this->getScope()->getPublicDir()->getRoot();
+			ClassLoader::addNamespace($this->namespace, $plugin_scope_root_dir);
+		}
 	}
 }

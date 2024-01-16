@@ -17,6 +17,7 @@ use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Plugins\Interfaces\PluginInterface;
 use OZONE\Core\Scopes\AbstractScope;
 use OZONE\Core\Utils\Hasher;
+use PHPUtils\Str;
 
 /**
  * Class PluginScope.
@@ -24,9 +25,20 @@ use OZONE\Core\Utils\Hasher;
 class PluginScope extends AbstractScope
 {
 	/**
+	 * The scope name.
+	 *
 	 * @var string
 	 */
-	protected string $id;
+	protected string $scope_name;
+
+	/**
+	 * The scope psr4 namespace directory.
+	 *
+	 * This is the plugin namespace with backslash replaced by directory separator.
+	 *
+	 * @var string
+	 */
+	protected string $scope_psr4_ns_dir;
 
 	/**
 	 * PluginScope constructor.
@@ -35,7 +47,10 @@ class PluginScope extends AbstractScope
 	 */
 	public function __construct(protected PluginInterface $plugin)
 	{
-		$this->id = $plugin->getName() . '-' . Hasher::shorten($plugin->getNamespace());
+		$namespace               = $plugin->getNamespace();
+		$this->scope_psr4_ns_dir = \str_replace('\\', DS, $namespace);
+		$unique_name             = $this->plugin->getName() . '-' . Hasher::shorten($namespace);
+		$this->scope_name        = Str::stringToURLSlug($unique_name);
 	}
 
 	/**
@@ -43,7 +58,7 @@ class PluginScope extends AbstractScope
 	 */
 	public function getName(): string
 	{
-		return $this->id;
+		return $this->scope_name;
 	}
 
 	/**
@@ -51,7 +66,7 @@ class PluginScope extends AbstractScope
 	 */
 	public function getPrivateDir(): FilesManager
 	{
-		return app()->getPluginsDir()->cd($this->id, true);
+		return app()->getPluginsDir()->cd($this->scope_psr4_ns_dir, true);
 	}
 
 	/**
@@ -59,6 +74,6 @@ class PluginScope extends AbstractScope
 	 */
 	public function getPublicDir(): FilesManager
 	{
-		return app()->getPublicDir()->cd('plugins' . DS . $this->id, true);
+		return app()->getPublicDir()->cd('plugins' . DS . $this->scope_name, true);
 	}
 }
