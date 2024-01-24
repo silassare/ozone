@@ -62,11 +62,13 @@ interface AppInterface extends ScopeInterface
 	/**
 	 * Returns the project scope with the given name.
 	 *
-	 * @param string $scope the scope name
+	 * If the scope name is null, the current scope is returned.
+	 *
+	 * @param null|string $scope the scope name
 	 *
 	 * @return ScopeInterface
 	 */
-	public function getScope(string $scope): ScopeInterface;
+	public function getScope(?string $scope = null): ScopeInterface;
 
 	/**
 	 * Returns an instance of the files manager with the cache directory as root.

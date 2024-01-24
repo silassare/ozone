@@ -67,8 +67,10 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getScope(string $scope): ScopeInterface
+	public function getScope(?string $scope = null): ScopeInterface
 	{
+		$scope = $scope ?? OZ_SCOPE_NAME;
+
 		if (ScopeInterface::ROOT_SCOPE === $scope) {
 			return $this;
 		}
