@@ -871,23 +871,13 @@ final class Context
 
 		// For sub request we reuse the parent request auth
 		// if it's one of the auth methods defined for the current route
-		if ($this->is_sub_request) {
+		if ($this->is_sub_request && isset($this->parent->auth)) {
 			$parent_auth = $this->parent->auth;
-			if (null === $parent_auth) {
-				throw new RuntimeException(
-					'Sub request require authentication but the main request has no auth method.'
-				);
+			if (\in_array($parent_auth::class, $auths_methods, true)) {
+				$this->auth = $parent_auth;
+
+				return;
 			}
-
-			if (!\in_array($parent_auth::class, $auths_methods, true)) {
-				throw new RuntimeException(
-					'Sub request require authentication, but the main request auth method is not defined for the current route.'
-				);
-			}
-
-			$this->auth = $parent_auth;
-
-			return;
 		}
 
 		/** @var AuthMethodInterface $class */
