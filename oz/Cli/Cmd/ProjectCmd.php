@@ -113,10 +113,13 @@ final class ProjectCmd extends Command
 			->number(0, 65535);
 		$serve->option('doc-root', 'r')
 			->description('The document root to use.')
-			->prompt(true, 'The document root to use')
 			->path()
-			->def(FS::fromRoot()->resolve('./public/api'))
 			->dir();
+		$serve->option('scope', 's')
+			->description('The scope to use.')
+			->prompt(true, 'The scope to use')
+			->string(1, 255)
+			->def('api');
 		$serve->handler($this->serve(...));
 	}
 
@@ -134,6 +137,7 @@ final class ProjectCmd extends Command
 
 		$host     = $args->get('host');
 		$port     = $args->get('port');
+		$scope    = $args->get('scope');
 		$doc_root = $args->get('doc-root');
 		$cli      = $this->getCli();
 
@@ -144,6 +148,10 @@ final class ProjectCmd extends Command
 				9000,
 				2227,
 			], $host);
+		}
+
+		if (empty($doc_root)) {
+			$doc_root = app()->getScope($scope)->getPublicDir()->getRoot();
 		}
 
 		$cli->info("Serving project on {$host}:{$port} ...");
