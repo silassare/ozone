@@ -36,6 +36,11 @@ if (!\defined('OZ_APP_DIR')) {
 	\define('OZ_APP_DIR', OZ_PROJECT_DIR . 'noop' . DS);
 }
 
+// = Scope name
+if (!\defined('OZ_SCOPE_NAME')) {
+	\define('OZ_SCOPE_NAME', 'root');
+}
+
 // = Logs directory
 if (!\defined('OZ_LOG_DIR')) {
 	\define('OZ_LOG_DIR', \getcwd() . DS);
