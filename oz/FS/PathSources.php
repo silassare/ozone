@@ -40,10 +40,17 @@ class PathSources
 
 		if (\str_starts_with($path, OZ_OZONE_DIR)) {
 			$this->sources['oz'][$path] = true;
-		} elseif (\str_starts_with($path, OZ_PROJECT_DIR . 'vendor')) {
-			$this->sources['plugins'][$path] = true;
-		} else {
+		} elseif (
+			// is in project dir/sub-dir and not in vendor dir/sub-dir
+			\str_starts_with($path, OZ_PROJECT_DIR)
+			&& !\str_starts_with($path, OZ_PROJECT_DIR . 'vendor')
+		) {
 			$this->sources['project'][$path] = true;
+		} else {
+			// is in vendor dir/sub-dir or elsewhere for plugins
+			// installed via composer with repository type path
+			// when developing/testing plugins
+			$this->sources['plugins'][$path] = true;
 		}
 
 		return $this;
