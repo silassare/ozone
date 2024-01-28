@@ -269,9 +269,7 @@ final class Context
 	{
 		try {
 			return $this->user()->isValid();
-		} catch (Throwable $t) {
-			oz_logger($t);
-
+		} catch (Throwable) {
 			return false;
 		}
 	}
