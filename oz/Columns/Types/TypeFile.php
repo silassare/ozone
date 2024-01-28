@@ -376,7 +376,7 @@ class TypeFile extends Type
 			$this->fileMaxCount((int) $options['file_max_count']);
 		}
 
-		if (isset($this->file_upload_total_size)) {
+		if (isset($options['file_upload_total_size'])) {
 			$this->fileUploadTotalSize((int) $options['file_upload_total_size']);
 		}
 
