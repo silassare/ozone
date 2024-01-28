@@ -53,6 +53,50 @@ class TypePassword extends Type
 	}
 
 	/**
+	 * Sets password min length.
+	 *
+	 * @param int $min
+	 *
+	 * @return $this
+	 *
+	 * @throws TypesException
+	 */
+	public function min(int $min): static
+	{
+		self::assertSafeIntRange($min, $this->getOption('max', 255), 0);
+
+		return $this->setOption('min', $min);
+	}
+
+	/**
+	 * Sets password max length.
+	 *
+	 * @param int $max
+	 *
+	 * @return $this
+	 *
+	 * @throws TypesException
+	 */
+	public function max(int $max): static
+	{
+		self::assertSafeIntRange($this->getOption('min', 0), $max, 0);
+
+		return $this->setOption('max', $max);
+	}
+
+	/**
+	 * Enable password security check.
+	 *
+	 * @param bool $secure
+	 *
+	 * @return $this
+	 */
+	public function secure(bool $secure = true): static
+	{
+		return $this->setOption('secure', $secure);
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	public function default($default): static
@@ -64,11 +108,36 @@ class TypePassword extends Type
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws TypesException
+	 */
+	public function configure(array $options): static
+	{
+		if (isset($options['min'])) {
+			$this->min((int) $options['min']);
+		}
+
+		if (isset($options['max'])) {
+			$this->max((int) $options['max']);
+		}
+
+		if (isset($options['secure'])) {
+			$this->secure((bool) $options['secure']);
+		}
+
+		return parent::configure($options);
+	}
+
+	/**
+	 * {@inheritDoc}
 	 */
 	public function validate($value): ?string
 	{
-		$min   = Settings::get('oz.users', 'OZ_USER_PASS_MIN_LENGTH');
-		$max   = Settings::get('oz.users', 'OZ_USER_PASS_MAX_LENGTH');
+		$def_min = Settings::get('oz.users', 'OZ_USER_PASS_MIN_LENGTH');
+		$def_max = Settings::get('oz.users', 'OZ_USER_PASS_MAX_LENGTH');
+		$min     = $this->getOption('min', $def_min);
+		$max     = $this->getOption('max', $def_max);
+
 		$debug = [
 			'value' => $value,
 			'min'   => $min,
@@ -84,6 +153,36 @@ class TypePassword extends Type
 		if (!empty($value)) {
 			$value = (string) $value;
 			$len   = \strlen($value);
+
+			if ($this->getOption('secure')) {
+				$has_upper = false;
+				$has_lower = false;
+				$has_digit = false;
+				$has_other = false;
+
+				for ($i = 0; $i < $len; ++$i) {
+					$char = $value[$i];
+
+					if (\ctype_upper($char)) {
+						$has_upper = true;
+					} elseif (\ctype_lower($char)) {
+						$has_lower = true;
+					} elseif (\ctype_digit($char)) {
+						$has_digit = true;
+					} else {
+						$has_other = true;
+					}
+				}
+
+				if (!$has_upper || !$has_lower || !$has_digit || !$has_other) {
+					throw new TypesInvalidValueException('OZ_FIELD_PASS_NOT_SECURE', [
+						'has_upper' => $has_upper,
+						'has_lower' => $has_lower,
+						'has_digit' => $has_digit,
+						'has_other' => $has_other,
+					] + $debug);
+				}
+			}
 
 			if ($len < $min) {
 				throw new TypesInvalidValueException('OZ_FIELD_PASS_TOO_SHORT', $debug);
