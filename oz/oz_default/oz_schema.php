@@ -21,7 +21,7 @@ use OZONE\Core\Columns\Types\TypeCC2;
 use OZONE\Core\Columns\Types\TypeFile;
 use OZONE\Core\Columns\Types\TypeGender;
 use OZONE\Core\Columns\Types\TypePassword;
-use OZONE\Core\Columns\Types\TypeUserName;
+use OZONE\Core\Columns\Types\TypeUsername;
 use OZONE\Core\Columns\TypeUtils;
 use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\Queue\JobState;
@@ -41,7 +41,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->column('phone', TypeUtils::userPhone());
 		$tb->column('email', TypeUtils::userMailAddress());
 		$tb->column('pass', new TypePassword());
-		$tb->column('name', new TypeUserName());
+		$tb->column('name', new TypeUsername());
 		$tb->column('gender', new TypeGender());
 		$tb->column('birth_date', TypeUtils::birthDate($min_age, $max_age));
 		$tb->column('pic', (new TypeFile())->mimeTypes(['image/png', 'image/jpeg'])->nullable());

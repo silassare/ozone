@@ -32,7 +32,7 @@ use OZONE\Core\Columns\Types\TypeGender;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Columns\Types\TypePhone;
 use OZONE\Core\Columns\Types\TypeUrl;
-use OZONE\Core\Columns\Types\TypeUserName;
+use OZONE\Core\Columns\Types\TypeUsername;
 use OZONE\Core\Forms\TypesSwitcher;
 
 /**
@@ -422,11 +422,11 @@ trait FormFieldsTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeUserName
+	 * @return TypeUsername
 	 */
-	public function username(string $name, bool $required = false): TypeUserName
+	public function username(string $name, bool $required = false): TypeUsername
 	{
-		$type  = new TypeUserName();
+		$type  = new TypeUsername();
 		$field = $this->field($name)->type($type);
 
 		if ($required) {

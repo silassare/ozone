@@ -22,14 +22,14 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Utils\Utils;
 
 /**
- * Class TypeUserName.
+ * Class TypeUsername.
  */
-class TypeUserName extends Type
+class TypeUsername extends Type
 {
-	public const NAME = 'user_name';
+	public const NAME = 'username';
 
 	/**
-	 * TypeUserName constructor.
+	 * TypeUsername constructor.
 	 *
 	 * @throws TypesException
 	 */

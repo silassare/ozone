@@ -18,13 +18,17 @@ use OZONE\Core\Columns\Types\TypeGender;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Columns\Types\TypePhone;
 use OZONE\Core\Columns\Types\TypeUrl;
-use OZONE\Core\Columns\Types\TypeUserName;
+use OZONE\Core\Columns\Types\TypeUsername;
 
 return [
 	TypePhone::NAME    => TypePhone::class,
 	TypeEmail::NAME    => TypeEmail::class,
 	TypeUrl::NAME      => TypeUrl::class,
-	TypeUserName::NAME => TypeUserName::class,
+	TypeUsername::NAME => TypeUsername::class,
+	/**
+	 * @deprecated
+	 */
+	'user_name'        => TypeUsername::class,
 	TypePassword::NAME => TypePassword::class,
 	TypeCC2::NAME      => TypeCC2::class,
 	TypeGender::NAME   => TypeGender::class,
