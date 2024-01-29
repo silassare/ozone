@@ -70,10 +70,10 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 		self::RATE_LIMIT_REACHED  => 429,
 		self::INTERNAL_ERROR      => 500,
 		// default error same as the CloudFlare's Unknown Error
-		self::UNKNOWN_ERROR => 520,
+		self::UNKNOWN_ERROR       => 520,
 		// ozone custom error codes
-		self::UNVERIFIED_USER => 401,
-		self::INVALID_FORM    => 400,
+		self::UNVERIFIED_USER     => 401,
+		self::INVALID_FORM        => 400,
 	];
 
 	/**
@@ -275,7 +275,7 @@ ERROR_PAGE;
 	 */
 	public static function throwableToString(Throwable $throwable): string
 	{
-		$describe = self::throwableDescribe($throwable);
+		$describe = self::throwableDescribe($throwable)[0];
 
 		try {
 			$data = \json_encode($describe['data'], \JSON_THROW_ON_ERROR);
@@ -298,31 +298,44 @@ STRING;
 	/**
 	 * Describe a given throwable.
 	 *
-	 * @param Throwable $throwable
+	 * @param Throwable $throwable the throwable to describe
+	 * @param bool      $deep      if true, will describe all previous throwables
 	 *
-	 * @return array
+	 * @return array<array{file:string,line:int,code:int,message:string,data:array,class:string,trace:string}>
 	 */
-	public static function throwableDescribe(Throwable $throwable): array
+	public static function throwableDescribe(Throwable $throwable, bool $deep = false): array
 	{
-		$data = [];
+		$results = [];
+		$current = $throwable;
 
-		if (\method_exists($throwable, 'getData')) {
-			try {
-				$data = $throwable->getData(true);
-			} catch (Throwable $t) {
-				$data = ['_error_will_calling_get_data_' => $t->getMessage()];
+		while ($current) {
+			$data = [];
+
+			if (\method_exists($throwable, 'getData')) {
+				try {
+					$data = $throwable->getData(true);
+				} catch (Throwable $t) {
+					$data = ['_error_will_calling_get_data_' => $t->getMessage()];
+				}
 			}
+
+			$results[] = [
+				'file'    => $current->getFile(),
+				'line'    => $current->getLine(),
+				'code'    => $current->getCode(),
+				'message' => $current->getMessage(),
+				'data'    => $data,
+				'class'   => \get_class($current),
+				'trace'   => $current->getTraceAsString(),
+			];
+
+			if (!$deep) {
+				break;
+			}
+			$current = $current->getPrevious();
 		}
 
-		return [
-			'file'    => $throwable->getFile(),
-			'line'    => $throwable->getLine(),
-			'code'    => $throwable->getCode(),
-			'message' => $throwable->getMessage(),
-			'data'    => $data,
-			'class'   => \get_class($throwable),
-			'trace'   => $throwable->getTraceAsString(),
-		];
+		return $results;
 	}
 
 	/**

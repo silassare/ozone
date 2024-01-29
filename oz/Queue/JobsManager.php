@@ -219,7 +219,7 @@ final class JobsManager
 				}
 			} catch (Throwable $t) {
 				$job_contract->setState(JobState::FAILED);
-				$job_contract->setErrors(BaseException::throwableDescribe($t));
+				$job_contract->setErrors(BaseException::throwableDescribe($t, true));
 				self::finish($job_contract);
 			}
 
