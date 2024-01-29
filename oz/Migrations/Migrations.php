@@ -17,6 +17,7 @@ use Gobl\CRUD\Exceptions\CRUDException;
 use Gobl\DBAL\Db as GoblDb;
 use Gobl\DBAL\Diff\Diff;
 use Gobl\DBAL\Interfaces\MigrationInterface;
+use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
 use OZONE\Core\App\Db;
@@ -186,10 +187,7 @@ final class Migrations
 		$config    = $db_actual->getConfig();
 
 		$db_from = GoblDb::newInstanceOf($db_actual->getType(), $config);
-		$db_to   = GoblDb::newInstanceOf($db_actual->getType(), $config);
-
-		Db::loadDevelopmentSchemaTo($db_to);
-		$db_to->lock();
+		$db_to   = self::devDb(true);
 
 		if ($latest) {
 			$db_from->ns('Migrations')
@@ -215,6 +213,31 @@ final class Migrations
 		}
 
 		return null;
+	}
+
+	/**
+	 * Returns a new instance of the development database.
+	 *
+	 * @param bool $fresh if true, a new instance will be created
+	 *
+	 * @return RDBMSInterface
+	 */
+	public static function devDb(bool $fresh = false): RDBMSInterface
+	{
+		/** @var null|RDBMSInterface $cached */
+		static $cached = null;
+
+		if ($fresh || !$cached) {
+			$db_actual = db();
+			$config    = $db_actual->getConfig();
+			$dev_db    = GoblDb::newInstanceOf($db_actual->getType(), $config);
+
+			Db::loadDevelopmentSchemaInto($dev_db);
+			$dev_db->lock();
+			$cached = $dev_db;
+		}
+
+		return $cached;
 	}
 
 	/**
