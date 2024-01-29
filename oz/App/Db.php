@@ -146,7 +146,7 @@ final class Db
 	 *
 	 * @param RDBMSInterface $db
 	 */
-	public static function loadDevelopmentSchemaTo(RDBMSInterface $db): void
+	public static function loadDevelopmentSchemaInto(RDBMSInterface $db): void
 	{
 		/** @var callable(NamespaceBuilder):void $factory */
 		$factory = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_schema.php';
@@ -175,7 +175,7 @@ final class Db
 		$version = $mg::getSourceCodeDbVersion();
 
 		if (Migrations::DB_NOT_INSTALLED_VERSION === $version) {
-			self::loadDevelopmentSchemaTo(self::$db);
+			self::loadDevelopmentSchemaInto(self::$db);
 		} else {
 			$current = $mg->getMigration($version);
 			if (!$current) {
