@@ -142,11 +142,11 @@ final class Db
 	}
 
 	/**
-	 * Collects all tables from the project and OZone to a given db instance.
+	 * Collects all tables from the project and O'Zone into a given db instance.
 	 *
 	 * @param RDBMSInterface $db
 	 */
-	public static function loadDevelopmentSchemaInto(RDBMSInterface $db): void
+	public static function loadDevSchemaInto(RDBMSInterface $db): void
 	{
 		/** @var callable(NamespaceBuilder):void $factory */
 		$factory = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_schema.php';
@@ -175,7 +175,7 @@ final class Db
 		$version = $mg::getSourceCodeDbVersion();
 
 		if (Migrations::DB_NOT_INSTALLED_VERSION === $version) {
-			self::loadDevelopmentSchemaInto(self::$db);
+			self::loadDevSchemaInto(self::$db);
 		} else {
 			$current = $mg->getMigration($version);
 			if (!$current) {

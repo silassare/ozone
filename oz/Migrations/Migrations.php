@@ -232,7 +232,7 @@ final class Migrations
 			$config    = $db_actual->getConfig();
 			$dev_db    = GoblDb::newInstanceOf($db_actual->getType(), $config);
 
-			Db::loadDevelopmentSchemaInto($dev_db);
+			Db::loadDevSchemaInto($dev_db);
 			$dev_db->lock();
 			$cached = $dev_db;
 		}
