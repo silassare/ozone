@@ -38,11 +38,15 @@ final class MigrationsCmd extends Command
 	{
 		$this->description('Manage your project database.');
 
-		$this->action('create', 'Create database migrations.')
-			->handler($this->create(...))
-			->option('force', 'f')
+		$create = $this->action('create', 'Create database migrations.')
+			->handler($this->create(...));
+		$create->option('force', 'f')
 			->description('Force creation even if no changes is detected by the diff algorithm.')
 			->bool();
+		$create->option('label', 'l')
+			->description('The migration label.')
+			->prompt(true, 'Enter migration label')
+			->string();
 
 		$this->action('check', 'Check database migrations.')
 			->handler($this->check(...));
@@ -67,9 +71,10 @@ final class MigrationsCmd extends Command
 	{
 		Utils::assertProjectLoaded();
 		$force = (bool) $args->get('force');
+		$label = (string) $args->get('label');
 
 		$mg   = new Migrations();
-		$path = $mg->create($force);
+		$path = $mg->create($force, empty($label) ? null : $label);
 
 		if ($path) {
 			$this->getCli()

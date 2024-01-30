@@ -175,11 +175,12 @@ final class Migrations
 	 * ];
 	 * ```
 	 *
-	 * @param bool $force if true, a migration file will be created even if there are no changes
+	 * @param bool        $force if true, a migration file will be created even if there are no changes
+	 * @param null|string $label the migration label
 	 *
 	 * @return null|string
 	 */
-	public function create(bool $force = false): ?string
+	public function create(bool $force, ?string $label = null): ?string
 	{
 		$fm        = app()->getMigrationsDir();
 		$latest    = $this->getLatestMigration();
@@ -202,7 +203,7 @@ final class Migrations
 		if ($force || $diff->hasChanges()) {
 			$outfile = $fm->resolve(\sprintf('%s.php', Random::fileName('migration')));
 
-			$fm->wf($outfile, (string) $diff->generateMigrationFile($version));
+			$fm->wf($outfile, (string) $diff->generateMigrationFile($version, $label));
 
 			// clear cache
 			self::clearCache();
