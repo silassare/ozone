@@ -45,8 +45,9 @@ final class MigrationsCmd extends Command
 			->bool();
 		$create->option('label', 'l')
 			->description('The migration label.')
+			->required()
 			->prompt(true, 'Enter migration label')
-			->string();
+			->string()->def('Auto generated migration.');
 
 		$this->action('check', 'Check database migrations.')
 			->handler($this->check(...));
