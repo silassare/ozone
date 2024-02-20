@@ -56,10 +56,13 @@ final class Router
 	 */
 	private array $dynamic_routes = [];
 
+	/**
+	 * @var array<string, string>
+	 */
 	private array $global_params = [];
 
 	/**
-	 * @var callable[]
+	 * @var array<string, callable>
 	 */
 	private array $global_params_providers = [];
 
@@ -92,7 +95,7 @@ final class Router
 	/**
 	 * Gets global parameters.
 	 *
-	 * @return array
+	 * @return array<string, string>
 	 */
 	public function getGlobalParams(): array
 	{
@@ -127,7 +130,8 @@ final class Router
 	public function getGlobalParamValue(Context $context, string $param): ?string
 	{
 		if (isset($this->global_params_providers[$param])) {
-			$value = \call_user_func($this->global_params_providers[$param], $context);
+			$factory = $this->global_params_providers[$param];
+			$value   = $factory($context);
 
 			if (null === $value) {
 				return null;
@@ -141,7 +145,7 @@ final class Router
 				'Declared provider for global route parameter "%s" should return "string" or "null" value type not: %s',
 				$param,
 				\get_debug_type($value)
-			)))->suspectCallable($this->global_params[$param]);
+			)))->suspectCallable($factory);
 		}
 
 		return null;
