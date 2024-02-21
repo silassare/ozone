@@ -106,7 +106,7 @@ final class ProjectCmd extends Command
 			->description('The host to use.')
 			->prompt(true, 'The host to use')
 			->string(1, 255)
-			->def('127.0.0.1');
+			->def('localhost');
 		$serve->option('port', 'p')
 			->description('The port to use.')
 			->prompt(true, 'The port to use')
