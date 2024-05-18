@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\REST\Traits;
 
+use Gobl\DBAL\Relations\Interfaces\RelationInterface;
 use Gobl\DBAL\Relations\Relation;
 use Gobl\DBAL\Relations\VirtualRelation;
 use Gobl\DBAL\Types\TypeBigint;
@@ -20,6 +21,7 @@ use Gobl\DBAL\Types\TypeInt;
 use Gobl\ORM\Exceptions\ORMQueryException;
 use Gobl\ORM\ORMController;
 use Gobl\ORM\ORMEntity;
+use Gobl\ORM\ORMRequest;
 use Gobl\ORM\Utils\ORMClassKind;
 use OZONE\Core\Exceptions\BadRequestException;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -50,6 +52,8 @@ trait RESTFulService
 
 		$controller = $this->controller();
 		$entity     = $controller->addItem($values);
+
+		$this->processRelations($entity, $req, false);
 
 		$this->json()
 			->setDone(
@@ -82,6 +86,8 @@ trait RESTFulService
 		if (!$entity) {
 			throw new NotFoundException();
 		}
+
+		$this->processRelations($entity, $req, false);
 
 		$this->json()
 			->setDone(
@@ -308,7 +314,12 @@ trait RESTFulService
 			/** @var VirtualRelation $found */
 			$found              = $this->table->getVirtualRelation($relation_name);
 			$paginated_relation = $found->isPaginated();
-			$r                  = $found->get($entity, $req, $total_records);
+
+			if ($paginated_relation) {
+				$r = $found->getController()->list($entity, $req, $total_records);
+			} else {
+				$r = $found->getController()->get($entity, $req);
+			}
 		} else {
 			throw new NotFoundException();
 		}
@@ -339,7 +350,7 @@ trait RESTFulService
 	 */
 	protected static function registerRESTRoutes(Router $router): void
 	{
-		$table = db()
+		$table       = db()
 			->getTableOrFail(self::TABLE_NAME);
 		$key_column  = $table->getColumnOrFail(self::KEY_COLUMN);
 		$type_obj    = $key_column->getType();
@@ -506,7 +517,7 @@ trait RESTFulService
 			}
 
 			foreach ($v_relations as $name => $rel) {
-				$results[$name] = $rel->get($entity, $req);
+				$results[$name] = $rel->getController()->get($entity, $req);
 			}
 		}
 
@@ -547,7 +558,7 @@ trait RESTFulService
 			foreach ($v_relations as $name => $rel) {
 				foreach ($entities as $entity) {
 					$id                  = $entity->{self::KEY_COLUMN};
-					$results[$name][$id] = $rel->get($entity, $req);
+					$results[$name][$id] = $rel->getController()->get($entity, $req);
 				}
 			}
 		}
@@ -649,5 +660,84 @@ trait RESTFulService
 			Relation::class        => $relations,
 			VirtualRelation::class => $v_relations,
 		];
+	}
+
+	/**
+	 * Creates, patches or delete relations.
+	 *
+	 * @param ORMEntity  $entity
+	 * @param ORMRequest $req
+	 * @param bool       $patch
+	 *
+	 * @throws ORMQueryException
+	 */
+	protected function processRelations(ORMEntity $entity, ORMRequest $req, bool $patch): void
+	{
+		$table = $this->table;
+
+		/** @var array<RelationInterface> $relations */
+		$relations = [...$table->getRelations(), ...$table->getVirtualRelations()];
+
+		foreach ($relations as $relation) {
+			$relation_name    = $relation->getName();
+			$relation_payload = $req->getFormField($relation_name);
+
+			if ($relation_payload) {
+				if ($relation->isPaginated()) {
+					if (!\is_array($relation_payload)) {
+						throw new ORMQueryException(
+							'OZ_RELATION_IS_PAGINATED_ARRAY_OF_ARRAY_EXPECTED',
+							['relation' => $relation_name]
+						);
+					}
+
+					foreach ($relation_payload as $rel_entry) {
+						if (empty($rel_entry)) {
+							continue;
+						}
+
+						if (!\is_array($rel_entry)) {
+							throw new ORMQueryException(
+								'OZ_RELATION_IS_PAGINATED_ARRAY_OF_ARRAY_EXPECTED',
+								['relation' => $relation_name]
+							);
+						}
+
+						$this->processRelative($relation, $entity, $rel_entry, $patch);
+					}
+				} else {
+					$rel_entry = $relation_payload;
+					if (empty($rel_entry)) {
+						continue;
+					}
+					if (!\is_array($rel_entry)) {
+						throw new ORMQueryException(
+							'OZ_RELATION_ARRAY_EXPECTED',
+							['relation' => $relation_name]
+						);
+					}
+
+					$this->processRelative($relation, $entity, $rel_entry, $patch);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Creates, patches or delete relations.
+	 */
+	private function processRelative(RelationInterface $relation, ORMEntity $entity, array $rel_entry, bool $patch): void
+	{
+		$r_ctrl = $relation->getController();
+		if ($patch) {
+			$delete = $rel_entry[ORMRequest::DELETE_PARAM] ?? false;
+			if ($delete) {
+				$r_ctrl->delete($entity, $rel_entry);
+			} else {
+				$r_ctrl->update($entity, $rel_entry);
+			}
+		} else {
+			$r_ctrl->create($entity, $rel_entry);
+		}
 	}
 }
