@@ -160,7 +160,7 @@ final class Users
 	 *
 	 * @param FormData $form_data
 	 *
-	 * @return \OZONE\Core\Db\OZUser|string the user object or error string
+	 * @return OZUser|string the user object or error string
 	 *
 	 * @throws InvalidFormException
 	 */
@@ -188,7 +188,7 @@ final class Users
 	 *
 	 * @param FormData $form_data
 	 *
-	 * @return \OZONE\Core\Db\OZUser|string the user object or error string
+	 * @return OZUser|string the user object or error string
 	 *
 	 * @throws InvalidFormException
 	 */
@@ -217,7 +217,7 @@ final class Users
 	 * @param OZUser $user
 	 * @param string $pass
 	 *
-	 * @return \OZONE\Core\Db\OZUser|string
+	 * @return OZUser|string
 	 */
 	public function tryLogIn(OZUser $user, string $pass): OZUser|string
 	{

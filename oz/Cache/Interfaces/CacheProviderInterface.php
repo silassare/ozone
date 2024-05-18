@@ -25,7 +25,7 @@ interface CacheProviderInterface
 	 *
 	 * @param string $key
 	 *
-	 * @return null|\OZONE\Core\Cache\CacheItem
+	 * @return null|CacheItem
 	 */
 	public function get(string $key): ?CacheItem;
 

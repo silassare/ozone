@@ -27,8 +27,8 @@ final class Process extends SymfonyProcess
 	 */
 	public function __construct(
 		array $command,
-		string $cwd = null,
-		array $env = null,
+		?string $cwd = null,
+		?array $env = null,
 		mixed $input = null,
 		?float $timeout = 0 // 0 means no timeout limit
 	) {

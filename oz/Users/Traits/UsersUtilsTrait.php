@@ -41,7 +41,7 @@ trait UsersUtilsTrait
 	 *
 	 * @param string $username
 	 *
-	 * @return null|\OZONE\Core\Db\OZUser
+	 * @return null|OZUser
 	 */
 	public static function identify(string $username): ?OZUser
 	{
@@ -63,7 +63,7 @@ trait UsersUtilsTrait
 	 *
 	 * @param string $phone the phone number
 	 *
-	 * @return null|\OZONE\Core\Db\OZUser
+	 * @return null|OZUser
 	 */
 	public static function withPhone(string $phone): ?OZUser
 	{
@@ -87,7 +87,7 @@ trait UsersUtilsTrait
 	 *
 	 * @param string $email the email address
 	 *
-	 * @return null|\OZONE\Core\Db\OZUser
+	 * @return null|OZUser
 	 */
 	public static function withEmail(string $email): ?OZUser
 	{
@@ -109,7 +109,7 @@ trait UsersUtilsTrait
 	 *
 	 * @param string $uid the user id
 	 *
-	 * @return null|\OZONE\Core\Db\OZUser
+	 * @return null|OZUser
 	 */
 	public static function withID(string $uid): ?OZUser
 	{
@@ -199,7 +199,7 @@ trait UsersUtilsTrait
 	 * @param string $role       the role
 	 * @param bool   $valid_only if true, only valid role will be returned
 	 *
-	 * @return null|\OZONE\Core\Db\OZRole
+	 * @return null|OZRole
 	 */
 	public static function roleEntry(string $uid, string $role, bool $valid_only): ?OZRole
 	{

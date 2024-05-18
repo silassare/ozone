@@ -55,11 +55,11 @@ final class Polyglot
 	/**
 	 * Gets language to use.
 	 *
-	 * @param null|\OZONE\Core\App\Context $context
+	 * @param null|Context $context
 	 *
 	 * @return string
 	 */
-	public static function getLanguage(Context $context = null): string
+	public static function getLanguage(?Context $context = null): string
 	{
 		if ($context) {
 			$state = $context->state();
@@ -119,10 +119,10 @@ final class Polyglot
 	 * Polyglot::translate('MY_LANG_KEY', $data, 'fr');
 	 * ```
 	 *
-	 * @param string                       $key     the human readable text key
-	 * @param array                        $inject  data to use for replacement
-	 * @param null|string                  $lang    use a specific lang
-	 * @param null|\OZONE\Core\App\Context $context the context
+	 * @param string       $key     the human readable text key
+	 * @param array        $inject  data to use for replacement
+	 * @param null|string  $lang    use a specific lang
+	 * @param null|Context $context the context
 	 *
 	 * @return string human readable text or null if none found
 	 */
@@ -130,7 +130,7 @@ final class Polyglot
 		string $key,
 		array $inject = [],
 		?string $lang = null,
-		Context $context = null
+		?Context $context = null
 	): string {
 		if (!self::isLangKey($key)) {
 			return $key;

@@ -124,7 +124,7 @@ class Response extends Message implements ResponseInterface
 	 * @param null|Headers         $headers the response headers
 	 * @param null|StreamInterface $body    the response body
 	 */
-	public function __construct(int $status = 200, Headers $headers = null, StreamInterface $body = null)
+	public function __construct(int $status = 200, ?Headers $headers = null, ?StreamInterface $body = null)
 	{
 		$this->status  = $this->filterStatus($status);
 		$this->headers = $headers ?: new Headers();

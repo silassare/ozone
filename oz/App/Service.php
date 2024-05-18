@@ -30,7 +30,7 @@ abstract class Service implements RouteProviderInterface
 	/**
 	 * Service constructor.
 	 *
-	 * @param \OZONE\Core\App\Context|\OZONE\Core\Router\RouteInfo $context
+	 * @param Context|RouteInfo $context
 	 */
 	public function __construct(Context|RouteInfo $context)
 	{

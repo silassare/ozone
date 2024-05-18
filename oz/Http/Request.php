@@ -686,7 +686,7 @@ class Request extends Message implements ServerRequestInterface
 	 *
 	 * @return mixed the parameter value
 	 */
-	public function getUnsafeFormField(string $key, string $default = null): mixed
+	public function getUnsafeFormField(string $key, ?string $default = null): mixed
 	{
 		$postParams = $this->getParsedBody();
 		$getParams  = $this->getQueryParams();

@@ -30,7 +30,7 @@ class Utils
 	 *
 	 * @throws JsonException
 	 */
-	public static function cleanStrForDb(string $str = null): string
+	public static function cleanStrForDb(?string $str = null): string
 	{
 		if (\is_numeric($str)) {
 			return $str;

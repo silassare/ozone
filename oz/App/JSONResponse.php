@@ -93,7 +93,7 @@ final class JSONResponse implements ArrayCapableInterface
 	/**
 	 * Adds data to the response.
 	 *
-	 * @param array|\PHPUtils\Interfaces\ArrayCapableInterface $data the data
+	 * @param array|ArrayCapableInterface $data the data
 	 *
 	 * @return $this
 	 */
@@ -137,7 +137,7 @@ final class JSONResponse implements ArrayCapableInterface
 	/**
 	 * Gets form.
 	 *
-	 * @return null|\OZONE\Core\Forms\Form
+	 * @return null|Form
 	 */
 	public function getForm(): ?Form
 	{
@@ -147,7 +147,7 @@ final class JSONResponse implements ArrayCapableInterface
 	/**
 	 * Sets form.
 	 *
-	 * @param null|\OZONE\Core\Forms\Form $form
+	 * @param null|Form $form
 	 *
 	 * @return $this
 	 */

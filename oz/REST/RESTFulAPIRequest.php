@@ -28,9 +28,9 @@ class RESTFulAPIRequest extends GoblORMRequest
 	/**
 	 * RESTFulAPIRequest constructor.
 	 *
-	 * @param Context                          $context
-	 * @param array|\OZONE\Core\Forms\FormData $form
-	 * @param string                           $scope
+	 * @param Context        $context
+	 * @param array|FormData $form
+	 * @param string         $scope
 	 *
 	 * @throws ORMQueryException
 	 */

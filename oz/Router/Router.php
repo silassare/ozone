@@ -42,7 +42,7 @@ final class Router
 	];
 
 	/**
-	 * @var null|\OZONE\Core\Router\RouteGroup
+	 * @var null|RouteGroup
 	 */
 	private ?RouteGroup $current_group = null;
 
@@ -212,7 +212,7 @@ final class Router
 	 *
 	 * @param string $name
 	 *
-	 * @return null|\OZONE\Core\Router\Route
+	 * @return null|Route
 	 */
 	public function getRoute(string $name): ?Route
 	{
@@ -357,7 +357,7 @@ final class Router
 	 *
 	 * @return RouteOptions
 	 */
-	public function map(array|string $methods, callable|string $path, callable $factory = null): RouteOptions
+	public function map(array|string $methods, callable|string $path, ?callable $factory = null): RouteOptions
 	{
 		if (\is_callable($path)) {
 			$factory = $path;
@@ -416,7 +416,7 @@ final class Router
 	 *
 	 * @return RouteOptions
 	 */
-	public function connect(callable|string $path, callable $factory = null): RouteOptions
+	public function connect(callable|string $path, ?callable $factory = null): RouteOptions
 	{
 		return $this->map('connect', $path, $factory);
 	}
@@ -429,7 +429,7 @@ final class Router
 	 *
 	 * @return RouteOptions
 	 */
-	public function delete(callable|string $path, callable $factory = null): RouteOptions
+	public function delete(callable|string $path, ?callable $factory = null): RouteOptions
 	{
 		return $this->map(['delete'], $path, $factory);
 	}
@@ -442,7 +442,7 @@ final class Router
 	 *
 	 * @return RouteOptions
 	 */
-	public function get(callable|string $path, callable $factory = null): RouteOptions
+	public function get(callable|string $path, ?callable $factory = null): RouteOptions
 	{
 		return $this->map(['get'], $path, $factory);
 	}
@@ -455,7 +455,7 @@ final class Router
 	 *
 	 * @return RouteOptions
 	 */
-	public function head(callable|string $path, callable $factory = null): RouteOptions
+	public function head(callable|string $path, ?callable $factory = null): RouteOptions
 	{
 		return $this->map(['head'], $path, $factory);
 	}
@@ -468,7 +468,7 @@ final class Router
 	 *
 	 * @return RouteOptions
 	 */
-	public function options(callable|string $path, callable $factory = null): RouteOptions
+	public function options(callable|string $path, ?callable $factory = null): RouteOptions
 	{
 		return $this->map(['options'], $path, $factory);
 	}
@@ -481,7 +481,7 @@ final class Router
 	 *
 	 * @return RouteOptions
 	 */
-	public function patch(callable|string $path, callable $factory = null): RouteOptions
+	public function patch(callable|string $path, ?callable $factory = null): RouteOptions
 	{
 		return $this->map(['patch'], $path, $factory);
 	}
@@ -494,7 +494,7 @@ final class Router
 	 *
 	 * @return RouteOptions
 	 */
-	public function post(callable|string $path, callable $factory = null): RouteOptions
+	public function post(callable|string $path, ?callable $factory = null): RouteOptions
 	{
 		return $this->map(['post'], $path, $factory);
 	}
@@ -507,7 +507,7 @@ final class Router
 	 *
 	 * @return RouteOptions
 	 */
-	public function put(callable|string $path, callable $factory = null): RouteOptions
+	public function put(callable|string $path, ?callable $factory = null): RouteOptions
 	{
 		return $this->map(['put'], $path, $factory);
 	}
@@ -520,7 +520,7 @@ final class Router
 	 *
 	 * @return RouteOptions
 	 */
-	public function trace(callable|string $path, callable $factory = null): RouteOptions
+	public function trace(callable|string $path, ?callable $factory = null): RouteOptions
 	{
 		return $this->map(['trace'], $path, $factory);
 	}

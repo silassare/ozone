@@ -44,12 +44,12 @@ final class DbCmd extends Command
 	/**
 	 * Ensures database backup.
 	 *
-	 * @param Kli                              $cli
-	 * @param null|\OZONE\Core\FS\FilesManager $fm
+	 * @param Kli               $cli
+	 * @param null|FilesManager $fm
 	 *
 	 * @throws KliException
 	 */
-	public static function ensureDBBackup(Kli $cli, FilesManager $fm = null): void
+	public static function ensureDBBackup(Kli $cli, ?FilesManager $fm = null): void
 	{
 		$fm = $fm ?? FS::fromRoot();
 

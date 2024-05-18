@@ -76,10 +76,10 @@ interface JobStoreInterface
 	/**
 	 * Returns iterator for jobs in a queue.
 	 *
-	 * @param string                          $queue_name
-	 * @param null|string                     $worker_name
-	 * @param null|\OZONE\Core\Queue\JobState $state
-	 * @param null|int                        $priority
+	 * @param string        $queue_name
+	 * @param null|string   $worker_name
+	 * @param null|JobState $state
+	 * @param null|int      $priority
 	 *
 	 * @return Iterator<JobContractInterface>
 	 */
@@ -93,12 +93,12 @@ interface JobStoreInterface
 	/**
 	 * List jobs in a queue.
 	 *
-	 * @param null|string                     $queue_name
-	 * @param null|string                     $worker_name
-	 * @param null|\OZONE\Core\Queue\JobState $state
-	 * @param null|int                        $priority
-	 * @param int                             $page
-	 * @param int                             $max
+	 * @param null|string   $queue_name
+	 * @param null|string   $worker_name
+	 * @param null|JobState $state
+	 * @param null|int      $priority
+	 * @param int           $page
+	 * @param int           $max
 	 *
 	 * @return JobContractInterface[]
 	 */

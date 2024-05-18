@@ -27,7 +27,7 @@ class Field implements ArrayCapableInterface
 	use ArrayCapableTrait;
 
 	/**
-	 * @var \Gobl\DBAL\Types\Interfaces\TypeInterface|\OZONE\Core\Forms\TypesSwitcher
+	 * @var TypeInterface|TypesSwitcher
 	 */
 	protected TypeInterface|TypesSwitcher $t_type;
 
@@ -46,7 +46,7 @@ class Field implements ArrayCapableInterface
 	 * @param string                           $name
 	 * @param null|TypeInterface|TypesSwitcher $type
 	 * @param bool                             $required
-	 * @param null|\OZONE\Core\Forms\FormRule  $if
+	 * @param null|FormRule                    $if
 	 */
 	public function __construct(
 		string $name,
@@ -119,7 +119,7 @@ class Field implements ArrayCapableInterface
 	/**
 	 * Set the field type.
 	 *
-	 * @param \Gobl\DBAL\Types\Interfaces\TypeInterface|\OZONE\Core\Forms\TypesSwitcher $type
+	 * @param TypeInterface|TypesSwitcher $type
 	 *
 	 * @return $this
 	 */

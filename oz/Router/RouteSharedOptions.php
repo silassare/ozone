@@ -48,7 +48,7 @@ class RouteSharedOptions
 	protected array $middlewares = [];
 
 	/**
-	 * @var null|callable|\OZONE\Core\Forms\Form
+	 * @var null|callable|Form
 	 */
 	protected $route_form;
 
@@ -63,8 +63,8 @@ class RouteSharedOptions
 	/**
 	 * RouteSharedOptions constructor.
 	 *
-	 * @param string                             $path
-	 * @param null|\OZONE\Core\Router\RouteGroup $parent
+	 * @param string          $path
+	 * @param null|RouteGroup $parent
 	 */
 	protected function __construct(
 		string $path,
@@ -311,7 +311,7 @@ class RouteSharedOptions
 	/**
 	 * Sets form.
 	 *
-	 * @param callable|\OZONE\Core\Forms\Form $form
+	 * @param callable|Form $form
 	 *
 	 * @return static
 	 */
@@ -364,7 +364,7 @@ class RouteSharedOptions
 	/**
 	 * Gets parent.
 	 *
-	 * @return null|\OZONE\Core\Router\RouteGroup
+	 * @return null|RouteGroup
 	 */
 	public function getParent(): ?RouteGroup
 	{
@@ -415,7 +415,7 @@ class RouteSharedOptions
 	 *
 	 * @param RouteInfo $ri
 	 *
-	 * @return null|\OZONE\Core\Forms\Form
+	 * @return null|Form
 	 */
 	public function getFormBundle(RouteInfo $ri): ?Form
 	{

@@ -114,7 +114,7 @@ class Logger
 	/**
 	 * Get the running app or null.
 	 *
-	 * @return null|\OZONE\Core\App\Interfaces\AppInterface
+	 * @return null|AppInterface
 	 */
 	protected static function optionalApp(): ?AppInterface
 	{

@@ -132,7 +132,7 @@ final class Utils
 	/**
 	 * Checks if a project is loaded and returns the app instance.
 	 *
-	 * @return null|\OZONE\Core\App\Interfaces\AppInterface
+	 * @return null|AppInterface
 	 */
 	public static function tryGetProjectApp(): ?AppInterface
 	{

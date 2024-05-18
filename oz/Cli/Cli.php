@@ -29,7 +29,7 @@ use PHPUtils\Str;
 final class Cli extends Kli
 {
 	/**
-	 * @var null|\OZONE\Core\Cli\Cli The Cli singleton instance
+	 * @var null|Cli The Cli singleton instance
 	 */
 	private static ?Cli $instance = null;
 

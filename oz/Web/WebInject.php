@@ -66,7 +66,7 @@ class WebInject
 	 *
 	 * @return string
 	 */
-	public function i18n(string $key, array $data = [], string $lang = null): string
+	public function i18n(string $key, array $data = [], ?string $lang = null): string
 	{
 		try {
 			return I18n::t($key, $data, $lang, $this->context);

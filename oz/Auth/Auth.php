@@ -39,7 +39,7 @@ final class Auth implements BootHookReceiverInterface
 	 *
 	 * @param string $ref
 	 *
-	 * @return null|\OZONE\Core\Db\OZAuth
+	 * @return null|OZAuth
 	 */
 	public static function get(string $ref): ?OZAuth
 	{
@@ -60,7 +60,7 @@ final class Auth implements BootHookReceiverInterface
 	 *
 	 * @param string $token_hash
 	 *
-	 * @return null|\OZONE\Core\Db\OZAuth
+	 * @return null|OZAuth
 	 */
 	public static function getByTokenHash(string $token_hash): ?OZAuth
 	{
@@ -145,7 +145,7 @@ final class Auth implements BootHookReceiverInterface
 	/**
 	 * Gets the auth method class from settings.
 	 *
-	 * @param \OZONE\Core\Auth\AuthMethodType|string $method
+	 * @param AuthMethodType|string $method
 	 *
 	 * @return class-string<\OZONE\Core\Auth\Interfaces\AuthMethodInterface>
 	 */

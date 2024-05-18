@@ -220,7 +220,7 @@ class DbJobStore implements JobStoreInterface
 	 *
 	 * @param string $ref
 	 *
-	 * @return null|\OZONE\Core\Db\OZJob
+	 * @return null|OZJob
 	 */
 	protected static function identify(string $ref): ?OZJob
 	{
@@ -234,12 +234,12 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * Convert a {@link JobInterface} to {@link \OZONE\Core\Db\OZJob}.
 	 *
-	 * @param JobInterface              $job
-	 * @param null|\OZONE\Core\Db\OZJob $oz_job
+	 * @param JobInterface $job
+	 * @param null|OZJob   $oz_job
 	 *
 	 * @return OZJob
 	 */
-	protected function toEntity(JobInterface $job, OZJob $oz_job = null): OZJob
+	protected function toEntity(JobInterface $job, ?OZJob $oz_job = null): OZJob
 	{
 		if (null === $oz_job) {
 			$oz_job = new OZJob();
@@ -270,7 +270,7 @@ class DbJobStore implements JobStoreInterface
 	 *
 	 * @return JobContractInterface
 	 */
-	protected function fromEntity(OZJob $oz_job, JobInterface $job = null): JobContractInterface
+	protected function fromEntity(OZJob $oz_job, ?JobInterface $job = null): JobContractInterface
 	{
 		if (null === $job) {
 			$job = new JobContract($oz_job->getRef(), $oz_job->getWorker(), $oz_job->getPayload(), $this);

@@ -302,7 +302,7 @@ class ImagesUtils
 		int $quality,
 		int $max_width,
 		int $max_height,
-		array $coordinate = null,
+		?array $coordinate = null,
 		bool $resize = true
 	): self {
 		$quality = empty($quality) ? 90 : $quality;

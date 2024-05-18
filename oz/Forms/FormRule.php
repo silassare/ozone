@@ -34,9 +34,9 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Add a rule to check if a field value is equal to a value.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string                     $field
-	 * @param null|bool|float|int|\OZONE\Core\Forms\Field|string $value
-	 * @param null|\OZONE\Core\Lang\I18nMessage|string           $message
+	 * @param Field|string                     $field
+	 * @param null|bool|Field|float|int|string $value
+	 * @param null|I18nMessage|string          $message
 	 *
 	 * @return $this
 	 */
@@ -51,9 +51,9 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Add a rule to check if a field value is not equal to a value.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string                     $field
-	 * @param null|bool|float|int|\OZONE\Core\Forms\Field|string $value
-	 * @param null|\OZONE\Core\Lang\I18nMessage|string           $message
+	 * @param Field|string                     $field
+	 * @param null|bool|Field|float|int|string $value
+	 * @param null|I18nMessage|string          $message
 	 *
 	 * @return $this
 	 */
@@ -68,9 +68,9 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Add a rule to check if a field value is greater than a value.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string           $field
-	 * @param float|int|\OZONE\Core\Forms\Field|string $value
-	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
+	 * @param Field|string            $field
+	 * @param Field|float|int|string  $value
+	 * @param null|I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -85,9 +85,9 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Add a rule to check if a field value is greater than or equal to a value.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string           $field
-	 * @param float|int|\OZONE\Core\Forms\Field|string $value
-	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
+	 * @param Field|string            $field
+	 * @param Field|float|int|string  $value
+	 * @param null|I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -102,9 +102,9 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Add a rule to check if a field value is less than a value.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string           $field
-	 * @param float|int|\OZONE\Core\Forms\Field|string $value
-	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
+	 * @param Field|string            $field
+	 * @param Field|float|int|string  $value
+	 * @param null|I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -119,9 +119,9 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Add a rule to check if a field value is less than or equal to a value.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string           $field
-	 * @param float|int|\OZONE\Core\Forms\Field|string $value
-	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
+	 * @param Field|string            $field
+	 * @param Field|float|int|string  $value
+	 * @param null|I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -136,9 +136,9 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Add a rule to check if a field value is in a list of values.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string           $field
-	 * @param array|\OZONE\Core\Forms\Field            $value
-	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
+	 * @param Field|string            $field
+	 * @param array|Field             $value
+	 * @param null|I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -153,9 +153,9 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Add a rule to check if a field value is not in a list of values.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string           $field
-	 * @param array|\OZONE\Core\Forms\Field            $value
-	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
+	 * @param Field|string            $field
+	 * @param array|Field             $value
+	 * @param null|I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -170,8 +170,8 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Add a rule to check if a field value is null.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string           $field
-	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
+	 * @param Field|string            $field
+	 * @param null|I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -185,8 +185,8 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Add a rule to check if a field value is not null.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string           $field
-	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
+	 * @param Field|string            $field
+	 * @param null|I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -248,7 +248,7 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Gets the error message.
 	 *
-	 * @return null|\OZONE\Core\Lang\I18nMessage|string
+	 * @return null|I18nMessage|string
 	 */
 	public function getErrorMessage(): null|I18nMessage|string
 	{
@@ -266,10 +266,10 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * Adds a rule.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string           $field
-	 * @param string                                   $rule
-	 * @param null|mixed                               $value
-	 * @param null|\OZONE\Core\Lang\I18nMessage|string $message
+	 * @param Field|string            $field
+	 * @param string                  $rule
+	 * @param null|mixed              $value
+	 * @param null|I18nMessage|string $message
 	 *
 	 * @return $this
 	 */

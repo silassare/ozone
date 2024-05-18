@@ -143,7 +143,7 @@ class FS
 	 *
 	 * @param string $id the file id
 	 *
-	 * @return null|\OZONE\Core\Db\OZFile
+	 * @return null|OZFile
 	 */
 	public static function getFileByID(string $id): ?OZFile
 	{
@@ -204,7 +204,7 @@ class FS
 	 *
 	 * @param UploadedFile $upload
 	 *
-	 * @return null|\OZONE\Core\Db\OZFile
+	 * @return null|OZFile
 	 */
 	public static function parseFileAlias(UploadedFile $upload): ?OZFile
 	{

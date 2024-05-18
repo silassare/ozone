@@ -52,9 +52,9 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Form constructor.
 	 *
-	 * @param null|\OZONE\Core\Http\Uri  $submit_to
-	 * @param string                     $method
-	 * @param null|\OZONE\Core\CSRF\CSRF $csrf
+	 * @param null|Uri  $submit_to
+	 * @param string    $method
+	 * @param null|CSRF $csrf
 	 */
 	public function __construct(
 		protected ?Uri $submit_to = null,
@@ -89,7 +89,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Gets form submit uri.
 	 *
-	 * @return null|\OZONE\Core\Http\Uri
+	 * @return null|Uri
 	 */
 	public function getSubmitTo(): ?Uri
 	{
@@ -128,7 +128,7 @@ class Form implements ArrayCapableInterface
 	 *
 	 * @param string                                                                          $name
 	 * @param callable(\OZONE\Core\Forms\FormValidationContext):(null|\OZONE\Core\Forms\Form) $factory
-	 * @param null|\OZONE\Core\Forms\FormRule                                                 $rule
+	 * @param null|FormRule                                                                   $rule
 	 *
 	 * @return $this
 	 */
@@ -184,7 +184,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Adds a double check fields for an existing field.
 	 *
-	 * @param \OZONE\Core\Forms\Field|string $field
+	 * @param Field|string $field
 	 *
 	 * @return $this
 	 */
@@ -233,7 +233,7 @@ class Form implements ArrayCapableInterface
 	 *
 	 * @param string $name
 	 *
-	 * @return null|\OZONE\Core\Forms\Field
+	 * @return null|Field
 	 */
 	public function getField(string $name): ?Field
 	{
@@ -243,9 +243,9 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Validates the form.
 	 *
-	 * @param FormData                        $unsafe_fd
-	 * @param null|\OZONE\Core\Forms\FormData $cleaned_fd
-	 * @param string                          $step_prefix
+	 * @param FormData      $unsafe_fd
+	 * @param null|FormData $cleaned_fd
+	 * @param string        $step_prefix
 	 *
 	 * @return FormData
 	 *
@@ -346,7 +346,7 @@ class Form implements ArrayCapableInterface
 	/**
 	 * Generates a form for a given table.
 	 *
-	 * @param \Gobl\DBAL\Table|string $table
+	 * @param string|Table $table
 	 *
 	 * @return Form
 	 */

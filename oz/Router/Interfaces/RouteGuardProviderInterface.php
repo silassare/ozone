@@ -25,7 +25,7 @@ interface RouteGuardProviderInterface
 	 *
 	 * @param RouteInfo $ri
 	 *
-	 * @return null|\OZONE\Core\Router\Interfaces\RouteGuardInterface
+	 * @return null|RouteGuardInterface
 	 */
 	public static function getGuard(RouteInfo $ri): ?RouteGuardInterface;
 }

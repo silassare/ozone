@@ -28,7 +28,7 @@ final class Countries
 	 *
 	 * @param string $cc2 the country code 2
 	 *
-	 * @return null|\OZONE\Core\Db\OZCountry
+	 * @return null|OZCountry
 	 */
 	public static function get(string $cc2): ?OZCountry
 	{

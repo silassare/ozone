@@ -44,12 +44,12 @@ final class OZone
 	public const INTERNAL_PATH_PREFIX = '/~ozone-internal~/';
 
 	/**
-	 * @var null|\OZONE\Core\Router\Router
+	 * @var null|Router
 	 */
 	private static ?Router $api_router;
 
 	/**
-	 * @var null|\OZONE\Core\Router\Router
+	 * @var null|Router
 	 */
 	private static ?Router $web_router;
 

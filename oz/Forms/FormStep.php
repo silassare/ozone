@@ -48,7 +48,7 @@ class FormStep
 	 *
 	 * @param FormValidationContext $fvc
 	 *
-	 * @return null|\OZONE\Core\Forms\Form
+	 * @return null|Form
 	 */
 	public function build(FormValidationContext $fvc): ?Form
 	{

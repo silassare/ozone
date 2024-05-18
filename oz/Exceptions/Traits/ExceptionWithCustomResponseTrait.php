@@ -25,7 +25,7 @@ trait ExceptionWithCustomResponseTrait
 	/**
 	 * Gets custom response.
 	 *
-	 * @return null|\OZONE\Core\Http\Response
+	 * @return null|Response
 	 */
 	public function getCustomResponse(): ?Response
 	{

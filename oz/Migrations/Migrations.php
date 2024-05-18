@@ -314,7 +314,7 @@ final class Migrations
 	/**
 	 * Gets the latest migration.
 	 *
-	 * @return null|\Gobl\DBAL\Interfaces\MigrationInterface
+	 * @return null|MigrationInterface
 	 */
 	public function getLatestMigration(): ?MigrationInterface
 	{
@@ -364,7 +364,7 @@ final class Migrations
 	 *
 	 * @param int $version
 	 *
-	 * @return null|\Gobl\DBAL\Interfaces\MigrationInterface
+	 * @return null|MigrationInterface
 	 */
 	public function getMigration(int $version): ?MigrationInterface
 	{
@@ -384,7 +384,7 @@ final class Migrations
 	 *
 	 * @param int $version
 	 *
-	 * @return null|\Gobl\DBAL\Interfaces\MigrationInterface
+	 * @return null|MigrationInterface
 	 */
 	public function getPreviousMigration(int $version): ?MigrationInterface
 	{
@@ -429,7 +429,7 @@ final class Migrations
 	 *
 	 * @param int $version
 	 *
-	 * @return null|\Gobl\DBAL\Interfaces\MigrationInterface
+	 * @return null|MigrationInterface
 	 */
 	public function getNextMigration(int $version): ?MigrationInterface
 	{

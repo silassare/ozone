@@ -74,10 +74,10 @@ final class Context
 	/**
 	 * Context constructor.
 	 *
-	 * @param HTTPEnvironment               $http_env
-	 * @param null|\OZONE\Core\Http\Request $request
-	 * @param null|\OZONE\Core\App\Context  $parent
-	 * @param bool                          $is_api
+	 * @param HTTPEnvironment $http_env
+	 * @param null|Request    $request
+	 * @param null|Context    $parent
+	 * @param bool            $is_api
 	 */
 	public function __construct(
 		HTTPEnvironment $http_env,
@@ -311,7 +311,7 @@ final class Context
 	/**
 	 * Try to get the state if the auth method is session based.
 	 *
-	 * @return null|\OZONE\Core\Sessions\SessionState
+	 * @return null|SessionState
 	 */
 	public function state(): ?SessionState
 	{
@@ -583,9 +583,9 @@ final class Context
 	/**
 	 * Sends response to the client.
 	 *
-	 * @param null|\OZONE\Core\Http\Response $with
+	 * @param null|Response $with
 	 */
-	public function respond(Response $with = null): void
+	public function respond(?Response $with = null): void
 	{
 		if (null !== $with) {
 			$this->response = $with;

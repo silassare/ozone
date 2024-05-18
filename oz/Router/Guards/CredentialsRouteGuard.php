@@ -37,10 +37,10 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	/**
 	 * CredentialsRouteGuard constructor.
 	 *
-	 * @param array<string,string>                           $credentials        username and password as key value pair
-	 * @param bool                                           $is_hashed_password
-	 * @param null|\Gobl\DBAL\Types\Interfaces\TypeInterface $username_type
-	 * @param null|\Gobl\DBAL\Types\Interfaces\TypeInterface $password_type
+	 * @param array<string,string> $credentials        username and password as key value pair
+	 * @param bool                 $is_hashed_password
+	 * @param null|TypeInterface   $username_type
+	 * @param null|TypeInterface   $password_type
 	 */
 	public function __construct(
 		private array $credentials,
