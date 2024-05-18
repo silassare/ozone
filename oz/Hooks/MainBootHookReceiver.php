@@ -153,7 +153,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		$h_list['Access-Control-Allow-Credentials'] = 'true';
 
 		// let's try to avoid the click-jacking
-		$h_list['X-Frame-Options'] = 'DENY';
+		$h_list['X-Frame-Options'] = 'SAMEORIGIN';
 
 		foreach ($h_list as $key => $value) {
 			$response = $response->withHeader($key, (string) $value);
