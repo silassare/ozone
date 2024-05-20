@@ -19,11 +19,13 @@ use Gobl\DBAL\Relations\VirtualRelation;
 use Gobl\DBAL\Types\TypeBigint;
 use Gobl\DBAL\Types\TypeInt;
 use Gobl\ORM\Exceptions\ORMQueryException;
+use Gobl\ORM\ORM;
 use Gobl\ORM\ORMController;
 use Gobl\ORM\ORMEntity;
 use Gobl\ORM\ORMRequest;
 use Gobl\ORM\Utils\ORMClassKind;
 use OZONE\Core\Exceptions\BadRequestException;
+use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\REST\RESTFulAPIRequest;
 use OZONE\Core\Router\RouteInfo;
@@ -48,20 +50,23 @@ trait RESTFulService
 	 */
 	public function actionCreateEntity(RESTFulAPIRequest $req): void
 	{
-		$values = $req->getFormData($this->table);
+		$db = ORM::getDatabase($this->table->getNamespace());
 
-		$controller = $this->controller();
-		$entity     = $controller->addItem($values);
+		$db->runInTransaction(function () use ($req) {
+			$controller = $this->controller();
+			$values     = $req->getFormData($this->table);
+			$entity     = $controller->addItem($values);
 
-		$this->processRelations($entity, $req, false);
+			$this->processRelations($entity, $req, false);
 
-		$this->json()
-			->setDone(
-				$controller
-					->getCRUD()
-					->getMessage()
-			)
-			->setData(['item' => $entity]);
+			$this->json()
+				->setDone(
+					$controller
+						->getCRUD()
+						->getMessage()
+				)
+				->setData(['item' => $entity]);
+		});
 	}
 
 	// ========================================================
@@ -77,25 +82,29 @@ trait RESTFulService
 	 */
 	public function actionUpdateOneItem(RESTFulAPIRequest $req): void
 	{
-		$values  = $req->getFormData($this->table);
-		$filters = $req->getFilters();
+		$db = ORM::getDatabase($this->table->getNamespace());
 
-		$controller = $this->controller();
-		$entity     = $controller->updateOneItem($filters, $values);
+		$db->runInTransaction(function () use ($req) {
+			$values  = $req->getFormData($this->table);
+			$filters = $req->getFilters();
 
-		if (!$entity) {
-			throw new NotFoundException();
-		}
+			$controller = $this->controller();
+			$entity     = $controller->updateOneItem($filters, $values);
 
-		$this->processRelations($entity, $req, false);
+			if (!$entity) {
+				throw new NotFoundException();
+			}
 
-		$this->json()
-			->setDone(
-				$controller
-					->getCRUD()
-					->getMessage()
-			)
-			->setData(['item' => $entity]);
+			$this->processRelations($entity, $req, false);
+
+			$this->json()
+				->setDone(
+					$controller
+						->getCRUD()
+						->getMessage()
+				)
+				->setData(['item' => $entity]);
+		});
 	}
 
 	/**
@@ -668,8 +677,6 @@ trait RESTFulService
 	 * @param ORMEntity  $entity
 	 * @param ORMRequest $req
 	 * @param bool       $patch
-	 *
-	 * @throws ORMQueryException
 	 */
 	protected function processRelations(ORMEntity $entity, ORMRequest $req, bool $patch): void
 	{
@@ -685,7 +692,7 @@ trait RESTFulService
 			if ($relation_payload) {
 				if ($relation->isPaginated()) {
 					if (!\is_array($relation_payload)) {
-						throw new ORMQueryException(
+						throw new InvalidFormException(
 							'OZ_RELATION_IS_PAGINATED_ARRAY_OF_ARRAY_EXPECTED',
 							['relation' => $relation_name]
 						);
@@ -697,7 +704,7 @@ trait RESTFulService
 						}
 
 						if (!\is_array($rel_entry)) {
-							throw new ORMQueryException(
+							throw new InvalidFormException(
 								'OZ_RELATION_IS_PAGINATED_ARRAY_OF_ARRAY_EXPECTED',
 								['relation' => $relation_name]
 							);
@@ -711,7 +718,7 @@ trait RESTFulService
 						continue;
 					}
 					if (!\is_array($rel_entry)) {
-						throw new ORMQueryException(
+						throw new InvalidFormException(
 							'OZ_RELATION_ARRAY_EXPECTED',
 							['relation' => $relation_name]
 						);
@@ -728,16 +735,31 @@ trait RESTFulService
 	 */
 	private function processRelative(RelationInterface $relation, ORMEntity $entity, array $rel_entry, bool $patch): void
 	{
-		$r_ctrl = $relation->getController();
-		if ($patch) {
-			$delete = $rel_entry[ORMRequest::DELETE_PARAM] ?? false;
-			if ($delete) {
-				$r_ctrl->delete($entity, $rel_entry);
+		try {
+			$r_ctrl = $relation->getController();
+			if ($patch) {
+				$delete = $rel_entry[ORMRequest::DELETE_PARAM] ?? false;
+				if ($delete) {
+					$r_ctrl->delete($entity, $rel_entry);
+				} else {
+					$r_ctrl->update($entity, $rel_entry);
+				}
 			} else {
-				$r_ctrl->update($entity, $rel_entry);
+				$r_ctrl->create($entity, $rel_entry);
 			}
-		} else {
-			$r_ctrl->create($entity, $rel_entry);
+		} catch (Throwable $t) {
+			$data = [
+				'relation' => $relation->getName(),
+			];
+
+			if ($t instanceof ORMQueryException) {
+				$data['previous'] = [
+					'error' => $t->getMessage(),
+					'data'  => $t->getData(),
+				];
+			}
+
+			throw new InvalidFormException('OZ_RELATION_PROCESSING_FAILED', $data, $t);
 		}
 	}
 }
