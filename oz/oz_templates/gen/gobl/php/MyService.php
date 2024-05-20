@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-// <%if(@length($.oz_header)){%><%$.oz_header%><%}%>
+// @ <%if(@length($.oz_header)){%><%$.oz_header%><%}%>
 declare(strict_types=1);
 
 namespace MY_SERVICE_NS;
@@ -40,9 +40,9 @@ use Throwable;
  * GET /my_path
  * ```
  *
- * - Get relation for the item in `my_table` with the given `:my_id`
+ * - Get a specified relation `:relation` for the item in `my_table` with the given `:my_id`
  * ```
- * GET /my_path/:my_id/relation
+ * GET /my_path/:my_id/:relation
  * ```
  *
  * - Update property(ies) of the item with the given `:my_id`
