@@ -22,6 +22,9 @@ enum FileKind: string
 	case AUDIO    = 'audio';
 	case VIDEO    = 'video';
 	case DOCUMENT = 'document';
+	case JS       = 'js';
+	case CSS      = 'css';
+	case FONT     = 'font';
 	case OTHER    = 'other';
 
 	/**
@@ -59,6 +62,18 @@ enum FileKind: string
 			|| \str_starts_with($mime, 'application/vnd.oasis.opendocument')
 		) {
 			return self::DOCUMENT;
+		}
+
+		if (\str_starts_with($mime, 'text/javascript') || \str_starts_with($mime, 'application/javascript')) {
+			return self::JS;
+		}
+
+		if (\str_starts_with($mime, 'text/css')) {
+			return self::CSS;
+		}
+
+		if (\str_starts_with($mime, 'font/') || \str_starts_with($mime, 'application/font-')) {
+			return self::FONT;
 		}
 
 		return self::OTHER;
