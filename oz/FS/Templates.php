@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS;
 
+use Blate\Blate;
 use OTpl\OTpl;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -86,9 +87,14 @@ class Templates
 		}
 
 		try {
-			$o      = new OTpl();
-			$result = $o->parse($src)
-				->runGet($data);
+			if (\str_ends_with($src, '.blate')) {
+				$b      = Blate::fromPath($src);
+				$result = $b->runGet($data);
+			} else {
+				$o      = new OTpl();
+				$result = $o->parse($src)
+					->runGet($data);
+			}
 		} catch (Throwable $t) {
 			throw new RuntimeException(\sprintf('Unable to compile template file: %s', $template), null, $t);
 		}
@@ -99,8 +105,9 @@ class Templates
 	/**
 	 * returns template according to available sources.
 	 *
-	 * when you use `oz://foo.tpl` it refer to template `foo.otpl`
-	 * in ozone templates directory
+	 * - `oz://~core~/foo.bar` refer to template `foo.bar` in core templates directory.
+	 * - `oz://~project~/foo.bar` refer to template `foo.bar` in project templates directory.
+	 * - `oz://foo.bar` refer to template `foo.bar` in all available templates directories.
 	 *
 	 * @param string $template the template file name
 	 *
@@ -108,18 +115,19 @@ class Templates
 	 */
 	public static function localize(string $template): false|string
 	{
-		$oz_only_prefix  = 'oz://';
-		$app_only_prefix = 'app://';
-		$cache_key       = $template;
-		$sources         = self::getSources();
+		$oz_core_only_prefix = 'oz://~core~/';
+		$project_only_prefix = 'oz://~project~/';
+		$cache_key           = $template;
+		$sources             = self::getSources();
 
-		if (\str_starts_with($template, $oz_only_prefix)) {
+		if (\str_starts_with($template, $oz_core_only_prefix)) {
 			$sources_group = [$sources->getInternalSources()];
-			$template      = Str::removePrefix($template, $oz_only_prefix);
-		} elseif (\str_starts_with($template, $app_only_prefix)) {
+			$template      = Str::removePrefix($template, $oz_core_only_prefix);
+		} elseif (\str_starts_with($template, $project_only_prefix)) {
 			$sources_group = [$sources->getProjectSources()];
-			$template      = Str::removePrefix($template, $app_only_prefix);
+			$template      = Str::removePrefix($template, $project_only_prefix);
 		} else {
+			$template      = Str::removePrefix($template, 'oz://');
 			$sources_group = [
 				$sources->getProjectSources(),
 				$sources->getPluginsSources(),

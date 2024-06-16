@@ -20,6 +20,7 @@ use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Templates;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use OZONE\Core\Utils\Env;
+use PHPUtils\FS\PathUtils;
 use Throwable;
 
 /**
@@ -35,6 +36,9 @@ abstract class AbstractApp implements AppInterface
 		// = Adds settings source
 		Settings::addSource($this->getSettingsDir()
 			->getRoot());
+
+		// = Adds register oz:// protocol resolver
+		PathUtils::registerResolver('oz', static fn (string $path) => Templates::localize($path));
 
 		// = Adds templates source
 		Templates::addSource($this->getTemplatesDir()

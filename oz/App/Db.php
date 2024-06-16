@@ -117,7 +117,7 @@ final class Db
 	{
 		$project_namespace = Settings::get('oz.config', 'OZ_PROJECT_NAMESPACE');
 
-		return \sprintf('%s\\Db', $project_namespace ?? 'NO_PROJECT');
+		return \sprintf('%s\Db', $project_namespace ?? 'NO_PROJECT');
 	}
 
 	/**

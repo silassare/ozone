@@ -237,7 +237,7 @@ final class Settings
 			$source_dir_fm->cd($parts['dirname'], true)
 				->wf(
 					$parts['basename'],
-					Templates::compile('oz://gen/settings.info.otpl', $inject)
+					Templates::compile('oz://~core~/gen/settings.info.otpl', $inject)
 				);
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to save settings.', null, $t);

@@ -121,7 +121,7 @@ abstract class AbstractPlugin implements PluginInterface
 	 */
 	final public function getDbNamespace(): string
 	{
-		return $this->namespace . '\\Db';
+		return $this->namespace . '\Db';
 	}
 
 	/**

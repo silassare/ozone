@@ -62,7 +62,7 @@ final class Schedule implements Stringable
 	 */
 	public function __construct(string $expression = '* * * * *')
 	{
-		$segments = \preg_split('/\\s+/', $expression);
+		$segments = \preg_split('/\s+/', $expression);
 
 		$this->minute     = $segments[0] ?? '*';
 		$this->hour       = $segments[1] ?? '*';

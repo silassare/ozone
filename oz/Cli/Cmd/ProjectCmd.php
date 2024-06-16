@@ -260,7 +260,7 @@ final class ProjectCmd extends Command
 		$app_class_file = \sprintf('%s.php', $class_name);
 
 		$oz_config  = Templates::compile(
-			'oz://gen/settings.info.otpl',
+			'oz://~core~/gen/settings.info.otpl',
 			Settings::genExportInfo('oz.config', [
 				'OZ_OZONE_VERSION'          => OZ_OZONE_VERSION,
 				'OZ_PROJECT_NAME'           => $name,
@@ -270,24 +270,24 @@ final class ProjectCmd extends Command
 			])
 		);
 		$oz_request = Templates::compile(
-			'oz://gen/settings.info.otpl',
+			'oz://~core~/gen/settings.info.otpl',
 			Settings::genExportInfo('oz.request', [
 				'OZ_DEFAULT_ORIGIN' => $origin_url,
 			])
 		);
 
-		$oz_db = Templates::compile('oz://gen/project.db.configs.otpl', [
+		$oz_db = Templates::compile('oz://~core~/gen/project.db.configs.otpl', [
 			'oz_version'         => OZ_OZONE_VERSION,
 			'oz_version_name'    => OZ_OZONE_VERSION_NAME,
 			'oz_time'            => \time(),
 			'oz_db_table_prefix' => Random::alpha(Random::int(3, 6)),
 		]);
 
-		$dot_env_file         = Templates::compile('oz://gen/project.env.otpl', [
+		$dot_env_file         = Templates::compile('oz://~core~/gen/project.env.otpl', [
 			'OZ_APP_SALT'   => \base64_encode(Keys::newSalt()),
 			'OZ_APP_SECRET' => \base64_encode(Keys::newSecret()),
 		]);
-		$dot_env_example_file = Templates::compile('oz://gen/project.env.otpl', [
+		$dot_env_example_file = Templates::compile('oz://~core~/gen/project.env.otpl', [
 			'OZ_APP_SALT'   => \base64_encode(Keys::newSalt()),
 			'OZ_APP_SECRET' => \base64_encode(Keys::newSecret()),
 		]);
@@ -301,10 +301,10 @@ final class ProjectCmd extends Command
 			'oz_install_path'           => \dirname(OZ_OZONE_DIR),
 		];
 
-		$app_class        = Templates::compile('oz://gen/app_class.otpl', $inject);
-		$app_instance     = Templates::compile('oz://gen/app.otpl', $inject);
-		$boot_content     = Templates::compile('oz://gen/boot.otpl', $inject);
-		$project_composer = Templates::compile('oz://gen/composer.json.otpl', $inject);
+		$app_class        = Templates::compile('oz://~core~/gen/app_class.otpl', $inject);
+		$app_instance     = Templates::compile('oz://~core~/gen/app.otpl', $inject);
+		$boot_content     = Templates::compile('oz://~core~/gen/boot.otpl', $inject);
+		$project_composer = Templates::compile('oz://~core~/gen/composer.json.otpl', $inject);
 
 		$tpl_folder = Templates::OZ_TEMPLATE_DIR;
 

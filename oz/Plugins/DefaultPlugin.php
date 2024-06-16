@@ -23,7 +23,7 @@ class DefaultPlugin extends AbstractPlugin
 	 */
 	public function __construct()
 	{
-		parent::__construct('ozone', 'OZONE\\Core', OZ_OZONE_DIR . '..');
+		parent::__construct('ozone', 'OZONE\Core', OZ_OZONE_DIR . '..');
 	}
 
 	/**

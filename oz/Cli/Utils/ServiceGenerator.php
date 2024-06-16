@@ -48,7 +48,7 @@ class ServiceGenerator extends CSGeneratorORM
 		if (!self::$templates_registered) {
 			Gobl::addTemplate(
 				self::SERVICE_TEMPLATE_NAME,
-				Templates::localize('gen/gobl/php/MyService.php'),
+				Templates::localize('oz://~core~/gen/gobl/php/MyService.php'),
 				[
 					'MY_SERVICE_NS' => '<%$.service.namespace%>',
 					'MyService'     => '<%$.service.class%>',
@@ -68,7 +68,7 @@ class ServiceGenerator extends CSGeneratorORM
 		foreach ($tables as $table) {
 			$this->generateServiceClass(
 				$table,
-				$table->getNamespace() . '\\Services',
+				$table->getNamespace() . '\Services',
 				$path,
 				'',
 				'',

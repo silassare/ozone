@@ -383,7 +383,7 @@ class ClassLoader
 	{
 		if (!empty($dir_path)) {
 			// removes last / or \
-			$dir_path = \rtrim($dir_path, '\\/');
+			$dir_path = \rtrim($dir_path, '\/');
 
 			if (\DIRECTORY_SEPARATOR === '\\') {
 				$dir_path = \str_replace('/', '\\', $dir_path);
