@@ -29,7 +29,7 @@
     "ext-bcmath": "*",
     "ext-fileinfo": "*",
     "silassare/otpl": "^2.0.0",
-    "silassare/blate": "^1.0.0",
+    "silassare/blate": "dev-main",
     "silassare/gobl": "^2.0.0",
     "silassare/kli": "^2.0.0",
     "silassare/php-utils": "^1.0.1",
