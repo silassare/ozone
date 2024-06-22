@@ -68,9 +68,14 @@ final class RoutePathParser
 		$path                = '';
 
 		while ($this->cursor < $this->len) {
-			$c = $this->route_path[$this->cursor];
+			$c    = $this->route_path[$this->cursor];
+			$next = $this->cursor + 1 < $this->len ? $this->route_path[$this->cursor + 1] : null;
 
-			if ('{' === $c || ':' === $c) {
+			// For colon ':' we need to make sure we don't fail when
+			// we have ':' followed by non valid parameter as in
+			// - http://example.com/{id}/[/{name}]
+			// - http://localhost:8080/{id}/[/{name}]
+			if ('{' === $c || (':' === $c && $next && self::isValidParameter($next))) {
 				$this->move();
 				if ('{' === $c) {
 					$name = $this->searchUntilCloseTag('{', '}', false);
@@ -144,9 +149,14 @@ final class RoutePathParser
 		$pattern        = '';
 
 		while ($this->cursor < $this->len) {
-			$c = $route_path[$this->cursor];
+			$c    = $route_path[$this->cursor];
+			$next = $this->cursor + 1 < $this->len ? $this->route_path[$this->cursor + 1] : null;
 
-			if ('{' === $c || ':' === $c) {
+			// For colon ':' we need to make sure we don't fail when
+			// we have ':' followed by non valid parameter as in
+			// - http://example.com/{id}/[/{name}]
+			// - http://localhost:8080/{id}/[/{name}]
+			if ('{' === $c || (':' === $c && $next && self::isValidParameter($next))) {
 				$this->move();
 				if ('{' === $c) {
 					$name = $this->searchUntilCloseTag('{', '}', false);
