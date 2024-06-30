@@ -725,7 +725,7 @@ final class Context
 	 * @param string   $url    the redirect destination url
 	 * @param null|int $status the redirect HTTP status code
 	 */
-	public function redirect(string $url, ?int $status = null): void
+	public function redirect(string $url, ?int $status = null): Response
 	{
 		$this->checkRecursiveRedirection($url, ['status' => $status]);
 
@@ -738,9 +738,11 @@ final class Context
 		if ($this->isApiContext()) {
 			$response = $this->response->withRedirect($url, $status);
 			$this->setResponse($response);
-		} else {
-			$this->redirectRoute('oz:redirect', ['url' => $url, 'status' => $status]);
+
+			return $this->getResponse();
 		}
+
+		return $this->redirectRoute('oz:redirect', ['url' => $url, 'status' => $status]);
 	}
 
 	/**
@@ -758,7 +760,7 @@ final class Context
 		array $query = [],
 		bool $inform_user = true,
 		?int $status = null,
-	): void {
+	): Response {
 		$this->checkRecursiveRedirection(
 			$route_name,
 			[
@@ -778,10 +780,10 @@ final class Context
 				->withPath($path, true)
 				->withQueryArray($query);
 
-			$this->redirect((string) $uri, $status);
-		} else {
-			$this->callPath($path, $params, $query);
+			return $this->redirect((string) $uri, $status);
 		}
+
+		return $this->callPath($path, $params, $query);
 	}
 
 	/**
