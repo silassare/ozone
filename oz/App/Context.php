@@ -540,24 +540,31 @@ final class Context
 				return \trim(\end($parts));
 			};
 
-			$host = null;
+			$found = null;
 
 			foreach ($sources as $source) {
-				if (!empty($host)) {
-					break;
-				}
-
 				if (!$this->http_environment->has($source)) {
 					continue;
 				}
-				$host = $this->http_environment->get($source);
+
+				$found = $this->http_environment->get($source);
 
 				if (\array_key_exists($source, $transformers)) {
-					$host = $transformers[$source]($host);
+					$found = $transformers[$source]($found);
+				}
+
+				if (!empty($found)) {
+					break;
 				}
 			}
 
-			$uri                  = Uri::createFromString($host ?? $this->getDefaultOrigin());
+			$found = $found ?? $this->getDefaultOrigin();
+
+			if (!\preg_match('~^https?://~', $found)) {
+				$found = 'https://' . $found;
+			}
+
+			$uri                  = Uri::createFromString($found);
 			$this->host           = $uri->getHost();
 			$port                 = $uri->getPort();
 			$this->host_with_port = $this->host;
