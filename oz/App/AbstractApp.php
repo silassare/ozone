@@ -123,7 +123,14 @@ abstract class AbstractApp implements AppInterface
 		static $env = null;
 
 		if (null === $env) {
-			$env = new Env($this->getProjectDir()->resolve('.env'));
+			$dir = $this->getProjectDir();
+
+			$dir->filter()
+				->isFile()
+				->isReadable()
+				->assert('.env');
+
+			$env = new Env($dir->resolve('.env'));
 		}
 
 		return $env;
