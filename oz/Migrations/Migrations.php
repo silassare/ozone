@@ -475,6 +475,7 @@ final class Migrations
 			$found = $qb->find()->fetchClass();
 			if ($found) {
 				$found->setVersion($version)
+					->setUpdatedAT(\time())
 					->save();
 			} else {
 				OZMigration::new()
