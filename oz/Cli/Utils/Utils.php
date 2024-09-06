@@ -156,7 +156,7 @@ final class Utils
 			$app = $return;
 		} elseif (\file_exists(OZ_PROJECT_DIR . 'oz/OZone.php')) {
 			// we are in ozone source folder
-			$app = new class() extends AbstractApp {};
+			$app = new class extends AbstractApp {};
 		}
 
 		return $app;

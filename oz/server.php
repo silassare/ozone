@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-$cli_server_router = (new class() {
+$cli_server_router = (new class {
 	/**
 	 * @var string
 	 */

@@ -343,10 +343,10 @@ class ImagesUtils
 		$min_size = Settings::get('oz.users', 'OZ_USER_PIC_MIN_SIZE');
 
 		return $x >= 0
-			   && $y >= 0
-			   && $w >= ($min_size + $x)
-			   && $h >= ($min_size + $y)
-			   && ($x + $w) <= $this->getWidth()
-			   && ($y + $h) <= $this->getHeight();
+			&& $y >= 0
+			&& $w >= ($min_size + $x)
+			&& $h >= ($min_size + $y)
+			&& ($x + $w) <= $this->getWidth()
+			&& ($y + $h) <= $this->getHeight();
 	}
 }
