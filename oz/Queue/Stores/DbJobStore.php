@@ -273,7 +273,7 @@ class DbJobStore implements JobStoreInterface
 	protected function fromEntity(OZJob $oz_job, ?JobInterface $job = null): JobContractInterface
 	{
 		if (null === $job) {
-			$job = new JobContract($oz_job->getRef(), $oz_job->getWorker(), $oz_job->getPayload(), $this);
+			$job = new JobContract($oz_job->getRef(), $oz_job->getWorker(), (array) $oz_job->getPayload(), $this);
 		}
 
 		return $job->setState($oz_job->getState())
@@ -282,8 +282,8 @@ class DbJobStore implements JobStoreInterface
 			->setPriority($oz_job->getPriority())
 			->setTryCount($oz_job->getTryCount())
 			->setRetryMax($oz_job->getRetryMax())
-			->setResult($oz_job->getResult())
-			->setErrors($oz_job->getErrors())
+			->setResult((array) $oz_job->getResult())
+			->setErrors((array) $oz_job->getErrors())
 			->setStartedAt((float) $oz_job->getStartedAt())
 			->setEndedAt((float) $oz_job->getEndedAt())
 			->setCreatedAt((int) $oz_job->getCreatedAt())

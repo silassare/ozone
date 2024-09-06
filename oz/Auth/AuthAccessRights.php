@@ -107,7 +107,7 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	 */
 	public static function from(OZAuth $auth): static
 	{
-		return new self($auth->getOptions());
+		return new self((array) $auth->getOptions());
 	}
 
 	/**
@@ -115,6 +115,6 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	 */
 	public function getOptions(): array
 	{
-		return $this->store->getData();
+		return (array) $this->store->getData();
 	}
 }

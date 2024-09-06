@@ -138,7 +138,7 @@ final class Auth implements BootHookReceiverInterface
 		}
 
 		/* @var AuthProviderInterface $provider */
-		return $provider::get($context, $auth->getPayload())
+		return $provider::get($context, (array) $auth->getPayload())
 			->setScope(AuthScope::from($auth));
 	}
 
