@@ -24,7 +24,6 @@ use OZONE\Core\Users\Services\Logout;
 use OZONE\Core\Users\Services\Password;
 use OZONE\Core\Users\Services\SignUp;
 use OZONE\Core\Users\Services\TNet;
-use OZONE\Core\Users\Services\UserPicEdit;
 
 return [
 	UploadFiles::class                  => true,
@@ -35,7 +34,6 @@ return [
 	SignUp::class                       => true,
 	Login::class                        => true,
 	Logout::class                       => true,
-	UserPicEdit::class                  => true,
 	Password::class                     => true,
 	AccountRecovery::class              => true,
 	AuthService::class                  => true,

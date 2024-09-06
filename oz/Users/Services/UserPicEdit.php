@@ -23,6 +23,8 @@ use OZONE\Core\Router\Router;
 
 /**
  * Class UserPicEdit.
+ *
+ * @deprecated should be removed a new way to handle profile picture should be implemented
  */
 class UserPicEdit extends Service
 {
