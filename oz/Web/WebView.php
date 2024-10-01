@@ -18,15 +18,12 @@ use OZONE\Core\FS\Templates;
 use OZONE\Core\Http\Body;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Web\Traits\WebSEOTrait;
 
 /**
  * Class WebView.
  */
 class WebView extends Service
 {
-	use WebSEOTrait;
-
 	protected string $template = '';
 
 	protected array $compile_data = [];
@@ -101,16 +98,6 @@ class WebView extends Service
 	}
 
 	/**
-	 * {@inheritDoc}
-	 */
-	public function getSEOPageURL(): string
-	{
-		return (string) $this->getContext()
-			->getRequest()
-			->getUri();
-	}
-
-	/**
 	 * Render the view and return response.
 	 *
 	 * @return Response
@@ -141,7 +128,6 @@ class WebView extends Service
 		$data['context'] = $context;
 		$data['oz']      = $wi;
 		$data['i18n']    = $wi->i18n(...);
-		$data['seo']     = $this->getSEOInjectData();
 
 		return Templates::compile($this->getTemplate(), $data);
 	}
