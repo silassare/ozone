@@ -807,7 +807,7 @@ class Request extends Message implements ServerRequestInterface
 		$method        = $environment['REQUEST_METHOD'];
 		$uri           = Uri::createFromEnvironment($environment);
 		$headers       = Headers::createFromEnvironment($environment);
-		$cookies       = Cookies::parseCookieHeaderString($headers->get('Cookie', [''])[0]);
+		$cookies       = Cookies::parseIncomingRequestCookieHeaderString($headers->get('Cookie', [''])[0]);
 		$serverParams  = $environment->all();
 		$body          = new RequestBody();
 		$uploadedFiles = UploadedFile::createFromEnvironment($environment);

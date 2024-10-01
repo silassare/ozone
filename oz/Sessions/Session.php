@@ -25,6 +25,7 @@ use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Http\Cookie;
 use OZONE\Core\Http\Cookies;
 use OZONE\Core\OZone;
 use OZONE\Core\Utils\Random;
@@ -293,27 +294,26 @@ final class Session implements BootHookReceiverInterface
 	 */
 	private function responseReady(): void
 	{
-		$response    = $this->context->getResponse();
-		$cookie_name = self::cookieName();
+		$response            = $this->context->getResponse();
+		$session_cookie_name = self::cookieName();
+
+		/** @var null|Cookie $cookie */
+		$cookie = null;
 
 		if ($this->started) {
 			$this->save();
-			$params          = $this->getCookieParams();
-			$params['value'] = $this->sess_entry->getID();
-			$cookie          = new Cookies();
-			$cookie->set($cookie_name, $params);
-
-			$response = $response->withHeader('Set-Cookie', $cookie->toHeaders());
+			$cookie          = Cookie::create($this->context, $session_cookie_name, $this->sess_entry->getID());
+			$cookie->expires = \time() + self::lifetime();
 		}
 
 		if ($this->delete_cookie) {
-			$params            = $this->getCookieParams();
-			$params['expires'] = \time() - 86400;
-			$params['value']   = '';
-			$cookie            = new Cookies();
-			$cookie->set($cookie_name, $params);
+			$cookie = Cookie::create($this->context, $session_cookie_name)->drop();
+		}
 
-			$response = $response->withHeader('Set-Cookie', $cookie->toHeaders());
+		if ($cookie) {
+			$cookies_jar = new Cookies();
+			$cookies_jar->add(Cookie::create($this->context, $session_cookie_name)->drop());
+			$response = $response->withHeader('Set-Cookie', $cookies_jar->toResponseHeaders());
 		}
 
 		$this->context->setResponse($response);
@@ -340,50 +340,19 @@ final class Session implements BootHookReceiverInterface
 		$sid = $this->sess_entry->getID();
 
 		try {
-			$expire = \time() + self::lifetime();
+			$now    = \time();
+			$expire = $now + self::lifetime();
 
 			$data = $this->state->getData();
 
 			$this->sess_entry->setData($data)
 				->setExpire($expire)
-				->setLastSeen(\time())
-				->setUpdatedAT(\time())
+				->setLastSeen($now)
+				->setUpdatedAT($now)
 				->save();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to save session.', ['_session_id' => $sid], $t);
 		}
-	}
-
-	/**
-	 * Gets cookie params to use for this request.
-	 *
-	 * @return array
-	 */
-	private function getCookieParams(): array
-	{
-		$cfg_domain   = Settings::get('oz.cookie', 'OZ_COOKIE_DOMAIN');
-		$cfg_path     = Settings::get('oz.cookie', 'OZ_COOKIE_PATH');
-		$cfg_lifetime = Settings::get('oz.cookie', 'OZ_COOKIE_LIFETIME');
-		$samesite     = Settings::get('oz.cookie', 'OZ_COOKIE_SAMESITE');
-
-		$context  = $this->context;
-		$request  = $context->getRequest();
-		$uri      = $request->getUri();
-		$secure   = 'https' === $uri->getScheme();
-		$lifetime = \max($cfg_lifetime, self::lifetime());
-		$domain   = (empty($cfg_domain) || 'self' === $cfg_domain) ? $context->getHost() : $cfg_domain;
-		$path     = (empty($cfg_path) || 'self' === $cfg_path) ? $uri->getBasePath() : $cfg_path;
-
-		$path = empty($path) ? '/' : $path;
-
-		return [
-			'expires'  => \time() + $lifetime,
-			'path'     => $path,
-			'domain'   => $domain,
-			'httponly' => true, // prevent access from javascript
-			'secure'   => $secure,
-			'samesite' => $samesite, // None, Lax or Strict
-		];
 	}
 
 	/**

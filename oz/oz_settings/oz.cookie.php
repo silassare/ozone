@@ -17,21 +17,21 @@ return [
 	 *
 	 * @default self (current domain)
 	 */
-	'OZ_COOKIE_DOMAIN'   => 'self',
+	'OZ_COOKIE_DOMAIN'      => 'self',
 
 	/**
 	 * Cookie path.
 	 *
 	 * @default self (current path)
 	 */
-	'OZ_COOKIE_PATH'     => 'self',
+	'OZ_COOKIE_PATH'        => 'self',
 
 	/**
 	 * Cookie lifetime in seconds.
 	 *
 	 * @default 86400 (1 day)
 	 */
-	'OZ_COOKIE_LIFETIME' => 86400,
+	'OZ_COOKIE_LIFETIME'    => 86400,
 
 	/**
 	 * Cookie same site.
@@ -40,5 +40,12 @@ return [
 	 *
 	 * @default Lax
 	 */
-	'OZ_COOKIE_SAMESITE' => 'Lax',
+	'OZ_COOKIE_SAMESITE'    => 'Lax',
+
+	/**
+	 * Cookie partitioned.
+	 *
+	 * @default false
+	 */
+	'OZ_COOKIE_PARTITIONED' => false,
 ];
