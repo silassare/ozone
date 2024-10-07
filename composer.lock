@@ -758,16 +758,16 @@
         },
         {
             "name": "silassare/php-utils",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/php-utils.git",
-                "reference": "c721407a6aa2a15ec8f077ec78c2b621ad892804"
+                "reference": "34c360aaec8883af6196295379a97c465f827377"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/php-utils/zipball/c721407a6aa2a15ec8f077ec78c2b621ad892804",
-                "reference": "c721407a6aa2a15ec8f077ec78c2b621ad892804",
+                "url": "https://api.github.com/repos/silassare/php-utils/zipball/34c360aaec8883af6196295379a97c465f827377",
+                "reference": "34c360aaec8883af6196295379a97c465f827377",
                 "shasum": ""
             },
             "require": {
@@ -793,11 +793,6 @@
                     "PHPUtils\\Tests\\": "tests"
                 }
             },
-            "archive": {
-                "exclude": [
-                    "/ignore"
-                ]
-            },
             "license": [
                 "MIT"
             ],
@@ -816,10 +811,10 @@
                 "utils"
             ],
             "support": {
-                "source": "https://github.com/silassare/php-utils/tree/1.0.1",
+                "source": "https://github.com/silassare/php-utils/tree/1.0.2",
                 "issues": "https://github.com/silassare/php-utils/issues"
             },
-            "time": "2024-06-16T21:05:51+00:00"
+            "time": "2024-10-07T13:40:59+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
