@@ -58,6 +58,26 @@ abstract class Message implements MessageInterface
 	}
 
 	/**
+	 * Just for pairing with __set.
+	 *
+	 * @param mixed $name
+	 */
+	public function __get($name): void
+	{
+		// Do nothing
+	}
+
+	/**
+	 * Just for pairing with __set.
+	 *
+	 * @param mixed $name
+	 */
+	public function __isset($name)
+	{
+		return false;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	public function getProtocolVersion(): string
