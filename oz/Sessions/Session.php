@@ -312,7 +312,7 @@ final class Session implements BootHookReceiverInterface
 
 		if ($cookie) {
 			$cookies_jar = new Cookies();
-			$cookies_jar->add(Cookie::create($this->context, $session_cookie_name)->drop());
+			$cookies_jar->add($cookie);
 			$response = $response->withHeader('Set-Cookie', $cookies_jar->toResponseHeaders());
 		}
 
