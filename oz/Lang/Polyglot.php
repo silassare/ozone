@@ -32,7 +32,7 @@ final class Polyglot
 	public const PORTION_COPY_REG = '~{{\s*([A-Z][A-Z0-9_.]+)\s*}}~';
 
 	// for {variable} and {variable | filter1 | filter2}
-	public const SIMPLE_REPLACE_REG = '~{\s*([a-zA-Z0-9_]+)\s*((?:\|\s*[a-zA-Z_][a-zA-Z0-9_]*\s*)+)?}~';
+	public const SIMPLE_REPLACE_REG = '~{\s*(\w+)\s*((?:\|\s*[a-zA-Z_]\w*\s*)+)?}~';
 	public const FILTERS_SEP        = '|';
 
 	private static array $filters = [];
@@ -72,7 +72,7 @@ final class Polyglot
 
 			$accept_language = $context->getRequest()
 				->getHeaderLine('HTTP_ACCEPT_LANGUAGE');
-			$browser = self::parseBrowserLanguage($accept_language);
+			$browser         = self::parseBrowserLanguage($accept_language);
 
 			if (!empty($browser['advice'])) {
 				$state?->set(self::CLIENT_LANG_SESSION_KEY, $browser['advice']);
