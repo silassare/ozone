@@ -19,6 +19,7 @@ use OZONE\Core\Cache\Interfaces\CacheProviderInterface;
 use OZONE\Core\Utils\Hasher;
 use RuntimeException;
 
+/** @noinspection ClassConstantCanBeUsedInspection */
 if (!\class_exists('\Memcached')) {
 	throw new RuntimeException('Memcached extension is not installed.');
 }

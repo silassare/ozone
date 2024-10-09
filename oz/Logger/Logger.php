@@ -55,6 +55,7 @@ class Logger
 				$log .= $prev_sep . BaseException::throwableToString($e);
 			}
 		} elseif ($value instanceof JsonSerializable) {
+			/** @noinspection JsonEncodingApiUsageInspection */
 			$log = \json_encode($value, \JSON_PRETTY_PRINT);
 		} else {
 			$log = \get_debug_type($value);

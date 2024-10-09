@@ -67,7 +67,9 @@ class TempFS implements BootHookReceiverInterface
 	{
 		$info_path = $this->dir()->resolve('./info.json');
 		$expires   = \time() + $lifetime;
-		$content   = \json_encode(['expires' => $expires]);
+
+		/** @noinspection JsonEncodingApiUsageInspection */
+		$content = \json_encode(['expires' => $expires]);
 
 		\file_put_contents($info_path, $content);
 
