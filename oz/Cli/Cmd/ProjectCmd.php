@@ -293,12 +293,13 @@ final class ProjectCmd extends Command
 		]);
 
 		$inject = [
-			'oz_version'                => OZ_OZONE_VERSION,
-			'oz_version_name'           => OZ_OZONE_VERSION_NAME,
-			'oz_time'                   => \time(),
-			'oz_project_namespace'      => $namespace,
-			'oz_project_app_class_name' => $class_name,
-			'oz_install_path'           => \dirname(OZ_OZONE_DIR),
+			'oz_version'                   => OZ_OZONE_VERSION,
+			'oz_version_name'              => OZ_OZONE_VERSION_NAME,
+			'oz_time'                      => \time(),
+			'oz_project_namespace'         => $namespace,
+			'oz_project_namespace_escaped' => \str_replace('\\', '\\\\', $namespace),
+			'oz_project_app_class_name'    => $class_name,
+			'oz_install_path'              => \dirname(OZ_OZONE_DIR),
 		];
 
 		$app_class        = Templates::compile('oz://~core~/gen/app_class.otpl', $inject);
