@@ -15,6 +15,7 @@ namespace OZONE\Core\FS;
 
 use Blate\Blate;
 use OTpl\OTpl;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Exceptions\RuntimeException;
 use PHPUtils\FS\PathUtils;
@@ -88,6 +89,8 @@ class Templates
 
 		try {
 			if (\str_ends_with($src, '.blate')) {
+				self::registerBlatePlugins();
+
 				$b      = Blate::fromPath($src);
 				$result = $b->runGet($data);
 			} else {
@@ -163,5 +166,21 @@ class Templates
 
 		return $cm->factory($cache_key, $factory)
 			->get();
+	}
+
+	/**
+	 * Register blate plugins.
+	 */
+	protected static function registerBlatePlugins(): void
+	{
+		static $registered = false;
+
+		if (!$registered) {
+			Blate::registerHelper('setting', [Settings::class, 'get']);
+			Blate::registerHelper('env', 'env');
+			Blate::registerHelper('oz_logger', 'oz_logger');
+
+			$registered = true;
+		}
 	}
 }
