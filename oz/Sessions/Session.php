@@ -41,7 +41,7 @@ final class Session implements BootHookReceiverInterface
 
 	private ?SessionState $state = null;
 
-	private ?OZSession $sess_entry = null;
+	private ?OZSession $session_entry = null;
 
 	private bool $started = false;
 
@@ -60,7 +60,7 @@ final class Session implements BootHookReceiverInterface
 	 */
 	public function __destruct()
 	{
-		unset($this->context, $this->state, $this->sess_entry);
+		unset($this->context, $this->state, $this->session_entry);
 	}
 
 	/**
@@ -88,7 +88,7 @@ final class Session implements BootHookReceiverInterface
 	{
 		$this->assertSessionStarted();
 
-		return $this->sess_entry->getUserID();
+		return $this->session_entry->getUserID();
 	}
 
 	/**
@@ -100,7 +100,7 @@ final class Session implements BootHookReceiverInterface
 	{
 		$this->assertSessionStarted();
 
-		return $this->sess_entry->getID();
+		return $this->session_entry->getID();
 	}
 
 	/**
@@ -131,18 +131,18 @@ final class Session implements BootHookReceiverInterface
 	public function start(?string $session_id = null): self
 	{
 		if ($session_id) {
-			$this->sess_entry = self::findSessionByID($session_id);
+			$this->session_entry = self::findSessionByID($session_id);
 		}
 
-		if (!$this->sess_entry) {
+		if (!$this->session_entry) {
 			$sid = Keys::newSessionID();
 
-			$this->sess_entry = new OZSession();
-			$this->sess_entry->setID($sid)
+			$this->session_entry = new OZSession();
+			$this->session_entry->setID($sid)
 				->setRequestSourceKey($this->request_source_key);
 		}
 
-		$this->state         = SessionState::getInstance($this->sess_entry);
+		$this->state         = SessionState::getInstance($this->session_entry);
 		$this->started       = true;
 		$this->delete_cookie = false;
 
@@ -171,14 +171,14 @@ final class Session implements BootHookReceiverInterface
 	{
 		$this->assertSessionStarted();
 
-		if (!$this->sess_entry->isNew()) {
-			self::delete($this->sess_entry->getID());
+		if (!$this->session_entry->isNew()) {
+			self::delete($this->session_entry->getID());
 		}
 
-		$this->sess_entry    = null;
-		$this->state         = null;
-		$this->started       = false;
-		$this->delete_cookie = true;
+		$this->session_entry    = null;
+		$this->state            = null;
+		$this->started          = false;
+		$this->delete_cookie    = true;
 
 		return $this;
 	}
@@ -196,8 +196,8 @@ final class Session implements BootHookReceiverInterface
 
 		// it may be a new session, so we save first
 		$uid              = $user->getID();
-		$sid              = $this->sess_entry->getID();
-		$session_owner_id = $this->sess_entry->getUserID();
+		$sid              = $this->session_entry->getID();
+		$session_owner_id = $this->session_entry->getUserID();
 
 		if ($session_owner_id && $uid !== $session_owner_id) {
 			throw new RuntimeException('OZ_SESSION_DISTINCT_USER_CANT_ATTACH_USER', [
@@ -209,7 +209,7 @@ final class Session implements BootHookReceiverInterface
 			]);
 		}
 
-		$this->sess_entry->setUserID($uid);
+		$this->session_entry->setUserID($uid);
 
 		return $this;
 	}
@@ -302,7 +302,7 @@ final class Session implements BootHookReceiverInterface
 
 		if ($this->started) {
 			$this->save();
-			$cookie          = Cookie::create($this->context, $session_cookie_name, $this->sess_entry->getID());
+			$cookie          = Cookie::create($this->context, $session_cookie_name, $this->session_entry->getID());
 			$cookie->expires = \time() + self::lifetime();
 		}
 
@@ -324,7 +324,7 @@ final class Session implements BootHookReceiverInterface
 	 */
 	private function assertSessionStarted(): void
 	{
-		if (!$this->started || !isset($this->sess_entry, $this->state)) {
+		if (!$this->started || !isset($this->session_entry, $this->state)) {
 			throw new RuntimeException('Session not yet started.');
 		}
 	}
@@ -337,7 +337,7 @@ final class Session implements BootHookReceiverInterface
 		if (!OZone::hasDbInstalled()) {
 			return;
 		}
-		$sid = $this->sess_entry->getID();
+		$sid = $this->session_entry->getID();
 
 		try {
 			$now    = \time();
@@ -345,7 +345,7 @@ final class Session implements BootHookReceiverInterface
 
 			$data = $this->state->getData();
 
-			$this->sess_entry->setData($data)
+			$this->session_entry->setData($data)
 				->setExpire($expire)
 				->setLastSeen($now)
 				->setUpdatedAT($now)
