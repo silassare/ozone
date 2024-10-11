@@ -17,6 +17,7 @@
     </projectFiles>
 
     <issueHandlers>
+        <MissingTemplateParam errorLevel="suppress"/>
         <UndefinedClass>
             <errorLevel type="suppress">
                 <referencedClass name="Memcached"/>

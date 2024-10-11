@@ -42,8 +42,8 @@
   "require-dev": {
     "roave/security-advisories": "dev-latest",
     "oliup/oliup-cs-php": "dev-main",
-    "phpunit/phpunit": "^9.5.26",
-    "vimeo/psalm": "^4.30"
+    "phpunit/phpunit": "^9.6.21",
+    "vimeo/psalm": "^5.26.1"
   },
   "suggest": {
     "ext-memcached": "Required to use Memcached Cache driver."
