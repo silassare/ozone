@@ -95,7 +95,7 @@ class CronWorker implements WorkerInterface
 	public function getResult(): array
 	{
 		return [
-			'output' => '', // TODO read output for command line tasks
+			'output' => '__UNIMPLEMENTED__', // TODO read output for command line tasks
 		];
 	}
 }

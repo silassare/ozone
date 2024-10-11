@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Cmd;
 
-use Kli\Exceptions\KliException;
 use Kli\Kli;
 use Kli\KliArgs;
 use OZONE\Core\App\Settings;
@@ -136,7 +135,7 @@ final class ScopesCmd extends Command
 	}
 
 	/**
-	 * @throws KliException
+	 * {@inheritDoc}
 	 */
 	protected function describe(): void
 	{
@@ -172,8 +171,6 @@ final class ScopesCmd extends Command
 	 * Adds new scope.
 	 *
 	 * @param KliArgs $args
-	 *
-	 * @throws KliException
 	 */
 	private function add(KliArgs $args): void
 	{

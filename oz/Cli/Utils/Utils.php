@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Utils;
 
 use Gobl\DBAL\Table;
-use Kli\Exceptions\KliException;
 use Kli\KliOption;
 use Kli\Types\KliTypeString;
 use OZONE\Core\App\AbstractApp;
@@ -203,8 +202,6 @@ final class Utils
 	 * @param array $excludes
 	 *
 	 * @return KliOption[]
-	 *
-	 * @throws KliException
 	 */
 	public static function buildTableCliOptions(Table $table, array $includes = [], array $excludes = []): array
 	{

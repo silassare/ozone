@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Cmd;
 
-use Kli\Exceptions\KliException;
 use Kli\KliArgs;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Cron\Cron;
@@ -25,7 +24,7 @@ use OZONE\Core\Cli\Utils\Utils;
 final class CronCmd extends Command
 {
 	/**
-	 * @throws KliException
+	 * {@inheritDoc}
 	 */
 	protected function describe(): void
 	{

@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cmd;
 
 use Gobl\DBAL\Table;
-use Kli\Exceptions\KliException;
 use Kli\KliArgs;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
@@ -29,15 +28,13 @@ final class ServicesCmd extends Command
 {
 	/**
 	 * {@inheritDoc}
-	 *
-	 * @throws KliException
 	 */
 	protected function describe(): void
 	{
 		$this->description('Manage your project service.');
 
 		$class_name_reg = '~^[a-zA-Z_][a-zA-Z0-9_]*$~';
-		$path_reg       = '~^/[a-zA-Z0-9_-][a-zA-Z0-9_-]*(/[a-zA-Z0-9_-][a-zA-Z0-9_-]*)*$~';
+		$path_reg       = '~^/[a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)*$~';
 		// action: generate service for a table
 		$generate = $this->action('generate', 'Generate service for a table in the database.');
 		$generate->option('service-path', 'p', [], 1)
@@ -76,8 +73,6 @@ final class ServicesCmd extends Command
 	 * Generate service for a table in the database.
 	 *
 	 * @param KliArgs $args
-	 *
-	 * @throws KliException
 	 */
 	private function generate(KliArgs $args): void
 	{

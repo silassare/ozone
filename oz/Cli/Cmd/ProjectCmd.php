@@ -38,8 +38,6 @@ final class ProjectCmd extends Command
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * @throws KliException
 	 */
 	protected function describe(): void
 	{
@@ -127,8 +125,6 @@ final class ProjectCmd extends Command
 	 * Serve project.
 	 *
 	 * @param KliArgs $args
-	 *
-	 * @throws KliException
 	 */
 	private function serve(
 		KliArgs $args
@@ -225,7 +221,6 @@ final class ProjectCmd extends Command
 	 * @param KliArgs $args
 	 *
 	 * @throws JsonException
-	 * @throws KliException
 	 */
 	private function create(KliArgs $args): void
 	{

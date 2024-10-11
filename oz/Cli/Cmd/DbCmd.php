@@ -61,8 +61,6 @@ final class DbCmd extends Command
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * @throws KliException
 	 */
 	protected function describe(): void
 	{
@@ -147,7 +145,6 @@ final class DbCmd extends Command
 	 *
 	 * @param KliArgs $args
 	 *
-	 * @throws KliException
 	 * @throws KliInputException
 	 */
 	private function build(KliArgs $args): void
@@ -237,7 +234,6 @@ final class DbCmd extends Command
 	 *
 	 * @param KliArgs $args
 	 *
-	 * @throws KliException
 	 * @throws Exception
 	 */
 	private function tsBundle(KliArgs $args): void
@@ -260,7 +256,6 @@ final class DbCmd extends Command
 	 *
 	 * @param KliArgs $args
 	 *
-	 * @throws KliException
 	 * @throws Exception
 	 */
 	private function dartBundle(KliArgs $args): void
@@ -282,8 +277,6 @@ final class DbCmd extends Command
 	 * Generate database file.
 	 *
 	 * @param KliArgs $args
-	 *
-	 * @throws KliException
 	 */
 	private function generate(KliArgs $args): void
 	{
@@ -316,8 +309,6 @@ final class DbCmd extends Command
 	 * Runs database file.
 	 *
 	 * @param KliArgs $args
-	 *
-	 * @throws KliException
 	 */
 	private function source(KliArgs $args): void
 	{
@@ -349,8 +340,6 @@ final class DbCmd extends Command
 	 * Backup database.
 	 *
 	 * @param KliArgs $args
-	 *
-	 * @throws KliException
 	 */
 	private function backup(KliArgs $args): void
 	{

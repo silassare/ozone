@@ -127,8 +127,6 @@ final class Cli extends Kli
 
 	/**
 	 * Loads all defined commands in oz.cli settings.
-	 *
-	 * @throws KliException
 	 */
 	private function loadCommands(): void
 	{

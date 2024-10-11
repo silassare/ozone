@@ -31,8 +31,6 @@ final class MigrationsCmd extends Command
 {
 	/**
 	 * {@inheritDoc}
-	 *
-	 * @throws KliException
 	 */
 	protected function describe(): void
 	{
@@ -65,8 +63,6 @@ final class MigrationsCmd extends Command
 
 	/**
 	 * Creates migration file.
-	 *
-	 * @throws KliException
 	 */
 	private function create(KliArgs $args): void
 	{
