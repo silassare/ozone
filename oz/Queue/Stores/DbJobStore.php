@@ -177,7 +177,7 @@ class DbJobStore implements JobStoreInterface
 		$all = $qb->find($max, ($page - 1) * $max)
 			->fetchAllClass();
 
-		return \array_map(static fn (OZJob $oz_job) => $this->fromEntity($oz_job), $all);
+		return \array_map(fn (OZJob $oz_job) => $this->fromEntity($oz_job), $all);
 	}
 
 	/**

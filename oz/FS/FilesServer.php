@@ -83,7 +83,7 @@ class FilesServer
 			->withHeader('Content-type', $file_mime)
 			->withHeader('Content-Disposition', "attachment; filename=\"{$file_name}\";");
 
-		if ($file_quality > 0) {
+		if ($file_quality > 0 && $file_quality < 3) {
 			// thumbnails
 			// 0: 'original file'
 			// 1: 'low quality',

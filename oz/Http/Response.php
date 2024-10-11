@@ -175,7 +175,7 @@ class Response extends Message implements ResponseInterface
 	 *
 	 * @return $this
 	 */
-	public function write(string $data): self
+	public function write(string $data): static
 	{
 		$this->getBody()
 			->write($data);
@@ -192,9 +192,9 @@ class Response extends Message implements ResponseInterface
 	 * @param string|UriInterface $url    the redirect destination
 	 * @param null|int            $status the redirect HTTP status code
 	 *
-	 * @return static
+	 * @return $this
 	 */
-	public function withRedirect(string|UriInterface $url, ?int $status = null): self
+	public function withRedirect(string|UriInterface $url, ?int $status = null): static
 	{
 		$responseWithRedirect = $this->withHeader('Location', (string) $url);
 
@@ -203,6 +203,7 @@ class Response extends Message implements ResponseInterface
 		}
 
 		if (null !== $status) {
+			/** @psalm-suppress UndefinedMethod */
 			return $responseWithRedirect->withStatus($status);
 		}
 
@@ -220,7 +221,7 @@ class Response extends Message implements ResponseInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function withStatus(int $code, string $reasonPhrase = ''): self
+	public function withStatus(int $code, string $reasonPhrase = ''): static
 	{
 		$code = $this->filterStatus($code);
 
@@ -250,9 +251,9 @@ class Response extends Message implements ResponseInterface
 	 * @param null|int $status              the HTTP status code
 	 * @param int      $jsonEncodingOptions Json encoding options
 	 *
-	 * @return static
+	 * @return $this
 	 */
-	public function withJson(mixed $data, ?int $status = null, int $jsonEncodingOptions = 0): self
+	public function withJson(mixed $data, ?int $status = null, int $jsonEncodingOptions = 0): static
 	{
 		try {
 			$json = \json_encode($data, \JSON_THROW_ON_ERROR | $jsonEncodingOptions);
@@ -266,6 +267,7 @@ class Response extends Message implements ResponseInterface
 		$responseWithJson = $response->withHeader('Content-Type', 'application/json;charset=utf-8');
 
 		if (isset($status)) {
+			/** @psalm-suppress UndefinedMethod */
 			return $responseWithJson->withStatus($status);
 		}
 

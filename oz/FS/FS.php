@@ -288,6 +288,8 @@ class FS
 			$result = 0;
 		}
 
+		/** @var int<0,7> $pow */
+
 		return \number_format($result, $precision, $decimal_point, $thousands_sep) . ' ' . $unites[$pow];
 	}
 

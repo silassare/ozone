@@ -53,9 +53,9 @@ final class ProjectCmd extends Command
 			->prompt(true, 'The project root folder path')
 			->description('The project root folder path.')
 			->path()
-			->def('.')
 			->dir()
-			->writable();
+			->writable()
+			->def('.');
 		$create->option('name', 'n', [], 2)
 			->description('Your new project name.')
 			->prompt(true, 'Project name')
@@ -73,8 +73,8 @@ final class ProjectCmd extends Command
 			->prompt(true, 'Project app class name')
 			->required()
 			->string(2, 30)
-			->def('SampleApp')
-			->pattern(PHPClass::CLASS_NAME_PATTERN);
+			->pattern(PHPClass::CLASS_NAME_PATTERN)
+			->def('SampleApp');
 		$create->option('prefix', 'p', [], 4)
 			->description('Your new project prefix.')
 			->prompt(true, 'Your new project prefix')
@@ -90,9 +90,9 @@ final class ProjectCmd extends Command
 			->description('The backup directory path.')
 			->prompt(true, 'The backup directory path')
 			->path()
-			->def('..')
 			->dir()
-			->writable();
+			->writable()
+			->def('..');
 		$backup->option('full', 'f', [], 2)
 			->description('Enable or disable full backup.')
 			->prompt(true, 'Full backup? yes/no')

@@ -57,8 +57,8 @@ final class ServicesCmd extends Command
 			->prompt(true, 'The service class name')
 			->description('The service class name.')
 			->string()
-			->def('')
-			->pattern($class_name_reg, \sprintf('The service class name is invalid, required pattern: "%s"', \trim($class_name_reg, $class_name_reg[0])));
+			->pattern($class_name_reg, \sprintf('The service class name is invalid, required pattern: "%s"', \trim($class_name_reg, $class_name_reg[0])))
+			->def('');
 		$generate->option('override', 'o', [], 4)
 			->description('To force override if a service with the same class name exists.')
 			->bool()

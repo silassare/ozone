@@ -128,6 +128,10 @@ class ImagesUtils
 
 		$r = @\imagecreatefromstring(\file_get_contents($src));
 
+		/**
+		 * @psalm-suppress TypeDoesNotContainType
+		 * @psalm-suppress NoValue
+		 */
 		return \is_resource($r) && 'gd' === \get_resource_type($r);
 	}
 

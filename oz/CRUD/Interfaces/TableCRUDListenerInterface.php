@@ -14,10 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Core\CRUD\Interfaces;
 
 use Gobl\CRUD\Interfaces\CRUDEventListenerInterface;
+use Gobl\ORM\ORMEntity;
 use OZONE\Core\App\Context;
 
 /**
  * Class TableCRUDListenerInterface.
+ *
+ * @template TEntity of ORMEntity
+ *
+ * @extends CRUDEventListenerInterface<TEntity>
  */
 interface TableCRUDListenerInterface extends CRUDEventListenerInterface
 {
