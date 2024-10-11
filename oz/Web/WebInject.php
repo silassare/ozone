@@ -22,6 +22,8 @@ use Throwable;
 
 /**
  * Class WebInject.
+ *
+ * @deprecated
  */
 class WebInject
 {
@@ -57,8 +59,6 @@ class WebInject
 
 	/**
 	 * Shortcut for {@see I18n::t()}.
-	 *
-	 * usage: $.i18n( $key [, $data [, $format [, $lang ] ] ] )
 	 *
 	 * @param string      $key
 	 * @param array       $data

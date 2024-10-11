@@ -177,8 +177,8 @@ class Templates
 
 		if (!$registered) {
 			Blate::registerHelper('setting', [Settings::class, 'get']);
-			Blate::registerHelper('env', 'env');
-			Blate::registerHelper('oz_logger', 'oz_logger');
+			Blate::registerHelper('env', env(...));
+			Blate::registerHelper('log', oz_logger(...));
 
 			$registered = true;
 		}

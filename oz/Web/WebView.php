@@ -122,12 +122,17 @@ class WebView extends Service
 	 */
 	protected function render(): string
 	{
-		$context         = $this->getContext();
-		$wi              = new WebInject($context);
-		$data            = $this->getCompileData();
-		$data['context'] = $context;
+		$context = $this->getContext();
+
+		$wi   = new WebInject($context);
+		$data = $this->getCompileData();
+
+		/** TODO remove oz */
 		$data['oz']      = $wi;
+		$data['context'] = $context;
 		$data['i18n']    = $wi->i18n(...);
+		$data['url']     = $context->buildUri(...);
+		$data['route']   = $context->buildRouteUri(...);
 
 		return Templates::compile($this->getTemplate(), $data);
 	}
