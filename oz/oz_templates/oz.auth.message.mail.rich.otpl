@@ -1,2 +1,0 @@
-Please follow this link to verify your email:
-<a href="<%$.auth_link%>" rel="nofollow">Verify</a>

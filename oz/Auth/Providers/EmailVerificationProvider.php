@@ -101,7 +101,7 @@ class EmailVerificationProvider extends AuthProvider
 	 */
 	private function sendMail(bool $first = true): void
 	{
-		$message = new MailMessage('oz.auth.message.mail.otpl', 'oz.auth.message.mail.rich.otpl');
+		$message = new MailMessage('oz.auth.message.mail.blate', 'oz.auth.message.mail.rich.blate');
 
 		$message->inject($this->credentials->toArray())
 			->addRecipient($this->email)

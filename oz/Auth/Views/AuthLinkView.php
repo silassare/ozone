@@ -54,7 +54,7 @@ final class AuthLinkView extends WebView
 
 		$provider->authorize($type);
 
-		return $this->setTemplate('oz.auth.link.view.otpl')
+		return $this->setTemplate('oz.auth.link.view.blate')
 			->respond();
 	}
 

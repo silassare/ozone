@@ -103,7 +103,7 @@ class PhoneVerificationProvider extends AuthProvider
 	 */
 	private function sendSms(bool $first = true): void
 	{
-		$message = new SMSMessage('oz.auth.messages.sms.otpl');
+		$message = new SMSMessage('oz.auth.messages.sms.blate');
 
 		$message->inject($this->credentials->toArray())
 			->addRecipient($this->phone)
