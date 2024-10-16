@@ -168,7 +168,7 @@ final class ProjectCmd extends Command
 
 		$process = new Process($cmd);
 
-		$process->setTty(true);
+		$process->enableTtyIfSupported();
 
 		$exit_code = $process->run(static function ($type, $data) use ($cli) {
 			$cli->write($data);
