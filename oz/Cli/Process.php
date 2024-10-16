@@ -34,4 +34,16 @@ final class Process extends SymfonyProcess
 	) {
 		parent::__construct($command, $cwd, $env, $input, $timeout);
 	}
+
+	/**
+	 * Enable TTY if supported.
+	 */
+	public function enableTtyIfSupported(): self
+	{
+		if (self::isTtySupported()) {
+			$this->setTty(true);
+		}
+
+		return $this;
+	}
 }
