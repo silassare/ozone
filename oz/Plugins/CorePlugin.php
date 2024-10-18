@@ -14,12 +14,12 @@ declare(strict_types=1);
 namespace OZONE\Core\Plugins;
 
 /**
- * Class DefaultPlugin.
+ * Class CorePlugin.
  */
-class DefaultPlugin extends AbstractPlugin
+class CorePlugin extends AbstractPlugin
 {
 	/**
-	 * DefaultPlugin constructor.
+	 * CorePlugin constructor.
 	 */
 	public function __construct()
 	{

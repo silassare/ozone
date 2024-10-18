@@ -166,8 +166,8 @@ abstract class AbstractPlugin implements PluginInterface
 	 */
 	protected function shouldEnableORM(): bool
 	{
-		// for default plugin it's already handled
-		if ($this instanceof DefaultPlugin) {
+		// for core plugin it's already handled
+		if ($this instanceof CorePlugin) {
 			return false;
 		}
 

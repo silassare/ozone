@@ -11,9 +11,9 @@
 
 declare(strict_types=1);
 
-use OZONE\Core\Plugins\DefaultPlugin;
+use OZONE\Core\Plugins\CorePlugin;
 
 return [
 	// 'namespace\class' => true // enabled: true or false
-	DefaultPlugin::class => true,
+	CorePlugin::class => true,
 ];

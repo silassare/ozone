@@ -87,12 +87,12 @@ class Plugins
 	}
 
 	/**
-	 * Returns the default plugin.
+	 * Returns the core ozone plugin.
 	 *
 	 * @return PluginInterface
 	 */
-	public static function default(): PluginInterface
+	public static function ozone(): PluginInterface
 	{
-		return self::getPlugin(DefaultPlugin::class);
+		return self::getPlugin(CorePlugin::class);
 	}
 }
