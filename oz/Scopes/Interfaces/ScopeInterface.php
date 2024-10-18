@@ -33,14 +33,28 @@ interface ScopeInterface
 	public function getName(): string;
 
 	/**
-	 * Returns an instance of the files manager with the scope private directory as root.
+	 * Returns an instance of the files manager with the scope sources directory as root.
+	 *
+	 * This is where generated sources files should be stored.
 	 *
 	 * @return FilesManager
 	 */
-	public function getPrivateDir(): FilesManager;
+	public function getSourcesDir(): FilesManager;
+
+	/**
+	 * Returns an instance of the files manager with the scope private data directory as root.
+	 *
+	 * This directory should be protected from public access.
+	 * This is where you should store private stateful data.
+	 *
+	 * @return FilesManager
+	 */
+	public function getDataDir(): FilesManager;
 
 	/**
 	 * Returns an instance of the files manager with the scope public directory as root.
+	 *
+	 * This directory is accessible from the web.
 	 *
 	 * @return FilesManager
 	 */

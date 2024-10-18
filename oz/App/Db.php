@@ -23,12 +23,14 @@ use Gobl\DBAL\Types\Utils\TypeUtils;
 use Gobl\Gobl;
 use OZONE\Core\Columns\TypeProvider;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Hooks\Events\DbSchemaCollectHook;
 use OZONE\Core\Hooks\Events\DbSchemaReadyHook;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
 use OZONE\Core\Plugins\Plugins;
+use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use Throwable;
 
 /**
@@ -140,7 +142,7 @@ final class Db
 	 */
 	public static function getOZoneDbNamespace(): string
 	{
-		return Plugins::default()->getDbNamespace();
+		return Plugins::ozone()->getDbNamespace();
 	}
 
 	/**
@@ -154,24 +156,21 @@ final class Db
 	}
 
 	/**
-	 * Returns the OZone db folder.
+	 * Returns an instance of the files manager with the scope set to the db folder.
+	 *
+	 * If no scope is provided, the current app scope is used.
+	 *
+	 * @param null|ScopeInterface $scope
+	 *
+	 * @return FilesManager
 	 */
-	public static function getOZoneDbFolder(): string
+	public static function dir(?ScopeInterface $scope = null): FilesManager
 	{
-		$fm = Plugins::default()->getScope()->getPrivateDir();
+		if (null === $scope) {
+			$scope = app();
+		}
 
-		return $fm->cd('Db', true)->getRoot();
-	}
-
-	/**
-	 * Returns the project db folder.
-	 */
-	public static function getProjectDbFolder(): string
-	{
-		return app()
-			->getPrivateDir()
-			->cd('Db', true)
-			->getRoot();
+		return $scope->getSourcesDir()->cd('Db', true);
 	}
 
 	/**
@@ -246,11 +245,11 @@ final class Db
 
 		self::$db
 			->ns(self::getOZoneDbNamespace())
-			->enableORM(self::getOZoneDbFolder());
+			->enableORM(self::dir(Plugins::ozone()->getScope())->getRoot());
 
 		self::$db
 			->ns(self::getProjectDbNamespace())
-			->enableORM(self::getProjectDbFolder());
+			->enableORM(self::dir()->getRoot());
 
 		self::$db->lock();
 

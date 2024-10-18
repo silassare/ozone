@@ -62,9 +62,17 @@ class PluginScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getPrivateDir(): FilesManager
+	public function getSourcesDir(): FilesManager
 	{
-		return app()->getPluginsDir()->cd($this->scope_psr4_ns_dir, true);
+		return app()->getPluginsSourcesDir()->cd($this->scope_psr4_ns_dir, true);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getDataDir(): FilesManager
+	{
+		return app()->getDataDir()->cd('plugins' . DS . $this->scope_name, true);
 	}
 
 	/**

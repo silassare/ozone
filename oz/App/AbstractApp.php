@@ -101,9 +101,18 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getPrivateDir(): FilesManager
+	public function getSourcesDir(): FilesManager
 	{
 		return FS::from(OZ_APP_DIR);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getDataDir(): FilesManager
+	{
+		return $this->getProjectDir()
+			->cd('data', true);
 	}
 
 	/**
@@ -149,7 +158,7 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getSettingsDir(): FilesManager
 	{
-		return $this->getPrivateDir()
+		return $this->getSourcesDir()
 			->cd('settings', true);
 	}
 
@@ -158,14 +167,14 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getTemplatesDir(): FilesManager
 	{
-		return $this->getPrivateDir()
+		return $this->getSourcesDir()
 			->cd('templates', true);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getPluginsDir(): FilesManager
+	public function getPluginsSourcesDir(): FilesManager
 	{
 		return $this->getProjectDir()
 			->cd('.ozone/plugins/', true);
@@ -185,8 +194,7 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getPrivateFilesDir(): FilesManager
 	{
-		return $this->getPrivateDir()
-			->cd('files', true);
+		return $this->getDataDir()->cd('files', true);
 	}
 
 	/**
@@ -202,7 +210,7 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getMigrationsDir(): FilesManager
 	{
-		return $this->getPrivateDir()
+		return $this->getSourcesDir()
 			->cd('migrations', true);
 	}
 }

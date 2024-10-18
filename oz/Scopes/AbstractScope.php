@@ -26,7 +26,7 @@ abstract class AbstractScope implements ScopeInterface
 	 */
 	public function getSettingsDir(): FilesManager
 	{
-		return $this->getPrivateDir()->cd('settings', true);
+		return $this->getSourcesDir()->cd('settings', true);
 	}
 
 	/**
@@ -34,7 +34,7 @@ abstract class AbstractScope implements ScopeInterface
 	 */
 	public function getTemplatesDir(): FilesManager
 	{
-		return $this->getPrivateDir()->cd('templates', true);
+		return $this->getSourcesDir()->cd('templates', true);
 	}
 
 	/**
@@ -42,7 +42,7 @@ abstract class AbstractScope implements ScopeInterface
 	 */
 	public function getPrivateFilesDir(): FilesManager
 	{
-		return $this->getPrivateDir()->cd('files', true);
+		return $this->getDataDir()->cd('files', true);
 	}
 
 	/**

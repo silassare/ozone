@@ -37,9 +37,17 @@ final class AppScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getPrivateDir(): FilesManager
+	public function getSourcesDir(): FilesManager
 	{
 		return app()->getProjectDir()->cd('scopes' . DS . $this->name, true);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getDataDir(): FilesManager
+	{
+		return app()->getDataDir()->cd('scopes' . DS . $this->name, true);
 	}
 
 	/**

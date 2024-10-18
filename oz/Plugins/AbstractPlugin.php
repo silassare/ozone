@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Plugins;
 
+use OZONE\Core\App\Db;
 use OZONE\Core\App\Settings;
 use OZONE\Core\FS\FS;
 use OZONE\Core\Hooks\Events\DbReadyHook;
@@ -30,14 +31,15 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * AbstractPlugin constructor.
 	 *
-	 * @param string $namespace    Plugin namespace
+	 * @param string $namespace Plugin namespace
 	 * @param string $install_path Plugin install path this is where the composer.json file is located
 	 */
 	public function __construct(
 		protected string $name,
 		protected string $namespace,
 		protected string $install_path
-	) {
+	)
+	{
 		$fs = FS::fromRoot();
 
 		// this wil fail if the install path is not a directory
@@ -141,19 +143,13 @@ abstract class AbstractPlugin implements PluginInterface
 	public function boot(): void
 	{
 		if ($this->isEnabled()) {
-			$plugin_scope_root_dir = $this->getScope()->getPrivateDir()->getRoot();
-
 			// add directory to the plugin namespace
-			ClassLoader::addNamespace($this->namespace, $plugin_scope_root_dir);
+			ClassLoader::addNamespace($this->namespace, $this->getScope()->getSourcesDir()->getRoot());
 
 			// enable ORM for the plugin if applicable
 			if ($this->shouldEnableORM()) {
 				DbReadyHook::listen(function (DbReadyHook $hook) {
-					$fm = $this->getScope()->getPrivateDir();
-
-					$dir = $fm->cd('Db', true)->getRoot();
-
-					$hook->db->ns($this->getDbNamespace())->enableORM($dir);
+					$hook->db->ns($this->getDbNamespace())->enableORM(Db::dir($this->getScope())->getRoot());
 				});
 			}
 		}

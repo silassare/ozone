@@ -78,11 +78,13 @@ interface AppInterface extends ScopeInterface
 	public function getCacheDir(): FilesManager;
 
 	/**
-	 * Returns an instance of the files manager with the plugins directory as root.
+	 * Returns an instance of the files manager with the plugins sources directory as root.
+	 *
+	 * This is where plugins generated sources files should be stored.
 	 *
 	 * @return FilesManager
 	 */
-	public function getPluginsDir(): FilesManager;
+	public function getPluginsSourcesDir(): FilesManager;
 
 	/**
 	 * Returns an instance of the files manager with the migrations directory as root.
