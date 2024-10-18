@@ -36,14 +36,12 @@ use Throwable;
 final class Migrations
 {
 	public const DB_NOT_INSTALLED_VERSION = 0;
-	public const FIRST_VERSION = 1;
+	public const FIRST_VERSION            = 1;
 
 	/**
 	 * Migrations constructor.
 	 */
-	public function __construct()
-	{
-	}
+	public function __construct() {}
 
 	/**
 	 * Gets the database migrations state.
@@ -175,7 +173,7 @@ final class Migrations
 	 * ];
 	 * ```
 	 *
-	 * @param bool $force if true, a migration file will be created even if there are no changes
+	 * @param bool        $force if true, a migration file will be created even if there are no changes
 	 * @param null|string $label the migration label
 	 *
 	 * @return null|string
@@ -198,7 +196,7 @@ final class Migrations
 		if ($force || $diff->hasChanges()) {
 			$outfile = $fm->resolve(\sprintf('%s.php', Random::fileName('migration')));
 
-			$fm->wf($outfile, (string)$diff->generateMigrationFile($version, $label));
+			$fm->wf($outfile, (string) $diff->generateMigrationFile($version, $label));
 
 			// clear cache
 			self::clearCache();
@@ -273,7 +271,7 @@ final class Migrations
 
 			\usort(
 				$migrations,
-				static fn(MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
+				static fn (MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
 			);
 
 			return $migrations;
