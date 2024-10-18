@@ -112,7 +112,7 @@ final class OZone
 	 *
 	 * @param string $message the message to display if the boot hook receivers are not notified
 	 */
-	public static function dieIfBookHookReceiversAreNotNotified(string $message): void
+	public static function dieIfBootHookReceiversAreNotNotified(string $message): void
 	{
 		if (!self::$boot_hook_receivers_notified) {
 			// this is to make sure that the dev will be notified by all means

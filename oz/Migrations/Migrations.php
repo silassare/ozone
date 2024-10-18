@@ -14,10 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Core\Migrations;
 
 use Gobl\CRUD\Exceptions\CRUDException;
-use Gobl\DBAL\Db as GoblDb;
 use Gobl\DBAL\Diff\Diff;
 use Gobl\DBAL\Interfaces\MigrationInterface;
-use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
 use OZONE\Core\App\Db;
@@ -38,12 +36,14 @@ use Throwable;
 final class Migrations
 {
 	public const DB_NOT_INSTALLED_VERSION = 0;
-	public const FIRST_VERSION            = 1;
+	public const FIRST_VERSION = 1;
 
 	/**
 	 * Migrations constructor.
 	 */
-	public function __construct() {}
+	public function __construct()
+	{
+	}
 
 	/**
 	 * Gets the database migrations state.
@@ -175,24 +175,19 @@ final class Migrations
 	 * ];
 	 * ```
 	 *
-	 * @param bool        $force if true, a migration file will be created even if there are no changes
+	 * @param bool $force if true, a migration file will be created even if there are no changes
 	 * @param null|string $label the migration label
 	 *
 	 * @return null|string
 	 */
 	public function create(bool $force, ?string $label = null): ?string
 	{
-		$fm        = app()->getMigrationsDir();
-		$latest    = $this->getLatestMigration();
-		$db_actual = db();
-		$config    = $db_actual->getConfig();
-
-		$db_from = GoblDb::newInstanceOf($db_actual->getType(), $config);
-		$db_to   = self::devDb(true);
+		$fm      = app()->getMigrationsDir();
+		$latest  = $this->getLatestMigration();
+		$db_from = Db::new($latest)->lock();
+		$db_to   = Db::dev()->lock();
 
 		if ($latest) {
-			$db_from->ns('Migrations')
-				->schema($latest->getSchema());
 			$version = $latest->getVersion() + 1;
 		} else {
 			$version = self::FIRST_VERSION;
@@ -203,7 +198,7 @@ final class Migrations
 		if ($force || $diff->hasChanges()) {
 			$outfile = $fm->resolve(\sprintf('%s.php', Random::fileName('migration')));
 
-			$fm->wf($outfile, (string) $diff->generateMigrationFile($version, $label));
+			$fm->wf($outfile, (string)$diff->generateMigrationFile($version, $label));
 
 			// clear cache
 			self::clearCache();
@@ -214,31 +209,6 @@ final class Migrations
 		}
 
 		return null;
-	}
-
-	/**
-	 * Returns a new instance of the development database.
-	 *
-	 * @param bool $fresh if true, a new instance will be created
-	 *
-	 * @return RDBMSInterface
-	 */
-	public static function devDb(bool $fresh = false): RDBMSInterface
-	{
-		/** @var null|RDBMSInterface $cached */
-		static $cached = null;
-
-		if ($fresh || !$cached) {
-			$db_actual = db();
-			$config    = $db_actual->getConfig();
-			$dev_db    = GoblDb::newInstanceOf($db_actual->getType(), $config);
-
-			Db::loadDevSchemaInto($dev_db);
-			$dev_db->lock();
-			$cached = $dev_db;
-		}
-
-		return $cached;
 	}
 
 	/**
@@ -303,7 +273,7 @@ final class Migrations
 
 			\usort(
 				$migrations,
-				static fn (MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
+				static fn(MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
 			);
 
 			return $migrations;

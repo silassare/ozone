@@ -17,6 +17,7 @@ use Gobl\DBAL\Builders\NamespaceBuilder;
 use Gobl\DBAL\Db as GoblDb;
 use Gobl\DBAL\DbConfig;
 use Gobl\DBAL\Exceptions\DBALException;
+use Gobl\DBAL\Interfaces\MigrationInterface;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Types\Utils\TypeUtils;
 use Gobl\Gobl;
@@ -45,7 +46,7 @@ final class Db
 	public static function init(): RDBMSInterface
 	{
 		if (!self::$db) {
-			OZone::dieIfBookHookReceiversAreNotNotified(
+			OZone::dieIfBootHookReceiversAreNotNotified(
 				\sprintf(
 					'%s should be called only after all boot hooks are registered.' .
 					' A call to %s before all boot hooks are registered may cause '
@@ -55,37 +56,12 @@ final class Db
 				)
 			);
 
-			Gobl::setProjectCacheDir(
-				app()
-					->getCacheDir()
-					->getRoot()
-			);
-
-			$config    = Settings::load('oz.db');
-			$db_config = new DbConfig([
-				'db_table_prefix' => Settings::get('oz.db', 'OZ_DB_TABLE_PREFIX'),
-				'db_host'         => $config['OZ_DB_HOST'],
-				'db_name'         => $config['OZ_DB_NAME'],
-				'db_user'         => $config['OZ_DB_USER'],
-				'db_pass'         => $config['OZ_DB_PASS'],
-				'db_charset'      => $config['OZ_DB_CHARSET'],
-				'db_collate'      => $config['OZ_DB_COLLATE'],
-			]);
-
-			$rdbms_type = $config['OZ_DB_RDBMS'];
-
 			try {
-				self::$db = GoblDb::newInstanceOf($rdbms_type, $db_config);
-			} catch (Throwable $t) {
-				throw new RuntimeException(
-					\sprintf('Unable to init "%s" RDBMS defined in "oz.db".', $rdbms_type),
-					null,
-					$t
-				);
-			}
+				$migration = self::initStepPrepare();
 
-			try {
-				self::register();
+				self::$db = self::new($migration);
+
+				self::initStepRegister(null !== $migration);
 			} catch (Throwable $t) {
 				throw new RuntimeException('Unable to initialize database.', null, $t);
 			}
@@ -100,6 +76,63 @@ final class Db
 	public static function get(): RDBMSInterface
 	{
 		return self::init();
+	}
+
+	/**
+	 * Creates a new RDBMS instance.
+	 *
+	 * The instance is created using the configuration defined in "oz.db".
+	 * If a migration is provided, the migration schema is loaded.
+	 *
+	 * @param null|MigrationInterface $migration The migration instance to autoload
+	 *
+	 * @return RDBMSInterface
+	 */
+	public static function new(?MigrationInterface $migration = null): RDBMSInterface
+	{
+		$config           = Settings::load('oz.db');
+		$rdbms_type       = $config['OZ_DB_RDBMS'];
+		$migration_config = $migration?->getConfigs();
+
+		$db_config = new DbConfig([
+			'db_table_prefix' => $migration_config['db_table_prefix'] ?? Settings::get('oz.db', 'OZ_DB_TABLE_PREFIX'),
+			'db_host'         => $config['OZ_DB_HOST'],
+			'db_name'         => $config['OZ_DB_NAME'],
+			'db_user'         => $config['OZ_DB_USER'],
+			'db_pass'         => $config['OZ_DB_PASS'],
+			'db_charset'      => $migration_config['db_charset'] ?? $config['OZ_DB_CHARSET'],
+			'db_collate'      => $migration_config['db_collate'] ?? $config['OZ_DB_COLLATE'],
+		]);
+
+		try {
+			$db = GoblDb::newInstanceOf($rdbms_type, $db_config);
+
+			if ($migration) {
+				$db->loadSchema($migration->getSchema());
+			}
+
+			return $db;
+		} catch (Throwable $t) {
+			throw new RuntimeException(
+				\sprintf('Unable to create a new RDBMS instance of type "%s" as defined in "oz.db".', $rdbms_type),
+				null,
+				$t
+			);
+		}
+	}
+
+	/**
+	 * Creates a new RDBMS instance with the actual development schema loaded.
+	 *
+	 * @return RDBMSInterface
+	 */
+	public static function dev(): RDBMSInterface
+	{
+		$db = self::new();
+
+		self::loadDevSchemaInto($db);
+
+		return $db;
 	}
 
 	/**
@@ -163,34 +196,54 @@ final class Db
 	}
 
 	/**
-	 * Register.
+	 * Initialize step prepare.
 	 *
-	 * @throws DBALException
+	 * @return null|MigrationInterface
 	 */
-	private static function register(): void
+	private static function initStepPrepare(): ?MigrationInterface
 	{
+		Gobl::setProjectCacheDir(
+			app()
+				->getCacheDir()
+				->getRoot()
+		);
+
 		TypeUtils::addTypeProvider(new TypeProvider());
 
 		$mg      = new Migrations();
 		$version = $mg::getSourceCodeDbVersion();
 
 		if (Migrations::DB_NOT_INSTALLED_VERSION === $version) {
-			self::loadDevSchemaInto(self::$db);
-		} else {
-			$current = $mg->getMigration($version);
-			if (!$current) {
-				throw (new RuntimeException(
-					\sprintf(
-						'Unable to find migration, using db version "%s" defined in settings.',
-						$version
-					)
-				))->suspectConfig('oz.db.migrations', 'OZ_MIGRATION_VERSION');
-			}
-
-			self::$db->loadSchema($current->getSchema());
-
-			(new DbSchemaReadyHook(self::$db))->dispatch();
+			return null;
 		}
+
+		$current = $mg->getMigration($version);
+
+		if (!$current) {
+			throw (new RuntimeException(
+				\sprintf(
+					'Unable to find migration, using db version "%s" defined in settings.',
+					$version
+				)
+			))->suspectConfig('oz.db.migrations', 'OZ_MIGRATION_VERSION');
+		}
+
+		return $current;
+	}
+
+	/**
+	 * Initialize step register.
+	 *
+	 * @throws DBALException
+	 */
+	private static function initStepRegister(bool $migration_loaded): void
+	{
+		if ($migration_loaded) {
+			(new DbSchemaReadyHook(self::$db))->dispatch();
+		} else {
+			self::loadDevSchemaInto(self::$db);
+		}
+
 		self::$db
 			->ns(self::getOZoneDbNamespace())
 			->enableORM(self::getOZoneDbFolder());
