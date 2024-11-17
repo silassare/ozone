@@ -175,10 +175,10 @@ final class Session implements BootHookReceiverInterface
 			self::delete($this->session_entry->getID());
 		}
 
-		$this->session_entry    = null;
-		$this->state            = null;
-		$this->started          = false;
-		$this->delete_cookie    = true;
+		$this->session_entry = null;
+		$this->state         = null;
+		$this->started       = false;
+		$this->delete_cookie = true;
 
 		return $this;
 	}

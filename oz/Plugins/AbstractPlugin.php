@@ -31,15 +31,14 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * AbstractPlugin constructor.
 	 *
-	 * @param string $namespace Plugin namespace
+	 * @param string $namespace    Plugin namespace
 	 * @param string $install_path Plugin install path this is where the composer.json file is located
 	 */
 	public function __construct(
 		protected string $name,
 		protected string $namespace,
 		protected string $install_path
-	)
-	{
+	) {
 		$fs = FS::fromRoot();
 
 		// this wil fail if the install path is not a directory

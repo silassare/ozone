@@ -19,6 +19,8 @@ use PHPUtils\Store\Store;
 
 /**
  * Class SessionState.
+ *
+ * @extends Store<array>
  */
 class SessionState extends Store
 {
@@ -29,7 +31,7 @@ class SessionState extends Store
 	 */
 	private function __construct(private OZSession $session)
 	{
-		parent::__construct($this->session->getData());
+		parent::__construct($this->session->getData()->getData());
 	}
 
 	/**

@@ -32,8 +32,8 @@ use OZONE\Core\Users\Users;
  */
 class SessionAuth implements SessionBasedAuthMethodInterface
 {
-	protected AuthMethodType $type       = AuthMethodType::SESSION;
-	protected ?string $session_id        = null;
+	protected AuthMethodType $type = AuthMethodType::SESSION;
+	protected ?string $session_id  = null;
 	protected ?Session $session;
 	protected OZUser $user;
 
@@ -210,8 +210,8 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 					throw new ForbiddenException(null, [
 						'_reason' => 'Session source key mismatch.',
 						'_help'   => 'This is possible session hijacking attempt.'
-									 . ' It may also be that the user is using a proxy, a VPN'
-									 . ' or his IP address has changed, usual under mobile network.',
+							. ' It may also be that the user is using a proxy, a VPN'
+							. ' or his IP address has changed, usual under mobile network.',
 					]);
 				}
 				$this->session->restart();
