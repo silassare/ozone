@@ -38,7 +38,8 @@ class GetFilesView extends WebView
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$format = Settings::get('oz.files', 'OZ_GET_FILE_URI_PATH_FORMAT');
+		$format      = Settings::get('oz.files', 'OZ_GET_FILE_URI_PATH_FORMAT');
+		$format_alts = Settings::get('oz.files', 'OZ_GET_FILE_URI_PATH_FORMAT_ALTS');
 
 		self::defineRouteParams(
 			$router
@@ -47,6 +48,14 @@ class GetFilesView extends WebView
 				})
 				->name(self::MAIN_ROUTE)
 		);
+
+		foreach ($format_alts as $alt) {
+			self::defineRouteParams(
+				$router->get($alt, static function (RouteInfo $ri) {
+					return self::handle($ri, true);
+				})
+			);
+		}
 	}
 
 	/**

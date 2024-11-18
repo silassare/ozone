@@ -37,6 +37,13 @@ return [
 	'OZ_GET_FILE_URI_PATH_FORMAT'         => '/files/ozone-{oz_file_id}[-{oz_file_auth_ref}]-{oz_file_auth_key}[-{oz_file_filters}][.{oz_file_extension}]',
 
 	/**
+	 * Alternative file uri path formats.
+	 */
+	'OZ_GET_FILE_URI_PATH_FORMAT_ALTS'    => [
+		'/uploads/{oz_file_id}[-{oz_file_auth_ref}]-{oz_file_auth_key}[-{oz_file_filters}][/{oz_file_name}]',
+	],
+
+	/**
 	 * when user download a file should we
 	 * specify the uploaded file name in the response headers ?
 	 */
