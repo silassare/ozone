@@ -23,6 +23,7 @@ use OZONE\Core\FS\FS;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
+use OZONE\Core\Router\RouteSharedOptions;
 use OZONE\Core\Web\WebView;
 
 /**
@@ -39,22 +40,40 @@ class GetFilesView extends WebView
 	{
 		$format = Settings::get('oz.files', 'OZ_GET_FILE_URI_PATH_FORMAT');
 
-		$router
-			->get($format, static function (RouteInfo $r) {
-				return self::handle($r);
-			})
-			->name(self::MAIN_ROUTE)
-			->params([
-				'oz_file_id'        => '[0-9]+',
-				'oz_file_auth_ref'  => '[a-z0-9]{32,}',
-				'oz_file_auth_key'  => '[a-z0-9]{32,}',
-				'oz_file_filters'   => '[a-z0-9\~]+',
-				'oz_file_extension' => '[a-z0-9]{1,10}',
-			]);
+		self::defineRouteParams(
+			$router
+				->get($format, static function (RouteInfo $r) {
+					return self::handle($r);
+				})
+				->name(self::MAIN_ROUTE)
+		);
 	}
 
 	/**
-	 * @param RouteInfo $ri
+	 * Define params for the route or route group.
+	 *
+	 * > This is public so developers can use it in their custom routes.
+	 *
+	 * @param RouteSharedOptions $routeOrGroup
+	 */
+	public static function defineRouteParams(RouteSharedOptions $routeOrGroup): void
+	{
+		$routeOrGroup->params([
+			'oz_file_id'        => '[0-9]+',
+			'oz_file_auth_ref'  => '[a-z0-9]{32,}',
+			'oz_file_auth_key'  => '[a-z0-9]{32,}',
+			'oz_file_filters'   => '[a-z0-9\~]+',
+			'oz_file_extension' => '[a-z0-9]{1,10}',
+		]);
+	}
+
+	/**
+	 * Handle file request.
+	 *
+	 * > This is public so developers can use it in their custom routes.
+	 *
+	 * @param RouteInfo $ri                   The route info
+	 * @param bool      $force_show_real_name When true, the file will be served with the real name even if configured otherwise
 	 *
 	 * @return Response
 	 *
@@ -62,7 +81,7 @@ class GetFilesView extends WebView
 	 * @throws NotFoundException
 	 * @throws UnauthorizedActionException
 	 */
-	public static function handle(RouteInfo $ri): Response
+	public static function handle(RouteInfo $ri, bool $force_show_real_name = false): Response
 	{
 		$context           = $ri->getContext();
 		$req_file_id       = $ri->param('oz_file_id');
@@ -107,7 +126,7 @@ class GetFilesView extends WebView
 		} else {
 			$response = $driver->serve($file, $response);
 
-			if (Settings::get('oz.files', 'OZ_GET_FILE_SHOW_REAL_NAME')) {
+			if ($force_show_real_name || Settings::get('oz.files', 'OZ_GET_FILE_SHOW_REAL_NAME')) {
 				$filename = $file->getRealName();
 				$response = $response->withHeader('Content-Disposition', "attachment; filename=\"{$filename}\";");
 			}
