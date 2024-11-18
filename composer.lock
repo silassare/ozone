@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "50950d65d3c73456a287d93211464b29",
+    "content-hash": "86ca4b0aebc33721826011b122e63769",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -578,12 +578,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "2f98cf3b3284e8c9b5d3d0688844e8715aeac6dd"
+                "reference": "bb8e5311de02ddc25c7bcd46242ffb5725048b5c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/2f98cf3b3284e8c9b5d3d0688844e8715aeac6dd",
-                "reference": "2f98cf3b3284e8c9b5d3d0688844e8715aeac6dd",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/bb8e5311de02ddc25c7bcd46242ffb5725048b5c",
+                "reference": "bb8e5311de02ddc25c7bcd46242ffb5725048b5c",
                 "shasum": ""
             },
             "require": {
@@ -640,7 +640,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/dev"
             },
-            "time": "2024-11-17T23:06:18+00:00"
+            "time": "2024-11-18T11:53:38+00:00"
         },
         {
             "name": "silassare/kli",
@@ -768,12 +768,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/php-utils.git",
-                "reference": "0270541d3f21a7ed2e9166cdbe8cdbb6b3e3a2ab"
+                "reference": "f0e5f262b9837694a21aa2555e9ac8a312088fb2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/php-utils/zipball/0270541d3f21a7ed2e9166cdbe8cdbb6b3e3a2ab",
-                "reference": "0270541d3f21a7ed2e9166cdbe8cdbb6b3e3a2ab",
+                "url": "https://api.github.com/repos/silassare/php-utils/zipball/f0e5f262b9837694a21aa2555e9ac8a312088fb2",
+                "reference": "f0e5f262b9837694a21aa2555e9ac8a312088fb2",
                 "shasum": ""
             },
             "require": {
@@ -820,7 +820,7 @@
                 "source": "https://github.com/silassare/php-utils/tree/1.0.3",
                 "issues": "https://github.com/silassare/php-utils/issues"
             },
-            "time": "2024-10-14T12:00:18+00:00"
+            "time": "2024-11-18T11:36:35+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
