@@ -62,9 +62,9 @@ final class Polyglot
 	public static function getLanguage(?Context $context = null): string
 	{
 		if ($context) {
-			$state = $context->state();
+			$store = $context->authStore();
 
-			$user_lang = $state?->get(self::CLIENT_LANG_SESSION_KEY);
+			$user_lang = $store?->get(self::CLIENT_LANG_SESSION_KEY);
 
 			if (!empty($user_lang)) {
 				return $user_lang;
@@ -75,7 +75,7 @@ final class Polyglot
 			$browser         = self::parseBrowserLanguage($accept_language);
 
 			if (!empty($browser['advice'])) {
-				$state?->set(self::CLIENT_LANG_SESSION_KEY, $browser['advice']);
+				$store?->set(self::CLIENT_LANG_SESSION_KEY, $browser['advice']);
 
 				return $browser['advice'];
 			}
@@ -97,7 +97,7 @@ final class Polyglot
 		$list = self::getEnabledLanguages();
 
 		if (isset($list[$lang])) {
-			$context->state()
+			$context->authStore()
 				?->set(self::CLIENT_LANG_SESSION_KEY, $lang);
 
 			return true;

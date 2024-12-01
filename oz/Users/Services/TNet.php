@@ -37,7 +37,7 @@ final class TNet extends Service
 
 		$user = null;
 		if ($context->hasAuthenticatedUser()) {
-			$user = $context->user();
+			$user = $context->auth()->user();
 		}
 
 		$this->json()

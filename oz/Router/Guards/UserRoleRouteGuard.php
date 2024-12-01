@@ -89,7 +89,7 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 	public function checkAccess(RouteInfo $ri): void
 	{
 		$context = $ri->getContext();
-		$uid     = $context->user()
+		$uid     = $context->auth()->user()
 			->getID();
 
 		$roles = \array_keys($this->roles);

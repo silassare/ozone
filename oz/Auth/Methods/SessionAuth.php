@@ -16,13 +16,13 @@ namespace OZONE\Core\Auth\Methods;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
-use OZONE\Core\Auth\Interfaces\SessionBasedAuthMethodInterface;
+use OZONE\Core\Auth\Interfaces\StatefulAuthMethodInterface;
+use OZONE\Core\Auth\StatefulAuthStore;
 use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\UnverifiedUserException;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Sessions\Session;
-use OZONE\Core\Sessions\SessionState;
 use OZONE\Core\Users\Users;
 
 /**
@@ -30,7 +30,7 @@ use OZONE\Core\Users\Users;
  *
  * @psalm-suppress RedundantPropertyInitializationCheck
  */
-class SessionAuth implements SessionBasedAuthMethodInterface
+class SessionAuth implements StatefulAuthMethodInterface
 {
 	protected AuthMethodType $type = AuthMethodType::SESSION;
 	protected ?string $session_id  = null;
@@ -149,7 +149,7 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * Returns the session instance.
 	 *
 	 * @throws ForbiddenException
 	 */
@@ -163,10 +163,10 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	 *
 	 * @throws ForbiddenException
 	 */
-	public function state(): SessionState
+	public function store(): StatefulAuthStore
 	{
 		return $this->session()
-			->state();
+			->store();
 	}
 
 	/**
@@ -174,10 +174,21 @@ class SessionAuth implements SessionBasedAuthMethodInterface
 	 *
 	 * @throws ForbiddenException
 	 */
-	public function id(): string
+	public function stateID(): string
 	{
 		return $this->startCurrentOrNewSession()
 			->id();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws ForbiddenException
+	 */
+	public function persist(): void
+	{
+		$this->session()
+			->responseReady();
 	}
 
 	/**

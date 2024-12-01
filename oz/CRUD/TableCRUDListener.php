@@ -56,9 +56,11 @@ abstract class TableCRUDListener implements TableCRUDListenerInterface
 
 	/**
 	 * Asserts that the current user is verified.
+	 *
+	 * @throws UnverifiedUserException
 	 */
 	protected function assertUserVerified(): void
 	{
-		$this->context->user();
+		$this->context->getUsers()->assertUserVerified();
 	}
 }

@@ -34,7 +34,7 @@ class FilesHandler extends TableCRUDListener
 		$crud->onBeforeCreateFlush(static function (BeforeCreateFlush $ev) use ($context) {
 			$uploaded_by = $ev->getField(OZFile::COL_UPLOADED_BY);
 			if (!$uploaded_by && $context->hasAuthenticatedUser()) {
-				$user = $context->user();
+				$user = $context->auth()->user();
 
 				$ev->setField(OZFile::COL_UPLOADED_BY, $user->id);
 			}

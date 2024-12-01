@@ -42,7 +42,7 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 	protected function requireForm(Context $context, Form $form): FormData
 	{
 		$request = $context->getRequest();
-		$state   = $context->requireState();
+		$state   = $context->requireAuthStore();
 		$uri     = $context->getRequest()
 			->getUri();
 

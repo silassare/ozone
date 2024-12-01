@@ -16,12 +16,12 @@ namespace OZONE\Core\Router\Rates;
 use OZONE\Core\Router\RouteInfo;
 
 /**
- * Class SessionRateLimit.
+ * Class StatefulAuthRateLimit.
  */
-final class SessionRateLimit extends RateLimit
+final class StatefulAuthRateLimit extends RateLimit
 {
 	/**
-	 * SessionRateLimit constructor.
+	 * StatefulAuthRateLimit constructor.
 	 *
 	 * @param RouteInfo $ri       the route info
 	 * @param int       $rate     number of requests allowed in the interval
@@ -30,10 +30,10 @@ final class SessionRateLimit extends RateLimit
 	 */
 	public function __construct(RouteInfo $ri, int $rate, int $interval, int $weight = 1)
 	{
-		$sid = $ri->getContext()->session()->id();
+		$id = $ri->getContext()->requireStatefulAuth()->stateID();
 
 		parent::__construct(
-			$sid,
+			$id,
 			$rate,
 			$interval,
 			$weight

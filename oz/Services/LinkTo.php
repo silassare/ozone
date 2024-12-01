@@ -46,7 +46,7 @@ final class LinkTo extends Service
 	{
 		$link_key = Hasher::hash32();
 
-		$context->requireState()
+		$context->requireAuthStore()
 			->set('oz.link_to_cfg.' . $link_key, [
 				'expire_at' => $expire_at,
 				'next'      => (string) $next,
@@ -86,7 +86,7 @@ final class LinkTo extends Service
 		$response = $context->getResponse();
 		$link_key = $ri->param(self::URI_KEY);
 		$key      = 'oz.link_to_cfg.' . $link_key;
-		$data     = $context->requireState()
+		$data     = $context->requireAuthStore()
 			->get($key);
 
 		if (empty($data)) {

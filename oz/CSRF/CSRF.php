@@ -35,14 +35,14 @@ class CSRF
 	public function __construct(private Context $context, private CSRFScope $scope)
 	{
 		switch ($this->scope) {
-			case CSRFScope::SESSION:
-				$this->scope_ref = $this->context->session()
-					->id();
+			case CSRFScope::STATE:
+				$this->scope_ref = $this->context->requireStatefulAuth()
+					->stateID();
 
 				break;
 
 			case CSRFScope::ACTIVE_USER:
-				$this->scope_ref = $this->context->user()
+				$this->scope_ref = $this->context->auth()->user()
 					->getID();
 
 				break;

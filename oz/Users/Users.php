@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Users;
 
 use OZONE\Core\App\Context;
+use OZONE\Core\Auth\Methods\SessionAuth;
 use OZONE\Core\Columns\Types\TypeEmail;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Columns\Types\TypePhone;
@@ -21,6 +22,7 @@ use OZONE\Core\Crypt\Password;
 use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Sessions\Session;
@@ -64,15 +66,15 @@ final class Users
 			throw new RuntimeException('OZ_USER_CANT_LOG_ON', $user->toArray());
 		}
 
-		$session      = $this->context->session();
-		$previous_uid = $session->state()
+		$session      = $this->requireSessionAuth()->session();
+		$previous_uid = $session->store()
 			->getPreviousUserID();
 		$saved_data   = [];
 
 		// if the current user is the previous one,
 		// hold the data of the current session
 		if (!empty($previous_uid) && $previous_uid === $user->getID()) {
-			$saved_data = $session->state()
+			$saved_data = $session->store()
 				->getData();
 		}
 
@@ -80,7 +82,7 @@ final class Users
 			$session->restart();
 
 			$user_dt = new Store($user->getData());
-			$state   = $session->state();
+			$state   = $session->store();
 
 			if ($user_dt->has('oz.2fa_enabled')) {
 				$this->start2FAAuthProcess($user, $session);
@@ -106,17 +108,17 @@ final class Users
 		// this make sure that we raise an exception
 		// if a call to this method is made without
 		// defining a session based authentication method
-		$session = $this->context->session();
+		$session = $this->requireSessionAuth()->session();
 
 		// then we check if we have an authenticated user
 		// attached to the session
 		if ($this->context->hasAuthenticatedUser()) {
 			try {
-				$current_user = $this->context->user();
-				$data         = $session->state()
-					->getData();
+				$current_user = $this->context->auth()->user();
+				$data         = $session->store()->getData();
+
 				$session->restart()
-					->state()
+					->store()
 					->merge($data)
 					->setPreviousUserID($current_user->getID());
 			} catch (Throwable $t) {
@@ -234,6 +236,20 @@ final class Users
 		$this->logUserIn($user);
 
 		return $user;
+	}
+
+	/**
+	 * @throws UnauthorizedActionException
+	 */
+	private function requireSessionAuth(): SessionAuth
+	{
+		$auth = $this->context->auth();
+
+		if (!$auth instanceof SessionAuth) {
+			throw new UnauthorizedActionException('OZ_SESSION_AUTH_REQUIRED');
+		}
+
+		return $auth;
 	}
 
 	/**

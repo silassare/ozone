@@ -197,7 +197,7 @@ class UploadFiles extends Service
 	public function deleteUpload(string $ref): void
 	{
 		$key   = self::getKey($ref);
-		$state = $this->getContext()->requireState();
+		$state = $this->getContext()->requireAuthStore();
 		$data  = $state->get($key);
 
 		if (isset($data['chunks'])) {
@@ -335,7 +335,7 @@ class UploadFiles extends Service
 	private function saveUploadedFilesIds(string $ref, array $files_ids): void
 	{
 		$key   = self::getKey($ref);
-		$state = $this->getContext()->requireState();
+		$state = $this->getContext()->requireAuthStore();
 		$state->set($key, $files_ids);
 	}
 
@@ -348,7 +348,7 @@ class UploadFiles extends Service
 	private function saveChunksInfo(string $ref, array $info): void
 	{
 		$key   = self::getKey($ref);
-		$state = $this->getContext()->requireState();
+		$state = $this->getContext()->requireAuthStore();
 		$state->set($key, $info);
 	}
 
@@ -363,7 +363,7 @@ class UploadFiles extends Service
 	{
 		$key = self::getKey($ref);
 
-		return $this->getContext()->requireState()->get($key);
+		return $this->getContext()->requireAuthStore()->get($key);
 	}
 
 	/**

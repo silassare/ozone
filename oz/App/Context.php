@@ -16,8 +16,8 @@ namespace OZONE\Core\App;
 use InvalidArgumentException;
 use LogicException;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
-use OZONE\Core\Auth\Interfaces\SessionBasedAuthMethodInterface;
-use OZONE\Core\Db\OZUser;
+use OZONE\Core\Auth\Interfaces\StatefulAuthMethodInterface;
+use OZONE\Core\Auth\StatefulAuthStore;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -32,8 +32,6 @@ use OZONE\Core\Http\Uri;
 use OZONE\Core\OZone;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Sessions\Session;
-use OZONE\Core\Sessions\SessionState;
 use OZONE\Core\Users\Users;
 use PHPUtils\Store\StoreNotEditable;
 use Throwable;
@@ -250,58 +248,47 @@ final class Context
 	}
 
 	/**
-	 * Gets current user.
-	 *
-	 * @return OZUser
-	 */
-	public function user(): OZUser
-	{
-		return $this->auth()
-			->user();
-	}
-
-	/**
 	 * Checks if we have an authenticated user.
 	 *
-	 * @return bool true when user is verified, false otherwise
+	 * @return bool true when user is authenticated, false otherwise
 	 */
 	public function hasAuthenticatedUser(): bool
 	{
 		try {
-			return $this->user()->isValid();
+			return $this->auth()->user()->isValid();
 		} catch (Throwable) {
 			return false;
 		}
 	}
 
 	/**
-	 * Checks if we have a session based auth method.
+	 * Checks if we have a stateful auth method.
 	 *
 	 * @return bool
 	 */
-	public function hasSession(): bool
+	public function hasStatefulAuth(): bool
 	{
 		try {
-			return (bool) $this->session();
+			return (bool) $this->requireStatefulAuth();
 		} catch (Throwable) {
 			return false;
 		}
 	}
 
 	/**
-	 * Gets session instance object.
+	 * Gets {@link StatefulAuthMethodInterface} instance object.
 	 *
-	 * @return Session
+	 * @return StatefulAuthMethodInterface
 	 */
-	public function session(): Session
+	public function requireStatefulAuth(): StatefulAuthMethodInterface
 	{
 		$auth = $this->auth();
-		if ($auth instanceof SessionBasedAuthMethodInterface) {
-			return $auth->session();
+		if ($auth instanceof StatefulAuthMethodInterface) {
+			return $auth;
 		}
 
 		throw new RuntimeException(
-			\sprintf('"%s" was called but the current auth method does not support sessions.', __METHOD__),
+			\sprintf('"%s" was called but the current auth method is not stateful.', __METHOD__),
 			[
 				'auth' => \get_class($auth),
 			]
@@ -309,14 +296,14 @@ final class Context
 	}
 
 	/**
-	 * Try to get the state if the auth method is session based.
+	 * Try to get the state if the auth method is stateful.
 	 *
-	 * @return null|SessionState
+	 * @return null|StatefulAuthStore
 	 */
-	public function state(): ?SessionState
+	public function authStore(): ?StatefulAuthStore
 	{
 		try {
-			return $this->requireState();
+			return $this->requireAuthStore();
 		} catch (Throwable) {
 		}
 
@@ -324,14 +311,14 @@ final class Context
 	}
 
 	/**
-	 * Make sure we have a session based auth method and return its state.
+	 * Make sure we have a stateful auth method and return its store.
 	 *
-	 * @return SessionState
+	 * @return StatefulAuthStore
 	 */
-	public function requireState(): SessionState
+	public function requireAuthStore(): StatefulAuthStore
 	{
-		return $this->session()
-			->state();
+		return $this->requireStatefulAuth()
+			->store();
 	}
 
 	/**
@@ -599,6 +586,10 @@ final class Context
 		}
 
 		(new ResponseHook($this))->dispatch();
+
+		if ($this->hasStatefulAuth()) {
+			$this->requireStatefulAuth()->persist();
+		}
 
 		$response = $this->response = $this->fixResponse($this->response);
 

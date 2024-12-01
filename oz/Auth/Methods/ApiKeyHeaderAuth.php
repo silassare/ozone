@@ -16,6 +16,7 @@ namespace OZONE\Core\Auth\Methods;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
+use OZONE\Core\Auth\Traits\UserAuthMethodTrait;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
@@ -28,8 +29,8 @@ class ApiKeyHeaderAuth implements AuthMethodInterface
 {
 	use UserAuthMethodTrait;
 
-	protected AuthMethodType $type    = AuthMethodType::API_KEY_HEADER;
-	protected string $api_key         = '';
+	protected AuthMethodType $type = AuthMethodType::API_KEY_HEADER;
+	protected string $api_key      = '';
 
 	/**
 	 * ApiKeyHeaderAuth constructor.

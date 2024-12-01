@@ -16,6 +16,7 @@ namespace OZONE\Core\Sessions;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\StatefulAuthStore;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Db\OZSession;
 use OZONE\Core\Db\OZSessionsQuery;
@@ -23,7 +24,6 @@ use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Hooks\Events\FinishHook;
-use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\Cookie;
 use OZONE\Core\Http\Cookies;
@@ -39,7 +39,7 @@ final class Session implements BootHookReceiverInterface
 {
 	private const SESSION_ID_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
 
-	private ?SessionState $state = null;
+	private ?StatefulAuthStore $state = null;
 
 	private ?OZSession $session_entry = null;
 
@@ -114,11 +114,11 @@ final class Session implements BootHookReceiverInterface
 	}
 
 	/**
-	 * To checks if session is started.
+	 * To checks if session has started.
 	 *
 	 * @return bool
 	 */
-	public function isStarted(): bool
+	public function hasStarted(): bool
 	{
 		return $this->started;
 	}
@@ -135,14 +135,15 @@ final class Session implements BootHookReceiverInterface
 		}
 
 		if (!$this->session_entry) {
-			$sid = Keys::newSessionID();
+			$session_id = Keys::newSessionID();
 
 			$this->session_entry = new OZSession();
-			$this->session_entry->setID($sid)
+			$this->session_entry->setID($session_id)
 				->setRequestSourceKey($this->request_source_key);
 		}
 
-		$this->state         = SessionState::getInstance($this->session_entry);
+		$data                = $this->session_entry->getData()->getData();
+		$this->state         = StatefulAuthStore::getInstance($session_id, $data);
 		$this->started       = true;
 		$this->delete_cookie = false;
 
@@ -217,9 +218,9 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Gets the session data store.
 	 *
-	 * @return SessionState
+	 * @return StatefulAuthStore
 	 */
-	public function state(): SessionState
+	public function store(): StatefulAuthStore
 	{
 		$this->assertSessionStarted();
 
@@ -231,14 +232,6 @@ final class Session implements BootHookReceiverInterface
 	 */
 	public static function boot(): void
 	{
-		ResponseHook::listen(static function (ResponseHook $ev) {
-			$context = $ev->context;
-			if ($context->hasSession()) {
-				$context->session()
-					->responseReady();
-			}
-		}, Event::RUN_LAST);
-
 		FinishHook::listen(static function () {
 			self::gc();
 		}, Event::RUN_LAST);
@@ -291,8 +284,10 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Response ready hook.
+	 *
+	 * @internal
 	 */
-	private function responseReady(): void
+	public function responseReady(): void
 	{
 		$response            = $this->context->getResponse();
 		$session_cookie_name = self::cookieName();

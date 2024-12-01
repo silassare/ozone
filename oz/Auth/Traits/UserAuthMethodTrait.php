@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Auth\Methods;
+namespace OZONE\Core\Auth\Traits;
 
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthState;

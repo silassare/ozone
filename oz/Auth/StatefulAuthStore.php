@@ -11,55 +11,41 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Sessions;
+namespace OZONE\Core\Auth;
 
 use OZONE\Core\Cache\CacheManager;
-use OZONE\Core\Db\OZSession;
 use PHPUtils\Store\Store;
 
 /**
- * Class SessionState.
+ * Class StatefulAuthStore.
  *
  * @extends Store<array>
  */
-class SessionState extends Store
+class StatefulAuthStore extends Store
 {
 	/**
-	 * SessionState constructor.
+	 * StatefulAuthStore constructor.
 	 *
-	 * @param OZSession $session
+	 * @param array $state
 	 */
-	private function __construct(private OZSession $session)
+	private function __construct(array $state)
 	{
-		parent::__construct($this->session->getData()->getData());
+		parent::__construct($state);
 	}
 
 	/**
-	 * SessionState destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->session);
-
-		parent::__destruct();
-	}
-
-	/**
-	 * Create instance with a given session entry.
-	 *
-	 * @param OZSession $session
+	 * Returns the state instance.
 	 *
 	 * @return $this
 	 */
-	public static function getInstance(OZSession $session): self
+	public static function getInstance(string $state_id, array $data): self
 	{
-		$sid     = $session->getID();
 		$cache   = CacheManager::runtime(__METHOD__);
-		$factory = static function () use ($session) {
-			return new self($session);
+		$factory = static function () use ($data) {
+			return new self($data);
 		};
 
-		return $cache->factory($sid, $factory)
+		return $cache->factory($state_id, $factory)
 			->get();
 	}
 

@@ -18,7 +18,7 @@ namespace OZONE\Core\CSRF;
  */
 enum CSRFScope: string
 {
-	case SESSION = 'SESSION'; // user session
+	case STATE = 'STATE'; // tied to stateful auth like session
 
 	case HOST = 'HOST'; // host and port
 

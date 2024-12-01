@@ -46,7 +46,7 @@ final class QRCode extends Service
 	{
 		$qr_code_key = Hasher::hash32();
 
-		$context->requireState()
+		$context->requireAuthStore()
 			->set('oz.qr_code_cfg.' . $qr_code_key, [
 				'expire_at' => $expire_at,
 				'data'      => $data,
@@ -71,7 +71,7 @@ final class QRCode extends Service
 	{
 		$response = $context->getResponse();
 		$key      = 'oz.qr_code_cfg.' . $qr_code_key;
-		$data     = $context->requireState()
+		$data     = $context->requireAuthStore()
 			->get($key);
 
 		if (empty($data)) {

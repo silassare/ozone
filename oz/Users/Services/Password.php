@@ -44,7 +44,7 @@ final class Password extends Service
 	public function actionEditOwnPass(RouteInfo $ri): void
 	{
 		$context = $ri->getContext();
-		$user    = $context->user();
+		$user    = $context->auth()->user();
 
 		Users::updatePass(
 			$user,

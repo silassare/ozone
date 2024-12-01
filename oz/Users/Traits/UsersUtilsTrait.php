@@ -316,7 +316,7 @@ trait UsersUtilsTrait
 		?Throwable $previous = null
 	): void {
 		try {
-			$user = $this->context->user();
+			$user = $this->context->auth()->user();
 		} catch (Throwable) {
 			throw new UnverifiedUserException($message, $data, $previous);
 		}
@@ -343,7 +343,7 @@ trait UsersUtilsTrait
 	): void {
 		$this->assertUserVerified($message, $data, $previous);
 
-		$uid = $this->context->user()
+		$uid = $this->context->auth()->user()
 			->getID();
 
 		if (!$uid || !self::isAdmin($uid)) {
@@ -368,7 +368,7 @@ trait UsersUtilsTrait
 	): void {
 		$this->assertUserVerified($message, $data, $previous);
 
-		$uid = $this->context->user()
+		$uid = $this->context->auth()->user()
 			->getID();
 
 		if (!$uid || !self::isEditor($uid)) {
@@ -393,7 +393,7 @@ trait UsersUtilsTrait
 	): void {
 		$this->assertUserVerified($message, $data, $previous);
 
-		$uid = $this->context->user()
+		$uid = $this->context->auth()->user()
 			->getID();
 
 		if (!$uid || !self::isSuperAdmin($uid)) {

@@ -16,6 +16,7 @@ namespace OZONE\Core\Auth\Methods;
 use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
+use OZONE\Core\Auth\Traits\HTTPAuthMethodTrait;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\ForbiddenException;
@@ -31,9 +32,9 @@ class BasicAuth implements AuthMethodInterface
 {
 	use HTTPAuthMethodTrait;
 
-	protected AuthMethodType $type     = AuthMethodType::BASIC;
-	protected string $username         = '';
-	protected string $password         = '';
+	protected AuthMethodType $type = AuthMethodType::BASIC;
+	protected string $username     = '';
+	protected string $password     = '';
 	protected OZUser $user;
 
 	/**

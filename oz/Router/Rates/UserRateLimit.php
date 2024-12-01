@@ -30,7 +30,7 @@ final class UserRateLimit extends RateLimit
 	 */
 	public function __construct(RouteInfo $ri, int $rate, int $interval, int $weight = 1)
 	{
-		$uid = $ri->getContext()->user()->getID();
+		$uid = $ri->getContext()->auth()->user()->getID();
 
 		parent::__construct(
 			$uid,

@@ -14,12 +14,11 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Interfaces;
 
 use OZONE\Core\Sessions\Session;
-use OZONE\Core\Sessions\SessionState;
 
 /**
  * Class SessionBasedAuthMethodInterface.
  */
-interface SessionBasedAuthMethodInterface extends AuthMethodInterface
+interface SessionBasedAuthMethodInterface extends StatefulAuthMethodInterface
 {
 	/**
 	 * Returns the session instance.
@@ -27,18 +26,4 @@ interface SessionBasedAuthMethodInterface extends AuthMethodInterface
 	 * @return Session
 	 */
 	public function session(): Session;
-
-	/**
-	 * Alias of {@link Session::state()}.
-	 *
-	 * @return SessionState
-	 */
-	public function state(): SessionState;
-
-	/**
-	 * Alias of {@link Session::id()}.
-	 *
-	 * @return string
-	 */
-	public function id(): string;
 }

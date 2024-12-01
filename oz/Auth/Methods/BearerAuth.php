@@ -15,6 +15,8 @@ namespace OZONE\Core\Auth\Methods;
 
 use OZONE\Core\Auth\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
+use OZONE\Core\Auth\Traits\HTTPAuthMethodTrait;
+use OZONE\Core\Auth\Traits\UserAuthMethodTrait;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
@@ -28,8 +30,8 @@ class BearerAuth implements AuthMethodInterface
 	use HTTPAuthMethodTrait;
 	use UserAuthMethodTrait;
 
-	protected AuthMethodType $type  = AuthMethodType::BEARER;
-	protected string $token         = '';
+	protected AuthMethodType $type = AuthMethodType::BEARER;
+	protected string $token        = '';
 
 	/**
 	 * BearerAuth constructor.
