@@ -34,7 +34,7 @@ final class ErrorView extends WebView
 		$request        = $context->getRequest();
 		$masked_message = BaseException::anErrorOccurredMessage();
 
-		$back_url    = $context->getDefaultOrigin();
+		$back_url    = $context->isApiContext() ? $context->getDefaultOrigin() : $context->buildUri('/');
 		$err_message = ($error instanceof InternalErrorException ? $masked_message : $error->getMessage());
 		$err_data    = $error->getData();
 		$status      = $error->getHTTPStatusCode();
