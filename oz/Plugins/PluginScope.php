@@ -82,4 +82,13 @@ class PluginScope extends AbstractScope
 	{
 		return app()->getPublicDir()->cd('plugins' . DS . $this->scope_name, true);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getCacheDir(): FilesManager
+	{
+		return app()->getProjectDir()
+			->cd('.ozone/cache/plugins/' . $this->scope_name, true);
+	}
 }
