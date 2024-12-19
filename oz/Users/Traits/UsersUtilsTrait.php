@@ -277,7 +277,7 @@ trait UsersUtilsTrait
 	 *
 	 * @param string $uid The user id
 	 *
-	 * @return \OZONE\Core\Db\OZRole[]
+	 * @return OZRole[]
 	 */
 	public static function roles(string $uid): array
 	{

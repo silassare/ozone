@@ -34,7 +34,7 @@ interface CacheProviderInterface
 	 *
 	 * @param string[] $keys
 	 *
-	 * @return \OZONE\Core\Cache\CacheItem[]
+	 * @return CacheItem[]
 	 */
 	public function getMultiple(array $keys): array;
 

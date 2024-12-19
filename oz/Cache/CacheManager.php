@@ -25,7 +25,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 final class CacheManager
 {
 	/**
-	 * @var \OZONE\Core\Cache\CacheManager[]
+	 * @var CacheManager[]
 	 */
 	private static array $sharedCM = [];
 
@@ -172,7 +172,7 @@ final class CacheManager
 	 *
 	 * @param string[] $keys
 	 *
-	 * @return \OZONE\Core\Cache\CacheItem[]
+	 * @return CacheItem[]
 	 */
 	public function getItems(array $keys = []): array
 	{

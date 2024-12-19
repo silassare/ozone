@@ -163,7 +163,7 @@ class FS
 	 *
 	 * @param string[] $ids
 	 *
-	 * @return Generator<\OZONE\Core\Db\OZFile>
+	 * @return Generator<OZFile>
 	 */
 	public static function getFilesByIDs(array $ids): Generator
 	{

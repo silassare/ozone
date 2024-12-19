@@ -35,17 +35,17 @@ class Form implements ArrayCapableInterface
 	use FormFieldsTrait;
 
 	/**
-	 * @var \OZONE\Core\Forms\Field[]
+	 * @var Field[]
 	 */
 	public array $fields = [];
 
 	/**
-	 * @var \OZONE\Core\Forms\FormStep[]
+	 * @var FormStep[]
 	 */
 	public array $steps = [];
 
 	/**
-	 * @var \OZONE\Core\Forms\FormRule[]
+	 * @var FormRule[]
 	 */
 	public array $rules = [];
 
@@ -126,9 +126,9 @@ class Form implements ArrayCapableInterface
 	 * A step is a group of fields that will be validated together.
 	 * Use this when some fields depends on others fields.
 	 *
-	 * @param string                                                                          $name
-	 * @param callable(\OZONE\Core\Forms\FormValidationContext):(null|\OZONE\Core\Forms\Form) $factory
-	 * @param null|FormRule                                                                   $rule
+	 * @param string                                      $name
+	 * @param callable(FormValidationContext):(null|Form) $factory
+	 * @param null|FormRule                               $rule
 	 *
 	 * @return $this
 	 */

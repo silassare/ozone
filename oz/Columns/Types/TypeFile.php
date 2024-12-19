@@ -431,7 +431,7 @@ class TypeFile extends Type
 		$storage_name = $this->getOption('storage', FS::DEFAULT_STORAGE);
 		$storage      = FS::getStorage($storage_name);
 
-		/** @var \OZONE\Core\Db\OZFile[] $new_file_list */
+		/** @var OZFile[] $new_file_list */
 		$new_file_list = [];
 		$data          = [];
 		$db            = db();

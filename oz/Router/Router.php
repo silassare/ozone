@@ -47,12 +47,12 @@ final class Router
 	private ?RouteGroup $current_group = null;
 
 	/**
-	 * @var \OZONE\Core\Router\Route[]
+	 * @var Route[]
 	 */
 	private array $static_routes = [];
 
 	/**
-	 * @var \OZONE\Core\Router\Route[]
+	 * @var Route[]
 	 */
 	private array $dynamic_routes = [];
 
@@ -74,8 +74,8 @@ final class Router
 	/**
 	 * Create a new route group.
 	 *
-	 * @param string                                               $path
-	 * @param callable(Router, \OZONE\Core\Router\RouteGroup):void $factory
+	 * @param string                            $path
+	 * @param callable(Router, RouteGroup):void $factory
 	 *
 	 * @return RouteGroup
 	 */
@@ -154,7 +154,7 @@ final class Router
 	/**
 	 * Gets dynamic routes.
 	 *
-	 * @return \OZONE\Core\Router\Route[]
+	 * @return Route[]
 	 */
 	public function getDynamicRoutes(): array
 	{
@@ -164,7 +164,7 @@ final class Router
 	/**
 	 * Gets static routes.
 	 *
-	 * @return \OZONE\Core\Router\Route[]
+	 * @return Route[]
 	 */
 	public function getStaticRoutes(): array
 	{
@@ -174,7 +174,7 @@ final class Router
 	/**
 	 * Gets all routes.
 	 *
-	 * @return \OZONE\Core\Router\Route[]
+	 * @return Route[]
 	 */
 	public function getRoutes(): array
 	{

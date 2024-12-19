@@ -147,7 +147,7 @@ final class Auth implements BootHookReceiverInterface
 	 *
 	 * @param AuthMethodType|string $method
 	 *
-	 * @return class-string<\OZONE\Core\Auth\Interfaces\AuthMethodInterface>
+	 * @return class-string<AuthMethodInterface>
 	 */
 	public static function method(AuthMethodType|string $method): string
 	{
@@ -182,7 +182,7 @@ final class Auth implements BootHookReceiverInterface
 	/**
 	 * Gets the list of enabled auth methods to use for api requests.
 	 *
-	 * @return \OZONE\Core\Auth\AuthMethodType[]
+	 * @return AuthMethodType[]
 	 */
 	public static function apiAuthMethods(): array
 	{

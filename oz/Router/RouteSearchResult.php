@@ -21,12 +21,12 @@ class RouteSearchResult
 	/**
 	 * RouteSearchResult constructor.
 	 *
-	 * @param RouteSearchStatus                                        $status
-	 * @param null|array{route:\OZONE\Core\Router\Route, params:array} $found
-	 * @param array{route:\OZONE\Core\Router\Route, params:array}[]    $static_full_matches
-	 * @param array{route:\OZONE\Core\Router\Route, params:array}[]    $dynamic_full_matches
-	 * @param array{route:\OZONE\Core\Router\Route, params:array}[]    $static_path_matches
-	 * @param array{route:\OZONE\Core\Router\Route, params:array}[]    $dynamic_path_matches
+	 * @param RouteSearchStatus                     $status
+	 * @param null|array{route:Route, params:array} $found
+	 * @param array{route:Route, params:array}[]    $static_full_matches
+	 * @param array{route:Route, params:array}[]    $dynamic_full_matches
+	 * @param array{route:Route, params:array}[]    $static_path_matches
+	 * @param array{route:Route, params:array}[]    $dynamic_path_matches
 	 */
 	public function __construct(
 		protected RouteSearchStatus $status,
@@ -50,7 +50,7 @@ class RouteSearchResult
 	/**
 	 * Gets the route that matched.
 	 *
-	 * @return null|array{route:\OZONE\Core\Router\Route, params:array}
+	 * @return null|array{route:Route, params:array}
 	 */
 	public function found(): ?array
 	{
@@ -60,7 +60,7 @@ class RouteSearchResult
 	/**
 	 * Gets other static routes that matched.
 	 *
-	 * @return array{route:\OZONE\Core\Router\Route, params:array}[]
+	 * @return array{route:Route, params:array}[]
 	 */
 	public function staticMatches(): array
 	{
@@ -70,7 +70,7 @@ class RouteSearchResult
 	/**
 	 * Gets other dynamic routes that matched.
 	 *
-	 * @return array{route:\OZONE\Core\Router\Route, params:array}[]
+	 * @return array{route:Route, params:array}[]
 	 */
 	public function dynamicMatches(): array
 	{
@@ -80,7 +80,7 @@ class RouteSearchResult
 	/**
 	 * Gets other static routes that matched but with wrong methods.
 	 *
-	 * @return array{route:\OZONE\Core\Router\Route, params:array}[]
+	 * @return array{route:Route, params:array}[]
 	 */
 	public function staticMatchesWrongMethods(): array
 	{
@@ -90,7 +90,7 @@ class RouteSearchResult
 	/**
 	 * Gets other dynamic routes that matched but with wrong methods.
 	 *
-	 * @return array{route:\OZONE\Core\Router\Route, params:array}[]
+	 * @return array{route:Route, params:array}[]
 	 */
 	public function dynamicMatchesWrongMethods(): array
 	{

@@ -32,7 +32,7 @@ class Field implements ArrayCapableInterface
 	protected TypeInterface|TypesSwitcher $t_type;
 
 	/**
-	 * @var null|callable(mixed, \OZONE\Core\Forms\FormValidationContext):mixed
+	 * @var null|callable(mixed, FormValidationContext):mixed
 	 */
 	protected $t_validator;
 	protected string $t_name;
@@ -133,7 +133,7 @@ class Field implements ArrayCapableInterface
 	/**
 	 * Set the field validator.
 	 *
-	 * @param callable(mixed, \OZONE\Core\Forms\FormValidationContext):mixed $validator
+	 * @param callable(mixed, FormValidationContext):mixed $validator
 	 *
 	 * @return $this
 	 */

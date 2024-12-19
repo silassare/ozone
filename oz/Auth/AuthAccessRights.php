@@ -24,7 +24,7 @@ use PHPUtils\Store\Store;
 class AuthAccessRights implements AuthAccessRightsInterface
 {
 	/**
-	 * @var \PHPUtils\Store\Store<array>
+	 * @var Store<array>
 	 */
 	protected Store $store;
 

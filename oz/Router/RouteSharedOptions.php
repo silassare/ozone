@@ -38,12 +38,12 @@ class RouteSharedOptions
 	protected array $route_params = [];
 
 	/**
-	 * @var array<callable|\OZONE\Core\Router\Interfaces\RouteGuardInterface>
+	 * @var array<callable|RouteGuardInterface>
 	 */
 	protected array $guards = [];
 
 	/**
-	 * @var array<callable(RouteInfo):(null|Response)|\OZONE\Core\Router\Interfaces\RouteMiddlewareInterface>
+	 * @var array<callable(RouteInfo):(null|Response)|RouteMiddlewareInterface>
 	 */
 	protected array $middlewares = [];
 
@@ -56,7 +56,7 @@ class RouteSharedOptions
 	private string $name = '';
 
 	/**
-	 * @var array<class-string<\OZONE\Core\Auth\Interfaces\AuthMethodInterface>>
+	 * @var array<class-string<AuthMethodInterface>>
 	 */
 	private array $auths_methods = [];
 
@@ -439,7 +439,7 @@ class RouteSharedOptions
 	 *
 	 * @param RouteInfo $ri
 	 *
-	 * @return \OZONE\Core\Forms\Form[]
+	 * @return Form[]
 	 */
 	public function getForms(RouteInfo $ri): array
 	{
@@ -485,7 +485,7 @@ class RouteSharedOptions
 	/**
 	 * Gets routes auth methods.
 	 *
-	 * @return array<class-string<\OZONE\Core\Auth\Interfaces\AuthMethodInterface>>
+	 * @return array<class-string<AuthMethodInterface>>
 	 */
 	public function getAuthMethods(): array
 	{
@@ -532,7 +532,7 @@ class RouteSharedOptions
 	/**
 	 * Gets route middlewares.
 	 *
-	 * @return array<callable(RouteInfo):(null|Response)|\OZONE\Core\Router\Interfaces\RouteMiddlewareInterface>
+	 * @return array<callable(RouteInfo):(null|Response)|RouteMiddlewareInterface>
 	 */
 	public function getMiddlewares(): array
 	{

@@ -26,7 +26,7 @@ class TypesSwitcher implements ArrayCapableInterface
 	use ArrayCapableTrait;
 
 	/**
-	 * @var array<int, array{type: \Gobl\DBAL\Types\Interfaces\TypeInterface, rule: \OZONE\Core\Forms\FormRule}>
+	 * @var array<int, array{type: TypeInterface, rule: FormRule}>
 	 */
 	private array $types = [];
 

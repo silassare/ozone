@@ -27,7 +27,7 @@ final class Queue
 	public const DEFAULT_STORE = DbJobStore::NAME;
 
 	/**
-	 * @var array<string, \OZONE\Core\Queue\Queue>
+	 * @var array<string, Queue>
 	 */
 	private static array $queues = [];
 
@@ -157,7 +157,7 @@ final class Queue
 	/**
 	 * Gets all queues.
 	 *
-	 * @return array<string, \OZONE\Core\Queue\Queue>
+	 * @return array<string, Queue>
 	 */
 	public static function getQueues(): array
 	{

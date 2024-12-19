@@ -28,17 +28,17 @@ use Throwable;
 final class JobsManager
 {
 	/**
-	 * @var \OZONE\Core\Queue\Interfaces\JobStoreInterface[]
+	 * @var JobStoreInterface[]
 	 */
 	private static array $stores = [];
 
-	/** @var array<string, class-string<\OZONE\Core\Queue\Interfaces\WorkerInterface>> */
+	/** @var array<string, class-string<WorkerInterface>> */
 	private static array $workers = [];
 
 	/**
 	 * Register a worker.
 	 *
-	 * @param class-string<\OZONE\Core\Queue\Interfaces\WorkerInterface> $worker_class
+	 * @param class-string<WorkerInterface> $worker_class
 	 */
 	public static function registerWorker(string $worker_class): void
 	{
@@ -58,7 +58,7 @@ final class JobsManager
 	/**
 	 * Gets all registered workers.
 	 *
-	 * @return array<string, class-string<\OZONE\Core\Queue\Interfaces\WorkerInterface>>
+	 * @return array<string, class-string<WorkerInterface>>
 	 */
 	public static function getWorkers(): array
 	{
@@ -70,7 +70,7 @@ final class JobsManager
 	 *
 	 * @param string $worker_name
 	 *
-	 * @return class-string<\OZONE\Core\Queue\Interfaces\WorkerInterface>
+	 * @return class-string<WorkerInterface>
 	 */
 	public static function getWorker(string $worker_name): string
 	{
@@ -98,7 +98,7 @@ final class JobsManager
 	/**
 	 * Gets all registered job stores.
 	 *
-	 * @return array<string, \OZONE\Core\Queue\Interfaces\JobStoreInterface>
+	 * @return array<string, JobStoreInterface>
 	 */
 	public static function getStores(): array
 	{

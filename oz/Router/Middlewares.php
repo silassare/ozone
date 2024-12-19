@@ -29,7 +29,7 @@ final class Middlewares
 	 *
 	 * @param string $name
 	 *
-	 * @return class-string<\OZONE\Core\Router\Interfaces\RouteMiddlewareInterface>
+	 * @return class-string<RouteMiddlewareInterface>
 	 */
 	public static function get(string $name): string
 	{

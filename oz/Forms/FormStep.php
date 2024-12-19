@@ -21,21 +21,21 @@ use OZONE\Core\Exceptions\RuntimeException;
 class FormStep
 {
 	/**
-	 * @var callable(\OZONE\Core\Forms\FormValidationContext):(null|\OZONE\Core\Forms\Form)
+	 * @var callable(FormValidationContext):(null|Form)
 	 */
 	protected $factory;
 
 	/**
-	 * @var null|callable(\OZONE\Core\Forms\FormValidationContext):bool
+	 * @var null|callable(FormValidationContext):bool
 	 */
 	protected $t_if;
 
 	/**
 	 * FormStep constructor.
 	 *
-	 * @param string                                                                          $name
-	 * @param callable(\OZONE\Core\Forms\FormValidationContext):(null|\OZONE\Core\Forms\Form) $factory
-	 * @param null|callable(\OZONE\Core\Forms\FormValidationContext):bool                     $if
+	 * @param string                                      $name
+	 * @param callable(FormValidationContext):(null|Form) $factory
+	 * @param null|callable(FormValidationContext):bool   $if
 	 */
 	public function __construct(protected string $name, callable $factory, ?callable $if = null)
 	{

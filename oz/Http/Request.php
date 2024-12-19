@@ -82,7 +82,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * List of uploaded files.
 	 *
-	 * @var \OZONE\Core\Http\UploadedFile[]
+	 * @var UploadedFile[]
 	 */
 	protected array $uploadedFiles;
 
@@ -762,7 +762,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return \OZONE\Core\Http\UploadedFile[]
+	 * @return UploadedFile[]
 	 */
 	public function getUploadedFiles(): array
 	{

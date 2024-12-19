@@ -29,7 +29,7 @@ final class Guards
 	 * @param array<string, array> $rules map of guard class or name to rules
 	 *                                    name should be declared in settings: oz.guards
 	 *
-	 * @return \OZONE\Core\Router\Interfaces\RouteGuardInterface[]
+	 * @return RouteGuardInterface[]
 	 */
 	public static function resolve(array $rules): array
 	{
@@ -52,7 +52,7 @@ final class Guards
 	 *
 	 * @param string $name
 	 *
-	 * @return class-string<\OZONE\Core\Router\Interfaces\RouteGuardInterface>
+	 * @return class-string<RouteGuardInterface>
 	 */
 	public static function get(string $name): string
 	{
@@ -85,7 +85,7 @@ final class Guards
 	 *
 	 * @param string $name
 	 *
-	 * @return class-string<\OZONE\Core\Router\Interfaces\RouteGuardProviderInterface>
+	 * @return class-string<RouteGuardProviderInterface>
 	 */
 	public static function provider(string $name): string
 	{

@@ -22,7 +22,7 @@ use OZONE\Core\Cli\Cron\Schedule;
 abstract class AbstractTask implements TaskInterface
 {
 	/**
-	 * @var \OZONE\Core\Cli\Cron\Schedule[]
+	 * @var Schedule[]
 	 */
 	protected array $schedules     = [];
 	protected bool $in_background  = false;
