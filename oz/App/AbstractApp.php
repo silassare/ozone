@@ -92,7 +92,7 @@ abstract class AbstractApp implements AppInterface
 				throw new InvalidArgumentException(\sprintf('Scope "%s" not found.', $scope), 0, $t);
 			}
 
-			$scopes[$scope] = new AppScope($scope);
+			$scopes[$scope] = new SubScope($scope);
 		}
 
 		return $scopes[$scope];
@@ -186,7 +186,7 @@ abstract class AbstractApp implements AppInterface
 	public function getCacheDir(): FilesManager
 	{
 		return $this->getProjectDir()
-			->cd('.ozone/cache/', true);
+			->cd('.ozone/cache/scopes/' . ScopeInterface::ROOT_SCOPE, true);
 	}
 
 	/**

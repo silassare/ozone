@@ -125,6 +125,8 @@ final class ProjectCmd extends Command
 	 * Serve project.
 	 *
 	 * @param KliArgs $args
+	 *
+	 * @throws JsonException
 	 */
 	private function serve(
 		KliArgs $args
@@ -146,8 +148,9 @@ final class ProjectCmd extends Command
 			], $host);
 		}
 
+		$sc = app()->getScope($scope);
 		if (empty($doc_root)) {
-			$doc_root = app()->getScope($scope)->getPublicDir()->getRoot();
+			$doc_root = $sc->getPublicDir()->getRoot();
 		}
 
 		$cli->info("Serving project on {$host}:{$port} ...");
@@ -165,6 +168,14 @@ final class ProjectCmd extends Command
 			$doc_root,
 			$router,
 		];
+
+		$sc->getCacheDir()->wf('./server.json', \json_encode([
+			'time'     => \time(),
+			'protocol' => 'http',
+			'host'     => $host,
+			'port'     => $port,
+			'doc_root' => $doc_root,
+		], \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT));
 
 		$process = new Process($cmd);
 

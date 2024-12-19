@@ -52,6 +52,13 @@ interface ScopeInterface
 	public function getDataDir(): FilesManager;
 
 	/**
+	 * Returns an instance of the files manager with the scope cache directory as root.
+	 *
+	 * @return FilesManager
+	 */
+	public function getCacheDir(): FilesManager;
+
+	/**
 	 * Returns an instance of the files manager with the scope public directory as root.
 	 *
 	 * This directory is accessible from the web.

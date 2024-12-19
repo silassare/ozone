@@ -17,12 +17,12 @@ use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Scopes\AbstractScope;
 
 /**
- * Class AppScope.
+ * Class SubScope.
  */
-final class AppScope extends AbstractScope
+final class SubScope extends AbstractScope
 {
 	/**
-	 * AppScope constructor.
+	 * SubScope constructor.
 	 */
 	public function __construct(protected string $name) {}
 
@@ -56,5 +56,14 @@ final class AppScope extends AbstractScope
 	public function getPublicDir(): FilesManager
 	{
 		return app()->getProjectDir()->cd('public' . DS . $this->name, true);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getCacheDir(): FilesManager
+	{
+		return app()->getProjectDir()
+			->cd('.ozone/cache/scopes/' . $this->name, true);
 	}
 }
