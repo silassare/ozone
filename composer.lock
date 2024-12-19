@@ -360,12 +360,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/oliup-io/code-generator.git",
-                "reference": "5a2f47fd9a6be7ca6705147d1d648e71055dd239"
+                "reference": "5ead9e0b81c2ef2c85cdea31e15ffe9cf150da32"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/oliup-io/code-generator/zipball/5a2f47fd9a6be7ca6705147d1d648e71055dd239",
-                "reference": "5a2f47fd9a6be7ca6705147d1d648e71055dd239",
+                "url": "https://api.github.com/repos/oliup-io/code-generator/zipball/5ead9e0b81c2ef2c85cdea31e15ffe9cf150da32",
+                "reference": "5ead9e0b81c2ef2c85cdea31e15ffe9cf150da32",
                 "shasum": ""
             },
             "require": {
@@ -375,7 +375,7 @@
             "require-dev": {
                 "oliup/oliup-cs-php": "dev-main",
                 "roave/security-advisories": "dev-latest",
-                "vimeo/psalm": "^4.30"
+                "vimeo/psalm": ">=5.26.1"
             },
             "default-branch": true,
             "type": "library",
@@ -404,7 +404,7 @@
                 "source": "https://github.com/oliup-io/code-generator/tree/main",
                 "issues": "https://github.com/oliup-io/code-generator/issues"
             },
-            "time": "2023-05-14T01:45:48+00:00"
+            "time": "2024-12-19T14:52:40+00:00"
         },
         {
             "name": "psr/clock",
@@ -513,12 +513,12 @@
             "source": {
                 "type": "git",
                 "url": "git@github.com:silassare/blate.git",
-                "reference": "b32ad81a026d05217d92361f1f1232e4c8167117"
+                "reference": "7a9a0a1b14f2252df3e5a129fea82f79220d8ce4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/blate/zipball/b32ad81a026d05217d92361f1f1232e4c8167117",
-                "reference": "b32ad81a026d05217d92361f1f1232e4c8167117",
+                "url": "https://api.github.com/repos/silassare/blate/zipball/7a9a0a1b14f2252df3e5a129fea82f79220d8ce4",
+                "reference": "7a9a0a1b14f2252df3e5a129fea82f79220d8ce4",
                 "shasum": ""
             },
             "require": {
@@ -570,7 +570,7 @@
                 "source": "https://github.com/silassare/blate/tree/main",
                 "issues": "https://github.com/silassare/blate/issues"
             },
-            "time": "2024-10-11T14:43:25+00:00"
+            "time": "2024-12-19T14:59:52+00:00"
         },
         {
             "name": "silassare/gobl",
@@ -578,12 +578,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "bb8e5311de02ddc25c7bcd46242ffb5725048b5c"
+                "reference": "fad3093adf0f0a1fbbdbf71663f4c4125ac64390"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/bb8e5311de02ddc25c7bcd46242ffb5725048b5c",
-                "reference": "bb8e5311de02ddc25c7bcd46242ffb5725048b5c",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/fad3093adf0f0a1fbbdbf71663f4c4125ac64390",
+                "reference": "fad3093adf0f0a1fbbdbf71663f4c4125ac64390",
                 "shasum": ""
             },
             "require": {
@@ -640,7 +640,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/dev"
             },
-            "time": "2024-11-18T11:53:38+00:00"
+            "time": "2024-12-19T15:06:40+00:00"
         },
         {
             "name": "silassare/kli",
@@ -2459,7 +2459,7 @@
             },
             "description": "Oliup PHP code style rules.",
             "support": {
-                "source": "https://github.com/oliup-io/oliup-cs-php/tree/main",
+                "source": "https://github.com/oliup-io/oliup-cs-php/tree/v1.0.2",
                 "issues": "https://github.com/oliup-io/oliup-cs-php/issues"
             },
             "time": "2024-12-19T14:24:40+00:00"
