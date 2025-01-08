@@ -1,86 +1,86 @@
 {
-  "name": "silassare/ozone",
-  "version": "3.0.0",
-  "description": "OZone is a framework to build RESTFul API and website.",
-  "license": "MIT",
-  "keywords": [
-    "ozone",
-    "api-generator",
-    "ozone-framework",
-    "framework",
-    "php",
-    "api",
-    "website"
-  ],
-  "config": {
-    "platform": {
-      "php": "8.1"
-    }
-  },
-  "require": {
-    "php": ">=8.1",
-    "ext-pdo": "*",
-    "ext-openssl": "*",
-    "ext-json": "*",
-    "ext-gd": "*",
-    "ext-libxml": "*",
-    "ext-simplexml": "*",
-    "ext-posix": "*",
-    "ext-bcmath": "*",
-    "ext-fileinfo": "*",
-    "silassare/otpl": "^2.0.0",
-    "silassare/blate": "dev-main",
-    "silassare/gobl": "^2.0.0",
-    "silassare/kli": "^2.0.0",
-    "silassare/php-utils": "^1.0.3",
-    "claviska/simpleimage": "^3.7.0",
-    "psr/http-message": "^2.0",
-    "dragonmantank/cron-expression": "^3.3",
-    "nesbot/carbon": "^2.66",
-    "symfony/process": "^6.3"
-  },
-  "require-dev": {
-    "roave/security-advisories": "dev-latest",
-    "oliup/oliup-cs-php": "dev-main",
-    "phpunit/phpunit": "^9.6.21",
-    "vimeo/psalm": "^5.26.1"
-  },
-  "suggest": {
-    "ext-memcached": "Required to use Memcached Cache driver."
-  },
-  "bin": [
-    "bin/oz",
-    "bin/ozone"
-  ],
-  "homepage": "https://github.com/silassare/ozone#readme",
-  "archive": {
-    "exclude": [
-      "/.ozone/",
-      "/noop/",
-      "/public/"
-    ]
-  },
-  "autoload": {
-    "psr-4": {
-      "OZONE\\Core\\": "oz",
-      "OZONE\\Tests\\": "tests"
-    },
-    "files": [
-      "oz/oz_default/oz_bootstrap.php"
-    ]
-  },
-  "authors": [
-    {
-      "name": "Emile Silas Sare",
-      "email": "emile.silas@gmail.com",
-      "homepage": "https://github.com/silassare"
-    }
-  ],
-  "prefer-stable": true,
-  "minimum-stability": "dev",
-  "extra": {
-    "branch-alias": {
-      "dev-dev": "3.0.x-dev"
-    }
-  }
+	"name": "silassare/ozone",
+	"version": "3.0.0",
+	"description": "OZone is a framework to build RESTFul API and website.",
+	"license": "MIT",
+	"keywords": [
+		"ozone",
+		"api-generator",
+		"ozone-framework",
+		"framework",
+		"php",
+		"api",
+		"website"
+	],
+	"config": {
+		"platform": {
+			"php": "8.1"
+		}
+	},
+	"require": {
+		"php": ">=8.1",
+		"ext-pdo": "*",
+		"ext-openssl": "*",
+		"ext-json": "*",
+		"ext-gd": "*",
+		"ext-libxml": "*",
+		"ext-simplexml": "*",
+		"ext-posix": "*",
+		"ext-bcmath": "*",
+		"ext-fileinfo": "*",
+		"silassare/gobl": "^2.0.0",
+		"silassare/kli": "^2.0.0",
+		"silassare/otpl": "^2.0.0",
+		"silassare/blate": "^1.0.0",
+		"silassare/php-utils": "^1.0.3",
+		"claviska/simpleimage": "^3.7.0",
+		"psr/http-message": "^2.0",
+		"dragonmantank/cron-expression": "^3.3",
+		"nesbot/carbon": "^2.66",
+		"symfony/process": "^6.3"
+	},
+	"require-dev": {
+		"roave/security-advisories": "dev-latest",
+		"oliup/oliup-cs-php": "dev-main",
+		"phpunit/phpunit": "^9.6.21",
+		"vimeo/psalm": "^5.26.1"
+	},
+	"suggest": {
+		"ext-memcached": "Required to use Memcached Cache driver."
+	},
+	"bin": [
+		"bin/oz",
+		"bin/ozone"
+	],
+	"homepage": "https://github.com/silassare/ozone#readme",
+	"archive": {
+		"exclude": [
+			"/.ozone/",
+			"/noop/",
+			"/public/"
+		]
+	},
+	"autoload": {
+		"psr-4": {
+			"OZONE\\Core\\": "oz",
+			"OZONE\\Tests\\": "tests"
+		},
+		"files": [
+			"oz/oz_default/oz_bootstrap.php"
+		]
+	},
+	"authors": [
+		{
+			"name": "Emile Silas Sare",
+			"email": "emile.silas@gmail.com",
+			"homepage": "https://github.com/silassare"
+		}
+	],
+	"prefer-stable": true,
+	"minimum-stability": "dev",
+	"extra": {
+		"branch-alias": {
+			"dev-main": "3.0.x-dev"
+		}
+	}
 }
