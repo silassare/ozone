@@ -1,6 +1,22 @@
 .idea
+
+# ozone
+.env
+.ozone
+public
 ignore
 **/otpl_done/*
 **/blate_cache/*
-**/oz/Db/Base/*
+**/debug.log
+
+# cs fixer
+.php-cs-fixer.cache
+
+# composer
 /vendor/
+
+# node
+**/node_modules/**
+
+# tests
+/noop/

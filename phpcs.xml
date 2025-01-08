@@ -1,9 +1,0 @@
-<?xml version="1.0"?>
-<ruleset name="ozone">
-	<exclude-pattern>*/vendor/*</exclude-pattern>
-	<exclude-pattern>*/ignore/*</exclude-pattern>
-	<exclude-pattern>*/otpl_done/*</exclude-pattern>
-	<exclude-pattern>*/vendor/*</exclude-pattern>
-	<exclude-pattern>*/oz/oz_templates/*</exclude-pattern>
-	<rule ref="./oliup.phpcs.xml" />
-</ruleset>

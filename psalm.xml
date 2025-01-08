@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<psalm
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        errorLevel="4"
+        resolveFromConfigFile="true"
+        xmlns="https://getpsalm.org/schema/config"
+        xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+>
+    <projectFiles>
+        <directory name="oz"/>
+        <directory name=".ozone/plugins"/>
+        <ignoreFiles>
+            <directory name="oz/oz_templates"/>
+            <directory name="vendor"/>
+            <directory name="tests"/>
+        </ignoreFiles>
+    </projectFiles>
+
+    <issueHandlers>
+        <MissingTemplateParam errorLevel="suppress"/>
+        <UndefinedClass>
+            <errorLevel type="suppress">
+                <referencedClass name="Memcached"/>
+            </errorLevel>
+        </UndefinedClass>
+    </issueHandlers>
+</psalm>

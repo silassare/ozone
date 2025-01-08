@@ -1,0 +1,33 @@
+<?php
+declare(strict_types=1);
+
+<%@import('gen.info.otpl',$)%>
+use OZONE\Core\Loader\ClassLoader;
+
+//= Don't forget to use DS instead of \ or / and
+//= always add the last DS to your directories path
+if (!\defined('DS')) {
+	\define('DS', \DIRECTORY_SEPARATOR);
+}
+
+//= Project directory
+//= any relative path will be resolved using this path as starting point
+if (!\defined('OZ_PROJECT_DIR')) {
+	\define('OZ_PROJECT_DIR', \dirname(__DIR__) . DS);
+}
+
+//= You can define the path to your ozone app directory here
+if (!\defined('OZ_APP_DIR')) {
+	\define('OZ_APP_DIR', __DIR__ . DS);
+}
+
+//= Logs directory
+if (!\defined('OZ_LOG_DIR')) {
+	\define('OZ_LOG_DIR', \getcwd() . DS);
+}
+
+//= Load composer autoload
+require_once OZ_PROJECT_DIR . 'vendor' . DS . 'autoload.php';
+
+//= Adds project namespace root directory
+ClassLoader::addNamespace('\<%$.oz_project_namespace%>', OZ_APP_DIR);

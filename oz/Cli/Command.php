@@ -9,31 +9,47 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Cli;
+declare(strict_types=1);
+
+namespace OZONE\Core\Cli;
 
 use Kli\KliCommand;
 
+/**
+ * Class Command.
+ */
 abstract class Command extends KliCommand
 {
 	/**
 	 * Command constructor.
 	 *
-	 * @param string            $name command name
-	 * @param \OZONE\OZ\Cli\Cli $cli  cli object to use
-	 *
-	 * @throws \Kli\Exceptions\KliException
+	 * @param string $name command name
+	 * @param Cli    $cli  cli object to use
 	 */
-	final public function __construct($name, Cli $cli)
+	protected function __construct(string $name, Cli $cli)
 	{
 		parent::__construct($name, $cli);
 		$this->describe();
 	}
 
 	/**
+	 * Should return a new instance.
+	 *
+	 * @param string $name
+	 * @param Cli    $cli
+	 *
+	 * @return self
+	 */
+	public static function instance(string $name, Cli $cli): self
+	{
+		return new static($name, $cli);
+	}
+
+	/**
 	 * Describe your command.
 	 *
 	 * Is called once the cli start.
-	 * You can add Actions and Options to your command.
+	 * You can add Actions and Options to your command here.
 	 */
 	abstract protected function describe();
 }

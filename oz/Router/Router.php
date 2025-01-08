@@ -9,20 +9,27 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Router;
+declare(strict_types=1);
 
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Exceptions\InternalErrorException;
+namespace OZONE\Core\Router;
 
-class Router
+use InvalidArgumentException;
+use OZONE\Core\App\Context;
+use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Router\Events\RouteBeforeRun;
+use OZONE\Core\Router\Events\RouteMethodNotAllowed;
+use OZONE\Core\Router\Events\RouteNotFound;
+use Throwable;
+
+/**
+ * Class Router.
+ */
+final class Router
 {
-	const NOT_FOUND = 0;
-
-	const FOUND = 1;
-
-	const METHOD_NOT_ALLOWED = 2;
-
-	private $allowedMethods = [
+	private array $allowed_methods = [
 		'CONNECT' => 1,
 		'DELETE'  => 1,
 		'GET'     => 1,
@@ -35,88 +42,110 @@ class Router
 	];
 
 	/**
-	 * @var \OZONE\OZ\Router\Route[]
+	 * @var null|RouteGroup
 	 */
-	private $staticRoutes = [];
+	private ?RouteGroup $current_group = null;
 
 	/**
-	 * @var \OZONE\OZ\Router\Route[]
+	 * @var Route[]
 	 */
-	private $dynamicRoutes = [];
+	private array $static_routes = [];
 
 	/**
-	 * @var array
+	 * @var Route[]
 	 */
-	private $defaultPlaceholders = [];
+	private array $dynamic_routes = [];
+
+	/**
+	 * @var array<string, string>
+	 */
+	private array $global_params = [];
+
+	/**
+	 * @var array<string, callable>
+	 */
+	private array $global_params_providers = [];
 
 	/**
 	 * Router constructor.
 	 */
-	public function __construct()
-	{
-	}
+	public function __construct() {}
 
 	/**
-	 * Gets default options.
+	 * Create a new route group.
 	 *
-	 * @return array
+	 * @param string                            $path
+	 * @param callable(Router, RouteGroup):void $factory
+	 *
+	 * @return RouteGroup
 	 */
-	public function getDefaultOptions()
+	public function group(string $path, callable $factory): RouteGroup
 	{
-		$options = [];
+		$group = new RouteGroup($path, $this->current_group);
 
-		foreach ($this->defaultPlaceholders as $placeholder => $dt) {
-			$options[$placeholder] = $dt['regex'];
-		}
+		$this->current_group = $group;
 
-		return $options;
+		$factory($this, $group);
+
+		$this->current_group = $group->getParent();
+
+		return $group;
 	}
 
 	/**
-	 * Declare a route placeholder provider.
+	 * Gets global parameters.
 	 *
-	 * @param string   $placeholder
-	 * @param string   $regex
+	 * @return array<string, string>
+	 */
+	public function getGlobalParams(): array
+	{
+		return $this->global_params;
+	}
+
+	/**
+	 * Add a global parameter provider.
+	 *
+	 * @param string   $param
+	 * @param string   $pattern
 	 * @param callable $provider
 	 *
 	 * @return $this
 	 */
-	public function declarePlaceholder($placeholder, $regex, callable $provider)
+	public function addGlobalParam(string $param, string $pattern, callable $provider): self
 	{
-		$this->defaultPlaceholders[$placeholder] = [
-			'regex'    => $regex,
-			'provider' => $provider,
-		];
+		$this->global_params[$param]           = $pattern;
+		$this->global_params_providers[$param] = $provider;
 
 		return $this;
 	}
 
 	/**
-	 * Gets a given declared placeholder value.
+	 * Gets a given global parameter value.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $placeholder
+	 * @param Context $context
+	 * @param string  $param
 	 *
 	 * @return null|string
 	 */
-	public function getDeclaredPlaceholderValue(Context $context, $placeholder)
+	public function getGlobalParamValue(Context $context, string $param): ?string
 	{
-		if (isset($this->defaultPlaceholders[$placeholder])) {
-			$value = \call_user_func($this->defaultPlaceholders[$placeholder]['provider'], $context);
+		if (isset($this->global_params_providers[$param])) {
+			$factory = $this->global_params_providers[$param];
+			$value   = $factory($context);
 
 			if (null === $value) {
 				return null;
 			}
 
 			if (\is_string($value) || \is_numeric($value)) {
-				return $value;
+				return (string) $value;
 			}
 
-			throw new \RuntimeException(\sprintf(
-				'Declared provider for route placeholder "%s" should return string or null value not %s.',
-				$placeholder,
-				\gettype($value)
-			));
+			throw (new RuntimeException(\sprintf(
+				'Declared provider for global route parameter "%s" should return "string" or "null" value type not: %s',
+				$param,
+				\get_debug_type($value)
+			)))->suspectCallable($factory);
 		}
 
 		return null;
@@ -125,72 +154,76 @@ class Router
 	/**
 	 * Gets dynamic routes.
 	 *
-	 * @return \OZONE\OZ\Router\Route[]
+	 * @return Route[]
 	 */
-	public function getDynamicRoutes()
+	public function getDynamicRoutes(): array
 	{
-		return $this->dynamicRoutes;
+		return $this->dynamic_routes;
 	}
 
 	/**
 	 * Gets static routes.
 	 *
-	 * @return \OZONE\OZ\Router\Route[]
+	 * @return Route[]
 	 */
-	public function getStaticRoutes()
+	public function getStaticRoutes(): array
 	{
-		return $this->staticRoutes;
+		return $this->static_routes;
 	}
 
 	/**
 	 * Gets all routes.
 	 *
-	 * @return \OZONE\OZ\Router\Route[]
+	 * @return Route[]
 	 */
-	public function getRoutes()
+	public function getRoutes(): array
 	{
-		return $this->staticRoutes + $this->dynamicRoutes;
+		$routes = $this->static_routes;
+
+		foreach ($this->dynamic_routes as $route) {
+			$routes[] = $route;
+		}
+
+		return $routes;
 	}
 
 	/**
 	 * Builds route path.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $route_name
-	 * @param array                  $args
-	 *
-	 * @throws \OZONE\OZ\Exceptions\InternalErrorException
+	 * @param Context $context
+	 * @param string  $route_name
+	 * @param array   $params
 	 *
 	 * @return string
 	 */
-	public function buildRoutePath(Context $context, $route_name, array $args = [])
+	public function buildRoutePath(Context $context, string $route_name, array $params = []): string
 	{
-		$route = $this->findWithName($route_name);
+		$route = $this->getRoute($route_name);
 
 		if (!$route) {
-			throw new InternalErrorException(\sprintf('There is no route named "%s".', $route_name));
+			throw new RuntimeException(\sprintf('There is no route named "%s".', $route_name));
 		}
 
-		return $route->toPath($context, $args);
+		return $route->buildPath($context, $params);
 	}
 
 	/**
-	 * Finds route with a given name
+	 * Gets route with a given name.
 	 *
 	 * @param string $name
 	 *
-	 * @return null|\OZONE\OZ\Router\Route
+	 * @return null|Route
 	 */
-	public function findWithName($name)
+	public function getRoute(string $name): ?Route
 	{
-		foreach ($this->staticRoutes as $route) {
-			if ($route->getOption(Route::OPTION_NAME, null) === $name) {
+		foreach ($this->static_routes as $route) {
+			if ($route->getName() === $name) {
 				return $route;
 			}
 		}
 
-		foreach ($this->dynamicRoutes as $route) {
-			if ($route->getOption(Route::OPTION_NAME, null) === $name) {
+		foreach ($this->dynamic_routes as $route) {
+			if ($route->getName() === $name) {
 				return $route;
 			}
 		}
@@ -199,29 +232,29 @@ class Router
 	}
 
 	/**
-	 * Finds the routes that match the given path
+	 * Finds the routes that match the given path.
 	 *
 	 * @param string $method The request method
 	 * @param string $path   The request path
 	 * @param bool   $all    True to stop searching when a route match
 	 *
-	 * @return array
+	 * @return RouteSearchResult
 	 */
-	public function find($method, $path, $all = false)
+	public function find(string $method, string $path, bool $all = false): RouteSearchResult
 	{
 		$method          = \strtoupper($method);
-		$first           = null;
+		$found           = null;
 		$static          = [];
 		$dynamic         = [];
 		$static_matches  = [];
 		$dynamic_matches = [];
 
-		if (isset($this->allowedMethods[$method])) {
-			foreach ($this->staticRoutes as $route) {
-				$args = [];
+		if (isset($this->allowed_methods[$method])) {
+			foreach ($this->static_routes as $route) {
+				$params = [];
 
-				if ($route->is($path, $args)) {
-					$item             = [$route, $args];
+				if ($route->is($path, $params)) {
+					$item             = ['route' => $route, 'params' => $params];
 					$static_matches[] = $item;
 
 					if ($route->accept($method)) {
@@ -235,11 +268,11 @@ class Router
 			}
 
 			if ($all || empty($static)) {
-				foreach ($this->dynamicRoutes as $route) {
-					$args = [];
+				foreach ($this->dynamic_routes as $route) {
+					$params = [];
 
-					if ($route->is($path, $args)) {
-						$item              = [$route, $args];
+					if ($route->is($path, $params)) {
+						$item              = ['route' => $route, 'params' => $params];
 						$dynamic_matches[] = $item;
 
 						if ($route->accept($method)) {
@@ -255,208 +288,298 @@ class Router
 		}
 
 		if (isset($static[0])) {
-			$status = self::FOUND;
-			$first  = $static[0];
+			$status = RouteSearchStatus::FOUND;
+			$found  = $static[0];
 		} elseif (isset($dynamic[0])) {
-			$status = self::FOUND;
-			$first  = $dynamic[0];
+			$status = RouteSearchStatus::FOUND;
+			$found  = $dynamic[0];
 		} elseif (!empty($static_matches) || !empty($dynamic_matches)) {
-			$status = self::METHOD_NOT_ALLOWED;
+			$status = RouteSearchStatus::METHOD_NOT_ALLOWED;
 		} else {
-			$status = self::NOT_FOUND;
+			$status = RouteSearchStatus::NOT_FOUND;
 		}
 
-		return [
-			'status'          => $status,
-			'first'           => $first, // the first that matches the route and the method
-			'static'          => $all ? $static : [], // matches the route and method
-			'dynamic'         => $all ? $dynamic : [], // matches the route and the method
-			'static_matches'  => $all ? $static_matches : [], // matches the route and/or the method
-			'dynamic_matches' => $all ? $dynamic_matches : [], // matches the route and/or the method
-		];
+		return new RouteSearchResult(
+			$status,
+			$found,
+			$static,
+			$dynamic,
+			$static_matches,
+			$dynamic_matches
+		);
 	}
 
 	/**
-	 * Registers route
+	 * Handle the request in a given context.
+	 *
+	 * @param Context                       $context
+	 * @param null|callable(RouteInfo):void $authenticator
+	 *
+	 * @throws ForbiddenException
+	 * @throws InvalidFormException
+	 * @throws Throwable
+	 */
+	public function handle(Context $context, ?callable $authenticator = null): void
+	{
+		$request = $context->getRequest();
+		$uri     = $request->getUri();
+		$result  = $this->find($request->getMethod(), $uri->getPath());
+
+		switch ($result->status()) {
+			case RouteSearchStatus::NOT_FOUND:
+				(new RouteNotFound($context))->dispatch();
+
+				break;
+
+			case RouteSearchStatus::METHOD_NOT_ALLOWED:
+				(new RouteMethodNotAllowed($context))->dispatch();
+
+				break;
+
+			case RouteSearchStatus::FOUND:
+				['route' => $route, 'params' => $params] = $result->found();
+				$ri                                      = new RouteInfo($context, $route, $params, $authenticator);
+
+				(new RouteBeforeRun($ri))->dispatch();
+
+				$this->runRoute($ri);
+
+				break;
+		}
+	}
+
+	/**
+	 * Registers route.
 	 *
 	 * @param string|string[] $methods
-	 * @param string          $route_path
-	 * @param callable        $callable
-	 * @param array           $options
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
-	 * @return $this
+	 * @return RouteOptions
 	 */
-	public function map($methods, $route_path, callable $callable, array $options = [])
+	public function map(array|string $methods, callable|string $path, ?callable $factory = null): RouteOptions
 	{
+		if (\is_callable($path)) {
+			$factory = $path;
+			$path    = '';
+		}
+
 		if (!\is_array($methods)) {
-			$methods = $methods === '*' ? \array_keys($this->allowedMethods) : [$methods];
+			$methods = '*' === $methods ? \array_keys($this->allowed_methods) : [$methods];
+		}
+
+		if (empty($path) && !$this->current_group) {
+			throw new InvalidArgumentException('Route path cannot be empty outside of a group.');
 		}
 
 		$methods_filtered = [];
 
 		foreach ($methods as $method) {
-			$method = \strtoupper($method);
+			if (!\is_string($method) || !isset($this->allowed_methods[\strtoupper($method)])) {
+				$allowed = \implode('|', \array_keys($this->allowed_methods));
 
-			if (!\is_string($method) || !isset($this->allowedMethods[$method])) {
-				$allowed = \implode('|', \array_keys($this->allowedMethods));
-
-				throw new \InvalidArgumentException(\sprintf(
-					'Invalid method name "%s" for route: %s . Allowed methods -> %s',
+				throw new InvalidArgumentException(\sprintf(
+					'Invalid method name "%s" for route "%s", allowed methods: %s',
 					$method,
-					$route_path,
+					$path,
 					$allowed
 				));
 			}
 
-			$methods_filtered[] = $method;
+			$methods_filtered[] = \strtoupper($method);
 		}
 
-		if (!\is_string($route_path) || !\strlen($route_path)) {
-			throw new \InvalidArgumentException(\sprintf('Empty or invalid route path: %s', $route_path));
-		}
-
-		if (!\is_callable($callable)) {
-			throw new \InvalidArgumentException(\sprintf(
+		if (!\is_callable($factory)) {
+			throw new InvalidArgumentException(\sprintf(
 				'Got "%s" while expecting callable for: %s',
-				\gettype($callable),
-				$route_path
+				\get_debug_type($factory),
+				$path
 			));
 		}
 
-		$route = new Route($this, $methods_filtered, $route_path, $callable, $options);
+		$route = new Route($this, $methods_filtered, $factory, $options = new RouteOptions($path, $this->current_group));
 
 		if ($route->isDynamic()) {
-			$this->dynamicRoutes[] = $route;
+			$this->dynamic_routes[] = $route;
 		} else {
-			$this->staticRoutes[] = $route;
+			$this->static_routes[] = $route;
 		}
 
-		return $this;
+		return $options;
 	}
 
 	/**
-	 * Register route for CONNECT request method
+	 * Register route for CONNECT request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
-	 * @param array    $options
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
-	 * @return $this
+	 * @return RouteOptions
 	 */
-	public function connect($route_path, callable $callable, array $options = [])
+	public function connect(callable|string $path, ?callable $factory = null): RouteOptions
 	{
-		return $this->map('connect', $route_path, $callable, $options);
+		return $this->map('connect', $path, $factory);
 	}
 
 	/**
-	 * Register route for DELETE request method
+	 * Register route for DELETE request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
-	 * @param array    $options
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
-	 * @return $this
+	 * @return RouteOptions
 	 */
-	public function delete($route_path, callable $callable, array $options = [])
+	public function delete(callable|string $path, ?callable $factory = null): RouteOptions
 	{
-		return $this->map('delete', $route_path, $callable, $options);
+		return $this->map(['delete'], $path, $factory);
 	}
 
 	/**
-	 * Register route for GET request method
+	 * Register route for GET request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
-	 * @param array    $options
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
-	 * @return $this
+	 * @return RouteOptions
 	 */
-	public function get($route_path, callable $callable, array $options = [])
+	public function get(callable|string $path, ?callable $factory = null): RouteOptions
 	{
-		return $this->map('get', $route_path, $callable, $options);
+		return $this->map(['get'], $path, $factory);
 	}
 
 	/**
-	 * Register route for HEAD request method
+	 * Register route for HEAD request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
-	 * @param array    $options
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
-	 * @return $this
+	 * @return RouteOptions
 	 */
-	public function head($route_path, callable $callable, array $options = [])
+	public function head(callable|string $path, ?callable $factory = null): RouteOptions
 	{
-		return $this->map('head', $route_path, $callable, $options);
+		return $this->map(['head'], $path, $factory);
 	}
 
 	/**
-	 * Register route for OPTIONS request method
+	 * Register route for OPTIONS request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
-	 * @param array    $options
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
-	 * @return $this
+	 * @return RouteOptions
 	 */
-	public function options($route_path, callable $callable, array $options = [])
+	public function options(callable|string $path, ?callable $factory = null): RouteOptions
 	{
-		return $this->map('options', $route_path, $callable, $options);
+		return $this->map(['options'], $path, $factory);
 	}
 
 	/**
-	 * Register route for PATCH request method
+	 * Register route for PATCH request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
-	 * @param array    $options
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
-	 * @return $this
+	 * @return RouteOptions
 	 */
-	public function patch($route_path, callable $callable, array $options = [])
+	public function patch(callable|string $path, ?callable $factory = null): RouteOptions
 	{
-		return $this->map('patch', $route_path, $callable, $options);
+		return $this->map(['patch'], $path, $factory);
 	}
 
 	/**
-	 * Register route for POST request method
+	 * Register route for POST request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
-	 * @param array    $options
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
-	 * @return $this
+	 * @return RouteOptions
 	 */
-	public function post($route_path, callable $callable, array $options = [])
+	public function post(callable|string $path, ?callable $factory = null): RouteOptions
 	{
-		return $this->map('post', $route_path, $callable, $options);
+		return $this->map(['post'], $path, $factory);
 	}
 
 	/**
-	 * Register route for PUT request method
+	 * Register route for PUT request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
-	 * @param array    $options
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
-	 * @return $this
+	 * @return RouteOptions
 	 */
-	public function put($route_path, callable $callable, array $options = [])
+	public function put(callable|string $path, ?callable $factory = null): RouteOptions
 	{
-		return $this->map('put', $route_path, $callable, $options);
+		return $this->map(['put'], $path, $factory);
 	}
 
 	/**
-	 * Register route for TRACE request method
+	 * Register route for TRACE request method.
 	 *
-	 * @param string   $route_path
-	 * @param callable $callable
-	 * @param array    $options
+	 * @param callable|string $path
+	 * @param null|callable   $factory
 	 *
-	 * @return $this
+	 * @return RouteOptions
 	 */
-	public function trace($route_path, callable $callable, array $options = [])
+	public function trace(callable|string $path, ?callable $factory = null): RouteOptions
 	{
-		return $this->map('trace', $route_path, $callable, $options);
+		return $this->map(['trace'], $path, $factory);
+	}
+
+	/**
+	 * Run the route that match the current request path.
+	 *
+	 * @param RouteInfo $ri
+	 *
+	 * @throws Throwable
+	 */
+	private function runRoute(RouteInfo $ri): void
+	{
+		static $history = [];
+
+		$route = $ri->route();
+
+		$history[] = ['name' => $route->getName(), 'path' => $route->getPath()];
+
+		// In a simple and good app
+		// this should not be called to much keep it simple
+		// 10 is a limit, it may be 5 or 100.
+		if (\count($history) >= 10) {
+			throw new RuntimeException('Possible recursive redirection.', $history);
+		}
+
+		$debug_data = static function (Route $route, array $data = []) {
+			return [
+				'route' => $route->getPath(),
+			] + $data;
+		};
+
+		try {
+			\ob_start();
+			$return        = \call_user_func($route->getHandler(), $ri);
+			$output_buffer = \ob_get_clean();
+		} catch (Throwable $t) {
+			\ob_clean();
+
+			// throw again exactly the same
+			throw $t;
+		}
+
+		if (!empty($output_buffer)) {
+			throw (new RuntimeException(
+				'Writing to output buffer is not allowed.',
+				$debug_data($route, ['output_buffer' => $output_buffer])
+			))->suspectCallable($route->getHandler());
+		}
+
+		if (!$return instanceof Response) {
+			throw (new RuntimeException(\sprintf(
+				'Invalid return type, got "%s" will expecting "%s".',
+				\get_debug_type($return),
+				Response::class
+			), $debug_data($route)))->suspectCallable($route->getHandler());
+		}
+
+		$ri->getContext()
+			->setResponse($return);
 	}
 }

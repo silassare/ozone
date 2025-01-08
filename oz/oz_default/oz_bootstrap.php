@@ -9,7 +9,9 @@
  * file that was distributed with this source code.
  */
 
-include_once __DIR__ . \DIRECTORY_SEPARATOR . 'oz_config.php';
+declare(strict_types=1);
+
+include_once __DIR__ . \DIRECTORY_SEPARATOR . 'oz_php_config.php';
 
 include_once __DIR__ . \DIRECTORY_SEPARATOR . 'oz_define.php';
 

@@ -1,0 +1,45 @@
+<?php
+declare(strict_types=1);
+
+<%@import('gen.info.otpl',$)%>
+use OZONE\Core\App\Settings;
+use OZONE\Core\FS\Templates;
+use OZONE\Core\Loader\ClassLoader;
+use OZONE\Core\OZone;
+<%if(!$.oz_use_api_context){%>
+//= Informs OZone that we are in Web Context
+\define('OZ_OZONE_IS_WEB_CONTEXT', true);
+<%}%>
+//= Don't forget to use DS instead of \ or / and
+//= always add the last DS to your directories path
+if (!\defined('DS')) {
+	\define('DS', \DIRECTORY_SEPARATOR);
+}
+
+//= Logs directory
+if (!\defined('OZ_LOG_DIR')) {
+	\define('OZ_LOG_DIR', __DIR__ . DS);
+}
+
+//= Scope name
+if (!\defined('OZ_SCOPE_NAME')) {
+	\define('OZ_SCOPE_NAME', '<%$.oz_scope_name%>');
+}
+
+//= Require boot file
+require_once __DIR__ . DS . '..' . DS . '..' . DS . 'app' . DS . 'boot.php';
+
+//= Get application instance
+$app = require OZ_APP_DIR . 'app.php';
+
+//= Adds additional settings source
+Settings::addSource(OZ_PROJECT_DIR . 'scopes' . DS . OZ_SCOPE_NAME . DS . 'settings');
+
+//= Adds additional templates source
+Templates::addSource(OZ_PROJECT_DIR . 'scopes' . DS . OZ_SCOPE_NAME . DS . 'templates');
+
+//= Adds new directory to project namespace
+ClassLoader::addNamespace('\<%$.oz_project_namespace%>', OZ_PROJECT_DIR . 'scopes' . DS . OZ_SCOPE_NAME);
+
+//= Run application
+OZone::run($app);

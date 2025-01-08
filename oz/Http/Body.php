@@ -9,56 +9,16 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Http;
+declare(strict_types=1);
+
+namespace OZONE\Core\Http;
+
+use OZONE\Core\Http\Traits\StreamSourcesTraits;
 
 /**
- * Body
- *
- * This class represents an HTTP message body and encapsulates a
- * streamable resource according to the PSR-7 standard.
- *
- * @link https://github.com/php-fig/http-message/blob/master/src/StreamInterface.php
+ * Class Body.
  */
 class Body extends Stream
 {
-	/**
-	 * Create new body.
-	 *
-	 * @param string $mode fopen mode
-	 *
-	 * @return \OZONE\OZ\Http\Body
-	 */
-	public static function create($mode = 'r+')
-	{
-		return new self(\fopen('php://temp', $mode));
-	}
-
-	/**
-	 * Create new body with string.
-	 *
-	 * @param string $content content
-	 * @param string $mode    fopen mode
-	 *
-	 * @return \OZONE\OZ\Http\Body
-	 */
-	public static function fromString($content, $mode = 'r+')
-	{
-		$body = new self(\fopen('php://temp', $mode));
-		$body->write($content);
-
-		return $body;
-	}
-
-	/**
-	 * Create new body with string.
-	 *
-	 * @param string $path file path
-	 * @param string $mode fopen mode, default to 'r' readonly mode
-	 *
-	 * @return \OZONE\OZ\Http\Body
-	 */
-	public static function fromPath($path, $mode = 'r')
-	{
-		return new self(\fopen($path, $mode));
-	}
+	use StreamSourcesTraits;
 }

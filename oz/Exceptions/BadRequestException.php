@@ -9,27 +9,32 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Exceptions;
+declare(strict_types=1);
+
+namespace OZONE\Core\Exceptions;
+
+use OZONE\Core\Lang\I18nMessage;
+use Throwable;
 
 /**
- * Class BadRequestException
+ * Class BadRequestException.
  */
 class BadRequestException extends BaseException
 {
 	/**
 	 * BadRequestException constructor.
 	 *
-	 * @param null|string     $message  the exception message
-	 * @param null|array      $data     additional exception data
-	 * @param null|\Throwable $previous previous throwable used for the exception chaining
+	 * @param null|I18nMessage|string $message  the exception message
+	 * @param null|array              $data     additional exception data
+	 * @param null|Throwable          $previous previous throwable used for the exception chaining
 	 */
-	public function __construct($message = null, array $data = null, $previous = null)
+	public function __construct(null|I18nMessage|string $message = null, ?array $data = null, ?Throwable $previous = null)
 	{
 		parent::__construct(
-			(empty($message) ? 'OZ_ERROR_BAD_REQUEST' : $message),
-			BaseException::BAD_REQUEST,
+			empty($message) ? 'OZ_ERROR_BAD_REQUEST' : $message,
 			$data,
-			$previous
+			$previous,
+			BaseException::BAD_REQUEST,
 		);
 	}
 }

@@ -9,32 +9,24 @@
  * file that was distributed with this source code.
  */
 
-use OZONE\OZ\Cli\Cli;
+declare(strict_types=1);
 
-//= For backward compatibility only
-//= @deprecated 2.0.0
-\define('OZ_SELF_SECURITY_CHECK', 1);
+use OZONE\Core\Cli\Cli;
 
-//=	Don't forget to use DS instead of \ or / and
-//= always add the last DS to your directories path
-\define('DS', \DIRECTORY_SEPARATOR);
+// = Check if we are in an existing project root
+if (\file_exists(\getcwd() . \DIRECTORY_SEPARATOR . 'app' . \DIRECTORY_SEPARATOR . 'boot.php')) {
+	// = Check if the project has been installed
+	if (!\file_exists(\getcwd() . \DIRECTORY_SEPARATOR . 'vendor' . \DIRECTORY_SEPARATOR . 'autoload.php')) {
+		exit('Found an existing project but no autoload file.' . \PHP_EOL .
+			 'Please run "composer install" in your project directory.' . \PHP_EOL);
+	}
 
-//= Project directory
-\define('OZ_PROJECT_DIR', \getcwd() . DS);
-
-//= OZone app directory
-\define('OZ_APP_DIR', OZ_PROJECT_DIR . 'api' . DS . 'app' . DS);
-
-//= Logs directory
-\define('OZ_LOG_DIR', OZ_PROJECT_DIR);
-
-//= Load composer autoload
-require_once OZ_PROJECT_DIR . DS . 'vendor' . DS . 'autoload.php';
-
-if (!\defined('OZ_OZONE_IS_CLI') || !OZ_OZONE_IS_CLI) {
-	print 'This is the command line tool for OZone Framework.';
-	exit(1);
+	// = Load the project boot file
+	require_once \getcwd() . \DIRECTORY_SEPARATOR . 'app' . \DIRECTORY_SEPARATOR . 'boot.php';
+} else {
+	// = There is no project, load ozone autoload file
+	require_once \dirname(__DIR__) . \DIRECTORY_SEPARATOR . 'vendor' . \DIRECTORY_SEPARATOR . 'autoload.php';
 }
 
-//= Run the cli
+// = Start the cli and execute any requested command
 Cli::run($argv);

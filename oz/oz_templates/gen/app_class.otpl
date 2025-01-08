@@ -1,0 +1,14 @@
+<?php
+declare(strict_types=1);
+
+<%@import('gen.info.otpl',$)%>
+namespace <%$.oz_project_namespace%>;
+
+use OZONE\Core\App\AbstractApp;
+
+/**
+ * Class <%$.oz_project_app_class_name%>
+ */
+class <%$.oz_project_app_class_name%> extends AbstractApp
+{
+}

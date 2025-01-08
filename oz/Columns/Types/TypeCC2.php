@@ -9,68 +9,107 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Columns\Types;
+declare(strict_types=1);
 
+namespace OZONE\Core\Columns\Types;
+
+use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
-use OZONE\OZ\User\UsersManager;
+use OZONE\Core\Users\Countries;
 
-final class TypeCC2 extends TypeString
+/**
+ * Class TypeCC2.
+ */
+class TypeCC2 extends Type
 {
-	const CC2_REG = '~^[a-zA-Z]{2}$~';
+	public const NAME = 'cc2';
 
-	private $authorized = false;
+	public const CC2_REG = '~^[a-zA-Z]{2}$~';
 
 	/**
 	 * TypeCC2 constructor.
 	 *
-	 * @inheritdoc
+	 * @throws TypesException
 	 */
 	public function __construct()
 	{
-		parent::__construct(2, 2, self::CC2_REG);
+		parent::__construct(new TypeString(2, 2, self::CC2_REG));
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	public static function getInstance(array $options): static
+	{
+		return (new self())->configure($options);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getName(): string
+	{
+		return self::NAME;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function default($default): static
+	{
+		$this->base_type->default($default);
+
+		return parent::default($default);
+	}
+
+	/**
+	 * Only allow authorized countries.
+	 *
 	 * @return $this
 	 */
-	public function authorized()
+	public function authorized(bool $authorized = true): static
 	{
-		$this->authorized = true;
-
-		return $this;
+		return $this->setOption('authorized', $authorized);
 	}
 
 	/**
-	 * @param $value
-	 * @param $column_name
-	 * @param $table_name
+	 * Only allow countries that are in the database.
 	 *
-	 * @throws \Exception
-	 *
-	 * @return string
+	 * @return $this
 	 */
-	public function validate($value, $column_name, $table_name)
+	public function check(bool $check = true): static
+	{
+		return $this->setOption('check', $check);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function validate($value): ?string
 	{
 		$debug = [
 			'value' => $value,
 		];
 
 		try {
-			$value = parent::validate($value, $column_name, $table_name);
+			$value = $this->base_type->validate($value);
 		} catch (TypesInvalidValueException $e) {
-			throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug, $e);
+			throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_INVALID', $debug, $e);
 		}
 
 		if (!empty($value)) {
 			$value = \strtoupper($value);
 
-			if ($this->authorized) {
-				if (!UsersManager::authorizedCountry($value)) {
+			if ($this->getOption('authorized')) {
+				if (!Countries::allowed($value)) {
 					throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_NOT_ALLOWED', $debug);
 				}
-			} elseif (!UsersManager::getCountryObject($value)) {
-				throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug);
+			} elseif (false !== $this->getOption('check')) {
+				if (!Countries::get($value)) {
+					throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug);
+				}
 			}
 		}
 
@@ -78,35 +117,17 @@ final class TypeCC2 extends TypeString
 	}
 
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 */
-	public function getCleanOptions()
+	public function configure(array $options): static
 	{
-		$options               = parent::getCleanOptions();
-		$options['authorized'] = $this->authorized;
-
-		return $options;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public static function getInstance(array $options)
-	{
-		$instance = new self();
-
-		if (self::getOptionKey($options, 'authorized', false)) {
-			$instance->authorized();
+		if (isset($options['authorized'])) {
+			$this->authorized((bool) $options['authorized']);
+		}
+		if (isset($options['check'])) {
+			$this->check((bool) $options['check']);
 		}
 
-		if (self::getOptionKey($options, 'null', false)) {
-			$instance->nullAble();
-		}
-
-		if (\array_key_exists('default', $options)) {
-			$instance->setDefault($options['default']);
-		}
-
-		return $instance;
+		return parent::configure($options);
 	}
 }

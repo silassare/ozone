@@ -9,145 +9,185 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ;
+declare(strict_types=1);
 
-use Exception;
-use Gobl\CRUD\CRUD;
-use OZONE\OZ\App\AppInterface;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\DbManager;
-use OZONE\OZ\Core\Interfaces\TableCollectionsProviderInterface;
-use OZONE\OZ\Core\Interfaces\TableRelationsProviderInterface;
-use OZONE\OZ\Core\SettingsManager;
-use OZONE\OZ\Event\EventManager;
-use OZONE\OZ\Exceptions\BaseException;
-use OZONE\OZ\Hooks\Interfaces\HookReceiverInterface;
-use OZONE\OZ\Hooks\MainHookProvider;
-use OZONE\OZ\Http\Environment;
-use OZONE\OZ\Lang\Polyglot;
-use OZONE\OZ\Loader\ClassLoader;
-use OZONE\OZ\Router\RouteProviderInterface;
-use OZONE\OZ\Router\Router;
-use ReflectionClass;
-use ReflectionException;
-use RuntimeException;
-use Throwable;
+namespace OZONE\Core;
 
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Db;
+use OZONE\Core\App\Interfaces\AppInterface;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Auth;
+use OZONE\Core\Auth\AuthMethodType;
+use OZONE\Core\CRUD\TableCRUD;
+use OZONE\Core\Db\OZRolesQuery;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Hooks\Events\FinishHook;
+use OZONE\Core\Hooks\Events\InitHook;
+use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Http\HTTPEnvironment;
+use OZONE\Core\Migrations\Migrations;
+use OZONE\Core\Migrations\MigrationsState;
+use OZONE\Core\Plugins\Plugins;
+use OZONE\Core\Router\Events\RouterCreated;
+use OZONE\Core\Router\Interfaces\RouteProviderInterface;
+use OZONE\Core\Router\Router;
+use OZONE\Core\Users\Users;
+use OZONE\Core\Utils\Utils;
+use PDOException;
+
+/**
+ * Class OZone.
+ */
 final class OZone
 {
-	const API_KEY_REG = '~^[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}-[A-Z0-9]{8}$~';
-
-	const INTERNAL_PATH_PREFIX = '/oz:';
+	public const INTERNAL_PATH_PREFIX = '/~ozone-internal~/';
 
 	/**
-	 * @var \OZONE\OZ\Router\Router
+	 * @var null|Router
 	 */
-	private static $api_router;
+	private static ?Router $api_router;
 
 	/**
-	 * @var \OZONE\OZ\Router\Router
+	 * @var null|Router
 	 */
-	private static $web_router;
+	private static ?Router $web_router;
 
 	/**
-	 * The current running app
+	 * The current running app.
 	 *
-	 * @var AppInterface
+	 * @var null|AppInterface
 	 */
-	private static $current_app = null;
-
-	/**
-	 * Gets event manager instance.
-	 *
-	 * @return \OZONE\OZ\Event\EventManager
-	 */
-	public static function getEventManager()
-	{
-		return EventManager::getInstance();
-	}
+	private static ?AppInterface $current_app         = null;
+	private static bool $boot_hook_receivers_notified = false;
 
 	/**
 	 * Gets current running app.
 	 *
-	 * @return \OZONE\OZ\App\AppInterface
+	 * @return AppInterface
 	 */
-	public static function getRunningApp()
+	public static function app(): AppInterface
 	{
+		if (null === self::$current_app) {
+			throw new RuntimeException('No app is running.');
+		}
+
 		return self::$current_app;
+	}
+
+	/**
+	 * Checks if a given path is an internal path.
+	 *
+	 * @param string $path
+	 *
+	 * @return bool
+	 */
+	public static function isInternalPath(string $path): bool
+	{
+		return \str_starts_with($path, self::INTERNAL_PATH_PREFIX);
+	}
+
+	/**
+	 * Checks if the app is running in cli mode.
+	 *
+	 * @return bool
+	 */
+	public static function isCliMode(): bool
+	{
+		return \defined('OZ_OZONE_IS_CLI') && OZ_OZONE_IS_CLI;
+	}
+
+	/**
+	 * Checks if the app is running in web mode.
+	 *
+	 * @return bool
+	 */
+	public static function isWebMode(): bool
+	{
+		return !self::isCliMode();
+	}
+
+	/**
+	 * Make sure that the boot hook receivers are notified.
+	 *
+	 * @param string $message the message to display if the boot hook receivers are not notified
+	 */
+	public static function dieIfBootHookReceiversAreNotNotified(string $message): void
+	{
+		if (!self::$boot_hook_receivers_notified) {
+			// this is to make sure that the dev will be notified by all means
+			// and look at the log file to fix the issue
+			oz_trace($message);
+
+			exit('Boot hook receivers not notified. If you are an admin, please review the log file and correct it!' . \PHP_EOL);
+		}
 	}
 
 	/**
 	 * OZone main entry point.
 	 *
-	 * @param \OZONE\OZ\App\AppInterface $app
-	 *
-	 * @throws \Throwable
+	 * @param AppInterface $app
 	 */
-	public static function run(AppInterface $app)
+	public static function run(AppInterface $app): void
 	{
-		if (!empty(self::$current_app)) {
-			\trigger_error('The app is already running.', \E_USER_NOTICE);
+		if (null !== self::$current_app) {
+			\trigger_error('The app is already running.');
 
 			return;
 		}
 
 		self::$current_app = $app;
 
-		$env = new Environment($_SERVER);
-		Polyglot::init($env);
-		DbManager::init();
+		$app->boot();
 
-		self::registerCustomRelations();
-		self::registerCustomCollections();
-		self::registerHookReceivers();
+		Plugins::boot();
 
-		$is_web  = \defined('OZ_OZONE_IS_WEB_CONTEXT');
-		$is_api  = !$is_web;
+		self::notifyBootHookReceivers();
 
-		if ($is_web && !\defined('OZ_OZONE_DEFAULT_API_KEY')) {
-			throw new InternalErrorException('OZ_DEFAULT_API_KEY_NOT_DEFINED');
-		}
+		Db::init();
 
-		$context = new Context($env, null, false, $is_api);
+		$context = self::getMainContext();
 
-		// [!IMPORTANT] The CRUD handler is instantiated with the first context
-		// So if we have a session,
-		// the current user access level will be used for CRUD validation
-		CRUD::setHandlerProvider(function ($table_name) use ($context) {
-			return DbManager::instantiateCRUDHandler($context, $table_name);
-		});
+		// The current user access level will be used for CRUD validation
+		TableCRUD::registerListeners($context);
 
-		try {
-			MainHookProvider::getInstance()
-							->triggerInit($context);
+		(new InitHook($context))->dispatch();
+
+		if (self::isWebMode()) {
 			$context->handle()
-					->respond();
-		} catch (Exception $e) {
-			$e = BaseException::tryConvert($e);
+				->respond();
 
-			$e->informClient($context);
-		} catch (Throwable $e) {
-			$e = BaseException::tryConvert($e);
+			// Finish the request
+			if (\function_exists('fastcgi_finish_request')) {
+				fastcgi_finish_request();
+			} elseif (!\in_array(\PHP_SAPI, ['cli', 'phpdbg'], true)) {
+				Utils::closeOutputBuffers(0, true);
+			}
 
-			$e->informClient($context);
+			(new FinishHook($context->getRequest(), $context->getResponse()))->dispatch();
+
+			exit;
 		}
 	}
 
 	/**
 	 * Returns the router with all API routes registered.
 	 *
-	 * @return \OZONE\OZ\Router\Router
+	 * @return Router
 	 */
-	public static function getApiRouter()
+	public static function getApiRouter(): Router
 	{
 		if (!isset(self::$api_router)) {
-			self::$api_router = new Router();
+			$router = self::$api_router = new Router();
+			$group  = $router->group('/', static function () {
+				$a      = Settings::load('oz.routes');
+				$b      = Settings::load('oz.routes.api');
+				$routes = Settings::merge($a, $b);
 
-			$a      = SettingsManager::get('oz.routes');
-			$b      = SettingsManager::get('oz.routes.api');
-			$routes = SettingsManager::merge($a, $b);
+				self::registerRoutes(self::$api_router, $routes);
+			})->auths(...Auth::apiAuthMethods());
 
-			self::registerRoutes(self::$api_router, $routes);
+			(new RouterCreated($router, $group, true))->dispatch();
 		}
 
 		return self::$api_router;
@@ -156,205 +196,169 @@ final class OZone
 	/**
 	 * Returns the router with all WEB routes registered.
 	 *
-	 * @return \OZONE\OZ\Router\Router
+	 * @return Router
 	 */
-	public static function getWebRouter()
+	public static function getWebRouter(): Router
 	{
 		if (!isset(self::$web_router)) {
-			self::$web_router = new Router();
+			$router = self::$web_router = new Router();
 
-			$a      = SettingsManager::get('oz.routes');
-			$b      = SettingsManager::get('oz.routes.web');
-			$routes = SettingsManager::merge($a, $b);
+			$group = $router->group('/', static function () {
+				$a      = Settings::load('oz.routes');
+				$b      = Settings::load('oz.routes.web');
+				$routes = Settings::merge($a, $b);
 
-			self::registerRoutes(self::$web_router, $routes);
+				self::registerRoutes(self::$web_router, $routes);
+			})->auths(AuthMethodType::SESSION);
+
+			(new RouterCreated($router, $group, false))->dispatch();
 		}
 
 		return self::$web_router;
 	}
 
 	/**
-	 * Creates instance of class for a given class name and arguments.
+	 * Check if we already completed installation process.
 	 *
-	 * @param string $class_name the full qualified class name to instantiate
-	 *
-	 * @throws \ReflectionException
-	 *
-	 * @return object
+	 * @return bool
 	 */
-	public static function createInstance($class_name)
+	public static function isInstalled(): bool
 	{
-		$c_args = \func_get_args();
-
-		\array_shift($c_args);
-
-		return ClassLoader::instantiateClass($class_name, $c_args);
+		return self::hasDbAccess() && self::hasDbInstalled() && self::hasSuperAdmin();
 	}
 
 	/**
-	 * @param \OZONE\OZ\Router\Router $router
-	 * @param array                   $routes
+	 * Check if we have database access.
+	 *
+	 * @return bool
 	 */
-	private static function registerRoutes(Router $router, $routes)
+	public static function hasDbAccess(): bool
+	{
+		static $has_db_access = null;
+
+		if (null === $has_db_access) {
+			try {
+				db()->getConnection();
+
+				$has_db_access = true;
+			} catch (PDOException) {
+				$has_db_access = false;
+			}
+		}
+
+		return $has_db_access;
+	}
+
+	/**
+	 * Check if we have database installed.
+	 *
+	 * @return bool
+	 */
+	public static function hasDbInstalled(): bool
+	{
+		return self::hasDbAccess() && MigrationsState::NOT_INSTALLED !== Migrations::getState();
+	}
+
+	/**
+	 * Check if we have a super admin.
+	 *
+	 * @return bool
+	 */
+	public static function hasSuperAdmin(): bool
+	{
+		if (!self::hasDbInstalled()) {
+			return false;
+		}
+
+		static $has_super_admin = null;
+
+		if (null === $has_super_admin) {
+			$roles_qb = new OZRolesQuery();
+			$results  = $roles_qb->whereNameIs(Users::SUPER_ADMIN)
+				->whereIsValid()
+				->find(1);
+
+			$has_super_admin = (bool) $results->count();
+		}
+
+		return $has_super_admin;
+	}
+
+	/**
+	 * Returns the main context.
+	 *
+	 * @return Context
+	 */
+	public static function getMainContext(): Context
+	{
+		static $main_context = null;
+		if (null === $main_context) {
+			$is_cli_mode    = self::isCliMode();
+			$is_web_context = \defined('OZ_OZONE_IS_WEB_CONTEXT');
+			$is_api_context = !$is_web_context;
+
+			if ($is_cli_mode) {
+				$http_env = HTTPEnvironment::mock();
+			} else {
+				$http_env = new HTTPEnvironment($_SERVER);
+			}
+
+			$main_context = new Context($http_env, null, null, $is_api_context);
+		}
+
+		return $main_context;
+	}
+
+	/**
+	 * Register all route provider.
+	 *
+	 * @param Router $router
+	 * @param array  $routes
+	 */
+	private static function registerRoutes(Router $router, array $routes): void
 	{
 		foreach ($routes as $provider => $enabled) {
 			if ($enabled) {
-				try {
-					$rc = new ReflectionClass($provider);
-
-					if (!$rc->implementsInterface(RouteProviderInterface::class)) {
-						throw new RuntimeException(\sprintf(
+				if (!\is_subclass_of($provider, RouteProviderInterface::class)) {
+					throw new RuntimeException(
+						\sprintf(
 							'Route provider "%s" should implements "%s".',
 							$provider,
 							RouteProviderInterface::class
-						));
-					}
-
-					/* @var RouteProviderInterface $provider */
-					$provider::registerRoutes($router);
-				} catch (ReflectionException $e) {
-					throw new RuntimeException(\sprintf('Unable to register route provider: %s.', $provider), null, $e);
+						)
+					);
 				}
+
+				/* @var RouteProviderInterface $provider */
+				$provider::registerRoutes($router);
 			}
 		}
 	}
 
 	/**
-	 * Register all hook receivers.
+	 * Notify all boot hook receivers.
 	 */
-	private static function registerHookReceivers()
+	private static function notifyBootHookReceivers(): void
 	{
-		$hook_receivers = SettingsManager::get('oz.hooks');
+		$hook_receivers = Settings::load('oz.boot');
 
 		foreach ($hook_receivers as $receiver => $enabled) {
 			if ($enabled) {
-				try {
-					$rc = new ReflectionClass($receiver);
-
-					if (!$rc->implementsInterface(HookReceiverInterface::class)) {
-						throw new RuntimeException(\sprintf(
-							'Hook receiver "%s" should implements "%s".',
+				if (!\is_subclass_of($receiver, BootHookReceiverInterface::class)) {
+					throw new RuntimeException(
+						\sprintf(
+							'Boot hook receiver "%s" should implements "%s".',
 							$receiver,
-							HookReceiverInterface::class
-						));
-					}
-					/* @var \OZONE\OZ\Hooks\Interfaces\HookReceiverInterface $receiver */
-					$receiver::register();
-				} catch (ReflectionException $e) {
-					throw new RuntimeException(\sprintf('Unable to register hook receiver "%s".', $receiver), null, $e);
+							BootHookReceiverInterface::class
+						)
+					);
 				}
+
+				/* @var \OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface $receiver */
+				$receiver::boot();
 			}
 		}
-	}
 
-	/**
-	 * Register custom relations.
-	 *
-	 * @throws \Exception
-	 */
-	private static function registerCustomRelations()
-	{
-		$relations_settings = SettingsManager::get('oz.db.relations');
-		$db                 = DbManager::getDb();
-
-		foreach ($relations_settings as $provider => $enabled) {
-			if ($enabled) {
-				try {
-					$rc = new ReflectionClass($provider);
-
-					if (!$rc->implementsInterface(TableRelationsProviderInterface::class)) {
-						throw new RuntimeException(\sprintf(
-							'Custom relations provider "%s" should implements "%s".',
-							$provider,
-							TableRelationsProviderInterface::class
-						));
-					}
-				} catch (ReflectionException $e) {
-					throw new RuntimeException(\sprintf(
-						'Unable to register custom relations provider "%s".',
-						$provider
-					), null, $e);
-				}
-
-				/* @var TableRelationsProviderInterface $provider */
-				$def_list = $provider::getRelationsDefinition();
-
-				foreach ($def_list as $table_name => $relations) {
-					$table = $db->getTable($table_name);
-
-					foreach ($relations as $relation_name => $callable) {
-						if (\is_callable($callable)) {
-							$table->defineVR($relation_name, $callable);
-						} else {
-							throw new RuntimeException(
-								\sprintf(
-									'Custom relation "%s" defined in "%s" for table "%s"'
-									. ' expected to be "callable" not "%s". %s',
-									$relation_name,
-									$provider,
-									$table_name,
-									\gettype($callable),
-									'Maybe the class method is private or protected.'
-								)
-							);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/**
-	 * Register custom collections.
-	 *
-	 * @throws \Exception
-	 */
-	private static function registerCustomCollections()
-	{
-		$collections_settings = SettingsManager::get('oz.db.collections');
-		$db                   = DbManager::getDb();
-
-		foreach ($collections_settings as $provider => $enabled) {
-			if ($enabled) {
-				try {
-					$rc = new ReflectionClass($provider);
-
-					if (!$rc->implementsInterface(TableCollectionsProviderInterface::class)) {
-						throw new RuntimeException(\sprintf(
-							'Custom collections provider "%s" should implements "%s".',
-							$provider,
-							TableCollectionsProviderInterface::class
-						));
-					}
-				} catch (ReflectionException $e) {
-					throw new RuntimeException(\sprintf(
-						'Unable to register custom collections provider "%s".',
-						$provider
-					), null, $e);
-				}
-
-				/* @var TableCollectionsProviderInterface $provider */
-				$def_list = $provider::getCollectionsDefinition();
-
-				foreach ($def_list as $table_name => $relations) {
-					$table = $db->getTable($table_name);
-
-					foreach ($relations as $collection_name => $callable) {
-						if (\is_callable($callable)) {
-							$table->defineCollection($collection_name, $callable);
-						} else {
-							throw new RuntimeException(\sprintf(
-								'Custom collection "%s" defined in "%s" for table "%s"'
-								. ' expected to be "callable" not "%s".',
-								$collection_name,
-								$provider,
-								$table_name,
-								\gettype($callable)
-							));
-						}
-					}
-				}
-			}
-		}
+		self::$boot_hook_receivers_notified = true;
 	}
 }

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) 2017-present, Emile Silas Sare
+  ~
+  ~ This file is part of OZone package.
+  ~
+  ~ For the full copyright and license information, please view the LICENSE
+  ~ file that was distributed with this source code.
+  -->
+
+<html lang="<%$.oz->getLanguage()%>">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport"
+			  content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"/>
+
+		<title>Redirect</title>
+
+		<meta http-equiv="Refresh" content="5;url=<%$.oz_redirect_url%>">
+		<link href="https://fonts.googleapis.com/css?family=Ubuntu&display=swap" rel="stylesheet">
+
+		<script type="text/javascript">
+			window.location.href = "<%$.oz_redirect_url%>";
+		</script>
+		<style rel="stylesheet">
+			body {
+				font-family: Ubuntu, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Oxygen-Sans, Cantarell, "Helvetica Neue", "Open Sans", sans-serif;
+				-webkit-font-smoothing: antialiased;
+				-moz-osx-font-smoothing: grayscale;
+				font-size: 1.2em;
+				margin: 0;
+				width: 100%;
+				height: 100%;
+				background-color: #F5F5F5;
+			}
+
+			#oz-box {
+				width: 80%;
+				max-width: 800px;
+				margin: 100px auto auto auto;
+				padding: 50px 20px;
+				box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+				border: 1px solid white;
+				background: white;
+				border-radius: 3px;
+			}
+
+			.oz-title {
+				font-size: 3em;
+				color: #ff5064;
+				text-align: center;
+			}
+
+			.oz-desc {
+				color: #333333;
+				margin: 30px 0;
+			}
+
+			.oz-desc-item {
+				padding: 10px;
+				background-color: #E6E6E6;
+				word-break: break-word;
+			}
+
+			.oz-desc-item:nth-child(odd) {
+				background-color: #F7F7F7;
+			}
+
+			.oz-btn {
+				display: block;
+				text-align: center;
+				background-color: #ff5064;
+				margin: 10px auto;
+				padding: 15px;
+				max-width: 50%;
+				text-decoration: none;
+				color: #FFFFFF;
+				border: 2px solid #ff5064;
+				border-radius: 3px;
+			}
+
+			.oz-btn:hover {
+				background-color: #ffffff;
+				color: #ff5064;
+			}
+
+			@media all and (max-width: 360px) {
+				.oz-title {
+					font-size: 2em;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div id="oz-box">
+			<span class="oz-logo"></span>
+			<div class="oz-title"><%$.i18n('OZ_VIEW_REDIRECT_TITLE')%></div>
+			<div class="oz-desc">
+				<div class="oz-desc-item" style="text-align: center;"><%$.i18n('OZ_VIEW_REDIRECT_MESSAGE', ['url'=>$.oz_redirect_url] )%></div>
+			</div>
+		</div>
+	</body>
+</html>

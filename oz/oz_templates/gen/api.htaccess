@@ -1,0 +1,34 @@
+AddDefaultCharset UTF-8
+
+# disable files listing, multiview and enable symbolic link
+#
+Options -Indexes -Multiviews +FollowSymlinks
+
+# disable access to /debug.log
+#
+<Files /debug.log>
+   Order Deny,allow
+   Deny from all
+</Files>
+
+# Mitigate https://httpoxy.org/ vulnerabilities
+#
+<IfModule mod_headers.c>
+   RequestHeader unset Proxy
+</IfModule>
+
+# start rewriting
+#
+<IfModule mod_rewrite.c>
+	RewriteEngine on
+
+	# Authorization Header
+	#
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+	RewriteCond %{REQUEST_URI}  !^/index\.php
+	RewriteCond %{REQUEST_URI}  !^/robots\.txt
+	RewriteCond %{REQUEST_URI}  !^/favicon\.ico
+	RewriteRule (.*)            index.php [L]
+</IfModule>

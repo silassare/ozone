@@ -9,27 +9,32 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Exceptions;
+declare(strict_types=1);
+
+namespace OZONE\Core\Exceptions;
+
+use OZONE\Core\Lang\I18nMessage;
+use Throwable;
 
 /**
- * Class NotFoundException
+ * Class NotFoundException.
  */
 class NotFoundException extends BaseException
 {
 	/**
 	 * NotFoundException constructor.
 	 *
-	 * @param null|string     $message  the exception message
-	 * @param null|array      $data     additional exception data
-	 * @param null|\Throwable $previous previous throwable used for the exception chaining
+	 * @param null|I18nMessage|string $message  the exception message
+	 * @param null|array              $data     additional exception data
+	 * @param null|Throwable          $previous previous throwable used for the exception chaining
 	 */
-	public function __construct($message = null, array $data = null, $previous = null)
+	public function __construct(null|I18nMessage|string $message = null, ?array $data = null, ?Throwable $previous = null)
 	{
 		parent::__construct(
-			(empty($message) ? 'OZ_ERROR_NOT_FOUND' : $message),
-			BaseException::NOT_FOUND,
+			empty($message) ? 'OZ_ERROR_NOT_FOUND' : $message,
 			$data,
-			$previous
+			$previous,
+			BaseException::NOT_FOUND,
 		);
 	}
 }

@@ -9,112 +9,87 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Http;
+declare(strict_types=1);
 
-use Closure;
+namespace OZONE\Core\Http;
+
 use InvalidArgumentException;
-use OZONE\OZ\Core\SettingsManager;
+use JsonException;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Forms\FormData;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 use RuntimeException;
 
 /**
- * Request
- *
- * This class represents an HTTP request. It manages
- * the request method, URI, headers, cookies, and body
- * according to the PSR-7 standard.
- *
- * @link https://github.com/php-fig/http-message/blob/master/src/MessageInterface.php
- * @link https://github.com/php-fig/http-message/blob/master/src/RequestInterface.php
- * @link https://github.com/php-fig/http-message/blob/master/src/ServerRequestInterface.php
+ * Class Request.
  */
 class Request extends Message implements ServerRequestInterface
 {
 	/**
-	 * The request method
-	 *
-	 * @var string
+	 * The request method.
 	 */
-	protected $method;
+	protected string $method;
 
 	/**
-	 * The original request method (ignoring override)
-	 *
-	 * @var string
+	 * The original request method (ignoring override).
 	 */
-	protected $originalMethod;
+	protected string $originalMethod;
 
 	/**
-	 * The request URI object
-	 *
-	 * @var \OZONE\OZ\Http\Uri
+	 * The request URI object.
 	 */
-	protected $uri;
+	protected Uri $uri;
 
 	/**
-	 * The request URI target (path + query string)
-	 *
-	 * @var string
+	 * The request URI target (path + query string).
 	 */
-	protected $requestTarget;
+	protected string $requestTarget;
 
 	/**
-	 * The request query string params
-	 *
-	 * @var array
+	 * The request query string params.
 	 */
-	protected $queryParams;
+	protected array $queryParams = [];
 
 	/**
-	 * The request cookies
-	 *
-	 * @var array
+	 * The request cookies.
 	 */
-	protected $cookies;
+	protected array $cookies;
 
 	/**
 	 * The server environment variables at the time the request was created.
-	 *
-	 * @var array
 	 */
-	protected $serverParams;
+	protected array $serverParams;
 
 	/**
-	 * The request attributes (route segment names and values)
-	 *
-	 * @var \OZONE\OZ\Http\Collection
+	 * The request attributes (route segment names and values).
 	 */
-	protected $attributes;
+	protected Collection $attributes;
 
 	/**
-	 * The request body parsed (if possible) into a PHP array or object
-	 *
-	 * @var null|array|object
+	 * The request body parsed (if possible) into a PHP array or object.
 	 */
-	protected $bodyParsed = false;
+	protected null|array|object $bodyParsed = null;
 
 	/**
-	 * List of request body parsers (e.g., url-encoded, JSON, XML, multipart)
+	 * List of request body parsers (e.g., url-encoded, JSON, XML, multipart).
 	 *
 	 * @var callable[]
 	 */
-	protected $bodyParsers = [];
+	protected array $bodyParsers = [];
 
 	/**
-	 * List of uploaded files
+	 * List of uploaded files.
 	 *
-	 * @var \OZONE\OZ\Http\UploadedFile[]
+	 * @var UploadedFile[]
 	 */
-	protected $uploadedFiles;
+	protected array $uploadedFiles;
 
 	/**
-	 * Valid request methods
-	 *
-	 * @var string[]
+	 * Valid request methods.
 	 */
-	protected $validMethods = [
+	protected static array $validMethods = [
 		'CONNECT' => 1,
 		'DELETE'  => 1,
 		'GET'     => 1,
@@ -139,10 +114,10 @@ class Request extends Message implements ServerRequestInterface
 	 * @param StreamInterface $body          The request body object
 	 * @param array           $uploadedFiles The request uploadedFiles collection
 	 *
-	 * @throws \InvalidArgumentException on invalid HTTP method
+	 * @throws InvalidArgumentException on invalid HTTP method
 	 */
 	public function __construct(
-		$method,
+		string $method,
 		UriInterface $uri,
 		Headers $headers,
 		array $cookies,
@@ -150,7 +125,7 @@ class Request extends Message implements ServerRequestInterface
 		StreamInterface $body,
 		array $uploadedFiles = []
 	) {
-		$this->method         = $this->filterMethod($method);
+		$this->method         = self::filterMethod($method);
 		$this->originalMethod = $this->method;
 		$this->uri            = $uri;
 		$this->headers        = $headers;
@@ -160,16 +135,16 @@ class Request extends Message implements ServerRequestInterface
 		$this->body           = $body;
 		$this->uploadedFiles  = $uploadedFiles;
 
-		if ($this->method === 'POST') {
-			$allowed = SettingsManager::get('oz.config', 'OZ_API_ALLOW_REAL_METHOD_HEADER');
+		if ('POST' === $this->method) {
+			$allowed = Settings::get('oz.request', 'OZ_ALLOW_REAL_METHOD_HEADER');
 
 			if ($allowed) {
-				$realMethodHeaderName = SettingsManager::get('oz.config', 'OZ_API_REAL_METHOD_HEADER_NAME');
+				$realMethodHeaderName = Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_NAME');
 				$realMethodHeaderName = \strtolower(\str_replace('_', '-', $realMethodHeaderName));
 				$realMethod           = $this->getHeaderLine($realMethodHeaderName);
 
 				if (!empty($realMethod)) {
-					$this->method = $this->filterMethod($realMethod);
+					$this->method = self::filterMethod($realMethod);
 				}
 			}
 		}
@@ -178,88 +153,83 @@ class Request extends Message implements ServerRequestInterface
 			$this->protocolVersion = \str_replace('HTTP/', '', $serverParams['SERVER_PROTOCOL']);
 		}
 
-		if (!$this->headers->has('Host') || $this->uri->getHost() !== '') {
+		if (!$this->headers->has('Host') || '' !== $this->uri->getHost()) {
 			$this->headers->set('Host', $this->uri->getHost());
 		}
 
-		$this->registerMediaTypeParser('application/json', function ($input) {
-			$result = \json_decode($input, true);
+		$json_parser = static function ($input) {
+			try {
+				$result = \json_decode($input, true, 512, \JSON_THROW_ON_ERROR);
 
-			if (\json_last_error() !== \JSON_ERROR_NONE || !\is_array($result)) {
-				return null;
+				if (\is_array($result)) {
+					return $result;
+				}
+			} catch (JsonException) {
 			}
 
-			return $result;
-		});
+			return null;
+		};
 
-		$this->registerMediaTypeParser('application/xml', function ($input) {
-			$backup        = \libxml_disable_entity_loader(true);
+		$xml_parser = static function ($input) {
+			$backup        = (\PHP_VERSION_ID < 80000) ? \libxml_disable_entity_loader(true) : null;
 			$backup_errors = \libxml_use_internal_errors(true);
 			$result        = \simplexml_load_string($input);
-			\libxml_disable_entity_loader($backup);
+
+			null !== $backup && \libxml_disable_entity_loader($backup);
+
 			\libxml_clear_errors();
 			\libxml_use_internal_errors($backup_errors);
 
-			if ($result === false) {
+			if (false === $result) {
 				return null;
 			}
 
 			return $result;
-		});
+		};
 
-		$this->registerMediaTypeParser('text/xml', function ($input) {
-			$backup        = \libxml_disable_entity_loader(true);
-			$backup_errors = \libxml_use_internal_errors(true);
-			$result        = \simplexml_load_string($input);
-			\libxml_disable_entity_loader($backup);
-			\libxml_clear_errors();
-			\libxml_use_internal_errors($backup_errors);
+		$this->registerMediaTypeParser('application/json', $json_parser);
+		$this->registerMediaTypeParser('application/xml', $xml_parser);
+		$this->registerMediaTypeParser('text/xml', $xml_parser);
 
-			if ($result === false) {
-				return null;
-			}
-
-			return $result;
-		});
-
-		$this->registerMediaTypeParser('application/x-www-form-urlencoded', function ($input) {
+		$this->registerMediaTypeParser('application/x-www-form-urlencoded', static function ($input) {
 			\parse_str($input, $data);
 
 			return $data;
 		});
+	}
 
-		// if the request had an invalid method, we can throw it now
-		if (isset($e) && $e instanceof InvalidArgumentException) {
-			throw $e;
-		}
+	/**
+	 * This method is applied to the cloned object
+	 * after PHP performs an initial shallow-copy. This
+	 * method completes a deep-copy by creating new objects
+	 * for the cloned object's internal reference pointers.
+	 */
+	public function __clone()
+	{
+		$this->headers    = clone $this->headers;
+		$this->attributes = clone $this->attributes;
+		$this->body       = clone $this->body;
 	}
 
 	/**
 	 * Register media type parser.
-	 *
-	 * Note: This method is not part of the PSR-7 standard.
 	 *
 	 * @param string   $mediaType a HTTP media type (excluding content-type
 	 *                            params)
 	 * @param callable $callable  a callable that returns parsed contents for
 	 *                            media type
 	 */
-	public function registerMediaTypeParser($mediaType, callable $callable)
+	public function registerMediaTypeParser(string $mediaType, callable $callable): void
 	{
-		if ($callable instanceof Closure) {
-			$callable = $callable->bindTo($this);
-		}
-		$this->bodyParsers[(string) $mediaType] = $callable;
+		$this->bodyParsers[$mediaType] = $callable;
 	}
 
 	/**
 	 * Gets request media type, if known.
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return null|string The request media type, minus content-type params
 	 */
-	public function getMediaType()
+	public function getMediaType(): ?string
 	{
 		$contentType = $this->getContentType();
 
@@ -275,11 +245,9 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Gets request content type.
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return null|string The request content type, if known
 	 */
-	public function getContentType()
+	public function getContentType(): ?string
 	{
 		$result = $this->getHeader('Content-Type');
 
@@ -287,36 +255,9 @@ class Request extends Message implements ServerRequestInterface
 	}
 
 	/**
-	 * Returns an instance with the specified body parameters.
-	 *
-	 * These MAY be injected during instantiation.
-	 *
-	 * If the request Content-Type is either application/x-www-form-urlencoded
-	 * or multipart/form-data, and the request method is POST, use this method
-	 * ONLY to inject the contents of $_POST.
-	 *
-	 * The data IS NOT REQUIRED to come from $_POST, but MUST be the results of
-	 * deserializing the request body content. Deserialization/parsing returns
-	 * structured data, and, as such, this method ONLY accepts arrays or objects,
-	 * or a null value if nothing was available to parse.
-	 *
-	 * As an example, if content negotiation determines that the request data
-	 * is a JSON payload, this method could be used to create a request
-	 * instance with the deserialized parameters.
-	 *
-	 * This method MUST be implemented in such a way as to retain the
-	 * immutability of the message, and MUST return an instance that has the
-	 * updated body parameters.
-	 *
-	 * @param null|array|object $data The deserialized body data. This will
-	 *                                typically be in an array or object.
-	 *
-	 * @throws \InvalidArgumentException if an unsupported argument type is
-	 *                                   provided
-	 *
-	 * @return static
+	 * {@inheritDoc}
 	 */
-	public function withParsedBody($data)
+	public function withParsedBody($data): self
 	{
 		if (null !== $data && !\is_object($data) && !\is_array($data)) {
 			throw new InvalidArgumentException('Parsed body value must be an array, an object, or null');
@@ -331,11 +272,9 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Gets the original HTTP method (ignore override).
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return string
 	 */
-	public function getOriginalMethod()
+	public function getOriginalMethod(): string
 	{
 		return $this->originalMethod;
 	}
@@ -343,11 +282,9 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Is this a GET request?
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return bool
 	 */
-	public function isGet()
+	public function isGet(): bool
 	{
 		return $this->isMethod('GET');
 	}
@@ -355,51 +292,33 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Does this request use a given method?
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @param string $method HTTP method
 	 *
 	 * @return bool
 	 */
-	public function isMethod($method)
+	public function isMethod(string $method): bool
 	{
 		return $this->getMethod() === $method;
 	}
 
 	/**
-	 * Retrieves the HTTP method of the request.
-	 *
-	 * @return string returns the request method
+	 * {@inheritDoc}
 	 */
-	public function getMethod()
+	public function getMethod(): string
 	{
 		return $this->method;
 	}
 
 	/**
-	 * Retrieve any parameters provided in the request body.
-	 *
-	 * If the request Content-Type is either application/x-www-form-urlencoded
-	 * or multipart/form-data, and the request method is POST, this method MUST
-	 * returns the contents of $_POST.
-	 *
-	 * Otherwise, this method may return any results of deserializing
-	 * the request body content; as parsing returns structured content, the
-	 * potential types MUST be arrays or objects only. A null value indicates
-	 * the absence of body content.
-	 *
-	 * @throws \RuntimeException if the request body media type parser returns an invalid value
-	 *
-	 * @return null|array|object The deserialized body parameters, if any.
-	 *                           These will typically be an array or object.
+	 * {@inheritDoc}
 	 */
-	public function getParsedBody()
+	public function getParsedBody(): null|array|object
 	{
-		if ($this->bodyParsed !== false) {
+		if (null !== $this->bodyParsed) {
 			return $this->bodyParsed;
 		}
 
-		if (!$this->body) {
+		if (empty((string) $this->body)) {
 			return null;
 		}
 
@@ -412,7 +331,7 @@ class Request extends Message implements ServerRequestInterface
 			$mediaType = 'application/' . $parts[\count($parts) - 1];
 		}
 
-		if (isset($this->bodyParsers[$mediaType]) === true) {
+		if (true === isset($this->bodyParsers[$mediaType])) {
 			$body   = (string) $this->getBody();
 			$parsed = $this->bodyParsers[$mediaType]($body);
 
@@ -421,6 +340,7 @@ class Request extends Message implements ServerRequestInterface
 					'Request body media type parser return value must be an array, an object, or null'
 				);
 			}
+
 			$this->bodyParsed = $parsed;
 
 			return $this->bodyParsed;
@@ -430,25 +350,11 @@ class Request extends Message implements ServerRequestInterface
 	}
 
 	/**
-	 * Returns an instance with the provided HTTP method.
-	 *
-	 * While HTTP method names are typically all uppercase characters, HTTP
-	 * method names are case-sensitive and thus implementations SHOULD NOT
-	 * modify the given string.
-	 *
-	 * This method MUST be implemented in such a way as to retain the
-	 * immutability of the message, and MUST return an instance that has the
-	 * changed request method.
-	 *
-	 * @param string $method case-sensitive method
-	 *
-	 * @throws \InvalidArgumentException for invalid HTTP methods
-	 *
-	 * @return static
+	 * {@inheritDoc}
 	 */
-	public function withMethod($method)
+	public function withMethod(string $method): self
 	{
-		$method                = $this->filterMethod($method);
+		$method                = self::filterMethod($method);
 		$clone                 = clone $this;
 		$clone->originalMethod = $method;
 		$clone->method         = $method;
@@ -457,28 +363,15 @@ class Request extends Message implements ServerRequestInterface
 	}
 
 	/**
-	 * Retrieves the message's request target.
-	 *
-	 * Retrieves the message's request-target either as it will appear (for
-	 * clients), as it appeared at request (for servers), or as it was
-	 * specified for the instance (see withRequestTarget()).
-	 *
-	 * In most cases, this will be the origin-form of the composed URI,
-	 * unless a value was provided to the concrete implementation (see
-	 * withRequestTarget() below).
-	 *
-	 * If no URI is available, and no request-target has been specifically
-	 * provided, this method MUST return the string "/".
-	 *
-	 * @return string
+	 * {@inheritDoc}
 	 */
-	public function getRequestTarget()
+	public function getRequestTarget(): string
 	{
 		if ($this->requestTarget) {
 			return $this->requestTarget;
 		}
 
-		if ($this->uri === null) {
+		if (empty((string) $this->uri)) {
 			return '/';
 		}
 
@@ -496,32 +389,10 @@ class Request extends Message implements ServerRequestInterface
 		return $this->requestTarget;
 	}
 
-	/*
-	 * URI
-	 */
-
 	/**
-	 * Returns an instance with the specific request-target.
-	 *
-	 * If the request needs a non-origin-form request-target — e.g., for
-	 * specifying an absolute-form, authority-form, or asterisk-form —
-	 * this method may be used to create an instance with the specified
-	 * request-target, verbatim.
-	 *
-	 * This method MUST be implemented in such a way as to retain the
-	 * immutability of the message, and MUST return an instance that has the
-	 * changed request target.
-	 *
-	 * @link http://tools.ietf.org/html/rfc7230#section-2.7 (for the various
-	 *     request-target forms allowed in request messages)
-	 *
-	 * @param mixed $requestTarget
-	 *
-	 * @throws \InvalidArgumentException if the request target is invalid
-	 *
-	 * @return static
+	 * {@inheritDoc}
 	 */
-	public function withRequestTarget($requestTarget)
+	public function withRequestTarget(string $requestTarget): self
 	{
 		if (\preg_match('#\s#', $requestTarget)) {
 			throw new InvalidArgumentException(
@@ -535,63 +406,25 @@ class Request extends Message implements ServerRequestInterface
 	}
 
 	/**
-	 * Retrieves the URI instance.
-	 *
-	 * This method MUST return a UriInterface instance.
-	 *
-	 * @link http://tools.ietf.org/html/rfc3986#section-4.3
-	 *
-	 * @return \OZONE\OZ\Http\Uri returns a UriInterface instance
-	 *                            representing the URI of the request
+	 * {@inheritDoc}
 	 */
-	public function getUri()
+	public function getUri(): Uri
 	{
 		return $this->uri;
 	}
 
 	/**
-	 * Returns an instance with the provided URI.
-	 *
-	 * This method MUST update the Host header of the returned request by
-	 * default if the URI contains a host component. If the URI does not
-	 * contain a host component, any pre-existing Host header MUST be carried
-	 * over to the returned request.
-	 *
-	 * You can opt-in to preserving the original state of the Host header by
-	 * setting `$preserveHost` to `true`. When `$preserveHost` is set to
-	 * `true`, this method interacts with the Host header in the following ways:
-	 *
-	 * - If the the Host header is missing or empty, and the new URI contains
-	 *   a host component, this method MUST update the Host header in the returned
-	 *   request.
-	 * - If the Host header is missing or empty, and the new URI does not contain a
-	 *   host component, this method MUST NOT update the Host header in the returned
-	 *   request.
-	 * - If a Host header is present and non-empty, this method MUST NOT update
-	 *   the Host header in the returned request.
-	 *
-	 * This method MUST be implemented in such a way as to retain the
-	 * immutability of the message, and MUST return an instance that has the
-	 * new UriInterface instance.
-	 *
-	 * @link http://tools.ietf.org/html/rfc3986#section-4.3
-	 *
-	 * @param UriInterface $uri          new request URI to use
-	 * @param bool         $preserveHost preserve the original state of the Host header
-	 *
-	 * @return static
+	 * {@inheritDoc}
 	 */
-	public function withUri(UriInterface $uri, $preserveHost = false)
+	public function withUri(UriInterface $uri, bool $preserveHost = false): self
 	{
 		$clone      = clone $this;
 		$clone->uri = $uri;
 
-		if (!$preserveHost) {
-			if ($uri->getHost() !== '') {
+		if ('' !== $uri->getHost()) {
+			if (!$preserveHost) {
 				$clone->headers->set('Host', $uri->getHost());
-			}
-		} else {
-			if ($uri->getHost() !== '' && (!$this->hasHeader('Host') || $this->getHeaderLine('Host') === '')) {
+			} elseif (!$this->hasHeader('Host') || '' === $this->getHeaderLine('Host')) {
 				$clone->headers->set('Host', $uri->getHost());
 			}
 		}
@@ -602,11 +435,9 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Is this a POST request?
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return bool
 	 */
-	public function isPost()
+	public function isPost(): bool
 	{
 		return $this->isMethod('POST');
 	}
@@ -614,11 +445,9 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Is this a PUT request?
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return bool
 	 */
-	public function isPut()
+	public function isPut(): bool
 	{
 		return $this->isMethod('PUT');
 	}
@@ -626,11 +455,9 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Is this a PATCH request?
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return bool
 	 */
-	public function isPatch()
+	public function isPatch(): bool
 	{
 		return $this->isMethod('PATCH');
 	}
@@ -638,11 +465,9 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Is this a DELETE request?
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return bool
 	 */
-	public function isDelete()
+	public function isDelete(): bool
 	{
 		return $this->isMethod('DELETE');
 	}
@@ -650,11 +475,9 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Is this a HEAD request?
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return bool
 	 */
-	public function isHead()
+	public function isHead(): bool
 	{
 		return $this->isMethod('HEAD');
 	}
@@ -662,57 +485,41 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Is this a OPTIONS request?
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return bool
 	 */
-	public function isOptions()
+	public function isOptions(): bool
 	{
 		return $this->isMethod('OPTIONS');
 	}
 
-	/*
-	 * Cookies
-	 */
-
 	/**
 	 * Is this an XHR request?
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return bool
 	 */
-	public function isXhr()
+	public function isXhr(): bool
 	{
-		return $this->getHeaderLine('X-Requested-With') === 'XMLHttpRequest';
+		return 'XMLHttpRequest' === $this->getHeaderLine('X-Requested-With');
 	}
 
 	/**
 	 * Gets request content character set, if known.
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return null|string
 	 */
-	public function getContentCharset()
+	public function getContentCharset(): ?string
 	{
 		$mediaTypeParams = $this->getMediaTypeParams();
 
-		if (isset($mediaTypeParams['charset'])) {
-			return $mediaTypeParams['charset'];
-		}
-
-		return null;
+		return $mediaTypeParams['charset'] ?? null;
 	}
 
 	/**
 	 * Gets request media type params, if known.
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return array
 	 */
-	public function getMediaTypeParams()
+	public function getMediaTypeParams(): array
 	{
 		$contentType       = $this->getContentType();
 		$contentTypeParams = [];
@@ -721,7 +528,7 @@ class Request extends Message implements ServerRequestInterface
 			$contentTypeParts       = \preg_split('/\s*[;,]\s*/', $contentType);
 			$contentTypePartsLength = \count($contentTypeParts);
 
-			for ($i = 1; $i < $contentTypePartsLength; $i++) {
+			for ($i = 1; $i < $contentTypePartsLength; ++$i) {
 				$paramParts                                     = \explode('=', $contentTypeParts[$i]);
 				$contentTypeParams[\strtolower($paramParts[0])] = $paramParts[1];
 			}
@@ -730,18 +537,12 @@ class Request extends Message implements ServerRequestInterface
 		return $contentTypeParams;
 	}
 
-	/*
-	 * Query Params
-	 */
-
 	/**
 	 * Gets request content length, if known.
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return null|int
 	 */
-	public function getContentLength()
+	public function getContentLength(): ?int
 	{
 		$result = $this->headers->get('Content-Length');
 
@@ -751,63 +552,30 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Fetches cookie value from cookies sent by the client to the server.
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
-	 * @param string $key     the attribute name
-	 * @param mixed  $default default value to return if the attribute does not exist
+	 * @param string     $key     the attribute name
+	 * @param null|mixed $default default value to return if the attribute does not exist
 	 *
 	 * @return mixed
 	 */
-	public function getCookieParam($key, $default = null)
+	public function getCookieParam(string $key, mixed $default = null): mixed
 	{
 		$cookies = $this->getCookieParams();
-		$result  = $default;
 
-		if (isset($cookies[$key])) {
-			$result = $cookies[$key];
-		}
-
-		return $result;
+		return $cookies[$key] ?? $default;
 	}
 
-	/*
-	 * File Params
-	 */
-
 	/**
-	 * Retrieve cookies.
-	 *
-	 * Retrieves cookies sent by the client to the server.
-	 *
-	 * The data MUST be compatible with the structure of the $_COOKIE
-	 * superglobal.
-	 *
-	 * @return array
+	 * {@inheritDoc}
 	 */
-	public function getCookieParams()
+	public function getCookieParams(): array
 	{
 		return $this->cookies;
 	}
 
 	/**
-	 * Returns an instance with the specified cookies.
-	 *
-	 * The data IS NOT REQUIRED to come from the $_COOKIE superglobal, but MUST
-	 * be compatible with the structure of $_COOKIE. Typically, this data will
-	 * be injected at instantiation.
-	 *
-	 * This method MUST NOT update the related Cookie header of the request
-	 * instance, nor related values in the server params.
-	 *
-	 * This method MUST be implemented in such a way as to retain the
-	 * immutability of the message, and MUST return an instance that has the
-	 * updated cookie values.
-	 *
-	 * @param array $cookies array of key/value pairs representing cookies
-	 *
-	 * @return static
+	 * {@inheritDoc}
 	 */
-	public function withCookieParams(array $cookies)
+	public function withCookieParams(array $cookies): self
 	{
 		$clone          = clone $this;
 		$clone->cookies = $cookies;
@@ -815,101 +583,49 @@ class Request extends Message implements ServerRequestInterface
 		return $clone;
 	}
 
-	/*
-	 * Server Params
-	 */
-
 	/**
 	 * Retrieve a server parameter.
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
-	 * @param string $key
-	 * @param mixed  $default
+	 * @param string     $key
+	 * @param null|mixed $default
 	 *
 	 * @return mixed
 	 */
-	public function getServerParam($key, $default = null)
+	public function getServerParam(string $key, mixed $default = null): mixed
 	{
 		$serverParams = $this->getServerParams();
 
-		return isset($serverParams[$key]) ? $serverParams[$key] : $default;
+		return $serverParams[$key] ?? $default;
 	}
 
 	/**
-	 * Retrieve server parameters.
-	 *
-	 * Retrieves data related to the incoming request environment,
-	 * typically derived from PHP's $_SERVER superglobal. The data IS NOT
-	 * REQUIRED to originate from $_SERVER.
-	 *
-	 * @return array
+	 * {@inheritDoc}
 	 */
-	public function getServerParams()
+	public function getServerParams(): array
 	{
 		return $this->serverParams;
 	}
 
-	/*
-	 * Attributes
-	 */
-
 	/**
-	 * Retrieve attributes derived from the request.
-	 *
-	 * The request "attributes" may be used to allow injection of any
-	 * parameters derived from the request: e.g., the results of path
-	 * match operations; the results of decrypting cookies; the results of
-	 * deserializing non-form-encoded message bodies; etc. Attributes
-	 * will be application and request specific, and CAN be mutable.
-	 *
-	 * @return array attributes derived from the request
+	 * {@inheritDoc}
 	 */
-	public function getAttributes()
+	public function getAttributes(): array
 	{
 		return $this->attributes->all();
 	}
 
 	/**
-	 * Retrieve a single derived request attribute.
-	 *
-	 * Retrieves a single derived request attribute as described in
-	 * getAttributes(). If the attribute has not been previously set, returns
-	 * the default value as provided.
-	 *
-	 * This method obviates the need for a hasAttribute() method, as it allows
-	 * specifying a default value to return if the attribute is not found.
-	 *
-	 * @param string $name    the attribute name
-	 * @param mixed  $default default value to return if the attribute does not exist
-	 *
-	 * @return mixed
-	 *
-	 * @see getAttributes()
+	 * {@inheritDoc}
 	 */
-	public function getAttribute($name, $default = null)
+	public function getAttribute(string $name, $default = null): mixed
 	{
 		return $this->attributes->get($name, $default);
 	}
 
 	/**
-	 * Returns an instance with the specified derived request attribute.
-	 *
-	 * This method allows setting a single derived request attribute as
-	 * described in getAttributes().
-	 *
-	 * This method MUST be implemented in such a way as to retain the
-	 * immutability of the message, and MUST return an instance that has the
-	 * updated attribute.
-	 *
-	 * @param string $name  the attribute name
-	 * @param mixed  $value the value of the attribute
-	 *
-	 * @return static
-	 *
-	 * @see getAttributes()
+	 * {@inheritDoc}
 	 */
-	public function withAttribute($name, $value)
+	public function withAttribute(string $name, $value): self
 	{
 		$clone = clone $this;
 		$clone->attributes->set($name, $value);
@@ -918,22 +634,9 @@ class Request extends Message implements ServerRequestInterface
 	}
 
 	/**
-	 * Returns an instance that removes the specified derived request attribute.
-	 *
-	 * This method allows removing a single derived request attribute as
-	 * described in getAttributes().
-	 *
-	 * This method MUST be implemented in such a way as to retain the
-	 * immutability of the message, and MUST return an instance that removes
-	 * the attribute.
-	 *
-	 * @param string $name the attribute name
-	 *
-	 * @return static
-	 *
-	 * @see getAttributes()
+	 * {@inheritDoc}
 	 */
-	public function withoutAttribute($name)
+	public function withoutAttribute(string $name): self
 	{
 		$clone = clone $this;
 		$clone->attributes->remove($name);
@@ -943,8 +646,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Creates a new instance with the specified derived request attributes.
-	 *
-	 * Note: This method is not part of the PSR-7 standard.
 	 *
 	 * This method allows setting all new derived request attributes as
 	 * described in getAttributes().
@@ -957,7 +658,7 @@ class Request extends Message implements ServerRequestInterface
 	 *
 	 * @return static
 	 */
-	public function withAttributes(array $attributes)
+	public function withAttributes(array $attributes): self
 	{
 		$clone             = clone $this;
 		$clone->attributes = new Collection($attributes);
@@ -965,20 +666,14 @@ class Request extends Message implements ServerRequestInterface
 		return $clone;
 	}
 
-	/*
-	 * Body
-	 */
-
 	/**
 	 * Force Body to be parsed again.
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
 	 * @return $this
 	 */
-	public function reparseBody()
+	public function reparseBody(): self
 	{
-		$this->bodyParsed = false;
+		$this->bodyParsed = null;
 
 		return $this;
 	}
@@ -986,14 +681,12 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Fetches request parameter value from body or query string, or uploded files (in that order).
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
-	 * @param string $key     the parameter key
-	 * @param string $default the default value
+	 * @param string      $key     the parameter key
+	 * @param null|string $default the default value
 	 *
 	 * @return mixed the parameter value
 	 */
-	public function getFormField($key, $default = null)
+	public function getUnsafeFormField(string $key, ?string $default = null): mixed
 	{
 		$postParams = $this->getParsedBody();
 		$getParams  = $this->getQueryParams();
@@ -1003,7 +696,7 @@ class Request extends Message implements ServerRequestInterface
 		if (\is_array($postParams) && isset($postParams[$key])) {
 			$result = $postParams[$key];
 		} elseif (\is_object($postParams) && \property_exists($postParams, $key)) {
-			$result = $postParams->$key;
+			$result = $postParams->{$key};
 		} elseif (isset($getParams[$key])) {
 			$result = $getParams[$key];
 		} elseif (isset($files[$key])) {
@@ -1016,13 +709,11 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Fetches associative array of body, query string parameters and uploaded files.
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
+	 * @param bool $include_files
 	 *
-	 * @param bool $includeFiles
-	 *
-	 * @return array
+	 * @return FormData
 	 */
-	public function getFormData($includeFiles = true)
+	public function getUnsafeFormData(bool $include_files = true): FormData
 	{
 		$params     = $this->getQueryParams();
 		$postParams = $this->getParsedBody();
@@ -1032,32 +723,23 @@ class Request extends Message implements ServerRequestInterface
 			$params = \array_merge($params, (array) $postParams);
 		}
 
-		if (!$includeFiles) {
-			return $params;
+		if ($include_files) {
+			$params = \array_replace($params, $files);
 		}
 
-		return \array_replace($params, $files);
+		return new FormData($params);
 	}
 
 	/**
-	 * Retrieve query string arguments.
-	 *
-	 * Retrieves the deserialized query string arguments, if any.
-	 *
-	 * Note: the query params might not be in sync with the URI or server
-	 * params. If you need to ensure you are only getting the original
-	 * values, you may need to parse the query string from `getUri()->getQuery()`
-	 * or from the `QUERY_STRING` server param.
-	 *
-	 * @return array
+	 * {@inheritDoc}
 	 */
-	public function getQueryParams()
+	public function getQueryParams(): array
 	{
-		if (\is_array($this->queryParams)) {
+		if (!empty($this->queryParams)) {
 			return $this->queryParams;
 		}
 
-		if ($this->uri === null) {
+		if (empty((string) $this->uri)) {
 			return [];
 		}
 
@@ -1067,29 +749,9 @@ class Request extends Message implements ServerRequestInterface
 	}
 
 	/**
-	 * Returns an instance with the specified query string arguments.
-	 *
-	 * These values SHOULD remain immutable over the course of the incoming
-	 * request. They MAY be injected during instantiation, such as from PHP's
-	 * $_GET superglobal, or MAY be derived from some other value such as the
-	 * URI. In cases where the arguments are parsed from the URI, the data
-	 * MUST be compatible with what PHP's parse_str() would return for
-	 * purposes of how duplicate query parameters are handled, and how nested
-	 * sets are handled.
-	 *
-	 * Setting query string arguments MUST NOT change the URI stored by the
-	 * request, nor the values in the server params.
-	 *
-	 * This method MUST be implemented in such a way as to retain the
-	 * immutability of the message, and MUST return an instance that has the
-	 * updated query string arguments.
-	 *
-	 * @param array $query array of query string arguments, typically from
-	 *                     $_GET
-	 *
-	 * @return static
+	 * {@inheritDoc}
 	 */
-	public function withQueryParams(array $query)
+	public function withQueryParams(array $query): self
 	{
 		$clone              = clone $this;
 		$clone->queryParams = $query;
@@ -1097,41 +759,20 @@ class Request extends Message implements ServerRequestInterface
 		return $clone;
 	}
 
-	/*
-	 * Parameters (e.g., POST and GET data)
-	 */
-
 	/**
-	 * Retrieve normalized file upload data.
+	 * {@inheritDoc}
 	 *
-	 * This method returns upload metadata in a normalized tree, with each leaf
-	 * an instance of Psr\Http\Message\UploadedFileInterface.
-	 *
-	 * These values MAY be prepared from $_FILES or the message body during
-	 * instantiation, or MAY be injected via withUploadedFiles().
-	 *
-	 * @return \OZONE\OZ\Http\UploadedFile[] an array tree of UploadedFileInterface instances; an empty
-	 *                                       array MUST be returned if no data is present
+	 * @return UploadedFile[]
 	 */
-	public function getUploadedFiles()
+	public function getUploadedFiles(): array
 	{
 		return $this->uploadedFiles;
 	}
 
 	/**
-	 * Creates a new instance with the specified uploaded files.
-	 *
-	 * This method MUST be implemented in such a way as to retain the
-	 * immutability of the message, and MUST return an instance that has the
-	 * updated body parameters.
-	 *
-	 * @param array $uploadedFiles an array tree of UploadedFileInterface instances
-	 *
-	 * @throws \InvalidArgumentException if an invalid structure is provided
-	 *
-	 * @return static
+	 * {@inheritDoc}
 	 */
-	public function withUploadedFiles(array $uploadedFiles)
+	public function withUploadedFiles(array $uploadedFiles): self
 	{
 		$clone                = clone $this;
 		$clone->uploadedFiles = $uploadedFiles;
@@ -1142,70 +783,31 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Fetches parameter value from query string.
 	 *
-	 * Note: This method is not part of the PSR-7 standard.
-	 *
-	 * @param string $key
-	 * @param mixed  $default
+	 * @param string     $key
+	 * @param null|mixed $default
 	 *
 	 * @return mixed
 	 */
-	public function getQueryParam($key, $default = null)
+	public function getQueryParam(string $key, mixed $default = null): mixed
 	{
 		$getParams = $this->getQueryParams();
-		$result    = $default;
 
-		if (isset($getParams[$key])) {
-			$result = $getParams[$key];
-		}
-
-		return $result;
+		return $getParams[$key] ?? $default;
 	}
 
 	/**
-	 * Validate the HTTP method
+	 * Creates new HTTP request with data extracted from the application HTTP Environment object.
 	 *
-	 * @param string $method
-	 *
-	 * @throws \InvalidArgumentException on invalid HTTP method
-	 *
-	 * @return string
-	 */
-	protected function filterMethod($method)
-	{
-		if (!\is_string($method)) {
-			throw new InvalidArgumentException(\sprintf(
-				'Unsupported HTTP method; must be a string, received %s',
-				(\is_object($method) ? \get_class($method) : \gettype($method))
-			));
-		}
-
-		$method = \strtoupper($method);
-
-		if (!\array_key_exists($method, $this->validMethods)) {
-			throw new InvalidArgumentException(\sprintf("Invalid HTTP method '%s'", $method));
-		}
-
-		return $method;
-	}
-
-	/*
-	 * Method
-	 */
-
-	/**
-	 * Creates new HTTP request with data extracted from the application
-	 * Environment object
-	 *
-	 * @param Environment $environment
+	 * @param HTTPEnvironment $environment
 	 *
 	 * @return static
 	 */
-	public static function createFromEnvironment(Environment $environment)
+	public static function createFromHTTPEnvironment(HTTPEnvironment $environment): self
 	{
 		$method        = $environment['REQUEST_METHOD'];
 		$uri           = Uri::createFromEnvironment($environment);
 		$headers       = Headers::createFromEnvironment($environment);
-		$cookies       = Cookies::parseCookieHeaderString($headers->get('Cookie', [''])[0]);
+		$cookies       = Cookies::parseIncomingRequestCookieHeaderString($headers->get('Cookie', [''])[0]);
 		$serverParams  = $environment->all();
 		$body          = new RequestBody();
 		$uploadedFiles = UploadedFile::createFromEnvironment($environment);
@@ -1213,8 +815,8 @@ class Request extends Message implements ServerRequestInterface
 		$request = new static($method, $uri, $headers, $cookies, $serverParams, $body, $uploadedFiles);
 
 		if (
-			$method === 'POST' &&
-			\in_array($request->getMediaType(), ['application/x-www-form-urlencoded', 'multipart/form-data'])
+			'POST' === $method
+			&& \in_array($request->getMediaType(), ['application/x-www-form-urlencoded', 'multipart/form-data'], true)
 		) {
 			// parsed body must be $_POST
 			$request = $request->withParsedBody($_POST);
@@ -1224,15 +826,22 @@ class Request extends Message implements ServerRequestInterface
 	}
 
 	/**
-	 * This method is applied to the cloned object
-	 * after PHP performs an initial shallow-copy. This
-	 * method completes a deep-copy by creating new objects
-	 * for the cloned object's internal reference pointers.
+	 * Validate the HTTP method.
+	 *
+	 * @param string $method
+	 *
+	 * @return string
+	 *
+	 * @throws InvalidArgumentException on invalid HTTP method
 	 */
-	public function __clone()
+	public static function filterMethod(string $method): string
 	{
-		$this->headers    = clone $this->headers;
-		$this->attributes = clone $this->attributes;
-		$this->body       = clone $this->body;
+		$method = \strtoupper($method);
+
+		if (!\array_key_exists($method, self::$validMethods)) {
+			throw new InvalidArgumentException(\sprintf("Invalid HTTP method '%s'", $method));
+		}
+
+		return $method;
 	}
 }

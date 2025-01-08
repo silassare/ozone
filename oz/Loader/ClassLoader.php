@@ -9,14 +9,19 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Loader;
+declare(strict_types=1);
+
+namespace OZONE\Core\Loader;
+
+use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * OZone class loader comply with PSR-4.
  * Used to load:
  *    - fully-qualified class.
  *  - and class which are not in a namespace context.
- *
+ *loadClass
  *```
  * /root/
  *        app/
@@ -44,7 +49,7 @@ namespace OZONE\OZ\Loader;
  *                Loader/
  *                    ClassLoader.php
  *        index.php
- *```
+ *```.
  *
  *```php
  * <?php
@@ -52,7 +57,7 @@ namespace OZONE\OZ\Loader;
  *    require_once "/root/packages/OZone/Loader/ClassLoader.php" ;
  *
  *    // no need to instantiate the loader nor register class loader
- *    $loader = \OZONE\OZ\Loader\ClassLoader;
+ *    $loader = \OZONE\Core\Loader\ClassLoader;
  *
  *    // to load class with namespace
  *        // register the base directories for your namespace prefixes
@@ -80,7 +85,7 @@ namespace OZONE\OZ\Loader;
 class ClassLoader
 {
 	/**
-	 * Class name regexp
+	 * Class name regexp.
 	 *
 	 * class name must:
 	 *        - start with a CapitalLetter
@@ -89,7 +94,7 @@ class ClassLoader
 	 *
 	 * @var string Class file name regular expression
 	 */
-	const CLASS_FILE_REG = "#([A-Z][a-zA-Z0-9_]*)\.php$#";
+	public const CLASS_FILE_REG = '~([A-Z][\w_]*)\.php$~';
 
 	/**
 	 * An associative array where the key is a namespace prefix and the value
@@ -97,28 +102,42 @@ class ClassLoader
 	 *
 	 * @var array
 	 */
-	protected static $psr4_namespaces_map = [];
+	protected static array $psr4_namespaces_map = [];
 
 	/**
 	 * Cache array of indexed dirs.
 	 *
 	 * @var array
 	 */
-	private static $indexed_dirs = [];
+	private static array $indexed_dirs = [];
 
 	/**
 	 * Array of classes name mapped to classes path.
 	 *
 	 * @var array
 	 */
-	private static $class_map = [];
+	private static array $class_map = [];
 
 	/**
 	 * Registered as class loader or not.
 	 *
 	 * @var bool
 	 */
-	private static $registered = false;
+	private static bool $registered = false;
+
+	/**
+	 * Returns a report of the class loader.
+	 *
+	 * @return array
+	 */
+	public static function report(): array
+	{
+		return [
+			'indexed_dirs' => self::$indexed_dirs,
+			'class_map'    => self::$class_map,
+			'namespaces'   => self::$psr4_namespaces_map,
+		];
+	}
 
 	/**
 	 * Adds directory to the indexed directories list.
@@ -126,10 +145,8 @@ class ClassLoader
 	 * @param string $dir       the directory path
 	 * @param bool   $recursive define if we should index sub directories
 	 * @param int    $deep      define how deep we should go if recursive
-	 *
-	 * @throws \Exception
 	 */
-	public static function addDir($dir, $recursive = false, $deep = 1)
+	public static function addDir(string $dir, bool $recursive = false, int $deep = 1): void
 	{
 		// let's register our class loader if not done
 		self::register();
@@ -137,39 +154,39 @@ class ClassLoader
 		$dir = self::cleanPath($dir);
 
 		if (!\is_dir($dir)) {
-			throw new \Exception(\sprintf('"%s" does not exists or is not a directory.', $dir));
+			throw new InvalidArgumentException(\sprintf('"%s" does not exists or is not a directory.', $dir));
 		}
 
-		if (\in_array($dir, self::$indexed_dirs)) {
+		if (\in_array($dir, self::$indexed_dirs, true)) {
 			return;
 		}
 
-		\array_push(self::$indexed_dirs, $dir);
+		self::$indexed_dirs[] = $dir;
 
 		$res = \opendir($dir);
 
-		if ($res) {
-			while (false !== ($filename = \readdir($res))) {
-				if ($filename !== '.' && $filename !== '..') {
-					$c_path = $dir . \DIRECTORY_SEPARATOR . $filename;
-					$in     = [];
+		if (!$res) {
+			throw new RuntimeException(\sprintf('cannot open directory at: "%s"', $dir));
+		}
 
-					if (\is_file($c_path) && \preg_match(self::CLASS_FILE_REG, $filename, $in)) {
-						$class_name = $in[1];
+		while (false !== ($filename = \readdir($res))) {
+			if ('.' !== $filename && '..' !== $filename) {
+				$c_path = $dir . \DIRECTORY_SEPARATOR . $filename;
+				$in     = [];
 
-						if (!\array_key_exists($class_name, self::$class_map)) {
-							self::$class_map[$class_name] = $c_path;
-						}
-					} elseif ((bool) $recursive && $deep > 0 && \is_dir($c_path)) {
-						self::addDir($c_path, $recursive, $deep - 1);
+				if (\is_file($c_path) && \preg_match(self::CLASS_FILE_REG, $filename, $in)) {
+					$class_name = $in[1];
+
+					if (!\array_key_exists($class_name, self::$class_map)) {
+						self::$class_map[$class_name] = $c_path;
 					}
+				} elseif ($recursive && $deep > 0 && \is_dir($c_path)) {
+					self::addDir($c_path, $recursive, $deep - 1);
 				}
 			}
-
-			\closedir($res);
-		} else {
-			throw new \Exception(\sprintf('cannot open directory at: "%s"', $dir));
 		}
+
+		\closedir($res);
 	}
 
 	/**
@@ -178,16 +195,14 @@ class ClassLoader
 	 * @param array $dirs      the directories list name
 	 * @param bool  $recursive define if we should index sub directories
 	 * @param int   $deep      define how deep we should go if recursive
-	 *
-	 * @throws \Exception
 	 */
-	public static function addDirs(array $dirs, $recursive = false, $deep = 1)
+	public static function addDirs(array $dirs, bool $recursive = false, int $deep = 1): void
 	{
 		foreach ($dirs as $dir) {
 			if (\is_array($dir)) {
-				$c_dir       = isset($dir[0]) ? $dir[0] : null;
-				$c_recursive = isset($dir[1]) ? $dir[1] : $recursive;
-				$c_deep      = isset($dir[2]) ? $dir[2] : $deep;
+				$c_dir       = $dir[0] ?? null;
+				$c_recursive = $dir[1] ?? $recursive;
+				$c_deep      = $dir[2] ?? $deep;
 
 				self::addDir($c_dir, $c_recursive, $c_deep);
 			} else {
@@ -205,10 +220,8 @@ class ClassLoader
 	 * @param bool   $prepend  if true, prepend the base directory to the stack
 	 *                         instead of appending it; this causes it to be searched first rather
 	 *                         than last
-	 *
-	 * @throws \Exception
 	 */
-	public static function addNamespace($prefix, $base_dir, $prepend = false)
+	public static function addNamespace(string $prefix, string $base_dir, bool $prepend = false): void
 	{
 		// let's register our class loader if not done
 		self::register();
@@ -216,7 +229,7 @@ class ClassLoader
 		$dir = self::cleanPath($base_dir);
 
 		if (!\is_dir($dir)) {
-			throw new \Exception(\sprintf('"%s" does not exists or is not a directory.', $dir));
+			throw new InvalidArgumentException(\sprintf('"%s" does not exists or is not a directory.', $dir));
 		}
 
 		// normalize namespace prefix
@@ -224,16 +237,16 @@ class ClassLoader
 		// normalize the base directory with a trailing separator
 		$base_dir = \rtrim($base_dir, \DIRECTORY_SEPARATOR) . '/';
 		// initialize the namespace prefix array
-		if (isset(self::$psr4_namespaces_map[$prefix]) === false) {
+		if (false === isset(self::$psr4_namespaces_map[$prefix])) {
 			self::$psr4_namespaces_map[$prefix] = [];
 		}
 
-		if (!\in_array($base_dir, self::$psr4_namespaces_map[$prefix])) {
+		if (!\in_array($base_dir, self::$psr4_namespaces_map[$prefix], true)) {
 			// retain the base directory for the namespace prefix
 			if ($prepend) {
 				\array_unshift(self::$psr4_namespaces_map[$prefix], $base_dir);
 			} else {
-				\array_push(self::$psr4_namespaces_map[$prefix], $base_dir);
+				self::$psr4_namespaces_map[$prefix][] = $base_dir;
 			}
 		}
 	}
@@ -243,22 +256,20 @@ class ClassLoader
 	 *
 	 * @param string $class_name the class name
 	 *
-	 * @return mixed the mapped file name on success, or boolean false on failure
+	 * @return false|string the mapped file name on success, or false on failure
 	 */
-	public static function loadClass($class_name)
+	public static function loadClass(string $class_name): bool|string
 	{
-		if (\is_string($class_name)) {
-			if (false !== \strrpos($class_name, '\\')) {
-				// it seems to be a fully-qualified class name
-				return self::loadClassPsr4($class_name);
-			}
+		if (false !== \strrpos($class_name, '\\')) {
+			// it seems to be a fully-qualified class name
+			return self::loadClassPsr4($class_name);
+		}
 
-			if (\array_key_exists($class_name, self::$class_map)) {
-				$path = self::$class_map[$class_name];
+		if (\array_key_exists($class_name, self::$class_map)) {
+			$path = self::$class_map[$class_name];
 
-				if (self::requireFile($path)) {
-					return $path;
-				}
+			if (self::requireFile($path)) {
+				return $path;
 			}
 		}
 
@@ -267,15 +278,15 @@ class ClassLoader
 	}
 
 	/**
-	 * Checks if the class exists
+	 * Checks if the class exists.
 	 *
 	 * @param string $class_name The class name
 	 *
 	 * @return bool
 	 */
-	public static function exists($class_name)
+	public static function exists(string $class_name): bool
 	{
-		if (\is_string($class_name)) {
+		if (!empty($class_name)) {
 			self::loadClass($class_name);
 
 			return \class_exists($class_name);
@@ -285,30 +296,15 @@ class ClassLoader
 	}
 
 	/**
-	 * Creates instance of class for a given class name and arguments array list.
-	 *
-	 * @param string $class_name the class name
-	 * @param array  $args       a list of arguments, used to instantiate
-	 *
-	 * @throws \ReflectionException
-	 *
-	 * @return object
-	 */
-	public static function instantiateClass($class_name, $args = [])
-	{
-		$obj = new \ReflectionClass($class_name);
-
-		return $obj->newInstanceArgs($args);
-	}
-
-	/**
 	 * Register loader with SPL autoloader stack.
 	 */
-	protected static function register()
+	protected static function register(): void
 	{
-		if (self::$registered === false) {
+		if (false === self::$registered) {
 			self::$registered = true;
-			\spl_autoload_register([self::class, 'loadClass']);
+			\spl_autoload_register(static function ($class_name) {
+				self::loadClass($class_name);
+			});
 		}
 	}
 
@@ -317,9 +313,9 @@ class ClassLoader
 	 *
 	 * @param string $class the fully-qualified class name
 	 *
-	 * @return mixed the mapped file name on success, or boolean false on failure
+	 * @return false|string the mapped file name on success, or false on failure
 	 */
-	protected static function loadClassPsr4($class)
+	protected static function loadClassPsr4(string $class): bool|string
 	{
 		// the current namespace prefix
 		$prefix = $class;
@@ -350,13 +346,13 @@ class ClassLoader
 	 * @param string $prefix         the namespace prefix
 	 * @param string $relative_class the relative class name
 	 *
-	 * @return mixed boolean false if no mapped file can be loaded, or the
-	 *               name of the mapped file that was loaded
+	 * @return false|string boolean false if no mapped file can be loaded, or the
+	 *                      name of the mapped file that was loaded
 	 */
-	protected static function getPsr4MappedFile($prefix, $relative_class)
+	protected static function getPsr4MappedFile(string $prefix, string $relative_class): false|string
 	{
 		// are there any base directories for this namespace prefix?
-		if (isset(self::$psr4_namespaces_map[$prefix]) === false) {
+		if (false === isset(self::$psr4_namespaces_map[$prefix])) {
 			return false;
 		}
 		// look through base directories for this namespace prefix
@@ -383,11 +379,11 @@ class ClassLoader
 	 *
 	 * @return string
 	 */
-	protected static function cleanPath($dir_path)
+	protected static function cleanPath(string $dir_path): string
 	{
-		if (\is_string($dir_path) && \strlen($dir_path) > 1) {
+		if (!empty($dir_path)) {
 			// removes last / or \
-			$dir_path = \rtrim($dir_path, '\\/');
+			$dir_path = \rtrim($dir_path, '\/');
 
 			if (\DIRECTORY_SEPARATOR === '\\') {
 				$dir_path = \str_replace('/', '\\', $dir_path);
@@ -404,7 +400,7 @@ class ClassLoader
 	 *
 	 * @return bool true if the file exists, false if not
 	 */
-	protected static function requireFile($file)
+	protected static function requireFile(string $file): bool
 	{
 		if (\file_exists($file)) {
 			require $file;

@@ -9,17 +9,34 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
+use OZONE\Core\Auth\Services\AuthService;
+use OZONE\Core\Auth\Services\EmailVerificationAuthService;
+use OZONE\Core\Auth\Services\PhoneVerificationAuthService;
+use OZONE\Core\FS\Services\UploadFiles;
+use OZONE\Core\Services\CaptchaCode;
+use OZONE\Core\Services\LinkTo;
+use OZONE\Core\Services\QRCode;
+use OZONE\Core\Users\Services\AccountRecovery;
+use OZONE\Core\Users\Services\Login;
+use OZONE\Core\Users\Services\Logout;
+use OZONE\Core\Users\Services\Password;
+use OZONE\Core\Users\Services\SignUp;
+use OZONE\Core\Users\Services\TNet;
+
 return [
-	'OZONE\OZ\FS\Services\GetFiles'               => true,
-	'OZONE\OZ\FS\Services\UploadFiles'            => true,
-	'OZONE\OZ\Authenticator\Services\CaptchaCode' => true,
-	'OZONE\OZ\Authenticator\Services\QRCode'      => true,
-	'OZONE\OZ\User\Services\TNet'                 => true,
-	'OZONE\OZ\User\Services\SignUp'               => true,
-	'OZONE\OZ\User\Services\Login'                => true,
-	'OZONE\OZ\User\Services\Logout'               => true,
-	'OZONE\OZ\User\Services\UserPicEdit'          => true,
-	'OZONE\OZ\User\Services\Password'             => true,
-	'OZONE\OZ\User\Services\SessionShare'         => true,
-	'OZONE\OZ\User\Services\AccountRecovery'      => true,
+	UploadFiles::class                  => true,
+	CaptchaCode::class                  => true,
+	QRCode::class                       => true,
+	LinkTo::class                       => true,
+	TNet::class                         => true,
+	SignUp::class                       => true,
+	Login::class                        => true,
+	Logout::class                       => true,
+	Password::class                     => true,
+	AccountRecovery::class              => true,
+	AuthService::class                  => true,
+	PhoneVerificationAuthService::class => true,
+	EmailVerificationAuthService::class => true,
 ];

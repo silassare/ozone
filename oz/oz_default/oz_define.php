@@ -9,12 +9,39 @@
  * file that was distributed with this source code.
  */
 
-\define('OZ_OZONE_VERSION', '2.0.0');
-\define('OZ_OZONE_VERSION_NAME', 'O\'Zone v' . OZ_OZONE_VERSION);
-\define('OZ_OZONE_DIR', \dirname(__DIR__) . \DIRECTORY_SEPARATOR);
-\define('OZ_OZONE_IS_CLI', 'cli' === \php_sapi_name());
+declare(strict_types=1);
 
-if (!\defined('PHP_INT_MIN')) {
-	// Available since PHP 7.0.0 http://php.net/manual/en/reserved.constants.php
-	\define('PHP_INT_MIN', ~\PHP_INT_MAX);
+\define('OZ_OZONE_START_TIME', \microtime(true));
+
+// = Don't forget to use DS instead of \ or / and
+// = always add the last DS to your directories path
+if (!\defined('DS')) {
+	\define('DS', \DIRECTORY_SEPARATOR);
+}
+
+\define('OZ_OZONE_DIR', \dirname(__DIR__) . DS);
+
+const OZ_OZONE_VERSION      = '3.0.0';
+const OZ_OZONE_VERSION_NAME = 'OZone v' . OZ_OZONE_VERSION;
+const OZ_OZONE_IS_CLI       = ('cli' === \PHP_SAPI);
+
+// = Project directory
+// = any relative path will be resolved using this path as starting point
+if (!\defined('OZ_PROJECT_DIR')) {
+	\define('OZ_PROJECT_DIR', \getcwd() . DS);
+}
+
+// = App directory
+if (!\defined('OZ_APP_DIR')) {
+	\define('OZ_APP_DIR', OZ_PROJECT_DIR . 'noop' . DS);
+}
+
+// = Scope name
+if (!\defined('OZ_SCOPE_NAME')) {
+	\define('OZ_SCOPE_NAME', 'root');
+}
+
+// = Logs directory
+if (!\defined('OZ_LOG_DIR')) {
+	\define('OZ_LOG_DIR', \getcwd() . DS);
 }

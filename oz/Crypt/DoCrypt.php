@@ -9,65 +9,49 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Crypt;
+declare(strict_types=1);
 
-use OZONE\OZ\Core\Hasher;
+namespace OZONE\Core\Crypt;
 
+use OZONE\Core\Crypt\Interfaces\CryptInterface;
+use RuntimeException;
+
+/**
+ * Class DoCrypt.
+ */
 class DoCrypt implements CryptInterface
 {
-	/**
-	 * BCRYPT algorithm max input length is 72
-	 *
-	 * @var int
-	 */
-	const BCRYPT_MAX_INPUT_LENGTH = 72;
+	protected string $cypher;
 
 	/**
 	 * DoCrypt constructor.
 	 */
-	public function __construct()
+	public function __construct(string $cypher = 'aes-256-cbc')
 	{
-	}
+		$cypher = \strtolower($cypher);
 
-	/**
-	 * @inheritdoc
-	 */
-	public function isHash($pass)
-	{
-		$pass_info = \password_get_info($pass);
-
-		return $pass_info['algo'] === \PASSWORD_BCRYPT;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function passHash($pass)
-	{
-		return \password_hash(self::toShort($pass), \PASSWORD_BCRYPT);
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function passCheck($pass, $known_hash)
-	{
-		return \password_verify(self::toShort($pass), $known_hash);
-	}
-
-	/**
-	 * shorten password to comply with BCRYPT algorithm max input length (72)
-	 *
-	 * @param string $pass the password
-	 *
-	 * @return string
-	 */
-	private static function toShort($pass)
-	{
-		if (\strlen($pass) > self::BCRYPT_MAX_INPUT_LENGTH) {
-			$pass = Hasher::hashIt($pass, 64);
+		if (!\in_array($cypher, \openssl_get_cipher_methods(), true)) {
+			throw new RuntimeException('Unsupported cypher method: ' . $cypher);
 		}
 
-		return $pass;
+		$this->cypher = $cypher;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function encrypt(string $message, string $pass_phrase): string
+	{
+		// TODO: rewrite this
+		return \openssl_encrypt($message, $this->cypher, $pass_phrase);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function decrypt(string $message, string $pass_phrase): string
+	{
+		// TODO: rewrite this
+		return \openssl_decrypt($message, $this->cypher, $pass_phrase);
 	}
 }

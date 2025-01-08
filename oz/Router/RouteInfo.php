@@ -9,137 +9,224 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Router;
+declare(strict_types=1);
 
-use OZONE\OZ\Core\Context;
+namespace OZONE\Core\Router;
 
-class RouteInfo
+use InvalidArgumentException;
+use OZONE\Core\App\Context;
+use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Forms\FormData;
+use OZONE\Core\Http\Uri;
+use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
+use PHPUtils\Store\Store;
+
+/**
+ * Class RouteInfo.
+ */
+final class RouteInfo
 {
-	/**
-	 * @var \OZONE\OZ\Core\Context
-	 */
-	private $context;
+	private Store $guards_data;
+	private FormData $clean_form_data;
 
 	/**
-	 * @var \OZONE\OZ\Router\Route
-	 */
-	private $route;
-
-	/**
-	 * @var array
-	 */
-	private $args;
-
-	/**
-	 * RouteContext constructor.
+	 * RouteInfo constructor.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param \OZONE\OZ\Router\Route $route
-	 * @param array                  $args
-	 */
-	public function __construct(Context $context, Route $route, array $args)
-	{
-		$this->context = $context;
-		$this->route   = $route;
-		$this->args    = $args;
-	}
-
-	/**
-	 * @return \OZONE\OZ\Http\Uri
-	 */
-	public function getUri()
-	{
-		return $this->context->getRequest()
-							 ->getUri();
-	}
-
-	/**
-	 * @return \OZONE\OZ\Http\UploadedFile[]
-	 */
-	public function getUploadedFiles()
-	{
-		return $this->context->getRequest()
-							 ->getUploadedFiles();
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getFormData()
-	{
-		return $this->context->getRequest()
-							 ->getFormData();
-	}
-
-	/**
-	 * @param string $name
-	 * @param mixed  $def
+	 * @param Context                   $context       The context
+	 * @param Route                     $route         The current route
+	 * @param array                     $params        The route params
+	 * @param null|callable($this):void $authenticator The authenticator
 	 *
-	 * @return mixed
+	 * @throws InvalidFormException
 	 */
-	public function getFormField($name, $def = null)
-	{
-		return $this->context->getRequest()
-							 ->getFormField($name, $def);
+	public function __construct(
+		private readonly Context $context,
+		private readonly Route $route,
+		private readonly array $params,
+		?callable $authenticator = null
+	) {
+		$this->guards_data     = new Store([]);
+		$this->clean_form_data = new FormData();
+
+		$authenticator && $authenticator($this);
+		$this->callGuards();
+		$this->runMiddlewares();
+		$this->checkForm();
 	}
 
 	/**
-	 * @return array
-	 */
-	public function getQueryParams()
-	{
-		return $this->context->getRequest()
-							 ->getQueryParams();
-	}
-
-	/**
-	 * @param string $key
-	 * @param mixed  $def
+	 * Gets current request context.
 	 *
-	 * @return array
+	 * @return Context
 	 */
-	public function getQueryParam($key, $def = null)
-	{
-		return $this->context->getRequest()
-							 ->getQueryParam($key, $def);
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getArgs()
-	{
-		return $this->args;
-	}
-
-	/**
-	 * @return \OZONE\OZ\Core\Context
-	 */
-	public function getContext()
+	public function getContext(): Context
 	{
 		return $this->context;
 	}
 
 	/**
-	 * @param string $name
-	 * @param mixed  $def
+	 * Gets current route.
 	 *
-	 * @return mixed
+	 * @return Route
 	 */
-	public function getArg($name, $def = null)
+	public function route(): Route
 	{
-		if (isset($this->args[$name])) {
-			return $this->args[$name];
-		}
-
-		return $def;
+		return $this->route;
 	}
 
 	/**
-	 * @return \OZONE\OZ\Router\Route
+	 * Gets current route parameters.
+	 *
+	 * @return array
 	 */
-	public function getRoute()
+	public function params(): array
 	{
-		return $this->route;
+		return $this->params;
+	}
+
+	/**
+	 * Gets current route parameter value with a given name.
+	 *
+	 * @param string     $name
+	 * @param null|mixed $def
+	 *
+	 * @return mixed
+	 */
+	public function param(string $name, mixed $def = null): mixed
+	{
+		return $this->params[$name] ?? $def;
+	}
+
+	/**
+	 * Shortcut for {@see \OZONE\Core\Http\Request::getUri()}.
+	 *
+	 * @return Uri
+	 */
+	public function uri(): Uri
+	{
+		return $this->context->getRequest()
+			->getUri();
+	}
+
+	/**
+	 * Gets validated form data.
+	 *
+	 * @return FormData
+	 */
+	public function getCleanFormData(): FormData
+	{
+		return $this->clean_form_data;
+	}
+
+	/**
+	 * Gets validated form field value.
+	 *
+	 * @param string     $name
+	 * @param null|mixed $def
+	 *
+	 * @return mixed
+	 */
+	public function getCleanFormField(string $name, mixed $def = null): mixed
+	{
+		return $this->clean_form_data->get($name, $def);
+	}
+
+	/**
+	 * Gets guard form data.
+	 *
+	 * @param string $guard
+	 *
+	 * @return FormData
+	 */
+	public function getGuardFormData(string $guard): FormData
+	{
+		$guard_class = Guards::get($guard);
+
+		$guard_data = $this->guards_data->get($guard_class);
+
+		if ($guard_data instanceof FormData) {
+			return $guard_data;
+		}
+
+		throw new InvalidArgumentException(\sprintf('Guard "%s" has no form data.', $guard));
+	}
+
+	/**
+	 * Shortcut for {@see \OZONE\Core\Http\Request::getUnsafeFormData()}.
+	 *
+	 * @param bool $include_files
+	 *
+	 * @return FormData
+	 */
+	public function getUnsafeFormData(bool $include_files = true): FormData
+	{
+		return $this->context->getRequest()
+			->getUnsafeFormData($include_files);
+	}
+
+	/**
+	 * Shortcut for {@see \OZONE\Core\Http\Request::getUnsafeFormField()}.
+	 *
+	 * @param string     $name
+	 * @param null|mixed $def
+	 *
+	 * @return mixed
+	 */
+	public function getUnsafeFormField(string $name, mixed $def = null): mixed
+	{
+		return $this->context->getRequest()
+			->getUnsafeFormField($name, $def);
+	}
+
+	/**
+	 * Run all guards.
+	 */
+	private function callGuards(): void
+	{
+		$route_guards = $this->route->getOptions()->getGuards($this);
+
+		foreach ($route_guards as $guard) {
+			$guard->checkAccess($this);
+			$this->guards_data->set($guard::class, $guard->getFormData());
+		}
+	}
+
+	/**
+	 * Run all middlewares.
+	 */
+	private function runMiddlewares(): void
+	{
+		$middlewares = $this->route->getOptions()->getMiddlewares();
+
+		foreach ($middlewares as $mdl) {
+			if ($mdl instanceof RouteMiddlewareInterface) {
+				$response = $mdl->run($this);
+			} else {
+				$response = $mdl($this);
+			}
+
+			if ($response) {
+				$this->context->setResponse($response);
+			}
+		}
+	}
+
+	/**
+	 * Validates the form data if any.
+	 *
+	 * @throws InvalidFormException
+	 */
+	private function checkForm(): void
+	{
+		$bundle = $this->route->getOptions()->getFormBundle($this);
+
+		if ($bundle) {
+			$unsafe_fd = $this->context->getRequest()
+				->getUnsafeFormData();
+
+			$clean_fd = $bundle->validate($unsafe_fd);
+
+			$this->clean_form_data->merge($clean_fd);
+		}
 	}
 }

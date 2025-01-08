@@ -9,83 +9,55 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Router;
+declare(strict_types=1);
 
-use InvalidArgumentException;
-use OZONE\OZ\Core\Context;
+namespace OZONE\Core\Router;
 
-class Route
+use OZONE\Core\App\Context;
+
+/**
+ * Class Route.
+ */
+final class Route
 {
-	const OPTION_NAME = 'route:name';
-
-	const REG_PLACEHOLDER = '[^/]+';
-
-	const REG_DELIMITER = '~';
-
-	/**
-	 * @var string
-	 */
-	private $route_path = '';
-
-	/**
-	 * @var string
-	 */
-	private $parsed = '';
-
-	/**
-	 * @var bool
-	 */
-	private $is_dynamic;
-
-	/**
-	 * @var array
-	 */
-	private $placeholders = [];
-
-	/**
-	 * @var array
-	 */
-	private $methods = [];
-
-	/**
-	 * @var array
-	 */
-	private $options = [];
+	public const DEFAULT_PARAM_PATTERN = '[^/]+';
+	public const REG_DELIMITER         = '~';
+	public const ROUTE_PARAM_REG       = '~^[a-zA-Z_][a-zA-Z0-9_]*$~';
 
 	/**
 	 * @var callable
 	 */
-	private $callable;
+	private $handler;
 
-	/**
-	 * @var \OZONE\OZ\Router\Router
-	 */
-	private $router;
+	private bool $parsed = false;
+	private string $parser_result;
+	private array $params_found = [];
 
 	/**
 	 * Route constructor.
 	 *
-	 * @param \OZONE\OZ\Router\Router $router
-	 * @param array                   $methods
-	 * @param string                  $route_path
-	 * @param callable                $callable
-	 * @param array                   $options
+	 * @param Router       $router
+	 * @param array        $methods
+	 * @param callable     $callable
+	 * @param RouteOptions $options
 	 */
-	public function __construct(Router $router, array $methods, $route_path, callable $callable, array $options = [])
-	{
-		$this->router     = $router;
-		$this->route_path = $route_path;
-		$this->methods    = $methods;
-		$this->callable   = $callable;
-		$this->options    = \array_merge($router->getDefaultOptions(), $options);
+	public function __construct(
+		private readonly Router $router,
+		private readonly array $methods,
+		callable $callable,
+		private readonly RouteOptions $options
+	) {
+		$this->handler = $callable;
+	}
 
-		if ($this->isDynamic()) {
-			$placeholders       = [];
-			$this->parsed       = self::parse($route_path, $options, $placeholders);
-			$this->placeholders = \array_keys($placeholders);
-		} else {
-			$this->parsed = $route_path;
-		}
+	/**
+	 * Gets route name.
+	 *
+	 * Shortcut of {@see \OZONE\Core\Router\RouteOptions::getName()}
+	 */
+	public function getName(): string
+	{
+		return $this->options->getName();
 	}
 
 	/**
@@ -93,79 +65,63 @@ class Route
 	 *
 	 * @return bool
 	 */
-	public function isDynamic()
+	public function isDynamic(): bool
 	{
-		if (!isset($this->is_dynamic)) {
-			$this->is_dynamic = (
-				false !== \strpos($this->route_path, '{') || false !== \strpos($this->route_path, '[')
-			);
-		}
+		$path = $this->options->getPath();
 
-		return $this->is_dynamic;
+		return \str_contains($path, '{')
+			|| \str_contains($path, ':')
+			|| \str_contains($path, '[');
 	}
 
 	/**
-	 * Builds the route with given placeholders value.
+	 * Builds the route path with given parameters values.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param array                  $args
+	 * @param Context $context
+	 * @param array   $params
 	 *
 	 * @return string
 	 */
-	public function toPath(Context $context, array $args)
+	public function buildPath(Context $context, array $params = []): string
 	{
+		$path = $this->options->getPath();
 		if (!$this->isDynamic()) {
-			return $this->route_path;
+			return $path;
 		}
 
-		return $this->pathBuilder($context, $this->route_path, $this->options, $args);
+		return (new RoutePathParser($path, $this->router))->buildPath($context, $params);
 	}
 
 	/**
 	 * Returns the route path as defined.
 	 *
+	 * @param bool $full
+	 *
 	 * @return string
 	 */
-	public function getRoutePath()
+	public function getPath(bool $full = true): string
 	{
-		return $this->route_path;
+		return $this->options->getPath($full);
 	}
 
 	/**
-	 * Returns the route callable.
+	 * Returns the route handler callable.
 	 *
 	 * @return callable
 	 */
-	public function getCallable()
+	public function getHandler(): callable
 	{
-		return $this->callable;
+		return $this->handler;
 	}
 
 	/**
 	 * Returns the route options.
 	 *
-	 * @return array
+	 * @return RouteOptions
 	 */
-	public function getOptions()
+	public function getOptions(): RouteOptions
 	{
 		return $this->options;
-	}
-
-	/**
-	 * Returns the route option with the given name.
-	 *
-	 * @param string $name
-	 * @param mixed  $def
-	 *
-	 * @return null|mixed
-	 */
-	public function getOption($name, $def = null)
-	{
-		if (isset($this->options[$name])) {
-			return $this->options[$name];
-		}
-
-		return $def;
 	}
 
 	/**
@@ -173,7 +129,7 @@ class Route
 	 *
 	 * @return array
 	 */
-	public function getMethods()
+	public function getMethods(): array
 	{
 		return $this->methods;
 	}
@@ -185,301 +141,80 @@ class Route
 	 *
 	 * @return bool
 	 */
-	public function accept($method)
+	public function accept(string $method): bool
 	{
-		return \in_array(\strtoupper($method), $this->methods);
+		return \in_array(\strtoupper($method), $this->methods, true);
 	}
 
 	/**
-	 * Returns parsed route.
+	 * Returns parser result.
 	 *
 	 * @return string
 	 */
-	public function getParsed()
+	public function getParserResult(): string
 	{
-		return $this->parsed;
+		$this->ensureParsed();
+
+		return $this->parser_result;
 	}
 
 	/**
-	 * Returns placeholders.
+	 * Returns parameters.
 	 *
 	 * @return array
 	 */
-	public function getPlaceholders()
+	public function getParams(): array
 	{
-		return $this->placeholders;
+		$this->ensureParsed();
+
+		return $this->params_found;
 	}
 
 	/**
 	 * Checks if a given path matches this route.
 	 *
 	 * @param string     $path
-	 * @param null|array $args
+	 * @param null|array $params
 	 *
 	 * @return bool
 	 */
-	public function is($path, array &$args = [])
+	public function is(string $path, ?array &$params = []): bool
 	{
+		$this->ensureParsed();
+
 		if (!$this->isDynamic()) {
-			return $path === $this->route_path;
+			return $path === $this->options->getPath();
 		}
 
-		$regexp  = self::REG_DELIMITER . '^' . $this->parsed . '$' . self::REG_DELIMITER;
+		$regexp  = self::REG_DELIMITER . '^' . $this->parser_result . '$' . self::REG_DELIMITER;
 		$matches = [];
-
-		$passed = (1 === \preg_match($regexp, $path, $matches)) ? true : false;
+		$passed  = 1 === \preg_match($regexp, $path, $matches);
 
 		if ($passed) {
-			$args = $matches;
+			$params = $matches;
 		}
 
 		return $passed;
 	}
 
 	/**
-	 * Builds dynamic path.
-	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 * @param string                 $route
-	 * @param array                  $options
-	 * @param array                  $args
-	 * @param null|string            $original_route
-	 *
-	 * @return string
+	 * This will lazily parse the route path.
 	 */
-	private function pathBuilder(
-		Context $context,
-		$route,
-		array $options = [],
-		array $args = [],
-		$original_route = null
-	) {
-		$len            = \strlen($route);
-		$original_route = null === $original_route ? $route : $original_route;
-		$path           = '';
-		$pos            = 0;
-
-		while ($pos < $len) {
-			$char = $route[$pos];
-
-			if ($char === '{') {
-				$name = self::searchUntilCloseTag('{', '}', $route, $pos + 1, $pos, false);
-
-				$required = ($route === $original_route ? 1 : 0);
-
-				if (isset($args[$name])) {
-					$path .= (string) $args[$name];
-				} else {
-					$value = $this->router->getDeclaredPlaceholderValue($context, $name);
-
-					if (null !== $value) {
-						$path .= (string) $value;
-					} elseif ($required) {
-						throw new InvalidArgumentException(\sprintf(
-							'Missing required placeholder value: %s',
-							$name
-						));
-					} else {
-						// we are in optional part and
-						// there is missing placeholder value
-						// so we ignore the optional part
-						return '';
-					}
-				}
-			} elseif ($char === '[') {
-				$optional = self::searchUntilCloseTag('[', ']', $route, $pos + 1, $pos, true);
-
-				if (!\strlen($optional)) {
-					throw new InvalidArgumentException(\sprintf(
-						'Optional part should not be empty: %s',
-						$original_route
-					));
-				}
-
-				$path .= $this->pathBuilder($context, $optional, $options, $args, $original_route);
+	private function ensureParsed(): void
+	{
+		if (!$this->parsed) {
+			$path = $this->options->getPath();
+			if ($this->isDynamic()) {
+				$params_found        = [];
+				$declared_params     = \array_merge($this->router->getGlobalParams(), $this->options->getParams());
+				$parser              = new RoutePathParser($path, $this->router);
+				$this->parser_result = $parser->parse($path, $declared_params, $params_found);
+				$this->params_found  = \array_keys($params_found);
 			} else {
-				$path .= $char;
+				$this->parser_result = $path;
 			}
 
-			$pos++;
+			$this->parsed = true;
 		}
-
-		return $path;
-	}
-
-	/**
-	 * Dynamic route parser.
-	 *
-	 * @param string      $route
-	 * @param array       $options
-	 * @param array       $placeholders
-	 * @param null|string $original_route
-	 *
-	 * @return string
-	 */
-	private static function parse($route, array $options = [], &$placeholders = [], $original_route = null)
-	{
-		$len            = \strlen($route);
-		$original_route = null === $original_route ? $route : $original_route;
-		$reg            = '';
-		$pos            = 0;
-
-		while ($pos < $len) {
-			$c = $route[$pos];
-
-			if ($c === '{') {
-				$name = self::searchUntilCloseTag('{', '}', $route, $pos + 1, $pos, false);
-
-				if (!\strlen($name)) {
-					throw new InvalidArgumentException(\sprintf(
-						'Placeholder should not be empty: %s',
-						$original_route
-					));
-				}
-
-				if (!\preg_match('~^[a-z_][a-z0-9_]*$~', $name)) {
-					throw new InvalidArgumentException(\sprintf(
-						'Placeholder contains invalid characters: %s -> %s',
-						$name,
-						$original_route
-					));
-				}
-
-				if (\array_key_exists($name, $placeholders)) {
-					throw new InvalidArgumentException(\sprintf(
-						'Placeholder name duplicated: %s -> %s',
-						$name,
-						$original_route
-					));
-				}
-
-				$placeholder_reg = self::REG_PLACEHOLDER;
-
-				if (isset($options[$name])) {
-					$placeholder_reg = $options[$name];
-
-					if (self::isInvalidOrComplex($placeholder_reg)) {
-						throw new InvalidArgumentException(\sprintf(
-							'Placeholder regexp is not valid or is complex. Keep it simple: %s -> %s',
-							$name,
-							$placeholder_reg
-						));
-					}
-				}
-
-				// use (?P<name> insteadof (?<name> for backward compatibility
-				$reg .= "(?P<$name>$placeholder_reg)";
-				$required            = ($route === $original_route ? 1 : 0);
-				$placeholders[$name] = $required;
-			} elseif ($c === '[') {
-				$optional = self::searchUntilCloseTag('[', ']', $route, $pos + 1, $pos, true);
-
-				if (!\strlen($optional)) {
-					throw new InvalidArgumentException(\sprintf(
-						'Optional part should not be empty: %s',
-						$original_route
-					));
-				}
-
-				$optional_reg = self::parse($optional, $options, $placeholders, $original_route);
-				$reg .= '(?:' . $optional_reg . ')?';
-			} else {
-				$reg .= \preg_quote($c, self::REG_DELIMITER);
-			}
-
-			$pos++;
-		}
-
-		return $reg;
-	}
-
-	/**
-	 * Search for close tag.
-	 *
-	 * @param string $open
-	 * @param string $close
-	 * @param string $string
-	 * @param int    $from
-	 * @param int    $found_at
-	 * @param bool   $go_deeply
-	 *
-	 * @return string
-	 */
-	private static function searchUntilCloseTag($open, $close, $string, $from, &$found_at, $go_deeply = false)
-	{
-		$found  = false;
-		$ret    = '';
-		$cursor = $from;
-		$len    = \strlen($string);
-		$stack  = 0;
-
-		while ($cursor < $len) {
-			$char = $string[$cursor];
-
-			if ($char === $open) {
-				if ($go_deeply) {
-					$stack++;
-				} else {
-					throw new InvalidArgumentException(\sprintf(
-						'The open tag %s at index %s was not closed before opening new tag at index %s',
-						$open,
-						$from - 1,
-						$cursor
-					));
-				}
-			}
-
-			if ($char === $close) {
-				if ($stack) {
-					$stack--;
-				} else {
-					$found    = true;
-					$found_at = $cursor;
-
-					break;
-				}
-			}
-
-			$ret .= $char;
-			$cursor++;
-		}
-
-		if ($found === false) {
-			throw new InvalidArgumentException(\sprintf(
-				'Unexpected end of string missing close tag %s at the end of %s',
-				$close,
-				$string
-			));
-		}
-
-		return $ret;
-	}
-
-	/**
-	 * Checks if the placeholder is complex or is invalid.
-	 *
-	 * Should be valid regex
-	 * Should not starts with ^
-	 * Should not ends with $
-	 *
-	 * @param string $regexp
-	 *
-	 * @return bool
-	 */
-	private static function isInvalidOrComplex($regexp)
-	{
-		\set_error_handler(function () {
-		}, \E_WARNING);
-		$is_invalid = \preg_match(self::REG_DELIMITER . $regexp . self::REG_DELIMITER, '') === false;
-		\restore_error_handler();
-
-		if ($is_invalid) {
-			return true;
-		}
-
-		// or is complex
-		// we are dealing with path so let keep it simple
-		return 0 === \strpos($regexp, '^') /* starts with ^ */
-			   || \strlen($regexp) - 1 === \strpos($regexp, '$'); /* ends with $ */
 	}
 }

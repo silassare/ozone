@@ -9,263 +9,205 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Exceptions;
+declare(strict_types=1);
+
+namespace OZONE\Core\Exceptions;
 
 use Exception;
 use Gobl\CRUD\Exceptions\CRUDException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\ORM\Exceptions\ORMQueryException;
-use OZONE\OZ\Core\Context;
-use OZONE\OZ\Core\ResponseHolder;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\JSONResponse;
+use OZONE\Core\Exceptions\Traits\ExceptionCustomSuspectTrait;
+use OZONE\Core\Exceptions\Traits\ExceptionWithCustomResponseTrait;
+use OZONE\Core\Exceptions\Views\ErrorView;
+use OZONE\Core\Http\Response;
+use OZONE\Core\Lang\I18nMessage;
+use OZONE\Core\Logger\Logger;
+use OZONE\Core\OZone;
+use OZONE\Core\Utils\Utils;
+use PHPUtils\Interfaces\RichExceptionInterface;
+use PHPUtils\Traits\RichExceptionTrait;
 use Throwable;
 
 /**
- * Class BaseException
+ * Class BaseException.
  */
-abstract class BaseException extends Exception
+abstract class BaseException extends Exception implements RichExceptionInterface
 {
-	const BAD_REQUEST = 400;
+	use ExceptionCustomSuspectTrait;
+	use ExceptionWithCustomResponseTrait;
+	use RichExceptionTrait;
 
-	const UNAUTHORIZED_ACTION = 401;
+	public const BAD_REQUEST = 400;
 
-	const FORBIDDEN = 403;
+	public const UNAUTHORIZED_ACTION = 401;
 
-	const NOT_FOUND = 404;
+	public const FORBIDDEN = 403;
 
-	const METHOD_NOT_ALLOWED = 405;
+	public const NOT_FOUND = 404;
 
-	const INTERNAL_ERROR = 500;
+	public const METHOD_NOT_ALLOWED = 405;
 
-	const UNKNOWN_ERROR = 520;
+	public const RATE_LIMIT_REACHED = 429;
+
+	public const INTERNAL_ERROR = 500;
+
+	public const UNKNOWN_ERROR = 520;
 
 	// ozone custom error codes
-	const UNVERIFIED_USER = 10001;
+	public const UNVERIFIED_USER = 10001;
 
-	const INVALID_FORM = 10002;
+	public const INVALID_FORM = 10002;
 
-	const MESSAGE_INTERNAL_ERROR = 'An "Error" occurred. If you are an admin, please review the log file and correct it!';
-
-	const MESSAGE_ERROR_UNHANDLED = 'An "unhandled error" occurred. If you are an admin, please review the log file and correct it!';
-
-	const MESSAGE_ERROR_HANDLING_ERROR = 'An "Error handling error" occurred. If you are an admin, please review the log file and correct it!';
-
-	const SENSITIVE_DATA_PREFIX = '_';
-
-	/**
-	 * @var bool
-	 */
-	protected static $just_die = false;
-
-	private static $ERRORS_HEADER_MAP = [
-		self::BAD_REQUEST         => 'HTTP/1.1 400 Bad Request',
-		self::UNAUTHORIZED_ACTION => 'HTTP/1.1 401 Unauthorized',
-		self::FORBIDDEN           => 'HTTP/1.1 403 Forbidden',
-		self::NOT_FOUND           => 'HTTP/1.1 404 Not Found',
-		self::METHOD_NOT_ALLOWED  => 'HTTP/1.1 405 Method Not Allowed',
-		self::INTERNAL_ERROR      => 'HTTP/1.1 500 Internal Server Error',
-		// default error same as the CloudFlare's Unknown Error
-		self::UNKNOWN_ERROR       => 'HTTP/1.1 520 Unknown Error',
-		// ozone custom error codes
-		self::UNVERIFIED_USER     => 'HTTP/1.1 403 Forbidden',
-		self::INVALID_FORM        => 'HTTP/1.1 400 Bad Request',
-	];
-
-	private static $ERRORS_STATUS_CODE_MAP = [
+	private const ERRORS_STATUS_CODE_MAP = [
 		self::BAD_REQUEST         => 400,
 		self::UNAUTHORIZED_ACTION => 401,
 		self::FORBIDDEN           => 403,
 		self::NOT_FOUND           => 404,
 		self::METHOD_NOT_ALLOWED  => 405,
+		self::RATE_LIMIT_REACHED  => 429,
 		self::INTERNAL_ERROR      => 500,
 		// default error same as the CloudFlare's Unknown Error
 		self::UNKNOWN_ERROR       => 520,
 		// ozone custom error codes
-		self::UNVERIFIED_USER     => 403,
+		self::UNVERIFIED_USER     => 401,
 		self::INVALID_FORM        => 400,
 	];
 
-	private static $force_json = false;
-
 	/**
-	 * @var array
+	 * @var bool
 	 */
-	protected $data;
+	protected static bool $just_die = false;
 
 	/**
 	 * BaseException constructor.
 	 *
-	 * @param string          $message  the exception message
-	 * @param int             $code     the exception code
-	 * @param null|array      $data     additional error data
-	 * @param null|\Throwable $previous previous throwable used for the exception chaining
+	 * @param I18nMessage|string $message  the exception message
+	 * @param null|array         $data     additional error data
+	 * @param null|Throwable     $previous previous throwable used for the exception chaining
+	 * @param int                $code     the exception code
 	 */
-	public function __construct($message, $code, array $data = null, $previous = null)
+	public function __construct(I18nMessage|string $message, ?array $data = null, ?Throwable $previous = null, int $code = 0)
 	{
+		$this->data = $data ?? [];
+		if ($message instanceof I18nMessage) {
+			$this->data = \array_merge($message->getInject(), $this->data);
+			$message    = $message->getText();
+		}
+
 		parent::__construct($message, $code, $previous);
-
-		$this->data = \is_array($data) ? $data : [];// prevent null value
 	}
 
 	/**
-	 * Gets data.
-	 *
-	 * We shouldn't expose all debug data to client, may contains sensitive data
-	 * like table structure, table name etc.
-	 * all sensitive data should be set with the sensitive data prefix
-	 *
-	 * @param bool $show_sensitive
-	 *
-	 * @return array
-	 */
-	public function getData($show_sensitive = false)
-	{
-		if (!$show_sensitive) {
-			$data = [];
-
-			foreach ($this->data as $key => $value) {
-				if (\is_int($key) || $key[0] !== self::SENSITIVE_DATA_PREFIX) {
-					$data[$key] = $value;
-				}
-			}
-
-			return $data;
-		}
-
-		return $this->data;
-	}
-
-	/**
-	 * Gets a http header string that corresponds to this exception
+	 * OZone exception to string magic helper.
 	 *
 	 * @return string
 	 */
-	public function getHeaderString()
+	public function __toString(): string
 	{
-		$code = $this->getCode();
-
-		if (isset(self::$ERRORS_HEADER_MAP[$code])) {
-			return self::$ERRORS_HEADER_MAP[$code];
-		}
-
-		return self::$ERRORS_HEADER_MAP[self::UNKNOWN_ERROR];
+		return self::throwableToString($this);
 	}
 
 	/**
-	 * Gets a http header string that corresponds to this exception
+	 * Gets an http header reason phrase that matches this exception.
 	 *
 	 * @return string
 	 */
-	public function getResponseStatusCode()
+	public function getHTTPReasonPhrase(): string
 	{
-		$code = $this->getCode();
-
-		if (isset(self::$ERRORS_STATUS_CODE_MAP[$code])) {
-			return self::$ERRORS_STATUS_CODE_MAP[$code];
-		}
-
-		return self::$ERRORS_STATUS_CODE_MAP[self::UNKNOWN_ERROR];
+		return Response::statusToReasonPhrase($this->getHTTPStatusCode()) ?? '';
 	}
 
 	/**
-	 * Show exception according to accept header name or request type
+	 * Gets an http header status code that matches this exception.
 	 *
-	 * @param \OZONE\OZ\Core\Context $context
+	 * @return int
 	 */
-	public function informClient(Context $context)
+	public function getHTTPStatusCode(): int
+	{
+		$code = $this->getCode();
+
+		return self::ERRORS_STATUS_CODE_MAP[$code] ?? self::ERRORS_STATUS_CODE_MAP[self::UNKNOWN_ERROR];
+	}
+
+	/**
+	 * Show exception according to accept header name or request type.
+	 *
+	 * @param Context $context
+	 */
+	public function informClient(Context $context): void
 	{
 		$request = $context->getRequest();
 
 		$this->data['_url']    = (string) $request->getUri();
 		$this->data['_method'] = $request->getMethod();
 
-		oz_logger($this);
+		Logger::log($this);
 
 		self::clearOutPutBuffer();
 
-		// We must avoid any other error, if there is one after this,
-		// then we are in a critical situation: 'Error handling error'
-		if (self::$just_die === true) {
-			$this->errorHandlingError();
+		// We are in a critical situation: 'Error handling error'
+		if (true === self::$just_die) {
+			self::dieWithAnErrorHandlingErrorOccurred();
 		}
 
 		// Any other error or exception should not be tolerated
+		// We must avoid any other error, if there is another error we must die
 		self::$just_die = true;
 
 		try {
-			if (OZ_OZONE_IS_CLI) {
-				die(\PHP_EOL . $this->getMessage() . \PHP_EOL);
+			if (OZone::isCliMode()) {
+				exit(\PHP_EOL . $this->getMessage() . \PHP_EOL);
 			}
-			$accept = $request->getHeaderLine('HTTP_ACCEPT');
 
-			if (!self::$force_json && (\is_int(\strpos($accept, 'text/html')) || $context->isWebContext())) {
-				$this->showCustomErrorPage($context);
-			} else {
-				$this->showJson($context);
+			$response = $this->getCustomResponse();
+
+			if (null === $response) {
+				if ($context->shouldReturnJSON()) {
+					$response = $this->getJSONResponse($context);
+				} else {
+					$response = $this->getDefaultErrorPage($context);
+				}
 			}
-		} catch (Exception $e) {
-			oz_logger($e);
-			$this->errorHandlingError();
+
+			$context->setResponse($response->withStatus($this->getHTTPStatusCode()));
 		} catch (Throwable $t) {
-			oz_logger($t);
-			$this->errorHandlingError();
+			Logger::log($t);
+			self::dieWithAnErrorHandlingErrorOccurred();
 		}
 	}
 
 	/**
+	 * Returns error occurred message.
+	 *
+	 * @param string $type
+	 *
+	 * @return string
+	 */
+	public static function anErrorOccurredMessage(string $type = 'error'): string
+	{
+		return \sprintf('An "%s" occurred. If you are an admin, please review the log file and correct it!', $type);
+	}
+
+	/**
+	 * Die with an `unhandled error` message.
+	 */
+	public static function dieWithAnUnhandledErrorOccurred(): void
+	{
+		self::criticalDie(self::anErrorOccurredMessage('unhandled error'));
+	}
+
+	/**
+	 * Die with an `error unhandled error` message.
+	 *
 	 * Called when an error / exception occurs while we
-	 * want to show another error / exception
+	 * want to show/handle another error / exception
 	 */
-	private function errorHandlingError()
+	public static function dieWithAnErrorHandlingErrorOccurred(): void
 	{
-		self::criticalDie(self::MESSAGE_ERROR_HANDLING_ERROR);
-	}
-
-	/**
-	 * Show exception as json
-	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 *
-	 * @throws \Exception
-	 */
-	private function showJson(Context $context)
-	{
-		if (!\headers_sent()) {
-			\header($this->getHeaderString());
-		}
-
-		$r = new ResponseHolder(\get_class($this));
-		$r->setError($this->getMessage())
-		  ->setData($this->getData());
-
-		$response = $context->getResponse()
-							->withStatus($this->getResponseStatusCode())
-							->withJson($r->getResponse());
-		$context->respond($response);
-	}
-
-	/**
-	 * Show exception in a custom error page.
-	 *
-	 * @param \OZONE\OZ\Core\Context $context
-	 *
-	 * @throws \Throwable
-	 */
-	private function showCustomErrorPage(Context $context)
-	{
-		$context->subRequestRoute('oz:error', [
-			'exception' => $this,
-			'context'   => $context,
-		]);
-	}
-
-	/**
-	 * Sets whether json response should be forced for error.
-	 *
-	 * @param bool $force_json
-	 */
-	public static function setForceJson($force_json)
-	{
-		self::$force_json = (bool) $force_json;
+		self::criticalDie(self::anErrorOccurredMessage('error handling error'));
 	}
 
 	/**
@@ -273,14 +215,14 @@ abstract class BaseException extends Exception
 	 *
 	 * @param string $err_msg
 	 */
-	public static function criticalDie($err_msg)
+	public static function criticalDie(string $err_msg): void
 	{
-		if (OZ_OZONE_IS_CLI) {
-			die(\PHP_EOL . $err_msg . \PHP_EOL);
+		if (OZone::isCliMode()) {
+			exit(\PHP_EOL . $err_msg . \PHP_EOL);
 		}
 
 		if (!\headers_sent()) {
-			\header(self::$ERRORS_HEADER_MAP[self::INTERNAL_ERROR]);
+			\header('HTTP/1.1 500 Internal Server Error');
 		}
 
 		self::clearOutPutBuffer();
@@ -315,33 +257,40 @@ abstract class BaseException extends Exception
 	</head>
 	<body>
 		<div class="oz-error">
-			<p>$err_msg</p>
+			<p>{$err_msg}</p>
 		</div>
 	</body>
 </html>
 ERROR_PAGE;
-		die($err_html);
+
+		exit($err_html);
 	}
 
 	/**
 	 * Convert a given throwable to string.
 	 *
-	 * @param \Throwable $throwable
+	 * @param Throwable $throwable
 	 *
 	 * @return string
 	 */
-	public static function throwableToString($throwable)
+	public static function throwableToString(Throwable $throwable): string
 	{
-		$describe = self::throwableDescribe($throwable);
-		$data     = \json_encode($describe['data']);
+		$describe = self::throwableDescribe($throwable)[0];
+
+		try {
+			$data = \json_encode($describe['data'], \JSON_THROW_ON_ERROR);
+		} catch (Throwable $t) {
+			/** @noinspection JsonEncodingApiUsageInspection */
+			$data = \json_encode(['_error_will_encoding_data_' => $t->getMessage()]);
+		}
 
 		return <<<STRING
-\tFile    : {$describe['file']},
-\tLine    : {$describe['line']},
-\tCode    : {$describe['code']},
-\tMessage : {$describe['message']},
-\tData    : {$data},
-\tClass   : {$describe['class']},
+\tFile    : {$describe['file']}
+\tLine    : {$describe['line']}
+\tCode    : {$describe['code']}
+\tMessage : {$describe['message']}
+\tData    : {$data}
+\tClass   : {$describe['class']}
 \tTrace   : {$describe['trace']}
 STRING;
 	}
@@ -349,37 +298,52 @@ STRING;
 	/**
 	 * Describe a given throwable.
 	 *
-	 * @param \Throwable $throwable
+	 * @param Throwable $throwable the throwable to describe
+	 * @param bool      $deep      if true, will describe all previous throwables
 	 *
-	 * @return array
+	 * @return array<array{file:string,line:int,code:int,message:string,data:array,class:string,trace:string}>
 	 */
-	public static function throwableDescribe($throwable)
+	public static function throwableDescribe(Throwable $throwable, bool $deep = false): array
 	{
-		$data = [];
+		$results = [];
+		$current = $throwable;
 
-		if (\method_exists($throwable, 'getData')) {
-			$data = $throwable->getData(true);
+		while ($current) {
+			$data = [];
+
+			if (\method_exists($throwable, 'getData')) {
+				try {
+					$data = $throwable->getData(true);
+				} catch (Throwable $t) {
+					$data = ['_error_will_calling_get_data_' => $t->getMessage()];
+				}
+			}
+
+			$results[] = [
+				'file'    => $current->getFile(),
+				'line'    => $current->getLine(),
+				'code'    => $current->getCode(),
+				'message' => $current->getMessage(),
+				'data'    => $data,
+				'class'   => \get_class($current),
+				'trace'   => $current->getTraceAsString(),
+			];
+
+			if (!$deep) {
+				break;
+			}
+			$current = $current->getPrevious();
 		}
 
-		return [
-			'file'    => $throwable->getFile(),
-			'line'    => $throwable->getLine(),
-			'code'    => $throwable->getCode(),
-			'message' => $throwable->getMessage(),
-			'data'    => $data,
-			'class'   => \get_class($throwable),
-			'trace'   => $throwable->getTraceAsString(),
-		];
+		return $results;
 	}
 
 	/**
-	 * Converts Gobl exceptions unto OZone exceptions.
+	 * Converts Gobl exceptions into OZone exceptions.
 	 *
-	 * @param \Throwable $throwable the throwable to convert
-	 *
-	 * @return \OZONE\OZ\Exceptions\BaseException
+	 * @param Throwable $throwable the throwable to convert
 	 */
-	public static function tryConvert($throwable)
+	public static function tryConvert(Throwable $throwable): self
 	{
 		if ($throwable instanceof self) {
 			return $throwable;
@@ -406,24 +370,39 @@ STRING;
 	}
 
 	/**
-	 * Try clear output buffer.
+	 * Returns json response.
+	 *
+	 * @param Context $context
+	 *
+	 * @return Response
 	 */
-	private static function clearOutPutBuffer()
+	private function getJSONResponse(Context $context): Response
 	{
-		// clear the output buffer, 'Dirty linen should be washed as a family.'
-		// loop until we get the top buffer level
-		while (\ob_get_level()) {
-			@\ob_end_clean();
-		}
+		$json = new JSONResponse();
+		$json->setError($this->getMessage())
+			->setData($this->getData());
+
+		return $context->getResponse()
+			->withJson($json);
 	}
 
 	/**
-	 * OZone exception to string formatter
+	 * Returns default error page response.
 	 *
-	 * @return string
+	 * @param Context $context
+	 *
+	 * @return Response
 	 */
-	public function __toString()
+	private function getDefaultErrorPage(Context $context): Response
 	{
-		return self::throwableToString($this);
+		return (new ErrorView($context))->renderError($this);
+	}
+
+	/**
+	 * Try clear output buffer.
+	 */
+	private static function clearOutPutBuffer(): void
+	{
+		Utils::closeOutputBuffers(1, false);
 	}
 }

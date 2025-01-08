@@ -9,69 +9,54 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Web\Views;
+declare(strict_types=1);
 
-use OZONE\OZ\Exceptions\InternalErrorException;
-use OZONE\OZ\Router\Route;
-use OZONE\OZ\Router\RouteInfo;
-use OZONE\OZ\Router\Router;
-use OZONE\OZ\Web\WebViewBase;
+namespace OZONE\Core\Web\Views;
 
-final class RedirectView extends WebViewBase
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Http\Response;
+use OZONE\Core\OZone;
+use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
+use OZONE\Core\Web\WebView;
+
+/**
+ * Class RedirectView.
+ */
+final class RedirectView extends WebView
 {
-	private $compile_data = [];
+	public const REDIRECT_ROUTE = 'oz:redirect';
 
 	/**
-	 * @throws \OZONE\OZ\Exceptions\BaseException
-	 *
-	 * @return \OZONE\OZ\Http\Response
+	 * @return Response
 	 */
-	public function mainRoute()
+	public function mainRoute(): Response
 	{
-		$context = $this->r->getContext();
+		$context = $this->getContext();
 		$request = $context->getRequest();
 		$url     = $request->getAttribute('url');
 		$status  = $request->getAttribute('status');
 
 		if (!\filter_var($url, \FILTER_VALIDATE_URL)) {
-			throw new InternalErrorException('Invalid redirect url.');
+			throw new RuntimeException('Invalid redirect url.', ['_redirecting_to' => $url]);
 		}
 
-		$this->compile_data = [
-			'oz_redirect_url' => \filter_var($url, \FILTER_SANITIZE_URL),
-		];
+		$this->injectKey('oz_redirect_url', \filter_var($url, \FILTER_SANITIZE_URL));
 
-		$response = $context->getResponse()
-							->withRedirect($url, $status);
-
-		return $this->renderTo($response);
+		return $this->setTemplate('oz.redirect.otpl')
+			->respond()
+			->withRedirect($url, $status);
 	}
 
 	/**
-	 * @inheritdoc
+	 * {@inheritDoc}
 	 */
-	public function getCompileData()
+	public static function registerRoutes(Router $router): void
 	{
-		return $this->compile_data;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function getTemplate()
-	{
-		return 'redirect.otpl';
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public static function registerRoutes(Router $router)
-	{
-		$router->map('*', '/oz:redirect', function (RouteInfo $r) {
-			$view = new self($r);
-
-			return $view->mainRoute();
-		}, [Route::OPTION_NAME => 'oz:redirect']);
+		$router
+			->map('*', OZone::INTERNAL_PATH_PREFIX . 'redirect', static function (RouteInfo $ri) {
+				return (new self($ri))->mainRoute();
+			})
+			->name(self::REDIRECT_ROUTE);
 	}
 }

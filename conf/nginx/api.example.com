@@ -11,7 +11,7 @@ server {
 
 	server_name api.example.com;
 
-	root /var/www/example/api;
+	root /var/www/example/public/api;
 	index index.php;
 
 	# disable access to debug.log
@@ -24,12 +24,6 @@ server {
 	# except .well-known used by Let's Encrypt
 	#
 	location ~ /\.(?!well-known) {
-		deny all;
-	}
-
-	# disable access to /app/* && /oz/*
-	#
-	location ~* ^/(?:app|oz|oz_private)/.*$ {
 		deny all;
 	}
 

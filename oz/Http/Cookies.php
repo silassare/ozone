@@ -9,166 +9,105 @@
  * file that was distributed with this source code.
  */
 
-namespace OZONE\OZ\Http;
+declare(strict_types=1);
 
+namespace OZONE\Core\Http;
+
+/**
+ * Class Cookies.
+ */
 class Cookies
 {
 	/**
-	 * Cookies from HTTP request
+	 * Cookies for HTTP response.
 	 *
-	 * @var array
+	 * @var array<string, Cookie>
 	 */
-	protected $request_cookies = [];
+	protected array $response_cookies = [];
 
 	/**
-	 * Cookies for HTTP response
+	 * Cookies for HTTP request.
 	 *
-	 * @var array
+	 * @var array<string, string>
 	 */
-	protected $response_cookies = [];
+	protected array $request_cookies = [];
 
 	/**
-	 * Default cookie properties
-	 *
-	 * @var array
+	 * Creates new cookies helper.
 	 */
-	protected $defaults_properties = [
-		'value'    => '',
-		'domain'   => null,
-		'hostonly' => null,
-		'path'     => null,
-		'expires'  => null,
-		'secure'   => false,
-		'httponly' => false,
-		'samesite' => null,
-	];
-
-	/**
-	 * Creates new cookies helper
-	 *
-	 * @param array $cookies
-	 */
-	public function __construct(array $cookies = [])
+	public function __construct(array $request_cookies = [])
 	{
-		$this->request_cookies = $cookies;
+		$this->request_cookies = $request_cookies;
 	}
 
 	/**
-	 * Sets default cookie properties
+	 * Gets the request cookies.
 	 *
-	 * @param array $properties
-	 *
-	 * @return \OZONE\OZ\Http\Cookies
+	 * @return array<string, string>
 	 */
-	public function setDefaultsProperties(array $properties)
+	public function getRequestCookies(): array
 	{
-		$this->defaults_properties = \array_replace($this->defaults_properties, $properties);
+		return $this->request_cookies;
+	}
+
+	/**
+	 * Gets a cookie from the request.
+	 *
+	 * @param string $name The name of the cookie
+	 */
+	public function getRequestCookie(string $name): ?string
+	{
+		return $this->request_cookies[$name] ?? null;
+	}
+
+	/**
+	 * Gets a cookie from the response.
+	 *
+	 * @param string $name The name of the cookie
+	 */
+	public function get(string $name): ?Cookie
+	{
+		return $this->response_cookies[$name] ?? null;
+	}
+
+	/**
+	 * Gets all cookies from the response.
+	 *
+	 * @return Cookie[]
+	 */
+	public function getAll(): array
+	{
+		return $this->response_cookies;
+	}
+
+	/**
+	 * Adds a cookie to the response.
+	 *
+	 * @param Cookie $cookie The cookie to set
+	 *
+	 * @return Cookies
+	 */
+	public function add(Cookie $cookie): self
+	{
+		$this->response_cookies[$cookie->name] = $cookie;
 
 		return $this;
 	}
 
 	/**
-	 * Gets request cookie
-	 *
-	 * @param string $name    Cookie name
-	 * @param mixed  $default Cookie default value
-	 *
-	 * @return mixed Cookie value if present, else default
-	 */
-	public function get($name, $default = null)
-	{
-		return isset($this->request_cookies[$name]) ? $this->request_cookies[$name] : $default;
-	}
-
-	/**
-	 * Sets response cookie
-	 *
-	 * @param string       $name  Cookie name
-	 * @param array|string $value Cookie value, or cookie properties
-	 *
-	 * @return \OZONE\OZ\Http\Cookies
-	 */
-	public function set($name, $value)
-	{
-		if (!\is_array($value)) {
-			$value = ['value' => (string) $value];
-		}
-		$this->response_cookies[$name] = \array_replace($this->defaults_properties, $value);
-
-		return $this;
-	}
-
-	/**
-	 * Converts to `Set-Cookie` headers
+	 * Converts to `Set-Cookie` headers.
 	 *
 	 * @return string[]
 	 */
-	public function toHeaders()
+	public function toResponseHeaders(): array
 	{
 		$headers = [];
 
-		foreach ($this->response_cookies as $name => $properties) {
-			$headers[] = $this->toHeader($name, $properties);
+		foreach ($this->response_cookies as /* $name => */ $cookie) {
+			$headers[] = (string) $cookie;
 		}
 
 		return $headers;
-	}
-
-	/**
-	 * Converts to `Set-Cookie` header
-	 *
-	 * @param string $name       Cookie name
-	 * @param array  $properties Cookie properties
-	 *
-	 * @return string
-	 */
-	protected function toHeader($name, array $properties)
-	{
-		$result = \urlencode($name) . '=' . \urlencode($properties['value']);
-
-		if (isset($properties['domain'])) {
-			$result .= '; domain=' . $properties['domain'];
-		}
-
-		if (isset($properties['path'])) {
-			$result .= '; path=' . $properties['path'];
-		}
-
-		if (isset($properties['expires'])) {
-			if (\is_string($properties['expires'])) {
-				$timestamp = \strtotime($properties['expires']);
-			} else {
-				$timestamp = (int) $properties['expires'];
-			}
-
-			if ($timestamp !== 0) {
-				$result .= '; expires=' . \gmdate('D, d-M-Y H:i:s e', $timestamp);
-			}
-		}
-
-		if (isset($properties['secure']) && $properties['secure']) {
-			$result .= '; secure';
-		}
-
-		if (isset($properties['hostonly']) && $properties['hostonly']) {
-			$result .= '; HostOnly';
-		}
-
-		if (isset($properties['httponly']) && $properties['httponly']) {
-			$result .= '; HttpOnly';
-		}
-
-		if (
-			isset($properties['samesite']) && \in_array(\strtolower($properties['samesite']), [
-				'none',
-				'lax',
-				'strict',
-			], true)
-		) {
-			$result .= '; SameSite=' . $properties['samesite'];
-		}
-
-		return $result;
 	}
 
 	/**
@@ -177,24 +116,18 @@ class Cookies
 	 *
 	 * @param string $header The raw HTTP request `Cookie:` header
 	 *
-	 * @throws \InvalidArgumentException if the cookie data cannot be parsed
-	 *
-	 * @return array Associative array of cookie names and values
+	 * @return array<string, string> Associative array of cookie names and values
 	 */
-	public static function parseCookieHeaderString($header)
+	public static function parseIncomingRequestCookieHeaderString(string $header): array
 	{
-		if (!\is_string($header)) {
-			throw new \InvalidArgumentException('Cannot parse Cookie data. Header value must be a string.');
-		}
-
 		$header  = \rtrim($header, "\r\n");
-		$pieces  = \preg_split('#[;]\s*#', $header);
+		$pieces  = \preg_split('#;\s*#', $header);
 		$cookies = [];
 
 		foreach ($pieces as $cookie) {
 			$cookie = \explode('=', $cookie);
 
-			if (\count($cookie) === 2) {
+			if (2 === \count($cookie)) {
 				$key   = \urldecode($cookie[0]);
 				$value = \urldecode($cookie[1]);
 
