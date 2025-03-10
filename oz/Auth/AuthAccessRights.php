@@ -16,7 +16,6 @@ namespace OZONE\Core\Auth;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
-use PHPUtils\Store\Store;
 
 /**
  * Class AuthAccessRights.
@@ -24,24 +23,16 @@ use PHPUtils\Store\Store;
 class AuthAccessRights implements AuthAccessRightsInterface
 {
 	/**
-	 * @var Store<array>
-	 */
-	protected Store $store;
-
-	/**
 	 * AuthAccessRights constructor.
 	 */
-	public function __construct(array $options = [])
-	{
-		$this->store = new Store($options);
-	}
+	public function __construct(protected array $options = []) {}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public function allow(string $action): self
 	{
-		$this->store->set($action, 1);
+		$this->options[$action] = 1;
 
 		return $this;
 	}
@@ -51,36 +42,56 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	 */
 	public function deny(string $action): self
 	{
-		$this->store->set($action, 0);
+		$this->options[$action] = 0;
 
 		return $this;
 	}
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * Specific rules like `users.medias.upload` are more important than wildcard rules like `users.medias.*`,
+	 * and users.medias.* is more specific than users.*
 	 */
 	public function can(string ...$actions): bool
 	{
 		foreach ($actions as $action) {
-			if (!$this->store->has($action)) {
-				$parts       = \explode('.', $action);
-				$full_access = false;
-				$tree        = null;
+			$is_wildcard = \str_contains($action, '*');
+			// when it's not a wildcard check if the granular action is defined
+			if (!$is_wildcard && isset($this->options[$action])) {
+				$allowed = (bool) $this->options[$action];
+			} else {
+				// when it's a wildcard or the granular action is not defined
+				$allowed = false;
+				$parts   = \explode('.', $action);
 
-				foreach ($parts as $k) {
-					$tree = $tree ? $tree . '.' . $k : $k;
+				// remove the last part
+				\array_pop($parts);
 
-					if (true === (bool) $this->store->get($tree . '.*')) {
-						$full_access = true;
+				// for foo.bar.baz.tar,
+				// will check for foo.*, foo.bar.*, foo.bar.baz.*
+				// the last defined will be the result
+				$parent = '';
+				foreach ($parts as $part) {
+					$parent .= $part . '.';
+					$allowed = (bool) ($this->options[$parent . '*'] ?? $allowed);
+				}
 
-						break;
+				// Ensure no specific denial exists for a child action
+				// when allow: users.* and deny: users.delete
+				// can: users.* ? no because users.delete is denied
+				if ($is_wildcard) {
+					foreach ($this->options as $k => $v) {
+						if (\str_starts_with($k, $parent) && !$v) {
+							$allowed = false;
+
+							break;
+						}
 					}
 				}
+			}
 
-				if (!$full_access) {
-					return false;
-				}
-			} elseif (true !== (bool) $this->store->get($action)) {
+			if (!$allowed) {
 				return false;
 			}
 		}
@@ -115,6 +126,6 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	 */
 	public function getOptions(): array
 	{
-		return (array) $this->store->getData();
+		return $this->options;
 	}
 }
