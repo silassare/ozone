@@ -42,11 +42,21 @@ final class Cli extends Kli
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	public function getVersion(bool $full = false): string
+	{
+		if ($full) {
+			return OZ_OZONE_VERSION_NAME;
+		}
+
+		return OZ_OZONE_VERSION;
+	}
+
+	/**
 	 * Gets the Cli instance.
 	 *
 	 * @return Cli
-	 *
-	 * @throws KliException
 	 */
 	public static function getInstance(): self
 	{
