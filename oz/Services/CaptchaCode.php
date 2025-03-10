@@ -128,8 +128,8 @@ final class CaptchaCode extends Service
 			self::$default_config['angle_max']
 		) * (1 === Random::int(0, 1) ? -1 : 1);
 
-		$font = $CAPTCHA_DIR .
-			self::$default_config['fonts'][Random::int(0, \count(self::$default_config['fonts']) - 1)];
+		$font = $CAPTCHA_DIR
+			. self::$default_config['fonts'][Random::int(0, \count(self::$default_config['fonts']) - 1)];
 
 		$font_size     = Random::int(
 			self::$default_config['min_font_size'],

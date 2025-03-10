@@ -50,8 +50,8 @@ final class Db
 		if (!self::$db) {
 			OZone::dieIfBootHookReceiversAreNotNotified(
 				\sprintf(
-					'%s should be called only after all boot hooks are registered.' .
-					' A call to %s before all boot hooks are registered may cause '
+					'%s should be called only after all boot hooks are registered.'
+					. ' A call to %s before all boot hooks are registered may cause '
 					. 'some boot hooks to not be notified and lead to inconsistent state.',
 					__METHOD__,
 					__METHOD__

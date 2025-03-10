@@ -17,8 +17,8 @@ use OZONE\Core\Cli\Cli;
 if (\file_exists(\getcwd() . \DIRECTORY_SEPARATOR . 'app' . \DIRECTORY_SEPARATOR . 'boot.php')) {
 	// = Check if the project has been installed
 	if (!\file_exists(\getcwd() . \DIRECTORY_SEPARATOR . 'vendor' . \DIRECTORY_SEPARATOR . 'autoload.php')) {
-		exit('Found an existing project but no autoload file.' . \PHP_EOL .
-			 'Please run "composer install" in your project directory.' . \PHP_EOL);
+		exit('Found an existing project but no autoload file.' . \PHP_EOL
+			 . 'Please run "composer install" in your project directory.' . \PHP_EOL);
 	}
 
 	// = Load the project boot file
