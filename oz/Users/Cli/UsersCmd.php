@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Core\Users\Cli;
 
 use Gobl\CRUD\Exceptions\CRUDException;
+use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
 use Gobl\ORM\Exceptions\ORMQueryException;
-use Kli\Exceptions\KliException;
 use Kli\KliArgs;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
@@ -28,9 +28,6 @@ use OZONE\Core\OZone;
  */
 final class UsersCmd extends Command
 {
-	/**
-	 * @throws KliException
-	 */
 	protected function describe(): void
 	{
 		$this->description('Manage users.');
@@ -63,6 +60,7 @@ final class UsersCmd extends Command
 	 * @throws CRUDException
 	 * @throws ORMException
 	 * @throws ORMQueryException
+	 * @throws GoblException
 	 */
 	private function add(KliArgs $args): void
 	{

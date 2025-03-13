@@ -20,6 +20,7 @@ use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Columns\Types\TypePhone;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Db\OZUser;
+use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
@@ -58,6 +59,9 @@ final class Users
 	 * @param OZUser $user the user object
 	 *
 	 * @return $this
+	 *
+	 * @throws UnauthorizedActionException
+	 * @throws ForbiddenException
 	 */
 	public function logUserIn(OZUser $user): self
 	{
@@ -101,6 +105,11 @@ final class Users
 
 	/**
 	 * Log the current user out.
+	 *
+	 * @return $this
+	 *
+	 * @throws ForbiddenException
+	 * @throws UnauthorizedActionException
 	 */
 	public function logUserOut(): self
 	{
@@ -220,6 +229,9 @@ final class Users
 	 * @param string $pass
 	 *
 	 * @return OZUser|string
+	 *
+	 * @throws ForbiddenException
+	 * @throws UnauthorizedActionException
 	 */
 	public function tryLogIn(OZUser $user, string $pass): OZUser|string
 	{
