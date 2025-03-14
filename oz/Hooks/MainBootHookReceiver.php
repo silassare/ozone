@@ -18,6 +18,7 @@ use Gobl\ORM\Events\ORMTableFilesGenerated;
 use Gobl\ORM\Utils\ORMClassKind;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\MethodNotAllowedException;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -28,7 +29,6 @@ use OZONE\Core\Http\Uri;
 use OZONE\Core\OZone;
 use OZONE\Core\Router\Events\RouteMethodNotAllowed;
 use OZONE\Core\Router\Events\RouteNotFound;
-use OZONE\Core\Sessions\Session;
 use OZONE\Core\Users\Traits\UserEntityTrait;
 use PHPUtils\Events\Event;
 
@@ -96,7 +96,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		$context        = $ev->context;
 		$request        = $context->getRequest();
 		$response       = $context->getResponse();
-		$life_time      = Session::lifetime();
+		$life_time      = Settings::get('oz.request', 'OZ_CORS_ALLOWED_MAX_AGE');
 		$h_list         = [];
 		$allowed_origin = Settings::get('oz.request', 'OZ_CORS_ALLOWED_ORIGIN');
 		// header spoofing can help hacker bypass this
@@ -170,15 +170,21 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		$table = $event->getTable();
 
 		if (Db::getOZoneDbNamespace() === $table->getNamespace()) {
-			$name  = $table->getName();
-			$trait = null;
+			$name      = $table->getName();
+			$trait     = null;
+			$interface = null;
 
 			if ('oz_users' === $name) {
-				$trait = UserEntityTrait::class;
+				$trait     = UserEntityTrait::class;
+				$interface = AuthUserInterface::class;
 			} elseif ('oz_files' === $name) {
 				$trait = FileEntityTrait::class;
 			}
 
+			if ($interface) {
+				$event->getClass(ORMClassKind::ENTITY)
+					->implements($interface);
+			}
 			if ($trait) {
 				$event->getClass(ORMClassKind::ENTITY)
 					->useTrait($trait);

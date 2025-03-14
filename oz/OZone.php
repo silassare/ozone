@@ -18,7 +18,8 @@ use OZONE\Core\App\Db;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\AuthMethodType;
+use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Auth\Enums\AuthMethodType;
 use OZONE\Core\CRUD\TableCRUD;
 use OZONE\Core\Db\OZRolesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -32,7 +33,6 @@ use OZONE\Core\Plugins\Plugins;
 use OZONE\Core\Router\Events\RouterCreated;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Users\Users;
 use OZONE\Core\Utils\Utils;
 use PDOException;
 
@@ -274,7 +274,7 @@ final class OZone
 
 		if (null === $has_super_admin) {
 			$roles_qb = new OZRolesQuery();
-			$results  = $roles_qb->whereNameIs(Users::SUPER_ADMIN)
+			$results  = $roles_qb->whereNameIs(AuthUsers::SUPER_ADMIN)
 				->whereIsValid()
 				->find(1);
 

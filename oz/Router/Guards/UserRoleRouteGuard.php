@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Guards;
 
+use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Router\RouteInfo;
-use OZONE\Core\Users\Users;
 
 /**
  * Class UserRoleRouteGuard.
@@ -88,18 +88,17 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 	 */
 	public function checkAccess(RouteInfo $ri): void
 	{
-		$context = $ri->getContext();
-		$uid     = $context->auth()->user()
-			->getID();
+		$context  = $ri->getContext();
+		$user     = $context->auth()->user();
 
 		$roles = \array_keys($this->roles);
 
-		if (!Users::hasOneRoleAtLeast($uid, $roles, $this->strict)) {
+		if (!AuthUsers::hasOneRoleAtLeast($user, $roles, $this->strict)) {
 			throw new ForbiddenException(null, [
-				'_reason' => 'User role is not in allowed list.',
-				'_roles'  => $roles,
-				'_strict' => $this->strict,
-				'_uid'    => $uid,
+				'_reason'  => 'User role is not in allowed list.',
+				'_roles'   => $roles,
+				'_strict'  => $this->strict,
+				'_user'    => AuthUsers::selector($user),
 			]);
 		}
 	}

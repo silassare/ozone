@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Methods;
 
 use OZONE\Core\App\Settings;
-use OZONE\Core\Auth\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
 use OZONE\Core\Auth\Traits\UserAuthMethodTrait;
 use OZONE\Core\Exceptions\ForbiddenException;

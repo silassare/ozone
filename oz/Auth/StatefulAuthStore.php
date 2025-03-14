@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth;
 
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Cache\CacheManager;
 use PHPUtils\Store\Store;
 
@@ -50,30 +51,34 @@ class StatefulAuthStore extends Store
 	}
 
 	/**
-	 * Gets previous user id.
+	 * Gets previous user.
 	 *
-	 * @return null|string
+	 * @return null|AuthUserInterface
 	 *
 	 * @internal
 	 */
-	public function getPreviousUserID(): ?string
+	public function getPreviousUser(): ?AuthUserInterface
 	{
-		return $this->get('oz.previous_user_id', null);
+		$selector = $this->get('oz.previous_user');
+
+		if (\is_array($selector)) {
+			return AuthUsers::identifyBySelector($selector);
+		}
+
+		return null;
 	}
 
 	/**
-	 * Sets previous user id.
+	 * Sets previous user.
 	 *
-	 * This is set when a user is logged out.
-	 *
-	 * @param string $uid
+	 * @param AuthUserInterface $user
 	 *
 	 * @return self
 	 *
 	 * @internal
 	 */
-	public function setPreviousUserID(string $uid): self
+	public function setPreviousUser(AuthUserInterface $user): self
 	{
-		return $this->set('oz.previous_user_id', $uid);
+		return $this->set('oz.previous_user', AuthUsers::selector($user));
 	}
 }

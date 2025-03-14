@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Interfaces;
 
-use OZONE\Core\Db\OZUser;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -52,12 +51,12 @@ interface AuthMethodInterface
 	 * Should return the authenticated user.
 	 *
 	 * Will be called after {@link AuthMethodInterface::authenticate()}
-	 * and should return an instance of {@link OZUser}
+	 * and should return an instance of {@link AuthUserInterface}
 	 * or throw an exception if no user was authenticated.
 	 *
-	 * @return OZUser
+	 * @return AuthUserInterface
 	 */
-	public function user(): OZUser;
+	public function user(): AuthUserInterface;
 
 	/**
 	 * Should return the access rights of the authenticated user depending on the authentication method used.

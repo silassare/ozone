@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-use OZONE\Core\Auth\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthMethodType;
 
 return [
 	/**

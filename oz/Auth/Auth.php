@@ -15,6 +15,7 @@ namespace OZONE\Core\Auth;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Enums\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthProviderInterface;
 use OZONE\Core\Db\OZAuth;

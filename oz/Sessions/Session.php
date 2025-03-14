@@ -16,11 +16,12 @@ namespace OZONE\Core\Sessions;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\StatefulAuthStore;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Db\OZSession;
 use OZONE\Core\Db\OZSessionsQuery;
-use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Hooks\Events\FinishHook;
@@ -34,6 +35,8 @@ use Throwable;
 
 /**
  * Class Session.
+ *
+ * @internal
  */
 final class Session implements BootHookReceiverInterface
 {
@@ -79,16 +82,6 @@ final class Session implements BootHookReceiverInterface
 	public static function cookieName(): string
 	{
 		return Settings::get('oz.sessions', 'OZ_SESSION_COOKIE_NAME');
-	}
-
-	/**
-	 * Returns session attached user ID.
-	 */
-	public function attachedUserID(): ?string
-	{
-		$this->assertSessionStarted();
-
-		return $this->session_entry->getUserID();
 	}
 
 	/**
@@ -185,32 +178,58 @@ final class Session implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Attach user to this session.
-	 *
-	 * @param OZUser $user
-	 *
-	 * @return $this
+	 * Returns session attached user.
 	 */
-	public function attachUser(OZUser $user): self
+	public function attachedAuthUser(): ?AuthUserInterface
 	{
 		$this->assertSessionStarted();
 
-		// it may be a new session, so we save first
-		$uid              = $user->getID();
-		$sid              = $this->session_entry->getID();
-		$session_owner_id = $this->session_entry->getUserID();
+		$c_type = $this->session_entry->getOwnerType();
+		$c_id   = $this->session_entry->getOwnerID();
 
-		if ($session_owner_id && $uid !== $session_owner_id) {
+		return $c_type && $c_id ? AuthUsers::identify($c_type, $c_id) : null;
+	}
+
+	/**
+	 * Attach user to this session.
+	 *
+	 * @param AuthUserInterface $user
+	 *
+	 * @return $this
+	 */
+	public function attachAuthUser(AuthUserInterface $user): self
+	{
+		$this->assertSessionStarted();
+
+		$current_user = $this->attachedAuthUser();
+
+		$sid = $this->session_entry->getID();
+
+		if ($current_user && !AuthUsers::same($current_user, $user)) {
 			throw new RuntimeException('OZ_SESSION_DISTINCT_USER_CANT_ATTACH_USER', [
-				'user_id'     => $uid,
-				'_session_id' => $sid,
-				'_owner'      => [
-					'session_owner_id' => $session_owner_id,
-				],
+				'_session_id'    => $sid,
+				'_owner_current' => AuthUsers::selector($current_user),
+				'_owner_new'     => AuthUsers::selector($user),
 			]);
 		}
 
-		$this->session_entry->setUserID($uid);
+		$this->session_entry->setOwnerID($user->getAuthIdentifier());
+		$this->session_entry->setOwnerType($user->getAuthUserTypeName());
+
+		return $this;
+	}
+
+	/**
+	 * Detach the current user from the session.
+	 *
+	 * @return $this
+	 */
+	public function detachAuthUser(): self
+	{
+		$this->assertSessionStarted();
+
+		$this->session_entry->setOwnerID(null);
+		$this->session_entry->setOwnerType(null);
 
 		return $this;
 	}

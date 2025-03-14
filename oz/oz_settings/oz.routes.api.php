@@ -11,19 +11,19 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\Auth\Services\AccountRecovery;
 use OZONE\Core\Auth\Services\AuthService;
 use OZONE\Core\Auth\Services\EmailVerificationAuthService;
+use OZONE\Core\Auth\Services\Login;
+use OZONE\Core\Auth\Services\Logout;
+use OZONE\Core\Auth\Services\Password;
 use OZONE\Core\Auth\Services\PhoneVerificationAuthService;
+use OZONE\Core\Auth\Services\SignUp;
+use OZONE\Core\Auth\Services\TNet;
 use OZONE\Core\FS\Services\UploadFiles;
 use OZONE\Core\Services\CaptchaCode;
 use OZONE\Core\Services\LinkTo;
 use OZONE\Core\Services\QRCode;
-use OZONE\Core\Users\Services\AccountRecovery;
-use OZONE\Core\Users\Services\Login;
-use OZONE\Core\Users\Services\Logout;
-use OZONE\Core\Users\Services\Password;
-use OZONE\Core\Users\Services\SignUp;
-use OZONE\Core\Users\Services\TNet;
 
 return [
 	UploadFiles::class                  => true,

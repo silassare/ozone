@@ -16,7 +16,6 @@ namespace OZONE\Core\App;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
 use OZONE\Core\Router\RouteInfo;
-use OZONE\Core\Sessions\Session;
 
 /**
  * Class Service.
@@ -70,8 +69,8 @@ abstract class Service implements RouteProviderInterface
 		$now           = \time();
 		$data['utime'] = $now;
 
-		if ($this->context->hasAuthenticatedUser()) {
-			$data['stime'] = $now + Session::lifetime();
+		if ($this->context->hasAuthenticatedUser() && $this->context->hasStatefulAuth()) {
+			$data['stime'] = $now + $this->context->requireStatefulAuth()->lifetime();
 		}
 
 		return $this->context->getResponse()

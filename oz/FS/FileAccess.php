@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS;
 
-use OZONE\Core\Auth\AuthSecretType;
+use OZONE\Core\Auth\Enums\AuthSecretType;
 use OZONE\Core\Auth\Providers\FileAuthProvider;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\InvalidFormException;

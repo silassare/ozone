@@ -17,7 +17,9 @@ use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
-use OZONE\Core\Users\Users;
+use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
+use OZONE\Core\Exceptions\RuntimeException;
 
 /**
  * Class TypeEmail.
@@ -67,9 +69,9 @@ class TypeEmail extends Type
 	 *
 	 * @return $this
 	 */
-	public function registered(): static
+	public function registered(string $as): static
 	{
-		return $this->setOption('registered', true);
+		return $this->setOption('registered', true)->setOption('registered_as', $as);
 	}
 
 	/**
@@ -77,9 +79,9 @@ class TypeEmail extends Type
 	 *
 	 * @return $this
 	 */
-	public function notRegistered(): static
+	public function notRegistered(string $as): static
 	{
-		return $this->setOption('registered', false);
+		return $this->setOption('registered', false)->setOption('registered_as', $as);
 	}
 
 	/**
@@ -103,13 +105,14 @@ class TypeEmail extends Type
 				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug);
 			}
 
-			$registered = $this->getOption('registered');
+			$registered    = $this->getOption('registered');
+			$registered_as = $this->getOption('registered_as');
 
-			if (false === $registered && Users::withEmail($value)) {
+			if (false === $registered && AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_EMAIL)) {
 				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_ALREADY_REGISTERED', $debug);
 			}
 
-			if (true === $registered && !Users::withEmail($value)) {
+			if (true === $registered && !AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_EMAIL)) {
 				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_NOT_REGISTERED', $debug);
 			}
 		}
@@ -123,10 +126,14 @@ class TypeEmail extends Type
 	public function configure(array $options): static
 	{
 		if (isset($options['registered'])) {
+			if (!isset($options['registered_as'])) {
+				throw new RuntimeException('Missing \'registered_as\' property.');
+			}
+
 			if ($options['registered']) {
-				$this->registered();
+				$this->registered($options['registered_as']);
 			} else {
-				$this->notRegistered();
+				$this->notRegistered($options['registered_as']);
 			}
 		}
 

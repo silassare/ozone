@@ -14,34 +14,34 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Traits;
 
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\AuthState;
+use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Auth\Enums\AuthState;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Providers\UserAuthProvider;
 use OZONE\Core\Db\OZAuth;
-use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
-use OZONE\Core\Users\Users;
 
 /**
  * Trait UserAuthMethodTrait.
  */
 trait UserAuthMethodTrait
 {
-	protected OZUser $user;
+	protected AuthUserInterface $user;
 	protected UserAuthProvider $provider;
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return OZUser
+	 * @return AuthUserInterface
 	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedActionException
 	 */
-	public function user(): OZUser
+	public function user(): AuthUserInterface
 	{
 		/** @psalm-suppress RedundantPropertyInitializationCheck */
 		if (!isset($this->user)) {
@@ -138,7 +138,7 @@ trait UserAuthMethodTrait
 		$context = $this->ri->getContext();
 		$auth    = Auth::get($auth_ref);
 
-		$user = Users::identify($uid);
+		$user = AuthUsers::identify($uid);
 
 		if (!$user) {
 			// invalid username

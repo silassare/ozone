@@ -25,7 +25,17 @@ return [
 	'OZ_SESSION_LIFE_TIME'                   => 3600 * 24 * 30, // 30 days
 
 	/**
+	 * The session source key to use.
+	 *
+	 * This can be 'user_ip' or 'user_agent'.
+	 */
+	'OZ_SESSION_SOURCE_KEY' => 'user_ip',
+
+	/**
 	 * Enable/Disable same source session hijacking protection.
+	 *
+	 * When OZ_SESSION_SOURCE_KEY is set to 'user_ip', this will force the session to be used from the same IP address.
+	 * This will be annoying for users who use VPNs or change their IP address frequently.
 	 */
 	'OZ_SESSION_HIJACKING_FORCE_SAME_SOURCE' => 1,
 ];

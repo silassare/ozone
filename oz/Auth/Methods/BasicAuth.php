@@ -13,15 +13,15 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
-use OZONE\Core\Auth\AuthMethodType;
+use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Auth\Enums\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Traits\HTTPAuthMethodTrait;
 use OZONE\Core\Crypt\Password;
-use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Router\RouteInfo;
-use OZONE\Core\Users\Users;
 
 /**
  * Class BasicAuth.
@@ -35,7 +35,7 @@ class BasicAuth implements AuthMethodInterface
 	protected AuthMethodType $type = AuthMethodType::BASIC;
 	protected string $username     = '';
 	protected string $password     = '';
-	protected OZUser $user;
+	protected AuthUserInterface $user;
 
 	/**
 	 * BasicAuth constructor.
@@ -121,7 +121,7 @@ class BasicAuth implements AuthMethodInterface
 	 */
 	public function authenticate(): void
 	{
-		$user = Users::identify($this->username);
+		$user = AuthUsers::identify($this->username);
 
 		if (!$user) {
 			// unknown user
@@ -148,7 +148,7 @@ class BasicAuth implements AuthMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function user(): OZUser
+	public function user(): AuthUserInterface
 	{
 		if (!isset($this->user)) {
 			$this->authenticate();
@@ -162,8 +162,7 @@ class BasicAuth implements AuthMethodInterface
 	 */
 	public function accessRights(): AuthAccessRightsInterface
 	{
-		return $this->user()
-			->getAccessRights();
+		return $this->user()->getAuthUserDataStore()->getAccessRights();
 	}
 
 	/**

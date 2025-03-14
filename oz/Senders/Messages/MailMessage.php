@@ -13,14 +13,14 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Senders\Messages;
 
-use OZONE\Core\Db\OZUser;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\FS\Templates;
 use OZONE\Core\Senders\Events\SendMail;
 
 /**
  * Class MailMessage.
  *
- * @extends Message<string|OZUser>
+ * @extends Message<string|AuthUserInterface>
  */
 class MailMessage extends Message
 {

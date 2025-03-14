@@ -15,8 +15,8 @@ namespace OZONE\Core\Auth\Interfaces;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\App\JSONResponse;
-use OZONE\Core\Auth\AuthSecretType;
-use OZONE\Core\Auth\AuthState;
+use OZONE\Core\Auth\Enums\AuthSecretType;
+use OZONE\Core\Auth\Enums\AuthState;
 
 /**
  * Interface AuthProviderInterface.

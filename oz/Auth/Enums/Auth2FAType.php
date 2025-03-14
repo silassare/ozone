@@ -11,19 +11,20 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Auth;
+namespace OZONE\Core\Auth\Enums;
 
 /**
- * Enum AuthType.
+ * Enum Auth2FAType.
  */
-enum AuthType: string
+enum Auth2FAType: string
 {
-	// Two Factor Authentication
-	case TWO_FA = '2FA';
-
-	// Email or phone verification
+	/**
+	 * Email/SMS code or token.
+	 */
 	case VERIFICATION = 'VERIFICATION';
 
-	// User Access Token
-	case ACCESS_TOKEN = 'ACCESS_TOKEN';
+	/**
+	 * Time-based One-Time Password.
+	 */
+	case TOTP = 'TOTP';
 }

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Auth;
+namespace OZONE\Core\Auth\Enums;
 
 /**
  * Enum AuthSecretType.

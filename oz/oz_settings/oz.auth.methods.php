@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-use OZONE\Core\Auth\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthMethodType;
 use OZONE\Core\Auth\Methods\ApiKeyHeaderAuth;
 use OZONE\Core\Auth\Methods\BasicAuth;
 use OZONE\Core\Auth\Methods\BearerAuth;

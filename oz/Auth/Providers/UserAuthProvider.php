@@ -15,9 +15,9 @@ namespace OZONE\Core\Auth\Providers;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
+use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Users\Users;
 
 /**
  * Class UserAuthProvider.
@@ -58,7 +58,7 @@ class UserAuthProvider extends AuthProvider
 			throw new InvalidArgumentException('Missing "user_id" in payload.');
 		}
 
-		$user = Users::identify($id);
+		$user = AuthUsers::identify($id);
 
 		if (!$user) {
 			throw new RuntimeException('Unable to load user using provided "user_id".', $payload);

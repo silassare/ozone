@@ -15,7 +15,8 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\AuthMethodType;
+use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Auth\Enums\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
 use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -27,7 +28,6 @@ use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 use OZONE\Core\Router\Interfaces\RouteGuardProviderInterface;
 use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
 use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
-use OZONE\Core\Users\Users;
 
 /**
  * Class SharedOptions.
@@ -219,7 +219,7 @@ class RouteSharedOptions
 	public function withAdminRole(): static
 	{
 		return $this->guard(static function () {
-			return new UserRoleRouteGuard(Users::ADMIN, Users::SUPER_ADMIN);
+			return new UserRoleRouteGuard(AuthUsers::ADMIN, AuthUsers::SUPER_ADMIN);
 		});
 	}
 
@@ -231,7 +231,7 @@ class RouteSharedOptions
 	public function withSuperAdminRole(): static
 	{
 		return $this->guard(static function () {
-			return new UserRoleRouteGuard(Users::SUPER_ADMIN);
+			return new UserRoleRouteGuard(AuthUsers::SUPER_ADMIN);
 		});
 	}
 

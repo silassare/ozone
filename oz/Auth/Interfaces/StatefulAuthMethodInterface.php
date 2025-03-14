@@ -40,4 +40,35 @@ interface StatefulAuthMethodInterface extends AuthMethodInterface
 	 * This is called after the response is ready to be sent.
 	 */
 	public function persist(): void;
+
+	/**
+	 * Destroy the state.
+	 */
+	public function destroy(): void;
+
+	/**
+	 * Renew the state.
+	 *
+	 * State store should be emptied and a new state id should be generated.
+	 */
+	public function renew(): void;
+
+	/**
+	 * Attach the user to the state.
+	 *
+	 * @param AuthUserInterface $user
+	 */
+	public function attachAuthUser(AuthUserInterface $user): void;
+
+	/**
+	 * Detach the current auth user from the state.
+	 */
+	public function detachAuthUser(): void;
+
+	/**
+	 * Get the state lifetime in seconds.
+	 *
+	 * @return int
+	 */
+	public function lifetime(): int;
 }

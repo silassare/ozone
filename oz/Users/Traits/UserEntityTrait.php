@@ -13,11 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Users\Traits;
 
-use OZONE\Core\Auth\AuthAccessRights;
-use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
+use OZONE\Core\Auth\AuthUserDataStore;
+use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Users\Users;
 
 /**
  * Trait UserEntityTrait.
@@ -27,12 +26,90 @@ trait UserEntityTrait
 	/**
 	 * {@inheritDoc}
 	 */
+	public function getAuthUserTypeName(): string
+	{
+		return self::TABLE_NAME;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getAuthIdentifier(): string
+	{
+		$id = $this->getID();
+
+		if (empty($id)) {
+			throw new RuntimeException('Trying to get auth identifier of an unsaved user.');
+		}
+
+		return $id;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getAuthIdentifiers(): array
+	{
+		return [
+			self::IDENTIFIER_NAME_ID    => $this->getID(),
+			self::IDENTIFIER_NAME_EMAIL => $this->getEmail(),
+			self::IDENTIFIER_NAME_PHONE => $this->getPhone(),
+		];
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getAuthPassword(): string
+	{
+		return $this->getPass();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function setAuthPassword(string $password_hash): self
+	{
+		$this->setPass($password_hash);
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getAuthUserDataStore(): AuthUserDataStore
+	{
+		return AuthUserDataStore::getInstance($this, $this->getData()->getData());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function setAuthUserDataStore(AuthUserDataStore $store): self
+	{
+		$this->setData($store->getData());
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function isAuthUserVerified(): bool
+	{
+		return $this->isValid();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	public function save(): bool
 	{
 		if (!$this->getID()) {
 			// new user will be added
-			$phone             = $this->getPhone();
-			$email             = $this->getEmail();
+			$phone = $this->getPhone();
+			$email = $this->getEmail();
 
 			if (empty($phone) && empty($email)) {
 				// Maybe "OZ_USER_PHONE_REQUIRED" and "OZ_USER_EMAIL_REQUIRED"
@@ -51,7 +128,7 @@ trait UserEntityTrait
 			// when user password change, force login again
 			// on all sessions associated with user
 			if ($this->getID()) {
-				Users::forceUserLogoutOnAllActiveSessions($this->getID());
+				AuthUsers::forceUserLogoutOnAllActiveSessions($this);
 			}
 		}
 
@@ -68,34 +145,5 @@ trait UserEntityTrait
 		$arr[self::COL_PASS] = null;
 
 		return $arr;
-	}
-
-	/**
-	 * Gets user access rights.
-	 *
-	 * @return AuthAccessRightsInterface
-	 */
-	public function getAccessRights(): AuthAccessRightsInterface
-	{
-		$data   = $this->getData();
-		$rights = $data['access_rights'] ?? [];
-
-		return new AuthAccessRights($rights);
-	}
-
-	/**
-	 * Sets user access rights.
-	 *
-	 * @param AuthAccessRightsInterface $rights
-	 *
-	 * @return $this
-	 */
-	public function setAccessRights(AuthAccessRightsInterface $rights): static
-	{
-		$data                  = $this->getData();
-		$data['access_rights'] = $rights->getOptions();
-		$this->setData($data);
-
-		return $this;
 	}
 }

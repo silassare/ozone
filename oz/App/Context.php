@@ -15,6 +15,7 @@ namespace OZONE\Core\App;
 
 use InvalidArgumentException;
 use LogicException;
+use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
 use OZONE\Core\Auth\Interfaces\StatefulAuthMethodInterface;
 use OZONE\Core\Auth\StatefulAuthStore;
@@ -32,7 +33,6 @@ use OZONE\Core\Http\Uri;
 use OZONE\Core\OZone;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Users\Users;
 use PHPUtils\Store\StoreNotEditable;
 use Throwable;
 
@@ -64,7 +64,7 @@ final class Context
 
 	private Response $response;
 
-	private Users $users;
+	private AuthUsers $users;
 	private ?AuthMethodInterface $auth;
 
 	private ?RouteInfo $route_info = null;
@@ -92,7 +92,7 @@ final class Context
 		$response               = new Response(200, $headers);
 		$this->response         = $response->withProtocolVersion($this->request->getProtocolVersion());
 
-		$this->users = new Users($this);
+		$this->users = new AuthUsers($this);
 	}
 
 	/**
@@ -255,7 +255,7 @@ final class Context
 	public function hasAuthenticatedUser(): bool
 	{
 		try {
-			return $this->auth()->user()->isValid();
+			return (bool) $this->auth()->user();
 		} catch (Throwable) {
 			return false;
 		}
@@ -324,9 +324,9 @@ final class Context
 	/**
 	 * Gets users manager instance object.
 	 *
-	 * @return Users
+	 * @return AuthUsers
 	 */
-	public function getUsers(): Users
+	public function getUsers(): AuthUsers
 	{
 		return $this->users;
 	}

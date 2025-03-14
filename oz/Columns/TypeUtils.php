@@ -16,6 +16,7 @@ namespace OZONE\Core\Columns;
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeDate;
+use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Columns\Types\TypeEmail;
 use OZONE\Core\Columns\Types\TypePhone;
@@ -75,5 +76,18 @@ class TypeUtils
 			->nullable(!Settings::get('oz.users', 'OZ_USER_EMAIL_REQUIRED'));
 
 		return $email;
+	}
+
+	/**
+	 * Returns a morph any id field type.
+	 * This is used to store the id of any morphed model.
+	 *
+	 * @return TypeString
+	 *
+	 * @throws TypesException
+	 */
+	public static function morphAnyId(): TypeString
+	{
+		return (new TypeString())->max(128);
 	}
 }

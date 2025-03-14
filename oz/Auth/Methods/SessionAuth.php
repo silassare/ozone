@@ -14,16 +14,16 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Methods;
 
 use OZONE\Core\App\Settings;
-use OZONE\Core\Auth\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Interfaces\StatefulAuthMethodInterface;
 use OZONE\Core\Auth\StatefulAuthStore;
-use OZONE\Core\Db\OZUser;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\UnverifiedUserException;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Sessions\Session;
-use OZONE\Core\Users\Users;
+use OZONE\Core\Utils\Hasher;
 
 /**
  * Class SessionAuth.
@@ -35,7 +35,7 @@ class SessionAuth implements StatefulAuthMethodInterface
 	protected AuthMethodType $type = AuthMethodType::SESSION;
 	protected ?string $session_id  = null;
 	protected ?Session $session;
-	protected OZUser $user;
+	protected AuthUserInterface $user;
 
 	/**
 	 * SessionAuth constructor.
@@ -85,7 +85,7 @@ class SessionAuth implements StatefulAuthMethodInterface
 	 */
 	public function ask(): void
 	{
-		$this->startCurrentOrNewSession();
+		$this->session();
 	}
 
 	/**
@@ -95,7 +95,7 @@ class SessionAuth implements StatefulAuthMethodInterface
 	 */
 	public function authenticate(): void
 	{
-		$this->startCurrentOrNewSession();
+		$this->session();
 	}
 
 	/**
@@ -104,27 +104,16 @@ class SessionAuth implements StatefulAuthMethodInterface
 	 * @throws ForbiddenException
 	 * @throws UnverifiedUserException
 	 */
-	public function user(): OZUser
+	public function user(): AuthUserInterface
 	{
 		if (!isset($this->user)) {
-			$uid = $this->session()
-				->attachedUserID();
-			if (!$uid || !($user = Users::identify($uid))) {
+			$user = $this->session()
+				->attachedAuthUser();
+
+			if (!$user) {
 				throw new UnverifiedUserException(null, [
 					'_reason' => 'User not authenticated.',
 					'_help'   => 'Please login first.',
-				]);
-			}
-
-			if (!$user->isValid()) {
-				Users::forceUserLogoutOnAllActiveSessions($user->getID());
-
-				throw new ForbiddenException(null, [
-					'_reason' => 'User not valid.',
-					// maybe the user was invalidated after session started
-					// we should normally clear all sessions for user when invalidating the user
-					'_help'   => 'Logic error: all user session should be cleared when user is invalidated.',
-					'_uid'    => $user->getID(),
 				]);
 			}
 
@@ -145,17 +134,7 @@ class SessionAuth implements StatefulAuthMethodInterface
 	public function accessRights(): AuthAccessRightsInterface
 	{
 		return $this->user()
-			->getAccessRights();
-	}
-
-	/**
-	 * Returns the session instance.
-	 *
-	 * @throws ForbiddenException
-	 */
-	public function session(): Session
-	{
-		return $this->startCurrentOrNewSession();
+			->getAuthUserDataStore()->getAccessRights();
 	}
 
 	/**
@@ -176,7 +155,7 @@ class SessionAuth implements StatefulAuthMethodInterface
 	 */
 	public function stateID(): string
 	{
-		return $this->startCurrentOrNewSession()
+		return $this->session()
 			->id();
 	}
 
@@ -192,27 +171,84 @@ class SessionAuth implements StatefulAuthMethodInterface
 	}
 
 	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws ForbiddenException
+	 */
+	public function destroy(): void
+	{
+		$this->session()
+			->destroy();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws ForbiddenException
+	 */
+	public function renew(): void
+	{
+		$this->session()
+			->restart();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws ForbiddenException
+	 */
+	public function attachAuthUser(AuthUserInterface $user): void
+	{
+		$this->session()
+			->attachAuthUser($user);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws ForbiddenException
+	 */
+	public function detachAuthUser(): void
+	{
+		$this->session()
+			->detachAuthUser();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function lifetime(): int
+	{
+		return Session::lifetime();
+	}
+
+	/**
 	 * Start current or new session.
 	 *
 	 * @return Session
 	 *
 	 * @throws ForbiddenException
 	 */
-	protected function startCurrentOrNewSession(): Session
+	protected function session(): Session
 	{
-		$context    = $this->ri->getContext();
-		$source_key = $context->getUserIP();
+		$context            = $this->ri->getContext();
+		$session_source_key = Settings::get('oz.sessions', 'OZ_SESSION_SOURCE_KEY');
+		$source_key_value   = match ($session_source_key) {
+			'user_agent' => 'User-Agent-Hash-' . Hasher::hash64($context->getRequest()->getHeaderLine('User-Agent')),
+			default      => $context->getUserIP(),
+		};
+
 		if (!isset($this->session)) {
-			$this->session = new Session($context, $source_key);
+			$this->session = new Session($context, $source_key_value);
 
 			$this->session->start($this->session_id);
 
 			$this->session_id = $this->session->id();
-		} elseif ($this->session->sourceKey() !== $source_key) {
+		} elseif ($this->session->sourceKey() !== $source_key_value) {
 			$force_same_source = (bool) Settings::get('oz.sessions', 'OZ_SESSION_HIJACKING_FORCE_SAME_SOURCE');
 
 			if ($force_same_source) {
-				if ($this->session->attachedUserID()) {
+				if ($this->session->attachedAuthUser()) {
 					// TODO: we may inform the user about this
 					// we can't just restart the session
 					// because the user may be doing something important

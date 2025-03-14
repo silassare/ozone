@@ -29,6 +29,7 @@ return [
 	'OZ_PROFILE_PIC_UPDATED'            => 'Photo de profil mise à jour.',
 	'OZ_FIELD_PHONE_ALREADY_REGISTERED' => 'Le {phone} est déjà associé à un autre compte.',
 	'OZ_FIELD_EMAIL_ALREADY_REGISTERED' => "L'adresse mail {email} est déjà associé à un autre compte.",
+	'OZ_FIELD_EMAIL_INVALID'            => "L'adresse mail n'est pas valide.",
 	'OZ_FIELD_PHONE_INVALID'            => 'Le numéro est invalide.',
 	'OZ_FIELD_PHONE_NOT_REGISTERED'     => "Ce numéro n'est pas inscrit.",
 	'OZ_FIELD_EMAIL_NOT_REGISTERED'     => "Cette adresse mail n'est pas enrégistrée.",
@@ -36,7 +37,9 @@ return [
 	'OZ_FIELD_USER_NAME_INVALID'        => "Le nom d'utilisateur contient des caractères non autorisés.",
 	'OZ_FIELD_USER_NAME_TOO_SHORT'      => "Le nom d'utilisateur est trop court.",
 	'OZ_FIELD_USER_NAME_TOO_LONG'       => "Le nom d'utilisateur est trop long.",
-	'OZ_FIELD_EMAIL_INVALID'            => "L'adresse mail n'est pas valide.",
+
+	'OZ_AUTH_USER_UNKNOWN' => 'Aucun utilisateur n\'est associé à ces informations de connexion.',
+
 	'OZ_FIELD_GENDER_INVALID'           => 'Le genre est invalide.',
 	'OZ_FIELD_PASS_INVALID'             => 'Le mot de passe est incorrect.',
 	'OZ_FIELD_PASS_NOT_SECURE'          => 'Le mot de passe n’est pas assez sécurisé.',

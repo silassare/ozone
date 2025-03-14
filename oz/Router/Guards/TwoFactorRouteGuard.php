@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Router\Guards;
 
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\AuthState;
+use OZONE\Core\Auth\Enums\AuthState;
 use OZONE\Core\Auth\Providers\UserAuthProvider;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\ForbiddenException;
