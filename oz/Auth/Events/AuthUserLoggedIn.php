@@ -11,27 +11,25 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Users\Events;
+namespace OZONE\Core\Auth\Events;
 
 use OZONE\Core\App\Context;
-use OZONE\Core\Db\OZUser;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use PHPUtils\Events\Event;
 
 /**
- * Class UserLogInFailed.
- *
- * This event is triggered when a user failed to log in.
+ * Class AuthUserLoggedIn.
  */
-final class UserLogInFailed extends Event
+final class AuthUserLoggedIn extends Event
 {
 	/**
-	 * UserLogInFailed constructor.
+	 * AuthUserLoggedIn constructor.
 	 *
-	 * @param Context $context the context
-	 * @param OZUser  $user    the user who failed to log in
+	 * @param Context           $context the context
+	 * @param AuthUserInterface $user    the user who logged in
 	 */
 	public function __construct(
 		public readonly Context $context,
-		public readonly OZUser $user
+		public readonly AuthUserInterface $user
 	) {}
 }
