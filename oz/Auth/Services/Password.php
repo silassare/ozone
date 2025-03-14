@@ -11,16 +11,16 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Users\Services;
+namespace OZONE\Core\Auth\Services;
 
 use OZONE\Core\App\Service;
+use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Users\Users;
 use Throwable;
 
 /**
@@ -28,8 +28,8 @@ use Throwable;
  */
 final class Password extends Service
 {
-	public const ROUTE_PASS_EDIT_BY_ADMIN = 'oz:pass-edit-admin';
-	public const ROUTE_PASS_EDIT_SELF     = 'oz:pass-edit-self';
+	public const ROUTE_PASS_EDIT_BY_AS_ADMIN = 'oz:pass-edit-as-admin';
+	public const ROUTE_PASS_EDIT_AS_SELF     = 'oz:pass-edit-as-self';
 
 	protected const FIELD_PASS_NEW     = 'pass_new';
 	protected const FIELD_PASS_CURRENT = 'pass_current';
@@ -46,39 +46,36 @@ final class Password extends Service
 		$context = $ri->getContext();
 		$user    = $context->auth()->user();
 
-		Users::updatePass(
+		AuthUsers::updatePass(
 			$user,
 			$ri->getCleanFormField(self::FIELD_PASS_NEW),
 			$ri->getCleanFormField(self::FIELD_PASS_CURRENT)
 		);
 
 		$this->json()
-			->setDone('OZ_PASSWORD_EDIT_SUCCESS')
-			->setData($user);
+			->setDone('OZ_PASSWORD_EDIT_SUCCESS');
 	}
 
 	/**
 	 * Edit password: admin only.
 	 *
 	 * @param RouteInfo $ri
-	 * @param string    $uid
 	 *
 	 * @throws NotFoundException
 	 * @throws UnauthorizedActionException
 	 */
-	public function actionEditPassAdmin(RouteInfo $ri, string $uid): void
+	public function actionEditPassByAdmin(RouteInfo $ri): void
 	{
-		$user = Users::identify($uid);
+		$user = AuthUsers::identifyBySelector($ri->getCleanFormData());
 
 		if (!$user) {
 			throw new NotFoundException();
 		}
 
-		Users::updatePass($user, $ri->getCleanFormField(self::FIELD_PASS_NEW));
+		AuthUsers::updatePass($user, $ri->getCleanFormField(self::FIELD_PASS_NEW));
 
 		$this->json()
-			->setDone('OZ_PASSWORD_EDIT_SUCCESS')
-			->setData($user);
+			->setDone('OZ_PASSWORD_EDIT_SUCCESS');
 	}
 
 	/**
@@ -89,26 +86,26 @@ final class Password extends Service
 	public static function registerRoutes(Router $router): void
 	{
 		$router
-			->group('/users', static function (Router $router) {
+			->group('/password/edit', static function (Router $router) {
 				$router
-					->map(['PATCH', 'POST'], '/{uid}/password/edit', static function (RouteInfo $ri) {
+					->map(['PATCH', 'POST'], '/admin', static function (RouteInfo $ri) {
 						$s = new self($ri);
-						$s->actionEditPassAdmin($ri, $ri->param('uid'));
+						$s->actionEditPassByAdmin($ri);
 
 						return $s->respond();
 					})
-					->name(self::ROUTE_PASS_EDIT_BY_ADMIN)
-					->params(['uid' => '\d+'])
-					->withRole(Users::ADMIN);
+					->name(self::ROUTE_PASS_EDIT_BY_AS_ADMIN)
+					->form(AuthUsers::selectorForm(...))
+					->withRole(AuthUsers::ADMIN);
 
 				$router
-					->map(['PATCH', 'POST'], '/password/edit', static function (RouteInfo $ri) {
+					->map(['PATCH', 'POST'], '/self', static function (RouteInfo $ri) {
 						$s = new self($ri);
 						$s->actionEditOwnPass($ri);
 
 						return $s->respond();
 					})
-					->name(self::ROUTE_PASS_EDIT_SELF)
+					->name(self::ROUTE_PASS_EDIT_AS_SELF)
 					->form(self::currentPassForm(...));
 			})
 			->form(self::newPassForm(...));
@@ -137,7 +134,7 @@ final class Password extends Service
 	public static function currentPassForm(): Form
 	{
 		$form = new Form();
-		$form->field(self::FIELD_PASS_CURRENT);
+		$form->field(self::FIELD_PASS_CURRENT)->required();
 
 		return $form;
 	}

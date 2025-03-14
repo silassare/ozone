@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Users\Services;
+namespace OZONE\Core\Auth\Services;
 
 use OZONE\Core\App\Service;
 use OZONE\Core\OZone;

@@ -11,10 +11,11 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Users\Services;
+namespace OZONE\Core\Auth\Services;
 
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Auth;
+use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Providers\EmailVerificationProvider;
 use OZONE\Core\Auth\Providers\PhoneVerificationProvider;
 use OZONE\Core\Columns\Types\TypePassword;
@@ -26,7 +27,6 @@ use OZONE\Core\Forms\Form;
 use OZONE\Core\Router\Guards\TwoFactorRouteGuard;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Users\Users;
 
 /**
  * Class AccountRecovery.
@@ -55,9 +55,9 @@ final class AccountRecovery extends Service
 		$provider = Auth::provider($this->getContext(), $auth);
 
 		if ($provider instanceof EmailVerificationProvider) {
-			$user = Users::withEmail($provider->getEmail());
+			$user = AuthUsers::withEmail($provider->getEmail());
 		} elseif ($provider instanceof PhoneVerificationProvider) {
-			$user = Users::withPhone($provider->getPhone());
+			$user = AuthUsers::withPhone($provider->getPhone());
 		} else {
 			// this is a logic error or someone is playing with us
 			throw new InternalErrorException();
@@ -69,7 +69,7 @@ final class AccountRecovery extends Service
 
 		$new_pass = $ri->getCleanFormField('pass');
 
-		Users::updatePass($user, $new_pass);
+		AuthUsers::updatePass($user, $new_pass);
 
 		$um->logUserIn($user);
 

@@ -17,7 +17,7 @@ use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\AuthSecretType;
+use OZONE\Core\Auth\Enums\AuthSecretType;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;

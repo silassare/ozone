@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Users\Services;
+namespace OZONE\Core\Auth\Services;
 
 use OZONE\Core\App\Service;
-use OZONE\Core\Db\OZUser;
+use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Users\Users;
 
 /**
  * Class Login.
@@ -41,15 +41,9 @@ final class Login extends Service
 		$form = $context->getRequest()
 			->getUnsafeFormData();
 
-		if (isset($form['phone'])) {
-			$result = $users_manager->tryPhoneLogIn($form);
-		} elseif (isset($form['email'])) {
-			$result = $users_manager->tryEmailLogIn($form);
-		} else {
-			throw new InvalidFormException();
-		}
+		$result = $users_manager->tryLogInForm($form);
 
-		if ($result instanceof OZUser) {
+		if ($result instanceof AuthUserInterface) {
 			$this->json()
 				->setDone('OZ_USER_SIGN_IN_DONE')
 				->setData($result);
@@ -72,6 +66,6 @@ final class Login extends Service
 				return $s->respond();
 			})
 			->name(self::ROUTE_LOGIN)
-			->form(Users::logInForm(...));
+			->form(AuthUsers::logInForm(...));
 	}
 }
