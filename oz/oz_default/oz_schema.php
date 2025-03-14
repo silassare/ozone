@@ -14,9 +14,8 @@ declare(strict_types=1);
 use Gobl\DBAL\Builders\NamespaceBuilder;
 use Gobl\DBAL\Builders\TableBuilder;
 use Gobl\DBAL\Column;
-use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Auth\AuthState;
+use OZONE\Core\Auth\Enums\AuthState;
 use OZONE\Core\Columns\Types\TypeCC2;
 use OZONE\Core\Columns\Types\TypeFile;
 use OZONE\Core\Columns\Types\TypeGender;
@@ -68,9 +67,9 @@ return static function (NamespaceBuilder $ns) {
 
 		// relations
 		$tb->collectRelation(static function () use ($tb) {
-			$tb->hasMany('roles')->from('oz_roles');
+			$tb->hasMany('roles')->from('oz_roles')->usingMorph('owner');
 			$tb->hasMany('files')->from('oz_files')->usingMorph('for');
-			$tb->hasMany('sessions')->from('oz_sessions');
+			$tb->hasMany('sessions')->from('oz_sessions')->usingMorph('owner');
 			$tb->belongsTo('country')->from('oz_countries');
 		});
 	});
@@ -89,14 +88,10 @@ return static function (NamespaceBuilder $ns) {
 		$tb->softDeletable();
 
 		// constraints
-		$tb->collectFk(static function (TableBuilder $tb) {
-			$tb->foreign('user_id', 'oz_users', 'id')
-				->onUpdateCascade()
-				->onDeleteCascade();
-		});
+		$tb->morph('owner', TypeUtils::morphAnyId());
 
 		$tb->collectIndex(static function (TableBuilder $tb) {
-			$tb->unique('user_id', 'name');
+			$tb->unique('owner_id', 'owner_type', 'name');
 		});
 	});
 
@@ -117,9 +112,6 @@ return static function (NamespaceBuilder $ns) {
 
 		// constraints
 		$tb->primary('cc2');
-
-		// relations
-		$tb->collectRelation(static fn () => $tb->hasMany('citizens')->from('oz_users'));
 	});
 
 	$ns->table('oz_files', static function (TableBuilder $tb) {
@@ -142,7 +134,7 @@ return static function (NamespaceBuilder $ns) {
 		// ex:
 		// 	- user have an avatar/profile pic
 		//	- post has an image/video/audio/file/attachment
-		$tb->morph('for', (new TypeString())->max(128), null, true);
+		$tb->morph('for', TypeUtils::morphAnyId(), null, true);
 		// this file is used for what
 		// ex: asset, avatar, profile_pic, post_image, post_video, post_audio, post_file, post_attachment etc...
 		$tb->string('for_label')->max(64)->default('asset');
@@ -151,11 +143,10 @@ return static function (NamespaceBuilder $ns) {
 		$tb->timestamps();
 		$tb->softDeletable();
 
+		$tb->morph('uploader', TypeUtils::morphAnyId(), null, true);
+
 		// constraints
 		$tb->collectFk(static function (TableBuilder $tb) {
-			$tb->foreign('uploaded_by', 'oz_users', 'id', true)
-				->onUpdateCascade()
-				->onDeleteSetNull();
 			$tb->foreign('clone_id', 'oz_files', 'id', true)
 				->onUpdateCascade()
 				->onDeleteSetNull();
@@ -166,7 +157,6 @@ return static function (NamespaceBuilder $ns) {
 
 		// relations
 		$tb->collectRelation(static function (TableBuilder $tb) {
-			$tb->belongsTo('uploader')->from('oz_users');
 			$tb->hasMany('clones')->from('oz_files')->usingColumns([
 				'id' => 'clone_id',
 			]);
@@ -224,7 +214,7 @@ return static function (NamespaceBuilder $ns) {
 
 		// columns
 		$tb->string('id')->min(6)->max(128);
-		$tb->string('request_source_key')->min(6)->max(250);
+		$tb->string('request_source_key')->min(6)->max(250)->truncate();
 		$tb->timestamp('expire');
 		$tb->timestamp('last_seen');
 		$tb->map('data')->default([]);
@@ -234,16 +224,7 @@ return static function (NamespaceBuilder $ns) {
 		// constraints
 		$tb->primary('id');
 
-		$tb->collectFk(static function (TableBuilder $tb) {
-			$tb->foreign('user_id', 'oz_users', 'id', true)
-				->onUpdateCascade()
-				->onDeleteCascade();
-		});
-
-		// relations
-		$tb->collectRelation(static function (TableBuilder $tb) {
-			$tb->belongsTo('user')->from('oz_users');
-		});
+		$tb->morph('owner', TypeUtils::morphAnyId(), null, true);
 	});
 
 	$ns->table('oz_db_stores', static function (TableBuilder $tb) {
