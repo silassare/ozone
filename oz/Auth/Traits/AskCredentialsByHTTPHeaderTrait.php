@@ -18,9 +18,9 @@ use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Router\Views\AccessGrantView;
 
 /**
- * Trait HTTPAuthMethodTrait.
+ * Trait AskCredentialsByHTTPHeaderTrait.
  */
-trait HTTPAuthMethodTrait
+trait AskCredentialsByHTTPHeaderTrait
 {
 	/**
 	 * Ask the client for authentication.
@@ -58,6 +58,8 @@ trait HTTPAuthMethodTrait
 
 	/**
 	 * Should return the auth method info used to build json response to be sent to client.
+	 *
+	 * Frontend developers can use this info to build the authentication form.
 	 *
 	 * @return array
 	 */

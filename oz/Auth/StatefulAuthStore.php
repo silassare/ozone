@@ -59,7 +59,7 @@ class StatefulAuthStore extends Store
 	 */
 	public function getPreviousUser(): ?AuthUserInterface
 	{
-		$selector = $this->get('oz.previous_user');
+		$selector = $this->get('oz.previous_auth_user');
 
 		if (\is_array($selector)) {
 			return AuthUsers::identifyBySelector($selector);
@@ -79,6 +79,6 @@ class StatefulAuthStore extends Store
 	 */
 	public function setPreviousUser(AuthUserInterface $user): self
 	{
-		return $this->set('oz.previous_user', AuthUsers::selector($user));
+		return $this->set('oz.previous_auth_user', AuthUsers::selector($user));
 	}
 }

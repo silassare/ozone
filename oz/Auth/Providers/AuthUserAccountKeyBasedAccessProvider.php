@@ -13,26 +13,26 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Providers;
 
-use InvalidArgumentException;
 use OZONE\Core\App\Context;
 use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Db\OZUser;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
+use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\RuntimeException;
 
 /**
- * Class UserAuthProvider.
+ * Class AuthUserAccountKeyBasedAccessProvider.
  */
-class UserAuthProvider extends AuthProvider
+class AuthUserAccountKeyBasedAccessProvider extends AuthProvider
 {
 	public const NAME = 'auth:provider:user';
 
 	/**
-	 * UserAuthProvider constructor.
+	 * AuthUserAccountKeyBasedAccessProvider constructor.
 	 *
-	 * @param Context $context
-	 * @param OZUser  $user
+	 * @param Context           $context
+	 * @param AuthUserInterface $user
 	 */
-	public function __construct(Context $context, protected OZUser $user)
+	public function __construct(Context $context, protected AuthUserInterface $user)
 	{
 		parent::__construct($context);
 	}
@@ -40,9 +40,9 @@ class UserAuthProvider extends AuthProvider
 	/**
 	 * Gets the user.
 	 *
-	 * @return OZUser
+	 * @return AuthUserInterface
 	 */
-	public function getUser(): OZUser
+	public function getUser(): AuthUserInterface
 	{
 		return $this->user;
 	}
@@ -50,18 +50,15 @@ class UserAuthProvider extends AuthProvider
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function get(Context $context, array $payload): self
+	public static function get(Context $context, OZAuth $auth): self
 	{
-		$id = $payload['user_id'] ?? null;
-
-		if (empty($id)) {
-			throw new InvalidArgumentException('Missing "user_id" in payload.');
-		}
-
-		$user = AuthUsers::identify($id);
+		$user = AuthUsers::identifyBySelector([
+			AuthUsers::FIELD_AUTH_USER_TYPE => $auth->getOwnerType(),
+			AuthUsers::FIELD_AUTH_USER_ID   => $auth->getOwnerId(),
+		]);
 
 		if (!$user) {
-			throw new RuntimeException('Unable to load user using provided "user_id".', $payload);
+			throw (new RuntimeException('Unable to identify the owner of this auth key.'))->suspectObject($auth);
 		}
 
 		return new self($context, $user);
@@ -72,9 +69,7 @@ class UserAuthProvider extends AuthProvider
 	 */
 	public function getPayload(): array
 	{
-		return [
-			'user_id' => $this->user->getID(),
-		];
+		return [];
 	}
 
 	/**

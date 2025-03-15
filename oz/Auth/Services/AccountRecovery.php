@@ -14,14 +14,12 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Services;
 
 use OZONE\Core\App\Service;
-use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Providers\EmailVerificationProvider;
 use OZONE\Core\Auth\Providers\PhoneVerificationProvider;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\ForbiddenException;
-use OZONE\Core\Exceptions\InternalErrorException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Router\Guards\TwoFactorRouteGuard;
@@ -40,7 +38,6 @@ final class AccountRecovery extends Service
 	 *
 	 * @throws ForbiddenException
 	 * @throws UnauthorizedActionException
-	 * @throws InternalErrorException
 	 */
 	public function actionRecover(RouteInfo $ri): void
 	{
@@ -52,24 +49,18 @@ final class AccountRecovery extends Service
 
 		$um = $context->getUsers();
 
-		$provider = Auth::provider($this->getContext(), $auth);
+		$user = AuthUsers::identifyBySelector([
+			AuthUsers::FIELD_AUTH_USER_TYPE => $auth->getOwnerType(),
+			AuthUsers::FIELD_AUTH_USER_ID   => $auth->getOwnerId(),
+		]);
 
-		if ($provider instanceof EmailVerificationProvider) {
-			$user = AuthUsers::withEmail($provider->getEmail());
-		} elseif ($provider instanceof PhoneVerificationProvider) {
-			$user = AuthUsers::withPhone($provider->getPhone());
-		} else {
-			// this is a logic error or someone is playing with us
-			throw new InternalErrorException();
-		}
-
-		if (!$user || !$user->isValid()) {
+		if (!$user || !$user->isAuthUserValid()) {
 			throw new ForbiddenException();
 		}
 
 		$new_pass = $ri->getCleanFormField('pass');
 
-		AuthUsers::updatePass($user, $new_pass);
+		AuthUsers::updatePassword($user, $new_pass);
 
 		$um->logUserIn($user);
 

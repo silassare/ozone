@@ -13,8 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS;
 
+use Gobl\Exceptions\GoblException;
 use OZONE\Core\Auth\Enums\AuthSecretType;
-use OZONE\Core\Auth\Providers\FileAuthProvider;
+use OZONE\Core\Auth\Providers\FileAccessAuthProvider;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -39,6 +40,7 @@ class FileAccess
 	 * @throws InvalidFormException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedActionException
+	 * @throws GoblException
 	 */
 	public static function check(OZFile $file, RouteInfo $ri, string $auth_key, ?string $auth_ref = null): void
 	{
@@ -53,7 +55,7 @@ class FileAccess
 			}
 		} else {
 			$context = $ri->getContext();
-			$auth    = new FileAuthProvider($context, $file);
+			$auth    = new FileAccessAuthProvider($context, $file);
 			$auth->getCredentials()
 				->setReference($auth_ref)
 				->setToken($auth_key);

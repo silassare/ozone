@@ -19,9 +19,14 @@ namespace OZONE\Core\Auth\Enums;
 enum Auth2FAType: string
 {
 	/**
-	 * Email/SMS code or token.
+	 * Email/SMS code.
 	 */
-	case VERIFICATION = 'VERIFICATION';
+	case CODE = 'CODE';
+
+	/**
+	 * Email/SMS link with token.
+	 */
+	case TOKEN = 'TOKEN';
 
 	/**
 	 * Time-based One-Time Password.

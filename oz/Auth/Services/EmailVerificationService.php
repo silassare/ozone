@@ -13,23 +13,19 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Services;
 
-use Gobl\DBAL\Types\TypeBool;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Providers\EmailVerificationProvider;
 use OZONE\Core\Columns\Types\TypeEmail;
 use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\FormData;
-use OZONE\Core\Forms\FormRule;
-use OZONE\Core\Forms\TypesSwitcher;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
 /**
- * Class EmailVerificationAuthService.
+ * Class EmailVerificationService.
  */
-class EmailVerificationAuthService extends Service
+class EmailVerificationService extends Service
 {
 	/**
 	 * {@inheritDoc}
@@ -37,19 +33,19 @@ class EmailVerificationAuthService extends Service
 	public static function registerRoutes(Router $router): void
 	{
 		$router->post('/auth/verify/email', static function (RouteInfo $ri) {
-			return (new self($ri))->init($ri, $ri->getCleanFormData());
+			return (new self($ri))->init($ri);
 		})
 			->form(self::buildInitForm(...));
 	}
 
 	/**
 	 * @param RouteInfo $ri
-	 * @param FormData  $fd
 	 *
 	 * @return Response
 	 */
-	private function init(RouteInfo $ri, FormData $fd): Response
+	private function init(RouteInfo $ri): Response
 	{
+		$fd    =   $ri->getCleanFormData();
 		$email = $fd->get('email');
 
 		$provider = new EmailVerificationProvider($this->getContext(), $email);
@@ -69,15 +65,6 @@ class EmailVerificationAuthService extends Service
 	{
 		$fb = new Form();
 
-		$fb->addField($registered = new Field('registered', new TypeBool(), false));
-
-		$email = new TypesSwitcher();
-		$email->when((new FormRule())->isNull($registered), new TypeEmail())
-			->when((new FormRule())->eq($registered, true), (new TypeEmail())->registered())
-			->when((new FormRule())->eq($registered, false), (new TypeEmail())->notRegistered());
-
-		$fb->addField(new Field('email', $email, true));
-
-		return $fb;
+		return $fb->addField(new Field('email', new TypeEmail(), true));
 	}
 }

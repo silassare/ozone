@@ -18,12 +18,12 @@ use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
 
 /**
- * Trait AuthProviderEventTrait.
+ * Trait AuthProviderEventsTrait.
  */
-trait AuthProviderEventTrait
+trait AuthProviderEventsTrait
 {
 	/**
-	 * Called when a new authorization process start.
+	 * Called when a new auth process start.
 	 *
 	 * @param OZAuth $auth
 	 */
@@ -38,7 +38,7 @@ trait AuthProviderEventTrait
 	}
 
 	/**
-	 * Called when the authorization process is refreshed.
+	 * Called when the auth process is refreshed.
 	 *
 	 * @param OZAuth $auth
 	 */
@@ -65,7 +65,7 @@ trait AuthProviderEventTrait
 	}
 
 	/**
-	 * Called when the authorization process is canceled.
+	 * Called when the auth process is canceled.
 	 *
 	 * @param OZAuth $auth
 	 */
@@ -78,7 +78,7 @@ trait AuthProviderEventTrait
 	}
 
 	/**
-	 * Called when the authorization process succeeded.
+	 * Called when the auth process succeeded.
 	 *
 	 * @param OZAuth $auth
 	 */
@@ -92,7 +92,7 @@ trait AuthProviderEventTrait
 	}
 
 	/**
-	 * Called when the authorization has expired.
+	 * Called when the auth entity has expired.
 	 *
 	 * @param OZAuth $auth
 	 *
@@ -128,7 +128,7 @@ trait AuthProviderEventTrait
 	}
 
 	/**
-	 * Called when authorization attempt exceeded try_max.
+	 * Called when attempt exceeded try_max.
 	 *
 	 * @param OZAuth $auth
 	 *

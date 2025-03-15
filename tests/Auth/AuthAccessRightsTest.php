@@ -45,7 +45,7 @@ final class AuthAccessRightsTest extends TestCase
 			'users.read'   => 1,
 			'users.update' => 1,
 			'groups.*'     => 1,
-		], $a->getOptions());
+		], $a->toArray());
 	}
 
 	public function testDeny(): void
@@ -66,7 +66,7 @@ final class AuthAccessRightsTest extends TestCase
 			'users.create' => 0,
 			'groups.*'     => 0,
 			'groups.read'  => 1,
-		], $a->getOptions());
+		], $a->toArray());
 	}
 
 	public function testCan(): void
@@ -118,7 +118,7 @@ final class AuthAccessRightsTest extends TestCase
 		$a->assertCan('users.delete');
 	}
 
-	public function testGetOptions(): void
+	public function tesToArray(): void
 	{
 		$a = new AuthAccessRights();
 
@@ -128,6 +128,6 @@ final class AuthAccessRightsTest extends TestCase
 		self::assertSame([
 			'users.*'      => 1,
 			'users.delete' => 0,
-		], $a->getOptions());
+		], $a->toArray());
 	}
 }

@@ -16,8 +16,8 @@ namespace OZONE\Core\App;
 use InvalidArgumentException;
 use LogicException;
 use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
-use OZONE\Core\Auth\Interfaces\StatefulAuthMethodInterface;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodStatefulInterface;
 use OZONE\Core\Auth\StatefulAuthStore;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\ForbiddenException;
@@ -65,7 +65,7 @@ final class Context
 	private Response $response;
 
 	private AuthUsers $users;
-	private ?AuthMethodInterface $auth;
+	private ?AuthenticationMethodInterface $auth;
 
 	private ?RouteInfo $route_info = null;
 
@@ -221,9 +221,9 @@ final class Context
 	/**
 	 * Gets current auth.
 	 *
-	 * @return AuthMethodInterface
+	 * @return AuthenticationMethodInterface
 	 */
-	public function auth(): AuthMethodInterface
+	public function auth(): AuthenticationMethodInterface
 	{
 		// if not defined we throw exception
 		// as this seems to be required but not defined
@@ -276,14 +276,14 @@ final class Context
 	}
 
 	/**
-	 * Gets {@link StatefulAuthMethodInterface} instance object.
+	 * Gets {@link AuthenticationMethodStatefulInterface} instance object.
 	 *
-	 * @return StatefulAuthMethodInterface
+	 * @return AuthenticationMethodStatefulInterface
 	 */
-	public function requireStatefulAuth(): StatefulAuthMethodInterface
+	public function requireStatefulAuth(): AuthenticationMethodStatefulInterface
 	{
 		$auth = $this->auth();
-		if ($auth instanceof StatefulAuthMethodInterface) {
+		if ($auth instanceof AuthenticationMethodStatefulInterface) {
 			return $auth;
 		}
 
@@ -322,7 +322,7 @@ final class Context
 	}
 
 	/**
-	 * Gets users manager instance object.
+	 * Gets auth users manager instance object.
 	 *
 	 * @return AuthUsers
 	 */
@@ -878,7 +878,7 @@ final class Context
 			}
 		}
 
-		/** @var AuthMethodInterface $class */
+		/** @var AuthenticationMethodInterface $class */
 		foreach ($auths_methods as $class) {
 			$instance = $class::get($ri, 'Authentication required.');
 

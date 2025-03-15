@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use OZONE\Core\Auth\Auth;
+use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Enums\AuthMethodType;
-use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
-use OZONE\Core\Auth\Traits\HTTPAuthMethodTrait;
-use OZONE\Core\Auth\Traits\UserAuthMethodTrait;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
+use OZONE\Core\Auth\Traits\AskCredentialsByHTTPHeaderTrait;
+use OZONE\Core\Auth\Traits\AuthUserKeyAuthenticationMethodTrait;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
@@ -26,10 +28,10 @@ use OZONE\Core\Utils\Hasher;
 /**
  * Class DigestAuth.
  */
-class DigestAuth implements AuthMethodInterface
+class DigestAuth implements AuthenticationMethodInterface
 {
-	use HTTPAuthMethodTrait;
-	use UserAuthMethodTrait;
+	use AskCredentialsByHTTPHeaderTrait;
+	use AuthUserKeyAuthenticationMethodTrait;
 
 	protected AuthMethodType $type;
 	protected string $digest = '';
@@ -54,6 +56,14 @@ class DigestAuth implements AuthMethodInterface
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	public static function get(RouteInfo $ri, string $realm): self
+	{
+		return new self($ri, $realm);
+	}
+
+	/**
 	 * Returns the digest.
 	 *
 	 * @return string
@@ -70,9 +80,9 @@ class DigestAuth implements AuthMethodInterface
 	{
 		$context       = $this->ri->getContext();
 		$request       = $context->getRequest();
-		$authorization = $request->getHeaderLine('Authorization');
+		$header_line   = $request->getHeaderLine('Authorization');
 
-		if (empty($authorization) || !\str_starts_with(\strtolower($authorization), 'digest ')) {
+		if (empty($header_line) || !\str_starts_with(\strtolower($header_line), 'digest ')) {
 			return false;
 		}
 
@@ -80,7 +90,7 @@ class DigestAuth implements AuthMethodInterface
 		$req_digest = $env->get('PHP_AUTH_DIGEST');
 
 		if (empty($req_digest)) {
-			$req_digest = \explode(' ', $authorization, 2)[1];
+			$req_digest = \explode(' ', $header_line, 2)[1];
 		}
 
 		if ($this->digestProperties($req_digest)) {
@@ -90,14 +100,6 @@ class DigestAuth implements AuthMethodInterface
 		}
 
 		return false;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public static function get(RouteInfo $ri, string $realm): self
-	{
-		return new self($ri, $realm);
 	}
 
 	/**
@@ -126,9 +128,36 @@ class DigestAuth implements AuthMethodInterface
 
 		$username = $parsed['username'];
 
-		[$identifier, $key_ref] = \explode(':', $username, 2);
+		[$auth_user_ref, $auth_key_ref] = \explode(':', $username, 2);
 
-		$auth = $this->getUserAuthWithRef($identifier, $key_ref);
+		$auth = Auth::get($auth_key_ref);
+
+		if (!$auth) {
+			throw new ForbiddenException(null, [
+				'_reason'   => 'Invalid auth ref.',
+				'_auth_ref' => $auth_key_ref,
+			]);
+		}
+
+		$selector = AuthUsers::refToSelector($auth_user_ref);
+
+		if (!$selector) {
+			// invalid username
+			throw new ForbiddenException(null, [
+				'_reason' => 'Invalid username.',
+			]);
+		}
+
+		$user = AuthUsers::identifyBySelector($selector);
+
+		if (!$user) {
+			// invalid username
+			throw new ForbiddenException(null, [
+				'_reason' => 'Invalid username.',
+			]);
+		}
+
+		$this->authenticateWithAuthEntity($auth, $user);
 
 		$known_key = $auth->getTokenHash();
 

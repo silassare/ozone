@@ -53,7 +53,7 @@ class AuthUserDataStore extends Store
 	/**
 	 * Gets the user access rights.
 	 */
-	public function getAccessRights(): AuthAccessRightsInterface
+	public function getAuthUserAccessRights(): AuthAccessRightsInterface
 	{
 		$data = $this->get('access_rights') ?? [];
 
@@ -63,9 +63,9 @@ class AuthUserDataStore extends Store
 	/**
 	 * Sets the user access rights.
 	 */
-	public function setAccessRights(AuthAccessRightsInterface $rights): self
+	public function setAuthUserAccessRights(AuthAccessRightsInterface $rights): self
 	{
-		$this->set('access_rights', $rights->getOptions());
+		$this->set('access_rights', $rights->toArray());
 
 		return $this;
 	}

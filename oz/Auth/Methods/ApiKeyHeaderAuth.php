@@ -14,9 +14,10 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Methods;
 
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Enums\AuthMethodType;
-use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
-use OZONE\Core\Auth\Traits\UserAuthMethodTrait;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
+use OZONE\Core\Auth\Traits\AuthUserKeyAuthenticationMethodTrait;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
@@ -25,9 +26,9 @@ use OZONE\Core\Router\RouteInfo;
 /**
  * Class ApiKeyHeaderAuth.
  */
-class ApiKeyHeaderAuth implements AuthMethodInterface
+class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 {
-	use UserAuthMethodTrait;
+	use AuthUserKeyAuthenticationMethodTrait;
 
 	protected AuthMethodType $type = AuthMethodType::API_KEY_HEADER;
 	protected string $api_key      = '';
@@ -43,6 +44,14 @@ class ApiKeyHeaderAuth implements AuthMethodInterface
 	public function __destruct()
 	{
 		unset($this->ri);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function get(RouteInfo $ri, string $realm): self
+	{
+		return new self($ri, $realm);
 	}
 
 	/**
@@ -78,14 +87,6 @@ class ApiKeyHeaderAuth implements AuthMethodInterface
 
 	/**
 	 * {@inheritDoc}
-	 */
-	public static function get(RouteInfo $ri, string $realm): self
-	{
-		return new self($ri, $realm);
-	}
-
-	/**
-	 * {@inheritDoc}
 	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
@@ -93,7 +94,15 @@ class ApiKeyHeaderAuth implements AuthMethodInterface
 	 */
 	public function authenticate(): void
 	{
-		$this->authenticateWithToken($this->api_key);
+		$auth = Auth::getByTokenHash($this->api_key);
+
+		if (!$auth) {
+			throw new ForbiddenException(null, [
+				'_reason'  => 'Invalid api key.',
+				'_api_key' => $this->api_key,
+			]);
+		}
+		$this->authenticateWithAuthEntity($auth);
 	}
 
 	/**

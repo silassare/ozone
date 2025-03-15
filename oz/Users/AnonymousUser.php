@@ -104,7 +104,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function isAuthUserVerified(): bool
+	public function isAuthUserValid(): bool
 	{
 		return false;
 	}

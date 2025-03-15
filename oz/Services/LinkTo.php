@@ -34,7 +34,7 @@ final class LinkTo extends Service
 	public const MAIN_ROUTE = 'oz:link-to';
 
 	/**
-	 * Gets link for authorization.
+	 * Gets hidden link.
 	 *
 	 * @param Context $context
 	 * @param Uri     $next
@@ -90,6 +90,7 @@ final class LinkTo extends Service
 			->get($key);
 
 		if (empty($data)) {
+			// user may be using different browser
 			throw new NotFoundException();
 		}
 

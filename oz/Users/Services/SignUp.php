@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Auth\Services;
+namespace OZONE\Core\Users\Services;
 
 use Gobl\CRUD\Exceptions\CRUDException;
 use Gobl\Exceptions\GoblException;

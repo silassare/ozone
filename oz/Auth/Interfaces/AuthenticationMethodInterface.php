@@ -16,9 +16,9 @@ namespace OZONE\Core\Auth\Interfaces;
 use OZONE\Core\Router\RouteInfo;
 
 /**
- * Class AuthMethodInterface.
+ * Class AuthenticationMethodInterface.
  */
-interface AuthMethodInterface
+interface AuthenticationMethodInterface
 {
 	/**
 	 * This should return a new instance.
@@ -41,7 +41,7 @@ interface AuthMethodInterface
 	public function satisfied(): bool;
 
 	/**
-	 * Authenticate the client by checking the token provided.
+	 * Authenticate the client by checking the information provided.
 	 *
 	 * This should throw an exception if the authentication fails.
 	 */
@@ -50,7 +50,7 @@ interface AuthMethodInterface
 	/**
 	 * Should return the authenticated user.
 	 *
-	 * Will be called after {@link AuthMethodInterface::authenticate()}
+	 * Will be called after {@link AuthenticationMethodInterface::authenticate()}
 	 * and should return an instance of {@link AuthUserInterface}
 	 * or throw an exception if no user was authenticated.
 	 *
@@ -66,7 +66,7 @@ interface AuthMethodInterface
 	 *
 	 * @return AuthAccessRightsInterface
 	 */
-	public function accessRights(): AuthAccessRightsInterface;
+	public function getAccessRights(): AuthAccessRightsInterface;
 
 	/**
 	 * Ask the client for authentication.

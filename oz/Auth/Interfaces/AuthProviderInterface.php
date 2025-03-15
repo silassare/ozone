@@ -17,6 +17,7 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\JSONResponse;
 use OZONE\Core\Auth\Enums\AuthSecretType;
 use OZONE\Core\Auth\Enums\AuthState;
+use OZONE\Core\Db\OZAuth;
 
 /**
  * Interface AuthProviderInterface.
@@ -34,11 +35,11 @@ interface AuthProviderInterface
 	 * Get auth provider instance.
 	 *
 	 * @param Context $context
-	 * @param array   $payload
+	 * @param OZAuth  $auth
 	 *
 	 * @return self
 	 */
-	public static function get(Context $context, array $payload): self;
+	public static function get(Context $context, OZAuth $auth): self;
 
 	/**
 	 * Get payload.
@@ -78,28 +79,30 @@ interface AuthProviderInterface
 	public function setScope(AuthScopeInterface $scope): self;
 
 	/**
-	 * Validate an authorization with current credentials.
+	 * Authorize with current credentials.
 	 *
 	 * @param AuthSecretType $type
 	 */
 	public function authorize(AuthSecretType $type): void;
 
 	/**
-	 * Get an authorization process state.
+	 * Get an auth process state.
 	 *
 	 * @return AuthState
 	 */
 	public function getState(): AuthState;
 
 	/**
-	 * Generate new authorization code, token ...
+	 * Generate new auth code, token ...
+	 *
+	 * @param null|AuthUserInterface $user if provided, the user will get ownership of the generated code, token ...
 	 */
-	public function generate(): self;
+	public function generate(?AuthUserInterface $user = null): self;
 
 	/**
-	 * Refresh the authorization process.
+	 * Refresh the auth process.
 	 *
-	 * @param bool $re_authorize true to force re-authorization, false otherwise
+	 * @param bool $re_authorize true to force re-auth, false otherwise
 	 *
 	 * @return $this
 	 */

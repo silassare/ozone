@@ -58,7 +58,7 @@ interface AuthUserInterface extends ArrayCapableInterface
 	 *   'phone' => $this->getPhone(),
 	 * ];
 	 *
-	 * @return array<string, string>
+	 * @return array
 	 */
 	public function getAuthIdentifiers(): array;
 
@@ -74,9 +74,9 @@ interface AuthUserInterface extends ArrayCapableInterface
 	 *
 	 * @param string $password_hash
 	 *
-	 * @return $this
+	 * @return static
 	 */
-	public function setAuthPassword(string $password_hash): self;
+	public function setAuthPassword(string $password_hash): static;
 
 	/**
 	 * Get the auth user data store.
@@ -90,14 +90,14 @@ interface AuthUserInterface extends ArrayCapableInterface
 	 *
 	 * @param AuthUserDataStore $store
 	 *
-	 * @return $this
+	 * @return static
 	 */
-	public function setAuthUserDataStore(AuthUserDataStore $store): self;
+	public function setAuthUserDataStore(AuthUserDataStore $store): static;
 
 	/**
-	 * Check if the auth user is verified.
+	 * Check if the auth user is valid.
 	 */
-	public function isAuthUserVerified(): bool;
+	public function isAuthUserValid(): bool;
 
 	/**
 	 * Save the entity.

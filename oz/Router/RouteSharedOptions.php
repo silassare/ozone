@@ -17,7 +17,7 @@ use InvalidArgumentException;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Enums\AuthMethodType;
-use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
@@ -56,7 +56,7 @@ class RouteSharedOptions
 	private string $name = '';
 
 	/**
-	 * @var array<class-string<AuthMethodInterface>>
+	 * @var array<class-string<AuthenticationMethodInterface>>
 	 */
 	private array $auths_methods = [];
 
@@ -157,11 +157,11 @@ class RouteSharedOptions
 			}
 
 			if (\class_exists($entry)) {
-				if (!\is_subclass_of($entry, AuthMethodInterface::class)) {
+				if (!\is_subclass_of($entry, AuthenticationMethodInterface::class)) {
 					throw new RuntimeException(\sprintf(
 						'Auth method "%s" should be subclass of: %s',
 						$entry,
-						AuthMethodInterface::class
+						AuthenticationMethodInterface::class
 					));
 				}
 				$auth = $entry;
@@ -485,7 +485,7 @@ class RouteSharedOptions
 	/**
 	 * Gets routes auth methods.
 	 *
-	 * @return array<class-string<AuthMethodInterface>>
+	 * @return array<class-string<AuthenticationMethodInterface>>
 	 */
 	public function getAuthMethods(): array
 	{

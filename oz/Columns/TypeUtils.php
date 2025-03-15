@@ -53,12 +53,14 @@ class TypeUtils
 	/**
 	 * Creates a user phone type.
 	 *
+	 * @param string $registered_as
+	 *
 	 * @return TypePhone
 	 */
-	public static function userPhone(): TypePhone
+	public static function userPhone(string $registered_as): TypePhone
 	{
 		$phone = new TypePhone();
-		$phone->notRegistered()
+		$phone->notRegistered($registered_as)
 			->nullable(!Settings::get('oz.users', 'OZ_USER_PHONE_REQUIRED'));
 
 		return $phone;
@@ -67,12 +69,14 @@ class TypeUtils
 	/**
 	 * Creates a user name type.
 	 *
+	 * @param string $registered_as
+	 *
 	 * @return TypeEmail
 	 */
-	public static function userMailAddress(): TypeEmail
+	public static function userMailAddress(string $registered_as): TypeEmail
 	{
 		$email = new TypeEmail();
-		$email->notRegistered()
+		$email->notRegistered($registered_as)
 			->nullable(!Settings::get('oz.users', 'OZ_USER_EMAIL_REQUIRED'));
 
 		return $email;

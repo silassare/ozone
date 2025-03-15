@@ -13,10 +13,11 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Enums\AuthMethodType;
-use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
-use OZONE\Core\Auth\Traits\HTTPAuthMethodTrait;
-use OZONE\Core\Auth\Traits\UserAuthMethodTrait;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
+use OZONE\Core\Auth\Traits\AskCredentialsByHTTPHeaderTrait;
+use OZONE\Core\Auth\Traits\AuthUserKeyAuthenticationMethodTrait;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
@@ -25,10 +26,10 @@ use OZONE\Core\Router\RouteInfo;
 /**
  * Class BearerAuth.
  */
-class BearerAuth implements AuthMethodInterface
+class BearerAuth implements AuthenticationMethodInterface
 {
-	use HTTPAuthMethodTrait;
-	use UserAuthMethodTrait;
+	use AskCredentialsByHTTPHeaderTrait;
+	use AuthUserKeyAuthenticationMethodTrait;
 
 	protected AuthMethodType $type = AuthMethodType::BEARER;
 	protected string $token        = '';
@@ -44,6 +45,14 @@ class BearerAuth implements AuthMethodInterface
 	public function __destruct()
 	{
 		unset($this->ri);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function get(RouteInfo $ri, string $realm): self
+	{
+		return new self($ri, $realm);
 	}
 
 	/**
@@ -63,13 +72,13 @@ class BearerAuth implements AuthMethodInterface
 	{
 		$context       = $this->ri->getContext();
 		$request       = $context->getRequest();
-		$authorization = $request->getHeaderLine('Authorization');
+		$header_line   = $request->getHeaderLine('Authorization');
 
-		if (empty($authorization) || !\str_starts_with(\strtolower($authorization), 'bearer ')) {
+		if (empty($header_line) || !\str_starts_with(\strtolower($header_line), 'bearer ')) {
 			return false;
 		}
 
-		$token = \substr($authorization, 7);
+		$token = \substr($header_line, 7);
 
 		if (!empty($token)) {
 			$this->token = $token;
@@ -82,14 +91,6 @@ class BearerAuth implements AuthMethodInterface
 
 	/**
 	 * {@inheritDoc}
-	 */
-	public static function get(RouteInfo $ri, string $realm): self
-	{
-		return new self($ri, $realm);
-	}
-
-	/**
-	 * {@inheritDoc}
 	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
@@ -97,7 +98,16 @@ class BearerAuth implements AuthMethodInterface
 	 */
 	public function authenticate(): void
 	{
-		$this->authenticateWithToken($this->token);
+		$auth = Auth::getByTokenHash($this->token);
+
+		if (!$auth) {
+			throw new ForbiddenException(null, [
+				'_reason' => 'Invalid auth token.',
+				'_token'  => $this->token,
+			]);
+		}
+
+		$this->authenticateWithAuthEntity($auth);
 	}
 
 	/**

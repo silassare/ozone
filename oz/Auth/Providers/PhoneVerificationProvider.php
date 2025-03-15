@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Providers;
 
-use InvalidArgumentException;
 use OZONE\Core\App\Context;
 use OZONE\Core\Db\OZAuth;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Senders\Messages\SMSMessage;
 
 /**
@@ -49,12 +49,13 @@ class PhoneVerificationProvider extends AuthProvider
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function get(Context $context, array $payload): self
+	public static function get(Context $context, OZAuth $auth): self
 	{
-		$phone = $payload['phone'] ?? null;
+		$payload = $auth->getPayload();
+		$phone   = $payload['phone'] ?? null;
 
 		if (empty($phone)) {
-			throw new InvalidArgumentException('Missing "phone" in payload.');
+			throw (new RuntimeException('Missing "phone" in payload.'))->suspectObject($payload);
 		}
 
 		return new self($context, $phone);

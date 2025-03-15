@@ -15,7 +15,7 @@ namespace OZONE\Core\FS\Drivers;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Auth\Providers\FileAuthProvider;
+use OZONE\Core\Auth\Providers\FileAccessAuthProvider;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
@@ -158,7 +158,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function revocableAccessUri(Context $context, FileAuthProvider $provider): Uri
+	public function revocableAccessUri(Context $context, FileAccessAuthProvider $provider): Uri
 	{
 		$file = $provider->getFile();
 		$this->require($file->getRef());

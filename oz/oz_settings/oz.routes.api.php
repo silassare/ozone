@@ -13,17 +13,17 @@ declare(strict_types=1);
 
 use OZONE\Core\Auth\Services\AccountRecovery;
 use OZONE\Core\Auth\Services\AuthService;
-use OZONE\Core\Auth\Services\EmailVerificationAuthService;
+use OZONE\Core\Auth\Services\EmailVerificationService;
 use OZONE\Core\Auth\Services\Login;
 use OZONE\Core\Auth\Services\Logout;
 use OZONE\Core\Auth\Services\Password;
-use OZONE\Core\Auth\Services\PhoneVerificationAuthService;
-use OZONE\Core\Auth\Services\SignUp;
+use OZONE\Core\Auth\Services\PhoneVerificationService;
 use OZONE\Core\Auth\Services\TNet;
 use OZONE\Core\FS\Services\UploadFiles;
 use OZONE\Core\Services\CaptchaCode;
 use OZONE\Core\Services\LinkTo;
 use OZONE\Core\Services\QRCode;
+use OZONE\Core\Users\Services\SignUp;
 
 return [
 	UploadFiles::class                  => true,
@@ -37,6 +37,6 @@ return [
 	Password::class                     => true,
 	AccountRecovery::class              => true,
 	AuthService::class                  => true,
-	PhoneVerificationAuthService::class => true,
-	EmailVerificationAuthService::class => true,
+	PhoneVerificationService::class     => true,
+	EmailVerificationService::class     => true,
 ];

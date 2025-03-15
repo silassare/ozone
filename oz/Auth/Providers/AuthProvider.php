@@ -27,7 +27,8 @@ use OZONE\Core\Auth\Enums\AuthState;
 use OZONE\Core\Auth\Interfaces\AuthCredentialsInterface;
 use OZONE\Core\Auth\Interfaces\AuthProviderInterface;
 use OZONE\Core\Auth\Interfaces\AuthScopeInterface;
-use OZONE\Core\Auth\Traits\AuthProviderEventTrait;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
+use OZONE\Core\Auth\Traits\AuthProviderEventsTrait;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -41,7 +42,7 @@ use Throwable;
  */
 abstract class AuthProvider implements AuthProviderInterface
 {
-	use AuthProviderEventTrait;
+	use AuthProviderEventsTrait;
 
 	protected JSONResponse $json_response;
 	protected AuthScopeInterface $scope;
@@ -103,6 +104,7 @@ abstract class AuthProvider implements AuthProviderInterface
 	 * @throws InvalidFormException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedActionException
+	 * @throws GoblException
 	 */
 	public function authorize(AuthSecretType $type): void
 	{
@@ -171,7 +173,7 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function generate(): self
+	public function generate(?AuthUserInterface $user = null): self
 	{
 		$code_hash   = $this->hash($this->credentials->newCode());
 		$token_hash  = $this->hash($this->credentials->newToken());
@@ -198,10 +200,16 @@ abstract class AuthProvider implements AuthProviderInterface
 				->setTokenHash($token_hash)
 				->setTryCount(0)
 				->setExpire((string) $expire)
-				->setOptions($this->scope->getAccessRight()->getOptions())
-				->save();
+				->setPermissions($this->scope->getAccessRight()->toArray());
+
+			if (null !== $user) {
+				$auth->setOwnerType($user->getAuthUserTypeName())
+					->setOwnerId($user->getAuthIdentifier());
+			}
+
+			$auth->save();
 		} catch (Throwable $t) {
-			throw new RuntimeException('Unable to save authorization data.', null, $t);
+			throw new RuntimeException('Unable to save auth entity.', null, $t);
 		}
 
 		$this->onInit($auth);
@@ -215,6 +223,7 @@ abstract class AuthProvider implements AuthProviderInterface
 	 * @throws NotFoundException
 	 * @throws UnauthorizedActionException
 	 * @throws InvalidFormException
+	 * @throws GoblException
 	 */
 	public function refresh(bool $re_authorize = true): self
 	{
@@ -266,7 +275,7 @@ abstract class AuthProvider implements AuthProviderInterface
 		try {
 			$auth->selfDelete();
 		} catch (Throwable $t) {
-			throw new RuntimeException('Unable to cancel authorization process.', null, $t);
+			throw new RuntimeException('Unable to cancel auth process.', null, $t);
 		}
 
 		$this->onCancel($auth);
@@ -287,7 +296,7 @@ abstract class AuthProvider implements AuthProviderInterface
 	}
 
 	/**
-	 * Save authorisation process into the database.
+	 * Save auth entity into the database.
 	 *
 	 * @param OZAuth $auth
 	 *
@@ -297,10 +306,10 @@ abstract class AuthProvider implements AuthProviderInterface
 	{
 		try {
 			$auth->setUpdatedAT((string) \time())
-				->setOptions($this->scope->getAccessRight()->getOptions())
+				->setPermissions($this->scope->getAccessRight()->toArray())
 				->save();
 		} catch (CRUDException|ORMException $e) {
-			throw new RuntimeException('Unable to save authorization process data.', null, $e);
+			throw new RuntimeException('Unable to save auth entity data.', null, $e);
 		}
 	}
 }

@@ -191,9 +191,9 @@ class Headers extends Collection
 	 */
 	public static function determineAuthorization(HTTPEnvironment $environment): HTTPEnvironment
 	{
-		$authorization = $environment->get('HTTP_AUTHORIZATION');
+		$value = $environment->get('HTTP_AUTHORIZATION');
 
-		if (null === $authorization && \is_callable('getallheaders')) {
+		if (null === $value && \is_callable('getallheaders')) {
 			$headers = getallheaders();
 			$headers = \array_change_key_case($headers, \CASE_LOWER);
 

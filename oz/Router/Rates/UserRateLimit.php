@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Rates;
 
+use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -30,10 +31,10 @@ final class UserRateLimit extends RateLimit
 	 */
 	public function __construct(RouteInfo $ri, int $rate, int $interval, int $weight = 1)
 	{
-		$uid = $ri->getContext()->auth()->user()->getID();
+		$ref = AuthUsers::ref($ri->getContext()->auth()->user());
 
 		parent::__construct(
-			$uid,
+			$ref,
 			$rate,
 			$interval,
 			$weight

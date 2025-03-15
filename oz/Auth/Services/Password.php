@@ -46,7 +46,7 @@ final class Password extends Service
 		$context = $ri->getContext();
 		$user    = $context->auth()->user();
 
-		AuthUsers::updatePass(
+		AuthUsers::updatePassword(
 			$user,
 			$ri->getCleanFormField(self::FIELD_PASS_NEW),
 			$ri->getCleanFormField(self::FIELD_PASS_CURRENT)
@@ -72,7 +72,7 @@ final class Password extends Service
 			throw new NotFoundException();
 		}
 
-		AuthUsers::updatePass($user, $ri->getCleanFormField(self::FIELD_PASS_NEW));
+		AuthUsers::updatePassword($user, $ri->getCleanFormField(self::FIELD_PASS_NEW));
 
 		$this->json()
 			->setDone('OZ_PASSWORD_EDIT_SUCCESS');

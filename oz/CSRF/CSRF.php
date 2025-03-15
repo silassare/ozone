@@ -15,6 +15,7 @@ namespace OZONE\Core\CSRF;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
+use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Utils\Hasher;
 use OZONE\Core\Utils\Random;
@@ -42,8 +43,7 @@ class CSRF
 				break;
 
 			case CSRFScope::ACTIVE_USER:
-				$this->scope_ref = $this->context->auth()->user()
-					->getID();
+				$this->scope_ref = AuthUsers::ref($this->context->auth()->user());
 
 				break;
 

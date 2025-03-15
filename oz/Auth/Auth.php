@@ -16,7 +16,7 @@ namespace OZONE\Core\Auth;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Enums\AuthMethodType;
-use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthProviderInterface;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Db\OZAuthsQuery;
@@ -36,7 +36,7 @@ use Throwable;
 final class Auth implements BootHookReceiverInterface
 {
 	/**
-	 * Get an auth by ref.
+	 * Get an auth entity by ref.
 	 *
 	 * @param string $ref
 	 *
@@ -57,7 +57,7 @@ final class Auth implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Get an auth by token.
+	 * Get an auth entity by token.
 	 *
 	 * @param string $token_hash
 	 *
@@ -73,12 +73,12 @@ final class Auth implements BootHookReceiverInterface
 				->find(1)
 				->fetchClass();
 		} catch (Throwable $t) {
-			throw new RuntimeException('Unable to load auth data.', null, $t);
+			throw new RuntimeException('Unable to load auth entity.', null, $t);
 		}
 	}
 
 	/**
-	 * Get an auth by ref.
+	 * Get an auth entity by ref.
 	 *
 	 * @param string $ref
 	 *
@@ -139,16 +139,16 @@ final class Auth implements BootHookReceiverInterface
 		}
 
 		/* @var AuthProviderInterface $provider */
-		return $provider::get($context, (array) $auth->getPayload())
+		return $provider::get($context, $auth)
 			->setScope(AuthScope::from($auth));
 	}
 
 	/**
-	 * Gets the auth method class from settings.
+	 * Gets the authentication method class from settings.
 	 *
 	 * @param AuthMethodType|string $method
 	 *
-	 * @return class-string<AuthMethodInterface>
+	 * @return class-string<AuthenticationMethodInterface>
 	 */
 	public static function method(AuthMethodType|string $method): string
 	{
@@ -167,12 +167,12 @@ final class Auth implements BootHookReceiverInterface
 			))->suspectConfig('oz.auth.methods', $method);
 		}
 
-		if (!\class_exists($class) || !\is_subclass_of($class, AuthMethodInterface::class)) {
+		if (!\class_exists($class) || !\is_subclass_of($class, AuthenticationMethodInterface::class)) {
 			throw (new RuntimeException(
 				\sprintf(
 					'Auth method "%s" should be subclass of: %s',
 					$class,
-					AuthMethodInterface::class
+					AuthenticationMethodInterface::class
 				)
 			))->suspectConfig('oz.auth.methods', $method);
 		}
@@ -191,7 +191,7 @@ final class Auth implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Deletes expired authorization process.
+	 * Deletes expired auth entities.
 	 */
 	private static function gc(): void
 	{
@@ -207,7 +207,7 @@ final class Auth implements BootHookReceiverInterface
 					->delete()
 					->execute();
 			} catch (Throwable $t) {
-				throw new RuntimeException('Unable to delete expired authorization.', null, $t);
+				throw new RuntimeException('Unable to delete expired auth entities.', null, $t);
 			}
 		}
 	}

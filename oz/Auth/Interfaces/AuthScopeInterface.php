@@ -30,14 +30,14 @@ interface AuthScopeInterface
 	public static function from(OZAuth $auth): static;
 
 	/**
-	 * Gets the authorization label.
+	 * Gets the auth label.
 	 *
 	 * @return string
 	 */
 	public function getLabel(): string;
 
 	/**
-	 * Sets the authorization label.
+	 * Sets the auth label.
 	 *
 	 * @param string $label
 	 *

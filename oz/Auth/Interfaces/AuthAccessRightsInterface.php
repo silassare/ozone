@@ -14,27 +14,21 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Interfaces;
 
 use OZONE\Core\Db\OZAuth;
+use PHPUtils\Interfaces\ArrayCapableInterface;
 
 /**
  * Interface AuthAccessRightsInterface.
  */
-interface AuthAccessRightsInterface
+interface AuthAccessRightsInterface extends ArrayCapableInterface
 {
 	/**
-	 * Loads access rights info from auth.
+	 * Loads access rights info from auth entity.
 	 *
 	 * @param OZAuth $auth
 	 *
 	 * @return static
 	 */
 	public static function from(OZAuth $auth): static;
-
-	/**
-	 * Gets options.
-	 *
-	 * @return array
-	 */
-	public function getOptions(): array;
 
 	/**
 	 * Add allowed action.

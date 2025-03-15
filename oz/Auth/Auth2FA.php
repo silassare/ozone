@@ -12,8 +12,8 @@
 namespace OZONE\Core\Auth;
 
 use OZONE\Core\Auth\Events\AuthUserLoggedIn;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodStatefulInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Auth\Interfaces\StatefulAuthMethodInterface;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 
@@ -35,10 +35,10 @@ final class Auth2FA implements BootHookReceiverInterface
 	/**
 	 * Check a 2FA auth process after login.
 	 *
-	 * @param AuthUserInterface           $user
-	 * @param StatefulAuthMethodInterface $auth_method
+	 * @param AuthUserInterface                     $user
+	 * @param AuthenticationMethodStatefulInterface $auth_method
 	 */
-	private static function check2FAAuthProcess(AuthUserInterface $user, StatefulAuthMethodInterface $auth_method): void
+	private static function check2FAAuthProcess(AuthUserInterface $user, AuthenticationMethodStatefulInterface $auth_method): void
 	{
 		if ($user->getAuthUserDataStore()->has2FAEnabled()) {
 			// TODO

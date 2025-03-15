@@ -22,28 +22,28 @@ use PHPUtils\Interfaces\ArrayCapableInterface;
 interface AuthCredentialsInterface extends ArrayCapableInterface
 {
 	/**
-	 * Should return newly generated raw authorization code.
+	 * Should return newly generated raw auth code.
 	 *
 	 * @return string
 	 */
 	public function newCode(): string;
 
 	/**
-	 * Should return newly generated raw authorization token.
+	 * Should return newly generated raw auth token.
 	 *
 	 * @return string
 	 */
 	public function newToken(): string;
 
 	/**
-	 * Gets raw authorization code.
+	 * Gets raw auth code.
 	 *
 	 * @return string
 	 */
 	public function getCode(): string;
 
 	/**
-	 * Sets raw authorization code.
+	 * Sets raw auth code.
 	 *
 	 * @param string $code
 	 *
@@ -52,14 +52,14 @@ interface AuthCredentialsInterface extends ArrayCapableInterface
 	public function setCode(string $code): self;
 
 	/**
-	 * Gets raw authorization token.
+	 * Gets raw auth token.
 	 *
 	 * @return string
 	 */
 	public function getToken(): string;
 
 	/**
-	 * Sets raw authorization token.
+	 * Sets raw auth token.
 	 *
 	 * @param string $token
 	 *
@@ -68,14 +68,14 @@ interface AuthCredentialsInterface extends ArrayCapableInterface
 	public function setToken(string $token): self;
 
 	/**
-	 * Gets the authorization reference.
+	 * Gets the auth reference.
 	 *
 	 * @return string
 	 */
 	public function getReference(): string;
 
 	/**
-	 * Sets the authorization reference.
+	 * Sets the auth reference.
 	 *
 	 * @param string $reference
 	 *
@@ -84,14 +84,14 @@ interface AuthCredentialsInterface extends ArrayCapableInterface
 	public function setReference(string $reference): self;
 
 	/**
-	 * Gets the authorization process refresh key.
+	 * Gets the auth process refresh key.
 	 *
 	 * @return string
 	 */
 	public function getRefreshKey(): string;
 
 	/**
-	 * Sets the authorization process refresh key.
+	 * Sets the auth process refresh key.
 	 *
 	 * @param string $refresh_key
 	 *
@@ -100,7 +100,7 @@ interface AuthCredentialsInterface extends ArrayCapableInterface
 	public function setRefreshKey(string $refresh_key): self;
 
 	/**
-	 * Gets authorization link.
+	 * Gets auth link.
 	 *
 	 * @return Uri
 	 */

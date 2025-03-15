@@ -16,14 +16,17 @@ namespace OZONE\Core\Auth;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
+use PHPUtils\Traits\ArrayCapableTrait;
 
 /**
  * Class AuthAccessRights.
  */
 class AuthAccessRights implements AuthAccessRightsInterface
 {
+	use ArrayCapableTrait;
+
 	/**
-	 * AuthAccessRights constructor.
+	 * AccessRights constructor.
 	 */
 	public function __construct(protected array $options = []) {}
 
@@ -118,13 +121,13 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	 */
 	public static function from(OZAuth $auth): static
 	{
-		return new self((array) $auth->getOptions());
+		return new self((array) $auth->getPermissions());
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getOptions(): array
+	public function toArray(): array
 	{
 		return $this->options;
 	}

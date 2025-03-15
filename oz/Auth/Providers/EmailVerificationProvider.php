@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Providers;
 
-use InvalidArgumentException;
 use OZONE\Core\App\Context;
 use OZONE\Core\Db\OZAuth;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Senders\Messages\MailMessage;
 
 /**
@@ -49,12 +49,13 @@ class EmailVerificationProvider extends AuthProvider
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function get(Context $context, array $payload): self
+	public static function get(Context $context, OZAuth $auth): self
 	{
-		$email = $payload['email'] ?? null;
+		$payload = $auth->getPayload();
+		$email   = $payload['email'] ?? null;
 
 		if (empty($email)) {
-			throw new InvalidArgumentException('Missing "email" in payload.');
+			throw (new RuntimeException('Missing "email" in payload.'))->suspectObject($payload);
 		}
 
 		return new self($context, $email);

@@ -16,8 +16,8 @@ namespace OZONE\Core\Auth\Methods;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Enums\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodStatefulInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Auth\Interfaces\StatefulAuthMethodInterface;
 use OZONE\Core\Auth\StatefulAuthStore;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\UnverifiedUserException;
@@ -30,7 +30,7 @@ use OZONE\Core\Utils\Hasher;
  *
  * @psalm-suppress RedundantPropertyInitializationCheck
  */
-class SessionAuth implements StatefulAuthMethodInterface
+class SessionAuth implements AuthenticationMethodStatefulInterface
 {
 	protected AuthMethodType $type = AuthMethodType::SESSION;
 	protected ?string $session_id  = null;
@@ -131,10 +131,10 @@ class SessionAuth implements StatefulAuthMethodInterface
 	 * @throws ForbiddenException
 	 * @throws UnverifiedUserException
 	 */
-	public function accessRights(): AuthAccessRightsInterface
+	public function getAccessRights(): AuthAccessRightsInterface
 	{
 		return $this->user()
-			->getAuthUserDataStore()->getAccessRights();
+			->getAuthUserDataStore()->getAuthUserAccessRights();
 	}
 
 	/**

@@ -37,8 +37,8 @@ return static function (NamespaceBuilder $ns) {
 
 		// columns
 		$tb->id();
-		$tb->column('phone', TypeUtils::userPhone());
-		$tb->column('email', TypeUtils::userMailAddress());
+		$tb->column('phone', TypeUtils::userPhone('oz_users'));
+		$tb->column('email', TypeUtils::userMailAddress('oz_users'));
 		$tb->column('pass', new TypePassword());
 		$tb->column('name', new TypeUsername());
 		$tb->column('gender', new TypeGender());
@@ -270,7 +270,8 @@ return static function (NamespaceBuilder $ns) {
 		$tb->int('try_count')->unsigned()->default(0);
 		$tb->int('lifetime')->unsigned();
 		$tb->timestamp('expire');
-		$tb->map('options')->default([]);
+		$tb->map('permissions')->default([]);
+		$tb->morph('owner', TypeUtils::morphAnyId(), null, true);
 		$tb->bool('is_valid')->default(true);
 		$tb->timestamps();
 		$tb->softDeletable();

@@ -68,7 +68,7 @@ trait UserEntityTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function setAuthPassword(string $password_hash): self
+	public function setAuthPassword(string $password_hash): static
 	{
 		$this->setPass($password_hash);
 
@@ -86,7 +86,7 @@ trait UserEntityTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function setAuthUserDataStore(AuthUserDataStore $store): self
+	public function setAuthUserDataStore(AuthUserDataStore $store): static
 	{
 		$this->setData($store->getData());
 
@@ -96,7 +96,7 @@ trait UserEntityTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function isAuthUserVerified(): bool
+	public function isAuthUserValid(): bool
 	{
 		return $this->isValid();
 	}

@@ -15,7 +15,7 @@ namespace OZONE\Core\Router\Guards;
 
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Enums\AuthState;
-use OZONE\Core\Auth\Providers\UserAuthProvider;
+use OZONE\Core\Auth\Providers\AuthUserAccountKeyBasedAccessProvider;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -42,7 +42,7 @@ class TwoFactorRouteGuard extends AbstractRouteGuard
 	 */
 	public function __construct(string ...$allowed_providers)
 	{
-		$this->allowed_providers = empty($allowed_providers) ? [UserAuthProvider::NAME] : \array_unique($allowed_providers);
+		$this->allowed_providers = empty($allowed_providers) ? [AuthUserAccountKeyBasedAccessProvider::NAME] : \array_unique($allowed_providers);
 
 		$this->form_data = new FormData();
 	}

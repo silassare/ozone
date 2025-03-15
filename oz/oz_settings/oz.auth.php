@@ -41,12 +41,12 @@ return [
 	'OZ_AUTH_CODE_USE_ALPHA_NUM'  => false,
 
 	/**
-	 * Auth by api key header name.
+	 * Authentication by api key header name.
 	 */
 	'OZ_AUTH_API_KEY_HEADER_NAME' => 'x-ozone-api-key',
 
 	/**
-	 * Default auth methods for API.
+	 * Default authentication methods for API.
 	 */
 	'OZ_AUTH_API_AUTH_METHODS' => [
 		AuthMethodType::BEARER,

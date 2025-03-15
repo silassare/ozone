@@ -13,21 +13,21 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Providers;
 
-use InvalidArgumentException;
 use OZONE\Core\App\Context;
+use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FS;
 
 /**
- * Class FileAuthProvider.
+ * Class FileAccessAuthProvider.
  */
-class FileAuthProvider extends AuthProvider
+class FileAccessAuthProvider extends AuthProvider
 {
 	public const NAME = 'auth:provider:file';
 
 	/**
-	 * FileAuthProvider constructor.
+	 * FileAccessAuthProvider constructor.
 	 *
 	 * @param Context $context
 	 * @param OZFile  $file
@@ -50,18 +50,19 @@ class FileAuthProvider extends AuthProvider
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function get(Context $context, array $payload): self
+	public static function get(Context $context, OZAuth $auth): self
 	{
-		$id = $payload['file_id'] ?? null;
+		$payload = $auth->getPayload();
+		$id      = $payload['file_id'] ?? null;
 
 		if (empty($id)) {
-			throw new InvalidArgumentException('Missing "file_id" in payload.');
+			throw (new RuntimeException('Missing "file_id" in payload.'))->suspectObject($payload);
 		}
 
 		$file = FS::getFileByID($id);
 
 		if (!$file || !$file->isValid()) {
-			throw new RuntimeException('Unable to load file using provided "file_id".', $payload);
+			throw (new RuntimeException('Unable to load file using provided "file_id".'))->suspectObject($payload);
 		}
 
 		return new self($context, $file);

@@ -16,9 +16,9 @@ namespace OZONE\Core\Auth\Methods;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Enums\AuthMethodType;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
-use OZONE\Core\Auth\Interfaces\AuthMethodInterface;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Auth\Traits\HTTPAuthMethodTrait;
+use OZONE\Core\Auth\Traits\AskCredentialsByHTTPHeaderTrait;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Router\RouteInfo;
@@ -28,13 +28,22 @@ use OZONE\Core\Router\RouteInfo;
  *
  * @psalm-suppress RedundantPropertyInitializationCheck
  */
-class BasicAuth implements AuthMethodInterface
+class BasicAuth implements AuthenticationMethodInterface
 {
-	use HTTPAuthMethodTrait;
+	use AskCredentialsByHTTPHeaderTrait;
+
+	public const BASIC_AUTH_SEPARATOR               = ':';
+	public const BASIC_AUTH_USERNAME_INFO_SEPARATOR = '|';
 
 	protected AuthMethodType $type = AuthMethodType::BASIC;
-	protected string $username     = '';
-	protected string $password     = '';
+
+	/**
+	 * @var string The username
+	 *
+	 * Should be in this format: `auth_user_type|auth_user_identifier_name|auth_user_identifier_value`
+	 */
+	protected string $username = '';
+	protected string $password = '';
 	protected AuthUserInterface $user;
 
 	/**
@@ -48,6 +57,14 @@ class BasicAuth implements AuthMethodInterface
 	public function __destruct()
 	{
 		unset($this->ri);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function get(RouteInfo $ri, string $realm): self
+	{
+		return new self($ri, $realm);
 	}
 
 	/**
@@ -77,9 +94,9 @@ class BasicAuth implements AuthMethodInterface
 	{
 		$context       = $this->ri->getContext();
 		$request       = $context->getRequest();
-		$authorization = $request->getHeaderLine('Authorization');
+		$header_line   = $request->getHeaderLine('Authorization');
 
-		if (empty($authorization) || !\str_starts_with(\strtolower($authorization), 'basic ')) {
+		if (empty($header_line) || !\str_starts_with(\strtolower($header_line), 'basic ')) {
 			return false;
 		}
 
@@ -94,7 +111,8 @@ class BasicAuth implements AuthMethodInterface
 			return true;
 		}
 
-		$parts = \explode(':', \base64_decode(\substr($authorization, 6), true), 2);
+		$decoded = \base64_decode(\substr($header_line, 6), true);
+		$parts   = \explode(self::BASIC_AUTH_SEPARATOR, $decoded, 2);
 
 		if (2 === \count($parts)) {
 			$this->username = $parts[0];
@@ -108,37 +126,38 @@ class BasicAuth implements AuthMethodInterface
 
 	/**
 	 * {@inheritDoc}
-	 */
-	public static function get(RouteInfo $ri, string $realm): self
-	{
-		return new self($ri, $realm);
-	}
-
-	/**
-	 * {@inheritDoc}
 	 *
 	 * @throws ForbiddenException
 	 */
 	public function authenticate(): void
 	{
-		$user = AuthUsers::identify($this->username);
+		$selector = AuthUsers::refToSelector($this->username, self::BASIC_AUTH_USERNAME_INFO_SEPARATOR);
+
+		if (false === $selector) {
+			throw new ForbiddenException(null, [
+				'_reason' => 'Invalid username format. Use auth_user_type|auth_user_identifier_name|auth_user_identifier_value for username.',
+			]);
+		}
+
+		$user = AuthUsers::identifyBySelector($selector);
 
 		if (!$user) {
 			// unknown user
 			throw new ForbiddenException(null, [
-				'_reason' => 'Unknown user.',
+				'_reason' => 'Unknown auth user.',
 			]);
 		}
-		if (!$user->isValid()) {
+		if (!$user->isAuthUserValid()) {
 			throw new ForbiddenException(null, [
-				'_reason' => 'Disabled user.',
+				'_reason' => 'Disabled auth user.',
+				'_user'   => AuthUsers::selector($user),
 			]);
 		}
 
-		if (!Password::verify($this->password, $user->getPass())) {
+		if (!Password::verify($this->password, $user->getAuthPassword())) {
 			// invalid password
 			throw new ForbiddenException(null, [
-				'_reason' => 'Invalid password.',
+				'_reason' => 'Invalid auth user password.',
 			]);
 		}
 
@@ -147,6 +166,8 @@ class BasicAuth implements AuthMethodInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws ForbiddenException
 	 */
 	public function user(): AuthUserInterface
 	{
@@ -159,10 +180,12 @@ class BasicAuth implements AuthMethodInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws ForbiddenException
 	 */
-	public function accessRights(): AuthAccessRightsInterface
+	public function getAccessRights(): AuthAccessRightsInterface
 	{
-		return $this->user()->getAuthUserDataStore()->getAccessRights();
+		return $this->user()->getAuthUserDataStore()->getAuthUserAccessRights();
 	}
 
 	/**

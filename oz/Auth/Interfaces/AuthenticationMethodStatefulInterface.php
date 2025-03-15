@@ -16,9 +16,9 @@ namespace OZONE\Core\Auth\Interfaces;
 use OZONE\Core\Auth\StatefulAuthStore;
 
 /**
- * Class StatefulAuthMethodInterface.
+ * Class AuthenticationMethodStatefulInterface.
  */
-interface StatefulAuthMethodInterface extends AuthMethodInterface
+interface AuthenticationMethodStatefulInterface extends AuthenticationMethodInterface
 {
 	/**
 	 * State ID.
