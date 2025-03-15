@@ -15,7 +15,6 @@ namespace OZONE\Core\Users;
 
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Interfaces\AuthUsersRepositoryInterface;
-use OZONE\Core\Db\OZUser;
 use OZONE\Core\Db\OZUsersQuery;
 use OZONE\Core\Exceptions\RuntimeException;
 use Throwable;
@@ -38,7 +37,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getAuthUserByIdentifier(string $identifier): ?OZUser
+	public function getAuthUserByIdentifier(string $identifier): ?AuthUserInterface
 	{
 		return self::withID($identifier);
 	}
@@ -46,7 +45,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getAuthUserByNamedIdentifier(string $identifier_name, string $identifier_value): ?OZUser
+	public function getAuthUserByNamedIdentifier(string $identifier_name, string $identifier_value): ?AuthUserInterface
 	{
 		return match ($identifier_name) {
 			AuthUserInterface::IDENTIFIER_NAME_ID    => self::withID($identifier_value),
@@ -63,9 +62,9 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 *
 	 * @param string $phone the phone number
 	 *
-	 * @return null|OZUser
+	 * @return null|AuthUserInterface
 	 */
-	private static function withPhone(string $phone): ?OZUser
+	private static function withPhone(string $phone): ?AuthUserInterface
 	{
 		try {
 			$u_table = new OZUsersQuery();
@@ -87,9 +86,9 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 *
 	 * @param string $email the email address
 	 *
-	 * @return null|OZUser
+	 * @return null|AuthUserInterface
 	 */
-	private static function withEmail(string $email): ?OZUser
+	private static function withEmail(string $email): ?AuthUserInterface
 	{
 		try {
 			$u_table = new OZUsersQuery();
@@ -109,9 +108,9 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 *
 	 * @param string $uid the user id
 	 *
-	 * @return null|OZUser
+	 * @return null|AuthUserInterface
 	 */
-	private static function withID(string $uid): ?OZUser
+	private static function withID(string $uid): ?AuthUserInterface
 	{
 		try {
 			$uq = new OZUsersQuery();
