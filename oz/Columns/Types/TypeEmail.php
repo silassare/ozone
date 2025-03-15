@@ -19,7 +19,7 @@ use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Users\UsersRepository;
 
 /**
  * Class TypeEmail.
@@ -126,14 +126,10 @@ class TypeEmail extends Type
 	public function configure(array $options): static
 	{
 		if (isset($options['registered'])) {
-			if (!isset($options['registered_as'])) {
-				throw new RuntimeException('Missing \'registered_as\' property.');
-			}
-
 			if ($options['registered']) {
-				$this->registered($options['registered_as']);
+				$this->registered($options['registered_as'] ?? UsersRepository::TYPE_NAME);
 			} else {
-				$this->notRegistered($options['registered_as']);
+				$this->notRegistered($options['registered_as'] ?? UsersRepository::TYPE_NAME);
 			}
 		}
 

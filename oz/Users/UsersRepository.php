@@ -25,6 +25,8 @@ use Throwable;
  */
 final class UsersRepository implements AuthUsersRepositoryInterface
 {
+	public const TYPE_NAME = 'oz_users';
+
 	/**
 	 * {@inheritDoc}
 	 */
