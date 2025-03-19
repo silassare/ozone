@@ -14,13 +14,16 @@ declare(strict_types=1);
 namespace OZONE\Core\App;
 
 use OZONE\Core\Http\Response;
+use OZONE\Core\REST\ApiDoc;
+use OZONE\Core\REST\Interfaces\ApiDocProviderInterface;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
 use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
 
 /**
  * Class Service.
  */
-abstract class Service implements RouteProviderInterface
+abstract class Service implements RouteProviderInterface, ApiDocProviderInterface
 {
 	private JSONResponse $json_response;
 
@@ -76,4 +79,14 @@ abstract class Service implements RouteProviderInterface
 		return $this->context->getResponse()
 			->withJson($data);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function registerRoutes(Router $router): void {}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function apiDoc(ApiDoc $doc): void {}
 }
