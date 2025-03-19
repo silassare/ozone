@@ -20,6 +20,7 @@ use OZONE\Core\Auth\Services\Password;
 use OZONE\Core\Auth\Services\PhoneVerificationService;
 use OZONE\Core\Auth\Services\TNet;
 use OZONE\Core\FS\Services\UploadFiles;
+use OZONE\Core\REST\Services\ApiDocService;
 use OZONE\Core\Services\CaptchaCode;
 use OZONE\Core\Services\LinkTo;
 use OZONE\Core\Services\QRCode;
@@ -39,4 +40,5 @@ return [
 	AuthService::class                  => true,
 	PhoneVerificationService::class     => true,
 	EmailVerificationService::class     => true,
+	ApiDocService::class                => true,
 ];

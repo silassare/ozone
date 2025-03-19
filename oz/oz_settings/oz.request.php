@@ -27,7 +27,4 @@ return [
 	// = For server that does not support HEAD, PATCH, PUT, DELETE...,
 	'OZ_ALLOW_REAL_METHOD_HEADER' => true,
 	'OZ_REAL_METHOD_HEADER_NAME'  => 'x-ozone-real-method',
-	// Enable API documentation page
-	'OZ_API_DOC_ENABLED'          => true,
-	'OZ_API_DOC_SHOW_ON_INDEX'    => true,
 ];
