@@ -35,6 +35,10 @@ use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
 class RouteSharedOptions
 {
 	protected readonly string $path;
+
+	/**
+	 * @var array<string,string>
+	 */
 	protected array $route_params = [];
 
 	/**
@@ -473,7 +477,7 @@ class RouteSharedOptions
 	/**
 	 * Gets route parameters.
 	 *
-	 * @return array
+	 * @return array<string,string>
 	 */
 	public function getParams(): array
 	{

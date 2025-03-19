@@ -31,6 +31,10 @@ final class Route
 
 	private bool $parsed = false;
 	private string $parser_result;
+
+	/**
+	 * @var string[]
+	 */
 	private array $params_found = [];
 
 	/**
@@ -159,11 +163,11 @@ final class Route
 	}
 
 	/**
-	 * Returns parameters.
+	 * Returns the parameters found after parsing the route path if any.
 	 *
 	 * @return array
 	 */
-	public function getParams(): array
+	public function getPathParams(): array
 	{
 		$this->ensureParsed();
 
@@ -198,6 +202,18 @@ final class Route
 	}
 
 	/**
+	 * Returns the declared parameters.
+	 *
+	 * This will include global parameters.
+	 *
+	 * @return array<string, string>
+	 */
+	public function getDeclaredParams(): array
+	{
+		return \array_merge($this->router->getGlobalParams(), $this->options->getParams());
+	}
+
+	/**
 	 * This will lazily parse the route path.
 	 */
 	private function ensureParsed(): void
@@ -206,7 +222,7 @@ final class Route
 			$path = $this->options->getPath();
 			if ($this->isDynamic()) {
 				$params_found        = [];
-				$declared_params     = \array_merge($this->router->getGlobalParams(), $this->options->getParams());
+				$declared_params     = $this->getDeclaredParams();
 				$parser              = new RoutePathParser($path, $this->router);
 				$this->parser_result = $parser->parse($path, $declared_params, $params_found);
 				$this->params_found  = \array_keys($params_found);

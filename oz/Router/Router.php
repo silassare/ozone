@@ -198,13 +198,7 @@ final class Router
 	 */
 	public function buildRoutePath(Context $context, string $route_name, array $params = []): string
 	{
-		$route = $this->getRoute($route_name);
-
-		if (!$route) {
-			throw new RuntimeException(\sprintf('There is no route named "%s".', $route_name));
-		}
-
-		return $route->buildPath($context, $params);
+		return $this->requireRoute($route_name)->buildPath($context, $params);
 	}
 
 	/**
@@ -229,6 +223,22 @@ final class Router
 		}
 
 		return null;
+	}
+
+	/**
+	 * Require a route by name.
+	 *
+	 * @param string $route_name The route name
+	 */
+	public function requireRoute(string $route_name): Route
+	{
+		$route = $this->getRoute($route_name);
+
+		if (!$route) {
+			throw new RuntimeException(\sprintf('There is no route named "%s".', $route_name));
+		}
+
+		return $route;
 	}
 
 	/**
