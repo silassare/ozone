@@ -27,6 +27,7 @@ use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\OZone;
+use OZONE\Core\REST\Views\ApiDocView;
 use OZONE\Core\Router\Events\RouteMethodNotAllowed;
 use OZONE\Core\Router\Events\RouteNotFound;
 use OZONE\Core\Users\Traits\UserEntityTrait;
@@ -53,15 +54,32 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		$request = $context->getRequest();
 		$uri     = $request->getUri();
 
-		// is it root
-		if ($context->isApiContext() && '/' === $uri->getPath()) {
-			// TODO api doc
-			// 1) show api usage doc when this condition are met:
-			//		- we are in api context
-			//		- debugging mode or allowed in settings
-			// 2) show welcome friendly page when this conditions are met:
-			//		- we are in web context
-			throw new ForbiddenException();
+		if ('/' === $uri->getPath()) {
+			if ($context->isApiContext()) {
+				// 1) show api usage doc as all this conditions are met:
+				//		- we are in api context
+				//      - the uri is root
+				//		- allowed in settings
+
+				if (
+					Settings::get('oz.api.doc', 'OZ_API_DOC_ENABLED')
+					&& Settings::get('oz.api.doc', 'OZ_API_DOC_SHOW_ON_INDEX')
+				) {
+					$context->redirectRoute(ApiDocView::API_DOC_VIEW_ROUTE);
+
+					return;
+				}
+
+				throw new ForbiddenException();
+			}
+
+			if ($context->isWebContext()) {
+				// TODO welcome friendly page
+				// 2) show welcome friendly page as all this conditions are met:
+				//		- we are in web context
+				//      - the uri is root
+				throw new ForbiddenException();
+			}
 		}
 
 		throw new NotFoundException();

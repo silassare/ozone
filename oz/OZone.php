@@ -171,6 +171,42 @@ final class OZone
 	}
 
 	/**
+	 * Returns the API routes providers.
+	 *
+	 * @return array<class-string, bool>
+	 */
+	public static function getApiRoutesProviders(): array
+	{
+		static $results = null;
+
+		if (null === $results) {
+			$a       = Settings::load('oz.routes');
+			$b       = Settings::load('oz.routes.api');
+			$results = Settings::merge($a, $b);
+		}
+
+		return $results;
+	}
+
+	/**
+	 * Returns the WEB routes providers.
+	 *
+	 * @return array<class-string, bool>
+	 */
+	public static function getWebRoutesProviders(): array
+	{
+		static $results = null;
+
+		if (null === $results) {
+			$a       = Settings::load('oz.routes');
+			$b       = Settings::load('oz.routes.web');
+			$results = Settings::merge($a, $b);
+		}
+
+		return $results;
+	}
+
+	/**
 	 * Returns the router with all API routes registered.
 	 *
 	 * @return Router
@@ -180,11 +216,7 @@ final class OZone
 		if (!isset(self::$api_router)) {
 			$router = self::$api_router = new Router();
 			$group  = $router->group('/', static function () {
-				$a      = Settings::load('oz.routes');
-				$b      = Settings::load('oz.routes.api');
-				$routes = Settings::merge($a, $b);
-
-				self::registerRoutes(self::$api_router, $routes);
+				self::registerRoutes(self::$api_router, self::getApiRoutesProviders());
 			})->auths(...Auth::apiAuthMethods());
 
 			(new RouterCreated($router, $group, true))->dispatch();
@@ -204,11 +236,7 @@ final class OZone
 			$router = self::$web_router = new Router();
 
 			$group = $router->group('/', static function () {
-				$a      = Settings::load('oz.routes');
-				$b      = Settings::load('oz.routes.web');
-				$routes = Settings::merge($a, $b);
-
-				self::registerRoutes(self::$web_router, $routes);
+				self::registerRoutes(self::$web_router, self::getWebRoutesProviders());
 			})->auths(AuthMethodType::SESSION);
 
 			(new RouterCreated($router, $group, false))->dispatch();
@@ -312,8 +340,8 @@ final class OZone
 	/**
 	 * Register all route provider.
 	 *
-	 * @param Router $router
-	 * @param array  $routes
+	 * @param Router                    $router
+	 * @param array<class-string, bool> $routes
 	 */
 	private static function registerRoutes(Router $router, array $routes): void
 	{
