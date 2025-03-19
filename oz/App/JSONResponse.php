@@ -25,9 +25,9 @@ final class JSONResponse implements ArrayCapableInterface
 	use ArrayCapableTrait;
 
 	/**
-	 * @var int ozone done response code
+	 * @var int ozone success response code
 	 */
-	public const RESPONSE_CODE_DONE = 0;
+	public const RESPONSE_CODE_SUCCESS = 0;
 
 	/**
 	 * @var int ozone error response code
@@ -45,7 +45,7 @@ final class JSONResponse implements ArrayCapableInterface
 	public function __construct()
 	{
 		$this->response = [
-			'error' => self::RESPONSE_CODE_DONE,
+			'error' => self::RESPONSE_CODE_SUCCESS,
 			'msg'   => 'OK',
 			'data'  => [],
 			'form'  => null,
@@ -84,7 +84,7 @@ final class JSONResponse implements ArrayCapableInterface
 	 */
 	public function setDone(string $msg = 'OK'): self
 	{
-		$this->response['error'] = self::RESPONSE_CODE_DONE;
+		$this->response['error'] = self::RESPONSE_CODE_SUCCESS;
 		$this->response['msg']   = $msg;
 
 		return $this;
