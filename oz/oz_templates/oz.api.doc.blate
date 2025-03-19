@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--
+ ~ Copyright (c) 2017-present, Emile Silas Sare
+ ~
+ ~ This file is part of OZone package.
+ ~
+ ~ For the full copyright and license information, please view the LICENSE
+ ~ file that was distributed with this source code.
+ -->
+<html lang="{oz.getLanguage()}">
+	<head>
+		<title>{api_doc_title}</title>
+		<!-- needed for adaptive design -->
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+
+		<!--
+		ReDoc doesn't change outer page styles
+		-->
+		{@raw}
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+			}
+
+			#api-doc-loader {
+				display: block;
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100vw;
+				height: 100vh;
+				padding-top: 20vh;
+				text-align: center;
+			}
+			#api-doc-loader img {
+				max-width: 200px;
+			}
+		</style>
+		{/raw}
+		<script>
+			window.api_doc_spec_url = {api_doc_spec_url};
+		</script>
+	</head>
+	<body>
+		<div id="api-doc-wrapper"></div>
+
+		<div id="api-doc-loader" title="Please wait...">
+			<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-rolling"><circle cx="50" cy="50" fill="none" stroke="#28292f" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138" transform="rotate(306.077 50 50)"><animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite"/></circle></svg>
+		</div>
+
+		<script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+
+        {@raw}
+		<script>
+			fetch(window.api_doc_spec_url, {
+				mode: 'no-cors',
+			}).then(function (response) {
+				return response.json();
+			}).then(function (d) {
+				Redoc.init(JSON.parse(d.data.spec), {}, document.getElementById('api-doc-wrapper'));
+				document.getElementById('api-doc-loader').style.display = "none";
+			});
+		</script>
+		{/raw}
+	</body>
+</html>
