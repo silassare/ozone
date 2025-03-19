@@ -24,9 +24,11 @@ use Gobl\ORM\ORMController;
 use Gobl\ORM\ORMEntity;
 use Gobl\ORM\ORMRequest;
 use Gobl\ORM\Utils\ORMClassKind;
+use InvalidArgumentException;
 use OZONE\Core\Exceptions\BadRequestException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\REST\RESTFulAPIRequest;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -37,6 +39,173 @@ use Throwable;
  */
 trait RESTFulService
 {
+	protected static array $available_actions = [
+		'get_one'      => true,
+		'get_all'      => true,
+		'get_relation' => true,
+		'update_one'   => true,
+		'update_all'   => true,
+		'delete_one'   => true,
+		'delete_all'   => true,
+		'create_one'   => true,
+	];
+
+	public static function routeName(string $action): string
+	{
+		if (!isset(static::$available_actions[$action])) {
+			throw new InvalidArgumentException('Invalid action: ' . $action);
+		}
+
+		return static::SERVICE_PATH . '.' . $action;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$table           = db()->getTableOrFail(self::TABLE_NAME);
+		$singular_name   = $table->getSingularName();
+		$plural_name     = $table->getPluralName();
+		$tag             = $doc->addTag($plural_name, \sprintf('Operations about `%s`.', $plural_name));
+		$entity          = $doc->entitySchema(self::TABLE_NAME);
+		$entity_creation = $doc->entitySchema(self::TABLE_NAME, true);
+		$api_key_column  = self::KEY_COLUMN;
+
+		$doc->addOperationFromRoute(
+			self::routeName('create_one'),
+			'POST',
+			\sprintf('Creates a new `%s`.', $singular_name),
+			[
+				$doc->success(
+					$doc->object(['item' => $entity]),
+					\sprintf('The `%s` was created successfully.', $singular_name)
+				),
+			],
+			[
+				'tags'        => [$tag->name],
+				'requestBody' => $doc->requestBody([
+					'application/json' => $entity_creation,
+				]),
+			]
+		);
+
+		$doc->addOperationFromRoute(
+			self::routeName('get_all'),
+			'GET',
+			\sprintf('Gets all `%s`.', $plural_name),
+			[
+				$doc->success(
+					$doc->paginated($entity),
+					\sprintf('All `%s` were retrieved successfully.', $plural_name)
+				),
+			],
+			['tags' => [$tag->name]]
+		);
+
+		$doc->addOperationFromRoute(
+			self::routeName('update_all'),
+			'PATCH',
+			\sprintf('Updates all `%s`.', $plural_name),
+			[
+				$doc->success(
+					$doc->object(['affected' => $doc->integer('The number of affected rows.')]),
+					\sprintf('All `%s` were updated successfully.', $plural_name)
+				),
+			],
+			['tags' => [$tag->name]]
+		);
+
+		$doc->addOperationFromRoute(
+			self::routeName('delete_all'),
+			'DELETE',
+			\sprintf('Deletes all `%s`.', $plural_name),
+			[
+				$doc->success(
+					$doc->object(['affected' => $doc->integer('The number of affected rows.')]),
+					\sprintf('All `%s` were deleted successfully.', $plural_name)
+				),
+			],
+			['tags' => [$tag->name]]
+		);
+
+		$doc->addOperationFromRoute(
+			self::routeName('get_one'),
+			'GET',
+			\sprintf('Gets the `%s` with the given `:%s`.', $singular_name, $api_key_column),
+			[
+				$doc->success(
+					$doc->object(['item' => $entity]),
+					\sprintf('The `%s` was retrieved successfully.', $singular_name)
+				),
+			],
+			['tags' => [$tag->name]]
+		);
+
+		$doc->addOperationFromRoute(
+			self::routeName('update_one'),
+			'PATCH',
+			\sprintf('Updates the `%s` with the given `:%s`.', $singular_name, $api_key_column),
+			[
+				$doc->success(
+					$doc->object(['item' => $entity]),
+					\sprintf('The `%s` was updated successfully.', $singular_name)
+				),
+			],
+			['tags' => [$tag->name]]
+		);
+
+		$doc->addOperationFromRoute(
+			self::routeName('delete_one'),
+			'DELETE',
+			\sprintf('Deletes the `%s` with the given `:%s`.', $singular_name, $api_key_column),
+			[
+				$doc->success(
+					$doc->object(['item' => $entity]),
+					\sprintf('The `%s` was deleted successfully.', $singular_name)
+				),
+			],
+			['tags' => [$tag->name]]
+		);
+
+		$relations           = $table->getRelations();
+		$v_relations         = $table->getVirtualRelations();
+		$relations_responses = [];
+		foreach ($relations as $relation) {
+			$relation_name                 = $relation->getName();
+			$relation_target_entity_schema = $doc->entitySchema($relation->getTargetTable());
+
+			$relations_responses[] = $doc->success(
+				$relation->isPaginated() ? $doc->paginated(
+					$relation_target_entity_schema,
+					$relation_name
+				) : $doc->object([
+					$relation_name => $relation_target_entity_schema,
+				]),
+				\sprintf('The `%s` was retrieved successfully.', $relation_name)
+			);
+		}
+
+		foreach ($v_relations as $vr) {
+			$vr_name               = $vr->getName();
+			$vr_relative_schema    = $doc->typeSchema($vr->getRelativeType());
+			$relations_responses[] = $doc->success(
+				$vr->isPaginated() ? $doc->paginated($vr_relative_schema, $vr_name) : $doc->object([
+					$vr_name => $vr_relative_schema,
+				]),
+				\sprintf('The `%s` was retrieved successfully.', $vr_name)
+			);
+		}
+
+		$doc->addOperationFromRoute(
+			self::routeName('get_relation'),
+			'GET',
+			\sprintf('Gets the `:relation` for the `%s` with the given `:%s`.', $singular_name, $api_key_column),
+			$relations_responses,
+			['tags' => [$tag->name]]
+		);
+	}
+
 	// ========================================================
 	// =	POST REQUEST METHODS
 	// ========================================================
@@ -48,7 +217,7 @@ trait RESTFulService
 	 *
 	 * @throws Throwable
 	 */
-	public function actionCreateEntity(RESTFulAPIRequest $req): void
+	public function actionCreateOne(RESTFulAPIRequest $req): void
 	{
 		$db = ORM::getDatabase($this->table->getNamespace());
 
@@ -80,7 +249,7 @@ trait RESTFulService
 	 *
 	 * @throws Throwable
 	 */
-	public function actionUpdateOneItem(RESTFulAPIRequest $req): void
+	public function actionUpdateOne(RESTFulAPIRequest $req): void
 	{
 		$db = ORM::getDatabase($this->table->getNamespace());
 
@@ -114,7 +283,7 @@ trait RESTFulService
 	 *
 	 * @throws Throwable
 	 */
-	public function actionUpdateAllItems(RESTFulAPIRequest $req): void
+	public function actionUpdateAll(RESTFulAPIRequest $req): void
 	{
 		$values   = $req->getFormData($this->table);
 		$filters  = $req->getFilters();
@@ -144,7 +313,7 @@ trait RESTFulService
 	 *
 	 * @throws Throwable
 	 */
-	public function actionDeleteEntity(RESTFulAPIRequest $req): void
+	public function actionDeleteOne(RESTFulAPIRequest $req): void
 	{
 		$filters = $req->getFilters();
 
@@ -199,7 +368,7 @@ trait RESTFulService
 	 *
 	 * @throws Throwable
 	 */
-	public function actionGetEntity(RESTFulAPIRequest $req): void
+	public function actionGetOne(RESTFulAPIRequest $req): void
 	{
 		$filters  = $req->getFilters();
 		$order_by = $req->getOrderBy();
@@ -359,7 +528,7 @@ trait RESTFulService
 	 */
 	protected static function registerRESTRoutes(Router $router): void
 	{
-		$table       = db()
+		$table = db()
 			->getTableOrFail(self::TABLE_NAME);
 		$key_column  = $table->getColumnOrFail(self::KEY_COLUMN);
 		$type_obj    = $key_column->getType();
@@ -382,31 +551,31 @@ trait RESTFulService
 		$router->group(self::SERVICE_PATH, static function (Router $router) {
 			$router->post(static function (RouteInfo $r) {
 				$service = new self($r);
-				$service->actionCreateEntity(self::buildRequest($r));
+				$service->actionCreateOne(self::buildRequest($r));
 
 				return $service->respond();
-			});
+			})->name(self::routeName('create_one'));
 
 			$router->get(static function (RouteInfo $r) {
 				$service = new self($r);
 				$service->actionGetAll(self::buildRequest($r));
 
 				return $service->respond();
-			});
+			})->name(self::routeName('get_all'));
 
 			$router->patch(static function (RouteInfo $r) {
 				$service = new self($r);
-				$service->actionUpdateAllItems(self::buildRequest($r));
+				$service->actionUpdateAll(self::buildRequest($r));
 
 				return $service->respond();
-			});
+			})->name(self::routeName('update_all'));
 
 			$router->delete(static function (RouteInfo $r) {
 				$service = new self($r);
 				$service->actionDeleteAll(self::buildRequest($r));
 
 				return $service->respond();
-			});
+			})->name(self::routeName('delete_all'));
 
 			$router->group('/:' . self::KEY_COLUMN, static function (Router $router) {
 				$router->get(static function (RouteInfo $r) {
@@ -417,10 +586,10 @@ trait RESTFulService
 					]);
 
 					$service = new self($r);
-					$service->actionGetEntity($req);
+					$service->actionGetOne($req);
 
 					return $service->respond();
-				});
+				})->name(self::routeName('get_one'));
 
 				$router->patch(static function (RouteInfo $r) {
 					$req = self::buildRequest($r, [
@@ -430,10 +599,10 @@ trait RESTFulService
 					]);
 
 					$service = new self($r);
-					$service->actionUpdateOneItem($req);
+					$service->actionUpdateOne($req);
 
 					return $service->respond();
-				});
+				})->name(self::routeName('update_one'));
 
 				$router->delete(static function (RouteInfo $r) {
 					$req = self::buildRequest($r, [
@@ -443,10 +612,10 @@ trait RESTFulService
 					]);
 
 					$service = new self($r);
-					$service->actionDeleteEntity($req);
+					$service->actionDeleteOne($req);
 
 					return $service->respond();
-				});
+				})->name(self::routeName('delete_one'));
 
 				$router->get('/:relation', static function (RouteInfo $r) {
 					$service = new self($r);
@@ -457,7 +626,7 @@ trait RESTFulService
 					], $r->param('relation'));
 
 					return $service->respond();
-				});
+				})->name(self::routeName('get_relation'));
 			});
 		})
 			->param('relation', $relation_param)
@@ -677,6 +846,8 @@ trait RESTFulService
 	 * @param ORMEntity  $entity
 	 * @param ORMRequest $req
 	 * @param bool       $patch
+	 *
+	 * @throws InvalidFormException
 	 */
 	protected function processRelations(ORMEntity $entity, ORMRequest $req, bool $patch): void
 	{
@@ -732,9 +903,15 @@ trait RESTFulService
 
 	/**
 	 * Creates, patches or delete relations.
+	 *
+	 * @throws InvalidFormException
 	 */
-	private function processRelative(RelationInterface $relation, ORMEntity $entity, array $rel_entry, bool $patch): void
-	{
+	private function processRelative(
+		RelationInterface $relation,
+		ORMEntity $entity,
+		array $rel_entry,
+		bool $patch
+	): void {
 		try {
 			$r_ctrl = $relation->getController();
 			if ($patch) {
