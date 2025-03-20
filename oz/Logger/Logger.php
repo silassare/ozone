@@ -17,7 +17,6 @@ use JsonSerializable;
 use OZONE\Core\Exceptions\BaseException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerTrait;
-use Psr\Log\LogLevel;
 use Stringable;
 use Throwable;
 
@@ -29,11 +28,7 @@ class Logger implements LoggerInterface
 	use LoggerTrait;
 
 	/**
-	 * Write to log file.
-	 *
-	 * @param string            $level   The log level {@see LogLevel}
-	 * @param string|Stringable $message The log message
-	 * @param array             $context The log context
+	 * {@inheritDoc}
 	 */
 	public function log($level, string|Stringable $message, array $context = []): void
 	{
@@ -61,8 +56,6 @@ class Logger implements LoggerInterface
 
 	/**
 	 * Returns a string representation of a value to be logged.
-	 *
-	 * @internal
 	 *
 	 * @param mixed $value
 	 *
