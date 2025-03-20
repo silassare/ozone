@@ -175,7 +175,7 @@ final class MigrationsCmd extends Command
 
 		$mg                 = new Migrations();
 		$target_version     = $args->get('to-version');
-		$current_db_version = $mg::getCurrentDbVersion();
+		$current_db_version = $mg::getCurrentDbVersion(true);
 
 		// make sure target version is less than current version
 		if ($target_version >= $current_db_version) {

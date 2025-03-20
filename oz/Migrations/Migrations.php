@@ -49,7 +49,7 @@ final class Migrations
 	public static function getState(): MigrationsState
 	{
 		$src_version = self::getSourceCodeDbVersion();
-		$db_version  = self::getCurrentDbVersion();
+		$db_version  = self::getCurrentDbVersion(true);
 
 		if (self::DB_NOT_INSTALLED_VERSION === $db_version) {
 			return MigrationsState::NOT_INSTALLED;
@@ -79,11 +79,13 @@ final class Migrations
 	/**
 	 * Gets the current database version.
 	 *
+	 * @param bool $silent if true, the error will be silenced
+	 *
 	 * @return int
 	 */
-	public static function getCurrentDbVersion(): int
+	public static function getCurrentDbVersion(bool $silent = false): int
 	{
-		return self::cache()->factory('db_version', static function () {
+		return self::cache()->factory('db_version', static function () use ($silent) {
 			try {
 				$qb    = new OZMigrationsQuery();
 				$found = $qb->find(1)->fetchClass();
@@ -92,7 +94,7 @@ final class Migrations
 					return $found->getVersion();
 				}
 			} catch (Throwable $t) {
-				oz_trace('Failed to get current database version.', null, $t);
+				!$silent && oz_trace('Failed to get current database version.', null, $t);
 			}
 
 			return self::DB_NOT_INSTALLED_VERSION;
@@ -301,7 +303,7 @@ final class Migrations
 	{
 		$latest = $this->getLatestMigration();
 		if ($latest) {
-			return self::getCurrentDbVersion() < $latest->getVersion();
+			return self::getCurrentDbVersion(true) < $latest->getVersion();
 		}
 
 		return false;
