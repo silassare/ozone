@@ -12,6 +12,8 @@
 namespace OZONE\Core\REST;
 
 use OpenApi\Annotations as OA;
+use OpenApi\Annotations\OpenApi;
+use OpenApi\Generator;
 use OZONE\Core\App\Context;
 use OZONE\Core\Logger\Logger;
 use OZONE\Core\OZone;
@@ -31,7 +33,7 @@ class ApiDoc implements ArrayCapableInterface
 	use ApiDocManipulationTrait;
 	use ArrayCapableTrait;
 
-	protected OA\OpenApi $openapi;
+	protected OpenApi $openapi;
 	protected OA\Info $api_info;
 	private static ?self $instance = null;
 
@@ -40,13 +42,15 @@ class ApiDoc implements ArrayCapableInterface
 	 */
 	private function __construct(protected Context $context, string $title, string $version)
 	{
-		$this->api_info = new OA\Info([
+		$context            = Generator::$context = $this->createContext();
+		$this->api_info     = new OA\Info([
 			'title'   => $title,
 			'version' => $version,
 		]);
-		$this->openapi = new OA\OpenApi([
+		$this->openapi = new OpenApi([
 			'info'     => $this->api_info,
-			'_context' => $this->createContext(),
+			'openapi'  => OpenApi::VERSION_3_1_0,
+			'_context' => $context,
 		]);
 
 		$this->loadProviders();
@@ -107,7 +111,7 @@ class ApiDoc implements ArrayCapableInterface
 		};
 
 		return new \OpenApi\Context([
-			'logger' => $logger,
+			'logger'  => $logger,
 		]);
 	}
 

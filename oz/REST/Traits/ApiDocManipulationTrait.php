@@ -146,6 +146,7 @@ trait ApiDocManipulationTrait
 			$pattern        = $declared_params_patterns[$param] ?? Route::DEFAULT_PARAM_PATTERN;
 			$route_params[] = new OA\PathParameter([
 				'name'        => $param,
+				'schema'      => $this->string(),
 				'description' => \sprintf('The parameter `%s` should match the pattern `%s`.', $param, $pattern),
 			]);
 		}
@@ -280,8 +281,10 @@ trait ApiDocManipulationTrait
 
 		return new OA\JsonContent([
 			'schema' => $this->object([
-				'error' => $this->integer(null, $ozone_error_code),
-				'msg'   => $this->string(null, $message),
+				'error' => $this->integer('Indicate if there is an error: `0` for success, `1` for error.', ['samples' => $ozone_error_code]),
+				'msg'   => $this->string('The error/success message.', [
+					'samples' => [$message],
+				]),
 				'data'  => $data,
 				'utime' => $utime,
 				'stime' => $stime,
@@ -330,9 +333,7 @@ trait ApiDocManipulationTrait
 			$properties[$name] = $schema;
 		}
 
-		return new Schema([
-			'type'       => 'object',
-			'properties' => $properties,
+		return $this->object($properties, [
 			'required'   => $required_names,
 		]);
 	}
@@ -388,9 +389,26 @@ trait ApiDocManipulationTrait
 		array $properties,
 		array $options = []
 	): Schema {
+		$normalized_props = [];
+
+		foreach ($properties as $key => $value) {
+			if ($value instanceof OA\Property) {
+				$normalized_props[] = $value;
+			} else {
+				$normalized_props[] = $prop = new OA\Property([
+					'property' => $key,
+				]);
+
+				// merge the value properties to the property
+				foreach ($value as $prop_key => $prop_value) {
+					$prop->{$prop_key} = $prop_value;
+				}
+			}
+		}
+
 		return new Schema([
 			'type'       => 'object',
-			'properties' => $properties,
+			'properties' => $normalized_props,
 		] + $options);
 	}
 
@@ -414,51 +432,45 @@ trait ApiDocManipulationTrait
 	 * Create schema with type `integer`.
 	 *
 	 * @param null|string $description the schema description
-	 * @param null|int    $sample      the schema example
 	 * @param array       $options     the schema options
 	 *
 	 * @return Schema
 	 */
 	public function integer(
 		?string $description = null,
-		?int $sample = null,
 		array $options = []
 	): Schema {
-		return $this->type('integer', $description, $sample, $options);
+		return $this->type('integer', $description, $options);
 	}
 
 	/**
 	 * Create schema with type `string`.
 	 *
 	 * @param null|string $description the schema description
-	 * @param null|string $sample      the schema example
 	 * @param array       $options     the schema options
 	 *
 	 * @return Schema
 	 */
 	public function string(
 		?string $description = null,
-		?string $sample = null,
 		array $options = []
 	): Schema {
-		return $this->type('string', $description, $sample, $options);
+		return $this->type('string', $description, $options);
 	}
 
 	/**
 	 * Create schema with type `boolean`.
 	 *
 	 * @param null|string $description the schema description
-	 * @param null|bool   $sample      the schema example
 	 * @param array       $options     the schema options
 	 *
 	 * @return Schema
 	 */
 	public function boolean(
 		?string $description = null,
-		?bool $sample = null,
 		array $options = []
 	): Schema {
-		return $this->type('boolean', $description, $sample, $options);
+		return $this->type('boolean', $description, $options);
 	}
 
 	/**
@@ -466,7 +478,6 @@ trait ApiDocManipulationTrait
 	 *
 	 * @param string|string[] $type        The schema type {@see Schema::$type}
 	 * @param null|string     $description The schema description
-	 * @param null|mixed      $sample      The schema example
 	 * @param array           $options     The schema options
 	 *
 	 * @return Schema
@@ -474,16 +485,12 @@ trait ApiDocManipulationTrait
 	public function type(
 		array|string $type,
 		?string $description = null,
-		mixed $sample = null,
 		array $options = []
 	): Schema {
 		$s = new Schema([
 			'type' => $type,
 		] + $options);
 
-		if (null !== $sample) {
-			$s->example = $sample;
-		}
 		if (null !== $description) {
 			$s->description = $description;
 		}
@@ -504,8 +511,12 @@ trait ApiDocManipulationTrait
 	{
 		return $this->object([
 			$items_name => $this->array($item),
-			'page'      => $this->integer('The current page number.', 1),
-			'max'       => $this->integer('The maximum number of items per page.', $default_max),
+			'page'      => $this->integer('The current page number.', [
+				'samples' => [1],
+			]),
+			'max'       => $this->integer('The maximum number of items per page.', [
+				'samples' => [$default_max],
+			]),
 			'total'     => $this->integer('The total number of items.'),
 		]);
 	}
