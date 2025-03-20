@@ -13,6 +13,7 @@ namespace OZONE\Core\REST;
 
 use OpenApi\Annotations as OA;
 use OZONE\Core\App\Context;
+use OZONE\Core\Logger\Logger;
 use OZONE\Core\OZone;
 use OZONE\Core\REST\Events\ApiDocReady;
 use OZONE\Core\REST\Interfaces\ApiDocProviderInterface;
@@ -20,6 +21,7 @@ use OZONE\Core\REST\Services\ApiDocService;
 use OZONE\Core\REST\Traits\ApiDocManipulationTrait;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
+use Stringable;
 
 /**
  * Class ApiDoc.
@@ -43,7 +45,8 @@ class ApiDoc implements ArrayCapableInterface
 			'version' => $version,
 		]);
 		$this->openapi = new OA\OpenApi([
-			$this->api_info,
+			'info'     => $this->api_info,
+			'_context' => $this->createContext(),
 		]);
 
 		$this->loadProviders();
@@ -87,6 +90,25 @@ class ApiDoc implements ArrayCapableInterface
 		return [
 			'spec' => $this->openapi->toJson(),
 		];
+	}
+
+	/**
+	 * Create the OpenApi context.
+	 *
+	 * @return \OpenApi\Context
+	 */
+	private function createContext(): \OpenApi\Context
+	{
+		$logger = new class extends Logger {
+			public function log($level, string|Stringable $message, array $context = []): void
+			{
+				oz_trace($level . ': ' . $message, $context);
+			}
+		};
+
+		return new \OpenApi\Context([
+			'logger' => $logger,
+		]);
 	}
 
 	/**

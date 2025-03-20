@@ -56,10 +56,12 @@ trait ApiDocManipulationTrait
 	 */
 	public function addTag(string $name, string $description = '', array $properties = []): OA\Tag
 	{
-		$this->openapi->tags[] = $tag = new OA\Tag([
+		$tag = new OA\Tag([
 			'name'        => $name,
 			'description' => $description,
 		] + $properties);
+
+		self::push($this->openapi, 'tags', $tag);
 
 		return $tag;
 	}
@@ -74,10 +76,11 @@ trait ApiDocManipulationTrait
 	 */
 	public function addServer(string $url, string $description = ''): OA\Server
 	{
-		$this->openapi->servers[] = $server = new OA\Server([
+		$server = new OA\Server([
 			'url'         => $url,
 			'description' => $description,
 		]);
+		self::push($this->openapi, 'servers', $server);
 
 		return $server;
 	}
@@ -97,7 +100,7 @@ trait ApiDocManipulationTrait
 			]);
 			$this->paths[$path] = $p;
 
-			$this->openapi->paths[] = $p;
+			self::push($this->openapi, 'paths', $p);
 		}
 
 		return $this->paths[$path];
@@ -236,7 +239,7 @@ trait ApiDocManipulationTrait
 		int $http_status_code = 200,
 	): Response {
 		return $this->response($http_status_code, $description, [
-			'application/json'=> $this->apiJson(JSONResponse::RESPONSE_CODE_SUCCESS, $message, $data),
+			'application/json' => $this->apiJson(JSONResponse::RESPONSE_CODE_SUCCESS, $message, $data),
 		]);
 	}
 
@@ -257,7 +260,7 @@ trait ApiDocManipulationTrait
 		int $http_status_code = 200,
 	): Response {
 		return $this->response($http_status_code, $description, [
-			'application/json'=> $this->apiJson(JSONResponse::RESPONSE_CODE_ERROR, $message, $data),
+			'application/json' => $this->apiJson(JSONResponse::RESPONSE_CODE_ERROR, $message, $data),
 		]);
 	}
 
@@ -297,6 +300,8 @@ trait ApiDocManipulationTrait
 	 */
 	public function entitySchema(string|Table $table, bool $editable_only = false, bool $for_update = false): Schema
 	{
+		$table = \is_string($table) ? db()->getTableOrFail($table) : $table;
+
 		/** @var array<string, Schema> $properties */
 		$properties = [];
 
@@ -503,6 +508,24 @@ trait ApiDocManipulationTrait
 			'max'       => $this->integer('The maximum number of items per page.', $default_max),
 			'total'     => $this->integer('The total number of items.'),
 		]);
+	}
+
+	/**
+	 * Push a value to an object property.
+	 *
+	 * @param object $to    The object
+	 * @param string $prop  The property name
+	 * @param mixed  $value The value to push
+	 */
+	private static function push(object $to, string $prop, mixed $value): void
+	{
+		if (self::isUndefined($to->{$prop})) {
+			$to->{$prop} = [];
+		} elseif (!\is_array($to->{$prop})) {
+			$to->{$prop} = [$to->{$prop}];
+		}
+
+		$to->{$prop}[] = $value;
 	}
 
 	/**
