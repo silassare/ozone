@@ -15,18 +15,33 @@ use Gobl\DBAL\Interfaces\RDBMSInterface;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\Utils\ErrorUtils;
 use OZONE\Core\Logger\Logger;
 use OZONE\Core\OZone;
+use Psr\Log\LogLevel;
 
 if (!\function_exists('oz_logger')) {
 	/**
-	 * Write to log file.
+	 * Get the logger instance or log a value.
 	 *
 	 * @param mixed $value
+	 *
+	 * @return Logger
 	 */
-	function oz_logger(mixed $value): void
+	function oz_logger(mixed $value = null): Logger
 	{
-		Logger::log($value);
+		static $logger = null;
+
+		if (null === $logger) {
+			$logger = new Logger();
+		}
+
+		if (null !== $value) {
+			$level = $value instanceof Throwable ? LogLevel::ERROR : LogLevel::DEBUG;
+			$logger->log($level, Logger::describe($value));
+		}
+
+		return $logger;
 	}
 
 	/**
@@ -100,5 +115,5 @@ if (!\function_exists('oz_logger')) {
 		return Db::get();
 	}
 
-	Logger::registerHandlers();
+	ErrorUtils::registerHandlers();
 }

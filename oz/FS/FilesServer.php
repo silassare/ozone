@@ -20,7 +20,6 @@ use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Body;
 use OZONE\Core\Http\Response;
-use OZONE\Core\Logger\Logger;
 
 /**
  * Class FilesServer.
@@ -56,7 +55,7 @@ class FilesServer
 			throw new NotFoundException();
 		}
 
-		Logger::log('Find a way to use nginx directive "internal" feature to serve file.');
+		oz_logger()->info('Find a way to use nginx directive "internal" feature to serve file.');
 
 		/* https://clubhouse.io/developer-how-to/how-to-use-internal-redirects-in-nginx/
 		if (Settings::get('oz.files', 'OZ_USE_NGINX_FILE_FEATURE')){

@@ -19,7 +19,6 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Cron\Cron;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Logger\Logger;
 use OZONE\Core\OZone;
 use PHPUtils\Str;
 
@@ -117,7 +116,7 @@ final class Cli extends Kli
 	 */
 	public function log(mixed $msg, bool $wrap = true): self
 	{
-		Logger::log($msg);
+		oz_logger($msg);
 
 		return $this;
 	}
