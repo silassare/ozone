@@ -41,7 +41,7 @@
 		</style>
 		{/raw}
 		<script>
-			window.api_doc_spec_url = {api_doc_spec_url};
+			window.api_doc_spec_url = "{api_doc_spec_url}";
 		</script>
 	</head>
 	<body>
