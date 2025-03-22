@@ -32,6 +32,7 @@ use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\REST\RESTFulAPIRequest;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
+use PHPUtils\Str;
 use Throwable;
 
 /**
@@ -50,6 +51,9 @@ trait RESTFulService
 		'create_one'   => true,
 	];
 
+	/**
+	 * Gets the route name for the given action.
+	 */
 	public static function routeName(string $action): string
 	{
 		if (!isset(static::$available_actions[$action])) {
@@ -64,45 +68,58 @@ trait RESTFulService
 	 */
 	public static function apiDoc(ApiDoc $doc): void
 	{
-		$table           = db()->getTableOrFail(self::TABLE_NAME);
-		$singular_name   = $table->getSingularName();
-		$plural_name     = $table->getPluralName();
-		$tag             = $doc->addTag($plural_name, \sprintf('Operations about `%s`.', $plural_name));
-		$entity          = $doc->entitySchema(self::TABLE_NAME);
-		$entity_creation = $doc->entitySchema(self::TABLE_NAME, true);
-		$api_key_column  = self::KEY_COLUMN;
+		$table               = db()->getTableOrFail(self::TABLE_NAME);
+		$api_doc_meta        =  $doc->tableMeta($table);
+		$singular_name       = $api_doc_meta['singular_name'];
+		$plural_name         = $api_doc_meta['plural_name'];
+		$a_an                = $api_doc_meta['use_an'] ? 'an' : 'a';
+		$operation_id_prefix = Str::stringToURLSlug($singular_name, '_');
+		$tag                 = $doc->addTag($plural_name, $api_doc_meta['description']);
+		$entity_read         = $doc->entitySchemaForRead(self::TABLE_NAME);
+		$entity_create       = $doc->entitySchemaForCreate(self::TABLE_NAME);
+		$entity_update       = $doc->entitySchemaForUpdate(self::TABLE_NAME);
+		$api_key_column      = self::KEY_COLUMN;
 
+		// create_one
 		$doc->addOperationFromRoute(
 			self::routeName('create_one'),
 			'POST',
 			\sprintf('Creates a new `%s`.', $singular_name),
 			[
 				$doc->success(
-					$doc->object(['item' => $entity]),
+					$doc->object(['item' => $entity_read]),
 					\sprintf('The `%s` was created successfully.', $singular_name)
 				),
 			],
 			[
 				'tags'        => [$tag->name],
+				'summary'     => 'Create',
+				'operationId' => \sprintf('%s.create_one', $operation_id_prefix),
 				'requestBody' => $doc->requestBody([
-					'application/json' => $entity_creation,
+					$doc->json($entity_create),
 				]),
 			]
 		);
 
+		// get_all
 		$doc->addOperationFromRoute(
 			self::routeName('get_all'),
 			'GET',
 			\sprintf('Gets all `%s`.', $plural_name),
 			[
 				$doc->success(
-					$doc->paginated($entity),
+					$doc->apiPaginated($entity_read),
 					\sprintf('All `%s` were retrieved successfully.', $plural_name)
 				),
 			],
-			['tags' => [$tag->name]]
+			[
+				'tags'        => [$tag->name],
+				'summary'     => 'List',
+				'operationId' => \sprintf('%s.get_all', $operation_id_prefix),
+			]
 		);
 
+		// update_all
 		$doc->addOperationFromRoute(
 			self::routeName('update_all'),
 			'PATCH',
@@ -113,9 +130,14 @@ trait RESTFulService
 					\sprintf('All `%s` were updated successfully.', $plural_name)
 				),
 			],
-			['tags' => [$tag->name]]
+			[
+				'tags'        => [$tag->name],
+				'requestBody' => $doc->requestBody([
+					$doc->json($entity_update),
+				]), ]
 		);
 
+		// delete_all
 		$doc->addOperationFromRoute(
 			self::routeName('delete_all'),
 			'DELETE',
@@ -129,39 +151,47 @@ trait RESTFulService
 			['tags' => [$tag->name]]
 		);
 
+		// get_one
 		$doc->addOperationFromRoute(
 			self::routeName('get_one'),
 			'GET',
 			\sprintf('Gets the `%s` with the given `:%s`.', $singular_name, $api_key_column),
 			[
 				$doc->success(
-					$doc->object(['item' => $entity]),
+					$doc->object(['item' => $entity_read]),
 					\sprintf('The `%s` was retrieved successfully.', $singular_name)
 				),
 			],
 			['tags' => [$tag->name]]
 		);
 
+		// update_one
 		$doc->addOperationFromRoute(
 			self::routeName('update_one'),
 			'PATCH',
 			\sprintf('Updates the `%s` with the given `:%s`.', $singular_name, $api_key_column),
 			[
 				$doc->success(
-					$doc->object(['item' => $entity]),
+					$doc->object(['item' => $entity_read]),
 					\sprintf('The `%s` was updated successfully.', $singular_name)
 				),
 			],
-			['tags' => [$tag->name]]
+			[
+				'tags'        => [$tag->name],
+				'requestBody' => $doc->requestBody([
+					$doc->json($entity_update),
+				]),
+			]
 		);
 
+		// delete_one
 		$doc->addOperationFromRoute(
 			self::routeName('delete_one'),
 			'DELETE',
 			\sprintf('Deletes the `%s` with the given `:%s`.', $singular_name, $api_key_column),
 			[
 				$doc->success(
-					$doc->object(['item' => $entity]),
+					$doc->object(['item' => $entity_read]),
 					\sprintf('The `%s` was deleted successfully.', $singular_name)
 				),
 			],
@@ -173,10 +203,10 @@ trait RESTFulService
 		$relations_responses = [];
 		foreach ($relations as $relation) {
 			$relation_name                 = $relation->getName();
-			$relation_target_entity_schema = $doc->entitySchema($relation->getTargetTable());
+			$relation_target_entity_schema = $doc->entitySchemaForRead($relation->getTargetTable());
 
 			$relations_responses[] = $doc->success(
-				$relation->isPaginated() ? $doc->paginated(
+				$relation->isPaginated() ? $doc->apiPaginated(
 					$relation_target_entity_schema,
 					$relation_name
 				) : $doc->object([
@@ -190,7 +220,7 @@ trait RESTFulService
 			$vr_name               = $vr->getName();
 			$vr_relative_schema    = $doc->typeSchema($vr->getRelativeType());
 			$relations_responses[] = $doc->success(
-				$vr->isPaginated() ? $doc->paginated($vr_relative_schema, $vr_name) : $doc->object([
+				$vr->isPaginated() ? $doc->apiPaginated($vr_relative_schema, $vr_name) : $doc->object([
 					$vr_name => $vr_relative_schema,
 				]),
 				\sprintf('The `%s` was retrieved successfully.', $vr_name)

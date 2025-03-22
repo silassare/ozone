@@ -11,22 +11,34 @@
 
 namespace OZONE\Core\REST\Traits;
 
+use BackedEnum;
+use Gobl\DBAL\Operator;
 use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
+use Gobl\DBAL\Types\TypeBigint;
 use Gobl\DBAL\Types\TypeBool;
+use Gobl\DBAL\Types\TypeDate;
 use Gobl\DBAL\Types\TypeDecimal;
+use Gobl\DBAL\Types\TypeEnum;
 use Gobl\DBAL\Types\TypeFloat;
 use Gobl\DBAL\Types\TypeInt;
 use Gobl\DBAL\Types\TypeList;
 use Gobl\DBAL\Types\TypeMap;
 use Gobl\DBAL\Types\TypeString;
 use InvalidArgumentException;
+use OpenApi\Annotations\AbstractAnnotation;
 use OpenApi\Annotations as OA;
 use OpenApi\Annotations\Operation;
+use OpenApi\Annotations\Parameter;
 use OpenApi\Annotations\Response;
 use OpenApi\Annotations\Schema;
 use OpenApi\Generator;
+use OpenApi\Processors\MergeJsonContent;
 use OZONE\Core\App\JSONResponse;
+use OZONE\Core\Columns\Types\TypeEmail;
+use OZONE\Core\Columns\Types\TypePassword;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\REST\RESTFulAPIRequest;
 use OZONE\Core\Router\Route;
 
 /**
@@ -37,13 +49,13 @@ trait ApiDocManipulationTrait
 	/**
 	 * @var array<string , OA\PathItem> The paths
 	 */
-	private array $paths                 = [];
-	private bool $include_private_column = false;
+	protected array $paths                 = [];
+	protected bool $include_private_column = false;
 
 	/**
 	 * @var array<string, callable(TypeInterface):Schema> The gobl types to schema providers
 	 */
-	private static array $gobl_types_to_schema_providers = [];
+	protected static array $gobl_types_to_schema_providers = [];
 
 	/**
 	 * Adds a new tag.
@@ -113,7 +125,7 @@ trait ApiDocManipulationTrait
 	 * @param string       $method     HTTP method
 	 * @param string       $summary    Summary of the route
 	 * @param array        $responses  OA\Response[]
-	 * @param array        $properties Additional properties
+	 * @param array        $properties Additional operation properties
 	 *
 	 * @return Operation
 	 */
@@ -136,24 +148,55 @@ trait ApiDocManipulationTrait
 			));
 		}
 
-		$path = $route->getPath();
-		$op   = $this->addOperation($path, $method, $summary, $responses, $properties);
-
-		$route_params             = [];
-		$declared_params_patterns = $route->getDeclaredParams();
+		$route_path      = $route->getPath();
+		$op              = $this->addOperation($route_path, $method, $summary, $responses, $properties);
+		$params_patterns = $route->getDeclaredParams();
+		$path_item       = $this->path($route_path);
 
 		foreach ($route->getPathParams() as $param) {
-			$pattern        = $declared_params_patterns[$param] ?? Route::DEFAULT_PARAM_PATTERN;
-			$route_params[] = new OA\PathParameter([
-				'name'        => $param,
-				'schema'      => $this->string(),
-				'description' => \sprintf('The parameter `%s` should match the pattern `%s`.', $param, $pattern),
-			]);
+			$pattern  = $params_patterns[$param] ?? Route::DEFAULT_PARAM_PATTERN;
+			$oa_param = $this->parameter(
+				$param,
+				$this->string(null, [
+					'pattern' => $pattern,
+				]),
+				\sprintf('The parameter `%s` should match the pattern `%s`.', $param, $pattern)
+			);
+
+			$this->push(
+				$path_item,
+				'parameters',
+				$oa_param
+			);
 		}
 
-		$this->path($path)->parameters = $route_params;
-
 		return $op;
+	}
+
+	/**
+	 * Create a new parameter.
+	 *
+	 * @param string                           $name        the parameter name
+	 * @param Schema                           $schema      the parameter schema
+	 * @param string                           $description the parameter description
+	 * @param 'cookie'|'header'|'path'|'query' $in          the parameter location
+	 * @param array                            $properties  the parameter properties
+	 *
+	 * @return Parameter
+	 */
+	public function parameter(
+		string $name,
+		Schema $schema,
+		string $description,
+		string $in = 'path',
+		array $properties = []
+	): Parameter {
+		return new Parameter([
+			'name'        => $name,
+			'schema'      => $schema,
+			'in'          => $in,
+			'description' => $description,
+		] + $properties);
 	}
 
 	/**
@@ -167,8 +210,13 @@ trait ApiDocManipulationTrait
 	 *
 	 * @return Operation
 	 */
-	public function addOperation(string $path, string $method, string $summary, array $responses, array $properties = []): Operation
-	{
+	public function addOperation(
+		string $path,
+		string $method,
+		string $summary,
+		array $responses,
+		array $properties = []
+	): Operation {
 		$method_lower = \strtolower($method);
 		$options      = [
 			'summary'   => $summary,
@@ -196,9 +244,9 @@ trait ApiDocManipulationTrait
 	/**
 	 * Creates a new response.
 	 *
-	 * @param int                                                                    $http_status_code the response HTTP status code
-	 * @param string                                                                 $description      the response description
-	 * @param array<string, OA\Attachable|OA\JsonContent|OA\MediaType|OA\XmlContent> $content          the response content
+	 * @param int                                       $http_status_code the response HTTP status code
+	 * @param string                                    $description      the response description
+	 * @param array<string, OA\Attachable|OA\MediaType> $content          the response content
 	 */
 	public function response(int $http_status_code, string $description, array $content): Response
 	{
@@ -212,7 +260,7 @@ trait ApiDocManipulationTrait
 	/**
 	 * Create a new request body.
 	 *
-	 * @param array<string, OA\JsonContent|OA\MediaType|OA\XmlContent> $content
+	 * @param array<string, OA\Attachable|OA\MediaType> $content
 	 *
 	 * @return OA\RequestBody
 	 */
@@ -227,20 +275,20 @@ trait ApiDocManipulationTrait
 	 * Create an ozone success response.
 	 *
 	 * @param array|Schema $data             the data
-	 * @param string       $message          the message
 	 * @param null|string  $description      the description
+	 * @param null|string  $message          the message
 	 * @param int          $http_status_code the HTTP status code
 	 *
 	 * @return Response
 	 */
 	public function success(
 		array|Schema $data,
-		string $message = 'OK',
 		?string $description = '',
+		?string $message = 'OK',
 		int $http_status_code = 200,
 	): Response {
 		return $this->response($http_status_code, $description, [
-			'application/json' => $this->apiJson(JSONResponse::RESPONSE_CODE_SUCCESS, $message, $data),
+			'application/json' => $this->apiJSONResponsePayload(JSONResponse::RESPONSE_CODE_SUCCESS, $message, $data),
 		]);
 	}
 
@@ -248,93 +296,319 @@ trait ApiDocManipulationTrait
 	 * Create an ozone error response.
 	 *
 	 * @param array|Schema $data             the data
-	 * @param string       $message          the message
 	 * @param null|string  $description      the description
+	 * @param null|string  $message          the message
 	 * @param int          $http_status_code the HTTP status code
 	 *
 	 * @return Response
 	 */
 	public function error(
 		array|Schema $data,
-		string $message = 'OZ_ERROR_INTERNAL',
 		?string $description = '',
+		?string $message = 'OZ_ERROR_INTERNAL',
 		int $http_status_code = 200,
 	): Response {
 		return $this->response($http_status_code, $description, [
-			'application/json' => $this->apiJson(JSONResponse::RESPONSE_CODE_ERROR, $message, $data),
+			'application/json' => $this->apiJSONResponsePayload(JSONResponse::RESPONSE_CODE_ERROR, $message, $data),
 		]);
 	}
 
 	/**
-	 * Creates the API JSON response schema with a message and data.
+	 * Creates the O'Zone API JSON response schema with a message and data.
 	 *
 	 * @param int          $ozone_error_code the error code: 0 for success and 1 for error
 	 * @param string       $message          the message
 	 * @param array|Schema $data             the data
 	 */
-	public function apiJson(int $ozone_error_code, string $message, array|Schema $data): OA\JsonContent
+	public function apiJSONResponsePayload(int $ozone_error_code, string $message, array|Schema $data): OA\MediaType
 	{
 		$data = $data instanceof Schema ? $data : $this->object($data);
 
 		$utime = $this->integer('The response UNIX timestamp.');
 		$stime = $this->integer('The response auth expiration UNIX timestamp.');
 
-		return new OA\JsonContent([
-			'schema' => $this->object([
-				'error' => $this->integer('Indicate if there is an error: `0` for success, `1` for error.', ['samples' => $ozone_error_code]),
-				'msg'   => $this->string('The error/success message.', [
-					'samples' => [$message],
-				]),
-				'data'  => $data,
-				'utime' => $utime,
-				'stime' => $stime,
+		return $this->json($this->object([
+			'error' => $this->integer('Indicate if there is an error: `0` for success, `1` for error.', ['default' => $ozone_error_code]),
+			'msg'   => $this->string('The error/success message.', [
+				'default' => $message,
 			]),
+			'data'  => $data,
+			'utime' => $utime,
+			'stime' => $stime,
+		]));
+	}
+
+	/**
+	 * Create a O'Zone API paginated schema.
+	 *
+	 * @param Schema $item        The item schema
+	 * @param string $items_name  The items name
+	 * @param int    $default_max The default maximum number of items per page
+	 *
+	 * @return Schema
+	 */
+	public function apiPaginated(Schema $item, string $items_name = 'items', int $default_max = 10): Schema
+	{
+		return $this->object([
+			$items_name => $this->array($item),
+			'page'      => $this->integer('The current page number.', [
+				'default' => 1,
+			]),
+			'max' => $this->integer('The maximum number of items per page.', [
+				'default' => $default_max,
+			]),
+			'total' => $this->integer('The total number of items.'),
 		]);
 	}
 
 	/**
-	 * Create a schema for a table entity.
+	 * Create the O'Zone API page parameter.
 	 *
-	 * @param string|Table $table         The table or the table name
-	 * @param bool         $editable_only If true, only editable columns will be included
-	 * @param bool         $for_update    If true, the schema will be for update
+	 * @param 'cookie'|'header'|'path'|'query' $in The parameter location
+	 *
+	 * @return Parameter
+	 */
+	public function apiPageParameter(string $in = 'query'): Parameter
+	{
+		return $this->parameter(
+			RESTFulAPIRequest::PAGE_PARAM,
+			$this->integer('The desired page number.', [
+				'default' => 1,
+			]),
+			'The desired page number.',
+			$in
+		);
+	}
+
+	/**
+	 * Create the O'Zone API max parameter.
+	 *
+	 * @param 'cookie'|'header'|'path'|'query' $in          The parameter location
+	 * @param int                              $default_max The default maximum number of items per page
+	 *
+	 * @return Parameter
+	 */
+	public function apiMaxParameter(string $in = 'query', int $default_max = 10): Parameter
+	{
+		return $this->parameter(
+			RESTFulAPIRequest::MAX_PARAM,
+			$this->integer('The maximum number of items per page.', [
+				'default' => $default_max,
+			]),
+			'The maximum number of items per page.',
+			$in
+		);
+	}
+
+	/**
+	 * Create the O'Zone API collection parameter.
+	 *
+	 * @param 'cookie'|'header'|'path'|'query' $in          The parameter location
+	 * @param string[]                         $collections The available collections
+	 *
+	 * @return Parameter
+	 */
+	public function apiCollectionParameter(string $in = 'query', array $collections = []): Parameter
+	{
+		$sc = $this->string('The collection name.');
+
+		if (!empty($collections)) {
+			$sc->enum = $collections;
+		}
+
+		return $this->parameter(
+			RESTFulAPIRequest::COLLECTION_PARAM,
+			$sc,
+			'The collection name.',
+			$in
+		);
+	}
+
+	/**
+	 * Create the O'Zone API order by parameter.
+	 *
+	 * @param 'cookie'|'header'|'path'|'query' $in The parameter location
+	 *
+	 * @return Parameter
+	 */
+	public function apiOrderByParameter(string $in): Parameter
+	{
+		$list_sep = RESTFulAPIRequest::ORDER_BY_DELIMITER;
+		$rule_sep = RESTFulAPIRequest::ORDER_BY_DELIMITER_ASC_DESC;
+
+		$sc       = $this->string('The ordering rules parameter');
+		$desc     = <<<DESC
+The ordering rules parameter.
+
+A list of ordering rules separated by the delimiter `{$list_sep}`.
+Each ordering rule is a column name followed by the delimiter `{$rule_sep}` and the order direction (`asc` or `desc`).
+
+> Example: `field_one{$rule_sep}asc{$list_sep}field_two{$rule_sep}desc`.
+DESC;
+
+		return $this->parameter(
+			RESTFulAPIRequest::ORDER_BY_PARAM,
+			$sc,
+			$desc,
+			$in
+		);
+	}
+
+	/**
+	 * Create the O'Zone API relations parameter.
+	 *
+	 * @param 'cookie'|'header'|'path'|'query' $in        The parameter location
+	 * @param string[]                         $relations The available relations
+	 *
+	 * @return Parameter
+	 */
+	public function apiRelationsParameter(string $in, array $relations): Parameter
+	{
+		$rel_sep     = RESTFulAPIRequest::RELATIONS_DELIMITER;
+		$rel_strings = \implode($rel_sep, $relations);
+		$sc          = $this->string('The relations parameter.');
+		$desc        = <<<DESC
+The relations parameter.
+
+A list of relations separated by the delimiter `{$rel_sep}`.
+Allowed relations are: `{$rel_strings}`.
+
+> Note: Only non paginated relations are allowed. For paginated relations use dedicated endpoints.
+
+> Example: `relation_one{$rel_sep}relation_two`.
+DESC;
+
+		return $this->parameter(
+			RESTFulAPIRequest::RELATIONS_PARAM,
+			$sc,
+			$desc,
+			$in
+		);
+	}
+
+	/**
+	 * Create the O'Zone API filters parameter.
+	 *
+	 * ```
+	 * [
+	 *    [['foo', 'eq', 'value'], 'OR', ['bar', 'lt', 8]], 'AND', ['baz', 'is_null']]
+	 *  ]
+	 * ```
+	 *
+	 * @param 'cookie'|'header'|'path'|'query' $in The parameter location
+	 *
+	 * @return Parameter
+	 */
+	public function apiFiltersParameter(string $in): Parameter
+	{
+		$filters_param               = RESTFulAPIRequest::FILTERS_PARAM;
+		$allowed_operators_str       = \implode(', ', \array_map(static fn ($op) => "`{$op->value}`", Operator::cases()));
+		$op_in                       = Operator::IN->value;
+		$op_not_in                   = Operator::NOT_IN->value;
+		$desc                        = <<<DESC
+The filters parameter.
+
+Use `{$filters_param}` to apply complex filtering logic to your query.
+The filter structure consists of conditions ([`field`, `operator`, `value`]),
+logical connectors (`AND`, `OR`), and nested conditions (arrays within arrays).
+
+Each condition follows this format:
+```js
+['field', 'operator', 'value']
+```
+
+Where:
+- `field` is the column name.
+- `operator` is the comparison operator: {$allowed_operators_str}
+
+> Note: The `{$op_in}` and `{$op_not_in}` operators require an array of values.
+
+DESC;
+
+		return $this->parameter(
+			$filters_param,
+			$this->array(null, ['description' => 'The desired filters.']),
+			$desc,
+			$in
+		);
+	}
+
+	/**
+	 * Create a JSON media type.
+	 */
+	public function json(Schema $schema): OA\MediaType
+	{
+		/**
+		 * Not using shortcut {@see OA\JsonContent} because
+		 * we are not using processors {@see MergeJsonContent} as seen here {@see Generator::getProcessorPipeline()}.
+		 */
+		return new OA\MediaType([
+			'mediaType' => 'application/json',
+			'schema'    => $schema,
+		]);
+	}
+
+	/**
+	 * Returns schema type for a table entity read.
+	 *
+	 * @param string|Table $table The table or the table name
 	 *
 	 * @return Schema
 	 */
-	public function entitySchema(string|Table $table, bool $editable_only = false, bool $for_update = false): Schema
+	public function entitySchemaForRead(string|Table $table): Schema
 	{
-		$table = \is_string($table) ? db()->getTableOrFail($table) : $table;
+		return $this->entitySchema($table, 'read');
+	}
 
-		/** @var array<string, Schema> $properties */
-		$properties = [];
+	/**
+	 * Returns schema type for a table entity creation.
+	 *
+	 * @param string|Table $table The table or the table name
+	 *
+	 * @return Schema
+	 */
+	public function entitySchemaForCreate(string|Table $table): Schema
+	{
+		return $this->entitySchema($table, 'create');
+	}
 
-		/** @var string[] $required_names */
-		$required_names = [];
+	/**
+	 * Returns schema type for a table entity update.
+	 *
+	 * @param string|Table $table The table or the table name
+	 *
+	 * @return Schema
+	 */
+	public function entitySchemaForUpdate(string|Table $table): Schema
+	{
+		return $this->entitySchema($table, 'update');
+	}
 
-		foreach ($table->getColumns() as $column) {
-			$type = $column->getType();
-
-			if ($editable_only && ($column->isPrivate() || $type->isAutoIncremented())) {
-				continue;
-			}
-
-			if (!$this->include_private_column && $column->isPrivate()) {
-				continue;
-			}
-
-			$name = $column->getFullName();
-
-			$schema = $this->typeSchema($column->getType());
-
-			if (!$for_update && !$type->isNullAble() && null === $type->getDefault()) {
-				$required_names[] = $name;
-			}
-
-			$properties[$name] = $schema;
+	/**
+	 * Create a reusable component.
+	 *
+	 * @param 'examples'|'headers'|'links'|'parameters'|'requestBodies'|'responses'|'schemas'|'securitySchemes' $kind    the component kind
+	 * @param string                                                                                            $name    the component name
+	 * @param callable():AbstractAnnotation                                                                     $factory the component factory
+	 *
+	 * @return Schema
+	 */
+	public function component(string $kind, string $name, callable $factory): Schema
+	{
+		if (self::isUndefined($this->openapi->components)) {
+			$this->openapi->components = new OA\Components([]);
 		}
 
-		return $this->object($properties, [
-			'required'   => $required_names,
+		if (self::isUndefined($this->openapi->components->{$kind})) {
+			$this->openapi->components->{$kind} = [];
+		}
+
+		if (!isset($this->openapi->components->{$kind}[$name])) {
+			$this->openapi->components->{$kind}[$name] = $factory();
+		}
+
+		return new Schema([
+			'ref' => "#/components/{$kind}/{$name}",
 		]);
 	}
 
@@ -363,11 +637,11 @@ trait ApiDocManipulationTrait
 		if ($factory) {
 			$schema = $factory($type);
 		} else {
-			$schema_type = self::toSchemaType($type) ?? self::toSchemaType($type->getBaseType());
+			$schema = $this->goblTypeToSchema($type) ?? $this->goblTypeToSchema($type->getBaseType());
+		}
 
-			$schema = new Schema([
-				'type' => $type->isNullable() ? ['null', $schema_type] : $schema_type,
-			]);
+		if (null === $schema) {
+			throw (new RuntimeException("Unsupported type: {$type->getName()}"))->suspectObject($type);
 		}
 
 		if (self::isUndefined($schema->example) && $type->hasDefault()) {
@@ -415,16 +689,16 @@ trait ApiDocManipulationTrait
 	/**
 	 * Create schema with type `array`.
 	 *
-	 * @param Schema $item    The array items schema
-	 * @param array  $options The schema options
+	 * @param null|Schema $item    The array items schema
+	 * @param array       $options The schema options
 	 *
 	 * @return Schema
 	 */
-	public function array(Schema $item, array $options = []): Schema
+	public function array(?Schema $item = null, array $options = []): Schema
 	{
 		return new Schema([
 			'type'  => 'array',
-			'items' => $item,
+			'items' => $item ?? new OA\Items([]),
 		] + $options);
 	}
 
@@ -499,26 +773,86 @@ trait ApiDocManipulationTrait
 	}
 
 	/**
-	 * Create a paginated schema.
+	 * Extract api doc metadata from a table.
 	 *
-	 * @param Schema $item        The item schema
-	 * @param string $items_name  The items name
-	 * @param int    $default_max The default maximum number of items per page
+	 * @param Table $table The table
+	 *
+	 * @return array
+	 */
+	public function tableMeta(
+		Table $table
+	): array {
+		$meta = $table->getMeta();
+
+		$get = static function (string $key, $default) use ($meta) {
+			$value = $meta->get($key);
+
+			if (null === $value || '' === $value) {
+				$value = $default;
+			}
+
+			return $value;
+		};
+
+		return [
+			'singular_name' => $get('api.doc.singular_name', self::tableNameToHuman($table->getSingularName())),
+			'plural_name'   => $get('api.doc.plural_name', self::tableNameToHuman($table->getPluralName())),
+			'description'   => $get('api.doc.description', ''),
+			'use_an'        => (bool) $get('api.doc.use_an', false),
+		];
+	}
+
+	/**
+	 * Create a schema for a table entity.
+	 *
+	 * @param string|Table             $table The table or the table name
+	 * @param 'create'|'read'|'update' $for   Specify the entity schema usage
 	 *
 	 * @return Schema
 	 */
-	public function paginated(Schema $item, string $items_name = 'items', int $default_max = 20): Schema
+	protected function entitySchema(string|Table $table, string $for): Schema
 	{
-		return $this->object([
-			$items_name => $this->array($item),
-			'page'      => $this->integer('The current page number.', [
-				'samples' => [1],
-			]),
-			'max'       => $this->integer('The maximum number of items per page.', [
-				'samples' => [$default_max],
-			]),
-			'total'     => $this->integer('The total number of items.'),
-		]);
+		$table = \is_string($table) ? db()->getTableOrFail($table) : $table;
+
+		$table_name = $table->getName();
+		$c_key      = $table_name . '.' . $for;
+
+		return $this->component('schemas', $c_key, function () use ($table, $for) {
+			/** @var array<string, Schema> $properties */
+			$properties = [];
+
+			/** @var string[] $required_names */
+			$required_names = [];
+
+			$is_create = 'create' === $for;
+			$is_update = 'update' === $for;
+
+			foreach ($table->getColumns() as $column) {
+				$type = $column->getType();
+
+				if (($is_create || $is_update) && ($column->isPrivate() || $type->isAutoIncremented())) {
+					continue;
+				}
+
+				if (!$this->include_private_column && $column->isPrivate()) {
+					continue;
+				}
+
+				$name = $column->getFullName();
+
+				$schema = $this->typeSchema($column->getType());
+
+				if ($is_create && !$type->isNullAble() && null === $type->getDefault()) {
+					$required_names[] = $name;
+				}
+
+				$properties[$name] = $schema;
+			}
+
+			return $this->object($properties, [
+				'required' => $required_names,
+			]);
+		});
 	}
 
 	/**
@@ -528,7 +862,7 @@ trait ApiDocManipulationTrait
 	 * @param string $prop  The property name
 	 * @param mixed  $value The value to push
 	 */
-	private static function push(object $to, string $prop, mixed $value): void
+	protected static function push(object $to, string $prop, mixed $value): void
 	{
 		if (self::isUndefined($to->{$prop})) {
 			$to->{$prop} = [];
@@ -544,19 +878,119 @@ trait ApiDocManipulationTrait
 	 *
 	 * @param TypeInterface $type
 	 *
-	 * @return null|string
+	 * @return null|Schema
 	 */
-	private static function toSchemaType(TypeInterface $type): ?string
+	protected function goblTypeToSchema(TypeInterface $type): ?Schema
 	{
-		return match ($type->getName()) {
-			TypeInt::NAME    => 'integer',
-			TypeString::NAME => 'string',
-			TypeBool::NAME   => 'boolean',
-			TypeFloat::NAME, TypeDecimal::NAME => 'number',
-			TypeList::NAME => 'array',
-			TypeMap::NAME  => 'object',
-			default        => null,
-		};
+		$sc_type   = null;
+		$t_name    = $type->getName();
+		$t_default = $type->getDefault();
+
+		switch ($t_name) {
+			case TypeInt::NAME:
+				$sc_type = $this->integer(null, [
+					'format' => 'int32',
+				]);
+
+				break;
+
+			case TypeString::NAME:
+			case TypeEmail::NAME:
+			case TypePassword::NAME:
+				$sc_type = $this->string();
+
+				/** @var TypeString $type */
+				$one_of  = $type->getOption('one_of');
+				$pattern = $type->getOption('pattern');
+
+				if ($one_of) {
+					$sc_type->enum = $one_of;
+				}
+
+				if ($pattern) {
+					$sc_type->pattern = $pattern;
+				}
+
+				if (TypeEmail::NAME === $t_name || TypePassword::NAME === $t_name) {
+					$sc_type->format = $t_name;
+				}
+
+				break;
+
+			case TypeEnum::NAME:
+				$options = [];
+				$sc_type = $this->string(null, $options);
+
+				/** @var TypeEnum $type */
+				/** @var class-string<BackedEnum> $enum_class */
+				$enum_class = $type->getOption('enum_class');
+
+				if ($enum_class) {
+					$sc_type->enum = $enum_class::cases();
+				}
+
+				break;
+
+			case TypeBool::NAME:
+				$sc_type = $this->boolean();
+
+				break;
+
+			case TypeBigint::NAME:
+				$sc_type = $this->string(null, [
+					'format' => 'int64',
+				]);
+
+				break;
+
+			case TypeFloat::NAME:
+			case TypeDecimal::NAME:
+				$sc_type = $this->type('number', null, [
+					'format' => $type->getName(),
+				]);
+
+				break;
+
+			case TypeList::NAME:
+				$sc_type = $this->array();
+
+				break;
+
+			case TypeMap::NAME:
+				$sc_type = $this->object([]);
+
+				break;
+
+			case TypeDate::NAME:
+				/** @var TypeDate $type */
+				$g_format = $type->getOption('format', TypeDate::FORMAT_TIMESTAMP);
+
+				if (TypeDate::FORMAT_TIMESTAMP === $g_format) {
+					$sc_type = $this->integer('The date in UNIX timestamp format.', [
+						'format' => 'int64',
+					]);
+				} else {
+					$sc_type = $this->string(null, [
+						'format' => 'date-time',
+					]);
+				}
+
+				break;
+		}
+
+		if (null === $sc_type) {
+			return null;
+		}
+
+		if ($type->isNullable() && !\is_array($sc_type->type)) {
+			$sc_type->type = ['null', $sc_type->type];
+		}
+
+		if ($type->hasDefault() && self::isUndefined($sc_type->default)) {
+			$sc_type->default = $t_default;
+		}
+
+		return $sc_type;
 	}
 
 	/**
@@ -566,8 +1000,21 @@ trait ApiDocManipulationTrait
 	 *
 	 * @return bool
 	 */
-	private static function isUndefined($value): bool
+	protected static function isUndefined($value): bool
 	{
 		return Generator::UNDEFINED === $value;
+	}
+
+	protected static function tableNameToHuman(string $name): string
+	{
+		$p = \explode('_', $name);
+
+		$first = $p[0];
+
+		if (\strlen($first) <= 2) {
+			\array_shift($p);
+		}
+
+		return \implode(' ', \array_map(\ucfirst(...), $p));
 	}
 }
