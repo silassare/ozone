@@ -596,15 +596,11 @@ DESC;
 	public function component(string $kind, string $name, callable $factory): Schema
 	{
 		if (self::isUndefined($this->openapi->components)) {
-			$this->openapi->components = new OA\Components([]);
+			$this->openapi->components = [];
 		}
 
-		if (self::isUndefined($this->openapi->components->{$kind})) {
-			$this->openapi->components->{$kind} = [];
-		}
-
-		if (!isset($this->openapi->components->{$kind}[$name])) {
-			$this->openapi->components->{$kind}[$name] = $factory();
+		if (!isset($this->openapi->components[$kind][$name])) {
+			$this->openapi->components[$kind][$name] = $factory();
 		}
 
 		return new Schema([
