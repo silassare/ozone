@@ -26,14 +26,14 @@
 			}
 
 			#api-doc-loader {
-				display: block;
-				position: fixed;
-				top: 0;
-				left: 0;
-				width: 100vw;
-				height: 100vh;
-				padding-top: 20vh;
-				text-align: center;
+				display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                align-items: center;
+                justify-content: center;
 			}
 			#api-doc-loader img {
 				max-width: 200px;
@@ -48,7 +48,7 @@
 		<div id="api-doc-wrapper"></div>
 
 		<div id="api-doc-loader" title="Please wait...">
-			<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-rolling"><circle cx="50" cy="50" fill="none" stroke="#28292f" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138" transform="rotate(306.077 50 50)"><animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite"/></circle></svg>
+			<svg xmlns="http://www.w3.org/2000/svg" width="100px" height="100px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-rolling"><circle cx="50" cy="50" fill="none" stroke="#28292f" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138" transform="rotate(306.077 50 50)"><animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite"/></circle></svg>
 		</div>
 
 		<script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
@@ -60,7 +60,7 @@
 			}).then(function (response) {
 				return response.json();
 			}).then(function (d) {
-				Redoc.init(JSON.parse(d.data.spec), {}, document.getElementById('api-doc-wrapper'));
+				Redoc.init(d.data.spec, {}, document.getElementById('api-doc-wrapper'));
 				document.getElementById('api-doc-loader').style.display = "none";
 			});
 		</script>
