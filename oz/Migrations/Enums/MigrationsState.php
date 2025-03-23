@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Migrations;
+namespace OZONE\Core\Migrations\Enums;
 
 /**
  * Class MigrationsState.
