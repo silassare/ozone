@@ -74,7 +74,7 @@ final class DbCmd extends Command
 			->bool()
 			->def(false);
 		$build->option('class-only', 'c')
-			->description('To build classes only.')
+			->description('To build classes only. If false will try to generate migration.')
 			->bool()
 			->def(false);
 		$build->option('namespace', 'n')
@@ -146,6 +146,7 @@ final class DbCmd extends Command
 	 * @param KliArgs $args
 	 *
 	 * @throws KliInputException
+	 * @throws KliException
 	 */
 	private function build(KliArgs $args): void
 	{
@@ -203,29 +204,8 @@ final class DbCmd extends Command
 			$cli->success(\sprintf('database classes generated: "%s".', $ns));
 		}
 
-		$queries = '';
-
 		if (!$class_only) {
-			Utils::assertDatabaseAccess();
-
-			try {
-				$queries = $db->getGenerator()
-					->buildDatabase();
-				$db->executeMulti($queries);
-
-				$cli->success('database queries executed.');
-			} catch (Throwable $t) {
-				$error_data = [];
-				if (!empty($queries)) {
-					$q_file = \sprintf('%s.sql', Random::fileName('debug-db-query'));
-
-					\file_put_contents($q_file, $queries);
-
-					$error_data['queries_file'] = $q_file;
-				}
-
-				throw new RuntimeException('database queries execution failed.', $error_data, $t);
-			}
+			$cli->executeString('migrations create');
 		}
 	}
 
