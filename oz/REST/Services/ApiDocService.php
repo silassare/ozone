@@ -51,10 +51,20 @@ final class ApiDocService extends Service implements ApiDocProviderInterface
 	 */
 	public static function apiDoc(ApiDoc $doc): void
 	{
-		$doc->addOperationFromRoute(self::API_DOC_SPEC_ROUTE, 'GET', 'Get the API documentation specification', [
-			$doc->success([
-				'spec' => $doc->string('The API documentation specification JSON string.'),
-			]),
-		]);
+		$tag = $doc->addTag('API Doc', 'API documentation & specification.');
+		$doc->addOperationFromRoute(
+			self::API_DOC_SPEC_ROUTE,
+			'GET',
+			'Get Specification',
+			[
+				$doc->success([
+					'spec' => $doc->object([], ['description' => 'The OpenAPI specification.']),
+				]),
+			],
+			[
+				'tags'        => [$tag->name],
+				'description' => 'Get the OpenAPI specification.',
+			]
+		);
 	}
 }

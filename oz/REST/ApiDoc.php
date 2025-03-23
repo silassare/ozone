@@ -92,7 +92,7 @@ class ApiDoc implements ArrayCapableInterface
 	public function toArray(): array
 	{
 		return [
-			'spec' => $this->openapi->toJson(),
+			'spec' => \json_decode($this->openapi->toJson()),
 		];
 	}
 
