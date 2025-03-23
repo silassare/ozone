@@ -17,11 +17,13 @@ use Gobl\DBAL\Interfaces\MigrationInterface;
 use Kli\Exceptions\KliException;
 use Kli\KliArgs;
 use Kli\Table\KliTableFormatter;
+use OZONE\Core\App\Db;
 use OZONE\Core\Cli\Cmd\DbCmd;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Migrations\Migrations;
+use OZONE\Core\Utils\Random;
 use Throwable;
 
 /**
@@ -124,6 +126,7 @@ final class MigrationsCmd extends Command
 	{
 		Utils::assertDatabaseAccess();
 
+		$cli        = $this->getCli();
 		$mg         = new Migrations();
 		$migrations = $mg->getPendingMigrations();
 
@@ -137,27 +140,57 @@ final class MigrationsCmd extends Command
 		// backup db before running migrations
 		DbCmd::ensureDBBackup($this->getCli());
 
-		foreach ($migrations as $migration) {
-			$this->getCli()
-				->info(\sprintf(
+		$current_db_version = $mg::getCurrentDbVersion(true);
+
+		// we have many migrations but the database seems to be empty
+		if (Migrations::DB_NOT_INSTALLED_VERSION === $current_db_version) {
+			// we just install the latest migration
+			$latest = $mg->getLatestMigration();
+			$cli->info('Database seems empty will try to install the latest migration.');
+			$queries_str = '';
+
+			$cli->info(\sprintf(
+				'Running migration "%s" generated on "%s" ...',
+				$latest->getLabel(),
+				\date('jS F Y, g:i:s a', $latest->getTimestamp())
+			), false);
+
+			try {
+				$mg->runFull($latest, $queries_str);
+			} catch (Throwable $t) {
+				$error_data = [];
+				if (!empty($queries_str)) {
+					$q_file = \sprintf('%s.sql', Random::fileName('debug-db-query'));
+
+					\file_put_contents($q_file, $queries_str);
+
+					$error_data['queries_file'] = $q_file;
+				}
+
+				throw new RuntimeException('Latest migration queries execution failed.', $error_data, $t);
+			}
+		} else {
+			foreach ($migrations as $migration) {
+				$cli->info(\sprintf(
 					'Running migration "%s" generated on "%s" ...',
 					$migration->getLabel(),
 					\date('jS F Y, g:i:s a', $migration->getTimestamp())
 				), false);
 
-			try {
-				$mg->run($migration);
-			} catch (Throwable $t) {
-				$error_message = \sprintf(
-					'Migration "%s" generated on "%s" failed.',
-					$migration->getLabel(),
-					\date('jS F Y, g:i:s a', $migration->getTimestamp())
-				);
+				try {
+					$mg->run($migration);
+				} catch (Throwable $t) {
+					$error_message = \sprintf(
+						'Migration "%s" generated on "%s" failed.',
+						$migration->getLabel(),
+						\date('jS F Y, g:i:s a', $migration->getTimestamp())
+					);
 
-				throw new RuntimeException($error_message, [
-					'label'   => $migration->getLabel(),
-					'version' => $migration->getVersion(),
-				], $t);
+					throw new RuntimeException($error_message, [
+						'label'   => $migration->getLabel(),
+						'version' => $migration->getVersion(),
+					], $t);
+				}
 			}
 		}
 	}

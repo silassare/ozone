@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Migrations\Events;
 
 use Gobl\DBAL\Interfaces\MigrationInterface;
+use OZONE\Core\Migrations\Enums\MigrationsRunMode;
 use PHPUtils\Events\Event;
 
 /**
@@ -27,10 +28,10 @@ final class MigrationBeforeRun extends Event
 	 * MigrationBeforeRun constructor.
 	 *
 	 * @param MigrationInterface $migration the migration instance
-	 * @param bool               $rollback  true if the we are rolling back
+	 * @param MigrationsRunMode  $mode      the mode of the migration
 	 */
 	public function __construct(
 		public readonly MigrationInterface $migration,
-		public readonly bool $rollback
+		public readonly MigrationsRunMode $mode
 	) {}
 }

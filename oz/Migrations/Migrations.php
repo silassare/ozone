@@ -24,6 +24,8 @@ use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Db\OZMigration;
 use OZONE\Core\Db\OZMigrationsQuery;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Migrations\Enums\MigrationsRunMode;
+use OZONE\Core\Migrations\Enums\MigrationsState;
 use OZONE\Core\Migrations\Events\MigrationAfterRun;
 use OZONE\Core\Migrations\Events\MigrationBeforeRun;
 use OZONE\Core\Migrations\Events\MigrationCreated;
@@ -102,6 +104,33 @@ final class Migrations
 	}
 
 	/**
+	 * Runs a given migration in full mode.
+	 *
+	 * @param MigrationInterface $migration
+	 * @param null|string        &$full_query the full query executed, usefull for debugging when error
+	 *
+	 * @throws CRUDException
+	 * @throws GoblException
+	 * @throws ORMException
+	 */
+	public function runFull(MigrationInterface $migration, ?string &$full_query = null): void
+	{
+		(new MigrationBeforeRun($migration, MigrationsRunMode::FULL))->dispatch();
+
+		$db               = Db::new($migration)->lock();
+		$full_query       = $db->getGenerator()
+			->buildDatabase();
+
+		if ($full_query) {
+			$db->executeMulti($full_query);
+		}
+
+		$this->setCurrentDbVersion($migration->getVersion());
+
+		(new MigrationAfterRun($migration, MigrationsRunMode::FULL))->dispatch();
+	}
+
+	/**
 	 * Runs a given migration.
 	 *
 	 * @param MigrationInterface $migration
@@ -112,16 +141,17 @@ final class Migrations
 	 */
 	public function run(MigrationInterface $migration): void
 	{
-		(new MigrationBeforeRun($migration, false))->dispatch();
+		(new MigrationBeforeRun($migration, MigrationsRunMode::UP))->dispatch();
 
 		$query = \trim($migration->up());
+		// may be empty if it was force generated will no change was detected
 		if ($query) {
 			db()->executeMulti($query);
 		}
 
 		$this->setCurrentDbVersion($migration->getVersion());
 
-		(new MigrationAfterRun($migration, false))->dispatch();
+		(new MigrationAfterRun($migration, MigrationsRunMode::UP))->dispatch();
 	}
 
 	/**
@@ -142,17 +172,17 @@ final class Migrations
 			$version = $previous->getVersion();
 		}
 
-		(new MigrationBeforeRun($migration, true))->dispatch();
+		(new MigrationBeforeRun($migration, MigrationsRunMode::DOWN))->dispatch();
 
 		$query = \trim($migration->down());
-
+		// may be empty if it was force generated will no change was detected
 		if ($query) {
 			db()->executeMulti($query);
 		}
 
 		$this->setCurrentDbVersion($version);
 
-		(new MigrationAfterRun($migration, true))->dispatch();
+		(new MigrationAfterRun($migration, MigrationsRunMode::DOWN))->dispatch();
 	}
 
 	/**
