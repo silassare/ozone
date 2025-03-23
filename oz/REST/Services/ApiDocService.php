@@ -63,6 +63,7 @@ final class ApiDocService extends Service implements ApiDocProviderInterface
 			],
 			[
 				'tags'        => [$tag->name],
+				'operationId' => 'ApiDoc.getSpec',
 				'description' => 'Get the OpenAPI specification.',
 			]
 		);
