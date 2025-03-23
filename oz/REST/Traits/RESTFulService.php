@@ -137,7 +137,7 @@ trait RESTFulService
 			$doc->addOperationFromRoute(
 				self::routeName('create_one'),
 				'POST',
-				'Create',
+				\sprintf('Create %s', $singular_name),
 				[
 					$doc->success(
 						$doc->object(['item' => $entity_read]),
@@ -160,7 +160,7 @@ trait RESTFulService
 			$doc->addOperationFromRoute(
 				self::routeName('get_one'),
 				'GET',
-				'Get',
+				\sprintf('Get %s', $singular_name),
 				[
 					$doc->success(
 						$doc->object([
@@ -189,7 +189,7 @@ trait RESTFulService
 			$doc->addOperationFromRoute(
 				self::routeName('update_one'),
 				'PATCH',
-				'Update',
+				\sprintf('Update %s', $singular_name),
 				[
 					$doc->success(
 						$doc->object(['item' => $entity_read]),
@@ -213,7 +213,7 @@ trait RESTFulService
 			$doc->addOperationFromRoute(
 				self::routeName('delete_one'),
 				'DELETE',
-				'Delete',
+				\sprintf('Delete %s', $singular_name),
 				[
 					$doc->success(
 						$doc->object(['item' => $entity_read]),
@@ -234,7 +234,7 @@ trait RESTFulService
 			$doc->addOperationFromRoute(
 				self::routeName('get_all'),
 				'GET',
-				'List',
+				\sprintf('List %s', $plural_name),
 				[
 					$doc->success(
 						$doc->apiPaginated([
@@ -261,7 +261,7 @@ trait RESTFulService
 			$doc->addOperationFromRoute(
 				self::routeName('update_all'),
 				'PATCH',
-				'Update All',
+				\sprintf('Update %s', $plural_name),
 				[
 					$doc->success(
 						$doc->object(['affected' => $doc->integer('The number of affected rows.')]),
@@ -285,7 +285,7 @@ trait RESTFulService
 			$doc->addOperationFromRoute(
 				self::routeName('delete_all'),
 				'DELETE',
-				'Delete All',
+				\sprintf('Delete %s', $plural_name),
 				[
 					$doc->success(
 						$doc->object(['affected' => $doc->integer('The number of affected rows.')]),
@@ -319,7 +319,7 @@ trait RESTFulService
 			$doc->addOperationFromRoute(
 				self::routeName('get_relation'),
 				'GET',
-				\sprintf('%s %s', $singular_name, ApiDoc::toHumanReadable($r_name)),
+				\sprintf('Get %s %s', $singular_name, ApiDoc::toHumanReadable($r_name)),
 				[
 					$doc->success(
 						$r->isPaginated() ? $doc->apiPaginated([
