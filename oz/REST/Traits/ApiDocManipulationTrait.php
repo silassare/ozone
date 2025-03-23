@@ -121,11 +121,16 @@ trait ApiDocManipulationTrait
 	/**
 	 * Adds a new operation from a route.
 	 *
-	 * @param Route|string $route      The route or the route name to add
-	 * @param string       $method     HTTP method
-	 * @param string       $summary    Summary of the route
-	 * @param array        $responses  OA\Response[]
-	 * @param array        $properties Additional operation properties
+	 * > If the path contains dynamic parameters, you can provide the values
+	 * > for these parameters using the `$path_params_values` argument.
+	 * > You can preserve some path parameters by omitting them from the `$path_params_values` argument.
+	 *
+	 * @param Route|string $route              The route or the route name to add
+	 * @param string       $method             HTTP method
+	 * @param string       $summary            Summary of the route
+	 * @param array        $responses          OA\Response[]
+	 * @param array        $properties         Additional operation properties
+	 * @param array        $path_params_values the path parameters values
 	 *
 	 * @return Operation
 	 */
@@ -134,7 +139,8 @@ trait ApiDocManipulationTrait
 		string $method,
 		string $summary,
 		array $responses,
-		array $properties = []
+		array $properties = [],
+		array $path_params_values = []
 	): Operation {
 		if (\is_string($route)) {
 			$route = $this->context->getRouter()->requireRoute($route);
@@ -148,13 +154,33 @@ trait ApiDocManipulationTrait
 			));
 		}
 
-		$route_path      = $route->getPath();
-		$op              = $this->addOperation($route_path, $method, $summary, $responses, $properties);
-		$params_patterns = $route->getDeclaredParams();
-		$path_item       = $this->path($route_path);
+		$route_path     = $route->getPath();
+		$route_params   = \array_unique($route->getPathParams());
+		$exclude_params = [];
 
-		foreach ($route->getPathParams() as $param) {
-			$pattern  = $params_patterns[$param] ?? Route::DEFAULT_PARAM_PATTERN;
+		if (!empty($path_params_values)) {
+			foreach ($route_params as $key) {
+				if (!isset($path_params_values[$key])) {
+					// preserve the path parameter
+					$path_params_values[$key] = ':' . $key;
+				} else {
+					$exclude_params[$key]     = true;
+				}
+			}
+
+			$route_path = $route->buildPath($this->context, $path_params_values);
+		}
+
+		$op                       = $this->addOperation($route_path, $method, $summary, $responses, $properties);
+		$path_item                = $this->path($route_path);
+		$declared_params_patterns = $route->getDeclaredParams();
+
+		foreach ($route_params as $param) {
+			if (isset($exclude_params[$param])) {
+				continue;
+			}
+
+			$pattern  = $declared_params_patterns[$param] ?? Route::DEFAULT_PARAM_PATTERN;
 			$oa_param = $this->parameter(
 				$param,
 				$this->string(null, [
@@ -163,10 +189,14 @@ trait ApiDocManipulationTrait
 				\sprintf('The parameter `%s` should match the pattern `%s`.', $param, $pattern)
 			);
 
-			$this->push(
+			self::push(
 				$path_item,
 				'parameters',
-				$oa_param
+				$oa_param,
+				// we add the path parameter only if it does not exist on this path item
+				// as multiple operations can share the same path item
+				// no checking may result in multiple parameters with the same name
+				static fn ($a) => $a->name === $param
 			);
 		}
 
@@ -341,16 +371,14 @@ trait ApiDocManipulationTrait
 	/**
 	 * Create a O'Zone API paginated schema.
 	 *
-	 * @param Schema $item        The item schema
-	 * @param string $items_name  The items name
-	 * @param int    $default_max The default maximum number of items per page
+	 * @param array<string,Schema> $properties  The properties
+	 * @param int                  $default_max The default maximum number of items per page
 	 *
 	 * @return Schema
 	 */
-	public function apiPaginated(Schema $item, string $items_name = 'items', int $default_max = 10): Schema
+	public function apiPaginated(array $properties, int $default_max = 10): Schema
 	{
-		return $this->object([
-			$items_name => $this->array($item),
+		return $this->object($properties + [
 			'page'      => $this->integer('The current page number.', [
 				'default' => 1,
 			]),
@@ -431,7 +459,7 @@ trait ApiDocManipulationTrait
 	 *
 	 * @return Parameter
 	 */
-	public function apiOrderByParameter(string $in): Parameter
+	public function apiOrderByParameter(string $in = 'query'): Parameter
 	{
 		$list_sep = RESTFulAPIRequest::ORDER_BY_DELIMITER;
 		$rule_sep = RESTFulAPIRequest::ORDER_BY_DELIMITER_ASC_DESC;
@@ -462,17 +490,23 @@ DESC;
 	 *
 	 * @return Parameter
 	 */
-	public function apiRelationsParameter(string $in, array $relations): Parameter
+	public function apiRelationsParameter(string $in = 'query', array $relations = []): Parameter
 	{
-		$rel_sep     = RESTFulAPIRequest::RELATIONS_DELIMITER;
-		$rel_strings = \implode($rel_sep, $relations);
-		$sc          = $this->string('The relations parameter.');
+		$rel_sep               = RESTFulAPIRequest::RELATIONS_DELIMITER;
+		$sc                    = $this->string('The relations parameter.');
+		$allowed_relation_text = '';
+
+		if (!empty($relations)) {
+			$sc->enum              = $relations;
+			$rel_strings           = \implode($rel_sep, $relations);
+			$allowed_relation_text = "Allowed relations are: `{$rel_strings}`.\n";
+		}
+
 		$desc        = <<<DESC
 The relations parameter.
 
 A list of relations separated by the delimiter `{$rel_sep}`.
-Allowed relations are: `{$rel_strings}`.
-
+{$allowed_relation_text}
 > Note: Only non paginated relations are allowed. For paginated relations use dedicated endpoints.
 
 > Example: `relation_one{$rel_sep}relation_two`.
@@ -499,7 +533,7 @@ DESC;
 	 *
 	 * @return Parameter
 	 */
-	public function apiFiltersParameter(string $in): Parameter
+	public function apiFiltersParameter(string $in = 'query'): Parameter
 	{
 		$filters_param               = RESTFulAPIRequest::FILTERS_PARAM;
 		$allowed_operators_str       = \implode(', ', \array_map(static fn ($op) => "`{$op->value}`", Operator::cases()));
@@ -513,7 +547,7 @@ The filter structure consists of conditions ([`field`, `operator`, `value`]),
 logical connectors (`AND`, `OR`), and nested conditions (arrays within arrays).
 
 Each condition follows this format:
-```js
+```
 ['field', 'operator', 'value']
 ```
 
@@ -522,6 +556,29 @@ Where:
 - `operator` is the comparison operator: {$allowed_operators_str}
 
 > Note: The `{$op_in}` and `{$op_not_in}` operators require an array of values.
+
+Examples:
+
+```json
+[
+    [
+        ['foo', 'eq', 'value', 'OR', 'bar', 'lt', 8]
+    ],
+    'AND', ['baz', 'is_null']
+]
+```
+
+You can also use this:
+
+```json
+[
+    'foo', 'eq', 'value',
+    'AND',
+    'bar', 'in', [1, 2, 3],
+    'AND',
+    'baz', 'is_null'
+]
+```
 
 DESC;
 
@@ -590,22 +647,26 @@ DESC;
 	 * @param 'examples'|'headers'|'links'|'parameters'|'requestBodies'|'responses'|'schemas'|'securitySchemes' $kind    the component kind
 	 * @param string                                                                                            $name    the component name
 	 * @param callable():AbstractAnnotation                                                                     $factory the component factory
+	 * @param array                                                                                             $options the component options
 	 *
 	 * @return Schema
 	 */
-	public function component(string $kind, string $name, callable $factory): Schema
+	public function component(string $kind, string $name, callable $factory, array $options = []): Schema
 	{
+		/** @psalm-suppress InvalidPropertyAssignmentValue */
 		if (self::isUndefined($this->openapi->components)) {
 			$this->openapi->components = [];
 		}
 
+		/** @psalm-suppress UndefinedMethod */
 		if (!isset($this->openapi->components[$kind][$name])) {
+			/** @psalm-suppress UndefinedMethod */
 			$this->openapi->components[$kind][$name] = $factory();
 		}
 
 		return new Schema([
-			'ref' => "#/components/{$kind}/{$name}",
-		]);
+			'ref'     => "#/components/{$kind}/{$name}",
+		] + $options);
 	}
 
 	/**
@@ -638,10 +699,6 @@ DESC;
 
 		if (null === $schema) {
 			throw (new RuntimeException("Unsupported type: {$type->getName()}"))->suspectObject($type);
-		}
-
-		if (self::isUndefined($schema->example) && $type->hasDefault()) {
-			$schema->example = $type->getDefault();
 		}
 
 		return $schema;
@@ -791,27 +848,77 @@ DESC;
 		};
 
 		return [
-			'singular_name' => $get('api.doc.singular_name', self::tableNameToHuman($table->getSingularName())),
-			'plural_name'   => $get('api.doc.plural_name', self::tableNameToHuman($table->getPluralName())),
+			'singular_name' => $get('api.doc.singular_name', self::toHumanReadable($table->getSingularName())),
+			'plural_name'   => $get('api.doc.plural_name', self::toHumanReadable($table->getPluralName())),
 			'description'   => $get('api.doc.description', ''),
 			'use_an'        => (bool) $get('api.doc.use_an', false),
 		];
 	}
 
 	/**
+	 * Push a value to an object property.
+	 *
+	 * @param object               $to        The object
+	 * @param string               $prop      The property name
+	 * @param mixed                $value     The value to push
+	 * @param null|callable(mixed) $predicate The predicate to check if the value already exists
+	 */
+	public static function push(object $to, string $prop, mixed $value, ?callable $predicate = null): void
+	{
+		if (self::isUndefined($to->{$prop})) {
+			$to->{$prop} = [];
+		} elseif (!\is_array($to->{$prop})) {
+			$to->{$prop} = [$to->{$prop}];
+		}
+
+		if ($predicate) {
+			foreach ($to->{$prop} as $v) {
+				if ($predicate($v)) {
+					return;
+				}
+			}
+		}
+
+		$to->{$prop}[] = $value;
+	}
+
+	/**
+	 * Try create an user friendly name.
+	 *
+	 * Examples:
+	 *  - 'oz_user' => 'User'
+	 *  - `user_profile` => `User Profile`
+	 *  - `user_id` => `User Id`
+	 *
+	 * @param string $name the table name
+	 */
+	public static function toHumanReadable(string $name): string
+	{
+		$p = \explode('_', $name);
+
+		$first = $p[0];
+
+		if (\strlen($first) <= 2) {
+			\array_shift($p);
+		}
+
+		return \implode(' ', \array_map(\ucfirst(...), $p));
+	}
+
+	/**
 	 * Create a schema for a table entity.
 	 *
-	 * @param string|Table             $table The table or the table name
-	 * @param 'create'|'read'|'update' $for   Specify the entity schema usage
+	 * @param string|Table             $table   The table or the table name
+	 * @param 'create'|'read'|'update' $for     Specify the entity schema usage
+	 * @param array                    $options The schema options
 	 *
 	 * @return Schema
 	 */
-	protected function entitySchema(string|Table $table, string $for): Schema
+	protected function entitySchema(string|Table $table, string $for, array $options = []): Schema
 	{
-		$table = \is_string($table) ? db()->getTableOrFail($table) : $table;
-
-		$table_name = $table->getName();
-		$c_key      = $table_name . '.' . $for;
+		$table        = \is_string($table) ? db()->getTableOrFail($table) : $table;
+		$api_doc_meta = $this->tableMeta($table);
+		$c_key        = \str_replace(' ', '', $api_doc_meta['singular_name'] . ' ' . \ucfirst($for));
 
 		return $this->component('schemas', $c_key, function () use ($table, $for) {
 			/** @var array<string, Schema> $properties */
@@ -848,25 +955,7 @@ DESC;
 			return $this->object($properties, [
 				'required' => $required_names,
 			]);
-		});
-	}
-
-	/**
-	 * Push a value to an object property.
-	 *
-	 * @param object $to    The object
-	 * @param string $prop  The property name
-	 * @param mixed  $value The value to push
-	 */
-	protected static function push(object $to, string $prop, mixed $value): void
-	{
-		if (self::isUndefined($to->{$prop})) {
-			$to->{$prop} = [];
-		} elseif (!\is_array($to->{$prop})) {
-			$to->{$prop} = [$to->{$prop}];
-		}
-
-		$to->{$prop}[] = $value;
+		}, $options);
 	}
 
 	/**
@@ -928,7 +1017,8 @@ DESC;
 				break;
 
 			case TypeBool::NAME:
-				$sc_type = $this->boolean();
+				$sc_type   = $this->boolean();
+				$t_default = null === $t_default ? null : (bool) $t_default;
 
 				break;
 
@@ -962,14 +1052,16 @@ DESC;
 				$g_format = $type->getOption('format', TypeDate::FORMAT_TIMESTAMP);
 
 				if (TypeDate::FORMAT_TIMESTAMP === $g_format) {
-					$sc_type = $this->integer('The date in UNIX timestamp format.', [
-						'format' => 'int64',
+					$sc_type = $this->string('The UTC date in UNIX timestamp format.', [
+						'format' => $type->isMicroseconds() ? 'float' : 'int64',
 					]);
 				} else {
-					$sc_type = $this->string(null, [
+					$sc_type = $this->string(\sprintf('The UTC date time in `%s` format.', $g_format), [
 						'format' => 'date-time',
 					]);
 				}
+
+				$t_default = null === $t_default ? null : $type->dbToPhp($t_default, db());
 
 				break;
 		}
@@ -990,7 +1082,7 @@ DESC;
 	}
 
 	/**
-	 * Check if the value is undefined.
+	 * Check if an annotation property value is {@see Generator::UNDEFINED}.
 	 *
 	 * @param $value
 	 *
@@ -999,18 +1091,5 @@ DESC;
 	protected static function isUndefined($value): bool
 	{
 		return Generator::UNDEFINED === $value;
-	}
-
-	protected static function tableNameToHuman(string $name): string
-	{
-		$p = \explode('_', $name);
-
-		$first = $p[0];
-
-		if (\strlen($first) <= 2) {
-			\array_shift($p);
-		}
-
-		return \implode(' ', \array_map(\ucfirst(...), $p));
 	}
 }

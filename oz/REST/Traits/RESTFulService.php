@@ -25,6 +25,7 @@ use Gobl\ORM\ORMEntity;
 use Gobl\ORM\ORMRequest;
 use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
+use OpenApi\Annotations\Schema;
 use OZONE\Core\Exceptions\BadRequestException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -69,7 +70,12 @@ trait RESTFulService
 	public static function apiDoc(ApiDoc $doc): void
 	{
 		$table               = db()->getTableOrFail(self::TABLE_NAME);
-		$api_doc_meta        =  $doc->tableMeta($table);
+
+		if (!$table->getMeta()->get('api.doc.enabled', true)) {
+			return;
+		}
+
+		$api_doc_meta        = $doc->tableMeta($table);
 		$singular_name       = $api_doc_meta['singular_name'];
 		$plural_name         = $api_doc_meta['plural_name'];
 		$a_an                = $api_doc_meta['use_an'] ? 'an' : 'a';
@@ -78,162 +84,279 @@ trait RESTFulService
 		$entity_read         = $doc->entitySchemaForRead(self::TABLE_NAME);
 		$entity_create       = $doc->entitySchemaForCreate(self::TABLE_NAME);
 		$entity_update       = $doc->entitySchemaForUpdate(self::TABLE_NAME);
-		$api_key_column      = self::KEY_COLUMN;
-
-		// create_one
-		$doc->addOperationFromRoute(
-			self::routeName('create_one'),
-			'POST',
-			\sprintf('Creates a new `%s`.', $singular_name),
-			[
-				$doc->success(
-					$doc->object(['item' => $entity_read]),
-					\sprintf('The `%s` was created successfully.', $singular_name)
-				),
-			],
-			[
-				'tags'        => [$tag->name],
-				'summary'     => 'Create',
-				'operationId' => \sprintf('%s.create_one', $operation_id_prefix),
-				'requestBody' => $doc->requestBody([
-					$doc->json($entity_create),
-				]),
-			]
-		);
-
-		// get_all
-		$doc->addOperationFromRoute(
-			self::routeName('get_all'),
-			'GET',
-			\sprintf('Gets all `%s`.', $plural_name),
-			[
-				$doc->success(
-					$doc->apiPaginated($entity_read),
-					\sprintf('All `%s` were retrieved successfully.', $plural_name)
-				),
-			],
-			[
-				'tags'        => [$tag->name],
-				'summary'     => 'List',
-				'operationId' => \sprintf('%s.get_all', $operation_id_prefix),
-			]
-		);
-
-		// update_all
-		$doc->addOperationFromRoute(
-			self::routeName('update_all'),
-			'PATCH',
-			\sprintf('Updates all `%s`.', $plural_name),
-			[
-				$doc->success(
-					$doc->object(['affected' => $doc->integer('The number of affected rows.')]),
-					\sprintf('All `%s` were updated successfully.', $plural_name)
-				),
-			],
-			[
-				'tags'        => [$tag->name],
-				'requestBody' => $doc->requestBody([
-					$doc->json($entity_update),
-				]), ]
-		);
-
-		// delete_all
-		$doc->addOperationFromRoute(
-			self::routeName('delete_all'),
-			'DELETE',
-			\sprintf('Deletes all `%s`.', $plural_name),
-			[
-				$doc->success(
-					$doc->object(['affected' => $doc->integer('The number of affected rows.')]),
-					\sprintf('All `%s` were deleted successfully.', $plural_name)
-				),
-			],
-			['tags' => [$tag->name]]
-		);
-
-		// get_one
-		$doc->addOperationFromRoute(
-			self::routeName('get_one'),
-			'GET',
-			\sprintf('Gets the `%s` with the given `:%s`.', $singular_name, $api_key_column),
-			[
-				$doc->success(
-					$doc->object(['item' => $entity_read]),
-					\sprintf('The `%s` was retrieved successfully.', $singular_name)
-				),
-			],
-			['tags' => [$tag->name]]
-		);
-
-		// update_one
-		$doc->addOperationFromRoute(
-			self::routeName('update_one'),
-			'PATCH',
-			\sprintf('Updates the `%s` with the given `:%s`.', $singular_name, $api_key_column),
-			[
-				$doc->success(
-					$doc->object(['item' => $entity_read]),
-					\sprintf('The `%s` was updated successfully.', $singular_name)
-				),
-			],
-			[
-				'tags'        => [$tag->name],
-				'requestBody' => $doc->requestBody([
-					$doc->json($entity_update),
-				]),
-			]
-		);
-
-		// delete_one
-		$doc->addOperationFromRoute(
-			self::routeName('delete_one'),
-			'DELETE',
-			\sprintf('Deletes the `%s` with the given `:%s`.', $singular_name, $api_key_column),
-			[
-				$doc->success(
-					$doc->object(['item' => $entity_read]),
-					\sprintf('The `%s` was deleted successfully.', $singular_name)
-				),
-			],
-			['tags' => [$tag->name]]
-		);
-
+		$pk_key_column       = self::KEY_COLUMN;
+		$collections         = $table->getCollections();
 		$relations           = $table->getRelations();
 		$v_relations         = $table->getVirtualRelations();
-		$relations_responses = [];
-		foreach ($relations as $relation) {
-			$relation_name                 = $relation->getName();
-			$relation_target_entity_schema = $doc->entitySchemaForRead($relation->getTargetTable());
 
-			$relations_responses[] = $doc->success(
-				$relation->isPaginated() ? $doc->apiPaginated(
-					$relation_target_entity_schema,
-					$relation_name
-				) : $doc->object([
-					$relation_name => $relation_target_entity_schema,
-				]),
-				\sprintf('The `%s` was retrieved successfully.', $relation_name)
+		/** @var string[] $non_paginated_relations_names */
+		$non_paginated_relations_names = [];
+
+		/** @var array<string, Schema> $non_paginated_relations_schemas */
+		$non_paginated_relations_schemas = [];
+		foreach ($relations as $relation) {
+			if (!$relation->isPaginated()) {
+				$non_paginated_relations_names[]                       = $relation->getName();
+				$non_paginated_relations_schemas[$relation->getName()] = $doc->entitySchemaForRead($relation->getTargetTable());
+			}
+		}
+		foreach ($v_relations as $vr) {
+			if (!$vr->isPaginated()) {
+				$non_paginated_relations_names[]                 = $vr->getName();
+				$non_paginated_relations_schemas[$vr->getName()] = $doc->typeSchema($vr->getRelativeType());
+			}
+		}
+
+		$base_params = [
+			$doc->apiMaxParameter(),
+			$doc->apiPageParameter(),
+			$doc->apiFiltersParameter(),
+			$doc->apiOrderByParameter(),
+		];
+		$get_one_params = [
+			...$base_params,
+		];
+		$get_all_params = [
+			...$base_params,
+		];
+		if (!empty($collections)) {
+			$get_all_params[] = $doc->apiCollectionParameter(
+				'query',
+				\array_map(static fn ($c) => $c->getName(), $collections)
 			);
+		}
+
+		if (!empty($non_paginated_relations_names)) {
+			$p                = $doc->apiRelationsParameter('query', $non_paginated_relations_names);
+			$get_one_params[] = $p;
+			$get_all_params[] = $p;
+		}
+
+		// create_one
+		if ($table->getMeta()->get('api.doc.create_one.enabled', true)) {
+			$doc->addOperationFromRoute(
+				self::routeName('create_one'),
+				'POST',
+				'Create',
+				[
+					$doc->success(
+						$doc->object(['item' => $entity_read]),
+						\sprintf('The `%s` was created successfully.', $singular_name)
+					),
+				],
+				[
+					'tags'            => [$tag->name],
+					'description'     => \sprintf('Create new `%s`.', $singular_name),
+					'operationId'     => \sprintf('%s.create_one', $operation_id_prefix),
+					'requestBody'     => $doc->requestBody([
+						$doc->json($entity_create),
+					]),
+				]
+			);
+		}
+
+		// get_one
+		if ($table->getMeta()->get('api.doc.get_one.enabled', true)) {
+			$doc->addOperationFromRoute(
+				self::routeName('get_one'),
+				'GET',
+				'Get',
+				[
+					$doc->success(
+						$doc->object([
+							'item'      => $entity_read,
+							'relations' => $doc->object($non_paginated_relations_schemas),
+						]),
+						\sprintf('The `%s` was retrieved successfully.', $singular_name)
+					),
+				],
+				[
+					'tags'        => [$tag->name],
+					'description' => \sprintf(
+						'Get %s `%s` identified by a given `%s`.',
+						$a_an,
+						$singular_name,
+						ApiDoc::toHumanReadable($pk_key_column)
+					),
+					'operationId' => \sprintf('%s.get_one', $operation_id_prefix),
+					'parameters'  => $get_one_params,
+				]
+			);
+		}
+
+		// update_one
+		if ($table->getMeta()->get('api.doc.update_one.enabled', true)) {
+			$doc->addOperationFromRoute(
+				self::routeName('update_one'),
+				'PATCH',
+				'Update',
+				[
+					$doc->success(
+						$doc->object(['item' => $entity_read]),
+						\sprintf('The `%s` was updated successfully.', $singular_name)
+					),
+				],
+				[
+					'tags'        => [$tag->name],
+					'description' => \sprintf('Update %s `%s` identified by a given `%s`', $a_an, $singular_name, ApiDoc::toHumanReadable($pk_key_column)),
+					'operationId' => \sprintf('%s.update_one', $operation_id_prefix),
+					'requestBody' => $doc->requestBody([
+						$doc->json($entity_update),
+					]),
+					'parameters' => $base_params,
+				]
+			);
+		}
+
+		// delete_one
+		if ($table->getMeta()->get('api.doc.delete_one.enabled', true)) {
+			$doc->addOperationFromRoute(
+				self::routeName('delete_one'),
+				'DELETE',
+				'Delete',
+				[
+					$doc->success(
+						$doc->object(['item' => $entity_read]),
+						\sprintf('The `%s` was deleted successfully.', $singular_name)
+					),
+				],
+				[
+					'tags'        => [$tag->name],
+					'description' => \sprintf('Delete %s `%s` identified by a given `%s`.', $a_an, $singular_name, ApiDoc::toHumanReadable($pk_key_column)),
+					'operationId' => \sprintf('%s.create_one', $operation_id_prefix),
+					'parameters'  => $base_params,
+				]
+			);
+		}
+
+		// get_all
+		if ($table->getMeta()->get('api.doc.get_all.enabled', true)) {
+			$doc->addOperationFromRoute(
+				self::routeName('get_all'),
+				'GET',
+				'List',
+				[
+					$doc->success(
+						$doc->apiPaginated([
+							'items'     => $doc->array($entity_read),
+							'relations' => $doc->object(\array_map(
+								static fn ($s) => $doc->object(['{' . $pk_key_column . '}' => $s]),
+								$non_paginated_relations_schemas
+							)),
+						]),
+						\sprintf('All `%s` were retrieved successfully.', $plural_name)
+					),
+				],
+				[
+					'tags'        => [$tag->name],
+					'description' => \sprintf('Gets all `%s` that matches a given filters.', $plural_name),
+					'operationId' => \sprintf('%s.get_all', $operation_id_prefix),
+					'parameters'  => $get_all_params,
+				]
+			);
+		}
+
+		// update_all
+		if ($table->getMeta()->get('api.doc.update_all.enabled', true)) {
+			$doc->addOperationFromRoute(
+				self::routeName('update_all'),
+				'PATCH',
+				'Update All',
+				[
+					$doc->success(
+						$doc->object(['affected' => $doc->integer('The number of affected rows.')]),
+						\sprintf('All `%s` were updated successfully.', $plural_name)
+					),
+				],
+				[
+					'tags'        => [$tag->name],
+					'description' => \sprintf('Update all `%s` that matches a given filters.`', $plural_name),
+					'operationId' => \sprintf('%s.update_all', $operation_id_prefix),
+					'requestBody' => $doc->requestBody([
+						$doc->json($entity_update),
+					]),
+					'parameters' => $base_params,
+				]
+			);
+		}
+
+		// delete_all
+		if ($table->getMeta()->get('api.doc.delete_all.enabled', true)) {
+			$doc->addOperationFromRoute(
+				self::routeName('delete_all'),
+				'DELETE',
+				'Delete All',
+				[
+					$doc->success(
+						$doc->object(['affected' => $doc->integer('The number of affected rows.')]),
+						\sprintf('All `%s` were deleted successfully.', $plural_name)
+					),
+				],
+				[
+					'tags'        => [$tag->name],
+					'description' => \sprintf('Delete all `%s` that matches a given filters.', $plural_name),
+					'operationId' => \sprintf('%s.delete_all', $operation_id_prefix),
+					'parameters'  => $base_params,
+				]
+			);
+		}
+
+		$add_relative_operation = static function (
+			RelationInterface $r,
+			Schema $r_schema
+		) use (
+			$table,
+			$operation_id_prefix,
+			$tag,
+			$pk_key_column,
+			$singular_name,
+			$doc
+		) {
+			$r_name = $r->getName();
+			if (!$table->getMeta()->get(\sprintf('api.doc.get_relation.%s.enabled', $r_name), true)) {
+				return;
+			}
+			$doc->addOperationFromRoute(
+				self::routeName('get_relation'),
+				'GET',
+				\sprintf('%s %s', $singular_name, ApiDoc::toHumanReadable($r_name)),
+				[
+					$doc->success(
+						$r->isPaginated() ? $doc->apiPaginated([
+							$r_name => $doc->array($r_schema),
+						]) : $doc->object([
+							$r_name => $r_schema,
+						]),
+						\sprintf(
+							'The `%s` of the `%s` was retrieved successfully.',
+							ApiDoc::toHumanReadable($r_name),
+							$singular_name
+						)
+					),
+				],
+				[
+					'tags'            => [$tag->name],
+					'description'     => \sprintf(
+						'Gets the `%s` of the `%s` with the given `%s`.',
+						ApiDoc::toHumanReadable($r_name),
+						$singular_name,
+						ApiDoc::toHumanReadable($pk_key_column)
+					),
+					'operationId'     => \sprintf('%s.get_relation.%s', $operation_id_prefix, $r_name),
+				],
+				[
+					'relation' => $r_name,
+				]
+			);
+		};
+
+		foreach ($relations as $relation) {
+			$add_relative_operation($relation, $doc->entitySchemaForRead($relation->getTargetTable()));
 		}
 
 		foreach ($v_relations as $vr) {
-			$vr_name               = $vr->getName();
-			$vr_relative_schema    = $doc->typeSchema($vr->getRelativeType());
-			$relations_responses[] = $doc->success(
-				$vr->isPaginated() ? $doc->apiPaginated($vr_relative_schema, $vr_name) : $doc->object([
-					$vr_name => $vr_relative_schema,
-				]),
-				\sprintf('The `%s` was retrieved successfully.', $vr_name)
-			);
+			$add_relative_operation($vr, $doc->typeSchema($vr->getRelativeType()));
 		}
-
-		$doc->addOperationFromRoute(
-			self::routeName('get_relation'),
-			'GET',
-			\sprintf('Gets the `:relation` for the `%s` with the given `:%s`.', $singular_name, $api_key_column),
-			$relations_responses,
-			['tags' => [$tag->name]]
-		);
 	}
 
 	// ========================================================
