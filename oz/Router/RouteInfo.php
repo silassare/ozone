@@ -186,8 +186,13 @@ final class RouteInfo
 		$route_guards = $this->route->getOptions()->getGuards($this);
 
 		foreach ($route_guards as $guard) {
-			$guard->checkAccess($this);
-			$this->guards_data->set($guard::class, $guard->getFormData());
+			$guard->check($this);
+
+			$form = $guard->getFormData();
+
+			if ($form) {
+				$this->guards_data->set($guard::class, $form);
+			}
 		}
 	}
 

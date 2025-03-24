@@ -45,7 +45,7 @@ class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getRules(): array
+	public function toRules(): array
 	{
 		return [
 			'password_hash' => $this->password_hash,
@@ -67,7 +67,7 @@ class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	 * @throws InvalidFormException
 	 * @throws UnauthorizedActionException
 	 */
-	public function checkAccess(RouteInfo $ri): void
+	public function check(RouteInfo $ri): void
 	{
 		$context = $ri->getContext();
 		$form    = new Form();

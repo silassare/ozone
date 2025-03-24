@@ -66,7 +66,7 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getRules(): array
+	public function toRules(): array
 	{
 		return [
 			'credentials'   => $this->credentials,
@@ -100,7 +100,7 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	 * @throws InvalidFormException
 	 * @throws UnauthorizedActionException
 	 */
-	public function checkAccess(RouteInfo $ri): void
+	public function check(RouteInfo $ri): void
 	{
 		$context = $ri->getContext();
 
@@ -146,7 +146,7 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getFormData(): FormData
+	public function getFormData(): ?FormData
 	{
 		return $this->form_data;
 	}

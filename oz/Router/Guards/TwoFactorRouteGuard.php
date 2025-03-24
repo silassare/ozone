@@ -50,7 +50,7 @@ class TwoFactorRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getRules(): array
+	public function toRules(): array
 	{
 		return [
 			'allowed_providers' => $this->allowed_providers,
@@ -72,7 +72,7 @@ class TwoFactorRouteGuard extends AbstractRouteGuard
 	 * @throws NotFoundException
 	 * @throws UnauthorizedActionException
 	 */
-	public function checkAccess(RouteInfo $ri): void
+	public function check(RouteInfo $ri): void
 	{
 		$context = $ri->getContext();
 
@@ -107,7 +107,7 @@ class TwoFactorRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getFormData(): FormData
+	public function getFormData(): ?FormData
 	{
 		return $this->form_data;
 	}

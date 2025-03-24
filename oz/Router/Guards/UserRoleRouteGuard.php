@@ -15,7 +15,6 @@ namespace OZONE\Core\Router\Guards;
 
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Exceptions\ForbiddenException;
-use OZONE\Core\Forms\FormData;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -23,49 +22,21 @@ use OZONE\Core\Router\RouteInfo;
  */
 class UserRoleRouteGuard extends AbstractRouteGuard
 {
-	private FormData $form_data;
-	private bool $strict = true;
-
-	/**
-	 * @var array<string, 1>
-	 */
-	private array $roles;
-
 	/**
 	 * UserRoleRouteGuard constructor.
-	 *
-	 * @param string ...$roles
 	 */
-	public function __construct(string ...$roles)
-	{
-		foreach ($roles as $role) {
-			$this->roles[$role] = 1;
-		}
-
-		$this->form_data = new FormData();
-	}
-
-	/**
-	 * Should it be strict?
-	 *
-	 * @param bool $strict
-	 *
-	 * @return $this
-	 */
-	public function strict(bool $strict = true): self
-	{
-		$this->strict = $strict;
-
-		return $this;
-	}
+	public function __construct(
+		private readonly array $roles,
+		private readonly bool $strict = true
+	) {}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getRules(): array
+	public function toRules(): array
 	{
 		return [
-			'roles'  => \array_keys($this->roles),
+			'roles'  => $this->roles,
 			'strict' => $this->strict,
 		];
 	}
@@ -75,10 +46,10 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 	 */
 	public static function fromRules(array $rules): self
 	{
-		$g = new self(...$rules['roles']);
-		$s = $rules['strict'] ?? true;
+		$roles  = $rules['roles'] ?? [];
+		$strict = $rules['strict'] ?? true;
 
-		return $g->strict($s);
+		return new self($roles, $strict);
 	}
 
 	/**
@@ -86,28 +57,18 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 	 *
 	 * @throws ForbiddenException
 	 */
-	public function checkAccess(RouteInfo $ri): void
+	public function check(RouteInfo $ri): void
 	{
 		$context  = $ri->getContext();
 		$user     = $context->auth()->user();
 
-		$roles = \array_keys($this->roles);
-
-		if (!AuthUsers::hasOneRoleAtLeast($user, $roles, $this->strict)) {
+		if (!AuthUsers::hasOneRoleAtLeast($user, $this->roles, $this->strict)) {
 			throw new ForbiddenException(null, [
 				'_reason'  => 'User role is not in allowed list.',
-				'_roles'   => $roles,
+				'_roles'   => $this->roles,
 				'_strict'  => $this->strict,
 				'_user'    => AuthUsers::selector($user),
 			]);
 		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function getFormData(): FormData
-	{
-		return $this->form_data;
 	}
 }

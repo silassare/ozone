@@ -33,6 +33,14 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 	protected string $password_field = 'password';
 
 	/**
+	 * {@inheritDoc}
+	 */
+	public function getFormData(): ?FormData
+	{
+		return null;
+	}
+
+	/**
 	 * This will show a custom form,
 	 * and makes sure the form is submitted and is valid.
 	 *

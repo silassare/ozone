@@ -24,7 +24,7 @@ interface RouteGuardInterface
 	/**
 	 * Returns rules.
 	 */
-	public function getRules(): array;
+	public function toRules(): array;
 
 	/**
 	 * Creates a new instance from rules.
@@ -36,14 +36,14 @@ interface RouteGuardInterface
 	public static function fromRules(array $rules): self;
 
 	/**
-	 * Check access.
+	 * Check.
 	 */
-	public function checkAccess(RouteInfo $ri): void;
+	public function check(RouteInfo $ri): void;
 
 	/**
 	 * Returns clean grant form data.
 	 *
-	 * @return FormData
+	 * @return null|FormData
 	 */
-	public function getFormData(): FormData;
+	public function getFormData(): ?FormData;
 }
