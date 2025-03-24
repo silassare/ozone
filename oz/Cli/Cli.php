@@ -19,6 +19,7 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Cron\Cron;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\Utils\ErrorUtils;
 use OZONE\Core\OZone;
 use PHPUtils\Str;
 
@@ -130,6 +131,7 @@ final class Cli extends Kli
 	 */
 	public static function run(array $args): void
 	{
+		ErrorUtils::registerHandlers();
 		self::getInstance()
 			->execute($args);
 	}

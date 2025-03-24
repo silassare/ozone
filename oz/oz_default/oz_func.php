@@ -12,10 +12,10 @@
 declare(strict_types=1);
 
 use Gobl\DBAL\Interfaces\RDBMSInterface;
+use OZONE\Core\App\Context;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Exceptions\Utils\ErrorUtils;
 use OZONE\Core\Logger\Logger;
 use OZONE\Core\OZone;
 use Psr\Log\LogLevel;
@@ -115,5 +115,13 @@ if (!\function_exists('oz_logger')) {
 		return Db::get();
 	}
 
-	ErrorUtils::registerHandlers();
+	/**
+	 * Alias for {@see Context::current()}.
+	 *
+	 * @return Context
+	 */
+	function context(): Context
+	{
+		return Context::current();
+	}
 }

@@ -1049,7 +1049,7 @@ DESC;
 
 			case TypeDate::NAME:
 				/** @var TypeDate $type */
-				$g_format = $type->getOption('format', TypeDate::FORMAT_TIMESTAMP);
+				$g_format = $type->getOption('format', TypeDate::FORMAT_DEFAULT);
 
 				if (TypeDate::FORMAT_TIMESTAMP === $g_format) {
 					$sc_type = $this->string('The UTC date in UNIX timestamp format.', [

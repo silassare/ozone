@@ -23,6 +23,7 @@ use OZONE\Core\Auth\Enums\AuthMethodType;
 use OZONE\Core\CRUD\TableCRUD;
 use OZONE\Core\Db\OZRolesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\Utils\ErrorUtils;
 use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Events\InitHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
@@ -54,25 +55,25 @@ final class OZone
 	private static ?Router $web_router;
 
 	/**
-	 * The current running app.
+	 * The running app.
 	 *
 	 * @var null|AppInterface
 	 */
-	private static ?AppInterface $current_app         = null;
+	private static ?AppInterface $_app                = null;
 	private static bool $boot_hook_receivers_notified = false;
 
 	/**
-	 * Gets current running app.
+	 * Gets running app.
 	 *
 	 * @return AppInterface
 	 */
 	public static function app(): AppInterface
 	{
-		if (null === self::$current_app) {
+		if (null === self::$_app) {
 			throw new RuntimeException('No app is running.');
 		}
 
-		return self::$current_app;
+		return self::$_app;
 	}
 
 	/**
@@ -119,8 +120,21 @@ final class OZone
 			// and look at the log file to fix the issue
 			oz_trace($message);
 
-			exit('Boot hook receivers not notified. If you are an admin, please review the log file and correct it!' . \PHP_EOL);
+			exit(
+				'Boot hook receivers not notified. If you are an admin, please review the log file and correct it!'
+				. \PHP_EOL
+			);
 		}
+	}
+
+	/**
+	 * Checks if the app is running.
+	 *
+	 * @return bool
+	 */
+	public static function isRunning(): bool
+	{
+		return null !== self::$_app;
 	}
 
 	/**
@@ -130,13 +144,15 @@ final class OZone
 	 */
 	public static function run(AppInterface $app): void
 	{
-		if (null !== self::$current_app) {
+		if (null !== self::$_app) {
 			\trigger_error('The app is already running.');
 
 			return;
 		}
 
-		self::$current_app = $app;
+		self::$_app = $app;
+
+		ErrorUtils::registerHandlers();
 
 		$app->boot();
 
@@ -146,7 +162,17 @@ final class OZone
 
 		Db::init();
 
-		$context = self::getMainContext();
+		$is_cli_mode    = self::isCliMode();
+		$is_web_context = \defined('OZ_OZONE_IS_WEB_CONTEXT');
+		$is_api_context = !$is_web_context;
+
+		if ($is_cli_mode) {
+			$http_env = HTTPEnvironment::mock();
+		} else {
+			$http_env = new HTTPEnvironment($_SERVER);
+		}
+
+		$context = new Context($http_env, null, null, $is_api_context);
 
 		// The current user access level will be used for CRUD validation
 		TableCRUD::registerListeners($context);
@@ -310,31 +336,6 @@ final class OZone
 		}
 
 		return $has_super_admin;
-	}
-
-	/**
-	 * Returns the main context.
-	 *
-	 * @return Context
-	 */
-	public static function getMainContext(): Context
-	{
-		static $main_context = null;
-		if (null === $main_context) {
-			$is_cli_mode    = self::isCliMode();
-			$is_web_context = \defined('OZ_OZONE_IS_WEB_CONTEXT');
-			$is_api_context = !$is_web_context;
-
-			if ($is_cli_mode) {
-				$http_env = HTTPEnvironment::mock();
-			} else {
-				$http_env = new HTTPEnvironment($_SERVER);
-			}
-
-			$main_context = new Context($http_env, null, null, $is_api_context);
-		}
-
-		return $main_context;
 	}
 
 	/**

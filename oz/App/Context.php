@@ -69,6 +69,9 @@ final class Context
 
 	private ?RouteInfo $route_info = null;
 
+	private static ?self $_root    = null;
+	private static ?self $_current = null;
+
 	/**
 	 * Context constructor.
 	 *
@@ -83,6 +86,12 @@ final class Context
 		private readonly ?self $parent = null,
 		bool $is_api = true
 	) {
+		if (null === self::$_root) {
+			self::$_root = $this;
+		} elseif (null === $parent) {
+			throw new RuntimeException('Parent context is required. Root context already set.');
+		}
+
 		$this->is_sub_request = null !== $this->parent;
 		$this->context_type   = $is_api ? self::CONTEXT_TYPE_API : self::CONTEXT_TYPE_WEB;
 
@@ -115,6 +124,36 @@ final class Context
 	 * Disable clone.
 	 */
 	private function __clone() {}
+
+	/**
+	 * Returns the current context.
+	 */
+	public static function current(): self
+	{
+		if (!isset(self::$_current)) {
+			if (!isset(self::$_root)) {
+				throw new RuntimeException('No context was created.');
+			}
+
+			return self::$_root;
+		}
+
+		return self::$_current;
+	}
+
+	/**
+	 * Gets the root context.
+	 *
+	 * @return self
+	 */
+	public static function root(): self
+	{
+		if (!isset(self::$_root)) {
+			throw new RuntimeException('No context was created.');
+		}
+
+		return self::$_root;
+	}
 
 	/**
 	 * Checks whether json response should be returned.
@@ -150,6 +189,9 @@ final class Context
 
 		$this->handle_called = true;
 
+		$previous             = self::$_current;
+		self::$_current       = $this;
+
 		try {
 			$uri           = $this->request->getUri();
 			$internal_path = OZone::isInternalPath($uri->getPath());
@@ -169,6 +211,8 @@ final class Context
 		} catch (Throwable $t) {
 			BaseException::tryConvert($t)
 				->informClient($this);
+		} finally {
+			self::$_current = $previous;
 		}
 
 		return $this;

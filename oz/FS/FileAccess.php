@@ -67,7 +67,7 @@ class FileAccess
 
 		if (!empty($guards)) {
 			foreach ($guards as $guard) {
-				$guard->checkAccess($ri);
+				$guard->check($ri);
 			}
 		}
 	}

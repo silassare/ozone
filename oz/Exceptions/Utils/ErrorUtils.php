@@ -29,6 +29,13 @@ class ErrorUtils
 	 */
 	public static function registerHandlers(): void
 	{
+		static $registered = false;
+
+		if ($registered) {
+			return;
+		}
+
+		$registered = true;
 		\set_exception_handler(self::exceptionHandler(...));
 		\set_error_handler(static function (int $code, string $message, string $file, int $line) {
 			self::errorHandler($code, $message, $file, $line, true);

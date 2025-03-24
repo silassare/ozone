@@ -120,7 +120,7 @@ trait FileEntityTrait
 		$map = [];
 
 		foreach ($guards as $guard) {
-			$map[$guard::class] = $guard->getRules();
+			$map[$guard::class] = $guard->toRules();
 		}
 
 		$data['guards_rules'] = $map;
