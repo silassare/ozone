@@ -23,6 +23,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Guards\TwoFactorRouteGuard;
+use OZONE\Core\Router\Guards\UserAccessRightsRouteGuard;
 use OZONE\Core\Router\Guards\UserRoleRouteGuard;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 use OZONE\Core\Router\Interfaces\RouteGuardProviderInterface;
@@ -192,6 +193,33 @@ class RouteSharedOptions
 	}
 
 	/**
+	 * Adds a guard that check user has the given access rights.
+	 *
+	 * @return $this
+	 */
+	public function withAccessRights(string ...$rights): static
+	{
+		return $this->guard(static function () use ($rights) {
+			return new UserAccessRightsRouteGuard($rights);
+		});
+	}
+
+	/**
+	 * Adds a guard that check user has the given access rights or roles.
+	 *
+	 * @param string[] $rights
+	 * @param string[] $roles
+	 *
+	 * @return $this
+	 */
+	public function withAccessRightsOrRoles(array $rights, array $roles): static
+	{
+		return $this->guard(static function () use ($rights, $roles) {
+			return new UserAccessRightsRouteGuard($rights, $roles);
+		});
+	}
+
+	/**
 	 * Adds a guard that check user has one of the given roles.
 	 *
 	 * @return $this
@@ -199,7 +227,7 @@ class RouteSharedOptions
 	public function withRole(string ...$roles): static
 	{
 		return $this->guard(static function () use ($roles) {
-			return new UserRoleRouteGuard(...$roles);
+			return new UserRoleRouteGuard($roles);
 		});
 	}
 
@@ -211,7 +239,7 @@ class RouteSharedOptions
 	public function withRoleOrAdmin(string ...$roles): static
 	{
 		return $this->guard(static function () use ($roles) {
-			return (new UserRoleRouteGuard(...$roles))->strict(false);
+			return new UserRoleRouteGuard($roles, false);
 		});
 	}
 
@@ -223,7 +251,7 @@ class RouteSharedOptions
 	public function withAdminRole(): static
 	{
 		return $this->guard(static function () {
-			return new UserRoleRouteGuard(AuthUsers::ADMIN, AuthUsers::SUPER_ADMIN);
+			return new UserRoleRouteGuard([AuthUsers::ADMIN, AuthUsers::SUPER_ADMIN]);
 		});
 	}
 
@@ -235,7 +263,7 @@ class RouteSharedOptions
 	public function withSuperAdminRole(): static
 	{
 		return $this->guard(static function () {
-			return new UserRoleRouteGuard(AuthUsers::SUPER_ADMIN);
+			return new UserRoleRouteGuard([AuthUsers::SUPER_ADMIN]);
 		});
 	}
 
@@ -249,7 +277,7 @@ class RouteSharedOptions
 	 * - or a callable that will be called with {@see RouteInfo} as argument
 	 *   and should return an instance of {@see RouteGuardInterface} or null.
 	 *
-	 * @param callable|RouteGuardInterface|string $guard
+	 * @param callable():RouteGuardInterface|RouteGuardInterface|string $guard
 	 *
 	 * @return static
 	 */
