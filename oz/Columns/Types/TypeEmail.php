@@ -127,9 +127,9 @@ class TypeEmail extends Type
 	{
 		if (isset($options['registered'])) {
 			if ($options['registered']) {
-				$this->registered($options['registered_as'] ?? UsersRepository::TYPE_NAME);
+				$this->registered($options['registered_as'] ?? UsersRepository::OZ_USERS);
 			} else {
-				$this->notRegistered($options['registered_as'] ?? UsersRepository::TYPE_NAME);
+				$this->notRegistered($options['registered_as'] ?? UsersRepository::OZ_USERS);
 			}
 		}
 

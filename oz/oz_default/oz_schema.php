@@ -17,14 +17,13 @@ use Gobl\DBAL\Column;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Enums\AuthState;
 use OZONE\Core\Columns\Types\TypeCC2;
-use OZONE\Core\Columns\Types\TypeFile;
 use OZONE\Core\Columns\Types\TypeGender;
-use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Columns\Types\TypeUsername;
 use OZONE\Core\Columns\TypeUtils;
 use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
+use OZONE\Core\Users\UsersRepository;
 
 return static function (NamespaceBuilder $ns) {
 	$ns->table('oz_users', static function (TableBuilder $tb) {
@@ -36,18 +35,12 @@ return static function (NamespaceBuilder $ns) {
 		$max_age = Settings::get('oz.users', 'OZ_USER_MAX_AGE');
 
 		// columns
-		$tb->id();
-		$tb->column('phone', TypeUtils::userPhone('oz_users'));
-		$tb->column('email', TypeUtils::userMailAddress('oz_users'));
-		$tb->column('pass', new TypePassword());
+		UsersRepository::makeAuthUserTable($tb);
+
 		$tb->column('name', new TypeUsername());
 		$tb->column('gender', new TypeGender());
 		$tb->column('birth_date', TypeUtils::birthDate($min_age, $max_age));
-		$tb->column('pic', (new TypeFile())->mimeTypes(['image/png', 'image/jpeg'])->nullable());
-		$tb->map('data')->default([]);
 		$tb->bool('is_valid')->default(true);
-		$tb->timestamps();
-		$tb->softDeletable();
 
 		// constraints
 		$tb->collectFk(static function () use ($tb) {
@@ -58,11 +51,6 @@ return static function (NamespaceBuilder $ns) {
 			})
 				->onUpdateCascade()
 				->onDeleteRestrict();
-		});
-
-		$tb->collectIndex(static function (TableBuilder $tb) {
-			$tb->unique('phone');
-			$tb->unique('email');
 		});
 
 		// relations

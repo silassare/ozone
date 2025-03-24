@@ -17,7 +17,6 @@ use OZONE\Core\Auth\AuthUserDataStore;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Users\UsersRepository;
 
 /**
  * Trait UserEntityTrait.
@@ -29,7 +28,7 @@ trait UserEntityTrait
 	 */
 	public function getAuthUserTypeName(): string
 	{
-		return UsersRepository::TYPE_NAME;
+		return self::TABLE_NAME;
 	}
 
 	/**

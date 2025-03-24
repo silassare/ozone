@@ -17,5 +17,5 @@ return [
 	/**
 	 * Map auth user type name {@see \OZONE\Core\Auth\Interfaces\AuthUserInterface::getAuthUserTypeName()} type name to the repository class.
 	 */
-	UsersRepository::TYPE_NAME  => UsersRepository::class,
+	UsersRepository::OZ_USERS  => UsersRepository::class,
 ];

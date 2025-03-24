@@ -16,7 +16,6 @@ namespace OZONE\Core\Hooks;
 use Exception;
 use Gobl\ORM\Events\ORMTableFilesGenerated;
 use Gobl\ORM\Utils\ORMClassKind;
-use OZONE\Core\App\Db;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Exceptions\ForbiddenException;
@@ -31,6 +30,7 @@ use OZONE\Core\REST\Views\ApiDocView;
 use OZONE\Core\Router\Events\RouteMethodNotAllowed;
 use OZONE\Core\Router\Events\RouteNotFound;
 use OZONE\Core\Users\Traits\UserEntityTrait;
+use OZONE\Core\Users\UsersRepository;
 use PHPUtils\Events\Event;
 
 /**
@@ -185,28 +185,25 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	 */
 	public static function onTableFilesGenerated(ORMTableFilesGenerated $event): void
 	{
-		$table = $event->getTable();
+		$table     = $event->getTable();
+		$name      = $table->getName();
+		$trait     = null;
+		$interface = null;
 
-		if (Db::getOZoneDbNamespace() === $table->getNamespace()) {
-			$name      = $table->getName();
-			$trait     = null;
-			$interface = null;
+		if (UsersRepository::supported($name)) {
+			$trait     = UserEntityTrait::class;
+			$interface = AuthUserInterface::class;
+		} elseif ('oz_files' === $name) {
+			$trait = FileEntityTrait::class;
+		}
 
-			if ('oz_users' === $name) {
-				$trait     = UserEntityTrait::class;
-				$interface = AuthUserInterface::class;
-			} elseif ('oz_files' === $name) {
-				$trait = FileEntityTrait::class;
-			}
-
-			if ($interface) {
-				$event->getClass(ORMClassKind::ENTITY)
-					->implements($interface);
-			}
-			if ($trait) {
-				$event->getClass(ORMClassKind::ENTITY)
-					->useTrait($trait);
-			}
+		if ($interface) {
+			$event->getClass(ORMClassKind::ENTITY)
+				->implements($interface);
+		}
+		if ($trait) {
+			$event->getClass(ORMClassKind::ENTITY)
+				->useTrait($trait);
 		}
 	}
 
