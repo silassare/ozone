@@ -132,10 +132,20 @@ class AuthScope implements AuthScopeInterface
 	{
 		$scope = new self();
 
+		$parent  = null;
+		$context = context();
+
+		if ($context->hasAuthenticatedUser()) {
+			$au = $context->auth();
+			if ($au->isScopedAuth()) {
+				$parent = $au->getAccessRights();
+			}
+		}
+
 		return $scope
 			->setTryMax($auth->getTryMax())
 			->setLifetime($auth->getLifetime())
 			->setLabel($auth->getLabel())
-			->setAccessRight(AuthAccessRights::from($auth));
+			->setAccessRight(AuthAccessRights::from($auth, $parent));
 	}
 }

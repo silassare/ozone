@@ -70,6 +70,14 @@ trait AuthUserKeyAuthenticationMethodTrait
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	public function isScopedAuth(): bool
+	{
+		return true;
+	}
+
+	/**
 	 * Authenticate with auth entity.
 	 *
 	 * @param OZAuth                 $auth

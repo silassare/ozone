@@ -28,13 +28,25 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	/**
 	 * AccessRights constructor.
 	 */
-	public function __construct(protected array $options = []) {}
+	public function __construct(
+		protected array $options = [],
+		protected ?AuthAccessRightsInterface $parent = null
+	) {}
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @throws UnauthorizedActionException
 	 */
 	public function allow(string $action): self
 	{
+		if ($this->parent && !$this->parent->can($action)) {
+			throw new UnauthorizedActionException('Access right escalation.', [
+				'_action'  => $action,
+				'_message' => 'Possible access rights escalation detected.',
+			]);
+		}
+
 		$this->options[$action] = 1;
 
 		return $this;
@@ -58,6 +70,10 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	 */
 	public function can(string ...$actions): bool
 	{
+		if ($this->parent && !$this->parent->can(...$actions)) {
+			return false;
+		}
+
 		foreach ($actions as $action) {
 			$is_wildcard = \str_contains($action, '*');
 			// when it's not a wildcard check if the granular action is defined
@@ -119,9 +135,9 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function from(OZAuth $auth): static
+	public static function from(OZAuth $auth, ?AuthAccessRightsInterface $parent = null): static
 	{
-		return new self((array) $auth->getPermissions());
+		return new self((array) $auth->getPermissions(), $parent);
 	}
 
 	/**

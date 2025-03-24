@@ -191,6 +191,14 @@ class BasicAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	public function isScopedAuth(): bool
+	{
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
 	protected function askHeader(): string
 	{
 		return 'Basic realm="' . $this->realm . '"';

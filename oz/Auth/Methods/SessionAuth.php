@@ -139,6 +139,14 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 
 	/**
 	 * {@inheritDoc}
+	 */
+	public function isScopedAuth(): bool
+	{
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
 	 *
 	 * @throws ForbiddenException
 	 */

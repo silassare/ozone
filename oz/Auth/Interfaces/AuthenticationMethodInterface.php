@@ -69,6 +69,19 @@ interface AuthenticationMethodInterface
 	public function getAccessRights(): AuthAccessRightsInterface;
 
 	/**
+	 * Check if the authentication method is scoped.
+	 *
+	 * - We want this to make sure if this authentication method use user full access rights or not.
+	 *
+	 * Examples:
+	 *      - Session based authentication is not scoped, the user has full access rights.
+	 *      - But token based authentication may be scoped, the access rights may depend on the token used.
+	 *
+	 * @return bool
+	 */
+	public function isScopedAuth(): bool;
+
+	/**
 	 * Ask the client for authentication.
 	 *
 	 * This may send a response to the client or throw an exception.
