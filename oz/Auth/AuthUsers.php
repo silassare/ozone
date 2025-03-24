@@ -166,7 +166,7 @@ final class AuthUsers
 			}
 
 			/** @var class-string<AuthUsersRepositoryInterface> $class */
-			self::$repositories[$user_type_name] = $class::get();
+			self::$repositories[$user_type_name] = $class::get($user_type_name);
 		}
 
 		return self::$repositories[$user_type_name];

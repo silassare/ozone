@@ -20,8 +20,10 @@ interface AuthUsersRepositoryInterface
 {
 	/**
 	 * Get the auth users repository instance.
+	 *
+	 * @param string $user_type_name the user type name as defined in the configuration
 	 */
-	public static function get(): self;
+	public static function get(string $user_type_name): self;
 
 	/**
 	 * Get the auth user by auth user identifier.
