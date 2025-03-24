@@ -13,33 +13,13 @@ declare(strict_types=1);
 
 namespace OZONE\Tests;
 
-use OZONE\Core\App\Context;
-use OZONE\Core\OZone;
 use OZONE\Core\Router\Router;
-use OZONE\Tests\App\App;
 
 /**
  * Class TestUtils.
  */
 class TestUtils
 {
-	/**
-	 * Returns a mock context.
-	 *
-	 * @return Context
-	 */
-	public static function context(): Context
-	{
-		static $context = null;
-
-		if (null === $context) {
-			OZone::run(new App());
-			$context = OZone::getMainContext();
-		}
-
-		return $context;
-	}
-
 	/**
 	 * Returns a mock router.
 	 *

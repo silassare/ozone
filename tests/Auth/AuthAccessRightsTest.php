@@ -26,6 +26,24 @@ use PHPUnit\Framework\TestCase;
  */
 final class AuthAccessRightsTest extends TestCase
 {
+	public function testParent(): void
+	{
+		$a = new AuthAccessRights([]);
+		$b = new AuthAccessRights([], $a);
+		$c = new AuthAccessRights([
+			'users.create' => 1,
+		], $a);
+
+		$a->deny('users.delete');
+
+		self::assertFalse($c->can('users.delete'));
+
+		$this->expectException(UnauthorizedActionException::class);
+		$this->expectExceptionMessage('Access right escalation.');
+
+		$b->allow('users.delete');
+	}
+
 	public function testAllow(): void
 	{
 		$a = new AuthAccessRights();

@@ -85,7 +85,7 @@ final class RouteTest extends TestCase
 	public function testBuildPath(): void
 	{
 		$router  = TestUtils::router();
-		$context = TestUtils::context();
+		$context = context();
 
 		$foo = $router->getRoute('foo');
 		self::assertSame('/foo', $foo->buildPath($context));

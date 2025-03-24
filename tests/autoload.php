@@ -11,4 +11,9 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\OZone;
+use OZONE\Tests\App;
+
 const OZ_LOG_EXECUTION_TIME = 1;
+
+OZone::run(new App());
