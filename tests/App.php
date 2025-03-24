@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Tests\App;
+namespace OZONE\Tests;
 
 use OZONE\Core\App\AbstractApp;
 
