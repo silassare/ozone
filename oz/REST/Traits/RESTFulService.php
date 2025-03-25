@@ -16,6 +16,7 @@ namespace OZONE\Core\REST\Traits;
 use Gobl\DBAL\Relations\Interfaces\RelationInterface;
 use Gobl\DBAL\Relations\Relation;
 use Gobl\DBAL\Relations\VirtualRelation;
+use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\TypeBigint;
 use Gobl\DBAL\Types\TypeInt;
 use Gobl\ORM\Exceptions\ORMQueryException;
@@ -27,6 +28,7 @@ use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
 use OpenApi\Annotations\Schema;
 use OZONE\Core\Exceptions\BadRequestException;
+use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\REST\ApiDoc;
@@ -86,8 +88,8 @@ trait RESTFulService
 		$entity_update       = $doc->entitySchemaForUpdate(self::TABLE_NAME);
 		$pk_key_column       = self::KEY_COLUMN;
 		$collections         = $table->getCollections();
-		$relations           = $table->getRelations();
-		$v_relations         = $table->getVirtualRelations();
+		$relations           = self::nonPrivateRelations($table);
+		$v_relations         = self::nonPrivateVirtualRelations($table);
 
 		/** @var string[] $non_paginated_relations_names */
 		$non_paginated_relations_names = [];
@@ -635,6 +637,8 @@ trait RESTFulService
 			/** @var Relation $found */
 			$found = $this->table->getRelation($relation_name);
 
+			self::assertNotPrivateRelationOrVirtualRelation($found);
+
 			if ($found->isPaginated()) {
 				$paginated_relation = true;
 				$r                  = $this->getRelationItemsList($found, $entity, $req, $total_records);
@@ -644,6 +648,9 @@ trait RESTFulService
 		} elseif ($this->table->hasVirtualRelation($relation_name)) {
 			/** @var VirtualRelation $found */
 			$found              = $this->table->getVirtualRelation($relation_name);
+
+			self::assertNotPrivateRelationOrVirtualRelation($found);
+
 			$paginated_relation = $found->isPaginated();
 
 			if ($paginated_relation) {
@@ -691,10 +698,10 @@ trait RESTFulService
 
 		$relations_names = [];
 
-		foreach ($table->getRelations() as $relation) {
+		foreach (self::nonPrivateRelations($table) as $relation) {
 			$relations_names[] = $relation->getName();
 		}
-		foreach ($table->getVirtualRelations() as $relation) {
+		foreach (self::nonPrivateVirtualRelations($table) as $relation) {
 			$relations_names[] = $relation->getName();
 		}
 
@@ -953,7 +960,7 @@ trait RESTFulService
 	 *
 	 * @return array
 	 *
-	 * @throws BadRequestException
+	 * @throws BadRequestException|ForbiddenException
 	 */
 	protected function resolveRelations(array $relations_names_list, bool $allow_paginated): array
 	{
@@ -974,11 +981,15 @@ trait RESTFulService
 				$missing[] = $name;
 			}
 
-			if ($rel && !$allow_paginated && $rel->isPaginated()) {
-				throw new BadRequestException(
-					'OZ_RELATION_IS_PAGINATED_AND_SHOULD_BE_RETRIEVED_WITH_DEDICATED_ENDPOINT',
-					['relation' => $name]
-				);
+			if ($rel) {
+				self::assertNotPrivateRelationOrVirtualRelation($rel);
+
+				if (!$allow_paginated && $rel->isPaginated()) {
+					throw new BadRequestException(
+						'OZ_RELATION_IS_PAGINATED_AND_SHOULD_BE_RETRIEVED_WITH_DEDICATED_ENDPOINT',
+						['relation' => $name]
+					);
+				}
 			}
 		}
 
@@ -1007,7 +1018,7 @@ trait RESTFulService
 		$table = $this->table;
 
 		/** @var array<RelationInterface> $relations */
-		$relations = [...$table->getRelations(), ...$table->getVirtualRelations()];
+		$relations = [...self::nonPrivateRelations($table), ...self::nonPrivateVirtualRelations($table)];
 
 		foreach ($relations as $relation) {
 			$relation_name    = $relation->getName();
@@ -1052,6 +1063,36 @@ trait RESTFulService
 				}
 			}
 		}
+	}
+
+	private static function assertNotPrivateRelationOrVirtualRelation(RelationInterface $r)
+	{
+		if ($r->isPrivate()) {
+			throw new ForbiddenException(null, [
+				'_message'  => 'Attempt to access private relations.',
+				'_relation' => $r->getName(),
+			]);
+		}
+	}
+
+	/**
+	 * @param Table $table
+	 *
+	 * @return Relation[]
+	 */
+	private static function nonPrivateRelations(Table $table): array
+	{
+		return \array_filter($table->getRelations(), static fn ($r) => !$r->isPrivate());
+	}
+
+	/**
+	 * @param Table $table
+	 *
+	 * @return VirtualRelation[]
+	 */
+	private static function nonPrivateVirtualRelations(Table $table): array
+	{
+		return \array_filter($table->getVirtualRelations(), static fn ($r) => !$r->isPrivate());
 	}
 
 	/**
