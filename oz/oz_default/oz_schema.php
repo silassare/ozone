@@ -62,27 +62,6 @@ return static function (NamespaceBuilder $ns) {
 		});
 	});
 
-	$ns->table('oz_roles', static function (TableBuilder $tb) {
-		$tb->plural('oz_roles')
-			->singular('oz_role')
-			->columnPrefix('role');
-
-		// columns
-		$tb->id();
-		$tb->string('name')->min(1)->max(60);
-		$tb->map('data')->default([]);
-		$tb->bool('is_valid')->default(true);
-		$tb->timestamps();
-		$tb->softDeletable();
-
-		// constraints
-		$tb->morph('owner', TypeUtils::morphAnyId());
-
-		$tb->collectIndex(static function (TableBuilder $tb) {
-			$tb->unique('owner_id', 'owner_type', 'name');
-		});
-	});
-
 	$ns->table('oz_countries', static function (TableBuilder $tb) {
 		$tb->plural('oz_countries')
 			->singular('oz_country')
@@ -161,7 +140,34 @@ return static function (NamespaceBuilder $ns) {
 		});
 	});
 
+	$ns->table('oz_roles', static function (TableBuilder $tb) {
+		$tb->getTable()->setPrivate();
+
+		$tb->plural('oz_roles')
+			->singular('oz_role')
+			->columnPrefix('role');
+
+		// columns
+		$tb->id();
+		$tb->string('name')->min(1)->max(60);
+		$tb->map('data')->default([]);
+		$tb->bool('is_valid')->default(true);
+		$tb->timestamps();
+		$tb->softDeletable();
+
+		// constraints
+		$tb->morph('owner', TypeUtils::morphAnyId());
+
+		$tb->collectIndex(static function (TableBuilder $tb) {
+			$tb->unique('owner_id', 'owner_type', 'name');
+		});
+	});
+
+	// START OF TABLES THAT SHOULD BE KEPT PRIVATE
+
 	$ns->table('oz_jobs', static function (TableBuilder $tb) {
+		$tb->getTable()->setPrivate();
+
 		$tb->plural('oz_jobs')
 			->singular('oz_job')
 			->columnPrefix('job');
@@ -190,8 +196,6 @@ return static function (NamespaceBuilder $ns) {
 			$tb->unique('ref');
 		});
 	});
-
-	// START OF TABLES THAT SHOULD BE KEPT PRIVATE
 
 	$ns->table('oz_sessions', static function (TableBuilder $tb) {
 		$tb->getTable()->setPrivate();
