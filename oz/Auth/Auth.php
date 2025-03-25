@@ -15,9 +15,9 @@ namespace OZONE\Core\Auth;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Auth\Enums\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodType;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
-use OZONE\Core\Auth\Interfaces\AuthProviderInterface;
+use OZONE\Core\Auth\Interfaces\AuthorizationProviderInterface;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Db\OZAuthsQuery;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -118,9 +118,9 @@ final class Auth implements BootHookReceiverInterface
 	 * @param Context $context
 	 * @param OZAuth  $auth
 	 *
-	 * @return AuthProviderInterface
+	 * @return AuthorizationProviderInterface
 	 */
-	public static function provider(Context $context, OZAuth $auth): AuthProviderInterface
+	public static function provider(Context $context, OZAuth $auth): AuthorizationProviderInterface
 	{
 		$name     = $auth->getProvider();
 		$provider = Settings::get('oz.auth.providers', $name);
@@ -128,29 +128,29 @@ final class Auth implements BootHookReceiverInterface
 		if (!$provider) {
 			throw new RuntimeException(\sprintf('Undefined auth provider "%s".', $name));
 		}
-		if (!\is_subclass_of($provider, AuthProviderInterface::class)) {
+		if (!\is_subclass_of($provider, AuthorizationProviderInterface::class)) {
 			throw new RuntimeException(
 				\sprintf(
 					'Auth provider "%s" should implements "%s".',
 					$provider,
-					AuthProviderInterface::class
+					AuthorizationProviderInterface::class
 				)
 			);
 		}
 
-		/* @var AuthProviderInterface $provider */
-		return $provider::get($context, $auth)
-			->setScope(AuthScope::from($auth));
+		/* @var AuthorizationProviderInterface $provider */
+		return $provider::resolve($context, $auth)
+			->setScope(AuthorizationScope::from($auth));
 	}
 
 	/**
 	 * Gets the authentication method class from settings.
 	 *
-	 * @param AuthMethodType|string $method
+	 * @param AuthenticationMethodType|string $method
 	 *
 	 * @return class-string<AuthenticationMethodInterface>
 	 */
-	public static function method(AuthMethodType|string $method): string
+	public static function method(AuthenticationMethodType|string $method): string
 	{
 		if (!\is_string($method)) {
 			$method = $method->value;
@@ -161,7 +161,7 @@ final class Auth implements BootHookReceiverInterface
 		if (!$class) {
 			throw (new RuntimeException(
 				\sprintf(
-					'Auth method "%s" not found in settings.',
+					'Authentication method "%s" not found in settings.',
 					$method
 				)
 			))->suspectConfig('oz.auth.methods', $method);
@@ -170,7 +170,7 @@ final class Auth implements BootHookReceiverInterface
 		if (!\class_exists($class) || !\is_subclass_of($class, AuthenticationMethodInterface::class)) {
 			throw (new RuntimeException(
 				\sprintf(
-					'Auth method "%s" should be subclass of: %s',
+					'Authentication method "%s" should be subclass of: %s',
 					$class,
 					AuthenticationMethodInterface::class
 				)
@@ -183,7 +183,7 @@ final class Auth implements BootHookReceiverInterface
 	/**
 	 * Gets the list of enabled auth methods to use for api requests.
 	 *
-	 * @return AuthMethodType[]
+	 * @return AuthenticationMethodType[]
 	 */
 	public static function apiAuthMethods(): array
 	{

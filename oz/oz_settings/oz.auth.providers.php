@@ -11,14 +11,14 @@
 
 declare(strict_types=1);
 
-use OZONE\Core\Auth\Providers\AuthUserAccountKeyBasedAccessProvider;
-use OZONE\Core\Auth\Providers\EmailVerificationProvider;
-use OZONE\Core\Auth\Providers\FileAccessAuthProvider;
-use OZONE\Core\Auth\Providers\PhoneVerificationProvider;
+use OZONE\Core\Auth\Providers\AuthUserAuthorizationProvider;
+use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
+use OZONE\Core\Auth\Providers\FileAccessAuthorizationProvider;
+use OZONE\Core\Auth\Providers\PhoneOwnershipVerificationProvider;
 
 return [
-	PhoneVerificationProvider::NAME             => PhoneVerificationProvider::class,
-	EmailVerificationProvider::NAME             => EmailVerificationProvider::class,
-	FileAccessAuthProvider::NAME                => FileAccessAuthProvider::class,
-	AuthUserAccountKeyBasedAccessProvider::NAME => AuthUserAccountKeyBasedAccessProvider::class,
+	PhoneOwnershipVerificationProvider::NAME                      => PhoneOwnershipVerificationProvider::class,
+	EmailOwnershipVerificationProvider::NAME                      => EmailOwnershipVerificationProvider::class,
+	FileAccessAuthorizationProvider::NAME                         => FileAccessAuthorizationProvider::class,
+	AuthUserAuthorizationProvider::NAME                           => AuthUserAuthorizationProvider::class,
 ];

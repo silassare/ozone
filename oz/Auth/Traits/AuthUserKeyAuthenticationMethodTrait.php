@@ -15,10 +15,10 @@ namespace OZONE\Core\Auth\Traits;
 
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Auth\Enums\AuthState;
+use OZONE\Core\Auth\Enums\AuthorizationState;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Auth\Providers\AuthUserAccountKeyBasedAccessProvider;
+use OZONE\Core\Auth\Providers\AuthUserAuthorizationProvider;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -30,7 +30,7 @@ use OZONE\Core\Exceptions\UnauthorizedActionException;
 trait AuthUserKeyAuthenticationMethodTrait
 {
 	protected ?AuthUserInterface $user                         = null;
-	protected ?AuthUserAccountKeyBasedAccessProvider $provider = null;
+	protected ?AuthUserAuthorizationProvider $provider         = null;
 
 	/**
 	 * {@inheritDoc}
@@ -72,7 +72,7 @@ trait AuthUserKeyAuthenticationMethodTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function isScopedAuth(): bool
+	public function isScoped(): bool
 	{
 		return true;
 	}
@@ -92,7 +92,7 @@ trait AuthUserKeyAuthenticationMethodTrait
 		$context  = $this->ri->getContext();
 		$provider = Auth::provider($context, $auth);
 
-		if (!$provider instanceof AuthUserAccountKeyBasedAccessProvider) {
+		if (!$provider instanceof AuthUserAuthorizationProvider) {
 			throw (new ForbiddenException(null, [
 				'_reason' => 'Invalid auth provider.',
 			]))->suspectObject($auth);
@@ -100,7 +100,7 @@ trait AuthUserKeyAuthenticationMethodTrait
 
 		$state = $provider->getState();
 
-		if (AuthState::AUTHORIZED !== $state) {
+		if (AuthorizationState::AUTHORIZED !== $state) {
 			throw (new ForbiddenException(null, [
 				'_reason' => 'Referenced auth is not authorized.',
 			]))->suspectObject($auth);

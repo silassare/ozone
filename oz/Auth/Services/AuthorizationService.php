@@ -17,7 +17,7 @@ use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\Enums\AuthSecretType;
+use OZONE\Core\Auth\Enums\AuthorizationSecretType;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -30,9 +30,9 @@ use OZONE\Core\Router\Router;
 use Throwable;
 
 /**
- * Class AuthService.
+ * Class AuthorizationService.
  */
-class AuthService extends Service
+class AuthorizationService extends Service
 {
 	/**
 	 * {@inheritDoc}
@@ -172,11 +172,11 @@ class AuthService extends Service
 		$token = $fd->get('token');
 
 		if (null !== $code) {
-			$type = AuthSecretType::CODE;
+			$type = AuthorizationSecretType::CODE;
 			$provider->getCredentials()
 				->setCode($code);
 		} elseif (null !== $token) {
-			$type = AuthSecretType::TOKEN;
+			$type = AuthorizationSecretType::TOKEN;
 			$provider->getCredentials()
 				->setToken($token);
 		} else {

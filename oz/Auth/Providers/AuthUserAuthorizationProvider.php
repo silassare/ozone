@@ -20,17 +20,14 @@ use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\RuntimeException;
 
 /**
- * Class AuthUserAccountKeyBasedAccessProvider.
+ * Class AuthUserAuthorizationProvider.
  */
-class AuthUserAccountKeyBasedAccessProvider extends AuthProvider
+class AuthUserAuthorizationProvider extends AuthorizationProvider
 {
 	public const NAME = 'auth:provider:user';
 
 	/**
-	 * AuthUserAccountKeyBasedAccessProvider constructor.
-	 *
-	 * @param Context           $context
-	 * @param AuthUserInterface $user
+	 * AuthUserAuthorizationProvider constructor.
 	 */
 	public function __construct(Context $context, protected AuthUserInterface $user)
 	{
@@ -50,7 +47,7 @@ class AuthUserAccountKeyBasedAccessProvider extends AuthProvider
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function get(Context $context, OZAuth $auth): self
+	public static function resolve(Context $context, OZAuth $auth): self
 	{
 		$user = AuthUsers::identifyBySelector([
 			AuthUsers::FIELD_AUTH_USER_TYPE => $auth->getOwnerType(),

@@ -19,7 +19,6 @@ use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\FormData;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -28,7 +27,6 @@ use OZONE\Core\Router\RouteInfo;
 class PasswordProtectedRouteGuard extends AbstractRouteGuard
 {
 	private string $password_hash;
-	private FormData $form_data;
 
 	/**
 	 * PasswordProtectedRouteGuard constructor.
@@ -39,7 +37,6 @@ class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	public function __construct(string $password, protected bool $is_hashed_password = false)
 	{
 		$this->password_hash = $is_hashed_password ? $password : Password::hash($password);
-		$this->form_data     = new FormData();
 	}
 
 	/**
@@ -63,11 +60,11 @@ class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws ForbiddenException
 	 * @throws InvalidFormException
 	 * @throws UnauthorizedActionException
+	 * @throws ForbiddenException
 	 */
-	public function check(RouteInfo $ri): void
+	public function check(RouteInfo $ri): bool
 	{
 		$context = $ri->getContext();
 		$form    = new Form();
@@ -85,14 +82,6 @@ class PasswordProtectedRouteGuard extends AbstractRouteGuard
 			throw new ForbiddenException();
 		}
 
-		$this->form_data->merge($fd);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function getFormData(): FormData
-	{
-		return $this->form_data;
+		return true;
 	}
 }

@@ -18,14 +18,14 @@ use OZONE\Core\Cache\CacheManager;
 use PHPUtils\Store\Store;
 
 /**
- * Class StatefulAuthStore.
+ * Class StatefulAuthenticationMethodStore.
  *
  * @extends Store<array>
  */
-class StatefulAuthStore extends Store
+class StatefulAuthenticationMethodStore extends Store
 {
 	/**
-	 * StatefulAuthStore constructor.
+	 * StatefulAuthenticationMethodStore constructor.
 	 *
 	 * @param array $state
 	 */

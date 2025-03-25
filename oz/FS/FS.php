@@ -17,7 +17,7 @@ use Generator;
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Auth\Interfaces\AuthCredentialsInterface;
+use OZONE\Core\Auth\Interfaces\AuthorizationCredentialsInterface;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Db\OZFilesQuery;
@@ -468,17 +468,17 @@ class FS
 	/**
 	 * Builds a file uri.
 	 *
-	 * @param Context                       $context
-	 * @param OZFile                        $file
-	 * @param null|AuthCredentialsInterface $credentials
-	 * @param string[]                      $filters
+	 * @param Context                                $context
+	 * @param OZFile                                 $file
+	 * @param null|AuthorizationCredentialsInterface $credentials
+	 * @param string[]                               $filters
 	 *
 	 * @return Uri
 	 */
 	public static function buildFileUri(
 		Context $context,
 		OZFile $file,
-		?AuthCredentialsInterface $credentials = null,
+		?AuthorizationCredentialsInterface $credentials = null,
 		?array $filters = []
 	): Uri {
 		$params = [

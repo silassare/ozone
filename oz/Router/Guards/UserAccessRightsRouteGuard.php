@@ -60,19 +60,19 @@ class UserAccessRightsRouteGuard extends AbstractRouteGuard
 	 *
 	 * @throws ForbiddenException
 	 */
-	public function check(RouteInfo $ri): void
+	public function check(RouteInfo $ri): bool
 	{
 		$auth   = $ri->getContext()->auth();
 		$rights = $auth->getAccessRights();
 
 		if ($rights->can(...$this->access_rights)) {
-			return;
+			return true;
 		}
 
 		$user = $auth->user();
 
-		if (!empty($this->roles) && AuthUsers::hasOneRoleAtLeast($user, $this->roles, true)) {
-			return;
+		if (!empty($this->roles) && AuthUsers::hasOneRoleAtLeast($user, $this->roles)) {
+			return true;
 		}
 
 		throw new ForbiddenException(null, [

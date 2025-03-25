@@ -16,13 +16,13 @@ namespace OZONE\Core\Router;
 use InvalidArgumentException;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Auth\Enums\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodType;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Response;
-use OZONE\Core\Router\Guards\TwoFactorRouteGuard;
+use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\Guards\UserAccessRightsRouteGuard;
 use OZONE\Core\Router\Guards\UserRoleRouteGuard;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
@@ -63,7 +63,7 @@ class RouteSharedOptions
 	/**
 	 * @var array<class-string<AuthenticationMethodInterface>>
 	 */
-	private array $auths_methods = [];
+	private array $authentication_methods = [];
 
 	/**
 	 * RouteSharedOptions constructor.
@@ -148,15 +148,17 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Defines allowed auth methods.
+	 * Defines allowed authentication methods.
 	 *
-	 * @param AuthMethodType|string ...$auths
+	 * @param AuthenticationMethodType|string ...$allowed_methods
 	 *
 	 * @return $this
 	 */
-	public function auths(AuthMethodType|string ...$auths): static
+	public function withAuthentication(AuthenticationMethodType|string ...$allowed_methods): static
 	{
-		foreach ($auths as $entry) {
+		$allowed_methods = self::atLeasOne($allowed_methods, 'authentication method');
+
+		foreach ($allowed_methods as $entry) {
 			if (!\is_string($entry)) {
 				$entry = $entry->value;
 			}
@@ -174,31 +176,35 @@ class RouteSharedOptions
 				$auth = Auth::method($entry);
 			}
 
-			$this->auths_methods[] = $auth;
+			$this->authentication_methods[] = $auth;
 		}
 
 		return $this;
 	}
 
 	/**
-	 * Adds a 2FA guard.
+	 * Adds a guard that check if at least one of the authorization providers authorized this request.
 	 *
 	 * @return $this
 	 */
-	public function with2FA(string ...$allowed_providers_name): static
+	public function withAuthorization(string ...$allowed_provider_names): static
 	{
-		return $this->guard(static function () use ($allowed_providers_name) {
-			return new TwoFactorRouteGuard(...$allowed_providers_name);
+		$allowed_provider_names = self::atLeasOne($allowed_provider_names, 'authorization provider');
+
+		return $this->guard(static function () use ($allowed_provider_names) {
+			return new AuthorizationProviderRouteGuard($allowed_provider_names);
 		});
 	}
 
 	/**
-	 * Adds a guard that check user has the given access rights.
+	 * Adds a guard that check that user has the given access rights.
 	 *
 	 * @return $this
 	 */
 	public function withAccessRights(string ...$rights): static
 	{
+		$rights = self::atLeasOne($rights, 'access right');
+
 		return $this->guard(static function () use ($rights) {
 			return new UserAccessRightsRouteGuard($rights);
 		});
@@ -214,6 +220,8 @@ class RouteSharedOptions
 	 */
 	public function withAccessRightsOrRoles(array $rights, array $roles): static
 	{
+		$rights = self::atLeasOne($rights, 'access right');
+
 		return $this->guard(static function () use ($rights, $roles) {
 			return new UserAccessRightsRouteGuard($rights, $roles);
 		});
@@ -226,6 +234,8 @@ class RouteSharedOptions
 	 */
 	public function withRole(string ...$roles): static
 	{
+		$roles = self::atLeasOne($roles, 'role');
+
 		return $this->guard(static function () use ($roles) {
 			return new UserRoleRouteGuard($roles);
 		});
@@ -238,6 +248,8 @@ class RouteSharedOptions
 	 */
 	public function withRoleOrAdmin(string ...$roles): static
 	{
+		$roles = self::atLeasOne($roles, 'role');
+
 		return $this->guard(static function () use ($roles) {
 			return new UserRoleRouteGuard($roles, false);
 		});
@@ -515,15 +527,15 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Gets routes auth methods.
+	 * Gets routes authentication methods.
 	 *
 	 * @return array<class-string<AuthenticationMethodInterface>>
 	 */
-	public function getAuthMethods(): array
+	public function getAuthenticationMethods(): array
 	{
-		$list = $this->parent?->getAuthMethods() ?? [];
+		$list = $this->parent?->getAuthenticationMethods() ?? [];
 
-		return \array_unique(\array_merge($list, $this->auths_methods));
+		return \array_unique(\array_merge($list, $this->authentication_methods));
 	}
 
 	/**
@@ -608,6 +620,16 @@ class RouteSharedOptions
 		\restore_error_handler();
 
 		return !$is_invalid;
+	}
+
+	private static function atLeasOne(array $values, string $message): array
+	{
+		$values = \array_unique($values);
+		if (empty($values)) {
+			throw new InvalidArgumentException(\sprintf('At least one "%s" is required.', $message));
+		}
+
+		return $values;
 	}
 
 	/**

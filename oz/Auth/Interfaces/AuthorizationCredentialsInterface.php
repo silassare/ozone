@@ -17,9 +17,9 @@ use OZONE\Core\Http\Uri;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 
 /**
- * Interface AuthCredentialsInterface.
+ * Interface AuthorizationCredentialsInterface.
  */
-interface AuthCredentialsInterface extends ArrayCapableInterface
+interface AuthorizationCredentialsInterface extends ArrayCapableInterface
 {
 	/**
 	 * Should return newly generated raw auth code.

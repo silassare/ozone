@@ -14,38 +14,25 @@ declare(strict_types=1);
 namespace OZONE\Core\Router\Guards;
 
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\Enums\AuthState;
-use OZONE\Core\Auth\Providers\AuthUserAccountKeyBasedAccessProvider;
+use OZONE\Core\Auth\Enums\AuthorizationState;
+use OZONE\Core\Auth\Interfaces\AuthorizationProviderInterface;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
-use OZONE\Core\Forms\FormData;
 use OZONE\Core\Router\RouteInfo;
 
 /**
- * Class TwoFactorRouteGuard.
+ * Class AuthorizationProviderRouteGuard.
  */
-class TwoFactorRouteGuard extends AbstractRouteGuard
+class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 {
-	private FormData $form_data;
-
 	/**
-	 * @var string[]
-	 */
-	private array $allowed_providers;
-
-	/**
-	 * TwoFactorRouteGuard constructor.
+	 * AuthorizationProviderRouteGuard constructor.
 	 *
-	 * @param string ...$allowed_providers The allowed providers names
+	 * @param string[] $allowed_providers The allowed providers names
 	 */
-	public function __construct(string ...$allowed_providers)
-	{
-		$this->allowed_providers = empty($allowed_providers) ? [AuthUserAccountKeyBasedAccessProvider::NAME] : \array_unique($allowed_providers);
-
-		$this->form_data = new FormData();
-	}
+	public function __construct(private array $allowed_providers) {}
 
 	/**
 	 * {@inheritDoc}
@@ -62,17 +49,19 @@ class TwoFactorRouteGuard extends AbstractRouteGuard
 	 */
 	public static function fromRules(array $rules): self
 	{
-		return new self(...$rules['allowed_providers']);
+		return new self($rules['allowed_providers']);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * @return array{provider:AuthorizationProviderInterface, auth:OZAuth}
+	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedActionException
 	 */
-	public function check(RouteInfo $ri): void
+	public function check(RouteInfo $ri): array
 	{
 		$context = $ri->getContext();
 
@@ -80,35 +69,40 @@ class TwoFactorRouteGuard extends AbstractRouteGuard
 			->getUnsafeFormField(OZAuth::COL_REF);
 
 		if (empty($auth_ref)) {
-			throw new ForbiddenException('OZ_2FA_REF_NOT_PROVIDED');
+			throw new ForbiddenException('OZ_AUTH_REF_NOT_PROVIDED');
 		}
 
 		$auth = Auth::getRequired($auth_ref);
 
 		if (!\in_array($auth->provider, $this->allowed_providers, true)) {
-			throw new ForbiddenException('OZ_2FA_NOT_ALLOWED', [
+			throw new ForbiddenException(null, [
 				// don't reveal the provider to attacker,
 				// it's like sending the attacker in the right direction
-				'_reason'      => '2FA provider is not allowed.',
-				'_allowed_2fa' => $this->allowed_providers,
-				'_provider'    => $auth->provider,
+				'_reason'            => 'Auth provider is not allowed.',
+				'_allowed_providers' => $this->allowed_providers,
+				'_provider'          => $auth->provider,
 			]);
 		}
 
 		$provider = Auth::provider($context, $auth);
 
-		if (AuthState::AUTHORIZED !== $provider->getState()) {
+		if (AuthorizationState::AUTHORIZED !== $provider->getState()) {
 			throw new UnauthorizedActionException();
 		}
 
-		$this->form_data->set('auth', $auth);
+		return [
+			'provider' => $provider,
+			'auth'     => $auth,
+		];
 	}
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @return array{provider:AuthorizationProviderInterface, auth:OZAuth}
 	 */
-	public function getFormData(): ?FormData
+	public static function resolveResults(RouteInfo $ri): array
 	{
-		return $this->form_data;
+		return $ri->getGuardStoredResults(static::class);
 	}
 }

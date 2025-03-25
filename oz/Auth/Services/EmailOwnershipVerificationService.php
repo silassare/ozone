@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Services;
 
 use OZONE\Core\App\Service;
-use OZONE\Core\Auth\Providers\PhoneVerificationProvider;
-use OZONE\Core\Columns\Types\TypePhone;
+use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
+use OZONE\Core\Columns\Types\TypeEmail;
 use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Response;
@@ -23,16 +23,16 @@ use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
 /**
- * Class PhoneVerificationService.
+ * Class EmailOwnershipVerificationService.
  */
-class PhoneVerificationService extends Service
+class EmailOwnershipVerificationService extends Service
 {
 	/**
 	 * {@inheritDoc}
 	 */
 	public static function registerRoutes(Router $router): void
 	{
-		$router->post('/auth/verify/phone', static function (RouteInfo $ri) {
+		$router->post('/auth/verify/email', static function (RouteInfo $ri) {
 			return (new self($ri))->init($ri);
 		})
 			->form(self::buildInitForm(...));
@@ -45,10 +45,10 @@ class PhoneVerificationService extends Service
 	 */
 	private function init(RouteInfo $ri): Response
 	{
-		$fd    = $ri->getCleanFormData();
-		$phone = $fd->get('phone');
+		$fd    =   $ri->getCleanFormData();
+		$email = $fd->get('email');
 
-		$provider = new PhoneVerificationProvider($this->getContext(), $phone);
+		$provider = new EmailOwnershipVerificationProvider($this->getContext(), $email);
 
 		$provider->generate();
 
@@ -65,6 +65,6 @@ class PhoneVerificationService extends Service
 	{
 		$fb = new Form();
 
-		return $fb->addField(new Field('phone', new TypePhone(), true));
+		return $fb->addField(new Field('email', new TypeEmail(), true));
 	}
 }

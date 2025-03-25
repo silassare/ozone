@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Views;
 
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\Enums\AuthSecretType;
+use OZONE\Core\Auth\Enums\AuthorizationSecretType;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Http\Response;
@@ -48,7 +48,7 @@ final class AuthLinkView extends WebView
 		$provider->getCredentials()
 			->setReference($ref);
 
-		$type = AuthSecretType::TOKEN;
+		$type = AuthorizationSecretType::TOKEN;
 		$provider->getCredentials()
 			->setToken($token);
 

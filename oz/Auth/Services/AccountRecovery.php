@@ -13,16 +13,18 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Services;
 
+use Gobl\DBAL\Types\TypeBool;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Auth\Providers\EmailVerificationProvider;
-use OZONE\Core\Auth\Providers\PhoneVerificationProvider;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
+use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
+use OZONE\Core\Auth\Providers\PhoneOwnershipVerificationProvider;
 use OZONE\Core\Columns\Types\TypePassword;
-use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Exceptions\InternalErrorException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Router\Guards\TwoFactorRouteGuard;
+use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
@@ -31,28 +33,37 @@ use OZONE\Core\Router\Router;
  */
 final class AccountRecovery extends Service
 {
-	public const ROUTE_ACCOUNT_RECOVERY = 'oz:account-recovery';
+	public const ROUTE_ACCOUNT_RECOVERY      = 'oz:account-recovery';
+	public const AUTO_LOGIN_ON_SUCCESS_FIELD = 'auto_login_on_success';
 
 	/**
 	 * @param RouteInfo $ri
 	 *
 	 * @throws ForbiddenException
 	 * @throws UnauthorizedActionException
+	 * @throws InternalErrorException
 	 */
 	public function actionRecover(RouteInfo $ri): void
 	{
-		$context = $ri->getContext();
+		$user_type               = $ri->getCleanFormField(AuthUsers::FIELD_AUTH_USER_TYPE);
+		$auto_login_on_success   = $ri->getCleanFormField(self::AUTO_LOGIN_ON_SUCCESS_FIELD, false);
 
-		/** @var OZAuth $auth */
-		$auth = $ri->getGuardFormData(TwoFactorRouteGuard::class)
-			->get('auth');
+		$provider = AuthorizationProviderRouteGuard::resolveResults($ri)['provider'];
+		$selector = [
+			AuthUsers::FIELD_AUTH_USER_TYPE => $user_type,
+		];
 
-		$um = $context->getUsers();
-
-		$user = AuthUsers::identifyBySelector([
-			AuthUsers::FIELD_AUTH_USER_TYPE => $auth->getOwnerType(),
-			AuthUsers::FIELD_AUTH_USER_ID   => $auth->getOwnerId(),
-		]);
+		if ($provider instanceof EmailOwnershipVerificationProvider) {
+			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_NAME]  = AuthUserInterface::IDENTIFIER_NAME_EMAIL;
+			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_VALUE] = $provider->getEmail();
+		} elseif ($provider instanceof PhoneOwnershipVerificationProvider) {
+			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_NAME]  = AuthUserInterface::IDENTIFIER_NAME_PHONE;
+			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_VALUE] = $provider->getPhone();
+		} else {
+			// this is a logic error or someone is playing with us
+			throw new InternalErrorException();
+		}
+		$user = AuthUsers::identifyBySelector($selector);
 
 		if (!$user || !$user->isAuthUserValid()) {
 			throw new ForbiddenException();
@@ -62,10 +73,12 @@ final class AccountRecovery extends Service
 
 		AuthUsers::updatePassword($user, $new_pass);
 
-		$um->logUserIn($user);
+		if ($auto_login_on_success) {
+			$ri->getContext()->getUsers()->logUserIn($user);
+		}
 
 		$this->json()
-			->setDone('OZ_PASSWORD_EDIT_SUCCESS')
+			->setDone('OZ_ACCOUNT_RECOVERY_SUCCESS')
 			->setData($user);
 	}
 
@@ -83,7 +96,10 @@ final class AccountRecovery extends Service
 				return $s->respond();
 			})
 			->name(self::ROUTE_ACCOUNT_RECOVERY)
-			->with2FA(PhoneVerificationProvider::NAME, EmailVerificationProvider::NAME)
+			->withAuthorization(
+				EmailOwnershipVerificationProvider::NAME,
+				PhoneOwnershipVerificationProvider::NAME
+			)
 			->form(self::editPassForm(...));
 	}
 
@@ -93,6 +109,10 @@ final class AccountRecovery extends Service
 	public static function editPassForm(): Form
 	{
 		$form = new Form();
+
+		$form->field(AuthUsers::FIELD_AUTH_USER_TYPE)->required();
+		$form->field(self::AUTO_LOGIN_ON_SUCCESS_FIELD)->type(new TypeBool());
+
 		$pass = $form->field('pass')
 			->type(new TypePassword())
 			->required();

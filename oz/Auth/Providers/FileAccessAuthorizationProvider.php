@@ -20,17 +20,14 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FS;
 
 /**
- * Class FileAccessAuthProvider.
+ * Class FileAccessAuthorizationProvider.
  */
-class FileAccessAuthProvider extends AuthProvider
+class FileAccessAuthorizationProvider extends AuthorizationProvider
 {
 	public const NAME = 'auth:provider:file';
 
 	/**
-	 * FileAccessAuthProvider constructor.
-	 *
-	 * @param Context $context
-	 * @param OZFile  $file
+	 * FileAccessAuthorizationProvider constructor.
 	 */
 	public function __construct(Context $context, protected OZFile $file)
 	{
@@ -50,7 +47,7 @@ class FileAccessAuthProvider extends AuthProvider
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function get(Context $context, OZAuth $auth): self
+	public static function resolve(Context $context, OZAuth $auth): self
 	{
 		$payload = $auth->getPayload();
 		$id      = $payload['file_id'] ?? null;

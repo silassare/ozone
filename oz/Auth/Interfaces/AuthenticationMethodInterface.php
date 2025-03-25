@@ -79,7 +79,7 @@ interface AuthenticationMethodInterface
 	 *
 	 * @return bool
 	 */
-	public function isScopedAuth(): bool;
+	public function isScoped(): bool;
 
 	/**
 	 * Ask the client for authentication.

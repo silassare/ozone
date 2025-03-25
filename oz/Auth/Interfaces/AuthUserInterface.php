@@ -18,6 +18,8 @@ use PHPUtils\Interfaces\ArrayCapableInterface;
 
 /**
  * Interface AuthUserInterface.
+ *
+ * This represent a user entity that can be authenticated.
  */
 interface AuthUserInterface extends ArrayCapableInterface
 {

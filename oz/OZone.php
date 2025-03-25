@@ -19,7 +19,7 @@ use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Auth\Enums\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodType;
 use OZONE\Core\CRUD\TableCRUD;
 use OZONE\Core\Db\OZRolesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -243,7 +243,7 @@ final class OZone
 			$router = self::$api_router = new Router();
 			$group  = $router->group('/', static function () {
 				self::registerRoutes(self::$api_router, self::getApiRoutesProviders());
-			})->auths(...Auth::apiAuthMethods());
+			})->withAuthentication(...Auth::apiAuthMethods());
 
 			(new RouterCreated($router, $group, true))->dispatch();
 		}
@@ -263,7 +263,7 @@ final class OZone
 
 			$group = $router->group('/', static function () {
 				self::registerRoutes(self::$web_router, self::getWebRoutesProviders());
-			})->auths(AuthMethodType::SESSION);
+			})->withAuthentication(AuthenticationMethodType::SESSION);
 
 			(new RouterCreated($router, $group, false))->dispatch();
 		}

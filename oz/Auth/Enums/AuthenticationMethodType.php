@@ -15,8 +15,10 @@ namespace OZONE\Core\Auth\Enums;
 
 /**
  * Enum AuthMethodType.
+ *
+ * Authentication method types.
  */
-enum AuthMethodType: string
+enum AuthenticationMethodType: string
 {
 	case BASIC = 'Basic';
 

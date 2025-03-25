@@ -20,13 +20,13 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\JSONResponse;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\AuthCredentials;
-use OZONE\Core\Auth\AuthScope;
-use OZONE\Core\Auth\Enums\AuthSecretType;
-use OZONE\Core\Auth\Enums\AuthState;
-use OZONE\Core\Auth\Interfaces\AuthCredentialsInterface;
-use OZONE\Core\Auth\Interfaces\AuthProviderInterface;
-use OZONE\Core\Auth\Interfaces\AuthScopeInterface;
+use OZONE\Core\Auth\AuthorizationCredentials;
+use OZONE\Core\Auth\AuthorizationScope;
+use OZONE\Core\Auth\Enums\AuthorizationSecretType;
+use OZONE\Core\Auth\Enums\AuthorizationState;
+use OZONE\Core\Auth\Interfaces\AuthorizationCredentialsInterface;
+use OZONE\Core\Auth\Interfaces\AuthorizationProviderInterface;
+use OZONE\Core\Auth\Interfaces\AuthorizationScopeInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Traits\AuthProviderEventsTrait;
 use OZONE\Core\Db\OZAuth;
@@ -38,36 +38,34 @@ use OZONE\Core\Utils\Hasher;
 use Throwable;
 
 /**
- * Class AuthProvider.
+ * Class AuthorizationProvider.
  */
-abstract class AuthProvider implements AuthProviderInterface
+abstract class AuthorizationProvider implements AuthorizationProviderInterface
 {
 	use AuthProviderEventsTrait;
 
 	protected JSONResponse $json_response;
-	protected AuthScopeInterface $scope;
+	protected AuthorizationScopeInterface $scope;
 
-	protected AuthCredentialsInterface $credentials;
+	protected AuthorizationCredentialsInterface $credentials;
 
 	/**
 	 * AuthProvider constructor.
-	 *
-	 * @param Context $context
 	 */
 	public function __construct(Context $context)
 	{
 		$code_length        = (int) Settings::get('oz.auth', 'OZ_AUTH_CODE_LENGTH');
 		$code_use_alpha_num = (bool) Settings::get('oz.auth', 'OZ_AUTH_CODE_USE_ALPHA_NUM');
 
-		$this->scope         = new AuthScope();
+		$this->scope         = new AuthorizationScope();
 		$this->json_response = new JSONResponse();
-		$this->credentials   = new AuthCredentials($context, $code_length, $code_use_alpha_num);
+		$this->credentials   = new AuthorizationCredentials($context, $code_length, $code_use_alpha_num);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getCredentials(): AuthCredentialsInterface
+	public function getCredentials(): AuthorizationCredentialsInterface
 	{
 		return $this->credentials;
 	}
@@ -75,7 +73,7 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getScope(): AuthScopeInterface
+	public function getScope(): AuthorizationScopeInterface
 	{
 		return $this->scope;
 	}
@@ -83,7 +81,7 @@ abstract class AuthProvider implements AuthProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function setScope(AuthScopeInterface $scope): self
+	public function setScope(AuthorizationScopeInterface $scope): self
 	{
 		$this->scope = $scope;
 
@@ -106,12 +104,12 @@ abstract class AuthProvider implements AuthProviderInterface
 	 * @throws UnauthorizedActionException
 	 * @throws GoblException
 	 */
-	public function authorize(AuthSecretType $type): void
+	public function authorize(AuthorizationSecretType $type): void
 	{
 		$ref    = $this->credentials->getReference();
 		$secret = match ($type) {
-			AuthSecretType::CODE  => $this->credentials->getCode(),
-			AuthSecretType::TOKEN => $this->credentials->getToken(),
+			AuthorizationSecretType::CODE  => $this->credentials->getCode(),
+			AuthorizationSecretType::TOKEN => $this->credentials->getToken(),
 		};
 
 		if (empty($ref)) {
@@ -129,26 +127,26 @@ abstract class AuthProvider implements AuthProviderInterface
 		$try_max    = $auth->try_max; // 0 means unlimited try
 		$count      = $auth->try_count + 1;
 		$remainder  = $try_max - $count;
-		$is_code    = AuthSecretType::CODE === $type;
+		$is_code    = AuthorizationSecretType::CODE === $type;
 		$known_hash = $is_code ? $auth->code_hash : $auth->token_hash;
 
 		// checks if auth process has expired
 		if ($auth->expire <= \time()) {
-			$this->save($auth->setState(AuthState::REFUSED->value));
+			$this->save($auth->setState(AuthorizationState::REFUSED->value));
 			$this->onExpired($auth);
 		} elseif ((0 === $try_max || $remainder >= 0) && \hash_equals($known_hash, $this->hash($secret))) {
 			// we don't exceed the auth_try_max and the token/code is valid
-			$this->save($auth->setState(AuthState::AUTHORIZED->value));
+			$this->save($auth->setState(AuthorizationState::AUTHORIZED->value));
 			$this->onAuthorized($auth);
 		} elseif (0 === $try_max || $remainder <= 0) {
 			// it is our last tentative or we already exceed auth_try_max
-			$this->save($auth->setState(AuthState::REFUSED->value));
+			$this->save($auth->setState(AuthorizationState::REFUSED->value));
 			$this->onTooMuchRetry($auth);
 		} else {
 			// we have another chance
 			$this->save($auth->setTryCount($auth->try_count + 1));
 
-			if (AuthSecretType::CODE === $type) {
+			if (AuthorizationSecretType::CODE === $type) {
 				$this->onInvalidCode($auth);
 			} else {
 				$this->onInvalidToken($auth);
@@ -162,7 +160,7 @@ abstract class AuthProvider implements AuthProviderInterface
 	 * @throws NotFoundException
 	 * @throws UnauthorizedActionException
 	 */
-	public function getState(): AuthState
+	public function getState(): AuthorizationState
 	{
 		$ref = $this->credentials->getReference();
 
@@ -248,7 +246,7 @@ abstract class AuthProvider implements AuthProviderInterface
 				->setExpire((string) $expire);
 
 			if ($re_authorize) {
-				$auth->setState(AuthState::PENDING->value);
+				$auth->setState(AuthorizationState::PENDING->value);
 			}
 
 			$this->save($auth);

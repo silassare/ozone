@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Enums;
 
 /**
- * Enum AuthSecretType.
+ * Enum AuthorizationSecretType.
  */
-enum AuthSecretType: string
+enum AuthorizationSecretType: string
 {
 	case TOKEN = 'TOKEN';
 

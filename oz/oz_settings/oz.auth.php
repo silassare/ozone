@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-use OZONE\Core\Auth\Enums\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodType;
 
 return [
 	/**
@@ -49,8 +49,8 @@ return [
 	 * Default authentication methods for API.
 	 */
 	'OZ_AUTH_API_AUTH_METHODS' => [
-		AuthMethodType::BEARER,
-		AuthMethodType::API_KEY_HEADER,
-		AuthMethodType::SESSION,
+		AuthenticationMethodType::BEARER,
+		AuthenticationMethodType::API_KEY_HEADER,
+		AuthenticationMethodType::SESSION,
 	],
 ];

@@ -19,20 +19,24 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Senders\Messages\SMSMessage;
 
 /**
- * Class PhoneVerificationProvider.
+ * Class PhoneOwnershipVerificationProvider.
  */
-class PhoneVerificationProvider extends AuthProvider
+class PhoneOwnershipVerificationProvider extends AuthorizationProvider
 {
 	public const NAME = 'auth:provider:phone:verify';
 
 	/**
-	 * PhoneVerificationProvider constructor.
+	 * PhoneOwnershipVerificationProvider constructor.
 	 *
-	 * @param Context $context
-	 * @param string  $phone
+	 * @param Context     $context the context
+	 * @param string      $phone   the phone number to verify
+	 * @param null|string $label   the label to use in the message
 	 */
-	public function __construct(Context $context, protected string $phone)
-	{
+	public function __construct(
+		Context $context,
+		protected string $phone,
+		protected ?string $label = null
+	) {
 		parent::__construct($context);
 	}
 
@@ -49,16 +53,17 @@ class PhoneVerificationProvider extends AuthProvider
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function get(Context $context, OZAuth $auth): self
+	public static function resolve(Context $context, OZAuth $auth): self
 	{
 		$payload = $auth->getPayload();
 		$phone   = $payload['phone'] ?? null;
+		$label   = $payload['label'] ?? null;
 
 		if (empty($phone)) {
 			throw (new RuntimeException('Missing "phone" in payload.'))->suspectObject($payload);
 		}
 
-		return new self($context, $phone);
+		return new self($context, $phone, $label);
 	}
 
 	/**
@@ -104,7 +109,12 @@ class PhoneVerificationProvider extends AuthProvider
 	 */
 	private function sendSms(bool $first = true): void
 	{
-		$message = new SMSMessage('oz.auth.messages.sms.blate');
+		$message = new SMSMessage(
+			'oz.auth.messages.verify.phone.blate',
+			[
+				'label' => $this->label,
+			]
+		);
 
 		$message->inject($this->credentials->toArray())
 			->addRecipient($this->phone)

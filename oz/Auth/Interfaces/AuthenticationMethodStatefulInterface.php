@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Interfaces;
 
-use OZONE\Core\Auth\StatefulAuthStore;
+use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
 
 /**
  * Class AuthenticationMethodStatefulInterface.
@@ -30,9 +30,9 @@ interface AuthenticationMethodStatefulInterface extends AuthenticationMethodInte
 	/**
 	 * Returns the stateful auth store.
 	 *
-	 * @return StatefulAuthStore
+	 * @return StatefulAuthenticationMethodStore
 	 */
-	public function store(): StatefulAuthStore;
+	public function store(): StatefulAuthenticationMethodStore;
 
 	/**
 	 * Persists the state.

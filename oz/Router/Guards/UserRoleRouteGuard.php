@@ -57,7 +57,7 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 	 *
 	 * @throws ForbiddenException
 	 */
-	public function check(RouteInfo $ri): void
+	public function check(RouteInfo $ri): bool
 	{
 		$context  = $ri->getContext();
 		$user     = $context->auth()->user();
@@ -70,5 +70,7 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 				'_user'    => AuthUsers::selector($user),
 			]);
 		}
+
+		return true;
 	}
 }

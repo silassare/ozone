@@ -15,7 +15,7 @@ namespace OZONE\Core\Auth\Methods;
 
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Auth\Enums\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodType;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Traits\AskCredentialsByHTTPHeaderTrait;
 use OZONE\Core\Auth\Traits\AuthUserKeyAuthenticationMethodTrait;
@@ -33,7 +33,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	use AskCredentialsByHTTPHeaderTrait;
 	use AuthUserKeyAuthenticationMethodTrait;
 
-	protected AuthMethodType $type;
+	protected AuthenticationMethodType $type;
 	protected string $digest = '';
 	protected string $nonce;
 	protected string $opaque;
@@ -43,7 +43,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	 */
 	protected function __construct(protected RouteInfo $ri, protected string $realm, protected bool $rfc2617 = false)
 	{
-		$this->type = $this->rfc2617 ? AuthMethodType::DIGEST_RFC_2617 : AuthMethodType::DIGEST;
+		$this->type = $this->rfc2617 ? AuthenticationMethodType::DIGEST_RFC_2617 : AuthenticationMethodType::DIGEST;
 		$this->newKeys();
 	}
 

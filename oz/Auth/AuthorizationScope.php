@@ -16,13 +16,13 @@ namespace OZONE\Core\Auth;
 use InvalidArgumentException;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
-use OZONE\Core\Auth\Interfaces\AuthScopeInterface;
+use OZONE\Core\Auth\Interfaces\AuthorizationScopeInterface;
 use OZONE\Core\Db\OZAuth;
 
 /**
  * Class AuthScope.
  */
-class AuthScope implements AuthScopeInterface
+class AuthorizationScope implements AuthorizationScopeInterface
 {
 	protected string $label = '';
 	protected int $try_max  = 0;
@@ -137,7 +137,7 @@ class AuthScope implements AuthScopeInterface
 
 		if ($context->hasAuthenticatedUser()) {
 			$au = $context->auth();
-			if ($au->isScopedAuth()) {
+			if ($au->isScoped()) {
 				$parent = $au->getAccessRights();
 			}
 		}

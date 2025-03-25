@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Interfaces;
 
-use OZONE\Core\Forms\FormData;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -36,14 +35,16 @@ interface RouteGuardInterface
 	public static function fromRules(array $rules): self;
 
 	/**
-	 * Check.
+	 * Check and returns any data produced during the check that may be useful.
 	 */
-	public function check(RouteInfo $ri): void;
+	public function check(RouteInfo $ri): mixed;
 
 	/**
-	 * Returns clean grant form data.
+	 * The route guard implement this to resolve any saved data.
 	 *
-	 * @return null|FormData
+	 * @param RouteInfo $ri
+	 *
+	 * @return mixed
 	 */
-	public function getFormData(): ?FormData;
+	public static function resolveResults(RouteInfo $ri): mixed;
 }

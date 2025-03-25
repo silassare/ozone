@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Methods;
 
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\Enums\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodType;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Traits\AskCredentialsByHTTPHeaderTrait;
 use OZONE\Core\Auth\Traits\AuthUserKeyAuthenticationMethodTrait;
@@ -31,8 +31,8 @@ class BearerAuth implements AuthenticationMethodInterface
 	use AskCredentialsByHTTPHeaderTrait;
 	use AuthUserKeyAuthenticationMethodTrait;
 
-	protected AuthMethodType $type = AuthMethodType::BEARER;
-	protected string $token        = '';
+	protected AuthenticationMethodType $type = AuthenticationMethodType::BEARER;
+	protected string $token                  = '';
 
 	/**
 	 * BearerAuth constructor.

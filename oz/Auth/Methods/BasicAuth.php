@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Methods;
 
 use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Auth\Enums\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodType;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
@@ -35,7 +35,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	public const BASIC_AUTH_SEPARATOR               = ':';
 	public const BASIC_AUTH_USERNAME_INFO_SEPARATOR = '|';
 
-	protected AuthMethodType $type = AuthMethodType::BASIC;
+	protected AuthenticationMethodType $type = AuthenticationMethodType::BASIC;
 
 	/**
 	 * @var string The username
@@ -191,7 +191,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function isScopedAuth(): bool
+	public function isScoped(): bool
 	{
 		return false;
 	}

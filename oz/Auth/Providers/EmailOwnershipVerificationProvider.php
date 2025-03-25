@@ -19,20 +19,24 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Senders\Messages\MailMessage;
 
 /**
- * Class EmailVerificationProvider.
+ * Class EmailOwnershipVerificationProvider.
  */
-class EmailVerificationProvider extends AuthProvider
+class EmailOwnershipVerificationProvider extends AuthorizationProvider
 {
 	public const NAME = 'auth:provider:email:verify';
 
 	/**
-	 * EmailVerificationProvider constructor.
+	 * EmailOwnershipVerificationProvider constructor.
 	 *
-	 * @param Context $context
-	 * @param string  $email
+	 * @param Context     $context the context
+	 * @param string      $email   the email to verify
+	 * @param null|string $label   the label to use in the message
 	 */
-	public function __construct(Context $context, protected string $email)
-	{
+	public function __construct(
+		Context $context,
+		protected string $email,
+		protected ?string $label = null
+	) {
 		parent::__construct($context);
 	}
 
@@ -49,16 +53,17 @@ class EmailVerificationProvider extends AuthProvider
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function get(Context $context, OZAuth $auth): self
+	public static function resolve(Context $context, OZAuth $auth): self
 	{
 		$payload = $auth->getPayload();
 		$email   = $payload['email'] ?? null;
+		$label   = $payload['label'] ?? null;
 
 		if (empty($email)) {
 			throw (new RuntimeException('Missing "email" in payload.'))->suspectObject($payload);
 		}
 
-		return new self($context, $email);
+		return new self($context, $email, $label);
 	}
 
 	/**
@@ -68,6 +73,7 @@ class EmailVerificationProvider extends AuthProvider
 	{
 		return [
 			'email' => $this->email,
+			'label' => $this->label,
 		];
 	}
 
@@ -102,7 +108,13 @@ class EmailVerificationProvider extends AuthProvider
 	 */
 	private function sendMail(bool $first = true): void
 	{
-		$message = new MailMessage('oz.auth.message.mail.blate', 'oz.auth.message.mail.rich.blate');
+		$message = new MailMessage(
+			'oz.auth.messages.verify.email.blate',
+			'oz.auth.messages.verify.email.rich.blate',
+			[
+				'label' => $this->label,
+			]
+		);
 
 		$message->inject($this->credentials->toArray())
 			->addRecipient($this->email)

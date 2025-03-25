@@ -15,31 +15,31 @@ namespace OZONE\Core\Auth\Interfaces;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\App\JSONResponse;
-use OZONE\Core\Auth\Enums\AuthSecretType;
-use OZONE\Core\Auth\Enums\AuthState;
+use OZONE\Core\Auth\Enums\AuthorizationSecretType;
+use OZONE\Core\Auth\Enums\AuthorizationState;
 use OZONE\Core\Db\OZAuth;
 
 /**
- * Interface AuthProviderInterface.
+ * Interface AuthorizationProviderInterface.
  */
-interface AuthProviderInterface
+interface AuthorizationProviderInterface
 {
 	/**
-	 * Get auth provider name.
+	 * Get authorization provider name.
 	 *
 	 * @return string
 	 */
 	public static function getName(): string;
 
 	/**
-	 * Get auth provider instance.
+	 * Resolve authorization provider instance using an existing auth entity.
 	 *
 	 * @param Context $context
 	 * @param OZAuth  $auth
 	 *
 	 * @return self
 	 */
-	public static function get(Context $context, OZAuth $auth): self;
+	public static function resolve(Context $context, OZAuth $auth): self;
 
 	/**
 	 * Get payload.
@@ -58,39 +58,39 @@ interface AuthProviderInterface
 	/**
 	 * Gets credentials.
 	 *
-	 * @return AuthCredentialsInterface
+	 * @return AuthorizationCredentialsInterface
 	 */
-	public function getCredentials(): AuthCredentialsInterface;
+	public function getCredentials(): AuthorizationCredentialsInterface;
 
 	/**
-	 * Gets scope.
+	 * Gets authorization scope.
 	 *
-	 * @return AuthScopeInterface
+	 * @return AuthorizationScopeInterface
 	 */
-	public function getScope(): AuthScopeInterface;
+	public function getScope(): AuthorizationScopeInterface;
 
 	/**
-	 * Sets scope.
+	 * Sets authorization scope.
 	 *
-	 * @param AuthScopeInterface $scope
+	 * @param AuthorizationScopeInterface $scope
 	 *
 	 * @return $this
 	 */
-	public function setScope(AuthScopeInterface $scope): self;
+	public function setScope(AuthorizationScopeInterface $scope): self;
 
 	/**
 	 * Authorize with current credentials.
 	 *
-	 * @param AuthSecretType $type
+	 * @param AuthorizationSecretType $type
 	 */
-	public function authorize(AuthSecretType $type): void;
+	public function authorize(AuthorizationSecretType $type): void;
 
 	/**
 	 * Get an auth process state.
 	 *
-	 * @return AuthState
+	 * @return AuthorizationState
 	 */
-	public function getState(): AuthState;
+	public function getState(): AuthorizationState;
 
 	/**
 	 * Generate new auth code, token ...

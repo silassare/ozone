@@ -16,9 +16,9 @@ namespace OZONE\Core\Auth\Interfaces;
 use OZONE\Core\Db\OZAuth;
 
 /**
- * Interface AuthScopeInterface.
+ * Interface AuthorizationScopeInterface.
  */
-interface AuthScopeInterface
+interface AuthorizationScopeInterface
 {
 	/**
 	 * Loads scope info from auth.

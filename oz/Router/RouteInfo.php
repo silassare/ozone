@@ -18,15 +18,20 @@ use OZONE\Core\App\Context;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Http\Uri;
+use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
-use PHPUtils\Store\Store;
 
 /**
  * Class RouteInfo.
  */
 final class RouteInfo
 {
-	private Store $guards_data;
+	/**
+	 * Maps route guard FQN class name to produced data during check.
+	 *
+	 * @var array<class-string<RouteGuardInterface>, mixed>
+	 */
+	private array $guards_data;
 	private FormData $clean_form_data;
 
 	/**
@@ -45,7 +50,7 @@ final class RouteInfo
 		private readonly array $params,
 		?callable $authenticator = null
 	) {
-		$this->guards_data     = new Store([]);
+		$this->guards_data     = [];
 		$this->clean_form_data = new FormData();
 
 		$authenticator && $authenticator($this);
@@ -132,23 +137,21 @@ final class RouteInfo
 	}
 
 	/**
-	 * Gets guard form data.
+	 * Gets guard stored results.
 	 *
-	 * @param string $guard
+	 * @param class-string<RouteGuardInterface> $guard_fqn_class
 	 *
-	 * @return FormData
+	 * @return mixed
 	 */
-	public function getGuardFormData(string $guard): FormData
+	public function getGuardStoredResults(string $guard_fqn_class): mixed
 	{
-		$guard_class = Guards::get($guard);
+		$guard_data = $this->guards_data[$guard_fqn_class] ?? null;
 
-		$guard_data = $this->guards_data->get($guard_class);
-
-		if ($guard_data instanceof FormData) {
+		if (null !== $guard_data) {
 			return $guard_data;
 		}
 
-		throw new InvalidArgumentException(\sprintf('Guard "%s" has no form data.', $guard));
+		throw new InvalidArgumentException(\sprintf('Guard "%s" has no results stored.', $guard_fqn_class));
 	}
 
 	/**
@@ -186,13 +189,9 @@ final class RouteInfo
 		$route_guards = $this->route->getOptions()->getGuards($this);
 
 		foreach ($route_guards as $guard) {
-			$guard->check($this);
+			$results = $guard->check($this);
 
-			$form = $guard->getFormData();
-
-			if ($form) {
-				$this->guards_data->set($guard::class, $form);
-			}
+			$this->guards_data[$guard::class] = $results;
 		}
 	}
 

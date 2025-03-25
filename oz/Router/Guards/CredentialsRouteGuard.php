@@ -24,7 +24,6 @@ use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\FormData;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -32,7 +31,10 @@ use OZONE\Core\Router\RouteInfo;
  */
 class CredentialsRouteGuard extends AbstractRouteGuard
 {
-	private FormData $form_data;
+	/**
+	 * @var null|array{username:string, password:string}
+	 */
+	private ?array $results = null;
 
 	/**
 	 * CredentialsRouteGuard constructor.
@@ -59,8 +61,6 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 				}
 			}
 		}
-
-		$this->form_data = new FormData();
 	}
 
 	/**
@@ -82,25 +82,27 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	 */
 	public static function fromRules(array $rules): self
 	{
-		$username_type = $rules['username_type'] ? TypeUtils::getTypeInstance($rules['username_type']['type'], $rules['username_type']) : null;
-		$password_type = $rules['password_type'] ? TypeUtils::getTypeInstance($rules['password_type']['type'], $rules['password_type']) : null;
+		$u_options = $rules['username_type'] ?? null;
+		$p_options = $rules['password_type'] ?? null;
 
 		return new self(
 			$rules['credentials'],
 			true,
-			$username_type,
-			$password_type
+			$u_options ? TypeUtils::getTypeInstance($u_options['type'], $u_options) : null,
+			$p_options ? TypeUtils::getTypeInstance($p_options['type'], $p_options) : null,
 		);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
+	 * @return array{username:string, password:string}
+	 *
 	 * @throws ForbiddenException
 	 * @throws InvalidFormException
 	 * @throws UnauthorizedActionException
 	 */
-	public function check(RouteInfo $ri): void
+	public function check(RouteInfo $ri): array
 	{
 		$context = $ri->getContext();
 
@@ -139,15 +141,19 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 			throw new ForbiddenException();
 		}
 
-		$this->form_data->set('username', $req_user)
-			->set('password', $req_password);
+		return [
+			'username' => $req_user,
+			'password' => $req_password,
+		];
 	}
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @return array{username:string, password:string}
 	 */
-	public function getFormData(): ?FormData
+	public static function resolveResults(RouteInfo $ri): array
 	{
-		return $this->form_data;
+		return $ri->getGuardStoredResults(static::class);
 	}
 }

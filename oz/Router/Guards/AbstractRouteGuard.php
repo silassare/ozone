@@ -21,6 +21,7 @@ use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
+use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Views\AccessGrantView;
 use OZONE\Core\Utils\Hasher;
 
@@ -35,9 +36,9 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getFormData(): ?FormData
+	public static function resolveResults(RouteInfo $ri): mixed
 	{
-		return null;
+		return $ri->getGuardStoredResults(static::class);
 	}
 
 	/**

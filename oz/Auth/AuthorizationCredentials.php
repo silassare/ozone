@@ -15,7 +15,7 @@ namespace OZONE\Core\Auth;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
-use OZONE\Core\Auth\Interfaces\AuthCredentialsInterface;
+use OZONE\Core\Auth\Interfaces\AuthorizationCredentialsInterface;
 use OZONE\Core\Auth\Views\AuthLinkView;
 use OZONE\Core\Http\Uri;
 use PHPUtils\Traits\ArrayCapableTrait;
@@ -23,7 +23,7 @@ use PHPUtils\Traits\ArrayCapableTrait;
 /**
  * Class AuthCredentials.
  */
-class AuthCredentials implements AuthCredentialsInterface
+class AuthorizationCredentials implements AuthorizationCredentialsInterface
 {
 	use ArrayCapableTrait;
 
@@ -77,7 +77,7 @@ class AuthCredentials implements AuthCredentialsInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function setCode(string $code): AuthCredentialsInterface
+	public function setCode(string $code): AuthorizationCredentialsInterface
 	{
 		$this->code = $code;
 
@@ -95,7 +95,7 @@ class AuthCredentials implements AuthCredentialsInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function setToken(string $token): AuthCredentialsInterface
+	public function setToken(string $token): AuthorizationCredentialsInterface
 	{
 		$this->token = $token;
 

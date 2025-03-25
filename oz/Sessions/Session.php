@@ -18,7 +18,7 @@ use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Auth\StatefulAuthStore;
+use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Db\OZSession;
 use OZONE\Core\Db\OZSessionsQuery;
@@ -42,7 +42,7 @@ final class Session implements BootHookReceiverInterface
 {
 	private const SESSION_ID_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
 
-	private ?StatefulAuthStore $state = null;
+	private ?StatefulAuthenticationMethodStore $state = null;
 
 	private ?OZSession $session_entry = null;
 
@@ -136,7 +136,7 @@ final class Session implements BootHookReceiverInterface
 		}
 
 		$data                = $this->session_entry->getData()->getData();
-		$this->state         = StatefulAuthStore::getInstance($session_id, $data);
+		$this->state         = StatefulAuthenticationMethodStore::getInstance($session_id, $data);
 		$this->started       = true;
 		$this->delete_cookie = false;
 
@@ -237,9 +237,9 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Gets the session data store.
 	 *
-	 * @return StatefulAuthStore
+	 * @return StatefulAuthenticationMethodStore
 	 */
-	public function store(): StatefulAuthStore
+	public function store(): StatefulAuthenticationMethodStore
 	{
 		$this->assertSessionStarted();
 

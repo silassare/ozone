@@ -33,13 +33,15 @@ final class Auth2FA implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Check a 2FA auth process after login.
+	 * Check a 2FA authentication process after login.
 	 *
 	 * @param AuthUserInterface                     $user
 	 * @param AuthenticationMethodStatefulInterface $auth_method
 	 */
-	private static function check2FAAuthProcess(AuthUserInterface $user, AuthenticationMethodStatefulInterface $auth_method): void
-	{
+	private static function check2FAAuthProcess(
+		AuthUserInterface $user,
+		AuthenticationMethodStatefulInterface $auth_method
+	): void {
 		if ($user->getAuthUserDataStore()->has2FAEnabled()) {
 			// TODO
 			// if user enable 2FA, we need to verify it first

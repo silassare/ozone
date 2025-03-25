@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Core\FS\Interfaces;
 
 use OZONE\Core\App\Context;
-use OZONE\Core\Auth\Providers\FileAccessAuthProvider;
-use OZONE\Core\Auth\Services\AuthService;
+use OZONE\Core\Auth\Providers\FileAccessAuthorizationProvider;
+use OZONE\Core\Auth\Services\AuthorizationService;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\Http\Response;
@@ -103,15 +103,15 @@ interface StorageInterface
 	 * The given auth provider credentials can be used to contact the auth server.
 	 * The file provider is responsible for contacting the auth server to check if the credential is still valid.
 	 *
-	 * @param Context                $context
-	 * @param FileAccessAuthProvider $provider
+	 * @param Context                         $context
+	 * @param FileAccessAuthorizationProvider $provider
 	 *
 	 * @return Uri
 	 *
-	 * @see AuthService for more information on how to check if the credential
+	 * @see AuthorizationService for more information on how to check if the credential
 	 *      still valid or not.
 	 */
-	public function revocableAccessUri(Context $context, FileAccessAuthProvider $provider): Uri;
+	public function revocableAccessUri(Context $context, FileAccessAuthorizationProvider $provider): Uri;
 
 	/**
 	 * Should returns a public access uri for the given file.

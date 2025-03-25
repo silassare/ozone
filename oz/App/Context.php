@@ -18,7 +18,7 @@ use LogicException;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodStatefulInterface;
-use OZONE\Core\Auth\StatefulAuthStore;
+use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -342,9 +342,9 @@ final class Context
 	/**
 	 * Try to get the state if the auth method is stateful.
 	 *
-	 * @return null|StatefulAuthStore
+	 * @return null|StatefulAuthenticationMethodStore
 	 */
-	public function authStore(): ?StatefulAuthStore
+	public function authStore(): ?StatefulAuthenticationMethodStore
 	{
 		try {
 			return $this->requireAuthStore();
@@ -357,9 +357,9 @@ final class Context
 	/**
 	 * Make sure we have a stateful auth method and return its store.
 	 *
-	 * @return StatefulAuthStore
+	 * @return StatefulAuthenticationMethodStore
 	 */
-	public function requireAuthStore(): StatefulAuthStore
+	public function requireAuthStore(): StatefulAuthenticationMethodStore
 	{
 		return $this->requireStatefulAuth()
 			->store();
@@ -885,7 +885,7 @@ final class Context
 	}
 
 	/**
-	 * Authenticates the current request.
+	 * Authenticates the request.
 	 *
 	 * When no auth method was defined for the current route, just returns null.
 	 * When auth method was defined for the current route:
@@ -905,7 +905,7 @@ final class Context
 		$this->route_info = $ri;
 		$route            = $ri->route();
 		$auths_methods    = $route->getOptions()
-			->getAuthMethods();
+			->getAuthenticationMethods();
 
 		if (empty($auths_methods)) {
 			return;

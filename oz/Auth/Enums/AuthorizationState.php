@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Enums;
 
 /**
- * Enum AuthState.
+ * Enum AuthorizationState.
  */
-enum AuthState: string
+enum AuthorizationState: string
 {
 	case PENDING = 'PENDING';
 

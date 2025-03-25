@@ -14,11 +14,11 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Methods;
 
 use OZONE\Core\App\Settings;
-use OZONE\Core\Auth\Enums\AuthMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodType;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodStatefulInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Auth\StatefulAuthStore;
+use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\UnverifiedUserException;
 use OZONE\Core\Router\RouteInfo;
@@ -32,8 +32,8 @@ use OZONE\Core\Utils\Hasher;
  */
 class SessionAuth implements AuthenticationMethodStatefulInterface
 {
-	protected AuthMethodType $type = AuthMethodType::SESSION;
-	protected ?string $session_id  = null;
+	protected AuthenticationMethodType $type = AuthenticationMethodType::SESSION;
+	protected ?string $session_id            = null;
 	protected ?Session $session;
 	protected AuthUserInterface $user;
 
@@ -140,7 +140,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function isScopedAuth(): bool
+	public function isScoped(): bool
 	{
 		return false;
 	}
@@ -150,7 +150,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 *
 	 * @throws ForbiddenException
 	 */
-	public function store(): StatefulAuthStore
+	public function store(): StatefulAuthenticationMethodStore
 	{
 		return $this->session()
 			->store();

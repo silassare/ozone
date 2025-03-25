@@ -15,7 +15,7 @@ use Gobl\DBAL\Builders\NamespaceBuilder;
 use Gobl\DBAL\Builders\TableBuilder;
 use Gobl\DBAL\Column;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Auth\Enums\AuthState;
+use OZONE\Core\Auth\Enums\AuthorizationState;
 use OZONE\Core\Columns\Types\TypeCC2;
 use OZONE\Core\Columns\Types\TypeGender;
 use OZONE\Core\Columns\Types\TypeUsername;
@@ -257,7 +257,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->map('payload')->default([]);
 		$tb->string('code_hash')->max(128);
 		$tb->string('token_hash')->min(32)->max(128);
-		$tb->enum('state', AuthState::class)->default(AuthState::PENDING);
+		$tb->enum('state', AuthorizationState::class)->default(AuthorizationState::PENDING);
 		$tb->int('try_max')->unsigned()->default(1);
 		$tb->int('try_count')->unsigned()->default(0);
 		$tb->int('lifetime')->unsigned();
