@@ -140,6 +140,8 @@ return static function (NamespaceBuilder $ns) {
 		});
 	});
 
+	// START OF TABLES THAT SHOULD BE KEPT PRIVATE
+
 	$ns->table('oz_roles', static function (TableBuilder $tb) {
 		$tb->getTable()->setPrivate();
 
@@ -162,8 +164,6 @@ return static function (NamespaceBuilder $ns) {
 			$tb->unique('owner_id', 'owner_type', 'name');
 		});
 	});
-
-	// START OF TABLES THAT SHOULD BE KEPT PRIVATE
 
 	$ns->table('oz_jobs', static function (TableBuilder $tb) {
 		$tb->getTable()->setPrivate();
