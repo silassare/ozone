@@ -14,6 +14,16 @@ server {
 	root /var/www/example/public/www;
 	index index.php;
 
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    # Buffer sizes for FastCGI responses
+    #
+    fastcgi_buffers 16 16k;
+    fastcgi_buffer_size 32k;
+    fastcgi_busy_buffers_size 64k;
+    fastcgi_temp_file_write_size 64k;
+
 	# disable access to debug.log
 	#
 	location = /debug.log {
