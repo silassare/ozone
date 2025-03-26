@@ -149,8 +149,8 @@ final class AuthUsers
 			if (!$class) {
 				throw (new RuntimeException(
 					\sprintf(
-						'Auth users repository "%s" not found in settings.',
-						$class
+						'Auth users repository for "%s" not found in settings.',
+						$user_type_name
 					)
 				))->suspectConfig('oz.auth.users.repositories', $user_type_name);
 			}
@@ -214,10 +214,20 @@ final class AuthUsers
 	/**
 	 * Identifies a auth user using a given identifier.
 	 */
-	public static function identify(string $user_type, string $identifier_value, ?string $identifier_name = null): ?AuthUserInterface
-	{
-		$repository = self::repository($user_type);
+	public static function identify(
+		string $user_type,
+		string $identifier_value,
+		?string $identifier_name = null
+	): ?AuthUserInterface {
+		try {
+			$repository = self::repository($user_type);
+		} catch (Throwable $t) {
+			// this may be an api user that is not providing a valid user type
+			// for development purpose we log the error
+			oz_logger()->warning($t);
 
+			return null;
+		}
 		if (null === $identifier_name) {
 			return $repository->getAuthUserByIdentifier($identifier_value);
 		}
