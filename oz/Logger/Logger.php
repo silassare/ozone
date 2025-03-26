@@ -16,7 +16,7 @@ namespace OZONE\Core\Logger;
 use JsonSerializable;
 use OZONE\Core\Exceptions\BaseException;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LoggerTrait;
+use Psr\Log\LogLevel;
 use Stringable;
 use Throwable;
 
@@ -25,35 +25,6 @@ use Throwable;
  */
 class Logger implements LoggerInterface
 {
-	use LoggerTrait;
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public function log($level, string|Stringable $message, array $context = []): void
-	{
-		$message = self::addTime((string) $message);
-
-		if (\defined('OZ_LOG_DIR')) {
-			$dir = OZ_LOG_DIR;
-		} else {
-			$dir = \getcwd();
-		}
-
-		$log_file = $dir . 'debug.log';
-
-		$mode = (\file_exists($log_file) && \filesize($log_file) <= 254000) ? 'a' : 'w';
-
-		if ($fp = \fopen($log_file, $mode)) {
-			\fwrite($fp, $message);
-			\fclose($fp);
-
-			if ('w' === $mode) {
-				\chmod($log_file, 0660);
-			}
-		}
-	}
-
 	/**
 	 * Returns a string representation of a value to be logged.
 	 *
@@ -87,19 +58,109 @@ class Logger implements LoggerInterface
 	}
 
 	/**
-	 * Add time to message.
-	 *
-	 * @param string $message
-	 *
-	 * @return string
+	 * {@inheritDoc}
 	 */
-	private static function addTime(string $message): string
+	public function log($level, string|Stringable|Throwable $message, array $context = []): void
 	{
-		$date      = \date('Y-m-d H:i:s');
+		if ($message instanceof Throwable) {
+			$message = self::describe($message);
+		}
 
-		return "================================================================================\n"
-		. $date . "\n"
-		. "========================\n"
-		. $message . "\n\n";
+		$date  = \date('Y-m-d H:i:s');
+		$level = \strtoupper($level);
+
+		$message = <<<LOG
+================================================================================
+[{$level}] {$date}
+================================================================================
+{$message}
+
+
+LOG;
+
+		if (\defined('OZ_LOG_DIR')) {
+			$dir = OZ_LOG_DIR;
+		} else {
+			$dir = \getcwd();
+		}
+
+		$log_file = $dir . 'debug.log';
+
+		$mode = (\file_exists($log_file) && \filesize($log_file) <= OZ_LOG_MAX_FILE_SIZE) ? 'a' : 'w';
+
+		if ($fp = \fopen($log_file, $mode)) {
+			\fwrite($fp, $message);
+			\fclose($fp);
+
+			if ('w' === $mode) {
+				\chmod($log_file, 0660);
+			}
+		}
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function emergency(string|Stringable|Throwable $message, array $context = []): void
+	{
+		$this->log(LogLevel::EMERGENCY, $message, $context);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function alert(string|Stringable|Throwable $message, array $context = []): void
+	{
+		$this->log(LogLevel::ALERT, $message, $context);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function critical(string|Stringable|Throwable $message, array $context = []): void
+	{
+		$this->log(LogLevel::CRITICAL, $message, $context);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function error(string|Stringable|Throwable $message, array $context = []): void
+	{
+		$this->log(LogLevel::ERROR, $message, $context);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function warning(string|Stringable|Throwable $message, array $context = []): void
+	{
+		$this->log(LogLevel::WARNING, $message, $context);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function notice(string|Stringable|Throwable $message, array $context = []): void
+	{
+		$this->log(LogLevel::NOTICE, $message, $context);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function info(string|Stringable|Throwable $message, array $context = []): void
+	{
+		$this->log(LogLevel::INFO, $message, $context);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function debug(string|Stringable|Throwable $message, array $context = []): void
+	{
+		$this->log(LogLevel::DEBUG, $message, $context);
+	}
+
+	protected static function write($level, string $message, array $context = []) {}
 }

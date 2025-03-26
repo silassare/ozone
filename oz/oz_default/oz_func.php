@@ -78,7 +78,7 @@ if (!\function_exists('oz_logger')) {
 		try {
 			throw new RuntimeException($message, $data, $previous);
 		} catch (RuntimeException $e) {
-			oz_logger($e);
+			oz_logger()->debug($e);
 		}
 	}
 
