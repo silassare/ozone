@@ -45,3 +45,8 @@ if (!\defined('OZ_SCOPE_NAME')) {
 if (!\defined('OZ_LOG_DIR')) {
 	\define('OZ_LOG_DIR', \getcwd() . DS);
 }
+
+// = Logs file max size default 5MB
+if (!\defined('OZ_LOG_MAX_FILE_SIZE')) {
+	\define('OZ_LOG_MAX_FILE_SIZE', 5_000_000);
+}
