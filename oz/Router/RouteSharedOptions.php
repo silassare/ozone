@@ -624,7 +624,6 @@ class RouteSharedOptions
 
 	private static function atLeasOne(array $values, string $message): array
 	{
-		$values = \array_unique($values);
 		if (empty($values)) {
 			throw new InvalidArgumentException(\sprintf('At least one "%s" is required.', $message));
 		}
