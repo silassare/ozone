@@ -156,7 +156,7 @@ final class MigrationsCmd extends Command
 			), false);
 
 			try {
-				$mg->runFull($latest, $queries_str);
+				$mg->install($latest, $queries_str);
 			} catch (Throwable $t) {
 				$error_data = [];
 				if (!empty($queries_str)) {
@@ -178,7 +178,7 @@ final class MigrationsCmd extends Command
 				), false);
 
 				try {
-					$mg->run($migration);
+					$mg->updateTo($migration);
 				} catch (Throwable $t) {
 					$error_message = \sprintf(
 						'Migration "%s" generated on "%s" failed.',
@@ -260,7 +260,7 @@ final class MigrationsCmd extends Command
 				));
 
 				try {
-					$mg->rollbackMigration($migration);
+					$mg->rollback($migration);
 				} catch (Throwable $e) {
 					throw new RuntimeException('Error rolling back migration.', [
 						'label'   => $migration->getLabel(),

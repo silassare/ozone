@@ -16,6 +16,8 @@ namespace OZONE\Core\Migrations;
 use Gobl\CRUD\Exceptions\CRUDException;
 use Gobl\DBAL\Diff\Diff;
 use Gobl\DBAL\Interfaces\MigrationInterface;
+use Gobl\DBAL\Interfaces\RDBMSInterface;
+use Gobl\DBAL\MigrationMode;
 use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
 use OZONE\Core\App\Db;
@@ -24,7 +26,6 @@ use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Db\OZMigration;
 use OZONE\Core\Db\OZMigrationsQuery;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Migrations\Enums\MigrationsRunMode;
 use OZONE\Core\Migrations\Enums\MigrationsState;
 use OZONE\Core\Migrations\Events\MigrationAfterRun;
 use OZONE\Core\Migrations\Events\MigrationBeforeRun;
@@ -104,34 +105,34 @@ final class Migrations
 	}
 
 	/**
-	 * Runs a given migration in full mode.
+	 * Installs the database with the given migration.
+	 *
+	 * Assumes that the database is not installed.
 	 *
 	 * @param MigrationInterface $migration
-	 * @param null|string        &$full_query the full query executed, usefull for debugging when error
+	 * @param null|string        &$query    the query executed, useful for debugging when error
 	 *
 	 * @throws CRUDException
 	 * @throws GoblException
 	 * @throws ORMException
 	 */
-	public function runFull(MigrationInterface $migration, ?string &$full_query = null): void
+	public function install(MigrationInterface $migration, ?string &$query = null): void
 	{
-		(new MigrationBeforeRun($migration, MigrationsRunMode::FULL))->dispatch();
+		$mode = MigrationMode::FULL;
 
-		$db               = Db::new($migration)->lock();
-		$full_query       = $db->getGenerator()
-			->buildDatabase();
+		(new MigrationBeforeRun($migration, $mode))->dispatch();
 
-		if ($full_query) {
-			$db->executeMulti($full_query);
-		}
+		$db = Db::new($migration)->lock();
+
+		$this->runMigrationQuery($db, $migration, $mode, $query);
 
 		$this->setCurrentDbVersion($migration->getVersion());
 
-		(new MigrationAfterRun($migration, MigrationsRunMode::FULL))->dispatch();
+		(new MigrationAfterRun($migration, $mode))->dispatch();
 	}
 
 	/**
-	 * Runs a given migration.
+	 * Updates the database to a given migration.
 	 *
 	 * @param MigrationInterface $migration
 	 *
@@ -139,19 +140,17 @@ final class Migrations
 	 * @throws GoblException
 	 * @throws ORMException
 	 */
-	public function run(MigrationInterface $migration): void
+	public function updateTo(MigrationInterface $migration): void
 	{
-		(new MigrationBeforeRun($migration, MigrationsRunMode::UP))->dispatch();
+		$mode = MigrationMode::UP;
 
-		$query = \trim($migration->up());
-		// may be empty if it was force generated will no change was detected
-		if ($query) {
-			db()->executeMulti($query);
-		}
+		(new MigrationBeforeRun($migration, $mode))->dispatch();
+
+		$this->runMigrationQuery(db(), $migration, $mode);
 
 		$this->setCurrentDbVersion($migration->getVersion());
 
-		(new MigrationAfterRun($migration, MigrationsRunMode::UP))->dispatch();
+		(new MigrationAfterRun($migration, $mode))->dispatch();
 	}
 
 	/**
@@ -163,7 +162,7 @@ final class Migrations
 	 * @throws GoblException
 	 * @throws ORMException
 	 */
-	public function rollbackMigration(MigrationInterface $migration): void
+	public function rollback(MigrationInterface $migration): void
 	{
 		$version  = self::DB_NOT_INSTALLED_VERSION;
 		$previous = $this->getPreviousMigration($migration->getVersion());
@@ -172,17 +171,15 @@ final class Migrations
 			$version = $previous->getVersion();
 		}
 
-		(new MigrationBeforeRun($migration, MigrationsRunMode::DOWN))->dispatch();
+		$mode = MigrationMode::DOWN;
 
-		$query = \trim($migration->down());
-		// may be empty if it was force generated will no change was detected
-		if ($query) {
-			db()->executeMulti($query);
-		}
+		(new MigrationBeforeRun($migration, $mode))->dispatch();
+
+		$this->runMigrationQuery(db(), $migration, $mode);
 
 		$this->setCurrentDbVersion($version);
 
-		(new MigrationAfterRun($migration, MigrationsRunMode::DOWN))->dispatch();
+		(new MigrationAfterRun($migration, $mode))->dispatch();
 	}
 
 	/**
@@ -447,6 +444,39 @@ final class Migrations
 		}
 
 		return null;
+	}
+
+	/**
+	 * Runs a migration query.
+	 */
+	private function runMigrationQuery(
+		RDBMSInterface $db,
+		MigrationInterface $migration,
+		MigrationMode $mode,
+		?string &$query = null
+	): void {
+		$query = match ($mode) {
+			MigrationMode::UP   => $migration->up(),
+			MigrationMode::DOWN => $migration->down(),
+			MigrationMode::FULL => $db->getGenerator()
+				->buildDatabase()
+		};
+		$proceed = $migration->beforeRun($mode, $query);
+
+		if (\is_string($proceed)) {
+			$query = $proceed;
+		}
+
+		if (false === $proceed) {
+			return;
+		}
+
+		$query = \trim($query);
+		// may be empty if it was force generated will no change was detected
+		if ($query) {
+			$db->executeMulti($query);
+			$migration->afterRun($mode);
+		}
 	}
 
 	/**
