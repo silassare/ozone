@@ -181,13 +181,23 @@ final class Auth implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Gets the list of enabled auth methods to use for api requests.
+	 * Gets the list of enabled auth methods to use for API routes.
 	 *
-	 * @return AuthenticationMethodType[]
+	 * @return array<AuthenticationMethodType|class-string<AuthenticationMethodInterface>>
 	 */
 	public static function apiAuthMethods(): array
 	{
 		return Settings::get('oz.auth', 'OZ_AUTH_API_AUTH_METHODS');
+	}
+
+	/**
+	 * Gets the list of enabled auth methods to use for WEB routes.
+	 *
+	 * @return array<AuthenticationMethodType|class-string<AuthenticationMethodInterface>>
+	 */
+	public static function webAuthMethods(): array
+	{
+		return Settings::get('oz.auth', 'OZ_AUTH_WEB_AUTH_METHODS');
 	}
 
 	/**

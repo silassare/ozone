@@ -57,4 +57,14 @@ return [
 		AuthenticationMethodType::API_KEY_HEADER,
 		AuthenticationMethodType::SESSION,
 	],
+
+	/**
+	 * Default allowed authentication methods to be defined for WEB routes.
+	 *
+	 * This is an array of {@see AuthenticationMethodType}
+	 * and FQN of classes implementing {@see AuthenticationMethodInterface}.
+	 */
+	'OZ_AUTH_WEB_AUTH_METHODS' => [
+		AuthenticationMethodType::SESSION,
+	],
 ];
