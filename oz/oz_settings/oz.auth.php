@@ -12,6 +12,7 @@
 declare(strict_types=1);
 
 use OZONE\Core\Auth\Enums\AuthenticationMethodType;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 
 return [
 	/**
@@ -46,7 +47,10 @@ return [
 	'OZ_AUTH_API_KEY_HEADER_NAME' => 'x-ozone-api-key',
 
 	/**
-	 * Default authentication methods for API.
+	 * Default allowed authentication methods to be defined for API routes.
+	 *
+	 * This is an array of {@see AuthenticationMethodType}
+	 * and FQN of classes implementing {@see AuthenticationMethodInterface}.
 	 */
 	'OZ_AUTH_API_AUTH_METHODS' => [
 		AuthenticationMethodType::BEARER,
