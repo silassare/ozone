@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Methods;
 
 use OZONE\Core\App\Settings;
-use OZONE\Core\Auth\Enums\AuthenticationMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodStatefulInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
@@ -32,8 +32,8 @@ use OZONE\Core\Utils\Hasher;
  */
 class SessionAuth implements AuthenticationMethodStatefulInterface
 {
-	protected AuthenticationMethodType $type = AuthenticationMethodType::SESSION;
-	protected ?string $session_id            = null;
+	protected AuthenticationMethodScheme $type = AuthenticationMethodScheme::SESSION;
+	protected ?string $session_id              = null;
 	protected ?Session $session;
 	protected AuthUserInterface $user;
 

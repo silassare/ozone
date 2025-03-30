@@ -35,7 +35,7 @@ class FilesHandler extends TableCRUDListener
 			if ($context->hasAuthenticatedUser()) {
 				$user = $context->auth()->user();
 
-				$ev->setField(OZFile::COL_UPLOADER_TYPE, $user->getAuthUserTypeName());
+				$ev->setField(OZFile::COL_UPLOADER_TYPE, $user->getAuthUserType());
 				$ev->setField(OZFile::COL_UPLOADER_ID, $user->getAuthIdentifier());
 			}
 		});

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-use OZONE\Core\Auth\Enums\AuthenticationMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Methods\ApiKeyHeaderAuth;
 use OZONE\Core\Auth\Methods\BasicAuth;
 use OZONE\Core\Auth\Methods\BearerAuth;
@@ -20,15 +20,15 @@ use OZONE\Core\Auth\Methods\DigestRFC2617Auth;
 use OZONE\Core\Auth\Methods\SessionAuth;
 
 /**
- * Map of authentication method type to class name.
+ * Map of authentication method scheme to class name.
  *
  * @var array $auth_methods
  */
 return [
-	AuthenticationMethodType::BASIC->value           => BasicAuth::class,
-	AuthenticationMethodType::BEARER->value          => BearerAuth::class,
-	AuthenticationMethodType::DIGEST->value          => DigestAuth::class,
-	AuthenticationMethodType::DIGEST_RFC_2617->value => DigestRFC2617Auth::class,
-	AuthenticationMethodType::SESSION->value         => SessionAuth::class,
-	AuthenticationMethodType::API_KEY_HEADER->value  => ApiKeyHeaderAuth::class,
+	AuthenticationMethodScheme::BASIC->value           => BasicAuth::class,
+	AuthenticationMethodScheme::BEARER->value          => BearerAuth::class,
+	AuthenticationMethodScheme::DIGEST->value          => DigestAuth::class,
+	AuthenticationMethodScheme::DIGEST_RFC_2617->value => DigestRFC2617Auth::class,
+	AuthenticationMethodScheme::SESSION->value         => SessionAuth::class,
+	AuthenticationMethodScheme::API_KEY_HEADER->value  => ApiKeyHeaderAuth::class,
 ];

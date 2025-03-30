@@ -28,7 +28,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getAuthUserTypeName(): string
+	public function getAuthUserType(): string
 	{
 		return 'anonymous';
 	}

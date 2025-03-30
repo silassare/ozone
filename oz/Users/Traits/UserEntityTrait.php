@@ -26,9 +26,9 @@ trait UserEntityTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getAuthUserTypeName(): string
+	public function getAuthUserType(): string
 	{
-		return self::TABLE_NAME;
+		return db()->getTableOrFail(self::TABLE_NAME)->getMorphType();
 	}
 
 	/**

@@ -201,7 +201,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 				->setPermissions($this->scope->getAccessRight()->toArray());
 
 			if (null !== $user) {
-				$auth->setOwnerType($user->getAuthUserTypeName())
+				$auth->setOwnerType($user->getAuthUserType())
 					->setOwnerId($user->getAuthIdentifier());
 			}
 

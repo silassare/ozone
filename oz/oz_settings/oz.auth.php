@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-use OZONE\Core\Auth\Enums\AuthenticationMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 
 return [
@@ -47,24 +47,24 @@ return [
 	'OZ_AUTH_API_KEY_HEADER_NAME' => 'x-ozone-api-key',
 
 	/**
-	 * Default allowed authentication methods to be defined for API routes.
+	 * Default allowed authentication methods or schemes to be defined for API routes.
 	 *
-	 * This is an array of {@see AuthenticationMethodType}
+	 * This is an array of {@see AuthenticationMethodScheme}
 	 * and FQN of classes implementing {@see AuthenticationMethodInterface}.
 	 */
 	'OZ_AUTH_API_AUTH_METHODS' => [
-		AuthenticationMethodType::BEARER,
-		AuthenticationMethodType::API_KEY_HEADER,
-		AuthenticationMethodType::SESSION,
+		AuthenticationMethodScheme::BEARER,
+		AuthenticationMethodScheme::API_KEY_HEADER,
+		AuthenticationMethodScheme::SESSION,
 	],
 
 	/**
-	 * Default allowed authentication methods to be defined for WEB routes.
+	 * Default allowed authentication methods or schemes to be defined for WEB routes.
 	 *
-	 * This is an array of {@see AuthenticationMethodType}
+	 * This is an array of {@see AuthenticationMethodScheme}
 	 * and FQN of classes implementing {@see AuthenticationMethodInterface}.
 	 */
 	'OZ_AUTH_WEB_AUTH_METHODS' => [
-		AuthenticationMethodType::SESSION,
+		AuthenticationMethodScheme::SESSION,
 	],
 ];

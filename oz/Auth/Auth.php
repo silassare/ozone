@@ -15,7 +15,7 @@ namespace OZONE\Core\Auth;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Auth\Enums\AuthenticationMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthorizationProviderInterface;
 use OZONE\Core\Db\OZAuth;
@@ -146,11 +146,11 @@ final class Auth implements BootHookReceiverInterface
 	/**
 	 * Gets the authentication method class from settings.
 	 *
-	 * @param AuthenticationMethodType|string $method
+	 * @param AuthenticationMethodScheme|string $method
 	 *
 	 * @return class-string<AuthenticationMethodInterface>
 	 */
-	public static function method(AuthenticationMethodType|string $method): string
+	public static function method(AuthenticationMethodScheme|string $method): string
 	{
 		if (!\is_string($method)) {
 			$method = $method->value;
@@ -183,7 +183,7 @@ final class Auth implements BootHookReceiverInterface
 	/**
 	 * Gets the list of enabled auth methods to use for API routes.
 	 *
-	 * @return array<AuthenticationMethodType|class-string<AuthenticationMethodInterface>>
+	 * @return array<AuthenticationMethodScheme|class-string<AuthenticationMethodInterface>>
 	 */
 	public static function apiAuthMethods(): array
 	{
@@ -193,7 +193,7 @@ final class Auth implements BootHookReceiverInterface
 	/**
 	 * Gets the list of enabled auth methods to use for WEB routes.
 	 *
-	 * @return array<AuthenticationMethodType|class-string<AuthenticationMethodInterface>>
+	 * @return array<AuthenticationMethodScheme|class-string<AuthenticationMethodInterface>>
 	 */
 	public static function webAuthMethods(): array
 	{

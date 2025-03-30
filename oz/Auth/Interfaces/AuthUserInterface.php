@@ -28,13 +28,13 @@ interface AuthUserInterface extends ArrayCapableInterface
 	public const IDENTIFIER_NAME_EMAIL = 'email';
 
 	/**
-	 * Get the entity auth type name.
+	 * Get the entity auth type.
 	 *
-	 * Usually the entity table name.
+	 * Usually the entity table morph type {@see Table::getMorphType()}.
 	 *
 	 * @return string
 	 */
-	public function getAuthUserTypeName(): string;
+	public function getAuthUserType(): string;
 
 	/**
 	 * Get the entity auth main identifier.

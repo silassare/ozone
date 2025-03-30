@@ -129,9 +129,9 @@ class TypePhone extends Type
 	{
 		if (isset($options['registered'])) {
 			if ($options['registered']) {
-				$this->registered($options['registered_as'] ?? UsersRepository::OZ_USERS);
+				$this->registered($options['registered_as'] ?? UsersRepository::DEFAULT_USER_TYPE);
 			} else {
-				$this->notRegistered($options['registered_as'] ?? UsersRepository::OZ_USERS);
+				$this->notRegistered($options['registered_as'] ?? UsersRepository::DEFAULT_USER_TYPE);
 			}
 		}
 

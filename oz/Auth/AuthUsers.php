@@ -73,7 +73,7 @@ final class AuthUsers
 	public static function ref(AuthUserInterface $user, string $separator = '.', ?string $identifier_name = null): string
 	{
 		if (null === $identifier_name) {
-			return $user->getAuthUserTypeName() . $separator . $user->getAuthIdentifier();
+			return $user->getAuthUserType() . $separator . $user->getAuthIdentifier();
 		}
 
 		$identifiers      = $user->getAuthIdentifiers();
@@ -86,7 +86,7 @@ final class AuthUsers
 			]);
 		}
 
-		return $user->getAuthUserTypeName() . $separator . $identifier_name . $separator . $identifier_value;
+		return $user->getAuthUserType() . $separator . $identifier_name . $separator . $identifier_value;
 	}
 
 	/**
@@ -123,7 +123,7 @@ final class AuthUsers
 	 */
 	public static function same(AuthUserInterface $a, AuthUserInterface $b): bool
 	{
-		return $a->getAuthUserTypeName() === $b->getAuthUserTypeName()
+		return $a->getAuthUserType() === $b->getAuthUserType()
 			&& $a->getAuthIdentifier() === $b->getAuthIdentifier();
 	}
 
@@ -133,7 +133,7 @@ final class AuthUsers
 	public static function selector(AuthUserInterface $user): array
 	{
 		return [
-			self::FIELD_AUTH_USER_TYPE => $user->getAuthUserTypeName(),
+			self::FIELD_AUTH_USER_TYPE => $user->getAuthUserType(),
 			self::FIELD_AUTH_USER_ID   => $user->getAuthIdentifier(),
 		];
 	}
@@ -277,7 +277,7 @@ final class AuthUsers
 		$sq = new OZSessionsQuery();
 
 		return $sq->whereOwnerIdIs($user->getAuthIdentifier())
-			->whereOwnerTypeIs($user->getAuthUserTypeName())
+			->whereOwnerTypeIs($user->getAuthUserType())
 			->whereExpireIsGt(\time())
 			->find()
 			->fetchAllClass();
@@ -291,7 +291,7 @@ final class AuthUsers
 		$sq = new OZSessionsQuery();
 
 		$sq->whereOwnerIdIs($user->getAuthIdentifier())
-			->whereOwnerTypeIs($user->getAuthUserTypeName())
+			->whereOwnerTypeIs($user->getAuthUserType())
 			->update([
 				OZSession::COL_OWNER_ID   => null,
 				OZSession::COL_OWNER_TYPE => null,
@@ -346,7 +346,7 @@ final class AuthUsers
 		$qb = new OZRolesQuery();
 
 		$qb->whereOwnerIdIs($user->getAuthIdentifier())
-			->whereOwnerTypeIs($user->getAuthUserTypeName())
+			->whereOwnerTypeIs($user->getAuthUserType())
 			->whereNameIs($role);
 
 		if ($valid_only) {
@@ -383,7 +383,7 @@ final class AuthUsers
 			$entry = new OZRole();
 
 			$entry->setOwnerID($user->getAuthIdentifier())
-				->setOwnerType($user->getAuthUserTypeName())
+				->setOwnerType($user->getAuthUserType())
 				->setName($role)
 				->setIsValid(true)
 				->save();
@@ -428,7 +428,7 @@ final class AuthUsers
 				$qb = new OZRolesQuery();
 
 				return $qb->whereOwnerIdIs($user->getAuthIdentifier())
-					->whereOwnerTypeIs($user->getAuthUserTypeName())
+					->whereOwnerTypeIs($user->getAuthUserType())
 					->whereIsValid()
 					->find(1)
 					->fetchAllClass();

@@ -43,7 +43,7 @@ trait AskCredentialsByHTTPHeaderTrait
 				->withJson($json);
 		} else {
 			$view     = new AccessGrantView($context);
-			$response = $view->renderAccessGrantAuth($this->realm);
+			$response = $view->renderAccessGrantAuth($this->askInfo());
 		}
 
 		throw $exception->setCustomResponse($response->withHeader('WWW-Authenticate', $this->askHeader()));

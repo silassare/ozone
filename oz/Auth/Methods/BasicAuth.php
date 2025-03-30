@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Methods;
 
 use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Auth\Enums\AuthenticationMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
@@ -35,7 +35,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	public const BASIC_AUTH_SEPARATOR               = ':';
 	public const BASIC_AUTH_USERNAME_INFO_SEPARATOR = '|';
 
-	protected AuthenticationMethodType $type = AuthenticationMethodType::BASIC;
+	protected AuthenticationMethodScheme $scheme = AuthenticationMethodScheme::BASIC;
 
 	/**
 	 * @var string The username
@@ -210,8 +210,8 @@ class BasicAuth implements AuthenticationMethodInterface
 	protected function askInfo(): array
 	{
 		return [
-			'type'  => $this->type->value,
-			'realm' => $this->realm,
+			'scheme' => $this->scheme->value,
+			'realm'  => $this->realm,
 		];
 	}
 }

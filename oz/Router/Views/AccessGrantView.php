@@ -37,16 +37,16 @@ final class AccessGrantView extends WebView
 	}
 
 	/**
-	 * @param string $realm
+	 * Render the access grant form with a custom template.
+	 *
+	 * @param array $info
 	 *
 	 * @return Response
 	 */
-	public function renderAccessGrantAuth(string $realm): Response
+	public function renderAccessGrantAuth(array $info): Response
 	{
 		return $this->setTemplate('oz.route.access.grant.auth.blate')
-			->inject([
-				'realm' => $realm,
-			])
+			->inject($info)
 			->respond();
 	}
 }

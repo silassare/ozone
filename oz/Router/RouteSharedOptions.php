@@ -16,7 +16,7 @@ namespace OZONE\Core\Router;
 use InvalidArgumentException;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Auth\Enums\AuthenticationMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -150,11 +150,11 @@ class RouteSharedOptions
 	/**
 	 * Defines allowed authentication methods.
 	 *
-	 * @param AuthenticationMethodType|string ...$allowed_methods
+	 * @param AuthenticationMethodScheme|string ...$allowed_methods
 	 *
 	 * @return $this
 	 */
-	public function withAuthentication(AuthenticationMethodType|string ...$allowed_methods): static
+	public function withAuthentication(AuthenticationMethodScheme|string ...$allowed_methods): static
 	{
 		$allowed_methods = self::atLeasOne($allowed_methods, 'authentication method');
 

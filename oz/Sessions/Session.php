@@ -214,7 +214,7 @@ final class Session implements BootHookReceiverInterface
 		}
 
 		$this->session_entry->setOwnerID($user->getAuthIdentifier());
-		$this->session_entry->setOwnerType($user->getAuthUserTypeName());
+		$this->session_entry->setOwnerType($user->getAuthUserType());
 
 		return $this;
 	}

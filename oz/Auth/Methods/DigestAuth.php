@@ -15,7 +15,7 @@ namespace OZONE\Core\Auth\Methods;
 
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Auth\Enums\AuthenticationMethodType;
+use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Traits\AskCredentialsByHTTPHeaderTrait;
 use OZONE\Core\Auth\Traits\AuthUserKeyAuthenticationMethodTrait;
@@ -33,7 +33,8 @@ class DigestAuth implements AuthenticationMethodInterface
 	use AskCredentialsByHTTPHeaderTrait;
 	use AuthUserKeyAuthenticationMethodTrait;
 
-	protected AuthenticationMethodType $type;
+	protected AuthenticationMethodScheme $scheme;
+
 	protected string $digest = '';
 	protected string $nonce;
 	protected string $opaque;
@@ -43,7 +44,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	 */
 	protected function __construct(protected RouteInfo $ri, protected string $realm, protected bool $rfc2617 = false)
 	{
-		$this->type = $this->rfc2617 ? AuthenticationMethodType::DIGEST_RFC_2617 : AuthenticationMethodType::DIGEST;
+		$this->scheme = $this->rfc2617 ? AuthenticationMethodScheme::DIGEST_RFC_2617 : AuthenticationMethodScheme::DIGEST;
 		$this->newKeys();
 	}
 
@@ -222,7 +223,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	protected function askInfo(): array
 	{
 		return [
-			'type'   => $this->type->value,
+			'scheme' => $this->scheme->value,
 			'realm'  => $this->realm,
 			'nonce'  => $this->nonce,
 			'opaque' => $this->opaque,

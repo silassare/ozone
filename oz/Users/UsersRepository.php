@@ -31,7 +31,7 @@ use Throwable;
  */
 final class UsersRepository implements AuthUsersRepositoryInterface
 {
-	public const OZ_USERS = 'oz_users';
+	public const DEFAULT_USER_TYPE = 'user';
 
 	/** @var array<string, 1> */
 	private static array $users_tables = [];

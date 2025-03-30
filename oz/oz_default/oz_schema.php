@@ -29,7 +29,8 @@ return static function (NamespaceBuilder $ns) {
 	$ns->table('oz_users', static function (TableBuilder $tb) {
 		$tb->plural('oz_users')
 			->singular('oz_user')
-			->columnPrefix('user');
+			->columnPrefix('user')
+			->morphType('user');
 
 		$min_age = Settings::get('oz.users', 'OZ_USER_MIN_AGE');
 		$max_age = Settings::get('oz.users', 'OZ_USER_MAX_AGE');
@@ -65,7 +66,8 @@ return static function (NamespaceBuilder $ns) {
 	$ns->table('oz_countries', static function (TableBuilder $tb) {
 		$tb->plural('oz_countries')
 			->singular('oz_country')
-			->columnPrefix('country');
+			->columnPrefix('country')
+			->morphType('country');
 
 		// columns
 		$tb->column('cc2', (new TypeCC2())->check(false));
@@ -84,7 +86,8 @@ return static function (NamespaceBuilder $ns) {
 	$ns->table('oz_files', static function (TableBuilder $tb) {
 		$tb->plural('oz_files')
 			->singular('oz_file')
-			->columnPrefix('file');
+			->columnPrefix('file')
+			->morphType('file');
 
 		// columns
 		$tb->id();
