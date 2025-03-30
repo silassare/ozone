@@ -14,11 +14,11 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Enums;
 
 /**
- * Enum AuthMethodType.
+ * Enum AuthenticationMethodScheme.
  *
- * Authentication method types.
+ * Authentication method scheme.
  */
-enum AuthenticationMethodType: string
+enum AuthenticationMethodScheme: string
 {
 	case BASIC = 'Basic';
 
