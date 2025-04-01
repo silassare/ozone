@@ -23,7 +23,6 @@ use OZONE\Core\CRUD\TableCRUD;
 use OZONE\Core\Db\OZRolesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Exceptions\Utils\ErrorUtils;
-use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Events\InitHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\HTTPEnvironment;
@@ -33,7 +32,6 @@ use OZONE\Core\Plugins\Plugins;
 use OZONE\Core\Router\Events\RouterCreated;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Utils\Utils;
 use PDOException;
 
 /**
@@ -98,16 +96,6 @@ final class OZone
 	}
 
 	/**
-	 * Checks if the app is running in web mode.
-	 *
-	 * @return bool
-	 */
-	public static function isWebMode(): bool
-	{
-		return !self::isCliMode();
-	}
-
-	/**
 	 * Make sure that the boot hook receivers are notified.
 	 *
 	 * @param string $message the message to display if the boot hook receivers are not notified
@@ -137,62 +125,19 @@ final class OZone
 	}
 
 	/**
-	 * OZone main entry point.
+	 * Run the app.
+	 *
+	 * This method is the entry point of the app.
+	 * It will bootstrap the app and handle the request.
 	 *
 	 * @param AppInterface $app
 	 */
-	public static function run(AppInterface $app): void
+	public static function run(AppInterface $app): never
 	{
-		if (null !== self::$_app) {
-			\trigger_error('The app is already running.');
+		$context = self::bootstrap($app);
 
-			return;
-		}
-
-		self::$_app = $app;
-
-		ErrorUtils::registerHandlers();
-
-		$app->boot();
-
-		Plugins::boot();
-
-		self::notifyBootHookReceivers();
-
-		Db::init();
-
-		$is_cli_mode    = self::isCliMode();
-		$is_web_context = \defined('OZ_OZONE_IS_WEB_CONTEXT');
-		$is_api_context = !$is_web_context;
-
-		if ($is_cli_mode) {
-			$http_env = HTTPEnvironment::mock();
-		} else {
-			$http_env = new HTTPEnvironment($_SERVER);
-		}
-
-		$context = new Context($http_env, null, null, $is_api_context);
-
-		// The current user access level will be used for CRUD validation
-		TableCRUD::registerListeners($context);
-
-		(new InitHook($context))->dispatch();
-
-		if (self::isWebMode()) {
-			$context->handle()
-				->respond();
-
-			// Finish the request
-			if (\function_exists('fastcgi_finish_request')) {
-				fastcgi_finish_request();
-			} elseif (!\in_array(\PHP_SAPI, ['cli', 'phpdbg'], true)) {
-				Utils::closeOutputBuffers(0, true);
-			}
-
-			(new FinishHook($context->getRequest(), $context->getResponse()))->dispatch();
-
-			exit;
-		}
+		$context->handle();
+		$context->respond();
 	}
 
 	/**
@@ -335,6 +280,53 @@ final class OZone
 		}
 
 		return $has_super_admin;
+	}
+
+	/**
+	 * Bootstrap the app.
+	 *
+	 * This bootstraps the app and returns the {@see Context} for web and cli mode.
+	 *
+	 * @internal
+	 */
+	public static function bootstrap(AppInterface $app): Context
+	{
+		if (null !== self::$_app) {
+			\trigger_error('The app is already running.');
+
+			return Context::root();
+		}
+
+		self::$_app = $app;
+
+		ErrorUtils::registerHandlers();
+
+		$app->boot();
+
+		Plugins::boot();
+
+		self::notifyBootHookReceivers();
+
+		Db::init();
+
+		$is_cli_mode    = self::isCliMode();
+		$is_web_context = \defined('OZ_OZONE_IS_WEB_CONTEXT');
+		$is_api_context = !$is_web_context;
+
+		if ($is_cli_mode) {
+			$http_env = HTTPEnvironment::mock();
+		} else {
+			$http_env = new HTTPEnvironment($_SERVER);
+		}
+
+		$context = new Context($http_env, null, null, $is_api_context);
+
+		// The current user access level will be used for CRUD validation
+		TableCRUD::registerListeners($context);
+
+		(new InitHook($context))->dispatch();
+
+		return $context;
 	}
 
 	/**

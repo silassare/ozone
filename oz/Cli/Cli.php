@@ -74,7 +74,7 @@ final class Cli extends Kli
 
 				$title = \sprintf('oz:%s', Str::stringToURLSlug($project_name));
 
-				OZone::run($app);
+				OZone::bootstrap($app);
 			}
 
 			\cli_set_process_title($title);
