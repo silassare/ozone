@@ -66,8 +66,6 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 					&& Settings::get('oz.api.doc', 'OZ_API_DOC_SHOW_ON_INDEX')
 				) {
 					$context->redirectRoute(ApiDocView::API_DOC_VIEW_ROUTE);
-
-					return;
 				}
 
 				throw new ForbiddenException();
