@@ -33,8 +33,10 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 {
 	public const DEFAULT_USER_TYPE = 'user';
 
-	/** @var array<string, 1> */
-	private static array $users_tables = [];
+	/**
+	 * @var array<string,1>
+	 */
+	private static array $auth_users_tables = [];
 
 	/**
 	 * UsersRepository constructor.
@@ -42,15 +44,19 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	public function __construct(protected string $table_name) {}
 
 	/**
-	 * Check if a given user type is supported by this repository.
+	 * Check if a given auth user table is supported by this repository.
 	 *
-	 * @param string $type_name
+	 * @param Table $table
 	 *
 	 * @return bool
+	 *
+	 * @internal
 	 */
-	public static function supported(string $type_name): bool
+	public static function isTableSupported(Table $table): bool
 	{
-		return isset(self::$users_tables[$type_name]);
+		$user_type  = $table->getMorphType();
+
+		return isset(self::$auth_users_tables[$user_type]);
 	}
 
 	/**
@@ -62,16 +68,18 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 */
 	public static function makeAuthUserTable(TableBuilder $tb): void
 	{
-		$table_name = $tb->getTable()->getName();
+		$table      = $tb->getTable();
+		$table_name = $table->getName();
+		$user_type  = $table->getMorphType();
 
 		// added once
 		// this method may be called multiple times for the same table in different db schema collect hooks
-		self::$users_tables[$table_name] = 1;
+		self::$auth_users_tables[$table_name] = 1;
 
 		// required columns
 		$tb->id();
-		$tb->column(AuthUserInterface::IDENTIFIER_NAME_PHONE, TypeUtils::userPhone($table_name));
-		$tb->column(AuthUserInterface::IDENTIFIER_NAME_EMAIL, TypeUtils::userMailAddress($table_name));
+		$tb->column(AuthUserInterface::IDENTIFIER_NAME_PHONE, TypeUtils::userPhone($user_type));
+		$tb->column(AuthUserInterface::IDENTIFIER_NAME_EMAIL, TypeUtils::userMailAddress($user_type));
 		$tb->column('pass', new TypePassword());
 		$tb->map('data')->default([]);
 

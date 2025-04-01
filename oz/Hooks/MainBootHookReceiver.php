@@ -185,15 +185,15 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	 */
 	public static function onTableFilesGenerated(ORMTableFilesGenerated $event): void
 	{
-		$table     = $event->getTable();
-		$name      = $table->getName();
-		$trait     = null;
-		$interface = null;
+		$table      = $event->getTable();
+		$table_name = $table->getName();
+		$trait      = null;
+		$interface  = null;
 
-		if (UsersRepository::supported($name)) {
+		if (UsersRepository::isTableSupported($table)) {
 			$trait     = UserEntityTrait::class;
 			$interface = AuthUserInterface::class;
-		} elseif ('oz_files' === $name) {
+		} elseif ('oz_files' === $table_name) {
 			$trait = FileEntityTrait::class;
 		}
 
