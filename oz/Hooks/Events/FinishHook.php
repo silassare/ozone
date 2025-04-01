@@ -13,8 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Hooks\Events;
 
-use OZONE\Core\Http\Request;
-use OZONE\Core\Http\Response;
+use OZONE\Core\App\Context;
 use PHPUtils\Events\Event;
 
 /**
@@ -30,11 +29,9 @@ final class FinishHook extends Event
 	/**
 	 * FinishHook constructor.
 	 *
-	 * @param Request  $request  the request
-	 * @param Response $response the response
+	 * @param Context $context the context
 	 */
 	public function __construct(
-		public readonly Request $request,
-		public readonly Response $response
+		public readonly Context $context
 	) {}
 }
