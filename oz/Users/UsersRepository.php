@@ -18,6 +18,7 @@ use Gobl\DBAL\Exceptions\DBALException;
 use Gobl\DBAL\Table;
 use Gobl\ORM\ORMTableQuery;
 use Gobl\ORM\Utils\ORMClassKind;
+use InvalidArgumentException;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Interfaces\AuthUsersRepositoryInterface;
 use OZONE\Core\Columns\Types\TypeFile;
@@ -39,9 +40,17 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	private static array $auth_users_tables = [];
 
 	/**
+	 * @var array<string,string>
+	 */
+	private static array $auth_users_type_to_tables = [];
+
+	/**
 	 * UsersRepository constructor.
 	 */
-	public function __construct(protected string $table_name) {}
+	private function __construct(
+		protected string $table_name,
+		protected string $user_type
+	) {}
 
 	/**
 	 * Check if a given auth user table is supported by this repository.
@@ -72,9 +81,10 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		$table_name = $table->getName();
 		$user_type  = $table->getMorphType();
 
-		// added once
-		// this method may be called multiple times for the same table in different db schema collect hooks
-		self::$auth_users_tables[$table_name] = 1;
+		// this method may be called multiple times for the same
+		// table in different db schema collect hooks
+		self::$auth_users_tables[$table_name]        = 1;
+		self::$auth_users_type_to_tables[$user_type] = $table_name;
 
 		// required columns
 		$tb->id();
@@ -99,7 +109,15 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 */
 	public static function get(string $user_type_name): self
 	{
-		return new self($user_type_name);
+		$table_name = self::$auth_users_type_to_tables[$user_type_name] ?? null;
+		if (empty($table_name)) {
+			throw new InvalidArgumentException(\sprintf(
+				'The auth user type "%s" is not supported.',
+				$user_type_name
+			));
+		}
+
+		return new self($table_name, $user_type_name);
 	}
 
 	/**
