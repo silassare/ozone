@@ -22,6 +22,7 @@ use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Events\RedirectHook;
 use OZONE\Core\Hooks\Events\RequestHook;
 use OZONE\Core\Hooks\Events\ResponseHook;
@@ -33,6 +34,7 @@ use OZONE\Core\Http\Uri;
 use OZONE\Core\OZone;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
+use OZONE\Core\Utils\Utils;
 use PHPUtils\Store\StoreNotEditable;
 use Throwable;
 
@@ -621,9 +623,12 @@ final class Context
 	/**
 	 * Sends response to the client.
 	 *
+	 * Should be called only once.
+	 * As it will finish/terminate the request.
+	 *
 	 * @param null|Response $with
 	 */
-	public function respond(?Response $with = null): void
+	public function respond(?Response $with = null): never
 	{
 		if (null !== $with) {
 			$this->response = $with;
@@ -701,6 +706,8 @@ final class Context
 				}
 			}
 		}
+
+		$this->finish();
 	}
 
 	/**
@@ -767,7 +774,7 @@ final class Context
 	 * @param string   $url    the redirect destination url
 	 * @param null|int $status the redirect HTTP status code
 	 */
-	public function redirect(string $url, ?int $status = null): Response
+	public function redirect(string $url, ?int $status = null): never
 	{
 		$this->checkRecursiveRedirection($url, ['status' => $status]);
 
@@ -780,11 +787,10 @@ final class Context
 		if ($this->isApiContext()) {
 			$response = $this->response->withRedirect($url, $status);
 			$this->setResponse($response);
-
-			return $this->getResponse();
+			$this->respond();
+		} else {
+			$this->redirectRoute('oz:redirect', ['url' => $url, 'status' => $status]);
 		}
-
-		return $this->redirectRoute('oz:redirect', ['url' => $url, 'status' => $status]);
 	}
 
 	/**
@@ -802,7 +808,7 @@ final class Context
 		array $query = [],
 		bool $inform_user = true,
 		?int $status = null,
-	): Response {
+	): never {
 		$this->checkRecursiveRedirection(
 			$route_name,
 			[
@@ -822,10 +828,11 @@ final class Context
 				->withPath($path, true)
 				->withQueryArray($query);
 
-			return $this->redirect((string) $uri, $status);
+			$this->redirect((string) $uri, $status);
+		} else {
+			$this->callPath($path, $params, $query);
+			$this->respond();
 		}
-
-		return $this->callPath($path, $params, $query);
 	}
 
 	/**
@@ -882,6 +889,23 @@ final class Context
 				return \strtolower(\trim($entry));
 			}, $bundle)
 		);
+	}
+
+	/**
+	 * Finish the request.
+	 */
+	private function finish(): never
+	{
+		// Finish the request
+		if (\function_exists('fastcgi_finish_request')) {
+			fastcgi_finish_request();
+		} elseif (!\in_array(\PHP_SAPI, ['cli', 'phpdbg'], true)) {
+			Utils::closeOutputBuffers(0, true);
+		}
+
+		(new FinishHook($this))->dispatch();
+
+		exit;
 	}
 
 	/**
