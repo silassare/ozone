@@ -34,22 +34,14 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 {
 	public const DEFAULT_USER_TYPE = 'user';
 
-	/**
-	 * @var array<string,1>
-	 */
-	private static array $auth_users_tables = [];
-
-	/**
-	 * @var array<string,string>
-	 */
-	private static array $auth_users_type_to_tables = [];
+	private const TABLE_MARKER_META_KEY = 'ozone.auth_users_repository.auth_user_type';
 
 	/**
 	 * UsersRepository constructor.
 	 */
 	private function __construct(
-		protected string $table_name,
-		protected string $user_type
+		protected Table $table,
+		protected string $user_type,
 	) {}
 
 	/**
@@ -63,9 +55,10 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 */
 	public static function isTableSupported(Table $table): bool
 	{
-		$user_type  = $table->getMorphType();
+		$user_type = $table->getMorphType();
+		$meta      = $table->getMeta();
 
-		return isset(self::$auth_users_tables[$user_type]);
+		return $meta->get(self::TABLE_MARKER_META_KEY) === $user_type;
 	}
 
 	/**
@@ -77,14 +70,10 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 */
 	public static function makeAuthUserTable(TableBuilder $tb): void
 	{
-		$table      = $tb->getTable();
-		$table_name = $table->getName();
-		$user_type  = $table->getMorphType();
+		$table     = $tb->getTable();
+		$user_type = $table->getMorphType();
 
-		// this method may be called multiple times for the same
-		// table in different db schema collect hooks
-		self::$auth_users_tables[$table_name]        = 1;
-		self::$auth_users_type_to_tables[$user_type] = $table_name;
+		$tb->meta(self::TABLE_MARKER_META_KEY, $user_type);
 
 		// required columns
 		$tb->id();
@@ -109,15 +98,16 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 */
 	public static function get(string $user_type_name): self
 	{
-		$table_name = self::$auth_users_type_to_tables[$user_type_name] ?? null;
-		if (empty($table_name)) {
+		$table = db()->getTableByMorphType($user_type_name);
+
+		if (!$table || !self::isTableSupported($table)) {
 			throw new InvalidArgumentException(\sprintf(
 				'The auth user type "%s" is not supported.',
 				$user_type_name
 			));
 		}
 
-		return new self($table_name, $user_type_name);
+		return new self($table, $user_type_name);
 	}
 
 	/**
@@ -162,7 +152,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to load user by phone.', [
 				'phone' => $phone,
-				'type'  => $this->table_name,
+				'type'  => $this->user_type,
 			], $t);
 		}
 	}
@@ -188,7 +178,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to load user by email.', [
 				'email' => $email,
-				'type'  => $this->table_name,
+				'type'  => $this->user_type,
 			], $t);
 		}
 	}
@@ -212,20 +202,15 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to load user by id.', [
 				'uid'  => $uid,
-				'type' => $this->table_name,
+				'type' => $this->user_type,
 			], $t);
 		}
-	}
-
-	private function table(): Table
-	{
-		return db()->getTableOrFail($this->table_name);
 	}
 
 	private function qb(): ORMTableQuery
 	{
 		/** @var ORMTableQuery $class */
-		$class = ORMClassKind::QUERY->getClassFQN($this->table());
+		$class = ORMClassKind::QUERY->getClassFQN($this->table);
 
 		return $class::new();
 	}
