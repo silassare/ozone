@@ -121,7 +121,7 @@ class FilesServer
 		array $options,
 		bool $allow_resume = false,
 		bool $is_stream = false
-	): void {
+	): never {
 		// TODO Full rewrite
 
 		// - turn off compression on the server
