@@ -334,7 +334,7 @@ final class Session implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Assert if the session started.
+	 * Asserts that the session started.
 	 */
 	private function assertSessionStarted(): void
 	{

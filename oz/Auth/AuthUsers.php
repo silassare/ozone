@@ -13,9 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth;
 
-use Gobl\CRUD\Exceptions\CRUDException;
-use Gobl\Exceptions\GoblException;
-use Gobl\ORM\Exceptions\ORMException;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Events\AuthUserLoggedIn;
@@ -24,12 +21,9 @@ use OZONE\Core\Auth\Events\AuthUserLogInFailed;
 use OZONE\Core\Auth\Events\AuthUserUnknown;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Interfaces\AuthUsersRepositoryInterface;
-use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Db\Base\OZSession;
-use OZONE\Core\Db\OZRole;
-use OZONE\Core\Db\OZRolesQuery;
 use OZONE\Core\Db\OZSessionsQuery;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
@@ -38,6 +32,8 @@ use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Exceptions\UnverifiedUserException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
+use OZONE\Core\Roles\Interfaces\RoleInterface;
+use OZONE\Core\Roles\Roles;
 use Throwable;
 
 /**
@@ -45,10 +41,6 @@ use Throwable;
  */
 final class AuthUsers
 {
-	public const SUPER_ADMIN = 'super-admin'; // Owner(s)
-	public const ADMIN       = 'admin';
-	public const EDITOR      = 'editor';
-
 	public const FIELD_AUTH_USER_TYPE             = 'auth_user_type';
 	public const FIELD_AUTH_USER_ID               = 'auth_user_id';
 	public const FIELD_AUTH_USER_IDENTIFIER_NAME  = 'auth_user_identifier_name';
@@ -70,8 +62,11 @@ final class AuthUsers
 	/**
 	 * Gets the user ref.
 	 */
-	public static function ref(AuthUserInterface $user, string $separator = '.', ?string $identifier_name = null): string
-	{
+	public static function ref(
+		AuthUserInterface $user,
+		string $separator = '.',
+		?string $identifier_name = null
+	): string {
 		if (null === $identifier_name) {
 			return $user->getAuthUserType() . $separator . $user->getAuthIdentifier();
 		}
@@ -333,119 +328,7 @@ final class AuthUsers
 	}
 
 	/**
-	 * Gets role entry for a given user id and role.
-	 *
-	 * @param AuthUserInterface $user       the user
-	 * @param string            $role       the role
-	 * @param bool              $valid_only if true, only valid role will be returned
-	 *
-	 * @return null|OZRole
-	 */
-	public static function roleEntry(AuthUserInterface $user, string $role, bool $valid_only): ?OZRole
-	{
-		$qb = new OZRolesQuery();
-
-		$qb->whereOwnerIdIs($user->getAuthIdentifier())
-			->whereOwnerTypeIs($user->getAuthUserType())
-			->whereNameIs($role);
-
-		if ($valid_only) {
-			$qb->whereIsValid();
-		}
-
-		return $qb->find(1)
-			->fetchClass();
-	}
-
-	/**
-	 * Assigns a role to a given user.
-	 *
-	 * @param AuthUserInterface $user    the user
-	 * @param string            $role    the role
-	 * @param bool              $restore if true and the role is invalid, it will be restored
-	 *
-	 * @return OZRole
-	 *
-	 * @throws CRUDException
-	 * @throws ORMException
-	 * @throws GoblException
-	 */
-	public static function assignRole(AuthUserInterface $user, string $role, bool $restore = false): OZRole
-	{
-		$entry = self::roleEntry($user, $role, false);
-
-		if ($entry) {
-			if ($restore && !$entry->isValid()) {
-				$entry->setIsValid(true)
-					->save();
-			}
-		} else {
-			$entry = new OZRole();
-
-			$entry->setOwnerID($user->getAuthIdentifier())
-				->setOwnerType($user->getAuthUserType())
-				->setName($role)
-				->setIsValid(true)
-				->save();
-		}
-
-		return $entry;
-	}
-
-	/**
-	 * Revokes a role from a given user.
-	 *
-	 * @param AuthUserInterface $user the user
-	 * @param string            $role the role
-	 *
-	 * @return bool
-	 *
-	 * @throws CRUDException
-	 * @throws GoblException
-	 * @throws ORMException
-	 */
-	public static function revokeRole(AuthUserInterface $user, string $role): bool
-	{
-		if ($entry = self::roleEntry($user, $role, false)) {
-			$entry->setIsValid(false)
-				->save();
-		}
-
-		return true;
-	}
-
-	/**
-	 * Gets a given user roles.
-	 *
-	 * @param AuthUserInterface $user
-	 *
-	 * @return OZRole[]
-	 */
-	public static function roles(AuthUserInterface $user): array
-	{
-		$factory = static function () use ($user) {
-			try {
-				$qb = new OZRolesQuery();
-
-				return $qb->whereOwnerIdIs($user->getAuthIdentifier())
-					->whereOwnerTypeIs($user->getAuthUserType())
-					->whereIsValid()
-					->find(1)
-					->fetchAllClass();
-			} catch (Throwable $t) {
-				throw new RuntimeException('Unable to load user roles.', [
-					'user' => AuthUsers::selector($user),
-				], $t);
-			}
-		};
-
-		return CacheManager::runtime(__METHOD__)
-			->factory(self::ref($user), $factory)
-			->get();
-	}
-
-	/**
-	 * Asserts if we have an authenticated user.
+	 * Asserts that we have an authenticated user.
 	 *
 	 * @param null|string    $message
 	 * @param null|array     $data
@@ -470,7 +353,7 @@ final class AuthUsers
 	}
 
 	/**
-	 * Asserts if the authenticated user is a verified admin.
+	 * Asserts that the authenticated user is at least a verified admin.
 	 *
 	 * @param string         $message
 	 * @param null|array     $data
@@ -479,7 +362,7 @@ final class AuthUsers
 	 * @throws ForbiddenException
 	 * @throws UnverifiedUserException
 	 */
-	public function assertIsAdmin(
+	public function assertUserIsAtLeastAdmin(
 		string $message = 'OZ_ERROR_YOU_ARE_NOT_ADMIN',
 		?array $data = [],
 		?Throwable $previous = null
@@ -488,13 +371,13 @@ final class AuthUsers
 
 		$user = $this->context->auth()->user();
 
-		if (!self::isAdmin($user)) {
+		if (!Roles::isAdmin($user, false)) {
 			throw new ForbiddenException($message, $data, $previous);
 		}
 	}
 
 	/**
-	 * Asserts if the authenticated user is a verified editor.
+	 * Asserts that the authenticated user is at least a verified editor.
 	 *
 	 * @param string         $message
 	 * @param null|array     $data
@@ -503,7 +386,7 @@ final class AuthUsers
 	 * @throws ForbiddenException
 	 * @throws UnverifiedUserException
 	 */
-	public function assertIsEditor(
+	public function assertUserIsAtLeastEditor(
 		string $message = 'OZ_ERROR_YOU_ARE_NOT_EDITOR',
 		?array $data = [],
 		?Throwable $previous = null
@@ -512,13 +395,13 @@ final class AuthUsers
 
 		$user = $this->context->auth()->user();
 
-		if (!self::isEditor($user)) {
+		if (!Roles::isEditor($user, false)) {
 			throw new ForbiddenException($message, $data, $previous);
 		}
 	}
 
 	/**
-	 * Asserts if the authenticated user is a super-admin.
+	 * Asserts that the authenticated user is a super-admin.
 	 *
 	 * @param string         $message
 	 * @param null|array     $data
@@ -527,7 +410,7 @@ final class AuthUsers
 	 * @throws ForbiddenException
 	 * @throws UnverifiedUserException
 	 */
-	public function assertIsSuperAdmin(
+	public function assertUserIsSuperAdmin(
 		string $message = 'OZ_ERROR_YOU_ARE_NOT_SUPER_ADMIN',
 		?array $data = [],
 		?Throwable $previous = null
@@ -536,90 +419,41 @@ final class AuthUsers
 
 		$user = $this->context->auth()->user();
 
-		if (!self::isSuperAdmin($user)) {
+		if (!Roles::isSuperAdmin($user)) {
 			throw new ForbiddenException($message, $data, $previous);
 		}
 	}
 
 	/**
-	 * Checks if the given id belongs to an user with super-admin role.
+	 * Asserts that the user with the given id has at least one role in a given roles list.
 	 *
-	 * @param AuthUserInterface $user
+	 * @param array<RoleInterface|string> $allowed_roles The roles list
+	 * @param null|RoleInterface          $at_least      If not null, and the user has no role in the allowed list,
+	 *                                                   it will check if the user has a role with a higher or equal weight
+	 * @param string                      $message
+	 * @param null|array                  $data
+	 * @param null|Throwable              $previous
 	 *
-	 * @return bool
+	 * @throws ForbiddenException
+	 * @throws UnverifiedUserException
 	 */
-	public static function isSuperAdmin(AuthUserInterface $user): bool
-	{
-		return self::hasRole($user, self::SUPER_ADMIN);
-	}
+	public function assertUserHasOneOfRoles(
+		array $allowed_roles,
+		?RoleInterface $at_least = null,
+		string $message = 'OZ_ERROR_USER_IS_MISSING_REQUIRED_ROLE',
+		?array $data = [],
+		?Throwable $previous = null
+	): void {
+		$this->assertUserVerified($message, $data, $previous);
 
-	/**
-	 * Checks if the given id belongs to an user with admin or super-admin role.
-	 *
-	 * @param AuthUserInterface $user
-	 *
-	 * @return bool
-	 */
-	public static function isAdmin(AuthUserInterface $user): bool
-	{
-		return self::hasRole($user, self::ADMIN, false);
-	}
+		$user = $this->context->auth()->user();
 
-	/**
-	 * Checks if the given id belongs to an user with editor role.
-	 *
-	 * @param AuthUserInterface $user
-	 *
-	 * @return bool
-	 */
-	public static function isEditor(AuthUserInterface $user): bool
-	{
-		return self::hasRole($user, self::EDITOR, false);
-	}
-
-	/**
-	 * Checks if the user with the given id has a given role.
-	 *
-	 * @param AuthUserInterface $user
-	 * @param string            $role   The role
-	 * @param bool              $strict In strict mode user should have one of the roles,
-	 *                                  in non-strict mode user should have one of the roles
-	 *                                  or be an admin or super-admin
-	 *
-	 * @return bool
-	 */
-	public static function hasRole(AuthUserInterface $user, string $role, bool $strict = true): bool
-	{
-		return self::hasOneRoleAtLeast($user, [$role], $strict);
-	}
-
-	/**
-	 * Checks if the user with the given id has at least one role in a given roles list.
-	 *
-	 * @param AuthUserInterface $user
-	 * @param string[]          $allowed_roles The roles list
-	 * @param bool              $strict        In strict mode user should have one of the roles,
-	 *                                         in non-strict mode user should have one of the roles
-	 *                                         or be an admin or super-admin
-	 *
-	 * @return bool
-	 */
-	public static function hasOneRoleAtLeast(AuthUserInterface $user, array $allowed_roles, bool $strict = true): bool
-	{
-		$roles         = self::roles($user);
-		$allowed_roles = \array_fill_keys(\array_values($allowed_roles), 1);
-		foreach ($roles as $entry) {
-			$r = $entry->getName();
-			if (isset($allowed_roles[$r])) {
-				return true;
-			}
-
-			if (!$strict && (self::ADMIN === $r || self::SUPER_ADMIN === $r)) {
-				return true;
-			}
+		if (!Roles::hasOneOfRoles($user, $allowed_roles, $at_least)) {
+			throw new ForbiddenException($message, $data + [
+				'_allowed_roles' => Roles::ensureRolesString($allowed_roles),
+				'_at_least'      => $at_least?->value,
+			], $previous);
 		}
-
-		return false;
 	}
 
 	/**

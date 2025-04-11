@@ -52,7 +52,7 @@ class UploadFiles extends Service
 	 */
 	public function upload(RouteInfo $r): void
 	{
-		$r->getContext()->getUsers()->assertUserVerified();
+		$r->getContext()->getAuthUsers()->assertUserVerified();
 
 		$files_ids = $r->getCleanFormField(self::PARAM_FILES);
 		$ref       = self::newRef();

@@ -133,11 +133,11 @@ final class ProjectCmd extends Command
 	): void {
 		Utils::assertProjectLoaded();
 
-		$host     = $args->get('host');
-		$port     = $args->get('port');
-		$scope    = $args->get('scope');
-		$doc_root = $args->get('doc-root');
-		$cli      = $this->getCli();
+		$host          = $args->get('host');
+		$port          = $args->get('port');
+		$scope_name    = $args->get('scope');
+		$doc_root      = $args->get('doc-root');
+		$cli           = $this->getCli();
 
 		if (null === $port) {
 			$port = Utils::getOpenPort([
@@ -148,7 +148,7 @@ final class ProjectCmd extends Command
 			], $host);
 		}
 
-		$sc = app()->getScope($scope);
+		$sc = scope($scope_name);
 		if (empty($doc_root)) {
 			$doc_root = $sc->getPublicDir()->getRoot();
 		}

@@ -23,6 +23,7 @@ use OZONE\Core\Columns\TypeUtils;
 use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
+use OZONE\Core\Roles\Roles;
 use OZONE\Core\Users\UsersRepository;
 
 return static function (NamespaceBuilder $ns) {
@@ -154,7 +155,7 @@ return static function (NamespaceBuilder $ns) {
 
 		// columns
 		$tb->id();
-		$tb->string('name')->min(1)->max(60);
+		$tb->enum('role', Roles::getRoleEnumClass());
 		$tb->map('data')->default([]);
 		$tb->bool('is_valid')->default(true);
 		$tb->timestamps();
@@ -164,7 +165,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->morph('owner', TypeUtils::morphAnyId());
 
 		$tb->collectIndex(static function (TableBuilder $tb) {
-			$tb->unique('owner_id', 'owner_type', 'name');
+			$tb->unique('owner_id', 'owner_type', 'role');
 		});
 	});
 

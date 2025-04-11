@@ -150,7 +150,7 @@ class TempFS implements BootHookReceiverInterface
 	 */
 	protected static function getTempDir(): FilesManager
 	{
-		return app()->getScope()->getCacheDir()->cd('tmp-fs', true);
+		return scope()->getCacheDir()->cd('tmp-fs', true);
 	}
 
 	/**

@@ -368,11 +368,11 @@ final class Context
 	}
 
 	/**
-	 * Gets auth users manager instance object.
+	 * Gets attached {@link AuthUsers} instance object.
 	 *
 	 * @return AuthUsers
 	 */
-	public function getUsers(): AuthUsers
+	public function getAuthUsers(): AuthUsers
 	{
 		return $this->users;
 	}

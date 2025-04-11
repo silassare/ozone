@@ -28,7 +28,7 @@ $cli_server_router = (new class {
 		$request_uri = $_SERVER['REQUEST_URI'];
 		$blacklist   = [
 			'~\.ht(pass|access)~', // htaccess files
-			'~/debug.log$~', // debug log files
+			'~/ozone.*\.log$~', // ozone log files
 			'~/\.git/~', // git files
 			'~/\.svn/~', // svn files
 		];

@@ -15,13 +15,14 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\Auth\Auth;
-use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Response;
+use OZONE\Core\Roles\Enums\Role;
+use OZONE\Core\Roles\Interfaces\RoleInterface;
 use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\Guards\UserAccessRightsRouteGuard;
 use OZONE\Core\Router\Guards\UserRoleRouteGuard;
@@ -232,7 +233,7 @@ class RouteSharedOptions
 	 *
 	 * @return $this
 	 */
-	public function withRole(string ...$roles): static
+	public function withRole(RoleInterface ...$roles): static
 	{
 		$roles = self::atLeasOne($roles, 'role');
 
@@ -246,7 +247,7 @@ class RouteSharedOptions
 	 *
 	 * @return $this
 	 */
-	public function withRoleOrAdmin(string ...$roles): static
+	public function withRoleOrAdmin(RoleInterface ...$roles): static
 	{
 		$roles = self::atLeasOne($roles, 'role');
 
@@ -263,7 +264,7 @@ class RouteSharedOptions
 	public function withAdminRole(): static
 	{
 		return $this->guard(static function () {
-			return new UserRoleRouteGuard([AuthUsers::ADMIN, AuthUsers::SUPER_ADMIN]);
+			return new UserRoleRouteGuard([Role::ADMIN, Role::SUPER_ADMIN]);
 		});
 	}
 
@@ -275,7 +276,7 @@ class RouteSharedOptions
 	public function withSuperAdminRole(): static
 	{
 		return $this->guard(static function () {
-			return new UserRoleRouteGuard([AuthUsers::SUPER_ADMIN]);
+			return new UserRoleRouteGuard([Role::SUPER_ADMIN]);
 		});
 	}
 

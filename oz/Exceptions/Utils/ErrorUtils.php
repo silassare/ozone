@@ -12,6 +12,7 @@
 namespace OZONE\Core\Exceptions\Utils;
 
 use OZONE\Core\App\Interfaces\AppInterface;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\OZone;
 use Psr\Log\LogLevel;
@@ -116,8 +117,13 @@ class ErrorUtils
 	 * @param int    $line         the file line where it occurs
 	 * @param bool   $die_on_fatal when true we will interrupt on fatal error
 	 */
-	private static function errorHandler(int $code, string $message, string $file, int $line, bool $die_on_fatal = false): void
-	{
+	private static function errorHandler(
+		int $code,
+		string $message,
+		string $file,
+		int $line,
+		bool $die_on_fatal = false
+	): void {
 		oz_logger()->log(self::errorCodeToLogLevel($code), "\n\tFile    : {$file}"
 			. "\n\tLine    : {$line}"
 			. "\n\tCode    : {$code}"
@@ -154,7 +160,7 @@ class ErrorUtils
 			self::errorHandler($code, $error['message'], $error['file'], $error['line'], true);
 		}
 
-		if (\defined('OZ_LOG_EXECUTION_TIME') && OZ_LOG_EXECUTION_TIME) {
+		if (Settings::get('oz.logs', 'OZ_LOG_EXECUTION_TIME_ENABLED')) {
 			oz_logger()->info('::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
 				. \PHP_EOL
 				. 'OZone execution time'

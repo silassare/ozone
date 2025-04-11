@@ -27,7 +27,7 @@ final class Logout extends Service
 	public function actionLogout(): void
 	{
 		$this->getContext()
-			->getUsers()
+			->getAuthUsers()
 			->logUserOut();
 
 		$this->json()

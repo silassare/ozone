@@ -33,7 +33,7 @@ final class Login extends Service
 	public function actionLogin(): void
 	{
 		$context       = $this->getContext();
-		$users_manager = $context->getUsers();
+		$users_manager = $context->getAuthUsers();
 		// And yes! user sent us a form
 		// so we check that the form is valid.
 		$users_manager->logUserOut();

@@ -58,7 +58,7 @@ final class SignUp extends Service
 		$user       = $controller->addItem($data);
 
 		$ri->getContext()
-			->getUsers()
+			->getAuthUsers()
 			->logUserIn($user);
 
 		$this->json()

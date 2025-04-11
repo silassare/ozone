@@ -15,6 +15,7 @@ namespace OZONE\Core\Router\Guards;
 
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Roles\Roles;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -71,7 +72,7 @@ class UserAccessRightsRouteGuard extends AbstractRouteGuard
 
 		$user = $auth->user();
 
-		if (!empty($this->roles) && AuthUsers::hasOneRoleAtLeast($user, $this->roles)) {
+		if (!empty($this->roles) && Roles::hasOneOfRoles($user, $this->roles)) {
 			return true;
 		}
 

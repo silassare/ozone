@@ -19,6 +19,7 @@ use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\Roles\Roles;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use Throwable;
@@ -96,7 +97,7 @@ final class Password extends Service
 					})
 					->name(self::ROUTE_PASS_EDIT_BY_AS_ADMIN)
 					->form(AuthUsers::selectorForm(...))
-					->withRole(AuthUsers::ADMIN);
+					->withRole(Roles::getRoleEnumClass()::admin());
 
 				$router
 					->map(['PATCH', 'POST'], '/self', static function (RouteInfo $ri) {

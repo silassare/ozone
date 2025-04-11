@@ -162,14 +162,14 @@ final class Utils
 	}
 
 	/**
-	 * Asserts if a project is loaded.
+	 * Asserts that a project is loaded.
 	 */
 	public static function assertProjectLoaded(): void
 	{
 		if (!self::tryGetProjectApp()) {
 			throw new RuntimeException(
 				\sprintf(
-					'Error: there is no ozone project in "%s".'
+					'There is no ozone project in "%s".'
 					. \PHP_EOL . 'Are you in project root folder?',
 					\getcwd()
 				)
@@ -178,7 +178,7 @@ final class Utils
 	}
 
 	/**
-	 * Asserts if we are in a project folder with database access.
+	 * Asserts that we are in a project folder with database access.
 	 */
 	public static function assertDatabaseAccess(): void
 	{

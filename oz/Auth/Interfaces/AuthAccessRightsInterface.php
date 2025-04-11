@@ -70,7 +70,7 @@ interface AuthAccessRightsInterface extends ArrayCapableInterface
 	public function can(string ...$actions): bool;
 
 	/**
-	 * Assert if all given action are allowed.
+	 * Asserts that all given action are allowed.
 	 *
 	 * @param string ...$actions
 	 */

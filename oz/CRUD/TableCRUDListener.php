@@ -16,8 +16,6 @@ namespace OZONE\Core\CRUD;
 use OZONE\Core\App\Context;
 use OZONE\Core\CRUD\Interfaces\TableCRUDListenerInterface;
 use OZONE\Core\CRUD\Traits\TableCRUDListenerTrait;
-use OZONE\Core\Exceptions\ForbiddenException;
-use OZONE\Core\Exceptions\UnverifiedUserException;
 
 /**
  * Class TableCRUDListener.
@@ -39,28 +37,5 @@ abstract class TableCRUDListener implements TableCRUDListenerInterface
 	public function __destruct()
 	{
 		unset($this->context);
-	}
-
-	/**
-	 * Asserts that the current user is an admin.
-	 *
-	 * @throws ForbiddenException
-	 * @throws UnverifiedUserException
-	 */
-	protected function assertIsAdmin(): void
-	{
-		$this->context
-			->getUsers()
-			->assertIsAdmin();
-	}
-
-	/**
-	 * Asserts that the current user is verified.
-	 *
-	 * @throws UnverifiedUserException
-	 */
-	protected function assertUserVerified(): void
-	{
-		$this->context->getUsers()->assertUserVerified();
 	}
 }

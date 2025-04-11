@@ -15,6 +15,8 @@ namespace OZONE\Core\Router\Guards;
 
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Roles\Enums\Role;
+use OZONE\Core\Roles\Roles;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -62,7 +64,7 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 		$context  = $ri->getContext();
 		$user     = $context->auth()->user();
 
-		if (!AuthUsers::hasOneRoleAtLeast($user, $this->roles, $this->strict)) {
+		if (!Roles::hasOneOfRoles($user, $this->roles, $this->strict ? null : Role::ADMIN)) {
 			throw new ForbiddenException(null, [
 				'_reason'  => 'User role is not in allowed list.',
 				'_roles'   => $this->roles,
