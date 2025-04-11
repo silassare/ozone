@@ -14,4 +14,4 @@ declare(strict_types=1);
 use OZONE\Core\OZone;
 use OZONE\Tests\App;
 
-OZone::run(new App());
+OZone::bootstrap(new App());

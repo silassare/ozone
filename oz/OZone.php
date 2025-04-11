@@ -286,8 +286,6 @@ final class OZone
 	 * Bootstrap the app.
 	 *
 	 * This bootstraps the app and returns the {@see Context} for web and cli mode.
-	 *
-	 * @internal
 	 */
 	public static function bootstrap(AppInterface $app): Context
 	{
