@@ -289,36 +289,11 @@ class Roles
 	}
 
 	/**
-	 * Gets role entry for a given user id and role.
-	 *
-	 * @param AuthUserInterface $user       the user
-	 * @param string            $role       the role
-	 * @param bool              $valid_only if true, only valid role will be returned
-	 *
-	 * @return null|OZRole
-	 */
-	public static function roleEntry(AuthUserInterface $user, string $role, bool $valid_only): ?OZRole
-	{
-		$qb = new OZRolesQuery();
-
-		$qb->whereOwnerIdIs($user->getAuthIdentifier())
-			->whereOwnerTypeIs($user->getAuthUserType())
-			->whereRoleIs($role);
-
-		if ($valid_only) {
-			$qb->whereIsValid();
-		}
-
-		return $qb->find(1)
-			->fetchClass();
-	}
-
-	/**
 	 * Assigns a role to a given user.
 	 *
-	 * @param AuthUserInterface $user    the user
-	 * @param string            $role    the role
-	 * @param bool              $restore if true and the role is invalid, it will be restored
+	 * @param AuthUserInterface    $user    the user
+	 * @param RoleInterface|string $role    the role
+	 * @param bool                 $restore if true and the role is invalid, it will be restored
 	 *
 	 * @return OZRole
 	 *
@@ -326,9 +301,10 @@ class Roles
 	 * @throws ORMException
 	 * @throws GoblException
 	 */
-	public static function assignRole(AuthUserInterface $user, string $role, bool $restore = false): OZRole
+	public static function assign(AuthUserInterface $user, RoleInterface|string $role, bool $restore = false): OZRole
 	{
-		$entry = self::roleEntry($user, $role, false);
+		$role  = self::normalize($role)->value;
+		$entry = self::role($user, $role, false);
 
 		if ($entry) {
 			if ($restore && !$entry->isValid()) {
@@ -360,14 +336,39 @@ class Roles
 	 * @throws GoblException
 	 * @throws ORMException
 	 */
-	public static function revokeRole(AuthUserInterface $user, string $role): bool
+	public static function revoke(AuthUserInterface $user, string $role): bool
 	{
-		if ($entry = self::roleEntry($user, $role, false)) {
+		if ($entry = self::role($user, $role, false)) {
 			$entry->setIsValid(false)
 				->save();
 		}
 
 		return true;
+	}
+
+	/**
+	 * Gets role entry for a given user id and role.
+	 *
+	 * @param AuthUserInterface $user       the user
+	 * @param string            $role       the role
+	 * @param bool              $valid_only if true, only valid role will be returned
+	 *
+	 * @return null|OZRole
+	 */
+	public static function role(AuthUserInterface $user, string $role, bool $valid_only): ?OZRole
+	{
+		$qb = new OZRolesQuery();
+
+		$qb->whereOwnerIdIs($user->getAuthIdentifier())
+			->whereOwnerTypeIs($user->getAuthUserType())
+			->whereRoleIs($role);
+
+		if ($valid_only) {
+			$qb->whereIsValid();
+		}
+
+		return $qb->find(1)
+			->fetchClass();
 	}
 
 	/**
