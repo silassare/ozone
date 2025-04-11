@@ -3,7 +3,7 @@
 .ozone
 **/otpl_done/*
 **/blate_cache/*
-**/debug.log
+**/ozone*.log
 
 # cs fixer
 .php-cs-fixer.cache

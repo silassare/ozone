@@ -15,7 +15,6 @@ use OpenApi\Annotations as OA;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Generator;
 use OZONE\Core\App\Context;
-use OZONE\Core\Logger\Logger;
 use OZONE\Core\OZone;
 use OZONE\Core\REST\Events\ApiDocReady;
 use OZONE\Core\REST\Interfaces\ApiDocProviderInterface;
@@ -23,6 +22,7 @@ use OZONE\Core\REST\Services\ApiDocService;
 use OZONE\Core\REST\Traits\ApiDocManipulationTrait;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
+use Psr\Log\AbstractLogger;
 use Stringable;
 
 /**
@@ -103,7 +103,7 @@ class ApiDoc implements ArrayCapableInterface
 	 */
 	private function createContext(): \OpenApi\Context
 	{
-		$logger = new class extends Logger {
+		$logger = new class extends AbstractLogger {
 			public function log($level, string|Stringable $message, array $context = []): void
 			{
 				oz_trace($level . ': ' . $message, $context);

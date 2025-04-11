@@ -16,11 +16,6 @@ if (!\defined('DS')) {
 	\define('DS', \DIRECTORY_SEPARATOR);
 }
 
-//= Logs directory
-if (!\defined('OZ_LOG_DIR')) {
-	\define('OZ_LOG_DIR', __DIR__ . DS);
-}
-
 //= Scope name
 if (!\defined('OZ_SCOPE_NAME')) {
 	\define('OZ_SCOPE_NAME', '<%$.oz_scope_name%>');

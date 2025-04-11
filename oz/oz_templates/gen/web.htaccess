@@ -5,9 +5,9 @@ AddType text/cache-manifest .manifest
 #
 Options -Indexes -Multiviews +FollowSymlinks
 
-# disable access to /debug.log
+# disable access to ozone log files
 #
-<Files /debug.log>
+<Files "ozone.*\.log$">
    Order Deny,allow
    Deny from all
 </Files>

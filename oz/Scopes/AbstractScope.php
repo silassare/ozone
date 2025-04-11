@@ -52,4 +52,13 @@ abstract class AbstractScope implements ScopeInterface
 	{
 		return $this->getPublicDir()->cd('static', true);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getLogsDir(): FilesManager
+	{
+		return app()->getProjectDir()
+			->cd('.ozone/logs/', true);
+	}
 }

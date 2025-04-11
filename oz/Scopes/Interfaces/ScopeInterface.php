@@ -52,6 +52,13 @@ interface ScopeInterface
 	public function getDataDir(): FilesManager;
 
 	/**
+	 * Returns an instance of the files manager with the scope logs directory as root.
+	 *
+	 * @return FilesManager
+	 */
+	public function getLogsDir(): FilesManager;
+
+	/**
 	 * Returns an instance of the files manager with the scope cache directory as root.
 	 *
 	 * @return FilesManager

@@ -21,11 +21,6 @@ if (!\defined('OZ_APP_DIR')) {
 	\define('OZ_APP_DIR', __DIR__ . DS);
 }
 
-//= Logs directory
-if (!\defined('OZ_LOG_DIR')) {
-	\define('OZ_LOG_DIR', \getcwd() . DS);
-}
-
 //= Load composer autoload
 require_once OZ_PROJECT_DIR . 'vendor' . DS . 'autoload.php';
 

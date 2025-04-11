@@ -15,9 +15,13 @@ use Gobl\DBAL\Interfaces\RDBMSInterface;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Interfaces\AppInterface;
+use OZONE\Core\Auth\AuthUsers;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Logger\Logger;
 use OZONE\Core\OZone;
+use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use Psr\Log\LogLevel;
 
 if (!\function_exists('oz_logger')) {
@@ -38,7 +42,7 @@ if (!\function_exists('oz_logger')) {
 
 		if (null !== $value) {
 			$level = $value instanceof Throwable ? LogLevel::ERROR : LogLevel::DEBUG;
-			$logger->log($level, Logger::describe($value));
+			$logger->log($level, $value);
 		}
 
 		return $logger;
@@ -123,5 +127,57 @@ if (!\function_exists('oz_logger')) {
 	function context(): Context
 	{
 		return Context::current();
+	}
+
+	/**
+	 * Alias for {@see Context::auth()}.
+	 *
+	 * @param null|Context $ctx instance of {@see Context} to use or null to use the current one
+	 *
+	 * @return AuthenticationMethodInterface
+	 */
+	function auth(?Context $ctx = null): AuthenticationMethodInterface
+	{
+		$ctx = $ctx ?? context();
+
+		return $ctx->auth();
+	}
+
+	/**
+	 * Get the current authenticated user.
+	 *
+	 * @param null|Context $ctx instance of {@see Context} to use or null to use the current one
+	 *
+	 * @return AuthUserInterface
+	 */
+	function user(?Context $ctx = null): AuthUserInterface
+	{
+		return auth($ctx)->user();
+	}
+
+	/**
+	 * Alias for {@see Context::getAuthUsers()}.
+	 *
+	 * @param null|Context $ctx instance of {@see Context} to use or null to use the current one
+	 *
+	 * @return AuthUsers
+	 */
+	function authUsers(?Context $ctx = null): AuthUsers
+	{
+		$ctx = $ctx ?? context();
+
+		return $ctx->getAuthUsers();
+	}
+
+	/**
+	 * Alias for {@see AppInterface::getScope()}.
+	 *
+	 * @param null|string $scope the scope name to use or null to use the current one
+	 *
+	 * @return ScopeInterface
+	 */
+	function scope(?string $scope = null)
+	{
+		return app()->getScope($scope);
 	}
 }

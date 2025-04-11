@@ -24,10 +24,11 @@ server {
     fastcgi_busy_buffers_size 64k;
     fastcgi_temp_file_write_size 64k;
 
-	# disable access to debug.log
+	# disable access to ozone log files
 	#
-	location = /debug.log {
+	location ~ /ozone[^/]*\.log$ {
 		deny all;
+		return 403;
 	}
 
 	# disable access to hidden files such as /.ht(pass|access)
@@ -35,6 +36,7 @@ server {
 	#
 	location ~ /\.(?!well-known) {
 		deny all;
+		return 403;
 	}
 
 	# serve the robots.txt only if it exists

@@ -213,4 +213,12 @@ abstract class AbstractApp implements AppInterface
 		return $this->getSourcesDir()
 			->cd('migrations', true);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function getLogsDir(): FilesManager
+	{
+		return $this->getProjectDir();
+	}
 }

@@ -13,8 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Logger;
 
-use JsonSerializable;
-use OZONE\Core\Exceptions\BaseException;
+use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Logger\Interfaces\LogWriterInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Stringable;
@@ -26,76 +27,11 @@ use Throwable;
 class Logger implements LoggerInterface
 {
 	/**
-	 * Returns a string representation of a value to be logged.
-	 *
-	 * @param mixed $value
-	 *
-	 * @return string
-	 */
-	public static function describe(mixed $value): string
-	{
-		$prev_sep  = "\n========previous========\n";
-
-		if (\is_scalar($value)) {
-			$log = (string) $value;
-		} elseif (\is_array($value)) {
-			$log = \var_export($value, true);
-		} elseif ($value instanceof Throwable) {
-			$e         = $value;
-			$log       = BaseException::throwableToString($e);
-
-			while ($e = $e->getPrevious()) {
-				$log .= $prev_sep . BaseException::throwableToString($e);
-			}
-		} elseif ($value instanceof JsonSerializable) {
-			/** @noinspection JsonEncodingApiUsageInspection */
-			$log = \json_encode($value, \JSON_PRETTY_PRINT);
-		} else {
-			$log = \get_debug_type($value);
-		}
-
-		return \str_replace(['\n', '\t', '\/'], ["\n", "\t", '/'], $log);
-	}
-
-	/**
 	 * {@inheritDoc}
 	 */
-	public function log($level, string|Stringable|Throwable $message, array $context = []): void
+	public function log($level, mixed $message, array $context = []): void
 	{
-		if ($message instanceof Throwable) {
-			$message = self::describe($message);
-		}
-
-		$date  = \date('Y-m-d H:i:s');
-		$level = \strtoupper($level);
-
-		$message = <<<LOG
-================================================================================
-[{$level}] {$date}
-================================================================================
-{$message}
-
-
-LOG;
-
-		if (\defined('OZ_LOG_DIR')) {
-			$dir = OZ_LOG_DIR;
-		} else {
-			$dir = \getcwd();
-		}
-
-		$log_file = $dir . 'debug.log';
-
-		$mode = (\file_exists($log_file) && \filesize($log_file) <= OZ_LOG_MAX_FILE_SIZE) ? 'a' : 'w';
-
-		if ($fp = \fopen($log_file, $mode)) {
-			\fwrite($fp, $message);
-			\fclose($fp);
-
-			if ('w' === $mode) {
-				\chmod($log_file, 0660);
-			}
-		}
+		self::writer()->write($level, $message, $context);
 	}
 
 	/**
@@ -162,5 +98,32 @@ LOG;
 		$this->log(LogLevel::DEBUG, $message, $context);
 	}
 
-	protected static function write($level, string $message, array $context = []) {}
+	/**
+	 * Gets the configured log writer instance.
+	 */
+	private static function writer(): LogWriterInterface
+	{
+		/** @var null|LogWriterInterface $writer */
+		static $writer;
+
+		if (null === $writer) {
+			$cls = Settings::get('oz.logs', 'OZ_LOG_WRITER');
+
+			if (LogWriter::class !== $cls) {
+				if (!\is_subclass_of($cls, LogWriterInterface::class)) {
+					throw (new RuntimeException(\sprintf(
+						'Log writer "%s" must implement "%s".',
+						$cls,
+						LogWriterInterface::class
+					)))->suspectConfig('oz.logs', 'OZ_LOG_WRITER');
+				}
+
+				$writer = $cls::get();
+			} else {
+				$writer = LogWriter::get();
+			}
+		}
+
+		return $writer;
+	}
 }
