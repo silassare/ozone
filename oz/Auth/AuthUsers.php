@@ -34,6 +34,7 @@ use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
 use OZONE\Core\Roles\Roles;
+use OZONE\Core\Roles\RolesUtils;
 use Throwable;
 
 /**
@@ -450,7 +451,7 @@ final class AuthUsers
 
 		if (!Roles::hasOneOfRoles($user, $allowed_roles, $at_least)) {
 			throw new ForbiddenException($message, $data + [
-				'_allowed_roles' => Roles::ensureRolesString($allowed_roles),
+				'_allowed_roles' => RolesUtils::ensureRolesString($allowed_roles),
 				'_at_least'      => $at_least?->value,
 			], $previous);
 		}

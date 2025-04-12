@@ -23,7 +23,7 @@ use OZONE\Core\Columns\TypeUtils;
 use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
-use OZONE\Core\Roles\Roles;
+use OZONE\Core\Roles\RolesUtils;
 use OZONE\Core\Users\UsersRepository;
 
 return static function (NamespaceBuilder $ns) {
@@ -155,7 +155,7 @@ return static function (NamespaceBuilder $ns) {
 
 		// columns
 		$tb->id();
-		$tb->enum('role', Roles::getRoleEnumClass());
+		$tb->enum('role', RolesUtils::getRoleEnumClass());
 		$tb->map('data')->default([]);
 		$tb->bool('is_valid')->default(true);
 		$tb->timestamps();
