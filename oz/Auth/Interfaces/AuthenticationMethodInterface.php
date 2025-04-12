@@ -71,7 +71,8 @@ interface AuthenticationMethodInterface
 	/**
 	 * Check if the authentication method is scoped.
 	 *
-	 * - We want this to make sure if this authentication method use user full access rights or not.
+	 * - We want this to be sure if this authentication method use user full access rights or not.
+	 * - Also user roles cannot be used to access resources if the authentication method is scoped.
 	 *
 	 * Examples:
 	 *      - Session based authentication is not scoped, the user has full access rights.
