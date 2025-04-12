@@ -176,7 +176,7 @@ if (!\function_exists('oz_logger')) {
 	 *
 	 * @return ScopeInterface
 	 */
-	function scope(?string $scope = null)
+	function scope(?string $scope = null): ScopeInterface
 	{
 		return app()->getScope($scope);
 	}
