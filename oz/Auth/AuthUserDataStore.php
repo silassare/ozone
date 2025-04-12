@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth;
 
 use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Cache\CacheManager;
 use PHPUtils\Store\Store;
@@ -52,6 +53,13 @@ class AuthUserDataStore extends Store
 
 	/**
 	 * Gets the user access rights.
+	 *
+	 * > IMPORTANT: Don't use this method to check access rights,
+	 * > as the request may be using scoped auth credentials.
+	 * >
+	 * > use {@see AuthenticationMethodInterface::getAccessRights()} instead.
+	 * >
+	 * > Example: `auth()->getAccessRights()`
 	 */
 	public function getAuthUserAccessRights(): AuthAccessRightsInterface
 	{
