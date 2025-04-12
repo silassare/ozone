@@ -20,7 +20,7 @@ use OZONE\Core\Auth\Interfaces\AuthorizationScopeInterface;
 use OZONE\Core\Db\OZAuth;
 
 /**
- * Class AuthScope.
+ * Class AuthorizationScope.
  */
 class AuthorizationScope implements AuthorizationScopeInterface
 {
@@ -30,7 +30,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	protected AuthAccessRightsInterface $access_right;
 
 	/**
-	 * AuthScope constructor.
+	 * AuthorizationScope constructor.
 	 */
 	public function __construct()
 	{
@@ -132,20 +132,10 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	{
 		$scope = new self();
 
-		$parent  = null;
-		$context = context();
-
-		if ($context->hasAuthenticatedUser()) {
-			$au = $context->auth();
-			if ($au->isScoped()) {
-				$parent = $au->getAccessRights();
-			}
-		}
-
 		return $scope
 			->setTryMax($auth->getTryMax())
 			->setLifetime($auth->getLifetime())
 			->setLabel($auth->getLabel())
-			->setAccessRight(AuthAccessRights::from($auth, $parent));
+			->setAccessRight(AuthAccessRights::from($auth));
 	}
 }

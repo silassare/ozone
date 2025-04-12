@@ -24,12 +24,20 @@ interface AuthAccessRightsInterface extends ArrayCapableInterface
 	/**
 	 * Loads access rights info from auth entity.
 	 *
-	 * @param OZAuth                         $auth
-	 * @param null|AuthAccessRightsInterface $parent
+	 * @param OZAuth $auth
 	 *
 	 * @return static
 	 */
-	public static function from(OZAuth $auth, ?self $parent = null): static;
+	public static function from(OZAuth $auth): static;
+
+	/**
+	 * Pushes a scope to the stack.
+	 *
+	 * @param AuthAccessRightsInterface $scope
+	 *
+	 * @return self
+	 */
+	public function pushScope(self $scope): self;
 
 	/**
 	 * Add allowed action.

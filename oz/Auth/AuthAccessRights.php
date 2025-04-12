@@ -26,12 +26,30 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	use ArrayCapableTrait;
 
 	/**
-	 * AccessRights constructor.
+	 * @var AuthAccessRightsInterface[]
+	 */
+	protected array $scopes = [];
+
+	/**
+	 * AuthAccessRights constructor.
 	 */
 	public function __construct(
 		protected array $options = [],
-		protected ?AuthAccessRightsInterface $parent = null
-	) {}
+		protected bool $auto_push_auth_user = true,
+	) {
+		if ($this->auto_push_auth_user) {
+			$context = context();
+
+			// this is to ensure we don't have access rights escalation
+			if ($context->hasAuthenticatedUser()) {
+				$au = $context->auth();
+				if ($au->isScoped()) {
+					$auth_user_rights = $au->getAccessRights();
+					$this->pushScope($auth_user_rights);
+				}
+			}
+		}
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -40,7 +58,7 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	 */
 	public function allow(string $action): self
 	{
-		if ($this->parent && !$this->parent->can($action)) {
+		if (!$this->allowedInScopes([$action])) {
 			throw new UnauthorizedActionException('Access right escalation.', [
 				'_action'  => $action,
 				'_message' => 'Possible access rights escalation detected.',
@@ -70,7 +88,7 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	 */
 	public function can(string ...$actions): bool
 	{
-		if ($this->parent && !$this->parent->can(...$actions)) {
+		if (!$this->allowedInScopes($actions)) {
 			return false;
 		}
 
@@ -135,9 +153,21 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public static function from(OZAuth $auth, ?AuthAccessRightsInterface $parent = null): static
+	public static function from(OZAuth $auth): static
 	{
-		return new self((array) $auth->getPermissions(), $parent);
+		return new self((array) $auth->getPermissions());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function pushScope(AuthAccessRightsInterface $scope): AuthAccessRightsInterface
+	{
+		if (!\in_array($scope, $this->scopes, true)) {
+			$this->scopes[] = $scope;
+		}
+
+		return $this;
 	}
 
 	/**
@@ -146,5 +176,16 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	public function toArray(): array
 	{
 		return $this->options;
+	}
+
+	protected function allowedInScopes(array $actions): bool
+	{
+		foreach ($this->scopes as $scope) {
+			if (!$scope->can(...$actions)) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 }

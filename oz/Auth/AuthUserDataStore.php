@@ -57,7 +57,7 @@ class AuthUserDataStore extends Store
 	{
 		$data = $this->get('access_rights') ?? [];
 
-		return new AuthAccessRights($data);
+		return new AuthAccessRights($data, false);
 	}
 
 	/**

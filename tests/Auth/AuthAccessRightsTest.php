@@ -26,13 +26,16 @@ use PHPUnit\Framework\TestCase;
  */
 final class AuthAccessRightsTest extends TestCase
 {
-	public function testParent(): void
+	public function testScopes(): void
 	{
 		$a = new AuthAccessRights([]);
-		$b = new AuthAccessRights([], $a);
+		$b = new AuthAccessRights([]);
 		$c = new AuthAccessRights([
 			'users.create' => 1,
-		], $a);
+		]);
+
+		$b->pushScope($a);
+		$c->pushScope($a);
 
 		$a->deny('users.delete');
 
@@ -44,6 +47,9 @@ final class AuthAccessRightsTest extends TestCase
 		$b->allow('users.delete');
 	}
 
+	/**
+	 * @throws UnauthorizedActionException
+	 */
 	public function testAllow(): void
 	{
 		$a = new AuthAccessRights();
@@ -66,6 +72,9 @@ final class AuthAccessRightsTest extends TestCase
 		], $a->toArray());
 	}
 
+	/**
+	 * @throws UnauthorizedActionException
+	 */
 	public function testDeny(): void
 	{
 		$a = new AuthAccessRights();
@@ -87,6 +96,9 @@ final class AuthAccessRightsTest extends TestCase
 		], $a->toArray());
 	}
 
+	/**
+	 * @throws UnauthorizedActionException
+	 */
 	public function testCan(): void
 	{
 		$a = (new AuthAccessRights());
@@ -136,6 +148,9 @@ final class AuthAccessRightsTest extends TestCase
 		$a->assertCan('users.delete');
 	}
 
+	/**
+	 * @throws UnauthorizedActionException
+	 */
 	public function tesToArray(): void
 	{
 		$a = new AuthAccessRights();
