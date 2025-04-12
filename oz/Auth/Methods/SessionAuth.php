@@ -133,8 +133,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 */
 	public function getAccessRights(): AuthAccessRightsInterface
 	{
-		return $this->user()
-			->getAuthUserDataStore()->getAuthUserAccessRights();
+		return $this->user()->getAuthUserDataStore()->getAuthUserAccessRights();
 	}
 
 	/**
