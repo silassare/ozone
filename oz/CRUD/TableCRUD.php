@@ -17,6 +17,7 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\CRUD\Interfaces\TableCRUDListenerInterface;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\OZone;
 
 /**
  * Class TableCRUD.
@@ -30,6 +31,11 @@ final class TableCRUD
 	 */
 	public static function registerListeners(Context $context): void
 	{
+		// make sure ozone is fully installed first
+		if (OZone::isInstalled()) {
+			return;
+		}
+
 		$gobl_crud = Settings::load('oz.gobl.crud');
 
 		foreach ($gobl_crud as $listener => $enabled) {

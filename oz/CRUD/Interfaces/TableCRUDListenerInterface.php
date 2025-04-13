@@ -16,6 +16,8 @@ namespace OZONE\Core\CRUD\Interfaces;
 use Gobl\CRUD\Interfaces\CRUDEventListenerInterface;
 use Gobl\ORM\ORMEntity;
 use OZONE\Core\App\Context;
+use OZONE\Core\Hooks\Events\InitHook;
+use OZONE\Core\OZone;
 
 /**
  * Class TableCRUDListenerInterface.
@@ -27,7 +29,9 @@ use OZONE\Core\App\Context;
 interface TableCRUDListenerInterface extends CRUDEventListenerInterface
 {
 	/**
-	 * Gets the CRUD listener should be able to register itself.
+	 * Called when O'Zone is fully booted but before {@see InitHook}.
+	 * This is the right place to register CRUD listeners.
+	 * This will be called only if the project is fully installed {@see OZone::isInstalled()}.
 	 *
 	 * @param Context $context
 	 */
