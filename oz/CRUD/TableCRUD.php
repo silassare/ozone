@@ -32,7 +32,7 @@ final class TableCRUD
 	public static function registerListeners(Context $context): void
 	{
 		// make sure ozone is fully installed first
-		if (OZone::isInstalled()) {
+		if (!OZone::isInstalled()) {
 			return;
 		}
 
