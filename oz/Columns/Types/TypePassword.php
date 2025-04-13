@@ -13,11 +13,13 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Columns\Types;
 
+use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Crypt\Password;
 
 /**
  * Class TypePassword.
@@ -34,6 +36,22 @@ class TypePassword extends Type
 	public function __construct()
 	{
 		parent::__construct(new TypeString(1, 255));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws TypesInvalidValueException
+	 */
+	public function phpToDb(mixed $value, RDBMSInterface $rdbms): ?string
+	{
+		// we should not store non-hashed password
+		if (!Password::isHash($value)) {
+			$value = $this->validate($value);
+			$value = Password::hash($value);
+		}
+
+		return $value;
 	}
 
 	/**
