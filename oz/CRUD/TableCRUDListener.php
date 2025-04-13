@@ -30,12 +30,4 @@ abstract class TableCRUDListener implements TableCRUDListenerInterface
 	 * @param Context $context
 	 */
 	public function __construct(protected readonly Context $context) {}
-
-	/**
-	 * TableCRUDListener destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->context);
-	}
 }
