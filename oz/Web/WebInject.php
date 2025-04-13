@@ -27,17 +27,12 @@ use Throwable;
  */
 class WebInject
 {
-	private Context $context;
-
 	/**
 	 * WebInject constructor.
 	 *
 	 * @param Context $context
 	 */
-	public function __construct(Context $context)
-	{
-		$this->context = $context;
-	}
+	public function __construct(private Context $context) {}
 
 	/**
 	 * WebInject destructor.
