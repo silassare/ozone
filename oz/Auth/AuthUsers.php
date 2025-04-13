@@ -28,8 +28,8 @@ use OZONE\Core\Db\OZSessionsQuery;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\UnauthenticatedException;
 use OZONE\Core\Exceptions\UnauthorizedActionException;
-use OZONE\Core\Exceptions\UnverifiedUserException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
@@ -335,9 +335,9 @@ final class AuthUsers
 	 * @param null|array     $data
 	 * @param null|Throwable $previous
 	 *
-	 * @throws UnverifiedUserException
+	 * @throws UnauthenticatedException
 	 */
-	public function assertUserVerified(
+	public function assertUserIsAuthenticated(
 		?string $message = null,
 		?array $data = [],
 		?Throwable $previous = null
@@ -345,11 +345,11 @@ final class AuthUsers
 		try {
 			$user = $this->context->auth()->user();
 		} catch (Throwable) {
-			throw new UnverifiedUserException($message, $data, $previous);
+			throw new UnauthenticatedException($message, $data, $previous);
 		}
 
 		if (!$user->isAuthUserValid()) {
-			throw new UnverifiedUserException($message, $data, $previous);
+			throw new UnauthenticatedException($message, $data, $previous);
 		}
 	}
 
@@ -361,14 +361,14 @@ final class AuthUsers
 	 * @param null|Throwable $previous
 	 *
 	 * @throws ForbiddenException
-	 * @throws UnverifiedUserException
+	 * @throws UnauthenticatedException
 	 */
 	public function assertUserIsAtLeastAdmin(
 		string $message = 'OZ_ERROR_YOU_ARE_NOT_ADMIN',
 		?array $data = [],
 		?Throwable $previous = null
 	): void {
-		$this->assertUserVerified($message, $data, $previous);
+		$this->assertUserIsAuthenticated($message, $data, $previous);
 
 		$user = $this->context->auth()->user();
 
@@ -385,14 +385,14 @@ final class AuthUsers
 	 * @param null|Throwable $previous
 	 *
 	 * @throws ForbiddenException
-	 * @throws UnverifiedUserException
+	 * @throws UnauthenticatedException
 	 */
 	public function assertUserIsAtLeastEditor(
 		string $message = 'OZ_ERROR_YOU_ARE_NOT_EDITOR',
 		?array $data = [],
 		?Throwable $previous = null
 	): void {
-		$this->assertUserVerified($message, $data, $previous);
+		$this->assertUserIsAuthenticated($message, $data, $previous);
 
 		$user = $this->context->auth()->user();
 
@@ -409,14 +409,14 @@ final class AuthUsers
 	 * @param null|Throwable $previous
 	 *
 	 * @throws ForbiddenException
-	 * @throws UnverifiedUserException
+	 * @throws UnauthenticatedException
 	 */
 	public function assertUserIsSuperAdmin(
 		string $message = 'OZ_ERROR_YOU_ARE_NOT_SUPER_ADMIN',
 		?array $data = [],
 		?Throwable $previous = null
 	): void {
-		$this->assertUserVerified($message, $data, $previous);
+		$this->assertUserIsAuthenticated($message, $data, $previous);
 
 		$user = $this->context->auth()->user();
 
@@ -436,7 +436,7 @@ final class AuthUsers
 	 * @param null|Throwable              $previous
 	 *
 	 * @throws ForbiddenException
-	 * @throws UnverifiedUserException
+	 * @throws UnauthenticatedException
 	 */
 	public function assertUserHasOneOfRoles(
 		array $allowed_roles,
@@ -445,7 +445,7 @@ final class AuthUsers
 		?array $data = [],
 		?Throwable $previous = null
 	): void {
-		$this->assertUserVerified($message, $data, $previous);
+		$this->assertUserIsAuthenticated($message, $data, $previous);
 
 		$user = $this->context->auth()->user();
 

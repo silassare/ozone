@@ -20,7 +20,7 @@ use OZONE\Core\Auth\Interfaces\AuthenticationMethodStatefulInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
 use OZONE\Core\Exceptions\ForbiddenException;
-use OZONE\Core\Exceptions\UnverifiedUserException;
+use OZONE\Core\Exceptions\UnauthenticatedException;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Sessions\Session;
 use OZONE\Core\Utils\Hasher;
@@ -102,7 +102,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 * {@inheritDoc}
 	 *
 	 * @throws ForbiddenException
-	 * @throws UnverifiedUserException
+	 * @throws UnauthenticatedException
 	 */
 	public function user(): AuthUserInterface
 	{
@@ -111,7 +111,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 				->attachedAuthUser();
 
 			if (!$user) {
-				throw new UnverifiedUserException(null, [
+				throw new UnauthenticatedException(null, [
 					'_reason' => 'User not authenticated.',
 					'_help'   => 'Please login first.',
 				]);
@@ -129,7 +129,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 * @return AuthAccessRightsInterface
 	 *
 	 * @throws ForbiddenException
-	 * @throws UnverifiedUserException
+	 * @throws UnauthenticatedException
 	 */
 	public function getAccessRights(): AuthAccessRightsInterface
 	{

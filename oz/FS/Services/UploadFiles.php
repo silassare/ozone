@@ -17,7 +17,7 @@ use Gobl\DBAL\Types\Exceptions\TypesException;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\InvalidFormException;
-use OZONE\Core\Exceptions\UnverifiedUserException;
+use OZONE\Core\Exceptions\UnauthenticatedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
@@ -48,11 +48,11 @@ class UploadFiles extends Service
 	/**
 	 * @param RouteInfo $r
 	 *
-	 * @throws UnverifiedUserException
+	 * @throws UnauthenticatedException
 	 */
 	public function upload(RouteInfo $r): void
 	{
-		$r->getContext()->getAuthUsers()->assertUserVerified();
+		$r->getContext()->getAuthUsers()->assertUserIsAuthenticated();
 
 		$files_ids = $r->getCleanFormField(self::PARAM_FILES);
 		$ref       = self::newRef();

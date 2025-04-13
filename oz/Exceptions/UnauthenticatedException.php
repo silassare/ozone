@@ -17,24 +17,27 @@ use OZONE\Core\Lang\I18nMessage;
 use Throwable;
 
 /**
- * Class UnverifiedUserException.
+ * Class UnauthenticatedException.
  */
-class UnverifiedUserException extends BaseException
+class UnauthenticatedException extends BaseException
 {
 	/**
-	 * UnverifiedUserException constructor.
+	 * UnauthenticatedException constructor.
 	 *
 	 * @param null|I18nMessage|string $message  the exception message
 	 * @param null|array              $data     additional exception data
 	 * @param null|Throwable          $previous previous throwable used for the exception chaining
 	 */
-	public function __construct(null|I18nMessage|string $message = null, ?array $data = null, ?Throwable $previous = null)
-	{
+	public function __construct(
+		null|I18nMessage|string $message = null,
+		?array $data = null,
+		?Throwable $previous = null
+	) {
 		parent::__construct(
-			empty($message) ? 'OZ_ERROR_YOU_MUST_LOGIN' : $message,
+			empty($message) ? 'OZ_ERROR_UNAUTHENTICATED' : $message,
 			$data,
 			$previous,
-			BaseException::UNVERIFIED_USER,
+			BaseException::UNAUTHENTICATED_USER,
 		);
 	}
 }

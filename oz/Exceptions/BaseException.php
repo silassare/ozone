@@ -56,7 +56,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	public const UNKNOWN_ERROR = 520;
 
 	// ozone custom error codes
-	public const UNVERIFIED_USER = 10001;
+	public const UNAUTHENTICATED_USER = 10001;
 
 	public const INVALID_FORM = 10002;
 
@@ -71,8 +71,8 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 		// default error same as the CloudFlare's Unknown Error
 		self::UNKNOWN_ERROR       => 520,
 		// ozone custom error codes
-		self::UNVERIFIED_USER     => 401,
-		self::INVALID_FORM        => 400,
+		self::UNAUTHENTICATED_USER     => 401,
+		self::INVALID_FORM             => 400,
 	];
 
 	/**
