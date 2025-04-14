@@ -36,7 +36,7 @@ class I18n
 			return Polyglot::translate($message, $inject, $lang, $context);
 		}
 
-		$inject = \array_merge($message->getInject(), $inject);
+		$inject = \array_merge($message->getData(), $inject);
 
 		return Polyglot::translate($message->getText(), $inject, $lang, $context);
 	}

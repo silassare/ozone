@@ -23,9 +23,11 @@ class I18nMessage implements ArrayCapableInterface
 {
 	use ArrayCapableTrait;
 
-	public function __construct(protected string $text, protected array $inject = []) {}
+	public function __construct(protected string $text, protected array $data = []) {}
 
 	/**
+	 * Gets the message text/key.
+	 *
 	 * @return string
 	 */
 	public function getText(): string
@@ -34,11 +36,13 @@ class I18nMessage implements ArrayCapableInterface
 	}
 
 	/**
+	 * Gets the message data.
+	 *
 	 * @return array
 	 */
-	public function getInject(): array
+	public function getData(): array
 	{
-		return $this->inject;
+		return $this->data;
 	}
 
 	/**
@@ -48,7 +52,7 @@ class I18nMessage implements ArrayCapableInterface
 	{
 		return [
 			'text'   => $this->getText(),
-			'inject' => $this->getInject(),
+			'data'   => $this->getData(),
 		];
 	}
 }
