@@ -11,27 +11,33 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Auth;
+namespace OZONE\Core\Access;
 
-use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
+use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Db\OZAuth;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
+use OZONE\Core\Lang\I18nMessage;
 use PHPUtils\Traits\ArrayCapableTrait;
 
 /**
- * Class AuthAccessRights.
+ * Class AccessRights.
  */
-class AuthAccessRights implements AuthAccessRightsInterface
+class AccessRights implements AccessRightsInterface
 {
 	use ArrayCapableTrait;
 
 	/**
-	 * @var AuthAccessRightsInterface[]
+	 * @var AccessRightsInterface[]
 	 */
 	protected array $scopes = [];
 
 	/**
-	 * AuthAccessRights constructor.
+	 * @var null|string
+	 */
+	protected ?string $last_checked = null;
+
+	/**
+	 * AccessRights constructor.
 	 */
 	public function __construct(
 		protected array $options = [],
@@ -54,12 +60,12 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function allow(string $action): self
 	{
 		if (!$this->allowedInScopes([$action])) {
-			throw new UnauthorizedActionException('Access right escalation.', [
+			throw new UnauthorizedException('Access right escalation.', [
 				'_action'  => $action,
 				'_message' => 'Possible access rights escalation detected.',
 			]);
@@ -88,12 +94,14 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	 */
 	public function can(string ...$actions): bool
 	{
+		$this->last_checked = null;
 		if (!$this->allowedInScopes($actions)) {
 			return false;
 		}
 
 		foreach ($actions as $action) {
-			$is_wildcard = \str_contains($action, '*');
+			$this->last_checked = $action;
+			$is_wildcard        = \str_contains($action, '*');
 			// when it's not a wildcard check if the granular action is defined
 			if (!$is_wildcard && isset($this->options[$action])) {
 				$allowed = (bool) $this->options[$action];
@@ -139,13 +147,24 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function assertCan(string ...$actions): void
 	{
 		if (!$this->can(...$actions)) {
-			throw new UnauthorizedActionException(null, [
-				'_actions' => $actions,
+			$last_checked = $this->last_checked;
+
+			/** @var null|I18nMessage $error */
+			$error = null;
+
+			if ($last_checked) {
+				$atomic_action = AtomicActionsRegistry::get($last_checked);
+				$error         = $atomic_action->getErrorMessage();
+			}
+
+			throw new UnauthorizedException($error, [
+				'_actions'      => $actions,
+				'_last_checked' => $last_checked,
 			]);
 		}
 	}
@@ -161,7 +180,7 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function pushScope(AuthAccessRightsInterface $scope): AuthAccessRightsInterface
+	public function pushScope(AccessRightsInterface $scope): AccessRightsInterface
 	{
 		if (!\in_array($scope, $this->scopes, true)) {
 			$this->scopes[] = $scope;
@@ -182,6 +201,10 @@ class AuthAccessRights implements AuthAccessRightsInterface
 	{
 		foreach ($this->scopes as $scope) {
 			if (!$scope->can(...$actions)) {
+				if ($scope instanceof self) {
+					$this->last_checked = $scope->last_checked;
+				}
+
 				return false;
 			}
 		}

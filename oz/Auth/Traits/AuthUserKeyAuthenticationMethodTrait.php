@@ -13,16 +13,16 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Traits;
 
+use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Enums\AuthorizationState;
-use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Providers\AuthUserAuthorizationProvider;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 
 /**
  * Trait AuthUserKeyAuthenticationMethodTrait.
@@ -39,7 +39,7 @@ trait AuthUserKeyAuthenticationMethodTrait
 	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function user(): AuthUserInterface
 	{
@@ -54,13 +54,13 @@ trait AuthUserKeyAuthenticationMethodTrait
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return AuthAccessRightsInterface
+	 * @return AccessRightsInterface
 	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
-	public function getAccessRights(): AuthAccessRightsInterface
+	public function getAccessRights(): AccessRightsInterface
 	{
 		if (!isset($this->provider)) {
 			$this->authenticate();
@@ -85,7 +85,7 @@ trait AuthUserKeyAuthenticationMethodTrait
 	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	protected function authenticateWithAuthEntity(OZAuth $auth, ?AuthUserInterface $expected_user = null): void
 	{
@@ -118,7 +118,7 @@ trait AuthUserKeyAuthenticationMethodTrait
 			if (!AuthUsers::same($expected_user, $user)) {
 				throw new ForbiddenException(null, [
 					'_reason'        => 'Referenced auth is not for this user.',
-					'_auth_user'     => AuthUsers::selector($user),
+					'_user'          => AuthUsers::selector($user),
 					'_expected_user' => AuthUsers::selector($expected_user),
 				]);
 			}

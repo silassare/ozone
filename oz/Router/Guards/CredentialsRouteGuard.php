@@ -22,7 +22,7 @@ use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Router\RouteInfo;
 
@@ -100,7 +100,7 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	 *
 	 * @throws ForbiddenException
 	 * @throws InvalidFormException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function check(RouteInfo $ri): array
 	{

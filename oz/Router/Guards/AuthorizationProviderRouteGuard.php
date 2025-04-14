@@ -19,7 +19,7 @@ use OZONE\Core\Auth\Interfaces\AuthorizationProviderInterface;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -59,7 +59,7 @@ class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function check(RouteInfo $ri): array
 	{
@@ -87,7 +87,7 @@ class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 		$provider = Auth::provider($context, $auth);
 
 		if (AuthorizationState::AUTHORIZED !== $provider->getState()) {
-			throw new UnauthorizedActionException();
+			throw new UnauthorizedException();
 		}
 
 		return [

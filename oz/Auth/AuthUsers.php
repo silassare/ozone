@@ -29,7 +29,7 @@ use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Exceptions\UnauthenticatedException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
@@ -302,18 +302,18 @@ final class AuthUsers
 	 * @param string            $new_pass     the new password
 	 * @param null|string       $current_pass the current pass
 	 *
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public static function updatePassword(AuthUserInterface $user, string $new_pass, ?string $current_pass = null): void
 	{
 		$known_pass_hash = $user->getAuthPassword();
 
 		if ((null !== $current_pass) && !Password::verify($current_pass, $known_pass_hash)) {
-			throw new UnauthorizedActionException('OZ_FIELD_PASS_INVALID');
+			throw new UnauthorizedException('OZ_FIELD_PASS_INVALID');
 		}
 
 		if (Password::verify($new_pass, $known_pass_hash)) {
-			throw new UnauthorizedActionException('OZ_PASSWORD_SAME_OLD_AND_NEW_PASS');
+			throw new UnauthorizedException('OZ_PASSWORD_SAME_OLD_AND_NEW_PASS');
 		}
 
 		try {
@@ -321,7 +321,7 @@ final class AuthUsers
 				->save();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to update user pass.', [
-				'user' => self::selector($user),
+				'_user' => self::selector($user),
 			], $t);
 		}
 

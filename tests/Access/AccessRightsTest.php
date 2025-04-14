@@ -11,26 +11,26 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Tests\Auth;
+namespace OZONE\Tests\Access;
 
-use OZONE\Core\Auth\AuthAccessRights;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Access\AccessRights;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class AuthAccessRightsTest.
+ * Class AccessRightsTest.
  *
  * @internal
  *
  * @coversNothing
  */
-final class AuthAccessRightsTest extends TestCase
+final class AccessRightsTest extends TestCase
 {
 	public function testScopes(): void
 	{
-		$a = new AuthAccessRights([]);
-		$b = new AuthAccessRights([]);
-		$c = new AuthAccessRights([
+		$a = new AccessRights([]);
+		$b = new AccessRights([]);
+		$c = new AccessRights([
 			'users.create' => 1,
 		]);
 
@@ -41,18 +41,18 @@ final class AuthAccessRightsTest extends TestCase
 
 		self::assertFalse($c->can('users.delete'));
 
-		$this->expectException(UnauthorizedActionException::class);
+		$this->expectException(UnauthorizedException::class);
 		$this->expectExceptionMessage('Access right escalation.');
 
 		$b->allow('users.delete');
 	}
 
 	/**
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function testAllow(): void
 	{
-		$a = new AuthAccessRights();
+		$a = new AccessRights();
 		$a->allow('users.create');
 		$a->allow('users.read');
 		$a->allow('users.update');
@@ -73,11 +73,11 @@ final class AuthAccessRightsTest extends TestCase
 	}
 
 	/**
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function testDeny(): void
 	{
-		$a = new AuthAccessRights();
+		$a = new AccessRights();
 
 		$a->allow('users.create');
 		self::assertTrue($a->can('users.create'));
@@ -97,11 +97,11 @@ final class AuthAccessRightsTest extends TestCase
 	}
 
 	/**
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function testCan(): void
 	{
-		$a = (new AuthAccessRights());
+		$a = (new AccessRights());
 		$a->allow('users.*');
 
 		// wildcard allow
@@ -115,14 +115,14 @@ final class AuthAccessRightsTest extends TestCase
 		$a->deny('users.medias.*');
 		self::assertFalse($a->can('users.medias.read'));
 
-		$b = new AuthAccessRights();
+		$b = new AccessRights();
 		$b->allow('users.medias.*');
 		$b->deny('users.*');
 
 		// while users.* is denied, users.medias.* is allowed so users.medias.read should return true
 		self::assertTrue($b->can('users.medias.upload'));
 
-		$c = new AuthAccessRights();
+		$c = new AccessRights();
 
 		// users.* is allowed so users.medias.* should return true
 		$c->allow('users.*');
@@ -135,25 +135,25 @@ final class AuthAccessRightsTest extends TestCase
 	}
 
 	/**
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function testAssertCan(): void
 	{
-		$a = new AuthAccessRights();
+		$a = new AccessRights();
 
 		$a->allow('users.*');
 		$a->deny('users.delete');
 
-		$this->expectException(UnauthorizedActionException::class);
+		$this->expectException(UnauthorizedException::class);
 		$a->assertCan('users.delete');
 	}
 
 	/**
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function tesToArray(): void
 	{
-		$a = new AuthAccessRights();
+		$a = new AccessRights();
 
 		$a->allow('users.*');
 		$a->deny('users.delete');

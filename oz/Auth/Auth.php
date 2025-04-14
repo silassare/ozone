@@ -22,7 +22,7 @@ use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Db\OZAuthsQuery;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\OZone;
@@ -84,8 +84,8 @@ final class Auth implements BootHookReceiverInterface
 	 *
 	 * @return OZAuth
 	 *
-	 * @throws NotFoundException           when not found
-	 * @throws UnauthorizedActionException auth is disabled
+	 * @throws NotFoundException     when not found
+	 * @throws UnauthorizedException auth is disabled
 	 */
 	public static function getRequired(string $ref): OZAuth
 	{
@@ -96,7 +96,7 @@ final class Auth implements BootHookReceiverInterface
 		}
 
 		if (!$auth->isValid()) {
-			throw new UnauthorizedActionException('OZ_AUTH_DISABLED');
+			throw new UnauthorizedException('OZ_AUTH_DISABLED');
 		}
 
 		return $auth;

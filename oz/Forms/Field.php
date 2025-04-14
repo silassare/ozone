@@ -38,6 +38,7 @@ class Field implements ArrayCapableInterface
 	protected string $t_name;
 	protected bool $t_hide          = false;
 	protected bool $t_required      = false;
+	protected bool $t_multiple      = false;
 	protected ?FormRule $t_if       = null;
 
 	/**
@@ -98,6 +99,20 @@ class Field implements ArrayCapableInterface
 	public function required(bool $required = true): static
 	{
 		$this->t_required = $required;
+
+		return $this;
+	}
+
+	/**
+	 * Define whether the field is multiple or not.
+	 *
+	 * @param bool $multiple
+	 *
+	 * @return $this
+	 */
+	public function multiple(bool $multiple = true): static
+	{
+		$this->t_multiple = true;
 
 		return $this;
 	}
@@ -199,6 +214,16 @@ class Field implements ArrayCapableInterface
 	}
 
 	/**
+	 * Check if the field is multiple.
+	 *
+	 * @return bool
+	 */
+	public function isMultiple(): bool
+	{
+		return $this->t_multiple;
+	}
+
+	/**
 	 * Validate a given value.
 	 *
 	 * @param mixed                 $value
@@ -216,7 +241,21 @@ class Field implements ArrayCapableInterface
 			$type = $this->t_type->getType($fvc);
 		}
 
-		$value = $type->validate($value);
+		if ($this->t_multiple) {
+			if (!\is_array($value)) {
+				throw new TypesInvalidValueException('Expected an array', $value);
+			}
+
+			$list = [];
+
+			foreach ($value as $entry) {
+				$list[] = $type->validate($entry);
+			}
+
+			$value = $list;
+		} else {
+			$value = $type->validate($value);
+		}
 
 		if (isset($this->t_validator)) {
 			$value = \call_user_func($this->t_validator, $value, $fvc);

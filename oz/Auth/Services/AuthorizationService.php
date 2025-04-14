@@ -21,7 +21,7 @@ use OZONE\Core\Auth\Enums\AuthorizationSecretType;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Http\Response;
@@ -69,7 +69,7 @@ class AuthorizationService extends Service
 	 * @return Response
 	 *
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function refresh(RouteInfo $ri, FormData $fd): Response
 	{
@@ -97,7 +97,7 @@ class AuthorizationService extends Service
 	 *
 	 * @return Response
 	 *
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 * @throws NotFoundException
 	 */
 	public function state(RouteInfo $ri): Response
@@ -125,7 +125,7 @@ class AuthorizationService extends Service
 	 *
 	 * @return Response
 	 *
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 * @throws NotFoundException
 	 */
 	public function cancel(RouteInfo $ri): Response
@@ -155,7 +155,7 @@ class AuthorizationService extends Service
 	 *
 	 * @throws InvalidFormException
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function authorize(RouteInfo $ri, FormData $fd): Response
 	{

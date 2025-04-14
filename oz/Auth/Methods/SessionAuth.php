@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
-use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodStatefulInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
@@ -126,12 +126,12 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return AuthAccessRightsInterface
+	 * @return AccessRightsInterface
 	 *
 	 * @throws ForbiddenException
 	 * @throws UnauthenticatedException
 	 */
-	public function getAccessRights(): AuthAccessRightsInterface
+	public function getAccessRights(): AccessRightsInterface
 	{
 		return $this->user()->getAuthUserDataStore()->getAuthUserAccessRights();
 	}

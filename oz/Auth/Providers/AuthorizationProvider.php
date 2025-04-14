@@ -33,7 +33,7 @@ use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Utils\Hasher;
 use Throwable;
 
@@ -101,7 +101,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 *
 	 * @throws InvalidFormException
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 * @throws GoblException
 	 */
 	public function authorize(AuthorizationSecretType $type): void
@@ -158,7 +158,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 * {@inheritDoc}
 	 *
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function getState(): AuthorizationState
 	{
@@ -219,7 +219,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 * {@inheritDoc}
 	 *
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 * @throws InvalidFormException
 	 * @throws GoblException
 	 */
@@ -261,7 +261,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 * {@inheritDoc}
 	 *
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function cancel(): self
 	{

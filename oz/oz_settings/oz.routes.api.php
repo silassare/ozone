@@ -11,6 +11,7 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\Access\Services\AccessRightsService;
 use OZONE\Core\Auth\Services\AccountRecovery;
 use OZONE\Core\Auth\Services\AuthorizationService;
 use OZONE\Core\Auth\Services\EmailOwnershipVerificationService;
@@ -41,4 +42,5 @@ return [
 	PhoneOwnershipVerificationService::class              => true,
 	EmailOwnershipVerificationService::class              => true,
 	ApiDocService::class                                  => true,
+	AccessRightsService::class                            => true,
 ];

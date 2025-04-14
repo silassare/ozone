@@ -15,7 +15,7 @@ namespace OZONE\Core\FS\Drivers;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\Db\OZFile;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Http\Uri;
 
@@ -35,11 +35,11 @@ final class PrivateLocalStorage extends AbstractLocalStorage
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function publicUri(Context $context, OZFile $file): Uri
 	{
-		throw new UnauthorizedActionException('Private files cannot be publicly accessed.');
+		throw new UnauthorizedException('Private files cannot be publicly accessed.');
 	}
 
 	/**

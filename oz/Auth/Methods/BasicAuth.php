@@ -13,9 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
-use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Traits\AskCredentialsByHTTPHeaderTrait;
@@ -183,7 +183,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	 *
 	 * @throws ForbiddenException
 	 */
-	public function getAccessRights(): AuthAccessRightsInterface
+	public function getAccessRights(): AccessRightsInterface
 	{
 		return $this->user()->getAuthUserDataStore()->getAuthUserAccessRights();
 	}

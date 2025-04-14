@@ -20,7 +20,7 @@ use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Traits\AuthUserKeyAuthenticationMethodTrait;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -90,7 +90,7 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function authenticate(): void
 	{

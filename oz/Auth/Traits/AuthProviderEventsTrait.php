@@ -15,7 +15,7 @@ namespace OZONE\Core\Auth\Traits;
 
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\InvalidFormException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 
 /**
  * Trait AuthProviderEventsTrait.
@@ -96,11 +96,11 @@ trait AuthProviderEventsTrait
 	 *
 	 * @param OZAuth $auth
 	 *
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	protected function onExpired(OZAuth $auth): void
 	{
-		throw new UnauthorizedActionException('OZ_AUTH_HAS_EXPIRED', $this->debug($auth));
+		throw new UnauthorizedException('OZ_AUTH_HAS_EXPIRED', $this->debug($auth));
 	}
 
 	/**
@@ -132,11 +132,11 @@ trait AuthProviderEventsTrait
 	 *
 	 * @param OZAuth $auth
 	 *
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	protected function onTooMuchRetry(OZAuth $auth): void
 	{
-		throw new UnauthorizedActionException('OZ_AUTH_TOO_MUCH_ATTEMPT', $this->debug($auth));
+		throw new UnauthorizedException('OZ_AUTH_TOO_MUCH_ATTEMPT', $this->debug($auth));
 	}
 
 	/**

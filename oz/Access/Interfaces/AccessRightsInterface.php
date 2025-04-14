@@ -11,15 +11,15 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Auth\Interfaces;
+namespace OZONE\Core\Access\Interfaces;
 
 use OZONE\Core\Db\OZAuth;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 
 /**
- * Interface AuthAccessRightsInterface.
+ * Interface AccessRightsInterface.
  */
-interface AuthAccessRightsInterface extends ArrayCapableInterface
+interface AccessRightsInterface extends ArrayCapableInterface
 {
 	/**
 	 * Loads access rights info from auth entity.
@@ -33,7 +33,7 @@ interface AuthAccessRightsInterface extends ArrayCapableInterface
 	/**
 	 * Pushes a scope to the stack.
 	 *
-	 * @param AuthAccessRightsInterface $scope
+	 * @param AccessRightsInterface $scope
 	 *
 	 * @return self
 	 */

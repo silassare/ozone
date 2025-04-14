@@ -16,8 +16,8 @@ namespace OZONE\Core\Auth\Services;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Columns\Types\TypePassword;
-use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\BadRequestException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Roles\RolesUtils;
 use OZONE\Core\Router\RouteInfo;
@@ -40,7 +40,7 @@ final class Password extends Service
 	 *
 	 * @param RouteInfo $ri
 	 *
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function actionEditOwnPass(RouteInfo $ri): void
 	{
@@ -62,15 +62,15 @@ final class Password extends Service
 	 *
 	 * @param RouteInfo $ri
 	 *
-	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws BadRequestException
+	 * @throws UnauthorizedException
 	 */
 	public function actionEditPassByAdmin(RouteInfo $ri): void
 	{
 		$user = AuthUsers::identifyBySelector($ri->getCleanFormData());
 
 		if (!$user) {
-			throw new NotFoundException();
+			throw new BadRequestException();
 		}
 
 		AuthUsers::updatePassword($user, $ri->getCleanFormField(self::FIELD_PASS_NEW));

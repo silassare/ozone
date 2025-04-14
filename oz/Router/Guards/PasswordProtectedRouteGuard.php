@@ -17,7 +17,7 @@ use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Router\RouteInfo;
 
@@ -61,7 +61,7 @@ class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	 * {@inheritDoc}
 	 *
 	 * @throws InvalidFormException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 * @throws ForbiddenException
 	 */
 	public function check(RouteInfo $ri): bool

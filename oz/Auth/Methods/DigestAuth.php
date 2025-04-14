@@ -21,7 +21,7 @@ use OZONE\Core\Auth\Traits\AskCredentialsByHTTPHeaderTrait;
 use OZONE\Core\Auth\Traits\AuthUserKeyAuthenticationMethodTrait;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Utils\Hasher;
 
@@ -108,7 +108,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function authenticate(): void
 	{

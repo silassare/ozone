@@ -22,7 +22,7 @@ use OZONE\Core\Auth\Providers\PhoneOwnershipVerificationProvider;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InternalErrorException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\RouteInfo;
@@ -40,7 +40,7 @@ final class AccountRecovery extends Service
 	 * @param RouteInfo $ri
 	 *
 	 * @throws ForbiddenException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 * @throws InternalErrorException
 	 */
 	public function actionRecover(RouteInfo $ri): void

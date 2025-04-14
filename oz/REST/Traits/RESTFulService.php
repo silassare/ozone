@@ -27,10 +27,13 @@ use Gobl\ORM\ORMRequest;
 use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
 use OpenApi\Annotations\Schema;
+use OZONE\Core\Access\AtomicAction;
+use OZONE\Core\Access\AtomicActionsRegistry;
 use OZONE\Core\Exceptions\BadRequestException;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Lang\I18nMessage;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\REST\RESTFulAPIRequest;
 use OZONE\Core\Router\RouteInfo;
@@ -696,6 +699,8 @@ trait RESTFulService
 		$int_type    = TypeInt::class;
 		$is_number   = ($type_obj instanceof $bigint_type || $type_obj instanceof $int_type);
 
+		self::registerAccessRightsActions($table);
+
 		$relations_names = [];
 
 		foreach (self::nonPrivateRelations($table) as $relation) {
@@ -791,6 +796,31 @@ trait RESTFulService
 		})
 			->param('relation', $relation_param)
 			->param(self::KEY_COLUMN, $id_param);
+	}
+
+	protected static function registerAccessRightsActions(Table $table): void
+	{
+		$actions = [
+			'read',
+			'read_all',
+			'update',
+			'update_all',
+			'delete',
+			'delete_all',
+		];
+
+		$prefix = $table->getMorphType();
+
+		foreach ($actions as $action) {
+			$desc = new I18nMessage('OZ_ACCESS_RIGHT_DESCRIPTION', [
+				'action' => $action,
+			]);
+			$error = new I18nMessage('OZ_MISSING_ACCESS_RIGHT', [
+				'action' => $action,
+			]);
+
+			AtomicActionsRegistry::register(new AtomicAction(\sprintf('%s.%s', $prefix, $action), $desc, $error));
+		}
 	}
 
 	/**
@@ -1065,7 +1095,10 @@ trait RESTFulService
 		}
 	}
 
-	private static function assertNotPrivateRelationOrVirtualRelation(RelationInterface $r)
+	/**
+	 * @throws ForbiddenException
+	 */
+	private static function assertNotPrivateRelationOrVirtualRelation(RelationInterface $r): void
 	{
 		if ($r->isPrivate()) {
 			throw new ForbiddenException(null, [

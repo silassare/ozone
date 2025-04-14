@@ -23,6 +23,7 @@ use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Roles\Enums\Role;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
+use OZONE\Core\Router\Guards\AuthenticatedUserRouteGuard;
 use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\Guards\UserAccessRightsRouteGuard;
 use OZONE\Core\Router\Guards\UserRoleRouteGuard;
@@ -194,6 +195,20 @@ class RouteSharedOptions
 
 		return $this->guard(static function () use ($allowed_provider_names) {
 			return new AuthorizationProviderRouteGuard($allowed_provider_names);
+		});
+	}
+
+	/**
+	 * Adds a guard that check if we have an authenticated user.
+	 *
+	 * > Allowed user type may be empty.
+	 *
+	 * @return $this
+	 */
+	public function withAuthenticatedUser(string ...$allowed_auth_user_types): static
+	{
+		return $this->guard(static function () use ($allowed_auth_user_types) {
+			return new AuthenticatedUserRouteGuard($allowed_auth_user_types);
 		});
 	}
 

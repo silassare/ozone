@@ -17,7 +17,7 @@ use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\JSONResponse;
 use OZONE\Core\Exceptions\InvalidFormException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
@@ -45,7 +45,7 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 	 * This will show a custom form,
 	 * and makes sure the form is submitted and is valid.
 	 *
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 * @throws InvalidFormException
 	 */
 	protected function requireForm(Context $context, Form $form): FormData
@@ -78,7 +78,7 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 			->type((new TypeString())->default($reference))
 			->required();
 
-		$exception = new UnauthorizedActionException();
+		$exception = new UnauthorizedException();
 
 		if ($context->shouldReturnJSON()) {
 			$json = new JSONResponse();

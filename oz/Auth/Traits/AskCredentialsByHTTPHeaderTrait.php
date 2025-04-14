@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Traits;
 
 use OZONE\Core\App\JSONResponse;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Router\Views\AccessGrantView;
 
 /**
@@ -25,13 +25,13 @@ trait AskCredentialsByHTTPHeaderTrait
 	/**
 	 * Ask the client for authentication.
 	 *
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 */
 	public function ask(): void
 	{
 		$context = $this->ri->getContext();
 
-		$exception = new UnauthorizedActionException();
+		$exception = new UnauthorizedException();
 
 		if ($context->shouldReturnJSON()) {
 			$json = new JSONResponse();

@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth;
 
-use OZONE\Core\Auth\Interfaces\AuthAccessRightsInterface;
+use OZONE\Core\Access\AccessRights;
+use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Cache\CacheManager;
@@ -61,17 +62,17 @@ class AuthUserDataStore extends Store
 	 * >
 	 * > Example: `auth()->getAccessRights()`
 	 */
-	public function getAuthUserAccessRights(): AuthAccessRightsInterface
+	public function getAuthUserAccessRights(): AccessRightsInterface
 	{
 		$data = $this->get('access_rights') ?? [];
 
-		return new AuthAccessRights($data, false);
+		return new AccessRights($data, false);
 	}
 
 	/**
 	 * Sets the user access rights.
 	 */
-	public function setAuthUserAccessRights(AuthAccessRightsInterface $rights): self
+	public function setAuthUserAccessRights(AccessRightsInterface $rights): self
 	{
 		$this->set('access_rights', $rights->toArray());
 

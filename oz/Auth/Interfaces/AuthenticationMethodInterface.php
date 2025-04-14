@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Interfaces;
 
+use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -64,9 +65,9 @@ interface AuthenticationMethodInterface
 	 * As a user may generate multiple tokens with different access rights.
 	 * This is useful to override the default access rights of the user depending on the token used.
 	 *
-	 * @return AuthAccessRightsInterface
+	 * @return AccessRightsInterface
 	 */
-	public function getAccessRights(): AuthAccessRightsInterface;
+	public function getAccessRights(): AccessRightsInterface;
 
 	/**
 	 * Check if the authentication method is scoped.

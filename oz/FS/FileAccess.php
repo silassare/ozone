@@ -19,7 +19,7 @@ use OZONE\Core\Auth\Providers\FileAccessAuthorizationProvider;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Exceptions\UnauthorizedActionException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -39,7 +39,7 @@ class FileAccess
 	 *
 	 * @throws InvalidFormException
 	 * @throws NotFoundException
-	 * @throws UnauthorizedActionException
+	 * @throws UnauthorizedException
 	 * @throws GoblException
 	 */
 	public static function check(OZFile $file, RouteInfo $ri, string $auth_key, ?string $auth_ref = null): void

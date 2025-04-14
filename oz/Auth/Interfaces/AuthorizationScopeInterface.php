@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Interfaces;
 
+use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Db\OZAuth;
 
 /**
@@ -80,16 +81,16 @@ interface AuthorizationScopeInterface
 	/**
 	 * Gets the access rights.
 	 *
-	 * @return AuthAccessRightsInterface
+	 * @return AccessRightsInterface
 	 */
-	public function getAccessRight(): AuthAccessRightsInterface;
+	public function getAccessRight(): AccessRightsInterface;
 
 	/**
 	 * Sets the access rights.
 	 *
-	 * @param AuthAccessRightsInterface $access_right
+	 * @param AccessRightsInterface $access_right
 	 *
 	 * @return $this
 	 */
-	public function setAccessRight(AuthAccessRightsInterface $access_right): self;
+	public function setAccessRight(AccessRightsInterface $access_right): self;
 }

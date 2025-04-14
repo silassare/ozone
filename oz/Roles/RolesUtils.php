@@ -248,7 +248,7 @@ class RolesUtils
 					->fetchAllClass();
 			} catch (Throwable $t) {
 				throw new RuntimeException('Unable to load user roles.', [
-					'user' => AuthUsers::selector($user),
+					'_user' => AuthUsers::selector($user),
 				], $t);
 			}
 		};
