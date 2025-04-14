@@ -41,7 +41,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 	public const BAD_REQUEST = 400;
 
-	public const UNAUTHORIZED_ACTION = 401;
+	public const UNAUTHORIZED = 401;
 
 	public const FORBIDDEN = 403;
 
@@ -62,7 +62,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 	private const ERRORS_STATUS_CODE_MAP = [
 		self::BAD_REQUEST         => 400,
-		self::UNAUTHORIZED_ACTION => 401,
+		self::UNAUTHORIZED        => 401,
 		self::FORBIDDEN           => 403,
 		self::NOT_FOUND           => 404,
 		self::METHOD_NOT_ALLOWED  => 405,
@@ -92,7 +92,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	{
 		$this->data = $data ?? [];
 		if ($message instanceof I18nMessage) {
-			$this->data = \array_merge($message->getInject(), $this->data);
+			$this->data = \array_merge($message->getData(), $this->data);
 			$message    = $message->getText();
 		}
 

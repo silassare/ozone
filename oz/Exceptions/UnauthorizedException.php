@@ -17,12 +17,12 @@ use OZONE\Core\Lang\I18nMessage;
 use Throwable;
 
 /**
- * Class UnauthorizedActionException.
+ * Class UnauthorizedException.
  */
-class UnauthorizedActionException extends BaseException
+class UnauthorizedException extends BaseException
 {
 	/**
-	 * UnauthorizedActionException constructor.
+	 * UnauthorizedException constructor.
 	 *
 	 * @param null|I18nMessage|string $message  the exception message
 	 * @param null|array              $data     additional exception data
@@ -34,7 +34,7 @@ class UnauthorizedActionException extends BaseException
 			empty($message) ? 'OZ_ERROR_NOT_ALLOWED' : $message,
 			$data,
 			$previous,
-			BaseException::UNAUTHORIZED_ACTION,
+			BaseException::UNAUTHORIZED,
 		);
 	}
 }

@@ -34,11 +34,14 @@ class RuntimeException extends \RuntimeException implements RichExceptionInterfa
 	 * @param null|array              $data     additional exception data
 	 * @param null|Throwable          $previous previous throwable used for the exception chaining
 	 */
-	public function __construct(null|I18nMessage|string $message = null, ?array $data = null, ?Throwable $previous = null)
-	{
+	public function __construct(
+		null|I18nMessage|string $message = null,
+		?array $data = null,
+		?Throwable $previous = null
+	) {
 		$this->data = $data ?? [];
 		if ($message instanceof I18nMessage) {
-			$this->data = \array_merge($message->getInject(), $this->data);
+			$this->data = \array_merge($message->getData(), $this->data);
 			$message    = $message->getText();
 		}
 		parent::__construct(empty($message) ? 'OZ_ERROR_RUNTIME' : $message, 0, $previous);
