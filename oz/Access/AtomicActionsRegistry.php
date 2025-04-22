@@ -11,6 +11,7 @@
 
 namespace OZONE\Core\Access;
 
+use OZONE\Core\Access\Interfaces\AtomicActionInterface;
 use RuntimeException;
 
 /**
@@ -70,5 +71,27 @@ class AtomicActionsRegistry
 	public static function getAll(): array
 	{
 		return self::$registry;
+	}
+
+	/**
+	 * Read atomic actions for a specific user access rights.
+	 *
+	 * @param AccessRights $user_access_rights
+	 *
+	 * @return array<string, array{action: AtomicActionInterface, allowed: bool}>
+	 */
+	public static function read(AccessRights $user_access_rights): array
+	{
+		$all    = self::getAll();
+		$result = [];
+
+		foreach ($all as $key => $action) {
+			$result[$key] = [
+				'action'  => $action,
+				'allowed' => $user_access_rights->can($key),
+			];
+		}
+
+		return $result;
 	}
 }

@@ -13,7 +13,6 @@ namespace OZONE\Core\Access\Services;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\TypeString;
-use OZONE\Core\Access\AccessRights;
 use OZONE\Core\Access\AtomicActionsRegistry;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\AuthUsers;
@@ -38,7 +37,11 @@ class AccessRightsService extends Service
 		// we only gets user access right with through this auth method as this auth method could be scoped
 		$userAccessRights = auth($ri->getContext())->getAccessRights();
 
-		return self::read($userAccessRights);
+		$this->json()->setData([
+			'list' => AtomicActionsRegistry::read($userAccessRights),
+		]);
+
+		return $this->respond();
 	}
 
 	/**
@@ -54,7 +57,11 @@ class AccessRightsService extends Service
 
 		$userAccessRights = $user->getAuthUserDataStore()->getAuthUserAccessRights();
 
-		return self::read($userAccessRights);
+		$this->json()->setData([
+			'list' => AtomicActionsRegistry::read($userAccessRights),
+		]);
+
+		return $this->respond();
 	}
 
 	public function list(RouteInfo $ri): Response
@@ -71,7 +78,45 @@ class AccessRightsService extends Service
 	 * @throws ForbiddenException
 	 * @throws BadRequestException
 	 */
-	public function grant(RouteInfo $ri): Response
+	public function update(RouteInfo $ri): Response
+	{
+		$this->doAllow($ri, $ri->getCleanFormField('allow_actions'));
+
+		$this->doDeny($ri, $ri->getCleanFormField('deny_actions'));
+
+		return $this->respond();
+	}
+
+	/**
+	 * @throws UnauthenticatedException
+	 * @throws ForbiddenException
+	 * @throws BadRequestException
+	 */
+	public function allow(RouteInfo $ri): Response
+	{
+		$this->doAllow($ri, $ri->getCleanFormField('actions'));
+
+		return $this->respond();
+	}
+
+	/**
+	 * @throws UnauthenticatedException
+	 * @throws BadRequestException
+	 * @throws ForbiddenException
+	 */
+	public function deny(RouteInfo $ri): Response
+	{
+		$this->doDeny($ri, $ri->getCleanFormField('actions'));
+
+		return $this->respond();
+	}
+
+	/**
+	 * @throws UnauthenticatedException
+	 * @throws BadRequestException
+	 * @throws ForbiddenException
+	 */
+	public function doAllow(RouteInfo $ri, array $actions): bool
 	{
 		$target_user = AuthUsers::identifyBySelector($ri->getCleanFormData());
 
@@ -87,9 +132,7 @@ class AccessRightsService extends Service
 		}
 
 		$target_user_access_rights = $target_user->getAuthUserDataStore()->getAuthUserAccessRights();
-
-		$actions = $ri->getCleanFormField('actions');
-		$save    = false;
+		$save                      = false;
 
 		foreach ($actions as $action) {
 			if (!AtomicActionsRegistry::isRegistered($action)) {
@@ -109,7 +152,7 @@ class AccessRightsService extends Service
 			$target_user->save();
 		}
 
-		return $this->respond();
+		return $save;
 	}
 
 	/**
@@ -117,9 +160,10 @@ class AccessRightsService extends Service
 	 * @throws BadRequestException
 	 * @throws ForbiddenException
 	 */
-	public function revoke(RouteInfo $ri): Response
+	public function doDeny(RouteInfo $ri, array $actions): bool
 	{
 		$target_user = AuthUsers::identifyBySelector($ri->getCleanFormData());
+
 		if (!$target_user) {
 			throw new BadRequestException();
 		}
@@ -138,7 +182,6 @@ class AccessRightsService extends Service
 		}
 
 		$target_user_access_rights = $target_user->getAuthUserDataStore()->getAuthUserAccessRights();
-		$actions                   = $ri->getCleanFormField('actions');
 		$save                      = false;
 
 		foreach ($actions as $action) {
@@ -153,13 +196,12 @@ class AccessRightsService extends Service
 				$save = true;
 			}
 		}
-
 		if ($save) {
 			$target_user->getAuthUserDataStore()->setAuthUserAccessRights($target_user_access_rights);
 			$target_user->save();
 		}
 
-		return $this->respond();
+		return $save;
 	}
 
 	/**
@@ -185,36 +227,24 @@ class AccessRightsService extends Service
 			})
 				->withRole(RolesUtils::admin());
 
-			$router->post('/grant', static function (RouteInfo $ri) {
-				return (new self($ri))->grant($ri);
+			$router->post('/allow', static function (RouteInfo $ri) {
+				return (new self($ri))->allow($ri);
 			})
-				->form(self::buildGrantForm(...))
+				->form(self::buildAllowForm(...))
 				->withRole(RolesUtils::admin());
 
-			$router->post('/revoke', static function (RouteInfo $ri) {
-				return (new self($ri))->revoke($ri);
+			$router->post('/deny', static function (RouteInfo $ri) {
+				return (new self($ri))->deny($ri);
 			})
-				->form(self::buildRevokeForm(...))
+				->form(self::buildDenyForm(...))
+				->withRole(RolesUtils::admin());
+
+			$router->post('/update', static function (RouteInfo $ri) {
+				return (new self($ri))->update($ri);
+			})
+				->form(self::buildUpdateForm(...))
 				->withRole(RolesUtils::admin());
 		});
-	}
-
-	private function read(AccessRights $user_access_rights): Response
-	{
-		$all    = AtomicActionsRegistry::getAll();
-		$result = [];
-
-		foreach ($all as $action => $right) {
-			if ($user_access_rights->can($action)) {
-				$result[$action] = $right;
-			}
-		}
-
-		$this->json()->setData([
-			'list' => $result,
-		]);
-
-		return $this->respond();
 	}
 
 	/**
@@ -222,7 +252,7 @@ class AccessRightsService extends Service
 	 *
 	 * @throws TypesException
 	 */
-	private static function buildGrantForm(): Form
+	private static function buildAllowForm(): Form
 	{
 		$fb = AuthUsers::selectorForm();
 
@@ -239,11 +269,33 @@ class AccessRightsService extends Service
 	 *
 	 * @throws TypesException
 	 */
-	private static function buildRevokeForm(): Form
+	private static function buildDenyForm(): Form
 	{
 		$fb = AuthUsers::selectorForm();
 
 		$fb->field('actions')
+			->type(new TypeString(3))
+			->multiple()
+			->required();
+
+		return $fb;
+	}
+
+	/**
+	 * @return Form
+	 *
+	 * @throws TypesException
+	 */
+	private static function buildUpdateForm(): Form
+	{
+		$fb = AuthUsers::selectorForm();
+
+		$fb->field('deny_actions')
+			->type(new TypeString(3))
+			->multiple()
+			->required();
+
+		$fb->field('allow_actions')
 			->type(new TypeString(3))
 			->multiple()
 			->required();

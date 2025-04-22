@@ -36,9 +36,9 @@ class AtomicAction implements AtomicActionInterface
 	public function toArray(): array
 	{
 		return [
-			'action'      => $this->action,
-			'description' => $this->description->toArray(),
-			'error'       => $this->error->toArray(),
+			'action'        => $this->action,
+			'description'   => $this->description->toArray(),
+			'error_message' => $this->error->toArray(),
 		];
 	}
 
