@@ -13,14 +13,13 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Collections\Interfaces;
 
-use Gobl\CRUD\Interfaces\CRUDEventListenerInterface;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use OZONE\Core\Hooks\Events\DbReadyHook;
 
 /**
  * Class EntityCollectionsProviderInterface.
  */
-interface EntityCollectionsProviderInterface extends CRUDEventListenerInterface
+interface EntityCollectionsProviderInterface
 {
 	/**
 	 * Called on {@see DbReadyHook}.
