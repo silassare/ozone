@@ -13,12 +13,14 @@ declare(strict_types=1);
 
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Auth2FA;
+use OZONE\Core\Collections\EntityCollections;
 use OZONE\Core\FS\TempFS;
 use OZONE\Core\Hooks\MainBootHookReceiver;
 use OZONE\Core\Sessions\Session;
 
 return [
 	MainBootHookReceiver::class => true,
+	EntityCollections::class    => true,
 	Session::class              => true,
 	Auth::class                 => true,
 	Auth2FA::class              => true,
