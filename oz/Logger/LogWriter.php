@@ -18,7 +18,6 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Logger\Interfaces\LogWriterInterface;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
-use Stringable;
 use Throwable;
 
 /**
@@ -65,7 +64,7 @@ class LogWriter implements LogWriterInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function write($level, string|Stringable|Throwable $message, array $context = []): void
+	public function write($level, mixed $message, array $context = []): void
 	{
 		$message = self::describe($message);
 
