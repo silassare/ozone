@@ -159,7 +159,7 @@ class AccessRights implements AccessRightsInterface
 
 			if ($last_checked) {
 				$atomic_action = AtomicActionsRegistry::get($last_checked);
-				$error         = $atomic_action->getErrorMessage();
+				$error         = $atomic_action?->getErrorMessage();
 			}
 
 			throw new UnauthorizedException($error, [
