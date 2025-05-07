@@ -14,14 +14,18 @@ declare(strict_types=1);
 namespace OZONE\Core\Users;
 
 use Gobl\DBAL\Builders\TableBuilder;
+use Gobl\DBAL\Column;
 use Gobl\DBAL\Exceptions\DBALException;
 use Gobl\DBAL\Table;
 use Gobl\ORM\ORMTableQuery;
 use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Interfaces\AuthUsersRepositoryInterface;
+use OZONE\Core\Columns\Types\TypeCC2;
 use OZONE\Core\Columns\Types\TypeFile;
+use OZONE\Core\Columns\Types\TypeGender;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Columns\TypeUtils;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -65,13 +69,26 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 * Add standard auth user columns to a table.
 	 *
 	 * @param TableBuilder $tb
+	 * @param array{
+	 *     with_gender?:bool,
+	 *     with_birth_date?:bool,
+	 *     with_country?:bool,
+	 *     min_age?: int,
+	 *     max_age?: int
+	 * } $options
 	 *
 	 * @throws DBALException
 	 */
-	public static function makeAuthUserTable(TableBuilder $tb): void
+	public static function makeAuthUserTable(TableBuilder $tb, array $options = []): void
 	{
 		$table     = $tb->getTable();
 		$user_type = $table->getMorphType();
+
+		$with_gender     = $options['with_gender'] ?? true;
+		$with_birth_date = $options['with_birth_date'] ?? true;
+		$with_country    = $options['with_country'] ?? true;
+		$min_age         = $options['min_age'] ?? Settings::get('oz.users', 'OZ_USER_MIN_AGE');
+		$max_age         = $options['max_age'] ?? Settings::get('oz.users', 'OZ_USER_MAX_AGE');
 
 		$tb->meta(self::TABLE_MARKER_META_KEY, $user_type);
 
@@ -79,6 +96,15 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		$tb->id();
 		$tb->column(AuthUserInterface::IDENTIFIER_NAME_PHONE, TypeUtils::userPhone($user_type));
 		$tb->column(AuthUserInterface::IDENTIFIER_NAME_EMAIL, TypeUtils::userMailAddress($user_type));
+
+		if ($with_gender) {
+			$tb->column('gender', new TypeGender());
+		}
+
+		if ($with_birth_date) {
+			$tb->column('birth_date', TypeUtils::birthDate($min_age, $max_age));
+		}
+
 		$tb->column('pass', new TypePassword());
 		$tb->map('data')->default([]);
 
@@ -87,9 +113,33 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		$tb->timestamps();
 		$tb->softDeletable();
 
+		// constraints
+		$tb->collectFk(static function () use ($tb, $with_country) {
+			if ($with_country) {
+				$tb->foreign('cc2', 'oz_countries', 'cc2', false, static function (Column $column) {
+					/** @var TypeCC2 $cc2_type */
+					$cc2_type = $column->getType();
+					$cc2_type->authorized();
+				})
+					->onUpdateCascade()
+					->onDeleteRestrict();
+			}
+		});
+
 		$tb->collectIndex(static function (TableBuilder $tb) {
 			$tb->unique('phone');
 			$tb->unique('email');
+		});
+
+		// relations
+		$tb->collectRelation(static function () use ($tb, $with_country) {
+			$tb->hasMany('roles')->from('oz_roles')->usingMorph('owner');
+			$tb->hasMany('files')->from('oz_files')->usingMorph('for');
+			$tb->hasMany('sessions')->from('oz_sessions')->usingMorph('owner');
+
+			if ($with_country) {
+				$tb->belongsTo('country')->from('oz_countries');
+			}
 		});
 	}
 

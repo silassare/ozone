@@ -13,11 +13,8 @@ declare(strict_types=1);
 
 use Gobl\DBAL\Builders\NamespaceBuilder;
 use Gobl\DBAL\Builders\TableBuilder;
-use Gobl\DBAL\Column;
-use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Enums\AuthorizationState;
 use OZONE\Core\Columns\Types\TypeCC2;
-use OZONE\Core\Columns\Types\TypeGender;
 use OZONE\Core\Columns\Types\TypeUsername;
 use OZONE\Core\Columns\TypeUtils;
 use OZONE\Core\FS\Enums\FileKind;
@@ -33,35 +30,13 @@ return static function (NamespaceBuilder $ns) {
 			->columnPrefix('user')
 			->morphType('user');
 
-		$min_age = Settings::get('oz.users', 'OZ_USER_MIN_AGE');
-		$max_age = Settings::get('oz.users', 'OZ_USER_MAX_AGE');
-
 		// columns
-		UsersRepository::makeAuthUserTable($tb);
 
 		$tb->column('name', new TypeUsername());
-		$tb->column('gender', new TypeGender());
-		$tb->column('birth_date', TypeUtils::birthDate($min_age, $max_age));
+
+		UsersRepository::makeAuthUserTable($tb);
+
 		$tb->bool('is_valid')->default(true);
-
-		// constraints
-		$tb->collectFk(static function () use ($tb) {
-			$tb->foreign('cc2', 'oz_countries', 'cc2', false, static function (Column $column) {
-				/** @var TypeCC2 $cc2_type */
-				$cc2_type = $column->getType();
-				$cc2_type->authorized();
-			})
-				->onUpdateCascade()
-				->onDeleteRestrict();
-		});
-
-		// relations
-		$tb->collectRelation(static function () use ($tb) {
-			$tb->hasMany('roles')->from('oz_roles')->usingMorph('owner');
-			$tb->hasMany('files')->from('oz_files')->usingMorph('for');
-			$tb->hasMany('sessions')->from('oz_sessions')->usingMorph('owner');
-			$tb->belongsTo('country')->from('oz_countries');
-		});
 	});
 
 	$ns->table('oz_countries', static function (TableBuilder $tb) {
