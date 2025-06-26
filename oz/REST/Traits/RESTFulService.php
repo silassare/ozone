@@ -328,9 +328,9 @@ trait RESTFulService
 				[
 					$doc->success(
 						$r->isPaginated() ? $doc->apiPaginated([
-							$r_name => $doc->array($r_schema),
+							'items' => $doc->array($r_schema),
 						]) : $doc->object([
-							$r_name => $r_schema,
+							'item' => $r_schema,
 						]),
 						\sprintf(
 							'The `%s` of the `%s` was retrieved successfully.',
@@ -669,12 +669,13 @@ trait RESTFulService
 			throw new NotFoundException();
 		}
 
-		$data[$relation_name] = $r;
-
 		if ($paginated_relation) {
+			$data['items'] = $r;
 			$data['page']  = $page;
 			$data['max']   = $max;
 			$data['total'] = $total_records;
+		} else {
+			$data['item'] = $r;
 		}
 
 		$this->json()
