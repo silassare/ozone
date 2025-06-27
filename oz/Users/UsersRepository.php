@@ -110,6 +110,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 
 		// optional columns
 		$tb->column('pic', (new TypeFile())->mimeTypes(['image/png', 'image/jpeg'])->nullable());
+		$tb->bool('is_valid')->default(true);
 		$tb->timestamps();
 		$tb->softDeletable();
 

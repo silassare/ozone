@@ -35,8 +35,6 @@ return static function (NamespaceBuilder $ns) {
 		$tb->column('name', new TypeUsername());
 
 		UsersRepository::makeAuthUserTable($tb);
-
-		$tb->bool('is_valid')->default(true);
 	});
 
 	$ns->table('oz_countries', static function (TableBuilder $tb) {
