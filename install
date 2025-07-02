@@ -7,6 +7,7 @@
 #
 #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+PHP_VERSION_NUMBER=8.1
 PHP_VERSION=php8.1
 
 #"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -53,56 +54,89 @@ shout_success(){
 }
 
 install_composer(){
-	shout "Installing composer..."
 
-	local EXPECTED_SIGNATURE ACTUAL_SIGNATURE;
+	if [ "$(which composer)" == "" ]; then
+		shout "Installing composer..."
 
-	# https://getcomposer.org/doc/faqs/how-to-install-composer-programmatically.md
-	EXPECTED_SIGNATURE="$(wget -q -O - https://composer.github.io/installer.sig)"
-	php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-	ACTUAL_SIGNATURE="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
+		local EXPECTED_SIGNATURE ACTUAL_SIGNATURE;
 
-	if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
-		shout_error 'Composer - Invalid installer signature'
+		# https://getcomposer.org/doc/faqs/how-to-install-composer-programmatically.md
+		EXPECTED_SIGNATURE="$(wget -q -O - https://composer.github.io/installer.sig)"
+		php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+		ACTUAL_SIGNATURE="$(php -r "echo hash_file('sha384', 'composer-setup.php');")"
+
+		if [ "$EXPECTED_SIGNATURE" != "$ACTUAL_SIGNATURE" ]; then
+			shout_error 'Composer - Invalid installer signature'
+			rm composer-setup.php
+			exit 1
+		fi
+
+		php composer-setup.php --quiet --filename=composer --install-dir=/usr/bin/
+
 		rm composer-setup.php
-		exit 1
+ 	fi
+}
+
+install_ufw(){
+
+	if [ "$(which ufw)" == "" ]; then
+		# install nginx and Uncomplicated FireWall
+		shout "Installing ufw (Uncomplicated FireWall)"
+
+		apt-get -qq -o=Dpkg::Use-Pty=0 -y install ufw < /dev/null
+
 	fi
 
-	php composer-setup.php --quiet --filename=composer --install-dir=/usr/bin/
-
-	local RESULT=$?
-
-	rm composer-setup.php
-
-	return $RESULT
+	# enable ssh via firewall
+	shout "Enabling SSH via firewall..."
+	ufw allow OpenSSH
 }
 
 install_nginx(){
-	# install nginx and Uncomplicated FireWall
-	shout "Installing nginx and ufw (Uncomplicated FireWall)"
+	if [ "$(which nginx)" == "" ]; then
+		# install nginx and Uncomplicated FireWall
+		shout "Installing nginx and ufw (Uncomplicated FireWall)"
 
-	apt-get -qq -o=Dpkg::Use-Pty=0 -y install nginx ufw < /dev/null
+		apt-get -qq -o=Dpkg::Use-Pty=0 -y install nginx < /dev/null
+
+	fi
 
 	# enable nginx via firewall
 	# Nginx Full: 	This profile opens both port 80 (normal, unencrypted web traffic)
 	# 		and port 443 (TLS/SSL encrypted traffic)
 	# Nginx HTTP: 	This profile opens only port 80 (normal, unencrypted web traffic)
 	# Nginx HTTPS: 	This profile opens only port 443 (TLS/SSL encrypted traffic)
-
-	shout "Opening port 80 and 443 for nginx..."
+	shout "Enabling port 80 and 443 for nginx..."
 	ufw allow 'Nginx Full'
 }
 
 install_git(){
-	shout "Installing git..."
-	apt-get -qq -o=Dpkg::Use-Pty=0 -y install git < /dev/null
+	if [ "$(which nginx)" == "" ]; then
+		shout "Installing git..."
+		apt-get -qq -o=Dpkg::Use-Pty=0 -y install git < /dev/null
+	fi
 }
 
 install_php(){
-	shout "Installing php and required extensions..."
+
+	# add ondrej/php repository
+	shout "Adding ondrej/php repository..."
+
+	add-apt-repository ppa:ondrej/php
 
 	# install php and modules
-	apt-get -qq -o=Dpkg::Use-Pty=0 -y install $PHP_VERSION-fpm $PHP_VERSION-mysql $PHP_VERSION-xml $PHP_VERSION-gd $PHP_VERSION-curl $PHP_VERSION-mbstring $PHP_VERSION-bcmath $PHP_VERSION-zip $PHP_VERSION-json $PHP_VERSION-fileinfo < /dev/null
+
+	shout "Installing php and required extensions..."
+
+	apt-get -qq -o=Dpkg::Use-Pty=0 -y install $PHP_VERSION-fpm $PHP_VERSION-mysql $PHP_VERSION-xml $PHP_VERSION-gd $PHP_VERSION-curl $PHP_VERSION-mbstring $PHP_VERSION-bcmath $PHP_VERSION-zip $PHP_VERSION-json $PHP_VERSION-common < /dev/null
+
+
+	# update php configuration
+
+	echo "cgi.fix_pathinfo=0\n date.timezone=UTC" > "/etc/php/$PHP_VERSION_NUMBER/fpm/conf.d/99-custom.ini"
+
+	# restart php fpm
+	systemctl restart $PHP_VERSION-fpm
 }
 
 configure_php(){
@@ -162,9 +196,12 @@ install_mysql(){
 }
 
 install_7zip(){
-	# install 7zip
-	shout "Installing 7zip..."
-	apt-get -qq -o=Dpkg::Use-Pty=0 -y install p7zip-full < /dev/null
+
+	if [ "$(which 7z)" == "" ]; then
+		# install 7zip
+		shout "Installing 7zip..."
+		apt-get -qq -o=Dpkg::Use-Pty=0 -y install p7zip-full < /dev/null
+	fi
 }
 
 # usage: set_php_ini_value date.timezone utc /fpm/php.ini
@@ -250,51 +287,30 @@ shout "Installing all required packages..."
 
 apt-get -qq -o=Dpkg::Use-Pty=0 -y install apt-utils < /dev/null
 
-# install mysql
+install_ufw
+echo
 
-if [ "$(which mysql)" == "" ]; then
-	install_mysql "root"
-	echo
-fi
+install_mysql "root"
+echo
 
-# install nginx
+install_nginx
+echo
 
-if [ "$(which nginx)" == "" ]; then
-	install_nginx
-	echo
-fi
+install_7zip
+echo
 
-# install 7zip
-
-if [ "$(which 7z)" == "" ]; then
-	install_7zip
-	echo
-fi
-
-# install php and required extensions
-
-if [ "$(which php)" == "" ]; then
-	install_php
-	echo
-fi
-
-# configure php
+install_php
+echo
 
 configure_php
+echo
 
-# install git
+install_git
+echo
 
-if [ "$(which git)" == "" ]; then
-	install_git
-	echo
-fi
+install_composer
+echo
 
-# install composer
-
-if [ "$(which composer)" == "" ]; then
-	install_composer
-	echo
-fi
 
 # Clone the OZone repository if it doesn't exist.
 
@@ -347,4 +363,3 @@ if [ $OZ_FRESH_INSTALL == 1 ]; then
 fi
 
 export DEBIAN_FRONTEND="$DEBIAN_FRONTEND_SAVED"
-
