@@ -219,7 +219,6 @@ final class AuthUsers
 			$repository = self::repository($user_type);
 		} catch (Throwable $t) {
 			// this may be an api user that is not providing a valid user type
-			// for development purpose we log the error
 			oz_logger()->warning($t);
 
 			return null;
