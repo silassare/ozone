@@ -19,7 +19,7 @@ use OZONE\Core\Senders\Events\SendSMS;
 /**
  * Class SMSMessage.
  *
- * @extends Message<string|AuthUserInterface>
+ * @extends Message<AuthUserInterface|string>
  */
 class SMSMessage extends Message
 {

@@ -20,7 +20,7 @@ use OZONE\Core\Senders\Events\SendMail;
 /**
  * Class MailMessage.
  *
- * @extends Message<string|AuthUserInterface>
+ * @extends Message<AuthUserInterface|string>
  */
 class MailMessage extends Message
 {

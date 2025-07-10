@@ -44,8 +44,8 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 * UsersRepository constructor.
 	 */
 	private function __construct(
-		protected Table $table,
-		protected string $user_type,
+		private Table $table,
+		private string $user_type,
 	) {}
 
 	/**

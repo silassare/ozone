@@ -19,7 +19,7 @@ use OZONE\Core\Senders\Events\SendNotification;
 /**
  * Class NotificationMessage.
  *
- * @extends Message<string|AuthUserInterface>
+ * @extends Message<AuthUserInterface|string>
  */
 class NotificationMessage extends Message
 {

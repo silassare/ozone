@@ -56,7 +56,7 @@ final class Session implements BootHookReceiverInterface
 	 * @param Context $context
 	 * @param string  $request_source_key
 	 */
-	public function __construct(protected Context $context, private readonly string $request_source_key) {}
+	public function __construct(private Context $context, private readonly string $request_source_key) {}
 
 	/**
 	 * Session destructor.
