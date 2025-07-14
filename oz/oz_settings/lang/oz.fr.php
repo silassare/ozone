@@ -12,7 +12,7 @@
 declare(strict_types=1);
 
 return [
-	'OZ_ERROR_YOU_ARE_NOT_ADMIN'         => "Erreur: Vous n'etes pas un administrateur.",
+	'OZ_ERROR_YOU_ARE_NOT_ADMIN'         => "Vous n'êtes pas un administrateur.",
 	'OZ_ERROR_BAD_REQUEST'               => 'Votre requête est invalide.',
 	'OZ_ERROR_INTERNAL'                  => "Une erreur interne s'est produite.",
 	'OZ_ERROR_RUNTIME'                   => "Une erreur interne s'est produite en cours d'exécution.",
