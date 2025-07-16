@@ -49,7 +49,7 @@ abstract class BaseHandler extends TableCRUDListener
 	}
 
 	/**
-	 * @param string $action
+	 * @param 'create'|'create_all'|'delete'|'delete_all'|'read'|'read_all'|'update'|'update_all' $action
 	 *
 	 * @return AllowRuleBuilder
 	 */
