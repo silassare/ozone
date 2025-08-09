@@ -194,7 +194,9 @@ final class DbCmd extends Command
 			}
 		}
 
-		$gen = new CSGeneratorORM($db, false, false);
+		$gen = new CSGeneratorORM($db);
+		$gen->ignorePrivateTables(false);
+		$gen->ignorePrivateColumns(false);
 
 		foreach ($ns_map as $ns => $_) {
 			// we (re)generate classes only for tables
@@ -224,7 +226,7 @@ final class DbCmd extends Command
 		$dir    = $args->get('dir');
 		$db     = db();
 		$tables = $db->getTables();
-		$gen    = new CSGeneratorTS($db, true, true);
+		$gen    = new CSGeneratorTS($db);
 
 		$gen->generate($tables, $dir);
 		$cli->success('TypeScript entities bundle generated.')
@@ -246,7 +248,7 @@ final class DbCmd extends Command
 		$dir    = $args->get('dir');
 		$db     = db();
 		$tables = $db->getTables();
-		$gen    = new CSGeneratorDart($db, true, true);
+		$gen    = new CSGeneratorDart($db);
 
 		$gen->generate($tables, $dir);
 		$cli->success('Dart entities bundle generated.')

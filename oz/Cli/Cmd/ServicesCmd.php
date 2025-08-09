@@ -105,7 +105,9 @@ final class ServicesCmd extends Command
 		$p_ns              = Settings::get('oz.config', 'OZ_PROJECT_NAMESPACE');
 		$service_namespace = \sprintf('%s\Services', $p_ns);
 
-		$generator = new ServiceGenerator($db, false, false);
+		$generator = new ServiceGenerator($db);
+		$generator->ignorePrivateTables(false);
+		$generator->ignorePrivateColumns(false);
 		$info      = $generator->generateServiceClass(
 			$table,
 			$service_namespace,

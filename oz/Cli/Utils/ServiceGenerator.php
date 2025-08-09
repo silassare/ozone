@@ -35,15 +35,11 @@ class ServiceGenerator extends CSGeneratorORM
 	 * ServiceGenerator constructor.
 	 *
 	 * @param RDBMSInterface $db
-	 * @param bool           $ignore_private_table
-	 * @param bool           $ignore_private_column
 	 */
 	public function __construct(
 		RDBMSInterface $db,
-		bool $ignore_private_table = true,
-		bool $ignore_private_column = true
 	) {
-		parent::__construct($db, $ignore_private_table, $ignore_private_column);
+		parent::__construct($db);
 
 		if (!self::$templates_registered) {
 			Gobl::addTemplate(
