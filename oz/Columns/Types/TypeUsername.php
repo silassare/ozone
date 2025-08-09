@@ -37,7 +37,7 @@ class TypeUsername extends Type
 	{
 		$max = (int) Settings::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH');
 
-		parent::__construct(new TypeString(1, \max(3, $max)));
+		parent::__construct(new TypeString(1, \max(3, $max) * 2));
 	}
 
 	/**

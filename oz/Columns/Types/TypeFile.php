@@ -41,7 +41,7 @@ class TypeFile extends Type
 	 */
 	public function __construct()
 	{
-		parent::__construct(new TypeString());
+		parent::__construct(new TypeString(1, 255));
 	}
 
 	/**
