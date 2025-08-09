@@ -30,6 +30,7 @@ use Gobl\CRUD\Events\BeforePKColumnWrite;
 use Gobl\CRUD\Events\BeforePrivateColumnWrite;
 use Gobl\CRUD\Events\BeforeRead;
 use Gobl\CRUD\Events\BeforeReadAll;
+use Gobl\CRUD\Events\BeforeSensitiveColumnWrite;
 use Gobl\CRUD\Events\BeforeUpdate;
 use Gobl\CRUD\Events\BeforeUpdateAll;
 use Gobl\CRUD\Events\BeforeUpdateAllFlush;
@@ -142,6 +143,14 @@ trait TableCRUDListenerTrait
 	 * {@inheritDoc}
 	 */
 	public function onBeforePrivateColumnWrite(BeforePrivateColumnWrite $action): bool
+	{
+		return false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function onBeforeSensitiveColumnWrite(BeforeSensitiveColumnWrite $action): bool
 	{
 		return false;
 	}
