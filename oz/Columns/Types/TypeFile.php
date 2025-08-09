@@ -386,8 +386,8 @@ class TypeFile extends Type
 	/**
 	 * Computes uploaded files.
 	 *
-	 * @param array<OZFile|UploadedFile> $uploaded_files
-	 * @param array                      $debug
+	 * @param array<OZFile|string|UploadedFile> $uploaded_files
+	 * @param array                             $debug
 	 *
 	 * @return string[] the list of file ids or paths
 	 *
@@ -400,15 +400,29 @@ class TypeFile extends Type
 		foreach ($uploaded_files as $k => $item) {
 			$debug['index'] = $k;
 
-            if (\is_string($item)) {
-                // dangerous to fix this, but we assume the string is a file ID or path
-                // we should not allow this in the first place, but we need to handle it as i have a bug
-                oz_logger()->warning(
-                    'TypeFile: received a string as file, this should not happen, please fix your code.',
-                    $debug
-                );
-                $uploaded_files[$k] = $item = FS::getFileByID($item);
-            }
+			if (\is_numeric($item)) {
+				// dangerous should be fixed, but we assume the string is a file ID or path
+				// we should not allow this in the first place,
+				// as the any user may send a random file id that may be have an access restriction
+				// but we need to handle it as we currently
+				// have a bug in the validation process when saving
+				// issue explanation:
+				// table foo has image_file_id column that reference oz_file.id
+				// now when the form is uploaded the file is validated and saved into the database
+				// then when entity of type foo is being saved image_file_id value receive the oz_file.id instead of
+				// OZFile or UploadedFile and this is validated
+				// Solution: make sure validate always return UploadedFile | OZFile and a TempFile
+				// then when saving check inside phpToDb save and use the oz_file.id
+				// when reading dbToPhp load the file from database or find a better solution
+				oz_logger()->warning(
+					'TypeFile: received a string as file, this should not happen, please fix your code.',
+					$debug
+				);
+
+				$item = FS::getFileByID($item);
+
+				$uploaded_files[$k] = $item;
+			}
 
 			// in case of temporary upload
 			// only UploadedFile instances are allowed
