@@ -43,7 +43,7 @@ class Roles
 	 *
 	 * @param AuthUserInterface $user       The user
 	 * @param bool              $strict     In strict mode user should be an admin,
-	 *                                      in non-strict mode user should may have a role with
+	 *                                      in non-strict mode user may have a role with
 	 *                                      a higher or equal weight
 	 * @param RoleCheckMode     $check_mode The check mode
 	 *
@@ -62,7 +62,7 @@ class Roles
 	 *
 	 * @param AuthUserInterface $user       The user
 	 * @param bool              $strict     In strict mode user should be an editor,
-	 *                                      in non-strict mode user should may have a role with
+	 *                                      in non-strict mode user may have a role with
 	 *                                      a higher or equal weight
 	 * @param RoleCheckMode     $check_mode The check mode
 	 *
@@ -82,7 +82,7 @@ class Roles
 	 * @param AuthUserInterface $user       The user
 	 * @param RoleInterface     $role       The role
 	 * @param bool              $strict     In strict mode user should have the exact role,
-	 *                                      in non-strict mode user should may have a role with
+	 *                                      in non-strict mode user may have a role with
 	 *                                      a higher or equal weight
 	 * @param RoleCheckMode     $check_mode The check mode
 	 *
