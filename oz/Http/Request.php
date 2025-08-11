@@ -681,12 +681,12 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Fetches request parameter value from body or query string, or uploded files (in that order).
 	 *
-	 * @param string      $key     the parameter key
-	 * @param null|string $default the default value
+	 * @param string     $key     the parameter key
+	 * @param null|mixed $default the default value
 	 *
 	 * @return mixed the parameter value
 	 */
-	public function getUnsafeFormField(string $key, ?string $default = null): mixed
+	public function getUnsafeFormField(string $key, mixed $default = null): mixed
 	{
 		$postParams = $this->getParsedBody();
 		$getParams  = $this->getQueryParams();
