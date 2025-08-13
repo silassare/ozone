@@ -27,6 +27,7 @@ use Gobl\ORM\ORMEntityCRUD;
 use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
+use OZONE\Core\Lang\I18nMessage;
 use OZONE\Core\Roles\Enums\Role;
 
 /**
@@ -37,7 +38,8 @@ abstract class BaseHandler extends TableCRUDListener
 	/**
 	 * @var array<'create'|'create_all'|'delete'|'delete_all'|'read'|'read_all'|'update'|'update_all',AllowRuleBuilder>
 	 */
-	private array $allow_rules = [];
+	private array $allow_rules                         = [];
+	private ?AllowCheckResult $last_allow_check_result = null;
 
 	public function __construct(
 		Context $context,
@@ -46,6 +48,16 @@ abstract class BaseHandler extends TableCRUDListener
 		parent::__construct($context);
 
 		$this->listen();
+	}
+
+	/**
+	 * Gets the last allow check result.
+	 *
+	 * @return null|AllowCheckResult
+	 */
+	public function getLastAllowCheckResult(): ?AllowCheckResult
+	{
+		return $this->last_allow_check_result;
 	}
 
 	/**
@@ -92,16 +104,30 @@ abstract class BaseHandler extends TableCRUDListener
 			// if the access right on this action was explicitly set
 			// allow it
 			if (auth()->getAccessRights()->can($full_action)) {
+				$this->last_allow_check_result = AllowCheckResult::allow(
+					new I18nMessage('HAS_REQUIRED_ACCESS_RIGHT', [
+						'_action' => $full_action,
+					])
+				);
+
 				return true;
 			}
 		}
 
 		$rule = $this->allow_rules[$action] ?? null;
 
-		// otherwise, we check if the action is allowed by
+		// otherwise, if there is a rule defined we check if the action is allowed
 		if ($rule) {
-			return $rule->allowed($this->context, $event);
+			$result = $rule->allowed($this->context, $event);
+
+			$this->last_allow_check_result = $result;
+
+			return $result->isAllowed();
 		}
+
+		$this->last_allow_check_result = AllowCheckResult::reject(
+			new I18nMessage('NO_RULE_DEFINED_FOR_ACTION', ['_action' => $action])
+		);
 
 		// we are strict, we want that any action to be explicitly allowed
 		// or granted through the access rights

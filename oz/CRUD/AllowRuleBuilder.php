@@ -14,17 +14,12 @@ declare(strict_types=1);
 namespace OZONE\Core\CRUD;
 
 use Gobl\CRUD\CRUDAction;
-use Gobl\CRUD\Events\BeforeCreate;
-use Gobl\CRUD\Events\BeforeDelete;
-use Gobl\CRUD\Events\BeforeDeleteAll;
-use Gobl\CRUD\Events\BeforeRead;
-use Gobl\CRUD\Events\BeforeReadAll;
-use Gobl\CRUD\Events\BeforeUpdate;
-use Gobl\CRUD\Events\BeforeUpdateAll;
 use LogicException;
 use OZONE\Core\App\Context;
+use OZONE\Core\Lang\I18nMessage;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
 use OZONE\Core\Roles\Roles;
+use OZONE\Core\Roles\RolesUtils;
 
 /**
  * Class AllowRuleBuilder.
@@ -34,21 +29,38 @@ class AllowRuleBuilder
 	/**
 	 * @var null|array{roles:RoleInterface[], at_least:null|RoleInterface, and_when:null|callable(CRUDAction):bool}
 	 */
-	protected ?array $role_based = null;
+	protected ?array $has_roles = null;
+
+	/**
+	 * @var null|array{types:string[], and_when:null|callable(CRUDAction):bool}
+	 */
+	protected ?array $auth_user_type = null;
 
 	/**
 	 * @var null|callable(CRUDAction):bool
 	 */
-	protected $condition_based;
+	protected $condition;
 
 	/**
-	 * @param RoleInterface[]                                                                                                     $roles
-	 * @param null|RoleInterface                                                                                                  $at_least
-	 * @param null|callable(BeforeCreate|BeforeDelete|BeforeDeleteAll|BeforeRead|BeforeReadAll|BeforeUpdate|BeforeUpdateAll):bool $and_when
+	 * @param array                     $types
+	 * @param null|callable(CRUDAction) $and_when
+	 */
+	public function onlyIfIs(array $types, ?callable $and_when = null): void
+	{
+		$this->auth_user_type = [
+			'types'    => $types,
+			'and_when' => $and_when,
+		];
+	}
+
+	/**
+	 * @param RoleInterface[]                $roles
+	 * @param null|RoleInterface             $at_least
+	 * @param null|callable(CRUDAction):bool $and_when
 	 */
 	public function ifRoles(array $roles, ?RoleInterface $at_least, ?callable $and_when = null): void
 	{
-		$this->role_based = [
+		$this->has_roles = [
 			'roles'    => $roles,
 			'at_least' => $at_least,
 			'and_when' => $and_when,
@@ -56,43 +68,115 @@ class AllowRuleBuilder
 	}
 
 	/**
-	 * @param RoleInterface                                                                                                       $at_least
-	 * @param null|callable(BeforeCreate|BeforeDelete|BeforeDeleteAll|BeforeRead|BeforeReadAll|BeforeUpdate|BeforeUpdateAll):bool $and_when
+	 * @param RoleInterface                  $at_least
+	 * @param null|callable(CRUDAction):bool $and_when
 	 */
 	public function ifRole(RoleInterface $at_least, ?callable $and_when = null): void
 	{
 		$this->ifRoles([$at_least], $at_least, $and_when);
 	}
 
+	/**
+	 * @param callable(CRUDAction):bool $when
+	 */
 	public function when(callable $when): void
 	{
-		$this->condition_based = $when;
+		$this->condition = $when;
 	}
 
-	public function allowed(Context $context, CRUDAction $action): bool
+	/**
+	 * Checks if the action is allowed for the current context.
+	 *
+	 * @param Context    $context
+	 * @param CRUDAction $action
+	 *
+	 * @return AllowCheckResult
+	 */
+	public function allowed(Context $context, CRUDAction $action): AllowCheckResult
 	{
-		if (null !== $this->role_based) {
-			$roles    = $this->role_based['roles'];
-			$at_least = $this->role_based['at_least'];
-			$and_when = $this->role_based['and_when'] ?? null;
+		if (isset($this->has_roles)) {
+			$roles    = $this->has_roles['roles'];
+			$at_least = $this->has_roles['at_least'];
+			$and_when = $this->has_roles['and_when'] ?? null;
+
+			if (!$context->hasAuthenticatedUser()) {
+				return AllowCheckResult::reject(new I18nMessage('OZ_ERROR_UNAUTHENTICATED'));
+			}
+
 			$has_role = Roles::hasOneOfRoles(user($context), $roles, $at_least);
 
 			if (!$has_role) {
-				return false;
+				return AllowCheckResult::reject(new I18nMessage(
+					'OZ_ERROR_USER_IS_MISSING_REQUIRED_ROLE',
+					[
+						'_allowed_roles' => RolesUtils::ensureRolesString($roles),
+						'_at_least_role' => $at_least?->value,
+					]
+				));
 			}
-			if (null !== $and_when) {
-				return $and_when($action);
+			if (null !== $and_when && !\call_user_func($and_when, $action)) {
+				return AllowCheckResult::reject(new I18nMessage(
+					'CONDITION_NOT_MET',
+					[
+						'_condition' => $and_when(...),
+					]
+				));
 			}
 
-			return true;
+			return AllowCheckResult::allow(new I18nMessage('ROLES_AND_CONDITION_MET'));
 		}
 
-		if (null !== $this->condition_based) {
-			return \call_user_func($this->condition_based, $action);
+		if (isset($this->condition)) {
+			$condition = $this->condition;
+			$result    = \call_user_func($condition, $action);
+
+			if (!$result) {
+				return AllowCheckResult::reject(new I18nMessage(
+					'CONDITION_NOT_MET',
+					[
+						'_condition' => $condition(...),
+					]
+				));
+			}
+
+			return AllowCheckResult::allow(new I18nMessage('CONDITION_MET'));
+		}
+
+		if (isset($this->auth_user_type)) {
+			$types     = $this->auth_user_type['types'];
+			$and_when  = $this->auth_user_type['and_when'] ?? null;
+
+			if (!$context->hasAuthenticatedUser()) {
+				return AllowCheckResult::reject(new I18nMessage('OZ_ERROR_UNAUTHENTICATED'));
+			}
+
+			$user      = user($context);
+			$user_type = $user->getAuthUserType();
+
+			if (!\in_array($user_type, $types, true)) {
+				return AllowCheckResult::reject(new I18nMessage(
+					'OZ_ERROR_USER_TYPE_NOT_ALLOWED',
+					[
+						'_allowed_types' => \implode(', ', $types),
+						'_user_type'     => $user_type,
+					]
+				));
+			}
+
+			if (null !== $and_when && !\call_user_func($and_when, $action)) {
+				return AllowCheckResult::reject(new I18nMessage(
+					'CONDITION_NOT_MET',
+					[
+						'_condition' => $and_when(...),
+					]
+				));
+			}
+
+			return AllowCheckResult::allow(new I18nMessage('AUTH_USER_TYPE_AND_CONDITION_MET'));
 		}
 
 		throw new LogicException(
-			\sprintf('No condition was set for the action: %s', \get_debug_type($action))
+			\sprintf('No rule was set for the action: %s', \get_debug_type($action))
 		);
 	}
 }
