@@ -51,8 +51,8 @@ class I18nMessage implements ArrayCapableInterface
 	public function toArray(): array
 	{
 		return [
-			'text'   => $this->getText(),
-			'data'   => $this->getData(),
+			'text' => $this->text,
+			'data' => $this->data,
 		];
 	}
 }
