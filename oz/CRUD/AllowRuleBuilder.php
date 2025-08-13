@@ -34,7 +34,7 @@ class AllowRuleBuilder
 	/**
 	 * @var null|array{types:string[], and_when:null|callable(CRUDAction):bool}
 	 */
-	protected ?array $auth_user_type = null;
+	protected ?array $only_if_user_is = null;
 
 	/**
 	 * @var null|callable(CRUDAction):bool
@@ -42,12 +42,12 @@ class AllowRuleBuilder
 	protected $condition;
 
 	/**
-	 * @param array                          $types
+	 * @param string[]                       $types
 	 * @param null|callable(CRUDAction):bool $and_when
 	 */
 	public function onlyIfIs(array $types, ?callable $and_when = null): void
 	{
-		$this->auth_user_type = [
+		$this->only_if_user_is = [
 			'types'    => $types,
 			'and_when' => $and_when,
 		];
@@ -133,9 +133,9 @@ class AllowRuleBuilder
 			return AllowCheckResult::allow(new I18nMessage('CONDITION_MET'));
 		}
 
-		if (isset($this->auth_user_type)) {
-			$types     = $this->auth_user_type['types'];
-			$and_when  = $this->auth_user_type['and_when'] ?? null;
+		if (isset($this->only_if_user_is)) {
+			$types     = $this->only_if_user_is['types'];
+			$and_when  = $this->only_if_user_is['and_when'] ?? null;
 
 			if (!$context->hasAuthenticatedUser()) {
 				return AllowCheckResult::reject(new I18nMessage('OZ_ERROR_UNAUTHENTICATED'));
