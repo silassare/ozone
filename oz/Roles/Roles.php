@@ -116,7 +116,9 @@ class Roles
 		RoleCheckMode $check_mode = RoleCheckMode::GRANT_ACCESS
 	): bool {
 		$can_use_user_role = match ($check_mode) {
-			// user role usage is not allowed in scoped auth
+			// we do not allow user role usage in scoped auth
+			// this is to make sure when in scoped auth (api key with specific access rights),
+			// the user role is not used to grant access in this API call
 			RoleCheckMode::GRANT_ACCESS => !auth()->isScoped(),
 			RoleCheckMode::READ         => true,
 		};

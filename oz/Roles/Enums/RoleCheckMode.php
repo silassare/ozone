@@ -24,10 +24,15 @@ enum RoleCheckMode
 	case READ;
 
 	/**
-	 * When checking user role to grant access to a resource.
+	 * Use this when checking user role to grant access to a resource.
 	 *
-	 * This mode is the default and make no user role is used in scoped authentication.
+	 * > Important: This mode is the default and make sure that no user role is used
+	 * in scoped authentication (api key, token etc... with specific access rights).
 	 * In Scoped authentication, the user role should never be used to grant access to a resource.
+	 * With this mode when the current request is using scoped authentication,
+	 * We return false for any user role check.
+	 *
+	 * @see Roles::hasOneOfRoles()
 	 */
 	case GRANT_ACCESS;
 }
