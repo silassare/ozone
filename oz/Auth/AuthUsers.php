@@ -451,7 +451,7 @@ final class AuthUsers
 		if (!Roles::hasOneOfRoles($user, $allowed_roles, $at_least)) {
 			throw new ForbiddenException($message, $data + [
 				'_allowed_roles' => RolesUtils::ensureRolesString($allowed_roles),
-				'_at_least'      => $at_least?->value,
+				'_at_least_role' => $at_least?->value,
 			], $previous);
 		}
 	}
