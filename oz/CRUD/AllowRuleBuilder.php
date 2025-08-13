@@ -42,8 +42,8 @@ class AllowRuleBuilder
 	protected $condition;
 
 	/**
-	 * @param array                     $types
-	 * @param null|callable(CRUDAction) $and_when
+	 * @param array                          $types
+	 * @param null|callable(CRUDAction):bool $and_when
 	 */
 	public function onlyIfIs(array $types, ?callable $and_when = null): void
 	{
@@ -116,10 +116,7 @@ class AllowRuleBuilder
 			}
 			if (null !== $and_when && !\call_user_func($and_when, $action)) {
 				return AllowCheckResult::reject(new I18nMessage(
-					'CONDITION_NOT_MET',
-					[
-						'_condition' => $and_when(...),
-					]
+					'CONDITION_NOT_MET'
 				));
 			}
 
@@ -127,15 +124,9 @@ class AllowRuleBuilder
 		}
 
 		if (isset($this->condition)) {
-			$condition = $this->condition;
-			$result    = \call_user_func($condition, $action);
-
-			if (!$result) {
+			if (!\call_user_func($this->condition, $action)) {
 				return AllowCheckResult::reject(new I18nMessage(
-					'CONDITION_NOT_MET',
-					[
-						'_condition' => $condition(...),
-					]
+					'CONDITION_NOT_MET'
 				));
 			}
 
@@ -165,10 +156,7 @@ class AllowRuleBuilder
 
 			if (null !== $and_when && !\call_user_func($and_when, $action)) {
 				return AllowCheckResult::reject(new I18nMessage(
-					'CONDITION_NOT_MET',
-					[
-						'_condition' => $and_when(...),
-					]
+					'CONDITION_NOT_MET'
 				));
 			}
 
