@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Router;
 
+use OZONE\Core\Router\Router;
 use OZONE\Tests\TestUtils;
 use PHPUnit\Framework\TestCase;
 
@@ -60,6 +61,25 @@ final class RouteTest extends TestCase
 		$articlesGetById = $router->getRoute('articles.get_by_id');
 		self::assertSame('/articles/:id', $articlesGetById->getPath());
 		self::assertSame(':id', $articlesGetById->getPath(false));
+	}
+
+	public function testPriority(): void
+	{
+		$router = TestUtils::router();
+
+		$router->group('/a', static function (Router $router) {
+			$router->group('/b', static function (Router $router) {
+				$router->get('/c', static fn () => null)
+					->name('c')->priority(1);
+			})
+				->name('b')->priority(3);
+		})
+			->name('a')->priority(1);
+
+		$c = $router->getRoute('a.b.c');
+
+		self::assertSame(1, $c->getOptions()->getPriority(false));
+		self::assertSame(5, $c->getOptions()->getPriority(true));
 	}
 
 	public function testGetParserResult(): void
