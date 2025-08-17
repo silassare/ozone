@@ -37,7 +37,11 @@ use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
  */
 class RouteSharedOptions
 {
+	public const PRIORITY_RUN_LAST    = -1;
+	public const PRIORITY_RUN_DEFAULT = 0;
+
 	protected readonly string $path;
+	protected int $priority = self::PRIORITY_RUN_DEFAULT;
 
 	/**
 	 * @var array<string,string>
@@ -380,6 +384,45 @@ class RouteSharedOptions
 		$this->route_form = $form;
 
 		return $this;
+	}
+
+	/**
+	 * Set priority.
+	 *
+	 * This method sets the priority of the route. Routes with higher priority values
+	 * will be matched before those with lower values.
+	 *
+	 * @param int $priority
+	 *
+	 * @return $this
+	 */
+	public function priority(int $priority): static
+	{
+		if ($priority < self::PRIORITY_RUN_LAST) {
+			throw new InvalidArgumentException(\sprintf(
+				'Priority must be greater than or equal to %d, %s given',
+				self::PRIORITY_RUN_LAST,
+				$priority
+			));
+		}
+
+		$this->priority = $priority;
+
+		return $this;
+	}
+
+	/**
+	 * Get route priority.
+	 *
+	 * @param bool $include_parent
+	 *
+	 * @return int
+	 */
+	public function getPriority(bool $include_parent): int
+	{
+		$parent_priority = $include_parent && $this->parent ? $this->parent->getPriority(true) : 0;
+
+		return $parent_priority + $this->priority;
 	}
 
 	/**

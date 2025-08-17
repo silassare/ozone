@@ -260,6 +260,8 @@ final class Router
 		$dynamic_matches = [];
 
 		if (isset($this->allowed_methods[$method])) {
+			$this->ensureOrdered();
+
 			foreach ($this->static_routes as $route) {
 				$params = [];
 
@@ -533,6 +535,37 @@ final class Router
 	public function trace(callable|string $path, ?callable $factory = null): RouteOptions
 	{
 		return $this->map(['trace'], $path, $factory);
+	}
+
+	/**
+	 * Ensure routes are ordered by priority.
+	 */
+	private function ensureOrdered(): void
+	{
+		\usort($this->static_routes, [$this, 'routePriorityComparator']);
+		\usort($this->dynamic_routes, [$this, 'routePriorityComparator']);
+	}
+
+	/**
+	 * Comparator for sorting routes by priority.
+	 *
+	 * The routes with higher priority values will be sorted before those with lower values.
+	 *
+	 * @param Route $a
+	 * @param Route $b
+	 *
+	 * @return int
+	 */
+	private function routePriorityComparator(Route $a, Route $b): int
+	{
+		$ap = $a->getOptions()->getPriority(true);
+		$bp = $b->getOptions()->getPriority(true);
+
+		if ($ap === $bp) {
+			return 0;
+		}
+
+		return ($ap > $bp) ? -1 : 1;
 	}
 
 	/**
