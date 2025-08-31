@@ -27,14 +27,6 @@ enum Role: string implements RoleInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function slug(): string
-	{
-		return $this->value;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public static function admin(): self
 	{
 		return self::ADMIN;
@@ -62,9 +54,9 @@ enum Role: string implements RoleInterface
 	public function weight(): int
 	{
 		return match ($this) {
-			self::SUPER_ADMIN => 10000,
-			self::ADMIN       => 9000,
-			self::EDITOR      => 5000,
+			self::SUPER_ADMIN => 10_000,
+			self::ADMIN       => 8_000,
+			self::EDITOR      => 5_000,
 		};
 	}
 }
