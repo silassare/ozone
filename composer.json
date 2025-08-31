@@ -58,8 +58,7 @@
 	"archive": {
 		"exclude": [
 			"/.ozone/",
-			"/noop/",
-			"/public/"
+			"/noop/"
 		]
 	},
 	"autoload": {
