@@ -104,7 +104,7 @@ if (!\function_exists('oz_logger')) {
 	 *
 	 * @return null|bool|float|int|string
 	 */
-	function env(string $key, mixed $default = null): null|bool|float|int|string
+	function env(string $key, mixed $default = null): bool|float|int|string|null
 	{
 		return app()->getEnv()->get($key, $default);
 	}

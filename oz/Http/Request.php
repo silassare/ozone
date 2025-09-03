@@ -70,7 +70,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * The request body parsed (if possible) into a PHP array or object.
 	 */
-	protected null|array|object $bodyParsed = null;
+	protected array|object|null $bodyParsed = null;
 
 	/**
 	 * List of request body parsers (e.g., url-encoded, JSON, XML, multipart).
@@ -312,7 +312,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getParsedBody(): null|array|object
+	public function getParsedBody(): array|object|null
 	{
 		if (null !== $this->bodyParsed) {
 			return $this->bodyParsed;

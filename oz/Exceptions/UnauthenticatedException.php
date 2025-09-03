@@ -29,7 +29,7 @@ class UnauthenticatedException extends BaseException
 	 * @param null|Throwable          $previous previous throwable used for the exception chaining
 	 */
 	public function __construct(
-		null|I18nMessage|string $message = null,
+		I18nMessage|string|null $message = null,
 		?array $data = null,
 		?Throwable $previous = null
 	) {

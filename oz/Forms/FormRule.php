@@ -29,7 +29,7 @@ class FormRule implements ArrayCapableInterface
 	 *      null|\OZONE\Core\Lang\I18nMessage|string}>
 	 */
 	private array $rules                     = [];
-	private null|I18nMessage|string $message = null;
+	private I18nMessage|string|null $message = null;
 
 	/**
 	 * Add a rule to check if a field value is equal to a value.
@@ -42,8 +42,8 @@ class FormRule implements ArrayCapableInterface
 	 */
 	public function eq(
 		Field|string $field,
-		null|bool|Field|float|int|string $value,
-		null|I18nMessage|string $message = null
+		bool|Field|float|int|string|null $value,
+		I18nMessage|string|null $message = null
 	): self {
 		return $this->add($field, 'eq', $value, $message);
 	}
@@ -59,8 +59,8 @@ class FormRule implements ArrayCapableInterface
 	 */
 	public function neq(
 		Field|string $field,
-		null|bool|Field|float|int|string $value,
-		null|I18nMessage|string $message = null
+		bool|Field|float|int|string|null $value,
+		I18nMessage|string|null $message = null
 	): self {
 		return $this->add($field, 'neq', $value, $message);
 	}
@@ -77,7 +77,7 @@ class FormRule implements ArrayCapableInterface
 	public function gt(
 		Field|string $field,
 		Field|float|int|string $value,
-		null|I18nMessage|string $message = null
+		I18nMessage|string|null $message = null
 	): self {
 		return $this->add($field, 'gt', $value, $message);
 	}
@@ -94,7 +94,7 @@ class FormRule implements ArrayCapableInterface
 	public function gte(
 		Field|string $field,
 		Field|float|int|string $value,
-		null|I18nMessage|string $message = null
+		I18nMessage|string|null $message = null
 	): self {
 		return $this->add($field, 'gte', $value, $message);
 	}
@@ -111,7 +111,7 @@ class FormRule implements ArrayCapableInterface
 	public function lt(
 		Field|string $field,
 		Field|float|int|string $value,
-		null|I18nMessage|string $message = null
+		I18nMessage|string|null $message = null
 	): self {
 		return $this->add($field, 'lt', $value, $message);
 	}
@@ -128,7 +128,7 @@ class FormRule implements ArrayCapableInterface
 	public function lte(
 		Field|string $field,
 		Field|float|int|string $value,
-		null|I18nMessage|string $message = null
+		I18nMessage|string|null $message = null
 	): self {
 		return $this->add($field, 'lte', $value, $message);
 	}
@@ -145,7 +145,7 @@ class FormRule implements ArrayCapableInterface
 	public function in(
 		Field|string $field,
 		array|Field $value,
-		null|I18nMessage|string $message = null
+		I18nMessage|string|null $message = null
 	): self {
 		return $this->add($field, 'in', $value, $message);
 	}
@@ -162,7 +162,7 @@ class FormRule implements ArrayCapableInterface
 	public function notIn(
 		Field|string $field,
 		array|Field $value,
-		null|I18nMessage|string $message = null
+		I18nMessage|string|null $message = null
 	): self {
 		return $this->add($field, 'not_in', $value, $message);
 	}
@@ -177,7 +177,7 @@ class FormRule implements ArrayCapableInterface
 	 */
 	public function isNull(
 		Field|string $field,
-		null|I18nMessage|string $message = null
+		I18nMessage|string|null $message = null
 	): self {
 		return $this->add($field, 'is_null', null, $message);
 	}
@@ -192,7 +192,7 @@ class FormRule implements ArrayCapableInterface
 	 */
 	public function isNotNull(
 		Field|string $field,
-		null|I18nMessage|string $message = null
+		I18nMessage|string|null $message = null
 	): self {
 		return $this->add($field, 'is_not_null', null, $message);
 	}
@@ -250,7 +250,7 @@ class FormRule implements ArrayCapableInterface
 	 *
 	 * @return null|I18nMessage|string
 	 */
-	public function getErrorMessage(): null|I18nMessage|string
+	public function getErrorMessage(): I18nMessage|string|null
 	{
 		return $this->message;
 	}
@@ -277,7 +277,7 @@ class FormRule implements ArrayCapableInterface
 		Field|string $field,
 		string $rule,
 		mixed $value = null,
-		null|I18nMessage|string $message = null
+		I18nMessage|string|null $message = null
 	): self {
 		$field_name = $field instanceof Field ? $field->getName() : $field;
 

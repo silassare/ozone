@@ -77,7 +77,7 @@ final class CacheManager
 	 *
 	 * @return bool
 	 */
-	public function set(string $key, mixed $value, null|DateInterval|float $lifetime = null): bool
+	public function set(string $key, mixed $value, DateInterval|float|null $lifetime = null): bool
 	{
 		$item = $this->getItem($key);
 
@@ -134,7 +134,7 @@ final class CacheManager
 	 *
 	 * @return CacheItem
 	 */
-	public function factory(string $key, callable $factory, null|DateInterval|float $lifetime = null): CacheItem
+	public function factory(string $key, callable $factory, DateInterval|float|null $lifetime = null): CacheItem
 	{
 		$item = $this->getItem($key);
 

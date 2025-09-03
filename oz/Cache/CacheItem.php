@@ -113,7 +113,7 @@ final class CacheItem
 	 *
 	 * @return $this
 	 */
-	public function expiresAfter(null|DateInterval|float $lifetime): self
+	public function expiresAfter(DateInterval|float|null $lifetime): self
 	{
 		if (null === $lifetime) {
 			$this->expire = null;

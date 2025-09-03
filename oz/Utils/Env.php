@@ -53,7 +53,7 @@ class Env
 	 *
 	 * @return null|bool|float|int|string
 	 */
-	public function get(string $key, mixed $default = null): null|bool|float|int|string
+	public function get(string $key, mixed $default = null): bool|float|int|string|null
 	{
 		return $this->env->getEnv($key, $default);
 	}

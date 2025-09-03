@@ -51,7 +51,7 @@ class Field implements ArrayCapableInterface
 	 */
 	public function __construct(
 		string $name,
-		null|TypeInterface|TypesSwitcher $type = null,
+		TypeInterface|TypesSwitcher|null $type = null,
 		bool $required = false,
 		?FormRule $if = null
 	) {
