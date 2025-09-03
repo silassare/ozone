@@ -106,7 +106,7 @@ class ServiceGenerator extends CSGeneratorORM
 			->isDir()
 			->assert($service_dir);
 
-		if ($table->hasSinglePKColumn()) {
+		if (!$table->hasSinglePKColumn()) {
 			throw new \PHPUtils\Exceptions\RuntimeException(
 				\sprintf(
 					'Table "%s" has more than one column in primary key while expecting 1.'
