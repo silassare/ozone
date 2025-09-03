@@ -689,12 +689,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "d46188576e08d3f7cb8621f3e51a236e172cc0d9"
+                "reference": "b4f78682e52091509abd75232ee40be1cea2d8b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/d46188576e08d3f7cb8621f3e51a236e172cc0d9",
-                "reference": "d46188576e08d3f7cb8621f3e51a236e172cc0d9",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/b4f78682e52091509abd75232ee40be1cea2d8b9",
+                "reference": "b4f78682e52091509abd75232ee40be1cea2d8b9",
                 "shasum": ""
             },
             "require": {
@@ -752,7 +752,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/main"
             },
-            "time": "2025-09-03T18:47:18+00:00"
+            "time": "2025-09-03T20:54:22+00:00"
         },
         {
             "name": "silassare/kli",
