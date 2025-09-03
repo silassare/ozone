@@ -22,20 +22,17 @@ use Gobl\DBAL\Types\TypeInt;
 use Gobl\ORM\Exceptions\ORMQueryException;
 use Gobl\ORM\ORM;
 use Gobl\ORM\ORMController;
-use Gobl\ORM\ORMEntity;
-use Gobl\ORM\ORMRequest;
 use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
+use OpenApi\Annotations\Parameter;
 use OpenApi\Annotations\Schema;
 use OZONE\Core\Access\AtomicAction;
 use OZONE\Core\Access\AtomicActionsRegistry;
-use OZONE\Core\Exceptions\BadRequestException;
-use OZONE\Core\Exceptions\ForbiddenException;
-use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Lang\I18nMessage;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\REST\RESTFulAPIRequest;
+use OZONE\Core\REST\RESTFullRelationsHelper;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use PHPUtils\Str;
@@ -74,7 +71,7 @@ trait RESTFulService
 	 */
 	public static function apiDoc(ApiDoc $doc): void
 	{
-		$table               = db()->getTableOrFail(self::TABLE_NAME);
+		$table = db()->getTableOrFail(self::TABLE_NAME);
 
 		if (!$table->getMeta()->get('api.doc.enabled', true)) {
 			return;
@@ -91,38 +88,25 @@ trait RESTFulService
 		$entity_update       = $doc->entitySchemaForUpdate(self::TABLE_NAME);
 		$pk_key_column       = self::KEY_COLUMN;
 		$collections         = $table->getCollections();
-		$relations           = self::nonPrivateRelations($table);
-		$v_relations         = self::nonPrivateVirtualRelations($table);
 
-		/** @var string[] $non_paginated_relations_names */
-		$non_paginated_relations_names = [];
-
-		/** @var array<string, Schema> $non_paginated_relations_schemas */
-		$non_paginated_relations_schemas = [];
-		foreach ($relations as $relation) {
-			if (!$relation->isPaginated()) {
-				$non_paginated_relations_names[]                       = $relation->getName();
-				$non_paginated_relations_schemas[$relation->getName()] = $doc->entitySchemaForRead($relation->getTargetTable());
-			}
-		}
-		foreach ($v_relations as $vr) {
-			if (!$vr->isPaginated()) {
-				$non_paginated_relations_names[]                 = $vr->getName();
-				$non_paginated_relations_schemas[$vr->getName()] = $doc->typeSchema($vr->getRelativeType());
-			}
-		}
-
-		$base_params = [
+		$get_one_params = [];
+		$get_all_params = [
 			$doc->apiMaxParameter(),
 			$doc->apiPageParameter(),
 			$doc->apiFiltersParameter(),
 			$doc->apiOrderByParameter(),
 		];
-		$get_one_params = [
-			...$base_params,
+		$update_one_params = [];
+		$update_all_params = [
+			$doc->apiMaxParameter(),
+			$doc->apiFiltersParameter(),
+			$doc->apiOrderByParameter(),
 		];
-		$get_all_params = [
-			...$base_params,
+		$delete_one_params = [];
+		$delete_all_params = [
+			$doc->apiMaxParameter(),
+			$doc->apiFiltersParameter(),
+			$doc->apiOrderByParameter(),
 		];
 		if (!empty($collections)) {
 			$get_all_params[] = $doc->apiCollectionParameter(
@@ -131,10 +115,14 @@ trait RESTFulService
 			);
 		}
 
-		if (!empty($non_paginated_relations_names)) {
-			$p                = $doc->apiRelationsParameter('query', $non_paginated_relations_names);
-			$get_one_params[] = $p;
-			$get_all_params[] = $p;
+		$relatives_options   = self::relationsDocOptions($table, $doc);
+		$relations           = $relatives_options['relations'];
+		$v_relations         = $relatives_options['v_relations'];
+
+		$non_paginated_relations_schemas = $relatives_options['non_paginated_relations_schemas'];
+
+		if (isset($relatives_options['relations_parameter'])) {
+			$get_one_params[] = $get_all_params[] = $relatives_options['relations_parameter'];
 		}
 
 		// create_one
@@ -203,12 +191,17 @@ trait RESTFulService
 				],
 				[
 					'tags'        => [$tag->name],
-					'description' => \sprintf('Update %s `%s` identified by a given `%s`', $a_an, $singular_name, ApiDoc::toHumanReadable($pk_key_column)),
+					'description' => \sprintf(
+						'Update %s `%s` identified by a given `%s`',
+						$a_an,
+						$singular_name,
+						ApiDoc::toHumanReadable($pk_key_column)
+					),
 					'operationId' => \sprintf('%s.update_one', $operation_id_prefix),
 					'requestBody' => $doc->requestBody([
 						$doc->json($entity_update),
 					]),
-					'parameters' => $base_params,
+					'parameters' => $update_one_params,
 				]
 			);
 		}
@@ -227,9 +220,14 @@ trait RESTFulService
 				],
 				[
 					'tags'        => [$tag->name],
-					'description' => \sprintf('Delete %s `%s` identified by a given `%s`.', $a_an, $singular_name, ApiDoc::toHumanReadable($pk_key_column)),
+					'description' => \sprintf(
+						'Delete %s `%s` identified by a given `%s`.',
+						$a_an,
+						$singular_name,
+						ApiDoc::toHumanReadable($pk_key_column)
+					),
 					'operationId' => \sprintf('%s.create_one', $operation_id_prefix),
-					'parameters'  => $base_params,
+					'parameters'  => $delete_one_params,
 				]
 			);
 		}
@@ -280,7 +278,7 @@ trait RESTFulService
 					'requestBody' => $doc->requestBody([
 						$doc->json($entity_update),
 					]),
-					'parameters' => $base_params,
+					'parameters' => $update_all_params,
 				]
 			);
 		}
@@ -301,7 +299,7 @@ trait RESTFulService
 					'tags'        => [$tag->name],
 					'description' => \sprintf('Delete all `%s` that matches a given filters.', $plural_name),
 					'operationId' => \sprintf('%s.delete_all', $operation_id_prefix),
-					'parameters'  => $base_params,
+					'parameters'  => $delete_all_params,
 				]
 			);
 		}
@@ -315,12 +313,40 @@ trait RESTFulService
 			$tag,
 			$pk_key_column,
 			$singular_name,
-			$doc
+			$doc,
 		) {
 			$r_name = $r->getName();
 			if (!$table->getMeta()->get(\sprintf('api.doc.get_relation.%s.enabled', $r_name), true)) {
 				return;
 			}
+
+			$r_params = $r->isPaginated() ? [
+				$doc->apiMaxParameter(),
+				$doc->apiPageParameter(),
+				$doc->apiFiltersParameter(),
+				$doc->apiOrderByParameter(),
+			] : [
+				$doc->apiFiltersParameter(),
+				$doc->apiOrderByParameter(),
+			];
+
+			/** @var null|Schema $r_relations_schema */
+			$r_relations_schema = null;
+			$r_table            = $r->getController()->getRelativesStoreTable();
+
+			if ($r_table?->hasSinglePKColumn()) {
+				$r_pk_column         = $r_table->getSinglePKColumnOrFail()->getName();
+				$r_relatives_options = self::relationsDocOptions($table, $doc);
+
+				if (isset($rr_options['relations_parameter'])) {
+					$r_params[] = $rr_options['relations_parameter'];
+				}
+				$r_relations_schema = $r->isPaginated() ? $doc->object(\array_map(
+					static fn ($s) => $doc->object(['{' . $r_pk_column . '}' => $s]),
+					$r_relatives_options['non_paginated_relations_schemas']
+				)) : $doc->object($r_relatives_options['non_paginated_relations_schemas']);
+			}
+
 			$doc->addOperationFromRoute(
 				self::routeName('get_relation'),
 				'GET',
@@ -328,9 +354,11 @@ trait RESTFulService
 				[
 					$doc->success(
 						$r->isPaginated() ? $doc->apiPaginated([
-							'items' => $doc->array($r_schema),
+							'items'     => $doc->array($r_schema),
+							'relations' => $r_relations_schema,
 						]) : $doc->object([
-							'item' => $r_schema,
+							'item'      => $r_schema,
+							'relations' => $r_relations_schema,
 						]),
 						\sprintf(
 							'The `%s` of the `%s` was retrieved successfully.',
@@ -348,6 +376,7 @@ trait RESTFulService
 						ApiDoc::toHumanReadable($pk_key_column)
 					),
 					'operationId'     => \sprintf('%s.get_relation.%s', $operation_id_prefix, $r_name),
+					'parameters'      => $r_params,
 				],
 				[
 					'relation' => $r_name,
@@ -383,8 +412,9 @@ trait RESTFulService
 			$controller = $this->controller();
 			$values     = $req->getFormData($this->table);
 			$entity     = $controller->addItem($values);
+			$rrh        = new RESTFullRelationsHelper($this->table);
 
-			$this->processRelations($entity, $req, false);
+			$rrh->processRelations($entity, $req, false);
 
 			$this->json()
 				->setDone(
@@ -422,7 +452,8 @@ trait RESTFulService
 				throw new NotFoundException();
 			}
 
-			$this->processRelations($entity, $req, false);
+			$rrh = new RESTFullRelationsHelper($this->table);
+			$rrh->processRelations($entity, $req, false);
 
 			$this->json()
 				->setDone(
@@ -538,7 +569,8 @@ trait RESTFulService
 			throw new NotFoundException();
 		}
 
-		$relations = $this->entityNonPaginatedRelations($entity, $req);
+		$rrh       = new RESTFullRelationsHelper($this->table);
+		$relations = $rrh->entityNonPaginatedRelations($entity, $req);
 
 		$this->json()
 			->setDone(
@@ -566,8 +598,8 @@ trait RESTFulService
 		$filters       = $req->getFilters();
 		$order_by      = $req->getOrderBy();
 		$max           = $req->getMax();
-		$offset        = $req->getOffset();
 		$page          = $req->getPage();
+		$offset        = $req->getOffset();
 		$total_records = 0;
 
 		$controller = $this->controller();
@@ -587,7 +619,8 @@ trait RESTFulService
 		$relations = [];
 
 		if (\count($results)) {
-			$relations = $this->entitiesNonPaginatedRelations($results, $req);
+			$rrh       = new RESTFullRelationsHelper($this->table);
+			$relations = $rrh->entitiesNonPaginatedRelations($results, $req);
 		}
 
 		$this->json()
@@ -631,8 +664,6 @@ trait RESTFulService
 			throw new NotFoundException();
 		}
 
-		$max                = $req->getMax();
-		$page               = $req->getPage();
 		$total_records      = 0;
 		$paginated_relation = false;
 
@@ -640,19 +671,21 @@ trait RESTFulService
 			/** @var Relation $found */
 			$found = $this->table->getRelation($relation_name);
 
-			self::assertNotPrivateRelationOrVirtualRelation($found);
+			RESTFullRelationsHelper::assertNotPrivateRelation($found);
+
+			$rrh = new RESTFullRelationsHelper($this->table);
 
 			if ($found->isPaginated()) {
 				$paginated_relation = true;
-				$r                  = $this->getRelationItemsList($found, $entity, $req, $total_records);
+				$r                  = $rrh->getRelationItemsList($found, $entity, $req, $total_records);
 			} else {
-				$r = $this->getRelationItem($found, $entity);
+				$r = $rrh->getRelationItem($found, $entity);
 			}
 		} elseif ($this->table->hasVirtualRelation($relation_name)) {
 			/** @var VirtualRelation $found */
-			$found              = $this->table->getVirtualRelation($relation_name);
+			$found = $this->table->getVirtualRelation($relation_name);
 
-			self::assertNotPrivateRelationOrVirtualRelation($found);
+			RESTFullRelationsHelper::assertNotPrivateRelation($found);
 
 			$paginated_relation = $found->isPaginated();
 
@@ -671,12 +704,29 @@ trait RESTFulService
 
 		if ($paginated_relation) {
 			$data['items'] = $r;
-			$data['page']  = $page;
-			$data['max']   = $max;
+			$data['page']  = $req->getPage();
+			$data['max']   = $req->getMax();
 			$data['total'] = $total_records;
 		} else {
 			$data['item'] = $r;
 		}
+
+		$relative_store_table = $found->getController()->getRelativesStoreTable();
+		$relative_relations   = [];
+
+		if ($relative_store_table?->hasSinglePKColumn()) {
+			$rst_rrh = new RESTFullRelationsHelper($relative_store_table);
+
+			if ($paginated_relation) {
+				if (\count($r) > 0) {
+					$relative_relations = $rst_rrh->entitiesNonPaginatedRelations($r, $req);
+				}
+			} else {
+				$relative_relations = $rst_rrh->entityNonPaginatedRelations($r, $req);
+			}
+		}
+
+		$data['relations'] = $relative_relations;
 
 		$this->json()
 			->setDone()
@@ -704,10 +754,10 @@ trait RESTFulService
 
 		$relations_names = [];
 
-		foreach (self::nonPrivateRelations($table) as $relation) {
+		foreach ($table->getRelations(false) as $relation) {
 			$relations_names[] = $relation->getName();
 		}
-		foreach (self::nonPrivateVirtualRelations($table) as $relation) {
+		foreach ($table->getVirtualRelations(false) as $relation) {
 			$relations_names[] = $relation->getName();
 		}
 
@@ -799,6 +849,11 @@ trait RESTFulService
 			->param(self::KEY_COLUMN, $id_param);
 	}
 
+	/**
+	 * Registers access rights actions for the given table.
+	 *
+	 * @param Table $table
+	 */
 	protected static function registerAccessRightsActions(Table $table): void
 	{
 		$actions = [
@@ -858,313 +913,43 @@ trait RESTFulService
 	}
 
 	/**
-	 * Make sure to load non-paginated relations for a single entity.
+	 * @param Table  $table
+	 * @param ApiDoc $doc
 	 *
-	 * @param ORMEntity         $entity
-	 * @param RESTFulAPIRequest $req
-	 *
-	 * @return array
-	 *
-	 * @throws BadRequestException
+	 * @return array{
+	 *     relations_parameter: null|Parameter,
+	 *     non_paginated_relations_schemas: array<string, Schema>,
+	 *     relations: array<int, Relation>,
+	 *     v_relations: array<int, VirtualRelation>
+	 * }
 	 */
-	protected function entityNonPaginatedRelations(ORMEntity $entity, RESTFulAPIRequest $req): array
+	private static function relationsDocOptions(Table $table, ApiDoc $doc): array
 	{
-		$query_relations = $req->getRequestedRelations();
-		$results         = [];
+		$relations   = $table->getRelations(false);
+		$v_relations = $table->getVirtualRelations(false);
 
-		if (!empty($query_relations)) {
-			$list = $this->resolveRelations($query_relations, false);
-
-			/** @var Relation[] $relations */
-			$relations = $list[Relation::class] ?? [];
-
-			/** @var VirtualRelation[] $v_relations */
-			$v_relations = $list[VirtualRelation::class] ?? [];
-
-			foreach ($relations as $name => $rel) {
-				$results[$name] = $this->getRelationItem($rel, $entity);
+		/** @var array<string, Schema> $schemas */
+		$schemas = [];
+		foreach ($relations as $rl) {
+			if (!$rl->isPaginated()) {
+				$schemas[$rl->getName()] = $doc->entitySchemaForRead($rl->getTargetTable());
 			}
-
-			foreach ($v_relations as $name => $rel) {
-				$results[$name] = $rel->getController()->get($entity, $req);
+		}
+		foreach ($v_relations as $vr) {
+			if (!$vr->isPaginated()) {
+				$schemas[$vr->getName()] = $doc->typeSchema($vr->getRelativeType());
 			}
 		}
 
-		return $results;
-	}
-
-	/**
-	 * Make sure to load non-paginated relations for a list of entities.
-	 *
-	 * @param ORMEntity[]       $entities
-	 * @param RESTFulAPIRequest $req
-	 *
-	 * @return array
-	 *
-	 * @throws BadRequestException
-	 */
-	protected function entitiesNonPaginatedRelations(array $entities, RESTFulAPIRequest $req): array
-	{
-		$query_relations = $req->getRequestedRelations();
-		$results         = [];
-
-		if (!empty($query_relations)) {
-			$list = $this->resolveRelations($query_relations, false);
-
-			/** @var Relation[] $relations */
-			$relations = $list[Relation::class] ?? [];
-
-			/** @var VirtualRelation[] $v_relations */
-			$v_relations = $list[VirtualRelation::class] ?? [];
-
-			foreach ($relations as $name => $rel) {
-				foreach ($entities as $entity) {
-					$id                  = $entity->{self::KEY_COLUMN};
-					$results[$name][$id] = $this->getRelationItem($rel, $entity);
-				}
-			}
-
-			foreach ($v_relations as $name => $rel) {
-				foreach ($entities as $entity) {
-					$id                  = $entity->{self::KEY_COLUMN};
-					$results[$name][$id] = $rel->getController()->get($entity, $req);
-				}
-			}
-		}
-
-		return $results;
-	}
-
-	/**
-	 * Gets a relation items list.
-	 *
-	 * @param Relation          $relation
-	 * @param ORMEntity         $entity
-	 * @param RESTFulAPIRequest $req
-	 * @param null|int          $total_records
-	 *
-	 * @return array
-	 *
-	 * @throws ORMQueryException
-	 */
-	protected function getRelationItemsList(
-		Relation $relation,
-		ORMEntity $entity,
-		RESTFulAPIRequest $req,
-		?int &$total_records = null
-	): array {
-		$req             = $req->createScopedInstance($relation->getName());
-		$relation_getter = $relation->getGetterName();
-
-		return \call_user_func_array([
-			$entity,
-			$relation_getter,
-		], [
-			$req->getFilters(),
-			$req->getMax(),
-			$req->getOffset(),
-			$req->getOrderBy(),
-			&$total_records,
-		]);
-	}
-
-	/**
-	 * Get relation item.
-	 *
-	 * @param Relation  $relation
-	 * @param ORMEntity $entity
-	 *
-	 * @return mixed
-	 */
-	protected function getRelationItem(Relation $relation, ORMEntity $entity): mixed
-	{
-		$relation_getter = $relation->getGetterName();
-
-		return $entity->{$relation_getter}();
-	}
-
-	/**
-	 * Resolve relations.
-	 *
-	 * @param array $relations_names_list
-	 * @param bool  $allow_paginated
-	 *
-	 * @return array
-	 *
-	 * @throws BadRequestException|ForbiddenException
-	 */
-	protected function resolveRelations(array $relations_names_list, bool $allow_paginated): array
-	{
-		$table       = $this->table;
-		$missing     = [];
-		$relations   = [];
-		$v_relations = [];
-
-		// we firstly check all relation
-		foreach ($relations_names_list as $name) {
-			$rel = null;
-
-			if ($table->hasRelation($name)) {
-				$rel = $relations[$name] = $table->getRelation($name);
-			} elseif ($table->hasVirtualRelation($name)) {
-				$rel = $v_relations[$name] = $table->getVirtualRelation($name);
-			} else {
-				$missing[] = $name;
-			}
-
-			if ($rel) {
-				self::assertNotPrivateRelationOrVirtualRelation($rel);
-
-				if (!$allow_paginated && $rel->isPaginated()) {
-					throw new BadRequestException(
-						'OZ_RELATION_IS_PAGINATED_AND_SHOULD_BE_RETRIEVED_WITH_DEDICATED_ENDPOINT',
-						['relation' => $name]
-					);
-				}
-			}
-		}
-
-		// checks if there are missing relations
-		if (\count($missing)) {
-			throw new BadRequestException('OZ_RELATION_NOT_DEFINED', ['relations' => $missing]);
-		}
+		$p = !empty($schemas)
+			? $doc->apiRelationsParameter('query', \array_keys($schemas))
+			: null;
 
 		return [
-			Relation::class        => $relations,
-			VirtualRelation::class => $v_relations,
+			'relations_parameter'             => $p,
+			'non_paginated_relations_schemas' => $schemas,
+			'relations'                       => $relations,
+			'v_relations'                     => $v_relations,
 		];
-	}
-
-	/**
-	 * Creates, patches or delete relations.
-	 *
-	 * @param ORMEntity  $entity
-	 * @param ORMRequest $req
-	 * @param bool       $patch
-	 *
-	 * @throws InvalidFormException
-	 */
-	protected function processRelations(ORMEntity $entity, ORMRequest $req, bool $patch): void
-	{
-		$table = $this->table;
-
-		/** @var array<RelationInterface> $relations */
-		$relations = [...self::nonPrivateRelations($table), ...self::nonPrivateVirtualRelations($table)];
-
-		foreach ($relations as $relation) {
-			$relation_name    = $relation->getName();
-			$relation_payload = $req->getFormField($relation_name);
-
-			if ($relation_payload) {
-				if ($relation->isPaginated()) {
-					if (!\is_array($relation_payload)) {
-						throw new InvalidFormException(
-							'OZ_RELATION_IS_PAGINATED_ARRAY_OF_ARRAY_EXPECTED',
-							['relation' => $relation_name]
-						);
-					}
-
-					foreach ($relation_payload as $rel_entry) {
-						if (empty($rel_entry)) {
-							continue;
-						}
-
-						if (!\is_array($rel_entry)) {
-							throw new InvalidFormException(
-								'OZ_RELATION_IS_PAGINATED_ARRAY_OF_ARRAY_EXPECTED',
-								['relation' => $relation_name]
-							);
-						}
-
-						$this->processRelative($relation, $entity, $rel_entry, $patch);
-					}
-				} else {
-					$rel_entry = $relation_payload;
-					if (empty($rel_entry)) {
-						continue;
-					}
-					if (!\is_array($rel_entry)) {
-						throw new InvalidFormException(
-							'OZ_RELATION_ARRAY_EXPECTED',
-							['relation' => $relation_name]
-						);
-					}
-
-					$this->processRelative($relation, $entity, $rel_entry, $patch);
-				}
-			}
-		}
-	}
-
-	/**
-	 * @throws ForbiddenException
-	 */
-	private static function assertNotPrivateRelationOrVirtualRelation(RelationInterface $r): void
-	{
-		if ($r->isPrivate()) {
-			throw new ForbiddenException(null, [
-				'_message'  => 'Attempt to access private relations.',
-				'_relation' => $r->getName(),
-			]);
-		}
-	}
-
-	/**
-	 * @param Table $table
-	 *
-	 * @return Relation[]
-	 */
-	private static function nonPrivateRelations(Table $table): array
-	{
-		return \array_filter($table->getRelations(), static fn ($r) => !$r->isPrivate());
-	}
-
-	/**
-	 * @param Table $table
-	 *
-	 * @return VirtualRelation[]
-	 */
-	private static function nonPrivateVirtualRelations(Table $table): array
-	{
-		return \array_filter($table->getVirtualRelations(), static fn ($r) => !$r->isPrivate());
-	}
-
-	/**
-	 * Creates, patches or delete relations.
-	 *
-	 * @throws InvalidFormException
-	 */
-	private function processRelative(
-		RelationInterface $relation,
-		ORMEntity $entity,
-		array $rel_entry,
-		bool $patch
-	): void {
-		try {
-			$r_ctrl = $relation->getController();
-			if ($patch) {
-				$delete = $rel_entry[ORMRequest::DELETE_PARAM] ?? false;
-				if ($delete) {
-					$r_ctrl->delete($entity, $rel_entry);
-				} else {
-					$r_ctrl->update($entity, $rel_entry);
-				}
-			} else {
-				$r_ctrl->create($entity, $rel_entry);
-			}
-		} catch (Throwable $t) {
-			$data = [
-				'relation' => $relation->getName(),
-			];
-
-			if ($t instanceof ORMQueryException) {
-				$data['previous'] = [
-					'error' => $t->getMessage(),
-					'data'  => $t->getData(),
-				];
-			}
-
-			throw new InvalidFormException('OZ_RELATION_PROCESSING_FAILED', $data, $t);
-		}
 	}
 }
