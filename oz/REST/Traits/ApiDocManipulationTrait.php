@@ -358,7 +358,10 @@ trait ApiDocManipulationTrait
 		$stime = $this->integer('The response auth expiration UNIX timestamp.');
 
 		return $this->json($this->object([
-			'error' => $this->integer('Indicate if there is an error: `0` for success, `1` for error.', ['default' => $ozone_error_code]),
+			'error' => $this->integer(
+				'Indicate if there is an error: `0` for success, `1` for error.',
+				['default' => $ozone_error_code]
+			),
 			'msg'   => $this->string('The error/success message.', [
 				'default' => $message,
 			]),
@@ -502,14 +505,16 @@ DESC;
 			$allowed_relation_text = "Allowed relations are: `{$rel_strings}`.\n";
 		}
 
-		$desc        = <<<DESC
+		$sample_relations = empty($relations) ? ['relation_one', 'relation_two'] : \array_slice($relations, 0, 2);
+		$sample           = \implode($rel_sep, $sample_relations);
+		$desc             = <<<DESC
 The relations parameter.
 
 A list of relations separated by the delimiter `{$rel_sep}`.
 {$allowed_relation_text}
 > Note: Only non paginated relations are allowed. For paginated relations use dedicated endpoints.
 
-> Example: `relation_one{$rel_sep}relation_two`.
+> Example: `{$sample}`.
 DESC;
 
 		return $this->parameter(
@@ -536,7 +541,10 @@ DESC;
 	public function apiFiltersParameter(string $in = 'query'): Parameter
 	{
 		$filters_param               = RESTFulAPIRequest::FILTERS_PARAM;
-		$allowed_operators_str       = \implode(', ', \array_map(static fn ($op) => "`{$op->value}`", Operator::cases()));
+		$allowed_operators_str       = \implode(', ', \array_map(
+			static fn ($op) => "`{$op->value}`",
+			Operator::cases()
+		));
 		$op_in                       = Operator::IN->value;
 		$op_not_in                   = Operator::NOT_IN->value;
 		$desc                        = <<<DESC
@@ -858,10 +866,10 @@ DESC;
 	/**
 	 * Push a value to an object property.
 	 *
-	 * @param object               $to        The object
-	 * @param string               $prop      The property name
-	 * @param mixed                $value     The value to push
-	 * @param null|callable(mixed) $predicate The predicate to check if the value already exists
+	 * @param object                    $to        The object
+	 * @param string                    $prop      The property name
+	 * @param mixed                     $value     The value to push
+	 * @param null|callable(mixed):bool $predicate The predicate to check if the value already exists
 	 */
 	public static function push(object $to, string $prop, mixed $value, ?callable $predicate = null): void
 	{
