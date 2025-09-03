@@ -336,7 +336,7 @@ trait RESTFulService
 
 			if ($r_table?->hasSinglePKColumn()) {
 				$r_pk_column         = $r_table->getSinglePKColumnOrFail()->getName();
-				$r_relatives_options = self::relationsDocOptions($table, $doc);
+				$r_relatives_options = self::relationsDocOptions($r_table, $doc);
 
 				if (isset($rr_options['relations_parameter'])) {
 					$r_params[] = $rr_options['relations_parameter'];
