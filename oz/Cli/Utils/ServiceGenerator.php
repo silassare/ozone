@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Utils;
 
-use Gobl\DBAL\Constraints\PrimaryKey;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Table;
 use Gobl\Gobl;
@@ -107,22 +106,17 @@ class ServiceGenerator extends CSGeneratorORM
 			->isDir()
 			->assert($service_dir);
 
-		/** @var PrimaryKey $pk */
-		$pk           = $table->getPrimaryKeyConstraint();
-		$columns      = $pk->getColumns();
-		$pk_col_count = \count($columns);
-
-		if (1 !== $pk_col_count) {
-			throw new RuntimeException(
+		if ($table->hasSinglePKColumn()) {
+			throw new \PHPUtils\Exceptions\RuntimeException(
 				\sprintf(
-					'Table "%s" contains "%s" columns in primary key.'
-					. 'You can generate service only for tables with one column as primary key.',
-					$table->getName(),
-					$pk_col_count
+					'Table "%s" has more than one column in primary key while expecting 1.'
+					 . 'You can generate service only for tables with one column as primary key.',
+					$table->getName()
 				)
 			);
 		}
 
+		$pk_column    = $table->getSinglePKColumnOrFail();
 		$service_path = \trim($service_path, '/');
 
 		$inject                         = $this->describeTable($table);
@@ -145,7 +139,16 @@ class ServiceGenerator extends CSGeneratorORM
 			->isEmpty()
 			->assert($class_path);
 
-		\file_put_contents($class_path, Gobl::runTemplate(self::SERVICE_TEMPLATE_NAME, $inject));
+		$replaces = [
+			'my_id' => $pk_column->getFullName(),
+		];
+
+		$search      = \array_keys($replaces);
+		$replacement = \array_values($replaces);
+
+		$content = \str_replace($search, $replacement, Gobl::runTemplate(self::SERVICE_TEMPLATE_NAME, $inject));
+
+		\file_put_contents($class_path, $content);
 
 		return [
 			'provider' => $qualified_class,
