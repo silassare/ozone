@@ -658,6 +658,7 @@ final class Context
 
 			// Headers
 			foreach ($response->getHeaders() as $name => $values) {
+				/** @var string $name */
 				$replace = (0 === \strcasecmp($name, 'Content-Type'));
 				foreach ($values as $value) {
 					\header(\sprintf('%s: %s', $name, $value), $replace, $status_code);
