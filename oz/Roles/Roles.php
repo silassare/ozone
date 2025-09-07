@@ -183,8 +183,8 @@ class Roles
 	/**
 	 * Revokes a role from a given user.
 	 *
-	 * @param AuthUserInterface $user the user
-	 * @param string            $role the role
+	 * @param AuthUserInterface    $user the user
+	 * @param RoleInterface|string $role the role
 	 *
 	 * @return bool
 	 *
@@ -192,8 +192,9 @@ class Roles
 	 * @throws GoblException
 	 * @throws ORMException
 	 */
-	public static function revoke(AuthUserInterface $user, string $role): bool
+	public static function revoke(AuthUserInterface $user, RoleInterface|string $role): bool
 	{
+		$role  = RolesUtils::normalize($role)->value;
 		if ($entry = RolesUtils::role($user, $role, false)) {
 			$entry->setIsValid(false)
 				->save();
