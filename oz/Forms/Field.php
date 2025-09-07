@@ -112,7 +112,7 @@ class Field implements ArrayCapableInterface
 	 */
 	public function multiple(bool $multiple = true): static
 	{
-		$this->t_multiple = true;
+		$this->t_multiple = $multiple;
 
 		return $this;
 	}
