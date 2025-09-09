@@ -244,7 +244,7 @@ class RolesUtils
 				return $qb->whereOwnerIdIs($user->getAuthIdentifier())
 					->whereOwnerTypeIs($user->getAuthUserType())
 					->whereIsValid()
-					->find(1)
+					->find()
 					->fetchAllClass();
 			} catch (Throwable $t) {
 				throw new RuntimeException('Unable to load user roles.', [
