@@ -140,10 +140,11 @@ final class RESTFullRelationsHelper
 	/**
 	 * Gets a relation items list.
 	 *
-	 * @param Relation          $relation
-	 * @param ORMEntity         $entity
-	 * @param RESTFulAPIRequest $req
-	 * @param null|int          $total_records
+	 * @param Relation          $relation       The relation
+	 * @param ORMEntity         $entity         The entity for which we want the relation items
+	 * @param RESTFulAPIRequest $req            The request object
+	 * @param bool              $scoped_filters Whether to scope filters to the relation name
+	 * @param null|int          $total_records  Reference to store the total records count
 	 *
 	 * @return array
 	 *
@@ -153,9 +154,10 @@ final class RESTFullRelationsHelper
 		Relation $relation,
 		ORMEntity $entity,
 		RESTFulAPIRequest $req,
+		bool $scoped_filters = true,
 		?int &$total_records = null
 	): array {
-		$req             = $req->createScopedInstance($relation->getName());
+		$req             = $scoped_filters ? $req->createScopedInstance($relation->getName()) : $req;
 		$relation_getter = $relation->getGetterName();
 
 		return \call_user_func_array([

@@ -677,7 +677,7 @@ trait RESTFulService
 
 			if ($found->isPaginated()) {
 				$paginated_relation = true;
-				$r                  = $rrh->getRelationItemsList($found, $entity, $req, $total_records);
+				$r                  = $rrh->getRelationItemsList($found, $entity, $req, false, $total_records);
 			} else {
 				$r = $rrh->getRelationItem($found, $entity);
 			}
