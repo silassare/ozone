@@ -1,0 +1,25 @@
+{
+  "name": "ozone-docs",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Documentation for OZone Framework",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "keywords": [
+    "documentation",
+    "ozone",
+    "framework"
+  ],
+  "author": "Emile Silas Sare",
+  "license": "MIT",
+  "devDependencies": {
+    "vitepress": "^1.0.0"
+  },
+  "dependencies": {
+    "vue": "^3.3.0"
+  }
+}
