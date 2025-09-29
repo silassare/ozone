@@ -12,7 +12,7 @@
 declare(strict_types=1);
 
 return [
-	'OZ_USER_MIN_AGE' => 16,
+	'OZ_USER_MIN_AGE' => 12,
 	'OZ_USER_MAX_AGE' => 100,
 
 	'OZ_USER_PASS_MIN_LENGTH' => 6,
