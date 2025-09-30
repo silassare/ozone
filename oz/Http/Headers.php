@@ -21,6 +21,12 @@ class Headers extends Collection
 	/**
 	 * Special HTTP headers that do not have the "HTTP_" prefix.
 	 *
+	 * These headers are treated specially because, unlike most HTTP headers
+	 * which are prefixed with "HTTP_" in the $_SERVER superglobal, these
+	 * headers are made available directly by PHP without the prefix.
+	 * This array is used to identify and handle these exceptions when
+	 * normalizing and extracting headers from the environment.
+	 *
 	 * @var array
 	 */
 	protected static array $special = [
@@ -31,6 +37,20 @@ class Headers extends Collection
 		'PHP_AUTH_DIGEST' => 1,
 		'AUTH_TYPE'       => 1,
 	];
+
+	/**
+	 * Creates new headers collection.
+	 *
+	 * @param array $items Initial items
+	 */
+	public function __construct(array $items = [])
+	{
+		parent::__construct();
+
+		foreach ($items as $key => $value) {
+			$this->set($key, $value);
+		}
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -44,7 +64,7 @@ class Headers extends Collection
 		$all = parent::all();
 		$out = [];
 
-		foreach ($all as /* $key => */ $props) {
+		foreach ($all as $props) {
 			$out[$props['originalKey']] = $props['value'];
 		}
 
@@ -89,11 +109,11 @@ class Headers extends Collection
 	 */
 	public function normalizeKey(string $key): string
 	{
-		$key = \strtolower(\str_replace('_', '-', $key));
+		$key = \strtoupper(\str_replace('-', '_', \trim($key)));
 
-		if (\str_starts_with($key, 'http-')) {
+		if (\str_starts_with($key, 'HTTP_')) {
 			$key = \substr($key, 5);
-		} elseif (\str_starts_with($key, 'redirect-http-')) {
+		} elseif (\str_starts_with($key, 'REDIRECT_HTTP_')) {
 			// Apache prefixes any environment variables set via RewriteRule with REDIRECT_
 			$key = \substr($key, 14);
 		}
@@ -115,6 +135,7 @@ class Headers extends Collection
 	{
 		$oldValues = $this->get($key, []);
 		$newValues = \is_array($value) ? $value : [$value];
+
 		$this->set($key, \array_merge($oldValues, \array_values($newValues)));
 	}
 
@@ -141,6 +162,7 @@ class Headers extends Collection
 		if (!\is_array($value)) {
 			$value = [$value];
 		}
+
 		parent::set($this->normalizeKey($key), [
 			'value'       => $value,
 			'originalKey' => $key,
@@ -165,13 +187,18 @@ class Headers extends Collection
 	 */
 	public static function createFromEnvironment(HTTPEnvironment $environment): self
 	{
-		$data        = [];
-		$environment = self::determineAuthorization($environment);
+		$data = [];
+
+		self::tryFixAuthorization($environment);
 
 		foreach ($environment as $key => $value) {
 			$key = \strtoupper($key);
 
 			if (isset(static::$special[$key]) || \str_starts_with($key, 'HTTP_')) {
+				/**
+				 * CONTENT_LENGTH is a special case that is not prefixed with HTTP_ and is already handled in $special.
+				 * We skip HTTP_CONTENT_LENGTH here to avoid duplication.
+				 */
 				if ('HTTP_CONTENT_LENGTH' !== $key) {
 					$data[$key] = $value;
 				}
@@ -186,10 +213,8 @@ class Headers extends Collection
 	 * getallheaders() when available.
 	 *
 	 * @param HTTPEnvironment $environment
-	 *
-	 * @return HTTPEnvironment
 	 */
-	public static function determineAuthorization(HTTPEnvironment $environment): HTTPEnvironment
+	private static function tryFixAuthorization(HTTPEnvironment $environment): void
 	{
 		$value = $environment->get('HTTP_AUTHORIZATION');
 
@@ -201,7 +226,5 @@ class Headers extends Collection
 				$environment->set('HTTP_AUTHORIZATION', $headers['authorization']);
 			}
 		}
-
-		return $environment;
 	}
 }
