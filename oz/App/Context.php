@@ -35,6 +35,7 @@ use OZONE\Core\OZone;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Utils\Utils;
+use OZONE\Core\Web\Views\RedirectView;
 use PHPUtils\Store\StoreNotEditable;
 use Throwable;
 
@@ -790,7 +791,7 @@ final class Context
 			$this->setResponse($response);
 			$this->respond();
 		} else {
-			$this->redirectRoute('oz:redirect', ['url' => $url, 'status' => $status]);
+			$this->redirectRoute(RedirectView::REDIRECT_ROUTE, ['url' => $url, 'status' => $status]);
 		}
 	}
 
