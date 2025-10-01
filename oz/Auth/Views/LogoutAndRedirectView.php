@@ -43,6 +43,9 @@ final class LogoutAndRedirectView extends WebView
 		$next    = $ri->getCleanFormField('next', '/');
 		$context = $ri->getContext();
 
+		/** @var null|callable $detach */
+		$detach = null;
+
 		$detach = ResponseHook::listen(static function (ResponseHook $ev) use (&$detach) {
 			if (Settings::get('oz.cache', 'OZ_CLEAR_SITE_DATA_HEADER_ON_LOGOUT')) {
 				$rule = Settings::get('oz.cache', 'OZ_CLEAR_SITE_DATA_HEADER_VALUE');
