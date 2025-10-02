@@ -689,12 +689,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "364408d1d91687df155a7a1c4129b6a9c83f7a91"
+                "reference": "fbf1a19b75d1064bf15409dd3d42eedd879c9f2f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/364408d1d91687df155a7a1c4129b6a9c83f7a91",
-                "reference": "364408d1d91687df155a7a1c4129b6a9c83f7a91",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/fbf1a19b75d1064bf15409dd3d42eedd879c9f2f",
+                "reference": "fbf1a19b75d1064bf15409dd3d42eedd879c9f2f",
                 "shasum": ""
             },
             "require": {
@@ -752,7 +752,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/main"
             },
-            "time": "2025-09-29T13:53:11+00:00"
+            "time": "2025-10-02T04:26:57+00:00"
         },
         {
             "name": "silassare/kli",
@@ -877,16 +877,16 @@
         },
         {
             "name": "silassare/php-utils",
-            "version": "1.0.4",
+            "version": "1.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/php-utils.git",
-                "reference": "47914a7ae522aa8dd72d368f676a58c64cf8fe6c"
+                "reference": "a16eb5e2eb5c25f8bb7f1fd02cd6775ee2f564bd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/php-utils/zipball/47914a7ae522aa8dd72d368f676a58c64cf8fe6c",
-                "reference": "47914a7ae522aa8dd72d368f676a58c64cf8fe6c",
+                "url": "https://api.github.com/repos/silassare/php-utils/zipball/a16eb5e2eb5c25f8bb7f1fd02cd6775ee2f564bd",
+                "reference": "a16eb5e2eb5c25f8bb7f1fd02cd6775ee2f564bd",
                 "shasum": ""
             },
             "require": {
@@ -930,10 +930,10 @@
                 "utils"
             ],
             "support": {
-                "source": "https://github.com/silassare/php-utils/tree/1.0.4",
+                "source": "https://github.com/silassare/php-utils/tree/1.0.5",
                 "issues": "https://github.com/silassare/php-utils/issues"
             },
-            "time": "2025-05-30T23:18:30+00:00"
+            "time": "2025-10-01T14:18:54+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
@@ -4534,12 +4534,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "684ef27cdce62b6562f77a92dc76bdfb46542a2d"
+                "reference": "4c2208a685ebaa31a0b6ce592e2ee2735542b0fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/684ef27cdce62b6562f77a92dc76bdfb46542a2d",
-                "reference": "684ef27cdce62b6562f77a92dc76bdfb46542a2d",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/4c2208a685ebaa31a0b6ce592e2ee2735542b0fc",
+                "reference": "4c2208a685ebaa31a0b6ce592e2ee2735542b0fc",
                 "shasum": ""
             },
             "conflict": {
@@ -4581,10 +4581,10 @@
                 "athlon1600/php-proxy-app": "<=3",
                 "athlon1600/youtube-downloader": "<=4",
                 "austintoddj/canvas": "<=3.4.2",
-                "auth0/auth0-php": ">=8.0.0.0-beta1,<8.14",
-                "auth0/login": "<7.17",
-                "auth0/symfony": "<5.4",
-                "auth0/wordpress": "<5.3",
+                "auth0/auth0-php": ">=3.3,<=8.16",
+                "auth0/login": "<=7.18",
+                "auth0/symfony": "<=5.4.1",
+                "auth0/wordpress": "<=5.3",
                 "automad/automad": "<2.0.0.0-alpha5",
                 "automattic/jetpack": "<9.8",
                 "awesome-support/awesome-support": "<=6.0.7",
@@ -4701,7 +4701,7 @@
                 "doctrine/mongodb-odm": "<1.0.2",
                 "doctrine/mongodb-odm-bundle": "<3.0.1",
                 "doctrine/orm": ">=1,<1.2.4|>=2,<2.4.8|>=2.5,<2.5.1|>=2.8.3,<2.8.4",
-                "dolibarr/dolibarr": "<=21.0.2",
+                "dolibarr/dolibarr": "<21.0.3",
                 "dompdf/dompdf": "<2.0.4",
                 "doublethreedigital/guest-entries": "<3.1.2",
                 "drupal/admin_audit_trail": "<1.0.5",
@@ -4890,7 +4890,7 @@
                 "joomla/archive": "<1.1.12|>=2,<2.0.1",
                 "joomla/database": ">=1,<2.2|>=3,<3.4",
                 "joomla/filesystem": "<1.6.2|>=2,<2.0.1",
-                "joomla/filter": "<1.4.4|>=2,<2.0.1",
+                "joomla/filter": "<2.0.6|>=3,<3.0.5|==4",
                 "joomla/framework": "<1.5.7|>=2.5.4,<=3.8.12",
                 "joomla/input": ">=2,<2.0.2",
                 "joomla/joomla-cms": "<3.9.12|>=4,<4.4.13|>=5,<5.2.6",
@@ -5500,7 +5500,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-09-24T21:05:21+00:00"
+            "time": "2025-10-01T22:05:21+00:00"
         },
         {
             "name": "sebastian/cli-parser",
