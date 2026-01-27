@@ -166,7 +166,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 */
 	public function getAuthUserByIdentifier(string $identifier): ?AuthUserInterface
 	{
-		return $this->withID($identifier);
+		return $this->getAuthUserByNamedIdentifier(AuthUserInterface::IDENTIFIER_NAME_ID, $identifier);
 	}
 
 	/**
@@ -174,88 +174,29 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 */
 	public function getAuthUserByNamedIdentifier(string $identifier_name, string $identifier_value): ?AuthUserInterface
 	{
-		return match ($identifier_name) {
-			AuthUserInterface::IDENTIFIER_NAME_ID    => $this->withID($identifier_value),
-			AuthUserInterface::IDENTIFIER_NAME_EMAIL => $this->withEmail($identifier_value),
-			AuthUserInterface::IDENTIFIER_NAME_PHONE => $this->withPhone($identifier_value),
-			default                                  => null,
-		};
-	}
+		$c_full_name = $this->table->getColumnOrFail($identifier_name)->getFullName();
 
-	/**
-	 * Search for registered user with a given phone number.
-	 *
-	 * No matter if user is valid or not.
-	 *
-	 * @psalm-suppress InvalidReturnStatement
-	 * @psalm-suppress InvalidReturnType
-	 *
-	 * @param string $phone the phone number
-	 *
-	 * @return null|AuthUserInterface
-	 */
-	private function withPhone(string $phone): ?AuthUserInterface
-	{
-		try {
-			return $this->qb()->where([AuthUserInterface::IDENTIFIER_NAME_PHONE, 'eq', $phone])
-				->find(1)
-				->fetchClass();
-		} catch (Throwable $t) {
-			throw new RuntimeException('Unable to load user by phone.', [
-				'phone' => $phone,
-				'type'  => $this->user_type,
-			], $t);
-		}
-	}
+		// check if this column can be used as unique identifier
+		if ($this->table->isPrimaryKey([$c_full_name]) || $this->table->isUniqueKey([$c_full_name])) {
+			try {
+				$sel = $this->qb()->where([$c_full_name, 'eq', $identifier_value])
+					->find(1);
 
-	/**
-	 * Search for registered user with a given email address.
-	 *
-	 * No matter if user is valid or not.
-	 *
-	 * @psalm-suppress InvalidReturnStatement
-	 * @psalm-suppress InvalidReturnType
-	 *
-	 * @param string $email the email address
-	 *
-	 * @return null|AuthUserInterface
-	 */
-	private function withEmail(string $email): ?AuthUserInterface
-	{
-		try {
-			return $this->qb()->where([AuthUserInterface::IDENTIFIER_NAME_EMAIL, 'eq', $email])
-				->find(1)
-				->fetchClass();
-		} catch (Throwable $t) {
-			throw new RuntimeException('Unable to load user by email.', [
-				'email' => $email,
-				'type'  => $this->user_type,
-			], $t);
+				/** @var null|AuthUserInterface */
+				return $sel->fetchClass();
+			} catch (Throwable $t) {
+				throw new RuntimeException('Unable to load user.', [
+					$identifier_name  => $identifier_value,
+					'type'            => $this->user_type,
+				], $t);
+			}
 		}
-	}
 
-	/**
-	 * Gets the user object with a given user id.
-	 *
-	 * @psalm-suppress InvalidReturnStatement
-	 * @psalm-suppress InvalidReturnType
-	 *
-	 * @param string $uid the user id
-	 *
-	 * @return null|AuthUserInterface
-	 */
-	private function withID(string $uid): ?AuthUserInterface
-	{
-		try {
-			return $this->qb()->where([AuthUserInterface::IDENTIFIER_NAME_ID, 'eq', $uid])
-				->find(1)
-				->fetchClass();
-		} catch (Throwable $t) {
-			throw new RuntimeException('Unable to load user by id.', [
-				'uid'  => $uid,
-				'type' => $this->user_type,
-			], $t);
-		}
+		throw new RuntimeException(\sprintf(
+			'"%s" is not a unique identifier for table "%s".',
+			$identifier_name,
+			$this->table->getName()
+		));
 	}
 
 	private function qb(): ORMTableQuery
