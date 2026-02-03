@@ -195,10 +195,10 @@ class Roles
 	public static function revoke(AuthUserInterface $user, RoleInterface|string $role): bool
 	{
 		$role  = RolesUtils::normalize($role)->value;
-		if ($entry = RolesUtils::role($user, $role, false)) {
-			$entry->setIsValid(false)
-				->save();
-		}
+
+		RolesUtils::role($user, $role, false)
+			?->setIsValid(false)
+			->save();
 
 		return true;
 	}

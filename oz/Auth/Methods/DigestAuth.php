@@ -259,7 +259,7 @@ class DigestAuth implements AuthenticationMethodInterface
 		\preg_match_all('~(' . $keys . ')=(?:([\'"])([^\2]+?)\2|([^\s,]+))~', $digest, $matches, \PREG_SET_ORDER);
 
 		foreach ($matches as $m) {
-			$data[$m[1]] = $m[3] ?: $m[4];
+			$data[$m[1]] = $m[3] ?? $m[4];
 			unset($missing[$m[1]]);
 		}
 
