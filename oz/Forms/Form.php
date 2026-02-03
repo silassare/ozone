@@ -134,7 +134,7 @@ class Form implements ArrayCapableInterface
 	 */
 	public function addStep(string $name, callable $factory, ?FormRule $rule = null): static
 	{
-		$if            = $rule ? static fn (FormValidationContext $fvc) => $rule->check($fvc) : null;
+		$if            = $rule ? $rule->check(...) : null;
 		$this->steps[] = new FormStep($name, $factory, $if);
 
 		return $this;
@@ -255,7 +255,7 @@ class Form implements ArrayCapableInterface
 	{
 		$this->assertValidCSRFToken($unsafe_fd);
 
-		$cleaned_fd = $cleaned_fd ?? new FormData();
+		$cleaned_fd ??= new FormData();
 		$fvc        = new FormValidationContext($unsafe_fd, $cleaned_fd);
 
 		foreach ($this->fields as $field) {
@@ -283,20 +283,24 @@ class Form implements ArrayCapableInterface
 		}
 
 		foreach ($this->rules as $rule) {
-			if (!$rule->check($fvc)) {
-				throw new InvalidFormException($rule->getErrorMessage(), [
-					// rule is prefixed by "_" because it may contain sensitive data
-					'_rule' => $rule,
-				]);
+			if ($rule->check($fvc)) {
+				continue;
 			}
+
+			throw new InvalidFormException($rule->getErrorMessage(), [
+				// rule is prefixed by "_" because it may contain sensitive data
+				'_rule' => $rule,
+			]);
 		}
 
 		foreach ($this->steps as $step) {
-			if ($step_form = $step->build($fvc)) {
-				$step_prefix .= $step->getName() . '.';
-
-				$step_form->validate($unsafe_fd, $cleaned_fd, $step_prefix);
+			if (!($step_form = $step->build($fvc))) {
+				continue;
 			}
+
+			$step_prefix .= $step->getName() . '.';
+
+			$step_form->validate($unsafe_fd, $cleaned_fd, $step_prefix);
 		}
 
 		return $cleaned_fd;

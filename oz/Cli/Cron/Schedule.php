@@ -103,9 +103,11 @@ final class Schedule implements Stringable
 	public function shouldRun(): bool
 	{
 		foreach ($this->only_if as $fn) {
-			if (!$fn()) {
-				return false;
+			if ($fn()) {
+				continue;
 			}
+
+			return false;
 		}
 
 		return true;
@@ -682,9 +684,7 @@ final class Schedule implements Stringable
 			}
 		}
 
-		return static function () use ($now, $start, $end) {
-			return $now->between($start, $end);
-		};
+		return static fn () => $now->between($start, $end);
 	}
 
 	/**

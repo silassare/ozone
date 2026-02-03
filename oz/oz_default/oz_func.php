@@ -138,7 +138,7 @@ if (!\function_exists('oz_logger')) {
 	 */
 	function auth(?Context $ctx = null): AuthenticationMethodInterface
 	{
-		$ctx = $ctx ?? context();
+		$ctx ??= context();
 
 		return $ctx->auth();
 	}
@@ -164,7 +164,7 @@ if (!\function_exists('oz_logger')) {
 	 */
 	function authUsers(?Context $ctx = null): AuthUsers
 	{
-		$ctx = $ctx ?? context();
+		$ctx ??= context();
 
 		return $ctx->getAuthUsers();
 	}

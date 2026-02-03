@@ -51,7 +51,7 @@ final class DbCmd extends Command
 	 */
 	public static function ensureDBBackup(Kli $cli, ?FilesManager $fm = null): void
 	{
-		$fm = $fm ?? FS::fromRoot();
+		$fm ??= FS::fromRoot();
 
 		$cli->info('Generating database backup ...');
 

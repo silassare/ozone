@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\Core\REST\Traits;
 
 use BackedEnum;
@@ -881,9 +883,11 @@ DESC;
 
 		if ($predicate) {
 			foreach ($to->{$prop} as $v) {
-				if ($predicate($v)) {
-					return;
+				if (!$predicate($v)) {
+					continue;
 				}
+
+				return;
 			}
 		}
 

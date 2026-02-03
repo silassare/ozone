@@ -158,7 +158,7 @@ class MemcachedCache implements CacheProviderInterface
 		$servers   = [
 			'_' => [],
 		];
-		$namespace = $namespace ?? '_';
+		$namespace ??= '_';
 
 		if (isset($memcached_instances[$namespace])) {
 			$instance = $memcached_instances[$namespace];

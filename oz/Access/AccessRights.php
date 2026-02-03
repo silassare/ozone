@@ -127,11 +127,13 @@ class AccessRights implements AccessRightsInterface
 				// can: users.* ? no because users.delete is denied
 				if ($is_wildcard) {
 					foreach ($this->options as $k => $v) {
-						if (\str_starts_with($k, $parent) && !$v) {
-							$allowed = false;
-
-							break;
+						if (!(\str_starts_with($k, $parent) && !$v)) {
+							continue;
 						}
+
+						$allowed = false;
+
+						break;
 					}
 				}
 			}
@@ -200,13 +202,15 @@ class AccessRights implements AccessRightsInterface
 	protected function allowedInScopes(array $actions): bool
 	{
 		foreach ($this->scopes as $scope) {
-			if (!$scope->can(...$actions)) {
-				if ($scope instanceof self) {
-					$this->last_checked = $scope->last_checked;
-				}
-
-				return false;
+			if ($scope->can(...$actions)) {
+				continue;
 			}
+
+			if ($scope instanceof self) {
+				$this->last_checked = $scope->last_checked;
+			}
+
+			return false;
 		}
 
 		return true;

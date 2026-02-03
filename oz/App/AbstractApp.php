@@ -38,7 +38,7 @@ abstract class AbstractApp implements AppInterface
 			->getRoot());
 
 		// = Adds register oz:// protocol resolver
-		PathUtils::registerResolver('oz', static fn (string $path) => Templates::localize($path));
+		PathUtils::registerResolver('oz', Templates::localize(...));
 
 		// = Adds templates source
 		Templates::addSource($this->getTemplatesDir()
@@ -73,7 +73,7 @@ abstract class AbstractApp implements AppInterface
 	 */
 	public function getScope(?string $scope = null): ScopeInterface
 	{
-		$scope = $scope ?? OZ_SCOPE_NAME;
+		$scope ??= OZ_SCOPE_NAME;
 
 		if (ScopeInterface::ROOT_SCOPE === $scope) {
 			return $this;

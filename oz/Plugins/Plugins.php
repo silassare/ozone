@@ -60,9 +60,7 @@ class Plugins
 		$plugins = Settings::load('oz.plugins');
 
 		foreach ($plugins as $plugin => $enabled) {
-			if ($enabled) {
-				self::getPlugin($plugin)->boot();
-			}
+			$enabled && self::getPlugin($plugin)->boot();
 		}
 	}
 

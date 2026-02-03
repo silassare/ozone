@@ -101,7 +101,8 @@ final class AccessRightsTest extends TestCase
 	 */
 	public function testCan(): void
 	{
-		$a = (new AccessRights());
+		$a = new AccessRights();
+
 		$a->allow('users.*');
 
 		// wildcard allow

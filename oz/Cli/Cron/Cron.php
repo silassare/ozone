@@ -80,19 +80,21 @@ final class Cron
 
 		foreach (self::$tasks as $task) {
 			foreach ($task->getSchedules() as $schedule) {
-				if ($schedule->isDue($now) && $schedule->shouldRun()) {
-					if ($task->shouldRunInBackground()) {
-						$async[] = $task;
-					} else {
-						$sync[] = $task;
-					}
-					$queue = Queue::get($task->shouldRunInBackground() ? Queue::CRON_ASYNC : Queue::CRON_SYNC);
-
-					$queue->push(new CronWorker($task->getName()))
-						->dispatch();
-
-					break;
+				if (!($schedule->isDue($now) && $schedule->shouldRun())) {
+					continue;
 				}
+
+				if ($task->shouldRunInBackground()) {
+					$async[] = $task;
+				} else {
+					$sync[] = $task;
+				}
+				$queue = Queue::get($task->shouldRunInBackground() ? Queue::CRON_ASYNC : Queue::CRON_SYNC);
+
+				$queue->push(new CronWorker($task->getName()))
+					->dispatch();
+
+				break;
 			}
 		}
 

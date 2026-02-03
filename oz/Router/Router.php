@@ -62,7 +62,7 @@ final class Router
 	private array $global_params = [];
 
 	/**
-	 * @var array<string, callable>
+	 * @var array<string, callable(Context):(null|numeric|string)>
 	 */
 	private array $global_params_providers = [];
 
@@ -105,9 +105,9 @@ final class Router
 	/**
 	 * Add a global parameter provider.
 	 *
-	 * @param string   $param
-	 * @param string   $pattern
-	 * @param callable $provider
+	 * @param string                                  $param
+	 * @param string                                  $pattern
+	 * @param callable(Context):(null|numeric|string) $provider
 	 *
 	 * @return $this
 	 */
@@ -211,15 +211,19 @@ final class Router
 	public function getRoute(string $name): ?Route
 	{
 		foreach ($this->static_routes as $route) {
-			if ($route->getName() === $name) {
-				return $route;
+			if ($route->getName() !== $name) {
+				continue;
 			}
+
+			return $route;
 		}
 
 		foreach ($this->dynamic_routes as $route) {
-			if ($route->getName() === $name) {
-				return $route;
+			if ($route->getName() !== $name) {
+				continue;
 			}
+
+			return $route;
 		}
 
 		return null;
@@ -590,11 +594,9 @@ final class Router
 			throw new RuntimeException('Possible recursive redirection.', $history);
 		}
 
-		$debug_data = static function (Route $route, array $data = []) {
-			return [
-				'route' => $route->getPath(),
-			] + $data;
-		};
+		$debug_data = static fn (Route $route, array $data = []) => [
+			'route' => $route->getPath(),
+		] + $data;
 
 		try {
 			\ob_start();

@@ -27,7 +27,7 @@ class Stream implements StreamInterface
 	 *
 	 * This is octal as per header stat.h
 	 */
-	public const FSTAT_MODE_S_IFIFO = 0010000;
+	public const FSTAT_MODE_S_IFIFO = 0o010000;
 
 	/**
 	 * Resource modes.
@@ -218,11 +218,13 @@ class Stream implements StreamInterface
 					$meta = $this->getMetadata();
 
 					foreach (self::$modes['readable'] as $mode) {
-						if (\str_starts_with($meta['mode'], $mode)) {
-							$this->readable = true;
-
-							break;
+						if (!\str_starts_with($meta['mode'], $mode)) {
+							continue;
 						}
+
+						$this->readable = true;
+
+						break;
 					}
 				}
 			}
@@ -332,11 +334,13 @@ class Stream implements StreamInterface
 				$meta = $this->getMetadata();
 
 				foreach (self::$modes['writable'] as $mode) {
-					if (\str_starts_with($meta['mode'], $mode)) {
-						$this->writable = true;
-
-						break;
+					if (!\str_starts_with($meta['mode'], $mode)) {
+						continue;
 					}
+
+					$this->writable = true;
+
+					break;
 				}
 			}
 		}

@@ -39,20 +39,22 @@ final class TableCRUD
 		$gobl_crud = Settings::load('oz.gobl.crud');
 
 		foreach ($gobl_crud as $listener => $enabled) {
-			if ($enabled) {
-				if (!\is_subclass_of($listener, TableCRUDListenerInterface::class)) {
-					throw new RuntimeException(
-						\sprintf(
-							'CRUD listener "%s" should extends "%s".',
-							$listener,
-							TableCRUDListenerInterface::class
-						)
-					);
-				}
-
-				/** @var TableCRUDListenerInterface $listener */
-				$listener::register($context);
+			if (!$enabled) {
+				continue;
 			}
+
+			if (!\is_subclass_of($listener, TableCRUDListenerInterface::class)) {
+				throw new RuntimeException(
+					\sprintf(
+						'CRUD listener "%s" should extends "%s".',
+						$listener,
+						TableCRUDListenerInterface::class
+					)
+				);
+			}
+
+			/** @var TableCRUDListenerInterface $listener */
+			$listener::register($context);
 		}
 	}
 }

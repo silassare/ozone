@@ -42,23 +42,15 @@ class AuthorizationService extends Service
 	public static function registerRoutes(Router $router): void
 	{
 		$router->group('/auth/:' . OZAuth::COL_REF, static function (Router $router) {
-			$router->post('/authorize', static function (RouteInfo $ri) {
-				return (new self($ri))->authorize($ri, $ri->getCleanFormData());
-			})
+			$router->post('/authorize', static fn (RouteInfo $ri) => (new self($ri))->authorize($ri, $ri->getCleanFormData()))
 				->form(self::buildAuthorizeForm(...));
 
-			$router->post('/refresh', static function (RouteInfo $ri) {
-				return (new self($ri))->refresh($ri, $ri->getCleanFormData());
-			})
+			$router->post('/refresh', static fn (RouteInfo $ri) => (new self($ri))->refresh($ri, $ri->getCleanFormData()))
 				->form(self::buildRefreshForm(...));
 
-			$router->get('/state', static function (RouteInfo $ri) {
-				return (new self($ri))->state($ri);
-			});
+			$router->get('/state', static fn (RouteInfo $ri) =>(new self($ri))->state($ri));
 
-			$router->post('/cancel', static function (RouteInfo $ri) {
-				return (new self($ri))->cancel($ri);
-			});
+			$router->post('/cancel', static fn (RouteInfo $ri) => (new self($ri))->cancel($ri));
 		});
 	}
 

@@ -11,10 +11,11 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Users\UsersRepository;
 
 /**
- * Map auth user type name {@see \OZONE\Core\Auth\Interfaces\AuthUserInterface::getAuthUserType()}
+ * Map auth user type name {@see AuthUserInterface::getAuthUserType()}
  * type name to the repository class.
  */
 return [

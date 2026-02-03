@@ -170,19 +170,21 @@ class ClassLoader
 		}
 
 		while (false !== ($filename = \readdir($res))) {
-			if ('.' !== $filename && '..' !== $filename) {
-				$c_path = $dir . \DIRECTORY_SEPARATOR . $filename;
-				$in     = [];
+			if ('.' === $filename || '..' === $filename) {
+				continue;
+			}
 
-				if (\is_file($c_path) && \preg_match(self::CLASS_FILE_REG, $filename, $in)) {
-					$class_name = $in[1];
+			$c_path = $dir . \DIRECTORY_SEPARATOR . $filename;
+			$in     = [];
 
-					if (!\array_key_exists($class_name, self::$class_map)) {
-						self::$class_map[$class_name] = $c_path;
-					}
-				} elseif ($recursive && $deep > 0 && \is_dir($c_path)) {
-					self::addDir($c_path, $recursive, $deep - 1);
+			if (\is_file($c_path) && \preg_match(self::CLASS_FILE_REG, $filename, $in)) {
+				$class_name = $in[1];
+
+				if (!\array_key_exists($class_name, self::$class_map)) {
+					self::$class_map[$class_name] = $c_path;
 				}
+			} elseif ($recursive && $deep > 0 && \is_dir($c_path)) {
+				self::addDir($c_path, $recursive, $deep - 1);
 			}
 		}
 

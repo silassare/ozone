@@ -18,6 +18,7 @@ use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\FS\FileAccess;
+use OZONE\Core\FS\FilesServer;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
 use OZONE\Core\Http\Response;
@@ -51,9 +52,7 @@ class GetFilesView extends WebView
 
 		foreach ($format_alts as $alt) {
 			self::defineRouteParams(
-				$router->get($alt, static function (RouteInfo $ri) {
-					return self::handle($ri, true);
-				})
+				$router->get($alt, static fn (RouteInfo $ri) => self::handle($ri, true))
 			);
 		}
 	}
@@ -155,7 +154,7 @@ class GetFilesView extends WebView
 	 */
 	private static function applyFilters(Response $response, FileStream $file, string $filters): Response
 	{
-		/** @see \OZONE\Core\FS\FilesServer::serve() */
+		/** @see FilesServer::serve() */
 		$filters_list = \explode(FS::FILTERS_SEPARATOR, $filters);
 
 		return $response;

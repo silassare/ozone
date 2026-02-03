@@ -120,9 +120,11 @@ final class Utils
 		$ports = \range($start, $end);
 
 		foreach ($ports as $port) {
-			if (!isset($checked[$port]) && !self::isPortOpen($port, $host)) {
-				return $port;
+			if (!(!isset($checked[$port]) && !self::isPortOpen($port, $host))) {
+				continue;
 			}
+
+			return $port;
 		}
 
 		return null;

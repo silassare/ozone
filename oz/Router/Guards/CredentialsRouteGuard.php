@@ -56,9 +56,11 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 
 		if (!$is_hashed_password) {
 			foreach ($this->credentials as $user_name => $password) {
-				if (\is_string($user_name) && \is_string($password)) {
-					$this->credentials[$user_name] = Password::hash($password);
+				if (!\is_string($user_name) || !\is_string($password)) {
+					continue;
 				}
+
+				$this->credentials[$user_name] = Password::hash($password);
 			}
 		}
 	}

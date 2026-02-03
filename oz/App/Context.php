@@ -592,7 +592,7 @@ final class Context
 				}
 			}
 
-			$found = $found ?? $this->getDefaultOrigin();
+			$found ??= $this->getDefaultOrigin();
 
 			if (!\preg_match('~^https?://~', $found)) {
 				$found = 'https://' . $found;
@@ -899,9 +899,7 @@ final class Context
 		$bundle = \array_merge($declared, $provided);
 
 		return \array_unique(
-			\array_map(static function ($entry) {
-				return \strtolower(\trim($entry));
-			}, $bundle)
+			\array_map(static fn ($entry) => \strtolower(\trim($entry)), $bundle)
 		);
 	}
 

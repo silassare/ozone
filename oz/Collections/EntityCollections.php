@@ -30,7 +30,7 @@ final class EntityCollections implements BootHookReceiverInterface
 	 */
 	public static function boot(): void
 	{
-		DbReadyHook::listen(static fn (DbReadyHook $ev) => self::registerCollections($ev));
+		DbReadyHook::listen(self::registerCollections(...));
 	}
 
 	/**
@@ -48,20 +48,22 @@ final class EntityCollections implements BootHookReceiverInterface
 		$providers = Settings::load('oz.gobl.collections');
 
 		foreach ($providers as $provider => $enabled) {
-			if ($enabled) {
-				if (!\is_subclass_of($provider, EntityCollectionsProviderInterface::class)) {
-					throw new RuntimeException(
-						\sprintf(
-							'Table collections provider "%s" should extends "%s".',
-							$provider,
-							EntityCollectionsProviderInterface::class
-						)
-					);
-				}
-
-				/** @var EntityCollectionsProviderInterface $provider */
-				$provider::register($ev->db);
+			if (!$enabled) {
+				continue;
 			}
+
+			if (!\is_subclass_of($provider, EntityCollectionsProviderInterface::class)) {
+				throw new RuntimeException(
+					\sprintf(
+						'Table collections provider "%s" should extends "%s".',
+						$provider,
+						EntityCollectionsProviderInterface::class
+					)
+				);
+			}
+
+			/** @var EntityCollectionsProviderInterface $provider */
+			$provider::register($ev->db);
 		}
 	}
 }

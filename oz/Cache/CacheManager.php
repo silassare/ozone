@@ -183,9 +183,11 @@ final class CacheManager
 		$items = $this->cache->getMultiple($keys);
 
 		foreach ($keys as $key) {
-			if (!isset($items[$key])) {
-				$items[$key] = self::notFound($key);
+			if (isset($items[$key])) {
+				continue;
 			}
+
+			$items[$key] = self::notFound($key);
 		}
 
 		return $items;

@@ -42,9 +42,7 @@ class StatefulAuthenticationMethodStore extends Store
 	public static function getInstance(string $state_id, array $data): self
 	{
 		$cache   = CacheManager::runtime(__METHOD__);
-		$factory = static function () use ($data) {
-			return new self($data);
-		};
+		$factory = static fn () => new self($data);
 
 		return $cache->factory($state_id, $factory)
 			->get();

@@ -255,7 +255,7 @@ final class Migrations
 	 */
 	public function migrations(): array
 	{
-		return self::cache()->factory('migrations', function () {
+		return self::cache()->factory('migrations', static function () {
 			$fm = app()->getMigrationsDir();
 
 			$filter     = $fm->filter()
@@ -348,9 +348,11 @@ final class Migrations
 		$migrations      = $this->migrations();
 
 		foreach ($migrations as $migration) {
-			if ($migration->getVersion() > $current_version) {
-				$pending[] = $migration;
+			if ($migration->getVersion() <= $current_version) {
+				continue;
 			}
+
+			$pending[] = $migration;
 		}
 
 		return $pending;
@@ -368,9 +370,11 @@ final class Migrations
 		$migrations = $this->migrations();
 
 		foreach ($migrations as $migration) {
-			if ($migration->getVersion() === $version) {
-				return $migration;
+			if ($migration->getVersion() !== $version) {
+				continue;
 			}
+
+			return $migration;
 		}
 
 		return null;
@@ -413,9 +417,11 @@ final class Migrations
 		$between    = [];
 
 		foreach ($migrations as $migration) {
-			if ($migration->getVersion() >= $from_version && $migration->getVersion() <= $to_version) {
-				$between[] = $migration;
+			if (!($migration->getVersion() >= $from_version && $migration->getVersion() <= $to_version)) {
+				continue;
 			}
+
+			$between[] = $migration;
 		}
 
 		return $between;
