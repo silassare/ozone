@@ -66,12 +66,16 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"OZONE\\Core\\": "oz",
-			"OZONE\\Tests\\": "tests"
+			"OZONE\\Core\\": "oz/"
 		},
 		"files": [
 			"oz/oz_default/oz_bootstrap.php"
 		]
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"OZONE\\Tests\\": "tests/"
+		}
 	},
 	"authors": [
 		{
