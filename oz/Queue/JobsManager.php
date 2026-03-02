@@ -149,39 +149,41 @@ final class JobsManager
 		$jobs_count               = 0;
 
 		foreach (self::$stores as $store) {
-			if (null === $store_name || $store->getName() === $store_name) {
-				foreach ($store->iterator($queue->getName(), $worker_name, JobState::PENDING, $priority) as $job) {
-					$max_try = $job->getRetryMax();
+			if (null !== $store_name && $store->getName() !== $store_name) {
+				continue;
+			}
 
-					if (JobState::FAILED === $job->getState() && $job->getTryCount() >= $max_try) {
-						continue;
-					}
+			foreach ($store->iterator($queue->getName(), $worker_name, JobState::PENDING, $priority) as $job) {
+				$max_try = $job->getRetryMax();
 
-					if (self::runJob($job)) {
-						if (JobState::FAILED === $job->getState()) {
-							if ($queue->shouldStopOnError()) {
-								throw new RuntimeException(\sprintf(
-									'Job "%s" failed in queue "%s".',
-									$job->getRef(),
-									$queue->getName()
-								));
-							}
-							++$errors_count;
-							++$consecutive_errors_count;
-						} elseif (JobState::DONE === $job->getState()) {
-							$consecutive_errors_count = 0;
-						}
+				if (JobState::FAILED === $job->getState() && $job->getTryCount() >= $max_try) {
+					continue;
+				}
 
-						if ($errors_count >= $max_errors_count || $consecutive_errors_count >= $max_consecutive_errors) {
+				if (self::runJob($job)) {
+					if (JobState::FAILED === $job->getState()) {
+						if ($queue->shouldStopOnError()) {
 							throw new RuntimeException(\sprintf(
-								'Queue "%s" has reached the maximum number of errors allowed.',
+								'Job "%s" failed in queue "%s".',
+								$job->getRef(),
 								$queue->getName()
 							));
 						}
+						++$errors_count;
+						++$consecutive_errors_count;
+					} elseif (JobState::DONE === $job->getState()) {
+						$consecutive_errors_count = 0;
+					}
 
-						if (null !== $max_job && ++$jobs_count >= $max_job) {
-							break 2;
-						}
+					if ($errors_count >= $max_errors_count || $consecutive_errors_count >= $max_consecutive_errors) {
+						throw new RuntimeException(\sprintf(
+							'Queue "%s" has reached the maximum number of errors allowed.',
+							$queue->getName()
+						));
+					}
+
+					if (null !== $max_job && ++$jobs_count >= $max_job) {
+						break 2;
 					}
 				}
 			}

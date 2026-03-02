@@ -38,9 +38,11 @@ class TypeUtils
 	public static function birthDate(int $min_age, int $max_age): Type
 	{
 		try {
-			$min_date = \sprintf('%s-01-01', \date('Y') - $max_age);
-			$max_date = \sprintf('%s-12-31', \date('Y') - $min_age);
-			$type     = new TypeDate();
+			$year     = (int) \date('Y');
+			$min_date = \mktime(0, 0, 0, 1, 1, $year - $max_age);
+			$max_date = \mktime(23, 59, 59, 12, 31, $year - $min_age);
+
+			$type = new TypeDate();
 
 			return $type->min($min_date)
 				->max($max_date)

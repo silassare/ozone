@@ -11,6 +11,9 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\Auth\Views\LogoutAndRedirectView;
+
 return [
 	// 'namespace\class' => true // enabled: true or false
+	LogoutAndRedirectView::class => true,
 ];

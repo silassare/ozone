@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\Core\Exceptions\Utils;
 
 use OZONE\Core\App\Interfaces\AppInterface;

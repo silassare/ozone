@@ -64,7 +64,7 @@ final class RoutePathParser
 		?string $original_route_path = null
 	): string {
 		$this->reset();
-		$original_route_path = $original_route_path ?? $this->route_path;
+		$original_route_path ??= $this->route_path;
 		$path                = '';
 
 		while ($this->cursor < $this->len) {
@@ -134,7 +134,7 @@ final class RoutePathParser
 	 * @param string      $route_path
 	 * @param array       $declared_params
 	 * @param array       &$params_found
-	 * @param null|string $original_route
+	 * @param null|string $original_route_path
 	 *
 	 * @return string
 	 */
@@ -142,10 +142,10 @@ final class RoutePathParser
 		string $route_path,
 		array $declared_params = [],
 		array &$params_found = [],
-		?string $original_route = null
+		?string $original_route_path = null
 	): string {
 		$this->reset();
-		$original_route = $original_route ?? $route_path;
+		$original_route_path ??= $route_path;
 		$pattern        = '';
 
 		while ($this->cursor < $this->len) {
@@ -168,7 +168,7 @@ final class RoutePathParser
 				if ('' === $name) {
 					throw new InvalidArgumentException(\sprintf(
 						'Route parameter name should not be empty: %s',
-						$original_route
+						$original_route_path
 					));
 				}
 
@@ -176,7 +176,7 @@ final class RoutePathParser
 					throw new InvalidArgumentException(\sprintf(
 						'Route parameter name contains invalid characters: %s -> %s',
 						$name,
-						$original_route
+						$original_route_path
 					));
 				}
 
@@ -184,7 +184,7 @@ final class RoutePathParser
 					throw new InvalidArgumentException(\sprintf(
 						'Route parameter name duplicated: %s -> %s',
 						$name,
-						$original_route
+						$original_route_path
 					));
 				}
 
@@ -192,7 +192,7 @@ final class RoutePathParser
 
 				// use (?P<name> insteadof (?<name> for backward compatibility
 				$pattern .= "(?P<{$name}>{$param_pattern})";
-				$required            = ($route_path === $original_route ? 1 : 0);
+				$required            = ($route_path === $original_route_path ? 1 : 0);
 				$params_found[$name] = $required;
 			} elseif ('[' === $c) {
 				$this->move();
@@ -201,12 +201,12 @@ final class RoutePathParser
 				if ('' === $optional) {
 					throw new InvalidArgumentException(\sprintf(
 						'Optional part should not be empty: %s',
-						$original_route
+						$original_route_path
 					));
 				}
 
 				$sub_parser   = new self($optional, $this->router);
-				$optional_reg = $sub_parser->parse($optional, $declared_params, $params_found, $original_route);
+				$optional_reg = $sub_parser->parse($optional, $declared_params, $params_found, $original_route_path);
 				$pattern .= '(?:' . $optional_reg . ')?';
 			} else {
 				$pattern .= \preg_quote($c, Route::REG_DELIMITER);

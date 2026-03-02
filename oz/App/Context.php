@@ -35,6 +35,7 @@ use OZONE\Core\OZone;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Utils\Utils;
+use OZONE\Core\Web\Views\RedirectView;
 use PHPUtils\Store\StoreNotEditable;
 use Throwable;
 
@@ -591,7 +592,7 @@ final class Context
 				}
 			}
 
-			$found = $found ?? $this->getDefaultOrigin();
+			$found ??= $this->getDefaultOrigin();
 
 			if (!\preg_match('~^https?://~', $found)) {
 				$found = 'https://' . $found;
@@ -772,25 +773,37 @@ final class Context
 	/**
 	 * Redirect the client to a given url.
 	 *
-	 * @param string   $url    the redirect destination url
-	 * @param null|int $status the redirect HTTP status code
+	 * @param string|Uri $to     the redirect destination url
+	 * @param null|int   $status the redirect HTTP status code
 	 */
-	public function redirect(string $url, ?int $status = null): never
+	public function redirect(string|Uri $to, ?int $status = null): never
 	{
-		$this->checkRecursiveRedirection($url, ['status' => $status]);
+		$uri = $to instanceof Uri ? $to : Uri::createFromString($to);
 
-		if (!\filter_var($url, \FILTER_VALIDATE_URL)) {
-			throw new InvalidArgumentException(\sprintf('Invalid redirect url: %s', $url));
+		if (empty($uri->getHost())) {
+			$req_uri = $this->request->getUri();
+			$uri     = $req_uri
+				->withPath($uri->getPath())
+				->withFragment($uri->getFragment())
+				->withQuery($uri->getQuery());
 		}
 
-		(new RedirectHook($this, Uri::createFromString($url)))->dispatch();
+		$uri_str = (string) $uri;
+
+		$this->checkRecursiveRedirection($uri_str, ['status' => $status]);
+
+		if (!\filter_var($uri_str, \FILTER_VALIDATE_URL)) {
+			throw new InvalidArgumentException(\sprintf('Invalid redirect url: %s', $uri_str));
+		}
+
+		(new RedirectHook($this, $uri))->dispatch();
 
 		if ($this->isApiContext()) {
-			$response = $this->response->withRedirect($url, $status);
+			$response = $this->response->withRedirect($uri_str, $status);
 			$this->setResponse($response);
 			$this->respond();
 		} else {
-			$this->redirectRoute('oz:redirect', ['url' => $url, 'status' => $status]);
+			$this->redirectRoute(RedirectView::REDIRECT_ROUTE, ['url' => $uri_str, 'status' => $status]);
 		}
 	}
 
@@ -886,9 +899,7 @@ final class Context
 		$bundle = \array_merge($declared, $provided);
 
 		return \array_unique(
-			\array_map(static function ($entry) {
-				return \strtolower(\trim($entry));
-			}, $bundle)
+			\array_map(static fn ($entry) => \strtolower(\trim($entry)), $bundle)
 		);
 	}
 
@@ -997,7 +1008,7 @@ final class Context
 	{
 		if (isset(self::$redirect_history[$path])) {
 			$debug = [
-				'target'  => $path,
+				'to$to'   => $path,
 				'data'    => $info,
 				'history' => self::$redirect_history,
 			];

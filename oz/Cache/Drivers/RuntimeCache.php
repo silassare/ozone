@@ -134,7 +134,8 @@ class RuntimeCache implements CacheProviderInterface
 			return false;
 		}
 
-		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] += $factor;
+		$val                                                              = self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] ?? 0;
+		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] = $val + $factor;
 
 		return $this->save();
 	}
@@ -144,11 +145,13 @@ class RuntimeCache implements CacheProviderInterface
 	 */
 	public function decrement(string $key, float $factor = 1): bool
 	{
-		if (!isset(self::$cache_data[$this->namespace][$key])) {
+		if (!isset(self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP])) {
 			return false;
 		}
 
-		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] -= $factor;
+		$val = self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] ?? 0;
+
+		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] = $val - $factor;
 
 		return $this->save();
 	}

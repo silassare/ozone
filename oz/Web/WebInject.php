@@ -15,6 +15,7 @@ namespace OZONE\Core\Web;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Http\Request;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Lang\Polyglot;
@@ -75,7 +76,7 @@ class WebInject
 	}
 
 	/**
-	 * Shortcut for {@see \OZONE\Core\Http\Request::getUri()}.
+	 * Shortcut for {@see Request::getUri()}.
 	 *
 	 * @return Uri
 	 */

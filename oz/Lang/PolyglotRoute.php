@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Lang;
 
-use OZONE\Core\App\Context;
 use OZONE\Core\Router\Events\RouteBeforeRun;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
 use OZONE\Core\Router\Router;
@@ -35,9 +34,7 @@ final class PolyglotRoute implements RouteProviderInterface
 		$router->addGlobalParam(
 			self::ROUTE_LANG_PARAM,
 			self::ROUTE_LANG_PARAM_PATTERN,
-			static function (Context $context) {
-				return Polyglot::getLanguage($context);
-			}
+			Polyglot::getLanguage(...)
 		);
 
 		RouteBeforeRun::listen(static function (RouteBeforeRun $ev): void {

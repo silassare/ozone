@@ -44,9 +44,7 @@ class AuthUserDataStore extends Store
 	{
 		$ref     = AuthUsers::ref($user);
 		$cache   = CacheManager::runtime(__METHOD__);
-		$factory = static function () use ($data) {
-			return new self($data);
-		};
+		$factory = static fn () => new self($data);
 
 		return $cache->factory($ref, $factory)
 			->get();

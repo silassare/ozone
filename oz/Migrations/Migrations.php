@@ -122,9 +122,7 @@ final class Migrations
 
 		(new MigrationBeforeRun($migration, $mode))->dispatch();
 
-		$db = Db::new($migration)->lock();
-
-		$this->runMigrationQuery($db, $migration, $mode, $query);
+		$this->runMigrationQuery($migration, $mode, $query);
 
 		$this->setCurrentDbVersion($migration->getVersion());
 
@@ -146,7 +144,7 @@ final class Migrations
 
 		(new MigrationBeforeRun($migration, $mode))->dispatch();
 
-		$this->runMigrationQuery(db(), $migration, $mode);
+		$this->runMigrationQuery($migration, $mode);
 
 		$this->setCurrentDbVersion($migration->getVersion());
 
@@ -175,7 +173,7 @@ final class Migrations
 
 		(new MigrationBeforeRun($migration, $mode))->dispatch();
 
-		$this->runMigrationQuery(db(), $migration, $mode);
+		$this->runMigrationQuery($migration, $mode);
 
 		$this->setCurrentDbVersion($version);
 
@@ -255,7 +253,7 @@ final class Migrations
 	 */
 	public function migrations(): array
 	{
-		return self::cache()->factory('migrations', function () {
+		return self::cache()->factory('migrations', static function () {
 			$fm = app()->getMigrationsDir();
 
 			$filter     = $fm->filter()
@@ -300,7 +298,7 @@ final class Migrations
 
 			\usort(
 				$migrations,
-				static fn (MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
+				static fn(MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
 			);
 
 			return $migrations;
@@ -348,9 +346,11 @@ final class Migrations
 		$migrations      = $this->migrations();
 
 		foreach ($migrations as $migration) {
-			if ($migration->getVersion() > $current_version) {
-				$pending[] = $migration;
+			if ($migration->getVersion() <= $current_version) {
+				continue;
 			}
+
+			$pending[] = $migration;
 		}
 
 		return $pending;
@@ -368,9 +368,11 @@ final class Migrations
 		$migrations = $this->migrations();
 
 		foreach ($migrations as $migration) {
-			if ($migration->getVersion() === $version) {
-				return $migration;
+			if ($migration->getVersion() !== $version) {
+				continue;
 			}
+
+			return $migration;
 		}
 
 		return null;
@@ -413,9 +415,11 @@ final class Migrations
 		$between    = [];
 
 		foreach ($migrations as $migration) {
-			if ($migration->getVersion() >= $from_version && $migration->getVersion() <= $to_version) {
-				$between[] = $migration;
+			if (!($migration->getVersion() >= $from_version && $migration->getVersion() <= $to_version)) {
+				continue;
 			}
+
+			$between[] = $migration;
 		}
 
 		return $between;
@@ -450,16 +454,17 @@ final class Migrations
 	 * Runs a migration query.
 	 */
 	private function runMigrationQuery(
-		RDBMSInterface $db,
 		MigrationInterface $migration,
 		MigrationMode $mode,
 		?string &$query = null
 	): void {
+
+		$db = $mode === MigrationMode::FULL ? Db::new($migration)->lock() : db();
+
 		$query = match ($mode) {
 			MigrationMode::UP   => $migration->up(),
 			MigrationMode::DOWN => $migration->down(),
-			MigrationMode::FULL => $db->getGenerator()
-				->buildDatabase()
+			MigrationMode::FULL => $db->getGenerator()->buildDatabase()
 		};
 		$proceed = $migration->beforeRun($mode, $query);
 

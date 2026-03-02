@@ -17,8 +17,6 @@ use BackedEnum;
 
 /**
  * Interface RoleInterface.
- *
- * @extends BackedEnum<string>
  */
 interface RoleInterface extends BackedEnum
 {

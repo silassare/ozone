@@ -34,7 +34,7 @@ final class ApiDocView extends WebView
 		if (Settings::get('oz.api.doc', 'OZ_API_DOC_ENABLED')) {
 			$router
 				->get('/api-doc-view.html', static function (RouteInfo $ri) {
-					$v = (new self($ri));
+					$v = new self($ri);
 
 					$v->setTemplate('oz://oz.api.doc.view.blate')
 						->inject(

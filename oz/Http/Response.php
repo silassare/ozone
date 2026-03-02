@@ -127,8 +127,8 @@ class Response extends Message implements ResponseInterface
 	public function __construct(int $status = 200, ?Headers $headers = null, ?StreamInterface $body = null)
 	{
 		$this->status  = $this->filterStatus($status);
-		$this->headers = $headers ?: new Headers();
-		$this->body    = $body ?: Body::create();
+		$this->headers = $headers ?? new Headers();
+		$this->body    = $body ?? Body::create();
 	}
 
 	/**
@@ -158,8 +158,9 @@ class Response extends Message implements ResponseInterface
 		$output .= self::EOL;
 
 		foreach ($this->getHeaders() as $name => $values) {
-			$output .= \sprintf('%s: %s', $name, $this->getHeaderLine($name)) . self::EOL;
+			$output .= \sprintf('%s: %s%s', $name, $this->getHeaderLine($name), self::EOL);
 		}
+
 		$output .= self::EOL;
 		$output .= $this->getBody();
 

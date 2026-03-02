@@ -21,7 +21,7 @@ use OZONE\Core\App\Context;
 class I18n
 {
 	/**
-	 * Shortcut for {@see \OZONE\Core\Lang\Polyglot::translate()}.
+	 * Shortcut for {@see Polyglot::translate()}.
 	 *
 	 * @param I18nMessage|string $message the message
 	 * @param array              $inject  data to use for replacement

@@ -59,6 +59,7 @@ interface AuthUserInterface extends ArrayCapableInterface
 	 *   'email' => $this->getEmail(),
 	 *   'phone' => $this->getPhone(),
 	 * ];
+	 * ```
 	 *
 	 * @return array
 	 */

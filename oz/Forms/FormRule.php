@@ -235,6 +235,7 @@ class FormRule implements ArrayCapableInterface
 				'not_in'      => !\is_array($b) || !\in_array($a, $b, true),
 				'is_null'     => null === $a,
 				'is_not_null' => null !== $a,
+				default	      => false,
 			};
 
 			if (!$ok) {

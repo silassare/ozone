@@ -931,14 +931,18 @@ trait RESTFulService
 		/** @var array<string, Schema> $schemas */
 		$schemas = [];
 		foreach ($relations as $rl) {
-			if (!$rl->isPaginated()) {
-				$schemas[$rl->getName()] = $doc->entitySchemaForRead($rl->getTargetTable());
+			if ($rl->isPaginated()) {
+				continue;
 			}
+
+			$schemas[$rl->getName()] = $doc->entitySchemaForRead($rl->getTargetTable());
 		}
 		foreach ($v_relations as $vr) {
-			if (!$vr->isPaginated()) {
-				$schemas[$vr->getName()] = $doc->typeSchema($vr->getRelativeType());
+			if ($vr->isPaginated()) {
+				continue;
 			}
+
+			$schemas[$vr->getName()] = $doc->typeSchema($vr->getRelativeType());
 		}
 
 		$p = !empty($schemas)

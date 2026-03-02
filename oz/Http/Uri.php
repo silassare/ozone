@@ -519,9 +519,7 @@ class Uri implements UriInterface
 	{
 		return \preg_replace_callback(
 			'~[^a-zA-Z0-9_\-.\~:@&=+$,/;%]+|%(?![A-Fa-f0-9]{2})~',
-			static function ($match) {
-				return \rawurlencode($match[0]);
-			},
+			static fn ($match) => \rawurlencode($match[0]),
 			$path
 		);
 	}
@@ -537,9 +535,7 @@ class Uri implements UriInterface
 	{
 		return \preg_replace_callback(
 			'~[^a-zA-Z0-9_\-.\~!$&\'()*+,;=%:@/?]+|%(?![A-Fa-f0-9]{2})~',
-			static function ($match) {
-				return \rawurlencode($match[0]);
-			},
+			static fn ($match) => \rawurlencode($match[0]),
 			$query
 		);
 	}

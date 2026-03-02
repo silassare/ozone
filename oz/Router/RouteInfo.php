@@ -17,6 +17,7 @@ use InvalidArgumentException;
 use OZONE\Core\App\Context;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\FormData;
+use OZONE\Core\Http\Request;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
@@ -103,7 +104,7 @@ final class RouteInfo
 	}
 
 	/**
-	 * Shortcut for {@see \OZONE\Core\Http\Request::getUri()}.
+	 * Shortcut for {@see Request::getUri()}.
 	 *
 	 * @return Uri
 	 */
@@ -155,7 +156,7 @@ final class RouteInfo
 	}
 
 	/**
-	 * Shortcut for {@see \OZONE\Core\Http\Request::getUnsafeFormData()}.
+	 * Shortcut for {@see Request::getUnsafeFormData()}.
 	 *
 	 * @param bool $include_files
 	 *
@@ -168,7 +169,7 @@ final class RouteInfo
 	}
 
 	/**
-	 * Shortcut for {@see \OZONE\Core\Http\Request::getUnsafeFormField()}.
+	 * Shortcut for {@see Request::getUnsafeFormField()}.
 	 *
 	 * @param string     $name
 	 * @param null|mixed $def

@@ -17,7 +17,6 @@ use Gobl\DBAL\Interfaces\MigrationInterface;
 use Kli\Exceptions\KliException;
 use Kli\KliArgs;
 use Kli\Table\KliTableFormatter;
-use OZONE\Core\App\Db;
 use OZONE\Core\Cli\Cmd\DbCmd;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
@@ -103,13 +102,11 @@ final class MigrationsCmd extends Command
 			$table->addHeader('Date', 'date')
 				->setCellFormatter(KliTableFormatter::date('jS F Y, g:i:s a'));
 
-			$table->addRows(\array_map(static function (MigrationInterface $migration) {
-				return [
-					'label'   => $migration->getLabel(),
-					'version' => $migration->getVersion(),
-					'date'    => $migration->getTimestamp(),
-				];
-			}, $mg->getPendingMigrations()));
+			$table->addRows(\array_map(static fn (MigrationInterface $migration) => [
+				'label'   => $migration->getLabel(),
+				'version' => $migration->getVersion(),
+				'date'    => $migration->getTimestamp(),
+			], $mg->getPendingMigrations()));
 
 			$cli->writeLn($table->render(), false);
 		} else {
@@ -252,21 +249,23 @@ final class MigrationsCmd extends Command
 		$migrations = \array_reverse($migrations);
 
 		foreach ($migrations as $migration) {
-			if ($migration->getVersion() !== $target_version) {
-				$cli->info(\sprintf(
-					'%s => %s ...',
-					\date('jS F Y, g:i:s a', $migration->getTimestamp()),
-					$migration->getLabel(),
-				));
+			if ($migration->getVersion() === $target_version) {
+				continue;
+			}
 
-				try {
-					$mg->rollback($migration);
-				} catch (Throwable $e) {
-					throw new RuntimeException('Error rolling back migration.', [
-						'label'   => $migration->getLabel(),
-						'version' => $migration->getVersion(),
-					], $e);
-				}
+			$cli->info(\sprintf(
+				'%s => %s ...',
+				\date('jS F Y, g:i:s a', $migration->getTimestamp()),
+				$migration->getLabel(),
+			));
+
+			try {
+				$mg->rollback($migration);
+			} catch (Throwable $e) {
+				throw new RuntimeException('Error rolling back migration.', [
+					'label'   => $migration->getLabel(),
+					'version' => $migration->getVersion(),
+				], $e);
 			}
 		}
 

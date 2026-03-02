@@ -43,11 +43,13 @@ $cli_server_router = (new class {
 			// check if requested file is not in blacklist
 			$blacklisted = false;
 			foreach ($blacklist as $pattern) {
-				if (\preg_match($pattern, $file)) {
-					$blacklisted = true;
-
-					break;
+				if (!\preg_match($pattern, $file)) {
+					continue;
 				}
+
+				$blacklisted = true;
+
+				break;
 			}
 
 			// let the server handle static file if not blacklisted

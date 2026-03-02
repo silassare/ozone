@@ -336,20 +336,22 @@ final class OZone
 	private static function registerRoutes(Router $router, array $routes): void
 	{
 		foreach ($routes as $provider => $enabled) {
-			if ($enabled) {
-				if (!\is_subclass_of($provider, RouteProviderInterface::class)) {
-					throw new RuntimeException(
-						\sprintf(
-							'Route provider "%s" should implements "%s".',
-							$provider,
-							RouteProviderInterface::class
-						)
-					);
-				}
-
-				/* @var RouteProviderInterface $provider */
-				$provider::registerRoutes($router);
+			if (!$enabled) {
+				continue;
 			}
+
+			if (!\is_subclass_of($provider, RouteProviderInterface::class)) {
+				throw new RuntimeException(
+					\sprintf(
+						'Route provider "%s" should implements "%s".',
+						$provider,
+						RouteProviderInterface::class
+					)
+				);
+			}
+
+			/* @var RouteProviderInterface $provider */
+			$provider::registerRoutes($router);
 		}
 	}
 
@@ -361,20 +363,22 @@ final class OZone
 		$hook_receivers = Settings::load('oz.boot');
 
 		foreach ($hook_receivers as $receiver => $enabled) {
-			if ($enabled) {
-				if (!\is_subclass_of($receiver, BootHookReceiverInterface::class)) {
-					throw new RuntimeException(
-						\sprintf(
-							'Boot hook receiver "%s" should implements "%s".',
-							$receiver,
-							BootHookReceiverInterface::class
-						)
-					);
-				}
-
-				/* @var \OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface $receiver */
-				$receiver::boot();
+			if (!$enabled) {
+				continue;
 			}
+
+			if (!\is_subclass_of($receiver, BootHookReceiverInterface::class)) {
+				throw new RuntimeException(
+					\sprintf(
+						'Boot hook receiver "%s" should implements "%s".',
+						$receiver,
+						BootHookReceiverInterface::class
+					)
+				);
+			}
+
+			/* @var \OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface $receiver */
+			$receiver::boot();
 		}
 
 		self::$boot_hook_receivers_notified = true;

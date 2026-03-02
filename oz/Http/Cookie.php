@@ -135,7 +135,9 @@ class Cookie
 			$this->secure = true;
 		}
 
-		if (isset($this->domain)) {
+		// don't set domain for localhost
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#attributes
+		if (isset($this->domain) && !empty($this->domain) && 'localhost' !== $this->domain) {
 			$result .= '; Domain=' . $this->domain;
 		}
 
@@ -144,7 +146,7 @@ class Cookie
 		}
 
 		if (isset($this->expires) && 0 !== $this->expires) {
-			$result .= '; Expires=' . \gmdate('D, d-M-Y H:i:s e', $this->expires);
+			$result .= '; Expires=' . \gmdate('D, d-M-Y H:i:s', $this->expires) . ' GMT';
 		}
 
 		if (isset($this->max_age)) {

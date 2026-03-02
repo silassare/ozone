@@ -87,7 +87,7 @@ LOG;
 			\fclose($fp);
 
 			if ('w' === $mode) {
-				\chmod($this->log_file, 0660);
+				\chmod($this->log_file, 0o660);
 			}
 		}
 	}

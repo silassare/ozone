@@ -186,9 +186,11 @@ final class Polyglot
 		$result = [];
 
 		foreach ($list as $lang => $value) {
-			if (true === $value) {
-				$result[$lang] = true;
+			if (true !== $value) {
+				continue;
 			}
+
+			$result[$lang] = true;
 		}
 
 		return $result;
@@ -218,9 +220,11 @@ final class Polyglot
 
 				// sets default to 1 for any without q factor
 				foreach ($browser_languages as $lang => $q) {
-					if ('' === $q) {
-						$browser_languages[$lang] = 1;
+					if ('' !== $q) {
+						continue;
 					}
+
+					$browser_languages[$lang] = 1;
 				}
 
 				// sort list based on value
@@ -254,12 +258,13 @@ final class Polyglot
 				$enabled_languages_groups = self::sortLanguagesByGroups($enabled_languages);
 
 				foreach ($browser_languages_groups as $group => $list) {
-					if (isset($enabled_languages_groups[$group])) {
-						// gets the first language in this group
-						$advice = $enabled_languages_groups[$group][0];
-
-						break;
+					if (!(isset($enabled_languages_groups[$group]))) {
+						continue;
 					}
+
+					$advice = $enabled_languages_groups[$group][0];
+
+					break;
 				}
 			}
 		}
@@ -293,9 +298,11 @@ final class Polyglot
 					$filters_list = \explode(self::FILTERS_SEP, $filters);
 
 					foreach ($filters_list as $filter) {
-						if (!empty($filter = \trim($filter))) {
-							$value = (string) self::applyFilter($filter, $value, $lang);
+						if (empty($filter = \trim($filter))) {
+							continue;
 						}
+
+						$value = (string) self::applyFilter($filter, $value, $lang);
 					}
 				}
 

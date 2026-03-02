@@ -57,7 +57,7 @@ final class Route
 	/**
 	 * Gets route name.
 	 *
-	 * Shortcut of {@see \OZONE\Core\Router\RouteOptions::getName()}
+	 * Shortcut of {@see RouteOptions::getName()}
 	 */
 	public function getName(): string
 	{

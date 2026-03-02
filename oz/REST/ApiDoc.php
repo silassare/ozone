@@ -9,6 +9,8 @@
  * file that was distributed with this source code.
  */
 
+declare(strict_types=1);
+
 namespace OZONE\Core\REST;
 
 use OpenApi\Annotations as OA;
@@ -126,9 +128,11 @@ class ApiDoc implements ArrayCapableInterface
 		$providers = $api + $web;
 
 		foreach ($providers as $provider => $enabled) {
-			if ($enabled && \is_subclass_of($provider, ApiDocProviderInterface::class)) {
-				$provider::apiDoc($this);
+			if (!$enabled || !\is_subclass_of($provider, ApiDocProviderInterface::class)) {
+				continue;
 			}
+
+			$provider::apiDoc($this);
 		}
 
 		(new ApiDocReady($this))->dispatch();
