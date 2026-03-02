@@ -17,6 +17,11 @@ ignore
 
 # node
 **/node_modules/**
+package-lock.json
+
+# documentation build
+docs/.vitepress/dist/
+docs/.vitepress/cache/
 
 # tests
 /noop/
