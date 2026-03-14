@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "52c4afb045722554b8fff508cac9a32a",
+    "content-hash": "f5596ed7ca9d0171f26d8f121a8d96b5",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -677,12 +677,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/blate.git",
-                "reference": "407472b22a03fa89a97fb49615c0d2929cea48cb"
+                "reference": "bf79a1906ecf6b99438c80d811673a92290f45fb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/blate/zipball/407472b22a03fa89a97fb49615c0d2929cea48cb",
-                "reference": "407472b22a03fa89a97fb49615c0d2929cea48cb",
+                "url": "https://api.github.com/repos/silassare/blate/zipball/bf79a1906ecf6b99438c80d811673a92290f45fb",
+                "reference": "bf79a1906ecf6b99438c80d811673a92290f45fb",
                 "shasum": ""
             },
             "require": {
@@ -743,7 +743,7 @@
                 "source": "https://github.com/silassare/blate/tree/main",
                 "issues": "https://github.com/silassare/blate/issues"
             },
-            "time": "2026-03-14T12:45:09+00:00"
+            "time": "2026-03-14T17:07:46+00:00"
         },
         {
             "name": "silassare/gobl",
@@ -877,60 +877,6 @@
                 "source": "https://github.com/silassare/kli/tree/main"
             },
             "time": "2026-03-14T14:19:57+00:00"
-        },
-        {
-            "name": "silassare/otpl",
-            "version": "2.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/silassare/otpl-php.git",
-                "reference": "4e1dca2087a30ce4e6241f6bb3ddc3548be7c102"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/silassare/otpl-php/zipball/4e1dca2087a30ce4e6241f6bb3ddc3548be7c102",
-                "reference": "4e1dca2087a30ce4e6241f6bb3ddc3548be7c102",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.1",
-                "silassare/php-utils": "^2.0.0"
-            },
-            "require-dev": {
-                "oliup/oliup-cs-php": "dev-main",
-                "phpunit/phpunit": "^9.5.26",
-                "roave/security-advisories": "dev-latest",
-                "vimeo/psalm": "^5.26.1"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "OTpl\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Emile Silas Sare",
-                    "homepage": "https://github.com/silassare"
-                }
-            ],
-            "description": "[DEPRECATED] A simple template system write once run everywhere! Use silassare/blate instead: https://github.com/silassare/blate",
-            "homepage": "https://github.com/silassare/otpl-php#readme",
-            "keywords": [
-                "otemplate",
-                "otpl",
-                "template"
-            ],
-            "support": {
-                "issues": "https://github.com/silassare/otpl-php/issues",
-                "source": "https://github.com/silassare/otpl-php/tree/v2.0.1"
-            },
-            "abandoned": "https://github.com/silassare/blate",
-            "time": "2026-03-08T18:16:04+00:00"
         },
         {
             "name": "silassare/php-utils",

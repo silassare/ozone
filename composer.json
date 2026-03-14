@@ -32,7 +32,6 @@
 		"ext-fileinfo": "*",
 		"silassare/gobl": "^3.0.0",
 		"silassare/kli": "^2.0.0",
-		"silassare/otpl": "^2.0.0",
 		"silassare/blate": "^1.1.0",
 		"silassare/php-utils": "^2.0.3",
 		"claviska/simpleimage": "^3.7.0",
