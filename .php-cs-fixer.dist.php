@@ -23,7 +23,6 @@ $finder->in([
 	__DIR__ . '/oz',
 	__DIR__ . '/tests',
 ])
-	->notPath('otpl_done')
 	->notPath('blate_cache')
 	->notPath('vendor')
 	->ignoreDotFiles(true)

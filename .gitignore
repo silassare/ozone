@@ -5,7 +5,6 @@
 .ozone
 public
 ignore
-**/otpl_done/*
 **/blate_cache/*
 **/ozone*.log
 
