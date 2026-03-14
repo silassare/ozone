@@ -249,12 +249,12 @@ class Field implements ArrayCapableInterface
 			$list = [];
 
 			foreach ($value as $entry) {
-				$list[] = $type->validate($entry);
+				$list[] = $type->validate($entry)->getCleanValue();
 			}
 
 			$value = $list;
 		} else {
-			$value = $type->validate($value);
+			$value = $type->validate($value)->getCleanValue();
 		}
 
 		if (isset($this->t_validator)) {

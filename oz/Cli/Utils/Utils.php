@@ -74,7 +74,7 @@ final class Utils
 	public static function isPortOpen(int $port, string $host = '127.0.0.1'): bool
 	{
 		// disable error reporting
-		\set_error_handler(static fn () => null);
+		\set_error_handler(static fn() => null);
 		$open = false;
 		$fp   = \fsockopen($host, $port, $errno, $err_str, 1);
 		if ($fp) {
@@ -172,7 +172,7 @@ final class Utils
 			throw new RuntimeException(
 				\sprintf(
 					'There is no ozone project in "%s".'
-					. \PHP_EOL . 'Are you in project root folder?',
+						. \PHP_EOL . 'Are you in project root folder?',
 					\getcwd()
 				)
 			);
@@ -227,7 +227,7 @@ final class Utils
 			$kli_type = new KliTypeString();
 
 			$kli_type->validator(static function ($value) use ($db_type) {
-				return $db_type->validate($value);
+				return $db_type->validate($value)->getCleanValue();
 			});
 
 			$option->type($kli_type)
