@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 
-<%@import('gen.info.otpl',$)%>
+{@import 'oz://gen/gen.info.blate' $$}
 use OZONE\Core\Loader\ClassLoader;
 
+{@raw}
 //= Don't forget to use DS instead of \ or / and
 //= always add the last DS to your directories path
 if (!\defined('DS')) {
@@ -20,9 +21,9 @@ if (!\defined('OZ_PROJECT_DIR')) {
 if (!\defined('OZ_APP_DIR')) {
 	\define('OZ_APP_DIR', __DIR__ . DS);
 }
-
+{/raw}
 //= Load composer autoload
 require_once OZ_PROJECT_DIR . 'vendor' . DS . 'autoload.php';
 
 //= Adds project namespace root directory
-ClassLoader::addNamespace('\<%$.oz_project_namespace%>', OZ_APP_DIR);
+ClassLoader::addNamespace('{=oz_project_namespace}', OZ_APP_DIR);

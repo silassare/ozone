@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\Core\FS;
 
 use Blate\Blate;
-use OTpl\OTpl;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -94,9 +93,7 @@ class Templates
 				$b      = Blate::fromPath($src);
 				$result = $b->runGet($data);
 			} else {
-				$o      = new OTpl();
-				$result = $o->parse($src)
-					->runGet($data);
+				throw new RuntimeException(\sprintf('Unsupported template file type: %s', $template));
 			}
 		} catch (Throwable $t) {
 			throw new RuntimeException(\sprintf('Unable to compile template file: %s', $template), null, $t);

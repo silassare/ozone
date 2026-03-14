@@ -1,7 +1,6 @@
 # ozone
 .env
 .ozone
-**/otpl_done/*
 **/blate_cache/*
 **/ozone*.log
 

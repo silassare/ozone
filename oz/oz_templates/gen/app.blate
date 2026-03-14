@@ -1,0 +1,8 @@
+<?php
+declare(strict_types=1);
+
+{@import 'oz://gen/gen.info.blate' $$}
+
+use {=oz_project_namespace}\{=oz_project_app_class_name};
+
+return new {=oz_project_app_class_name}();

@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-<%@import('gen.info.otpl',$)%>
+{@import 'oz://gen/gen.info.blate' $$}
 
 return [
-	'OZ_DB_TABLE_PREFIX' => '<%$.oz_db_table_prefix%>',
+	'OZ_DB_TABLE_PREFIX' => '{=oz_db_table_prefix}',
 	'OZ_DB_RDBMS'        => env('OZ_DB_RDBMS', 'mysql'),
 	'OZ_DB_HOST'         => env('OZ_DB_HOST', 'localhost'),
 	'OZ_DB_NAME'         => env('OZ_DB_NAME', ''),

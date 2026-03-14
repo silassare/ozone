@@ -50,7 +50,7 @@ final class ErrorView extends WebView
 			'oz_error_back_url'    => $back_url,
 		]);
 
-		return $this->setTemplate('oz.error.otpl')
+		return $this->setTemplate('oz.error.blate')
 			->respond()
 			->withStatus($status);
 	}

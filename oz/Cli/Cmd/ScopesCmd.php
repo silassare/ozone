@@ -75,8 +75,8 @@ final class ScopesCmd extends Command
 			'oz_use_api_context'        => $use_api_context,
 		];
 
-		$oz_request  = Templates::compile('oz://~core~/gen/settings.info.otpl', $settings_inject);
-		$scope_index = Templates::compile('oz://~core~/gen/scope.index.otpl', $inject);
+		$oz_request  = Templates::compile('oz://~core~/gen/settings.info.blate', $settings_inject);
+		$scope_index = Templates::compile('oz://~core~/gen/scope.index.blate', $inject);
 
 		$tpl_folder = Templates::OZ_TEMPLATE_DIR;
 

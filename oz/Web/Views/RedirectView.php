@@ -43,7 +43,7 @@ final class RedirectView extends WebView
 
 		$this->injectKey('oz_redirect_url', \filter_var($url, \FILTER_SANITIZE_URL));
 
-		return $this->setTemplate('oz.redirect.otpl')
+		return $this->setTemplate('oz.redirect.blate')
 			->respond()
 			->withRedirect($url, $status);
 	}
@@ -54,7 +54,7 @@ final class RedirectView extends WebView
 	public static function registerRoutes(Router $router): void
 	{
 		$router
-			->map('*', OZone::INTERNAL_PATH_PREFIX . 'redirect', static fn (RouteInfo $ri) => (new self($ri))->mainRoute())
+			->map('*', OZone::INTERNAL_PATH_PREFIX . 'redirect', static fn(RouteInfo $ri) => (new self($ri))->mainRoute())
 			->name(self::REDIRECT_ROUTE);
 	}
 }

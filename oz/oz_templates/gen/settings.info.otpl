@@ -1,5 +1,0 @@
-<?php
-declare(strict_types=1);
-
-<%@import('gen.info.otpl',$)%>
-return <%$.oz_settings_str%>;
