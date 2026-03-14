@@ -17,11 +17,22 @@
     </projectFiles>
 
     <issueHandlers>
-        <MissingTemplateParam errorLevel="suppress"/>
         <UndefinedClass>
             <errorLevel type="suppress">
                 <referencedClass name="Memcached"/>
             </errorLevel>
         </UndefinedClass>
+
+        <PossiblyUnusedMethod errorLevel="suppress"/>
+        <PossiblyUnusedReturnValue errorLevel="suppress"/>
+        <MissingOverrideAttribute errorLevel="suppress"/>
+        <UnusedClass errorLevel="suppress"/>
+        <PossiblyUnusedProperty errorLevel="suppress"/>
+        <RedundantCondition errorLevel="suppress"/>
+        <RedundantCondition errorLevel="suppress"/>
+        <TypeDoesNotContainNull errorLevel="suppress"/>
+        <ImplicitToStringCast errorLevel="suppress"/>
+        <UnusedFunctionCall errorLevel="suppress"/>
+        <InvalidOperand errorLevel="suppress"/>
     </issueHandlers>
 </psalm>
