@@ -113,9 +113,9 @@ final class Cli extends Kli
 	 * @param mixed $msg  the message to log
 	 * @param bool  $wrap to wrap string or not
 	 *
-	 * @return Cli
+	 * @return static
 	 */
-	public function log(mixed $msg, bool $wrap = true): self
+	public function log(mixed $msg, bool $wrap = true): static
 	{
 		oz_logger($msg);
 

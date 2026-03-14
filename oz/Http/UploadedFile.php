@@ -285,7 +285,7 @@ class UploadedFile implements UploadedFileInterface
 			} else {
 				$subArray = [];
 
-				foreach ($uploadedFile['error'] as $fileIdx => $error) {
+				foreach ($uploadedFile['error'] as $fileIdx => $_) {
 					// normalise subarray and re-parse to move the input's keyname up a level
 					$subArray[$fileIdx]['name']     = $uploadedFile['name'][$fileIdx];
 					$subArray[$fileIdx]['type']     = $uploadedFile['type'][$fileIdx];

@@ -16,7 +16,6 @@ namespace OZONE\Core\Migrations;
 use Gobl\CRUD\Exceptions\CRUDException;
 use Gobl\DBAL\Diff\Diff;
 use Gobl\DBAL\Interfaces\MigrationInterface;
-use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\MigrationMode;
 use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
@@ -298,7 +297,7 @@ final class Migrations
 
 			\usort(
 				$migrations,
-				static fn(MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
+				static fn (MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
 			);
 
 			return $migrations;
@@ -458,8 +457,7 @@ final class Migrations
 		MigrationMode $mode,
 		?string &$query = null
 	): void {
-
-		$db = $mode === MigrationMode::FULL ? Db::new($migration)->lock() : db();
+		$db = MigrationMode::FULL === $mode ? Db::new($migration)->lock() : db();
 
 		$query = match ($mode) {
 			MigrationMode::UP   => $migration->up(),

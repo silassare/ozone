@@ -13,12 +13,17 @@ declare(strict_types=1);
 
 namespace OZONE\Core\CRUD;
 
+use Gobl\ORM\ORMEntity;
 use OZONE\Core\App\Context;
 use OZONE\Core\CRUD\Interfaces\TableCRUDListenerInterface;
 use OZONE\Core\CRUD\Traits\TableCRUDListenerTrait;
 
 /**
  * Class TableCRUDListener.
+ *
+ * @template  TEntity of ORMEntity
+ *
+ * @implements TableCRUDListenerInterface<TEntity>
  */
 abstract class TableCRUDListener implements TableCRUDListenerInterface
 {

@@ -147,15 +147,16 @@ class GetFilesView extends WebView
 	 * Should apply filters to the file.
 	 *
 	 * @param Response   $response The request response object
-	 * @param FileStream $file     The file stream
-	 * @param string     $filters  The filters to apply
+	 * @param FileStream $_file    The file stream
+	 * @param string     $_filters The filters to apply
 	 *
 	 * @return Response
 	 */
-	private static function applyFilters(Response $response, FileStream $file, string $filters): Response
+	private static function applyFilters(Response $response, FileStream $_file, string $_filters): Response
 	{
 		/** @see FilesServer::serve() */
-		$filters_list = \explode(FS::FILTERS_SEPARATOR, $filters);
+		// TODO: finish implementation
+		// $filters_list = \explode(FS::FILTERS_SEPARATOR, $filters);
 
 		return $response;
 	}

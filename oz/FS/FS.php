@@ -384,9 +384,9 @@ class FS
 	/**
 	 * Returns a new temp file path.
 	 *
-	 * @return string
+	 * @return false|string
 	 */
-	public static function newTempFile(): string
+	public static function newTempFile(): false|string
 	{
 		return \tempnam(\sys_get_temp_dir(), Settings::get('oz.config', 'OZ_PROJECT_PREFIX', 'oz') . '_');
 	}

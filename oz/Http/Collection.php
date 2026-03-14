@@ -20,6 +20,9 @@ use IteratorAggregate;
 
 /**
  * Class Collection.
+ *
+ * @implements  IteratorAggregate<string,mixed>
+ * @implements ArrayAccess<string,mixed>
  */
 class Collection implements ArrayAccess, Countable, IteratorAggregate
 {

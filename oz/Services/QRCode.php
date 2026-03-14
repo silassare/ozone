@@ -79,7 +79,6 @@ final class QRCode extends Service
 		}
 
 		$expire_at = $data['expire_at'];
-		$code      = $data['code'];
 
 		if ($expire_at && $expire_at < \time()) {
 			throw new NotFoundException('OZ_QR_CODE_HAS_EXPIRED');
@@ -88,6 +87,7 @@ final class QRCode extends Service
 		$file = \tmpfile();
 
 		// TODO QRCODE
+		// $code = $data['code'];
 		// \QRcode::png($code, $file, QR_ECLEVEL_H, 20);
 
 		$body = new Body($file);

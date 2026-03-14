@@ -66,7 +66,7 @@ class AccessRightsService extends Service
 		return $this->respond();
 	}
 
-	public function list(RouteInfo $ri): Response
+	public function list(RouteInfo $_): Response
 	{
 		$this->json()->setData([
 			'list' => AtomicActionsRegistry::getAll(),

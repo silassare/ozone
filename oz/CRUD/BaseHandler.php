@@ -32,6 +32,10 @@ use OZONE\Core\Roles\Enums\Role;
 
 /**
  * Class BaseHandler.
+ *
+ * @template TEntity of ORMEntity
+ *
+ * @extends TableCRUDListener<TEntity>
  */
 abstract class BaseHandler extends TableCRUDListener
 {

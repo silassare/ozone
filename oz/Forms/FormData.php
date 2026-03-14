@@ -17,6 +17,8 @@ use PHPUtils\Store\Store;
 
 /**
  * Class FormData.
+ *
+ * @extends Store<array>
  */
 class FormData extends Store
 {

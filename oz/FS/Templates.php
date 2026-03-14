@@ -88,7 +88,7 @@ class Templates
 
 		try {
 			if (\str_ends_with($src, '.blate')) {
-				self::registerBlatePlugins();
+				self::ensureBlatePluginsRegistered();
 
 				$b      = Blate::fromPath($src);
 				$result = $b->runGet($data);
@@ -168,11 +168,12 @@ class Templates
 	/**
 	 * Register blate plugins.
 	 */
-	protected static function registerBlatePlugins(): void
+	protected static function ensureBlatePluginsRegistered(): void
 	{
 		static $registered = false;
 
 		if (!$registered) {
+			Blate::setCacheDir(app()->getCacheDir()->getRoot());
 			Blate::registerHelper('setting', [Settings::class, 'get']);
 			Blate::registerHelper('env', env(...));
 			Blate::registerHelper('log', oz_logger(...));

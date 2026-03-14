@@ -257,7 +257,7 @@ final class Polyglot
 				$browser_languages_groups = self::sortLanguagesByGroups($browser_languages);
 				$enabled_languages_groups = self::sortLanguagesByGroups($enabled_languages);
 
-				foreach ($browser_languages_groups as $group => $list) {
+				foreach ($browser_languages_groups as $group => $_) {
 					if (!(isset($enabled_languages_groups[$group]))) {
 						continue;
 					}
@@ -402,7 +402,7 @@ final class Polyglot
 	{
 		$groups = [];
 
-		foreach ($languages as $lang => $value) {
+		foreach ($languages as $lang => $_) {
 			$group            = self::getLanguageGroup($lang);
 			$groups[$group][] = $lang;
 		}

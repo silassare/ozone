@@ -517,7 +517,7 @@ class Uri implements UriInterface
 	 */
 	protected function filterPath(string $path): string
 	{
-		return \preg_replace_callback(
+		return (string) \preg_replace_callback(
 			'~[^a-zA-Z0-9_\-.\~:@&=+$,/;%]+|%(?![A-Fa-f0-9]{2})~',
 			static fn ($match) => \rawurlencode($match[0]),
 			$path
@@ -533,7 +533,7 @@ class Uri implements UriInterface
 	 */
 	protected function filterQuery(string $query): string
 	{
-		return \preg_replace_callback(
+		return (string) \preg_replace_callback(
 			'~[^a-zA-Z0-9_\-.\~!$&\'()*+,;=%:@/?]+|%(?![A-Fa-f0-9]{2})~',
 			static fn ($match) => \rawurlencode($match[0]),
 			$query

@@ -47,6 +47,7 @@ final class LogoutAndRedirectView extends WebView
 		$detach = null;
 
 		$detach = ResponseHook::listen(static function (ResponseHook $ev) use (&$detach) {
+			// TODO: sometimes these make google chrome to freeze, we should investigate this issue and fix it
 			if (Settings::get('oz.cache', 'OZ_CLEAR_SITE_DATA_HEADER_ON_LOGOUT')) {
 				$rule = Settings::get('oz.cache', 'OZ_CLEAR_SITE_DATA_HEADER_VALUE');
 

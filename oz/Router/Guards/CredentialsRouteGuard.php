@@ -32,11 +32,6 @@ use OZONE\Core\Router\RouteInfo;
 class CredentialsRouteGuard extends AbstractRouteGuard
 {
 	/**
-	 * @var null|array{username:string, password:string}
-	 */
-	private ?array $results = null;
-
-	/**
 	 * CredentialsRouteGuard constructor.
 	 *
 	 * @param array<string,string> $credentials        username and password as key value pair

@@ -23,7 +23,7 @@ use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Interfaces\AuthUsersRepositoryInterface;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Crypt\Password;
-use OZONE\Core\Db\Base\OZSession;
+use OZONE\Core\Db\OZSession;
 use OZONE\Core\Db\OZSessionsQuery;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
@@ -160,8 +160,6 @@ final class AuthUsers
 					)
 				))->suspectConfig('oz.auth.users.repositories', $user_type_name);
 			}
-
-			/** @var class-string<AuthUsersRepositoryInterface> $class */
 			self::$repositories[$user_type_name] = $class::get($user_type_name);
 		}
 
@@ -265,7 +263,7 @@ final class AuthUsers
 	 *
 	 * @param AuthUserInterface $user
 	 *
-	 * @return \OZONE\Core\Db\OZSession[]
+	 * @return OZSession[]
 	 */
 	public static function getUserActiveSessions(AuthUserInterface $user): array
 	{

@@ -54,7 +54,7 @@ final class RedirectView extends WebView
 	public static function registerRoutes(Router $router): void
 	{
 		$router
-			->map('*', OZone::INTERNAL_PATH_PREFIX . 'redirect', static fn(RouteInfo $ri) => (new self($ri))->mainRoute())
+			->map('*', OZone::INTERNAL_PATH_PREFIX . 'redirect', static fn (RouteInfo $ri) => (new self($ri))->mainRoute())
 			->name(self::REDIRECT_ROUTE);
 	}
 }

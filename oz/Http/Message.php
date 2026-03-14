@@ -49,10 +49,10 @@ abstract class Message implements MessageInterface
 	/**
 	 * Disable magic setter to ensure immutability.
 	 *
-	 * @param $name
-	 * @param $value
+	 * @param $_name
+	 * @param $_value
 	 */
-	public function __set($name, $value): void
+	public function __set($_name, $_value): void
 	{
 		// Do nothing
 	}
@@ -60,9 +60,9 @@ abstract class Message implements MessageInterface
 	/**
 	 * Just for pairing with __set.
 	 *
-	 * @param mixed $name
+	 * @param mixed $_name
 	 */
-	public function __get($name): void
+	public function __get(mixed $_name): void
 	{
 		// Do nothing
 	}
@@ -70,9 +70,11 @@ abstract class Message implements MessageInterface
 	/**
 	 * Just for pairing with __set.
 	 *
-	 * @param mixed $name
+	 * @param mixed $_name
+	 *
+	 * @return false
 	 */
-	public function __isset($name)
+	public function __isset(mixed $_name): bool
 	{
 		return false;
 	}

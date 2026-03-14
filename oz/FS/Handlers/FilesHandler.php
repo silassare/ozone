@@ -20,6 +20,8 @@ use OZONE\Core\Db\OZFile;
 
 /**
  * Class FilesHandler.
+ *
+ * @extends TableCRUDListener<OZFile>
  */
 class FilesHandler extends TableCRUDListener
 {

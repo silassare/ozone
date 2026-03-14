@@ -201,7 +201,7 @@ final class Db
 	 */
 	private static function initStepPrepare(): ?MigrationInterface
 	{
-		Gobl::setProjectCacheDir(
+		Gobl::setDefaultOutputDir(
 			app()
 				->getCacheDir()
 				->getRoot()

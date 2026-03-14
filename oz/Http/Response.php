@@ -157,7 +157,7 @@ class Response extends Message implements ResponseInterface
 		);
 		$output .= self::EOL;
 
-		foreach ($this->getHeaders() as $name => $values) {
+		foreach ($this->getHeaders() as $name => $_s) {
 			$output .= \sprintf('%s: %s%s', $name, $this->getHeaderLine($name), self::EOL);
 		}
 

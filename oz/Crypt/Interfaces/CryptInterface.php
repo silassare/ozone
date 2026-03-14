@@ -29,9 +29,9 @@ interface CryptInterface
 	 * @param string $message
 	 * @param string $pass_phrase
 	 *
-	 * @return string
+	 * @return false|string
 	 */
-	public function encrypt(string $message, string $pass_phrase): string;
+	public function encrypt(string $message, string $pass_phrase): false|string;
 
 	/**
 	 * Decrypts a message.
@@ -39,7 +39,7 @@ interface CryptInterface
 	 * @param string $message
 	 * @param string $pass_phrase
 	 *
-	 * @return string
+	 * @return false|string
 	 */
-	public function decrypt(string $message, string $pass_phrase): string;
+	public function decrypt(string $message, string $pass_phrase): false|string;
 }

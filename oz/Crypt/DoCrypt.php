@@ -40,7 +40,7 @@ class DoCrypt implements CryptInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function encrypt(string $message, string $pass_phrase): string
+	public function encrypt(string $message, string $pass_phrase): false|string
 	{
 		// TODO: rewrite this
 		return \openssl_encrypt($message, $this->cypher, $pass_phrase);
@@ -49,7 +49,7 @@ class DoCrypt implements CryptInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function decrypt(string $message, string $pass_phrase): string
+	public function decrypt(string $message, string $pass_phrase): false|string
 	{
 		// TODO: rewrite this
 		return \openssl_decrypt($message, $this->cypher, $pass_phrase);

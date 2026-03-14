@@ -38,11 +38,6 @@ final class Cron
 	private static array $tasks = [];
 
 	/**
-	 * Cron constructor.
-	 */
-	private function __construct() {}
-
-	/**
 	 * Schedule a cron task.
 	 */
 	public static function addTask(TaskInterface $task): void

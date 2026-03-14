@@ -201,7 +201,7 @@ final class DbCmd extends Command
 		foreach ($ns_map as $ns => $_) {
 			// we (re)generate classes only for tables
 			// in the given namespace
-			$gen->generate($db->getTables($ns), ORM::getOutputDirectory($ns));
+			$gen->generate($db->getTables($ns), ORM::getOutputDir($ns));
 
 			$cli->success(\sprintf('database classes generated: "%s".', $ns));
 		}

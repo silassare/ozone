@@ -546,8 +546,8 @@ final class Router
 	 */
 	private function ensureOrdered(): void
 	{
-		\usort($this->static_routes, [$this, 'routePriorityComparator']);
-		\usort($this->dynamic_routes, [$this, 'routePriorityComparator']);
+		\usort($this->static_routes, $this->routePriorityComparator(...));
+		\usort($this->dynamic_routes, $this->routePriorityComparator(...));
 	}
 
 	/**

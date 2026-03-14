@@ -142,6 +142,9 @@ trait UserEntityTrait
 	{
 		$arr = parent::toArray($hide_sensitive_data);
 
+		// Sensitive data hidden or not already handled by parent toArray method,
+		// but we ensure that password is not included in the array representation
+		// of the user entity.
 		$arr[self::COL_PASS] = null;
 
 		return $arr;

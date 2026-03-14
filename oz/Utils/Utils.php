@@ -13,51 +13,11 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Utils;
 
-use JsonException;
-use OZONE\Core\App\Settings;
-
 /**
  * Class Utils.
  */
 class Utils
 {
-	/**
-	 * Cleans a given string.
-	 *
-	 * @param null|string $str the string to clean
-	 *
-	 * @return string
-	 *
-	 * @throws JsonException
-	 */
-	public static function cleanStrForDb(?string $str = null): string
-	{
-		if (\is_numeric($str)) {
-			return $str;
-		}
-
-		if (!\is_string($str)) {
-			return '';
-		}
-
-		$db_charset = Settings::get('oz.db', 'OZ_DB_CHARSET');
-
-		if ('utf8' === \strtolower($db_charset)) {
-			// https://stackoverflow.com/a/34637891/6584810
-			// this will handle emoji code, if we are using utf8 as DB charset
-			// and the utf8 used by MySql support characters up to U+FFFF
-			// but Most emoji use code points higher than U+FFFF.
-			// use json_decode (JavaScript: JSON.parse) to get the Emoji back to life
-			$str = \json_encode($str, \JSON_THROW_ON_ERROR);
-			// remove quote added by json_encode
-			$str = \substr($str, 1, -1);
-		}
-
-		// convert some chars to html entities
-		// third arg is 'false' to prevent for example: &amp; to become &amp;amp;
-		return \htmlentities($str, \ENT_QUOTES, 'UTF-8', false);
-	}
-
 	/**
 	 * Cleans or flushes output buffers up to target level.
 	 *

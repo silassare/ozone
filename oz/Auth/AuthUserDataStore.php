@@ -22,6 +22,8 @@ use PHPUtils\Store\Store;
 
 /**
  * Class AuthUserDataStore.
+ *
+ * @extends Store<array>
  */
 class AuthUserDataStore extends Store
 {
