@@ -16,11 +16,12 @@ namespace OZONE\Core\Columns\Types;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use Gobl\ORM\ORMTypeHint;
+use Gobl\ORM\ORMUniversalType;
 use JsonException;
-use OLIUP\CG\PHPType;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\FS;
@@ -30,6 +31,8 @@ use Throwable;
 
 /**
  * Class TypeFile.
+ *
+ * @extends Type<mixed, null|string>
  */
 class TypeFile extends Type
 {
@@ -246,47 +249,9 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @return null|string|string[] the file(s) id(s) or path(s)
-	 */
-	public function validate($value): array|string|null
-	{
-		$debug = [
-			'value' => $value,
-		];
-
-		if (null === $value) {
-			$value = $this->getDefault();
-
-			if (null === $value && $this->isNullable()) {
-				return null;
-			}
-		}
-
-		if ($value) {
-			$value = \is_array($value) ? $value : [$value];
-			$total = \count($value);
-
-			if (!$this->checkFileCount($total)) {
-				throw new TypesInvalidValueException('OZ_FILE_COUNT_OUT_OF_RANGE', [
-					'min' => $this->getOption('file_min_count'),
-					'max' => $this->getOption('file_max_count'),
-				]);
-			}
-
-			$results = $this->computeUploadedFiles($value, $debug);
-
-			return $this->isMultiple() ? $results : $results[0];
-		}
-
-		throw new TypesInvalidValueException('OZ_FILE_INVALID', $debug);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws JsonException
 	 */
-	public function dbToPhp($value, RDBMSInterface $rdbms): array|string|null
+	public function dbToPhp(mixed $value, RDBMSInterface $rdbms): array|string|null
 	{
 		if (null === $value) {
 			return null;
@@ -300,7 +265,7 @@ class TypeFile extends Type
 	 *
 	 * @throws JsonException
 	 */
-	public function phpToDb($value, RDBMSInterface $rdbms): ?string
+	public function phpToDb(mixed $value, RDBMSInterface $rdbms): ?string
 	{
 		if (null === $value) {
 			return null;
@@ -314,8 +279,7 @@ class TypeFile extends Type
 	 */
 	public function getWriteTypeHint(): ORMTypeHint
 	{
-		return $this->isMultiple() ? ORMTypeHint::array()
-			->setPHPType(new PHPType('string[]')) : ORMTypeHint::string();
+		return $this->isMultiple() ? ORMTypeHint::list(ORMUniversalType::STRING) : ORMTypeHint::string();
 	}
 
 	/**
@@ -323,8 +287,7 @@ class TypeFile extends Type
 	 */
 	public function getReadTypeHint(): ORMTypeHint
 	{
-		return $this->isMultiple() ? ORMTypeHint::array()
-			->setPHPType(new PHPType('string[]')) : ORMTypeHint::string();
+		return $this->isMultiple() ? ORMTypeHint::list(ORMUniversalType::STRING) : ORMTypeHint::string();
 	}
 
 	/**
@@ -384,6 +347,57 @@ class TypeFile extends Type
 	}
 
 	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws TypesInvalidValueException
+	 */
+	protected function runValidation(ValidationSubjectInterface $subject): void
+	{
+		$value = $subject->getUnsafeValue();
+		$debug = [
+			'value' => $value,
+		];
+
+		if (null === $value) {
+			$value = $this->getDefault();
+
+			if (null === $value && $this->isNullable()) {
+				$subject->accept(null);
+
+				return;
+			}
+		}
+
+		if (!$value) {
+			$subject->reject(new TypesInvalidValueException('OZ_FILE_INVALID', $debug));
+
+			return;
+		}
+
+		$value = \is_array($value) ? $value : [$value];
+		$total = \count($value);
+
+		if (!$this->checkFileCount($total)) {
+			$subject->reject(new TypesInvalidValueException('OZ_FILE_COUNT_OUT_OF_RANGE', [
+				'min' => $this->getOption('file_min_count'),
+				'max' => $this->getOption('file_max_count'),
+			]));
+
+			return;
+		}
+
+		try {
+			$results = $this->computeUploadedFiles($value, $debug);
+		} catch (TypesInvalidValueException $e) {
+			$subject->reject($e);
+
+			return;
+		}
+
+		$subject->accept($this->isMultiple() ? $results : $results[0]);
+	}
+
+	/**
 	 * Computes uploaded files.
 	 *
 	 * @param array<OZFile|string|UploadedFile> $uploaded_files
@@ -401,9 +415,9 @@ class TypeFile extends Type
 			$debug['index'] = $k;
 
 			if (\is_numeric($item)) {
-				// dangerous should be fixed, but we assume the string is a file ID or path
+				// TODO: dangerous should be fixed, but we assume the string is a file ID or path
 				// we should not allow this in the first place,
-				// as the any user may send a random file id that may be have an access restriction
+				// as any user may send a random file id that may have an access restriction
 				// but we need to handle it as we currently
 				// have a bug in the validation process when saving
 				// issue explanation:
@@ -411,7 +425,7 @@ class TypeFile extends Type
 				// now when the form is uploaded the file is validated and saved into the database
 				// then when entity of type foo is being saved image_file_id value receive the oz_file.id instead of
 				// OZFile or UploadedFile and this is validated
-				// Solution: make sure validate always return UploadedFile | OZFile and a TempFile
+				// Solution: make sure always return ValidatedFile
 				// then when saving check inside phpToDb save and use the oz_file.id
 				// when reading dbToPhp load the file from database or find a better solution
 				oz_logger()->warning(

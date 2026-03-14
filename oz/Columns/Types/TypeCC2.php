@@ -15,12 +15,15 @@ namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\Users\Countries;
 
 /**
  * Class TypeCC2.
+ *
+ * @extends Type<mixed, null|string>
  */
 class TypeCC2 extends Type
 {
@@ -87,38 +90,6 @@ class TypeCC2 extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function validate($value): ?string
-	{
-		$debug = [
-			'value' => $value,
-		];
-
-		try {
-			$value = $this->base_type->validate($value);
-		} catch (TypesInvalidValueException $e) {
-			throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_INVALID', $debug, $e);
-		}
-
-		if (!empty($value)) {
-			$value = \strtoupper($value);
-
-			if ($this->getOption('authorized')) {
-				if (!Countries::allowed($value)) {
-					throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_NOT_ALLOWED', $debug);
-				}
-			} elseif (false !== $this->getOption('check')) {
-				if (!Countries::get($value)) {
-					throw new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug);
-				}
-			}
-		}
-
-		return $value;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function configure(array $options): static
 	{
 		if (isset($options['authorized'])) {
@@ -129,5 +100,45 @@ class TypeCC2 extends Type
 		}
 
 		return parent::configure($options);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function runValidation(ValidationSubjectInterface $subject): void
+	{
+		$value = $subject->getUnsafeValue();
+
+		try {
+			$value = $this->base_type->validate($value)->getCleanValue();
+		} catch (TypesInvalidValueException $e) {
+			$subject->reject(new TypesInvalidValueException('OZ_FIELD_COUNTRY_INVALID', null, $e));
+
+			return;
+		}
+
+		$debug = [
+			'value' => $value,
+		];
+
+		if (!empty($value)) {
+			$value = \strtoupper($value);
+
+			if ($this->getOption('authorized')) {
+				if (!Countries::allowed($value)) {
+					$subject->reject(new TypesInvalidValueException('OZ_FIELD_COUNTRY_NOT_ALLOWED', $debug));
+
+					return;
+				}
+			} elseif ($this->getOption('check')) {
+				if (!Countries::get($value)) {
+					$subject->reject(new TypesInvalidValueException('OZ_FIELD_COUNTRY_UNKNOWN', $debug));
+
+					return;
+				}
+			}
+		}
+
+		$subject->accept($value);
 	}
 }

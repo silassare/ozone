@@ -15,14 +15,15 @@ namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
-use JsonException;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Utils\Utils;
 
 /**
  * Class TypeUsername.
+ *
+ * @extends Type<mixed, null|string>
  */
 class TypeUsername extends Type
 {
@@ -68,36 +69,40 @@ class TypeUsername extends Type
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * @throws JsonException
 	 */
-	public function validate($value): ?string
+	protected function runValidation(ValidationSubjectInterface $subject): void
 	{
+		$value = $subject->getUnsafeValue();
+
+		try {
+			$value = $this->base_type->validate($value)->getCleanValue();
+		} catch (TypesInvalidValueException $e) {
+			$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_INVALID', null, $e));
+
+			return;
+		}
+
 		$debug = [
 			'value' => $value,
 		];
-
-		try {
-			$value = $this->base_type->validate($value);
-		} catch (TypesInvalidValueException $e) {
-			throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_INVALID', $debug, $e);
-		}
 
 		if (!empty($value)) {
 			$len   = \strlen($value);
 			$value = \trim($value);
 
 			if ($len < Settings::get('oz.users', 'OZ_USER_NAME_MIN_LENGTH')) {
-				throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_SHORT', $debug);
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_SHORT', $debug));
+
+				return;
 			}
 
 			if ($len > Settings::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH')) {
-				throw new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_LONG', $debug);
-			}
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_LONG', $debug));
 
-			$value = Utils::cleanStrForDb($value);
+				return;
+			}
 		}
 
-		return $value;
+		$subject->accept($value);
 	}
 }

@@ -15,12 +15,15 @@ namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Settings;
 
 /**
  * Class TypeGender.
+ *
+ * @extends Type<mixed, null|string>
  */
 class TypeGender extends Type
 {
@@ -65,26 +68,32 @@ class TypeGender extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function validate($value): ?string
+	protected function runValidation(ValidationSubjectInterface $subject): void
 	{
+		$value = $subject->getUnsafeValue();
+
+		try {
+			$value = $this->base_type->validate($value)->getCleanValue();
+		} catch (TypesInvalidValueException $e) {
+			$subject->reject(new TypesInvalidValueException('OZ_FIELD_GENDER_INVALID', null, $e));
+
+			return;
+		}
+
 		$debug = [
 			'value' => $value,
 		];
-
-		try {
-			$value = $this->base_type->validate($value);
-		} catch (TypesInvalidValueException $e) {
-			throw new TypesInvalidValueException('OZ_FIELD_GENDER_INVALID', $debug, $e);
-		}
 
 		if (!empty($value)) {
 			$allowed = Settings::get('oz.users', 'OZ_USER_ALLOWED_GENDERS');
 
 			if (!\in_array($value, $allowed, true)) {
-				throw new TypesInvalidValueException('OZ_FIELD_GENDER_INVALID', $debug);
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_GENDER_INVALID', $debug));
+
+				return;
 			}
 		}
 
-		return $value;
+		$subject->accept($value);
 	}
 }

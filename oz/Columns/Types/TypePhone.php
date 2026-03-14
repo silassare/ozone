@@ -15,6 +15,7 @@ namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\Auth\AuthUsers;
@@ -23,6 +24,8 @@ use OZONE\Core\Users\UsersRepository;
 
 /**
  * Class TypePhone.
+ *
+ * @extends Type<mixed, null|string>
  */
 class TypePhone extends Type
 {
@@ -89,42 +92,6 @@ class TypePhone extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function validate($value): ?string
-	{
-		$debug = [
-			'phone' => $value,
-			'value' => $value,
-		];
-
-		if (\is_string($value)) {
-			$value = \str_replace(' ', '', $value);
-		}
-
-		try {
-			$value = $this->base_type->validate($value);
-		} catch (TypesInvalidValueException $e) {
-			throw new TypesInvalidValueException('OZ_FIELD_PHONE_INVALID', $debug, $e);
-		}
-
-		if (!empty($value)) {
-			$registered    = $this->getOption('registered');
-			$registered_as = $this->getOption('registered_as');
-
-			if (false === $registered && AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_PHONE)) {
-				throw new TypesInvalidValueException('OZ_FIELD_PHONE_ALREADY_REGISTERED', $debug);
-			}
-
-			if (true === $registered && !AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_PHONE)) {
-				throw new TypesInvalidValueException('OZ_FIELD_PHONE_NOT_REGISTERED', $debug);
-			}
-		}
-
-		return $value;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function configure(array $options): static
 	{
 		if (isset($options['registered'])) {
@@ -136,5 +103,46 @@ class TypePhone extends Type
 		}
 
 		return parent::configure($options);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function runValidation(ValidationSubjectInterface $subject): void
+	{
+		$value = $subject->getUnsafeValue();
+
+		try {
+			$value = $this->base_type->validate($value)->getCleanValue();
+		} catch (TypesInvalidValueException $e) {
+			$subject->reject(new TypesInvalidValueException('OZ_FIELD_PHONE_INVALID', null, $e));
+
+			return;
+		}
+
+		$debug = [
+			'phone' => $value,
+			'value' => $value,
+		];
+
+		if (!empty($value)) {
+			$value         = \str_replace(' ', '', $value);
+			$registered    = $this->getOption('registered');
+			$registered_as = $this->getOption('registered_as');
+
+			if (false === $registered && AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_PHONE)) {
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_PHONE_ALREADY_REGISTERED', $debug));
+
+				return;
+			}
+
+			if (true === $registered && !AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_PHONE)) {
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_PHONE_NOT_REGISTERED', $debug));
+
+				return;
+			}
+		}
+
+		$subject->accept($value);
 	}
 }

@@ -15,6 +15,7 @@ namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\Auth\AuthUsers;
@@ -23,6 +24,8 @@ use OZONE\Core\Users\UsersRepository;
 
 /**
  * Class TypeEmail.
+ *
+ * @extends Type<mixed, null|string>
  */
 class TypeEmail extends Type
 {
@@ -87,42 +90,6 @@ class TypeEmail extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function validate($value): ?string
-	{
-		$debug = [
-			'email' => $value,
-			'value' => $value,
-		];
-
-		try {
-			$value = $this->base_type->validate($value);
-		} catch (TypesInvalidValueException $e) {
-			throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug, $e);
-		}
-
-		if (!empty($value)) {
-			if (!\filter_var($value, \FILTER_VALIDATE_EMAIL)) {
-				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug);
-			}
-
-			$registered    = $this->getOption('registered');
-			$registered_as = $this->getOption('registered_as');
-
-			if (false === $registered && AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_EMAIL)) {
-				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_ALREADY_REGISTERED', $debug);
-			}
-
-			if (true === $registered && !AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_EMAIL)) {
-				throw new TypesInvalidValueException('OZ_FIELD_EMAIL_NOT_REGISTERED', $debug);
-			}
-		}
-
-		return $value;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function configure(array $options): static
 	{
 		if (isset($options['registered'])) {
@@ -134,5 +101,50 @@ class TypeEmail extends Type
 		}
 
 		return parent::configure($options);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function runValidation(ValidationSubjectInterface $subject): void
+	{
+		$value = $subject->getUnsafeValue();
+
+		try {
+			$value = $this->base_type->validate($value)->getCleanValue();
+		} catch (TypesInvalidValueException $e) {
+			$subject->reject(new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', null, $e));
+
+			return;
+		}
+
+		$debug = [
+			'value' => $value,
+		];
+
+		if (!empty($value)) {
+			if (!\filter_var($value, \FILTER_VALIDATE_EMAIL)) {
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug));
+
+				return;
+			}
+
+			$registered    = $this->getOption('registered');
+			$registered_as = $this->getOption('registered_as');
+
+			if (false === $registered && AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_EMAIL)) {
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_EMAIL_ALREADY_REGISTERED', $debug));
+
+				return;
+			}
+
+			if (true === $registered && !AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_EMAIL)) {
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_EMAIL_NOT_REGISTERED', $debug));
+
+				return;
+			}
+		}
+
+		$subject->accept($value);
 	}
 }

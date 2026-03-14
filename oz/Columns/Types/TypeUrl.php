@@ -15,12 +15,15 @@ namespace OZONE\Core\Columns\Types;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\Http\Uri;
 
 /**
  * Class TypeUrl.
+ *
+ * @extends Type<mixed, null|string>
  */
 class TypeUrl extends Type
 {
@@ -76,36 +79,6 @@ class TypeUrl extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function validate($value): string
-	{
-		$debug = [
-			'value' => $value,
-		];
-
-		try {
-			$value = $this->base_type->validate($value);
-		} catch (TypesInvalidValueException $e) {
-			throw new TypesInvalidValueException('OZ_FIELD_URL_INVALID', $debug, $e);
-		}
-
-		if (!empty($value)) {
-			$allow_absolute_path = (bool) $this->getOption('allow_absolute_path', false);
-
-			if ($allow_absolute_path && \str_starts_with($value, '/')) {
-				return (string) Uri::createFromString($value);
-			}
-
-			if (!\filter_var($value, \FILTER_VALIDATE_URL)) {
-				throw new TypesInvalidValueException('OZ_FIELD_URL_INVALID', $debug);
-			}
-		}
-
-		return $value;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
 	public function configure(array $options): static
 	{
 		if (isset($options['allow_absolute_path'])) {
@@ -115,5 +88,40 @@ class TypeUrl extends Type
 		}
 
 		return parent::configure($options);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	protected function runValidation(ValidationSubjectInterface $subject): void
+	{
+		$value = $subject->getUnsafeValue();
+
+		try {
+			$value = $this->base_type->validate($value)->getCleanValue();
+		} catch (TypesInvalidValueException $e) {
+			$subject->reject(new TypesInvalidValueException('OZ_FIELD_URL_INVALID', null, $e));
+
+			return;
+		}
+
+		$debug = [
+			'value' => $value,
+		];
+
+		if (!empty($value)) {
+			$allow_absolute_path = (bool) $this->getOption('allow_absolute_path', false);
+
+			if ($allow_absolute_path && \str_starts_with($value, '/') && !\str_starts_with($value, '//')) {
+				// TODO: we should check valid path
+				$value = (string) Uri::createFromString($value);
+			} elseif (!\filter_var($value, \FILTER_VALIDATE_URL)) {
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_URL_INVALID', $debug));
+
+				return;
+			}
+		}
+
+		$subject->accept($value);
 	}
 }

@@ -16,6 +16,7 @@ namespace OZONE\Core\Columns\Types;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Settings;
@@ -23,6 +24,8 @@ use OZONE\Core\Crypt\Password;
 
 /**
  * Class TypePassword.
+ *
+ * @extends Type<mixed, null|string>
  */
 class TypePassword extends Type
 {
@@ -46,8 +49,8 @@ class TypePassword extends Type
 	public function phpToDb(mixed $value, RDBMSInterface $rdbms): ?string
 	{
 		// we should not store non-hashed password
-		if (!Password::isHash($value)) {
-			$value = $this->validate($value);
+		if (null !== $value && !Password::isHash($value)) {
+			$value = (string) $this->validate($value)->getCleanValue();
 			$value = Password::hash($value);
 		}
 
@@ -149,8 +152,18 @@ class TypePassword extends Type
 	/**
 	 * {@inheritDoc}
 	 */
-	public function validate($value): ?string
+	protected function runValidation(ValidationSubjectInterface $subject): void
 	{
+		$value = $subject->getUnsafeValue();
+
+		try {
+			$value = $this->base_type->validate($value)->getCleanValue();
+		} catch (TypesInvalidValueException $e) {
+			$subject->reject(new TypesInvalidValueException('OZ_FIELD_PASS_INVALID', null, $e));
+
+			return;
+		}
+
 		$def_min = Settings::get('oz.users', 'OZ_USER_PASS_MIN_LENGTH');
 		$def_max = Settings::get('oz.users', 'OZ_USER_PASS_MAX_LENGTH');
 		$min     = $this->getOption('min', $def_min);
@@ -161,12 +174,6 @@ class TypePassword extends Type
 			'min'   => $min,
 			'max'   => $max,
 		];
-
-		try {
-			$value = $this->base_type->validate($value);
-		} catch (TypesInvalidValueException $e) {
-			throw new TypesInvalidValueException('OZ_FIELD_PASS_INVALID', $debug, $e);
-		}
 
 		if (!empty($value)) {
 			$value = (string) $value;
@@ -193,24 +200,30 @@ class TypePassword extends Type
 				}
 
 				if (!$has_upper || !$has_lower || !$has_digit || !$has_other) {
-					throw new TypesInvalidValueException('OZ_FIELD_PASS_NOT_SECURE', [
+					$subject->reject(new TypesInvalidValueException('OZ_FIELD_PASS_NOT_SECURE', [
 						'has_upper' => $has_upper,
 						'has_lower' => $has_lower,
 						'has_digit' => $has_digit,
 						'has_other' => $has_other,
-					] + $debug);
+					] + $debug));
+
+					return;
 				}
 			}
 
 			if ($len < $min) {
-				throw new TypesInvalidValueException('OZ_FIELD_PASS_TOO_SHORT', $debug);
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_PASS_TOO_SHORT', $debug));
+
+				return;
 			}
 
 			if ($len > $max) {
-				throw new TypesInvalidValueException('OZ_FIELD_PASS_TOO_LONG', $debug);
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_PASS_TOO_LONG', $debug));
+
+				return;
 			}
 		}
 
-		return $value;
+		$subject->accept($value);
 	}
 }
