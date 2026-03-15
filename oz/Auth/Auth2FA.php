@@ -45,8 +45,7 @@ final class Auth2FA implements BootHookReceiverInterface
 		AuthenticationMethodStatefulInterface $auth_method
 	): void {
 		if ($user->getAuthUserDataStore()->has2FAEnabled()) {
-			// TODO
-			// if user enable 2FA, we need to verify it first
+			// TODO: if user enable 2FA, we need to verify it first
 			// before attaching the user to the session
 			// To do that:
 			// 1) we start a 2FA auth process

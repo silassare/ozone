@@ -17,6 +17,7 @@ use OZONE\Core\Collections\EntityCollections;
 use OZONE\Core\FS\TempFS;
 use OZONE\Core\Hooks\MainBootHookReceiver;
 use OZONE\Core\Sessions\Session;
+use OZONE\Core\Web\BlatePlugin;
 
 return [
 	MainBootHookReceiver::class => true,
@@ -25,4 +26,5 @@ return [
 	Auth::class                 => true,
 	Auth2FA::class              => true,
 	TempFS::class               => true,
+	BlatePlugin::class          => true,
 ];

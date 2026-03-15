@@ -124,15 +124,9 @@ class WebView extends Service
 	{
 		$context = $this->getContext();
 
-		$wi   = new WebInject($context);
 		$data = $this->getCompileData();
 
-		/** TODO remove oz */
-		$data['oz']      = $wi;
-		$data['context'] = $context;
-		$data['i18n']    = $wi->i18n(...);
-		$data['url']     = $context->buildUri(...);
-		$data['route']   = $context->buildRouteUri(...);
+		$data[BlatePlugin::CONTEXT_INJECT_KEY] = $context;
 
 		return Templates::compile($this->getTemplate(), $data);
 	}

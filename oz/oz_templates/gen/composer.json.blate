@@ -4,7 +4,7 @@
     "description", "A newly created project with ozone",
     "config.platform.php", "8.1.31",
     "require.php", ">=8.1",
-    "require['silassare/ozone']", oz_version,
+    "require['silassare/ozone']", $global.oz_version,
     $concat("autoload.['psr-4'].['", oz_project_namespace_escaped, "'].0"), "app",
     "['minimum-stability']", "dev",
     "['prefer-stable']", true

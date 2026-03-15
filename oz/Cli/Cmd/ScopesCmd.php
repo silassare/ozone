@@ -67,8 +67,6 @@ final class ScopesCmd extends Command
 		]);
 
 		$inject = [
-			'oz_version_name'           => OZ_OZONE_VERSION_NAME,
-			'oz_time'                   => \time(),
 			'oz_project_namespace'      => $namespace,
 			'oz_project_app_class_name' => $app_class,
 			'oz_scope_name'             => $scope_name,

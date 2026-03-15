@@ -84,7 +84,7 @@ class ServiceGenerator extends CSGeneratorORM
 			throw new \PHPUtils\Exceptions\RuntimeException(
 				\sprintf(
 					'Table "%s" has more than one column in primary key while expecting 1.'
-					 . 'You can generate service only for tables with one column as primary key.',
+						. 'You can generate service only for tables with one column as primary key.',
 					$table->getName()
 				)
 			);
@@ -105,8 +105,6 @@ class ServiceGenerator extends CSGeneratorORM
 
 		$inject                         = $this->describeTable($table);
 		$inject['oz_header']            = $header;
-		$inject['oz_version_name']      = OZ_OZONE_VERSION_NAME;
-		$inject['oz_time']              = \time();
 		$inject['service']['path']      = $service_path;
 		$inject['service']['namespace'] = $service_namespace;
 		$inject['service']['class']     = $service_class;

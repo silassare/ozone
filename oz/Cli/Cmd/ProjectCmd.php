@@ -283,9 +283,6 @@ final class ProjectCmd extends Command
 		);
 
 		$oz_db = Templates::compile('oz://~core~/gen/project.db.configs.blate', [
-			'oz_version'         => OZ_OZONE_VERSION,
-			'oz_version_name'    => OZ_OZONE_VERSION_NAME,
-			'oz_time'            => \time(),
 			'oz_db_table_prefix' => Random::alpha(Random::int(3, 6)),
 		]);
 
@@ -299,9 +296,6 @@ final class ProjectCmd extends Command
 		]);
 
 		$inject = [
-			'oz_version'                   => OZ_OZONE_VERSION,
-			'oz_version_name'              => OZ_OZONE_VERSION_NAME,
-			'oz_time'                      => \time(),
 			'oz_project_namespace'         => $namespace,
 			'oz_project_namespace_escaped' => \str_replace('\\', '\\\\', $namespace),
 			'oz_project_app_class_name'    => $class_name,

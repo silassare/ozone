@@ -275,8 +275,6 @@ final class Settings
 	public static function genExportInfo(string $setting_group_name, array $settings): array
 	{
 		return [
-			'oz_version_name'  => OZ_OZONE_VERSION_NAME,
-			'oz_time'          => \time(),
 			'oz_settings_name' => $setting_group_name,
 			'oz_settings_data' => $settings,
 			'oz_settings_str'  => self::export($settings, 1, "\t", true),

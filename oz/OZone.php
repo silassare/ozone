@@ -107,10 +107,8 @@ final class OZone
 			// and look at the log file to fix the issue
 			oz_trace($message);
 
-			exit(
-				'Boot hook receivers not notified. If you are an admin, please review the log file and correct it!'
-				. \PHP_EOL
-			);
+			exit('Boot hook receivers not notified. If you are an admin, please review the log file and correct it!'
+				. \PHP_EOL);
 		}
 	}
 
