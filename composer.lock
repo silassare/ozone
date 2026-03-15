@@ -463,12 +463,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "7bddacb5dc1185ef0b299554ef140873871fa4d1"
+                "reference": "7559ee073191d5ff4382a929902fa3ae78152997"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/7bddacb5dc1185ef0b299554ef140873871fa4d1",
-                "reference": "7bddacb5dc1185ef0b299554ef140873871fa4d1",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/7559ee073191d5ff4382a929902fa3ae78152997",
+                "reference": "7559ee073191d5ff4382a929902fa3ae78152997",
                 "shasum": ""
             },
             "require": {
@@ -485,6 +485,11 @@
                 "phpunit/phpunit": "^9.5.9",
                 "roave/security-advisories": "dev-latest",
                 "vimeo/psalm": "^6.0"
+            },
+            "suggest": {
+                "ext-pdo_mysql": "Required to use the MySQL driver.",
+                "ext-pdo_pgsql": "Required to use the PostgreSQL driver.",
+                "ext-sqlite3": "Required to use the SQLite driver."
             },
             "default-branch": true,
             "type": "library",
@@ -524,7 +529,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/main"
             },
-            "time": "2026-03-14T14:27:05+00:00"
+            "time": "2026-03-15T09:34:16+00:00"
         },
         {
             "name": "silassare/kli",
