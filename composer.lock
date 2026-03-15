@@ -389,12 +389,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/blate.git",
-                "reference": "88958a163e7fcdd143ef77be6ecfe5942436d859"
+                "reference": "0595f32c1290135c4d989f5da655e1ad0d7175a4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/blate/zipball/88958a163e7fcdd143ef77be6ecfe5942436d859",
-                "reference": "88958a163e7fcdd143ef77be6ecfe5942436d859",
+                "url": "https://api.github.com/repos/silassare/blate/zipball/0595f32c1290135c4d989f5da655e1ad0d7175a4",
+                "reference": "0595f32c1290135c4d989f5da655e1ad0d7175a4",
                 "shasum": ""
             },
             "require": {
@@ -455,7 +455,7 @@
                 "source": "https://github.com/silassare/blate/tree/main",
                 "issues": "https://github.com/silassare/blate/issues"
             },
-            "time": "2026-03-14T17:48:35+00:00"
+            "time": "2026-03-15T16:36:44+00:00"
         },
         {
             "name": "silassare/gobl",
