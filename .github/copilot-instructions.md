@@ -916,28 +916,43 @@ Multi-tenant/multi-origin support via scopes. A project can have multiple scopes
 
 ## 18. Dependency Summary
 
-| Package                         | Role                                                      |
-| ------------------------------- | --------------------------------------------------------- |
-| `silassare/gobl`                | ORM, DBAL, schema management, CRUD queries, code gen      |
-| `silassare/kli`                 | CLI framework                                             |
-| `silassare/blate`               | Template engine (used for settings/code gen templates)    |
-| `silassare/php-utils`           | `Event`, `Store`, `PathUtils`, `Str`, `ArrayCapableTrait` |
-| `claviska/simpleimage`          | Image processing (captcha, profile picture resizing)      |
-| `dragonmantank/cron-expression` | Cron expression parsing                                   |
-| `nesbot/carbon`                 | Date/time manipulation                                    |
-| `symfony/process`               | Shell process execution (CLI tasks)                       |
-| `zircote/swagger-php`           | OpenAPI annotation and generation                         |
-| `psr/http-message`              | PSR-7 HTTP message interfaces                             |
-| `ext-gd`                        | Required for captcha image generation                     |
-| `ext-pdo`                       | Required for database access                              |
-| `ext-openssl`                   | Required for cryptographic operations                     |
+| Package                | Role                                                      |
+| ---------------------- | --------------------------------------------------------- |
+| `silassare/gobl`       | ORM, DBAL, schema management, CRUD queries, code gen      |
+| `silassare/kli`        | CLI framework                                             |
+| `silassare/blate`      | Template engine (used for settings/code gen templates)    |
+| `silassare/php-utils`  | `Event`, `Store`, `PathUtils`, `Str`, `ArrayCapableTrait` |
+| `oliup/code-generator` | Fluent PHP source code generation                         |
+| `claviska/simpleimage` | Image processing (captcha, profile picture resizing)      |
+| `symfony/process`      | Shell process execution (CLI tasks)                       |
+| `zircote/swagger-php`  | OpenAPI annotation and generation                         |
+| `psr/http-message`     | PSR-7 HTTP message interfaces                             |
+| `ext-gd`               | Required for captcha image generation                     |
+| `ext-pdo`              | Required for database access                              |
+| `ext-openssl`          | Required for cryptographic operations                     |
 
 **Minimum PHP**: 8.1
 **Default RDBMS**: MySQL (`ext-pdo`, `Gobl\DBAL\Drivers\MySQL\MySQL`)
 
 ---
 
-## 19. Benchmark System
+## 19. In-House Package APIs
+
+The packages below are first-party dependencies. Read their source under `vendor/` before using; do **not** guess at APIs.
+
+Each package ships its own detailed agent/copilot instructions. **Always read these files before writing code that uses the package.**
+
+| Package                | Instructions / Docs                                           |
+| ---------------------- | ------------------------------------------------------------- |
+| `silassare/gobl`       | `vendor/silassare/gobl/.github/copilot-instructions.md`       |
+| `silassare/kli`        | `vendor/silassare/kli/.github/copilot-instructions.md`        |
+| `silassare/php-utils`  | `vendor/silassare/php-utils/.github/copilot-instructions.md`  |
+| `silassare/blate`      | `vendor/silassare/blate/.github/copilot-instructions.md`      |
+| `oliup/code-generator` | `vendor/oliup/code-generator/.github/copilot-instructions.md` |
+
+---
+
+## 20. Benchmark System
 
 **Class**: `OZONE\Tests\Benchmark` — `tests/Benchmark.php`
 
