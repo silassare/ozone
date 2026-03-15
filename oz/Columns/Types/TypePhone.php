@@ -25,22 +25,33 @@ use OZONE\Core\Users\UsersRepository;
 /**
  * Class TypePhone.
  *
+ * Validates E.164 phone numbers of the form `+<digits>` where the digit
+ * portion is between 6 and 15 characters (ITU-T E.164), giving a total
+ * maximum length of 16 characters (+ sign + 15 digits).
+ *
  * @extends Type<mixed, null|string>
  */
 class TypePhone extends Type
 {
 	public const NAME = 'phone';
 
+	/**
+	 * E.164 phone regex: `+` followed by 6 to 15 digits.
+	 * Total maximum length: 16 characters (1 for `+`, up to 15 for digits).
+	 */
 	public const PHONE_REG = '~^\+\d{6,15}$~';
 
 	/**
 	 * TypePhone constructor.
 	 *
+	 * The underlying TypeString uses max=16 to match the regex maximum:
+	 * `+` (1 char) + up to 15 digits = 16 chars total.
+	 *
 	 * @throws TypesException
 	 */
 	public function __construct()
 	{
-		parent::__construct(new TypeString(1, 15, self::PHONE_REG));
+		parent::__construct(new TypeString(1, 16, self::PHONE_REG));
 	}
 
 	/**
