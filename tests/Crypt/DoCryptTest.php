@@ -80,10 +80,12 @@ final class DoCryptTest extends TestCase
 
 	public function testEncryptProducesDifferentCiphertextForSameInput(): void
 	{
-		// openssl_encrypt without IV always produces the same result for same inputs
-		// (no randomness in this simple implementation), so we just verify success
+		// A random IV is generated per call, so identical inputs produce different ciphertexts.
 		$crypt = new DoCrypt();
 		$enc1  = $crypt->encrypt('same', 'key');
+		$enc2  = $crypt->encrypt('same', 'key');
 		self::assertNotFalse($enc1);
+		self::assertNotFalse($enc2);
+		self::assertNotSame($enc1, $enc2);
 	}
 }

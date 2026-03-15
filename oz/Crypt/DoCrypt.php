@@ -42,8 +42,21 @@ class DoCrypt implements CryptInterface
 	 */
 	public function encrypt(string $message, string $pass_phrase): false|string
 	{
-		// TODO: rewrite this
-		return \openssl_encrypt($message, $this->cypher, $pass_phrase);
+		$iv_len = \openssl_cipher_iv_length($this->cypher);
+
+		if (false === $iv_len) {
+			return false;
+		}
+
+		$iv        = $iv_len > 0 ? \random_bytes($iv_len) : '';
+		$key       = \hash('sha256', $pass_phrase, true);
+		$encrypted = \openssl_encrypt($message, $this->cypher, $key, \OPENSSL_RAW_DATA, $iv);
+
+		if (false === $encrypted) {
+			return false;
+		}
+
+		return \base64_encode($iv . $encrypted);
 	}
 
 	/**
@@ -51,7 +64,22 @@ class DoCrypt implements CryptInterface
 	 */
 	public function decrypt(string $message, string $pass_phrase): false|string
 	{
-		// TODO: rewrite this
-		return \openssl_decrypt($message, $this->cypher, $pass_phrase);
+		$iv_len = \openssl_cipher_iv_length($this->cypher);
+
+		if (false === $iv_len) {
+			return false;
+		}
+
+		$data = \base64_decode($message, true);
+
+		if (false === $data || \strlen($data) < $iv_len) {
+			return false;
+		}
+
+		$iv         = $iv_len > 0 ? \substr($data, 0, $iv_len) : '';
+		$ciphertext = \substr($data, $iv_len);
+		$key        = \hash('sha256', $pass_phrase, true);
+
+		return \openssl_decrypt($ciphertext, $this->cypher, $key, \OPENSSL_RAW_DATA, $iv);
 	}
 }
