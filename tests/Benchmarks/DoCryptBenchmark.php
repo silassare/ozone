@@ -25,16 +25,16 @@ use OZONE\Core\Crypt\DoCrypt;
  */
 class DoCryptBenchmark implements BenchmarkSuiteInterface
 {
-    public static function callables(): array
-    {
-        $crypt  = new DoCrypt('aes-256-cbc');
-        $key    = 'bench-secret-key-32-bytes-padded';
-        $cipher = $crypt->encrypt('benchmark plaintext payload', $key);
+	public static function callables(): array
+	{
+		$crypt  = new DoCrypt('aes-256-cbc');
+		$key    = 'bench-secret-key-32-bytes-padded';
+		$cipher = $crypt->encrypt('benchmark plaintext payload', $key);
 
-        return [
-            'docrypt_encrypt_aes256' => static fn() => $crypt->encrypt('benchmark plaintext payload', $key),
-            // Pre-computed ciphertext so decrypt always exercises a valid input.
-            'docrypt_decrypt_aes256' => static fn() => $crypt->decrypt($cipher, $key),
-        ];
-    }
+		return [
+			'docrypt_encrypt_aes256' => static fn () => $crypt->encrypt('benchmark plaintext payload', $key),
+			// Pre-computed ciphertext so decrypt always exercises a valid input.
+			'docrypt_decrypt_aes256' => static fn () => $crypt->decrypt($cipher, $key),
+		];
+	}
 }

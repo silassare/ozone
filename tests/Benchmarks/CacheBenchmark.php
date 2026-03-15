@@ -26,22 +26,22 @@ use OZONE\Core\Cache\CacheManager;
  */
 class CacheBenchmark implements BenchmarkSuiteInterface
 {
-    public static function callables(): array
-    {
-        $cache = CacheManager::runtime('benchmark_suite');
-        // Pre-populate so get/has always exercise a hit path.
-        $cache->set('bench_key', 'bench_value');
+	public static function callables(): array
+	{
+		$cache = CacheManager::runtime('benchmark_suite');
+		// Pre-populate so get/has always exercise a hit path.
+		$cache->set('bench_key', 'bench_value');
 
-        return [
-            'cache_set'     => static fn() => $cache->set('bench_key', 'bench_value'),
-            'cache_get_hit' => static fn() => $cache->get('bench_key'),
-            'cache_has'     => static fn() => $cache->has('bench_key'),
+		return [
+			'cache_set'     => static fn () => $cache->set('bench_key', 'bench_value'),
+			'cache_get_hit' => static fn () => $cache->get('bench_key'),
+			'cache_has'     => static fn () => $cache->has('bench_key'),
 
-            // factory() returns cached value on subsequent calls — tests memoize path.
-            'cache_factory' => static fn() => $cache->factory(
-                'bench_factory_key',
-                static fn() => 'computed_value'
-            ),
-        ];
-    }
+			// factory() returns cached value on subsequent calls — tests memoize path.
+			'cache_factory' => static fn () => $cache->factory(
+				'bench_factory_key',
+				static fn () => 'computed_value'
+			),
+		];
+	}
 }

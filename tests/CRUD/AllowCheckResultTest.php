@@ -26,46 +26,48 @@ use PHPUnit\Framework\TestCase;
  */
 final class AllowCheckResultTest extends TestCase
 {
-    public function testAllowCreatesAllowedResult(): void
-    {
-        $reason = new I18nMessage('ALLOWED_KEY');
-        $result = AllowCheckResult::allow($reason);
+	public function testAllowCreatesAllowedResult(): void
+	{
+		$reason = new I18nMessage('ALLOWED_KEY');
+		$result = AllowCheckResult::allow($reason);
 
-        self::assertTrue($result->isAllowed());
-        self::assertSame($reason, $result->getReason());
-    }
+		self::assertTrue($result->isAllowed());
+		self::assertSame($reason, $result->getReason());
+	}
 
-    public function testRejectCreatesRejectedResult(): void
-    {
-        $reason = new I18nMessage('DENIED_KEY');
-        $result = AllowCheckResult::reject($reason);
+	public function testRejectCreatesRejectedResult(): void
+	{
+		$reason = new I18nMessage('DENIED_KEY');
+		$result = AllowCheckResult::reject($reason);
 
-        self::assertFalse($result->isAllowed());
-        self::assertSame($reason, $result->getReason());
-    }
+		self::assertFalse($result->isAllowed());
+		self::assertSame($reason, $result->getReason());
+	}
 
-    public function testConstructorSetsAllowedAndReason(): void
-    {
-        $reason = new I18nMessage('CAUSE');
-        $result = new AllowCheckResult(true, $reason);
+	public function testConstructorSetsAllowedAndReason(): void
+	{
+		$reason = new I18nMessage('CAUSE');
+		$result = new AllowCheckResult(true, $reason);
 
-        self::assertTrue($result->isAllowed());
-        self::assertSame($reason, $result->getReason());
-    }
+		self::assertTrue($result->isAllowed());
+		self::assertSame($reason, $result->getReason());
+	}
 
-    public function testToArrayAllowedSnippet(): void
-    {
-        $result = AllowCheckResult::allow(new I18nMessage('ACCESS_GRANTED'));
-        $arr    = $result->toArray();
-        self::assertTrue($arr['allowed']);
-        self::assertEquals(new I18nMessage('ACCESS_GRANTED'), $arr['reason']);
-    }
+	public function testToArrayAllowedSnippet(): void
+	{
+		$msg    = new I18nMessage('ACCESS_GRANTED');
+		$result = AllowCheckResult::allow($msg);
+		$arr    = $result->toArray();
+		self::assertTrue($arr['allowed']);
+		self::assertSame($msg, $arr['reason']);
+	}
 
-    public function testToArrayRejectedSnippet(): void
-    {
-        $result = AllowCheckResult::reject(new I18nMessage('ACCESS_DENIED', ['resource' => 'posts']));
-        $arr    = $result->toArray();
-        self::assertFalse($arr['allowed']);
-        self::assertEquals(new I18nMessage('ACCESS_DENIED', ['resource' => 'posts']), $arr['reason']);
-    }
+	public function testToArrayRejectedSnippet(): void
+	{
+		$msg    = new I18nMessage('ACCESS_DENIED', ['resource' => 'posts']);
+		$result = AllowCheckResult::reject($msg);
+		$arr    = $result->toArray();
+		self::assertFalse($arr['allowed']);
+		self::assertSame($msg, $arr['reason']);
+	}
 }

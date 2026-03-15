@@ -26,49 +26,49 @@ use PHPUnit\Framework\TestCase;
  */
 final class ValidatedFileTest extends TestCase
 {
-    public function testIsPathReturnsTrueForPathInstance(): void
-    {
-        $vf = new ValidatedFile('/path/to/some/file.jpg', true);
-        self::assertTrue($vf->isPath());
-        self::assertFalse($vf->isFileID());
-    }
+	public function testIsPathReturnsTrueForPathInstance(): void
+	{
+		$vf = new ValidatedFile('/path/to/some/file.jpg', true);
+		self::assertTrue($vf->isPath());
+		self::assertFalse($vf->isFileID());
+	}
 
-    public function testIsFileIDReturnsTrueForIdInstance(): void
-    {
-        $vf = new ValidatedFile('42', false);
-        self::assertFalse($vf->isPath());
-        self::assertTrue($vf->isFileID());
-    }
+	public function testIsFileIDReturnsTrueForIdInstance(): void
+	{
+		$vf = new ValidatedFile('42', false);
+		self::assertFalse($vf->isPath());
+		self::assertTrue($vf->isFileID());
+	}
 
-    public function testToStringReturnsValue(): void
-    {
-        $vf = new ValidatedFile('/uploads/foo.png', true);
-        self::assertSame('/uploads/foo.png', (string) $vf);
+	public function testToStringReturnsValue(): void
+	{
+		$vf = new ValidatedFile('/uploads/foo.png', true);
+		self::assertSame('/uploads/foo.png', (string) $vf);
 
-        $vfId = new ValidatedFile('123', false);
-        self::assertSame('123', (string) $vfId);
-    }
+		$vfId = new ValidatedFile('123', false);
+		self::assertSame('123', (string) $vfId);
+	}
 
-    public function testNonNumericFileIdThrowsInvalidArgumentException(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        new ValidatedFile('not-numeric', false);
-    }
+	public function testNonNumericFileIdThrowsInvalidArgumentException(): void
+	{
+		$this->expectException(InvalidArgumentException::class);
+		new ValidatedFile('not-numeric', false);
+	}
 
-    public function testNumericStringIsValidFileId(): void
-    {
-        $vf = new ValidatedFile('0', false);
-        self::assertTrue($vf->isFileID());
+	public function testNumericStringIsValidFileId(): void
+	{
+		$vf = new ValidatedFile('0', false);
+		self::assertTrue($vf->isFileID());
 
-        $vf2 = new ValidatedFile('999999', false);
-        self::assertTrue($vf2->isFileID());
-    }
+		$vf2 = new ValidatedFile('999999', false);
+		self::assertTrue($vf2->isFileID());
+	}
 
-    public function testPathCanBeAnything(): void
-    {
-        // When is_path=true, no validation on the value string
-        $vf = new ValidatedFile('not-numeric-but-is-path', true);
-        self::assertTrue($vf->isPath());
-        self::assertSame('not-numeric-but-is-path', (string) $vf);
-    }
+	public function testPathCanBeAnything(): void
+	{
+		// When is_path=true, no validation on the value string
+		$vf = new ValidatedFile('not-numeric-but-is-path', true);
+		self::assertTrue($vf->isPath());
+		self::assertSame('not-numeric-but-is-path', (string) $vf);
+	}
 }

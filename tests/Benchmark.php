@@ -360,7 +360,7 @@ class Benchmark
 	public function orderByFastest(): self
 	{
 		$this->assertRan();
-		\uasort($this->results, static fn($a, $b) => $a['avg_ns'] <=> $b['avg_ns']);
+		\uasort($this->results, static fn ($a, $b) => $a['avg_ns'] <=> $b['avg_ns']);
 
 		return $this;
 	}
@@ -373,7 +373,7 @@ class Benchmark
 	public function orderBySlowest(): self
 	{
 		$this->assertRan();
-		\uasort($this->results, static fn($a, $b) => $b['avg_ns'] <=> $a['avg_ns']);
+		\uasort($this->results, static fn ($a, $b) => $b['avg_ns'] <=> $a['avg_ns']);
 
 		return $this;
 	}
@@ -387,7 +387,7 @@ class Benchmark
 	public function orderByBestEntropy(): self
 	{
 		$this->assertRan();
-		\uasort($this->results, static fn($a, $b) => $a['dup_rate'] <=> $b['dup_rate']);
+		\uasort($this->results, static fn ($a, $b) => $a['dup_rate'] <=> $b['dup_rate']);
 
 		return $this;
 	}
@@ -462,14 +462,14 @@ class Benchmark
 		}
 
 		$table = new KliTable();
-		$table->addHeader('Reference',  'ref')->alignLeft();
+		$table->addHeader('Reference', 'ref')->alignLeft();
 		$table->addHeader('Iterations', 'iterations')->alignRight()
 			->setCellFormatter(KliTableFormatter::number());
-		$table->addHeader('Ops/sec',    'ops_per_sec')->alignRight()
+		$table->addHeader('Ops/sec', 'ops_per_sec')->alignRight()
 			->setCellFormatter(KliTableFormatter::number(2));
-		$table->addHeader('Avg (ns)',   'avg_ns')->alignRight()
+		$table->addHeader('Avg (ns)', 'avg_ns')->alignRight()
 			->setCellFormatter($this->nsFormatter());
-		$table->addHeader('Relative',   'relative')->alignRight()
+		$table->addHeader('Relative', 'relative')->alignRight()
 			->setCellFormatter($this->relativeFormatter());
 		$table->addRows($rows);
 		echo $table;
@@ -492,7 +492,7 @@ class Benchmark
 	 *
 	 * @return $this
 	 */
-	public function compareWith(Benchmark $baseline): self
+	public function compareWith(self $baseline): self
 	{
 		$this->assertRan();
 		$baseline->assertRan();
@@ -553,12 +553,12 @@ class Benchmark
 
 		$nsFormat = $this->nsFormatter();
 		$table    = new KliTable();
-		$table->addHeader('Reference',     'ref')->alignLeft();
-		$table->addHeader('Current (ns)',  'current_avg')->alignRight()->setCellFormatter($nsFormat);
+		$table->addHeader('Reference', 'ref')->alignLeft();
+		$table->addHeader('Current (ns)', 'current_avg')->alignRight()->setCellFormatter($nsFormat);
 		$table->addHeader('Baseline (ns)', 'base_avg')->alignRight()->setCellFormatter($nsFormat);
-		$table->addHeader('Delta (ns)',    'delta_ns')->alignRight()->setCellFormatter($this->deltaFormatter());
-		$table->addHeader('Change %',      'change_pct')->alignRight()->setCellFormatter($this->pctFormatter());
-		$table->addHeader('Status',        'status')->alignCenter()->setCellFormatter($this->statusFormatter());
+		$table->addHeader('Delta (ns)', 'delta_ns')->alignRight()->setCellFormatter($this->deltaFormatter());
+		$table->addHeader('Change %', 'change_pct')->alignRight()->setCellFormatter($this->pctFormatter());
+		$table->addHeader('Status', 'status')->alignCenter()->setCellFormatter($this->statusFormatter());
 		$table->addRows($rows);
 		echo $table;
 
@@ -606,10 +606,10 @@ class Benchmark
 	 *
 	 * @param string $json JSON string produced by exportJson()
 	 *
+	 * @return self
+	 *
 	 * @throws JsonException            if the JSON is malformed
 	 * @throws InvalidArgumentException if the decoded value is not an object/array
-	 *
-	 * @return self
 	 */
 	public static function fromJson(string $json): self
 	{
@@ -790,7 +790,7 @@ class Benchmark
 		$avg = \array_sum($durations) / $count;
 
 		$mid    = (int) ($count / 2);
-		$median = ($count % 2 === 0)
+		$median = (0 === $count % 2)
 			? ($durations[$mid - 1] + $durations[$mid]) / 2.0
 			: (float) $durations[$mid];
 
@@ -830,32 +830,32 @@ class Benchmark
 	{
 		$nsFormat = $this->nsFormatter();
 
-		$table->addHeader('Reference',    'ref')->alignLeft();
-		$table->addHeader('Iterations',   'iterations')->alignRight()
+		$table->addHeader('Reference', 'ref')->alignLeft();
+		$table->addHeader('Iterations', 'iterations')->alignRight()
 			->setCellFormatter(KliTableFormatter::number());
-		$table->addHeader('Ops/sec',      'ops_per_sec')->alignRight()
+		$table->addHeader('Ops/sec', 'ops_per_sec')->alignRight()
 			->setCellFormatter(KliTableFormatter::number(2));
-		$table->addHeader('Avg (ns)',     'avg_ns')->alignRight()
+		$table->addHeader('Avg (ns)', 'avg_ns')->alignRight()
 			->setCellFormatter($nsFormat);
-		$table->addHeader('Min (ns)',     'min_ns')->alignRight()
+		$table->addHeader('Min (ns)', 'min_ns')->alignRight()
 			->setCellFormatter($nsFormat);
-		$table->addHeader('Max (ns)',     'max_ns')->alignRight()
+		$table->addHeader('Max (ns)', 'max_ns')->alignRight()
 			->setCellFormatter($nsFormat);
-		$table->addHeader('Median (ns)',  'median_ns')->alignRight()
+		$table->addHeader('Median (ns)', 'median_ns')->alignRight()
 			->setCellFormatter($nsFormat);
-		$table->addHeader('p95 (ns)',     'p95_ns')->alignRight()
+		$table->addHeader('p95 (ns)', 'p95_ns')->alignRight()
 			->setCellFormatter($nsFormat);
 		$table->addHeader('Std Dev (ns)', 'stddev_ns')->alignRight()
 			->setCellFormatter($nsFormat);
-		$table->addHeader('Total (s)',    'total_s')->alignRight()
+		$table->addHeader('Total (s)', 'total_s')->alignRight()
 			->setCellFormatter(KliTableFormatter::number(6));
-		$table->addHeader('Wall (s)',     'wall_s')->alignRight()
+		$table->addHeader('Wall (s)', 'wall_s')->alignRight()
 			->setCellFormatter(KliTableFormatter::number(6));
-		$table->addHeader('Relative',     'relative')->alignRight()
+		$table->addHeader('Relative', 'relative')->alignRight()
 			->setCellFormatter($this->relativeFormatter());
 
 		if ($this->checkDuplicate) {
-			$table->addHeader('Dups',  'dup_count')->alignRight()
+			$table->addHeader('Dups', 'dup_count')->alignRight()
 				->setCellFormatter(KliTableFormatter::number());
 			$table->addHeader('Dup %', 'dup_rate')->alignRight()
 				->setCellFormatter(KliTableFormatter::number(2));
@@ -879,7 +879,7 @@ class Benchmark
 	 */
 	private function nsFormatter(): KliTableCellFormatterInterface
 	{
-		return new class() implements KliTableCellFormatterInterface {
+		return new class implements KliTableCellFormatterInterface {
 			public function format(mixed $value, KliTableHeader $header, array $row): string
 			{
 				return null === $value ? 'N/A' : \number_format((float) $value, 2);
@@ -900,7 +900,7 @@ class Benchmark
 	 */
 	private function relativeFormatter(): KliTableCellFormatterInterface
 	{
-		return new class() implements KliTableCellFormatterInterface {
+		return new class implements KliTableCellFormatterInterface {
 			public function format(mixed $value, KliTableHeader $header, array $row): string
 			{
 				return null === $value ? 'N/A' : \number_format((float) $value, 2) . 'x';
@@ -925,7 +925,7 @@ class Benchmark
 	 */
 	private function deltaFormatter(): KliTableCellFormatterInterface
 	{
-		return new class() implements KliTableCellFormatterInterface {
+		return new class implements KliTableCellFormatterInterface {
 			public function format(mixed $value, KliTableHeader $header, array $row): string
 			{
 				if (null === $value) {
@@ -998,13 +998,13 @@ class Benchmark
 	 *   IMPROVEMENT : green + bold
 	 *   STABLE      : yellow
 	 *   NEW         : cyan
-	 *   REMOVED     : dark gray
+	 *   REMOVED     : dark gray.
 	 *
 	 * @return KliTableCellFormatterInterface
 	 */
 	private function statusFormatter(): KliTableCellFormatterInterface
 	{
-		return new class() implements KliTableCellFormatterInterface {
+		return new class implements KliTableCellFormatterInterface {
 			public function format(mixed $value, KliTableHeader $header, array $row): string
 			{
 				return (string) $value;
@@ -1049,7 +1049,7 @@ class Benchmark
 	private function assertRan(): void
 	{
 		if (null === $this->results) {
-			throw new LogicException(sprintf('No results yet. Call %s first.', Str::callableName($this->run(...))));
+			throw new LogicException(\sprintf('No results yet. Call %s first.', Str::callableName($this->run(...))));
 		}
 	}
 }

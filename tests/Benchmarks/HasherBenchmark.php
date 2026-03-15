@@ -25,12 +25,12 @@ use OZONE\Core\Utils\Hasher;
  */
 class HasherBenchmark implements BenchmarkSuiteInterface
 {
-    public static function callables(): array
-    {
-        return [
-            'hasher_hash32'  => static fn() => Hasher::hash32('benchmark-input-string'),
-            'hasher_hash64'  => static fn() => Hasher::hash64('benchmark-input-string'),
-            'hasher_shorten' => static fn() => Hasher::shorten('benchmark-input-string'),
-        ];
-    }
+	public static function callables(): array
+	{
+		return [
+			'hasher_hash32'  => static fn () => Hasher::hash32('benchmark-input-string'),
+			'hasher_hash64'  => static fn () => Hasher::hash64('benchmark-input-string'),
+			'hasher_shorten' => static fn () => Hasher::shorten('benchmark-input-string'),
+		];
+	}
 }

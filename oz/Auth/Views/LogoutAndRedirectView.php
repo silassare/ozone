@@ -37,6 +37,8 @@ final class LogoutAndRedirectView extends WebView
 	 *
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
+	 *
+	 * @psalm-suppress UnusedVariable
 	 */
 	public function logoutAndRedirect(RouteInfo $ri): never
 	{

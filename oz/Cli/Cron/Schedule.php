@@ -682,7 +682,7 @@ final class Schedule implements Stringable
 			}
 		}
 
-		return static fn() => $now->between($start, $end);
+		return static fn () => $now->between($start, $end);
 	}
 
 	/**

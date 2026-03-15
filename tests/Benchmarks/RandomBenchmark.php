@@ -26,21 +26,21 @@ use OZONE\Core\Utils\Random;
  */
 class RandomBenchmark implements BenchmarkSuiteInterface
 {
-    public static function callables(): array
-    {
-        return [
-            // Full character set — worst-case entropy draw.
-            'random_string_32'   => static fn() => Random::string(32),
+	public static function callables(): array
+	{
+		return [
+			// Full character set — worst-case entropy draw.
+			'random_string_32'   => static fn () => Random::string(32),
 
-            // Alphanumeric — common for tokens and auth codes.
-            'random_alphanum_16' => static fn() => Random::alphaNum(16),
+			// Alphanumeric — common for tokens and auth codes.
+			'random_alphanum_16' => static fn () => Random::alphaNum(16),
 
-            // Numeric — used for PIN / OTP codes.
-            'random_num_6'       => static fn() => Random::num(6),
+			// Numeric — used for PIN / OTP codes.
+			'random_num_6'       => static fn () => Random::num(6),
 
-            // Primitives.
-            'random_int'         => static fn() => Random::int(0, 1_000_000),
-            'random_bool'        => static fn() => Random::bool(),
-        ];
-    }
+			// Primitives.
+			'random_int'         => static fn () => Random::int(0, 1_000_000),
+			'random_bool'        => static fn () => Random::bool(),
+		];
+	}
 }

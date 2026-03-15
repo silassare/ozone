@@ -25,12 +25,12 @@ namespace OZONE\Tests\Benchmarks;
  */
 interface BenchmarkSuiteInterface
 {
-    /**
-     * Returns a map of benchmark entries to measure.
-     * Keys are stable labels (used to match against the baseline JSON).
-     * Values are zero-argument callables whose execution time is measured.
-     *
-     * @return array<string, callable>
-     */
-    public static function callables(): array;
+	/**
+	 * Returns a map of benchmark entries to measure.
+	 * Keys are stable labels (used to match against the baseline JSON).
+	 * Values are zero-argument callables whose execution time is measured.
+	 *
+	 * @return array<string, callable>
+	 */
+	public static function callables(): array;
 }

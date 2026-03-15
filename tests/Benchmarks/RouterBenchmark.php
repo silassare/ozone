@@ -27,23 +27,23 @@ use OZONE\Tests\TestUtils;
  */
 class RouterBenchmark implements BenchmarkSuiteInterface
 {
-    public static function callables(): array
-    {
-        $router = TestUtils::router();
+	public static function callables(): array
+	{
+		$router = TestUtils::router();
 
-        return [
-            // Static route table — O(1) hash lookup.
-            'router_find_static'          => static fn() => $router->find('GET', '/foo'),
-            'router_find_static_deep'     => static fn() => $router->find('GET', '/bar/baz'),
+		return [
+			// Static route table — O(1) hash lookup.
+			'router_find_static'          => static fn () => $router->find('GET', '/foo'),
+			'router_find_static_deep'     => static fn () => $router->find('GET', '/bar/baz'),
 
-            // Dynamic segments — regex matching against compiled patterns.
-            'router_find_dynamic_id'      => static fn() => $router->find('GET', '/users/42'),
-            'router_find_dynamic_article' => static fn() => $router->find('GET', '/users/42/articles/published'),
-            'router_find_articles_list'   => static fn() => $router->find('GET', '/articles'),
-            'router_find_articles_id'     => static fn() => $router->find('GET', '/articles/99'),
+			// Dynamic segments — regex matching against compiled patterns.
+			'router_find_dynamic_id'      => static fn () => $router->find('GET', '/users/42'),
+			'router_find_dynamic_article' => static fn () => $router->find('GET', '/users/42/articles/published'),
+			'router_find_articles_list'   => static fn () => $router->find('GET', '/articles'),
+			'router_find_articles_id'     => static fn () => $router->find('GET', '/articles/99'),
 
-            // 404 miss — all routes exhausted before returning NOT_FOUND.
-            'router_find_dynamic_miss'    => static fn() => $router->find('GET', '/not-found-route'),
-        ];
-    }
+			// 404 miss — all routes exhausted before returning NOT_FOUND.
+			'router_find_dynamic_miss'    => static fn () => $router->find('GET', '/not-found-route'),
+		];
+	}
 }

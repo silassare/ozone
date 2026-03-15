@@ -26,133 +26,133 @@ use PHPUnit\Framework\TestCase;
  */
 final class RuntimeCacheTest extends TestCase
 {
-    private RuntimeCache $cache;
+	private RuntimeCache $cache;
 
-    protected function setUp(): void
-    {
-        // Each test gets an isolated namespace so tests do not interfere with each other
-        $this->cache = new RuntimeCache('test_' . \spl_object_id($this));
-        $this->cache->clear();
-    }
+	protected function setUp(): void
+	{
+		// Each test gets an isolated namespace so tests do not interfere with each other
+		$this->cache = new RuntimeCache('test_' . \spl_object_id($this));
+		$this->cache->clear();
+	}
 
-    public function testSetAndGet(): void
-    {
-        $item = new CacheItem('hello', 'world');
-        $this->cache->set($item);
+	public function testSetAndGet(): void
+	{
+		$item = new CacheItem('hello', 'world');
+		$this->cache->set($item);
 
-        $retrieved = $this->cache->get('hello');
-        self::assertNotNull($retrieved);
-        self::assertSame('world', $retrieved->get());
-    }
+		$retrieved = $this->cache->get('hello');
+		self::assertNotNull($retrieved);
+		self::assertSame('world', $retrieved->get());
+	}
 
-    public function testGetReturnsNullForMissingKey(): void
-    {
-        self::assertNull($this->cache->get('missing'));
-    }
+	public function testGetReturnsNullForMissingKey(): void
+	{
+		self::assertNull($this->cache->get('missing'));
+	}
 
-    public function testGetReturnsNullForExpiredItem(): void
-    {
-        $item = (new CacheItem('expired', 'value'))->expiresAfter(-1.0); // expired in the past
-        $this->cache->set($item);
+	public function testGetReturnsNullForExpiredItem(): void
+	{
+		$item = (new CacheItem('expired', 'value'))->expiresAfter(-1.0); // expired in the past
+		$this->cache->set($item);
 
-        self::assertNull($this->cache->get('expired'));
-    }
+		self::assertNull($this->cache->get('expired'));
+	}
 
-    public function testDeleteRemovesItem(): void
-    {
-        $this->cache->set(new CacheItem('key', 'val'));
-        $this->cache->delete('key');
+	public function testDeleteRemovesItem(): void
+	{
+		$this->cache->set(new CacheItem('key', 'val'));
+		$this->cache->delete('key');
 
-        self::assertNull($this->cache->get('key'));
-    }
+		self::assertNull($this->cache->get('key'));
+	}
 
-    public function testClearEmptiesAllItems(): void
-    {
-        $this->cache->set(new CacheItem('a', 1));
-        $this->cache->set(new CacheItem('b', 2));
-        $this->cache->clear();
+	public function testClearEmptiesAllItems(): void
+	{
+		$this->cache->set(new CacheItem('a', 1));
+		$this->cache->set(new CacheItem('b', 2));
+		$this->cache->clear();
 
-        self::assertNull($this->cache->get('a'));
-        self::assertNull($this->cache->get('b'));
-    }
+		self::assertNull($this->cache->get('a'));
+		self::assertNull($this->cache->get('b'));
+	}
 
-    public function testGetMultipleReturnsOnlyExistingItems(): void
-    {
-        $this->cache->set(new CacheItem('x', 10));
-        $this->cache->set(new CacheItem('y', 20));
+	public function testGetMultipleReturnsOnlyExistingItems(): void
+	{
+		$this->cache->set(new CacheItem('x', 10));
+		$this->cache->set(new CacheItem('y', 20));
 
-        $items = $this->cache->getMultiple(['x', 'y', 'z']);
-        self::assertCount(2, $items);
-        self::assertArrayHasKey('x', $items);
-        self::assertArrayHasKey('y', $items);
-        self::assertArrayNotHasKey('z', $items);
-    }
+		$items = $this->cache->getMultiple(['x', 'y', 'z']);
+		self::assertCount(2, $items);
+		self::assertArrayHasKey('x', $items);
+		self::assertArrayHasKey('y', $items);
+		self::assertArrayNotHasKey('z', $items);
+	}
 
-    public function testDeleteMultipleRemovesMultipleItems(): void
-    {
-        $this->cache->set(new CacheItem('a', 1));
-        $this->cache->set(new CacheItem('b', 2));
-        $this->cache->set(new CacheItem('c', 3));
-        $this->cache->deleteMultiple(['a', 'b']);
+	public function testDeleteMultipleRemovesMultipleItems(): void
+	{
+		$this->cache->set(new CacheItem('a', 1));
+		$this->cache->set(new CacheItem('b', 2));
+		$this->cache->set(new CacheItem('c', 3));
+		$this->cache->deleteMultiple(['a', 'b']);
 
-        self::assertNull($this->cache->get('a'));
-        self::assertNull($this->cache->get('b'));
-        self::assertNotNull($this->cache->get('c'));
-    }
+		self::assertNull($this->cache->get('a'));
+		self::assertNull($this->cache->get('b'));
+		self::assertNotNull($this->cache->get('c'));
+	}
 
-    public function testIncrementIncreasesValue(): void
-    {
-        $this->cache->set(new CacheItem('counter', 10));
-        $this->cache->increment('counter', 5);
+	public function testIncrementIncreasesValue(): void
+	{
+		$this->cache->set(new CacheItem('counter', 10));
+		$this->cache->increment('counter', 5);
 
-        $item = $this->cache->get('counter');
-        self::assertNotNull($item);
-        self::assertSame(15.0, $item->get());
-    }
+		$item = $this->cache->get('counter');
+		self::assertNotNull($item);
+		self::assertSame(15.0, $item->get());
+	}
 
-    public function testIncrementReturnsFalseForMissingKey(): void
-    {
-        self::assertFalse($this->cache->increment('nonexistent'));
-    }
+	public function testIncrementReturnsFalseForMissingKey(): void
+	{
+		self::assertFalse($this->cache->increment('nonexistent'));
+	}
 
-    public function testDecrementDecreasesValue(): void
-    {
-        $this->cache->set(new CacheItem('counter', 10));
-        $this->cache->decrement('counter', 3);
+	public function testDecrementDecreasesValue(): void
+	{
+		$this->cache->set(new CacheItem('counter', 10));
+		$this->cache->decrement('counter', 3);
 
-        $item = $this->cache->get('counter');
-        self::assertNotNull($item);
-        self::assertSame(7.0, $item->get());
-    }
+		$item = $this->cache->get('counter');
+		self::assertNotNull($item);
+		self::assertSame(7.0, $item->get());
+	}
 
-    public function testDecrementReturnsFalseForMissingKey(): void
-    {
-        self::assertFalse($this->cache->decrement('nonexistent'));
-    }
+	public function testDecrementReturnsFalseForMissingKey(): void
+	{
+		self::assertFalse($this->cache->decrement('nonexistent'));
+	}
 
-    public function testGetSharedInstanceReturnsSameNamespace(): void
-    {
-        $a = RuntimeCache::getSharedInstance('shared_ns');
-        $a->set(new CacheItem('ping', 'pong'));
+	public function testGetSharedInstanceReturnsSameNamespace(): void
+	{
+		$a = RuntimeCache::getSharedInstance('shared_ns');
+		$a->set(new CacheItem('ping', 'pong'));
 
-        $b    = RuntimeCache::getSharedInstance('shared_ns');
-        $item = $b->get('ping');
-        self::assertNotNull($item);
-        self::assertSame('pong', $item->get());
+		$b    = RuntimeCache::getSharedInstance('shared_ns');
+		$item = $b->get('ping');
+		self::assertNotNull($item);
+		self::assertSame('pong', $item->get());
 
-        // Cleanup
-        $a->clear();
-    }
+		// Cleanup
+		$a->clear();
+	}
 
-    public function testDifferentNamespacesAreIsolated(): void
-    {
-        $ns1 = new RuntimeCache('ns1_isolation');
-        $ns2 = new RuntimeCache('ns2_isolation');
+	public function testDifferentNamespacesAreIsolated(): void
+	{
+		$ns1 = new RuntimeCache('ns1_isolation');
+		$ns2 = new RuntimeCache('ns2_isolation');
 
-        $ns1->set(new CacheItem('k', 'from_ns1'));
+		$ns1->set(new CacheItem('k', 'from_ns1'));
 
-        self::assertNull($ns2->get('k'));
+		self::assertNull($ns2->get('k'));
 
-        $ns1->clear();
-    }
+		$ns1->clear();
+	}
 }

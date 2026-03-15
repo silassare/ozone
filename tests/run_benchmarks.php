@@ -44,6 +44,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
+
 require_once __DIR__ . '/autoload.php';
 
 use OZONE\Tests\Benchmark;
@@ -70,54 +71,54 @@ const THRESHOLD_PCT = 20.0;
  */
 function buildMachineFingerprint(): array
 {
-    $cpuModel = 'unknown';
-    $cpuCount = 1;
+	$cpuModel = 'unknown';
+	$cpuCount = 1;
 
-    if (\PHP_OS_FAMILY === 'Linux') {
-        $cpuinfo = @\file_get_contents('/proc/cpuinfo') ?: '';
+	if (\PHP_OS_FAMILY === 'Linux') {
+		$cpuinfo = @\file_get_contents('/proc/cpuinfo') ?: '';
 
-        if (\preg_match('/model name\s*:\s*(.+)/i', $cpuinfo, $m)) {
-            $cpuModel = \trim($m[1]);
-        }
+		if (\preg_match('/model name\s*:\s*(.+)/i', $cpuinfo, $m)) {
+			$cpuModel = \trim($m[1]);
+		}
 
-        $nproc = @\shell_exec('nproc 2>/dev/null');
+		$nproc = @\shell_exec('nproc 2>/dev/null');
 
-        if ($nproc) {
-            $cpuCount = (int) \trim($nproc);
-        }
-    } elseif (\PHP_OS_FAMILY === 'Darwin') {
-        $brand = @\shell_exec('sysctl -n machdep.cpu.brand_string 2>/dev/null');
+		if ($nproc) {
+			$cpuCount = (int) \trim($nproc);
+		}
+	} elseif (\PHP_OS_FAMILY === 'Darwin') {
+		$brand = @\shell_exec('sysctl -n machdep.cpu.brand_string 2>/dev/null');
 
-        if ($brand) {
-            $cpuModel = \trim($brand);
-        }
+		if ($brand) {
+			$cpuModel = \trim($brand);
+		}
 
-        $ncpu = @\shell_exec('sysctl -n hw.ncpu 2>/dev/null');
+		$ncpu = @\shell_exec('sysctl -n hw.ncpu 2>/dev/null');
 
-        if ($ncpu) {
-            $cpuCount = (int) \trim($ncpu);
-        }
-    } elseif (\PHP_OS_FAMILY === 'Windows') {
-        $cpu = @\shell_exec('wmic cpu get name /value 2>NUL');
+		if ($ncpu) {
+			$cpuCount = (int) \trim($ncpu);
+		}
+	} elseif (\PHP_OS_FAMILY === 'Windows') {
+		$cpu = @\shell_exec('wmic cpu get name /value 2>NUL');
 
-        if ($cpu && \preg_match('/Name=(.+)/i', $cpu, $m)) {
-            $cpuModel = \trim($m[1]);
-        }
+		if ($cpu && \preg_match('/Name=(.+)/i', $cpu, $m)) {
+			$cpuModel = \trim($m[1]);
+		}
 
-        $cores = @\shell_exec('wmic cpu get NumberOfCores /value 2>NUL');
+		$cores = @\shell_exec('wmic cpu get NumberOfCores /value 2>NUL');
 
-        if ($cores && \preg_match('/NumberOfCores=(\d+)/i', $cores, $m)) {
-            $cpuCount = (int) $m[1];
-        }
-    }
+		if ($cores && \preg_match('/NumberOfCores=(\d+)/i', $cores, $m)) {
+			$cpuCount = (int) $m[1];
+		}
+	}
 
-    return [
-        'php_version' => \PHP_VERSION,
-        'os'          => \PHP_OS_FAMILY,
-        'arch'        => \php_uname('m'),
-        'cpu_model'   => $cpuModel,
-        'cpu_count'   => $cpuCount,
-    ];
+	return [
+		'php_version' => \PHP_VERSION,
+		'os'          => \PHP_OS_FAMILY,
+		'arch'        => \php_uname('m'),
+		'cpu_model'   => $cpuModel,
+		'cpu_count'   => $cpuCount,
+	];
 }
 
 /**
@@ -130,20 +131,20 @@ function buildMachineFingerprint(): array
  */
 function fingerprintsMatch(array $a, array $b): bool
 {
-    foreach (['php_version', 'os', 'arch'] as $key) {
-        if (($a[$key] ?? null) !== ($b[$key] ?? null)) {
-            return false;
-        }
-    }
+	foreach (['php_version', 'os', 'arch'] as $key) {
+		if (($a[$key] ?? null) !== ($b[$key] ?? null)) {
+			return false;
+		}
+	}
 
-    // cpu_model unknown on either side — skip model check.
-    if (($a['cpu_model'] ?? 'unknown') !== 'unknown' && ($b['cpu_model'] ?? 'unknown') !== 'unknown') {
-        if ($a['cpu_model'] !== $b['cpu_model']) {
-            return false;
-        }
-    }
+	// cpu_model unknown on either side — skip model check.
+	if (($a['cpu_model'] ?? 'unknown') !== 'unknown' && ($b['cpu_model'] ?? 'unknown') !== 'unknown') {
+		if ($a['cpu_model'] !== $b['cpu_model']) {
+			return false;
+		}
+	}
 
-    return true;
+	return true;
 }
 
 $fingerprint = buildMachineFingerprint();
@@ -155,14 +156,15 @@ $fingerprint = buildMachineFingerprint();
 $callables = [];
 
 foreach (\glob(__DIR__ . '/Benchmarks/*Benchmark.php') ?: [] as $file) {
-    require_once $file;
-    $class     = 'OZONE\\Tests\\Benchmarks\\' . \basename($file, '.php');
-    $callables = \array_merge($callables, $class::callables());
+	require_once $file;
+	$class     = 'OZONE\Tests\Benchmarks\\' . \basename($file, '.php');
+	$callables = \array_merge($callables, $class::callables());
 }
 
 if (empty($callables)) {
-    echo 'No benchmark suites found in tests/Benchmarks/.' . \PHP_EOL;
-    exit(0);
+	echo 'No benchmark suites found in tests/Benchmarks/.' . \PHP_EOL;
+
+	exit(0);
 }
 
 // ---------------------------------------------------------------------------
@@ -170,10 +172,10 @@ if (empty($callables)) {
 // ---------------------------------------------------------------------------
 
 $bm = Benchmark::create()
-    ->warmup(10)
-    ->maxDuration(0.5)
-    ->regressionThreshold(THRESHOLD_PCT)
-    ->run($callables);
+	->warmup(10)
+	->maxDuration(0.5)
+	->regressionThreshold(THRESHOLD_PCT)
+	->run($callables);
 
 // ---------------------------------------------------------------------------
 // Compare with baseline if one exists
@@ -184,56 +186,57 @@ $hasImprovement = false;
 $baselineExists = \is_file(BASELINE_FILE);
 
 if ($baselineExists) {
-    $baseline       = Benchmark::fromJson(\file_get_contents(BASELINE_FILE));
-    $baseFingerprint = $baseline->getExportedMeta();
+	$baseline        = Benchmark::fromJson(\file_get_contents(BASELINE_FILE));
+	$baseFingerprint = $baseline->getExportedMeta();
 
-    // If the baseline was recorded without a fingerprint (legacy format) or on
-    // a different machine, skip numerical comparison and just update the baseline.
-    if (!empty($baseFingerprint) && !fingerprintsMatch($fingerprint, $baseFingerprint)) {
-        echo \PHP_EOL . '=== Benchmark baseline was recorded on a different machine — resetting. ===' . \PHP_EOL;
-        echo '  Baseline : ' . ($baseFingerprint['cpu_model'] ?? '?') . ' / ' . ($baseFingerprint['os'] ?? '?') . ' / PHP ' . ($baseFingerprint['php_version'] ?? '?') . \PHP_EOL;
-        echo '  Current  : ' . $fingerprint['cpu_model'] . ' / ' . $fingerprint['os'] . ' / PHP ' . $fingerprint['php_version'] . \PHP_EOL;
-        echo '  New baseline saved. Run again to start tracking regressions.' . \PHP_EOL;
-        \file_put_contents(BASELINE_FILE, $bm->exportJson($fingerprint));
-        exit(0);
-    }
+	// If the baseline was recorded without a fingerprint (legacy format) or on
+	// a different machine, skip numerical comparison and just update the baseline.
+	if (!empty($baseFingerprint) && !fingerprintsMatch($fingerprint, $baseFingerprint)) {
+		echo \PHP_EOL . '=== Benchmark baseline was recorded on a different machine — resetting. ===' . \PHP_EOL;
+		echo '  Baseline : ' . ($baseFingerprint['cpu_model'] ?? '?') . ' / ' . ($baseFingerprint['os'] ?? '?') . ' / PHP ' . ($baseFingerprint['php_version'] ?? '?') . \PHP_EOL;
+		echo '  Current  : ' . $fingerprint['cpu_model'] . ' / ' . $fingerprint['os'] . ' / PHP ' . $fingerprint['php_version'] . \PHP_EOL;
+		echo '  New baseline saved. Run again to start tracking regressions.' . \PHP_EOL;
+		\file_put_contents(BASELINE_FILE, $bm->exportJson($fingerprint));
 
-    $baseData = $baseline->getResults();
+		exit(0);
+	}
 
-    foreach ($bm->getResults() as $ref => $current) {
-        if (!isset($baseData[$ref])) {
-            continue; // NEW entries do not trigger output by themselves
-        }
+	$baseData = $baseline->getResults();
 
-        $base = $baseData[$ref];
+	foreach ($bm->getResults() as $ref => $current) {
+		if (!isset($baseData[$ref])) {
+			continue; // NEW entries do not trigger output by themselves
+		}
 
-        // Use min_ns (fastest observed time) for comparison rather than the
-        // mean. The minimum is immune to OS scheduling spikes — noise only
-        // ever adds latency, so the minimum stays stable across clean runs.
-        // A real regression will raise the minimum because the fast path
-        // itself is slower; random jitter only inflates individual samples.
-        $baseMin = $base['min_ns'];
-        $currMin = $current['min_ns'];
+		$base = $baseData[$ref];
 
-        $changePct = $baseMin > 0.0
-            ? (($currMin - $baseMin) / $baseMin) * 100.0
-            : 0.0;
+		// Use min_ns (fastest observed time) for comparison rather than the
+		// mean. The minimum is immune to OS scheduling spikes — noise only
+		// ever adds latency, so the minimum stays stable across clean runs.
+		// A real regression will raise the minimum because the fast path
+		// itself is slower; random jitter only inflates individual samples.
+		$baseMin = $base['min_ns'];
+		$currMin = $current['min_ns'];
 
-        if ($changePct > THRESHOLD_PCT) {
-            $hasRegression = true;
-        } elseif ($changePct < -THRESHOLD_PCT) {
-            $hasImprovement = true;
-        }
-    }
+		$changePct = $baseMin > 0.0
+			? (($currMin - $baseMin) / $baseMin) * 100.0
+			: 0.0;
 
-    if ($hasRegression || $hasImprovement) {
-        echo \PHP_EOL . '=== Benchmark results (vs baseline) ===' . \PHP_EOL;
-        $bm->orderByFastest()->compareWith($baseline);
-    }
+		if ($changePct > THRESHOLD_PCT) {
+			$hasRegression = true;
+		} elseif ($changePct < -THRESHOLD_PCT) {
+			$hasImprovement = true;
+		}
+	}
+
+	if ($hasRegression || $hasImprovement) {
+		echo \PHP_EOL . '=== Benchmark results (vs baseline) ===' . \PHP_EOL;
+		$bm->orderByFastest()->compareWith($baseline);
+	}
 } else {
-    // First run: print initial numbers so the developer has a reference.
-    echo \PHP_EOL . '=== Benchmark results (initial run — no baseline yet) ===' . \PHP_EOL;
-    $bm->orderByFastest()->printSummary();
+	// First run: print initial numbers so the developer has a reference.
+	echo \PHP_EOL . '=== Benchmark results (initial run — no baseline yet) ===' . \PHP_EOL;
+	$bm->orderByFastest()->printSummary();
 }
 
 // ---------------------------------------------------------------------------
@@ -242,7 +245,7 @@ if ($baselineExists) {
 // ---------------------------------------------------------------------------
 
 if (!$hasRegression) {
-    \file_put_contents(BASELINE_FILE, $bm->exportJson($fingerprint));
+	\file_put_contents(BASELINE_FILE, $bm->exportJson($fingerprint));
 }
 
 // ---------------------------------------------------------------------------

@@ -29,214 +29,214 @@ use PHPUnit\Framework\TestCase;
  */
 final class RoutePathParserTest extends TestCase
 {
-    private Router $router;
+	private Router $router;
 
-    protected function setUp(): void
-    {
-        $this->router = TestUtils::router();
-    }
+	protected function setUp(): void
+	{
+		$this->router = TestUtils::router();
+	}
 
-    // -------------------------------------------------------------------------
-    // isValidParameter
-    // -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// isValidParameter
+	// -------------------------------------------------------------------------
 
-    public function testIsValidParameterAcceptsAlphaStart(): void
-    {
-        self::assertTrue(RoutePathParser::isValidParameter('id'));
-        self::assertTrue(RoutePathParser::isValidParameter('userId'));
-        self::assertTrue(RoutePathParser::isValidParameter('user_id'));
-        self::assertTrue(RoutePathParser::isValidParameter('_hidden'));
-    }
+	public function testIsValidParameterAcceptsAlphaStart(): void
+	{
+		self::assertTrue(RoutePathParser::isValidParameter('id'));
+		self::assertTrue(RoutePathParser::isValidParameter('userId'));
+		self::assertTrue(RoutePathParser::isValidParameter('user_id'));
+		self::assertTrue(RoutePathParser::isValidParameter('_hidden'));
+	}
 
-    public function testIsValidParameterAcceptsUnderscoreStart(): void
-    {
-        self::assertTrue(RoutePathParser::isValidParameter('_id'));
-        self::assertTrue(RoutePathParser::isValidParameter('_'));
-    }
+	public function testIsValidParameterAcceptsUnderscoreStart(): void
+	{
+		self::assertTrue(RoutePathParser::isValidParameter('_id'));
+		self::assertTrue(RoutePathParser::isValidParameter('_'));
+	}
 
-    public function testIsValidParameterRejectsDigitStart(): void
-    {
-        self::assertFalse(RoutePathParser::isValidParameter('1id'));
-        self::assertFalse(RoutePathParser::isValidParameter('9'));
-    }
+	public function testIsValidParameterRejectsDigitStart(): void
+	{
+		self::assertFalse(RoutePathParser::isValidParameter('1id'));
+		self::assertFalse(RoutePathParser::isValidParameter('9'));
+	}
 
-    public function testIsValidParameterRejectsEmptyString(): void
-    {
-        self::assertFalse(RoutePathParser::isValidParameter(''));
-    }
+	public function testIsValidParameterRejectsEmptyString(): void
+	{
+		self::assertFalse(RoutePathParser::isValidParameter(''));
+	}
 
-    public function testIsValidParameterRejectsSpecialChars(): void
-    {
-        self::assertFalse(RoutePathParser::isValidParameter('user-id'));
-        self::assertFalse(RoutePathParser::isValidParameter('user.id'));
-        self::assertFalse(RoutePathParser::isValidParameter('user id'));
-    }
+	public function testIsValidParameterRejectsSpecialChars(): void
+	{
+		self::assertFalse(RoutePathParser::isValidParameter('user-id'));
+		self::assertFalse(RoutePathParser::isValidParameter('user.id'));
+		self::assertFalse(RoutePathParser::isValidParameter('user id'));
+	}
 
-    // -------------------------------------------------------------------------
-    // parse() - static segments
-    // -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// parse() - static segments
+	// -------------------------------------------------------------------------
 
-    public function testParseStaticSegment(): void
-    {
-        $parser  = new RoutePathParser('/users/list', $this->router);
-        $pattern = $parser->parse('/users/list');
-        // '/' is not special with the '~' delimiter so preg_quote leaves it unchanged.
-        self::assertSame('/users/list', $pattern);
-    }
+	public function testParseStaticSegment(): void
+	{
+		$parser  = new RoutePathParser('/users/list', $this->router);
+		$pattern = $parser->parse('/users/list');
+		// '/' is not special with the '~' delimiter so preg_quote leaves it unchanged.
+		self::assertSame('/users/list', $pattern);
+	}
 
-    public function testParseEmptyPath(): void
-    {
-        $parser  = new RoutePathParser('/', $this->router);
-        $pattern = $parser->parse('/');
-        self::assertSame('/', $pattern);
-    }
+	public function testParseEmptyPath(): void
+	{
+		$parser  = new RoutePathParser('/', $this->router);
+		$pattern = $parser->parse('/');
+		self::assertSame('/', $pattern);
+	}
 
-    // -------------------------------------------------------------------------
-    // parse() - colon-style parameters
-    // -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// parse() - colon-style parameters
+	// -------------------------------------------------------------------------
 
-    public function testParseColonParameter(): void
-    {
-        $parser  = new RoutePathParser('/users/:id', $this->router);
-        $pattern = $parser->parse('/users/:id');
+	public function testParseColonParameter(): void
+	{
+		$parser  = new RoutePathParser('/users/:id', $this->router);
+		$pattern = $parser->parse('/users/:id');
 
-        self::assertStringContainsString('(?P<id>', $pattern);
-        self::assertStringContainsString(Route::DEFAULT_PARAM_PATTERN, $pattern);
-    }
+		self::assertStringContainsString('(?P<id>', $pattern);
+		self::assertStringContainsString(Route::DEFAULT_PARAM_PATTERN, $pattern);
+	}
 
-    public function testParseColonParameterWithCustomConstraint(): void
-    {
-        $parser  = new RoutePathParser('/items/:id', $this->router);
-        $pattern = $parser->parse('/items/:id', ['id' => '[0-9]+']);
+	public function testParseColonParameterWithCustomConstraint(): void
+	{
+		$parser  = new RoutePathParser('/items/:id', $this->router);
+		$pattern = $parser->parse('/items/:id', ['id' => '[0-9]+']);
 
-        self::assertStringContainsString('(?P<id>[0-9]+)', $pattern);
-    }
+		self::assertStringContainsString('(?P<id>[0-9]+)', $pattern);
+	}
 
-    public function testParseMultipleColonParameters(): void
-    {
-        $parser  = new RoutePathParser('/users/:userId/posts/:postId', $this->router);
-        $params  = [];
-        $pattern = $parser->parse('/users/:userId/posts/:postId', [], $params);
+	public function testParseMultipleColonParameters(): void
+	{
+		$parser  = new RoutePathParser('/users/:userId/posts/:postId', $this->router);
+		$params  = [];
+		$pattern = $parser->parse('/users/:userId/posts/:postId', [], $params);
 
-        self::assertStringContainsString('(?P<userId>', $pattern);
-        self::assertStringContainsString('(?P<postId>', $pattern);
-        self::assertArrayHasKey('userId', $params);
-        self::assertArrayHasKey('postId', $params);
-    }
+		self::assertStringContainsString('(?P<userId>', $pattern);
+		self::assertStringContainsString('(?P<postId>', $pattern);
+		self::assertArrayHasKey('userId', $params);
+		self::assertArrayHasKey('postId', $params);
+	}
 
-    // -------------------------------------------------------------------------
-    // parse() - brace-style parameters
-    // -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// parse() - brace-style parameters
+	// -------------------------------------------------------------------------
 
-    public function testParseBraceParameter(): void
-    {
-        $parser  = new RoutePathParser('/users/{id}', $this->router);
-        $pattern = $parser->parse('/users/{id}');
+	public function testParseBraceParameter(): void
+	{
+		$parser  = new RoutePathParser('/users/{id}', $this->router);
+		$pattern = $parser->parse('/users/{id}');
 
-        self::assertStringContainsString('(?P<id>', $pattern);
-        self::assertStringContainsString(Route::DEFAULT_PARAM_PATTERN, $pattern);
-    }
+		self::assertStringContainsString('(?P<id>', $pattern);
+		self::assertStringContainsString(Route::DEFAULT_PARAM_PATTERN, $pattern);
+	}
 
-    public function testParseBraceParameterWithConstraint(): void
-    {
-        $parser  = new RoutePathParser('/items/{id}', $this->router);
-        $pattern = $parser->parse('/items/{id}', ['id' => '\d+']);
+	public function testParseBraceParameterWithConstraint(): void
+	{
+		$parser  = new RoutePathParser('/items/{id}', $this->router);
+		$pattern = $parser->parse('/items/{id}', ['id' => '\d+']);
 
-        self::assertStringContainsString('(?P<id>\d+)', $pattern);
-    }
+		self::assertStringContainsString('(?P<id>\d+)', $pattern);
+	}
 
-    // -------------------------------------------------------------------------
-    // parse() - optional segments
-    // -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// parse() - optional segments
+	// -------------------------------------------------------------------------
 
-    public function testParseOptionalSegment(): void
-    {
-        $parser  = new RoutePathParser('/posts[/:slug]', $this->router);
-        $params  = [];
-        $pattern = $parser->parse('/posts[/:slug]', [], $params);
+	public function testParseOptionalSegment(): void
+	{
+		$parser  = new RoutePathParser('/posts[/:slug]', $this->router);
+		$params  = [];
+		$pattern = $parser->parse('/posts[/:slug]', [], $params);
 
-        // Optional part should be wrapped in non-capturing optional group.
-        self::assertStringContainsString('(?:', $pattern);
-        self::assertStringContainsString(')?', $pattern);
-        self::assertStringContainsString('(?P<slug>', $pattern);
-        self::assertSame(0, $params['slug']); // 0 = optional
-    }
+		// Optional part should be wrapped in non-capturing optional group.
+		self::assertStringContainsString('(?:', $pattern);
+		self::assertStringContainsString(')?', $pattern);
+		self::assertStringContainsString('(?P<slug>', $pattern);
+		self::assertSame(0, $params['slug']); // 0 = optional
+	}
 
-    public function testParseRequiredParamIsMarkedAsRequired(): void
-    {
-        $parser = new RoutePathParser('/:id', $this->router);
-        $params = [];
-        $parser->parse('/:id', [], $params);
+	public function testParseRequiredParamIsMarkedAsRequired(): void
+	{
+		$parser = new RoutePathParser('/:id', $this->router);
+		$params = [];
+		$parser->parse('/:id', [], $params);
 
-        self::assertSame(1, $params['id']); // 1 = required
-    }
+		self::assertSame(1, $params['id']); // 1 = required
+	}
 
-    // -------------------------------------------------------------------------
-    // parse() - validation errors
-    // -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// parse() - validation errors
+	// -------------------------------------------------------------------------
 
-    public function testParseThrowsOnDuplicateParameter(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $parser = new RoutePathParser('/:id/:id', $this->router);
-        $parser->parse('/:id/:id');
-    }
+	public function testParseThrowsOnDuplicateParameter(): void
+	{
+		$this->expectException(InvalidArgumentException::class);
+		$parser = new RoutePathParser('/:id/:id', $this->router);
+		$parser->parse('/:id/:id');
+	}
 
-    public function testParseThrowsOnUnclosedBrace(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $parser = new RoutePathParser('/users/{id', $this->router);
-        $parser->parse('/users/{id');
-    }
+	public function testParseThrowsOnUnclosedBrace(): void
+	{
+		$this->expectException(InvalidArgumentException::class);
+		$parser = new RoutePathParser('/users/{id', $this->router);
+		$parser->parse('/users/{id');
+	}
 
-    public function testParseThrowsOnUnclosedOptionalBracket(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $parser = new RoutePathParser('/users[/:id', $this->router);
-        $parser->parse('/users[/:id');
-    }
+	public function testParseThrowsOnUnclosedOptionalBracket(): void
+	{
+		$this->expectException(InvalidArgumentException::class);
+		$parser = new RoutePathParser('/users[/:id', $this->router);
+		$parser->parse('/users[/:id');
+	}
 
-    public function testParseThrowsOnEmptyOptionalPart(): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-        $parser = new RoutePathParser('/users[]', $this->router);
-        $parser->parse('/users[]');
-    }
+	public function testParseThrowsOnEmptyOptionalPart(): void
+	{
+		$this->expectException(InvalidArgumentException::class);
+		$parser = new RoutePathParser('/users[]', $this->router);
+		$parser->parse('/users[]');
+	}
 
-    // -------------------------------------------------------------------------
-    // parse() - result matches URLs correctly
-    // -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// parse() - result matches URLs correctly
+	// -------------------------------------------------------------------------
 
-    public function testParsedPatternMatchesDynamicUrl(): void
-    {
-        $parser  = new RoutePathParser('/users/:id', $this->router);
-        $pattern = $parser->parse('/users/:id');
-        $regexp  = Route::REG_DELIMITER . '^' . $pattern . '$' . Route::REG_DELIMITER;
+	public function testParsedPatternMatchesDynamicUrl(): void
+	{
+		$parser  = new RoutePathParser('/users/:id', $this->router);
+		$pattern = $parser->parse('/users/:id');
+		$regexp  = Route::REG_DELIMITER . '^' . $pattern . '$' . Route::REG_DELIMITER;
 
-        self::assertSame(1, \preg_match($regexp, '/users/42', $matches));
-        self::assertSame('42', $matches['id']);
-    }
+		self::assertSame(1, \preg_match($regexp, '/users/42', $matches));
+		self::assertSame('42', $matches['id']);
+	}
 
-    public function testParsedPatternDoesNotMatchWrongUrl(): void
-    {
-        $parser  = new RoutePathParser('/users/:id', $this->router);
-        $pattern = $parser->parse('/users/:id');
-        $regexp  = Route::REG_DELIMITER . '^' . $pattern . '$' . Route::REG_DELIMITER;
+	public function testParsedPatternDoesNotMatchWrongUrl(): void
+	{
+		$parser  = new RoutePathParser('/users/:id', $this->router);
+		$pattern = $parser->parse('/users/:id');
+		$regexp  = Route::REG_DELIMITER . '^' . $pattern . '$' . Route::REG_DELIMITER;
 
-        self::assertSame(0, \preg_match($regexp, '/posts/42'));
-    }
+		self::assertSame(0, \preg_match($regexp, '/posts/42'));
+	}
 
-    public function testParsedOptionalPatternMatchesWithAndWithoutOptional(): void
-    {
-        $parser  = new RoutePathParser('/articles[/:slug]', $this->router);
-        $pattern = $parser->parse('/articles[/:slug]');
-        $regexp  = Route::REG_DELIMITER . '^' . $pattern . '$' . Route::REG_DELIMITER;
+	public function testParsedOptionalPatternMatchesWithAndWithoutOptional(): void
+	{
+		$parser  = new RoutePathParser('/articles[/:slug]', $this->router);
+		$pattern = $parser->parse('/articles[/:slug]');
+		$regexp  = Route::REG_DELIMITER . '^' . $pattern . '$' . Route::REG_DELIMITER;
 
-        // With optional segment.
-        self::assertSame(1, \preg_match($regexp, '/articles/my-post', $matches));
-        self::assertSame('my-post', $matches['slug']);
+		// With optional segment.
+		self::assertSame(1, \preg_match($regexp, '/articles/my-post', $matches));
+		self::assertSame('my-post', $matches['slug']);
 
-        // Without optional segment.
-        self::assertSame(1, \preg_match($regexp, '/articles'));
-    }
+		// Without optional segment.
+		self::assertSame(1, \preg_match($regexp, '/articles'));
+	}
 }

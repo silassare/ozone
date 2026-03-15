@@ -26,9 +26,9 @@ class RedisCache implements CacheProviderInterface
 	 *
 	 * TODO: implement this class
 	 *
-	 * @param string $namespace
+	 * @param string $_namespace
 	 */
-	public function __construct(string $namespace) {}
+	public function __construct(string $_namespace) {}
 
 	/**
 	 * {@inheritDoc}
