@@ -87,8 +87,8 @@ class TypeUsername extends Type
 		];
 
 		if (!empty($value)) {
-			$len   = \strlen($value);
 			$value = \trim($value);
+			$len   = \strlen($value);
 
 			if ($len < Settings::get('oz.users', 'OZ_USER_NAME_MIN_LENGTH')) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_SHORT', $debug));
