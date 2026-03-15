@@ -1,0 +1,3 @@
+#!/bin/sh
+
+php tests/run_benchmarks.php
