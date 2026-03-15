@@ -22,7 +22,9 @@ use Gobl\DBAL\Types\TypeString;
 use Gobl\ORM\ORMTypeHint;
 use Gobl\ORM\ORMUniversalType;
 use JsonException;
+use OLIUP\CG\PHPType;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Columns\ValidatedFile;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\TempFS;
@@ -32,7 +34,27 @@ use Throwable;
 /**
  * Class TypeFile.
  *
- * @extends Type<mixed, null|string>
+ * Handles file upload validation and persistence for OZone column types.
+ *
+ * Accepted inputs for the write (validation) path:
+ *  - {@see UploadedFile} — a fresh HTTP upload (single or multiple)
+ *  - {@see OZFile} — an already-persisted DB file entity (re-assignment,
+ *    only valid for non-temporary columns)
+ *  - {@see ValidatedFile} — a value that previously passed through this
+ *    type's validation pipeline (e.g. returned by {@see dbToPhp()} during
+ *    an entity re-save)
+ *
+ * The clean value produced by validation is always:
+ *  - `null` — when the column is nullable and no value was provided
+ *  - `ValidatedFile` — for a single-file column
+ *  - `ValidatedFile[]` — for a multiple-file column
+ *
+ * DB storage format:
+ *  - Single persisted file: the numeric OZFile primary key as a plain string
+ *  - Multiple persisted files: a JSON array of numeric IDs
+ *  - Temporary file: the absolute TempFS path (single or JSON array)
+ *
+ * @extends Type<mixed, null|ValidatedFile|ValidatedFile[]>
  */
 class TypeFile extends Type
 {
@@ -247,20 +269,35 @@ class TypeFile extends Type
 	}
 
 	/**
+	 * Converts the stored DB string back to a {@see ValidatedFile} or {@see ValidatedFile}[] instance.
+	 *
 	 * {@inheritDoc}
 	 *
 	 * @throws JsonException
 	 */
-	public function dbToPhp(mixed $value, RDBMSInterface $rdbms): array|string|null
+	public function dbToPhp(mixed $value, RDBMSInterface $rdbms): array|ValidatedFile|null
 	{
 		if (null === $value) {
 			return null;
 		}
 
-		return $this->isMultiple() ? \json_decode($value, false, 512, \JSON_THROW_ON_ERROR) : $value;
+		$wrap = $this->isTemporary()
+			? static fn (string $v) => ValidatedFile::forTempPath($v)
+			: static fn (string $v) => ValidatedFile::forFileID($v);
+
+		if ($this->isMultiple()) {
+			/** @var string[] $ids */
+			$ids = \json_decode($value, true, 512, \JSON_THROW_ON_ERROR);
+
+			return \array_map($wrap, $ids);
+		}
+
+		return $wrap($value);
 	}
 
 	/**
+	 * Serializes a {@see ValidatedFile} or {@see ValidatedFile}[] to the DB storage string.
+	 *
 	 * {@inheritDoc}
 	 *
 	 * @throws JsonException
@@ -271,7 +308,13 @@ class TypeFile extends Type
 			return null;
 		}
 
-		return $this->isMultiple() ? \json_encode($value, \JSON_THROW_ON_ERROR) : $value;
+		if ($this->isMultiple()) {
+			/** @var ValidatedFile[] $value */
+			return \json_encode($value, \JSON_THROW_ON_ERROR);
+		}
+
+		/** @var ValidatedFile $value */
+		return (string) $value;
 	}
 
 	/**
@@ -279,15 +322,27 @@ class TypeFile extends Type
 	 */
 	public function getWriteTypeHint(): ORMTypeHint
 	{
-		return $this->isMultiple() ? ORMTypeHint::list(ORMUniversalType::STRING) : ORMTypeHint::string();
+		if ($this->isMultiple()) {
+			return ORMTypeHint::list(ORMUniversalType::STRING)->setPHPType(new PHPType('\\' . ValidatedFile::class . '[]'));
+		}
+
+		return ORMTypeHint::string()
+			->setPHPType(new PHPType('\\' . ValidatedFile::class));
 	}
 
 	/**
+	 * Returns the read (getter) type hint for ORM code generation.
+	 *
 	 * {@inheritDoc}
 	 */
 	public function getReadTypeHint(): ORMTypeHint
 	{
-		return $this->isMultiple() ? ORMTypeHint::list(ORMUniversalType::STRING) : ORMTypeHint::string();
+		if ($this->isMultiple()) {
+			return ORMTypeHint::list(ORMUniversalType::STRING)->setPHPType(new PHPType('\\' . ValidatedFile::class . '[]'));
+		}
+
+		return ORMTypeHint::string()
+			->setPHPType(new PHPType('\\' . ValidatedFile::class));
 	}
 
 	/**
@@ -347,6 +402,19 @@ class TypeFile extends Type
 	}
 
 	/**
+	 * Validates the incoming file value(s) and accepts a `ValidatedFile`
+	 * (single) or `ValidatedFile[]` (multiple) as the clean result.
+	 *
+	 * Accepted inputs:
+	 *  - {@see UploadedFile} — a fresh HTTP upload
+	 *  - {@see OZFile} — an already-persisted DB file entity (non-temp only)
+	 *  - {@see ValidatedFile} — a value that already passed this pipeline
+	 *    (e.g. the result of `dbToPhp()` being written back via entity save)
+	 *
+	 * Bare strings, integers, or any other type are rejected with
+	 * `OZ_FILE_INVALID` to prevent IDOR attacks where a caller could pass an
+	 * arbitrary file ID without proving ownership.
+	 *
 	 * {@inheritDoc}
 	 *
 	 * @throws TypesInvalidValueException
@@ -398,48 +466,41 @@ class TypeFile extends Type
 	}
 
 	/**
-	 * Computes uploaded files.
+	 * Validates and processes a list of file inputs, returning a `ValidatedFile[]`.
 	 *
-	 * @param array<OZFile|string|UploadedFile> $uploaded_files
-	 * @param array                             $debug
+	 * Each item in `$uploaded_files` must be one of:
+	 *  - {@see UploadedFile} — passes {@see checkUploadedFile()}, then uploaded to
+	 *    storage (or moved to TempFS for temp columns)
+	 *  - {@see OZFile} — passes {@see checkOZFile()}, then reused (non-temp only)
+	 *  - {@see ValidatedFile} — already validated by a previous pipeline run;
+	 *    accepted as-is and its size is not re-checked
 	 *
-	 * @return string[] the list of file ids or paths
+	 * Bare strings and any other types are **rejected** to prevent IDOR: a raw
+	 * file ID supplied by the user would bypass authorization checks.
+	 *
+	 * @param array<OZFile|UploadedFile|ValidatedFile> $uploaded_files
+	 * @param array                                    $debug
+	 *
+	 * @return ValidatedFile[] the validated file references
 	 *
 	 * @throws TypesInvalidValueException
 	 */
 	protected function computeUploadedFiles(array $uploaded_files, array $debug): array
 	{
-		$total_size = 0;
+		$total_size      = 0;
+		$validated_items = [];
 
 		foreach ($uploaded_files as $k => $item) {
 			$debug['index'] = $k;
 
-			if (\is_numeric($item)) {
-				// TODO: dangerous should be fixed, but we assume the string is a file ID or path
-				// we should not allow this in the first place,
-				// as any user may send a random file id that may have an access restriction
-				// but we need to handle it as we currently
-				// have a bug in the validation process when saving
-				// issue explanation:
-				// table foo has image_file_id column that reference oz_file.id
-				// now when the form is uploaded the file is validated and saved into the database
-				// then when entity of type foo is being saved image_file_id value receive the oz_file.id instead of
-				// OZFile or UploadedFile and this is validated
-				// Solution: make sure always return ValidatedFile
-				// then when saving check inside phpToDb save and use the oz_file.id
-				// when reading dbToPhp load the file from database or find a better solution
-				oz_logger()->warning(
-					'TypeFile: received a string as file, this should not happen, please fix your code.',
-					$debug
-				);
+			if ($item instanceof ValidatedFile) {
+				// Already passed through this pipeline -- trust it as-is.
+				// Size is not rechecked: it was validated on initial submission.
+				$validated_items[$k] = $item;
 
-				$item = FS::getFileByID($item);
-
-				$uploaded_files[$k] = $item;
+				continue;
 			}
 
-			// in case of temporary upload
-			// only UploadedFile instances are allowed
 			if ($item instanceof UploadedFile) {
 				$this->checkUploadedFile($item);
 
@@ -449,7 +510,15 @@ class TypeFile extends Type
 
 				$total_size += $item->getSize();
 			} else {
-				throw new TypesInvalidValueException('OZ_FILE_INVALID', $debug);
+				// Bare strings, integers, or any other type are rejected.
+				// Accepting a raw file ID from user-supplied input would be an
+				// IDOR vulnerability -- use ValidatedFile::forFileID() for trusted
+				// internal assignments instead.
+				throw new TypesInvalidValueException('OZ_FILE_INVALID', $debug + [
+					'_advice' => 'Each item must be an UploadedFile, OZFile (non-temp), or ValidatedFile instance.'
+						. ' Bare strings and other types are rejected to prevent IDOR vulnerabilities.'
+						. ' Use ValidatedFile::forFileID() for trusted internal assignments.',
+				]);
 			}
 		}
 
@@ -460,9 +529,35 @@ class TypeFile extends Type
 			throw new TypesInvalidValueException('OZ_FILE_TOTAL_SIZE_EXCEED_LIMIT', $debug);
 		}
 
+		// Fast path: every item was already a ValidatedFile pass-through.
+		// No upload, DB transaction, or storage provider access needed.
+		if (\count($validated_items) === \count($uploaded_files)) {
+			return \array_values($validated_items);
+		}
+
 		if ($this->isTemporary()) {
-			/** @var UploadedFile[] $uploaded_files */
-			return $this->computeTemporaryUploadedFiles($uploaded_files);
+			// Only UploadedFile instances are uploaded to TempFS; ValidatedFile
+			// pass-throughs (from a previous temp validation) are already paths.
+			$new_uploads = \array_filter(
+				$uploaded_files,
+				static fn ($item) => $item instanceof UploadedFile
+			);
+			$temp_results = $this->computeTemporaryUploadedFiles(\array_values($new_uploads));
+
+			// Merge: replace UploadedFile slots with the resulting ValidatedFile,
+			// keep already-ValidatedFile slots in place.
+			$merged    = [];
+			$tempIndex = 0;
+
+			foreach ($uploaded_files as $k => $item) {
+				if ($item instanceof UploadedFile) {
+					$merged[] = $temp_results[$tempIndex++];
+				} else {
+					$merged[] = $validated_items[$k];
+				}
+			}
+
+			return $merged;
 		}
 
 		$label        = $this->getOption('file_label', '');
@@ -471,28 +566,38 @@ class TypeFile extends Type
 
 		/** @var OZFile[] $new_file_list */
 		$new_file_list = [];
-		$data          = [];
-		$db            = db();
+
+		/** @var ValidatedFile[] $data */
+		$data = [];
+		$db   = db();
 
 		try {
 			$db->beginTransaction();
 
-			foreach ($uploaded_files as $file) {
-				if ($file instanceof OZFile) {
+			foreach ($uploaded_files as $k => $item) {
+				if (isset($validated_items[$k])) {
+					// Already-validated file -- reuse without re-uploading.
+					$data[] = $validated_items[$k];
+
+					continue;
+				}
+
+				if ($item instanceof OZFile) {
 					/** @var string $fid */
-					$fid = $file->getID();
+					$fid    = $item->getID();
+					$data[] = ValidatedFile::forFileID($fid);
 				} else {
-					$fo = $storage->upload($file);
+					/** @var UploadedFile $item */
+					$fo = $storage->upload($item);
 					$fo->setForLabel($label)
 						->save();
 
 					$new_file_list[] = $fo;
 
 					/** @var string $fid */
-					$fid = $fo->getID();
+					$fid    = $fo->getID();
+					$data[] = ValidatedFile::forFileID($fid);
 				}
-
-				$data[] = $fid;
 			}
 		} catch (Throwable $t) {
 			$db->rollBack();
@@ -510,11 +615,15 @@ class TypeFile extends Type
 	}
 
 	/**
-	 * Computes temporary uploaded files.
+	 * Moves freshly-uploaded files into TempFS and returns a `ValidatedFile[]`.
 	 *
-	 * @param array<UploadedFile> $uploaded_files
+	 * Each item is moved to a file named after its cleaned filename inside the
+	 * TempFS upload directory. The returned `ValidatedFile::forTempPath()` instances
+	 * hold the absolute path of the moved file.
 	 *
-	 * @return string[] the list of file paths
+	 * @param UploadedFile[] $uploaded_files freshly-uploaded files to move
+	 *
+	 * @return ValidatedFile[] one `ValidatedFile::forTempPath()` per input
 	 */
 	protected function computeTemporaryUploadedFiles(array $uploaded_files): array
 	{
@@ -522,7 +631,7 @@ class TypeFile extends Type
 
 		$tmp_fs_dir = TempFS::get($lifetime, 'upload')->dir();
 
-		/** @var string[] $list */
+		/** @var ValidatedFile[] $list */
 		$list = [];
 
 		foreach ($uploaded_files as $upload) {
@@ -531,7 +640,7 @@ class TypeFile extends Type
 
 			$upload->moveTo($path);
 
-			$list[] = $path;
+			$list[] = ValidatedFile::forTempPath($path);
 		}
 
 		return $list;
