@@ -11,6 +11,9 @@ ignore
 # cs fixer
 .php-cs-fixer.cache
 
+# phpunit
+.phpunit.result.cache
+
 # composer
 /vendor/
 
