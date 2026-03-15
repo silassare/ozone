@@ -27,7 +27,14 @@ use OZONE\Core\Http\Uri;
  */
 class TypeUrl extends Type
 {
-	public const NAME                   = 'url';
+	public const NAME = 'url';
+
+	/**
+	 * Regex for validating absolute URL paths (starting with a single slash, no scheme or host).
+	 * Allows optional query string and fragment. Disallows control characters and spaces.
+	 * This is used when allow_absolute_path option is enabled, to validate URLs that are not
+	 * full URLs with scheme and host, but just paths (e.g. "/foo/bar?baz=qux#fragment").
+	 */
 	private const ABSOLUTE_URL_PATH_REG = '~^\/[^\s?#]*(\?[^\s#]*)?(#[^\s]*)?$~u';
 
 	/**
@@ -113,7 +120,13 @@ class TypeUrl extends Type
 			$allow_absolute_path = (bool) $this->getOption('allow_absolute_path', false);
 
 			if ($allow_absolute_path && \str_starts_with($value, '/') && !\str_starts_with($value, '//')) {
-				// TODO: we should check valid path
+				// Validate as an absolute path: only path characters, optional query string
+				// and fragment. No scheme, no host, no control characters, no spaces.
+				if (!\preg_match(self::ABSOLUTE_URL_PATH_REG, $value)) {
+					$subject->reject(new TypesInvalidValueException('OZ_FIELD_URL_INVALID', $debug));
+
+					return;
+				}
 				$value = (string) Uri::createFromString($value);
 			} elseif (!\filter_var($value, \FILTER_VALIDATE_URL)) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_URL_INVALID', $debug));
