@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Tests\Columns;
 
 use InvalidArgumentException;
+use LogicException;
 use OZONE\Core\Columns\ValidatedFile;
+use OZONE\Core\Db\OZFile;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,49 +28,106 @@ use PHPUnit\Framework\TestCase;
  */
 final class ValidatedFileTest extends TestCase
 {
-	public function testIsPathReturnsTrueForPathInstance(): void
+	// -------------------------------------------------------------------------
+	// forFileID factory
+	// -------------------------------------------------------------------------
+
+	public function testForFileIDCreatesPersisted(): void
 	{
-		$vf = new ValidatedFile('/path/to/some/file.jpg', true);
-		self::assertTrue($vf->isPath());
-		self::assertFalse($vf->isFileID());
+		$vf = ValidatedFile::forFileID('42');
+		self::assertTrue($vf->isPersisted());
+		self::assertFalse($vf->isTemporary());
 	}
 
-	public function testIsFileIDReturnsTrueForIdInstance(): void
+	public function testForFileIDGetIdReturnsId(): void
 	{
-		$vf = new ValidatedFile('42', false);
-		self::assertFalse($vf->isPath());
-		self::assertTrue($vf->isFileID());
+		$vf = ValidatedFile::forFileID('99');
+		self::assertSame('99', $vf->getId());
 	}
 
-	public function testToStringReturnsValue(): void
+	public function testForFileIDToString(): void
 	{
-		$vf = new ValidatedFile('/uploads/foo.png', true);
-		self::assertSame('/uploads/foo.png', (string) $vf);
-
-		$vfId = new ValidatedFile('123', false);
-		self::assertSame('123', (string) $vfId);
+		$vf = ValidatedFile::forFileID('123');
+		self::assertSame('123', (string) $vf);
 	}
 
-	public function testNonNumericFileIdThrowsInvalidArgumentException(): void
+	public function testForFileIDGetPathThrows(): void
+	{
+		$this->expectException(LogicException::class);
+		ValidatedFile::forFileID('42')->getPath();
+	}
+
+	// -------------------------------------------------------------------------
+	// forTempPath factory
+	// -------------------------------------------------------------------------
+
+	public function testForTempPathCreatesTemporary(): void
+	{
+		$vf = ValidatedFile::forTempPath('/tmp/upload/abc.jpg');
+		self::assertTrue($vf->isTemporary());
+		self::assertFalse($vf->isPersisted());
+	}
+
+	public function testForTempPathGetPathReturnsPath(): void
+	{
+		$vf = ValidatedFile::forTempPath('/tmp/upload/foo.png');
+		self::assertSame('/tmp/upload/foo.png', $vf->getPath());
+	}
+
+	public function testForTempPathToString(): void
+	{
+		$vf = ValidatedFile::forTempPath('/tmp/abc');
+		self::assertSame('/tmp/abc', (string) $vf);
+	}
+
+	public function testForTempPathGetIdThrows(): void
+	{
+		$this->expectException(LogicException::class);
+		ValidatedFile::forTempPath('/tmp/abc')->getId();
+	}
+
+	public function testForTempPathLoadFileReturnsNull(): void
+	{
+		$vf = ValidatedFile::forTempPath('/tmp/abc.jpg');
+		self::assertNull($vf->loadFile());
+	}
+
+	// -------------------------------------------------------------------------
+	// forFile factory
+	// -------------------------------------------------------------------------
+
+	public function testForFileCreatesPersisted(): void
+	{
+		$file = $this->createMock(OZFile::class);
+		$file->method('isSaved')->willReturn(true);
+		$file->method('getID')->willReturn('77');
+
+		$vf = ValidatedFile::forFile($file);
+		self::assertTrue($vf->isPersisted());
+		self::assertFalse($vf->isTemporary());
+		self::assertSame('77', $vf->getId());
+	}
+
+	public function testForFileReturnsCachedEntityOnLoadFile(): void
+	{
+		$file = $this->createMock(OZFile::class);
+		$file->method('isSaved')->willReturn(true);
+		$file->method('getID')->willReturn('55');
+
+		$vf = ValidatedFile::forFile($file);
+		// The entity must be cached instantly - no DB query should occur.
+		self::assertSame($file, $vf->loadFile());
+		// Second call still returns the same cached instance.
+		self::assertSame($file, $vf->loadFile());
+	}
+
+	public function testForFileThrowsWhenNotSaved(): void
 	{
 		$this->expectException(InvalidArgumentException::class);
-		new ValidatedFile('not-numeric', false);
-	}
 
-	public function testNumericStringIsValidFileId(): void
-	{
-		$vf = new ValidatedFile('0', false);
-		self::assertTrue($vf->isFileID());
+		$file = $this->createMock(OZFile::class);
+		$file->method('isSaved')->willReturn(false);
 
-		$vf2 = new ValidatedFile('999999', false);
-		self::assertTrue($vf2->isFileID());
-	}
-
-	public function testPathCanBeAnything(): void
-	{
-		// When is_path=true, no validation on the value string
-		$vf = new ValidatedFile('not-numeric-but-is-path', true);
-		self::assertTrue($vf->isPath());
-		self::assertSame('not-numeric-but-is-path', (string) $vf);
+		ValidatedFile::forFile($file);
 	}
 }
