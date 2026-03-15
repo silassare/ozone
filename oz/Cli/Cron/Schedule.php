@@ -13,12 +13,11 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Cron;
 
-use Carbon\Carbon;
 use Closure;
-use Cron\CronExpression;
 use DateTime;
 use DateTimeZone;
 use Exception;
+use OZONE\Core\Utils\DateTimeUtils;
 use Stringable;
 
 /**
@@ -555,8 +554,7 @@ final class Schedule implements Stringable
 	{
 		$this->dailyAt($time);
 
-		return $this->setPosition(3, Carbon::now()
-			->endOfMonth()->day);
+		return $this->setPosition(3, DateTimeUtils::now()->endOfMonth()->getDay());
 	}
 
 	/**
@@ -671,9 +669,9 @@ final class Schedule implements Stringable
 	private function inTimeInterval(string $startTime, string $endTime): Closure
 	{
 		[$now, $start, $end] = [
-			Carbon::now($this->timezone),
-			Carbon::parse($startTime, $this->timezone),
-			Carbon::parse($endTime, $this->timezone),
+			DateTimeUtils::now($this->timezone),
+			DateTimeUtils::parse($startTime, $this->timezone),
+			DateTimeUtils::parse($endTime, $this->timezone),
 		];
 
 		if ($end->lessThan($start)) {
@@ -684,7 +682,7 @@ final class Schedule implements Stringable
 			}
 		}
 
-		return static fn () => $now->between($start, $end);
+		return static fn() => $now->between($start, $end);
 	}
 
 	/**
