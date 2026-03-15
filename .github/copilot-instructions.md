@@ -298,7 +298,42 @@ class MyService extends Service
 - `stime` — session expiry time (when applicable)
 - All data set via `$this->json()->setData(...)`
 
-**WebView**: extend `OZONE\Core\Web\WebView` for HTML responses; call `$v->setTemplate('oz://path/to.blate')->inject([...])`.
+**WebView**: extend `OZONE\Core\Web\WebView` for HTML responses; call `$v->setTemplate('oz://path/to.blate')->inject([...])`. The context is automatically available inside templates via `BlatePlugin::CONTEXT_INJECT_KEY`.
+
+### BlatePlugin (`OZONE\Core\Web\BlatePlugin`) — internal
+
+A `BootHookReceiverInterface` that wires OZone into the Blate template engine. Registered in `oz.boot`. Marked `@internal` — do not reference it directly from application or plugin code.
+
+**Two distinct responsibilities:**
+
+1. **`BlatePlugin::register()`** — called from `.blate.php` at project root (picked up by `Blate::autoLoad()`). Registers all helpers and global vars so they are available in every template:
+
+   | Type            | Blate name        | Delegates to                      |
+   | --------------- | ----------------- | --------------------------------- |
+   | helper          | `setting`         | `Settings::get()`                 |
+   | helper          | `env`             | `env()`                           |
+   | helper          | `log`             | `oz_logger()`                     |
+   | helper          | `t`               | `BlatePlugin::t()` -> `I18n::t()` |
+   | helper          | `uri`             | `Context::buildUri()`             |
+   | helper          | `route`           | `Context::buildRouteUri()`        |
+   | computed global | `request_uri`     | current request `Uri`             |
+   | computed global | `base_url`        | `Context::getBaseUrl()`           |
+   | computed global | `lang`            | `Polyglot::getLanguage()`         |
+   | global var      | `oz_version`      | `OZ_OZONE_VERSION`                |
+   | global var      | `oz_version_name` | `OZ_OZONE_VERSION_NAME`           |
+
+2. **`BlatePlugin::boot()`** — called via the boot hook. Runs `Blate::autoLoad()` for `OZ_OZONE_DIR` and `OZ_PROJECT_DIR`, and sets the Blate cache directory.
+
+**Context access in templates:** `BlatePlugin::getContext()` reads the context injected by `WebView::render()` from the Blate scope (`CONTEXT_INJECT_KEY = '__oz_web_blate_inject_context'`), falling back to the global `context()` helper if not set.
+
+**`.blate.php`** — Blate auto-config file at project root. Must call `BlatePlugin::register()` so all helpers and global vars are available. Generated once per project.
+
+```php
+// .blate.php (project root)
+use OZONE\Core\Web\BlatePlugin;
+
+BlatePlugin::register();
+```
 
 ---
 
@@ -916,20 +951,20 @@ Multi-tenant/multi-origin support via scopes. A project can have multiple scopes
 
 ## 18. Dependency Summary
 
-| Package                | Role                                                      |
-| ---------------------- | --------------------------------------------------------- |
-| `silassare/gobl`       | ORM, DBAL, schema management, CRUD queries, code gen      |
-| `silassare/kli`        | CLI framework                                             |
-| `silassare/blate`      | Template engine (used for settings/code gen templates)    |
-| `silassare/php-utils`  | `Event`, `Store`, `PathUtils`, `Str`, `ArrayCapableTrait` |
-| `oliup/code-generator` | Fluent PHP source code generation                         |
-| `claviska/simpleimage` | Image processing (captcha, profile picture resizing)      |
-| `symfony/process`      | Shell process execution (CLI tasks)                       |
-| `zircote/swagger-php`  | OpenAPI annotation and generation                         |
-| `psr/http-message`     | PSR-7 HTTP message interfaces                             |
-| `ext-gd`               | Required for captcha image generation                     |
-| `ext-pdo`              | Required for database access                              |
-| `ext-openssl`          | Required for cryptographic operations                     |
+| Package                | Role                                                                                                |
+| ---------------------- | --------------------------------------------------------------------------------------------------- |
+| `silassare/gobl`       | ORM, DBAL, schema management, CRUD queries, code gen                                                |
+| `silassare/kli`        | CLI framework                                                                                       |
+| `silassare/blate`      | Template engine for web views, settings files, and code-gen templates; integrated via `BlatePlugin` |
+| `silassare/php-utils`  | `Event`, `Store`, `PathUtils`, `Str`, `ArrayCapableTrait`                                           |
+| `oliup/code-generator` | Fluent PHP source code generation                                                                   |
+| `claviska/simpleimage` | Image processing (captcha, profile picture resizing)                                                |
+| `symfony/process`      | Shell process execution (CLI tasks)                                                                 |
+| `zircote/swagger-php`  | OpenAPI annotation and generation                                                                   |
+| `psr/http-message`     | PSR-7 HTTP message interfaces                                                                       |
+| `ext-gd`               | Required for captcha image generation                                                               |
+| `ext-pdo`              | Required for database access                                                                        |
+| `ext-openssl`          | Required for cryptographic operations                                                               |
 
 **Minimum PHP**: 8.1
 **Default RDBMS**: MySQL (`ext-pdo`, `Gobl\DBAL\Drivers\MySQL\MySQL`)
