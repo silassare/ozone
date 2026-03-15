@@ -1,16 +1,19 @@
 # OZone Framework — Developer Copilot Instructions
 
-> Authoritative guidance for AI-assisted development in the OZone PHP framework.
 > All paths are relative to the repository root. Namespace root: `OZONE\Core` -> `oz/`.
 
 ---
 
-> **IMPORTANT:**
->
-> - No hallucination or invention. Read the actual source files before generating code, docs, or this file. Focus only on what can be directly observed in the codebase.
-> - When a bug or issue is found, do not fix it directly — ask for feedback and approval first.
-> - If `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` do not exist, symlink them to `.github/copilot-instructions.md`.
-> - **No Unicode shortcut characters in PHP comments or docblocks.** Use plain ASCII equivalents:
+## IMPORTANT
+
+- **No hallucination or invention.** Read the actual source files before generating code, docs, or this file. Focus only on what can be directly observed in the codebase.
+- **When a bug or issue is found, do not fix it directly** — ask for feedback and approval first.
+- **Symlinks:** If `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` do not exist, symlink them to `.github/copilot-instructions.md`.
+- **Direct dependencies only.** Only use packages listed in `require` or `require-dev` of `composer.json`. Do not rely on transitive dependencies — they are not guaranteed to be present and can change without notice.
+- **Strict types.** Every PHP file starts with `declare(strict_types=1);`.
+- **Indentation.** Use tabs (not spaces) for all PHP indentation.
+- **Assertions.** Use snapshot assertions where they best convey expected output; use `assertEquals()` / `assertSame()` with inline values for simple or small structures. Never use third-party snapshot packages — only project-owned helpers.
+- **No Unicode shortcut characters in PHP comments or docblocks.** Use plain ASCII equivalents:
 
 | use      | don't use   |
 | -------- | ----------- |
@@ -808,7 +811,26 @@ Swagger UI at `GET /api-doc-view.html` (`ApiDocView`).
 
 **Test namespace**: `OZONE\Tests` -> `tests/`
 
-Existing test suites: `tests/Access/`, `tests/FS/`, `tests/Router/`
+**Test suites** (under `tests/`):
+
+| Directory  | Covers                                               |
+| ---------- | ---------------------------------------------------- |
+| `Access/`  | `AccessRights`, `AtomicAction`, role resolution      |
+| `App/`     | `Settings`, `Context`, `JSONResponse`, `Keys`        |
+| `Cache/`   | `CacheManager`, runtime and persistent drivers       |
+| `Columns/` | Custom DB column types (`TypePhone`, `TypeEmail`, …) |
+| `CRUD/`    | `TableCRUD`, `AllowRuleBuilder`                      |
+| `Forms/`   | Form definition, field validation, multi-step        |
+| `FS/`      | File-system helpers, `TempFS`, `FS` drivers          |
+| `Http/`    | `Uri`, `Request`, `Response`                         |
+| `Crypt/`   | `DoCrypt`, `Hasher`, `Random`                        |
+| `Lang/`    | i18n loading                                         |
+| `Router/`  | Route matching, guards, middlewares                  |
+| `Utils/`   | Utility helpers                                      |
+
+Shared helpers:
+
+- `tests/TestUtils.php` — `TestUtils::router()` returns a pre-populated `Router` (static + dynamic routes) for use in any test or benchmark.
 
 When writing tests:
 
@@ -829,10 +851,6 @@ OZONE\Core\{Module}\Events\      ->  oz/{Module}/Events/
 OZONE\Core\{Module}\Traits\      ->  oz/{Module}/Traits/
 OZONE\Core\{Module}\Enums\       ->  oz/{Module}/Enums/
 ```
-
-### Strict Typing
-
-Every file starts with `declare(strict_types=1);`.
 
 ### Global Helpers
 
@@ -916,3 +934,142 @@ Multi-tenant/multi-origin support via scopes. A project can have multiple scopes
 
 **Minimum PHP**: 8.1
 **Default RDBMS**: MySQL (`ext-pdo`, `Gobl\DBAL\Drivers\MySQL\MySQL`)
+
+---
+
+## 19. Benchmark System
+
+**Class**: `OZONE\Tests\Benchmark` — `tests/Benchmark.php`
+
+A fluent harness for measuring execution speed, detecting regressions, and
+tracking performance over time. Results are rendered via `KliTable` and can
+be persisted to JSON for baseline comparison in future runs.
+
+### Running benchmarks
+
+Benchmarks live in `tests/run_benchmarks.php` (a standalone PHP script, not a PHPUnit test). Run with:
+
+```sh
+./run_benchmark
+```
+
+Output is suppressed unless at least one callable is classified as REGRESSION or IMPROVEMENT — silent when all results are STABLE. Baseline results are stored in `tests/benchmark-baseline.json` and updated after every run.
+
+### Basic usage
+
+```php
+use OZONE\Tests\Benchmark;
+
+$bm = Benchmark::create()
+    ->warmup(5)          // unmeasured warmup calls (default 3)
+    ->maxDuration(1.0)   // run each callable for up to 1 second
+    ->run([
+        'sha256' => fn() => hash('sha256', 'test'),
+        'sha512' => fn() => hash('sha512', 'test'),
+    ]);
+
+$bm->orderByFastest()->prettyPrint();
+
+// Persist baseline:
+file_put_contents('baseline.json', $bm->exportJson());
+
+// Later: compare against baseline:
+$baseline = Benchmark::fromJson(file_get_contents('baseline.json'));
+Benchmark::create()->maxDuration(1)->warmup(5)
+    ->run([...])          // same labels
+    ->compareWith($baseline);
+```
+
+### Configuration (fluent)
+
+| Method                            | Default | Description                                                       |
+| --------------------------------- | ------- | ----------------------------------------------------------------- |
+| `warmup(int $iterations)`         | `3`     | Unmeasured calls before timing begins (prime caches/JIT)          |
+| `maxDuration(float $seconds)`     | `null`  | Stop after this many wall-clock seconds. Required if no max iter. |
+| `maxIterations(int $n)`           | `null`  | Stop after this many calls. Required if no max duration.          |
+| `checkDuplicate(bool $check)`     | `false` | Track repeated return values; populates `dup_count`/`dup_rate`    |
+| `trackMemory(bool $track)`        | `false` | Record peak memory delta per callable in `memory_kb`              |
+| `regressionThreshold(float $pct)` | `5.0`   | % band classifying a change as STABLE instead of REGRESSION       |
+
+At least one of `maxDuration()` or `maxIterations()` must be set before `run()`.
+
+### Execution & results
+
+```php
+->run(array $callables): self    // run and store results
+->reset(): self                  // clear results for reuse
+
+->getResults(): array            // all records keyed by label
+->getResult(string $ref): ?array // single record
+
+->orderByFastest(): self         // sort by avg_ns ascending
+->orderBySlowest(): self         // sort by avg_ns descending
+->orderByBestEntropy(): self     // sort by dup_rate ascending
+```
+
+### Result record keys
+
+Each entry returned by `getResults()` / `getResult()` contains:
+
+| Key           | Type     | Description                                           |
+| ------------- | -------- | ----------------------------------------------------- |
+| `ref`         | `string` | Callable label                                        |
+| `iterations`  | `int`    | Number of measured calls                              |
+| `ops_per_sec` | `float`  | Theoretical ops/sec derived from `avg_ns`             |
+| `avg_ns`      | `float`  | Mean call duration in nanoseconds                     |
+| `min_ns`      | `float`  | Fastest call in nanoseconds                           |
+| `max_ns`      | `float`  | Slowest call in nanoseconds                           |
+| `median_ns`   | `float`  | Median call duration in nanoseconds                   |
+| `p95_ns`      | `float`  | 95th-percentile call duration (nearest-rank)          |
+| `stddev_ns`   | `float`  | Sample standard deviation in nanoseconds (Bessel n-1) |
+| `total_s`     | `float`  | Sum of measured durations in seconds (pure CPU time)  |
+| `wall_s`      | `float`  | Total wall-clock seconds (includes loop overhead)     |
+| `dup_count`   | `int`    | Duplicate return-value count (0 if disabled)          |
+| `dup_rate`    | `float`  | Duplicate percentage (0.0 if disabled)                |
+| `memory_kb`   | `?float` | Peak memory delta in KB (`null` if disabled)          |
+
+### Output methods
+
+| Method                         | Description                                                             |
+| ------------------------------ | ----------------------------------------------------------------------- |
+| `prettyPrint(): self`          | Full KliTable — all columns plus a Relative (1.00x) column              |
+| `printSummary(): self`         | Compact 5-column KliTable: Ref, Iterations, Ops/sec, Avg (ns), Relative |
+| `compareWith(Benchmark): self` | Regression table: Current, Baseline, Delta, Change %, Status            |
+
+### Comparison status labels (`compareWith`)
+
+| Status        | Meaning                                         | Color        |
+| ------------- | ----------------------------------------------- | ------------ |
+| `REGRESSION`  | `avg_ns` increased beyond `regressionThreshold` | red + bold   |
+| `IMPROVEMENT` | `avg_ns` decreased beyond `regressionThreshold` | green + bold |
+| `STABLE`      | Change within the threshold band                | yellow       |
+| `NEW`         | Present in current run but absent from baseline | cyan         |
+| `REMOVED`     | Present in baseline but absent from current run | dark gray    |
+
+### Baseline persistence
+
+```php
+// Export after a run:
+$json = $bm->exportJson();   // JSON_PRETTY_PRINT string
+file_put_contents($path, $json);
+
+// Reload later as a read-only baseline (no re-run):
+$baseline = Benchmark::fromJson(file_get_contents($path));
+$current->compareWith($baseline);
+```
+
+### When to add new benchmarks
+
+Add an entry to `tests/run_benchmarks.php` whenever you introduce or modify a
+performance-sensitive code path — especially:
+
+- New routing features (guards, middlewares, path parsers)
+- New column types or form validators that run on every request
+- New cache drivers or cache-access patterns
+- New cryptographic helpers (`DoCrypt`, `Hasher`, `Random`)
+- New URI handling or HTTP message transformations
+- Any hot path that runs O(n) per request or per DB row
+
+Use the label format `area_operation[_variant]` (e.g. `router_find_static`,
+`hasher_hash64`, `docrypt_encrypt_256`) so the baseline JSON stays consistent
+across commits.
