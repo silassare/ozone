@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Scopes;
 
+use Override;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 
@@ -24,6 +25,7 @@ abstract class AbstractScope implements ScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getSettingsDir(): FilesManager
 	{
 		return $this->getSourcesDir()->cd('settings', true);
@@ -32,6 +34,7 @@ abstract class AbstractScope implements ScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getTemplatesDir(): FilesManager
 	{
 		return $this->getSourcesDir()->cd('templates', true);
@@ -40,6 +43,7 @@ abstract class AbstractScope implements ScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPrivateFilesDir(): FilesManager
 	{
 		return $this->getDataDir()->cd('files', true);
@@ -48,6 +52,7 @@ abstract class AbstractScope implements ScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPublicFilesDir(): FilesManager
 	{
 		return $this->getPublicDir()->cd('static', true);
@@ -56,6 +61,7 @@ abstract class AbstractScope implements ScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getLogsDir(): FilesManager
 	{
 		return app()->getProjectDir()

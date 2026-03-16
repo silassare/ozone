@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\App;
 
+use Override;
 use OZONE\Core\Http\Response;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\REST\Interfaces\ApiDocProviderInterface;
@@ -83,10 +84,12 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void {}
 
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function apiDoc(ApiDoc $doc): void {}
 }

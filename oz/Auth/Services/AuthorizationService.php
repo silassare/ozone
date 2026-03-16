@@ -15,6 +15,7 @@ namespace OZONE\Core\Auth\Services;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\TypeString;
+use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Enums\AuthorizationSecretType;
@@ -39,6 +40,7 @@ class AuthorizationService extends Service
 	 *
 	 * @throws Throwable
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router->group('/auth/:' . OZAuth::COL_REF, static function (Router $router) {

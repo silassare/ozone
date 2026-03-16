@@ -17,6 +17,7 @@ use ArrayAccess;
 use ArrayIterator;
 use Countable;
 use IteratorAggregate;
+use Override;
 
 /**
  * Class Collection.
@@ -130,6 +131,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function offsetExists($offset): bool
 	{
 		return $this->has($offset);
@@ -138,6 +140,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function offsetGet($offset): mixed
 	{
 		return $this->get($offset);
@@ -146,6 +149,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function offsetSet($offset, $value): void
 	{
 		$this->set($offset, $value);
@@ -154,6 +158,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function offsetUnset($offset): void
 	{
 		$this->remove($offset);
@@ -162,6 +167,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function count(): int
 	{
 		return \count($this->data);
@@ -170,6 +176,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getIterator(): ArrayIterator
 	{
 		return new ArrayIterator($this->data);

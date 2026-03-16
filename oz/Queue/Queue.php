@@ -18,6 +18,17 @@ use OZONE\Core\Queue\Stores\DbJobStore;
 
 /**
  * Class Queue.
+ *
+ * Represents a named job channel with configurable error-tolerance policies.
+ *
+ * {@link push()} wraps a {@link WorkerInterface} in a {@link Job} and returns it ready
+ * to be persisted via {@link Job::dispatch()}. Built-in channel names:
+ *
+ * - {@link Queue::DEFAULT} — general-purpose jobs
+ * - {@link Queue::CRON_SYNC} — due cron tasks that must run in the foreground
+ * - {@link Queue::CRON_ASYNC} — due cron tasks that run in a background process
+ *
+ * Retrieve or lazily create a channel with {@link Queue::get()}.
  */
 final class Queue
 {

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Providers;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -53,6 +54,7 @@ class EmailOwnershipVerificationProvider extends AuthorizationProvider
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function resolve(Context $context, OZAuth $auth): self
 	{
 		$payload = $auth->getPayload();
@@ -69,6 +71,7 @@ class EmailOwnershipVerificationProvider extends AuthorizationProvider
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPayload(): array
 	{
 		return [
@@ -80,6 +83,7 @@ class EmailOwnershipVerificationProvider extends AuthorizationProvider
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function getName(): string
 	{
 		return self::NAME;
@@ -88,6 +92,7 @@ class EmailOwnershipVerificationProvider extends AuthorizationProvider
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function onInit(OZAuth $auth): void
 	{
 		parent::onInit($auth);
@@ -97,6 +102,7 @@ class EmailOwnershipVerificationProvider extends AuthorizationProvider
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function onRefresh(OZAuth $auth): void
 	{
 		parent::onRefresh($auth);

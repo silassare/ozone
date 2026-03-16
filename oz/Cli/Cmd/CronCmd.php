@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cmd;
 
 use Kli\KliArgs;
+use Override;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Cron\Cron;
 use OZONE\Core\Cli\Utils\Utils;
@@ -26,6 +27,7 @@ final class CronCmd extends Command
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function describe(): void
 	{
 		$this->description('Manage cron jobs.');

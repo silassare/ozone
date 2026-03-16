@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use Override;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
@@ -50,6 +51,7 @@ class BearerAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function get(RouteInfo $ri, string $realm): self
 	{
 		return new self($ri, $realm);
@@ -68,6 +70,7 @@ class BearerAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function satisfied(): bool
 	{
 		$context       = $this->ri->getContext();
@@ -96,6 +99,7 @@ class BearerAuth implements AuthenticationMethodInterface
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 */
+	#[Override]
 	public function authenticate(): void
 	{
 		$auth = Auth::getByTokenHash($this->token);
@@ -113,6 +117,7 @@ class BearerAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function askHeader(): string
 	{
 		return 'Bearer realm="' . $this->realm . '"';
@@ -121,6 +126,7 @@ class BearerAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function askInfo(): array
 	{
 		return [

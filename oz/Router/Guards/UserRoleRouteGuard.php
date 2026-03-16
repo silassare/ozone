@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Guards;
 
+use Override;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Roles\Enums\Role;
@@ -35,6 +36,7 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toRules(): array
 	{
 		return [
@@ -46,6 +48,7 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function fromRules(array $rules): self
 	{
 		$roles  = $rules['roles'] ?? [];
@@ -59,6 +62,7 @@ class UserRoleRouteGuard extends AbstractRouteGuard
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function check(RouteInfo $ri): bool
 	{
 		$context  = $ri->getContext();

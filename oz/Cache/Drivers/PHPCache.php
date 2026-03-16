@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cache\Drivers;
 
+use Override;
 use OZONE\Core\FS\FS;
 
 /**
@@ -25,6 +26,7 @@ class PHPCache extends RuntimeCache
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function getSharedInstance(?string $namespace = null): self
 	{
 		return new self($namespace);
@@ -33,6 +35,7 @@ class PHPCache extends RuntimeCache
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function save(): bool
 	{
 		$path = $this->getCachePath();
@@ -45,6 +48,7 @@ class PHPCache extends RuntimeCache
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function load(): array
 	{
 		$path   = $this->getCachePath();

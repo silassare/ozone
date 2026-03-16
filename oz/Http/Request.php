@@ -15,6 +15,7 @@ namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
 use JsonException;
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Forms\FormData;
 use Psr\Http\Message\ServerRequestInterface;
@@ -257,6 +258,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withParsedBody($data): self
 	{
 		if (null !== $data && !\is_object($data) && !\is_array($data)) {
@@ -304,6 +306,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getMethod(): string
 	{
 		return $this->method;
@@ -312,6 +315,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getParsedBody(): array|object|null
 	{
 		if (null !== $this->bodyParsed) {
@@ -352,6 +356,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withMethod(string $method): self
 	{
 		$method                = self::filterMethod($method);
@@ -365,6 +370,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getRequestTarget(): string
 	{
 		if ($this->requestTarget) {
@@ -392,6 +398,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withRequestTarget(string $requestTarget): self
 	{
 		if (\preg_match('#\s#', $requestTarget)) {
@@ -408,6 +415,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getUri(): Uri
 	{
 		return $this->uri;
@@ -416,6 +424,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withUri(UriInterface $uri, bool $preserveHost = false): self
 	{
 		$clone      = clone $this;
@@ -567,6 +576,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getCookieParams(): array
 	{
 		return $this->cookies;
@@ -575,6 +585,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withCookieParams(array $cookies): self
 	{
 		$clone          = clone $this;
@@ -601,6 +612,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getServerParams(): array
 	{
 		return $this->serverParams;
@@ -609,6 +621,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAttributes(): array
 	{
 		return $this->attributes->all();
@@ -617,6 +630,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAttribute(string $name, $default = null): mixed
 	{
 		return $this->attributes->get($name, $default);
@@ -625,6 +639,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withAttribute(string $name, $value): self
 	{
 		$clone = clone $this;
@@ -636,6 +651,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withoutAttribute(string $name): self
 	{
 		$clone = clone $this;
@@ -733,6 +749,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getQueryParams(): array
 	{
 		if (!empty($this->queryParams)) {
@@ -751,6 +768,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withQueryParams(array $query): self
 	{
 		$clone              = clone $this;
@@ -764,6 +782,7 @@ class Request extends Message implements ServerRequestInterface
 	 *
 	 * @return UploadedFile[]
 	 */
+	#[Override]
 	public function getUploadedFiles(): array
 	{
 		return $this->uploadedFiles;
@@ -772,6 +791,7 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withUploadedFiles(array $uploadedFiles): self
 	{
 		$clone                = clone $this;

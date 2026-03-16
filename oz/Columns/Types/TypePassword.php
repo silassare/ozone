@@ -19,6 +19,7 @@ use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Crypt\Password;
 
@@ -46,6 +47,7 @@ class TypePassword extends Type
 	 *
 	 * @throws TypesInvalidValueException
 	 */
+	#[Override]
 	public function phpToDb(mixed $value, RDBMSInterface $rdbms): ?string
 	{
 		// we should not store non-hashed password
@@ -60,6 +62,7 @@ class TypePassword extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function getInstance(array $options): static
 	{
 		return (new static())->configure($options);
@@ -68,6 +71,7 @@ class TypePassword extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
@@ -120,6 +124,7 @@ class TypePassword extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function default($default): static
 	{
 		$this->base_type->default($default);
@@ -132,6 +137,7 @@ class TypePassword extends Type
 	 *
 	 * @throws TypesException
 	 */
+	#[Override]
 	public function configure(array $options): static
 	{
 		if (isset($options['min'])) {
@@ -152,6 +158,7 @@ class TypePassword extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
 	{
 		$value = $subject->getUnsafeValue();

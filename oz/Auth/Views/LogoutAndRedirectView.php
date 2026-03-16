@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Views;
 
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Columns\Types\TypeUrl;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -64,6 +65,7 @@ final class LogoutAndRedirectView extends WebView
 		$context->redirect($next);
 	}
 
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Web\Views;
 
+use Override;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Response;
 use OZONE\Core\OZone;
@@ -51,6 +52,7 @@ final class RedirectView extends WebView
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router

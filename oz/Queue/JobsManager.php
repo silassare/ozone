@@ -20,10 +20,22 @@ use OZONE\Core\Queue\Hooks\JobFinished;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
+use OZONE\Core\Utils\JSONResult;
 use Throwable;
 
 /**
  * Class JobsManager.
+ *
+ * Static execution engine for the job queue.
+ *
+ * Maintains two global registries: worker classes (keyed by worker name) and job stores
+ * (keyed by store name). {@link run()} iterates PENDING jobs from one or more stores,
+ * resolves the correct worker via {@link WorkerInterface::fromPayload()}, calls
+ * {@link WorkerInterface::work()}, then persists the result, error, and final state on
+ * the {@link JobContractInterface}.
+ *
+ * Fires {@link JobBeforeStart} before a job begins and {@link JobFinished} after a job
+ * completes successfully.
  */
 final class JobsManager
 {
@@ -154,12 +166,6 @@ final class JobsManager
 			}
 
 			foreach ($store->iterator($queue->getName(), $worker_name, JobState::PENDING, $priority) as $job) {
-				$max_try = $job->getRetryMax();
-
-				if (JobState::FAILED === $job->getState() && $job->getTryCount() >= $max_try) {
-					continue;
-				}
-
 				if (self::runJob($job)) {
 					if (JobState::FAILED === $job->getState()) {
 						if ($queue->shouldStopOnError()) {
@@ -217,11 +223,26 @@ final class JobsManager
 					self::workAsync($worker, $job_contract);
 				} else {
 					$worker->work($job_contract);
+					$result = $worker->getResult();
+					$job_contract->setResult($result);
+
+					if ($result->isError()) {
+						$job_contract->setState(JobState::FAILED);
+					} else {
+						$job_contract->setState(JobState::DONE);
+					}
+
 					self::finish($job_contract);
 				}
 			} catch (Throwable $t) {
 				$job_contract->setState(JobState::FAILED);
-				$job_contract->setErrors(BaseException::throwableDescribe($t, true));
+
+				$result = isset($worker) ? $worker->getResult() : new JSONResult();
+
+				$result->setError($t->getMessage())
+					->setData(BaseException::throwableDescribe($t, true));
+
+				$job_contract->setResult($result);
 				self::finish($job_contract);
 			}
 
@@ -234,12 +255,23 @@ final class JobsManager
 	/**
 	 * Finish a job.
 	 *
+	 * If the job failed but still has retries remaining, the state is reset to
+	 * {@link JobState::PENDING} so the next {@link run()} call picks it up again.
+	 *
 	 * @param JobContractInterface $job_contract
 	 */
 	public static function finish(
 		JobContractInterface $job_contract
 	): void {
 		$job_contract->setEndedAt((float) \microtime(true));
+
+		if (
+			JobState::FAILED === $job_contract->getState()
+			&& $job_contract->getTryCount() < $job_contract->getRetryMax()
+		) {
+			// Reset to PENDING so the job is retried on the next run.
+			$job_contract->setState(JobState::PENDING);
+		}
 
 		$job_contract->save();
 		$job_contract->unlock();
@@ -259,7 +291,15 @@ final class JobsManager
 		WorkerInterface $worker,
 		JobContractInterface $job_contract,
 	): void {
-		// TODO: instead we could use a background process to launch only this job
+		// TODO: replace with a true background-process dispatch.
+		// For now, fall back to synchronous execution so async jobs are not
+		// left permanently in RUNNING state.
 		$worker->work($job_contract);
+
+		$result = $worker->getResult();
+		$job_contract->setResult($result);
+		$job_contract->setState($result->isError() ? JobState::FAILED : JobState::DONE);
+
+		self::finish($job_contract);
 	}
 }

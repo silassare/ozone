@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Forms;
 
+use Override;
 use OZONE\Core\Lang\I18nMessage;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
@@ -259,6 +260,7 @@ class FormRule implements ArrayCapableInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toArray(): array
 	{
 		return $this->rules;

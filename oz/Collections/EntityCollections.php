@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Collections;
 
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Collections\Interfaces\EntityCollectionsProviderInterface;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -28,6 +29,7 @@ final class EntityCollections implements BootHookReceiverInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function boot(): void
 	{
 		DbReadyHook::listen(self::registerCollections(...));

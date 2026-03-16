@@ -15,6 +15,7 @@ namespace OZONE\Core\Access\Services;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\TypeString;
+use Override;
 use OZONE\Core\Access\AtomicActionsRegistry;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\AuthUsers;
@@ -211,6 +212,7 @@ class AccessRightsService extends Service
 	 *
 	 * @throws Throwable
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router->group('/access-rights', static function (Router $router) {

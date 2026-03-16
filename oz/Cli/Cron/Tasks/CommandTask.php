@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Cron\Tasks;
 
+use Override;
 use OZONE\Core\Cli\Process;
 
 /**
@@ -38,6 +39,7 @@ class CommandTask extends AbstractTask
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function run(): void
 	{
 		if (\is_string($this->command)) {
@@ -50,6 +52,24 @@ class CommandTask extends AbstractTask
 			$process->start();
 		} else {
 			$process->run();
+
+			$exit_code = $process->getExitCode();
+
+			$this->result->setData([
+				'exit_code' => $exit_code,
+				'stdout'    => $process->getOutput(),
+				'stderr'    => $process->getErrorOutput(),
+			]);
+
+			if (0 !== $exit_code) {
+				$this->result->setError(\sprintf(
+					'Command task "%s" failed with exit code %d.',
+					$this->name,
+					$exit_code
+				));
+			} else {
+				$this->result->setDone();
+			}
 		}
 	}
 }

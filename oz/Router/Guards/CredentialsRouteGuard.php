@@ -18,6 +18,7 @@ use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Gobl\DBAL\Types\TypeString;
 use Gobl\DBAL\Types\Utils\TypeUtils;
 use InvalidArgumentException;
+use Override;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\ForbiddenException;
@@ -63,6 +64,7 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toRules(): array
 	{
 		return [
@@ -77,6 +79,7 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	 *
 	 * @throws TypesException
 	 */
+	#[Override]
 	public static function fromRules(array $rules): self
 	{
 		$u_options = $rules['username_type'] ?? null;
@@ -99,6 +102,7 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	 * @throws InvalidFormException
 	 * @throws UnauthorizedException
 	 */
+	#[Override]
 	public function check(RouteInfo $ri): array
 	{
 		$context = $ri->getContext();
@@ -149,6 +153,7 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	 *
 	 * @return array{username:string, password:string}
 	 */
+	#[Override]
 	public static function resolveResults(RouteInfo $ri): array
 	{
 		return $ri->getGuardStoredResults(static::class);

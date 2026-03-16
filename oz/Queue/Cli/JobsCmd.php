@@ -16,6 +16,7 @@ namespace OZONE\Core\Queue\Cli;
 use Kli\Exceptions\KliException;
 use Kli\KliArgs;
 use Kli\Types\KliTypeString;
+use Override;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Queue\JobsManager;
@@ -29,6 +30,7 @@ final class JobsCmd extends Command
 	/**
 	 * @throws KliException
 	 */
+	#[Override]
 	protected function describe(): void
 	{
 		$this->description('Manage job queue.');
@@ -68,7 +70,7 @@ final class JobsCmd extends Command
 			$jobs_run->handler(static function (KliArgs $args) {
 				$store    = $args->get('store');
 				$worker   = $args->get('worker');
-				$queue    = $args->get('driver');
+				$queue    = $args->get('queue');
 				$priority = $args->get('priority');
 				$max_jobs = $args->get('max-jobs');
 

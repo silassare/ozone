@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Logger;
 
 use JsonSerializable;
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Logger\Interfaces\LogWriterInterface;
@@ -49,6 +50,7 @@ class LogWriter implements LogWriterInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function get(): static
 	{
 		/** @var null|LogWriterInterface $writer */
@@ -64,6 +66,7 @@ class LogWriter implements LogWriterInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function write($level, mixed $message, array $context = []): void
 	{
 		$message = self::describe($message);

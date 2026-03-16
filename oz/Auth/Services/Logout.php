@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Services;
 
+use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -37,6 +38,7 @@ final class Logout extends Service
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router

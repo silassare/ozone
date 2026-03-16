@@ -13,11 +13,28 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Cron\Tasks;
 
+use Override;
 use OZONE\Core\Cli\Cron\Interfaces\TaskInterface;
 use OZONE\Core\Cli\Cron\Schedule;
+use OZONE\Core\Utils\JSONResult;
 
 /**
- * Class TaskBase.
+ * Class AbstractTask.
+ *
+ * Base class for all cron tasks.
+ *
+ * A task defines what to execute (overriding {@link run()}) and when, via one or more
+ * {@link Schedule} instances attached through {@link schedule()} or {@link addSchedule()}.
+ *
+ * Key configuration flags:
+ * - {@link inBackground()} — whether the task should run in a background process (maps to
+ *   the `cron:async` queue when dispatched by {@link Cron::runDues()}).
+ * - {@link oneAtATime()} — skip execution if a previous instance is still running
+ *   (enforced via a cache lock keyed on the task name).
+ * - {@link setTimeout()} — maximum allowed execution time in seconds.
+ *
+ * After {@link run()} completes, results are exposed via {@link getResult()} and stored
+ * in the job record by {@link CronTaskWorker}.
  */
 abstract class AbstractTask implements TaskInterface
 {
@@ -28,7 +45,7 @@ abstract class AbstractTask implements TaskInterface
 	protected bool $in_background  = false;
 	protected bool $one_at_a_time  = false;
 	protected ?int $timeout        = null;
-	protected array $result        = [];
+	protected JSONResult $result;
 
 	protected readonly string $cache_key;
 
@@ -43,11 +60,13 @@ abstract class AbstractTask implements TaskInterface
 		protected string $description = ''
 	) {
 		$this->cache_key = 'cron_task_' . $name;
+		$this->result    = new JSONResult();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getName(): string
 	{
 		return $this->name;
@@ -56,6 +75,7 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getDescription(): string
 	{
 		return $this->description;
@@ -64,6 +84,7 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function setDescription(string $description): self
 	{
 		$this->description = $description;
@@ -74,6 +95,7 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function addSchedule(Schedule $schedule): self
 	{
 		$this->schedules[] = $schedule;
@@ -84,6 +106,7 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function schedule(): Schedule
 	{
 		$this->addSchedule($schedule = new Schedule());
@@ -94,6 +117,7 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getSchedules(): array
 	{
 		return $this->schedules;
@@ -102,6 +126,7 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function inBackground(): self
 	{
 		$this->in_background = true;
@@ -112,6 +137,7 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function shouldRunInBackground(): bool
 	{
 		return $this->in_background;
@@ -120,6 +146,7 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function oneAtATime(int $timeout = 0): self
 	{
 		$this->one_at_a_time = true;
@@ -131,6 +158,7 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function shouldRunOneAtATime(): bool
 	{
 		return $this->one_at_a_time;
@@ -139,6 +167,7 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getTimeout(): ?int
 	{
 		return $this->timeout;
@@ -147,6 +176,7 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function setTimeout(?int $timeout = null): self
 	{
 		$this->timeout = $timeout;
@@ -157,7 +187,8 @@ abstract class AbstractTask implements TaskInterface
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getResult(): array
+	#[Override]
+	public function getResult(): JSONResult
 	{
 		return $this->result;
 	}

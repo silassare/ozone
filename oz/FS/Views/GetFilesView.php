@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS\Views;
 
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -37,6 +38,7 @@ class GetFilesView extends WebView
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$format      = Settings::get('oz.files', 'OZ_GET_FILE_URI_PATH_FORMAT');

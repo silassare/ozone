@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Http;
 
+use Override;
+
 /**
  * Class Headers.
  */
@@ -59,6 +61,7 @@ class Headers extends Collection
 	 * This method returns the _original_ header name
 	 * as specified by the end user.
 	 */
+	#[Override]
 	public function all(): array
 	{
 		$all = parent::all();
@@ -91,6 +94,7 @@ class Headers extends Collection
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function has(string $key): bool
 	{
 		return parent::has($this->normalizeKey($key));
@@ -142,6 +146,7 @@ class Headers extends Collection
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function get(string $key, mixed $default = null): mixed
 	{
 		if ($this->has($key)) {
@@ -157,6 +162,7 @@ class Headers extends Collection
 	 * This method sets a header value. It replaces
 	 * any values that may already exist for the header name.
 	 */
+	#[Override]
 	public function set(string $key, mixed $value): void
 	{
 		if (!\is_array($value)) {
@@ -172,6 +178,7 @@ class Headers extends Collection
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function remove(string $key): void
 	{
 		parent::remove($this->normalizeKey($key));

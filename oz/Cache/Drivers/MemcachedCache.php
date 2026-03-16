@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cache\Drivers;
 
 use Memcached;
+use Override;
 use OZONE\Core\Cache\CacheItem;
 use OZONE\Core\Cache\Interfaces\CacheProviderInterface;
 use OZONE\Core\Utils\Hasher;
@@ -40,6 +41,7 @@ class MemcachedCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function get(string $key): ?CacheItem
 	{
 		$value = $this->memcached->get($key);
@@ -64,6 +66,7 @@ class MemcachedCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getMultiple(array $keys): array
 	{
 		$items = [];
@@ -82,6 +85,7 @@ class MemcachedCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function set(CacheItem $item): bool
 	{
 		$key                    = $item->getKey();
@@ -104,6 +108,7 @@ class MemcachedCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function increment(string $key, float $factor = 1): bool
 	{
 		return $this->memcached->increment($key, $factor);
@@ -112,6 +117,7 @@ class MemcachedCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function decrement(string $key, float $factor = 1): bool
 	{
 		return $this->memcached->decrement($key, $factor);
@@ -120,6 +126,7 @@ class MemcachedCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function delete(string $key): bool
 	{
 		return $this->memcached->delete($key);
@@ -128,6 +135,7 @@ class MemcachedCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function deleteMultiple(array $keys): bool
 	{
 		$deleted = true;
@@ -142,6 +150,7 @@ class MemcachedCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function clear(): bool
 	{
 		return $this->memcached->flush();
@@ -150,6 +159,7 @@ class MemcachedCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function getSharedInstance(?string $namespace = null): CacheProviderInterface
 	{
 		// one instantiation per-connection per-request

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Providers;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
@@ -47,6 +48,7 @@ class AuthUserAuthorizationProvider extends AuthorizationProvider
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function resolve(Context $context, OZAuth $auth): self
 	{
 		$user = AuthUsers::identifyBySelector([
@@ -64,6 +66,7 @@ class AuthUserAuthorizationProvider extends AuthorizationProvider
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPayload(): array
 	{
 		return [];
@@ -72,6 +75,7 @@ class AuthUserAuthorizationProvider extends AuthorizationProvider
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function getName(): string
 	{
 		return self::NAME;

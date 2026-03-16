@@ -15,6 +15,7 @@ namespace OZONE\Core\REST;
 
 use Gobl\ORM\Exceptions\ORMQueryException;
 use Gobl\ORM\ORMRequest as GoblORMRequest;
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\Forms\FormData;
 
@@ -64,6 +65,7 @@ class RESTFulAPIRequest extends GoblORMRequest
 	 *
 	 * @return static
 	 */
+	#[Override]
 	public function createScopedInstance(string $scope): static
 	{
 		return new self($this->context, $this->payload, $scope);

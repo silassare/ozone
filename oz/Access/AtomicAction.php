@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Access;
 
+use Override;
 use OZONE\Core\Access\Interfaces\AtomicActionInterface;
 use OZONE\Core\Lang\I18nMessage;
 use PHPUtils\Traits\ArrayCapableTrait;
@@ -33,6 +34,7 @@ class AtomicAction implements AtomicActionInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toArray(): array
 	{
 		return [
@@ -45,6 +47,7 @@ class AtomicAction implements AtomicActionInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAction(): string
 	{
 		return $this->action;
@@ -53,6 +56,7 @@ class AtomicAction implements AtomicActionInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getDescription(): I18nMessage
 	{
 		return $this->description;
@@ -61,6 +65,7 @@ class AtomicAction implements AtomicActionInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getErrorMessage(): I18nMessage
 	{
 		return $this->error;

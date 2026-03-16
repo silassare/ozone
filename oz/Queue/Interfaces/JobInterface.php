@@ -15,6 +15,7 @@ namespace OZONE\Core\Queue\Interfaces;
 
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
+use OZONE\Core\Utils\JSONResult;
 
 /**
  * Interface JobInterface.
@@ -173,34 +174,18 @@ interface JobInterface
 	/**
 	 * Gets the job result.
 	 *
-	 * @return array
+	 * @return JSONResult
 	 */
-	public function getResult(): array;
+	public function getResult(): JSONResult;
 
 	/**
 	 * Sets the job result.
 	 *
-	 * @param array $result
+	 * @param JSONResult $result
 	 *
 	 * @return $this
 	 */
-	public function setResult(array $result): self;
-
-	/**
-	 * Gets the job errors.
-	 *
-	 * @return array
-	 */
-	public function getErrors(): array;
-
-	/**
-	 * Sets the job errors.
-	 *
-	 * @param array $errors
-	 *
-	 * @return $this
-	 */
-	public function setErrors(array $errors): self;
+	public function setResult(JSONResult $result): self;
 
 	/**
 	 * Gets the job try count.

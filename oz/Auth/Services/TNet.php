@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Services;
 
+use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\OZone;
 use OZONE\Core\Router\RouteInfo;
@@ -51,6 +52,7 @@ final class TNet extends Service
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router

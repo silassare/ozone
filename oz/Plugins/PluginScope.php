@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Plugins;
 
+use Override;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Plugins\Interfaces\PluginInterface;
 use OZONE\Core\Scopes\AbstractScope;
@@ -54,6 +55,7 @@ class PluginScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getName(): string
 	{
 		return $this->scope_name;
@@ -62,6 +64,7 @@ class PluginScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getSourcesDir(): FilesManager
 	{
 		return app()->getPluginsSourcesDir()->cd($this->scope_psr4_ns_dir, true);
@@ -70,6 +73,7 @@ class PluginScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getDataDir(): FilesManager
 	{
 		return app()->getDataDir()->cd('plugins' . DS . $this->scope_name, true);
@@ -78,6 +82,7 @@ class PluginScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPublicDir(): FilesManager
 	{
 		return app()->getPublicDir()->cd('plugins' . DS . $this->scope_name, true);
@@ -86,6 +91,7 @@ class PluginScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getCacheDir(): FilesManager
 	{
 		return app()->getProjectDir()

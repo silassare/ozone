@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Providers;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Db\OZFile;
@@ -47,6 +48,7 @@ class FileAccessAuthorizationProvider extends AuthorizationProvider
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function resolve(Context $context, OZAuth $auth): self
 	{
 		$payload = $auth->getPayload();
@@ -68,6 +70,7 @@ class FileAccessAuthorizationProvider extends AuthorizationProvider
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPayload(): array
 	{
 		return [
@@ -78,6 +81,7 @@ class FileAccessAuthorizationProvider extends AuthorizationProvider
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function getName(): string
 	{
 		return self::NAME;

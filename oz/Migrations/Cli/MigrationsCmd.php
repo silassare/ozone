@@ -17,6 +17,7 @@ use Gobl\DBAL\Interfaces\MigrationInterface;
 use Kli\Exceptions\KliException;
 use Kli\KliArgs;
 use Kli\Table\KliTableFormatter;
+use Override;
 use OZONE\Core\Cli\Cmd\DbCmd;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
@@ -33,6 +34,7 @@ final class MigrationsCmd extends Command
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function describe(): void
 	{
 		$this->description('Manage your project database.');

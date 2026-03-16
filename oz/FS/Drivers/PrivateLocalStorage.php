@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS\Drivers;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\UnauthorizedException;
@@ -27,6 +28,7 @@ final class PrivateLocalStorage extends AbstractLocalStorage
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function get(string $name): self
 	{
 		return new self($name);
@@ -37,6 +39,7 @@ final class PrivateLocalStorage extends AbstractLocalStorage
 	 *
 	 * @throws UnauthorizedException
 	 */
+	#[Override]
 	public function publicUri(Context $context, OZFile $file): Uri
 	{
 		throw new UnauthorizedException('Private files cannot be publicly accessed.');
@@ -45,6 +48,7 @@ final class PrivateLocalStorage extends AbstractLocalStorage
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function uploadsDir(): FilesManager
 	{
 		return app()

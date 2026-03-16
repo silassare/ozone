@@ -24,6 +24,7 @@ use Kli\Exceptions\KliInputException;
 use Kli\Kli;
 use Kli\KliArgs;
 use OLIUP\CG\PHPNamespace;
+use Override;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
@@ -62,6 +63,7 @@ final class DbCmd extends Command
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function describe(): void
 	{
 		$this->description('Manage your project database.');

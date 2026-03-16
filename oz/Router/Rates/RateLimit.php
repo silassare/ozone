@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Rates;
 
+use Override;
 use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
 
 /**
@@ -38,6 +39,7 @@ class RateLimit implements RouteRateLimitInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function key(): string
 	{
 		return $this->key;
@@ -46,6 +48,7 @@ class RateLimit implements RouteRateLimitInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function interval(): int
 	{
 		return $this->interval;
@@ -54,6 +57,7 @@ class RateLimit implements RouteRateLimitInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function rate(): int
 	{
 		return $this->rate;
@@ -62,6 +66,7 @@ class RateLimit implements RouteRateLimitInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function weight(): int
 	{
 		return $this->weight;

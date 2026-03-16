@@ -16,6 +16,7 @@ namespace OZONE\Core\Auth\Providers;
 use Gobl\CRUD\Exceptions\CRUDException;
 use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\JSONResponse;
 use OZONE\Core\App\Settings;
@@ -65,6 +66,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getCredentials(): AuthorizationCredentialsInterface
 	{
 		return $this->credentials;
@@ -73,6 +75,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getScope(): AuthorizationScopeInterface
 	{
 		return $this->scope;
@@ -81,6 +84,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function setScope(AuthorizationScopeInterface $scope): self
 	{
 		$this->scope = $scope;
@@ -91,6 +95,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getJSONResponse(): JSONResponse
 	{
 		return $this->json_response;
@@ -104,6 +109,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 * @throws UnauthorizedException
 	 * @throws GoblException
 	 */
+	#[Override]
 	public function authorize(AuthorizationSecretType $type): void
 	{
 		$ref    = $this->credentials->getReference();
@@ -160,6 +166,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 */
+	#[Override]
 	public function getState(): AuthorizationState
 	{
 		$ref = $this->credentials->getReference();
@@ -171,6 +178,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function generate(?AuthUserInterface $user = null): self
 	{
 		$code_hash   = $this->hash($this->credentials->newCode());
@@ -223,6 +231,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 * @throws InvalidFormException
 	 * @throws GoblException
 	 */
+	#[Override]
 	public function refresh(bool $re_authorize = true): self
 	{
 		$ref  = $this->credentials->getReference();
@@ -263,6 +272,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 */
+	#[Override]
 	public function cancel(): self
 	{
 		$ref  = $this->credentials->getReference();

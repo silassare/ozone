@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Plugins;
 
+use Override;
+
 /**
  * Class CorePlugin.
  */
@@ -29,6 +31,7 @@ class CorePlugin extends AbstractPlugin
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function instance(): Interfaces\PluginInterface
 	{
 		return new self();

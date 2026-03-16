@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use Override;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
@@ -59,6 +60,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function get(RouteInfo $ri, string $realm): self
 	{
 		return new self($ri, $realm);
@@ -77,6 +79,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function satisfied(): bool
 	{
 		$context       = $this->ri->getContext();
@@ -110,6 +113,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 */
+	#[Override]
 	public function authenticate(): void
 	{
 		if (empty($this->digest)) {
@@ -198,6 +202,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function askHeader(): string
 	{
 		if ($this->rfc2617) {
@@ -220,6 +225,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function askInfo(): array
 	{
 		return [

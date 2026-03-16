@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth;
 
+use Override;
 use OZONE\Core\Auth\Events\AuthUserLoggedIn;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodStatefulInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
@@ -27,6 +28,7 @@ final class Auth2FA implements BootHookReceiverInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function boot(): void
 	{
 		AuthUserLoggedIn::listen(static function (AuthUserLoggedIn $event) {

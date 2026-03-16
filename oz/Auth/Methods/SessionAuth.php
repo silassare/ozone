@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use Override;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
@@ -53,6 +54,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function get(RouteInfo $ri, string $realm): self
 	{
 		return new self($ri, $realm);
@@ -61,6 +63,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function satisfied(): bool
 	{
 		$request = $this->ri->getContext()
@@ -83,6 +86,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function ask(): void
 	{
 		$this->session();
@@ -93,6 +97,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function authenticate(): void
 	{
 		$this->session();
@@ -104,6 +109,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 * @throws ForbiddenException
 	 * @throws UnauthenticatedException
 	 */
+	#[Override]
 	public function user(): AuthUserInterface
 	{
 		if (!isset($this->user)) {
@@ -131,6 +137,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 * @throws ForbiddenException
 	 * @throws UnauthenticatedException
 	 */
+	#[Override]
 	public function getAccessRights(): AccessRightsInterface
 	{
 		return $this->user()->getAuthUserDataStore()->getAuthUserAccessRights();
@@ -139,6 +146,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function isScoped(): bool
 	{
 		return false;
@@ -149,6 +157,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function store(): StatefulAuthenticationMethodStore
 	{
 		return $this->session()
@@ -160,6 +169,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function stateID(): string
 	{
 		return $this->session()
@@ -171,6 +181,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function persist(): void
 	{
 		$this->session()
@@ -182,6 +193,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function destroy(): void
 	{
 		$this->session()
@@ -193,6 +205,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function renew(): void
 	{
 		$this->session()
@@ -204,6 +217,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function attachAuthUser(AuthUserInterface $user): void
 	{
 		$this->session()
@@ -215,6 +229,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function detachAuthUser(): void
 	{
 		$this->session()
@@ -224,6 +239,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function lifetime(): int
 	{
 		return Session::lifetime();

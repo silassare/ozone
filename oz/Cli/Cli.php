@@ -15,6 +15,7 @@ namespace OZONE\Core\Cli;
 
 use Kli\Exceptions\KliException;
 use Kli\Kli;
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Cron\Cron;
 use OZONE\Core\Cli\Utils\Utils;
@@ -44,6 +45,7 @@ final class Cli extends Kli
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getVersion(bool $full = false): string
 	{
 		if ($full) {
@@ -93,6 +95,7 @@ final class Cli extends Kli
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function welcome(): void
 	{
 		$this->write(\file_get_contents(OZ_OZONE_DIR . 'welcome'));
@@ -101,6 +104,7 @@ final class Cli extends Kli
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function quit(): void
 	{
 		$this->info('See you soon!');
@@ -115,6 +119,7 @@ final class Cli extends Kli
 	 *
 	 * @return static
 	 */
+	#[Override]
 	public function log(mixed $msg, bool $wrap = true): static
 	{
 		oz_logger($msg);

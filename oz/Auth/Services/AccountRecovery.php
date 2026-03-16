@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Services;
 
 use Gobl\DBAL\Types\TypeBool;
+use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
@@ -85,6 +86,7 @@ final class AccountRecovery extends Service
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router

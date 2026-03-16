@@ -17,6 +17,7 @@ use Closure;
 use DateTime;
 use DateTimeZone;
 use Exception;
+use Override;
 use OZONE\Core\Utils\DateTimeUtils;
 use Stringable;
 
@@ -73,6 +74,7 @@ final class Schedule implements Stringable
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function __toString()
 	{
 		return \implode(' ', [$this->minute, $this->hour, $this->dayOfMonth, $this->month, $this->dayOfWeek]);

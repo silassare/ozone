@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Services;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
@@ -179,6 +180,7 @@ final class CaptchaCode extends Service
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$route_path = Settings::get('oz.paths', 'OZ_CAPTCHA_ROUTE_PATH');

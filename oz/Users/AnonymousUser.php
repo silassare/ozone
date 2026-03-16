@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Users;
 
+use Override;
 use OZONE\Core\Auth\AuthUserDataStore;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Crypt\Password;
@@ -30,6 +31,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAuthUserType(): string
 	{
 		return 'anonymous';
@@ -38,6 +40,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAuthIdentifier(): string
 	{
 		return 'anonymous';
@@ -46,6 +49,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAuthIdentifiers(): array
 	{
 		return [
@@ -56,6 +60,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAuthPassword(): string
 	{
 		return Password::hash('anonymous');
@@ -64,6 +69,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function setAuthPassword(string $password_hash): self
 	{
 		return $this;
@@ -72,6 +78,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAuthUserDataStore(): AuthUserDataStore
 	{
 		return AuthUserDataStore::getInstance($this, []);
@@ -80,6 +87,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function setAuthUserDataStore(AuthUserDataStore $store): self
 	{
 		return $this;
@@ -88,6 +96,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function save(): bool
 	{
 		return true;
@@ -96,6 +105,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toArray(): array
 	{
 		return [
@@ -106,6 +116,7 @@ final class AnonymousUser implements AuthUserInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function isAuthUserValid(): bool
 	{
 		return false;

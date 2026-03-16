@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Sessions;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
@@ -249,6 +250,7 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function boot(): void
 	{
 		FinishHook::listen(static function () {

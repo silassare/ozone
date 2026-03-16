@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS\Drivers;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Db\OZFile;
@@ -28,6 +29,7 @@ final class PublicLocalStorage extends AbstractLocalStorage
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function get(string $name): self
 	{
 		return new self($name);
@@ -36,6 +38,7 @@ final class PublicLocalStorage extends AbstractLocalStorage
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function publicUri(Context $context, OZFile $file): Uri
 	{
 		$abs_path = $this->require($file->getRef());
@@ -54,6 +57,7 @@ final class PublicLocalStorage extends AbstractLocalStorage
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function uploadsDir(): FilesManager
 	{
 		return app()

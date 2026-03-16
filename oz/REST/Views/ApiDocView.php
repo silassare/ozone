@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\REST\Views;
 
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
@@ -29,6 +30,7 @@ final class ApiDocView extends WebView
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		if (Settings::get('oz.api.doc', 'OZ_API_DOC_ENABLED')) {

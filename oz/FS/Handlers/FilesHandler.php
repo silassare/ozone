@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\FS\Handlers;
 
 use Gobl\CRUD\Events\BeforeCreateFlush;
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\CRUD\TableCRUDListener;
 use OZONE\Core\Db\OZFile;
@@ -25,6 +26,7 @@ use OZONE\Core\Db\OZFile;
  */
 class FilesHandler extends TableCRUDListener
 {
+	#[Override]
 	public static function register(Context $context): void
 	{
 		if (!\class_exists(OZFile::class)) {

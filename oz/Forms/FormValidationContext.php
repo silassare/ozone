@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Forms;
 
+use Override;
 use PHPUtils\Traits\ArrayCapableTrait;
 
 /**
@@ -56,6 +57,7 @@ class FormValidationContext
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toArray(): array
 	{
 		return [

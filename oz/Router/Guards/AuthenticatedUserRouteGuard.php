@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Guards;
 
+use Override;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Exceptions\UnauthenticatedException;
 use OZONE\Core\Exceptions\UnauthorizedException;
@@ -35,6 +36,7 @@ class AuthenticatedUserRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toRules(): array
 	{
 		return [
@@ -45,6 +47,7 @@ class AuthenticatedUserRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function fromRules(array $rules): self
 	{
 		$types  = $rules['types'] ?? [];
@@ -57,6 +60,7 @@ class AuthenticatedUserRouteGuard extends AbstractRouteGuard
 	 *
 	 * @throws UnauthenticatedException|UnauthorizedException
 	 */
+	#[Override]
 	public function check(RouteInfo $ri): bool
 	{
 		$context  = $ri->getContext();

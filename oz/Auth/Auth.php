@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
@@ -105,6 +106,7 @@ final class Auth implements BootHookReceiverInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function boot(): void
 	{
 		FinishHook::listen(static function () {

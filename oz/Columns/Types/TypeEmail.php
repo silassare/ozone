@@ -18,6 +18,7 @@ use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
+use Override;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Users\UsersRepository;
@@ -44,6 +45,7 @@ class TypeEmail extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function getInstance(array $options): static
 	{
 		return (new static())->configure($options);
@@ -52,6 +54,7 @@ class TypeEmail extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
@@ -60,6 +63,7 @@ class TypeEmail extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function default($default): static
 	{
 		$this->base_type->default($default);
@@ -90,6 +94,7 @@ class TypeEmail extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function configure(array $options): static
 	{
 		if (isset($options['registered'])) {
@@ -106,6 +111,7 @@ class TypeEmail extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
 	{
 		$value = $subject->getUnsafeValue();

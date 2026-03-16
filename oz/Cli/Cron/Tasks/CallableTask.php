@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Cron\Tasks;
 
-use OZONE\Core\Exceptions\RuntimeException;
+use Override;
+use OZONE\Core\Exceptions\BaseException;
 use Throwable;
 
 /**
@@ -29,9 +30,9 @@ class CallableTask extends AbstractTask
 	/**
 	 * CallableTask constructor.
 	 *
-	 * @param string           $name
-	 * @param callable():array $callable
-	 * @param string           $description
+	 * @param string                    $name
+	 * @param callable(JSONResult):void $callable    callable that will be called when the task runs
+	 * @param string                    $description
 	 */
 	public function __construct(string $name, callable $callable, string $description = '')
 	{
@@ -43,13 +44,16 @@ class CallableTask extends AbstractTask
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function run(): void
 	{
 		try {
-			$fn           = $this->callable;
-			$this->result = $fn();
+			$fn = $this->callable;
+
+			$fn($this->result);
 		} catch (Throwable $t) {
-			throw (new RuntimeException('CallableTask failed.', null, $t))->suspectCallable($this->callable);
+			$this->result->setError($t->getMessage())
+				->setData(BaseException::throwableDescribe($t, true));
 		}
 	}
 }

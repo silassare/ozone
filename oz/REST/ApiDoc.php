@@ -16,6 +16,7 @@ namespace OZONE\Core\REST;
 use OpenApi\Annotations as OA;
 use OpenApi\Annotations\OpenApi;
 use OpenApi\Generator;
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\OZone;
 use OZONE\Core\REST\Events\ApiDocReady;
@@ -91,6 +92,7 @@ class ApiDoc implements ArrayCapableInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toArray(): array
 	{
 		return [
@@ -106,6 +108,7 @@ class ApiDoc implements ArrayCapableInterface
 	private function createContext(): \OpenApi\Context
 	{
 		$logger = new class extends AbstractLogger {
+			#[Override]
 			public function log($level, string|Stringable $message, array $context = []): void
 			{
 				oz_trace($level . ': ' . $message, $context);

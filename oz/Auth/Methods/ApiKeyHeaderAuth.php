@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
@@ -49,6 +50,7 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function get(RouteInfo $ri, string $realm): self
 	{
 		return new self($ri, $realm);
@@ -67,6 +69,7 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function satisfied(): bool
 	{
 		$api_key_name = Settings::get('oz.auth', 'OZ_AUTH_API_KEY_HEADER_NAME');
@@ -92,6 +95,7 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 */
+	#[Override]
 	public function authenticate(): void
 	{
 		$auth = Auth::getByTokenHash($this->api_key);
@@ -110,6 +114,7 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function ask(): void
 	{
 		if (empty($this->api_key)) {

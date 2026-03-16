@@ -14,19 +14,30 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cron;
 
 use Exception;
-use OZONE\Core\Cli\Cli;
 use OZONE\Core\Cli\Cron\Hooks\CronCollect;
 use OZONE\Core\Cli\Cron\Interfaces\TaskInterface;
 use OZONE\Core\Cli\Cron\Tasks\CallableTask;
 use OZONE\Core\Cli\Cron\Tasks\CommandTask;
-use OZONE\Core\Cli\Cron\Workers\CronWorker;
+use OZONE\Core\Cli\Cron\Workers\CronTaskWorker;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
 use OZONE\Core\Queue\Queue;
+use OZONE\Core\Utils\JSONResult;
 use PHPUtils\Str;
 
 /**
  * Class Cron.
+ *
+ * Static registry and entry point for the cron scheduler.
+ *
+ * Tasks are registered with {@link addTask()} (or the convenience helpers {@link call()},
+ * {@link command()}, {@link work()}), then collected at runtime via a {@link CronCollect} hook.
+ *
+ * {@link runDues()} is called by the CLI cron runner on each tick: it iterates all
+ * registered tasks, checks for due {@link Schedule} instances, and enqueues each due task
+ * as a {@link CronTaskWorker} job to the appropriate queue (`cron:sync` or `cron:async`).
+ * Actual execution is handled later by {@link JobsManager::run()} when those queues are
+ * processed, or immediately via {@link start()} for single direct runs.
  */
 final class Cron
 {
@@ -65,13 +76,17 @@ final class Cron
 	/**
 	 * Enqueue all due scheduled tasks.
 	 *
+	 * Each due task is dispatched as a {@link CronTaskWorker} job to the appropriate
+	 * cron queue (`cron:sync` or `cron:async`). Actual execution is deferred to
+	 * {@link JobsManager::run()} which processes those queues.
+	 *
 	 * @throws Exception
 	 */
 	public static function runDues(): void
 	{
-		$now   = \time();
-		$sync  = [];
-		$async = [];
+		self::collect();
+
+		$now = \time();
 
 		foreach (self::$tasks as $task) {
 			foreach ($task->getSchedules() as $schedule) {
@@ -79,39 +94,13 @@ final class Cron
 					continue;
 				}
 
-				if ($task->shouldRunInBackground()) {
-					$async[] = $task;
-				} else {
-					$sync[] = $task;
-				}
 				$queue = Queue::get($task->shouldRunInBackground() ? Queue::CRON_ASYNC : Queue::CRON_SYNC);
 
-				$queue->push(new CronWorker($task->getName()))
+				$queue->push(new CronTaskWorker($task->getName()))
 					->dispatch();
 
 				break;
 			}
-		}
-
-		$cli = Cli::getInstance();
-
-		// run async tasks
-		foreach ($async as $task) {
-			$cli->writeLn(\sprintf(
-				'Running task "%s" in background...',
-				$task->getName()
-			));
-			$task->run();
-		}
-
-		// run sync tasks
-		foreach ($sync as $task) {
-			$cli->writeLn(\sprintf(
-				'Running task "%s" in foreground...',
-				$task->getName()
-			));
-
-			$task->run();
 		}
 	}
 
@@ -160,9 +149,9 @@ final class Cron
 	/**
 	 * Schedule a callable cron task.
 	 *
-	 * @param string           $name
-	 * @param callable():array $callable
-	 * @param string           $description
+	 * @param string                    $name
+	 * @param callable(JSONResult):void $callable
+	 * @param string                    $description
 	 *
 	 * @return Schedule
 	 */
@@ -189,16 +178,16 @@ final class Cron
 		string $queue = Queue::DEFAULT,
 		string $store = Queue::DEFAULT_STORE
 	): Schedule {
-		return self::call(static function () use ($worker, $queue, $store) {
+		return self::call(static function (JSONResult $result) use ($worker, $queue, $store) {
 			$job_contract = Queue::get($queue)
 				->push($worker)
 				->dispatch($store);
 
-			return [
+			$result->setDone()->setData([
 				'job_ref' => $job_contract->getRef(),
 				'queue'   => $queue,
 				'store'   => $store,
-			];
+			]);
 		});
 	}
 
@@ -209,6 +198,8 @@ final class Cron
 	 */
 	public static function start(string $name): void
 	{
+		self::collect();
+
 		$task = self::getTask($name);
 
 		if (!$task) {

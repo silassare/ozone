@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Senders\Messages;
 
+use Override;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Senders\Events\SendSMS;
 
@@ -26,6 +27,7 @@ class SMSMessage extends Message
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function send(): static
 	{
 		(new SendSMS($this))->dispatch();

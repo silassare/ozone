@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Users\Services;
 
 use Gobl\Exceptions\GoblException;
+use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
 use OZONE\Core\Auth\Providers\PhoneOwnershipVerificationProvider;
@@ -69,6 +70,7 @@ final class SignUp extends Service
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router

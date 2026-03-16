@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cache\Drivers;
 
+use Override;
 use OZONE\Core\Cache\CacheItem;
 use OZONE\Core\Cache\Interfaces\CacheProviderInterface;
 
@@ -46,6 +47,7 @@ class RuntimeCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function get(string $key): ?CacheItem
 	{
 		if (isset(self::$cache_data[$this->namespace][$key])) {
@@ -65,6 +67,7 @@ class RuntimeCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getMultiple(array $keys): array
 	{
 		$items = [];
@@ -83,6 +86,7 @@ class RuntimeCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function set(CacheItem $item): bool
 	{
 		self::$cache_data[$this->namespace][$item->getKey()] = [
@@ -96,6 +100,7 @@ class RuntimeCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function delete(string $key): bool
 	{
 		unset(self::$cache_data[$this->namespace][$key]);
@@ -106,6 +111,7 @@ class RuntimeCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function deleteMultiple(array $keys): bool
 	{
 		foreach ($keys as $key) {
@@ -118,6 +124,7 @@ class RuntimeCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function clear(): bool
 	{
 		self::$cache_data[$this->namespace] = [];
@@ -128,6 +135,7 @@ class RuntimeCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function increment(string $key, float $factor = 1): bool
 	{
 		if (!isset(self::$cache_data[$this->namespace][$key])) {
@@ -143,6 +151,7 @@ class RuntimeCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function decrement(string $key, float $factor = 1): bool
 	{
 		if (!isset(self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP])) {
@@ -159,6 +168,7 @@ class RuntimeCache implements CacheProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function getSharedInstance(?string $namespace = null): self
 	{
 		return new self($namespace);

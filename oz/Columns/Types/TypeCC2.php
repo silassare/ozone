@@ -18,6 +18,7 @@ use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Interfaces\ValidationSubjectInterface;
 use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
+use Override;
 use OZONE\Core\Users\Countries;
 
 /**
@@ -44,6 +45,7 @@ class TypeCC2 extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function getInstance(array $options): static
 	{
 		return (new self())->configure($options);
@@ -52,6 +54,7 @@ class TypeCC2 extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
@@ -60,6 +63,7 @@ class TypeCC2 extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function default($default): static
 	{
 		$this->base_type->default($default);
@@ -90,6 +94,7 @@ class TypeCC2 extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function configure(array $options): static
 	{
 		if (isset($options['authorized'])) {
@@ -105,6 +110,7 @@ class TypeCC2 extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
 	{
 		$value = $subject->getUnsafeValue();

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use Override;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -23,6 +24,7 @@ class DigestRFC2617Auth extends DigestAuth
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function get(RouteInfo $ri, string $realm): self
 	{
 		return new self($ri, $realm, true);

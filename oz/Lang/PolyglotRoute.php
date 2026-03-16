@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Lang;
 
+use Override;
 use OZONE\Core\Router\Events\RouteBeforeRun;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
 use OZONE\Core\Router\Router;
@@ -29,6 +30,7 @@ final class PolyglotRoute implements RouteProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router->addGlobalParam(

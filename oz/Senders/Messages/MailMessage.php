@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Senders\Messages;
 
+use Override;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\FS\Templates;
 use OZONE\Core\Senders\Events\SendMail;
@@ -52,6 +53,7 @@ class MailMessage extends Message
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function send(): static
 	{
 		(new SendMail($this))->dispatch();

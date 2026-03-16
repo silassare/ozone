@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\FS;
 
 use JsonException;
+use Override;
 use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Utils\Random;
@@ -136,6 +137,7 @@ class TempFS implements BootHookReceiverInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function boot(): void
 	{
 		FinishHook::listen(static function () {

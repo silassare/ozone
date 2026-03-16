@@ -15,6 +15,7 @@ namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
 use JsonException;
+use Override;
 use OZONE\Core\Exceptions\RuntimeException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -214,6 +215,7 @@ class Response extends Message implements ResponseInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getStatusCode(): int
 	{
 		return $this->status;
@@ -222,6 +224,7 @@ class Response extends Message implements ResponseInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withStatus(int $code, string $reasonPhrase = ''): static
 	{
 		$code = $this->filterStatus($code);
@@ -378,6 +381,7 @@ class Response extends Message implements ResponseInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getReasonPhrase(): string
 	{
 		if ($this->reasonPhrase) {

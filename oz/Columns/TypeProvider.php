@@ -15,6 +15,7 @@ namespace OZONE\Core\Columns;
 
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Gobl\DBAL\Types\Interfaces\TypeProviderInterface;
+use Override;
 use OZONE\Core\App\Settings;
 
 /**
@@ -25,6 +26,7 @@ class TypeProvider implements TypeProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getTypeInstance(string $name, array $options): ?TypeInterface
 	{
 		/** @var null|TypeInterface $type_class */
@@ -40,6 +42,7 @@ class TypeProvider implements TypeProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function hasType(string $name): bool
 	{
 		return null !== Settings::get('oz.db.columns.types', $name);

@@ -23,6 +23,7 @@ use Gobl\ORM\ORMTypeHint;
 use Gobl\ORM\ORMUniversalType;
 use JsonException;
 use OLIUP\CG\PHPType;
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Columns\ValidatedFile;
 use OZONE\Core\Db\OZFile;
@@ -72,6 +73,7 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function getInstance(array $options): static
 	{
 		return (new self())->configure($options);
@@ -80,6 +82,7 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
@@ -88,6 +91,7 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function default($default): static
 	{
 		$this->base_type->default($default);
@@ -275,6 +279,7 @@ class TypeFile extends Type
 	 *
 	 * @throws JsonException
 	 */
+	#[Override]
 	public function dbToPhp(mixed $value, RDBMSInterface $rdbms): array|ValidatedFile|null
 	{
 		if (null === $value) {
@@ -302,6 +307,7 @@ class TypeFile extends Type
 	 *
 	 * @throws JsonException
 	 */
+	#[Override]
 	public function phpToDb(mixed $value, RDBMSInterface $rdbms): ?string
 	{
 		if (null === $value) {
@@ -320,6 +326,7 @@ class TypeFile extends Type
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getWriteTypeHint(): ORMTypeHint
 	{
 		if ($this->isMultiple()) {
@@ -335,6 +342,7 @@ class TypeFile extends Type
 	 *
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getReadTypeHint(): ORMTypeHint
 	{
 		if ($this->isMultiple()) {
@@ -350,6 +358,7 @@ class TypeFile extends Type
 	 *
 	 * @throws TypesException
 	 */
+	#[Override]
 	public function configure(array $options): static
 	{
 		if (isset($options['multiple'])) {
@@ -419,6 +428,7 @@ class TypeFile extends Type
 	 *
 	 * @throws TypesInvalidValueException
 	 */
+	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
 	{
 		$value = $subject->getUnsafeValue();

@@ -16,6 +16,7 @@ namespace OZONE\Core\Cli\Utils;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Table;
 use Gobl\ORM\Generators\CSGeneratorORM;
+use Override;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Templates;
 
@@ -38,6 +39,7 @@ class ServiceGenerator extends CSGeneratorORM
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function generate(array $tables, ?string $path = null, string $header = ''): static
 	{
 		foreach ($tables as $table) {

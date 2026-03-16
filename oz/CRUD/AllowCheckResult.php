@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\CRUD;
 
+use Override;
 use OZONE\Core\Lang\I18nMessage;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
@@ -49,6 +50,7 @@ class AllowCheckResult implements ArrayCapableInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toArray(): array
 	{
 		return [

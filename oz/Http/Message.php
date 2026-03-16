@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
+use Override;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\StreamInterface;
 
@@ -82,6 +83,7 @@ abstract class Message implements MessageInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getProtocolVersion(): string
 	{
 		return $this->protocolVersion;
@@ -90,6 +92,7 @@ abstract class Message implements MessageInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withProtocolVersion($version): static
 	{
 		if (!isset(self::$validProtocolVersions[$version])) {
@@ -107,6 +110,7 @@ abstract class Message implements MessageInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getHeaders(): array
 	{
 		return $this->headers->all();
@@ -115,6 +119,7 @@ abstract class Message implements MessageInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function hasHeader($name): bool
 	{
 		return $this->headers->has($name);
@@ -123,6 +128,7 @@ abstract class Message implements MessageInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getHeader($name): array
 	{
 		return $this->headers->get($name, []);
@@ -131,6 +137,7 @@ abstract class Message implements MessageInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getHeaderLine($name): string
 	{
 		return \implode(',', $this->headers->get($name, []));
@@ -139,6 +146,7 @@ abstract class Message implements MessageInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withHeader($name, $value): static
 	{
 		$clone = clone $this;
@@ -150,6 +158,7 @@ abstract class Message implements MessageInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withAddedHeader($name, $value): static
 	{
 		$clone = clone $this;
@@ -161,6 +170,7 @@ abstract class Message implements MessageInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withoutHeader($name): static
 	{
 		$clone = clone $this;
@@ -172,6 +182,7 @@ abstract class Message implements MessageInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getBody(): StreamInterface
 	{
 		return $this->body;
@@ -180,6 +191,7 @@ abstract class Message implements MessageInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withBody(StreamInterface $body): static
 	{
 		$clone       = clone $this;

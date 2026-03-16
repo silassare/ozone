@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cron\Interfaces;
 
 use OZONE\Core\Cli\Cron\Schedule;
+use OZONE\Core\Utils\JSONResult;
 
 /**
  * Interface TaskInterface.
@@ -36,6 +37,8 @@ interface TaskInterface
 
 	/**
 	 * Set task description.
+	 *
+	 * @param string $description
 	 *
 	 * @return $this
 	 */
@@ -74,9 +77,9 @@ interface TaskInterface
 	/**
 	 * Get the task result.
 	 *
-	 * @return array
+	 * @return JSONResult
 	 */
-	public function getResult(): array;
+	public function getResult(): JSONResult;
 
 	/**
 	 * Mark the task as background task.

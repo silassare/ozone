@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
+use Override;
 use Psr\Http\Message\UriInterface;
 
 /**
@@ -126,6 +127,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getScheme(): string
 	{
 		return $this->scheme;
@@ -134,6 +136,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withScheme(string $scheme): self
 	{
 		$scheme        = $this->filterScheme($scheme);
@@ -146,6 +149,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAuthority(): string
 	{
 		$userInfo = $this->getUserInfo();
@@ -181,6 +185,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getUserInfo(): string
 	{
 		return $this->user . ($this->password ? ':' . $this->password : '');
@@ -213,6 +218,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withUserInfo(string $user, ?string $password = null): self
 	{
 		$clone           = clone $this;
@@ -225,6 +231,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getHost(): string
 	{
 		return $this->host;
@@ -233,6 +240,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withHost(string $host): self
 	{
 		$clone       = clone $this;
@@ -244,6 +252,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPort(): ?int
 	{
 		return $this->port && !$this->hasStandardPort() ? $this->port : null;
@@ -252,6 +261,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withPort(?int $port): self
 	{
 		$port        = $this->filterPort($port);
@@ -264,6 +274,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPath(): string
 	{
 		return $this->path;
@@ -272,6 +283,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withPath(string $path, bool $preserve_base_path = false): self
 	{
 		$clone       = clone $this;
@@ -301,6 +313,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getQuery(): string
 	{
 		return $this->query;
@@ -309,6 +322,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withQuery(string $query): self
 	{
 		$query        = \ltrim($query, '?');
@@ -333,6 +347,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getFragment(): string
 	{
 		return $this->fragment;
@@ -341,6 +356,7 @@ class Uri implements UriInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function withFragment(string $fragment): self
 	{
 		$fragment        = \ltrim($fragment, '#');

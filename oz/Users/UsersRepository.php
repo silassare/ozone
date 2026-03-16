@@ -20,6 +20,7 @@ use Gobl\DBAL\Table;
 use Gobl\ORM\ORMTableQuery;
 use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Interfaces\AuthUsersRepositoryInterface;
@@ -106,7 +107,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		}
 
 		$tb->column('pass', new TypePassword());
-		$tb->map('data')->default([]);
+		$tb->map('data')->default([])->nativeJson();
 
 		// optional columns
 		$tb->column('pic', (new TypeFile())->mimeTypes(['image/png', 'image/jpeg'])->nullable());
@@ -147,6 +148,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function get(string $user_type_name): self
 	{
 		$table = db()->getTableByMorphType($user_type_name);
@@ -164,6 +166,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAuthUserByIdentifier(string $identifier): ?AuthUserInterface
 	{
 		return $this->getAuthUserByNamedIdentifier(AuthUserInterface::IDENTIFIER_NAME_ID, $identifier);
@@ -172,6 +175,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAuthUserByNamedIdentifier(string $identifier_name, string $identifier_value): ?AuthUserInterface
 	{
 		$c_full_name = $this->table->getColumnOrFail($identifier_name)->getFullName();

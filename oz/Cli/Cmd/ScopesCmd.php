@@ -15,6 +15,7 @@ namespace OZONE\Core\Cli\Cmd;
 
 use Kli\Kli;
 use Kli\KliArgs;
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
@@ -135,6 +136,7 @@ final class ScopesCmd extends Command
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function describe(): void
 	{
 		$this->description('Manage your ozone project scopes.');

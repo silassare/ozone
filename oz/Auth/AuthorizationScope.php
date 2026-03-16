@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth;
 
 use InvalidArgumentException;
+use Override;
 use OZONE\Core\Access\AccessRights;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\App\Settings;
@@ -44,6 +45,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getLabel(): string
 	{
 		return $this->label;
@@ -52,6 +54,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function setLabel(string $label): self
 	{
 		$this->label = $label;
@@ -62,6 +65,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getLifetime(): int
 	{
 		return $this->lifetime;
@@ -70,6 +74,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function setLifetime(int $lifetime): self
 	{
 		if ($lifetime <= 0) {
@@ -86,6 +91,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getTryMax(): int
 	{
 		return $this->try_max;
@@ -94,6 +100,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function setTryMax(int $try_max): self
 	{
 		if ($try_max <= 0) {
@@ -111,6 +118,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAccessRight(): AccessRightsInterface
 	{
 		return $this->access_right;
@@ -119,6 +127,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function setAccessRight(AccessRightsInterface $access_right): self
 	{
 		$this->access_right = $access_right;
@@ -129,6 +138,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function from(OZAuth $auth): static
 	{
 		$scope = new self();

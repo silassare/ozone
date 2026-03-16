@@ -19,6 +19,7 @@ use Kli\Exceptions\KliInputException;
 use Kli\KliArgs;
 use OLIUP\CG\PHPClass;
 use OLIUP\CG\PHPNamespace;
+use Override;
 use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
@@ -39,6 +40,7 @@ final class ProjectCmd extends Command
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function describe(): void
 	{
 		$this->description('Manage your ozone project.');

@@ -19,6 +19,7 @@ use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
 use Gobl\ORM\Exceptions\ORMQueryException;
 use InvalidArgumentException;
+use Override;
 use OZONE\Core\Db\OZJob;
 use OZONE\Core\Db\OZJobsQuery;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
@@ -37,6 +38,7 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
@@ -45,6 +47,7 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function get(string $ref): ?JobContractInterface
 	{
 		$oz_job = self::identify($ref);
@@ -59,6 +62,7 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getOrFail(string $ref): JobContractInterface
 	{
 		$job = $this->get($ref);
@@ -81,6 +85,7 @@ class DbJobStore implements JobStoreInterface
 	 * @throws GoblException
 	 * @throws ORMException
 	 */
+	#[Override]
 	public function add(JobInterface $job): JobContractInterface
 	{
 		$entity = $this->toEntity($job);
@@ -101,6 +106,7 @@ class DbJobStore implements JobStoreInterface
 	 * @throws GoblException
 	 * @throws ORMException
 	 */
+	#[Override]
 	public function update(JobContractInterface $job_contract): JobStoreInterface
 	{
 		$qb = new OZJobsQuery();
@@ -122,6 +128,7 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function delete(JobContractInterface $job_contract): JobStoreInterface
 	{
 		$qb = new OZJobsQuery();
@@ -136,6 +143,7 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function iterator(
 		string $queue_name,
 		?string $worker_name = null,
@@ -159,6 +167,7 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function list(
 		?string $queue_name = null,
 		?string $worker_name = null,
@@ -187,6 +196,7 @@ class DbJobStore implements JobStoreInterface
 	 * @throws ORMException
 	 * @throws ORMQueryException
 	 */
+	#[Override]
 	public function lock(JobContractInterface $job_contract): bool
 	{
 		$oz_job = self::identify($job_contract->getRef());
@@ -204,6 +214,7 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function unlock(JobContractInterface $job_contract): bool
 	{
 		$qb = new OZJobsQuery();
@@ -255,7 +266,6 @@ class DbJobStore implements JobStoreInterface
 			->setRetryMax($job->getRetryMax())
 			->setPayload($job->getPayload())
 			->setResult($job->getResult())
-			->setErrors($job->getErrors())
 			->setStartedAt($job->getStartedAt())
 			->setEndedAt($job->getEndedAt())
 			->setCreatedAt($job->getCreatedAt())
@@ -282,8 +292,7 @@ class DbJobStore implements JobStoreInterface
 			->setPriority($oz_job->getPriority())
 			->setTryCount($oz_job->getTryCount())
 			->setRetryMax($oz_job->getRetryMax())
-			->setResult((array) $oz_job->getResult())
-			->setErrors((array) $oz_job->getErrors())
+			->setResult($oz_job->getResult())
 			->setStartedAt((float) $oz_job->getStartedAt())
 			->setEndedAt((float) $oz_job->getEndedAt())
 			->setCreatedAt((int) $oz_job->getCreatedAt())

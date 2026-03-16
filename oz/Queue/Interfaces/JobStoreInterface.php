@@ -17,7 +17,17 @@ use Iterator;
 use OZONE\Core\Queue\JobState;
 
 /**
- * Class JobStoreInterface.
+ * Interface JobStoreInterface.
+ *
+ * Persistence contract for job records.
+ *
+ * An implementation is responsible for storing, retrieving, locking, and iterating
+ * {@link JobContractInterface} records. The built-in implementation is `DbJobStore`,
+ * which persists to the `oz_jobs` database table.
+ *
+ * Locking prevents two concurrent queue runners from picking up the same job:
+ * {@link lock()} returns `true` only once per unlocked job, and {@link unlock()} releases
+ * it after the job completes or fails.
  */
 interface JobStoreInterface
 {

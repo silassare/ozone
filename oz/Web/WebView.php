@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Web;
 
+use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\FS\Templates;
 use OZONE\Core\Http\Body;
@@ -102,6 +103,7 @@ class WebView extends Service
 	 *
 	 * @return Response
 	 */
+	#[Override]
 	public function respond(): Response
 	{
 		return $this->renderTo(
@@ -113,6 +115,7 @@ class WebView extends Service
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void {}
 
 	/**

@@ -13,12 +13,23 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Queue;
 
+use Override;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 
 /**
  * Class JobContract.
+ *
+ * A {@link Job} bound to a {@link JobStoreInterface}.
+ *
+ * Extends `Job` with persistence operations: {@link save()} flushes the current state back
+ * to the store, {@link lock()} / {@link unlock()} prevent concurrent workers from picking
+ * up the same job, and {@link getTrackingCode()} returns a `store:ref` string that can later
+ * be resolved back to this contract via {@link fromTrackingCode()}.
+ *
+ * Instances are created exclusively by {@link JobStoreInterface::add()} and should not be
+ * instantiated directly by application code.
  */
 class JobContract extends Job implements JobContractInterface
 {
@@ -38,6 +49,7 @@ class JobContract extends Job implements JobContractInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getStore(): JobStoreInterface
 	{
 		return $this->store;
@@ -46,6 +58,7 @@ class JobContract extends Job implements JobContractInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getTrackingCode(): string
 	{
 		return \sprintf('%s:%s', $this->store->getName(), $this->getRef());
@@ -54,6 +67,7 @@ class JobContract extends Job implements JobContractInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function fromTrackingCode(string $tracking_code): JobContractInterface
 	{
 		[$store_name, $ref] = \explode(':', $tracking_code, 2);
@@ -69,6 +83,7 @@ class JobContract extends Job implements JobContractInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function save(): self
 	{
 		$this->store->update($this);
@@ -79,6 +94,7 @@ class JobContract extends Job implements JobContractInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function lock(): bool
 	{
 		return $this->store->lock($this);
@@ -87,6 +103,7 @@ class JobContract extends Job implements JobContractInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function unlock(): bool
 	{
 		return $this->store->unlock($this);

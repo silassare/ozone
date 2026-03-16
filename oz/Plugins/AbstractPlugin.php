@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Plugins;
 
+use Override;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Settings;
 use OZONE\Core\FS\FS;
@@ -56,6 +57,7 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getScope(): PluginScope
 	{
 		return Plugins::scopeOf($this);
@@ -64,6 +66,7 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getName(): string
 	{
 		return $this->name;
@@ -72,6 +75,7 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getInstallPath(): string
 	{
 		return $this->install_path;
@@ -80,6 +84,7 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPackageName(): string
 	{
 		return $this->composer_json->get('name', '');
@@ -88,6 +93,7 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getDescription(): string
 	{
 		return $this->composer_json->get('description', '');
@@ -96,6 +102,7 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getAuthor(): string
 	{
 		return $this->composer_json->get('authors.0.name', '');
@@ -104,6 +111,7 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getVersion(): string
 	{
 		return $this->composer_json->get('version', '0.0.0');
@@ -112,6 +120,7 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	final public function getNamespace(): string
 	{
 		return $this->namespace;
@@ -120,6 +129,7 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	final public function getDbNamespace(): string
 	{
 		return $this->namespace . '\Db';
@@ -128,6 +138,7 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	final public function isEnabled(): bool
 	{
 		$plugins = Settings::load('oz.plugins');
@@ -139,6 +150,7 @@ abstract class AbstractPlugin implements PluginInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function boot(): void
 	{
 		if ($this->isEnabled()) {

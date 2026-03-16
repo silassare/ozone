@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router;
 
+use Override;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Router\Interfaces\RouteRateLimiterInterface;
 use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
@@ -38,6 +39,7 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function get(RouteInfo $ri, RouteRateLimitInterface $limit): RouteRateLimiterInterface
 	{
 		return new static($ri, $limit);
@@ -46,6 +48,7 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function hit(): bool
 	{
 		$key      = $this->limit->key();
@@ -79,6 +82,7 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function reset(): self
 	{
 		$key = $this->limit->key();
@@ -93,6 +97,7 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function status(): array
 	{
 		$key      = $this->limit->key();

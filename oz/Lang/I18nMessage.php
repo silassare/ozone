@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Lang;
 
+use Override;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
 
@@ -48,6 +49,7 @@ class I18nMessage implements ArrayCapableInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toArray(): array
 	{
 		return [

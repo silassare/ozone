@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Services;
 
+use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Columns\Types\TypePassword;
@@ -84,6 +85,7 @@ final class Password extends Service
 	 *
 	 * @throws Throwable
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router

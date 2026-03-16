@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Logger;
 
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Logger\Interfaces\LogWriterInterface;
@@ -29,6 +30,7 @@ class Logger implements LoggerInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function log($level, mixed $message, array $context = []): void
 	{
 		self::writer()->write($level, $message, $context);
@@ -37,6 +39,7 @@ class Logger implements LoggerInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function emergency(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::EMERGENCY, $message, $context);
@@ -45,6 +48,7 @@ class Logger implements LoggerInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function alert(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::ALERT, $message, $context);
@@ -53,6 +57,7 @@ class Logger implements LoggerInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function critical(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::CRITICAL, $message, $context);
@@ -61,6 +66,7 @@ class Logger implements LoggerInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function error(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::ERROR, $message, $context);
@@ -69,6 +75,7 @@ class Logger implements LoggerInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function warning(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::WARNING, $message, $context);
@@ -77,6 +84,7 @@ class Logger implements LoggerInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function notice(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::NOTICE, $message, $context);
@@ -85,6 +93,7 @@ class Logger implements LoggerInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function info(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::INFO, $message, $context);
@@ -93,6 +102,7 @@ class Logger implements LoggerInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function debug(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::DEBUG, $message, $context);

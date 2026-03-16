@@ -320,7 +320,7 @@ trait ApiDocManipulationTrait
 		int $http_status_code = 200,
 	): Response {
 		return $this->response($http_status_code, $description, [
-			'application/json' => $this->apiJSONResponsePayload(JSONResponse::RESPONSE_CODE_SUCCESS, $message, $data),
+			'application/json' => $this->apiJSONResponsePayload(JSONResponse::SUCCESS, $message, $data),
 		]);
 	}
 
@@ -341,7 +341,7 @@ trait ApiDocManipulationTrait
 		int $http_status_code = 200,
 	): Response {
 		return $this->response($http_status_code, $description, [
-			'application/json' => $this->apiJSONResponsePayload(JSONResponse::RESPONSE_CODE_ERROR, $message, $data),
+			'application/json' => $this->apiJSONResponsePayload(JSONResponse::ERROR, $message, $data),
 		]);
 	}
 

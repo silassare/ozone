@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
+use Override;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FS;
 use Psr\Http\Message\StreamInterface;
@@ -120,6 +121,7 @@ class UploadedFile implements UploadedFileInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getStream(): Stream
 	{
 		if ($this->moved) {
@@ -136,6 +138,7 @@ class UploadedFile implements UploadedFileInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function moveTo(string $targetPath): void
 	{
 		if ($this->moved) {
@@ -182,6 +185,7 @@ class UploadedFile implements UploadedFileInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getError(): int
 	{
 		return $this->error;
@@ -190,6 +194,7 @@ class UploadedFile implements UploadedFileInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getClientFilename(): string
 	{
 		return $this->unsafe_name;
@@ -198,6 +203,7 @@ class UploadedFile implements UploadedFileInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getClientMediaType(): ?string
 	{
 		return $this->unsafe_type;
@@ -226,6 +232,7 @@ class UploadedFile implements UploadedFileInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getSize(): int
 	{
 		return $this->size ?? 0;

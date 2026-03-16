@@ -18,6 +18,7 @@ use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
 use Gobl\ORM\Exceptions\ORMQueryException;
 use Kli\KliArgs;
+use Override;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Db\OZUser;
@@ -28,6 +29,7 @@ use OZONE\Core\OZone;
  */
 final class UsersCmd extends Command
 {
+	#[Override]
 	protected function describe(): void
 	{
 		$this->description('Manage users.');

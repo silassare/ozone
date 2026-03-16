@@ -15,6 +15,7 @@ namespace OZONE\Core\Cli\Cmd;
 
 use Gobl\DBAL\Table;
 use Kli\KliArgs;
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\ServiceGenerator;
@@ -29,6 +30,7 @@ final class ServicesCmd extends Command
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function describe(): void
 	{
 		$this->description('Manage your project service.');

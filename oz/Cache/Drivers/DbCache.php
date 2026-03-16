@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cache\Drivers;
 
 use Gobl\Exceptions\GoblException;
+use Override;
 use OZONE\Core\Db\OZDbStore;
 use OZONE\Core\Db\OZDbStoresQuery;
 
@@ -27,6 +28,7 @@ class DbCache extends RuntimeCache
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function getSharedInstance(?string $namespace = null): self
 	{
 		return new self($namespace);
@@ -37,6 +39,7 @@ class DbCache extends RuntimeCache
 	 *
 	 * @throws GoblException
 	 */
+	#[Override]
 	protected function save(): bool
 	{
 		$this->db_store->setValue(\serialize(self::$cache_data[$this->namespace]))
@@ -48,6 +51,7 @@ class DbCache extends RuntimeCache
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function load(): array
 	{
 		$ref = $this->getRef();

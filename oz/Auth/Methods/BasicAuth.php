@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use Override;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
@@ -62,6 +63,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function get(RouteInfo $ri, string $realm): self
 	{
 		return new self($ri, $realm);
@@ -90,6 +92,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function satisfied(): bool
 	{
 		$context       = $this->ri->getContext();
@@ -129,6 +132,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function authenticate(): void
 	{
 		$selector = AuthUsers::refToSelector($this->username, self::BASIC_AUTH_USERNAME_INFO_SEPARATOR);
@@ -169,6 +173,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function user(): AuthUserInterface
 	{
 		if (!isset($this->user)) {
@@ -183,6 +188,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	 *
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function getAccessRights(): AccessRightsInterface
 	{
 		return $this->user()->getAuthUserDataStore()->getAuthUserAccessRights();
@@ -191,6 +197,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function isScoped(): bool
 	{
 		return false;
@@ -199,6 +206,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function askHeader(): string
 	{
 		return 'Basic realm="' . $this->realm . '"';
@@ -207,6 +215,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	protected function askInfo(): array
 	{
 		return [

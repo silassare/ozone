@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\App;
 
 use InvalidArgumentException;
+use Override;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FS;
@@ -48,6 +49,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	final public function getName(): string
 	{
 		return ScopeInterface::ROOT_SCOPE;
@@ -56,21 +58,25 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function boot(): void {}
 
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function onUnhandledThrowable(Throwable $t): void {}
 
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function onUnhandledError(int $code, string $message, string $file, int $line): void {}
 
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getScope(?string $scope = null): ScopeInterface
 	{
 		$scope ??= OZ_SCOPE_NAME;
@@ -101,6 +107,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getSourcesDir(): FilesManager
 	{
 		return FS::from(OZ_APP_DIR);
@@ -109,6 +116,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getDataDir(): FilesManager
 	{
 		return $this->getProjectDir()
@@ -118,6 +126,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPublicDir(): FilesManager
 	{
 		return $this->getProjectDir()
@@ -127,6 +136,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getEnv(): Env
 	{
 		static $env = null;
@@ -148,6 +158,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getProjectDir(): FilesManager
 	{
 		return FS::from(OZ_PROJECT_DIR);
@@ -156,6 +167,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getSettingsDir(): FilesManager
 	{
 		return $this->getSourcesDir()
@@ -165,6 +177,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getTemplatesDir(): FilesManager
 	{
 		return $this->getSourcesDir()
@@ -174,6 +187,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPluginsSourcesDir(): FilesManager
 	{
 		return $this->getProjectDir()
@@ -183,6 +197,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getCacheDir(): FilesManager
 	{
 		return $this->getProjectDir()
@@ -192,6 +207,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPrivateFilesDir(): FilesManager
 	{
 		return $this->getDataDir()->cd('files', true);
@@ -200,6 +216,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPublicFilesDir(): FilesManager
 	{
 		return $this->getPublicDir();
@@ -208,6 +225,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getMigrationsDir(): FilesManager
 	{
 		return $this->getSourcesDir()
@@ -217,6 +235,7 @@ abstract class AbstractApp implements AppInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getLogsDir(): FilesManager
 	{
 		return $this->getProjectDir();

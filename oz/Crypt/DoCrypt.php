@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Crypt;
 
+use Override;
 use OZONE\Core\Crypt\Interfaces\CryptInterface;
 use RuntimeException;
 
@@ -40,6 +41,7 @@ class DoCrypt implements CryptInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function encrypt(string $message, string $pass_phrase): false|string
 	{
 		$iv_len = \openssl_cipher_iv_length($this->cypher);
@@ -62,6 +64,7 @@ class DoCrypt implements CryptInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function decrypt(string $message, string $pass_phrase): false|string
 	{
 		$iv_len = \openssl_cipher_iv_length($this->cypher);

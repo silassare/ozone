@@ -16,6 +16,7 @@ namespace OZONE\Core\Hooks;
 use Exception;
 use Gobl\ORM\Events\ORMTableFilesGenerated;
 use Gobl\ORM\Utils\ORMClassKind;
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Exceptions\ForbiddenException;
@@ -208,6 +209,7 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function boot(): void
 	{
 		RouteNotFound::listen([self::class, 'onRouteNotFound'], Event::RUN_LAST);

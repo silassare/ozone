@@ -16,6 +16,7 @@ namespace OZONE\Core\Columns;
 use InvalidArgumentException;
 use JsonSerializable;
 use LogicException;
+use Override;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\FS;
 
@@ -84,6 +85,7 @@ final class ValidatedFile implements JsonSerializable
 	 * (file ID or TempFS path) is used whenever a `ValidatedFile` ends up
 	 * inside a JSON payload.
 	 */
+	#[Override]
 	public function jsonSerialize(): string
 	{
 		return $this->value;

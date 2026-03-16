@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Guards;
 
+use Override;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Enums\AuthorizationState;
 use OZONE\Core\Auth\Interfaces\AuthorizationProviderInterface;
@@ -37,6 +38,7 @@ class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toRules(): array
 	{
 		return [
@@ -47,6 +49,7 @@ class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function fromRules(array $rules): self
 	{
 		return new self($rules['allowed_providers']);
@@ -61,6 +64,7 @@ class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 */
+	#[Override]
 	public function check(RouteInfo $ri): array
 	{
 		$context = $ri->getContext();
@@ -101,6 +105,7 @@ class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 	 *
 	 * @return array{provider:AuthorizationProviderInterface, auth:OZAuth}
 	 */
+	#[Override]
 	public static function resolveResults(RouteInfo $ri): array
 	{
 		return $ri->getGuardStoredResults(static::class);

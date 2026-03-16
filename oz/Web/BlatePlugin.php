@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Web;
 
 use Blate\Blate;
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -72,6 +73,7 @@ final class BlatePlugin implements BootHookReceiverInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function boot()
 	{
 		// auto load blate configs

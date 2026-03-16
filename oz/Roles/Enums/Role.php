@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Roles\Enums;
 
+use Override;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
 
 /**
@@ -27,6 +28,7 @@ enum Role: string implements RoleInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function admin(): self
 	{
 		return self::ADMIN;
@@ -35,6 +37,7 @@ enum Role: string implements RoleInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function superAdmin(): self
 	{
 		return self::SUPER_ADMIN;
@@ -43,6 +46,7 @@ enum Role: string implements RoleInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function editor(): self
 	{
 		return self::EDITOR;
@@ -51,6 +55,7 @@ enum Role: string implements RoleInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function weight(): int
 	{
 		return match ($this) {

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Services;
 
+use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Providers\PhoneOwnershipVerificationProvider;
 use OZONE\Core\Columns\Types\TypePhone;
@@ -30,6 +31,7 @@ class PhoneOwnershipVerificationService extends Service
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router->post('/auth/verify/phone', static function (RouteInfo $ri) {

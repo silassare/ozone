@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Senders\Messages;
 
+use Override;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Senders\Events\SendNotification;
 
@@ -26,6 +27,7 @@ class NotificationMessage extends Message
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function send(): static
 	{
 		(new SendNotification($this))->dispatch();

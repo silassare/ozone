@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\App;
 
+use Override;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Scopes\AbstractScope;
 
@@ -29,6 +30,7 @@ final class SubScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getName(): string
 	{
 		return $this->name;
@@ -37,6 +39,7 @@ final class SubScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getSourcesDir(): FilesManager
 	{
 		return app()->getProjectDir()->cd('scopes' . DS . $this->name, true);
@@ -45,6 +48,7 @@ final class SubScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getDataDir(): FilesManager
 	{
 		return app()->getDataDir()->cd('scopes' . DS . $this->name, true);
@@ -53,6 +57,7 @@ final class SubScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getPublicDir(): FilesManager
 	{
 		return app()->getProjectDir()->cd('public' . DS . $this->name, true);
@@ -61,6 +66,7 @@ final class SubScope extends AbstractScope
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function getCacheDir(): FilesManager
 	{
 		return app()->getProjectDir()

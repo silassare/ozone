@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\REST\Services;
 
+use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
 use OZONE\Core\REST\ApiDoc;
@@ -30,6 +31,7 @@ final class ApiDocService extends Service implements ApiDocProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		if (Settings::get('oz.api.doc', 'OZ_API_DOC_ENABLED')) {
@@ -49,6 +51,7 @@ final class ApiDocService extends Service implements ApiDocProviderInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{
 		$tag = $doc->addTag('API Doc', 'API documentation & specification.');

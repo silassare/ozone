@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Guards;
 
+use Override;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\ForbiddenException;
@@ -42,6 +43,7 @@ class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toRules(): array
 	{
 		return [
@@ -52,6 +54,7 @@ class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function fromRules(array $rules): self
 	{
 		return new self($rules['password_hash'], true);
@@ -64,6 +67,7 @@ class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	 * @throws UnauthorizedException
 	 * @throws ForbiddenException
 	 */
+	#[Override]
 	public function check(RouteInfo $ri): bool
 	{
 		$context = $ri->getContext();

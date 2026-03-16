@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\FS\Services;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
+use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\InvalidFormException;
@@ -277,6 +278,7 @@ class UploadFiles extends Service
 	 *
 	 * @throws Throwable
 	 */
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router->group('/upload', static function (Router $router) {

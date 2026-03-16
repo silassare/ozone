@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Views;
 
+use Override;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Enums\AuthorizationSecretType;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -58,6 +59,7 @@ final class AuthLinkView extends WebView
 			->respond();
 	}
 
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router

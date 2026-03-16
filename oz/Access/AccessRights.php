@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Access;
 
+use Override;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\UnauthorizedException;
@@ -62,6 +63,7 @@ class AccessRights implements AccessRightsInterface
 	 *
 	 * @throws UnauthorizedException
 	 */
+	#[Override]
 	public function allow(string $action): self
 	{
 		if (!$this->allowedInScopes([$action])) {
@@ -79,6 +81,7 @@ class AccessRights implements AccessRightsInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function deny(string $action): self
 	{
 		$this->options[$action] = 0;
@@ -92,6 +95,7 @@ class AccessRights implements AccessRightsInterface
 	 * Specific rules like `users.medias.upload` are more important than wildcard rules like `users.medias.*`,
 	 * and users.medias.* is more specific than users.*
 	 */
+	#[Override]
 	public function can(string ...$actions): bool
 	{
 		$this->last_checked = null;
@@ -151,6 +155,7 @@ class AccessRights implements AccessRightsInterface
 	 *
 	 * @throws UnauthorizedException
 	 */
+	#[Override]
 	public function assertCan(string ...$actions): void
 	{
 		if (!$this->can(...$actions)) {
@@ -174,6 +179,7 @@ class AccessRights implements AccessRightsInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function from(OZAuth $auth): static
 	{
 		return new self((array) $auth->getPermissions());
@@ -182,6 +188,7 @@ class AccessRights implements AccessRightsInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function pushScope(AccessRightsInterface $scope): AccessRightsInterface
 	{
 		if (!\in_array($scope, $this->scopes, true)) {
@@ -194,6 +201,7 @@ class AccessRights implements AccessRightsInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public function toArray(): array
 	{
 		return $this->options;

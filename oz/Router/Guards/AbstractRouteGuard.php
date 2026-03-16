@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Router\Guards;
 
 use Gobl\DBAL\Types\TypeString;
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\JSONResponse;
 use OZONE\Core\Exceptions\InvalidFormException;
@@ -36,6 +37,7 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function resolveResults(RouteInfo $ri): mixed
 	{
 		return $ri->getGuardStoredResults(static::class);
