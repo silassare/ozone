@@ -22,6 +22,7 @@ use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
 use OZONE\Core\Roles\RolesUtils;
 use OZONE\Core\Users\UsersRepository;
+use OZONE\Core\Utils\JSONResult;
 
 return static function (NamespaceBuilder $ns) {
 	$ns->table('oz_users', static function (TableBuilder $tb) {
@@ -48,7 +49,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->string('calling_code')->max(6);
 		$tb->string('name')->max(255);
 		$tb->string('name_real')->max(255);
-		$tb->map('data')->default([]);
+		$tb->map('data')->default([])->nativeJson();
 		$tb->bool('is_valid')->default(true);
 		$tb->timestamps();
 		$tb->softDeletable();
@@ -82,7 +83,7 @@ return static function (NamespaceBuilder $ns) {
 		// this file is used for what
 		// ex: asset, avatar, profile_pic, post_image, post_video, post_audio, post_file, post_attachment etc...
 		$tb->string('for_label')->max(64)->default('asset');
-		$tb->map('data')->default([]);
+		$tb->map('data')->default([])->nativeJson();
 		$tb->bool('is_valid')->default(true);
 		$tb->timestamps();
 		$tb->softDeletable();
@@ -129,7 +130,7 @@ return static function (NamespaceBuilder $ns) {
 		// columns
 		$tb->id();
 		$tb->enum('role', RolesUtils::getRoleEnumClass());
-		$tb->map('data')->default([]);
+		$tb->map('data')->default([])->nativeJson();
 		$tb->bool('is_valid')->default(true);
 		$tb->timestamps();
 		$tb->softDeletable();
@@ -160,9 +161,8 @@ return static function (NamespaceBuilder $ns) {
 		$tb->int('try_count')->unsigned()->default(0);
 		$tb->int('retry_max')->unsigned()->default(3);
 		$tb->int('retry_delay')->unsigned()->default(180 /* 3 minutes */);
-		$tb->map('payload')->default([]);
-		$tb->map('result')->default([]);
-		$tb->map('errors')->default([]);
+		$tb->map('payload')->default([])->big()->nativeJson();
+		$tb->json('result')->default([])->big()->nativeJson()->jsonOf(JSONResult::class);
 		$tb->bool('locked')->default(false);
 		$tb->timestamp('started_at')->microseconds()->nullable();
 		$tb->timestamp('ended_at')->microseconds()->nullable();
@@ -186,7 +186,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->string('request_source_key')->min(6)->max(250)->truncate();
 		$tb->timestamp('expire');
 		$tb->timestamp('last_seen');
-		$tb->map('data')->default([]);
+		$tb->map('data')->default([])->nativeJson();
 		$tb->bool('is_valid')->default(true);
 		$tb->timestamps();
 
@@ -209,7 +209,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->string('key')->min(32)->max(128);
 		$tb->string('value')->nullable();
 		$tb->string('label')->max(255);
-		$tb->map('data')->default([]);
+		$tb->map('data')->default([])->nativeJson();
 		$tb->timestamps();
 		$tb->softDeletable();
 
@@ -231,7 +231,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->string('label')->min(1)->max(128);
 		$tb->string('refresh_key')->min(32)->max(128);
 		$tb->string('provider')->min(1)->max(128);
-		$tb->map('payload')->default([]);
+		$tb->map('payload')->default([])->nativeJson();
 		$tb->string('code_hash')->max(128);
 		$tb->string('token_hash')->min(32)->max(128);
 		$tb->enum('state', AuthorizationState::class)->default(AuthorizationState::PENDING);
@@ -239,7 +239,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->int('try_count')->unsigned()->default(0);
 		$tb->int('lifetime')->unsigned();
 		$tb->timestamp('expire');
-		$tb->map('permissions')->default([]);
+		$tb->map('permissions')->default([])->nativeJson();
 		$tb->morph('owner', TypeUtils::morphAnyId(), null, true);
 		$tb->bool('is_valid')->default(true);
 		$tb->timestamps();
