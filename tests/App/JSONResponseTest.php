@@ -30,7 +30,7 @@ final class JSONResponseTest extends TestCase
 		$r = new JSONResponse();
 		$a = $r->toArray();
 
-		self::assertSame(JSONResponse::RESPONSE_CODE_SUCCESS, $a['error']);
+		self::assertSame(JSONResponse::SUCCESS, $a['error']);
 		self::assertSame('OK', $a['msg']);
 		self::assertSame([], $a['data']);
 	}
@@ -40,7 +40,7 @@ final class JSONResponseTest extends TestCase
 		$r = (new JSONResponse())->setError('SOMETHING_WENT_WRONG');
 		$a = $r->toArray();
 
-		self::assertSame(JSONResponse::RESPONSE_CODE_ERROR, $a['error']);
+		self::assertSame(JSONResponse::ERROR, $a['error']);
 		self::assertSame('SOMETHING_WENT_WRONG', $a['msg']);
 	}
 
@@ -57,7 +57,7 @@ final class JSONResponseTest extends TestCase
 			->setDone('TASK_DONE');
 
 		$a = $r->toArray();
-		self::assertSame(JSONResponse::RESPONSE_CODE_SUCCESS, $a['error']);
+		self::assertSame(JSONResponse::SUCCESS, $a['error']);
 		self::assertSame('TASK_DONE', $a['msg']);
 	}
 
@@ -100,7 +100,7 @@ final class JSONResponseTest extends TestCase
 		$target->merge($source);
 
 		$a = $target->toArray();
-		self::assertSame(JSONResponse::RESPONSE_CODE_ERROR, $a['error']);
+		self::assertSame(JSONResponse::ERROR, $a['error']);
 		self::assertSame('ERR', $a['msg']);
 		self::assertSame(1, $a['data']['x']);
 	}
@@ -130,7 +130,7 @@ final class JSONResponseTest extends TestCase
 
 	public function testConstantsValues(): void
 	{
-		self::assertSame(0, JSONResponse::RESPONSE_CODE_SUCCESS);
-		self::assertSame(1, JSONResponse::RESPONSE_CODE_ERROR);
+		self::assertSame(0, JSONResponse::SUCCESS);
+		self::assertSame(1, JSONResponse::ERROR);
 	}
 }
