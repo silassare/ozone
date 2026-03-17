@@ -33,7 +33,7 @@ final class ServicesCmd extends Command
 	#[Override]
 	protected function describe(): void
 	{
-		$this->description('Manage your project service.');
+		$this->description('Manage your project services.');
 
 		$class_name_reg = '~^[a-zA-Z_][a-zA-Z0-9_]*$~';
 		$path_reg       = '~^/[a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)*$~';

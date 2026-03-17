@@ -30,7 +30,7 @@ final class CronCmd extends Command
 	#[Override]
 	protected function describe(): void
 	{
-		$this->description('Manage cron jobs.');
+		$this->description('Manage cron tasks.');
 
 		if (Utils::isProjectLoaded()) {
 			// action: run scheduled cron tasks
