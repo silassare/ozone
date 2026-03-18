@@ -27,3 +27,5 @@ docs/.vitepress/cache/
 
 # tests
 /noop/
+/tests/projects/
+/tests/_vendors_cache_/
