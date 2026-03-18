@@ -16,12 +16,11 @@ namespace OZONE\Core\App;
 use InvalidArgumentException;
 use Override;
 use OZONE\Core\App\Interfaces\AppInterface;
+use OZONE\Core\FS\Assets;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FS;
-use OZONE\Core\FS\Templates;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use OZONE\Core\Utils\Env;
-use PHPUtils\FS\PathUtils;
 use Throwable;
 
 /**
@@ -38,11 +37,8 @@ abstract class AbstractApp implements AppInterface
 		Settings::addSource($this->getSettingsDir()
 			->getRoot());
 
-		// = Adds register oz:// protocol resolver
-		PathUtils::registerResolver('oz', Templates::localize(...));
-
 		// = Adds templates source
-		Templates::addSource($this->getTemplatesDir()
+		Assets::addSource($this->getTemplatesDir()
 			->getRoot());
 	}
 
