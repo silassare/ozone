@@ -12,6 +12,7 @@
 - **Direct dependencies only.** Only use packages listed in `require` or `require-dev` of `composer.json`. Do not rely on transitive dependencies — they are not guaranteed to be present and can change without notice.
 - **Strict types.** Every PHP file starts with `declare(strict_types=1);`.
 - **Indentation.** Use tabs (not spaces) for all PHP indentation.
+- **"oz" casing.** When uppercasing "oz", always use `OZ`, `OZone`, or `ozone` — never `Oz` or `Ozone`.
 - **Assertions.** Use snapshot assertions where they best convey expected output; use `assertEquals()` / `assertSame()` with inline values for simple or small structures. Never use third-party snapshot packages — only project-owned helpers.
 - **No Unicode shortcut characters in PHP comments or docblocks.** Use plain ASCII equivalents:
 
@@ -128,20 +129,23 @@ return [
 
 Settings are layered PHP files returning arrays. The framework loads from `oz/oz_settings/` first, then app-level settings override — the last source wins per key.
 
-**Setting group name format**: `foo.bar.baz` or `foo/bar.baz` (maps to `foo/bar.baz.php`)
+**Setting group name format**: `foo.bar.baz` (maps to `foo.bar.baz.php` in the settings dir, dots are literal). Slashes create subdirectories: `foo/bar.baz` maps to `foo/bar.baz.php`.
 
 **Core API**:
 
 ```php
-Settings::get('oz.config', 'OZ_PROJECT_NAME');           // read one key, optional default
-Settings::load('oz.db');                                  // load entire group as array
-Settings::set('oz.auth', 'OZ_AUTH_CODE_LENGTH', 8);      // persist one key (writes PHP file)
-Settings::save('oz.users', ['OZ_USER_MIN_AGE' => 18]);    // persist array (writes PHP file)
-Settings::has('oz.db', 'OZ_DB_HOST');                     // check existence
-Settings::addSource(string $path);                        // add settings directory source
+Settings::get('oz.config', 'OZ_PROJECT_NAME');              // read one key, optional default
+Settings::load('oz.db');                                     // load entire group as array
+Settings::set('oz.auth', 'OZ_AUTH_CODE_LENGTH', 8);         // persist one key (writes PHP file)
+Settings::unset('oz.auth', 'OZ_AUTH_CODE_LENGTH');          // remove one key (writes PHP file)
+Settings::has('oz.db', 'OZ_DB_HOST');                       // check existence
+Settings::addSource(string $path);                          // add settings directory source
+Settings::applyMergeStrategy(array $a, array $b): array;    // merge strategy: indexed -> array_merge, assoc -> array_replace_recursive
 ```
 
-**`oz.config` is blacklisted** — runtime edits via `Settings::set/save` are disallowed for it.
+**`oz.config` is blacklisted** — runtime edits via `Settings::set/unset` are disallowed for it.
+
+**`SettingsGroup`** (`OZONE\Core\App\SettingsGroup`, `@internal`) — the per-group backing `Store<array>` used internally by `Settings`. Its `merge()` calls `Settings::applyMergeStrategy()` before delegating to the parent store. Do not use it directly.
 
 **All built-in settings groups** (in `oz/oz_settings/`):
 
@@ -334,6 +338,34 @@ use OZONE\Core\Web\BlatePlugin;
 
 BlatePlugin::register();
 ```
+
+### Assets (`OZONE\Core\FS\Assets`) — `oz://` protocol registry
+
+`Assets` is a `BootHookReceiverInterface` (registered in `oz.boot`) that owns the `oz://` URI protocol and the multi-source asset registry.
+**`Assets::boot()`** — registers `oz://` as a `PathUtils` resolver pointing at `Assets::localize()`.
+
+**Key static methods:**
+
+| Method                                  | Description                                                                                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `getSources(): PathSources`             | Static singleton; initially seeded with `Templates::OZ_TEMPLATE_DIR`                                                                             |
+| `addSource(string $path)`               | Validates dir is readable, then adds to sources for `oz://` lookup                                                                               |
+| `localize(string $path): false\|string` | Resolves `oz://` paths; supports `~core~` (ozone dir) and `~project~` (project dir) prefixes, then falls back to scanning all registered sources |
+
+**Usage in templates / views:**
+
+```php
+// Referencing an ozone built-in template:
+$view->setTemplate('oz://oz_templates/oz.welcome.blate');
+
+// Referencing a core-only asset (bypass sources scan):
+Assets::localize('oz://~core~/oz_templates/foo.blate');
+
+// Adding a plugin's template directory:
+Assets::addSource('/path/to/my-plugin/templates');
+```
+
+All `oz://` resolution and source registration is handled exclusively by `Assets::boot()`.
 
 ---
 
@@ -761,7 +793,9 @@ Migration files are PHP files in `{project}/migrations/` returning `MigrationInt
 | `oz migrations` | `MigrationsCmd` | `create`, `check`, `run`, `rollback`                           |
 | `oz services`   | `ServicesCmd`   | `generate` — scaffold RESTful service for a table              |
 | `oz scopes`     | `ScopesCmd`     | add scopes (multi-tenant)                                      |
+| `oz settings`   | `SettingsCmd`   | `set`, `unset` — runtime settings management                   |
 | `oz cron`       | `CronCmd`       | `run` — run due cron tasks; `start <name>`                     |
+| `oz jobs`       | `JobsCmd`       | `run` — process queue jobs; `finish` — mark orphaned as failed |
 
 **`Utils::assertProjectLoaded()`** — throws if no `app/app.php` found in CWD or ancestor; always the first line in commands that require a project.
 
@@ -839,14 +873,25 @@ Swagger UI at `GET /api-doc-view.html` (`ApiDocView`).
 ## 16. Testing
 
 **Framework**: PHPUnit 9.x
-**Bootstrap**: `tests/autoload.php` -> `OZone::bootstrap(new App())`
 **Test App**: `tests/App.php` extends `AbstractApp`
 
 **Run tests**: `./run_test` (or `./vendor/bin/phpunit --testdox`)
 
-**Test namespace**: `OZONE\Tests` -> `tests/`
+**Test suites**:
 
-**Test suites** (under `tests/`):
+| Suite         | Directory                                 | Bootstrap                         |
+| ------------- | ----------------------------------------- | --------------------------------- |
+| `Unit`        | `tests/` (excluding `tests/Integration/`) | `tests/autoload.php`              |
+| `Integration` | `tests/Integration/`                      | `tests/Integration/bootstrap.php` |
+
+> **Note:** `tests/autoload.php` calls `OZone::bootstrap(new App())` as a unit-test workaround so that
+> ORM entities, settings, and context are available in unit tests without running a real HTTP request.
+> Integration tests do **not** call `OZone::bootstrap()` — they run `bin/oz` subprocesses in real project
+> directories via `OZTestProject`. See section 23 for the full integration test conventions.
+
+**Unit test namespace**: `OZONE\Tests` -> `tests/`
+
+**Unit test directories** (under `tests/`):
 
 | Directory  | Covers                                               |
 | ---------- | ---------------------------------------------------- |
@@ -867,11 +912,11 @@ Shared helpers:
 
 - `tests/TestUtils.php` — `TestUtils::router()` returns a pre-populated `Router` (static + dynamic routes) for use in any test or benchmark.
 
-When writing tests:
+When writing unit tests:
 
 - Extend PHPUnit `TestCase`
 - Place in `tests/` under a matching namespace subdirectory
-- Full bootstrap (DB, settings, context) is available since `OZone::bootstrap()` runs in `autoload.php`
+- Full bootstrap (DB, settings, context) is available since `OZone::bootstrap()` runs in `tests/autoload.php`
 
 ---
 
@@ -1123,3 +1168,243 @@ performance-sensitive code path — especially:
 Use the label format `area_operation[_variant]` (e.g. `router_find_static`,
 `hasher_hash64`, `docrypt_encrypt_256`) so the baseline JSON stays consistent
 across commits.
+
+---
+
+## 21. CLI Command Reference
+
+**Binary**: `bin/oz` (or `bin/ozone`) — detects project automatically.
+
+**Auto-detection logic** (in `oz/index.php`):
+
+- If `app/boot.php` exists in CWD -> load project (requires `vendor/autoload.php`)
+- Otherwise -> load ozone's own `vendor/autoload.php` and run CLI as global tool
+
+### `oz project`
+
+| Action   | Options                                                                                                                                                                                       | Description                           |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `create` | `-r/--root-dir` (default `.`), `-n/--name` (required), `--namespace` (required, default `_Default_`), `-c/--class-name` (default `SampleApp`), `-p/--prefix` (required, 2-char, default `SA`) | Scaffold a new project                |
+| `serve`  | `-h/--host`, `-p/--port`, `-r/--doc-root`, `-s/--scope` (default `api`)                                                                                                                       | Serve a scope via PHP built-in server |
+| `backup` | `-d/--dir`, `-f/--full`                                                                                                                                                                       | Back up the project                   |
+
+After `project create`, one default scope named `api` is automatically created.
+The generated `composer.json` requires `silassare/ozone` at the current version.
+Run `composer update` or `composer install` in the new project dir to complete setup.
+
+### `oz scopes`
+
+| Action | Options                                                                                                          | Description                      |
+| ------ | ---------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `add`  | `-n/--name` (required), `-o/--origin` (required, default `http://localhost`), `-a/--api` (bool, default `false`) | Add a named scope to the project |
+
+Each scope creates:
+
+- Private dir: `scopes/{name}/` (settings, templates, `.htaccess`)
+- Public dir: `public/{name}/` (`index.php`, `robots.txt`, `favicon.ico`, `.htaccess`)
+
+### `oz db`
+
+| Action     | Options                                   | Description                          |
+| ---------- | ----------------------------------------- | ------------------------------------ |
+| `build`    | `-a` all, `-c` class-only, `-n` namespace | Generate ORM PHP classes from schema |
+| `generate` | `-d/--dir`, `-n/--namespace`              | Generate SQL DDL file                |
+| `source`   | `-f/--file`                               | Execute SQL file against DB          |
+| `backup`   | `-d/--dir`                                | Dump DB to file                      |
+
+### `oz migrations`
+
+| Action     | Options                               | Description                         |
+| ---------- | ------------------------------------- | ----------------------------------- |
+| `create`   | `-f/--force`, `-l/--label` (required) | Generate migration from schema diff |
+| `check`    | —                                     | Show current migration state        |
+| `run`      | —                                     | Apply all pending migrations        |
+| `rollback` | `--to-version=N`                      | Rollback to version N               |
+
+### `oz services`
+
+`generate` — scaffold a RESTful service class for a Gobl ORM table.
+
+### `oz settings`
+
+| Action  | Options                                                                                          | Description                        |
+| ------- | ------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| `set`   | `-s/--scope` (optional), `-g/--group` (required), `-k/--key` (required), `-v/--value` (required) | Persist a key in a settings group  |
+| `unset` | `-s/--scope` (optional), `-g/--group` (required), `-k/--key` (required)                          | Remove a key from a settings group |
+
+Value parsing (auto-detected from the string argument): `null` -> null, `true`/`false` -> bool, numeric strings -> int/float, `{...}`/`[...]` -> JSON object/array, anything else -> string.
+
+### `oz cron`
+
+| Action  | Options     | Description                    |
+| ------- | ----------- | ------------------------------ |
+| `run`   | —           | Run all due cron tasks         |
+| `start` | `-n/--name` | Run a specific named cron task |
+
+### `oz jobs`
+
+| Action   | Options   | Description                          |
+| -------- | --------- | ------------------------------------ |
+| `run`    | `--queue` | Process jobs from a queue            |
+| `finish` | —         | Mark orphaned running jobs as failed |
+
+---
+
+## 22. Scope System
+
+A **scope** is a named entry point into the project (e.g. `api`, `www`, custom). Each scope has:
+
+- A name (lowercase slug)
+- An origin URL (used for CORS and `OZ_DEFAULT_ORIGIN`)
+- An `api` flag — when true, routes from `oz.routes.api` are loaded; when false, `oz.routes.web`
+
+**Directory layout** after `oz scopes add -n www -o http://example.com`:
+
+```
+scopes/
+  www/
+    settings/
+      oz.request.php    # OZ_DEFAULT_ORIGIN for this scope
+    templates/
+    .htaccess           # deny from all
+public/
+  www/
+    index.php           # calls OZone::run(new AppClass())
+    robots.txt
+    favicon.ico
+    .htaccess
+```
+
+**`project serve`** launches PHP's built-in server pointed at `public/{scope}/`:
+
+```bash
+oz project serve -s api -h localhost -p 8080
+```
+
+Writes a `server.json` to the scope's cache dir with host/port/protocol.
+
+**Multi-scope projects**: Each `public/{scope}/index.php` bootstraps its own `Context` independently. Scopes share the same app class and settings hierarchy but can override any settings group in `scopes/{name}/settings/`.
+
+---
+
+## 23. Integration Test Conventions
+
+### Overview
+
+Integration tests exercise the CLI toolchain (project creation, scope management, DB migrations, etc.) against a real filesystem and database. They live separately from unit tests.
+
+| Suite       | Directory                                 | Bootstrap                         |
+| ----------- | ----------------------------------------- | --------------------------------- |
+| Unit        | `tests/` (excluding `tests/Integration/`) | `tests/autoload.php`              |
+| Integration | `tests/Integration/`                      | `tests/Integration/bootstrap.php` |
+
+### Project directories
+
+Each test that needs a project creates it in `tests/projects/{name}/` (auto-created, `.gitignore`'d). Directories are created and destroyed per test class via `OZTestProject` helper.
+
+### `OZTestProject` helper (`tests/Integration/Support/OZTestProject.php`)
+
+Wraps `bin/oz` subprocess calls in a project directory.
+
+**Vendor caching — `composer install` runs only when dependencies actually change.**
+
+`OZTestProject::create(string $name, array $deps = [], array $deps_dev = [], bool $shared = true)`
+
+1. Creates `tests/projects/{name}/` and runs `oz project create` inside it.
+2. Patches the generated `composer.json` with `$deps`/`$deps_dev` and adds a path
+   repository pointing at the ozone root (so `silassare/ozone` is resolved locally
+   without downloading).
+3. Computes a SHA-256 hash of the final `require` + `require-dev` maps (includes
+   `$name` when `$shared = false` so the vendor dir is not shared with other projects
+   that have the same dep set).
+4. If `tests/_vendors_cache_/{hash}/` already exists, symlinks `vendor/` there
+   — nothing is installed.
+   Otherwise runs `composer install`, moves `vendor/` to the cache dir, then
+   symlinks back in.
+
+Settings override — DB credentials and other per-test values should be injected
+via `writeEnv()` (appends/updates `.env`). The generated `app/settings/oz.db.php`
+reads all DB config from `.env` via `env()`, so no PHP settings file needs
+touching for typical DB tests.
+For other settings overrides use `setSetting()`.
+
+```php
+// Create project — composer install only runs if dep hash not yet cached:
+$proj = OZTestProject::create('my-test');
+
+// Inject DB config into .env:
+$proj->writeEnv((new DbTestConfig())->toEnvArray());
+
+// Override any settings key (writes/updates app/settings/{group}.php):
+$proj->setSetting('oz.request', 'OZ_DEFAULT_ORIGIN', 'http://localhost:8080');
+
+// Run any oz command inside the project dir:
+$proc = $proj->oz('migrations', 'run');
+$proc->mustRun();
+
+// Tear down (unlinks vendor symlink, removes project dir):
+$proj->destroy();
+```
+
+`OZTestProject::create()` never corrupts the ozone root `vendor/` — the path
+repository only places a symlink inside the cached vendor as `vendor/silassare/ozone`.
+
+### Multi-DB support
+
+Tests read DB configuration from environment variables:
+
+| Env var            | Default      | Description                   |
+| ------------------ | ------------ | ----------------------------- |
+| `OZ_TEST_DB_RDBMS` | `sqlite`     | `mysql`, `pgsql`, or `sqlite` |
+| `OZ_TEST_DB_HOST`  | `:memory:`   | DB host (or SQLite path)      |
+| `OZ_TEST_DB_NAME`  | `ozone_test` | Database name                 |
+| `OZ_TEST_DB_USER`  | `root`       | DB username                   |
+| `OZ_TEST_DB_PASS`  | `""`         | DB password                   |
+
+Integration test classes that require a DB extend `IntegrationTestCase` (in `tests/Support/`) which applies the schema DDL once per process.
+
+### Test class guidelines
+
+- One focused test class per feature. Keep classes small.
+- Namespace: `OZONE\Tests\Integration\{Feature}\{ClassName}Test`
+- File path: `tests/Integration/{Feature}/{ClassName}Test.php`
+- Extend `PHPUnit\Framework\TestCase` for CLI/filesystem tests
+- Extend `OZONE\Tests\Support\IntegrationTestCase` for tests that need DB access
+- Skip tests when required conditions are absent (e.g. MySQL not configured)
+
+### Directory structure
+
+```
+tests/
+  Integration/
+    bootstrap.php               # lightweight bootstrap (no OZone::bootstrap)
+    Support/
+      OZTestProject.php         # project lifecycle wrapper
+      DbTestConfig.php          # multi-DB env-var reader
+    Project/
+      ProjectCreateTest.php     # project scaffold, structure verification
+    Scopes/
+      ScopesAddTest.php         # scope creation, directory structure
+    Db/
+      MigrationsTest.php        # db build, migrations create/check/run/rollback
+    Queue/
+      JobQueueTest.php          # dispatch, run, finish, retry
+    Cron/
+      CronTaskTest.php          # task registration, runDues, state
+  projects/                     # .gitignore'd; created/destroyed per test run
+```
+
+### Running integration tests
+
+```bash
+# All integration tests (SQLite by default):
+./vendor/bin/phpunit --testsuite Integration
+
+# With MySQL:
+OZ_TEST_DB_RDBMS=mysql OZ_TEST_DB_NAME=ozone_test OZ_TEST_DB_USER=root \
+  ./vendor/bin/phpunit --testsuite Integration
+
+# With PostgreSQL:
+OZ_TEST_DB_RDBMS=pgsql OZ_TEST_DB_HOST=localhost OZ_TEST_DB_NAME=ozone_test \
+  OZ_TEST_DB_USER=postgres ./vendor/bin/phpunit --testsuite Integration
+```
