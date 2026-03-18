@@ -25,9 +25,9 @@ use OZONE\Core\Cli\Command;
 final class SettingsCmd extends Command
 {
 	/**
-	 * Upsets a new setting in the project.
+	 * Sets a new setting in the project.
 	 */
-	public function upset(
+	public function set(
 		KliArgs $args
 	): void {
 		$scope_name      = $args->get('scope');
@@ -41,7 +41,7 @@ final class SettingsCmd extends Command
 		$style = $cli->style()->green();
 
 		$cli->success(\sprintf(
-			'Setting %s in group %s has been successfully updated.',
+			'Setting %s in group %s has been successfully set.',
 			$style->apply($key),
 			$style->apply($group)
 		));
@@ -79,16 +79,16 @@ final class SettingsCmd extends Command
 	{
 		$this->description('Manage your project settings.');
 
-		// action: upset a setting
-		$upset = $this->action('upset', 'Upset a setting in the project.');
-		self::commonOptions($upset);
-		$upset->option('value', 'v', [], 4)
+		// action: set a setting
+		$set = $this->action('set', 'Set a setting in the project.');
+		self::commonOptions($set);
+		$set->option('value', 'v', [], 4)
 			->required()
 			->prompt(true, 'The setting value')
 			->description('The setting value. Use json format for array or object value.')
 			->string();
 
-		$upset->handler($this->upset(...));
+		$set->handler($this->set(...));
 
 		// action: unset a setting
 		$unset = $this->action('unset', 'Unset a setting in the project.');
