@@ -36,6 +36,13 @@ final class BlatePlugin implements BootHookReceiverInterface
 
 	public static function register(): void
 	{
+		static $registered = false;
+
+		if ($registered) {
+			return;
+		}
+		$registered = true;
+
 		Blate::registerHelper(
 			'setting',
 			[Settings::class, 'get']

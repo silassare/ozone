@@ -22,6 +22,7 @@ use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Exceptions\Utils\ErrorUtils;
 use OZONE\Core\OZone;
+use OZONE\Core\Web\BlatePlugin;
 use PHPUtils\Str;
 
 /**
@@ -77,6 +78,10 @@ final class Cli extends Kli
 				$title = \sprintf('oz:%s', Str::stringToURLSlug($project_name));
 
 				OZone::bootstrap($app);
+			} else {
+				// we need template for project create command,
+				// so we bootstrap with blate plugin to have access to ozone custom template helper in blate templates.
+				BlatePlugin::register();
 			}
 
 			\cli_set_process_title($title);
@@ -137,6 +142,7 @@ final class Cli extends Kli
 	public static function run(array $args): void
 	{
 		ErrorUtils::registerHandlers();
+
 		self::getInstance()
 			->execute($args);
 	}
