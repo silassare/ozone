@@ -35,7 +35,7 @@ final class SettingsCmd extends Command
 		$key             = $args->get('key');
 		$value           = self::parseValue($args->get('value'));
 
-		Settings::set($key, $value, $group, scope($scope_name));
+		Settings::set($group, $key, $value, scope($scope_name));
 
 		$cli   = $this->getCli();
 		$style = $cli->style()->green();
@@ -59,7 +59,7 @@ final class SettingsCmd extends Command
 		$group           = $args->get('group');
 		$key             = $args->get('key');
 
-		Settings::unset($key, $group, scope($scope_name));
+		Settings::unset($group, $key, scope($scope_name));
 
 		$cli   = $this->getCli();
 		$style = $cli->style()->green();
