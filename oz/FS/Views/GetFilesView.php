@@ -15,12 +15,13 @@ namespace OZONE\Core\FS\Views;
 
 use Override;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Db\OZFile;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\FS\FileAccess;
-use OZONE\Core\FS\FilesServer;
 use OZONE\Core\FS\FileStream;
+use OZONE\Core\FS\Filters\FileFilters;
 use OZONE\Core\FS\FS;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\RouteInfo;
@@ -54,7 +55,7 @@ class GetFilesView extends WebView
 
 		foreach ($format_alts as $alt) {
 			self::defineRouteParams(
-				$router->get($alt, static fn (RouteInfo $ri) => self::handle($ri, true))
+				$router->get($alt, static fn(RouteInfo $ri) => self::handle($ri, true))
 			);
 		}
 	}
@@ -132,7 +133,7 @@ class GetFilesView extends WebView
 		$response = $context->getResponse();
 
 		if ($req_file_filters) {
-			$response = self::applyFilters($response, $driver->getStream($file), $req_file_filters);
+			$response = self::applyFilters($response, $file, $driver->getStream($file), $req_file_filters);
 		} else {
 			$response = $driver->serve($file, $response);
 
@@ -146,20 +147,22 @@ class GetFilesView extends WebView
 	}
 
 	/**
-	 * Should apply filters to the file.
+	 * Apply filter tokens to a file and return the populated response.
 	 *
-	 * @param Response   $response The request response object
-	 * @param FileStream $_file    The file stream
-	 * @param string     $_filters The filters to apply
+	 * Dispatches to the first matching FileFilterHandlerInterface registered
+	 * in FileFilters. Falls back to raw streaming when no handler matches.
+	 *
+	 * @param Response   $response the response object to populate
+	 * @param OZFile     $file     the file entity
+	 * @param FileStream $stream   a fresh, unread file stream
+	 * @param string     $filters  the raw filters param from the URL (tokens joined by FS::FILTERS_SEPARATOR)
 	 *
 	 * @return Response
 	 */
-	private static function applyFilters(Response $response, FileStream $_file, string $_filters): Response
+	private static function applyFilters(Response $response, OZFile $file, FileStream $stream, string $filters): Response
 	{
-		/** @see FilesServer::serve() */
-		// TODO: finish implementation
-		// $filters_list = \explode(FS::FILTERS_SEPARATOR, $filters);
+		$filterTokens = \array_values(\array_filter(\explode(FS::FILTERS_SEPARATOR, $filters)));
 
-		return $response;
+		return FileFilters::apply($file, $stream, $response, $filterTokens);
 	}
 }
