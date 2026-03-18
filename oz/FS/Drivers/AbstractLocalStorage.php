@@ -198,13 +198,20 @@ abstract class AbstractLocalStorage implements StorageInterface
 				->withHeader('X-Sendfile', $abs_path);
 		}
 
-		$size      = $file->getSize();
 		$mime_type = $file->getMime();
 		$body      = Body::fromPath($abs_path);
+		$ts        = $file->getUpdatedAT();
+		$mtime     = \is_numeric($ts) ? (int) $ts : (int) \strtotime($ts);
+		// Derive ETag from public, stable, version-sensitive fields.
+		// The file key is an access-control secret and must NOT be exposed in headers.
+		$etag = \hash('xxh64', $file->getID() . ':' . $file->getSize() . ':' . $ts);
 
-		return $response->withHeader('Content-Transfer-Encoding', 'binary')
-			->withHeader('Content-Length', (string) $size)
-			->withHeader('Content-type', $mime_type)
+		return $response
+			->withHeader('Content-Type', $mime_type)
+			->withHeader('Accept-Ranges', 'bytes')
+			->withHeader('ETag', '"' . $etag . '"')
+			->withHeader('Last-Modified', \gmdate('D, d M Y H:i:s \G\M\T', $mtime))
+			->withHeader('Cache-Control', 'private, max-age=31536000, immutable')
 			->withBody($body);
 	}
 
@@ -330,8 +337,8 @@ abstract class AbstractLocalStorage implements StorageInterface
 		$destination = $this->uploadsDir()->resolve($ref);
 		if (
 			$fs->filter()
-			->isFile()
-			->check($destination)
+				->isFile()
+				->check($destination)
 		) {
 			return $destination;
 		}

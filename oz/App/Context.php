@@ -28,6 +28,7 @@ use OZONE\Core\Hooks\Events\RequestHook;
 use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Http\Headers;
 use OZONE\Core\Http\HTTPEnvironment;
+use OZONE\Core\Http\RangeResponse;
 use OZONE\Core\Http\Request;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\Uri;
@@ -520,9 +521,9 @@ final class Context
 										$unsafe_ip,
 										\FILTER_VALIDATE_IP,
 										\FILTER_FLAG_IPV4
-										| \FILTER_FLAG_IPV6
-										| \FILTER_FLAG_NO_PRIV_RANGE
-										| \FILTER_FLAG_NO_RES_RANGE
+											| \FILTER_FLAG_IPV6
+											| \FILTER_FLAG_NO_PRIV_RANGE
+											| \FILTER_FLAG_NO_RES_RANGE
 									)) !== false
 								) {
 									$user_ip   = $unsafe_ip;
@@ -671,7 +672,9 @@ final class Context
 		if (!$response->isEmpty()) {
 			$body = $response->getBody();
 
-			if ($body->isSeekable()) {
+			// For 206 Partial Content, RangeResponse::apply() already seeked the body
+			// to the range start position — rewinding would reset that.
+			if ($body->isSeekable() && 206 !== $response->getStatusCode()) {
 				$body->rewind();
 			}
 
@@ -992,7 +995,13 @@ final class Context
 			->getSize();
 
 		if (null !== $size) {
-			return $response->withHeader('Content-Length', (string) $size);
+			$response = $response->withHeader('Content-Length', (string) $size);
+		}
+
+		// Apply range / conditional-request logic for any response that opted in
+		// to byte-range serving by setting the Accept-Ranges: bytes header.
+		if ($response->hasHeader('Accept-Ranges')) {
+			$response = RangeResponse::apply($this->getRequest(), $response);
 		}
 
 		return $response;
