@@ -10,7 +10,7 @@ Completed items are marked ✅.
 
 ---
 
-### [ ] A. `Cli/Cron/Workers/CronWorker.php:98` — Read output for command-line tasks
+### [x] A. `Cli/Cron/Workers/CronWorker.php:98` — Read output for command-line tasks ✅
 
 **Current behaviour:** `getResult()` returns a hardcoded `__UNIMPLEMENTED__` string for `output`.
 
@@ -197,7 +197,7 @@ Replace both methods with a new `FileStream`-based approach already partly in pl
 
 | ID  | File                                            | Complexity | Risk               | Status  |
 | --- | ----------------------------------------------- | ---------- | ------------------ | ------- |
-| A   | `Cli/Cron/Workers/CronWorker.php`               | Low        | Low                | pending |
+| A   | `Cli/Cron/Workers/CronWorker.php`               | Low        | Low                | ✅ done |
 | B   | `Auth/Methods/SessionAuth.php`                  | Low        | Low                | pending |
 | C   | `Auth/Views/LogoutAndRedirectView.php`          | Low        | Low                | pending |
 | D   | `oz_templates/oz.route.access.grant.form.blate` | Low        | Low                | pending |

@@ -32,8 +32,13 @@ use Throwable;
  */
 final class BlatePlugin implements BootHookReceiverInterface
 {
-	public const CONTEXT_INJECT_KEY = '__oz_web_blate_inject_context';
+	public const CONTEXT_INJECT_KEY = '__blate_inject_oz_context__';
 
+	private static $enable_risky = false;
+
+	/**
+	 * Registers the Blate plugin helpers and global variables.
+	 */
 	public static function register(): void
 	{
 		static $registered = false;
@@ -70,11 +75,14 @@ final class BlatePlugin implements BootHookReceiverInterface
 			'description' => 'The current OZone version name.',
 		]);
 
-		// Do we really need the whole context? Maybe we can just inject exactly
-		// what we need (like the above) and avoid giving too much power to the templates?
-		// Blate::registerGlobalVar('oz_context', self::getContext(...), [
-		//   'description' => 'The OZone application context.',
-		// ]);
+		if (self::$enable_risky) {
+			// Do we really need the whole context? Maybe we can just inject exactly
+			// what is useful (like above) and avoid giving too much power to the templates?
+			// But for now we can keep it like this and see if we really need it.
+			Blate::registerComputedGlobalVar('oz_context', self::getContext(...), [
+				'description' => 'The OZone application context.',
+			]);
+		}
 	}
 
 	/**
