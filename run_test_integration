@@ -1,0 +1,48 @@
+#!/bin/sh
+
+# Integration test runner for OZone.
+#
+# Required environment variables (with defaults shown):
+#   OZ_TEST_DB_RDBMS          mysql
+#   OZ_TEST_DB_HOST           127.0.0.1
+#   OZ_TEST_DB_NAME           ozone_test
+#   OZ_TEST_DB_USER           root
+#   OZ_TEST_DB_PASS           (empty)
+#   OZ_TEST_DB_TABLE_PREFIX   (empty)
+#
+# Copy .env.test.example to .env.test, fill in your values, then run:
+#   source .env.test && ./run_test_integration
+#
+# Or export the variables inline:
+#   OZ_TEST_DB_USER=myuser OZ_TEST_DB_PASS=secret ./run_test_integration
+#
+# To use SQLite (no external server needed):
+#   OZ_TEST_DB_RDBMS=sqlite OZ_TEST_DB_HOST=:memory: ./run_test_integration
+#
+# Docker / CI note:
+#   Point OZ_TEST_DB_HOST at the MySQL container host/port and make sure the
+#   database named in OZ_TEST_DB_NAME exists.  The integration bootstrap
+#   handles CREATE TABLE; no prior schema setup is required.
+
+set -e
+
+DB_RDBMS="${OZ_TEST_DB_RDBMS:-mysql}"
+DB_HOST="${OZ_TEST_DB_HOST:-127.0.0.1}"
+DB_NAME="${OZ_TEST_DB_NAME:-ozone_test}"
+DB_USER="${OZ_TEST_DB_USER:-root}"
+DB_PASS="${OZ_TEST_DB_PASS:-}"
+
+# For MySQL: ensure the test database exists before PHPUnit runs.
+if [ "$DB_RDBMS" = "mysql" ]; then
+    if command -v mysql > /dev/null 2>&1; then
+        if [ -n "$DB_PASS" ]; then
+            mysql -h"$DB_HOST" -u"$DB_USER" -p"$DB_PASS" \
+                -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;" 2>/dev/null || true
+        else
+            mysql -h"$DB_HOST" -u"$DB_USER" \
+                -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;" 2>/dev/null || true
+        fi
+    fi
+fi
+
+./vendor/bin/phpunit --testsuite Integration --testdox --do-not-cache-result
