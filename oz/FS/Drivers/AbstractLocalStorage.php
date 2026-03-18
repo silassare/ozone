@@ -85,6 +85,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 		$filesize = \filesize($destination);
 
+		/** @var string $ref */
 		$f = new OZFile();
 		$f->setName($clean_name)
 			->setRealName($filename)
@@ -123,6 +124,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 		$filesize = \filesize($destination);
 
+		/** @var string $ref */
 		$f = new OZFile();
 		$f->setName($clean_name)
 			->setRealName($filename)
@@ -328,8 +330,8 @@ abstract class AbstractLocalStorage implements StorageInterface
 		$destination = $this->uploadsDir()->resolve($ref);
 		if (
 			$fs->filter()
-				->isFile()
-				->check($destination)
+			->isFile()
+			->check($destination)
 		) {
 			return $destination;
 		}
