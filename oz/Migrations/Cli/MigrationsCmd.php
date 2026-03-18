@@ -104,7 +104,7 @@ final class MigrationsCmd extends Command
 			$table->addHeader('Date', 'date')
 				->setCellFormatter(KliTableFormatter::date('jS F Y, g:i:s a'));
 
-			$table->addRows(\array_map(static fn(MigrationInterface $migration) => [
+			$table->addRows(\array_map(static fn (MigrationInterface $migration) => [
 				'label'   => $migration->getLabel(),
 				'version' => $migration->getVersion(),
 				'date'    => $migration->getTimestamp(),
