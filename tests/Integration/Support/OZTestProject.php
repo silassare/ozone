@@ -18,12 +18,12 @@ use RuntimeException;
 use Symfony\Component\Process\Process;
 
 /**
- * Helper that manages a throwaway OZone project inside tests/projects/{name}/.
+ * Helper that manages a throwaway OZone project inside /tmp/_oz_tests_/projects/{name}/.
  *
  * Vendor caching:
  *   - A SHA-256 hash is computed from the project's effective require + require-dev.
- *   - If tests/_vendors_cache_/{hash}/ already exists, vendor/ is symlinked there
- *     — no composer install needed.
+ *   - If /tmp/_oz_tests_/_vendors_cache_/{hash}/ already exists, vendor/ is symlinked there
+ *     -- no composer install needed.
  *   - Otherwise composer install runs, the resulting vendor/ is moved to the cache
  *     dir, then symlinked back in. Subsequent projects with the same dep set reuse
  *     the cache instantly.
@@ -46,7 +46,7 @@ final class OZTestProject
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Creates a test project in tests/projects/{name}/ and returns a handle.
+	 * Creates a test project in /tmp/_oz_tests_/projects/{name}/ and returns a handle.
 	 *
 	 * Composer install only runs when the effective dependency set has never
 	 * been seen before — otherwise the cached vendor/ directory is symlinked.
@@ -84,14 +84,11 @@ final class OZTestProject
 					$ozone_root . \DIRECTORY_SEPARATOR . 'bin' . \DIRECTORY_SEPARATOR . 'oz',
 					'project',
 					'create',
-					'--root-dir',
-					$project_dir,
-					'--name',
-					$name,
-					'--namespace',
-					$namespace,
-					'--prefix',
-					$prefix,
+					"--root-dir={$project_dir}",
+					"--name={$name}",
+					"--namespace={$namespace}",
+					'--class-name=SampleApp',
+					"--prefix={$prefix}",
 				],
 				$ozone_root,
 			);
@@ -114,6 +111,22 @@ final class OZTestProject
 			'url'     => $ozone_root,
 			'options' => ['symlink' => true],
 		]];
+
+		// Allow any version of ozone so the path-repo (which exports dev-main)
+		// satisfies the constraint regardless of the exact version written in
+		// the generated composer.json.
+		$composer['require']['silassare/ozone'] = '*';
+
+		// Composer requires PSR-4 namespace prefixes to end with '\'.
+		// The project generator omits the trailing backslash, so add it here.
+		if (isset($composer['autoload']['psr-4'])) {
+			$psr4 = [];
+			foreach ($composer['autoload']['psr-4'] as $prefix => $paths) {
+				$key        = \str_ends_with($prefix, '\\') ? $prefix : $prefix . '\\';
+				$psr4[$key] = $paths;
+			}
+			$composer['autoload']['psr-4'] = $psr4;
+		}
 
 		foreach ($deps as $pkg => $ver) {
 			$composer['require'][$pkg] = $ver;
@@ -290,19 +303,19 @@ final class OZTestProject
 	}
 
 	/**
-	 * tests/_vendors_cache_/.
+	 * /tmp/_oz_tests_/_vendors_cache_/.
 	 */
 	private static function vendorsCacheDir(): string
 	{
-		return \dirname(__DIR__, 2) . \DIRECTORY_SEPARATOR . '_vendors_cache_';
+		return '/tmp/_oz_tests_/_vendors_cache_';
 	}
 
 	/**
-	 * tests/projects/.
+	 * /tmp/_oz_tests_/projects/.
 	 */
 	private static function projectsDir(): string
 	{
-		return \dirname(__DIR__, 2) . \DIRECTORY_SEPARATOR . 'projects';
+		return '/tmp/_oz_tests_/projects';
 	}
 
 	/**
