@@ -388,7 +388,7 @@ final class Settings
 			$max_length = $align ? \max(\array_map('\strlen', \array_map('trim', \array_keys($data)))) + 2 : 0;
 
 			foreach ($data as $key => $value) {
-				if (\is_string($value) && \str_starts_with($key, '::comment::')) {
+				if (!$indexed && \is_string($key) && \str_starts_with($key, '::comment::') && \is_string($value)) {
 					$comment = $start . '//= ';
 					$comment .= \wordwrap($value, 75, \PHP_EOL . $comment);
 					$r[]     = $comment;
