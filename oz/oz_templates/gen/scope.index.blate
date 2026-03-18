@@ -4,7 +4,7 @@ declare(strict_types=1);
 {@import 'oz://gen/gen.info.blate' $$}
 
 use OZONE\Core\App\Settings;
-use OZONE\Core\FS\Templates;
+use OZONE\Core\FS\Assets;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\OZone;
 {@if !oz_use_api_context}
@@ -32,7 +32,7 @@ $app = require OZ_APP_DIR . 'app.php';
 Settings::addSource(OZ_PROJECT_DIR . 'scopes' . DS . OZ_SCOPE_NAME . DS . 'settings');
 
 //= Adds additional templates source
-Templates::addSource(OZ_PROJECT_DIR . 'scopes' . DS . OZ_SCOPE_NAME . DS . 'templates');
+Assets::addSource(OZ_PROJECT_DIR . 'scopes' . DS . OZ_SCOPE_NAME . DS . 'templates');
 
 //= Adds new directory to project namespace
 ClassLoader::addNamespace('\{=oz_project_namespace}', OZ_PROJECT_DIR . 'scopes' . DS . OZ_SCOPE_NAME);
