@@ -6,6 +6,42 @@ Completed items are marked ✅.
 
 ---
 
+## HIGHEST PRIORITY — Integration Test Coverage
+
+---
+
+### [ ] 0. Expand integration test suite
+
+**Goal:** Full integration test coverage before adding new features or fixing bugs. Tests exercise real CLI
+subprocesses against temporary scaffolded projects so regressions are caught end-to-end.
+
+**Status: IN PROGRESS — foundational suite created, needs expansion.**
+
+**Done so far:**
+
+| File                                              | Covers                                                                                                  |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `tests/Integration/Project/ProjectCreateTest.php` | `oz project create` — full directory/file structure, PHP syntax validity, idempotency                   |
+| `tests/Integration/Scopes/ScopesAddTest.php`      | `oz scopes add` — API scope, web scope, multiple scopes, origin persisted, htaccess content, PHP syntax |
+| `tests/Integration/Project/ProjectServeTest.php`  | PHP built-in server starts, responds to HTTP, returns OZone JSON                                        |
+| `tests/Integration/Settings/SettingsCmdTest.php`  | `oz settings set/unset` — all value types, scope-scoped writes, unset removes key                       |
+
+**Bug fixed:** `SettingsCmd` argument order corrected — `Settings::set($group, $key, $value, ...)` and `Settings::unset($group, $key, ...)`. ✅
+
+**Remaining test areas:**
+
+- `oz db build` — ORM class generation from schema
+- `oz migrations create/check/run/rollback` — full migration lifecycle
+- `oz services generate` — service scaffolding
+- Route registration, guard, middleware, form validation (via HTTP in served project)
+- Template rendering via web scope
+- Auth flows (login, logout, token) via HTTP
+- Queue/job dispatch and processing
+
+**Complexity:** Low-Medium | **Risk:** Low (test-only changes)
+
+---
+
 ## LOW PRIORITY
 
 ---
