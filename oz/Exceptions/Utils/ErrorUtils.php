@@ -94,7 +94,9 @@ class ErrorUtils
 			?->onUnhandledThrowable($t);
 
 		if (OZone::isCliMode()) {
-			exit(\PHP_EOL . $t->getMessage() . \PHP_EOL);
+			\fwrite(\STDERR, \PHP_EOL . $t->getMessage() . \PHP_EOL);
+
+			exit(1);
 		}
 
 		self::criticalDieMessage();
@@ -155,9 +157,9 @@ class ErrorUtils
 			oz_logger()->log(
 				self::errorCodeToLogLevel($code),
 				'::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
-				. \PHP_EOL
-				. 'OZone shutdown error'
-				. \PHP_EOL . '::::::::::::::::::::::::'
+					. \PHP_EOL
+					. 'OZone shutdown error'
+					. \PHP_EOL . '::::::::::::::::::::::::'
 			);
 			self::errorHandler($code, $error['message'], $error['file'], $error['line'], true);
 		}
