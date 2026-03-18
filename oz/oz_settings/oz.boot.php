@@ -14,6 +14,7 @@ declare(strict_types=1);
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Auth2FA;
 use OZONE\Core\Collections\EntityCollections;
+use OZONE\Core\FS\Assets;
 use OZONE\Core\FS\TempFS;
 use OZONE\Core\Hooks\MainBootHookReceiver;
 use OZONE\Core\Queue\QueueBootHookReceiver;
@@ -22,6 +23,7 @@ use OZONE\Core\Web\BlatePlugin;
 
 return [
 	MainBootHookReceiver::class  => true,
+	Assets::class  				          => true,
 	EntityCollections::class     => true,
 	Session::class               => true,
 	Auth::class                  => true,
