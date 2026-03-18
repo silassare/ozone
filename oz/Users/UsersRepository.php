@@ -107,7 +107,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		}
 
 		$tb->column('pass', new TypePassword());
-		$tb->map('data')->default([])->nativeJson();
+		$tb->map('data')->default([]);
 
 		// optional columns
 		$tb->column('pic', (new TypeFile())->mimeTypes(['image/png', 'image/jpeg'])->nullable());
