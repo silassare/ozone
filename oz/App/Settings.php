@@ -28,7 +28,7 @@ use Throwable;
 final class Settings
 {
 	/**
-	 * setting group name pattern.
+	 * Setting group name pattern.
 	 *
 	 * ```
 	 * foo.bar.baz        -> ok
@@ -41,26 +41,26 @@ final class Settings
 	public const PATTERN_SETTING_GROUP_NAME = '(?:[a-z0-9]+/)*[a-z0-9]+(?:\.[a-z0-9]+)*';
 
 	/**
-	 * setting group name regular expression.
+	 * Setting group name regular expression.
 	 */
 	public const REG_SETTING_GROUP_NAME = '#^' . self::PATTERN_SETTING_GROUP_NAME . '$#';
 
 	/**
-	 * settings map array.
+	 * Settings groups map.
 	 *
-	 * @var array
+	 * @var array<string, SettingsGroup>
 	 */
-	private static array $settings_map = [];
+	private static array $settings_groups = [];
 
 	/**
-	 * list of not editable settings at runtime.
+	 * List of not editable settings at runtime.
 	 *
 	 * @var array<string, null>
 	 */
 	private static array $settings_blacklist = ['oz.config' => null];
 
 	/**
-	 * settings as loaded array.
+	 * Settings as loaded array.
 	 *
 	 * @var array<string, array>
 	 */
@@ -85,7 +85,7 @@ final class Settings
 	}
 
 	/**
-	 * adds settings sources directory.
+	 * Adds settings sources directory.
 	 *
 	 * @param string $path settings files directory path
 	 */
@@ -110,83 +110,91 @@ final class Settings
 	}
 
 	/**
-	 * returns settings group data.
+	 * Returns settings group data.
 	 *
-	 * @param string $setting_group the setting group
-	 * @param bool   $reload        reload settings from sources
+	 * @param string $group  the setting group
+	 * @param bool   $reload reload settings from sources
 	 *
 	 * @return array
 	 */
-	public static function load(string $setting_group, bool $reload = false): array
+	public static function load(string $group, bool $reload = false): array
 	{
-		self::checkSettingGroupName($setting_group);
-		self::loadAll($setting_group, $reload);
-
-		if (\array_key_exists($setting_group, self::$settings_map)) {
-			return self::$settings_map[$setting_group];
-		}
-
-		throw new RuntimeException(\sprintf('Undefined setting group: %s', $setting_group));
+		return self::requireGroupStore($group, $reload)->toArray();
 	}
 
 	/**
-	 * gets value of a given key in a setting group.
+	 * Gets value of a given key in a setting group.
 	 *
-	 * @param string     $setting_group the setting group
-	 * @param string     $key           the setting key name
-	 * @param null|mixed $def           the default value (when not set)
+	 * @param string     $group  the setting group
+	 * @param string     $key    the setting key name
+	 * @param null|mixed $def    the default value (when not set)
+	 * @param bool       $reload reload settings from sources
 	 *
 	 * @return mixed
 	 */
-	public static function get(string $setting_group, string $key, mixed $def = null): mixed
+	public static function get(string $group, string $key, mixed $def = null, bool $reload = false): mixed
 	{
-		$settings = self::load($setting_group);
+		$s = self::requireGroupStore($group, $reload);
 
-		if (\array_key_exists($key, $settings)) {
-			return $settings[$key];
+		if ($s->has($key)) {
+			return $s->get($key);
 		}
 
 		return $def;
 	}
 
 	/**
-	 * sets value of a given key in a setting group.
+	 * Sets value of a given key in a setting group.
 	 *
-	 * @param string              $setting_group_name the setting group name
-	 * @param string              $key                the setting key
-	 * @param mixed               $value              the setting value
-	 * @param null|ScopeInterface $scope              the scope to use
+	 * @param string              $group the setting group name
+	 * @param string              $key   the setting key
+	 * @param mixed               $value the setting value
+	 * @param null|ScopeInterface $scope the scope to use (default: current app scope)
 	 */
 	public static function set(
-		string $setting_group_name,
+		string $group,
 		string $key,
 		mixed $value,
 		?ScopeInterface $scope = null
 	): void {
-		$data[$key] = $value;
-		self::save($setting_group_name, $data, true, $scope);
+		self::modify($group, static fn ($current) => $current->set($key, $value), $scope);
 	}
 
 	/**
-	 * checks if a given setting group exists.
-	 * if a key is given, checks if the key exists in the setting group.
+	 * Unsets value of a given key in a setting group.
 	 *
-	 * @param string      $setting_group the setting group
-	 * @param null|string $key           the setting key name
+	 * @param string              $group the setting group name
+	 * @param string              $key   the setting key
+	 * @param null|ScopeInterface $scope the scope to use (default: current app scope)
+	 */
+	public static function unset(
+		string $group,
+		string $key,
+		?ScopeInterface $scope = null
+	): void {
+		self::modify($group, static fn ($current) => $current->remove($key), $scope);
+	}
+
+	/**
+	 * Checks if a given setting group exists.
+	 * If a key is given, checks if the key exists in the setting group.
+	 *
+	 * @param string      $group the setting group
+	 * @param null|string $key   the setting key name
 	 *
 	 * @return bool
 	 */
-	public static function has(string $setting_group, ?string $key = null): bool
+	public static function has(string $group, ?string $key = null): bool
 	{
 		try {
 			if (null !== $key) {
 				$def = Random::string();
-				$val = self::get($setting_group, $key, $def);
+				$val = self::get($group, $key, $def);
 
 				return $val !== $def;
 			}
 
-			self::load($setting_group);
+			self::requireGroupStore($group);
 
 			return true;
 		} catch (Throwable) {
@@ -195,45 +203,96 @@ final class Settings
 	}
 
 	/**
-	 * sets settings data.
+	 * Applies the merge strategy to two settings arrays.
 	 *
-	 * @param string              $setting_group_name the setting group name
-	 * @param mixed               $data               settings data
-	 * @param bool                $merge              merge with existing data or not
-	 * @param null|ScopeInterface $scope              the scope
+	 * @param array $a the first settings array
+	 * @param array $b the second settings array
+	 *
+	 * @return array
 	 */
-	public static function save(
-		string $setting_group_name,
-		array $data,
-		bool $merge = false,
+	public static function applyMergeStrategy(array $a, array $b): array
+	{
+		if (\is_int(\key($a))) {
+			return \array_merge($a, $b);
+		}
+
+		return \array_replace_recursive($a, $b);
+	}
+
+	/**
+	 * Generate settings export info usable in template file.
+	 *
+	 * @param string $group    the setting group name
+	 * @param array  $settings the settings
+	 *
+	 * @return array
+	 */
+	public static function genExportInfo(string $group, array $settings): array
+	{
+		return [
+			'oz_settings_name' => $group,
+			'oz_settings_data' => $settings,
+			'oz_settings_str'  => self::export($settings, 1, "\t", true),
+		];
+	}
+
+	/**
+	 * Returns the settings group store instance.
+	 *
+	 * @param string $group  the setting group name
+	 * @param bool   $reload reload settings from sources
+	 *
+	 * @return SettingsGroup
+	 */
+	private static function requireGroupStore(string $group, bool $reload = false): SettingsGroup
+	{
+		self::checkSettingGroupName($group);
+		self::loadAll($group, $reload);
+
+		$found = self::$settings_groups[$group] ?? null;
+
+		if (null !== $found) {
+			return $found;
+		}
+
+		throw new RuntimeException(\sprintf('Undefined setting group: %s', $group));
+	}
+
+	/**
+	 * Modifies settings group data with a modifier callback function.
+	 *
+	 * @param string                       $group    the setting group name
+	 * @param callable(SettingsGroup):void $modifier the settings modifier callback function
+	 * @param null|ScopeInterface          $scope    the scope
+	 */
+	private static function modify(
+		string $group,
+		callable $modifier,
 		?ScopeInterface $scope = null
 	): void {
-		self::checkSettingGroupName($setting_group_name);
+		self::requireGroupStore($group, true);
 
-		if (\array_key_exists($setting_group_name, self::$settings_blacklist)) {
+		if (\array_key_exists($group, self::$settings_blacklist)) {
 			throw new RuntimeException(
 				\sprintf(
 					'Runtime settings edit is disabled for "%s". Try manually.',
-					$setting_group_name
+					$group
 				)
 			);
 		}
 
-		$source_dir_fm         = ($scope ?? app())->getSettingsDir();
-		$setting_relative_path = $setting_group_name . '.php';
-		$setting_abs_path      = $source_dir_fm->resolve($setting_relative_path);
+		$source_dir_fm = ($scope ?? app())->getSettingsDir();
+		$relative_path = $group . '.php';
+		$abs_path      = $source_dir_fm->resolve($relative_path);
 
-		// make sure that settings are loaded
-		self::loadAll($setting_group_name, true);
+		$current = new SettingsGroup(self::$as_loaded[$abs_path] ?? []);
 
-		$current = self::$as_loaded[$setting_abs_path] ?? [];
+		$modifier($current);
 
-		$settings = $merge ? self::merge($current, $data) : $data;
-
-		$inject = self::genExportInfo($setting_group_name, $settings);
+		$inject = self::genExportInfo($group, $current->toArray());
 
 		try {
-			$parts = \pathinfo($setting_abs_path);
+			$parts = \pathinfo($abs_path);
 			$source_dir_fm->cd($parts['dirname'], true)
 				->wf(
 					$parts['basename'],
@@ -244,41 +303,7 @@ final class Settings
 		}
 
 		// updates settings
-		self::loadAll($setting_group_name, true);
-	}
-
-	/**
-	 * settings merge strategy.
-	 *
-	 * @param array $current
-	 * @param array $data
-	 *
-	 * @return array
-	 */
-	public static function merge(array $current, array $data): array
-	{
-		if (\is_int(\key($current))) {
-			return \array_merge($current, $data);
-		}
-
-		return \array_replace_recursive($current, $data);
-	}
-
-	/**
-	 * generate settings export info usable in template file.
-	 *
-	 * @param string $setting_group_name the setting group name
-	 * @param array  $settings           the settings
-	 *
-	 * @return array
-	 */
-	public static function genExportInfo(string $setting_group_name, array $settings): array
-	{
-		return [
-			'oz_settings_name' => $setting_group_name,
-			'oz_settings_data' => $settings,
-			'oz_settings_str'  => self::export($settings, 1, "\t", true),
-		];
+		self::loadAll($group, true);
 	}
 
 	/**
@@ -288,41 +313,40 @@ final class Settings
 	 *  - first load from default ozone settings sources dir
 	 *  - after load from customs app settings sources dir
 	 *
-	 * @param string $setting_group_name the setting group name
-	 * @param bool   $reload             reload settings from sources
+	 * @param string $group  the setting group name
+	 * @param bool   $reload reload settings from sources
 	 */
-	private static function loadAll(string $setting_group_name, bool $reload = false): void
+	private static function loadAll(string $group, bool $reload = false): void
 	{
 		if ($reload) {
-			unset(self::$settings_map[$setting_group_name]);
+			unset(self::$settings_groups[$group]);
 		}
 
-		if (!\array_key_exists($setting_group_name, self::$settings_map)) {
+		if (!\array_key_exists($group, self::$settings_groups)) {
 			$list = self::getSources()->getAllSources();
 
 			foreach ($list as $source) {
-				$fm               = FS::from($source);
-				$setting_abs_path = $fm->resolve($setting_group_name . '.php');
+				$fm       = FS::from($source);
+				$abs_path = $fm->resolve($group . '.php');
 
-				if (\file_exists($setting_abs_path)) {
-					$result = require $setting_abs_path;
+				if (\file_exists($abs_path)) {
+					$result = require $abs_path;
 
 					if (!\is_array($result)) {
 						throw new RuntimeException(\sprintf(
 							'Settings "%s" returned from "%s" should be of type "array" not "%s"',
-							$setting_group_name,
-							$setting_abs_path,
+							$group,
+							$abs_path,
 							\get_debug_type($result)
 						));
 					}
 
-					self::$as_loaded[$setting_abs_path] = $result;
+					self::$as_loaded[$abs_path] = $result;
 
-					if (!\array_key_exists($setting_group_name, self::$settings_map)) {
-						self::$settings_map[$setting_group_name] = $result;
+					if (!\array_key_exists($group, self::$settings_groups)) {
+						self::$settings_groups[$group] = new SettingsGroup($result);
 					} else {
-						$current                                 = self::$settings_map[$setting_group_name];
-						self::$settings_map[$setting_group_name] = self::merge($current, $result);
+						self::$settings_groups[$group]->merge($result);
 					}
 				}
 			}
@@ -342,7 +366,7 @@ final class Settings
 	}
 
 	/**
-	 * a custom var_export function for settings.
+	 * A custom var_export function for settings.
 	 *
 	 * @param mixed  $data        the data to export
 	 * @param int    $indent      indent start
