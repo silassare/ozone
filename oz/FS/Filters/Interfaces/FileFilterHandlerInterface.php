@@ -27,26 +27,26 @@ use OZONE\Core\Http\Response;
  */
 interface FileFilterHandlerInterface
 {
-    /**
-     * Returns true when this handler can process the given file
-     * using the provided filter tokens.
-     *
-     * @param OZFile   $file         the file entity
-     * @param string[] $filterTokens the individual filter tokens (already split on FS::FILTERS_SEPARATOR)
-     *
-     * @return bool
-     */
-    public function canHandle(OZFile $file, array $filterTokens): bool;
+	/**
+	 * Returns true when this handler can process the given file
+	 * using the provided filter tokens.
+	 *
+	 * @param OZFile   $file         the file entity
+	 * @param string[] $filterTokens the individual filter tokens (already split on FS::FILTERS_SEPARATOR)
+	 *
+	 * @return bool
+	 */
+	public function canHandle(OZFile $file, array $filterTokens): bool;
 
-    /**
-     * Processes the file stream and returns a populated response.
-     *
-     * @param OZFile     $file         the file entity
-     * @param FileStream $stream       a fresh, unread stream of the file content
-     * @param Response   $response     the response object to populate and return
-     * @param string[]   $filterTokens the individual filter tokens to apply
-     *
-     * @return Response
-     */
-    public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response;
+	/**
+	 * Processes the file stream and returns a populated response.
+	 *
+	 * @param OZFile     $file         the file entity
+	 * @param FileStream $stream       a fresh, unread stream of the file content
+	 * @param Response   $response     the response object to populate and return
+	 * @param string[]   $filterTokens the individual filter tokens to apply
+	 *
+	 * @return Response
+	 */
+	public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response;
 }

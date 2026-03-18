@@ -55,159 +55,159 @@ use OZONE\Core\Http\Response;
  */
 class ImageFileFilterHandler implements FileFilterHandlerInterface
 {
-    private const CACHE_NS = 'oz.fs.image.filters';
+	private const CACHE_NS = 'oz.fs.image.filters';
 
-    /**
-     * {@inheritDoc}
-     */
-    #[Override]
-    public function canHandle(OZFile $file, array $filterTokens): bool
-    {
-        return FileKind::IMAGE === FileKind::fromMime($file->getMime());
-    }
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function canHandle(OZFile $file, array $filterTokens): bool
+	{
+		return FileKind::IMAGE === FileKind::fromMime($file->getMime());
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    #[Override]
-    public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response
-    {
-        $cacheKey = \md5($file->getID() . ':' . $file->getKey() . ':' . \implode(',', $filterTokens));
-        $cm       = CacheManager::persistent(self::CACHE_NS);
-        $item     = $cm->getItem($cacheKey);
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response
+	{
+		$cacheKey = \md5($file->getID() . ':' . $file->getKey() . ':' . \implode(',', $filterTokens));
+		$cm       = CacheManager::persistent(self::CACHE_NS);
+		$item     = $cm->getItem($cacheKey);
 
-        if (!$item->expired()) {
-            /** @var array{mime: string, bytes: string} $cached */
-            $cached = $item->get();
-            $mime   = $cached['mime'];
-            $bytes  = $cached['bytes'];
-        } else {
-            [$mime, $bytes] = $this->process($file, $stream, $filterTokens);
-            $cm->set($cacheKey, ['mime' => $mime, 'bytes' => $bytes]);
-        }
+		if (!$item->expired()) {
+			/** @var array{mime: string, bytes: string} $cached */
+			$cached = $item->get();
+			$mime   = $cached['mime'];
+			$bytes  = $cached['bytes'];
+		} else {
+			[$mime, $bytes] = $this->process($file, $stream, $filterTokens);
+			$cm->set($cacheKey, ['mime' => $mime, 'bytes' => $bytes]);
+		}
 
-        return $response
-            ->withHeader('Content-type', $mime)
-            ->withHeader('Content-Length', (string) \strlen($bytes))
-            ->withBody(Body::fromString($bytes));
-    }
+		return $response
+			->withHeader('Content-type', $mime)
+			->withHeader('Content-Length', (string) \strlen($bytes))
+			->withBody(Body::fromString($bytes));
+	}
 
-    /**
-     * Parse tokens, apply SimpleImage transformations, return [mime, bytes].
-     *
-     * Falls back to the raw content when image processing fails.
-     *
-     * @param OZFile     $file
-     * @param FileStream $stream
-     * @param string[]   $filterTokens
-     *
-     * @return array{0: string, 1: string}
-     */
-    private function process(OZFile $file, FileStream $stream, array $filterTokens): array
-    {
-        // -------------------------------------------------------------------
-        // Parse tokens
-        // -------------------------------------------------------------------
-        $maxW     = null;    // int|null
-        $maxH     = null;    // int|null
-        $quality  = 100;
-        $useCrop  = false;
-        $cropOverridden = false;   // true when 'crop' or 'nocrop' was explicit
+	/**
+	 * Parse tokens, apply SimpleImage transformations, return [mime, bytes].
+	 *
+	 * Falls back to the raw content when image processing fails.
+	 *
+	 * @param OZFile     $file
+	 * @param FileStream $stream
+	 * @param string[]   $filterTokens
+	 *
+	 * @return array{0: string, 1: string}
+	 */
+	private function process(OZFile $file, FileStream $stream, array $filterTokens): array
+	{
+		// -------------------------------------------------------------------
+		// Parse tokens
+		// -------------------------------------------------------------------
+		$maxW           = null;    // int|null
+		$maxH           = null;    // int|null
+		$quality        = 100;
+		$useCrop        = false;
+		$cropOverridden = false;   // true when 'crop' or 'nocrop' was explicit
 
-        // Effects are stored as closures applied in declaration order.
-        $effects = [];
+		// Effects are stored as closures applied in declaration order.
+		$effects = [];
 
-        foreach ($filterTokens as $token) {
-            if ($token === 'thumb') {
-                if (!$cropOverridden) {
-                    $useCrop = true;
-                }
-                $maxW ??= (int) Settings::get('oz.files', 'OZ_THUMBNAIL_MAX_SIZE');
-                $maxH ??= (int) Settings::get('oz.files', 'OZ_THUMBNAIL_MAX_SIZE');
-            } elseif (\preg_match('/^thumb(\d+)$/', $token, $m)) {
-                if (!$cropOverridden) {
-                    $useCrop = true;
-                }
-                $maxW = (int) $m[1];
-                $maxH = (int) $m[1];
-            } elseif (\preg_match('/^w(\d+)$/', $token, $m)) {
-                $maxW = (int) $m[1];
-            } elseif (\preg_match('/^h(\d+)$/', $token, $m)) {
-                $maxH = (int) $m[1];
-            } elseif (\preg_match('/^q(\d+)$/', $token, $m)) {
-                $quality = \max(1, \min(100, (int) $m[1]));
-            } elseif ($token === 'crop') {
-                $useCrop        = true;
-                $cropOverridden = true;
-            } elseif ($token === 'nocrop') {
-                $useCrop        = false;
-                $cropOverridden = true;
-            } elseif ($token === 'grayscale') {
-                $effects[] = static function (SimpleImage $img): void {
-                    $img->desaturate();
-                };
-            } elseif ($token === 'sepia') {
-                $effects[] = static function (SimpleImage $img): void {
-                    $img->sepia();
-                };
-            } elseif ($token === 'sharpen') {
-                $effects[] = static function (SimpleImage $img): void {
-                    $img->sharpen();
-                };
-            } elseif ($token === 'blur') {
-                $effects[] = static function (SimpleImage $img): void {
-                    $img->blur('gaussian', 1);
-                };
-            } elseif (\preg_match('/^blur(\d+)$/', $token, $m)) {
-                $passes  = (int) $m[1];
-                $effects[] = static function (SimpleImage $img) use ($passes): void {
-                    $img->blur('gaussian', $passes);
-                };
-            }
-            // Unknown tokens are silently ignored.
-        }
+		foreach ($filterTokens as $token) {
+			if ('thumb' === $token) {
+				if (!$cropOverridden) {
+					$useCrop = true;
+				}
+				$maxW ??= (int) Settings::get('oz.files', 'OZ_THUMBNAIL_MAX_SIZE');
+				$maxH ??= (int) Settings::get('oz.files', 'OZ_THUMBNAIL_MAX_SIZE');
+			} elseif (\preg_match('/^thumb(\d+)$/', $token, $m)) {
+				if (!$cropOverridden) {
+					$useCrop = true;
+				}
+				$maxW = (int) $m[1];
+				$maxH = (int) $m[1];
+			} elseif (\preg_match('/^w(\d+)$/', $token, $m)) {
+				$maxW = (int) $m[1];
+			} elseif (\preg_match('/^h(\d+)$/', $token, $m)) {
+				$maxH = (int) $m[1];
+			} elseif (\preg_match('/^q(\d+)$/', $token, $m)) {
+				$quality = \max(1, \min(100, (int) $m[1]));
+			} elseif ('crop' === $token) {
+				$useCrop        = true;
+				$cropOverridden = true;
+			} elseif ('nocrop' === $token) {
+				$useCrop        = false;
+				$cropOverridden = true;
+			} elseif ('grayscale' === $token) {
+				$effects[] = static function (SimpleImage $img): void {
+					$img->desaturate();
+				};
+			} elseif ('sepia' === $token) {
+				$effects[] = static function (SimpleImage $img): void {
+					$img->sepia();
+				};
+			} elseif ('sharpen' === $token) {
+				$effects[] = static function (SimpleImage $img): void {
+					$img->sharpen();
+				};
+			} elseif ('blur' === $token) {
+				$effects[] = static function (SimpleImage $img): void {
+					$img->blur('gaussian', 1);
+				};
+			} elseif (\preg_match('/^blur(\d+)$/', $token, $m)) {
+				$passes    = (int) $m[1];
+				$effects[] = static function (SimpleImage $img) use ($passes): void {
+					$img->blur('gaussian', $passes);
+				};
+			}
+			// Unknown tokens are silently ignored.
+		}
 
-        // -------------------------------------------------------------------
-        // Process image
-        // -------------------------------------------------------------------
-        $mime    = $file->getMime();
-        $content = $stream->getContents();
+		// -------------------------------------------------------------------
+		// Process image
+		// -------------------------------------------------------------------
+		$mime    = $file->getMime();
+		$content = $stream->getContents();
 
-        try {
-            $img = new SimpleImage();
-            $img->fromString($content);
+		try {
+			$img = new SimpleImage();
+			$img->fromString($content);
 
-            if ($maxW !== null || $maxH !== null) {
-                $w = $maxW ?? 0;
-                $h = $maxH ?? 0;
+			if (null !== $maxW || null !== $maxH) {
+				$w = $maxW ?? 0;
+				$h = $maxH ?? 0;
 
-                if ($useCrop && $w && $h) {
-                    $img->thumbnail($w, $h);
-                } elseif ($w && $h) {
-                    $img->bestFit($w, $h);
-                } elseif ($w) {
-                    $img->resize($w, null);
-                } else {
-                    $img->resize(null, $h);
-                }
-            }
+				if ($useCrop && $w && $h) {
+					$img->thumbnail($w, $h);
+				} elseif ($w && $h) {
+					$img->bestFit($w, $h);
+				} elseif ($w) {
+					$img->resize($w, null);
+				} else {
+					$img->resize(null, $h);
+				}
+			}
 
-            foreach ($effects as $effect) {
-                $effect($img);
-            }
+			foreach ($effects as $effect) {
+				$effect($img);
+			}
 
-            $bytes = $img->toString($mime, $quality);
-        } catch (Exception $e) {
-            oz_logger()->error('Image filter processing failed, falling back to raw file.', [
-                '_file'      => $file->getID(),
-                '_filters'   => $filterTokens,
-                '_exception' => $e->getMessage(),
-            ]);
+			$bytes = $img->toString($mime, $quality);
+		} catch (Exception $e) {
+			oz_logger()->error('Image filter processing failed, falling back to raw file.', [
+				'_file'      => $file->getID(),
+				'_filters'   => $filterTokens,
+				'_exception' => $e->getMessage(),
+			]);
 
-            // Return raw content so the request never serves an empty body.
-            $bytes = $content;
-        }
+			// Return raw content so the request never serves an empty body.
+			$bytes = $content;
+		}
 
-        return [$mime, $bytes];
-    }
+		return [$mime, $bytes];
+	}
 }

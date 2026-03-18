@@ -55,7 +55,7 @@ class GetFilesView extends WebView
 
 		foreach ($format_alts as $alt) {
 			self::defineRouteParams(
-				$router->get($alt, static fn(RouteInfo $ri) => self::handle($ri, true))
+				$router->get($alt, static fn (RouteInfo $ri) => self::handle($ri, true))
 			);
 		}
 	}

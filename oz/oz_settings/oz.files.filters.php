@@ -25,5 +25,5 @@ use OZONE\Core\FS\Filters\ImageFileFilterHandler;
  * FileFilters::register() in your plugin's boot() method (higher priority).
  */
 return [
-    ImageFileFilterHandler::class => true,
+	ImageFileFilterHandler::class => true,
 ];
