@@ -150,7 +150,7 @@ final class OZone
 		if (null === $results) {
 			$a       = Settings::load('oz.routes');
 			$b       = Settings::load('oz.routes.api');
-			$results = Settings::merge($a, $b);
+			$results = Settings::applyMergeStrategy($a, $b);
 		}
 
 		return $results;
@@ -168,7 +168,7 @@ final class OZone
 		if (null === $results) {
 			$a       = Settings::load('oz.routes');
 			$b       = Settings::load('oz.routes.web');
-			$results = Settings::merge($a, $b);
+			$results = Settings::applyMergeStrategy($a, $b);
 		}
 
 		return $results;
