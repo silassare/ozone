@@ -304,8 +304,6 @@ final class DbCmd extends Command
 
 		if (empty($query)) {
 			$cli->error(\sprintf('the database source file (%s) is empty.', $file));
-
-			return;
 		}
 
 		$db = db();

@@ -187,7 +187,7 @@ final class ProjectCmd extends Command
 			$cli->write($data);
 		});
 
-		exit($exit_code);
+		$this->getCli()->terminate($exit_code);
 	}
 
 	/**
@@ -252,8 +252,6 @@ final class ProjectCmd extends Command
 					$folder
 				)
 			);
-
-			return;
 		}
 
 		if (self::NAMESPACE_PLACEHOLDER === $namespace) {
