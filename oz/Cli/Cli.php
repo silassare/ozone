@@ -21,6 +21,7 @@ use OZONE\Core\Cli\Cron\Cron;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Exceptions\Utils\ErrorUtils;
+use OZONE\Core\FS\Assets;
 use OZONE\Core\OZone;
 use OZONE\Core\Web\BlatePlugin;
 use PHPUtils\Str;
@@ -79,6 +80,8 @@ final class Cli extends Kli
 
 				OZone::bootstrap($app);
 			} else {
+				// required to use oz:// protocol in cli context without app (when running cli out of an existing project).
+				Assets::register();
 				// we need template for project create command,
 				// so we bootstrap with blate plugin to have access to ozone custom template helper in blate templates.
 				BlatePlugin::register();
