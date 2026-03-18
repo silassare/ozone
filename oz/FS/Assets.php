@@ -38,6 +38,17 @@ final class Assets implements BootHookReceiverInterface
 	#[Override]
 	public static function boot(): void
 	{
+		self::register();
+	}
+
+	/**
+	 * This is separated from the boot hook because we need
+	 * to register the resolver in cli context without app (when running cli out of an existing project).
+	 *
+	 * @internal
+	 */
+	public static function register(): void
+	{
 		// This allows us to use PathUtils::resolve('oz://path/to/asset') to get the localized path.
 		// Typically useful in blate templates or other dependencies using PathUtils::resolve() method.
 		PathUtils::registerResolver('oz', self::localize(...));
