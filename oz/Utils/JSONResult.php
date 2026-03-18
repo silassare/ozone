@@ -181,10 +181,10 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function revive(mixed $value): static
+	public static function revive(mixed $payload): static
 	{
 		$r = new self();
-		$r->payload += (array) $value;
+		$r->payload += (array) $payload;
 
 		return $r;
 	}

@@ -15,6 +15,7 @@ namespace OZONE\Core\Cli\Cron\Tasks;
 
 use Override;
 use OZONE\Core\Exceptions\BaseException;
+use OZONE\Core\Utils\JSONResult;
 use Throwable;
 
 /**
@@ -23,7 +24,7 @@ use Throwable;
 class CallableTask extends AbstractTask
 {
 	/**
-	 * @var callable
+	 * @var callable(JSONResult):void
 	 */
 	private $callable;
 
