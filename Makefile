@@ -1,9 +1,9 @@
-.PHONY: test test-unit test-integration benchmark cs fix clean
+.PHONY: test test-unit test-integration benchmark cs lint fix clean
 
 PHPUNIT = ./vendor/bin/phpunit
-PSALM   = ./vendor/bin/psalm
-CS_FIX  = ./vendor/bin/oliup-cs fix
 PHP     = php
+
+# = Tests
 
 ## Run the unit test suite
 test-unit:
@@ -16,18 +16,25 @@ test-integration:
 ## Run all test suites
 test: test-unit test-integration
 
+# = Benchmarks
+
 ## Run benchmarks
 benchmark:
 	$(PHP) tests/run_benchmarks.php
 
-## Run static analysis (psalm)
+# = Code quality
+
+## Check code style
 cs:
-	$(PSALM) --no-cache
+	vendor/bin/phpcs
+
+## Run static analysis (psalm)
+lint:
+	vendor/bin/psalm --no-cache
 
 ## Run code style fixer
-fix:
-	$(PSALM) --no-cache
-	$(CS_FIX)
+fix: lint
+	vendor/bin/oliup-cs fix
 
 ## Remove blate caches and temp test artefacts
 clean:
