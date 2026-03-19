@@ -11,7 +11,12 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\App\Settings;
 use OZONE\Core\OZone;
 use OZONE\Tests\App;
+
+// Register test-specific settings overrides before bootstrap so that
+// lazily-loaded groups pick them up on first access.
+Settings::addSource(__DIR__ . '/settings');
 
 OZone::bootstrap(new App());
