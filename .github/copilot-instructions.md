@@ -805,27 +805,221 @@ Migration files are PHP files in `{project}/migrations/` returning `MigrationInt
 
 ```php
 use OZONE\Core\Cli\Cron\Cron;
-use OZONE\Core\Cli\Cron\Schedule;
-use OZONE\Core\Cli\Cron\Tasks\CallableTask;
+use OZONE\Core\Utils\JSONResult;
 
 // Register tasks in CronCollect listener:
-CronCollect::listen(function () {
-    $task = new CallableTask('my-task', function () {
-        // do work, return results array
-        return ['processed' => 42];
-    });
-    $task->schedule()->everyHour();   // Carbon-based Schedule fluent API
-    Cron::addTask($task);
+CronCollect::listen(static function () {
+    Cron::call(static function (JSONResult $result) {
+        $result->setDone()->setData(['processed' => 42]);
+    }, 'my-task')->everyHour();
 });
 ```
 
 Task types: `CallableTask` (PHP callable), `CommandTask` (shell command).
 Tasks can run `inBackground()` or `oneAtATime()`. Due tasks are queued via `OZONE\Core\Queue\Queue`.
+See **sections 24 and 25** for full Queue and Cron API reference.
 
 **Helper scripts** (project root):
 
 - `run_test` — runs `./vendor/bin/phpunit --testdox`
 - `csfix` — runs `psalm --no-cache` + `oliup-cs fix`
+
+---
+
+## 24. Job Queue System
+
+**Classes**: `Queue`, `Job`, `JobContract`, `JobsManager`, `JobState`
+**Stores**: `DbJobStore` (default), `RedisJobStore` (opt-in via `oz.redis`)
+**Workers**: implement `WorkerInterface`, register via `JobsManager::registerWorker()`
+
+### Core Concepts
+
+| Class / Interface   | Role                                                                             |
+| ------------------- | -------------------------------------------------------------------------------- |
+| `Queue`             | Named channel with error-tolerance config; `push()` creates a `Job`              |
+| `Job`               | Pure value object: worker class name, payload, state, retry settings             |
+| `JobContract`       | `Job` + store binding; has `save()`, `lock()`, `unlock()`, `isLocked()`          |
+| `JobStoreInterface` | Persistence contract: `add`, `get`, `update`, `delete`, `iterator`, `lock`, etc. |
+| `WorkerInterface`   | Execution unit: `work()`, `getResult()`, `isAsync()`, `getPayload()`             |
+| `JobsManager`       | Static engine: `run()`, `runJob()`, `forceRunJob()`, `finish()`                  |
+
+### State Machine
+
+```
+PENDING -> RUNNING -> DONE
+                   -> FAILED -> PENDING (if retries remain, immediately — retry_delay not yet enforced)
+                             -> FAILED  (no retries left)
+```
+
+**Lock**: `lock()` is atomic (`UPDATE WHERE locked = false`); only one worker can acquire a job. `isLocked()` checks current state from the store.
+
+### Async Jobs
+
+When `WorkerInterface::isAsync()` returns `true`, `JobsManager::runJob()` hands the job off to a background subprocess **without** releasing the lock:
+
+```
+runJob() acquires lock -> sets RUNNING -> workAsync()
+  -> spawns: oz jobs run --store=X --job=<ref> --force
+  -> subprocess: forceRunJob() -> increments try count -> work() -> finish() -> unlock()
+```
+
+The parent process never calls `unlock()` — the subprocess owns it via `finish()`. If `Process::start()` throws, the exception propagates to `runJob()`'s `catch` block which calls `finish()` -> `unlock()` exactly once.
+
+`forceRunJob()` is also reachable via `oz jobs run --store=X --job=<ref> --force` (manual forced takeover).
+
+### Retry Delay Limitation
+
+`retry_delay` is stored on `oz_jobs` but **not enforced** by the current iterator. When a failed job is reset to PENDING, it is picked up on the next `run()` call immediately. Enforcing it requires a `run_after` column on `oz_jobs` (schema change).
+
+### `oz jobs` CLI
+
+| Invocation                                   | Behaviour                                                         |
+| -------------------------------------------- | ----------------------------------------------------------------- |
+| `oz jobs run`                                | Process all PENDING jobs from all stores                          |
+| `oz jobs run --store=X --queue=Y --worker=W` | Filter by store / queue / worker                                  |
+| `oz jobs run --store=X --job=<ref>`          | Run one specific job; fail with error if already locked           |
+| `oz jobs run --store=X --job=<ref> --force`  | Locked -> `forceRunJob()`; unlocked -> `runJob()` (acquire first) |
+| `oz jobs finish --store=X --ref=<ref>`       | Mark an orphaned RUNNING job as finished/failed                   |
+
+### Implementing a Worker
+
+```php
+use OZONE\Core\Queue\Interfaces\JobContractInterface;
+use OZONE\Core\Queue\Interfaces\WorkerInterface;
+use OZONE\Core\Utils\JSONResult;
+
+class MyWorker implements WorkerInterface
+{
+    private JSONResult $result;
+
+    public function __construct(private readonly string $item_id) {}
+
+    public static function getName(): string { return self::class; }
+
+    public function isAsync(): bool { return false; }
+
+    public function work(JobContractInterface $job_contract): self
+    {
+        $this->result = new JSONResult();
+        // ... do work ...
+        $this->result->setDone()->setData(['item_id' => $this->item_id]);
+        return $this;
+    }
+
+    public function getResult(): JSONResult { return $this->result; }
+
+    public static function fromPayload(array $payload): self
+    {
+        return new self($payload['item_id']);
+    }
+
+    public function getPayload(): array { return ['item_id' => $this->item_id]; }
+}
+
+// Register in a BootHookReceiver:
+JobsManager::registerWorker(MyWorker::class);
+
+// Dispatch a job:
+Queue::get(Queue::DEFAULT)
+    ->push(new MyWorker('abc123'))
+    ->dispatch();        // -> JobContractInterface
+```
+
+---
+
+## 25. Cron System
+
+**Classes**: `Cron`, `Schedule`, `AbstractTask`, `CallableTask`, `CommandTask`, `CronTaskWorker`
+**Queue channels**: `Queue::CRON_SYNC` (foreground), `Queue::CRON_ASYNC` (background subprocess)
+
+### How It Works
+
+`oz cron run` -> `Cron::runDues()` -> checks each task's schedules -> dispatches due tasks as `CronTaskWorker` jobs -> `oz jobs run --queue=cron:sync` processes them.
+
+```php
+// Register in CronCollect listener (typically in a BootHookReceiver):
+CronCollect::listen(static function () {
+    // Callable task:
+    Cron::call(static function (JSONResult $result) {
+        $result->setDone()->setData(['processed' => 42]);
+    }, 'my-task')->everyHour();
+
+    // Shell command task (runs in background subprocess by default):
+    Cron::command('php artisan cache:clear', 'cache-clear')->daily();
+
+    // Worker job task (dispatches another queue job):
+    Cron::work(new MyWorker('x'), Queue::DEFAULT)->everyMinute();
+});
+```
+
+### Task Configuration (fluent on `AbstractTask`)
+
+`Cron::call()`, `Cron::command()`, and `Cron::work()` return a `Schedule`. Task-level config (`inBackground()`, etc.) is on `AbstractTask` and cannot be chained from those helpers. To combine both, use `Cron::addTask()` + `$task->schedule()` directly.
+
+```php
+$task->inBackground()          // route to cron:async queue (background subprocess)
+     ->oneAtATime(timeout: 300) // skip if previous instance is still running (enforced via persistent cache lock)
+     ->setTimeout(60);          // max execution seconds
+```
+
+### Schedule API (fluent on `Schedule`)
+
+`Cron::call/command/work()` all return the `Schedule` created internally by `AbstractTask::schedule()`. A task with no schedule method call runs every minute (default expression `* * * * *`). A task can hold multiple schedules via `addSchedule()`; it fires when **any** schedule is due.
+
+**Representative frequency methods:**
+
+| Method | Expression | Notes |
+| --- | --- | --- |
+| `everyMinute()` | `* * * * *` | default |
+| `everyFiveMinutes()` | `*/5 * * * *` | |
+| `everyHour()` | `0 * * * *` | minute 0 |
+| `everyHourAt(int\|int[] $offset)` | e.g. `15 * * * *` | minute offset(s) |
+| `daily()` | `0 0 * * *` | midnight |
+| `dailyAt('10:30')` | `30 10 * * *` | |
+| `twiceDaily(int $h1, int $h2)` | e.g. `0 1,13 * * *` | |
+| `weekdays()` / `weekends()` | `* * * * 1-5` | day-of-week filter |
+| `weekly()` | `0 0 * * 0` | Sunday midnight |
+| `weeklyOn(int $day, string $time)` | | `Schedule::MONDAY` etc. |
+| `monthly()` | `0 0 1 * *` | |
+| `quarterly()` | `0 0 1 1-12/3 *` | |
+| `yearly()` | `0 0 1 1 *` | |
+
+**Window / conditional methods** (evaluated **lazily** at `shouldRun()` time, not at registration time):
+
+```php
+$schedule->between('08:00', '18:00')    // only run when current time is in the window
+         ->notBetween('02:00', '04:00') // skip when current time is in the window
+         ->timezone('America/New_York'); // evaluate window checks in this timezone
+```
+
+`between()` and `notBetween()` can be chained; all predicates must pass (AND). `isDue()` checks the cron expression; `shouldRun()` checks all window predicates.
+
+### `oneAtATime` Enforcement
+
+Two-layer guard using `CacheManager::persistent('cron')`:
+
+1. **Dispatch time** (`Cron::runDues()`): if cache key `cron_task_{name}` exists, the task is skipped entirely — no job is queued.
+2. **Execution time** (`CronTaskWorker::work()`): sets the cache key before `run()`, clears it in `finally` (even on failure). If the key already exists at run time, the job is marked DONE with `skipped: true`.
+
+Cache TTL = `$task->getTimeout()` seconds, or 86400 s (24 h) when timeout is 0/null to prevent indefinitely stale locks.
+
+### `CallableTask` Signature
+
+```php
+// Callable receives a JSONResult to fill:
+Cron::call(static function (JSONResult $result) {
+    $result->setDone()->setData(['rows' => 10]);
+}, 'my-task')->daily();
+```
+
+`CallableTask::$callable` is declared without a PHP type (`callable` is not a valid property type in PHP 8.x). Use a `@var callable(JSONResult):void` docblock.
+
+### Built-in Queue Channels for Cron
+
+| Channel      | Constant            | Used for                              |
+| ------------ | ------------------- | ------------------------------------- |
+| `cron:sync`  | `Queue::CRON_SYNC`  | Tasks that must run in the foreground |
+| `cron:async` | `Queue::CRON_ASYNC` | Tasks with `inBackground()` set       |
 
 ---
 
@@ -1002,14 +1196,20 @@ Multi-tenant/multi-origin support via scopes. A project can have multiple scopes
 | `silassare/kli`        | CLI framework                                                                                       |
 | `silassare/blate`      | Template engine for web views, settings files, and code-gen templates; integrated via `BlatePlugin` |
 | `silassare/php-utils`  | `Event`, `Store`, `PathUtils`, `Str`, `ArrayCapableTrait`                                           |
-| `oliup/code-generator` | Fluent PHP source code generation                                                                   |
 | `claviska/simpleimage` | Image processing (captcha, profile picture resizing)                                                |
 | `symfony/process`      | Shell process execution (CLI tasks)                                                                 |
 | `zircote/swagger-php`  | OpenAPI annotation and generation                                                                   |
 | `psr/http-message`     | PSR-7 HTTP message interfaces                                                                       |
+| `psr/log`              | PSR-3 logging interface                                                                             |
 | `ext-gd`               | Required for captcha image generation                                                               |
 | `ext-pdo`              | Required for database access                                                                        |
 | `ext-openssl`          | Required for cryptographic operations                                                               |
+| `ext-json`             | Required for JSON encoding/decoding                                                                 |
+| `ext-libxml`           | Required for XML processing                                                                         |
+| `ext-simplexml`        | Required for XML parsing                                                                            |
+| `ext-posix`            | Required for process management (POSIX signals)                                                     |
+| `ext-bcmath`           | Required for arbitrary-precision arithmetic                                                         |
+| `ext-fileinfo`         | Required for MIME type detection                                                                    |
 
 **Minimum PHP**: 8.1
 **Default RDBMS**: MySQL (`ext-pdo`, `Gobl\DBAL\Drivers\MySQL\MySQL`)
@@ -1022,13 +1222,12 @@ The packages below are first-party dependencies. Read their source under `vendor
 
 Each package ships its own detailed agent/copilot instructions. **Always read these files before writing code that uses the package.**
 
-| Package                | Instructions / Docs                                           |
-| ---------------------- | ------------------------------------------------------------- |
-| `silassare/gobl`       | `vendor/silassare/gobl/.github/copilot-instructions.md`       |
-| `silassare/kli`        | `vendor/silassare/kli/.github/copilot-instructions.md`        |
-| `silassare/php-utils`  | `vendor/silassare/php-utils/.github/copilot-instructions.md`  |
-| `silassare/blate`      | `vendor/silassare/blate/.github/copilot-instructions.md`      |
-| `oliup/code-generator` | `vendor/oliup/code-generator/.github/copilot-instructions.md` |
+| Package               | Instructions / Docs                                          |
+| --------------------- | ------------------------------------------------------------ |
+| `silassare/gobl`      | `vendor/silassare/gobl/.github/copilot-instructions.md`      |
+| `silassare/kli`       | `vendor/silassare/kli/.github/copilot-instructions.md`       |
+| `silassare/php-utils` | `vendor/silassare/php-utils/.github/copilot-instructions.md` |
+| `silassare/blate`     | `vendor/silassare/blate/.github/copilot-instructions.md`     |
 
 ---
 
