@@ -192,6 +192,9 @@ class DbJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Uses an atomic `UPDATE WHERE locked = false` so only one concurrent caller
+	 * can acquire the lock - no separate read-then-write race condition.
+	 *
 	 * @throws CRUDException
 	 * @throws ORMException
 	 * @throws ORMQueryException
@@ -199,16 +202,16 @@ class DbJobStore implements JobStoreInterface
 	#[Override]
 	public function lock(JobContractInterface $job_contract): bool
 	{
-		$oz_job = self::identify($job_contract->getRef());
+		$qb = new OZJobsQuery();
 
-		if ($oz_job && !$oz_job->isLocked()) {
-			$oz_job->setLocked(true)
-				->save();
+		$affected = $qb->whereRefIs($job_contract->getRef())
+			->whereIsNotLocked()
+			->update([
+				OZJob::COL_LOCKED => true,
+			])
+			->execute();
 
-			return true;
-		}
-
-		return false;
+		return $affected > 0;
 	}
 
 	/**
@@ -235,6 +238,22 @@ class DbJobStore implements JobStoreInterface
 		$oz_job = self::identify($job_contract->getRef());
 
 		return $oz_job?->isLocked() ?? false;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Executes a `SELECT COUNT(*)` query - no row data loaded.
+	 */
+	#[Override]
+	public function count(string $queue_name, ?JobState $state = null): int
+	{
+		$qb = new OZJobsQuery();
+
+		empty($queue_name) || $qb->whereQueueIs($queue_name);
+		null === $state || $qb->whereStateIs($state);
+
+		return $qb->find()->totalCount();
 	}
 
 	/**
@@ -275,6 +294,7 @@ class DbJobStore implements JobStoreInterface
 			->setPriority($job->getPriority())
 			->setTryCount($job->getTryCount())
 			->setRetryMax($job->getRetryMax())
+			->setRetryDelay($job->getRetryDelay())
 			->setPayload($job->getPayload())
 			->setResult($job->getResult())
 			->setStartedAt($job->getStartedAt())
@@ -303,9 +323,10 @@ class DbJobStore implements JobStoreInterface
 			->setPriority($oz_job->getPriority())
 			->setTryCount($oz_job->getTryCount())
 			->setRetryMax($oz_job->getRetryMax())
+			->setRetryDelay($oz_job->getRetryDelay())
 			->setResult($oz_job->getResult())
-			->setStartedAt((float) $oz_job->getStartedAt())
-			->setEndedAt((float) $oz_job->getEndedAt())
+			->setStartedAt(null !== $oz_job->getStartedAt() ? (float) $oz_job->getStartedAt() : null)
+			->setEndedAt(null !== $oz_job->getEndedAt() ? (float) $oz_job->getEndedAt() : null)
 			->setCreatedAt((int) $oz_job->getCreatedAt())
 			->setUpdatedAt((int) $oz_job->getUpdatedAt());
 	}

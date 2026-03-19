@@ -23,14 +23,17 @@ use OZONE\Core\Utils\JSONResult;
  * Implementations must be round-trippable via a string name and payload array so the job
  * runner can reconstruct them from a persisted {@link JobContractInterface} record:
  *
- * - {@link getName()} — unique string identifier used to look up this class in the worker
+ * - {@link getName()} - unique string identifier used to look up this class in the worker
  *   registry when a job is dequeued.
- * - {@link getPayload()} / {@link fromPayload()} — symmetrical: whatever `getPayload()`
+ * - {@link getPayload()} / {@link fromPayload()} - symmetrical: whatever `getPayload()`
  *   returns, `fromPayload()` must reconstruct an equivalent worker instance from it.
- * - {@link work()} — performs the actual job; any output should be accessible via
+ * - {@link work()} - performs the actual job; any output should be accessible via
  *   {@link getResult()} afterwards so {@link JobsManager} can persist it on the job record.
- * - {@link isAsync()} — hint for the job runner; async handling is currently a stub
- *   (deferred to a future background-process implementation).
+ * - {@link isAsync()} - hint for the job runner; when true, the runner spawns a
+ *   dedicated background subprocess for this job (via the `--job <ref> --force`
+ *   CLI dispatch) so the queue worker process stays free to pick up the next job
+ *   immediately. The lock is held by the parent process and transferred to the
+ *   subprocess, which releases it in {@link JobsManager::finish()}.
  */
 interface WorkerInterface
 {

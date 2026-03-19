@@ -15,6 +15,7 @@ namespace OZONE\Core\Cli\Cron\Tasks;
 
 use Override;
 use OZONE\Core\Cli\Process;
+use OZONE\Core\Utils\JSONResult;
 
 /**
  * Class CommandTask.
@@ -38,38 +39,40 @@ class CommandTask extends AbstractTask
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * Always runs the command synchronously and captures its output.
+	 * Background dispatch is handled externally by {@link CronTaskWorker::isAsync()} and
+	 * the queue runner - this method must not start a detached process.
 	 */
 	#[Override]
 	public function run(): void
 	{
+		$this->result = new JSONResult();
+
 		if (\is_string($this->command)) {
 			$process = Process::fromShellCommandline($this->command);
 		} else {
 			$process = new Process($this->command);
 		}
 
-		if ($this->shouldRunInBackground()) {
-			$process->start();
+		$process->run();
+
+		$exit_code = $process->getExitCode();
+
+		$this->result->setData([
+			'exit_code' => $exit_code,
+			'stdout'    => $process->getOutput(),
+			'stderr'    => $process->getErrorOutput(),
+		]);
+
+		if (0 !== $exit_code) {
+			$this->result->setError(\sprintf(
+				'Command task "%s" failed with exit code %d.',
+				$this->name,
+				$exit_code
+			));
 		} else {
-			$process->run();
-
-			$exit_code = $process->getExitCode();
-
-			$this->result->setData([
-				'exit_code' => $exit_code,
-				'stdout'    => $process->getOutput(),
-				'stderr'    => $process->getErrorOutput(),
-			]);
-
-			if (0 !== $exit_code) {
-				$this->result->setError(\sprintf(
-					'Command task "%s" failed with exit code %d.',
-					$this->name,
-					$exit_code
-				));
-			} else {
-				$this->result->setDone();
-			}
+			$this->result->setDone();
 		}
 	}
 }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cron;
 
 use Exception;
+use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Cli\Cron\Hooks\CronCollect;
 use OZONE\Core\Cli\Cron\Interfaces\TaskInterface;
 use OZONE\Core\Cli\Cron\Tasks\CallableTask;
@@ -92,6 +93,13 @@ final class Cron
 			foreach ($task->getSchedules() as $schedule) {
 				if (!($schedule->isDue($now) && $schedule->shouldRun())) {
 					continue;
+				}
+
+				if ($task->shouldRunOneAtATime()) {
+					// Skip dispatch when a previous instance is still holding its cache lock.
+					if (CacheManager::persistent('cron')->has('cron_task_' . $task->getName())) {
+						break;
+					}
 				}
 
 				$queue = Queue::get($task->shouldRunInBackground() ? Queue::CRON_ASYNC : Queue::CRON_SYNC);

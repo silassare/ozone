@@ -96,9 +96,11 @@ interface TaskInterface
 	/**
 	 * Mark the task as one at a time.
 	 *
+	 * @param int $timeout maximum execution time in seconds (0 = unlimited)
+	 *
 	 * @return $this
 	 */
-	public function oneAtATime(): self;
+	public function oneAtATime(int $timeout = 0): self;
 
 	/**
 	 * Gets the task timeout in seconds.

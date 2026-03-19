@@ -296,6 +296,37 @@ class RedisJobStore implements JobStoreInterface
 		return (bool) $this->redis()->exists($this->lockKey($job_contract->getRef()));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 *
+	 * When no state is given, returns the ZSET cardinality (O(1) ZCARD).
+	 * When a state is given, iterates the refs and reads hash fields (O(n)),
+	 * which is acceptable for the small queue sizes typical of cron workloads.
+	 */
+	#[Override]
+	public function count(string $queue_name, ?JobState $state = null): int
+	{
+		if (null === $state) {
+			// zCard returns int >= 0 for existing sorted sets, false when the
+			// key does not exist (empty queue). Both false and 0 map to 0 here.
+			/** @psalm-suppress RedundantCast */
+			return (int) ($this->redis()->zCard($this->queueKey($queue_name)) ?: 0);
+		}
+
+		$refs  = $this->redis()->zRange($this->queueKey($queue_name), 0, -1);
+		$count = 0;
+
+		foreach ($refs as $ref) {
+			$data = $this->redis()->hGetAll($this->jobKey((string) $ref));
+
+			if (!empty($data) && (int) ($data[self::F_STATE] ?? -1) === $state->value) {
+				++$count;
+			}
+		}
+
+		return $count;
+	}
+
 	// -------------------------------------------------------------------------
 	// Private helpers
 	// -------------------------------------------------------------------------

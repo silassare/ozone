@@ -217,11 +217,30 @@ final class JobsManager
 				$worker_class = self::getWorker($job_contract->getWorker());
 				$worker       = $worker_class::fromPayload($job_contract->getPayload());
 
-				if ($worker->isAsync()) {
-					// Do NOT increment try count or set startedAt here.
-					// The job is reset to PENDING and re-acquired by a background
-					// subprocess that calls runJob() again -- that call is the one
-					// responsible for counting the attempt and recording the start time.
+				// Decide whether to spawn a subprocess or run synchronously.
+				// For async workers, degrade to synchronous execution when the queue's
+				// concurrent limit is reached (counts RUNNING jobs, including this one).
+				$run_async = $worker->isAsync();
+
+				if ($run_async) {
+					$queue          = Queue::get($job_contract->getQueue());
+					$max_concurrent = $queue->getMaxConcurrent();
+
+					if (null !== $max_concurrent) {
+						$running = $job_contract->getStore()->count(
+							$job_contract->getQueue(),
+							JobState::RUNNING
+						);
+
+						if ($running > $max_concurrent) {
+							$run_async = false;
+						}
+					}
+				}
+
+				if ($run_async) {
+					// Keep the lock held. The subprocess receives the ref via
+					// --job and --force and owns the job until finish() releases the lock.
 					self::workAsync($job_contract);
 				} else {
 					// Count the attempt and record when work actually begins.
@@ -277,6 +296,9 @@ final class JobsManager
 			&& $job_contract->getTryCount() < $job_contract->getRetryMax()
 		) {
 			// Reset to PENDING so the job is retried on the next run.
+			// NOTE: retry_delay is stored on the job but is not enforced here
+			// because the iterator has no "run_after" filter. Enforcing it
+			// requires a schema change (a run_after column on oz_jobs).
 			$job_contract->setState(JobState::PENDING);
 		}
 

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cron\Workers;
 
 use Override;
+use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Cli\Cron\Cron;
 use OZONE\Core\Cli\Cron\Interfaces\TaskInterface;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
@@ -81,7 +82,33 @@ class CronTaskWorker implements WorkerInterface
 	#[Override]
 	public function work(JobContractInterface $job_contract): self
 	{
-		$this->task->run();
+		if ($this->task->shouldRunOneAtATime()) {
+			$cache     = CacheManager::persistent('cron');
+			$cache_key = 'cron_task_' . $this->task->getName();
+			$timeout   = $this->task->getTimeout();
+			// Use the task's execution timeout as the lock TTL so stale locks
+			// expire automatically. Fall back to 24 h when no timeout is set.
+			$ttl = $timeout > 0 ? (float) $timeout : 86400.0;
+
+			if ($cache->has($cache_key)) {
+				// A previous instance is still holding the lock -- skip quietly.
+				$this->task->getResult()
+					->setDone()
+					->setData(['skipped' => true, 'reason' => 'oneAtATime: another instance is running']);
+
+				return $this;
+			}
+
+			$cache->set($cache_key, true, $ttl);
+
+			try {
+				$this->task->run();
+			} finally {
+				$cache->delete($cache_key);
+			}
+		} else {
+			$this->task->run();
+		}
 
 		return $this;
 	}

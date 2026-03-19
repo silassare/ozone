@@ -45,6 +45,7 @@ final class Queue
 	private bool $stop_on_error                = false;
 	private int $max_consecutive_errors_count  = 3;
 	private int $max_errors_count              = 10;
+	private ?int $max_concurrent               = null;
 
 	/**
 	 * Queue constructor.
@@ -133,6 +134,34 @@ final class Queue
 	public function getMaxErrorsCount(): int
 	{
 		return $this->max_errors_count;
+	}
+
+	/**
+	 * Sets the maximum number of concurrent RUNNING jobs allowed in this queue.
+	 *
+	 * When the RUNNING job count exceeds this limit at async dispatch time,
+	 * the new async job is demoted to synchronous in-process execution rather
+	 * than spawning an additional subprocess. Set to null (default) for no limit.
+	 *
+	 * @param null|int $max_concurrent
+	 *
+	 * @return Queue
+	 */
+	public function setMaxConcurrent(?int $max_concurrent): self
+	{
+		$this->max_concurrent = $max_concurrent;
+
+		return $this;
+	}
+
+	/**
+	 * Gets the maximum number of concurrent RUNNING jobs allowed in this queue.
+	 *
+	 * @return null|int null means unlimited
+	 */
+	public function getMaxConcurrent(): ?int
+	{
+		return $this->max_concurrent;
 	}
 
 	/**

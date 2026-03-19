@@ -48,6 +48,8 @@ class CallableTask extends AbstractTask
 	#[Override]
 	public function run(): void
 	{
+		$this->result = new JSONResult();
+
 		try {
 			$fn = $this->callable;
 

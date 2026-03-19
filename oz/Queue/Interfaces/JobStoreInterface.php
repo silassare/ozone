@@ -147,4 +147,14 @@ interface JobStoreInterface
 	 * @return bool
 	 */
 	public function isLocked(JobContractInterface $job_contract): bool;
+
+	/**
+	 * Count jobs in a queue, optionally filtered by state.
+	 *
+	 * @param string        $queue_name
+	 * @param null|JobState $state      when null, all states are counted
+	 *
+	 * @return int
+	 */
+	public function count(string $queue_name, ?JobState $state = null): int;
 }
