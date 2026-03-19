@@ -66,7 +66,8 @@ final class Assets implements BootHookReceiverInterface
 
 		if (null === $sources) {
 			$sources = new PathSources();
-			$sources->add(Templates::OZ_TEMPLATE_DIR);
+			$sources->add(OZ_OZONE_DIR . 'oz_assets')
+				->add(Templates::OZ_TEMPLATE_DIR);
 		}
 
 		return $sources;
