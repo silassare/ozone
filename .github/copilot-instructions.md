@@ -8,6 +8,7 @@
 
 - **No hallucination or invention.** Read the actual source files before generating code, docs, or this file. Focus only on what can be directly observed in the codebase.
 - **When a bug or issue is found, do not fix it directly** — ask for feedback and approval first.
+- No too verbose comment blocks on obvious code. Keep comments concise and focused on non-obvious insights or rationale.
 - **Symlinks:** If `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` do not exist, symlink them to `.github/copilot-instructions.md`.
 - **Direct dependencies only.** Only use packages listed in `require` or `require-dev` of `composer.json`. Do not rely on transitive dependencies — they are not guaranteed to be present and can change without notice.
 - **Strict types.** Every PHP file starts with `declare(strict_types=1);`.
@@ -968,22 +969,22 @@ $task->inBackground()          // route to cron:async queue (background subproce
 
 **Representative frequency methods:**
 
-| Method | Expression | Notes |
-| --- | --- | --- |
-| `everyMinute()` | `* * * * *` | default |
-| `everyFiveMinutes()` | `*/5 * * * *` | |
-| `everyHour()` | `0 * * * *` | minute 0 |
-| `everyHourAt(int\|int[] $offset)` | e.g. `15 * * * *` | minute offset(s) |
-| `daily()` | `0 0 * * *` | midnight |
-| `dailyAt('10:30')` | `30 10 * * *` | |
-| `twiceDaily(int $h1, int $h2)` | e.g. `0 1,13 * * *` | |
-| `weekdays()` / `weekends()` | `* * * * 1-5` / `* * * * 6,0` | day-of-week filter |
-| `weekly()` | `0 0 * * 0` | Sunday midnight |
-| `weeklyOn(int $day, string $time)` | | `Schedule::MONDAY` etc. |
-| `monthly()` | `0 0 1 * *` | |
-| `lastDayOfMonth(string $time)` | e.g. `0 0 28-31 * *` | lazy predicate ensures it runs only on the actual last day of the month |
-| `quarterly()` | `0 0 1 1-12/3 *` | |
-| `yearly()` | `0 0 1 1 *` | |
+| Method                             | Expression                    | Notes                                                                   |
+| ---------------------------------- | ----------------------------- | ----------------------------------------------------------------------- |
+| `everyMinute()`                    | `* * * * *`                   | default                                                                 |
+| `everyFiveMinutes()`               | `*/5 * * * *`                 |                                                                         |
+| `everyHour()`                      | `0 * * * *`                   | minute 0                                                                |
+| `everyHourAt(int\|int[] $offset)`  | e.g. `15 * * * *`             | minute offset(s)                                                        |
+| `daily()`                          | `0 0 * * *`                   | midnight                                                                |
+| `dailyAt('10:30')`                 | `30 10 * * *`                 |                                                                         |
+| `twiceDaily(int $h1, int $h2)`     | e.g. `0 1,13 * * *`           |                                                                         |
+| `weekdays()` / `weekends()`        | `* * * * 1-5` / `* * * * 6,0` | day-of-week filter                                                      |
+| `weekly()`                         | `0 0 * * 0`                   | Sunday midnight                                                         |
+| `weeklyOn(int $day, string $time)` |                               | `Schedule::MONDAY` etc.                                                 |
+| `monthly()`                        | `0 0 1 * *`                   |                                                                         |
+| `lastDayOfMonth(string $time)`     | e.g. `0 0 28-31 * *`          | lazy predicate ensures it runs only on the actual last day of the month |
+| `quarterly()`                      | `0 0 1 1-12/3 *`              |                                                                         |
+| `yearly()`                         | `0 0 1 1 *`                   |                                                                         |
 
 **Window / conditional methods** (evaluated **lazily** at `shouldRun()` time, not at registration time):
 
