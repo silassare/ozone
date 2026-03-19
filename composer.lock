@@ -470,12 +470,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "b705bbeaa834023a023207cf8e0c222ece2436b0"
+                "reference": "72af644df3a492aa5e3a07fceb0df5f51e23d97b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/b705bbeaa834023a023207cf8e0c222ece2436b0",
-                "reference": "b705bbeaa834023a023207cf8e0c222ece2436b0",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/72af644df3a492aa5e3a07fceb0df5f51e23d97b",
+                "reference": "72af644df3a492aa5e3a07fceb0df5f51e23d97b",
                 "shasum": ""
             },
             "require": {
@@ -539,7 +539,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/main"
             },
-            "time": "2026-03-18T15:25:43+00:00"
+            "time": "2026-03-19T11:27:06+00:00"
         },
         {
             "name": "silassare/kli",
@@ -547,12 +547,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/kli.git",
-                "reference": "9735654635c79338d957f9f12cd06ea8ca4d2db5"
+                "reference": "18ec087032ad82271feb6551a020590d987cf19d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/kli/zipball/9735654635c79338d957f9f12cd06ea8ca4d2db5",
-                "reference": "9735654635c79338d957f9f12cd06ea8ca4d2db5",
+                "url": "https://api.github.com/repos/silassare/kli/zipball/18ec087032ad82271feb6551a020590d987cf19d",
+                "reference": "18ec087032ad82271feb6551a020590d987cf19d",
                 "shasum": ""
             },
             "require": {
@@ -603,7 +603,7 @@
                 "issues": "https://github.com/silassare/kli/issues",
                 "source": "https://github.com/silassare/kli/tree/main"
             },
-            "time": "2026-03-18T21:45:39+00:00"
+            "time": "2026-03-19T11:46:08+00:00"
         },
         {
             "name": "silassare/php-utils",
@@ -8295,16 +8295,16 @@
         },
         {
             "name": "vimeo/psalm",
-            "version": "6.16.0",
+            "version": "6.16.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vimeo/psalm.git",
-                "reference": "7cf3e8b988edd75e0766963b0b9e671b220f5785"
+                "reference": "f1f5de594dc76faf8784e02d3dc4716c91c6f6ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vimeo/psalm/zipball/7cf3e8b988edd75e0766963b0b9e671b220f5785",
-                "reference": "7cf3e8b988edd75e0766963b0b9e671b220f5785",
+                "url": "https://api.github.com/repos/vimeo/psalm/zipball/f1f5de594dc76faf8784e02d3dc4716c91c6f6ac",
+                "reference": "f1f5de594dc76faf8784e02d3dc4716c91c6f6ac",
                 "shasum": ""
             },
             "require": {
@@ -8409,7 +8409,7 @@
                 "issues": "https://github.com/vimeo/psalm/issues",
                 "source": "https://github.com/vimeo/psalm"
             },
-            "time": "2026-03-17T11:15:56+00:00"
+            "time": "2026-03-19T10:56:09+00:00"
         },
         {
             "name": "webmozart/assert",
