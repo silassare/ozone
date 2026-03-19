@@ -108,4 +108,13 @@ class JobContract extends Job implements JobContractInterface
 	{
 		return $this->store->unlock($this);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function isLocked(): bool
+	{
+		return $this->store->isLocked($this);
+	}
 }

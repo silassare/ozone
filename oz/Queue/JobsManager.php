@@ -21,6 +21,7 @@ use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
 use OZONE\Core\Utils\JSONResult;
+use Symfony\Component\Process\Process;
 use Throwable;
 
 /**
@@ -209,9 +210,6 @@ final class JobsManager
 			(new JobBeforeStart($job_contract))->dispatch();
 
 			$job_contract->setState(JobState::RUNNING);
-			$job_contract->incrementTryCount();
-			$job_contract->setStartedAt((float) \microtime(true));
-
 			$job_contract->save();
 
 			try {
@@ -220,8 +218,17 @@ final class JobsManager
 				$worker       = $worker_class::fromPayload($job_contract->getPayload());
 
 				if ($worker->isAsync()) {
-					self::workAsync($worker, $job_contract);
+					// Do NOT increment try count or set startedAt here.
+					// The job is reset to PENDING and re-acquired by a background
+					// subprocess that calls runJob() again -- that call is the one
+					// responsible for counting the attempt and recording the start time.
+					self::workAsync($job_contract);
 				} else {
+					// Count the attempt and record when work actually begins.
+					$job_contract->incrementTryCount();
+					$job_contract->setStartedAt((float) \microtime(true));
+					$job_contract->save();
+
 					$worker->work($job_contract);
 					$result = $worker->getResult();
 					$job_contract->setResult($result);
@@ -282,24 +289,76 @@ final class JobsManager
 	}
 
 	/**
-	 * Run a job asynchronously.
+	 * Continue execution of an async-dispatched job.
 	 *
-	 * @param WorkerInterface      $worker
+	 * Called by the CLI subprocess after receiving --job and --force. The job is assumed
+	 * to be locked and in RUNNING state from the dispatching process. This method
+	 * bypasses the lock() check -- the subprocess is the designated handler and is
+	 * responsible for the final unlock via finish().
+	 *
+	 * @param JobContractInterface $job_contract
+	 */
+	public static function forceRunJob(JobContractInterface $job_contract): void
+	{
+		// Count the attempt and record when work actually begins.
+		$job_contract->incrementTryCount();
+		$job_contract->setStartedAt((float) \microtime(true));
+		$job_contract->save();
+
+		try {
+			/** @var WorkerInterface $worker_class */
+			$worker_class = self::getWorker($job_contract->getWorker());
+			$worker       = $worker_class::fromPayload($job_contract->getPayload());
+
+			$worker->work($job_contract);
+			$result = $worker->getResult();
+			$job_contract->setResult($result);
+
+			if ($result->isError()) {
+				$job_contract->setState(JobState::FAILED);
+			} else {
+				$job_contract->setState(JobState::DONE);
+			}
+
+			self::finish($job_contract);
+		} catch (Throwable $t) {
+			$job_contract->setState(JobState::FAILED);
+
+			$result = isset($worker) ? $worker->getResult() : new JSONResult();
+
+			$result->setError($t->getMessage())
+				->setData(BaseException::throwableDescribe($t, true));
+
+			$job_contract->setResult($result);
+			self::finish($job_contract);
+		}
+	}
+
+	/**
+	 * Hand off a locked job to a background subprocess.
+	 *
+	 * The lock is kept held. The subprocess receives the job ref via --job
+	 * and calls forceRunJob(), which owns the job from that point and releases
+	 * the lock via finish(). If Process::start() throws, the exception propagates
+	 * to runJob()'s catch block, which calls finish() -> unlock() exactly once.
+	 *
 	 * @param JobContractInterface $job_contract
 	 */
 	private static function workAsync(
-		WorkerInterface $worker,
 		JobContractInterface $job_contract,
 	): void {
-		// TODO: replace with a true background-process dispatch.
-		// For now, fall back to synchronous execution so async jobs are not
-		// left permanently in RUNNING state.
-		$worker->work($job_contract);
+		// Keep the lock held -- the subprocess takes over via forceRunJob().
+		$bin = OZ_PROJECT_DIR . 'bin' . \DIRECTORY_SEPARATOR . 'oz';
+		$cmd = [
+			\PHP_BINARY,
+			$bin,
+			'jobs',
+			'run',
+			'--store=' . $job_contract->getStore()->getName(),
+			'--job=' . $job_contract->getRef(),
+			'--force',
+		];
 
-		$result = $worker->getResult();
-		$job_contract->setResult($result);
-		$job_contract->setState($result->isError() ? JobState::FAILED : JobState::DONE);
-
-		self::finish($job_contract);
+		(new Process($cmd, OZ_PROJECT_DIR, null, null, 0))->start();
 	}
 }
