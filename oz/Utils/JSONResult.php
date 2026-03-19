@@ -35,21 +35,18 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	 */
 	public const ERROR = 1;
 
-	/**
-	 * @var array payload data
-	 */
-	protected array $payload;
+	protected int $error;
+	protected string $msg;
+	protected array $data;
 
 	/**
 	 * JSONResult constructor.
 	 */
 	public function __construct()
 	{
-		$this->payload = [
-			'error' => static::SUCCESS,
-			'msg'   => 'OK',
-			'data'  => [],
-		];
+		$this->error = static::SUCCESS;
+		$this->msg   = 'OK';
+		$this->data  = [];
 	}
 
 	/**
@@ -57,7 +54,7 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	 */
 	public function __destruct()
 	{
-		unset($this->payload);
+		unset($this->error, $this->msg, $this->data);
 	}
 
 	/**
@@ -67,7 +64,7 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	 */
 	public function isError(): bool
 	{
-		return $this->payload['error'] === static::ERROR;
+		return $this->error === static::ERROR;
 	}
 
 	/**
@@ -77,7 +74,7 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	 */
 	public function isDone(): bool
 	{
-		return $this->payload['error'] === static::SUCCESS;
+		return $this->error === static::SUCCESS;
 	}
 
 	/**
@@ -89,8 +86,8 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	 */
 	public function setError(string $msg = 'OZ_ERROR_INTERNAL'): static
 	{
-		$this->payload['error'] = static::ERROR;
-		$this->payload['msg']   = $msg;
+		$this->error = static::ERROR;
+		$this->msg   = $msg;
 
 		return $this;
 	}
@@ -104,14 +101,14 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	 */
 	public function setDone(string $msg = 'OK'): static
 	{
-		$this->payload['error'] = static::SUCCESS;
-		$this->payload['msg']   = $msg;
+		$this->error = static::SUCCESS;
+		$this->msg   = $msg;
 
 		return $this;
 	}
 
 	/**
-	 * Adds data to the payload.
+	 * Sets the result data.
 	 *
 	 * @param array|ArrayCapableInterface $data the data
 	 *
@@ -119,13 +116,13 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	 */
 	public function setData(array|ArrayCapableInterface $data): static
 	{
-		$this->payload['data'] = $data instanceof ArrayCapableInterface ? $data->toArray() : $data;
+		$this->data = $data instanceof ArrayCapableInterface ? $data->toArray() : $data;
 
 		return $this;
 	}
 
 	/**
-	 * Sets a custom key/value to the payload data.
+	 * Sets a custom key/value to the result data.
 	 *
 	 * @param string $key   the key name
 	 * @param mixed  $value the value to be added
@@ -135,14 +132,24 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	public function setDataKey(string $key, mixed $value): static
 	{
 		if (!empty($key)) {
-			$this->payload['data'][$key] = $value;
+			$this->data[$key] = $value;
 		}
 
 		return $this;
 	}
 
 	/**
-	 * Gets a custom key/value from the payload data.
+	 * Gets the result data.
+	 *
+	 * @return array
+	 */
+	public function getData(): array
+	{
+		return $this->data;
+	}
+
+	/**
+	 * Gets a custom key/value from the result data.
 	 *
 	 * @param string $key the key name
 	 * @param mixed  $def
@@ -151,26 +158,21 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	 */
 	public function getDataKey(string $key, mixed $def = null): mixed
 	{
-		return $this->payload['data'][$key] ?? $def;
+		return $this->data[$key] ?? $def;
 	}
 
 	/**
-	 * Merge json payload from a given instance.
+	 * Merge json result from a given instance.
 	 *
-	 * Values from `$payload` overwrite matching keys in this instance.
-	 * The `data` sub-array is deep-merged: source keys win on conflict but
-	 * keys present only in this instance are preserved.
-	 *
-	 * @param JSONResult $payload
+	 * @param JSONResult $other
 	 *
 	 * @return static
 	 */
-	public function merge(self $payload): static
+	public function merge(self $other): static
 	{
-		$other                 = $payload->toArray();
-		$data                  = \array_replace((array) ($this->payload['data'] ?? []), (array) ($other['data'] ?? []));
-		$this->payload         = \array_replace($this->payload, $other);
-		$this->payload['data'] = $data;
+		$this->error = $other->error;
+		$this->msg   = $other->msg;
+		$this->data  = \array_merge($this->data, $other->data);
 
 		return $this;
 	}
@@ -181,7 +183,11 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	#[Override]
 	public function toArray(): array
 	{
-		return $this->payload;
+		return [
+			'error' => $this->error,
+			'msg'   => $this->msg,
+			'data'  => $this->data,
+		];
 	}
 
 	/**
@@ -190,8 +196,11 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	#[Override]
 	public static function revive(mixed $payload): static
 	{
-		$r = new self();
-		$r->payload += (array) $payload;
+		$r = new static();
+
+		$r->error = $payload['error'] === static::ERROR ? static::ERROR : static::SUCCESS;
+		$r->msg   = $payload['msg'] ?? 'OK';
+		$r->data  = $payload['data'] ?? [];
 
 		return $r;
 	}

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\App;
 
+use LogicException;
 use Override;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Utils\JSONResult;
@@ -22,6 +23,8 @@ use OZONE\Core\Utils\JSONResult;
  */
 final class JSONResponse extends JSONResult
 {
+	private ?Form $form = null;
+
 	/**
 	 * Gets form.
 	 *
@@ -29,21 +32,53 @@ final class JSONResponse extends JSONResult
 	 */
 	public function getForm(): ?Form
 	{
-		return $this->payload['form'] ?? null;
+		return $this->form;
 	}
 
 	/**
 	 * Sets form.
 	 *
-	 * @param null|Form $form
+	 * @param null|Form $form the form instance
 	 *
 	 * @return $this
 	 */
 	public function setForm(?Form $form): self
 	{
-		$this->payload['form'] = $form;
+		$this->form = $form;
 
 		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function merge(JSONResult $other): static
+	{
+		parent::merge($other);
+
+		if ($other instanceof self && null !== $other->form) {
+			$this->form = $other->form;
+		}
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Not supported: {@see Form} instances contain callables and runtime state
+	 * that are not JSON-serializable and cannot be reconstructed from a payload.
+	 * JSONResponse is a transient response object, not a persistent value.
+	 *
+	 * @throws LogicException always
+	 */
+	#[Override]
+	public static function revive(mixed $payload): static
+	{
+		throw new LogicException(
+			self::class . '::revive() is not supported: Form instances contain callables and runtime state that cannot be revived from JSON.'
+		);
 	}
 
 	/**
@@ -54,8 +89,10 @@ final class JSONResponse extends JSONResult
 	{
 		$res = parent::toArray();
 
-		if (empty($res['form'])) {
-			unset($res['form']);
+		$f = $this->form?->toArray();
+
+		if (!empty($f)) {
+			$res['form'] = $f;
 		}
 
 		return $res;
