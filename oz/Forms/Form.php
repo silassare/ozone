@@ -36,17 +36,17 @@ class Form implements ArrayCapableInterface
 	use FormFieldsTrait;
 
 	/**
-	 * @var Field[]
+	 * @var array<string,Field>
 	 */
 	public array $fields = [];
 
 	/**
-	 * @var FormStep[]
+	 * @var array<string,FormStep>
 	 */
 	public array $steps = [];
 
 	/**
-	 * @var FormRule[]
+	 * @var list<FormRule>
 	 */
 	public array $rules = [];
 
@@ -135,8 +135,8 @@ class Form implements ArrayCapableInterface
 	 */
 	public function addStep(string $name, callable $factory, ?FormRule $rule = null): static
 	{
-		$if            = $rule ? $rule->check(...) : null;
-		$this->steps[] = new FormStep($name, $factory, $if);
+		$if                 = $rule ? $rule->check(...) : null;
+		$this->steps[$name] = new FormStep($name, $factory, $if);
 
 		return $this;
 	}
@@ -313,12 +313,21 @@ class Form implements ArrayCapableInterface
 	#[Override]
 	public function toArray(): array
 	{
+		// TODO: for steps we just tell that these form has steps,
+		// we don't return steps data because steps are dynamic and depends
+		// on form data and validation context, so we can't return them in form array,
+		// 1) we can add a mechanism (via a special route or a specific request header/param) for the client to ask for next step form as
+		// we can't get steps form before validating some data and calling step factory/condition
+		// 2) add api doc (see ApiDoc) for that special route and the mechanism in general
+		// this feature is useful in web app to build dynamic form etc...
+		// NOTE: step form can have deep steps (if too difficult, we can disable that and ensure it's well documented)
+
 		return [
-			'_csrf'  => $this->csrf?->genCsrfToken(),
-			'action' => (string) ($this->submit_to ?? ''),
-			'method' => $this->method,
-			'fields' => $this->fields,
-			'steps'  => $this->steps,
+			'_csrf'     => $this->csrf?->genCsrfToken(),
+			'action'    => (string) ($this->submit_to ?? ''),
+			'method'    => $this->method,
+			'fields'    => \array_map(static fn (Field $f) => $f->toArray(), $this->fields),
+			'has_steps' => !empty($this->steps),
 		];
 	}
 

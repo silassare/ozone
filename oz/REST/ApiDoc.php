@@ -45,6 +45,8 @@ class ApiDoc implements ArrayCapableInterface
 	 */
 	private function __construct(protected Context $context, string $title, string $version)
 	{
+		// TODO: add api doc for all ozone public services and features, static assets, like auth, csrf, etc...
+
 		$context            = Generator::$context = $this->createContext();
 		$this->api_info     = new OA\Info([
 			'title'   => $title,
