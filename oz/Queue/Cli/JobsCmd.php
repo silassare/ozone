@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Queue\Cli;
 
 use Kli\Exceptions\KliException;
+use Kli\Exceptions\KliInputException;
 use Kli\KliArgs;
 use Kli\Types\KliTypeString;
 use Override;
@@ -52,7 +53,6 @@ final class JobsCmd extends Command
 
 			$jobs_run->option('queue', 'q')
 				->description('The queue name.')
-				->required()
 				->type($queue_type);
 
 			$jobs_run->option('worker', 'w')
@@ -67,15 +67,15 @@ final class JobsCmd extends Command
 				->description('The maximum number of jobs to run.')
 				->number();
 
-			$jobs_run->handler(static function (KliArgs $args) {
-				$store    = $args->get('store');
-				$worker   = $args->get('worker');
-				$queue    = $args->get('queue');
-				$priority = $args->get('priority');
-				$max_jobs = $args->get('max-jobs');
+			$jobs_run->option('job', 'j')
+				->description('Run a specific job by ref.')
+				->string();
 
-				JobsManager::run($store, $queue, $worker, $priority, $max_jobs);
-			});
+			$jobs_run->option('force', 'f')
+				->description('Run the job even if it is locked (also used for async hand-off).')
+				->bool();
+
+			$jobs_run->handler(self::run(...));
 
 			$jobs_finish = $this->action('finish', 'Finish jobs.');
 
@@ -89,13 +89,57 @@ final class JobsCmd extends Command
 				->required()
 				->string();
 
-			$jobs_finish->handler(static function (KliArgs $args) {
-				$store = $args->get('store');
-				$ref   = $args->get('ref');
-
-				JobsManager::finish(JobsManager::getStore($store)
-					->getOrFail($ref));
-			});
+			$jobs_finish->handler(self::finish(...));
 		}
+	}
+
+	private static function finish(KliArgs $args)
+	{
+		$store = $args->get('store');
+		$ref   = $args->get('ref');
+
+		JobsManager::finish(JobsManager::getStore($store)
+			->getOrFail($ref));
+	}
+
+	/**
+	 * @throws KliException
+	 */
+	private static function run(KliArgs $args)
+	{
+		$store   = $args->get('store');
+		$job_ref = $args->get('job');
+		$force   = (bool) $args->get('force');
+
+		if (null !== $job_ref) {
+			$job = JobsManager::getStore($store)->getOrFail($job_ref);
+
+			if ($force) {
+				if ($job->isLocked()) {
+					// Job is already locked (async hand-off or forced takeover):
+					// skip lock acquisition and run directly.
+					JobsManager::forceRunJob($job);
+				} else {
+					// Not locked yet: acquire lock normally then run.
+					JobsManager::runJob($job);
+				}
+			} else {
+				// Normal single-job mode: fail if locked.
+				if (!JobsManager::runJob($job)) {
+					throw new KliInputException(
+						\sprintf('Job "%s" is locked. Use --force to run it anyway.', $job_ref)
+					);
+				}
+			}
+
+			return;
+		}
+
+		$worker   = $args->get('worker');
+		$queue    = $args->get('queue');
+		$priority = $args->get('priority');
+		$max_jobs = $args->get('max-jobs');
+
+		JobsManager::run($store, $queue, $worker, $priority, $max_jobs);
 	}
 }
