@@ -10,31 +10,30 @@ Completed items are marked ✅.
 
 ---
 
-### [ ] D. `oz/oz_templates/oz.route.access.grant.form.blate` — Render access-grant form
+### [x] D. `oz/oz_templates/oz.route.access.grant.form.blate` — Render access-grant form ✅
 
-**Current behaviour:** Template contains only `<!-- TODO - add render the form -->`.
+Full HTML form rendered. Changes:
 
-**Proposed solution:**
-Render a minimal HTML form that posts the authorization credentials back to
-`POST /auth/:ref/authorize`. Fields: CSRF token + any dynamic fields injected by the authorization
-provider (e.g. code input for email/phone verification). Inline CSS only — no external assets.
-
-**Complexity:** Low | **Risk:** None (template-only, no PHP changes)
+- `AbstractRouteGuard`: `grant_form_ref` field marked `.hidden()` so templates treat it as a hidden input.
+- `AccessGrantView::renderAccessGrantForm()`: serializes `$form->toArray()` with fields recursively
+  converted via `Field::toArray()` before injecting, so the template receives a plain array.
+- Template: full HTML page using `oz.css`, supports CSRF token, hidden fields with pre-filled defaults,
+  `<input type="password">` for password-type fields, `*` indicator for required fields, submit button.
+- `oz.fr.php`: added `OZ_ACCESS_GRANT_FORM_TITLE` and `OZ_ACCESS_GRANT_FORM_SUBMIT_BTN`.
 
 ---
 
-### [ ] C. `Auth/Views/LogoutAndRedirectView.php` — Chrome freeze on `Clear-Site-Data` header
+### [x] C. `Auth/Views/LogoutAndRedirectView.php` — Chrome freeze on `Clear-Site-Data` header ✅
 
-**Current behaviour:** Setting the `Clear-Site-Data` response header can cause Chrome to freeze.
+Proper fix implemented — no more cookie-only compromise. Changes:
 
-**Proposed solution:**
-
-1. Change the default `OZ_CLEAR_SITE_DATA_HEADER_VALUE` to `"cookies"` only (minimum needed for
-   logout) — avoids the Chrome freeze immediately.
-2. Add a note in the settings description about the Chrome limitation.
-3. Long-term fix: send the header on a dedicated intermediate response (no redirect body), then redirect.
-
-**Complexity:** Low | **Risk:** Low (settings default change + comment)
+- `LogoutAndRedirectView`: when Clear-Site-Data is enabled, instead of calling `$context->redirect()`
+  (which produces a 3xx), render a **200** intermediate page (`oz.redirect.blate`) with the
+  `Clear-Site-Data` header attached to it, then call `$context->respond()`. The page redirects
+  the browser via `<meta http-equiv="Refresh">` + JS — no 3xx involved, Chrome does not freeze.
+- `oz.cache.php`: restored `OZ_CLEAR_SITE_DATA_HEADER_VALUE` to `"cache", "cookies", "storage"`
+  (dropped deprecated `"executionContexts"`). Updated comment to explain the intermediate-page
+  strategy and link to the Chromium bug.
 
 ---
 
@@ -131,29 +130,29 @@ subprocesses against temporary scaffolded projects so regressions are caught end
 
 ## Completed
 
-| ID | File                                               | Notes                                                                  |
-| -- | -------------------------------------------------- | ---------------------------------------------------------------------- |
-| A  | `Cli/Cron/Workers/CronWorker.php`                  | Stdout/stderr captured from process, returned in `getResult()['output']`, truncated at 64 KB |
-| G  | `Queue/JobsManager.php`                            | `workAsync()` spawns subprocess via `symfony/process`; falls back to in-process on failure |
-| H  | `Cache/Drivers/RedisCache.php`                     | Fully implemented with `ext-redis`; SCAN+DEL clear; namespaced keys; native TTL |
-| I  | `FS/Views/GetFilesView.php`                        | `applyFilters()` delegates to `FileFilters` + `ImageFileFilterHandler`; resize/crop/quality/format |
-| J  | `FS/FilesServer.php`                               | Removed; file serving via `GetFilesView` + `RangeResponse::apply()` in `Context::fixResponse()` |
+| ID  | File                              | Notes                                                                                              |
+| --- | --------------------------------- | -------------------------------------------------------------------------------------------------- |
+| A   | `Cli/Cron/Workers/CronWorker.php` | Stdout/stderr captured from process, returned in `getResult()['output']`, truncated at 64 KB       |
+| G   | `Queue/JobsManager.php`           | `workAsync()` spawns subprocess via `symfony/process`; falls back to in-process on failure         |
+| H   | `Cache/Drivers/RedisCache.php`    | Fully implemented with `ext-redis`; SCAN+DEL clear; namespaced keys; native TTL                    |
+| I   | `FS/Views/GetFilesView.php`       | `applyFilters()` delegates to `FileFilters` + `ImageFileFilterHandler`; resize/crop/quality/format |
+| J   | `FS/FilesServer.php`              | Removed; file serving via `GetFilesView` + `RangeResponse::apply()` in `Context::fixResponse()`    |
 
 ---
 
 ## Summary table
 
-| ID  | File                                               | Complexity | Risk                | Status      |
-| --- | -------------------------------------------------- | ---------- | ------------------- | ----------- |
-| D   | `oz/oz_templates/oz.route.access.grant.form.blate` | Low        | None                | pending     |
-| C   | `Auth/Views/LogoutAndRedirectView.php`             | Low        | Low                 | pending     |
-| F   | `Hooks/MainBootHookReceiver.php`                   | Low        | Low                 | pending     |
-| B   | `Auth/Methods/SessionAuth.php`                     | Low        | Low                 | pending     |
-| E   | `Services/QRCode.php`                              | Low        | Low-Medium          | pending     |
-| 0   | Integration test suite                             | Low-Medium | Low                 | in progress |
-| K   | `Auth/Auth2FA.php`                                 | **High**   | **High**            | pending     |
-| A   | `Cli/Cron/Workers/CronWorker.php`                  | Low        | Low                 | ✅ done     |
-| G   | `Queue/JobsManager.php`                            | Medium     | Low                 | ✅ done     |
-| H   | `Cache/Drivers/RedisCache.php`                     | Medium     | Low                 | ✅ done     |
-| I   | `FS/Views/GetFilesView.php`                        | Medium     | Low                 | ✅ done     |
-| J   | `FS/FilesServer.php`                               | Medium     | Medium              | ✅ done     |
+| ID  | File                                               | Complexity | Risk       | Status      |
+| --- | -------------------------------------------------- | ---------- | ---------- | ----------- |
+| D   | `oz/oz_templates/oz.route.access.grant.form.blate` | Low        | None       | ✅ done     |
+| C   | `Auth/Views/LogoutAndRedirectView.php`             | Low        | Low        | ✅ done     |
+| F   | `Hooks/MainBootHookReceiver.php`                   | Low        | Low        | pending     |
+| B   | `Auth/Methods/SessionAuth.php`                     | Low        | Low        | pending     |
+| E   | `Services/QRCode.php`                              | Low        | Low-Medium | pending     |
+| 0   | Integration test suite                             | Low-Medium | Low        | in progress |
+| K   | `Auth/Auth2FA.php`                                 | **High**   | **High**   | pending     |
+| A   | `Cli/Cron/Workers/CronWorker.php`                  | Low        | Low        | ✅ done     |
+| G   | `Queue/JobsManager.php`                            | Medium     | Low        | ✅ done     |
+| H   | `Cache/Drivers/RedisCache.php`                     | Medium     | Low        | ✅ done     |
+| I   | `FS/Views/GetFilesView.php`                        | Medium     | Low        | ✅ done     |
+| J   | `FS/FilesServer.php`                               | Medium     | Medium     | ✅ done     |
