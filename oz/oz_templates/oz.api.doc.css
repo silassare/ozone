@@ -3,7 +3,7 @@ body {
     padding: 0;
 }
 
-#api-doc-loader {
+#oz-api-doc-loader {
     display: flex;
     position: fixed;
     top: 0;
@@ -14,6 +14,6 @@ body {
     justify-content: center;
 }
 
-#api-doc-loader img {
+#oz-api-doc-loader img {
     max-width: 200px;
 }

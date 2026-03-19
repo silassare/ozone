@@ -26,9 +26,9 @@
 		</script>
 	</head>
 	<body>
-		<div id="api-doc-wrapper"></div>
+		<div id="oz-api-doc-wrapper"></div>
 
-		<div id="api-doc-loader" title="Please wait...">
+		<div id="oz-api-doc-loader" title="Please wait...">
 			<svg xmlns="http://www.w3.org/2000/svg" width="100px" height="100px" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid" class="lds-rolling"><circle cx="50" cy="50" fill="none" stroke="#28292f" stroke-width="10" r="35" stroke-dasharray="164.93361431346415 56.97787143782138" transform="rotate(306.077 50 50)"><animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 50 50;360 50 50" keyTimes="0;1" dur="1s" begin="0s" repeatCount="indefinite"/></circle></svg>
 		</div>
 
@@ -41,8 +41,8 @@
 			}).then(function (response) {
 				return response.json();
 			}).then(function (d) {
-				Redoc.init(d.data.spec, {}, document.getElementById('api-doc-wrapper'));
-				document.getElementById('api-doc-loader').style.display = "none";
+				Redoc.init(d.data.spec, {}, document.getElementById('oz-api-doc-wrapper'));
+				document.getElementById('oz-api-doc-loader').style.display = "none";
 			});
 		</script>
 		{/raw}
