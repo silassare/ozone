@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Cron;
 
 use DateTime;
+use DateTimeZone;
 use OZONE\Core\Cli\Cron\Schedule;
 use PHPUnit\Framework\TestCase;
 
@@ -50,6 +51,16 @@ final class ScheduleTest extends TestCase
 	public function testEveryTwoMinutes(): void
 	{
 		self::assertSame('*/2 * * * *', (string) (new Schedule())->everyTwoMinutes());
+	}
+
+	public function testEveryThreeMinutes(): void
+	{
+		self::assertSame('*/3 * * * *', (string) (new Schedule())->everyThreeMinutes());
+	}
+
+	public function testEveryFourMinutes(): void
+	{
+		self::assertSame('*/4 * * * *', (string) (new Schedule())->everyFourMinutes());
 	}
 
 	public function testEveryFiveMinutes(): void
@@ -209,6 +220,32 @@ final class ScheduleTest extends TestCase
 		self::assertSame('* * * * 1,3,5', (string) (new Schedule())->days([1, 3, 5]));
 	}
 
+	public function testDaysVariadic(): void
+	{
+		self::assertSame('* * * * 1,3,5', (string) (new Schedule())->days(1, 3, 5));
+	}
+
+	public function testLastDayOfMonthExpression(): void
+	{
+		// Day-of-month is clamped to 28-31; runtime predicate checks the actual last day.
+		self::assertSame('0 0 28-31 * *', (string) (new Schedule())->lastDayOfMonth());
+	}
+
+	public function testLastDayOfMonthCustomTime(): void
+	{
+		self::assertSame('30 22 28-31 * *', (string) (new Schedule())->lastDayOfMonth('22:30'));
+	}
+
+	public function testLastDayOfMonthShouldRunMatchesToday(): void
+	{
+		$s = (new Schedule())->lastDayOfMonth();
+		// Schedule defaults to UTC; compute expected value against the same timezone.
+		$now    = new DateTime('now', new DateTimeZone('UTC'));
+		$isLast = (int) $now->format('j') === (int) $now->format('t');
+
+		self::assertSame($isLast, $s->shouldRun());
+	}
+
 	// -------------------------------------------------------------------------
 	// isDue smoke test
 	// -------------------------------------------------------------------------
@@ -226,6 +263,14 @@ final class ScheduleTest extends TestCase
 		$s = new Schedule('0 0 31 2 *');
 
 		self::assertFalse($s->isDue((new DateTime('2025-06-15 00:00:00'))->getTimestamp()));
+	}
+
+	public function testGetNextRunTimeForEveryMinuteSchedule(): void
+	{
+		// Use a UTC minute boundary so +1 minute is exactly +60 s.
+		$base = (int) (new DateTime('2025-01-15 10:00:00', new DateTimeZone('UTC')))->getTimestamp();
+
+		self::assertSame($base + 60, (new Schedule())->getNextRunTime($base));
 	}
 
 	// -------------------------------------------------------------------------
