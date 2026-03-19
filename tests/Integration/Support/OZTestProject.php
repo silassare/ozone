@@ -49,7 +49,7 @@ final class OZTestProject
 	 * Creates a test project in /tmp/_oz_tests_/projects/{name}/ and returns a handle.
 	 *
 	 * Composer install only runs when the effective dependency set has never
-	 * been seen before — otherwise the cached vendor/ directory is symlinked.
+	 * been seen before - otherwise the cached vendor/ directory is symlinked.
 	 *
 	 * @param string               $name     project directory name (slug)
 	 * @param array<string,string> $deps     extra require packages (name -> constraint)
@@ -188,7 +188,7 @@ final class OZTestProject
 	/**
 	 * Build a Process that runs an oz CLI command inside the test project.
 	 *
-	 * The process is returned but NOT started — call mustRun() or run() on it.
+	 * The process is returned but NOT started - call mustRun() or run() on it.
 	 *
 	 * @param string ...$args e.g. 'migrations', 'run'
 	 */
@@ -209,7 +209,7 @@ final class OZTestProject
 	 *
 	 * Existing keys are updated in-place; new keys are appended.
 	 * This is the preferred way to inject DB credentials and similar
-	 * runtime config — the generated oz.db.php already reads from .env.
+	 * runtime config - the generated oz.db.php already reads from .env.
 	 *
 	 * @param array<string, string> $values
 	 */
@@ -240,7 +240,7 @@ final class OZTestProject
 	 * Override a single settings key in the test project by writing
 	 * (or updating) app/settings/{group}.php.
 	 *
-	 * Multiple calls for the same group are safe — the file is read, merged,
+	 * Multiple calls for the same group are safe - the file is read, merged,
 	 * and rewritten each time.
 	 *
 	 * For most tests, prefer {@see writeEnv()} to inject DB config instead.

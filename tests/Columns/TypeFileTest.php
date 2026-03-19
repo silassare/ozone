@@ -119,7 +119,7 @@ final class TypeFileTest extends TestCase
 	}
 
 	// -------------------------------------------------------------------------
-	// runValidation / validate — IDOR protection
+	// runValidation / validate - IDOR protection
 	// -------------------------------------------------------------------------
 
 	public function testValidateRejectsRawStringId(): void

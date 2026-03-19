@@ -38,17 +38,17 @@ use Throwable;
  * Handles file upload validation and persistence for OZone column types.
  *
  * Accepted inputs for the write (validation) path:
- *  - {@see UploadedFile} — a fresh HTTP upload (single or multiple)
- *  - {@see OZFile} — an already-persisted DB file entity (re-assignment,
+ *  - {@see UploadedFile} - a fresh HTTP upload (single or multiple)
+ *  - {@see OZFile} - an already-persisted DB file entity (re-assignment,
  *    only valid for non-temporary columns)
- *  - {@see ValidatedFile} — a value that previously passed through this
+ *  - {@see ValidatedFile} - a value that previously passed through this
  *    type's validation pipeline (e.g. returned by {@see dbToPhp()} during
  *    an entity re-save)
  *
  * The clean value produced by validation is always:
- *  - `null` — when the column is nullable and no value was provided
- *  - `ValidatedFile` — for a single-file column
- *  - `ValidatedFile[]` — for a multiple-file column
+ *  - `null` - when the column is nullable and no value was provided
+ *  - `ValidatedFile` - for a single-file column
+ *  - `ValidatedFile[]` - for a multiple-file column
  *
  * DB storage format:
  *  - Single persisted file: the numeric OZFile primary key as a plain string
@@ -415,9 +415,9 @@ class TypeFile extends Type
 	 * (single) or `ValidatedFile[]` (multiple) as the clean result.
 	 *
 	 * Accepted inputs:
-	 *  - {@see UploadedFile} — a fresh HTTP upload
-	 *  - {@see OZFile} — an already-persisted DB file entity (non-temp only)
-	 *  - {@see ValidatedFile} — a value that already passed this pipeline
+	 *  - {@see UploadedFile} - a fresh HTTP upload
+	 *  - {@see OZFile} - an already-persisted DB file entity (non-temp only)
+	 *  - {@see ValidatedFile} - a value that already passed this pipeline
 	 *    (e.g. the result of `dbToPhp()` being written back via entity save)
 	 *
 	 * Bare strings, integers, or any other type are rejected with
@@ -479,10 +479,10 @@ class TypeFile extends Type
 	 * Validates and processes a list of file inputs, returning a `ValidatedFile[]`.
 	 *
 	 * Each item in `$uploaded_files` must be one of:
-	 *  - {@see UploadedFile} — passes {@see checkUploadedFile()}, then uploaded to
+	 *  - {@see UploadedFile} - passes {@see checkUploadedFile()}, then uploaded to
 	 *    storage (or moved to TempFS for temp columns)
-	 *  - {@see OZFile} — passes {@see checkOZFile()}, then reused (non-temp only)
-	 *  - {@see ValidatedFile} — already validated by a previous pipeline run;
+	 *  - {@see OZFile} - passes {@see checkOZFile()}, then reused (non-temp only)
+	 *  - {@see ValidatedFile} - already validated by a previous pipeline run;
 	 *    accepted as-is and its size is not re-checked
 	 *
 	 * Bare strings and any other types are **rejected** to prevent IDOR: a raw

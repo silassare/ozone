@@ -26,7 +26,7 @@ use OZONE\Core\Utils\JSONResult;
  * {@link WorkerInterface::fromPayload()}, execution state, retry settings, and the result
  * produced after execution completes as a {@link JSONResult}.
  *
- * `Job` is a pure value object — it has no persistence knowledge. Call {@link dispatch()}
+ * `Job` is a pure value object - it has no persistence knowledge. Call {@link dispatch()}
  * to add it to a store and receive a {@link JobContractInterface} with lifecycle methods.
  */
 class Job implements Interfaces\JobInterface

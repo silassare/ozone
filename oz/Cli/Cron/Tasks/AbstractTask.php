@@ -27,11 +27,11 @@ use OZONE\Core\Utils\JSONResult;
  * {@link Schedule} instances attached through {@link schedule()} or {@link addSchedule()}.
  *
  * Key configuration flags:
- * - {@link inBackground()} — whether the task should run in a background process (maps to
+ * - {@link inBackground()} - whether the task should run in a background process (maps to
  *   the `cron:async` queue when dispatched by {@link Cron::runDues()}).
- * - {@link oneAtATime()} — skip execution if a previous instance is still running
+ * - {@link oneAtATime()} - skip execution if a previous instance is still running
  *   (enforced via a cache lock keyed on the task name).
- * - {@link setTimeout()} — maximum allowed execution time in seconds.
+ * - {@link setTimeout()} - maximum allowed execution time in seconds.
  *
  * After {@link run()} completes, results are exposed via {@link getResult()} and stored
  * in the job record by {@link CronTaskWorker}.

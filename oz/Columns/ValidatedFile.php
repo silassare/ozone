@@ -54,7 +54,7 @@ final class ValidatedFile implements JsonSerializable
 	private ?OZFile $_loaded_file = null;
 
 	/**
-	 * Private constructor — use the named factories {@see forFileID()} and {@see forTempPath()}.
+	 * Private constructor - use the named factories {@see forFileID()} and {@see forTempPath()}.
 	 *
 	 * @param string $value     the raw value: a numeric file ID or an absolute TempFS path
 	 * @param bool   $temporary true when the value is a TempFS path, false when it is a file ID

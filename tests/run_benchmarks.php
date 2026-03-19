@@ -26,7 +26,7 @@ declare(strict_types=1);
  * Noise suppression strategy:
  *   Regression detection uses min_ns (fastest observed time) rather than the
  *   mean. The minimum is unaffected by OS scheduling interruptions and
- *   background process spikes — it represents the true cost of the code path
+ *   background process spikes - it represents the true cost of the code path
  *   without interference. A genuine regression will raise the minimum because
  *   the fast path itself is slower; random OS noise only ever adds to a run,
  *   never subtracts from the observed minimum.
@@ -40,7 +40,7 @@ declare(strict_types=1);
  *   2. Implement BenchmarkSuiteInterface::callables() returning your entries.
  *   3. Follow the label convention: area_operation[_variant]
  *      e.g. router_find_static, hasher_hash64, docrypt_encrypt_aes256
- *   4. The runner discovers the file automatically — no registration needed.
+ *   4. The runner discovers the file automatically - no registration needed.
  */
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -59,7 +59,7 @@ const THRESHOLD_PCT = 20.0;
 // compared with the current environment. When they differ the comparison is
 // skipped and a warning is printed instead of misleading regression output.
 // Regression detection uses min_ns (fastest observed time), which is immune
-// to OS scheduling spikes — noise only ever adds latency to individual
+// to OS scheduling spikes - noise only ever adds latency to individual
 // samples, so the minimum stays stable across clean runs on the same machine.
 
 /**
@@ -123,7 +123,7 @@ function buildMachineFingerprint(): array
 
 /**
  * Returns true when two fingerprints describe the same environment.
- * Treats unknown cpu_model as a wildcard — avoids false positives on systems
+ * Treats unknown cpu_model as a wildcard - avoids false positives on systems
  * where /proc/cpuinfo is unavailable.
  *
  * @param array<string, mixed> $a
@@ -137,7 +137,7 @@ function fingerprintsMatch(array $a, array $b): bool
 		}
 	}
 
-	// cpu_model unknown on either side — skip model check.
+	// cpu_model unknown on either side - skip model check.
 	if (($a['cpu_model'] ?? 'unknown') !== 'unknown' && ($b['cpu_model'] ?? 'unknown') !== 'unknown') {
 		if ($a['cpu_model'] !== $b['cpu_model']) {
 			return false;
@@ -211,7 +211,7 @@ if ($baselineExists) {
 		$base = $baseData[$ref];
 
 		// Use min_ns (fastest observed time) for comparison rather than the
-		// mean. The minimum is immune to OS scheduling spikes — noise only
+		// mean. The minimum is immune to OS scheduling spikes - noise only
 		// ever adds latency, so the minimum stays stable across clean runs.
 		// A real regression will raise the minimum because the fast path
 		// itself is slower; random jitter only inflates individual samples.
@@ -240,7 +240,7 @@ if ($baselineExists) {
 }
 
 // ---------------------------------------------------------------------------
-// Save updated baseline (only when no regressions — avoids saving noisy spikes
+// Save updated baseline (only when no regressions - avoids saving noisy spikes
 // as the new reference, which would mask future real regressions)
 // ---------------------------------------------------------------------------
 

@@ -33,7 +33,7 @@ use Throwable;
  *  - Set OZ_TEST_DB_RDBMS=sqlite and OZ_TEST_DB_HOST=:memory: to use
  *    an in-memory SQLite database instead (fast, no external server required).
  *
- * @see run_test_integration — the companion script that exports env vars and
+ * @see run_test_integration - the companion script that exports env vars and
  *      creates the MySQL test database before running PHPUnit.
  */
 abstract class IntegrationTestCase extends TestCase
@@ -81,7 +81,7 @@ abstract class IntegrationTestCase extends TestCase
 	 * Truncates the given tables, removing all rows and resetting
 	 * auto-increment counters.
 	 *
-	 * Table names must be the bare names without any DB prefix — the ORM
+	 * Table names must be the bare names without any DB prefix - the ORM
 	 * entity constants (e.g. OZJob::TABLE_NAME) give the correct value.
 	 *
 	 * @param string ...$table_names bare table names, e.g. 'oz_jobs'

@@ -37,7 +37,7 @@ class CacheBenchmark implements BenchmarkSuiteInterface
 			'cache_get_hit' => static fn () => $cache->get('bench_key'),
 			'cache_has'     => static fn () => $cache->has('bench_key'),
 
-			// factory() returns cached value on subsequent calls — tests memoize path.
+			// factory() returns cached value on subsequent calls - tests memoize path.
 			'cache_factory' => static fn () => $cache->factory(
 				'bench_factory_key',
 				static fn () => 'computed_value'

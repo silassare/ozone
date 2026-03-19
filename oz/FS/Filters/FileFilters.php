@@ -90,7 +90,7 @@ final class FileFilters
 			}
 		}
 
-		// No handler matched — stream the raw file so the request never returns an empty body.
+		// No handler matched - stream the raw file so the request never returns an empty body.
 		$content = $stream->getContents();
 
 		return $response

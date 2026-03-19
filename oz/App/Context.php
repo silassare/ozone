@@ -673,7 +673,7 @@ final class Context
 			$body = $response->getBody();
 
 			// For 206 Partial Content, RangeResponse::apply() already seeked the body
-			// to the range start position — rewinding would reset that.
+			// to the range start position - rewinding would reset that.
 			if ($body->isSeekable() && 206 !== $response->getStatusCode()) {
 				$body->rewind();
 			}

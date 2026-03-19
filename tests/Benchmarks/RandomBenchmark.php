@@ -29,13 +29,13 @@ class RandomBenchmark implements BenchmarkSuiteInterface
 	public static function callables(): array
 	{
 		return [
-			// Full character set — worst-case entropy draw.
+			// Full character set - worst-case entropy draw.
 			'random_string_32'   => static fn () => Random::string(32),
 
-			// Alphanumeric — common for tokens and auth codes.
+			// Alphanumeric - common for tokens and auth codes.
 			'random_alphanum_16' => static fn () => Random::alphaNum(16),
 
-			// Numeric — used for PIN / OTP codes.
+			// Numeric - used for PIN / OTP codes.
 			'random_num_6'       => static fn () => Random::num(6),
 
 			// Primitives.

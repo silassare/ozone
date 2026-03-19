@@ -12,6 +12,6 @@
 declare(strict_types=1);
 
 // Minimal bootstrap for integration tests.
-// Does NOT call OZone::bootstrap() — each test project runs its own bootstrap
+// Does NOT call OZone::bootstrap() - each test project runs its own bootstrap
 // via 'bin/oz' subprocesses.
 require_once __DIR__ . '/../../vendor/autoload.php';

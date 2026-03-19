@@ -74,7 +74,7 @@ final class FileFiltersTest extends TestCase
 	}
 
 	// -----------------------------------------------------------------------
-	// Token: no-op (no tokens) — image unchanged
+	// Token: no-op (no tokens) - image unchanged
 	// -----------------------------------------------------------------------
 
 	public function testNoTokensReturnsOriginalDimensions(): void
@@ -89,7 +89,7 @@ final class FileFiltersTest extends TestCase
 	}
 
 	// -----------------------------------------------------------------------
-	// Token: w{N} — resize to width, proportional height
+	// Token: w{N} - resize to width, proportional height
 	// -----------------------------------------------------------------------
 
 	public function testWidthTokenResizesWidth(): void
@@ -104,7 +104,7 @@ final class FileFiltersTest extends TestCase
 	}
 
 	// -----------------------------------------------------------------------
-	// Token: h{N} — resize to height, proportional width
+	// Token: h{N} - resize to height, proportional width
 	// -----------------------------------------------------------------------
 
 	public function testHeightTokenResizesHeight(): void
@@ -119,7 +119,7 @@ final class FileFiltersTest extends TestCase
 	}
 
 	// -----------------------------------------------------------------------
-	// Token: thumb{N} — square thumbnail via crop
+	// Token: thumb{N} - square thumbnail via crop
 	// -----------------------------------------------------------------------
 
 	public function testThumbNTokenProducesSquare(): void
@@ -134,7 +134,7 @@ final class FileFiltersTest extends TestCase
 	}
 
 	// -----------------------------------------------------------------------
-	// Token: thumb — square thumbnail using default setting
+	// Token: thumb - square thumbnail using default setting
 	// -----------------------------------------------------------------------
 
 	public function testThumbTokenUsesThumbnailSize(): void
@@ -149,7 +149,7 @@ final class FileFiltersTest extends TestCase
 	}
 
 	// -----------------------------------------------------------------------
-	// Token: nocrop — override thumbnail crop
+	// Token: nocrop - override thumbnail crop
 	// -----------------------------------------------------------------------
 
 	public function testNocropTokenPreservesAspectRatio(): void
@@ -165,7 +165,7 @@ final class FileFiltersTest extends TestCase
 	}
 
 	// -----------------------------------------------------------------------
-	// Token: crop — explicit crop with w + h
+	// Token: crop - explicit crop with w + h
 	// -----------------------------------------------------------------------
 
 	public function testCropTokenWithWidthAndHeightProducesExactSize(): void
@@ -180,7 +180,7 @@ final class FileFiltersTest extends TestCase
 	}
 
 	// -----------------------------------------------------------------------
-	// Token: grayscale — image still valid, response body non-empty
+	// Token: grayscale - image still valid, response body non-empty
 	// -----------------------------------------------------------------------
 
 	public function testGrayscaleTokenProducesValidImage(): void
@@ -252,7 +252,7 @@ final class FileFiltersTest extends TestCase
 	}
 
 	// -----------------------------------------------------------------------
-	// Token: q{N} — quality flag parsed without changing dimensions
+	// Token: q{N} - quality flag parsed without changing dimensions
 	// -----------------------------------------------------------------------
 
 	public function testQualityTokenDoesNotChangeDimensions(): void
@@ -316,13 +316,13 @@ final class FileFiltersTest extends TestCase
 	}
 
 	// -----------------------------------------------------------------------
-	// FileFilters registry — programmatic registration + dispatch
+	// FileFilters registry - programmatic registration + dispatch
 	// -----------------------------------------------------------------------
 
 	public function testRegisterAndApplyUsesFirstMatchingHandler(): void
 	{
 		// Reset static state between tests by using a fresh anonymous handler
-		// that matches everything — registered BEFORE the real ImageHandler.
+		// that matches everything - registered BEFORE the real ImageHandler.
 		$spy     = new class implements FileFilterHandlerInterface {
 			public bool $called = false;
 

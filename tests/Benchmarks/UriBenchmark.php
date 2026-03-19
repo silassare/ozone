@@ -33,13 +33,13 @@ class UriBenchmark implements BenchmarkSuiteInterface
 			// Parsing a full URI string into an immutable value object.
 			'uri_parse'        => static fn () => Uri::createFromString($rawUri),
 
-			// Single immutable mutations — one new object allocated per call.
+			// Single immutable mutations - one new object allocated per call.
 			'uri_mutate_path'  => static fn () => Uri::createFromString($rawUri)
 				->withPath('/api/v1/items'),
 			'uri_mutate_query' => static fn () => Uri::createFromString($rawUri)
 				->withQuery('q=test&page=2'),
 
-			// Chained mutations — multiple allocations in sequence.
+			// Chained mutations - multiple allocations in sequence.
 			'uri_mutate_chain' => static fn () => Uri::createFromString($rawUri)
 				->withPath('/api/v2/products')
 				->withQuery('search=foo&limit=20')

@@ -44,7 +44,7 @@ final class HasherTest extends TestCase
 
 	public function testHash32WithNullProducesRandomHash(): void
 	{
-		// Null generates a random hash each time — so two calls must differ
+		// Null generates a random hash each time - so two calls must differ
 		$h1 = Hasher::hash32(null);
 		$h2 = Hasher::hash32(null);
 		self::assertSame(32, \strlen($h1));
