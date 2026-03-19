@@ -15,8 +15,8 @@ Completed items are marked ✅.
 Full HTML form rendered. Changes:
 
 - `AbstractRouteGuard`: `grant_form_ref` field marked `.hidden()` so templates treat it as a hidden input.
-- `AccessGrantView::renderAccessGrantForm()`: serializes `$form->toArray()` with fields recursively
-  converted via `Field::toArray()` before injecting, so the template receives a plain array.
+- `Form::toArray()`: now serializes `$fields` in-place via `array_map(fn => $f->toArray())` and exposes
+  `has_steps` flag — `AccessGrantView` was simplified to just `$form->toArray()` with no manual mapping.
 - Template: full HTML page using `oz.css`, supports CSRF token, hidden fields with pre-filled defaults,
   `<input type="password">` for password-type fields, `*` indicator for required fields, submit button.
 - `oz.fr.php`: added `OZ_ACCESS_GRANT_FORM_TITLE` and `OZ_ACCESS_GRANT_FORM_SUBMIT_BTN`.
@@ -42,10 +42,10 @@ Proper fix implemented — no more cookie-only compromise. Changes:
 **Current behaviour:** Accessing the root URL in web context throws `ForbiddenException`.
 
 **Proposed solution:**
-Add a minimal Blate template `oz://oz_templates/oz.welcome.blate` rendered as a `WebView` — shows
+Add a minimal Blate template `oz://oz.welcome.blate` rendered as a `WebView` — shows
 the project name, OZone version, and (if API doc is enabled) a link to the Swagger UI.
-Served only when `OZ_APP_ENV !== 'production'`; production keeps the `ForbiddenException`.
 Add `OZ_SHOW_WELCOME_PAGE` boolean to `oz.config` (default `true` in dev, `false` in prod).
+Served only when `OZ_SHOW_WELCOME_PAGE` is enabled; otherwise keeps the `ForbiddenException`.
 
 **Complexity:** Low | **Risk:** Low (new template + route + settings key, isolated path)
 
@@ -63,6 +63,20 @@ alert email/notification to the user. Add a translatable `OZ_SESSION_HIJACKING_D
 so the API response body is human-readable.
 
 **Complexity:** Low | **Risk:** Low (new event class + small SessionAuth change + i18n key)
+
+---
+
+### [ ] L. `REST/ApiDoc.php` — Add API doc for all OZone built-in services
+
+**Current behaviour:** `ApiDoc::loadProviders()` iterates over route providers and calls `apiDoc()` only on
+those that implement `ApiDocProviderInterface`. Virtually none of the built-in OZone services implement it.
+
+**Proposed solution:**
+Implement `ApiDocProviderInterface::apiDoc()` on each built-in service/view that exposes a public HTTP API:
+auth routes (login, logout, password), CSRF endpoint, file serving, auth link, API doc spec, QR code, etc.
+Each provider describes its routes, request parameters/forms, and response shapes using the `ApiDoc` helpers.
+
+**Complexity:** Low | **Risk:** None (purely additive — annotations and doc registration only)
 
 ---
 
@@ -109,6 +123,25 @@ subprocesses against temporary scaffolded projects so regressions are caught end
 
 ---
 
+### [ ] M. `Forms/Form.php` — Multi-step form introspection endpoint
+
+**Current behaviour:** `Form::toArray()` exposes a `has_steps: true` flag when a form has steps, but
+cannot return the step fields because steps are dynamic — their fields and visibility depend on the
+validation context built from earlier step data.
+
+**Proposed solution:**
+
+1. Add a dedicated route (e.g. `POST /forms/step`) that accepts validated data from the current step and
+   returns the serialized next step form — so a web client can progressively reveal field groups.
+   Consider a `X-OZ-Form-Step` request header as an alternative activation mechanism.
+2. Document the mechanism in `ApiDoc` (item L above).
+3. Decide whether deep nested steps (step-within-step) are in scope; if not, validate and throw on
+   nesting so it is never accidentally introduced.
+
+**Complexity:** Medium | **Risk:** Low (new isolated route; no changes to validation logic)
+
+---
+
 ### [ ] K. `Auth/Auth2FA.php` — Implement two-factor authentication flow
 
 **Current behaviour:** `check2FAAuthProcess()` throws `RuntimeException('User 2FA not yet implemented.')`.
@@ -148,8 +181,10 @@ subprocesses against temporary scaffolded projects so regressions are caught end
 | C   | `Auth/Views/LogoutAndRedirectView.php`             | Low        | Low        | ✅ done     |
 | F   | `Hooks/MainBootHookReceiver.php`                   | Low        | Low        | pending     |
 | B   | `Auth/Methods/SessionAuth.php`                     | Low        | Low        | pending     |
+| L   | `REST/ApiDoc.php`                                  | Low        | None       | pending     |
 | E   | `Services/QRCode.php`                              | Low        | Low-Medium | pending     |
 | 0   | Integration test suite                             | Low-Medium | Low        | in progress |
+| M   | `Forms/Form.php`                                   | Medium     | Low        | pending     |
 | K   | `Auth/Auth2FA.php`                                 | **High**   | **High**   | pending     |
 | A   | `Cli/Cron/Workers/CronWorker.php`                  | Low        | Low        | ✅ done     |
 | G   | `Queue/JobsManager.php`                            | Medium     | Low        | ✅ done     |
