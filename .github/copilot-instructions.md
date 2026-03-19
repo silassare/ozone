@@ -357,10 +357,10 @@ BlatePlugin::register();
 
 ```php
 // Referencing an ozone built-in template:
-$view->setTemplate('oz://oz_templates/oz.welcome.blate');
+$view->setTemplate('oz://welcome.blate');
 
 // Referencing a core-only asset (bypass sources scan):
-Assets::localize('oz://~core~/oz_templates/foo.blate');
+Assets::localize('oz://~core~/foo.blate');
 
 // Adding a plugin's template directory:
 Assets::addSource('/path/to/my-plugin/templates');
