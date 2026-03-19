@@ -120,17 +120,12 @@ final class Cli extends Kli
 	}
 
 	/**
-	 * Creates log file or append to existing.
-	 *
-	 * @param mixed $msg  the message to log
-	 * @param bool  $wrap to wrap string or not
-	 *
-	 * @return static
+	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function log(mixed $msg, bool $wrap = true): static
+	public function log(string $level, mixed $msg, array $context = []): static
 	{
-		oz_logger($msg);
+		oz_logger()->log($level, $msg, $context);
 
 		return $this;
 	}
