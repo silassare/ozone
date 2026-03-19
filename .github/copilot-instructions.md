@@ -11,7 +11,7 @@
 - **Symlinks:** If `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` do not exist, symlink them to `.github/copilot-instructions.md`.
 - **Direct dependencies only.** Only use packages listed in `require` or `require-dev` of `composer.json`. Do not rely on transitive dependencies — they are not guaranteed to be present and can change without notice.
 - **Strict types.** Every PHP file starts with `declare(strict_types=1);`.
-- **Indentation.** Use tabs (not spaces) for all PHP indentation.
+- **Indentation — IMPORTANT.** Use **tabs** (never spaces) for all PHP indentation. This applies to every generated or edited PHP file without exception.
 - **"oz" casing.** When uppercasing "oz", always use `OZ`, `OZone`, or `ozone` — never `Oz` or `Ozone`.
 - **Assertions.** Use snapshot assertions where they best convey expected output; use `assertEquals()` / `assertSame()` with inline values for simple or small structures. Never use third-party snapshot packages — only project-owned helpers.
 - **No Unicode shortcut characters in PHP comments or docblocks.** Use plain ASCII equivalents:
