@@ -15,6 +15,7 @@ namespace OZONE\Core\Forms\Traits;
 
 use BackedEnum;
 use Gobl\DBAL\Types\Exceptions\TypesException;
+use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Gobl\DBAL\Types\TypeBigint;
 use Gobl\DBAL\Types\TypeBool;
 use Gobl\DBAL\Types\TypeDate;
@@ -22,6 +23,7 @@ use Gobl\DBAL\Types\TypeDecimal;
 use Gobl\DBAL\Types\TypeEnum;
 use Gobl\DBAL\Types\TypeFloat;
 use Gobl\DBAL\Types\TypeInt;
+use Gobl\DBAL\Types\TypeJson;
 use Gobl\DBAL\Types\TypeList;
 use Gobl\DBAL\Types\TypeMap;
 use Gobl\DBAL\Types\TypeString;
@@ -50,14 +52,7 @@ trait FormFieldsTrait
 	 */
 	public function string(string $name, bool $required = false): TypeString
 	{
-		$type  = new TypeString();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeString(), $required);
 	}
 
 	/**
@@ -70,14 +65,7 @@ trait FormFieldsTrait
 	 */
 	public function bigint(string $name, bool $required = false): TypeBigint
 	{
-		$type  = new TypeBigint();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeBigint(), $required);
 	}
 
 	/**
@@ -90,14 +78,7 @@ trait FormFieldsTrait
 	 */
 	public function int(string $name, bool $required = false): TypeInt
 	{
-		$type  = new TypeInt();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeInt(), $required);
 	}
 
 	/**
@@ -110,14 +91,7 @@ trait FormFieldsTrait
 	 */
 	public function decimal(string $name, bool $required = false): TypeDecimal
 	{
-		$type  = new TypeDecimal();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeDecimal(), $required);
 	}
 
 	/**
@@ -130,14 +104,7 @@ trait FormFieldsTrait
 	 */
 	public function float(string $name, bool $required = false): TypeFloat
 	{
-		$type  = new TypeFloat();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeFloat(), $required);
 	}
 
 	/**
@@ -153,14 +120,7 @@ trait FormFieldsTrait
 	 */
 	public function enum(string $name, string $enum_class, bool $required = false): TypeEnum
 	{
-		$type  = new TypeEnum($enum_class);
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeEnum($enum_class), $required);
 	}
 
 	/**
@@ -173,14 +133,7 @@ trait FormFieldsTrait
 	 */
 	public function bool(string $name, bool $required = false): TypeBool
 	{
-		$type  = new TypeBool();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeBool(), $required);
 	}
 
 	/**
@@ -193,14 +146,7 @@ trait FormFieldsTrait
 	 */
 	public function date(string $name, bool $required = false): TypeDate
 	{
-		$type  = new TypeDate();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeDate(), $required);
 	}
 
 	/**
@@ -226,14 +172,7 @@ trait FormFieldsTrait
 	 */
 	public function list(string $name, bool $required = false): TypeList
 	{
-		$type  = new TypeList();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeList(), $required);
 	}
 
 	/**
@@ -246,14 +185,20 @@ trait FormFieldsTrait
 	 */
 	public function map(string $name, bool $required = false): TypeMap
 	{
-		$type  = new TypeMap();
-		$field = $this->field($name)->type($type);
+		return $this->withType($name, new TypeMap(), $required);
+	}
 
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+	/**
+	 * Creates a new field of type json.
+	 *
+	 * @param string $name
+	 * @param bool   $required
+	 *
+	 * @return TypeJson
+	 */
+	public function json(string $name, bool $required = false): TypeJson
+	{
+		return $this->withType($name, new TypeJson(), $required);
 	}
 
 	/**
@@ -266,14 +211,7 @@ trait FormFieldsTrait
 	 */
 	public function switcher(string $name, bool $required = false): TypesSwitcher
 	{
-		$type  = new TypesSwitcher();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypesSwitcher(), $required);
 	}
 
 	/**
@@ -286,14 +224,7 @@ trait FormFieldsTrait
 	 */
 	public function cc2(string $name, bool $required = false): TypeCC2
 	{
-		$type  = new TypeCC2();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeCC2(), $required);
 	}
 
 	/**
@@ -306,14 +237,7 @@ trait FormFieldsTrait
 	 */
 	public function email(string $name, bool $required = false): TypeEmail
 	{
-		$type  = new TypeEmail();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeEmail(), $required);
 	}
 
 	/**
@@ -326,14 +250,7 @@ trait FormFieldsTrait
 	 */
 	public function file(string $name, bool $required = false): TypeFile
 	{
-		$type  = new TypeFile();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeFile(), $required);
 	}
 
 	/**
@@ -346,14 +263,7 @@ trait FormFieldsTrait
 	 */
 	public function gender(string $name, bool $required = false): TypeGender
 	{
-		$type  = new TypeGender();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeGender(), $required);
 	}
 
 	/**
@@ -366,14 +276,7 @@ trait FormFieldsTrait
 	 */
 	public function phone(string $name, bool $required = false): TypePhone
 	{
-		$type  = new TypePhone();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypePhone(), $required);
 	}
 
 	/**
@@ -386,14 +289,7 @@ trait FormFieldsTrait
 	 */
 	public function password(string $name, bool $required = false): TypePassword
 	{
-		$type  = new TypePassword();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypePassword(), $required);
 	}
 
 	/**
@@ -406,14 +302,7 @@ trait FormFieldsTrait
 	 */
 	public function url(string $name, bool $required = false): TypeUrl
 	{
-		$type  = new TypeUrl();
-		$field = $this->field($name)->type($type);
-
-		if ($required) {
-			$field->required();
-		}
-
-		return $type;
+		return $this->withType($name, new TypeUrl(), $required);
 	}
 
 	/**
@@ -426,7 +315,22 @@ trait FormFieldsTrait
 	 */
 	public function username(string $name, bool $required = false): TypeUsername
 	{
-		$type  = new TypeUsername();
+		return $this->withType($name, new TypeUsername(), $required);
+	}
+
+	/**
+	 * Helper method to create a field with a given type and required flag.
+	 *
+	 * @template T of TypeInterface|TypesSwitcher
+	 *
+	 * @param string $name
+	 * @param T      $type
+	 * @param bool   $required
+	 *
+	 * @return T
+	 */
+	private function withType(string $name, TypeInterface|TypesSwitcher $type, bool $required = false): TypeInterface|TypesSwitcher
+	{
 		$field = $this->field($name)->type($type);
 
 		if ($required) {
