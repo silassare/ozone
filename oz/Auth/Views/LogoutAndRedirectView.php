@@ -19,7 +19,6 @@ use OZONE\Core\Columns\Types\TypeUrl;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Web\WebView;
@@ -46,21 +45,20 @@ final class LogoutAndRedirectView extends WebView
 		$next    = $ri->getCleanFormField('next', '/');
 		$context = $ri->getContext();
 
-		/** @var null|callable $detach */
-		$detach = null;
+		if (Settings::get('oz.cache', 'OZ_CLEAR_SITE_DATA_HEADER_ON_LOGOUT')) {
+			$rule = Settings::get('oz.cache', 'OZ_CLEAR_SITE_DATA_HEADER_VALUE');
 
-		$detach = ResponseHook::listen(static function (ResponseHook $ev) use (&$detach) {
-			// TODO: sometimes these make google chrome to freeze, we should investigate this issue and fix it
-			if (Settings::get('oz.cache', 'OZ_CLEAR_SITE_DATA_HEADER_ON_LOGOUT')) {
-				$rule = Settings::get('oz.cache', 'OZ_CLEAR_SITE_DATA_HEADER_VALUE');
+			// Sending Clear-Site-Data on a 3xx response freezes Chrome.
+			// Fix: respond with a 200 page that carries the header; the page
+			// redirects the client via <meta refresh> + JS so no 3xx is involved.
+			$response = $this->setTemplate('oz.redirect.blate')
+				->inject(['oz_redirect_url' => $next])
+				->respond()
+				->withHeader('Clear-Site-Data', $rule);
 
-				$response = $ev->context->getResponse();
-
-				$ev->context->setResponse($response->withHeader('Clear-Site-Data', $rule));
-
-				$detach();
-			}
-		});
+			$context->setResponse($response);
+			$context->respond();
+		}
 
 		$context->redirect($next);
 	}

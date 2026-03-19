@@ -30,14 +30,20 @@ return [
 	 *
 	 * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Clear-Site-Data
 	 *
-	 * @default false
+	 * @default true
 	 */
 	'OZ_CLEAR_SITE_DATA_HEADER_ON_LOGOUT' => true,
 
 	/**
 	 * Value of Clear-Site-Data header on logout response.
 	 *
+	 * Do NOT send this header directly on a 3xx redirect response -- Chrome will freeze
+	 * when "cache" or "storage" directives appear on a 302/303/307 response.
+	 * OZone avoids this by responding with a 200 intermediate page that carries the header
+	 * and redirects the client via <meta refresh> + JS.
+	 *
 	 * @see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Clear-Site-Data
+	 * @see https://bugs.chromium.org/p/chromium/issues/detail?id=898503
 	 */
-	'OZ_CLEAR_SITE_DATA_HEADER_VALUE' => '"cache", "cookies", "storage", "executionContexts"',
+	'OZ_CLEAR_SITE_DATA_HEADER_VALUE' => '"cache", "cookies", "storage"',
 ];
