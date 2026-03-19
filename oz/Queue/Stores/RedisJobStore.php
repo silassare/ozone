@@ -287,6 +287,15 @@ class RedisJobStore implements JobStoreInterface
 		return (bool) $this->redis()->del($this->lockKey($job_contract->getRef()));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function isLocked(JobContractInterface $job_contract): bool
+	{
+		return (bool) $this->redis()->exists($this->lockKey($job_contract->getRef()));
+	}
+
 	// -------------------------------------------------------------------------
 	// Private helpers
 	// -------------------------------------------------------------------------

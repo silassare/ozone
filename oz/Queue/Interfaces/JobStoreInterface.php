@@ -138,4 +138,13 @@ interface JobStoreInterface
 	 * @return bool
 	 */
 	public function unlock(JobContractInterface $job_contract): bool;
+
+	/**
+	 * Checks whether a job is currently locked.
+	 *
+	 * @param JobContractInterface $job_contract
+	 *
+	 * @return bool
+	 */
+	public function isLocked(JobContractInterface $job_contract): bool;
 }

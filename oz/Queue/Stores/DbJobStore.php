@@ -227,6 +227,17 @@ class DbJobStore implements JobStoreInterface
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function isLocked(JobContractInterface $job_contract): bool
+	{
+		$oz_job = self::identify($job_contract->getRef());
+
+		return $oz_job?->isLocked() ?? false;
+	}
+
+	/**
 	 * Find {@link \OZONE\Core\Db\OZJob} by ref.
 	 *
 	 * @param string $ref

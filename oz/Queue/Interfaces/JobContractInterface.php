@@ -57,4 +57,11 @@ interface JobContractInterface extends JobInterface
 	 * @return bool
 	 */
 	public function unlock(): bool;
+
+	/**
+	 * Checks whether the job contract is currently locked.
+	 *
+	 * @return bool
+	 */
+	public function isLocked(): bool;
 }
