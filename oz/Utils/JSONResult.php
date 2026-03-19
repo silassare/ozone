@@ -157,13 +157,20 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	/**
 	 * Merge json payload from a given instance.
 	 *
+	 * Values from `$payload` overwrite matching keys in this instance.
+	 * The `data` sub-array is deep-merged: source keys win on conflict but
+	 * keys present only in this instance are preserved.
+	 *
 	 * @param JSONResult $payload
 	 *
 	 * @return static
 	 */
 	public function merge(self $payload): static
 	{
-		$this->payload += $payload->toArray();
+		$other                 = $payload->toArray();
+		$data                  = \array_replace((array) ($this->payload['data'] ?? []), (array) ($other['data'] ?? []));
+		$this->payload         = \array_replace($this->payload, $other);
+		$this->payload['data'] = $data;
 
 		return $this;
 	}
