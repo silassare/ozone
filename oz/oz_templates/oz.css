@@ -20,6 +20,17 @@ body {
     border-radius: 3px;
 }
 
+.oz-logo {
+    display: block;
+    margin: 0 auto 30px auto;
+    width: 100px;
+    height: 100px;
+    background-image: url('/logo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
 .oz-title {
     font-size: 3em;
     color: #ff5064;
@@ -55,6 +66,62 @@ body {
 }
 
 .oz-btn:hover {
+    background-color: #ffffff;
+    color: #ff5064;
+}
+.oz-form {
+    margin-top: 20px;
+}
+
+.oz-form-field {
+    margin-bottom: 16px;
+}
+
+.oz-form-field label {
+    display: block;
+    color: #555555;
+    margin-bottom: 6px;
+    font-size: 0.9em;
+}
+
+.oz-required {
+    color: #ff5064;
+    margin-left: 2px;
+}
+
+.oz-form-field input[type="text"],
+.oz-form-field input[type="password"],
+.oz-form-field input[type="email"],
+.oz-form-field input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #dddddd;
+    border-radius: 3px;
+    box-sizing: border-box;
+    font-size: 0.9em;
+    font-family: inherit;
+}
+
+.oz-form-field input:focus {
+    outline: none;
+    border-color: #ff5064;
+}
+
+.oz-btn-submit {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin-top: 10px;
+    background-color: #ff5064;
+    color: #ffffff;
+    border: 2px solid #ff5064;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 1em;
+    font-family: inherit;
+}
+
+.oz-btn-submit:hover {
     background-color: #ffffff;
     color: #ff5064;
 }

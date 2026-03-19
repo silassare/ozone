@@ -56,4 +56,8 @@ return [
 	'OZ_VIEW_GO_BACK_BTN'               => 'Retour',
 	'OZ_VIEW_REDIRECT_TITLE'            => 'Vous allez être rediriger.',
 	'OZ_VIEW_REDIRECT_MESSAGE'          => "Si vous n'êtes pas redirigé automatiquement, suivez ce <a href=\"{url}\">lien</a>.",
+
+	// access grant form view
+	'OZ_ACCESS_GRANT_FORM_TITLE'      => 'Autorisation requise',
+	'OZ_ACCESS_GRANT_FORM_SUBMIT_BTN' => 'Autoriser',
 ];

@@ -30,9 +30,7 @@ final class AccessGrantView extends WebView
 	public function renderAccessGrantForm(Form $form): Response
 	{
 		return $this->setTemplate('oz.route.access.grant.form.blate')
-			->inject([
-				'form' => $form,
-			])
+			->inject(['form' => $form->toArray()])
 			->respond();
 	}
 

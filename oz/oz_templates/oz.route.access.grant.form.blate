@@ -1,1 +1,54 @@
-<!-- TODO - add render the form -->
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) 2017-present, Emile Silas Sare
+  ~
+  ~ This file is part of OZone package.
+  ~
+  ~ For the full copyright and license information, please view the LICENSE
+  ~ file that was distributed with this source code.
+  -->
+
+<html lang="{$global.lang}">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport"
+			  content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"/>
+
+		<title>{$t('OZ_ACCESS_GRANT_FORM_TITLE')}</title>
+
+		<style>
+		{@import_raw 'oz://oz.css'}
+		</style>
+	</head>
+	<body>
+		<div id="oz-box">
+			<span class="oz-logo"></span>
+			<div class="oz-title">{$t('OZ_ACCESS_GRANT_FORM_TITLE')}</div>
+			<form class="oz-form" action="{= form.action}" method="{form.method}">
+				{# CSRF token #}
+				{@if form._csrf}
+				<input type="hidden" name="_csrf" value="{form._csrf}">
+				{/if}
+
+				{@each field in form.fields}
+				{@if field.hidden}
+				<input type="hidden" name="{field.name}" value="{field.type.default ?? ''}">
+				{:else}
+				<div class="oz-form-field">
+					<label for="oz_field_{field.name}">
+						{field.name}{@if field.required}<span class="oz-required">*</span>{/if}
+					</label>
+					{@if field.type.type == 'password'}
+					<input id="oz_field_{field.name}" type="password" name="{field.name}" autocomplete="current-password" {@if field.required}required{/if}>
+					{:else}
+					<input id="oz_field_{field.name}" type="text" name="{field.name}" autocomplete="off" {@if field.required}required{/if}>
+					{/if}
+				</div>
+				{/if}
+				{/each}
+
+				<button class="oz-btn-submit" type="submit">{$t('OZ_ACCESS_GRANT_FORM_SUBMIT_BTN')}</button>
+			</form>
+		</div>
+	</body>
+</html>
