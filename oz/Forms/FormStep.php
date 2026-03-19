@@ -62,7 +62,7 @@ class FormStep
 			throw (new RuntimeException(
 				\sprintf(
 					'Step form builder should return instance of "%s" or "null" not: %s',
-					self::class,
+					Form::class,
 					\get_debug_type($form)
 				)
 			))->suspectCallable($this->factory);
