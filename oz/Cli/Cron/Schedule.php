@@ -22,7 +22,7 @@ use OZONE\Core\Utils\DateTimeUtils;
 use Stringable;
 
 /**
- * Class Scheduler.
+ * Class Schedule.
  */
 final class Schedule implements Stringable
 {
@@ -83,7 +83,7 @@ final class Schedule implements Stringable
 	/**
 	 * Checks if the task is due to run based on the cron expression.
 	 *
-	 * @param int $time
+	 * @param int $time the timestamp to check against
 	 *
 	 * @return bool
 	 *
@@ -117,6 +117,8 @@ final class Schedule implements Stringable
 	/**
 	 * Returns next run time.
 	 *
+	 * @param int $time_from the timestamp to calculate the next run time from
+	 *
 	 * @throws Exception
 	 */
 	public function getNextRunTime(int $time_from): int
@@ -131,8 +133,8 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run between start and end time.
 	 *
-	 * @param string $startTime
-	 * @param string $endTime
+	 * @param string $startTime the start time in "H:i" format
+	 * @param string $endTime   the end time in "H:i" format
 	 *
 	 * @return $this
 	 */
@@ -144,18 +146,16 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to not run between start and end time.
 	 *
-	 * @param string $startTime
-	 * @param string $endTime
+	 * @param string $startTime the start time in "H:i" format
+	 * @param string $endTime   the end time in "H:i" format
 	 *
 	 * @return $this
 	 */
 	public function notBetween(string $startTime, string $endTime): self
 	{
-		return $this->onlyIf(function () use ($endTime, $startTime) {
-			$predicate = $this->inTimeInterval($startTime, $endTime);
+		$predicate = $this->inTimeInterval($startTime, $endTime);
 
-			return !$predicate();
-		});
+		return $this->onlyIf(static fn () => !$predicate());
 	}
 
 	/**
@@ -231,6 +231,8 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run every thirty minutes.
 	 *
+	 * @param bool $atMinuteZeroAndThirty if true, the task will run at minute 0 and 30 of each hour; otherwise, it will run every 30 minutes starting from the first minute (e.g., 1, 31)
+	 *
 	 * @return $this
 	 */
 	public function everyThirtyMinutes(bool $atMinuteZeroAndThirty = false): self
@@ -243,7 +245,7 @@ final class Schedule implements Stringable
 	 *
 	 * @return $this
 	 */
-	public function hourly(): self
+	public function everyHour(): self
 	{
 		return $this->setPosition(1, 0);
 	}
@@ -251,11 +253,11 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run hourly at a given offset in the hour.
 	 *
-	 * @param int|int[] $offset
+	 * @param int|int[] $offset the minute(s) of the hour to run at (0-59)
 	 *
 	 * @return $this
 	 */
-	public function hourlyAt(array|int $offset): self
+	public function everyHourAt(array|int $offset): self
 	{
 		return $this->setPosition(1, \is_array($offset) ? \implode(',', $offset) : $offset);
 	}
@@ -341,7 +343,7 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run daily at a given time (10:00, 19:30, etc).
 	 *
-	 * @param string $time
+	 * @param string $time the time in "H:i" format
 	 *
 	 * @return $this
 	 */
@@ -356,8 +358,8 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run twice daily.
 	 *
-	 * @param int $first
-	 * @param int $second
+	 * @param int $first  the hour of the first run (0-23)
+	 * @param int $second the hour of the second run (0-23)
 	 *
 	 * @return $this
 	 */
@@ -369,9 +371,9 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run twice daily at a given offset.
 	 *
-	 * @param int $first
-	 * @param int $second
-	 * @param int $offset
+	 * @param int $first  the hour of the first run (0-23)
+	 * @param int $second the hour of the second run (0-23)
+	 * @param int $offset the minute of the hour to run at (0-59)
 	 *
 	 * @return $this
 	 */
@@ -488,8 +490,8 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run weekly on a given day and time.
 	 *
-	 * @param array|mixed $dayOfWeek
-	 * @param string      $time
+	 * @param int|int[] $dayOfWeek the day(s) of the week to run on (0-6, where 0 is Sunday)
+	 * @param string    $time      the time in "H:i" format
 	 *
 	 * @return $this
 	 */
@@ -515,8 +517,8 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run monthly on a given day and time.
 	 *
-	 * @param int    $dayOfMonth
-	 * @param string $time
+	 * @param int    $dayOfMonth the day of the month to run on (1-31)
+	 * @param string $time       the time in "H:i" format
 	 *
 	 * @return $this
 	 */
@@ -530,9 +532,9 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run twice monthly at a given time.
 	 *
-	 * @param int    $first
-	 * @param int    $second
-	 * @param string $time
+	 * @param int    $first  the day of the month for the first run (1-31)
+	 * @param int    $second the day of the month for the second run (1-31)
+	 * @param string $time   the time in "H:i" format
 	 *
 	 * @return $this
 	 */
@@ -548,7 +550,7 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run on the last day of the month.
 	 *
-	 * @param string $time
+	 * @param string $time the time in "H:i" format
 	 *
 	 * @return $this
 	 */
@@ -575,8 +577,8 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run quarterly on a given day and time.
 	 *
-	 * @param int|string $dayOfQuarter
-	 * @param string     $time
+	 * @param int|string $dayOfQuarter the day of the quarter to run on (1-31)
+	 * @param string     $time         the time in "H:i" format
 	 *
 	 * @return $this
 	 */
@@ -604,9 +606,9 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run yearly on a given month, day, and time.
 	 *
-	 * @param int|string $month
-	 * @param int|string $dayOfMonth
-	 * @param string     $time
+	 * @param int|string $month      the month to run on (1-12)
+	 * @param int|string $dayOfMonth the day of the month to run on (1-31)
+	 * @param string     $time       the time in "H:i" format
 	 *
 	 * @return $this
 	 */
@@ -621,7 +623,7 @@ final class Schedule implements Stringable
 	/**
 	 * Set the days of the week the task should run on.
 	 *
-	 * @param array|mixed $days
+	 * @param int|int[]|string $days the day(s) of the week to run on (0-6, where 0 is Sunday); accepts a single int constant, an array of int constants, a pre-formatted cron field string (e.g. '1-5'), or multiple ints as separate arguments
 	 *
 	 * @return $this
 	 */
@@ -635,7 +637,7 @@ final class Schedule implements Stringable
 	/**
 	 * Set the timezone the date should be evaluated on.
 	 *
-	 * @param DateTimeZone|string $timezone
+	 * @param DateTimeZone|string $timezone the timezone to set (e.g., "UTC", "America/New_York", etc.)
 	 *
 	 * @return $this
 	 */
@@ -649,7 +651,7 @@ final class Schedule implements Stringable
 	/**
 	 * Add runs predicate.
 	 *
-	 * @param callable $fn
+	 * @param callable $fn the predicate function that determines if the task should run
 	 *
 	 * @return $this
 	 */
@@ -661,52 +663,61 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Schedule the task to run between start and end time.
+	 * Returns a closure that checks whether the current time falls in the given interval.
 	 *
-	 * @param string $startTime
-	 * @param string $endTime
+	 * The closure is evaluated lazily: $now, $start, and $end are resolved each time
+	 * it is called (i.e. at shouldRun() time), not at schedule-build time. This
+	 * ensures between() / notBetween() always compare against the real current time.
 	 *
-	 * @return Closure
+	 * When $endTime < $startTime the interval wraps across midnight: $start is moved
+	 * back one day (if $start > $now) or $end is moved forward one day.
+	 *
+	 * @param string $startTime the start time in "H:i" format
+	 * @param string $endTime   the end time in "H:i" format
+	 *
+	 * @return Closure():bool
 	 */
 	private function inTimeInterval(string $startTime, string $endTime): Closure
 	{
-		[$now, $start, $end] = [
-			DateTimeUtils::now($this->timezone),
-			DateTimeUtils::parse($startTime, $this->timezone),
-			DateTimeUtils::parse($endTime, $this->timezone),
-		];
+		return function () use ($startTime, $endTime): bool {
+			$now   = DateTimeUtils::now($this->timezone);
+			$start = DateTimeUtils::parse($startTime, $this->timezone);
+			$end   = DateTimeUtils::parse($endTime, $this->timezone);
 
-		if ($end->lessThan($start)) {
-			if ($start->greaterThan($now)) {
-				$start = $start->subDay();
-			} else {
-				$end = $end->addDay();
+			if ($end->lessThan($start)) {
+				if ($start->greaterThan($now)) {
+					$start = $start->subDay();
+				} else {
+					$end = $end->addDay();
+				}
 			}
-		}
 
-		return static fn () => $now->between($start, $end);
+			return $now->between($start, $end);
+		};
 	}
 
 	/**
 	 * Set the position of the given value.
 	 *
-	 * @param int        $position
-	 * @param int|string $value
+	 * @param int        $position the position to set (1 for minute, 2 for hour, 3 for day of month, 4 for month, 5 for day of week)
+	 * @param int|string $value    the value to set at the given position
 	 *
 	 * @return $this
 	 */
 	private function setPosition(int $position, int|string $value): self
 	{
+		$str = (string) $value;
+
 		if (1 === $position) {
-			$this->minute = $value;
+			$this->minute = $str;
 		} elseif (2 === $position) {
-			$this->hour = $value;
+			$this->hour = $str;
 		} elseif (3 === $position) {
-			$this->dayOfMonth = $value;
+			$this->dayOfMonth = $str;
 		} elseif (4 === $position) {
-			$this->month = $value;
+			$this->month = $str;
 		} elseif (5 === $position) {
-			$this->dayOfWeek = $value;
+			$this->dayOfWeek = $str;
 		}
 
 		return $this;
