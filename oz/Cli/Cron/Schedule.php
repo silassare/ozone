@@ -231,7 +231,7 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run every thirty minutes.
 	 *
-	 * @param bool $atMinuteZeroAndThirty if true, the task will run at minute 0 and 30 of each hour; otherwise, it will run every 30 minutes starting from the first minute (e.g., 1, 31)
+	 * @param bool $atMinuteZeroAndThirty if true, the task will run at minute 0 and 30 of each hour; otherwise, it will run every 30 minutes starting from minute 0 (e.g., 0, 30)
 	 *
 	 * @return $this
 	 */
@@ -490,8 +490,8 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run weekly on a given day and time.
 	 *
-	 * @param int|int[] $dayOfWeek the day(s) of the week to run on (0-6, where 0 is Sunday)
-	 * @param string    $time      the time in "H:i" format
+	 * @param int|int[]|string $dayOfWeek the day(s) of the week to run on (0-6, where 0 is Sunday); accepts a single int constant, an array of int constants, or a pre-formatted cron field string (e.g. '1-5')
+	 * @param string           $time      the time in "H:i" format
 	 *
 	 * @return $this
 	 */
@@ -550,6 +550,10 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run on the last day of the month.
 	 *
+	 * The day-of-month field is set to `28-31` (all potential last days) and a
+	 * lazy predicate is added so the task only fires when today's date equals
+	 * the actual last day of the current month.
+	 *
 	 * @param string $time the time in "H:i" format
 	 *
 	 * @return $this
@@ -558,7 +562,13 @@ final class Schedule implements Stringable
 	{
 		$this->dailyAt($time);
 
-		return $this->setPosition(3, DateTimeUtils::now()->endOfMonth()->getDay());
+		$this->setPosition(3, '28-31');
+
+		return $this->onlyIf(function (): bool {
+			$now = DateTimeUtils::now($this->timezone);
+
+			return $now->getDay() === $now->endOfMonth()->getDay();
+		});
 	}
 
 	/**

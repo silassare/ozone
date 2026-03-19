@@ -977,10 +977,11 @@ $task->inBackground()          // route to cron:async queue (background subproce
 | `daily()` | `0 0 * * *` | midnight |
 | `dailyAt('10:30')` | `30 10 * * *` | |
 | `twiceDaily(int $h1, int $h2)` | e.g. `0 1,13 * * *` | |
-| `weekdays()` / `weekends()` | `* * * * 1-5` | day-of-week filter |
+| `weekdays()` / `weekends()` | `* * * * 1-5` / `* * * * 6,0` | day-of-week filter |
 | `weekly()` | `0 0 * * 0` | Sunday midnight |
 | `weeklyOn(int $day, string $time)` | | `Schedule::MONDAY` etc. |
 | `monthly()` | `0 0 1 * *` | |
+| `lastDayOfMonth(string $time)` | e.g. `0 0 28-31 * *` | lazy predicate ensures it runs only on the actual last day of the month |
 | `quarterly()` | `0 0 1 1-12/3 *` | |
 | `yearly()` | `0 0 1 1 *` | |
 
