@@ -18,6 +18,7 @@ use Gobl\ORM\Events\ORMTableFilesGenerated;
 use Gobl\ORM\Utils\ORMClassKind;
 use Override;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Events\SessionHijackingDetected;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\MethodNotAllowedException;
@@ -58,10 +59,10 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 
 		if ('/' === $uri->getPath()) {
 			if ($context->isApiContext()) {
-				// 1) show api usage doc as all this conditions are met:
-				//		- we are in api context
-				//      - the uri is root
-				//		- allowed in settings
+				// 1) show api usage doc when all this conditions are met:
+				//   - we are in api context
+				//   - the uri is root
+				//   - allowed in settings
 
 				if (
 					Settings::get('oz.api.doc', 'OZ_API_DOC_ENABLED')
@@ -75,9 +76,9 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 
 			if ($context->isWebContext()) {
 				// 2) show welcome page when all these conditions are met:
-				//		- we are in web context
-				//      - the uri is root
-				//		- allowed in settings
+				//   - we are in web context
+				//   - the uri is root
+				//   - allowed in settings
 				if (Settings::get('oz.config', 'OZ_SHOW_WELCOME_PAGE')) {
 					$v = new WebView($context);
 					$v->setTemplate('oz://oz.welcome.blate');
@@ -224,6 +225,13 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		RouteMethodNotAllowed::listen([self::class, 'onMethodNotAllowed'], Event::RUN_LAST);
 
 		ResponseHook::listen([self::class, 'onResponse'], Event::RUN_FIRST);
+
+		SessionHijackingDetected::listen(static function (SessionHijackingDetected $ev): void {
+			oz_logger()->warning('Session hijacking detected.', [
+				'session_id' => $ev->session->id(),
+				'user_ip'    => $ev->context->getUserIP(),
+			]);
+		}, Event::RUN_LAST);
 
 		if (OZone::isCliMode()) {
 			ORMTableFilesGenerated::listen([self::class, 'onTableFilesGenerated'], Event::RUN_FIRST);

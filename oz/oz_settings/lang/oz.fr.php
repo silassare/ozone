@@ -40,6 +40,8 @@ return [
 
 	'OZ_AUTH_USER_UNKNOWN' => 'Aucun utilisateur n\'est associé à ces informations de connexion.',
 
+	'OZ_SESSION_HIJACKING_DETECTED' => 'Votre session a été interrompue pour des raisons de sécurité.',
+
 	'OZ_FIELD_GENDER_INVALID'           => 'Le genre est invalide.',
 	'OZ_FIELD_PASS_INVALID'             => 'Le mot de passe est incorrect.',
 	'OZ_FIELD_PASS_NOT_SECURE'          => 'Le mot de passe n’est pas assez sécurisé.',

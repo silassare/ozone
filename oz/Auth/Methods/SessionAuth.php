@@ -17,6 +17,7 @@ use Override;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
+use OZONE\Core\Auth\Events\SessionHijackingDetected;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodStatefulInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
@@ -272,12 +273,9 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 
 			if ($force_same_source) {
 				if ($this->session->attachedAuthUser()) {
-					// TODO: we may inform the user about this
-					// we can't just restart the session
-					// because the user may be doing something important
-					// and we don't want to interrupt him
-					// so we just throw an exception
-					throw new ForbiddenException(null, [
+					(new SessionHijackingDetected($context, $this->session))->dispatch();
+
+					throw new ForbiddenException('OZ_SESSION_HIJACKING_DETECTED', [
 						'_reason' => 'Session source key mismatch.',
 						'_help'   => 'This is possible session hijacking attempt.'
 							. ' It may also be that the user is using a proxy, a VPN'
