@@ -26,6 +26,7 @@ use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Http\Response;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use Throwable;
@@ -35,6 +36,11 @@ use Throwable;
  */
 class AuthorizationService extends Service
 {
+	public const ROUTE_AUTHORIZE = 'oz:auth:authorize';
+	public const ROUTE_REFRESH   = 'oz:auth:refresh';
+	public const ROUTE_STATE     = 'oz:auth:state';
+	public const ROUTE_CANCEL    = 'oz:auth:cancel';
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -45,23 +51,22 @@ class AuthorizationService extends Service
 	{
 		$router->group('/auth/:' . OZAuth::COL_REF, static function (Router $router) {
 			$router->post('/authorize', static fn (RouteInfo $ri) => (new self($ri))->authorize($ri, $ri->getCleanFormData()))
+				->name(self::ROUTE_AUTHORIZE)
 				->form(self::buildAuthorizeForm(...));
 
 			$router->post('/refresh', static fn (RouteInfo $ri) => (new self($ri))->refresh($ri, $ri->getCleanFormData()))
+				->name(self::ROUTE_REFRESH)
 				->form(self::buildRefreshForm(...));
 
-			$router->get('/state', static fn (RouteInfo $ri) =>(new self($ri))->state($ri));
+			$router->get('/state', static fn (RouteInfo $ri) => (new self($ri))->state($ri))
+				->name(self::ROUTE_STATE);
 
-			$router->post('/cancel', static fn (RouteInfo $ri) => (new self($ri))->cancel($ri));
+			$router->post('/cancel', static fn (RouteInfo $ri) => (new self($ri))->cancel($ri))
+				->name(self::ROUTE_CANCEL);
 		});
 	}
 
 	/**
-	 * @param RouteInfo $ri
-	 * @param FormData  $fd
-	 *
-	 * @return Response
-	 *
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 */
@@ -87,10 +92,6 @@ class AuthorizationService extends Service
 	}
 
 	/**
-	 * @param RouteInfo $ri
-	 *
-	 * @return Response
-	 *
 	 * @throws UnauthorizedException
 	 * @throws NotFoundException
 	 */
@@ -115,10 +116,6 @@ class AuthorizationService extends Service
 	}
 
 	/**
-	 * @param RouteInfo $ri
-	 *
-	 * @return Response
-	 *
 	 * @throws UnauthorizedException
 	 * @throws NotFoundException
 	 */
@@ -142,11 +139,6 @@ class AuthorizationService extends Service
 	}
 
 	/**
-	 * @param RouteInfo $ri
-	 * @param FormData  $fd
-	 *
-	 * @return Response
-	 *
 	 * @throws InvalidFormException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
@@ -183,6 +175,58 @@ class AuthorizationService extends Service
 			->merge($provider->getJSONResponse());
 
 		return $this->respond();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag = $doc->addTag('Authorization', 'Authorization flow endpoints.');
+
+		$op = $doc->addOperationFromRoute(self::ROUTE_AUTHORIZE, 'POST', 'Authorize', [
+			$doc->success(['state' => $doc->string('The authorization state.')]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Auth.authorize',
+			'description' => 'Submit a code or token to complete an authorization flow.',
+		]);
+		$op->requestBody = $doc->requestBody([
+			'application/json' => $doc->json($doc->object([
+				'code'  => $doc->string('A one-time code (mutually exclusive with token).'),
+				'token' => $doc->string('An authorization token (mutually exclusive with code).'),
+			])),
+		]);
+
+		$op = $doc->addOperationFromRoute(self::ROUTE_REFRESH, 'POST', 'Refresh', [
+			$doc->success(['state' => $doc->string('The authorization state.')]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Auth.refresh',
+			'description' => 'Refresh an authorization flow credentials.',
+		]);
+		$op->requestBody = $doc->requestBody([
+			'application/json' => $doc->json($doc->object([
+				'refresh_key' => $doc->string('The refresh key.'),
+			])),
+		]);
+
+		$doc->addOperationFromRoute(self::ROUTE_STATE, 'GET', 'Get State', [
+			$doc->success(['state' => $doc->string('The current authorization state.')]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Auth.state',
+			'description' => 'Get the current state of an authorization flow.',
+		]);
+
+		$doc->addOperationFromRoute(self::ROUTE_CANCEL, 'POST', 'Cancel', [
+			$doc->success([]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Auth.cancel',
+			'description' => 'Cancel an authorization flow.',
+		]);
 	}
 
 	/**

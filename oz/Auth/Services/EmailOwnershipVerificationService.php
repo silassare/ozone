@@ -20,6 +20,7 @@ use OZONE\Core\Columns\Types\TypeEmail;
 use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Response;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
@@ -28,6 +29,8 @@ use OZONE\Core\Router\Router;
  */
 class EmailOwnershipVerificationService extends Service
 {
+	public const ROUTE_VERIFY_EMAIL = 'oz:auth:verify:email';
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -37,7 +40,29 @@ class EmailOwnershipVerificationService extends Service
 		$router->post('/auth/verify/email', static function (RouteInfo $ri) {
 			return (new self($ri))->init($ri);
 		})
+			->name(self::ROUTE_VERIFY_EMAIL)
 			->form(self::buildInitForm(...));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag = $doc->addTag('Authorization', 'Authorization flow endpoints.');
+		$op  = $doc->addOperationFromRoute(self::ROUTE_VERIFY_EMAIL, 'POST', 'Verify Email Ownership', [
+			$doc->success(['ref' => $doc->string('The authorization reference.')]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Auth.verifyEmail',
+			'description' => 'Start an email address ownership verification flow.',
+		]);
+		$op->requestBody = $doc->requestBody([
+			'application/json' => $doc->json($doc->object([
+				'email' => $doc->string('The email address to verify.'),
+			])),
+		]);
 	}
 
 	/**

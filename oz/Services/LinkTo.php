@@ -20,6 +20,7 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\Uri;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Utils\Hasher;
@@ -72,6 +73,28 @@ final class LinkTo extends Service
 			})
 			->name(self::MAIN_ROUTE)
 			->param(self::URI_KEY, '[a-z0-9]{32}');
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag = $doc->addTag('Assets', 'Static asset generation endpoints.');
+		$doc->addOperationFromRoute(
+			self::MAIN_ROUTE,
+			'GET',
+			'Redirect to URL',
+			[
+				$doc->response(302, 'Redirect to the target URL.', []),
+			],
+			[
+				'tags'        => [$tag->name],
+				'operationId' => 'Assets.linkTo',
+				'description' => 'Redirect to the URL stored for the given key.',
+			]
+		);
 	}
 
 	/**

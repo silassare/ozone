@@ -20,6 +20,7 @@ use OZONE\Core\Columns\Types\TypePhone;
 use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Response;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
@@ -28,6 +29,8 @@ use OZONE\Core\Router\Router;
  */
 class PhoneOwnershipVerificationService extends Service
 {
+	public const ROUTE_VERIFY_PHONE = 'oz:auth:verify:phone';
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -37,7 +40,29 @@ class PhoneOwnershipVerificationService extends Service
 		$router->post('/auth/verify/phone', static function (RouteInfo $ri) {
 			return (new self($ri))->init($ri);
 		})
+			->name(self::ROUTE_VERIFY_PHONE)
 			->form(self::buildInitForm(...));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag = $doc->addTag('Authorization', 'Authorization flow endpoints.');
+		$op  = $doc->addOperationFromRoute(self::ROUTE_VERIFY_PHONE, 'POST', 'Verify Phone Ownership', [
+			$doc->success(['ref' => $doc->string('The authorization reference.')]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Auth.verifyPhone',
+			'description' => 'Start a phone number ownership verification flow.',
+		]);
+		$op->requestBody = $doc->requestBody([
+			'application/json' => $doc->json($doc->object([
+				'phone' => $doc->string('The phone number to verify (E.164 format).'),
+			])),
+		]);
 	}
 
 	/**

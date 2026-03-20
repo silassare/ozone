@@ -15,6 +15,7 @@ namespace OZONE\Core\Auth\Services;
 
 use Override;
 use OZONE\Core\App\Service;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
@@ -49,5 +50,27 @@ final class Logout extends Service
 				return $s->respond();
 			})
 			->name(self::ROUTE_LOGOUT);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag = $doc->addTag('Auth', 'Authentication endpoints.');
+		$doc->addOperationFromRoute(
+			self::ROUTE_LOGOUT,
+			'POST',
+			'Logout',
+			[
+				$doc->success([]),
+			],
+			[
+				'tags'        => [$tag->name],
+				'operationId' => 'Auth.logout',
+				'description' => 'End the current session.',
+			]
+		);
 	}
 }

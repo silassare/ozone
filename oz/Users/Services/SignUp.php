@@ -22,6 +22,7 @@ use OZONE\Core\Db\OZUser;
 use OZONE\Core\Db\OZUsersController;
 use OZONE\Core\Exceptions\InternalErrorException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -83,5 +84,35 @@ final class SignUp extends Service
 			->name(self::ROUTE_SIGN_UP)
 			->form(static fn () => Form::fromTable(OZUser::TABLE_NAME))
 			->withAuthorization(EmailOwnershipVerificationProvider::NAME, PhoneOwnershipVerificationProvider::NAME);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag = $doc->addTag('Users', 'User management endpoints.');
+		$op  = $doc->addOperationFromRoute(
+			self::ROUTE_SIGN_UP,
+			'POST',
+			'Sign Up',
+			[
+				$doc->success(['user' => $doc->object([], ['description' => 'The newly created user.'])]),
+			],
+			[
+				'tags'        => [$tag->name],
+				'operationId' => 'Users.signUp',
+				'description' => 'Create a new user account. Requires prior email or phone ownership verification.',
+			]
+		);
+		$op->requestBody = $doc->requestBody([
+			'application/json' => $doc->json($doc->object([
+				OZUser::COL_NAME       => $doc->string('The user name.'),
+				OZUser::COL_PASS       => $doc->string('The user password.'),
+				OZUser::COL_GENDER     => $doc->string('The user gender.'),
+				OZUser::COL_BIRTH_DATE => $doc->string('The user birth date (YYYY-MM-DD).'),
+			])),
+		]);
 	}
 }

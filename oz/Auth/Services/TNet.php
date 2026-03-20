@@ -16,6 +16,7 @@ namespace OZONE\Core\Auth\Services;
 use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\OZone;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
@@ -63,5 +64,36 @@ final class TNet extends Service
 				return $s->respond();
 			})
 			->name(self::ROUTE_TNET);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag = $doc->addTag('Health', 'System health & connectivity.');
+		$doc->addOperationFromRoute(
+			self::ROUTE_TNET,
+			'GET',
+			'Health Check',
+			[
+				$doc->success([
+					'ok'            => $doc->boolean('Whether the user is authenticated.'),
+					'_current_user' => $doc->object([], ['description' => 'The current user, if authenticated.', 'nullable' => true]),
+					'_health'       => $doc->object([
+						'is_installed'     => $doc->boolean(),
+						'has_db_access'    => $doc->boolean(),
+						'has_db_installed' => $doc->boolean(),
+						'has_super_admin'  => $doc->boolean(),
+					]),
+				]),
+			],
+			[
+				'tags'        => [$tag->name],
+				'operationId' => 'Health.check',
+				'description' => 'Check API connectivity and system health.',
+			]
+		);
 	}
 }

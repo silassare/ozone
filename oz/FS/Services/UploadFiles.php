@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\FS\Services;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
+use OpenApi\Annotations\MediaType;
 use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
@@ -23,6 +24,7 @@ use OZONE\Core\Forms\Form;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
 use OZONE\Core\Http\UploadedFile;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\Rates\IPRateLimit;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -326,6 +328,68 @@ class UploadFiles extends Service
 
 			return new IPRateLimit($ri, $limit, 60);
 		});
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag           = $doc->addTag('Files', 'File upload endpoints.');
+		$file_schema   = $doc->type('string', null, ['format' => 'binary']);
+		$files_schema  = $doc->array($file_schema, ['description' => 'The uploaded files.']);
+		$ref_schema    = $doc->string('The upload reference.');
+
+		$op = $doc->addOperationFromRoute(self::MAIN_ROUTE, 'POST', 'Upload Files', [
+			$doc->success([
+				self::PARAM_REF   => $ref_schema,
+				self::PARAM_FILES => $files_schema,
+			]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Files.upload',
+			'description' => 'Upload one or more files.',
+		]);
+		$op->requestBody = $doc->requestBody([
+			'multipart/form-data' => new MediaType([
+				'schema' => $doc->object([
+					self::PARAM_FILES => $doc->array($file_schema, ['description' => 'Files to upload.']),
+				]),
+			]),
+		]);
+
+		$op = $doc->addOperationFromRoute(self::CHUNK_START_ROUTE, 'POST', 'Start Chunked Upload', [
+			$doc->success([self::PARAM_REF => $ref_schema]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Files.chunkStart',
+			'description' => 'Initialize a chunked file upload session.',
+		]);
+		$op->requestBody = $doc->requestBody([
+			'application/json' => $doc->json($doc->object([
+				self::PARAM_NAME => $doc->string('The file name.'),
+				self::PARAM_SIZE => $doc->integer('The total file size in bytes.'),
+				self::PARAM_TYPE => $doc->string('The MIME type.'),
+			])),
+		]);
+
+		$op = $doc->addOperationFromRoute(self::CHUNK_ADD_ROUTE, 'POST', 'Add Chunk', [
+			$doc->success([self::PARAM_FILES => $files_schema]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Files.chunkAdd',
+			'description' => 'Upload a single chunk for an ongoing chunked upload.',
+		]);
+		$op->requestBody = $doc->requestBody([
+			'multipart/form-data' => new MediaType([
+				'schema' => $doc->object([
+					self::PARAM_REF         => $ref_schema,
+					self::PARAM_CHUNK_INDEX => $doc->integer('The zero-based chunk index.'),
+					self::PARAM_CHUNK       => $file_schema,
+				]),
+			]),
+		]);
 	}
 
 	/**

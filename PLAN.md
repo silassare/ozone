@@ -37,7 +37,7 @@ Proper fix implemented — no more cookie-only compromise. Changes:
 
 ---
 
-### [ ] F. `Hooks/MainBootHookReceiver.php` — Welcome page for web context root
+### [x] F. `Hooks/MainBootHookReceiver.php` — Welcome page for web context root ✅
 
 **Current behaviour:** Accessing the root URL in web context throws `ForbiddenException`.
 
@@ -49,9 +49,19 @@ Served only when `OZ_SHOW_WELCOME_PAGE` is enabled; otherwise keeps the `Forbidd
 
 **Complexity:** Low | **Risk:** Low (new template + route + settings key, isolated path)
 
+Changes:
+
+- `oz.config.php`: added `OZ_SHOW_WELCOME_PAGE => true` (projects override to `false` in prod).
+- `MainBootHookReceiver::onRouteNotFound()`: replaced TODO with `WebView($context)` rendering
+  `oz://oz.welcome.blate` when `OZ_SHOW_WELCOME_PAGE` is enabled; `ForbiddenException` otherwise.
+- `oz.welcome.blate`: new template — project name, OZone version, optional API doc link
+  (shown only when both `OZ_API_DOC_ENABLED` and `OZ_API_DOC_SHOW_ON_INDEX` are set).
+- `oz.fr.php`: added `OZ_WELCOME_PAGE_TITLE` (`'Bienvenue'`) and
+  `OZ_WELCOME_PAGE_API_DOC_LINK` (`'Documentation API'`).
+
 ---
 
-### [ ] B. `Auth/Methods/SessionAuth.php` — Inform user on session hijacking detection
+### [x] B. `Auth/Methods/SessionAuth.php` — Inform user on session hijacking detection ✅
 
 **Current behaviour:** When a session source-key mismatch is detected for an authenticated user,
 a `ForbiddenException` is thrown with no user-visible message beyond the HTTP 403.
@@ -64,9 +74,18 @@ so the API response body is human-readable.
 
 **Complexity:** Low | **Risk:** Low (new event class + small SessionAuth change + i18n key)
 
+Changes:
+
+- `Auth/Events/SessionHijackingDetected.php`: new event carrying `Context` + `Session`.
+- `SessionAuth::session()`: dispatches `SessionHijackingDetected` before throwing, passes
+  `'OZ_SESSION_HIJACKING_DETECTED'` as the exception message key (replaces bare `null`).
+- `MainBootHookReceiver::boot()`: registers a default `RUN_LAST` listener that calls
+  `oz_logger()->warning()` with session ID and user IP.
+- `oz.fr.php`: added `OZ_SESSION_HIJACKING_DETECTED` (`'Votre session a été interrompue pour des raisons de sécurité.'`).
+
 ---
 
-### [ ] L. `REST/ApiDoc.php` — Add API doc for all OZone built-in services
+### [x] L. `REST/ApiDoc.php` — Add API doc for all OZone built-in services
 
 **Current behaviour:** `ApiDoc::loadProviders()` iterates over route providers and calls `apiDoc()` only on
 those that implement `ApiDocProviderInterface`. Virtually none of the built-in OZone services implement it.
@@ -181,7 +200,7 @@ validation context built from earlier step data.
 | C   | `Auth/Views/LogoutAndRedirectView.php`             | Low        | Low        | ✅ done     |
 | F   | `Hooks/MainBootHookReceiver.php`                   | Low        | Low        | pending     |
 | B   | `Auth/Methods/SessionAuth.php`                     | Low        | Low        | pending     |
-| L   | `REST/ApiDoc.php`                                  | Low        | None       | pending     |
+| L   | `REST/ApiDoc.php`                                  | Low        | None       | ✅ done     |
 | E   | `Services/QRCode.php`                              | Low        | Low-Medium | pending     |
 | 0   | Integration test suite                             | Low-Medium | Low        | in progress |
 | M   | `Forms/Form.php`                                   | Medium     | Low        | pending     |

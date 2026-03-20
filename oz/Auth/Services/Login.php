@@ -18,6 +18,7 @@ use OZONE\Core\App\Service;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
@@ -69,5 +70,36 @@ final class Login extends Service
 			})
 			->name(self::ROUTE_LOGIN)
 			->form(AuthUsers::logInForm(...));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag = $doc->addTag('Auth', 'Authentication endpoints.');
+		$op  = $doc->addOperationFromRoute(
+			self::ROUTE_LOGIN,
+			'POST',
+			'Login',
+			[
+				$doc->success(['user' => $doc->object([], ['description' => 'The authenticated user.'])]),
+			],
+			[
+				'tags'        => [$tag->name],
+				'operationId' => 'Auth.login',
+				'description' => 'Authenticate a user and start a session.',
+			]
+		);
+		$op->requestBody = $doc->requestBody([
+			'application/json' => $doc->json($doc->object([
+				AuthUsers::FIELD_AUTH_USER_TYPE             => $doc->string('The user type.'),
+				AuthUsers::FIELD_AUTH_USER_IDENTIFIER_NAME  => $doc->string('The identifier field name (e.g. email, phone).'),
+				AuthUsers::FIELD_AUTH_USER_IDENTIFIER_VALUE => $doc->string('The identifier value.'),
+				AuthUsers::FIELD_AUTH_USER_ID               => $doc->string('The user ID.'),
+				AuthUsers::FIELD_AUTH_USER_PASSWORD         => $doc->string('The user password.'),
+			])),
+		]);
 	}
 }

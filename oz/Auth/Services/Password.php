@@ -20,6 +20,7 @@ use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\BadRequestException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Roles\RolesUtils;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -140,5 +141,55 @@ final class Password extends Service
 		$form->field(self::FIELD_PASS_CURRENT)->required();
 
 		return $form;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag = $doc->addTag('Auth', 'Authentication endpoints.');
+
+		$op = $doc->addOperationFromRoute(
+			self::ROUTE_PASS_EDIT_BY_AS_ADMIN,
+			'POST',
+			'Edit Password (Admin)',
+			[
+				$doc->success([]),
+			],
+			[
+				'tags'        => [$tag->name],
+				'operationId' => 'Auth.editPasswordAsAdmin',
+				'description' => 'Change a user password (admin only).',
+			]
+		);
+		$op->requestBody = $doc->requestBody([
+			'application/json' => $doc->json($doc->object([
+				AuthUsers::FIELD_AUTH_USER_TYPE => $doc->string('The user type.'),
+				AuthUsers::FIELD_AUTH_USER_ID   => $doc->string('The user ID.'),
+				self::FIELD_PASS_NEW            => $doc->string('The new password.'),
+			])),
+		]);
+
+		$op = $doc->addOperationFromRoute(
+			self::ROUTE_PASS_EDIT_AS_SELF,
+			'POST',
+			'Edit Password (Self)',
+			[
+				$doc->success([]),
+			],
+			[
+				'tags'        => [$tag->name],
+				'operationId' => 'Auth.editPasswordAsSelf',
+				'description' => 'Change the current user own password.',
+			]
+		);
+		$op->requestBody = $doc->requestBody([
+			'application/json' => $doc->json($doc->object([
+				self::FIELD_PASS_CURRENT => $doc->string('The current password.'),
+				self::FIELD_PASS_NEW     => $doc->string('The new password.'),
+			])),
+		]);
 	}
 }

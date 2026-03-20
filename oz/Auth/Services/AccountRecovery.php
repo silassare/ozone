@@ -25,6 +25,7 @@ use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InternalErrorException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -120,5 +121,35 @@ final class AccountRecovery extends Service
 			->required();
 
 		return $form->doubleCheck($pass);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag = $doc->addTag('Auth', 'Authentication endpoints.');
+		$op  = $doc->addOperationFromRoute(
+			self::ROUTE_ACCOUNT_RECOVERY,
+			'POST',
+			'Account Recovery',
+			[
+				$doc->success(['user' => $doc->object([], ['description' => 'The recovered user.'])]),
+			],
+			[
+				'tags'        => [$tag->name],
+				'operationId' => 'Auth.accountRecovery',
+				'description' => 'Reset a user password after email or phone ownership verification.',
+			]
+		);
+		$op->requestBody = $doc->requestBody([
+			'application/json' => $doc->json($doc->object([
+				AuthUsers::FIELD_AUTH_USER_TYPE   => $doc->string('The user type.'),
+				self::AUTO_LOGIN_ON_SUCCESS_FIELD => $doc->boolean('Whether to automatically log in after recovery.'),
+				'pass'                            => $doc->string('The new password.'),
+				'pass_confirm'                    => $doc->string('Confirm the new password.'),
+			])),
+		]);
 	}
 }
