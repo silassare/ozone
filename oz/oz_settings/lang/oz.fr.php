@@ -60,4 +60,8 @@ return [
 	// access grant form view
 	'OZ_ACCESS_GRANT_FORM_TITLE'      => 'Autorisation requise',
 	'OZ_ACCESS_GRANT_FORM_SUBMIT_BTN' => 'Autoriser',
+
+	// welcome page view
+	'OZ_WELCOME_PAGE_TITLE'        => 'Bienvenue',
+	'OZ_WELCOME_PAGE_API_DOC_LINK' => 'Documentation API',
 ];

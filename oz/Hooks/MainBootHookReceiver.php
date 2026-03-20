@@ -32,6 +32,7 @@ use OZONE\Core\Router\Events\RouteMethodNotAllowed;
 use OZONE\Core\Router\Events\RouteNotFound;
 use OZONE\Core\Users\Traits\UserEntityTrait;
 use OZONE\Core\Users\UsersRepository;
+use OZONE\Core\Web\WebView;
 use PHPUtils\Events\Event;
 
 /**
@@ -73,10 +74,16 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 			}
 
 			if ($context->isWebContext()) {
-				// TODO welcome friendly page
-				// 2) show welcome friendly page as all this conditions are met:
+				// 2) show welcome page when all these conditions are met:
 				//		- we are in web context
 				//      - the uri is root
+				//		- allowed in settings
+				if (Settings::get('oz.config', 'OZ_SHOW_WELCOME_PAGE')) {
+					$v = new WebView($context);
+					$v->setTemplate('oz://oz.welcome.blate');
+					$context->respond($v->respond());
+				}
+
 				throw new ForbiddenException();
 			}
 		}

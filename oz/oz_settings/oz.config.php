@@ -17,4 +17,6 @@ return [
 	'OZ_PROJECT_NAMESPACE'      => 'NOOP',
 	'OZ_PROJECT_APP_CLASS_NAME' => 'NoopApp',
 	'OZ_PROJECT_PREFIX'         => 'SA',
+	// Show a welcome page at the root URL in web context. Disable in production.
+	'OZ_SHOW_WELCOME_PAGE'      => true,
 ];

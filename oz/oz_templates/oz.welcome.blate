@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) 2017-present, Emile Silas Sare
+  ~
+  ~ This file is part of OZone package.
+  ~
+  ~ For the full copyright and license information, please view the LICENSE
+  ~ file that was distributed with this source code.
+  -->
+
+<html lang="{$global.lang}">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport"
+			  content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"/>
+
+		<title>{$setting('oz.config', 'OZ_PROJECT_NAME')}</title>
+
+		<link href="https://fonts.googleapis.com/css?family=Ubuntu&display=swap" rel="stylesheet">
+
+		<style>
+		{@import_raw 'oz://oz.css'}
+		</style>
+	</head>
+	<body>
+		<div id="oz-box">
+			<span class="oz-logo"></span>
+			<div class="oz-title">{$setting('oz.config', 'OZ_PROJECT_NAME')}</div>
+			<div class="oz-desc">
+				<div class="oz-desc-item" style="text-align: center;">
+					{$t('OZ_WELCOME_PAGE_TITLE')}
+				</div>
+				<div class="oz-desc-item" style="text-align: center; font-size: .85em; opacity: .7;">
+					{$global.oz_version_name}
+				</div>
+				{@if $setting('oz.api.doc', 'OZ_API_DOC_ENABLED') && $setting('oz.api.doc', 'OZ_API_DOC_SHOW_ON_INDEX')}
+				<div class="oz-desc-item oz-actions" style="text-align: center; margin-top: 1.5em;">
+					<a href="{$global.base_url}/api-doc-view.html" class="oz-btn">
+						{$t('OZ_WELCOME_PAGE_API_DOC_LINK')}
+					</a>
+				</div>
+				{/if}
+			</div>
+		</div>
+	</body>
+</html>
