@@ -171,7 +171,7 @@ Settings::applyMergeStrategy(array $a, array $b): array;    // merge strategy: i
 | `oz.guards.providers`        | Guard provider class map                                                                                                      |
 | `oz.gobl.crud`               | CRUD listener class map                                                                                                       |
 | `oz.gobl.collections`        | Entity collection class map                                                                                                   |
-| `oz.request`                 | CORS settings, `OZ_DEFAULT_ORIGIN`, `OZ_ALLOW_REAL_METHOD_HEADER`                                                             |
+| `oz.request`                 | CORS settings, `OZ_DEFAULT_ORIGIN`, `OZ_REAL_METHOD_HEADER_ALLOWED`                                                           |
 | `oz.sessions`                | `OZ_SESSION_LIFE_TIME`, `OZ_SESSION_COOKIE_NAME`                                                                              |
 | `oz.cookie`                  | `OZ_COOKIE_DOMAIN`, `OZ_COOKIE_PATH`, `OZ_COOKIE_LIFETIME`, `OZ_COOKIE_SAMESITE`, `OZ_COOKIE_PARTITIONED`                     |
 | `oz.users`                   | Age range, password/name lengths, gender list, email/phone requirements                                                       |
@@ -230,18 +230,22 @@ class MyService extends Service
 
 ```php
 $router->get('/path', $handler)
-    ->name('route:name')                                       // dot-notation name
-    ->withAuthentication(AuthenticationMethodScheme::SESSION)  // allowed auth scheme(s)
-    ->withAuthenticatedUser('admin')                           // guard: requires logged-in user (type)
-    ->withRole(MyRole::instance())                             // guard: requires role
-    ->withAccessRights('resource.action')                      // guard: requires access right
-    ->withAuthorization('auth:provider:name')                  // guard: OZAuth-based
-    ->middleware(MyMiddleware::class)                           // middleware by class FQN
-    ->guard(MyGuard::class)                                    // guard by class FQN
-    ->form(MyForm::class)                                      // attach form for validation
-    ->param('id', '[0-9]+')                                    // path param constraint
-    ->priority(10)                                             // higher = matched first
-    ->rateLimit(new IPRateLimit($ri, 60, 3600));               // rate limiting
+    ->name('route:name')                                          // dot-notation name
+    ->withAuthentication(AuthenticationMethodScheme::SESSION)     // allowed auth scheme(s)
+    ->withAuthenticatedUser('admin')                              // guard: requires logged-in user (type)
+    ->withRole(MyRole::instance())                                // guard: requires role
+    ->withRoleOrAdmin(MyRole::instance())                         // guard: role OR admin/super-admin
+    ->withAdminRole()                                             // guard: admin or super-admin role
+    ->withSuperAdminRole()                                        // guard: super-admin role only
+    ->withAccessRights('resource.action')                         // guard: requires access right
+    ->withAccessRightsOrRoles(['resource.action'], [MyRole::instance()]) // guard: right OR role
+    ->withAuthorization('auth:provider:name')                     // guard: OZAuth-based
+    ->middleware(MyMiddleware::class)                              // middleware by class FQN
+    ->guard(MyGuard::class)                                       // guard by class FQN
+    ->form(MyForm::class)                                         // attach form for validation
+    ->param('id', '[0-9]+')                                       // path param constraint
+    ->priority(10)                                                // higher = matched first
+    ->rateLimit(new IPRateLimit($ri, 60, 3600));                  // rate limiting
 ```
 
 ### Route Groups
@@ -407,35 +411,85 @@ $field = $this->string('name')
     ->multiple(false)
     ->hidden(false)
     ->type(new TypeString(2, 60))
-    ->validator(function (mixed $value, FormValidationContext $ctx): mixed {
-        // return cleaned value or add error to context
+    ->validator(function (mixed $value, FormData $fd): mixed {
+        // return cleaned value or throw on invalid
         return $value;
     });
 ```
 
-### Cross-field Rules
+### Pre- and Post-Validation Rules
+
+`expect()` — pre-validation, runs on **raw (unsafe)** data before field validation begins. Non-server-only entries are included in `toArray()` so the client can pre-check before submitting.
+
+`ensure()` — post-validation, runs on **cleaned** data after all fields are validated. Server-side only, never sent to the client.
 
 ```php
-$this->rule()
+// Reject the form before touching fields if the plan is wrong:
+$this->expect()->eq('plan', 'enterprise', 'PLAN_REQUIRED');
+
+// After validation: passwords must match (cross-field check on clean values):
+$this->ensure()
     ->eq('password', 'password_confirm')   // password must equal password_confirm
     ->isNotNull('email');
 ```
 
 ### Multi-step Forms
 
+Steps are created with `$form->step()` (static) or `$form->dynamicStep()` (factory called with the cleaned `FormData` at validation time). An optional `FormRule` condition controls whether the step is applied.
+
 ```php
 $this->string('type')->required(true);
 
-$this->addStep('step2', function (Form $form) {
-    $form->string('extra_field')->required(true);
-}, $this->rule()->eq('type', new FormattedValue('advanced')));
+// Static step — form structure known at definition time:
+$inner = new Form();
+$inner->string('extra_field')->required(true);
+$this->step('details', $inner, $this->ensure()->eq('type', 'advanced'));
+
+// Dynamic step — form built from cleaned FormData at runtime:
+$this->dynamicStep('extra', function (FormData $fd) {
+    $f = new Form();
+    $f->string('extra_field')->required(true);
+    return $f;
+}, $this->ensure()->eq('type', 'advanced'));
+```
+
+**`FormStep`** (`OZONE\Core\Forms\FormStep`) — value object representing a step. Key methods:
+
+- `isStatic() / isDynamic()` — step type
+- `getStaticForm(): Form` — returns the form for static steps (throws for dynamic)
+- `build(FormData $fd): ?Form` — evaluates the condition against cleaned `FormData` and returns the form (null when condition fails)
+- `toArray()` — serializes: `ref`, `name`, `type` (`static`|`dynamic`), `form` (null for dynamic), `if` (serialized `FormRule` or null)
+
+**`DynamicValue`** (`OZONE\Core\Forms\DynamicValue<T>`) — wraps a server-side callable for `FormRule` comparisons. `toArray()` returns `['$dynamic' => true]` — tells the client the value is evaluated server-side only.
+
+```php
+// Rule value evaluated lazily at validation time:
+$dv = new DynamicValue(fn (FormData $fd) => $fd->get('computed'));
+$this->ensure()->eq('status', $dv);
+```
+
+**`FormUtils::assertValidFieldName(string $name): void`** — validates that a field name is a valid dot-path (e.g. `user.name`). Throws `InvalidArgumentException` on failure.
+
+### FormRule operators
+
+`eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `not_in`, `is_null`, `is_not_null`
+
+The second argument to each operator may be a scalar, a `Field` (cross-field comparison), or a `DynamicValue` (server-side resolution). When a `DynamicValue` is used, the rule is marked `server_only: true` in `toArray()`.
+
+`FormRule::toArray()` format per entry:
+
+```php
+// Scalar / DynamicValue:
+['field_ref' => 'type', 'value' => 'admin', 'rule' => 'eq', 'server_only' => false, 'message' => null]
+// Cross-field:
+['field_ref' => 'password', 'target_ref' => 'password_confirm', 'rule' => 'eq', 'server_only' => false, 'message' => null]
 ```
 
 ### CSRF
 
 ```php
 $form = new Form();
-$form->csrf = true;   // enable CSRF token field
+$form->t_csrf = new CSRF($context);   // enable CSRF protection
 ```
 
 ---
@@ -595,6 +649,8 @@ All types implement:
 **TypeCC2** — 2-letter ISO country code. Supports `.authorized(bool)` to restrict to approved countries.
 
 **TypeGender** — validates against `oz.users` `OZ_USER_ALLOWED_GENDERS` list.
+
+**TypeUsername** — validates username format and length from `oz.users` (`OZ_USER_NAME_MIN_LENGTH`, `OZ_USER_NAME_MAX_LENGTH`, `OZ_USER_NAME_PATTERN`). Supports `.registered(string $as)` to require the username to exist in `oz_usernames`, and `.notRegistered()` to require it not to exist. See also `UsernameUtils::exists(string $name): bool` and `UsernameUtils::get(string $name): ?OZUsername`.
 
 ---
 

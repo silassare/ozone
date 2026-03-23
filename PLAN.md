@@ -180,6 +180,94 @@ validation context built from earlier step data.
 
 ---
 
+### [x] N. `oz_schema.php` — Schema `api.doc` + `field.*` metadata on all tables/columns ✅
+
+**Current behaviour:** Most columns in `oz_schema.php` have no `api.doc.description` or `field.*` metadata. The `entitySchema()` builder in `ApiDocManipulationTrait` reads neither column `api.doc.description` nor `field.label` when generating OpenAPI property schemas — descriptions are always empty.
+
+**Proposed solution:**
+
+1. Add `field.label` and `api.doc.description` metadata to every non-trivial column in `oz_schema.php`
+   (all public tables: `oz_countries`, `oz_files`; all private tables: `oz_roles`, `oz_jobs`, `oz_sessions`,
+   `oz_db_stores`, `oz_auths`, `oz_migrations`). Add `api.doc.description` at table level too.
+   `oz_users` columns already have metadata via `UsersRepository::makeAuthUserTable()` (staged).
+   `oz_usernames.name` already has it.
+2. Fix `entitySchema()` in `ApiDocManipulationTrait` to read `api.doc.description` from the column
+   metadata and set it as `$schema->description`.
+
+**Complexity:** Low | **Risk:** None (purely additive metadata + one-line fix in entitySchema)
+
+---
+
+### [x] O. `ApiDocManipulationTrait` — `requestBodyFromForm()` + form-aware `addOperationFromRoute()` ✅
+
+**Current behaviour:** No way to auto-generate an OpenAPI `requestBody` from a `Form` object. `addOperationFromRoute()` ignores forms entirely. Field-level labels, descriptions, and help text from the (staged) `Field` API are never surfaced in OpenAPI output.
+
+**Proposed solution:**
+
+1. Add `requestBodyFromForm(Form $form): ?OA\RequestBody` to `ApiDocManipulationTrait` that:
+   - Iterates all fields (including hidden ones); hidden fields get an `x-oz-hidden: true` extension.
+   - Per-field description fallback: `api.doc.description` metadata → `field.description` → auto-generate from field name via `toHumanReadable()`.
+   - Per-field title from `field.label` or auto-generated.
+   - Returns `null` when the form has no fields.
+2. `addOperationFromRoute()` gains an optional `?Form $form = null` parameter; when provided, the
+   generated `requestBody` is attached to the operation automatically.
+3. Update all built-in service `apiDoc()` implementations that register a request body to use
+   `requestBodyFromForm()` where applicable (Login, SignUp, Password, UploadFiles, etc.).
+
+**Complexity:** Low-Medium | **Risk:** Low (new helper, additive changes to existing methods)
+
+---
+
+### [x] P. `RouteSharedOptions` / `ApiDocManipulationTrait` — Guard descriptors + auth auto-discovery ✅
+
+**Current behaviour:** Guards are stored as opaque closures in `$guards` — their semantic meaning (requires auth user, role, access rights, authorization provider) is invisible at doc-generation time. `addOperationFromRoute()` does not document security requirements or preconditions.
+
+**Analysis:** The `guard()` array allows duplicates (no deduplication). A parallel `$guard_descriptors` array must track descriptors alongside guards without changing how guards are stored or resolved.
+
+**Proposed solution:**
+
+1. Add `protected array $guard_descriptors = []` to `RouteSharedOptions`.
+2. Each semantic guard method appends a typed descriptor entry:
+   - `withAuthentication(...)` — already stored in `$authentication_methods`; no extra descriptor needed.
+   - `withAuthenticatedUser($types)` → `['type' => 'authenticated_user', 'allowed_types' => $types]`
+   - `withAuthorization($providers)` → `['type' => 'authorization', 'allowed_providers' => $providers]`
+   - `withAccessRights($rights)` → `['type' => 'access_rights', 'rights' => $rights]`
+   - `withAccessRightsOrRoles($rights, $roles)` → `['type' => 'access_rights', 'rights' => $rights, 'roles' => $roles]`
+   - `withRole($roles)` → `['type' => 'role', 'roles' => $role_names]`, `mustBeAdmin = true`
+   - `withRoleOrAdmin($roles)` → `['type' => 'role', 'roles' => $role_names]`, `mustBeAdmin = false`
+   - `withAdminRole()` → `['type' => 'role', 'roles' => [Role::ADMIN, Role::SUPER_ADMIN]]`
+   - `withSuperAdminRole()` → `['type' => 'role', 'roles' => [Role::SUPER_ADMIN]]`
+3. Add `getGuardDescriptors(): array` that merges parent + own descriptors (same as auth methods pattern).
+4. In `addOperationFromRoute()`, call `$route->getGuardDescriptors()` and:
+   - Add supported `securitySchemes` from `$route->getAuthenticationMethods()`.
+   - Add an `x-oz-security` extension on the operation listing guard requirements in structured form.
+
+**Complexity:** Low-Medium | **Risk:** Low (additive: new array + getter, existing guards array unchanged)
+
+---
+
+### [x] Q. `REST/Traits/RESTFulService.php` + `ApiDocManipulationTrait` — Bug fixes + filters docs ✅
+
+**Current behaviour / bugs found:**
+
+1. `delete_one` operationId is `sprintf('%s.create_one', ...)` — wrong, copy-paste error.
+2. `$rr_options['relations_parameter']` in `$add_relative_operation` closure references undefined `$rr_options` — should be `$r_relatives_options['relations_parameter']`.
+3. `entitySchema()` never sets `$schema->description` from column `api.doc.description`.
+4. `apiFiltersParameter()` documents all `Operator` cases globally; does not show per-column available operators.
+5. Relation paths all use the same shared path item — each relation should get a distinct path via `path_params_values = ['relation' => $r_name]`.
+
+**Proposed fixes:**
+
+1. Fix `delete_one` operationId: `'%s.delete_one'`.
+2. Fix `$rr_options` reference: use `$r_relatives_options` (the correct variable in scope).
+3. `entitySchema()`: after `$schema = $this->typeSchema(...)`, read `$column->getMeta()->get('api.doc.description', '')` and set `$schema->description` when non-empty.
+4. `apiFiltersParameter(Table $table)`: accept an optional `Table` parameter; when provided, add a per-column section listing each column's allowed operators from `$column->getType()->getAllowedFilterOperators()`. Also document both the string shorthand expression and the nested array expression.
+5. Distinct relation paths: pass `path_params_values = ['relation' => $r_name]` to `addOperationFromRoute()` for each relation operation.
+
+**Complexity:** Low | **Risk:** Low (targeted bug fixes + backward-compatible signature extension)
+
+---
+
 ## Completed
 
 | ID  | File                              | Notes                                                                                              |
@@ -201,6 +289,10 @@ validation context built from earlier step data.
 | F   | `Hooks/MainBootHookReceiver.php`                   | Low        | Low        | pending     |
 | B   | `Auth/Methods/SessionAuth.php`                     | Low        | Low        | pending     |
 | L   | `REST/ApiDoc.php`                                  | Low        | None       | ✅ done     |
+| N   | `oz_schema.php` + `entitySchema()`                 | Low        | None       | ✅ done     |
+| O   | `ApiDocManipulationTrait` requestBodyFromForm      | Low-Medium | Low        | ✅ done     |
+| P   | `RouteSharedOptions` guard descriptors             | Low-Medium | Low        | ✅ done     |
+| Q   | `RESTFulService` bug fixes + filters docs          | Low        | Low        | ✅ done     |
 | E   | `Services/QRCode.php`                              | Low        | Low-Medium | pending     |
 | 0   | Integration test suite                             | Low-Medium | Low        | in progress |
 | M   | `Forms/Form.php`                                   | Medium     | Low        | pending     |
