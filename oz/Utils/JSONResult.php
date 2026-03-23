@@ -198,9 +198,17 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	{
 		$r = new static();
 
-		$r->error = $payload['error'] === static::ERROR ? static::ERROR : static::SUCCESS;
-		$r->msg   = $payload['msg'] ?? 'OK';
-		$r->data  = $payload['data'] ?? [];
+		if (\is_array($payload)) {
+			$err = static::SUCCESS;
+
+			if (isset($payload['error'])) {
+				$err = $payload['error'] ? static::ERROR : static::SUCCESS;
+			}
+
+			$r->error = $err;
+			$r->msg   = $payload['msg'] ?? 'OK';
+			$r->data  = $payload['data'] ?? [];
+		}
 
 		return $r;
 	}
