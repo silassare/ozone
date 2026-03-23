@@ -160,6 +160,32 @@ final class Context
 	}
 
 	/**
+	 * Checks whether this is a form discovery request.
+	 *
+	 * When enabled in settings, the client may send the configured header to indicate
+	 * that instead of executing the route handler, the server should return the route's
+	 * form bundle as JSON so the client can build the form UI dynamically.
+	 *
+	 * @return bool
+	 */
+	public function isFormDiscoveryRequest(): bool
+	{
+		if ($this->is_sub_request) {
+			return false;
+		}
+
+		$allowed = Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_ALLOWED');
+
+		if (!$allowed) {
+			return false;
+		}
+
+		$header_name = Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_NAME');
+
+		return '' !== $this->request->getHeaderLine($header_name);
+	}
+
+	/**
 	 * Checks whether json response should be returned.
 	 *
 	 * @return bool
@@ -908,12 +934,14 @@ final class Context
 		$declared                    = Settings::get('oz.request', 'OZ_CORS_ALLOWED_HEADERS');
 		$declared[]                  = \strtolower(Settings::get('oz.auth', 'OZ_AUTH_API_KEY_HEADER_NAME'));
 		$allow_real_method_header    = Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_ALLOWED');
-		$declared                 = Settings::get('oz.request', 'OZ_CORS_ALLOWED_HEADERS');
-		$declared[]               = \strtolower(Settings::get('oz.auth', 'OZ_AUTH_API_KEY_HEADER_NAME'));
-		$allow_real_method_header = Settings::get('oz.request', 'OZ_ALLOW_REAL_METHOD_HEADER');
+		$allow_form_discovery_header = Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_ALLOWED');
 
 		if ($allow_real_method_header) {
 			$declared[] = \strtolower(Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_NAME'));
+		}
+
+		if ($allow_form_discovery_header) {
+			$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_NAME'));
 		}
 
 		$bundle = \array_merge($declared, $provided);

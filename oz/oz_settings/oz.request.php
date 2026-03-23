@@ -57,4 +57,18 @@ return [
 	 * @default 'X-OZONE-Real-Method'
 	 */
 	'OZ_REAL_METHOD_HEADER_NAME'  => 'X-OZONE-Real-Method',
+
+	/**
+	 * Allow to use X-OZONE-Form-Discovery header to indicate that the request is a form discovery request.
+	 *
+	 * This is useful for clients that want to discover the form structure before submitting it.
+	 */
+	'OZ_FORM_DISCOVERY_HEADER_ALLOWED' => true,
+
+	/**
+	 * Name of the header to use for form discovery.
+	 *
+	 * This header is used by the client to indicate that the request is a form discovery request.
+	 */
+	'OZ_FORM_DISCOVERY_HEADER_NAME' => 'X-OZONE-Form-Discovery',
 ];
