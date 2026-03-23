@@ -15,6 +15,7 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
+use OZONE\Core\App\Service;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -355,9 +356,17 @@ final class Router
 
 			case RouteSearchStatus::FOUND:
 				['route' => $route, 'params' => $params] = $result->found();
-				$ri                                      = new RouteInfo($context, $route, $params, $authenticator);
 
-				(new RouteFound($ri))->dispatch();
+				(new RouteFound($context, $route, $params))->dispatch();
+
+				$is_form_discovery = $context->isFormDiscoveryRequest();
+				$replace_handler   = $is_form_discovery ? $this->createDiscoveryHandler() : null;
+
+				$ri = new RouteInfo($context, $route, $params, $authenticator, $replace_handler);
+
+				if (!$is_form_discovery) {
+					$ri->checkRouteForm();
+				}
 
 				(new RouteBeforeRun($ri))->dispatch();
 
@@ -576,9 +585,27 @@ final class Router
 	}
 
 	/**
+	 * Creates a handler for form discovery route,
+	 * this handler will replace the regular route handler.
+	 *
+	 * @return callable(RouteInfo):Response
+	 */
+	private function createDiscoveryHandler(): callable
+	{
+		return Service::createHandler(static function (Service $svc) {
+			$ri      = $svc->getContext()->getRouteInfo();
+			$bundle  = $ri->route()->getOptions()->getFormBundle($ri);
+
+			$svc->json()->setDone()->setDataKey('form', $bundle);
+
+			$svc->respond();
+		});
+	}
+
+	/**
 	 * Run the route that match the current request path.
 	 *
-	 * @param RouteInfo $ri
+	 * @param RouteInfo $ri The route info to run
 	 *
 	 * @throws Throwable
 	 */
@@ -587,6 +614,8 @@ final class Router
 		static $history = [];
 
 		$route = $ri->route();
+
+		$handler = $ri->getEffectiveHandler();
 
 		$history[] = ['name' => $route->getName(), 'path' => $route->getPath()];
 
@@ -603,7 +632,7 @@ final class Router
 
 		try {
 			\ob_start();
-			$return        = \call_user_func($route->getHandler(), $ri);
+			$return        = \call_user_func($handler, $ri);
 			$output_buffer = \ob_get_clean();
 		} catch (Throwable $t) {
 			\ob_clean();
@@ -616,7 +645,7 @@ final class Router
 			throw (new RuntimeException(
 				'Writing to output buffer is not allowed.',
 				$debug_data($route, ['output_buffer' => $output_buffer])
-			))->suspectCallable($route->getHandler());
+			))->suspectCallable($handler);
 		}
 
 		if (!$return instanceof Response) {
@@ -624,7 +653,7 @@ final class Router
 				'Invalid return type, got "%s" will expecting "%s".',
 				\get_debug_type($return),
 				Response::class
-			), $debug_data($route)))->suspectCallable($route->getHandler());
+			), $debug_data($route)))->suspectCallable($handler);
 		}
 
 		$ri->getContext()

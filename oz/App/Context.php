@@ -327,8 +327,7 @@ final class Context
 				\sprintf('No auth method was defined for the current route but "%s" was called.', __METHOD__)
 			)
 			)->suspectCallable(
-				$this->route_info->route()
-					->getHandler()
+				$this->route_info->getEffectiveHandler()
 			);
 		}
 

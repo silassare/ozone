@@ -13,20 +13,26 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Events;
 
+use OZONE\Core\App\Context;
 use OZONE\Core\Hooks\Hook;
-use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Route;
 
 /**
  * Class RouteFound.
  *
  * This event is triggered when a route is found for the requested resource.
- * The route form is not checked at this point.
+ *
+ * The difference between this event and {@see RouteBeforeRun} is that this event
+ * is triggered before any route guard is checked, while {@see RouteBeforeRun}
+ * is triggered after all guards have been checked and passed.
  */
 final class RouteFound extends Hook
 {
 	public function __construct(
-		public readonly RouteInfo $ri,
+		Context $context,
+		public readonly Route $route,
+		public readonly array $params
 	) {
-		parent::__construct($ri->getContext());
+		parent::__construct($context);
 	}
 }

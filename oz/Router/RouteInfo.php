@@ -15,12 +15,15 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
+use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\FormData;
-use OZONE\Core\Http\Request;
+use OZONE\Core\Http\Response;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
+use PHPUtils\Str;
 
 /**
  * Class RouteInfo.
@@ -33,15 +36,21 @@ final class RouteInfo
 	 * @var array<class-string<RouteGuardInterface>, mixed>
 	 */
 	private array $guards_data;
-	private FormData $clean_form_data;
+	private ?FormData $clean_form_data = null;
+
+	/**
+	 * @var null|callable(static):Response
+	 */
+	private $replace_handler;
 
 	/**
 	 * RouteInfo constructor.
 	 *
-	 * @param Context                   $context       The context
-	 * @param Route                     $route         The current route
-	 * @param array                     $params        The route params
-	 * @param null|callable($this):void $authenticator The authenticator
+	 * @param Context                          $context         The context
+	 * @param Route                            $route           The current route
+	 * @param array                            $params          The route params
+	 * @param null|callable(static):void       $authenticator   The authenticator
+	 * @param null|(callable(static):Response) $replace_handler The route handler to run, if null the regular route handler will be used
 	 *
 	 * @throws InvalidFormException
 	 */
@@ -49,15 +58,15 @@ final class RouteInfo
 		private readonly Context $context,
 		private readonly Route $route,
 		private readonly array $params,
-		?callable $authenticator = null
+		?callable $authenticator = null,
+		?callable $replace_handler = null
 	) {
 		$this->guards_data     = [];
-		$this->clean_form_data = new FormData();
+		$this->replace_handler = $replace_handler;
 
 		$authenticator && $authenticator($this);
 		$this->callGuards();
 		$this->runMiddlewares();
-		$this->checkForm();
 	}
 
 	/**
@@ -78,6 +87,18 @@ final class RouteInfo
 	public function route(): Route
 	{
 		return $this->route;
+	}
+
+	/**
+	 * Gets the effective route handler to run.
+	 *
+	 * If a handler was provided in the constructor, it will be returned, otherwise the regular route handler will be returned.
+	 *
+	 * @return callable(static):Response
+	 */
+	public function getEffectiveHandler(): callable
+	{
+		return $this->replace_handler ?? $this->route()->getHandler();
 	}
 
 	/**
@@ -121,6 +142,12 @@ final class RouteInfo
 	 */
 	public function getCleanFormData(): FormData
 	{
+		if (null === $this->clean_form_data) {
+			throw new RuntimeException('Form data has not been checked yet.', [
+				'_reason' => \sprintf('%s called before the router called %s.', __METHOD__, Str::callableName([$this, 'checkRouteForm'])),
+			]);
+		}
+
 		return $this->clean_form_data;
 	}
 
@@ -134,7 +161,7 @@ final class RouteInfo
 	 */
 	public function getCleanFormField(string $name, mixed $def = null): mixed
 	{
-		return $this->clean_form_data->get($name, $def);
+		return $this->getCleanFormData()->get($name, $def);
 	}
 
 	/**
@@ -183,6 +210,56 @@ final class RouteInfo
 	}
 
 	/**
+	 * Validates the form data if any.
+	 *
+	 * @internal this should be called once by the router before calling the route handler
+	 *
+	 * @throws InvalidFormException
+	 */
+	public function checkRouteForm(): void
+	{
+		if (null !== $this->clean_form_data) {
+			throw new RuntimeException('Form has already been checked.', [
+				'_reason' => 'Only the router should call this method, and it should be called only once per route dispatch.',
+			]);
+		}
+
+		$this->clean_form_data = new FormData();
+
+		$bundle = $this->route->getOptions()->getFormBundle($this);
+
+		if ($bundle) {
+			$resume_scope = $bundle->getResumeScope();
+			$cache        = null;
+			$cache_key    = null;
+			$prefilled    = null;
+
+			if (null !== $resume_scope) {
+				$scope_id = $resume_scope->resolveId($this->context);
+
+				$cache     = CacheManager::persistent('form.resume');
+				$cache_key = $bundle->buildResumeCacheKey($scope_id);
+				$cached    = $cache->get($cache_key);
+
+				if ($cached instanceof FormData) {
+					$prefilled = $cached;
+				}
+			}
+
+			$unsafe_fd = $this->context->getRequest()
+				->getUnsafeFormData();
+
+			$clean_fd = $bundle->validate($unsafe_fd, $prefilled);
+
+			if (null !== $cache && null !== $cache_key) {
+				$cache->set($cache_key, $clean_fd, $bundle->getResumeTTL());
+			}
+
+			$this->clean_form_data->merge($clean_fd);
+		}
+	}
+
+	/**
 	 * Run all guards.
 	 */
 	private function callGuards(): void
@@ -213,25 +290,6 @@ final class RouteInfo
 			if ($response) {
 				$this->context->setResponse($response);
 			}
-		}
-	}
-
-	/**
-	 * Validates the form data if any.
-	 *
-	 * @throws InvalidFormException
-	 */
-	private function checkForm(): void
-	{
-		$bundle = $this->route->getOptions()->getFormBundle($this);
-
-		if ($bundle) {
-			$unsafe_fd = $this->context->getRequest()
-				->getUnsafeFormData();
-
-			$clean_fd = $bundle->validate($unsafe_fd);
-
-			$this->clean_form_data->merge($clean_fd);
 		}
 	}
 }
