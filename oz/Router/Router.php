@@ -20,6 +20,7 @@ use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Events\RouteBeforeRun;
+use OZONE\Core\Router\Events\RouteFound;
 use OZONE\Core\Router\Events\RouteMethodNotAllowed;
 use OZONE\Core\Router\Events\RouteNotFound;
 use Throwable;
@@ -355,6 +356,8 @@ final class Router
 			case RouteSearchStatus::FOUND:
 				['route' => $route, 'params' => $params] = $result->found();
 				$ri                                      = new RouteInfo($context, $route, $params, $authenticator);
+
+				(new RouteFound($ri))->dispatch();
 
 				(new RouteBeforeRun($ri))->dispatch();
 
