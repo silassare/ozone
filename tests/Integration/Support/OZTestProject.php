@@ -141,9 +141,16 @@ final class OZTestProject
 		}
 
 		// -- Step 3: compute vendor cache hash --------------------------------
+		// Include a fingerprint of the ozone composer.lock so that any upstream
+		// dependency update (e.g. kli, gobl, php-utils) that does not change the
+		// project's require constraints still busts the cache and triggers a fresh
+		// composer install.
+		$lock_file  = $ozone_root . \DIRECTORY_SEPARATOR . 'composer.lock';
+		$lock_hash  = \is_readable($lock_file) ? \md5_file($lock_file) : '';
 		$hash_input = [
 			'require'     => $composer['require'] ?? [],
 			'require-dev' => $composer['require-dev'] ?? [],
+			'lock'        => $lock_hash,
 		];
 		if (!$shared) {
 			$hash_input['project'] = $name;

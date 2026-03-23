@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\CRUD;
 
 use OZONE\Core\CRUD\AllowCheckResult;
-use OZONE\Core\Lang\I18nMessage;
+use OZONE\Core\Lang\I18n;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,7 +28,7 @@ final class AllowCheckResultTest extends TestCase
 {
 	public function testAllowCreatesAllowedResult(): void
 	{
-		$reason = new I18nMessage('ALLOWED_KEY');
+		$reason = I18n::m('ALLOWED_KEY');
 		$result = AllowCheckResult::allow($reason);
 
 		self::assertTrue($result->isAllowed());
@@ -37,7 +37,7 @@ final class AllowCheckResultTest extends TestCase
 
 	public function testRejectCreatesRejectedResult(): void
 	{
-		$reason = new I18nMessage('DENIED_KEY');
+		$reason = I18n::m('DENIED_KEY');
 		$result = AllowCheckResult::reject($reason);
 
 		self::assertFalse($result->isAllowed());
@@ -46,7 +46,7 @@ final class AllowCheckResultTest extends TestCase
 
 	public function testConstructorSetsAllowedAndReason(): void
 	{
-		$reason = new I18nMessage('CAUSE');
+		$reason = I18n::m('CAUSE');
 		$result = new AllowCheckResult(true, $reason);
 
 		self::assertTrue($result->isAllowed());
@@ -55,7 +55,7 @@ final class AllowCheckResultTest extends TestCase
 
 	public function testToArrayAllowedSnippet(): void
 	{
-		$msg    = new I18nMessage('ACCESS_GRANTED');
+		$msg    = I18n::m('ACCESS_GRANTED');
 		$result = AllowCheckResult::allow($msg);
 		$arr    = $result->toArray();
 		self::assertTrue($arr['allowed']);
@@ -64,7 +64,7 @@ final class AllowCheckResultTest extends TestCase
 
 	public function testToArrayRejectedSnippet(): void
 	{
-		$msg    = new I18nMessage('ACCESS_DENIED', ['resource' => 'posts']);
+		$msg    = I18n::m('ACCESS_DENIED', ['resource' => 'posts']);
 		$result = AllowCheckResult::reject($msg);
 		$arr    = $result->toArray();
 		self::assertFalse($arr['allowed']);

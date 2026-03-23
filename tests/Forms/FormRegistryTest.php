@@ -1,0 +1,371 @@
+<?php
+
+/**
+ * Copyright (c) 2017-present, Emile Silas Sare
+ *
+ * This file is part of OZone package.
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace OZONE\Tests\Forms;
+
+use InvalidArgumentException;
+use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Forms\Form;
+use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormRegistry;
+use OZONE\Core\Http\Enums\RequestScope;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Class FormRegistryTest.
+ *
+ * @internal
+ *
+ * @coversNothing
+ */
+final class FormRegistryTest extends TestCase
+{
+	protected function setUp(): void
+	{
+		FormRegistry::clear();
+	}
+
+	// -------------------------------------------------------------------------
+	// FormRegistry
+	// -------------------------------------------------------------------------
+
+	public function testRegisterAndGet(): void
+	{
+		$form = new Form();
+		FormRegistry::register('my.form', $form);
+
+		self::assertSame($form, FormRegistry::get('my.form'));
+	}
+
+	public function testGetReturnsNullForUnknownKey(): void
+	{
+		self::assertNull(FormRegistry::get('unknown'));
+	}
+
+	public function testAllReturnsRegisteredForms(): void
+	{
+		$a = new Form();
+		$b = new Form();
+		FormRegistry::register('form.a', $a);
+		FormRegistry::register('form.b', $b);
+
+		self::assertSame(['form.a' => $a, 'form.b' => $b], FormRegistry::all());
+	}
+
+	public function testRegisterOverwritesPrevious(): void
+	{
+		$first  = new Form();
+		$second = new Form();
+		FormRegistry::register('dupe', $first);
+		FormRegistry::register('dupe', $second);
+
+		self::assertSame($second, FormRegistry::get('dupe'));
+	}
+
+	public function testClearEmptiesRegistry(): void
+	{
+		FormRegistry::register('x', new Form());
+		FormRegistry::clear();
+
+		self::assertSame([], FormRegistry::all());
+		self::assertNull(FormRegistry::get('x'));
+	}
+
+	// -------------------------------------------------------------------------
+	// Form::key()
+	// -------------------------------------------------------------------------
+
+	public function testFormKeyRegistersInRegistry(): void
+	{
+		$form = new Form();
+		$form->key('form:login');
+
+		self::assertSame('form:login', $form->getKey());
+		self::assertSame($form, FormRegistry::get('form:login'));
+	}
+
+	public function testFormKeyEmptyStringThrows(): void
+	{
+		$this->expectException(InvalidArgumentException::class);
+
+		(new Form())->key('');
+	}
+
+	public function testFormKeyReturnsSelf(): void
+	{
+		$form   = new Form();
+		$result = $form->key('some.key');
+
+		self::assertSame($form, $result);
+	}
+
+	public function testGetKeyReturnsNullByDefault(): void
+	{
+		self::assertNull((new Form())->getKey());
+	}
+
+	public function testToArrayIncludesKey(): void
+	{
+		$form = new Form();
+		$form->key('form:test');
+
+		self::assertSame('form:test', $form->toArray()['key']);
+	}
+
+	public function testToArrayKeyIsNullWhenNotSet(): void
+	{
+		$form = new Form();
+		$form->field('username');
+
+		self::assertNull($form->toArray()['key']);
+	}
+
+	// -------------------------------------------------------------------------
+	// Form::getVersion()
+	// -------------------------------------------------------------------------
+
+	public function testGetVersionReturns16CharHex(): void
+	{
+		$version = (new Form())->getVersion();
+
+		self::assertMatchesRegularExpression('/^[0-9a-f]{16}$/', $version);
+	}
+
+	public function testGetVersionIsStableBetweenCalls(): void
+	{
+		$form = new Form();
+		$form->field('email')->required(true);
+
+		self::assertSame($form->getVersion(), $form->getVersion());
+	}
+
+	public function testGetVersionChangesWhenFieldAdded(): void
+	{
+		$form    = new Form();
+		$vBefore = $form->getVersion();
+
+		$form->field('email')->required(true);
+		$vAfter = $form->getVersion();
+
+		self::assertNotSame($vBefore, $vAfter);
+	}
+
+	public function testGetVersionChangesWhenRequiredFlagChanges(): void
+	{
+		$formA = new Form();
+		$formA->field('name')->required(false);
+		$vOptional = $formA->getVersion();
+
+		$formB = new Form();
+		$formB->field('name')->required(true);
+		$vRequired = $formB->getVersion();
+
+		self::assertNotSame($vOptional, $vRequired);
+	}
+
+	public function testGetVersionSameForEquivalentForms(): void
+	{
+		$a = new Form();
+		$a->field('name')->required(true);
+
+		$b = new Form();
+		$b->field('name')->required(true);
+
+		self::assertSame($a->getVersion(), $b->getVersion());
+	}
+
+	// -------------------------------------------------------------------------
+	// buildResumeCacheKey()
+	// -------------------------------------------------------------------------
+
+	public function testBuildResumeCacheKeyContainsVersion(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+		$version = $form->getVersion();
+		$key     = $form->buildResumeCacheKey('scope-abc');
+
+		self::assertStringContainsString($version, $key);
+	}
+
+	public function testBuildResumeCacheKeyDiffersForDifferentScopes(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		self::assertNotSame(
+			$form->buildResumeCacheKey('scope-1'),
+			$form->buildResumeCacheKey('scope-2')
+		);
+	}
+
+	public function testBuildResumeCacheKeyStableForSameScope(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		self::assertSame(
+			$form->buildResumeCacheKey('user-42'),
+			$form->buildResumeCacheKey('user-42')
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// Form::resume()
+	// -------------------------------------------------------------------------
+
+	public function testResumeModeDefaultIsNone(): void
+	{
+		self::assertNull((new Form())->getResumeScope());
+	}
+
+	public function testResumeTTLDefaultIs3600(): void
+	{
+		self::assertSame(3600, (new Form())->getResumeTTL());
+	}
+
+	public function testResumeSetsModeAndTTL(): void
+	{
+		$form = (new Form())->resume(RequestScope::STATE, 7200);
+
+		self::assertSame(RequestScope::STATE, $form->getResumeScope());
+		self::assertSame(7200, $form->getResumeTTL());
+	}
+
+	public function testResumeReturnsSelf(): void
+	{
+		$form   = new Form();
+		$result = $form->resume(RequestScope::USER);
+
+		self::assertSame($form, $result);
+	}
+
+	// -------------------------------------------------------------------------
+	// merge() propagates resume mode
+	// -------------------------------------------------------------------------
+
+	public function testMergePropagatesToNoneTarget(): void
+	{
+		$source = (new Form())->resume(RequestScope::USER, 600);
+		$target = new Form();
+
+		$target->merge($source);
+
+		self::assertSame(RequestScope::USER, $target->getResumeScope());
+		self::assertSame(600, $target->getResumeTTL());
+	}
+
+	public function testMergeDoesNotOverwriteExistingMode(): void
+	{
+		$source = (new Form())->resume(RequestScope::USER, 600);
+		$target = (new Form())->resume(RequestScope::STATE, 300);
+
+		$target->merge($source);
+
+		// STATE was set first — it wins.
+		self::assertSame(RequestScope::STATE, $target->getResumeScope());
+		self::assertSame(300, $target->getResumeTTL());
+	}
+
+	public function testMergeWithBothNoneKeepsNone(): void
+	{
+		$target = new Form();
+		$source = new Form();
+
+		$target->merge($source);
+
+		self::assertNull($target->getResumeScope());
+	}
+
+	// -------------------------------------------------------------------------
+	// validate() — prefilled cleaned_fd satisfies required constraints
+	// -------------------------------------------------------------------------
+
+	public function testPrefilledSatisfiesRequiredField(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+		$form->field('email')->required(true);
+
+		// First request: both fields submitted.
+		$first_unsafe = $this->makeFormData(['name' => 'Alice', 'email' => 'alice@example.com']);
+		$first_clean  = $form->validate($first_unsafe);
+
+		self::assertSame('Alice', $first_clean->get('name'));
+		self::assertSame('alice@example.com', $first_clean->get('email'));
+
+		// Second request: only email submitted; name is pre-filled from cache.
+		$second_unsafe = $this->makeFormData(['email' => 'bob@example.com']);
+		$second_clean  = $form->validate($second_unsafe, $first_clean);
+
+		// email comes from the new submission.
+		self::assertSame('bob@example.com', $second_clean->get('email'));
+		// name comes from prefilled data — no "missing required field" error.
+		self::assertSame('Alice', $second_clean->get('name'));
+	}
+
+	public function testMissingRequiredFieldWithNoPrefilledThrows(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		$this->expectException(InvalidFormException::class);
+
+		$form->validate($this->makeFormData([]));
+	}
+
+	public function testMissingRequiredFieldNotInPrefilledStillThrows(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+		$form->field('email')->required(true);
+
+		// Prefilled has name but NOT email.
+		$prefilled = new FormData();
+		$prefilled->set('name', 'Alice');
+
+		$this->expectException(InvalidFormException::class);
+
+		// email is neither in unsafe_fd nor in prefilled — must throw.
+		$form->validate($this->makeFormData([]), $prefilled);
+	}
+
+	public function testPrefilledValueOverriddenByNewSubmission(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		$prefilled = new FormData();
+		$prefilled->set('name', 'Alice');
+
+		// New submission provides a different value — it always wins.
+		$clean = $form->validate($this->makeFormData(['name' => 'Bob']), $prefilled);
+
+		self::assertSame('Bob', $clean->get('name'));
+	}
+
+	// -------------------------------------------------------------------------
+	// Helpers
+	// -------------------------------------------------------------------------
+
+	private function makeFormData(array $data): FormData
+	{
+		$fd = new FormData();
+
+		foreach ($data as $key => $value) {
+			$fd->set($key, $value);
+		}
+
+		return $fd;
+	}
+}
