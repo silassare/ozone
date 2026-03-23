@@ -17,12 +17,15 @@ use Blate\Blate;
 use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
+use OZONE\Core\CSRF\CSRF;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Lang\I18nMessage;
 use OZONE\Core\Lang\Polyglot;
+use OZONE\Core\Router\Route;
 use Throwable;
 
 /**
@@ -56,7 +59,14 @@ final class BlatePlugin implements BootHookReceiverInterface
 		Blate::registerHelper('log', oz_logger(...));
 		Blate::registerHelper('t', self::t(...));
 		Blate::registerHelper('uri', self::uri(...));
-		Blate::registerHelper('route', self::routeUri(...));
+		Blate::registerHelper('route_uri', self::routeUri(...));
+
+		Blate::registerComputedGlobalVar('csrf_token', self::csrfToken(...), [
+			'description' => 'The CSRF token for the current route.',
+		]);
+		Blate::registerComputedGlobalVar('route', self::route(...), [
+			'description' => 'The current route instance.',
+		]);
 
 		Blate::registerComputedGlobalVar('request_uri', self::requestUri(...), [
 			'description' => 'The URI of the current request.',
@@ -181,6 +191,26 @@ final class BlatePlugin implements BootHookReceiverInterface
 		$ctx = self::getContext();
 
 		return $ctx->buildRouteUri($name, $params, $query);
+	}
+
+	/**
+	 * Returns the current route instance.
+	 */
+	public static function route(): Route
+	{
+		return self::getContext()->getRouteInfo()->route();
+	}
+
+	/**
+	 * Returns the CSRF token for the current route.
+	 */
+	public static function csrfToken(): string
+	{
+		$ctx   = self::getContext();
+		$route =  self::route();
+		$scope = $route->getOptions()->getCSRFScope() ?? RequestScope::STATE;
+
+		return (new CSRF($ctx, $scope))->generateToken();
 	}
 
 	/**
