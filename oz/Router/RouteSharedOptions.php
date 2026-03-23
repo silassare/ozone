@@ -20,11 +20,13 @@ use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Roles\Enums\Role;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
 use OZONE\Core\Router\Guards\AuthenticatedUserRouteGuard;
 use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
+use OZONE\Core\Router\Guards\CSRFRouteGuard;
 use OZONE\Core\Router\Guards\UserAccessRightsRouteGuard;
 use OZONE\Core\Router\Guards\UserRoleRouteGuard;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
@@ -43,23 +45,36 @@ class RouteSharedOptions
 	protected readonly string $path;
 	protected int $priority = self::PRIORITY_RUN_DEFAULT;
 
+	protected ?RequestScope $csrf_scope = null;
+
 	/**
 	 * @var array<string,string>
 	 */
 	protected array $route_params = [];
 
 	/**
-	 * @var array<callable|RouteGuardInterface>
+	 * @var list<(callable(RouteInfo):?RouteGuardInterface)|RouteGuardInterface>
 	 */
 	protected array $guards = [];
 
 	/**
-	 * @var array<callable(RouteInfo):(null|Response)|RouteMiddlewareInterface>
+	 * Structured descriptors for semantic guards set via `withAuthentication`,
+	 * `withAuthenticatedUser`, `withAuthorization`, `withRole`,
+	 * `withAccessRights`, etc.  Populated in parallel with {@see $guards}.
+	 *
+	 * Each entry is an associative array with at least a `type` key.
+	 *
+	 * @var list<array{type: string, ...}>
+	 */
+	protected array $guard_descriptors = [];
+
+	/**
+	 * @var list<(callable(RouteInfo):?Response)|RouteMiddlewareInterface>
 	 */
 	protected array $middlewares = [];
 
 	/**
-	 * @var null|callable|Form
+	 * @var null|(callable(RouteInfo):?Form)|Form
 	 */
 	protected $route_form;
 
@@ -67,7 +82,7 @@ class RouteSharedOptions
 	private string $name = '';
 
 	/**
-	 * @var array<class-string<AuthenticationMethodInterface>>
+	 * @var list<class-string<AuthenticationMethodInterface>>
 	 */
 	private array $authentication_methods = [];
 
@@ -110,7 +125,7 @@ class RouteSharedOptions
 	/**
 	 * Defines a rate limit.
 	 *
-	 * @param callable(RouteInfo):(null|RouteRateLimitInterface)|RouteRateLimitInterface $limit_provider
+	 * @param (callable(RouteInfo):?RouteRateLimitInterface)|RouteRateLimitInterface $limit_provider
 	 *
 	 * @return $this
 	 */
@@ -197,6 +212,11 @@ class RouteSharedOptions
 	{
 		$allowed_provider_names = self::atLeasOne($allowed_provider_names, 'authorization provider');
 
+		$this->guard_descriptors[] = [
+			'type'               => 'authorization',
+			'allowed_providers'  => $allowed_provider_names,
+		];
+
 		return $this->guard(static fn () => new AuthorizationProviderRouteGuard($allowed_provider_names));
 	}
 
@@ -209,6 +229,11 @@ class RouteSharedOptions
 	 */
 	public function withAuthenticatedUser(string ...$allowed_auth_user_types): static
 	{
+		$this->guard_descriptors[] = [
+			'type'          => 'authenticated_user',
+			'allowed_types' => $allowed_auth_user_types,
+		];
+
 		return $this->guard(static fn () => new AuthenticatedUserRouteGuard($allowed_auth_user_types));
 	}
 
@@ -220,6 +245,11 @@ class RouteSharedOptions
 	public function withAccessRights(string ...$rights): static
 	{
 		$rights = self::atLeasOne($rights, 'access right');
+
+		$this->guard_descriptors[] = [
+			'type'   => 'access_rights',
+			'rights' => $rights,
+		];
 
 		return $this->guard(static fn () => new UserAccessRightsRouteGuard($rights));
 	}
@@ -236,6 +266,12 @@ class RouteSharedOptions
 	{
 		$rights = self::atLeasOne($rights, 'access right');
 
+		$this->guard_descriptors[] = [
+			'type'   => 'access_rights',
+			'rights' => $rights,
+			'roles'  => $roles,
+		];
+
 		return $this->guard(static fn () => new UserAccessRightsRouteGuard($rights, $roles));
 	}
 
@@ -247,6 +283,11 @@ class RouteSharedOptions
 	public function withRole(RoleInterface ...$roles): static
 	{
 		$roles = self::atLeasOne($roles, 'role');
+
+		$this->guard_descriptors[] = [
+			'type'  => 'role',
+			'roles' => \array_map(static fn ($r) => $r->value, $roles),
+		];
 
 		return $this->guard(static fn () => new UserRoleRouteGuard($roles));
 	}
@@ -260,6 +301,12 @@ class RouteSharedOptions
 	{
 		$roles = self::atLeasOne($roles, 'role');
 
+		$this->guard_descriptors[] = [
+			'type'       => 'role',
+			'roles'      => \array_map(static fn ($r) => $r->value, $roles),
+			'admin_also' => true,
+		];
+
 		return $this->guard(static fn () => new UserRoleRouteGuard($roles, false));
 	}
 
@@ -270,6 +317,11 @@ class RouteSharedOptions
 	 */
 	public function withAdminRole(): static
 	{
+		$this->guard_descriptors[] = [
+			'type'  => 'role',
+			'roles' => [Role::ADMIN->value, Role::SUPER_ADMIN->value],
+		];
+
 		return $this->guard(static fn () => new UserRoleRouteGuard([Role::ADMIN, Role::SUPER_ADMIN]));
 	}
 
@@ -280,7 +332,46 @@ class RouteSharedOptions
 	 */
 	public function withSuperAdminRole(): static
 	{
+		$this->guard_descriptors[] = [
+			'type'  => 'role',
+			'roles' => [Role::SUPER_ADMIN->value],
+		];
+
 		return $this->guard(static fn () => new UserRoleRouteGuard([Role::SUPER_ADMIN]));
+	}
+
+	/**
+	 * Adds a guard that check CSRF token.
+	 *
+	 * @return $this
+	 */
+	public function withCSRF(RequestScope $scope): static
+	{
+		$has_csrf_guard_in_tree = $this->getCSRFScope();
+
+		$this->csrf_scope = $scope;
+
+		$this->guard_descriptors[] = [
+			'type'  => 'csrf',
+			'scope' => $scope->value,
+		];
+
+		if ($has_csrf_guard_in_tree) {
+			// Don't add another guard if we already have one in parent groups.
+			return $this;
+		}
+
+		return $this->guard(fn () => new CSRFRouteGuard($this->csrf_scope));
+	}
+
+	/**
+	 * Gets CSRF scope defined for this route or its parent groups.
+	 *
+	 * @return null|RequestScope
+	 */
+	public function getCSRFScope(): ?RequestScope
+	{
+		return $this->csrf_scope ?? $this->parent?->getCSRFScope() ?? null;
 	}
 
 	/**
@@ -293,14 +384,14 @@ class RouteSharedOptions
 	 * - or a callable that will be called with {@see RouteInfo} as argument
 	 *   and should return an instance of {@see RouteGuardInterface} or null.
 	 *
-	 * @param callable():RouteGuardInterface|RouteGuardInterface|string $guard
+	 * @param (callable(RouteInfo):?RouteGuardInterface)|RouteGuardInterface|string $guard
 	 *
 	 * @return static
 	 */
 	public function guard(callable|RouteGuardInterface|string $guard): static
 	{
 		if (\is_string($guard)) { // class FQN or provider name
-			if (\class_exists($guard)) {// class FQN
+			if (\class_exists($guard)) { // class FQN
 				$provider_class = $guard;
 				if (!\is_subclass_of($provider_class, RouteGuardProviderInterface::class)) {
 					throw new RuntimeException(\sprintf(
@@ -309,7 +400,7 @@ class RouteSharedOptions
 						RouteGuardProviderInterface::class
 					));
 				}
-			} else {// provider name
+			} else { // provider name
 				$provider_class = Guards::provider($guard);
 			}
 
@@ -325,14 +416,14 @@ class RouteSharedOptions
 	/**
 	 * Add a middleware.
 	 *
-	 * @param callable(RouteInfo):void|RouteMiddlewareInterface|string $middleware
+	 * @param (callable(RouteInfo):?Response)|RouteMiddlewareInterface|string $middleware
 	 *
 	 * @return static
 	 */
 	public function middleware(callable|RouteMiddlewareInterface|string $middleware): static
 	{
 		if (\is_string($middleware)) { // class FQN or provider name
-			if (\class_exists($middleware)) {// class FQN
+			if (\class_exists($middleware)) { // class FQN
 				$mdl_class = $middleware;
 				if (!\is_subclass_of($mdl_class, RouteMiddlewareInterface::class)) {
 					throw new RuntimeException(\sprintf(
@@ -341,7 +432,7 @@ class RouteSharedOptions
 						RouteMiddlewareInterface::class
 					));
 				}
-			} else {// middleware name
+			} else { // middleware name
 				$mdl_class = Middlewares::get($middleware);
 			}
 
@@ -359,7 +450,7 @@ class RouteSharedOptions
 	/**
 	 * Sets form.
 	 *
-	 * @param callable|Form $form
+	 * @param (callable(RouteInfo):?Form)|Form $form
 	 *
 	 * @return static
 	 */
@@ -398,7 +489,7 @@ class RouteSharedOptions
 	/**
 	 * Get route priority.
 	 *
-	 * @param bool $include_parent
+	 * @param bool $include_parent whether to include the priority of parent groups in the calculation
 	 *
 	 * @return int
 	 */
@@ -435,7 +526,7 @@ class RouteSharedOptions
 	/**
 	 * Add parameters.
 	 *
-	 * @param array $params
+	 * @param array<string, string> $params
 	 *
 	 * @return static
 	 */
@@ -526,7 +617,7 @@ class RouteSharedOptions
 	 *
 	 * @param RouteInfo $ri
 	 *
-	 * @return Form[]
+	 * @return list<Form>
 	 */
 	public function getForms(RouteInfo $ri): array
 	{
@@ -572,7 +663,7 @@ class RouteSharedOptions
 	/**
 	 * Gets routes authentication methods.
 	 *
-	 * @return array<class-string<AuthenticationMethodInterface>>
+	 * @return list<class-string<AuthenticationMethodInterface>>
 	 */
 	public function getAuthenticationMethods(): array
 	{
@@ -582,9 +673,26 @@ class RouteSharedOptions
 	}
 
 	/**
+	 * Gets structured descriptors for the semantic guards registered via
+	 * `withAuthentication`, `withAuthenticatedUser`, `withAuthorization`,
+	 * `withRole`, `withAccessRights`, etc.
+	 *
+	 * Each descriptor is an associative array with at least a `type` key.
+	 * Parent descriptors are prepended before the route's own descriptors.
+	 *
+	 * @return list<array{type: string, ...}>
+	 */
+	public function getGuardDescriptors(): array
+	{
+		$parent = $this->parent?->getGuardDescriptors() ?? [];
+
+		return \array_merge($parent, $this->guard_descriptors);
+	}
+
+	/**
 	 * Gets route guards.
 	 *
-	 * @return RouteGuardInterface[]
+	 * @return list<RouteGuardInterface>
 	 */
 	public function getGuards(RouteInfo $ri): array
 	{
@@ -619,7 +727,7 @@ class RouteSharedOptions
 	/**
 	 * Gets route middlewares.
 	 *
-	 * @return array<callable(RouteInfo):(null|Response)|RouteMiddlewareInterface>
+	 * @return list<(callable(RouteInfo):?Response)|RouteMiddlewareInterface>
 	 */
 	public function getMiddlewares(): array
 	{

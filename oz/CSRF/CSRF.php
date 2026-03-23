@@ -15,8 +15,8 @@ namespace OZONE\Core\CSRF;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
-use OZONE\Core\Auth\AuthUsers;
-use OZONE\Core\Forms\FormData;
+use OZONE\Core\Http\Enums\RequestScope;
+use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Utils\Hasher;
 use OZONE\Core\Utils\Random;
 
@@ -33,30 +33,9 @@ class CSRF
 	/**
 	 * CSRF constructor.
 	 */
-	public function __construct(private Context $context, private CSRFScope $scope)
+	public function __construct(private Context $context, private RequestScope $scope)
 	{
-		switch ($this->scope) {
-			case CSRFScope::STATE:
-				$this->scope_ref = $this->context->requireStatefulAuth()
-					->stateID();
-
-				break;
-
-			case CSRFScope::ACTIVE_USER:
-				$this->scope_ref = AuthUsers::ref($this->context->auth()->user());
-
-				break;
-
-			case CSRFScope::USER_IP:
-				$this->scope_ref = $this->context->getUserIP(true, true);
-
-				break;
-
-			case CSRFScope::HOST:
-				$this->scope_ref = $this->context->getHost(true);
-
-				break;
-		}
+		$this->scope_ref = $scope->resolveId($context);
 	}
 
 	/**
@@ -68,20 +47,23 @@ class CSRF
 	}
 
 	/**
-	 * Check a csrf token validity in a given form.
+	 * Check a csrf token validity in a given route.
 	 *
-	 * @param FormData $fd
+	 * @param RouteInfo $ri
 	 *
 	 * @return bool
 	 */
-	public function check(FormData $fd): bool
+	public function check(RouteInfo $ri): bool
 	{
+		$fd = $ri->getUnsafeFormData();
+
 		if ($token = $fd->get(self::TOKEN_PARAM)) {
 			$parts = \explode(self::TOKEN_SEP, $token);
 			$id    = $parts[0] ?? null;
 			$key   = $parts[1] ?? null;
 		} elseif ($header = $this->context->getRequest()
-			->getHeaderLine(self::TOKEN_HEADER)) {
+			->getHeaderLine(self::TOKEN_HEADER)
+		) {
 			$parts = \explode(self::TOKEN_SEP, $header);
 			$id    = $parts[0] ?? null;
 			$key   = $parts[1] ?? null;
@@ -101,7 +83,7 @@ class CSRF
 	 *
 	 * @return string
 	 */
-	public function genCsrfToken(): string
+	public function generateToken(): string
 	{
 		$id  = Random::num();
 		$key = $this->buildKey($id);
@@ -118,6 +100,7 @@ class CSRF
 	 */
 	public function obfuscate(string $human_readable_str): string
 	{
+		// TODO: find usage to this method or remove it
 		// obfuscation is not security keep it simple
 		return Hasher::shorten($this->scope_ref . $human_readable_str . Keys::salt());
 	}

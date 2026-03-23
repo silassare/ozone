@@ -116,11 +116,12 @@ final class AccountRecovery extends Service
 		$form->field(AuthUsers::FIELD_AUTH_USER_TYPE)->required();
 		$form->field(self::AUTO_LOGIN_ON_SUCCESS_FIELD)->type(new TypeBool());
 
-		$pass = $form->field('pass')
+		$form->field('pass')
 			->type(new TypePassword())
-			->required();
+			->required()
+			->doubleCheck();
 
-		return $form->doubleCheck($pass);
+		return $form;
 	}
 
 	/**

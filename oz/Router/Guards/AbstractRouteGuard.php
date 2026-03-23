@@ -75,7 +75,7 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 			return $clean_form;
 		}
 
-		$form->setSubmitTo($uri);
+		$form->submitTo($uri);
 		$form->field('grant_form_ref')
 			->type((new TypeString())->default($reference))
 			->hidden()

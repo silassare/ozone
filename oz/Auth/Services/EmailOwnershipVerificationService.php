@@ -17,7 +17,6 @@ use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
 use OZONE\Core\Columns\Types\TypeEmail;
-use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Response;
 use OZONE\Core\REST\ApiDoc;
@@ -92,6 +91,8 @@ class EmailOwnershipVerificationService extends Service
 	{
 		$fb = new Form();
 
-		return $fb->addField(new Field('email', new TypeEmail(), true));
+		$fb->field('email')->type(new TypeEmail())->required(true);
+
+		return $fb;
 	}
 }

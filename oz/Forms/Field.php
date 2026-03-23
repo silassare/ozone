@@ -17,15 +17,20 @@ use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Gobl\DBAL\Types\TypeString;
 use Override;
+use OZONE\Core\Lang\I18n;
+use OZONE\Core\Lang\I18nMessage;
 use PHPUtils\Interfaces\ArrayCapableInterface;
+use PHPUtils\Interfaces\MetaCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
+use PHPUtils\Traits\MetaCapableTrait;
 
 /**
  * Class Field.
  */
-class Field implements ArrayCapableInterface
+class Field implements ArrayCapableInterface, MetaCapableInterface
 {
 	use ArrayCapableTrait;
+	use MetaCapableTrait;
 
 	/**
 	 * @var TypeInterface|TypesSwitcher
@@ -33,33 +38,77 @@ class Field implements ArrayCapableInterface
 	protected TypeInterface|TypesSwitcher $t_type;
 
 	/**
-	 * @var null|callable(mixed, FormValidationContext):mixed
+	 * @var null|callable(mixed, FormData):mixed
 	 */
 	protected $t_validator;
 	protected string $t_name;
-	protected bool $t_hide          = false;
-	protected bool $t_required      = false;
-	protected bool $t_multiple      = false;
-	protected ?FormRule $t_if       = null;
+	protected ?I18nMessage $t_label       = null;
+	protected ?I18nMessage $t_description = null;
+	protected ?I18nMessage $t_help        = null;
+	protected bool $t_hide                = false;
+	protected bool $t_required            = false;
+	protected bool $t_multiple            = false;
+	protected ?RuleSet $t_if              = null;
+	protected Form $t_form;
+	protected ?self $t_double_check = null;
 
 	/**
 	 * Field constructor.
 	 *
+	 * @param Form                             $form The form to which the field belongs
 	 * @param string                           $name
 	 * @param null|TypeInterface|TypesSwitcher $type
-	 * @param bool                             $required
-	 * @param null|FormRule                    $if
 	 */
 	public function __construct(
+		Form $form,
 		string $name,
-		TypeInterface|TypesSwitcher|null $type = null,
-		bool $required = false,
-		?FormRule $if = null
+		TypeInterface|TypesSwitcher|null $type = null
 	) {
-		$this->t_name     = $name;
-		$this->t_type     = $type ?? new TypeString();
-		$this->t_required = $required;
-		$this->t_if       = $if;
+		$this->t_form = $form;
+		$this->t_type = $type ?? new TypeString();
+
+		$this->name($name);
+	}
+
+	/**
+	 * Field destructor.
+	 */
+	public function __destruct()
+	{
+		unset($this->t_form, $this->t_type);
+	}
+
+	/**
+	 * Gets the field reference.
+	 */
+	public function getRef(): string
+	{
+		return $this->t_form->getRef($this->t_name);
+	}
+
+	/**
+	 * Adds a double check field for this field.
+	 *
+	 * @return $this
+	 */
+	public function doubleCheck(): static
+	{
+		// TODO: the current field type may change so find a workaround to avoid issues with the confirm field type
+		if (null === $this->t_double_check) {
+			$confirm = $this->t_form->field($this->t_name . '_confirm');
+
+			$this->t_form->ensure()
+				->eq($this, $confirm, I18n::m('OZ_FIELD_SHOULD_HAVE_SAME_VALUE', [
+					'field'         => $this->t_name,
+					'field_confirm' => $confirm->t_name,
+				]));
+
+			$this->t_double_check = $confirm;
+
+			$this->syncWithDoubleCheck();
+		}
+
+		return $this;
 	}
 
 	/**
@@ -71,7 +120,51 @@ class Field implements ArrayCapableInterface
 	 */
 	public function name(string $name): static
 	{
+		FormUtils::assertValidFieldName($name);
+
 		$this->t_name = $name;
+
+		return $this;
+	}
+
+	/**
+	 * Define the field label.
+	 *
+	 * @param null|I18nMessage|string $label
+	 *
+	 * @return $this
+	 */
+	public function label(I18nMessage|string|null $label): static
+	{
+		$this->t_label = null === $label ? null : ($label instanceof I18nMessage ? $label : I18n::m($label));
+
+		return $this;
+	}
+
+	/**
+	 * Define the field description.
+	 *
+	 * @param null|I18nMessage|string $description
+	 *
+	 * @return $this
+	 */
+	public function description(I18nMessage|string|null $description): static
+	{
+		$this->t_description = null === $description ? null : ($description instanceof I18nMessage ? $description : I18n::m($description));
+
+		return $this;
+	}
+
+	/**
+	 * Define the field help text.
+	 *
+	 * @param null|I18nMessage|string $help
+	 *
+	 * @return $this
+	 */
+	public function help(I18nMessage|string|null $help): static
+	{
+		$this->t_help = null === $help ? null : ($help instanceof I18nMessage ? $help : I18n::m($help));
 
 		return $this;
 	}
@@ -101,6 +194,8 @@ class Field implements ArrayCapableInterface
 	{
 		$this->t_required = $required;
 
+		$this->syncWithDoubleCheck();
+
 		return $this;
 	}
 
@@ -115,18 +210,20 @@ class Field implements ArrayCapableInterface
 	{
 		$this->t_multiple = $multiple;
 
+		$this->syncWithDoubleCheck();
+
 		return $this;
 	}
 
 	/**
 	 * Set the field visibility condition.
 	 *
-	 * @return FormRule
+	 * @return RuleSet
 	 */
-	public function if(): FormRule
+	public function if(): RuleSet
 	{
 		if (!isset($this->t_if)) {
-			$this->t_if = new FormRule();
+			$this->t_if = new RuleSet();
 		}
 
 		return $this->t_if;
@@ -143,13 +240,15 @@ class Field implements ArrayCapableInterface
 	{
 		$this->t_type = $type;
 
+		$this->syncWithDoubleCheck();
+
 		return $this;
 	}
 
 	/**
 	 * Set the field validator.
 	 *
-	 * @param callable(mixed, FormValidationContext):mixed $validator
+	 * @param callable(mixed, FormData):mixed $validator
 	 *
 	 * @return $this
 	 */
@@ -163,17 +262,17 @@ class Field implements ArrayCapableInterface
 	/**
 	 * Check if the field is enabled.
 	 *
-	 * @param FormValidationContext $fvc
+	 * @param FormData $fd
 	 *
 	 * @return bool
 	 */
-	public function isEnabled(FormValidationContext $fvc): bool
+	public function isEnabled(FormData $fd): bool
 	{
 		if (null === $this->t_if) {
 			return true;
 		}
 
-		return $this->t_if->check($fvc);
+		return $this->t_if->check($fd);
 	}
 
 	/**
@@ -184,6 +283,36 @@ class Field implements ArrayCapableInterface
 	public function getName(): string
 	{
 		return $this->t_name;
+	}
+
+	/**
+	 * Gets the field label.
+	 *
+	 * @return null|I18nMessage|string
+	 */
+	public function getLabel(): I18nMessage|string|null
+	{
+		return $this->t_label;
+	}
+
+	/**
+	 * Gets the field description.
+	 *
+	 * @return null|I18nMessage|string
+	 */
+	public function getDescription(): I18nMessage|string|null
+	{
+		return $this->t_description;
+	}
+
+	/**
+	 * Gets the field help text.
+	 *
+	 * @return null|I18nMessage|string
+	 */
+	public function getHelp(): I18nMessage|string|null
+	{
+		return $this->t_help;
 	}
 
 	/**
@@ -227,19 +356,19 @@ class Field implements ArrayCapableInterface
 	/**
 	 * Validate a given value.
 	 *
-	 * @param mixed                 $value
-	 * @param FormValidationContext $fvc
+	 * @param mixed    $value
+	 * @param FormData $fd
 	 *
 	 * @return mixed
 	 *
 	 * @throws TypesInvalidValueException
 	 */
-	public function validate(mixed $value, FormValidationContext $fvc): mixed
+	public function validate(mixed $value, FormData $fd): mixed
 	{
 		$type = $this->t_type;
 
 		if ($type instanceof TypesSwitcher) {
-			$type = $this->t_type->getType($fvc);
+			$type = $this->t_type->getType($fd);
 		}
 
 		if ($this->t_multiple) {
@@ -259,7 +388,7 @@ class Field implements ArrayCapableInterface
 		}
 
 		if (isset($this->t_validator)) {
-			$value = \call_user_func($this->t_validator, $value, $fvc);
+			$value = \call_user_func($this->t_validator, $value, $fd);
 		}
 
 		return $value;
@@ -267,16 +396,44 @@ class Field implements ArrayCapableInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @return array{
+	 *  ref: string,
+	 *  name: string,
+	 *  type: TypeInterface|TypesSwitcher,
+	 *  label: ?I18nMessage|string,
+	 *  description: ?I18nMessage|string,
+	 *  help: ?I18nMessage|string,
+	 *  required: bool,
+	 *  hidden: bool,
+	 *  if: ?RuleSet
+	 * }
 	 */
 	#[Override]
 	public function toArray(): array
 	{
 		return [
-			'name'     => $this->t_name,
-			'type'     => $this->t_type->toArray(),
-			'required' => $this->t_required,
-			'hidden'   => $this->t_hide,
-			'if'       => $this->t_if?->toArray(),
+			'ref' 	       => $this->getRef(),
+			'name'        => $this->t_name,
+			'type'        => $this->t_type,
+			'label'       => $this->t_label,
+			'description' => $this->t_description,
+			'help'        => $this->t_help,
+			'required'    => $this->t_required,
+			'hidden'      => $this->t_hide,
+			'if'          => $this->t_if,
 		];
+	}
+
+	/**
+	 * Synchronizes the main field properties with the double check field, if it exists.
+	 */
+	private function syncWithDoubleCheck(): void
+	{
+		if (null !== $this->t_double_check) {
+			$this->t_double_check->t_type      = $this->t_type;
+			$this->t_double_check->t_multiple  = $this->t_multiple;
+			$this->t_double_check->t_required  = $this->t_required;
+		}
 	}
 }

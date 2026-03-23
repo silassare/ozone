@@ -108,7 +108,6 @@ final class SignUp extends Service
 		);
 		$op->requestBody = $doc->requestBody([
 			'application/json' => $doc->json($doc->object([
-				OZUser::COL_NAME       => $doc->string('The user name.'),
 				OZUser::COL_PASS       => $doc->string('The user password.'),
 				OZUser::COL_GENDER     => $doc->string('The user gender.'),
 				OZUser::COL_BIRTH_DATE => $doc->string('The user birth date (YYYY-MM-DD).'),

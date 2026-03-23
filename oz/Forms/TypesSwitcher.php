@@ -27,19 +27,19 @@ class TypesSwitcher implements ArrayCapableInterface
 	use ArrayCapableTrait;
 
 	/**
-	 * @var array<int, array{type: TypeInterface, rule: FormRule}>
+	 * @var array<int, array{type: TypeInterface, rule: RuleSet}>
 	 */
 	private array $types = [];
 
 	/**
 	 * Adds type to the switcher.
 	 *
-	 * @param FormRule      $rule
+	 * @param RuleSet       $rule
 	 * @param TypeInterface $type
 	 *
 	 * @return $this
 	 */
-	public function when(FormRule $rule, TypeInterface $type): self
+	public function when(RuleSet $rule, TypeInterface $type): self
 	{
 		$this->types[] = [
 			'type' => $type,
@@ -52,17 +52,17 @@ class TypesSwitcher implements ArrayCapableInterface
 	/**
 	 * Gets the appropriate type.
 	 *
-	 * @param FormValidationContext $fvc
+	 * @param FormData $fd
 	 *
 	 * @return TypeInterface
 	 */
-	public function getType(FormValidationContext $fvc): TypeInterface
+	public function getType(FormData $fd): TypeInterface
 	{
 		foreach ($this->types as $item) {
 			$type = $item['type'];
 			$rule = $item['rule'];
 
-			if ($rule->check($fvc)) {
+			if ($rule->check($fd)) {
 				return $type;
 			}
 		}
@@ -72,6 +72,11 @@ class TypesSwitcher implements ArrayCapableInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @return array{
+	 *  type: 'types-switcher',
+	 *  types: list<array{type: TypeInterface, rule: RuleSet}>
+	 * }
 	 */
 	#[Override]
 	public function toArray(): array

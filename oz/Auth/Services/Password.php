@@ -121,13 +121,11 @@ final class Password extends Service
 	public static function newPassForm(): Form
 	{
 		$form = new Form();
-
-		$form->doubleCheck(
-			$form
-				->field(self::FIELD_PASS_NEW)
-				->type(new TypePassword())
-				->required()
-		);
+		$form
+			->field(self::FIELD_PASS_NEW)
+			->type(new TypePassword())
+			->required()
+			->doubleCheck();
 
 		return $form;
 	}

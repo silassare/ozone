@@ -17,7 +17,6 @@ use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Providers\PhoneOwnershipVerificationProvider;
 use OZONE\Core\Columns\Types\TypePhone;
-use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Response;
 use OZONE\Core\REST\ApiDoc;
@@ -92,6 +91,8 @@ class PhoneOwnershipVerificationService extends Service
 	{
 		$fb = new Form();
 
-		return $fb->addField(new Field('phone', new TypePhone(), true));
+		$fb->field('phone')->type(new TypePhone())->required(true);
+
+		return $fb;
 	}
 }
