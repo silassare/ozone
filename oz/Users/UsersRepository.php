@@ -95,28 +95,78 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 
 		// required columns
 		$tb->id();
-		$tb->column(AuthUserInterface::IDENTIFIER_NAME_PHONE, TypeUtils::userPhone($user_type));
-		$tb->column(AuthUserInterface::IDENTIFIER_NAME_EMAIL, TypeUtils::userMailAddress($user_type));
+
+		$tb->string('civility')->min(0)->max(16)
+			->setMetaKey('field.label', 'Civility')
+			->setMetaKey('api.doc.description', 'The civility of the auth user (e.g. Mr, Mrs, Miss, etc.)');
+
+		$tb->string('display_name')->max(60)
+			->setMetaKey('field.label', 'Display Name')
+			->setMetaKey('api.doc.description', 'The display name of the auth user');
+		// In old project user entity has only 'name' column representing the Full Name,
+		// we had no first_name/last_name/display_name/username logic before.
+		// To avoid loosing data or breaking old code, we set the old name as 'name' so Gobl can
+		// keep detect diff key and rename 'name' column to 'display_name'.
+		$tb->useColumn('display_name')->oldName('name');
+
+		$tb->string('first_name')->max(60)
+			->setMetaKey('field.label', 'First Name')
+			->setMetaKey('api.doc.description', 'The first name of the auth user');
+
+		$tb->string('last_name')->max(60)
+			->setMetaKey('field.label', 'Last Name')
+			->setMetaKey('api.doc.description', 'The last name of the auth user');
+
+		$tb->column(AuthUserInterface::IDENTIFIER_TYPE_NAME, TypeUtils::authUserName()->notRegistered())
+			->setMetaKey('field.label', 'Username')
+			->setMetaKey('api.doc.description', 'The unique username of the auth user');
+
+		$tb->column(AuthUserInterface::IDENTIFIER_TYPE_PHONE, TypeUtils::authUserPhone()->notRegistered($user_type))
+			->setMetaKey('field.label', 'Phone')
+			->setMetaKey('api.doc.description', 'The phone number of the auth user');
+
+		$tb->column(AuthUserInterface::IDENTIFIER_TYPE_EMAIL, TypeUtils::authUserEmail()->notRegistered($user_type))
+			->setMetaKey('field.label', 'Email')
+			->setMetaKey('api.doc.description', 'The email address of the auth user');
 
 		if ($with_gender) {
-			$tb->column('gender', new TypeGender());
+			$tb->column('gender', new TypeGender())
+				->setMetaKey('field.label', 'Gender')
+				->setMetaKey('api.doc.description', 'The gender of the auth user');
 		}
 
 		if ($with_birth_date) {
-			$tb->column('birth_date', TypeUtils::birthDate($min_age, $max_age));
+			$tb->column('birth_date', TypeUtils::birthDate($min_age, $max_age))
+				->setMetaKey('field.label', 'Birth Date')
+				->setMetaKey('api.doc.description', 'The birth date of the auth user');
 		}
 
-		$tb->column('pass', new TypePassword());
-		$tb->map('data')->default([]);
+		$tb->column('pass', new TypePassword())
+			->setMetaKey('field.label', 'Password')
+			->setMetaKey('api.doc.description', 'The password of the auth user');
+
+		$tb->map('data')->default([])
+			->setMetaKey('field.label', 'Data')
+			->setMetaKey('api.doc.description', 'Additional data of the auth user');
 
 		// optional columns
-		$tb->column('pic', (new TypeFile())->mimeTypes(['image/png', 'image/jpeg'])->nullable());
-		$tb->bool('is_valid')->default(true);
+		$tb->column('pic', (new TypeFile())->mimeTypes(['image/png', 'image/jpeg'])->nullable())
+			->setMetaKey('field.label', 'Profile Picture')
+			->setMetaKey('api.doc.description', 'The profile picture of the auth user');
+
+		$tb->bool('is_valid')->default(true)
+			->setMetaKey('field.label', 'Is Valid')
+			->setMetaKey('api.doc.description', 'Whether the auth user is active and valid');
+
 		$tb->timestamps();
 		$tb->softDeletable();
 
 		// constraints
 		$tb->collectFk(static function () use ($tb, $with_country) {
+			$tb->foreign(AuthUserInterface::IDENTIFIER_TYPE_NAME, 'oz_usernames', 'name', !Settings::get('oz.users', 'OZ_USER_USERNAME_REQUIRED'))
+				->onUpdateCascade()
+				->onDeleteRestrict();
+
 			if ($with_country) {
 				$tb->foreign('cc2', 'oz_countries', 'cc2', false, static function (Column $column) {
 					/** @var TypeCC2 $cc2_type */
@@ -129,8 +179,9 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		});
 
 		$tb->collectIndex(static function (TableBuilder $tb) {
-			$tb->unique('phone');
-			$tb->unique('email');
+			$tb->unique(AuthUserInterface::IDENTIFIER_TYPE_NAME);
+			$tb->unique(AuthUserInterface::IDENTIFIER_TYPE_PHONE);
+			$tb->unique(AuthUserInterface::IDENTIFIER_TYPE_EMAIL);
 		});
 
 		// relations
@@ -149,18 +200,18 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function get(string $user_type_name): self
+	public static function get(string $user_type): self
 	{
-		$table = db()->getTableByMorphType($user_type_name);
+		$table = db()->getTableByMorphType($user_type);
 
 		if (!$table || !self::isTableSupported($table)) {
 			throw new InvalidArgumentException(\sprintf(
 				'The auth user type "%s" is not supported.',
-				$user_type_name
+				$user_type
 			));
 		}
 
-		return new self($table, $user_type_name);
+		return new self($table, $user_type);
 	}
 
 	/**
@@ -169,16 +220,16 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	#[Override]
 	public function getAuthUserByIdentifier(string $identifier): ?AuthUserInterface
 	{
-		return $this->getAuthUserByNamedIdentifier(AuthUserInterface::IDENTIFIER_NAME_ID, $identifier);
+		return $this->getAuthUserByIdentifierType(AuthUserInterface::IDENTIFIER_TYPE_ID, $identifier);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function getAuthUserByNamedIdentifier(string $identifier_name, string $identifier_value): ?AuthUserInterface
+	public function getAuthUserByIdentifierType(string $identifier_type, string $identifier_value): ?AuthUserInterface
 	{
-		$c_full_name = $this->table->getColumnOrFail($identifier_name)->getFullName();
+		$c_full_name = $this->table->getColumnOrFail($identifier_type)->getFullName();
 
 		// check if this column can be used as unique identifier
 		if ($this->table->isPrimaryKey([$c_full_name]) || $this->table->isUniqueKey([$c_full_name])) {
@@ -190,7 +241,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 				return $sel->fetchClass();
 			} catch (Throwable $t) {
 				throw new RuntimeException('Unable to load user.', [
-					$identifier_name  => $identifier_value,
+					$identifier_type  => $identifier_value,
 					'type'            => $this->user_type,
 				], $t);
 			}
@@ -198,7 +249,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 
 		throw new RuntimeException(\sprintf(
 			'"%s" is not a unique identifier for table "%s".',
-			$identifier_name,
+			$identifier_type,
 			$this->table->getName()
 		));
 	}

@@ -20,6 +20,7 @@ use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use Override;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Users\UsernameUtils;
 
 /**
  * Class TypeUsername.
@@ -72,6 +73,43 @@ class TypeUsername extends Type
 	}
 
 	/**
+	 * To accept only registered usernames.
+	 *
+	 * @return $this
+	 */
+	public function registered(): static
+	{
+		return $this->setOption('registered', true);
+	}
+
+	/**
+	 * To accept only usernames that are not registered.
+	 *
+	 * @return $this
+	 */
+	public function notRegistered(): static
+	{
+		return $this->setOption('registered', false);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function configure(array $options): static
+	{
+		if (isset($options['registered'])) {
+			if ($options['registered']) {
+				$this->registered();
+			} else {
+				$this->notRegistered();
+			}
+		}
+
+		return parent::configure($options);
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
@@ -95,6 +133,9 @@ class TypeUsername extends Type
 			$value = \trim($value);
 			$len   = \strlen($value);
 
+			/** @var null|bool $registered */
+			$registered = $this->getOption('registered');
+
 			if ($len < Settings::get('oz.users', 'OZ_USER_NAME_MIN_LENGTH')) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_SHORT', $debug));
 
@@ -103,6 +144,24 @@ class TypeUsername extends Type
 
 			if ($len > Settings::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH')) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_TOO_LONG', $debug));
+
+				return;
+			}
+
+			if (!\preg_match(Settings::get('oz.users', 'OZ_USER_NAME_PATTERN'), $value)) {
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_INVALID_CHARACTERS', $debug));
+
+				return;
+			}
+
+			if (false === $registered && UsernameUtils::exists($value)) {
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_ALREADY_REGISTERED', $debug));
+
+				return;
+			}
+
+			if (true === $registered && !UsernameUtils::exists($value)) {
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_USER_NAME_NOT_REGISTERED', $debug));
 
 				return;
 			}

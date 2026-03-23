@@ -56,10 +56,10 @@ final class AccountRecovery extends Service
 		];
 
 		if ($provider instanceof EmailOwnershipVerificationProvider) {
-			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_NAME]  = AuthUserInterface::IDENTIFIER_NAME_EMAIL;
+			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_TYPE]  = AuthUserInterface::IDENTIFIER_TYPE_EMAIL;
 			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_VALUE] = $provider->getEmail();
 		} elseif ($provider instanceof PhoneOwnershipVerificationProvider) {
-			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_NAME]  = AuthUserInterface::IDENTIFIER_NAME_PHONE;
+			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_TYPE]  = AuthUserInterface::IDENTIFIER_TYPE_PHONE;
 			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_VALUE] = $provider->getPhone();
 		} else {
 			// this is a logic error or someone is playing with us

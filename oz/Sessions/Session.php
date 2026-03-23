@@ -288,7 +288,7 @@ final class Session implements BootHookReceiverInterface
 
 				$item = $result->fetchClass();
 
-				if ($item && $item->getExpire() > \time()) {
+				if ($item && $item->getExpireAT() > \time()) {
 					return $item;
 				}
 			} catch (Throwable $t) {
@@ -362,8 +362,8 @@ final class Session implements BootHookReceiverInterface
 			$data = $this->state->getData();
 
 			$this->session_entry->setData($data)
-				->setExpire($expire)
-				->setLastSeen($now)
+				->setExpireAT($expire)
+				->setLastSeenAT($now)
 				->setUpdatedAT($now)
 				->save();
 		} catch (Throwable $t) {
@@ -379,7 +379,7 @@ final class Session implements BootHookReceiverInterface
 		if (Random::bool() && OZone::hasDbInstalled()) {
 			try {
 				$s_table = new OZSessionsQuery();
-				$s_table->whereExpireIsLte(\time())
+				$s_table->whereExpireAtIsLte(\time())
 					->delete()
 					->execute();
 			} catch (Throwable $t) {

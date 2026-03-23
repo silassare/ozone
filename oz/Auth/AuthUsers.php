@@ -44,7 +44,7 @@ final class AuthUsers
 {
 	public const FIELD_AUTH_USER_TYPE             = 'auth_user_type';
 	public const FIELD_AUTH_USER_ID               = 'auth_user_id';
-	public const FIELD_AUTH_USER_IDENTIFIER_NAME  = 'auth_user_identifier_name';
+	public const FIELD_AUTH_USER_IDENTIFIER_TYPE  = 'auth_user_identifier_type';
 	public const FIELD_AUTH_USER_IDENTIFIER_VALUE = 'auth_user_identifier_value';
 	public const FIELD_AUTH_USER_PASSWORD         = 'auth_user_password';
 
@@ -66,23 +66,23 @@ final class AuthUsers
 	public static function ref(
 		AuthUserInterface $user,
 		string $separator = '.',
-		?string $identifier_name = null
+		?string $identifier_type = null
 	): string {
-		if (null === $identifier_name) {
+		if (null === $identifier_type) {
 			return $user->getAuthUserType() . $separator . $user->getAuthIdentifier();
 		}
 
 		$identifiers      = $user->getAuthIdentifiers();
-		$identifier_value = $identifiers[$identifier_name] ?? null;
+		$identifier_value = $identifiers[$identifier_type] ?? null;
 
 		if (null === $identifier_value) {
 			throw new RuntimeException('Auth user identifier not defined.', [
 				'_user'            => self::selector($user),
-				'_identifier_name' => $identifier_name,
+				'_identifier_type' => $identifier_type,
 			]);
 		}
 
-		return $user->getAuthUserType() . $separator . $identifier_name . $separator . $identifier_value;
+		return $user->getAuthUserType() . $separator . $identifier_type . $separator . $identifier_value;
 	}
 
 	/**
@@ -101,7 +101,7 @@ final class AuthUsers
 		if (3 === \count($parts)) {
 			return [
 				self::FIELD_AUTH_USER_TYPE             => $parts[0],
-				self::FIELD_AUTH_USER_IDENTIFIER_NAME  => $parts[1],
+				self::FIELD_AUTH_USER_IDENTIFIER_TYPE  => $parts[1],
 				self::FIELD_AUTH_USER_IDENTIFIER_VALUE => $parts[2],
 			];
 		}
@@ -178,9 +178,9 @@ final class AuthUsers
 			->required();
 
 		$form->field(self::FIELD_AUTH_USER_ID)
-			->required()->if()->isNull(self::FIELD_AUTH_USER_IDENTIFIER_NAME);
+			->required()->if()->isNull(self::FIELD_AUTH_USER_IDENTIFIER_TYPE);
 
-		$form->field(self::FIELD_AUTH_USER_IDENTIFIER_NAME)
+		$form->field(self::FIELD_AUTH_USER_IDENTIFIER_TYPE)
 			->required()->if()->isNull(self::FIELD_AUTH_USER_ID);
 
 		$form->field(self::FIELD_AUTH_USER_IDENTIFIER_VALUE)
@@ -211,7 +211,7 @@ final class AuthUsers
 	public static function identify(
 		string $user_type,
 		string $identifier_value,
-		?string $identifier_name = null
+		?string $identifier_type = null
 	): ?AuthUserInterface {
 		try {
 			$repository = self::repository($user_type);
@@ -221,11 +221,11 @@ final class AuthUsers
 
 			return null;
 		}
-		if (null === $identifier_name) {
+		if (null === $identifier_type) {
 			return $repository->getAuthUserByIdentifier($identifier_value);
 		}
 
-		return $repository->getAuthUserByNamedIdentifier($identifier_name, $identifier_value);
+		return $repository->getAuthUserByIdentifierType($identifier_type, $identifier_value);
 	}
 
 	/**
@@ -249,10 +249,10 @@ final class AuthUsers
 		$user_identifier = $fd->get(self::FIELD_AUTH_USER_ID);
 
 		if (null === $user_identifier) {
-			$user_identifier_name  = $fd->get(self::FIELD_AUTH_USER_IDENTIFIER_NAME);
+			$user_identifier_type  = $fd->get(self::FIELD_AUTH_USER_IDENTIFIER_TYPE);
 			$user_identifier_value = $fd->get(self::FIELD_AUTH_USER_IDENTIFIER_VALUE);
 
-			return self::identify($user_type, $user_identifier_value, $user_identifier_name);
+			return self::identify($user_type, $user_identifier_value, $user_identifier_type);
 		}
 
 		return self::identify($user_type, $user_identifier);
@@ -271,7 +271,7 @@ final class AuthUsers
 
 		return $sq->whereOwnerIdIs($user->getAuthIdentifier())
 			->whereOwnerTypeIs($user->getAuthUserType())
-			->whereExpireIsGt(\time())
+			->whereExpireAtIsGt(\time())
 			->find()
 			->fetchAllClass();
 	}

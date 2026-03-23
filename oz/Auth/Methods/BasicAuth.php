@@ -41,7 +41,7 @@ class BasicAuth implements AuthenticationMethodInterface
 	/**
 	 * @var string The username
 	 *
-	 * Should be in this format: `auth_user_type|auth_user_identifier_name|auth_user_identifier_value`
+	 * Should be in this format: `auth_user_type|auth_user_identifier_type|auth_user_identifier_value`
 	 */
 	protected string $username = '';
 	protected string $password = '';
@@ -139,7 +139,7 @@ class BasicAuth implements AuthenticationMethodInterface
 
 		if (false === $selector) {
 			throw new ForbiddenException(null, [
-				'_reason' => 'Invalid username format. Use auth_user_type|auth_user_identifier_name|auth_user_identifier_value for username.',
+				'_reason' => 'Invalid username format. Use auth_user_type|auth_user_identifier_type|auth_user_identifier_value for username.',
 			]);
 		}
 

@@ -214,8 +214,8 @@ final class Auth implements BootHookReceiverInterface
 
 				$qb = new OZAuthsQuery();
 
-				$qb->whereExpireIsGt(0)
-					->whereExpireIsLte($an_hour_ago)
+				$qb->whereExpireAtIsGt(0)
+					->whereExpireAtIsLte($an_hour_ago)
 					->delete()
 					->execute();
 			} catch (Throwable $t) {

@@ -143,17 +143,20 @@ class TypePhone extends Type
 		];
 
 		if (!empty($value)) {
-			$value         = \str_replace(' ', '', $value);
+			$value = \str_replace(' ', '', $value);
+
+			/** @var null|bool $registered */
+			/** @var null|string $registered_as */
 			$registered    = $this->getOption('registered');
 			$registered_as = $this->getOption('registered_as');
 
-			if (false === $registered && AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_PHONE)) {
+			if (false === $registered && AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_TYPE_PHONE)) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_PHONE_ALREADY_REGISTERED', $debug));
 
 				return;
 			}
 
-			if (true === $registered && !AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_PHONE)) {
+			if (true === $registered && !AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_TYPE_PHONE)) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_PHONE_NOT_REGISTERED', $debug));
 
 				return;

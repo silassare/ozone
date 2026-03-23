@@ -53,7 +53,7 @@ final class AnonymousUser implements AuthUserInterface
 	public function getAuthIdentifiers(): array
 	{
 		return [
-			self::IDENTIFIER_NAME_ID => 'anonymous',
+			self::IDENTIFIER_TYPE_ID => 'anonymous',
 		];
 	}
 

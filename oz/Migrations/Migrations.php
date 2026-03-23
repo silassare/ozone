@@ -90,7 +90,9 @@ final class Migrations
 		return self::cache()->factory('db_version', static function () use ($silent) {
 			try {
 				$qb    = new OZMigrationsQuery();
-				$found = $qb->find(1)->fetchClass();
+				$found = $qb->find(1, 0, [
+					OZMigration::COL_ID => 'desc',
+				])->fetchClass();
 
 				if ($found) {
 					return $found->getVersion();
@@ -123,7 +125,7 @@ final class Migrations
 
 		$this->runMigrationQuery($migration, $mode, $query);
 
-		$this->setCurrentDbVersion($migration->getVersion());
+		$this->updateMigrationsHistory($migration->getVersion(), $mode);
 
 		(new MigrationAfterRun($migration, $mode))->dispatch();
 	}
@@ -145,7 +147,7 @@ final class Migrations
 
 		$this->runMigrationQuery($migration, $mode);
 
-		$this->setCurrentDbVersion($migration->getVersion());
+		$this->updateMigrationsHistory($migration->getVersion(), $mode);
 
 		(new MigrationAfterRun($migration, $mode))->dispatch();
 	}
@@ -174,7 +176,7 @@ final class Migrations
 
 		$this->runMigrationQuery($migration, $mode);
 
-		$this->setCurrentDbVersion($version);
+		$this->updateMigrationsHistory($version, $mode);
 
 		(new MigrationAfterRun($migration, $mode))->dispatch();
 	}
@@ -493,30 +495,27 @@ final class Migrations
 	}
 
 	/**
-	 * Sets the current database version.
+	 * Updates the migrations history with the current database version.
 	 *
-	 * @param int $version
+	 * @param int           $version the database version to set in the history
+	 * @param MigrationMode $mode    the migration mode, if null
 	 *
 	 * @throws CRUDException
 	 * @throws GoblException
 	 * @throws ORMException
 	 */
-	private function setCurrentDbVersion(int $version): void
+	private function updateMigrationsHistory(int $version, MigrationMode $mode): void
 	{
-		if (self::DB_NOT_INSTALLED_VERSION !== $version) {
-			$qb    = new OZMigrationsQuery();
-			$found = $qb->find()->fetchClass();
-			if ($found) {
-				$found->setVersion($version)
-					->setUpdatedAT(\time())
-					->save();
-			} else {
-				OZMigration::new()
-					->setVersion($version)
-					->setUpdatedAT(\time())
-					->save();
-			}
+		// This is probably an uninstallation so we skip setting the version in this case.
+		if (self::DB_NOT_INSTALLED_VERSION === $version) {
+			return;
 		}
+
+		OZMigration::new()
+			->setVersion($version)
+			->setMode($mode)
+			->setUpdatedAT(\time())
+			->save();
 
 		self::clearCache();
 		Settings::set('oz.db.migrations', 'OZ_MIGRATION_VERSION', $version);

@@ -21,17 +21,17 @@ interface AuthUsersRepositoryInterface
 	/**
 	 * Get the auth users repository instance.
 	 *
-	 * @param string $user_type_name the user type name as defined in the configuration
+	 * @param string $user_type the user type as defined in the configuration
 	 */
-	public static function get(string $user_type_name): self;
+	public static function get(string $user_type): self;
 
 	/**
-	 * Get the auth user by auth user identifier.
+	 * Get the auth user by auth user default identifier (The auth user id).
 	 */
 	public function getAuthUserByIdentifier(string $identifier): ?AuthUserInterface;
 
 	/**
-	 * Get the auth user by login identifier name and value.
+	 * Get the auth user by login identifier type and value.
 	 */
-	public function getAuthUserByNamedIdentifier(string $identifier_name, string $identifier_value): ?AuthUserInterface;
+	public function getAuthUserByIdentifierType(string $identifier_type, string $identifier_value): ?AuthUserInterface;
 }

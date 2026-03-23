@@ -20,6 +20,7 @@ use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Columns\Types\TypeEmail;
 use OZONE\Core\Columns\Types\TypePhone;
+use OZONE\Core\Columns\Types\TypeUsername;
 use OZONE\Core\Exceptions\RuntimeException;
 
 /**
@@ -53,33 +54,41 @@ class TypeUtils
 	}
 
 	/**
-	 * Creates a user phone type.
+	 * Creates a auth user username type.
 	 *
-	 * @param string $registered_as
+	 * @return TypeUsername
+	 */
+	public static function authUserName(): TypeUsername
+	{
+		$username = new TypeUsername();
+		$username->nullable(!Settings::get('oz.users', 'OZ_USER_USERNAME_REQUIRED'));
+
+		return $username;
+	}
+
+	/**
+	 * Creates a auth user phone type.
 	 *
 	 * @return TypePhone
 	 */
-	public static function userPhone(string $registered_as): TypePhone
+	public static function authUserPhone(): TypePhone
 	{
 		$phone = new TypePhone();
-		$phone->notRegistered($registered_as)
+		$phone
 			->nullable(!Settings::get('oz.users', 'OZ_USER_PHONE_REQUIRED'));
 
 		return $phone;
 	}
 
 	/**
-	 * Creates a user name type.
-	 *
-	 * @param string $registered_as
+	 * Creates a auth user email type.
 	 *
 	 * @return TypeEmail
 	 */
-	public static function userMailAddress(string $registered_as): TypeEmail
+	public static function authUserEmail(): TypeEmail
 	{
 		$email = new TypeEmail();
-		$email->notRegistered($registered_as)
-			->nullable(!Settings::get('oz.users', 'OZ_USER_EMAIL_REQUIRED'));
+		$email->nullable(!Settings::get('oz.users', 'OZ_USER_EMAIL_REQUIRED'));
 
 		return $email;
 	}

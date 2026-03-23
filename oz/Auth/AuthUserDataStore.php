@@ -15,7 +15,6 @@ namespace OZONE\Core\Auth;
 
 use OZONE\Core\Access\AccessRights;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
-use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Cache\CacheManager;
 use PHPUtils\Store\Store;

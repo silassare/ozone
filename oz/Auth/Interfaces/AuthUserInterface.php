@@ -23,9 +23,11 @@ use PHPUtils\Interfaces\ArrayCapableInterface;
  */
 interface AuthUserInterface extends ArrayCapableInterface
 {
-	public const IDENTIFIER_NAME_ID    = 'id';
-	public const IDENTIFIER_NAME_PHONE = 'phone';
-	public const IDENTIFIER_NAME_EMAIL = 'email';
+	public const IDENTIFIER_TYPE_ID         = 'id';
+	public const IDENTIFIER_TYPE_NAME       = 'username';
+	public const IDENTIFIER_TYPE_PHONE      = 'phone';
+	public const IDENTIFIER_TYPE_EMAIL      = 'email';
+	public const AUTH_USER_DATA_STORE_KEY   = '_auth_user_data_store';
 
 	/**
 	 * Get the entity auth type.

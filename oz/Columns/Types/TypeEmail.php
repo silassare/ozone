@@ -135,16 +135,18 @@ class TypeEmail extends Type
 				return;
 			}
 
+			/** @var null|bool $registered */
+			/** @var null|string $registered_as */
 			$registered    = $this->getOption('registered');
 			$registered_as = $this->getOption('registered_as');
 
-			if (false === $registered && AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_EMAIL)) {
+			if (false === $registered && AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_TYPE_EMAIL)) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_EMAIL_ALREADY_REGISTERED', $debug));
 
 				return;
 			}
 
-			if (true === $registered && !AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_NAME_EMAIL)) {
+			if (true === $registered && !AuthUsers::identify($registered_as, $value, AuthUserInterface::IDENTIFIER_TYPE_EMAIL)) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_EMAIL_NOT_REGISTERED', $debug));
 
 				return;

@@ -137,7 +137,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 		$known_hash = $is_code ? $auth->code_hash : $auth->token_hash;
 
 		// checks if auth process has expired
-		if ($auth->expire <= \time()) {
+		if ($auth->expire_at <= \time()) {
 			$this->save($auth->setState(AuthorizationState::REFUSED->value));
 			$this->onExpired($auth);
 		} elseif ((0 === $try_max || $remainder >= 0) && \hash_equals($known_hash, $this->hash($secret))) {
@@ -205,7 +205,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 				->setCodeHash($code_hash)
 				->setTokenHash($token_hash)
 				->setTryCount(0)
-				->setExpire((string) $expire)
+				->setExpireAT((string) $expire)
 				->setPermissions($this->scope->getAccessRight()->toArray());
 
 			if (null !== $user) {
@@ -252,7 +252,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 				->setTryMax($this->scope->getTryMax())
 				->setTryCount($this->scope->getLifetime())
 				->setTryCount(0)
-				->setExpire((string) $expire);
+				->setExpireAt((string) $expire);
 
 			if ($re_authorize) {
 				$auth->setState(AuthorizationState::PENDING->value);

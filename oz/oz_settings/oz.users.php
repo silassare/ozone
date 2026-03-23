@@ -43,6 +43,19 @@ return [
 	'OZ_USER_NAME_MAX_LENGTH' => 60,
 
 	/**
+	 * Regex pattern for validating user name.
+	 *
+	 * Technically we could accept any character in the username
+	 * but it is better to restrict it to a reasonable set of characters
+	 * to avoid issues with encoding and to prevent users
+	 * from using invisible characters in their usernames.
+	 *
+	 * If you prefer to allow more characters, you can change this pattern in your configuration.
+	 * The default pattern allows letters, numbers, dots, and underscores.
+	 */
+	'OZ_USER_NAME_PATTERN' => '~^[a-zA-Z_][a-zA-Z0-9._]+$~',
+
+	/**
 	 * Minimum size (width and height) for user profile pictures.
 	 * The size is in pixels.
 	 */
@@ -62,16 +75,23 @@ return [
 	],
 
 	/**
-	 * Should we require email for new user registration?
+	 * Should we require email for new auth user registration?
 	 *
 	 * @default true
 	 */
 	'OZ_USER_EMAIL_REQUIRED'  => true,
 
 	/**
-	 * Should we require phone number for new user registration?
+	 * Should we require phone number for new auth user registration?
 	 *
 	 * @default false
 	 */
 	'OZ_USER_PHONE_REQUIRED'  => false,
+
+	/**
+	 * Should we require username for new auth user registration?
+	 *
+	 * @default false
+	 */
+	'OZ_USER_USERNAME_REQUIRED'  => false,
 ];

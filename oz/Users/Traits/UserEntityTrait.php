@@ -51,9 +51,10 @@ trait UserEntityTrait
 	public function getAuthIdentifiers(): array
 	{
 		return [
-			self::IDENTIFIER_NAME_ID    => $this->getID(),
-			self::IDENTIFIER_NAME_EMAIL => $this->getEmail(),
-			self::IDENTIFIER_NAME_PHONE => $this->getPhone(),
+			self::IDENTIFIER_TYPE_ID    => $this->getID(),
+			self::IDENTIFIER_TYPE_NAME  => $this->getUsername(),
+			self::IDENTIFIER_TYPE_EMAIL => $this->getEmail(),
+			self::IDENTIFIER_TYPE_PHONE => $this->getPhone(),
 		];
 	}
 
@@ -80,7 +81,7 @@ trait UserEntityTrait
 	 */
 	public function getAuthUserDataStore(): AuthUserDataStore
 	{
-		return AuthUserDataStore::getInstance($this, $this->getData()->getData());
+		return AuthUserDataStore::getInstance($this, $this->getData()->get(self::AUTH_USER_DATA_STORE_KEY, []));
 	}
 
 	/**
@@ -88,7 +89,7 @@ trait UserEntityTrait
 	 */
 	public function setAuthUserDataStore(AuthUserDataStore $store): static
 	{
-		$this->setData($store->getData());
+		$this->setDataKey(self::AUTH_USER_DATA_STORE_KEY, $store->getData());
 
 		return $this;
 	}
@@ -146,6 +147,22 @@ trait UserEntityTrait
 		// but we ensure that password is not included in the array representation
 		// of the user entity.
 		$arr[self::COL_PASS] = null;
+
+		if ($hide_sensitive_data) {
+			$data = $this->getData()->toArray();
+
+			// we should not include the auth user data store in the array representation
+			// of the user entity,
+			unset($data[self::AUTH_USER_DATA_STORE_KEY]);
+
+			foreach ($data as $key => $_) {
+				if (\str_starts_with((string) $key, '_')) {
+					unset($data[$key]);
+				}
+			}
+
+			$arr[self::COL_DATA] = $data;
+		}
 
 		return $arr;
 	}
