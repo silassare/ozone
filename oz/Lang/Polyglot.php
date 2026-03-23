@@ -120,7 +120,7 @@ final class Polyglot
 	 * ```
 	 *
 	 * @param string       $key     the human readable text key
-	 * @param array        $inject  data to use for replacement
+	 * @param null|array   $inject  data to use for replacement
 	 * @param null|string  $lang    use a specific lang
 	 * @param null|Context $context the context
 	 *
@@ -128,7 +128,7 @@ final class Polyglot
 	 */
 	public static function translate(
 		string $key,
-		array $inject = [],
+		?array $inject = null,
 		?string $lang = null,
 		?Context $context = null
 	): string {
@@ -140,7 +140,7 @@ final class Polyglot
 			$lang = self::getLanguage($context);
 		}
 
-		return self::parseText($key, $inject, $lang);
+		return self::parseText($key, $inject ?? [], $lang);
 	}
 
 	/**

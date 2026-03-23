@@ -29,7 +29,7 @@ use OpenApi\Annotations\Schema;
 use OZONE\Core\Access\AtomicAction;
 use OZONE\Core\Access\AtomicActionsRegistry;
 use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Lang\I18nMessage;
+use OZONE\Core\Lang\I18n;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\REST\RESTFulAPIRequest;
 use OZONE\Core\REST\RESTFullRelationsHelper;
@@ -868,10 +868,10 @@ trait RESTFulService
 		$prefix = $table->getMorphType();
 
 		foreach ($actions as $action) {
-			$desc = new I18nMessage('OZ_ACCESS_RIGHT_DESCRIPTION', [
+			$desc = I18n::m('OZ_ACCESS_RIGHT_DESCRIPTION', [
 				'action' => $action,
 			]);
-			$error = new I18nMessage('OZ_MISSING_ACCESS_RIGHT', [
+			$error = I18n::m('OZ_MISSING_ACCESS_RIGHT', [
 				'action' => $action,
 			]);
 

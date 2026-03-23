@@ -16,7 +16,7 @@ namespace OZONE\Core\CRUD;
 use Gobl\CRUD\CRUDAction;
 use LogicException;
 use OZONE\Core\App\Context;
-use OZONE\Core\Lang\I18nMessage;
+use OZONE\Core\Lang\I18n;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
 use OZONE\Core\Roles\Roles;
 use OZONE\Core\Roles\RolesUtils;
@@ -100,13 +100,13 @@ class AllowRuleBuilder
 			$and_when = $this->has_roles['and_when'] ?? null;
 
 			if (!$context->hasAuthenticatedUser()) {
-				return AllowCheckResult::reject(new I18nMessage('OZ_ERROR_UNAUTHENTICATED'));
+				return AllowCheckResult::reject(I18n::m('OZ_ERROR_UNAUTHENTICATED'));
 			}
 
 			$has_role = Roles::hasOneOfRoles(user($context), $roles, $at_least);
 
 			if (!$has_role) {
-				return AllowCheckResult::reject(new I18nMessage(
+				return AllowCheckResult::reject(I18n::m(
 					'OZ_ERROR_USER_IS_MISSING_REQUIRED_ROLE',
 					[
 						'_allowed_roles' => RolesUtils::ensureRolesString($roles),
@@ -115,22 +115,22 @@ class AllowRuleBuilder
 				));
 			}
 			if (null !== $and_when && !\call_user_func($and_when, $action)) {
-				return AllowCheckResult::reject(new I18nMessage(
+				return AllowCheckResult::reject(I18n::m(
 					'CONDITION_NOT_MET'
 				));
 			}
 
-			return AllowCheckResult::allow(new I18nMessage('ROLES_AND_CONDITION_MET'));
+			return AllowCheckResult::allow(I18n::m('ROLES_AND_CONDITION_MET'));
 		}
 
 		if (isset($this->condition)) {
 			if (!\call_user_func($this->condition, $action)) {
-				return AllowCheckResult::reject(new I18nMessage(
+				return AllowCheckResult::reject(I18n::m(
 					'CONDITION_NOT_MET'
 				));
 			}
 
-			return AllowCheckResult::allow(new I18nMessage('CONDITION_MET'));
+			return AllowCheckResult::allow(I18n::m('CONDITION_MET'));
 		}
 
 		if (isset($this->only_if_user_is)) {
@@ -138,14 +138,14 @@ class AllowRuleBuilder
 			$and_when  = $this->only_if_user_is['and_when'] ?? null;
 
 			if (!$context->hasAuthenticatedUser()) {
-				return AllowCheckResult::reject(new I18nMessage('OZ_ERROR_UNAUTHENTICATED'));
+				return AllowCheckResult::reject(I18n::m('OZ_ERROR_UNAUTHENTICATED'));
 			}
 
 			$user      = user($context);
 			$user_type = $user->getAuthUserType();
 
 			if (!\in_array($user_type, $types, true)) {
-				return AllowCheckResult::reject(new I18nMessage(
+				return AllowCheckResult::reject(I18n::m(
 					'OZ_ERROR_USER_TYPE_NOT_ALLOWED',
 					[
 						'_allowed_types' => \implode(', ', $types),
@@ -155,12 +155,10 @@ class AllowRuleBuilder
 			}
 
 			if (null !== $and_when && !\call_user_func($and_when, $action)) {
-				return AllowCheckResult::reject(new I18nMessage(
-					'CONDITION_NOT_MET'
-				));
+				return AllowCheckResult::reject(I18n::m('CONDITION_NOT_MET'));
 			}
 
-			return AllowCheckResult::allow(new I18nMessage('AUTH_USER_TYPE_AND_CONDITION_MET'));
+			return AllowCheckResult::allow(I18n::m('AUTH_USER_TYPE_AND_CONDITION_MET'));
 		}
 
 		throw new LogicException(

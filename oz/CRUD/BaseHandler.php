@@ -27,7 +27,7 @@ use Gobl\ORM\ORMEntityCRUD;
 use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
-use OZONE\Core\Lang\I18nMessage;
+use OZONE\Core\Lang\I18n;
 use OZONE\Core\Roles\Enums\Role;
 
 /**
@@ -73,7 +73,15 @@ abstract class BaseHandler extends TableCRUDListener
 	{
 		if (
 			!\in_array($action, [
-				'create', 'read', 'update', 'delete', 'create_all', 'read_all', 'update_all', 'delete_all'], true)
+				'create',
+				'read',
+				'update',
+				'delete',
+				'create_all',
+				'read_all',
+				'update_all',
+				'delete_all',
+			], true)
 		) {
 			throw new InvalidArgumentException('Invalid action: ' . $action);
 		}
@@ -109,7 +117,7 @@ abstract class BaseHandler extends TableCRUDListener
 			// allow it
 			if (auth()->getAccessRights()->can($full_action)) {
 				$this->last_allow_check_result = AllowCheckResult::allow(
-					new I18nMessage('HAS_REQUIRED_ACCESS_RIGHT', [
+					I18n::m('HAS_REQUIRED_ACCESS_RIGHT', [
 						'_action' => $full_action,
 					])
 				);
@@ -130,7 +138,7 @@ abstract class BaseHandler extends TableCRUDListener
 		}
 
 		$this->last_allow_check_result = AllowCheckResult::reject(
-			new I18nMessage('NO_RULE_DEFINED_FOR_ACTION', ['_action' => $action])
+			I18n::m('NO_RULE_DEFINED_FOR_ACTION', ['_action' => $action])
 		);
 
 		// we are strict, we want that any action to be explicitly allowed
