@@ -40,6 +40,8 @@ use OZONE\Core\App\JSONResponse;
 use OZONE\Core\Columns\Types\TypeEmail;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Forms\Form;
+use OZONE\Core\Forms\TypesSwitcher;
 use OZONE\Core\REST\RESTFulAPIRequest;
 use OZONE\Core\Router\Route;
 
@@ -177,6 +179,22 @@ trait ApiDocManipulationTrait
 		$path_item                = $this->path($route_path);
 		$declared_params_patterns = $route->getDeclaredParams();
 
+		// Attach guard and authentication metadata when not already set by the caller.
+		if (self::isUndefined($op->x)) {
+			$route_options        = $route->getOptions();
+			$auth_methods         = $route_options->getAuthenticationMethods();
+			$guard_descriptors    = $route_options->getGuardDescriptors();
+
+			if (!empty($auth_methods) || !empty($guard_descriptors)) {
+				$op->x = [
+					'oz-security' => ['name' => 'oz-security', 'value' => [
+						'auth_methods'      => \array_map(static fn ($m) => \basename(\str_replace('\\', '/', $m)), $auth_methods),
+						'guard_descriptors' => $guard_descriptors,
+					]],
+				];
+			}
+		}
+
 		foreach ($route_params as $param) {
 			if (isset($exclude_params[$param])) {
 				continue;
@@ -300,6 +318,75 @@ trait ApiDocManipulationTrait
 	{
 		return new OA\RequestBody([
 			'content' => $content,
+		]);
+	}
+
+	/**
+	 * Create a request body from a form.
+	 *
+	 * Iterates the form fields (top-level, non-conditional) and builds an
+	 * `application/json` request body schema.  Returns `null` when the form
+	 * has no top-level fields.
+	 *
+	 * Hidden fields are included and annotated with `x-oz-hidden: true`.
+	 * Required fields are listed in the JSON Schema `required` array.
+	 *
+	 * @param Form $form the form to document
+	 *
+	 * @return null|OA\RequestBody
+	 */
+	public function requestBodyFromForm(Form $form): ?OA\RequestBody
+	{
+		$opt = $form->toArray();
+
+		/** @var array<string, Schema> $properties */
+		$properties     = [];
+		$required_names = [];
+
+		foreach ($opt['fields'] as $field) {
+			$field_name = $field->getName();
+			$field_type = $field->getType();
+
+			if ($field_type instanceof TypesSwitcher) {
+				// dynamic type: document as a generic value
+				$schema = $this->type(['string', 'number', 'boolean', 'object', 'array', 'null']);
+			} else {
+				$schema = $this->typeSchema($field_type);
+			}
+
+			$label = $field->getLabel();
+			if (null !== $label) {
+				$label_text = \is_string($label) ? $label : $label->getText();
+				if ('' !== $label_text) {
+					$schema->title = $label_text;
+				}
+			}
+
+			$desc = $field->getDescription();
+			if (null !== $desc) {
+				$desc_text = \is_string($desc) ? $desc : $desc->getText();
+				if ('' !== $desc_text) {
+					$schema->description = $desc_text;
+				}
+			}
+
+			if ($field->isHidden()) {
+				$schema->x = ['oz-hidden' => ['name' => 'oz-hidden', 'value' => true]];
+			}
+
+			$properties[$field_name] = $schema;
+
+			if ($field->isRequired()) {
+				$required_names[] = $field_name;
+			}
+		}
+
+		$body_schema = $this->object($properties, [
+			'required' => $required_names,
+		]);
+
+		return $this->requestBody([
+			'application/json' => $this->json($body_schema),
 		]);
 	}
 
@@ -530,33 +617,32 @@ DESC;
 	/**
 	 * Create the O'Zone API filters parameter.
 	 *
-	 * ```
-	 * [
-	 *    [['foo', 'eq', 'value'], 'OR', ['bar', 'lt', 8]], 'AND', ['baz', 'is_null']]
-	 *  ]
-	 * ```
+	 * When `$table` is provided, the description includes a per-column section
+	 * listing each filterable column and its allowed operators.
 	 *
-	 * @param 'cookie'|'header'|'path'|'query' $in The parameter location
+	 * @param 'cookie'|'header'|'path'|'query' $in    The parameter location
+	 * @param null|Table                       $table The table to document per-column operators for
 	 *
 	 * @return Parameter
 	 */
-	public function apiFiltersParameter(string $in = 'query'): Parameter
+	public function apiFiltersParameter(string $in = 'query', ?Table $table = null): Parameter
 	{
-		$filters_param               = RESTFulAPIRequest::FILTERS_PARAM;
-		$allowed_operators_str       = \implode(', ', \array_map(
+		$filters_param         = RESTFulAPIRequest::FILTERS_PARAM;
+		$op_in                 = Operator::IN->value;
+		$op_not_in             = Operator::NOT_IN->value;
+		$allowed_operators_str = \implode(', ', \array_map(
 			static fn ($op) => "`{$op->value}`",
 			Operator::cases()
 		));
-		$op_in                       = Operator::IN->value;
-		$op_not_in                   = Operator::NOT_IN->value;
-		$desc                        = <<<DESC
+
+		$desc = <<<DESC
 The filters parameter.
 
 Use `{$filters_param}` to apply complex filtering logic to your query.
 The filter structure consists of conditions ([`field`, `operator`, `value`]),
 logical connectors (`AND`, `OR`), and nested conditions (arrays within arrays).
 
-Each condition follows this format:
+A condition follows this format:
 ```
 ['field', 'operator', 'value']
 ```
@@ -567,18 +653,19 @@ Where:
 
 > Note: The `{$op_in}` and `{$op_not_in}` operators require an array of values.
 
-Examples:
+**Array expression examples:**
 
 ```json
 [
     [
-        ['foo', 'eq', 'value', 'OR', 'bar', 'lt', 8]
+        ['foo', 'eq', 'value'],
+        'OR', ['bar', 'lt', 8]
     ],
     'AND', ['baz', 'is_null']
 ]
 ```
 
-You can also use this:
+**String shorthand expression** (a flat array; conditions share the same logical level):
 
 ```json
 [
@@ -589,8 +676,31 @@ You can also use this:
     'baz', 'is_null'
 ]
 ```
-
 DESC;
+
+		if (null !== $table) {
+			$per_column_lines = [];
+			foreach ($table->getColumns() as $column) {
+				$col_ops = $column->getType()->getAllowedFilterOperators();
+				if (!empty($col_ops)) {
+					$col_name           = $column->getFullName();
+					$ops_str            = \implode(', ', \array_map(static fn ($op) => "`{$op->value}`", $col_ops));
+					$per_column_lines[] = "| `{$col_name}` | {$ops_str} |";
+				}
+			}
+			if (!empty($per_column_lines)) {
+				$per_col_table = \implode("\n", $per_column_lines);
+				$desc .= <<<COLS
+
+
+**Available operators per column:**
+
+| Column | Operators |
+|--------|-----------|
+{$per_col_table}
+COLS;
+			}
+		}
 
 		return $this->parameter(
 			$filters_param,
@@ -959,6 +1069,11 @@ DESC;
 
 				if ($is_create && !$type->isNullAble() && null === $type->getDefault()) {
 					$required_names[] = $name;
+				}
+
+				$col_desc = $column->getMeta()->get('api.doc.description', '');
+				if (!empty($col_desc)) {
+					$schema->description = $col_desc;
 				}
 
 				$properties[$name] = $schema;

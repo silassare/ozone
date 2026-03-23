@@ -93,19 +93,19 @@ trait RESTFulService
 		$get_all_params = [
 			$doc->apiMaxParameter(),
 			$doc->apiPageParameter(),
-			$doc->apiFiltersParameter(),
+			$doc->apiFiltersParameter('query', $table),
 			$doc->apiOrderByParameter(),
 		];
 		$update_one_params = [];
 		$update_all_params = [
 			$doc->apiMaxParameter(),
-			$doc->apiFiltersParameter(),
+			$doc->apiFiltersParameter('query', $table),
 			$doc->apiOrderByParameter(),
 		];
 		$delete_one_params = [];
 		$delete_all_params = [
 			$doc->apiMaxParameter(),
-			$doc->apiFiltersParameter(),
+			$doc->apiFiltersParameter('query', $table),
 			$doc->apiOrderByParameter(),
 		];
 		if (!empty($collections)) {
@@ -226,7 +226,7 @@ trait RESTFulService
 						$singular_name,
 						ApiDoc::toHumanReadable($pk_key_column)
 					),
-					'operationId' => \sprintf('%s.create_one', $operation_id_prefix),
+					'operationId' => \sprintf('%s.delete_one', $operation_id_prefix),
 					'parameters'  => $delete_one_params,
 				]
 			);
@@ -320,13 +320,16 @@ trait RESTFulService
 				return;
 			}
 
+			// ensure not a virtual relation, get the target table to be able to get the customized filters parameters for the relation
+			$r_target = $r instanceof Relation ? $r->getTargetTable() : null;
+
 			$r_params = $r->isPaginated() ? [
 				$doc->apiMaxParameter(),
 				$doc->apiPageParameter(),
-				$doc->apiFiltersParameter(),
+				$doc->apiFiltersParameter('query', $r_target),
 				$doc->apiOrderByParameter(),
 			] : [
-				$doc->apiFiltersParameter(),
+				$doc->apiFiltersParameter('query', $r_target),
 				$doc->apiOrderByParameter(),
 			];
 
@@ -338,8 +341,8 @@ trait RESTFulService
 				$r_pk_column         = $r_table->getSinglePKColumnOrFail()->getName();
 				$r_relatives_options = self::relationsDocOptions($r_table, $doc);
 
-				if (isset($rr_options['relations_parameter'])) {
-					$r_params[] = $rr_options['relations_parameter'];
+				if (isset($r_relatives_options['relations_parameter'])) {
+					$r_params[] = $r_relatives_options['relations_parameter'];
 				}
 				$r_relations_schema = $r->isPaginated() ? $doc->object(\array_map(
 					static fn ($s) => $doc->object(['{' . $r_pk_column . '}' => $s]),
