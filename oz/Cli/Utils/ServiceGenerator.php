@@ -16,14 +16,14 @@ namespace OZONE\Core\Cli\Utils;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Table;
 use Gobl\ORM\Generators\CSGeneratorORM;
-use Override;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Templates;
 
 /**
  * Class ServiceGenerator.
  */
-class ServiceGenerator extends CSGeneratorORM
+class ServiceGenerator
 {
 	/**
 	 * ServiceGenerator constructor.
@@ -31,51 +31,32 @@ class ServiceGenerator extends CSGeneratorORM
 	 * @param RDBMSInterface $db
 	 */
 	public function __construct(
-		RDBMSInterface $db,
-	) {
-		parent::__construct($db);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function generate(array $tables, ?string $path = null, string $header = ''): static
-	{
-		foreach ($tables as $table) {
-			$this->generateServiceClass(
-				$table,
-				$table->getNamespace() . '\Services',
-				'',
-				'',
-				$header,
-				$path,
-				true
-			);
-		}
-
-		return $this;
-	}
+		private RDBMSInterface $db,
+	) {}
 
 	/**
 	 * Generate OZone service class for a given table.
 	 *
 	 * @param Table       $table             the table
 	 * @param string      $service_namespace the service class namespace
-	 * @param string      $service_path      the service path
 	 * @param string      $service_class     the service class name to use
-	 * @param string      $header            the source header to use
-	 * @param null|string $service_dir       the destination folder path
+	 * @param string      $base_path         the service url base path
+	 * @param string      $header            the header to add at the top of the generated class file
+	 * @param null|string $output_dir        the output directory for the generated class file, if null it will be generated in the default services directory
+	 * @param bool        $override          whether to override the service class if it already exists,
+	 *                                       if false and the class file already exists an exception will be thrown,
+	 *                                       if true and the class file already exists it will be renamed
+	 *                                       with a ".backup" suffix before generating the new class file
 	 *
 	 * @return array{provider:string} the generated service info
 	 */
-	public function generateServiceClass(
+	public function generateClass(
 		Table $table,
 		string $service_namespace,
-		string $service_path,
 		string $service_class,
+		string $base_path,
 		string $header = '',
-		?string $service_dir = null,
+		?string $output_dir = null,
 		bool $override = false
 	): array {
 		if (!$table->hasPrimaryKeyConstraint()) {
@@ -92,22 +73,33 @@ class ServiceGenerator extends CSGeneratorORM
 			);
 		}
 
-		$fs           = self::outputDirFS($service_dir);
-		$class_path   = $fs->resolve($service_class . '.php');
-		$service_path = \trim($service_path, '/');
+		$fm = FS::fromRoot();
+
+		$fm->filter()
+			->isDir()
+			->isWritable()
+			->assert($output_dir);
+
+		$class_path = $fm->cd($output_dir)->resolve($service_class . '.php');
+		$base_path  = \trim($base_path, '/');
 
 		if ($override && \file_exists($class_path)) {
 			\rename($class_path, $class_path . '.backup');
 		}
 
 		// we check if the class file is empty/not exists etc...
-		$fs->filter()
+		$fm->filter()
 			->isEmpty()
 			->assert($class_path);
 
-		$inject                         = $this->describeTable($table);
+		$og = new CSGeneratorORM($this->db);
+
+		$og->ignorePrivateTables(false);
+		$og->ignorePrivateColumns(false);
+
+		$inject                         = $og->describeTable($table);
 		$inject['oz_header']            = $header;
-		$inject['service']['path']      = $service_path;
+		$inject['service']['path']      = $base_path;
 		$inject['service']['namespace'] = $service_namespace;
 		$inject['service']['class']     = $service_class;
 		$qualified_class                = $service_namespace . '\\' . $inject['service']['class'];
