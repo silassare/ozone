@@ -92,4 +92,24 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void {}
+
+	/**
+	 * Creates a service request handler and returns it.
+	 *
+	 * This is a convenient method to create a service from a factory.
+	 *
+	 * @param callable(Service):void $factory
+	 *
+	 * @return callable(Context|RouteInfo):Response
+	 */
+	public static function createHandler(callable $factory): callable
+	{
+		return static function (Context|RouteInfo $context) use ($factory) {
+			$svc = new class($context) extends Service {};
+
+			\call_user_func($factory, $svc);
+
+			return $svc->respond();
+		};
+	}
 }
