@@ -137,7 +137,7 @@ class Request extends Message implements ServerRequestInterface
 		$this->uploadedFiles  = $uploadedFiles;
 
 		if ('POST' === $this->method) {
-			$allowed = Settings::get('oz.request', 'OZ_ALLOW_REAL_METHOD_HEADER');
+			$allowed = Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_ALLOWED');
 
 			if ($allowed) {
 				$realMethodHeaderName = Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_NAME');

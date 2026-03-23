@@ -49,7 +49,7 @@ return [
 	 *
 	 * @example: use X-OZONE-Real-Method: DELETE to simulate a DELETE request while sending a POST request.
 	 */
-	'OZ_ALLOW_REAL_METHOD_HEADER' => true,
+	'OZ_REAL_METHOD_HEADER_ALLOWED' => true,
 
 	/**
 	 * Name of the header to use to override HTTP method.

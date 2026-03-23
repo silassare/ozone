@@ -905,6 +905,9 @@ final class Context
 			$provided = \explode(',', $access_control_headers);
 		}
 
+		$declared                    = Settings::get('oz.request', 'OZ_CORS_ALLOWED_HEADERS');
+		$declared[]                  = \strtolower(Settings::get('oz.auth', 'OZ_AUTH_API_KEY_HEADER_NAME'));
+		$allow_real_method_header    = Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_ALLOWED');
 		$declared                 = Settings::get('oz.request', 'OZ_CORS_ALLOWED_HEADERS');
 		$declared[]               = \strtolower(Settings::get('oz.auth', 'OZ_AUTH_API_KEY_HEADER_NAME'));
 		$allow_real_method_header = Settings::get('oz.request', 'OZ_ALLOW_REAL_METHOD_HEADER');
