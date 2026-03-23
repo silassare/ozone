@@ -441,10 +441,8 @@ final class FileFiltersTest extends TestCase
 		\imagecolorallocate($img, 100, 149, 237);
 		\ob_start();
 		\imagepng($img);
-		$bytes = (string) \ob_get_clean();
-		\imagedestroy($img);
 
-		return $bytes;
+		return (string) \ob_get_clean();
 	}
 
 	/**
@@ -472,7 +470,6 @@ final class FileFiltersTest extends TestCase
 		self::assertNotFalse($img, 'Response body must be a valid image');
 		$w = \imagesx($img);
 		$h = \imagesy($img);
-		\imagedestroy($img);
 
 		return [$w, $h];
 	}

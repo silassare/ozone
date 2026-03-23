@@ -171,8 +171,6 @@ final class CaptchaCode extends Service
 		$content = \ob_get_contents();
 		\ob_clean();
 
-		\imagedestroy($captcha);
-
 		$body = Body::fromString($content);
 
 		return $response->withHeader('Content-type', 'image/png')
