@@ -243,6 +243,20 @@ final class Context
 	}
 
 	/**
+	 * Gets route info instance object.
+	 *
+	 * @return RouteInfo
+	 */
+	public function getRouteInfo(): RouteInfo
+	{
+		if (!isset($this->route_info)) {
+			throw new RuntimeException('No route info is available yet. This is only available after the router found a route for the request and before the route handler is called.');
+		}
+
+		return $this->route_info;
+	}
+
+	/**
 	 * Gets response.
 	 *
 	 * @return Response
