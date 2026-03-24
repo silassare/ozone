@@ -474,26 +474,6 @@ class RuleSet implements ArrayCapableInterface
 		];
 	}
 
-	// -----------------------------------------------------------
-	// Backward-compat accessors (kept for code that used FormRule)
-	// -----------------------------------------------------------
-
-	/**
-	 * Gets the message from the last failed rule.
-	 *
-	 * @deprecated use {@see self::getViolationMessage()} instead
-	 *
-	 * @return null|I18nMessage|string
-	 */
-	public function getFailedRuleMessage(): I18nMessage|string|null
-	{
-		return $this->getViolationMessage();
-	}
-
-	// -----------------------------------------------------------
-	// Internals
-	// -----------------------------------------------------------
-
 	/**
 	 * Builds a {@see Rule} child from a field, operator, value and message, then appends it
 	 * to the children list.
