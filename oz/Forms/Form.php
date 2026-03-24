@@ -519,16 +519,19 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	public function toArray(): array
 	{
 		return [
-			'key'    => $this->t_key,
-			'prefix' => $this->t_prefix,
-			'action' => $this->t_submit_to,
-			'method' => $this->t_method,
-			'fields' => $this->t_fields,
-			'steps'  => $this->t_steps,
-			'expect' => \array_values(\array_filter(
+			'key'          => $this->t_key,
+			'version'      => $this->getVersion(),
+			'prefix'       => $this->t_prefix,
+			'action'       => $this->t_submit_to,
+			'method'       => $this->t_method,
+			'fields'       => $this->t_fields,
+			'steps'        => $this->t_steps,
+			'expect'       => \array_values(\array_filter(
 				$this->t_pre_validation_rules,
 				static fn (RuleSet $r) => !$r->isServerOnly()
 			)),
+			'resume_scope' => $this->t_resume_scope?->value,
+			'resume_ttl'   => null !== $this->t_resume_scope ? $this->t_resume_ttl : null,
 		];
 	}
 

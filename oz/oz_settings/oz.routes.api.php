@@ -20,6 +20,7 @@ use OZONE\Core\Auth\Services\Logout;
 use OZONE\Core\Auth\Services\Password;
 use OZONE\Core\Auth\Services\PhoneOwnershipVerificationService;
 use OZONE\Core\Auth\Services\TNet;
+use OZONE\Core\Forms\Services\FormsService;
 use OZONE\Core\FS\Services\UploadFiles;
 use OZONE\Core\REST\Services\ApiDocService;
 use OZONE\Core\Services\CaptchaCode;
@@ -32,6 +33,7 @@ return [
 	CaptchaCode::class                                    => true,
 	QRCode::class                                         => true,
 	LinkTo::class                                         => true,
+	FormsService::class                                   => true,
 	TNet::class                                           => true,
 	SignUp::class                                         => true,
 	Login::class                                          => true,

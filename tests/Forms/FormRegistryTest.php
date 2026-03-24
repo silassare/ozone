@@ -130,6 +130,35 @@ final class FormRegistryTest extends TestCase
 		self::assertNull($form->toArray()['key']);
 	}
 
+	public function testToArrayIncludesVersion(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		$arr = $form->toArray();
+		self::assertArrayHasKey('version', $arr);
+		self::assertMatchesRegularExpression('/^[0-9a-f]{16}$/', $arr['version']);
+		self::assertSame($form->getVersion(), $arr['version']);
+	}
+
+	public function testToArrayResumeScopeNullWhenNotEnabled(): void
+	{
+		$form = new Form();
+
+		$arr = $form->toArray();
+		self::assertNull($arr['resume_scope']);
+		self::assertNull($arr['resume_ttl']);
+	}
+
+	public function testToArrayResumeScopeAndTTLWhenEnabled(): void
+	{
+		$form = (new Form())->resume(RequestScope::STATE, 1800);
+
+		$arr = $form->toArray();
+		self::assertSame(RequestScope::STATE->value, $arr['resume_scope']);
+		self::assertSame(1800, $arr['resume_ttl']);
+	}
+
 	// -------------------------------------------------------------------------
 	// Form::getVersion()
 	// -------------------------------------------------------------------------

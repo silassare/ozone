@@ -143,6 +143,12 @@ final class RouteInfo
 	public function getCleanFormData(): FormData
 	{
 		if (null === $this->clean_form_data) {
+			// In discovery mode checkRouteForm() is intentionally skipped — return empty
+			// FormData so form callables that read it during form-bundle resolution don't throw.
+			if ($this->context->isFormDiscoveryRequest()) {
+				return new FormData();
+			}
+
 			throw new RuntimeException('Form data has not been checked yet.', [
 				'_reason' => \sprintf('%s called before the router called %s.', __METHOD__, Str::callableName([$this, 'checkRouteForm'])),
 			]);
@@ -207,6 +213,33 @@ final class RouteInfo
 	{
 		return $this->context->getRequest()
 			->getUnsafeFormField($name, $def);
+	}
+
+	/**
+	 * Clears the resume cache entry for the current route's form bundle.
+	 *
+	 * Call this after a successful final submission to prevent stale cached
+	 * data from pre-filling the form on the next open request for the same scope.
+	 * Has no effect when the bundle has no resume scope configured.
+	 */
+	public function clearFormResumeCache(): void
+	{
+		$bundle = $this->route->getOptions()->getFormBundle($this);
+
+		if (!$bundle) {
+			return;
+		}
+
+		$resume_scope = $bundle->getResumeScope();
+
+		if (null === $resume_scope) {
+			return;
+		}
+
+		$scope_id  = $resume_scope->resolveId($this->context);
+		$cache_key = $bundle->buildResumeCacheKey($scope_id);
+
+		CacheManager::persistent('oz.form.resume')->delete($cache_key);
 	}
 
 	/**
