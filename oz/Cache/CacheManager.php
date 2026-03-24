@@ -308,8 +308,8 @@ final class CacheManager
 	 */
 	private static function assertValidKey(string $key): void
 	{
-		if ('' === $key) {
-			throw new InvalidArgumentException('Cache key must be a non empty string.');
+		if ('' === \trim($key)) {
+			throw new InvalidArgumentException('Cache key must not be empty or whitespace-only string.');
 		}
 	}
 
