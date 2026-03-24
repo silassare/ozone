@@ -35,7 +35,7 @@ class Logger implements LoggerInterface
 	#[Override]
 	public function log($level, string|Stringable|Throwable $message, array $context = []): void
 	{
-		self::writer()->write($level, $message, $context);
+		self::writer()->write((string) $level, $message, $context);
 	}
 
 	/**
