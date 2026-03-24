@@ -209,7 +209,7 @@ final class FormsEvaluateRulesTest extends TestCase
 	{
 		$results = [];
 
-		foreach ($form->t_pre_validation_rules as $rule_set) {
+		foreach ($form->getPreValidationRules() as $rule_set) {
 			/** @var RuleSet $rule_set */
 			if ($rule_set->isServerOnly()) {
 				$passed    = $rule_set->check($unsafe_fd);

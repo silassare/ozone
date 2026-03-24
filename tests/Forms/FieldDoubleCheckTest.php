@@ -57,7 +57,7 @@ final class FieldDoubleCheckTest extends TestCase
 		$field->doubleCheck();
 		$field->doubleCheck(); // second call must be a no-op
 
-		self::assertCount(1, $form->t_post_validation_rules);
+		self::assertCount(1, $form->getPostValidationRules());
 		self::assertNotNull($form->getField('password_confirm'));
 	}
 
@@ -176,7 +176,7 @@ final class FieldDoubleCheckTest extends TestCase
 		$field = $form->field('code');
 		$field->doubleCheck();
 
-		self::assertCount(1, $form->t_post_validation_rules);
+		self::assertCount(1, $form->getPostValidationRules());
 	}
 
 	public function testDoubleCheckWorksWithPrefixedForm(): void

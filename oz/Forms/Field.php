@@ -29,7 +29,7 @@ use PHPUtils\Traits\MetaCapableTrait;
 /**
  * Class Field.
  */
-class Field implements ArrayCapableInterface, MetaCapableInterface
+final class Field implements ArrayCapableInterface, MetaCapableInterface
 {
 	use ArrayCapableTrait;
 	use MetaCapableTrait;
@@ -37,22 +37,22 @@ class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * @var TypeInterface|TypesSwitcher
 	 */
-	protected TypeInterface|TypesSwitcher $t_type;
+	private TypeInterface|TypesSwitcher $t_type;
 
 	/**
 	 * @var null|callable(mixed, FormData):mixed
 	 */
-	protected $t_validator;
-	protected string $t_name;
-	protected ?I18nMessage $t_label       = null;
-	protected ?I18nMessage $t_description = null;
-	protected ?I18nMessage $t_help        = null;
-	protected bool $t_hide                = false;
-	protected bool $t_required            = false;
-	protected bool $t_multiple            = false;
-	protected ?RuleSet $t_if              = null;
-	protected Form $t_form;
-	protected ?self $t_double_check = null;
+	private $t_validator;
+	private string $t_name;
+	private ?I18nMessage $t_label       = null;
+	private ?I18nMessage $t_description = null;
+	private ?I18nMessage $t_help        = null;
+	private bool $t_hide                = false;
+	private bool $t_required            = false;
+	private bool $t_multiple            = false;
+	private ?RuleSet $t_if              = null;
+	private Form $t_form;
+	private ?self $t_double_check = null;
 
 	/**
 	 * Field constructor.

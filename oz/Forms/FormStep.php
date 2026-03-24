@@ -26,20 +26,20 @@ final class FormStep implements ArrayCapableInterface
 {
 	use ArrayCapableTrait;
 
-	protected string $t_name;
+	private string $t_name;
 
 	/**
 	 * @var null|callable():Form|Form
 	 */
-	protected $t_static_form;
+	private $t_static_form;
 
 	/**
 	 * @var null|callable(FormData):Form
 	 */
-	protected $t_dynamic_form_factory;
+	private $t_dynamic_form_factory;
 
-	protected ?RuleSet $t_if = null;
-	protected Form $t_parent_form;
+	private ?RuleSet $t_if = null;
+	private Form $t_parent_form;
 
 	/**
 	 * FormStep constructor.

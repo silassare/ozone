@@ -42,51 +42,58 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * @var array<string,Field>
 	 */
-	public array $t_fields = [];
+	private array $t_fields = [];
 
 	/**
 	 * @var array<string,FormStep>
 	 */
-	public array $t_steps = [];
+	private array $t_steps = [];
 
 	/**
 	 * @var list<RuleSet>
 	 */
-	public array $t_pre_validation_rules = [];
+	private array $t_pre_validation_rules = [];
 
 	/**
 	 * @var list<RuleSet>
 	 */
-	public array $t_post_validation_rules = [];
+	private array $t_post_validation_rules = [];
 
 	/**
 	 * Form prefix, used for field namespacing in case of multiple forms in the same page or nested forms (steps).
 	 * It can be useful to avoid field name conflicts.
 	 */
-	public ?string $t_prefix = null;
+	private ?string $t_prefix = null;
 
-	public string $t_method;
+	private string $t_method;
 
-	public ?Uri $t_submit_to;
+	private ?Uri $t_submit_to;
 
 	/**
 	 * Optional form key for form discovery and registry.
 	 *
 	 * @see FormRegistry
 	 */
-	public ?string $t_key = null;
+	private string $t_key;
 
 	/**
 	 * Controls incremental (multi-request) validation caching.
 	 *
 	 * @see RequestScope
 	 */
-	public ?RequestScope $t_resume_scope = null;
+	private ?RequestScope $t_resume_scope = null;
 
 	/**
 	 * Cache TTL in seconds for resume data. Defaults to 3600 (1 hour).
 	 */
-	public int $t_resume_ttl = 3600;
+	private int $t_resume_ttl = 3600;
+
+	/**
+	 * Counter used to generate unique auto-keys via {@see self::key()}.
+	 */
+	private static int $key_counter = 0;
+
+	private bool $t_registered = false;
 
 	/**
 	 * Form constructor.
@@ -107,6 +114,7 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 		$this->method($method);
 
 		$this->t_submit_to = $submit_to;
+		$this->t_key       = 'oz:form:auto:' . (++self::$key_counter);
 	}
 
 	/**
@@ -118,34 +126,80 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	}
 
 	/**
-	 * Registers this form in {@see FormRegistry} under the given key.
+	 * Sets the form key for registry and discovery.
 	 *
-	 * The key is used for form discovery: the router can serve the serialized form
-	 * definition at a discovery endpoint without running the route handler.
-	 *
-	 * @param string $key A non-empty identifier for this form
+	 * @param string $key The form key, must be non-empty and not whitespace-only string
 	 *
 	 * @return $this
 	 */
 	public function key(string $key): static
 	{
-		if ('' === $key) {
-			throw new InvalidArgumentException('Form key must be a non-empty string.');
+		if ('' === \trim($key)) {
+			throw new InvalidArgumentException('Form key must be non-empty and not whitespace-only string.');
 		}
 
-		$this->t_key = $key;
+		if ($this->t_key !== $key) {
+			$old         = $this->t_key;
+			$this->t_key = $key;
 
-		FormRegistry::register($key, $this);
+			if ($this->t_registered) {
+				FormRegistry::unregister($old);
+				FormRegistry::register($key, $this);
+			}
+		}
 
 		return $this;
 	}
 
 	/**
-	 * Returns the form key previously set via {@see self::key()}, or null if unset.
+	 * Registers the form in the {@see FormRegistry} under its current key.
 	 */
-	public function getKey(): ?string
+	public function register(): static
+	{
+		if (!$this->t_registered) {
+			FormRegistry::register($this->t_key, $this);
+			$this->t_registered = true;
+		}
+
+		return $this;
+	}
+
+	/**
+	 * Returns the form key.
+	 */
+	public function getKey(): string
 	{
 		return $this->t_key;
+	}
+
+	/**
+	 * Gets the registered steps.
+	 *
+	 * @return array<string, FormStep>
+	 */
+	public function getSteps(): array
+	{
+		return $this->t_steps;
+	}
+
+	/**
+	 * Gets the registered pre-validation rules.
+	 *
+	 * @return list<RuleSet>
+	 */
+	public function getPreValidationRules(): array
+	{
+		return $this->t_pre_validation_rules;
+	}
+
+	/**
+	 * Gets the registered post-validation rules.
+	 *
+	 * @return list<RuleSet>
+	 */
+	public function getPostValidationRules(): array
+	{
+		return $this->t_post_validation_rules;
 	}
 
 	/**
@@ -529,7 +583,7 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	 * are excluded from `expect` — the client cannot evaluate them.
 	 *
 	 * @return array{
-	 *  key: ?string,
+	 *  key: string,
 	 *  version: string,
 	 *  prefix: ?string,
 	 *  action: ?Uri,

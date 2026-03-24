@@ -21,6 +21,8 @@ namespace OZONE\Core\Forms;
  * It is primarily used for form discovery: the router can serve the
  * serialized form definition for a named form without executing the
  * route handler.
+ *
+ * @internal
  */
 final class FormRegistry
 {
@@ -40,6 +42,18 @@ final class FormRegistry
 	public static function register(string $key, Form $form): void
 	{
 		self::$registry[$key] = $form;
+	}
+
+	/**
+	 * Remove a previously registered form by its key.
+	 *
+	 * No-op when the key is not registered.
+	 *
+	 * @param string $key The form key to remove
+	 */
+	public static function unregister(string $key): void
+	{
+		unset(self::$registry[$key]);
 	}
 
 	/**

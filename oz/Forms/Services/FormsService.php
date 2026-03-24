@@ -222,7 +222,7 @@ final class FormsService extends Service
 
 		$found = null === $current_step_name; // for root case we start looking immediately
 
-		foreach ($form->t_steps as $step) {
+		foreach ($form->getSteps() as $step) {
 			$step_form = $step->build($cleaned_fd);
 
 			if ($found) {
@@ -289,7 +289,7 @@ final class FormsService extends Service
 		$unsafe_fd = $ri->getUnsafeFormData();
 		$results   = [];
 
-		foreach ($form->t_pre_validation_rules as $rule_set) {
+		foreach ($form->getPreValidationRules() as $rule_set) {
 			if ($rule_set->isServerOnly()) {
 				$passed    = $rule_set->check($unsafe_fd);
 				$results[] = [

@@ -173,8 +173,8 @@ final class FormStepTest extends TestCase
 		$sub  = new Form();
 		$step = $form->step('details', $sub);
 
-		self::assertArrayHasKey('details', $form->t_steps);
-		self::assertSame($step, $form->t_steps['details']);
+		self::assertArrayHasKey('details', $form->getSteps());
+		self::assertSame($step, $form->getSteps()['details']);
 	}
 
 	public function testFormDynamicStepRegistersInTSteps(): void
@@ -182,8 +182,8 @@ final class FormStepTest extends TestCase
 		$form = new Form();
 		$step = $form->dynamicStep('extra', static fn (FormData $fd) => new Form());
 
-		self::assertArrayHasKey('extra', $form->t_steps);
-		self::assertSame($step, $form->t_steps['extra']);
+		self::assertArrayHasKey('extra', $form->getSteps());
+		self::assertSame($step, $form->getSteps()['extra']);
 	}
 
 	public function testGetStepReturnsRegisteredStep(): void
