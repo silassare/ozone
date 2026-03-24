@@ -24,7 +24,7 @@ use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Roles\Enums\Role;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
-use OZONE\Core\Router\Enums\FormDocPolicy;
+use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use OZONE\Core\Router\Guards\AuthenticatedUserRouteGuard;
 use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\Guards\CSRFRouteGuard;
@@ -75,8 +75,8 @@ class RouteSharedOptions
 	 */
 	protected array $middlewares = [];
 
-	protected ?FormDeclaration $form_declaration = null;
-	private string $name                         = '';
+	protected ?RouteFormDeclaration $form_declaration = null;
+	private string $name                              = '';
 
 	/**
 	 * @var list<class-string<AuthenticationMethodInterface>>
@@ -448,33 +448,33 @@ class RouteSharedOptions
 	 * Sets the route's form declaration.
 	 *
 	 * Accepts a {@see Form} instance, a callable (with arity auto-detected via reflection),
-	 * or a pre-built {@see FormDeclaration} for full control.
+	 * or a pre-built {@see RouteFormDeclaration} for full control.
 	 *
-	 * Detection rules (when $form is not a FormDeclaration):
+	 * Detection rules (when $form is not a RouteFormDeclaration):
 	 *  - A Form instance or a zero-arg callable (`fn(): Form`) is treated as static:
 	 *    resolvable and documentable without a live {@see RouteInfo}.
 	 *  - A one-arg+ callable (`fn(RouteInfo $ri): ?Form`) is treated as dynamic:
 	 *    requires a live {@see RouteInfo} at request time and is opaque in API docs
-	 *    unless $policy is overridden or a preview is provided via {@see FormDeclaration::dynamic()}.
+	 *    unless $policy is overridden or a preview is provided via {@see RouteFormDeclaration::dynamic()}.
 	 *
-	 * The $policy parameter is ignored when $form is already a {@see FormDeclaration}.
+	 * The $policy parameter is ignored when $form is already a {@see RouteFormDeclaration}.
 	 *
-	 * @param callable|Form|FormDeclaration $form     the form, a factory, or a full declaration
-	 * @param FormDocPolicy                 $policy   documentation policy (AUTO by default)
-	 * @param bool                          $override whether to override an existing form declaration or throw an exception
+	 * @param callable|Form|RouteFormDeclaration $form     the form, a factory, or a full declaration
+	 * @param RouteFormDocPolicy                 $policy   documentation policy (AUTO by default)
+	 * @param bool                               $override whether to override an existing form declaration or throw an exception
 	 *
 	 * @return static
 	 */
-	public function form(callable|Form|FormDeclaration $form, FormDocPolicy $policy = FormDocPolicy::AUTO, bool $override = false): static
+	public function form(callable|Form|RouteFormDeclaration $form, RouteFormDocPolicy $policy = RouteFormDocPolicy::AUTO, bool $override = false): static
 	{
 		if (null !== $this->form_declaration && !$override) {
 			throw new RuntimeException('Form declaration is already set for this route.');
 		}
 
-		if ($form instanceof FormDeclaration) {
+		if ($form instanceof RouteFormDeclaration) {
 			$this->form_declaration = $form;
 		} else {
-			$this->form_declaration = FormDeclaration::make($form, $policy);
+			$this->form_declaration = RouteFormDeclaration::make($form, $policy);
 		}
 
 		return $this;
@@ -659,7 +659,7 @@ class RouteSharedOptions
 	 * Gets the merged form bundle for API doc generation (no live RouteInfo needed).
 	 *
 	 * Collects doc forms from the entire parent-group chain, merging them into one {@see Form}.
-	 * Declarations with policy {@see FormDocPolicy::OPAQUE} or {@see FormDocPolicy::DISCOVERY_ONLY},
+	 * Declarations with policy {@see RouteFormDocPolicy::OPAQUE} or {@see RouteFormDocPolicy::DISCOVERY_ONLY},
 	 * and dynamic factories without a preview callable, contribute nothing.
 	 *
 	 * @return null|Form
@@ -685,17 +685,17 @@ class RouteSharedOptions
 	 * Returns the effective documentation policy for this route.
 	 *
 	 * Returns the policy of the innermost (child-most) declaration in the chain.
-	 * Falls back to {@see FormDocPolicy::AUTO} when no declaration exists.
+	 * Falls back to {@see RouteFormDocPolicy::AUTO} when no declaration exists.
 	 *
-	 * @return FormDocPolicy
+	 * @return RouteFormDocPolicy
 	 */
-	public function getEffectiveDocPolicy(): FormDocPolicy
+	public function getEffectiveDocPolicy(): RouteFormDocPolicy
 	{
 		if (null !== $this->form_declaration) {
 			return $this->form_declaration->getPolicy();
 		}
 
-		return $this->parent?->getEffectiveDocPolicy() ?? FormDocPolicy::AUTO;
+		return $this->parent?->getEffectiveDocPolicy() ?? RouteFormDocPolicy::AUTO;
 	}
 
 	/**

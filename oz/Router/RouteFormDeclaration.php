@@ -16,12 +16,12 @@ namespace OZONE\Core\Router;
 use Closure;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Router\Enums\FormDocPolicy;
+use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use ReflectionException;
 use ReflectionFunction;
 
 /**
- * Class FormDeclaration.
+ * Class RouteFormDeclaration.
  *
  * Wraps a route's form definition together with its documentation policy.
  *
@@ -37,9 +37,9 @@ use ReflectionFunction;
  * time, not at invocation time, so mismatches surface early.
  *
  * @see RouteSharedOptions::form()
- * @see FormDocPolicy
+ * @see RouteFormDocPolicy
  */
-final class FormDeclaration
+final class RouteFormDeclaration
 {
 	/**
 	 * @var null|Form a Form instance — resolvable and documentable without RouteInfo
@@ -62,7 +62,7 @@ final class FormDeclaration
 	 */
 	private ?Closure $t_doc_preview = null;
 
-	private FormDocPolicy $t_policy;
+	private RouteFormDocPolicy $t_policy;
 
 	private function __construct() {}
 
@@ -79,24 +79,25 @@ final class FormDeclaration
 	 *    and documentable without a live RouteInfo.
 	 *  - A one-arg+ callable (`fn(RouteInfo $ri): ?Form`) is stored as dynamic: requires a live
 	 *    RouteInfo at request time; opaque in API docs unless $policy says otherwise.
-	 *    To expose a schema for a dynamic form use {@see FormDeclaration::dynamic()} instead.
+	 *    To expose a schema for a dynamic form use {@see RouteFormDeclaration::dynamic()} instead.
 	 *
 	 * The $policy parameter is applied as-is on top of the detection result.
-	 * {@see FormDocPolicy::AUTO} leaves the visibility determined by whether the form is static
-	 * (documentable) or dynamic (opaque). Use {@see FormDocPolicy::OPAQUE} or
-	 * {@see FormDocPolicy::DISCOVERY_ONLY} to explicitly hide the form from docs regardless.
+	 * {@see RouteFormDocPolicy::AUTO} leaves the visibility determined by whether the form is static
+	 * (documentable) or dynamic (opaque). Use {@see RouteFormDocPolicy::OPAQUE} or
+	 * {@see RouteFormDocPolicy::DISCOVERY_ONLY} to explicitly hide the form from docs regardless.
 	 *
-	 * @param callable|Form $form   the form definition or factory callable
-	 * @param FormDocPolicy $policy documentation policy (AUTO by default)
+	 * @param callable|Form      $form   the form definition or factory callable
+	 * @param RouteFormDocPolicy $policy documentation policy (AUTO by default)
 	 *
 	 * @return static
 	 */
-	public static function make(callable|Form $form, FormDocPolicy $policy = FormDocPolicy::AUTO): self
+	public static function make(callable|Form $form, RouteFormDocPolicy $policy = RouteFormDocPolicy::AUTO): self
 	{
 		$decl           = new self();
 		$decl->t_policy = $policy;
 
 		if ($form instanceof Form) {
+			$form->register();
 			$decl->t_static_form = $form;
 
 			return $decl;
@@ -140,7 +141,7 @@ final class FormDeclaration
 	public static function dynamic(callable $factory, ?callable $doc_preview = null): self
 	{
 		$decl                    = new self();
-		$decl->t_policy          = FormDocPolicy::AUTO;
+		$decl->t_policy          = RouteFormDocPolicy::AUTO;
 		$decl->t_dynamic_factory = Closure::fromCallable($factory);
 
 		if (null !== $doc_preview) {
@@ -162,7 +163,7 @@ final class FormDeclaration
 	 */
 	public static function opaque(callable|Form $form): self
 	{
-		return self::make($form, FormDocPolicy::OPAQUE);
+		return self::make($form, RouteFormDocPolicy::OPAQUE);
 	}
 
 	/**
@@ -177,7 +178,7 @@ final class FormDeclaration
 	 */
 	public static function discoveryOnly(callable|Form $form): self
 	{
-		return self::make($form, FormDocPolicy::DISCOVERY_ONLY);
+		return self::make($form, RouteFormDocPolicy::DISCOVERY_ONLY);
 	}
 
 	/**
@@ -216,14 +217,14 @@ final class FormDeclaration
 
 	/**
 	 * Returns the form for API doc generation (no RouteInfo needed). Returns null when:
-	 *  - The policy is {@see FormDocPolicy::OPAQUE} or {@see FormDocPolicy::DISCOVERY_ONLY}.
+	 *  - The policy is {@see RouteFormDocPolicy::OPAQUE} or {@see RouteFormDocPolicy::DISCOVERY_ONLY}.
 	 *  - The form is a dynamic factory with no preview callable.
 	 *
 	 * @return null|Form
 	 */
 	public function getDocForm(): ?Form
 	{
-		if (FormDocPolicy::OPAQUE === $this->t_policy || FormDocPolicy::DISCOVERY_ONLY === $this->t_policy) {
+		if (RouteFormDocPolicy::OPAQUE === $this->t_policy || RouteFormDocPolicy::DISCOVERY_ONLY === $this->t_policy) {
 			return null;
 		}
 
@@ -246,21 +247,21 @@ final class FormDeclaration
 	/**
 	 * Returns the documentation policy for this declaration.
 	 *
-	 * When the declared policy is {@see FormDocPolicy::AUTO} but the form is a dynamic factory
+	 * When the declared policy is {@see RouteFormDocPolicy::AUTO} but the form is a dynamic factory
 	 * with no doc preview, no schema can be surfaced at doc-gen time, so this method promotes
-	 * the effective policy to {@see FormDocPolicy::OPAQUE} — ensuring the `x-oz-form` extension
+	 * the effective policy to {@see RouteFormDocPolicy::OPAQUE} — ensuring the `x-oz-form` extension
 	 * is still added to the operation instead of the form silently disappearing from the spec.
 	 *
-	 * @return FormDocPolicy
+	 * @return RouteFormDocPolicy
 	 */
-	public function getPolicy(): FormDocPolicy
+	public function getPolicy(): RouteFormDocPolicy
 	{
 		if (
-			FormDocPolicy::AUTO === $this->t_policy
+			RouteFormDocPolicy::AUTO === $this->t_policy
 			&& null !== $this->t_dynamic_factory
 			&& null === $this->t_doc_preview
 		) {
-			return FormDocPolicy::OPAQUE;
+			return RouteFormDocPolicy::OPAQUE;
 		}
 
 		return $this->t_policy;

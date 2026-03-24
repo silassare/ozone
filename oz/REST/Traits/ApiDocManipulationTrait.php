@@ -43,7 +43,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\TypesSwitcher;
 use OZONE\Core\REST\RESTFulAPIRequest;
-use OZONE\Core\Router\Enums\FormDocPolicy;
+use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use OZONE\Core\Router\Route;
 
 /**
@@ -200,7 +200,7 @@ trait ApiDocManipulationTrait
 		if (self::isUndefined($op->requestBody)) {
 			$doc_policy    = $route_options->getEffectiveDocPolicy();
 
-			if (FormDocPolicy::OPAQUE === $doc_policy || FormDocPolicy::DISCOVERY_ONLY === $doc_policy) {
+			if (RouteFormDocPolicy::OPAQUE === $doc_policy || RouteFormDocPolicy::DISCOVERY_ONLY === $doc_policy) {
 				$oz_form_ext = ['oz-form' => ['name' => 'oz-form', 'value' => ['policy' => $doc_policy->value]]];
 
 				if (self::isUndefined($op->x)) {

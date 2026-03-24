@@ -187,4 +187,62 @@ final class FormValidationTest extends TestCase
 		self::assertArrayNotHasKey('ensure', $arr);
 		self::assertSame([], $arr['expect']);
 	}
+
+	// region prefilled data
+
+	public function testPrefilledSatisfiesRequiredField(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+		$form->field('email')->required(true);
+
+		$first_unsafe = new FormData(['name' => 'Alice', 'email' => 'alice@example.com']);
+		$first_clean  = $form->validate($first_unsafe);
+
+		self::assertSame('Alice', $first_clean->get('name'));
+		self::assertSame('alice@example.com', $first_clean->get('email'));
+
+		// second submission omits 'name' — prefilled data satisfies it
+		$second_clean = $form->validate(new FormData(['email' => 'bob@example.com']), $first_clean);
+
+		self::assertSame('bob@example.com', $second_clean->get('email'));
+		self::assertSame('Alice', $second_clean->get('name'));
+	}
+
+	public function testMissingRequiredFieldWithNoPrefilledThrows(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		$this->expectException(InvalidFormException::class);
+		$form->validate(new FormData([]));
+	}
+
+	public function testMissingRequiredFieldNotInPrefilledStillThrows(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+		$form->field('email')->required(true);
+
+		$prefilled = new FormData();
+		$prefilled->set('name', 'Alice');
+		// 'email' is required but missing from both input and prefilled
+
+		$this->expectException(InvalidFormException::class);
+		$form->validate(new FormData([]), $prefilled);
+	}
+
+	public function testPrefilledValueOverriddenByNewSubmission(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		$prefilled = new FormData();
+		$prefilled->set('name', 'Alice');
+
+		$clean = $form->validate(new FormData(['name' => 'Bob']), $prefilled);
+		self::assertSame('Bob', $clean->get('name'));
+	}
+
+	// endregion
 }

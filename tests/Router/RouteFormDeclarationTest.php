@@ -14,14 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Router;
 
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Router\Enums\FormDocPolicy;
-use OZONE\Core\Router\FormDeclaration;
+use OZONE\Core\Forms\FormRegistry;
+use OZONE\Core\Router\Enums\RouteFormDocPolicy;
+use OZONE\Core\Router\RouteFormDeclaration;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class FormDeclarationTest.
+ * Class RouteFormDeclarationTest.
  *
- * Tests for {@see FormDeclaration} — arity detection, policy resolution,
+ * Tests for {@see RouteFormDeclaration} — arity detection, policy resolution,
  * and doc-gen behaviour.  Runtime resolution (resolve()) is excluded here
  * as it requires a live RouteInfo/Context.
  *
@@ -29,12 +30,48 @@ use PHPUnit\Framework\TestCase;
  *
  * @coversNothing
  */
-final class FormDeclarationTest extends TestCase
+final class RouteFormDeclarationTest extends TestCase
 {
+	protected function setUp(): void
+	{
+		FormRegistry::clear();
+	}
+
+	public function testMakeWithFormInstanceRegistersForm(): void
+	{
+		$form = new Form();
+		$key  = $form->getKey();
+		RouteFormDeclaration::make($form);
+
+		self::assertSame($form, FormRegistry::get($key));
+	}
+
+	public function testMakeWithStaticFactoryDoesNotEagerlyRegister(): void
+	{
+		// Zero-arg factory — make() does NOT call the factory at declaration time.
+		$registered = false;
+		RouteFormDeclaration::make(static function () use (&$registered): Form {
+			$registered = true;
+
+			return new Form();
+		});
+
+		self::assertFalse($registered, 'Static factory must not be called eagerly by make().');
+	}
+
+	public function testMakeWithDynamicFactoryDoesNotRegister(): void
+	{
+		// One-arg factory — no form is registered at declaration time.
+		$before = FormRegistry::all();
+		RouteFormDeclaration::make(static fn ($ri) => new Form());
+
+		self::assertSame($before, FormRegistry::all());
+	}
+
 	public function testMakeWithFormInstanceIsNotDynamic(): void
 	{
 		$form = new Form();
-		$decl = FormDeclaration::make($form);
+		$decl = RouteFormDeclaration::make($form);
 
 		self::assertFalse($decl->isDynamic());
 	}
@@ -42,15 +79,15 @@ final class FormDeclarationTest extends TestCase
 	public function testMakeWithFormInstanceGetPolicyIsAuto(): void
 	{
 		$form = new Form();
-		$decl = FormDeclaration::make($form);
+		$decl = RouteFormDeclaration::make($form);
 
-		self::assertSame(FormDocPolicy::AUTO, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
 	}
 
 	public function testMakeWithFormInstanceGetDocFormReturnsForm(): void
 	{
 		$form = new Form();
-		$decl = FormDeclaration::make($form);
+		$decl = RouteFormDeclaration::make($form);
 
 		self::assertSame($form, $decl->getDocForm());
 	}
@@ -58,7 +95,7 @@ final class FormDeclarationTest extends TestCase
 	public function testMakeWithZeroArgCallableIsNotDynamic(): void
 	{
 		$form = new Form();
-		$decl = FormDeclaration::make(static fn () => $form);
+		$decl = RouteFormDeclaration::make(static fn () => $form);
 
 		self::assertFalse($decl->isDynamic());
 	}
@@ -67,7 +104,7 @@ final class FormDeclarationTest extends TestCase
 	{
 		$form  = new Form();
 		$calls = 0;
-		$decl  = FormDeclaration::make(static function () use ($form, &$calls): Form {
+		$decl  = RouteFormDeclaration::make(static function () use ($form, &$calls): Form {
 			++$calls;
 
 			return $form;
@@ -81,59 +118,59 @@ final class FormDeclarationTest extends TestCase
 
 	public function testMakeWithZeroArgCallableGetPolicyIsAuto(): void
 	{
-		$decl = FormDeclaration::make(static fn () => new Form());
+		$decl = RouteFormDeclaration::make(static fn () => new Form());
 
-		self::assertSame(FormDocPolicy::AUTO, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
 	}
 
 	public function testMakeWithOneArgCallableIsDynamic(): void
 	{
-		$decl = FormDeclaration::make(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::make(static fn ($ri) => new Form());
 
 		self::assertTrue($decl->isDynamic());
 	}
 
 	public function testMakeWithOneArgCallableGetDocFormReturnsNull(): void
 	{
-		$decl = FormDeclaration::make(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::make(static fn ($ri) => new Form());
 
 		self::assertNull($decl->getDocForm());
 	}
 
 	public function testMakeWithFormAndOpaquePolicy(): void
 	{
-		$decl = FormDeclaration::make(new Form(), FormDocPolicy::OPAQUE);
+		$decl = RouteFormDeclaration::make(new Form(), RouteFormDocPolicy::OPAQUE);
 
-		self::assertSame(FormDocPolicy::OPAQUE, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::OPAQUE, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
 	}
 
 	public function testMakeWithFormAndDiscoveryOnlyPolicy(): void
 	{
-		$decl = FormDeclaration::make(new Form(), FormDocPolicy::DISCOVERY_ONLY);
+		$decl = RouteFormDeclaration::make(new Form(), RouteFormDocPolicy::DISCOVERY_ONLY);
 
-		self::assertSame(FormDocPolicy::DISCOVERY_ONLY, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::DISCOVERY_ONLY, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
 	}
 
 	public function testMakeWithZeroArgCallableAndOpaquePolicy(): void
 	{
-		$decl = FormDeclaration::make(static fn () => new Form(), FormDocPolicy::OPAQUE);
+		$decl = RouteFormDeclaration::make(static fn () => new Form(), RouteFormDocPolicy::OPAQUE);
 
-		self::assertSame(FormDocPolicy::OPAQUE, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::OPAQUE, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
 	}
 
 	public function testDynamicWithoutPreviewIsDynamic(): void
 	{
-		$decl = FormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
 
 		self::assertTrue($decl->isDynamic());
 	}
 
 	public function testDynamicWithoutPreviewGetDocFormReturnsNull(): void
 	{
-		$decl = FormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
 
 		self::assertNull($decl->getDocForm());
 	}
@@ -142,16 +179,16 @@ final class FormDeclarationTest extends TestCase
 	{
 		// AUTO + dynamic + no preview -> promoted to OPAQUE so the form does not
 		// silently disappear from the spec.
-		$decl = FormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
 
-		self::assertSame(FormDocPolicy::OPAQUE, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::OPAQUE, $decl->getPolicy());
 	}
 
 	public function testDynamicWithPreviewGetDocFormCallsPreview(): void
 	{
 		$preview = new Form();
 		$calls   = 0;
-		$decl    = FormDeclaration::dynamic(
+		$decl    = RouteFormDeclaration::dynamic(
 			static fn ($ri) => new Form(),
 			static function () use ($preview, &$calls): Form {
 				++$calls;
@@ -168,74 +205,74 @@ final class FormDeclarationTest extends TestCase
 
 	public function testDynamicWithPreviewGetPolicyIsAuto(): void
 	{
-		$decl = FormDeclaration::dynamic(
+		$decl = RouteFormDeclaration::dynamic(
 			static fn ($ri) => new Form(),
 			static fn () => new Form()
 		);
 
 		// AUTO is NOT promoted when a preview is provided.
-		self::assertSame(FormDocPolicy::AUTO, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
 	}
 
 	public function testOpaqueWithFormHidesDocForm(): void
 	{
-		$decl = FormDeclaration::opaque(new Form());
+		$decl = RouteFormDeclaration::opaque(new Form());
 
-		self::assertSame(FormDocPolicy::OPAQUE, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::OPAQUE, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
 	}
 
 	public function testOpaqueWithZeroArgCallableHidesDocForm(): void
 	{
-		$decl = FormDeclaration::opaque(static fn () => new Form());
+		$decl = RouteFormDeclaration::opaque(static fn () => new Form());
 
-		self::assertSame(FormDocPolicy::OPAQUE, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::OPAQUE, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
 	}
 
 	public function testDiscoveryOnlyWithFormHidesDocForm(): void
 	{
-		$decl = FormDeclaration::discoveryOnly(new Form());
+		$decl = RouteFormDeclaration::discoveryOnly(new Form());
 
-		self::assertSame(FormDocPolicy::DISCOVERY_ONLY, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::DISCOVERY_ONLY, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
 	}
 
 	public function testGetPolicyNotPromotedForStaticForm(): void
 	{
-		$decl = FormDeclaration::make(new Form());
+		$decl = RouteFormDeclaration::make(new Form());
 
-		self::assertSame(FormDocPolicy::AUTO, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
 	}
 
 	public function testGetPolicyNotPromotedForStaticFactory(): void
 	{
-		$decl = FormDeclaration::make(static fn () => new Form());
+		$decl = RouteFormDeclaration::make(static fn () => new Form());
 
-		self::assertSame(FormDocPolicy::AUTO, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
 	}
 
 	public function testGetPolicyNotPromotedForDynamicWithPreview(): void
 	{
-		$decl = FormDeclaration::dynamic(
+		$decl = RouteFormDeclaration::dynamic(
 			static fn ($ri) => new Form(),
 			static fn () => new Form()
 		);
 
-		self::assertSame(FormDocPolicy::AUTO, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
 	}
 
 	public function testGetPolicyPromotedForDynamicWithoutPreview(): void
 	{
-		$decl = FormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
 
-		self::assertSame(FormDocPolicy::OPAQUE, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::OPAQUE, $decl->getPolicy());
 	}
 
 	public function testGetDocFormNullForOpaque(): void
 	{
 		$form = new Form();
-		$decl = FormDeclaration::make($form, FormDocPolicy::OPAQUE);
+		$decl = RouteFormDeclaration::make($form, RouteFormDocPolicy::OPAQUE);
 
 		self::assertNull($decl->getDocForm());
 	}
@@ -243,35 +280,35 @@ final class FormDeclarationTest extends TestCase
 	public function testGetDocFormNullForDiscoveryOnly(): void
 	{
 		$form = new Form();
-		$decl = FormDeclaration::make($form, FormDocPolicy::DISCOVERY_ONLY);
+		$decl = RouteFormDeclaration::make($form, RouteFormDocPolicy::DISCOVERY_ONLY);
 
 		self::assertNull($decl->getDocForm());
 	}
 
 	public function testGetDocFormNullForDynamicFactoryWithNoPreview(): void
 	{
-		$decl = FormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
 
 		self::assertNull($decl->getDocForm());
 	}
 
 	public function testIsDynamicFalseForStaticForm(): void
 	{
-		self::assertFalse(FormDeclaration::make(new Form())->isDynamic());
+		self::assertFalse(RouteFormDeclaration::make(new Form())->isDynamic());
 	}
 
 	public function testIsDynamicFalseForStaticFactory(): void
 	{
-		self::assertFalse(FormDeclaration::make(static fn () => new Form())->isDynamic());
+		self::assertFalse(RouteFormDeclaration::make(static fn () => new Form())->isDynamic());
 	}
 
 	public function testIsDynamicTrueForDynamicFactory(): void
 	{
-		self::assertTrue(FormDeclaration::dynamic(static fn ($ri) => new Form())->isDynamic());
+		self::assertTrue(RouteFormDeclaration::dynamic(static fn ($ri) => new Form())->isDynamic());
 	}
 
 	public function testIsDynamicTrueForOneArgMakeCallable(): void
 	{
-		self::assertTrue(FormDeclaration::make(static fn ($ri) => new Form())->isDynamic());
+		self::assertTrue(RouteFormDeclaration::make(static fn ($ri) => new Form())->isDynamic());
 	}
 }

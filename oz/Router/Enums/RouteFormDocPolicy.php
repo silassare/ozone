@@ -16,7 +16,7 @@ namespace OZONE\Core\Router\Enums;
 use OZONE\Core\Router\RouteSharedOptions;
 
 /**
- * Enum FormDocPolicy.
+ * Enum RouteFormDocPolicy.
  *
  * Controls how a route's form declaration is represented in generated API documentation.
  *
@@ -37,14 +37,14 @@ use OZONE\Core\Router\RouteSharedOptions;
  * ->form(fn (RouteInfo $ri) => buildForm($ri))
  *
  * // Explicitly opaque (internal form, not shown in docs):
- * ->form(new MyForm(), FormDocPolicy::OPAQUE)
- * ->form(FormDeclaration::opaque(fn (RouteInfo $ri) => ...))
+ * ->form(new MyForm(), RouteFormDocPolicy::OPAQUE)
+ * ->form(RouteFormDeclaration::opaque(fn (RouteInfo $ri) => ...))
  *
  * // Explicit discovery (client fetches schema from GET /forms/{key}):
- * ->form(FormDeclaration::discoveryOnly(fn (RouteInfo $ri) => ...))
+ * ->form(RouteFormDeclaration::discoveryOnly(fn (RouteInfo $ri) => ...))
  * ```
  */
-enum FormDocPolicy: string
+enum RouteFormDocPolicy: string
 {
 	/**
 	 * Automatic detection.
