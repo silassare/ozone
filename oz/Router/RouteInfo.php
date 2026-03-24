@@ -237,7 +237,7 @@ final class RouteInfo
 			if (null !== $resume_scope) {
 				$scope_id = $resume_scope->resolveId($this->context);
 
-				$cache     = CacheManager::persistent('form.resume');
+				$cache     = CacheManager::persistent('oz.form.resume');
 				$cache_key = $bundle->buildResumeCacheKey($scope_id);
 				$cached    = $cache->get($cache_key);
 
