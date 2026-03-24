@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router;
 
+use InvalidArgumentException;
+use Override;
+
 /**
  * Class RouteOptions.
  */
@@ -33,5 +36,19 @@ final class RouteOptions extends RouteSharedOptions
 		parent::__construct($path, $group);
 
 		$this->name('route_' . (++self::$route_count));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function name(string $name): static
+	{
+		// only group name can be empty
+		if ('' === \trim($name)) {
+			throw new InvalidArgumentException('Route name cannot be empty or whitespace-only.');
+		}
+
+		return parent::name($name);
 	}
 }

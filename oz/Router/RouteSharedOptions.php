@@ -585,6 +585,8 @@ class RouteSharedOptions
 			}
 		}
 
+		// we remove any leading/trailing dots and replace multiple consecutive dots with a single one to avoid issues with empty group names
+		// because empty group names are allowed but can lead to messy route names like "admin..list" which should be normalized to "admin.list"
 		return \trim(\str_replace('..', '.', $name), '.');
 	}
 

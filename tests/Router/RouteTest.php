@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Router;
 
+use InvalidArgumentException;
 use OZONE\Core\Router\Router;
 use OZONE\Tests\TestUtils;
 use PHPUnit\Framework\TestCase;
@@ -41,6 +42,18 @@ final class RouteTest extends TestCase
 
 		$articlesGetById = $router->getRoute('articles.get_by_id');
 		self::assertTrue($articlesGetById->isDynamic());
+	}
+
+	public function testEmptyName(): void
+	{
+		$router = TestUtils::router();
+
+		$route = $router->get('/empty-name', static fn () => null);
+
+		self::expectException(InvalidArgumentException::class);
+		self::expectExceptionMessage('Route name cannot be empty or whitespace-only.');
+
+		$route->name('');
 	}
 
 	public function testGetPath(): void
