@@ -51,7 +51,7 @@ final class RouteTest extends TestCase
 		$route = $router->get('/empty-name', static fn () => null);
 
 		self::expectException(InvalidArgumentException::class);
-		self::expectExceptionMessage('Route name cannot be empty or whitespace-only.');
+		self::expectExceptionMessage('Route name must be non-empty and not whitespace-only string.');
 
 		$route->name('');
 	}

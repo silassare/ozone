@@ -46,7 +46,7 @@ final class RouteOptions extends RouteSharedOptions
 	{
 		// only group name can be empty
 		if ('' === \trim($name)) {
-			throw new InvalidArgumentException('Route name cannot be empty or whitespace-only.');
+			throw new InvalidArgumentException('Route name must be non-empty and not whitespace-only string.');
 		}
 
 		return parent::name($name);
