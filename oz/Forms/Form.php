@@ -621,19 +621,29 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 				continue;
 			}
 
-			$form->field($column->getName())
+			$field = $form->field($column->getName())
 				->label($column->getMeta()->get('field.label'))
 				->description($column->getMeta()->get('field.description'))
 				->help($column->getMeta()->get('field.help'))
-				// we don't merge all as meta may contains sensitive data,
-				// we keep api.doc meta because it's used to generate API documentation and is not sensitive
-				->setMetaKey('api.doc', $column->getMeta()->get('api.doc', []))
-				// frontend.options may contains presentation hints that are not sensitive, we can merge them safely
-				->setMetaKey('frontend.options', $column->getMeta()->get('frontend.options', []))
+
 				->type($type)
 				->required(!$type->isNullable());
+
+			self::safeFrontendMeta($column, $field);
 		}
 
 		return $form;
+	}
+
+	/**
+	 * Safely merges meta from a source MetaCapableInterface to a target one, filtering out any sensitive data.
+	 */
+	public static function safeFrontendMeta(MetaCapableInterface $from, MetaCapableInterface $to): void
+	{
+		// we don't merge all as meta may contains sensitive data,
+		// we keep api.doc meta because it's used to generate API documentation and is not sensitive
+		$to->setMetaKey('api.doc', $from->getMeta()->get('api.doc', []))
+			// frontend.options may contains presentation hints that are not sensitive, we can merge them safely
+			->setMetaKey('frontend', $from->getMeta()->get('frontend', []));
 	}
 }

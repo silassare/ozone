@@ -16,7 +16,9 @@ namespace OZONE\Core\Forms;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Gobl\DBAL\Types\TypeString;
+use Gobl\DBAL\Types\Utils\TypeUtils;
 use Override;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Lang\I18nMessage;
 use PHPUtils\Interfaces\ArrayCapableInterface;
@@ -93,7 +95,8 @@ class Field implements ArrayCapableInterface, MetaCapableInterface
 	 */
 	public function doubleCheck(): static
 	{
-		// TODO: the current field type may change so find a workaround to avoid issues with the confirm field type
+		// syncWithDoubleCheck() is called from type(), required(), and multiple(), keeping the confirm
+		// field's type/required/multiple in sync whenever the primary field's settings change later.
 		if (null === $this->t_double_check) {
 			$confirm = $this->t_form->field($this->t_name . '_confirm');
 
@@ -415,7 +418,7 @@ class Field implements ArrayCapableInterface, MetaCapableInterface
 		return [
 			'ref' 	       => $this->getRef(),
 			'name'        => $this->t_name,
-			'type'        => $this->t_type,
+			'type'        => $this->t_type instanceof TypeInterface ? self::cleanType($this->t_type) : $this->t_type,
 			'label'       => $this->t_label,
 			'description' => $this->t_description,
 			'help'        => $this->t_help,
@@ -423,6 +426,31 @@ class Field implements ArrayCapableInterface, MetaCapableInterface
 			'hidden'      => $this->t_hide,
 			'if'          => $this->t_if,
 		];
+	}
+
+	/**
+	 * Creates a clean type instance for frontend consumption by stripping out
+	 * any meta information that may contain sensitive data.
+	 *
+	 * @param TypeInterface $type
+	 *
+	 * @return TypeInterface
+	 */
+	public static function cleanType(TypeInterface $type): TypeInterface
+	{
+		$type_array = $type->toArray();
+
+		unset($type_array['meta']);
+
+		$tn = TypeUtils::getTypeInstance($type->getName(), $type_array);
+
+		if (null === $tn) {
+			throw new RuntimeException('Failed to clean type for frontend: unable to reconstruct type instance from array representation');
+		}
+
+		Form::safeFrontendMeta($type, $tn);
+
+		return $tn;
 	}
 
 	/**

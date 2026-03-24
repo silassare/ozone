@@ -83,7 +83,10 @@ class TypesSwitcher implements ArrayCapableInterface
 	{
 		return [
 			'type'  => 'types-switcher',
-			'types' => $this->types,
+			'types' => \array_map(static fn ($item) => [
+				'type' => Field::cleanType($item['type']),
+				'rule' => $item['rule'],
+			], $this->types),
 		];
 	}
 }
