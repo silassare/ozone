@@ -76,7 +76,7 @@ subprocesses against temporary scaffolded projects so regressions are caught end
 
 ---
 
-### [ ] P. `Forms/` — Complete partial form (resume) integration
+### [x] P. `Forms/` — Complete partial form (resume) integration
 
 **Current behaviour:** The resume cache system (`Form::resume()`, `RouteInfo::checkRouteForm()`) reads
 and writes partial `FormData` to cache but several pieces are incomplete or missing.
@@ -158,7 +158,7 @@ and writes partial `FormData` to cache but several pieces are incomplete or miss
 | L   | `REST/ApiDoc.php`                             | Low        | None       | pending     |
 | E   | `Services/QRCode.php`                         | Low        | Low-Medium | pending     |
 | 0   | Integration test suite                        | Low-Medium | Low        | in progress |
-| P   | `Forms/` — partial form resume                | Low-Medium | Low        | pending     |
+| P   | `Forms/` — partial form resume                | Low-Medium | Low        | ✅ done     |
 | K   | `Auth/Auth2FA.php`                            | **High**   | **High**   | pending     |
 | D   | `oz/oz_templates/...access.grant.form.blate`  | Low        | None       | ✅ done     |
 | C   | `Auth/Views/LogoutAndRedirectView.php`        | Low        | Low        | ✅ done     |

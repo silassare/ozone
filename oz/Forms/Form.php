@@ -297,7 +297,11 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	 */
 	public function step(string $name, callable|self $form, ?RuleSet $only_if = null): FormStep
 	{
-		return FormStep::static($this, $name, $form, $only_if);
+		$step = FormStep::static($this, $name, $form, $only_if);
+
+		$this->t_steps[$name] = $step;
+
+		return $step;
 	}
 
 	/**
@@ -311,7 +315,23 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	 */
 	public function dynamicStep(string $name, callable $factory, ?RuleSet $only_if = null): FormStep
 	{
-		return FormStep::dynamic($this, $name, $factory, $only_if);
+		$step = FormStep::dynamic($this, $name, $factory, $only_if);
+
+		$this->t_steps[$name] = $step;
+
+		return $step;
+	}
+
+	/**
+	 * Retrieves a previously registered step by name.
+	 *
+	 * @param string $name The step name
+	 *
+	 * @return null|FormStep
+	 */
+	public function getStep(string $name): ?FormStep
+	{
+		return $this->t_steps[$name] ?? null;
 	}
 
 	/**
@@ -431,14 +451,15 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Validates the form.
 	 *
-	 * @param FormData      $unsafe_fd
-	 * @param null|FormData $cleaned_fd
+	 * @param FormData      $unsafe_fd  Raw (unsafe) form data from the request
+	 * @param null|FormData $cleaned_fd Pre-filled validated data (e.g. from a resume cache); merged with newly validated fields
+	 * @param bool          $skip_steps When true, step sub-forms are not traversed. Useful in step-by-step validation where only root-level fields are validated
 	 *
 	 * @return FormData
 	 *
 	 * @throws InvalidFormException
 	 */
-	public function validate(FormData $unsafe_fd, ?FormData $cleaned_fd = null): FormData
+	public function validate(FormData $unsafe_fd, ?FormData $cleaned_fd = null, bool $skip_steps = false): FormData
 	{
 		foreach ($this->t_pre_validation_rules as $rule) {
 			if ($rule->check($unsafe_fd)) {
@@ -488,12 +509,14 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 			]);
 		}
 
-		foreach ($this->t_steps as $step) {
-			if (!($step_form = $step->build($cleaned_fd))) {
-				continue;
-			}
+		if (!$skip_steps) {
+			foreach ($this->t_steps as $step) {
+				if (!($step_form = $step->build($cleaned_fd))) {
+					continue;
+				}
 
-			$step_form->validate($unsafe_fd, $cleaned_fd);
+				$step_form->validate($unsafe_fd, $cleaned_fd);
+			}
 		}
 
 		return $cleaned_fd;
@@ -507,12 +530,15 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	 *
 	 * @return array{
 	 *  key: ?string,
+	 *  version: string,
 	 *  prefix: ?string,
 	 *  action: ?Uri,
 	 *  method: string,
 	 *  fields: list<Field>,
 	 *  steps: list<FormStep>,
-	 *  expect: list<RuleSet>
+	 *  expect: list<RuleSet>,
+	 *  resume_scope: ?string,
+	 *  resume_ttl: ?int
 	 * }
 	 */
 	#[Override]

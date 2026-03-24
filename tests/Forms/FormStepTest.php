@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Forms;
 
 use InvalidArgumentException;
+use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
@@ -196,6 +197,192 @@ final class FormStepTest extends TestCase
 		self::assertNotNull($arr['if']);
 		self::assertInstanceOf(RuleSet::class, $arr['if']);
 		self::assertSame('details', $arr['ref']);
+	}
+
+	// -----------------------------------------------------------
+	// Form::step() / Form::dynamicStep() registration
+	// -----------------------------------------------------------
+
+	public function testFormStepRegistersInTSteps(): void
+	{
+		$form = new Form();
+		$sub  = new Form();
+		$step = $form->step('details', $sub);
+
+		self::assertArrayHasKey('details', $form->t_steps);
+		self::assertSame($step, $form->t_steps['details']);
+	}
+
+	public function testFormDynamicStepRegistersInTSteps(): void
+	{
+		$form = new Form();
+		$step = $form->dynamicStep('extra', static fn (FormData $fd) => new Form());
+
+		self::assertArrayHasKey('extra', $form->t_steps);
+		self::assertSame($step, $form->t_steps['extra']);
+	}
+
+	// -----------------------------------------------------------
+	// Form::getStep()
+	// -----------------------------------------------------------
+
+	public function testGetStepReturnsRegisteredStep(): void
+	{
+		$form = new Form();
+		$form->step('details', new Form());
+
+		self::assertInstanceOf(FormStep::class, $form->getStep('details'));
+	}
+
+	public function testGetStepReturnsNullForUnknownName(): void
+	{
+		self::assertNull((new Form())->getStep('unknown'));
+	}
+
+	// -----------------------------------------------------------
+	// Form::validate() skip_steps
+	// -----------------------------------------------------------
+
+	public function testValidateSkipStepsDoesNotValidateStepFields(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		$sub = new Form();
+		$sub->field('bio')->required(true); // required but absent from unsafe_fd
+		$form->step('profile', $sub);
+
+		// skip_steps=true: 'bio' is not checked even though it is required in the step
+		$clean = $form->validate($this->makeFormData(['name' => 'Alice']), null, skip_steps: true);
+
+		self::assertSame('Alice', $clean->get('name'));
+		self::assertFalse($clean->has('bio'));
+	}
+
+	public function testValidateWithoutSkipStepsEnforcesStepRequiredFields(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		$sub = new Form();
+		$sub->field('bio')->required(true);
+		$form->step('profile', $sub);
+
+		$this->expectException(InvalidFormException::class);
+
+		$form->validate($this->makeFormData(['name' => 'Alice']));
+	}
+
+	public function testValidateWithStepsSucceedsWhenAllFieldsPresent(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		$sub = new Form();
+		$sub->field('bio')->required(true);
+		$form->step('profile', $sub);
+
+		// step sub-form has no prefix, so 'bio' is the field ref (not 'profile.bio')
+		$clean = $form->validate($this->makeFormData(['name' => 'Alice', 'bio' => 'Hello']));
+
+		self::assertSame('Alice', $clean->get('name'));
+		self::assertSame('Hello', $clean->get('bio'));
+	}
+
+	// -----------------------------------------------------------
+	// Form::validate() conditional steps via FormStep::isEnabled()
+	// -----------------------------------------------------------
+
+	public function testConditionalStepSkippedWhenConditionFalse(): void
+	{
+		$form = new Form();
+		$form->field('type')->required(true);
+
+		$sub  = new Form();
+		$sub->field('extra')->required(true);
+		$step = $form->step('advanced', $sub);
+		$step->if()->eq('type', 'advanced');
+
+		// type=basic -> step disabled -> 'extra' not checked
+		$clean = $form->validate($this->makeFormData(['type' => 'basic']));
+
+		self::assertSame('basic', $clean->get('type'));
+		self::assertFalse($clean->has('extra'));
+	}
+
+	public function testConditionalStepEnforcedWhenConditionTrue(): void
+	{
+		$form = new Form();
+		$form->field('type')->required(true);
+
+		$sub  = new Form();
+		$sub->field('extra')->required(true);
+		$step = $form->step('advanced', $sub);
+		$step->if()->eq('type', 'advanced');
+
+		$this->expectException(InvalidFormException::class);
+
+		// type=advanced -> step active -> 'extra' is required but missing
+		$form->validate($this->makeFormData(['type' => 'advanced']));
+	}
+
+	// -----------------------------------------------------------
+	// Form::validate() dynamic steps
+	// -----------------------------------------------------------
+
+	public function testDynamicStepReceivesCleanedFormData(): void
+	{
+		$form = new Form();
+		$form->field('mode')->required(true);
+
+		$form->dynamicStep('dyn', static function (FormData $fd) {
+			$f = new Form();
+
+			if ('verbose' === $fd->get('mode')) {
+				$f->field('detail')->required(true);
+			}
+
+			return $f;
+		});
+
+		// mode=verbose requires 'detail' but it is missing
+		$this->expectException(InvalidFormException::class);
+		$form->validate($this->makeFormData(['mode' => 'verbose']));
+	}
+
+	public function testDynamicStepNoRequiredFieldWhenModeSimple(): void
+	{
+		$form = new Form();
+		$form->field('mode')->required(true);
+
+		$form->dynamicStep('dyn', static function (FormData $fd) {
+			$f = new Form();
+
+			if ('verbose' === $fd->get('mode')) {
+				$f->field('detail')->required(true);
+			}
+
+			return $f;
+		});
+
+		$clean = $form->validate($this->makeFormData(['mode' => 'simple']));
+		self::assertSame('simple', $clean->get('mode'));
+	}
+
+	// -----------------------------------------------------------
+	// Form::getVersion() reflects registered steps
+	// -----------------------------------------------------------
+
+	public function testVersionChangesAfterStepAdded(): void
+	{
+		$form   = new Form();
+		$form->field('name');
+		$before = $form->getVersion();
+
+		$form->step('details', new Form());
+		$after = $form->getVersion();
+
+		self::assertNotSame($before, $after);
 	}
 
 	// -----------------------------------------------------------
