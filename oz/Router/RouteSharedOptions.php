@@ -43,6 +43,7 @@ class RouteSharedOptions
 	public const PRIORITY_RUN_LAST    = -1;
 	public const PRIORITY_RUN_DEFAULT = 0;
 
+	protected readonly ?RouteGroup $parent;
 	protected readonly string $path;
 	protected int $priority = self::PRIORITY_RUN_DEFAULT;
 
@@ -75,9 +76,7 @@ class RouteSharedOptions
 	protected array $middlewares = [];
 
 	protected ?FormDeclaration $form_declaration = null;
-
-	protected readonly ?RouteGroup $parent;
-	private string $name = '';
+	private string $name                         = '';
 
 	/**
 	 * @var list<class-string<AuthenticationMethodInterface>>
@@ -460,13 +459,18 @@ class RouteSharedOptions
 	 *
 	 * The $policy parameter is ignored when $form is already a {@see FormDeclaration}.
 	 *
-	 * @param callable|Form|FormDeclaration $form   the form, a factory, or a full declaration
-	 * @param FormDocPolicy                 $policy documentation policy (AUTO by default)
+	 * @param callable|Form|FormDeclaration $form     the form, a factory, or a full declaration
+	 * @param FormDocPolicy                 $policy   documentation policy (AUTO by default)
+	 * @param bool                          $override whether to override an existing form declaration or throw an exception
 	 *
 	 * @return static
 	 */
-	public function form(callable|Form|FormDeclaration $form, FormDocPolicy $policy = FormDocPolicy::AUTO): static
+	public function form(callable|Form|FormDeclaration $form, FormDocPolicy $policy = FormDocPolicy::AUTO, bool $override = false): static
 	{
+		if (null !== $this->form_declaration && !$override) {
+			throw new RuntimeException('Form declaration is already set for this route.');
+		}
+
 		if ($form instanceof FormDeclaration) {
 			$this->form_declaration = $form;
 		} else {

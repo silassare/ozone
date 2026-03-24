@@ -41,250 +41,238 @@ use ReflectionFunction;
  */
 final class FormDeclaration
 {
-    /**
-     * @var null|Form a Form instance — resolvable and documentable without RouteInfo
-     */
-    private ?Form $t_static_form = null;
+	/**
+	 * @var null|Form a Form instance — resolvable and documentable without RouteInfo
+	 */
+	private ?Form $t_static_form = null;
 
-    /**
-     * @var null|Closure zero-arg factory: fn():Form — resolvable and documentable without RouteInfo
-     */
-    private ?Closure $t_static_factory = null;
+	/**
+	 * @var null|Closure zero-arg factory: fn():Form — resolvable and documentable without RouteInfo
+	 */
+	private ?Closure $t_static_factory = null;
 
-    /**
-     * @var null|Closure one-arg+ factory: fn(RouteInfo):?Form — requires a live RouteInfo at runtime
-     */
-    private ?Closure $t_dynamic_factory = null;
+	/**
+	 * @var null|Closure one-arg+ factory: fn(RouteInfo):?Form — requires a live RouteInfo at runtime
+	 */
+	private ?Closure $t_dynamic_factory = null;
 
-    /**
-     * @var null|Closure zero-arg doc preview: fn():Form — paired with a dynamic factory to expose
-     *                   a schema in API docs without a live RouteInfo
-     */
-    private ?Closure $t_doc_preview = null;
+	/**
+	 * @var null|Closure zero-arg doc preview: fn():Form — paired with a dynamic factory to expose
+	 *                   a schema in API docs without a live RouteInfo
+	 */
+	private ?Closure $t_doc_preview = null;
 
-    private FormDocPolicy $t_policy;
+	private FormDocPolicy $t_policy;
 
-    private function __construct() {}
+	private function __construct() {}
 
-    public function __destruct()
-    {
-        unset($this->t_static_form, $this->t_static_factory, $this->t_dynamic_factory, $this->t_doc_preview);
-    }
+	public function __destruct()
+	{
+		unset($this->t_static_form, $this->t_static_factory, $this->t_dynamic_factory, $this->t_doc_preview);
+	}
 
-	// -----------------------------------------------------------
-	// Named constructors
-	// -----------------------------------------------------------
+	/**
+	 * Creates a declaration from a callable or Form with arity auto-detection.
+	 *
+	 * Detection rules:
+	 *  - A Form instance or a zero-arg callable (`fn(): Form`) is stored as static: resolvable
+	 *    and documentable without a live RouteInfo.
+	 *  - A one-arg+ callable (`fn(RouteInfo $ri): ?Form`) is stored as dynamic: requires a live
+	 *    RouteInfo at request time; opaque in API docs unless $policy says otherwise.
+	 *    To expose a schema for a dynamic form use {@see FormDeclaration::dynamic()} instead.
+	 *
+	 * The $policy parameter is applied as-is on top of the detection result.
+	 * {@see FormDocPolicy::AUTO} leaves the visibility determined by whether the form is static
+	 * (documentable) or dynamic (opaque). Use {@see FormDocPolicy::OPAQUE} or
+	 * {@see FormDocPolicy::DISCOVERY_ONLY} to explicitly hide the form from docs regardless.
+	 *
+	 * @param callable|Form $form   the form definition or factory callable
+	 * @param FormDocPolicy $policy documentation policy (AUTO by default)
+	 *
+	 * @return static
+	 */
+	public static function make(callable|Form $form, FormDocPolicy $policy = FormDocPolicy::AUTO): self
+	{
+		$decl           = new self();
+		$decl->t_policy = $policy;
 
-    /**
-     * Creates a declaration from a callable or Form with arity auto-detection.
-     *
-     * Detection rules:
-     *  - A Form instance or a zero-arg callable (`fn(): Form`) is stored as static: resolvable
-     *    and documentable without a live RouteInfo.
-     *  - A one-arg+ callable (`fn(RouteInfo $ri): ?Form`) is stored as dynamic: requires a live
-     *    RouteInfo at request time; opaque in API docs unless $policy says otherwise.
-     *    To expose a schema for a dynamic form use {@see FormDeclaration::dynamic()} instead.
-     *
-     * The $policy parameter is applied as-is on top of the detection result.
-     * {@see FormDocPolicy::AUTO} leaves the visibility determined by whether the form is static
-     * (documentable) or dynamic (opaque). Use {@see FormDocPolicy::OPAQUE} or
-     * {@see FormDocPolicy::DISCOVERY_ONLY} to explicitly hide the form from docs regardless.
-     *
-     * @param callable|Form $form   the form definition or factory callable
-     * @param FormDocPolicy $policy documentation policy (AUTO by default)
-     *
-     * @return static
-     */
-    public static function make(callable|Form $form, FormDocPolicy $policy = FormDocPolicy::AUTO): self
-    {
-        $decl           = new self();
-        $decl->t_policy = $policy;
+		if ($form instanceof Form) {
+			$decl->t_static_form = $form;
 
-        if ($form instanceof Form) {
-            $decl->t_static_form = $form;
+			return $decl;
+		}
 
-            return $decl;
-        }
+		// Detect callable arity via reflection.
+		// 0 required params -> static (can be called at doc-gen time without RouteInfo).
+		// 1+ required params -> dynamic (requires RouteInfo at request time).
+		$closure    = Closure::fromCallable($form);
+		$is_dynamic = true;
 
-        // Detect callable arity via reflection.
-        // 0 required params -> static (can be called at doc-gen time without RouteInfo).
-        // 1+ required params -> dynamic (requires RouteInfo at request time).
-        $closure    = Closure::fromCallable($form);
-        $is_dynamic = true;
+		try {
+			$is_dynamic = (new ReflectionFunction($closure))->getNumberOfRequiredParameters() > 0;
+		} catch (ReflectionException) {
+			// Conservative default: treat as dynamic when reflection is unavailable.
+		}
 
-        try {
-            $is_dynamic = (new ReflectionFunction($closure))->getNumberOfRequiredParameters() > 0;
-        } catch (ReflectionException) {
-            // Conservative default: treat as dynamic when reflection is unavailable.
-        }
+		if ($is_dynamic) {
+			$decl->t_dynamic_factory = $closure;
+		} else {
+			$decl->t_static_factory = $closure;
+		}
 
-        if ($is_dynamic) {
-            $decl->t_dynamic_factory = $closure;
-        } else {
-            $decl->t_static_factory = $closure;
-        }
+		return $decl;
+	}
 
-        return $decl;
-    }
+	/**
+	 * Creates an explicitly dynamic declaration with an optional doc-gen preview.
+	 *
+	 * The runtime $factory receives a live RouteInfo and may return null to skip validation.
+	 * Even for zero-arg callables, this named constructor always stores the form as dynamic.
+	 *
+	 * When $doc_preview is provided, the declaration is documentable: {@see getDocForm()} calls
+	 * the preview instead of returning null.  Without it the form is opaque in API docs.
+	 *
+	 * @param callable(RouteInfo):?Form $factory     runtime factory — receives a live RouteInfo
+	 * @param null|(callable():Form)    $doc_preview zero-arg preview factory for doc generation
+	 *
+	 * @return static
+	 */
+	public static function dynamic(callable $factory, ?callable $doc_preview = null): self
+	{
+		$decl                    = new self();
+		$decl->t_policy          = FormDocPolicy::AUTO;
+		$decl->t_dynamic_factory = Closure::fromCallable($factory);
 
-    /**
-     * Creates an explicitly dynamic declaration with an optional doc-gen preview.
-     *
-     * The runtime $factory receives a live RouteInfo and may return null to skip validation.
-     * Even for zero-arg callables, this named constructor always stores the form as dynamic.
-     *
-     * When $doc_preview is provided, the declaration is documentable: {@see getDocForm()} calls
-     * the preview instead of returning null.  Without it the form is opaque in API docs.
-     *
-     * @param callable(RouteInfo):?Form $factory     runtime factory — receives a live RouteInfo
-     * @param null|(callable():Form)    $doc_preview zero-arg preview factory for doc generation
-     *
-     * @return static
-     */
-    public static function dynamic(callable $factory, ?callable $doc_preview = null): self
-    {
-        $decl                    = new self();
-        $decl->t_policy          = FormDocPolicy::AUTO;
-        $decl->t_dynamic_factory = Closure::fromCallable($factory);
+		if (null !== $doc_preview) {
+			$decl->t_doc_preview = Closure::fromCallable($doc_preview);
+		}
 
-        if (null !== $doc_preview) {
-            $decl->t_doc_preview = Closure::fromCallable($doc_preview);
-        }
+		return $decl;
+	}
 
-        return $decl;
-    }
+	/**
+	 * Creates a declaration that is explicitly hidden from API docs.
+	 *
+	 * The form works normally at request time. The generated OpenAPI spec adds
+	 * `x-oz-form: {policy: opaque}` to the operation instead of a `requestBody` schema.
+	 *
+	 * @param callable|Form $form
+	 *
+	 * @return static
+	 */
+	public static function opaque(callable|Form $form): self
+	{
+		return self::make($form, FormDocPolicy::OPAQUE);
+	}
 
-    /**
-     * Creates a declaration that is explicitly hidden from API docs.
-     *
-     * The form works normally at request time. The generated OpenAPI spec adds
-     * `x-oz-form: {policy: opaque}` to the operation instead of a `requestBody` schema.
-     *
-     * @param callable|Form $form
-     *
-     * @return static
-     */
-    public static function opaque(callable|Form $form): self
-    {
-        return self::make($form, FormDocPolicy::OPAQUE);
-    }
+	/**
+	 * Creates a declaration that signals clients to use the form discovery endpoint.
+	 *
+	 * The form works normally at request time. The generated OpenAPI spec adds
+	 * `x-oz-form: {policy: discovery_only}` to the operation instead of embedding the schema.
+	 *
+	 * @param callable|Form $form
+	 *
+	 * @return static
+	 */
+	public static function discoveryOnly(callable|Form $form): self
+	{
+		return self::make($form, FormDocPolicy::DISCOVERY_ONLY);
+	}
 
-    /**
-     * Creates a declaration that signals clients to use the form discovery endpoint.
-     *
-     * The form works normally at request time. The generated OpenAPI spec adds
-     * `x-oz-form: {policy: discovery_only}` to the operation instead of embedding the schema.
-     *
-     * @param callable|Form $form
-     *
-     * @return static
-     */
-    public static function discoveryOnly(callable|Form $form): self
-    {
-        return self::make($form, FormDocPolicy::DISCOVERY_ONLY);
-    }
+	/**
+	 * Resolves the form at request time. Returns null when the factory returns null.
+	 *
+	 * @param RouteInfo $ri
+	 *
+	 * @return null|Form
+	 *
+	 * @throws RuntimeException when the factory returns an unexpected type
+	 */
+	public function resolve(RouteInfo $ri): ?Form
+	{
+		if (null !== $this->t_static_form) {
+			return $this->t_static_form;
+		}
 
-	// -----------------------------------------------------------
-	// Runtime use
-	// -----------------------------------------------------------
+		if (null !== $this->t_static_factory) {
+			$result = ($this->t_static_factory)();
+		} elseif (null !== $this->t_dynamic_factory) {
+			$result = ($this->t_dynamic_factory)($ri);
+		} else {
+			return null;
+		}
 
-    /**
-     * Resolves the form at request time. Returns null when the factory returns null.
-     *
-     * @param RouteInfo $ri
-     *
-     * @return null|Form
-     *
-     * @throws RuntimeException when the factory returns an unexpected type
-     */
-    public function resolve(RouteInfo $ri): ?Form
-    {
-        if (null !== $this->t_static_form) {
-            return $this->t_static_form;
-        }
+		if (null === $result || $result instanceof Form) {
+			return $result;
+		}
 
-        if (null !== $this->t_static_factory) {
-            $result = ($this->t_static_factory)();
-        } elseif (null !== $this->t_dynamic_factory) {
-            $result = ($this->t_dynamic_factory)($ri);
-        } else {
-            return null;
-        }
+		throw new RuntimeException(\sprintf(
+			'Form factory must return an instance of "%s" or null, got: %s.',
+			Form::class,
+			\get_debug_type($result),
+		));
+	}
 
-        if (null === $result || $result instanceof Form) {
-            return $result;
-        }
+	/**
+	 * Returns the form for API doc generation (no RouteInfo needed). Returns null when:
+	 *  - The policy is {@see FormDocPolicy::OPAQUE} or {@see FormDocPolicy::DISCOVERY_ONLY}.
+	 *  - The form is a dynamic factory with no preview callable.
+	 *
+	 * @return null|Form
+	 */
+	public function getDocForm(): ?Form
+	{
+		if (FormDocPolicy::OPAQUE === $this->t_policy || FormDocPolicy::DISCOVERY_ONLY === $this->t_policy) {
+			return null;
+		}
 
-        throw new RuntimeException(\sprintf(
-            'Form factory must return an instance of "%s" or null, got: %s.',
-            Form::class,
-            \get_debug_type($result),
-        ));
-    }
+		if (null !== $this->t_static_form) {
+			return $this->t_static_form;
+		}
 
-	// -----------------------------------------------------------
-	// Doc-gen use
-	// -----------------------------------------------------------
+		if (null !== $this->t_static_factory) {
+			return ($this->t_static_factory)();
+		}
 
-    /**
-     * Returns the form for API doc generation (no RouteInfo needed). Returns null when:
-     *  - The policy is {@see FormDocPolicy::OPAQUE} or {@see FormDocPolicy::DISCOVERY_ONLY}.
-     *  - The form is a dynamic factory with no preview callable.
-     *
-     * @return null|Form
-     */
-    public function getDocForm(): ?Form
-    {
-        if (FormDocPolicy::OPAQUE === $this->t_policy || FormDocPolicy::DISCOVERY_ONLY === $this->t_policy) {
-            return null;
-        }
+		if (null !== $this->t_doc_preview) {
+			return ($this->t_doc_preview)();
+		}
 
-        if (null !== $this->t_static_form) {
-            return $this->t_static_form;
-        }
+		// Dynamic factory without a preview: opaque in docs.
+		return null;
+	}
 
-        if (null !== $this->t_static_factory) {
-            return ($this->t_static_factory)();
-        }
+	/**
+	 * Returns the documentation policy for this declaration.
+	 *
+	 * When the declared policy is {@see FormDocPolicy::AUTO} but the form is a dynamic factory
+	 * with no doc preview, no schema can be surfaced at doc-gen time, so this method promotes
+	 * the effective policy to {@see FormDocPolicy::OPAQUE} — ensuring the `x-oz-form` extension
+	 * is still added to the operation instead of the form silently disappearing from the spec.
+	 *
+	 * @return FormDocPolicy
+	 */
+	public function getPolicy(): FormDocPolicy
+	{
+		if (
+			FormDocPolicy::AUTO === $this->t_policy
+			&& null !== $this->t_dynamic_factory
+			&& null === $this->t_doc_preview
+		) {
+			return FormDocPolicy::OPAQUE;
+		}
 
-        if (null !== $this->t_doc_preview) {
-            return ($this->t_doc_preview)();
-        }
+		return $this->t_policy;
+	}
 
-        // Dynamic factory without a preview: opaque in docs.
-        return null;
-    }
-
-    /**
-     * Returns the documentation policy for this declaration.
-     *
-     * When the declared policy is {@see FormDocPolicy::AUTO} but the form is a dynamic factory
-     * with no doc preview, no schema can be surfaced at doc-gen time, so this method promotes
-     * the effective policy to {@see FormDocPolicy::OPAQUE} — ensuring the `x-oz-form` extension
-     * is still added to the operation instead of the form silently disappearing from the spec.
-     *
-     * @return FormDocPolicy
-     */
-    public function getPolicy(): FormDocPolicy
-    {
-        if (
-            FormDocPolicy::AUTO === $this->t_policy
-            && null !== $this->t_dynamic_factory
-            && null === $this->t_doc_preview
-        ) {
-            return FormDocPolicy::OPAQUE;
-        }
-
-        return $this->t_policy;
-    }
-
-    /**
-     * Returns true when the form requires a live RouteInfo to be resolved at request time.
-     *
-     * @return bool
-     */
-    public function isDynamic(): bool
-    {
-        return null !== $this->t_dynamic_factory;
-    }
+	/**
+	 * Returns true when the form requires a live RouteInfo to be resolved at request time.
+	 *
+	 * @return bool
+	 */
+	public function isDynamic(): bool
+	{
+		return null !== $this->t_dynamic_factory;
+	}
 }
