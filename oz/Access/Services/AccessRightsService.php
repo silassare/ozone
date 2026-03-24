@@ -285,14 +285,13 @@ class AccessRightsService extends Service
 			'description' => 'Get the access rights of the currently authenticated user.',
 		]);
 
-		$op = $doc->addOperationFromRoute(self::ROUTE_READ_AS_ADMIN, 'GET', 'Get User Access Rights (Admin)', [
+		$doc->addOperationFromRoute(self::ROUTE_READ_AS_ADMIN, 'GET', 'Get User Access Rights (Admin)', [
 			$doc->success(['list' => $doc->array($doc->object([]))]),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Access.readAsAdmin',
 			'description' => 'Get the access rights of a specific user (admin only).',
 		]);
-		$op->requestBody = $doc->requestBodyFromForm(AuthUsers::selectorForm());
 
 		$doc->addOperationFromRoute(self::ROUTE_LIST, 'GET', 'List All Access Rights', [
 			$doc->success(['list' => $doc->array($doc->object([]))]),
@@ -302,32 +301,29 @@ class AccessRightsService extends Service
 			'description' => 'List all registered atomic actions (admin only).',
 		]);
 
-		$op = $doc->addOperationFromRoute(self::ROUTE_ALLOW, 'POST', 'Allow Access Rights', [
+		$doc->addOperationFromRoute(self::ROUTE_ALLOW, 'POST', 'Allow Access Rights', [
 			$doc->success([]),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Access.allow',
 			'description' => 'Grant one or more access rights to a user (admin only).',
 		]);
-		$op->requestBody = $doc->requestBodyFromForm(self::buildAllowForm());
 
-		$op = $doc->addOperationFromRoute(self::ROUTE_DENY, 'POST', 'Deny Access Rights', [
+		$doc->addOperationFromRoute(self::ROUTE_DENY, 'POST', 'Deny Access Rights', [
 			$doc->success([]),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Access.deny',
 			'description' => 'Revoke one or more access rights from a user (admin only).',
 		]);
-		$op->requestBody = $doc->requestBodyFromForm(self::buildDenyForm());
 
-		$op = $doc->addOperationFromRoute(self::ROUTE_UPDATE, 'POST', 'Update Access Rights', [
+		$doc->addOperationFromRoute(self::ROUTE_UPDATE, 'POST', 'Update Access Rights', [
 			$doc->success([]),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Access.update',
 			'description' => 'Atomically grant and revoke access rights on a user (admin only).',
 		]);
-		$op->requestBody = $doc->requestBodyFromForm(self::buildUpdateForm());
 	}
 
 	/**

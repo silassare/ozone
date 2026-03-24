@@ -149,7 +149,7 @@ final class Password extends Service
 	{
 		$tag = $doc->addTag('Auth', 'Authentication endpoints.');
 
-		$op = $doc->addOperationFromRoute(
+		$doc->addOperationFromRoute(
 			self::ROUTE_PASS_EDIT_BY_AS_ADMIN,
 			'POST',
 			'Edit Password (Admin)',
@@ -162,11 +162,8 @@ final class Password extends Service
 				'description' => 'Change a user password (admin only).',
 			]
 		);
-		$op->requestBody = $doc->requestBodyFromForm(
-			(new Form())->merge(self::newPassForm())->merge(AuthUsers::selectorForm())
-		);
 
-		$op = $doc->addOperationFromRoute(
+		$doc->addOperationFromRoute(
 			self::ROUTE_PASS_EDIT_AS_SELF,
 			'POST',
 			'Edit Password (Self)',
@@ -178,9 +175,6 @@ final class Password extends Service
 				'operationId' => 'Auth.editPasswordAsSelf',
 				'description' => 'Change the current user own password.',
 			]
-		);
-		$op->requestBody = $doc->requestBodyFromForm(
-			(new Form())->merge(self::newPassForm())->merge(self::currentPassForm())
 		);
 	}
 }

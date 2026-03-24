@@ -131,7 +131,7 @@ final class AccountRecovery extends Service
 	public static function apiDoc(ApiDoc $doc): void
 	{
 		$tag = $doc->addTag('Auth', 'Authentication endpoints.');
-		$op  = $doc->addOperationFromRoute(
+		$doc->addOperationFromRoute(
 			self::ROUTE_ACCOUNT_RECOVERY,
 			'POST',
 			'Account Recovery',
@@ -144,6 +144,5 @@ final class AccountRecovery extends Service
 				'description' => 'Reset a user password after email or phone ownership verification.',
 			]
 		);
-		$op->requestBody = $doc->requestBodyFromForm(self::editPassForm());
 	}
 }

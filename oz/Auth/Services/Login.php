@@ -79,7 +79,7 @@ final class Login extends Service
 	public static function apiDoc(ApiDoc $doc): void
 	{
 		$tag = $doc->addTag('Auth', 'Authentication endpoints.');
-		$op  = $doc->addOperationFromRoute(
+		$doc->addOperationFromRoute(
 			self::ROUTE_LOGIN,
 			'POST',
 			'Login',
@@ -92,6 +92,5 @@ final class Login extends Service
 				'description' => 'Authenticate a user and start a session.',
 			]
 		);
-		$op->requestBody = $doc->requestBodyFromForm(AuthUsers::logInForm());
 	}
 }

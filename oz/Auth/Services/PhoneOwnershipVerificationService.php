@@ -50,14 +50,13 @@ class PhoneOwnershipVerificationService extends Service
 	public static function apiDoc(ApiDoc $doc): void
 	{
 		$tag = $doc->addTag('Authorization', 'Authorization flow endpoints.');
-		$op  = $doc->addOperationFromRoute(self::ROUTE_VERIFY_PHONE, 'POST', 'Verify Phone Ownership', [
+		$doc->addOperationFromRoute(self::ROUTE_VERIFY_PHONE, 'POST', 'Verify Phone Ownership', [
 			$doc->success(['ref' => $doc->string('The authorization reference.')]),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Auth.verifyPhone',
 			'description' => 'Start a phone number ownership verification flow.',
 		]);
-		$op->requestBody = $doc->requestBodyFromForm(self::buildInitForm());
 	}
 
 	/**

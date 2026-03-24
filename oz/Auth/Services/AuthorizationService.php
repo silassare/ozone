@@ -185,23 +185,21 @@ class AuthorizationService extends Service
 	{
 		$tag = $doc->addTag('Authorization', 'Authorization flow endpoints.');
 
-		$op = $doc->addOperationFromRoute(self::ROUTE_AUTHORIZE, 'POST', 'Authorize', [
+		$doc->addOperationFromRoute(self::ROUTE_AUTHORIZE, 'POST', 'Authorize', [
 			$doc->success(['state' => $doc->string('The authorization state.')]),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Auth.authorize',
 			'description' => 'Submit a code or token to complete an authorization flow.',
 		]);
-		$op->requestBody = $doc->requestBodyFromForm(self::buildAuthorizeForm());
 
-		$op = $doc->addOperationFromRoute(self::ROUTE_REFRESH, 'POST', 'Refresh', [
+		$doc->addOperationFromRoute(self::ROUTE_REFRESH, 'POST', 'Refresh', [
 			$doc->success(['state' => $doc->string('The authorization state.')]),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Auth.refresh',
 			'description' => 'Refresh an authorization flow credentials.',
 		]);
-		$op->requestBody = $doc->requestBodyFromForm(self::buildRefreshForm());
 
 		$doc->addOperationFromRoute(self::ROUTE_STATE, 'GET', 'Get State', [
 			$doc->success(['state' => $doc->string('The current authorization state.')]),

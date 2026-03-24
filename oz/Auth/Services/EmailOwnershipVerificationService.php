@@ -50,14 +50,13 @@ class EmailOwnershipVerificationService extends Service
 	public static function apiDoc(ApiDoc $doc): void
 	{
 		$tag = $doc->addTag('Authorization', 'Authorization flow endpoints.');
-		$op  = $doc->addOperationFromRoute(self::ROUTE_VERIFY_EMAIL, 'POST', 'Verify Email Ownership', [
+		$doc->addOperationFromRoute(self::ROUTE_VERIFY_EMAIL, 'POST', 'Verify Email Ownership', [
 			$doc->success(['ref' => $doc->string('The authorization reference.')]),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Auth.verifyEmail',
 			'description' => 'Start an email address ownership verification flow.',
 		]);
-		$op->requestBody = $doc->requestBodyFromForm(self::buildInitForm());
 	}
 
 	/**

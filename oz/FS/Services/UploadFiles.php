@@ -359,14 +359,13 @@ class UploadFiles extends Service
 			]),
 		]);
 
-		$op = $doc->addOperationFromRoute(self::CHUNK_START_ROUTE, 'POST', 'Start Chunked Upload', [
+		$doc->addOperationFromRoute(self::CHUNK_START_ROUTE, 'POST', 'Start Chunked Upload', [
 			$doc->success([self::PARAM_REF => $ref_schema]),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Files.chunkStart',
 			'description' => 'Initialize a chunked file upload session.',
 		]);
-		$op->requestBody = $doc->requestBodyFromForm(self::uploadChunkStartForm());
 
 		$op = $doc->addOperationFromRoute(self::CHUNK_ADD_ROUTE, 'POST', 'Add Chunk', [
 			$doc->success([self::PARAM_FILES => $files_schema]),

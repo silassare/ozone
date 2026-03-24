@@ -93,7 +93,7 @@ final class SignUp extends Service
 	public static function apiDoc(ApiDoc $doc): void
 	{
 		$tag = $doc->addTag('Users', 'User management endpoints.');
-		$op  = $doc->addOperationFromRoute(
+		$doc->addOperationFromRoute(
 			self::ROUTE_SIGN_UP,
 			'POST',
 			'Sign Up',
@@ -106,6 +106,5 @@ final class SignUp extends Service
 				'description' => 'Create a new user account. Requires prior email or phone ownership verification.',
 			]
 		);
-		$op->requestBody = $doc->requestBodyFromForm(Form::fromTable(OZUser::TABLE_NAME));
 	}
 }
