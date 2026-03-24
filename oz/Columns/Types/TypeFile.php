@@ -287,8 +287,8 @@ class TypeFile extends Type
 		}
 
 		$wrap = $this->isTemporary()
-			? static fn (string $v) => ValidatedFile::forTempPath($v)
-			: static fn (string $v) => ValidatedFile::forFileID($v);
+			? static fn (string $v): ValidatedFile => ValidatedFile::forTempPath($v)
+			: static fn (string $v): ValidatedFile => ValidatedFile::forFileID($v);
 
 		if ($this->isMultiple()) {
 			/** @var string[] $ids */

@@ -99,7 +99,7 @@ final class BlatePlugin implements BootHookReceiverInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function boot()
+	public static function boot(): void
 	{
 		// auto load blate configs
 		Blate::autoLoad(OZ_OZONE_DIR); // oz root

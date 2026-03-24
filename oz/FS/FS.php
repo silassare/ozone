@@ -363,7 +363,7 @@ class FS
 			throw new RuntimeException(\sprintf('Undefined file storage driver: %s', $name));
 		}
 
-		$factory = static function () use ($driver, $name) {
+		$factory = static function () use ($driver, $name): StorageInterface {
 			if (!\is_subclass_of($driver, StorageInterface::class)) {
 				throw new RuntimeException(\sprintf(
 					'Files storage driver "%s" should implements "%s".',

@@ -40,11 +40,11 @@ final class RoutePathParser
 	/**
 	 * Checks if a parameter is valid.
 	 *
-	 * @param $str
+	 * @param string $str
 	 *
 	 * @return bool
 	 */
-	public static function isValidParameter($str): bool
+	public static function isValidParameter(string $str): bool
 	{
 		return 1 === \preg_match(Route::ROUTE_PARAM_REG, $str);
 	}

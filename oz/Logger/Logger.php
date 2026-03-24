@@ -29,9 +29,11 @@ class Logger implements LoggerInterface
 {
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @param string|Stringable|Throwable $message
 	 */
 	#[Override]
-	public function log($level, mixed $message, array $context = []): void
+	public function log($level, string|Stringable|Throwable $message, array $context = []): void
 	{
 		self::writer()->write($level, $message, $context);
 	}

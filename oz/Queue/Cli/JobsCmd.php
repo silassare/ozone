@@ -93,7 +93,7 @@ final class JobsCmd extends Command
 		}
 	}
 
-	private static function finish(KliArgs $args)
+	private static function finish(KliArgs $args): void
 	{
 		$store = $args->get('store');
 		$ref   = $args->get('ref');
@@ -102,10 +102,7 @@ final class JobsCmd extends Command
 			->getOrFail($ref));
 	}
 
-	/**
-	 * @throws KliException
-	 */
-	private static function run(KliArgs $args)
+	private static function run(KliArgs $args): void
 	{
 		$store   = $args->get('store');
 		$job_ref = $args->get('job');

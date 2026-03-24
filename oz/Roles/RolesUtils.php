@@ -237,21 +237,25 @@ class RolesUtils
 
 		$fresh && $cache->clear();
 
-		$factory = static function () use ($user) {
-			try {
-				$qb = new OZRolesQuery();
+		$factory
+			/**
+			 * @return OZRole[]
+			 */
+			= static function () use ($user): array {
+				try {
+					$qb = new OZRolesQuery();
 
-				return $qb->whereOwnerIdIs($user->getAuthIdentifier())
-					->whereOwnerTypeIs($user->getAuthUserType())
-					->whereIsValid()
-					->find()
-					->fetchAllClass();
-			} catch (Throwable $t) {
-				throw new RuntimeException('Unable to load user roles.', [
-					'_user' => AuthUsers::selector($user),
-				], $t);
-			}
-		};
+					return $qb->whereOwnerIdIs($user->getAuthIdentifier())
+						->whereOwnerTypeIs($user->getAuthUserType())
+						->whereIsValid()
+						->find()
+						->fetchAllClass();
+				} catch (Throwable $t) {
+					throw new RuntimeException('Unable to load user roles.', [
+						'_user' => AuthUsers::selector($user),
+					], $t);
+				}
+			};
 
 		return $cache
 			->factory($cache_key, $factory)

@@ -125,7 +125,7 @@ final class Assets implements BootHookReceiverInterface
 			return $path;
 		}
 
-		$factory = static function () use ($path, $sources_group) {
+		$factory = static function () use ($path, $sources_group): string|false {
 			$found = false;
 
 			foreach ($sources_group as $group) {

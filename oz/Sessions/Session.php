@@ -278,7 +278,7 @@ final class Session implements BootHookReceiverInterface
 			return null;
 		}
 
-		$factory = static function () use ($sid) {
+		$factory = static function () use ($sid): ?OZSession {
 			try {
 				$sqb = new OZSessionsQuery();
 

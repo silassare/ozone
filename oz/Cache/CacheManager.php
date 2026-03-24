@@ -177,7 +177,7 @@ final class CacheManager
 	public function getItems(array $keys = []): array
 	{
 		foreach ($keys as $key) {
-			self::assertValidKey($key);
+			self::assertValidKey((string) $key);
 		}
 
 		$items = $this->cache->getMultiple($keys);
@@ -304,11 +304,11 @@ final class CacheManager
 	}
 
 	/**
-	 * @param $key
+	 * @param string $key
 	 */
-	private static function assertValidKey($key): void
+	private static function assertValidKey(string $key): void
 	{
-		if (!\is_string($key) || '' === $key) {
+		if ('' === $key) {
 			throw new InvalidArgumentException('Cache key must be a non empty string.');
 		}
 	}

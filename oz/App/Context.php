@@ -608,7 +608,7 @@ final class Context
 				'SERVER_ADDR',
 			];
 
-			$transformers['HTTP_X_FORWARDED_HOST'] = static function ($value) {
+			$transformers['HTTP_X_FORWARDED_HOST'] = static function ($value): string {
 				$parts = \explode(',', $value);
 
 				return \trim(\end($parts));

@@ -626,7 +626,7 @@ final class Router
 			throw new RuntimeException('Possible recursive redirection.', $history);
 		}
 
-		$debug_data = static fn (Route $route, array $data = []) => [
+		$debug_data = static fn (Route $route, array $data = []): array => [
 			'route' => $route->getPath(),
 		] + $data;
 

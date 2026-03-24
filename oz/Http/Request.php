@@ -22,6 +22,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 use RuntimeException;
+use SimpleXMLElement;
 
 /**
  * Class Request.
@@ -158,7 +159,7 @@ class Request extends Message implements ServerRequestInterface
 			$this->headers->set('Host', $this->uri->getHost());
 		}
 
-		$json_parser = static function ($input) {
+		$json_parser = static function ($input): ?array {
 			try {
 				$result = \json_decode($input, true, 512, \JSON_THROW_ON_ERROR);
 
@@ -171,13 +172,9 @@ class Request extends Message implements ServerRequestInterface
 			return null;
 		};
 
-		$xml_parser = static function ($input) {
-			$backup        = (\PHP_VERSION_ID < 80000) ? \libxml_disable_entity_loader(true) : null;
+		$xml_parser = static function ($input): ?SimpleXMLElement {
 			$backup_errors = \libxml_use_internal_errors(true);
 			$result        = \simplexml_load_string($input);
-
-			null !== $backup && \libxml_disable_entity_loader($backup);
-
 			\libxml_clear_errors();
 			\libxml_use_internal_errors($backup_errors);
 
