@@ -162,13 +162,9 @@ final class Password extends Service
 				'description' => 'Change a user password (admin only).',
 			]
 		);
-		$op->requestBody = $doc->requestBody([
-			'application/json' => $doc->json($doc->object([
-				AuthUsers::FIELD_AUTH_USER_TYPE => $doc->string('The user type.'),
-				AuthUsers::FIELD_AUTH_USER_ID   => $doc->string('The user ID.'),
-				self::FIELD_PASS_NEW            => $doc->string('The new password.'),
-			])),
-		]);
+		$op->requestBody = $doc->requestBodyFromForm(
+			(new Form())->merge(self::newPassForm())->merge(AuthUsers::selectorForm())
+		);
 
 		$op = $doc->addOperationFromRoute(
 			self::ROUTE_PASS_EDIT_AS_SELF,
@@ -183,11 +179,8 @@ final class Password extends Service
 				'description' => 'Change the current user own password.',
 			]
 		);
-		$op->requestBody = $doc->requestBody([
-			'application/json' => $doc->json($doc->object([
-				self::FIELD_PASS_CURRENT => $doc->string('The current password.'),
-				self::FIELD_PASS_NEW     => $doc->string('The new password.'),
-			])),
-		]);
+		$op->requestBody = $doc->requestBodyFromForm(
+			(new Form())->merge(self::newPassForm())->merge(self::currentPassForm())
+		);
 	}
 }

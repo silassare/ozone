@@ -366,13 +366,7 @@ class UploadFiles extends Service
 			'operationId' => 'Files.chunkStart',
 			'description' => 'Initialize a chunked file upload session.',
 		]);
-		$op->requestBody = $doc->requestBody([
-			'application/json' => $doc->json($doc->object([
-				self::PARAM_NAME => $doc->string('The file name.'),
-				self::PARAM_SIZE => $doc->integer('The total file size in bytes.'),
-				self::PARAM_TYPE => $doc->string('The MIME type.'),
-			])),
-		]);
+		$op->requestBody = $doc->requestBodyFromForm(self::uploadChunkStartForm());
 
 		$op = $doc->addOperationFromRoute(self::CHUNK_ADD_ROUTE, 'POST', 'Add Chunk', [
 			$doc->success([self::PARAM_FILES => $files_schema]),

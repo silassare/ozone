@@ -192,12 +192,7 @@ class AuthorizationService extends Service
 			'operationId' => 'Auth.authorize',
 			'description' => 'Submit a code or token to complete an authorization flow.',
 		]);
-		$op->requestBody = $doc->requestBody([
-			'application/json' => $doc->json($doc->object([
-				'code'  => $doc->string('A one-time code (mutually exclusive with token).'),
-				'token' => $doc->string('An authorization token (mutually exclusive with code).'),
-			])),
-		]);
+		$op->requestBody = $doc->requestBodyFromForm(self::buildAuthorizeForm());
 
 		$op = $doc->addOperationFromRoute(self::ROUTE_REFRESH, 'POST', 'Refresh', [
 			$doc->success(['state' => $doc->string('The authorization state.')]),
@@ -206,11 +201,7 @@ class AuthorizationService extends Service
 			'operationId' => 'Auth.refresh',
 			'description' => 'Refresh an authorization flow credentials.',
 		]);
-		$op->requestBody = $doc->requestBody([
-			'application/json' => $doc->json($doc->object([
-				'refresh_key' => $doc->string('The refresh key.'),
-			])),
-		]);
+		$op->requestBody = $doc->requestBodyFromForm(self::buildRefreshForm());
 
 		$doc->addOperationFromRoute(self::ROUTE_STATE, 'GET', 'Get State', [
 			$doc->success(['state' => $doc->string('The current authorization state.')]),

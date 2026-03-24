@@ -57,11 +57,7 @@ class PhoneOwnershipVerificationService extends Service
 			'operationId' => 'Auth.verifyPhone',
 			'description' => 'Start a phone number ownership verification flow.',
 		]);
-		$op->requestBody = $doc->requestBody([
-			'application/json' => $doc->json($doc->object([
-				'phone' => $doc->string('The phone number to verify (E.164 format).'),
-			])),
-		]);
+		$op->requestBody = $doc->requestBodyFromForm(self::buildInitForm());
 	}
 
 	/**

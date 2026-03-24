@@ -57,11 +57,7 @@ class EmailOwnershipVerificationService extends Service
 			'operationId' => 'Auth.verifyEmail',
 			'description' => 'Start an email address ownership verification flow.',
 		]);
-		$op->requestBody = $doc->requestBody([
-			'application/json' => $doc->json($doc->object([
-				'email' => $doc->string('The email address to verify.'),
-			])),
-		]);
+		$op->requestBody = $doc->requestBodyFromForm(self::buildInitForm());
 	}
 
 	/**

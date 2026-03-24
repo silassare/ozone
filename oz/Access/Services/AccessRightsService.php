@@ -24,6 +24,7 @@ use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\UnauthenticatedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Response;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Roles\Roles;
 use OZONE\Core\Roles\RolesUtils;
 use OZONE\Core\Router\RouteInfo;
@@ -35,6 +36,18 @@ use Throwable;
  */
 class AccessRightsService extends Service
 {
+	public const ROUTE_READ_ME       = 'oz:access-rights.me';
+
+	public const ROUTE_READ_AS_ADMIN = 'oz:access-rights.read';
+
+	public const ROUTE_LIST          = 'oz:access-rights.list';
+
+	public const ROUTE_ALLOW         = 'oz:access-rights.allow';
+
+	public const ROUTE_DENY          = 'oz:access-rights.deny';
+
+	public const ROUTE_UPDATE        = 'oz:access-rights.update';
+
 	public function readForMe(RouteInfo $ri): Response
 	{
 		// we only gets user access right with through this auth method as this auth method could be scoped
@@ -218,37 +231,103 @@ class AccessRightsService extends Service
 		$router->group('/access-rights', static function (Router $router) {
 			$router->get('/me', static function (RouteInfo $ri) {
 				return (new self($ri))->readForMe($ri);
-			})->withAuthenticatedUser();
+			})->name(self::ROUTE_READ_ME)->withAuthenticatedUser();
 
 			$router->get('/read', static function (RouteInfo $ri) {
 				return (new self($ri))->readAsAdmin($ri);
 			})
+				->name(self::ROUTE_READ_AS_ADMIN)
 				->form(AuthUsers::selectorForm(...))
 				->withRole(RolesUtils::admin());
 
 			$router->get('/list', static function (RouteInfo $ri) {
 				return (new self($ri))->list($ri);
 			})
+				->name(self::ROUTE_LIST)
 				->withRole(RolesUtils::admin());
 
 			$router->post('/allow', static function (RouteInfo $ri) {
 				return (new self($ri))->allow($ri);
 			})
+				->name(self::ROUTE_ALLOW)
 				->form(self::buildAllowForm(...))
 				->withRole(RolesUtils::admin());
 
 			$router->post('/deny', static function (RouteInfo $ri) {
 				return (new self($ri))->deny($ri);
 			})
+				->name(self::ROUTE_DENY)
 				->form(self::buildDenyForm(...))
 				->withRole(RolesUtils::admin());
 
 			$router->post('/update', static function (RouteInfo $ri) {
 				return (new self($ri))->update($ri);
 			})
+				->name(self::ROUTE_UPDATE)
 				->form(self::buildUpdateForm(...))
 				->withRole(RolesUtils::admin());
 		});
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function apiDoc(ApiDoc $doc): void
+	{
+		$tag = $doc->addTag('Access', 'Access rights management endpoints.');
+
+		$doc->addOperationFromRoute(self::ROUTE_READ_ME, 'GET', 'Get My Access Rights', [
+			$doc->success(['list' => $doc->array($doc->object([]))]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Access.readMe',
+			'description' => 'Get the access rights of the currently authenticated user.',
+		]);
+
+		$op = $doc->addOperationFromRoute(self::ROUTE_READ_AS_ADMIN, 'GET', 'Get User Access Rights (Admin)', [
+			$doc->success(['list' => $doc->array($doc->object([]))]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Access.readAsAdmin',
+			'description' => 'Get the access rights of a specific user (admin only).',
+		]);
+		$op->requestBody = $doc->requestBodyFromForm(AuthUsers::selectorForm());
+
+		$doc->addOperationFromRoute(self::ROUTE_LIST, 'GET', 'List All Access Rights', [
+			$doc->success(['list' => $doc->array($doc->object([]))]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Access.list',
+			'description' => 'List all registered atomic actions (admin only).',
+		]);
+
+		$op = $doc->addOperationFromRoute(self::ROUTE_ALLOW, 'POST', 'Allow Access Rights', [
+			$doc->success([]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Access.allow',
+			'description' => 'Grant one or more access rights to a user (admin only).',
+		]);
+		$op->requestBody = $doc->requestBodyFromForm(self::buildAllowForm());
+
+		$op = $doc->addOperationFromRoute(self::ROUTE_DENY, 'POST', 'Deny Access Rights', [
+			$doc->success([]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Access.deny',
+			'description' => 'Revoke one or more access rights from a user (admin only).',
+		]);
+		$op->requestBody = $doc->requestBodyFromForm(self::buildDenyForm());
+
+		$op = $doc->addOperationFromRoute(self::ROUTE_UPDATE, 'POST', 'Update Access Rights', [
+			$doc->success([]),
+		], [
+			'tags'        => [$tag->name],
+			'operationId' => 'Access.update',
+			'description' => 'Atomically grant and revoke access rights on a user (admin only).',
+		]);
+		$op->requestBody = $doc->requestBodyFromForm(self::buildUpdateForm());
 	}
 
 	/**

@@ -10,7 +10,7 @@ Completed items are marked ✅.
 
 ---
 
-### [ ] L. `REST/ApiDoc.php` — Complete API doc for all OZone built-in services
+### [x] L. `REST/ApiDoc.php` — Complete API doc for all OZone built-in services
 
 **Current behaviour:** `ApiDoc::loadProviders()` iterates over route providers and calls `apiDoc()` only on
 those that implement `ApiDocProviderInterface`. Several built-in services have stale, missing, or incomplete
@@ -155,7 +155,7 @@ and writes partial `FormData` to cache but several pieces are incomplete or miss
 
 | ID  | File                                          | Complexity | Risk       | Status      |
 | --- | --------------------------------------------- | ---------- | ---------- | ----------- |
-| L   | `REST/ApiDoc.php`                             | Low        | None       | pending     |
+| L   | `REST/ApiDoc.php`                             | Low        | None       | ✅ done     |
 | E   | `Services/QRCode.php`                         | Low        | Low-Medium | pending     |
 | 0   | Integration test suite                        | Low-Medium | Low        | in progress |
 | P   | `Forms/` — partial form resume                | Low-Medium | Low        | ✅ done     |

@@ -144,13 +144,6 @@ final class AccountRecovery extends Service
 				'description' => 'Reset a user password after email or phone ownership verification.',
 			]
 		);
-		$op->requestBody = $doc->requestBody([
-			'application/json' => $doc->json($doc->object([
-				AuthUsers::FIELD_AUTH_USER_TYPE   => $doc->string('The user type.'),
-				self::AUTO_LOGIN_ON_SUCCESS_FIELD => $doc->boolean('Whether to automatically log in after recovery.'),
-				'pass'                            => $doc->string('The new password.'),
-				'pass_confirm'                    => $doc->string('Confirm the new password.'),
-			])),
-		]);
+		$op->requestBody = $doc->requestBodyFromForm(self::editPassForm());
 	}
 }

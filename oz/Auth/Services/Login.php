@@ -92,14 +92,6 @@ final class Login extends Service
 				'description' => 'Authenticate a user and start a session.',
 			]
 		);
-		$op->requestBody = $doc->requestBody([
-			'application/json' => $doc->json($doc->object([
-				AuthUsers::FIELD_AUTH_USER_TYPE             => $doc->string('The user type.'),
-				AuthUsers::FIELD_AUTH_USER_IDENTIFIER_TYPE  => $doc->string('The identifier field name (e.g. email, phone).'),
-				AuthUsers::FIELD_AUTH_USER_IDENTIFIER_VALUE => $doc->string('The identifier value.'),
-				AuthUsers::FIELD_AUTH_USER_ID               => $doc->string('The user ID.'),
-				AuthUsers::FIELD_AUTH_USER_PASSWORD         => $doc->string('The user password.'),
-			])),
-		]);
+		$op->requestBody = $doc->requestBodyFromForm(AuthUsers::logInForm());
 	}
 }

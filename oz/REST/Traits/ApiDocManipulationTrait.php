@@ -354,20 +354,16 @@ trait ApiDocManipulationTrait
 				$schema = $this->typeSchema($field_type);
 			}
 
-			$label = $field->getLabel();
-			if (null !== $label) {
-				$label_text = \is_string($label) ? $label : $label->getText();
-				if ('' !== $label_text) {
-					$schema->title = $label_text;
-				}
-			}
+			$label         = $field->getLabel();
+			$label_text    = null !== $label ? (\is_string($label) ? $label : $label->getText()) : null;
+			$schema->title = (null !== $label_text && '' !== $label_text) ? $label_text : self::toHumanReadable($field_name);
 
-			$desc = $field->getDescription();
-			if (null !== $desc) {
-				$desc_text = \is_string($desc) ? $desc : $desc->getText();
-				if ('' !== $desc_text) {
-					$schema->description = $desc_text;
-				}
+			$desc      = $field->getDescription();
+			$desc_text = null !== $desc ? (\is_string($desc) ? $desc : $desc->getText()) : null;
+			if (null !== $desc_text && '' !== $desc_text) {
+				$schema->description = $desc_text;
+			} else {
+				$schema->description = self::toHumanReadable($field_name);
 			}
 
 			if ($field->isHidden()) {
