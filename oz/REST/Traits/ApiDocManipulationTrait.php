@@ -43,6 +43,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\TypesSwitcher;
 use OZONE\Core\REST\RESTFulAPIRequest;
+use OZONE\Core\Router\Enums\FormDocPolicy;
 use OZONE\Core\Router\Route;
 
 /**
@@ -178,12 +179,12 @@ trait ApiDocManipulationTrait
 		$op                       = $this->addOperation($route_path, $method, $summary, $responses, $properties);
 		$path_item                = $this->path($route_path);
 		$declared_params_patterns = $route->getDeclaredParams();
+		$route_options            = $route->getOptions();
 
 		// Attach guard and authentication metadata when not already set by the caller.
 		if (self::isUndefined($op->x)) {
-			$route_options        = $route->getOptions();
-			$auth_methods         = $route_options->getAuthenticationMethods();
-			$guard_descriptors    = $route_options->getGuardDescriptors();
+			$auth_methods      = $route_options->getAuthenticationMethods();
+			$guard_descriptors = $route_options->getGuardDescriptors();
 
 			if (!empty($auth_methods) || !empty($guard_descriptors)) {
 				$op->x = [
@@ -192,6 +193,26 @@ trait ApiDocManipulationTrait
 						'guard_descriptors' => $guard_descriptors,
 					]],
 				];
+			}
+		}
+
+		// Auto-attach request body from the route's static form declaration when not already set.
+		if (self::isUndefined($op->requestBody)) {
+			$doc_policy    = $route_options->getEffectiveDocPolicy();
+
+			if (FormDocPolicy::OPAQUE === $doc_policy || FormDocPolicy::DISCOVERY_ONLY === $doc_policy) {
+				$oz_form_ext = ['oz-form' => ['name' => 'oz-form', 'value' => ['policy' => $doc_policy->value]]];
+
+				if (self::isUndefined($op->x)) {
+					$op->x = $oz_form_ext;
+				} elseif (\is_array($op->x)) {
+					$op->x = \array_merge($op->x, $oz_form_ext);
+				}
+			} else {
+				$static_bundle = $route_options->getStaticFormBundle();
+				if (null !== $static_bundle) {
+					$op->requestBody = $this->requestBodyFromForm($static_bundle);
+				}
 			}
 		}
 

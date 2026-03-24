@@ -24,6 +24,7 @@ use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Roles\Enums\Role;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
+use OZONE\Core\Router\Enums\FormDocPolicy;
 use OZONE\Core\Router\Guards\AuthenticatedUserRouteGuard;
 use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\Guards\CSRFRouteGuard;
@@ -73,10 +74,7 @@ class RouteSharedOptions
 	 */
 	protected array $middlewares = [];
 
-	/**
-	 * @var null|(callable(RouteInfo):?Form)|Form
-	 */
-	protected $route_form;
+	protected ?FormDeclaration $form_declaration = null;
 
 	protected readonly ?RouteGroup $parent;
 	private string $name = '';
@@ -105,7 +103,7 @@ class RouteSharedOptions
 	 */
 	public function __destruct()
 	{
-		unset($this->guards, $this->middlewares, $this->route_form, $this->route_params);
+		unset($this->guards, $this->middlewares, $this->form_declaration, $this->route_params);
 	}
 
 	/**
@@ -448,15 +446,32 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Sets form.
+	 * Sets the route's form declaration.
 	 *
-	 * @param (callable(RouteInfo):?Form)|Form $form
+	 * Accepts a {@see Form} instance, a callable (with arity auto-detected via reflection),
+	 * or a pre-built {@see FormDeclaration} for full control.
+	 *
+	 * Detection rules (when $form is not a FormDeclaration):
+	 *  - A Form instance or a zero-arg callable (`fn(): Form`) is treated as static:
+	 *    resolvable and documentable without a live {@see RouteInfo}.
+	 *  - A one-arg+ callable (`fn(RouteInfo $ri): ?Form`) is treated as dynamic:
+	 *    requires a live {@see RouteInfo} at request time and is opaque in API docs
+	 *    unless $policy is overridden or a preview is provided via {@see FormDeclaration::dynamic()}.
+	 *
+	 * The $policy parameter is ignored when $form is already a {@see FormDeclaration}.
+	 *
+	 * @param callable|Form|FormDeclaration $form   the form, a factory, or a full declaration
+	 * @param FormDocPolicy                 $policy documentation policy (AUTO by default)
 	 *
 	 * @return static
 	 */
-	public function form(callable|Form $form): static
+	public function form(callable|Form|FormDeclaration $form, FormDocPolicy $policy = FormDocPolicy::AUTO): static
 	{
-		$this->route_form = $form;
+		if ($form instanceof FormDeclaration) {
+			$this->form_declaration = $form;
+		} else {
+			$this->form_declaration = FormDeclaration::make($form, $policy);
+		}
 
 		return $this;
 	}
@@ -613,7 +628,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Gets route forms.
+	 * Gets route forms at request time.
 	 *
 	 * @param RouteInfo $ri
 	 *
@@ -623,29 +638,58 @@ class RouteSharedOptions
 	{
 		$forms = $this->parent?->getForms($ri) ?? [];
 
-		if (isset($this->route_form)) {
-			if ($this->route_form instanceof Form) {
-				$forms[] = $this->route_form;
-			} else {
-				$form_builder = $this->route_form;
-				$result       = $form_builder($ri);
+		if (null !== $this->form_declaration) {
+			$form = $this->form_declaration->resolve($ri);
 
-				if (null !== $result) {
-					if ($result instanceof Form) {
-						$forms[] = $result;
-					} else {
-						throw (new RuntimeException(\sprintf(
-							'Route form builder should return instance of "%s" or "null" not: %s',
-							Form::class,
-							\get_debug_type($result)
-						))
-						)->suspectCallable($form_builder);
-					}
-				}
+			if (null !== $form) {
+				$forms[] = $form;
 			}
 		}
 
 		return $forms;
+	}
+
+	/**
+	 * Gets the merged form bundle for API doc generation (no live RouteInfo needed).
+	 *
+	 * Collects doc forms from the entire parent-group chain, merging them into one {@see Form}.
+	 * Declarations with policy {@see FormDocPolicy::OPAQUE} or {@see FormDocPolicy::DISCOVERY_ONLY},
+	 * and dynamic factories without a preview callable, contribute nothing.
+	 *
+	 * @return null|Form
+	 */
+	public function getStaticFormBundle(): ?Form
+	{
+		$forms = $this->getDocForms();
+
+		if (empty($forms)) {
+			return null;
+		}
+
+		$bundle = new Form();
+
+		foreach ($forms as $form) {
+			$bundle->merge($form);
+		}
+
+		return $bundle;
+	}
+
+	/**
+	 * Returns the effective documentation policy for this route.
+	 *
+	 * Returns the policy of the innermost (child-most) declaration in the chain.
+	 * Falls back to {@see FormDocPolicy::AUTO} when no declaration exists.
+	 *
+	 * @return FormDocPolicy
+	 */
+	public function getEffectiveDocPolicy(): FormDocPolicy
+	{
+		if (null !== $this->form_declaration) {
+			return $this->form_declaration->getPolicy();
+		}
+
+		return $this->parent?->getEffectiveDocPolicy() ?? FormDocPolicy::AUTO;
 	}
 
 	/**
@@ -734,6 +778,28 @@ class RouteSharedOptions
 		$middlewares = $this->parent?->getMiddlewares() ?? [];
 
 		return \array_merge($middlewares, $this->middlewares);
+	}
+
+	/**
+	 * Collects documentable forms from this node and all parent groups.
+	 *
+	 * Called by {@see getStaticFormBundle()} to build the doc-gen bundle.
+	 *
+	 * @return list<Form>
+	 */
+	protected function getDocForms(): array
+	{
+		$forms = $this->parent?->getDocForms() ?? [];
+
+		if (null !== $this->form_declaration) {
+			$doc_form = $this->form_declaration->getDocForm();
+
+			if (null !== $doc_form) {
+				$forms[] = $doc_form;
+			}
+		}
+
+		return $forms;
 	}
 
 	/**
