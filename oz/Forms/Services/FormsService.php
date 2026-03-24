@@ -43,6 +43,8 @@ final class FormsService extends Service
 
 	public const VALIDATE_NAMED_STEP_ROUTE = 'oz:forms.step.named';
 
+	public const EVALUATE_RULES_ROUTE = 'oz:forms.evaluate';
+
 	/**
 	 * {@inheritDoc}
 	 */
@@ -67,6 +69,12 @@ final class FormsService extends Service
 				$ri->param(self::STEP_NAME_PARAM, '')
 			);
 		})->name(self::VALIDATE_NAMED_STEP_ROUTE);
+
+		// Evaluate server-only expect rules against the submitted raw data and return
+		// per-rule pass/fail results (useful for pre-submission async validation).
+		$router->post('/forms/:' . self::FORM_KEY_PARAM . '/evaluate', static function (RouteInfo $ri) {
+			return (new self($ri))->actionEvaluateRules($ri, $ri->param(self::FORM_KEY_PARAM, ''));
+		})->name(self::EVALUATE_RULES_ROUTE);
 	}
 
 	/**
@@ -132,6 +140,26 @@ final class FormsService extends Service
 				'tags'        => [$tag->name],
 				'operationId' => 'Forms.validateNamedStep',
 				'description' => 'Validates the root fields plus all steps up to and including the named step, then returns the next enabled step form definition. Send all accumulated field values (root + all completed steps) in the request body.',
+			]
+		);
+
+		$doc->addOperationFromRoute(
+			self::EVALUATE_RULES_ROUTE,
+			'POST',
+			'Evaluate Server-Only Rules',
+			[
+				$doc->success([
+					'results' => $doc->array($doc->object([
+						'passed'  => $doc->boolean('True when the rule passed.'),
+						'message' => $doc->string('Violation message, or null when the rule passed.', ['nullable' => true]),
+					])),
+				]),
+				$doc->response(404, 'Form not found.', []),
+			],
+			[
+				'tags'        => [$tag->name],
+				'operationId' => 'Forms.evaluateRules',
+				'description' => 'Evaluates all server-only expect rules registered on the form against the submitted raw data. Returns one result object per server-only rule in definition order. Non-server-only rules are omitted — they are evaluated client-side. Useful for pre-submission checks such as username availability or coupon code validation.',
 			]
 		);
 	}
@@ -231,6 +259,49 @@ final class FormsService extends Service
 		}
 
 		return $this->buildNextStepResponse(true, null, null);
+	}
+
+	/**
+	 * Evaluates all server-only expect rules registered on the form against the raw
+	 * submitted data and returns one result object per server-only rule, in definition
+	 * order.  Non-server-only rules are skipped — they can be evaluated client-side
+	 * using the serialized rule set returned by {@see actionGetForm}.
+	 *
+	 * This endpoint is useful for pre-submission async validation (e.g. username
+	 * availability, coupon code existence) where the predicate cannot be run in
+	 * the browser.
+	 *
+	 * @param RouteInfo $ri       The current route info (used to read request body)
+	 * @param string    $form_key The form key registered via {@see Form::key()}
+	 *
+	 * @return Response
+	 *
+	 * @throws NotFoundException when the form is not found
+	 */
+	private function actionEvaluateRules(RouteInfo $ri, string $form_key): Response
+	{
+		$form = FormRegistry::get($form_key);
+
+		if (!$form) {
+			throw new NotFoundException('OZ_FORM_NOT_FOUND');
+		}
+
+		$unsafe_fd = $ri->getUnsafeFormData();
+		$results   = [];
+
+		foreach ($form->t_pre_validation_rules as $rule_set) {
+			if ($rule_set->isServerOnly()) {
+				$passed    = $rule_set->check($unsafe_fd);
+				$results[] = [
+					'passed'  => $passed,
+					'message' => $passed ? null : $rule_set->getViolationMessage(),
+				];
+			}
+		}
+
+		$this->json()->setDone()->setData(['results' => $results]);
+
+		return $this->respond();
 	}
 
 	/**
