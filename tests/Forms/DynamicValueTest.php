@@ -46,7 +46,47 @@ final class DynamicValueTest extends TestCase
 	{
 		$dynamic = new DynamicValue(static fn () => 42);
 
-		self::assertSame(['$dynamic' => true], $dynamic->toArray());
+		self::assertSame(['$dynamic' => true, '$preview' => null], $dynamic->toArray());
+	}
+
+	public function testToArrayWithNoPreviewFactoryAlwaysReturnsNullPreview(): void
+	{
+		$dynamic = new DynamicValue(static fn () => 'runtime');
+
+		// Even inside withDiscovery(), no preview factory -> $preview stays null.
+		$result = DynamicValue::withDiscovery(static fn () => $dynamic->toArray());
+
+		self::assertSame(['$dynamic' => true, '$preview' => null], $result);
+	}
+
+	public function testToArrayWithPreviewFactoryReturnsPreviewDuringDiscovery(): void
+	{
+		$dynamic = new DynamicValue(
+			static fn (FormData $fd) => $fd->get('x'),
+			static fn () => ['a', 'b', 'c'],
+		);
+
+		// Outside discovery: no preview.
+		self::assertSame(['$dynamic' => true, '$preview' => null], $dynamic->toArray());
+
+		// Inside withDiscovery(): preview is embedded.
+		$result = DynamicValue::withDiscovery(static fn () => $dynamic->toArray());
+
+		self::assertSame(['$dynamic' => true, '$preview' => ['value' => ['a', 'b', 'c']]], $result);
+	}
+
+	public function testIsClientResolvableFalseWithoutPreview(): void
+	{
+		$dynamic = new DynamicValue(static fn () => 1);
+
+		self::assertFalse($dynamic->isClientResolvable());
+	}
+
+	public function testIsClientResolvableTrueWithPreview(): void
+	{
+		$dynamic = new DynamicValue(static fn () => 1, static fn () => [1, 2, 3]);
+
+		self::assertTrue($dynamic->isClientResolvable());
 	}
 
 	private function makeFormData(array $data): FormData

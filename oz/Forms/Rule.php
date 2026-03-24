@@ -61,7 +61,9 @@ final class Rule implements ArrayCapableInterface
 		public readonly ?string $target_ref,
 		public readonly I18nMessage|string|null $message,
 	) {
-		$this->server_only = null === $target_ref && $value instanceof DynamicValue;
+		$this->server_only = null === $target_ref
+			&& $value instanceof DynamicValue
+			&& !$value->isClientResolvable();
 	}
 
 	/**
