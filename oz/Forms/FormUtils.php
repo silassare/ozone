@@ -38,7 +38,7 @@ final class FormUtils
 			 * @psalm-suppress UnusedMethodCall since we just want to check if the name can be parsed as a dot path,
 			 * we don't care about the segments themselves
 			 */
-			DotPath::parse($name)->getSegments();
+			DotPath::parse($name);
 		} catch (Throwable $t) {
 			throw new InvalidArgumentException(\sprintf('Invalid field name: "%s"', $name), 0, $t);
 		}
