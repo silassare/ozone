@@ -105,14 +105,16 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface
 	 */
 	private function process(OZFile $file, FileStream $stream, array $filterTokens): array
 	{
-		// -------------------------------------------------------------------
-		// Parse tokens
-		// -------------------------------------------------------------------
-		$maxW           = null;    // int|null
-		$maxH           = null;    // int|null
+		/**
+		 * @var null|int $maxW
+		 * @var null|int $maxH
+		 */
+		$maxW           = null;
+		$maxH           = null;
 		$quality        = 100;
 		$useCrop        = false;
-		$cropOverridden = false;   // true when 'crop' or 'nocrop' was explicit
+		// true when 'crop' or 'nocrop' was explicit
+		$cropOverridden = false;
 
 		// Effects are stored as closures applied in declaration order.
 		$effects = [];
@@ -167,9 +169,8 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface
 			// Unknown tokens are silently ignored.
 		}
 
-		// -------------------------------------------------------------------
 		// Process image
-		// -------------------------------------------------------------------
+
 		$mime    = $file->getMime();
 		$content = $stream->getContents();
 

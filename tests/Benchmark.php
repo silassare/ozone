@@ -134,10 +134,6 @@ class Benchmark
 	 */
 	private array $exportedMeta = [];
 
-	// -------------------------------------------------------------------------
-	// Construction
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Named constructor for fluent chaining.
 	 *
@@ -147,10 +143,6 @@ class Benchmark
 	{
 		return new self();
 	}
-
-	// -------------------------------------------------------------------------
-	// Configuration (fluent builder)
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Sets the number of unmeasured warmup calls executed before measurement.
@@ -263,10 +255,6 @@ class Benchmark
 		return $this;
 	}
 
-	// -------------------------------------------------------------------------
-	// Execution
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Benchmarks each callable in $callables and stores the results.
 	 * Overwrites any previously stored results; call reset() first if accumulation
@@ -318,10 +306,6 @@ class Benchmark
 		return $this;
 	}
 
-	// -------------------------------------------------------------------------
-	// Results access
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Returns all result records keyed by callable name.
 	 *
@@ -347,10 +331,6 @@ class Benchmark
 
 		return $this->results[$ref] ?? null;
 	}
-
-	// -------------------------------------------------------------------------
-	// Ordering
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Sorts stored results by ascending average call time (fastest first).
@@ -391,10 +371,6 @@ class Benchmark
 
 		return $this;
 	}
-
-	// -------------------------------------------------------------------------
-	// Output
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Prints a full statistics table to stdout.
@@ -647,10 +623,6 @@ class Benchmark
 		return $this->exportedMeta;
 	}
 
-	// -------------------------------------------------------------------------
-	// Measurement core
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Runs warmup calls, then executes the timed loop until the configured
 	 * stopping condition is met, and returns the statistics record for $ref.
@@ -815,10 +787,6 @@ class Benchmark
 		];
 	}
 
-	// -------------------------------------------------------------------------
-	// Table construction helpers
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Attaches all standard column headers to $table for the full stats view.
 	 * Optional columns (dup_count, dup_rate, memory_kb) are added only when
@@ -866,10 +834,6 @@ class Benchmark
 				->setCellFormatter(KliTableFormatter::number(2));
 		}
 	}
-
-	// -------------------------------------------------------------------------
-	// Cell formatters
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Returns a formatter that renders float nanosecond values to 2 decimal
@@ -1023,10 +987,6 @@ class Benchmark
 			}
 		};
 	}
-
-	// -------------------------------------------------------------------------
-	// Utility helpers
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Returns the smallest avg_ns across all stored results.

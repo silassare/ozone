@@ -28,10 +28,6 @@ final class TypePasswordTest extends TestCase
 {
 	// Default OZ_USER_PASS_MIN_LENGTH = 6, OZ_USER_PASS_MAX_LENGTH = 60
 
-	// -------------------------------------------------------------------------
-	// Valid values
-	// -------------------------------------------------------------------------
-
 	public function testAcceptsValidPassword(): void
 	{
 		$type    = new TypePassword();
@@ -51,10 +47,6 @@ final class TypePasswordTest extends TestCase
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
-
-	// -------------------------------------------------------------------------
-	// Secure mode
-	// -------------------------------------------------------------------------
 
 	public function testSecureModeAcceptsComplexPassword(): void
 	{
@@ -81,10 +73,6 @@ final class TypePasswordTest extends TestCase
 		(new TypePassword())->secure()->validate('NoSpecial1');
 	}
 
-	// -------------------------------------------------------------------------
-	// Custom min/max
-	// -------------------------------------------------------------------------
-
 	public function testCustomMinEnforced(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
@@ -96,10 +84,6 @@ final class TypePasswordTest extends TestCase
 		$this->expectException(TypesInvalidValueException::class);
 		(new TypePassword())->max(8)->validate('toolongpassword');
 	}
-
-	// -------------------------------------------------------------------------
-	// Invalid values
-	// -------------------------------------------------------------------------
 
 	public function testRejectsTooShortPassword(): void
 	{

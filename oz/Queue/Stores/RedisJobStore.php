@@ -327,10 +327,6 @@ class RedisJobStore implements JobStoreInterface
 		return $count;
 	}
 
-	// -------------------------------------------------------------------------
-	// Private helpers
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Returns the shared Redis connection, connecting lazily on first call.
 	 *

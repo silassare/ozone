@@ -26,10 +26,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class TypePhoneTest extends TestCase
 {
-	// -------------------------------------------------------------------------
-	// Valid values
-	// -------------------------------------------------------------------------
-
 	public function testAcceptsMinimumLengthE164(): void
 	{
 		// + 6 digits = 7 chars total
@@ -60,10 +56,6 @@ final class TypePhoneTest extends TestCase
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
-
-	// -------------------------------------------------------------------------
-	// Invalid values
-	// -------------------------------------------------------------------------
 
 	public function testRejectsPhoneWithoutPlus(): void
 	{

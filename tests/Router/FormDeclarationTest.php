@@ -31,10 +31,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class FormDeclarationTest extends TestCase
 {
-	// -----------------------------------------------------------
-	// make() — Form instance
-	// -----------------------------------------------------------
-
 	public function testMakeWithFormInstanceIsNotDynamic(): void
 	{
 		$form = new Form();
@@ -58,10 +54,6 @@ final class FormDeclarationTest extends TestCase
 
 		self::assertSame($form, $decl->getDocForm());
 	}
-
-	// -----------------------------------------------------------
-	// make() — zero-arg callable (static factory)
-	// -----------------------------------------------------------
 
 	public function testMakeWithZeroArgCallableIsNotDynamic(): void
 	{
@@ -94,10 +86,6 @@ final class FormDeclarationTest extends TestCase
 		self::assertSame(FormDocPolicy::AUTO, $decl->getPolicy());
 	}
 
-	// -----------------------------------------------------------
-	// make() — one-arg callable (dynamic factory)
-	// -----------------------------------------------------------
-
 	public function testMakeWithOneArgCallableIsDynamic(): void
 	{
 		$decl = FormDeclaration::make(static fn ($ri) => new Form());
@@ -111,10 +99,6 @@ final class FormDeclarationTest extends TestCase
 
 		self::assertNull($decl->getDocForm());
 	}
-
-	// -----------------------------------------------------------
-	// make() with explicit policy
-	// -----------------------------------------------------------
 
 	public function testMakeWithFormAndOpaquePolicy(): void
 	{
@@ -140,10 +124,6 @@ final class FormDeclarationTest extends TestCase
 		self::assertNull($decl->getDocForm());
 	}
 
-	// -----------------------------------------------------------
-	// dynamic() — without doc preview
-	// -----------------------------------------------------------
-
 	public function testDynamicWithoutPreviewIsDynamic(): void
 	{
 		$decl = FormDeclaration::dynamic(static fn ($ri) => new Form());
@@ -166,10 +146,6 @@ final class FormDeclarationTest extends TestCase
 
 		self::assertSame(FormDocPolicy::OPAQUE, $decl->getPolicy());
 	}
-
-	// -----------------------------------------------------------
-	// dynamic() — with doc preview
-	// -----------------------------------------------------------
 
 	public function testDynamicWithPreviewGetDocFormCallsPreview(): void
 	{
@@ -201,10 +177,6 @@ final class FormDeclarationTest extends TestCase
 		self::assertSame(FormDocPolicy::AUTO, $decl->getPolicy());
 	}
 
-	// -----------------------------------------------------------
-	// opaque()
-	// -----------------------------------------------------------
-
 	public function testOpaqueWithFormHidesDocForm(): void
 	{
 		$decl = FormDeclaration::opaque(new Form());
@@ -221,10 +193,6 @@ final class FormDeclarationTest extends TestCase
 		self::assertNull($decl->getDocForm());
 	}
 
-	// -----------------------------------------------------------
-	// discoveryOnly()
-	// -----------------------------------------------------------
-
 	public function testDiscoveryOnlyWithFormHidesDocForm(): void
 	{
 		$decl = FormDeclaration::discoveryOnly(new Form());
@@ -232,10 +200,6 @@ final class FormDeclarationTest extends TestCase
 		self::assertSame(FormDocPolicy::DISCOVERY_ONLY, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
 	}
-
-	// -----------------------------------------------------------
-	// getPolicy() — AUTO promotion rules
-	// -----------------------------------------------------------
 
 	public function testGetPolicyNotPromotedForStaticForm(): void
 	{
@@ -268,10 +232,6 @@ final class FormDeclarationTest extends TestCase
 		self::assertSame(FormDocPolicy::OPAQUE, $decl->getPolicy());
 	}
 
-	// -----------------------------------------------------------
-	// getDocForm() — exhaustive policy enforcement
-	// -----------------------------------------------------------
-
 	public function testGetDocFormNullForOpaque(): void
 	{
 		$form = new Form();
@@ -294,10 +254,6 @@ final class FormDeclarationTest extends TestCase
 
 		self::assertNull($decl->getDocForm());
 	}
-
-	// -----------------------------------------------------------
-	// isDynamic()
-	// -----------------------------------------------------------
 
 	public function testIsDynamicFalseForStaticForm(): void
 	{

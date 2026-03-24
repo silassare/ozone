@@ -35,10 +35,6 @@ final class TypeFileTest extends TestCase
 		$this->rdbms = $this->createMock(RDBMSInterface::class);
 	}
 
-	// -------------------------------------------------------------------------
-	// dbToPhp
-	// -------------------------------------------------------------------------
-
 	public function testDbToPhpNullReturnsNull(): void
 	{
 		$type = new TypeFile();
@@ -83,10 +79,6 @@ final class TypeFileTest extends TestCase
 		self::assertNull($type->dbToPhp(null, $this->rdbms));
 	}
 
-	// -------------------------------------------------------------------------
-	// phpToDb
-	// -------------------------------------------------------------------------
-
 	public function testPhpToDbNullReturnsNull(): void
 	{
 		$type = (new TypeFile())->nullable();
@@ -117,10 +109,6 @@ final class TypeFileTest extends TestCase
 		$db = $type->phpToDb($vfs, $this->rdbms);
 		self::assertSame('["1","2"]', $db);
 	}
-
-	// -------------------------------------------------------------------------
-	// runValidation / validate - IDOR protection
-	// -------------------------------------------------------------------------
 
 	public function testValidateRejectsRawStringId(): void
 	{

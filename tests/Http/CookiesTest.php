@@ -26,10 +26,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class CookiesTest extends TestCase
 {
-	// -----------------------------------------------------------
-	// Cookies (collection) tests
-	// -----------------------------------------------------------
-
 	public function testGetRequestCookiesReturnsInitialCookies(): void
 	{
 		$cookies = new Cookies(['session' => 'abc123', 'lang' => 'fr']);
@@ -111,10 +107,6 @@ final class CookiesTest extends TestCase
 
 		self::assertSame('first', $cookies['key']);
 	}
-
-	// -----------------------------------------------------------
-	// Cookie (single) __toString snapshot tests
-	// -----------------------------------------------------------
 
 	public function testCookieToStringSimple(): void
 	{

@@ -27,10 +27,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class CronExpressionTest extends TestCase
 {
-	// -------------------------------------------------------------------------
-	// Constructor / validation
-	// -------------------------------------------------------------------------
-
 	public function testConstructorRejectsFewerThanFiveFields(): void
 	{
 		$this->expectException(RuntimeException::class);
@@ -49,10 +45,6 @@ final class CronExpressionTest extends TestCase
 		self::assertInstanceOf(CronExpression::class, $expr);
 	}
 
-	// -------------------------------------------------------------------------
-	// isDue - wildcard
-	// -------------------------------------------------------------------------
-
 	public function testWildcardMatchesEveryMinute(): void
 	{
 		$expr = new CronExpression('* * * * *');
@@ -62,10 +54,6 @@ final class CronExpressionTest extends TestCase
 		self::assertTrue($expr->isDue(new DateTime('2025-01-01 00:00:00')));
 		self::assertTrue($expr->isDue(new DateTime('2025-12-31 23:59:00')));
 	}
-
-	// -------------------------------------------------------------------------
-	// isDue - exact minute/hour
-	// -------------------------------------------------------------------------
 
 	public function testExactMinuteMatch(): void
 	{
@@ -85,10 +73,6 @@ final class CronExpressionTest extends TestCase
 		self::assertFalse($expr->isDue(new DateTime('2025-06-15 09:01:00')));
 	}
 
-	// -------------------------------------------------------------------------
-	// isDue - comma-separated lists
-	// -------------------------------------------------------------------------
-
 	public function testMinuteList(): void
 	{
 		$expr = new CronExpression('0,15,30,45 * * * *');
@@ -101,10 +85,6 @@ final class CronExpressionTest extends TestCase
 		self::assertFalse($expr->isDue(new DateTime('2025-06-15 14:46:00')));
 	}
 
-	// -------------------------------------------------------------------------
-	// isDue - ranges
-	// -------------------------------------------------------------------------
-
 	public function testHourRange(): void
 	{
 		$expr = new CronExpression('0 9-17 * * *');
@@ -115,10 +95,6 @@ final class CronExpressionTest extends TestCase
 		self::assertFalse($expr->isDue(new DateTime('2025-06-15 08:00:00')));
 		self::assertFalse($expr->isDue(new DateTime('2025-06-15 18:00:00')));
 	}
-
-	// -------------------------------------------------------------------------
-	// isDue - step syntax
-	// -------------------------------------------------------------------------
 
 	public function testStepEveryFiveMinutes(): void
 	{
@@ -166,10 +142,6 @@ final class CronExpressionTest extends TestCase
 		self::assertFalse($expr->isDue(new DateTime('2025-06-15 14:04:00')));
 	}
 
-	// -------------------------------------------------------------------------
-	// isDue - day-of-month
-	// -------------------------------------------------------------------------
-
 	public function testDayOfMonthExact(): void
 	{
 		$expr = new CronExpression('0 0 15 * *');
@@ -179,10 +151,6 @@ final class CronExpressionTest extends TestCase
 		self::assertFalse($expr->isDue(new DateTime('2025-06-16 00:00:00')));
 	}
 
-	// -------------------------------------------------------------------------
-	// isDue - month
-	// -------------------------------------------------------------------------
-
 	public function testMonthExact(): void
 	{
 		$expr = new CronExpression('0 0 1 6 *');
@@ -191,10 +159,6 @@ final class CronExpressionTest extends TestCase
 		self::assertFalse($expr->isDue(new DateTime('2025-05-01 00:00:00')));
 		self::assertFalse($expr->isDue(new DateTime('2025-07-01 00:00:00')));
 	}
-
-	// -------------------------------------------------------------------------
-	// isDue - day-of-week
-	// -------------------------------------------------------------------------
 
 	public function testDayOfWeekMonday(): void
 	{
@@ -215,10 +179,6 @@ final class CronExpressionTest extends TestCase
 		self::assertTrue($exprZero->isDue(new DateTime('2025-06-15 00:00:00')));
 		self::assertTrue($exprSeven->isDue(new DateTime('2025-06-15 00:00:00')));
 	}
-
-	// -------------------------------------------------------------------------
-	// isDue - named month aliases
-	// -------------------------------------------------------------------------
 
 	public function testNamedMonths(): void
 	{
@@ -249,10 +209,6 @@ final class CronExpressionTest extends TestCase
 		self::assertFalse($expr->isDue(new DateTime('2025-02-01 00:00:00')));
 	}
 
-	// -------------------------------------------------------------------------
-	// isDue - named day-of-week aliases
-	// -------------------------------------------------------------------------
-
 	public function testNamedDayOfWeek(): void
 	{
 		// 2025-06-16 is Monday
@@ -281,10 +237,6 @@ final class CronExpressionTest extends TestCase
 		self::assertFalse($expr->isDue(new DateTime('2025-06-22 00:00:00'))); // Sunday
 	}
 
-	// -------------------------------------------------------------------------
-	// isDue - DOM/DOW OR logic
-	// -------------------------------------------------------------------------
-
 	public function testDomAndDowOrLogic(): void
 	{
 		// Run on day 15 OR on Mondays
@@ -308,10 +260,6 @@ final class CronExpressionTest extends TestCase
 		self::assertFalse($expr->isDue(new DateTime('2025-06-17 00:00:00'))); // Tuesday
 	}
 
-	// -------------------------------------------------------------------------
-	// isDue - question-mark wildcard (?)
-	// -------------------------------------------------------------------------
-
 	public function testQuestionMarkActsAsWildcard(): void
 	{
 		$expr = new CronExpression('0 0 ? * ?');
@@ -319,10 +267,6 @@ final class CronExpressionTest extends TestCase
 		self::assertTrue($expr->isDue(new DateTime('2025-06-15 00:00:00')));
 		self::assertTrue($expr->isDue(new DateTime('2025-01-01 00:00:00')));
 	}
-
-	// -------------------------------------------------------------------------
-	// isDue - case-insensitivity of named aliases
-	// -------------------------------------------------------------------------
 
 	public function testNamedAliasesAreCaseInsensitive(): void
 	{
@@ -336,10 +280,6 @@ final class CronExpressionTest extends TestCase
 		self::assertTrue($upper->isDue($dt));
 		self::assertTrue($mixed->isDue($dt));
 	}
-
-	// -------------------------------------------------------------------------
-	// getNextRunDate
-	// -------------------------------------------------------------------------
 
 	public function testNextRunDateEveryMinute(): void
 	{

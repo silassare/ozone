@@ -28,10 +28,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class ValidatedFileTest extends TestCase
 {
-	// -------------------------------------------------------------------------
-	// forFileID factory
-	// -------------------------------------------------------------------------
-
 	public function testForFileIDCreatesPersisted(): void
 	{
 		$vf = ValidatedFile::forFileID('42');
@@ -56,10 +52,6 @@ final class ValidatedFileTest extends TestCase
 		$this->expectException(LogicException::class);
 		ValidatedFile::forFileID('42')->getPath();
 	}
-
-	// -------------------------------------------------------------------------
-	// forTempPath factory
-	// -------------------------------------------------------------------------
 
 	public function testForTempPathCreatesTemporary(): void
 	{
@@ -91,10 +83,6 @@ final class ValidatedFileTest extends TestCase
 		$vf = ValidatedFile::forTempPath('/tmp/abc.jpg');
 		self::assertNull($vf->loadFile());
 	}
-
-	// -------------------------------------------------------------------------
-	// forFile factory
-	// -------------------------------------------------------------------------
 
 	public function testForFileCreatesPersisted(): void
 	{

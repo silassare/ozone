@@ -31,10 +31,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class FormStepTest extends TestCase
 {
-	// -----------------------------------------------------------
-	// static() factory
-	// -----------------------------------------------------------
-
 	public function testStaticStepWithFormInstance(): void
 	{
 		$parent = new Form();
@@ -58,10 +54,6 @@ final class FormStepTest extends TestCase
 		self::assertSame($inner, $step->getStaticForm());
 	}
 
-	// -----------------------------------------------------------
-	// dynamic() factory
-	// -----------------------------------------------------------
-
 	public function testDynamicStepIsDynamic(): void
 	{
 		$parent = new Form();
@@ -80,10 +72,6 @@ final class FormStepTest extends TestCase
 		$step->getStaticForm();
 	}
 
-	// -----------------------------------------------------------
-	// invalid step name
-	// -----------------------------------------------------------
-
 	public function testStaticStepWithInvalidNameThrows(): void
 	{
 		$parent = new Form();
@@ -91,10 +79,6 @@ final class FormStepTest extends TestCase
 		$this->expectException(InvalidArgumentException::class);
 		FormStep::static($parent, '', new Form());
 	}
-
-	// -----------------------------------------------------------
-	// build() without condition
-	// -----------------------------------------------------------
 
 	public function testBuildAlwaysRunsWhenNoCondition(): void
 	{
@@ -105,10 +89,6 @@ final class FormStepTest extends TestCase
 
 		self::assertSame($inner, $step->build($fd));
 	}
-
-	// -----------------------------------------------------------
-	// build() with condition (only_if)
-	// -----------------------------------------------------------
 
 	public function testBuildReturnsFormWhenConditionPasses(): void
 	{
@@ -130,10 +110,6 @@ final class FormStepTest extends TestCase
 		self::assertNull($step->build($this->makeFormData(['type' => 'simple'])));
 	}
 
-	// -----------------------------------------------------------
-	// build() dynamic step
-	// -----------------------------------------------------------
-
 	public function testBuildDynamicStepPassesFdToFactory(): void
 	{
 		$parent = new Form();
@@ -142,10 +118,6 @@ final class FormStepTest extends TestCase
 
 		self::assertSame($inner, $step->build($this->makeFormData([])));
 	}
-
-	// -----------------------------------------------------------
-	// getRef() with prefixed parent
-	// -----------------------------------------------------------
 
 	public function testGetRefIncludesParentPrefix(): void
 	{
@@ -156,10 +128,6 @@ final class FormStepTest extends TestCase
 
 		self::assertSame('user.address', $step->getRef());
 	}
-
-	// -----------------------------------------------------------
-	// toArray()
-	// -----------------------------------------------------------
 
 	public function testToArrayStructureForStaticStep(): void
 	{
@@ -199,10 +167,6 @@ final class FormStepTest extends TestCase
 		self::assertSame('details', $arr['ref']);
 	}
 
-	// -----------------------------------------------------------
-	// Form::step() / Form::dynamicStep() registration
-	// -----------------------------------------------------------
-
 	public function testFormStepRegistersInTSteps(): void
 	{
 		$form = new Form();
@@ -222,10 +186,6 @@ final class FormStepTest extends TestCase
 		self::assertSame($step, $form->t_steps['extra']);
 	}
 
-	// -----------------------------------------------------------
-	// Form::getStep()
-	// -----------------------------------------------------------
-
 	public function testGetStepReturnsRegisteredStep(): void
 	{
 		$form = new Form();
@@ -238,10 +198,6 @@ final class FormStepTest extends TestCase
 	{
 		self::assertNull((new Form())->getStep('unknown'));
 	}
-
-	// -----------------------------------------------------------
-	// Form::validate() skip_steps
-	// -----------------------------------------------------------
 
 	public function testValidateSkipStepsDoesNotValidateStepFields(): void
 	{
@@ -289,10 +245,6 @@ final class FormStepTest extends TestCase
 		self::assertSame('Hello', $clean->get('bio'));
 	}
 
-	// -----------------------------------------------------------
-	// Form::validate() conditional steps via FormStep::isEnabled()
-	// -----------------------------------------------------------
-
 	public function testConditionalStepSkippedWhenConditionFalse(): void
 	{
 		$form = new Form();
@@ -325,10 +277,6 @@ final class FormStepTest extends TestCase
 		// type=advanced -> step active -> 'extra' is required but missing
 		$form->validate($this->makeFormData(['type' => 'advanced']));
 	}
-
-	// -----------------------------------------------------------
-	// Form::validate() dynamic steps
-	// -----------------------------------------------------------
 
 	public function testDynamicStepReceivesCleanedFormData(): void
 	{
@@ -369,10 +317,6 @@ final class FormStepTest extends TestCase
 		self::assertSame('simple', $clean->get('mode'));
 	}
 
-	// -----------------------------------------------------------
-	// Form::getVersion() reflects registered steps
-	// -----------------------------------------------------------
-
 	public function testVersionChangesAfterStepAdded(): void
 	{
 		$form   = new Form();
@@ -384,10 +328,6 @@ final class FormStepTest extends TestCase
 
 		self::assertNotSame($before, $after);
 	}
-
-	// -----------------------------------------------------------
-	// helpers
-	// -----------------------------------------------------------
 
 	private function makeFormData(array $data): FormData
 	{

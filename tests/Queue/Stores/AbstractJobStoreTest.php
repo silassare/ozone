@@ -71,10 +71,6 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 		}
 	}
 
-	// -------------------------------------------------------------------------
-	// Tests: add / get
-	// -------------------------------------------------------------------------
-
 	public function testAddAndGetRoundtrip(): void
 	{
 		$job = $this->makeJob();
@@ -108,10 +104,6 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 		$this->expectException(InvalidArgumentException::class);
 		$this->store->getOrFail('nonexistent-' . \uniqid('', true));
 	}
-
-	// -------------------------------------------------------------------------
-	// Tests: update / delete
-	// -------------------------------------------------------------------------
 
 	public function testUpdatePersistsStateChange(): void
 	{
@@ -159,10 +151,6 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 
 		self::assertNull($this->store->get($contract->getRef()));
 	}
-
-	// -------------------------------------------------------------------------
-	// Tests: iterator
-	// -------------------------------------------------------------------------
 
 	public function testIteratorYieldsAllJobsInQueue(): void
 	{
@@ -212,10 +200,6 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 		self::assertNotContains($beta->getRef(), $alphaRefs);
 	}
 
-	// -------------------------------------------------------------------------
-	// Tests: list / pagination
-	// -------------------------------------------------------------------------
-
 	public function testListReturnsPaginatedResults(): void
 	{
 		// Add 4 jobs first.
@@ -237,10 +221,6 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 
 		self::assertCount(4, $all);
 	}
-
-	// -------------------------------------------------------------------------
-	// Tests: lock / unlock / isLocked
-	// -------------------------------------------------------------------------
 
 	public function testLockReturnsTrueOnFirstAcquire(): void
 	{
@@ -286,10 +266,6 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 		$this->store->unlock($contract);
 		self::assertFalse($this->store->isLocked($contract));
 	}
-
-	// -------------------------------------------------------------------------
-	// Tests: count
-	// -------------------------------------------------------------------------
 
 	public function testCountWithoutStateFilterStartsAtZero(): void
 	{
@@ -348,10 +324,6 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 	 * Provide the store implementation under test.
 	 */
 	abstract protected function makeStore(): JobStoreInterface;
-
-	// -------------------------------------------------------------------------
-	// Helpers
-	// -------------------------------------------------------------------------
 
 	protected function makeJob(
 		string $queue = '',

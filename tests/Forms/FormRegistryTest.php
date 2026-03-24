@@ -35,10 +35,6 @@ final class FormRegistryTest extends TestCase
 		FormRegistry::clear();
 	}
 
-	// -------------------------------------------------------------------------
-	// FormRegistry
-	// -------------------------------------------------------------------------
-
 	public function testRegisterAndGet(): void
 	{
 		$form = new Form();
@@ -80,10 +76,6 @@ final class FormRegistryTest extends TestCase
 		self::assertSame([], FormRegistry::all());
 		self::assertNull(FormRegistry::get('x'));
 	}
-
-	// -------------------------------------------------------------------------
-	// Form::key()
-	// -------------------------------------------------------------------------
 
 	public function testFormKeyRegistersInRegistry(): void
 	{
@@ -159,10 +151,6 @@ final class FormRegistryTest extends TestCase
 		self::assertSame(1800, $arr['resume_ttl']);
 	}
 
-	// -------------------------------------------------------------------------
-	// Form::getVersion()
-	// -------------------------------------------------------------------------
-
 	public function testGetVersionReturns16CharHex(): void
 	{
 		$version = (new Form())->getVersion();
@@ -213,10 +201,6 @@ final class FormRegistryTest extends TestCase
 		self::assertSame($a->getVersion(), $b->getVersion());
 	}
 
-	// -------------------------------------------------------------------------
-	// buildResumeCacheKey()
-	// -------------------------------------------------------------------------
-
 	public function testBuildResumeCacheKeyContainsVersion(): void
 	{
 		$form = new Form();
@@ -249,10 +233,6 @@ final class FormRegistryTest extends TestCase
 		);
 	}
 
-	// -------------------------------------------------------------------------
-	// Form::resume()
-	// -------------------------------------------------------------------------
-
 	public function testResumeModeDefaultIsNone(): void
 	{
 		self::assertNull((new Form())->getResumeScope());
@@ -278,10 +258,6 @@ final class FormRegistryTest extends TestCase
 
 		self::assertSame($form, $result);
 	}
-
-	// -------------------------------------------------------------------------
-	// merge() propagates resume mode
-	// -------------------------------------------------------------------------
 
 	public function testMergePropagatesToNoneTarget(): void
 	{
@@ -315,10 +291,6 @@ final class FormRegistryTest extends TestCase
 
 		self::assertNull($target->getResumeScope());
 	}
-
-	// -------------------------------------------------------------------------
-	// validate() — prefilled cleaned_fd satisfies required constraints
-	// -------------------------------------------------------------------------
 
 	public function testPrefilledSatisfiesRequiredField(): void
 	{
@@ -382,10 +354,6 @@ final class FormRegistryTest extends TestCase
 
 		self::assertSame('Bob', $clean->get('name'));
 	}
-
-	// -------------------------------------------------------------------------
-	// Helpers
-	// -------------------------------------------------------------------------
 
 	private function makeFormData(array $data): FormData
 	{

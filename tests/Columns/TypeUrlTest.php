@@ -26,10 +26,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class TypeUrlTest extends TestCase
 {
-	// -------------------------------------------------------------------------
-	// Full URLs (http/https)
-	// -------------------------------------------------------------------------
-
 	public function testAcceptsHttpUrl(): void
 	{
 		$type  = new TypeUrl();
@@ -51,10 +47,6 @@ final class TypeUrlTest extends TestCase
 		self::assertNull($clean);
 	}
 
-	// -------------------------------------------------------------------------
-	// Absolute paths (require allowAbsolutePath())
-	// -------------------------------------------------------------------------
-
 	public function testAbsolutePathAcceptedWhenAllowed(): void
 	{
 		$type  = (new TypeUrl())->allowAbsolutePath();
@@ -74,10 +66,6 @@ final class TypeUrlTest extends TestCase
 		$this->expectException(TypesInvalidValueException::class);
 		(new TypeUrl())->validate('/absolute/path');
 	}
-
-	// -------------------------------------------------------------------------
-	// Invalid values
-	// -------------------------------------------------------------------------
 
 	public function testProtocolRelativeUrlRejectedAsAbsolutePath(): void
 	{

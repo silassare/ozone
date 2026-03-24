@@ -107,10 +107,6 @@ class RuleSet implements ArrayCapableInterface
 		return $rs;
 	}
 
-	// -----------------------------------------------------------
-	// Rule methods
-	// -----------------------------------------------------------
-
 	/**
 	 * Adds a rule: field value must equal $value.
 	 *
@@ -277,10 +273,6 @@ class RuleSet implements ArrayCapableInterface
 		return $this->addRule($field, RuleOperator::IS_NOT_NULL, null, $message);
 	}
 
-	// -----------------------------------------------------------
-	// Nesting
-	// -----------------------------------------------------------
-
 	/**
 	 * Adds a nested AND sub-group.
 	 *
@@ -316,10 +308,6 @@ class RuleSet implements ArrayCapableInterface
 
 		return $this;
 	}
-
-	// -----------------------------------------------------------
-	// Evaluation
-	// -----------------------------------------------------------
 
 	/**
 	 * Evaluates all children against the given form data.
@@ -383,10 +371,6 @@ class RuleSet implements ArrayCapableInterface
 		return $this->t_violation?->getMessage();
 	}
 
-	// -----------------------------------------------------------
-	// Introspection
-	// -----------------------------------------------------------
-
 	/**
 	 * Whether this rule set (or any of its nested descendants) contains
 	 * a {@see Rule} that must be evaluated server-side only.
@@ -441,10 +425,6 @@ class RuleSet implements ArrayCapableInterface
 	{
 		return $this->t_children;
 	}
-
-	// -----------------------------------------------------------
-	// Serialization
-	// -----------------------------------------------------------
 
 	/**
 	 * {@inheritDoc}

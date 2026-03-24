@@ -26,10 +26,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class TypeEmailTest extends TestCase
 {
-	// -------------------------------------------------------------------------
-	// Valid values
-	// -------------------------------------------------------------------------
-
 	public function testAcceptsValidEmail(): void
 	{
 		$type  = new TypeEmail();
@@ -57,10 +53,6 @@ final class TypeEmailTest extends TestCase
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
-
-	// -------------------------------------------------------------------------
-	// Invalid values
-	// -------------------------------------------------------------------------
 
 	public function testRejectsMissingAtSign(): void
 	{

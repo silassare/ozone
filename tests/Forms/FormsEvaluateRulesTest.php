@@ -38,10 +38,6 @@ final class FormsEvaluateRulesTest extends TestCase
 		FormRegistry::clear();
 	}
 
-	// -----------------------------------------------------------
-	// Empty / no server-only rules
-	// -----------------------------------------------------------
-
 	public function testFormNotFoundReturnsNull(): void
 	{
 		self::assertNull(FormRegistry::get('non.existent.form'));
@@ -68,10 +64,6 @@ final class FormsEvaluateRulesTest extends TestCase
 
 		self::assertSame([], $results);
 	}
-
-	// -----------------------------------------------------------
-	// Single server-only expect rule
-	// -----------------------------------------------------------
 
 	public function testSingleServerOnlyRulePasses(): void
 	{
@@ -113,10 +105,6 @@ final class FormsEvaluateRulesTest extends TestCase
 		self::assertNull($results[0]['message']);
 	}
 
-	// -----------------------------------------------------------
-	// Multiple server-only expect rules — all evaluated independently
-	// -----------------------------------------------------------
-
 	public function testMultipleServerOnlyRulesAllEvaluated(): void
 	{
 		$form = new Form();
@@ -147,10 +135,6 @@ final class FormsEvaluateRulesTest extends TestCase
 		self::assertTrue($results[1]['passed']);
 	}
 
-	// -----------------------------------------------------------
-	// Mixed: server-only and non-server-only rules
-	// -----------------------------------------------------------
-
 	public function testOnlyServerOnlyRulesAreIncludedInResults(): void
 	{
 		$form = new Form();
@@ -168,10 +152,6 @@ final class FormsEvaluateRulesTest extends TestCase
 		self::assertSame('USERNAME_TAKEN', $results[0]['message']);
 	}
 
-	// -----------------------------------------------------------
-	// Dynamic value uses FormData context
-	// -----------------------------------------------------------
-
 	public function testDynamicValueReceivesUnsafeFormData(): void
 	{
 		$captured = null;
@@ -187,10 +167,6 @@ final class FormsEvaluateRulesTest extends TestCase
 
 		self::assertSame('ctx-value', $captured);
 	}
-
-	// -----------------------------------------------------------
-	// Result order matches rule definition order
-	// -----------------------------------------------------------
 
 	public function testResultOrderMatchesDefinitionOrder(): void
 	{
@@ -217,10 +193,6 @@ final class FormsEvaluateRulesTest extends TestCase
 
 		self::assertSame(['first', 'second', 'third'], $order);
 	}
-
-	// -----------------------------------------------------------
-	// Helper: mirrors the logic in FormsService::actionEvaluateRules
-	// -----------------------------------------------------------
 
 	/**
 	 * Mirrors the core evaluation loop in FormsService::actionEvaluateRules.

@@ -25,10 +25,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class ScheduleTest extends TestCase
 {
-	// -------------------------------------------------------------------------
-	// __toString / expression round-trip
-	// -------------------------------------------------------------------------
-
 	public function testDefaultExpressionIsEveryMinute(): void
 	{
 		self::assertSame('* * * * *', (string) new Schedule());
@@ -38,10 +34,6 @@ final class ScheduleTest extends TestCase
 	{
 		self::assertSame('30 9 * * 1', (string) new Schedule('30 9 * * 1'));
 	}
-
-	// -------------------------------------------------------------------------
-	// Frequency methods - expression strings
-	// -------------------------------------------------------------------------
 
 	public function testEveryMinute(): void
 	{
@@ -246,10 +238,6 @@ final class ScheduleTest extends TestCase
 		self::assertSame($isLast, $s->shouldRun());
 	}
 
-	// -------------------------------------------------------------------------
-	// isDue smoke test
-	// -------------------------------------------------------------------------
-
 	public function testWildcardIsDueForCurrentTime(): void
 	{
 		$s = new Schedule('* * * * *');
@@ -272,10 +260,6 @@ final class ScheduleTest extends TestCase
 
 		self::assertSame($base + 60, (new Schedule())->getNextRunTime($base));
 	}
-
-	// -------------------------------------------------------------------------
-	// shouldRun() - predicates
-	// -------------------------------------------------------------------------
 
 	public function testShouldRunWithNoPredicatesIsAlwaysTrue(): void
 	{
@@ -330,10 +314,6 @@ final class ScheduleTest extends TestCase
 
 		self::assertFalse($s->shouldRun());
 	}
-
-	// -------------------------------------------------------------------------
-	// timezone fluency
-	// -------------------------------------------------------------------------
 
 	public function testTimezoneReturnsSelf(): void
 	{

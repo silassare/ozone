@@ -32,10 +32,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class FieldDoubleCheckTest extends TestCase
 {
-	// -----------------------------------------------------------
-	// Basic setup
-	// -----------------------------------------------------------
-
 	public function testDoubleCheckCreatesConfirmField(): void
 	{
 		$form  = new Form();
@@ -65,10 +61,6 @@ final class FieldDoubleCheckTest extends TestCase
 		self::assertNotNull($form->getField('password_confirm'));
 	}
 
-	// -----------------------------------------------------------
-	// Type sync — type set BEFORE doubleCheck()
-	// -----------------------------------------------------------
-
 	public function testConfirmFieldInheritsTypeSetBeforeDoubleCheck(): void
 	{
 		$type  = new TypeBigint();
@@ -80,10 +72,6 @@ final class FieldDoubleCheckTest extends TestCase
 		$confirm = $form->getField('amount_confirm');
 		self::assertSame($type, $confirm->getType());
 	}
-
-	// -----------------------------------------------------------
-	// Type sync — type set AFTER doubleCheck()
-	// -----------------------------------------------------------
 
 	public function testConfirmFieldSyncsTypePropagatedAfterDoubleCheck(): void
 	{
@@ -97,10 +85,6 @@ final class FieldDoubleCheckTest extends TestCase
 		$confirm = $form->getField('amount_confirm');
 		self::assertSame($type, $confirm->getType());
 	}
-
-	// -----------------------------------------------------------
-	// required sync
-	// -----------------------------------------------------------
 
 	public function testConfirmFieldSyncsRequired(): void
 	{
@@ -126,10 +110,6 @@ final class FieldDoubleCheckTest extends TestCase
 		self::assertTrue($form->getField('email_confirm')->isRequired());
 	}
 
-	// -----------------------------------------------------------
-	// multiple sync
-	// -----------------------------------------------------------
-
 	public function testConfirmFieldSyncsMultiple(): void
 	{
 		$form  = new Form();
@@ -142,10 +122,6 @@ final class FieldDoubleCheckTest extends TestCase
 
 		self::assertTrue($form->getField('tag_confirm')->isMultiple());
 	}
-
-	// -----------------------------------------------------------
-	// Form validation — values match
-	// -----------------------------------------------------------
 
 	public function testFormValidationPassesWhenBothValuesMatch(): void
 	{
@@ -161,10 +137,6 @@ final class FieldDoubleCheckTest extends TestCase
 		self::assertSame('secret123', $result->get('password'));
 		self::assertSame('secret123', $result->get('password_confirm'));
 	}
-
-	// -----------------------------------------------------------
-	// Form validation — values do not match
-	// -----------------------------------------------------------
 
 	public function testFormValidationFailsWhenValuesDiffer(): void
 	{
@@ -198,10 +170,6 @@ final class FieldDoubleCheckTest extends TestCase
 		}
 	}
 
-	// -----------------------------------------------------------
-	// The ensure rule is added exactly once
-	// -----------------------------------------------------------
-
 	public function testEnsureRuleAddedExactlyOnce(): void
 	{
 		$form  = new Form();
@@ -210,10 +178,6 @@ final class FieldDoubleCheckTest extends TestCase
 
 		self::assertCount(1, $form->t_post_validation_rules);
 	}
-
-	// -----------------------------------------------------------
-	// Prefixed form
-	// -----------------------------------------------------------
 
 	public function testDoubleCheckWorksWithPrefixedForm(): void
 	{

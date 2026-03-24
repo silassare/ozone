@@ -34,10 +34,6 @@ use ReflectionObject;
  */
 final class FileFiltersTest extends TestCase
 {
-	// -----------------------------------------------------------------------
-	// Setup / Teardown
-	// -----------------------------------------------------------------------
-
 	/**
 	 * Reset static state in FileFilters between tests so registered spy
 	 * handlers from one test do not bleed into the next.
@@ -48,10 +44,6 @@ final class FileFiltersTest extends TestCase
 		$rc->getProperty('handlers')->setValue(null, []);
 		$rc->getProperty('loaded')->setValue(null, false);
 	}
-
-	// -----------------------------------------------------------------------
-	// ImageFileFilterHandler::canHandle
-	// -----------------------------------------------------------------------
 
 	public function testCanHandleImageMime(): void
 	{
@@ -73,10 +65,6 @@ final class FileFiltersTest extends TestCase
 		self::assertFalse($handler->canHandle(self::makeFile('audio/mpeg'), []));
 	}
 
-	// -----------------------------------------------------------------------
-	// Token: no-op (no tokens) - image unchanged
-	// -----------------------------------------------------------------------
-
 	public function testNoTokensReturnsOriginalDimensions(): void
 	{
 		$file  = self::makeFile('image/png');
@@ -87,10 +75,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame(200, $w);
 		self::assertSame(150, $h);
 	}
-
-	// -----------------------------------------------------------------------
-	// Token: w{N} - resize to width, proportional height
-	// -----------------------------------------------------------------------
 
 	public function testWidthTokenResizesWidth(): void
 	{
@@ -103,10 +87,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame(50, $h); // proportional
 	}
 
-	// -----------------------------------------------------------------------
-	// Token: h{N} - resize to height, proportional width
-	// -----------------------------------------------------------------------
-
 	public function testHeightTokenResizesHeight(): void
 	{
 		$file  = self::makeFile('image/png');
@@ -117,10 +97,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame(100, $w); // proportional
 		self::assertSame(50, $h);
 	}
-
-	// -----------------------------------------------------------------------
-	// Token: thumb{N} - square thumbnail via crop
-	// -----------------------------------------------------------------------
 
 	public function testThumbNTokenProducesSquare(): void
 	{
@@ -133,10 +109,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame(80, $h);
 	}
 
-	// -----------------------------------------------------------------------
-	// Token: thumb - square thumbnail using default setting
-	// -----------------------------------------------------------------------
-
 	public function testThumbTokenUsesThumbnailSize(): void
 	{
 		$file  = self::makeFile('image/png');
@@ -147,10 +119,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame(640, $w);
 		self::assertSame(640, $h);
 	}
-
-	// -----------------------------------------------------------------------
-	// Token: nocrop - override thumbnail crop
-	// -----------------------------------------------------------------------
 
 	public function testNocropTokenPreservesAspectRatio(): void
 	{
@@ -164,10 +132,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame(40, $h);
 	}
 
-	// -----------------------------------------------------------------------
-	// Token: crop - explicit crop with w + h
-	// -----------------------------------------------------------------------
-
 	public function testCropTokenWithWidthAndHeightProducesExactSize(): void
 	{
 		$file  = self::makeFile('image/png');
@@ -178,10 +142,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame(80, $w);
 		self::assertSame(60, $h);
 	}
-
-	// -----------------------------------------------------------------------
-	// Token: grayscale - image still valid, response body non-empty
-	// -----------------------------------------------------------------------
 
 	public function testGrayscaleTokenProducesValidImage(): void
 	{
@@ -195,10 +155,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame(40, $h);
 	}
 
-	// -----------------------------------------------------------------------
-	// Token: sepia
-	// -----------------------------------------------------------------------
-
 	public function testSepiaTokenProducesValidImage(): void
 	{
 		$file  = self::makeFile('image/png');
@@ -209,10 +165,6 @@ final class FileFiltersTest extends TestCase
 		[$w] = self::pngDimensions($out);
 		self::assertSame(40, $w);
 	}
-
-	// -----------------------------------------------------------------------
-	// Token: blur / blur{N}
-	// -----------------------------------------------------------------------
 
 	public function testBlurTokenProducesValidImage(): void
 	{
@@ -236,10 +188,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame(40, $w);
 	}
 
-	// -----------------------------------------------------------------------
-	// Token: sharpen
-	// -----------------------------------------------------------------------
-
 	public function testSharpenTokenProducesValidImage(): void
 	{
 		$file  = self::makeFile('image/png');
@@ -250,10 +198,6 @@ final class FileFiltersTest extends TestCase
 		[$w] = self::pngDimensions($out);
 		self::assertSame(40, $w);
 	}
-
-	// -----------------------------------------------------------------------
-	// Token: q{N} - quality flag parsed without changing dimensions
-	// -----------------------------------------------------------------------
 
 	public function testQualityTokenDoesNotChangeDimensions(): void
 	{
@@ -266,10 +210,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame(80, $h);
 	}
 
-	// -----------------------------------------------------------------------
-	// Unknown tokens are silently ignored
-	// -----------------------------------------------------------------------
-
 	public function testUnknownTokensAreIgnored(): void
 	{
 		$file  = self::makeFile('image/png');
@@ -280,10 +220,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame(30, $w);
 		self::assertSame(30, $h);
 	}
-
-	// -----------------------------------------------------------------------
-	// Bad image bytes -> fallback to raw content (never empty body)
-	// -----------------------------------------------------------------------
 
 	public function testBadImageFallsBackToRawContent(): void
 	{
@@ -298,10 +234,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame($badBytes, $body);
 	}
 
-	// -----------------------------------------------------------------------
-	// Response headers set correctly
-	// -----------------------------------------------------------------------
-
 	public function testHandleResponseHasCorrectMimeAndContentLength(): void
 	{
 		$file    = self::makeFile('image/png');
@@ -314,10 +246,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame('image/png', $result->getHeaderLine('Content-type'));
 		self::assertSame((string) \strlen($body), $result->getHeaderLine('Content-Length'));
 	}
-
-	// -----------------------------------------------------------------------
-	// FileFilters registry - programmatic registration + dispatch
-	// -----------------------------------------------------------------------
 
 	public function testRegisterAndApplyUsesFirstMatchingHandler(): void
 	{
@@ -378,18 +306,10 @@ final class FileFiltersTest extends TestCase
 		self::assertSame((string) \strlen($content), $response->getHeaderLine('Content-Length'));
 	}
 
-	// -----------------------------------------------------------------------
-	// SimpleImage availability guard
-	// -----------------------------------------------------------------------
-
 	public function testSimpleImageIsAvailable(): void
 	{
 		self::assertTrue(\class_exists(SimpleImage::class), 'claviska/simpleimage must be installed');
 	}
-
-	// -----------------------------------------------------------------------
-	// Helpers
-	// -----------------------------------------------------------------------
 
 	/**
 	 * Build a minimal OZFile with the given mime type.

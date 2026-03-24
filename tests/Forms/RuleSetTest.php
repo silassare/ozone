@@ -15,7 +15,6 @@ namespace OZONE\Tests\Forms;
 
 use OZONE\Core\Forms\DynamicValue;
 use OZONE\Core\Forms\Enums\RuleSetCondition;
-use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\Rule;
@@ -32,10 +31,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class RuleSetTest extends TestCase
 {
-	// -----------------------------------------------------------
-	// eq
-	// -----------------------------------------------------------
-
 	public function testEqPassesWhenEqual(): void
 	{
 		$rs = (new RuleSet())->eq('type', 'admin');
@@ -48,10 +43,6 @@ final class RuleSetTest extends TestCase
 		self::assertFalse($rs->check($this->fd(['type' => 'user'])));
 	}
 
-	// -----------------------------------------------------------
-	// neq
-	// -----------------------------------------------------------
-
 	public function testNeqPassesWhenNotEqual(): void
 	{
 		$rs = (new RuleSet())->neq('status', 'banned');
@@ -63,10 +54,6 @@ final class RuleSetTest extends TestCase
 		$rs = (new RuleSet())->neq('status', 'banned');
 		self::assertFalse($rs->check($this->fd(['status' => 'banned'])));
 	}
-
-	// -----------------------------------------------------------
-	// gt / gte / lt / lte
-	// -----------------------------------------------------------
 
 	public function testGtPassesWhenGreater(): void
 	{
@@ -99,10 +86,6 @@ final class RuleSetTest extends TestCase
 		self::assertFalse($rs->check($this->fd(['score' => 101])));
 	}
 
-	// -----------------------------------------------------------
-	// in / notIn
-	// -----------------------------------------------------------
-
 	public function testInPassesWhenValueIsInList(): void
 	{
 		$rs = (new RuleSet())->in('role', ['admin', 'editor', 'user']);
@@ -116,10 +99,6 @@ final class RuleSetTest extends TestCase
 		self::assertTrue($rs->check($this->fd(['role' => 'admin'])));
 		self::assertFalse($rs->check($this->fd(['role' => 'banned'])));
 	}
-
-	// -----------------------------------------------------------
-	// isNull / isNotNull
-	// -----------------------------------------------------------
 
 	public function testIsNullPassesWhenFieldAbsent(): void
 	{
@@ -145,10 +124,6 @@ final class RuleSetTest extends TestCase
 		self::assertFalse($rs->check($this->fd([])));
 	}
 
-	// -----------------------------------------------------------
-	// Cross-field compare
-	// -----------------------------------------------------------
-
 	public function testEqWithTwoFieldsPassesWhenBothMatch(): void
 	{
 		$form = new Form();
@@ -167,10 +142,6 @@ final class RuleSetTest extends TestCase
 			'confirm_password' => 'other',
 		])));
 	}
-
-	// -----------------------------------------------------------
-	// AND (default) — all must pass
-	// -----------------------------------------------------------
 
 	public function testMultipleChainedRulesAllMustPass(): void
 	{
@@ -191,10 +162,6 @@ final class RuleSetTest extends TestCase
 			'role' => 'forbidden',
 		])));
 	}
-
-	// -----------------------------------------------------------
-	// OR nesting
-	// -----------------------------------------------------------
 
 	public function testOrGroupPassesWhenAnyBranchMatches(): void
 	{
@@ -238,10 +205,6 @@ final class RuleSetTest extends TestCase
 		self::assertTrue($rs->check($this->fd([])));
 	}
 
-	// -----------------------------------------------------------
-	// Nested AND inside outer AND
-	// -----------------------------------------------------------
-
 	public function testAndNestingAllMustPass(): void
 	{
 		$rs = (new RuleSet())
@@ -262,10 +225,6 @@ final class RuleSetTest extends TestCase
 			'age'   => 10,
 		])));
 	}
-
-	// -----------------------------------------------------------
-	// RuleViolation
-	// -----------------------------------------------------------
 
 	public function testGetViolationIsNullBeforeCheck(): void
 	{
@@ -310,10 +269,6 @@ final class RuleSetTest extends TestCase
 		self::assertInstanceOf(Rule::class, $rs->getViolation()?->getNode());
 	}
 
-	// -----------------------------------------------------------
-	// isServerOnly
-	// -----------------------------------------------------------
-
 	public function testIsServerOnlyFalseForScalarValues(): void
 	{
 		$rs = (new RuleSet())->eq('field', 'value');
@@ -336,10 +291,6 @@ final class RuleSetTest extends TestCase
 
 		self::assertTrue($rs->isServerOnly());
 	}
-
-	// -----------------------------------------------------------
-	// toArray
-	// -----------------------------------------------------------
 
 	public function testToArrayStructureForFlatAnd(): void
 	{
@@ -415,10 +366,6 @@ final class RuleSetTest extends TestCase
 		self::assertArrayNotHasKey('value', $arr['rules'][0]);
 	}
 
-	// -----------------------------------------------------------
-	// getCondition / getChildren
-	// -----------------------------------------------------------
-
 	public function testGetConditionDefaultIsAnd(): void
 	{
 		$rs = new RuleSet();
@@ -440,10 +387,6 @@ final class RuleSetTest extends TestCase
 			self::assertInstanceOf(Rule::class, $child);
 		}
 	}
-
-	// -----------------------------------------------------------
-	// Helpers
-	// -----------------------------------------------------------
 
 	private function fd(array $data): FormData
 	{

@@ -28,10 +28,6 @@ final class TypeGenderTest extends TestCase
 {
 	// Default OZ_USER_ALLOWED_GENDERS: ['Male', 'Female', 'None', 'Other']
 
-	// -------------------------------------------------------------------------
-	// Valid values
-	// -------------------------------------------------------------------------
-
 	public function testAcceptsMale(): void
 	{
 		$type  = new TypeGender();
@@ -66,10 +62,6 @@ final class TypeGenderTest extends TestCase
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
-
-	// -------------------------------------------------------------------------
-	// Invalid values
-	// -------------------------------------------------------------------------
 
 	public function testRejectsCaseMismatch(): void
 	{

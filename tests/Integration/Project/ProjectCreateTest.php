@@ -43,10 +43,6 @@ final class ProjectCreateTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	// -------------------------------------------------------------------------
-	// Core app directory
-	// -------------------------------------------------------------------------
-
 	public function testAppDirectoryExists(): void
 	{
 		self::assertDirectoryExists(self::path('app'));
@@ -89,10 +85,6 @@ final class ProjectCreateTest extends TestCase
 		self::assertSame('deny from all', \file_get_contents(self::path('app/.htaccess')));
 	}
 
-	// -------------------------------------------------------------------------
-	// Settings files
-	// -------------------------------------------------------------------------
-
 	public function testOzConfigSettingsExists(): void
 	{
 		self::assertFileExists(self::path('app/settings/oz.config.php'));
@@ -134,10 +126,6 @@ final class ProjectCreateTest extends TestCase
 	{
 		self::assertFileExists(self::path('app/settings/oz.db.php'));
 	}
-
-	// -------------------------------------------------------------------------
-	// Project root files
-	// -------------------------------------------------------------------------
 
 	public function testDotEnvExists(): void
 	{
@@ -184,10 +172,6 @@ final class ProjectCreateTest extends TestCase
 		$composer = \json_decode(\file_get_contents(self::path('composer.json')), true);
 		self::assertArrayHasKey('silassare/ozone', $composer['require']);
 	}
-
-	// -------------------------------------------------------------------------
-	// Default api scope (auto-created by project create)
-	// -------------------------------------------------------------------------
 
 	public function testApiScopePrivateDirectoryExists(): void
 	{
@@ -246,10 +230,6 @@ final class ProjectCreateTest extends TestCase
 		self::assertFileExists(self::path('public/api/.htaccess'));
 	}
 
-	// -------------------------------------------------------------------------
-	// PHP syntax validity for generated PHP files
-	// -------------------------------------------------------------------------
-
 	/**
 	 * @dataProvider provideGeneratedPhpFileIsSyntacticallyValidCases
 	 */
@@ -279,10 +259,6 @@ final class ProjectCreateTest extends TestCase
 		];
 	}
 
-	// -------------------------------------------------------------------------
-	// Idempotency: running create again on the same directory must be a no-op
-	// -------------------------------------------------------------------------
-
 	public function testProjectCreateIsIdempotent(): void
 	{
 		$proc = self::$proj->oz(
@@ -296,10 +272,6 @@ final class ProjectCreateTest extends TestCase
 		// The important thing is it does NOT wipe the existing files.
 		self::assertFileExists(self::path('app/boot.php'));
 	}
-
-	// -------------------------------------------------------------------------
-	// Internal helpers
-	// -------------------------------------------------------------------------
 
 	private static function path(string $relative): string
 	{

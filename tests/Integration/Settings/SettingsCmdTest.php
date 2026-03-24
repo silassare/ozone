@@ -57,10 +57,6 @@ final class SettingsCmdTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	// -------------------------------------------------------------------------
-	// oz settings set -- value parsing
-	// -------------------------------------------------------------------------
-
 	public function testSetStringValue(): void
 	{
 		self::$proj->oz('settings', 'set', '-g=app.custom', '-k=MY_KEY', '-v=hello world')
@@ -125,10 +121,6 @@ final class SettingsCmdTest extends TestCase
 		self::assertSame(['x' => 1, 'y' => 2], $settings['MY_OBJ']);
 	}
 
-	// -------------------------------------------------------------------------
-	// oz settings unset
-	// -------------------------------------------------------------------------
-
 	public function testUnsetRemovesKey(): void
 	{
 		// First write a key
@@ -164,10 +156,6 @@ final class SettingsCmdTest extends TestCase
 		self::assertArrayNotHasKey('REMOVE_ME', $settings);
 	}
 
-	// -------------------------------------------------------------------------
-	// oz settings with --scope
-	// -------------------------------------------------------------------------
-
 	public function testSetWithScopeWritesToScopeDir(): void
 	{
 		self::$proj->oz('settings', 'set', '-s=myweb', '-g=oz.request', '-k=OZ_DEFAULT_ORIGIN', '-v=http://scoped.example.com')
@@ -185,10 +173,6 @@ final class SettingsCmdTest extends TestCase
 		})($scope_file);
 		self::assertSame('http://scoped.example.com', $settings['OZ_DEFAULT_ORIGIN']);
 	}
-
-	// -------------------------------------------------------------------------
-	// Internal helpers
-	// -------------------------------------------------------------------------
 
 	private static function settingsPath(string $group): string
 	{

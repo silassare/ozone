@@ -28,10 +28,6 @@ final class TypeUsernameTest extends TestCase
 {
 	// OZ_USER_NAME_MIN_LENGTH defaults to 3, OZ_USER_NAME_MAX_LENGTH defaults to 60.
 
-	// -------------------------------------------------------------------------
-	// Valid values
-	// -------------------------------------------------------------------------
-
 	public function testAcceptsValidUsername(): void
 	{
 		$type  = new TypeUsername();
@@ -52,10 +48,6 @@ final class TypeUsernameTest extends TestCase
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
-
-	// -------------------------------------------------------------------------
-	// Trim-before-measure fix
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Before the fix, '  a  ' (5 chars with padding) passed the min=3 length
@@ -79,10 +71,6 @@ final class TypeUsernameTest extends TestCase
 		$clean = $type->validate('  Alice  ')->getCleanValue();
 		self::assertSame('Alice', $clean);
 	}
-
-	// -------------------------------------------------------------------------
-	// Invalid values
-	// -------------------------------------------------------------------------
 
 	public function testRejectsTooShortUsername(): void
 	{

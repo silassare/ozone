@@ -31,10 +31,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class RangeResponseTest extends TestCase
 {
-	// -----------------------------------------------------------------------
-	// Non-200 passthrough
-	// -----------------------------------------------------------------------
-
 	public function testNon200ResponseIsReturnedUnchanged(): void
 	{
 		$request  = self::makeRequest('GET', ['Range' => 'bytes=0-4']);
@@ -43,10 +39,6 @@ final class RangeResponseTest extends TestCase
 
 		self::assertSame(404, $result->getStatusCode());
 	}
-
-	// -----------------------------------------------------------------------
-	// Normal GET with no conditional / range headers -> passthrough
-	// -----------------------------------------------------------------------
 
 	public function testPlainGetReturnsOriginal200(): void
 	{
@@ -57,10 +49,6 @@ final class RangeResponseTest extends TestCase
 		self::assertSame(200, $result->getStatusCode());
 		self::assertSame('Hello World', (string) $result->getBody());
 	}
-
-	// -----------------------------------------------------------------------
-	// If-None-Match / ETag -> 304
-	// -----------------------------------------------------------------------
 
 	public function testIfNoneMatchExactEtagReturns304(): void
 	{
@@ -128,10 +116,6 @@ final class RangeResponseTest extends TestCase
 
 		self::assertSame(200, $result->getStatusCode());
 	}
-
-	// -----------------------------------------------------------------------
-	// Range -> 206
-	// -----------------------------------------------------------------------
 
 	public function testRangeExplicitStartAndEndReturns206(): void
 	{
@@ -220,10 +204,6 @@ final class RangeResponseTest extends TestCase
 		self::assertSame('l', $body->read(1));
 	}
 
-	// -----------------------------------------------------------------------
-	// Range -> 416 (unsatisfiable)
-	// -----------------------------------------------------------------------
-
 	public function testRangeStartBeyondSizeReturns416(): void
 	{
 		$request  = self::makeRequest('GET', ['Range' => 'bytes=100-200']);
@@ -275,10 +255,6 @@ final class RangeResponseTest extends TestCase
 		self::assertSame(416, $result->getStatusCode());
 	}
 
-	// -----------------------------------------------------------------------
-	// Range on non-GET method -> ignored
-	// -----------------------------------------------------------------------
-
 	public function testRangeHeaderOnPostIsIgnored(): void
 	{
 		$request  = self::makeRequest('POST', ['Range' => 'bytes=0-4']);
@@ -297,10 +273,6 @@ final class RangeResponseTest extends TestCase
 		self::assertSame(200, $result->getStatusCode());
 	}
 
-	// -----------------------------------------------------------------------
-	// Range when Content-Length is absent or zero -> passthrough
-	// -----------------------------------------------------------------------
-
 	public function testRangeWithoutContentLengthReturnedUnchanged(): void
 	{
 		$request  = self::makeRequest('GET', ['Range' => 'bytes=0-4']);
@@ -314,10 +286,6 @@ final class RangeResponseTest extends TestCase
 		self::assertSame(200, $result->getStatusCode());
 	}
 
-	// -----------------------------------------------------------------------
-	// 304 takes priority over Range when both headers present
-	// -----------------------------------------------------------------------
-
 	public function testConditionalCheckTakesPriorityOverRangeHeader(): void
 	{
 		$request = self::makeRequest('GET', [
@@ -330,10 +298,6 @@ final class RangeResponseTest extends TestCase
 		// ETag matched -> 304, range is not evaluated.
 		self::assertSame(304, $result->getStatusCode());
 	}
-
-	// -----------------------------------------------------------------------
-	// ETag derivation in serve() -- content without leaking the file key
-	// -----------------------------------------------------------------------
 
 	public function testEtagForSameFileIsDeterministic(): void
 	{
@@ -366,9 +330,6 @@ final class RangeResponseTest extends TestCase
 
 		self::assertNotSame($etag, $etag2);
 	}
-	// -----------------------------------------------------------------------
-	// Helpers
-	// -----------------------------------------------------------------------
 
 	/**
 	 * Build a minimal GET or HEAD request, optionally with extra headers.

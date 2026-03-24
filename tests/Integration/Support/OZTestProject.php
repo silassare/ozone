@@ -41,10 +41,6 @@ final class OZTestProject
 {
 	private function __construct(private readonly string $dir) {}
 
-	// -------------------------------------------------------------------------
-	// Factory
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Creates a test project in /tmp/_oz_tests_/projects/{name}/ and returns a handle.
 	 *
@@ -188,10 +184,6 @@ final class OZTestProject
 		return new self($project_dir);
 	}
 
-	// -------------------------------------------------------------------------
-	// Public API
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Build a Process that runs an oz CLI command inside the test project.
 	 *
@@ -295,10 +287,6 @@ final class OZTestProject
 		}
 		(new Process(['rm', '-rf', $this->dir]))->run();
 	}
-
-	// -------------------------------------------------------------------------
-	// Internal helpers
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Absolute path to the OZone repository root.

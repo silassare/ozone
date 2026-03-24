@@ -62,19 +62,11 @@ final class ScopesAddTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	// -------------------------------------------------------------------------
-	// Default 'api' scope (created by project create)
-	// -------------------------------------------------------------------------
-
 	public function testDefaultApiScopeExists(): void
 	{
 		self::assertDirectoryExists(self::path('scopes/api'));
 		self::assertDirectoryExists(self::path('public/api'));
 	}
-
-	// -------------------------------------------------------------------------
-	// Custom API scope: myapi
-	// -------------------------------------------------------------------------
 
 	public function testMyapiPrivateDirectoryExists(): void
 	{
@@ -126,10 +118,6 @@ final class ScopesAddTest extends TestCase
 		self::assertSame('http://api.example.com', $settings['OZ_DEFAULT_ORIGIN']);
 	}
 
-	// -------------------------------------------------------------------------
-	// Web scope: web (api=false)
-	// -------------------------------------------------------------------------
-
 	public function testWebScopePrivateDirectoryExists(): void
 	{
 		self::assertDirectoryExists(self::path('scopes/web'));
@@ -177,10 +165,6 @@ final class ScopesAddTest extends TestCase
 		self::assertStringNotContainsString('OZ_OZONE_IS_WEB_CONTEXT', $content);
 	}
 
-	// -------------------------------------------------------------------------
-	// Second API scope: admin (with custom port in origin)
-	// -------------------------------------------------------------------------
-
 	public function testAdminScopeExists(): void
 	{
 		self::assertDirectoryExists(self::path('scopes/admin'));
@@ -193,10 +177,6 @@ final class ScopesAddTest extends TestCase
 		self::assertIsArray($settings);
 		self::assertSame('http://admin.example.com:8080', $settings['OZ_DEFAULT_ORIGIN']);
 	}
-
-	// -------------------------------------------------------------------------
-	// Multiple scopes co-exist in the same project
-	// -------------------------------------------------------------------------
 
 	public function testFourScopesExist(): void
 	{
@@ -212,10 +192,6 @@ final class ScopesAddTest extends TestCase
 			);
 		}
 	}
-
-	// -------------------------------------------------------------------------
-	// PHP syntax validity for all generated scope files
-	// -------------------------------------------------------------------------
 
 	/**
 	 * @dataProvider provideGeneratedPhpFileIsSyntacticallyValidCases
@@ -243,10 +219,6 @@ final class ScopesAddTest extends TestCase
 			'public/admin/index.php'                => ['public/admin/index.php'],
 		];
 	}
-
-	// -------------------------------------------------------------------------
-	// Internal helpers
-	// -------------------------------------------------------------------------
 
 	private static function path(string $relative): string
 	{

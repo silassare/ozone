@@ -96,10 +96,6 @@ final class ProjectServeTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	// -------------------------------------------------------------------------
-	// HTTP response tests
-	// -------------------------------------------------------------------------
-
 	public function testServerResponds(): void
 	{
 		$response = $this->get('/');
@@ -130,10 +126,6 @@ final class ProjectServeTest extends TestCase
 		// OZone always adds 'utime' to API responses
 		self::assertArrayHasKey('utime', $data);
 	}
-
-	// -------------------------------------------------------------------------
-	// Internal helpers
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Makes a GET request to the running server and returns the response body,

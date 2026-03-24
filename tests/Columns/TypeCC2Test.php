@@ -26,10 +26,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class TypeCC2Test extends TestCase
 {
-	// -------------------------------------------------------------------------
-	// Valid values
-	// -------------------------------------------------------------------------
-
 	public function testAcceptsUpperCaseCode(): void
 	{
 		$type  = new TypeCC2();
@@ -57,10 +53,6 @@ final class TypeCC2Test extends TestCase
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
-
-	// -------------------------------------------------------------------------
-	// Invalid values
-	// -------------------------------------------------------------------------
 
 	public function testRejectsSingleChar(): void
 	{

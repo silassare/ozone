@@ -26,10 +26,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class DateTimeUtilsTest extends TestCase
 {
-	// -------------------------------------------------------------------------
-	// parse / getDay
-	// -------------------------------------------------------------------------
-
 	public function testParseReturnsCorrectDay(): void
 	{
 		$dt = DateTimeUtils::parse('2025-06-15 10:30:00', 'UTC');
@@ -42,10 +38,6 @@ final class DateTimeUtilsTest extends TestCase
 		$dt = DateTimeUtils::parse('2025-03-01 09:00:00', 'UTC');
 		self::assertSame(1, $dt->getDay());
 	}
-
-	// -------------------------------------------------------------------------
-	// endOfMonth / getDay
-	// -------------------------------------------------------------------------
 
 	public function testEndOfMonthJanuary(): void
 	{
@@ -85,10 +77,6 @@ final class DateTimeUtilsTest extends TestCase
 		self::assertSame(31, $end->getDay());
 	}
 
-	// -------------------------------------------------------------------------
-	// addDay / subDay
-	// -------------------------------------------------------------------------
-
 	public function testAddDay(): void
 	{
 		$dt   = DateTimeUtils::parse('2025-06-15 00:00:00', 'UTC');
@@ -126,10 +114,6 @@ final class DateTimeUtilsTest extends TestCase
 		self::assertSame(16, $next->getDay());
 	}
 
-	// -------------------------------------------------------------------------
-	// lessThan / greaterThan
-	// -------------------------------------------------------------------------
-
 	public function testLessThan(): void
 	{
 		$earlier = DateTimeUtils::parse('2025-06-15 08:00:00', 'UTC');
@@ -149,10 +133,6 @@ final class DateTimeUtilsTest extends TestCase
 		self::assertFalse($earlier->greaterThan($later));
 		self::assertFalse($later->greaterThan($later));
 	}
-
-	// -------------------------------------------------------------------------
-	// between
-	// -------------------------------------------------------------------------
 
 	public function testBetweenInsideInterval(): void
 	{
@@ -183,10 +163,6 @@ final class DateTimeUtilsTest extends TestCase
 		self::assertFalse($after->between($start, $end));
 	}
 
-	// -------------------------------------------------------------------------
-	// timezone support
-	// -------------------------------------------------------------------------
-
 	public function testTimezoneStringIsAccepted(): void
 	{
 		$dt = DateTimeUtils::parse('2025-06-15 14:00:00', 'America/New_York');
@@ -206,10 +182,6 @@ final class DateTimeUtilsTest extends TestCase
 		$dt = DateTimeUtils::now(null);
 		self::assertInstanceOf(DateTimeUtils::class, $dt);
 	}
-
-	// -------------------------------------------------------------------------
-	// now
-	// -------------------------------------------------------------------------
 
 	public function testNowReturnsCurrentDay(): void
 	{

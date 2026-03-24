@@ -25,10 +25,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class PolyglotTest extends TestCase
 {
-	// -----------------------------------------------------------
-	// isLangKey tests
-	// -----------------------------------------------------------
-
 	public function testIsLangKeyReturnsTrueForValidKeys(): void
 	{
 		self::assertTrue(Polyglot::isLangKey('MY_KEY'));
@@ -48,10 +44,6 @@ final class PolyglotTest extends TestCase
 		self::assertFalse(Polyglot::isLangKey('has-hyphen'));
 		self::assertFalse(Polyglot::isLangKey('_STARTS_WITH_UNDERSCORE'));
 	}
-
-	// -----------------------------------------------------------
-	// parseBrowserLanguage tests
-	// -----------------------------------------------------------
 
 	public function testParseBrowserLanguageWithNullReturnsEmptyLanguagesAndNullAdvice(): void
 	{
@@ -102,10 +94,6 @@ final class PolyglotTest extends TestCase
 		self::assertSame('fr', $keys[0]);
 		self::assertSame('en', $keys[1]);
 	}
-
-	// -----------------------------------------------------------
-	// declareFilter tests
-	// -----------------------------------------------------------
 
 	public function testDeclareFilterRegistersCallable(): void
 	{

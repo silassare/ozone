@@ -52,20 +52,18 @@ use OZONE\Tests\Benchmark;
 const BASELINE_FILE = __DIR__ . '/benchmark-baseline.json';
 const THRESHOLD_PCT = 20.0;
 
-// ---------------------------------------------------------------------------
-// Machine fingerprint
-// ---------------------------------------------------------------------------
-// The fingerprint is stored in the baseline JSON envelope. On load it is
-// compared with the current environment. When they differ the comparison is
-// skipped and a warning is printed instead of misleading regression output.
-// Regression detection uses min_ns (fastest observed time), which is immune
-// to OS scheduling spikes - noise only ever adds latency to individual
-// samples, so the minimum stays stable across clean runs on the same machine.
-
 /**
  * Returns a best-effort snapshot of the current hardware and runtime
  * environment. Used to detect when a baseline was recorded on a different
  * machine so comparisons are not silently invalidated.
+ *
+ * Machine fingerprint
+ * The fingerprint is stored in the baseline JSON envelope. On load it is
+ * compared with the current environment. When they differ the comparison is
+ * skipped and a warning is printed instead of misleading regression output.
+ * Regression detection uses min_ns (fastest observed time), which is immune
+ * to OS scheduling spikes - noise only ever adds latency to individual
+ * samples, so the minimum stays stable across clean runs on the same machine.
  *
  * @return array<string, mixed>
  */
@@ -149,10 +147,6 @@ function fingerprintsMatch(array $a, array $b): bool
 
 $fingerprint = buildMachineFingerprint();
 
-// ---------------------------------------------------------------------------
-// Discover and load all benchmark suites from tests/Benchmarks/*Benchmark.php
-// ---------------------------------------------------------------------------
-
 $callables = [];
 
 foreach (\glob(__DIR__ . '/Benchmarks/*Benchmark.php') ?: [] as $file) {
@@ -167,19 +161,11 @@ if (empty($callables)) {
 	exit(0);
 }
 
-// ---------------------------------------------------------------------------
-// Run
-// ---------------------------------------------------------------------------
-
 $bm = Benchmark::create()
 	->warmup(10)
 	->maxDuration(0.5)
 	->regressionThreshold(THRESHOLD_PCT)
 	->run($callables);
-
-// ---------------------------------------------------------------------------
-// Compare with baseline if one exists
-// ---------------------------------------------------------------------------
 
 $hasRegression  = false;
 $hasImprovement = false;
@@ -239,17 +225,12 @@ if ($baselineExists) {
 	$bm->orderByFastest()->printSummary();
 }
 
-// ---------------------------------------------------------------------------
 // Save updated baseline (only when no regressions - avoids saving noisy spikes
 // as the new reference, which would mask future real regressions)
-// ---------------------------------------------------------------------------
 
 if (!$hasRegression) {
 	\file_put_contents(BASELINE_FILE, $bm->exportJson($fingerprint));
 }
 
-// ---------------------------------------------------------------------------
 // Exit with error code on regression so CI catches it
-// ---------------------------------------------------------------------------
-
 exit($hasRegression ? 1 : 0);

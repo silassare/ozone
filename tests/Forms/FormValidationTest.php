@@ -28,10 +28,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class FormValidationTest extends TestCase
 {
-	// -----------------------------------------------------------
-	// expect() — pre-validation, runs on unsafe data
-	// -----------------------------------------------------------
-
 	public function testExpectPassesWhenConditionHoldsOnRawData(): void
 	{
 		$form = new Form();
@@ -82,10 +78,6 @@ final class FormValidationTest extends TestCase
 		$form->validate(new FormData(['flag' => 'yes']));
 	}
 
-	// -----------------------------------------------------------
-	// ensure() — post-validation, runs on cleaned data
-	// -----------------------------------------------------------
-
 	public function testEnsurePassesWhenConditionHoldsOnCleanData(): void
 	{
 		$form = new Form();
@@ -131,10 +123,6 @@ final class FormValidationTest extends TestCase
 			self::assertSame('OZ_FORM_MISSING_REQUIRED_FIELD', $e->getMessage());
 		}
 	}
-
-	// -----------------------------------------------------------
-	// toArray() — expect entries serialized (server-only excluded entirely)
-	// -----------------------------------------------------------
 
 	public function testToArrayIncludesExpectEntries(): void
 	{
@@ -187,10 +175,6 @@ final class FormValidationTest extends TestCase
 		self::assertArrayHasKey('expect', $arr);
 		self::assertSame([], $arr['expect']);
 	}
-
-	// -----------------------------------------------------------
-	// ensure() rules are NOT in toArray()
-	// -----------------------------------------------------------
 
 	public function testToArrayDoesNotExposeEnsureRules(): void
 	{

@@ -36,10 +36,6 @@ final class RoutePathParserTest extends TestCase
 		$this->router = TestUtils::router();
 	}
 
-	// -------------------------------------------------------------------------
-	// isValidParameter
-	// -------------------------------------------------------------------------
-
 	public function testIsValidParameterAcceptsAlphaStart(): void
 	{
 		self::assertTrue(RoutePathParser::isValidParameter('id'));
@@ -72,10 +68,6 @@ final class RoutePathParserTest extends TestCase
 		self::assertFalse(RoutePathParser::isValidParameter('user id'));
 	}
 
-	// -------------------------------------------------------------------------
-	// parse() - static segments
-	// -------------------------------------------------------------------------
-
 	public function testParseStaticSegment(): void
 	{
 		$parser  = new RoutePathParser('/users/list', $this->router);
@@ -90,10 +82,6 @@ final class RoutePathParserTest extends TestCase
 		$pattern = $parser->parse('/');
 		self::assertSame('/', $pattern);
 	}
-
-	// -------------------------------------------------------------------------
-	// parse() - colon-style parameters
-	// -------------------------------------------------------------------------
 
 	public function testParseColonParameter(): void
 	{
@@ -124,10 +112,6 @@ final class RoutePathParserTest extends TestCase
 		self::assertArrayHasKey('postId', $params);
 	}
 
-	// -------------------------------------------------------------------------
-	// parse() - brace-style parameters
-	// -------------------------------------------------------------------------
-
 	public function testParseBraceParameter(): void
 	{
 		$parser  = new RoutePathParser('/users/{id}', $this->router);
@@ -144,10 +128,6 @@ final class RoutePathParserTest extends TestCase
 
 		self::assertStringContainsString('(?P<id>\d+)', $pattern);
 	}
-
-	// -------------------------------------------------------------------------
-	// parse() - optional segments
-	// -------------------------------------------------------------------------
 
 	public function testParseOptionalSegment(): void
 	{
@@ -170,10 +150,6 @@ final class RoutePathParserTest extends TestCase
 
 		self::assertSame(1, $params['id']); // 1 = required
 	}
-
-	// -------------------------------------------------------------------------
-	// parse() - validation errors
-	// -------------------------------------------------------------------------
 
 	public function testParseThrowsOnDuplicateParameter(): void
 	{
@@ -202,10 +178,6 @@ final class RoutePathParserTest extends TestCase
 		$parser = new RoutePathParser('/users[]', $this->router);
 		$parser->parse('/users[]');
 	}
-
-	// -------------------------------------------------------------------------
-	// parse() - result matches URLs correctly
-	// -------------------------------------------------------------------------
 
 	public function testParsedPatternMatchesDynamicUrl(): void
 	{
