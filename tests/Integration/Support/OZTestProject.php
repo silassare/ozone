@@ -204,6 +204,27 @@ final class OZTestProject
 	}
 
 	/**
+	 * Write (or overwrite) an arbitrary file inside the project directory.
+	 *
+	 * Intermediate directories are created automatically.
+	 * The path is relative to the project root (no leading slash required).
+	 *
+	 * @param string $relative_path e.g. 'app/TestRoutes.php'
+	 * @param string $content       file content
+	 */
+	public function writeFile(string $relative_path, string $content): void
+	{
+		$abs = $this->dir . \DIRECTORY_SEPARATOR . \ltrim($relative_path, '/\\');
+		$dir = \dirname($abs);
+
+		if (!\is_dir($dir)) {
+			\mkdir($dir, 0o775, true);
+		}
+
+		\file_put_contents($abs, $content);
+	}
+
+	/**
 	 * Write (or overwrite) key-value pairs in the project .env file.
 	 *
 	 * Existing keys are updated in-place; new keys are appended.

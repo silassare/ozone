@@ -96,6 +96,14 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	private bool $t_registered = false;
 
 	/**
+	 * Whether the form key was explicitly set by the user via {@see self::key()}.
+	 *
+	 * Only explicitly named forms are registered in the {@see FormRegistry} and
+	 * therefore discoverable / eligible for partial-upload via {@see FormsService}.
+	 */
+	private bool $t_named = false;
+
+	/**
 	 * Form constructor.
 	 *
 	 * @param null|string $prefix    optional prefix for field namespacing (validated as a dot-path segment)
@@ -138,6 +146,8 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 			throw new InvalidArgumentException('Form key must be non-empty and not whitespace-only string.');
 		}
 
+		$this->t_named = true;
+
 		if ($this->t_key !== $key) {
 			$old         = $this->t_key;
 			$this->t_key = $key;
@@ -149,6 +159,17 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 		}
 
 		return $this;
+	}
+
+	/**
+	 * Returns true when the form key was set explicitly via {@see self::key()}.
+	 *
+	 * Only named forms are registered in {@see FormRegistry} and discoverable
+	 * via the forms service.
+	 */
+	public function isNamed(): bool
+	{
+		return $this->t_named;
 	}
 
 	/**
@@ -239,8 +260,8 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 			'pfx' => $this->t_prefix,
 			'fld' => $fields,
 			'stp' => $steps,
-			'exp' => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->t_pre_validation_rules),
-			'ens' => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->t_post_validation_rules),
+			'exp' => \array_map(static fn(RuleSet $r) => $r->toArray(), $this->t_pre_validation_rules),
+			'ens' => \array_map(static fn(RuleSet $r) => $r->toArray(), $this->t_post_validation_rules),
 		];
 
 		return \substr(\hash('sha256', \json_encode($descriptor, \JSON_THROW_ON_ERROR)), 0, 16);
@@ -608,7 +629,7 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 			'steps'        => $this->t_steps,
 			'expect'       => \array_values(\array_filter(
 				$this->t_pre_validation_rules,
-				static fn (RuleSet $r) => !$r->isServerOnly()
+				static fn(RuleSet $r) => !$r->isServerOnly()
 			)),
 			'resume_scope' => $this->t_resume_scope?->value,
 			'resume_ttl'   => null !== $this->t_resume_scope ? $this->t_resume_ttl : null,

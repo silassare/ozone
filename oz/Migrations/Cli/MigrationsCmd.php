@@ -53,8 +53,12 @@ final class MigrationsCmd extends Command
 		$this->action('check', 'Check database migrations.')
 			->handler($this->check(...));
 
-		$this->action('run', 'Run database migrations.')
+		$run = $this->action('run', 'Run database migrations.')
 			->handler($this->run(...));
+		$run->option('skip-backup')
+			->description('Skip the database backup step before running migrations.')
+			->bool()
+			->def(false);
 
 		$this->action('rollback', 'Rollback database migrations.')
 			->handler($this->rollback(...))
@@ -121,13 +125,14 @@ final class MigrationsCmd extends Command
 	 *
 	 * @throws KliException
 	 */
-	private function run(): void
+	private function run(KliArgs $args): void
 	{
 		Utils::assertDatabaseAccess();
 
-		$cli        = $this->getCli();
-		$mg         = new Migrations();
-		$migrations = $mg->getPendingMigrations();
+		$skip_backup = (bool) $args->get('skip-backup');
+		$cli         = $this->getCli();
+		$mg          = new Migrations();
+		$migrations  = $mg->getPendingMigrations();
 
 		if (empty($migrations)) {
 			$this->getCli()
@@ -137,7 +142,9 @@ final class MigrationsCmd extends Command
 		}
 
 		// backup db before running migrations
-		DbCmd::ensureDBBackup($this->getCli());
+		if (!$skip_backup) {
+			DbCmd::ensureDBBackup($this->getCli());
+		}
 
 		$current_db_version = $mg::getCurrentDbVersion(true);
 

@@ -97,7 +97,11 @@ final class RouteFormDeclaration
 		$decl->t_policy = $policy;
 
 		if ($form instanceof Form) {
-			$form->register();
+			// Only register forms that have an explicit stable key set via Form::key().
+			// Auto-keyed forms (oz:form:auto:N) are ephemeral and must NOT be discoverable.
+			if ($form->isNamed()) {
+				$form->register();
+			}
 			$decl->t_static_form = $form;
 
 			return $decl;

@@ -221,7 +221,7 @@ class MyService extends Service
             $s = new self($ri);
             return $s->respond();
         })->name('my:items.create')
-          ->form(MyCreateForm::class);
+          ->form(new MyCreateForm());
     }
 }
 ```
@@ -242,7 +242,7 @@ $router->get('/path', $handler)
     ->withAuthorization('auth:provider:name')                     // guard: OZAuth-based
     ->middleware(MyMiddleware::class)                              // middleware by class FQN
     ->guard(MyGuard::class)                                       // guard by class FQN
-    ->form(MyForm::class)                                         // attach form for validation
+    ->form(new MyForm())                                          // attach form instance (or callable) for validation
     ->param('id', '[0-9]+')                                       // path param constraint
     ->priority(10)                                                // higher = matched first
     ->rateLimit(new IPRateLimit($ri, 60, 3600));                  // rate limiting
@@ -378,7 +378,9 @@ All `oz://` resolution and source registration is handled exclusively by `Assets
 
 **Main class**: `OZONE\Core\Forms\Form`
 
-Forms are attached to routes via `.form(MyForm::class)` and auto-validated in `RouteInfo` construction. Clean data is accessible via `$ri->getCleanFormData()`.
+Forms are attached to routes via `.form(new MyForm())` (pass a `Form` instance or a callable factory — class name strings are not accepted) and auto-validated in `RouteInfo` construction. Clean data is accessible via `$ri->getCleanFormData()`.
+
+Call `$form->key('my:form:key')` to register the form in `FormRegistry` for discovery via `FormsService`. Only explicitly keyed forms are discoverable; auto-keyed forms (key set without `key()`) are NOT registered. `$form->isNamed()` returns true once `key()` has been called.
 
 ### Defining Forms
 
@@ -822,7 +824,10 @@ oz migrations check
 # 2. Generate a new migration after schema changes:
 oz migrations create --label="Add users birthdate column"
 
-# 3. Apply pending migrations:
+# 3. Apply pending migrations (--skip-backup skips the pre-run DB backup, useful for SQLite or CI):
+oz migrations run --skip-backup
+
+# 3b. Apply with backup (default, for production MySQL):
 oz migrations run
 
 # 4. Rollback to a previous version:
@@ -1201,7 +1206,7 @@ All HTTP exceptions extend `OZONE\Core\Exceptions\BaseException`:
 - `NotFoundException` — 404
 - `MethodNotAllowedException` — 405
 - `BadRequestException` — 400
-- `InvalidFormException` — 422 (form validation failure)
+- `InvalidFormException` — 400 (form validation failure; `BaseException::INVALID_FORM` maps to HTTP 400)
 - `UnauthorizedException` — 401
 
 Throw these in guards, middlewares, or handlers; they are caught by `Context::handle()` and serialized via `informClient()`.
@@ -1475,7 +1480,7 @@ Each scope creates:
 | ---------- | ------------------------------------- | ----------------------------------- |
 | `create`   | `-f/--force`, `-l/--label` (required) | Generate migration from schema diff |
 | `check`    | —                                     | Show current migration state        |
-| `run`      | —                                     | Apply all pending migrations        |
+| `run`      | `--skip-backup`                       | Apply all pending migrations (skip pre-run DB backup) |
 | `rollback` | `--to-version=N`                      | Rollback to version N               |
 
 ### `oz services`
