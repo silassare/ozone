@@ -1613,13 +1613,13 @@ repository only places a symlink inside the cached vendor as `vendor/silassare/o
 
 Tests read DB configuration from environment variables:
 
-| Env var            | Default      | Description                   |
-| ------------------ | ------------ | ----------------------------- |
-| `OZ_TEST_DB_RDBMS` | `sqlite`     | `mysql`, `pgsql`, or `sqlite` |
-| `OZ_TEST_DB_HOST`  | `:memory:`   | DB host (or SQLite path)      |
-| `OZ_TEST_DB_NAME`  | `ozone_test` | Database name                 |
-| `OZ_TEST_DB_USER`  | `root`       | DB username                   |
-| `OZ_TEST_DB_PASS`  | `""`         | DB password                   |
+| Env var            | Default      | Description                        |
+| ------------------ | ------------ | ---------------------------------- |
+| `OZ_TEST_DB_RDBMS` | `sqlite`     | `mysql`, `postgresql`, or `sqlite` |
+| `OZ_TEST_DB_HOST`  | `:memory:`   | DB host (or SQLite path)           |
+| `OZ_TEST_DB_NAME`  | `ozone_test` | Database name                      |
+| `OZ_TEST_DB_USER`  | `root`       | DB username                        |
+| `OZ_TEST_DB_PASS`  | `""`         | DB password                        |
 
 Integration test classes that require a DB extend `IntegrationTestCase` (in `tests/Support/`) which applies the schema DDL once per process.
 
@@ -1665,6 +1665,6 @@ OZ_TEST_DB_RDBMS=mysql OZ_TEST_DB_NAME=ozone_test OZ_TEST_DB_USER=root \
   ./vendor/bin/phpunit --testsuite Integration
 
 # With PostgreSQL:
-OZ_TEST_DB_RDBMS=pgsql OZ_TEST_DB_HOST=localhost OZ_TEST_DB_NAME=ozone_test \
+OZ_TEST_DB_RDBMS=postgresql OZ_TEST_DB_HOST=localhost OZ_TEST_DB_NAME=ozone_test \
   OZ_TEST_DB_USER=postgres ./vendor/bin/phpunit --testsuite Integration
 ```

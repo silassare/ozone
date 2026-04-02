@@ -52,7 +52,7 @@ final class DbTestConfig
 
 	public function isPostgreSQL(): bool
 	{
-		return 'pgsql' === $this->rdbms;
+		return 'postgresql' === $this->rdbms;
 	}
 
 	/**
