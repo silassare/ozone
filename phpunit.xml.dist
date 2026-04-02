@@ -10,6 +10,16 @@
 
     <php>
         <ini name="error_reporting" value="-1"/>
+        <!-- MySQL test database (ozone_test user / database). -->
+        <env name="OZ_TEST_MYSQL_HOST" value="127.0.0.1"/>
+        <env name="OZ_TEST_MYSQL_NAME" value="ozone_test"/>
+        <env name="OZ_TEST_MYSQL_USER" value="ozone_test"/>
+        <env name="OZ_TEST_MYSQL_PASS" value="OzoneTest@1"/>
+        <!-- PostgreSQL test database (ozone_test user / database). -->
+        <env name="OZ_TEST_PGSQL_HOST" value="127.0.0.1"/>
+        <env name="OZ_TEST_PGSQL_NAME" value="ozone_test"/>
+        <env name="OZ_TEST_PGSQL_USER" value="ozone_test"/>
+        <env name="OZ_TEST_PGSQL_PASS" value="OzoneTest@1"/>
     </php>
 
     <testsuites>
