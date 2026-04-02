@@ -61,12 +61,13 @@ subprocesses against temporary scaffolded projects so regressions are caught end
 | `tests/Integration/Scopes/ScopesAddTest.php`      | `oz scopes add` — API scope, web scope, multiple scopes, origin persisted, htaccess content, PHP syntax |
 | `tests/Integration/Project/ProjectServeTest.php`  | PHP built-in server starts, responds to HTTP, returns OZone JSON                                        |
 | `tests/Integration/Settings/SettingsCmdTest.php`  | `oz settings set/unset` — all value types, scope-scoped writes, unset removes key                       |
+| `tests/Integration/Db/DbBackupTest.php`           | `oz db backup` — creates backup file per DB type; SQLite :memory: fails                                 |
+| `tests/Integration/Db/MigrationsTest.php`         | `oz migrations` — NOT_INSTALLED -> run -> INSTALLED -> create -> PENDING -> run -> rollback             |
+| `tests/Integration/Db/DbBuildTest.php`            | `oz db build` — ORM classes generated in app/Db/, valid PHP, idempotent                                 |
+| `tests/Integration/Services/ServicesGenerateTest.php` | `oz services generate` — file created, valid PHP, registered in routes, override/conflict/bad-table     |
 
 **Remaining test areas:**
 
-- `oz db build` — ORM class generation from schema
-- `oz migrations create/check/run/rollback` — full migration lifecycle
-- `oz services generate` — service scaffolding
 - Route registration, guard, middleware, form validation (via HTTP in served project)
 - Template rendering via web scope
 - Auth flows (login, logout, token) via HTTP
