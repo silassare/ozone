@@ -5,6 +5,10 @@ PHP     = php
 
 # = Tests
 
+## Prepare databases for integration local tests (MySQL and PostgreSQL)
+prepare-test-dbs:
+	./tests/prepare_test_dbs.sh
+
 ## Run the unit test suite
 test-unit:
 	$(PHPUNIT) --testsuite Unit --testdox --do-not-cache-result
@@ -37,7 +41,7 @@ lint:
 fix: lint
 	vendor/bin/oliup-cs fix
 
-## Remove blate caches and temp test artefacts
+## Remove blate caches and temp test artifacts
 clean:
 	find . -name blate_cache -exec rm -rf {} + 2>/dev/null || true
 	rm -rf /tmp/_oz_tests_/
