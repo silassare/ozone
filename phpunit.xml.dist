@@ -12,14 +12,16 @@
         <ini name="error_reporting" value="-1"/>
         <!-- MySQL test database (ozone_test user / database). -->
         <env name="OZ_TEST_MYSQL_HOST" value="127.0.0.1"/>
-        <env name="OZ_TEST_MYSQL_NAME" value="ozone_test"/>
+        <env name="OZ_TEST_MYSQL_PORT" value="3306"/>
+        <env name="OZ_TEST_MYSQL_DB" value="ozone_test"/>
         <env name="OZ_TEST_MYSQL_USER" value="ozone_test"/>
-        <env name="OZ_TEST_MYSQL_PASS" value="OzoneTest@1"/>
+        <env name="OZ_TEST_MYSQL_PASSWORD" value="OzoneTest@1"/>
         <!-- PostgreSQL test database (ozone_test user / database). -->
-        <env name="OZ_TEST_PGSQL_HOST" value="127.0.0.1"/>
-        <env name="OZ_TEST_PGSQL_NAME" value="ozone_test"/>
-        <env name="OZ_TEST_PGSQL_USER" value="ozone_test"/>
-        <env name="OZ_TEST_PGSQL_PASS" value="OzoneTest@1"/>
+        <env name="OZ_TEST_POSTGRESQL_HOST" value="127.0.0.1"/>
+        <env name="OZ_TEST_POSTGRESQL_PORT" value="5432"/>
+        <env name="OZ_TEST_POSTGRESQL_DB" value="ozone_test"/>
+        <env name="OZ_TEST_POSTGRESQL_USER" value="ozone_test"/>
+        <env name="OZ_TEST_POSTGRESQL_PASSWORD" value="OzoneTest@1"/>
     </php>
 
     <testsuites>

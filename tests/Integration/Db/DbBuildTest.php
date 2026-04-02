@@ -16,6 +16,8 @@ namespace OZONE\Tests\Integration\Db;
 use OZONE\Tests\Integration\Support\DbTestConfig;
 use OZONE\Tests\Integration\Support\OZTestProject;
 use PHPUnit\Framework\TestCase;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Symfony\Component\Process\Process;
 
 /**
@@ -75,7 +77,7 @@ final class DbBuildTest extends TestCase
 	public function testDbBuildExitsCleanly(DbTestConfig $config): void
 	{
 		$rdbms = $config->rdbms;
-		$proj  = OZTestProject::create('db-build-' . $rdbms, shared: false);
+		$proj  = OZTestProject::create('db-build-' . $rdbms, shared: true, fresh: true);
 		$proj->writeEnv($config->toEnvArray());
 
 		self::$projects[$rdbms] = $proj;
@@ -83,6 +85,8 @@ final class DbBuildTest extends TestCase
 
 		// ORM classes must exist before migrations can run.
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
+		// Drop all tables so FK constraint names don't collide between test runs.
+		$proj->cleanDb();
 		// Create and apply initial migration so the DB is ready.
 		$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
 		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
@@ -119,16 +123,22 @@ final class DbBuildTest extends TestCase
 	public function testGeneratedFilesAreValidPhp(DbTestConfig $config): void
 	{
 		$dbDir = self::getProject($config)->getPath() . '/app/Db';
-		$files = \array_merge(
-			\glob($dbDir . '/*.php') ?: [],
-			\glob($dbDir . '/**/*.php') ?: [],
-		);
+		$files = [];
 
-		// For an empty project schema no entity PHP files may be generated;
-		// skip the lint check rather than failing the test.
-		if (empty($files)) {
-			self::markTestSkipped('No entity PHP files generated for empty project schema.');
+		if (\is_dir($dbDir)) {
+			$it = new RecursiveIteratorIterator(
+				new RecursiveDirectoryIterator($dbDir, RecursiveDirectoryIterator::SKIP_DOTS),
+			);
+			foreach ($it as $file) {
+				if ('php' === $file->getExtension()) {
+					$files[] = $file->getPathname();
+				}
+			}
 		}
+
+		// An empty project schema generates no entity PHP files — this is expected.
+		// Ensure the loop below is always entered when files do exist.
+		self::assertIsArray($files, 'Expected array of PHP files (possibly empty for a blank schema).');
 
 		foreach ($files as $file) {
 			$lint = new Process([\PHP_BINARY, '-l', $file]);

@@ -231,10 +231,12 @@ final class MigrationsTest extends TestCase
 			return self::$projects[$rdbms];
 		}
 
-		$proj = OZTestProject::create('migrations-' . $rdbms, shared: false);
+		$proj = OZTestProject::create('migrations-' . $rdbms, shared: true, fresh: true);
 		$proj->writeEnv($config->toEnvArray());
 		// ORM classes must be generated before any migration operation.
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
+		// Drop all tables so FK constraint names don't collide between test runs.
+		$proj->cleanDb();
 
 		self::$projects[$rdbms] = $proj;
 		self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;

@@ -15,6 +15,7 @@ namespace OZONE\Tests\Integration\Support;
 
 use JsonException;
 use OZONE\Core\Utils\Env;
+use PDO;
 use RuntimeException;
 use Symfony\Component\Process\Process;
 
@@ -55,6 +56,9 @@ final class OZTestProject
 	 *                                       other projects that have the same dep set;
 	 *                                       pass false to isolate vendor per project name;
 	 *                                       in most cases tests should set shared=true so that composer installs are minimized
+	 * @param bool                 $fresh    when true, any existing project directory is destroyed before creating;
+	 *                                       use when the test must start from a clean slate on every run
+	 *                                       (e.g. tests that call migrations create + run inline)
 	 *
 	 * @throws JsonException
 	 */
@@ -63,9 +67,15 @@ final class OZTestProject
 		array $deps = [],
 		array $deps_dev = [],
 		bool $shared = true,
+		bool $fresh = false,
 	): static {
 		$ozone_root  = self::ozoneRoot();
 		$project_dir = self::projectsDir() . \DIRECTORY_SEPARATOR . $name;
+
+		// Destroy any existing project directory when a clean slate is requested.
+		if ($fresh && \is_dir($project_dir)) {
+			(new self($project_dir))->destroy();
+		}
 
 		if (!\is_dir($project_dir)) {
 			\mkdir($project_dir, 0o775, true);
@@ -276,6 +286,73 @@ final class OZTestProject
 			\unlink($vendor);
 		}
 		(new Process(['rm', '-rf', $this->dir]))->run();
+	}
+
+	/**
+	 * Drops all tables in the project's database (MySQL / PostgreSQL).
+	 *
+	 * Call this before running `oz migrations run` when the project reuses a
+	 * shared server-side database.  MySQL enforces globally-unique FK
+	 * constraint names within a database (e.g. `fk_oz_users_oz_usernames`),
+	 * so leftover tables from a previous project with the same schema cause
+	 * "Duplicate foreign key constraint name" errors.  Dropping everything
+	 * first gives each test run a clean slate.
+	 *
+	 * No-op for SQLite (each SQLite test already uses a unique file).
+	 */
+	public function cleanDb(): void
+	{
+		$env_file = $this->dir . \DIRECTORY_SEPARATOR . '.env';
+		if (!\is_file($env_file)) {
+			return;
+		}
+
+		$env   = new Env($env_file);
+		$rdbms = (string) ($env->get('OZ_DB_RDBMS') ?? 'sqlite');
+
+		if ('sqlite' === $rdbms) {
+			return; // SQLite uses a unique file per test class / run.
+		}
+
+		$host = (string) ($env->get('OZ_DB_HOST') ?? '127.0.0.1');
+		$name = (string) ($env->get('OZ_DB_NAME') ?? '');
+		$user = (string) ($env->get('OZ_DB_USER') ?? '');
+		$pass = (string) ($env->get('OZ_DB_PASS') ?? '');
+
+		if ('mysql' === $rdbms) {
+			$port = (int) ($env->get('OZ_DB_PORT') ?? 3306);
+			$pdo  = new PDO(
+				"mysql:host={$host};port={$port};dbname={$name};charset=utf8mb4",
+				$user,
+				$pass,
+				[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+			);
+			$pdo->exec('SET foreign_key_checks = 0');
+			$tables = $pdo->query(
+				'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()'
+			)->fetchAll(PDO::FETCH_COLUMN);
+			foreach ($tables as $table) {
+				$pdo->exec("DROP TABLE IF EXISTS `{$table}`");
+			}
+			$pdo->exec('SET foreign_key_checks = 1');
+		} elseif ('postgresql' === $rdbms) {
+			$port = (int) ($env->get('OZ_DB_PORT') ?? 5432);
+			$pdo  = new PDO(
+				"pgsql:host={$host};port={$port};dbname={$name}",
+				$user,
+				$pass,
+				[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION],
+			);
+			// Drop each table individually with CASCADE to avoid exceeding
+			// max_locks_per_transaction that DROP SCHEMA CASCADE would require.
+			$tables = $pdo->query(
+				"SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
+			)->fetchAll(PDO::FETCH_COLUMN);
+			foreach ($tables as $table) {
+				$quoted = '"' . \str_replace('"', '""', (string) $table) . '"';
+				$pdo->exec("DROP TABLE IF EXISTS {$quoted} CASCADE");
+			}
+		}
 	}
 
 	/**

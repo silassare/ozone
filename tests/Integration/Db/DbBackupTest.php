@@ -66,20 +66,25 @@ final class DbBackupTest extends TestCase
 	 */
 	public function testBackupCreatesFile(DbTestConfig $config): void
 	{
-		$proj = OZTestProject::create('db-backup-' . $config->rdbms, shared: false);
-		$proj->writeEnv($config->toEnvArray());
+		$proj = OZTestProject::create('db-backup-' . $config->rdbms, shared: true, fresh: true);
 
-		// ORM classes must exist before migrations can run.
-		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
-		// Create and apply the initial migration so the DB schema exists.
-		$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
-		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
+		try {
+			$proj->writeEnv($config->toEnvArray());
 
-		// Run the actual backup command.
-		$proc = $proj->oz('db', 'backup', '--dir=' . $this->backupDir);
-		$proc->mustRun();
+			// ORM classes must exist before migrations can run.
+			$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
+			// Drop all tables so FK constraint names don't collide between test runs.
+			$proj->cleanDb();
+			// Create and apply the initial migration so the DB schema exists.
+			$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
+			$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
 
-		$proj->destroy();
+			// Run the actual backup command.
+			$proc = $proj->oz('db', 'backup', '--dir=' . $this->backupDir);
+			$proc->mustRun();
+		} finally {
+			$proj->destroy();
+		}
 
 		$ext   = $config->isSQLite() ? '*.db' : '*.sql';
 		$files = \glob($this->backupDir . '/' . $ext) ?: [];
@@ -105,13 +110,16 @@ final class DbBackupTest extends TestCase
 
 	public function testSQLiteInMemoryBackupFails(): void
 	{
-		$proj = OZTestProject::create('db-backup-sqlite-mem', shared: false);
-		$proj->writeEnv(DbTestConfig::sqlite(':memory:')->toEnvArray());
+		$proj = OZTestProject::create('db-backup-sqlite-mem', shared: true, fresh: true);
 
-		$proc = $proj->oz('db', 'backup', '--dir=' . $this->backupDir);
-		$proc->run();
+		try {
+			$proj->writeEnv(DbTestConfig::sqlite(':memory:')->toEnvArray());
 
-		$proj->destroy();
+			$proc = $proj->oz('db', 'backup', '--dir=' . $this->backupDir);
+			$proc->run();
+		} finally {
+			$proj->destroy();
+		}
 
 		self::assertNotSame(0, $proc->getExitCode(), 'Backup of :memory: SQLite must fail.');
 		$files = \glob($this->backupDir . '/*') ?: [];

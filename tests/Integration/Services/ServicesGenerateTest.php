@@ -78,7 +78,7 @@ final class ServicesGenerateTest extends TestCase
 	public function testGenerateExitsCleanly(DbTestConfig $config): void
 	{
 		$rdbms = $config->rdbms;
-		$proj  = OZTestProject::create('svcgen-' . $rdbms, shared: false);
+		$proj  = OZTestProject::create('svcgen-' . $rdbms, shared: true, fresh: true);
 		$proj->writeEnv($config->toEnvArray());
 
 		self::$projects[$rdbms] = $proj;
@@ -86,6 +86,8 @@ final class ServicesGenerateTest extends TestCase
 
 		// ORM classes must exist before migrations can run.
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
+		// Drop all tables so FK constraint names don't collide between test runs.
+		$proj->cleanDb();
 		// DB must be installed for services generate to access the table schema.
 		$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
 		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
