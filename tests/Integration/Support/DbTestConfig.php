@@ -97,16 +97,18 @@ final class DbTestConfig
 	 */
 	public static function mysql(): ?self
 	{
-		if (false === \getenv('OZ_TEST_MYSQL_HOST')) {
+		$envs = \getenv();
+
+		if (empty($envs['OZ_TEST_MYSQL_HOST'])) {
 			return null;
 		}
 
 		return new self(
 			'mysql',
-			\getenv('OZ_TEST_MYSQL_HOST') ?: '127.0.0.1',
-			\getenv('OZ_TEST_MYSQL_NAME') ?: 'ozone_test',
-			\getenv('OZ_TEST_MYSQL_USER') ?: 'root',
-			\getenv('OZ_TEST_MYSQL_PASS') ?: '',
+			$envs['OZ_TEST_MYSQL_HOST'],
+			$envs['OZ_TEST_MYSQL_NAME'] ?? 'ozone_test',
+			$envs['OZ_TEST_MYSQL_USER'] ?? 'root',
+			$envs['OZ_TEST_MYSQL_PASS'] ?? '',
 		);
 	}
 
@@ -122,26 +124,24 @@ final class DbTestConfig
 	 */
 	public static function postgresql(): ?self
 	{
-		if (false === \getenv('OZ_TEST_PGSQL_HOST')) {
+		$envs = \getenv();
+
+		if (empty($envs['OZ_TEST_PGSQL_HOST'])) {
 			return null;
 		}
 
 		return new self(
 			'postgresql',
-			\getenv('OZ_TEST_PGSQL_HOST') ?: '127.0.0.1',
-			\getenv('OZ_TEST_PGSQL_NAME') ?: 'ozone_test',
-			\getenv('OZ_TEST_PGSQL_USER') ?: 'postgres',
-			\getenv('OZ_TEST_PGSQL_PASS') ?: '',
+			$envs['OZ_TEST_PGSQL_HOST'],
+			$envs['OZ_TEST_PGSQL_NAME'] ?? 'ozone_test',
+			$envs['OZ_TEST_PGSQL_USER'] ?? 'postgres',
+			$envs['OZ_TEST_PGSQL_PASS'] ?? '',
 		);
 	}
 
 	/**
 	 * Returns all DB configurations that are currently available, keyed by
 	 * driver name so PHPUnit @dataProvider output is readable.
-	 *
-	 * SQLite is always included (backed by a temp file per process).
-	 * MySQL is included when OZ_TEST_MYSQL_HOST is set.
-	 * PostgreSQL is included when OZ_TEST_PGSQL_HOST is set.
 	 *
 	 * Usage in a test class:
 	 *

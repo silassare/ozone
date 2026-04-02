@@ -66,13 +66,6 @@ final class DbBackupTest extends TestCase
 	 */
 	public function testBackupCreatesFile(DbTestConfig $config): void
 	{
-		if ($config->isMySQL() && !self::cmdAvailable('mysqldump')) {
-			self::markTestSkipped('mysqldump not found on this system.');
-		}
-		if ($config->isPostgreSQL() && !self::cmdAvailable('pg_dump')) {
-			self::markTestSkipped('pg_dump not found on this system.');
-		}
-
 		$proj = OZTestProject::create('db-backup-' . $config->rdbms, shared: false);
 		$proj->writeEnv($config->toEnvArray());
 		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
@@ -117,16 +110,5 @@ final class DbBackupTest extends TestCase
 		self::assertNotSame(0, $proc->getExitCode(), 'Backup of :memory: SQLite must fail.');
 		$files = \glob($this->backupDir . '/*') ?: [];
 		self::assertCount(0, $files, 'No backup file should be created for :memory: SQLite.');
-	}
-
-	// -------------------------------------------------------------------------
-	// Helpers
-	// -------------------------------------------------------------------------
-
-	private static function cmdAvailable(string $cmd): bool
-	{
-		$result = \shell_exec('command -v ' . \escapeshellarg($cmd) . ' 2>/dev/null');
-
-		return !empty(\trim((string) $result));
 	}
 }
