@@ -16,18 +16,17 @@ namespace OZONE\Tests\Integration\Db;
 use OZONE\Tests\Integration\Support\DbTestConfig;
 use OZONE\Tests\Integration\Support\OZTestProject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Process\Process;
 
 /**
  * Integration tests for `oz db backup`.
  *
  * Tests cover:
- *  - SQLite file backup creates a .db copy in the target directory
- *  - SQLite :memory: backup exits with an error
- *  - MySQL backup creates a .sql dump (skipped when MySQL is not configured
- *    or mysqldump is not available)
- *  - PostgreSQL backup creates a .sql dump (skipped when PostgreSQL is not
- *    configured or pg_dump is not available)
+ *  - All configured DB types can produce a backup file (via @dataProvider).
+ *  - SQLite :memory: backup exits with an error.
+ *
+ * DB types are enabled via env vars (see DbTestConfig::allConfigured()).
+ * SQLite is always tested. MySQL and PostgreSQL require the respective CLI
+ * tools (mysqldump / pg_dump) to be available on the system.
  *
  * @internal
  *
@@ -40,15 +39,13 @@ final class DbBackupTest extends TestCase
 	protected function setUp(): void
 	{
 		parent::setUp();
-		// Each test gets its own temp dir so backup files do not collide.
-		$this->backupDir = \sys_get_temp_dir() . '/_oz_tests_backup_' . \uniqid('', true);
+		$this->backupDir = \sys_get_temp_dir() . '/_oz_backup_' . \uniqid('', true);
 		\mkdir($this->backupDir, 0o775, true);
 	}
 
 	protected function tearDown(): void
 	{
-		$files = \glob($this->backupDir . '/*') ?: [];
-		foreach ($files as $f) {
+		foreach (\glob($this->backupDir . '/*') ?: [] as $f) {
 			\unlink($f);
 		}
 		if (\is_dir($this->backupDir)) {
@@ -57,34 +54,60 @@ final class DbBackupTest extends TestCase
 		parent::tearDown();
 	}
 
-	public function testSQLiteBackupCreatesDbFile(): void
+	// -------------------------------------------------------------------------
+	// Tests
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Verifies that `oz db backup` creates a backup file for every configured
+	 * DB type.
+	 *
+	 * @dataProvider provideBackupCreatesFileCases
+	 */
+	public function testBackupCreatesFile(DbTestConfig $config): void
 	{
-		$proj    = OZTestProject::create('db-backup-sqlite', shared: false);
-		$db_file = $proj->getPath() . '/test.db';
+		if ($config->isMySQL() && !self::cmdAvailable('mysqldump')) {
+			self::markTestSkipped('mysqldump not found on this system.');
+		}
+		if ($config->isPostgreSQL() && !self::cmdAvailable('pg_dump')) {
+			self::markTestSkipped('pg_dump not found on this system.');
+		}
 
-		$proj->writeEnv([
-			'OZ_DB_RDBMS' => 'sqlite',
-			'OZ_DB_HOST'  => $db_file,
-		]);
-
+		$proj = OZTestProject::create('db-backup-' . $config->rdbms, shared: false);
+		$proj->writeEnv($config->toEnvArray());
 		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
 
-		$proj->oz('db', 'backup', '--dir=' . $this->backupDir)->mustRun();
+		$proc = $proj->oz('db', 'backup', '--dir=' . $this->backupDir);
+		$proc->mustRun();
 
 		$proj->destroy();
 
-		$files = \glob($this->backupDir . '/*.db') ?: [];
-		self::assertCount(1, $files, 'Expected exactly one .db backup file.');
+		$ext   = $config->isSQLite() ? '*.db' : '*.sql';
+		$files = \glob($this->backupDir . '/' . $ext) ?: [];
+		self::assertCount(1, $files, "Expected one {$ext} backup file for {$config->rdbms}.");
 		self::assertFileExists($files[0]);
+	}
+
+	// -------------------------------------------------------------------------
+	// Data providers
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Provides one entry per DB type that is currently configured.
+	 * SQLite is always present. MySQL / PostgreSQL require env vars
+	 * (see DbTestConfig::allConfigured()).
+	 *
+	 * @return array<string, array{DbTestConfig}>
+	 */
+	public static function provideBackupCreatesFileCases(): iterable
+	{
+		return DbTestConfig::allConfigured();
 	}
 
 	public function testSQLiteInMemoryBackupFails(): void
 	{
 		$proj = OZTestProject::create('db-backup-sqlite-mem', shared: false);
-		$proj->writeEnv([
-			'OZ_DB_RDBMS' => 'sqlite',
-			'OZ_DB_HOST'  => ':memory:',
-		]);
+		$proj->writeEnv(DbTestConfig::sqlite(':memory:')->toEnvArray());
 
 		$proc = $proj->oz('db', 'backup', '--dir=' . $this->backupDir);
 		$proc->run();
@@ -96,57 +119,14 @@ final class DbBackupTest extends TestCase
 		self::assertCount(0, $files, 'No backup file should be created for :memory: SQLite.');
 	}
 
-	public function testMySQLBackupCreatesSqlFile(): void
+	// -------------------------------------------------------------------------
+	// Helpers
+	// -------------------------------------------------------------------------
+
+	private static function cmdAvailable(string $cmd): bool
 	{
-		$config = new DbTestConfig();
-		if (!$config->isMySQL()) {
-			self::markTestSkipped('MySQL not configured (set OZ_TEST_DB_RDBMS=mysql).');
-		}
-		if (!self::commandAvailable('mysqldump')) {
-			self::markTestSkipped('mysqldump not found on this system.');
-		}
+		$result = \shell_exec('command -v ' . \escapeshellarg($cmd) . ' 2>/dev/null');
 
-		$proj = OZTestProject::create('db-backup-mysql', shared: false);
-		$proj->writeEnv($config->toEnvArray());
-		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
-
-		$proj->oz('db', 'backup', '--dir=' . $this->backupDir)->mustRun();
-
-		$proj->destroy();
-
-		$files = \glob($this->backupDir . '/*.sql') ?: [];
-		self::assertCount(1, $files, 'Expected exactly one .sql backup file.');
-		self::assertFileExists($files[0]);
-	}
-
-	public function testPostgreSQLBackupCreatesSqlFile(): void
-	{
-		$config = new DbTestConfig();
-		if (!$config->isPostgreSQL()) {
-			self::markTestSkipped('PostgreSQL not configured (set OZ_TEST_DB_RDBMS=postgresql).');
-		}
-		if (!self::commandAvailable('pg_dump')) {
-			self::markTestSkipped('pg_dump not found on this system.');
-		}
-
-		$proj = OZTestProject::create('db-backup-postgresql', shared: false);
-		$proj->writeEnv($config->toEnvArray());
-		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
-
-		$proj->oz('db', 'backup', '--dir=' . $this->backupDir)->mustRun();
-
-		$proj->destroy();
-
-		$files = \glob($this->backupDir . '/*.sql') ?: [];
-		self::assertCount(1, $files, 'Expected exactly one .sql backup file.');
-		self::assertFileExists($files[0]);
-	}
-
-	private static function commandAvailable(string $cmd): bool
-	{
-		$proc = new Process(['which', $cmd]);
-		$proc->run();
-
-		return $proc->isSuccessful();
+		return !empty(\trim((string) $result));
 	}
 }

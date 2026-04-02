@@ -14,14 +14,11 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Support;
 
 /**
- * Reads test DB configuration from environment variables.
+ * Holds test DB configuration for one RDBMS driver.
  *
- * Defaults to an in-memory SQLite database so the integration suite runs
- * out of the box with no external server required.
- * Override via env vars to target MySQL or PostgreSQL in CI:
- *
- *   OZ_TEST_DB_RDBMS=mysql OZ_TEST_DB_NAME=ozone_test OZ_TEST_DB_USER=root \
- *     ./vendor/bin/phpunit --testsuite Integration
+ * Out of the box (no env vars), only SQLite is available.
+ * To enable MySQL or PostgreSQL, set the driver-specific env vars
+ * documented in {@see allConfigured()}.
  */
 final class DbTestConfig
 {
@@ -31,13 +28,18 @@ final class DbTestConfig
 	public readonly string $user;
 	public readonly string $pass;
 
-	public function __construct()
-	{
-		$this->rdbms = \getenv('OZ_TEST_DB_RDBMS') ?: 'sqlite';
-		$this->host  = \getenv('OZ_TEST_DB_HOST') ?: ':memory:';
-		$this->name  = \getenv('OZ_TEST_DB_NAME') ?: 'ozone_test';
-		$this->user  = \getenv('OZ_TEST_DB_USER') ?: 'root';
-		$this->pass  = \getenv('OZ_TEST_DB_PASS') ?: '';
+	private function __construct(
+		string $rdbms,
+		string $host,
+		string $name,
+		string $user,
+		string $pass,
+	) {
+		$this->rdbms = $rdbms;
+		$this->host  = $host;
+		$this->name  = $name;
+		$this->user  = $user;
+		$this->pass  = $pass;
 	}
 
 	public function isSQLite(): bool
@@ -70,5 +72,105 @@ final class DbTestConfig
 			'OZ_DB_USER'  => $this->user,
 			'OZ_DB_PASS'  => $this->pass,
 		];
+	}
+
+	/**
+	 * Returns a SQLite config backed by a real file (not :memory:) so the DB
+	 * persists across separate process invocations (e.g. migrations run + backup).
+	 *
+	 * @param string $host absolute path to the SQLite database file
+	 */
+	public static function sqlite(string $host): self
+	{
+		return new self('sqlite', $host, '', '', '');
+	}
+
+	/**
+	 * Returns a MySQL config read from per-driver env vars:
+	 *
+	 *   OZ_TEST_MYSQL_HOST  (default: 127.0.0.1)
+	 *   OZ_TEST_MYSQL_NAME  (default: ozone_test)
+	 *   OZ_TEST_MYSQL_USER  (default: root)
+	 *   OZ_TEST_MYSQL_PASS  (default: '')
+	 *
+	 * Returns null when OZ_TEST_MYSQL_HOST is not set.
+	 */
+	public static function mysql(): ?self
+	{
+		if (false === \getenv('OZ_TEST_MYSQL_HOST')) {
+			return null;
+		}
+
+		return new self(
+			'mysql',
+			\getenv('OZ_TEST_MYSQL_HOST') ?: '127.0.0.1',
+			\getenv('OZ_TEST_MYSQL_NAME') ?: 'ozone_test',
+			\getenv('OZ_TEST_MYSQL_USER') ?: 'root',
+			\getenv('OZ_TEST_MYSQL_PASS') ?: '',
+		);
+	}
+
+	/**
+	 * Returns a PostgreSQL config read from per-driver env vars:
+	 *
+	 *   OZ_TEST_PGSQL_HOST  (default: 127.0.0.1)
+	 *   OZ_TEST_PGSQL_NAME  (default: ozone_test)
+	 *   OZ_TEST_PGSQL_USER  (default: postgres)
+	 *   OZ_TEST_PGSQL_PASS  (default: '')
+	 *
+	 * Returns null when OZ_TEST_PGSQL_HOST is not set.
+	 */
+	public static function postgresql(): ?self
+	{
+		if (false === \getenv('OZ_TEST_PGSQL_HOST')) {
+			return null;
+		}
+
+		return new self(
+			'postgresql',
+			\getenv('OZ_TEST_PGSQL_HOST') ?: '127.0.0.1',
+			\getenv('OZ_TEST_PGSQL_NAME') ?: 'ozone_test',
+			\getenv('OZ_TEST_PGSQL_USER') ?: 'postgres',
+			\getenv('OZ_TEST_PGSQL_PASS') ?: '',
+		);
+	}
+
+	/**
+	 * Returns all DB configurations that are currently available, keyed by
+	 * driver name so PHPUnit @dataProvider output is readable.
+	 *
+	 * SQLite is always included (backed by a temp file per process).
+	 * MySQL is included when OZ_TEST_MYSQL_HOST is set.
+	 * PostgreSQL is included when OZ_TEST_PGSQL_HOST is set.
+	 *
+	 * Usage in a test class:
+	 *
+	 *   public static function provideDbConfig(): array
+	 *   {
+	 *       return DbTestConfig::allConfigured();
+	 *   }
+	 *
+	 *   @dataProvider provideDbConfig
+	 *   public function testSomething(DbTestConfig $config): void { ... }
+	 *
+	 * @return array<string, array{DbTestConfig}>
+	 */
+	public static function allConfigured(): array
+	{
+		$configs = [
+			'sqlite' => [self::sqlite(\sys_get_temp_dir() . '/oz_test_' . \getmypid() . '.db')],
+		];
+
+		$mysql = self::mysql();
+		if (null !== $mysql) {
+			$configs['mysql'] = [$mysql];
+		}
+
+		$postgresql = self::postgresql();
+		if (null !== $postgresql) {
+			$configs['postgresql'] = [$postgresql];
+		}
+
+		return $configs;
 	}
 }
