@@ -15,6 +15,8 @@ namespace OZONE\Core\Cli\Cmd;
 
 use Exception;
 use Gobl\DBAL\Drivers\MySQL\MySQL;
+use Gobl\DBAL\Drivers\PostgreSQL\PostgreSQL;
+use Gobl\DBAL\Drivers\SQLite\SQLite;
 use Gobl\ORM\Generators\CSGeneratorDart;
 use Gobl\ORM\Generators\CSGeneratorORM;
 use Gobl\ORM\Generators\CSGeneratorTS;
@@ -26,7 +28,6 @@ use Kli\KliArgs;
 use OLIUP\CG\PHPNamespace;
 use Override;
 use OZONE\Core\App\Db;
-use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Utils\Utils;
@@ -329,30 +330,41 @@ final class DbCmd extends Command
 
 		$dir    = $args->get('dir');
 		$cli    = $this->getCli();
-		$config = Settings::load('oz.db');
+		$rdbms  = db()->getType();
+		$fm     = FS::from($dir);
 
-		if (MySQL::NAME !== $config['OZ_DB_RDBMS']) {
-			throw new RuntimeException('this work only for MySQL database.');
-		}
+		match ($rdbms) {
+			MySQL::NAME      => $this->backupMySQL($cli, $fm),
+			PostgreSQL::NAME => $this->backupPostgreSQL($cli, $fm),
+			SQLite::NAME     => $this->backupSQLite($cli, $fm),
+			default          => throw new RuntimeException(\sprintf(
+				'database backup is not supported for "%s".',
+				$rdbms
+			)),
+		};
+	}
 
-		$fm      = FS::from($dir);
+	/**
+	 * Backup MySQL database using mysqldump.
+	 *
+	 * @param Kli          $cli
+	 * @param FilesManager $fm
+	 */
+	private function backupMySQL(Kli $cli, FilesManager $fm): void
+	{
 		$outfile = $fm->resolve(\sprintf('%s.sql', Random::fileName('backup')));
-		$db_host = $config['OZ_DB_HOST'];
-		$db_user = $config['OZ_DB_USER'];
-		$db_pass = $config['OZ_DB_PASS'];
-		$db_name = $config['OZ_DB_NAME'];
+		$config  = db()->getConfig();
 
 		$cmd = [
 			'mysqldump',
-			'-h' . $db_host,
-			'-u' . $db_user,
-			$db_name,
+			'-h' . $config->getDbHost(),
+			'-u' . $config->getDbUser(),
+			$config->getDbName(),
 			'--result-file=' . $outfile,
-			'-p' . $db_pass,
+			'-p' . $config->getDbPass(),
 		];
 
 		$process = new Process($cmd);
-
 		$process->run();
 
 		if ($process->isSuccessful()) {
@@ -364,5 +376,76 @@ final class DbCmd extends Command
 				'mysqldump_exit_code' => $process->getExitCode(),
 			]);
 		}
+	}
+
+	/**
+	 * Backup PostgreSQL database using pg_dump.
+	 *
+	 * @param Kli          $cli
+	 * @param FilesManager $fm
+	 */
+	private function backupPostgreSQL(Kli $cli, FilesManager $fm): void
+	{
+		$outfile = $fm->resolve(\sprintf('%s.sql', Random::fileName('backup')));
+		$config  = db()->getConfig();
+
+		$env = [];
+
+		if (!empty($config->getDbPass())) {
+			$env['PGPASSWORD'] = $config->getDbPass();
+		}
+
+		$cmd = [
+			'pg_dump',
+			'-h',
+			$config->getDbHost(),
+			'-U',
+			$config->getDbUser(),
+			'-d',
+			$config->getDbName(),
+			'-f',
+			$outfile,
+		];
+
+		$process = new Process($cmd, env: $env);
+		$process->run();
+
+		if ($process->isSuccessful()) {
+			$cli->success('database backup file created.')
+				->writeLn($outfile);
+		} else {
+			throw new RuntimeException('unable to backup database.', [
+				'pg_dump_error'     => $process->getErrorOutput(),
+				'pg_dump_exit_code' => $process->getExitCode(),
+			]);
+		}
+	}
+
+	/**
+	 * Backup SQLite database by copying the database file.
+	 *
+	 * @param Kli          $cli
+	 * @param FilesManager $fm
+	 */
+	private function backupSQLite(Kli $cli, FilesManager $fm): void
+	{
+		$config  = db()->getConfig();
+		$db_file = $config->getDbHost();
+
+		if (':memory:' === $db_file || !\file_exists($db_file)) {
+			throw new RuntimeException('unable to backup in-memory or missing SQLite database.');
+		}
+
+		$outfile = $fm->resolve(\sprintf('%s.db', Random::fileName('backup')));
+
+		if (!\copy($db_file, $outfile)) {
+			throw new RuntimeException('unable to backup SQLite database file.', [
+				'source' => $db_file,
+				'dest'   => $outfile,
+			]);
+		}
+
+		$cli->success('database backup file created.')
+			->writeLn($outfile);
 	}
 }
