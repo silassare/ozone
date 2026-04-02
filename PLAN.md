@@ -33,7 +33,7 @@ HTTP API: auth routes (login, logout, password, sign-up), file serving, auth lin
 
 ---
 
-### [ ] E. `Services/QRCode.php` — QR code generation
+### [x] E. `Services/QRCode.php` — QR code generation
 
 **Current behaviour:** QR generation is commented out; the route returns an empty PNG body.
 
@@ -120,7 +120,7 @@ subprocesses against temporary scaffolded projects so regressions are caught end
 | ID  | File                                          | Complexity | Risk       | Status      |
 | --- | --------------------------------------------- | ---------- | ---------- | ----------- |
 | L   | `REST/ApiDoc.php`                             | Low        | None       | ✅ done     |
-| E   | `Services/QRCode.php`                         | Low        | Low-Medium | pending     |
+| E   | `Services/QRCode.php`                         | Low        | Low-Medium | ✅ done     |
 | 0   | Integration test suite                        | Low-Medium | Low        | in progress |
 | K   | `Auth/Auth2FA.php`                            | **High**   | **High**   | pending     |
 | D   | `oz/oz_templates/...access.grant.form.blate`  | Low        | None       | ✅ done     |
