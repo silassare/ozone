@@ -19,12 +19,14 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Body;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
+use OZONE\Core\Services\QRCode\Interfaces\QRCodeEncoderDecoderInterface;
 use OZONE\Core\Utils\Hasher;
 
 /**
@@ -89,9 +91,21 @@ final class QRCode extends Service
 
 		$file = \tmpfile();
 
-		// TODO QRCODE
-		// $code = $data['code'];
-		// \QRcode::png($code, $file, QR_ECLEVEL_H, 20);
+		$class = Settings::get('oz.utils', 'OZ_QR_CODE_ENCODER');
+
+		if (!\is_subclass_of($class, QRCodeEncoderDecoderInterface::class)) {
+			throw new RuntimeException(\sprintf(
+				'QR code encoder "%s" must implement "%s".',
+				$class,
+				QRCodeEncoderDecoderInterface::class,
+			));
+		}
+
+		/** @var QRCodeEncoderDecoderInterface $class */
+		$encoder = $class::get();
+		$png     = $encoder->encode($data['data']);
+		\fwrite($file, $png);
+		\rewind($file);
 
 		$body = new Body($file);
 
