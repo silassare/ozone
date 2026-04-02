@@ -104,7 +104,7 @@ class ServiceGenerator
 		$inject['service']['class']     = $service_class;
 		$qualified_class                = $service_namespace . '\\' . $inject['service']['class'];
 
-		$content = Templates::compile('oz://~core~/gen/gobl/MyService.php.blate', $inject);
+		$content = Templates::compile('oz://~core~/gen/gobl/php/MyService.php.blate', $inject);
 
 		\file_put_contents($class_path, $content);
 
