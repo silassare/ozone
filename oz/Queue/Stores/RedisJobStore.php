@@ -274,7 +274,7 @@ class RedisJobStore implements JobStoreInterface
 		return $this->redis()->set(
 			$this->lockKey($job_contract->getRef()),
 			'1',
-			['nx' => true, 'ex' => self::LOCK_TTL]
+			['EX' => self::LOCK_TTL, 'NX']
 		);
 	}
 
