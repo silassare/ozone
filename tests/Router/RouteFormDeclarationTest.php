@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace OZONE\Tests\Router;
 
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\FormRegistry;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use OZONE\Core\Router\RouteFormDeclaration;
 use PHPUnit\Framework\TestCase;
@@ -32,31 +31,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class RouteFormDeclarationTest extends TestCase
 {
-	protected function setUp(): void
-	{
-		FormRegistry::clear();
-	}
-
-	public function testMakeWithFormInstanceRegistersForm(): void
-	{
-		// Only explicitly named forms (those with a key() call) are registered.
-		$form = (new Form())->key('test:make:registers');
-		$key  = $form->getKey();
-		RouteFormDeclaration::make($form);
-
-		self::assertSame($form, FormRegistry::get($key));
-	}
-
-	public function testMakeWithAutoKeyedFormInstanceDoesNotRegister(): void
-	{
-		// Auto-keyed forms must NOT be registered at make() time.
-		$before = FormRegistry::all();
-		$form   = new Form(); // auto-key, not named
-		RouteFormDeclaration::make($form);
-
-		self::assertSame($before, FormRegistry::all());
-	}
-
 	public function testMakeWithStaticFactoryDoesNotEagerlyRegister(): void
 	{
 		// Zero-arg factory — make() does NOT call the factory at declaration time.
@@ -68,15 +42,6 @@ final class RouteFormDeclarationTest extends TestCase
 		});
 
 		self::assertFalse($registered, 'Static factory must not be called eagerly by make().');
-	}
-
-	public function testMakeWithDynamicFactoryDoesNotRegister(): void
-	{
-		// One-arg factory — no form is registered at declaration time.
-		$before = FormRegistry::all();
-		RouteFormDeclaration::make(static fn($ri) => new Form());
-
-		self::assertSame($before, FormRegistry::all());
 	}
 
 	public function testMakeWithFormInstanceIsNotDynamic(): void

@@ -355,7 +355,8 @@ final class Router
 				break;
 
 			case RouteSearchStatus::FOUND:
-				['route' => $route, 'params' => $params] = $result->found();
+				$route  = $result->foundRoute();
+				$params = $result->foundRouteParams();
 
 				(new RouteFound($context, $route, $params))->dispatch();
 

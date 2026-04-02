@@ -54,24 +54,28 @@ final class RouterTest extends TestCase
 
 		$result = $router->find('GET', '/articles/42', true);
 
-		$found = $result->found();
+		self::assertSame($articlesGetById, $result->foundRoute());
 
-		self::assertIsArray($found);
-		self::assertSame($articlesGetById, $found['route']);
-		self::assertSame('42', $found['params']['id']);
+		$params = $result->foundRouteParams();
+		self::assertIsArray($params);
+		self::assertSame('42', $params['id']);
 
 		$userArticlesList = $router->getRoute('users.by_id.articles');
 		$result           = $router->find('GET', '/users/1/articles', true);
-		$found            = $result->found();
-		self::assertIsArray($found);
-		self::assertSame($userArticlesList, $found['route']);
-		self::assertSame('1', $found['params']['id']);
+
+		self::assertSame($userArticlesList, $result->foundRoute());
+
+		$params = $result->foundRouteParams();
+		self::assertIsArray($params);
+		self::assertSame('1', $params['id']);
 
 		$result = $router->find('GET', '/users/5/articles/draft', true);
-		$found  = $result->found();
-		self::assertIsArray($found);
-		self::assertSame($userArticlesList, $found['route']);
-		self::assertSame('5', $found['params']['id']);
-		self::assertSame('draft', $found['params']['state']);
+
+		self::assertSame($userArticlesList, $result->foundRoute());
+
+		$params = $result->foundRouteParams();
+		self::assertIsArray($params);
+		self::assertSame('5', $params['id']);
+		self::assertSame('draft', $params['state']);
 	}
 }

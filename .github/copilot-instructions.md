@@ -380,8 +380,6 @@ All `oz://` resolution and source registration is handled exclusively by `Assets
 
 Forms are attached to routes via `.form(new MyForm())` (pass a `Form` instance or a callable factory — class name strings are not accepted) and auto-validated in `RouteInfo` construction. Clean data is accessible via `$ri->getCleanFormData()`.
 
-Call `$form->key('my:form:key')` to register the form in `FormRegistry` for discovery via `FormsService`. Only explicitly keyed forms are discoverable; auto-keyed forms (key set without `key()`) are NOT registered. `$form->isNamed()` returns true once `key()` has been called.
-
 ### Defining Forms
 
 ```php
@@ -824,10 +822,10 @@ oz migrations check
 # 2. Generate a new migration after schema changes:
 oz migrations create --label="Add users birthdate column"
 
-# 3. Apply pending migrations (--skip-backup skips the pre-run DB backup, useful for SQLite or CI):
+# 3. Apply pending migrations (--skip-backup skips the pre-run DB backup, not recommended for production):
 oz migrations run --skip-backup
 
-# 3b. Apply with backup (default, for production MySQL):
+# 3b. Apply with backup (default, for production):
 oz migrations run
 
 # 4. Rollback to a previous version:
@@ -1476,12 +1474,12 @@ Each scope creates:
 
 ### `oz migrations`
 
-| Action     | Options                               | Description                         |
-| ---------- | ------------------------------------- | ----------------------------------- |
-| `create`   | `-f/--force`, `-l/--label` (required) | Generate migration from schema diff |
-| `check`    | —                                     | Show current migration state        |
+| Action     | Options                               | Description                                           |
+| ---------- | ------------------------------------- | ----------------------------------------------------- |
+| `create`   | `-f/--force`, `-l/--label` (required) | Generate migration from schema diff                   |
+| `check`    | —                                     | Show current migration state                          |
 | `run`      | `--skip-backup`                       | Apply all pending migrations (skip pre-run DB backup) |
-| `rollback` | `--to-version=N`                      | Rollback to version N               |
+| `rollback` | `--to-version=N`                      | Rollback to version N                                 |
 
 ### `oz services`
 

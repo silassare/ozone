@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router;
 
+use LogicException;
+
 /**
  * Class RouteSearchResult.
  */
@@ -50,11 +52,29 @@ class RouteSearchResult
 	/**
 	 * Gets the route that matched.
 	 *
-	 * @return null|array{route:Route, params:array}
+	 * @return Route
 	 */
-	public function found(): ?array
+	public function foundRoute(): Route
 	{
-		return $this->found;
+		if (!$this->found) {
+			throw new LogicException(\sprintf('No route was found. You should check the status before calling %s.', __METHOD__));
+		}
+
+		return $this->found['route'];
+	}
+
+	/**
+	 * Gets the parameters extracted from the request path for the route that matched.
+	 *
+	 * @return array
+	 */
+	public function foundRouteParams(): array
+	{
+		if (!$this->found) {
+			throw new LogicException(\sprintf('No route was found. You should check the status before calling %s.', __METHOD__));
+		}
+
+		return $this->found['params'] ?? [];
 	}
 
 	/**

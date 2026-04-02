@@ -119,10 +119,10 @@ final class FormStepTest extends TestCase
 		self::assertSame($inner, $step->build($this->makeFormData([])));
 	}
 
-	public function testGetRefIncludesParentPrefix(): void
+	public function testGetRefIncludesParentName(): void
 	{
 		$parent = new Form();
-		$parent->prefix('user');
+		$parent->name('user');
 		$inner  = new Form();
 		$step   = FormStep::static($parent, 'address', $inner);
 

@@ -21,6 +21,7 @@ use Override;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Lang\I18nMessage;
+use OZONE\Core\Utils\Utils;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Interfaces\MetaCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
@@ -448,7 +449,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 			throw new RuntimeException('Failed to clean type for frontend: unable to reconstruct type instance from array representation');
 		}
 
-		Form::safeFrontendMeta($type, $tn);
+		Utils::safeFrontendMeta($type, $tn);
 
 		return $tn;
 	}

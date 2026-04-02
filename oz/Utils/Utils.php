@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Utils;
 
+use PHPUtils\Interfaces\MetaCapableInterface;
+
 /**
  * Class Utils.
  */
@@ -41,5 +43,17 @@ class Utils
 				\ob_end_clean();
 			}
 		}
+	}
+
+	/**
+	 * Safely merges meta from a source MetaCapableInterface to a target one, filtering out any sensitive data.
+	 */
+	public static function safeFrontendMeta(MetaCapableInterface $from, MetaCapableInterface $to): void
+	{
+		// we don't merge all as meta may contains sensitive data,
+		// we keep api.doc meta because it's used to generate API documentation and is not sensitive
+		$to->setMetaKey('api.doc', $from->getMeta()->get('api.doc', []))
+			// frontend.options may contains presentation hints that are not sensitive, we can merge them safely
+			->setMetaKey('frontend', $from->getMeta()->get('frontend', []));
 	}
 }

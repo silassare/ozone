@@ -16,7 +16,6 @@ namespace OZONE\Core\Forms;
 use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\TypeDate;
-use InvalidArgumentException;
 use Override;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\Enums\RuleSetCondition;
@@ -25,6 +24,8 @@ use OZONE\Core\Forms\Traits\FormFieldsTrait;
 use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Request;
 use OZONE\Core\Http\Uri;
+use OZONE\Core\Utils\Hasher;
+use OZONE\Core\Utils\Utils;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Interfaces\MetaCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
@@ -60,21 +61,14 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	private array $t_post_validation_rules = [];
 
 	/**
-	 * Form prefix, used for field namespacing in case of multiple forms in the same page or nested forms (steps).
-	 * It can be useful to avoid field name conflicts.
+	 * Form name, used for field namespacing in case of multiple forms in the
+	 * same page or nested forms (steps). It can be useful to avoid field name conflicts.
 	 */
-	private ?string $t_prefix = null;
+	private ?string $t_name = null;
 
 	private string $t_method;
 
 	private ?Uri $t_submit_to;
-
-	/**
-	 * Optional form key for form discovery and registry.
-	 *
-	 * @see FormRegistry
-	 */
-	private string $t_key;
 
 	/**
 	 * Controls incremental (multi-request) validation caching.
@@ -89,40 +83,24 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	private int $t_resume_ttl = 3600;
 
 	/**
-	 * Counter used to generate unique auto-keys via {@see self::key()}.
-	 */
-	private static int $key_counter = 0;
-
-	private bool $t_registered = false;
-
-	/**
-	 * Whether the form key was explicitly set by the user via {@see self::key()}.
-	 *
-	 * Only explicitly named forms are registered in the {@see FormRegistry} and
-	 * therefore discoverable / eligible for partial-upload via {@see FormsService}.
-	 */
-	private bool $t_named = false;
-
-	/**
 	 * Form constructor.
 	 *
-	 * @param null|string $prefix    optional prefix for field namespacing (validated as a dot-path segment)
+	 * @param null|string $name      optional name for field namespacing (validated as a dot-path segment)
 	 * @param string      $method    The form submit method, default is POST
 	 * @param null|Uri    $submit_to The form submit uri. Set this to instruct the client to submit the form to a specific uri.
 	 */
 	public function __construct(
-		?string $prefix = null,
+		?string $name = null,
 		string $method = 'POST',
 		?Uri $submit_to = null
 	) {
-		if (null !== $prefix) {
-			$this->prefix($prefix);
+		if (null !== $name) {
+			$this->name($name);
 		}
 
 		$this->method($method);
 
 		$this->t_submit_to = $submit_to;
-		$this->t_key       = 'oz:form:auto:' . (++self::$key_counter);
 	}
 
 	/**
@@ -131,66 +109,6 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	public function __destruct()
 	{
 		unset($this->t_fields, $this->t_steps, $this->t_pre_validation_rules, $this->t_post_validation_rules, $this->t_submit_to);
-	}
-
-	/**
-	 * Sets the form key for registry and discovery.
-	 *
-	 * @param string $key The form key, must be non-empty and not whitespace-only string
-	 *
-	 * @return $this
-	 */
-	public function key(string $key): static
-	{
-		if ('' === \trim($key)) {
-			throw new InvalidArgumentException('Form key must be non-empty and not whitespace-only string.');
-		}
-
-		$this->t_named = true;
-
-		if ($this->t_key !== $key) {
-			$old         = $this->t_key;
-			$this->t_key = $key;
-
-			if ($this->t_registered) {
-				FormRegistry::unregister($old);
-				FormRegistry::register($key, $this);
-			}
-		}
-
-		return $this;
-	}
-
-	/**
-	 * Returns true when the form key was set explicitly via {@see self::key()}.
-	 *
-	 * Only named forms are registered in {@see FormRegistry} and discoverable
-	 * via the forms service.
-	 */
-	public function isNamed(): bool
-	{
-		return $this->t_named;
-	}
-
-	/**
-	 * Registers the form in the {@see FormRegistry} under its current key.
-	 */
-	public function register(): static
-	{
-		if (!$this->t_registered) {
-			FormRegistry::register($this->t_key, $this);
-			$this->t_registered = true;
-		}
-
-		return $this;
-	}
-
-	/**
-	 * Returns the form key.
-	 */
-	public function getKey(): string
-	{
-		return $this->t_key;
 	}
 
 	/**
@@ -226,13 +144,7 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Returns a short structural fingerprint of this form.
 	 *
-	 * The version is a 16-character hex string derived from a SHA-256 of the
-	 * form's structure (prefix, field refs/types/required flags, step names
-	 * and types, and expect/ensure rule sets). It changes when the structure
-	 * changes and is used as the cache-key discriminator for resume data, so
-	 * cached data from an old form shape is never replayed against a new one.
-	 *
-	 * @return string 16-character lowercase hex string
+	 * @return string
 	 */
 	public function getVersion(): string
 	{
@@ -240,10 +152,10 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 
 		foreach ($this->t_fields as $field) {
 			$fields[] = [
-				'ref' => $field->getRef(),
-				'req' => $field->isRequired(),
-				'mul' => $field->isMultiple(),
-				'typ' => \get_class($field->getType()),
+				'r'  => $field->getRef(),
+				'rq' => $field->isRequired(),
+				'm'  => $field->isMultiple(),
+				't'  => \get_class($field->getType()),
 			];
 		}
 
@@ -251,20 +163,20 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 
 		foreach ($this->t_steps as $step) {
 			$steps[] = [
-				'name' => $step->getName(),
-				'type' => $step->isStatic() ? 'static' : 'dynamic',
+				'n'  => $step->getName(),
+				'sd' => $step->isStatic() ? 'static' : 'dynamic',
 			];
 		}
 
 		$descriptor = [
-			'pfx' => $this->t_prefix,
-			'fld' => $fields,
-			'stp' => $steps,
-			'exp' => \array_map(static fn(RuleSet $r) => $r->toArray(), $this->t_pre_validation_rules),
-			'ens' => \array_map(static fn(RuleSet $r) => $r->toArray(), $this->t_post_validation_rules),
+			'n'  => $this->t_name,
+			'f'  => $fields,
+			's'  => $steps,
+			'pr' => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->t_pre_validation_rules),
+			'po' => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->t_post_validation_rules),
 		];
 
-		return \substr(\hash('sha256', \json_encode($descriptor, \JSON_THROW_ON_ERROR)), 0, 16);
+		return Hasher::shorten(Hasher::hash32(\json_encode($descriptor, \JSON_THROW_ON_ERROR)));
 	}
 
 	/**
@@ -322,13 +234,13 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	}
 
 	/**
-	 * Set form prefix.
+	 * Set form name.
 	 */
-	public function prefix(string $prefix): self
+	public function name(string $name): self
 	{
-		FormUtils::assertValidFieldName($prefix);
+		FormUtils::assertValidFieldName($name);
 
-		$this->t_prefix = $prefix;
+		$this->t_name = $name;
 
 		return $this;
 	}
@@ -480,15 +392,15 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	}
 
 	/**
-	 * Gets a ref for a given field or step name, prefixed with form prefix if any.
+	 * Gets a ref for a given field or step name, prefixed with form name if any.
 	 */
 	public function getRef(string $name): string
 	{
-		if (empty($this->t_prefix)) {
+		if (empty($this->t_name)) {
 			return $name;
 		}
 
-		return $this->t_prefix . '.' . $name;
+		return $this->t_name . '.' . $name;
 	}
 
 	/**
@@ -604,9 +516,8 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	 * are excluded from `expect` — the client cannot evaluate them.
 	 *
 	 * @return array{
-	 *  key: string,
 	 *  version: string,
-	 *  prefix: ?string,
+	 *  name: ?string,
 	 *  action: ?Uri,
 	 *  method: string,
 	 *  fields: list<Field>,
@@ -619,18 +530,19 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	#[Override]
 	public function toArray(): array
 	{
+		$expect_rules = \array_values(\array_filter(
+			$this->t_pre_validation_rules,
+			static fn (RuleSet $r) => !$r->isServerOnly()
+		));
+
 		return [
-			'key'          => $this->t_key,
 			'version'      => $this->getVersion(),
-			'prefix'       => $this->t_prefix,
+			'name'         => $this->t_name,
 			'action'       => $this->t_submit_to,
 			'method'       => $this->t_method,
 			'fields'       => $this->t_fields,
 			'steps'        => $this->t_steps,
-			'expect'       => \array_values(\array_filter(
-				$this->t_pre_validation_rules,
-				static fn(RuleSet $r) => !$r->isServerOnly()
-			)),
+			'expect'       => $expect_rules,
 			'resume_scope' => $this->t_resume_scope?->value,
 			'resume_ttl'   => null !== $this->t_resume_scope ? $this->t_resume_ttl : null,
 		];
@@ -704,21 +616,9 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 				->type($type)
 				->required(!$type->isNullable());
 
-			self::safeFrontendMeta($column, $field);
+			Utils::safeFrontendMeta($column, $field);
 		}
 
 		return $form;
-	}
-
-	/**
-	 * Safely merges meta from a source MetaCapableInterface to a target one, filtering out any sensitive data.
-	 */
-	public static function safeFrontendMeta(MetaCapableInterface $from, MetaCapableInterface $to): void
-	{
-		// we don't merge all as meta may contains sensitive data,
-		// we keep api.doc meta because it's used to generate API documentation and is not sensitive
-		$to->setMetaKey('api.doc', $from->getMeta()->get('api.doc', []))
-			// frontend.options may contains presentation hints that are not sensitive, we can merge them safely
-			->setMetaKey('frontend', $from->getMeta()->get('frontend', []));
 	}
 }

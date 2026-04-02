@@ -76,42 +76,6 @@ subprocesses against temporary scaffolded projects so regressions are caught end
 
 ---
 
-### [x] P. `Forms/` — Complete partial form (resume) integration
-
-**Current behaviour:** The resume cache system (`Form::resume()`, `RouteInfo::checkRouteForm()`) reads
-and writes partial `FormData` to cache but several pieces are incomplete or missing.
-
-**Remaining tasks (easiest first):**
-
-1. **`RouteInfo::clearFormResumeCache()`** — The cache is written on every request but never deleted.
-   After a successful final submission the stale entry persists until TTL, pre-filling the next open form
-   for the same user/session. Add a `clearFormResumeCache(): void` method on `RouteInfo` that deletes
-   `$cache_key`; route handlers call it after a successful submission.
-
-2. **Guard discovery callable against null clean data** — In discovery mode (`X-OZONE-Form-Discovery`
-   header), `checkRouteForm()` is skipped so `$clean_form_data = null`. If the route's `form(callable)`
-   callback internally calls `$ri->getCleanFormData()` it throws. Add a guard or early-return so
-   discovery does not blow up.
-
-3. **Resume metadata in `Form::toArray()`** — The serialized form sent to the client omits:
-   - `version` — client cannot detect that the form structure changed between page load and submission.
-   - `resume_scope` — client does not know partial submission is supported.
-   - `resume_ttl` — client cannot reflect "progress saved for N minutes" in UI.
-
-4. **`FormRegistry` discovery endpoint** — `Form::key()` populates `FormRegistry` but nothing reads
-   from it at runtime. The discovery mechanism goes through `getFormBundle()` on route options, not the
-   registry. Build a `GET /forms/{key}` endpoint (or equivalent) backed by `FormRegistry::get($key)`
-   so clients can fetch a form definition independently of a route dispatch.
-
-5. **`DynamicFormService` — step-by-step partial validation endpoint** — Accept validated data from
-   the current step and return the serialized next step form so a web client can progressively reveal
-   field groups. Deep nested steps (step-within-step) are supported by design via `FormRegistry`.
-   Document the mechanism in `ApiDoc` (item L). Dependent on 1-4.
-
-**Complexity:** Low–Medium | **Risk:** Low (isolated to Forms + RouteInfo, no auth or DB changes)
-
----
-
 ### [ ] K. `Auth/Auth2FA.php` — Implement two-factor authentication flow
 
 **Current behaviour:** `check2FAAuthProcess()` throws `RuntimeException('User 2FA not yet implemented.')`.
@@ -158,7 +122,6 @@ and writes partial `FormData` to cache but several pieces are incomplete or miss
 | L   | `REST/ApiDoc.php`                             | Low        | None       | ✅ done     |
 | E   | `Services/QRCode.php`                         | Low        | Low-Medium | pending     |
 | 0   | Integration test suite                        | Low-Medium | Low        | in progress |
-| P   | `Forms/` — partial form resume                | Low-Medium | Low        | ✅ done     |
 | K   | `Auth/Auth2FA.php`                            | **High**   | **High**   | pending     |
 | D   | `oz/oz_templates/...access.grant.form.blate`  | Low        | None       | ✅ done     |
 | C   | `Auth/Views/LogoutAndRedirectView.php`        | Low        | Low        | ✅ done     |

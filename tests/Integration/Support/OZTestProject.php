@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Support;
 
 use JsonException;
+use OZONE\Core\Utils\Env;
 use RuntimeException;
 use Symfony\Component\Process\Process;
 
@@ -204,27 +205,6 @@ final class OZTestProject
 	}
 
 	/**
-	 * Write (or overwrite) an arbitrary file inside the project directory.
-	 *
-	 * Intermediate directories are created automatically.
-	 * The path is relative to the project root (no leading slash required).
-	 *
-	 * @param string $relative_path e.g. 'app/TestRoutes.php'
-	 * @param string $content       file content
-	 */
-	public function writeFile(string $relative_path, string $content): void
-	{
-		$abs = $this->dir . \DIRECTORY_SEPARATOR . \ltrim($relative_path, '/\\');
-		$dir = \dirname($abs);
-
-		if (!\is_dir($dir)) {
-			\mkdir($dir, 0o775, true);
-		}
-
-		\file_put_contents($abs, $content);
-	}
-
-	/**
 	 * Write (or overwrite) key-value pairs in the project .env file.
 	 *
 	 * Existing keys are updated in-place; new keys are appended.
@@ -236,24 +216,12 @@ final class OZTestProject
 	public function writeEnv(array $values): void
 	{
 		$env_file = $this->dir . \DIRECTORY_SEPARATOR . '.env';
-		$existing = [];
 
-		if (\is_file($env_file)) {
-			foreach (\file($env_file, \FILE_IGNORE_NEW_LINES | \FILE_SKIP_EMPTY_LINES) as $line) {
-				if (\str_starts_with(\ltrim($line), '#') || !\str_contains($line, '=')) {
-					continue;
-				}
-				[$k, $v]             = \explode('=', $line, 2);
-				$existing[\trim($k)] = \trim($v);
-			}
+		if (!\is_file($env_file)) {
+			\file_put_contents($env_file, '');
 		}
 
-		$merged = \array_merge($existing, $values);
-		$lines  = [];
-		foreach ($merged as $k => $v) {
-			$lines[] = "{$k}={$v}";
-		}
-		\file_put_contents($env_file, \implode("\n", $lines) . "\n");
+		(new Env($env_file))->patch($values);
 	}
 
 	/**

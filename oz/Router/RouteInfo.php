@@ -30,6 +30,8 @@ use PHPUtils\Str;
  */
 final class RouteInfo
 {
+	private const FORM_DATA_RESUME_CACHE_NAMESPACE = 'oz.form.resume';
+
 	/**
 	 * Maps route guard FQN class name to produced data during check.
 	 *
@@ -216,38 +218,13 @@ final class RouteInfo
 	}
 
 	/**
-	 * Clears the resume cache entry for the current route's form bundle.
-	 *
-	 * Call this after a successful final submission to prevent stale cached
-	 * data from pre-filling the form on the next open request for the same scope.
-	 * Has no effect when the bundle has no resume scope configured.
-	 */
-	public function clearFormResumeCache(): void
-	{
-		$bundle = $this->route->getOptions()->getFormBundle($this);
-
-		if (!$bundle) {
-			return;
-		}
-
-		$resume_scope = $bundle->getResumeScope();
-
-		if (null === $resume_scope) {
-			return;
-		}
-
-		$scope_id  = $resume_scope->resolveId($this->context);
-		$cache_key = $bundle->buildResumeCacheKey($scope_id);
-
-		CacheManager::persistent('oz.form.resume')->delete($cache_key);
-	}
-
-	/**
 	 * Validates the form data if any.
 	 *
 	 * @internal this should be called once by the router before calling the route handler
 	 *
 	 * @throws InvalidFormException
+	 *
+	 * @internal this should be called once by the router before calling the route handler
 	 */
 	public function checkRouteForm(): void
 	{
@@ -270,7 +247,7 @@ final class RouteInfo
 			if (null !== $resume_scope) {
 				$scope_id = $resume_scope->resolveId($this->context);
 
-				$cache     = CacheManager::persistent('oz.form.resume');
+				$cache     = CacheManager::persistent(self::FORM_DATA_RESUME_CACHE_NAMESPACE);
 				$cache_key = $bundle->buildResumeCacheKey($scope_id);
 				$cached    = $cache->get($cache_key);
 
@@ -285,6 +262,7 @@ final class RouteInfo
 			$clean_fd = $bundle->validate($unsafe_fd, $prefilled);
 
 			if (null !== $cache && null !== $cache_key) {
+				// TODO: ensure we delete the cache entry on form completion
 				$cache->set($cache_key, $clean_fd, $bundle->getResumeTTL());
 			}
 
