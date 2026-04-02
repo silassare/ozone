@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 return [
 	/**
-	 * Set to true to enable Redis integration.
+	 * Enable Redis support for job storage and caching.
 	 *
 	 * When enabled the {@link \OZONE\Core\Queue\Stores\RedisJobStore} is registered
 	 * as an additional job store, and {@link \OZONE\Core\Cache\Drivers\RedisCache}
@@ -21,7 +21,7 @@ return [
 	 *
 	 * Requires the ext-redis PHP extension.
 	 */
-	'OZ_REDIS_ENABLED' => false,
+	'OZ_REDIS_ENABLED' => \extension_loaded('redis'),
 
 	/**
 	 * Redis server hostname or IP address.
