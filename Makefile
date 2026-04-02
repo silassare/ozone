@@ -14,7 +14,8 @@ test-integration:
 	$(PHPUNIT) --testsuite Integration --testdox --do-not-cache-result
 
 ## Run all test suites
-test: test-unit test-integration
+test:
+	$(PHPUNIT) --testdox --do-not-cache-result
 
 # = Benchmarks
 
