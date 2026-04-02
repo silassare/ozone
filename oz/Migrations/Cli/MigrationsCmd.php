@@ -132,7 +132,7 @@ final class MigrationsCmd extends Command
 		$skip_backup = (bool) $args->get('skip-backup');
 		$cli         = $this->getCli();
 		$mg          = new Migrations();
-		$migrations  = $mg->getPendingMigrations();
+		$migrations  = $mg->getPendingMigrations(true);
 
 		if (empty($migrations)) {
 			$this->getCli()

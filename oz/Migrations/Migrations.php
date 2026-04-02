@@ -338,12 +338,14 @@ final class Migrations
 	/**
 	 * Gets the pending migrations.
 	 *
+	 * @param bool $silent if true, the error will be silenced
+	 *
 	 * @return MigrationInterface[]
 	 */
-	public function getPendingMigrations(): array
+	public function getPendingMigrations(bool $silent = false): array
 	{
 		$pending         = [];
-		$current_version = self::getCurrentDbVersion();
+		$current_version = self::getCurrentDbVersion($silent);
 		$migrations      = $this->migrations();
 
 		foreach ($migrations as $migration) {
