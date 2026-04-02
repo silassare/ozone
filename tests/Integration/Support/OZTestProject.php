@@ -53,7 +53,8 @@ final class OZTestProject
 	 * @param array<string,string> $deps_dev extra require-dev packages
 	 * @param bool                 $shared   when true the vendor cache is shared with
 	 *                                       other projects that have the same dep set;
-	 *                                       pass false to isolate vendor per project name
+	 *                                       pass false to isolate vendor per project name;
+	 *                                       in most cases tests should set shared=true so that composer installs are minimized
 	 *
 	 * @throws JsonException
 	 */

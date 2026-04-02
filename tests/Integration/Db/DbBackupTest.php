@@ -68,8 +68,14 @@ final class DbBackupTest extends TestCase
 	{
 		$proj = OZTestProject::create('db-backup-' . $config->rdbms, shared: false);
 		$proj->writeEnv($config->toEnvArray());
+
+		// ORM classes must exist before migrations can run.
+		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
+		// Create and apply the initial migration so the DB schema exists.
+		$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
 		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
 
+		// Run the actual backup command.
 		$proc = $proj->oz('db', 'backup', '--dir=' . $this->backupDir);
 		$proc->mustRun();
 
@@ -94,7 +100,7 @@ final class DbBackupTest extends TestCase
 	 */
 	public static function provideBackupCreatesFileCases(): iterable
 	{
-		return DbTestConfig::allConfigured();
+		return DbTestConfig::allConfigured('backup');
 	}
 
 	public function testSQLiteInMemoryBackupFails(): void

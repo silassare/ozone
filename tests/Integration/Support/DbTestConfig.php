@@ -86,12 +86,7 @@ final class DbTestConfig
 	}
 
 	/**
-	 * Returns a MySQL config read from per-driver env vars:
-	 *
-	 *   OZ_TEST_MYSQL_HOST  (default: 127.0.0.1)
-	 *   OZ_TEST_MYSQL_NAME  (default: ozone_test)
-	 *   OZ_TEST_MYSQL_USER  (default: root)
-	 *   OZ_TEST_MYSQL_PASS  (default: '')
+	 * Returns a MySQL config read from per-driver env vars.
 	 *
 	 * Returns null when OZ_TEST_MYSQL_HOST is not set.
 	 */
@@ -107,35 +102,30 @@ final class DbTestConfig
 			'mysql',
 			$envs['OZ_TEST_MYSQL_HOST'],
 			$envs['OZ_TEST_MYSQL_NAME'] ?? 'ozone_test',
-			$envs['OZ_TEST_MYSQL_USER'] ?? 'root',
-			$envs['OZ_TEST_MYSQL_PASS'] ?? '',
+			$envs['OZ_TEST_MYSQL_USER'] ?? 'ozone_test',
+			$envs['OZ_TEST_MYSQL_PASSWORD'] ?? '',
 		);
 	}
 
 	/**
-	 * Returns a PostgreSQL config read from per-driver env vars:
+	 * Returns a PostgreSQL config read from per-driver env vars.
 	 *
-	 *   OZ_TEST_PGSQL_HOST  (default: 127.0.0.1)
-	 *   OZ_TEST_PGSQL_NAME  (default: ozone_test)
-	 *   OZ_TEST_PGSQL_USER  (default: postgres)
-	 *   OZ_TEST_PGSQL_PASS  (default: '')
-	 *
-	 * Returns null when OZ_TEST_PGSQL_HOST is not set.
+	 * Returns null when OZ_TEST_POSTGRESQL_HOST is not set.
 	 */
 	public static function postgresql(): ?static
 	{
 		$envs = \getenv();
 
-		if (empty($envs['OZ_TEST_PGSQL_HOST'])) {
+		if (empty($envs['OZ_TEST_POSTGRESQL_HOST'])) {
 			return null;
 		}
 
 		return new static(
 			'postgresql',
-			$envs['OZ_TEST_PGSQL_HOST'],
-			$envs['OZ_TEST_PGSQL_NAME'] ?? 'ozone_test',
-			$envs['OZ_TEST_PGSQL_USER'] ?? 'postgres',
-			$envs['OZ_TEST_PGSQL_PASS'] ?? '',
+			$envs['OZ_TEST_POSTGRESQL_HOST'],
+			$envs['OZ_TEST_POSTGRESQL_NAME'] ?? 'ozone_test',
+			$envs['OZ_TEST_POSTGRESQL_USER'] ?? 'ozone_test',
+			$envs['OZ_TEST_POSTGRESQL_PASSWORD'] ?? '',
 		);
 	}
 
@@ -143,22 +133,30 @@ final class DbTestConfig
 	 * Returns all DB configurations that are currently available, keyed by
 	 * driver name so PHPUnit @dataProvider output is readable.
 	 *
+	 * A `$tag` string is appended to the SQLite filename so test classes that
+	 * run concurrently (or sequentially with stale files) do not share the same
+	 * SQLite database file. Always pass a short class-specific tag such as
+	 * `'migrations'` or `'dbbuild'` from every DB-related test class.
+	 *
 	 * Usage in a test class:
 	 *
 	 *   public static function provideDbConfig(): array
 	 *   {
-	 *       return DbTestConfig::allConfigured();
+	 *       return DbTestConfig::allConfigured('my-feature');
 	 *   }
 	 *
 	 *   @dataProvider provideDbConfig
 	 *   public function testSomething(DbTestConfig $config): void { ... }
 	 *
+	 * @param string $tag short slug appended to the SQLite filename (e.g. 'migrations')
+	 *
 	 * @return array<string, array{DbTestConfig}>
 	 */
-	public static function allConfigured(): array
+	public static function allConfigured(string $tag = ''): array
 	{
+		$suffix  = '' !== $tag ? "_{$tag}" : '';
 		$configs = [
-			'sqlite' => [self::sqlite(\sys_get_temp_dir() . '/oz_test_' . \getmypid() . '.db')],
+			'sqlite' => [self::sqlite(\sys_get_temp_dir() . '/oz_test_' . \getmypid() . $suffix . '.db')],
 		];
 
 		$mysql = self::mysql();
