@@ -1,5 +1,5 @@
 <?php
-{= $if($length(oz_header), oz_header,'')}
+{= $default(oz_header, '')}
 declare(strict_types=1);
 
 namespace {= service.namespace};
