@@ -150,41 +150,41 @@ Settings::applyMergeStrategy(array $a, array $b): array;    // merge strategy: i
 
 **All built-in settings groups** (in `oz/oz_settings/`):
 
-| File                         | Key settings                                                                                                                  |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `oz.config`                  | `OZ_PROJECT_NAME`, `OZ_PROJECT_NAMESPACE`, `OZ_PROJECT_APP_CLASS_NAME`, `OZ_PROJECT_PREFIX`                                   |
-| `oz.db`                      | `OZ_DB_RDBMS`, `OZ_DB_HOST`, `OZ_DB_NAME`, `OZ_DB_USER`, `OZ_DB_PASS`, `OZ_DB_TABLE_PREFIX`, `OZ_DB_CHARSET`, `OZ_DB_COLLATE` |
-| `oz.db.schema`               | Project table definitions (Gobl schema array)                                                                                 |
-| `oz.db.migrations`           | `OZ_MIGRATION_VERSION`                                                                                                        |
-| `oz.db.columns.types`        | `TypeName::NAME => TypeName::class` map                                                                                       |
-| `oz.boot`                    | Boot hook receiver class map                                                                                                  |
-| `oz.plugins`                 | Plugin class map                                                                                                              |
-| `oz.routes`                  | Shared route provider class map (both API + web)                                                                              |
-| `oz.routes.api`              | API router route provider class map                                                                                           |
-| `oz.routes.web`              | Web router route provider class map                                                                                           |
-| `oz.auth`                    | Auth code config, API key header name, auth methods for API/web                                                               |
-| `oz.auth.users.repositories` | User type -> `AuthUsersRepositoryInterface` class map                                                                         |
-| `oz.auth.providers`          | Provider name -> `AuthorizationProviderInterface` class map                                                                   |
-| `oz.auth.methods`            | Scheme -> method class map                                                                                                    |
-| `oz.middlewares`             | Named middleware registry                                                                                                     |
-| `oz.guards`                  | Named guard registry                                                                                                          |
-| `oz.guards.providers`        | Guard provider class map                                                                                                      |
-| `oz.gobl.crud`               | CRUD listener class map                                                                                                       |
-| `oz.gobl.collections`        | Entity collection class map                                                                                                   |
-| `oz.request`                 | CORS settings, `OZ_DEFAULT_ORIGIN`, `OZ_REAL_METHOD_HEADER_ALLOWED`                                                           |
-| `oz.sessions`                | `OZ_SESSION_LIFE_TIME`, `OZ_SESSION_COOKIE_NAME`                                                                              |
-| `oz.cookie`                  | `OZ_COOKIE_DOMAIN`, `OZ_COOKIE_PATH`, `OZ_COOKIE_LIFETIME`, `OZ_COOKIE_SAMESITE`, `OZ_COOKIE_PARTITIONED`                     |
-| `oz.users`                   | Age range, password/name lengths, gender list, email/phone requirements                                                       |
-| `oz.paths`                   | Service URL path settings (QR code, captcha, link-to routes)                                                                  |
-| `oz.api.doc`                 | `OZ_API_DOC_ENABLED`, `OZ_API_DOC_SHOW_ON_INDEX`                                                                              |
-| `oz.lang`                    | i18n source files                                                                                                             |
-| `oz.cache`                   | `OZ_RUNTIME_CACHE_PROVIDER`, `OZ_PERSISTENT_CACHE_PROVIDER`                                                                   |
-| `oz.logs`                    | `OZ_LOG_WRITER`, `OZ_LOG_MAX_FILE_SIZE`, `OZ_LOG_EXECUTION_TIME_ENABLED`                                                      |
-| `oz.files`                   | File URI path format with placeholders (`oz_file_id`, `oz_file_auth_key`, etc.)                                               |
-| `oz.files.storages`          | Storage driver map: `FS::DEFAULT_STORAGE`, `FS::PUBLIC_STORAGE`, `FS::PRIVATE_STORAGE`                                        |
-| `oz.senders`                 | Sender class map: `sms`, `mail`, `notification`                                                                               |
-| `oz.roles`                   | `OZ_ROLE_ENUM_CLASS` -> roles enum class                                                                                      |
-| `oz.proxies`                 | Trusted proxy configuration                                                                                                   |
+| File                         | Key settings                                                                                                                                |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `oz.config`                  | `OZ_PROJECT_NAME`, `OZ_PROJECT_NAMESPACE`, `OZ_PROJECT_APP_CLASS_NAME`, `OZ_PROJECT_PREFIX`                                                 |
+| `oz.db`                      | `OZ_DB_RDBMS`, `OZ_DB_HOST`, `OZ_DB_PORT`, `OZ_DB_NAME`, `OZ_DB_USER`, `OZ_DB_PASS`, `OZ_DB_TABLE_PREFIX`, `OZ_DB_CHARSET`, `OZ_DB_COLLATE` |
+| `oz.db.schema`               | Project table definitions (Gobl schema array)                                                                                               |
+| `oz.db.migrations`           | `OZ_MIGRATION_VERSION`                                                                                                                      |
+| `oz.db.columns.types`        | `TypeName::NAME => TypeName::class` map                                                                                                     |
+| `oz.boot`                    | Boot hook receiver class map                                                                                                                |
+| `oz.plugins`                 | Plugin class map                                                                                                                            |
+| `oz.routes`                  | Shared route provider class map (both API + web)                                                                                            |
+| `oz.routes.api`              | API router route provider class map                                                                                                         |
+| `oz.routes.web`              | Web router route provider class map                                                                                                         |
+| `oz.auth`                    | Auth code config, API key header name, auth methods for API/web                                                                             |
+| `oz.auth.users.repositories` | User type -> `AuthUsersRepositoryInterface` class map                                                                                       |
+| `oz.auth.providers`          | Provider name -> `AuthorizationProviderInterface` class map                                                                                 |
+| `oz.auth.methods`            | Scheme -> method class map                                                                                                                  |
+| `oz.middlewares`             | Named middleware registry                                                                                                                   |
+| `oz.guards`                  | Named guard registry                                                                                                                        |
+| `oz.guards.providers`        | Guard provider class map                                                                                                                    |
+| `oz.gobl.crud`               | CRUD listener class map                                                                                                                     |
+| `oz.gobl.collections`        | Entity collection class map                                                                                                                 |
+| `oz.request`                 | CORS settings, `OZ_DEFAULT_ORIGIN`, `OZ_REAL_METHOD_HEADER_ALLOWED`                                                                         |
+| `oz.sessions`                | `OZ_SESSION_LIFE_TIME`, `OZ_SESSION_COOKIE_NAME`                                                                                            |
+| `oz.cookie`                  | `OZ_COOKIE_DOMAIN`, `OZ_COOKIE_PATH`, `OZ_COOKIE_LIFETIME`, `OZ_COOKIE_SAMESITE`, `OZ_COOKIE_PARTITIONED`                                   |
+| `oz.users`                   | Age range, password/name lengths, gender list, email/phone requirements                                                                     |
+| `oz.paths`                   | Service URL path settings (QR code, captcha, link-to routes)                                                                                |
+| `oz.api.doc`                 | `OZ_API_DOC_ENABLED`, `OZ_API_DOC_SHOW_ON_INDEX`                                                                                            |
+| `oz.lang`                    | i18n source files                                                                                                                           |
+| `oz.cache`                   | `OZ_RUNTIME_CACHE_PROVIDER`, `OZ_PERSISTENT_CACHE_PROVIDER`                                                                                 |
+| `oz.logs`                    | `OZ_LOG_WRITER`, `OZ_LOG_MAX_FILE_SIZE`, `OZ_LOG_EXECUTION_TIME_ENABLED`                                                                    |
+| `oz.files`                   | File URI path format with placeholders (`oz_file_id`, `oz_file_auth_key`, etc.)                                                             |
+| `oz.files.storages`          | Storage driver map: `FS::DEFAULT_STORAGE`, `FS::PUBLIC_STORAGE`, `FS::PRIVATE_STORAGE`                                                      |
+| `oz.senders`                 | Sender class map: `sms`, `mail`, `notification`                                                                                             |
+| `oz.roles`                   | `OZ_ROLE_ENUM_CLASS` -> roles enum class                                                                                                    |
+| `oz.proxies`                 | Trusted proxy configuration                                                                                                                 |
 
 ---
 
@@ -1611,17 +1611,94 @@ repository only places a symlink inside the cached vendor as `vendor/silassare/o
 
 ### Multi-DB support
 
-Tests read DB configuration from environment variables:
+`DbTestConfig` reads per-driver env vars. SQLite is always enabled (no env vars required). MySQL and PostgreSQL are enabled when their respective host variable is set.
 
-| Env var            | Default      | Description                        |
-| ------------------ | ------------ | ---------------------------------- |
-| `OZ_TEST_DB_RDBMS` | `sqlite`     | `mysql`, `postgresql`, or `sqlite` |
-| `OZ_TEST_DB_HOST`  | `:memory:`   | DB host (or SQLite path)           |
-| `OZ_TEST_DB_NAME`  | `ozone_test` | Database name                      |
-| `OZ_TEST_DB_USER`  | `root`       | DB username                        |
-| `OZ_TEST_DB_PASS`  | `""`         | DB password                        |
+| Env var                       | Default      | Description              |
+| ----------------------------- | ------------ | ------------------------ |
+| `OZ_TEST_MYSQL_HOST`          | —            | Enable MySQL (required)  |
+| `OZ_TEST_MYSQL_DB`            | `ozone_test` | MySQL database name      |
+| `OZ_TEST_MYSQL_USER`          | `root`       | MySQL username           |
+| `OZ_TEST_MYSQL_PASSWORD`      | `""`         | MySQL password           |
+| `OZ_TEST_POSTGRESQL_HOST`     | —            | Enable PostgreSQL (req.) |
+| `OZ_TEST_POSTGRESQL_DB`       | `ozone_test` | PostgreSQL database name |
+| `OZ_TEST_POSTGRESQL_USER`     | `postgres`   | PostgreSQL username      |
+| `OZ_TEST_POSTGRESQL_PASSWORD` | `""`         | PostgreSQL password      |
 
-Integration test classes that require a DB extend `IntegrationTestCase` (in `tests/Support/`) which applies the schema DDL once per process.
+**`DbTestConfig::allConfigured(string $tag = ''): array`** returns one dataset entry per enabled DB type. The `$tag` string is appended to the SQLite filename to avoid cross-test-class file conflicts — always pass a short class-specific slug (e.g. `'migrations'`, `'dbbuild'`, `'svcgen'`, `'backup'`).
+
+### Static project store pattern (required for multi-DB tests)
+
+**Never combine `@depends` with `@dataProvider`** — PHPUnit 9 cannot propagate dependency return values across data sets (dataset name suffix prevents the lookup). Use `@dataProvider` only on every test method.
+
+Projects are shared across test methods via a `private static array $projects` keyed by RDBMS name. The **first** test in declaration order creates the project; all subsequent tests call `self::getProject($config)` to retrieve it.
+
+**Setup order requirement**: `oz db build --build-all --class-only` MUST be called before any migration command so ORM classes are available. Follow this sequence in the first test method:
+
+```php
+$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
+$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
+$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
+```
+
+**Example pattern** (also see `MigrationsTest`, `DbBuildTest`, `ServicesGenerateTest`, `DbBackupTest`):
+
+```php
+final class MyFeatureTest extends TestCase
+{
+    /** @var array<string, OZTestProject> */
+    private static array $projects = [];
+    /** @var array<string, null|string> */
+    private static array $dbFiles = [];
+
+    public static function tearDownAfterClass(): void
+    {
+        foreach (self::$projects as $key => $proj) {
+            $proj->destroy();
+            $file = self::$dbFiles[$key] ?? null;
+            if (null !== $file && \is_file($file)) { \unlink($file); }
+        }
+        self::$projects = [];
+        self::$dbFiles  = [];
+        parent::tearDownAfterClass();
+    }
+
+    /** @dataProvider provideDbConfig */
+    public function testFirst(DbTestConfig $config): void
+    {
+        $rdbms = $config->rdbms;
+        $proj  = OZTestProject::create('myfeature-' . $rdbms, shared: false);
+        $proj->writeEnv($config->toEnvArray());
+        self::$projects[$rdbms] = $proj;
+        self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;
+        // Required setup order:
+        $proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
+        $proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
+        $proj->oz('migrations', 'run', '--skip-backup')->mustRun();
+        // ... first assertion ...
+    }
+
+    /** @dataProvider provideDbConfig */
+    public function testSecond(DbTestConfig $config): void
+    {
+        $proj = self::getProject($config);
+        // ... next assertion using $proj ...
+    }
+
+    public static function provideDbConfig(): array
+    {
+        return DbTestConfig::allConfigured('myfeature');
+    }
+
+    private static function getProject(DbTestConfig $config): OZTestProject
+    {
+        $rdbms = $config->rdbms;
+        if (!isset(self::$projects[$rdbms])) {
+            self::fail(sprintf('Project for %s not initialized. Did testFirst pass?', $rdbms));
+        }
+        return self::$projects[$rdbms];
+    }
+}
+```
 
 ### Test class guidelines
 
@@ -1629,8 +1706,8 @@ Integration test classes that require a DB extend `IntegrationTestCase` (in `tes
 - Namespace: `OZONE\Tests\Integration\{Feature}\{ClassName}Test`
 - File path: `tests/Integration/{Feature}/{ClassName}Test.php`
 - Extend `PHPUnit\Framework\TestCase` for CLI/filesystem tests
-- Extend `OZONE\Tests\Support\IntegrationTestCase` for tests that need DB access
-- Skip tests when required conditions are absent (e.g. MySQL not configured)
+- All DB-related test classes must use `@dataProvider provideDbConfig` + `DbTestConfig::allConfigured('<tag>')` to exercise every configured RDBMS.
+- **Never combine `@depends` with `@dataProvider`** — use the static project store pattern instead.
 
 ### Directory structure
 
@@ -1646,7 +1723,11 @@ tests/
     Scopes/
       ScopesAddTest.php         # scope creation, directory structure
     Db/
-      MigrationsTest.php        # db build, migrations create/check/run/rollback
+      DbBuildTest.php           # db build across all DB types
+      DbBackupTest.php          # db backup across all DB types
+      MigrationsTest.php        # migrations lifecycle across all DB types
+    Services/
+      ServicesGenerateTest.php  # services generate across all DB types
     Queue/
       JobQueueTest.php          # dispatch, run, finish, retry
     Cron/
@@ -1657,14 +1738,18 @@ tests/
 ### Running integration tests
 
 ```bash
-# All integration tests (SQLite by default):
+# SQLite only (always available, no env vars needed):
 ./vendor/bin/phpunit --testsuite Integration
 
-# With MySQL:
-OZ_TEST_DB_RDBMS=mysql OZ_TEST_DB_NAME=ozone_test OZ_TEST_DB_USER=root \
+# SQLite + MySQL:
+OZ_TEST_MYSQL_HOST=127.0.0.1 OZ_TEST_MYSQL_DB=ozone_test OZ_TEST_MYSQL_USER=root \
   ./vendor/bin/phpunit --testsuite Integration
 
-# With PostgreSQL:
-OZ_TEST_DB_RDBMS=postgresql OZ_TEST_DB_HOST=localhost OZ_TEST_DB_NAME=ozone_test \
-  OZ_TEST_DB_USER=postgres ./vendor/bin/phpunit --testsuite Integration
+# SQLite + PostgreSQL:
+OZ_TEST_POSTGRESQL_HOST=127.0.0.1 OZ_TEST_POSTGRESQL_DB=ozone_test OZ_TEST_POSTGRESQL_USER=postgres \
+  ./vendor/bin/phpunit --testsuite Integration
+
+# All three DB types:
+OZ_TEST_MYSQL_HOST=127.0.0.1 OZ_TEST_POSTGRESQL_HOST=127.0.0.1 \
+  ./vendor/bin/phpunit --testsuite Integration
 ```

@@ -7,6 +7,7 @@ return [
 	'OZ_DB_TABLE_PREFIX' => '{=oz_db_table_prefix}',
 	'OZ_DB_RDBMS'        => env('OZ_DB_RDBMS', 'mysql'),
 	'OZ_DB_HOST'         => env('OZ_DB_HOST', 'localhost'),
+	'OZ_DB_PORT'         => env('OZ_DB_PORT', 3306),
 	'OZ_DB_NAME'         => env('OZ_DB_NAME', ''),
 	'OZ_DB_USER'         => env('OZ_DB_USER', ''),
 	'OZ_DB_PASS'         => env('OZ_DB_PASS', ''),

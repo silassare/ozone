@@ -51,8 +51,8 @@ final class Db
 			OZone::dieIfBootHookReceiversAreNotNotified(
 				\sprintf(
 					'%s should be called only after all boot hooks are registered.'
-					. ' A call to %s before all boot hooks are registered may cause '
-					. 'some boot hooks to not be notified and lead to inconsistent state.',
+						. ' A call to %s before all boot hooks are registered may cause '
+						. 'some boot hooks to not be notified and lead to inconsistent state.',
 					__METHOD__,
 					__METHOD__
 				)
@@ -99,6 +99,7 @@ final class Db
 		$db_config = new DbConfig([
 			'db_table_prefix' => $migration_config['db_table_prefix'] ?? Settings::get('oz.db', 'OZ_DB_TABLE_PREFIX'),
 			'db_host'         => $config['OZ_DB_HOST'],
+			'db_port'         => $config['OZ_DB_PORT'],
 			'db_name'         => $config['OZ_DB_NAME'],
 			'db_user'         => $config['OZ_DB_USER'],
 			'db_pass'         => $config['OZ_DB_PASS'],

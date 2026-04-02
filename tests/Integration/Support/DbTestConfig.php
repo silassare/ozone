@@ -24,6 +24,7 @@ final class DbTestConfig
 {
 	public readonly string $rdbms;
 	public readonly string $host;
+	public readonly int $port;
 	public readonly string $name;
 	public readonly string $user;
 	public readonly string $pass;
@@ -31,12 +32,14 @@ final class DbTestConfig
 	private function __construct(
 		string $rdbms,
 		string $host,
+		int $port,
 		string $name,
 		string $user,
 		string $pass,
 	) {
 		$this->rdbms = $rdbms;
 		$this->host  = $host;
+		$this->port  = $port;
 		$this->name  = $name;
 		$this->user  = $user;
 		$this->pass  = $pass;
@@ -68,6 +71,7 @@ final class DbTestConfig
 		return [
 			'OZ_DB_RDBMS' => $this->rdbms,
 			'OZ_DB_HOST'  => $this->host,
+			'OZ_DB_PORT'  => $this->port,
 			'OZ_DB_NAME'  => $this->name,
 			'OZ_DB_USER'  => $this->user,
 			'OZ_DB_PASS'  => $this->pass,
@@ -82,7 +86,7 @@ final class DbTestConfig
 	 */
 	public static function sqlite(string $host): static
 	{
-		return new self('sqlite', $host, '', '', '');
+		return new self('sqlite', $host, 0, '', '', '');
 	}
 
 	/**
@@ -101,7 +105,8 @@ final class DbTestConfig
 		return new static(
 			'mysql',
 			$envs['OZ_TEST_MYSQL_HOST'],
-			$envs['OZ_TEST_MYSQL_NAME'] ?? 'ozone_test',
+			$envs['OZ_TEST_MYSQL_PORT'] ?? 3306,
+			$envs['OZ_TEST_MYSQL_DB'] ?? 'ozone_test',
 			$envs['OZ_TEST_MYSQL_USER'] ?? 'ozone_test',
 			$envs['OZ_TEST_MYSQL_PASSWORD'] ?? '',
 		);
@@ -123,7 +128,8 @@ final class DbTestConfig
 		return new static(
 			'postgresql',
 			$envs['OZ_TEST_POSTGRESQL_HOST'],
-			$envs['OZ_TEST_POSTGRESQL_NAME'] ?? 'ozone_test',
+			$envs['OZ_TEST_POSTGRESQL_PORT'] ?? 5432,
+			$envs['OZ_TEST_POSTGRESQL_DB'] ?? 'ozone_test',
 			$envs['OZ_TEST_POSTGRESQL_USER'] ?? 'ozone_test',
 			$envs['OZ_TEST_POSTGRESQL_PASSWORD'] ?? '',
 		);
