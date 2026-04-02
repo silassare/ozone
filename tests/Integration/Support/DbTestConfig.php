@@ -105,7 +105,7 @@ final class DbTestConfig
 		return new static(
 			'mysql',
 			$envs['OZ_TEST_MYSQL_HOST'],
-			$envs['OZ_TEST_MYSQL_PORT'] ?? 3306,
+			(int) ($envs['OZ_TEST_MYSQL_PORT'] ?? 3306),
 			$envs['OZ_TEST_MYSQL_DB'] ?? 'ozone_test',
 			$envs['OZ_TEST_MYSQL_USER'] ?? 'ozone_test',
 			$envs['OZ_TEST_MYSQL_PASSWORD'] ?? '',
@@ -128,7 +128,7 @@ final class DbTestConfig
 		return new static(
 			'postgresql',
 			$envs['OZ_TEST_POSTGRESQL_HOST'],
-			$envs['OZ_TEST_POSTGRESQL_PORT'] ?? 5432,
+			(int) ($envs['OZ_TEST_POSTGRESQL_PORT'] ?? 5432),
 			$envs['OZ_TEST_POSTGRESQL_DB'] ?? 'ozone_test',
 			$envs['OZ_TEST_POSTGRESQL_USER'] ?? 'ozone_test',
 			$envs['OZ_TEST_POSTGRESQL_PASSWORD'] ?? '',
