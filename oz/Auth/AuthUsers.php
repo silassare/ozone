@@ -456,10 +456,8 @@ final class AuthUsers
 
 	/**
 	 * Logon the auth user.
-	 *
-	 * @return $this
 	 */
-	public function logUserIn(AuthUserInterface $user): self
+	public function logUserIn(AuthUserInterface $user): static
 	{
 		$auth_method = $this->context->requireStatefulAuth();
 		$previous    = $auth_method->store()
@@ -490,10 +488,8 @@ final class AuthUsers
 
 	/**
 	 * Log the current user out.
-	 *
-	 * @return $this
 	 */
-	public function logUserOut(): self
+	public function logUserOut(): static
 	{
 		// we require a stateful auth method to log out
 		// this make sure that we raise an exception

@@ -38,14 +38,12 @@ class AuthUserDataStore extends Store
 
 	/**
 	 * Returns the store instance.
-	 *
-	 * @return $this
 	 */
-	public static function getInstance(AuthUserInterface $user, array $data): self
+	public static function getInstance(AuthUserInterface $user, array $data): static
 	{
 		$ref     = AuthUsers::ref($user);
 		$cache   = CacheManager::runtime(__METHOD__);
-		$factory = static fn (): self => new self($data);
+		$factory = static fn (): static => new static($data);
 
 		return $cache->factory($ref, $factory)
 			->get();
@@ -71,7 +69,7 @@ class AuthUserDataStore extends Store
 	/**
 	 * Sets the user access rights.
 	 */
-	public function setAuthUserAccessRights(AccessRightsInterface $rights): self
+	public function setAuthUserAccessRights(AccessRightsInterface $rights): static
 	{
 		$this->set('access_rights', $rights->toArray());
 
@@ -90,10 +88,8 @@ class AuthUserDataStore extends Store
 	 * Sets the 2FA enabled status.
 	 *
 	 * @param bool $enabled
-	 *
-	 * @return $this
 	 */
-	public function set2FAEnabled(bool $enabled = true): self
+	public function set2FAEnabled(bool $enabled = true): static
 	{
 		$this->set('2fa.enabled', $enabled);
 

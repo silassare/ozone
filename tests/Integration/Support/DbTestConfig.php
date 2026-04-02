@@ -80,7 +80,7 @@ final class DbTestConfig
 	 *
 	 * @param string $host absolute path to the SQLite database file
 	 */
-	public static function sqlite(string $host): self
+	public static function sqlite(string $host): static
 	{
 		return new self('sqlite', $host, '', '', '');
 	}
@@ -95,7 +95,7 @@ final class DbTestConfig
 	 *
 	 * Returns null when OZ_TEST_MYSQL_HOST is not set.
 	 */
-	public static function mysql(): ?self
+	public static function mysql(): ?static
 	{
 		$envs = \getenv();
 
@@ -103,7 +103,7 @@ final class DbTestConfig
 			return null;
 		}
 
-		return new self(
+		return new static(
 			'mysql',
 			$envs['OZ_TEST_MYSQL_HOST'],
 			$envs['OZ_TEST_MYSQL_NAME'] ?? 'ozone_test',
@@ -122,7 +122,7 @@ final class DbTestConfig
 	 *
 	 * Returns null when OZ_TEST_PGSQL_HOST is not set.
 	 */
-	public static function postgresql(): ?self
+	public static function postgresql(): ?static
 	{
 		$envs = \getenv();
 
@@ -130,7 +130,7 @@ final class DbTestConfig
 			return null;
 		}
 
-		return new self(
+		return new static(
 			'postgresql',
 			$envs['OZ_TEST_PGSQL_HOST'],
 			$envs['OZ_TEST_PGSQL_NAME'] ?? 'ozone_test',

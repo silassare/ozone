@@ -48,10 +48,8 @@ interface WorkerInterface
 	 * Instructs the worker to do the job.
 	 *
 	 * @param JobContractInterface $job_contract
-	 *
-	 * @return $this
 	 */
-	public function work(JobContractInterface $job_contract): self;
+	public function work(JobContractInterface $job_contract): static;
 
 	/**
 	 * Is the worker working asynchronously?
@@ -71,10 +69,8 @@ interface WorkerInterface
 	 * Gets the worker instance from payload.
 	 *
 	 * @param array $payload
-	 *
-	 * @return static
 	 */
-	public static function fromPayload(array $payload): self;
+	public static function fromPayload(array $payload): static;
 
 	/**
 	 * Returns the payload.

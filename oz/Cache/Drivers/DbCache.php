@@ -21,7 +21,7 @@ use OZONE\Core\Db\OZDbStoresQuery;
 /**
  * Class DbCache.
  */
-class DbCache extends RuntimeCache
+final class DbCache extends RuntimeCache
 {
 	private ?OZDbStore $db_store;
 
@@ -29,7 +29,7 @@ class DbCache extends RuntimeCache
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function getSharedInstance(?string $namespace = null): self
+	public static function getSharedInstance(?string $namespace = null): static
 	{
 		return new self($namespace);
 	}

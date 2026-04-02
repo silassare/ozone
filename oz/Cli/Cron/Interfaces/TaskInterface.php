@@ -39,19 +39,15 @@ interface TaskInterface
 	 * Set task description.
 	 *
 	 * @param string $description
-	 *
-	 * @return $this
 	 */
-	public function setDescription(string $description): self;
+	public function setDescription(string $description): static;
 
 	/**
 	 * Add a schedule to the task.
 	 *
 	 * @param Schedule $schedule
-	 *
-	 * @return $this
 	 */
-	public function addSchedule(Schedule $schedule): self;
+	public function addSchedule(Schedule $schedule): static;
 
 	/**
 	 * Create a new schedule.
@@ -83,10 +79,8 @@ interface TaskInterface
 
 	/**
 	 * Mark the task as background task.
-	 *
-	 * @return $this
 	 */
-	public function inBackground(): self;
+	public function inBackground(): static;
 
 	/**
 	 * Should run in background?
@@ -97,10 +91,8 @@ interface TaskInterface
 	 * Mark the task as one at a time.
 	 *
 	 * @param int $timeout maximum execution time in seconds (0 = unlimited)
-	 *
-	 * @return $this
 	 */
-	public function oneAtATime(int $timeout = 0): self;
+	public function oneAtATime(int $timeout = 0): static;
 
 	/**
 	 * Gets the task timeout in seconds.
@@ -113,10 +105,8 @@ interface TaskInterface
 	 * Sets the task timeout in seconds.
 	 *
 	 * @param null|int $timeout
-	 *
-	 * @return $this
 	 */
-	public function setTimeout(?int $timeout = null): self;
+	public function setTimeout(?int $timeout = null): static;
 
 	/**
 	 * Should run one at a time?

@@ -22,7 +22,7 @@ use OZONE\Core\Router\RouteInfo;
 /**
  * Class CSRFRouteGuard.
  */
-class CSRFRouteGuard extends AbstractRouteGuard
+final class CSRFRouteGuard extends AbstractRouteGuard
 {
 	/**
 	 * CSRFRouteGuard constructor.
@@ -46,7 +46,7 @@ class CSRFRouteGuard extends AbstractRouteGuard
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function fromRules(array $rules): self
+	public static function fromRules(array $rules): static
 	{
 		$scope = RequestScope::tryFrom($rules['scope'] ?? '') ?? RequestScope::STATE;
 

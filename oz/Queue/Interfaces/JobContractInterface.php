@@ -33,16 +33,16 @@ interface JobContractInterface extends JobInterface
 	 *
 	 * @param string $tracking_code
 	 *
-	 * @return JobContractInterface
+	 * @return static
 	 */
-	public static function fromTrackingCode(string $tracking_code): self;
+	public static function fromTrackingCode(string $tracking_code): static;
 
 	/**
 	 * Saves the job contract.
 	 *
-	 * @return $this
+	 * @return static
 	 */
-	public function save(): self;
+	public function save(): static;
 
 	/**
 	 * Locks the job contract.

@@ -33,9 +33,9 @@ final class DateTimeUtils
 	 *
 	 * @param null|DateTimeZone|string $timezone
 	 *
-	 * @return self
+	 * @return static
 	 */
-	public static function now(DateTimeZone|string|null $timezone = null): self
+	public static function now(DateTimeZone|string|null $timezone = null): static
 	{
 		return new self(new DateTimeImmutable('now', self::resolveTimezone($timezone)));
 	}
@@ -46,14 +46,14 @@ final class DateTimeUtils
 	 * @param string                   $time
 	 * @param null|DateTimeZone|string $timezone
 	 *
-	 * @return self
+	 * @return static
 	 */
-	public static function parse(string $time, DateTimeZone|string|null $timezone = null): self
+	public static function parse(string $time, DateTimeZone|string|null $timezone = null): static
 	{
 		$tz = self::resolveTimezone($timezone);
 		$dt = new DateTimeImmutable($time, $tz);
 
-		return new self($dt);
+		return new static($dt);
 	}
 
 	/**
@@ -69,14 +69,14 @@ final class DateTimeUtils
 	/**
 	 * Return a new instance pointing to the last day of the current month.
 	 *
-	 * @return self
+	 * @return static
 	 */
-	public function endOfMonth(): self
+	public function endOfMonth(): static
 	{
 		// 't' returns number of days in the current month
 		$lastDay = (int) $this->dt->format('t');
 
-		return new self($this->dt->setDate(
+		return new static($this->dt->setDate(
 			(int) $this->dt->format('Y'),
 			(int) $this->dt->format('n'),
 			$lastDay
@@ -86,27 +86,27 @@ final class DateTimeUtils
 	/**
 	 * Return a new instance one day in the future.
 	 *
-	 * @return self
+	 * @return static
 	 */
-	public function addDay(): self
+	public function addDay(): static
 	{
-		return new self($this->dt->modify('+1 day'));
+		return new static($this->dt->modify('+1 day'));
 	}
 
 	/**
 	 * Return a new instance one day in the past.
 	 *
-	 * @return self
+	 * @return static
 	 */
-	public function subDay(): self
+	public function subDay(): static
 	{
-		return new self($this->dt->modify('-1 day'));
+		return new static($this->dt->modify('-1 day'));
 	}
 
 	/**
 	 * Check whether this instance is strictly before another.
 	 *
-	 * @param self $other
+	 * @param static $other
 	 *
 	 * @return bool
 	 */
@@ -118,7 +118,7 @@ final class DateTimeUtils
 	/**
 	 * Check whether this instance is strictly after another.
 	 *
-	 * @param self $other
+	 * @param static $other
 	 *
 	 * @return bool
 	 */
@@ -130,8 +130,8 @@ final class DateTimeUtils
 	/**
 	 * Check whether this instance falls within [$start, $end] (inclusive).
 	 *
-	 * @param self $start
-	 * @param self $end
+	 * @param static $start
+	 * @param static $end
 	 *
 	 * @return bool
 	 */

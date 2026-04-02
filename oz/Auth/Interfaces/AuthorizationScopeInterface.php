@@ -41,10 +41,8 @@ interface AuthorizationScopeInterface
 	 * Sets the auth label.
 	 *
 	 * @param string $label
-	 *
-	 * @return $this
 	 */
-	public function setLabel(string $label): self;
+	public function setLabel(string $label): static;
 
 	/**
 	 * Gets the maximum failure allowed.
@@ -57,10 +55,8 @@ interface AuthorizationScopeInterface
 	 * Sets the maximum failure allowed.
 	 *
 	 * @param int $try_max
-	 *
-	 * @return $this
 	 */
-	public function setTryMax(int $try_max): self;
+	public function setTryMax(int $try_max): static;
 
 	/**
 	 * Gets the lifetime in seconds.
@@ -73,10 +69,8 @@ interface AuthorizationScopeInterface
 	 * Sets the lifetime in seconds.
 	 *
 	 * @param int $lifetime
-	 *
-	 * @return $this
 	 */
-	public function setLifetime(int $lifetime): self;
+	public function setLifetime(int $lifetime): static;
 
 	/**
 	 * Gets the access rights.
@@ -89,8 +83,6 @@ interface AuthorizationScopeInterface
 	 * Sets the access rights.
 	 *
 	 * @param AccessRightsInterface $access_right
-	 *
-	 * @return $this
 	 */
-	public function setAccessRight(AccessRightsInterface $access_right): self;
+	public function setAccessRight(AccessRightsInterface $access_right): static;
 }

@@ -19,7 +19,7 @@ use OZONE\Core\FS\FS;
 /**
  * Class PHPCache.
  */
-class PHPCache extends RuntimeCache
+final class PHPCache extends RuntimeCache
 {
 	private ?string $cache_path = null;
 
@@ -27,7 +27,7 @@ class PHPCache extends RuntimeCache
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function getSharedInstance(?string $namespace = null): self
+	public static function getSharedInstance(?string $namespace = null): static
 	{
 		return new self($namespace);
 	}
@@ -54,7 +54,8 @@ class PHPCache extends RuntimeCache
 		$path   = $this->getCachePath();
 		$filter = FS::fromRoot()->filter();
 		if ($filter->isFile()
-			->check($path)) {
+			->check($path)
+		) {
 			$cache = \file_get_contents($path);
 
 			if ($cache) {

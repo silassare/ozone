@@ -310,9 +310,10 @@ STRING;
 		while ($current) {
 			$data = [];
 
-			if (\method_exists($throwable, 'getData')) {
+			if ($current instanceof RichExceptionInterface || \method_exists($current, 'getData')) {
 				try {
-					$data = $throwable->getData(true);
+					/** @var RichExceptionInterface $current */
+					$data = $current->getData(true);
 				} catch (Throwable $t) {
 					$data = ['_error_will_calling_get_data_' => $t->getMessage()];
 				}

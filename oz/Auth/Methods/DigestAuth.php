@@ -61,7 +61,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function get(RouteInfo $ri, string $realm): self
+	public static function get(RouteInfo $ri, string $realm): static
 	{
 		return new self($ri, $realm);
 	}
@@ -172,11 +172,11 @@ class DigestAuth implements AuthenticationMethodInterface
 		if ($this->rfc2617) {
 			$expected_response = \md5(
 				$A1
-				. ':' . $parsed['nonce']
-				. ':' . $parsed['nc']
-				. ':' . $parsed['cnonce']
-				. ':' . $parsed['qop']
-				. ':' . $A2
+					. ':' . $parsed['nonce']
+					. ':' . $parsed['nc']
+					. ':' . $parsed['cnonce']
+					. ':' . $parsed['qop']
+					. ':' . $A2
 			);
 		} else {
 			$expected_response = \md5($A1 . ':' . $parsed['nonce'] . ':' . $A2);

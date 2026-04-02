@@ -40,7 +40,7 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function get(RouteInfo $ri, RouteRateLimitInterface $limit): RouteRateLimiterInterface
+	public static function get(RouteInfo $ri, RouteRateLimitInterface $limit): static
 	{
 		return new static($ri, $limit);
 	}
@@ -83,7 +83,7 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function reset(): self
+	public function reset(): static
 	{
 		$key = $this->limit->key();
 

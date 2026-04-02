@@ -30,7 +30,7 @@ final class PublicLocalStorage extends AbstractLocalStorage
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function get(string $name): self
+	public static function get(string $name): static
 	{
 		return new self($name);
 	}

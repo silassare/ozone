@@ -31,10 +31,8 @@ interface StorageInterface
 	 * Gets driver instance.
 	 *
 	 * @param string $name the driver assigned name
-	 *
-	 * @return $this
 	 */
-	public static function get(string $name): self;
+	public static function get(string $name): static;
 
 	/**
 	 * Should return stream.
@@ -139,30 +137,24 @@ interface StorageInterface
 	 *
 	 * @param OZFile            $file
 	 * @param FileStream|string $content
-	 *
-	 * @return $this
 	 */
-	public function write(OZFile $file, FileStream|string $content): self;
+	public function write(OZFile $file, FileStream|string $content): static;
 
 	/**
 	 * Appends data to the given file.
 	 *
 	 * @param OZFile            $file
 	 * @param FileStream|string $data
-	 *
-	 * @return $this
 	 */
-	public function append(OZFile $file, FileStream|string $data): self;
+	public function append(OZFile $file, FileStream|string $data): static;
 
 	/**
 	 * Prepends data to the given file.
 	 *
 	 * @param OZFile            $file
 	 * @param FileStream|string $data
-	 *
-	 * @return $this
 	 */
-	public function prepend(OZFile $file, FileStream|string $data): self;
+	public function prepend(OZFile $file, FileStream|string $data): static;
 
 	/**
 	 * Delete a file.

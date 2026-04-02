@@ -96,10 +96,8 @@ final class CacheItem
 	 * Sets this cache item value.
 	 *
 	 * @param mixed $value
-	 *
-	 * @return $this
 	 */
-	public function set(mixed $value): self
+	public function set(mixed $value): static
 	{
 		$this->value = $value;
 
@@ -110,10 +108,8 @@ final class CacheItem
 	 * Sets cache item lifetime.
 	 *
 	 * @param null|DateInterval|float $lifetime
-	 *
-	 * @return $this
 	 */
-	public function expiresAfter(DateInterval|float|null $lifetime): self
+	public function expiresAfter(DateInterval|float|null $lifetime): static
 	{
 		if (null === $lifetime) {
 			$this->expire = null;

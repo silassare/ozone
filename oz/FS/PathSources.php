@@ -31,10 +31,8 @@ class PathSources
 	 * Add a path source.
 	 *
 	 * @param string $path
-	 *
-	 * @return $this
 	 */
-	public function add(string $path): self
+	public function add(string $path): static
 	{
 		$path = FS::fromRoot()->resolve($path);
 

@@ -21,7 +21,7 @@ use PHPUtils\Traits\ArrayCapableTrait;
 /**
  * Class AllowCheckResult.
  */
-class AllowCheckResult implements ArrayCapableInterface
+final class AllowCheckResult implements ArrayCapableInterface
 {
 	use ArrayCapableTrait;
 
@@ -63,10 +63,8 @@ class AllowCheckResult implements ArrayCapableInterface
 	 * Creates a new AllowCheckResult instance with rejection status.
 	 *
 	 * @param I18nMessage $reason
-	 *
-	 * @return self
 	 */
-	public static function reject(I18nMessage $reason): self
+	public static function reject(I18nMessage $reason): static
 	{
 		return new self(false, $reason);
 	}
@@ -75,10 +73,8 @@ class AllowCheckResult implements ArrayCapableInterface
 	 * Creates a new AllowCheckResult instance with approval status.
 	 *
 	 * @param I18nMessage $reason
-	 *
-	 * @return self
 	 */
-	public static function allow(I18nMessage $reason): self
+	public static function allow(I18nMessage $reason): static
 	{
 		return new self(true, $reason);
 	}

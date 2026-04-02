@@ -166,7 +166,7 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	 *
 	 * @param JSONResult $other
 	 *
-	 * @return static
+	 * @return $this
 	 */
 	public function merge(self $other): static
 	{

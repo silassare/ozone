@@ -22,7 +22,7 @@ use OZONE\Core\Senders\Messages\MailMessage;
 /**
  * Class EmailOwnershipVerificationProvider.
  */
-class EmailOwnershipVerificationProvider extends AuthorizationProvider
+final class EmailOwnershipVerificationProvider extends AuthorizationProvider
 {
 	public const NAME = 'auth:provider:email:verify';
 
@@ -55,7 +55,7 @@ class EmailOwnershipVerificationProvider extends AuthorizationProvider
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function resolve(Context $context, OZAuth $auth): self
+	public static function resolve(Context $context, OZAuth $auth): static
 	{
 		$payload = $auth->getPayload();
 		$email   = $payload['email'] ?? null;

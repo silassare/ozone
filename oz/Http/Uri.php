@@ -118,10 +118,10 @@ class Uri implements UriInterface
 		$path = $basePath . '/' . \ltrim($path, '/');
 
 		return ($scheme ? $scheme . ':' : '')
-			   . ($authority ? '//' . $authority : '')
-			   . $path
-			   . ($query ? '?' . $query : '')
-			   . ($fragment ? '#' . $fragment : '');
+			. ($authority ? '//' . $authority : '')
+			. $path
+			. ($query ? '?' . $query : '')
+			. ($fragment ? '#' . $fragment : '');
 	}
 
 	/**
@@ -137,7 +137,7 @@ class Uri implements UriInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withScheme(string $scheme): self
+	public function withScheme(string $scheme): static
 	{
 		$scheme        = $this->filterScheme($scheme);
 		$clone         = clone $this;
@@ -164,9 +164,9 @@ class Uri implements UriInterface
 	 *
 	 * @param string $basePath
 	 *
-	 * @return self
+	 * @return static
 	 */
-	public function withBasePath(string $basePath): self
+	public function withBasePath(string $basePath): static
 	{
 		if (!empty($basePath)) {
 			$basePath = '/' . \trim($basePath, '/'); // <-- Trim on both sides
@@ -211,15 +211,15 @@ class Uri implements UriInterface
 		}
 
 		return ($scheme ? $scheme . ':' : '')
-			   . ($authority ? '//' . $authority : '')
-			   . \rtrim($basePath, '/');
+			. ($authority ? '//' . $authority : '')
+			. \rtrim($basePath, '/');
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withUserInfo(string $user, ?string $password = null): self
+	public function withUserInfo(string $user, ?string $password = null): static
 	{
 		$clone           = clone $this;
 		$clone->user     = $user;
@@ -241,7 +241,7 @@ class Uri implements UriInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withHost(string $host): self
+	public function withHost(string $host): static
 	{
 		$clone       = clone $this;
 		$clone->host = $host;
@@ -262,7 +262,7 @@ class Uri implements UriInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withPort(?int $port): self
+	public function withPort(?int $port): static
 	{
 		$port        = $this->filterPort($port);
 		$clone       = clone $this;
@@ -284,7 +284,7 @@ class Uri implements UriInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withPath(string $path, bool $preserve_base_path = false): self
+	public function withPath(string $path, bool $preserve_base_path = false): static
 	{
 		$clone       = clone $this;
 		$clone->path = $this->filterPath($path);
@@ -323,7 +323,7 @@ class Uri implements UriInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withQuery(string $query): self
+	public function withQuery(string $query): static
 	{
 		$query        = \ltrim($query, '?');
 		$clone        = clone $this;
@@ -337,9 +337,9 @@ class Uri implements UriInterface
 	 *
 	 * @param array $query
 	 *
-	 * @return self a new instance with the specified query string
+	 * @return static a new instance with the specified query string
 	 */
-	public function withQueryArray(array $query): self
+	public function withQueryArray(array $query): static
 	{
 		return $this->withQuery(\http_build_query($query, '', '&', \PHP_QUERY_RFC3986));
 	}
@@ -357,7 +357,7 @@ class Uri implements UriInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withFragment(string $fragment): self
+	public function withFragment(string $fragment): static
 	{
 		$fragment        = \ltrim($fragment, '#');
 		$clone           = clone $this;
@@ -371,9 +371,9 @@ class Uri implements UriInterface
 	 *
 	 * @param string $uri Complete Uri string (i.e., https://user:pass@host:443/path?query).
 	 *
-	 * @return self
+	 * @return static
 	 */
-	public static function createFromString(string $uri): self
+	public static function createFromString(string $uri): static
 	{
 		$parts    = \parse_url($uri);
 		$scheme   = $parts['scheme'] ?? '';
@@ -393,9 +393,9 @@ class Uri implements UriInterface
 	 *
 	 * @param HTTPEnvironment $env
 	 *
-	 * @return self
+	 * @return static
 	 */
-	public static function createFromEnvironment(HTTPEnvironment $env): self
+	public static function createFromEnvironment(HTTPEnvironment $env): static
 	{
 		// Scheme
 		$isSecure = $env->get('HTTPS');

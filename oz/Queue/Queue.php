@@ -68,10 +68,8 @@ final class Queue
 	 * Enables or disables stop on error.
 	 *
 	 * @param bool $stop_on_error
-	 *
-	 * @return Queue
 	 */
-	public function enableStopOnError(bool $stop_on_error = true): self
+	public function enableStopOnError(bool $stop_on_error = true): static
 	{
 		$this->stop_on_error = $stop_on_error;
 
@@ -92,10 +90,8 @@ final class Queue
 	 * Sets max consecutive errors count.
 	 *
 	 * @param int $max_consecutive_errors_count
-	 *
-	 * @return Queue
 	 */
-	public function setMaxConsecutiveErrorsCount(int $max_consecutive_errors_count): self
+	public function setMaxConsecutiveErrorsCount(int $max_consecutive_errors_count): static
 	{
 		$this->max_consecutive_errors_count = $max_consecutive_errors_count;
 
@@ -116,10 +112,8 @@ final class Queue
 	 * Sets max errors count.
 	 *
 	 * @param int $max_errors
-	 *
-	 * @return Queue
 	 */
-	public function setMaxErrorsCount(int $max_errors): self
+	public function setMaxErrorsCount(int $max_errors): static
 	{
 		$this->max_errors_count = $max_errors;
 
@@ -144,10 +138,8 @@ final class Queue
 	 * than spawning an additional subprocess. Set to null (default) for no limit.
 	 *
 	 * @param null|int $max_concurrent
-	 *
-	 * @return Queue
 	 */
-	public function setMaxConcurrent(?int $max_concurrent): self
+	public function setMaxConcurrent(?int $max_concurrent): static
 	{
 		$this->max_concurrent = $max_concurrent;
 
@@ -182,10 +174,8 @@ final class Queue
 	 * Gets a queue by name.
 	 *
 	 * @param string $name
-	 *
-	 * @return Queue
 	 */
-	public static function get(string $name): self
+	public static function get(string $name): static
 	{
 		if (!isset(self::$queues[$name])) {
 			self::$queues[$name] = new self($name);

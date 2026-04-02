@@ -46,10 +46,8 @@ interface AuthorizationCredentialsInterface extends ArrayCapableInterface
 	 * Sets raw auth code.
 	 *
 	 * @param string $code
-	 *
-	 * @return $this
 	 */
-	public function setCode(string $code): self;
+	public function setCode(string $code): static;
 
 	/**
 	 * Gets raw auth token.
@@ -62,10 +60,8 @@ interface AuthorizationCredentialsInterface extends ArrayCapableInterface
 	 * Sets raw auth token.
 	 *
 	 * @param string $token
-	 *
-	 * @return $this
 	 */
-	public function setToken(string $token): self;
+	public function setToken(string $token): static;
 
 	/**
 	 * Gets the auth reference.
@@ -78,10 +74,8 @@ interface AuthorizationCredentialsInterface extends ArrayCapableInterface
 	 * Sets the auth reference.
 	 *
 	 * @param string $reference
-	 *
-	 * @return $this
 	 */
-	public function setReference(string $reference): self;
+	public function setReference(string $reference): static;
 
 	/**
 	 * Gets the auth process refresh key.
@@ -94,10 +88,8 @@ interface AuthorizationCredentialsInterface extends ArrayCapableInterface
 	 * Sets the auth process refresh key.
 	 *
 	 * @param string $refresh_key
-	 *
-	 * @return $this
 	 */
-	public function setRefreshKey(string $refresh_key): self;
+	public function setRefreshKey(string $refresh_key): static;
 
 	/**
 	 * Gets auth link.

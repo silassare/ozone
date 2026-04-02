@@ -23,7 +23,7 @@ interface AuthUsersRepositoryInterface
 	 *
 	 * @param string $user_type the user type as defined in the configuration
 	 */
-	public static function get(string $user_type): self;
+	public static function get(string $user_type): static;
 
 	/**
 	 * Get the auth user by auth user default identifier (The auth user id).

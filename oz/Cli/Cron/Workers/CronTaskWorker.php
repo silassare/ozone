@@ -80,7 +80,7 @@ class CronTaskWorker implements WorkerInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function work(JobContractInterface $job_contract): self
+	public function work(JobContractInterface $job_contract): static
 	{
 		if ($this->task->shouldRunOneAtATime()) {
 			$cache     = CacheManager::persistent('cron');
@@ -117,7 +117,7 @@ class CronTaskWorker implements WorkerInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function fromPayload(array $payload): WorkerInterface
+	public static function fromPayload(array $payload): static
 	{
 		return new static($payload['task_name']);
 	}

@@ -37,7 +37,7 @@ trait ExceptionWithCustomResponseTrait
 	 *
 	 * @param Response $response
 	 *
-	 * @return static
+	 * @return $this
 	 */
 	public function setCustomResponse(Response $response): static
 	{

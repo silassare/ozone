@@ -16,21 +16,21 @@ namespace OZONE\Core\Http;
 /**
  * Class Cookies.
  */
-class Cookies
+final class Cookies
 {
 	/**
 	 * Cookies for HTTP response.
 	 *
 	 * @var array<string, Cookie>
 	 */
-	protected array $response_cookies = [];
+	private array $response_cookies = [];
 
 	/**
 	 * Cookies for HTTP request.
 	 *
 	 * @var array<string, string>
 	 */
-	protected array $request_cookies = [];
+	private array $request_cookies = [];
 
 	/**
 	 * Creates new cookies helper.
@@ -84,10 +84,8 @@ class Cookies
 	 * Adds a cookie to the response.
 	 *
 	 * @param Cookie $cookie The cookie to set
-	 *
-	 * @return Cookies
 	 */
-	public function add(Cookie $cookie): self
+	public function add(Cookie $cookie): static
 	{
 		$this->response_cookies[$cookie->name] = $cookie;
 

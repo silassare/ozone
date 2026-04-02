@@ -91,7 +91,7 @@ final class RouteFormDeclaration
 	 *
 	 * @return static
 	 */
-	public static function make(callable|Form $form, RouteFormDocPolicy $policy = RouteFormDocPolicy::AUTO): self
+	public static function make(callable|Form $form, RouteFormDocPolicy $policy = RouteFormDocPolicy::AUTO): static
 	{
 		$decl           = new self();
 		$decl->t_policy = $policy;
@@ -137,7 +137,7 @@ final class RouteFormDeclaration
 	 *
 	 * @return static
 	 */
-	public static function dynamic(callable $factory, ?callable $doc_preview = null): self
+	public static function dynamic(callable $factory, ?callable $doc_preview = null): static
 	{
 		$decl                    = new self();
 		$decl->t_policy          = RouteFormDocPolicy::AUTO;
@@ -160,7 +160,7 @@ final class RouteFormDeclaration
 	 *
 	 * @return static
 	 */
-	public static function opaque(callable|Form $form): self
+	public static function opaque(callable|Form $form): static
 	{
 		return self::make($form, RouteFormDocPolicy::OPAQUE);
 	}
@@ -175,7 +175,7 @@ final class RouteFormDeclaration
 	 *
 	 * @return static
 	 */
-	public static function discoveryOnly(callable|Form $form): self
+	public static function discoveryOnly(callable|Form $form): static
 	{
 		return self::make($form, RouteFormDocPolicy::DISCOVERY_ONLY);
 	}

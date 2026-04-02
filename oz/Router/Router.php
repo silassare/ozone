@@ -110,10 +110,8 @@ final class Router
 	 * @param string                                  $param
 	 * @param string                                  $pattern
 	 * @param callable(Context):(null|numeric|string) $provider
-	 *
-	 * @return $this
 	 */
-	public function addGlobalParam(string $param, string $pattern, callable $provider): self
+	public function addGlobalParam(string $param, string $pattern, callable $provider): static
 	{
 		$this->global_params[$param]           = $pattern;
 		$this->global_params_providers[$param] = $provider;

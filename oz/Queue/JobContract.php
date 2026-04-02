@@ -68,7 +68,7 @@ class JobContract extends Job implements JobContractInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function fromTrackingCode(string $tracking_code): JobContractInterface
+	public static function fromTrackingCode(string $tracking_code): static
 	{
 		[$store_name, $ref] = \explode(':', $tracking_code, 2);
 
@@ -84,7 +84,7 @@ class JobContract extends Job implements JobContractInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function save(): self
+	public function save(): static
 	{
 		$this->store->update($this);
 

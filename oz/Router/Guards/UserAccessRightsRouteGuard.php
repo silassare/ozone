@@ -22,7 +22,7 @@ use OZONE\Core\Router\RouteInfo;
 /**
  * Class UserAccessRightsRouteGuard.
  */
-class UserAccessRightsRouteGuard extends AbstractRouteGuard
+final class UserAccessRightsRouteGuard extends AbstractRouteGuard
 {
 	/**
 	 * UserAccessRightsRouteGuard constructor.
@@ -51,7 +51,7 @@ class UserAccessRightsRouteGuard extends AbstractRouteGuard
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function fromRules(array $rules): self
+	public static function fromRules(array $rules): static
 	{
 		$rights = $rules['access_rights'] ?? [];
 		$roles  = $rules['roles'] ?? [];

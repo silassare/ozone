@@ -36,10 +36,8 @@ interface AuthorizationProviderInterface
 	 *
 	 * @param Context $context
 	 * @param OZAuth  $auth
-	 *
-	 * @return self
 	 */
-	public static function resolve(Context $context, OZAuth $auth): self;
+	public static function resolve(Context $context, OZAuth $auth): static;
 
 	/**
 	 * Get payload.
@@ -73,10 +71,8 @@ interface AuthorizationProviderInterface
 	 * Sets authorization scope.
 	 *
 	 * @param AuthorizationScopeInterface $scope
-	 *
-	 * @return $this
 	 */
-	public function setScope(AuthorizationScopeInterface $scope): self;
+	public function setScope(AuthorizationScopeInterface $scope): static;
 
 	/**
 	 * Authorize with current credentials.
@@ -97,21 +93,17 @@ interface AuthorizationProviderInterface
 	 *
 	 * @param null|AuthUserInterface $user if provided, the user will get ownership of the generated code, token ...
 	 */
-	public function generate(?AuthUserInterface $user = null): self;
+	public function generate(?AuthUserInterface $user = null): static;
 
 	/**
 	 * Refresh the auth process.
 	 *
 	 * @param bool $re_authorize true to force re-auth, false otherwise
-	 *
-	 * @return $this
 	 */
-	public function refresh(bool $re_authorize = true): self;
+	public function refresh(bool $re_authorize = true): static;
 
 	/**
 	 * Cancel the process.
-	 *
-	 * @return $this
 	 */
-	public function cancel(): self;
+	public function cancel(): static;
 }

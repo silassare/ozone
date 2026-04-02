@@ -62,10 +62,8 @@ class FilesManager extends FSUtils
 	 * - permissions: int, the permissions of the file or directory.
 	 *
 	 * @param array $structure
-	 *
-	 * @return $this
 	 */
-	public function apply(array $structure): self
+	public function apply(array $structure): static
 	{
 		foreach ($structure as $key => $options) {
 			$type = $options['type'] ?? null;

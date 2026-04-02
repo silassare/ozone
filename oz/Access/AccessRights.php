@@ -64,7 +64,7 @@ class AccessRights implements AccessRightsInterface
 	 * @throws UnauthorizedException
 	 */
 	#[Override]
-	public function allow(string $action): self
+	public function allow(string $action): static
 	{
 		if (!$this->allowedInScopes([$action])) {
 			throw new UnauthorizedException('Access right escalation.', [
@@ -82,7 +82,7 @@ class AccessRights implements AccessRightsInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function deny(string $action): self
+	public function deny(string $action): static
 	{
 		$this->options[$action] = 0;
 
@@ -189,7 +189,7 @@ class AccessRights implements AccessRightsInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function pushScope(AccessRightsInterface $scope): AccessRightsInterface
+	public function pushScope(AccessRightsInterface $scope): static
 	{
 		if (!\in_array($scope, $this->scopes, true)) {
 			$this->scopes[] = $scope;

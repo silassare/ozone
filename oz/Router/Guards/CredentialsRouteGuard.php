@@ -30,7 +30,7 @@ use OZONE\Core\Router\RouteInfo;
 /**
  * Class CredentialsRouteGuard.
  */
-class CredentialsRouteGuard extends AbstractRouteGuard
+final class CredentialsRouteGuard extends AbstractRouteGuard
 {
 	/**
 	 * CredentialsRouteGuard constructor.
@@ -80,7 +80,7 @@ class CredentialsRouteGuard extends AbstractRouteGuard
 	 * @throws TypesException
 	 */
 	#[Override]
-	public static function fromRules(array $rules): self
+	public static function fromRules(array $rules): static
 	{
 		$u_options = $rules['username_type'] ?? null;
 		$p_options = $rules['password_type'] ?? null;

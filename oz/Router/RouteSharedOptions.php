@@ -110,7 +110,7 @@ class RouteSharedOptions
 	 *
 	 * @param string $name
 	 *
-	 * @return static
+	 * @return $this
 	 */
 	public function name(string $name): static
 	{
@@ -383,7 +383,7 @@ class RouteSharedOptions
 	 *
 	 * @param (callable(RouteInfo):?RouteGuardInterface)|RouteGuardInterface|string $guard
 	 *
-	 * @return static
+	 * @return $this
 	 */
 	public function guard(callable|RouteGuardInterface|string $guard): static
 	{
@@ -415,7 +415,7 @@ class RouteSharedOptions
 	 *
 	 * @param (callable(RouteInfo):?Response)|RouteMiddlewareInterface|string $middleware
 	 *
-	 * @return static
+	 * @return $this
 	 */
 	public function middleware(callable|RouteMiddlewareInterface|string $middleware): static
 	{
@@ -463,7 +463,7 @@ class RouteSharedOptions
 	 * @param RouteFormDocPolicy                 $policy   documentation policy (AUTO by default)
 	 * @param bool                               $override whether to override an existing form declaration or throw an exception
 	 *
-	 * @return static
+	 * @return $this
 	 */
 	public function form(callable|Form|RouteFormDeclaration $form, RouteFormDocPolicy $policy = RouteFormDocPolicy::AUTO, bool $override = false): static
 	{
@@ -525,7 +525,7 @@ class RouteSharedOptions
 	 * @param string $name
 	 * @param string $pattern
 	 *
-	 * @return static
+	 * @return $this
 	 */
 	public function param(string $name, string $pattern = Route::DEFAULT_PARAM_PATTERN): static
 	{
@@ -547,7 +547,7 @@ class RouteSharedOptions
 	 *
 	 * @param array<string, string> $params
 	 *
-	 * @return static
+	 * @return $this
 	 */
 	public function params(array $params): static
 	{

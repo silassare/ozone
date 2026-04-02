@@ -135,10 +135,8 @@ final class Schedule implements Stringable
 	 *
 	 * @param string $startTime the start time in "H:i" format
 	 * @param string $endTime   the end time in "H:i" format
-	 *
-	 * @return $this
 	 */
-	public function between(string $startTime, string $endTime): self
+	public function between(string $startTime, string $endTime): static
 	{
 		return $this->onlyIf($this->inTimeInterval($startTime, $endTime));
 	}
@@ -148,10 +146,8 @@ final class Schedule implements Stringable
 	 *
 	 * @param string $startTime the start time in "H:i" format
 	 * @param string $endTime   the end time in "H:i" format
-	 *
-	 * @return $this
 	 */
-	public function notBetween(string $startTime, string $endTime): self
+	public function notBetween(string $startTime, string $endTime): static
 	{
 		$predicate = $this->inTimeInterval($startTime, $endTime);
 
@@ -160,70 +156,56 @@ final class Schedule implements Stringable
 
 	/**
 	 * Schedule the task to run every minute.
-	 *
-	 * @return $this
 	 */
-	public function everyMinute(): self
+	public function everyMinute(): static
 	{
 		return $this->setPosition(1, '*');
 	}
 
 	/**
 	 * Schedule the task to run every two minutes.
-	 *
-	 * @return $this
 	 */
-	public function everyTwoMinutes(): self
+	public function everyTwoMinutes(): static
 	{
 		return $this->setPosition(1, '*/2');
 	}
 
 	/**
 	 * Schedule the task to run every three minutes.
-	 *
-	 * @return $this
 	 */
-	public function everyThreeMinutes(): self
+	public function everyThreeMinutes(): static
 	{
 		return $this->setPosition(1, '*/3');
 	}
 
 	/**
 	 * Schedule the task to run every four minutes.
-	 *
-	 * @return $this
 	 */
-	public function everyFourMinutes(): self
+	public function everyFourMinutes(): static
 	{
 		return $this->setPosition(1, '*/4');
 	}
 
 	/**
 	 * Schedule the task to run every five minutes.
-	 *
-	 * @return $this
 	 */
-	public function everyFiveMinutes(): self
+	public function everyFiveMinutes(): static
 	{
 		return $this->setPosition(1, '*/5');
 	}
 
 	/**
 	 * Schedule the task to run every ten minutes.
-	 *
-	 * @return $this
 	 */
-	public function everyTenMinutes(): self
+	public function everyTenMinutes(): static
 	{
 		return $this->setPosition(1, '*/10');
 	}
 
 	/**
 	 * Schedule the task to run every fifteen minutes.
-	 *
-	 * @return $this
 	 */
-	public function everyFifteenMinutes(): self
+	public function everyFifteenMinutes(): static
 	{
 		return $this->setPosition(1, '*/15');
 	}
@@ -232,20 +214,16 @@ final class Schedule implements Stringable
 	 * Schedule the task to run every thirty minutes.
 	 *
 	 * @param bool $atMinuteZeroAndThirty if true, the task will run at minute 0 and 30 of each hour; otherwise, it will run every 30 minutes starting from minute 0 (e.g., 0, 30)
-	 *
-	 * @return $this
 	 */
-	public function everyThirtyMinutes(bool $atMinuteZeroAndThirty = false): self
+	public function everyThirtyMinutes(bool $atMinuteZeroAndThirty = false): static
 	{
 		return $this->setPosition(1, $atMinuteZeroAndThirty ? '0,30' : '*/30');
 	}
 
 	/**
 	 * Schedule the task to run hourly.
-	 *
-	 * @return $this
 	 */
-	public function everyHour(): self
+	public function everyHour(): static
 	{
 		return $this->setPosition(1, 0);
 	}
@@ -254,20 +232,16 @@ final class Schedule implements Stringable
 	 * Schedule the task to run hourly at a given offset in the hour.
 	 *
 	 * @param int|int[] $offset the minute(s) of the hour to run at (0-59)
-	 *
-	 * @return $this
 	 */
-	public function everyHourAt(array|int $offset): self
+	public function everyHourAt(array|int $offset): static
 	{
 		return $this->setPosition(1, \is_array($offset) ? \implode(',', $offset) : $offset);
 	}
 
 	/**
 	 * Schedule the task to run every odd hour.
-	 *
-	 * @return $this
 	 */
-	public function everyOddHour(): self
+	public function everyOddHour(): static
 	{
 		return $this->setPosition(1, 0)
 			->setPosition(2, '1-23/2');
@@ -275,10 +249,8 @@ final class Schedule implements Stringable
 
 	/**
 	 * Schedule the task to run every two hours.
-	 *
-	 * @return $this
 	 */
-	public function everyTwoHours(): self
+	public function everyTwoHours(): static
 	{
 		return $this->setPosition(1, 0)
 			->setPosition(2, '*/2');
@@ -286,10 +258,8 @@ final class Schedule implements Stringable
 
 	/**
 	 * Schedule the task to run every three hours.
-	 *
-	 * @return $this
 	 */
-	public function everyThreeHours(): self
+	public function everyThreeHours(): static
 	{
 		return $this->setPosition(1, 0)
 			->setPosition(2, '*/3');
@@ -297,10 +267,8 @@ final class Schedule implements Stringable
 
 	/**
 	 * Schedule the task to run every four hours.
-	 *
-	 * @return $this
 	 */
-	public function everyFourHours(): self
+	public function everyFourHours(): static
 	{
 		return $this->setPosition(1, 0)
 			->setPosition(2, '*/4');
@@ -308,10 +276,8 @@ final class Schedule implements Stringable
 
 	/**
 	 * Schedule the task to run every six hours.
-	 *
-	 * @return $this
 	 */
-	public function everySixHours(): self
+	public function everySixHours(): static
 	{
 		return $this->setPosition(1, 0)
 			->setPosition(2, '*/6');
@@ -319,10 +285,8 @@ final class Schedule implements Stringable
 
 	/**
 	 * Schedule the task to run daily.
-	 *
-	 * @return $this
 	 */
-	public function daily(): self
+	public function daily(): static
 	{
 		return $this->setPosition(1, 0)
 			->setPosition(2, 0);
@@ -332,10 +296,8 @@ final class Schedule implements Stringable
 	 * Schedule the task at a given time.
 	 *
 	 * @param string $time
-	 *
-	 * @return $this
 	 */
-	public function at(string $time): self
+	public function at(string $time): static
 	{
 		return $this->dailyAt($time);
 	}
@@ -344,10 +306,8 @@ final class Schedule implements Stringable
 	 * Schedule the task to run daily at a given time (10:00, 19:30, etc).
 	 *
 	 * @param string $time the time in "H:i" format
-	 *
-	 * @return $this
 	 */
-	public function dailyAt(string $time): self
+	public function dailyAt(string $time): static
 	{
 		$segments = \explode(':', $time);
 
@@ -360,10 +320,8 @@ final class Schedule implements Stringable
 	 *
 	 * @param int $first  the hour of the first run (0-23)
 	 * @param int $second the hour of the second run (0-23)
-	 *
-	 * @return $this
 	 */
-	public function twiceDaily(int $first = 1, int $second = 13): self
+	public function twiceDaily(int $first = 1, int $second = 13): static
 	{
 		return $this->twiceDailyAt($first, $second);
 	}
@@ -374,10 +332,8 @@ final class Schedule implements Stringable
 	 * @param int $first  the hour of the first run (0-23)
 	 * @param int $second the hour of the second run (0-23)
 	 * @param int $offset the minute of the hour to run at (0-59)
-	 *
-	 * @return $this
 	 */
-	public function twiceDailyAt(int $first = 1, int $second = 13, int $offset = 0): self
+	public function twiceDailyAt(int $first = 1, int $second = 13, int $offset = 0): static
 	{
 		$hours = $first . ',' . $second;
 
@@ -387,100 +343,80 @@ final class Schedule implements Stringable
 
 	/**
 	 * Schedule the task to run only on weekdays.
-	 *
-	 * @return $this
 	 */
-	public function weekdays(): self
+	public function weekdays(): static
 	{
 		return $this->days(self::MONDAY . '-' . self::FRIDAY);
 	}
 
 	/**
 	 * Schedule the task to run only on weekends.
-	 *
-	 * @return $this
 	 */
-	public function weekends(): self
+	public function weekends(): static
 	{
 		return $this->days(self::SATURDAY . ',' . self::SUNDAY);
 	}
 
 	/**
 	 * Schedule the task to run only on Mondays.
-	 *
-	 * @return $this
 	 */
-	public function mondays(): self
+	public function mondays(): static
 	{
 		return $this->days(self::MONDAY);
 	}
 
 	/**
 	 * Schedule the task to run only on Tuesdays.
-	 *
-	 * @return $this
 	 */
-	public function tuesdays(): self
+	public function tuesdays(): static
 	{
 		return $this->days(self::TUESDAY);
 	}
 
 	/**
 	 * Schedule the task to run only on Wednesdays.
-	 *
-	 * @return $this
 	 */
-	public function wednesdays(): self
+	public function wednesdays(): static
 	{
 		return $this->days(self::WEDNESDAY);
 	}
 
 	/**
 	 * Schedule the task to run only on Thursdays.
-	 *
-	 * @return $this
 	 */
-	public function thursdays(): self
+	public function thursdays(): static
 	{
 		return $this->days(self::THURSDAY);
 	}
 
 	/**
 	 * Schedule the task to run only on Fridays.
-	 *
-	 * @return $this
 	 */
-	public function fridays(): self
+	public function fridays(): static
 	{
 		return $this->days(self::FRIDAY);
 	}
 
 	/**
 	 * Schedule the task to run only on Saturdays.
-	 *
-	 * @return $this
 	 */
-	public function saturdays(): self
+	public function saturdays(): static
 	{
 		return $this->days(self::SATURDAY);
 	}
 
 	/**
 	 * Schedule the task to run only on Sundays.
-	 *
-	 * @return $this
 	 */
-	public function sundays(): self
+	public function sundays(): static
 	{
 		return $this->days(self::SUNDAY);
 	}
 
 	/**
 	 * Schedule the task to run weekly.
-	 *
-	 * @return $this
 	 */
-	public function weekly(): self
+	public function weekly(): static
 	{
 		return $this->setPosition(1, 0)
 			->setPosition(2, 0)
@@ -492,10 +428,8 @@ final class Schedule implements Stringable
 	 *
 	 * @param int|int[]|string $dayOfWeek the day(s) of the week to run on (0-6, where 0 is Sunday); accepts a single int constant, an array of int constants, or a pre-formatted cron field string (e.g. '1-5')
 	 * @param string           $time      the time in "H:i" format
-	 *
-	 * @return $this
 	 */
-	public function weeklyOn(mixed $dayOfWeek, string $time = '0:0'): self
+	public function weeklyOn(mixed $dayOfWeek, string $time = '0:0'): static
 	{
 		$this->dailyAt($time);
 
@@ -504,10 +438,8 @@ final class Schedule implements Stringable
 
 	/**
 	 * Schedule the task to run monthly.
-	 *
-	 * @return $this
 	 */
-	public function monthly(): self
+	public function monthly(): static
 	{
 		return $this->setPosition(1, 0)
 			->setPosition(2, 0)
@@ -519,10 +451,8 @@ final class Schedule implements Stringable
 	 *
 	 * @param int    $dayOfMonth the day of the month to run on (1-31)
 	 * @param string $time       the time in "H:i" format
-	 *
-	 * @return $this
 	 */
-	public function monthlyOn(int $dayOfMonth = 1, string $time = '0:0'): self
+	public function monthlyOn(int $dayOfMonth = 1, string $time = '0:0'): static
 	{
 		$this->dailyAt($time);
 
@@ -535,10 +465,8 @@ final class Schedule implements Stringable
 	 * @param int    $first  the day of the month for the first run (1-31)
 	 * @param int    $second the day of the month for the second run (1-31)
 	 * @param string $time   the time in "H:i" format
-	 *
-	 * @return $this
 	 */
-	public function twiceMonthly(int $first = 1, int $second = 16, string $time = '0:0'): self
+	public function twiceMonthly(int $first = 1, int $second = 16, string $time = '0:0'): static
 	{
 		$daysOfMonth = $first . ',' . $second;
 
@@ -555,10 +483,8 @@ final class Schedule implements Stringable
 	 * the actual last day of the current month.
 	 *
 	 * @param string $time the time in "H:i" format
-	 *
-	 * @return $this
 	 */
-	public function lastDayOfMonth(string $time = '0:0'): self
+	public function lastDayOfMonth(string $time = '0:0'): static
 	{
 		$this->dailyAt($time);
 
@@ -573,10 +499,8 @@ final class Schedule implements Stringable
 
 	/**
 	 * Schedule the task to run quarterly.
-	 *
-	 * @return $this
 	 */
-	public function quarterly(): self
+	public function quarterly(): static
 	{
 		return $this->setPosition(1, 0)
 			->setPosition(2, 0)
@@ -589,10 +513,8 @@ final class Schedule implements Stringable
 	 *
 	 * @param int|string $dayOfQuarter the day of the quarter to run on (1-31)
 	 * @param string     $time         the time in "H:i" format
-	 *
-	 * @return $this
 	 */
-	public function quarterlyOn(int|string $dayOfQuarter = 1, string $time = '0:0'): self
+	public function quarterlyOn(int|string $dayOfQuarter = 1, string $time = '0:0'): static
 	{
 		$this->dailyAt($time);
 
@@ -602,10 +524,8 @@ final class Schedule implements Stringable
 
 	/**
 	 * Schedule the task to run yearly.
-	 *
-	 * @return $this
 	 */
-	public function yearly(): self
+	public function yearly(): static
 	{
 		return $this->setPosition(1, 0)
 			->setPosition(2, 0)
@@ -619,10 +539,8 @@ final class Schedule implements Stringable
 	 * @param int|string $month      the month to run on (1-12)
 	 * @param int|string $dayOfMonth the day of the month to run on (1-31)
 	 * @param string     $time       the time in "H:i" format
-	 *
-	 * @return $this
 	 */
-	public function yearlyOn(int|string $month = 1, int|string $dayOfMonth = 1, string $time = '0:0'): self
+	public function yearlyOn(int|string $month = 1, int|string $dayOfMonth = 1, string $time = '0:0'): static
 	{
 		$this->dailyAt($time);
 
@@ -634,10 +552,8 @@ final class Schedule implements Stringable
 	 * Set the days of the week the task should run on.
 	 *
 	 * @param int|int[]|string $days the day(s) of the week to run on (0-6, where 0 is Sunday); accepts a single int constant, an array of int constants, a pre-formatted cron field string (e.g. '1-5'), or multiple ints as separate arguments
-	 *
-	 * @return $this
 	 */
-	public function days(mixed $days): self
+	public function days(mixed $days): static
 	{
 		$days = \is_array($days) ? $days : \func_get_args();
 
@@ -648,10 +564,8 @@ final class Schedule implements Stringable
 	 * Set the timezone the date should be evaluated on.
 	 *
 	 * @param DateTimeZone|string $timezone the timezone to set (e.g., "UTC", "America/New_York", etc.)
-	 *
-	 * @return $this
 	 */
-	public function timezone(DateTimeZone|string $timezone): self
+	public function timezone(DateTimeZone|string $timezone): static
 	{
 		$this->timezone = $timezone;
 
@@ -662,10 +576,8 @@ final class Schedule implements Stringable
 	 * Add runs predicate.
 	 *
 	 * @param callable $fn the predicate function that determines if the task should run
-	 *
-	 * @return $this
 	 */
-	private function onlyIf(callable $fn): self
+	private function onlyIf(callable $fn): static
 	{
 		$this->only_if[] = $fn;
 
@@ -711,10 +623,8 @@ final class Schedule implements Stringable
 	 *
 	 * @param int        $position the position to set (1 for minute, 2 for hour, 3 for day of month, 4 for month, 5 for day of week)
 	 * @param int|string $value    the value to set at the given position
-	 *
-	 * @return $this
 	 */
-	private function setPosition(int $position, int|string $value): self
+	private function setPosition(int $position, int|string $value): static
 	{
 		$str = (string) $value;
 

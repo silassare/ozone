@@ -99,7 +99,7 @@ final class FormStep implements ArrayCapableInterface
 	 *
 	 * @return static
 	 */
-	public static function static(Form $parent_form, string $name, callable|Form $form, ?RuleSet $if = null): self
+	public static function static(Form $parent_form, string $name, callable|Form $form, ?RuleSet $if = null): static
 	{
 		$s = new self($parent_form, $name, $if);
 
@@ -118,7 +118,7 @@ final class FormStep implements ArrayCapableInterface
 	 *
 	 * @return static
 	 */
-	public static function dynamic(Form $parent_form, string $name, callable $factory, ?RuleSet $if = null): self
+	public static function dynamic(Form $parent_form, string $name, callable $factory, ?RuleSet $if = null): static
 	{
 		$s = new self($parent_form, $name, $if);
 

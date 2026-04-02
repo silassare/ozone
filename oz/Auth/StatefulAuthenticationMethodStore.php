@@ -36,13 +36,11 @@ class StatefulAuthenticationMethodStore extends Store
 
 	/**
 	 * Returns the state instance.
-	 *
-	 * @return $this
 	 */
-	public static function getInstance(string $state_id, array $data): self
+	public static function getInstance(string $state_id, array $data): static
 	{
 		$cache   = CacheManager::runtime(__METHOD__);
-		$factory = static fn (): self => new self($data);
+		$factory = static fn (): static => new static($data);
 
 		return $cache->factory($state_id, $factory)
 			->get();
@@ -71,11 +69,9 @@ class StatefulAuthenticationMethodStore extends Store
 	 *
 	 * @param AuthUserInterface $user
 	 *
-	 * @return self
-	 *
 	 * @internal
 	 */
-	public function setPreviousUser(AuthUserInterface $user): self
+	public function setPreviousUser(AuthUserInterface $user): static
 	{
 		return $this->set('oz.previous_auth_user', AuthUsers::selector($user));
 	}

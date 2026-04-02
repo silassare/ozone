@@ -23,10 +23,8 @@ interface RouteMiddlewareInterface
 {
 	/**
 	 * Get middleware instance.
-	 *
-	 * @return self
 	 */
-	public static function get(): self;
+	public static function get(): static;
 
 	/**
 	 * Run middleware.

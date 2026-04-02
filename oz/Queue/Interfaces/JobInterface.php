@@ -40,10 +40,8 @@ interface JobInterface
 	 * Sets job name.
 	 *
 	 * @param string $name
-	 *
-	 * @return $this
 	 */
-	public function setName(string $name): self;
+	public function setName(string $name): static;
 
 	/**
 	 * Gets payload.
@@ -70,10 +68,8 @@ interface JobInterface
 	 * Sets the job queue name.
 	 *
 	 * @param string $queue
-	 *
-	 * @return $this
 	 */
-	public function setQueue(string $queue): self;
+	public function setQueue(string $queue): static;
 
 	/**
 	 * Gets the job priority.
@@ -86,19 +82,15 @@ interface JobInterface
 	 * Sets the job priority.
 	 *
 	 * @param int $priority
-	 *
-	 * @return $this
 	 */
-	public function setPriority(int $priority): self;
+	public function setPriority(int $priority): static;
 
 	/**
 	 * Sets the job created at time.
 	 *
 	 * @param int $created_at
-	 *
-	 * @return $this
 	 */
-	public function setCreatedAt(int $created_at): self;
+	public function setCreatedAt(int $created_at): static;
 
 	/**
 	 * Gets the job created at time.
@@ -111,10 +103,8 @@ interface JobInterface
 	 * Sets the job updated at time.
 	 *
 	 * @param int $updated_at
-	 *
-	 * @return $this
 	 */
-	public function setUpdatedAt(int $updated_at): self;
+	public function setUpdatedAt(int $updated_at): static;
 
 	/**
 	 * Gets the job updated at time.
@@ -134,10 +124,8 @@ interface JobInterface
 	 * Sets the job state.
 	 *
 	 * @param JobState $state
-	 *
-	 * @return $this
 	 */
-	public function setState(JobState $state): self;
+	public function setState(JobState $state): static;
 
 	/**
 	 * Gets the job started at time.
@@ -150,10 +138,8 @@ interface JobInterface
 	 * Sets the job started at time.
 	 *
 	 * @param null|float $started_at
-	 *
-	 * @return $this
 	 */
-	public function setStartedAt(?float $started_at): self;
+	public function setStartedAt(?float $started_at): static;
 
 	/**
 	 * Gets the job ended at time.
@@ -166,10 +152,8 @@ interface JobInterface
 	 * Sets the job ended at time.
 	 *
 	 * @param null|float $ended_at
-	 *
-	 * @return $this
 	 */
-	public function setEndedAt(?float $ended_at): self;
+	public function setEndedAt(?float $ended_at): static;
 
 	/**
 	 * Gets the job result.
@@ -182,10 +166,8 @@ interface JobInterface
 	 * Sets the job result.
 	 *
 	 * @param JSONResult $result
-	 *
-	 * @return $this
 	 */
-	public function setResult(JSONResult $result): self;
+	public function setResult(JSONResult $result): static;
 
 	/**
 	 * Gets the job try count.
@@ -198,17 +180,13 @@ interface JobInterface
 	 * Sets the job try count.
 	 *
 	 * @param int $try_count
-	 *
-	 * @return $this
 	 */
-	public function setTryCount(int $try_count): self;
+	public function setTryCount(int $try_count): static;
 
 	/**
 	 * Increments the job try count.
-	 *
-	 * @return $this
 	 */
-	public function incrementTryCount(): self;
+	public function incrementTryCount(): static;
 
 	/**
 	 * Gets the job max retry count.
@@ -221,10 +199,8 @@ interface JobInterface
 	 * Sets the job max retry count.
 	 *
 	 * @param int $retry_max
-	 *
-	 * @return $this
 	 */
-	public function setRetryMax(int $retry_max): self;
+	public function setRetryMax(int $retry_max): static;
 
 	/**
 	 * Gets the job retry delay.
@@ -237,10 +213,8 @@ interface JobInterface
 	 * Sets the job retry delay.
 	 *
 	 * @param int $retry_delay
-	 *
-	 * @return $this
 	 */
-	public function setRetryDelay(int $retry_delay): self;
+	public function setRetryDelay(int $retry_delay): static;
 
 	/**
 	 * Dispatches the job to the queue in the given store.

@@ -25,7 +25,7 @@ use OZONE\Core\Router\RouteInfo;
 /**
  * Class PasswordProtectedRouteGuard.
  */
-class PasswordProtectedRouteGuard extends AbstractRouteGuard
+final class PasswordProtectedRouteGuard extends AbstractRouteGuard
 {
 	private string $password_hash;
 
@@ -55,7 +55,7 @@ class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function fromRules(array $rules): self
+	public static function fromRules(array $rules): static
 	{
 		return new self($rules['password_hash'], true);
 	}

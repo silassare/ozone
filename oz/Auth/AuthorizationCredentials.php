@@ -82,7 +82,7 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setCode(string $code): AuthorizationCredentialsInterface
+	public function setCode(string $code): static
 	{
 		$this->code = $code;
 
@@ -102,7 +102,7 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setToken(string $token): AuthorizationCredentialsInterface
+	public function setToken(string $token): static
 	{
 		$this->token = $token;
 
@@ -122,7 +122,7 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setRefreshKey(string $refresh_key): self
+	public function setRefreshKey(string $refresh_key): static
 	{
 		$this->refresh_key = $refresh_key;
 
@@ -142,7 +142,7 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setReference(string $reference): self
+	public function setReference(string $reference): static
 	{
 		$this->reference = $reference;
 

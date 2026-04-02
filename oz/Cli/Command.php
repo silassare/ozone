@@ -37,10 +37,8 @@ abstract class Command extends KliCommand
 	 *
 	 * @param string $name
 	 * @param Cli    $cli
-	 *
-	 * @return self
 	 */
-	public static function instance(string $name, Cli $cli): self
+	public static function instance(string $name, Cli $cli): static
 	{
 		return new static($name, $cli);
 	}

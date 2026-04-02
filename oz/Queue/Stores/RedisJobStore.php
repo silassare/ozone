@@ -141,7 +141,7 @@ class RedisJobStore implements JobStoreInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function update(JobContractInterface $job_contract): JobStoreInterface
+	public function update(JobContractInterface $job_contract): static
 	{
 		if ($this->redis()->exists($this->jobKey($job_contract->getRef()))) {
 			$this->redis()->hMset($this->jobKey($job_contract->getRef()), $this->toData($job_contract));
@@ -156,7 +156,7 @@ class RedisJobStore implements JobStoreInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function delete(JobContractInterface $job_contract): JobStoreInterface
+	public function delete(JobContractInterface $job_contract): static
 	{
 		$ref = $job_contract->getRef();
 

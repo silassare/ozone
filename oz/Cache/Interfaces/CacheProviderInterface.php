@@ -96,8 +96,6 @@ interface CacheProviderInterface
 	 * Gets shared instance.
 	 *
 	 * @param null|string $namespace
-	 *
-	 * @return static
 	 */
-	public static function getSharedInstance(?string $namespace = null): self;
+	public static function getSharedInstance(?string $namespace = null): static;
 }

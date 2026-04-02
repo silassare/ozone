@@ -209,7 +209,7 @@ class RedisCache implements CacheProviderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function getSharedInstance(?string $namespace = null): CacheProviderInterface
+	public static function getSharedInstance(?string $namespace = null): static
 	{
 		static $instances = [];
 

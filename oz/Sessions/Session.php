@@ -119,10 +119,8 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Start the session.
-	 *
-	 * @return $this
 	 */
-	public function start(?string $session_id = null): self
+	public function start(?string $session_id = null): static
 	{
 		if ($session_id) {
 			$this->session_entry = self::findSessionByID($session_id);
@@ -146,10 +144,8 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Restart the session.
-	 *
-	 * @return $this
 	 */
-	public function restart(): self
+	public function restart(): static
 	{
 		$this->assertSessionStarted();
 
@@ -159,10 +155,8 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Destroy the session.
-	 *
-	 * @return $this
 	 */
-	public function destroy(): self
+	public function destroy(): static
 	{
 		$this->assertSessionStarted();
 
@@ -195,10 +189,8 @@ final class Session implements BootHookReceiverInterface
 	 * Attach user to this session.
 	 *
 	 * @param AuthUserInterface $user
-	 *
-	 * @return $this
 	 */
-	public function attachAuthUser(AuthUserInterface $user): self
+	public function attachAuthUser(AuthUserInterface $user): static
 	{
 		$this->assertSessionStarted();
 
@@ -222,10 +214,8 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Detach the current user from the session.
-	 *
-	 * @return $this
 	 */
-	public function detachAuthUser(): self
+	public function detachAuthUser(): static
 	{
 		$this->assertSessionStarted();
 

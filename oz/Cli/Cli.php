@@ -60,9 +60,9 @@ final class Cli extends Kli
 	/**
 	 * Gets the Cli instance.
 	 *
-	 * @return Cli
+	 * @return static
 	 */
-	public static function getInstance(): self
+	public static function getInstance(): static
 	{
 		if (null === self::$instance) {
 			if (!OZone::isCliMode()) {

@@ -28,14 +28,14 @@ use Throwable;
  * Create a temporary directory in which files and directories can be created.
  * The created directory has an expiration date for automatic deletion.
  */
-class TempFS implements BootHookReceiverInterface
+final class TempFS implements BootHookReceiverInterface
 {
 	/**
 	 * TempFS constructor.
 	 *
 	 * @param string $ref
 	 */
-	protected function __construct(protected readonly string $ref) {}
+	private function __construct(private readonly string $ref) {}
 
 	/**
 	 * Gets the ref.
@@ -61,10 +61,8 @@ class TempFS implements BootHookReceiverInterface
 	 * Sets the temp directory expiration time.
 	 *
 	 * @param int $lifetime
-	 *
-	 * @return $this
 	 */
-	public function setLifetime(int $lifetime): self
+	public function setLifetime(int $lifetime): static
 	{
 		$info_path = $this->dir()->resolve('./info.json');
 		$expires   = \time() + $lifetime;
@@ -98,15 +96,13 @@ class TempFS implements BootHookReceiverInterface
 	 *
 	 * @param int    $lifetime the lifetime in seconds
 	 * @param string $prefix   the prefix
-	 *
-	 * @return self
 	 */
-	public static function get(int $lifetime, string $prefix = ''): self
+	public static function get(int $lifetime, string $prefix = ''): static
 	{
 		$prefix = \trim($prefix);
 		$ref    = ($prefix ? $prefix . '-' : '') . \date('Y-m-d') . '-' . Random::alpha(8);
 
-		return (new self($ref))->setLifetime($lifetime);
+		return (new static($ref))->setLifetime($lifetime);
 	}
 
 	/**
@@ -115,9 +111,9 @@ class TempFS implements BootHookReceiverInterface
 	 * @param string   $ref      the ref
 	 * @param null|int $lifetime the lifetime in seconds
 	 *
-	 * @return self
+	 * @return static
 	 */
-	public static function use(string $ref, ?int $lifetime = null): self
+	public static function use(string $ref, ?int $lifetime = null): static
 	{
 		$has = self::canUse($ref);
 
@@ -125,7 +121,7 @@ class TempFS implements BootHookReceiverInterface
 			throw new RuntimeException(\sprintf('%s: invalid or expired ref "%s".', self::class, $ref));
 		}
 
-		$instance = new self($ref);
+		$instance = new static($ref);
 
 		if ($lifetime) {
 			$instance->setLifetime($lifetime);
@@ -150,7 +146,7 @@ class TempFS implements BootHookReceiverInterface
 	 *
 	 * @return FilesManager
 	 */
-	protected static function getTempDir(): FilesManager
+	private static function getTempDir(): FilesManager
 	{
 		return scope()->getCacheDir()->cd('tmp-fs', true);
 	}
@@ -162,7 +158,7 @@ class TempFS implements BootHookReceiverInterface
 	 *
 	 * @return null|int
 	 */
-	protected static function getExpirationTime(string $tmp_dir): ?int
+	private static function getExpirationTime(string $tmp_dir): ?int
 	{
 		$info_path = FS::from($tmp_dir)->resolve('./info.json');
 

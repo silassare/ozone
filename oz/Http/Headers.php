@@ -189,10 +189,8 @@ class Headers extends Collection
 	 * the application Environment object.
 	 *
 	 * @param HTTPEnvironment $environment
-	 *
-	 * @return self
 	 */
-	public static function createFromEnvironment(HTTPEnvironment $environment): self
+	public static function createFromEnvironment(HTTPEnvironment $environment): static
 	{
 		$data = [];
 

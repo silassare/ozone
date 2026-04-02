@@ -26,7 +26,7 @@ use OZONE\Core\Router\RouteInfo;
 /**
  * Class AuthorizationProviderRouteGuard.
  */
-class AuthorizationProviderRouteGuard extends AbstractRouteGuard
+final class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 {
 	/**
 	 * AuthorizationProviderRouteGuard constructor.
@@ -50,7 +50,7 @@ class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function fromRules(array $rules): self
+	public static function fromRules(array $rules): static
 	{
 		return new self($rules['allowed_providers']);
 	}

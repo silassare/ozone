@@ -26,10 +26,8 @@ interface AuthenticationMethodInterface
 	 *
 	 * @param RouteInfo $ri
 	 * @param string    $realm
-	 *
-	 * @return self
 	 */
-	public static function get(RouteInfo $ri, string $realm): self;
+	public static function get(RouteInfo $ri, string $realm): static;
 
 	/**
 	 * Parse the authentication header and return true if required data are present.

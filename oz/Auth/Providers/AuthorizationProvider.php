@@ -85,7 +85,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setScope(AuthorizationScopeInterface $scope): self
+	public function setScope(AuthorizationScopeInterface $scope): static
 	{
 		$this->scope = $scope;
 
@@ -179,7 +179,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function generate(?AuthUserInterface $user = null): self
+	public function generate(?AuthUserInterface $user = null): static
 	{
 		$code_hash   = $this->hash($this->credentials->newCode());
 		$token_hash  = $this->hash($this->credentials->newToken());
@@ -232,7 +232,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 * @throws GoblException
 	 */
 	#[Override]
-	public function refresh(bool $re_authorize = true): self
+	public function refresh(bool $re_authorize = true): static
 	{
 		$ref  = $this->credentials->getReference();
 		$auth = Auth::getRequired($ref);
@@ -273,7 +273,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 * @throws UnauthorizedException
 	 */
 	#[Override]
-	public function cancel(): self
+	public function cancel(): static
 	{
 		$ref  = $this->credentials->getReference();
 		$auth = Auth::getRequired($ref);

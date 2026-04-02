@@ -18,7 +18,7 @@ use Override;
 /**
  * Class CorePlugin.
  */
-class CorePlugin extends AbstractPlugin
+final class CorePlugin extends AbstractPlugin
 {
 	/**
 	 * CorePlugin constructor.
@@ -32,7 +32,7 @@ class CorePlugin extends AbstractPlugin
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function instance(): Interfaces\PluginInterface
+	public static function instance(): static
 	{
 		return new self();
 	}

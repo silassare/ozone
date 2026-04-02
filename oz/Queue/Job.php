@@ -82,7 +82,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setName(string $name): self
+	public function setName(string $name): static
 	{
 		$this->name = $name;
 
@@ -120,7 +120,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setQueue(string $queue): self
+	public function setQueue(string $queue): static
 	{
 		$this->queue = $queue;
 
@@ -140,7 +140,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setPriority(int $priority): self
+	public function setPriority(int $priority): static
 	{
 		$this->priority = $priority;
 
@@ -151,7 +151,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setCreatedAt(int $created_at): self
+	public function setCreatedAt(int $created_at): static
 	{
 		$this->created_at = $created_at;
 
@@ -171,7 +171,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setUpdatedAt(int $updated_at): self
+	public function setUpdatedAt(int $updated_at): static
 	{
 		$this->updated_at = $updated_at;
 
@@ -200,7 +200,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setState(JobState $state): self
+	public function setState(JobState $state): static
 	{
 		$this->state = $state;
 
@@ -220,7 +220,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setStartedAt(?float $started_at): self
+	public function setStartedAt(?float $started_at): static
 	{
 		$this->started_at = $started_at;
 
@@ -240,7 +240,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setEndedAt(?float $ended_at): self
+	public function setEndedAt(?float $ended_at): static
 	{
 		$this->ended_at = $ended_at;
 
@@ -260,7 +260,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setResult(JSONResult $result): self
+	public function setResult(JSONResult $result): static
 	{
 		$this->result = $result;
 
@@ -280,7 +280,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setTryCount(int $try_count): self
+	public function setTryCount(int $try_count): static
 	{
 		$this->try_count = $try_count;
 
@@ -291,7 +291,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function incrementTryCount(): self
+	public function incrementTryCount(): static
 	{
 		++$this->try_count;
 
@@ -311,7 +311,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setRetryMax(int $retry_max): self
+	public function setRetryMax(int $retry_max): static
 	{
 		$this->retry_max = $retry_max;
 
@@ -331,7 +331,7 @@ class Job implements Interfaces\JobInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setRetryDelay(int $retry_delay): self
+	public function setRetryDelay(int $retry_delay): static
 	{
 		$this->retry_delay = $retry_delay;
 

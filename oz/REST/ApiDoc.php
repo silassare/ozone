@@ -31,7 +31,7 @@ use Stringable;
 /**
  * Class ApiDoc.
  */
-class ApiDoc implements ArrayCapableInterface
+final class ApiDoc implements ArrayCapableInterface
 {
 	use ApiDocManipulationTrait;
 	use ArrayCapableTrait;
@@ -63,10 +63,8 @@ class ApiDoc implements ArrayCapableInterface
 	 * Gets the ApiDoc instance.
 	 *
 	 * @param Context $context
-	 *
-	 * @return ApiDoc
 	 */
-	public static function get(Context $context): self
+	public static function get(Context $context): static
 	{
 		if (!isset(self::$instance)) {
 			self::$instance = new self($context, 'API Documentation', '1.0.0');

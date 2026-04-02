@@ -256,7 +256,7 @@ class Request extends Message implements ServerRequestInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withParsedBody($data): self
+	public function withParsedBody($data): static
 	{
 		if (null !== $data && !\is_object($data) && !\is_array($data)) {
 			throw new InvalidArgumentException('Parsed body value must be an array, an object, or null');
@@ -354,7 +354,7 @@ class Request extends Message implements ServerRequestInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withMethod(string $method): self
+	public function withMethod(string $method): static
 	{
 		$method                = self::filterMethod($method);
 		$clone                 = clone $this;
@@ -396,7 +396,7 @@ class Request extends Message implements ServerRequestInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withRequestTarget(string $requestTarget): self
+	public function withRequestTarget(string $requestTarget): static
 	{
 		if (\preg_match('#\s#', $requestTarget)) {
 			throw new InvalidArgumentException(
@@ -422,7 +422,7 @@ class Request extends Message implements ServerRequestInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withUri(UriInterface $uri, bool $preserveHost = false): self
+	public function withUri(UriInterface $uri, bool $preserveHost = false): static
 	{
 		$clone      = clone $this;
 		$clone->uri = $uri;
@@ -583,7 +583,7 @@ class Request extends Message implements ServerRequestInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withCookieParams(array $cookies): self
+	public function withCookieParams(array $cookies): static
 	{
 		$clone          = clone $this;
 		$clone->cookies = $cookies;
@@ -637,7 +637,7 @@ class Request extends Message implements ServerRequestInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withAttribute(string $name, $value): self
+	public function withAttribute(string $name, $value): static
 	{
 		$clone = clone $this;
 		$clone->attributes->set($name, $value);
@@ -649,7 +649,7 @@ class Request extends Message implements ServerRequestInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withoutAttribute(string $name): self
+	public function withoutAttribute(string $name): static
 	{
 		$clone = clone $this;
 		$clone->attributes->remove($name);
@@ -671,7 +671,7 @@ class Request extends Message implements ServerRequestInterface
 	 *
 	 * @return static
 	 */
-	public function withAttributes(array $attributes): self
+	public function withAttributes(array $attributes): static
 	{
 		$clone             = clone $this;
 		$clone->attributes = new Collection($attributes);
@@ -684,7 +684,7 @@ class Request extends Message implements ServerRequestInterface
 	 *
 	 * @return $this
 	 */
-	public function reparseBody(): self
+	public function reparseBody(): static
 	{
 		$this->bodyParsed = null;
 
@@ -766,7 +766,7 @@ class Request extends Message implements ServerRequestInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withQueryParams(array $query): self
+	public function withQueryParams(array $query): static
 	{
 		$clone              = clone $this;
 		$clone->queryParams = $query;
@@ -789,7 +789,7 @@ class Request extends Message implements ServerRequestInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withUploadedFiles(array $uploadedFiles): self
+	public function withUploadedFiles(array $uploadedFiles): static
 	{
 		$clone                = clone $this;
 		$clone->uploadedFiles = $uploadedFiles;
@@ -819,7 +819,7 @@ class Request extends Message implements ServerRequestInterface
 	 *
 	 * @return static
 	 */
-	public static function createFromHTTPEnvironment(HTTPEnvironment $environment): self
+	public static function createFromHTTPEnvironment(HTTPEnvironment $environment): static
 	{
 		$method        = $environment['REQUEST_METHOD'];
 		$uri           = Uri::createFromEnvironment($environment);

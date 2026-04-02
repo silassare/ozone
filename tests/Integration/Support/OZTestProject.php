@@ -62,7 +62,7 @@ final class OZTestProject
 		array $deps = [],
 		array $deps_dev = [],
 		bool $shared = true,
-	): self {
+	): static {
 		$ozone_root  = self::ozoneRoot();
 		$project_dir = self::projectsDir() . \DIRECTORY_SEPARATOR . $name;
 

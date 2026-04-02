@@ -42,7 +42,7 @@ final class JSONResponse extends JSONResult
 	 *
 	 * @return $this
 	 */
-	public function setForm(?Form $form): self
+	public function setForm(?Form $form): static
 	{
 		$this->form = $form;
 

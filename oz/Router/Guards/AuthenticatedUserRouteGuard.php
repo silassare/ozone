@@ -22,7 +22,7 @@ use OZONE\Core\Router\RouteInfo;
 /**
  * Class AuthenticatedUserRouteGuard.
  */
-class AuthenticatedUserRouteGuard extends AbstractRouteGuard
+final class AuthenticatedUserRouteGuard extends AbstractRouteGuard
 {
 	/**
 	 * AuthenticatedUserRouteGuard constructor.
@@ -48,7 +48,7 @@ class AuthenticatedUserRouteGuard extends AbstractRouteGuard
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function fromRules(array $rules): self
+	public static function fromRules(array $rules): static
 	{
 		$types  = $rules['types'] ?? [];
 

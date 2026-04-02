@@ -221,7 +221,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	 * @throws Throwable
 	 */
 	#[Override]
-	public function write(OZFile $file, FileStream|string $content): self
+	public function write(OZFile $file, FileStream|string $content): static
 	{
 		$abs_path = $this->require($file->getRef());
 
@@ -246,7 +246,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	 * @throws Throwable
 	 */
 	#[Override]
-	public function append(OZFile $file, FileStream|string $data): self
+	public function append(OZFile $file, FileStream|string $data): static
 	{
 		$abs_path = $this->require($file->getRef());
 
@@ -265,7 +265,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 	 * @throws Throwable
 	 */
 	#[Override]
-	public function prepend(OZFile $file, FileStream|string $data): self
+	public function prepend(OZFile $file, FileStream|string $data): static
 	{
 		$abs_path = $this->require($file->getRef());
 

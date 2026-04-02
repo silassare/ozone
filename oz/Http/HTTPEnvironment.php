@@ -16,16 +16,14 @@ namespace OZONE\Core\Http;
 /**
  * Class HTTPEnvironment.
  */
-class HTTPEnvironment extends Collection
+final class HTTPEnvironment extends Collection
 {
 	/**
 	 * Creates mock HTTP environment.
 	 *
 	 * @param array $env Array of custom HTTP environment keys and values
-	 *
-	 * @return self
 	 */
-	public static function mock(array $env = []): self
+	public static function mock(array $env = []): static
 	{
 		$env = \array_merge([
 			'SERVER_PROTOCOL'      => 'HTTP/1.1',
@@ -45,6 +43,6 @@ class HTTPEnvironment extends Collection
 			'REQUEST_TIME_FLOAT'   => \microtime(true),
 		], $env);
 
-		return new static($env);
+		return new self($env);
 	}
 }

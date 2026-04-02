@@ -51,7 +51,7 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function get(RouteInfo $ri, string $realm): self
+	public static function get(RouteInfo $ri, string $realm): static
 	{
 		return new self($ri, $realm);
 	}

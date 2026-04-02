@@ -31,22 +31,16 @@ interface RoleInterface extends BackedEnum
 
 	/**
 	 * Gets instance for admin role.
-	 *
-	 * @return self
 	 */
-	public static function admin(): self;
+	public static function admin(): static;
 
 	/**
 	 * Gets instance for super admin role.
-	 *
-	 * @return self
 	 */
-	public static function superAdmin(): self;
+	public static function superAdmin(): static;
 
 	/**
 	 * Gets instance for editor role.
-	 *
-	 * @return self
 	 */
-	public static function editor(): self;
+	public static function editor(): static;
 }

@@ -29,10 +29,8 @@ interface RouteGuardInterface
 	 * Creates a new instance from rules.
 	 *
 	 * @param array $rules
-	 *
-	 * @return self
 	 */
-	public static function fromRules(array $rules): self;
+	public static function fromRules(array $rules): static;
 
 	/**
 	 * Check and returns any data produced during the check that may be useful.

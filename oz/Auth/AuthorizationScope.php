@@ -55,7 +55,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setLabel(string $label): self
+	public function setLabel(string $label): static
 	{
 		$this->label = $label;
 
@@ -75,7 +75,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setLifetime(int $lifetime): self
+	public function setLifetime(int $lifetime): static
 	{
 		if ($lifetime <= 0) {
 			throw new InvalidArgumentException(\sprintf(
@@ -101,7 +101,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setTryMax(int $try_max): self
+	public function setTryMax(int $try_max): static
 	{
 		if ($try_max <= 0) {
 			throw new InvalidArgumentException(\sprintf(
@@ -128,7 +128,7 @@ class AuthorizationScope implements AuthorizationScopeInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setAccessRight(AccessRightsInterface $access_right): self
+	public function setAccessRight(AccessRightsInterface $access_right): static
 	{
 		$this->access_right = $access_right;
 

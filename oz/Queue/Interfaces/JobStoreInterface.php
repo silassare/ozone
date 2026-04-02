@@ -69,19 +69,15 @@ interface JobStoreInterface
 	 * Update a job.
 	 *
 	 * @param JobContractInterface $job_contract
-	 *
-	 * @return JobStoreInterface
 	 */
-	public function update(JobContractInterface $job_contract): self;
+	public function update(JobContractInterface $job_contract): static;
 
 	/**
 	 * Delete a job.
 	 *
 	 * @param JobContractInterface $job_contract
-	 *
-	 * @return $this
 	 */
-	public function delete(JobContractInterface $job_contract): self;
+	public function delete(JobContractInterface $job_contract): static;
 
 	/**
 	 * Returns iterator for jobs in a queue.

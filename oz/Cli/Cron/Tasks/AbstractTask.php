@@ -85,7 +85,7 @@ abstract class AbstractTask implements TaskInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setDescription(string $description): self
+	public function setDescription(string $description): static
 	{
 		$this->description = $description;
 
@@ -96,7 +96,7 @@ abstract class AbstractTask implements TaskInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function addSchedule(Schedule $schedule): self
+	public function addSchedule(Schedule $schedule): static
 	{
 		$this->schedules[] = $schedule;
 
@@ -127,7 +127,7 @@ abstract class AbstractTask implements TaskInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function inBackground(): self
+	public function inBackground(): static
 	{
 		$this->in_background = true;
 
@@ -147,7 +147,7 @@ abstract class AbstractTask implements TaskInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function oneAtATime(int $timeout = 0): self
+	public function oneAtATime(int $timeout = 0): static
 	{
 		$this->one_at_a_time = true;
 		$this->timeout       = $timeout;
@@ -177,7 +177,7 @@ abstract class AbstractTask implements TaskInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setTimeout(?int $timeout = null): self
+	public function setTimeout(?int $timeout = null): static
 	{
 		$this->timeout = $timeout;
 

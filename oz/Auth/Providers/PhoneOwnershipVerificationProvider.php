@@ -22,7 +22,7 @@ use OZONE\Core\Senders\Messages\SMSMessage;
 /**
  * Class PhoneOwnershipVerificationProvider.
  */
-class PhoneOwnershipVerificationProvider extends AuthorizationProvider
+final class PhoneOwnershipVerificationProvider extends AuthorizationProvider
 {
 	public const NAME = 'auth:provider:phone:verify';
 
@@ -55,7 +55,7 @@ class PhoneOwnershipVerificationProvider extends AuthorizationProvider
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function resolve(Context $context, OZAuth $auth): self
+	public static function resolve(Context $context, OZAuth $auth): static
 	{
 		$payload = $auth->getPayload();
 		$phone   = $payload['phone'] ?? null;
@@ -76,6 +76,7 @@ class PhoneOwnershipVerificationProvider extends AuthorizationProvider
 	{
 		return [
 			'phone' => $this->phone,
+			'label' => $this->label,
 		];
 	}
 

@@ -39,7 +39,7 @@ class TypesSwitcher implements ArrayCapableInterface
 	 *
 	 * @return $this
 	 */
-	public function when(RuleSet $rule, TypeInterface $type): self
+	public function when(RuleSet $rule, TypeInterface $type): static
 	{
 		$this->types[] = [
 			'type' => $type,

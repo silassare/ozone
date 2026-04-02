@@ -70,7 +70,7 @@ final class AnonymousUser implements AuthUserInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setAuthPassword(string $password_hash): self
+	public function setAuthPassword(string $password_hash): static
 	{
 		return $this;
 	}
@@ -88,7 +88,7 @@ final class AnonymousUser implements AuthUserInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setAuthUserDataStore(AuthUserDataStore $store): self
+	public function setAuthUserDataStore(AuthUserDataStore $store): static
 	{
 		return $this;
 	}

@@ -100,5 +100,5 @@ interface PluginInterface
 	/**
 	 * Get the plugin instance.
 	 */
-	public static function instance(): self;
+	public static function instance(): static;
 }

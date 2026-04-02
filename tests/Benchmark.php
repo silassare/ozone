@@ -136,22 +136,18 @@ class Benchmark
 
 	/**
 	 * Named constructor for fluent chaining.
-	 *
-	 * @return self
 	 */
-	public static function create(): self
+	public static function create(): static
 	{
-		return new self();
+		return new static();
 	}
 
 	/**
 	 * Sets the number of unmeasured warmup calls executed before measurement.
 	 *
 	 * @param int $iterations number of warmup calls (>= 0, default 3)
-	 *
-	 * @return $this
 	 */
-	public function warmup(int $iterations): self
+	public function warmup(int $iterations): static
 	{
 		if ($iterations < 0) {
 			throw new InvalidArgumentException('Warmup iterations must be >= 0.');
@@ -167,10 +163,8 @@ class Benchmark
 	 * Either maxDuration() or maxIterations() must be configured before run().
 	 *
 	 * @param float $seconds wall-clock cutoff per callable (> 0)
-	 *
-	 * @return $this
 	 */
-	public function maxDuration(float $seconds): self
+	public function maxDuration(float $seconds): static
 	{
 		if ($seconds <= 0.0) {
 			throw new InvalidArgumentException('Max duration must be > 0.');
@@ -186,10 +180,8 @@ class Benchmark
 	 * Either maxDuration() or maxIterations() must be configured before run().
 	 *
 	 * @param int $n iteration hard limit (> 0)
-	 *
-	 * @return $this
 	 */
-	public function maxIterations(int $n): self
+	public function maxIterations(int $n): static
 	{
 		if ($n <= 0) {
 			throw new InvalidArgumentException('Max iterations must be > 0.');
@@ -207,10 +199,8 @@ class Benchmark
 	 * Useful for verifying that generators produce sufficiently unique output.
 	 *
 	 * @param bool $check default true
-	 *
-	 * @return $this
 	 */
-	public function checkDuplicate(bool $check = true): self
+	public function checkDuplicate(bool $check = true): static
 	{
 		$this->checkDuplicate = $check;
 
@@ -224,10 +214,8 @@ class Benchmark
 	 * Note: peak tracking is approximate; GC activity can affect readings.
 	 *
 	 * @param bool $track default true
-	 *
-	 * @return $this
 	 */
-	public function trackMemory(bool $track = true): self
+	public function trackMemory(bool $track = true): static
 	{
 		$this->trackMemory = $track;
 
@@ -241,10 +229,8 @@ class Benchmark
 	 * Default: 5.0 (5%).
 	 *
 	 * @param float $pct positive percentage, e.g. 5.0 for +/- 5%
-	 *
-	 * @return $this
 	 */
-	public function regressionThreshold(float $pct): self
+	public function regressionThreshold(float $pct): static
 	{
 		if ($pct <= 0.0) {
 			throw new InvalidArgumentException('Regression threshold must be > 0.');
@@ -265,10 +251,8 @@ class Benchmark
 	 * others fall back to their numeric index cast to string.
 	 *
 	 * @param array<array-key, callable> $callables
-	 *
-	 * @return $this
 	 */
-	public function run(array $callables): self
+	public function run(array $callables): static
 	{
 		if (null === $this->maxDuration && null === $this->maxIterations) {
 			throw new LogicException('Call maxDuration() or maxIterations() before run().');
@@ -296,10 +280,8 @@ class Benchmark
 	/**
 	 * Clears all stored results so the Benchmark instance can be reused for a
 	 * fresh run without creating a new object.
-	 *
-	 * @return $this
 	 */
-	public function reset(): self
+	public function reset(): static
 	{
 		$this->results = null;
 
@@ -334,10 +316,8 @@ class Benchmark
 
 	/**
 	 * Sorts stored results by ascending average call time (fastest first).
-	 *
-	 * @return $this
 	 */
-	public function orderByFastest(): self
+	public function orderByFastest(): static
 	{
 		$this->assertRan();
 		\uasort($this->results, static fn ($a, $b) => $a['avg_ns'] <=> $b['avg_ns']);
@@ -350,7 +330,7 @@ class Benchmark
 	 *
 	 * @return $this
 	 */
-	public function orderBySlowest(): self
+	public function orderBySlowest(): static
 	{
 		$this->assertRan();
 		\uasort($this->results, static fn ($a, $b) => $b['avg_ns'] <=> $a['avg_ns']);
@@ -361,10 +341,8 @@ class Benchmark
 	/**
 	 * Sorts stored results by ascending duplicate rate (lowest dup_rate first).
 	 * Most useful after checkDuplicate(true); without it all rates are 0.
-	 *
-	 * @return $this
 	 */
-	public function orderByBestEntropy(): self
+	public function orderByBestEntropy(): static
 	{
 		$this->assertRan();
 		\uasort($this->results, static fn ($a, $b) => $a['dup_rate'] <=> $b['dup_rate']);
@@ -377,10 +355,8 @@ class Benchmark
 	 * All collected metrics are displayed, plus a "Relative" column that shows
 	 * each callable's average time relative to the fastest in this run
 	 * (1.00x = fastest, highlighted in green).
-	 *
-	 * @return $this
 	 */
-	public function prettyPrint(): self
+	public function prettyPrint(): static
 	{
 		$this->assertRan();
 
@@ -411,10 +387,8 @@ class Benchmark
 	 * Prints a compact summary table to stdout showing only the most essential
 	 * columns: Reference, Iterations, Ops/sec, Avg (ns), and Relative speed.
 	 * Faster to scan at a glance than the full prettyPrint() table.
-	 *
-	 * @return $this
 	 */
-	public function printSummary(): self
+	public function printSummary(): static
 	{
 		$this->assertRan();
 
@@ -465,10 +439,8 @@ class Benchmark
 	 *   - REMOVED     : callable present in baseline but not in current run (dark gray)
 	 *
 	 * @param Benchmark $baseline the reference run to compare against
-	 *
-	 * @return $this
 	 */
-	public function compareWith(self $baseline): self
+	public function compareWith(self $baseline): static
 	{
 		$this->assertRan();
 		$baseline->assertRan();
@@ -582,12 +554,10 @@ class Benchmark
 	 *
 	 * @param string $json JSON string produced by exportJson()
 	 *
-	 * @return self
-	 *
 	 * @throws JsonException            if the JSON is malformed
 	 * @throws InvalidArgumentException if the decoded value is not an object/array
 	 */
-	public static function fromJson(string $json): self
+	public static function fromJson(string $json): static
 	{
 		$data = \json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
 

@@ -251,10 +251,8 @@ final class CacheManager
 	 * Gets shared runtime cache.
 	 *
 	 * @param null|string $namespace
-	 *
-	 * @return CacheManager
 	 */
-	public static function runtime(?string $namespace = null): self
+	public static function runtime(?string $namespace = null): static
 	{
 		$class_fqn = Settings::get('oz.cache', 'OZ_RUNTIME_CACHE_PROVIDER');
 
@@ -265,10 +263,8 @@ final class CacheManager
 	 * Gets shared persistent cache.
 	 *
 	 * @param null|string $namespace
-	 *
-	 * @return CacheManager
 	 */
-	public static function persistent(?string $namespace = null): self
+	public static function persistent(?string $namespace = null): static
 	{
 		$class_fqn = Settings::get('oz.cache', 'OZ_PERSISTENT_CACHE_PROVIDER');
 
@@ -280,10 +276,8 @@ final class CacheManager
 	 *
 	 * @param string      $class_fqn
 	 * @param null|string $namespace
-	 *
-	 * @return CacheManager
 	 */
-	private static function sharedInstance(string $class_fqn, ?string $namespace = null): self
+	private static function sharedInstance(string $class_fqn, ?string $namespace = null): static
 	{
 		$key = $class_fqn . ($namespace ?? '');
 

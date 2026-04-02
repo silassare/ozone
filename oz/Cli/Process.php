@@ -38,7 +38,7 @@ final class Process extends SymfonyProcess
 	/**
 	 * Enable TTY if supported.
 	 */
-	public function enableTtyIfSupported(): self
+	public function enableTtyIfSupported(): static
 	{
 		if (self::isTtySupported()) {
 			$this->setTty(true);

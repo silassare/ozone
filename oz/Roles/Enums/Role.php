@@ -29,7 +29,7 @@ enum Role: string implements RoleInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function admin(): self
+	public static function admin(): static
 	{
 		return self::ADMIN;
 	}
@@ -38,7 +38,7 @@ enum Role: string implements RoleInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function superAdmin(): self
+	public static function superAdmin(): static
 	{
 		return self::SUPER_ADMIN;
 	}
@@ -47,7 +47,7 @@ enum Role: string implements RoleInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function editor(): self
+	public static function editor(): static
 	{
 		return self::EDITOR;
 	}

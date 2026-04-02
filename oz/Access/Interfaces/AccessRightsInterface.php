@@ -35,9 +35,9 @@ interface AccessRightsInterface extends ArrayCapableInterface
 	 *
 	 * @param AccessRightsInterface $scope
 	 *
-	 * @return self
+	 * @return static
 	 */
-	public function pushScope(self $scope): self;
+	public function pushScope(self $scope): static;
 
 	/**
 	 * Add allowed action.
@@ -51,7 +51,7 @@ interface AccessRightsInterface extends ArrayCapableInterface
 	 *
 	 * @return static
 	 */
-	public function allow(string $action): self;
+	public function allow(string $action): static;
 
 	/**
 	 * Add denied action.
@@ -66,7 +66,7 @@ interface AccessRightsInterface extends ArrayCapableInterface
 	 *
 	 * @return static
 	 */
-	public function deny(string $action): self;
+	public function deny(string $action): static;
 
 	/**
 	 * Checks if all given action are allowed.

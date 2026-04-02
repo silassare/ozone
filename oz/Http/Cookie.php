@@ -20,7 +20,7 @@ use PHPUtils\Str;
 /**
  * Class Cookie.
  */
-class Cookie
+final class Cookie
 {
 	/**
 	 * The name of the cookie.
@@ -188,10 +188,8 @@ class Cookie
 	 * @param Context $context The context
 	 * @param string  $name    The name of the cookie
 	 * @param string  $value   The value of the cookie
-	 *
-	 * @return self
 	 */
-	public static function create(Context $context, string $name, string $value = ''): self
+	public static function create(Context $context, string $name, string $value = ''): static
 	{
 		$cfg_domain      = Settings::get('oz.cookie', 'OZ_COOKIE_DOMAIN');
 		$cfg_path        = Settings::get('oz.cookie', 'OZ_COOKIE_PATH');
@@ -220,10 +218,8 @@ class Cookie
 
 	/**
 	 * Drop the cookie.
-	 *
-	 * @return $this
 	 */
-	public function drop(): self
+	public function drop(): static
 	{
 		$this->expires = \time() - 86400;
 		$this->max_age = 0;

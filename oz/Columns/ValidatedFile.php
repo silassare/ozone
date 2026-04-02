@@ -105,10 +105,8 @@ final class ValidatedFile implements JsonSerializable
 	 * you have verified that the user is authorized to access the file.
 	 *
 	 * @param string $id the numeric file ID (value of `OZFile->getID()`)
-	 *
-	 * @return self
 	 */
-	public static function forFileID(string $id): self
+	public static function forFileID(string $id): static
 	{
 		return new self($id, false);
 	}
@@ -130,11 +128,9 @@ final class ValidatedFile implements JsonSerializable
 	 *
 	 * @param OZFile $file a saved OZFile entity (`isSaved()` must be true)
 	 *
-	 * @return self
-	 *
 	 * @throws InvalidArgumentException when `$file` has not yet been saved to the database
 	 */
-	public static function forFile(OZFile $file): self
+	public static function forFile(OZFile $file): static
 	{
 		if (!$file->isSaved()) {
 			throw new InvalidArgumentException('Cannot create ValidatedFile for an OZFile that has not been saved to the database.');
@@ -142,7 +138,7 @@ final class ValidatedFile implements JsonSerializable
 
 		/** @var string $id */
 		$id = $file->getID();
-		$s  = new self($id, false);
+		$s  = new static($id, false);
 
 		$s->_loaded_file = $file;
 
@@ -158,10 +154,8 @@ final class ValidatedFile implements JsonSerializable
 	 * to permanent storage).
 	 *
 	 * @param string $path the absolute TempFS path of the uploaded file
-	 *
-	 * @return self
 	 */
-	public static function forTempPath(string $path): self
+	public static function forTempPath(string $path): static
 	{
 		return new self($path, true);
 	}

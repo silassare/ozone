@@ -169,7 +169,7 @@ class RuntimeCache implements CacheProviderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function getSharedInstance(?string $namespace = null): self
+	public static function getSharedInstance(?string $namespace = null): static
 	{
 		return new self($namespace);
 	}

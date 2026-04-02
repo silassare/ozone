@@ -23,7 +23,7 @@ use OZONE\Core\FS\FS;
 /**
  * Class FileAccessAuthorizationProvider.
  */
-class FileAccessAuthorizationProvider extends AuthorizationProvider
+final class FileAccessAuthorizationProvider extends AuthorizationProvider
 {
 	public const NAME = 'auth:provider:file';
 
@@ -49,7 +49,7 @@ class FileAccessAuthorizationProvider extends AuthorizationProvider
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function resolve(Context $context, OZAuth $auth): self
+	public static function resolve(Context $context, OZAuth $auth): static
 	{
 		$payload = $auth->getPayload();
 		$id      = $payload['file_id'] ?? null;

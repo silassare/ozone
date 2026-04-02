@@ -132,7 +132,7 @@ final class Context
 	/**
 	 * Returns the current context.
 	 */
-	public static function current(): self
+	public static function current(): static
 	{
 		if (!isset(self::$_current)) {
 			if (!isset(self::$_root)) {
@@ -147,10 +147,8 @@ final class Context
 
 	/**
 	 * Gets the root context.
-	 *
-	 * @return self
 	 */
-	public static function root(): self
+	public static function root(): static
 	{
 		if (!isset(self::$_root)) {
 			throw new RuntimeException('No context was created.');
@@ -209,9 +207,9 @@ final class Context
 	/**
 	 * Handle the incoming request.
 	 *
-	 * @return Context
+	 * @return $this
 	 */
-	public function handle(): self
+	public function handle(): static
 	{
 		if ($this->handle_called) {
 			throw new RuntimeException('The request is already handled.');
@@ -296,10 +294,8 @@ final class Context
 	 * Sets response.
 	 *
 	 * @param Response $response
-	 *
-	 * @return $this
 	 */
-	public function setResponse(Response $response): self
+	public function setResponse(Response $response): static
 	{
 		$this->response = $response;
 

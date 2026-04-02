@@ -236,7 +236,7 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Set form name.
 	 */
-	public function name(string $name): self
+	public function name(string $name): static
 	{
 		FormUtils::assertValidFieldName($name);
 
@@ -249,8 +249,6 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	 * Set form submit to uri.
 	 *
 	 * @param Uri $uri
-	 *
-	 * @return $this
 	 */
 	public function submitTo(Uri $uri): static
 	{
@@ -263,10 +261,8 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	 * Sets form submit method.
 	 *
 	 * @param string $method
-	 *
-	 * @return Form
 	 */
-	public function method(string $method): self
+	public function method(string $method): static
 	{
 		$this->t_method = Request::filterMethod($method);
 

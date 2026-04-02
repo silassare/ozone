@@ -200,7 +200,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function get(string $user_type): self
+	public static function get(string $user_type): static
 	{
 		$table = db()->getTableByMorphType($user_type);
 

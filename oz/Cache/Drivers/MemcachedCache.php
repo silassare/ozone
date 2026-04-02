@@ -28,15 +28,14 @@ if (!\class_exists('\Memcached')) {
 /**
  * Class MemcachedCache.
  */
-class MemcachedCache implements CacheProviderInterface
+final class MemcachedCache implements CacheProviderInterface
 {
 	/**
 	 * MemcachedCache constructor.
 	 *
 	 * @param Memcached $memcached
-	 * @param string    $namespace
 	 */
-	protected function __construct(protected Memcached $memcached, protected string $namespace) {}
+	private function __construct(private Memcached $memcached) {}
 
 	/**
 	 * {@inheritDoc}
@@ -160,7 +159,7 @@ class MemcachedCache implements CacheProviderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function getSharedInstance(?string $namespace = null): CacheProviderInterface
+	public static function getSharedInstance(?string $namespace = null): static
 	{
 		// one instantiation per-connection per-request
 		static $memcached_instances = [];
@@ -192,6 +191,6 @@ class MemcachedCache implements CacheProviderInterface
 			$memcached_instances[$namespace] = $instance;
 		}
 
-		return new self($instance, $namespace);
+		return new self($instance);
 	}
 }

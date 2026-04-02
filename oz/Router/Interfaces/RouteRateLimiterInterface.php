@@ -25,10 +25,8 @@ interface RouteRateLimiterInterface
 	 *
 	 * @param RouteInfo               $ri
 	 * @param RouteRateLimitInterface $limit
-	 *
-	 * @return RouteRateLimiterInterface
 	 */
-	public static function get(RouteInfo $ri, RouteRateLimitInterface $limit): self;
+	public static function get(RouteInfo $ri, RouteRateLimitInterface $limit): static;
 
 	/**
 	 * Should check if the rate limit is not reached.
@@ -39,10 +37,8 @@ interface RouteRateLimiterInterface
 
 	/**
 	 * Should reset the rate limit.
-	 *
-	 * @return $this
 	 */
-	public function reset(): self;
+	public function reset(): static;
 
 	/**
 	 * Should return the rate limit status.

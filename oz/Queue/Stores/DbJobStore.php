@@ -100,14 +100,12 @@ class DbJobStore implements JobStoreInterface
 	 *
 	 * @param JobContractInterface $job_contract
 	 *
-	 * @return JobStoreInterface
-	 *
 	 * @throws CRUDException
 	 * @throws GoblException
 	 * @throws ORMException
 	 */
 	#[Override]
-	public function update(JobContractInterface $job_contract): JobStoreInterface
+	public function update(JobContractInterface $job_contract): static
 	{
 		$qb = new OZJobsQuery();
 
@@ -129,7 +127,7 @@ class DbJobStore implements JobStoreInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function delete(JobContractInterface $job_contract): JobStoreInterface
+	public function delete(JobContractInterface $job_contract): static
 	{
 		$qb = new OZJobsQuery();
 
