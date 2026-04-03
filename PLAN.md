@@ -46,32 +46,27 @@ bundled pure-PHP QR encoder to avoid adding a dependency. **Confirm preferred ap
 
 ---
 
-### [ ] 0. Expand integration test suite
+### [x] 0. Expand integration test suite
 
 **Goal:** Full integration test coverage before adding new features or fixing bugs. Tests exercise real CLI
 subprocesses against temporary scaffolded projects so regressions are caught end-to-end.
 
-**Status: IN PROGRESS — foundational suite created, needs expansion.**
+**Status: COMPLETE — 939 tests, 1730 assertions, all passing (SQLite, MySQL, PostgreSQL).**
 
-**Done so far:**
+**Done:**
 
-| File                                              | Covers                                                                                                  |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `tests/Integration/Project/ProjectCreateTest.php` | `oz project create` — full directory/file structure, PHP syntax validity, idempotency                   |
-| `tests/Integration/Scopes/ScopesAddTest.php`      | `oz scopes add` — API scope, web scope, multiple scopes, origin persisted, htaccess content, PHP syntax |
-| `tests/Integration/Project/ProjectServeTest.php`  | PHP built-in server starts, responds to HTTP, returns OZone JSON                                        |
-| `tests/Integration/Settings/SettingsCmdTest.php`  | `oz settings set/unset` — all value types, scope-scoped writes, unset removes key                       |
-| `tests/Integration/Db/DbBackupTest.php`           | `oz db backup` — creates backup file per DB type; SQLite :memory: fails                                 |
-| `tests/Integration/Db/MigrationsTest.php`         | `oz migrations` — NOT_INSTALLED -> run -> INSTALLED -> create -> PENDING -> run -> rollback             |
-| `tests/Integration/Db/DbBuildTest.php`            | `oz db build` — ORM classes generated in app/Db/, valid PHP, idempotent                                 |
+| File                                                  | Covers                                                                                                  |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `tests/Integration/Project/ProjectCreateTest.php`     | `oz project create` — full directory/file structure, PHP syntax validity, idempotency                   |
+| `tests/Integration/Scopes/ScopesAddTest.php`          | `oz scopes add` — API scope, web scope, multiple scopes, origin persisted, htaccess content, PHP syntax |
+| `tests/Integration/Project/ProjectServeTest.php`      | PHP built-in server starts, responds to HTTP, returns OZone JSON                                        |
+| `tests/Integration/Settings/SettingsCmdTest.php`      | `oz settings set/unset` — all value types, scope-scoped writes, unset removes key                       |
+| `tests/Integration/Db/DbBackupTest.php`               | `oz db backup` — creates backup file per DB type; SQLite :memory: fails                                 |
+| `tests/Integration/Db/MigrationsTest.php`             | `oz migrations` — NOT_INSTALLED -> run -> INSTALLED -> create -> PENDING -> run -> rollback             |
+| `tests/Integration/Db/DbBuildTest.php`                | `oz db build` — ORM classes generated in app/Db/, valid PHP, idempotent                                 |
 | `tests/Integration/Services/ServicesGenerateTest.php` | `oz services generate` — file created, valid PHP, registered in routes, override/conflict/bad-table     |
-
-**Remaining test areas:**
-
-- Route registration, guard, middleware, form validation (via HTTP in served project)
-- Template rendering via web scope
-- Auth flows (login, logout, token) via HTTP
-- Queue/job dispatch and processing
+| `tests/Integration/Http/HttpRoutingTest.php`          | Custom routes, form validation, auth guards, built-in login/logout endpoints (live HTTP server)         |
+| `tests/Integration/Queue/JobQueueTest.php`            | Job dispatch and processing via `oz jobs run`; idempotent re-run (all DB types)                         |
 
 **Complexity:** Low-Medium | **Risk:** Low (test-only, no production code changes)
 
@@ -118,22 +113,22 @@ subprocesses against temporary scaffolded projects so regressions are caught end
 
 ## Summary table
 
-| ID  | File                                          | Complexity | Risk       | Status      |
-| --- | --------------------------------------------- | ---------- | ---------- | ----------- |
-| L   | `REST/ApiDoc.php`                             | Low        | None       | ✅ done     |
-| E   | `Services/QRCode.php`                         | Low        | Low-Medium | ✅ done     |
-| 0   | Integration test suite                        | Low-Medium | Low        | in progress |
-| K   | `Auth/Auth2FA.php`                            | **High**   | **High**   | pending     |
-| D   | `oz/oz_templates/...access.grant.form.blate`  | Low        | None       | ✅ done     |
-| C   | `Auth/Views/LogoutAndRedirectView.php`        | Low        | Low        | ✅ done     |
-| F   | `Hooks/MainBootHookReceiver.php`              | Low        | Low        | ✅ done     |
-| B   | `Auth/Methods/SessionAuth.php`                | Low        | Low        | ✅ done     |
-| N   | `oz_schema.php` + `entitySchema()`            | Low        | None       | ✅ done     |
-| O   | `ApiDocManipulationTrait` requestBodyFromForm | Low-Medium | Low        | ✅ done     |
-| P\* | `RouteSharedOptions` guard descriptors        | Low-Medium | Low        | ✅ done     |
-| Q   | `RESTFulService` bug fixes + filters docs     | Low        | Low        | ✅ done     |
-| A   | `Cli/Cron/Workers/CronWorker.php`             | Low        | Low        | ✅ done     |
-| G   | `Queue/JobsManager.php`                       | Medium     | Low        | ✅ done     |
-| H   | `Cache/Drivers/RedisCache.php`                | Medium     | Low        | ✅ done     |
-| I   | `FS/Views/GetFilesView.php`                   | Medium     | Low        | ✅ done     |
-| J   | `FS/FilesServer.php`                          | Medium     | Medium     | ✅ done     |
+| ID  | File                                          | Complexity | Risk       | Status   |
+| --- | --------------------------------------------- | ---------- | ---------- | -------- |
+| L   | `REST/ApiDoc.php`                             | Low        | None       | ✅ done  |
+| E   | `Services/QRCode.php`                         | Low        | Low-Medium | ✅ done  |
+| 0   | Integration test suite                        | Low-Medium | Low        | **done** |
+| K   | `Auth/Auth2FA.php`                            | **High**   | **High**   | pending  |
+| D   | `oz/oz_templates/...access.grant.form.blate`  | Low        | None       | ✅ done  |
+| C   | `Auth/Views/LogoutAndRedirectView.php`        | Low        | Low        | ✅ done  |
+| F   | `Hooks/MainBootHookReceiver.php`              | Low        | Low        | ✅ done  |
+| B   | `Auth/Methods/SessionAuth.php`                | Low        | Low        | ✅ done  |
+| N   | `oz_schema.php` + `entitySchema()`            | Low        | None       | ✅ done  |
+| O   | `ApiDocManipulationTrait` requestBodyFromForm | Low-Medium | Low        | ✅ done  |
+| P\* | `RouteSharedOptions` guard descriptors        | Low-Medium | Low        | ✅ done  |
+| Q   | `RESTFulService` bug fixes + filters docs     | Low        | Low        | ✅ done  |
+| A   | `Cli/Cron/Workers/CronWorker.php`             | Low        | Low        | ✅ done  |
+| G   | `Queue/JobsManager.php`                       | Medium     | Low        | ✅ done  |
+| H   | `Cache/Drivers/RedisCache.php`                | Medium     | Low        | ✅ done  |
+| I   | `FS/Views/GetFilesView.php`                   | Medium     | Low        | ✅ done  |
+| J   | `FS/FilesServer.php`                          | Medium     | Medium     | ✅ done  |

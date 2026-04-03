@@ -137,12 +137,14 @@ Settings are layered PHP files returning arrays. The framework loads from `oz/oz
 ```php
 Settings::get('oz.config', 'OZ_PROJECT_NAME');              // read one key, optional default
 Settings::load('oz.db');                                     // load entire group as array
-Settings::set('oz.auth', 'OZ_AUTH_CODE_LENGTH', 8);         // persist one key (writes PHP file)
-Settings::unset('oz.auth', 'OZ_AUTH_CODE_LENGTH');          // remove one key (writes PHP file)
+Settings::set('oz.auth', 'OZ_AUTH_CODE_LENGTH', 8);         // persist one key (always writes to stateful dir)
+Settings::unset('oz.auth', 'OZ_AUTH_CODE_LENGTH');          // remove one key (always writes to stateful dir)
 Settings::has('oz.db', 'OZ_DB_HOST');                       // check existence
 Settings::addSource(string $path);                          // add settings directory source
 Settings::applyMergeStrategy(array $a, array $b): array;    // merge strategy: indexed -> array_merge, assoc -> array_replace_recursive
 ```
+
+**`Settings::set/unset` always write to the scope's stateful settings directory** (`data/settings/` for the app, `data/scopes/{name}/settings/` for a scoped write, `data/plugins/{name}/settings/` for a plugin). Source settings files (`app/settings/`, `scopes/{name}/settings/`) are for version-controlled defaults edited manually. Runtime modifications via `set/unset` never touch the source tree.
 
 **`oz.config` is blacklisted** — runtime edits via `Settings::set/unset` are disallowed for it.
 
@@ -780,7 +782,9 @@ class MyPlugin extends AbstractPlugin
 
     public function boot(): void
     {
-        // register routes, event listeners, settings sources, etc.
+        // Add the plugin's version-controlled source settings dir.
+        // The stateful settings dir (data/plugins/{name}/settings/) is auto-registered
+        // by AbstractScope::__construct() when the scope is first accessed.
         Settings::addSource($this->getScope()->getSettingsDir()->getRoot());
     }
 }
@@ -984,6 +988,46 @@ Queue::get(Queue::DEFAULT)
     ->push(new MyWorker('abc123'))
     ->dispatch();        // -> JobContractInterface
 ```
+
+### Batch Jobs
+
+**Class**: `OZONE\Core\Queue\BatchManager` (final, static)
+**Event**: `OZONE\Core\Queue\Hooks\BatchFinished`
+**Entity**: `OZONE\Core\Db\OZJobBatch` — backed by `oz_job_batches` table (`id` bigint auto-inc PK, `name` nullable string, `finished_at` nullable timestamp)
+
+A batch groups N workers dispatched as a unit. When every job reaches a terminal state, `BatchFinished` fires once.
+
+```php
+// Create and dispatch a batch:
+$batch = BatchManager::create(
+    [new ResizeWorker('img-1'), new ResizeWorker('img-2')],
+    Queue::DEFAULT,
+    'resize-images',   // optional human-readable name
+);
+
+$batch_id = $batch->getID();   // integer PK -- use this for progress/isFinished queries
+
+// Listen for completion:
+BatchFinished::listen(static function (BatchFinished $e) {
+    $e->batch;      // OZJobBatch entity
+    $e->has_error;  // true if any job ended in FAILED / DEAD_LETTER / CANCELLED
+});
+
+// Check progress (aggregates across all registered stores):
+$progress = BatchManager::progress($batch_id);
+// shape: ['total'=>N, 'pending'=>N, 'running'=>N, 'done'=>N, 'failed'=>N, 'cancelled'=>N, 'dead_letter'=>N]
+
+// Check if fully finished:
+$done = BatchManager::isFinished($batch_id);
+```
+
+**Key design points:**
+
+- `BatchManager::create()` stores the integer `oz_job_batches.id` in each job's `batch_id` FK column — not a string ref.
+- `progress()` and `isFinished()` accept `string $batch_id` (the stringified integer PK).
+- `BatchFinished` is dispatched by `JobsManager::finish()` via `BatchManager::onJobSettled()` — store-agnostic: uses `JobStoreInterface::countByBatch()` on the owning store, never queries `oz_jobs` directly.
+- Empty batches (`$workers = []`) are immediately marked finished.
+- `JobStoreInterface` additions: `countByBatch(string $batch_id, ?JobState $state = null): int` and `listByBatch(string $batch_id): array` — both `DbJobStore` and `RedisJobStore` implement them.
 
 ---
 
