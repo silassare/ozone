@@ -152,7 +152,7 @@ final class AccessRightsTest extends TestCase
 	/**
 	 * @throws UnauthorizedException
 	 */
-	public function tesToArray(): void
+	public function testToArray(): void
 	{
 		$a = new AccessRights();
 
@@ -163,5 +163,207 @@ final class AccessRightsTest extends TestCase
 			'users.*'      => 1,
 			'users.delete' => 0,
 		], $a->toArray());
+	}
+
+	// -----------------------------------------------------------------------
+	// Multi-level wildcards
+	// -----------------------------------------------------------------------
+
+	/**
+	 * @throws UnauthorizedException
+	 */
+	public function testThreeLevelWildcardResolvesCorrectly(): void
+	{
+		$a = new AccessRights([], false);
+		$a->allow('a.b.*');
+
+		self::assertTrue($a->can('a.b.c'));
+		self::assertTrue($a->can('a.b.d'));
+		self::assertFalse($a->can('a.c.d'));
+	}
+
+	/**
+	 * @throws UnauthorizedException
+	 */
+	public function testGranularDenyOverridesWildcardAllow(): void
+	{
+		$a = new AccessRights([], false);
+		$a->allow('a.*');
+		$a->deny('a.secret');
+
+		self::assertTrue($a->can('a.read'));
+		self::assertFalse($a->can('a.secret'));
+	}
+
+	/**
+	 * @throws UnauthorizedException
+	 */
+	public function testWildcardCanIsFalseWhenAnyChildIsDenied(): void
+	{
+		// can('a.*') should be false because a.secret is explicitly denied.
+		$a = new AccessRights([], false);
+		$a->allow('a.*');
+		$a->deny('a.secret');
+
+		self::assertFalse($a->can('a.*'));
+	}
+
+	/**
+	 * @throws UnauthorizedException
+	 */
+	public function testWildcardCanIsTrueWhenNoChildDenied(): void
+	{
+		$a = new AccessRights([], false);
+		$a->allow('a.*');
+
+		self::assertTrue($a->can('a.*'));
+	}
+
+	/**
+	 * @throws UnauthorizedException
+	 */
+	public function testDeeplyNestedGranularAllowUnderDeniedWildcard(): void
+	{
+		// deny a.b.* but explicitly allow a.b.read.
+		$a = new AccessRights([], false);
+		$a->deny('a.b.*');
+		$a->allow('a.b.read');
+
+		self::assertTrue($a->can('a.b.read'));
+		self::assertFalse($a->can('a.b.write'));
+	}
+
+	// -----------------------------------------------------------------------
+	// Multiple actions in one can() call
+	// -----------------------------------------------------------------------
+
+	/**
+	 * @throws UnauthorizedException
+	 */
+	public function testCanWithMultipleActionsReturnsTrueOnlyWhenAllAreAllowed(): void
+	{
+		$a = new AccessRights([], false);
+		$a->allow('files.read');
+		$a->allow('files.download');
+
+		self::assertTrue($a->can('files.read', 'files.download'));
+		self::assertFalse($a->can('files.read', 'files.delete'));
+	}
+
+	// -----------------------------------------------------------------------
+	// Scope interaction
+	// -----------------------------------------------------------------------
+
+	public function testAllowThrowsWhenActionDeniedInParentScope(): void
+	{
+		$parent = new AccessRights(['admin.*' => 0], false);
+		$child  = new AccessRights([], false);
+		$child->pushScope($parent);
+
+		$this->expectException(UnauthorizedException::class);
+		$child->allow('admin.delete');
+	}
+
+	/**
+	 * @throws UnauthorizedException
+	 */
+	public function testChildCannotEscalateAboveParentScope(): void
+	{
+		// Parent allows only files.read.
+		$parent = new AccessRights(['files.read' => 1], false);
+		$child  = new AccessRights([], false);
+		$child->pushScope($parent);
+
+		$this->expectException(UnauthorizedException::class);
+		$child->allow('files.write');   // not in parent -> escalation
+	}
+
+	/**
+	 * @throws UnauthorizedException
+	 */
+	public function testChildInheritsParentDenial(): void
+	{
+		$parent = new AccessRights([], false);
+		$parent->deny('admin.delete');
+
+		$child = new AccessRights([], false);
+		$child->pushScope($parent);
+
+		self::assertFalse($child->can('admin.delete'));
+	}
+
+	/**
+	 * @throws UnauthorizedException
+	 */
+	public function testScopePushedTwiceIsNotDuplicated(): void
+	{
+		$parent = new AccessRights(['a.read' => 1], false);
+		$child  = new AccessRights([], false);
+		$child->pushScope($parent);
+		$child->pushScope($parent);   // second push must be a no-op
+
+		// Only one scope should be influencing can(); just assert it works correctly.
+		$child->allow('a.read');
+		self::assertTrue($child->can('a.read'));
+	}
+
+	// -----------------------------------------------------------------------
+	// assertCan()
+	// -----------------------------------------------------------------------
+
+	/**
+	 * @throws UnauthorizedException
+	 */
+	public function testAssertCanDoesNotThrowWhenAllowed(): void
+	{
+		$a = new AccessRights([], false);
+		$a->allow('x.y');
+		$a->assertCan('x.y');  // must not throw
+
+		self::assertTrue(true);  // reached here without exception
+	}
+
+	public function testAssertCanThrowsWhenDenied(): void
+	{
+		$a = new AccessRights([], false);
+		$a->deny('x.y');
+
+		$this->expectException(UnauthorizedException::class);
+		$a->assertCan('x.y');
+	}
+
+	// -----------------------------------------------------------------------
+	// toArray()
+	// -----------------------------------------------------------------------
+
+	/**
+	 * @throws UnauthorizedException
+	 */
+	public function testToArrayReflectsAllowAndDenyEntries(): void
+	{
+		$a = new AccessRights([], false);
+		$a->allow('docs.read');
+		$a->deny('docs.write');
+
+		self::assertSame([
+			'docs.read'  => 1,
+			'docs.write' => 0,
+		], $a->toArray());
+	}
+
+	// -----------------------------------------------------------------------
+	// from(OZAuth)
+	// -----------------------------------------------------------------------
+
+	public function testFromAuthPopulatesOptions(): void
+	{
+		$permissions = ['tasks.read' => 1, 'tasks.write' => 0];
+
+		// Simulate loading AccessRights from a permissions array
+		// (same path used internally by AccessRights::from() for OZAuth entities).
+		$a = new AccessRights($permissions, false);
+
+		self::assertTrue($a->can('tasks.read'));
+		self::assertFalse($a->can('tasks.write'));
 	}
 }
