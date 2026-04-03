@@ -25,7 +25,10 @@ final class SubScope extends AbstractScope
 	/**
 	 * SubScope constructor.
 	 */
-	public function __construct(protected string $name) {}
+	public function __construct(protected string $name)
+	{
+		parent::__construct();
+	}
 
 	/**
 	 * {@inheritDoc}

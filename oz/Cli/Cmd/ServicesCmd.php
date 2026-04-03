@@ -122,7 +122,7 @@ final class ServicesCmd extends Command
 			$override
 		);
 
-		Settings::set('oz.routes.api', $info['provider'], true);
+		Settings::set('oz.routes.api', $info['provider'], true, null, false);
 
 		$this->getCli()
 			->success(\sprintf('service "%s" generated for "%s => %s".', $service_class, $base_path, $table_name));

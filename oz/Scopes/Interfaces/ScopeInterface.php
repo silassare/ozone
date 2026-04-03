@@ -82,6 +82,13 @@ interface ScopeInterface
 	public function getSettingsDir(): FilesManager;
 
 	/**
+	 * Returns an instance of the files manager with the scope stateful settings directory as root.
+	 *
+	 * @return FilesManager
+	 */
+	public function getStatefulSettingsDir(): FilesManager;
+
+	/**
 	 * Returns an instance of the files manager with the scope templates directory as root.
 	 *
 	 * @return FilesManager

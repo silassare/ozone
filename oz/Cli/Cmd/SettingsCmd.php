@@ -34,8 +34,9 @@ final class SettingsCmd extends Command
 		$group           = $args->get('group');
 		$key             = $args->get('key');
 		$value           = self::parseValue($args->get('value'));
+		$source          = (bool) $args->get('source');
 
-		Settings::set($group, $key, $value, scope($scope_name));
+		Settings::set($group, $key, $value, scope($scope_name), !$source);
 
 		$cli   = $this->getCli();
 		$style = $cli->style()->green();
@@ -58,8 +59,9 @@ final class SettingsCmd extends Command
 		$scope_name      = $args->get('scope');
 		$group           = $args->get('group');
 		$key             = $args->get('key');
+		$source          = (bool) $args->get('source');
 
-		Settings::unset($group, $key, scope($scope_name));
+		Settings::unset($group, $key, scope($scope_name), !$source);
 
 		$cli   = $this->getCli();
 		$style = $cli->style()->green();
@@ -87,12 +89,18 @@ final class SettingsCmd extends Command
 			->prompt(true, 'The setting value')
 			->description('The setting value. Use json format for array or object value.')
 			->string();
+		$set->option('source', '', [], 5)
+			->description('Write to the source settings directory instead of the stateful one. Use during development.')
+			->bool();
 
 		$set->handler($this->set(...));
 
 		// action: unset a setting
 		$unset = $this->action('unset', 'Unset a setting in the project.');
 		self::commonOptions($unset);
+		$unset->option('source', '', [], 4)
+			->description('Write to the source settings directory instead of the stateful one. Use during development.')
+			->bool();
 		$unset->handler($this->unset(...));
 	}
 

@@ -20,11 +20,12 @@ use PHPUnit\Framework\TestCase;
  * Verifies `oz settings set` and `oz settings unset` commands.
  *
  * Tests cover:
- *  - Setting a string value
+ *  - Setting a string value (stateful: data/settings/)
  *  - Setting boolean, integer, and null values (auto-parsed)
  *  - Setting a JSON array and object value
  *  - Unsetting a key removes it from the settings file
- *  - Setting with a scope name writes to the correct scope's settings dir
+ *  - Setting with --source writes to the version-controlled source dir (app/settings/)
+ *  - Setting with a scope name writes to the correct scope stateful settings dir
  *
  * @internal
  *
@@ -161,7 +162,9 @@ final class SettingsCmdTest extends TestCase
 		self::$proj->oz('settings', 'set', '-s=myweb', '-g=oz.request', '-k=OZ_DEFAULT_ORIGIN', '-v=http://scoped.example.com')
 			->mustRun();
 
+		// Runtime writes always go to the stateful directory (data/), not the source tree.
 		$scope_file = self::$proj->getPath()
+			. \DIRECTORY_SEPARATOR . 'data'
 			. \DIRECTORY_SEPARATOR . 'scopes'
 			. \DIRECTORY_SEPARATOR . 'myweb'
 			. \DIRECTORY_SEPARATOR . 'settings'
@@ -174,10 +177,30 @@ final class SettingsCmdTest extends TestCase
 		self::assertSame('http://scoped.example.com', $settings['OZ_DEFAULT_ORIGIN']);
 	}
 
+	public function testSetWithSourceFlagWritesToSourceDir(): void
+	{
+		self::$proj->oz('settings', 'set', '--source', '-g=app.custom', '-k=SOURCE_KEY', '-v=source-value')
+			->mustRun();
+
+		// --source writes to app/settings/, not data/settings/.
+		$source_file = self::$proj->getPath()
+			. \DIRECTORY_SEPARATOR . 'app'
+			. \DIRECTORY_SEPARATOR . 'settings'
+			. \DIRECTORY_SEPARATOR . 'app.custom.php';
+
+		self::assertFileExists($source_file);
+		$settings = (static function ($file) {
+			return require $file;
+		})($source_file);
+		self::assertSame('source-value', $settings['SOURCE_KEY']);
+	}
+
 	private static function settingsPath(string $group): string
 	{
+		// Runtime writes always go to the stateful directory (data/settings/) so that
+		// source-controlled defaults in app/settings/ are never modified by oz commands.
 		return self::$proj->getPath()
-			. \DIRECTORY_SEPARATOR . 'app'
+			. \DIRECTORY_SEPARATOR . 'data'
 			. \DIRECTORY_SEPARATOR . 'settings'
 			. \DIRECTORY_SEPARATOR . $group . '.php';
 	}

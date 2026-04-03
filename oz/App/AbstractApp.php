@@ -37,6 +37,10 @@ abstract class AbstractApp implements AppInterface
 		Settings::addSource($this->getSettingsDir()
 			->getRoot());
 
+		// = Adds stateful settings source
+		Settings::addSource($this->getStatefulSettingsDir()
+			->getRoot());
+
 		// = Adds templates source
 		Assets::addSource($this->getTemplatesDir()
 			->getRoot());
@@ -166,8 +170,16 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function getSettingsDir(): FilesManager
 	{
-		return $this->getSourcesDir()
-			->cd('settings', true);
+		return $this->getSourcesDir()->cd('settings', true);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function getStatefulSettingsDir(): FilesManager
+	{
+		return $this->getDataDir()->cd('settings', true);
 	}
 
 	/**

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Scopes;
 
 use Override;
+use OZONE\Core\App\Settings;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 
@@ -23,12 +24,31 @@ use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 abstract class AbstractScope implements ScopeInterface
 {
 	/**
+	 * AbstractScope constructor.
+	 */
+	protected function __construct()
+	{
+		// = Adds stateful settings source for this scope
+		Settings::addSource($this->getStatefulSettingsDir()
+			->getRoot());
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
 	public function getSettingsDir(): FilesManager
 	{
 		return $this->getSourcesDir()->cd('settings', true);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function getStatefulSettingsDir(): FilesManager
+	{
+		return $this->getDataDir()->cd('settings', true);
 	}
 
 	/**

@@ -50,6 +50,7 @@ class PluginScope extends AbstractScope
 		$namespace               = $plugin->getNamespace();
 		$this->scope_psr4_ns_dir = \str_replace('\\', DS, $namespace);
 		$this->scope_name        = Str::stringToURLSlug($this->plugin->getName());
+		parent::__construct();
 	}
 
 	/**

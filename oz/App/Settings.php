@@ -146,33 +146,37 @@ final class Settings
 	/**
 	 * Sets value of a given key in a setting group.
 	 *
-	 * @param string              $group the setting group name
-	 * @param string              $key   the setting key
-	 * @param mixed               $value the setting value
-	 * @param null|ScopeInterface $scope the scope to use (default: current app scope)
+	 * @param string              $group    the setting group name
+	 * @param string              $key      the setting key
+	 * @param mixed               $value    the setting value
+	 * @param null|ScopeInterface $scope    the scope to use (default: current app scope)
+	 * @param bool                $stateful true -> stateful dir (data/settings/), false -> source dir (app/settings/)
 	 */
 	public static function set(
 		string $group,
 		string $key,
 		mixed $value,
-		?ScopeInterface $scope = null
+		?ScopeInterface $scope = null,
+		bool $stateful = true
 	): void {
-		self::modify($group, static fn ($current) => $current->set($key, $value), $scope);
+		self::modify($group, static fn ($current) => $current->set($key, $value), $scope, $stateful);
 	}
 
 	/**
 	 * Unsets value of a given key in a setting group.
 	 *
-	 * @param string              $group the setting group name
-	 * @param string              $key   the setting key
-	 * @param null|ScopeInterface $scope the scope to use (default: current app scope)
+	 * @param string              $group    the setting group name
+	 * @param string              $key      the setting key
+	 * @param null|ScopeInterface $scope    the scope to use (default: current app scope)
+	 * @param bool                $stateful true -> stateful dir (data/settings/), false -> source dir (app/settings/)
 	 */
 	public static function unset(
 		string $group,
 		string $key,
-		?ScopeInterface $scope = null
+		?ScopeInterface $scope = null,
+		bool $stateful = true
 	): void {
-		self::modify($group, static fn ($current) => $current->remove($key), $scope);
+		self::modify($group, static fn ($current) => $current->remove($key), $scope, $stateful);
 	}
 
 	/**
@@ -263,12 +267,14 @@ final class Settings
 	 *
 	 * @param string                       $group    the setting group name
 	 * @param callable(SettingsGroup):void $modifier the settings modifier callback function
-	 * @param null|ScopeInterface          $scope    the scope
+	 * @param null|ScopeInterface          $scope    the scope to use (default: current app scope)
+	 * @param bool                         $stateful true -> stateful dir (data/), false -> source dir (app/)
 	 */
 	private static function modify(
 		string $group,
 		callable $modifier,
-		?ScopeInterface $scope = null
+		?ScopeInterface $scope = null,
+		bool $stateful = true
 	): void {
 		self::requireGroupStore($group, true);
 
@@ -280,8 +286,8 @@ final class Settings
 				)
 			);
 		}
-
-		$source_dir_fm = ($scope ?? app())->getSettingsDir();
+		$target        = $scope ?? app();
+		$source_dir_fm = $stateful ? $target->getStatefulSettingsDir() : $target->getSettingsDir();
 		$relative_path = $group . '.php';
 		$abs_path      = $source_dir_fm->resolve($relative_path);
 
@@ -382,10 +388,14 @@ final class Settings
 		bool $align = false
 	): string {
 		if (\is_array($data)) {
-			$r          = [];
-			$start      = \str_repeat($indent_char, $indent);
-			$indexed    = \array_is_list($data);
-			$max_length = $align ? \max(\array_map('\strlen', \array_map('trim', \array_keys($data)))) + 2 : 0;
+			$r       = [];
+			$start   = \str_repeat($indent_char, $indent);
+			$indexed = \array_is_list($data);
+			$keys    = \array_keys($data);
+			// max() fails on empty arrays; key-alignment only applies to non-empty assoc arrays.
+			$max_length = ($align && !$indexed && !empty($keys))
+				? \max(\array_map('\strlen', \array_map('trim', $keys))) + 2
+				: 0;
 
 			foreach ($data as $key => $value) {
 				if (!$indexed && \is_string($key) && \str_starts_with($key, '::comment::') && \is_string($value)) {
