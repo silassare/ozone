@@ -448,6 +448,8 @@ return static function (NamespaceBuilder $ns) {
 			->meta('api.doc.description', 'An authorization process record tracking verification state, codes, tokens, and retry limits.');
 
 		// columns
+		$tb->id();
+
 		$tb->string('ref')->min(32)->max(128)
 			->setMetaKey('field.label', 'Reference')
 			->setMetaKey('api.doc.description', 'The unique reference token identifying this authorization process.');
@@ -511,9 +513,9 @@ return static function (NamespaceBuilder $ns) {
 		$tb->softDeletable();
 
 		// constraints
-		$tb->primary('ref');
 
 		$tb->collectIndex(static function (TableBuilder $tb) {
+			$tb->unique('ref');
 			$tb->unique('refresh_key');
 			$tb->unique('token_hash');
 		});
