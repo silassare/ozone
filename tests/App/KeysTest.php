@@ -26,6 +26,30 @@ use PHPUnit\Framework\TestCase;
  */
 final class KeysTest extends TestCase
 {
+	public function testId32KeyReturns32HexChars(): void
+	{
+		$key = Keys::id32();
+		self::assertSame(32, \strlen($key));
+		self::assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $key);
+	}
+
+	public function testId32KeyIsUnique(): void
+	{
+		self::assertNotSame(Keys::id32(), Keys::id32());
+	}
+
+	public function testId64KeyReturns64HexChars(): void
+	{
+		$key = Keys::id64();
+		self::assertSame(64, \strlen($key));
+		self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $key);
+	}
+
+	public function testId64KeyIsUnique(): void
+	{
+		self::assertNotSame(Keys::id64(), Keys::id64());
+	}
+
 	public function testNewFileKeyReturns32HexChars(): void
 	{
 		$key = Keys::newFileKey();
