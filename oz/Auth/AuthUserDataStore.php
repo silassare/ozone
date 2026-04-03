@@ -16,6 +16,7 @@ namespace OZONE\Core\Auth;
 use OZONE\Core\Access\AccessRights;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
+use OZONE\Core\Auth\TwoFactor\TwoFactorChannelRegistry;
 use OZONE\Core\Cache\CacheManager;
 use PHPUtils\Store\Store;
 
@@ -92,6 +93,64 @@ class AuthUserDataStore extends Store
 	public function set2FAEnabled(bool $enabled = true): static
 	{
 		$this->set('2fa.enabled', $enabled);
+
+		return $this;
+	}
+
+	/**
+	 * Gets the user's preferred 2FA channel name.
+	 *
+	 * Returns null when no preference is set (auto-selection applies).
+	 * Possible values are channel names such as 'totp', 'email', 'sms',
+	 * or any name registered with {@see TwoFactorChannelRegistry}.
+	 *
+	 * @return null|string
+	 */
+	public function get2FAMethod(): ?string
+	{
+		$method = $this->get('2fa.method');
+
+		return \is_string($method) && '' !== $method ? $method : null;
+	}
+
+	/**
+	 * Sets the user's preferred 2FA channel name.
+	 *
+	 * Pass null to clear the preference and fall back to auto-selection.
+	 *
+	 * @param null|string $method channel name (e.g. 'totp', 'email', 'sms') or null
+	 */
+	public function set2FAMethod(?string $method): static
+	{
+		$this->set('2fa.method', $method);
+
+		return $this;
+	}
+
+	/**
+	 * Gets the base32-encoded TOTP secret stored for this user.
+	 *
+	 * Returns null when TOTP has not been set up.
+	 *
+	 * @return null|string
+	 */
+	public function get2FATotpSecret(): ?string
+	{
+		$secret = $this->get('2fa.totp_secret');
+
+		return \is_string($secret) && '' !== $secret ? $secret : null;
+	}
+
+	/**
+	 * Stores the base32-encoded TOTP secret for this user.
+	 *
+	 * Pass null to remove the TOTP secret (disables TOTP channel for this user).
+	 *
+	 * @param null|string $secret base32-encoded TOTP secret or null
+	 */
+	public function set2FATotpSecret(?string $secret): static
+	{
+		$this->set('2fa.totp_secret', $secret);
 
 		return $this;
 	}

@@ -75,4 +75,49 @@ class StatefulAuthenticationMethodStore extends Store
 	{
 		return $this->set('oz.previous_auth_user', AuthUsers::selector($user));
 	}
+
+	/**
+	 * Gets the user held pending 2FA verification.
+	 *
+	 * Returns null when there is no pending 2FA user in the current session.
+	 *
+	 * @return null|AuthUserInterface
+	 *
+	 * @internal
+	 */
+	public function get2FAPendingUser(): ?AuthUserInterface
+	{
+		$selector = $this->get('oz.2fa_pending_user');
+
+		if (\is_array($selector)) {
+			return AuthUsers::identifyBySelector($selector);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Stores the user that must complete 2FA before being fully attached to the session.
+	 *
+	 * @param AuthUserInterface $user
+	 *
+	 * @internal
+	 */
+	public function set2FAPendingUser(AuthUserInterface $user): static
+	{
+		return $this->set('oz.2fa_pending_user', AuthUsers::selector($user));
+	}
+
+	/**
+	 * Removes the pending 2FA user entry from the session store.
+	 *
+	 * Called by {@see TwoFactorAuthorizationProvider::onAuthorized()} after the user
+	 * is successfully re-attached.
+	 *
+	 * @internal
+	 */
+	public function clear2FAPendingUser(): static
+	{
+		return $this->remove('oz.2fa_pending_user');
+	}
 }

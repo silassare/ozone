@@ -1,0 +1,3 @@
+<p>Your two-factor authentication code is:</p>
+<p style="font-size:2em;letter-spacing:0.2em;font-weight:bold;">{auth_code}</p>
+<p>This code expires in a few minutes. Do not share it with anyone.</p>

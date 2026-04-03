@@ -15,10 +15,12 @@ use OZONE\Core\Auth\Providers\AuthUserAuthorizationProvider;
 use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
 use OZONE\Core\Auth\Providers\FileAccessAuthorizationProvider;
 use OZONE\Core\Auth\Providers\PhoneOwnershipVerificationProvider;
+use OZONE\Core\Auth\Providers\TwoFactorAuthorizationProvider;
 
 return [
-	PhoneOwnershipVerificationProvider::NAME                      => PhoneOwnershipVerificationProvider::class,
-	EmailOwnershipVerificationProvider::NAME                      => EmailOwnershipVerificationProvider::class,
-	FileAccessAuthorizationProvider::NAME                         => FileAccessAuthorizationProvider::class,
-	AuthUserAuthorizationProvider::NAME                           => AuthUserAuthorizationProvider::class,
+	PhoneOwnershipVerificationProvider::NAME  => PhoneOwnershipVerificationProvider::class,
+	EmailOwnershipVerificationProvider::NAME  => EmailOwnershipVerificationProvider::class,
+	FileAccessAuthorizationProvider::NAME     => FileAccessAuthorizationProvider::class,
+	AuthUserAuthorizationProvider::NAME       => AuthUserAuthorizationProvider::class,
+	TwoFactorAuthorizationProvider::NAME      => TwoFactorAuthorizationProvider::class,
 ];
