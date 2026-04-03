@@ -371,7 +371,7 @@ return static function (NamespaceBuilder $ns) {
 			->setMetaKey('field.label', 'Request Source Key')
 			->setMetaKey('api.doc.description', 'A fingerprint of the client environment used to detect session hijacking.');
 
-		$tb->timestamp('expire_at')
+		$tb->timestamp('expire_at')->format('timestamp')
 			->setMetaKey('field.label', 'Expires At')
 			->setMetaKey('api.doc.description', 'The timestamp after which this session is considered expired.');
 		$tb->useColumn('expire_at')->oldName('expire');
@@ -418,7 +418,7 @@ return static function (NamespaceBuilder $ns) {
 			->setMetaKey('field.label', 'Value')
 			->setMetaKey('api.doc.description', 'The stored value for this key (may be null).');
 
-		$tb->timestamp('expire_at')->nullable()
+		$tb->timestamp('expire_at')->format('timestamp')->nullable()
 			->setMetaKey('field.label', 'Expires At')
 			->setMetaKey('api.doc.description', 'The timestamp after which this store entry is considered expired, should no longer be used and garbage collected.');
 
@@ -494,7 +494,7 @@ return static function (NamespaceBuilder $ns) {
 			->setMetaKey('field.label', 'Lifetime')
 			->setMetaKey('api.doc.description', 'The validity duration of this authorization process in seconds.');
 
-		$tb->timestamp('expire_at')
+		$tb->timestamp('expire_at')->format('timestamp')
 			->setMetaKey('field.label', 'Expires At')
 			->setMetaKey('api.doc.description', 'The timestamp at which this authorization process expires.');
 		$tb->useColumn('expire_at')->oldName('expire');
