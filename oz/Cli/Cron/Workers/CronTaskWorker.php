@@ -46,6 +46,12 @@ class CronTaskWorker implements WorkerInterface
 	 */
 	public function __construct(protected readonly string $task_name)
 	{
+		// Ensure tasks are registered before looking up by name.
+		// In async subprocess contexts (oz jobs run --force), OZone is fully bootstrapped
+		// but Cron::runDues() -- which normally calls collect() -- is never invoked.
+		// Calling collect() here is idempotent (guarded by $collected flag inside Cron).
+		Cron::collect();
+
 		$task = Cron::getTask($this->task_name);
 
 		if (!$task) {

@@ -408,7 +408,11 @@ final class JobsManager
 		JobContractInterface $job_contract,
 	): void {
 		// Keep the lock held -- the subprocess takes over via forceRunJob().
-		$bin = OZ_PROJECT_DIR . 'bin' . \DIRECTORY_SEPARATOR . 'oz';
+		//
+		// Use the ozone package bin/oz script (resolved from OZ_OZONE_DIR) rather
+		// than OZ_PROJECT_DIR.'bin/oz', because freshly scaffolded projects do not
+		// have a project-level bin/ directory; the binary lives inside the package.
+		$bin = \dirname(OZ_OZONE_DIR) . \DIRECTORY_SEPARATOR . 'bin' . \DIRECTORY_SEPARATOR . 'oz';
 		$cmd = [
 			\PHP_BINARY,
 			$bin,
@@ -419,6 +423,19 @@ final class JobsManager
 			'--force',
 		];
 
-		(new Process($cmd, OZ_PROJECT_DIR, null, null, 0))->start();
+		// Two measures are required to truly detach the subprocess on Linux:
+		//
+		// 1. 'create_new_console' — prevents Process::__destruct() from calling
+		//    stop() (which sends SIGTERM then SIGKILL) when this temporary Process
+		//    object goes out of scope at the end of workAsync().
+		//
+		// 2. disableOutput() — routes subprocess stdout/stderr to /dev/null instead
+		//    of anonymous pipes. Without this, __destruct() closes the read-end of
+		//    those pipes and the subprocess gets SIGPIPE on its next write, killing
+		//    it even though stop() was never called.
+		$process = new Process($cmd, OZ_PROJECT_DIR, null, null, 0);
+		$process->setOptions(['create_new_console' => true]);
+		$process->disableOutput();
+		$process->start();
 	}
 }

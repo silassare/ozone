@@ -244,15 +244,27 @@ final class BatchManager
 		}
 
 		// All jobs have settled -- mark the batch finished.
-		$bq    = new OZJobBatchesQuery();
-		$batch = $bq->whereIdIs($batch_id)->find()->fetchClass();
+		// Use an atomic UPDATE WHERE finished_at IS NULL so only one concurrent
+		// caller can win the race.  A plain fetch -> check -> save pattern would
+		// allow two simultaneous workers settling the last two jobs to both read
+		// finished_at=null and both dispatch BatchFinished.
+		$now      = (string) \time();
+		$affected = (new OZJobBatchesQuery())
+			->whereIdIs($batch_id)
+			->whereFinishedAtIsNull()
+			->update([OZJobBatch::COL_FINISHED_AT => $now])
+			->execute();
 
-		if (null === $batch || null !== $batch->getFinishedAT()) {
-			return; // already finished or batch not found
+		if ($affected <= 0) {
+			return; // another worker already marked it finished (or batch not found)
 		}
 
-		$batch->setFinishedAT((string) \time());
-		$batch->save();
+		// Re-fetch the entity so BatchFinished receives the fully populated object.
+		$batch = (new OZJobBatchesQuery())->whereIdIs($batch_id)->find()->fetchClass();
+
+		if (null === $batch) {
+			return; // should never happen after a successful update, but guard anyway
+		}
 
 		// Determine if any job ended in a non-DONE terminal state.
 		$error_states = [JobState::FAILED, JobState::DEAD_LETTER, JobState::CANCELLED];
