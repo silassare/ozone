@@ -31,30 +31,33 @@ use OZONE\Core\Utils\JSONResult;
  */
 class Job implements Interfaces\JobInterface
 {
-	protected string $queue         = Queue::DEFAULT;
-	protected string $name          = '';
-	protected JobState $state       = JobState::PENDING;
-	protected ?float $started_at    = null;
-	protected ?float $ended_at      = null;
+	protected string $queue          = Queue::DEFAULT;
+	protected string $name           = '';
+	protected JobState $state        = JobState::PENDING;
+	protected ?float $started_at     = null;
+	protected ?float $ended_at       = null;
 	protected int $created_at;
 	protected int $updated_at;
 	protected JSONResult $result;
-	protected int $try_count     = 0;
-	protected int $retry_max     = 3;
-	protected int $priority      = 0;
-	protected int $retry_delay   = 60; // 1 minute
+	protected int $try_count         = 0;
+	protected int $retry_max         = 3;
+	protected int $priority          = 0;
+	protected int $retry_delay       = 60; // 1 minute
+	protected ?int $run_after        = null;
+	protected array $chain           = [];
+	protected ?string $batch_id      = null;
 
 	/**
 	 * Job constructor.
 	 *
-	 * @param string $ref
-	 * @param string $worker
-	 * @param array  $payload
+	 * @param string $ref     unique job reference
+	 * @param string $worker  fully-qualified worker class name
+	 * @param array  $payload input data passed to {@link WorkerInterface::fromPayload()}
 	 */
 	public function __construct(
 		protected readonly string $ref,
 		protected readonly string $worker,
-		protected readonly array $payload
+		protected array $payload = [],
 	) {
 		$this->created_at = $this->updated_at = \time();
 		$this->result     = new JSONResult();
@@ -346,5 +349,74 @@ class Job implements Interfaces\JobInterface
 	{
 		return JobsManager::getStore($store_name)
 			->add($this);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function getRunAfter(): ?int
+	{
+		return $this->run_after;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function setRunAfter(?int $run_after): static
+	{
+		$this->run_after = $run_after;
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function getChain(): array
+	{
+		return $this->chain;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function setChain(array $chain): static
+	{
+		$this->chain = $chain;
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function getBatchId(): ?string
+	{
+		return $this->batch_id;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function setBatchId(?string $batch_id): static
+	{
+		$this->batch_id = $batch_id;
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function isDeadLetter(): bool
+	{
+		return JobState::DEAD_LETTER === $this->state;
 	}
 }

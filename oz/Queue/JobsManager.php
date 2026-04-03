@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Queue;
 
+use OZONE\Core\App\Keys;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Queue\Hooks\JobBeforeStart;
@@ -281,8 +282,9 @@ final class JobsManager
 	/**
 	 * Finish a job.
 	 *
-	 * If the job failed but still has retries remaining, the state is reset to
-	 * {@link JobState::PENDING} so the next {@link run()} call picks it up again.
+	 * On failure with remaining retries, sets `run_after` to enforce the retry delay then
+	 * resets state to PENDING. When all retries are exhausted, transitions to DEAD_LETTER.
+	 * On success, dispatches the next job in the chain (if any) and notifies BatchManager.
 	 *
 	 * @param JobContractInterface $job_contract
 	 */
@@ -291,22 +293,58 @@ final class JobsManager
 	): void {
 		$job_contract->setEndedAt((float) \microtime(true));
 
-		if (
-			JobState::FAILED === $job_contract->getState()
-			&& $job_contract->getTryCount() < $job_contract->getRetryMax()
-		) {
-			// Reset to PENDING so the job is retried on the next run.
-			// NOTE: retry_delay is stored on the job but is not enforced here
-			// because the iterator has no "run_after" filter. Enforcing it
-			// requires a schema change (a run_after column on oz_jobs).
-			$job_contract->setState(JobState::PENDING);
+		if (JobState::FAILED === $job_contract->getState()) {
+			if ($job_contract->getTryCount() < $job_contract->getRetryMax()) {
+				// Enforce retry delay: job will not be picked up until run_after elapses.
+				$delay = $job_contract->getRetryDelay();
+				$job_contract->setRunAfter(\time() + $delay);
+				$job_contract->setState(JobState::PENDING);
+			} else {
+				// All retries exhausted -- move to dead-letter queue.
+				$job_contract->setState(JobState::DEAD_LETTER);
+			}
 		}
 
 		$job_contract->save();
 		$job_contract->unlock();
 
-		if (JobState::DONE === $job_contract->getState()) {
+		$final_state = $job_contract->getState();
+
+		if (JobState::DONE === $final_state) {
 			(new JobFinished($job_contract))->dispatch();
+
+			// Dispatch next job in chain (if any).
+			$chain = $job_contract->getChain();
+
+			if (!empty($chain)) {
+				$next      = \array_shift($chain);
+				$worker    = $next['worker'] ?? null;
+				$payload   = $next['payload'] ?? [];
+				$queue     = $next['queue'] ?? $job_contract->getQueue();
+				$remaining = $chain; // jobs after the one we just shifted
+
+				if (null !== $worker && isset(self::$workers[$worker])) {
+					$ref      = Keys::id64('job-ref');
+					$next_job = (new Job($ref, $worker, (array) $payload))
+						->setQueue((string) $queue)
+						->setName($worker)
+						->setChain($remaining)
+						->setBatchId($job_contract->getBatchId());
+
+					$job_contract->getStore()->add($next_job);
+				}
+			}
+		}
+
+		// Notify batch manager when the job has settled into a terminal state.
+		$terminal_states = [JobState::DONE, JobState::FAILED, JobState::DEAD_LETTER, JobState::CANCELLED];
+
+		if (\in_array($final_state, $terminal_states, true)) {
+			$batch_id = $job_contract->getBatchId();
+
+			if (null !== $batch_id) {
+				BatchManager::onJobSettled($job_contract, $batch_id);
+			}
 		}
 	}
 

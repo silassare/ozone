@@ -307,13 +307,49 @@ return static function (NamespaceBuilder $ns) {
 			->setMetaKey('field.label', 'Ended At')
 			->setMetaKey('api.doc.description', 'The timestamp when job execution ended (success or failure).');
 
-		$tb->timestamps();
-		$tb->softDeletable();
+		$tb->int('run_after')->unsigned()->nullable()
+			->setMetaKey('field.label', 'Run After')
+			->setMetaKey('api.doc.description', 'Unix timestamp before which the job must not be picked up (enforces retry delay).');
 
-		// constraints
+		$tb->map('chain')->default([])
+			->setMetaKey('field.label', 'Chain')
+			->setMetaKey('api.doc.description', 'Ordered list of serialized job specs to dispatch after this job completes successfully.');
+
+		$tb->collectFk(static function (TableBuilder $tb) {
+			$tb->foreign('batch_id', 'oz_job_batches', 'id', true)
+				->onUpdateCascade()
+				->onDeleteSetNull();
+
+			$tb->useColumn('batch_id')
+				->setMetaKey('field.label', 'Batch ID')
+				->setMetaKey('api.doc.description', 'The ID of the batch this job belongs to, if any.');
+		});
+
 		$tb->collectIndex(static function (TableBuilder $tb) {
 			$tb->unique('ref');
 		});
+		$tb->timestamps();
+	});
+
+	$ns->table('oz_job_batches', static function (TableBuilder $tb) {
+		$tb->getTable()->setPrivate();
+
+		$tb->plural('oz_job_batches')
+			->singular('oz_job_batch')
+			->columnPrefix('batch')
+			->meta('api.doc.description', 'A batch grouping multiple jobs that tracks collective completion.');
+
+		$tb->id();
+
+		$tb->string('name')->max(255)->nullable()
+			->setMetaKey('field.label', 'Name')
+			->setMetaKey('api.doc.description', 'An optional human-readable name for this batch.');
+
+		$tb->timestamp('finished_at')->nullable()
+			->setMetaKey('field.label', 'Finished At')
+			->setMetaKey('api.doc.description', 'The timestamp when all jobs in this batch reached a terminal state.');
+
+		$tb->timestamps();
 	});
 
 	$ns->table('oz_sessions', static function (TableBuilder $tb) {

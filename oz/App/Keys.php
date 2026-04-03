@@ -24,6 +24,26 @@ use OZONE\Core\Utils\Random;
 final class Keys
 {
 	/**
+	 * Generate new 32-character unique ID.
+	 *
+	 * @param string $namespace optional namespace to ensure uniqueness across different contexts
+	 */
+	public static function id32(string $namespace = ''): string
+	{
+		return Hasher::hash32(\uniqid($namespace, true) . \microtime() . self::salt());
+	}
+
+	/**
+	 * Generate new 64-character unique ID.
+	 *
+	 * @param string $namespace optional namespace to ensure uniqueness across different contexts
+	 */
+	public static function id64(string $namespace = ''): string
+	{
+		return Hasher::hash64(\uniqid($namespace, true) . \microtime() . self::salt());
+	}
+
+	/**
 	 * Generate new file key.
 	 *
 	 * @return string
@@ -134,7 +154,7 @@ final class Keys
 	 */
 	public static function salt(): string
 	{
-		return self::b64Env('OZ_APP_SALT');
+		return self::b64SecretEnv('OZ_APP_SALT');
 	}
 
 	/**
@@ -144,17 +164,18 @@ final class Keys
 	 */
 	public static function secret(): string
 	{
-		return self::b64Env('OZ_APP_SECRET');
+		return self::b64SecretEnv('OZ_APP_SECRET');
 	}
 
 	/**
-	 * Get base64 encoded env value.
+	 * Get and decode a base64-encoded secret from env.
+	 * Caches decoded values to avoid redundant decoding on subsequent calls.
 	 *
 	 * @param string $key
 	 *
 	 * @return string
 	 */
-	private static function b64Env(string $key): string
+	private static function b64SecretEnv(string $key): string
 	{
 		static $decoded = [];
 

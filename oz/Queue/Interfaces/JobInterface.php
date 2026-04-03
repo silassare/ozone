@@ -224,4 +224,57 @@ interface JobInterface
 	 * @return JobContractInterface
 	 */
 	public function dispatch(string $store_name = Queue::DEFAULT_STORE): JobContractInterface;
+
+	/**
+	 * Gets the Unix timestamp before which the job must not be picked up.
+	 *
+	 * A null value means the job is immediately eligible.
+	 *
+	 * @return null|int
+	 */
+	public function getRunAfter(): ?int;
+
+	/**
+	 * Sets the Unix timestamp before which the job must not be picked up.
+	 *
+	 * @param null|int $run_after
+	 */
+	public function setRunAfter(?int $run_after): static;
+
+	/**
+	 * Gets the ordered list of serialized job specs to dispatch after successful completion.
+	 *
+	 * Each entry is a plain array that can be passed to {@link JobsManager::dispatchChained()}.
+	 *
+	 * @return array
+	 */
+	public function getChain(): array;
+
+	/**
+	 * Sets the ordered list of serialized job specs to dispatch after successful completion.
+	 *
+	 * @param array $chain
+	 */
+	public function setChain(array $chain): static;
+
+	/**
+	 * Gets the ref of the batch this job belongs to.
+	 *
+	 * @return null|string
+	 */
+	public function getBatchId(): ?string;
+
+	/**
+	 * Sets the ref of the batch this job belongs to.
+	 *
+	 * @param null|string $batch_id
+	 */
+	public function setBatchId(?string $batch_id): static;
+
+	/**
+	 * Returns true if this job is in the dead-letter state.
+	 *
+	 * @return bool
+	 */
+	public function isDeadLetter(): bool;
 }

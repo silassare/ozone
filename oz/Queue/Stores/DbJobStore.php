@@ -148,7 +148,8 @@ class DbJobStore implements JobStoreInterface
 		?JobState $state = null,
 		?int $priority = null
 	): Generator {
-		$qb = new OZJobsQuery();
+		$qb  = new OZJobsQuery();
+		$now = \time();
 
 		empty($queue_name) || $qb->whereQueueIs($queue_name);
 		empty($worker_name) || $qb->whereWorkerIs($worker_name);
@@ -158,6 +159,13 @@ class DbJobStore implements JobStoreInterface
 		$result = $qb->find();
 
 		foreach ($result->lazy() as $oz_job) {
+			// Skip jobs whose run_after window has not arrived yet.
+			$run_after = $oz_job->getRunAfter();
+
+			if (null !== $run_after && $run_after > $now) {
+				continue;
+			}
+
 			yield $this->fromEntity($oz_job);
 		}
 	}
@@ -255,6 +263,64 @@ class DbJobStore implements JobStoreInterface
 	}
 
 	/**
+	 * {@inheritDoc}
+	 *
+	 * Only deletes jobs in terminal states (DONE, FAILED, DEAD_LETTER, CANCELLED).
+	 * Live jobs (PENDING, RUNNING) are never affected regardless of age.
+	 */
+	#[Override]
+	public function prune(int $older_than_seconds, ?JobState $state = null, ?string $queue_name = null): int
+	{
+		$terminal = [JobState::DONE, JobState::FAILED, JobState::DEAD_LETTER, JobState::CANCELLED];
+		$cutoff   = \time() - $older_than_seconds;
+
+		$qb = new OZJobsQuery();
+
+		if (null !== $state) {
+			if (!\in_array($state, $terminal, true)) {
+				return 0; // refuse to prune non-terminal states
+			}
+
+			$qb->whereStateIs($state);
+		} else {
+			$qb->whereStateIsIn(\array_map(static fn (JobState $s) => $s->value, $terminal));
+		}
+
+		empty($queue_name) || $qb->whereQueueIs($queue_name);
+
+		$qb->whereCreatedAtIsLte((string) $cutoff);
+
+		return $qb->delete()->execute();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function countByBatch(string $batch_id, ?JobState $state = null): int
+	{
+		$qb = new OZJobsQuery();
+		$qb->whereBatchIdIs($batch_id);
+		null === $state || $qb->whereStateIs($state);
+
+		return $qb->find()->totalCount();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function listByBatch(string $batch_id): array
+	{
+		$qb = new OZJobsQuery();
+
+		return \array_map(
+			$this->fromEntity(...),
+			$qb->whereBatchIdIs($batch_id)->find()->fetchAllClass()
+		);
+	}
+
+	/**
 	 * Find {@link \OZONE\Core\Db\OZJob} by ref.
 	 *
 	 * @param string $ref
@@ -297,6 +363,9 @@ class DbJobStore implements JobStoreInterface
 			->setResult($job->getResult())
 			->setStartedAt($job->getStartedAt())
 			->setEndedAt($job->getEndedAt())
+			->setRunAfter($job->getRunAfter())
+			->setChain($job->getChain())
+			->setBatchID($job->getBatchId())
 			->setCreatedAt($job->getCreatedAt())
 			->setUpdatedAt($job->getUpdatedAt());
 	}
@@ -312,7 +381,7 @@ class DbJobStore implements JobStoreInterface
 	protected function fromEntity(OZJob $oz_job, ?JobInterface $job = null): JobContractInterface
 	{
 		if (null === $job) {
-			$job = new JobContract($oz_job->getRef(), $oz_job->getWorker(), (array) $oz_job->getPayload(), $this);
+			$job = new JobContract($oz_job->getRef(), $oz_job->getWorker(), (array) $oz_job->getPayload()->getData(), $this);
 		}
 
 		return $job->setState($oz_job->getState())
@@ -325,6 +394,9 @@ class DbJobStore implements JobStoreInterface
 			->setResult($oz_job->getResult())
 			->setStartedAt(null !== $oz_job->getStartedAt() ? (float) $oz_job->getStartedAt() : null)
 			->setEndedAt(null !== $oz_job->getEndedAt() ? (float) $oz_job->getEndedAt() : null)
+			->setRunAfter($oz_job->getRunAfter())
+			->setChain((array) $oz_job->getChain()->getData())
+			->setBatchId($oz_job->getBatchID())
 			->setCreatedAt((int) $oz_job->getCreatedAt())
 			->setUpdatedAt((int) $oz_job->getUpdatedAt());
 	}

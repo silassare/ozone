@@ -153,4 +153,37 @@ interface JobStoreInterface
 	 * @return int
 	 */
 	public function count(string $queue_name, ?JobState $state = null): int;
+
+	/**
+	 * Delete terminal jobs older than the given age.
+	 *
+	 * Only jobs in a terminal state (DONE, FAILED, DEAD_LETTER, CANCELLED) are eligible.
+	 * Live jobs (PENDING, RUNNING) are never pruned, regardless of age.
+	 *
+	 * @param int           $older_than_seconds delete jobs whose `created_at` is older than this many seconds
+	 * @param null|JobState $state              when provided, restrict pruning to this state
+	 * @param null|string   $queue_name         when provided, restrict pruning to this queue
+	 *
+	 * @return int the number of jobs deleted
+	 */
+	public function prune(int $older_than_seconds, ?JobState $state = null, ?string $queue_name = null): int;
+
+	/**
+	 * Count jobs belonging to a batch, optionally filtered by state.
+	 *
+	 * @param string        $batch_id the value of the `batch_id` field stored on each job
+	 * @param null|JobState $state    when null, all states are counted
+	 *
+	 * @return int
+	 */
+	public function countByBatch(string $batch_id, ?JobState $state = null): int;
+
+	/**
+	 * List all jobs belonging to a batch.
+	 *
+	 * @param string $batch_id the value of the `batch_id` field stored on each job
+	 *
+	 * @return JobContractInterface[]
+	 */
+	public function listByBatch(string $batch_id): array;
 }

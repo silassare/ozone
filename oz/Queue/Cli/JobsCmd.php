@@ -16,11 +16,13 @@ namespace OZONE\Core\Queue\Cli;
 use Kli\Exceptions\KliException;
 use Kli\Exceptions\KliInputException;
 use Kli\KliArgs;
+use Kli\Types\KliTypeNumber;
 use Kli\Types\KliTypeString;
 use Override;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Queue\JobsManager;
+use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
 
 /**
@@ -90,6 +92,45 @@ final class JobsCmd extends Command
 				->string();
 
 			$jobs_finish->handler(self::finish(...));
+
+			// ---- prune -------------------------------------------------------
+			$jobs_prune = $this->action('prune', 'Delete old terminal-state jobs.');
+
+			$jobs_prune->option('store', 's')
+				->description('Restrict pruning to this store. Defaults to all stores.')
+				->type($store_type);
+
+			$jobs_prune->option('queue', 'q')
+				->description('Restrict pruning to this queue.')
+				->type($queue_type);
+
+			$jobs_prune->option('state', 't')
+				->description('Restrict pruning to jobs in this state (done|failed|dead_letter|cancelled).')
+				->string();
+
+			$jobs_prune->option('older-than', 'o')
+				->description('Only delete jobs older than this many seconds (default: 86400 = 24 h).')
+				->type((new KliTypeNumber())->min(0)->def(86400));
+
+			$jobs_prune->handler(self::prune(...));
+
+			// ---- dead-letter -------------------------------------------------
+			$jobs_dl = $this->action('dead-letter', 'Manage dead-letter jobs.');
+
+			$jobs_dl->option('store', 's')
+				->description('Restrict to this store.')
+				->type($store_type);
+
+			$jobs_dl->option('queue', 'q')
+				->description('Restrict to this queue.')
+				->type($queue_type);
+
+			$jobs_dl->option('action', 'a')
+				->description('What to do: list, retry, delete.')
+				->string()
+				->def('list');
+
+			$jobs_dl->handler(self::deadLetter(...));
 		}
 	}
 
@@ -100,6 +141,100 @@ final class JobsCmd extends Command
 
 		JobsManager::finish(JobsManager::getStore($store)
 			->getOrFail($ref));
+	}
+
+	private static function prune(KliArgs $args): void
+	{
+		$store_name  = $args->get('store');
+		$queue_name  = $args->get('queue');
+		$state_raw   = $args->get('state');
+		$older_than  = (int) $args->get('older-than');
+
+		$state = null;
+
+		if (null !== $state_raw) {
+			$state = match ($state_raw) {
+				'done'        => JobState::DONE,
+				'failed'      => JobState::FAILED,
+				'dead_letter' => JobState::DEAD_LETTER,
+				'cancelled'   => JobState::CANCELLED,
+				default       => throw new KliInputException(
+					\sprintf('Unknown state "%s". Use: done, failed, dead_letter, cancelled.', $state_raw)
+				),
+			};
+		}
+
+		$total = 0;
+
+		foreach (JobsManager::getStores() as $store) {
+			if (null !== $store_name && $store->getName() !== $store_name) {
+				continue;
+			}
+
+			$total += $store->prune($older_than, $state, $queue_name);
+		}
+
+		echo \sprintf("Pruned %d job(s).\n", $total);
+	}
+
+	private static function deadLetter(KliArgs $args): void
+	{
+		$store_name = $args->get('store');
+		$queue_name = $args->get('queue');
+		$action     = (string) ($args->get('action') ?? 'list');
+
+		$count = 0;
+
+		foreach (JobsManager::getStores() as $store) {
+			if (null !== $store_name && $store->getName() !== $store_name) {
+				continue;
+			}
+
+			$jobs = $store->list($queue_name, null, JobState::DEAD_LETTER);
+
+			foreach ($jobs as $job) {
+				++$count;
+
+				if ('list' === $action) {
+					echo \sprintf(
+						"[%s] %s worker=%s queue=%s tries=%d/%d\n",
+						$job->getRef(),
+						$job->getName(),
+						$job->getWorker(),
+						$job->getQueue(),
+						$job->getTryCount(),
+						$job->getRetryMax()
+					);
+
+					continue;
+				}
+
+				if ('retry' === $action) {
+					$job->setState(JobState::PENDING)
+						->setRunAfter(null)
+						->setTryCount(0);
+					$store->update($job);
+
+					continue;
+				}
+
+				if ('delete' === $action) {
+					$store->delete($job);
+
+					continue;
+				}
+
+				throw new KliInputException(
+					\sprintf('Unknown action "%s". Use: list, retry, delete.', $action)
+				);
+			}
+		}
+
+		if ('list' !== $action) {
+			echo \sprintf("Dead-letter %s: %d job(s) affected.\n", $action, $count);
+		} elseif (0 === $count) {
+			echo "No dead-letter jobs found.\n";
+		}
 	}
 
 	private static function run(KliArgs $args): void

@@ -52,6 +52,13 @@ final class QueueBootHookReceiver implements BootHookReceiverInterface
 		// Always-on DB-backed store
 		JobsManager::registerStore(new DbJobStore());
 
+		// Pre-create the built-in queues so that JobsCmd::describe() can include them in
+		// the --queue option pattern. Queue::get() is lazy, so without this the cron
+		// queues would only appear after Cron::runDues() runs (too late for describe()).
+		Queue::get(Queue::DEFAULT);
+		Queue::get(Queue::CRON_SYNC);
+		Queue::get(Queue::CRON_ASYNC);
+
 		// Redis store: register only when explicitly enabled
 		if (RedisFactory::isAvailable() && Settings::get('oz.redis', 'OZ_REDIS_ENABLED', false)) {
 			JobsManager::registerStore(new RedisJobStore());

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Queue;
 
+use OZONE\Core\App\Keys;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
 use OZONE\Core\Queue\Stores\DbJobStore;
 
@@ -165,9 +166,11 @@ final class Queue
 	 */
 	public function push(WorkerInterface $worker): Job
 	{
-		$ref = \uniqid('', true);
+		$ref = Keys::id64('job-ref');
 
-		return (new Job($ref, $worker::getName(), $worker->getPayload()))->setQueue($this->name);
+		return (new Job($ref, $worker::getName(), $worker->getPayload()))
+			->setQueue($this->name)
+			->setName($worker::getName());
 	}
 
 	/**

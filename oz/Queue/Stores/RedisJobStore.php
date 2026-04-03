@@ -74,6 +74,9 @@ class RedisJobStore implements JobStoreInterface
 	private const F_ENDED_AT   = 'ended_at';
 	private const F_CREATED_AT = 'created_at';
 	private const F_UPDATED_AT = 'updated_at';
+	private const F_RUN_AFTER  = 'run_after';
+	private const F_CHAIN      = 'chain';
+	private const F_BATCH_ID   = 'batch_id';
 
 	private ?PhpRedis $redis = null;
 
@@ -184,6 +187,7 @@ class RedisJobStore implements JobStoreInterface
 		?int $priority = null
 	): Generator {
 		$refs = $this->redis()->zRange($this->queueKey($queue_name), 0, -1);
+		$now  = \time();
 
 		foreach ($refs as $ref) {
 			$data = $this->redis()->hGetAll($this->jobKey((string) $ref));
@@ -201,6 +205,13 @@ class RedisJobStore implements JobStoreInterface
 			}
 
 			if (null !== $priority && (int) ($data[self::F_PRIORITY] ?? 0) !== $priority) {
+				continue;
+			}
+
+			// Skip jobs whose run_after window has not arrived yet.
+			$run_after_raw = $data[self::F_RUN_AFTER] ?? '';
+
+			if ('' !== $run_after_raw && (int) $run_after_raw > $now) {
 				continue;
 			}
 
@@ -328,6 +339,111 @@ class RedisJobStore implements JobStoreInterface
 	}
 
 	/**
+	 * {@inheritDoc}
+	 *
+	 * Iterates the all-jobs set (or a specific queue set) by score range to find
+	 * jobs older than the cutoff, then checks each against terminal state(s).
+	 * Only terminal-state jobs are removed.
+	 */
+	#[Override]
+	public function prune(int $older_than_seconds, ?JobState $state = null, ?string $queue_name = null): int
+	{
+		$terminal        = [JobState::DONE, JobState::FAILED, JobState::DEAD_LETTER, JobState::CANCELLED];
+		$terminal_values = \array_map(static fn (JobState $s) => $s->value, $terminal);
+		$cutoff          = \time() - $older_than_seconds;
+
+		if (null !== $state) {
+			if (!\in_array($state, $terminal, true)) {
+				return 0; // refuse to prune non-terminal states
+			}
+
+			$terminal_values = [$state->value];
+		}
+
+		$index_key = null !== $queue_name ? $this->queueKey($queue_name) : $this->allKey();
+		$refs      = $this->redis()->zRangeByScore($index_key, '-inf', (string) $cutoff);
+		$count     = 0;
+
+		foreach ($refs as $ref) {
+			$data = $this->redis()->hGetAll($this->jobKey((string) $ref));
+
+			if (empty($data)) {
+				continue;
+			}
+
+			$job_state = (int) ($data[self::F_STATE] ?? -1);
+
+			if (!\in_array($job_state, $terminal_values, true)) {
+				continue;
+			}
+
+			$queue = (string) ($data[self::F_QUEUE] ?? '');
+
+			$this->redis()->del($this->jobKey((string) $ref));
+			$this->redis()->zRem($this->queueKey($queue), $ref);
+			$this->redis()->zRem($this->allKey(), $ref);
+			$this->redis()->del($this->lockKey((string) $ref));
+
+			++$count;
+		}
+
+		return $count;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Scans the all-jobs set and filters in PHP by `batch_id` (and optionally state).
+	 * Acceptable because batch sizes are typically small.
+	 */
+	#[Override]
+	public function countByBatch(string $batch_id, ?JobState $state = null): int
+	{
+		$refs  = $this->redis()->zRange($this->allKey(), 0, -1);
+		$count = 0;
+
+		foreach ($refs as $ref) {
+			$data = $this->redis()->hGetAll($this->jobKey((string) $ref));
+
+			if (empty($data) || ($data[self::F_BATCH_ID] ?? '') !== $batch_id) {
+				continue;
+			}
+
+			if (null !== $state && (int) ($data[self::F_STATE] ?? -1) !== $state->value) {
+				continue;
+			}
+
+			++$count;
+		}
+
+		return $count;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Scans the all-jobs set and returns all jobs whose `batch_id` matches.
+	 */
+	#[Override]
+	public function listByBatch(string $batch_id): array
+	{
+		$refs    = $this->redis()->zRange($this->allKey(), 0, -1);
+		$results = [];
+
+		foreach ($refs as $ref) {
+			$data = $this->redis()->hGetAll($this->jobKey((string) $ref));
+
+			if (empty($data) || ($data[self::F_BATCH_ID] ?? '') !== $batch_id) {
+				continue;
+			}
+
+			$results[] = $this->fromData($data);
+		}
+
+		return $results;
+	}
+
+	/**
 	 * Returns the shared Redis connection, connecting lazily on first call.
 	 *
 	 * @return PhpRedis
@@ -392,6 +508,8 @@ class RedisJobStore implements JobStoreInterface
 	 */
 	private function toData(JobInterface $job): array
 	{
+		$run_after = $job->getRunAfter();
+
 		return [
 			self::F_REF        => $job->getRef(),
 			self::F_NAME       => $job->getName(),
@@ -408,6 +526,9 @@ class RedisJobStore implements JobStoreInterface
 			self::F_ENDED_AT   => (string) ($job->getEndedAt() ?? ''),
 			self::F_CREATED_AT => (string) $job->getCreatedAt(),
 			self::F_UPDATED_AT => (string) $job->getUpdatedAt(),
+			self::F_RUN_AFTER  => null !== $run_after ? (string) $run_after : '',
+			self::F_CHAIN      => \json_encode($job->getChain()) ?: '[]',
+			self::F_BATCH_ID   => $job->getBatchId() ?? '',
 		];
 	}
 
@@ -430,6 +551,10 @@ class RedisJobStore implements JobStoreInterface
 
 		$job = new JobContract($ref, $worker, $payload, $this);
 
+		$run_after_raw = $data[self::F_RUN_AFTER] ?? '';
+		$chain_raw     = $data[self::F_CHAIN] ?? '[]';
+		$batch_id_raw  = $data[self::F_BATCH_ID] ?? '';
+
 		$job->setName((string) ($data[self::F_NAME] ?? ''))
 			->setQueue((string) ($data[self::F_QUEUE] ?? ''))
 			->setState(JobState::from((int) ($data[self::F_STATE] ?? 0)))
@@ -441,7 +566,10 @@ class RedisJobStore implements JobStoreInterface
 			->setStartedAt('' !== $started_raw ? (float) $started_raw : null)
 			->setEndedAt('' !== $ended_raw ? (float) $ended_raw : null)
 			->setCreatedAt((int) ($data[self::F_CREATED_AT] ?? 0))
-			->setUpdatedAt((int) ($data[self::F_UPDATED_AT] ?? 0));
+			->setUpdatedAt((int) ($data[self::F_UPDATED_AT] ?? 0))
+			->setRunAfter('' !== $run_after_raw ? (int) $run_after_raw : null)
+			->setChain((array) (\json_decode($chain_raw, true) ?? []))
+			->setBatchId('' !== $batch_id_raw ? $batch_id_raw : null);
 
 		return $job;
 	}
