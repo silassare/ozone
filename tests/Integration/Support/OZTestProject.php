@@ -179,9 +179,11 @@ final class OZTestProject
 				\symlink($cache_dir, $vendor_symlink);
 			} else {
 				// First time this dep set is seen: install, cache, symlink.
+				// Composer install can take several minutes on a cold network - use a generous timeout.
 				$install = new Process(
 					['composer', 'install', '--no-interaction', '--no-progress'],
 					$project_dir,
+					timeout: 300,
 				);
 				$install->mustRun();
 
@@ -271,6 +273,102 @@ final class OZTestProject
 	public function getPath(): string
 	{
 		return $this->dir;
+	}
+
+	/**
+	 * Returns the PHP namespace derived from the project directory name.
+	 *
+	 * Mirrors the logic used by {@see self::create()} when invoking `oz project create`.
+	 */
+	public function getNamespace(): string
+	{
+		return self::toNamespace(\basename($this->dir));
+	}
+
+	/**
+	 * Writes (or overwrites) a file inside the test project directory.
+	 *
+	 * The target path is relative to the project root. Parent directories are
+	 * created automatically.
+	 *
+	 * @param string $relativePath relative path inside the project (e.g. 'app/MyClass.php')
+	 * @param string $content      file contents to write
+	 */
+	public function writeFile(string $relativePath, string $content): void
+	{
+		$full = $this->dir
+			. \DIRECTORY_SEPARATOR
+			. \ltrim(\str_replace('/', \DIRECTORY_SEPARATOR, $relativePath), \DIRECTORY_SEPARATOR);
+		$dir = \dirname($full);
+
+		if (!\is_dir($dir)) {
+			\mkdir($dir, 0o775, true);
+		}
+		\file_put_contents($full, $content);
+	}
+
+	/**
+	 * Starts `oz project serve` for the given scope and waits until it accepts connections.
+	 *
+	 * @param string $scope the scope name (default 'api')
+	 * @param string $host  the host to bind to (default '127.0.0.1')
+	 *
+	 * @return array{0: Process, 1: string, 2: int} [$server_process, $host, $port]
+	 *
+	 * @throws RuntimeException when the server does not start within the timeout
+	 */
+	public function startServer(string $scope = 'api', string $host = '127.0.0.1'): array
+	{
+		$server = $this->oz('project', 'serve', "--scope={$scope}", "--host={$host}");
+		$server->start();
+
+		// oz project serve writes server.json before binding the port.
+		$server_json = $this->dir . "/.ozone/cache/scopes/{$scope}/server.json";
+		$deadline    = \microtime(true) + 15.0;
+		while (!\is_file($server_json) && \microtime(true) < $deadline) {
+			\usleep(100_000);
+		}
+
+		if (!\is_file($server_json)) {
+			$server->stop(0);
+
+			throw new RuntimeException(
+				"oz project serve (scope={$scope}) did not write server.json within 15 seconds."
+			);
+		}
+
+		$info = \json_decode(\file_get_contents($server_json), true);
+		$port = (int) ($info['port'] ?? 0);
+
+		if (0 === $port) {
+			$server->stop(0);
+
+			throw new RuntimeException('server.json did not contain a valid port.');
+		}
+
+		// Poll until the port is actually accepting connections.
+		$ready    = false;
+		$deadline = \microtime(true) + 10.0;
+		while (\microtime(true) < $deadline) {
+			$sock = @\fsockopen($host, $port, $errno, $errstr, 0.1);
+			if (\is_resource($sock)) {
+				\fclose($sock);
+				$ready = true;
+
+				break;
+			}
+			\usleep(100_000);
+		}
+
+		if (!$ready) {
+			$server->stop(0);
+
+			throw new RuntimeException(
+				"PHP built-in server (scope={$scope}) did not start within 10 seconds."
+			);
+		}
+
+		return [$server, $host, $port];
 	}
 
 	/**

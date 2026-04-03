@@ -321,4 +321,49 @@ final class ScheduleTest extends TestCase
 
 		self::assertSame($s, $s->timezone('UTC'));
 	}
+
+	// -------------------------------------------------------------------------
+	// skipIfLate() tests
+	// -------------------------------------------------------------------------
+
+	public function testSkipIfLateReturnsSelf(): void
+	{
+		$s = new Schedule();
+
+		self::assertSame($s, $s->skipIfLate());
+	}
+
+	/**
+	 * everyMinute() is always due exactly 60 seconds ago. With grace=1 min,
+	 * 60 <= 60 so the schedule should still run.
+	 */
+	public function testSkipIfLateWithEveryMinuteRunsWithinGrace(): void
+	{
+		$s = (new Schedule())->everyMinute()->skipIfLate(1);
+
+		self::assertTrue($s->shouldRun());
+	}
+
+	/**
+	 * With grace=0 minutes, any non-zero elapsed time exceeds the grace window.
+	 * everyMinute() last fired 60 s ago, 60 > 0 -> the schedule must be skipped.
+	 */
+	public function testSkipIfLateWithEveryMinuteSkipsWhenGraceExceeded(): void
+	{
+		$s = (new Schedule())->everyMinute()->skipIfLate(0);
+
+		self::assertFalse($s->shouldRun());
+	}
+
+	/**
+	 * When the cron expression is never satisfiable (e.g. Feb 31), no previous
+	 * slot is ever found. skipIfLate() should fall through and allow the run.
+	 */
+	public function testSkipIfLateAlwaysRunsWhenNoPreviousSlotFound(): void
+	{
+		// '0 0 31 2 *' -- Feb 31 never exists -> isDue() never true
+		$s = (new Schedule('0 0 31 2 *'))->skipIfLate(0);
+
+		self::assertTrue($s->shouldRun());
+	}
 }

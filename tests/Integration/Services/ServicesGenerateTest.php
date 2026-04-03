@@ -138,8 +138,8 @@ final class ServicesGenerateTest extends TestCase
 	 */
 	public function testServiceIsRegisteredInRoutesSettings(DbTestConfig $config): void
 	{
-		// oz services generate calls Settings::set('oz.routes.api', ...).
-		// The setting lands in app/settings/oz.routes.api.php.
+		// oz services generate calls Settings::set('oz.routes.api', ..., false)
+		// which writes to the source settings directory (app/settings/).
 		$settingsFile = self::getProject($config)->getPath() . '/app/settings/oz.routes.api.php';
 		self::assertFileExists($settingsFile, 'oz.routes.api.php must be written by services generate.');
 
