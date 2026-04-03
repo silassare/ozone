@@ -41,141 +41,141 @@ use PHPUnit\Framework\TestCase;
  */
 final class DaemonTest extends TestCase
 {
-    /** @var array<string, OZTestProject> */
-    private static array $projects = [];
+	/** @var array<string, OZTestProject> */
+	private static array $projects = [];
 
-    /** @var array<string, null|string> */
-    private static array $dbFiles = [];
+	/** @var array<string, null|string> */
+	private static array $dbFiles = [];
 
-    public static function tearDownAfterClass(): void
-    {
-        foreach (self::$projects as $proj) {
-            $proj->destroy();
-        }
-        foreach (self::$dbFiles as $file) {
-            if (null !== $file && \is_file($file)) {
-                \unlink($file);
-            }
-        }
-        self::$projects = [];
-        self::$dbFiles  = [];
-        parent::tearDownAfterClass();
-    }
+	public static function tearDownAfterClass(): void
+	{
+		foreach (self::$projects as $proj) {
+			$proj->destroy();
+		}
+		foreach (self::$dbFiles as $file) {
+			if (null !== $file && \is_file($file)) {
+				\unlink($file);
+			}
+		}
+		self::$projects = [];
+		self::$dbFiles  = [];
+		parent::tearDownAfterClass();
+	}
 
-    /**
-     * Creates the project, installs the schema, and injects the worker and
-     * boot hook receiver used by subsequent tests.
-     *
-     * @dataProvider provideDbConfig
-     */
-    public function testSetup(DbTestConfig $config): void
-    {
-        $rdbms = $config->rdbms;
-        $proj  = OZTestProject::create('daemon-' . $rdbms, shared: true, fresh: true);
-        $proj->writeEnv($config->toEnvArray());
+	/**
+	 * Creates the project, installs the schema, and injects the worker and
+	 * boot hook receiver used by subsequent tests.
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testSetup(DbTestConfig $config): void
+	{
+		$rdbms = $config->rdbms;
+		$proj  = OZTestProject::create('daemon-' . $rdbms, shared: true, fresh: true);
+		$proj->writeEnv($config->toEnvArray());
 
-        self::$projects[$rdbms] = $proj;
-        self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;
+		self::$projects[$rdbms] = $proj;
+		self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;
 
-        $proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
-        $proj->cleanDb();
-        $proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
-        $proj->oz('migrations', 'run', '--skip-backup')->mustRun();
+		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
+		$proj->cleanDb();
+		$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
+		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
 
-        $ns          = $proj->getNamespace();
-        $projPath    = $proj->getPath();
-        $flagFile    = $projPath . '/worker_flag.txt';
-        $triggerFile = $projPath . '/dispatch.trigger';
+		$ns          = $proj->getNamespace();
+		$projPath    = $proj->getPath();
+		$flagFile    = $projPath . '/worker_flag.txt';
+		$triggerFile = $projPath . '/dispatch.trigger';
 
-        $proj->writeFile('app/Workers/DaemonTestWorker.php', self::workerSource($ns, $flagFile));
-        $proj->writeFile('app/DaemonTestBootHookReceiver.php', self::bootHookSource($ns, $flagFile, $triggerFile));
-        $proj->setSetting('oz.boot', "{$ns}\\DaemonTestBootHookReceiver", true);
+		$proj->writeFile('app/Workers/DaemonTestWorker.php', self::workerSource($ns, $flagFile));
+		$proj->writeFile('app/DaemonTestBootHookReceiver.php', self::bootHookSource($ns, $flagFile, $triggerFile));
+		$proj->setSetting('oz.boot', "{$ns}\\DaemonTestBootHookReceiver", true);
 
-        self::assertTrue(true, 'Setup completed.');
-    }
+		self::assertTrue(true, 'Setup completed.');
+	}
 
-    /**
-     * Pre-dispatches one job, then runs the daemon with `--max-jobs=1` and
-     * `--sleep=0`. The daemon must process the job and exit with code 0.
-     *
-     * @dataProvider provideDbConfig
-     */
-    public function testDaemonProcessesJobAndExits(DbTestConfig $config): void
-    {
-        $proj        = self::getProject($config);
-        $flagFile    = $proj->getPath() . '/worker_flag.txt';
-        $triggerFile = $proj->getPath() . '/dispatch.trigger';
+	/**
+	 * Pre-dispatches one job, then runs the daemon with `--max-jobs=1` and
+	 * `--sleep=0`. The daemon must process the job and exit with code 0.
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testDaemonProcessesJobAndExits(DbTestConfig $config): void
+	{
+		$proj        = self::getProject($config);
+		$flagFile    = $proj->getPath() . '/worker_flag.txt';
+		$triggerFile = $proj->getPath() . '/dispatch.trigger';
 
-        // Ensure no stale flag from a previous run.
-        if (\is_file($flagFile)) {
-            \unlink($flagFile);
-        }
+		// Ensure no stale flag from a previous run.
+		if (\is_file($flagFile)) {
+			\unlink($flagFile);
+		}
 
-        // Pre-dispatch one job via a neutral invocation (trigger present).
-        // "dead-letter --action=list" fires InitHook (which dispatches the job)
-        // but does not process any jobs.
-        \file_put_contents($triggerFile, '1');
-        $proj->oz('jobs', 'dead-letter', '--action=list')->mustRun();
+		// Pre-dispatch one job via a neutral invocation (trigger present).
+		// "dead-letter --action=list" fires InitHook (which dispatches the job)
+		// but does not process any jobs.
+		\file_put_contents($triggerFile, '1');
+		$proj->oz('jobs', 'dead-letter', '--action=list')->mustRun();
 
-        // Start the daemon. --max-jobs=1 makes it process exactly 1 job and exit.
-        // --sleep=0 prevents the 3-second idle poll from blocking the test.
-        $proc = $proj->oz('jobs', 'work', '--max-jobs=1', '--sleep=0');
-        $proc->mustRun();
+		// Start the daemon. --max-jobs=1 makes it process exactly 1 job and exit.
+		// --sleep=0 prevents the 3-second idle poll from blocking the test.
+		$proc = $proj->oz('jobs', 'work', '--max-jobs=1', '--sleep=0');
+		$proc->mustRun();
 
-        self::assertSame(
-            0,
-            $proc->getExitCode(),
-            "Daemon must exit 0 after processing its job.\n"
-                . $proc->getOutput() . $proc->getErrorOutput()
-        );
-        self::assertFileExists(
-            $flagFile,
-            "Worker must have written the flag file while running under the daemon.\n"
-                . $proc->getOutput() . $proc->getErrorOutput()
-        );
-        self::assertSame('ran', \trim((string) \file_get_contents($flagFile)));
-    }
+		self::assertSame(
+			0,
+			$proc->getExitCode(),
+			"Daemon must exit 0 after processing its job.\n"
+				. $proc->getOutput() . $proc->getErrorOutput()
+		);
+		self::assertFileExists(
+			$flagFile,
+			"Worker must have written the flag file while running under the daemon.\n"
+				. $proc->getOutput() . $proc->getErrorOutput()
+		);
+		self::assertSame('ran', \trim((string) \file_get_contents($flagFile)));
+	}
 
-    /**
-     * When the queue is empty the daemon still exits cleanly once the
-     * max-time limit is reached.
-     *
-     * @dataProvider provideDbConfig
-     */
-    public function testDaemonExitsCleanlyOnMaxTime(DbTestConfig $config): void
-    {
-        $proj = self::getProject($config);
+	/**
+	 * When the queue is empty the daemon still exits cleanly once the
+	 * max-time limit is reached.
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testDaemonExitsCleanlyOnMaxTime(DbTestConfig $config): void
+	{
+		$proj = self::getProject($config);
 
-        // Drain any left-over jobs so the queue is empty.
-        $proj->oz('jobs', 'run')->mustRun();
+		// Drain any left-over jobs so the queue is empty.
+		$proj->oz('jobs', 'run')->mustRun();
 
-        // The daemon finds nothing to do, polls once (sleep 0), then stops
-        // because max-time=2 seconds has elapsed.
-        $proc = $proj->oz('jobs', 'work', '--max-time=2', '--sleep=0');
-        $proc->mustRun();
+		// The daemon finds nothing to do, polls once (sleep 0), then stops
+		// because max-time=2 seconds has elapsed.
+		$proc = $proj->oz('jobs', 'work', '--max-time=2', '--sleep=0');
+		$proc->mustRun();
 
-        self::assertSame(
-            0,
-            $proc->getExitCode(),
-            "Daemon must exit 0 when max-time is reached with an empty queue.\n"
-                . $proc->getOutput() . $proc->getErrorOutput()
-        );
-    }
+		self::assertSame(
+			0,
+			$proc->getExitCode(),
+			"Daemon must exit 0 when max-time is reached with an empty queue.\n"
+				. $proc->getOutput() . $proc->getErrorOutput()
+		);
+	}
 
-    public static function provideDbConfig(): iterable
-    {
-        return DbTestConfig::allConfigured('daemon');
-    }
+	public static function provideDbConfig(): iterable
+	{
+		return DbTestConfig::allConfigured('daemon');
+	}
 
-    // -------------------------------------------------------------------------
-    // PHP source templates
-    // -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// PHP source templates
+	// -------------------------------------------------------------------------
 
-    private static function workerSource(string $namespace, string $flagFile): string
-    {
-        $flagFile = \addslashes($flagFile);
+	private static function workerSource(string $namespace, string $flagFile): string
+	{
+		$flagFile = \addslashes($flagFile);
 
-        return <<<PHP
+		return <<<PHP
 <?php
 
 declare(strict_types=1);
@@ -233,17 +233,17 @@ final class DaemonTestWorker implements WorkerInterface
 	}
 }
 PHP;
-    }
+	}
 
-    private static function bootHookSource(
-        string $namespace,
-        string $flagFile,
-        string $triggerFile,
-    ): string {
-        $flagFile    = \addslashes($flagFile);
-        $triggerFile = \addslashes($triggerFile);
+	private static function bootHookSource(
+		string $namespace,
+		string $flagFile,
+		string $triggerFile,
+	): string {
+		$flagFile    = \addslashes($flagFile);
+		$triggerFile = \addslashes($triggerFile);
 
-        return <<<PHP
+		return <<<PHP
 <?php
 
 declare(strict_types=1);
@@ -285,20 +285,20 @@ final class DaemonTestBootHookReceiver implements BootHookReceiverInterface
 	}
 }
 PHP;
-    }
+	}
 
-    // -------------------------------------------------------------------------
-    // Static project store helpers
-    // -------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
+	// Static project store helpers
+	// -------------------------------------------------------------------------
 
-    private static function getProject(DbTestConfig $config): OZTestProject
-    {
-        $rdbms = $config->rdbms;
+	private static function getProject(DbTestConfig $config): OZTestProject
+	{
+		$rdbms = $config->rdbms;
 
-        if (!isset(self::$projects[$rdbms])) {
-            self::fail(\sprintf('Project for %s not initialized. Did testSetup pass?', $rdbms));
-        }
+		if (!isset(self::$projects[$rdbms])) {
+			self::fail(\sprintf('Project for %s not initialized. Did testSetup pass?', $rdbms));
+		}
 
-        return self::$projects[$rdbms];
-    }
+		return self::$projects[$rdbms];
+	}
 }
