@@ -186,6 +186,10 @@ final class Cron
 		string $queue = Queue::DEFAULT,
 		string $store = Queue::DEFAULT_STORE
 	): Schedule {
+		// Derive a stable, collision-free name from worker + queue so that
+		// multiple Cron::work() calls never clash on the task registry.
+		$name = \sprintf('work@%s[%s]', $worker::getName(), $queue);
+
 		return self::call(static function (JSONResult $result) use ($worker, $queue, $store) {
 			$job_contract = Queue::get($queue)
 				->push($worker)
@@ -196,7 +200,7 @@ final class Cron
 				'queue'   => $queue,
 				'store'   => $store,
 			]);
-		});
+		}, $name);
 	}
 
 	/**

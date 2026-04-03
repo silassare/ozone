@@ -573,6 +573,45 @@ final class Schedule implements Stringable
 	}
 
 	/**
+	 * Skip this execution if the task is more than `$grace_minutes` late.
+	 *
+	 * Useful for tasks that should not run if the cron daemon was offline and
+	 * the scheduled window has already passed. The check is evaluated lazily at
+	 * {@link shouldRun()} time.
+	 *
+	 * @param int $grace_minutes how many minutes past the scheduled time are acceptable (>= 1)
+	 *
+	 * @return static
+	 */
+	public function skipIfLate(int $grace_minutes = 5): static
+	{
+		return $this->onlyIf(function () use ($grace_minutes): bool {
+			$now = \time();
+
+			// Approximate the most recent due time by searching one full
+			// day backward in one-minute steps until we find a slot that
+			// isDue(). We look in 60-second windows for up to 1440 minutes.
+			$prev_due = null;
+
+			for ($offset = 1; $offset <= 1440; ++$offset) {
+				$candidate = $now - ($offset * 60);
+
+				if ($this->isDue($candidate)) {
+					$prev_due = $candidate;
+
+					break;
+				}
+			}
+
+			if (null === $prev_due) {
+				return true; // no previous slot found - let it run
+			}
+
+			return ($now - $prev_due) <= ($grace_minutes * 60);
+		});
+	}
+
+	/**
 	 * Add runs predicate.
 	 *
 	 * @param callable $fn the predicate function that determines if the task should run
