@@ -14,14 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cron;
 
 use Exception;
-use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Cli\Cron\Hooks\CronCollect;
 use OZONE\Core\Cli\Cron\Interfaces\TaskInterface;
 use OZONE\Core\Cli\Cron\Tasks\CallableTask;
 use OZONE\Core\Cli\Cron\Tasks\CommandTask;
 use OZONE\Core\Cli\Cron\Workers\CronTaskWorker;
+use OZONE\Core\Db\OZJobsQuery;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
+use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
 use OZONE\Core\Utils\JSONResult;
 use PHPUtils\Str;
@@ -96,15 +97,27 @@ final class Cron
 				}
 
 				if ($task->shouldRunOneAtATime()) {
-					// Skip dispatch when a previous instance is still holding its cache lock.
-					if (CacheManager::persistent('cron')->has('cron_task_' . $task->getName())) {
+					// Multi-server safe: check the shared DB for existing PENDING or RUNNING instances.
+					// The oz_jobs table is visible to all servers sharing the same DB, so this check
+					// prevents concurrent dispatch across multiple nodes.
+					$existing = (new OZJobsQuery())
+						->whereNameIs($task->getName())
+						->whereWorkerIs(CronTaskWorker::class)
+						->whereStateIsIn([JobState::PENDING->value, JobState::RUNNING->value])
+						->find(1)
+						->totalCount();
+
+					if ($existing > 0) {
 						break;
 					}
 				}
 
 				$queue = Queue::get($task->shouldRunInBackground() ? Queue::CRON_ASYNC : Queue::CRON_SYNC);
 
+				// Override the default CronTaskWorker::class job name with the task name.
+				// This ensures the multi-server oneAtATime DB check can identify instances by task name.
 				$queue->push(new CronTaskWorker($task->getName()))
+					->setName($task->getName())
 					->dispatch();
 
 				break;

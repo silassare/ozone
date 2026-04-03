@@ -64,4 +64,14 @@ interface JobContractInterface extends JobInterface
 	 * @return bool
 	 */
 	public function isLocked(): bool;
+
+	/**
+	 * Cancels the job if it is PENDING and not locked.
+	 *
+	 * Returns true on success, false when the job is already running, finished,
+	 * or held by another worker (locked).
+	 *
+	 * @return bool
+	 */
+	public function cancel(): bool;
 }

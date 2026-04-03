@@ -138,7 +138,7 @@ final class Schedule implements Stringable
 	 */
 	public function between(string $startTime, string $endTime): static
 	{
-		return $this->onlyIf($this->inTimeInterval($startTime, $endTime));
+		return $this->when($this->inTimeInterval($startTime, $endTime));
 	}
 
 	/**
@@ -151,7 +151,7 @@ final class Schedule implements Stringable
 	{
 		$predicate = $this->inTimeInterval($startTime, $endTime);
 
-		return $this->onlyIf(static fn () => !$predicate());
+		return $this->when(static fn () => !$predicate());
 	}
 
 	/**
@@ -490,7 +490,7 @@ final class Schedule implements Stringable
 
 		$this->setPosition(3, '28-31');
 
-		return $this->onlyIf(function (): bool {
+		return $this->when(function (): bool {
 			$now = DateTimeUtils::now($this->timezone);
 
 			return $now->getDay() === $now->endOfMonth()->getDay();
@@ -585,7 +585,7 @@ final class Schedule implements Stringable
 	 */
 	public function skipIfLate(int $grace_minutes = 5): static
 	{
-		return $this->onlyIf(function () use ($grace_minutes): bool {
+		return $this->when(function () use ($grace_minutes): bool {
 			$now = \time();
 
 			// Approximate the most recent due time by searching one full
@@ -612,11 +612,16 @@ final class Schedule implements Stringable
 	}
 
 	/**
-	 * Add runs predicate.
+	 * Run only when the given callable returns true.
 	 *
-	 * @param callable $fn the predicate function that determines if the task should run
+	 * The callable is evaluated lazily at {@link shouldRun()} time, not at schedule
+	 * build time. Chain multiple calls to AND them together.
+	 *
+	 * @param callable():bool $fn predicate that returns true when the task should run
+	 *
+	 * @return static
 	 */
-	private function onlyIf(callable $fn): static
+	public function when(callable $fn): static
 	{
 		$this->only_if[] = $fn;
 

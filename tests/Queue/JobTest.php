@@ -190,4 +190,60 @@ final class JobTest extends IntegrationTestCase
 		self::assertSame($ref, $fetched->getRef());
 		self::assertSame('test-dispatch', $fetched->getQueue());
 	}
+
+	// ----- encrypted() / shouldEncryptPayload() ---------------------------
+
+	public function testEncryptedFlagDefaultsToFalse(): void
+	{
+		$job = new Job('ref', 'worker', []);
+
+		self::assertFalse($job->shouldEncryptPayload());
+	}
+
+	public function testEncryptedReturnsSelf(): void
+	{
+		$job = new Job('ref', 'worker', []);
+
+		self::assertSame($job, $job->encrypted());
+	}
+
+	public function testEncryptedFlagCanBeEnabled(): void
+	{
+		$job = new Job('ref', 'worker', []);
+		$job->encrypted();
+
+		self::assertTrue($job->shouldEncryptPayload());
+	}
+
+	// ----- cancel() -------------------------------------------------------
+
+	public function testCancelPendingJobTransitionsToCANCELLED(): void
+	{
+		$ref                 = 'test-cancel-' . \uniqid('', true);
+		$this->createdRefs[] = $ref;
+
+		$job      = (new Job($ref, 'dummy-worker', []))->setQueue('test-cancel')->setName('test-cancel-job');
+		$contract = $job->dispatch();
+
+		self::assertSame(JobState::PENDING, $contract->getState());
+
+		$result = JobsManager::cancel($contract);
+
+		self::assertTrue($result);
+		self::assertSame(JobState::CANCELLED, $contract->getState());
+	}
+
+	public function testCancelAlreadyCancelledJobReturnsFalse(): void
+	{
+		$ref                 = 'test-cancel2-' . \uniqid('', true);
+		$this->createdRefs[] = $ref;
+
+		$job      = (new Job($ref, 'dummy-worker', []))->setQueue('test-cancel')->setName('test-cancel2-job');
+		$contract = $job->dispatch();
+
+		JobsManager::cancel($contract);
+
+		// Second cancel must return false - already CANCELLED.
+		self::assertFalse(JobsManager::cancel($contract));
+	}
 }

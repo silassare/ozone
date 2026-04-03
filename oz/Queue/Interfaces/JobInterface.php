@@ -79,6 +79,24 @@ interface JobInterface
 	public function getPriority(): int;
 
 	/**
+	 * Opt in to payload encryption.
+	 *
+	 * When set, the job store encrypts the payload before writing to the backing store
+	 * and decrypts it on load. Uses {@link \OZONE\Core\Crypt\DoCrypt} with the application
+	 * secret from {@link \OZONE\Core\App\Keys::secret()}.
+	 *
+	 * @return static
+	 */
+	public function encrypted(): static;
+
+	/**
+	 * Checks whether the payload should be encrypted at rest.
+	 *
+	 * @return bool
+	 */
+	public function shouldEncryptPayload(): bool;
+
+	/**
 	 * Sets the job priority.
 	 *
 	 * @param int $priority

@@ -20,6 +20,8 @@ use Gobl\ORM\Exceptions\ORMException;
 use Gobl\ORM\Exceptions\ORMQueryException;
 use InvalidArgumentException;
 use Override;
+use OZONE\Core\App\Keys;
+use OZONE\Core\Crypt\DoCrypt;
 use OZONE\Core\Db\OZJob;
 use OZONE\Core\Db\OZJobsQuery;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
@@ -379,6 +381,15 @@ class DbJobStore implements JobStoreInterface
 			$oz_job = new OZJob();
 		}
 
+		// Encrypt payload at rest when requested.
+		if ($job->shouldEncryptPayload()) {
+			$secret  = Keys::secret();
+			$cipher  = (new DoCrypt())->encrypt(\json_encode($job->getPayload()), $secret);
+			$payload = ['$enc' => $cipher];
+		} else {
+			$payload = $job->getPayload();
+		}
+
 		return $oz_job->setRef($job->getRef())
 			->setState($job->getState())
 			->setQueue($job->getQueue())
@@ -388,7 +399,7 @@ class DbJobStore implements JobStoreInterface
 			->setTryCount($job->getTryCount())
 			->setRetryMax($job->getRetryMax())
 			->setRetryDelay($job->getRetryDelay())
-			->setPayload($job->getPayload())
+			->setPayload($payload)
 			->setResult($job->getResult())
 			->setStartedAt($job->getStartedAt())
 			->setEndedAt($job->getEndedAt())
@@ -409,11 +420,24 @@ class DbJobStore implements JobStoreInterface
 	 */
 	protected function fromEntity(OZJob $oz_job, ?JobInterface $job = null): JobContractInterface
 	{
-		if (null === $job) {
-			$job = new JobContract($oz_job->getRef(), $oz_job->getWorker(), (array) $oz_job->getPayload()->getData(), $this);
+		$raw_payload  = (array) $oz_job->getPayload()->getData();
+		$is_encrypted = false;
+
+		// Detect encrypted payload: sentinel key '$enc' wraps the ciphertext.
+		if (isset($raw_payload['$enc']) && \is_string($raw_payload['$enc'])) {
+			$decrypted = (new DoCrypt())->decrypt($raw_payload['$enc'], Keys::secret());
+
+			if (false !== $decrypted) {
+				$raw_payload  = (array) \json_decode($decrypted, true);
+				$is_encrypted = true;
+			}
 		}
 
-		return $job->setState($oz_job->getState())
+		if (null === $job) {
+			$job = new JobContract($oz_job->getRef(), $oz_job->getWorker(), $raw_payload, $this);
+		}
+
+		$contract = $job->setState($oz_job->getState())
 			->setQueue($oz_job->getQueue())
 			->setName($oz_job->getName())
 			->setPriority($oz_job->getPriority())
@@ -428,5 +452,12 @@ class DbJobStore implements JobStoreInterface
 			->setBatchId($oz_job->getBatchID())
 			->setCreatedAt((int) $oz_job->getCreatedAt())
 			->setUpdatedAt((int) $oz_job->getUpdatedAt());
+
+		// Preserve the encryption flag so subsequent saves re-encrypt the payload.
+		if ($is_encrypted) {
+			$contract->encrypted();
+		}
+
+		return $contract;
 	}
 }

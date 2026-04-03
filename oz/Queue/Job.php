@@ -39,13 +39,14 @@ class Job implements Interfaces\JobInterface
 	protected int $created_at;
 	protected int $updated_at;
 	protected JSONResult $result;
-	protected int $try_count         = 0;
-	protected int $retry_max         = 3;
-	protected int $priority          = 0;
-	protected int $retry_delay       = 60; // 1 minute
-	protected ?int $run_after        = null;
-	protected array $chain           = [];
-	protected ?string $batch_id      = null;
+	protected int $try_count               = 0;
+	protected int $retry_max               = 3;
+	protected int $priority                = 0;
+	protected int $retry_delay             = 60; // 1 minute
+	protected ?int $run_after              = null;
+	protected array $chain                 = [];
+	protected ?string $batch_id            = null;
+	protected bool $should_encrypt_payload = false;
 
 	/**
 	 * Job constructor.
@@ -148,6 +149,26 @@ class Job implements Interfaces\JobInterface
 		$this->priority = $priority;
 
 		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function encrypted(): static
+	{
+		$this->should_encrypt_payload = true;
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function shouldEncryptPayload(): bool
+	{
+		return $this->should_encrypt_payload;
 	}
 
 	/**

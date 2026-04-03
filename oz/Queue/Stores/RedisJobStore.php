@@ -16,6 +16,8 @@ namespace OZONE\Core\Queue\Stores;
 use Generator;
 use InvalidArgumentException;
 use Override;
+use OZONE\Core\App\Keys;
+use OZONE\Core\Crypt\DoCrypt;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
@@ -510,6 +512,15 @@ class RedisJobStore implements JobStoreInterface
 	{
 		$run_after = $job->getRunAfter();
 
+		// Encrypt payload at rest when requested.
+		if ($job->shouldEncryptPayload()) {
+			$secret  = Keys::secret();
+			$cipher  = (new DoCrypt())->encrypt(\json_encode($job->getPayload()), $secret);
+			$payload = \json_encode(['$enc' => $cipher]) ?: '{}';
+		} else {
+			$payload = \json_encode($job->getPayload()) ?: '{}';
+		}
+
 		return [
 			self::F_REF        => $job->getRef(),
 			self::F_NAME       => $job->getName(),
@@ -517,7 +528,7 @@ class RedisJobStore implements JobStoreInterface
 			self::F_WORKER     => $job->getWorker(),
 			self::F_STATE      => (string) $job->getState()->value,
 			self::F_PRIORITY   => (string) $job->getPriority(),
-			self::F_PAYLOAD    => \json_encode($job->getPayload()) ?: '{}',
+			self::F_PAYLOAD    => $payload,
 			self::F_RESULT     => \json_encode($job->getResult()->toArray()) ?: '{}',
 			self::F_TRY_COUNT  => (string) $job->getTryCount(),
 			self::F_RETRY_MAX  => (string) $job->getRetryMax(),
@@ -541,15 +552,27 @@ class RedisJobStore implements JobStoreInterface
 	 */
 	private function fromData(array $data): JobContractInterface
 	{
-		$ref     = (string) ($data[self::F_REF] ?? '');
-		$worker  = (string) ($data[self::F_WORKER] ?? '');
-		$payload = (array) (\json_decode($data[self::F_PAYLOAD] ?? '{}', true) ?? []);
-		$result  = JSONResult::revive(\json_decode($data[self::F_RESULT] ?? '{}', true) ?? []);
+		$ref         = (string) ($data[self::F_REF] ?? '');
+		$worker      = (string) ($data[self::F_WORKER] ?? '');
+		$raw_payload = (array) (\json_decode($data[self::F_PAYLOAD] ?? '{}', true) ?? []);
+		$result      = JSONResult::revive(\json_decode($data[self::F_RESULT] ?? '{}', true) ?? []);
+
+		$is_encrypted = false;
+
+		// Detect encrypted payload: sentinel key '$enc' wraps the ciphertext.
+		if (isset($raw_payload['$enc']) && \is_string($raw_payload['$enc'])) {
+			$decrypted = (new DoCrypt())->decrypt($raw_payload['$enc'], Keys::secret());
+
+			if (false !== $decrypted) {
+				$raw_payload  = (array) \json_decode($decrypted, true);
+				$is_encrypted = true;
+			}
+		}
 
 		$started_raw = $data[self::F_STARTED_AT] ?? '';
 		$ended_raw   = $data[self::F_ENDED_AT] ?? '';
 
-		$job = new JobContract($ref, $worker, $payload, $this);
+		$job = new JobContract($ref, $worker, $raw_payload, $this);
 
 		$run_after_raw = $data[self::F_RUN_AFTER] ?? '';
 		$chain_raw     = $data[self::F_CHAIN] ?? '[]';
@@ -570,6 +593,11 @@ class RedisJobStore implements JobStoreInterface
 			->setRunAfter('' !== $run_after_raw ? (int) $run_after_raw : null)
 			->setChain((array) (\json_decode($chain_raw, true) ?? []))
 			->setBatchId('' !== $batch_id_raw ? $batch_id_raw : null);
+
+		// Preserve the encryption flag so subsequent saves re-encrypt the payload.
+		if ($is_encrypted) {
+			$job->encrypted();
+		}
 
 		return $job;
 	}

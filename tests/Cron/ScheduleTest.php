@@ -366,4 +366,60 @@ final class ScheduleTest extends TestCase
 
 		self::assertTrue($s->shouldRun());
 	}
+
+	// ----- when() ---------------------------------------------------------
+
+	public function testWhenReturnsSelf(): void
+	{
+		$s = new Schedule();
+		self::assertSame($s, $s->when(static fn () => true));
+	}
+
+	public function testWhenAllowsRunWhenPredicateReturnsTrue(): void
+	{
+		$s = (new Schedule())->when(static fn () => true);
+
+		self::assertTrue($s->shouldRun());
+	}
+
+	public function testWhenBlocksRunWhenPredicateReturnsFalse(): void
+	{
+		$s = (new Schedule())->when(static fn () => false);
+
+		self::assertFalse($s->shouldRun());
+	}
+
+	public function testWhenChainingRequiresAllPredicatesToPass(): void
+	{
+		// Both true -> should run.
+		$s1 = (new Schedule())
+			->when(static fn () => true)
+			->when(static fn () => true);
+		self::assertTrue($s1->shouldRun());
+
+		// One false -> should not run.
+		$s2 = (new Schedule())
+			->when(static fn () => true)
+			->when(static fn () => false);
+		self::assertFalse($s2->shouldRun());
+	}
+
+	public function testWhenPredicateIsEvaluatedLazily(): void
+	{
+		$calls = 0;
+
+		$s = (new Schedule())->when(static function () use (&$calls): bool {
+			++$calls;
+
+			return true;
+		});
+
+		self::assertSame(0, $calls, 'predicate must not be called at build time');
+
+		$s->shouldRun();
+		self::assertSame(1, $calls, 'predicate must be called once at shouldRun() time');
+
+		$s->shouldRun();
+		self::assertSame(2, $calls, 'predicate must be called again on each shouldRun() invocation');
+	}
 }

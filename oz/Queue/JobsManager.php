@@ -17,6 +17,7 @@ use OZONE\Core\App\Keys;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Queue\Hooks\JobBeforeStart;
+use OZONE\Core\Queue\Hooks\JobCancelled;
 use OZONE\Core\Queue\Hooks\JobFinished;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
@@ -153,7 +154,7 @@ final class JobsManager
 		?string $worker_name = null,
 		?int $priority = null,
 		?int $max_job = null
-	): void {
+	): int {
 		$queue                  = Queue::get($queue_name);
 		$max_consecutive_errors = $queue->getMaxConsecutiveErrorsCount();
 		$max_errors_count       = $queue->getMaxErrorsCount();
@@ -196,6 +197,43 @@ final class JobsManager
 				}
 			}
 		}
+
+		return $jobs_count;
+	}
+
+	/**
+	 * Cancel a pending, unlocked job.
+	 *
+	 * Sets the job state to CANCELLED and dispatches {@link JobCancelled}.
+	 * Returns false when the job cannot be cancelled: it is already running,
+	 * in a terminal state, or held by another worker (locked).
+	 *
+	 * @param JobContractInterface $job_contract
+	 *
+	 * @return bool
+	 */
+	public static function cancel(JobContractInterface $job_contract): bool
+	{
+		if (JobState::PENDING !== $job_contract->getState()) {
+			return false;
+		}
+
+		if ($job_contract->isLocked()) {
+			return false;
+		}
+
+		$job_contract->setState(JobState::CANCELLED);
+		$job_contract->save();
+
+		(new JobCancelled($job_contract))->dispatch();
+
+		$batch_id = $job_contract->getBatchId();
+
+		if (null !== $batch_id) {
+			BatchManager::onJobSettled($job_contract, $batch_id);
+		}
+
+		return true;
 	}
 
 	/**

@@ -14,11 +14,12 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cron\Workers;
 
 use Override;
-use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Cli\Cron\Cron;
 use OZONE\Core\Cli\Cron\Interfaces\TaskInterface;
+use OZONE\Core\Db\OZJobsQuery;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
+use OZONE\Core\Queue\JobState;
 use OZONE\Core\Utils\JSONResult;
 use RuntimeException;
 
@@ -89,32 +90,28 @@ class CronTaskWorker implements WorkerInterface
 	public function work(JobContractInterface $job_contract): static
 	{
 		if ($this->task->shouldRunOneAtATime()) {
-			$cache     = CacheManager::persistent('cron');
-			$cache_key = 'cron_task_' . $this->task->getName();
-			$timeout   = $this->task->getTimeout();
-			// Use the task's execution timeout as the lock TTL so stale locks
-			// expire automatically. Fall back to 24 h when no timeout is set.
-			$ttl = $timeout > 0 ? (float) $timeout : 86400.0;
+			// Multi-server safe: check the shared DB for other RUNNING instances of this task.
+			// The RUNNING state on the job record acts as the shared lock. No explicit lock
+			// release is required -- the state transitions to DONE/FAILED automatically via
+			// JobsManager::finish(), making this check reliable across multiple servers.
+			$other_running = (new OZJobsQuery())
+				->whereNameIs($this->task->getName())
+				->whereWorkerIs(static::class)
+				->whereStateIs(JobState::RUNNING)
+				->whereRefIsNot($job_contract->getRef())
+				->find(1)
+				->totalCount();
 
-			if ($cache->has($cache_key)) {
-				// A previous instance is still holding the lock -- skip quietly.
+			if ($other_running > 0) {
 				$this->task->getResult()
 					->setDone()
 					->setData(['skipped' => true, 'reason' => 'oneAtATime: another instance is running']);
 
 				return $this;
 			}
-
-			$cache->set($cache_key, true, $ttl);
-
-			try {
-				$this->task->run();
-			} finally {
-				$cache->delete($cache_key);
-			}
-		} else {
-			$this->task->run();
 		}
+
+		$this->task->run();
 
 		return $this;
 	}

@@ -117,4 +117,13 @@ class JobContract extends Job implements JobContractInterface
 	{
 		return $this->store->isLocked($this);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function cancel(): bool
+	{
+		return JobsManager::cancel($this);
+	}
 }

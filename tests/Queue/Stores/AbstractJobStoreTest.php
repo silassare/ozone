@@ -320,6 +320,27 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 		self::assertSame(0, $this->store->count($this->testQueue));
 	}
 
+	// ----- encryption roundtrip -------------------------------------------
+
+	public function testEncryptedPayloadIsStoredObfuscatedAndDeserializedCorrectly(): void
+	{
+		$secret_payload = ['secret' => 'sensitive-value', 'token' => 'abc123'];
+		$job            = $this->makeJob($this->testQueue, 'dummy', $secret_payload);
+		$job->encrypted(); // opt in to payload encryption
+
+		$contract = $this->store->add($job);
+
+		// 1. The deserialized contract must expose the original plain-text payload.
+		self::assertSame($secret_payload, $contract->getPayload());
+
+		// 2. After reloading from the store, the payload must still be correct.
+		$reloaded = $this->store->getOrFail($contract->getRef());
+		self::assertSame($secret_payload, $reloaded->getPayload());
+
+		// 3. The encryption flag is preserved so re-saves continue to encrypt.
+		self::assertTrue($reloaded->shouldEncryptPayload());
+	}
+
 	/**
 	 * Provide the store implementation under test.
 	 */
