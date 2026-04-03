@@ -23,6 +23,7 @@ use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Utils\Hasher;
 
 /**
  * Class ApiKeyHeaderAuth.
@@ -85,7 +86,7 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 
 		$this->api_key = $api_key;
 
-		return false;
+		return true;
 	}
 
 	/**
@@ -98,7 +99,7 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 	#[Override]
 	public function authenticate(): void
 	{
-		$auth = Auth::getByTokenHash($this->api_key);
+		$auth = Auth::getByTokenHash(Hasher::hash64($this->api_key));
 
 		if (!$auth) {
 			throw new ForbiddenException(null, [

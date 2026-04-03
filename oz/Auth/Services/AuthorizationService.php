@@ -61,8 +61,9 @@ class AuthorizationService extends Service
 			$router->get('/state', static fn (RouteInfo $ri) => (new self($ri))->state($ri))
 				->name(self::ROUTE_STATE);
 
-			$router->post('/cancel', static fn (RouteInfo $ri) => (new self($ri))->cancel($ri))
-				->name(self::ROUTE_CANCEL);
+			$router->post('/cancel', static fn (RouteInfo $ri) => (new self($ri))->cancel($ri, $ri->getCleanFormData()))
+				->name(self::ROUTE_CANCEL)
+				->form(self::buildCancelForm(...));
 		});
 	}
 
@@ -118,17 +119,20 @@ class AuthorizationService extends Service
 	/**
 	 * @throws UnauthorizedException
 	 * @throws NotFoundException
+	 * @throws InvalidFormException
 	 */
-	public function cancel(RouteInfo $ri): Response
+	public function cancel(RouteInfo $ri, FormData $fd): Response
 	{
-		$ref = $ri->param(OZAuth::COL_REF);
+		$ref         = $ri->param(OZAuth::COL_REF);
+		$refresh_key = $fd->get('refresh_key');
 
 		$auth = Auth::getRequired($ref);
 
 		$provider = Auth::provider($ri->getContext(), $auth);
 
 		$provider->getCredentials()
-			->setReference($ref);
+			->setReference($ref)
+			->setRefreshKey($refresh_key);
 
 		$provider->cancel();
 
@@ -214,8 +218,24 @@ class AuthorizationService extends Service
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Auth.cancel',
-			'description' => 'Cancel an authorization flow.',
+			'description' => 'Cancel an authorization flow. Requires the refresh_key to prevent unauthorized cancellation.',
 		]);
+	}
+
+	/**
+	 * @return Form
+	 *
+	 * @throws TypesException
+	 */
+	private static function buildCancelForm(): Form
+	{
+		$fb = new Form();
+
+		$fb->field('refresh_key')
+			->type(new TypeString(16))
+			->required();
+
+		return $fb;
 	}
 
 	/**

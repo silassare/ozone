@@ -23,6 +23,7 @@ use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Utils\Hasher;
 
 /**
  * Class BearerAuth.
@@ -102,7 +103,7 @@ class BearerAuth implements AuthenticationMethodInterface
 	#[Override]
 	public function authenticate(): void
 	{
-		$auth = Auth::getByTokenHash($this->token);
+		$auth = Auth::getByTokenHash(Hasher::hash64($this->token));
 
 		if (!$auth) {
 			throw new ForbiddenException(null, [

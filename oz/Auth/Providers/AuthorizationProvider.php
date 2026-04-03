@@ -250,7 +250,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 			$auth->setCodeHash($code_hash)
 				->setTokenHash($token_hash)
 				->setTryMax($this->scope->getTryMax())
-				->setTryCount($this->scope->getLifetime())
+				->setLifetime($this->scope->getLifetime())
 				->setTryCount(0)
 				->setExpireAt((string) $expire);
 
@@ -279,6 +279,10 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 		$auth = Auth::getRequired($ref);
 
 		$this->scope = $this->scope::from($auth);
+
+		if (!\hash_equals($auth->getRefreshKey(), $this->credentials->getRefreshKey())) {
+			$this->onInvalidRefreshKey($auth);
+		}
 
 		try {
 			$auth->selfDelete();
