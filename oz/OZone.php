@@ -326,6 +326,26 @@ final class OZone
 	}
 
 	/**
+	 * Check if we are in dev mode.
+	 *
+	 * @return bool
+	 */
+	public static function inDevMode(): bool
+	{
+		return 'production' !== env('ENV_MODE', 'development');
+	}
+
+	/**
+	 * Check if we are in production mode.
+	 *
+	 * @return bool
+	 */
+	public static function inProductionMode(): bool
+	{
+		return 'production' === env('ENV_MODE', 'development');
+	}
+
+	/**
 	 * Register all route provider.
 	 *
 	 * @param Router                    $router
