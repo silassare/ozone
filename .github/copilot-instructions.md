@@ -137,14 +137,21 @@ Settings are layered PHP files returning arrays. The framework loads from `oz/oz
 ```php
 Settings::get('oz.config', 'OZ_PROJECT_NAME');              // read one key, optional default
 Settings::load('oz.db');                                     // load entire group as array
-Settings::set('oz.auth', 'OZ_AUTH_CODE_LENGTH', 8);         // persist one key (always writes to stateful dir)
-Settings::unset('oz.auth', 'OZ_AUTH_CODE_LENGTH');          // remove one key (always writes to stateful dir)
+Settings::set('oz.auth', 'OZ_AUTH_CODE_LENGTH', 8);              // stateful (data/settings/) — default
+Settings::set('oz.routes.api', MyService::class, true, null, false); // source (app/settings/) — $stateful=false
+Settings::unset('oz.auth', 'OZ_AUTH_CODE_LENGTH');               // stateful — default
+Settings::unset('oz.auth', 'OZ_AUTH_CODE_LENGTH', null, false);  // source — $stateful=false
 Settings::has('oz.db', 'OZ_DB_HOST');                       // check existence
 Settings::addSource(string $path);                          // add settings directory source
 Settings::applyMergeStrategy(array $a, array $b): array;    // merge strategy: indexed -> array_merge, assoc -> array_replace_recursive
 ```
 
-**`Settings::set/unset` always write to the scope's stateful settings directory** (`data/settings/` for the app, `data/scopes/{name}/settings/` for a scoped write, `data/plugins/{name}/settings/` for a plugin). Source settings files (`app/settings/`, `scopes/{name}/settings/`) are for version-controlled defaults edited manually. Runtime modifications via `set/unset` never touch the source tree.
+**`Settings::set/unset`** accept an optional `bool $stateful = true` parameter:
+
+- `$stateful = true` (default) — writes to the stateful directory (`data/settings/`, `data/scopes/{name}/settings/`, `data/plugins/{name}/settings/`). Use for runtime overrides that must not touch version-controlled files.
+- `$stateful = false` — writes to the source directory (`app/settings/`, `scopes/{name}/settings/`). Use for dev-time scaffolding (e.g. `oz services generate`) where the change should be committed. The `--source` flag on `oz settings set/unset` exposes this option in the CLI.
+
+Source settings files (`app/settings/`, `scopes/{name}/settings/`) are the version-controlled defaults, edited manually or via dev-time tooling.
 
 **`oz.config` is blacklisted** — runtime edits via `Settings::set/unset` are disallowed for it.
 
@@ -850,16 +857,16 @@ Migration files are PHP files in `{project}/migrations/` returning `MigrationInt
 
 ### Built-in Commands
 
-| Command         | Class           | Actions                                                        |
-| --------------- | --------------- | -------------------------------------------------------------- |
-| `oz project`    | `ProjectCmd`    | `create` — scaffold new project                                |
-| `oz db`         | `DbCmd`         | `build` — generate ORM classes; `backup`; code-gen for Dart/TS |
-| `oz migrations` | `MigrationsCmd` | `create`, `check`, `run`, `rollback`                           |
-| `oz services`   | `ServicesCmd`   | `generate` — scaffold RESTful service for a table              |
-| `oz scopes`     | `ScopesCmd`     | add scopes (multi-tenant)                                      |
-| `oz settings`   | `SettingsCmd`   | `set`, `unset` — runtime settings management                   |
-| `oz cron`       | `CronCmd`       | `run` — run due cron tasks; `start <name>`                     |
-| `oz jobs`       | `JobsCmd`       | `run` — process queue jobs; `finish` — mark orphaned as failed |
+| Command         | Class           | Actions                                                                                   |
+| --------------- | --------------- | ----------------------------------------------------------------------------------------- |
+| `oz project`    | `ProjectCmd`    | `create` — scaffold new project                                                           |
+| `oz db`         | `DbCmd`         | `build` — generate ORM classes; `backup`; code-gen for Dart/TS                            |
+| `oz migrations` | `MigrationsCmd` | `create`, `check`, `run`, `rollback`                                                      |
+| `oz services`   | `ServicesCmd`   | `generate` — scaffold RESTful service for a table                                         |
+| `oz scopes`     | `ScopesCmd`     | add scopes (multi-tenant)                                                                 |
+| `oz settings`   | `SettingsCmd`   | `set [--source]`, `unset [--source]` — write to stateful (default) or source settings dir |
+| `oz cron`       | `CronCmd`       | `run` — run due cron tasks; `start <name>`                                                |
+| `oz jobs`       | `JobsCmd`       | `run`, `finish`, `prune`, `dead-letter`                                                   |
 
 **`Utils::assertProjectLoaded()`** — throws if no `app/app.php` found in CWD or ancestor; always the first line in commands that require a project.
 
@@ -911,11 +918,14 @@ See **sections 24 and 25** for full Queue and Cron API reference.
 
 ```
 PENDING -> RUNNING -> DONE
-                   -> FAILED -> PENDING (if retries remain, immediately — retry_delay not yet enforced)
-                             -> FAILED  (no retries left)
+                   -> FAILED -> PENDING (if retries remain; run_after enforces retry_delay)
+                             -> DEAD_LETTER (retries exhausted)
+CANCELLED (terminal, no programmatic cancel API yet)
 ```
 
 **Lock**: `lock()` is atomic (`UPDATE WHERE locked = false`); only one worker can acquire a job. `isLocked()` checks current state from the store.
+
+**`run_after`**: when a failed job is reset to PENDING, `finish()` sets `run_after = time() + retry_delay`. Both stores' `iterator()` skip jobs where `run_after > now()`, enforcing the delay window.
 
 ### Async Jobs
 
@@ -931,19 +941,26 @@ The parent process never calls `unlock()` — the subprocess owns it via `finish
 
 `forceRunJob()` is also reachable via `oz jobs run --store=X --job=<ref> --force` (manual forced takeover).
 
-### Retry Delay Limitation
+### Additional Job Features
 
-`retry_delay` is stored on `oz_jobs` but **not enforced** by the current iterator. When a failed job is reset to PENDING, it is picked up on the next `run()` call immediately. Enforcing it requires a `run_after` column on `oz_jobs` (schema change).
+- **Job chaining**: `Job::setChain([['worker', 'payload', 'queue'], ...])`. When a job finishes successfully, `finish()` dispatches the next entry in the chain as a new job with the remaining chain attached. The new job uses the default retry settings (chain entries do not inherit the parent's `retry_max`/`retry_delay`).
+- **Max concurrency**: `Queue::setMaxConcurrent(int $n)`. When the RUNNING count exceeds the limit, async workers are demoted to synchronous execution in the same process instead of spawning a subprocess.
+- **`JobBeforeStart` hook**: fired by `runJob()` before any job starts. Carries the `JobContractInterface`.
+- **Dead-letter**: when `try_count >= retry_max` a FAILED job transitions to `DEAD_LETTER`. Use `oz jobs dead-letter --action=retry` to reset and re-queue.
 
 ### `oz jobs` CLI
 
-| Invocation                                   | Behaviour                                                         |
-| -------------------------------------------- | ----------------------------------------------------------------- |
-| `oz jobs run`                                | Process all PENDING jobs from all stores                          |
-| `oz jobs run --store=X --queue=Y --worker=W` | Filter by store / queue / worker                                  |
-| `oz jobs run --store=X --job=<ref>`          | Run one specific job; fail with error if already locked           |
-| `oz jobs run --store=X --job=<ref> --force`  | Locked -> `forceRunJob()`; unlocked -> `runJob()` (acquire first) |
-| `oz jobs finish --store=X --ref=<ref>`       | Mark an orphaned RUNNING job as finished/failed                   |
+| Invocation                                                                 | Behaviour                                                                           |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Invocation                                                                 | Behaviour                                                                           |
+| --------------------------------------------------------------             | ----------------------------------------------------------------------------------- |
+| `oz jobs run`                                                              | Process all PENDING jobs from all stores                                            |
+| `oz jobs run --store=X --queue=Y --worker=W`                               | Filter by store / queue / worker                                                    |
+| `oz jobs run --store=X --job=<ref>`                                        | Run one specific job; fail with error if already locked                             |
+| `oz jobs run --store=X --job=<ref> --force`                                | Locked -> `forceRunJob()`; unlocked -> `runJob()` (acquire first)                   |
+| `oz jobs finish --store=X --ref=<ref>`                                     | Mark an orphaned RUNNING job as finished/failed (releases lock in DbJobStore)       |
+| `oz jobs prune [--store=X] [--queue=Y] [--state=S] [--older-than=N]`       | Delete terminal-state jobs older than N seconds (default 86400)                     |
+| `oz jobs dead-letter [--store=X] [--queue=Y] --action=list\|retry\|delete` | List, re-queue, or delete dead-letter jobs                                          |
 
 ### Implementing a Worker
 
@@ -1038,7 +1055,20 @@ $done = BatchManager::isFinished($batch_id);
 
 ### How It Works
 
-`oz cron run` -> `Cron::runDues()` -> checks each task's schedules -> dispatches due tasks as `CronTaskWorker` jobs -> `oz jobs run --queue=cron:sync` processes them.
+`oz cron run` dispatches due tasks as `CronTaskWorker` jobs and then processes both cron queues:
+
+```
+Cron::runDues()  -- dispatches due tasks to cron:sync or cron:async
+JobsManager::run(null, Queue::CRON_SYNC)   -- runs sync tasks in-process
+JobsManager::run(null, Queue::CRON_ASYNC)  -- spawns subprocesses for async tasks
+```
+
+For **async** tasks the subprocess is `oz jobs run --store=X --job=<ref> --force`. In that subprocess OZone bootstraps and registers CronCollect listeners, but `Cron::collect()` must be called before executing the task. **`CronTaskWorker` calls `Cron::collect()` in its constructor** — it is idempotent (guarded by the `$collected` flag) so calling it multiple times is safe.
+
+`Cron::collect()` is also called by:
+
+- `Cron::runDues()` (at the start of the cron runner)
+- `Cron::start(string $name)` (direct single-task invocation)
 
 ```php
 // Register in CronCollect listener (typically in a BootHookReceiver):
@@ -1104,9 +1134,23 @@ $schedule->between('08:00', '18:00')    // only run when current time is in the 
 Two-layer guard using `CacheManager::persistent('cron')`:
 
 1. **Dispatch time** (`Cron::runDues()`): if cache key `cron_task_{name}` exists, the task is skipped entirely — no job is queued.
-2. **Execution time** (`CronTaskWorker::work()`): sets the cache key before `run()`, clears it in `finally` (even on failure). If the key already exists at run time, the job is marked DONE with `skipped: true`.
+2. **Execution time** (`CronTaskWorker::work()`): checks the key again; if already set, marks the job DONE with `skipped: true`. Otherwise sets the key before `run()` and deletes it in `finally` (runs even on failure).
 
-Cache TTL = `$task->getTimeout()` seconds, or 86400 s (24 h) when timeout is 0/null to prevent indefinitely stale locks.
+Cache TTL = `$task->getTimeout()` seconds, or 86400 s (24 h) when timeout is 0/null.
+
+**Limitation**: the cache lock is node-local. In a multi-server deployment, two hosts can independently run the same `oneAtATime` task simultaneously.
+
+### `skipIfLate(int $grace_minutes)`
+
+Call on a `Schedule` to skip execution when the cron daemon was offline past the grace window:
+
+```php
+Cron::call(fn ($r) => ..., 'my-task')
+    ->daily()
+    ->skipIfLate(15); // skip if more than 15 min late
+```
+
+**Note**: the backward scan only looks 1,440 minutes (24 h) back, so `skipIfLate()` has no practical effect on monthly/yearly schedules.
 
 ### `CallableTask` Signature
 
