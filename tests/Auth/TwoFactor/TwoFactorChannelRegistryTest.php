@@ -45,7 +45,7 @@ final class TwoFactorChannelRegistryTest extends TestCase
 	{
 		$ref  = new ReflectionClass(TwoFactorChannelRegistry::class);
 		$prop = $ref->getProperty('channels');
-		$prop->setAccessible(true);
+
 		$this->channels_before = $prop->getValue(null);
 		$prop->setValue(null, []);
 	}
@@ -57,7 +57,6 @@ final class TwoFactorChannelRegistryTest extends TestCase
 	{
 		$ref  = new ReflectionClass(TwoFactorChannelRegistry::class);
 		$prop = $ref->getProperty('channels');
-		$prop->setAccessible(true);
 		$prop->setValue(null, $this->channels_before);
 	}
 
