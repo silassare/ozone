@@ -59,6 +59,11 @@ final class Router
 	private array $dynamic_routes = [];
 
 	/**
+	 * Whether both route arrays are already sorted by priority.
+	 */
+	private bool $ordered = false;
+
+	/**
 	 * @var array<string, string>
 	 */
 	private array $global_params = [];
@@ -432,6 +437,8 @@ final class Router
 			$this->static_routes[] = $route;
 		}
 
+		$this->ordered = false;
+
 		return $options;
 	}
 
@@ -557,8 +564,14 @@ final class Router
 	 */
 	private function ensureOrdered(): void
 	{
+		if ($this->ordered) {
+			return;
+		}
+
 		\usort($this->static_routes, $this->routePriorityComparator(...));
 		\usort($this->dynamic_routes, $this->routePriorityComparator(...));
+
+		$this->ordered = true;
 	}
 
 	/**
