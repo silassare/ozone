@@ -211,4 +211,41 @@ final class RoutePathParserTest extends TestCase
 		// Without optional segment.
 		self::assertSame(1, \preg_match($regexp, '/articles'));
 	}
+
+	public function testBuildPathStaticSegment(): void
+	{
+		$parser = new RoutePathParser('/users/list', $this->router);
+		self::assertSame('/users/list', $parser->buildPath(context()));
+	}
+
+	public function testBuildPathColonParam(): void
+	{
+		$parser = new RoutePathParser('/users/:id', $this->router);
+		self::assertSame('/users/42', $parser->buildPath(context(), ['id' => 42]));
+	}
+
+	public function testBuildPathBraceParam(): void
+	{
+		$parser = new RoutePathParser('/users/{id}', $this->router);
+		self::assertSame('/users/42', $parser->buildPath(context(), ['id' => 42]));
+	}
+
+	public function testBuildPathOptionalParamPresent(): void
+	{
+		$parser = new RoutePathParser('/articles[/:slug]', $this->router);
+		self::assertSame('/articles/hello', $parser->buildPath(context(), ['slug' => 'hello']));
+	}
+
+	public function testBuildPathOptionalParamAbsent(): void
+	{
+		$parser = new RoutePathParser('/articles[/:slug]', $this->router);
+		self::assertSame('/articles', $parser->buildPath(context()));
+	}
+
+	public function testBuildPathThrowsOnMissingRequiredParam(): void
+	{
+		$this->expectException(InvalidArgumentException::class);
+		$parser = new RoutePathParser('/users/:id', $this->router);
+		$parser->buildPath(context());
+	}
 }

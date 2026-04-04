@@ -138,5 +138,18 @@ final class RouteTest extends TestCase
 			'id'    => 1,
 			'state' => 'published',
 		]));
+
+		// {brace} param syntax.
+		$userGet = $router->getRoute('users.by_id.get');
+		self::assertSame('/users/42/', $userGet->buildPath($context, ['id' => 42]));
+	}
+
+	public function testBuildPathThrowsOnMissingRequiredParam(): void
+	{
+		$router  = TestUtils::router();
+		$context = context();
+
+		$this->expectException(InvalidArgumentException::class);
+		$router->getRoute('articles.get_by_id')->buildPath($context);
 	}
 }
