@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
+use LogicException;
+use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Http\Enums\RequestScope;
@@ -30,6 +32,13 @@ use PHPUnit\Framework\TestCase;
  */
 final class FormTest extends TestCase
 {
+	protected function setUp(): void
+	{
+		// Clear the form resume cache before each test so cache round-trip tests
+		// do not interfere with each other.
+		CacheManager::persistent(Form::FORM_DATA_RESUME_CACHE_NAMESPACE)->clear();
+	}
+
 	// -----------------------------------------------------------------------
 	// toArray
 	// -----------------------------------------------------------------------
@@ -53,9 +62,9 @@ final class FormTest extends TestCase
 		self::assertNull($arr['resume_ttl']);
 	}
 
-	public function testToArrayResumeScopeAndTTLWhenEnabled(): void
+	public function testToArrayResumableScopeAndTTLWhenEnabled(): void
 	{
-		$arr = (new Form())->resume(RequestScope::STATE, 1800)->toArray();
+		$arr = (new Form())->resumable(RequestScope::STATE, 1800)->toArray();
 
 		self::assertSame(RequestScope::STATE->value, $arr['resume_scope']);
 		self::assertSame(1800, $arr['resume_ttl']);
@@ -124,19 +133,19 @@ final class FormTest extends TestCase
 		self::assertSame(3600, (new Form())->getResumeTTL());
 	}
 
-	public function testResumeSetsScopeAndTTL(): void
+	public function testResumableSetsScopeAndTTL(): void
 	{
-		$form = (new Form())->resume(RequestScope::STATE, 7200);
+		$form = (new Form())->resumable(RequestScope::STATE, 7200);
 
 		self::assertSame(RequestScope::STATE, $form->getResumeScope());
 		self::assertSame(7200, $form->getResumeTTL());
 	}
 
-	public function testResumeReturnsSelf(): void
+	public function testResumableReturnsSelf(): void
 	{
 		$form = new Form();
 
-		self::assertSame($form, $form->resume(RequestScope::USER));
+		self::assertSame($form, $form->resumable(RequestScope::USER));
 	}
 
 	// -----------------------------------------------------------------------
@@ -180,7 +189,7 @@ final class FormTest extends TestCase
 
 	public function testMergePropagatesToNoneTarget(): void
 	{
-		$source = (new Form())->resume(RequestScope::USER, 600);
+		$source = (new Form())->resumable(RequestScope::USER, 600);
 		$target = new Form();
 
 		$target->merge($source);
@@ -191,8 +200,8 @@ final class FormTest extends TestCase
 
 	public function testMergeDoesNotOverwriteExistingScope(): void
 	{
-		$source = (new Form())->resume(RequestScope::USER, 600);
-		$target = (new Form())->resume(RequestScope::STATE, 300);
+		$source = (new Form())->resumable(RequestScope::USER, 600);
+		$target = (new Form())->resumable(RequestScope::STATE, 300);
 
 		$target->merge($source);
 
@@ -293,6 +302,101 @@ final class FormTest extends TestCase
 		$field = $form->field('name');
 
 		self::assertSame($field, $form->getField('name'));
+	}
+
+	// -----------------------------------------------------------------------
+	// resume() and saveForLater() — cache round-trip
+	// -----------------------------------------------------------------------
+
+	public function testResumeWhenNotResumableReturnsNullAndCallable(): void
+	{
+		$form = new Form();
+		$form->field('email')->required(true);
+
+		[$prefilled, $drop] = $form->resume(context());
+
+		self::assertNull($prefilled);
+		self::assertIsCallable($drop);
+		$drop(); // must not throw
+	}
+
+	public function testResumeWhenResumableAndNoCachedDataReturnsNull(): void
+	{
+		$form = (new Form())->resumable(RequestScope::HOST);
+		$form->field('email')->required(true);
+
+		[$prefilled] = $form->resume(context());
+
+		self::assertNull($prefilled);
+	}
+
+	public function testSaveForLaterThrowsWhenNotResumable(): void
+	{
+		$form = new Form();
+		$form->field('email')->required(true);
+
+		$this->expectException(LogicException::class);
+		$form->saveForLater(context(), $this->makeFormData(['email' => 'a@b.com']));
+	}
+
+	public function testSaveForLaterReturnsSelf(): void
+	{
+		$form = (new Form())->resumable(RequestScope::HOST);
+		$form->field('email')->required(true);
+
+		self::assertSame($form, $form->saveForLater(context(), $this->makeFormData(['email' => 'a@b.com'])));
+	}
+
+	public function testResumeRoundTrip(): void
+	{
+		$form = (new Form())->resumable(RequestScope::HOST);
+		$form->field('email')->required(true);
+
+		$form->saveForLater(context(), $this->makeFormData(['email' => 'test@example.com']));
+
+		[$prefilled] = $form->resume(context());
+
+		self::assertNotNull($prefilled);
+		self::assertSame('test@example.com', $prefilled->get('email'));
+	}
+
+	public function testResumeDiscardsDataWhenFormVersionChanges(): void
+	{
+		$form = (new Form())->resumable(RequestScope::HOST);
+		$form->field('email')->required(true);
+
+		$form->saveForLater(context(), $this->makeFormData(['email' => 'test@example.com']));
+
+		// Adding a field changes the form version -> new cache key -> miss.
+		$form->field('name')->required(true);
+
+		[$prefilled] = $form->resume(context());
+
+		self::assertNull($prefilled);
+	}
+
+	public function testDropCallableClearsCachedData(): void
+	{
+		$form = (new Form())->resumable(RequestScope::HOST);
+		$form->field('email')->required(true);
+
+		$form->saveForLater(context(), $this->makeFormData(['email' => 'x@x.com']));
+
+		[$prefilled, $drop] = $form->resume(context());
+		self::assertNotNull($prefilled); // data is there
+
+		$drop();
+
+		[$prefilledAfterDrop] = $form->resume(context());
+		self::assertNull($prefilledAfterDrop); // gone
+	}
+
+	public function testResumePreservesTTLFromResumable(): void
+	{
+		$form = (new Form())->resumable(RequestScope::HOST, 900);
+		$form->field('name')->required(true);
+
+		self::assertSame(900, $form->getResumeTTL());
 	}
 
 	// -----------------------------------------------------------------------
