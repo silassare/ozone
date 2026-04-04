@@ -81,9 +81,18 @@ final class JobChainTest extends TestCase
 		$flagB   = $proj->getPath() . '/worker_b.flag';
 		$trigger = $proj->getPath() . '/dispatch.trigger';
 
-		$proj->writeFile('app/Workers/ChainTestWorkerA.php', self::workerASource($ns, $flagA));
-		$proj->writeFile('app/Workers/ChainTestWorkerB.php', self::workerBSource($ns, $flagB));
-		$proj->writeFile('app/ChainTestBootHookReceiver.php', self::bootHookSource($ns, $flagA, $flagB, $trigger));
+		$proj->writeFileFromStub('ChainTestWorkerA', 'app/Workers/ChainTestWorkerA.php', [
+			'namespace' => $ns,
+		]);
+		$proj->writeFileFromStub('ChainTestWorkerB', 'app/Workers/ChainTestWorkerB.php', [
+			'namespace' => $ns,
+		]);
+		$proj->writeFileFromStub('ChainTestBootHookReceiver', 'app/ChainTestBootHookReceiver.php', [
+			'namespace'    => $ns,
+			'flag_a'       => $flagA,
+			'flag_b'       => $flagB,
+			'trigger_file' => $trigger,
+		]);
 		$proj->setSetting('oz.boot', "{$ns}\\ChainTestBootHookReceiver", true);
 
 		\file_put_contents($trigger, '1');
@@ -123,196 +132,6 @@ final class JobChainTest extends TestCase
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('job-chain');
-	}
-
-	// -------------------------------------------------------------------------
-	// PHP source templates
-	// -------------------------------------------------------------------------
-
-	private static function workerASource(string $namespace, string $flagA): string
-	{
-		$flagA = \addslashes($flagA);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace}\\Workers;
-
-use OZONE\\Core\\Queue\\Interfaces\\JobContractInterface;
-use OZONE\\Core\\Queue\\Interfaces\\WorkerInterface;
-use OZONE\\Core\\Utils\\JSONResult;
-
-/**
- * First worker in the chain. Writes a flag file and succeeds.
- */
-final class ChainTestWorkerA implements WorkerInterface
-{
-	private JSONResult \$result;
-
-	public function __construct(private readonly string \$flagFile) {}
-
-	public static function getName(): string
-	{
-		return 'chain-test-worker-a';
-	}
-
-	public function isAsync(): bool
-	{
-		return false;
-	}
-
-	public function work(JobContractInterface \$job): static
-	{
-		\$this->result = new JSONResult();
-		\\file_put_contents(\$this->flagFile, 'ok');
-		\$this->result->setDone()->setData(['worker' => 'A']);
-
-		return \$this;
-	}
-
-	public function getResult(): JSONResult
-	{
-		return \$this->result;
-	}
-
-	public static function fromPayload(array \$payload): static
-	{
-		return new self(\$payload['flag_file']);
-	}
-
-	public function getPayload(): array
-	{
-		return ['flag_file' => \$this->flagFile];
-	}
-}
-PHP;
-	}
-
-	private static function workerBSource(string $namespace, string $flagB): string
-	{
-		$flagB = \addslashes($flagB);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace}\\Workers;
-
-use OZONE\\Core\\Queue\\Interfaces\\JobContractInterface;
-use OZONE\\Core\\Queue\\Interfaces\\WorkerInterface;
-use OZONE\\Core\\Utils\\JSONResult;
-
-/**
- * Second worker in the chain. Writes a flag file and succeeds.
- */
-final class ChainTestWorkerB implements WorkerInterface
-{
-	private JSONResult \$result;
-
-	public function __construct(private readonly string \$flagFile) {}
-
-	public static function getName(): string
-	{
-		return 'chain-test-worker-b';
-	}
-
-	public function isAsync(): bool
-	{
-		return false;
-	}
-
-	public function work(JobContractInterface \$job): static
-	{
-		\$this->result = new JSONResult();
-		\\file_put_contents(\$this->flagFile, 'ok');
-		\$this->result->setDone()->setData(['worker' => 'B']);
-
-		return \$this;
-	}
-
-	public function getResult(): JSONResult
-	{
-		return \$this->result;
-	}
-
-	public static function fromPayload(array \$payload): static
-	{
-		return new self(\$payload['flag_file']);
-	}
-
-	public function getPayload(): array
-	{
-		return ['flag_file' => \$this->flagFile];
-	}
-}
-PHP;
-	}
-
-	private static function bootHookSource(
-		string $namespace,
-		string $flagA,
-		string $flagB,
-		string $triggerFile,
-	): string {
-		$flagA       = \addslashes($flagA);
-		$flagB       = \addslashes($flagB);
-		$triggerFile = \addslashes($triggerFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use OZONE\\Core\\Hooks\\Events\\InitHook;
-use OZONE\\Core\\Hooks\\Interfaces\\BootHookReceiverInterface;
-use OZONE\\Core\\Queue\\JobsManager;
-use OZONE\\Core\\Queue\\Queue;
-use {$namespace}\\Workers\\ChainTestWorkerA;
-use {$namespace}\\Workers\\ChainTestWorkerB;
-
-/**
- * Boot hook receiver for JobChainTest.
- *
- * Registers both chain workers and dispatches WorkerA with WorkerB in its
- * chain when the trigger file is present.
- */
-final class ChainTestBootHookReceiver implements BootHookReceiverInterface
-{
-	public static function boot(): void
-	{
-		JobsManager::registerWorker(ChainTestWorkerA::class);
-		JobsManager::registerWorker(ChainTestWorkerB::class);
-
-		InitHook::listen(static function () {
-			\$triggerFile = '{$triggerFile}';
-
-			if (!\\is_file(\$triggerFile)) {
-				return;
-			}
-
-			\\unlink(\$triggerFile);
-
-			\$chain = [
-				[
-					'worker'  => ChainTestWorkerB::getName(),
-					'payload' => (new ChainTestWorkerB('{$flagB}'))->getPayload(),
-					'queue'   => Queue::DEFAULT,
-				],
-			];
-
-			Queue::get(Queue::DEFAULT)
-				->push(new ChainTestWorkerA('{$flagA}'))
-				->setChain(\$chain)
-				->dispatch();
-		});
-	}
-}
-PHP;
 	}
 
 	// -------------------------------------------------------------------------

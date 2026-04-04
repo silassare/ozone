@@ -82,8 +82,15 @@ final class RetryDelayTest extends TestCase
 		$failFile    = $projPath . '/fail.flag';
 		$triggerFile = $projPath . '/dispatch.trigger';
 
-		$proj->writeFile('app/Workers/RetryTestWorker.php', self::workerSource($ns, $counterFile, $failFile));
-		$proj->writeFile('app/RetryTestBootHookReceiver.php', self::bootHookSource($ns, $counterFile, $failFile, $triggerFile));
+		$proj->writeFileFromStub('RetryTestWorker', 'app/Workers/RetryTestWorker.php', [
+			'namespace' => $ns,
+		]);
+		$proj->writeFileFromStub('RetryTestBootHookReceiver', 'app/RetryTestBootHookReceiver.php', [
+			'namespace'    => $ns,
+			'counter_file' => $counterFile,
+			'fail_file'    => $failFile,
+			'trigger_file' => $triggerFile,
+		]);
 		$proj->setSetting('oz.boot', "{$ns}\\RetryTestBootHookReceiver", true);
 
 		// Create the fail flag so the worker throws on every attempt.
@@ -131,144 +138,6 @@ final class RetryDelayTest extends TestCase
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('retry-delay');
-	}
-
-	// -------------------------------------------------------------------------
-	// PHP source templates
-	// -------------------------------------------------------------------------
-
-	private static function workerSource(string $namespace, string $counterFile, string $failFile): string
-	{
-		$counterFile = \addslashes($counterFile);
-		$failFile    = \addslashes($failFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace}\\Workers;
-
-use OZONE\\Core\\Queue\\Interfaces\\JobContractInterface;
-use OZONE\\Core\\Queue\\Interfaces\\WorkerInterface;
-use OZONE\\Core\\Utils\\JSONResult;
-
-/**
- * Synchronous worker for RetryDelayTest.
- *
- * Increments a counter file on every run. Throws if a fail-flag file exists.
- */
-final class RetryTestWorker implements WorkerInterface
-{
-	private JSONResult \$result;
-
-	public function __construct(
-		private readonly string \$counterFile,
-		private readonly string \$failFile,
-	) {}
-
-	public static function getName(): string
-	{
-		return 'retry-test-worker';
-	}
-
-	public function isAsync(): bool
-	{
-		return false;
-	}
-
-	public function work(JobContractInterface \$job): static
-	{
-		\$this->result = new JSONResult();
-
-		\$count = \\is_file(\$this->counterFile)
-			? (int) \\trim((string) \\file_get_contents(\$this->counterFile))
-			: 0;
-		\\file_put_contents(\$this->counterFile, (string) (\$count + 1));
-
-		if (\\is_file(\$this->failFile)) {
-			throw new \\RuntimeException('Forced failure from RetryTestWorker.');
-		}
-
-		\$this->result->setDone()->setData(['ok' => true]);
-
-		return \$this;
-	}
-
-	public function getResult(): JSONResult
-	{
-		return \$this->result;
-	}
-
-	public static function fromPayload(array \$payload): static
-	{
-		return new self(\$payload['counter_file'], \$payload['fail_file']);
-	}
-
-	public function getPayload(): array
-	{
-		return [
-			'counter_file' => \$this->counterFile,
-			'fail_file'    => \$this->failFile,
-		];
-	}
-}
-PHP;
-	}
-
-	private static function bootHookSource(
-		string $namespace,
-		string $counterFile,
-		string $failFile,
-		string $triggerFile,
-	): string {
-		$counterFile = \addslashes($counterFile);
-		$failFile    = \addslashes($failFile);
-		$triggerFile = \addslashes($triggerFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use OZONE\\Core\\Hooks\\Events\\InitHook;
-use OZONE\\Core\\Hooks\\Interfaces\\BootHookReceiverInterface;
-use OZONE\\Core\\Queue\\JobsManager;
-use OZONE\\Core\\Queue\\Queue;
-use {$namespace}\\Workers\\RetryTestWorker;
-
-/**
- * Boot hook receiver for RetryDelayTest.
- *
- * Registers the RetryTestWorker and dispatches one job (via InitHook) only
- * when the trigger file is present, consuming it immediately.
- */
-final class RetryTestBootHookReceiver implements BootHookReceiverInterface
-{
-	public static function boot(): void
-	{
-		JobsManager::registerWorker(RetryTestWorker::class);
-
-		InitHook::listen(static function () {
-			\$triggerFile = '{$triggerFile}';
-
-			if (!\\is_file(\$triggerFile)) {
-				return;
-			}
-
-			\\unlink(\$triggerFile);
-
-			Queue::get(Queue::DEFAULT)
-				->push(new RetryTestWorker('{$counterFile}', '{$failFile}'))
-				->setRetryMax(3)
-				->setRetryDelay(3600)
-				->dispatch();
-		});
-	}
-}
-PHP;
 	}
 
 	// -------------------------------------------------------------------------

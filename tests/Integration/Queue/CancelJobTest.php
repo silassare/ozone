@@ -81,8 +81,15 @@ final class CancelJobTest extends TestCase
 		$refFile     = $projPath . '/job_ref.txt';
 		$triggerFile = $projPath . '/dispatch.trigger';
 
-		$proj->writeFile('app/Workers/CancelTestWorker.php', self::workerSource($ns, $flagFile));
-		$proj->writeFile('app/CancelTestBootHookReceiver.php', self::bootHookSource($ns, $flagFile, $refFile, $triggerFile));
+		$proj->writeFileFromStub('CancelTestWorker', 'app/Workers/CancelTestWorker.php', [
+			'namespace' => $ns,
+		]);
+		$proj->writeFileFromStub('CancelTestBootHookReceiver', 'app/CancelTestBootHookReceiver.php', [
+			'namespace'    => $ns,
+			'flag_file'    => $flagFile,
+			'ref_file'     => $refFile,
+			'trigger_file' => $triggerFile,
+		]);
 		$proj->setSetting('oz.boot', "{$ns}\\CancelTestBootHookReceiver", true);
 
 		// Touch trigger so InitHook dispatches a job on the next oz invocation.
@@ -111,8 +118,8 @@ final class CancelJobTest extends TestCase
 		self::assertFileDoesNotExist(
 			$flagFile,
 			"Cancelled job must not execute when queue is drained.\n"
-			. 'Cancel output: ' . $cancelProc->getOutput() . "\n"
-			. 'Run output: ' . $runProc->getOutput() . $runProc->getErrorOutput()
+				. 'Cancel output: ' . $cancelProc->getOutput() . "\n"
+				. 'Run output: ' . $runProc->getOutput() . $runProc->getErrorOutput()
 		);
 	}
 
@@ -150,129 +157,6 @@ final class CancelJobTest extends TestCase
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('cancel-job');
-	}
-
-	// -------------------------------------------------------------------------
-	// PHP source templates
-	// -------------------------------------------------------------------------
-
-	private static function workerSource(string $namespace, string $flagFile): string
-	{
-		$flagFile = \addslashes($flagFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace}\\Workers;
-
-use OZONE\\Core\\Queue\\Interfaces\\JobContractInterface;
-use OZONE\\Core\\Queue\\Interfaces\\WorkerInterface;
-use OZONE\\Core\\Utils\\JSONResult;
-
-/**
- * Minimal worker for CancelJobTest.
- *
- * Writes a flag file when it executes so the test can confirm the job ran
- * (or did not run when cancelled).
- */
-final class CancelTestWorker implements WorkerInterface
-{
-	private JSONResult \$result;
-
-	public function __construct(private readonly string \$flagFile) {}
-
-	public static function getName(): string
-	{
-		return 'cancel-test-worker';
-	}
-
-	public function isAsync(): bool
-	{
-		return false;
-	}
-
-	public function work(JobContractInterface \$job): static
-	{
-		\$this->result = new JSONResult();
-		\\file_put_contents(\$this->flagFile, 'ran');
-		\$this->result->setDone()->setData(['ran' => true]);
-
-		return \$this;
-	}
-
-	public function getResult(): JSONResult
-	{
-		return \$this->result;
-	}
-
-	public static function fromPayload(array \$payload): static
-	{
-		return new self(\$payload['flag_file']);
-	}
-
-	public function getPayload(): array
-	{
-		return ['flag_file' => \$this->flagFile];
-	}
-}
-PHP;
-	}
-
-	private static function bootHookSource(
-		string $namespace,
-		string $flagFile,
-		string $refFile,
-		string $triggerFile,
-	): string {
-		$flagFile    = \addslashes($flagFile);
-		$refFile     = \addslashes($refFile);
-		$triggerFile = \addslashes($triggerFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use OZONE\\Core\\Hooks\\Events\\InitHook;
-use OZONE\\Core\\Hooks\\Interfaces\\BootHookReceiverInterface;
-use OZONE\\Core\\Queue\\JobsManager;
-use OZONE\\Core\\Queue\\Queue;
-use {$namespace}\\Workers\\CancelTestWorker;
-
-/**
- * Boot hook receiver for CancelJobTest.
- *
- * Registers the worker. When the trigger file is present, dispatches one job
- * and writes the job ref to a file so the test can pass it to `oz jobs cancel`.
- */
-final class CancelTestBootHookReceiver implements BootHookReceiverInterface
-{
-	public static function boot(): void
-	{
-		JobsManager::registerWorker(CancelTestWorker::class);
-
-		InitHook::listen(static function () {
-			\$triggerFile = '{$triggerFile}';
-
-			if (!\\is_file(\$triggerFile)) {
-				return;
-			}
-
-			\\unlink(\$triggerFile);
-
-			\$contract = Queue::get(Queue::DEFAULT)
-				->push(new CancelTestWorker('{$flagFile}'))
-				->dispatch();
-
-			\\file_put_contents('{$refFile}', \$contract->getRef());
-		});
-	}
-}
-PHP;
 	}
 
 	// -------------------------------------------------------------------------

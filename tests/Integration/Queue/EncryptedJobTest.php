@@ -84,8 +84,15 @@ final class EncryptedJobTest extends TestCase
 		$rawPayloadFile = $projPath . '/raw_payload.json';
 		$triggerFile    = $projPath . '/dispatch.trigger';
 
-		$proj->writeFile('app/Workers/EncryptTestWorker.php', self::workerSource($ns, $flagFile));
-		$proj->writeFile('app/EncryptTestBootHookReceiver.php', self::bootHookSource($ns, $flagFile, $rawPayloadFile, $triggerFile));
+		$proj->writeFileFromStub('EncryptTestWorker', 'app/Workers/EncryptTestWorker.php', [
+			'namespace' => $ns,
+		]);
+		$proj->writeFileFromStub('EncryptTestBootHookReceiver', 'app/EncryptTestBootHookReceiver.php', [
+			'namespace'       => $ns,
+			'flag_file'       => $flagFile,
+			'raw_payload_file'=> $rawPayloadFile,
+			'trigger_file'    => $triggerFile,
+		]);
 		$proj->setSetting('oz.boot', "{$ns}\\EncryptTestBootHookReceiver", true);
 
 		// Dispatch the encrypted job without processing it.
@@ -161,146 +168,6 @@ final class EncryptedJobTest extends TestCase
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('encrypted-job');
-	}
-
-	// -------------------------------------------------------------------------
-	// PHP source templates
-	// -------------------------------------------------------------------------
-
-	private static function workerSource(string $namespace, string $flagFile): string
-	{
-		$flagFile = \addslashes($flagFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace}\\Workers;
-
-use OZONE\\Core\\Queue\\Interfaces\\JobContractInterface;
-use OZONE\\Core\\Queue\\Interfaces\\WorkerInterface;
-use OZONE\\Core\\Utils\\JSONResult;
-
-/**
- * Worker for EncryptedJobTest.
- *
- * Writes a flag file on execution so the test can confirm the job ran (and
- * thus that decryption succeeded end-to-end).
- */
-final class EncryptTestWorker implements WorkerInterface
-{
-	private JSONResult \$result;
-
-	public function __construct(private readonly string \$flagFile) {}
-
-	public static function getName(): string
-	{
-		return 'encrypt-test-worker';
-	}
-
-	public function isAsync(): bool
-	{
-		return false;
-	}
-
-	public function work(JobContractInterface \$job): static
-	{
-		\$this->result = new JSONResult();
-		\\file_put_contents(\$this->flagFile, 'ran');
-		\$this->result->setDone()->setData(['ran' => true]);
-
-		return \$this;
-	}
-
-	public function getResult(): JSONResult
-	{
-		return \$this->result;
-	}
-
-	public static function fromPayload(array \$payload): static
-	{
-		return new self(\$payload['flag_file']);
-	}
-
-	public function getPayload(): array
-	{
-		return ['flag_file' => \$this->flagFile];
-	}
-}
-PHP;
-	}
-
-	private static function bootHookSource(
-		string $namespace,
-		string $flagFile,
-		string $rawPayloadFile,
-		string $triggerFile,
-	): string {
-		$flagFile       = \addslashes($flagFile);
-		$rawPayloadFile = \addslashes($rawPayloadFile);
-		$triggerFile    = \addslashes($triggerFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use OZONE\\Core\\Db\\OZJobsQuery;
-use OZONE\\Core\\Hooks\\Events\\InitHook;
-use OZONE\\Core\\Hooks\\Interfaces\\BootHookReceiverInterface;
-use OZONE\\Core\\Queue\\JobsManager;
-use OZONE\\Core\\Queue\\Queue;
-use {$namespace}\\Workers\\EncryptTestWorker;
-
-/**
- * Boot hook receiver for EncryptedJobTest.
- *
- * When the trigger file is present:
- *   1. Dispatches one encrypted job.
- *   2. Reads back the raw OZJob entity (payload still encrypted at this point)
- *      and writes its payload JSON to raw_payload.json so the test can
- *      assert the "\$enc" sentinel without touching the DB directly.
- */
-final class EncryptTestBootHookReceiver implements BootHookReceiverInterface
-{
-	public static function boot(): void
-	{
-		JobsManager::registerWorker(EncryptTestWorker::class);
-
-		InitHook::listen(static function () {
-			\$triggerFile = '{$triggerFile}';
-
-			if (!\\is_file(\$triggerFile)) {
-				return;
-			}
-
-			\\unlink(\$triggerFile);
-
-			\$contract = Queue::get(Queue::DEFAULT)
-				->push(new EncryptTestWorker('{$flagFile}'))
-				->encrypted()
-				->dispatch();
-
-			// Read back the raw entity -- payload is still {"\$enc":"..."} here because
-			// OZJobsQuery does NOT decrypt; only DbJobStore::fromEntity() does.
-			\$entity = (new OZJobsQuery())
-				->whereRefIs(\$contract->getRef())
-				->find(1)
-				->fetchClass();
-
-			if (null !== \$entity) {
-				\\file_put_contents(
-					'{$rawPayloadFile}',
-					\\json_encode(\$entity->getPayload()->getData())
-				);
-			}
-		});
-	}
-}
-PHP;
 	}
 
 	// -------------------------------------------------------------------------

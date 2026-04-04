@@ -87,8 +87,14 @@ final class DaemonTest extends TestCase
 		$flagFile    = $projPath . '/worker_flag.txt';
 		$triggerFile = $projPath . '/dispatch.trigger';
 
-		$proj->writeFile('app/Workers/DaemonTestWorker.php', self::workerSource($ns, $flagFile));
-		$proj->writeFile('app/DaemonTestBootHookReceiver.php', self::bootHookSource($ns, $flagFile, $triggerFile));
+		$proj->writeFileFromStub('DaemonTestWorker', 'app/Workers/DaemonTestWorker.php', [
+			'namespace' => $ns,
+		]);
+		$proj->writeFileFromStub('DaemonTestBootHookReceiver', 'app/DaemonTestBootHookReceiver.php', [
+			'namespace'    => $ns,
+			'flag_file'    => $flagFile,
+			'trigger_file' => $triggerFile,
+		]);
 		$proj->setSetting('oz.boot', "{$ns}\\DaemonTestBootHookReceiver", true);
 
 		self::assertTrue(true, 'Setup completed.');
@@ -165,126 +171,6 @@ final class DaemonTest extends TestCase
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('daemon');
-	}
-
-	// -------------------------------------------------------------------------
-	// PHP source templates
-	// -------------------------------------------------------------------------
-
-	private static function workerSource(string $namespace, string $flagFile): string
-	{
-		$flagFile = \addslashes($flagFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace}\\Workers;
-
-use OZONE\\Core\\Queue\\Interfaces\\JobContractInterface;
-use OZONE\\Core\\Queue\\Interfaces\\WorkerInterface;
-use OZONE\\Core\\Utils\\JSONResult;
-
-/**
- * Minimal worker for DaemonTest.
- *
- * Writes a flag file when it executes so the test can confirm the daemon
- * actually processed a job.
- */
-final class DaemonTestWorker implements WorkerInterface
-{
-	private JSONResult \$result;
-
-	public function __construct(private readonly string \$flagFile) {}
-
-	public static function getName(): string
-	{
-		return 'daemon-test-worker';
-	}
-
-	public function isAsync(): bool
-	{
-		return false;
-	}
-
-	public function work(JobContractInterface \$job): static
-	{
-		\$this->result = new JSONResult();
-		\\file_put_contents(\$this->flagFile, 'ran');
-		\$this->result->setDone()->setData(['ran' => true]);
-
-		return \$this;
-	}
-
-	public function getResult(): JSONResult
-	{
-		return \$this->result;
-	}
-
-	public static function fromPayload(array \$payload): static
-	{
-		return new self(\$payload['flag_file']);
-	}
-
-	public function getPayload(): array
-	{
-		return ['flag_file' => \$this->flagFile];
-	}
-}
-PHP;
-	}
-
-	private static function bootHookSource(
-		string $namespace,
-		string $flagFile,
-		string $triggerFile,
-	): string {
-		$flagFile    = \addslashes($flagFile);
-		$triggerFile = \addslashes($triggerFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use OZONE\\Core\\Hooks\\Events\\InitHook;
-use OZONE\\Core\\Hooks\\Interfaces\\BootHookReceiverInterface;
-use OZONE\\Core\\Queue\\JobsManager;
-use OZONE\\Core\\Queue\\Queue;
-use {$namespace}\\Workers\\DaemonTestWorker;
-
-/**
- * Boot hook receiver for DaemonTest.
- *
- * Registers the worker. When the trigger file is present, dispatches one job
- * WITHOUT running it -- this simulates work arriving in the queue before the
- * daemon starts.
- */
-final class DaemonTestBootHookReceiver implements BootHookReceiverInterface
-{
-	public static function boot(): void
-	{
-		JobsManager::registerWorker(DaemonTestWorker::class);
-
-		InitHook::listen(static function () {
-			\$triggerFile = '{$triggerFile}';
-
-			if (!\\is_file(\$triggerFile)) {
-				return;
-			}
-
-			\\unlink(\$triggerFile);
-
-			Queue::get(Queue::DEFAULT)
-				->push(new DaemonTestWorker('{$flagFile}'))
-				->dispatch();
-		});
-	}
-}
-PHP;
 	}
 
 	// -------------------------------------------------------------------------

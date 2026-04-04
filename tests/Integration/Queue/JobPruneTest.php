@@ -82,8 +82,14 @@ final class JobPruneTest extends TestCase
 		$successFile = $projPath . '/success.flag';
 		$triggerFile = $projPath . '/dispatch.trigger';
 
-		$proj->writeFile('app/Workers/PruneTestWorker.php', self::workerSource($ns, $successFile));
-		$proj->writeFile('app/PruneTestBootHookReceiver.php', self::bootHookSource($ns, $successFile, $triggerFile));
+		$proj->writeFileFromStub('PruneTestWorker', 'app/Workers/PruneTestWorker.php', [
+			'namespace' => $ns,
+		]);
+		$proj->writeFileFromStub('PruneTestBootHookReceiver', 'app/PruneTestBootHookReceiver.php', [
+			'namespace'    => $ns,
+			'success_file' => $successFile,
+			'trigger_file' => $triggerFile,
+		]);
 		$proj->setSetting('oz.boot', "{$ns}\\PruneTestBootHookReceiver", true);
 
 		// Dispatch and run to completion -> DONE record in DB.
@@ -185,122 +191,6 @@ final class JobPruneTest extends TestCase
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('job-prune');
-	}
-
-	// -------------------------------------------------------------------------
-	// PHP source templates
-	// -------------------------------------------------------------------------
-
-	private static function workerSource(string $namespace, string $successFile): string
-	{
-		$successFile = \addslashes($successFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace}\\Workers;
-
-use OZONE\\Core\\Queue\\Interfaces\\JobContractInterface;
-use OZONE\\Core\\Queue\\Interfaces\\WorkerInterface;
-use OZONE\\Core\\Utils\\JSONResult;
-
-/**
- * Synchronous worker for JobPruneTest. Always succeeds.
- */
-final class PruneTestWorker implements WorkerInterface
-{
-	private JSONResult \$result;
-
-	public function __construct(private readonly string \$successFile) {}
-
-	public static function getName(): string
-	{
-		return 'prune-test-worker';
-	}
-
-	public function isAsync(): bool
-	{
-		return false;
-	}
-
-	public function work(JobContractInterface \$job): static
-	{
-		\$this->result = new JSONResult();
-		\\file_put_contents(\$this->successFile, 'ok');
-		\$this->result->setDone()->setData(['ok' => true]);
-
-		return \$this;
-	}
-
-	public function getResult(): JSONResult
-	{
-		return \$this->result;
-	}
-
-	public static function fromPayload(array \$payload): static
-	{
-		return new self(\$payload['success_file']);
-	}
-
-	public function getPayload(): array
-	{
-		return ['success_file' => \$this->successFile];
-	}
-}
-PHP;
-	}
-
-	private static function bootHookSource(
-		string $namespace,
-		string $successFile,
-		string $triggerFile,
-	): string {
-		$successFile = \addslashes($successFile);
-		$triggerFile = \addslashes($triggerFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use OZONE\\Core\\Hooks\\Events\\InitHook;
-use OZONE\\Core\\Hooks\\Interfaces\\BootHookReceiverInterface;
-use OZONE\\Core\\Queue\\JobsManager;
-use OZONE\\Core\\Queue\\Queue;
-use {$namespace}\\Workers\\PruneTestWorker;
-
-/**
- * Boot hook receiver for JobPruneTest.
- *
- * Registers PruneTestWorker and dispatches one job when the trigger file
- * is present.
- */
-final class PruneTestBootHookReceiver implements BootHookReceiverInterface
-{
-	public static function boot(): void
-	{
-		JobsManager::registerWorker(PruneTestWorker::class);
-
-		InitHook::listen(static function () {
-			\$triggerFile = '{$triggerFile}';
-
-			if (!\\is_file(\$triggerFile)) {
-				return;
-			}
-
-			\\unlink(\$triggerFile);
-
-			Queue::get(Queue::DEFAULT)
-				->push(new PruneTestWorker('{$successFile}'))
-				->dispatch();
-		});
-	}
-}
-PHP;
 	}
 
 	// -------------------------------------------------------------------------

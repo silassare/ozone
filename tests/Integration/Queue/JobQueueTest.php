@@ -78,8 +78,12 @@ final class JobQueueTest extends TestCase
 		$ns       = $proj->getNamespace();
 		$flagFile = $proj->getPath() . \DIRECTORY_SEPARATOR . 'job_ran.flag';
 
-		$proj->writeFile('app/Workers/TestJobWorker.php', self::workerSource($ns, $flagFile));
-		$proj->writeFile('app/TestJobBootHookReceiver.php', self::bootHookSource($ns));
+		$proj->writeFileFromStub('TestJobWorker', 'app/Workers/TestJobWorker.php', [
+			'namespace' => $ns,
+		]);
+		$proj->writeFileFromStub('TestJobBootHookReceiver', 'app/TestJobBootHookReceiver.php', [
+			'namespace' => $ns,
+		]);
 		$proj->setSetting('oz.boot', "{$ns}\\TestJobBootHookReceiver", true);
 
 		// Running the queue processes the job dispatched by TestJobBootHookReceiver.
@@ -125,127 +129,6 @@ final class JobQueueTest extends TestCase
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('job-queue');
-	}
-
-	// -------------------------------------------------------------------------
-	// PHP source templates injected into test projects
-	// -------------------------------------------------------------------------
-
-	/**
-	 * Returns the PHP source for the TestJobWorker class.
-	 *
-	 * The worker writes 'done' to a flag file so the test can confirm it ran.
-	 */
-	private static function workerSource(string $namespace, string $flagFile): string
-	{
-		$escapedFlag = \addslashes($flagFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace}\\Workers;
-
-use OZONE\\Core\\Queue\\Interfaces\\JobContractInterface;
-use OZONE\\Core\\Queue\\Interfaces\\WorkerInterface;
-use OZONE\\Core\\Utils\\JSONResult;
-
-/**
- * Minimal synchronous worker used by the integration test.
- *
- * Writes 'done' to a flag file so the test process can assert the job ran.
- */
-final class TestJobWorker implements WorkerInterface
-{
-	private JSONResult \$result;
-
-	public function __construct(private readonly string \$flagFile) {}
-
-	public static function getName(): string
-	{
-		return 'test-job-worker';
-	}
-
-	public function isAsync(): bool
-	{
-		return false;
-	}
-
-	public function work(JobContractInterface \$jobContract): static
-	{
-		\$this->result = new JSONResult();
-		\\file_put_contents(\$this->flagFile, 'done');
-		\$this->result->setDone()->setData(['flag' => \$this->flagFile]);
-
-		return \$this;
-	}
-
-	public function getResult(): JSONResult
-	{
-		return \$this->result;
-	}
-
-	public static function fromPayload(array \$payload): static
-	{
-		return new self(\$payload['flag_file']);
-	}
-
-	public function getPayload(): array
-	{
-		return ['flag_file' => \$this->flagFile];
-	}
-}
-PHP;
-	}
-
-	/**
-	 * Returns the PHP source for the TestJobBootHookReceiver class.
-	 *
-	 * On every OZone bootstrap (boot phase) the receiver registers the custom
-	 * worker.  Then via an InitHook listener it dispatches one job so that the
-	 * subsequent `oz jobs run` action finds something to process.
-	 */
-	private static function bootHookSource(string $namespace): string
-	{
-		$escapedNs   = \addslashes($namespace);
-		$escapedFlag = '{$flagFile}'; // will be resolved at PHP runtime inside the generated file
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use OZONE\\Core\\Hooks\\Events\\InitHook;
-use OZONE\\Core\\Hooks\\Interfaces\\BootHookReceiverInterface;
-use OZONE\\Core\\Queue\\JobsManager;
-use OZONE\\Core\\Queue\\Queue;
-use {$namespace}\\Workers\\TestJobWorker;
-
-/**
- * Registers TestJobWorker and dispatches one test job per bootstrap via InitHook.
- */
-final class TestJobBootHookReceiver implements BootHookReceiverInterface
-{
-	public static function boot(): void
-	{
-		JobsManager::registerWorker(TestJobWorker::class);
-
-		InitHook::listen(static function () {
-			// Flag file path is defined relative to the project root at
-			// class-generation time (absolute path embedded by OZTestProject).
-			\$flagFile = \\dirname(__DIR__) . \\DIRECTORY_SEPARATOR . 'job_ran.flag';
-			// Remove any previous run's flag so the test sees a fresh result.
-			if (\\is_file(\$flagFile)) {
-				\\unlink(\$flagFile);
-			}
-			Queue::get(Queue::DEFAULT)->push(new TestJobWorker(\$flagFile))->dispatch();
-		});
-	}
-}
-PHP;
 	}
 
 	// -------------------------------------------------------------------------

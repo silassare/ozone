@@ -57,7 +57,9 @@ final class HttpRoutingTest extends TestCase
 
 		// Inject the custom test route provider.
 		$ns = $proj->getNamespace(); // 'HttpRouting'
-		$proj->writeFile('app/TestRoutesProvider.php', self::routesProviderSource($ns));
+		$proj->writeFileFromStub('TestRoutesProvider', 'app/TestRoutesProvider.php', [
+			'namespace' => $ns,
+		]);
 		$proj->setSetting('oz.routes.api', "{$ns}\\TestRoutesProvider", true);
 
 		// Build ORM classes and install the schema.
@@ -240,64 +242,5 @@ final class HttpRoutingTest extends TestCase
 		}
 
 		return [$status, $body];
-	}
-
-	/**
-	 * Returns the PHP source for the custom TestRoutesProvider class.
-	 *
-	 * The class is written into app/TestRoutesProvider.php in the test project so
-	 * it is auto-loaded under the project namespace.
-	 */
-	private static function routesProviderSource(string $namespace): string
-	{
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use OZONE\\Core\\App\\Service as BaseService;
-use OZONE\\Core\\Forms\\Form;
-use OZONE\\Core\\REST\\ApiDoc;
-use OZONE\\Core\\Router\\RouteInfo;
-use OZONE\\Core\\Router\\Router;
-
-/**
- * Custom route provider injected by integration tests.
- */
-final class TestRoutesProvider extends BaseService
-{
-	public static function registerRoutes(Router \$router): void
-	{
-		// Simple GET route.
-		\$router->get('/test-ping', static function (RouteInfo \$ri) {
-			\$s = new self(\$ri);
-			\$s->json()->setDone('PONG')->setData(['pong' => true]);
-			return \$s->respond();
-		})->name('test:ping');
-
-		// POST route with required form field.
-		\$router->post('/test-echo', static function (RouteInfo \$ri) {
-			\$s = new self(\$ri);
-			\$s->json()->setDone()->setData(['message' => \$ri->getCleanFormData()->get('message')]);
-			return \$s->respond();
-		})->name('test:echo')->form(static function () {
-			\$form = new Form();
-			\$form->string('message', true);
-			return \$form;
-		});
-
-		// GET route guarded by authentication requirement.
-		\$router->get('/test-protected', static function (RouteInfo \$ri) {
-			\$s = new self(\$ri);
-			\$s->json()->setDone()->setData(['secret' => 'ok']);
-			return \$s->respond();
-		})->name('test:protected')->withAuthenticatedUser();
-	}
-
-	public static function apiDoc(ApiDoc \$doc): void {}
-}
-PHP;
 	}
 }

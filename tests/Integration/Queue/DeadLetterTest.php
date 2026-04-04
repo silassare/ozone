@@ -84,8 +84,16 @@ final class DeadLetterTest extends TestCase
 		$successFile = $projPath . '/success.flag';
 		$triggerFile = $projPath . '/dispatch.trigger';
 
-		$proj->writeFile('app/Workers/DeadLetterTestWorker.php', self::workerSource($ns, $counterFile, $failFile, $successFile));
-		$proj->writeFile('app/DeadLetterBootHookReceiver.php', self::bootHookSource($ns, $counterFile, $failFile, $successFile, $triggerFile));
+		$proj->writeFileFromStub('DeadLetterTestWorker', 'app/Workers/DeadLetterTestWorker.php', [
+			'namespace' => $ns,
+		]);
+		$proj->writeFileFromStub('DeadLetterBootHookReceiver', 'app/DeadLetterBootHookReceiver.php', [
+			'namespace'    => $ns,
+			'counter_file' => $counterFile,
+			'fail_file'    => $failFile,
+			'success_file' => $successFile,
+			'trigger_file' => $triggerFile,
+		]);
 		$proj->setSetting('oz.boot', "{$ns}\\DeadLetterBootHookReceiver", true);
 
 		// Worker will fail (fail flag present), retry_max=2, retry_delay=0.
@@ -182,159 +190,6 @@ final class DeadLetterTest extends TestCase
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('dead-letter');
-	}
-
-	// -------------------------------------------------------------------------
-	// PHP source templates
-	// -------------------------------------------------------------------------
-
-	private static function workerSource(
-		string $namespace,
-		string $counterFile,
-		string $failFile,
-		string $successFile,
-	): string {
-		$counterFile = \addslashes($counterFile);
-		$failFile    = \addslashes($failFile);
-		$successFile = \addslashes($successFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace}\\Workers;
-
-use OZONE\\Core\\Queue\\Interfaces\\JobContractInterface;
-use OZONE\\Core\\Queue\\Interfaces\\WorkerInterface;
-use OZONE\\Core\\Utils\\JSONResult;
-
-/**
- * Synchronous worker for DeadLetterTest.
- *
- * Increments counter each run. Throws when fail-flag exists; writes
- * success-flag on success.
- */
-final class DeadLetterTestWorker implements WorkerInterface
-{
-	private JSONResult \$result;
-
-	public function __construct(
-		private readonly string \$counterFile,
-		private readonly string \$failFile,
-		private readonly string \$successFile,
-	) {}
-
-	public static function getName(): string
-	{
-		return 'dead-letter-test-worker';
-	}
-
-	public function isAsync(): bool
-	{
-		return false;
-	}
-
-	public function work(JobContractInterface \$job): static
-	{
-		\$this->result = new JSONResult();
-
-		\$count = \\is_file(\$this->counterFile)
-			? (int) \\trim((string) \\file_get_contents(\$this->counterFile))
-			: 0;
-		\\file_put_contents(\$this->counterFile, (string) (\$count + 1));
-
-		if (\\is_file(\$this->failFile)) {
-			throw new \\RuntimeException('Forced failure from DeadLetterTestWorker.');
-		}
-
-		\\file_put_contents(\$this->successFile, 'ok');
-		\$this->result->setDone()->setData(['ok' => true]);
-
-		return \$this;
-	}
-
-	public function getResult(): JSONResult
-	{
-		return \$this->result;
-	}
-
-	public static function fromPayload(array \$payload): static
-	{
-		return new self(
-			\$payload['counter_file'],
-			\$payload['fail_file'],
-			\$payload['success_file'],
-		);
-	}
-
-	public function getPayload(): array
-	{
-		return [
-			'counter_file' => \$this->counterFile,
-			'fail_file'    => \$this->failFile,
-			'success_file' => \$this->successFile,
-		];
-	}
-}
-PHP;
-	}
-
-	private static function bootHookSource(
-		string $namespace,
-		string $counterFile,
-		string $failFile,
-		string $successFile,
-		string $triggerFile,
-	): string {
-		$counterFile = \addslashes($counterFile);
-		$failFile    = \addslashes($failFile);
-		$successFile = \addslashes($successFile);
-		$triggerFile = \addslashes($triggerFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use OZONE\\Core\\Hooks\\Events\\InitHook;
-use OZONE\\Core\\Hooks\\Interfaces\\BootHookReceiverInterface;
-use OZONE\\Core\\Queue\\JobsManager;
-use OZONE\\Core\\Queue\\Queue;
-use {$namespace}\\Workers\\DeadLetterTestWorker;
-
-/**
- * Boot hook receiver for DeadLetterTest.
- *
- * Registers the worker and dispatches one job (retry_max=2, retry_delay=0)
- * when the trigger file is present.
- */
-final class DeadLetterBootHookReceiver implements BootHookReceiverInterface
-{
-	public static function boot(): void
-	{
-		JobsManager::registerWorker(DeadLetterTestWorker::class);
-
-		InitHook::listen(static function () {
-			\$triggerFile = '{$triggerFile}';
-
-			if (!\\is_file(\$triggerFile)) {
-				return;
-			}
-
-			\\unlink(\$triggerFile);
-
-			Queue::get(Queue::DEFAULT)
-				->push(new DeadLetterTestWorker('{$counterFile}', '{$failFile}', '{$successFile}'))
-				->setRetryMax(2)
-				->setRetryDelay(0)
-				->dispatch();
-		});
-	}
-}
-PHP;
 	}
 
 	// -------------------------------------------------------------------------

@@ -101,7 +101,10 @@ final class CronTaskTest extends TestCase
 		$ns       = $proj->getNamespace();
 		$flagFile = $proj->getPath() . \DIRECTORY_SEPARATOR . 'cron_ran.flag';
 
-		$proj->writeFile('app/TestCronBootHookReceiver.php', self::bootHookSource($ns, $flagFile));
+		$proj->writeFileFromStub('TestCronBootHookReceiver', 'app/TestCronBootHookReceiver.php', [
+			'namespace' => $ns,
+			'flag_file' => $flagFile,
+		]);
 		$proj->setSetting('oz.boot', "{$ns}\\TestCronBootHookReceiver", true);
 
 		// oz cron run dispatches AND processes the due task (CronCmd runs cron:sync after dispatch).
@@ -171,7 +174,10 @@ final class CronTaskTest extends TestCase
 		$ns       = $proj->getNamespace();
 		$flagFile = $proj->getPath() . \DIRECTORY_SEPARATOR . 'async_cron_ran.flag';
 
-		$proj->writeFile('app/TestAsyncCronBootHookReceiver.php', self::asyncBootHookSource($ns, $flagFile));
+		$proj->writeFileFromStub('TestAsyncCronBootHookReceiver', 'app/TestAsyncCronBootHookReceiver.php', [
+			'namespace' => $ns,
+			'flag_file' => $flagFile,
+		]);
 		$proj->setSetting('oz.boot', "{$ns}\\TestAsyncCronBootHookReceiver", true);
 
 		// oz cron run dispatches to cron:async and spawns a subprocess to execute it.
@@ -227,49 +233,8 @@ final class CronTaskTest extends TestCase
 	}
 
 	// -------------------------------------------------------------------------
-	// PHP source templates injected into test projects
+	// Static project store helpers
 	// -------------------------------------------------------------------------
-
-	/**
-	 * Returns the PHP source for the TestCronBootHookReceiver class.
-	 *
-	 * Registers a CronCollect listener that adds an everyMinute callable task.
-	 * The task writes 'cron-ok' to the flag file so the test can confirm it ran.
-	 */
-	private static function bootHookSource(string $namespace, string $flagFile): string
-	{
-		$escapedFlag = \addslashes($flagFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use OZONE\\Core\\Cli\\Cron\\Cron;
-use OZONE\\Core\\Cli\\Cron\\Hooks\\CronCollect;
-use OZONE\\Core\\Hooks\\Interfaces\\BootHookReceiverInterface;
-use OZONE\\Core\\Utils\\JSONResult;
-
-/**
- * Registers a callable cron task via CronCollect so the integration test
- * can verify the full dispatch + process pipeline.
- */
-final class TestCronBootHookReceiver implements BootHookReceiverInterface
-{
-	public static function boot(): void
-	{
-		CronCollect::listen(static function () {
-			Cron::call(static function (JSONResult \$result) {
-				\\file_put_contents('{$escapedFlag}', 'cron-ok');
-				\$result->setDone()->setData(['flag' => '{$escapedFlag}']);
-			}, 'test-cron-flag-task')->everyMinute();
-		});
-	}
-}
-PHP;
-	}
 
 	private static function getProject(DbTestConfig $config): OZTestProject
 	{
@@ -295,58 +260,5 @@ PHP;
 		}
 
 		return self::$asyncProjects[$rdbms];
-	}
-
-	/**
-	 * Returns the PHP source for TestAsyncCronBootHookReceiver.
-	 *
-	 * Registers a CronCollect listener that adds an everyMinute async callable task.
-	 * The task writes 'async-cron-ok' to the flag file so the test can confirm the
-	 * background subprocess resolved the task correctly.
-	 */
-	private static function asyncBootHookSource(string $namespace, string $flagFile): string
-	{
-		$escapedFlag = \addslashes($flagFile);
-
-		return <<<PHP
-<?php
-
-declare(strict_types=1);
-
-namespace {$namespace};
-
-use OZONE\\Core\\Cli\\Cron\\Cron;
-use OZONE\\Core\\Cli\\Cron\\Hooks\\CronCollect;
-use OZONE\\Core\\Cli\\Cron\\Tasks\\CallableTask;
-use OZONE\\Core\\Hooks\\Interfaces\\BootHookReceiverInterface;
-use OZONE\\Core\\Utils\\JSONResult;
-
-/**
- * Registers an async callable cron task via CronCollect.
- *
- * Uses \\inBackground() so the task is routed to the cron:async queue and
- * executed via a background subprocess.  This verifies that CronTaskWorker
- * calls Cron::collect() in its constructor so the task registry is populated
- * in the subprocess context.
- */
-final class TestAsyncCronBootHookReceiver implements BootHookReceiverInterface
-{
-	public static function boot(): void
-	{
-		CronCollect::listen(static function () {
-			\$task = new CallableTask(
-				'test-async-cron-flag-task',
-				static function (JSONResult \$result) {
-					\\file_put_contents('{$escapedFlag}', 'async-cron-ok');
-					\$result->setDone()->setData(['flag' => '{$escapedFlag}']);
-				},
-			);
-			\$task->inBackground();
-			\$task->schedule()->everyMinute();
-			Cron::addTask(\$task);
-		});
-	}
-}
-PHP;
 	}
 }

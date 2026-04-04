@@ -300,6 +300,26 @@ final class OZTestProject
 	}
 
 	/**
+	 * Writes a file to the project by loading a stub from tests/Integration/Stubs/
+	 * and replacing `__PLH_KEY__` placeholders with the given values.
+	 *
+	 * @param string              $stubName      stub filename without the .php extension (in tests/Integration/Stubs/)
+	 * @param string              $targetRelPath relative path inside the project (e.g. 'app/Workers/MyWorker.php')
+	 * @param array<string,mixed> $placeholders  key => value map; each key is uppercased and wrapped in __PLH_...__
+	 */
+	public function writeFileFromStub(string $stubName, string $targetRelPath, array $placeholders): void
+	{
+		$stubFile = \dirname(__DIR__) . \DIRECTORY_SEPARATOR . 'Stubs' . \DIRECTORY_SEPARATOR . $stubName . '.php';
+		$content  = (string) \file_get_contents($stubFile);
+
+		foreach ($placeholders as $key => $value) {
+			$content = \str_replace('__PLH_' . \strtoupper($key) . '__', (string) $value, $content);
+		}
+
+		$this->writeFile($targetRelPath, $content);
+	}
+
+	/**
 	 * Starts `oz project serve` for the given scope and waits until it accepts connections.
 	 *
 	 * @param string $scope the scope name (default 'api')
