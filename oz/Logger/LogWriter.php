@@ -70,6 +70,7 @@ class LogWriter implements LogWriterInterface
 	public function write($level, mixed $message, array $context = []): void
 	{
 		$message = self::describe($message);
+		$context = !empty($context) ? self::describe($context) : '';
 
 		$date  = \date('Y-m-d H:i:s');
 		$level = \strtoupper($level);
@@ -80,8 +81,14 @@ class LogWriter implements LogWriterInterface
 ================================================================================
 {$message}
 
+LOG;
+		if (!empty($context)) {
+			$message .= <<<LOG
+===
+{$context}
 
 LOG;
+		}
 
 		$mode = (\file_exists($this->log_file) && \filesize($this->log_file) <= $this->max_size) ? 'a' : 'w';
 

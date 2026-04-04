@@ -27,6 +27,27 @@ use Throwable;
  */
 class Logger implements LoggerInterface
 {
+	private const LEVELS = [
+		LogLevel::EMERGENCY => 0,
+		LogLevel::ALERT     => 1,
+		LogLevel::CRITICAL  => 2,
+		LogLevel::ERROR     => 3,
+		LogLevel::WARNING   => 4,
+		LogLevel::NOTICE    => 5,
+		LogLevel::INFO      => 6,
+		LogLevel::DEBUG     => 7,
+	];
+
+	/**
+	 * Checks if a log level should be logged based on the configured log level.
+	 */
+	public static function shouldLog(string $level): bool
+	{
+		$configured_level = Settings::get('oz.logs', 'OZ_LOG_LEVEL', LogLevel::DEBUG);
+
+		return self::LEVELS[$level] <= self::LEVELS[$configured_level];
+	}
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -35,6 +56,10 @@ class Logger implements LoggerInterface
 	#[Override]
 	public function log($level, string|Stringable|Throwable $message, array $context = []): void
 	{
+		if (!self::shouldLog($level)) {
+			return;
+		}
+
 		self::writer()->write((string) $level, $message, $context);
 	}
 

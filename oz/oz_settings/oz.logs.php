@@ -10,6 +10,7 @@
  */
 
 declare(strict_types=1);
+
 use OZONE\Core\Logger\LogWriter;
 
 return [
@@ -27,4 +28,10 @@ return [
 	 * Enable or disable logging of execution time.
 	 */
 	'OZ_LOG_EXECUTION_TIME_ENABLED' => false,
+
+	/**
+	 * The log level to use. Messages with a level equal to or higher than this will be logged.
+	 * Valid levels are: 'emergency', 'alert', 'critical', 'error', 'warning', 'notice', 'info', 'debug'.
+	 */
+	'OZ_LOG_LEVEL' => 'debug',
 ];
