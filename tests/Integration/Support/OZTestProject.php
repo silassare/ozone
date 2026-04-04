@@ -49,23 +49,21 @@ final class OZTestProject
 	 * Composer install only runs when the effective dependency set has never
 	 * been seen before - otherwise the cached vendor/ directory is symlinked.
 	 *
-	 * @param string               $name     project directory name (slug)
-	 * @param array<string,string> $deps     extra require packages (name -> constraint)
-	 * @param array<string,string> $deps_dev extra require-dev packages
-	 * @param bool                 $shared   when true the vendor cache is shared with
-	 *                                       other projects that have the same dep set;
-	 *                                       pass false to isolate vendor per project name;
-	 *                                       in most cases tests should set shared=true so that composer installs are minimized
-	 * @param bool                 $fresh    when true, any existing project directory is destroyed before creating;
-	 *                                       use when the test must start from a clean slate on every run
-	 *                                       (e.g. tests that call migrations create + run inline)
+	 * @param string               $name   project directory name (slug)
+	 * @param array<string,string> $deps   extra require packages (name -> constraint)
+	 * @param bool                 $shared when true the vendor cache is shared with
+	 *                                     other projects that have the same dep set;
+	 *                                     pass false to isolate vendor per project name;
+	 *                                     in most cases tests should set shared=true so that composer installs are minimized
+	 * @param bool                 $fresh  when true, any existing project directory is destroyed before creating;
+	 *                                     use when the test must start from a clean slate on every run
+	 *                                     (e.g. tests that call migrations create + run inline)
 	 *
 	 * @throws JsonException
 	 */
 	public static function create(
 		string $name,
 		array $deps = [],
-		array $deps_dev = [],
 		bool $shared = true,
 		bool $fresh = false,
 	): static {
@@ -139,14 +137,8 @@ final class OZTestProject
 		foreach ($deps as $pkg => $ver) {
 			$composer['require'][$pkg] = $ver;
 		}
-		foreach ($deps_dev as $pkg => $ver) {
-			$composer['require-dev'][$pkg] = $ver;
-		}
 
 		\ksort($composer['require']);
-		if (!empty($composer['require-dev'])) {
-			\ksort($composer['require-dev']);
-		}
 
 		// -- Step 3: compute vendor cache hash --------------------------------
 		// Include a fingerprint of the ozone composer.lock so that any upstream
@@ -156,9 +148,8 @@ final class OZTestProject
 		$lock_file  = $ozone_root . \DIRECTORY_SEPARATOR . 'composer.lock';
 		$lock_hash  = \is_readable($lock_file) ? \md5_file($lock_file) : '';
 		$hash_input = [
-			'require'     => $composer['require'] ?? [],
-			'require-dev' => $composer['require-dev'] ?? [],
-			'lock'        => $lock_hash,
+			'require' => $composer['require'] ?? [],
+			'lock'    => $lock_hash,
 		];
 		if (!$shared) {
 			$hash_input['project'] = $name;
@@ -180,8 +171,9 @@ final class OZTestProject
 			} else {
 				// First time this dep set is seen: install, cache, symlink.
 				// Composer install can take several minutes on a cold network - use a generous timeout.
+				// --no-dev: sub-projects only run oz CLI commands; dev packages are never needed.
 				$install = new Process(
-					['composer', 'install', '--no-interaction', '--no-progress'],
+					['composer', 'install', '--no-dev', '--no-interaction', '--no-progress'],
 					$project_dir,
 					timeout: 300,
 				);
