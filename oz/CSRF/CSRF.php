@@ -92,20 +92,6 @@ class CSRF
 	}
 
 	/**
-	 * Obfuscate a human readable string (Field name, Select option value etc.).
-	 *
-	 * @param string $human_readable_str
-	 *
-	 * @return string
-	 */
-	public function obfuscate(string $human_readable_str): string
-	{
-		// TODO: find usage to this method or remove it
-		// obfuscation is not security keep it simple
-		return Hasher::shorten($this->scope_ref . $human_readable_str . Keys::salt());
-	}
-
-	/**
 	 * Builds csrf token key part.
 	 *
 	 * @param string $id
