@@ -262,8 +262,10 @@ final class RouteInfo
 			$clean_fd = $bundle->validate($unsafe_fd, $prefilled);
 
 			if (null !== $cache && null !== $cache_key) {
-				// TODO: ensure we delete the cache entry on form completion
-				$cache->set($cache_key, $clean_fd, $bundle->getResumeTTL());
+				// Validation succeeded — the route handler is about to execute with
+				// the fully assembled FormData.  Delete the resume cache entry so
+				// stale partial data never bleeds into a future request.
+				$cache->delete($cache_key);
 			}
 
 			$this->clean_form_data->merge($clean_fd);
