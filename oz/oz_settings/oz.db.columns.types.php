@@ -26,7 +26,7 @@ return [
 	TypeUrl::NAME      => TypeUrl::class,
 	TypeUsername::NAME => TypeUsername::class,
 	/**
-	 * @deprecated
+	 * @deprecated kept for backward compatibility, but use `username` instead for new columns
 	 */
 	'user_name'        => TypeUsername::class,
 	TypePassword::NAME => TypePassword::class,
