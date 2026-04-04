@@ -12,7 +12,11 @@
 declare(strict_types=1);
 
 use OZONE\Core\Roles\Enums\Role;
+use OZONE\Core\Roles\Interfaces\RoleInterface;
 
 return [
+	/**
+	 * FQN of the roles enum class, must implement {@see RoleInterface}.
+	 */
 	'OZ_ROLE_ENUM_CLASS' => Role::class,
 ];

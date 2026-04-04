@@ -11,9 +11,7 @@
 
 declare(strict_types=1);
 
-// = List of allowed and disabled proxies.
-// = use `true` to allow a proxy
-// = use `false` to disable a proxy
+// Map of trusted proxies. Use `true` to allow, `false` to block.
 return [
 	// 'proxy_1' => true,
 	// 'proxy_2' => false,

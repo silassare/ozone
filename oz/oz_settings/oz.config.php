@@ -12,10 +12,31 @@
 declare(strict_types=1);
 
 return [
+	/**
+	 * The OZone framework version. Do not override - auto-set from the framework constant.
+	 */
 	'OZ_OZONE_VERSION'          => OZ_OZONE_VERSION,
+
+	/**
+	 * Project name.
+	 *
+	 * Shown in the CLI and used during project/scope code generation.
+	 */
 	'OZ_PROJECT_NAME'           => 'Sample App',
+
+	/**
+	 * Root PHP namespace for generated classes.
+	 */
 	'OZ_PROJECT_NAMESPACE'      => 'NOOP',
+
+	/**
+	 * App class name used during project/scope code generation.
+	 */
 	'OZ_PROJECT_APP_CLASS_NAME' => 'NoopApp',
+
+	/**
+	 * Short prefix (2 characters) used in various place like for temp file names.
+	 */
 	'OZ_PROJECT_PREFIX'         => 'SA',
 
 	/**

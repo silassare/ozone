@@ -15,6 +15,13 @@ use OZONE\Core\FS\Drivers\PrivateLocalStorage;
 use OZONE\Core\FS\Drivers\PublicLocalStorage;
 use OZONE\Core\FS\FS;
 
+/**
+ * Map of named storage slots to their driver class.
+ *
+ * - {@see FS::DEFAULT_STORAGE} — storage used when no specific slot is requested
+ * - {@see FS::PUBLIC_STORAGE}  — publicly accessible files
+ * - {@see FS::PRIVATE_STORAGE} — access-controlled files
+ */
 return [
 	FS::DEFAULT_STORAGE => PublicLocalStorage::class,
 	FS::PUBLIC_STORAGE  => PublicLocalStorage::class,

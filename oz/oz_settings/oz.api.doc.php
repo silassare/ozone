@@ -12,7 +12,13 @@
 declare(strict_types=1);
 
 return [
-	// Enable API documentation page
-	'OZ_API_DOC_ENABLED'          => true,
-	'OZ_API_DOC_SHOW_ON_INDEX'    => true,
+	/**
+	 * Enable API documentation generation and endpoints.
+	 */
+	'OZ_API_DOC_ENABLED'       => true,
+
+	/**
+	 * Redirect the root API URL to the API doc view when OZ_API_DOC_ENABLED is true.
+	 */
+	'OZ_API_DOC_SHOW_ON_INDEX' => true,
 ];
