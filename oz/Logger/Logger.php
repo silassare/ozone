@@ -43,7 +43,12 @@ class Logger implements LoggerInterface
 	 */
 	public static function shouldLog(string $level): bool
 	{
-		$configured_level = Settings::get('oz.logs', 'OZ_LOG_LEVEL', LogLevel::DEBUG);
+		/** @var null|string $configured_level */
+		static $configured_level;
+
+		if (null === $configured_level) {
+			$configured_level = Settings::get('oz.logs', 'OZ_LOG_LEVEL', LogLevel::DEBUG);
+		}
 
 		return self::LEVELS[$level] <= self::LEVELS[$configured_level];
 	}
