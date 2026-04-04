@@ -60,7 +60,7 @@ class Logger implements LoggerInterface
 			return;
 		}
 
-		self::writer()->write((string) $level, $message, $context);
+		self::writer()->write($level, $message, $context);
 	}
 
 	/**
