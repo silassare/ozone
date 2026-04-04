@@ -15,7 +15,6 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
-use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\FormData;
@@ -30,8 +29,6 @@ use PHPUtils\Str;
  */
 final class RouteInfo
 {
-	private const FORM_DATA_RESUME_CACHE_NAMESPACE = 'oz.form.resume';
-
 	/**
 	 * Maps route guard FQN class name to produced data during check.
 	 *
@@ -237,34 +234,16 @@ final class RouteInfo
 		$bundle = $this->route->getOptions()->getFormBundle($this);
 
 		if ($bundle) {
-			$resume_scope = $bundle->getResumeScope();
-			$cache        = null;
-			$cache_key    = null;
-			$prefilled    = null;
+			[$prefilled, $drop_resume_cache] = $bundle->resume($this->context);
 
-			if (null !== $resume_scope) {
-				$scope_id = $resume_scope->resolveId($this->context);
-
-				$cache     = CacheManager::persistent(self::FORM_DATA_RESUME_CACHE_NAMESPACE);
-				$cache_key = $bundle->buildResumeCacheKey($scope_id);
-				$cached    = $cache->get($cache_key);
-
-				if ($cached instanceof FormData) {
-					$prefilled = $cached;
-				}
-			}
-
-			$unsafe_fd = $this->context->getRequest()
-				->getUnsafeFormData();
+			$unsafe_fd = $this->context->getRequest()->getUnsafeFormData();
 
 			$clean_fd = $bundle->validate($unsafe_fd, $prefilled);
 
-			if (null !== $cache && null !== $cache_key) {
-				// Validation succeeded — the route handler is about to execute with
-				// the fully assembled FormData.  Delete the resume cache entry so
-				// stale partial data never bleeds into a future request.
-				$cache->delete($cache_key);
-			}
+			// Validation succeeded — the route handler is about to execute with
+			// the fully assembled FormData. Delete the resume cache entry if any so
+			// stale partial data never bleeds into a future request.
+			$drop_resume_cache();
 
 			$this->clean_form_data->merge($clean_fd);
 		}

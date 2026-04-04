@@ -13,10 +13,14 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Forms;
 
+use Closure;
 use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\TypeDate;
+use LogicException;
 use Override;
+use OZONE\Core\App\Context;
+use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\Enums\RuleSetCondition;
 use OZONE\Core\Forms\Enums\RuleSetContext;
@@ -39,6 +43,8 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	use ArrayCapableTrait;
 	use FormFieldsTrait;
 	use MetaCapableTrait;
+
+	public const FORM_DATA_RESUME_CACHE_NAMESPACE = 'oz.form.resume';
 
 	/**
 	 * @var array<string,Field>
@@ -191,7 +197,7 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	 *
 	 * @return $this
 	 */
-	public function resume(RequestScope $mode = RequestScope::STATE, int $ttl = 3600): static
+	public function resumable(RequestScope $mode = RequestScope::STATE, int $ttl = 3600): static
 	{
 		$this->t_resume_scope = $mode;
 		$this->t_resume_ttl   = $ttl;
@@ -429,6 +435,61 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	public function getMethod(): string
 	{
 		return $this->t_method;
+	}
+
+	/**
+	 * Try resuming a previously saved form state.
+	 *
+	 * @return array{
+	 *  0: null|FormData,
+	 *  1: (Closure(): bool)
+	 * }
+	 */
+	public function resume(Context $context): array
+	{
+		$cache        = null;
+		$cache_key    = null;
+		$prefilled    = null;
+
+		if (null !== $this->t_resume_scope) {
+			$scope_id = $this->t_resume_scope->resolveId($context);
+
+			$cache     = CacheManager::persistent(self::FORM_DATA_RESUME_CACHE_NAMESPACE);
+			$cache_key = $this->buildResumeCacheKey($scope_id);
+			$cached    = $cache->get($cache_key);
+
+			if (\is_array($cached) && isset($cached['version'], $cached['data']) && $cached['version'] === $this->getVersion()) {
+				$prefilled = new FormData($cached['data']);
+			}
+		}
+
+		$drop_callable = static fn () => $cache_key && $cache?->delete($cache_key);
+
+		return [$prefilled, $drop_callable];
+	}
+
+	/**
+	 * Saves validated form data for resuming later.
+	 *
+	 * @param Context  $context The request context to resolve the resume scope
+	 * @param FormData $fd      Validated form data to save
+	 */
+	public function saveForLater(Context $context, FormData $fd): static
+	{
+		if (null === $this->t_resume_scope) {
+			throw new LogicException('Form resume is not enabled for this form.');
+		}
+
+		$scope_id  = $this->t_resume_scope->resolveId($context);
+		$cache     = CacheManager::persistent(self::FORM_DATA_RESUME_CACHE_NAMESPACE);
+		$cache_key = $this->buildResumeCacheKey($scope_id);
+
+		$cache->set($cache_key, [
+			'version' => $this->getVersion(),
+			'data'    => $fd->toArray(),
+		], $this->t_resume_ttl);
+
+		return $this;
 	}
 
 	/**
