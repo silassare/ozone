@@ -138,12 +138,12 @@ final class AuthUsersUtilsTest extends TestCase
 
 	public function testRefToSelectorParsesThreeParts(): void
 	{
-		$result = AuthUsers::refToSelector('user.email.test@example.com');
+		$result = AuthUsers::refToSelector('user.email.john.doe@example.com');
 
 		self::assertSame([
 			AuthUsers::FIELD_AUTH_USER_TYPE             => 'user',
 			AuthUsers::FIELD_AUTH_USER_IDENTIFIER_TYPE  => 'email',
-			AuthUsers::FIELD_AUTH_USER_IDENTIFIER_VALUE => 'test@example.com',
+			AuthUsers::FIELD_AUTH_USER_IDENTIFIER_VALUE => 'john.doe@example.com',
 		], $result);
 	}
 
