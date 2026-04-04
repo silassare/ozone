@@ -159,41 +159,42 @@ Source settings files (`app/settings/`, `scopes/{name}/settings/`) are the versi
 
 **All built-in settings groups** (in `oz/oz_settings/`):
 
-| File                         | Key settings                                                                                                                                |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `oz.config`                  | `OZ_PROJECT_NAME`, `OZ_PROJECT_NAMESPACE`, `OZ_PROJECT_APP_CLASS_NAME`, `OZ_PROJECT_PREFIX`                                                 |
-| `oz.db`                      | `OZ_DB_RDBMS`, `OZ_DB_HOST`, `OZ_DB_PORT`, `OZ_DB_NAME`, `OZ_DB_USER`, `OZ_DB_PASS`, `OZ_DB_TABLE_PREFIX`, `OZ_DB_CHARSET`, `OZ_DB_COLLATE` |
-| `oz.db.schema`               | Project table definitions (Gobl schema array)                                                                                               |
-| `oz.db.migrations`           | `OZ_MIGRATION_VERSION`                                                                                                                      |
-| `oz.db.columns.types`        | `TypeName::NAME => TypeName::class` map                                                                                                     |
-| `oz.boot`                    | Boot hook receiver class map                                                                                                                |
-| `oz.plugins`                 | Plugin class map                                                                                                                            |
-| `oz.routes`                  | Shared route provider class map (both API + web)                                                                                            |
-| `oz.routes.api`              | API router route provider class map                                                                                                         |
-| `oz.routes.web`              | Web router route provider class map                                                                                                         |
-| `oz.auth`                    | Auth code config, API key header name, auth methods for API/web                                                                             |
-| `oz.auth.users.repositories` | User type -> `AuthUsersRepositoryInterface` class map                                                                                       |
-| `oz.auth.providers`          | Provider name -> `AuthorizationProviderInterface` class map                                                                                 |
-| `oz.auth.methods`            | Scheme -> method class map                                                                                                                  |
-| `oz.middlewares`             | Named middleware registry                                                                                                                   |
-| `oz.guards`                  | Named guard registry                                                                                                                        |
-| `oz.guards.providers`        | Guard provider class map                                                                                                                    |
-| `oz.gobl.crud`               | CRUD listener class map                                                                                                                     |
-| `oz.gobl.collections`        | Entity collection class map                                                                                                                 |
-| `oz.request`                 | CORS settings, `OZ_DEFAULT_ORIGIN`, `OZ_REAL_METHOD_HEADER_ALLOWED`                                                                         |
-| `oz.sessions`                | `OZ_SESSION_LIFE_TIME`, `OZ_SESSION_COOKIE_NAME`                                                                                            |
-| `oz.cookie`                  | `OZ_COOKIE_DOMAIN`, `OZ_COOKIE_PATH`, `OZ_COOKIE_LIFETIME`, `OZ_COOKIE_SAMESITE`, `OZ_COOKIE_PARTITIONED`                                   |
-| `oz.users`                   | Age range, password/name lengths, gender list, email/phone requirements                                                                     |
-| `oz.paths`                   | Service URL path settings (QR code, captcha, link-to routes)                                                                                |
-| `oz.api.doc`                 | `OZ_API_DOC_ENABLED`, `OZ_API_DOC_SHOW_ON_INDEX`                                                                                            |
-| `oz.lang`                    | i18n source files                                                                                                                           |
-| `oz.cache`                   | `OZ_RUNTIME_CACHE_PROVIDER`, `OZ_PERSISTENT_CACHE_PROVIDER`                                                                                 |
-| `oz.logs`                    | `OZ_LOG_WRITER`, `OZ_LOG_MAX_FILE_SIZE`, `OZ_LOG_EXECUTION_TIME_ENABLED`                                                                    |
-| `oz.files`                   | File URI path format with placeholders (`oz_file_id`, `oz_file_auth_key`, etc.)                                                             |
-| `oz.files.storages`          | Storage driver map: `FS::DEFAULT_STORAGE`, `FS::PUBLIC_STORAGE`, `FS::PRIVATE_STORAGE`                                                      |
-| `oz.senders`                 | Sender class map: `sms`, `mail`, `notification`                                                                                             |
-| `oz.roles`                   | `OZ_ROLE_ENUM_CLASS` -> roles enum class                                                                                                    |
-| `oz.proxies`                 | Trusted proxy configuration                                                                                                                 |
+| File                         | Key settings                                                                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `oz.config`                  | `OZ_PROJECT_NAME`, `OZ_PROJECT_NAMESPACE`, `OZ_PROJECT_APP_CLASS_NAME`, `OZ_PROJECT_PREFIX`                                                                  |
+| `oz.db`                      | `OZ_DB_RDBMS`, `OZ_DB_HOST`, `OZ_DB_PORT`, `OZ_DB_NAME`, `OZ_DB_USER`, `OZ_DB_PASS`, `OZ_DB_TABLE_PREFIX`, `OZ_DB_CHARSET`, `OZ_DB_COLLATE`                  |
+| `oz.db.schema`               | Project table definitions (Gobl schema array)                                                                                                                |
+| `oz.db.migrations`           | `OZ_MIGRATION_VERSION`                                                                                                                                       |
+| `oz.db.columns.types`        | `TypeName::NAME => TypeName::class` map                                                                                                                      |
+| `oz.boot`                    | Boot hook receiver class map                                                                                                                                 |
+| `oz.plugins`                 | Plugin class map                                                                                                                                             |
+| `oz.routes`                  | Shared route provider class map (both API + web)                                                                                                             |
+| `oz.routes.api`              | API router route provider class map                                                                                                                          |
+| `oz.routes.web`              | Web router route provider class map                                                                                                                          |
+| `oz.auth`                    | Auth code config, API key header name, auth methods for API/web                                                                                              |
+| `oz.auth.users.repositories` | User type -> `AuthUsersRepositoryInterface` class map                                                                                                        |
+| `oz.auth.providers`          | Provider name -> `AuthorizationProviderInterface` class map                                                                                                  |
+| `oz.auth.methods`            | Scheme -> method class map                                                                                                                                   |
+| `oz.middlewares`             | Named middleware registry                                                                                                                                    |
+| `oz.guards`                  | Named guard registry                                                                                                                                         |
+| `oz.guards.providers`        | Guard provider class map                                                                                                                                     |
+| `oz.gobl.crud`               | CRUD listener class map                                                                                                                                      |
+| `oz.gobl.collections`        | Entity collection class map                                                                                                                                  |
+| `oz.request`                 | CORS settings, `OZ_DEFAULT_ORIGIN`, `OZ_REAL_METHOD_HEADER_ALLOWED`                                                                                          |
+| `oz.sessions`                | `OZ_SESSION_LIFE_TIME`, `OZ_SESSION_COOKIE_NAME`                                                                                                             |
+| `oz.cookie`                  | `OZ_COOKIE_DOMAIN`, `OZ_COOKIE_PATH`, `OZ_COOKIE_LIFETIME`, `OZ_COOKIE_SAMESITE`, `OZ_COOKIE_PARTITIONED`                                                    |
+| `oz.users`                   | Age range, password/name lengths, gender list, email/phone requirements                                                                                      |
+| `oz.paths`                   | Service URL path settings (QR code, captcha, link-to routes)                                                                                                 |
+| `oz.api.doc`                 | `OZ_API_DOC_ENABLED`, `OZ_API_DOC_SHOW_ON_INDEX`                                                                                                             |
+| `oz.lang`                    | i18n source files                                                                                                                                            |
+| `oz.cache`                   | `OZ_RUNTIME_CACHE_PROVIDER`, `OZ_PERSISTENT_CACHE_PROVIDER`                                                                                                  |
+| `oz.logs`                    | `OZ_LOG_WRITER`, `OZ_LOG_MAX_FILE_SIZE`, `OZ_LOG_EXECUTION_TIME_ENABLED`                                                                                     |
+| `oz.files`                   | File URI path format with placeholders (`oz_file_id`, `oz_file_auth_key`, etc.)                                                                              |
+| `oz.files.storages`          | Storage driver map: `FS::DEFAULT_STORAGE`, `FS::PUBLIC_STORAGE`, `FS::PRIVATE_STORAGE`                                                                       |
+| `oz.senders`                 | Sender class map: `sms`, `mail`, `notification`                                                                                                              |
+| `oz.roles`                   | `OZ_ROLE_ENUM_CLASS` -> roles enum class                                                                                                                     |
+| `oz.proxies`                 | Trusted proxy configuration                                                                                                                                  |
+| `oz.redis`                   | `OZ_REDIS_ENABLED`, `OZ_REDIS_HOST`, `OZ_REDIS_PORT`, `OZ_REDIS_PASSWORD`, `OZ_REDIS_DATABASE`, `OZ_REDIS_PREFIX`, `OZ_REDIS_TIMEOUT`, `OZ_REDIS_PERSISTENT` |
 
 ---
 
@@ -612,8 +613,8 @@ $db = Db::get();          // or use the global helper: db()
 - OZone entities: `Db::getOZoneDbNamespace()` -> `OZONE\Core\Db` (generated in `oz/Db/`)
 - Project entities: `Db::getProjectDbNamespace()` -> `{OZ_PROJECT_NAMESPACE}\Db`
 
-**Built-in OZone DB entities** (in `oz/Db/`):
-`OZAuth`, `OZFile`, `OZMigration`, `OZSession`, `OZUser` (and their query classes)
+**Built-in OZone DB entities** (generated into `oz/Db/` via `oz db build`):
+`OZAuth`, `OZCountry`, `OZDbStore`, `OZFile`, `OZJob`, `OZJobBatch`, `OZMigration`, `OZRole`, `OZSession`, `OZUser`, `OZUsername` (and their query classes)
 
 **Custom column types** (registered via `oz.db.columns.types` -> `TypeProvider`):
 `TypePhone`, `TypeEmail`, `TypeUrl`, `TypeUsername`, `TypePassword`, `TypeCC2`, `TypeGender`, `TypeFile`
@@ -857,16 +858,17 @@ Migration files are PHP files in `{project}/migrations/` returning `MigrationInt
 
 ### Built-in Commands
 
-| Command         | Class           | Actions                                                                                   |
-| --------------- | --------------- | ----------------------------------------------------------------------------------------- |
-| `oz project`    | `ProjectCmd`    | `create` — scaffold new project                                                           |
-| `oz db`         | `DbCmd`         | `build` — generate ORM classes; `backup`; code-gen for Dart/TS                            |
-| `oz migrations` | `MigrationsCmd` | `create`, `check`, `run`, `rollback`                                                      |
-| `oz services`   | `ServicesCmd`   | `generate` — scaffold RESTful service for a table                                         |
-| `oz scopes`     | `ScopesCmd`     | add scopes (multi-tenant)                                                                 |
-| `oz settings`   | `SettingsCmd`   | `set [--source]`, `unset [--source]` — write to stateful (default) or source settings dir |
-| `oz cron`       | `CronCmd`       | `run` — run due cron tasks; `start <name>`                                                |
-| `oz jobs`       | `JobsCmd`       | `run`, `finish`, `prune`, `dead-letter`                                                   |
+| Command         | Class           | Actions                                                                                                   |
+| --------------- | --------------- | --------------------------------------------------------------------------------------------------------- |
+| `oz project`    | `ProjectCmd`    | `create` — scaffold new project                                                                           |
+| `oz db`         | `DbCmd`         | `build` — generate ORM classes; `backup`; code-gen for Dart/TS                                            |
+| `oz migrations` | `MigrationsCmd` | `create`, `check`, `run`, `rollback`                                                                      |
+| `oz services`   | `ServicesCmd`   | `generate` — scaffold RESTful service for a table                                                         |
+| `oz users`      | `UsersCmd`      | `add` — add a new user                                                                                    |
+| `oz scopes`     | `ScopesCmd`     | add scopes (multi-tenant)                                                                                 |
+| `oz settings`   | `SettingsCmd`   | `set [--source]`, `unset [--source]` — write to stateful (default) or source settings dir                 |
+| `oz cron`       | `CronCmd`       | `run` — run due cron tasks; `start <name>`                                                                |
+| `oz jobs`       | `JobsCmd`       | `run`, `finish`, `prune`, `dead-letter`, `cancel`, `work` (daemon), `supervisor` (supervisord config gen) |
 
 **`Utils::assertProjectLoaded()`** — throws if no `app/app.php` found in CWD or ancestor; always the first line in commands that require a project.
 
@@ -890,10 +892,16 @@ Task types: `CallableTask` (PHP callable), `CommandTask` (shell command).
 Tasks can run `inBackground()` or `oneAtATime()`. Due tasks are queued via `OZONE\Core\Queue\Queue`.
 See **sections 24 and 25** for full Queue and Cron API reference.
 
-**Helper scripts** (project root):
+**Helper scripts** (project root — via `Makefile`):
 
-- `run_test` — runs `./vendor/bin/phpunit --testdox`
-- `csfix` — runs `psalm --no-cache` + `oliup-cs fix`
+- `make test` — runs the full test suite (`./vendor/bin/phpunit --testdox`)
+- `make test-unit` — runs only the Unit suite
+- `make test-integration` — runs only the Integration suite
+- `make benchmark` — runs `tests/run_benchmarks.php`
+- `make fix` — runs psalm + code style fixer (`oliup-cs fix`)
+- `make cs` — checks code style only
+- `make lint` — runs psalm static analysis only
+- `make clean` — removes Blate caches and temp test artifacts
 
 ---
 
@@ -950,17 +958,15 @@ The parent process never calls `unlock()` — the subprocess owns it via `finish
 
 ### `oz jobs` CLI
 
-| Invocation                                                                 | Behaviour                                                                           |
-| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Invocation                                                                 | Behaviour                                                                           |
-| --------------------------------------------------------------             | ----------------------------------------------------------------------------------- |
-| `oz jobs run`                                                              | Process all PENDING jobs from all stores                                            |
-| `oz jobs run --store=X --queue=Y --worker=W`                               | Filter by store / queue / worker                                                    |
-| `oz jobs run --store=X --job=<ref>`                                        | Run one specific job; fail with error if already locked                             |
-| `oz jobs run --store=X --job=<ref> --force`                                | Locked -> `forceRunJob()`; unlocked -> `runJob()` (acquire first)                   |
-| `oz jobs finish --store=X --ref=<ref>`                                     | Mark an orphaned RUNNING job as finished/failed (releases lock in DbJobStore)       |
-| `oz jobs prune [--store=X] [--queue=Y] [--state=S] [--older-than=N]`       | Delete terminal-state jobs older than N seconds (default 86400)                     |
-| `oz jobs dead-letter [--store=X] [--queue=Y] --action=list\|retry\|delete` | List, re-queue, or delete dead-letter jobs                                          |
+| Invocation                                                                 | Behaviour                                                                     |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `oz jobs run`                                                              | Process all PENDING jobs from all stores                                      |
+| `oz jobs run --store=X --queue=Y --worker=W`                               | Filter by store / queue / worker                                              |
+| `oz jobs run --store=X --job=<ref>`                                        | Run one specific job; fail with error if already locked                       |
+| `oz jobs run --store=X --job=<ref> --force`                                | Locked -> `forceRunJob()`; unlocked -> `runJob()` (acquire first)             |
+| `oz jobs finish --store=X --ref=<ref>`                                     | Mark an orphaned RUNNING job as finished/failed (releases lock in DbJobStore) |
+| `oz jobs prune [--store=X] [--queue=Y] [--state=S] [--older-than=N]`       | Delete terminal-state jobs older than N seconds (default 86400)               |
+| `oz jobs dead-letter [--store=X] [--queue=Y] --action=list\|retry\|delete` | List, re-queue, or delete dead-letter jobs                                    |
 
 ### Implementing a Worker
 
@@ -1218,7 +1224,7 @@ Swagger UI at `GET /api-doc-view.html` (`ApiDocView`).
 **Framework**: PHPUnit 9.x
 **Test App**: `tests/App.php` extends `AbstractApp`
 
-**Run tests**: `./run_test` (or `./vendor/bin/phpunit --testdox`)
+**Run tests**: `make test` (or `./vendor/bin/phpunit --testdox`)
 
 **Test suites**:
 
@@ -1236,20 +1242,24 @@ Swagger UI at `GET /api-doc-view.html` (`ApiDocView`).
 
 **Unit test directories** (under `tests/`):
 
-| Directory  | Covers                                               |
-| ---------- | ---------------------------------------------------- |
-| `Access/`  | `AccessRights`, `AtomicAction`, role resolution      |
-| `App/`     | `Settings`, `Context`, `JSONResponse`, `Keys`        |
-| `Cache/`   | `CacheManager`, runtime and persistent drivers       |
-| `Columns/` | Custom DB column types (`TypePhone`, `TypeEmail`, …) |
-| `CRUD/`    | `TableCRUD`, `AllowRuleBuilder`                      |
-| `Forms/`   | Form definition, field validation, multi-step        |
-| `FS/`      | File-system helpers, `TempFS`, `FS` drivers          |
-| `Http/`    | `Uri`, `Request`, `Response`                         |
-| `Crypt/`   | `DoCrypt`, `Hasher`, `Random`                        |
-| `Lang/`    | i18n loading                                         |
-| `Router/`  | Route matching, guards, middlewares                  |
-| `Utils/`   | Utility helpers                                      |
+| Directory   | Covers                                               |
+| ----------- | ---------------------------------------------------- |
+| `Access/`   | `AccessRights`, `AtomicAction`, role resolution      |
+| `App/`      | `Settings`, `Context`, `JSONResponse`, `Keys`        |
+| `Auth/`     | Authentication methods, authorization, session mgmt  |
+| `Cache/`    | `CacheManager`, runtime and persistent drivers       |
+| `Columns/`  | Custom DB column types (`TypePhone`, `TypeEmail`, …) |
+| `Cron/`     | `Schedule`, cron expressions                         |
+| `CRUD/`     | `TableCRUD`, `AllowRuleBuilder`                      |
+| `Forms/`    | Form definition, field validation, multi-step        |
+| `FS/`       | File-system helpers, `TempFS`, `FS` drivers          |
+| `Http/`     | `Uri`, `Request`, `Response`                         |
+| `Crypt/`    | `DoCrypt`, `Hasher`, `Random`                        |
+| `Lang/`     | i18n loading                                         |
+| `Queue/`    | `Job`, `Queue`, job store drivers                    |
+| `Router/`   | Route matching, guards, middlewares                  |
+| `Services/` | Built-in services (e.g. QR code)                     |
+| `Utils/`    | Utility helpers                                      |
 
 Shared helpers:
 
@@ -1393,7 +1403,7 @@ be persisted to JSON for baseline comparison in future runs.
 Benchmarks live in `tests/run_benchmarks.php` (a standalone PHP script, not a PHPUnit test). Run with:
 
 ```sh
-./run_benchmark
+make benchmark
 ```
 
 Output is suppressed unless at least one callable is classified as REGRESSION or IMPROVEMENT — silent when all results are STABLE. Baseline results are stored in `tests/benchmark-baseline.json` and updated after every run.
@@ -1582,6 +1592,12 @@ Each scope creates:
 
 Value parsing (auto-detected from the string argument): `null` -> null, `true`/`false` -> bool, numeric strings -> int/float, `{...}`/`[...]` -> JSON object/array, anything else -> string.
 
+### `oz users`
+
+| Action | Options                                                                                     | Description    |
+| ------ | ------------------------------------------------------------------------------------------- | -------------- |
+| `add`  | `-e/--email`, `-p/--phone`, `-n/--name`, `-s/--pass` (password), and other user-field flags | Add a new user |
+
 ### `oz cron`
 
 | Action  | Options     | Description                    |
@@ -1591,10 +1607,15 @@ Value parsing (auto-detected from the string argument): `null` -> null, `true`/`
 
 ### `oz jobs`
 
-| Action   | Options   | Description                          |
-| -------- | --------- | ------------------------------------ |
-| `run`    | `--queue` | Process jobs from a queue            |
-| `finish` | —         | Mark orphaned running jobs as failed |
+| Action        | Options                                                                          | Description                                     |
+| ------------- | -------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `run`         | `--store`, `--queue`, `--worker`, `--job`, `--force`                             | Process jobs (all stores, or filtered)          |
+| `finish`      | `--store`, `--ref`                                                               | Mark an orphaned RUNNING job as finished/failed |
+| `prune`       | `--store`, `--queue`, `--state`, `--older-than`                                  | Delete terminal-state jobs older than N seconds |
+| `dead-letter` | `--store`, `--queue`, `--action=list\|retry\|delete`                             | List, re-queue, or delete dead-letter jobs      |
+| `cancel`      | `--store`, `--ref`                                                               | Cancel a PENDING job                            |
+| `work`        | `--store`, `--queue`, `--worker`, `--sleep`, `--max-time`                        | Run a persistent queue worker daemon            |
+| `supervisor`  | `--queue`, `--workers`, `--sleep`, `--memory`, `--log-dir`, `--user`, `--output` | Generate a supervisord config section           |
 
 ---
 
@@ -1648,7 +1669,7 @@ Integration tests exercise the CLI toolchain (project creation, scope management
 
 ### Project directories
 
-Each test that needs a project creates it in `tests/projects/{name}/` (auto-created, `.gitignore`'d). Directories are created and destroyed per test class via `OZTestProject` helper.
+Each test that needs a project creates it in `/tmp/_oz_tests_/projects/{name}/` (auto-created, `.gitignore`'d). Directories are created and destroyed per test class via `OZTestProject` helper.
 
 ### `OZTestProject` helper (`tests/Integration/Support/OZTestProject.php`)
 
@@ -1658,14 +1679,14 @@ Wraps `bin/oz` subprocess calls in a project directory.
 
 `OZTestProject::create(string $name, array $deps = [], array $deps_dev = [], bool $shared = true)`
 
-1. Creates `tests/projects/{name}/` and runs `oz project create` inside it.
+1. Creates `/tmp/_oz_tests_/projects/{name}/` and runs `oz project create` inside it.
 2. Patches the generated `composer.json` with `$deps`/`$deps_dev` and adds a path
    repository pointing at the ozone root (so `silassare/ozone` is resolved locally
    without downloading).
 3. Computes a SHA-256 hash of the final `require` + `require-dev` maps (includes
    `$name` when `$shared = false` so the vendor dir is not shared with other projects
    that have the same dep set).
-4. If `tests/_vendors_cache_/{hash}/` already exists, symlinks `vendor/` there
+4. If `/tmp/_oz_tests_/_vendors_cache_/{hash}/` already exists, symlinks `vendor/` there
    — nothing is installed.
    Otherwise runs `composer install`, moves `vendor/` to the cache dir, then
    symlinks back in.
@@ -1689,6 +1710,12 @@ $proj->setSetting('oz.request', 'OZ_DEFAULT_ORIGIN', 'http://localhost:8080');
 // Run any oz command inside the project dir:
 $proc = $proj->oz('migrations', 'run');
 $proc->mustRun();
+
+// Write a file from a stub with placeholder substitution:
+$proj->writeFileFromStub('MyStub', 'app/MyClass.php', [
+    'namespace' => $ns,
+    'flag_file' => '/tmp/my-flag',
+]);
 
 // Tear down (unlinks vendor symlink, removes project dir):
 $proj->destroy();
@@ -1797,47 +1824,8 @@ final class MyFeatureTest extends TestCase
 - All DB-related test classes must use `@dataProvider provideDbConfig` + `DbTestConfig::allConfigured('<tag>')` to exercise every configured RDBMS.
 - **Never combine `@depends` with `@dataProvider`** — use the static project store pattern instead.
 
-### Directory structure
-
-```
-tests/
-  Integration/
-    bootstrap.php               # lightweight bootstrap (no OZone::bootstrap)
-    Support/
-      OZTestProject.php         # project lifecycle wrapper
-      DbTestConfig.php          # multi-DB env-var reader
-    Project/
-      ProjectCreateTest.php     # project scaffold, structure verification
-    Scopes/
-      ScopesAddTest.php         # scope creation, directory structure
-    Db/
-      DbBuildTest.php           # db build across all DB types
-      DbBackupTest.php          # db backup across all DB types
-      MigrationsTest.php        # migrations lifecycle across all DB types
-    Services/
-      ServicesGenerateTest.php  # services generate across all DB types
-    Queue/
-      JobQueueTest.php          # dispatch, run, finish, retry
-    Cron/
-      CronTaskTest.php          # task registration, runDues, state
-  projects/                     # .gitignore'd; created/destroyed per test run
-```
-
 ### Running integration tests
 
 ```bash
-# SQLite only (always available, no env vars needed):
 ./vendor/bin/phpunit --testsuite Integration
-
-# SQLite + MySQL:
-OZ_TEST_MYSQL_HOST=127.0.0.1 OZ_TEST_MYSQL_DB=ozone_test OZ_TEST_MYSQL_USER=root \
-  ./vendor/bin/phpunit --testsuite Integration
-
-# SQLite + PostgreSQL:
-OZ_TEST_POSTGRESQL_HOST=127.0.0.1 OZ_TEST_POSTGRESQL_DB=ozone_test OZ_TEST_POSTGRESQL_USER=postgres \
-  ./vendor/bin/phpunit --testsuite Integration
-
-# All three DB types:
-OZ_TEST_MYSQL_HOST=127.0.0.1 OZ_TEST_POSTGRESQL_HOST=127.0.0.1 \
-  ./vendor/bin/phpunit --testsuite Integration
 ```
