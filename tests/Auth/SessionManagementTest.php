@@ -168,28 +168,23 @@ final class SessionManagementTest extends TestCase
 
 	public function testAttachAuthUserSetsOwnerOnSession(): void
 	{
-		$user    = $this->mockUser('customer', '42');
+		// Use the registered default user type so AuthUsers::identify() can resolve
+		// the repository without logging a spurious WARNING.
+		$user    = $this->mockUser('user', '42');
 		$session = $this->makeSession();
 		$session->start();
 
-		$session->attachAuthUser($user);
-
-		// Verify the setter propagated into the underlying OZSession entity.
-		// We call attachedAuthUser() which will return null because there is no
-		// real repository - but we verify that owner_type / owner_id were written
-		// by asserting the underlying state indirectly via re-attaching the same user.
-		$session->attachAuthUser($user); // same user, must not throw
+		$session->attachAuthUser($user); // must not throw
 		$this->addToAssertionCount(1);
 	}
 
 	public function testAttachSameUserTwiceDoesNotThrow(): void
 	{
-		// The conflict guard only fires when attachedAuthUser() returns a non-null
-		// user that differs from the new user.  Since our mock owner type has no
-		// registered repository, attachedAuthUser() always returns null and the
-		// guard is bypassed.  This test verifies the happy path: attaching the
-		// same user twice must never throw.
-		$user    = $this->mockUser('customer', '5');
+		// Use the registered default user type so the second attachAuthUser() call
+		// can run attachedAuthUser() without logging a spurious WARNING about a
+		// missing repository.  The identifier '5' has no matching DB row so
+		// identify() returns null and the conflict guard is bypassed.
+		$user    = $this->mockUser('user', '5');
 		$session = $this->makeSession();
 		$session->start();
 
@@ -201,7 +196,7 @@ final class SessionManagementTest extends TestCase
 
 	public function testDetachAuthUserClearsOwnerFields(): void
 	{
-		$user    = $this->mockUser('customer', '7');
+		$user    = $this->mockUser('user', '7');
 		$session = $this->makeSession();
 		$session->start();
 		$session->attachAuthUser($user);
