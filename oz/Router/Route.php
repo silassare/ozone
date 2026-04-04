@@ -224,7 +224,7 @@ final class Route
 				$params_found        = [];
 				$declared_params     = $this->getDeclaredParams();
 				$parser              = new RoutePathParser($path, $this->router);
-				$this->parser_result = $parser->parse($path, $declared_params, $params_found);
+				$this->parser_result = $parser->parse($declared_params, $params_found);
 				$this->params_found  = \array_keys($params_found);
 			} else {
 				$this->parser_result = $path;

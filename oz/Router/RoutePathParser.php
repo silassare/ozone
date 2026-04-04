@@ -131,7 +131,6 @@ final class RoutePathParser
 	/**
 	 * Dynamic route parser.
 	 *
-	 * @param string      $route_path
 	 * @param array       $declared_params
 	 * @param array       &$params_found
 	 * @param null|string $original_route_path
@@ -139,17 +138,16 @@ final class RoutePathParser
 	 * @return string
 	 */
 	public function parse(
-		string $route_path,
 		array $declared_params = [],
 		array &$params_found = [],
 		?string $original_route_path = null
 	): string {
 		$this->reset();
-		$original_route_path ??= $route_path;
+		$original_route_path ??= $this->route_path;
 		$pattern        = '';
 
 		while ($this->cursor < $this->len) {
-			$c    = $route_path[$this->cursor];
+			$c    = $this->route_path[$this->cursor];
 			$next = $this->cursor + 1 < $this->len ? $this->route_path[$this->cursor + 1] : null;
 
 			// For colon ':' we need to make sure we don't fail when
@@ -192,7 +190,7 @@ final class RoutePathParser
 
 				// use (?P<name> insteadof (?<name> for backward compatibility
 				$pattern .= "(?P<{$name}>{$param_pattern})";
-				$required            = ($route_path === $original_route_path ? 1 : 0);
+				$required            = ($this->route_path === $original_route_path ? 1 : 0);
 				$params_found[$name] = $required;
 			} elseif ('[' === $c) {
 				$this->move();
@@ -206,7 +204,7 @@ final class RoutePathParser
 				}
 
 				$sub_parser   = new self($optional, $this->router);
-				$optional_reg = $sub_parser->parse($optional, $declared_params, $params_found, $original_route_path);
+				$optional_reg = $sub_parser->parse($declared_params, $params_found, $original_route_path);
 				$pattern .= '(?:' . $optional_reg . ')?';
 			} else {
 				$pattern .= \preg_quote($c, Route::REG_DELIMITER);

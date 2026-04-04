@@ -71,7 +71,7 @@ final class RoutePathParserTest extends TestCase
 	public function testParseStaticSegment(): void
 	{
 		$parser  = new RoutePathParser('/users/list', $this->router);
-		$pattern = $parser->parse('/users/list');
+		$pattern = $parser->parse();
 		// '/' is not special with the '~' delimiter so preg_quote leaves it unchanged.
 		self::assertSame('/users/list', $pattern);
 	}
@@ -79,14 +79,14 @@ final class RoutePathParserTest extends TestCase
 	public function testParseEmptyPath(): void
 	{
 		$parser  = new RoutePathParser('/', $this->router);
-		$pattern = $parser->parse('/');
+		$pattern = $parser->parse();
 		self::assertSame('/', $pattern);
 	}
 
 	public function testParseColonParameter(): void
 	{
 		$parser  = new RoutePathParser('/users/:id', $this->router);
-		$pattern = $parser->parse('/users/:id');
+		$pattern = $parser->parse();
 
 		self::assertStringContainsString('(?P<id>', $pattern);
 		self::assertStringContainsString(Route::DEFAULT_PARAM_PATTERN, $pattern);
@@ -95,7 +95,7 @@ final class RoutePathParserTest extends TestCase
 	public function testParseColonParameterWithCustomConstraint(): void
 	{
 		$parser  = new RoutePathParser('/items/:id', $this->router);
-		$pattern = $parser->parse('/items/:id', ['id' => '[0-9]+']);
+		$pattern = $parser->parse(['id' => '[0-9]+']);
 
 		self::assertStringContainsString('(?P<id>[0-9]+)', $pattern);
 	}
@@ -104,7 +104,7 @@ final class RoutePathParserTest extends TestCase
 	{
 		$parser  = new RoutePathParser('/users/:userId/posts/:postId', $this->router);
 		$params  = [];
-		$pattern = $parser->parse('/users/:userId/posts/:postId', [], $params);
+		$pattern = $parser->parse([], $params);
 
 		self::assertStringContainsString('(?P<userId>', $pattern);
 		self::assertStringContainsString('(?P<postId>', $pattern);
@@ -115,7 +115,7 @@ final class RoutePathParserTest extends TestCase
 	public function testParseBraceParameter(): void
 	{
 		$parser  = new RoutePathParser('/users/{id}', $this->router);
-		$pattern = $parser->parse('/users/{id}');
+		$pattern = $parser->parse();
 
 		self::assertStringContainsString('(?P<id>', $pattern);
 		self::assertStringContainsString(Route::DEFAULT_PARAM_PATTERN, $pattern);
@@ -124,7 +124,7 @@ final class RoutePathParserTest extends TestCase
 	public function testParseBraceParameterWithConstraint(): void
 	{
 		$parser  = new RoutePathParser('/items/{id}', $this->router);
-		$pattern = $parser->parse('/items/{id}', ['id' => '\d+']);
+		$pattern = $parser->parse(['id' => '\d+']);
 
 		self::assertStringContainsString('(?P<id>\d+)', $pattern);
 	}
@@ -133,7 +133,7 @@ final class RoutePathParserTest extends TestCase
 	{
 		$parser  = new RoutePathParser('/posts[/:slug]', $this->router);
 		$params  = [];
-		$pattern = $parser->parse('/posts[/:slug]', [], $params);
+		$pattern = $parser->parse([], $params);
 
 		// Optional part should be wrapped in non-capturing optional group.
 		self::assertStringContainsString('(?:', $pattern);
@@ -146,7 +146,7 @@ final class RoutePathParserTest extends TestCase
 	{
 		$parser = new RoutePathParser('/:id', $this->router);
 		$params = [];
-		$parser->parse('/:id', [], $params);
+		$parser->parse([], $params);
 
 		self::assertSame(1, $params['id']); // 1 = required
 	}
@@ -155,34 +155,34 @@ final class RoutePathParserTest extends TestCase
 	{
 		$this->expectException(InvalidArgumentException::class);
 		$parser = new RoutePathParser('/:id/:id', $this->router);
-		$parser->parse('/:id/:id');
+		$parser->parse();
 	}
 
 	public function testParseThrowsOnUnclosedBrace(): void
 	{
 		$this->expectException(InvalidArgumentException::class);
 		$parser = new RoutePathParser('/users/{id', $this->router);
-		$parser->parse('/users/{id');
+		$parser->parse();
 	}
 
 	public function testParseThrowsOnUnclosedOptionalBracket(): void
 	{
 		$this->expectException(InvalidArgumentException::class);
 		$parser = new RoutePathParser('/users[/:id', $this->router);
-		$parser->parse('/users[/:id');
+		$parser->parse();
 	}
 
 	public function testParseThrowsOnEmptyOptionalPart(): void
 	{
 		$this->expectException(InvalidArgumentException::class);
 		$parser = new RoutePathParser('/users[]', $this->router);
-		$parser->parse('/users[]');
+		$parser->parse();
 	}
 
 	public function testParsedPatternMatchesDynamicUrl(): void
 	{
 		$parser  = new RoutePathParser('/users/:id', $this->router);
-		$pattern = $parser->parse('/users/:id');
+		$pattern = $parser->parse();
 		$regexp  = Route::REG_DELIMITER . '^' . $pattern . '$' . Route::REG_DELIMITER;
 
 		self::assertSame(1, \preg_match($regexp, '/users/42', $matches));
@@ -192,7 +192,7 @@ final class RoutePathParserTest extends TestCase
 	public function testParsedPatternDoesNotMatchWrongUrl(): void
 	{
 		$parser  = new RoutePathParser('/users/:id', $this->router);
-		$pattern = $parser->parse('/users/:id');
+		$pattern = $parser->parse();
 		$regexp  = Route::REG_DELIMITER . '^' . $pattern . '$' . Route::REG_DELIMITER;
 
 		self::assertSame(0, \preg_match($regexp, '/posts/42'));
@@ -201,7 +201,7 @@ final class RoutePathParserTest extends TestCase
 	public function testParsedOptionalPatternMatchesWithAndWithoutOptional(): void
 	{
 		$parser  = new RoutePathParser('/articles[/:slug]', $this->router);
-		$pattern = $parser->parse('/articles[/:slug]');
+		$pattern = $parser->parse();
 		$regexp  = Route::REG_DELIMITER . '^' . $pattern . '$' . Route::REG_DELIMITER;
 
 		// With optional segment.
