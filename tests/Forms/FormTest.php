@@ -183,6 +183,70 @@ final class FormTest extends TestCase
 		);
 	}
 
+	public function testBuildResumeCacheKeyWithIdPrefixesKey(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+		$form->setId('step-1');
+
+		self::assertStringStartsWith('step-1_', $form->buildResumeCacheKey('scope-abc'));
+	}
+
+	public function testBuildResumeCacheKeyDiffersForDifferentIds(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		$formA = clone $form;
+		$formA->setId('form-a');
+
+		$formB = clone $form;
+		$formB->setId('form-b');
+
+		self::assertNotSame(
+			$formA->buildResumeCacheKey('scope-x'),
+			$formB->buildResumeCacheKey('scope-x')
+		);
+	}
+
+	public function testBuildResumeCacheKeyWithoutIdDiffersFromWithId(): void
+	{
+		$form = new Form();
+		$form->field('name')->required(true);
+
+		$withoutId = $form->buildResumeCacheKey('scope-x');
+
+		$form->setId('my-form');
+
+		$withId = $form->buildResumeCacheKey('scope-x');
+
+		self::assertNotSame($withoutId, $withId);
+	}
+
+	// -----------------------------------------------------------------------
+	// setId / getId
+	// -----------------------------------------------------------------------
+
+	public function testGetIdNullByDefault(): void
+	{
+		self::assertNull((new Form())->getId());
+	}
+
+	public function testSetIdReturnsSelf(): void
+	{
+		$form = new Form();
+
+		self::assertSame($form, $form->setId('wizard'));
+	}
+
+	public function testGetIdReturnsSetValue(): void
+	{
+		$form = new Form();
+		$form->setId('step-2');
+
+		self::assertSame('step-2', $form->getId());
+	}
+
 	// -----------------------------------------------------------------------
 	// merge — resume propagation
 	// -----------------------------------------------------------------------

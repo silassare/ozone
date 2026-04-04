@@ -89,6 +89,11 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	private int $t_resume_ttl = 3600;
 
 	/**
+	 * Optional form ID, can be used to correlate form submissions with server-side state or logs.
+	 */
+	private ?string $t_id = null;
+
+	/**
 	 * Form constructor.
 	 *
 	 * @param null|string $name      optional name for field namespacing (validated as a dot-path segment)
@@ -230,13 +235,17 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	 * replayed against a structurally different form) and a hash of the
 	 * provided scope identifier (session ID or user identifier).
 	 *
+	 * When form ID is set, it is also included in the cache key to allow multiple
+	 * forms with different IDs to be active under the same resume scope without
+	 * key collisions.
+	 *
 	 * @param string $scope_id Session stateID or user auth identifier
 	 *
 	 * @return string Non-empty cache key
 	 */
 	public function buildResumeCacheKey(string $scope_id): string
 	{
-		return 'form_resume_' . $this->getVersion() . '_' . \substr(\hash('sha256', $scope_id), 0, 16);
+		return ($this->t_id ? $this->t_id . '_' : '') . $this->getVersion() . '_' . Hasher::shorten(Hasher::hash32($scope_id));
 	}
 
 	/**
@@ -403,6 +412,24 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 		}
 
 		return $this->t_name . '.' . $name;
+	}
+
+	/**
+	 * Sets form ID.
+	 */
+	public function setId(string $id): static
+	{
+		$this->t_id = $id;
+
+		return $this;
+	}
+
+	/**
+	 * Gets form ID.
+	 */
+	public function getId(): ?string
+	{
+		return $this->t_id;
 	}
 
 	/**
