@@ -30,6 +30,7 @@ use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\TempFS;
 use OZONE\Core\Http\UploadedFile;
+use PHPUtils\Str;
 use Throwable;
 
 /**
@@ -481,6 +482,10 @@ class TypeFile extends Type
 	 * Each item in `$uploaded_files` must be one of:
 	 *  - {@see UploadedFile} - passes {@see checkUploadedFile()}, then uploaded to
 	 *    storage (or moved to TempFS for temp columns)
+	 *  - {@see UploadedFile} with MIME `text/x-ozone-file-alias` - an `.ofa` alias
+	 *    descriptor; pre-resolved to the target {@see OZFile} before validation so
+	 *    MIME and size checks run against the real file (not the 4 KB descriptor).
+	 *    Aliases are rejected for temporary columns.
 	 *  - {@see OZFile} - passes {@see checkOZFile()}, then reused (non-temp only)
 	 *  - {@see ValidatedFile} - already validated by a previous pipeline run;
 	 *    accepted as-is and its size is not re-checked
@@ -497,6 +502,54 @@ class TypeFile extends Type
 	 */
 	protected function computeUploadedFiles(array $uploaded_files, array $debug): array
 	{
+		// Pre-resolve .ofa alias uploads before the validation loop so that:
+		//  1. MIME and size checks run on the real target file, not the 4 KB
+		//     JSON descriptor.
+		//  2. $total_size accumulates the real file's size.
+		//  3. Temp columns receive an explicit rejection -- aliases reference
+		//     persisted files, which contradicts the temp-only semantic.
+		// Keys present in $alias_keys indicate which slots were resolved from an
+		// alias and therefore need a DB clone in the upload loop (same semantics
+		// as AbstractLocalStorage::upload() for alias inputs).
+		$alias_keys = [];
+
+		foreach ($uploaded_files as $k => $item) {
+			if (!$item instanceof UploadedFile) {
+				continue;
+			}
+
+			// Detect .ofa alias by MIME and extension WITHOUT consuming the stream.
+			// FS::parseFileAlias() will consume it exactly once below.
+			if (
+				'text/x-ozone-file-alias' !== $item->getClientMediaType()
+				|| !\preg_match('~\.ofa$~i', $item->getClientFilename())
+			) {
+				continue;
+			}
+
+			// Aliases reference persisted files -- reject for temporary columns.
+			if ($this->isTemporary()) {
+				throw new TypesInvalidValueException('OZ_FILE_INVALID', $debug + [
+					'index'   => $k,
+					'_reason' => '.ofa alias files are not supported for temporary file columns.',
+				]);
+			}
+
+			try {
+				$resolved = FS::parseFileAlias($item);
+			} catch (Throwable $t) {
+				throw new TypesInvalidValueException('OZ_FILE_INVALID', $debug + ['index' => $k], $t);
+			}
+
+			if (null === $resolved) {
+				// Alias file exceeded the 4 KB limit or had a mismatched extension.
+				throw new TypesInvalidValueException('OZ_FILE_INVALID', $debug + ['index' => $k]);
+			}
+
+			$alias_keys[$k]     = true;
+			$uploaded_files[$k] = $resolved;
+		}
+
 		$total_size      = 0;
 		$validated_items = [];
 
@@ -520,14 +573,21 @@ class TypeFile extends Type
 
 				$total_size += $item->getSize();
 			} else {
-				// Bare strings, integers, or any other type are rejected.
-				// Accepting a raw file ID from user-supplied input would be an
-				// IDOR vulnerability -- use ValidatedFile::forFileID() for trusted
-				// internal assignments instead.
 				throw new TypesInvalidValueException('OZ_FILE_INVALID', $debug + [
-					'_advice' => 'Each item must be an UploadedFile, OZFile (non-temp), or ValidatedFile instance.'
-						. ' Bare strings and other types are rejected to prevent IDOR vulnerabilities.'
-						. ' Use ValidatedFile::forFileID() for trusted internal assignments.',
+					'_advice' => \sprintf(
+						'Each item must be an %s, %s (non-temp), or %s instance.'
+							. ' Bare strings and other types are rejected to prevent IDOR vulnerabilities.'
+							. ' Use %s for trusted internal assignments.',
+						UploadedFile::class,
+						OZFile::class,
+						ValidatedFile::class,
+						Str::callableName(
+							[
+								ValidatedFile::class,
+								'forFileID',
+							]
+						)
+					),
 				]);
 			}
 		}
@@ -548,6 +608,7 @@ class TypeFile extends Type
 		if ($this->isTemporary()) {
 			// Only UploadedFile instances are uploaded to TempFS; ValidatedFile
 			// pass-throughs (from a previous temp validation) are already paths.
+			// Aliases are rejected above, so no OZFile items reach this branch.
 			$new_uploads = \array_filter(
 				$uploaded_files,
 				static fn ($item) => $item instanceof UploadedFile
@@ -593,9 +654,26 @@ class TypeFile extends Type
 				}
 
 				if ($item instanceof OZFile) {
-					/** @var string $fid */
-					$fid    = $item->getID();
-					$data[] = ValidatedFile::forFileID($fid);
+					if ($alias_keys[$k] ?? false) {
+						// Alias-resolved file: clone it so the new entity gets its
+						// own DB record while sharing the physical content with the
+						// original.  The clone is NOT added to $new_file_list -- it
+						// shares the physical file, so the storage must not delete it
+						// on rollback.  The DB transaction rollback handles the clone
+						// record automatically.
+						$cloned = $item->cloneFile();
+						$cloned->setForLabel($label)->save();
+
+						/** @var string $fid */
+						$fid    = $cloned->getID();
+						$data[] = ValidatedFile::forFileID($fid);
+					} else {
+						// Directly-passed OZFile (re-assignment): reference without
+						// cloning, matching the semantics of explicit OZFile input.
+						/** @var string $fid */
+						$fid    = $item->getID();
+						$data[] = ValidatedFile::forFileID($fid);
+					}
 				} else {
 					/** @var UploadedFile $item */
 					$fo = $storage->upload($item);
