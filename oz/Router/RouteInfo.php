@@ -223,8 +223,6 @@ final class RouteInfo
 	 * @internal this should be called once by the router before calling the route handler
 	 *
 	 * @throws InvalidFormException
-	 *
-	 * @internal this should be called once by the router before calling the route handler
 	 */
 	public function checkRouteForm(): void
 	{
