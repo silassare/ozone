@@ -452,7 +452,7 @@ final class Router
 	 */
 	public function connect(callable|string $path, ?callable $factory = null): RouteOptions
 	{
-		return $this->map('connect', $path, $factory);
+		return $this->map(['connect'], $path, $factory);
 	}
 
 	/**
