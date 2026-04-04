@@ -627,7 +627,11 @@ class RouteSharedOptions
 				$bundle->merge($form);
 			}
 
-			return $bundle;
+			$req    = $ri->getContext()->getRequest();
+			$target = $req->getUri();
+			$method = $req->getMethod();
+
+			return $bundle->submitTo($target)->method($method);
 		}
 
 		return null;
