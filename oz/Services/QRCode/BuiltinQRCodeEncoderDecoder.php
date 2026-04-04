@@ -769,7 +769,16 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 	 */
 	private function imageToMatrix(string $image): array
 	{
+		/**
+		 * imagecreatefromstring() emits E_WARNING on unrecognized data.
+		 * Temporarily install a noop handler so the warning does not leak into
+		 * the application log - we validate the return value immediately.
+		 *
+		 * @psalm-suppress InvalidArgument - imagecreatefromstring() may emit a warning on invalid data, but we handle that case
+		 */
+		\set_error_handler(static function (): void {}, \E_WARNING);
 		$img = \imagecreatefromstring($image);
+		\restore_error_handler();
 
 		if (!$img) {
 			throw new RuntimeException('Failed to decode QR code: imagecreatefromstring returned false.');
