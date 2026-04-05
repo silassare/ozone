@@ -400,7 +400,7 @@ class MyForm extends Form
     public function __construct()
     {
         parent::__construct();
-        // typed field helpers from FormFieldsTrait:
+        // typed field helpers from FieldContainerHelpersTrait:
         $this->string('name')->required(true);
         $this->email('email')->required(true);
         $this->int('age');
@@ -410,7 +410,7 @@ class MyForm extends Form
 }
 ```
 
-**Available field helpers** (via `FormFieldsTrait`):
+**Available field helpers** (via `FieldContainerHelpersTrait`):
 `string()`, `int()`, `bigint()`, `bool()`, `date()`, `timestamp()`, `email()`, `phone()`, `password()`, `url()`, `username()`, `cc2()`, `file()`, `gender()`, `enum()`, `list()`, `map()`, `switcher()`
 
 ### Field Configuration

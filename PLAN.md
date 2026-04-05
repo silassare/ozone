@@ -28,13 +28,13 @@ Add server-side orchestration for multi-step, session-resumable form flows where
 
 ### Modify
 
-| Path                                  | Change                                                                    |
-| ------------------------------------- | ------------------------------------------------------------------------- |
-| `oz/oz_settings/oz.routes.api.php`    | Update class reference after FormService move                             |
-| `oz/Forms/Form.php`                   | step()->fieldset(), dynamicStep()->dynamicFieldset(), etc.                |
-| `oz/Forms/Field.php`                  | `$t_form: Form` -> `$t_parent: FieldContainerInterface`                   |
-| `oz/Forms/Traits/FormFieldsTrait.php` | No change — already delegates to `$this->field()` which both classes have |
-| `tests/Forms/FormTest.php`            | Update step/dynamicStep references to fieldset/dynamicFieldset            |
+| Path                                             | Change                                                                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------- |
+| `oz/oz_settings/oz.routes.api.php`               | Update class reference after FormService move                             |
+| `oz/Forms/Form.php`                              | step()->fieldset(), dynamicStep()->dynamicFieldset(), etc.                |
+| `oz/Forms/Field.php`                             | `$t_form: Form` -> `$t_parent: FieldContainerInterface`                   |
+| `oz/Forms/Traits/FieldContainerHelpersTrait.php` | No change — already delegates to `$this->field()` which both classes have |
+| `tests/Forms/FormTest.php`                       | Update step/dynamicStep references to fieldset/dynamicFieldset            |
 
 ---
 
@@ -117,15 +117,15 @@ and maps cleanly to one level of grouping.
 
 **`Fieldset` members:**
 
-| Member                     | Type                       | Purpose                                              |
-| -------------------------- | -------------------------- | ---------------------------------------------------- |
-| `$t_name`                  | `string`                   | Always required (unlike Form where name is optional) |
-| `$t_legend`                | `?I18nMessage`             | Display label — `->legend(string\|I18nMessage)`      |
-| `$t_fields`                | `array<string, Field>`     | Its own fields                                       |
-| `$t_post_validation_rules` | `list<RuleSet>`            | From `ensure()` — cross-field checks within fieldset |
-| `$t_if`                    | `?RuleSet`                 | Condition for the whole fieldset                     |
-| static/dynamic variant     | same storage as `FormStep` | Static form or dynamic factory                       |
-| `use FormFieldsTrait`      | —                          | All typed helpers (`email()`, `string()`, etc.)      |
+| Member                           | Type                       | Purpose                                              |
+| -------------------------------- | -------------------------- | ---------------------------------------------------- |
+| `$t_name`                        | `string`                   | Always required (unlike Form where name is optional) |
+| `$t_legend`                      | `?I18nMessage`             | Display label — `->legend(string\|I18nMessage)`      |
+| `$t_fields`                      | `array<string, Field>`     | Its own fields                                       |
+| `$t_post_validation_rules`       | `list<RuleSet>`            | From `ensure()` — cross-field checks within fieldset |
+| `$t_if`                          | `?RuleSet`                 | Condition for the whole fieldset                     |
+| static/dynamic variant           | same storage as `FormStep` | Static form or dynamic factory                       |
+| `use FieldContainerHelpersTrait` | —                          | All typed helpers (`email()`, `string()`, etc.)      |
 
 **`Fieldset` does NOT have:** `expect()`, `resumable()`, `fieldset()`, `dynamicFieldset()`.
 

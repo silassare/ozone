@@ -16,7 +16,7 @@ namespace OZONE\Core\Forms;
 use Closure;
 use Override;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Forms\Traits\FormFieldsTrait;
+use OZONE\Core\Forms\Traits\FieldContainerHelpersTrait;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Lang\I18nMessage;
 use PHPUtils\Interfaces\ArrayCapableInterface;
@@ -45,7 +45,7 @@ use PHPUtils\Traits\ArrayCapableTrait;
 final class Fieldset extends AbstractFieldContainer implements ArrayCapableInterface
 {
 	use ArrayCapableTrait;
-	use FormFieldsTrait;
+	use FieldContainerHelpersTrait;
 
 	private ?I18nMessage $t_legend = null;
 

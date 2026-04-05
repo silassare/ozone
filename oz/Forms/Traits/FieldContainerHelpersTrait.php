@@ -38,9 +38,9 @@ use OZONE\Core\Columns\Types\TypeUsername;
 use OZONE\Core\Forms\TypesSwitcher;
 
 /**
- * Trait FormFieldsTrait.
+ * Trait FieldContainerHelpersTrait.
  */
-trait FormFieldsTrait
+trait FieldContainerHelpersTrait
 {
 	/**
 	 * Creates a new field of type string.

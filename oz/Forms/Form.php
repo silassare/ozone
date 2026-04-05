@@ -21,7 +21,7 @@ use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Exceptions\InvalidFormException;
-use OZONE\Core\Forms\Traits\FormFieldsTrait;
+use OZONE\Core\Forms\Traits\FieldContainerHelpersTrait;
 use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Request;
 use OZONE\Core\Http\Uri;
@@ -38,7 +38,7 @@ use PHPUtils\Traits\MetaCapableTrait;
 class Form extends AbstractFieldContainer implements ArrayCapableInterface, MetaCapableInterface
 {
 	use ArrayCapableTrait;
-	use FormFieldsTrait;
+	use FieldContainerHelpersTrait;
 	use MetaCapableTrait;
 
 	public const FORM_DATA_RESUME_CACHE_NAMESPACE = 'oz.form.resume';
