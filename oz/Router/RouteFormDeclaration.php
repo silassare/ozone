@@ -78,7 +78,7 @@ final class RouteFormDeclaration
 
 	public function __destruct()
 	{
-		unset($this->t_static_form, $this->t_static_factory, $this->t_dynamic_factory, $this->t_doc_preview);
+		unset($this->t_static_form, $this->t_static_factory, $this->t_dynamic_factory, $this->t_doc_preview, $this->t_provider_class);
 	}
 
 	/**

@@ -219,7 +219,7 @@ class RouteSharedOptions
 			'allowed_providers'  => $allowed_provider_names,
 		];
 
-		return $this->guard(static fn() => new AuthorizationProviderRouteGuard($allowed_provider_names));
+		return $this->guard(static fn () => new AuthorizationProviderRouteGuard($allowed_provider_names));
 	}
 
 	/**
@@ -236,7 +236,7 @@ class RouteSharedOptions
 			'allowed_types' => $allowed_auth_user_types,
 		];
 
-		return $this->guard(static fn() => new AuthenticatedUserRouteGuard($allowed_auth_user_types));
+		return $this->guard(static fn () => new AuthenticatedUserRouteGuard($allowed_auth_user_types));
 	}
 
 	/**
@@ -253,7 +253,7 @@ class RouteSharedOptions
 			'rights' => $rights,
 		];
 
-		return $this->guard(static fn() => new UserAccessRightsRouteGuard($rights));
+		return $this->guard(static fn () => new UserAccessRightsRouteGuard($rights));
 	}
 
 	/**
@@ -274,7 +274,7 @@ class RouteSharedOptions
 			'roles'  => $roles,
 		];
 
-		return $this->guard(static fn() => new UserAccessRightsRouteGuard($rights, $roles));
+		return $this->guard(static fn () => new UserAccessRightsRouteGuard($rights, $roles));
 	}
 
 	/**
@@ -288,10 +288,10 @@ class RouteSharedOptions
 
 		$this->guard_descriptors[] = [
 			'type'  => 'role',
-			'roles' => \array_map(static fn($r) => $r->value, $roles),
+			'roles' => \array_map(static fn ($r) => $r->value, $roles),
 		];
 
-		return $this->guard(static fn() => new UserRoleRouteGuard($roles));
+		return $this->guard(static fn () => new UserRoleRouteGuard($roles));
 	}
 
 	/**
@@ -305,11 +305,11 @@ class RouteSharedOptions
 
 		$this->guard_descriptors[] = [
 			'type'       => 'role',
-			'roles'      => \array_map(static fn($r) => $r->value, $roles),
+			'roles'      => \array_map(static fn ($r) => $r->value, $roles),
 			'admin_also' => true,
 		];
 
-		return $this->guard(static fn() => new UserRoleRouteGuard($roles, false));
+		return $this->guard(static fn () => new UserRoleRouteGuard($roles, false));
 	}
 
 	/**
@@ -324,7 +324,7 @@ class RouteSharedOptions
 			'roles' => [Role::ADMIN->value, Role::SUPER_ADMIN->value],
 		];
 
-		return $this->guard(static fn() => new UserRoleRouteGuard([Role::ADMIN, Role::SUPER_ADMIN]));
+		return $this->guard(static fn () => new UserRoleRouteGuard([Role::ADMIN, Role::SUPER_ADMIN]));
 	}
 
 	/**
@@ -339,7 +339,7 @@ class RouteSharedOptions
 			'roles' => [Role::SUPER_ADMIN->value],
 		];
 
-		return $this->guard(static fn() => new UserRoleRouteGuard([Role::SUPER_ADMIN]));
+		return $this->guard(static fn () => new UserRoleRouteGuard([Role::SUPER_ADMIN]));
 	}
 
 	/**
@@ -363,7 +363,7 @@ class RouteSharedOptions
 			return $this;
 		}
 
-		return $this->guard(fn() => new CSRFRouteGuard($this->csrf_scope));
+		return $this->guard(fn () => new CSRFRouteGuard($this->csrf_scope));
 	}
 
 	/**

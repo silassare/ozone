@@ -13,7 +13,11 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Router;
 
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Forms\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormResumeProgress;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use OZONE\Core\Router\RouteFormDeclaration;
 use PHPUnit\Framework\TestCase;
@@ -286,5 +290,69 @@ final class RouteFormDeclarationTest extends TestCase
 	public function testIsDynamicTrueForOneArgMakeCallable(): void
 	{
 		self::assertTrue(RouteFormDeclaration::make(static fn ($ri) => new Form())->isDynamic());
+	}
+
+	// -----------------------------------------------------------------------
+	// provider()
+	// -----------------------------------------------------------------------
+
+	public function testProviderDeclarationHasExternalPolicy(): void
+	{
+		$decl = RouteFormDeclaration::provider(StubFormProvider::class);
+
+		self::assertSame(RouteFormDocPolicy::EXTERNAL, $decl->getPolicy());
+	}
+
+	public function testProviderDeclarationStoresProviderClass(): void
+	{
+		$decl = RouteFormDeclaration::provider(StubFormProvider::class);
+
+		self::assertSame(StubFormProvider::class, $decl->getProviderClass());
+	}
+
+	public function testGetProviderClassIsNullForNonProviderDeclaration(): void
+	{
+		$decl = RouteFormDeclaration::make(new Form());
+
+		self::assertNull($decl->getProviderClass());
+	}
+
+	public function testProviderDeclarationGetDocFormReturnsNull(): void
+	{
+		$decl = RouteFormDeclaration::provider(StubFormProvider::class);
+
+		self::assertNull($decl->getDocForm());
+	}
+
+	public function testProviderDeclarationIsNotDynamic(): void
+	{
+		$decl = RouteFormDeclaration::provider(StubFormProvider::class);
+
+		self::assertFalse($decl->isDynamic());
+	}
+
+	public function testProviderWithNonProviderClassThrows(): void
+	{
+		$this->expectException(RuntimeException::class);
+
+		RouteFormDeclaration::provider(Form::class);
+	}
+}
+
+/**
+ * Minimal provider stub for use in RouteFormDeclarationTest.
+ *
+ * @internal
+ */
+final class StubFormProvider extends AbstractResumableFormProvider
+{
+	public static function providerName(): string
+	{
+		return 'test:stub';
+	}
+
+	public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
+	{
+		return null;
 	}
 }
