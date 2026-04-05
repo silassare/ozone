@@ -201,7 +201,21 @@ trait ApiDocManipulationTrait
 			$doc_policy    = $route_options->getEffectiveDocPolicy();
 
 			if (RouteFormDocPolicy::OPAQUE === $doc_policy || RouteFormDocPolicy::EXTERNAL === $doc_policy) {
-				$oz_form_ext = ['oz-form' => ['name' => 'oz-form', 'value' => ['policy' => $doc_policy->value]]];
+				$oz_form_value = ['policy' => $doc_policy->value];
+
+				// When the route uses a ResumableFormProviderInterface provider, attach provider metadata.
+				if (RouteFormDocPolicy::EXTERNAL === $doc_policy) {
+					$declaration    = $route_options->getFormDeclaration();
+					$provider_class = $declaration?->getProviderClass();
+
+					if (null !== $provider_class) {
+						$init_form                           = $provider_class::initForm();
+						$oz_form_value['form_provider_name'] = $provider_class::providerName();
+						$oz_form_value['init_form']          = $init_form?->toArray();
+					}
+				}
+
+				$oz_form_ext = ['oz-form' => ['name' => 'oz-form', 'value' => $oz_form_value]];
 
 				if (self::isUndefined($op->x)) {
 					$op->x = $oz_form_ext;
