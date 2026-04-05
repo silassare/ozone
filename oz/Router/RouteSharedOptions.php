@@ -20,6 +20,7 @@ use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\Forms\Interfaces\ResumableFormProviderInterface;
 use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Roles\Enums\Role;
@@ -218,7 +219,7 @@ class RouteSharedOptions
 			'allowed_providers'  => $allowed_provider_names,
 		];
 
-		return $this->guard(static fn () => new AuthorizationProviderRouteGuard($allowed_provider_names));
+		return $this->guard(static fn() => new AuthorizationProviderRouteGuard($allowed_provider_names));
 	}
 
 	/**
@@ -235,7 +236,7 @@ class RouteSharedOptions
 			'allowed_types' => $allowed_auth_user_types,
 		];
 
-		return $this->guard(static fn () => new AuthenticatedUserRouteGuard($allowed_auth_user_types));
+		return $this->guard(static fn() => new AuthenticatedUserRouteGuard($allowed_auth_user_types));
 	}
 
 	/**
@@ -252,7 +253,7 @@ class RouteSharedOptions
 			'rights' => $rights,
 		];
 
-		return $this->guard(static fn () => new UserAccessRightsRouteGuard($rights));
+		return $this->guard(static fn() => new UserAccessRightsRouteGuard($rights));
 	}
 
 	/**
@@ -273,7 +274,7 @@ class RouteSharedOptions
 			'roles'  => $roles,
 		];
 
-		return $this->guard(static fn () => new UserAccessRightsRouteGuard($rights, $roles));
+		return $this->guard(static fn() => new UserAccessRightsRouteGuard($rights, $roles));
 	}
 
 	/**
@@ -287,10 +288,10 @@ class RouteSharedOptions
 
 		$this->guard_descriptors[] = [
 			'type'  => 'role',
-			'roles' => \array_map(static fn ($r) => $r->value, $roles),
+			'roles' => \array_map(static fn($r) => $r->value, $roles),
 		];
 
-		return $this->guard(static fn () => new UserRoleRouteGuard($roles));
+		return $this->guard(static fn() => new UserRoleRouteGuard($roles));
 	}
 
 	/**
@@ -304,11 +305,11 @@ class RouteSharedOptions
 
 		$this->guard_descriptors[] = [
 			'type'       => 'role',
-			'roles'      => \array_map(static fn ($r) => $r->value, $roles),
+			'roles'      => \array_map(static fn($r) => $r->value, $roles),
 			'admin_also' => true,
 		];
 
-		return $this->guard(static fn () => new UserRoleRouteGuard($roles, false));
+		return $this->guard(static fn() => new UserRoleRouteGuard($roles, false));
 	}
 
 	/**
@@ -323,7 +324,7 @@ class RouteSharedOptions
 			'roles' => [Role::ADMIN->value, Role::SUPER_ADMIN->value],
 		];
 
-		return $this->guard(static fn () => new UserRoleRouteGuard([Role::ADMIN, Role::SUPER_ADMIN]));
+		return $this->guard(static fn() => new UserRoleRouteGuard([Role::ADMIN, Role::SUPER_ADMIN]));
 	}
 
 	/**
@@ -338,7 +339,7 @@ class RouteSharedOptions
 			'roles' => [Role::SUPER_ADMIN->value],
 		];
 
-		return $this->guard(static fn () => new UserRoleRouteGuard([Role::SUPER_ADMIN]));
+		return $this->guard(static fn() => new UserRoleRouteGuard([Role::SUPER_ADMIN]));
 	}
 
 	/**
@@ -362,7 +363,7 @@ class RouteSharedOptions
 			return $this;
 		}
 
-		return $this->guard(fn () => new CSRFRouteGuard($this->csrf_scope));
+		return $this->guard(fn() => new CSRFRouteGuard($this->csrf_scope));
 	}
 
 	/**
@@ -471,24 +472,29 @@ class RouteSharedOptions
 	 * Sets the route's form declaration.
 	 *
 	 * Accepts a {@see Form} instance, a callable (with arity auto-detected via reflection),
-	 * or a pre-built {@see RouteFormDeclaration} for full control.
+	 * a pre-built {@see RouteFormDeclaration} for full control, or a
+	 * `class-string<ResumableFormProviderInterface>` to delegate the entire form lifecycle to
+	 * the resumable-form pipeline.
 	 *
 	 * Detection rules (when $form is not a RouteFormDeclaration):
+	 *  - A `class-string<ResumableFormProviderInterface>` — creates an EXTERNAL declaration that
+	 *    bypasses normal bundle validation; the router injects the completed FormData instead.
 	 *  - A Form instance or a zero-arg callable (`fn(): Form`) is treated as static:
 	 *    resolvable and documentable without a live {@see RouteInfo}.
 	 *  - A one-arg+ callable (`fn(RouteInfo $ri): ?Form`) is treated as dynamic:
 	 *    requires a live {@see RouteInfo} at request time and is opaque in API docs
 	 *    unless $policy is overridden or a preview is provided via {@see RouteFormDeclaration::dynamic()}.
 	 *
-	 * The $policy parameter is ignored when $form is already a {@see RouteFormDeclaration}.
+	 * The $policy parameter is ignored when $form is already a {@see RouteFormDeclaration} or a
+	 * provider class string.
 	 *
-	 * @param callable|Form|RouteFormDeclaration $form     the form, a factory, or a full declaration
-	 * @param RouteFormDocPolicy                 $policy   documentation policy (AUTO by default)
-	 * @param bool                               $override whether to override an existing form declaration or throw an exception
+	 * @param callable|class-string<ResumableFormProviderInterface>|Form|RouteFormDeclaration $form     the form, a factory, a full declaration, or a provider class string
+	 * @param RouteFormDocPolicy                                                              $policy   documentation policy (AUTO by default)
+	 * @param bool                                                                            $override whether to override an existing form declaration or throw an exception
 	 *
 	 * @return $this
 	 */
-	public function form(callable|Form|RouteFormDeclaration $form, RouteFormDocPolicy $policy = RouteFormDocPolicy::AUTO, bool $override = false): static
+	public function form(callable|Form|RouteFormDeclaration|string $form, RouteFormDocPolicy $policy = RouteFormDocPolicy::AUTO, bool $override = false): static
 	{
 		if (null !== $this->form_declaration && !$override) {
 			throw new RuntimeException('Form declaration is already set for this route.');
@@ -496,11 +502,23 @@ class RouteSharedOptions
 
 		if ($form instanceof RouteFormDeclaration) {
 			$this->form_declaration = $form;
+		} elseif (\is_string($form)) {
+			$this->form_declaration = RouteFormDeclaration::provider($form);
 		} else {
 			$this->form_declaration = RouteFormDeclaration::make($form, $policy);
 		}
 
 		return $this;
+	}
+
+	/**
+	 * Returns the form declaration set directly on this route or group, without traversing the parent chain.
+	 *
+	 * @return null|RouteFormDeclaration
+	 */
+	public function getFormDeclaration(): ?RouteFormDeclaration
+	{
+		return $this->form_declaration;
 	}
 
 	/**

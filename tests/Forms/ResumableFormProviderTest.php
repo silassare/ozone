@@ -13,18 +13,18 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
-use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormResumeProgress;
 use OZONE\Core\Http\Enums\RequestScope;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 /**
  * Class ResumableFormProviderTest.
  *
- * Tests for {@see AbstractResumableFormProvider}: registry, resolution, and defaults.
+ * Tests for {@see AbstractResumableFormProvider}: interface defaults and instance().
  *
  * @internal
  *
@@ -32,63 +32,48 @@ use PHPUnit\Framework\TestCase;
  */
 final class ResumableFormProviderTest extends TestCase
 {
-	protected function setUp(): void
+	// -----------------------------------------------------------------------
+	// providerName / interface
+	// -----------------------------------------------------------------------
+
+	public function testProviderNameReturnsExpectedString(): void
 	{
-		AbstractResumableFormProvider::clearRegistry();
+		self::assertSame('test:simple', SimpleTestProvider::providerName());
 	}
 
-	protected function tearDown(): void
+	public function testNoRegistryMethodsExist(): void
 	{
-		AbstractResumableFormProvider::clearRegistry();
+		self::assertFalse(\method_exists(AbstractResumableFormProvider::class, 'register'));
+		self::assertFalse(\method_exists(AbstractResumableFormProvider::class, 'resolve'));
+		self::assertFalse(\method_exists(AbstractResumableFormProvider::class, 'clearRegistry'));
 	}
 
 	// -----------------------------------------------------------------------
-	// register + resolve
+	// initForm
 	// -----------------------------------------------------------------------
 
-	public function testRegisterAndResolveReturnsInstance(): void
+	public function testDefaultInitFormIsNull(): void
 	{
-		AbstractResumableFormProvider::register(SimpleTestProvider::class);
-
-		$provider = AbstractResumableFormProvider::resolve('test:simple');
-
-		self::assertInstanceOf(SimpleTestProvider::class, $provider);
+		self::assertNull(SimpleTestProvider::initForm());
 	}
 
-	public function testResolveUnknownRefThrowsNotFoundException(): void
+	// -----------------------------------------------------------------------
+	// instance()
+	// -----------------------------------------------------------------------
+
+	public function testDirectConstructionLeavesRiNull(): void
 	{
-		$this->expectException(NotFoundException::class);
+		$provider = new SimpleTestProvider();
 
-		AbstractResumableFormProvider::resolve('test:nonexistent');
-	}
+		$ri_prop = new ReflectionProperty(AbstractResumableFormProvider::class, 'ri');
+		$ri_prop->setAccessible(true);
 
-	public function testRegisterSameClassTwiceIsIdempotent(): void
-	{
-		AbstractResumableFormProvider::register(SimpleTestProvider::class);
-		AbstractResumableFormProvider::register(SimpleTestProvider::class); // must not throw
-
-		$provider = AbstractResumableFormProvider::resolve('test:simple');
-
-		self::assertInstanceOf(SimpleTestProvider::class, $provider);
-	}
-
-	public function testRegisterDifferentClassUnderSameRefThrowsRuntimeException(): void
-	{
-		AbstractResumableFormProvider::register(SimpleTestProvider::class);
-
-		$this->expectException(RuntimeException::class);
-
-		AbstractResumableFormProvider::register(ConflictingTestProvider::class);
+		self::assertNull($ri_prop->getValue($provider));
 	}
 
 	// -----------------------------------------------------------------------
 	// Defaults
 	// -----------------------------------------------------------------------
-
-	public function testDefaultInitFormIsNull(): void
-	{
-		self::assertNull((new SimpleTestProvider())->initForm());
-	}
 
 	public function testDefaultResumeTTLIs3600(): void
 	{
@@ -100,23 +85,29 @@ final class ResumableFormProviderTest extends TestCase
 		self::assertSame(RequestScope::STATE, (new SimpleTestProvider())->resumeScope());
 	}
 
+	public function testDefaultIsReversibleIsFalse(): void
+	{
+		self::assertFalse((new SimpleTestProvider())->isReversible());
+	}
+
+	public function testDefaultTotalStepsIsNull(): void
+	{
+		self::assertNull((new SimpleTestProvider())->totalSteps());
+	}
+
+	public function testDefaultNotBeforeIsNull(): void
+	{
+		self::assertNull((new SimpleTestProvider())->notBefore());
+	}
+
+	public function testDefaultDeadlineIsNull(): void
+	{
+		self::assertNull((new SimpleTestProvider())->deadline());
+	}
+
 	public function testResumeScopeCanBeOverridden(): void
 	{
 		self::assertSame(RequestScope::HOST, (new HostScopedTestProvider())->resumeScope());
-	}
-
-	// -----------------------------------------------------------------------
-	// clearRegistry (test isolation utility)
-	// -----------------------------------------------------------------------
-
-	public function testClearRegistryMakesProviderUnresolvable(): void
-	{
-		AbstractResumableFormProvider::register(SimpleTestProvider::class);
-		AbstractResumableFormProvider::clearRegistry();
-
-		$this->expectException(NotFoundException::class);
-
-		AbstractResumableFormProvider::resolve('test:simple');
 	}
 }
 
@@ -125,58 +116,38 @@ final class ResumableFormProviderTest extends TestCase
 // ---------------------------------------------------------------------------
 
 /**
- * Minimal provider: no init form, returns one step, then done.
+ * Minimal provider: no init form, returns one step at index 0, then done.
  *
  * @internal
  */
 final class SimpleTestProvider extends AbstractResumableFormProvider
 {
-	public static function providerRef(): string
+	public static function providerName(): string
 	{
 		return 'test:simple';
 	}
 
-	public function nextStep(FormData $progress): ?Form
+	public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
 	{
-		if ($progress->has('step1_done')) {
-			return null;
+		if (0 === $progress->getStepIndex()) {
+			$form = new Form();
+			$form->string('answer');
+
+			return $form;
 		}
 
-		$form = new Form();
-		$form->field('step1_done'); // optional — validates with empty data
-
-		return $form;
-	}
-}
-
-/**
- * Provider with same providerRef as SimpleTestProvider — used to test
- * duplicate-registration conflict detection.
- *
- * @internal
- */
-final class ConflictingTestProvider extends AbstractResumableFormProvider
-{
-	public static function providerRef(): string
-	{
-		return 'test:simple'; // deliberately conflicts with SimpleTestProvider
-	}
-
-	public function nextStep(FormData $progress): ?Form
-	{
 		return null;
 	}
 }
 
 /**
- * Provider that overrides resumeScope to HOST — useful for unit tests that
- * cannot rely on a stateful auth context.
+ * Provider that overrides resumeScope to HOST.
  *
  * @internal
  */
 final class HostScopedTestProvider extends AbstractResumableFormProvider
 {
-	public static function providerRef(): string
+	public static function providerName(): string
 	{
 		return 'test:host-scoped';
 	}
@@ -186,7 +157,7 @@ final class HostScopedTestProvider extends AbstractResumableFormProvider
 		return RequestScope::HOST;
 	}
 
-	public function nextStep(FormData $progress): ?Form
+	public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
 	{
 		return null;
 	}

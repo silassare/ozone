@@ -15,112 +15,77 @@ namespace OZONE\Core\Forms;
 
 use DateTimeImmutable;
 use Override;
-use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Interfaces\ResumableFormProviderInterface;
+use OZONE\Core\Forms\Services\ResumableFormService;
 use OZONE\Core\Http\Enums\RequestScope;
+use OZONE\Core\Router\RouteInfo;
 
 /**
  * Class AbstractResumableFormProvider.
  *
- * Base class for resumable form providers. Provides a static registry so that
- * providers can be resolved from the URL's `:provider` segment without
- * exposing fully-qualified class names in requests.
+ * Pure-defaults base for resumable form providers. Provider resolution is handled
+ * by {@see ResumableFormService} via the
+ * `oz.forms.providers` settings registry — there is no static in-process registry.
  *
- * Usage:
+ * Concrete providers must implement {@see self::providerName()} and
+ * {@see self::nextStep()}. All other methods have sensible defaults and may be
+ * overridden as needed.
+ *
+ * Usage example:
  *
  * ```php
  * class MyProvider extends AbstractResumableFormProvider
  * {
- *     public static function providerRef(): string { return 'my-survey'; }
+ *     public static function providerName(): string { return 'my-survey'; }
  *
- *     public function nextStep(FormData $progress): ?Form
+ *     public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
  *     {
  *         // Return next form or null when done
  *     }
  * }
+ * ```
  *
- * // Register once, e.g. in a BootHookReceiverInterface::boot() method:
- * AbstractResumableFormProvider::register(MyProvider::class);
+ * Register in `app/settings/oz.forms.providers.php`:
+ *
+ * ```php
+ * return [
+ *     MyProvider::PROVIDER_NAME => MyProvider::class,
+ * ];
  * ```
  */
 abstract class AbstractResumableFormProvider implements ResumableFormProviderInterface
 {
 	/**
-	 * Registry: providerRef -> class FQN.
+	 * The RouteInfo for the current handler invocation.
 	 *
-	 * @var array<string, class-string<ResumableFormProviderInterface>>
+	 * Set by the default {@see self::instance()} implementation. Providers
+	 * that need access to the context, request, or auth state use `$this->ri`.
+	 * Providers that do not need it may ignore this property.
 	 */
-	private static array $registry = [];
+	protected ?RouteInfo $ri = null;
 
 	/**
-	 * Registers a provider class in the global registry.
+	 * {@inheritDoc}
 	 *
-	 * The class must implement {@see ResumableFormProviderInterface}.
-	 * Registering a different class under the same ref as an already-registered
-	 * one throws a {@see RuntimeException}.
-	 *
-	 * @param class-string<ResumableFormProviderInterface> $class FQN of the provider class
-	 *
-	 * @throws RuntimeException when the same ref is already registered by a different class
+	 * Default implementation: constructs a new instance of the concrete class and
+	 * injects `$ri`. Providers may override this to perform additional setup.
 	 */
-	public static function register(string $class): void
+	#[Override]
+	public static function instance(RouteInfo $ri): static
 	{
-		$ref = $class::providerRef();
+		$instance     = new static();
+		$instance->ri = $ri;
 
-		if (isset(self::$registry[$ref]) && self::$registry[$ref] !== $class) {
-			throw new RuntimeException(\sprintf(
-				'Resumable form provider ref "%s" is already registered by "%s". Cannot re-register with "%s".',
-				$ref,
-				self::$registry[$ref],
-				$class
-			));
-		}
-
-		self::$registry[$ref] = $class;
+		return $instance;
 	}
 
 	/**
-	 * Resolves a provider ref to a fresh provider instance.
-	 *
-	 * Handles two cases:
-	 *  - `route:{name}` refs are resolved lazily via {@see RouteResumableFormProvider::resolveRoute()}
-	 *    without requiring boot-time registration.
-	 *  - All other refs are looked up in the static registry populated by {@see self::register()}.
-	 *
-	 * @param string $ref The value of the `:provider` URL segment
-	 *
-	 * @return ResumableFormProviderInterface
-	 *
-	 * @throws NotFoundException when no provider is registered for `$ref`
+	 * {@inheritDoc}
 	 */
-	public static function resolve(string $ref): ResumableFormProviderInterface
+	#[Override]
+	public static function initForm(): ?Form
 	{
-		if (\str_starts_with($ref, RouteResumableFormProvider::PROVIDER_REF_PREFIX)) {
-			$route_name = \substr($ref, \strlen(RouteResumableFormProvider::PROVIDER_REF_PREFIX));
-
-			return RouteResumableFormProvider::resolveRoute($route_name);
-		}
-
-		if (!isset(self::$registry[$ref])) {
-			throw new NotFoundException('OZ_FORM_PROVIDER_NOT_FOUND', ['ref' => $ref]);
-		}
-
-		$class = self::$registry[$ref];
-
-		return new $class();
-	}
-
-	/**
-	 * Clears the registry.
-	 *
-	 * Intended for test isolation only - do not call in production code.
-	 *
-	 * @internal
-	 */
-	public static function clearRegistry(): void
-	{
-		self::$registry = [];
+		return null;
 	}
 
 	/**
@@ -130,15 +95,6 @@ abstract class AbstractResumableFormProvider implements ResumableFormProviderInt
 	public function resumeScope(): RequestScope
 	{
 		return RequestScope::STATE;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function initForm(): ?Form
-	{
-		return null;
 	}
 
 	/**

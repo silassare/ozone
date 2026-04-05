@@ -16,6 +16,8 @@ namespace OZONE\Core\Router;
 use Closure;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\Forms\Interfaces\ResumableFormProviderInterface;
+use OZONE\Core\Forms\Services\ResumableFormService;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use ReflectionException;
 use ReflectionFunction;
@@ -29,6 +31,8 @@ use ReflectionFunction;
  *  - t_static_form    : a Form instance; documentable and resolvable without RouteInfo.
  *  - t_static_factory : a zero-arg callable `fn():Form`; documentable and resolvable without RouteInfo.
  *  - t_dynamic_factory: a one-arg+ callable `fn(RouteInfo):?Form`; requires a live RouteInfo.
+ *  - t_provider_class : a class-string<ResumableFormProviderInterface>; form is fully managed
+ *                       by the resumable-form pipeline, not validated by the normal bundle logic.
  *
  * An optional `t_doc_preview` (`fn():Form`) can be paired with a dynamic factory to make the
  * route's schema visible in API docs at doc-gen time (no live RouteInfo required for that path).
@@ -61,6 +65,12 @@ final class RouteFormDeclaration
 	 *                   a schema in API docs without a live RouteInfo
 	 */
 	private ?Closure $t_doc_preview = null;
+
+	/**
+	 * @var null|class-string<ResumableFormProviderInterface> the provider class when the route
+	 *                                                        delegates to the resumable-form pipeline
+	 */
+	private ?string $t_provider_class = null;
 
 	private RouteFormDocPolicy $t_policy;
 
@@ -178,6 +188,44 @@ final class RouteFormDeclaration
 	public static function external(callable|Form $form): static
 	{
 		return self::make($form, RouteFormDocPolicy::EXTERNAL);
+	}
+
+	/**
+	 * Creates a declaration that delegates form resolution entirely to a resumable-form provider.
+	 *
+	 * The route handler receives the completed {@see FormData} via {@see RouteInfo::getCleanFormData()},
+	 * which is populated by {@see ResumableFormService::requireCompletion()}
+	 * using the `X-OZONE-Form-Resumable-Ref` request header. No normal bundle validation is run.
+	 *
+	 * @param class-string<ResumableFormProviderInterface> $class the provider class
+	 *
+	 * @return static
+	 */
+	public static function provider(string $class): static
+	{
+		if (!\is_a($class, ResumableFormProviderInterface::class, true)) {
+			throw new RuntimeException(\sprintf(
+				'Form provider class "%s" must implement %s.',
+				$class,
+				ResumableFormProviderInterface::class
+			));
+		}
+
+		$decl                   = new self();
+		$decl->t_policy         = RouteFormDocPolicy::EXTERNAL;
+		$decl->t_provider_class = $class;
+
+		return $decl;
+	}
+
+	/**
+	 * Returns the provider class when this declaration was created via {@see provider()}, null otherwise.
+	 *
+	 * @return null|class-string<ResumableFormProviderInterface>
+	 */
+	public function getProviderClass(): ?string
+	{
+		return $this->t_provider_class;
 	}
 
 	/**

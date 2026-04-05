@@ -16,82 +16,92 @@ namespace OZONE\Core\Forms\Interfaces;
 use DateTimeImmutable;
 use OZONE\Core\Exceptions\FormResumeExpiredException;
 use OZONE\Core\Exceptions\FormResumeNotYetActiveException;
-use OZONE\Core\Forms\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormResumeProgress;
 use OZONE\Core\Http\Enums\RequestScope;
+use OZONE\Core\Router\RouteInfo;
 
 /**
  * Interface ResumableFormProviderInterface.
  *
  * A resumable form provider drives a multi-step, session-backed form sequence.
- * Each step's form is derived from the accumulated validated data of all previous
+ * Each step form is derived from the accumulated validated data of all previous
  * steps, making QCM flows, adaptive surveys, and multi-page wizards possible.
  *
- * Implementors MUST register themselves via
- * {@see AbstractResumableFormProvider::register()} so they can
- * be resolved from the URL's `:provider` segment.
+ * Providers are resolved by name via the `oz.forms.providers` settings registry.
  *
- * Contract for {@see self::nextStep()}: it must be deterministic - given the same
- * `$progress`, it must always describe the same form structure. Side effects and
- * random variation are not allowed.
+ * Contract for {@see self::nextStep()}: it must be deterministic — given the same
+ * inputs it must always return the same form structure. Side effects are not allowed.
  */
 interface ResumableFormProviderInterface
 {
 	/**
 	 * Returns the unique slug that identifies this provider type.
 	 *
-	 * This value is used as the `:provider` URL segment, so it must be URL-safe
-	 * (letters, digits, hyphens, and colons are all accepted by the router).
+	 * This value is used as the `:provider` URL segment and must match the key
+	 * registered in the `oz.forms.providers` settings file.
 	 *
-	 * Example: `'quiz:geography'`, `'onboarding:wizard'`
+	 * Example: `'quiz:geography'`, `'route'`, `'onboarding:wizard'`
 	 */
-	public static function providerRef(): string;
+	public static function providerName(): string;
 
 	/**
 	 * Returns an optional pre-flight form shown before the main step sequence.
 	 *
-	 * Common uses: accepting terms of service, solving a captcha, providing
-	 * context (e.g. choosing an exam subject before the actual questions start).
+	 * When non-null the client must include the init form data in the body of
+	 * `POST /form/:provider/init`. The validated init fields become the starting
+	 * `$cleaned_form` for the first {@see self::nextStep()} call.
 	 *
 	 * Return `null` to skip straight to the first {@see self::nextStep()} call.
 	 *
-	 * When non-null the client is expected to include the init form data in the
-	 * body of `POST /form/:provider/init`. The validated init fields are merged
-	 * into the accumulated progress and passed as the starting `$progress` to
-	 * the first {@see self::nextStep()} call.
+	 * STATIC so that API doc generation and route discovery can call it without
+	 * constructing a full provider instance.
 	 */
-	public function initForm(): ?Form;
+	public static function initForm(): ?Form;
 
 	/**
-	 * Returns the next form to display given the accumulated validated progress.
+	 * Factory: creates a provider instance bound to the current route context.
 	 *
-	 * Called at least once per step submission. The returned form describes
-	 * exactly the fields the client must fill for the next step.
+	 * The returned instance stores `$ri` so it can access the context, request,
+	 * auth state, etc. Called once per ResumableFormService handler invocation.
 	 *
-	 * Return `null` to signal that the sequence is complete - no more steps.
+	 * @param RouteInfo $ri the current route info
 	 *
-	 * @param FormData $progress accumulated validated data from all previous steps
-	 *                           (including init form data when applicable)
+	 * @return static
 	 */
-	public function nextStep(FormData $progress): ?Form;
+	public static function instance(RouteInfo $ri): static;
 
 	/**
-	 * Returns the total number of steps in the sequence, or null when unknown.
+	 * Returns the next form to display given the accumulated validated data and
+	 * the provider's private progress state.
 	 *
-	 * When non-null, the service includes a `progress` block in every response
-	 * so the client can show a progress indicator.
+	 * - `$cleaned_form`: accumulated validated fields from all previous steps
+	 *   (shareable with the client if needed). Read values but do NOT mutate.
+	 * - `$progress`: private provider state, phase, and step index (never sent to
+	 *   the client). The provider may call `$progress->set(key, value)` to store
+	 *   bookkeeping data for use in subsequent calls.
 	 *
-	 * Return null for open-ended or adaptive sequences where the total is not known
-	 * in advance.
+	 * Return `null` to signal that the sequence is complete (no more steps).
+	 *
+	 * @param FormData           $cleaned_form accumulated validated fields from all previous steps
+	 * @param FormResumeProgress $progress     private provider state
+	 */
+	public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form;
+
+	/**
+	 * Returns the total number of steps, or null when unknown.
+	 *
+	 * When non-null, every response includes a `progress` block so the client can
+	 * show a progress indicator. Return null for open-ended or adaptive sequences.
 	 */
 	public function totalSteps(): ?int;
 
 	/**
 	 * Returns true when the client is allowed to go back to a previous step.
 	 *
-	 * When true, the session snapshots progress before each submission so
-	 * `POST /form/:provider/:ref/back` can restore the previous state.
+	 * When true, the service snapshots progress before each submission so
+	 * `POST /form/:provider/back` can restore the previous state.
 	 */
 	public function isReversible(): bool;
 
@@ -108,9 +118,10 @@ interface ResumableFormProviderInterface
 	/**
 	 * Returns the hard deadline after which in-progress sessions are rejected.
 	 *
-	 * When non-null, `expires_at` is derived from `min(time() + resumeTTL(), deadline)`
-	 * and stored in the session. Any handler that loads the session after the deadline
-	 * throws {@see FormResumeExpiredException} (HTTP 410).
+	 * When non-null, `expires_at` is derived from
+	 * `min(time() + resumeTTL(), deadline->getTimestamp())` and stored in the session.
+	 * Any handler that loads the session after the deadline throws
+	 * {@see FormResumeExpiredException} (HTTP 410).
 	 *
 	 * Return null for sessions that expire only by inactivity (via {@see self::resumeTTL()}).
 	 */
@@ -119,15 +130,15 @@ interface ResumableFormProviderInterface
 	/**
 	 * Returns the scope strategy used to tie session cache entries to a specific
 	 * principal. The resolved scope ID is stored in the session and verified on
-	 * every subsequent request so another caller cannot hijack an in-progress session.
+	 * every subsequent request so another caller cannot hijack a session.
 	 */
 	public function resumeScope(): RequestScope;
 
 	/**
 	 * Returns the session cache TTL in seconds.
 	 *
-	 * After this duration of inactivity the session cache entry expires and
-	 * the client must start a new session.
+	 * After this duration of inactivity the session cache entry expires and the
+	 * client must start a new session.
 	 */
 	public function resumeTTL(): int;
 }
