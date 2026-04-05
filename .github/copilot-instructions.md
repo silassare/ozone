@@ -443,32 +443,41 @@ $this->ensure()
     ->isNotNull('email');
 ```
 
-### Multi-step Forms
+### Fieldsets (Conditional Field Groups)
 
-Steps are created with `$form->step()` (static) or `$form->dynamicStep()` (factory called with the cleaned `FormData` at validation time). An optional `FormRule` condition controls whether the step is applied.
+Fieldsets group related fields within a single form validation pass. Created with `$form->fieldset()` (static, callback mutates the `Fieldset` in-place at definition time) or `$form->dynamicFieldset()` (factory called with the accumulated cleaned `FormData` at validation time). An optional `RuleSet` condition controls whether the fieldset is applied.
 
 ```php
 $this->string('type')->required(true);
 
-// Static step — form structure known at definition time:
-$inner = new Form();
-$inner->string('extra_field')->required(true);
-$this->step('details', $inner, $this->ensure()->eq('type', 'advanced'));
+// Static fieldset — callback populates the fieldset immediately at definition time:
+$this->fieldset('details', function (Fieldset $fs): void {
+    $fs->string('extra_field')->required(true);
+});
 
-// Dynamic step — form built from cleaned FormData at runtime:
-$this->dynamicStep('extra', function (FormData $fd) {
-    $f = new Form();
-    $f->string('extra_field')->required(true);
-    return $f;
+// Conditional static fieldset — only applied when condition passes:
+$this->fieldset('advanced', static function (Fieldset $fs): void {
+    $fs->string('extra_field')->required(true);
 }, $this->ensure()->eq('type', 'advanced'));
+
+// Dynamic fieldset — factory receives accumulated cleaned FormData at validation time:
+$this->dynamicFieldset('extra', function (FormData $fd): Fieldset {
+    return Fieldset::static($this, 'extra', function (Fieldset $fs) use ($fd): void {
+        if ('advanced' === $fd->get('type')) {
+            $fs->string('extra_field')->required(true);
+        }
+    });
+});
 ```
 
-**`FormStep`** (`OZONE\Core\Forms\FormStep`) — value object representing a step. Key methods:
+**`Fieldset`** (`OZONE\Core\Forms\Fieldset`) — represents a named conditional group of fields. Key methods:
 
-- `isStatic() / isDynamic()` — step type
-- `getStaticForm(): Form` — returns the form for static steps (throws for dynamic)
-- `build(FormData $fd): ?Form` — evaluates the condition against cleaned `FormData` and returns the form (null when condition fails)
-- `toArray()` — serializes: `ref`, `name`, `type` (`static`|`dynamic`), `form` (null for dynamic), `if` (serialized `FormRule` or null)
+- `isStatic() / isDynamic()` — fieldset type
+- `legend(I18nMessage|string $legend): static` — sets the display label for the group
+- `if(): RuleSet` — returns (or lazy-inits) the condition `RuleSet` evaluated against accumulated cleaned data
+- `isEnabled(FormData $fd): bool` — returns true when the condition passes (or no condition is set)
+- `build(FormData $fd): ?static` — evaluates condition; returns null when disabled, `$this` for static when enabled, factory result for dynamic
+- `toArray()` — serializes: `ref`, `name`, `legend`, `type` (`static`|`dynamic`), `fields` (null for dynamic), `if` (serialized `RuleSet` or null)
 
 **`DynamicValue`** (`OZONE\Core\Forms\DynamicValue<T>`) — wraps a server-side callable for `FormRule` comparisons. `toArray()` returns `['$dynamic' => true]` — tells the client the value is evaluated server-side only.
 
