@@ -49,6 +49,10 @@ class RouteSharedOptions
 
 	protected ?RequestScope $csrf_scope = null;
 
+	protected ?RequestScope $route_resume_scope = null;
+
+	protected int $route_resume_ttl = 3600;
+
 	/**
 	 * @var array<string,string>
 	 */
@@ -372,6 +376,25 @@ class RouteSharedOptions
 	}
 
 	/**
+	 * Enables resume caching for the form bundle assembled by this route or group.
+	 *
+	 * When set, overrides any resumable() configuration declared on the individual
+	 * forms merged into the bundle. Inherited from parent groups; innermost definition wins.
+	 *
+	 * @param RequestScope $scope The scoping strategy for the resume cache
+	 * @param int          $ttl   Cache TTL in seconds (default: 3600)
+	 *
+	 * @return $this
+	 */
+	public function resumable(RequestScope $scope = RequestScope::STATE, int $ttl = 3600): static
+	{
+		$this->route_resume_scope = $scope;
+		$this->route_resume_ttl   = $ttl;
+
+		return $this;
+	}
+
+	/**
 	 * Add guard.
 	 *
 	 * The route guard may be a:
@@ -631,6 +654,12 @@ class RouteSharedOptions
 			$target = $req->getUri();
 			$method = $req->getMethod();
 
+			$resume_config = $this->resolveResumeConfig();
+
+			if (null !== $resume_config) {
+				$bundle->resumable($resume_config[0], $resume_config[1]);
+			}
+
 			return $bundle->submitTo($target)->method($method);
 		}
 
@@ -680,6 +709,12 @@ class RouteSharedOptions
 
 		foreach ($forms as $form) {
 			$bundle->merge($form);
+		}
+
+		$resume_config = $this->resolveResumeConfig();
+
+		if (null !== $resume_config) {
+			$bundle->resumable($resume_config[0], $resume_config[1]);
 		}
 
 		return $bundle;
@@ -788,6 +823,23 @@ class RouteSharedOptions
 		$middlewares = $this->parent?->getMiddlewares() ?? [];
 
 		return \array_merge($middlewares, $this->middlewares);
+	}
+
+	/**
+	 * Resolves the effective resume configuration for this route/group chain.
+	 *
+	 * Innermost (most specific) definition wins.
+	 * Returns null when no level defines resumable().
+	 *
+	 * @return null|array{0: RequestScope, 1: int}
+	 */
+	protected function resolveResumeConfig(): ?array
+	{
+		if (null !== $this->route_resume_scope) {
+			return [$this->route_resume_scope, $this->route_resume_ttl];
+		}
+
+		return $this->parent?->resolveResumeConfig();
 	}
 
 	/**
