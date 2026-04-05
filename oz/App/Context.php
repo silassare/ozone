@@ -939,6 +939,8 @@ final class Context
 			$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_NAME'));
 		}
 
+		$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_RESUMABLE_REF_HEADER_NAME'));
+
 		$bundle = \array_merge($declared, $provided);
 
 		return \array_unique(

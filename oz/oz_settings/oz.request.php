@@ -71,4 +71,11 @@ return [
 	 * This header is used by the client to indicate that the request is a form discovery request.
 	 */
 	'OZ_FORM_DISCOVERY_HEADER_NAME' => 'X-OZONE-Form-Discovery',
+
+	/**
+	 * Name of the header to use for form resumable form reference.
+	 *
+	 * This header is used by the client to indicate that the request should use payload from a resumable form reference.
+	 */
+	'OZ_FORM_RESUMABLE_REF_HEADER_NAME' => 'X-OZONE-Form-Resumable-Ref',
 ];
