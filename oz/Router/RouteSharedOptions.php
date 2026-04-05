@@ -36,7 +36,7 @@ use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
 use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
 
 /**
- * Class SharedOptions.
+ * Class RouteSharedOptions.
  */
 class RouteSharedOptions
 {
