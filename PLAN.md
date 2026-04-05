@@ -1,4 +1,4 @@
-# PLAN: FormService - Incremental / Resumable Form Submission
+# PLAN: ResumableFormService - Incremental / Resumable Form Submission
 
 ## Goals
 
@@ -7,7 +7,7 @@ Add server-side orchestration for multi-step, session-resumable form flows where
 - Each step form can depend on previously validated answers (QCM, surveys, wizards)
 - All session state lives in the persistent cache; clients carry only an opaque `resume_ref`
 - Abandonment (cancel), in-progress retrieval (state), and step submission (next) are all explicit
-- After the final step the accumulated `FormData` is available for a downstream action via a static helper
+- After the final step the accumulated `FormData` is available for the downstream route handler
 
 ---
 
@@ -15,77 +15,66 @@ Add server-side orchestration for multi-step, session-resumable form flows where
 
 ### Create / Move
 
-| Path                                                         | Status  | Purpose                                       |
-| ------------------------------------------------------------ | ------- | --------------------------------------------- |
-| `oz/Forms/Interfaces/ResumableFormProviderInterface.php`     | done    | Contract for form sequence providers          |
-| `oz/Forms/Interfaces/FieldContainerInterface.php`            | pending | Shared contract for `Form` and `Fieldset`     |
-| `oz/Forms/AbstractResumableFormProvider.php`                 | done    | Registry + defaults (initForm=null, ttl=3600) |
-| `oz/Forms/Fieldset.php` _(renamed from `FormStep.php`)_      | pending | Conditional named group of fields             |
-| `oz/Forms/Services/FormService.php` _(moved from Services/)_ | pending | REST service with 6 routes                    |
-| `tests/Forms/ResumableFormProviderTest.php`                  | done    | Unit tests for registry + interface           |
-| `tests/Services/FormServiceTest.php`                         | done    | Unit tests for all 6 handlers                 |
-| `tests/Forms/FieldsetTest.php`                               | pending | Unit tests for Fieldset                       |
+| Path                                                                 | Status  | Purpose                                                              |
+| -------------------------------------------------------------------- | ------- | -------------------------------------------------------------------- |
+| `oz/Forms/Interfaces/ResumableFormProviderInterface.php`             | done    | Contract for form sequence providers (redesign pending)              |
+| `oz/Forms/Interfaces/FieldContainerInterface.php`                    | pending | Shared contract for `Form` and `Fieldset`                            |
+| `oz/Forms/AbstractResumableFormProvider.php`                         | done    | Pure defaults base - registry removed (redesign pending)             |
+| `oz/Forms/Enums/FormResumePhase.php`                                 | pending | `INIT \| STEPS \| DONE` enum                                         |
+| `oz/Forms/FormResumeProgress.php`                                    | pending | `Store<array>` subclass - phase, step index, private provider state  |
+| `oz/Forms/Fieldset.php` _(renamed from `FormStep.php`)_              | pending | Conditional named group of fields                                    |
+| `oz/Forms/Services/ResumableFormService.php` _(renamed FormService)_ | pending | REST service with 6 routes; resolution via `oz.forms.providers`      |
+| `oz/Router/RouteResumableFormProvider.php`                           | pending | Complete redesign in Router namespace                                |
+| `oz/oz_settings/oz.forms.providers.php`                              | pending | Default provider map: `'route' => RouteResumableFormProvider::class` |
+| `tests/Forms/ResumableFormProviderTest.php`                          | done    | Unit tests - will need update for new interface                      |
+| `tests/Forms/FormServiceTest.php`                                    | done    | Unit tests - will need rename + update for new signatures            |
+| `tests/Forms/FieldsetTest.php`                                       | pending | Unit tests for Fieldset                                              |
 
 ### Modify
 
-| Path                                             | Change                                                                    |
-| ------------------------------------------------ | ------------------------------------------------------------------------- |
-| `oz/oz_settings/oz.routes.api.php`               | Update class reference after FormService move                             |
-| `oz/Forms/Form.php`                              | step()->fieldset(), dynamicStep()->dynamicFieldset(), etc.                |
-| `oz/Forms/Field.php`                             | `$t_form: Form` -> `$t_parent: FieldContainerInterface`                   |
-| `oz/Forms/Traits/FieldContainerHelpersTrait.php` | No change — already delegates to `$this->field()` which both classes have |
-| `tests/Forms/FormTest.php`                       | Update step/dynamicStep references to fieldset/dynamicFieldset            |
+| Path                                             | Change                                                                           |
+| ------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `oz/oz_settings/oz.routes.api.php`               | Replace `FormService::class` with `ResumableFormService::class`                  |
+| `oz/oz_settings/oz.request.php`                  | Already has `OZ_FORM_RESUMABLE_REF_HEADER_NAME` = `'X-OZONE-Form-Resumable-Ref'` |
+| `oz/Forms/Form.php`                              | `step()` -> `fieldset()`, `dynamicStep()` -> `dynamicFieldset()`, etc.           |
+| `oz/Forms/Field.php`                             | `$t_form: Form` -> `$t_parent: FieldContainerInterface`                          |
+| `oz/Forms/Traits/FieldContainerHelpersTrait.php` | No change - already delegates to `$this->field()`                                |
+| `oz/Router/RouteSharedOptions.php`               | `form()` extended to detect `class-string<ResumableFormProviderInterface>`       |
+| `tests/Forms/FormTest.php`                       | Update `step/dynamicStep` references to `fieldset/dynamicFieldset`               |
+
+---
+
+## Completed Renames (already in code)
+
+- `sessionScope` -> `resumeScope` on `ResumableFormProviderInterface` and `AbstractResumableFormProvider`
+- `sessionTTL` -> `resumeTTL` on the same
+- `nextForm` -> `nextStep` on the same
+- `FormService` namespace move: `OZONE\Core\Services` -> `OZONE\Core\Forms\Services\FormService`
+- `DISCOVERY_ONLY` -> `EXTERNAL` on `RouteFormDocPolicy`
+- `RouteFormDeclaration::discoveryOnly()` -> `RouteFormDeclaration::external()`
 
 ---
 
 ## Pending Renames
 
-These are not yet applied to code. Do not implement until reviewed.
+### 1. `FormService` -> `ResumableFormService`
 
-### 1. `FormService` namespace move
+- **From**: `OZONE\Core\Forms\Services\FormService` (`oz/Forms/Services/FormService.php`)
+- **To**: `OZONE\Core\Forms\Services\ResumableFormService` (`oz/Forms/Services/ResumableFormService.php`)
 
-- **From**: `OZONE\Core\Services\FormService` (`oz/Services/FormService.php`)
-- **To**: `OZONE\Core\Forms\Services\FormService` (`oz/Forms/Services/FormService.php`)
+No logic changes - only class name, file name, and namespace reference update.
 
-Keeps all form-related classes co-located under `oz/Forms/`. All constants (`SESSION_CACHE_NAMESPACE`,
-`STEP_INDEX_KEY`, `ROUTE_*`), logic, and tests remain the same - only the namespace and file path change.
+Affected files: `oz/oz_settings/oz.routes.api.php`, `tests/Forms/FormServiceTest.php`.
 
-Affected files after the move: `oz/oz_settings/oz.routes.api.php`, `tests/Services/FormServiceTest.php`.
+### 2. Interface method renames on `ResumableFormProviderInterface`
 
-### 2. Method renames on `ResumableFormProviderInterface` (and `AbstractResumableFormProvider`)
+| Current name                          | New                                                                     |
+| ------------------------------------- | ----------------------------------------------------------------------- |
+| `providerRef(): string`               | `providerName(): string`                                                |
+| `initForm(): ?Form`                   | `static initForm(): ?Form`                                              |
+| `nextStep(FormData $progress): ?Form` | `nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form` |
 
-| Current name   | New name      | Rationale                                                                                           |
-| -------------- | ------------- | --------------------------------------------------------------------------------------------------- |
-| `sessionScope` | `resumeScope` | "session" implies auth session; "resume" aligns with `Form::resumable()` / `Form::getResumeScope()` |
-| `sessionTTL`   | `resumeTTL`   | Same alignment reason; also matches `Form::getResumeTTL()`                                          |
-
-The associated `SESSION_CACHE_NAMESPACE` constant on `FormService` stays as-is (it names the cache bucket, not a
-method). The stored session key `scope_id` in the session array also stays as-is (it is a storage detail).
-
-### 3. `nextForm` → `nextStep` on `ResumableFormProviderInterface`
-
-`nextForm()` is renamed to `nextStep()`. The old name was ambiguous (it returns a `Form` _for_ the next
-step, but sounds like it _advances_ state). `nextStep()` better conveys the provider's role: "given what
-we know so far, what form describes the next step?"
-
-Affected files: `oz/Forms/Interfaces/ResumableFormProviderInterface.php`, `oz/Forms/AbstractResumableFormProvider.php`,
-`oz/Forms/Services/FormService.php`, `tests/Services/FormServiceTest.php`.
-
-### Relationship: `Form::resumable()` vs. provider `resumeScope()`/`resumeTTL()`
-
-These are two distinct but related concepts operating at different levels:
-
-| Concept                              | Level   | What it caches                                      | Scope source                    |
-| ------------------------------------ | ------- | --------------------------------------------------- | ------------------------------- |
-| `Form::resumable(scope, ttl)`        | field   | Per-field validated values within **one** form step | Caller explicitly sets it       |
-| Provider `resumeScope()/resumeTTL()` | session | Entire FormService session across **all** steps     | Provider declares its own scope |
-
-A `Form` can have `resumable()` enabled _inside_ a FormService step - in that case fields within that step
-survive individual HTTP requests to `POST /.../next`. The provider's `resumeScope()` governs who owns the
-_entire multi-step session_.
-
-For `RouteResumableFormProvider` (see below) the provider should derive its `resumeScope()` and `resumeTTL()`
-from the wrapped form's `getResumeScope()` and `getResumeTTL()` when they are set.
+Plus **new method**: `static instance(RouteInfo $ri): static`
 
 ### 3. `FormStep` -> `Fieldset` and related renames
 
@@ -188,264 +177,438 @@ $form->dynamicFieldset('extras', function (FormData $fd): Fieldset {
 
 ```php
 namespace OZONE\Core\Forms\Interfaces;
+
+interface ResumableFormProviderInterface
 {
-    // Unique slug identifying this provider type (used as the :provider URL segment)
-    public static function providerRef(): string;
+    // Unique name registered as the key in oz.forms.providers settings and used
+    // as the :provider URL segment in ResumableFormService routes.
+    public static function providerName(): string;
 
     // Optional pre-flight form shown before the main steps begin.
+    // STATIC so API doc generation can call it without instantiating a provider.
     // Return null to skip straight to the first nextStep() call.
-    public function initForm(): ?Form;
+    public static function initForm(): ?Form;
 
-    // Return the Form the client must fill for the next step, given accumulated progress.
+    // Factory: creates a provider instance aware of ResumableFormService's RouteInfo.
+    // The returned instance stores $ri internally for access to context, request, etc.
+    // Called once per ResumableFormService handler invocation.
+    public static function instance(RouteInfo $ri): static;
+
+    // Return the Form the client must fill for the next step, given accumulated cleaned
+    // fields and the private progress state.
+    // - $cleaned_form: accumulated validated fields from all previous steps (shareable
+    //   with the client if needed); read the values but do NOT mutate.
+    // - $progress: private provider state + phase + step index (never sent to the client);
+    //   the provider may call $progress->set(key, value) to store private bookkeeping.
     // Return null when the sequence is complete (no more steps).
-    // Contract: must be deterministic - same $progress always yields the same Form structure.
-    // Do NOT return Forms with internal fieldset()s that encode separate screens;
-    // prefer returning flat Forms and driving branching via nextStep() itself.
-    public function nextStep(FormData $progress): ?Form;
+    // Contract: must be deterministic - same inputs always yield the same Form structure.
+    public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form;
 
     // How long the session cache entry lives from its creation time (seconds).
-    // When deadline() is also set, the effective TTL is min(resumeTTL(), deadline()-now).
-    // (pending rename from sessionTTL)
     public function resumeTTL(): int;
 
     // Scope strategy tying session cache entries to a specific principal.
-    // (pending rename from sessionScope)
     public function resumeScope(): RequestScope;
 
-    // Known total step count (null = variable / unknown at creation time).
-    // "Step" = one nextStep() + POST .../next round-trip. Does NOT count internal Form fieldsets.
-    // When non-null, every FormService response includes a progress object { step, total_steps }.
-    // When null, progress is omitted from the response (client knows flow is variable).
-    // Default implementation returns null.
+    // Known total step count (null = variable/unknown at creation time).
+    // When non-null every response includes {"step": N, "total_steps": M}.
+    // Default: null.
     public function totalSteps(): ?int;
 
-    // Whether the client may go back to a previous step.
-    // When true, FormService maintains a history of progress snapshots and exposes
-    // POST /.../back. When false (default), the back route throws BadRequestException.
+    // Whether the client may go back to a previous step via POST .../back.
+    // Default: false.
     public function isReversible(): bool;
 
-    // Earliest moment at which a new session may be started. Return null for no restriction.
-    // FormService::initSession() throws SessionNotYetActiveException when now() < notBefore().
-    // Useful for exam / appointment flows where the form must not open early.
+    // Earliest moment a new session may be started; null = no restriction.
     public function notBefore(): ?\DateTimeImmutable;
 
-    // Hard deadline: the session auto-expires at this moment regardless of resumeTTL().
-    // Return null for no hard deadline (TTL is the only expiry).
-    // FormService stores expires_at = min(created_at + resumeTTL(), deadline) in the session.
-    // On every request: if now() > expires_at, throws FormResumeExpiredException.
-    // Every response includes expires_at (Unix timestamp) so clients can show countdowns.
-    // Useful for timed exams, limited-time surveys, etc.
+    // Hard deadline: auto-expires at this moment regardless of resumeTTL().
+    // null = TTL-only expiry.
     public function deadline(): ?\DateTimeImmutable;
 }
 ```
 
-**Notes on `totalSteps()` and flattening:**
+---
 
-FormService does NOT split a `Form`'s internal `step()` sub-steps into separate HTTP round-trips.
-Internal steps are treated as part of one screen and validated in one `Form::validate()` call.
-If a provider wants a genuinely separate page, it should return a separate form from `nextForm()`.
+## New Types
 
-This means `totalSteps()` reflects the number of `nextStep()` round-trips, not internal fieldsets.
-Providers with deterministic branching graphs should calculate and return this count; providers
-with conditional branching where the count depends on user choices should return `null`.
+### `FormResumePhase` enum
 
-When `totalSteps()` is `null`, the `progress` key is omitted from formService responses — the
-client knows the flow is variable and no meaningful "N of M" can be reported.
+```php
+namespace OZONE\Core\Forms\Enums;
 
-**Notes on timing (`notBefore` + `deadline`):**
+enum FormResumePhase: string
+{
+    case INIT  = 'init';   // initForm() is non-null and not yet submitted
+    case STEPS = 'steps';  // stepping through nextStep() sequence
+    case DONE  = 'done';   // nextStep() returned null; sequence complete
+}
+```
 
-- `notBefore` and `deadline` are evaluated against the server clock at the moment of the request.
-- Both can be null independently (e.g., a deadline-only exam with no open-from restriction).
-- When both are set, `deadline` must be strictly after `notBefore`; providers are expected
-  to validate this at construction time.
-- `expires_at` in the session and every response is a Unix timestamp (int), or `null` when
-  no deadline is configured.
+### `FormResumeProgress`
+
+```php
+namespace OZONE\Core\Forms;
+
+/**
+ * @extends Store<array>
+ */
+class FormResumeProgress extends Store
+{
+    private const STEP_INDEX_KEY = '_step_index';
+    private const PHASE_KEY      = '_phase';
+
+    public function getPhase(): FormResumePhase;
+
+    // 0-based step index incremented by ResumableFormService after each validated next.
+    public function getStepIndex(): int;
+
+    // Provider private state - arbitrary key/value the provider uses for bookkeeping.
+    // Keys must not start with '_' (reserved for framework internal keys).
+    public function get(string $key): mixed;
+    public function set(string $key, mixed $value): void;
+}
+```
+
+`FormResumeProgress` is constructed from the cached `progress_state` array and reconstructed
+on every request. The framework owns the housekeeping keys (`_step_index`, `_phase`); providers
+own all other keys.
 
 ---
 
 ## Abstract Base: `AbstractResumableFormProvider`
 
-| Responsibility           | Implementation                                                                                                                   |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| Static registry          | `private static array $registry = []` keyed by `providerRef()`                                                                   |
-| Register                 | `public static function register(string $class): void` - calls `$class::providerRef()` to derive the key                         |
-| Resolve                  | `public static function resolve(string $ref): ResumableFormProviderInterface` - throws `NotFoundException` for unregistered refs |
-| Default `initForm()`     | returns `null`                                                                                                                   |
-| Default `resumeTTL()`    | returns `3600` (pending rename from `sessionTTL()`)                                                                              |
-| Default `resumeScope()`  | returns `RequestScope::STATE` (pending rename from `sessionScope()`)                                                             |
-| Default `totalSteps()`   | returns `null` (variable / unknown)                                                                                              |
-| Default `isReversible()` | returns `false`                                                                                                                  |
-| Default `notBefore()`    | returns `null` (no restriction)                                                                                                  |
-| Default `deadline()`     | returns `null` (TTL-only expiry)                                                                                                 |
+Pure-defaults base. The static registry pattern is **removed** - provider resolution now goes
+through `oz.forms.providers` settings inside `ResumableFormService`.
+
+| Responsibility           | Implementation                                         |
+| ------------------------ | ------------------------------------------------------ |
+| Default `initForm()`     | returns `null` (static)                                |
+| Default `instance($ri)`  | `$inst = new static(); $inst->ri = $ri; return $inst;` |
+| Default `resumeTTL()`    | returns `3600`                                         |
+| Default `resumeScope()`  | returns `RequestScope::STATE`                          |
+| Default `totalSteps()`   | returns `null` (variable/unknown)                      |
+| Default `isReversible()` | returns `false`                                        |
+| Default `notBefore()`    | returns `null` (no restriction)                        |
+| Default `deadline()`     | returns `null` (TTL-only expiry)                       |
+
+The `protected ?RouteInfo $ri = null` property is set by the default `instance()`. Providers
+may access it via `$this->ri`; providers that do not need it may ignore it.
+
+**Removed** (see "Methods Pending Removal"): `$registry`, `register()`, `resolve()`, `clearRegistry()`
 
 ---
 
-## FormService Routes
+## Settings: `oz.forms.providers`
 
-| Method | Path                            | Handler             | Route name         |
-| ------ | ------------------------------- | ------------------- | ------------------ |
-| POST   | `/form/:provider/init`          | `initSession()`     | `oz:form:init`     |
-| GET    | `/form/:provider/:ref/state`    | `getState()`        | `oz:form:state`    |
-| POST   | `/form/:provider/:ref/next`     | `nextStep()`        | `oz:form:next`     |
-| POST   | `/form/:provider/:ref/back`     | `backStep()`        | `oz:form:back`     |
-| POST   | `/form/:provider/:ref/cancel`   | `cancelSession()`   | `oz:form:cancel`   |
-| POST   | `/form/:provider/:ref/evaluate` | `evaluateCurrent()` | `oz:form:evaluate` |
+New settings file `oz/oz_settings/oz.forms.providers.php`:
 
-Path parameter constraints:
+```php
+return [
+    RouteResumableFormProvider::PROVIDER_NAME => RouteResumableFormProvider::class,
+];
+```
 
-- `:provider` - default `[^/]+` (slug may contain colons and hyphens)
-- `:ref` - constrained to `[0-9a-f]{32}` so it can never shadow the literal `init` segment
+Registry format: `provider_name (string) => class FQN (string)`. The class must implement
+`ResumableFormProviderInterface`.
+
+Applications add custom providers in `app/settings/oz.forms.providers.php`:
+
+```php
+return [
+    MyQuizProvider::PROVIDER_NAME => MyQuizProvider::class,
+];
+```
+
+Keys are merged via `array_replace_recursive` - built-in defaults are preserved unless explicitly
+overridden.
+
+`ResumableFormService` resolves a provider at request time via:
+
+```php
+$class = Settings::get('oz.forms.providers', $provider_name);
+if (!$class || !is_a($class, ResumableFormProviderInterface::class, true)) {
+    throw new NotFoundException(...);
+}
+$provider = $class::instance($this->ri);
+```
+
+---
+
+## Route-level Provider Declaration
+
+A route may declare a `ResumableFormProviderInterface` class directly via `.form()`:
+
+```php
+$router->post('/signup', $handler)
+    ->form(SignupProvider::class);  // class-string<ResumableFormProviderInterface> detected
+```
+
+**Behaviour when a class implementing `ResumableFormProviderInterface` is passed:**
+
+- The route's form policy is set to `RouteFormDocPolicy::EXTERNAL`.
+- The provider class is stored on `RouteFormDeclaration` as the canonical provider.
+- Last defined in chain wins (group -> route).
+- `ResumableFormService` becomes the **exclusive** submission path for this route.
+- Before the route handler runs, the framework reads `OZ_FORM_RESUMABLE_REF_HEADER_NAME` from
+  the request header, looks up the completed session in cache, verifies ownership and
+  `phase === done`, then injects the accumulated `FormData` into `$ri->getCleanFormData()`.
+- The route handler simply uses `$ri->getCleanFormData()` as normal.
+
+**Discovery response** for a route with a provider declared:
+
+```json
+{ "policy": "external", "form_provider_name": "my-quiz", "init_form": { ... } }
+```
+
+`init_form` is the serialized result of `ProviderClass::initForm()` (or `null`).
+
+---
+
+## `RouteResumableFormProvider` Redesign
+
+**Namespace**: `OZONE\Core\Router` (moved from `OZONE\Core\Forms`)
+**File**: `oz/Router/RouteResumableFormProvider.php`
+**Registered in**: `oz.forms.providers` default settings as `'route' => RouteResumableFormProvider::class`
+
+```php
+namespace OZONE\Core\Router;
+
+class RouteResumableFormProvider extends AbstractResumableFormProvider
+{
+    public const PROVIDER_NAME = 'route';
+
+    public static function providerName(): string
+    {
+        return self::PROVIDER_NAME;
+    }
+
+    // initForm() returns a Form with a single required 'route_name' string field.
+    // The client submits the target route's name to start the session.
+    public static function initForm(): ?Form;
+
+    // nextStep():
+    // - At step index 0: reads $cleaned_form->get('route_name'), calls
+    //   $router->getRoute($route_name)->getStaticFormBundle() on that route,
+    //   validates that bundle->getResumeScope() !== null, returns the bundle.
+    // - At step index 1: returns null (done - single-step provider).
+    // - If route not found, bundle not resumable, or no static form: throws RuntimeException.
+    public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form;
+
+    // resumeScope() and resumeTTL() derived from the target route's static form bundle
+    // (stored in $progress private state after step 0).
+    public function resumeScope(): RequestScope;
+    public function resumeTTL(): int;
+
+    public function totalSteps(): ?int
+    {
+        return 1;
+    }
+}
+```
+
+---
+
+## `ResumableFormService` Routes
+
+| Method | Path                       | Handler             | Route name         |
+| ------ | -------------------------- | ------------------- | ------------------ |
+| POST   | `/form/:provider/init`     | `initSession()`     | `oz:form:init`     |
+| GET    | `/form/:provider/state`    | `getState()`        | `oz:form:state`    |
+| POST   | `/form/:provider/next`     | `nextStep()`        | `oz:form:next`     |
+| POST   | `/form/:provider/back`     | `backStep()`        | `oz:form:back`     |
+| POST   | `/form/:provider/cancel`   | `cancelSession()`   | `oz:form:cancel`   |
+| POST   | `/form/:provider/evaluate` | `evaluateCurrent()` | `oz:form:evaluate` |
+
+The `resume_ref` travels as an HTTP header (`X-OZONE-Form-Resumable-Ref`) on all requests
+except `init` (which creates the ref and returns it in the response body). There is no `:ref`
+path segment.
+
+Path parameter constraint: `:provider` - `[^/]+`.
 
 ---
 
 ## Session Cache Schema
 
 Cache namespace: `'oz.form.sessions'`
-Cache key: `$resume_ref` (32-char hex, generated by `Keys::id32('form.session')`)
+Cache key: `$resume_ref` (32-char hex, returned by `initSession()` and sent back by
+the client in the `X-OZONE-Form-Resumable-Ref` request header)
 
 ```php
 [
-    'provider_ref' => string,   // e.g. 'quiz:geo' (cross-checked on every request)
-    'provider_cls' => string,   // FQN - used by resolve() to reconstruct the provider
-    'phase'        => string,   // 'init' | 'steps' | 'done'
-    'progress'     => array,    // FormData::toArray() - accumulated validated fields
-    'scope_id'     => string,   // provider->resumeScope()->resolveId($context) at creation time
-    'created_at'   => int,      // Unix timestamp of session creation
-    'expires_at'   => int|null, // Unix timestamp of hard deadline, null when TTL-only
-    'history'      => array,    // list of previous progress snapshots (when isReversible())
-                                // each entry: ['progress' => array] - older entries first
+    'provider_name'  => string,   // e.g. 'route' -- cross-checked on every request
+    'phase'          => string,   // FormResumePhase->value  ('init' | 'steps' | 'done')
+    'cleaned_form'   => array,    // FormData::toArray() -- accumulated validated fields
+                                  // shareable structure; NOT the private provider state
+    'progress_state' => array,    // backing array for FormResumeProgress (private to provider)
+                                  // includes '_step_index', '_phase', and provider keys
+    'scope_id'       => string,   // provider->resumeScope()->resolveId($context)
+    'created_at'     => int,      // Unix timestamp of session creation
+    'expires_at'     => int|null, // Unix timestamp of hard deadline; null = TTL-only
+    'history'        => array,    // list of {cleaned_form, progress_state} snapshots
+                                  // (only populated when provider->isReversible())
 ]
 ```
 
 **Phases:**
 
-| Phase   | Meaning                                        | Current form                     |
-| ------- | ---------------------------------------------- | -------------------------------- |
-| `init`  | `initForm()` is non-null and not yet submitted | `$provider->initForm()`          |
-| `steps` | Stepping through `nextStep()` sequence         | `$provider->nextStep($progress)` |
-| `done`  | `nextStep($progress)` returned null            | `null` (no more steps)           |
+| Phase   | Meaning                                            | Current form                                         |
+| ------- | -------------------------------------------------- | ---------------------------------------------------- |
+| `init`  | `initForm()` returned non-null Form, not submitted | `$class::initForm()` (static call)                   |
+| `steps` | Stepping through `nextStep()` sequence             | `$provider->nextStep($cleaned_form_data, $progress)` |
+| `done`  | `nextStep()` returned null                         | null (no more steps)                                 |
 
-The current form is always **re-derived** from the cached `$progress` — it is never stored.
-This keeps the cache lean and means the provider only needs to be deterministic.
+The current form is always **re-derived** from the cached state - it is never stored. This
+keeps the cache lean and means the provider only needs to be deterministic.
 
 **`history` invariants (when `isReversible()` is true):**
 
-- After step 0 is submitted successfully, `history = [step0_snapshot]`.
-- Each successful `nextStep()` pushes the pre-advance snapshot before updating `progress`.
-- `backStep()` pops the last snapshot and restores `progress` to it (and decrements `STEP_INDEX_KEY`).
+- After step 0 is submitted, `history` = `[{cleaned_form snapshot, progress_state snapshot}]`.
+- Each successful `nextStep()` pushes the pre-advance snapshot before updating.
+- `backStep()` pops the last snapshot, restores `cleaned_form` and `progress_state`.
 - `history` is always `[]` when `isReversible()` is `false`.
 
 ---
 
 ## Standard Response Shape
 
-Every FormService response (except `cancel`) includes:
+Every `ResumableFormService` response includes:
 
 ```json
 {
     "done":       false,
     "resume_ref": "a3f...",
-    "form":       { ... },      // null when done
-    "expires_at": 1700003600,   // Unix timestamp or null
-    "progress":   {             // omitted entirely when provider.totalSteps() === null
-        "step":        2,       // 1-indexed (STEP_INDEX_KEY + 1)
-        "total_steps": 10       // provider.totalSteps()
+    "form":       { ... },
+    "expires_at": 1700003600,
+    "progress":   {
+        "step":        2,
+        "total_steps": 10
     }
 }
 ```
 
-When `done: true`, `form` is `null` and `progress.step === progress.total_steps` (when present).
+`resume_ref` is included in every response (not just `init`). `form` is `null` when done.
+`progress` is omitted entirely when `provider->totalSteps() === null`.
+When `done: true`, `progress.step === progress.total_steps` (when present).
 
 ---
 
 ## Handler Logic
 
+Provider resolution used in every handler:
+
+```
+$class = Settings::get('oz.forms.providers', $route_provider_name);
+if (!$class) throw NotFoundException
+$provider = $class::instance($this->ri);
+```
+
+`resume_ref` is read from the `X-OZONE-Form-Resumable-Ref` request header in all handlers
+except `initSession()`.
+
 ### `POST /form/:provider/init`
 
 ```
-1. resolve(:provider) -> $provider           NotFoundException if unregistered
+1. resolve :provider from oz.forms.providers -> $class, $provider
 2. if provider->notBefore() != null && now() < notBefore(): throw FormResumeNotYetActiveException
 3. scope_id = provider->resumeScope()->resolveId($context)
-4. $progress = new FormData()
-5. $init_form = $provider->initForm()
+4. $cleaned_form = new FormData()
+5. $init_form = $class::initForm()                // STATIC call
 6. if $init_form != null:
-       validate request body against $init_form -> $init_data
-       $progress = $init_data
-7. progress->set(STEP_INDEX_KEY, 0)
-8. $next = $provider->nextStep($progress)
-9. $phase = ($next === null) ? 'done' : 'steps'
-10. expires_at = provider->deadline() ? min(time()+resumeTTL(), deadline->timestamp) : null
-11. resume_ref = Keys::id32('form.session')
-12. Write session:
-        provider_ref, provider_cls, phase, progress, scope_id,
+       validate request body against $init_form -> $init_cleaned
+       $cleaned_form = $init_cleaned
+       $phase = FormResumePhase::INIT
+   else:
+       $phase = FormResumePhase::STEPS
+7. $progress = new FormResumeProgress()
+8. $progress->set('_step_index', 0)
+9. $progress->set('_phase', $phase->value)
+10. $next = $provider->nextStep($cleaned_form, $progress)
+11. $phase = ($next === null) ? FormResumePhase::DONE : FormResumePhase::STEPS
+12. $progress->set('_phase', $phase->value)
+13. expires_at = provider->deadline()
+        ? min(time() + resumeTTL(), deadline->timestamp)
+        : null
+14. resume_ref = Keys::id32('form.session')
+15. Write session:
+        provider_name, phase, cleaned_form, progress_state, scope_id,
         created_at, expires_at, history: []
     TTL = provider->resumeTTL()
-13. Return standard response
+16. Return standard response (resume_ref also in response body for client to store)
 ```
 
-### `GET /form/:provider/:ref/state`
+### `GET /form/:provider/state`
 
 ```
-1. Load session by :ref                            NotFoundException if not found / expired
-2. if expires_at != null && now() > expires_at:    throw FormResumeExpiredException
-3. Verify scope_id matches                         ForbiddenException on mismatch
-4. Verify session['provider_ref'] == :provider     ForbiddenException on mismatch
-5. Re-derive current form from phase + progress
-6. Return standard response
+1. Read resume_ref from X-OZONE-Form-Resumable-Ref header
+2. Load session by resume_ref             NotFoundException if not found / expired
+3. if expires_at != null && now() > expires_at: throw FormResumeExpiredException
+4. Verify scope_id matches                ForbiddenException on mismatch
+5. Verify session['provider_name'] == :provider   ForbiddenException on mismatch
+6. Re-derive current form from phase + cleaned_form + progress_state
+7. Return standard response
 ```
 
-### `POST /form/:provider/:ref/next`
+### `POST /form/:provider/next`
 
 ```
-1. Load session, verify ownership + provider       NotFoundException / ForbiddenException
-2. if expires_at != null && now() > expires_at:    throw FormResumeExpiredException
-3. Abort if phase === 'done'                       BadRequestException
-4. $current_form = deriveCurrentForm(phase, provider, progress)
-5. Validate request body against $current_form -> $validated
-6. Increment STEP_INDEX_KEY in $validated
-7. if provider->isReversible():
-       push current progress snapshot onto history
-8. $next = $provider->nextStep($validated)
-9. $phase = ($next === null) ? 'done' : 'steps'
-10. Update session cache: phase, progress=$validated, history
+1. Read resume_ref from header
+2. Load session, verify ownership + provider
+3. if expires_at != null && now() > expires_at: throw FormResumeExpiredException
+4. Abort if phase === DONE                BadRequestException
+5. Re-derive $current_form from phase, cleaned_form, progress_state
+6. Validate request body against $current_form -> $validated
+7. Merge $validated into cleaned_form
+8. $progress->set('_step_index', $progress->getStepIndex() + 1)
+9. if provider->isReversible():
+       push {cleaned_form, progress_state} snapshot onto history
+10. $next = $provider->nextStep($cleaned_form, $progress)
+11. $phase = ($next === null) ? DONE : STEPS
+12. $progress->set('_phase', $phase->value)
+13. Update session cache: phase, cleaned_form, progress_state, history
+14. Return standard response
+```
+
+### `POST /form/:provider/back`
+
+```
+1. Read resume_ref from header
+2. Load session, verify ownership + provider
+3. if expires_at != null && now() > expires_at: throw FormResumeExpiredException
+4. if !provider->isReversible(): throw BadRequestException('OZ_FORM_NOT_REVERSIBLE')
+5. if history is empty: throw BadRequestException('OZ_FORM_NO_PREVIOUS_STEP')
+6. Pop last snapshot from history -> {prev_cleaned_form, prev_progress_state}
+7. Restore session: cleaned_form = prev_cleaned_form, progress_state = prev_progress_state
+8. phase = FormResumePhase::STEPS (always; back is only valid before done)
+9. Re-derive current form from restored state
+10. Update session cache
 11. Return standard response
 ```
 
-### `POST /form/:provider/:ref/back`
+### `POST /form/:provider/cancel`
 
 ```
-1. Load session, verify ownership + provider
-2. if expires_at != null && now() > expires_at:    throw FormResumeExpiredException
-3. if !provider->isReversible():                   throw BadRequestException('OZ_FORM_NOT_REVERSIBLE')
-4. if history is empty:                            throw BadRequestException('OZ_FORM_NO_PREVIOUS_STEP')
-5. Pop last snapshot from history -> $prev_progress
-6. Restore session: progress = $prev_progress, phase = 'steps', history = history[:-1]
-7. Re-derive current form from restored progress
-8. Return standard response
+1. Read resume_ref from header
+2. Load session, verify ownership + provider
+3. Delete session from cache
+4. Return { done: true }
 ```
 
-### `POST /form/:provider/:ref/cancel`
+### `POST /form/:provider/evaluate`
 
 ```
-1. Load session, verify ownership + provider
-2. Delete session from cache
-3. Return { done: true }
-```
-
-### `POST /form/:provider/:ref/evaluate`
-
-```
-1. Load session, verify ownership
-2. if expires_at != null && now() > expires_at:    throw FormResumeExpiredException
-3. Abort if phase === 'done'                       BadRequestException
-4. Derive current form from phase
-5. eval_data = merge(session.progress, request.body)
-6. For each field where getIf() != null && getIf()->isServerOnly():
+1. Read resume_ref from header
+2. Load session, verify ownership
+3. if expires_at != null && now() > expires_at: throw FormResumeExpiredException
+4. Abort if phase === DONE               BadRequestException
+5. Re-derive current form from phase, cleaned_form, progress_state
+6. eval_data = merge(session.cleaned_form, request.body)
+7. For each field where getIf() != null && getIf()->isServerOnly():
        visibility[field.ref] = field->isEnabled(eval_data)
-7. For each expect rule where isServerOnly():
+8. For each expect rule where isServerOnly():
        passes = rule->check(eval_data)
        expect_results[] = { index, passes, message }
-8. Return { visibility: {field_ref: bool}, expect: [{index, passes, message}] }
+9. Return { visibility: {field_ref: bool}, expect: [{index, passes, message}] }
 ```
 
 ---
@@ -457,72 +620,80 @@ When `done: true`, `form` is `null` and `progress.step === progress.total_steps`
 | `FormResumeNotYetActiveException` | 403  | `notBefore()` is set and `now() < notBefore()` |
 | `FormResumeExpiredException`      | 410  | `expires_at` is set and `now() > expires_at`   |
 
-`FormResumeExpiredException` uses 410 Gone (the resource existed but is no longer available)
-rather than 404 (which would imply it never existed). Clients can distinguish expiry from a
-bad ref. The `FormResume` prefix makes it clear these relate to the resumable form token
-lifecycle, not to `OZONE\Core\Sessions\Session`.
+`FormResumeExpiredException` uses 410 Gone rather than 404 so clients can distinguish expiry
+from a bad ref.
 
 ---
 
-## `FormService::requireCompletion()` (static helper)
+## `ResumableFormService::requireCompletion()` (static helper)
 
 ```php
 public static function requireCompletion(
-    string $provider_ref,
+    string $provider_name,
     string $resume_ref,
     Context $context
 ): FormData
 ```
 
-- Loads session, verifies `scope_id` ownership, verifies `provider_ref` matches
-- Requires `phase === 'done'`; throws `ForbiddenException` otherwise
-- Returns the accumulated `FormData`
-- Intentionally does NOT delete the session (let TTL handle cleanup, or let the
-  downstream action delete after consuming)
+- Loads session by `$resume_ref`, verifies `scope_id` ownership, verifies `provider_name` matches
+- Requires `phase === done`; throws `ForbiddenException` otherwise
+- Returns `FormData` built from `cleaned_form`
+- Does NOT delete the session (TTL handles cleanup)
+
+When a route declares a provider via `->form(MyProvider::class)`, `requireCompletion()` is called
+**internally by the routing pipeline** before the handler runs - the handler receives the completed
+`FormData` transparently via `$ri->getCleanFormData()` and does not call it manually.
 
 ---
 
 ## Security
 
-| Concern                                | Mitigation                                                                                  |
-| -------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Enumerate/guess sessions               | `resume_ref = Keys::id32()` — 128-bit entropy                                               |
-| Session hijacking                      | `scope_id` stored in session, validated on every request                                    |
-| Arbitrary provider class instantiation | `:provider` validated against pre-registered registry                                       |
-| Cross-provider session abuse           | `provider_ref` stored in session, checked every request                                     |
-| Path ambiguity `init` vs `:ref`        | `:ref` constrained to `[0-9a-f]{32}`                                                        |
-| Stale sessions                         | TTL enforced by cache layer                                                                 |
-| Race on concurrent next submissions    | Cache set is not atomic; documented limitation — use `oneAtATime` in the provider if needed |
+| Concern                                | Mitigation                                                                  |
+| -------------------------------------- | --------------------------------------------------------------------------- |
+| Enumerate/guess sessions               | `resume_ref = Keys::id32()` - 128-bit entropy                               |
+| Session hijacking                      | `scope_id` stored in session, validated on every request                    |
+| Arbitrary provider class instantiation | `:provider` validated against `oz.forms.providers` settings registry        |
+| Cross-provider session abuse           | `provider_name` stored in session, checked on every request                 |
+| Path ambiguity                         | No `:ref` in path; `resume_ref` only in header                              |
+| Stale sessions                         | TTL enforced by cache layer                                                 |
+| Race on concurrent next submissions    | Cache set is not atomic - documented limitation; use `oneAtATime` if needed |
 
 ---
 
 ## Test Plan
 
-### `tests/Forms/ResumableFormProviderTest.php`
+### `tests/Forms/ResumableFormProviderTest.php` (needs update)
 
-- Register a concrete provider class; `resolve()` returns its instance
-- Resolve unknown ref throws `NotFoundException`
-- Default `initForm()` returns null
-- Default `sessionTTL()` returns 3600
-- Re-registering a provider ref with a different class throws `RuntimeException`
+- `providerName()` returns the expected string
+- `static initForm()` returns null by default
+- `static instance($ri)` returns a correctly typed instance with `$ri` accessible
+- Default `resumeTTL()` returns 3600
+- Default `resumeScope()` returns `RequestScope::STATE`
+- No registry methods exist (`register`, `resolve`, `clearRegistry` are gone)
 
-### `tests/Services/FormServiceTest.php`
+### `tests/Forms/ResumableFormServiceTest.php` (renamed from `FormServiceTest.php`)
 
-- `initSession`: no initForm -> creates session phase=steps, returns first step form
-- `initSession`: with initForm -> validates init body, creates session, returns first step form
+- `initSession`: no `initForm` -> creates session `phase=steps`, returns first form
+- `initSession`: with `initForm` -> validates body, creates session, returns first form
 - `initSession`: invalid init body -> throws `InvalidFormException`
 - `initSession`: unknown provider -> throws `NotFoundException`
-- `initSession`: single-step provider (nextStep returns null after init) -> done immediately
+- `initSession`: single-step provider (nextStep returns null immediately) -> `done=true`
 - `nextStep`: advances progress, returns next form, updates cache
-- `nextStep`: final step -> phase='done', done=true in response
+- `nextStep`: final step -> `phase=done`, `done=true` in response
 - `nextStep`: already done -> throws `BadRequestException`
 - `nextStep`: wrong scope_id -> throws `ForbiddenException`
 - `nextStep`: unknown resume_ref -> throws `NotFoundException`
+- `nextStep`: `resume_ref` read from `X-OZONE-Form-Resumable-Ref` header (not body)
 - `getState`: returns current form at each phase
-- `getState`: unknown ref -> throws `NotFoundException`
-- `cancelSession`: deletes session, returns done=true
+- `getState`: unknown resume_ref -> throws `NotFoundException`
+- `cancelSession`: deletes session, returns `done=true`
 - `requireCompletion`: done session -> returns FormData
 - `requireCompletion`: not-done session -> throws `ForbiddenException`
+- `FormResumeProgress`: `getPhase()`, `getStepIndex()`, `get/set` provider state round-trip
+- `isReversible=true`: `backStep()` succeeds, restores previous cleaned_form and progress_state
+- `isReversible=false`: `backStep()` throws `BadRequestException`
+- `notBefore()` in future: `initSession` throws `FormResumeNotYetActiveException`
+- `deadline()` in past: any handler throws `FormResumeExpiredException`
 
 ---
 
@@ -552,146 +723,122 @@ The `x-oz-form` extension value changes from `'discovery_only'` to `'external'` 
 generated OpenAPI spec. No other case values change.
 
 When a route's form is resumable and auto-registered as a `RouteResumableFormProvider`,
-the `x-oz-form` extension also carries `form_provider_ref`:
+the `x-oz-form` extension also carries `form_provider_name` and `init_form`:
 
 ```json
-{ "policy": "external", "form_provider_ref": "route:oz:signup" }
+{ "policy": "external", "form_provider_name": "route", "init_form": null }
 ```
+
+`init_form` is the serialized result of `ProviderClass::initForm()` (or `null`).
 
 ---
 
 ## Backlog
 
-### A. `RouteResumableFormProvider` — route form bridge (proposed)
+### A. Form flattening & `totalSteps()` notes
 
-**Background**: `RouteSharedOptions::getStaticFormBundle()` collects all static form declarations on a
-route into a merged `Form` for API doc generation. A separate discovery request from the client can
-retrieve this form. The proposal bridges this with `FormService`: when a route's form has
-`resumable()` enabled (i.e. `$form->getResumeScope() !== null`), the client is directed to
-use `FormService` instead of submitting raw data.
+`ResumableFormService` does NOT flatten `Form` internal `fieldset()` sub-sections into separate
+HTTP round-trips. Fieldsets are validated in one `Form::validate()` call. If a provider wants
+separate pages, it must return separate flat forms from `nextStep()`.
 
-**Proposal**:
+`totalSteps()` contract: `null` = length variable/unknown, omit `progress` from response;
+`int` = fixed length, include `progress` in every response.
 
-1. Add `RouteResumableFormProvider` — a lazy `AbstractResumableFormProvider` wrapping a route's
-   static form as a single-step sequence. Resolution is on-demand via the `route:` prefix —
-   no bootstrap scan required.
-   - Provider ref: `route:{route_name}` (e.g. `route:oz:signup`). Not pre-registered; resolved
-     lazily by `AbstractResumableFormProvider::resolve()` when it sees the `route:` prefix.
-   - `initForm()`: `null` (the form is the first and only step)
-   - `nextStep(FormData $progress)`: returns the route's static form on step index 0, `null` on 1
-   - `resumeScope()`: from `bundle->getResumeScope()` — always non-null (enforced at resolve time)
-   - `resumeTTL()`: from `bundle->getResumeTTL()` (default 3600 if form used default)
+### B. API doc hint when provider declared on route
 
-2. When route form discovery is called for a resumable-form route, include a `form_provider_ref`
-   in the response alongside (or instead of) the raw form array:
-
-   ```json
-   { "form_provider_ref": "route:oz:signup" }
-   ```
-
-   The client uses this ref with `POST /form/:provider/init` instead of submitting directly to
-   the route. The route's own handler uses `FormService::requireCompletion()` to consume the
-   validated data once the session is done.
-
-3. API doc: when `RouteFormDocPolicy` is `EXTERNAL` or the form is resumable, the
-   `x-oz-form` OpenAPI extension includes `{ policy: 'external', form_provider_ref: '...' }`
-   so generated clients (and API explorers) know how to start the FormService session.
-
-**Opt-in only**: A route is eligible only when its static form bundle has `getResumeScope() !== null`
-— i.e. the developer called `Form::resumable()` on a form attached to the route:
-
-```php
-// Opt-in: form declares resumable() -> RouteResumableFormProvider is auto-registered
-$router->post('/signup', $handler)
-    ->form((new SignupForm())->resumable(RequestScope::STATE, 3600));
-
-// Not opted-in: plain form -> direct-submit, no FormService involvement
-$router->post('/login', $handler)
-    ->form(new LoginForm());
-```
-
-Calling `->resumable()` on the form **before** passing it to `.form()` sets `t_resume_scope` on
-the `Form` instance stored inside the `RouteFormDeclaration`. When `getStaticFormBundle()` later
-calls `bundle->merge(form)`, it propagates `t_resume_scope` to the bundle (only if the bundle
-doesn't already have one from a parent group — first-in-chain wins).
-
-**Resolution is lazy, not a boot-time scan.** `RouteResumableFormProvider` does not iterate all
-routes at `InitHook`. Instead `AbstractResumableFormProvider::resolve()` recognises the `route:`
-prefix and resolves on-demand:
-
-```
-resolve('route:oz:signup')
-  -> strip prefix -> route name = 'oz:signup'
-  -> router->getRoute('oz:signup')
-  -> getStaticFormBundle()
-  -> assert bundle->getResumeScope() !== null   (NotFoundException if not resumable)
-  -> return new RouteResumableFormProvider(route, bundle)
-```
-
-No pre-registration step, no scanning, no stale state at boot.
-
-### B. Form flattening & `totalSteps()` progress indicator
-
-**Flattening decision (final)**: FormService does **NOT** flatten `Form` internal `step()`
-sub-steps into separate HTTP round-trips.
-
-Rationale: internal `Form::step()` calls define conditional sub-sections of a single form
-(e.g., "show these extra fields if X is checked"). They are validated in one `Form::validate()`
-call and belong to one logical screen. Splitting them into separate HTTP exchanges would
-violate `Form`'s own semantics and make the provider API harder to implement correctly.
-
-If a developer wants separate pages, the provider must return separate flat forms from
-`nextStep()`. FormService is not responsible for decomposing a Form that the developer
-intentionally constructed as a unit.
-
-**`totalSteps()` is an explicit contract** on `ResumableFormProviderInterface`:
-
-- `null` → sequence length is variable/unknown; `progress` key is **omitted** from the response
-- `int` → fixed declared length; every response includes `progress`
-
-**Response shape** (repeated from above for clarity):
+When `getStaticFormBundle()` returns null because the form is delegated to a provider
+(policy = `EXTERNAL`), the generated `x-oz-form` OpenAPI extension must reference the
+`form_provider_name` and the `POST /form/:provider/init` route so developers know how
+to start the session:
 
 ```json
-{
-  "resume_ref":  "...",
-  "form":        { ... },
-  "done":        false,
-  "expires_at":  1700003600,
-  "progress":    { "step": 2, "total_steps": 10 }  // key omitted entirely when totalSteps()===null
-}
+{ "policy": "external", "form_provider_name": "route", "init_form": null }
 ```
 
-- `step` = `STEP_INDEX_KEY` value + 1 (response is 1-indexed)
-- When `done: true`, `progress.step === progress.total_steps` (when key is present)
+### C. Integration test with `DynamicValue` and flow control
 
-### C. Additional backlog items
+Create `tests/Integration/Forms/ResumableFormServiceTest.php` exercising:
 
-- [ ] **C1. `getStaticFormBundle` API doc hint when resumable** — When `getStaticFormBundle()` returns
-      null for a route because its form is resumable (or policy is `EXTERNAL`), the generated API
-      doc (via `x-oz-form` extension) should reference the `form_provider_ref` and the `POST /form/:provider/init`
-      route so developers know how to start the session. Use `RouteFormDocPolicy::EXTERNAL` with the
-      `form_provider_ref` field (see `RouteFormDocPolicy` redesign section above).
+- A multi-question provider (at least 3 steps)
+- `DynamicValue` in field `if()` conditions (server-only visibility)
+- At least one `expect()` rule that `isServerOnly()` to trigger `/evaluate`
+- Known `totalSteps()` to verify progress counter
+- Full flow: init -> multiple nexts -> done
+- Cancel mid-flow: subsequent `getState` must throw `NotFoundException`
 
-- [ ] **C2. Remove stale/wrong PHPDoc and comments about forms** — Audit the entire codebase
-      (including tests) for outdated docblocks that reference old form API (e.g. references to
-      `resume()` when the method is `resumable()`, wrong parameter names, obsolete step descriptions,
-      incorrect mentions of `sessionScope`/`sessionTTL` after rename). Pay special attention to
-      `oz/Forms/`, `oz/Router/`, `oz/REST/`, and matching test files.
+After writing this test, update `.github/copilot-instructions.md` section 23 (or add a
+Forms subsection) to document the test pattern.
 
-- [ ] **C3. Real integration test — QCM with DynamicValue and flow control** — Create a full
-      integration test in `tests/Integration/Forms/` (style: `OZTestProject` subprocess) that exercises:
-  - A multi-question provider (geography quiz or similar) with at least 3 steps
-  - `DynamicValue` in field `if()` conditions (server-only visibility)
-  - At least one `expect()` rule that `isServerOnly()` to trigger `/evaluate`
-  - Known `totalSteps()` to verify the progress counter
-  - Full flow: init -> multiple nexts -> done -> `requireCompletion()`
-  - Cancel mid-flow: next `getState` must throw `NotFoundException`
-  - After integration test is added, update copilot-instructions.md (section 23 or add a Forms
-    subsection) to document the pattern so future agents know how to write similar tests.
+### D. Rate limiting on `POST /init`
 
-- [ ] **C4. Rate limiting on `POST /init`** — Protect against session flooding by adding
-      `rateLimit(new IPRateLimit(...))` to the `ROUTE_INIT` route declaration.
+Add `rateLimit(new IPRateLimit(...))` to the `oz:form:init` route declaration to prevent
+session flooding.
 
-- [ ] **C5. Session abandonment / expiry hooks** — Dispatch an event when a FormService session
-      expires from cache (useful for analytics or cleanup). Needs cache-layer support (expiry callbacks)
-      which is not currently available — defer until cache layer supports it.
+### E. Session abandonment / expiry hooks
+
+Dispatch an event when a `ResumableFormService` session expires from cache (useful for
+analytics or cleanup). Requires cache-layer expiry callbacks - **defer** until that
+support is available.
+
+---
+
+## Methods Pending Removal
+
+The following methods/properties exist in the current code but are made **obsolete** by the
+new design. No code changes until these are approved for removal.
+
+### On `AbstractResumableFormProvider` - registry pattern removed
+
+1. `private static array $registry` - registry replaced by `oz.forms.providers` settings
+2. `public static function register(string $class): void` - replaced by settings file
+3. `public static function resolve(string $ref): ResumableFormProviderInterface` - moves to `ResumableFormService`
+4. `public static function clearRegistry(): void` - test helper, registry is gone
+
+### On `RouteResumableFormProvider` - entire class being redesigned
+
+5. `const PROVIDER_REF_PREFIX = 'route:'` - replaced by `const PROVIDER_NAME = 'route'`
+6. `public static function providerRef(): string` - replaced by `providerName()`
+7. `public static function resolveRoute(string $route_name): self` - resolution moves to `ResumableFormService`
+8. `public function getProviderRef(): string` - replaced by `providerName()`
+9. `public static function refForRoute(string $route_name): string` - no longer needed
+10. `public function __construct(string $route_name, Form $bundle)` - replaced by `instance(RouteInfo $ri)`
+
+### On `ResumableFormProviderInterface` - signature changes
+
+11. `providerRef(): string` - becomes `providerName(): string`
+12. `initForm(): ?Form` - becomes `static initForm(): ?Form`
+13. `nextStep(FormData $progress): ?Form` - becomes `nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form`
+
+### On `FormService` (pre-rename)
+
+14. `const STEP_INDEX_KEY = '_oz_form_step_index'` - moves into `FormResumeProgress` as
+    private `const STEP_INDEX_KEY = '_step_index'`
+
+---
+
+## Cleanup: Stale PHPDoc and Comments
+
+After all code changes are applied, do a targeted audit and fix any outdated references
+(wrong param names, references to removed methods, stale step descriptions, etc.).
+
+**Files to audit:**
+
+- `oz/Forms/` - all `.php` files
+- `oz/Forms/Services/` - all `.php` files
+- `oz/Router/RouteSharedOptions.php`, `RouteFormDeclaration.php`, `RouteOptions.php`
+- `oz/REST/` - any file referencing form policies or providers
+- `tests/Forms/` - all `.php` files
+- `.github/copilot-instructions.md` - section 6 (Forms) and section 15 (REST)
+
+**Key patterns to search for and fix:**
+
+- `providerRef` (should be `providerName`)
+- `sessionTTL`, `sessionScope` (verify all renamed correctly)
+- `STEP_INDEX_KEY` references outside `FormResumeProgress`
+- `provider_ref` in doc/comments (now `provider_name`)
+- `form_provider_ref` in doc/comments (now `form_provider_name`)
+- `FormService` class name (should be `ResumableFormService`)
+- `resolve(` on `AbstractResumableFormProvider` (method removed)
+- `register(` on `AbstractResumableFormProvider` (method removed)
+- `nextForm(` (renamed - verify all gone)
+- `:ref` URL path segment references (no longer in routes)
