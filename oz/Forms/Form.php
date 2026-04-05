@@ -15,15 +15,12 @@ namespace OZONE\Core\Forms;
 
 use Closure;
 use Gobl\DBAL\Table;
-use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\TypeDate;
 use LogicException;
 use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\Cache\CacheManager;
 use OZONE\Core\Exceptions\InvalidFormException;
-use OZONE\Core\Forms\Enums\RuleSetCondition;
-use OZONE\Core\Forms\Enums\RuleSetContext;
 use OZONE\Core\Forms\Traits\FormFieldsTrait;
 use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Request;
@@ -38,7 +35,7 @@ use PHPUtils\Traits\MetaCapableTrait;
 /**
  * Class Form.
  */
-class Form implements ArrayCapableInterface, MetaCapableInterface
+class Form extends AbstractFieldContainer implements ArrayCapableInterface, MetaCapableInterface
 {
 	use ArrayCapableTrait;
 	use FormFieldsTrait;
@@ -47,30 +44,9 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	public const FORM_DATA_RESUME_CACHE_NAMESPACE = 'oz.form.resume';
 
 	/**
-	 * @var array<string,Field>
+	 * @var array<string,Fieldset>
 	 */
-	private array $t_fields = [];
-
-	/**
-	 * @var array<string,FormStep>
-	 */
-	private array $t_steps = [];
-
-	/**
-	 * @var list<RuleSet>
-	 */
-	private array $t_pre_validation_rules = [];
-
-	/**
-	 * @var list<RuleSet>
-	 */
-	private array $t_post_validation_rules = [];
-
-	/**
-	 * Form name, used for field namespacing in case of multiple forms in the
-	 * same page or nested forms (steps). It can be useful to avoid field name conflicts.
-	 */
-	private ?string $t_name = null;
+	private array $t_fieldsets = [];
 
 	private string $t_method;
 
@@ -117,39 +93,21 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Form destructor.
 	 */
+	#[Override]
 	public function __destruct()
 	{
-		unset($this->t_fields, $this->t_steps, $this->t_pre_validation_rules, $this->t_post_validation_rules, $this->t_submit_to);
+		parent::__destruct();
+		unset($this->t_fieldsets, $this->t_submit_to);
 	}
 
 	/**
-	 * Gets the registered steps.
+	 * Gets the registered fieldsets.
 	 *
-	 * @return array<string, FormStep>
+	 * @return array<string, Fieldset>
 	 */
-	public function getSteps(): array
+	public function getFieldsets(): array
 	{
-		return $this->t_steps;
-	}
-
-	/**
-	 * Gets the registered pre-validation rules.
-	 *
-	 * @return list<RuleSet>
-	 */
-	public function getPreValidationRules(): array
-	{
-		return $this->t_pre_validation_rules;
-	}
-
-	/**
-	 * Gets the registered post-validation rules.
-	 *
-	 * @return list<RuleSet>
-	 */
-	public function getPostValidationRules(): array
-	{
-		return $this->t_post_validation_rules;
+		return $this->t_fieldsets;
 	}
 
 	/**
@@ -161,7 +119,7 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	{
 		$fields = [];
 
-		foreach ($this->t_fields as $field) {
+		foreach ($this->getFields() as $field) {
 			$fields[] = [
 				'r'  => $field->getRef(),
 				'rq' => $field->isRequired(),
@@ -170,21 +128,21 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 			];
 		}
 
-		$steps = [];
+		$fieldsets = [];
 
-		foreach ($this->t_steps as $step) {
-			$steps[] = [
-				'n'  => $step->getName(),
-				'sd' => $step->isStatic() ? 'static' : 'dynamic',
+		foreach ($this->t_fieldsets as $fieldset) {
+			$fieldsets[] = [
+				'n'  => $fieldset->getName(),
+				'sd' => $fieldset->isStatic() ? 'static' : 'dynamic',
 			];
 		}
 
 		$descriptor = [
-			'n'  => $this->t_name,
-			'f'  => $fields,
-			's'  => $steps,
-			'pr' => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->t_pre_validation_rules),
-			'po' => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->t_post_validation_rules),
+			'n'   => $this->getName(),
+			'f'   => $fields,
+			'fs'  => $fieldsets,
+			'pr'  => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->getPreValidationRules()),
+			'po'  => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->getPostValidationRules()),
 		];
 
 		return Hasher::shorten(Hasher::hash32(\json_encode($descriptor, \JSON_THROW_ON_ERROR)));
@@ -249,18 +207,6 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	}
 
 	/**
-	 * Set form name.
-	 */
-	public function name(string $name): static
-	{
-		FormUtils::assertValidFieldName($name);
-
-		$this->t_name = $name;
-
-		return $this;
-	}
-
-	/**
 	 * Set form submit to uri.
 	 *
 	 * @param Uri $uri
@@ -285,133 +231,76 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	}
 
 	/**
-	 * Creates a new static form step.
+	 * Creates a new static fieldset whose fields are defined by a mutate-in-place callback.
 	 *
-	 * @param string               $name    The step name
-	 * @param callable():Form|Form $form    The step form or factory
-	 * @param null|RuleSet         $only_if The step condition
+	 * The callback is executed immediately at definition time and receives the new
+	 * {@see Fieldset} instance, allowing fields to be registered inline:
 	 *
-	 * @return FormStep
+	 * ```php
+	 * $form->fieldset('address', function (Fieldset $fs): void {
+	 *     $fs->string('street')->required();
+	 *     $fs->string('city')->required();
+	 * });
+	 * ```
+	 *
+	 * @param string                  $name     the fieldset name
+	 * @param callable(Fieldset):void $callback populates the fieldset in-place
+	 * @param null|RuleSet            $only_if  the fieldset condition
+	 *
+	 * @return Fieldset
 	 */
-	public function step(string $name, callable|self $form, ?RuleSet $only_if = null): FormStep
+	public function fieldset(string $name, callable $callback, ?RuleSet $only_if = null): Fieldset
 	{
-		$step = FormStep::static($this, $name, $form, $only_if);
+		$fs = Fieldset::static($this, $name, $callback, $only_if);
 
-		$this->t_steps[$name] = $step;
+		$this->t_fieldsets[$name] = $fs;
 
-		return $step;
+		return $fs;
 	}
 
 	/**
-	 * Creates a new dynamic form step.
+	 * Creates a new dynamic fieldset whose structure is built at validation time.
 	 *
-	 * @param string                  $name    The step name
-	 * @param callable(FormData):Form $factory The step form factory
-	 * @param null|RuleSet            $only_if The step condition
+	 * @param string                      $name    the fieldset name
+	 * @param callable(FormData):Fieldset $factory builds the fieldset from accumulated cleaned data
+	 * @param null|RuleSet                $only_if the fieldset condition
 	 *
-	 * @return FormStep
+	 * @return Fieldset
 	 */
-	public function dynamicStep(string $name, callable $factory, ?RuleSet $only_if = null): FormStep
+	public function dynamicFieldset(string $name, callable $factory, ?RuleSet $only_if = null): Fieldset
 	{
-		$step = FormStep::dynamic($this, $name, $factory, $only_if);
+		$fs = Fieldset::dynamic($this, $name, $factory, $only_if);
 
-		$this->t_steps[$name] = $step;
+		$this->t_fieldsets[$name] = $fs;
 
-		return $step;
+		return $fs;
 	}
 
 	/**
-	 * Retrieves a previously registered step by name.
+	 * Retrieves a previously registered fieldset by name.
 	 *
-	 * @param string $name The step name
+	 * @param string $name the fieldset name
 	 *
-	 * @return null|FormStep
+	 * @return null|Fieldset
 	 */
-	public function getStep(string $name): ?FormStep
+	public function getFieldset(string $name): ?Fieldset
 	{
-		return $this->t_steps[$name] ?? null;
-	}
-
-	/**
-	 * Create or gets a field by its name.
-	 *
-	 * @param string $name The field name
-	 *
-	 * @return Field
-	 */
-	public function field(string $name): Field
-	{
-		$field = $this->t_fields[$name] ?? null;
-
-		if (!$field) {
-			$field = new Field($this, $name);
-
-			$this->t_fields[$name] = $field;
-		}
-
-		return $field;
-	}
-
-	/**
-	 * Creates and registers a new pre-validation condition.
-	 *
-	 * Pre-validation conditions run server-side on raw (unsafe) form data, before any field is
-	 * validated. Non-server-only rule sets are included in {@see self::toArray()}.
-	 *
-	 * If the condition fails, {@see InvalidFormException} is thrown before field validation begins.
-	 *
-	 * Use cases:
-	 * - Gating the form on a flag or plan value present in the raw input
-	 * - Rejecting globally invalid input combinations before processing individual fields
-	 *
-	 * @param RuleSetCondition $condition AND (default) or OR
-	 *
-	 * @return RuleSet
-	 */
-	public function expect(RuleSetCondition $condition = RuleSetCondition::AND): RuleSet
-	{
-		$rule = RuleSet::create($condition, RuleSetContext::UNSAFE);
-
-		$this->t_pre_validation_rules[] = $rule;
-
-		return $rule;
-	}
-
-	/**
-	 * Creates and registers a new post-validation assertion.
-	 *
-	 * Post-validation assertions run server-side on cleaned form data, after all fields have been
-	 * validated and transformed. They are never sent to the client.
-	 *
-	 * If the assertion fails, {@see InvalidFormException} is thrown.
-	 *
-	 * Use cases:
-	 * - Cross-field equality checks on transformed values (e.g. password === password_confirm)
-	 * - Permission or consistency checks that can only be evaluated on clean data
-	 *
-	 * @param RuleSetCondition $condition AND (default) or OR
-	 *
-	 * @return RuleSet
-	 */
-	public function ensure(RuleSetCondition $condition = RuleSetCondition::AND): RuleSet
-	{
-		$rule = RuleSet::create($condition, RuleSetContext::CLEANED);
-
-		$this->t_post_validation_rules[] = $rule;
-
-		return $rule;
+		return $this->t_fieldsets[$name] ?? null;
 	}
 
 	/**
 	 * Gets a ref for a given field or step name, prefixed with form name if any.
 	 */
+	#[Override]
 	public function getRef(string $name): string
 	{
-		if (empty($this->t_name)) {
+		$name_prefix = $this->getName();
+
+		if (empty($name_prefix)) {
 			return $name;
 		}
 
-		return $this->t_name . '.' . $name;
+		return $name_prefix . '.' . $name;
 	}
 
 	/**
@@ -430,18 +319,6 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	public function getId(): ?string
 	{
 		return $this->t_id;
-	}
-
-	/**
-	 * Gets a field by its name.
-	 *
-	 * @param string $name
-	 *
-	 * @return null|Field
-	 */
-	public function getField(string $name): ?Field
-	{
-		return $this->t_fields[$name] ?? null;
 	}
 
 	/**
@@ -524,69 +401,29 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	 *
 	 * @param FormData      $unsafe_fd  Raw (unsafe) form data from the request
 	 * @param null|FormData $cleaned_fd Pre-filled validated data (e.g. from a resume cache); merged with newly validated fields
-	 * @param bool          $skip_steps When true, step sub-forms are not traversed. Useful in step-by-step validation where only root-level fields are validated
+	 * @param bool          $shallow    When true, fieldsets are not traversed. Useful in step-by-step validation where only root-level fields are validated
 	 *
 	 * @return FormData
 	 *
 	 * @throws InvalidFormException
 	 */
-	public function validate(FormData $unsafe_fd, ?FormData $cleaned_fd = null, bool $skip_steps = false): FormData
+	public function validate(FormData $unsafe_fd, ?FormData $cleaned_fd = null, bool $shallow = false): FormData
 	{
-		foreach ($this->t_pre_validation_rules as $rule) {
-			if ($rule->check($unsafe_fd)) {
-				continue;
-			}
-
-			throw new InvalidFormException($rule->getViolationMessage(), [
-				'_rule' => $rule,
-			]);
-		}
+		$this->checkPreValidationRules($unsafe_fd);
 
 		$cleaned_fd ??= new FormData();
 
-		foreach ($this->t_fields as $field) {
-			$ref = $field->getRef();
-			if ($field->isEnabled($unsafe_fd)) {
-				if ($unsafe_fd->has($ref)) {
-					try {
-						$cleaned_fd->set($ref, $field->validate($unsafe_fd->get($ref), $unsafe_fd));
-					} catch (TypesInvalidValueException $e) {
-						/** @var InvalidFormException $e */
-						$e = InvalidFormException::tryConvert($e);
+		$this->checkFields($unsafe_fd, $cleaned_fd);
 
-						$e->suspectObject($field);
+		$this->checkPostValidationRules($cleaned_fd);
 
-						throw $e;
-					}
-				} elseif ($field->isRequired() && !$cleaned_fd->has($ref)) {
-					throw new InvalidFormException('OZ_FORM_MISSING_REQUIRED_FIELD', [
-						'field' => $ref,
-						'_form' => $this,
-						'_data' => $unsafe_fd->getData(),
-					]);
-				}
-			}
-		}
-
-		foreach ($this->t_post_validation_rules as $rule) {
-			if ($rule->check($cleaned_fd)) {
-				continue;
-			}
-
-			throw new InvalidFormException($rule->getViolationMessage(), [
-				// rule is prefixed by "_" as form rules are checked on validated data (cleaned data),
-				// they may contains values that are not safe to be exposed to client (added while validating etc...)
-				'_rule' => $rule,
-			]);
-		}
-
-		if (!$skip_steps) {
-			foreach ($this->t_steps as $step) {
-				if (!($step_form = $step->build($cleaned_fd))) {
+		if (!$shallow) {
+			foreach ($this->t_fieldsets as $fieldset) {
+				if (!($built = $fieldset->build($cleaned_fd))) {
 					continue;
 				}
 
-				$step_form->validate($unsafe_fd, $cleaned_fd);
+				$built->validate($unsafe_fd, $cleaned_fd);
 			}
 		}
 
@@ -605,7 +442,7 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	 *  action: ?Uri,
 	 *  method: string,
 	 *  fields: list<Field>,
-	 *  steps: list<FormStep>,
+	 *  fieldsets: list<Fieldset>,
 	 *  expect: list<RuleSet>,
 	 *  resume_scope: ?string,
 	 *  resume_ttl: ?int
@@ -615,17 +452,17 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 	public function toArray(): array
 	{
 		$expect_rules = \array_values(\array_filter(
-			$this->t_pre_validation_rules,
+			$this->getPreValidationRules(),
 			static fn (RuleSet $r) => !$r->isServerOnly()
 		));
 
 		return [
 			'version'      => $this->getVersion(),
-			'name'         => $this->t_name,
+			'name'         => $this->getName(),
 			'action'       => $this->t_submit_to,
 			'method'       => $this->t_method,
-			'fields'       => $this->t_fields,
-			'steps'        => $this->t_steps,
+			'fields'       => $this->getFields(),
+			'fieldsets'    => $this->t_fieldsets,
 			'expect'       => $expect_rules,
 			'resume_scope' => $this->t_resume_scope?->value,
 			'resume_ttl'   => null !== $this->t_resume_scope ? $this->t_resume_ttl : null,
@@ -649,10 +486,8 @@ class Form implements ArrayCapableInterface, MetaCapableInterface
 			$this->t_submit_to = $from->t_submit_to;
 		}
 
-		$this->t_fields                = \array_merge($this->t_fields, $from->t_fields);
-		$this->t_steps                 = \array_merge($this->t_steps, $from->t_steps);
-		$this->t_pre_validation_rules  = \array_merge($this->t_pre_validation_rules, $from->t_pre_validation_rules);
-		$this->t_post_validation_rules = \array_merge($this->t_post_validation_rules, $from->t_post_validation_rules);
+		$this->mergeContainerState($from);
+		$this->t_fieldsets = \array_merge($this->t_fieldsets, $from->t_fieldsets);
 
 		// Propagate resume scope from source — first non-null wins.
 		if (null === $this->t_resume_scope && null !== $from->t_resume_scope) {

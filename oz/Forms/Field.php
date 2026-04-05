@@ -19,6 +19,7 @@ use Gobl\DBAL\Types\TypeString;
 use Gobl\DBAL\Types\Utils\TypeUtils;
 use Override;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Forms\Interfaces\FieldContainerInterface;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Lang\I18nMessage;
 use OZONE\Core\Utils\Utils;
@@ -45,30 +46,30 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 */
 	private $t_validator;
 	private string $t_name;
-	private ?I18nMessage $t_label       = null;
-	private ?I18nMessage $t_description = null;
-	private ?I18nMessage $t_help        = null;
-	private bool $t_hide                = false;
-	private bool $t_required            = false;
-	private bool $t_multiple            = false;
-	private ?RuleSet $t_if              = null;
-	private Form $t_form;
+	private ?I18nMessage $t_label             = null;
+	private ?I18nMessage $t_description       = null;
+	private ?I18nMessage $t_help              = null;
+	private bool $t_hide                      = false;
+	private bool $t_required                  = false;
+	private bool $t_multiple                  = false;
+	private ?RuleSet $t_if                    = null;
+	private FieldContainerInterface $t_parent;
 	private ?self $t_double_check = null;
 
 	/**
 	 * Field constructor.
 	 *
-	 * @param Form                             $form The form to which the field belongs
+	 * @param FieldContainerInterface          $parent the container (Form or Fieldset) this field belongs to
 	 * @param string                           $name
 	 * @param null|TypeInterface|TypesSwitcher $type
 	 */
 	public function __construct(
-		Form $form,
+		FieldContainerInterface $parent,
 		string $name,
 		TypeInterface|TypesSwitcher|null $type = null
 	) {
-		$this->t_form = $form;
-		$this->t_type = $type ?? new TypeString();
+		$this->t_parent = $parent;
+		$this->t_type   = $type ?? new TypeString();
 
 		$this->name($name);
 	}
@@ -78,7 +79,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 */
 	public function __destruct()
 	{
-		unset($this->t_form, $this->t_type);
+		unset($this->t_parent, $this->t_type);
 	}
 
 	/**
@@ -86,7 +87,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 */
 	public function getRef(): string
 	{
-		return $this->t_form->getRef($this->t_name);
+		return $this->t_parent->getRef($this->t_name);
 	}
 
 	/**
@@ -99,9 +100,9 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 		// syncWithDoubleCheck() is called from type(), required(), and multiple(), keeping the confirm
 		// field's type/required/multiple in sync whenever the primary field's settings change later.
 		if (null === $this->t_double_check) {
-			$confirm = $this->t_form->field($this->t_name . '_confirm');
+			$confirm = $this->t_parent->field($this->t_name . '_confirm');
 
-			$this->t_form->ensure()
+			$this->t_parent->ensure()
 				->eq($this, $confirm, I18n::m('OZ_FIELD_SHOULD_HAVE_SAME_VALUE', [
 					'field'         => $this->t_name,
 					'field_confirm' => $confirm->t_name,
@@ -261,6 +262,19 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 		$this->t_validator = $validator;
 
 		return $this;
+	}
+
+	/**
+	 * Gets the field visibility condition, if any.
+	 *
+	 * Returns null when no condition has been defined (field is always visible).
+	 * Use this to inspect the condition without creating one as a side effect.
+	 *
+	 * @return null|RuleSet
+	 */
+	public function getIf(): ?RuleSet
+	{
+		return $this->t_if;
 	}
 
 	/**
