@@ -121,11 +121,11 @@ final class RouteFormDeclarationTest extends TestCase
 		self::assertNull($decl->getDocForm());
 	}
 
-	public function testMakeWithFormAndDiscoveryOnlyPolicy(): void
+	public function testMakeWithFormAndExternalPolicy(): void
 	{
-		$decl = RouteFormDeclaration::make(new Form(), RouteFormDocPolicy::DISCOVERY_ONLY);
+		$decl = RouteFormDeclaration::make(new Form(), RouteFormDocPolicy::EXTERNAL);
 
-		self::assertSame(RouteFormDocPolicy::DISCOVERY_ONLY, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::EXTERNAL, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
 	}
 
@@ -206,11 +206,11 @@ final class RouteFormDeclarationTest extends TestCase
 		self::assertNull($decl->getDocForm());
 	}
 
-	public function testDiscoveryOnlyWithFormHidesDocForm(): void
+	public function testExternalWithFormHidesDocForm(): void
 	{
-		$decl = RouteFormDeclaration::discoveryOnly(new Form());
+		$decl = RouteFormDeclaration::external(new Form());
 
-		self::assertSame(RouteFormDocPolicy::DISCOVERY_ONLY, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::EXTERNAL, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
 	}
 
@@ -253,10 +253,10 @@ final class RouteFormDeclarationTest extends TestCase
 		self::assertNull($decl->getDocForm());
 	}
 
-	public function testGetDocFormNullForDiscoveryOnly(): void
+	public function testGetDocFormNullForExternal(): void
 	{
 		$form = new Form();
-		$decl = RouteFormDeclaration::make($form, RouteFormDocPolicy::DISCOVERY_ONLY);
+		$decl = RouteFormDeclaration::make($form, RouteFormDocPolicy::EXTERNAL);
 
 		self::assertNull($decl->getDocForm());
 	}
