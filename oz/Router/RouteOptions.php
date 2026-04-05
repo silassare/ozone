@@ -23,6 +23,8 @@ final class RouteOptions extends RouteSharedOptions
 {
 	private static int $route_count = 0;
 
+	private bool $t_name_is_explicit = false;
+
 	/**
 	 * RouteOptions constructor.
 	 *
@@ -36,6 +38,8 @@ final class RouteOptions extends RouteSharedOptions
 		parent::__construct($path, $group);
 
 		$this->name('route_' . (++self::$route_count));
+		// auto-generated names are not considered explicit so we revert to false here:
+		$this->t_name_is_explicit = false;
 	}
 
 	/**
@@ -49,6 +53,22 @@ final class RouteOptions extends RouteSharedOptions
 			throw new InvalidArgumentException('Route name must be non-empty and not whitespace-only string.');
 		}
 
+		$this->t_name_is_explicit = true;
+
 		return parent::name($name);
+	}
+
+	/**
+	 * Returns true when the route name was set explicitly via {@see self::name()},
+	 * false when the auto-generated fallback name is still in use.
+	 *
+	 * Resumable form providers keyed by `route:{name}` require an explicit name
+	 * because auto-generated names are not stable across deployments or PHP workers.
+	 *
+	 * @return bool
+	 */
+	public function isNameExplicit(): bool
+	{
+		return $this->t_name_is_explicit;
 	}
 }

@@ -83,6 +83,11 @@ abstract class AbstractResumableFormProvider implements ResumableFormProviderInt
 	/**
 	 * Resolves a provider ref to a fresh provider instance.
 	 *
+	 * Handles two cases:
+	 *  - `route:{name}` refs are resolved lazily via {@see RouteResumableFormProvider::resolveRoute()}
+	 *    without requiring boot-time registration.
+	 *  - All other refs are looked up in the static registry populated by {@see self::register()}.
+	 *
 	 * @param string $ref The value of the `:provider` URL segment
 	 *
 	 * @return ResumableFormProviderInterface
@@ -91,6 +96,12 @@ abstract class AbstractResumableFormProvider implements ResumableFormProviderInt
 	 */
 	public static function resolve(string $ref): ResumableFormProviderInterface
 	{
+		if (\str_starts_with($ref, RouteResumableFormProvider::PROVIDER_REF_PREFIX)) {
+			$route_name = \substr($ref, \strlen(RouteResumableFormProvider::PROVIDER_REF_PREFIX));
+
+			return RouteResumableFormProvider::resolveRoute($route_name);
+		}
+
 		if (!isset(self::$registry[$ref])) {
 			throw new NotFoundException('OZ_FORM_PROVIDER_NOT_FOUND', ['ref' => $ref]);
 		}
