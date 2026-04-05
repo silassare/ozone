@@ -20,6 +20,7 @@ use OZONE\Core\Auth\Services\Logout;
 use OZONE\Core\Auth\Services\Password;
 use OZONE\Core\Auth\Services\PhoneOwnershipVerificationService;
 use OZONE\Core\Auth\Services\TNet;
+use OZONE\Core\Forms\Services\FormService;
 use OZONE\Core\FS\Services\UploadFiles;
 use OZONE\Core\REST\Services\ApiDocService;
 use OZONE\Core\Services\CaptchaCode;
@@ -43,4 +44,5 @@ return [
 	EmailOwnershipVerificationService::class => true,
 	ApiDocService::class                     => true,
 	AccessRightsService::class               => true,
+	FormService::class                       => true,
 ];
