@@ -51,6 +51,8 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 	public const RATE_LIMIT_REACHED = 429;
 
+	public const GONE = 410;
+
 	public const INTERNAL_ERROR = 500;
 
 	public const UNKNOWN_ERROR = 520;
@@ -64,6 +66,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 		self::BAD_REQUEST         => 400,
 		self::UNAUTHORIZED        => 401,
 		self::FORBIDDEN           => 403,
+		self::GONE                => 410,
 		self::NOT_FOUND           => 404,
 		self::METHOD_NOT_ALLOWED  => 405,
 		self::RATE_LIMIT_REACHED  => 429,
