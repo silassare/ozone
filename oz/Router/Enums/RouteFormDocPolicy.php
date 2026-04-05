@@ -24,7 +24,7 @@ use OZONE\Core\Router\RouteSharedOptions;
  * |------------------|-----------------------|-----------------------|
  * | AUTO             | embedded if static    | none                  |
  * | OPAQUE           | none                  | `{policy: opaque}`    |
- * | DISCOVERY_ONLY   | none                  | `{policy: discovery_only}` |
+ * | EXTERNAL         | none                  | `{policy: external}`  |
  *
  * Usage via {@see RouteSharedOptions::form()}:
  *
@@ -40,8 +40,8 @@ use OZONE\Core\Router\RouteSharedOptions;
  * ->form(new MyForm(), RouteFormDocPolicy::OPAQUE)
  * ->form(RouteFormDeclaration::opaque(fn (RouteInfo $ri) => ...))
  *
- * // Explicit discovery (client fetches schema from GET /forms/{key}):
- * ->form(RouteFormDeclaration::discoveryOnly(fn (RouteInfo $ri) => ...))
+ * // External (client fetches schema from GET /forms/{key}):
+ * ->form(RouteFormDeclaration::external(fn (RouteInfo $ri) => ...))
  * ```
  */
 enum RouteFormDocPolicy: string
@@ -63,10 +63,10 @@ enum RouteFormDocPolicy: string
 	case OPAQUE = 'opaque';
 
 	/**
-	 * Signals clients to fetch the form structure from the discovery endpoint.
+	 * Signals clients to fetch the form structure from an external endpoint.
 	 *
 	 * The form works normally at request time but the spec shows only an
-	 * `x-oz-form: {policy: discovery_only}` extension rather than embedding the schema.
+	 * `x-oz-form: {policy: external}` extension rather than embedding the schema.
 	 */
-	case DISCOVERY_ONLY = 'discovery_only';
+	case EXTERNAL = 'external';
 }

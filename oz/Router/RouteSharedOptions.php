@@ -663,7 +663,7 @@ class RouteSharedOptions
 	 * Gets the merged form bundle for API doc generation (no live RouteInfo needed).
 	 *
 	 * Collects doc forms from the entire parent-group chain, merging them into one {@see Form}.
-	 * Declarations with policy {@see RouteFormDocPolicy::OPAQUE} or {@see RouteFormDocPolicy::DISCOVERY_ONLY},
+	 * Declarations with policy {@see RouteFormDocPolicy::OPAQUE} or {@see RouteFormDocPolicy::EXTERNAL},
 	 * and dynamic factories without a preview callable, contribute nothing.
 	 *
 	 * @return null|Form

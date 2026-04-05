@@ -84,7 +84,7 @@ final class RouteFormDeclaration
 	 * The $policy parameter is applied as-is on top of the detection result.
 	 * {@see RouteFormDocPolicy::AUTO} leaves the visibility determined by whether the form is static
 	 * (documentable) or dynamic (opaque). Use {@see RouteFormDocPolicy::OPAQUE} or
-	 * {@see RouteFormDocPolicy::DISCOVERY_ONLY} to explicitly hide the form from docs regardless.
+	 * {@see RouteFormDocPolicy::EXTERNAL} to explicitly hide the form from docs regardless.
 	 *
 	 * @param callable|Form      $form   the form definition or factory callable
 	 * @param RouteFormDocPolicy $policy documentation policy (AUTO by default)
@@ -166,18 +166,18 @@ final class RouteFormDeclaration
 	}
 
 	/**
-	 * Creates a declaration that signals clients to use the form discovery endpoint.
+	 * Creates a declaration that signals clients to use an external form schema endpoint.
 	 *
 	 * The form works normally at request time. The generated OpenAPI spec adds
-	 * `x-oz-form: {policy: discovery_only}` to the operation instead of embedding the schema.
+	 * `x-oz-form: {policy: external}` to the operation instead of embedding the schema.
 	 *
 	 * @param callable|Form $form
 	 *
 	 * @return static
 	 */
-	public static function discoveryOnly(callable|Form $form): static
+	public static function external(callable|Form $form): static
 	{
-		return self::make($form, RouteFormDocPolicy::DISCOVERY_ONLY);
+		return self::make($form, RouteFormDocPolicy::EXTERNAL);
 	}
 
 	/**
@@ -216,14 +216,14 @@ final class RouteFormDeclaration
 
 	/**
 	 * Returns the form for API doc generation (no RouteInfo needed). Returns null when:
-	 *  - The policy is {@see RouteFormDocPolicy::OPAQUE} or {@see RouteFormDocPolicy::DISCOVERY_ONLY}.
+	 *  - The policy is {@see RouteFormDocPolicy::OPAQUE} or {@see RouteFormDocPolicy::EXTERNAL}.
 	 *  - The form is a dynamic factory with no preview callable.
 	 *
 	 * @return null|Form
 	 */
 	public function getDocForm(): ?Form
 	{
-		if (RouteFormDocPolicy::OPAQUE === $this->t_policy || RouteFormDocPolicy::DISCOVERY_ONLY === $this->t_policy) {
+		if (RouteFormDocPolicy::OPAQUE === $this->t_policy || RouteFormDocPolicy::EXTERNAL === $this->t_policy) {
 			return null;
 		}
 

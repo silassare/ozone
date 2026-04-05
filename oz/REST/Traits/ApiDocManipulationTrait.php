@@ -200,7 +200,7 @@ trait ApiDocManipulationTrait
 		if (self::isUndefined($op->requestBody)) {
 			$doc_policy    = $route_options->getEffectiveDocPolicy();
 
-			if (RouteFormDocPolicy::OPAQUE === $doc_policy || RouteFormDocPolicy::DISCOVERY_ONLY === $doc_policy) {
+			if (RouteFormDocPolicy::OPAQUE === $doc_policy || RouteFormDocPolicy::EXTERNAL === $doc_policy) {
 				$oz_form_ext = ['oz-form' => ['name' => 'oz-form', 'value' => ['policy' => $doc_policy->value]]];
 
 				if (self::isUndefined($op->x)) {
