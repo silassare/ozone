@@ -176,6 +176,50 @@ class Headers extends Collection
 	}
 
 	/**
+	 * Sets a boolean header value.
+	 *
+	 * This method is RFC 8941 compliant, representing boolean values as ?1 for true and ?0 for false.
+	 *
+	 * @param string $key   The case-insensitive header name
+	 * @param bool   $value The boolean value to set
+	 */
+	public function setBool(string $key, bool $value): void
+	{
+		$value = $value ? '?1' : '?0';
+
+		parent::set($this->normalizeKey($key), [
+			'value'       => [$value],
+			'originalKey' => $key,
+		]);
+	}
+
+	/**
+	 * Gets a header value as a boolean.
+	 *
+	 * Based on RFC 8941 representation of boolean values.
+	 * ?1 is true, ?0 is false.
+	 *
+	 * @param string $key     The case-insensitive header name
+	 * @param bool   $default The default value if the header is not set or invalid
+	 *
+	 * @return bool
+	 */
+	public function getBool(string $key, bool $default = false): bool
+	{
+		$val = $this->get($key, [])[0] ?? null;
+
+		if ('?1' === $val) {
+			return true;
+		}
+
+		if ('?0' === $val) {
+			return false;
+		}
+
+		return $default;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]

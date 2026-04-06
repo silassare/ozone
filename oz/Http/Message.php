@@ -98,7 +98,7 @@ abstract class Message implements MessageInterface
 		if (!isset(self::$validProtocolVersions[$version])) {
 			throw new InvalidArgumentException(
 				'Invalid HTTP version. Must be one of: '
-				. \implode(', ', \array_keys(self::$validProtocolVersions))
+					. \implode(', ', \array_keys(self::$validProtocolVersions))
 			);
 		}
 		$clone                  = clone $this;
@@ -144,6 +144,22 @@ abstract class Message implements MessageInterface
 	}
 
 	/**
+	 * Gets a header value as a boolean.
+	 *
+	 * Based on RFC 8941 representation of boolean values.
+	 * ?1 is true, ?0 is false.
+	 *
+	 * @param string $name    The case-insensitive header name
+	 * @param bool   $default The default value if the header is not set or invalid
+	 *
+	 * @return bool
+	 */
+	public function getHeaderAsBool(string $name, bool $default = false): bool
+	{
+		return $this->headers->getBool($name, $default);
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
@@ -151,6 +167,19 @@ abstract class Message implements MessageInterface
 	{
 		$clone = clone $this;
 		$clone->headers->set($name, $value);
+
+		return $clone;
+	}
+
+	/**
+	 * Returns a new instance with the specified boolean header.
+	 *
+	 * @param mixed $name
+	 */
+	public function withHeaderBool($name, bool $value): static
+	{
+		$clone = clone $this;
+		$clone->headers->setBool($name, $value);
 
 		return $clone;
 	}

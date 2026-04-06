@@ -180,7 +180,7 @@ final class Context
 
 		$header_name = Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_NAME');
 
-		return '' !== $this->request->getHeaderLine($header_name);
+		return $this->request->getHeaderAsBool($header_name);
 	}
 
 	/**
@@ -939,7 +939,8 @@ final class Context
 			$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_NAME'));
 		}
 
-		$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_RESUMABLE_REF_HEADER_NAME'));
+		$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_RESUME_HEADER_NAME'));
+		$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_RESUME_REF_HEADER_NAME'));
 
 		$bundle = \array_merge($declared, $provided);
 

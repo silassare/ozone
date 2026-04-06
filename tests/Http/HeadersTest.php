@@ -120,4 +120,51 @@ final class HeadersTest extends TestCase
 		self::assertNull($h->get('X-Missing'));
 		self::assertSame('fallback', $h->get('X-Missing', 'fallback'));
 	}
+
+	public function testGetBoolReturnsTrueForRfc8941True(): void
+	{
+		$h = new Headers(['X-Flag' => '?1']);
+		self::assertTrue($h->getBool('X-Flag'));
+	}
+
+	public function testGetBoolReturnsFalseForRfc8941False(): void
+	{
+		$h = new Headers(['X-Flag' => '?0']);
+		self::assertFalse($h->getBool('X-Flag'));
+	}
+
+	public function testGetBoolReturnsDefaultWhenAbsent(): void
+	{
+		$h = new Headers();
+		self::assertFalse($h->getBool('X-Missing'));
+		self::assertTrue($h->getBool('X-Missing', true));
+	}
+
+	public function testGetBoolReturnsDefaultForUnrecognizedValue(): void
+	{
+		$h = new Headers(['X-Flag' => 'yes']);
+		self::assertFalse($h->getBool('X-Flag'));
+		self::assertTrue($h->getBool('X-Flag', true));
+	}
+
+	public function testSetBoolStoresTrueAsRfc8941(): void
+	{
+		$h = new Headers();
+		$h->setBool('X-Flag', true);
+		self::assertSame(['?1'], $h->get('X-Flag'));
+	}
+
+	public function testSetBoolStoresFalseAsRfc8941(): void
+	{
+		$h = new Headers();
+		$h->setBool('X-Flag', false);
+		self::assertSame(['?0'], $h->get('X-Flag'));
+	}
+
+	public function testSetBoolOverwritesPreviousValue(): void
+	{
+		$h = new Headers(['X-Flag' => '?1']);
+		$h->setBool('X-Flag', false);
+		self::assertSame(['?0'], $h->get('X-Flag'));
+	}
 }

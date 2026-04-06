@@ -48,7 +48,7 @@ use OZONE\Core\Router\Router;
  * in the `oz.forms.providers` settings file.
  *
  * The `resume_ref` is returned in the body of `POST .../init` and must be sent
- * back on every subsequent request via the `X-OZONE-Form-Resumable-Ref` header.
+ * back on every subsequent request via a dedicated header.
  *
  * Route overview:
  *
@@ -106,7 +106,7 @@ final class ResumableFormService extends Service
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{
-		// API doc is intentionally minimal - form structures are dynamic.
+		// TODO: document the endpoints and their request/response schemas
 	}
 
 	// -------------------------------------------------------------------------
@@ -498,17 +498,17 @@ final class ResumableFormService extends Service
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Reads the resume_ref from the X-OZONE-Form-Resumable-Ref request header.
+	 * Reads the resume_ref from request header.
 	 *
 	 * @throws BadRequestException when the header is absent or empty
 	 */
 	private function readResumeRef(RouteInfo $ri): string
 	{
-		$header_name = Settings::get('oz.request', 'OZ_FORM_RESUMABLE_REF_HEADER_NAME');
+		$header_name = Settings::get('oz.request', 'OZ_FORM_RESUME_REF_HEADER_NAME');
 		$value       = $ri->getContext()->getRequest()->getHeaderLine($header_name);
 
 		if ('' === $value) {
-			throw new BadRequestException('OZ_FORM_RESUME_REF_MISSING');
+			throw new BadRequestException('OZ_FORM_SESSION_REF_MISSING');
 		}
 
 		return $value;

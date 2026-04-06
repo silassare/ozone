@@ -59,7 +59,7 @@ return [
 	'OZ_REAL_METHOD_HEADER_NAME'  => 'X-OZONE-Real-Method',
 
 	/**
-	 * Allow to use X-OZONE-Form-Discovery header to indicate that the request is a form discovery request.
+	 * Allow to use form discovery header to indicate that the request is a form discovery request.
 	 *
 	 * This is useful for clients that want to discover the form structure before submitting it.
 	 */
@@ -69,13 +69,25 @@ return [
 	 * Name of the header to use for form discovery.
 	 *
 	 * This header is used by the client to indicate that the request is a form discovery request.
+	 *
+	 * Require RFC 8941 representation of boolean values. ?1 is true, ?0 is false.
 	 */
 	'OZ_FORM_DISCOVERY_HEADER_NAME' => 'X-OZONE-Form-Discovery',
 
 	/**
-	 * Name of the header to use for form resumable form reference.
+	 * Name of the header to indicate that we want to bypass route handling and be in resume mode for a form.
 	 *
-	 * This header is used by the client to indicate that the request should use payload from a resumable form reference.
+	 * This header is not necessary at the end of the form resume flow, but it is necessary for the intermediate steps.
+	 *
+	 * Require RFC 8941 representation of boolean values. ?1 is true, ?0 is false.
 	 */
-	'OZ_FORM_RESUMABLE_REF_HEADER_NAME' => 'X-OZONE-Form-Resumable-Ref',
+	'OZ_FORM_RESUME_HEADER_NAME' => 'X-OZONE-Form-Resume',
+
+	/**
+	 * Name of the header to use for resumed form session reference.
+	 *
+	 * This header is used by the client to indicate that the request should use payload from a resumed form reference.
+	 * The value of the header should be the resume reference provided by the server in a previous response.
+	 */
+	'OZ_FORM_RESUME_REF_HEADER_NAME' => 'X-OZONE-Form-Resume-Ref',
 ];
