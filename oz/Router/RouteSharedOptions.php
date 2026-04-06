@@ -573,13 +573,13 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Returns the form declaration set directly on this route or group, without traversing the parent chain.
+	 * Returns the form declaration defined for this route or its parent.
 	 *
 	 * @return null|RouteFormDeclaration
 	 */
 	public function getFormDeclaration(): ?RouteFormDeclaration
 	{
-		return $this->form_declaration;
+		return $this->form_declaration ?? $this->parent?->getFormDeclaration() ?? null;
 	}
 
 	/**
@@ -922,6 +922,34 @@ class RouteSharedOptions
 			$interceptors,
 			$this->interceptors
 		);
+	}
+
+	/**
+	 * Returns true when this route/group chain has resume support — i.e. when at
+	 * least one level has called resumable() or declared a ResumableFormProvider.
+	 *
+	 * @return bool
+	 */
+	public function hasResumeSupport(): bool
+	{
+		return null !== $this->resolveResumeConfig()
+			|| null !== $this->resolveProviderClass();
+	}
+
+	/**
+	 * Resolves the provider class from the form declaration chain.
+	 *
+	 * Returns the first non-null provider class walking from this level up to the root.
+	 *
+	 * @return null|class-string<ResumableFormProviderInterface>
+	 */
+	public function resolveProviderClass(): ?string
+	{
+		if (null !== $this->form_declaration) {
+			return $this->form_declaration->getProviderClass();
+		}
+
+		return $this->parent?->resolveProviderClass();
 	}
 
 	/**

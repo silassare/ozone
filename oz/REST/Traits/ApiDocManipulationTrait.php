@@ -257,8 +257,7 @@ trait ApiDocManipulationTrait
 			if (RouteFormDocPolicy::OPAQUE === $doc_policy) {
 				$this->declarePolicyOnlyFormExtension($op, $doc_policy);
 			} elseif (RouteFormDocPolicy::EXTERNAL === $doc_policy) {
-				$declaration    = $route_options->getFormDeclaration();
-				$provider_class = $declaration?->getProviderClass();
+				$provider_class = $route_options->resolveProviderClass();
 
 				if (null !== $provider_class) {
 					$this->declareResumableFormProviderExtension($op, $provider_class);

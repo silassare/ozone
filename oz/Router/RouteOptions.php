@@ -15,6 +15,7 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use Override;
+use OZONE\Core\Exceptions\RuntimeException;
 
 /**
  * Class RouteOptions.
@@ -23,6 +24,17 @@ final class RouteOptions extends RouteSharedOptions
 {
 	protected string $full_path_prefix = '';
 	private static int $route_count    = 0;
+
+	/**
+	 * @var list<callable(Router, Route):void>
+	 */
+	private array $refiners = [];
+
+	/**
+	 * True after {@see runRefiners()} has been called.
+	 * Prevents adding refiners to an already-refined route.
+	 */
+	private bool $refined = false;
 
 	private bool $t_name_is_explicit = false;
 
@@ -100,5 +112,49 @@ final class RouteOptions extends RouteSharedOptions
 	public function isNameExplicit(): bool
 	{
 		return $this->t_name_is_explicit;
+	}
+
+	/**
+	 * Registers a refiner on this specific route.
+	 *
+	 * A refiner is called by {@see Router::applyRefiners()} with the router and
+	 * the route this options instance belongs to. This can be used to add sibling
+	 * routes, mutate options, etc., once all routes are fully registered.
+	 *
+	 * @param callable(Router, Route):void $refiner
+	 *
+	 * @return $this
+	 *
+	 * @throws RuntimeException when called after refiners have already been applied
+	 */
+	public function pushRefiner(callable $refiner): static
+	{
+		if ($this->refined) {
+			throw new RuntimeException('Cannot add a refiner to a route that has already been refined.');
+		}
+
+		$this->refiners[] = $refiner;
+
+		return $this;
+	}
+
+	/**
+	 * Executes all refiners registered on this route.
+	 *
+	 * Called by {@see Router::applyRefiners()} for each route.
+	 * After this call, {@see pushRefiner()} will throw.
+	 *
+	 * @param Router $router the router to pass to each refiner
+	 * @param Route  $route  the route this options instance belongs to
+	 *
+	 * @internal this should only be called by the router, and only once per route dispatch
+	 */
+	public function runRefiners(Router $router, Route $route): void
+	{
+		$this->refined = true;
+
+		foreach ($this->refiners as $refiner) {
+			$refiner($router, $route);
+		}
 	}
 }

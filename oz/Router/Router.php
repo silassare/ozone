@@ -559,6 +559,25 @@ final class Router
 	}
 
 	/**
+	 * Applies all refiners registered on each route's {@see RouteOptions}.
+	 *
+	 * Should be called once per router after all routes are registered —
+	 * typically from the {@see RouterCreated} constructor. Routes added by
+	 * refiners (e.g. POST siblings) are NOT themselves passed back to refiners.
+	 * After this call every processed {@see RouteOptions} will reject new refiners.
+	 */
+	public function applyRefiners(): void
+	{
+		// Snapshot before entering the loop so routes added by refiners
+		// (e.g. sibling routes) are not themselves refined.
+		$routes = $this->getRoutes();
+
+		foreach ($routes as $route) {
+			$route->getOptions()->runRefiners($this, $route);
+		}
+	}
+
+	/**
 	 * Ensure routes are ordered by priority.
 	 */
 	private function ensureOrdered(): void

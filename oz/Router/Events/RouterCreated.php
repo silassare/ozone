@@ -36,5 +36,7 @@ final class RouterCreated extends Event
 		public readonly Router $router,
 		public readonly RouteGroup $topLevelGroup,
 		public readonly bool $isApi,
-	) {}
+	) {
+		$this->router->applyRefiners();
+	}
 }
