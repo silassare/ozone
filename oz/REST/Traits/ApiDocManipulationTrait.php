@@ -41,10 +41,12 @@ use OZONE\Core\Columns\Types\TypeEmail;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\Forms\Interfaces\ResumableFormProviderInterface;
 use OZONE\Core\Forms\TypesSwitcher;
 use OZONE\Core\REST\RESTFulAPIRequest;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use OZONE\Core\Router\Route;
+use OZONE\Core\Router\RouteResumableFormProvider;
 
 /**
  * Trait ApiDocManipulationTrait.
@@ -124,6 +126,59 @@ trait ApiDocManipulationTrait
 	}
 
 	/**
+	 * Attaches an `x-oz-form` EXTERNAL extension carrying provider metadata to an operation.
+	 *
+	 * @param Operation                                    $op            the OpenAPI operation
+	 * @param class-string<ResumableFormProviderInterface> $form_provider the provider class
+	 */
+	public function declareResumableFormProviderExtension(Operation $op, string $form_provider): void
+	{
+		$init_form = $form_provider::initForm();
+
+		self::pushExtension($op, 'oz-form', [
+			'policy'             => RouteFormDocPolicy::EXTERNAL->value,
+			'form_provider_name' => $form_provider::providerName(),
+			'init_form'          => $init_form?->toArray(),
+		]);
+	}
+
+	/**
+	 * Attaches an `x-oz-form` extension with only the given policy to an operation.
+	 *
+	 * @param Operation          $op     the OpenAPI operation
+	 * @param RouteFormDocPolicy $policy the doc policy (`OPAQUE` or `EXTERNAL`)
+	 */
+	public function declarePolicyOnlyFormExtension(Operation $op, RouteFormDocPolicy $policy): void
+	{
+		self::pushExtension($op, 'oz-form', [
+			'policy' => $policy->value,
+		]);
+	}
+
+	/**
+	 * Push an extension to an OpenAPI annotation, initializing the `x` property if needed.
+	 *
+	 * @param Operation $op    the OpenAPI operation
+	 * @param string    $name  the extension name
+	 * @param array     $value the extension value
+	 */
+	public static function pushExtension(Operation $op, string $name, array $value): void
+	{
+		$extension = [
+			$name => [
+				'name'  => $name,
+				'value' => $value,
+			],
+		];
+
+		if (self::isUndefined($op->x)) {
+			$op->x = $extension;
+		} elseif (\is_array($op->x)) {
+			$op->x = \array_merge($op->x, $extension);
+		}
+	}
+
+	/**
 	 * Adds a new operation from a route.
 	 *
 	 * > If the path contains dynamic parameters, you can provide the values
@@ -181,51 +236,45 @@ trait ApiDocManipulationTrait
 		$declared_params_patterns = $route->getDeclaredParams();
 		$route_options            = $route->getOptions();
 
-		// Attach guard and authentication metadata when not already set by the caller.
-		if (self::isUndefined($op->x)) {
-			$auth_methods      = $route_options->getAuthenticationMethods();
-			$guard_descriptors = $route_options->getGuardDescriptors();
+		$auth_methods      = $route_options->getAuthenticationMethods();
+		$guard_descriptors = $route_options->getGuardDescriptors();
 
-			if (!empty($auth_methods) || !empty($guard_descriptors)) {
-				$op->x = [
-					'oz-security' => ['name' => 'oz-security', 'value' => [
-						'auth_methods'      => \array_map(static fn($m) => \basename(\str_replace('\\', '/', $m)), $auth_methods),
-						'guard_descriptors' => $guard_descriptors,
-					]],
-				];
-			}
+		if (!empty($auth_methods) || !empty($guard_descriptors)) {
+			self::pushExtension(
+				$op,
+				'oz-security',
+				[
+					'auth_methods'      => \array_map(static fn ($m) => \basename(\str_replace('\\', '/', $m)), $auth_methods),
+					'guards'            => $guard_descriptors,
+				],
+			);
 		}
 
 		// Auto-attach request body from the route's static form declaration when not already set.
 		if (self::isUndefined($op->requestBody)) {
 			$doc_policy    = $route_options->getEffectiveDocPolicy();
 
-			if (RouteFormDocPolicy::OPAQUE === $doc_policy || RouteFormDocPolicy::EXTERNAL === $doc_policy) {
-				$oz_form_value = ['policy' => $doc_policy->value];
+			if (RouteFormDocPolicy::OPAQUE === $doc_policy) {
+				$this->declarePolicyOnlyFormExtension($op, $doc_policy);
+			} elseif (RouteFormDocPolicy::EXTERNAL === $doc_policy) {
+				$declaration    = $route_options->getFormDeclaration();
+				$provider_class = $declaration?->getProviderClass();
 
-				// When the route uses a ResumableFormProviderInterface provider, attach provider metadata.
-				if (RouteFormDocPolicy::EXTERNAL === $doc_policy) {
-					$declaration    = $route_options->getFormDeclaration();
-					$provider_class = $declaration?->getProviderClass();
-
-					if (null !== $provider_class) {
-						$init_form                           = $provider_class::initForm();
-						$oz_form_value['form_provider_name'] = $provider_class::providerName();
-						$oz_form_value['init_form']          = $init_form?->toArray();
-					}
-				}
-
-				$oz_form_ext = ['oz-form' => ['name' => 'oz-form', 'value' => $oz_form_value]];
-
-				if (self::isUndefined($op->x)) {
-					$op->x = $oz_form_ext;
-				} elseif (\is_array($op->x)) {
-					$op->x = \array_merge($op->x, $oz_form_ext);
+				if (null !== $provider_class) {
+					$this->declareResumableFormProviderExtension($op, $provider_class);
+				} else {
+					$this->declarePolicyOnlyFormExtension($op, $doc_policy);
 				}
 			} else {
 				$static_bundle = $route_options->getStaticFormBundle();
 				if (null !== $static_bundle) {
 					$op->requestBody = $this->requestBodyFromForm($static_bundle);
+
+					// When the static bundle is resumable, add an hint so clients know
+					// they may also start form resume sessions from this endpoint.
+					if (null !== $static_bundle->getResumeScope()) {
+						$this->declareResumableFormProviderExtension($op, RouteResumableFormProvider::class);
+					}
 				}
 			}
 		}
@@ -251,7 +300,7 @@ trait ApiDocManipulationTrait
 				// we add the path parameter only if it does not exist on this path item
 				// as multiple operations can share the same path item
 				// no checking may result in multiple parameters with the same name
-				static fn($a) => $a->name === $param
+				static fn ($a) => $a->name === $param
 			);
 		}
 
@@ -662,7 +711,7 @@ DESC;
 		$op_in                 = Operator::IN->value;
 		$op_not_in             = Operator::NOT_IN->value;
 		$allowed_operators_str = \implode(', ', \array_map(
-			static fn($op) => "`{$op->value}`",
+			static fn ($op) => "`{$op->value}`",
 			Operator::cases()
 		));
 
@@ -715,7 +764,7 @@ DESC;
 				$col_ops = $column->getType()->getAllowedFilterOperators();
 				if (!empty($col_ops)) {
 					$col_name           = $column->getFullName();
-					$ops_str            = \implode(', ', \array_map(static fn($op) => "`{$op->value}`", $col_ops));
+					$ops_str            = \implode(', ', \array_map(static fn ($op) => "`{$op->value}`", $col_ops));
 					$per_column_lines[] = "| `{$col_name}` | {$ops_str} |";
 				}
 			}
