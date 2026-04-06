@@ -27,3 +27,4 @@ docs/.vitepress/cache/
 
 # tests
 /noop/
+/data/

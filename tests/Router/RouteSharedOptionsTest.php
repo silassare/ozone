@@ -13,12 +13,18 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Router;
 
+use Override;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormResumeProgress;
+use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
+use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
+use OZONE\Core\Router\RouteFormDiscoveryInterceptor;
 use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\Router;
 use OZONE\Core\Router\RouteSharedOptions;
 use OZONE\Tests\TestUtils;
 use PHPUnit\Framework\TestCase;
@@ -140,6 +146,88 @@ final class RouteSharedOptionsTest extends TestCase
 		// Provider declarations bypass the normal bundle path — getFormBundle() returns null.
 		self::assertNull($route->getOptions()->getFormBundle($ri));
 	}
+
+	// -----------------------------------------------------------------------
+	// interceptor() / getInterceptors()
+	// -----------------------------------------------------------------------
+
+	public function testGetInterceptorsAlwaysIncludesFormDiscoveryInterceptor(): void
+	{
+		$router = TestUtils::router();
+		$route  = $router->getRoute('foo');
+		$name   = RouteFormDiscoveryInterceptor::getName();
+
+		$interceptors = $route->getOptions()->getInterceptors();
+
+		self::assertArrayHasKey($name, $interceptors);
+		self::assertSame(RouteFormDiscoveryInterceptor::class, $interceptors[$name]);
+	}
+
+	public function testInterceptorMethodAddsCustomInterceptor(): void
+	{
+		$router = new Router();
+		$router->get('/intercept-test', static fn () => null)
+			->name('intercept.test')
+			->interceptor(StubSharedOptionsInterceptor::class);
+
+		$route        = $router->getRoute('intercept.test');
+		$interceptors = $route->getOptions()->getInterceptors();
+		$name         = StubSharedOptionsInterceptor::getName();
+
+		self::assertArrayHasKey($name, $interceptors);
+		self::assertSame(StubSharedOptionsInterceptor::class, $interceptors[$name]);
+	}
+
+	public function testInterceptorMethodThrowsForNonExistentClass(): void
+	{
+		$this->expectException(RuntimeException::class);
+
+		$router = new Router();
+		$router->get('/bad-intercept', static fn () => null)
+			->interceptor('OZONE\NonExistent\SomeInterceptor');
+	}
+
+	public function testInterceptorMethodThrowsForNonInterceptorClass(): void
+	{
+		$this->expectException(RuntimeException::class);
+
+		$router = new Router();
+		$router->get('/bad-intercept2', static fn () => null)
+			->interceptor(StubSharedOptionsProvider::class);
+	}
+
+	public function testGetInterceptorsFromParentAreInheritedByChildRoute(): void
+	{
+		$router = new Router();
+		$router->group('/parent', static function (Router $router) {
+			$router->get('/child', static fn () => null)
+				->name('child');
+		})
+			->name('parent')
+			->interceptor(StubSharedOptionsInterceptor::class);
+
+		$route        = $router->getRoute('parent.child');
+		$interceptors = $route->getOptions()->getInterceptors();
+		$name         = StubSharedOptionsInterceptor::getName();
+
+		self::assertArrayHasKey($name, $interceptors);
+	}
+
+	public function testAddingDuplicateInterceptorByNameKeepsLatestDefinition(): void
+	{
+		$router = new Router();
+		$router->get('/dedup', static fn () => null)
+			->name('dedup.test')
+			->interceptor(StubSharedOptionsInterceptor::class)
+			->interceptor(StubSharedOptionsInterceptor::class);
+
+		$route        = $router->getRoute('dedup.test');
+		$interceptors = $route->getOptions()->getInterceptors();
+		$name         = StubSharedOptionsInterceptor::getName();
+
+		// Same name — only one entry should be present (last write wins in the map).
+		self::assertCount(1, \array_filter($interceptors, static fn ($v) => StubSharedOptionsInterceptor::class === $v));
+	}
 }
 
 /**
@@ -157,5 +245,45 @@ final class StubSharedOptionsProvider extends AbstractResumableFormProvider
 	public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
 	{
 		return null;
+	}
+}
+
+/**
+ * Minimal interceptor stub for use in RouteSharedOptionsTest.
+ *
+ * @internal
+ */
+final class StubSharedOptionsInterceptor implements RouteInterceptorInterface
+{
+	public function __construct(private readonly RouteInfo $ri) {}
+
+	#[Override]
+	public static function getName(): string
+	{
+		return 'stub-shared-options-interceptor';
+	}
+
+	#[Override]
+	public static function getPriority(): int
+	{
+		return 5;
+	}
+
+	#[Override]
+	public function shouldIntercept(): bool
+	{
+		return false;
+	}
+
+	#[Override]
+	public function handle(): Response
+	{
+		return new Response();
+	}
+
+	#[Override]
+	public static function instance(RouteInfo $ri): static
+	{
+		return new self($ri);
 	}
 }
