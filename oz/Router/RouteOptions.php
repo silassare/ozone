@@ -92,8 +92,8 @@ final class RouteOptions extends RouteSharedOptions
 	 * Returns true when the route name was set explicitly via {@see self::name()},
 	 * false when the auto-generated fallback name is still in use.
 	 *
-	 * Resumable form providers keyed by `route:{name}` require an explicit name
-	 * because auto-generated names are not stable across deployments or PHP workers.
+	 * Some features may require an explicit name because auto-generated names
+	 * are not stable across deployments or PHP workers.
 	 *
 	 * @return bool
 	 */
