@@ -11,8 +11,13 @@
 
 declare(strict_types=1);
 
-use OZONE\Core\Router\RouteResumableFormProvider;
-
-return [
-	RouteResumableFormProvider::PROVIDER_NAME => RouteResumableFormProvider::class,
-];
+// RouteResumableFormProvider is the built-in fallback used by RouteFormResumeInterceptor
+// when a route has no explicit provider class. It is not registered here as a standalone
+// provider because it requires the real route's RouteInfo to function correctly.
+//
+// Register custom providers in your app's settings/oz.forms.providers.php:
+//
+//   return [
+//       MyProvider::PROVIDER_NAME => MyProvider::class,
+//   ];
+return [];

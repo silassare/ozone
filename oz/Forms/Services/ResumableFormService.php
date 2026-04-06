@@ -26,12 +26,12 @@ use OZONE\Core\Exceptions\FormResumeExpiredException;
 use OZONE\Core\Exceptions\FormResumeNotYetActiveException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
-use OZONE\Core\Forms\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Enums\FormResumePhase;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormResumeProgress;
 use OZONE\Core\Forms\Interfaces\ResumableFormProviderInterface;
+use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Lang\I18nMessage;
 use OZONE\Core\REST\ApiDoc;
@@ -72,6 +72,14 @@ final class ResumableFormService extends Service
 	public const ROUTE_BACK     = 'oz:form:back';
 	public const ROUTE_CANCEL   = 'oz:form:cancel';
 	public const ROUTE_EVALUATE = 'oz:form:evaluate';
+
+	// Sub-action values carried by the X-OZONE-Form-Resume-Action header.
+	public const ACTION_INIT     = 'init';
+	public const ACTION_STATE    = 'state';
+	public const ACTION_NEXT     = 'next';
+	public const ACTION_BACK     = 'back';
+	public const ACTION_CANCEL   = 'cancel';
+	public const ACTION_EVALUATE = 'evaluate';
 
 	/**
 	 * {@inheritDoc}
@@ -132,18 +140,291 @@ final class ResumableFormService extends Service
 	 */
 	public function initSession(RouteInfo $ri): Response
 	{
-		$provider_name      = $ri->param('provider');
-		[$class, $provider] = $this->resolveProvider($provider_name, $ri);
-		$context            = $ri->getContext();
+		$provider_name = $ri->param('provider');
+		[, $provider]  = $this->resolveProvider($provider_name, $ri);
 
+		return $this->doInit($provider, ['provider_name' => $provider_name], $ri);
+	}
+
+	/**
+	 * GET /form/:provider/state.
+	 *
+	 * Returns the current form to fill without advancing the session.
+	 *
+	 * @throws NotFoundException          when the session is not found
+	 * @throws ForbiddenException         when the caller does not own the session
+	 * @throws FormResumeExpiredException when the session has passed its deadline
+	 */
+	public function getState(RouteInfo $ri): Response
+	{
+		$provider_name = $ri->param('provider');
+		[, $provider]  = $this->resolveProvider($provider_name, $ri);
+
+		return $this->doState($provider, ['provider_name' => $provider_name], $ri);
+	}
+
+	/**
+	 * POST /form/:provider/next.
+	 *
+	 * Validates the submitted step data, merges it into the accumulated
+	 * cleaned form, and advances the session to the next step.
+	 *
+	 * @throws BadRequestException        when the session is already complete
+	 * @throws NotFoundException          when the session is not found
+	 * @throws ForbiddenException         when the caller does not own the session
+	 * @throws FormResumeExpiredException when the session has passed its deadline
+	 * @throws InvalidFormException       when step validation fails
+	 */
+	public function nextStep(RouteInfo $ri): Response
+	{
+		$provider_name = $ri->param('provider');
+		[, $provider]  = $this->resolveProvider($provider_name, $ri);
+
+		return $this->doNext($provider, ['provider_name' => $provider_name], $ri);
+	}
+
+	/**
+	 * POST /form/:provider/back.
+	 *
+	 * Reverts the session to the previous step by restoring the last history
+	 * snapshot. Only available on providers where `isReversible()` returns true.
+	 *
+	 * @throws BadRequestException        when the provider is not reversible or there is no history
+	 * @throws NotFoundException          when the session is not found
+	 * @throws ForbiddenException         when the caller does not own the session
+	 * @throws FormResumeExpiredException when the session has passed its deadline
+	 */
+	public function backStep(RouteInfo $ri): Response
+	{
+		$provider_name = $ri->param('provider');
+		[, $provider]  = $this->resolveProvider($provider_name, $ri);
+
+		return $this->doBack($provider, ['provider_name' => $provider_name], $ri);
+	}
+
+	/**
+	 * POST /form/:provider/evaluate.
+	 *
+	 * Server-side evaluation of all conditions the client cannot resolve locally.
+	 * Merges the current raw client input with the accumulated session data and
+	 * evaluates server-only field visibility and expect rules.
+	 *
+	 * @throws NotFoundException          when the session is not found
+	 * @throws ForbiddenException         when the caller does not own the session
+	 * @throws BadRequestException        when the session is complete
+	 * @throws FormResumeExpiredException when the session has passed its deadline
+	 */
+	public function evaluateCurrent(RouteInfo $ri): Response
+	{
+		$provider_name = $ri->param('provider');
+		[, $provider]  = $this->resolveProvider($provider_name, $ri);
+
+		return $this->doEvaluate($provider, ['provider_name' => $provider_name], $ri);
+	}
+
+	/**
+	 * POST /form/:provider/cancel.
+	 *
+	 * Discards the session. The resume_ref becomes invalid immediately.
+	 *
+	 * @throws NotFoundException          when the session is not found
+	 * @throws ForbiddenException         when the caller does not own the session
+	 * @throws FormResumeExpiredException when the session has passed its deadline
+	 */
+	public function cancelSession(RouteInfo $ri): Response
+	{
+		$provider_name = $ri->param('provider');
+		[, $provider]  = $this->resolveProvider($provider_name, $ri);
+
+		return $this->doCancel($provider, ['provider_name' => $provider_name], $ri);
+	}
+
+	// -------------------------------------------------------------------------
+	// Route-interceptor operations
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Entry point for {@see RouteFormResumeInterceptor}.
+	 *
+	 * Dispatches the incoming resume action to the appropriate handler, running
+	 * the full multi-step session lifecycle in the context of the MATCHED route
+	 * rather than standalone `/form/:provider/...` endpoints.
+	 *
+	 * @param class-string<ResumableFormProviderInterface> $providerClass the resolved provider FQCN
+	 * @param string                                       $action        one of the ACTION_* constants
+	 *
+	 * @throws BadRequestException when $action is not a known action token
+	 */
+	public function handleFromRealContext(string $providerClass, string $action): Response
+	{
+		$ri         = $this->getContext()->getRouteInfo();
+		$route_name = $ri->route()->getOptions()->getName();
+		$provider   = $providerClass::instance($ri);
+		$identity   = ['route_name' => $route_name, 'provider_class' => $providerClass];
+
+		return match ($action) {
+			self::ACTION_INIT     => $this->doInit($provider, $identity, $ri),
+			self::ACTION_STATE    => $this->doState($provider, $identity, $ri),
+			self::ACTION_NEXT     => $this->doNext($provider, $identity, $ri),
+			self::ACTION_BACK     => $this->doBack($provider, $identity, $ri),
+			self::ACTION_CANCEL   => $this->doCancel($provider, $identity, $ri),
+			self::ACTION_EVALUATE => $this->doEvaluate($provider, $identity, $ri),
+			default               => throw new BadRequestException('OZ_FORM_RESUME_INVALID_ACTION', ['action' => $action]),
+		};
+	}
+
+	// -------------------------------------------------------------------------
+	// Static helper for downstream consumption
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Validates that a session identified by `$resume_ref` belongs to the correct
+	 * provider and caller, and that the sequence has been fully completed.
+	 *
+	 * Intended for downstream route handlers that require the multi-step form to have
+	 * been fully filled before executing a real action.
+	 *
+	 * The session is NOT deleted by this method — TTL handles cleanup.
+	 *
+	 * @param string  $provider_name The expected provider name (key from oz.forms.providers)
+	 * @param string  $resume_ref    The session reference returned by `POST /init`
+	 * @param Context $context       Current request context (used for ownership check)
+	 *
+	 * @return FormData Accumulated validated data from all completed steps
+	 *
+	 * @throws NotFoundException          when the session does not exist or has expired
+	 * @throws ForbiddenException         when not done, wrong provider, or scope mismatch
+	 * @throws FormResumeExpiredException when the session has passed its deadline
+	 */
+	public static function requireCompletion(
+		string $provider_name,
+		string $resume_ref,
+		Context $context
+	): FormData {
+		$session = self::loadRawSession($resume_ref);
+
+		if (null === $session) {
+			throw new NotFoundException('OZ_FORM_SESSION_NOT_FOUND', ['ref' => $resume_ref]);
+		}
+
+		if ($session['provider_name'] !== $provider_name) {
+			throw new ForbiddenException('OZ_FORM_SESSION_PROVIDER_MISMATCH');
+		}
+
+		// Verify the provider is still registered (guards against stale sessions after config changes).
+		$class = Settings::get('oz.forms.providers', $provider_name);
+
+		if (!$class || !\is_a($class, ResumableFormProviderInterface::class, true)) {
+			throw new NotFoundException('OZ_FORM_PROVIDER_NOT_FOUND', ['provider' => $provider_name]);
+		}
+
+		// The scope was stored during doInit() so we never need to instantiate the provider here.
+		$scope    = RequestScope::from($session['scope_name']);
+		$scope_id = $scope->resolveId($context);
+
+		if ($session['scope_id'] !== $scope_id) {
+			throw new ForbiddenException('OZ_FORM_SESSION_ACCESS_DENIED');
+		}
+
+		$expires_at = $session['expires_at'] ?? null;
+		if (null !== $expires_at && \time() > $expires_at) {
+			throw new FormResumeExpiredException();
+		}
+
+		if (FormResumePhase::DONE->value !== $session['phase']) {
+			throw new ForbiddenException('OZ_FORM_SESSION_NOT_DONE', ['ref' => $resume_ref]);
+		}
+
+		return new FormData($session['cleaned_form'] ?? []);
+	}
+
+	/**
+	 * Validates that a route-interceptor session identified by `$resume_ref` belongs to the
+	 * current route and caller, and that the sequence has been fully completed.
+	 *
+	 * Intended for downstream route handlers that require the multi-step form (managed via
+	 * {@see RouteFormResumeInterceptor}) to have been fully filled before
+	 * executing a real action.
+	 *
+	 * The session is NOT deleted by this method — TTL handles cleanup.
+	 *
+	 * @param string    $resume_ref the session reference returned by the `init` action
+	 * @param RouteInfo $ri         current RouteInfo (used for route and scope validation)
+	 *
+	 * @return FormData accumulated validated data from all completed steps
+	 *
+	 * @throws NotFoundException          when the session does not exist or has expired
+	 * @throws ForbiddenException         when not done, wrong route, or scope mismatch
+	 * @throws FormResumeExpiredException when the session has passed its deadline
+	 */
+	public static function requireRouteCompletion(string $resume_ref, RouteInfo $ri): FormData
+	{
+		$route_name = $ri->route()->getOptions()->getName();
+		$session    = self::loadRawSession($resume_ref);
+
+		if (null === $session) {
+			throw new NotFoundException('OZ_FORM_SESSION_NOT_FOUND', ['ref' => $resume_ref]);
+		}
+
+		if (($session['route_name'] ?? null) !== $route_name) {
+			throw new ForbiddenException('OZ_FORM_SESSION_PROVIDER_MISMATCH');
+		}
+
+		$provider_class = $session['provider_class'] ?? null;
+
+		if (!$provider_class || !\is_a($provider_class, ResumableFormProviderInterface::class, true)) {
+			throw new ForbiddenException('OZ_FORM_SESSION_PROVIDER_MISMATCH');
+		}
+
+		// The scope was stored during doInit() so we never need to instantiate the provider here.
+		$scope    = RequestScope::from($session['scope_name']);
+		$scope_id = $scope->resolveId($ri->getContext());
+
+		if ($session['scope_id'] !== $scope_id) {
+			throw new ForbiddenException('OZ_FORM_SESSION_ACCESS_DENIED');
+		}
+
+		$expires_at = $session['expires_at'] ?? null;
+		if (null !== $expires_at && \time() > $expires_at) {
+			throw new FormResumeExpiredException();
+		}
+
+		if (FormResumePhase::DONE->value !== $session['phase']) {
+			throw new ForbiddenException('OZ_FORM_SESSION_NOT_DONE', ['ref' => $resume_ref]);
+		}
+
+		return new FormData($session['cleaned_form'] ?? []);
+	}
+
+	// -------------------------------------------------------------------------
+	// Unified action implementations
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Creates a new form session.
+	 *
+	 * @param array $identity_fields fields merged into the session record for ownership verification
+	 *                               standalone: `['provider_name' => $name]`
+	 *                               route-context: `['route_name' => $name, 'provider_class' => $class]`
+	 *
+	 * @throws FormResumeNotYetActiveException when `notBefore()` is in the future
+	 * @throws InvalidFormException            when init form validation fails
+	 */
+	private function doInit(
+		ResumableFormProviderInterface $provider,
+		array $identity_fields,
+		RouteInfo $ri
+	): Response {
+		$context    = $ri->getContext();
 		$not_before = $provider->notBefore();
+
 		if (null !== $not_before && new DateTimeImmutable() < $not_before) {
 			throw new FormResumeNotYetActiveException();
 		}
 
 		$scope_id     = $provider->resumeScope()->resolveId($context);
 		$cleaned_form = new FormData();
-		$init_form    = $class::initForm();
+		$init_form    = $provider::initForm();
 
 		if (null !== $init_form) {
 			$unsafe_fd    = $context->getRequest()->getUnsafeFormData();
@@ -164,48 +445,42 @@ final class ResumableFormService extends Service
 
 		$resume_ref = Keys::id32('form.session');
 
-		self::writeSession($resume_ref, [
-			'provider_name'  => $provider_name,
+		self::writeSession($resume_ref, \array_merge($identity_fields, [
 			'phase'          => $phase->value,
 			'cleaned_form'   => $cleaned_form->toArray(),
 			'progress_state' => $progress->toArray(),
 			'scope_id'       => $scope_id,
+			'scope_name'     => $provider->resumeScope()->name,
 			'created_at'     => \time(),
 			'expires_at'     => $expires_at,
 			'history'        => [],
-		], $provider->resumeTTL());
+		]), $provider->resumeTTL());
 
 		return $this->respondWith($resume_ref, $next_form, FormResumePhase::DONE === $phase, $provider, $progress, $expires_at);
 	}
 
 	/**
-	 * GET /form/:provider/state.
-	 *
-	 * Returns the current form to fill without advancing the session.
+	 * Returns the current step form and session state.
 	 *
 	 * @throws NotFoundException          when the session is not found
 	 * @throws ForbiddenException         when the caller does not own the session
 	 * @throws FormResumeExpiredException when the session has passed its deadline
 	 */
-	public function getState(RouteInfo $ri): Response
-	{
-		$provider_name = $ri->param('provider');
-		$resume_ref    = $this->readResumeRef($ri);
-		$context       = $ri->getContext();
-
-		[$session, $provider, $cleaned_form, $progress] = $this->loadSession($ri, $resume_ref, $provider_name, $context);
-
-		$current_form = $this->deriveCurrentForm($session['phase'], $provider, $cleaned_form, $progress);
-		$expires_at   = $session['expires_at'] ?? null;
+	private function doState(
+		ResumableFormProviderInterface $provider,
+		array $identity_fields,
+		RouteInfo $ri
+	): Response {
+		$resume_ref                          = $this->readResumeRef($ri);
+		[$session, $cleaned_form, $progress] = $this->doLoadSession($ri, $resume_ref, $identity_fields, $provider);
+		$current_form                        = $this->deriveCurrentForm($session['phase'], $provider, $cleaned_form, $progress);
+		$expires_at                          = $session['expires_at'] ?? null;
 
 		return $this->respondWith($resume_ref, $current_form, FormResumePhase::DONE->value === $session['phase'], $provider, $progress, $expires_at);
 	}
 
 	/**
-	 * POST /form/:provider/next.
-	 *
-	 * Validates the submitted step data, merges it into the accumulated
-	 * cleaned form, and advances the session to the next step.
+	 * Validates the current step and advances to the next.
 	 *
 	 * @throws BadRequestException        when the session is already complete
 	 * @throws NotFoundException          when the session is not found
@@ -213,20 +488,20 @@ final class ResumableFormService extends Service
 	 * @throws FormResumeExpiredException when the session has passed its deadline
 	 * @throws InvalidFormException       when step validation fails
 	 */
-	public function nextStep(RouteInfo $ri): Response
-	{
-		$provider_name = $ri->param('provider');
-		$resume_ref    = $this->readResumeRef($ri);
-		$context       = $ri->getContext();
-
-		[$session, $provider, $cleaned_form, $progress] = $this->loadSession($ri, $resume_ref, $provider_name, $context);
+	private function doNext(
+		ResumableFormProviderInterface $provider,
+		array $identity_fields,
+		RouteInfo $ri
+	): Response {
+		$resume_ref                          = $this->readResumeRef($ri);
+		[$session, $cleaned_form, $progress] = $this->doLoadSession($ri, $resume_ref, $identity_fields, $provider);
 
 		if (FormResumePhase::DONE->value === $session['phase']) {
 			throw new BadRequestException('OZ_FORM_SESSION_ALREADY_DONE');
 		}
 
 		$current_form = $this->deriveCurrentForm($session['phase'], $provider, $cleaned_form, $progress);
-		$unsafe_fd    = $context->getRequest()->getUnsafeFormData();
+		$unsafe_fd    = $ri->getContext()->getRequest()->getUnsafeFormData();
 		$validated    = $current_form->validate($unsafe_fd, $cleaned_form);
 
 		$history    = $session['history'] ?? [];
@@ -234,7 +509,7 @@ final class ResumableFormService extends Service
 
 		if ($provider->isReversible()) {
 			// Snapshot the state BEFORE merging validated data and advancing.
-			// This allows backStep() to restore to the exact state which produced the
+			// This allows doBack() to restore to the exact state which produced the
 			// current form - so the user sees the same form again after going back.
 			$history[] = [
 				'cleaned_form'   => $cleaned_form->toArray(),
@@ -265,23 +540,20 @@ final class ResumableFormService extends Service
 	}
 
 	/**
-	 * POST /form/:provider/back.
-	 *
-	 * Reverts the session to the previous step by restoring the last history
-	 * snapshot. Only available on providers where `isReversible()` returns true.
+	 * Reverts the session to the previous step.
 	 *
 	 * @throws BadRequestException        when the provider is not reversible or there is no history
 	 * @throws NotFoundException          when the session is not found
 	 * @throws ForbiddenException         when the caller does not own the session
 	 * @throws FormResumeExpiredException when the session has passed its deadline
 	 */
-	public function backStep(RouteInfo $ri): Response
-	{
-		$provider_name = $ri->param('provider');
-		$resume_ref    = $this->readResumeRef($ri);
-		$context       = $ri->getContext();
-
-		[$session, $provider] = $this->loadSession($ri, $resume_ref, $provider_name, $context);
+	private function doBack(
+		ResumableFormProviderInterface $provider,
+		array $identity_fields,
+		RouteInfo $ri
+	): Response {
+		$resume_ref = $this->readResumeRef($ri);
+		[$session]  = $this->doLoadSession($ri, $resume_ref, $identity_fields, $provider);
 
 		if (!$provider->isReversible()) {
 			throw new BadRequestException('OZ_FORM_SESSION_NOT_REVERSIBLE');
@@ -294,11 +566,11 @@ final class ResumableFormService extends Service
 			throw new BadRequestException('OZ_FORM_SESSION_NO_HISTORY');
 		}
 
-		$prev_snapshot       = \array_pop($history);
-		$prev_cleaned_form   = new FormData($prev_snapshot['cleaned_form'] ?? []);
-		$prev_progress       = new FormResumeProgress($prev_snapshot['progress_state'] ?? []);
+		$prev_snapshot     = \array_pop($history);
+		$prev_cleaned_form = new FormData($prev_snapshot['cleaned_form'] ?? []);
+		$prev_progress     = new FormResumeProgress($prev_snapshot['progress_state'] ?? []);
 
-		// Re-derive the form from the restored state (always STEPS — back is never from DONE).
+		// Re-derive the form from the restored state (always STEPS -- back is never from DONE).
 		$current_form = $provider->nextStep($prev_cleaned_form, $prev_progress);
 
 		self::writeSession($resume_ref, \array_merge($session, [
@@ -312,29 +584,51 @@ final class ResumableFormService extends Service
 	}
 
 	/**
-	 * POST /form/:provider/evaluate.
-	 *
-	 * Server-side evaluation of all conditions the client cannot resolve locally.
-	 * Merges the current raw client input with the accumulated session data and
-	 * evaluates server-only field visibility and expect rules.
+	 * Discards the session.
 	 *
 	 * @throws NotFoundException          when the session is not found
 	 * @throws ForbiddenException         when the caller does not own the session
-	 * @throws BadRequestException        when the session is complete
 	 * @throws FormResumeExpiredException when the session has passed its deadline
 	 */
-	public function evaluateCurrent(RouteInfo $ri): Response
-	{
-		$provider_name = $ri->param('provider');
-		$resume_ref    = $this->readResumeRef($ri);
-		$context       = $ri->getContext();
+	private function doCancel(
+		ResumableFormProviderInterface $provider,
+		array $identity_fields,
+		RouteInfo $ri
+	): Response {
+		$resume_ref = $this->readResumeRef($ri);
 
-		[$session, $provider, $cleaned_form, $progress] = $this->loadSession($ri, $resume_ref, $provider_name, $context);
+		$this->doLoadSession($ri, $resume_ref, $identity_fields, $provider);
+
+		CacheManager::persistent(self::SESSION_CACHE_NAMESPACE)->delete($resume_ref);
+
+		$this->json()
+			->setDone()
+			->setData(['done' => true]);
+
+		return $this->respond();
+	}
+
+	/**
+	 * Evaluates server-only field visibility and expect rules for the current step.
+	 *
+	 * @throws BadRequestException        when the session is complete
+	 * @throws NotFoundException          when the session is not found
+	 * @throws ForbiddenException         when the caller does not own the session
+	 * @throws FormResumeExpiredException when the session has passed its deadline
+	 */
+	private function doEvaluate(
+		ResumableFormProviderInterface $provider,
+		array $identity_fields,
+		RouteInfo $ri
+	): Response {
+		$resume_ref                          = $this->readResumeRef($ri);
+		[$session, $cleaned_form, $progress] = $this->doLoadSession($ri, $resume_ref, $identity_fields, $provider);
 
 		if (FormResumePhase::DONE->value === $session['phase']) {
 			throw new BadRequestException('OZ_FORM_SESSION_ALREADY_DONE');
 		}
 
+		$context      = $ri->getContext();
 		$current_form = $this->deriveCurrentForm($session['phase'], $provider, $cleaned_form, $progress);
 
 		// Merge: accumulated cleaned values (validated) + current raw client input.
@@ -382,101 +676,6 @@ final class ResumableFormService extends Service
 		return $this->respond();
 	}
 
-	/**
-	 * POST /form/:provider/cancel.
-	 *
-	 * Discards the session. The resume_ref becomes invalid immediately.
-	 *
-	 * @throws NotFoundException          when the session is not found
-	 * @throws ForbiddenException         when the caller does not own the session
-	 * @throws FormResumeExpiredException when the session has passed its deadline
-	 */
-	public function cancelSession(RouteInfo $ri): Response
-	{
-		$provider_name = $ri->param('provider');
-		$resume_ref    = $this->readResumeRef($ri);
-		$context       = $ri->getContext();
-
-		$this->loadSession($ri, $resume_ref, $provider_name, $context);
-
-		CacheManager::persistent(self::SESSION_CACHE_NAMESPACE)->delete($resume_ref);
-
-		$this->json()
-			->setDone()
-			->setData(['done' => true]);
-
-		return $this->respond();
-	}
-
-	// -------------------------------------------------------------------------
-	// Static helper for downstream consumption
-	// -------------------------------------------------------------------------
-
-	/**
-	 * Validates that a session identified by `$resume_ref` belongs to the correct
-	 * provider and caller, and that the sequence has been fully completed.
-	 *
-	 * Intended for downstream route handlers that require the multi-step form to have
-	 * been fully filled before executing a real action.
-	 *
-	 * The session is NOT deleted by this method — TTL handles cleanup.
-	 *
-	 * @param string  $provider_name The expected provider name (key from oz.forms.providers)
-	 * @param string  $resume_ref    The session reference returned by `POST /init`
-	 * @param Context $context       Current request context (used for ownership check)
-	 *
-	 * @return FormData Accumulated validated data from all completed steps
-	 *
-	 * @throws NotFoundException          when the session does not exist or has expired
-	 * @throws ForbiddenException         when not done, wrong provider, or scope mismatch
-	 * @throws FormResumeExpiredException when the session has passed its deadline
-	 */
-	public static function requireCompletion(
-		string $provider_name,
-		string $resume_ref,
-		Context $context
-	): FormData {
-		$session = self::loadRawSession($resume_ref);
-
-		if (null === $session) {
-			throw new NotFoundException('OZ_FORM_SESSION_NOT_FOUND', ['ref' => $resume_ref]);
-		}
-
-		if ($session['provider_name'] !== $provider_name) {
-			throw new ForbiddenException('OZ_FORM_SESSION_PROVIDER_MISMATCH');
-		}
-
-		// Derive scope_id from provider settings for ownership check.
-		$class = Settings::get('oz.forms.providers', $provider_name);
-
-		if (!$class || !\is_a($class, ResumableFormProviderInterface::class, true)) {
-			throw new NotFoundException('OZ_FORM_PROVIDER_NOT_FOUND', ['provider' => $provider_name]);
-		}
-
-		// We need a provider instance for resumeScope() — use a dummy RouteInfo-less instance.
-		// requireCompletion() is called outside a provider handler, so we build a temp instance
-		// from the class alone (relies on AbstractResumableFormProvider::instance() having
-		// a fallback when $ri is null).
-		/** @var ResumableFormProviderInterface $class */
-		$provider = new $class();
-		$scope_id = $provider->resumeScope()->resolveId($context);
-
-		if ($session['scope_id'] !== $scope_id) {
-			throw new ForbiddenException('OZ_FORM_SESSION_ACCESS_DENIED');
-		}
-
-		$expires_at = $session['expires_at'] ?? null;
-		if (null !== $expires_at && \time() > $expires_at) {
-			throw new FormResumeExpiredException();
-		}
-
-		if (FormResumePhase::DONE->value !== $session['phase']) {
-			throw new ForbiddenException('OZ_FORM_SESSION_NOT_DONE', ['ref' => $resume_ref]);
-		}
-
-		return new FormData($session['cleaned_form'] ?? []);
-	}
-
 	// -------------------------------------------------------------------------
 	// Internal helpers
 	// -------------------------------------------------------------------------
@@ -521,19 +720,23 @@ final class ResumableFormService extends Service
 	}
 
 	/**
-	 * Loads and validates a session, verifying ownership, provider match, and expiry.
+	 * Loads and validates a session, verifying identity, scope ownership, and expiry.
 	 *
-	 * @return array{0: array, 1: ResumableFormProviderInterface, 2: FormData, 3: FormResumeProgress}
+	 * @param array $identity_fields session fields to match for ownership verification
+	 *                               (e.g. `['provider_name' => $name]` or
+	 *                               `['route_name' => $name, 'provider_class' => $class]`)
+	 *
+	 * @return array{0: array, 1: FormData, 2: FormResumeProgress}
 	 *
 	 * @throws NotFoundException          when the session is not found
-	 * @throws ForbiddenException         when ownership or provider check fails
+	 * @throws ForbiddenException         when identity or scope ownership check fails
 	 * @throws FormResumeExpiredException when the session has passed its deadline
 	 */
-	private function loadSession(
+	private function doLoadSession(
 		RouteInfo $ri,
 		string $resume_ref,
-		string $provider_name,
-		Context $context
+		array $identity_fields,
+		ResumableFormProviderInterface $provider
 	): array {
 		$session = self::loadRawSession($resume_ref);
 
@@ -541,13 +744,13 @@ final class ResumableFormService extends Service
 			throw new NotFoundException('OZ_FORM_SESSION_NOT_FOUND', ['ref' => $resume_ref]);
 		}
 
-		if ($session['provider_name'] !== $provider_name) {
-			throw new ForbiddenException('OZ_FORM_SESSION_PROVIDER_MISMATCH');
+		foreach ($identity_fields as $key => $value) {
+			if (($session[$key] ?? null) !== $value) {
+				throw new ForbiddenException('OZ_FORM_SESSION_PROVIDER_MISMATCH');
+			}
 		}
 
-		[, $provider] = $this->resolveProvider($provider_name, $ri);
-
-		$scope_id = $provider->resumeScope()->resolveId($context);
+		$scope_id = $provider->resumeScope()->resolveId($ri->getContext());
 
 		if ($session['scope_id'] !== $scope_id) {
 			throw new ForbiddenException('OZ_FORM_SESSION_ACCESS_DENIED');
@@ -561,7 +764,7 @@ final class ResumableFormService extends Service
 		$cleaned_form = new FormData($session['cleaned_form'] ?? []);
 		$progress     = new FormResumeProgress($session['progress_state'] ?? []);
 
-		return [$session, $provider, $cleaned_form, $progress];
+		return [$session, $cleaned_form, $progress];
 	}
 
 	/**

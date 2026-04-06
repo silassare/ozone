@@ -19,7 +19,6 @@ use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormResumeProgress;
 use OZONE\Core\Http\Enums\RequestScope;
 use PHPUnit\Framework\TestCase;
-use ReflectionProperty;
 
 /**
  * Class ResumableFormProviderTest.
@@ -47,15 +46,6 @@ final class ResumableFormProviderTest extends TestCase
 	public function testDefaultInitFormIsNull(): void
 	{
 		self::assertNull(SimpleTestProvider::initForm());
-	}
-
-	public function testDirectConstructionLeavesRiNull(): void
-	{
-		$provider = new SimpleTestProvider();
-
-		$ri_prop = new ReflectionProperty(AbstractResumableFormProvider::class, 'ri');
-
-		self::assertNull($ri_prop->getValue($provider));
 	}
 
 	public function testDefaultResumeTTLIs3600(): void

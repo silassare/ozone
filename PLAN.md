@@ -862,3 +862,128 @@ After all code changes are applied, do a targeted audit and fix any outdated ref
 - `register(` on `AbstractResumableFormProvider` (method removed)
 - `nextForm(` (renamed - verify all gone)
 - `:ref` URL path segment references (no longer in routes)
+
+---
+
+## Phase: Route-Interceptor Resume (RouteFormResumeInterceptor)
+
+### Status: DONE
+
+### Overview
+
+Instead of routing all form-resume requests through standalone `/form/:provider/...` endpoints,
+the interceptor approach matches resume requests on the **real** route, so all route auth, guards,
+and middlewares run before any resume logic fires.
+
+### Components
+
+#### `oz/Router/RouteFormResumeInterceptor.php` (NEW)
+
+- Always injected via `RouteSharedOptions::getInterceptors()` at priority 1 (before discovery, priority 0).
+- `shouldIntercept()`: returns true when the request carries `X-OZONE-Form-Resume: ?1` AND the
+  matched route has resume support (`hasResumeSupport()` = true).
+- `handle()`: reads action from `X-OZONE-Form-Resume-Action` header (default: `init`), resolves
+  provider class from route options (`resolveProviderClass()`) falling back to
+  `RouteResumableFormProvider::class`, and delegates to `ResumableFormService::handleFromRealContext()`.
+
+#### `oz/Router/RouteResumableFormProvider.php` (REFACTORED)
+
+Redesigned as the built-in fallback provider for routes that declare `->resumable()` without
+an explicit provider class. It no longer requires a `route_name` init form.
+
+- `initForm()` -> `null` (no init step; the route is already known from the URL)
+- `nextStep(0)` -> `$this->ri->route()->getOptions()->getFormBundle($this->ri)` (dynamic bundle)
+- `nextStep(1+)` -> `null` (done)
+- `resumeScope()` -> from `$this->ri->route()->getOptions()->resolveResumeConfig()[0]`
+- `resumeTTL()` -> from `$this->ri->route()->getOptions()->resolveResumeConfig()[1]`
+
+`PROVIDER_NAME` removed (no longer registered as a standalone named provider).
+
+#### `oz/oz_settings/oz.forms.providers.php` (UPDATED)
+
+`RouteResumableFormProvider` removed from the registry. It is only used internally by the
+interceptor, not as a named standalone provider.
+
+#### `oz/Forms/Services/ResumableFormService.php` (UPDATED)
+
+New public constants: `ACTION_INIT`, `ACTION_STATE`, `ACTION_NEXT`, `ACTION_BACK`,
+`ACTION_CANCEL`, `ACTION_EVALUATE`.
+
+New methods:
+
+- `public function handleFromRealContext(string $providerClass, string $action): Response`
+  Entry point for the interceptor. Dispatches to one of the 6 `*ForRoute` private methods.
+- `public static function requireRouteCompletion(string $resume_ref, RouteInfo $ri): FormData`
+  Validates a completed interceptor session; validates against `route_name` + `provider_class`
+  stored in the session (not against a provider registry name).
+
+New private methods: `initSessionForRoute`, `getStateForRoute`, `nextStepForRoute`,
+`backStepForRoute`, `cancelSessionForRoute`, `evaluateCurrentForRoute`, `loadRouteSession`.
+
+**Session structure for interceptor sessions** (stored in persistent cache):
+
+```
+[
+  'route_name'     => string  // route's full name — used as owner key on load
+  'provider_class' => string  // FQCN — used to reinstantiate provider in requireRouteCompletion
+  'scope_id'       => mixed   // ownership token derived from provider->resumeScope()
+  'phase'          => string  // FormResumePhase enum value
+  'cleaned_form'   => array
+  'progress_state' => array
+  'created_at'     => int
+  'expires_at'     => ?int
+  'history'        => array   // non-empty only when provider->isReversible() = true
+]
+```
+
+#### `oz/oz_settings/oz.request.php` (UPDATED)
+
+New setting:
+
+- `OZ_FORM_RESUME_ACTION_HEADER_NAME` = `'X-OZONE-Form-Resume-Action'`
+  Carried by the `X-OZONE-Form-Resume-Action` CORS-exposed header; values: init/state/next/back/cancel/evaluate.
+
+#### `oz/App/Context.php` (UPDATED)
+
+`OZ_FORM_RESUME_ACTION_HEADER_NAME` added to the CORS-allowed headers list.
+
+#### `oz/Router/RouteSharedOptions.php` (UPDATED)
+
+`getInterceptors()` now always injects both `RouteFormDiscoveryInterceptor` (priority 0) AND
+`RouteFormResumeInterceptor` (priority 1) as base entries.
+
+### Route-interceptor session lifecycle
+
+```
+Client sends:  POST /my-route  +  X-OZONE-Form-Resume: ?1  +  X-OZONE-Form-Resume-Action: init
+Server:        routes to POST /my-route  ->  auth/guards/middlewares  ->  resume interceptor fires
+               initSessionForRoute():   creates session, returns step-0 form + resume_ref
+
+Client sends:  POST /my-route  +  X-OZONE-Form-Resume: ?1  +  X-OZONE-Form-Resume-Action: next
+               + X-OZONE-Form-Resume-Ref: <resume_ref>  +  body: step-0 form data
+Server:        nextStepForRoute(): validates step-0 data, returns done: true (single-step provider)
+
+Client sends:  POST /my-route  (no resume header)  +  X-OZONE-Form-Resume-Ref: <resume_ref>
+               Route handler runs normally; calls requireRouteCompletion($resume_ref, $ri)
+               to retrieve accumulated FormData.
+```
+
+### Usage example
+
+```php
+$router->post('/checkout', static fn (RouteInfo $ri) => (new CheckoutService($ri))->checkout())
+    ->name('checkout')
+    ->form(new CheckoutForm())
+    ->resumable(RequestScope::STATE)
+    ->withAuthenticatedUser();
+
+// In CheckoutService::checkout():
+// When X-OZONE-Form-Resume header is present, RouteFormResumeInterceptor handles the session.
+// When resume is done, the real handler is called:
+public function checkout(): Response
+{
+    $resume_ref  = $this->ri->getContext()->getRequest()->getHeaderLine('X-OZONE-Form-Resume-Ref');
+    $form_data   = ResumableFormService::requireRouteCompletion($resume_ref, $this->ri);
+    // ... process $form_data ...
+}
+```

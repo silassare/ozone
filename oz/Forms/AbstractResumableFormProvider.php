@@ -62,7 +62,7 @@ abstract class AbstractResumableFormProvider implements ResumableFormProviderInt
 	 * that need access to the context, request, or auth state use `$this->ri`.
 	 * Providers that do not need it may ignore this property.
 	 */
-	protected ?RouteInfo $ri = null;
+	protected RouteInfo $ri;
 
 	/**
 	 * {@inheritDoc}

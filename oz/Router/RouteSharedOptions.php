@@ -911,13 +911,20 @@ class RouteSharedOptions
 	 */
 	public function getInterceptors(): array
 	{
-		$interceptors = $this->parent?->getInterceptors() ?? [];
-		$rd           = RouteFormDiscoveryInterceptor::getName();
+		$interceptors  = $this->parent?->getInterceptors() ?? [];
+		$rfd           = RouteFormDiscoveryInterceptor::getName();
+		$rfr           = RouteFormResumeInterceptor::getName();
 
 		return \array_merge(
 			[
-				// we make sure that the form discovery interceptor is always present and runs after all other interceptors, even if not explicitly added, because it's responsible for populating the RouteInfo with the resolved form which is needed by any interceptor that needs to access the form or its data
-				$rd => RouteFormDiscoveryInterceptor::class,
+				// Always present: discovery interceptor runs last (priority 0) so any
+				// higher-priority interceptor (including resume, priority 1) can fire first.
+				// Discovery is responsible for populating the resolved form on RouteInfo.
+				$rfd => RouteFormDiscoveryInterceptor::class,
+				// Always present: resume interceptor fires before discovery (priority 1)
+				// and only activates when the route has resume support and the request
+				// carries the form-resume header.
+				$rfr => RouteFormResumeInterceptor::class,
 			],
 			$interceptors,
 			$this->interceptors
@@ -960,7 +967,7 @@ class RouteSharedOptions
 	 *
 	 * @return null|array{0: RequestScope, 1: int}
 	 */
-	protected function resolveResumeConfig(): ?array
+	public function resolveResumeConfig(): ?array
 	{
 		if (null !== $this->route_resume_scope) {
 			return [$this->route_resume_scope, $this->route_resume_ttl];

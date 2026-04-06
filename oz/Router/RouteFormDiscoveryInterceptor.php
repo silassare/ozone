@@ -63,16 +63,12 @@ final class RouteFormDiscoveryInterceptor implements RouteInterceptorInterface
 	#[Override]
 	public function handle(): Response
 	{
-		$handler  = Service::createHandler(static function (Service $svc) {
-			$ri      = $svc->getContext()->getRouteInfo();
-			$bundle  = $ri->route()->getOptions()->getFormBundle($ri);
+		$bundle  = $this->ri->route()->getOptions()->getFormBundle($this->ri);
 
-			$svc->json()->setDone()->setForm($bundle);
+		$svc = new class($this->ri) extends Service {};
+		$svc->json()->setDone()->setForm($bundle);
 
-			$svc->respond();
-		});
-
-		return $handler($this->ri);
+		return $svc->respond();
 	}
 
 	/**
