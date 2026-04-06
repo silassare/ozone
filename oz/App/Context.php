@@ -915,6 +915,7 @@ final class Context
 
 		$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_RESUME_HEADER_NAME'));
 		$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_RESUME_REF_HEADER_NAME'));
+		$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_RESUME_ACTION_HEADER_NAME'));
 
 		$bundle = \array_merge($declared, $provided);
 

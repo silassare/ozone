@@ -90,4 +90,12 @@ return [
 	 * The value of the header should be the resume reference provided by the server in a previous response.
 	 */
 	'OZ_FORM_RESUME_REF_HEADER_NAME' => 'X-OZONE-Form-Resume-Ref',
+
+	/**
+	 * Name of the header that carries the form resume action.
+	 *
+	 * Valid values: init, state, next, back, cancel, evaluate.
+	 * When absent the action defaults to "init".
+	 */
+	'OZ_FORM_RESUME_ACTION_HEADER_NAME' => 'X-OZONE-Form-Resume-Action',
 ];
