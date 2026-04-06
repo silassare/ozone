@@ -242,11 +242,11 @@ final class RouteInfo
 			if (null !== $provider_class) {
 				// Route declared with a ResumableFormProviderInterface provider.
 				// Read the resume reference from the request header and inject the completed FormData.
-				$header_name = Settings::get('oz.request', 'OZ_FORM_RESUMABLE_REF_HEADER_NAME');
+				$header_name = Settings::get('oz.request', 'OZ_FORM_RESUME_REF_HEADER_NAME');
 				$resume_ref  = $this->context->getRequest()->getHeaderLine($header_name);
 
 				if ('' === $resume_ref) {
-					throw new BadRequestException('OZ_FORM_RESUME_REF_MISSING');
+					throw new BadRequestException('OZ_FORM_SESSION_REF_MISSING');
 				}
 
 				$clean_fd = ResumableFormService::requireCompletion(

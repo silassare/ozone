@@ -44,7 +44,10 @@ class RouteSharedOptions
 	public const PRIORITY_RUN_LAST    = -1;
 	public const PRIORITY_RUN_DEFAULT = 0;
 
-	protected readonly ?RouteGroup $parent;
+	/**
+	 * @var null|RouteSharedOptions
+	 */
+	protected readonly ?RouteSharedOptions $parent;
 	protected readonly string $path;
 	protected int $priority = self::PRIORITY_RUN_DEFAULT;
 
@@ -91,12 +94,12 @@ class RouteSharedOptions
 	/**
 	 * RouteSharedOptions constructor.
 	 *
-	 * @param string          $path
-	 * @param null|RouteGroup $parent
+	 * @param string                  $path
+	 * @param null|RouteSharedOptions $parent
 	 */
 	protected function __construct(
 		string $path,
-		?RouteGroup $parent = null
+		?self $parent = null
 	) {
 		$this->path   = $path;
 		$this->parent = $parent;
@@ -206,7 +209,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Adds a guard that check if at least one of the authorization providers authorized this request.
+	 * Adds a guard that checks if at least one of the authorization providers authorized this request.
 	 *
 	 * @return $this
 	 */
@@ -223,7 +226,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Adds a guard that check if we have an authenticated user.
+	 * Adds a guard that checks if we have an authenticated user.
 	 *
 	 * > Allowed user type may be empty.
 	 *
@@ -240,7 +243,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Adds a guard that check that user has the given access rights.
+	 * Adds a guard that checks that the user has the given access rights.
 	 *
 	 * @return $this
 	 */
@@ -257,7 +260,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Adds a guard that check user has the given access rights or roles.
+	 * Adds a guard that checks that the user has the given access rights or roles.
 	 *
 	 * @param string[] $rights
 	 * @param string[] $roles
@@ -278,7 +281,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Adds a guard that check user has one of the given roles.
+	 * Adds a guard that checks that the user has one of the given roles.
 	 *
 	 * @return $this
 	 */
@@ -287,15 +290,16 @@ class RouteSharedOptions
 		$roles = self::atLeasOne($roles, 'role');
 
 		$this->guard_descriptors[] = [
-			'type'  => 'role',
-			'roles' => \array_map(static fn ($r) => $r->value, $roles),
+			'type'   => 'role',
+			'roles'  => \array_map(static fn ($r) => $r->value, $roles),
+			'strict' => true,
 		];
 
 		return $this->guard(static fn () => new UserRoleRouteGuard($roles));
 	}
 
 	/**
-	 * Adds a guard that check user has one of the given roles or is admin.
+	 * Adds a guard that checks that the user has one of the given roles or is admin.
 	 *
 	 * @return $this
 	 */
@@ -304,39 +308,41 @@ class RouteSharedOptions
 		$roles = self::atLeasOne($roles, 'role');
 
 		$this->guard_descriptors[] = [
-			'type'       => 'role',
-			'roles'      => \array_map(static fn ($r) => $r->value, $roles),
-			'admin_also' => true,
+			'type'   => 'role',
+			'roles'  => \array_map(static fn ($r) => $r->value, $roles),
+			'strict' => false,
 		];
 
 		return $this->guard(static fn () => new UserRoleRouteGuard($roles, false));
 	}
 
 	/**
-	 * Adds a guard that check if user has admin or super admin role.
+	 * Adds a guard that checks if the user has admin or super admin role.
 	 *
 	 * @return $this
 	 */
 	public function withAdminRole(): static
 	{
 		$this->guard_descriptors[] = [
-			'type'  => 'role',
-			'roles' => [Role::ADMIN->value, Role::SUPER_ADMIN->value],
+			'type'   => 'role',
+			'roles'  => [Role::ADMIN->value, Role::SUPER_ADMIN->value],
+			'strict' => true,
 		];
 
 		return $this->guard(static fn () => new UserRoleRouteGuard([Role::ADMIN, Role::SUPER_ADMIN]));
 	}
 
 	/**
-	 * Adds a guard that check if user super admin role.
+	 * Adds a guard that checks if the user has super admin role.
 	 *
 	 * @return $this
 	 */
 	public function withSuperAdminRole(): static
 	{
 		$this->guard_descriptors[] = [
-			'type'  => 'role',
-			'roles' => [Role::SUPER_ADMIN->value],
+			'type'   => 'role',
+			'roles'  => [Role::SUPER_ADMIN->value],
+			'strict' => true,
 		];
 
 		return $this->guard(static fn () => new UserRoleRouteGuard([Role::SUPER_ADMIN]));
@@ -602,9 +608,9 @@ class RouteSharedOptions
 	/**
 	 * Gets parent.
 	 *
-	 * @return null|RouteGroup
+	 * @return null|RouteSharedOptions
 	 */
-	public function getParent(): ?RouteGroup
+	public function getParent(): ?self
 	{
 		return $this->parent;
 	}
@@ -919,15 +925,6 @@ class RouteSharedOptions
 		return !$is_invalid;
 	}
 
-	private static function atLeasOne(array $values, string $message): array
-	{
-		if (empty($values)) {
-			throw new InvalidArgumentException(\sprintf('At least one "%s" is required.', $message));
-		}
-
-		return $values;
-	}
-
 	/**
 	 * Concat two path.
 	 *
@@ -936,7 +933,7 @@ class RouteSharedOptions
 	 *
 	 * @return string
 	 */
-	private static function safePathConcat(string $prefix, string $path): string
+	protected static function safePathConcat(string $prefix, string $path): string
 	{
 		if (empty($prefix)) {
 			return $path;
@@ -947,5 +944,14 @@ class RouteSharedOptions
 		}
 
 		return \rtrim($prefix, '/') . '/' . \ltrim($path, '/');
+	}
+
+	private static function atLeasOne(array $values, string $message): array
+	{
+		if (empty($values)) {
+			throw new InvalidArgumentException(\sprintf('At least one "%s" is required.', $message));
+		}
+
+		return $values;
 	}
 }

@@ -383,14 +383,17 @@ final class Router
 	/**
 	 * Registers route.
 	 *
-	 * @param string|string[] $methods
-	 * @param callable|string $path
-	 * @param null|callable   $factory
+	 * @param string|string[]         $methods
+	 * @param callable|string         $path
+	 * @param null|callable           $factory
+	 * @param null|RouteSharedOptions $parent  explicit parent; defaults to the current open group when null
 	 *
 	 * @return RouteOptions
 	 */
-	public function map(array|string $methods, callable|string $path, ?callable $factory = null): RouteOptions
+	public function map(array|string $methods, callable|string $path, ?callable $factory = null, ?RouteSharedOptions $parent = null): RouteOptions
 	{
+		$parent = $parent ?? $this->current_group;
+
 		if (\is_callable($path)) {
 			$factory = $path;
 			$path    = '';
@@ -400,8 +403,8 @@ final class Router
 			$methods = '*' === $methods ? \array_keys($this->allowed_methods) : [$methods];
 		}
 
-		if (empty($path) && !$this->current_group) {
-			throw new InvalidArgumentException('Route path cannot be empty outside of a group.');
+		if (empty($path) && !$parent) {
+			throw new InvalidArgumentException('Route path cannot be empty when there is no parent.');
 		}
 
 		$methods_filtered = [];
@@ -429,7 +432,7 @@ final class Router
 			));
 		}
 
-		$route = new Route($this, $methods_filtered, $factory, $options = new RouteOptions($path, $this->current_group));
+		$route = new Route($this, $methods_filtered, $factory, $options = new RouteOptions($path, $parent));
 
 		if ($route->isDynamic()) {
 			$this->dynamic_routes[] = $route;

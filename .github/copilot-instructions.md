@@ -159,42 +159,42 @@ Source settings files (`app/settings/`, `scopes/{name}/settings/`) are the versi
 
 **All built-in settings groups** (in `oz/oz_settings/`):
 
-| File                         | Key settings                                                                                                                                                 |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `oz.config`                  | `OZ_PROJECT_NAME`, `OZ_PROJECT_NAMESPACE`, `OZ_PROJECT_APP_CLASS_NAME`, `OZ_PROJECT_PREFIX`                                                                  |
-| `oz.db`                      | `OZ_DB_RDBMS`, `OZ_DB_HOST`, `OZ_DB_PORT`, `OZ_DB_NAME`, `OZ_DB_USER`, `OZ_DB_PASS`, `OZ_DB_TABLE_PREFIX`, `OZ_DB_CHARSET`, `OZ_DB_COLLATE`                  |
-| `oz.db.schema`               | Project table definitions (Gobl schema array)                                                                                                                |
-| `oz.db.migrations`           | `OZ_MIGRATION_VERSION`                                                                                                                                       |
-| `oz.db.columns.types`        | `TypeName::NAME => TypeName::class` map                                                                                                                      |
-| `oz.boot`                    | Boot hook receiver class map                                                                                                                                 |
-| `oz.plugins`                 | Plugin class map                                                                                                                                             |
-| `oz.routes`                  | Shared route provider class map (both API + web)                                                                                                             |
-| `oz.routes.api`              | API router route provider class map                                                                                                                          |
-| `oz.routes.web`              | Web router route provider class map                                                                                                                          |
-| `oz.auth`                    | Auth code config, API key header name, auth methods for API/web                                                                                              |
-| `oz.auth.users.repositories` | User type -> `AuthUsersRepositoryInterface` class map                                                                                                        |
-| `oz.auth.providers`          | Provider name -> `AuthorizationProviderInterface` class map                                                                                                  |
-| `oz.auth.methods`            | Scheme -> method class map                                                                                                                                   |
-| `oz.middlewares`             | Named middleware registry                                                                                                                                    |
-| `oz.guards`                  | Named guard registry                                                                                                                                         |
-| `oz.guards.providers`        | Guard provider class map                                                                                                                                     |
-| `oz.gobl.crud`               | CRUD listener class map                                                                                                                                      |
-| `oz.gobl.collections`        | Entity collection class map                                                                                                                                  |
-| `oz.request`                 | CORS settings, `OZ_DEFAULT_ORIGIN`, `OZ_REAL_METHOD_HEADER_ALLOWED`                                                                                          |
-| `oz.sessions`                | `OZ_SESSION_LIFE_TIME`, `OZ_SESSION_COOKIE_NAME`                                                                                                             |
-| `oz.cookie`                  | `OZ_COOKIE_DOMAIN`, `OZ_COOKIE_PATH`, `OZ_COOKIE_LIFETIME`, `OZ_COOKIE_SAMESITE`, `OZ_COOKIE_PARTITIONED`                                                    |
-| `oz.users`                   | Age range, password/name lengths, gender list, email/phone requirements                                                                                      |
-| `oz.paths`                   | Service URL path settings (QR code, captcha, link-to routes)                                                                                                 |
-| `oz.api.doc`                 | `OZ_API_DOC_ENABLED`, `OZ_API_DOC_SHOW_ON_INDEX`                                                                                                             |
-| `oz.lang`                    | i18n source files                                                                                                                                            |
-| `oz.cache`                   | `OZ_RUNTIME_CACHE_PROVIDER`, `OZ_PERSISTENT_CACHE_PROVIDER`                                                                                                  |
-| `oz.logs`                    | `OZ_LOG_WRITER`, `OZ_LOG_MAX_FILE_SIZE`, `OZ_LOG_EXECUTION_TIME_ENABLED`                                                                                     |
-| `oz.files`                   | File URI path format with placeholders (`oz_file_id`, `oz_file_auth_key`, etc.)                                                                              |
-| `oz.files.storages`          | Storage driver map: `FS::DEFAULT_STORAGE`, `FS::PUBLIC_STORAGE`, `FS::PRIVATE_STORAGE`                                                                       |
-| `oz.senders`                 | Sender class map: `sms`, `mail`, `notification`                                                                                                              |
-| `oz.roles`                   | `OZ_ROLE_ENUM_CLASS` -> roles enum class                                                                                                                     |
-| `oz.proxies`                 | Trusted proxy configuration                                                                                                                                  |
-| `oz.redis`                   | `OZ_REDIS_ENABLED`, `OZ_REDIS_HOST`, `OZ_REDIS_PORT`, `OZ_REDIS_PASSWORD`, `OZ_REDIS_DATABASE`, `OZ_REDIS_PREFIX`, `OZ_REDIS_TIMEOUT`, `OZ_REDIS_PERSISTENT` |
+| File                         | Key settings                                                                                                                                                         |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `oz.config`                  | `OZ_PROJECT_NAME`, `OZ_PROJECT_NAMESPACE`, `OZ_PROJECT_APP_CLASS_NAME`, `OZ_PROJECT_PREFIX`                                                                          |
+| `oz.db`                      | `OZ_DB_RDBMS`, `OZ_DB_HOST`, `OZ_DB_PORT`, `OZ_DB_NAME`, `OZ_DB_USER`, `OZ_DB_PASS`, `OZ_DB_TABLE_PREFIX`, `OZ_DB_CHARSET`, `OZ_DB_COLLATE`                          |
+| `oz.db.schema`               | Project table definitions (Gobl schema array)                                                                                                                        |
+| `oz.db.migrations`           | `OZ_MIGRATION_VERSION`                                                                                                                                               |
+| `oz.db.columns.types`        | `TypeName::NAME => TypeName::class` map                                                                                                                              |
+| `oz.boot`                    | Boot hook receiver class map                                                                                                                                         |
+| `oz.plugins`                 | Plugin class map                                                                                                                                                     |
+| `oz.routes`                  | Shared route provider class map (both API + web)                                                                                                                     |
+| `oz.routes.api`              | API router route provider class map                                                                                                                                  |
+| `oz.routes.web`              | Web router route provider class map                                                                                                                                  |
+| `oz.auth`                    | Auth code config, API key header name, auth methods for API/web                                                                                                      |
+| `oz.auth.users.repositories` | User type -> `AuthUsersRepositoryInterface` class map                                                                                                                |
+| `oz.auth.providers`          | Provider name -> `AuthorizationProviderInterface` class map                                                                                                          |
+| `oz.auth.methods`            | Scheme -> method class map                                                                                                                                           |
+| `oz.middlewares`             | Named middleware registry                                                                                                                                            |
+| `oz.guards`                  | Named guard registry                                                                                                                                                 |
+| `oz.guards.providers`        | Guard provider class map                                                                                                                                             |
+| `oz.gobl.crud`               | CRUD listener class map                                                                                                                                              |
+| `oz.gobl.collections`        | Entity collection class map                                                                                                                                          |
+| `oz.request`                 | CORS settings, `OZ_DEFAULT_ORIGIN`, `OZ_REAL_METHOD_HEADER_ALLOWED`, `OZ_FORM_DISCOVERY_HEADER_NAME`, `OZ_FORM_RESUME_HEADER_NAME`, `OZ_FORM_RESUME_REF_HEADER_NAME` |
+| `oz.sessions`                | `OZ_SESSION_LIFE_TIME`, `OZ_SESSION_COOKIE_NAME`                                                                                                                     |
+| `oz.cookie`                  | `OZ_COOKIE_DOMAIN`, `OZ_COOKIE_PATH`, `OZ_COOKIE_LIFETIME`, `OZ_COOKIE_SAMESITE`, `OZ_COOKIE_PARTITIONED`                                                            |
+| `oz.users`                   | Age range, password/name lengths, gender list, email/phone requirements                                                                                              |
+| `oz.paths`                   | Service URL path settings (QR code, captcha, link-to routes)                                                                                                         |
+| `oz.api.doc`                 | `OZ_API_DOC_ENABLED`, `OZ_API_DOC_SHOW_ON_INDEX`                                                                                                                     |
+| `oz.lang`                    | i18n source files                                                                                                                                                    |
+| `oz.cache`                   | `OZ_RUNTIME_CACHE_PROVIDER`, `OZ_PERSISTENT_CACHE_PROVIDER`                                                                                                          |
+| `oz.logs`                    | `OZ_LOG_WRITER`, `OZ_LOG_MAX_FILE_SIZE`, `OZ_LOG_EXECUTION_TIME_ENABLED`                                                                                             |
+| `oz.files`                   | File URI path format with placeholders (`oz_file_id`, `oz_file_auth_key`, etc.)                                                                                      |
+| `oz.files.storages`          | Storage driver map: `FS::DEFAULT_STORAGE`, `FS::PUBLIC_STORAGE`, `FS::PRIVATE_STORAGE`                                                                               |
+| `oz.senders`                 | Sender class map: `sms`, `mail`, `notification`                                                                                                                      |
+| `oz.roles`                   | `OZ_ROLE_ENUM_CLASS` -> roles enum class                                                                                                                             |
+| `oz.proxies`                 | Trusted proxy configuration                                                                                                                                          |
+| `oz.redis`                   | `OZ_REDIS_ENABLED`, `OZ_REDIS_HOST`, `OZ_REDIS_PORT`, `OZ_REDIS_PASSWORD`, `OZ_REDIS_DATABASE`, `OZ_REDIS_PREFIX`, `OZ_REDIS_TIMEOUT`, `OZ_REDIS_PERSISTENT`         |
 
 ---
 
@@ -269,6 +269,22 @@ $router->group('/api/v1', function (RouteGroup $group) {
     $group->post('/users', ...)->name('users.create');
 });
 ```
+
+### Explicit `$parent` on `map()`
+
+`Router::map()` accepts an optional fourth argument `?RouteSharedOptions $parent`. When provided it is used as the route parent instead of the current open group:
+
+```php
+// Register a base route and keep its RouteOptions.
+$parent = $router->get('/items', $handler)->name('items');
+
+// Register a child route that inherits path, name, guards, and middlewares from $parent.
+$child = $router->map(['get'], '/:id', $handler, $parent)->name('get_by_id');
+// full path  => /items/:id
+// full name  => items.get_by_id
+```
+
+This allows any `RouteOptions` (not just a `RouteGroup`) to act as a parent, which is useful when building sibling routes that share configuration without an explicit group block.
 
 ### Route Parameters
 

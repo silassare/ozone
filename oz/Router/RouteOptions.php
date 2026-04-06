@@ -21,21 +21,22 @@ use Override;
  */
 final class RouteOptions extends RouteSharedOptions
 {
-	private static int $route_count = 0;
+	protected string $full_path_prefix = '';
+	private static int $route_count    = 0;
 
 	private bool $t_name_is_explicit = false;
 
 	/**
 	 * RouteOptions constructor.
 	 *
-	 * @param string          $path
-	 * @param null|RouteGroup $group
+	 * @param string                  $path
+	 * @param null|RouteSharedOptions $parent
 	 */
 	public function __construct(
 		string $path,
-		?RouteGroup $group = null
+		?RouteSharedOptions $parent = null
 	) {
-		parent::__construct($path, $group);
+		parent::__construct($path, $parent);
 
 		$this->name('route_' . (++self::$route_count));
 		// auto-generated names are not considered explicit so we revert to false here:
@@ -56,6 +57,35 @@ final class RouteOptions extends RouteSharedOptions
 		$this->t_name_is_explicit = true;
 
 		return parent::name($name);
+	}
+
+	/**
+	 * Sets a full path prefix for the route.
+	 *
+	 * @param string $path the path to be used as prefix for the full route path
+	 *
+	 * @return $this
+	 */
+	public function fullPathPrefix(string $path): static
+	{
+		$this->full_path_prefix = $path;
+
+		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function getPath(bool $full = true): string
+	{
+		$path = parent::getPath($full);
+
+		if ($full && !empty($this->full_path_prefix)) {
+			$path = self::safePathConcat($this->full_path_prefix, $path);
+		}
+
+		return $path;
 	}
 
 	/**

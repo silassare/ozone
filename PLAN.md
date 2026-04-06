@@ -32,15 +32,15 @@ Add server-side orchestration for multi-step, session-resumable form flows where
 
 ### Modify
 
-| Path                                             | Change                                                                           |
-| ------------------------------------------------ | -------------------------------------------------------------------------------- |
-| `oz/oz_settings/oz.routes.api.php`               | Replace `FormService::class` with `ResumableFormService::class`                  |
-| `oz/oz_settings/oz.request.php`                  | Already has `OZ_FORM_RESUMABLE_REF_HEADER_NAME` = `'X-OZONE-Form-Resumable-Ref'` |
-| `oz/Forms/Form.php`                              | `step()` -> `fieldset()`, `dynamicStep()` -> `dynamicFieldset()`, etc.           |
-| `oz/Forms/Field.php`                             | `$t_form: Form` -> `$t_parent: FieldContainerInterface`                          |
-| `oz/Forms/Traits/FieldContainerHelpersTrait.php` | No change - already delegates to `$this->field()`                                |
-| `oz/Router/RouteSharedOptions.php`               | `form()` extended to detect `class-string<ResumableFormProviderInterface>`       |
-| `tests/Forms/FormTest.php`                       | Update `step/dynamicStep` references to `fieldset/dynamicFieldset`               |
+| Path                                             | Change                                                                     |
+| ------------------------------------------------ | -------------------------------------------------------------------------- |
+| `oz/oz_settings/oz.routes.api.php`               | Replace `FormService::class` with `ResumableFormService::class`            |
+| `oz/oz_settings/oz.request.php`                  | Already has `OZ_FORM_RESUME_REF_HEADER_NAME` = `'X-OZONE-Form-Resume-Ref'` |
+| `oz/Forms/Form.php`                              | `step()` -> `fieldset()`, `dynamicStep()` -> `dynamicFieldset()`, etc.     |
+| `oz/Forms/Field.php`                             | `$t_form: Form` -> `$t_parent: FieldContainerInterface`                    |
+| `oz/Forms/Traits/FieldContainerHelpersTrait.php` | No change - already delegates to `$this->field()`                          |
+| `oz/Router/RouteSharedOptions.php`               | `form()` extended to detect `class-string<ResumableFormProviderInterface>` |
+| `tests/Forms/FormTest.php`                       | Update `step/dynamicStep` references to `fieldset/dynamicFieldset`         |
 
 ---
 
@@ -350,7 +350,7 @@ $router->post('/signup', $handler)
 - The provider class is stored on `RouteFormDeclaration` as the canonical provider.
 - Last defined in chain wins (group -> route).
 - `ResumableFormService` becomes the **exclusive** submission path for this route.
-- Before the route handler runs, the framework reads `OZ_FORM_RESUMABLE_REF_HEADER_NAME` from
+- Before the route handler runs, the framework reads `OZ_FORM_RESUME_REF_HEADER_NAME` from
   the request header, looks up the completed session in cache, verifies ownership and
   `phase === done`, then injects the accumulated `FormData` into `$ri->getCleanFormData()`.
 - The route handler simply uses `$ri->getCleanFormData()` as normal.
@@ -420,7 +420,7 @@ class RouteResumableFormProvider extends AbstractResumableFormProvider
 | POST   | `/form/:provider/cancel`   | `cancelSession()`   | `oz:form:cancel`   |
 | POST   | `/form/:provider/evaluate` | `evaluateCurrent()` | `oz:form:evaluate` |
 
-The `resume_ref` travels as an HTTP header (`X-OZONE-Form-Resumable-Ref`) on all requests
+The `resume_ref` travels as an HTTP header on all requests
 except `init` (which creates the ref and returns it in the response body). There is no `:ref`
 path segment.
 
@@ -432,7 +432,7 @@ Path parameter constraint: `:provider` - `[^/]+`.
 
 Cache namespace: `'oz.form.sessions'`
 Cache key: `$resume_ref` (32-char hex, returned by `initSession()` and sent back by
-the client in the `X-OZONE-Form-Resumable-Ref` request header)
+the client in the request header)
 
 ```php
 [
@@ -503,7 +503,7 @@ if (!$class) throw NotFoundException
 $provider = $class::instance($this->ri);
 ```
 
-`resume_ref` is read from the `X-OZONE-Form-Resumable-Ref` request header in all handlers
+`resume_ref` is read from the request header in all handlers
 except `initSession()`.
 
 ### `POST /form/:provider/init`
@@ -540,7 +540,7 @@ except `initSession()`.
 ### `GET /form/:provider/state`
 
 ```
-1. Read resume_ref from X-OZONE-Form-Resumable-Ref header
+1. Read resume_ref from request header
 2. Load session by resume_ref             NotFoundException if not found / expired
 3. if expires_at != null && now() > expires_at: throw FormResumeExpiredException
 4. Verify scope_id matches                ForbiddenException on mismatch
@@ -683,7 +683,7 @@ When a route declares a provider via `->form(MyProvider::class)`, `requireComple
 - `nextStep`: already done -> throws `BadRequestException`
 - `nextStep`: wrong scope_id -> throws `ForbiddenException`
 - `nextStep`: unknown resume_ref -> throws `NotFoundException`
-- `nextStep`: `resume_ref` read from `X-OZONE-Form-Resumable-Ref` header (not body)
+- `nextStep`: `resume_ref` read from request header (not body)
 - `getState`: returns current form at each phase
 - `getState`: unknown resume_ref -> throws `NotFoundException`
 - `cancelSession`: deletes session, returns `done=true`
@@ -779,6 +779,26 @@ session flooding.
 Dispatch an event when a `ResumableFormService` session expires from cache (useful for
 analytics or cleanup). Requires cache-layer expiry callbacks - **defer** until that
 support is available.
+
+### F. `addOperationFromRoute` — detect resumable static form bundle
+
+**File**: `oz/REST/Traits/ApiDocManipulationTrait.php`, inside `addOperationFromRoute()`.
+
+**Problem**: When a route declares a static form with `.resumable()` (i.e.
+`$static_bundle->getResumeScope() !== null`), the method emits a plain `requestBody` schema
+with no indication that the client **may also** submit through the `RouteResumableFormProvider`
+pipeline (`POST /form/route/init` → request header on the route).
+Direct submission remains valid; the resumable path is an alternative the spec does not
+currently expose.
+
+**Fix**: In the `else` branch, after resolving `$static_bundle`, check
+`$static_bundle->getResumeScope()`. When non-null, emit the normal `requestBody` **and**
+attach an additional `x-oz-form` extension as an opt-in hint:
+
+The required import is `OZONE\Core\Router\RouteResumableFormProvider`.
+
+**Also update** the `addOperationFromRoute()` docblock to mention that routes with a resumable
+static form bundle emit both `requestBody` and `x-oz-form`.
 
 ---
 

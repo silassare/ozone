@@ -195,7 +195,7 @@ final class RouteFormDeclaration
 	 *
 	 * The route handler receives the completed {@see FormData} via {@see RouteInfo::getCleanFormData()},
 	 * which is populated by {@see ResumableFormService::requireCompletion()}
-	 * using the `X-OZONE-Form-Resumable-Ref` request header. No normal bundle validation is run.
+	 * using the request header. No normal bundle validation is run.
 	 *
 	 * @param class-string<ResumableFormProviderInterface> $class the provider class
 	 *

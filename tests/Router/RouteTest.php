@@ -15,6 +15,7 @@ namespace OZONE\Tests\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\Router\Router;
+use OZONE\Core\Router\RouteSearchStatus;
 use OZONE\Tests\TestUtils;
 use PHPUnit\Framework\TestCase;
 
@@ -74,6 +75,64 @@ final class RouteTest extends TestCase
 		$articlesGetById = $router->getRoute('articles.get_by_id');
 		self::assertSame('/articles/:id', $articlesGetById->getPath());
 		self::assertSame(':id', $articlesGetById->getPath(false));
+	}
+
+	public function testFullPathPrefixIsPrependedToFullPath(): void
+	{
+		$router = new Router();
+
+		$router->group('/items', static function (Router $r) {
+			$r->get('/:id', static fn () => null)
+				->name('get')
+				->fullPathPrefix('/v1');
+		})
+			->name('items');
+
+		$route = $router->getRoute('items.get');
+
+		// getPath(false) returns only the own path segment — prefix does not affect it.
+		self::assertSame('/:id', $route->getPath(false));
+
+		// getPath(true) = prefix + parent path + own path.
+		self::assertSame('/v1/items/:id', $route->getPath(true));
+	}
+
+	public function testFullPathPrefixWithParentRouteOptions(): void
+	{
+		$router = new Router();
+
+		$parent = $router->get('/api/things', static fn () => null)
+			->name('things');
+
+		$child = $router->map(['get'], '/:id', static fn () => null, $parent)
+			->name('get')
+			->fullPathPrefix('/v2');
+
+		// getPath(false) is not affected by the prefix.
+		self::assertSame('/:id', $child->getPath(false));
+
+		// getPath(true) = prefix + parent path + own path.
+		self::assertSame('/v2/api/things/:id', $child->getPath(true));
+	}
+
+	public function testFullPathPrefixIsIncludedInRoutingPath(): void
+	{
+		// fullPathPrefix is included in getPath(true), so it IS part of the routing path.
+		// A route with fullPathPrefix('/v1') on path '/items/:id' matches /v1/items/42,
+		// not /items/42.
+		$router = new Router();
+
+		$router->get('/items/:id', static fn () => null)
+			->name('with.prefix')
+			->fullPathPrefix('/v1');
+
+		// Not found at the unprefixed path.
+		$unprefixed = $router->find('GET', '/items/42');
+		self::assertSame(RouteSearchStatus::NOT_FOUND, $unprefixed->status());
+
+		// Found at the prefixed path.
+		$prefixed = $router->find('GET', '/v1/items/42');
+		self::assertSame(RouteSearchStatus::FOUND, $prefixed->status());
 	}
 
 	public function testPriority(): void

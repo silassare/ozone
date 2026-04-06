@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Tests\Router;
 
 use OZONE\Core\Router\Route;
+use OZONE\Core\Router\Router;
+use OZONE\Core\Router\RouteSearchStatus;
 use OZONE\Tests\TestUtils;
 use PHPUnit\Framework\TestCase;
 
@@ -77,5 +79,29 @@ final class RouterTest extends TestCase
 		self::assertIsArray($params);
 		self::assertSame('5', $params['id']);
 		self::assertSame('draft', $params['state']);
+	}
+
+	public function testMapWithExplicitRouteOptionsParent(): void
+	{
+		$router = new Router();
+
+		// Register a parent route and keep its options object.
+		$parent = $router->get('/items', static fn () => null)
+			->name('items');
+
+		// Register a child route with the parent options as explicit parent.
+		$child = $router->map(['get'], '/:id', static fn () => null, $parent)
+			->name('get_by_id');
+
+		// Full path should be parent path + child path.
+		self::assertSame('/items/:id', $child->getPath(true));
+
+		// Full name should be parent name + child name.
+		self::assertSame('items.get_by_id', $child->getName(true));
+
+		// Route must be findable via the composed path.
+		$result = $router->find('GET', '/items/42');
+		self::assertSame(RouteSearchStatus::FOUND, $result->status());
+		self::assertSame('/items/:id', $result->foundRoute()->getPath(true));
 	}
 }
