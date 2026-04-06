@@ -861,4 +861,38 @@ class Request extends Message implements ServerRequestInterface
 
 		return $method;
 	}
+
+	/**
+	 * Checks whether this is a form discovery request.
+	 *
+	 * When enabled in settings, the client may send the configured header to indicate
+	 * that instead of executing the route handler, the server should return the route's
+	 * form bundle as JSON so the client can build the form UI dynamically.
+	 *
+	 * @return bool
+	 */
+	public function isFormDiscoveryRequest(): bool
+	{
+		$allowed = Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_ALLOWED');
+
+		if (!$allowed) {
+			return false;
+		}
+
+		$header_name = Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_NAME');
+
+		return $this->getHeaderAsBool($header_name);
+	}
+
+	/**
+	 * Checks whether this is a form resume request.
+	 *
+	 * Indicate that the client wants to bypass route handling and be in resume mode for a form.
+	 */
+	public function isFormResumeRequest(): bool
+	{
+		$header_name = Settings::get('oz.request', 'OZ_FORM_RESUME_HEADER_NAME');
+
+		return $this->getHeaderAsBool($header_name);
+	}
 }

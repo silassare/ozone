@@ -158,32 +158,6 @@ final class Context
 	}
 
 	/**
-	 * Checks whether this is a form discovery request.
-	 *
-	 * When enabled in settings, the client may send the configured header to indicate
-	 * that instead of executing the route handler, the server should return the route's
-	 * form bundle as JSON so the client can build the form UI dynamically.
-	 *
-	 * @return bool
-	 */
-	public function isFormDiscoveryRequest(): bool
-	{
-		if ($this->is_sub_request) {
-			return false;
-		}
-
-		$allowed = Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_ALLOWED');
-
-		if (!$allowed) {
-			return false;
-		}
-
-		$header_name = Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_NAME');
-
-		return $this->request->getHeaderAsBool($header_name);
-	}
-
-	/**
 	 * Checks whether json response should be returned.
 	 *
 	 * @return bool

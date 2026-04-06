@@ -24,6 +24,7 @@ use OZONE\Core\Forms\Services\ResumableFormService;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
+use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
 use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
 use PHPUtils\Str;
 
@@ -40,19 +41,15 @@ final class RouteInfo
 	private array $guards_data;
 	private ?FormData $clean_form_data = null;
 
-	/**
-	 * @var null|callable(static):Response
-	 */
-	private $replace_handler;
+	private ?RouteInterceptorInterface $interceptor = null;
 
 	/**
 	 * RouteInfo constructor.
 	 *
-	 * @param Context                          $context         The context
-	 * @param Route                            $route           The current route
-	 * @param array                            $params          The route params
-	 * @param null|callable(static):void       $authenticator   The authenticator
-	 * @param null|(callable(static):Response) $replace_handler The route handler to run, if null the regular route handler will be used
+	 * @param Context                    $context       The context
+	 * @param Route                      $route         The current route
+	 * @param array                      $params        The route params
+	 * @param null|callable(static):void $authenticator The authenticator
 	 *
 	 * @throws InvalidFormException
 	 */
@@ -61,14 +58,15 @@ final class RouteInfo
 		private readonly Route $route,
 		private readonly array $params,
 		?callable $authenticator = null,
-		?callable $replace_handler = null
 	) {
-		$this->guards_data     = [];
-		$this->replace_handler = $replace_handler;
+		$this->guards_data = [];
 
 		$authenticator && $authenticator($this);
+
 		$this->callGuards();
 		$this->runMiddlewares();
+
+		$this->interceptor = $this->selectInterceptor();
 	}
 
 	/**
@@ -79,6 +77,26 @@ final class RouteInfo
 	public function getContext(): Context
 	{
 		return $this->context;
+	}
+
+	/**
+	 * Checks if the route is intercepted.
+	 *
+	 * @return bool
+	 */
+	public function isIntercepted(): bool
+	{
+		return null !== $this->interceptor;
+	}
+
+	/**
+	 * Gets the interceptor instance if any.
+	 *
+	 * @return null|RouteInterceptorInterface
+	 */
+	public function getInterceptor(): ?RouteInterceptorInterface
+	{
+		return $this->interceptor;
 	}
 
 	/**
@@ -100,7 +118,9 @@ final class RouteInfo
 	 */
 	public function getEffectiveHandler(): callable
 	{
-		return $this->replace_handler ?? $this->route()->getHandler();
+		return null !== $this->interceptor
+			? $this->interceptor->handle(...)
+			: $this->route()->getHandler();
 	}
 
 	/**
@@ -145,15 +165,17 @@ final class RouteInfo
 	public function getCleanFormData(): FormData
 	{
 		if (null === $this->clean_form_data) {
-			// In discovery mode checkRouteForm() is intentionally skipped — return empty
-			// FormData so form callables that read it during form-bundle resolution don't throw.
-			if ($this->context->isFormDiscoveryRequest()) {
-				return new FormData();
+			// When there is an interceptor, checkRouteForm() is intentionally skipped
+			// so we define empty FormData so form callables that read it during
+			// form-bundle resolution don't throw.
+
+			if (null === $this->interceptor) {
+				throw new RuntimeException('Form data has not been checked yet.', [
+					'_reason' => \sprintf('%s called before the router called %s.', __METHOD__, Str::callableName([$this, 'checkRouteForm'])),
+				]);
 			}
 
-			throw new RuntimeException('Form data has not been checked yet.', [
-				'_reason' => \sprintf('%s called before the router called %s.', __METHOD__, Str::callableName([$this, 'checkRouteForm'])),
-			]);
+			$this->clean_form_data = new FormData();
 		}
 
 		return $this->clean_form_data;
@@ -311,5 +333,43 @@ final class RouteInfo
 				$this->context->setResponse($response);
 			}
 		}
+	}
+
+	/**
+	 * Find the first interceptor that should intercept the request.
+	 */
+	private function selectInterceptor(): ?RouteInterceptorInterface
+	{
+		$interceptors = $this->route->getOptions()->getInterceptors();
+
+		\usort($interceptors, self::interceptorsPriorityComparator(...));
+
+		foreach ($interceptors as $interceptor) {
+			$instance = $interceptor::instance($this);
+
+			if ($instance->shouldIntercept()) {
+				return $instance;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Comparator function to sort interceptors by priority in descending order (higher priority value means higher priority).
+	 *
+	 * @param class-string<RouteInterceptorInterface> $a
+	 * @param class-string<RouteInterceptorInterface> $b
+	 */
+	private static function interceptorsPriorityComparator(string $a, string $b): int
+	{
+		$ap = $a::getPriority();
+		$bp = $b::getPriority();
+
+		if ($ap === $bp) {
+			return 0;
+		}
+
+		return ($ap > $bp) ? -1 : 1;
 	}
 }

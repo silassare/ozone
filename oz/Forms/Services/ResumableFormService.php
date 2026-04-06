@@ -175,11 +175,7 @@ final class ResumableFormService extends Service
 			'history'        => [],
 		], $provider->resumeTTL());
 
-		$this->json()
-			->setDone()
-			->setData($this->buildResponseData($resume_ref, $next_form, FormResumePhase::DONE === $phase, $provider, $progress, $expires_at));
-
-		return $this->respond();
+		return $this->respondWith($resume_ref, $next_form, FormResumePhase::DONE === $phase, $provider, $progress, $expires_at);
 	}
 
 	/**
@@ -202,11 +198,7 @@ final class ResumableFormService extends Service
 		$current_form = $this->deriveCurrentForm($session['phase'], $provider, $cleaned_form, $progress);
 		$expires_at   = $session['expires_at'] ?? null;
 
-		$this->json()
-			->setDone()
-			->setData($this->buildResponseData($resume_ref, $current_form, FormResumePhase::DONE->value === $session['phase'], $provider, $progress, $expires_at));
-
-		return $this->respond();
+		return $this->respondWith($resume_ref, $current_form, FormResumePhase::DONE->value === $session['phase'], $provider, $progress, $expires_at);
 	}
 
 	/**
@@ -269,11 +261,7 @@ final class ResumableFormService extends Service
 			'history'        => $history,
 		]), $provider->resumeTTL());
 
-		$this->json()
-			->setDone()
-			->setData($this->buildResponseData($resume_ref, $next_form, FormResumePhase::DONE === $phase, $provider, $progress, $expires_at));
-
-		return $this->respond();
+		return $this->respondWith($resume_ref, $next_form, FormResumePhase::DONE === $phase, $provider, $progress, $expires_at);
 	}
 
 	/**
@@ -320,11 +308,7 @@ final class ResumableFormService extends Service
 			'history'        => $history,
 		]), $provider->resumeTTL());
 
-		$this->json()
-			->setDone()
-			->setData($this->buildResponseData($resume_ref, $current_form, false, $provider, $prev_progress, $expires_at));
-
-		return $this->respond();
+		return $this->respondWith($resume_ref, $current_form, false, $provider, $prev_progress, $expires_at);
 	}
 
 	/**
@@ -604,17 +588,16 @@ final class ResumableFormService extends Service
 	 *
 	 * When `totalSteps()` is not null a `progress` block is included.
 	 */
-	private function buildResponseData(
+	private function respondWith(
 		string $resume_ref,
 		?Form $form,
 		bool $done,
 		ResumableFormProviderInterface $provider,
 		FormResumeProgress $progress,
 		?int $expires_at
-	): array {
+	): Response {
 		$data = [
 			'resume_ref' => $resume_ref,
-			'form'       => $form,
 			'done'       => $done,
 			'expires_at' => $expires_at,
 		];
@@ -627,7 +610,10 @@ final class ResumableFormService extends Service
 			];
 		}
 
-		return $data;
+		$this->json()
+			->setDone()->setData($data)->setForm($form);
+
+		return $this->respond();
 	}
 
 	/**

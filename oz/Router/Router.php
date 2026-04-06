@@ -15,7 +15,6 @@ namespace OZONE\Core\Router;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
-use OZONE\Core\App\Service;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -363,12 +362,9 @@ final class Router
 
 				(new RouteFound($context, $route, $params))->dispatch();
 
-				$is_form_discovery = $context->isFormDiscoveryRequest();
-				$replace_handler   = $is_form_discovery ? $this->createDiscoveryHandler() : null;
+				$ri = new RouteInfo($context, $route, $params, $authenticator);
 
-				$ri = new RouteInfo($context, $route, $params, $authenticator, $replace_handler);
-
-				if (!$is_form_discovery) {
+				if (!$ri->isIntercepted()) {
 					$ri->checkRouteForm();
 				}
 
@@ -597,24 +593,6 @@ final class Router
 		}
 
 		return ($ap > $bp) ? -1 : 1;
-	}
-
-	/**
-	 * Creates a handler for form discovery route,
-	 * this handler will replace the regular route handler.
-	 *
-	 * @return callable(RouteInfo):Response
-	 */
-	private function createDiscoveryHandler(): callable
-	{
-		return Service::createHandler(static function (Service $svc) {
-			$ri      = $svc->getContext()->getRouteInfo();
-			$bundle  = $ri->route()->getOptions()->getFormBundle($ri);
-
-			$svc->json()->setDone()->setDataKey('form', $bundle);
-
-			$svc->respond();
-		});
 	}
 
 	/**

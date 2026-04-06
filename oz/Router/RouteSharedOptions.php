@@ -33,6 +33,7 @@ use OZONE\Core\Router\Guards\UserAccessRightsRouteGuard;
 use OZONE\Core\Router\Guards\UserRoleRouteGuard;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 use OZONE\Core\Router\Interfaces\RouteGuardProviderInterface;
+use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
 use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
 use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
 
@@ -83,6 +84,11 @@ class RouteSharedOptions
 	 */
 	protected array $middlewares = [];
 
+	/**
+	 * @var array<string, class-string<RouteInterceptorInterface>>
+	 */
+	protected array $interceptors = [];
+
 	protected ?RouteFormDeclaration $form_declaration = null;
 	private string $name                              = '';
 
@@ -110,7 +116,7 @@ class RouteSharedOptions
 	 */
 	public function __destruct()
 	{
-		unset($this->guards, $this->middlewares, $this->form_declaration, $this->route_params);
+		unset($this->guards, $this->middlewares, $this->form_declaration, $this->route_params, $this->interceptors);
 	}
 
 	/**
@@ -365,7 +371,7 @@ class RouteSharedOptions
 		];
 
 		if ($has_csrf_guard_in_tree) {
-			// Don't add another guard if we already have one in parent groups.
+			// Don't add another guard if we already have one in parent.
 			return $this;
 		}
 
@@ -373,7 +379,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Gets CSRF scope defined for this route or its parent groups.
+	 * Gets CSRF scope defined for this route or its parent.
 	 *
 	 * @return null|RequestScope
 	 */
@@ -386,7 +392,7 @@ class RouteSharedOptions
 	 * Enables resume caching for the form bundle assembled by this route or group.
 	 *
 	 * When set, overrides any resumable() configuration declared on the individual
-	 * forms merged into the bundle. Inherited from parent groups; innermost definition wins.
+	 * forms merged into the bundle. Inherited from parent; innermost definition wins.
 	 *
 	 * @param RequestScope $scope The scoping strategy for the resume cache
 	 * @param int          $ttl   Cache TTL in seconds (default: 3600)
@@ -443,6 +449,10 @@ class RouteSharedOptions
 	/**
 	 * Add a middleware.
 	 *
+	 * Middlewares are executed in the order they are defined, after guards.
+	 * They can be added at any level of the route/group tree and are inherited by child routes/groups;
+	 * they will be executed in a depth-first manner (i.e. parent middlewares run before child middlewares).
+	 *
 	 * @param (callable(RouteInfo):?Response)|RouteMiddlewareInterface|string $middleware
 	 *
 	 * @return $this
@@ -475,6 +485,46 @@ class RouteSharedOptions
 		} else {
 			$this->middlewares[] = $middleware;
 		}
+
+		return $this;
+	}
+
+	/**
+	 * Add an interceptor.
+	 *
+	 * Route interceptors are executed in the order they are defined after guards and middlewares.
+	 * The first interceptor that accepts the request by returning true when {@see RouteInterceptorInterface::shouldIntercept()}
+	 * is called will short-circuit the rest of the chain and its {@see RouteInterceptorInterface::handle()}
+	 * will be called in place of the route handler.
+	 *
+	 * NOTE: route form will not be validated when a route interceptor intercepts the request,
+	 * so it should be used only for special use cases like form discovery...
+	 *
+	 * They can be added at any level of the route/group tree and are inherited by child routes/groups;
+	 * they will be executed in a depth-first manner (i.e. parent interceptors run before child interceptors).
+	 *
+	 * @param class-string<RouteInterceptorInterface> $interceptor the interceptor FQN class
+	 *
+	 * @return $this
+	 */
+	public function interceptor(string $interceptor): static
+	{
+		if (!\class_exists($interceptor)) {
+			throw new RuntimeException(\sprintf(
+				'Route interceptor class "%s" does not exist.',
+				$interceptor
+			));
+		}
+
+		if (!\is_subclass_of($interceptor, RouteInterceptorInterface::class)) {
+			throw new RuntimeException(\sprintf(
+				'Route interceptor "%s" should be subclass of: %s',
+				$interceptor,
+				RouteInterceptorInterface::class
+			));
+		}
+
+		$this->interceptors[$interceptor::getName()] = $interceptor;
 
 		return $this;
 	}
@@ -560,7 +610,7 @@ class RouteSharedOptions
 	/**
 	 * Get route priority.
 	 *
-	 * @param bool $include_parent whether to include the priority of parent groups in the calculation
+	 * @param bool $include_parent whether to include the priority of parent in the calculation
 	 *
 	 * @return int
 	 */
@@ -662,7 +712,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Gets route form bundle.
+	 * Gets form bundle.
 	 *
 	 * @param RouteInfo $ri
 	 *
@@ -696,7 +746,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Gets route forms at request time.
+	 * Gets forms at request time.
 	 *
 	 * @param RouteInfo $ri
 	 *
@@ -767,7 +817,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Gets route parameters.
+	 * Gets parameters.
 	 *
 	 * @return array<string,string>
 	 */
@@ -779,7 +829,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Gets routes authentication methods.
+	 * Gets authentication methods.
 	 *
 	 * @return list<class-string<AuthenticationMethodInterface>>
 	 */
@@ -808,7 +858,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Gets route guards.
+	 * Gets guards.
 	 *
 	 * @return list<RouteGuardInterface>
 	 */
@@ -843,7 +893,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Gets route middlewares.
+	 * Gets middlewares.
 	 *
 	 * @return list<(callable(RouteInfo):?Response)|RouteMiddlewareInterface>
 	 */
@@ -852,6 +902,26 @@ class RouteSharedOptions
 		$middlewares = $this->parent?->getMiddlewares() ?? [];
 
 		return \array_merge($middlewares, $this->middlewares);
+	}
+
+	/**
+	 * Gets interceptors.
+	 *
+	 * @return array<string, class-string<RouteInterceptorInterface>>
+	 */
+	public function getInterceptors(): array
+	{
+		$interceptors = $this->parent?->getInterceptors() ?? [];
+		$rd           = RouteFormDiscoveryInterceptor::getName();
+
+		return \array_merge(
+			[
+				// we make sure that the form discovery interceptor is always present and runs after all other interceptors, even if not explicitly added, because it's responsible for populating the RouteInfo with the resolved form which is needed by any interceptor that needs to access the form or its data
+				$rd => RouteFormDiscoveryInterceptor::class,
+			],
+			$interceptors,
+			$this->interceptors
+		);
 	}
 
 	/**
@@ -872,7 +942,7 @@ class RouteSharedOptions
 	}
 
 	/**
-	 * Collects documentable forms from this node and all parent groups.
+	 * Collects documentable forms from this and all parent.
 	 *
 	 * Called by {@see getStaticFormBundle()} to build the doc-gen bundle.
 	 *
