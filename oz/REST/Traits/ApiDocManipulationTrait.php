@@ -189,7 +189,7 @@ trait ApiDocManipulationTrait
 			if (!empty($auth_methods) || !empty($guard_descriptors)) {
 				$op->x = [
 					'oz-security' => ['name' => 'oz-security', 'value' => [
-						'auth_methods'      => \array_map(static fn ($m) => \basename(\str_replace('\\', '/', $m)), $auth_methods),
+						'auth_methods'      => \array_map(static fn($m) => \basename(\str_replace('\\', '/', $m)), $auth_methods),
 						'guard_descriptors' => $guard_descriptors,
 					]],
 				];
@@ -251,7 +251,7 @@ trait ApiDocManipulationTrait
 				// we add the path parameter only if it does not exist on this path item
 				// as multiple operations can share the same path item
 				// no checking may result in multiple parameters with the same name
-				static fn ($a) => $a->name === $param
+				static fn($a) => $a->name === $param
 			);
 		}
 
@@ -662,7 +662,7 @@ DESC;
 		$op_in                 = Operator::IN->value;
 		$op_not_in             = Operator::NOT_IN->value;
 		$allowed_operators_str = \implode(', ', \array_map(
-			static fn ($op) => "`{$op->value}`",
+			static fn($op) => "`{$op->value}`",
 			Operator::cases()
 		));
 
@@ -715,7 +715,7 @@ DESC;
 				$col_ops = $column->getType()->getAllowedFilterOperators();
 				if (!empty($col_ops)) {
 					$col_name           = $column->getFullName();
-					$ops_str            = \implode(', ', \array_map(static fn ($op) => "`{$op->value}`", $col_ops));
+					$ops_str            = \implode(', ', \array_map(static fn($op) => "`{$op->value}`", $col_ops));
 					$per_column_lines[] = "| `{$col_name}` | {$ops_str} |";
 				}
 			}

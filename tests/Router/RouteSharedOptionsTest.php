@@ -50,7 +50,7 @@ final class RouteSharedOptionsTest extends TestCase
 		$form   = new Form();
 		$form->field('name')->required(true);
 
-		$router->post('/bundle-test', static fn() => null)
+		$router->post('/bundle-test', static fn () => null)
 			->name('bundle.test')
 			->form($form);
 
@@ -72,7 +72,7 @@ final class RouteSharedOptionsTest extends TestCase
 		$form   = new Form();
 		$form->field('name')->required(true);
 
-		$router->post('/bundle-method-test', static fn() => null)
+		$router->post('/bundle-method-test', static fn () => null)
 			->name('bundle.method.test')
 			->form($form);
 
@@ -101,7 +101,7 @@ final class RouteSharedOptionsTest extends TestCase
 		$router = TestUtils::router();
 		$form   = new Form();
 
-		$router->get('/decl-test', static fn() => null)
+		$router->get('/decl-test', static fn () => null)
 			->name('decl.test')
 			->form($form);
 
@@ -114,7 +114,7 @@ final class RouteSharedOptionsTest extends TestCase
 	{
 		$router = TestUtils::router();
 
-		$router->post('/provider-test', static fn() => null)
+		$router->post('/provider-test', static fn () => null)
 			->name('provider.test')
 			->form(StubSharedOptionsProvider::class);
 
@@ -130,7 +130,7 @@ final class RouteSharedOptionsTest extends TestCase
 	{
 		$router = TestUtils::router();
 
-		$router->post('/provider-bundle-test', static fn() => null)
+		$router->post('/provider-bundle-test', static fn () => null)
 			->name('provider.bundle.test')
 			->form(StubSharedOptionsProvider::class);
 
