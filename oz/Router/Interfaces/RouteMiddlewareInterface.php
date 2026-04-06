@@ -22,9 +22,9 @@ use OZONE\Core\Router\RouteInfo;
 interface RouteMiddlewareInterface
 {
 	/**
-	 * Get middleware instance.
+	 * Creates an instance of the middleware.
 	 */
-	public static function get(): static;
+	public static function instance(): static;
 
 	/**
 	 * Run middleware.

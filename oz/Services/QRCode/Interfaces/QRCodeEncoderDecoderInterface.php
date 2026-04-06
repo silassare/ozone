@@ -25,11 +25,11 @@ use OZONE\Core\App\Settings;
 interface QRCodeEncoderDecoderInterface
 {
 	/**
-	 * Gets the QR code encoder/decoder instance.
+	 * Creates an instance of the QR code encoder/decoder.
 	 *
 	 * @return static the QR code encoder/decoder instance
 	 */
-	public static function get(): static;
+	public static function instance(): static;
 
 	/**
 	 * Encodes the given data as a PNG QR code image and returns the raw PNG binary.

@@ -51,7 +51,7 @@ class LogWriter implements LogWriterInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function get(): static
+	public static function instance(): static
 	{
 		/** @var null|LogWriterInterface $writer */
 		static $writer;

@@ -30,12 +30,12 @@ final class QRCodeEncoderDecoderTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->qr = BuiltinQRCodeEncoderDecoder::get();
+		$this->qr = BuiltinQRCodeEncoderDecoder::instance();
 	}
 
-	public function testGetReturnsInstance(): void
+	public function testInstanceReturnsInstance(): void
 	{
-		$a = BuiltinQRCodeEncoderDecoder::get();
+		$a = BuiltinQRCodeEncoderDecoder::instance();
 
 		self::assertInstanceOf(BuiltinQRCodeEncoderDecoder::class, $a);
 	}

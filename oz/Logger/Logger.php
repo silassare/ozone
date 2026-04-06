@@ -160,9 +160,10 @@ class Logger implements LoggerInterface
 					)))->suspectConfig('oz.logs', 'OZ_LOG_WRITER');
 				}
 
-				$writer = $cls::get();
+				/** @var class-string<LogWriterInterface> $cls */
+				$writer = $cls::instance();
 			} else {
-				$writer = LogWriter::get();
+				$writer = LogWriter::instance();
 			}
 		}
 

@@ -19,11 +19,11 @@ use Throwable;
 interface LogWriterInterface
 {
 	/**
-	 * Gets the log writer instance.
+	 * Creates an instance of the log writer.
 	 *
 	 * @return static
 	 */
-	public static function get(): static;
+	public static function instance(): static;
 
 	/**
 	 * Writes a log message.

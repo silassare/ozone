@@ -451,20 +451,25 @@ class RouteSharedOptions
 	{
 		if (\is_string($middleware)) { // class FQN or provider name
 			if (\class_exists($middleware)) { // class FQN
-				$mdl_class = $middleware;
-				if (!\is_subclass_of($mdl_class, RouteMiddlewareInterface::class)) {
+				if (!\is_subclass_of($middleware, RouteMiddlewareInterface::class)) {
 					throw new RuntimeException(\sprintf(
 						'Route middleware "%s" should be subclass of: %s',
-						$mdl_class,
+						$middleware,
 						RouteMiddlewareInterface::class
 					));
 				}
+
+				/**
+				 * @psalm-suppress UnnecessaryVarAnnotation
+				 *
+				 * @var class-string<RouteMiddlewareInterface> $mdl_class
+				 */
+				$mdl_class = $middleware;
 			} else { // middleware name
 				$mdl_class = Middlewares::get($middleware);
 			}
 
-			/** @var RouteMiddlewareInterface $mdl_class */
-			$mdl = $mdl_class::get();
+			$mdl = $mdl_class::instance();
 
 			$this->middlewares[] = $mdl;
 		} else {

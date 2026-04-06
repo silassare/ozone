@@ -101,8 +101,8 @@ final class QRCode extends Service
 			));
 		}
 
-		/** @var QRCodeEncoderDecoderInterface $class */
-		$encoder = $class::get();
+		/** @var class-string<QRCodeEncoderDecoderInterface> $class */
+		$encoder = $class::instance();
 		$png     = $encoder->encode($data['data']);
 		\fwrite($file, $png);
 		\rewind($file);

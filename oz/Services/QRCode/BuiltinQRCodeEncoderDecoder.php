@@ -682,7 +682,7 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function get(): static
+	public static function instance(): static
 	{
 		return new self();
 	}
