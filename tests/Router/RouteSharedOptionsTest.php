@@ -149,7 +149,7 @@ final class RouteSharedOptionsTest extends TestCase
  */
 final class StubSharedOptionsProvider extends AbstractResumableFormProvider
 {
-	public static function providerName(): string
+	public static function getName(): string
 	{
 		return 'test:shared-options-stub';
 	}

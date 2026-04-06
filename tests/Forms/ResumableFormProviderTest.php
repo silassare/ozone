@@ -32,13 +32,9 @@ use ReflectionProperty;
  */
 final class ResumableFormProviderTest extends TestCase
 {
-	// -----------------------------------------------------------------------
-	// providerName / interface
-	// -----------------------------------------------------------------------
-
-	public function testProviderNameReturnsExpectedString(): void
+	public function testGetNameReturnsExpectedString(): void
 	{
-		self::assertSame('test:simple', SimpleTestProvider::providerName());
+		self::assertSame('test:simple', SimpleTestProvider::getName());
 	}
 
 	public function testNoRegistryMethodsExist(): void
@@ -48,18 +44,10 @@ final class ResumableFormProviderTest extends TestCase
 		self::assertFalse(\method_exists(AbstractResumableFormProvider::class, 'clearRegistry'));
 	}
 
-	// -----------------------------------------------------------------------
-	// initForm
-	// -----------------------------------------------------------------------
-
 	public function testDefaultInitFormIsNull(): void
 	{
 		self::assertNull(SimpleTestProvider::initForm());
 	}
-
-	// -----------------------------------------------------------------------
-	// instance()
-	// -----------------------------------------------------------------------
 
 	public function testDirectConstructionLeavesRiNull(): void
 	{
@@ -69,10 +57,6 @@ final class ResumableFormProviderTest extends TestCase
 
 		self::assertNull($ri_prop->getValue($provider));
 	}
-
-	// -----------------------------------------------------------------------
-	// Defaults
-	// -----------------------------------------------------------------------
 
 	public function testDefaultResumeTTLIs3600(): void
 	{
@@ -110,10 +94,6 @@ final class ResumableFormProviderTest extends TestCase
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Inline test-only provider fixtures
-// ---------------------------------------------------------------------------
-
 /**
  * Minimal provider: no init form, returns one step at index 0, then done.
  *
@@ -121,7 +101,7 @@ final class ResumableFormProviderTest extends TestCase
  */
 final class SimpleTestProvider extends AbstractResumableFormProvider
 {
-	public static function providerName(): string
+	public static function getName(): string
 	{
 		return 'test:simple';
 	}
@@ -146,7 +126,7 @@ final class SimpleTestProvider extends AbstractResumableFormProvider
  */
 final class HostScopedTestProvider extends AbstractResumableFormProvider
 {
-	public static function providerName(): string
+	public static function getName(): string
 	{
 		return 'test:host-scoped';
 	}

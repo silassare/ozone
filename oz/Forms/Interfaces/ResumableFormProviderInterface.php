@@ -44,7 +44,7 @@ interface ResumableFormProviderInterface
 	 *
 	 * Example: `'quiz:geography'`, `'route'`, `'onboarding:wizard'`
 	 */
-	public static function providerName(): string;
+	public static function getName(): string;
 
 	/**
 	 * Returns an optional pre-flight form shown before the main step sequence.

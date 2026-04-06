@@ -27,7 +27,7 @@ use OZONE\Core\Router\RouteInfo;
  * by {@see ResumableFormService} via the
  * `oz.forms.providers` settings registry — there is no static in-process registry.
  *
- * Concrete providers must implement {@see self::providerName()} and
+ * Concrete providers must implement {@see self::getName()} and
  * {@see self::nextStep()}. All other methods have sensible defaults and may be
  * overridden as needed.
  *
@@ -36,7 +36,7 @@ use OZONE\Core\Router\RouteInfo;
  * ```php
  * class MyProvider extends AbstractResumableFormProvider
  * {
- *     public static function providerName(): string { return 'my-survey'; }
+ *     public static function getName(): string { return 'my-survey'; }
  *
  *     public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
  *     {

@@ -250,7 +250,7 @@ final class RouteInfo
 				}
 
 				$clean_fd = ResumableFormService::requireCompletion(
-					$provider_class::providerName(),
+					$provider_class::getName(),
 					$resume_ref,
 					$this->context
 				);

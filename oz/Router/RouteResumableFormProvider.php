@@ -54,7 +54,7 @@ final class RouteResumableFormProvider extends AbstractResumableFormProvider
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function providerName(): string
+	public static function getName(): string
 	{
 		return self::PROVIDER_NAME;
 	}

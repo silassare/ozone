@@ -137,7 +137,7 @@ trait ApiDocManipulationTrait
 
 		self::pushExtension($op, 'oz-form', [
 			'policy'             => RouteFormDocPolicy::EXTERNAL->value,
-			'form_provider_name' => $form_provider::providerName(),
+			'form_provider_name' => $form_provider::getName(),
 			'init_form'          => $init_form?->toArray(),
 		]);
 	}

@@ -70,7 +70,7 @@ Affected files: `oz/oz_settings/oz.routes.api.php`, `tests/Forms/FormServiceTest
 
 | Current name                          | New                                                                     |
 | ------------------------------------- | ----------------------------------------------------------------------- |
-| `providerRef(): string`               | `providerName(): string`                                                |
+| `providerRef(): string`               | `getName(): string`                                                     |
 | `initForm(): ?Form`                   | `static initForm(): ?Form`                                              |
 | `nextStep(FormData $progress): ?Form` | `nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form` |
 
@@ -182,7 +182,7 @@ interface ResumableFormProviderInterface
 {
     // Unique name registered as the key in oz.forms.providers settings and used
     // as the :provider URL segment in ResumableFormService routes.
-    public static function providerName(): string;
+    public static function getName(): string;
 
     // Optional pre-flight form shown before the main steps begin.
     // STATIC so API doc generation can call it without instantiating a provider.
@@ -378,7 +378,7 @@ class RouteResumableFormProvider extends AbstractResumableFormProvider
 {
     public const PROVIDER_NAME = 'route';
 
-    public static function providerName(): string
+    public static function getName(): string
     {
         return self::PROVIDER_NAME;
     }
@@ -664,7 +664,7 @@ When a route declares a provider via `->form(MyProvider::class)`, `requireComple
 
 ### `tests/Forms/ResumableFormProviderTest.php` (needs update)
 
-- `providerName()` returns the expected string
+- `getName()` returns the expected string
 - `static initForm()` returns null by default
 - `static instance($ri)` returns a correctly typed instance with `$ri` accessible
 - Default `resumeTTL()` returns 3600
@@ -817,15 +817,15 @@ new design. No code changes until these are approved for removal.
 ### On `RouteResumableFormProvider` - entire class being redesigned
 
 5. `const PROVIDER_REF_PREFIX = 'route:'` - replaced by `const PROVIDER_NAME = 'route'`
-6. `public static function providerRef(): string` - replaced by `providerName()`
+6. `public static function providerRef(): string` - replaced by `getName()`
 7. `public static function resolveRoute(string $route_name): self` - resolution moves to `ResumableFormService`
-8. `public function getProviderRef(): string` - replaced by `providerName()`
+8. `public function getProviderRef(): string` - replaced by `getName()`
 9. `public static function refForRoute(string $route_name): string` - no longer needed
 10. `public function __construct(string $route_name, Form $bundle)` - replaced by `instance(RouteInfo $ri)`
 
 ### On `ResumableFormProviderInterface` - signature changes
 
-11. `providerRef(): string` - becomes `providerName(): string`
+11. `providerRef(): string` - becomes `getName(): string`
 12. `initForm(): ?Form` - becomes `static initForm(): ?Form`
 13. `nextStep(FormData $progress): ?Form` - becomes `nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form`
 
@@ -852,7 +852,7 @@ After all code changes are applied, do a targeted audit and fix any outdated ref
 
 **Key patterns to search for and fix:**
 
-- `providerRef` (should be `providerName`)
+- `providerRef` (should be `getName`)
 - `sessionTTL`, `sessionScope` (verify all renamed correctly)
 - `STEP_INDEX_KEY` references outside `FormResumeProgress`
 - `provider_ref` in doc/comments (now `provider_name`)

@@ -346,7 +346,7 @@ final class RouteFormDeclarationTest extends TestCase
  */
 final class StubFormProvider extends AbstractResumableFormProvider
 {
-	public static function providerName(): string
+	public static function getName(): string
 	{
 		return 'test:stub';
 	}
