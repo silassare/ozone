@@ -66,7 +66,6 @@ final class ResumableFormProviderTest extends TestCase
 		$provider = new SimpleTestProvider();
 
 		$ri_prop = new ReflectionProperty(AbstractResumableFormProvider::class, 'ri');
-		$ri_prop->setAccessible(true);
 
 		self::assertNull($ri_prop->getValue($provider));
 	}
