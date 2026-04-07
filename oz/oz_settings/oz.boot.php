@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Auth2FA;
+use OZONE\Core\Cache\CacheGarbageCollector;
 use OZONE\Core\Collections\EntityCollections;
 use OZONE\Core\FS\Assets;
 use OZONE\Core\FS\TempFS;
@@ -31,4 +32,5 @@ return [
 	TempFS::class                => true,
 	BlatePlugin::class           => true,
 	QueueBootHookReceiver::class => true,
+	CacheGarbageCollector::class => true,
 ];

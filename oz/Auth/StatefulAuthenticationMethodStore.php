@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth;
 
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
 use PHPUtils\Store\Store;
 
 /**
@@ -39,11 +39,7 @@ class StatefulAuthenticationMethodStore extends Store
 	 */
 	public static function getInstance(string $state_id, array $data): static
 	{
-		$cache   = CacheManager::runtime(__METHOD__);
-		$factory = static fn (): static => new static($data);
-
-		return $cache->factory($state_id, $factory)
-			->get();
+		return CacheRegistry::runtime(__METHOD__)->remember($state_id, static fn (): static => new static($data));
 	}
 
 	/**

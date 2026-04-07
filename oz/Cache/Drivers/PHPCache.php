@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cache\Drivers;
 
 use Override;
+use OZONE\Core\Cache\CacheCapabilities;
 use OZONE\Core\FS\FS;
 
 /**
@@ -27,7 +28,21 @@ final class PHPCache extends RuntimeCache
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function getSharedInstance(?string $namespace = null): static
+	public function capabilities(): CacheCapabilities
+	{
+		return new CacheCapabilities(
+			perEntryTTL: true,
+			persistent: true,
+			expiryCallbacks: false,
+			atomic: false,
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function fromConfig(string $namespace, array $options = []): static
 	{
 		return new self($namespace);
 	}

@@ -14,7 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Core\Router;
 
 use Override;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
+use OZONE\Core\Cache\CacheStore;
 use OZONE\Core\Router\Interfaces\RouteRateLimiterInterface;
 use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
 
@@ -23,7 +24,7 @@ use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
  */
 class RouteRateLimiter implements RouteRateLimiterInterface
 {
-	private CacheManager $cache;
+	private CacheStore $cache;
 
 	/**
 	 * RouteRateLimiter constructor.
@@ -33,7 +34,7 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 	 */
 	public function __construct(protected RouteInfo $ri, protected RouteRateLimitInterface $limit)
 	{
-		$this->cache = CacheManager::persistent(self::class);
+		$this->cache = CacheRegistry::store('oz:rate_limit');
 	}
 
 	/**

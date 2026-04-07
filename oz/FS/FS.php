@@ -18,7 +18,7 @@ use InvalidArgumentException;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Interfaces\AuthorizationCredentialsInterface;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Db\OZFilesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -376,9 +376,7 @@ class FS
 			return $driver::get($name);
 		};
 
-		return CacheManager::runtime(__METHOD__)
-			->factory($name, $factory)
-			->get();
+		return CacheRegistry::runtime(__METHOD__)->remember($name, $factory);
 	}
 
 	/**
@@ -441,10 +439,8 @@ class FS
 	{
 		if (\function_exists('finfo_open')) {
 			$finfo = \finfo_open(\FILEINFO_MIME_TYPE);
-			$mime  = \finfo_file($finfo, $file_path);
-			\finfo_close($finfo);
 
-			return $mime;
+			return \finfo_file($finfo, $file_path);
 		}
 		if (\function_exists('mime_content_type')) {
 			return \mime_content_type($file_path);

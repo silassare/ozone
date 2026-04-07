@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Forms;
 
 use LogicException;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Http\Enums\RequestScope;
@@ -36,7 +36,7 @@ final class FormTest extends TestCase
 	{
 		// Clear the form resume cache before each test so cache round-trip tests
 		// do not interfere with each other.
-		CacheManager::persistent(Form::FORM_DATA_RESUME_CACHE_NAMESPACE)->clear();
+		CacheRegistry::store(Form::FORM_DATA_RESUME_CACHE_NAMESPACE)->clear();
 	}
 
 	// -----------------------------------------------------------------------

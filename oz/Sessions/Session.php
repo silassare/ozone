@@ -20,7 +20,7 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
 use OZONE\Core\Db\OZSession;
 use OZONE\Core\Db\OZSessionsQuery;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -288,9 +288,7 @@ final class Session implements BootHookReceiverInterface
 			return null;
 		};
 
-		return CacheManager::runtime(__METHOD__)
-			->factory($sid, $factory)
-			->get();
+		return CacheRegistry::runtime(__METHOD__)->remember($sid, $factory);
 	}
 
 	/**

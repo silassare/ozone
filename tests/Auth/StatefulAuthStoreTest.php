@@ -70,8 +70,7 @@ final class StatefulAuthStoreTest extends TestCase
 
 	public function testTwoCallsWithSameStateIdBothReceiveInitialData(): void
 	{
-		// The factory pattern in CacheManager does not persist created objects back
-		// to the cache store, so each getInstance() call constructs a new Store.
+		// Each getInstance() call constructs a new Store from the supplied data array.
 		// State sharing across calls is handled by the Session layer (the session loads
 		// the raw data array from DB and passes it to getInstance() each time).
 		//

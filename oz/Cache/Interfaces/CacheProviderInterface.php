@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cache\Interfaces;
 
-use OZONE\Core\Cache\CacheItem;
+use OZONE\Core\Cache\CacheCapabilities;
+use OZONE\Core\Cache\CacheEntry;
 
 /**
  * Interface CacheProviderInterface.
@@ -21,34 +22,43 @@ use OZONE\Core\Cache\CacheItem;
 interface CacheProviderInterface
 {
 	/**
-	 * Gets a cache entry.
+	 * Returns the capabilities of this cache driver.
+	 *
+	 * @return CacheCapabilities
+	 */
+	public function capabilities(): CacheCapabilities;
+
+	/**
+	 * Gets a cache entry by key, or null when not found or expired.
 	 *
 	 * @param string $key
 	 *
-	 * @return null|CacheItem
+	 * @return null|CacheEntry
 	 */
-	public function get(string $key): ?CacheItem;
+	public function get(string $key): ?CacheEntry;
 
 	/**
-	 * Gets a list of cache entry.
+	 * Gets multiple cache entries. Missing or expired keys are omitted from the result.
 	 *
 	 * @param string[] $keys
 	 *
-	 * @return CacheItem[]
+	 * @return CacheEntry[] keyed by cache key
 	 */
 	public function getMultiple(array $keys): array;
 
 	/**
-	 * Add or update a new cache entry.
+	 * Stores a cache entry.
 	 *
-	 * @param CacheItem $item
+	 * @param CacheEntry $entry
 	 *
 	 * @return bool
 	 */
-	public function set(CacheItem $item): bool;
+	public function set(CacheEntry $entry): bool;
 
 	/**
-	 * Increment value of a given key.
+	 * Increments the value of a given key.
+	 *
+	 * Returns false when the key does not exist.
 	 *
 	 * @param string $key
 	 * @param float  $factor
@@ -58,7 +68,9 @@ interface CacheProviderInterface
 	public function increment(string $key, float $factor = 1): bool;
 
 	/**
-	 * Decrement value of a given key.
+	 * Decrements the value of a given key.
+	 *
+	 * Returns false when the key does not exist.
 	 *
 	 * @param string $key
 	 * @param float  $factor
@@ -68,7 +80,7 @@ interface CacheProviderInterface
 	public function decrement(string $key, float $factor = 1): bool;
 
 	/**
-	 * Delete a cache entry with a given key.
+	 * Deletes a cache entry by key.
 	 *
 	 * @param string $key
 	 *
@@ -77,7 +89,7 @@ interface CacheProviderInterface
 	public function delete(string $key): bool;
 
 	/**
-	 * Deletes a list of cache entry with a given key list.
+	 * Deletes multiple cache entries.
 	 *
 	 * @param string[] $keys
 	 *
@@ -86,16 +98,34 @@ interface CacheProviderInterface
 	public function deleteMultiple(array $keys): bool;
 
 	/**
-	 * Clear the cache.
+	 * Clears all entries in this driver's namespace.
 	 *
 	 * @return bool
 	 */
 	public function clear(): bool;
 
 	/**
-	 * Gets shared instance.
+	 * Returns expired entries for garbage collection.
 	 *
-	 * @param null|string $namespace
+	 * Drivers that do not support server-side expiry scanning should return an empty array.
+	 * The caller is responsible for deleting the returned entries after processing.
+	 *
+	 * @param int $limit maximum number of expired entries to return per call
+	 *
+	 * @return CacheEntry[] keyed by original cache key
 	 */
-	public static function getSharedInstance(?string $namespace = null): static;
+	public function getExpiredEntries(int $limit = 100): array;
+
+	/**
+	 * Creates a new driver instance for the given namespace and options.
+	 *
+	 * Drivers are responsible for reading their own config from `$options`;
+	 * unknown keys are ignored.
+	 *
+	 * @param string $namespace the namespace (store name) for this driver instance
+	 * @param array  $options   driver-specific configuration options
+	 *
+	 * @return static
+	 */
+	public static function fromConfig(string $namespace, array $options = []): static;
 }

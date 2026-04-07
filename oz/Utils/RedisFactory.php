@@ -26,8 +26,8 @@ use RuntimeException;
  * Enable Redis by setting `OZ_REDIS_ENABLED = true` in your app's `oz.redis`
  * settings override.
  *
- * The connection is established lazily on the first call to {@link get()} and
- * reused for the lifetime of the PHP process. Call {@link reset()} to discard
+ * The connection is established lazily on the first call to {@see RedisFactory::get()} and
+ * reused for the lifetime of the PHP process. Call {@see RedisFactory::reset()} to discard
  * the cached connection (e.g. after a fork or in tests).
  */
 final class RedisFactory

@@ -19,7 +19,8 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
+use OZONE\Core\Cache\Interfaces\CacheEntryExpiryListenerInterface;
 use OZONE\Core\Exceptions\BadRequestException;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\FormResumeExpiredException;
@@ -63,9 +64,9 @@ use OZONE\Core\Router\Router;
  * After the final step `done: true` is returned. The `resume_ref` can be passed to
  * {@see self::requireCompletion()} by downstream code to retrieve the accumulated data.
  */
-final class ResumableFormService extends Service
+final class ResumableFormService extends Service implements CacheEntryExpiryListenerInterface
 {
-	public const CACHE_NAMESPACE = 'oz.form.sessions';
+	public const CACHE_NAMESPACE = 'oz:form:sessions';
 
 	public const ROUTE_INIT     = 'oz:form:init';
 	public const ROUTE_STATE    = 'oz:form:state';
@@ -81,6 +82,35 @@ final class ResumableFormService extends Service
 	public const ACTION_BACK     = 'back';
 	public const ACTION_CANCEL   = 'cancel';
 	public const ACTION_EVALUATE = 'evaluate';
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Called by {@see CacheGarbageCollector} when a session entry in the
+	 * `oz:form:sessions` store expires without being cancelled or consumed.
+	 *
+	 * Reconstructs the provider from the stored `provider_class` key and
+	 * delegates to {@see ResumableFormProviderInterface::onAbandon()}.
+	 *
+	 * Sessions without a `provider_class` key (e.g. created before this
+	 * feature was introduced) are silently ignored.
+	 */
+	#[Override]
+	public static function onCacheEntryExpiry(string $key, mixed $value, string $store_name): void
+	{
+		if (!\is_array($value)) {
+			return;
+		}
+
+		$class = $value['provider_class'] ?? null;
+
+		if (null === $class || !\is_a($class, ResumableFormProviderInterface::class, true)) {
+			return;
+		}
+
+		/** @var class-string<ResumableFormProviderInterface> $class */
+		$class::onAbandon($value);
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -344,7 +374,7 @@ final class ResumableFormService extends Service
 	 */
 	public static function dropSession(string $resume_ref): void
 	{
-		CacheManager::persistent(self::CACHE_NAMESPACE)->delete($resume_ref);
+		CacheRegistry::store(self::CACHE_NAMESPACE)->delete($resume_ref);
 	}
 
 	// -------------------------------------------------------------------------
@@ -399,6 +429,7 @@ final class ResumableFormService extends Service
 			$progress->setPhase($phase);
 
 			self::writeSession($resume_ref, \array_merge($identity_fields, [
+				'provider_class' => \get_class($provider),
 				'phase'          => $phase->value,
 				'cleaned_form'   => [],
 				'progress_state' => $progress->toArray(),
@@ -419,6 +450,7 @@ final class ResumableFormService extends Service
 		$progress->setPhase($phase);
 
 		self::writeSession($resume_ref, \array_merge($identity_fields, [
+			'provider_class' => \get_class($provider),
 			'phase'          => $phase->value,
 			'cleaned_form'   => $cleaned_form->toArray(),
 			'progress_state' => $progress->toArray(),
@@ -599,7 +631,7 @@ final class ResumableFormService extends Service
 
 		$this->doLoadSession($ri, $resume_ref, $identity_fields, $provider);
 
-		CacheManager::persistent(self::CACHE_NAMESPACE)->delete($resume_ref);
+		CacheRegistry::store(self::CACHE_NAMESPACE)->delete($resume_ref);
 
 		$this->json()
 			->setDone()
@@ -825,7 +857,7 @@ final class ResumableFormService extends Service
 
 	private static function loadRawSession(string $resume_ref): ?array
 	{
-		$cached = CacheManager::persistent(self::CACHE_NAMESPACE)->get($resume_ref);
+		$cached = CacheRegistry::store(self::CACHE_NAMESPACE)->get($resume_ref);
 
 		if (!\is_array($cached)) {
 			return null;
@@ -839,6 +871,6 @@ final class ResumableFormService extends Service
 	 */
 	private static function writeSession(string $resume_ref, array $session, int $ttl): void
 	{
-		CacheManager::persistent(self::CACHE_NAMESPACE)->set($resume_ref, $session, $ttl);
+		CacheRegistry::store(self::CACHE_NAMESPACE)->set($resume_ref, $session, $ttl);
 	}
 }

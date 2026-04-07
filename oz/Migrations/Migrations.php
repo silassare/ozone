@@ -21,7 +21,8 @@ use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
+use OZONE\Core\Cache\CacheStore;
 use OZONE\Core\Db\OZMigration;
 use OZONE\Core\Db\OZMigrationsQuery;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -87,7 +88,7 @@ final class Migrations
 	 */
 	public static function getCurrentDbVersion(bool $silent = false): int
 	{
-		return self::cache()->factory('db_version', static function () use ($silent) {
+		return self::cache()->remember('db_version', static function () use ($silent) {
 			try {
 				$qb    = new OZMigrationsQuery();
 				$found = $qb->find(1, 0, [
@@ -102,7 +103,7 @@ final class Migrations
 			}
 
 			return self::DB_NOT_INSTALLED_VERSION;
-		})->get();
+		});
 	}
 
 	/**
@@ -254,7 +255,7 @@ final class Migrations
 	 */
 	public function migrations(): array
 	{
-		return self::cache()->factory('migrations', static function () {
+		return self::cache()->remember('migrations', static function () {
 			$fm = app()->getMigrationsDir();
 
 			$filter     = $fm->filter()
@@ -303,8 +304,7 @@ final class Migrations
 			);
 
 			return $migrations;
-		})
-			->get();
+		});
 	}
 
 	/**
@@ -489,11 +489,11 @@ final class Migrations
 	/**
 	 * Gets the migrations cache.
 	 *
-	 * @return CacheManager
+	 * @return CacheStore
 	 */
-	private static function cache(): CacheManager
+	private static function cache(): CacheStore
 	{
-		return CacheManager::runtime(self::class);
+		return CacheRegistry::runtime(self::class);
 	}
 
 	/**

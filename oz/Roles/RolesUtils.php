@@ -16,7 +16,7 @@ namespace OZONE\Core\Roles;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
 use OZONE\Core\Db\OZRole;
 use OZONE\Core\Db\OZRolesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -232,10 +232,10 @@ class RolesUtils
 	 */
 	public static function roles(AuthUserInterface $user, bool $fresh = false): array
 	{
-		$cache     = CacheManager::runtime(__METHOD__);
+		$store     = CacheRegistry::runtime(__METHOD__);
 		$cache_key = AuthUsers::ref($user);
 
-		$fresh && $cache->clear();
+		$fresh && $store->clear();
 
 		$factory
 			/**
@@ -257,8 +257,6 @@ class RolesUtils
 				}
 			};
 
-		return $cache
-			->factory($cache_key, $factory)
-			->get();
+		return $store->remember($cache_key, $factory);
 	}
 }

@@ -14,17 +14,21 @@ declare(strict_types=1);
 namespace OZONE\Core\Cache\Drivers;
 
 use Override;
-use OZONE\Core\Cache\CacheItem;
+use OZONE\Core\Cache\CacheCapabilities;
+use OZONE\Core\Cache\CacheEntry;
 use OZONE\Core\Cache\Interfaces\CacheProviderInterface;
 
 /**
  * Class RuntimeCache.
+ *
+ * In-memory cache backed by a static PHP array. Data is lost when the process
+ * ends. Suitable for per-request memoization.
  */
 class RuntimeCache implements CacheProviderInterface
 {
-	public const CACHE_VALUE_PROP = 'value';
+	protected const CACHE_VALUE_PROP  = 'value';
 
-	public const CACHE_EXPIRE_PROP = 'expire';
+	protected const CACHE_EXPIRE_PROP = 'expire';
 
 	protected string $namespace;
 
@@ -48,14 +52,28 @@ class RuntimeCache implements CacheProviderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function get(string $key): ?CacheItem
+	public function capabilities(): CacheCapabilities
+	{
+		return new CacheCapabilities(
+			perEntryTTL: true,
+			persistent: false,
+			expiryCallbacks: false,
+			atomic: false,
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function get(string $key): ?CacheEntry
 	{
 		if (isset(self::$cache_data[$this->namespace][$key])) {
 			$item   = self::$cache_data[$this->namespace][$key];
 			$expire = $item[self::CACHE_EXPIRE_PROP] ?? null;
 
 			if (null === $expire || $expire > \microtime(true)) {
-				return new CacheItem($key, $item[self::CACHE_VALUE_PROP], (float) $expire);
+				return new CacheEntry($key, $item[self::CACHE_VALUE_PROP], $expire);
 			}
 
 			$this->delete($key);
@@ -87,11 +105,11 @@ class RuntimeCache implements CacheProviderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function set(CacheItem $item): bool
+	public function set(CacheEntry $entry): bool
 	{
-		self::$cache_data[$this->namespace][$item->getKey()] = [
-			self::CACHE_VALUE_PROP  => $item->get(),
-			self::CACHE_EXPIRE_PROP => $item->getExpire(),
+		self::$cache_data[$this->namespace][$entry->key] = [
+			self::CACHE_VALUE_PROP  => $entry->value,
+			self::CACHE_EXPIRE_PROP => $entry->expiresAt,
 		];
 
 		return $this->save();
@@ -142,8 +160,8 @@ class RuntimeCache implements CacheProviderInterface
 			return false;
 		}
 
-		$val                                                              = self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] ?? 0;
-		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] = $val + $factor;
+		$val                                                               = self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] ?? 0;
+		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP]  = $val + $factor;
 
 		return $this->save();
 	}
@@ -158,24 +176,34 @@ class RuntimeCache implements CacheProviderInterface
 			return false;
 		}
 
-		$val = self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] ?? 0;
-
-		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] = $val - $factor;
+		$val                                                               = self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] ?? 0;
+		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP]  = $val - $factor;
 
 		return $this->save();
 	}
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * RuntimeCache does not support server-side expiry scanning; returns an empty array.
 	 */
 	#[Override]
-	public static function getSharedInstance(?string $namespace = null): static
+	public function getExpiredEntries(int $limit = 100): array
 	{
-		return new self($namespace);
+		return [];
 	}
 
 	/**
-	 * This method is called when the cache is initialized.
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function fromConfig(string $namespace, array $options = []): static
+	{
+		return new static($namespace);
+	}
+
+	/**
+	 * Called when the cache is being initialized.
 	 *
 	 * @return array
 	 */
@@ -185,7 +213,7 @@ class RuntimeCache implements CacheProviderInterface
 	}
 
 	/**
-	 * This method is called after each cache operation.
+	 * Called after each write operation.
 	 *
 	 * @return bool
 	 */

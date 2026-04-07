@@ -16,9 +16,9 @@ use OZONE\Core\Cache\Drivers\RuntimeCache;
 /**
  * Unit-test cache settings.
  *
- * Override the persistent cache provider to use an in-memory RuntimeCache
- * so that no database connection is required during unit testing.
+ * Override both the default persistent driver and the named store driver
+ * to use an in-memory RuntimeCache so that no database connection is required.
  */
 return [
-	'OZ_PERSISTENT_CACHE_PROVIDER' => RuntimeCache::class,
+	'OZ_CACHE_DEFAULT_PERSISTENT' => RuntimeCache::class,
 ];

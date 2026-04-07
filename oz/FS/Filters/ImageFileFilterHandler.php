@@ -17,7 +17,7 @@ use claviska\SimpleImage;
 use Exception;
 use Override;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\FS\FileStream;
@@ -55,7 +55,7 @@ use OZONE\Core\Http\Response;
  */
 class ImageFileFilterHandler implements FileFilterHandlerInterface
 {
-	private const CACHE_NS = 'oz.fs.image.filters';
+	private const CACHE_NS = 'oz:fs:image:filters';
 
 	/**
 	 * {@inheritDoc}
@@ -73,17 +73,17 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface
 	public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response
 	{
 		$cacheKey = \md5($file->getID() . ':' . $file->getKey() . ':' . \implode(',', $filterTokens));
-		$cm       = CacheManager::persistent(self::CACHE_NS);
-		$item     = $cm->getItem($cacheKey);
+		$store    = CacheRegistry::store(self::CACHE_NS);
 
-		if (!$item->expired()) {
-			/** @var array{mime: string, bytes: string} $cached */
-			$cached = $item->get();
-			$mime   = $cached['mime'];
-			$bytes  = $cached['bytes'];
+		/** @var null|array{mime: string, bytes: string} $cached */
+		$cached   = $store->get($cacheKey);
+
+		if (null !== $cached) {
+			$mime  = $cached['mime'];
+			$bytes = $cached['bytes'];
 		} else {
 			[$mime, $bytes] = $this->process($file, $stream, $filterTokens);
-			$cm->set($cacheKey, ['mime' => $mime, 'bytes' => $bytes]);
+			$store->set($cacheKey, ['mime' => $mime, 'bytes' => $bytes]);
 		}
 
 		return $response

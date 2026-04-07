@@ -17,7 +17,7 @@ use OZONE\Core\Access\AccessRights;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\TwoFactor\TwoFactorChannelRegistry;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
 use PHPUtils\Store\Store;
 
 /**
@@ -42,12 +42,7 @@ class AuthUserDataStore extends Store
 	 */
 	public static function getInstance(AuthUserInterface $user, array $data): static
 	{
-		$ref     = AuthUsers::ref($user);
-		$cache   = CacheManager::runtime(__METHOD__);
-		$factory = static fn (): static => new static($data);
-
-		return $cache->factory($ref, $factory)
-			->get();
+		return CacheRegistry::runtime(__METHOD__)->remember(AuthUsers::ref($user), static fn (): static => new static($data));
 	}
 
 	/**

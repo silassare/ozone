@@ -11,19 +11,27 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\Cache\CacheRegistry;
 use OZONE\Core\Cache\Drivers\DbCache;
 use OZONE\Core\Cache\Drivers\RuntimeCache;
 
 return [
 	/**
-	 * Runtime cache driver: data are lost after runtime.
+	 * Default runtime cache driver.
+	 *
+	 * Runtime data is scoped to the current process and lost when it ends.
+	 * Used by {@see CacheRegistry::runtime()}.
 	 */
-	'OZ_RUNTIME_CACHE_PROVIDER'    => RuntimeCache::class,
+	'OZ_CACHE_DEFAULT_RUNTIME'    => RuntimeCache::class,
 
 	/**
-	 * Persistent cache driver: data should survive after runtime.
+	 * Default persistent cache driver.
+	 *
+	 * Persistent data survives process restarts.
+	 * Used by {@see CacheRegistry::persistent()} and as the
+	 * fallback when a named store in `oz.cache.stores` specifies no `driver` key.
 	 */
-	'OZ_PERSISTENT_CACHE_PROVIDER' => DbCache::class,
+	'OZ_CACHE_DEFAULT_PERSISTENT' => DbCache::class,
 
 	/**
 	 * Add Clear-Site-Data header on logout response.

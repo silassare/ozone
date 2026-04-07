@@ -44,6 +44,12 @@ final class ResumableFormServiceTest extends TestCase
 	private static string $host = '127.0.0.1';
 	private static int $port    = 0;
 
+	/** Absolute path; writing a UNIX timestamp here activates notBefore() on the irreversible provider. */
+	private static string $notBeforeFile = '';
+
+	/** Absolute path; writing a UNIX timestamp here activates deadline() on the irreversible provider. */
+	private static string $deadlineFile = '';
+
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -58,6 +64,12 @@ final class ResumableFormServiceTest extends TestCase
 
 		$ns = $proj->getNamespace();
 
+		// Config files used by TestFormIrreversibleProvider (read server-side per request).
+		$notBeforeFile        = $proj->getPath() . '/irreversible_not_before.txt';
+		$deadlineFile         = $proj->getPath() . '/irreversible_deadline.txt';
+		self::$notBeforeFile  = $notBeforeFile;
+		self::$deadlineFile   = $deadlineFile;
+
 		// Inject provider stubs.
 		$proj->writeFileFromStub('TestFormProvider', 'app/TestFormProvider.php', [
 			'namespace' => $ns,
@@ -65,10 +77,22 @@ final class ResumableFormServiceTest extends TestCase
 		$proj->writeFileFromStub('TestFormRealContextProvider', 'app/TestFormRealContextProvider.php', [
 			'namespace' => $ns,
 		]);
+		$proj->writeFileFromStub('TestFormIrreversibleProvider', 'app/TestFormIrreversibleProvider.php', [
+			'namespace'       => $ns,
+			'not_before_file' => $notBeforeFile,
+			'deadline_file'   => $deadlineFile,
+		]);
+		$proj->writeFileFromStub('TestFormConsumerRoutesProvider', 'app/TestFormConsumerRoutesProvider.php', [
+			'namespace' => $ns,
+		]);
 
 		// Register providers in oz.forms.providers.
 		$proj->setSetting('oz.forms.providers', 'test-wizard', "{$ns}\\TestFormProvider");
 		$proj->setSetting('oz.forms.providers', 'test-real-ctx', "{$ns}\\TestFormRealContextProvider");
+		$proj->setSetting('oz.forms.providers', 'test-irreversible', "{$ns}\\TestFormIrreversibleProvider");
+
+		// Register consumer routes (requireCompletion / dropSession test endpoints).
+		$proj->setSetting('oz.routes.api', "{$ns}\\TestFormConsumerRoutesProvider", true);
 
 		// Build ORM classes and install the schema.
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
@@ -94,6 +118,12 @@ final class ResumableFormServiceTest extends TestCase
 		}
 		if (isset(self::$proj)) {
 			self::$proj->destroy();
+		}
+		// Clean up temp config files created for the irreversible-provider tests.
+		foreach ([self::$notBeforeFile, self::$deadlineFile] as $tmpFile) {
+			if ('' !== $tmpFile && \file_exists($tmpFile)) {
+				\unlink($tmpFile);
+			}
 		}
 		parent::tearDownAfterClass();
 	}
@@ -358,6 +388,213 @@ final class ResumableFormServiceTest extends TestCase
 		// Step 1 form fields are color and hint.
 		$fieldRefs = \array_column($data['form']['fields'], 'ref');
 		self::assertContains('color', $fieldRefs);
+	}
+
+	// -------------------------------------------------------------------------
+	// Invalid init-form data
+	// -------------------------------------------------------------------------
+
+	public function testInvalidInitFormDataReturnsError(): void
+	{
+		// Open a session to reach INIT phase (initForm() returns the 'wish' form).
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		// Submit /next without the required 'wish' field -- form validation must fail.
+		[, $body] = $this->request('POST', '/form/test-wizard/next', [], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(1, $data['error'], 'Missing required init-form field should return error=1.');
+	}
+
+	// -------------------------------------------------------------------------
+	// Spoofed scope_id (wrong host)
+	// -------------------------------------------------------------------------
+
+	public function testSpoofedScopeIdReturnsError(): void
+	{
+		// Open a session; scope_id stored = getHost() of the normal 127.0.0.1 request.
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		// Submit /next with a different Host header so scope_id does not match.
+		// PHP stream context "header" overrides the auto-generated Host: value
+		// (documented: "Values in this option will override other options such as Host:").
+		[, $body] = $this->request('POST', '/form/test-wizard/next', ['wish' => 'spy'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+			'Host'                    => 'evil.example.com:9999',
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(1, $data['error'], 'Spoofed scope_id (different Host) should return error=1.');
+	}
+
+	// -------------------------------------------------------------------------
+	// Unknown resume_ref
+	// -------------------------------------------------------------------------
+
+	public function testUnknownResumeRefReturnsError(): void
+	{
+		// Fabricate a ref that was never issued.
+		[, $body] = $this->request('POST', '/form/test-wizard/next', ['wish' => 'ghost'], [
+			'X-OZONE-Form-Resume-Ref' => 'aaaabbbbccccddddeeeeffffgggghhhh',
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(1, $data['error'], 'Unknown resume_ref should return error=1.');
+	}
+
+	// -------------------------------------------------------------------------
+	// requireCompletion
+	// -------------------------------------------------------------------------
+
+	public function testRequireCompletionOnDoneSession(): void
+	{
+		// Complete the full test-wizard flow: init + submit init + 3 step submissions.
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		$this->request('POST', '/form/test-wizard/next', ['wish' => 'completion-test'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['name' => 'dave'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['color' => 'purple'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['notes' => 'final'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+
+		// Downstream consumer calls requireCompletion via the test route.
+		[, $body] = $this->request('GET', '/test/require-completion/' . $resumeRef);
+		$data     = \json_decode($body, true);
+
+		self::assertSame(0, $data['error'], 'requireCompletion on a done session should return error=0. Body: ' . $body);
+		self::assertArrayHasKey('values', $data['data']);
+		self::assertSame('completion-test', $data['data']['values']['wish'] ?? null);
+		self::assertSame('dave', $data['data']['values']['name'] ?? null);
+	}
+
+	public function testRequireCompletionOnNotDoneSessionReturnsError(): void
+	{
+		// Open a session but do not advance past INIT.
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		[, $body] = $this->request('GET', '/test/require-completion/' . $resumeRef);
+		$data     = \json_decode($body, true);
+
+		self::assertSame(1, $data['error'], 'requireCompletion on a not-done session should return error=1.');
+	}
+
+	// -------------------------------------------------------------------------
+	// Irreversible provider -- POST /back
+	// -------------------------------------------------------------------------
+
+	public function testBackOnIrreversibleProviderReturnsError(): void
+	{
+		// test-irreversible has no initForm() so the session starts directly in STEPS.
+		[, $body]  = $this->request('POST', '/form/test-irreversible/init');
+		$data      = \json_decode($body, true);
+		self::assertSame(0, $data['error'], 'POST /init for irreversible provider should succeed. Body: ' . $body);
+		$resumeRef = $data['data']['resume_ref'];
+
+		// POST /back must be rejected immediately because isReversible() = false.
+		[, $body] = $this->request('POST', '/form/test-irreversible/back', [], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(1, $data['error'], 'POST /back on an irreversible provider should return error=1.');
+	}
+
+	// -------------------------------------------------------------------------
+	// notBefore() in the future
+	// -------------------------------------------------------------------------
+
+	public function testNotBeforeInFutureReturnsError(): void
+	{
+		// Activate notBefore: write a timestamp 1 hour in the future.
+		\file_put_contents(self::$notBeforeFile, (string) (\time() + 3600));
+
+		try {
+			[, $body] = $this->request('POST', '/form/test-irreversible/init');
+			$data     = \json_decode($body, true);
+
+			self::assertSame(1, $data['error'], 'POST /init with notBefore in the future should return error=1.');
+		} finally {
+			\unlink(self::$notBeforeFile);
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// deadline() in the past
+	// -------------------------------------------------------------------------
+
+	public function testDeadlineInPastReturnsError(): void
+	{
+		// Activate deadline: write a timestamp 100 seconds in the past.
+		// doInit() stores expires_at = min(time()+TTL, deadline) = past timestamp.
+		\file_put_contents(self::$deadlineFile, (string) (\time() - 100));
+
+		try {
+			// POST /init itself succeeds (notBefore is not checked here).
+			[, $body] = $this->request('POST', '/form/test-irreversible/init');
+			$initData = \json_decode($body, true);
+			self::assertSame(0, $initData['error'], 'POST /init should succeed even with a past deadline. Body: ' . $body);
+			$resumeRef = $initData['data']['resume_ref'];
+
+			// Any handler that loads the session checks expires_at and must throw FormResumeExpiredException.
+			[, $body] = $this->request('GET', '/form/test-irreversible/state', [], [
+				'X-OZONE-Form-Resume-Ref' => $resumeRef,
+			]);
+			$data = \json_decode($body, true);
+
+			self::assertSame(1, $data['error'], 'GET /state after a past deadline should return error=1.');
+		} finally {
+			\unlink(self::$deadlineFile);
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// dropSession invalidates the ref
+	// -------------------------------------------------------------------------
+
+	public function testDropSessionInvalidatesRef(): void
+	{
+		// Complete the full flow so we have a done session.
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		$this->request('POST', '/form/test-wizard/next', ['wish' => 'drop-test'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['name' => 'will-drop'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['color' => 'yellow'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		[, $nextBody] = $this->request('POST', '/form/test-wizard/next', ['notes' => 'bye'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		self::assertSame(0, \json_decode($nextBody, true)['error'], 'Completing test-wizard should return error=0.');
+
+		// Downstream consumer drops the session.
+		[, $dropBody] = $this->request('POST', '/test/drop-session/' . $resumeRef);
+		self::assertSame(0, \json_decode($dropBody, true)['error'], 'dropSession should return error=0.');
+
+		// After drop, any access with the old ref must fail.
+		[, $body] = $this->request('GET', '/form/test-wizard/state', [], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(1, $data['error'], 'GET /state after dropSession should return error=1.');
 	}
 
 	// -------------------------------------------------------------------------

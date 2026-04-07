@@ -223,7 +223,7 @@ final class FileFiltersTest extends TestCase
 
 	public function testBadImageFallsBackToRawContent(): void
 	{
-		$file      = self::makeFile('image/png');
+		$file      = self::makeFile('image/png', '999');
 		$badBytes  = 'this is not an image';
 		$handler   = new ImageFileFilterHandler();
 		$stream    = self::makeStream($badBytes);

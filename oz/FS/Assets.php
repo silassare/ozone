@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\FS;
 
 use Override;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use PHPUtils\FS\PathUtils;
 use PHPUtils\Str;
@@ -145,9 +145,6 @@ final class Assets implements BootHookReceiverInterface
 			return $found;
 		};
 
-		$cm = CacheManager::runtime(self::class);
-
-		return $cm->factory($cache_key, $factory)
-			->get();
+		return CacheRegistry::runtime(self::class)->remember($cache_key, $factory);
 	}
 }

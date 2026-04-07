@@ -15,7 +15,8 @@ namespace OZONE\Core\Cache\Drivers;
 
 use Memcached;
 use Override;
-use OZONE\Core\Cache\CacheItem;
+use OZONE\Core\Cache\CacheCapabilities;
+use OZONE\Core\Cache\CacheEntry;
 use OZONE\Core\Cache\Interfaces\CacheProviderInterface;
 use OZONE\Core\Utils\Hasher;
 use RuntimeException;
@@ -41,7 +42,21 @@ final class MemcachedCache implements CacheProviderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function get(string $key): ?CacheItem
+	public function capabilities(): CacheCapabilities
+	{
+		return new CacheCapabilities(
+			perEntryTTL: true,
+			persistent: true,
+			expiryCallbacks: false,
+			atomic: true,
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function get(string $key): ?CacheEntry
 	{
 		$value = $this->memcached->get($key);
 
@@ -52,11 +67,11 @@ final class MemcachedCache implements CacheProviderInterface
 		$expire = $this->memcached->get($key . ':expire');
 
 		if (Memcached::RES_NOTFOUND === $this->memcached->getResultCode()) {
-			return new CacheItem($key, $value);
+			return new CacheEntry($key, $value);
 		}
 
 		if ($expire > \microtime(true)) {
-			return new CacheItem($key, $value, (float) $expire);
+			return new CacheEntry($key, $value, (float) $expire);
 		}
 
 		return null;
@@ -85,13 +100,13 @@ final class MemcachedCache implements CacheProviderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function set(CacheItem $item): bool
+	public function set(CacheEntry $entry): bool
 	{
-		$key                    = $item->getKey();
-		$expire                 = $item->getExpire();
+		$key                    = $entry->key;
+		$expire                 = $entry->expiresAt;
 		$expire_in_milliseconds = (null !== $expire) ? (int) ($expire * 1000) : null;
 
-		$this->memcached->set($key, $item->get(), $expire_in_milliseconds);
+		$this->memcached->set($key, $entry->value, $expire_in_milliseconds);
 
 		if (Memcached::RES_SUCCESS !== $this->memcached->getResultCode()) {
 			return false;
@@ -157,34 +172,39 @@ final class MemcachedCache implements CacheProviderInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * MemcachedCache does not support server-side expiry scanning.
 	 */
 	#[Override]
-	public static function getSharedInstance(?string $namespace = null): static
+	public function getExpiredEntries(int $limit = 100): array
 	{
-		// one instantiation per-connection per-request
+		return [];
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function fromConfig(string $namespace, array $options = []): static
+	{
 		static $memcached_instances = [];
 
-		$servers   = [
+		$servers = [
 			'_' => [],
 		];
-		$namespace ??= '_';
 
 		if (isset($memcached_instances[$namespace])) {
 			$instance = $memcached_instances[$namespace];
 		} else {
 			$instance = new Memcached($namespace);
-			// Add servers if no connections listed.
-			// In a production environment with multiple server sets you may wish to prevent typos from silently adding data
-			// to the default pool, in which case return an error on no match instead of defaulting
+			// Add servers if none connected yet.
 			if (!\count($instance->getServerList())) {
 				$prefix = Hasher::shorten($namespace);
 				$instance->setOption(Memcached::OPT_PREFIX_KEY, $prefix . ':');
-				// advisable option
 				$instance->setOption(Memcached::OPT_LIBKETAMA_COMPATIBLE, true);
 				$instance->setOption(Memcached::OPT_RECV_TIMEOUT, 1000);
 				$instance->setOption(Memcached::OPT_SEND_TIMEOUT, 3000);
 				$instance->setOption(Memcached::OPT_TCP_NODELAY, true);
-
 				$instance->addServers($servers);
 			}
 

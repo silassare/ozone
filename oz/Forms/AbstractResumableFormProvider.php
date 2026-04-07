@@ -147,4 +147,13 @@ abstract class AbstractResumableFormProvider implements ResumableFormProviderInt
 	{
 		return null;
 	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function onAbandon(array $session): void
+	{
+		// no-op by default
+	}
 }

@@ -177,7 +177,7 @@ final class ResumableFormServiceTest extends TestCase
 
 	public function testCacheNamespaceConstant(): void
 	{
-		self::assertSame('oz.form.sessions', ResumableFormService::CACHE_NAMESPACE);
+		self::assertSame('oz:form:sessions', ResumableFormService::CACHE_NAMESPACE);
 	}
 
 	public function testRouteInitConstant(): void

@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Cache;
 
-use OZONE\Core\Cache\CacheItem;
+use OZONE\Core\Cache\CacheEntry;
 use OZONE\Core\Cache\Drivers\RuntimeCache;
 use PHPUnit\Framework\TestCase;
 
@@ -37,12 +37,12 @@ final class RuntimeCacheTest extends TestCase
 
 	public function testSetAndGet(): void
 	{
-		$item = new CacheItem('hello', 'world');
-		$this->cache->set($item);
+		$entry = new CacheEntry('hello', 'world');
+		$this->cache->set($entry);
 
 		$retrieved = $this->cache->get('hello');
 		self::assertNotNull($retrieved);
-		self::assertSame('world', $retrieved->get());
+		self::assertSame('world', $retrieved->value);
 	}
 
 	public function testGetReturnsNullForMissingKey(): void
@@ -52,15 +52,15 @@ final class RuntimeCacheTest extends TestCase
 
 	public function testGetReturnsNullForExpiredItem(): void
 	{
-		$item = (new CacheItem('expired', 'value'))->expiresAfter(-1.0); // expired in the past
-		$this->cache->set($item);
+		$entry = CacheEntry::forTTL('expired', 'value', -1.0); // expired in the past
+		$this->cache->set($entry);
 
 		self::assertNull($this->cache->get('expired'));
 	}
 
 	public function testDeleteRemovesItem(): void
 	{
-		$this->cache->set(new CacheItem('key', 'val'));
+		$this->cache->set(new CacheEntry('key', 'val'));
 		$this->cache->delete('key');
 
 		self::assertNull($this->cache->get('key'));
@@ -68,8 +68,8 @@ final class RuntimeCacheTest extends TestCase
 
 	public function testClearEmptiesAllItems(): void
 	{
-		$this->cache->set(new CacheItem('a', 1));
-		$this->cache->set(new CacheItem('b', 2));
+		$this->cache->set(new CacheEntry('a', 1));
+		$this->cache->set(new CacheEntry('b', 2));
 		$this->cache->clear();
 
 		self::assertNull($this->cache->get('a'));
@@ -78,8 +78,8 @@ final class RuntimeCacheTest extends TestCase
 
 	public function testGetMultipleReturnsOnlyExistingItems(): void
 	{
-		$this->cache->set(new CacheItem('x', 10));
-		$this->cache->set(new CacheItem('y', 20));
+		$this->cache->set(new CacheEntry('x', 10));
+		$this->cache->set(new CacheEntry('y', 20));
 
 		$items = $this->cache->getMultiple(['x', 'y', 'z']);
 		self::assertCount(2, $items);
@@ -90,9 +90,9 @@ final class RuntimeCacheTest extends TestCase
 
 	public function testDeleteMultipleRemovesMultipleItems(): void
 	{
-		$this->cache->set(new CacheItem('a', 1));
-		$this->cache->set(new CacheItem('b', 2));
-		$this->cache->set(new CacheItem('c', 3));
+		$this->cache->set(new CacheEntry('a', 1));
+		$this->cache->set(new CacheEntry('b', 2));
+		$this->cache->set(new CacheEntry('c', 3));
 		$this->cache->deleteMultiple(['a', 'b']);
 
 		self::assertNull($this->cache->get('a'));
@@ -102,12 +102,12 @@ final class RuntimeCacheTest extends TestCase
 
 	public function testIncrementIncreasesValue(): void
 	{
-		$this->cache->set(new CacheItem('counter', 10));
+		$this->cache->set(new CacheEntry('counter', 10));
 		$this->cache->increment('counter', 5);
 
-		$item = $this->cache->get('counter');
-		self::assertNotNull($item);
-		self::assertSame(15.0, $item->get());
+		$entry = $this->cache->get('counter');
+		self::assertNotNull($entry);
+		self::assertSame(15.0, $entry->value);
 	}
 
 	public function testIncrementReturnsFalseForMissingKey(): void
@@ -117,12 +117,12 @@ final class RuntimeCacheTest extends TestCase
 
 	public function testDecrementDecreasesValue(): void
 	{
-		$this->cache->set(new CacheItem('counter', 10));
+		$this->cache->set(new CacheEntry('counter', 10));
 		$this->cache->decrement('counter', 3);
 
-		$item = $this->cache->get('counter');
-		self::assertNotNull($item);
-		self::assertSame(7.0, $item->get());
+		$entry = $this->cache->get('counter');
+		self::assertNotNull($entry);
+		self::assertSame(7.0, $entry->value);
 	}
 
 	public function testDecrementReturnsFalseForMissingKey(): void
@@ -130,15 +130,15 @@ final class RuntimeCacheTest extends TestCase
 		self::assertFalse($this->cache->decrement('nonexistent'));
 	}
 
-	public function testGetSharedInstanceReturnsSameNamespace(): void
+	public function testFromConfigReturnsSameNamespace(): void
 	{
-		$a = RuntimeCache::getSharedInstance('shared_ns');
-		$a->set(new CacheItem('ping', 'pong'));
+		$a = RuntimeCache::fromConfig('shared_ns');
+		$a->set(new CacheEntry('ping', 'pong'));
 
-		$b    = RuntimeCache::getSharedInstance('shared_ns');
-		$item = $b->get('ping');
-		self::assertNotNull($item);
-		self::assertSame('pong', $item->get());
+		$b     = RuntimeCache::fromConfig('shared_ns');
+		$entry = $b->get('ping');
+		self::assertNotNull($entry);
+		self::assertSame('pong', $entry->value);
 
 		// Cleanup
 		$a->clear();
@@ -149,7 +149,7 @@ final class RuntimeCacheTest extends TestCase
 		$ns1 = new RuntimeCache('ns1_isolation');
 		$ns2 = new RuntimeCache('ns2_isolation');
 
-		$ns1->set(new CacheItem('k', 'from_ns1'));
+		$ns1->set(new CacheEntry('k', 'from_ns1'));
 
 		self::assertNull($ns2->get('k'));
 

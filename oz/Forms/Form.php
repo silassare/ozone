@@ -19,7 +19,7 @@ use Gobl\DBAL\Types\TypeDate;
 use LogicException;
 use Override;
 use OZONE\Core\App\Context;
-use OZONE\Core\Cache\CacheManager;
+use OZONE\Core\Cache\CacheRegistry;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\Traits\FieldContainerHelpersTrait;
 use OZONE\Core\Http\Enums\RequestScope;
@@ -41,7 +41,7 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	use FieldContainerHelpersTrait;
 	use MetaCapableTrait;
 
-	public const FORM_DATA_RESUME_CACHE_NAMESPACE = 'oz.form.resume';
+	public const FORM_DATA_RESUME_CACHE_NAMESPACE = 'oz:form:resume';
 
 	/**
 	 * @var array<string,Fieldset>
@@ -358,7 +358,7 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 		if (null !== $this->t_resume_scope) {
 			$scope_id = $this->t_resume_scope->resolveId($context);
 
-			$cache     = CacheManager::persistent(self::FORM_DATA_RESUME_CACHE_NAMESPACE);
+			$cache     = CacheRegistry::store(self::FORM_DATA_RESUME_CACHE_NAMESPACE);
 			$cache_key = $this->buildResumeCacheKey($scope_id);
 			$cached    = $cache->get($cache_key);
 
@@ -385,10 +385,10 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 		}
 
 		$scope_id  = $this->t_resume_scope->resolveId($context);
-		$cache     = CacheManager::persistent(self::FORM_DATA_RESUME_CACHE_NAMESPACE);
+		$store     = CacheRegistry::store(self::FORM_DATA_RESUME_CACHE_NAMESPACE);
 		$cache_key = $this->buildResumeCacheKey($scope_id);
 
-		$cache->set($cache_key, [
+		$store->set($cache_key, [
 			'version' => $this->getVersion(),
 			'data'    => $fd->toArray(),
 		], $this->t_resume_ttl);

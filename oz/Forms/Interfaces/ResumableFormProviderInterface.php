@@ -153,4 +153,19 @@ interface ResumableFormProviderInterface
 	 * client must start a new session.
 	 */
 	public function resumeTTL(): int;
+
+	/**
+	 * Called when a session belonging to this provider expires passively (TTL
+	 * elapses without the client explicitly cancelling it).
+	 *
+	 * Override to release resources, update upstream state, or log the
+	 * abandonment. The `$session` array contains the raw session record that
+	 * was stored at the time of expiry (same shape written by `doInit`).
+	 *
+	 * This method is invoked from the cache garbage collector and must NOT rely
+	 * on an active HTTP request context.
+	 *
+	 * @param array $session the raw session record that expired
+	 */
+	public static function onAbandon(array $session): void;
 }

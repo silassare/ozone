@@ -14,7 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Core\Cache\Drivers;
 
 use Override;
-use OZONE\Core\Cache\CacheItem;
+use OZONE\Core\Cache\CacheCapabilities;
+use OZONE\Core\Cache\CacheEntry;
 use OZONE\Core\Cache\Interfaces\CacheProviderInterface;
 use OZONE\Core\Utils\RedisFactory;
 use Redis as PhpRedis;
@@ -32,9 +33,8 @@ if (!\class_exists('\Redis')) {
  *
  * Each cache entry is stored as a single serialized blob at the namespaced key
  * `{namespace}:{key}`. The blob encodes both the cached value and the absolute
- * expiry timestamp so {@link CacheItem} can be reconstructed exactly. A native
- * Redis TTL is also set when an expiry is present so expired keys are
- * automatically evicted.
+ * expiry timestamp. A native Redis TTL is also set when an expiry is present so
+ * expired keys are automatically evicted.
  *
  * Namespace isolation: all existing keys in a namespace can be cleared in one
  * pass via {@link clear()}, which uses a Redis SCAN + DEL loop.
@@ -57,7 +57,21 @@ class RedisCache implements CacheProviderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function get(string $key): ?CacheItem
+	public function capabilities(): CacheCapabilities
+	{
+		return new CacheCapabilities(
+			perEntryTTL: true,
+			persistent: true,
+			expiryCallbacks: false, // Redis TTL evicts passively; no push-based GC needed
+			atomic: true,
+		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function get(string $key): ?CacheEntry
 	{
 		$raw = RedisFactory::get()->get($this->buildKey($key));
 
@@ -80,7 +94,7 @@ class RedisCache implements CacheProviderInterface
 			return null;
 		}
 
-		return new CacheItem($key, $data[self::VALUE_KEY], $expire);
+		return new CacheEntry($key, $data[self::VALUE_KEY], $expire);
 	}
 
 	/**
@@ -106,12 +120,12 @@ class RedisCache implements CacheProviderInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function set(CacheItem $item): bool
+	public function set(CacheEntry $entry): bool
 	{
-		$expire    = $item->getExpire();
-		$redis_key = $this->buildKey($item->getKey());
+		$expire    = $entry->expiresAt;
+		$redis_key = $this->buildKey($entry->key);
 		$raw       = \serialize([
-			self::VALUE_KEY  => $item->get(),
+			self::VALUE_KEY  => $entry->value,
 			self::EXPIRE_KEY => $expire,
 		]);
 
@@ -130,13 +144,13 @@ class RedisCache implements CacheProviderInterface
 	#[Override]
 	public function increment(string $key, float $factor = 1): bool
 	{
-		$item = $this->get($key);
+		$entry = $this->get($key);
 
-		if (null === $item) {
+		if (null === $entry) {
 			return false;
 		}
 
-		return $this->set(new CacheItem($key, $item->get() + $factor, $item->getExpire()));
+		return $this->set(new CacheEntry($key, $entry->value + $factor, $entry->expiresAt));
 	}
 
 	/**
@@ -145,13 +159,13 @@ class RedisCache implements CacheProviderInterface
 	#[Override]
 	public function decrement(string $key, float $factor = 1): bool
 	{
-		$item = $this->get($key);
+		$entry = $this->get($key);
 
-		if (null === $item) {
+		if (null === $entry) {
 			return false;
 		}
 
-		return $this->set(new CacheItem($key, $item->get() - $factor, $item->getExpire()));
+		return $this->set(new CacheEntry($key, $entry->value - $factor, $entry->expiresAt));
 	}
 
 	/**
@@ -207,15 +221,22 @@ class RedisCache implements CacheProviderInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * RedisCache does not support server-side expiry scanning; Redis handles TTL eviction natively.
 	 */
 	#[Override]
-	public static function getSharedInstance(?string $namespace = null): static
+	public function getExpiredEntries(int $limit = 100): array
 	{
-		static $instances = [];
+		return [];
+	}
 
-		$ns = $namespace ?? '_';
-
-		return $instances[$ns] ??= new self($ns);
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function fromConfig(string $namespace, array $options = []): static
+	{
+		return new self($namespace);
 	}
 
 	/**
