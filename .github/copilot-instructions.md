@@ -188,7 +188,8 @@ Source settings files (`app/settings/`, `scopes/{name}/settings/`) are the versi
 | `oz.paths`                   | Service URL path settings (QR code, captcha, link-to routes)                                                                                                                                             |
 | `oz.api.doc`                 | `OZ_API_DOC_ENABLED`, `OZ_API_DOC_SHOW_ON_INDEX`                                                                                                                                                         |
 | `oz.lang`                    | i18n source files                                                                                                                                                                                        |
-| `oz.cache`                   | `OZ_RUNTIME_CACHE_PROVIDER`, `OZ_PERSISTENT_CACHE_PROVIDER`                                                                                                                                              |
+| `oz.cache`                   | `OZ_CACHE_DEFAULT_RUNTIME`, `OZ_CACHE_DEFAULT_PERSISTENT`, `OZ_CLEAR_SITE_DATA_HEADER_ON_LOGOUT`, `OZ_CLEAR_SITE_DATA_HEADER_VALUE`                                                                      |
+| `oz.cache.stores`            | Named store definitions: store-name -> `{driver, options, expiry_listener}` map                                                                                                                          |
 | `oz.logs`                    | `OZ_LOG_WRITER`, `OZ_LOG_MAX_FILE_SIZE`, `OZ_LOG_EXECUTION_TIME_ENABLED`                                                                                                                                 |
 | `oz.files`                   | File URI path format with placeholders (`oz_file_id`, `oz_file_auth_key`, etc.)                                                                                                                          |
 | `oz.files.storages`          | Storage driver map: `FS::DEFAULT_STORAGE`, `FS::PUBLIC_STORAGE`, `FS::PRIVATE_STORAGE`                                                                                                                   |
@@ -1161,7 +1162,7 @@ CronCollect::listen(static function () {
 
 ```php
 $task->inBackground()          // route to cron:async queue (background subprocess)
-     ->oneAtATime(timeout: 300) // skip if previous instance is still running (enforced via persistent cache lock)
+     ->oneAtATime(timeout: 300) // skip if previous instance is still running (enforced via DB job state check)
      ->setTimeout(60);          // max execution seconds
 ```
 
@@ -1200,14 +1201,12 @@ $schedule->between('08:00', '18:00')    // only run when current time is in the 
 
 ### `oneAtATime` Enforcement
 
-Two-layer guard using `CacheManager::persistent('cron')`:
+Two-layer guard using the shared `oz_jobs` DB table (`OZJobsQuery`):
 
-1. **Dispatch time** (`Cron::runDues()`): if cache key `cron_task_{name}` exists, the task is skipped entirely — no job is queued.
-2. **Execution time** (`CronTaskWorker::work()`): checks the key again; if already set, marks the job DONE with `skipped: true`. Otherwise sets the key before `run()` and deletes it in `finally` (runs even on failure).
+1. **Dispatch time** (`Cron::runDues()`): queries the DB for existing `PENDING` or `RUNNING` jobs with the same task name and `CronTaskWorker` worker class. If any exist, the task is skipped entirely — no new job is queued.
+2. **Execution time** (`CronTaskWorker::work()`): queries the DB for `RUNNING` jobs with the same name/worker, excluding the current job ref. If found, marks the job DONE with `skipped: true`.
 
-Cache TTL = `$task->getTimeout()` seconds, or 86400 s (24 h) when timeout is 0/null.
-
-**Limitation**: the cache lock is node-local. In a multi-server deployment, two hosts can independently run the same `oneAtATime` task simultaneously.
+This mechanism is multi-server safe: the `oz_jobs` table is visible to all nodes sharing the same database, so cross-host concurrent dispatch is prevented.
 
 ### `skipIfLate(int $grace_minutes)`
 
@@ -1238,6 +1237,132 @@ Cron::call(static function (JSONResult $result) {
 | ------------ | ------------------- | ------------------------------------- |
 | `cron:sync`  | `Queue::CRON_SYNC`  | Tasks that must run in the foreground |
 | `cron:async` | `Queue::CRON_ASYNC` | Tasks with `inBackground()` set       |
+
+---
+
+## 26. Cache System
+
+**Classes**: `CacheRegistry`, `CacheStore`, `CacheEntry`, `CacheCapabilities`, `CacheGarbageCollector`
+**Interface**: `CacheProviderInterface`, `CacheEntryExpiryListenerInterface`
+**Drivers**: `RuntimeCache`, `DbCache`, `PHPCache`, `RedisCache`, `MemcachedCache`
+
+### Access Patterns
+
+Obtain a `CacheStore` via `CacheRegistry` — never construct drivers directly:
+
+```php
+// 1. Named store — configured in `oz.cache.stores`, overridable per project:
+CacheRegistry::store('oz:form:sessions')     // -> CacheStore
+
+// 2. Per-request in-memory memoization (uses OZ_CACHE_DEFAULT_RUNTIME driver):
+CacheRegistry::runtime(__METHOD__)           // -> CacheStore
+
+// 3. Persistent across requests (uses OZ_CACHE_DEFAULT_PERSISTENT driver):
+CacheRegistry::persistent(self::class)       // -> CacheStore
+```
+
+### `CacheStore` API
+
+```php
+$store = CacheRegistry::store('oz:form:sessions');
+
+$store->get(string $key, mixed $default = null): mixed
+$store->entry(string $key): ?CacheEntry          // includes expiry metadata
+$store->set(string $key, mixed $value, ?int $ttl = null): bool
+$store->has(string $key): bool
+$store->delete(string $key): bool
+$store->deleteMultiple(array $keys): bool
+$store->clear(): bool
+$store->increment(string $key, float|int $by = 1): bool
+$store->decrement(string $key, float|int $by = 1): bool
+$store->remember(string $key, callable $factory, ?int $ttl = null): mixed
+```
+
+**`CacheEntry`** (immutable value object): `$entry->key`, `$entry->value`, `$entry->expiresAt` (float microtime or null), `$entry->isExpired(): bool`, `CacheEntry::forTTL(key, value, ttlSeconds): static`.
+
+### Named Stores (`oz.cache.stores`)
+
+Each key is a colon-separated store name. Each value is an optional config array:
+
+```php
+// oz/oz_settings/oz.cache.stores.php
+return [
+    'oz:form:sessions' => [
+        'driver'          => DbCache::class,    // defaults to OZ_CACHE_DEFAULT_PERSISTENT
+        'options'         => [],                // driver-specific options
+        'expiry_listener' => ResumableFormService::class,  // optional
+    ],
+];
+```
+
+Projects override individual entries in `app/settings/oz.cache.stores.php`; the `array_replace_recursive` merge strategy means overriding one store does not affect the others.
+
+**Built-in named stores:**
+
+| Store name            | Driver    | Expiry listener                            |
+| --------------------- | --------- | ------------------------------------------ |
+| `oz:rate_limit`       | `DbCache` | —                                          |
+| `oz:form:resume`      | `DbCache` | —                                          |
+| `oz:form:sessions`    | `DbCache` | `ResumableFormService::onCacheEntryExpiry` |
+| `oz:fs:image:filters` | `DbCache` | —                                          |
+
+### Expiry Callbacks (`CacheEntryExpiryListenerInterface`)
+
+Register an expiry listener on a named store to be notified when entries expire:
+
+```php
+// In oz.cache.stores:
+'oz:form:sessions' => [
+    'driver'          => DbCache::class,
+    'expiry_listener' => MyListener::class,
+],
+
+// MyListener must implement:
+interface CacheEntryExpiryListenerInterface {
+    public static function onCacheEntryExpiry(string $key, mixed $value, string $store_name): void;
+}
+```
+
+`CacheGarbageCollector` (registered in `oz.boot`) runs on `FinishHook` and calls the listener for each expired entry found, then hard-deletes the entry (even if the listener throws). Only drivers where `capabilities()->expiryCallbacks = true` are scanned (currently `DbCache`).
+
+### `CacheCapabilities`
+
+```php
+new CacheCapabilities(
+    perEntryTTL: bool,      // true when the driver honors per-entry TTL
+    persistent: bool,       // true when data survives process restart
+    expiryCallbacks: bool,  // true when getExpiredEntries() is implemented
+    atomic: bool,           // true when increment/decrement is atomic
+);
+```
+
+| Driver           | perEntryTTL | persistent | expiryCallbacks | atomic |
+| ---------------- | ----------- | ---------- | --------------- | ------ |
+| `RuntimeCache`   | true        | false      | false           | false  |
+| `DbCache`        | true        | true       | true            | false  |
+| `PHPCache`       | true        | true       | false           | false  |
+| `RedisCache`     | true        | true       | false           | true   |
+| `MemcachedCache` | true        | true       | false           | true   |
+
+### Implementing a Custom Driver
+
+```php
+class MyDriver implements CacheProviderInterface {
+    public function capabilities(): CacheCapabilities { ... }
+    public function get(string $key): ?CacheEntry { ... }
+    public function getMultiple(array $keys): array { ... }
+    public function set(CacheEntry $entry): bool { ... }
+    public function increment(string $key, float $factor = 1): bool { ... }
+    public function decrement(string $key, float $factor = 1): bool { ... }
+    public function delete(string $key): bool { ... }
+    public function deleteMultiple(array $keys): bool { ... }
+    public function clear(): bool { ... }
+    public function getExpiredEntries(int $limit = 100): array { ... }
+    public static function fromConfig(string $namespace, array $options = []): static { ... }
+}
+```
+
+Register in `oz.cache` / `oz.cache.stores` by setting the `driver` key to the FQN of the implementing class.
 
 ---
 
@@ -1305,24 +1430,24 @@ Swagger UI at `GET /api-doc-view.html` (`ApiDocView`).
 
 **Unit test directories** (under `tests/`):
 
-| Directory   | Covers                                               |
-| ----------- | ---------------------------------------------------- |
-| `Access/`   | `AccessRights`, `AtomicAction`, role resolution      |
-| `App/`      | `Settings`, `Context`, `JSONResponse`, `Keys`        |
-| `Auth/`     | Authentication methods, authorization, session mgmt  |
-| `Cache/`    | `CacheManager`, runtime and persistent drivers       |
-| `Columns/`  | Custom DB column types (`TypePhone`, `TypeEmail`, …) |
-| `Cron/`     | `Schedule`, cron expressions                         |
-| `CRUD/`     | `TableCRUD`, `AllowRuleBuilder`                      |
-| `Forms/`    | Form definition, field validation, multi-step        |
-| `FS/`       | File-system helpers, `TempFS`, `FS` drivers          |
-| `Http/`     | `Uri`, `Request`, `Response`                         |
-| `Crypt/`    | `DoCrypt`, `Hasher`, `Random`                        |
-| `Lang/`     | i18n loading                                         |
-| `Queue/`    | `Job`, `Queue`, job store drivers                    |
-| `Router/`   | Route matching, guards, middlewares                  |
-| `Services/` | Built-in services (e.g. QR code)                     |
-| `Utils/`    | Utility helpers                                      |
+| Directory   | Covers                                                                      |
+| ----------- | --------------------------------------------------------------------------- |
+| `Access/`   | `AccessRights`, `AtomicAction`, role resolution                             |
+| `App/`      | `Settings`, `Context`, `JSONResponse`, `Keys`                               |
+| `Auth/`     | Authentication methods, authorization, session mgmt                         |
+| `Cache/`    | `CacheRegistry`, `CacheStore`, `CacheEntry`, runtime and persistent drivers |
+| `Columns/`  | Custom DB column types (`TypePhone`, `TypeEmail`, …)                        |
+| `Cron/`     | `Schedule`, cron expressions                                                |
+| `CRUD/`     | `TableCRUD`, `AllowRuleBuilder`                                             |
+| `Forms/`    | Form definition, field validation, multi-step                               |
+| `FS/`       | File-system helpers, `TempFS`, `FS` drivers                                 |
+| `Http/`     | `Uri`, `Request`, `Response`                                                |
+| `Crypt/`    | `DoCrypt`, `Hasher`, `Random`                                               |
+| `Lang/`     | i18n loading                                                                |
+| `Queue/`    | `Job`, `Queue`, job store drivers                                           |
+| `Router/`   | Route matching, guards, middlewares                                         |
+| `Services/` | Built-in services (e.g. QR code)                                            |
+| `Utils/`    | Utility helpers                                                             |
 
 Shared helpers:
 
