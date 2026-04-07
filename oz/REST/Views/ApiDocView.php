@@ -34,7 +34,7 @@ final class ApiDocView extends WebView
 	public static function registerRoutes(Router $router): void
 	{
 		if (Settings::get('oz.api.doc', 'OZ_API_DOC_ENABLED')) {
-			$router
+			$route = $router
 				->get('/api-doc-view.html', static function (RouteInfo $ri) {
 					$v = new self($ri);
 
@@ -46,6 +46,10 @@ final class ApiDocView extends WebView
 					return $v->respond();
 				})
 				->name(self::API_DOC_VIEW_ROUTE);
+
+			if (!Settings::get('oz.api.doc', 'OZ_API_DOC_PUBLIC')) {
+				$route->withAdminRole();
+			}
 		}
 	}
 }

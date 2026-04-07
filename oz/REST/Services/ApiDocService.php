@@ -35,7 +35,7 @@ final class ApiDocService extends Service implements ApiDocProviderInterface
 	public static function registerRoutes(Router $router): void
 	{
 		if (Settings::get('oz.api.doc', 'OZ_API_DOC_ENABLED')) {
-			$router
+			$route = $router
 				->get('/api-doc-spec.json', static function (RouteInfo $ri) {
 					$s = new self($ri);
 
@@ -45,6 +45,10 @@ final class ApiDocService extends Service implements ApiDocProviderInterface
 					return $s->respond();
 				})
 				->name(self::API_DOC_SPEC_ROUTE);
+
+			if (!Settings::get('oz.api.doc', 'OZ_API_DOC_PUBLIC')) {
+				$route->withAdminRole();
+			}
 		}
 	}
 
