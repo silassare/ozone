@@ -460,7 +460,7 @@ trait RESTFulService
 			}
 
 			$rrh = new RESTFullRelationsHelper($this->table);
-			$rrh->processRelations($entity, $req, false);
+			$rrh->processRelations($entity, $req, true);
 
 			$this->json()
 				->setDone(
