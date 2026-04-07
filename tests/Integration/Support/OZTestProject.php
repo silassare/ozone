@@ -41,6 +41,9 @@ use Symfony\Component\Process\Process;
  */
 final class OZTestProject
 {
+	/** @var int[] PIDs of php -S processes started via startServer(), killed on destroy(). */
+	private array $serverPids = [];
+
 	private function __construct(private readonly string $dir) {}
 
 	/**
@@ -380,17 +383,37 @@ final class OZTestProject
 			);
 		}
 
+		// Re-read server.json after the port is confirmed open: at this point
+		// oz project serve has already written the server_pid field.
+		$live_info  = \json_decode(\file_get_contents($server_json), true);
+		$server_pid = (int) ($live_info['server_pid'] ?? 0);
+		if ($server_pid > 0) {
+			$this->serverPids[] = $server_pid;
+		}
+
 		return [$server, $host, $port];
 	}
 
 	/**
 	 * Delete the test project directory.
 	 *
-	 * The vendor/ symlink is unlinked first so the cache directory is not
-	 * touched by the recursive delete.
+	 * Any php -S processes spawned by {@see startServer()} are killed first so
+	 * they do not keep running as orphans after the test process exits.
+	 * The vendor/ symlink is unlinked before the recursive delete so the
+	 * shared vendor cache directory is not affected.
 	 */
 	public function destroy(): void
 	{
+		// Kill any tracked php -S server processes that may have been orphaned
+		// when their parent oz process was killed (Symfony Process puts children
+		// in their own process group, so they do not die with the parent).
+		foreach ($this->serverPids as $pid) {
+			if ($pid > 0 && \function_exists('posix_kill') && \posix_kill($pid, 0)) {
+				\posix_kill($pid, \SIGTERM);
+			}
+		}
+		$this->serverPids = [];
+
 		$vendor = $this->dir . \DIRECTORY_SEPARATOR . 'vendor';
 		if (\is_link($vendor)) {
 			\unlink($vendor);

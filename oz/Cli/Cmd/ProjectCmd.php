@@ -171,21 +171,50 @@ final class ProjectCmd extends Command
 			$router,
 		];
 
-		$sc->getCacheDir()->wf('./server.json', \json_encode([
-			'time'     => \time(),
-			'protocol' => 'http',
-			'host'     => $host,
-			'port'     => $port,
-			'doc_root' => $doc_root,
-		], \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT));
+		// Write server.json early so that tooling polling for it can detect the
+		// server is coming up (port is reserved but php -S has not yet started).
+		$server_info = [
+			'time'       => \time(),
+			'protocol'   => 'http',
+			'host'       => $host,
+			'port'       => $port,
+			'doc_root'   => $doc_root,
+			'server_pid' => null,
+		];
+		$sc->getCacheDir()->wf('./server.json', \json_encode($server_info, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT));
 
 		$process = new Process($cmd);
 
 		$process->enableTtyIfSupported();
 
-		$exit_code = $process->run(static function ($type, $data) use ($cli) {
+		// Start async so we can immediately grab the PID and update server.json.
+		$process->start(static function ($type, $data) use ($cli): void {
 			$cli->write($data);
 		});
+
+		// Update server.json with the php -S PID so tools and tests can kill
+		// the inner server process directly when needed (e.g. when the parent
+		// oz process is SIGKILLed before it can forward the signal itself).
+		$server_info['server_pid'] = $process->getPid();
+		$sc->getCacheDir()->wf('./server.json', \json_encode($server_info, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT));
+
+		// Symfony Process isolates child processes in their own process group via
+		// setpgid(0,0). This means SIGTERM sent to this oz process does NOT
+		// automatically propagate to the php -S child. Register handlers here so
+		// that any signal received by this process is forwarded to the child.
+		// pcntl_async_signals() ensures delivery even while waiting in wait().
+		if (\function_exists('pcntl_async_signals') && \function_exists('pcntl_signal')) {
+			\pcntl_async_signals(true);
+
+			$forward = static function () use ($process): void {
+				$process->stop(3, \SIGTERM);
+			};
+
+			\pcntl_signal(\SIGTERM, $forward);
+			\pcntl_signal(\SIGINT, $forward);
+		}
+
+		$exit_code = $process->wait();
 
 		$this->getCli()->terminate($exit_code);
 	}

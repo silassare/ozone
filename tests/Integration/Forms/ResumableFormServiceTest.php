@@ -90,7 +90,7 @@ final class ResumableFormServiceTest extends TestCase
 	public static function tearDownAfterClass(): void
 	{
 		if (null !== self::$server && self::$server->isRunning()) {
-			self::$server->stop(0);
+			self::$server->stop(3);
 		}
 		if (isset(self::$proj)) {
 			self::$proj->destroy();
