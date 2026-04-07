@@ -35,6 +35,7 @@ use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Lang\I18nMessage;
 use OZONE\Core\REST\ApiDoc;
+use OZONE\Core\Router\Rates\IPRateLimit;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
@@ -92,7 +93,8 @@ final class ResumableFormService extends Service
 		$router->group($group_path, static function (Router $router): void {
 			$router->group('/:provider', static function (Router $router): void {
 				$router->post('/init', static fn (RouteInfo $ri) => (new self($ri))->initSession($ri))
-					->name(self::ROUTE_INIT);
+					->name(self::ROUTE_INIT)
+					->rateLimit(static fn (RouteInfo $ri) => new IPRateLimit($ri, 30, 3600));
 
 				$router->get('/state', static fn (RouteInfo $ri) => (new self($ri))->getState($ri))
 					->name(self::ROUTE_STATE);
