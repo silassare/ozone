@@ -50,14 +50,14 @@ use OZONE\Core\Router\Router;
  * The `resume_ref` is returned in the body of `POST .../init` and must be sent
  * back on every subsequent request via a dedicated header.
  *
- * Route overview:
+ * Route overview (group path is configurable via `OZ_RESUMABLE_FORM_SERVICE_ROUTE_GROUP_PATH` in `oz.paths`):
  *
- *  POST /form/:provider/init       - start a new session
- *  GET  /form/:provider/state      - get the current step form
- *  POST /form/:provider/next       - submit the current step, advance
- *  POST /form/:provider/back       - go back to the previous step
- *  POST /form/:provider/cancel     - discard the session
- *  POST /form/:provider/evaluate   - evaluate server-only field/rule visibility
+ *  POST {group-path}/:provider/init       - start a new session
+ *  GET  {group-path}/:provider/state      - get the current step form
+ *  POST {group-path}/:provider/next       - submit the current step, advance
+ *  POST {group-path}/:provider/back       - go back to the previous step
+ *  POST {group-path}/:provider/cancel     - discard the session
+ *  POST {group-path}/:provider/evaluate   - evaluate server-only field/rule visibility
  *
  * After the final step `done: true` is returned. The `resume_ref` can be passed to
  * {@see self::requireCompletion()} by downstream code to retrieve the accumulated data.
@@ -87,24 +87,28 @@ final class ResumableFormService extends Service
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
-		$router->post('/form/:provider/init', static fn (RouteInfo $ri) => (new self($ri))->initSession($ri))
-			->name(self::ROUTE_INIT);
+		$group_path = Settings::get('oz.paths', 'OZ_RESUMABLE_FORM_SERVICE_ROUTE_GROUP_PATH');
 
-		$router->group('/form/:provider', static function (Router $router): void {
-			$router->get('/state', static fn (RouteInfo $ri) => (new self($ri))->getState($ri))
-				->name(self::ROUTE_STATE);
+		$router->group($group_path, static function (Router $router): void {
+			$router->group('/:provider', static function (Router $router): void {
+				$router->post('/init', static fn (RouteInfo $ri) => (new self($ri))->initSession($ri))
+					->name(self::ROUTE_INIT);
 
-			$router->post('/next', static fn (RouteInfo $ri) => (new self($ri))->nextStep($ri))
-				->name(self::ROUTE_NEXT);
+				$router->get('/state', static fn (RouteInfo $ri) => (new self($ri))->getState($ri))
+					->name(self::ROUTE_STATE);
 
-			$router->post('/back', static fn (RouteInfo $ri) => (new self($ri))->backStep($ri))
-				->name(self::ROUTE_BACK);
+				$router->post('/next', static fn (RouteInfo $ri) => (new self($ri))->nextStep($ri))
+					->name(self::ROUTE_NEXT);
 
-			$router->post('/cancel', static fn (RouteInfo $ri) => (new self($ri))->cancelSession($ri))
-				->name(self::ROUTE_CANCEL);
+				$router->post('/back', static fn (RouteInfo $ri) => (new self($ri))->backStep($ri))
+					->name(self::ROUTE_BACK);
 
-			$router->post('/evaluate', static fn (RouteInfo $ri) => (new self($ri))->evaluateCurrent($ri))
-				->name(self::ROUTE_EVALUATE);
+				$router->post('/cancel', static fn (RouteInfo $ri) => (new self($ri))->cancelSession($ri))
+					->name(self::ROUTE_CANCEL);
+
+				$router->post('/evaluate', static fn (RouteInfo $ri) => (new self($ri))->evaluateCurrent($ri))
+					->name(self::ROUTE_EVALUATE);
+			});
 		});
 	}
 
@@ -122,7 +126,7 @@ final class ResumableFormService extends Service
 	// -------------------------------------------------------------------------
 
 	/**
-	 * POST /form/:provider/init.
+	 * POST {group-path}/:provider/init.
 	 *
 	 * Creates a new form session for the given provider.
 	 *
@@ -153,7 +157,7 @@ final class ResumableFormService extends Service
 	}
 
 	/**
-	 * GET /form/:provider/state.
+	 * GET {group-path}/:provider/state.
 	 *
 	 * Returns the current form to fill without advancing the session.
 	 *
@@ -170,7 +174,7 @@ final class ResumableFormService extends Service
 	}
 
 	/**
-	 * POST /form/:provider/next.
+	 * POST {group-path}/:provider/next.
 	 *
 	 * Validates the submitted step data, merges it into the accumulated
 	 * cleaned form, and advances the session to the next step.
@@ -190,7 +194,7 @@ final class ResumableFormService extends Service
 	}
 
 	/**
-	 * POST /form/:provider/back.
+	 * POST {group-path}/:provider/back.
 	 *
 	 * Reverts the session to the previous step by restoring the last history
 	 * snapshot. Only available on providers where `isReversible()` returns true.
@@ -209,7 +213,7 @@ final class ResumableFormService extends Service
 	}
 
 	/**
-	 * POST /form/:provider/evaluate.
+	 * POST {group-path}/:provider/evaluate.
 	 *
 	 * Server-side evaluation of all conditions the client cannot resolve locally.
 	 * Merges the current raw client input with the accumulated session data and
@@ -229,7 +233,7 @@ final class ResumableFormService extends Service
 	}
 
 	/**
-	 * POST /form/:provider/cancel.
+	 * POST {group-path}/:provider/cancel.
 	 *
 	 * Discards the session. The resume_ref becomes invalid immediately.
 	 *
@@ -254,7 +258,7 @@ final class ResumableFormService extends Service
 	 *
 	 * Dispatches the incoming resume action to the appropriate handler, running
 	 * the full multi-step session lifecycle in the context of the MATCHED route
-	 * rather than standalone `/form/:provider/...` endpoints.
+	 * rather than standalone `{group-path}/:provider/...` endpoints.
 	 *
 	 * @param class-string<ResumableFormProviderInterface> $providerClass the resolved provider FQCN
 	 * @param string                                       $action        one of the ACTION_* constants

@@ -62,7 +62,7 @@ interface ResumableFormProviderInterface
 	 * Returns an optional pre-flight form shown before the main step sequence.
 	 *
 	 * When non-null the client must include the init form data in the body of
-	 * `POST /form/:provider/init`. The validated init fields become the starting
+	 * the `init` action request. The validated init fields become the starting
 	 * `$cleaned_form` for the first {@see self::nextStep()} call.
 	 *
 	 * Return `null` to skip straight to the first {@see self::nextStep()} call.
@@ -113,14 +113,14 @@ interface ResumableFormProviderInterface
 	 * Returns true when the client is allowed to go back to a previous step.
 	 *
 	 * When true, the service snapshots progress before each submission so
-	 * `POST /form/:provider/back` can restore the previous state.
+	 * the `back` action can restore the previous state.
 	 */
 	public function isReversible(): bool;
 
 	/**
 	 * Returns the earliest instant at which this flow may be started.
 	 *
-	 * When non-null and in the future, `POST /form/:provider/init` throws
+	 * When non-null and in the future, the `init` action throws
 	 * {@see FormResumeNotYetActiveException} (HTTP 403).
 	 *
 	 * Return null to allow the flow to start at any time.

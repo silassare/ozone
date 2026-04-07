@@ -23,7 +23,7 @@ use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
  * Class RouteFormResumeInterceptor.
  *
  * Route interceptor that handles form-resume requests directly on the matched route,
- * instead of routing them through the standalone `/form/:provider/...` endpoints.
+ * instead of routing them through the dedicated resumable-form endpoints.
  *
  * Fires when:
  *  - the request carries the `X-OZONE-Form-Resume: ?1` header, AND

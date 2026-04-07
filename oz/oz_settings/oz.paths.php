@@ -29,4 +29,9 @@ return [
 	 * The `{oz_link_to_key}` placeholder is replaced by the link key parameter.
 	 */
 	'OZ_LINK_TO_ROUTE_PATH' => '/link-to/oz-{oz_link_to_key}',
+
+	/**
+	 * Resumable form service route group path.
+	 */
+	'OZ_RESUMABLE_FORM_SERVICE_ROUTE_GROUP_PATH' => '/form',
 ];

@@ -228,7 +228,7 @@ trait ApiDocManipulationTrait
 			$is_resumable = null !== $provider_class || null !== $resume_config;
 
 			// require_real_context: true if the client must go through this route's URL exclusively
-			// and cannot use the standalone /form/:provider/... endpoints.
+			// and cannot use the dedicated resumable-form endpoints.
 			$require_real_context = true;
 			if (null !== $provider_class) {
 				$require_real_context = $provider_class::requiresRealContext();
