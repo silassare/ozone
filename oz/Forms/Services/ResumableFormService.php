@@ -64,7 +64,7 @@ use OZONE\Core\Router\Router;
  */
 final class ResumableFormService extends Service
 {
-	public const SESSION_CACHE_NAMESPACE = 'oz.form.sessions';
+	public const CACHE_NAMESPACE = 'oz.form.sessions';
 
 	public const ROUTE_INIT     = 'oz:form:init';
 	public const ROUTE_STATE    = 'oz:form:state';
@@ -257,10 +257,9 @@ final class ResumableFormService extends Service
 	 */
 	public function handleFromRealContext(string $providerClass, string $action): Response
 	{
-		$ri         = $this->getContext()->getRouteInfo();
-		$route_name = $ri->route()->getOptions()->getName();
-		$provider   = $providerClass::instance($ri);
-		$identity   = ['route_name' => $route_name, 'provider_class' => $providerClass];
+		$ri       = $this->getContext()->getRouteInfo();
+		$provider = $providerClass::instance($ri);
+		$identity = [];
 
 		return match ($action) {
 			self::ACTION_INIT     => $this->doInit($provider, $identity, $ri),
@@ -279,43 +278,28 @@ final class ResumableFormService extends Service
 
 	/**
 	 * Validates that a session identified by `$resume_ref` belongs to the correct
-	 * provider and caller, and that the sequence has been fully completed.
+	 * caller and that the sequence has been fully completed.
 	 *
 	 * Intended for downstream route handlers that require the multi-step form to have
 	 * been fully filled before executing a real action.
 	 *
 	 * The session is NOT deleted by this method — TTL handles cleanup.
 	 *
-	 * @param string  $provider_name The expected provider name (key from oz.forms.providers)
-	 * @param string  $resume_ref    The session reference returned by `POST /init`
-	 * @param Context $context       Current request context (used for ownership check)
+	 * @param string  $resume_ref the session reference returned by `POST /init` or the `init` action
+	 * @param Context $context    current request context (used for ownership check)
 	 *
-	 * @return FormData Accumulated validated data from all completed steps
+	 * @return FormData accumulated validated data from all completed steps
 	 *
 	 * @throws NotFoundException          when the session does not exist or has expired
-	 * @throws ForbiddenException         when not done, wrong provider, or scope mismatch
+	 * @throws ForbiddenException         when not done or scope mismatch
 	 * @throws FormResumeExpiredException when the session has passed its deadline
 	 */
-	public static function requireCompletion(
-		string $provider_name,
-		string $resume_ref,
-		Context $context
-	): FormData {
+	public static function requireCompletion(string $resume_ref, Context $context): FormData
+	{
 		$session = self::loadRawSession($resume_ref);
 
 		if (null === $session) {
 			throw new NotFoundException('OZ_FORM_SESSION_NOT_FOUND', ['ref' => $resume_ref]);
-		}
-
-		if ($session['provider_name'] !== $provider_name) {
-			throw new ForbiddenException('OZ_FORM_SESSION_PROVIDER_MISMATCH');
-		}
-
-		// Verify the provider is still registered (guards against stale sessions after config changes).
-		$class = Settings::get('oz.forms.providers', $provider_name);
-
-		if (!$class || !\is_a($class, ResumableFormProviderInterface::class, true)) {
-			throw new NotFoundException('OZ_FORM_PROVIDER_NOT_FOUND', ['provider' => $provider_name]);
 		}
 
 		// The scope was stored during doInit() so we never need to instantiate the provider here.
@@ -339,61 +323,16 @@ final class ResumableFormService extends Service
 	}
 
 	/**
-	 * Validates that a route-interceptor session identified by `$resume_ref` belongs to the
-	 * current route and caller, and that the sequence has been fully completed.
+	 * Deletes a form session from the cache.
 	 *
-	 * Intended for downstream route handlers that require the multi-step form (managed via
-	 * {@see RouteFormResumeInterceptor}) to have been fully filled before
-	 * executing a real action.
+	 * Call this after the route handler successfully consumes the session data to
+	 * prevent reuse and free the cache entry immediately (rather than waiting for TTL).
 	 *
-	 * The session is NOT deleted by this method — TTL handles cleanup.
-	 *
-	 * @param string    $resume_ref the session reference returned by the `init` action
-	 * @param RouteInfo $ri         current RouteInfo (used for route and scope validation)
-	 *
-	 * @return FormData accumulated validated data from all completed steps
-	 *
-	 * @throws NotFoundException          when the session does not exist or has expired
-	 * @throws ForbiddenException         when not done, wrong route, or scope mismatch
-	 * @throws FormResumeExpiredException when the session has passed its deadline
+	 * @param string $resume_ref the session reference to drop
 	 */
-	public static function requireRouteCompletion(string $resume_ref, RouteInfo $ri): FormData
+	public static function dropSession(string $resume_ref): void
 	{
-		$route_name = $ri->route()->getOptions()->getName();
-		$session    = self::loadRawSession($resume_ref);
-
-		if (null === $session) {
-			throw new NotFoundException('OZ_FORM_SESSION_NOT_FOUND', ['ref' => $resume_ref]);
-		}
-
-		if (($session['route_name'] ?? null) !== $route_name) {
-			throw new ForbiddenException('OZ_FORM_SESSION_PROVIDER_MISMATCH');
-		}
-
-		$provider_class = $session['provider_class'] ?? null;
-
-		if (!$provider_class || !\is_a($provider_class, ResumableFormProviderInterface::class, true)) {
-			throw new ForbiddenException('OZ_FORM_SESSION_PROVIDER_MISMATCH');
-		}
-
-		// The scope was stored during doInit() so we never need to instantiate the provider here.
-		$scope    = RequestScope::from($session['scope_name']);
-		$scope_id = $scope->resolveId($ri->getContext());
-
-		if ($session['scope_id'] !== $scope_id) {
-			throw new ForbiddenException('OZ_FORM_SESSION_ACCESS_DENIED');
-		}
-
-		$expires_at = $session['expires_at'] ?? null;
-		if (null !== $expires_at && \time() > $expires_at) {
-			throw new FormResumeExpiredException();
-		}
-
-		if (FormResumePhase::DONE->value !== $session['phase']) {
-			throw new ForbiddenException('OZ_FORM_SESSION_NOT_DONE', ['ref' => $resume_ref]);
-		}
-
-		return new FormData($session['cleaned_form'] ?? []);
+		CacheManager::persistent(self::CACHE_NAMESPACE)->delete($resume_ref);
 	}
 
 	// -------------------------------------------------------------------------
@@ -405,7 +344,7 @@ final class ResumableFormService extends Service
 	 *
 	 * @param array $identity_fields fields merged into the session record for ownership verification
 	 *                               standalone: `['provider_name' => $name]`
-	 *                               route-context: `['route_name' => $name, 'provider_class' => $class]`
+	 *                               route-context: `[]`
 	 *
 	 * @throws FormResumeNotYetActiveException when `notBefore()` is in the future
 	 * @throws InvalidFormException            when init form validation fails
@@ -450,7 +389,7 @@ final class ResumableFormService extends Service
 			'cleaned_form'   => $cleaned_form->toArray(),
 			'progress_state' => $progress->toArray(),
 			'scope_id'       => $scope_id,
-			'scope_name'     => $provider->resumeScope()->name,
+			'scope_name'     => $provider->resumeScope()->value,
 			'created_at'     => \time(),
 			'expires_at'     => $expires_at,
 			'history'        => [],
@@ -599,7 +538,7 @@ final class ResumableFormService extends Service
 
 		$this->doLoadSession($ri, $resume_ref, $identity_fields, $provider);
 
-		CacheManager::persistent(self::SESSION_CACHE_NAMESPACE)->delete($resume_ref);
+		CacheManager::persistent(self::CACHE_NAMESPACE)->delete($resume_ref);
 
 		$this->json()
 			->setDone()
@@ -819,12 +758,9 @@ final class ResumableFormService extends Service
 		return $this->respond();
 	}
 
-	/**
-	 * Loads a raw session array from the cache, or null when not found.
-	 */
 	private static function loadRawSession(string $resume_ref): ?array
 	{
-		$cached = CacheManager::persistent(self::SESSION_CACHE_NAMESPACE)->get($resume_ref);
+		$cached = CacheManager::persistent(self::CACHE_NAMESPACE)->get($resume_ref);
 
 		if (!\is_array($cached)) {
 			return null;
@@ -838,6 +774,6 @@ final class ResumableFormService extends Service
 	 */
 	private static function writeSession(string $resume_ref, array $session, int $ttl): void
 	{
-		CacheManager::persistent(self::SESSION_CACHE_NAMESPACE)->set($resume_ref, $session, $ttl);
+		CacheManager::persistent(self::CACHE_NAMESPACE)->set($resume_ref, $session, $ttl);
 	}
 }

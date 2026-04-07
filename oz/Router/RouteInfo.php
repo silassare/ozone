@@ -256,24 +256,31 @@ final class RouteInfo
 
 		$this->clean_form_data = new FormData();
 
-		$provider_class = $this->route->getOptions()->resolveProviderClass();
-
-		if (null !== $provider_class) {
-			// Route declared with a ResumableFormProviderInterface provider.
-			// Read the resume reference from the request header and validate that
-			// the route-interceptor multi-step form session is fully complete.
+		if ($this->route->getOptions()->hasResumeSupport()) {
 			$header_name = Settings::get('oz.request', 'OZ_FORM_RESUME_REF_HEADER_NAME');
 			$resume_ref  = $this->context->getRequest()->getHeaderLine($header_name);
 
-			if ('' === $resume_ref) {
+			if ('' !== $resume_ref) {
+				// resume_ref present: validate the completed session and use its data.
+				$clean_fd = ResumableFormService::requireCompletion($resume_ref, $this->context);
+
+				$this->clean_form_data->merge($clean_fd);
+
+				// Drop the session immediately after loading — the data is now in memory
+				// and the handler is about to execute. This prevents reuse and frees the
+				// cache entry without waiting for TTL (mirrors $drop_resume_cache() below).
+				ResumableFormService::dropSession($resume_ref);
+
+				return;
+			}
+
+			if (null !== $this->route->getOptions()->resolveProviderClass()) {
+				// Provider-based routes have no standalone form — the session is the only input path.
 				throw new BadRequestException('OZ_FORM_SESSION_REF_MISSING');
 			}
 
-			$clean_fd = ResumableFormService::requireRouteCompletion($resume_ref, $this);
-
-			$this->clean_form_data->merge($clean_fd);
-
-			return;
+			// ->resumable() only: the route's own form may still be submitted directly.
+			// Fall through to normal form validation below.
 		}
 
 		$bundle = $this->route->getOptions()->getFormBundle($this);
