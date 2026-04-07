@@ -30,7 +30,7 @@ use OZONE\Core\Utils\JSONResult;
  * - {@link inBackground()} - whether the task should run in a background process (maps to
  *   the `cron:async` queue when dispatched by {@link Cron::runDues()}).
  * - {@link oneAtATime()} - skip execution if a previous instance is still running
- *   (enforced via a cache lock keyed on the task name).
+ *   (enforced via DB job state check on the oz_jobs table).
  * - {@link setTimeout()} - maximum allowed execution time in seconds.
  *
  * After {@link run()} completes, results are exposed via {@link getResult()} and stored
@@ -47,8 +47,6 @@ abstract class AbstractTask implements TaskInterface
 	protected ?int $timeout        = null;
 	protected JSONResult $result;
 
-	protected readonly string $cache_key;
-
 	/**
 	 * TaskBase constructor.
 	 *
@@ -59,8 +57,7 @@ abstract class AbstractTask implements TaskInterface
 		protected readonly string $name,
 		protected string $description = ''
 	) {
-		$this->cache_key = 'cron_task_' . $name;
-		$this->result    = new JSONResult();
+		$this->result = new JSONResult();
 	}
 
 	/**
