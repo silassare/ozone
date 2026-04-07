@@ -56,12 +56,12 @@ final class RouteFormDeclarationTest extends TestCase
 		self::assertFalse($decl->isDynamic());
 	}
 
-	public function testMakeWithFormInstanceGetPolicyIsAuto(): void
+	public function testMakeWithFormInstanceGetPolicyIsStatic(): void
 	{
 		$form = new Form();
 		$decl = RouteFormDeclaration::make($form);
 
-		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::STATIC, $decl->getPolicy());
 	}
 
 	public function testMakeWithFormInstanceGetDocFormReturnsForm(): void
@@ -96,11 +96,11 @@ final class RouteFormDeclarationTest extends TestCase
 		self::assertSame(1, $calls);
 	}
 
-	public function testMakeWithZeroArgCallableGetPolicyIsAuto(): void
+	public function testMakeWithZeroArgCallableGetPolicyIsStatic(): void
 	{
 		$decl = RouteFormDeclaration::make(static fn () => new Form());
 
-		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::STATIC, $decl->getPolicy());
 	}
 
 	public function testMakeWithOneArgCallableIsDynamic(): void
@@ -110,11 +110,11 @@ final class RouteFormDeclarationTest extends TestCase
 		self::assertTrue($decl->isDynamic());
 	}
 
-	public function testMakeWithOneArgCallableGetDocFormReturnsNull(): void
+	public function testMakeWithOneArgCallableGetPolicyIsDynamic(): void
 	{
 		$decl = RouteFormDeclaration::make(static fn ($ri) => new Form());
 
-		self::assertNull($decl->getDocForm());
+		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 	}
 
 	public function testMakeWithFormAndOpaquePolicy(): void
@@ -125,11 +125,11 @@ final class RouteFormDeclarationTest extends TestCase
 		self::assertNull($decl->getDocForm());
 	}
 
-	public function testMakeWithFormAndExternalPolicy(): void
+	public function testMakeWithFormAndDynamicPolicy(): void
 	{
-		$decl = RouteFormDeclaration::make(new Form(), RouteFormDocPolicy::EXTERNAL);
+		$decl = RouteFormDeclaration::make(new Form(), RouteFormDocPolicy::DYNAMIC);
 
-		self::assertSame(RouteFormDocPolicy::EXTERNAL, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
 	}
 
@@ -155,16 +155,33 @@ final class RouteFormDeclarationTest extends TestCase
 		self::assertNull($decl->getDocForm());
 	}
 
-	public function testDynamicWithoutPreviewGetPolicyPromotesToOpaque(): void
+	public function testDynamicWithoutPreviewGetPolicyIsDynamic(): void
 	{
-		// AUTO + dynamic + no preview -> promoted to OPAQUE so the form does not
-		// silently disappear from the spec.
+		// dynamic() always sets DYNAMIC policy — no promotion logic needed.
 		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
 
-		self::assertSame(RouteFormDocPolicy::OPAQUE, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 	}
 
-	public function testDynamicWithPreviewGetDocFormCallsPreview(): void
+	public function testDynamicWithPreviewGetDocFormReturnsNull(): void
+	{
+		// DYNAMIC policy -> getDocForm() always returns null (no requestBody embedding).
+		$decl = RouteFormDeclaration::dynamic(
+			static fn ($ri) => new Form(),
+			static fn () => new Form()
+		);
+
+		self::assertNull($decl->getDocForm());
+	}
+
+	public function testGetDocPreviewFormReturnsNullWhenNoPreview(): void
+	{
+		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
+
+		self::assertNull($decl->getDocPreviewForm());
+	}
+
+	public function testDynamicWithPreviewGetDocPreviewFormCallsPreview(): void
 	{
 		$preview = new Form();
 		$calls   = 0;
@@ -177,21 +194,21 @@ final class RouteFormDeclarationTest extends TestCase
 			}
 		);
 
-		$result = $decl->getDocForm();
+		$result = $decl->getDocPreviewForm();
 
 		self::assertSame($preview, $result);
 		self::assertSame(1, $calls);
 	}
 
-	public function testDynamicWithPreviewGetPolicyIsAuto(): void
+	public function testDynamicWithPreviewGetPolicyIsDynamic(): void
 	{
 		$decl = RouteFormDeclaration::dynamic(
 			static fn ($ri) => new Form(),
 			static fn () => new Form()
 		);
 
-		// AUTO is NOT promoted when a preview is provided.
-		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
+		// dynamic() always returns DYNAMIC regardless of whether a preview is provided.
+		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 	}
 
 	public function testOpaqueWithFormHidesDocForm(): void
@@ -210,43 +227,43 @@ final class RouteFormDeclarationTest extends TestCase
 		self::assertNull($decl->getDocForm());
 	}
 
-	public function testExternalWithFormHidesDocForm(): void
+	public function testDynamicWithFormHidesDocForm(): void
 	{
-		$decl = RouteFormDeclaration::external(new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
 
-		self::assertSame(RouteFormDocPolicy::EXTERNAL, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
 	}
 
-	public function testGetPolicyNotPromotedForStaticForm(): void
+	public function testGetPolicyStaticForStaticForm(): void
 	{
 		$decl = RouteFormDeclaration::make(new Form());
 
-		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::STATIC, $decl->getPolicy());
 	}
 
-	public function testGetPolicyNotPromotedForStaticFactory(): void
+	public function testGetPolicyStaticForStaticFactory(): void
 	{
 		$decl = RouteFormDeclaration::make(static fn () => new Form());
 
-		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::STATIC, $decl->getPolicy());
 	}
 
-	public function testGetPolicyNotPromotedForDynamicWithPreview(): void
+	public function testGetPolicyDynamicForDynamicWithPreview(): void
 	{
 		$decl = RouteFormDeclaration::dynamic(
 			static fn ($ri) => new Form(),
 			static fn () => new Form()
 		);
 
-		self::assertSame(RouteFormDocPolicy::AUTO, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 	}
 
-	public function testGetPolicyPromotedForDynamicWithoutPreview(): void
+	public function testGetPolicyDynamicForDynamicWithoutPreview(): void
 	{
 		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
 
-		self::assertSame(RouteFormDocPolicy::OPAQUE, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 	}
 
 	public function testGetDocFormNullForOpaque(): void
@@ -257,10 +274,10 @@ final class RouteFormDeclarationTest extends TestCase
 		self::assertNull($decl->getDocForm());
 	}
 
-	public function testGetDocFormNullForExternal(): void
+	public function testGetDocFormNullForDynamic(): void
 	{
 		$form = new Form();
-		$decl = RouteFormDeclaration::make($form, RouteFormDocPolicy::EXTERNAL);
+		$decl = RouteFormDeclaration::make($form, RouteFormDocPolicy::DYNAMIC);
 
 		self::assertNull($decl->getDocForm());
 	}
@@ -296,11 +313,11 @@ final class RouteFormDeclarationTest extends TestCase
 	// provider()
 	// -----------------------------------------------------------------------
 
-	public function testProviderDeclarationHasExternalPolicy(): void
+	public function testProviderDeclarationHasDynamicPolicy(): void
 	{
 		$decl = RouteFormDeclaration::provider(StubFormProvider::class);
 
-		self::assertSame(RouteFormDocPolicy::EXTERNAL, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 	}
 
 	public function testProviderDeclarationStoresProviderClass(): void

@@ -116,7 +116,7 @@ final class RouteSharedOptionsTest extends TestCase
 		self::assertNotNull($route->getOptions()->getFormDeclaration());
 	}
 
-	public function testFormWithProviderClassStringCreatesExternalDeclaration(): void
+	public function testFormWithProviderClassStringCreatesDynamicDeclaration(): void
 	{
 		$router = TestUtils::router();
 
@@ -128,7 +128,7 @@ final class RouteSharedOptionsTest extends TestCase
 		$decl  = $route->getOptions()->getFormDeclaration();
 
 		self::assertNotNull($decl);
-		self::assertSame(RouteFormDocPolicy::EXTERNAL, $decl->getPolicy());
+		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 		self::assertSame(StubSharedOptionsProvider::class, $decl->getProviderClass());
 	}
 
