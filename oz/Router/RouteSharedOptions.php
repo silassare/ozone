@@ -538,24 +538,24 @@ class RouteSharedOptions
 	 * the resumable-form pipeline.
 	 *
 	 * Detection rules (when $form is not a RouteFormDeclaration):
-	 *  - A `class-string<ResumableFormProviderInterface>` — creates an EXTERNAL declaration that
+	 *  - A `class-string<ResumableFormProviderInterface>` -- creates a DYNAMIC declaration that
 	 *    bypasses normal bundle validation; the router injects the completed FormData instead.
-	 *  - A Form instance or a zero-arg callable (`fn(): Form`) is treated as static:
+	 *  - A Form instance or a zero-arg callable (`fn(): Form`) -> {@see RouteFormDocPolicy::STATIC}:
 	 *    resolvable and documentable without a live {@see RouteInfo}.
-	 *  - A one-arg+ callable (`fn(RouteInfo $ri): ?Form`) is treated as dynamic:
-	 *    requires a live {@see RouteInfo} at request time and is opaque in API docs
-	 *    unless $policy is overridden or a preview is provided via {@see RouteFormDeclaration::dynamic()}.
+	 *  - A one-arg+ callable (`fn(RouteInfo $ri): ?Form`) -> {@see RouteFormDocPolicy::DYNAMIC}:
+	 *    requires a live {@see RouteInfo} at request time.
 	 *
-	 * The $policy parameter is ignored when $form is already a {@see RouteFormDeclaration} or a
-	 * provider class string.
+	 * Pass {@see RouteFormDocPolicy::OPAQUE} or {@see RouteFormDocPolicy::DYNAMIC} as `$policy` to
+	 * override the auto-detected value. The $policy parameter is ignored when $form is already a
+	 * {@see RouteFormDeclaration} or a provider class string.
 	 *
 	 * @param callable|class-string<ResumableFormProviderInterface>|Form|RouteFormDeclaration $form     the form, a factory, a full declaration, or a provider class string
-	 * @param RouteFormDocPolicy                                                              $policy   documentation policy (AUTO by default)
+	 * @param null|RouteFormDocPolicy                                                         $policy   explicit override (OPAQUE or DYNAMIC); null = auto-detect
 	 * @param bool                                                                            $override whether to override an existing form declaration or throw an exception
 	 *
 	 * @return $this
 	 */
-	public function form(callable|Form|RouteFormDeclaration|string $form, RouteFormDocPolicy $policy = RouteFormDocPolicy::AUTO, bool $override = false): static
+	public function form(callable|Form|RouteFormDeclaration|string $form, ?RouteFormDocPolicy $policy = null, bool $override = false): static
 	{
 		if (null !== $this->form_declaration && !$override) {
 			throw new RuntimeException('Form declaration is already set for this route.');
@@ -771,7 +771,7 @@ class RouteSharedOptions
 	 * Gets the merged form bundle for API doc generation (no live RouteInfo needed).
 	 *
 	 * Collects doc forms from the entire parent-group chain, merging them into one {@see Form}.
-	 * Declarations with policy {@see RouteFormDocPolicy::OPAQUE} or {@see RouteFormDocPolicy::EXTERNAL},
+	 * Declarations with policy {@see RouteFormDocPolicy::OPAQUE} or {@see RouteFormDocPolicy::DYNAMIC},
 	 * and dynamic factories without a preview callable, contribute nothing.
 	 *
 	 * @return null|Form
@@ -803,17 +803,17 @@ class RouteSharedOptions
 	 * Returns the effective documentation policy for this route.
 	 *
 	 * Returns the policy of the innermost (child-most) declaration in the chain.
-	 * Falls back to {@see RouteFormDocPolicy::AUTO} when no declaration exists.
+	 * Returns null when no form declaration exists anywhere in the chain.
 	 *
-	 * @return RouteFormDocPolicy
+	 * @return null|RouteFormDocPolicy
 	 */
-	public function getEffectiveDocPolicy(): RouteFormDocPolicy
+	public function getEffectiveDocPolicy(): ?RouteFormDocPolicy
 	{
 		if (null !== $this->form_declaration) {
 			return $this->form_declaration->getPolicy();
 		}
 
-		return $this->parent?->getEffectiveDocPolicy() ?? RouteFormDocPolicy::AUTO;
+		return $this->parent?->getEffectiveDocPolicy();
 	}
 
 	/**

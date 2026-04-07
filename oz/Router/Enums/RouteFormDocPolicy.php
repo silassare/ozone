@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router\Enums;
 
+use OZONE\Core\Router\RouteFormDeclaration;
 use OZONE\Core\Router\RouteSharedOptions;
 
 /**
@@ -20,53 +21,56 @@ use OZONE\Core\Router\RouteSharedOptions;
  *
  * Controls how a route's form declaration is represented in generated API documentation.
  *
- * | Value            | `requestBody` in docs | `x-oz-form` extension |
- * |------------------|-----------------------|-----------------------|
- * | AUTO             | embedded if static    | none                  |
- * | OPAQUE           | none                  | `{policy: opaque}`    |
- * | EXTERNAL         | none                  | `{policy: external}`  |
+ * | Value   | `requestBody` in docs     | `x-oz-form` extension                                             |
+ * |---------|---------------------------|-------------------------------------------------------------------|
+ * | STATIC  | embedded (schema present) | `{policy:'static',  resumable:bool, require_real_context:bool}`   |
+ * | OPAQUE  | none                      | `{policy:'opaque',  resumable:bool, require_real_context:bool, provider_name?:str, init_form:null}` |
+ * | DYNAMIC | none                      | `{policy:'dynamic', resumable:bool, require_real_context:bool, provider_name?:str, init_form:array|null}` |
  *
  * Usage via {@see RouteSharedOptions::form()}:
  *
  * ```php
- * // Static form (0-arg factory) - AUTO detects it as documentable:
+ * // Form instance or zero-arg factory -> STATIC (auto-detected, schema embedded in docs):
  * ->form(new MyForm())
  * ->form(fn () => new MyForm())
  *
- * // Dynamic form (1-arg factory) - AUTO detects it as opaque:
+ * // One-arg+ factory -> DYNAMIC (auto-detected, only x-oz-form extension in docs):
  * ->form(fn (RouteInfo $ri) => buildForm($ri))
  *
- * // Explicitly opaque (internal form, not shown in docs):
+ * // Explicitly opaque (form present at request time, fully hidden from docs):
  * ->form(new MyForm(), RouteFormDocPolicy::OPAQUE)
  * ->form(RouteFormDeclaration::opaque(fn (RouteInfo $ri) => ...))
  *
- * // External (client fetches schema from GET /forms/{key}):
- * ->form(RouteFormDeclaration::external(fn (RouteInfo $ri) => ...))
+ * // Explicitly dynamic (factory or form treated as dynamic regardless of arity):
+ * ->form(RouteFormDeclaration::dynamic(fn (RouteInfo $ri) => ...))
+ *
+ * // Resumable-form provider (always DYNAMIC):
+ * ->form(MyResumableProvider::class)
  * ```
  */
 enum RouteFormDocPolicy: string
 {
 	/**
-	 * Automatic detection.
+	 * The form schema is available at doc-generation time and is embedded in the
+	 * OpenAPI `requestBody`. Applies to Form instances and zero-arg callables.
 	 *
-	 * A Form instance or zero-arg callable is treated as static and embedded in the spec.
-	 * A one-arg+ callable is treated as dynamic and produces no requestBody in the spec.
+	 * Extension: `x-oz-form: {policy:'static', resumable:bool, require_real_context:bool}`
 	 */
-	case AUTO = 'auto';
+	case STATIC = 'static';
 
 	/**
-	 * Explicitly hidden from API docs.
+	 * Explicitly hidden from API docs. The form is present and validated at request
+	 * time but nothing about its structure is revealed in the generated OpenAPI spec.
 	 *
-	 * The form works normally at request time but does not appear in the generated OpenAPI spec.
-	 * An `x-oz-form: {policy: opaque}` extension is added to the operation instead.
+	 * Extension: `x-oz-form: {policy:'opaque', resumable:bool, require_real_context:bool, provider_name?:str, init_form:null}`
 	 */
 	case OPAQUE = 'opaque';
 
 	/**
-	 * Signals clients to fetch the form structure from an external endpoint.
+	 * The form is dynamic or managed by a resumable-form provider. No `requestBody`
+	 * schema is embedded; clients use the `x-oz-form` extension to discover the flow.
 	 *
-	 * The form works normally at request time but the spec shows only an
-	 * `x-oz-form: {policy: external}` extension rather than embedding the schema.
+	 * Extension: `x-oz-form: {policy:'dynamic', resumable:bool, require_real_context:bool, provider_name?:str, init_form:array|null}`
 	 */
-	case EXTERNAL = 'external';
+	case DYNAMIC = 'dynamic';
 }

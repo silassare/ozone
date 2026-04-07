@@ -41,12 +41,10 @@ use OZONE\Core\Columns\Types\TypeEmail;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\Interfaces\ResumableFormProviderInterface;
 use OZONE\Core\Forms\TypesSwitcher;
 use OZONE\Core\REST\RESTFulAPIRequest;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use OZONE\Core\Router\Route;
-use OZONE\Core\Router\RouteResumableFormProvider;
 
 /**
  * Trait ApiDocManipulationTrait.
@@ -123,36 +121,6 @@ trait ApiDocManipulationTrait
 		}
 
 		return $this->paths[$path];
-	}
-
-	/**
-	 * Attaches an `x-oz-form` EXTERNAL extension carrying provider metadata to an operation.
-	 *
-	 * @param Operation                                    $op            the OpenAPI operation
-	 * @param class-string<ResumableFormProviderInterface> $form_provider the provider class
-	 */
-	public function declareResumableFormProviderExtension(Operation $op, string $form_provider): void
-	{
-		$init_form = $form_provider::initForm();
-
-		self::pushExtension($op, 'oz-form', [
-			'policy'             => RouteFormDocPolicy::EXTERNAL->value,
-			'form_provider_name' => $form_provider::getName(),
-			'init_form'          => $init_form?->toArray(),
-		]);
-	}
-
-	/**
-	 * Attaches an `x-oz-form` extension with only the given policy to an operation.
-	 *
-	 * @param Operation          $op     the OpenAPI operation
-	 * @param RouteFormDocPolicy $policy the doc policy (`OPAQUE` or `EXTERNAL`)
-	 */
-	public function declarePolicyOnlyFormExtension(Operation $op, RouteFormDocPolicy $policy): void
-	{
-		self::pushExtension($op, 'oz-form', [
-			'policy' => $policy->value,
-		]);
 	}
 
 	/**
@@ -250,31 +218,58 @@ trait ApiDocManipulationTrait
 			);
 		}
 
-		// Auto-attach request body from the route's static form declaration when not already set.
+		// Attach form documentation when not already overridden by the caller.
 		if (self::isUndefined($op->requestBody)) {
-			$doc_policy    = $route_options->getEffectiveDocPolicy();
+			$doc_policy     = $route_options->getEffectiveDocPolicy();
+			$provider_class = $route_options->resolveProviderClass();
+			$resume_config  = $route_options->resolveResumeConfig();
 
-			if (RouteFormDocPolicy::OPAQUE === $doc_policy) {
-				$this->declarePolicyOnlyFormExtension($op, $doc_policy);
-			} elseif (RouteFormDocPolicy::EXTERNAL === $doc_policy) {
-				$provider_class = $route_options->resolveProviderClass();
+			// A route is resumable when it has an explicit provider OR a form with resumeScope.
+			$is_resumable = null !== $provider_class || null !== $resume_config;
 
-				if (null !== $provider_class) {
-					$this->declareResumableFormProviderExtension($op, $provider_class);
-				} else {
-					$this->declarePolicyOnlyFormExtension($op, $doc_policy);
-				}
-			} else {
+			// require_real_context: true if the client must go through this route's URL exclusively
+			// and cannot use the standalone /form/:provider/... endpoints.
+			$require_real_context = true;
+			if (null !== $provider_class) {
+				$require_real_context = $provider_class::requiresRealContext();
+			}
+
+			if (RouteFormDocPolicy::STATIC === $doc_policy) {
 				$static_bundle = $route_options->getStaticFormBundle();
 				if (null !== $static_bundle) {
 					$op->requestBody = $this->requestBodyFromForm($static_bundle);
-
-					// When the static bundle is resumable, add an hint so clients know
-					// they may also start form resume sessions from this endpoint.
-					if (null !== $static_bundle->getResumeScope()) {
-						$this->declareResumableFormProviderExtension($op, RouteResumableFormProvider::class);
-					}
 				}
+				self::pushExtension($op, 'oz-form', [
+					'policy'               => RouteFormDocPolicy::STATIC->value,
+					'resumable'            => $is_resumable,
+					'require_real_context' => $require_real_context,
+				]);
+			} elseif (RouteFormDocPolicy::OPAQUE === $doc_policy) {
+				$extension = [
+					'policy'               => RouteFormDocPolicy::OPAQUE->value,
+					'resumable'            => $is_resumable,
+					'require_real_context' => $require_real_context,
+					'init_form'            => null,
+				];
+				if ($is_resumable && !$require_real_context && null !== $provider_class) {
+					$extension['provider_name'] = $provider_class::getName();
+				}
+				self::pushExtension($op, 'oz-form', $extension);
+			} elseif (RouteFormDocPolicy::DYNAMIC === $doc_policy) {
+				$decl      = $route_options->getFormDeclaration();
+				$init_form = null !== $provider_class
+					? $provider_class::initForm()?->toArray()
+					: $decl?->getDocPreviewForm()?->toArray();
+				$extension = [
+					'policy'               => RouteFormDocPolicy::DYNAMIC->value,
+					'resumable'            => $is_resumable,
+					'require_real_context' => $require_real_context,
+					'init_form'            => $init_form,
+				];
+				if ($is_resumable && !$require_real_context && null !== $provider_class) {
+					$extension['provider_name'] = $provider_class::getName();
+				}
+				self::pushExtension($op, 'oz-form', $extension);
 			}
 		}
 
