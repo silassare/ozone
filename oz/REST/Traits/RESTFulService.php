@@ -54,6 +54,9 @@ trait RESTFulService
 		'create_one'   => true,
 	];
 
+	/** Memoized controller instance - safe because a service instance is single-use per request. */
+	private ?ORMController $controller_instance = null;
+
 	/**
 	 * Gets the route name for the given action.
 	 */
@@ -481,21 +484,25 @@ trait RESTFulService
 	 */
 	public function actionUpdateAll(RESTFulAPIRequest $req): void
 	{
-		$values   = $req->getFormData($this->table);
-		$filters  = $req->getFilters();
-		$order_by = $req->getOrderBy();
-		$max      = $req->getMax();
+		$db = ORM::getDatabase($this->table->getNamespace());
 
-		$controller = $this->controller();
-		$count      = $controller->updateAllItems($filters, $values, $max, $order_by);
+		$db->runInTransaction(function () use ($req) {
+			$values   = $req->getFormData($this->table);
+			$filters  = $req->getFilters();
+			$order_by = $req->getOrderBy();
+			$max      = $req->getMax();
 
-		$this->json()
-			->setDone(
-				$controller
-					->getCRUD()
-					->getMessage()
-			)
-			->setData(['affected' => $count]);
+			$controller = $this->controller();
+			$count      = $controller->updateAllItems($filters, $values, $max, $order_by);
+
+			$this->json()
+				->setDone(
+					$controller
+						->getCRUD()
+						->getMessage()
+				)
+				->setData(['affected' => $count]);
+		});
 	}
 
 	// ========================================================
@@ -537,20 +544,24 @@ trait RESTFulService
 	 */
 	public function actionDeleteAll(RESTFulAPIRequest $req): void
 	{
-		$filters  = $req->getFilters();
-		$order_by = $req->getOrderBy();
-		$max      = $req->getMax();
+		$db = ORM::getDatabase($this->table->getNamespace());
 
-		$controller = $this->controller();
-		$count      = $controller->deleteAllItems($filters, $max, $order_by);
+		$db->runInTransaction(function () use ($req) {
+			$filters  = $req->getFilters();
+			$order_by = $req->getOrderBy();
+			$max      = $req->getMax();
 
-		$this->json()
-			->setDone(
-				$controller
-					->getCRUD()
-					->getMessage()
-			)
-			->setData(['affected' => $count]);
+			$controller = $this->controller();
+			$count      = $controller->deleteAllItems($filters, $max, $order_by);
+
+			$this->json()
+				->setDone(
+					$controller
+						->getCRUD()
+						->getMessage()
+				)
+				->setData(['affected' => $count]);
+		});
 	}
 
 	// ========================================================
@@ -916,7 +927,7 @@ trait RESTFulService
 	 */
 	protected function controller(): ORMController
 	{
-		return new (ORMClassKind::CONTROLLER->getClassFQN($this->table));
+		return $this->controller_instance ??= new (ORMClassKind::CONTROLLER->getClassFQN($this->table));
 	}
 
 	/**
