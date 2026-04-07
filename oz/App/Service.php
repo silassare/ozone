@@ -30,6 +30,8 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 
 	private Context $context;
 
+	private ?int $response_status = null;
+
 	/**
 	 * Service constructor.
 	 *
@@ -78,7 +80,7 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 		}
 
 		return $this->context->getResponse()
-			->withJson($data);
+			->withJson($data, $this->response_status);
 	}
 
 	/**
@@ -92,4 +94,14 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void {}
+
+	/**
+	 * Sets the HTTP response status code.
+	 *
+	 * @param int $status
+	 */
+	protected function setResponseStatus(int $status): void
+	{
+		$this->response_status = $status;
+	}
 }

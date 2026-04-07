@@ -134,7 +134,9 @@ trait RESTFulService
 				[
 					$doc->success(
 						$doc->object(['item' => $entity_read]),
-						\sprintf('The `%s` was created successfully.', $singular_name)
+						\sprintf('The `%s` was created successfully.', $singular_name),
+						'OK',
+						201
 					),
 				],
 				[
@@ -418,6 +420,8 @@ trait RESTFulService
 			$rrh        = new RESTFullRelationsHelper($this->table);
 
 			$rrh->processRelations($entity, $req, false);
+
+			$this->setResponseStatus(201);
 
 			$this->json()
 				->setDone(
