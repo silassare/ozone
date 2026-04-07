@@ -16,7 +16,6 @@ namespace OZONE\Core\App;
 use Override;
 use PHPUtils\DotPath;
 use PHPUtils\Store\Store;
-use PHPUtils\Store\Traits\StoreTrait;
 
 /**
  * Class SettingsGroup.
@@ -38,15 +37,10 @@ use PHPUtils\Store\Traits\StoreTrait;
  *   treats them as a single opaque key. Common examples: FQCNs in `oz.routes.*`, provider
  *   slugs like `auth:provider:email` in `oz.auth.providers`, service keys like `test-wizard`.
  *
- * The `has()` and `get()` overrides detect bracket-quoted normalized keys (always produced by
- * `normalizeKey()` for special-char single keys) and use direct `array_key_exists` to bypass
- * a known {@see StoreTrait::parentOf()} limitation that prevents
- * single-segment bracket-quoted paths from resolving correctly. All other keys — including
- * multi-segment deep paths — are forwarded to the parent {@see Store} implementation where
- * DotPath traversal works correctly.
- *
- * **Never flatten this to `array_key_exists` for all keys** — that would silently break any
- * deep-key access that consuming projects depend on.
+ * All `has()`, `get()`, `set()`, and `remove()` calls run through `normalizeKey()` to produce
+ * a DotPath-safe key, then delegate to the parent {@see Store} which uses
+ * {@see StoreTrait::parentOf()} for traversal. Single-segment special-char keys are wrapped in
+ * bracket notation by `normalizeKey()` and resolved correctly by `parentOf()`.
  *
  * @extends Store<array>
  *
@@ -93,45 +87,20 @@ final class SettingsGroup extends Store
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * When `normalizeKey()` produces a bracket-quoted key (i.e. the key contained special
-	 * characters), use direct `array_key_exists` on the root data array rather than
-	 * DotPath traversal. This bypasses a known `StoreTrait::parentOf()` limitation where
-	 * single-segment bracket-quoted paths leave `$access_key` unrewritten, causing
-	 * the lookup to fail. For all other keys (plain or dot-separated deep paths) the
-	 * parent {@see Store} implementation handles DotPath traversal correctly.
 	 */
 	#[Override]
 	public function has(string $key): bool
 	{
-		$normalized = self::normalizeKey($key);
-
-		// Bracket-quoted: single literal segment with special chars -> direct lookup.
-		if (\str_starts_with($normalized, "['")) {
-			return \array_key_exists($key, $this->toArray());
-		}
-
-		return parent::has($normalized);
+		return parent::has(self::normalizeKey($key));
 	}
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * @see self::has() for the rationale of the bracket-quoted branch.
 	 */
 	#[Override]
 	public function get(string $key, mixed $default = null): mixed
 	{
-		$normalized = self::normalizeKey($key);
-
-		// Bracket-quoted: single literal segment with special chars -> direct lookup.
-		if (\str_starts_with($normalized, "['")) {
-			$data = $this->toArray();
-
-			return \array_key_exists($key, $data) ? $data[$key] : $default;
-		}
-
-		return parent::get($normalized, $default);
+		return parent::get(self::normalizeKey($key), $default);
 	}
 
 	/**
