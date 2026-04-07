@@ -423,8 +423,8 @@ class RouteSharedOptions
 	 */
 	public function guard(callable|RouteGuardInterface|string $guard): static
 	{
-		if (\is_string($guard)) { // class FQN or provider name
-			if (\class_exists($guard)) { // class FQN
+		if (\is_string($guard)) { // class FQCN or provider name
+			if (\class_exists($guard)) { // class FQCN
 				$provider_class = $guard;
 				if (!\is_subclass_of($provider_class, RouteGuardProviderInterface::class)) {
 					throw new RuntimeException(\sprintf(
@@ -459,8 +459,8 @@ class RouteSharedOptions
 	 */
 	public function middleware(callable|RouteMiddlewareInterface|string $middleware): static
 	{
-		if (\is_string($middleware)) { // class FQN or provider name
-			if (\class_exists($middleware)) { // class FQN
+		if (\is_string($middleware)) { // class FQCN or provider name
+			if (\class_exists($middleware)) { // class FQCN
 				if (!\is_subclass_of($middleware, RouteMiddlewareInterface::class)) {
 					throw new RuntimeException(\sprintf(
 						'Route middleware "%s" should be subclass of: %s',
@@ -503,7 +503,7 @@ class RouteSharedOptions
 	 * They can be added at any level of the route/group tree and are inherited by child routes/groups;
 	 * they will be executed in a depth-first manner (i.e. parent interceptors run before child interceptors).
 	 *
-	 * @param class-string<RouteInterceptorInterface> $interceptor the interceptor FQN class
+	 * @param class-string<RouteInterceptorInterface> $interceptor the interceptor FQCN
 	 *
 	 * @return $this
 	 */

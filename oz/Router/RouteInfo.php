@@ -34,7 +34,7 @@ use PHPUtils\Str;
 final class RouteInfo
 {
 	/**
-	 * Maps route guard FQN class name to produced data during check.
+	 * Maps route guard FQCNs to produced data during check.
 	 *
 	 * @var array<class-string<RouteGuardInterface>, mixed>
 	 */

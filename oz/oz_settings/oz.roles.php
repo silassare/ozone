@@ -16,7 +16,7 @@ use OZONE\Core\Roles\Interfaces\RoleInterface;
 
 return [
 	/**
-	 * FQN of the roles enum class, must implement {@see RoleInterface}.
+	 * FQCN of the roles enum class, must implement {@see RoleInterface}.
 	 */
 	'OZ_ROLE_ENUM_CLASS' => Role::class,
 ];

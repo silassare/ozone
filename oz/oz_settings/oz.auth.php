@@ -50,7 +50,7 @@ return [
 	 * Default allowed authentication methods or schemes to be defined for API routes.
 	 *
 	 * This is an array of {@see AuthenticationMethodScheme}
-	 * and FQN of classes implementing {@see AuthenticationMethodInterface}.
+	 * and FQCN of classes implementing {@see AuthenticationMethodInterface}.
 	 */
 	'OZ_AUTH_API_AUTH_METHODS' => [
 		AuthenticationMethodScheme::BEARER,
@@ -62,7 +62,7 @@ return [
 	 * Default allowed authentication methods or schemes to be defined for WEB routes.
 	 *
 	 * This is an array of {@see AuthenticationMethodScheme}
-	 * and FQN of classes implementing {@see AuthenticationMethodInterface}.
+	 * and FQCN of classes implementing {@see AuthenticationMethodInterface}.
 	 */
 	'OZ_AUTH_WEB_AUTH_METHODS' => [
 		AuthenticationMethodScheme::SESSION,
