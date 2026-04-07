@@ -66,9 +66,6 @@ abstract class AbstractResumableFormProvider implements ResumableFormProviderInt
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * Default implementation: constructs a new instance of the concrete class and
-	 * injects `$ri`. Providers may override this to perform additional setup.
 	 */
 	#[Override]
 	public static function instance(RouteInfo $ri): static
@@ -77,6 +74,15 @@ abstract class AbstractResumableFormProvider implements ResumableFormProviderInt
 		$instance->ri = $ri;
 
 		return $instance;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function requiresRealContext(): bool
+	{
+		return true;
 	}
 
 	/**

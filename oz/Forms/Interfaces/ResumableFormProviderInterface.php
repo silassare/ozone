@@ -19,7 +19,9 @@ use OZONE\Core\Exceptions\FormResumeNotYetActiveException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormResumeProgress;
+use OZONE\Core\Forms\Services\ResumableFormService;
 use OZONE\Core\Http\Enums\RequestScope;
+use OZONE\Core\Router\RouteFormResumeInterceptor;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -45,6 +47,16 @@ interface ResumableFormProviderInterface
 	 * Example: `'quiz:geography'`, `'route'`, `'onboarding:wizard'`
 	 */
 	public static function getName(): string;
+
+	/**
+	 * Returns true when the provider requires the route-interceptor context
+	 * {@see RouteFormResumeInterceptor} and cannot be used via the standalone
+	 * {@see ResumableFormService} endpoints.
+	 *
+	 * When true, {@see ResumableFormService} will reject any direct request to those
+	 * endpoints with a {@see BadRequestException}. Default: true.
+	 */
+	public static function requiresRealContext(): bool;
 
 	/**
 	 * Returns an optional pre-flight form shown before the main step sequence.

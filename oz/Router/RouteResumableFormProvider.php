@@ -52,6 +52,18 @@ final class RouteResumableFormProvider extends AbstractResumableFormProvider
 	/**
 	 * {@inheritDoc}
 	 *
+	 * Always true: this provider reads the matched route's options which are only
+	 * accessible through the interceptor pipeline, not standalone endpoints.
+	 */
+	#[Override]
+	public static function requiresRealContext(): bool
+	{
+		return true;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * - Step 0: returns the matched route's form bundle via `getFormBundle($this->ri)`.
 	 * - Step 1+: returns null (sequence complete).
 	 */
