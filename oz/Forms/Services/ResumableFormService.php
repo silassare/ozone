@@ -124,8 +124,14 @@ final class ResumableFormService extends Service
 	/**
 	 * POST /form/:provider/init.
 	 *
-	 * Creates a new form session for the given provider. When the provider returns
-	 * a non-null `initForm()`, its data must be present in the request body.
+	 * Creates a new form session for the given provider.
+	 *
+	 * When `initForm()` is non-null the session starts in INIT phase: the init form is
+	 * returned immediately so the client can display it. The client must then submit the
+	 * init form data via a separate `POST .../next` call to advance to the first real step.
+	 *
+	 * When `initForm()` is null the session starts in STEPS phase (or DONE when the
+	 * provider has no steps at all) and the first step form is returned immediately.
 	 *
 	 * Response keys:
 	 *  - `resume_ref` (string)  opaque 32-char session reference
@@ -135,8 +141,8 @@ final class ResumableFormService extends Service
 	 *  - `progress`   (?array)  step progress block when `totalSteps()` is not null
 	 *
 	 * @throws NotFoundException               when the provider name is not registered
+	 * @throws BadRequestException             when the provider requires real context
 	 * @throws FormResumeNotYetActiveException when `notBefore()` is in the future
-	 * @throws InvalidFormException            when init form validation fails
 	 */
 	public function initSession(RouteInfo $ri): Response
 	{
@@ -342,12 +348,19 @@ final class ResumableFormService extends Service
 	/**
 	 * Creates a new form session.
 	 *
+	 * When `initForm()` is non-null the session is persisted in INIT phase and the
+	 * init form is returned to the client without calling `nextStep()` yet. The client
+	 * submits the init data via a subsequent `POST .../next` which transitions the
+	 * session to STEPS (or DONE) and returns the first real step form.
+	 *
+	 * When `initForm()` is null `nextStep(0)` is called immediately and the session
+	 * starts in STEPS or DONE.
+	 *
 	 * @param array $identity_fields fields merged into the session record for ownership verification
 	 *                               standalone: `['provider_name' => $name]`
 	 *                               route-context: `[]`
 	 *
 	 * @throws FormResumeNotYetActiveException when `notBefore()` is in the future
-	 * @throws InvalidFormException            when init form validation fails
 	 */
 	private function doInit(
 		ResumableFormProviderInterface $provider,
@@ -361,21 +374,9 @@ final class ResumableFormService extends Service
 			throw new FormResumeNotYetActiveException();
 		}
 
-		$scope_id     = $provider->resumeScope()->resolveId($context);
-		$cleaned_form = new FormData();
-		$init_form    = $provider::initForm();
-
-		if (null !== $init_form) {
-			$unsafe_fd    = $context->getRequest()->getUnsafeFormData();
-			$cleaned_form = $init_form->validate($unsafe_fd);
-		}
-
+		$scope_id = $provider->resumeScope()->resolveId($context);
 		$progress = new FormResumeProgress();
 		$progress->setStepIndex(0);
-
-		$next_form = $provider->nextStep($cleaned_form, $progress);
-		$phase     = null === $next_form ? FormResumePhase::DONE : FormResumePhase::STEPS;
-		$progress->setPhase($phase);
 
 		$deadline   = $provider->deadline();
 		$expires_at = null !== $deadline
@@ -383,6 +384,33 @@ final class ResumableFormService extends Service
 			: null;
 
 		$resume_ref = Keys::id32('form.session');
+		$init_form  = $provider::initForm();
+
+		if (null !== $init_form) {
+			// INIT phase: return the pre-flight form to the client.
+			// The init data is submitted separately via POST .../next.
+			$phase = FormResumePhase::INIT;
+			$progress->setPhase($phase);
+
+			self::writeSession($resume_ref, \array_merge($identity_fields, [
+				'phase'          => $phase->value,
+				'cleaned_form'   => [],
+				'progress_state' => $progress->toArray(),
+				'scope_id'       => $scope_id,
+				'scope_name'     => $provider->resumeScope()->value,
+				'created_at'     => \time(),
+				'expires_at'     => $expires_at,
+				'history'        => [],
+			]), $provider->resumeTTL());
+
+			return $this->respondWith($resume_ref, $init_form, false, $provider, $progress, $expires_at);
+		}
+
+		// No init form: jump straight to STEPS (or DONE when provider has no steps).
+		$cleaned_form = new FormData();
+		$next_form    = $provider->nextStep($cleaned_form, $progress);
+		$phase        = null === $next_form ? FormResumePhase::DONE : FormResumePhase::STEPS;
+		$progress->setPhase($phase);
 
 		self::writeSession($resume_ref, \array_merge($identity_fields, [
 			'phase'          => $phase->value,
@@ -419,13 +447,20 @@ final class ResumableFormService extends Service
 	}
 
 	/**
-	 * Validates the current step and advances to the next.
+	 * Validates the current step (or init form) and advances to the next.
+	 *
+	 * When the session is in INIT phase, validates the pre-flight init form and
+	 * transitions directly to STEPS (or DONE). The step index is NOT incremented
+	 * so `nextStep(0)` is called for the first real step.
+	 *
+	 * When in STEPS phase, validates the current step derived from `nextStep()`,
+	 * increments the step index, and calls `nextStep()` again for the next form.
 	 *
 	 * @throws BadRequestException        when the session is already complete
 	 * @throws NotFoundException          when the session is not found
 	 * @throws ForbiddenException         when the caller does not own the session
 	 * @throws FormResumeExpiredException when the session has passed its deadline
-	 * @throws InvalidFormException       when step validation fails
+	 * @throws InvalidFormException       when form validation fails
 	 */
 	private function doNext(
 		ResumableFormProviderInterface $provider,
@@ -439,12 +474,34 @@ final class ResumableFormService extends Service
 			throw new BadRequestException('OZ_FORM_SESSION_ALREADY_DONE');
 		}
 
-		$current_form = $this->deriveCurrentForm($session['phase'], $provider, $cleaned_form, $progress);
-		$unsafe_fd    = $ri->getContext()->getRequest()->getUnsafeFormData();
-		$validated    = $current_form->validate($unsafe_fd, $cleaned_form);
-
 		$history    = $session['history'] ?? [];
 		$expires_at = $session['expires_at'] ?? null;
+		$unsafe_fd  = $ri->getContext()->getRequest()->getUnsafeFormData();
+
+		if (FormResumePhase::INIT->value === $session['phase']) {
+			// Submit the pre-flight init form. Step index stays at 0 so that
+			// nextStep(0) is called immediately after — the init form is not a step.
+			$validated = $provider::initForm()->validate($unsafe_fd, $cleaned_form);
+
+			$cleaned_form->merge($validated);
+
+			$next_form = $provider->nextStep($cleaned_form, $progress);
+			$phase     = null === $next_form ? FormResumePhase::DONE : FormResumePhase::STEPS;
+			$progress->setPhase($phase);
+
+			self::writeSession($resume_ref, \array_merge($session, [
+				'phase'          => $phase->value,
+				'cleaned_form'   => $cleaned_form->toArray(),
+				'progress_state' => $progress->toArray(),
+				'history'        => $history,
+			]), $provider->resumeTTL());
+
+			return $this->respondWith($resume_ref, $next_form, FormResumePhase::DONE === $phase, $provider, $progress, $expires_at);
+		}
+
+		// STEPS phase: validate the current step, advance.
+		$current_form = $this->deriveCurrentForm($session['phase'], $provider, $cleaned_form, $progress);
+		$validated    = $current_form->validate($unsafe_fd, $cleaned_form);
 
 		if ($provider->isReversible()) {
 			// Snapshot the state BEFORE merging validated data and advancing.
@@ -457,9 +514,7 @@ final class ResumableFormService extends Service
 		}
 
 		// Merge the validated step data into the accumulated cleaned form.
-		foreach ($validated->toArray() as $key => $value) {
-			$cleaned_form->set((string) $key, $value);
-		}
+		$cleaned_form->merge($validated);
 
 		// Advance the step index so the provider knows which step it is answering for.
 		$progress->setStepIndex($progress->getStepIndex() + 1);
@@ -644,7 +699,8 @@ final class ResumableFormService extends Service
 	 *
 	 * @return array{0: class-string<ResumableFormProviderInterface>, 1: ResumableFormProviderInterface}
 	 *
-	 * @throws NotFoundException when the provider name is not registered
+	 * @throws NotFoundException   when the provider name is not registered
+	 * @throws BadRequestException when the provider requires real context (route interceptor path)
 	 */
 	private function resolveProvider(string $provider_name, RouteInfo $ri): array
 	{
@@ -655,6 +711,10 @@ final class ResumableFormService extends Service
 		}
 
 		/** @var class-string<ResumableFormProviderInterface> $class */
+		if ($class::requiresRealContext()) {
+			throw new BadRequestException('OZ_FORM_PROVIDER_REQUIRES_REAL_CONTEXT', ['provider' => $provider_name]);
+		}
+
 		return [$class, $class::instance($ri)];
 	}
 
@@ -662,8 +722,7 @@ final class ResumableFormService extends Service
 	 * Loads and validates a session, verifying identity, scope ownership, and expiry.
 	 *
 	 * @param array $identity_fields session fields to match for ownership verification
-	 *                               (e.g. `['provider_name' => $name]` or
-	 *                               `['route_name' => $name, 'provider_class' => $class]`)
+	 *                               (e.g. `['provider_name' => $name]` or `[]`)
 	 *
 	 * @return array{0: array, 1: FormData, 2: FormResumeProgress}
 	 *
