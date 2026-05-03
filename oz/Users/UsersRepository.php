@@ -17,9 +17,8 @@ use Gobl\DBAL\Builders\TableBuilder;
 use Gobl\DBAL\Column;
 use Gobl\DBAL\Exceptions\DBALException;
 use Gobl\DBAL\Table;
+use Gobl\ORM\ORM;
 use Gobl\ORM\ORMOptions;
-use Gobl\ORM\ORMTableQuery;
-use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
 use Override;
 use OZONE\Core\App\Settings;
@@ -235,11 +234,12 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		// check if this column can be used as unique identifier
 		if ($this->table->isPrimaryKey([$c_full_name]) || $this->table->isUniqueKey([$c_full_name])) {
 			try {
-				$sel = $this->qb()->where([$c_full_name, 'eq', $identifier_value])
-					->find(ORMOptions::makePaginated(1));
+				$qb = ORM::query($this->table);
+				$qb->where([$c_full_name, 'eq', $identifier_value]);
+				$res = $qb->find(ORMOptions::makePaginated(1));
 
 				/** @var null|AuthUserInterface */
-				return $sel->fetchClass();
+				return $res->fetchClass();
 			} catch (Throwable $t) {
 				throw new RuntimeException('Unable to load user.', [
 					$identifier_type  => $identifier_value,
@@ -253,13 +253,5 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 			$identifier_type,
 			$this->table->getName()
 		));
-	}
-
-	private function qb(): ORMTableQuery
-	{
-		/** @var ORMTableQuery $class */
-		$class = ORMClassKind::QUERY->getClassFQN($this->table);
-
-		return $class::new();
 	}
 }
