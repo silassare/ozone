@@ -355,6 +355,142 @@ final class ResumableFormServiceTest extends TestCase
 		);
 	}
 
+	public function testEvaluateReturnsServerSideExpectResult(): void
+	{
+		// Advance to step 2 (notes) with color='forbidden' accumulated.
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		$this->request('POST', '/form/test-wizard/next', ['wish' => 'anything'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['name' => 'alice'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['color' => 'forbidden'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+
+		// On step 2 the server-only expect rule checks color != 'forbidden' -> should fail.
+		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', [], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(0, $data['error']);
+		self::assertArrayHasKey('expect', $data['data']);
+		self::assertNotEmpty($data['data']['expect'], 'expect array must contain at least one entry.');
+		self::assertFalse(
+			$data['data']['expect'][0]['passes'] ?? true,
+			"Expect rule must fail when color='forbidden'."
+		);
+	}
+
+	public function testEvaluateReturnsServerSideEnsureResult(): void
+	{
+		// Advance to step 2 (notes). The ensure rule checks notes != 'bad-notes'.
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		$this->request('POST', '/form/test-wizard/next', ['wish' => 'anything'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['name' => 'alice'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['color' => 'blue'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+
+		// Evaluate with notes='bad-notes' in the raw input -> ensure rule must fail.
+		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', ['notes' => 'bad-notes'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(0, $data['error']);
+		self::assertArrayHasKey('ensure', $data['data']);
+		self::assertNotEmpty($data['data']['ensure'], 'ensure array must contain at least one entry.');
+		self::assertFalse(
+			$data['data']['ensure'][0]['passes'] ?? true,
+			"Ensure rule must fail when notes='bad-notes'."
+		);
+
+		// Evaluate with notes='good-notes' -> ensure rule must pass.
+		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', ['notes' => 'good-notes'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertTrue(
+			$data['data']['ensure'][0]['passes'] ?? false,
+			"Ensure rule must pass when notes != 'bad-notes'."
+		);
+	}
+
+	public function testEvaluateReturnsFieldsetServerSideVisibility(): void
+	{
+		// Advance to step 2 (notes) with wish='skip-details' -> fieldset should be hidden.
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		$this->request('POST', '/form/test-wizard/next', ['wish' => 'skip-details'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['name' => 'alice'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['color' => 'blue'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+
+		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', [], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(0, $data['error']);
+		self::assertArrayHasKey('fieldsets', $data['data']);
+		self::assertFalse(
+			$data['data']['fieldsets']['extra_details'] ?? true,
+			"'extra_details' fieldset must be hidden when wish='skip-details'."
+		);
+	}
+
+	public function testEvaluateFieldsetShownAndIntraFieldsetFieldVisibility(): void
+	{
+		// wish='skip-detail' -> fieldset IS shown, but conditional_detail inside is hidden.
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		$this->request('POST', '/form/test-wizard/next', ['wish' => 'skip-detail'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['name' => 'alice'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['color' => 'blue'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+
+		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', [], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(0, $data['error']);
+		// Fieldset itself: wish='skip-detail' != 'skip-details' -> fieldset IS visible.
+		self::assertTrue(
+			$data['data']['fieldsets']['extra_details'] ?? false,
+			"'extra_details' fieldset must be shown when wish='skip-detail' (not 'skip-details')."
+		);
+		// Field inside fieldset: wish='skip-detail' == DynamicValue('skip-detail') -> hidden.
+		self::assertFalse(
+			$data['data']['visibility']['extra_details.conditional_detail'] ?? true,
+			"'extra_details.conditional_detail' must be hidden when wish='skip-detail'."
+		);
+	}
+
 	// -------------------------------------------------------------------------
 	// Back endpoint
 	// -------------------------------------------------------------------------

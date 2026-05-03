@@ -16,6 +16,7 @@ namespace __PLH_NAMESPACE__;
 use Override;
 use OZONE\Core\Forms\AbstractResumableFormProvider;
 use OZONE\Core\Forms\DynamicValue;
+use OZONE\Core\Forms\Fieldset;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormResumeProgress;
@@ -92,6 +93,17 @@ final class TestFormProvider extends AbstractResumableFormProvider
 				$f->string('notes');
 				// Server-only expect rule: color must not be 'forbidden'.
 				$f->expect()->neq('color', new DynamicValue(static fn (FormData $fd): string => 'forbidden'));
+				// Server-only ensure rule: notes must not be 'bad-notes'.
+				$f->ensure()->neq('notes', new DynamicValue(static fn (FormData $fd): string => 'bad-notes'));
+				// Fieldset with a server-only if condition: shown only when wish != 'skip-details'.
+				$fs = $f->fieldset('extra_details', static function (Fieldset $fs): void {
+					$fs->string('detail_note');
+					// Field inside fieldset with server-only if: shown only when wish != 'skip-detail'.
+					$fs->string('conditional_detail');
+					$fs->field('conditional_detail')
+						->if()->neq('wish', new DynamicValue(static fn (FormData $fd): string => 'skip-detail'));
+				});
+				$fs->if()->neq('wish', new DynamicValue(static fn (FormData $fd): string => 'skip-details'));
 
 				return $f;
 			})(),

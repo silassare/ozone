@@ -153,10 +153,6 @@ final class ResumableFormService extends Service implements CacheEntryExpiryList
 		// TODO: document the endpoints and their request/response schemas
 	}
 
-	// -------------------------------------------------------------------------
-	// Route handlers
-	// -------------------------------------------------------------------------
-
 	/**
 	 * POST {group-path}/:provider/init.
 	 *
@@ -281,10 +277,6 @@ final class ResumableFormService extends Service implements CacheEntryExpiryList
 		return $this->doCancel($provider, ['provider_name' => $provider_name], $ri);
 	}
 
-	// -------------------------------------------------------------------------
-	// Route-interceptor operations
-	// -------------------------------------------------------------------------
-
 	/**
 	 * Entry point for {@see RouteFormResumeInterceptor}.
 	 *
@@ -313,10 +305,6 @@ final class ResumableFormService extends Service implements CacheEntryExpiryList
 			default               => throw new BadRequestException('OZ_FORM_RESUME_INVALID_ACTION', ['action' => $action]),
 		};
 	}
-
-	// -------------------------------------------------------------------------
-	// Static helper for downstream consumption
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Validates that a session identified by `$resume_ref` belongs to the correct
@@ -376,10 +364,6 @@ final class ResumableFormService extends Service implements CacheEntryExpiryList
 	{
 		CacheRegistry::store(self::CACHE_NAMESPACE)->delete($resume_ref);
 	}
-
-	// -------------------------------------------------------------------------
-	// Unified action implementations
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Creates a new form session.
@@ -671,7 +655,7 @@ final class ResumableFormService extends Service implements CacheEntryExpiryList
 			)
 		);
 
-		// -- Field visibility -------------------------------------------------
+		// Root-level field visibility
 		$visibility = [];
 
 		foreach ($current_form->getFields() as $field) {
@@ -682,7 +666,34 @@ final class ResumableFormService extends Service implements CacheEntryExpiryList
 			}
 		}
 
-		// -- Expect rules (pre-validation, server-only) -----------------------
+		// Fieldset visibility and intra-fieldset field visibility
+		$fieldsets_visibility = [];
+
+		foreach ($current_form->getFieldsets() as $fieldset) {
+			$fs_cond = $fieldset->getIf();
+
+			if (null !== $fs_cond && $fs_cond->isServerOnly()) {
+				$fieldsets_visibility[$fieldset->getName()] = $fieldset->isEnabled($eval_data);
+			}
+
+			// Build the fieldset to obtain its concrete fields.
+			// Returns null when the fieldset condition is not satisfied -- skip fields too.
+			$built = $fieldset->build($eval_data);
+
+			if (null === $built) {
+				continue;
+			}
+
+			foreach ($built->getFields() as $field) {
+				$cond = $field->getIf();
+
+				if (null !== $cond && $cond->isServerOnly()) {
+					$visibility[$field->getRef()] = $field->isEnabled($eval_data);
+				}
+			}
+		}
+
+		// Expect rules (pre-validation, server-only)
 		$expect_results = [];
 
 		foreach ($current_form->getPreValidationRules() as $index => $rule) {
@@ -698,19 +709,33 @@ final class ResumableFormService extends Service implements CacheEntryExpiryList
 			}
 		}
 
+		// Ensure rules (post-validation, server-only)
+		$ensure_results = [];
+
+		foreach ($current_form->getPostValidationRules() as $index => $rule) {
+			if ($rule->isServerOnly()) {
+				$passes = $rule->check($eval_data);
+				$msg    = $passes ? null : $rule->getViolationMessage();
+
+				$ensure_results[] = [
+					'index'   => $index,
+					'passes'  => $passes,
+					'message' => $msg instanceof I18nMessage ? $msg->toArray() : $msg,
+				];
+			}
+		}
+
 		$this->json()
 			->setDone()
 			->setData([
 				'visibility' => $visibility,
+				'fieldsets'  => $fieldsets_visibility,
 				'expect'     => $expect_results,
+				'ensure'     => $ensure_results,
 			]);
 
 		return $this->respond();
 	}
-
-	// -------------------------------------------------------------------------
-	// Internal helpers
-	// -------------------------------------------------------------------------
 
 	/**
 	 * Reads the resume_ref from request header.

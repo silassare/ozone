@@ -215,6 +215,19 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	}
 
 	/**
+	 * Returns the condition that controls whether this fieldset participates in
+	 * validation, or null when no condition has been set.
+	 *
+	 * Use {@see self::if()} to set or read the condition via the fluent builder.
+	 *
+	 * @return null|RuleSet
+	 */
+	public function getIf(): ?RuleSet
+	{
+		return $this->t_if ?? null;
+	}
+
+	/**
 	 * Returns (or lazily initialises) the condition that controls whether this
 	 * fieldset participates in validation. Evaluated against the parent form's
 	 * accumulated cleaned data.
