@@ -252,7 +252,7 @@ final class JobsManager
 			$job_contract->save();
 
 			try {
-				/** @var WorkerInterface $worker_class */
+				/** @var class-string<WorkerInterface> $worker_class */
 				$worker_class = self::getWorker($job_contract->getWorker());
 				$worker       = $worker_class::fromPayload($job_contract->getPayload());
 
@@ -404,7 +404,7 @@ final class JobsManager
 		$job_contract->save();
 
 		try {
-			/** @var WorkerInterface $worker_class */
+			/** @var class-string<WorkerInterface> $worker_class */
 			$worker_class = self::getWorker($job_contract->getWorker());
 			$worker       = $worker_class::fromPayload($job_contract->getPayload());
 
