@@ -121,8 +121,11 @@ final class ResumableFormAbandonTest extends TestCase
 
 		// 3. Make a request -- the FinishHook fires on the server side after the
 		//    response is sent, which triggers the cache garbage collector.
-		//    Any request will do; a non-existent resource is fine.
-		$this->request('POST', '/form/test-abandon/init');
+		//    Use GET / to avoid creating a new form session as a side effect
+		//    (a POST to /form/test-abandon/init would create an orphaned session
+		//    with TTL=1s that could then be GC'd in a subsequent test, causing
+		//    a spurious onAbandon call and flag-file write).
+		$this->request('GET', '/');
 
 		// 4. The flag file is written synchronously inside the server process (same
 		//    PHP request handling the FinishHook), so by the time file_get_contents
@@ -158,7 +161,8 @@ final class ResumableFormAbandonTest extends TestCase
 
 		// 3. Trigger a FinishHook via another request so the GC can run.
 		//    The GC must not find the already-deleted entry.
-		$this->request('POST', '/form/test-abandon/init');
+		//    Use GET / to avoid creating a new form session as a side effect.
+		$this->request('GET', '/');
 
 		// 4. The flag file must NOT exist.
 		self::assertFileDoesNotExist(

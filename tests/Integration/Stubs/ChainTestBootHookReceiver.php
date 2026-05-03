@@ -33,7 +33,7 @@ final class ChainTestBootHookReceiver implements BootHookReceiverInterface
 		JobsManager::registerWorker(ChainTestWorkerA::class);
 		JobsManager::registerWorker(ChainTestWorkerB::class);
 
-		InitHook::listen(static function () {
+		InitHook::listen(static function (): void {
 			$triggerFile = '__PLH_TRIGGER_FILE__';
 
 			if (!\is_file($triggerFile)) {

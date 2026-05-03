@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Auth;
 
+use Gobl\ORM\ORMOptions;
 use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
@@ -244,7 +245,7 @@ final class SessionManagementTest extends TestCase
 		$result = (new OZSessionsQuery())
 			->whereIdIs($sid)
 			->whereIsValid()
-			->find(1)
+			->find(ORMOptions::makePaginated(1))
 			->fetchClass();
 
 		// The row exists in the DB but has a past expire_at; either the query
@@ -268,7 +269,7 @@ final class SessionManagementTest extends TestCase
 		$result = (new OZSessionsQuery())
 			->whereIdIs($sid)
 			->whereIsValid()
-			->find(1)
+			->find(ORMOptions::makePaginated(1))
 			->fetchClass();
 
 		self::assertNotNull($result);
@@ -352,7 +353,7 @@ final class SessionManagementTest extends TestCase
 			#[Override]
 			public function getAuthUserDataStore(): AuthUserDataStore
 			{
-				return $this->data_store ??= new AuthUserDataStore([]);
+				return $this->data_store ?? throw new RuntimeException('AuthUserDataStore not set on mock user.');
 			}
 
 			#[Override]

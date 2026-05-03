@@ -35,12 +35,12 @@ final class BatchTestBootHookReceiver implements BootHookReceiverInterface
 		JobsManager::registerWorker(BatchTestWorkerA::class);
 		JobsManager::registerWorker(BatchTestWorkerB::class);
 
-		BatchFinished::listen(static function (BatchFinished $event) {
+		BatchFinished::listen(static function (BatchFinished $event): void {
 			$hasError = $event->has_error ? '1' : '0';
 			\file_put_contents('__PLH_FINISHED_FLAG__', 'batch-finished:' . $hasError);
 		});
 
-		InitHook::listen(static function () {
+		InitHook::listen(static function (): void {
 			$triggerFile = '__PLH_TRIGGER_FILE__';
 
 			if (!\is_file($triggerFile)) {

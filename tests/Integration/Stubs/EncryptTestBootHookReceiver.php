@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace __PLH_NAMESPACE__;
 
 use __PLH_NAMESPACE__\Workers\EncryptTestWorker;
+use Gobl\ORM\ORMOptions;
 use OZONE\Core\Db\OZJobsQuery;
 use OZONE\Core\Hooks\Events\InitHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
@@ -35,7 +36,7 @@ final class EncryptTestBootHookReceiver implements BootHookReceiverInterface
 	{
 		JobsManager::registerWorker(EncryptTestWorker::class);
 
-		InitHook::listen(static function () {
+		InitHook::listen(static function (): void {
 			$triggerFile = '__PLH_TRIGGER_FILE__';
 
 			if (!\is_file($triggerFile)) {
@@ -53,7 +54,7 @@ final class EncryptTestBootHookReceiver implements BootHookReceiverInterface
 			// OZJobsQuery does NOT decrypt; only DbJobStore::fromEntity() does.
 			$entity = (new OZJobsQuery())
 				->whereRefIs($contract->getRef())
-				->find(1)
+				->find(ORMOptions::makePaginated(1))
 				->fetchClass();
 
 			if (null !== $entity) {

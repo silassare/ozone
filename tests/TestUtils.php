@@ -32,14 +32,14 @@ class TestUtils
 		$router->get('/foo', static fn () => null)
 			->name('foo');
 
-		$router->group('/bar', static function (Router $router) {
+		$router->group('/bar', static function (Router $router): void {
 			$router->get('/baz', static fn () => null)
 				->name('baz');
 		})
 			->name('bar');
 
-		$router->group('/users', static function (Router $router) {
-			$router->group('/{id}/', static function (Router $router) {
+		$router->group('/users', static function (Router $router): void {
+			$router->group('/{id}/', static function (Router $router): void {
 				$router->get(static fn () => null)
 					->name('get');
 
@@ -50,7 +50,7 @@ class TestUtils
 		})
 			->name('users');
 
-		$router->group('/articles', static function (Router $router) {
+		$router->group('/articles', static function (Router $router): void {
 			$router->get(static fn () => null)
 				->name('list');
 			$router->get(':id', static fn () => null)

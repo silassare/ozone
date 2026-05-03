@@ -40,7 +40,7 @@ final class StaleLockBootHookReceiver implements BootHookReceiverInterface
 	{
 		JobsManager::registerWorker(StaleLockTestWorker::class);
 
-		InitHook::listen(static function () {
+		InitHook::listen(static function (): void {
 			$flagFile = '__PLH_FLAG_FILE__';
 			if (\is_file($flagFile)) {
 				\unlink($flagFile);

@@ -31,7 +31,7 @@ final class DeadLetterBootHookReceiver implements BootHookReceiverInterface
 	{
 		JobsManager::registerWorker(DeadLetterTestWorker::class);
 
-		InitHook::listen(static function () {
+		InitHook::listen(static function (): void {
 			$triggerFile = '__PLH_TRIGGER_FILE__';
 
 			if (!\is_file($triggerFile)) {

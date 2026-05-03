@@ -31,10 +31,10 @@ final class TestAsyncCronBootHookReceiver implements BootHookReceiverInterface
 {
 	public static function boot(): void
 	{
-		CronCollect::listen(static function () {
+		CronCollect::listen(static function (): void {
 			$task = new CallableTask(
 				'test-async-cron-flag-task',
-				static function (JSONResult $result) {
+				static function (JSONResult $result): void {
 					\file_put_contents('__PLH_FLAG_FILE__', 'async-cron-ok');
 					$result->setDone()->setData(['flag' => '__PLH_FLAG_FILE__']);
 				},

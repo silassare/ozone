@@ -31,10 +31,10 @@ final class RouteGroupTest extends TestCase
 	{
 		$router    = TestUtils::router();
 		$bar_group = null;
-		$router->group('/test', static function (Router $router) use (&$bar_group) {
+		$router->group('/test', static function (Router $router) use (&$bar_group): void {
 			$router->get('/foo', static fn () => null)
 				->name('foo');
-			$bar_group = $router->group('/bar', static function (Router $router) {
+			$bar_group = $router->group('/bar', static function (Router $router): void {
 				$router->get('/baz', static fn () => null)
 					->name('baz');
 			});
@@ -56,10 +56,10 @@ final class RouteGroupTest extends TestCase
 	{
 		$router = TestUtils::router();
 
-		$router->group('/test', static function (Router $router) {
+		$router->group('/test', static function (Router $router): void {
 			$router->get('/foo', static fn () => null)
 				->name('foo');
-			$router->group('/bar', static function (Router $router) {
+			$router->group('/bar', static function (Router $router): void {
 				$router->get('/baz', static fn () => null)
 					->name('baz');
 			});

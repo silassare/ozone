@@ -52,6 +52,18 @@ final class ProjectServeTest extends TestCase
 			'OZ_DB_HOST'  => $db_path,
 		]);
 
+		// Disable the default GET / -> API-doc redirect so that a plain GET /
+		// returns a JSON error (403 Forbidden) instead of a 302, allowing the
+		// tests below to assert on the JSON response body.
+		self::$proj->setSetting('oz.api.doc', 'OZ_API_DOC_SHOW_ON_INDEX', false);
+
+		// Build ORM classes so Db::initStepRegister() can call enableORM() on the
+		// project namespace directory (app/Db/), which does not exist in a fresh
+		// scaffolded project until the first `oz db build` run.
+		self::$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
+		self::$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
+		self::$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
+
 		// Start the server via `oz project serve`. The command auto-picks a port,
 		// writes .ozone/cache/scopes/api/server.json, then begins serving.
 		self::$server = self::$proj->oz('project', 'serve', '--scope=api', '--host=' . self::$host);

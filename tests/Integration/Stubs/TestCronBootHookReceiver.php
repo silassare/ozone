@@ -26,8 +26,8 @@ final class TestCronBootHookReceiver implements BootHookReceiverInterface
 {
 	public static function boot(): void
 	{
-		CronCollect::listen(static function () {
-			Cron::call(static function (JSONResult $result) {
+		CronCollect::listen(static function (): void {
+			Cron::call(static function (JSONResult $result): void {
 				\file_put_contents('__PLH_FLAG_FILE__', 'cron-ok');
 				$result->setDone()->setData(['flag' => '__PLH_FLAG_FILE__']);
 			}, 'test-cron-flag-task')->everyMinute();

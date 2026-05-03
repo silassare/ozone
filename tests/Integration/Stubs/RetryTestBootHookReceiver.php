@@ -31,7 +31,7 @@ final class RetryTestBootHookReceiver implements BootHookReceiverInterface
 	{
 		JobsManager::registerWorker(RetryTestWorker::class);
 
-		InitHook::listen(static function () {
+		InitHook::listen(static function (): void {
 			$triggerFile = '__PLH_TRIGGER_FILE__';
 
 			if (!\is_file($triggerFile)) {

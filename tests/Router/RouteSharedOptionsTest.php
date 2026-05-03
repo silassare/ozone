@@ -199,7 +199,7 @@ final class RouteSharedOptionsTest extends TestCase
 	public function testGetInterceptorsFromParentAreInheritedByChildRoute(): void
 	{
 		$router = new Router();
-		$router->group('/parent', static function (Router $router) {
+		$router->group('/parent', static function (Router $router): void {
 			$router->get('/child', static fn () => null)
 				->name('child');
 		})

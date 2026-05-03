@@ -31,7 +31,7 @@ final class CancelTestBootHookReceiver implements BootHookReceiverInterface
 	{
 		JobsManager::registerWorker(CancelTestWorker::class);
 
-		InitHook::listen(static function () {
+		InitHook::listen(static function (): void {
 			$triggerFile = '__PLH_TRIGGER_FILE__';
 
 			if (!\is_file($triggerFile)) {

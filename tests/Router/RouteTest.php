@@ -81,7 +81,7 @@ final class RouteTest extends TestCase
 	{
 		$router = new Router();
 
-		$router->group('/items', static function (Router $r) {
+		$router->group('/items', static function (Router $r): void {
 			$r->get('/:id', static fn () => null)
 				->name('get')
 				->fullPathPrefix('/v1');
@@ -139,8 +139,8 @@ final class RouteTest extends TestCase
 	{
 		$router = TestUtils::router();
 
-		$router->group('/a', static function (Router $router) {
-			$router->group('/b', static function (Router $router) {
+		$router->group('/a', static function (Router $router): void {
+			$router->group('/b', static function (Router $router): void {
 				$router->get('/c', static fn () => null)
 					->name('c')->priority(1);
 			})

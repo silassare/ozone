@@ -28,7 +28,7 @@ final class TestJobBootHookReceiver implements BootHookReceiverInterface
 	{
 		JobsManager::registerWorker(TestJobWorker::class);
 
-		InitHook::listen(static function () {
+		InitHook::listen(static function (): void {
 			// Flag file path is resolved relative to the project root at runtime.
 			$flagFile = \dirname(__DIR__) . \DIRECTORY_SEPARATOR . 'job_ran.flag';
 			// Remove any previous run's flag so the test sees a fresh result.
