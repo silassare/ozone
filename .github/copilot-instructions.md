@@ -699,6 +699,69 @@ Keys::newAuthToken()   // 64-char hash
 Keys::newAuthCode(6)   // numeric or alphanumeric code
 ```
 
+### ORMOptions API (Gobl ORM query options)
+
+`Gobl\ORM\ORMOptions` is the unified query-options class. It implements `ORMOptionsInterface` (which extends `ORMSelectOptionsInterface`, `ORMDeleteOptionsInterface`, `ORMUpdateOptionsInterface`, `ORMCreateOptionsInterface`). Use the static factory methods — do not construct with new unless parsing a request payload.
+
+**Static factory methods:**
+
+```php
+ORMOptions::makePaginated(?int $max, ?int $page = null, ?array $order_by = null): static
+ORMOptions::makeFromFilters(array $filters): static
+ORMOptions::makeCursorBased(string $cursor_column, int $max, mixed $cursor = null, string $direction = 'ASC'): static
+```
+
+**`ORMTableQuery::find()` signature:**
+
+```php
+$qb->find(?ORMSelectOptionsInterface $options = null): ORMResults
+```
+
+Always use `ORMOptions::makePaginated()` to limit results:
+
+```php
+$qb->find(ORMOptions::makePaginated(1))              // max=1
+$qb->find(ORMOptions::makePaginated($max, $page))   // paginated, $page is 1-based
+$qb->find()                                          // all rows (no limit)
+```
+
+**`ORMResults::getTotal()`:**
+
+```php
+$results->getTotal(?WithPaginationInterface $options = null, bool $force = false): int
+// Pass null (or omit) for non-cursor-based total; lazily runs COUNT(*) only when needed.
+```
+
+**`ORMController` method signatures:**
+
+| Method            | Signature                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| `getItem`         | `getItem(?ORMSelectOptionsInterface $options = null)`                                |
+| `getAllItems`     | `getAllItems(?ORMSelectOptionsInterface $options = null): ORMResults`                |
+| `getAllRelatives` | `getAllRelatives($e, $rel, ?ORMSelectOptionsInterface $options = null): ?ORMResults` |
+| `updateOneItem`   | `updateOneItem(ORMUpdateOptionsInterface $options)`                                  |
+| `updateAllItems`  | `updateAllItems(ORMUpdateOptionsInterface $options)`                                 |
+| `deleteOneItem`   | `deleteOneItem(?ORMDeleteOptionsInterface $options = null)`                          |
+| `deleteAllItems`  | `deleteAllItems(?ORMDeleteOptionsInterface $options = null)`                         |
+
+**`ORM::entity()` / `ORM::results()`:**
+
+```php
+ORM::entity($table, $isNew, $strict)
+ORM::results($table, $qb)
+```
+
+**Cursor-based pagination pattern:**
+
+```php
+$options = ORMOptions::makeCursorBased('id', $max, $cursor, 'ASC');
+$orm_results = $controller->getAllItems($options);
+$page = $orm_results->fetchAllClassWithCursorMeta($options);
+// $page shape: ['items' => [...], 'next_cursor' => mixed, 'has_more' => bool]
+```
+
+**`RESTFulAPIRequest`** extends `ORMOptions` directly — it IS an `ORMOptionsInterface` and can be passed as-is to all ORM controller methods.
+
 ---
 
 ## 9. Column Type System
@@ -1368,10 +1431,10 @@ Register in `oz.cache` / `oz.cache.stores` by setting the `driver` key to the FQ
 
 ## 15. REST Conventions
 
-**Trait**: `OZONE\Core\REST\Traits\RESTFulService`
-**Request wrapper**: `OZONE\Core\REST\RESTFulAPIRequest extends GoblORMRequest`
+**Class**: `OZONE\Core\REST\RESTFulService`
+**Request wrapper**: `OZONE\Core\REST\RESTFulAPIRequest`
 
-The `RESTFulService` trait makes a `Service` class into a full CRUD REST controller for a Gobl ORM table. It auto-registers 8 standard routes:
+The `RESTFulService` class makes a `Service` class into a full CRUD REST controller for a Gobl ORM table. It auto-registers 8 standard routes:
 
 | Action         | HTTP   | Path                   | Route Name                  |
 | -------------- | ------ | ---------------------- | --------------------------- |
@@ -1386,7 +1449,7 @@ The `RESTFulService` trait makes a `Service` class into a full CRUD REST control
 
 Disable individual actions via `static::$available_actions['delete_all'] = false`.
 
-**Relations**: `RESTFullRelationsHelper` loads non-paginated and paginated relations; private relations throw `ForbiddenException`.
+**Relations**: `RESTFulRelationsHelper` loads non-paginated and paginated relations; private relations throw `ForbiddenException`.
 
 ### OpenAPI Documentation
 
