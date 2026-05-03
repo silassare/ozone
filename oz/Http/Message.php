@@ -50,10 +50,10 @@ abstract class Message implements MessageInterface
 	/**
 	 * Disable magic setter to ensure immutability.
 	 *
-	 * @param $_name
-	 * @param $_value
+	 * @param mixed $_name
+	 * @param mixed $_value
 	 */
-	public function __set($_name, $_value): void
+	public function __set(mixed $_name, mixed $_value): void
 	{
 		// Do nothing
 	}
