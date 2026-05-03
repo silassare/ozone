@@ -20,10 +20,10 @@ use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\TypeBigint;
 use Gobl\DBAL\Types\TypeInt;
 use Gobl\ORM\Exceptions\ORMQueryException;
+use Gobl\ORM\Interfaces\PaginationAwareListInterface;
 use Gobl\ORM\ORM;
 use Gobl\ORM\ORMController;
 use Gobl\ORM\ORMOptions;
-use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
 use OpenApi\Annotations\Parameter;
 use OpenApi\Annotations\Schema;
@@ -118,6 +118,9 @@ abstract class RESTFulService extends Service
 			$doc->apiPageParameter(),
 			$doc->apiFiltersParameter('query', $table),
 			$doc->apiOrderByParameter(),
+			$doc->apiCursorParameter(),
+			$doc->apiCursorColumnParameter(),
+			$doc->apiCursorDirParameter(),
 		];
 		$update_one_params = [];
 		$update_all_params = [
@@ -259,18 +262,25 @@ abstract class RESTFulService extends Service
 
 		// get_all
 		if ($table->getMeta()->get('api.doc.get_all.enabled', true)) {
+			$items_with_relations = [
+				'items'     => $doc->array($entity_read),
+				'relations' => $doc->object(\array_map(
+					static fn ($s) => $doc->object(['{' . $pk_key_column . '}' => $s]),
+					$non_paginated_relations_schemas
+				)),
+			];
+
 			$doc->addOperationFromRoute(
 				static::routeName('get_all'),
 				'GET',
 				\sprintf('List %s', $plural_name),
 				[
 					$doc->success(
-						$doc->apiPaginated([
-							'items'     => $doc->array($entity_read),
-							'relations' => $doc->object(\array_map(
-								static fn ($s) => $doc->object(['{' . $pk_key_column . '}' => $s]),
-								$non_paginated_relations_schemas
-							)),
+						new Schema([
+							'oneOf' => [
+								$doc->apiPaginated($items_with_relations),
+								$doc->apiCursorPaginated($items_with_relations),
+							],
 						]),
 						\sprintf('All `%s` were retrieved successfully.', $plural_name)
 					),
@@ -353,6 +363,9 @@ abstract class RESTFulService extends Service
 				$doc->apiPageParameter(),
 				$doc->apiFiltersParameter('query', $r_target),
 				$doc->apiOrderByParameter(),
+				$doc->apiCursorParameter(),
+				$doc->apiCursorColumnParameter(),
+				$doc->apiCursorDirParameter(),
 			] : [
 				$doc->apiFiltersParameter('query', $r_target),
 				$doc->apiOrderByParameter(),
@@ -381,10 +394,18 @@ abstract class RESTFulService extends Service
 				\sprintf('Get %s %s', $singular_name, ApiDoc::toHumanReadable($r_name)),
 				[
 					$doc->success(
-						$r->isPaginated() ? $doc->apiPaginated(
-							['items' => $doc->array($r_schema)]
-								+ (null !== $r_relations_schema ? ['relations' => $r_relations_schema] : [])
-						) : $doc->object(
+						$r->isPaginated() ? new Schema([
+							'oneOf' => [
+								$doc->apiPaginated(
+									['items' => $doc->array($r_schema)]
+										+ (null !== $r_relations_schema ? ['relations' => $r_relations_schema] : [])
+								),
+								$doc->apiCursorPaginated(
+									['items' => $doc->array($r_schema)]
+										+ (null !== $r_relations_schema ? ['relations' => $r_relations_schema] : [])
+								),
+							],
+						]) : $doc->object(
 							['item' => $r_schema]
 								+ (null !== $r_relations_schema ? ['relations' => $r_relations_schema] : [])
 						),
@@ -418,7 +439,7 @@ abstract class RESTFulService extends Service
 		}
 
 		foreach ($v_relations as $vr) {
-			$add_relative_operation($vr, $doc->typeSchema($vr->getRelativeType()));
+			$add_relative_operation($vr, $doc->virtualRelationTypeSchema($vr));
 		}
 	}
 
@@ -438,7 +459,7 @@ abstract class RESTFulService extends Service
 		$db = ORM::getDatabase($this->table->getNamespace());
 
 		$db->runInTransaction(function () use ($req): void {
-			$controller = $this->controller();
+			$controller = $this->ctrl();
 			$values     = $req->getFormData($this->table);
 			$entity     = $controller->addItem($values);
 			$rrh        = new RESTFulRelationsHelper($this->table);
@@ -473,7 +494,7 @@ abstract class RESTFulService extends Service
 		$db = ORM::getDatabase($this->table->getNamespace());
 
 		$db->runInTransaction(function () use ($req): void {
-			$controller = $this->controller();
+			$controller = $this->ctrl();
 			$entity     = $controller->updateOneItem($req);
 
 			if (!$entity) {
@@ -505,7 +526,7 @@ abstract class RESTFulService extends Service
 		$db = ORM::getDatabase($this->table->getNamespace());
 
 		$db->runInTransaction(function () use ($req): void {
-			$controller = $this->controller();
+			$controller = $this->ctrl();
 			$count      = $controller->updateAllItems($req);
 
 			$this->json()
@@ -531,7 +552,7 @@ abstract class RESTFulService extends Service
 	 */
 	public function actionDeleteOne(RESTFulAPIRequest $req): void
 	{
-		$controller = $this->controller();
+		$controller = $this->ctrl();
 		$entity     = $controller->deleteOneItem($req);
 
 		if (!$entity) {
@@ -558,7 +579,7 @@ abstract class RESTFulService extends Service
 		$db = ORM::getDatabase($this->table->getNamespace());
 
 		$db->runInTransaction(function () use ($req): void {
-			$controller = $this->controller();
+			$controller = $this->ctrl();
 			$count      = $controller->deleteAllItems($req);
 
 			$this->json()
@@ -584,7 +605,7 @@ abstract class RESTFulService extends Service
 	 */
 	public function actionGetOne(RESTFulAPIRequest $req): void
 	{
-		$controller = $this->controller();
+		$controller = $this->ctrl();
 		$entity     = $controller->getItem($req);
 
 		if (!$entity) {
@@ -616,7 +637,7 @@ abstract class RESTFulService extends Service
 	public function actionGetAll(RESTFulAPIRequest $req): void
 	{
 		$collection_name = $req->getRequestedCollection();
-		$controller      = $this->controller();
+		$controller      = $this->ctrl();
 
 		if ($collection_name) {
 			$collection = $this->table->getCollection($collection_name);
@@ -630,25 +651,13 @@ abstract class RESTFulService extends Service
 			$orm_results = $controller->getAllItems($req);
 		}
 
-		if ($req->isCursorBased()) {
-			$data        = $orm_results->fetchAllClassWithCursorMeta($req);
-			$data['max'] = $req->getMax();
-			$items       = $data['items'];
-		} else {
-			$items = $orm_results->fetchAllClass();
-			$data  = [
-				'items' => $items,
-				'page'  => $req->getPage() ?? 1,
-				'max'   => $req->getMax(),
-				'total' => $orm_results->getTotal($req),
-			];
-		}
+		$data  = $this->preparePaginatedListResponseData($orm_results, $req);
 
 		$relations = [];
 
-		if (\count($items)) {
+		if (\count($data['items'])) {
 			$rrh       = new RESTFulRelationsHelper($this->table);
-			$relations = $rrh->entitiesNonPaginatedRelations($items, $req);
+			$relations = $rrh->entitiesNonPaginatedRelations($data['items'], $req);
 		}
 
 		$data['relations'] = $relations;
@@ -681,14 +690,12 @@ abstract class RESTFulService extends Service
 			throw new NotFoundException();
 		}
 
-		$controller = $this->controller();
+		$controller = $this->ctrl();
 		$entity     = $controller->getItem(ORMOptions::makeFromFilters($entity_filters));
 
 		if (!$entity) {
 			throw new NotFoundException();
 		}
-
-		$paginated_relation = false;
 
 		if ($this->table->hasRelation($relation_name)) {
 			/** @var Relation $found */
@@ -699,31 +706,25 @@ abstract class RESTFulService extends Service
 
 			$rrh = new RESTFulRelationsHelper($this->table);
 
-			if ($found->isPaginated()) {
-				$paginated_relation = true;
-				$orm_results        = $rrh->getRelationItemsList($found, $entity, $req, false);
+			$paginated_relation = $found->isPaginated();
+			if ($paginated_relation) {
+				$orm_results = $rrh->getRelationItemsList($found, $entity, $req, false);
 
 				if (!$orm_results) {
 					throw new NotFoundException();
 				}
 
-				if ($req->isCursorBased()) {
-					$data        = $orm_results->fetchAllClassWithCursorMeta($req);
-					$data['max'] = $req->getMax();
-					$r           = $data['items'];
-				} else {
-					$r    = $orm_results->fetchAllClass();
-					$data = [
-						'items' => $r,
-						'page'  => $req->getPage() ?? 1,
-						'max'   => $req->getMax(),
-						'total' => $orm_results->getTotal($req),
-					];
-				}
+				/** @psalm-suppress InvalidArgument */
+				$data = $this->preparePaginatedListResponseData($orm_results, $req);
 			} else {
-				$r    = $rrh->getRelationItem($found, $entity);
+				$item = $rrh->getRelationItem($found, $entity);
+
+				if (null === $item) {
+					throw new NotFoundException();
+				}
+
 				$data = [
-					'item' => $r,
+					'item' => $item,
 				];
 			}
 		} elseif ($this->table->hasVirtualRelation($relation_name)) {
@@ -735,24 +736,25 @@ abstract class RESTFulService extends Service
 			$paginated_relation = $found->isPaginated();
 
 			if ($paginated_relation) {
-				$r    = $found->getController()->list($entity, $req);
-				$data = [
-					'items' => $r,
-					'page'  => $req->getPage() ?? 1,
-					'max'   => $req->getMax(),
-					'total' => \count($r),
-				];
+				$list = $found->getController()->list($entity, $req);
+
+				if (!$list) {
+					throw new NotFoundException();
+				}
+
+				$data = $this->preparePaginatedListResponseData($list, $req);
 			} else {
-				$r    = $found->getController()->get($entity, $req);
+				$item = $found->getController()->get($entity, $req);
+
+				if (null === $item) {
+					throw new NotFoundException();
+				}
+
 				$data = [
-					'item' => $r,
+					'item' => $item,
 				];
 			}
 		} else {
-			throw new NotFoundException();
-		}
-
-		if (null === $r) {
 			throw new NotFoundException();
 		}
 
@@ -763,11 +765,11 @@ abstract class RESTFulService extends Service
 			$rst_rrh = new RESTFulRelationsHelper($relative_store_table);
 
 			if ($paginated_relation) {
-				if (\count($r) > 0) {
-					$relative_relations = $rst_rrh->entitiesNonPaginatedRelations($r, $req);
+				if (\count($data['items']) > 0) {
+					$relative_relations = $rst_rrh->entitiesNonPaginatedRelations($data['items'], $req);
 				}
 			} else {
-				$relative_relations = $rst_rrh->entityNonPaginatedRelations($r, $req);
+				$relative_relations = $rst_rrh->entityNonPaginatedRelations($data['item'], $req);
 			}
 		}
 
@@ -776,6 +778,29 @@ abstract class RESTFulService extends Service
 		$this->json()
 			->setDone()
 			->setData($data);
+	}
+
+	/**
+	 * Processes a paginated list to prepare response data.
+	 *
+	 * @param PaginationAwareListInterface $list the paginated list to process
+	 * @param RESTFulAPIRequest            $req  the API request containing pagination parameters
+	 */
+	protected function preparePaginatedListResponseData(PaginationAwareListInterface $list, RESTFulAPIRequest $req): array
+	{
+		if ($req->isCursorBased()) {
+			$data        = $list->getItemsWithCursorMeta($req);
+			$data['max'] = $req->getMax();
+		} else {
+			$data = [
+				'items' => \iterator_to_array($list->getItems(), false),
+				'page'  => $req->getPage() ?? 1,
+				'max'   => $req->getMax(),
+				'total' => $list->getTotal($req),
+			];
+		}
+
+		return $data;
 	}
 
 	/**
@@ -952,9 +977,9 @@ abstract class RESTFulService extends Service
 	 *
 	 * @return ORMController
 	 */
-	protected function controller(): ORMController
+	protected function ctrl(): ORMController
 	{
-		return $this->controller_instance ??= new (ORMClassKind::CONTROLLER->getClassFQN($this->table));
+		return $this->controller_instance ??= ORM::ctrl($this->table);
 	}
 
 	/**
@@ -987,7 +1012,7 @@ abstract class RESTFulService extends Service
 				continue;
 			}
 
-			$schemas[$vr->getName()] = $doc->typeSchema($vr->getRelativeType());
+			$schemas[$vr->getName()] = $doc->virtualRelationTypeSchema($vr);
 		}
 
 		$p = !empty($schemas)
