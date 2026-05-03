@@ -301,7 +301,7 @@ final class Migrations
 
 			\usort(
 				$migrations,
-				static fn(MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
+				static fn (MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
 			);
 
 			return $migrations;
