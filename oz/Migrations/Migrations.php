@@ -19,6 +19,7 @@ use Gobl\DBAL\Interfaces\MigrationInterface;
 use Gobl\DBAL\MigrationMode;
 use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
+use Gobl\ORM\ORMOptions;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cache\CacheRegistry;
@@ -91,9 +92,9 @@ final class Migrations
 		return self::cache()->remember('db_version', static function () use ($silent) {
 			try {
 				$qb    = new OZMigrationsQuery();
-				$found = $qb->find(1, 0, [
-					OZMigration::COL_ID => 'desc',
-				])->fetchClass();
+				$found = $qb->find(ORMOptions::makePaginated(1)->setOrderBy([
+					OZMigration::COL_ID => 'DESC',
+				]))->fetchClass();
 
 				if ($found) {
 					return $found->getVersion();
@@ -300,7 +301,7 @@ final class Migrations
 
 			\usort(
 				$migrations,
-				static fn (MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
+				static fn(MigrationInterface $a, MigrationInterface $b) => $a->getVersion() <=> $b->getVersion()
 			);
 
 			return $migrations;

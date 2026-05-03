@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cache\Drivers;
 
 use Gobl\Exceptions\GoblException;
+use Gobl\ORM\ORMOptions;
 use Override;
 use OZONE\Core\Cache\CacheCapabilities;
 use OZONE\Core\Cache\CacheEntry;
@@ -126,7 +127,7 @@ final class DbCache implements CacheProviderInterface
 		$store = $this->findRow($entry->key) ?? $this->newRow($entry->key);
 
 		$raw       = \serialize([self::CACHE_VALUE => $entry->value]);
-		$expire_at = null !== $entry->expiresAt ? (int) $entry->expiresAt : null;
+		$expire_at = null !== $entry->expiresAt ? (int) \ceil($entry->expiresAt) : null;
 
 		$store->setValue($raw)
 			->setExpireAT($expire_at)
@@ -234,7 +235,7 @@ final class DbCache implements CacheProviderInterface
 			->whereIsNotDeleted()
 			->whereExpireAtIsNotNull()
 			->whereExpireAtIsLte(\time())
-			->find($limit);
+			->find(ORMOptions::makePaginated($limit));
 
 		$entries = [];
 
@@ -279,7 +280,7 @@ final class DbCache implements CacheProviderInterface
 			->whereGroupIs($this->namespace)
 			->whereKeyIs($this->hashKey($key))
 			->whereIsNotDeleted()
-			->find(1)
+			->find(ORMOptions::makePaginated(1))
 			->fetchClass();
 	}
 

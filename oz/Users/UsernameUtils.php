@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Users;
 
+use Gobl\ORM\ORMOptions;
 use OZONE\Core\Db\OZUsername;
 
 /**
@@ -37,6 +38,6 @@ final class UsernameUtils
 	): ?OZUsername {
 		return OZUsername::qb()
 			->whereNameIs($name)
-			->find(1)->fetchClass();
+			->find(ORMOptions::makePaginated(1))->fetchClass();
 	}
 }

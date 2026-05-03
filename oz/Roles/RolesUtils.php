@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Roles;
 
+use Gobl\ORM\ORMOptions;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
@@ -218,7 +219,7 @@ class RolesUtils
 			$qb->whereIsValid();
 		}
 
-		return $qb->find(1)
+		return $qb->find(ORMOptions::makePaginated(1))
 			->fetchClass();
 	}
 

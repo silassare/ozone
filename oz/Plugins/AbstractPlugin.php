@@ -159,7 +159,7 @@ abstract class AbstractPlugin implements PluginInterface
 
 			// enable ORM for the plugin if applicable
 			if ($this->shouldEnableORM()) {
-				DbReadyHook::listen(function (DbReadyHook $hook) {
+				DbReadyHook::listen(function (DbReadyHook $hook): void {
 					$hook->db->ns($this->getDbNamespace())->enableORM(Db::dir($this->getScope())->getRoot());
 				});
 			}

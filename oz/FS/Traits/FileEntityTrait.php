@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS\Traits;
 
+use Gobl\ORM\ORMOptions;
 use OZONE\Core\App\Keys;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Enums\FileKind;
@@ -63,7 +64,7 @@ trait FileEntityTrait
 		$data[self::COL_CLONE_ID] = $this->getID();
 		$data[self::COL_KEY]      = Keys::newFileKey();
 
-		if (!$this->getSourceID()) {// first level clone
+		if (!$this->getSourceID()) { // first level clone
 			$data[self::COL_SOURCE_ID] = $this->getID();
 		}
 
@@ -87,7 +88,7 @@ trait FileEntityTrait
 	 */
 	public function hasClones(): bool
 	{
-		return (bool) \count($this->getClones([], 1));
+		return (bool) \count($this->getClones(ORMOptions::makePaginated(1)) ?? []);
 	}
 
 	/**
@@ -132,6 +133,8 @@ trait FileEntityTrait
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @return array<string, mixed>
 	 */
 	public function toArray($hide_sensitive_data = true): array
 	{

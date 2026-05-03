@@ -110,10 +110,10 @@ class ErrorUtils
 		$const_e_strict = 2048;
 
 		return match ($code) {
-			\E_ERROR, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR, \E_RECOVERABLE_ERROR => LogLevel::ERROR,
+			\E_ERROR, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR, \E_RECOVERABLE_ERROR                                       => LogLevel::ERROR,
 			\E_WARNING, \E_CORE_WARNING, \E_COMPILE_WARNING, \E_USER_WARNING, $const_e_strict, \E_DEPRECATED, \E_USER_DEPRECATED => LogLevel::WARNING,
-			\E_NOTICE, \E_USER_NOTICE => LogLevel::NOTICE,
-			default => LogLevel::DEBUG
+			\E_NOTICE, \E_USER_NOTICE                                                                                            => LogLevel::NOTICE,
+			default                                                                                                              => LogLevel::DEBUG
 		};
 	}
 

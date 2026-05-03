@@ -49,7 +49,7 @@ class AuthorizationService extends Service
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
-		$router->group('/auth/:' . OZAuth::COL_REF, static function (Router $router) {
+		$router->group('/auth/:' . OZAuth::COL_REF, static function (Router $router): void {
 			$router->post('/authorize', static fn (RouteInfo $ri) => (new self($ri))->authorize($ri, $ri->getCleanFormData()))
 				->name(self::ROUTE_AUTHORIZE)
 				->form(self::buildAuthorizeForm(...));

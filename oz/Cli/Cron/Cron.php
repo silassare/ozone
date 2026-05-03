@@ -104,8 +104,8 @@ final class Cron
 						->whereNameIs($task->getName())
 						->whereWorkerIs(CronTaskWorker::class)
 						->whereStateIsIn([JobState::PENDING->value, JobState::RUNNING->value])
-						->find(1)
-						->totalCount();
+						->find()
+						->getTotal();
 
 					if ($existing > 0) {
 						break;
@@ -203,7 +203,7 @@ final class Cron
 		// multiple Cron::work() calls never clash on the task registry.
 		$name = \sprintf('work@%s[%s]', $worker::getName(), $queue);
 
-		return self::call(static function (JSONResult $result) use ($worker, $queue, $store) {
+		return self::call(static function (JSONResult $result) use ($worker, $queue, $store): void {
 			$job_contract = Queue::get($queue)
 				->push($worker)
 				->dispatch($store);

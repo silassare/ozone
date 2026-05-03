@@ -228,7 +228,7 @@ class AccessRightsService extends Service
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
-		$router->group('/access-rights', static function (Router $router) {
+		$router->group('/access-rights', static function (Router $router): void {
 			$router->get('/me', static function (RouteInfo $ri) {
 				return (new self($ri))->readForMe($ri);
 			})->name(self::ROUTE_READ_ME)->withAuthenticatedUser();

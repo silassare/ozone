@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core;
 
+use Gobl\ORM\ORMOptions;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Interfaces\AppInterface;
@@ -183,7 +184,7 @@ final class OZone
 	{
 		if (!isset(self::$api_router)) {
 			$router = self::$api_router = new Router();
-			$group  = $router->group('/', static function () {
+			$group  = $router->group('/', static function (): void {
 				self::registerRoutes(self::$api_router, self::getApiRoutesProviders());
 			})->withAuthentication(...Auth::apiAuthMethods());
 
@@ -203,7 +204,7 @@ final class OZone
 		if (!isset(self::$web_router)) {
 			$router = self::$web_router = new Router();
 
-			$group = $router->group('/', static function () {
+			$group = $router->group('/', static function (): void {
 				self::registerRoutes(self::$web_router, self::getWebRoutesProviders());
 			})->withAuthentication(...Auth::webAuthMethods());
 
@@ -272,7 +273,7 @@ final class OZone
 			$roles_qb = new OZRolesQuery();
 			$results  = $roles_qb->whereRoleIs(Role::SUPER_ADMIN)
 				->whereIsValid()
-				->find(1);
+				->find(ORMOptions::makePaginated(1));
 
 			$has_super_admin = (bool) $results->count();
 		}

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\FS;
 
 use Generator;
+use Gobl\ORM\ORMOptions;
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
@@ -151,7 +152,7 @@ class FS
 			$qb = new OZFilesQuery();
 
 			return $qb->whereIdIs($id)
-				->find(1)
+				->find(ORMOptions::makePaginated(1))
 				->fetchClass();
 		} catch (Throwable $t) {
 			throw new RuntimeException(\sprintf('Unable to get file with id: %s', $id), null, $t);

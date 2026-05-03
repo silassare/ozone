@@ -67,7 +67,7 @@ final class LogoutAndRedirectView extends WebView
 	public static function registerRoutes(Router $router): void
 	{
 		$router
-			->get('/logout', static function (RouteInfo $ri) {
+			->get('/logout', static function (RouteInfo $ri): void {
 				(new self($ri))->logoutAndRedirect($ri);
 			})->form(static function () {
 				$type = (new TypeUrl())->allowAbsolutePath();

@@ -18,6 +18,7 @@ use Gobl\CRUD\Exceptions\CRUDException;
 use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
 use Gobl\ORM\Exceptions\ORMQueryException;
+use Gobl\ORM\ORMOptions;
 use InvalidArgumentException;
 use Override;
 use OZONE\Core\App\Keys;
@@ -220,7 +221,7 @@ class DbJobStore implements JobStoreInterface
 		null === $state || $qb->whereStateIs($state);
 		null === $priority || $qb->wherePriorityIs($priority);
 
-		$all = $qb->find($max, ($page - 1) * $max)
+		$all = $qb->find(ORMOptions::makePaginated($max, $page))
 			->fetchAllClass();
 
 		return \array_map($this->fromEntity(...), $all);
@@ -290,7 +291,7 @@ class DbJobStore implements JobStoreInterface
 		empty($queue_name) || $qb->whereQueueIs($queue_name);
 		null === $state || $qb->whereStateIs($state);
 
-		return $qb->find()->totalCount();
+		return $qb->find()->getTotal();
 	}
 
 	/**
@@ -334,7 +335,7 @@ class DbJobStore implements JobStoreInterface
 		$qb->whereBatchIdIs($batch_id);
 		null === $state || $qb->whereStateIs($state);
 
-		return $qb->find()->totalCount();
+		return $qb->find()->getTotal();
 	}
 
 	/**

@@ -283,7 +283,7 @@ class UploadFiles extends Service
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
-		$router->group('/upload', static function (Router $router) {
+		$router->group('/upload', static function (Router $router): void {
 			$router
 				->post('/', static function (RouteInfo $ri) {
 					$s = new static($ri);

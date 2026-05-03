@@ -304,7 +304,7 @@ class ClassLoader
 	{
 		if (false === self::$registered) {
 			self::$registered = true;
-			\spl_autoload_register(static function ($class_name) {
+			\spl_autoload_register(static function ($class_name): void {
 				self::loadClass($class_name);
 			});
 		}

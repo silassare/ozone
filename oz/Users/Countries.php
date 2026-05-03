@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Users;
 
+use Gobl\ORM\ORMOptions;
 use OZONE\Core\Db\OZCountriesQuery;
 use OZONE\Core\Db\OZCountry;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -37,7 +38,7 @@ final class Countries
 				$cq = new OZCountriesQuery();
 
 				return $cq->whereCc2Is($cc2)
-					->find(1)
+					->find(ORMOptions::makePaginated(1))
 					->fetchClass();
 			} catch (Throwable $t) {
 				throw new RuntimeException('Unable to load country info.', [

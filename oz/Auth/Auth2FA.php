@@ -62,7 +62,7 @@ final class Auth2FA implements BootHookReceiverInterface
 		TwoFactorChannelRegistry::register(new EmailOtpChannel());
 		TwoFactorChannelRegistry::register(new SmsOtpChannel());
 
-		AuthUserLoggedIn::listen(static function (AuthUserLoggedIn $event) {
+		AuthUserLoggedIn::listen(static function (AuthUserLoggedIn $event): void {
 			// 2FA requires stateful auth (session). Skip silently for stateless methods.
 			if (!$event->context->hasStatefulAuth()) {
 				return;

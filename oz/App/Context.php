@@ -207,7 +207,7 @@ final class Context
 			(new RequestHook($this))->dispatch();
 
 			$this->getRouter()
-				->handle($this, function (RouteInfo $route_info) {
+				->handle($this, function (RouteInfo $route_info): void {
 					$this->authenticate($route_info);
 				});
 		} catch (Throwable $t) {

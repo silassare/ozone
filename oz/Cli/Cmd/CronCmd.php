@@ -38,7 +38,7 @@ final class CronCmd extends Command
 			// action: run scheduled cron tasks
 			$run = $this->action('run', 'Run scheduled cron tasks.');
 
-			$run->handler(static function () {
+			$run->handler(static function (): void {
 				// process due cron tasks, which will push them into the cron:sync and cron:async queues;
 				// this is done first to ensure that any tasks due at the time of invocation are included
 				// in the current run, even if they were due before the JobsManager::run() calls below.
@@ -55,7 +55,7 @@ final class CronCmd extends Command
 				->required()
 				->string();
 
-			$start->handler(static function (KliArgs $args) {
+			$start->handler(static function (KliArgs $args): void {
 				Cron::start($args->get('name'));
 			});
 		}

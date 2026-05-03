@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\REST;
 
 use Gobl\ORM\Exceptions\ORMQueryException;
-use Gobl\ORM\ORMRequest as GoblORMRequest;
+use Gobl\ORM\ORMOptions;
 use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\Forms\FormData;
@@ -22,7 +22,7 @@ use OZONE\Core\Forms\FormData;
 /**
  * Class RESTFulAPIRequest.
  */
-class RESTFulAPIRequest extends GoblORMRequest
+class RESTFulAPIRequest extends ORMOptions
 {
 	private Context $context;
 
@@ -31,11 +31,11 @@ class RESTFulAPIRequest extends GoblORMRequest
 	 *
 	 * @param Context        $context
 	 * @param array|FormData $form
-	 * @param string         $scope
+	 * @param null|string    $scope
 	 *
 	 * @throws ORMQueryException
 	 */
-	public function __construct(Context $context, array|FormData $form, string $scope = '')
+	public function __construct(Context $context, array|FormData $form, ?string $scope = null)
 	{
 		parent::__construct(\is_array($form) ? $form : $form->getData(), $scope);
 
@@ -43,7 +43,7 @@ class RESTFulAPIRequest extends GoblORMRequest
 	}
 
 	/**
-	 * ORMRequest destructor.
+	 * RESTFulAPIRequest destructor.
 	 */
 	public function __destruct()
 	{

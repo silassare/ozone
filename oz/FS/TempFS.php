@@ -136,7 +136,7 @@ final class TempFS implements BootHookReceiverInterface
 	#[Override]
 	public static function boot(): void
 	{
-		FinishHook::listen(static function () {
+		FinishHook::listen(static function (): void {
 			self::gc();
 		}, Event::RUN_LAST);
 	}

@@ -148,7 +148,7 @@ abstract class BaseHandler extends TableCRUDListener
 
 	protected function listen(): void
 	{
-		$this->withCrud(function (ORMEntityCRUD $crud) {
+		$this->withCrud(function (ORMEntityCRUD $crud): void {
 			$crud->onBeforeCreate(fn (BeforeCreate $ev) => $this->can('create', $ev));
 			$crud->onBeforeUpdate(fn (BeforeUpdate $ev) => $this->can('update', $ev));
 			$crud->onBeforeUpdateAll(fn (BeforeUpdateAll $ev) => $this->can('update_all', $ev));

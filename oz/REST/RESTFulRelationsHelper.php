@@ -13,37 +13,32 @@ declare(strict_types=1);
 
 namespace OZONE\Core\REST;
 
-use Gobl\DBAL\Column;
 use Gobl\DBAL\Relations\Interfaces\RelationInterface;
 use Gobl\DBAL\Relations\Relation;
 use Gobl\DBAL\Relations\VirtualRelation;
 use Gobl\DBAL\Table;
 use Gobl\ORM\Exceptions\ORMQueryException;
+use Gobl\ORM\ORM;
 use Gobl\ORM\ORMEntity;
-use Gobl\ORM\ORMRequest;
+use Gobl\ORM\ORMResults;
 use OZONE\Core\Exceptions\BadRequestException;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use Throwable;
 
 /**
- * Class RESTFullRelationsHelper.
+ * Class RESTFulRelationsHelper.
  *
  * @internal
  */
-final class RESTFullRelationsHelper
+final class RESTFulRelationsHelper
 {
-	private readonly Column $pk_column;
-
 	/**
-	 * RESTFullRelationsHelper constructor.
+	 * RESTFulRelationsHelper constructor.
 	 *
 	 * @param Table $table
 	 */
-	public function __construct(private readonly Table $table)
-	{
-		$this->pk_column = $table->getSinglePKColumnOrFail();
-	}
+	public function __construct(private readonly Table $table) {}
 
 	/**
 	 * Asserts that the given relation is not private.
@@ -85,7 +80,7 @@ final class RESTFullRelationsHelper
 			$v_relations = $list[VirtualRelation::class] ?? [];
 
 			foreach ($relations as $name => $rel) {
-				$results[$name] = $this->getRelationItem($rel, $entity);
+				$results[$name] = ORM::ctrl($rel->getTargetTable())->getRelative($entity, $rel);
 			}
 
 			foreach ($v_relations as $name => $rel) {
@@ -110,7 +105,6 @@ final class RESTFullRelationsHelper
 	{
 		$query_relations = $req->getRequestedRelations();
 		$results         = [];
-		$key_column      = $this->pk_column->getName();
 
 		if (!empty($query_relations)) {
 			$list = $this->resolveRelations($query_relations, false);
@@ -122,16 +116,20 @@ final class RESTFullRelationsHelper
 			$v_relations = $list[VirtualRelation::class] ?? [];
 
 			foreach ($relations as $name => $rel) {
+				// resolveRelations(allow_paginated: false) guarantees every relation here is
+				// non-paginated (non-multiple), so getRelativeBatch is always the right method.
+				$batch = ORM::ctrl($rel->getTargetTable())->getRelativeBatch($entities, $rel);
+
 				foreach ($entities as $entity) {
-					$id                  = $entity->{$key_column};
-					$results[$name][$id] = $this->getRelationItem($rel, $entity);
+					$results[$name][$entity->toIdentityKey()] = $batch[$entity->toIdentityKey()] ?? null;
 				}
 			}
 
 			foreach ($v_relations as $name => $rel) {
+				$batch = $rel->getController()->getBatch($entities, $req);
+
 				foreach ($entities as $entity) {
-					$id                  = $entity->{$key_column};
-					$results[$name][$id] = $rel->getController()->get($entity, $req);
+					$results[$name][$entity->toIdentityKey()] = $batch[$entity->toIdentityKey()] ?? null;
 				}
 			}
 		}
@@ -146,32 +144,20 @@ final class RESTFullRelationsHelper
 	 * @param ORMEntity         $entity         The entity for which we want the relation items
 	 * @param RESTFulAPIRequest $req            The request object
 	 * @param bool              $scoped_filters Whether to scope filters to the relation name
-	 * @param null|int          $total_records  Reference to store the total records count
 	 *
-	 * @return array
+	 * @return null|ORMResults
 	 *
-	 * @throws ORMQueryException
+	 * @throws Throwable
 	 */
 	public function getRelationItemsList(
 		Relation $relation,
 		ORMEntity $entity,
 		RESTFulAPIRequest $req,
-		bool $scoped_filters = true,
-		?int &$total_records = null
-	): array {
-		$req             = $scoped_filters ? $req->createScopedInstance($relation->getName()) : $req;
-		$relation_getter = $relation->getGetterName();
+		bool $scoped_filters = true
+	): ?ORMResults {
+		$req = $scoped_filters ? $req->createScopedInstance($relation->getName()) : $req;
 
-		return \call_user_func_array([
-			$entity,
-			$relation_getter,
-		], [
-			$req->getFilters(),
-			$req->getMax(),
-			$req->getOffset(),
-			$req->getOrderBy(),
-			&$total_records,
-		]);
+		return ORM::ctrl($relation->getTargetTable())->getAllRelatives($entity, $relation, $req);
 	}
 
 	/**
@@ -184,21 +170,19 @@ final class RESTFullRelationsHelper
 	 */
 	public function getRelationItem(Relation $relation, ORMEntity $entity): mixed
 	{
-		$relation_getter = $relation->getGetterName();
-
-		return $entity->{$relation_getter}();
+		return ORM::ctrl($relation->getTargetTable())->getRelative($entity, $relation);
 	}
 
 	/**
 	 * Creates, patches or delete relations.
 	 *
-	 * @param ORMEntity  $entity
-	 * @param ORMRequest $req
-	 * @param bool       $patch
+	 * @param ORMEntity         $entity
+	 * @param RESTFulAPIRequest $req
+	 * @param bool              $patch
 	 *
 	 * @throws InvalidFormException
 	 */
-	public function processRelations(ORMEntity $entity, ORMRequest $req, bool $patch): void
+	public function processRelations(ORMEntity $entity, RESTFulAPIRequest $req, bool $patch): void
 	{
 		$table = $this->table;
 
@@ -254,15 +238,17 @@ final class RESTFullRelationsHelper
 	/**
 	 * Resolve relations.
 	 *
-	 * @param array $relations_names_list
-	 * @param bool  $allow_paginated
+	 * @param array<int, string> $relations_names_list
+	 * @param bool               $allow_paginated
 	 *
 	 * @return array
 	 *
 	 * @throws BadRequestException|ForbiddenException
 	 */
-	private function resolveRelations(array $relations_names_list, bool $allow_paginated): array
-	{
+	private function resolveRelations(
+		array $relations_names_list,
+		bool $allow_paginated
+	): array {
 		$table       = $this->table;
 		$missing     = [];
 		$relations   = [];
@@ -317,7 +303,7 @@ final class RESTFullRelationsHelper
 		try {
 			$r_ctrl = $relation->getController();
 			if ($patch) {
-				$delete = $rel_entry[ORMRequest::DELETE_PARAM] ?? false;
+				$delete = $rel_entry[RESTFulAPIRequest::DELETE_PARAM] ?? false;
 				if ($delete) {
 					$r_ctrl->delete($entity, $rel_entry);
 				} else {

@@ -99,8 +99,8 @@ class CronTaskWorker implements WorkerInterface
 				->whereWorkerIs(static::class)
 				->whereStateIs(JobState::RUNNING)
 				->whereRefIsNot($job_contract->getRef())
-				->find(1)
-				->totalCount();
+				->find()
+				->getTotal();
 
 			if ($other_running > 0) {
 				$this->task->getResult()

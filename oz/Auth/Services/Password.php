@@ -90,7 +90,7 @@ final class Password extends Service
 	public static function registerRoutes(Router $router): void
 	{
 		$router
-			->group('/password/edit', static function (Router $router) {
+			->group('/password/edit', static function (Router $router): void {
 				$router
 					->map(['PATCH', 'POST'], '/admin', static function (RouteInfo $ri) {
 						$s = new self($ri);

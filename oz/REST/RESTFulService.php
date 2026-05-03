@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\REST\Traits;
+namespace OZONE\Core\REST;
 
 use Gobl\DBAL\Relations\Interfaces\RelationInterface;
 use Gobl\DBAL\Relations\Relation;
@@ -22,17 +22,18 @@ use Gobl\DBAL\Types\TypeInt;
 use Gobl\ORM\Exceptions\ORMQueryException;
 use Gobl\ORM\ORM;
 use Gobl\ORM\ORMController;
+use Gobl\ORM\ORMOptions;
 use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
 use OpenApi\Annotations\Parameter;
 use OpenApi\Annotations\Schema;
+use Override;
 use OZONE\Core\Access\AtomicAction;
 use OZONE\Core\Access\AtomicActionsRegistry;
+use OZONE\Core\App\Context;
+use OZONE\Core\App\Service;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Lang\I18n;
-use OZONE\Core\REST\ApiDoc;
-use OZONE\Core\REST\RESTFulAPIRequest;
-use OZONE\Core\REST\RESTFullRelationsHelper;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use PHPUtils\Str;
@@ -41,8 +42,12 @@ use Throwable;
 /**
  * Class RESTFulService.
  */
-trait RESTFulService
+abstract class RESTFulService extends Service
 {
+	public const SERVICE_PATH = '/svc-path-sample';
+	public const TABLE_NAME   = 'table_name_sample';
+	public const KEY_COLUMN   = 'id';
+
 	protected static array $available_actions = [
 		'get_one'      => true,
 		'get_all'      => true,
@@ -54,8 +59,22 @@ trait RESTFulService
 		'create_one'   => true,
 	];
 
+	protected Table $table;
+
 	/** Memoized controller instance - safe because a service instance is single-use per request. */
 	private ?ORMController $controller_instance = null;
+
+	/**
+	 * RESTFulService constructor.
+	 *
+	 * @param Context|RouteInfo $context
+	 */
+	protected function __construct(Context|RouteInfo $context)
+	{
+		parent::__construct($context);
+
+		$this->table = db()->getTableOrFail(static::TABLE_NAME);
+	}
 
 	/**
 	 * Gets the route name for the given action.
@@ -72,9 +91,10 @@ trait RESTFulService
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{
-		$table = db()->getTableOrFail(self::TABLE_NAME);
+		$table = db()->getTableOrFail(static::TABLE_NAME);
 
 		if (!$table->getMeta()->get('api.doc.enabled', true)) {
 			return;
@@ -86,10 +106,10 @@ trait RESTFulService
 		$a_an                = $api_doc_meta['use_an'] ? 'an' : 'a';
 		$operation_id_prefix = Str::stringToURLSlug($singular_name, '_');
 		$tag                 = $doc->addTag($plural_name, $api_doc_meta['description']);
-		$entity_read         = $doc->entitySchemaForRead(self::TABLE_NAME);
-		$entity_create       = $doc->entitySchemaForCreate(self::TABLE_NAME);
-		$entity_update       = $doc->entitySchemaForUpdate(self::TABLE_NAME);
-		$pk_key_column       = self::KEY_COLUMN;
+		$entity_read         = $doc->entitySchemaForRead(static::TABLE_NAME);
+		$entity_create       = $doc->entitySchemaForCreate(static::TABLE_NAME);
+		$entity_update       = $doc->entitySchemaForUpdate(static::TABLE_NAME);
+		$pk_key_column       = static::KEY_COLUMN;
 		$collections         = $table->getCollections();
 
 		$get_one_params = [];
@@ -118,7 +138,7 @@ trait RESTFulService
 			);
 		}
 
-		$relatives_options   = self::relationsDocOptions($table, $doc);
+		$relatives_options   = static::relationsDocOptions($table, $doc);
 		$relations           = $relatives_options['relations'];
 		$v_relations         = $relatives_options['v_relations'];
 
@@ -131,7 +151,7 @@ trait RESTFulService
 		// create_one
 		if ($table->getMeta()->get('api.doc.create_one.enabled', true)) {
 			$doc->addOperationFromRoute(
-				self::routeName('create_one'),
+				static::routeName('create_one'),
 				'POST',
 				\sprintf('Create %s', $singular_name),
 				[
@@ -156,7 +176,7 @@ trait RESTFulService
 		// get_one
 		if ($table->getMeta()->get('api.doc.get_one.enabled', true)) {
 			$doc->addOperationFromRoute(
-				self::routeName('get_one'),
+				static::routeName('get_one'),
 				'GET',
 				\sprintf('Get %s', $singular_name),
 				[
@@ -185,7 +205,7 @@ trait RESTFulService
 		// update_one
 		if ($table->getMeta()->get('api.doc.update_one.enabled', true)) {
 			$doc->addOperationFromRoute(
-				self::routeName('update_one'),
+				static::routeName('update_one'),
 				'PATCH',
 				\sprintf('Update %s', $singular_name),
 				[
@@ -214,7 +234,7 @@ trait RESTFulService
 		// delete_one
 		if ($table->getMeta()->get('api.doc.delete_one.enabled', true)) {
 			$doc->addOperationFromRoute(
-				self::routeName('delete_one'),
+				static::routeName('delete_one'),
 				'DELETE',
 				\sprintf('Delete %s', $singular_name),
 				[
@@ -240,7 +260,7 @@ trait RESTFulService
 		// get_all
 		if ($table->getMeta()->get('api.doc.get_all.enabled', true)) {
 			$doc->addOperationFromRoute(
-				self::routeName('get_all'),
+				static::routeName('get_all'),
 				'GET',
 				\sprintf('List %s', $plural_name),
 				[
@@ -267,7 +287,7 @@ trait RESTFulService
 		// update_all
 		if ($table->getMeta()->get('api.doc.update_all.enabled', true)) {
 			$doc->addOperationFromRoute(
-				self::routeName('update_all'),
+				static::routeName('update_all'),
 				'PATCH',
 				\sprintf('Update %s', $plural_name),
 				[
@@ -291,7 +311,7 @@ trait RESTFulService
 		// delete_all
 		if ($table->getMeta()->get('api.doc.delete_all.enabled', true)) {
 			$doc->addOperationFromRoute(
-				self::routeName('delete_all'),
+				static::routeName('delete_all'),
 				'DELETE',
 				\sprintf('Delete %s', $plural_name),
 				[
@@ -319,7 +339,7 @@ trait RESTFulService
 			$pk_key_column,
 			$singular_name,
 			$doc,
-		) {
+		): void {
 			$r_name = $r->getName();
 			if (!$table->getMeta()->get(\sprintf('api.doc.get_relation.%s.enabled', $r_name), true)) {
 				return;
@@ -344,7 +364,7 @@ trait RESTFulService
 
 			if ($r_table?->hasSinglePKColumn()) {
 				$r_pk_column         = $r_table->getSinglePKColumnOrFail()->getName();
-				$r_relatives_options = self::relationsDocOptions($r_table, $doc);
+				$r_relatives_options = static::relationsDocOptions($r_table, $doc);
 
 				if (isset($r_relatives_options['relations_parameter'])) {
 					$r_params[] = $r_relatives_options['relations_parameter'];
@@ -356,18 +376,18 @@ trait RESTFulService
 			}
 
 			$doc->addOperationFromRoute(
-				self::routeName('get_relation'),
+				static::routeName('get_relation'),
 				'GET',
 				\sprintf('Get %s %s', $singular_name, ApiDoc::toHumanReadable($r_name)),
 				[
 					$doc->success(
-						$r->isPaginated() ? $doc->apiPaginated([
-							'items'     => $doc->array($r_schema),
-							'relations' => $r_relations_schema,
-						]) : $doc->object([
-							'item'      => $r_schema,
-							'relations' => $r_relations_schema,
-						]),
+						$r->isPaginated() ? $doc->apiPaginated(
+							['items' => $doc->array($r_schema)]
+								+ (null !== $r_relations_schema ? ['relations' => $r_relations_schema] : [])
+						) : $doc->object(
+							['item' => $r_schema]
+								+ (null !== $r_relations_schema ? ['relations' => $r_relations_schema] : [])
+						),
 						\sprintf(
 							'The `%s` of the `%s` was retrieved successfully.',
 							ApiDoc::toHumanReadable($r_name),
@@ -393,6 +413,7 @@ trait RESTFulService
 		};
 
 		foreach ($relations as $relation) {
+			/** @psalm-suppress InvalidArgument */
 			$add_relative_operation($relation, $doc->entitySchemaForRead($relation->getTargetTable()));
 		}
 
@@ -416,11 +437,11 @@ trait RESTFulService
 	{
 		$db = ORM::getDatabase($this->table->getNamespace());
 
-		$db->runInTransaction(function () use ($req) {
+		$db->runInTransaction(function () use ($req): void {
 			$controller = $this->controller();
 			$values     = $req->getFormData($this->table);
 			$entity     = $controller->addItem($values);
-			$rrh        = new RESTFullRelationsHelper($this->table);
+			$rrh        = new RESTFulRelationsHelper($this->table);
 
 			$rrh->processRelations($entity, $req, false);
 
@@ -451,18 +472,15 @@ trait RESTFulService
 	{
 		$db = ORM::getDatabase($this->table->getNamespace());
 
-		$db->runInTransaction(function () use ($req) {
-			$values  = $req->getFormData($this->table);
-			$filters = $req->getFilters();
-
+		$db->runInTransaction(function () use ($req): void {
 			$controller = $this->controller();
-			$entity     = $controller->updateOneItem($filters, $values);
+			$entity     = $controller->updateOneItem($req);
 
 			if (!$entity) {
 				throw new NotFoundException();
 			}
 
-			$rrh = new RESTFullRelationsHelper($this->table);
+			$rrh = new RESTFulRelationsHelper($this->table);
 			$rrh->processRelations($entity, $req, true);
 
 			$this->json()
@@ -486,14 +504,9 @@ trait RESTFulService
 	{
 		$db = ORM::getDatabase($this->table->getNamespace());
 
-		$db->runInTransaction(function () use ($req) {
-			$values   = $req->getFormData($this->table);
-			$filters  = $req->getFilters();
-			$order_by = $req->getOrderBy();
-			$max      = $req->getMax();
-
+		$db->runInTransaction(function () use ($req): void {
 			$controller = $this->controller();
-			$count      = $controller->updateAllItems($filters, $values, $max, $order_by);
+			$count      = $controller->updateAllItems($req);
 
 			$this->json()
 				->setDone(
@@ -518,10 +531,8 @@ trait RESTFulService
 	 */
 	public function actionDeleteOne(RESTFulAPIRequest $req): void
 	{
-		$filters = $req->getFilters();
-
 		$controller = $this->controller();
-		$entity     = $controller->deleteOneItem($filters);
+		$entity     = $controller->deleteOneItem($req);
 
 		if (!$entity) {
 			throw new NotFoundException();
@@ -546,13 +557,9 @@ trait RESTFulService
 	{
 		$db = ORM::getDatabase($this->table->getNamespace());
 
-		$db->runInTransaction(function () use ($req) {
-			$filters  = $req->getFilters();
-			$order_by = $req->getOrderBy();
-			$max      = $req->getMax();
-
+		$db->runInTransaction(function () use ($req): void {
 			$controller = $this->controller();
-			$count      = $controller->deleteAllItems($filters, $max, $order_by);
+			$count      = $controller->deleteAllItems($req);
 
 			$this->json()
 				->setDone(
@@ -577,17 +584,14 @@ trait RESTFulService
 	 */
 	public function actionGetOne(RESTFulAPIRequest $req): void
 	{
-		$filters  = $req->getFilters();
-		$order_by = $req->getOrderBy();
-
 		$controller = $this->controller();
-		$entity     = $controller->getItem($filters, $order_by);
+		$entity     = $controller->getItem($req);
 
 		if (!$entity) {
 			throw new NotFoundException();
 		}
 
-		$rrh       = new RESTFullRelationsHelper($this->table);
+		$rrh       = new RESTFulRelationsHelper($this->table);
 		$relations = $rrh->entityNonPaginatedRelations($entity, $req);
 
 		$this->json()
@@ -611,35 +615,43 @@ trait RESTFulService
 	 */
 	public function actionGetAll(RESTFulAPIRequest $req): void
 	{
-		$collection = $req->getRequestedCollection();
+		$collection_name = $req->getRequestedCollection();
+		$controller      = $this->controller();
 
-		$filters       = $req->getFilters();
-		$order_by      = $req->getOrderBy();
-		$max           = $req->getMax();
-		$page          = $req->getPage();
-		$offset        = $req->getOffset();
-		$total_records = 0;
-
-		$controller = $this->controller();
-
-		if ($collection) {
-			$collection = $this->table->getCollection($req->getRequestedCollection());
+		if ($collection_name) {
+			$collection = $this->table->getCollection($collection_name);
 
 			if (!$collection) {
 				throw new NotFoundException();
 			}
 
-			$results = $collection->getItems($req, $total_records);
+			$orm_results = $collection->getItems($req);
 		} else {
-			$results = $controller->getAllItems($filters, $max, $offset, $order_by, $total_records);
+			$orm_results = $controller->getAllItems($req);
+		}
+
+		if ($req->isCursorBased()) {
+			$data        = $orm_results->fetchAllClassWithCursorMeta($req);
+			$data['max'] = $req->getMax();
+			$items       = $data['items'];
+		} else {
+			$items = $orm_results->fetchAllClass();
+			$data  = [
+				'items' => $items,
+				'page'  => $req->getPage() ?? 1,
+				'max'   => $req->getMax(),
+				'total' => $orm_results->getTotal($req),
+			];
 		}
 
 		$relations = [];
 
-		if (\count($results)) {
-			$rrh       = new RESTFullRelationsHelper($this->table);
-			$relations = $rrh->entitiesNonPaginatedRelations($results, $req);
+		if (\count($items)) {
+			$rrh       = new RESTFulRelationsHelper($this->table);
+			$relations = $rrh->entitiesNonPaginatedRelations($items, $req);
 		}
+
+		$data['relations'] = $relations;
 
 		$this->json()
 			->setDone(
@@ -647,13 +659,7 @@ trait RESTFulService
 					->getCRUD()
 					->getMessage()
 			)
-			->setData([
-				'items'     => $results,
-				'max'       => $max,
-				'page'      => $page,
-				'total'     => $total_records,
-				'relations' => $relations,
-			]);
+			->setData($data);
 	}
 
 	/**
@@ -676,41 +682,71 @@ trait RESTFulService
 		}
 
 		$controller = $this->controller();
-		$entity     = $controller->getItem($entity_filters);
+		$entity     = $controller->getItem(ORMOptions::makeFromFilters($entity_filters));
 
 		if (!$entity) {
 			throw new NotFoundException();
 		}
 
-		$total_records      = 0;
 		$paginated_relation = false;
 
 		if ($this->table->hasRelation($relation_name)) {
 			/** @var Relation $found */
 			$found = $this->table->getRelation($relation_name);
 
-			RESTFullRelationsHelper::assertNotPrivateRelation($found);
+			/** @psalm-suppress InvalidArgument */
+			RESTFulRelationsHelper::assertNotPrivateRelation($found);
 
-			$rrh = new RESTFullRelationsHelper($this->table);
+			$rrh = new RESTFulRelationsHelper($this->table);
 
 			if ($found->isPaginated()) {
 				$paginated_relation = true;
-				$r                  = $rrh->getRelationItemsList($found, $entity, $req, false, $total_records);
+				$orm_results        = $rrh->getRelationItemsList($found, $entity, $req, false);
+
+				if (!$orm_results) {
+					throw new NotFoundException();
+				}
+
+				if ($req->isCursorBased()) {
+					$data        = $orm_results->fetchAllClassWithCursorMeta($req);
+					$data['max'] = $req->getMax();
+					$r           = $data['items'];
+				} else {
+					$r    = $orm_results->fetchAllClass();
+					$data = [
+						'items' => $r,
+						'page'  => $req->getPage() ?? 1,
+						'max'   => $req->getMax(),
+						'total' => $orm_results->getTotal($req),
+					];
+				}
 			} else {
-				$r = $rrh->getRelationItem($found, $entity);
+				$r    = $rrh->getRelationItem($found, $entity);
+				$data = [
+					'item' => $r,
+				];
 			}
 		} elseif ($this->table->hasVirtualRelation($relation_name)) {
 			/** @var VirtualRelation $found */
 			$found = $this->table->getVirtualRelation($relation_name);
 
-			RESTFullRelationsHelper::assertNotPrivateRelation($found);
+			RESTFulRelationsHelper::assertNotPrivateRelation($found);
 
 			$paginated_relation = $found->isPaginated();
 
 			if ($paginated_relation) {
-				$r = $found->getController()->list($entity, $req, $total_records);
+				$r    = $found->getController()->list($entity, $req);
+				$data = [
+					'items' => $r,
+					'page'  => $req->getPage() ?? 1,
+					'max'   => $req->getMax(),
+					'total' => \count($r),
+				];
 			} else {
-				$r = $found->getController()->get($entity, $req);
+				$r    = $found->getController()->get($entity, $req);
+				$data = [
+					'item' => $r,
+				];
 			}
 		} else {
 			throw new NotFoundException();
@@ -720,20 +756,11 @@ trait RESTFulService
 			throw new NotFoundException();
 		}
 
-		if ($paginated_relation) {
-			$data['items'] = $r;
-			$data['page']  = $req->getPage();
-			$data['max']   = $req->getMax();
-			$data['total'] = $total_records;
-		} else {
-			$data['item'] = $r;
-		}
-
 		$relative_store_table = $found->getController()->getRelativesStoreTable();
 		$relative_relations   = [];
 
 		if ($relative_store_table?->hasSinglePKColumn()) {
-			$rst_rrh = new RESTFullRelationsHelper($relative_store_table);
+			$rst_rrh = new RESTFulRelationsHelper($relative_store_table);
 
 			if ($paginated_relation) {
 				if (\count($r) > 0) {
@@ -761,14 +788,14 @@ trait RESTFulService
 	protected static function registerRESTRoutes(Router $router): void
 	{
 		$table = db()
-			->getTableOrFail(self::TABLE_NAME);
-		$key_column  = $table->getColumnOrFail(self::KEY_COLUMN);
+			->getTableOrFail(static::TABLE_NAME);
+		$key_column  = $table->getColumnOrFail(static::KEY_COLUMN);
 		$type_obj    = $key_column->getType();
 		$bigint_type = TypeBigint::class;
 		$int_type    = TypeInt::class;
 		$is_number   = ($type_obj instanceof $bigint_type || $type_obj instanceof $int_type);
 
-		self::registerAccessRightsActions($table);
+		static::registerAccessRightsActions($table);
 
 		$relations_names = [];
 
@@ -782,89 +809,89 @@ trait RESTFulService
 		$id_param       = $is_number ? '[0-9]+' : '[^/]+';
 		$relation_param = \implode('|', $relations_names);
 
-		$router->group(self::SERVICE_PATH, static function (Router $router) {
+		$router->group(static::SERVICE_PATH, static function (Router $router): void {
 			$router->post(static function (RouteInfo $r) {
-				$service = new self($r);
-				$service->actionCreateOne(self::buildRequest($r));
+				$service = new static($r);
+				$service->actionCreateOne(static::buildRequest($r));
 
 				return $service->respond();
-			})->name(self::routeName('create_one'));
+			})->name(static::routeName('create_one'));
 
 			$router->get(static function (RouteInfo $r) {
-				$service = new self($r);
-				$service->actionGetAll(self::buildRequest($r));
+				$service = new static($r);
+				$service->actionGetAll(static::buildRequest($r));
 
 				return $service->respond();
-			})->name(self::routeName('get_all'));
+			})->name(static::routeName('get_all'));
 
 			$router->patch(static function (RouteInfo $r) {
-				$service = new self($r);
-				$service->actionUpdateAll(self::buildRequest($r));
+				$service = new static($r);
+				$service->actionUpdateAll(static::buildRequest($r));
 
 				return $service->respond();
-			})->name(self::routeName('update_all'));
+			})->name(static::routeName('update_all'));
 
 			$router->delete(static function (RouteInfo $r) {
-				$service = new self($r);
-				$service->actionDeleteAll(self::buildRequest($r));
+				$service = new static($r);
+				$service->actionDeleteAll(static::buildRequest($r));
 
 				return $service->respond();
-			})->name(self::routeName('delete_all'));
+			})->name(static::routeName('delete_all'));
 
-			$router->group('/:' . self::KEY_COLUMN, static function (Router $router) {
+			$router->group('/:' . static::KEY_COLUMN, static function (Router $router): void {
 				$router->get(static function (RouteInfo $r) {
-					$req = self::buildRequest($r, [
-						self::KEY_COLUMN,
+					$req = static::buildRequest($r, [
+						static::KEY_COLUMN,
 						'eq',
-						$r->param(self::KEY_COLUMN),
+						$r->param(static::KEY_COLUMN),
 					]);
 
-					$service = new self($r);
+					$service = new static($r);
 					$service->actionGetOne($req);
 
 					return $service->respond();
-				})->name(self::routeName('get_one'));
+				})->name(static::routeName('get_one'));
 
 				$router->patch(static function (RouteInfo $r) {
-					$req = self::buildRequest($r, [
-						self::KEY_COLUMN,
+					$req = static::buildRequest($r, [
+						static::KEY_COLUMN,
 						'eq',
-						$r->param(self::KEY_COLUMN),
+						$r->param(static::KEY_COLUMN),
 					]);
 
-					$service = new self($r);
+					$service = new static($r);
 					$service->actionUpdateOne($req);
 
 					return $service->respond();
-				})->name(self::routeName('update_one'));
+				})->name(static::routeName('update_one'));
 
 				$router->delete(static function (RouteInfo $r) {
-					$req = self::buildRequest($r, [
-						self::KEY_COLUMN,
+					$req = static::buildRequest($r, [
+						static::KEY_COLUMN,
 						'eq',
-						$r->param(self::KEY_COLUMN),
+						$r->param(static::KEY_COLUMN),
 					]);
 
-					$service = new self($r);
+					$service = new static($r);
 					$service->actionDeleteOne($req);
 
 					return $service->respond();
-				})->name(self::routeName('delete_one'));
+				})->name(static::routeName('delete_one'));
 
 				$router->get('/:relation', static function (RouteInfo $r) {
-					$service = new self($r);
-					$service->actionGetRelation(self::buildRequest($r), [
-						self::KEY_COLUMN,
+					$service = new static($r);
+					$service->actionGetRelation(static::buildRequest($r), [
+						static::KEY_COLUMN,
 						'eq',
-						$r->param(self::KEY_COLUMN),
+						$r->param(static::KEY_COLUMN),
 					], $r->param('relation'));
 
 					return $service->respond();
-				})->name(self::routeName('get_relation'));
+				})->name(static::routeName('get_relation'));
 			});
 		})
 			->param('relation', $relation_param)
-			->param(self::KEY_COLUMN, $id_param);
+			->param(static::KEY_COLUMN, $id_param);
 	}
 
 	/**

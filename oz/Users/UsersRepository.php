@@ -17,6 +17,7 @@ use Gobl\DBAL\Builders\TableBuilder;
 use Gobl\DBAL\Column;
 use Gobl\DBAL\Exceptions\DBALException;
 use Gobl\DBAL\Table;
+use Gobl\ORM\ORMOptions;
 use Gobl\ORM\ORMTableQuery;
 use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
@@ -162,30 +163,30 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		$tb->softDeletable();
 
 		// constraints
-		$tb->collectFk(static function () use ($tb, $with_country) {
+		$tb->collectFk(static function () use ($tb, $with_country): void {
 			$tb->foreign(AuthUserInterface::IDENTIFIER_TYPE_NAME, 'oz_usernames', 'name', !Settings::get('oz.users', 'OZ_USER_USERNAME_REQUIRED'))
 				->onUpdateCascade()
 				->onDeleteRestrict();
 
 			if ($with_country) {
-				$tb->foreign('cc2', 'oz_countries', 'cc2', false, static function (Column $column) {
-					/** @var TypeCC2 $cc2_type */
-					$cc2_type = $column->getType();
-					$cc2_type->authorized();
-				})
+				$tb->foreign('cc2', 'oz_countries', 'cc2')
 					->onUpdateCascade()
 					->onDeleteRestrict();
+
+				/** @var TypeCC2 $cc2_type */
+				$cc2_type = $tb->useColumn('cc2')->getType();
+				$cc2_type->authorized();
 			}
 		});
 
-		$tb->collectIndex(static function (TableBuilder $tb) {
+		$tb->collectIndex(static function (TableBuilder $tb): void {
 			$tb->unique(AuthUserInterface::IDENTIFIER_TYPE_NAME);
 			$tb->unique(AuthUserInterface::IDENTIFIER_TYPE_PHONE);
 			$tb->unique(AuthUserInterface::IDENTIFIER_TYPE_EMAIL);
 		});
 
 		// relations
-		$tb->collectRelation(static function () use ($tb, $with_country) {
+		$tb->collectRelation(static function () use ($tb, $with_country): void {
 			$tb->hasMany('roles')->from('oz_roles')->usingMorph('owner');
 			$tb->hasMany('files')->from('oz_files')->usingMorph('for');
 			$tb->hasMany('sessions')->from('oz_sessions')->usingMorph('owner');
@@ -235,7 +236,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		if ($this->table->isPrimaryKey([$c_full_name]) || $this->table->isUniqueKey([$c_full_name])) {
 			try {
 				$sel = $this->qb()->where([$c_full_name, 'eq', $identifier_value])
-					->find(1);
+					->find(ORMOptions::makePaginated(1));
 
 				/** @var null|AuthUserInterface */
 				return $sel->fetchClass();

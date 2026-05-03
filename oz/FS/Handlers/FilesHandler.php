@@ -35,7 +35,7 @@ class FilesHandler extends TableCRUDListener
 
 		$crud = OZFile::crud();
 
-		$crud->onBeforeCreateFlush(static function (BeforeCreateFlush $ev) use ($context) {
+		$crud->onBeforeCreateFlush(static function (BeforeCreateFlush $ev) use ($context): void {
 			if ($context->hasAuthenticatedUser()) {
 				$user = $context->auth()->user();
 

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Sessions;
 
+use Gobl\ORM\ORMOptions;
 use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
@@ -243,12 +244,12 @@ final class Session implements BootHookReceiverInterface
 	#[Override]
 	public static function boot(): void
 	{
-		FinishHook::listen(static function () {
+		FinishHook::listen(static function (): void {
 			self::gc();
 		}, Event::RUN_LAST);
 
 		if (\class_exists(OZSession::class)) {
-			DbReadyHook::listen(static function () {
+			DbReadyHook::listen(static function (): void {
 				OZSession::crud()
 					->onBeforePKColumnWrite(static fn () => true);
 			});
@@ -274,7 +275,7 @@ final class Session implements BootHookReceiverInterface
 
 				$result = $sqb->whereIdIs($sid)
 					->whereIsValid()
-					->find(1);
+					->find(ORMOptions::makePaginated(1));
 
 				$item = $result->fetchClass();
 

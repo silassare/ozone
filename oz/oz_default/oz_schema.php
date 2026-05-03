@@ -25,8 +25,8 @@ use OZONE\Core\Roles\RolesUtils;
 use OZONE\Core\Users\UsersRepository;
 use OZONE\Core\Utils\JSONResult;
 
-return static function (NamespaceBuilder $ns) {
-	$ns->table('oz_users', static function (TableBuilder $tb) {
+return static function (NamespaceBuilder $ns): void {
+	$ns->table('oz_users', static function (TableBuilder $tb): void {
 		$tb->plural('oz_users')
 			->singular('oz_user')
 			->columnPrefix('user')
@@ -40,7 +40,7 @@ return static function (NamespaceBuilder $ns) {
 	// it's ensure uniqueness of usernames across all auth user types
 	// so we can easily check for username availability and also to be able
 	// to find the auth user of a given username
-	$ns->table('oz_usernames', static function (TableBuilder $tb) {
+	$ns->table('oz_usernames', static function (TableBuilder $tb): void {
 		$tb->getTable()->setPrivate();
 
 		$tb->plural('oz_usernames')
@@ -64,7 +64,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->primary('name');
 	});
 
-	$ns->table('oz_countries', static function (TableBuilder $tb) {
+	$ns->table('oz_countries', static function (TableBuilder $tb): void {
 		$tb->plural('oz_countries')
 			->singular('oz_country')
 			->columnPrefix('country')
@@ -103,7 +103,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->primary('cc2');
 	});
 
-	$ns->table('oz_files', static function (TableBuilder $tb) {
+	$ns->table('oz_files', static function (TableBuilder $tb): void {
 		$tb->plural('oz_files')
 			->singular('oz_file')
 			->columnPrefix('file')
@@ -174,7 +174,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->softDeletable();
 
 		// constraints
-		$tb->collectFk(static function (TableBuilder $tb) {
+		$tb->collectFk(static function (TableBuilder $tb): void {
 			$tb->foreign('clone_id', 'oz_files', 'id', true)
 				->onUpdateCascade()
 				->onDeleteSetNull();
@@ -184,7 +184,7 @@ return static function (NamespaceBuilder $ns) {
 		});
 
 		// relations
-		$tb->collectRelation(static function (TableBuilder $tb) {
+		$tb->collectRelation(static function (TableBuilder $tb): void {
 			$tb->hasMany('clones')->from('oz_files')->usingColumns([
 				'id' => 'clone_id',
 			]);
@@ -205,7 +205,7 @@ return static function (NamespaceBuilder $ns) {
 
 	// START OF TABLES THAT SHOULD BE KEPT PRIVATE
 
-	$ns->table('oz_roles', static function (TableBuilder $tb) {
+	$ns->table('oz_roles', static function (TableBuilder $tb): void {
 		$tb->getTable()->setPrivate();
 
 		$tb->plural('oz_roles')
@@ -235,12 +235,12 @@ return static function (NamespaceBuilder $ns) {
 
 		// constraints
 
-		$tb->collectIndex(static function (TableBuilder $tb) {
+		$tb->collectIndex(static function (TableBuilder $tb): void {
 			$tb->unique('owner_id', 'owner_type', 'role');
 		});
 	});
 
-	$ns->table('oz_jobs', static function (TableBuilder $tb) {
+	$ns->table('oz_jobs', static function (TableBuilder $tb): void {
 		$tb->getTable()->setPrivate();
 
 		$tb->plural('oz_jobs')
@@ -315,7 +315,7 @@ return static function (NamespaceBuilder $ns) {
 			->setMetaKey('field.label', 'Chain')
 			->setMetaKey('api.doc.description', 'Ordered list of serialized job specs to dispatch after this job completes successfully.');
 
-		$tb->collectFk(static function (TableBuilder $tb) {
+		$tb->collectFk(static function (TableBuilder $tb): void {
 			$tb->foreign('batch_id', 'oz_job_batches', 'id', true)
 				->onUpdateCascade()
 				->onDeleteSetNull();
@@ -325,13 +325,13 @@ return static function (NamespaceBuilder $ns) {
 				->setMetaKey('api.doc.description', 'The ID of the batch this job belongs to, if any.');
 		});
 
-		$tb->collectIndex(static function (TableBuilder $tb) {
+		$tb->collectIndex(static function (TableBuilder $tb): void {
 			$tb->unique('ref');
 		});
 		$tb->timestamps();
 	});
 
-	$ns->table('oz_job_batches', static function (TableBuilder $tb) {
+	$ns->table('oz_job_batches', static function (TableBuilder $tb): void {
 		$tb->getTable()->setPrivate();
 
 		$tb->plural('oz_job_batches')
@@ -352,7 +352,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->timestamps();
 	});
 
-	$ns->table('oz_sessions', static function (TableBuilder $tb) {
+	$ns->table('oz_sessions', static function (TableBuilder $tb): void {
 		$tb->getTable()->setPrivate();
 
 		$tb->plural('oz_sessions')
@@ -395,7 +395,7 @@ return static function (NamespaceBuilder $ns) {
 		$tb->primary('id');
 	});
 
-	$ns->table('oz_db_stores', static function (TableBuilder $tb) {
+	$ns->table('oz_db_stores', static function (TableBuilder $tb): void {
 		$tb->getTable()->setPrivate();
 
 		$tb->plural('oz_db_stores')
@@ -434,12 +434,12 @@ return static function (NamespaceBuilder $ns) {
 		$tb->softDeletable();
 
 		// constraints
-		$tb->collectIndex(static function (TableBuilder $tb) {
+		$tb->collectIndex(static function (TableBuilder $tb): void {
 			$tb->unique('group', 'key');
 		});
 	});
 
-	$ns->table('oz_auths', static function (TableBuilder $tb) {
+	$ns->table('oz_auths', static function (TableBuilder $tb): void {
 		$tb->getTable()->setPrivate();
 
 		$tb->plural('oz_auths')
@@ -514,14 +514,14 @@ return static function (NamespaceBuilder $ns) {
 
 		// constraints
 
-		$tb->collectIndex(static function (TableBuilder $tb) {
+		$tb->collectIndex(static function (TableBuilder $tb): void {
 			$tb->unique('ref');
 			$tb->unique('refresh_key');
 			$tb->unique('token_hash');
 		});
 	});
 
-	$ns->table('oz_migrations', static function (TableBuilder $tb) {
+	$ns->table('oz_migrations', static function (TableBuilder $tb): void {
 		$tb->getTable()->setPrivate();
 
 		$tb->plural('oz_migrations')

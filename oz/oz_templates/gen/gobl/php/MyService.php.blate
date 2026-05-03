@@ -7,7 +7,7 @@ namespace {= service.namespace};
 use Gobl\DBAL\Table;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Service;
-use OZONE\Core\REST\Traits\RESTFulService;
+use OZONE\Core\REST\RESTFulService;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use Throwable;
@@ -61,15 +61,11 @@ use Throwable;
  * DELETE  /{= my_path}
  * ```
  */
-final class {= my_svc_class} extends Service
+final class {= my_svc_class} extends RESTFulService
 {='{'}
-	use RESTFulService;
-
 	public const SERVICE_PATH = '/{= my_path}';
 	public const TABLE_NAME   = '{= my_table}';
 	public const KEY_COLUMN   = '{= my_id}';
-
-	protected Table $table;
 
 	/**
 	 * {= my_svc_class} constructor.
@@ -79,8 +75,6 @@ final class {= my_svc_class} extends Service
 	public function __construct(Context|RouteInfo $context)
 	{='{'}
 		parent::__construct($context);
-
-		$this->table = db()->getTableOrFail(self::TABLE_NAME);
 	{='}'}
 
 	/**

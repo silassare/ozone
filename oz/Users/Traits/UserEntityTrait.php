@@ -138,6 +138,8 @@ trait UserEntityTrait
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @return array<string, mixed>
 	 */
 	public function toArray($hide_sensitive_data = true): array
 	{

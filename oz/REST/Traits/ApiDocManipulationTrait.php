@@ -388,7 +388,7 @@ trait ApiDocManipulationTrait
 	/**
 	 * Create a new request body.
 	 *
-	 * @param array<string, OA\Attachable|OA\MediaType> $content
+	 * @param array<OA\Attachable|OA\MediaType> $content
 	 *
 	 * @return OA\RequestBody
 	 */

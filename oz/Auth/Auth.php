@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth;
 
+use Gobl\ORM\ORMOptions;
 use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
@@ -50,7 +51,7 @@ final class Auth implements BootHookReceiverInterface
 			$qb->whereRefIs($ref);
 
 			return $qb
-				->find(1)
+				->find(ORMOptions::makePaginated(1))
 				->fetchClass();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to load auth data.', null, $t);
@@ -71,7 +72,7 @@ final class Auth implements BootHookReceiverInterface
 			$qb->whereTokenHashIs($token_hash);
 
 			return $qb
-				->find(1)
+				->find(ORMOptions::makePaginated(1))
 				->fetchClass();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to load auth entity.', null, $t);
@@ -109,7 +110,7 @@ final class Auth implements BootHookReceiverInterface
 	#[Override]
 	public static function boot(): void
 	{
-		FinishHook::listen(static function () {
+		FinishHook::listen(static function (): void {
 			self::gc();
 		}, Event::RUN_LAST);
 	}
@@ -179,6 +180,7 @@ final class Auth implements BootHookReceiverInterface
 			))->suspectConfig('oz.auth.methods', $method);
 		}
 
+		/** @var class-string<AuthenticationMethodInterface> $class */
 		return $class;
 	}
 
