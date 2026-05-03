@@ -15,6 +15,7 @@ namespace OZONE\Core\REST\Traits;
 
 use BackedEnum;
 use Gobl\DBAL\Operator;
+use Gobl\DBAL\Relations\Interfaces\VirtualRelationInterface;
 use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Gobl\DBAL\Types\TypeBigint;
@@ -595,6 +596,80 @@ trait ApiDocManipulationTrait
 	}
 
 	/**
+	 * Create the O'Zone API cursor parameter.
+	 *
+	 * @param 'cookie'|'header'|'path'|'query' $in The parameter location
+	 *
+	 * @return Parameter
+	 */
+	public function apiCursorParameter(string $in = 'query'): Parameter
+	{
+		return $this->parameter(
+			RESTFulAPIRequest::CURSOR_PARAM,
+			$this->string('The cursor value from the previous page.'),
+			'The cursor value from the previous page for cursor-based pagination.',
+			$in
+		);
+	}
+
+	/**
+	 * Create the O'Zone API cursor column parameter.
+	 *
+	 * @param 'cookie'|'header'|'path'|'query' $in The parameter location
+	 *
+	 * @return Parameter
+	 */
+	public function apiCursorColumnParameter(string $in = 'query'): Parameter
+	{
+		return $this->parameter(
+			RESTFulAPIRequest::CURSOR_COLUMN_PARAM,
+			$this->string('The column name to use as cursor.'),
+			'The column name to use as cursor. When provided, activates cursor-based pagination.',
+			$in
+		);
+	}
+
+	/**
+	 * Create the O'Zone API cursor direction parameter.
+	 *
+	 * @param 'cookie'|'header'|'path'|'query' $in The parameter location
+	 *
+	 * @return Parameter
+	 */
+	public function apiCursorDirParameter(string $in = 'query'): Parameter
+	{
+		$sc       = $this->string('The direction of cursor-based pagination.');
+		$sc->enum = ['asc', 'desc'];
+
+		return $this->parameter(
+			RESTFulAPIRequest::CURSOR_DIR_PARAM,
+			$sc,
+			'The direction of cursor-based pagination (`asc` or `desc`).',
+			$in
+		);
+	}
+
+	/**
+	 * Create a O'Zone API cursor-paginated schema.
+	 *
+	 * @param array<string,Schema> $properties  The properties
+	 * @param int                  $default_max The default maximum number of items per page
+	 *
+	 * @return Schema
+	 */
+	public function apiCursorPaginated(array $properties, int $default_max = 10): Schema
+	{
+		return $this->object($properties + [
+			'next_cursor'   => $this->type(['string', 'null'], 'The cursor value for the next page.'),
+			'cursor_column' => $this->type(['string', 'null'], 'The column used as cursor.'),
+			'has_more'      => $this->boolean('Whether there are more items to retrieve.'),
+			'max'           => $this->integer('The maximum number of items per page.', [
+				'default' => $default_max,
+			]),
+		]);
+	}
+
+	/**
 	 * Create the O'Zone API collection parameter.
 	 *
 	 * @param 'cookie'|'header'|'path'|'query' $in          The parameter location
@@ -896,6 +971,24 @@ COLS;
 		}
 
 		return $schema;
+	}
+
+	/**
+	 * Create a schema for a gobl virtual relation.
+	 *
+	 * @param VirtualRelationInterface $vr
+	 *
+	 * @return Schema
+	 */
+	public function virtualRelationTypeSchema(VirtualRelationInterface $vr): Schema
+	{
+		$type = $vr->getRelativeType();
+
+		if ($type instanceof Table) {
+			return $this->entitySchemaForRead($type);
+		}
+
+		return $this->typeSchema($type);
 	}
 
 	/**
@@ -1285,11 +1378,11 @@ COLS;
 	/**
 	 * Check if an annotation property value is {@see Generator::UNDEFINED}.
 	 *
-	 * @param $value
+	 * @param mixed $value
 	 *
 	 * @return bool
 	 */
-	protected static function isUndefined($value): bool
+	protected static function isUndefined(mixed $value): bool
 	{
 		return Generator::UNDEFINED === $value;
 	}

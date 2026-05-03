@@ -756,8 +756,8 @@ ORM::results($table, $qb)
 ```php
 $options = ORMOptions::makeCursorBased('id', $max, $cursor, 'ASC');
 $orm_results = $controller->getAllItems($options);
-$page = $orm_results->fetchAllClassWithCursorMeta($options);
-// $page shape: ['items' => [...], 'next_cursor' => mixed, 'has_more' => bool]
+$page = $orm_results->getItemsWithCursorMeta($options);
+// $page shape: ['items' => [...], 'next_cursor' => int|string|null, 'cursor_column' => string|null, 'has_more' => bool]
 ```
 
 **`RESTFulAPIRequest`** extends `ORMOptions` directly — it IS an `ORMOptionsInterface` and can be passed as-is to all ORM controller methods.
@@ -1450,6 +1450,36 @@ The `RESTFulService` class makes a `Service` class into a full CRUD REST control
 Disable individual actions via `static::$available_actions['delete_all'] = false`.
 
 **Relations**: `RESTFulRelationsHelper` loads non-paginated and paginated relations; private relations throw `ForbiddenException`.
+
+### Pagination (`get_all`, paginated `get_relation`)
+
+All paginated endpoints accept the following query parameters:
+
+| Parameter       | Type         | Description                                                                                 |
+| --------------- | ------------ | ------------------------------------------------------------------------------------------- |
+| `max`           | int          | Maximum items per page (default 10)                                                         |
+| `page`          | int          | Page number for offset-based pagination (default 1). Mutually exclusive with cursor params. |
+| `filters`       | object       | Column filters                                                                              |
+| `order_by`      | string       | Ordering rules                                                                              |
+| `cursor`        | string/int   | Cursor value from the previous page (activates cursor mode)                                 |
+| `cursor_column` | string       | Column to paginate on (activates cursor mode)                                               |
+| `cursor_dir`    | `asc`/`desc` | Cursor pagination direction (activates cursor mode)                                         |
+
+Providing any of `cursor`, `cursor_column`, or `cursor_dir` activates cursor-based mode (`isCursorBased()` returns `true`). `page` and cursor params are mutually exclusive — mixing them throws `GOBL_ORM_REQUEST_PAGE_AND_CURSOR_PAGINATION_ARE_MUTUALLY_EXCLUSIVE`.
+
+**Offset-based response shape:**
+
+```json
+{ "items": [...], "page": 1, "max": 10, "total": 150, "relations": {...} }
+```
+
+**Cursor-based response shape:**
+
+```json
+{ "items": [...], "next_cursor": "42", "cursor_column": "id", "has_more": true, "max": 10, "relations": {...} }
+```
+
+`cursor_column` mirrors the column used so the client knows which field holds the cursor value for the next request. `next_cursor` is `null` when there are no more pages. Both response shapes include a `relations` key for the non-paginated relations that were requested.
 
 ### OpenAPI Documentation
 
