@@ -12,7 +12,8 @@
 declare(strict_types=1);
 
 // Map of trusted proxies. Use `true` to allow, `false` to block.
+// If you're behind cloudflare proxy you can add and enable all cloudflare IP
 return [
-	// 'proxy_1' => true,
-	// 'proxy_2' => false,
+	// 'proxy_ip_1' => true,
+	// 'proxy_ip_2' => false,
 ];

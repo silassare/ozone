@@ -499,6 +499,10 @@ final class Context
 		if ($risky) {
 			if (false === $allowed_proxies_only || true === Settings::get('oz.proxies', $user_ip)) {
 				$sources = [
+					// cloudflare
+					'HTTP_CF_CONNECTING_IP',
+
+					// other
 					'HTTP_CLIENT_IP',
 					'HTTP_X_FORWARDED_FOR',
 					'HTTP_X_FORWARDED',
@@ -920,7 +924,7 @@ final class Context
 		$bundle = \array_merge($declared, $provided);
 
 		return \array_unique(
-			\array_map(static fn ($entry) => \strtolower(\trim($entry)), $bundle)
+			\array_map(static fn($entry) => \strtolower(\trim($entry)), $bundle)
 		);
 	}
 
