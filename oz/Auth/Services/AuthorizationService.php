@@ -24,7 +24,7 @@ use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Http\Response;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
@@ -42,6 +42,15 @@ class AuthorizationService extends Service
 	public const ROUTE_CANCEL    = 'oz:auth:cancel';
 
 	/**
+	 * The route parameter holding the authorization reference.
+	 *
+	 * A plain name, not `OZAuth::COL_REF`: reading that constant loads the generated ORM class, and
+	 * route registration must not -- loading an ORM class initializes the database, so every
+	 * request would build the schema just to declare these routes.
+	 */
+	private const REF_PARAM = 'auth_ref';
+
+	/**
 	 * {@inheritDoc}
 	 *
 	 * @throws Throwable
@@ -49,12 +58,15 @@ class AuthorizationService extends Service
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
-		$router->group('/auth/:' . OZAuth::COL_REF, static function (Router $router): void {
-			$router->post('/authorize', static fn (RouteInfo $ri) => (new self($ri))->authorize($ri, $ri->getCleanFormData()))
+		$router->group('/auth/:' . self::REF_PARAM, static function (Router $router): void {
+			$authorize = static fn (RouteInfo $ri) => (new self($ri))->authorize($ri, $ri->getCleanFormData());
+			$refresh   = static fn (RouteInfo $ri) => (new self($ri))->refresh($ri, $ri->getCleanFormData());
+
+			$router->post('/authorize', $authorize)
 				->name(self::ROUTE_AUTHORIZE)
 				->form(self::buildAuthorizeForm(...));
 
-			$router->post('/refresh', static fn (RouteInfo $ri) => (new self($ri))->refresh($ri, $ri->getCleanFormData()))
+			$router->post('/refresh', $refresh)
 				->name(self::ROUTE_REFRESH)
 				->form(self::buildRefreshForm(...));
 
@@ -71,9 +83,9 @@ class AuthorizationService extends Service
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 */
-	public function refresh(RouteInfo $ri, FormData $fd): Response
+	public function refresh(RouteInfo $ri, FormDataClean $fd): Response
 	{
-		$ref         = $ri->param(OZAuth::COL_REF);
+		$ref         = $ri->param(self::REF_PARAM);
 		$refresh_key = $fd->get('refresh_key');
 
 		$auth = Auth::getRequired($ref);
@@ -98,7 +110,7 @@ class AuthorizationService extends Service
 	 */
 	public function state(RouteInfo $ri): Response
 	{
-		$ref = $ri->param(OZAuth::COL_REF);
+		$ref = $ri->param(self::REF_PARAM);
 
 		$auth = Auth::getRequired($ref);
 
@@ -121,9 +133,9 @@ class AuthorizationService extends Service
 	 * @throws NotFoundException
 	 * @throws InvalidFormException
 	 */
-	public function cancel(RouteInfo $ri, FormData $fd): Response
+	public function cancel(RouteInfo $ri, FormDataClean $fd): Response
 	{
-		$ref         = $ri->param(OZAuth::COL_REF);
+		$ref         = $ri->param(self::REF_PARAM);
 		$refresh_key = $fd->get('refresh_key');
 
 		$auth = Auth::getRequired($ref);
@@ -147,9 +159,9 @@ class AuthorizationService extends Service
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 */
-	public function authorize(RouteInfo $ri, FormData $fd): Response
+	public function authorize(RouteInfo $ri, FormDataClean $fd): Response
 	{
-		$ref = $ri->param(OZAuth::COL_REF);
+		$ref = $ri->param(self::REF_PARAM);
 
 		$auth = Auth::getRequired($ref);
 
@@ -189,36 +201,62 @@ class AuthorizationService extends Service
 	{
 		$tag = $doc->addTag('Authorization', 'Authorization flow endpoints.');
 
+		$ref_param = $doc->parameter(
+			OZAuth::COL_REF,
+			$doc->string('The authorization flow reference.'),
+			'Authorization flow reference, returned by the endpoint that started the flow.',
+			'path'
+		);
+
+		$state_schema = $doc->object([
+			'ref'         => $doc->string('The authorization reference.'),
+			'state'       => $doc->string('The current authorization state (`pending`, `authorized`, `expired`, ...).'),
+			'expires_at'  => $doc->integer('UNIX timestamp when this flow expires, or `null`.', ['nullable' => true]),
+		], ['description' => 'Current authorization flow state.']);
+
 		$doc->addOperationFromRoute(self::ROUTE_AUTHORIZE, 'POST', 'Authorize', [
-			$doc->success(['state' => $doc->string('The authorization state.')]),
+			$doc->success(['state' => $state_schema], 'Authorization accepted.', 'OZ_AUTH_AUTHORIZED'),
+			$doc->error([], 'Invalid or already-used code / token.', 'OZ_AUTH_CODE_INVALID', 200),
+			$doc->error([], 'Flow has expired.', 'OZ_AUTH_EXPIRED', 200),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Auth.authorize',
-			'description' => 'Submit a code or token to complete an authorization flow.',
+			'description' => 'Complete a flow by submitting a `code` (sent via email or SMS) '
+				. 'or a `token`. Which is expected depends on the provider.',
+			'parameters'  => [$ref_param],
 		]);
 
 		$doc->addOperationFromRoute(self::ROUTE_REFRESH, 'POST', 'Refresh', [
-			$doc->success(['state' => $doc->string('The authorization state.')]),
+			$doc->success(['state' => $state_schema], 'Credentials refreshed.', 'OZ_AUTH_REFRESHED'),
+			$doc->error([], 'Invalid or expired `refresh_key`.', 'OZ_AUTH_REFRESH_KEY_INVALID', 200),
+			$doc->error([], 'Flow has expired.', 'OZ_AUTH_EXPIRED', 200),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Auth.refresh',
-			'description' => 'Refresh an authorization flow credentials.',
+			'description' => 'Refresh an authorization flow (re-send the code or regenerate credentials). '
+				. 'Requires the `refresh_key` returned when the flow was created.',
+			'parameters'  => [$ref_param],
 		]);
 
-		$doc->addOperationFromRoute(self::ROUTE_STATE, 'GET', 'Get State', [
-			$doc->success(['state' => $doc->string('The current authorization state.')]),
+		$doc->addOperationFromRoute(self::ROUTE_STATE, 'GET', 'Get Authorization State', [
+			$doc->success(['state' => $state_schema], 'Current authorization state.'),
+			$doc->error([], 'Flow not found.', 'OZ_AUTH_NOT_FOUND', 200),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Auth.state',
-			'description' => 'Get the current state of an authorization flow.',
+			'description' => 'Retrieve the current state of an authorization flow without advancing it.',
+			'parameters'  => [$ref_param],
 		]);
 
-		$doc->addOperationFromRoute(self::ROUTE_CANCEL, 'POST', 'Cancel', [
-			$doc->success([]),
+		$doc->addOperationFromRoute(self::ROUTE_CANCEL, 'POST', 'Cancel Authorization', [
+			$doc->success([], 'Flow cancelled.'),
+			$doc->error([], 'Invalid or expired `refresh_key`.', 'OZ_AUTH_REFRESH_KEY_INVALID', 200),
+			$doc->error([], 'Flow not found.', 'OZ_AUTH_NOT_FOUND', 200),
 		], [
 			'tags'        => [$tag->name],
 			'operationId' => 'Auth.cancel',
-			'description' => 'Cancel an authorization flow. Requires the refresh_key to prevent unauthorized cancellation.',
+			'description' => 'Cancel an authorization flow. Requires the `refresh_key`, so only its owner can.',
+			'parameters'  => [$ref_param],
 		]);
 	}
 

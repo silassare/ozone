@@ -77,7 +77,8 @@ final class JSONResponse extends JSONResult
 	public static function revive(mixed $payload): static
 	{
 		throw new LogicException(
-			self::class . '::revive() is not supported: Form instances contain callables and runtime state that cannot be revived from JSON.'
+			self::class . '::revive() is not supported: Form instances contain callables and runtime state'
+				. ' that cannot be revived from JSON.'
 		);
 	}
 

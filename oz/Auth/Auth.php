@@ -16,6 +16,7 @@ namespace OZONE\Core\Auth;
 use Gobl\ORM\ORMOptions;
 use Override;
 use OZONE\Core\App\Context;
+use OZONE\Core\App\GarbageCollector;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
@@ -25,11 +26,8 @@ use OZONE\Core\Db\OZAuthsQuery;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Exceptions\UnauthorizedException;
-use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\OZone;
-use OZONE\Core\Utils\Random;
-use PHPUtils\Events\Event;
 use Throwable;
 
 /**
@@ -110,9 +108,7 @@ final class Auth implements BootHookReceiverInterface
 	#[Override]
 	public static function boot(): void
 	{
-		FinishHook::listen(static function (): void {
-			self::gc();
-		}, Event::RUN_LAST);
+		GarbageCollector::register('oz:auths', self::gc(...));
 	}
 
 	/**
@@ -209,7 +205,7 @@ final class Auth implements BootHookReceiverInterface
 	 */
 	private static function gc(): void
 	{
-		if (Random::bool() && OZone::hasDbInstalled()) {
+		if (OZone::hasDbInstalled()) {
 			try {
 				// delete auth that expired more than an hour ago
 				$an_hour_ago = \time() - 3600;

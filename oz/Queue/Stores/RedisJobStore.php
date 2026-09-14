@@ -18,6 +18,7 @@ use InvalidArgumentException;
 use Override;
 use OZONE\Core\App\Keys;
 use OZONE\Core\Crypt\DoCrypt;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
@@ -134,6 +135,12 @@ class RedisJobStore implements JobStoreInterface
 		$data       = $this->toData($job);
 		$ref        = $job->getRef();
 		$created_at = $job->getCreatedAt();
+
+		// A ref is unique in a store (JobStoreInterface::add()): claimed atomically, before a write
+		// that would otherwise replace the job that has it.
+		if (!$this->redis()->hSetNx($this->jobKey($ref), 'ref', $ref)) {
+			throw new RuntimeException(\sprintf('The job store "%s" already has a job "%s".', self::NAME, $ref));
+		}
 
 		$this->redis()->hMset($this->jobKey($ref), $data);
 		$this->redis()->zAdd($this->queueKey($job->getQueue()), $created_at, $ref);

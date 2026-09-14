@@ -83,7 +83,8 @@ class UploadedFile implements UploadedFileInterface
 	 * @param null|string $type  the file media type
 	 * @param null|int    $size  the file size in bytes
 	 * @param int         $error the UPLOAD_ERR_XXX code representing the status of the upload
-	 * @param bool        $sapi  indicates if the upload is in a SAPI environment, should be false if file path is not coming from $_FILES
+	 * @param bool        $sapi  whether the upload comes from a SAPI environment; false when the
+	 *                           file path does not come from $_FILES
 	 */
 	public function __construct(
 		string $file,
@@ -146,11 +147,13 @@ class UploadedFile implements UploadedFileInterface
 		}
 
 		if (\UPLOAD_ERR_OK !== $this->error) {
-			$info             = FS::uploadErrorInfo($this->error);
-			$debug['_name']   = $this->unsafe_name;
-			$debug['_reason'] = $info['reason'];
+			$info = FS::uploadErrorInfo($this->error);
 
-			throw new RuntimeException($info['message'], $debug);
+			// Initialised, not written into out of nowhere (see AbstractLocalStorage::upload()).
+			throw new RuntimeException($info['message'], [
+				'_name'   => $this->unsafe_name,
+				'_reason' => $info['reason'],
+			]);
 		}
 
 		$targetIsStream = \strpos($targetPath, '://') > 0;
@@ -161,7 +164,11 @@ class UploadedFile implements UploadedFileInterface
 
 		if ($targetIsStream) {
 			if (!\copy($this->file, $targetPath)) {
-				throw new RuntimeException(\sprintf('Error moving uploaded file "%s" to "%s"', $this->unsafe_name, $targetPath));
+				throw new RuntimeException(\sprintf(
+					'Error moving uploaded file "%s" to "%s"',
+					$this->unsafe_name,
+					$targetPath
+				));
 			}
 
 			if (!\unlink($this->file)) {
@@ -173,10 +180,18 @@ class UploadedFile implements UploadedFileInterface
 			}
 
 			if (!\move_uploaded_file($this->file, $targetPath)) {
-				throw new RuntimeException(\sprintf('Error moving uploaded file "%s" to "%s"', $this->unsafe_name, $targetPath));
+				throw new RuntimeException(\sprintf(
+					'Error moving uploaded file "%s" to "%s"',
+					$this->unsafe_name,
+					$targetPath
+				));
 			}
 		} elseif (!\rename($this->file, $targetPath)) {
-			throw new RuntimeException(\sprintf('Error moving uploaded file "%s" to "%s"', $this->unsafe_name, $targetPath));
+			throw new RuntimeException(\sprintf(
+				'Error moving uploaded file "%s" to "%s"',
+				$this->unsafe_name,
+				$targetPath
+			));
 		}
 
 		$this->moved = true;
@@ -259,20 +274,38 @@ class UploadedFile implements UploadedFileInterface
 	}
 
 	/**
-	 * Parse a non-normalized, i.e. $_FILES superglobal, tree of uploaded file data.
+	 * Creates a normalized tree of UploadedFile instances from a `$_FILES`-shaped array.
 	 *
-	 * @param array $uploadedFiles the non-normalized tree of uploaded file data
+	 * For a worker server that parses uploads itself and hands them over in that shape (Swoole).
+	 * Its temporary files were not registered by PHP's upload handling, so `$sapi` must be false:
+	 * `move_uploaded_file()` would refuse them.
+	 *
+	 * @param array $files the `$_FILES`-shaped tree
+	 * @param bool  $sapi  whether PHP itself received the files
 	 *
 	 * @return array a normalized tree of UploadedFile instances
 	 */
-	private static function parseUploadedFiles(array $uploadedFiles): array
+	public static function fromFilesArray(array $files, bool $sapi = true): array
+	{
+		return static::parseUploadedFiles($files, $sapi);
+	}
+
+	/**
+	 * Parse a non-normalized, i.e. $_FILES superglobal, tree of uploaded file data.
+	 *
+	 * @param array $uploadedFiles the non-normalized tree of uploaded file data
+	 * @param bool  $sapi          whether PHP itself received the files
+	 *
+	 * @return array a normalized tree of UploadedFile instances
+	 */
+	private static function parseUploadedFiles(array $uploadedFiles, bool $sapi = true): array
 	{
 		$parsed = [];
 
 		foreach ($uploadedFiles as $field => $uploadedFile) {
 			if (!isset($uploadedFile['error'])) {
 				if (\is_array($uploadedFile)) {
-					$parsed[$field] = static::parseUploadedFiles($uploadedFile);
+					$parsed[$field] = static::parseUploadedFiles($uploadedFile, $sapi);
 				}
 
 				continue;
@@ -287,7 +320,7 @@ class UploadedFile implements UploadedFileInterface
 					$uploadedFile['type'] ?? null,
 					$uploadedFile['size'] ?? null,
 					$uploadedFile['error'],
-					true
+					$sapi
 				);
 			} else {
 				$subArray = [];
@@ -300,7 +333,7 @@ class UploadedFile implements UploadedFileInterface
 					$subArray[$fileIdx]['error']    = $uploadedFile['error'][$fileIdx];
 					$subArray[$fileIdx]['size']     = $uploadedFile['size'][$fileIdx];
 
-					$parsed[$field] = static::parseUploadedFiles($subArray);
+					$parsed[$field] = static::parseUploadedFiles($subArray, $sapi);
 				}
 			}
 		}

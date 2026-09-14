@@ -13,12 +13,15 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Forms;
 
+use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Gobl\DBAL\Types\TypeString;
 use Gobl\DBAL\Types\Utils\TypeUtils;
 use Override;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Forms\Enums\RuleSetCondition;
+use OZONE\Core\Forms\Enums\RuleSetDataType;
 use OZONE\Core\Forms\Interfaces\FieldContainerInterface;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Lang\I18nMessage;
@@ -42,7 +45,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	private TypeInterface|TypesSwitcher $t_type;
 
 	/**
-	 * @var null|callable(mixed, FormData):mixed
+	 * @var null|callable(mixed, FormValidationContext):mixed
 	 */
 	private $t_validator;
 	private string $t_name;
@@ -75,11 +78,53 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	}
 
 	/**
-	 * Field destructor.
+	 * Deep-copies the mutable state a field owns.
+	 *
+	 * Without this, {@see Form::merge()} would hand the same Field instance to
+	 * every bundle built from a long-lived form, so a mutation through one
+	 * bundle would leak into the source definition and into every other bundle.
+	 *
+	 * The double-check companion is deliberately not cloned here: it is a
+	 * sibling entry in the same container, so the container re-links it after
+	 * cloning the whole set (see {@see AbstractFieldContainer::mergeContainerState()}).
 	 */
-	public function __destruct()
+	public function __clone()
 	{
-		unset($this->t_parent, $this->t_type);
+		$this->t_type = clone $this->t_type;
+
+		if (null !== $this->t_if) {
+			$this->t_if = clone $this->t_if;
+		}
+	}
+
+	/**
+	 * Re-links this field's double-check companion after a bulk clone.
+	 *
+	 * @internal
+	 */
+	public function relinkDoubleCheck(?self $confirm): void
+	{
+		$this->t_double_check = $confirm;
+	}
+
+	/**
+	 * Returns the double-check companion field, if any.
+	 *
+	 * @internal
+	 */
+	public function getDoubleCheck(): ?self
+	{
+		return $this->t_double_check;
+	}
+
+	/**
+	 * Re-binds this field to a container.
+	 *
+	 * @internal
+	 */
+	public function rebind(FieldContainerInterface $parent): void
+	{
+		$this->t_parent = $parent;
 	}
 
 	/**
@@ -155,7 +200,9 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 */
 	public function description(I18nMessage|string|null $description): static
 	{
-		$this->t_description = null === $description ? null : ($description instanceof I18nMessage ? $description : I18n::m($description));
+		$this->t_description = null === $description ? null : (
+			$description instanceof I18nMessage ? $description : I18n::m($description)
+		);
 
 		return $this;
 	}
@@ -228,7 +275,11 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	public function if(): RuleSet
 	{
 		if (!isset($this->t_if)) {
-			$this->t_if = new RuleSet();
+			$this->t_if = RuleSet::create(
+				RuleSetCondition::AND,
+				RuleSetDataType::CLEANED,
+				$this->getRef() . '@if'
+			);
 		}
 
 		return $this->t_if;
@@ -245,7 +296,41 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	{
 		$this->t_type = $type;
 
+		if ($type instanceof TypesSwitcher) {
+			$type->bindTo($this);
+		}
+
 		$this->syncWithDoubleCheck();
+
+		return $this;
+	}
+
+	/**
+	 * Configures the field's current type in place, keeping the chain on the field.
+	 *
+	 * Lets type-level and field-level configuration share one chain after a typed
+	 * helper, which returns the field:
+	 *
+	 * ```php
+	 * $form->string('name', true)
+	 *     ->configureType(static fn (TypeString $t) => $t->min(2)->max(60))
+	 *     ->label('Full name');
+	 * ```
+	 *
+	 * The callback's return value is ignored; it mutates the type it receives. A
+	 * callback typed for a different type class fails with a TypeError.
+	 *
+	 * @template T of TypeInterface|TypesSwitcher
+	 *
+	 * @param callable(T):mixed $configure
+	 *
+	 * @return $this
+	 */
+	public function configureType(callable $configure): static
+	{
+		// T is chosen by the caller's callback; a mismatch surfaces as a TypeError.
+		/** @psalm-suppress InvalidArgument */
+		$configure($this->t_type);
 
 		return $this;
 	}
@@ -253,7 +338,11 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Set the field validator.
 	 *
-	 * @param callable(mixed, FormData):mixed $validator
+	 * The callable receives the cleaned value and the full
+	 * {@see FormValidationContext}, so it can read either the raw payload or the
+	 * data cleaned so far.
+	 *
+	 * @param callable(mixed, FormValidationContext):mixed $validator
 	 *
 	 * @return $this
 	 */
@@ -280,17 +369,17 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Check if the field is enabled.
 	 *
-	 * @param FormData $fd
+	 * @param FormValidationContext $ctx
 	 *
 	 * @return bool
 	 */
-	public function isEnabled(FormData $fd): bool
+	public function isEnabled(FormValidationContext $ctx): bool
 	{
 		if (null === $this->t_if) {
 			return true;
 		}
 
-		return $this->t_if->check($fd);
+		return $this->t_if->check($ctx);
 	}
 
 	/**
@@ -374,42 +463,48 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Validate a given value.
 	 *
-	 * @param mixed    $value
-	 * @param FormData $fd
+	 * The raw $value is what gets validated; $ctx only supplies the surrounding
+	 * data that a {@see TypesSwitcher} or a custom validator may consult.
+	 *
+	 * @param mixed                 $value
+	 * @param FormValidationContext $ctx
 	 *
 	 * @return mixed
 	 *
 	 * @throws TypesInvalidValueException
 	 */
-	public function validate(mixed $value, FormData $fd): mixed
+	public function validate(mixed $value, FormValidationContext $ctx): mixed
 	{
-		$type = $this->t_type;
-
-		if ($type instanceof TypesSwitcher) {
-			$type = $this->t_type->getType($fd);
-		}
-
-		if ($this->t_multiple) {
-			if (!\is_array($value)) {
-				throw new TypesInvalidValueException('Expected an array', $value);
-			}
-
-			$list = [];
-
-			foreach ($value as $entry) {
-				$list[] = $type->validate($entry)->getCleanValue();
-			}
-
-			$value = $list;
-		} else {
-			$value = $type->validate($value)->getCleanValue();
-		}
+		$value = $this->validateType($value, $ctx);
 
 		if (isset($this->t_validator)) {
-			$value = \call_user_func($this->t_validator, $value, $fd);
+			$value = \call_user_func($this->t_validator, $value, $ctx);
 		}
 
 		return $value;
+	}
+
+	/**
+	 * Re-checks an already-cleaned value against this field's current type.
+	 *
+	 * Used for values replayed from a resume cache: they were cleaned during an
+	 * earlier request, so the type constraints must be re-asserted against the
+	 * field as it is defined *now* rather than trusted.
+	 *
+	 * The custom {@see self::validator()} is deliberately not re-run: it already
+	 * ran when the value was first cleaned, and it is not required to be
+	 * idempotent, so running it again could transform the value a second time.
+	 *
+	 * @param mixed                 $value a value produced by an earlier {@see self::validate()}
+	 * @param FormValidationContext $ctx
+	 *
+	 * @return mixed
+	 *
+	 * @throws TypesInvalidValueException when the stored value no longer satisfies the field
+	 */
+	public function revalidateStored(mixed $value, FormValidationContext $ctx): mixed
+	{
+		return $this->validateType($value, $ctx);
 	}
 
 	/**
@@ -426,6 +521,8 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 *  hidden: bool,
 	 *  if: ?RuleSet
 	 * }
+	 *
+	 * @throws TypesException
 	 */
 	#[Override]
 	public function toArray(): array
@@ -450,6 +547,8 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 * @param TypeInterface $type
 	 *
 	 * @return TypeInterface
+	 *
+	 * @throws TypesException
 	 */
 	public static function cleanType(TypeInterface $type): TypeInterface
 	{
@@ -460,12 +559,48 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 		$tn = TypeUtils::getTypeInstance($type->getName(), $type_array);
 
 		if (null === $tn) {
-			throw new RuntimeException('Failed to clean type for frontend: unable to reconstruct type instance from array representation');
+			throw new RuntimeException(
+				'Failed to clean type for frontend: unable to reconstruct type instance from array representation'
+			);
 		}
 
 		Utils::safeFrontendMeta($type, $tn);
 
 		return $tn;
+	}
+
+	/**
+	 * Runs the type-level validation only, resolving a {@see TypesSwitcher} when needed.
+	 *
+	 * Unlike {@see self::validate()}, the custom {@see self::validator()} is not run.
+	 * Used for replayed values ({@see self::revalidateStored()}) and to clean a step
+	 * that is still being filled without triggering validator side effects.
+	 *
+	 * @throws TypesInvalidValueException
+	 */
+	public function validateType(mixed $value, FormValidationContext $ctx): mixed
+	{
+		$type = $this->t_type;
+
+		if ($type instanceof TypesSwitcher) {
+			$type = $this->t_type->getType($ctx);
+		}
+
+		if ($this->t_multiple) {
+			if (!\is_array($value)) {
+				throw new TypesInvalidValueException('Expected an array', $value);
+			}
+
+			$list = [];
+
+			foreach ($value as $entry) {
+				$list[] = $type->validate($entry)->getCleanValue();
+			}
+
+			return $list;
+		}
+
+		return $type->validate($value)->getCleanValue();
 	}
 
 	/**

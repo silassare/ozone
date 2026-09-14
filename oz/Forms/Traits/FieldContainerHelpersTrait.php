@@ -35,10 +35,20 @@ use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Columns\Types\TypePhone;
 use OZONE\Core\Columns\Types\TypeUrl;
 use OZONE\Core\Columns\Types\TypeUsername;
+use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\TypesSwitcher;
 
 /**
  * Trait FieldContainerHelpersTrait.
+ *
+ * Every helper returns the {@see Field}, so field-level configuration chains
+ * directly. Configure the type with {@see Field::configureType()}:
+ *
+ * ```php
+ * $this->string('name', true)
+ *     ->configureType(static fn (TypeString $t) => $t->min(2)->max(60))
+ *     ->label('Full name');
+ * ```
  */
 trait FieldContainerHelpersTrait
 {
@@ -48,9 +58,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeString
+	 * @return Field
 	 */
-	public function string(string $name, bool $required = false): TypeString
+	public function string(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeString(), $required);
 	}
@@ -61,9 +71,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeBigint
+	 * @return Field
 	 */
-	public function bigint(string $name, bool $required = false): TypeBigint
+	public function bigint(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeBigint(), $required);
 	}
@@ -74,9 +84,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeInt
+	 * @return Field
 	 */
-	public function int(string $name, bool $required = false): TypeInt
+	public function int(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeInt(), $required);
 	}
@@ -87,9 +97,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeDecimal
+	 * @return Field
 	 */
-	public function decimal(string $name, bool $required = false): TypeDecimal
+	public function decimal(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeDecimal(), $required);
 	}
@@ -100,9 +110,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeFloat
+	 * @return Field
 	 */
-	public function float(string $name, bool $required = false): TypeFloat
+	public function float(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeFloat(), $required);
 	}
@@ -114,11 +124,11 @@ trait FieldContainerHelpersTrait
 	 * @param class-string<BackedEnum> $enum_class
 	 * @param bool                     $required
 	 *
-	 * @return TypeEnum
+	 * @return Field
 	 *
 	 * @throws TypesException
 	 */
-	public function enum(string $name, string $enum_class, bool $required = false): TypeEnum
+	public function enum(string $name, string $enum_class, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeEnum($enum_class), $required);
 	}
@@ -129,9 +139,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeBool
+	 * @return Field
 	 */
-	public function bool(string $name, bool $required = false): TypeBool
+	public function bool(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeBool(), $required);
 	}
@@ -142,9 +152,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeDate
+	 * @return Field
 	 */
-	public function date(string $name, bool $required = false): TypeDate
+	public function date(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeDate(), $required);
 	}
@@ -155,11 +165,11 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeDate
+	 * @return Field
 	 */
-	public function timestamp(string $name, bool $required = false): TypeDate
+	public function timestamp(string $name, bool $required = false): Field
 	{
-		return $this->date($name, $required)->format('timestamp');
+		return $this->withType($name, (new TypeDate())->format('timestamp'), $required);
 	}
 
 	/**
@@ -168,9 +178,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeList
+	 * @return Field
 	 */
-	public function list(string $name, bool $required = false): TypeList
+	public function list(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeList(), $required);
 	}
@@ -181,9 +191,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeMap
+	 * @return Field
 	 */
-	public function map(string $name, bool $required = false): TypeMap
+	public function map(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeMap(), $required);
 	}
@@ -194,9 +204,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeJson
+	 * @return Field
 	 */
-	public function json(string $name, bool $required = false): TypeJson
+	public function json(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeJson(), $required);
 	}
@@ -207,9 +217,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypesSwitcher
+	 * @return Field
 	 */
-	public function switcher(string $name, bool $required = false): TypesSwitcher
+	public function switcher(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypesSwitcher(), $required);
 	}
@@ -220,9 +230,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeCC2
+	 * @return Field
 	 */
-	public function cc2(string $name, bool $required = false): TypeCC2
+	public function cc2(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeCC2(), $required);
 	}
@@ -233,9 +243,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeEmail
+	 * @return Field
 	 */
-	public function email(string $name, bool $required = false): TypeEmail
+	public function email(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeEmail(), $required);
 	}
@@ -246,9 +256,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeFile
+	 * @return Field
 	 */
-	public function file(string $name, bool $required = false): TypeFile
+	public function file(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeFile(), $required);
 	}
@@ -259,9 +269,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeGender
+	 * @return Field
 	 */
-	public function gender(string $name, bool $required = false): TypeGender
+	public function gender(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeGender(), $required);
 	}
@@ -272,9 +282,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypePhone
+	 * @return Field
 	 */
-	public function phone(string $name, bool $required = false): TypePhone
+	public function phone(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypePhone(), $required);
 	}
@@ -285,9 +295,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypePassword
+	 * @return Field
 	 */
-	public function password(string $name, bool $required = false): TypePassword
+	public function password(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypePassword(), $required);
 	}
@@ -298,9 +308,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeUrl
+	 * @return Field
 	 */
-	public function url(string $name, bool $required = false): TypeUrl
+	public function url(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeUrl(), $required);
 	}
@@ -311,9 +321,9 @@ trait FieldContainerHelpersTrait
 	 * @param string $name
 	 * @param bool   $required
 	 *
-	 * @return TypeUsername
+	 * @return Field
 	 */
-	public function username(string $name, bool $required = false): TypeUsername
+	public function username(string $name, bool $required = false): Field
 	{
 		return $this->withType($name, new TypeUsername(), $required);
 	}
@@ -321,22 +331,23 @@ trait FieldContainerHelpersTrait
 	/**
 	 * Helper method to create a field with a given type and required flag.
 	 *
-	 * @template T of TypeInterface|TypesSwitcher
+	 * @param string                      $name
+	 * @param TypeInterface|TypesSwitcher $type
+	 * @param bool                        $required
 	 *
-	 * @param string $name
-	 * @param T      $type
-	 * @param bool   $required
-	 *
-	 * @return T
+	 * @return Field
 	 */
-	private function withType(string $name, TypeInterface|TypesSwitcher $type, bool $required = false): TypeInterface|TypesSwitcher
-	{
+	private function withType(
+		string $name,
+		TypeInterface|TypesSwitcher $type,
+		bool $required = false
+	): Field {
 		$field = $this->field($name)->type($type);
 
 		if ($required) {
 			$field->required();
 		}
 
-		return $type;
+		return $field;
 	}
 }

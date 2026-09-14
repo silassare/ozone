@@ -101,10 +101,13 @@ final class BlatePlugin implements BootHookReceiverInterface
 	#[Override]
 	public static function boot(): void
 	{
-		// auto load blate configs
-		Blate::autoLoad(OZ_OZONE_DIR); // oz root
-		Blate::autoLoad(OZ_PROJECT_DIR); // project root
-		Blate::setCacheDir(app()->getCacheDir()->getRoot());
+		// On Blate's first use rather than here: a request that renders no template -- an API call --
+		// then loads no Blate configuration and registers no helper, Blate's own included.
+		Blate::onFirstUse(static function (): void {
+			Blate::autoLoad(OZ_OZONE_DIR); // oz root
+			Blate::autoLoad(OZ_PROJECT_DIR); // project root
+			Blate::setCacheDir(app()->getCacheDir()->getRoot());
+		});
 	}
 
 	/**
@@ -207,7 +210,7 @@ final class BlatePlugin implements BootHookReceiverInterface
 	public static function csrfToken(): string
 	{
 		$ctx   = self::getContext();
-		$route =  self::route();
+		$route = self::route();
 		$scope = $route->getOptions()->getCSRFScope() ?? RequestScope::STATE;
 
 		return (new CSRF($ctx, $scope))->generateToken();

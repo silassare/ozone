@@ -20,28 +20,31 @@ use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Exceptions\RateLimitReachedException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\Interfaces\ResumableFormProviderInterface;
+use OZONE\Core\Forms\FormDiscoveryRouteInterceptor;
+use OZONE\Core\Forms\Resume\FormResumeRouteInterceptor;
+use OZONE\Core\Forms\Resume\Interfaces\ResumableFormProviderInterface;
+use OZONE\Core\Forms\Resume\ResumableFormProvider;
 use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Response;
-use OZONE\Core\Roles\Enums\Role;
-use OZONE\Core\Roles\Interfaces\RoleInterface;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
-use OZONE\Core\Router\Guards\AuthenticatedUserRouteGuard;
-use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\Guards\CSRFRouteGuard;
-use OZONE\Core\Router\Guards\UserAccessRightsRouteGuard;
-use OZONE\Core\Router\Guards\UserRoleRouteGuard;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 use OZONE\Core\Router\Interfaces\RouteGuardProviderInterface;
 use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
 use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
 use OZONE\Core\Router\Interfaces\RouteRateLimitInterface;
+use OZONE\Core\Router\Traits\RouteGuardShortcutsTrait;
 
 /**
  * Class RouteSharedOptions.
+ *
+ * The options a route or a group declares. What a route inherits from its groups is read
+ * through {@see self::resolved()}.
  */
 class RouteSharedOptions
 {
+	use RouteGuardShortcutsTrait;
+
 	public const PRIORITY_RUN_LAST    = -1;
 	public const PRIORITY_RUN_DEFAULT = 0;
 
@@ -53,6 +56,8 @@ class RouteSharedOptions
 	protected int $priority = self::PRIORITY_RUN_DEFAULT;
 
 	protected ?RequestScope $csrf_scope = null;
+
+	protected ?bool $csrf_disabled = null;
 
 	protected ?RequestScope $route_resume_scope = null;
 
@@ -90,12 +95,30 @@ class RouteSharedOptions
 	protected array $interceptors = [];
 
 	protected ?RouteFormDeclaration $form_declaration = null;
-	private string $name                              = '';
+
+	/**
+	 * Bumped on every option change, of any route or group: a cached
+	 * {@see ResolvedRouteOptions} built at an older revision may miss a group change.
+	 */
+	private static int $revision = 0;
+
+	private string $name = '';
 
 	/**
 	 * @var list<class-string<AuthenticationMethodInterface>>
 	 */
 	private array $authentication_methods = [];
+
+	private ?ResolvedRouteOptions $resolved = null;
+
+	private int $resolved_revision = -1;
+
+	/**
+	 * The cached full path of {@see self::getPath()}, and the option revision it was computed at.
+	 */
+	private ?string $full_path = null;
+
+	private int $full_path_revision = -1;
 
 	/**
 	 * RouteSharedOptions constructor.
@@ -109,14 +132,6 @@ class RouteSharedOptions
 	) {
 		$this->path   = $path;
 		$this->parent = $parent;
-	}
-
-	/**
-	 * RouteSharedOptions destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->guards, $this->middlewares, $this->form_declaration, $this->route_params, $this->interceptors);
 	}
 
 	/**
@@ -188,7 +203,7 @@ class RouteSharedOptions
 	 */
 	public function withAuthentication(AuthenticationMethodScheme|string ...$allowed_methods): static
 	{
-		$allowed_methods = self::atLeasOne($allowed_methods, 'authentication method');
+		$allowed_methods = self::atLeastOne($allowed_methods, 'authentication method');
 
 		foreach ($allowed_methods as $entry) {
 			if (!\is_string($entry)) {
@@ -211,147 +226,9 @@ class RouteSharedOptions
 			$this->authentication_methods[] = $auth;
 		}
 
+		self::changed();
+
 		return $this;
-	}
-
-	/**
-	 * Adds a guard that checks if at least one of the authorization providers authorized this request.
-	 *
-	 * @return $this
-	 */
-	public function withAuthorization(string ...$allowed_provider_names): static
-	{
-		$allowed_provider_names = self::atLeasOne($allowed_provider_names, 'authorization provider');
-
-		$this->guard_descriptors[] = [
-			'type'               => 'authorization',
-			'allowed_providers'  => $allowed_provider_names,
-		];
-
-		return $this->guard(static fn () => new AuthorizationProviderRouteGuard($allowed_provider_names));
-	}
-
-	/**
-	 * Adds a guard that checks if we have an authenticated user.
-	 *
-	 * > Allowed user type may be empty.
-	 *
-	 * @return $this
-	 */
-	public function withAuthenticatedUser(string ...$allowed_auth_user_types): static
-	{
-		$this->guard_descriptors[] = [
-			'type'          => 'authenticated_user',
-			'allowed_types' => $allowed_auth_user_types,
-		];
-
-		return $this->guard(static fn () => new AuthenticatedUserRouteGuard($allowed_auth_user_types));
-	}
-
-	/**
-	 * Adds a guard that checks that the user has the given access rights.
-	 *
-	 * @return $this
-	 */
-	public function withAccessRights(string ...$rights): static
-	{
-		$rights = self::atLeasOne($rights, 'access right');
-
-		$this->guard_descriptors[] = [
-			'type'   => 'access_rights',
-			'rights' => $rights,
-		];
-
-		return $this->guard(static fn () => new UserAccessRightsRouteGuard($rights));
-	}
-
-	/**
-	 * Adds a guard that checks that the user has the given access rights or roles.
-	 *
-	 * @param string[] $rights
-	 * @param string[] $roles
-	 *
-	 * @return $this
-	 */
-	public function withAccessRightsOrRoles(array $rights, array $roles): static
-	{
-		$rights = self::atLeasOne($rights, 'access right');
-
-		$this->guard_descriptors[] = [
-			'type'   => 'access_rights',
-			'rights' => $rights,
-			'roles'  => $roles,
-		];
-
-		return $this->guard(static fn () => new UserAccessRightsRouteGuard($rights, $roles));
-	}
-
-	/**
-	 * Adds a guard that checks that the user has one of the given roles.
-	 *
-	 * @return $this
-	 */
-	public function withRole(RoleInterface ...$roles): static
-	{
-		$roles = self::atLeasOne($roles, 'role');
-
-		$this->guard_descriptors[] = [
-			'type'   => 'role',
-			'roles'  => \array_map(static fn ($r) => $r->value, $roles),
-			'strict' => true,
-		];
-
-		return $this->guard(static fn () => new UserRoleRouteGuard($roles));
-	}
-
-	/**
-	 * Adds a guard that checks that the user has one of the given roles or is admin.
-	 *
-	 * @return $this
-	 */
-	public function withRoleOrAdmin(RoleInterface ...$roles): static
-	{
-		$roles = self::atLeasOne($roles, 'role');
-
-		$this->guard_descriptors[] = [
-			'type'   => 'role',
-			'roles'  => \array_map(static fn ($r) => $r->value, $roles),
-			'strict' => false,
-		];
-
-		return $this->guard(static fn () => new UserRoleRouteGuard($roles, false));
-	}
-
-	/**
-	 * Adds a guard that checks if the user has admin or super admin role.
-	 *
-	 * @return $this
-	 */
-	public function withAdminRole(): static
-	{
-		$this->guard_descriptors[] = [
-			'type'   => 'role',
-			'roles'  => [Role::ADMIN->value, Role::SUPER_ADMIN->value],
-			'strict' => true,
-		];
-
-		return $this->guard(static fn () => new UserRoleRouteGuard([Role::ADMIN, Role::SUPER_ADMIN]));
-	}
-
-	/**
-	 * Adds a guard that checks if the user has super admin role.
-	 *
-	 * @return $this
-	 */
-	public function withSuperAdminRole(): static
-	{
-		$this->guard_descriptors[] = [
-			'type'   => 'role',
-			'roles'  => [Role::SUPER_ADMIN->value],
-			'strict' => true,
-		];
-
-		return $this->guard(static fn () => new UserRoleRouteGuard([Role::SUPER_ADMIN]));
 	}
 
 	/**
@@ -363,12 +240,15 @@ class RouteSharedOptions
 	{
 		$has_csrf_guard_in_tree = $this->getCSRFScope();
 
-		$this->csrf_scope = $scope;
+		$this->csrf_scope    = $scope;
+		$this->csrf_disabled = false;
 
 		$this->guard_descriptors[] = [
 			'type'  => 'csrf',
 			'scope' => $scope->value,
 		];
+
+		self::changed();
 
 		if ($has_csrf_guard_in_tree) {
 			// Don't add another guard if we already have one in parent.
@@ -385,17 +265,46 @@ class RouteSharedOptions
 	 */
 	public function getCSRFScope(): ?RequestScope
 	{
-		return $this->csrf_scope ?? $this->parent?->getCSRFScope() ?? null;
+		return $this->resolved()->csrf_scope;
 	}
 
 	/**
-	 * Enables resume caching for the form bundle assembled by this route or group.
+	 * Opts this route (or group, with its routes) out of the default CSRF check of session
+	 * requests (`OZ_CSRF_SESSION_DEFAULT`), e.g. for a webhook or a form another site posts on
+	 * purpose. A route of the group can opt back in with {@see self::withCSRF()}.
 	 *
-	 * When set, overrides any resumable() configuration declared on the individual
-	 * forms merged into the bundle. Inherited from parent; innermost definition wins.
+	 * @return $this
+	 */
+	public function withoutCSRF(): static
+	{
+		$this->csrf_disabled = true;
+
+		self::changed();
+
+		return $this;
+	}
+
+	/**
+	 * Whether this route or its parent opted out of the default CSRF check.
+	 */
+	public function isCSRFDisabled(): bool
+	{
+		return $this->resolved()->csrf_disabled;
+	}
+
+	/**
+	 * Makes this route (or group) resumable through the form session state machine.
 	 *
-	 * @param RequestScope $scope The scoping strategy for the resume cache
-	 * @param int          $ttl   Cache TTL in seconds (default: 3600)
+	 * Resume requests on the route are handled by {@see FormResumeRouteInterceptor}
+	 * with {@see ResumableFormProvider}, whose single step is the route's form
+	 * bundle; the completed session, bound to this route, is then submitted with the
+	 * resume-ref header. Inherited from parent; innermost definition wins.
+	 *
+	 * This is independent of {@see Form::resumable()}: that per-form cache is replayed
+	 * by {@see RouteInfo::checkRouteForm()} only when a form itself opts in.
+	 *
+	 * @param RequestScope $scope The scoping strategy for the resume session
+	 * @param int          $ttl   Session TTL in seconds (default: 3600)
 	 *
 	 * @return $this
 	 */
@@ -403,6 +312,8 @@ class RouteSharedOptions
 	{
 		$this->route_resume_scope = $scope;
 		$this->route_resume_ttl   = $ttl;
+
+		self::changed();
 
 		return $this;
 	}
@@ -442,6 +353,8 @@ class RouteSharedOptions
 		}
 
 		$this->guards[] = $guard;
+
+		self::changed();
 
 		return $this;
 	}
@@ -486,6 +399,8 @@ class RouteSharedOptions
 			$this->middlewares[] = $middleware;
 		}
 
+		self::changed();
+
 		return $this;
 	}
 
@@ -493,9 +408,9 @@ class RouteSharedOptions
 	 * Add an interceptor.
 	 *
 	 * Route interceptors are executed in the order they are defined after guards and middlewares.
-	 * The first interceptor that accepts the request by returning true when {@see RouteInterceptorInterface::shouldIntercept()}
-	 * is called will short-circuit the rest of the chain and its {@see RouteInterceptorInterface::handle()}
-	 * will be called in place of the route handler.
+	 * The first interceptor whose {@see RouteInterceptorInterface::shouldIntercept()} returns true
+	 * short-circuits the rest of the chain: its {@see RouteInterceptorInterface::handle()} is
+	 * called in place of the route handler.
 	 *
 	 * NOTE: route form will not be validated when a route interceptor intercepts the request,
 	 * so it should be used only for special use cases like form discovery...
@@ -526,6 +441,8 @@ class RouteSharedOptions
 
 		$this->interceptors[$interceptor::getName()] = $interceptor;
 
+		self::changed();
+
 		return $this;
 	}
 
@@ -549,14 +466,20 @@ class RouteSharedOptions
 	 * override the auto-detected value. The $policy parameter is ignored when $form is already a
 	 * {@see RouteFormDeclaration} or a provider class string.
 	 *
-	 * @param callable|class-string<ResumableFormProviderInterface>|Form|RouteFormDeclaration $form     the form, a factory, a full declaration, or a provider class string
-	 * @param null|RouteFormDocPolicy                                                         $policy   explicit override (OPAQUE or DYNAMIC); null = auto-detect
-	 * @param bool                                                                            $override whether to override an existing form declaration or throw an exception
+	 * @param callable|Form|RouteFormDeclaration|string $form     a form, a factory, a declaration, or a
+	 *                                                            resumable form provider class name
+	 * @param null|RouteFormDocPolicy                   $policy   explicit override (OPAQUE or DYNAMIC),
+	 *                                                            or null to detect it
+	 * @param bool                                      $override whether to replace an existing
+	 *                                                            declaration instead of throwing
 	 *
 	 * @return $this
 	 */
-	public function form(callable|Form|RouteFormDeclaration|string $form, ?RouteFormDocPolicy $policy = null, bool $override = false): static
-	{
+	public function form(
+		callable|Form|RouteFormDeclaration|string $form,
+		?RouteFormDocPolicy $policy = null,
+		bool $override = false
+	): static {
 		if (null !== $this->form_declaration && !$override) {
 			throw new RuntimeException('Form declaration is already set for this route.');
 		}
@@ -569,6 +492,8 @@ class RouteSharedOptions
 			$this->form_declaration = RouteFormDeclaration::make($form, $policy);
 		}
 
+		self::changed();
+
 		return $this;
 	}
 
@@ -579,7 +504,7 @@ class RouteSharedOptions
 	 */
 	public function getFormDeclaration(): ?RouteFormDeclaration
 	{
-		return $this->form_declaration ?? $this->parent?->getFormDeclaration() ?? null;
+		return $this->resolved()->formDeclaration();
 	}
 
 	/**
@@ -641,6 +566,8 @@ class RouteSharedOptions
 
 		$this->route_params[$name] = $pattern;
 
+		self::changed();
+
 		return $this;
 	}
 
@@ -687,8 +614,8 @@ class RouteSharedOptions
 			}
 		}
 
-		// we remove any leading/trailing dots and replace multiple consecutive dots with a single one to avoid issues with empty group names
-		// because empty group names are allowed but can lead to messy route names like "admin..list" which should be normalized to "admin.list"
+		// Empty group names are allowed, so collapse repeated dots and trim leading/trailing
+		// ones: "admin..list" becomes "admin.list".
 		return \trim(\str_replace('..', '.', $name), '.');
 	}
 
@@ -701,14 +628,33 @@ class RouteSharedOptions
 	 */
 	public function getPath(bool $full = true): string
 	{
-		if ($full && $this->parent) {
-			$parent_path = $this->parent->getPath();
-			if (!empty($parent_path)) {
-				return self::safePathConcat($parent_path, $this->path);
-			}
+		// The full path is read at every route comparison: computed once, until an option changes.
+		if ($full && null !== $this->full_path && $this->full_path_revision === self::$revision) {
+			return $this->full_path;
+		}
+
+		if ($full) {
+			$this->full_path          = $this->computeFullPath();
+			$this->full_path_revision = self::$revision;
+
+			return $this->full_path;
 		}
 
 		return $this->path;
+	}
+
+	/**
+	 * The options of this route or group merged with those it inherits, built on first use
+	 * and rebuilt after any option change.
+	 */
+	public function resolved(): ResolvedRouteOptions
+	{
+		if (null === $this->resolved || $this->resolved_revision !== self::$revision) {
+			$this->resolved          = $this->resolve();
+			$this->resolved_revision = self::$revision;
+		}
+
+		return $this->resolved;
 	}
 
 	/**
@@ -720,29 +666,7 @@ class RouteSharedOptions
 	 */
 	public function getFormBundle(RouteInfo $ri): ?Form
 	{
-		$forms = $this->getForms($ri);
-
-		if (!empty($forms)) {
-			$bundle = new Form();
-
-			foreach ($forms as $form) {
-				$bundle->merge($form);
-			}
-
-			$req    = $ri->getContext()->getRequest();
-			$target = $req->getUri();
-			$method = $req->getMethod();
-
-			$resume_config = $this->resolveResumeConfig();
-
-			if (null !== $resume_config) {
-				$bundle->resumable($resume_config[0], $resume_config[1]);
-			}
-
-			return $bundle->submitTo($target)->method($method);
-		}
-
-		return null;
+		return $this->resolved()->formBundle($ri);
 	}
 
 	/**
@@ -754,17 +678,7 @@ class RouteSharedOptions
 	 */
 	public function getForms(RouteInfo $ri): array
 	{
-		$forms = $this->parent?->getForms($ri) ?? [];
-
-		if (null !== $this->form_declaration) {
-			$form = $this->form_declaration->resolve($ri);
-
-			if (null !== $form) {
-				$forms[] = $form;
-			}
-		}
-
-		return $forms;
+		return $this->resolved()->forms($ri);
 	}
 
 	/**
@@ -778,25 +692,7 @@ class RouteSharedOptions
 	 */
 	public function getStaticFormBundle(): ?Form
 	{
-		$forms = $this->getDocForms();
-
-		if (empty($forms)) {
-			return null;
-		}
-
-		$bundle = new Form();
-
-		foreach ($forms as $form) {
-			$bundle->merge($form);
-		}
-
-		$resume_config = $this->resolveResumeConfig();
-
-		if (null !== $resume_config) {
-			$bundle->resumable($resume_config[0], $resume_config[1]);
-		}
-
-		return $bundle;
+		return $this->resolved()->staticFormBundle();
 	}
 
 	/**
@@ -809,11 +705,7 @@ class RouteSharedOptions
 	 */
 	public function getEffectiveDocPolicy(): ?RouteFormDocPolicy
 	{
-		if (null !== $this->form_declaration) {
-			return $this->form_declaration->getPolicy();
-		}
-
-		return $this->parent?->getEffectiveDocPolicy();
+		return $this->resolved()->docPolicy();
 	}
 
 	/**
@@ -823,9 +715,7 @@ class RouteSharedOptions
 	 */
 	public function getParams(): array
 	{
-		$params = $this->parent?->getParams() ?? [];
-
-		return \array_merge($params, $this->route_params);
+		return $this->resolved()->params;
 	}
 
 	/**
@@ -835,9 +725,7 @@ class RouteSharedOptions
 	 */
 	public function getAuthenticationMethods(): array
 	{
-		$list = $this->parent?->getAuthenticationMethods() ?? [];
-
-		return \array_unique(\array_merge($list, $this->authentication_methods));
+		return $this->resolved()->authentication_methods;
 	}
 
 	/**
@@ -852,9 +740,7 @@ class RouteSharedOptions
 	 */
 	public function getGuardDescriptors(): array
 	{
-		$parent = $this->parent?->getGuardDescriptors() ?? [];
-
-		return \array_merge($parent, $this->guard_descriptors);
+		return $this->resolved()->guard_descriptors;
 	}
 
 	/**
@@ -864,32 +750,7 @@ class RouteSharedOptions
 	 */
 	public function getGuards(RouteInfo $ri): array
 	{
-		$results = $this->parent?->getGuards($ri) ?? [];
-		foreach ($this->guards as $guard) {
-			if (\is_callable($guard)) {
-				$provider = $guard;
-				$guard    = $provider($ri);
-
-				if (null === $guard) {
-					continue;
-				}
-
-				if (!$guard instanceof RouteGuardInterface) {
-					throw (new RuntimeException(\sprintf(
-						'Route guard provider should return instance of "%s" or "null" not: %s',
-						RouteGuardInterface::class,
-						\get_debug_type($guard)
-					))
-					)->suspectCallable($provider);
-				}
-			}
-
-			if ($guard instanceof RouteGuardInterface) {
-				$results[] = $guard;
-			}
-		}
-
-		return $results;
+		return $this->resolved()->guards($ri);
 	}
 
 	/**
@@ -899,64 +760,50 @@ class RouteSharedOptions
 	 */
 	public function getMiddlewares(): array
 	{
-		$middlewares = $this->parent?->getMiddlewares() ?? [];
-
-		return \array_merge($middlewares, $this->middlewares);
+		return $this->resolved()->middlewares;
 	}
 
 	/**
-	 * Gets interceptors.
+	 * Gets interceptors, the built-in ones included.
 	 *
 	 * @return array<string, class-string<RouteInterceptorInterface>>
 	 */
 	public function getInterceptors(): array
 	{
-		$interceptors  = $this->parent?->getInterceptors() ?? [];
-		$rfd           = RouteFormDiscoveryInterceptor::getName();
-		$rfr           = RouteFormResumeInterceptor::getName();
-
-		return \array_merge(
-			[
-				// Always present: discovery interceptor runs last (priority 0) so any
-				// higher-priority interceptor (including resume, priority 1) can fire first.
-				// Discovery is responsible for populating the resolved form on RouteInfo.
-				$rfd => RouteFormDiscoveryInterceptor::class,
-				// Always present: resume interceptor fires before discovery (priority 1)
-				// and only activates when the route has resume support and the request
-				// carries the form-resume header.
-				$rfr => RouteFormResumeInterceptor::class,
-			],
-			$interceptors,
-			$this->interceptors
-		);
+		return $this->resolved()->interceptors;
 	}
 
 	/**
 	 * Returns true when this route/group chain has resume support — i.e. when at
-	 * least one level has called resumable() or declared a ResumableFormProvider.
+	 * least one level has called resumable() or declared a resumable form provider.
 	 *
 	 * @return bool
 	 */
 	public function hasResumeSupport(): bool
 	{
-		return null !== $this->resolveResumeConfig()
-			|| null !== $this->resolveProviderClass();
+		return $this->resolved()->hasResumeSupport();
 	}
 
 	/**
-	 * Resolves the provider class from the form declaration chain.
+	 * Resolves the provider that drives resumption on this route: the declared
+	 * provider, else {@see ResumableFormProvider} when the chain called
+	 * resumable(), else null (no resume support).
 	 *
-	 * Returns the first non-null provider class walking from this level up to the root.
+	 * @return null|class-string<ResumableFormProviderInterface>
+	 */
+	public function resolveResumeProviderClass(): ?string
+	{
+		return $this->resolved()->resumeProviderClass();
+	}
+
+	/**
+	 * Resolves the provider class of the innermost form declaration.
 	 *
 	 * @return null|class-string<ResumableFormProviderInterface>
 	 */
 	public function resolveProviderClass(): ?string
 	{
-		if (null !== $this->form_declaration) {
-			return $this->form_declaration->getProviderClass();
-		}
-
-		return $this->parent?->resolveProviderClass();
+		return $this->resolved()->providerClass();
 	}
 
 	/**
@@ -969,33 +816,22 @@ class RouteSharedOptions
 	 */
 	public function resolveResumeConfig(): ?array
 	{
-		if (null !== $this->route_resume_scope) {
-			return [$this->route_resume_scope, $this->route_resume_ttl];
-		}
-
-		return $this->parent?->resolveResumeConfig();
+		return $this->resolved()->resume_config;
 	}
 
 	/**
-	 * Collects documentable forms from this and all parent.
-	 *
-	 * Called by {@see getStaticFormBundle()} to build the doc-gen bundle.
-	 *
-	 * @return list<Form>
+	 * The path, prefixed by every parent's.
 	 */
-	protected function getDocForms(): array
+	protected function computeFullPath(): string
 	{
-		$forms = $this->parent?->getDocForms() ?? [];
-
-		if (null !== $this->form_declaration) {
-			$doc_form = $this->form_declaration->getDocForm();
-
-			if (null !== $doc_form) {
-				$forms[] = $doc_form;
+		if ($this->parent) {
+			$parent_path = $this->parent->getPath();
+			if (!empty($parent_path)) {
+				return self::safePathConcat($parent_path, $this->path);
 			}
 		}
 
-		return $forms;
+		return $this->path;
 	}
 
 	/**
@@ -1056,12 +892,76 @@ class RouteSharedOptions
 		return \rtrim($prefix, '/') . '/' . \ltrim($path, '/');
 	}
 
-	private static function atLeasOne(array $values, string $message): array
+	/**
+	 * Invalidates every cached {@see ResolvedRouteOptions}: to be called by each option setter.
+	 */
+	protected static function changed(): void
+	{
+		++self::$revision;
+	}
+
+	/**
+	 * @template T
+	 *
+	 * @param array<T> $values
+	 *
+	 * @return non-empty-array<T>
+	 */
+	protected static function atLeastOne(array $values, string $message): array
 	{
 		if (empty($values)) {
 			throw new InvalidArgumentException(\sprintf('At least one "%s" is required.', $message));
 		}
 
 		return $values;
+	}
+
+	/**
+	 * Merges this level's options into the parent's resolved ones.
+	 */
+	private function resolve(): ResolvedRouteOptions
+	{
+		$parent = $this->parent?->resolved();
+
+		$form_declarations = $parent->form_declarations ?? [];
+
+		if (null !== $this->form_declaration) {
+			$form_declarations[] = $this->form_declaration;
+		}
+
+		return new ResolvedRouteOptions(
+			authentication_methods: \array_values(\array_unique(\array_merge(
+				$parent->authentication_methods ?? [],
+				$this->authentication_methods
+			))),
+			guard_descriptors: \array_merge($parent->guard_descriptors ?? [], $this->guard_descriptors),
+			guard_entries: \array_merge($parent->guard_entries ?? [], $this->guards),
+			middlewares: \array_merge($parent->middlewares ?? [], $this->middlewares),
+			interceptors: \array_merge($parent->interceptors ?? self::builtinInterceptors(), $this->interceptors),
+			params: \array_merge($parent->params ?? [], $this->route_params),
+			form_declarations: $form_declarations,
+			csrf_scope: $this->csrf_scope ?? $parent?->csrf_scope,
+			csrf_disabled: $this->csrf_disabled ?? $parent->csrf_disabled ?? false,
+			resume_config: null !== $this->route_resume_scope
+				? [$this->route_resume_scope, $this->route_resume_ttl]
+				: $parent?->resume_config,
+		);
+	}
+
+	/**
+	 * The interceptors every route has, before any declared one.
+	 *
+	 * @return array<string, class-string<RouteInterceptorInterface>>
+	 */
+	private static function builtinInterceptors(): array
+	{
+		return [
+			// Discovery runs last (priority 0), so any higher-priority interceptor (including
+			// resume, priority 1) can fire first. It populates the resolved form on RouteInfo.
+			FormDiscoveryRouteInterceptor::getName() => FormDiscoveryRouteInterceptor::class,
+			// Resume only activates when the route has resume support and the request carries
+			// the form-resume header.
+			FormResumeRouteInterceptor::getName() => FormResumeRouteInterceptor::class,
+		];
 	}
 }

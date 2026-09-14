@@ -66,7 +66,10 @@ trait AuthUserKeyAuthenticationMethodTrait
 			$this->authenticate();
 		}
 
-		return $this->provider->getScope()->getAccessRight();
+		/** @var AuthUserAuthorizationProvider $provider authenticate() sets it, or throws */
+		$provider = $this->provider;
+
+		return $provider->getScope()->getAccessRight();
 	}
 
 	/**
@@ -92,8 +95,10 @@ trait AuthUserKeyAuthenticationMethodTrait
 		$context  = $this->ri->getContext();
 		$provider = Auth::provider($context, $auth);
 
+		// The credential is genuine past this point: the public codes tell its holder what to
+		// fix without revealing anything about other accounts.
 		if (!$provider instanceof AuthUserAuthorizationProvider) {
-			throw (new ForbiddenException(null, [
+			throw (new ForbiddenException('OZ_AUTH_INVALID_PROVIDER', [
 				'_reason' => 'Invalid auth provider.',
 			]))->suspectObject($auth);
 		}
@@ -101,7 +106,7 @@ trait AuthUserKeyAuthenticationMethodTrait
 		$state = $provider->getState();
 
 		if (AuthorizationState::AUTHORIZED !== $state) {
-			throw (new ForbiddenException(null, [
+			throw (new ForbiddenException('OZ_AUTH_NOT_AUTHORIZED', [
 				'_reason' => 'Referenced auth is not authorized.',
 			]))->suspectObject($auth);
 		}
@@ -109,7 +114,7 @@ trait AuthUserKeyAuthenticationMethodTrait
 		$user = $provider->getUser();
 
 		if (!$user->isAuthUserValid()) {
-			throw (new ForbiddenException(null, [
+			throw (new ForbiddenException('OZ_AUTH_USER_UNVERIFIED', [
 				'_reason' => 'Auth user is not verified.',
 			]))->suspectObject($user);
 		}

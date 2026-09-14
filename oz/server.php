@@ -58,14 +58,21 @@ $cli_server_router = (new class {
 			}
 		}
 
-		$sub = \explode('/', $request_uri)[1] ?? '';
+		$sub        = \explode('/', $request_uri)[1] ?? '';
+		$index_file = '';
 
-		if (
-			!$sub || !\is_file(
-				$index_file = $root . \DIRECTORY_SEPARATOR . $sub . \DIRECTORY_SEPARATOR . 'index.php'
-			)
-		) {
-			if (!\is_file($index_file = $root . \DIRECTORY_SEPARATOR . 'index.php')) {
+		if ('' !== $sub) {
+			$scoped = $root . \DIRECTORY_SEPARATOR . $sub . \DIRECTORY_SEPARATOR . 'index.php';
+
+			if (\is_file($scoped)) {
+				$index_file = $scoped;
+			}
+		}
+
+		if ('' === $index_file) {
+			$index_file = $root . \DIRECTORY_SEPARATOR . 'index.php';
+
+			if (!\is_file($index_file)) {
 				\header('HTTP/1.1 404 Not Found', true, 404);
 				echo 'Requested resource not found: ' . $request_uri;
 

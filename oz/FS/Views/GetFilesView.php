@@ -23,6 +23,7 @@ use OZONE\Core\FS\FileAccess;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\Filters\FileFilters;
 use OZONE\Core\FS\FS;
+use OZONE\Core\FS\Scan\FileScan;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -84,7 +85,7 @@ class GetFilesView extends WebView
 	 * > This is public so developers can use it in their custom routes.
 	 *
 	 * @param RouteInfo $ri                   The route info
-	 * @param bool      $force_show_real_name When true, the file will be served with the real name even if configured otherwise
+	 * @param bool      $force_show_real_name serve the file under its real name, whatever the configuration
 	 *
 	 * @return Response
 	 *
@@ -104,7 +105,7 @@ class GetFilesView extends WebView
 
 		$file = FS::getFileByID($req_file_id);
 
-		if (!$file || !$file->isValid()) {
+		if (!$file || !$file->isValid() || !FileScan::isServable($file)) {
 			throw new NotFoundException();
 		}
 
@@ -159,8 +160,12 @@ class GetFilesView extends WebView
 	 *
 	 * @return Response
 	 */
-	private static function applyFilters(Response $response, OZFile $file, FileStream $stream, string $filters): Response
-	{
+	private static function applyFilters(
+		Response $response,
+		OZFile $file,
+		FileStream $stream,
+		string $filters
+	): Response {
 		$filterTokens = \array_values(\array_filter(\explode(FS::FILTERS_SEPARATOR, $filters)));
 
 		return FileFilters::apply($file, $stream, $response, $filterTokens);

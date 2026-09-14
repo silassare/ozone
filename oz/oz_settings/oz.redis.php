@@ -16,7 +16,7 @@ return [
 	 * Enable Redis support for job storage and caching.
 	 *
 	 * When enabled the {@link \OZONE\Core\Queue\Stores\RedisJobStore} is registered
-	 * as an additional job store, and {@link \OZONE\Core\Cache\Drivers\RedisCache}
+	 * as an additional job store, and {@link \OZONE\Core\Stores\Drivers\RedisStore}
 	 * can be used as the persistent cache provider.
 	 *
 	 * Requires the ext-redis PHP extension.

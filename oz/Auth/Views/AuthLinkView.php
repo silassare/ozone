@@ -25,15 +25,32 @@ use OZONE\Core\Web\WebView;
 
 /**
  * Class AuthLinkView.
+ *
+ * Authorization links are opened with a GET, which only shows a confirmation page;
+ * the authorization happens on the POST it submits. Mail scanners and link previews
+ * fetch links with GET, so authorizing there would let them consume the token
+ * before the user does.
  */
 final class AuthLinkView extends WebView
 {
-	public const AUTH_LINK_ROUTE = 'oz:auth_link';
+	public const AUTH_LINK_ROUTE         = 'oz:auth_link';
+	public const AUTH_LINK_CONFIRM_ROUTE = 'oz:auth_link:confirm';
 
 	/**
-	 * @param RouteInfo $ri
+	 * Shows the confirmation page, without touching the token.
 	 *
-	 * @return Response
+	 * @throws NotFoundException when the reference is unknown
+	 */
+	public function confirm(RouteInfo $ri): Response
+	{
+		Auth::getRequired($ri->param('ref'));
+
+		return $this->setTemplate('oz.auth.link.confirm.blate')
+			->respond();
+	}
+
+	/**
+	 * Authorizes with the link token.
 	 *
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
@@ -64,8 +81,14 @@ final class AuthLinkView extends WebView
 	{
 		$router
 			->get('/auth/link/:ref/:token', static function (RouteInfo $ri) {
-				return (new self($ri))->authorize($ri);
+				return (new self($ri))->confirm($ri);
 			})
 			->name(self::AUTH_LINK_ROUTE);
+
+		$router
+			->post('/auth/link/:ref/:token', static function (RouteInfo $ri) {
+				return (new self($ri))->authorize($ri);
+			})
+			->name(self::AUTH_LINK_CONFIRM_ROUTE);
 	}
 }

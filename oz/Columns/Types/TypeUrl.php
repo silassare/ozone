@@ -59,6 +59,23 @@ class TypeUrl extends Type
 	}
 
 	/**
+	 * Restricts full URLs to http(s) on the given hosts (compared case-insensitively).
+	 *
+	 * Absolute paths, when allowed, are unaffected. An empty list lifts the restriction.
+	 * Use it for user-supplied redirect targets, which would otherwise be open redirects.
+	 *
+	 * @param list<string> $hosts
+	 *
+	 * @return $this
+	 */
+	public function allowedHosts(array $hosts): static
+	{
+		$hosts = \array_map(static fn ($host) => \strtolower(\trim((string) $host)), $hosts);
+
+		return $this->setOption('allowed_hosts', \array_values(\array_unique(\array_filter($hosts))));
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
@@ -97,6 +114,10 @@ class TypeUrl extends Type
 			if ($options['allow_absolute_path']) {
 				$this->allowAbsolutePath();
 			}
+		}
+
+		if (isset($options['allowed_hosts']) && \is_array($options['allowed_hosts'])) {
+			$this->allowedHosts($options['allowed_hosts']);
 		}
 
 		return parent::configure($options);
@@ -138,9 +159,30 @@ class TypeUrl extends Type
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_URL_INVALID', $debug));
 
 				return;
+			} elseif (!$this->isAllowedHost($value)) {
+				$subject->reject(new TypesInvalidValueException('OZ_FIELD_URL_HOST_NOT_ALLOWED', $debug));
+
+				return;
 			}
 		}
 
 		$subject->accept($value);
+	}
+
+	/**
+	 * Whether a full URL passes the {@see self::allowedHosts()} restriction.
+	 */
+	private function isAllowedHost(string $url): bool
+	{
+		$hosts = (array) $this->getOption('allowed_hosts', []);
+
+		if (empty($hosts)) {
+			return true;
+		}
+
+		$scheme = \strtolower((string) \parse_url($url, \PHP_URL_SCHEME));
+		$host   = \strtolower((string) \parse_url($url, \PHP_URL_HOST));
+
+		return ('http' === $scheme || 'https' === $scheme) && \in_array($host, $hosts, true);
 	}
 }

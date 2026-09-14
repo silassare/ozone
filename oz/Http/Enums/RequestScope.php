@@ -81,7 +81,8 @@ enum RequestScope: string
 			self::STATE   => $context->requireStatefulAuth()->stateID(),
 			self::USER    => AuthUsers::ref($context->auth()->user()),
 			self::HOST    => $context->getHost(true),
-			self::USER_IP => $context->getUserIP(true, true)
+			// No port: it changes with every connection, so the scope would not be stable.
+			self::USER_IP => $context->getUserIP()
 				?? throw new RuntimeException('Cannot resolve USER_IP scope: client IP address is unavailable.'),
 		};
 	}

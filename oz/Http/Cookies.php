@@ -109,6 +109,31 @@ final class Cookies
 	}
 
 	/**
+	 * Sets these cookies on a response, next to the `Set-Cookie` lines it already has.
+	 *
+	 * An existing line setting a cookie of the same name is replaced; every other one is kept, so a
+	 * handler's own cookies survive the ones the framework adds on the way out (the session's).
+	 */
+	public function applyTo(Response $response): Response
+	{
+		if (!$this->response_cookies) {
+			return $response;
+		}
+
+		$lines = [];
+
+		foreach ($response->getHeader('Set-Cookie') as $line) {
+			$name = \urldecode(\trim((string) \strstr($line, '=', true)));
+
+			if (!isset($this->response_cookies[$name])) {
+				$lines[] = $line;
+			}
+		}
+
+		return $response->withHeader('Set-Cookie', \array_merge($lines, $this->toResponseHeaders()));
+	}
+
+	/**
 	 * Parse HTTP request `Cookie:` header and extract
 	 * into a PHP associative array.
 	 *
@@ -119,7 +144,9 @@ final class Cookies
 	public static function parseIncomingRequestCookieHeaderString(string $header): array
 	{
 		$header  = \rtrim($header, "\r\n");
-		$pieces  = \preg_split('#;\s*#', $header);
+		// preg_split() returns false on a regex failure; an empty list is the right reading of a
+		// header we could not split, rather than iterating over false.
+		$pieces  = \preg_split('#;\s*#', $header) ?: [];
 		$cookies = [];
 
 		foreach ($pieces as $cookie) {

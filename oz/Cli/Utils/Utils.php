@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Utils;
 
 use Gobl\DBAL\Table;
+use Gobl\DBAL\Types\TypeBool;
 use Kli\KliOption;
+use Kli\Types\KliTypeBool;
 use Kli\Types\KliTypeString;
 use OZONE\Core\App\AbstractApp;
 use OZONE\Core\App\Interfaces\AppInterface;
@@ -199,6 +201,10 @@ final class Utils
 	/**
 	 * Builds cli options from a table.
 	 *
+	 * Private, auto-incremented and soft-delete columns are left out (the ORM manages the last
+	 * ones). An option is required only when its column is not nullable and has no default, and
+	 * bool columns take `true` / `false`, `1` / `0` or `yes` / `no`.
+	 *
 	 * @param Table $table
 	 * @param array $includes
 	 * @param array $excludes
@@ -208,6 +214,12 @@ final class Utils
 	public static function buildTableCliOptions(Table $table, array $includes = [], array $excludes = []): array
 	{
 		$options = [];
+
+		if ($table->isSoftDeletable()) {
+			$excludes[] = $table->getColumnOrFail(Table::COLUMN_SOFT_DELETED)->getFullName();
+			$excludes[] = $table->getColumnOrFail(Table::COLUMN_SOFT_DELETED_AT)->getFullName();
+		}
+
 		foreach ($table->getColumns() as $column) {
 			$name = $column->getFullName();
 			if (!empty($includes) && !\in_array($name, $includes, true)) {
@@ -223,21 +235,25 @@ final class Utils
 				continue;
 			}
 
-			$option   = new KliOption($name);
-			$kli_type = new KliTypeString();
+			$option = new KliOption($name);
 
-			$kli_type->validator(static function ($value) use ($db_type) {
-				return $db_type->validate($value)->getCleanValue();
-			});
+			if ($db_type instanceof TypeBool || $db_type->getBaseType() instanceof TypeBool) {
+				// The column only takes real booleans: Kli parses the command line ones.
+				$kli_type = new KliTypeBool();
+			} else {
+				$kli_type = new KliTypeString();
+
+				$kli_type->validator(static function ($value) use ($db_type) {
+					return $db_type->validate($value)->getCleanValue();
+				});
+			}
 
 			$option->type($kli_type)
 				->prompt(true, $name);
 
 			if ($db_type->hasDefault()) {
 				$kli_type->def($db_type->getDefault());
-			}
-
-			if (!$db_type->isNullable()) {
+			} elseif (!$db_type->isNullable()) {
 				$option->required();
 			}
 

@@ -43,14 +43,6 @@ class RESTFulAPIRequest extends ORMOptions
 	}
 
 	/**
-	 * RESTFulAPIRequest destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->context);
-	}
-
-	/**
 	 * Gets the context.
 	 *
 	 * @return Context

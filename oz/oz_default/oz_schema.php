@@ -19,6 +19,7 @@ use OZONE\Core\Columns\Types\TypeCC2;
 use OZONE\Core\Columns\Types\TypeUsername;
 use OZONE\Core\Columns\TypeUtils;
 use OZONE\Core\FS\Enums\FileKind;
+use OZONE\Core\FS\Enums\FileScanState;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
 use OZONE\Core\Roles\RolesUtils;
@@ -169,6 +170,10 @@ return static function (NamespaceBuilder $ns): void {
 		$tb->bool('is_valid')->default(true)
 			->setMetaKey('field.label', 'Is Valid')
 			->setMetaKey('api.doc.description', 'Whether the file is active and accessible.');
+
+		$tb->enum('scan_state', FileScanState::class)->default(FileScanState::UNSCANNED)
+			->setMetaKey('field.label', 'Scan State')
+			->setMetaKey('api.doc.description', 'The virus scan state of the file content (see oz.files.scan).');
 
 		$tb->timestamps();
 		$tb->softDeletable();

@@ -40,7 +40,7 @@ final class ApiDocView extends WebView
 
 					$v->setTemplate('oz://oz.api.doc.view.blate')
 						->inject(
-							ApiDoc::get($ri->getContext())->viewInject()
+							ApiDoc::get()->viewInject()
 						);
 
 					return $v->respond();

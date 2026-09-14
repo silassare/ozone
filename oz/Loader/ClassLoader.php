@@ -13,7 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Loader;
 
+use FilesystemIterator;
 use InvalidArgumentException;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use RuntimeException;
 
 /**
@@ -97,6 +100,11 @@ class ClassLoader
 	public const CLASS_FILE_REG = '~([A-Z][\w_]*)\.php$~';
 
 	/**
+	 * A file path, relative to a namespace's base directory and without `.php`, that names a class.
+	 */
+	private const PSR4_RELATIVE_REG = '~^[A-Za-z_]\w*(?:[/\\\][A-Za-z_]\w*)*$~';
+
+	/**
 	 * An associative array where the key is a namespace prefix and the value
 	 * is an array of base directories for classes in that namespace.
 	 *
@@ -119,6 +127,27 @@ class ClassLoader
 	private static array $class_map = [];
 
 	/**
+	 * Namespace prefixes whose base directory is only resolved when their first class is needed.
+	 *
+	 * @var array<string, callable():?string>
+	 */
+	private static array $lazy_namespaces = [];
+
+	/**
+	 * Classes mapped to their files by a production build ({@see useClassMap()}).
+	 *
+	 * @var array<string, string>
+	 */
+	private static array $compiled_map = [];
+
+	/**
+	 * The root namespaces (`OZONE\`) of the regular and lazy namespaces.
+	 *
+	 * @var array<string, true>
+	 */
+	private static array $roots = [];
+
+	/**
 	 * Registered as class loader or not.
 	 *
 	 * @var bool
@@ -133,9 +162,10 @@ class ClassLoader
 	public static function report(): array
 	{
 		return [
-			'indexed_dirs' => self::$indexed_dirs,
-			'class_map'    => self::$class_map,
-			'namespaces'   => self::$psr4_namespaces_map,
+			'indexed_dirs'    => self::$indexed_dirs,
+			'class_map'       => self::$class_map,
+			'namespaces'      => self::$psr4_namespaces_map,
+			'lazy_namespaces' => \array_keys(self::$lazy_namespaces),
 		];
 	}
 
@@ -236,6 +266,8 @@ class ClassLoader
 
 		// normalize namespace prefix
 		$prefix = \trim($prefix, '\\') . '\\';
+
+		self::$roots[\strstr($prefix, '\\', true) . '\\'] = true;
 		// normalize the base directory with a trailing separator
 		$base_dir = \rtrim($base_dir, \DIRECTORY_SEPARATOR) . '/';
 		// initialize the namespace prefix array
@@ -254,6 +286,91 @@ class ClassLoader
 	}
 
 	/**
+	 * Adds a namespace whose base directory is only known once one of its classes is needed.
+	 *
+	 * The provider is called then, before the class loads (it may prepare what the classes need, such
+	 * as a database for ORM classes), and the directory it returns is kept as a regular base
+	 * directory of the namespace. A provider returning null is asked again for the next class.
+	 *
+	 * @param string             $prefix       the namespace prefix
+	 * @param callable():?string $dir_provider returns the base directory, or null when not available yet
+	 */
+	public static function addLazyNamespace(string $prefix, callable $dir_provider): void
+	{
+		self::register();
+
+		$prefix = \trim($prefix, '\\') . '\\';
+
+		self::$lazy_namespaces[$prefix]                    = $dir_provider;
+		self::$roots[\strstr($prefix, '\\', true) . '\\']  = true;
+	}
+
+	/**
+	 * Maps classes to their files, as a production build lists them ({@see mapNamespaces()}): found
+	 * without looking in the namespace's directories.
+	 *
+	 * @param array<string, string> $map class name -> file
+	 */
+	public static function useClassMap(array $map): void
+	{
+		self::register();
+
+		self::$compiled_map = $map + self::$compiled_map;
+	}
+
+	/**
+	 * Resolves every lazy namespace now ({@see addLazyNamespace()}): what a build that lists the
+	 * classes needs. A namespace whose provider has no directory yet stays lazy.
+	 */
+	public static function resolveLazyNamespaces(): void
+	{
+		foreach (\array_keys(self::$lazy_namespaces) as $prefix) {
+			if (isset(self::$lazy_namespaces[$prefix])) {
+				self::resolveLazyNamespace($prefix);
+			}
+		}
+	}
+
+	/**
+	 * The classes of every namespace's base directories, found by the PSR-4 rule from their file
+	 * names: what a production class map lists. Lazy namespaces not resolved yet are not listed.
+	 *
+	 * @return array<string, string> class name -> file
+	 */
+	public static function mapNamespaces(): array
+	{
+		$map = [];
+
+		foreach (self::$psr4_namespaces_map as $prefix => $dirs) {
+			foreach ($dirs as $dir) {
+				$root = \rtrim($dir, '/\\');
+
+				if (!\is_dir($root)) {
+					continue;
+				}
+
+				$files = new RecursiveIteratorIterator(
+					new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
+				);
+
+				foreach ($files as $file) {
+					$path     = $file->getPathname();
+					$relative = \substr($path, \strlen($root) + 1, -4);
+
+					if (!\str_ends_with($path, '.php') || !\preg_match(self::PSR4_RELATIVE_REG, $relative)) {
+						continue;
+					}
+
+					// the first base directory wins, as it does when searching
+					$map[$prefix . \str_replace(['/', '\\'], '\\', $relative)] ??= $path;
+				}
+			}
+		}
+
+		return $map;
+	}
+
+	/**
 	 * Loads the class file for a given class name fully-qualified or not.
 	 *
 	 * @param string $class_name the class name
@@ -262,21 +379,48 @@ class ClassLoader
 	 */
 	public static function loadClass(string $class_name): bool|string
 	{
-		if (false !== \strrpos($class_name, '\\')) {
-			// it seems to be a fully-qualified class name
-			return self::loadClassPsr4($class_name);
+		$file = self::findFile($class_name);
+
+		if (null === $file) {
+			return false;
 		}
 
-		if (\array_key_exists($class_name, self::$class_map)) {
-			$path = self::$class_map[$class_name];
+		require $file;
 
-			if (self::requireFile($path)) {
-				return $path;
+		return $file;
+	}
+
+	/**
+	 * The file a class would be loaded from, without loading it: null when none is found.
+	 *
+	 * The directory of a lazy namespace is resolved on the way.
+	 *
+	 * @param string $class_name the class name, fully-qualified or not
+	 */
+	public static function findFile(string $class_name): ?string
+	{
+		if (isset(self::$compiled_map[$class_name])) {
+			// A class of a lazy namespace still waits for its provider (the database for ORM classes).
+			if (!empty(self::$lazy_namespaces)) {
+				self::resolveLazyPrefixes($class_name);
 			}
+
+			return self::$compiled_map[$class_name];
 		}
 
-		// class not found
-		return false;
+		if (false !== ($pos = \strpos($class_name, '\\'))) {
+			// Registered ahead of Composer, this loader is asked for every class first: one whose root
+			// namespace none of its namespaces has (Gobl, php-utils, a PSR interface) is Composer's.
+			if (!isset(self::$roots[\substr($class_name, 0, $pos + 1)])) {
+				return null;
+			}
+
+			return self::findPsr4File($class_name);
+		}
+
+		$path = self::$class_map[$class_name] ?? null;
+
+		return null !== $path && \file_exists($path) ? $path : null;
 	}
 
 	/**
@@ -299,6 +443,10 @@ class ClassLoader
 
 	/**
 	 * Register loader with SPL autoloader stack.
+	 *
+	 * Ahead of the others (Composer's): a class of a namespace registered here is found without their
+	 * lookups, which for a namespace they also map (OZone's generated ORM classes, under `OZONE\Core\`)
+	 * would first look for the file in a directory it is not in.
 	 */
 	protected static function register(): void
 	{
@@ -306,7 +454,7 @@ class ClassLoader
 			self::$registered = true;
 			\spl_autoload_register(static function ($class_name): void {
 				self::loadClass($class_name);
-			});
+			}, true, true);
 		}
 	}
 
@@ -319,27 +467,15 @@ class ClassLoader
 	 */
 	protected static function loadClassPsr4(string $class): bool|string
 	{
-		// the current namespace prefix
-		$prefix = $class;
-		// work backwards through the namespace names of the fully-qualified
-		// class name to find a mapped file name
-		while (false !== $pos = \strrpos($prefix, '\\')) {
-			// retain the trailing namespace separator in the prefix
-			$prefix = \substr($class, 0, $pos + 1);
-			// the rest is the relative class name
-			$relative_class = \substr($class, $pos + 1);
-			// try to load a mapped file for the prefix and relative class
-			$mapped_file = self::getPsr4MappedFile($prefix, $relative_class);
+		$file = self::findPsr4File($class);
 
-			if ($mapped_file) {
-				return $mapped_file;
-			}
-			// removes the trailing namespace separator for the next iteration
-			$prefix = \rtrim($prefix, '\\');
+		if (null === $file) {
+			return false;
 		}
 
-		// never found a mapped file
-		return false;
+		require $file;
+
+		return $file;
 	}
 
 	/**
@@ -411,5 +547,73 @@ class ClassLoader
 		}
 
 		return false;
+	}
+
+	/**
+	 * The file of a fully-qualified class, working backwards through its namespace prefixes: null when
+	 * none is mapped.
+	 */
+	private static function findPsr4File(string $class): ?string
+	{
+		$prefix = $class;
+
+		while (false !== $pos = \strrpos($prefix, '\\')) {
+			// retain the trailing namespace separator in the prefix
+			$prefix = \substr($class, 0, $pos + 1);
+
+			if (isset(self::$lazy_namespaces[$prefix])) {
+				self::resolveLazyNamespace($prefix);
+			}
+
+			if (isset(self::$psr4_namespaces_map[$prefix])) {
+				$relative = \str_replace('\\', '/', \substr($class, $pos + 1)) . '.php';
+
+				foreach (self::$psr4_namespaces_map[$prefix] as $base_dir) {
+					if (\file_exists($base_dir . $relative)) {
+						return $base_dir . $relative;
+					}
+				}
+			}
+
+			// removes the trailing namespace separator for the next iteration
+			$prefix = \rtrim($prefix, '\\');
+		}
+
+		return null;
+	}
+
+	/**
+	 * Resolves the lazy namespaces a class belongs to.
+	 */
+	private static function resolveLazyPrefixes(string $class): void
+	{
+		$prefix = $class;
+
+		while (false !== $pos = \strrpos($prefix, '\\')) {
+			$prefix = \substr($class, 0, $pos + 1);
+
+			if (isset(self::$lazy_namespaces[$prefix])) {
+				self::resolveLazyNamespace($prefix);
+			}
+
+			$prefix = \rtrim($prefix, '\\');
+		}
+	}
+
+	/**
+	 * Asks a lazy namespace's provider for its base directory, and keeps it once it has one.
+	 *
+	 * The provider may load classes of the same namespace (a database being initialized loads ORM
+	 * classes): the directory is kept by whichever call gets it first.
+	 */
+	private static function resolveLazyNamespace(string $prefix): void
+	{
+		$dir = (self::$lazy_namespaces[$prefix])();
+
+		if (null !== $dir && isset(self::$lazy_namespaces[$prefix])) {
+			unset(self::$lazy_namespaces[$prefix]);
+
+			self::addNamespace($prefix, $dir);
+		}
 	}
 }

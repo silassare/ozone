@@ -22,8 +22,6 @@ use Gobl\ORM\Exceptions\ORMException;
 use Gobl\ORM\ORMOptions;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Cache\CacheRegistry;
-use OZONE\Core\Cache\CacheStore;
 use OZONE\Core\Db\OZMigration;
 use OZONE\Core\Db\OZMigrationsQuery;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -31,6 +29,8 @@ use OZONE\Core\Migrations\Enums\MigrationsState;
 use OZONE\Core\Migrations\Events\MigrationAfterRun;
 use OZONE\Core\Migrations\Events\MigrationBeforeRun;
 use OZONE\Core\Migrations\Events\MigrationCreated;
+use OZONE\Core\Stores\CacheRegistry;
+use OZONE\Core\Stores\KeyValueStore;
 use OZONE\Core\Utils\Random;
 use Throwable;
 
@@ -73,9 +73,30 @@ final class Migrations
 	/**
 	 * Gets the database version supported by the source code.
 	 *
+	 * That is the version of the latest migration file: the migration files are what the source
+	 * code describes, so they are the only trustworthy answer. `OZ_MIGRATION_VERSION` is not --
+	 * it records the version the database is *at* ({@see self::getInstalledDbVersion()}), and is
+	 * only written once a migration has run, so a created but unrun migration would be invisible
+	 * here and {@see self::getState()} could never report {@see MigrationsState::PENDING}.
+	 *
 	 * @return int
 	 */
 	public static function getSourceCodeDbVersion(): int
+	{
+		return (new self())->getLatestMigration()?->getVersion() ?? self::DB_NOT_INSTALLED_VERSION;
+	}
+
+	/**
+	 * Gets the database version recorded in the settings, without touching the database.
+	 *
+	 * `OZ_MIGRATION_VERSION` is written by {@see self::updateMigrationsHistory()} whenever a
+	 * migration runs, so it is the version the database is at, known offline. {@see Db::init()}
+	 * needs it before there is any connection, to load the schema matching the live database
+	 * rather than the newest one on disk.
+	 *
+	 * @return int
+	 */
+	public static function getInstalledDbVersion(): int
 	{
 		return Settings::get('oz.db.migrations', 'OZ_MIGRATION_VERSION', self::DB_NOT_INSTALLED_VERSION);
 	}
@@ -328,12 +349,9 @@ final class Migrations
 	 */
 	public function hasPendingMigrations(): bool
 	{
-		$latest = $this->getLatestMigration();
-		if ($latest) {
-			return self::getCurrentDbVersion(true) < $latest->getVersion();
-		}
-
-		return false;
+		// Same comparison as getState(), but true for a database that is not installed yet too:
+		// its migrations are pending, they have simply never run.
+		return self::getCurrentDbVersion(true) < self::getSourceCodeDbVersion();
 	}
 
 	/**
@@ -490,9 +508,9 @@ final class Migrations
 	/**
 	 * Gets the migrations cache.
 	 *
-	 * @return CacheStore
+	 * @return KeyValueStore
 	 */
-	private static function cache(): CacheStore
+	private static function cache(): KeyValueStore
 	{
 		return CacheRegistry::runtime(self::class);
 	}

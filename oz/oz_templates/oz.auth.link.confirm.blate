@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) 2017-present, Emile Silas Sare
+  ~
+  ~ This file is part of OZone package.
+  ~
+  ~ For the full copyright and license information, please view the LICENSE
+  ~ file that was distributed with this source code.
+  -->
+
+<html lang="{$global.lang}">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport"
+			  content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"/>
+		<meta name="robots" content="noindex, nofollow">
+
+		<title>{$t('OZ_VIEW_AUTH_LINK_CONFIRM_TITLE')}</title>
+
+		<style>
+		{@import_raw 'oz://oz.css'}
+		</style>
+	</head>
+	<body>
+		<div id="oz-box">
+			<span class="oz-logo"></span>
+			<div class="oz-title">{$t('OZ_VIEW_AUTH_LINK_CONFIRM_TITLE')}</div>
+			<div class="oz-desc">
+				<div class="oz-desc-item" style="text-align: center;">
+				{$t('OZ_VIEW_AUTH_LINK_CONFIRM_MESSAGE')}
+				</div>
+			</div>
+			<form method="post">
+				<input type="hidden" name="_csrf" value="{$global.csrf_token}">
+				<button class="oz-btn-submit" type="submit">{$t('OZ_VIEW_AUTH_LINK_CONFIRM_BTN')}</button>
+			</form>
+		</div>
+	</body>
+</html>

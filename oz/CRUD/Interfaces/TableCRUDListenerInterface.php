@@ -33,7 +33,10 @@ interface TableCRUDListenerInterface extends CRUDEventListenerInterface
 	 * This is the right place to register CRUD listeners.
 	 * This will be called only if the project is fully installed {@see OZone::isInstalled()}.
 	 *
-	 * @param Context $context
+	 * It runs once per process, and a worker process serves many requests: a listener reads the
+	 * context of the request being handled when an event fires ({@see Context::current()}, or
+	 * `TableCRUDListener::context()`), never one kept from registration -- that one would be the boot
+	 * context, with no request and no user.
 	 */
-	public static function register(Context $context): void;
+	public static function register(): void;
 }

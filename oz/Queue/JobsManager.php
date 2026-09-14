@@ -58,7 +58,11 @@ final class JobsManager
 	public static function registerWorker(string $worker_class): void
 	{
 		if (!\is_subclass_of($worker_class, WorkerInterface::class)) {
-			throw new RuntimeException(\sprintf('Worker "%s" must implement %s', $worker_class, WorkerInterface::class));
+			throw new RuntimeException(\sprintf(
+				'Worker "%s" must implement %s',
+				$worker_class,
+				WorkerInterface::class
+			));
 		}
 
 		$worker_name = $worker_class::getName();
@@ -361,7 +365,7 @@ final class JobsManager
 				$remaining = $chain; // jobs after the one we just shifted
 
 				if (null !== $worker && isset(self::$workers[$worker])) {
-					$ref      = Keys::id64('job-ref');
+					$ref      = Keys::id64();
 					$next_job = (new Job($ref, $worker, (array) $payload))
 						->setQueue((string) $queue)
 						->setName($worker)

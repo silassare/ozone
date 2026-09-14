@@ -391,11 +391,16 @@ class Uri implements UriInterface
 	/**
 	 * Creates new Uri from environment.
 	 *
-	 * @param HTTPEnvironment $env
+	 * Behind a trusted proxy (`oz.proxies`) the host, scheme and then port are the ones the
+	 * proxy reports (`Forwarded` `host=` / `X-Forwarded-Host`, `Forwarded` `proto=` /
+	 * `X-Forwarded-Proto`, `X-Forwarded-Port`).
+	 *
+	 * @param HTTPEnvironment     $env
+	 * @param null|TrustedProxies $proxies defaults to {@see TrustedProxies::fromSettings()}
 	 *
 	 * @return static
 	 */
-	public static function createFromEnvironment(HTTPEnvironment $env): static
+	public static function createFromEnvironment(HTTPEnvironment $env, ?TrustedProxies $proxies = null): static
 	{
 		// Scheme
 		$isSecure = $env->get('HTTPS');
@@ -405,29 +410,70 @@ class Uri implements UriInterface
 		$username = $env->get('PHP_AUTH_USER', '');
 		$password = $env->get('PHP_AUTH_PW', '');
 
+		// Behind a proxy, the host, scheme and port the client used are the ones the proxy
+		// reports; they are only trusted from a proxy listed in `oz.proxies`.
+		$forwarded_host   = null;
+		$forwarded_scheme = null;
+		$remote           = $env->get('REMOTE_ADDR');
+
+		if (\is_string($remote)) {
+			$proxies ??= TrustedProxies::fromSettings();
+			$forwarded         = $env->get('HTTP_FORWARDED');
+			$forwarded         = \is_string($forwarded) ? $forwarded : null;
+			$x_forwarded_host  = $env->get('HTTP_X_FORWARDED_HOST');
+			$x_forwarded_proto = $env->get('HTTP_X_FORWARDED_PROTO');
+			$forwarded_host    = $proxies->resolveHost(
+				$remote,
+				$forwarded,
+				\is_string($x_forwarded_host) ? $x_forwarded_host : null
+			);
+			$forwarded_scheme  = $proxies->resolveScheme(
+				$remote,
+				$forwarded,
+				\is_string($x_forwarded_proto) ? $x_forwarded_proto : null
+			);
+		}
+
 		// Authority: Host
-		if ($env->has('HTTP_HOST')) {
+		if (null !== $forwarded_host) {
+			$host = $forwarded_host;
+		} elseif ($env->has('HTTP_HOST')) {
 			$host = $env->get('HTTP_HOST');
 		} else {
 			$host = $env->get('SERVER_NAME');
 		}
 
 		// Authority: Port
-		$port = (int) $env->get('SERVER_PORT', 80);
+		$port      = (int) $env->get('SERVER_PORT', 80);
+		$host_port = null;
 
 		if (\preg_match('~^(\[[a-fA-F0-9:.]+])(:\d+)?\z~', $host, $matches)) {
 			$host = $matches[1];
 
 			if ($matches[2]) {
-				$port = (int) \substr($matches[2], 1);
+				$host_port = (int) \substr($matches[2], 1);
 			}
 		} else {
 			$pos = \strpos($host, ':');
 
 			if (false !== $pos) {
-				$port = (int) \substr($host, $pos + 1);
-				$host = \strstr($host, ':', true);
+				$host_port = (int) \substr($host, $pos + 1);
+				$host      = \strstr($host, ':', true);
 			}
+		}
+
+		if (null !== $forwarded_scheme) {
+			$scheme = $forwarded_scheme;
+		}
+
+		if (null !== $forwarded_host || null !== $forwarded_scheme) {
+			// SERVER_PORT is the port the proxy reached us on, not the one the client used.
+			$x_forwarded_port = \trim(\explode(',', (string) $env->get('HTTP_X_FORWARDED_PORT', ''))[0]);
+			$port             = \ctype_digit($x_forwarded_port)
+				? (int) $x_forwarded_port
+				: ($host_port ?? ('https' === $scheme ? 443 : 80));
+		} elseif (null !== $host_port) {
+			$port = $host_port;
 		}
 
 		// Path

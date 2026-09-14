@@ -24,23 +24,19 @@ use OZONE\Core\Utils\Random;
 final class Keys
 {
 	/**
-	 * Generate new 32-character unique ID.
-	 *
-	 * @param string $namespace optional namespace to ensure uniqueness across different contexts
+	 * Generate new 32-character unique ID (128 random bits, hex encoded).
 	 */
-	public static function id32(string $namespace = ''): string
+	public static function id32(): string
 	{
-		return Hasher::hash32(\uniqid($namespace, true) . \microtime() . self::salt());
+		return \bin2hex(\random_bytes(16));
 	}
 
 	/**
-	 * Generate new 64-character unique ID.
-	 *
-	 * @param string $namespace optional namespace to ensure uniqueness across different contexts
+	 * Generate new 64-character unique ID (256 random bits, hex encoded).
 	 */
-	public static function id64(string $namespace = ''): string
+	public static function id64(): string
 	{
-		return Hasher::hash64(\uniqid($namespace, true) . \microtime() . self::salt());
+		return \bin2hex(\random_bytes(32));
 	}
 
 	/**

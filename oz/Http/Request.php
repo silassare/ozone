@@ -14,15 +14,12 @@ declare(strict_types=1);
 namespace OZONE\Core\Http;
 
 use InvalidArgumentException;
-use JsonException;
 use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Forms\FormData;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
-use RuntimeException;
-use SimpleXMLElement;
 
 /**
  * Class Request.
@@ -75,11 +72,9 @@ class Request extends Message implements ServerRequestInterface
 	protected array|object|null $bodyParsed = null;
 
 	/**
-	 * List of request body parsers (e.g., url-encoded, JSON, XML, multipart).
-	 *
-	 * @var callable[]
+	 * The request body parsers, by media type.
 	 */
-	protected array $bodyParsers = [];
+	protected RequestBodyParser $body_parser;
 
 	/**
 	 * List of uploaded files.
@@ -136,20 +131,11 @@ class Request extends Message implements ServerRequestInterface
 		$this->attributes     = new Collection();
 		$this->body           = $body;
 		$this->uploadedFiles  = $uploadedFiles;
-
-		if ('POST' === $this->method) {
-			$allowed = Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_ALLOWED');
-
-			if ($allowed) {
-				$realMethodHeaderName = Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_NAME');
-				$realMethodHeaderName = \strtolower(\str_replace('_', '-', $realMethodHeaderName));
-				$realMethod           = $this->getHeaderLine($realMethodHeaderName);
-
-				if (!empty($realMethod)) {
-					$this->method = self::filterMethod($realMethod);
-				}
-			}
-		}
+		$this->body_parser    = new RequestBodyParser();
+		$this->method         = MethodOverride::resolve(
+			$this->method,
+			$this->getHeaderLine(MethodOverride::headerName())
+		);
 
 		if (isset($serverParams['SERVER_PROTOCOL'])) {
 			$this->protocolVersion = \str_replace('HTTP/', '', $serverParams['SERVER_PROTOCOL']);
@@ -158,42 +144,6 @@ class Request extends Message implements ServerRequestInterface
 		if (!$this->headers->has('Host') || '' !== $this->uri->getHost()) {
 			$this->headers->set('Host', $this->uri->getHost());
 		}
-
-		$json_parser = static function ($input): ?array {
-			try {
-				$result = \json_decode($input, true, 512, \JSON_THROW_ON_ERROR);
-
-				if (\is_array($result)) {
-					return $result;
-				}
-			} catch (JsonException) {
-			}
-
-			return null;
-		};
-
-		$xml_parser = static function ($input): ?SimpleXMLElement {
-			$backup_errors = \libxml_use_internal_errors(true);
-			$result        = \simplexml_load_string($input);
-			\libxml_clear_errors();
-			\libxml_use_internal_errors($backup_errors);
-
-			if (false === $result) {
-				return null;
-			}
-
-			return $result;
-		};
-
-		$this->registerMediaTypeParser('application/json', $json_parser);
-		$this->registerMediaTypeParser('application/xml', $xml_parser);
-		$this->registerMediaTypeParser('text/xml', $xml_parser);
-
-		$this->registerMediaTypeParser('application/x-www-form-urlencoded', static function ($input) {
-			\parse_str($input, $data);
-
-			return $data;
-		});
 	}
 
 	/**
@@ -204,9 +154,10 @@ class Request extends Message implements ServerRequestInterface
 	 */
 	public function __clone()
 	{
-		$this->headers    = clone $this->headers;
-		$this->attributes = clone $this->attributes;
-		$this->body       = clone $this->body;
+		$this->headers     = clone $this->headers;
+		$this->attributes  = clone $this->attributes;
+		$this->body        = clone $this->body;
+		$this->body_parser = clone $this->body_parser;
 	}
 
 	/**
@@ -219,7 +170,15 @@ class Request extends Message implements ServerRequestInterface
 	 */
 	public function registerMediaTypeParser(string $mediaType, callable $callable): void
 	{
-		$this->bodyParsers[$mediaType] = $callable;
+		$this->body_parser->register($mediaType, $callable);
+	}
+
+	/**
+	 * Gets the parsed `Content-Type`, if any.
+	 */
+	public function mediaType(): ?MediaType
+	{
+		return MediaType::fromContentType($this->getContentType());
 	}
 
 	/**
@@ -229,15 +188,7 @@ class Request extends Message implements ServerRequestInterface
 	 */
 	public function getMediaType(): ?string
 	{
-		$contentType = $this->getContentType();
-
-		if ($contentType) {
-			$contentTypeParts = \preg_split('/\s*[;,]\s*/', $contentType);
-
-			return \strtolower($contentTypeParts[0]);
-		}
-
-		return null;
+		return $this->mediaType()?->type;
 	}
 
 	/**
@@ -315,39 +266,11 @@ class Request extends Message implements ServerRequestInterface
 	#[Override]
 	public function getParsedBody(): array|object|null
 	{
-		if (null !== $this->bodyParsed) {
-			return $this->bodyParsed;
+		if (null === $this->bodyParsed) {
+			$this->bodyParsed = $this->body_parser->parse($this->mediaType(), (string) $this->getBody());
 		}
 
-		if (empty((string) $this->body)) {
-			return null;
-		}
-
-		$mediaType = $this->getMediaType();
-
-		// look for a media type with a structured syntax suffix (RFC 6839)
-		$parts = \explode('+', $mediaType);
-
-		if (\count($parts) >= 2) {
-			$mediaType = 'application/' . $parts[\count($parts) - 1];
-		}
-
-		if (true === isset($this->bodyParsers[$mediaType])) {
-			$body   = (string) $this->getBody();
-			$parsed = $this->bodyParsers[$mediaType]($body);
-
-			if (null !== $parsed && !\is_object($parsed) && !\is_array($parsed)) {
-				throw new RuntimeException(
-					'Request body media type parser return value must be an array, an object, or null'
-				);
-			}
-
-			$this->bodyParsed = $parsed;
-
-			return $this->bodyParsed;
-		}
-
-		return null;
+		return $this->bodyParsed;
 	}
 
 	/**
@@ -515,32 +438,17 @@ class Request extends Message implements ServerRequestInterface
 	 */
 	public function getContentCharset(): ?string
 	{
-		$mediaTypeParams = $this->getMediaTypeParams();
-
-		return $mediaTypeParams['charset'] ?? null;
+		return $this->mediaType()?->param('charset');
 	}
 
 	/**
 	 * Gets request media type params, if known.
 	 *
-	 * @return array
+	 * @return array<string, string>
 	 */
 	public function getMediaTypeParams(): array
 	{
-		$contentType       = $this->getContentType();
-		$contentTypeParams = [];
-
-		if ($contentType) {
-			$contentTypeParts       = \preg_split('/\s*[;,]\s*/', $contentType);
-			$contentTypePartsLength = \count($contentTypeParts);
-
-			for ($i = 1; $i < $contentTypePartsLength; ++$i) {
-				$paramParts                                     = \explode('=', $contentTypeParts[$i]);
-				$contentTypeParams[\strtolower($paramParts[0])] = $paramParts[1];
-			}
-		}
-
-		return $contentTypeParams;
+		return $this->mediaType()->params ?? [];
 	}
 
 	/**
@@ -815,24 +723,40 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Creates new HTTP request with data extracted from the application HTTP Environment object.
 	 *
-	 * @param HTTPEnvironment $environment
+	 * Without `$body`, the request is the one PHP received: its body is `php://input`, its files
+	 * `$_FILES` and a form POST's parsed body `$_POST`. With `$body`, it came from a worker server
+	 * that hands requests over as objects (RoadRunner, Swoole), so PHP's own request globals are not
+	 * this request's and none of them is read: pass the server's parsed form and files instead.
+	 *
+	 * @param HTTPEnvironment      $environment
+	 * @param null|StreamInterface $body           the request body, when PHP did not receive the request
+	 * @param null|array           $parsed_body    the parsed form body, when the server parsed it
+	 * @param null|array           $uploaded_files a normalized tree of {@see UploadedFile}
 	 *
 	 * @return static
 	 */
-	public static function createFromHTTPEnvironment(HTTPEnvironment $environment): static
-	{
+	public static function createFromHTTPEnvironment(
+		HTTPEnvironment $environment,
+		?StreamInterface $body = null,
+		?array $parsed_body = null,
+		?array $uploaded_files = null
+	): static {
+		$from_php      = null === $body;
 		$method        = $environment['REQUEST_METHOD'];
 		$uri           = Uri::createFromEnvironment($environment);
 		$headers       = Headers::createFromEnvironment($environment);
 		$cookies       = Cookies::parseIncomingRequestCookieHeaderString($headers->get('Cookie', [''])[0]);
 		$serverParams  = $environment->all();
-		$body          = new RequestBody();
-		$uploadedFiles = UploadedFile::createFromEnvironment($environment);
+		$body ??= new RequestBody();
+		$uploadedFiles = $uploaded_files ?? ($from_php ? UploadedFile::createFromEnvironment($environment) : []);
 
-		$request = new static($method, $uri, $headers, $cookies, $serverParams, $body, $uploadedFiles);
+		$request = new static($method, $uri, $headers, $cookies, $serverParams, $body, $uploadedFiles ?? []);
 
-		if (
-			'POST' === $method
+		if (null !== $parsed_body) {
+			$request = $request->withParsedBody($parsed_body);
+		} elseif (
+			$from_php
+			&& 'POST' === $method
 			&& \in_array($request->getMediaType(), ['application/x-www-form-urlencoded', 'multipart/form-data'], true)
 		) {
 			// parsed body must be $_POST

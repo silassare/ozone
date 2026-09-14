@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth;
 
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Cache\CacheRegistry;
+use OZONE\Core\Stores\CacheRegistry;
 use PHPUtils\Store\Store;
 
 /**

@@ -28,13 +28,26 @@ class PathSources
 	];
 
 	/**
+	 * The sources written at runtime (stateful settings, under `data/`), as {@see getAllSources()}
+	 * lists them.
+	 *
+	 * @var array<string, true>
+	 */
+	protected array $stateful = [];
+
+	/**
 	 * Add a path source.
 	 *
 	 * @param string $path
+	 * @param bool   $stateful whether the source is written at runtime, rather than shipped with the code
 	 */
-	public function add(string $path): static
+	public function add(string $path, bool $stateful = false): static
 	{
 		$path = FS::fromRoot()->resolve($path);
+
+		if ($stateful) {
+			$this->stateful[$path] = true;
+		}
 
 		if (\str_starts_with($path, OZ_OZONE_DIR)) {
 			$this->sources['oz'][$path] = true;
@@ -82,6 +95,14 @@ class PathSources
 	public function getPluginsSources(): array
 	{
 		return \array_keys($this->sources['plugins']);
+	}
+
+	/**
+	 * Whether a source, as {@see getAllSources()} lists it, is written at runtime.
+	 */
+	public function isStateful(string $path): bool
+	{
+		return isset($this->stateful[$path]);
 	}
 
 	/**

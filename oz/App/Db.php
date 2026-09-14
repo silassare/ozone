@@ -21,12 +21,15 @@ use Gobl\DBAL\Interfaces\MigrationInterface;
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Types\Utils\TypeUtils;
 use Gobl\Gobl;
+use Gobl\ORM\Exceptions\ORMRuntimeException;
+use Gobl\ORM\ORM;
 use OZONE\Core\Columns\TypeProvider;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Hooks\Events\DbSchemaCollectHook;
 use OZONE\Core\Hooks\Events\DbSchemaReadyHook;
+use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
 use OZONE\Core\Plugins\Plugins;
@@ -41,13 +44,18 @@ final class Db
 	private static ?RDBMSInterface $db = null;
 
 	/**
+	 * Whether {@see self::init()} is running: the ORM classes it loads must not start it again.
+	 */
+	private static bool $initializing = false;
+
+	/**
 	 * Initialize the database.
 	 *
 	 * This method should be called only after all boot hooks are registered.
 	 */
 	public static function init(): RDBMSInterface
 	{
-		if (!self::$db) {
+		if (!self::$db && !self::$initializing) {
 			OZone::dieIfBootHookReceiversAreNotNotified(
 				\sprintf(
 					'%s should be called only after all boot hooks are registered.'
@@ -58,6 +66,10 @@ final class Db
 				)
 			);
 
+			self::registerTypes();
+
+			self::$initializing = true;
+
 			try {
 				$migration = self::initStepPrepare();
 
@@ -66,10 +78,94 @@ final class Db
 				self::initStepRegister(null !== $migration);
 			} catch (Throwable $t) {
 				throw new RuntimeException('Unable to initialize database.', null, $t);
+			} finally {
+				self::$initializing = false;
 			}
 		}
 
+		if (null === self::$db) {
+			// Only while the schema itself is loading: something used the database from inside it.
+			throw new RuntimeException('The database is being initialized and cannot be used yet.');
+		}
+
 		return self::$db;
+	}
+
+	/**
+	 * Initializes the database when an ORM class is first loaded, rather than at bootstrap.
+	 *
+	 * A request that never touches the database -- most anonymous API calls, static pages -- then
+	 * never builds the schema. Everything that does goes through `db()` or a generated ORM class,
+	 * whose namespace Gobl only knows once `init()` declared it: this autoloader, first in line and
+	 * limited to the ORM namespaces (OZone's, the project's, each enabled plugin's), runs `init()`
+	 * before such a class loads: each is a lazy namespace of {@see ClassLoader}, whose first class
+	 * initializes the database, then loads from the directory Gobl generated the classes in.
+	 * Registered once boot hook receivers have run, since `init()` must not run before.
+	 */
+	public static function initOnFirstUse(): void
+	{
+		static $registered = false;
+
+		if ($registered) {
+			return;
+		}
+
+		$registered = true;
+
+		foreach (self::ormNamespaces() as $namespace) {
+			ClassLoader::addLazyNamespace($namespace, static function () use ($namespace): ?string {
+				if (null === self::$db && !self::$initializing) {
+					self::init();
+				}
+
+				try {
+					return ORM::getOutputDir($namespace);
+				} catch (ORMRuntimeException) {
+					// Not declared, or not yet while the schema loads: asked again for the next class.
+					return null;
+				}
+			});
+		}
+	}
+
+	/**
+	 * The namespaces of generated ORM classes: OZone's, the project's, each enabled plugin's.
+	 *
+	 * @internal
+	 *
+	 * @return list<string>
+	 */
+	public static function ormNamespaces(): array
+	{
+		$namespaces = [self::getOZoneDbNamespace(), self::getProjectDbNamespace()];
+
+		foreach (Settings::load('oz.plugins') as $plugin => $enabled) {
+			if ($enabled) {
+				$namespaces[] = Plugins::getPlugin((string) $plugin)->getDbNamespace();
+			}
+		}
+
+		return \array_values(\array_unique(\array_map(
+			static fn (string $ns): string => \trim($ns, '\\'),
+			$namespaces
+		)));
+	}
+
+	/**
+	 * Registers OZone's column types with Gobl, once per process.
+	 *
+	 * At bootstrap, apart from {@see self::init()}: the database is initialized when first used, and
+	 * a type may be needed before that (a form field typed by name).
+	 */
+	public static function registerTypes(): void
+	{
+		static $registered = false;
+
+		if (!$registered) {
+			$registered = true;
+
+			TypeUtils::addTypeProvider(new TypeProvider());
+		}
 	}
 
 	/**
@@ -111,7 +207,10 @@ final class Db
 			$db = GoblDb::newInstanceOf($rdbms_type, $db_config);
 
 			if ($migration) {
-				$db->loadSchema($migration->getSchema());
+				// Each table is built when first used: a request pays for the tables it touches. The
+				// schema a migration recorded was validated when the migration was created.
+				$db->setLazySchema()
+					->loadSchema($migration->getSchema());
 			}
 
 			return $db;
@@ -208,10 +307,11 @@ final class Db
 				->getRoot()
 		);
 
-		TypeUtils::addTypeProvider(new TypeProvider());
+		$mg = new Migrations();
 
-		$mg      = new Migrations();
-		$version = $mg::getSourceCodeDbVersion();
+		// The version the database is at, not the latest migration on disk: the schema loaded here
+		// has to match the live database, which a created-but-unrun migration does not.
+		$version = $mg::getInstalledDbVersion();
 
 		if (Migrations::DB_NOT_INSTALLED_VERSION === $version) {
 			return null;

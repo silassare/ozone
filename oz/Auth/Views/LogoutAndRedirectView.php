@@ -19,6 +19,7 @@ use OZONE\Core\Columns\Types\TypeUrl;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Web\WebView;
@@ -45,8 +46,8 @@ final class LogoutAndRedirectView extends WebView
 		$next    = $ri->getCleanFormField('next', '/');
 		$context = $ri->getContext();
 
-		if (Settings::get('oz.cache', 'OZ_CLEAR_SITE_DATA_HEADER_ON_LOGOUT')) {
-			$rule = Settings::get('oz.cache', 'OZ_CLEAR_SITE_DATA_HEADER_VALUE');
+		if (Settings::get('oz.auth', 'OZ_CLEAR_SITE_DATA_HEADER_ON_LOGOUT')) {
+			$rule = Settings::get('oz.auth', 'OZ_CLEAR_SITE_DATA_HEADER_VALUE');
 
 			// Sending Clear-Site-Data on a 3xx response freezes Chrome.
 			// Fix: respond with a 200 page that carries the header; the page
@@ -69,14 +70,20 @@ final class LogoutAndRedirectView extends WebView
 		$router
 			->get('/logout', static function (RouteInfo $ri): void {
 				(new self($ri))->logoutAndRedirect($ri);
-			})->form(static function () {
-				$type = (new TypeUrl())->allowAbsolutePath();
+			})->form(static function (RouteInfo $ri) {
+				// `next` may only point to a local path, this host, or a host listed in
+				// OZ_REDIRECT_ALLOWED_HOSTS: anything else would be an open redirect.
+				$hosts   = (array) Settings::get('oz.request', 'OZ_REDIRECT_ALLOWED_HOSTS', []);
+				$hosts[] = $ri->getContext()->getHost();
 
 				$form = new Form();
-				$form->field('next')->type($type);
+				$form->field('next')->type((new TypeUrl())->allowAbsolutePath()->allowedHosts($hosts));
 
 				return $form;
 			})
+			// Without a token any page could log users out (`<img src="/logout">`):
+			// logout links must carry `_csrf` (see the `csrf_token` template global).
+			->withCSRF(RequestScope::STATE)
 			->name(self::LOGOUT_AND_REDIRECT_ROUTE);
 	}
 }

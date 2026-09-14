@@ -163,7 +163,9 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 
 		// constraints
 		$tb->collectFk(static function () use ($tb, $with_country): void {
-			$tb->foreign(AuthUserInterface::IDENTIFIER_TYPE_NAME, 'oz_usernames', 'name', !Settings::get('oz.users', 'OZ_USER_USERNAME_REQUIRED'))
+			$username_optional = !Settings::get('oz.users', 'OZ_USER_USERNAME_REQUIRED');
+
+			$tb->foreign(AuthUserInterface::IDENTIFIER_TYPE_NAME, 'oz_usernames', 'name', $username_optional)
 				->onUpdateCascade()
 				->onDeleteRestrict();
 

@@ -80,7 +80,7 @@ final class Cli extends Kli
 
 				OZone::bootstrap($app);
 			} else {
-				// required to use oz:// protocol in cli context without app (when running cli out of an existing project).
+				// Needed for the oz:// protocol when the CLI runs outside a project (no app).
 				Assets::register();
 				// we need template for project create command,
 				// so we bootstrap with blate plugin to have access to ozone custom template helper in blate templates.

@@ -156,6 +156,6 @@ final class CredentialsRouteGuard extends AbstractRouteGuard
 	#[Override]
 	public static function resolveResults(RouteInfo $ri): array
 	{
-		return $ri->getGuardStoredResults(static::class);
+		return $ri->getGuardStoredResults(self::class);
 	}
 }

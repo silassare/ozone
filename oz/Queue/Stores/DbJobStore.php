@@ -79,7 +79,11 @@ class DbJobStore implements JobStoreInterface
 		$job = $this->get($ref);
 
 		if (!$job) {
-			throw new InvalidArgumentException(\sprintf('Job with ref "%s" not found in store "%s".', $ref, self::NAME));
+			throw new InvalidArgumentException(\sprintf(
+				'Job with ref "%s" not found in store "%s".',
+				$ref,
+				self::NAME
+			));
 		}
 
 		return $job;

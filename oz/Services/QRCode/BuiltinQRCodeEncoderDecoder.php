@@ -774,7 +774,7 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 		 * Temporarily install a noop handler so the warning does not leak into
 		 * the application log - we validate the return value immediately.
 		 *
-		 * @psalm-suppress InvalidArgument - imagecreatefromstring() may emit a warning on invalid data, but we handle that case
+		 * @psalm-suppress InvalidArgument - imagecreatefromstring() may warn on invalid data, which is handled
 		 */
 		\set_error_handler(static function (): void {}, \E_WARNING);
 		$img = \imagecreatefromstring($image);

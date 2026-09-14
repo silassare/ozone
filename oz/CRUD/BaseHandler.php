@@ -26,7 +26,6 @@ use Gobl\ORM\ORMEntity;
 use Gobl\ORM\ORMEntityCRUD;
 use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
-use OZONE\Core\App\Context;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Roles\Enums\Role;
 
@@ -45,12 +44,8 @@ abstract class BaseHandler extends TableCRUDListener
 	private array $allow_rules                         = [];
 	private ?AllowCheckResult $last_allow_check_result = null;
 
-	public function __construct(
-		Context $context,
-		protected Table $table,
-	) {
-		parent::__construct($context);
-
+	public function __construct(protected Table $table)
+	{
 		$this->listen();
 	}
 
@@ -110,12 +105,15 @@ abstract class BaseHandler extends TableCRUDListener
 	 */
 	protected function can(string $action, CRUDAction $event): bool
 	{
-		if ($this->context->hasAuthenticatedUser()) {
+		// The request being handled, whoever it is for: never the context the handler was built in.
+		$context = $this->context();
+
+		if ($context->hasAuthenticatedUser()) {
 			$full_action = \sprintf('%s.%s', $this->table->getMorphType(), $action);
 
 			// if the access right on this action was explicitly set
 			// allow it
-			if (auth()->getAccessRights()->can($full_action)) {
+			if (auth($context)->getAccessRights()->can($full_action)) {
 				$this->last_allow_check_result = AllowCheckResult::allow(
 					I18n::m('HAS_REQUIRED_ACCESS_RIGHT', [
 						'_action' => $full_action,
@@ -130,7 +128,7 @@ abstract class BaseHandler extends TableCRUDListener
 
 		// otherwise, if there is a rule defined we check if the action is allowed
 		if ($rule) {
-			$result = $rule->allowed($this->context, $event);
+			$result = $rule->allowed($context, $event);
 
 			$this->last_allow_check_result = $result;
 

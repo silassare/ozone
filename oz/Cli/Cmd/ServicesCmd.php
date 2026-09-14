@@ -44,22 +44,31 @@ final class ServicesCmd extends Command
 		$generate->option('base-path', 'p', [], 1)
 			->required()
 			->prompt(true, 'The service url base path')
-			->description('The service url base path, e.g. "/users" for a service that will be available at "https://example.com/users".')
+			->description('The service url base path, e.g. "/users" for "https://example.com/users".')
 			->string()
-			->pattern($base_path_reg, \sprintf('The service url base path is invalid, required pattern: "%s"', \trim($base_path_reg, $base_path_reg[0])));
+			->pattern($base_path_reg, \sprintf(
+				'The service url base path is invalid, required pattern: "%s"',
+				\trim($base_path_reg, $base_path_reg[0])
+			));
 
 		$generate->option('table', 't', [], 2)
 			->required()
 			->prompt(true, 'The table name')
 			->description('The table name.')
 			->string()
-			->pattern(Table::NAME_REG, \sprintf('The table name is invalid, required pattern: "%s"', Table::NAME_PATTERN));
+			->pattern(Table::NAME_REG, \sprintf(
+				'The table name is invalid, required pattern: "%s"',
+				Table::NAME_PATTERN
+			));
 
 		$generate->option('class', 'c', [], 3)
 			->prompt(true, 'The service class name')
 			->description('The service class name.')
 			->string()
-			->pattern($class_name_reg, \sprintf('The service class name is invalid, required pattern: "%s"', \trim($class_name_reg, $class_name_reg[0])))
+			->pattern($class_name_reg, \sprintf(
+				'The service class name is invalid, required pattern: "%s"',
+				\trim($class_name_reg, $class_name_reg[0])
+			))
 			->def('');
 
 		$generate->option('override', 'o', [], 4)

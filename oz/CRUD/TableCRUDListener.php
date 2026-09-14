@@ -30,9 +30,13 @@ abstract class TableCRUDListener implements TableCRUDListenerInterface
 	use TableCRUDListenerTrait;
 
 	/**
-	 * TableCRUDListener constructor.
+	 * The context of the request being handled, resolved when an event fires.
 	 *
-	 * @param Context $context
+	 * Listeners are registered once per process, and a worker serves many requests: a context kept
+	 * at registration would be the boot one -- no request, no user -- for every later request.
 	 */
-	public function __construct(protected readonly Context $context) {}
+	protected function context(): Context
+	{
+		return Context::current();
+	}
 }

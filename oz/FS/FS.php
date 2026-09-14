@@ -19,7 +19,6 @@ use InvalidArgumentException;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Interfaces\AuthorizationCredentialsInterface;
-use OZONE\Core\Cache\CacheRegistry;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\Db\OZFilesQuery;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -27,6 +26,7 @@ use OZONE\Core\FS\Interfaces\StorageInterface;
 use OZONE\Core\FS\Views\GetFilesView;
 use OZONE\Core\Http\UploadedFile;
 use OZONE\Core\Http\Uri;
+use OZONE\Core\Stores\CacheRegistry;
 use OZONE\Core\Utils\Hasher;
 use OZONE\Core\Utils\Random;
 use PHPUtils\Str;
@@ -90,7 +90,7 @@ class FS
 		};
 		$reason  = match ($error) {
 			\UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini',
-			\UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form',
+			\UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive of the HTML form',
 			\UPLOAD_ERR_NO_FILE    => 'No file was uploaded',
 			\UPLOAD_ERR_PARTIAL    => 'The uploaded file was only partially uploaded',
 			\UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder',

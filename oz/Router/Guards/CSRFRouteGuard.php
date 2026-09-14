@@ -68,10 +68,8 @@ final class CSRFRouteGuard extends AbstractRouteGuard
 			return true;
 		}
 
-		throw new ForbiddenException(null, [
-			// we use '_reason' instead of 'reason' because
-			// we want only developers to know the real reason
-			'_reason' => 'invalid csrf token',
+		throw new ForbiddenException('OZ_CSRF_TOKEN_INVALID', [
+			'_reason' => 'Missing, invalid or expired CSRF token.',
 		]);
 	}
 }

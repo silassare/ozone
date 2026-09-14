@@ -31,8 +31,11 @@ class InvalidFormException extends BaseException
 	 * @param null|array              $data     additional exception data
 	 * @param null|Throwable          $previous previous throwable used for the exception chaining
 	 */
-	public function __construct(I18nMessage|string|null $message = null, ?array $data = null, ?Throwable $previous = null)
-	{
+	public function __construct(
+		I18nMessage|string|null $message = null,
+		?array $data = null,
+		?Throwable $previous = null
+	) {
 		parent::__construct(
 			empty($message) ? 'OZ_ERROR_INVALID_FORM' : $message,
 			$data,

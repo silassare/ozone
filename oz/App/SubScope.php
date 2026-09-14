@@ -52,16 +52,7 @@ final class SubScope extends AbstractScope
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function getDataDir(): FilesManager
-	{
-		return app()->getDataDir()->cd('scopes' . DS . $this->name, true);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function getPublicDir(): FilesManager
+	public function getDocumentRootDir(): FilesManager
 	{
 		return app()->getProjectDir()->cd('public' . DS . $this->name, true);
 	}

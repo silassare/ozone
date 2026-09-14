@@ -11,13 +11,14 @@
 
 declare(strict_types=1);
 
-// RouteResumableFormProvider is the built-in fallback used by RouteFormResumeInterceptor
+// ResumableFormProvider is the built-in fallback used by FormResumeRouteInterceptor
 // when a route has no explicit provider class. It is not registered here as a standalone
 // provider because it requires the real route's RouteInfo to function correctly.
 //
-// Register custom providers in your app's settings/oz.forms.providers.php:
+// Register custom providers in your app's settings/oz.forms.providers.php, keyed by the
+// provider's getName() (the `:provider` segment of the standalone endpoints):
 //
 //   return [
-//       MyProvider::PROVIDER_NAME => MyProvider::class,
+//       'my-survey' => MyProvider::class,
 //   ];
 return [];

@@ -20,7 +20,9 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\FS\FilesManager;
+use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Templates;
+use OZONE\Core\Scopes\StateLayout;
 
 /**
  * Class ScopesCmd.
@@ -30,9 +32,9 @@ final class ScopesCmd extends Command
 	/**
 	 * Adds new scope.
 	 *
-	 * @param Kli                                                                                                  $cli
-	 * @param FilesManager                                                                                         $fm
-	 * @param array{api:bool, name:string, origin:string, project_name:string, namespace:string, app_class:string} $options
+	 * @param Kli          $cli
+	 * @param FilesManager $fm
+	 * @param array        $options keys: api (bool), name, origin, project_name, namespace, app_class
 	 */
 	public static function addScope(
 		Kli $cli,
@@ -46,21 +48,32 @@ final class ScopesCmd extends Command
 		$namespace       = $options['namespace'];
 		$app_class       = $options['app_class'];
 
+		// The project root, captured before anything walks $fm: cd() moves a FilesManager in place.
+		$project_root = $fm->getRoot();
+
 		$private_abs_folder = $fm->resolve('scopes' . DS . $scope_name);
 		$public_abs_folder  = $fm->resolve('public' . DS . $scope_name);
 
-		if (\file_exists($private_abs_folder)) {
-			$fm->filter()
-				->isDir()
-				->isEmpty()
-				->assert($scope_name);
-		}
+		// An existing folder is only acceptable when it is an empty directory: the scope is otherwise
+		// already there, and scaffolding over it would overwrite its settings and entry point.
+		// The resolved paths, not the bare scope name: asserting `$scope_name` used to look for
+		// `{project}/{scope}`, a path that never exists, so the guard reported a missing directory
+		// instead of an existing scope -- and never actually checked that it was empty.
+		foreach ([$private_abs_folder, $public_abs_folder] as $folder) {
+			if (!\file_exists($folder)) {
+				continue;
+			}
 
-		if (\file_exists($public_abs_folder)) {
-			$fm->filter()
-				->isDir()
-				->isEmpty()
-				->assert($scope_name);
+			if (!\is_dir($folder) || !self::isEmptyDir($folder)) {
+				$cli->error(\sprintf(
+					'The scope "%s" already exists: "%s" is not an empty directory.'
+						. ' Remove it first, or choose another name.',
+					$scope_name,
+					$folder
+				));
+
+				return;
+			}
 		}
 
 		$settings_inject = Settings::genExportInfo('oz.request', [
@@ -127,10 +140,30 @@ final class ScopesCmd extends Command
 		$fm->cd($public_abs_folder, true)
 			->apply($public_structures);
 
+		// The scope's state directories, and the symlink its web root follows to the public files.
+		$project    = FS::from($project_root);
+		StateLayout::ensureAt($project, $scope_name);
+		$link_state = StateLayout::linkAt($project, $scope_name, $public_abs_folder);
+
 		$cli
 			->success(\sprintf('Scope "%s" added to project "%s".', $scope_name, $project_name))
 			->info(\sprintf('- Private folder: %s', $private_abs_folder))
 			->info(\sprintf('- Public folder: %s', $public_abs_folder));
+
+		if ('blocked' === $link_state) {
+			$cli->error(\sprintf(
+				'- Could not link %s%sstatic: something already exists there.',
+				$public_abs_folder,
+				DS
+			), true, null);
+		} else {
+			$cli->info(\sprintf(
+				'- Public files: %s (linked from %s%sstatic)',
+				StateLayout::dirAt($project, StateLayout::PUBLIC_FILES, $scope_name)->getRoot(),
+				$public_abs_folder,
+				DS
+			));
+		}
 	}
 
 	/**
@@ -141,7 +174,8 @@ final class ScopesCmd extends Command
 	{
 		$this->description('Manage your ozone project scopes.');
 		// https://stackoverflow.com/questions/37232382/what-is-protocol-and-host-combined-called
-		$origin_reg = '~^https?://(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])(?:\.(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9]))*(?::\d+)?$~';
+		$host_label = '(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])';
+		$origin_reg = '~^https?://' . $host_label . '(?:\.' . $host_label . ')*(?::\d+)?$~';
 
 		// action: add web client
 		$add = $this->action('add', 'Add new scope to your project.');
@@ -165,6 +199,24 @@ final class ScopesCmd extends Command
 			->bool()
 			->def(false);
 		$add->handler($this->add(...));
+	}
+
+	/**
+	 * Whether a directory holds nothing.
+	 *
+	 * @param string $dir
+	 *
+	 * @return bool
+	 */
+	private static function isEmptyDir(string $dir): bool
+	{
+		foreach (\scandir($dir) ?: [] as $entry) {
+			if ('.' !== $entry && '..' !== $entry) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

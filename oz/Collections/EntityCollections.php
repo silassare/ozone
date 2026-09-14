@@ -13,12 +13,14 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Collections;
 
+use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Collections\Interfaces\EntityCollectionsProviderInterface;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Events\DbReadyHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
 
 /**
@@ -42,13 +44,22 @@ final class EntityCollections implements BootHookReceiverInterface
 	 */
 	private static function registerCollections(DbReadyHook $ev): void
 	{
-		// make sure ozone is fully installed first
-		if (!OZone::isInstalled()) {
+		// A database a migration was installed on (a settings read, not the two queries of
+		// OZone::isInstalled(), whose super admin collections do not depend on).
+		if (Migrations::DB_NOT_INSTALLED_VERSION === Migrations::getInstalledDbVersion()) {
 			return;
 		}
 
-		$providers = Settings::load('oz.gobl.collections');
+		self::registerProviders($ev->db, Settings::load('oz.gobl.collections'));
+	}
 
+	/**
+	 * Registers the enabled providers of a `oz.gobl.collections` map.
+	 *
+	 * @param array<string, bool> $providers provider class -> enabled
+	 */
+	private static function registerProviders(RDBMSInterface $db, array $providers): void
+	{
 		foreach ($providers as $provider => $enabled) {
 			if (!$enabled) {
 				continue;
@@ -65,7 +76,7 @@ final class EntityCollections implements BootHookReceiverInterface
 			}
 
 			/** @var EntityCollectionsProviderInterface $provider */
-			$provider::register($ev->db);
+			$provider::register($db);
 		}
 	}
 }

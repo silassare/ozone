@@ -20,7 +20,6 @@ use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Traits\AskCredentialsByHTTPHeaderTrait;
-use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Router\RouteInfo;
 
@@ -51,14 +50,6 @@ class BasicAuth implements AuthenticationMethodInterface
 	 * BasicAuth constructor.
 	 */
 	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
-
-	/**
-	 * BasicAuth destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->ri);
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -139,29 +130,19 @@ class BasicAuth implements AuthenticationMethodInterface
 
 		if (false === $selector) {
 			throw new ForbiddenException(null, [
-				'_reason' => 'Invalid username format. Use auth_user_type|auth_user_identifier_type|auth_user_identifier_value for username.',
+				'_reason' => 'Invalid username format, expected '
+					. '"auth_user_type|auth_user_identifier_type|auth_user_identifier_value".',
 			]);
 		}
 
 		$user = AuthUsers::identifyBySelector($selector);
 
-		if (!$user) {
-			// unknown user
-			throw new ForbiddenException(null, [
-				'_reason' => 'Unknown auth user.',
-			]);
-		}
-		if (!$user->isAuthUserValid()) {
-			throw new ForbiddenException(null, [
-				'_reason' => 'Disabled auth user.',
-				'_user'   => AuthUsers::selector($user),
-			]);
-		}
+		// Same brute-force protection as the login route.
+		$error = AuthUsers::checkPassword($user, $this->password, $this->username);
 
-		if (!Password::verify($this->password, $user->getAuthPassword())) {
-			// invalid password
+		if (null !== $error || null === $user) {
 			throw new ForbiddenException(null, [
-				'_reason' => 'Invalid auth user password.',
+				'_reason' => $error ?? 'OZ_AUTH_INVALID_CREDENTIALS',
 			]);
 		}
 

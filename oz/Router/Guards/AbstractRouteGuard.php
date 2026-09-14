@@ -20,7 +20,7 @@ use OZONE\Core\App\JSONResponse;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Views\AccessGrantView;
@@ -50,7 +50,7 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 	 * @throws UnauthorizedException
 	 * @throws InvalidFormException
 	 */
-	protected function requireForm(Context $context, Form $form): FormData
+	protected function requireForm(Context $context, Form $form): FormDataClean
 	{
 		$request = $context->getRequest();
 		$state   = $context->requireAuthStore();
@@ -59,20 +59,20 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 
 		$reference  = Hasher::hash32((string) $uri);
 		$form_key   = \sprintf('route_guard.clean_forms.%s', $reference);
-		$clean_form = $state->get($form_key);
+		$cleaned_fd = $state->get($form_key);
 
-		if (\is_array($clean_form)) {
-			return new FormData($clean_form);
+		if (\is_array($cleaned_fd)) {
+			return new FormDataClean($cleaned_fd);
 		}
 
 		$req_grant_ref = $request->getUnsafeFormField('grant_form_ref');
 
 		if ($req_grant_ref === $reference) {
-			$clean_form = $form->validate($request->getUnsafeFormData());
+			$cleaned_fd = $form->validate($request->getUnsafeFormData());
 
-			$state->set($form_key, $clean_form);
+			$state->set($form_key, $cleaned_fd);
 
-			return $clean_form;
+			return $cleaned_fd;
 		}
 
 		$form->submitTo($uri);

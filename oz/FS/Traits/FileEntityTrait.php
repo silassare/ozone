@@ -17,6 +17,7 @@ use Gobl\ORM\ORMOptions;
 use OZONE\Core\App\Keys;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Enums\FileKind;
+use OZONE\Core\FS\Scan\FileScan;
 use OZONE\Core\Router\Guards;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 
@@ -27,11 +28,17 @@ trait FileEntityTrait
 {
 	/**
 	 * {@inheritDoc}
+	 *
+	 * A new file goes through the virus scan ({@see FileScan}) when it is enabled.
 	 */
 	public function save(): bool
 	{
-		if ($this->isNew()) {
+		$is_new = $this->isNew();
+
+		if ($is_new) {
 			$this->setKey(Keys::newFileKey());
+
+			FileScan::beforeInsert($this);
 		}
 
 		$mime = $this->getMime();
@@ -40,7 +47,13 @@ trait FileEntityTrait
 			$this->setKind(FileKind::fromMime($mime));
 		}
 
-		return parent::save();
+		$saved = parent::save();
+
+		if ($is_new) {
+			FileScan::afterInsert($this);
+		}
+
+		return $saved;
 	}
 
 	/**
@@ -57,7 +70,7 @@ trait FileEntityTrait
 		}
 
 		$f    = new static();
-		$data = $this->toArray(false);
+		$data = $this->toRow(); // not toArray(): it blanks the storage ref
 
 		unset($data[self::COL_ID]); // we want a new file id
 
@@ -88,6 +101,11 @@ trait FileEntityTrait
 	 */
 	public function hasClones(): bool
 	{
+		// The relation query of an unsaved file would look for clones of a null id.
+		if ($this->isNew()) {
+			return false;
+		}
+
 		return (bool) \count($this->getClones(ORMOptions::makePaginated(1)) ?? []);
 	}
 

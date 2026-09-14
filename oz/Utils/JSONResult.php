@@ -50,14 +50,6 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	}
 
 	/**
-	 * JSONResult destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->error, $this->msg, $this->data);
-	}
-
-	/**
 	 * Checks if the result is an error.
 	 *
 	 * @return bool

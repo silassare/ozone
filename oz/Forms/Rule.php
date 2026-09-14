@@ -17,6 +17,7 @@ use Override;
 use OZONE\Core\Forms\Enums\RuleOperator;
 use OZONE\Core\Lang\I18nMessage;
 use PHPUtils\Interfaces\ArrayCapableInterface;
+use PHPUtils\Store\Store;
 use PHPUtils\Traits\ArrayCapableTrait;
 
 /**
@@ -27,11 +28,11 @@ use PHPUtils\Traits\ArrayCapableTrait;
  * internally by {@see RuleSet} and should not be instantiated directly.
  *
  * Two comparison modes:
- *  - Value   : field ref vs. a scalar / {@see DynamicValue}
+ *  - Value   : field ref vs. a scalar / {@see AsyncValue}
  *  - Cross-field: field ref vs. another field ref (target_ref)
  *
  * A rule is considered server-only when its comparison value is a
- * {@see DynamicValue} (resolved at runtime, never exposed to the client).
+ * {@see AsyncValue} (resolved at runtime, never exposed to the client).
  */
 final class Rule implements ArrayCapableInterface
 {
@@ -40,7 +41,7 @@ final class Rule implements ArrayCapableInterface
 	/**
 	 * Whether this rule must be evaluated server-side only.
 	 *
-	 * True when {@see $value} is a {@see DynamicValue}.
+	 * True when {@see $value} is an {@see AsyncValue}.
 	 */
 	public readonly bool $server_only;
 
@@ -49,7 +50,7 @@ final class Rule implements ArrayCapableInterface
 	 *
 	 * @param string                  $field_ref  the field to evaluate
 	 * @param RuleOperator            $operator   the comparison operator
-	 * @param mixed                   $value      the right-hand scalar or {@see DynamicValue}
+	 * @param mixed                   $value      the right-hand scalar or {@see AsyncValue}
 	 *                                            (ignored when $target_ref is set)
 	 * @param null|string             $target_ref field ref to compare against (cross-field mode)
 	 * @param null|I18nMessage|string $message    optional failure message
@@ -62,34 +63,29 @@ final class Rule implements ArrayCapableInterface
 		public readonly I18nMessage|string|null $message,
 	) {
 		$this->server_only = null === $target_ref
-			&& $value instanceof DynamicValue
+			&& $value instanceof AsyncValue
 			&& !$value->isClientResolvable();
 	}
 
 	/**
 	 * Evaluates this rule against the given form data.
 	 *
-	 * @param FormData $fd
+	 * @param Store                 $data the operand source selected by the owning rule set
+	 * @param FormValidationContext $ctx  full context, handed to {@see AsyncValue} factories
 	 *
 	 * @return bool
 	 */
-	public function evaluate(FormData $fd): bool
+	public function evaluate(Store $data, FormValidationContext $ctx): bool
 	{
-		if (!$fd->has($this->field_ref)) {
-			oz_trace(\sprintf(
-				'[RuleSet] field_ref "%s" is absent from FormData during rule evaluation (operator: %s). '
-					. 'Absent fields evaluate to null. Verify the field name and the evaluation context (UNSAFE vs CLEANED).',
-				$this->field_ref,
-				$this->operator->value
-			));
-		}
-
-		$a = $fd->get($this->field_ref);
+		// An absent field evaluates to null: optional fields are legitimately absent, and
+		// reading a field validated later in the same pass is caught by
+		// FormValidationContext::assertReadable().
+		$a = $data->get($this->field_ref);
 
 		if (null !== $this->target_ref) {
-			$b = $fd->get($this->target_ref);
-		} elseif ($this->value instanceof DynamicValue) {
-			$b = $this->value->getValue($fd);
+			$b = $data->get($this->target_ref);
+		} elseif ($this->value instanceof AsyncValue) {
+			$b = $this->value->getValue($ctx);
 		} else {
 			$b = $this->value;
 		}
@@ -136,7 +132,7 @@ final class Rule implements ArrayCapableInterface
 		if (null !== $this->target_ref) {
 			$arr['target_ref'] = $this->target_ref;
 		} else {
-			$arr['value'] = $this->value instanceof DynamicValue
+			$arr['value'] = $this->value instanceof AsyncValue
 				? $this->value->toArray()
 				: $this->value;
 		}

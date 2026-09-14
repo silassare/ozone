@@ -13,8 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Core\App;
 
-use InvalidArgumentException;
-use LogicException;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodStatefulInterface;
@@ -23,36 +21,42 @@ use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Events\FinishHook;
-use OZONE\Core\Hooks\Events\RedirectHook;
 use OZONE\Core\Hooks\Events\RequestHook;
 use OZONE\Core\Hooks\Events\ResponseHook;
+use OZONE\Core\Http\ClientInfo;
 use OZONE\Core\Http\Headers;
 use OZONE\Core\Http\HTTPEnvironment;
-use OZONE\Core\Http\RangeResponse;
 use OZONE\Core\Http\Request;
 use OZONE\Core\Http\Response;
+use OZONE\Core\Http\ResponseEmitter;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\OZone;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Utils\Utils;
-use OZONE\Core\Web\Views\RedirectView;
+use OZONE\Core\Runtime\Exceptions\RequestFinished;
+use OZONE\Core\Runtime\Interfaces\ResponseSinkInterface;
+use OZONE\Core\Runtime\Runtime;
 use PHPUtils\Store\StoreNotEditable;
 use Throwable;
 
 /**
  * Class Context.
+ *
+ * One request (or sub-request) and everything about it: the request and response, the
+ * matched route, the context tree (root, current, parent) and the router. Its other
+ * concerns live in dedicated objects, which the shortcut methods below delegate to:
+ *
+ * - {@see self::client()}: client IP, host, origin ({@see ClientInfo});
+ * - {@see self::authState()}: the authentication method, stateful store and users
+ *   ({@see ContextAuth});
+ * - sub-requests and redirections ({@see Navigator});
+ * - sending the response ({@see ResponseEmitter}, or the worker's {@see ResponseSinkInterface}).
  */
 final class Context
 {
 	public const CONTEXT_TYPE_API = 1;
 
 	public const CONTEXT_TYPE_WEB = 2;
-
-	private static array $redirect_history = [];
-
-	private string $host           = '';
-	private string $host_with_port = '';
 
 	private bool $handle_called = false;
 
@@ -68,30 +72,37 @@ final class Context
 
 	private Response $response;
 
-	private AuthUsers $users;
-	private ?AuthenticationMethodInterface $auth;
+	private ContextAuth $auth_state;
+
+	private ?ClientInfo $client = null;
+
+	private ?Navigator $navigator = null;
 
 	private ?RouteInfo $route_info = null;
 
-	private static ?self $_root    = null;
-	private static ?self $_current = null;
+	private static ?self $root_context    = null;
+	private static ?self $current_context = null;
 
 	/**
 	 * Context constructor.
 	 *
-	 * @param HTTPEnvironment $http_env
-	 * @param null|Request    $request
-	 * @param null|Context    $parent
-	 * @param bool            $is_api
+	 * @param HTTPEnvironment            $http_env
+	 * @param null|Request               $request
+	 * @param null|Context               $parent
+	 * @param bool                       $is_api
+	 * @param null|ResponseSinkInterface $response_sink where the response goes instead of PHP's
+	 *                                                  output; a root context's only, see
+	 *                                                  {@see self::getResponseSink()}
 	 */
 	public function __construct(
 		HTTPEnvironment $http_env,
 		?Request $request = null,
 		private readonly ?self $parent = null,
-		bool $is_api = true
+		bool $is_api = true,
+		private readonly ?ResponseSinkInterface $response_sink = null
 	) {
-		if (null === self::$_root) {
-			self::$_root = $this;
+		if (null === self::$root_context) {
+			self::$root_context = $this;
 		} elseif (null === $parent) {
 			throw new RuntimeException('Parent context is required. Root context already set.');
 		}
@@ -105,23 +116,7 @@ final class Context
 		$response               = new Response(200, $headers);
 		$this->response         = $response->withProtocolVersion($this->request->getProtocolVersion());
 
-		$this->users = new AuthUsers($this);
-	}
-
-	/**
-	 * Context destructor.
-	 */
-	public function __destruct()
-	{
-		unset(
-			$this->users,
-			$this->response,
-			$this->request,
-			$this->http_environment,
-			$this->t_router,
-			$this->route_info,
-			$this->auth,
-		);
+		$this->auth_state = new ContextAuth(new AuthUsers($this));
 	}
 
 	/**
@@ -130,19 +125,43 @@ final class Context
 	private function __clone() {}
 
 	/**
+	 * Ends the current request's context tree, so the next request can start its own.
+	 *
+	 * A root context is refused while one is already set, and the request lifecycle normally ends in
+	 * `exit`, so one process serves one request. A persistent worker (RoadRunner, Swoole,
+	 * FrankenPHP worker mode) has to call this between requests instead -- together with
+	 * {@see OZone::endRequest()}, which releases the rest of the per-request state.
+	 *
+	 * @internal
+	 */
+	public static function release(): void
+	{
+		self::$root_context    = null;
+		self::$current_context = null;
+	}
+
+	/**
 	 * Returns the current context.
 	 */
 	public static function current(): static
 	{
-		if (!isset(self::$_current)) {
-			if (!isset(self::$_root)) {
+		if (!isset(self::$current_context)) {
+			if (!isset(self::$root_context)) {
 				throw new RuntimeException('No context was created.');
 			}
 
-			return self::$_root;
+			return self::$root_context;
 		}
 
-		return self::$_current;
+		return self::$current_context;
+	}
+
+	/**
+	 * Whether a request's context tree exists (between two requests of a worker, it does not).
+	 */
+	public static function hasRoot(): bool
+	{
+		return null !== self::$root_context;
 	}
 
 	/**
@@ -150,11 +169,11 @@ final class Context
 	 */
 	public static function root(): static
 	{
-		if (!isset(self::$_root)) {
+		if (!isset(self::$root_context)) {
 			throw new RuntimeException('No context was created.');
 		}
 
-		return self::$_root;
+		return self::$root_context;
 	}
 
 	/**
@@ -191,8 +210,8 @@ final class Context
 
 		$this->handle_called = true;
 
-		$previous             = self::$_current;
-		self::$_current       = $this;
+		$previous              = self::$current_context;
+		self::$current_context = $this;
 
 		try {
 			$uri           = $this->request->getUri();
@@ -210,11 +229,15 @@ final class Context
 				->handle($this, function (RouteInfo $route_info): void {
 					$this->authenticate($route_info);
 				});
+		} catch (RequestFinished $finished) {
+			// Control flow, not an error: a persistent runtime uses it where PHP-FPM would `exit`,
+			// so it has to reach the worker loop rather than become a response.
+			throw $finished;
 		} catch (Throwable $t) {
 			BaseException::tryConvert($t)
 				->informClient($this);
 		} finally {
-			self::$_current = $previous;
+			self::$current_context = $previous;
 		}
 
 		return $this;
@@ -248,7 +271,7 @@ final class Context
 	public function getRouteInfo(): RouteInfo
 	{
 		if (!isset($this->route_info)) {
-			throw new RuntimeException('No route info is available yet. This is only available after the router found a route for the request and before the route handler is called.');
+			throw new RuntimeException('No route info yet: the router has not matched a route.');
 		}
 
 		return $this->route_info;
@@ -277,31 +300,49 @@ final class Context
 	}
 
 	/**
+	 * Gets the parent context of a sub-request, or null for a request.
+	 */
+	public function getParent(): ?self
+	{
+		return $this->parent;
+	}
+
+	/**
+	 * What the request tells about its client: IP, host, origin.
+	 */
+	public function client(): ClientInfo
+	{
+		return $this->client ??= new ClientInfo($this->http_environment, $this->request);
+	}
+
+	/**
+	 * The authentication state of the request.
+	 */
+	public function authState(): ContextAuth
+	{
+		return $this->auth_state;
+	}
+
+	/**
+	 * The navigator handling sub-requests and redirections.
+	 *
+	 * @internal use {@see self::callRoute()}, {@see self::redirect()}, ...
+	 */
+	public function navigator(): Navigator
+	{
+		return $this->navigator ??= new Navigator($this, $this->http_environment);
+	}
+
+	/**
 	 * Gets current auth.
+	 *
+	 * Shortcut for {@see ContextAuth::method()}.
 	 *
 	 * @return AuthenticationMethodInterface
 	 */
 	public function auth(): AuthenticationMethodInterface
 	{
-		// if not defined we throw exception
-		// as this seems to be required but not defined
-		// in the route options or called before the route was found
-		if (!isset($this->auth)) {
-			if (!isset($this->route_info)) {
-				throw new RuntimeException(
-					\sprintf('"%s" was called before a route was found.', __METHOD__)
-				);
-			}
-
-			throw (new RuntimeException(
-				\sprintf('No auth method was defined for the current route but "%s" was called.', __METHOD__)
-			)
-			)->suspectCallable(
-				$this->route_info->getEffectiveHandler()
-			);
-		}
-
-		return $this->auth;
+		return $this->auth_state->method();
 	}
 
 	/**
@@ -311,11 +352,7 @@ final class Context
 	 */
 	public function hasAuthenticatedUser(): bool
 	{
-		try {
-			return (bool) $this->auth()->user();
-		} catch (Throwable) {
-			return false;
-		}
+		return $this->auth_state->hasAuthenticatedUser();
 	}
 
 	/**
@@ -325,11 +362,7 @@ final class Context
 	 */
 	public function hasStatefulAuth(): bool
 	{
-		try {
-			return (bool) $this->requireStatefulAuth();
-		} catch (Throwable) {
-			return false;
-		}
+		return $this->auth_state->isStateful();
 	}
 
 	/**
@@ -339,17 +372,7 @@ final class Context
 	 */
 	public function requireStatefulAuth(): AuthenticationMethodStatefulInterface
 	{
-		$auth = $this->auth();
-		if ($auth instanceof AuthenticationMethodStatefulInterface) {
-			return $auth;
-		}
-
-		throw new RuntimeException(
-			\sprintf('"%s" was called but the current auth method is not stateful.', __METHOD__),
-			[
-				'auth' => \get_class($auth),
-			]
-		);
+		return $this->auth_state->requireStateful();
 	}
 
 	/**
@@ -359,12 +382,7 @@ final class Context
 	 */
 	public function authStore(): ?StatefulAuthenticationMethodStore
 	{
-		try {
-			return $this->requireAuthStore();
-		} catch (Throwable) {
-		}
-
-		return null;
+		return $this->auth_state->store();
 	}
 
 	/**
@@ -374,8 +392,7 @@ final class Context
 	 */
 	public function requireAuthStore(): StatefulAuthenticationMethodStore
 	{
-		return $this->requireStatefulAuth()
-			->store();
+		return $this->auth_state->requireStore();
 	}
 
 	/**
@@ -385,7 +402,7 @@ final class Context
 	 */
 	public function getAuthUsers(): AuthUsers
 	{
-		return $this->users;
+		return $this->auth_state->users();
 	}
 
 	/**
@@ -454,7 +471,7 @@ final class Context
 	public function buildUri(string $path, array $query = []): Uri
 	{
 		return $this->request->getUri()
-			->withHost($this->getHost())
+			->withHost($this->client()->host())
 			->withPath($path, true)
 			->withQueryArray($query);
 	}
@@ -477,96 +494,31 @@ final class Context
 	}
 
 	/**
-	 * Gets user IP address.
+	 * Gets the client IP address.
 	 *
-	 * @param bool $with_port            Should we append port to the IP address ? Default: false. (Mostly for user
-	 *                                   under IPS...)
-	 * @param bool $risky                Should we use risky method ? Default: false. (For user under ISP/Proxy...)
-	 * @param bool $allowed_proxies_only In risky mode should we accept allowed proxies only ? Default: true
+	 * Shortcut for {@see ClientInfo::ip()}.
+	 *
+	 * @param bool $with_port append the client port; only known when the client is the TCP peer
 	 *
 	 * @return null|string
 	 */
-	public function getUserIP(bool $with_port = false, bool $risky = false, bool $allowed_proxies_only = true): ?string
+	public function getUserIP(bool $with_port = false): ?string
 	{
-		// You're crazy to rely on something other than this :)
-		$user_ip   = $this->http_environment->get('REMOTE_ADDR');
-		$user_port = $this->http_environment->get('REMOTE_PORT');
+		return $this->client()->ip($with_port);
+	}
 
-		if (empty($user_ip)) { // we can't trust this request
-			return null;
-		}
-
-		if ($risky) {
-			if (false === $allowed_proxies_only || true === Settings::get('oz.proxies', $user_ip)) {
-				$sources = [
-					// cloudflare
-					'HTTP_CF_CONNECTING_IP',
-
-					// other
-					'HTTP_CLIENT_IP',
-					'HTTP_X_FORWARDED_FOR',
-					'HTTP_X_FORWARDED',
-					'HTTP_X_CLUSTER_CLIENT_IP',
-					'HTTP_FORWARDED_FOR',
-					'HTTP_FORWARDED',
-				];
-
-				foreach ($sources as $source) {
-					$value = $this->http_environment->get($source);
-					if ($value) {
-						$value = \strtolower($value);
-
-						if (
-							\preg_match_all(
-								'~(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[[a-f0-9:]+])(?::(\d+))?~',
-								$value,
-								$matches
-							)
-						) {
-							$ips   = $matches[1] ?? [];
-							$ports = $matches[2] ?? [];
-							foreach ($ips as $index => $unsafe_ip) {
-								$unsafe_ip   = \str_replace(['[', ']'], '', $unsafe_ip);
-								$unsafe_port = $ports[$index] ?? null;
-
-								if (
-									($unsafe_ip = \filter_var(
-										$unsafe_ip,
-										\FILTER_VALIDATE_IP,
-										\FILTER_FLAG_IPV4
-											| \FILTER_FLAG_IPV6
-											| \FILTER_FLAG_NO_PRIV_RANGE
-											| \FILTER_FLAG_NO_RES_RANGE
-									)) !== false
-								) {
-									$user_ip   = $unsafe_ip;
-									$user_port = $unsafe_port;
-
-									break 2;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if ($with_port && !empty($user_port)) {
-			if (\str_contains($user_ip, ':')) {
-				// Woo hah!!! we got an IPV6 address,
-				// In order to append the port,
-				// We should enclose it in square brackets []
-				$user_ip = '[' . $user_ip . ']';
-			}
-
-			$user_ip .= ':' . $user_port;
-		}
-
-		return $user_ip;
+	/**
+	 * Whether the TCP peer is a trusted proxy (see `oz.proxies`).
+	 */
+	public function isFromTrustedProxy(): bool
+	{
+		return $this->client()->isFromTrustedProxy();
 	}
 
 	/**
 	 * Gets the host.
+	 *
+	 * Shortcut for {@see ClientInfo::host()}.
 	 *
 	 * @param bool $with_port
 	 *
@@ -574,55 +526,7 @@ final class Context
 	 */
 	public function getHost(bool $with_port = false): string
 	{
-		if (empty($this->host)) {
-			$sources = [
-				'HTTP_X_FORWARDED_HOST',
-				'HTTP_HOST',
-				'SERVER_NAME',
-				'SERVER_ADDR',
-			];
-
-			$transformers['HTTP_X_FORWARDED_HOST'] = static function ($value): string {
-				$parts = \explode(',', $value);
-
-				return \trim(\end($parts));
-			};
-
-			$found = null;
-
-			foreach ($sources as $source) {
-				if (!$this->http_environment->has($source)) {
-					continue;
-				}
-
-				$found = $this->http_environment->get($source);
-
-				if (\array_key_exists($source, $transformers)) {
-					$found = $transformers[$source]($found);
-				}
-
-				if (!empty($found)) {
-					break;
-				}
-			}
-
-			$found ??= $this->getDefaultOrigin();
-
-			if (!\preg_match('~^https?://~', $found)) {
-				$found = 'https://' . $found;
-			}
-
-			$uri                  = Uri::createFromString($found);
-			$this->host           = $uri->getHost();
-			$port                 = $uri->getPort();
-			$this->host_with_port = $this->host;
-
-			if ($port) {
-				$this->host_with_port .= ':' . $port;
-			}
-		}
-
-		return $with_port ? $this->host_with_port : $this->host;
+		return $this->client()->host($with_port);
 	}
 
 	/**
@@ -632,7 +536,7 @@ final class Context
 	 */
 	public function getDefaultOrigin(): string
 	{
-		return (string) Uri::createFromString(Settings::get('oz.request', 'OZ_DEFAULT_ORIGIN'));
+		return $this->client()->defaultOrigin();
 	}
 
 	/**
@@ -651,81 +555,33 @@ final class Context
 
 		(new ResponseHook($this))->dispatch();
 
-		if ($this->hasStatefulAuth()) {
-			$this->requireStatefulAuth()->persist();
+		if ($this->auth_state->isStateful()) {
+			$this->auth_state->requireStateful()->persist();
 		}
 
-		$response = $this->response = $this->fixResponse($this->response);
+		$this->response = ResponseEmitter::prepare($this->response, $this->request);
 
-		$chunk_size = 4096;
+		$sink = $this->getResponseSink();
 
-		// Send response
-		if (!\headers_sent()) {
-			// Status
-			\header(
-				\sprintf(
-					'HTTP/%s %s %s',
-					$response->getProtocolVersion(),
-					$status_code = $response->getStatusCode(),
-					$response->getReasonPhrase()
-				)
-			);
-
-			// Headers
-			foreach ($response->getHeaders() as $name => $values) {
-				/** @var string $name */
-				$replace = (0 === \strcasecmp($name, 'Content-Type'));
-				foreach ($values as $value) {
-					\header(\sprintf('%s: %s', $name, $value), $replace, $status_code);
-				}
-			}
+		if (null === $sink) {
+			ResponseEmitter::emit($this->response);
+		} else {
+			$sink->send($this->response);
 		}
 
-		// Body
-		if (!$response->isEmpty()) {
-			$body = $response->getBody();
+		$this->finish($sink);
+	}
 
-			// For 206 Partial Content, RangeResponse::apply() already seeked the body
-			// to the range start position - rewinding would reset that.
-			if ($body->isSeekable() && 206 !== $response->getStatusCode()) {
-				$body->rewind();
-			}
-
-			$content_length = (int) $response->getHeaderLine('Content-Length');
-
-			if (!$content_length) {
-				$content_length = $body->getSize();
-			}
-
-			if (isset($content_length)) {
-				$amount_to_read = $content_length;
-
-				while ($amount_to_read > 0 && !$body->eof()) {
-					$data = $body->read(\min($chunk_size, $amount_to_read));
-					echo $data;
-
-					$amount_to_read -= \strlen($data);
-
-					if (\CONNECTION_NORMAL !== \connection_status()) {
-						$body->close();
-
-						break;
-					}
-				}
-			} else {
-				while (!$body->eof()) {
-					echo $body->read($chunk_size);
-
-					if (\CONNECTION_NORMAL !== \connection_status()) {
-						$body->close();
-
-						break;
-					}
-				}
-			}
-		}
-
-		$this->finish();
+	/**
+	 * Where the response of this request goes, or null when it is written to PHP's output
+	 * (`header()` and `echo`).
+	 *
+	 * The sink belongs to the request, so a sub-request answers through its root's: it is the
+	 * worker loop's, given to {@see OZone::handleRequest()} with the request it came with.
+	 */
+	public function getResponseSink(): ?ResponseSinkInterface
+	{
+		return null === $this->parent ? $this->response_sink : $this->parent->getResponseSink();
 	}
 
 	/**
@@ -744,10 +600,7 @@ final class Context
 		array $query = [],
 		bool $override_response = true
 	): Response {
-		$path = $this->getRouter()
-			->buildRoutePath($this, $route_name, $params);
-
-		return $this->callPath($path, $params, $query, $override_response);
+		return $this->navigator()->callRoute($route_name, $params, $query, $override_response);
 	}
 
 	/**
@@ -766,24 +619,7 @@ final class Context
 		array $query = [],
 		bool $override_response = true
 	): Response {
-		$http_env = $this->http_environment;
-		$request  = Request::createFromHTTPEnvironment($http_env);
-		$uri      = $request->getUri()
-			->withPath($path, true)
-			->withQueryArray($query);
-
-		$request = $request->withAttributes($attributes)
-			->withUri($uri);
-
-		$context  = new self($http_env, $request, $this, $this->isApiContext());
-		$response = $context->handle()
-			->getResponse();
-
-		if ($override_response) {
-			$this->setResponse($response);
-		}
-
-		return $response;
+		return $this->navigator()->callPath($path, $attributes, $query, $override_response);
 	}
 
 	/**
@@ -794,33 +630,7 @@ final class Context
 	 */
 	public function redirect(string|Uri $to, ?int $status = null): never
 	{
-		$uri = $to instanceof Uri ? $to : Uri::createFromString($to);
-
-		if (empty($uri->getHost())) {
-			$req_uri = $this->request->getUri();
-			$uri     = $req_uri
-				->withPath($uri->getPath())
-				->withFragment($uri->getFragment())
-				->withQuery($uri->getQuery());
-		}
-
-		$uri_str = (string) $uri;
-
-		$this->checkRecursiveRedirection($uri_str, ['status' => $status]);
-
-		if (!\filter_var($uri_str, \FILTER_VALIDATE_URL)) {
-			throw new InvalidArgumentException(\sprintf('Invalid redirect url: %s', $uri_str));
-		}
-
-		(new RedirectHook($this, $uri))->dispatch();
-
-		if ($this->isApiContext()) {
-			$response = $this->response->withRedirect($uri_str, $status);
-			$this->setResponse($response);
-			$this->respond();
-		} else {
-			$this->redirectRoute(RedirectView::REDIRECT_ROUTE, ['url' => $uri_str, 'status' => $status]);
-		}
+		$this->navigator()->redirect($to, $status);
 	}
 
 	/**
@@ -839,119 +649,73 @@ final class Context
 		bool $inform_user = true,
 		?int $status = null,
 	): never {
-		$this->checkRecursiveRedirection(
-			$route_name,
-			[
-				'params'      => $params,
-				'query'       => $query,
-				'inform_user' => $inform_user,
-			]
-		);
+		$this->navigator()->redirectRoute($route_name, $params, $query, $inform_user, $status);
+	}
 
-		$path = $this->getRouter()
-			->buildRoutePath($this, $route_name, $params);
-
-		self::$redirect_history[$route_name] = ['path' => $path, 'params' => $params];
-
-		if ($inform_user && !OZone::isInternalPath($path)) {
-			$uri = Uri::createFromEnvironment($this->http_environment)
-				->withPath($path, true)
-				->withQueryArray($query);
-
-			$this->redirect((string) $uri, $status);
-		} else {
-			$this->callPath($path, $params, $query);
-			$this->respond();
-		}
+	/**
+	 * Gets the request `Origin` header, when it is an http(s) origin.
+	 *
+	 * Shortcut for {@see ClientInfo::origin()}.
+	 */
+	public function getRequestOrigin(): ?string
+	{
+		return $this->client()->origin();
 	}
 
 	/**
 	 * Gets the request origin or referer.
 	 *
-	 * don't trust on what you get from this
+	 * Shortcut for {@see ClientInfo::originOrReferer()}; never trust it for security decisions.
 	 *
 	 * @return null|string
 	 */
 	public function getRequestOriginOrReferer(): ?string
 	{
-		$origin = '';
-
-		if ($this->http_environment->has('HTTP_ORIGIN')) {
-			$origin = $this->http_environment->get('HTTP_ORIGIN');
-		} elseif ($this->http_environment->has('HTTP_REFERER')) {
-			// not safe at all: be aware
-			$origin = $this->http_environment->get('HTTP_REFERER');
-		}
-
-		// ignore android-app://com.google.android....
-		if (\preg_match('~^https?://~', $origin)) {
-			return $origin;
-		}
-
-		return null;
+		return $this->client()->originOrReferer();
 	}
 
 	/**
 	 * Returns custom headers name for use in CORS.
 	 *
+	 * Shortcut for {@see ClientInfo::corsAllowedHeaders()}.
+	 *
 	 * @return array
 	 */
 	public function getAllowedHeadersNameList(): array
 	{
-		$access_control_headers = $this->request->getHeaderLine('HTTP_ACCESS_CONTROL_REQUEST_HEADERS');
-		$provided               = [];
-		if (!empty($access_control_headers)) {
-			$provided = \explode(',', $access_control_headers);
-		}
-
-		$declared                    = Settings::get('oz.request', 'OZ_CORS_ALLOWED_HEADERS');
-		$declared[]                  = \strtolower(Settings::get('oz.auth', 'OZ_AUTH_API_KEY_HEADER_NAME'));
-		$allow_real_method_header    = Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_ALLOWED');
-		$allow_form_discovery_header = Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_ALLOWED');
-
-		if ($allow_real_method_header) {
-			$declared[] = \strtolower(Settings::get('oz.request', 'OZ_REAL_METHOD_HEADER_NAME'));
-		}
-
-		if ($allow_form_discovery_header) {
-			$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_NAME'));
-		}
-
-		$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_RESUME_HEADER_NAME'));
-		$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_RESUME_REF_HEADER_NAME'));
-		$declared[] = \strtolower(Settings::get('oz.request', 'OZ_FORM_RESUME_ACTION_HEADER_NAME'));
-
-		$bundle = \array_merge($declared, $provided);
-
-		return \array_unique(
-			\array_map(static fn($entry) => \strtolower(\trim($entry)), $bundle)
-		);
+		return $this->client()->corsAllowedHeaders();
 	}
 
 	/**
 	 * Finish the request.
+	 *
+	 * @param null|ResponseSinkInterface $sink the sink that took the response, if any
 	 */
-	private function finish(): never
+	private function finish(?ResponseSinkInterface $sink): never
 	{
-		// Finish the request
-		if (\function_exists('fastcgi_finish_request')) {
-			fastcgi_finish_request();
-		} elseif (!\in_array(\PHP_SAPI, ['cli', 'phpdbg'], true)) {
-			Utils::closeOutputBuffers(0, true);
+		$runtime = Runtime::current();
+
+		// The response is on its way; what follows runs with the client already served. A sink has
+		// sent it already, and flushing PHP's output would write to whatever the server made of
+		// STDOUT -- under RoadRunner, the protocol pipe.
+		if (null === $sink) {
+			$runtime->flushRequest();
 		}
 
 		(new FinishHook($this))->dispatch();
 
-		exit;
+		// How a request ends is the runtime's business, and the only thing a persistent process does
+		// differently: PHP-FPM exits here, a worker unwinds to its loop. Either way nothing written
+		// after a call to this runs. That is the published contract of `respond()` being `: never`,
+		// which application code writes against as much as the framework does -- a handler that
+		// responds and then falls through to a throw, a redirect, or a `return` it expects to be
+		// unreachable. A runtime that merely skipped the exit would run all of it.
+		$runtime->terminate();
 	}
 
 	/**
-	 * Authenticates the request.
-	 *
-	 * When no auth method was defined for the current route, just returns null.
-	 * When auth method was defined for the current route:
-	 *  - If the request didn't satisfy none of them, an exception is thrown.
-	 *  - The first auth method that satisfies the request is used to authenticate the request.
+	 * Authenticates the request with the matched route's methods, see
+	 * {@see ContextAuth::authenticate()}.
 	 *
 	 * @param RouteInfo $ri
 	 *
@@ -959,94 +723,8 @@ final class Context
 	 */
 	private function authenticate(RouteInfo $ri): void
 	{
-		if (isset($this->auth)) {
-			throw new LogicException('Authentication already done.');
-		}
-
 		$this->route_info = $ri;
-		$route            = $ri->route();
-		$auths_methods    = $route->getOptions()
-			->getAuthenticationMethods();
 
-		if (empty($auths_methods)) {
-			return;
-		}
-
-		// For sub request we reuse the parent request auth
-		// if it's one of the auth methods defined for the current route
-		if ($this->is_sub_request && isset($this->parent->auth)) {
-			$parent_auth = $this->parent->auth;
-			if (\in_array($parent_auth::class, $auths_methods, true)) {
-				$this->auth = $parent_auth;
-
-				return;
-			}
-		}
-
-		/** @var AuthenticationMethodInterface $class */
-		foreach ($auths_methods as $class) {
-			$instance = $class::get($ri, 'Authentication required.');
-
-			if ($instance->satisfied()) {
-				$instance->authenticate();
-
-				$this->auth = $instance;
-
-				return;
-			}
-		}
-
-		throw new ForbiddenException('Authentication required.');
-	}
-
-	/**
-	 * Try fix response.
-	 *
-	 * @param Response $response
-	 *
-	 * @return Response
-	 */
-	private function fixResponse(Response $response): Response
-	{
-		if ($response->isEmpty()) {
-			return $response->withoutHeader('Content-Type')
-				->withoutHeader('Content-Length');
-		}
-
-		$size = $response->getBody()
-			->getSize();
-
-		if (null !== $size) {
-			$response = $response->withHeader('Content-Length', (string) $size);
-		}
-
-		// Apply range / conditional-request logic for any response that opted in
-		// to byte-range serving by setting the Accept-Ranges: bytes header.
-		if ($response->hasHeader('Accept-Ranges')) {
-			$response = RangeResponse::apply($this->getRequest(), $response);
-		}
-
-		return $response;
-	}
-
-	/**
-	 * Checks for recursive redirection.
-	 *
-	 * @param string $path
-	 * @param array  $info
-	 */
-	private function checkRecursiveRedirection(string $path, array $info): void
-	{
-		if (isset(self::$redirect_history[$path])) {
-			$debug = [
-				'to$to'   => $path,
-				'data'    => $info,
-				'history' => self::$redirect_history,
-			];
-
-			throw new RuntimeException('OZ_RECURSIVE_REDIRECTION', $debug);
-		}
-
-		self::$redirect_history[$path] = $info;
+		$this->auth_state->authenticate($ri, $this->parent?->auth_state);
 	}
 }

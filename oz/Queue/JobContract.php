@@ -41,8 +41,12 @@ class JobContract extends Job implements JobContractInterface
 	 * @param array             $payload
 	 * @param JobStoreInterface $store
 	 */
-	public function __construct(string $ref, string $worker, array $payload, protected readonly JobStoreInterface $store)
-	{
+	public function __construct(
+		string $ref,
+		string $worker,
+		array $payload,
+		protected readonly JobStoreInterface $store
+	) {
 		parent::__construct($ref, $worker, $payload);
 	}
 

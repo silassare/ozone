@@ -99,7 +99,7 @@ final class BatchManager
 		$store    = JobsManager::getStore($store_name);
 
 		foreach ($workers as $worker) {
-			$ref = Keys::id64('job-ref');
+			$ref = Keys::id64();
 			$job = (new Job($ref, $worker::getName(), $worker->getPayload()))
 				->setQueue($queue_name)
 				->setName($worker::getName())

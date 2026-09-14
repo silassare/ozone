@@ -41,14 +41,6 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
 
 	/**
-	 * ApiKeyHeaderAuth destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->ri);
-	}
-
-	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
@@ -103,8 +95,7 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 
 		if (!$auth) {
 			throw new ForbiddenException(null, [
-				'_reason'  => 'Invalid api key.',
-				'_api_key' => $this->api_key,
+				'_reason' => 'Invalid api key.',
 			]);
 		}
 		$this->authenticateWithAuthEntity($auth);
@@ -122,8 +113,6 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 			throw new ForbiddenException('OZ_MISSING_API_KEY');
 		}
 
-		throw new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID', [
-			'_api_key' => $this->api_key,
-		]);
+		throw new ForbiddenException('OZ_YOUR_API_KEY_IS_NOT_VALID');
 	}
 }

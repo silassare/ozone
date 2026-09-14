@@ -32,8 +32,11 @@ class FormResumeNotYetActiveException extends ForbiddenException
 	 * @param null|array              $data     additional exception data
 	 * @param null|Throwable          $previous previous throwable used for the exception chaining
 	 */
-	public function __construct(I18nMessage|string|null $message = null, ?array $data = null, ?Throwable $previous = null)
-	{
+	public function __construct(
+		I18nMessage|string|null $message = null,
+		?array $data = null,
+		?Throwable $previous = null
+	) {
 		parent::__construct(
 			empty($message) ? 'OZ_FORM_RESUME_NOT_YET_ACTIVE' : $message,
 			$data,

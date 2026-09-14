@@ -23,7 +23,6 @@ use OZONE\Core\Exceptions\RuntimeException;
 final class RouteOptions extends RouteSharedOptions
 {
 	protected string $full_path_prefix = '';
-	private static int $route_count    = 0;
 
 	/**
 	 * @var list<callable(Router, Route):void>
@@ -41,6 +40,8 @@ final class RouteOptions extends RouteSharedOptions
 	/**
 	 * RouteOptions constructor.
 	 *
+	 * The router names the route ({@see autoName()}) until {@see name()} does.
+	 *
 	 * @param string                  $path
 	 * @param null|RouteSharedOptions $parent
 	 */
@@ -49,10 +50,24 @@ final class RouteOptions extends RouteSharedOptions
 		?RouteSharedOptions $parent = null
 	) {
 		parent::__construct($path, $parent);
+	}
 
-		$this->name('route_' . (++self::$route_count));
-		// auto-generated names are not considered explicit so we revert to false here:
-		$this->t_name_is_explicit = false;
+	/**
+	 * Names the route, unless {@see name()} did: the name is not explicit.
+	 *
+	 * @param string $name
+	 *
+	 * @return $this
+	 *
+	 * @internal called by {@see Router::map()} only
+	 */
+	public function autoName(string $name): static
+	{
+		if (!$this->t_name_is_explicit) {
+			parent::name($name);
+		}
+
+		return $this;
 	}
 
 	/**
@@ -82,22 +97,10 @@ final class RouteOptions extends RouteSharedOptions
 	{
 		$this->full_path_prefix = $path;
 
+		// The full path is cached until an option changes.
+		self::changed();
+
 		return $this;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function getPath(bool $full = true): string
-	{
-		$path = parent::getPath($full);
-
-		if ($full && !empty($this->full_path_prefix)) {
-			$path = self::safePathConcat($this->full_path_prefix, $path);
-		}
-
-		return $path;
 	}
 
 	/**
@@ -156,5 +159,20 @@ final class RouteOptions extends RouteSharedOptions
 		foreach ($this->refiners as $refiner) {
 			$refiner($router, $route);
 		}
+	}
+
+	/**
+	 * The route's full path, behind its full path prefix.
+	 */
+	#[Override]
+	protected function computeFullPath(): string
+	{
+		$path = parent::computeFullPath();
+
+		if (!empty($this->full_path_prefix)) {
+			$path = self::safePathConcat($this->full_path_prefix, $path);
+		}
+
+		return $path;
 	}
 }

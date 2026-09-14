@@ -30,14 +30,6 @@ class WebView extends Service
 	protected array $compile_data = [];
 
 	/**
-	 * WebView constructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->compile_data);
-	}
-
-	/**
 	 * @param array $data
 	 *
 	 * @return $this

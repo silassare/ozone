@@ -16,15 +16,16 @@ namespace OZONE\Core\Forms;
 use Override;
 use OZONE\Core\Forms\Enums\RuleOperator;
 use OZONE\Core\Forms\Enums\RuleSetCondition;
-use OZONE\Core\Forms\Enums\RuleSetContext;
+use OZONE\Core\Forms\Enums\RuleSetDataType;
 use OZONE\Core\Lang\I18nMessage;
 use PHPUtils\Interfaces\ArrayCapableInterface;
+use PHPUtils\Store\Store;
 use PHPUtils\Traits\ArrayCapableTrait;
 
 /**
  * Class RuleSet.
  *
- * A chainable, tree-structured predicate evaluated against a {@see FormData} object.
+ * A chainable, tree-structured predicate evaluated against a data {@see Store} object.
  * Children are {@see Rule} entries or nested {@see RuleSet} groups.
  *
  * Combining modes (set at construction time):
@@ -42,10 +43,10 @@ use PHPUtils\Traits\ArrayCapableTrait;
  * ```
  *
  * The rule set is considered server-only when any descendant {@see Rule}
- * has {@see Rule::$server_only} set to true (i.e. its value is a {@see DynamicValue}).
- * Server-only rule sets emit `['$async' => true]` in {@see toArray()}.
+ * has {@see Rule::$server_only} set to true (i.e. its value is an {@see AsyncValue}).
+ * Server-only rule sets emit `['ref' => ..., '$async' => true]` in {@see toArray()}.
  *
- * Context ({@see RuleSetContext}) is set exclusively by the framework via
+ * Context ({@see RuleSetDataType}) is set exclusively by the framework via
  * {@see self::create()} and is never exposed through a public setter.
  * Developer code using `new RuleSet()` always defaults to AND + UNSAFE.
  */
@@ -63,7 +64,16 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * @internal
 	 */
-	private RuleSetContext $t_context;
+	private RuleSetDataType $t_data_type;
+
+	/**
+	 * Stable reference identifying this rule set within its form definition.
+	 *
+	 * Derived from the owning container at definition time, so it is identical
+	 * across requests for the same form and survives {@see Form::merge()}.
+	 * Empty for rule sets built directly with `new RuleSet()`.
+	 */
+	private string $t_ref = '';
 
 	private ?RuleViolation $t_violation = null;
 
@@ -74,51 +84,77 @@ class RuleSet implements ArrayCapableInterface
 	 * Use {@see self::create()} to specify context — reserved for framework use.
 	 *
 	 * @param RuleSetCondition $condition AND (default) or OR
+	 * @param RuleSetDataType  $data_type UNSAFE (default) or CLEANED
 	 */
-	public function __construct(RuleSetCondition $condition = RuleSetCondition::AND)
-	{
-		$this->t_condition = $condition;
-		$this->t_context   = RuleSetContext::UNSAFE;
+	public function __construct(
+		RuleSetCondition $condition = RuleSetCondition::AND,
+		RuleSetDataType $data_type = RuleSetDataType::UNSAFE,
+		string $ref = ''
+	) {
+		$this->t_ref              = $ref;
+		$this->t_condition        = $condition;
+		$this->t_data_type        = $data_type;
 	}
 
 	/**
-	 * RuleSet destructor.
+	 * Deep-copies nested sub-groups so a cloned rule set does not share
+	 * mutable violation state with the original.
+	 *
+	 * {@see Rule} children are immutable and can safely stay shared.
 	 */
-	public function __destruct()
+	public function __clone()
 	{
-		unset($this->t_children, $this->t_violation);
+		$this->t_violation = null;
+
+		foreach ($this->t_children as $i => $child) {
+			if ($child instanceof self) {
+				$this->t_children[$i] = clone $child;
+			}
+		}
 	}
 
 	/**
 	 * Framework factory — creates a rule set with an explicit context.
 	 *
-	 * @internal not intended for use in application or plugin code
-	 *
 	 * @param RuleSetCondition $condition AND or OR
-	 * @param RuleSetContext   $context   UNSAFE or CLEANED
+	 * @param RuleSetDataType  $data_type UNSAFE or CLEANED
+	 * @param string           $ref       stable reference within the form definition
 	 *
 	 * @return static
+	 *
+	 * @internal not intended for use in application or plugin code
 	 */
-	public static function create(RuleSetCondition $condition, RuleSetContext $context): static
+	public static function create(RuleSetCondition $condition, RuleSetDataType $data_type, string $ref = ''): static
 	{
-		$rs            = new static($condition);
-		$rs->t_context = $context;
+		return new static($condition, $data_type, $ref);
+	}
 
-		return $rs;
+	/**
+	 * Gets this rule set's stable reference.
+	 *
+	 * Assigned by the owning container at definition time and identical across
+	 * requests for the same form definition, so a client can correlate a rule it
+	 * was sent with the evaluation result it gets back from the server.
+	 *
+	 * Returns an empty string for rule sets built directly with `new RuleSet()`.
+	 */
+	public function getRef(): string
+	{
+		return $this->t_ref;
 	}
 
 	/**
 	 * Adds a rule: field value must equal $value.
 	 *
-	 * @param Field|string                                                              $field
-	 * @param null|bool|DynamicValue<null|bool|float|int|string>|Field|float|int|string $value
-	 * @param null|I18nMessage|string                                                   $message
+	 * @param Field|string                                                            $field
+	 * @param null|AsyncValue<null|bool|float|int|string>|bool|Field|float|int|string $value
+	 * @param null|I18nMessage|string                                                 $message
 	 *
 	 * @return $this
 	 */
 	public function eq(
 		Field|string $field,
-		bool|DynamicValue|Field|float|int|string|null $value,
+		AsyncValue|bool|Field|float|int|string|null $value,
 		I18nMessage|string|null $message = null
 	): static {
 		return $this->addRule($field, RuleOperator::EQ, $value, $message);
@@ -127,15 +163,15 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must not equal $value.
 	 *
-	 * @param Field|string                                                              $field
-	 * @param null|bool|DynamicValue<null|bool|float|int|string>|Field|float|int|string $value
-	 * @param null|I18nMessage|string                                                   $message
+	 * @param Field|string                                                            $field
+	 * @param null|AsyncValue<null|bool|float|int|string>|bool|Field|float|int|string $value
+	 * @param null|I18nMessage|string                                                 $message
 	 *
 	 * @return $this
 	 */
 	public function neq(
 		Field|string $field,
-		bool|DynamicValue|Field|float|int|string|null $value,
+		AsyncValue|bool|Field|float|int|string|null $value,
 		I18nMessage|string|null $message = null
 	): static {
 		return $this->addRule($field, RuleOperator::NEQ, $value, $message);
@@ -144,15 +180,15 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must be greater than $value.
 	 *
-	 * @param Field|string                                          $field
-	 * @param DynamicValue<float|int|string>|Field|float|int|string $value
-	 * @param null|I18nMessage|string                               $message
+	 * @param Field|string                                        $field
+	 * @param AsyncValue<float|int|string>|Field|float|int|string $value
+	 * @param null|I18nMessage|string                             $message
 	 *
 	 * @return $this
 	 */
 	public function gt(
 		Field|string $field,
-		DynamicValue|Field|float|int|string $value,
+		AsyncValue|Field|float|int|string $value,
 		I18nMessage|string|null $message = null
 	): static {
 		return $this->addRule($field, RuleOperator::GT, $value, $message);
@@ -161,15 +197,15 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must be greater than or equal to $value.
 	 *
-	 * @param Field|string                                          $field
-	 * @param DynamicValue<float|int|string>|Field|float|int|string $value
-	 * @param null|I18nMessage|string                               $message
+	 * @param Field|string                                        $field
+	 * @param AsyncValue<float|int|string>|Field|float|int|string $value
+	 * @param null|I18nMessage|string                             $message
 	 *
 	 * @return $this
 	 */
 	public function gte(
 		Field|string $field,
-		DynamicValue|Field|float|int|string $value,
+		AsyncValue|Field|float|int|string $value,
 		I18nMessage|string|null $message = null
 	): static {
 		return $this->addRule($field, RuleOperator::GTE, $value, $message);
@@ -178,15 +214,15 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must be less than $value.
 	 *
-	 * @param Field|string                                          $field
-	 * @param DynamicValue<float|int|string>|Field|float|int|string $value
-	 * @param null|I18nMessage|string                               $message
+	 * @param Field|string                                        $field
+	 * @param AsyncValue<float|int|string>|Field|float|int|string $value
+	 * @param null|I18nMessage|string                             $message
 	 *
 	 * @return $this
 	 */
 	public function lt(
 		Field|string $field,
-		DynamicValue|Field|float|int|string $value,
+		AsyncValue|Field|float|int|string $value,
 		I18nMessage|string|null $message = null
 	): static {
 		return $this->addRule($field, RuleOperator::LT, $value, $message);
@@ -195,15 +231,15 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must be less than or equal to $value.
 	 *
-	 * @param Field|string                                          $field
-	 * @param DynamicValue<float|int|string>|Field|float|int|string $value
-	 * @param null|I18nMessage|string                               $message
+	 * @param Field|string                                        $field
+	 * @param AsyncValue<float|int|string>|Field|float|int|string $value
+	 * @param null|I18nMessage|string                             $message
 	 *
 	 * @return $this
 	 */
 	public function lte(
 		Field|string $field,
-		DynamicValue|Field|float|int|string $value,
+		AsyncValue|Field|float|int|string $value,
 		I18nMessage|string|null $message = null
 	): static {
 		return $this->addRule($field, RuleOperator::LTE, $value, $message);
@@ -212,15 +248,15 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must be in $value.
 	 *
-	 * @param Field|string                    $field
-	 * @param array|DynamicValue<array>|Field $value
-	 * @param null|I18nMessage|string         $message
+	 * @param Field|string                  $field
+	 * @param array|AsyncValue<array>|Field $value
+	 * @param null|I18nMessage|string       $message
 	 *
 	 * @return $this
 	 */
 	public function in(
 		Field|string $field,
-		array|DynamicValue|Field $value,
+		array|AsyncValue|Field $value,
 		I18nMessage|string|null $message = null
 	): static {
 		return $this->addRule($field, RuleOperator::IN, $value, $message);
@@ -229,15 +265,15 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must not be in $value.
 	 *
-	 * @param Field|string                    $field
-	 * @param array|DynamicValue<array>|Field $value
-	 * @param null|I18nMessage|string         $message
+	 * @param Field|string                  $field
+	 * @param array|AsyncValue<array>|Field $value
+	 * @param null|I18nMessage|string       $message
 	 *
 	 * @return $this
 	 */
 	public function notIn(
 		Field|string $field,
-		array|DynamicValue|Field $value,
+		array|AsyncValue|Field $value,
 		I18nMessage|string|null $message = null
 	): static {
 		return $this->addRule($field, RuleOperator::NOT_IN, $value, $message);
@@ -284,7 +320,7 @@ class RuleSet implements ArrayCapableInterface
 	 */
 	public function and(callable $callback): static
 	{
-		$sub            = static::create(RuleSetCondition::AND, $this->t_context);
+		$sub            = static::create(RuleSetCondition::AND, $this->t_data_type, $this->subRef('and'));
 		$callback($sub);
 		$this->t_children[] = $sub;
 
@@ -302,7 +338,7 @@ class RuleSet implements ArrayCapableInterface
 	 */
 	public function or(callable $callback): static
 	{
-		$sub            = static::create(RuleSetCondition::OR, $this->t_context);
+		$sub            = static::create(RuleSetCondition::OR, $this->t_data_type, $this->subRef('or'));
 		$callback($sub);
 		$this->t_children[] = $sub;
 
@@ -314,17 +350,22 @@ class RuleSet implements ArrayCapableInterface
 	 *
 	 * After calling this method, use {@see self::getViolation()} to inspect any failure.
 	 *
-	 * @param FormData $fd
+	 * The operand source is selected from the context by this rule set's own
+	 * {@see RuleSetDataType}, so a CLEANED rule set can never read raw input.
+	 *
+	 * @param FormValidationContext $ctx
 	 *
 	 * @return bool true when all conditions pass, false otherwise
 	 */
-	public function check(FormData $fd): bool
+	public function check(FormValidationContext $ctx): bool
 	{
+		$data = $ctx->dataFor($this->t_data_type);
+
 		$this->t_violation = null;
 
 		if (RuleSetCondition::AND === $this->t_condition) {
 			foreach ($this->t_children as $child) {
-				if (!$this->evaluateChild($child, $fd)) {
+				if (!$this->evaluateChild($child, $ctx, $data)) {
 					return false;
 				}
 			}
@@ -338,7 +379,7 @@ class RuleSet implements ArrayCapableInterface
 		}
 
 		foreach ($this->t_children as $child) {
-			if ($this->evaluateChild($child, $fd, true)) {
+			if ($this->evaluateChild($child, $ctx, $data, true)) {
 				return true;
 			}
 		}
@@ -375,7 +416,7 @@ class RuleSet implements ArrayCapableInterface
 	 * Whether this rule set (or any of its nested descendants) contains
 	 * a {@see Rule} that must be evaluated server-side only.
 	 *
-	 * Server-only rule sets serialize to `['$async' => true]` in {@see toArray()}.
+	 * Server-only rule sets serialize to `['ref' => ..., '$async' => true]` in {@see toArray()}.
 	 *
 	 * @return bool
 	 */
@@ -405,18 +446,6 @@ class RuleSet implements ArrayCapableInterface
 	}
 
 	/**
-	 * Gets the context this rule set is evaluated in.
-	 *
-	 * @internal
-	 *
-	 * @return RuleSetContext
-	 */
-	public function getContext(): RuleSetContext
-	{
-		return $this->t_context;
-	}
-
-	/**
 	 * Gets all direct children (Rule or nested RuleSet entries).
 	 *
 	 * @return list<Rule|RuleSet>
@@ -427,31 +456,81 @@ class RuleSet implements ArrayCapableInterface
 	}
 
 	/**
+	 * Every field ref this rule set reads, including cross-field targets and nested sets.
+	 *
+	 * @return list<string>
+	 */
+	public function getFieldRefs(): array
+	{
+		$refs = [];
+
+		foreach ($this->t_children as $child) {
+			if ($child instanceof self) {
+				\array_push($refs, ...$child->getFieldRefs());
+
+				continue;
+			}
+
+			$refs[] = $child->field_ref;
+
+			if (null !== $child->target_ref) {
+				$refs[] = $child->target_ref;
+			}
+		}
+
+		return $refs;
+	}
+
+	/**
 	 * {@inheritDoc}
 	 *
-	 * Returns `['$async' => true]` when {@see self::isServerOnly()} is true.
+	 * Returns `['ref' => ..., '$async' => true]` when {@see self::isServerOnly()} is true:
+	 * the ref is still sent so the client can ask the evaluate endpoint about the
+	 * rule, while its operands stay server-side.
 	 *
 	 * Otherwise returns:
 	 * ```
 	 * [
+	 *   'ref'       => string,
 	 *   'condition' => 'and'|'or',
+	 *   'data_type' => string,
 	 *   'rules'     => [ <Rule::toArray()>|<RuleSet::toArray()>, ... ],
 	 * ]
 	 * ```
 	 *
-	 * @return array{'$async': true}|array{condition: string, rules: list<array>}
+	 * @return array
 	 */
 	#[Override]
 	public function toArray(): array
 	{
 		if ($this->isServerOnly()) {
-			return ['$async' => true];
+			return [
+				'ref'    => $this->t_ref,
+				'$async' => true,
+			];
 		}
 
 		return [
+			'ref'       => $this->t_ref,
 			'condition' => $this->t_condition->value,
+			'data_type' => $this->t_data_type->value,
 			'rules'     => \array_map(static fn (Rule|RuleSet $c) => $c->toArray(), $this->t_children),
 		];
+	}
+
+	/**
+	 * Builds the reference for a nested sub-group.
+	 *
+	 * Positional within the parent, but scoped to it, so it stays stable across
+	 * requests for the same definition code.
+	 */
+	private function subRef(string $kind): string
+	{
+		if ('' === $this->t_ref) {
+			return '';
+		}
+
+		return \sprintf('%s.%s[%d]', $this->t_ref, $kind, \count($this->t_children));
 	}
 
 	/**
@@ -460,7 +539,7 @@ class RuleSet implements ArrayCapableInterface
 	 *
 	 * @param Field|string            $field    the field ref or instance
 	 * @param RuleOperator            $operator
-	 * @param mixed                   $value    the right-hand operand (scalar, DynamicValue, or Field for cross-field)
+	 * @param mixed                   $value    the right-hand operand (scalar, AsyncValue, or Field for cross-field)
 	 * @param null|I18nMessage|string $message  optional failure message
 	 *
 	 * @return $this
@@ -494,25 +573,30 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Evaluates a single child (Rule or RuleSet), recording any violation.
 	 *
-	 * @param Rule|RuleSet $child
-	 * @param FormData     $fd
-	 * @param bool         $reset_violation whether to reset $t_violation before evaluating (used in OR loops)
+	 * @param Rule|RuleSet          $child
+	 * @param FormValidationContext $ctx
+	 * @param Store                 $data            this rule set's own operand source
+	 * @param bool                  $reset_violation whether to reset $t_violation before evaluating (used in OR loops)
 	 *
 	 * @return bool
 	 */
-	private function evaluateChild(Rule|self $child, FormData $fd, bool $reset_violation = false): bool
-	{
+	private function evaluateChild(
+		Rule|self $child,
+		FormValidationContext $ctx,
+		Store $data,
+		bool $reset_violation = false
+	): bool {
 		if ($reset_violation) {
 			$this->t_violation = null;
 		}
 
 		if ($child instanceof Rule) {
-			if (!$child->evaluate($fd)) {
+			if (!$child->evaluate($data, $ctx)) {
 				$this->t_violation = new RuleViolation($child);
 
 				return false;
 			}
-		} elseif (!$child->check($fd)) {
+		} elseif (!$child->check($ctx)) {
 			$this->t_violation = new RuleViolation($child, $child->getViolation());
 
 			return false;

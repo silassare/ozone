@@ -12,6 +12,9 @@
 declare(strict_types=1);
 
 return [
-	'default' => 'fr',
+	// Used when the client's languages (Accept-Language) match none of the enabled ones,
+	// and for any message the chosen language does not translate.
+	'default' => 'en',
+	'en'      => true,
 	'fr'      => true,
 ];

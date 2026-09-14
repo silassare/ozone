@@ -14,10 +14,14 @@ declare(strict_types=1);
 namespace OZONE\Core\FS\Services;
 
 use Gobl\DBAL\Types\Exceptions\TypesException;
+use Gobl\DBAL\Types\TypeBigint;
+use Gobl\DBAL\Types\TypeInt;
 use OpenApi\Annotations\MediaType;
 use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Columns\Types\TypeFile;
+use OZONE\Core\Columns\ValidatedFile;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\UnauthenticatedException;
 use OZONE\Core\Forms\Form;
@@ -97,7 +101,9 @@ class UploadFiles extends Service
 	{
 		$ref         = $r->getCleanFormField(self::PARAM_REF);
 		$chunk_index = $r->getCleanFormField(self::PARAM_CHUNK_INDEX);
-		$chunk_path  = $r->getCleanFormField(self::PARAM_CHUNK);
+
+		/** @var ValidatedFile $chunk_file */
+		$chunk_file = $r->getCleanFormField(self::PARAM_CHUNK);
 
 		$info = $this->loadChunksInfo($ref);
 
@@ -113,7 +119,7 @@ class UploadFiles extends Service
 		$chunks = $info['chunks'];
 
 		if (isset($chunks[$chunk_index])) {
-			\unlink($chunk_path);
+			\unlink($chunk_file->getPath());
 
 			// we are not throwing an exception here
 			// because the client may have sent the same
@@ -125,7 +131,9 @@ class UploadFiles extends Service
 		$uploaded = $r->getUnsafeFormField(self::PARAM_CHUNK);
 
 		$chunks[$chunk_index] = [
-			'chunk_path' => (string) $chunk_path,
+			// The TempFS reference, never a path: the chunks of one upload may be
+			// received by processes that do not resolve it to the same place.
+			'chunk_ref'  => (string) $chunk_file,
 			'chunk_size' => $uploaded->getSize(),
 		];
 
@@ -140,7 +148,7 @@ class UploadFiles extends Service
 
 		if ($total_size > $expected_size) {
 			foreach ($chunks as $chunk) {
-				\unlink($chunk['chunk_path']);
+				\unlink(self::chunkPath($chunk['chunk_ref']));
 			}
 
 			throw new InvalidFormException(
@@ -162,7 +170,7 @@ class UploadFiles extends Service
 			$fm          = FS::fromRoot();
 
 			foreach ($chunks as $c) {
-				$path = $c['chunk_path'];
+				$path = self::chunkPath($c['chunk_ref']);
 				if (null === $target_path) {
 					$target_path = $path;
 				} else {
@@ -207,7 +215,7 @@ class UploadFiles extends Service
 			$chunks = $data['chunks'];
 
 			foreach ($chunks as $c) {
-				$path = $c['chunk_path'];
+				$path = self::chunkPath($c['chunk_ref']);
 				if (\file_exists($path)) {
 					\unlink($path);
 				}
@@ -231,8 +239,8 @@ class UploadFiles extends Service
 	public static function uploadForm(): Form
 	{
 		$form = new Form();
-		$form->file(self::PARAM_FILES)->multiple()
-			->fileMinCount(1);
+		$form->file(self::PARAM_FILES)
+			->configureType(static fn (TypeFile $t) => $t->multiple()->fileMinCount(1));
 
 		return $form;
 	}
@@ -250,7 +258,7 @@ class UploadFiles extends Service
 
 		$form->string(self::PARAM_NAME, true);
 		$form->bigint(self::PARAM_SIZE, true)
-			->unsigned()->min($min_size)->max($max_size);
+			->configureType(static fn (TypeBigint $t) => $t->unsigned()->min($min_size)->max($max_size));
 		$form->string(self::PARAM_TYPE, true);
 
 		return $form;
@@ -267,10 +275,9 @@ class UploadFiles extends Service
 
 		$form->string(self::PARAM_REF, true);
 		$form->int(self::PARAM_CHUNK_INDEX, true)
-			->unsigned();
+			->configureType(static fn (TypeInt $t) => $t->unsigned());
 		$form->file(self::PARAM_CHUNK, true)
-			->temp()
-			->fileMaxSize(self::CHUNK_MAX_SIZE);
+			->configureType(static fn (TypeFile $t) => $t->temp()->fileMaxSize(self::CHUNK_MAX_SIZE));
 
 		return $form;
 	}
@@ -401,8 +408,8 @@ class UploadFiles extends Service
 	/**
 	 * Saves the chunks info.
 	 *
-	 * @param string                                                                                            $ref
-	 * @param array{name:string, size:int, type:string, chunks:array<array{chunk_path:string, chunk_size:int}>} $info
+	 * @param string                                                                                           $ref
+	 * @param array{name:string, size:int, type:string, chunks:array<array{chunk_ref:string, chunk_size:int}>} $info
 	 */
 	private function saveChunksInfo(string $ref, array $info): void
 	{
@@ -416,7 +423,7 @@ class UploadFiles extends Service
 	 *
 	 * @param string $ref
 	 *
-	 * @return null|array{name:string, size:int, type:string, chunks:array<array{chunk_path:string, chunk_size:int}>}
+	 * @return null|array{name:string, size:int, type:string, chunks:array<array{chunk_ref:string, chunk_size:int}>}
 	 */
 	private function loadChunksInfo(string $ref): ?array
 	{
@@ -445,5 +452,17 @@ class UploadFiles extends Service
 	private static function newRef(): string
 	{
 		return Random::alphaNum(16);
+	}
+
+	/**
+	 * Resolves the current path of a stored chunk reference.
+	 *
+	 * @param string $chunk_ref
+	 *
+	 * @return string
+	 */
+	private static function chunkPath(string $chunk_ref): string
+	{
+		return ValidatedFile::forTempValue($chunk_ref)->getPath();
 	}
 }

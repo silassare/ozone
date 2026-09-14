@@ -40,7 +40,7 @@ final class ApiDocService extends Service implements ApiDocProviderInterface
 					$s = new self($ri);
 
 					$s->json()
-						->setData(ApiDoc::get($ri->getContext()));
+						->setData(ApiDoc::get());
 
 					return $s->respond();
 				})
@@ -58,6 +58,8 @@ final class ApiDocService extends Service implements ApiDocProviderInterface
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{
+		$doc->addFormSystemGuide();
+
 		$tag = $doc->addTag('API Doc', 'API documentation & specification.');
 		$doc->addOperationFromRoute(
 			self::API_DOC_SPEC_ROUTE,

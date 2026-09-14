@@ -13,12 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS;
 
+use InvalidArgumentException;
 use JsonException;
 use Override;
-use OZONE\Core\Hooks\Events\FinishHook;
+use OZONE\Core\App\GarbageCollector;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Utils\Random;
-use PHPUtils\Events\Event;
 use RuntimeException;
 use Throwable;
 
@@ -54,7 +54,7 @@ final class TempFS implements BootHookReceiverInterface
 	 */
 	public function dir(): FilesManager
 	{
-		return self::getTempDir()->cd($this->ref, true);
+		return self::root()->cd($this->ref, true);
 	}
 
 	/**
@@ -64,13 +64,14 @@ final class TempFS implements BootHookReceiverInterface
 	 */
 	public function setLifetime(int $lifetime): static
 	{
-		$info_path = $this->dir()->resolve('./info.json');
-		$expires   = \time() + $lifetime;
+		$expires = \time() + $lifetime;
 
 		/** @noinspection JsonEncodingApiUsageInspection */
 		$content = \json_encode(['expires' => $expires]);
 
-		\file_put_contents($info_path, $content);
+		// Atomic: a concurrent reader that caught this file truncated would fail to decode it and
+		// treat a live ref as expired, and data/ may be on a volume shared between instances.
+		$this->dir()->writeAtomic('./info.json', (string) $content);
 
 		return $this;
 	}
@@ -84,9 +85,11 @@ final class TempFS implements BootHookReceiverInterface
 	 */
 	public static function canUse(string $ref): bool
 	{
-		$dir = self::getTempDir()->resolve($ref);
+		if (!self::isValidSegment($ref)) {
+			return false;
+		}
 
-		$expire = self::getExpirationTime($dir);
+		$expire = self::getExpirationTime(self::path($ref));
 
 		return $expire && $expire > \time();
 	}
@@ -102,7 +105,7 @@ final class TempFS implements BootHookReceiverInterface
 		$prefix = \trim($prefix);
 		$ref    = ($prefix ? $prefix . '-' : '') . \date('Y-m-d') . '-' . Random::alpha(8);
 
-		return (new static($ref))->setLifetime($lifetime);
+		return (new self($ref))->setLifetime($lifetime);
 	}
 
 	/**
@@ -121,7 +124,7 @@ final class TempFS implements BootHookReceiverInterface
 			throw new RuntimeException(\sprintf('%s: invalid or expired ref "%s".', self::class, $ref));
 		}
 
-		$instance = new static($ref);
+		$instance = new self($ref);
 
 		if ($lifetime) {
 			$instance->setLifetime($lifetime);
@@ -131,24 +134,76 @@ final class TempFS implements BootHookReceiverInterface
 	}
 
 	/**
+	 * Gets the temp directory root of the current scope.
+	 *
+	 * @return FilesManager
+	 */
+	public static function root(): FilesManager
+	{
+		// data/tmp-fs/{scope}, not .ozone/cache: an in-flight chunked upload and a file a form has
+		// already accepted are a user's work in progress, and must survive what may delete a cache.
+		return scope()->getTempDir();
+	}
+
+	/**
+	 * The absolute path of a ref, or of a file directly in it.
+	 *
+	 * The ref is not checked for expiration: {@see self::canUse()} does that.
+	 *
+	 * @param string $ref  the ref
+	 * @param string $name the name of a file in the ref directory, when any
+	 *
+	 * @return string
+	 */
+	public static function path(string $ref, string $name = ''): string
+	{
+		self::assertSegment($ref);
+
+		if ('' === $name) {
+			return self::root()->resolve($ref);
+		}
+
+		self::assertSegment($name);
+
+		return self::root()->resolve($ref . DS . $name);
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
 	public static function boot(): void
 	{
-		FinishHook::listen(static function (): void {
-			self::gc();
-		}, Event::RUN_LAST);
+		GarbageCollector::register('oz:temp-fs', self::gc(...));
 	}
 
 	/**
-	 * Gets the temp directory.
+	 * Asserts that a ref or a file name is a single, safe path segment.
 	 *
-	 * @return FilesManager
+	 * @param string $segment
 	 */
-	private static function getTempDir(): FilesManager
+	public static function assertSegment(string $segment): void
 	{
-		return scope()->getCacheDir()->cd('tmp-fs', true);
+		if (!self::isValidSegment($segment)) {
+			throw new InvalidArgumentException(
+				\sprintf('%s: "%s" is not a valid ref or file name.', self::class, $segment)
+			);
+		}
+	}
+
+	/**
+	 * Checks that a ref or a file name is a single, safe path segment.
+	 *
+	 * @param string $segment
+	 *
+	 * @return bool
+	 */
+	private static function isValidSegment(string $segment): bool
+	{
+		return '' !== $segment
+			&& '.' !== $segment
+			&& '..' !== $segment
+			&& !\strpbrk($segment, "/\\\0");
 	}
 
 	/**
@@ -180,27 +235,24 @@ final class TempFS implements BootHookReceiverInterface
 	 */
 	private static function gc(): void
 	{
-		if (Random::bool()) {
-			$root = self::getTempDir();
-			$root->walk('.', static function (string $name, string $path, bool $is_dir) {
-				if ($is_dir) {
-					$expires = self::getExpirationTime($path);
-					if (!$expires) {
-						// we simply ignore as its maybe a new temporary directory in creation process
-						return false;
-					}
-
-					if ($expires < \time()) {
-						try {
-							// this may fail if other process is using or deleting the directory
-							FS::fromRoot()->rmdir($path);
-						} catch (Throwable) {
-						}
-					}
+		self::root()->walk('.', static function (string $name, string $path, bool $is_dir) {
+			if ($is_dir) {
+				$expires = self::getExpirationTime($path);
+				if (!$expires) {
+					// we simply ignore as its maybe a new temporary directory in creation process
+					return false;
 				}
 
-				return false;
-			});
-		}
+				if ($expires < \time()) {
+					try {
+						// this may fail if other process is using or deleting the directory
+						FS::fromRoot()->rmdir($path);
+					} catch (Throwable) {
+					}
+				}
+			}
+
+			return false;
+		});
 	}
 }

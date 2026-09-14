@@ -71,7 +71,7 @@ final class AuthenticatedUserRouteGuard extends AbstractRouteGuard
 
 		if (!empty($this->allowed_user_types)) {
 			if (!\in_array($u->getAuthUserType(), $this->allowed_user_types, true)) {
-				throw new UnauthorizedException(null, [
+				throw new UnauthorizedException('OZ_ERROR_USER_TYPE_NOT_ALLOWED', [
 					'_reason'     => 'User type not allowed',
 					'_user'       => AuthUsers::selector($u),
 					'_allowed'    => $this->allowed_user_types,

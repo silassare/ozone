@@ -48,4 +48,15 @@ return [
 	 * @default false
 	 */
 	'OZ_COOKIE_PARTITIONED' => false,
+
+	/**
+	 * Cookie Secure flag.
+	 *
+	 * - 'auto': set when the request is https, as seen through trusted proxies (`oz.proxies`);
+	 * - true: always (e.g. behind a TLS proxy that does not report the scheme);
+	 * - false: never.
+	 *
+	 * @default 'auto'
+	 */
+	'OZ_COOKIE_SECURE'      => 'auto',
 ];

@@ -44,12 +44,16 @@ final class Route
 	 * @param array        $methods
 	 * @param callable     $callable
 	 * @param RouteOptions $options
+	 * @param string       $source   the route provider that maps the route, '' for none
+	 * @param int          $ordinal  the position of the route among those its source maps
 	 */
 	public function __construct(
 		private readonly Router $router,
 		private readonly array $methods,
 		callable $callable,
-		private readonly RouteOptions $options
+		private readonly RouteOptions $options,
+		private readonly string $source = '',
+		private readonly int $ordinal = 0
 	) {
 		$this->handler = $callable;
 	}
@@ -129,6 +133,28 @@ final class Route
 	}
 
 	/**
+	 * The route provider that maps this route: '' when none does (a {@see Events\RouterCreated}
+	 * listener, a test).
+	 *
+	 * @internal read by {@see Router::compileTable()}
+	 */
+	public function getSource(): string
+	{
+		return $this->source;
+	}
+
+	/**
+	 * The position of this route among the routes its source maps: with the source, what identifies
+	 * it in a {@see RouteTable}.
+	 *
+	 * @internal read by {@see Router::compileTable()}
+	 */
+	public function getOrdinal(): int
+	{
+		return $this->ordinal;
+	}
+
+	/**
 	 * Returns this route allowed HTTP request methods.
 	 *
 	 * @return array
@@ -136,6 +162,22 @@ final class Route
 	public function getMethods(): array
 	{
 		return $this->methods;
+	}
+
+	/**
+	 * Returns a stable identity for this route: its full name, sorted methods and full path.
+	 *
+	 * Built from the definition only, so it is identical across requests and processes.
+	 * Used to scope per-route state such as form sessions and form resume caches.
+	 *
+	 * @return string
+	 */
+	public function key(): string
+	{
+		$methods = $this->methods;
+		\sort($methods);
+
+		return $this->getName() . '|' . \implode(',', $methods) . '|' . $this->getPath();
 	}
 
 	/**

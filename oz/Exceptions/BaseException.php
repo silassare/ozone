@@ -21,10 +21,16 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\JSONResponse;
 use OZONE\Core\Exceptions\Traits\ExceptionCustomSuspectTrait;
 use OZONE\Core\Exceptions\Traits\ExceptionWithCustomResponseTrait;
+use OZONE\Core\Exceptions\Utils\ErrorUtils;
 use OZONE\Core\Exceptions\Views\ErrorView;
+use OZONE\Core\Hooks\Events\EndRequestHook;
+use OZONE\Core\Http\Body;
+use OZONE\Core\Http\Headers;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Lang\I18nMessage;
 use OZONE\Core\OZone;
+use OZONE\Core\Runtime\Interfaces\ResponseSinkInterface;
+use OZONE\Core\Runtime\Runtime;
 use OZONE\Core\Utils\Utils;
 use PHPUtils\Interfaces\RichExceptionInterface;
 use PHPUtils\Traits\RichExceptionTrait;
@@ -91,8 +97,12 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	 * @param null|Throwable     $previous previous throwable used for the exception chaining
 	 * @param int                $code     the exception code
 	 */
-	public function __construct(I18nMessage|string $message, ?array $data = null, ?Throwable $previous = null, int $code = 0)
-	{
+	public function __construct(
+		I18nMessage|string $message,
+		?array $data = null,
+		?Throwable $previous = null,
+		int $code = 0
+	) {
 		$this->data = $data ?? [];
 		if ($message instanceof I18nMessage) {
 			$this->data = \array_merge($message->getData(), $this->data);
@@ -110,6 +120,20 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	public function __toString(): string
 	{
 		return self::throwableToString($this);
+	}
+
+	/**
+	 * Forgets that an error has already been handled in this process.
+	 *
+	 * `$just_die` exists so a failure *while reporting a failure* cannot loop. It is never unset,
+	 * so in a persistent worker the first handled error makes every later one die immediately,
+	 * without a response.
+	 *
+	 * @internal on {@see EndRequestHook}
+	 */
+	public static function release(): void
+	{
+		self::$just_die = false;
 	}
 
 	/**
@@ -161,7 +185,9 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 		try {
 			if (OZone::isCliMode()) {
-				exit(\PHP_EOL . $this->getMessage() . \PHP_EOL);
+				echo \PHP_EOL . $this->getMessage() . \PHP_EOL;
+
+				Runtime::current()->terminate(1);
 			}
 
 			$response = $this->getCustomResponse();
@@ -196,7 +222,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	/**
 	 * Die with an `unhandled error` message.
 	 */
-	public static function dieWithAnUnhandledErrorOccurred(): void
+	public static function dieWithAnUnhandledErrorOccurred(): never
 	{
 		self::criticalDie(self::anErrorOccurredMessage('unhandled error'));
 	}
@@ -207,7 +233,7 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	 * Called when an error / exception occurs while we
 	 * want to show/handle another error / exception
 	 */
-	public static function dieWithAnErrorHandlingErrorOccurred(): void
+	public static function dieWithAnErrorHandlingErrorOccurred(): never
 	{
 		self::criticalDie(self::anErrorOccurredMessage('error handling error'));
 	}
@@ -217,13 +243,17 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	 *
 	 * @param string $err_msg
 	 */
-	public static function criticalDie(string $err_msg): void
+	public static function criticalDie(string $err_msg): never
 	{
 		if (OZone::isCliMode()) {
-			exit(\PHP_EOL . $err_msg . \PHP_EOL);
+			echo \PHP_EOL . $err_msg . \PHP_EOL;
+
+			Runtime::current()->terminate(1);
 		}
 
-		if (!\headers_sent()) {
+		$sink = self::responseSink();
+
+		if (null === $sink && !\headers_sent()) {
 			\header('HTTP/1.1 500 Internal Server Error');
 		}
 
@@ -265,7 +295,19 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 </html>
 ERROR_PAGE;
 
-		exit($err_html);
+		if (null === $sink) {
+			echo $err_html;
+		} else {
+			// Last resort, and still a response object: under RoadRunner the process output is the
+			// protocol pipe, and bytes written to it would kill the worker rather than reach anyone.
+			$sink->send(new Response(
+				500,
+				new Headers(['Content-Type' => 'text/html; charset=UTF-8']),
+				Body::fromString($err_html)
+			));
+		}
+
+		Runtime::current()->terminate(1);
 	}
 
 	/**
@@ -316,7 +358,7 @@ STRING;
 			if ($current instanceof RichExceptionInterface || \method_exists($current, 'getData')) {
 				try {
 					/** @var RichExceptionInterface $current */
-					$data = $current->getData(true);
+					$data = ErrorUtils::redactSensitiveData($current->getData(true));
 				} catch (Throwable $t) {
 					$data = ['_error_will_calling_get_data_' => $t->getMessage()];
 				}
@@ -373,6 +415,18 @@ STRING;
 	}
 
 	/**
+	 * The worker's response sink of the current request, if there is a request and it has one.
+	 */
+	private static function responseSink(): ?ResponseSinkInterface
+	{
+		try {
+			return Context::root()->getResponseSink();
+		} catch (Throwable) {
+			return null;
+		}
+	}
+
+	/**
 	 * Returns json response.
 	 *
 	 * @param Context $context
@@ -383,7 +437,7 @@ STRING;
 	{
 		$json = new JSONResponse();
 		$json->setError($this->getMessage())
-			->setData($this->getData());
+			->setData(ErrorUtils::redactSensitiveData($this->getData()));
 
 		return $context->getResponse()
 			->withJson($json);

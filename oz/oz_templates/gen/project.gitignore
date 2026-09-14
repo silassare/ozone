@@ -1,6 +1,15 @@
 # ozone
+#
+# Two state roots, neither of them version-controlled:
+#   data/    -- must be backed up and must be consistent across instances
+#   .ozone/  -- per instance, safe to delete at any time (caches, logs, build output)
+#
+# public/*/static are symlinks into data/static, recreated by `oz project link`.
 .env
+/data/
 .ozone
+public/static
+public/*/static
 **/blate_cache/*
 **/ozone*.log
 

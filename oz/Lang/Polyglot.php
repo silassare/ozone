@@ -13,15 +13,24 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Lang;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Router\Events\RouteBeforeRun;
+use OZONE\Core\Router\Interfaces\RouteProviderInterface;
+use OZONE\Core\Router\Router;
+use PHPUtils\Events\Event;
 
 /**
  * Class Polyglot.
  */
-final class Polyglot
+final class Polyglot implements BootHookReceiverInterface, RouteProviderInterface
 {
+	public const ROUTE_LANG_PARAM         = 'lang';
+	public const ROUTE_LANG_PARAM_PATTERN = '[a-z]{1,8}(-[a-z]{1,8})?';
+
 	public const CLIENT_LANG_SESSION_KEY = 'oz.polyglot.favorite';
 
 	public const ACCEPT_LANGUAGE_REG = '~([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.\d+))?~i';
@@ -74,9 +83,9 @@ final class Polyglot
 				->getHeaderLine('HTTP_ACCEPT_LANGUAGE');
 			$browser         = self::parseBrowserLanguage($accept_language);
 
+			// Not stored: the browser sends it with every request, and writing it would give every
+			// anonymous visitor a session. Only a choice (setUserLanguage()) is kept.
 			if (!empty($browser['advice'])) {
-				$store?->set(self::CLIENT_LANG_SESSION_KEY, $browser['advice']);
-
 				return $browser['advice'];
 			}
 		}
@@ -273,6 +282,34 @@ final class Polyglot
 	}
 
 	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function boot(): void
+	{
+		RouteBeforeRun::listen(static function (RouteBeforeRun $ev): void {
+			$lang = $ev->target->param(self::ROUTE_LANG_PARAM);
+
+			if ($lang) {
+				Polyglot::setUserLanguage($ev->context, $lang);
+			}
+		}, Event::RUN_FIRST);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function registerRoutes(Router $router): void
+	{
+		$router->addGlobalParam(
+			self::ROUTE_LANG_PARAM,
+			self::ROUTE_LANG_PARAM_PATTERN,
+			self::getLanguage(...)
+		);
+	}
+
+	/**
 	 * Parse lang key.
 	 *
 	 * @param string $i18n_key
@@ -360,7 +397,7 @@ final class Polyglot
 			$history[$i18n_key] = true;
 
 			while (\preg_match(self::PORTION_COPY_REG, $text, $in)) {
-				@[$found, $lk] = $in;
+				[$found, $lk] = $in;
 
 				if (isset($history[$lk])) {
 					throw new RuntimeException(\sprintf('Possible infinite loop in lang key: %s.', $lk));

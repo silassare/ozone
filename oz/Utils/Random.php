@@ -66,15 +66,15 @@ final class Random
 	}
 
 	/**
-	 * Randomly return true or false.
+	 * Returns true once in `$frequency` calls on average (always true when `$frequency` <= 1).
 	 *
-	 * @param int $frequency
+	 * @param int $frequency e.g. 2 for a coin flip, 100 for a 1% chance
 	 *
 	 * @return bool
 	 */
-	public static function bool(int $frequency = 10): bool
+	public static function bool(int $frequency = 2): bool
 	{
-		return (bool) (self::int(0, \max($frequency, 1)) % 2);
+		return 1 === self::int(1, \max($frequency, 1));
 	}
 
 	/**

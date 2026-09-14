@@ -146,8 +146,10 @@ class Stream implements StreamInterface
 			$this->seekable = false;
 
 			if ($this->isAttached()) {
-				$meta           = $this->getMetadata();
-				$this->seekable = !$this->isPipe() && $meta['seekable'];
+				// getMetadata() is null only when detached, which isAttached() just ruled out; the
+				// defaults keep that guarantee explicit instead of implied.
+				$meta           = $this->getMetadata() ?? [];
+				$this->seekable = !$this->isPipe() && (bool) ($meta['seekable'] ?? false);
 			}
 		}
 
@@ -222,10 +224,11 @@ class Stream implements StreamInterface
 				$this->readable = false;
 
 				if ($this->isAttached()) {
-					$meta = $this->getMetadata();
+					$meta      = $this->getMetadata() ?? [];
+					$mode_meta = (string) ($meta['mode'] ?? '');
 
 					foreach (self::$modes['readable'] as $mode) {
-						if (!\str_starts_with($meta['mode'], $mode)) {
+						if (!\str_starts_with($mode_meta, $mode)) {
 							continue;
 						}
 
@@ -346,10 +349,11 @@ class Stream implements StreamInterface
 			$this->writable = false;
 
 			if ($this->isAttached()) {
-				$meta = $this->getMetadata();
+				$meta      = $this->getMetadata() ?? [];
+				$mode_meta = (string) ($meta['mode'] ?? '');
 
 				foreach (self::$modes['writable'] as $mode) {
-					if (!\str_starts_with($meta['mode'], $mode)) {
+					if (!\str_starts_with($mode_meta, $mode)) {
 						continue;
 					}
 

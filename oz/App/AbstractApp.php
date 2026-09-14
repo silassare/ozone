@@ -20,6 +20,7 @@ use OZONE\Core\FS\Assets;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FS;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
+use OZONE\Core\Scopes\StateLayout;
 use OZONE\Core\Utils\Env;
 use Throwable;
 
@@ -38,8 +39,7 @@ abstract class AbstractApp implements AppInterface
 			->getRoot());
 
 		// = Adds stateful settings source
-		Settings::addSource($this->getStatefulSettingsDir()
-			->getRoot());
+		Settings::addSource(StateLayout::path($this, StateLayout::SETTINGS), true);
 
 		// = Adds templates source
 		Assets::addSource($this->getTemplatesDir()
@@ -119,8 +119,10 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function getDataDir(): FilesManager
 	{
+		// Never auto-created: this is the volume a deployment mounts, and silently making an empty
+		// one on a node whose disk did not come up hides the problem instead of reporting it.
 		return $this->getProjectDir()
-			->cd('data', true);
+			->cd('data', false);
 	}
 
 	/**
@@ -129,8 +131,44 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function getPublicDir(): FilesManager
 	{
+		return $this->getDocumentRootDir();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function getDocumentRootDir(): FilesManager
+	{
 		return $this->getProjectDir()
-			->cd('public/static', true);
+			->cd('public', true);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function getStateSlug(): string
+	{
+		return ScopeInterface::ROOT_SCOPE;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function getTempDir(): FilesManager
+	{
+		return StateLayout::dir($this, StateLayout::TEMP);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function getStateStoreDir(): FilesManager
+	{
+		return StateLayout::dir($this, StateLayout::STATE);
 	}
 
 	/**
@@ -142,14 +180,19 @@ abstract class AbstractApp implements AppInterface
 		static $env = null;
 
 		if (null === $env) {
-			$dir = $this->getProjectDir();
+			// The app's project directory, which an app may put elsewhere than OZ_PROJECT_DIR.
+			$dir  = $this->getProjectDir();
+			$path = \rtrim($dir->getRoot(), '/\\') . DS . '.env';
 
-			$dir->filter()
-				->isFile()
-				->isReadable()
-				->assert('.env');
+			if (!\is_file($path) || !\is_readable($path)) {
+				// throws the error it always has
+				$dir->filter()
+					->isFile()
+					->isReadable()
+					->assert('.env');
+			}
 
-			$env = new Env($dir->resolve('.env'));
+			$env = new Env($path);
 		}
 
 		return $env;
@@ -179,7 +222,7 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function getStatefulSettingsDir(): FilesManager
 	{
-		return $this->getDataDir()->cd('settings', true);
+		return StateLayout::dir($this, StateLayout::SETTINGS);
 	}
 
 	/**
@@ -218,7 +261,7 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function getPrivateFilesDir(): FilesManager
 	{
-		return $this->getDataDir()->cd('files', true);
+		return StateLayout::dir($this, StateLayout::PRIVATE_FILES);
 	}
 
 	/**
@@ -227,7 +270,7 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function getPublicFilesDir(): FilesManager
 	{
-		return $this->getPublicDir();
+		return StateLayout::dir($this, StateLayout::PUBLIC_FILES);
 	}
 
 	/**
@@ -246,6 +289,7 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function getLogsDir(): FilesManager
 	{
-		return $this->getProjectDir();
+		return $this->getProjectDir()
+			->cd('.ozone/logs/', true);
 	}
 }

@@ -16,13 +16,19 @@ namespace OZONE\Core\Router;
 use InvalidArgumentException;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
+use OZONE\Core\CSRF\CSRF;
 use OZONE\Core\Exceptions\BadRequestException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
-use OZONE\Core\Forms\Services\ResumableFormService;
+use OZONE\Core\Forms\FormDataClean;
+use OZONE\Core\Forms\Resume\FormSessionStore;
+use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\Uri;
+use OZONE\Core\Router\Guards\CSRFRouteGuard;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
 use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
 use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
@@ -39,9 +45,14 @@ final class RouteInfo
 	 * @var array<class-string<RouteGuardInterface>, mixed>
 	 */
 	private array $guards_data;
-	private ?FormData $clean_form_data = null;
+	private ?FormDataClean $cleaned_fd = null;
 
 	private ?RouteInterceptorInterface $interceptor = null;
+
+	/**
+	 * @var list<callable(Response):void>
+	 */
+	private array $on_success = [];
 
 	/**
 	 * RouteInfo constructor.
@@ -112,7 +123,8 @@ final class RouteInfo
 	/**
 	 * Gets the effective route handler to run.
 	 *
-	 * If a handler was provided in the constructor, it will be returned, otherwise the regular route handler will be returned.
+	 * If a handler was provided in the constructor, it will be returned,
+	 * otherwise the regular route handler will be returned.
 	 *
 	 * @return callable(static):Response
 	 */
@@ -160,25 +172,29 @@ final class RouteInfo
 	/**
 	 * Gets validated form data.
 	 *
-	 * @return FormData
+	 * @return FormDataClean
 	 */
-	public function getCleanFormData(): FormData
+	public function getCleanFormData(): FormDataClean
 	{
-		if (null === $this->clean_form_data) {
+		if (null === $this->cleaned_fd) {
 			// When there is an interceptor, checkRouteForm() is intentionally skipped
-			// so we define empty FormData so form callables that read it during
+			// so we define an empty FormDataClean so form callables that read it during
 			// form-bundle resolution don't throw.
 
 			if (null === $this->interceptor) {
 				throw new RuntimeException('Form data has not been checked yet.', [
-					'_reason' => \sprintf('%s called before the router called %s.', __METHOD__, Str::callableName([$this, 'checkRouteForm'])),
+					'_reason' => \sprintf(
+						'%s called before the router called %s.',
+						__METHOD__,
+						Str::callableName([$this, 'checkRouteForm'])
+					),
 				]);
 			}
 
-			$this->clean_form_data = new FormData();
+			$this->cleaned_fd = new FormDataClean();
 		}
 
-		return $this->clean_form_data;
+		return $this->cleaned_fd;
 	}
 
 	/**
@@ -242,34 +258,36 @@ final class RouteInfo
 	/**
 	 * Validates the form data if any.
 	 *
-	 * @internal this should be called once by the router before calling the route handler
-	 *
 	 * @throws InvalidFormException
+	 *
+	 * @internal this should be called once by the router before calling the route handler
 	 */
 	public function checkRouteForm(): void
 	{
-		if (null !== $this->clean_form_data) {
+		if (null !== $this->cleaned_fd) {
 			throw new RuntimeException('Form has already been checked.', [
-				'_reason' => 'Only the router should call this method, and it should be called only once per route dispatch.',
+				'_reason' => 'Only the router calls this method, once per route dispatch.',
 			]);
 		}
 
-		$this->clean_form_data = new FormData();
+		// Held locally as well as on the instance: the same object either way, but the local keeps
+		// the "assigned right here" guarantee readable through the try/catch below.
+		$cleaned          = new FormDataClean();
+		$this->cleaned_fd = $cleaned;
 
 		if ($this->route->getOptions()->hasResumeSupport()) {
 			$header_name = Settings::get('oz.request', 'OZ_FORM_RESUME_REF_HEADER_NAME');
 			$resume_ref  = $this->context->getRequest()->getHeaderLine($header_name);
 
 			if ('' !== $resume_ref) {
-				// resume_ref present: validate the completed session and use its data.
-				$clean_fd = ResumableFormService::requireCompletion($resume_ref, $this->context);
+				// resume_ref present: the completed session is the input, provided it
+				// belongs to this route's provider (and to this route when opened here).
+				$cleaned->merge(FormSessionStore::requireCompletionForRoute($resume_ref, $this));
 
-				$this->clean_form_data->merge($clean_fd);
-
-				// Drop the session immediately after loading — the data is now in memory
-				// and the handler is about to execute. This prevents reuse and frees the
-				// cache entry without waiting for TTL (mirrors $drop_resume_cache() below).
-				ResumableFormService::dropSession($resume_ref);
+				// Drop the session only once the handler has returned a successful
+				// response, so a failing handler leaves the wizard intact. This prevents
+				// reuse and frees the cache entry without waiting for TTL.
+				$this->onSuccess(static fn () => FormSessionStore::drop($resume_ref));
 
 				return;
 			}
@@ -285,19 +303,117 @@ final class RouteInfo
 
 		$bundle = $this->route->getOptions()->getFormBundle($this);
 
-		if ($bundle) {
-			[$prefilled, $drop_resume_cache] = $bundle->resume($this->context);
+		if (!$bundle) {
+			return;
+		}
 
-			$unsafe_fd = $this->context->getRequest()->getUnsafeFormData();
+		$unsafe_fd = $this->context->getRequest()->getUnsafeFormData();
 
-			$clean_fd = $bundle->validate($unsafe_fd, $prefilled);
+		// Fast path: no form in the bundle opted into Form::resumable().
+		if (null === $bundle->getResumeScope()) {
+			$cleaned->merge($bundle->validate($unsafe_fd));
 
-			// Validation succeeded — the route handler is about to execute with
-			// the fully assembled FormData. Delete the resume cache entry if any so
-			// stale partial data never bleeds into a future request.
-			$drop_resume_cache();
+			return;
+		}
 
-			$this->clean_form_data->merge($clean_fd);
+		$this->validateResumable($bundle, $unsafe_fd);
+	}
+
+	/**
+	 * Registers a callback to run once the route handler has returned a
+	 * successful response.
+	 *
+	 * Scoped to this dispatch: unlike a global ResponseHook listener, it is
+	 * discarded with this RouteInfo, so it can neither fire for another request
+	 * nor pile up in a long-running process. It does not run when the handler
+	 * throws or returns an unsuccessful response.
+	 *
+	 * @param callable(Response):void $callback
+	 *
+	 * @return $this
+	 *
+	 * @internal
+	 */
+	public function onSuccess(callable $callback): static
+	{
+		$this->on_success[] = $callback;
+
+		return $this;
+	}
+
+	/**
+	 * Runs the {@see self::onSuccess()} callbacks against the handler's response,
+	 * at most once.
+	 *
+	 * @internal called by the router right after the route handler returns
+	 */
+	public function finalize(Response $response): void
+	{
+		$callbacks        = $this->on_success;
+		$this->on_success = [];
+
+		if (!$response->isSuccessful()) {
+			return;
+		}
+
+		foreach ($callbacks as $callback) {
+			$callback($response);
+		}
+	}
+
+	/**
+	 * The accumulator `checkRouteForm()` created for this dispatch.
+	 *
+	 * @return FormDataClean
+	 */
+	private function cleanFormData(): FormDataClean
+	{
+		if (null === $this->cleaned_fd) {
+			throw new RuntimeException('The route form has not been checked yet.', [
+				'_reason' => 'Only the router calls this, after checkRouteForm().',
+			]);
+		}
+
+		return $this->cleaned_fd;
+	}
+
+	/**
+	 * Validates a bundle whose forms opted into {@see Form::resumable()}.
+	 *
+	 * Values validated by an earlier failed attempt on this route are replayed (and
+	 * re-checked), so the client only resends what is missing. A failed attempt saves
+	 * what it managed to validate; a successful handler clears the entry. The entry is
+	 * partitioned by route, so two routes sharing a form never prefill each other.
+	 *
+	 * Cost: one cache read, plus a write only when a failed attempt cleaned something
+	 * new, plus a delete only when an entry was read and the handler succeeded.
+	 *
+	 * @throws InvalidFormException
+	 */
+	private function validateResumable(Form $bundle, FormData $unsafe_fd): void
+	{
+		$partition          = $this->route->key();
+		[$prefilled, $drop] = $bundle->resume($this->context, $partition);
+		$cleaned_fd         = $prefilled ?? new FormDataClean();
+		$before             = $cleaned_fd->toArray();
+
+		try {
+			$bundle->validate($unsafe_fd, $cleaned_fd);
+		} catch (InvalidFormException $e) {
+			// validate() fills $cleaned_fd field by field, so it still holds everything
+			// cleaned before the failure.
+			if ($cleaned_fd->toArray() !== $before) {
+				$bundle->saveForLater($this->context, $cleaned_fd, $partition);
+			}
+
+			throw $e;
+		}
+
+		// checkRouteForm() assigned it before calling this.
+		$this->cleanFormData()->merge($cleaned_fd);
+
+		if (null !== $prefilled) {
+			$this->onSuccess(static fn () => $drop());
 		}
 	}
 
@@ -308,11 +424,29 @@ final class RouteInfo
 	{
 		$route_guards = $this->route->getOptions()->getGuards($this);
 
+		// Unsafe requests authenticated by the session cookie need a CSRF token, unless the
+		// route opted out (see CSRF::isRequiredByDefault()). Sub-requests were checked with
+		// the request that made them.
+		if (
+			!$this->context->isSubRequest()
+			&& CSRF::isRequiredByDefault($this->route->getOptions(), $this->context, $this->currentAuth())
+		) {
+			\array_unshift($route_guards, new CSRFRouteGuard(RequestScope::STATE));
+		}
+
 		foreach ($route_guards as $guard) {
 			$results = $guard->check($this);
 
 			$this->guards_data[$guard::class] = $results;
 		}
+	}
+
+	/**
+	 * The authentication method of the request, when the route defines one.
+	 */
+	private function currentAuth(): ?AuthenticationMethodInterface
+	{
+		return $this->context->authState()->current();
 	}
 
 	/**
@@ -356,7 +490,7 @@ final class RouteInfo
 	}
 
 	/**
-	 * Comparator function to sort interceptors by priority in descending order (higher priority value means higher priority).
+	 * Sorts interceptors by priority, highest first.
 	 *
 	 * @param class-string<RouteInterceptorInterface> $a
 	 * @param class-string<RouteInterceptorInterface> $b

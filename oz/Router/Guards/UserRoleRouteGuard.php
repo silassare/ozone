@@ -69,7 +69,7 @@ final class UserRoleRouteGuard extends AbstractRouteGuard
 		$user     = $context->auth()->user();
 
 		if (!Roles::hasOneOfRoles($user, $this->roles, $this->strict ? null : Role::ADMIN)) {
-			throw new ForbiddenException(null, [
+			throw new ForbiddenException('OZ_ERROR_USER_IS_MISSING_REQUIRED_ROLE', [
 				'_reason'  => 'User role is not in allowed list.',
 				'_roles'   => $this->roles,
 				'_strict'  => $this->strict,

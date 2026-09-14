@@ -152,6 +152,16 @@ final class MigrationsCmd extends Command
 		if (Migrations::DB_NOT_INSTALLED_VERSION === $current_db_version) {
 			// we just install the latest migration
 			$latest = $mg->getLatestMigration();
+
+			if (null === $latest) {
+				// Unreachable through run(), which returns early when nothing is pending, but the
+				// guarantee is two screens away: a missing migration is worth one line here rather
+				// than a fatal on the next call.
+				$cli->error('There is no migration to install. Run "oz migrations create" first.');
+
+				return;
+			}
+
 			$cli->info('Database seems empty will try to install the latest migration.');
 			$queries_str = '';
 

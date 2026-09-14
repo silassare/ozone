@@ -27,7 +27,7 @@ use OZONE\Core\Db\OZFile;
 class FilesHandler extends TableCRUDListener
 {
 	#[Override]
-	public static function register(Context $context): void
+	public static function register(): void
 	{
 		if (!\class_exists(OZFile::class)) {
 			return;
@@ -35,7 +35,10 @@ class FilesHandler extends TableCRUDListener
 
 		$crud = OZFile::crud();
 
-		$crud->onBeforeCreateFlush(static function (BeforeCreateFlush $ev) use ($context): void {
+		$crud->onBeforeCreateFlush(static function (BeforeCreateFlush $ev): void {
+			// The uploader is whoever the request being handled is for: read when the file is saved.
+			$context = Context::current();
+
 			if ($context->hasAuthenticatedUser()) {
 				$user = $context->auth()->user();
 

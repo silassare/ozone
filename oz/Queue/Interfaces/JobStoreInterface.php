@@ -59,6 +59,9 @@ interface JobStoreInterface
 	/**
 	 * Add a job.
 	 *
+	 * A ref is unique in a store: adding a job whose ref the store has throws, and leaves the stored
+	 * job as it was (what makes a cron dispatch idempotent, `Cron::runDues()`).
+	 *
 	 * @param JobInterface $job
 	 *
 	 * @return JobContractInterface

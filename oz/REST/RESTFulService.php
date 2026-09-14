@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Core\REST;
 
-use Gobl\DBAL\Relations\Interfaces\RelationInterface;
 use Gobl\DBAL\Relations\Relation;
 use Gobl\DBAL\Relations\VirtualRelation;
 use Gobl\DBAL\Table;
@@ -25,22 +24,26 @@ use Gobl\ORM\ORM;
 use Gobl\ORM\ORMController;
 use Gobl\ORM\ORMOptions;
 use InvalidArgumentException;
-use OpenApi\Annotations\Parameter;
-use OpenApi\Annotations\Schema;
 use Override;
 use OZONE\Core\Access\AtomicAction;
 use OZONE\Core\Access\AtomicActionsRegistry;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Service;
 use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Http\Response;
 use OZONE\Core\Lang\I18n;
+use OZONE\Core\REST\Enums\RESTFulAction;
 use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Router\RouteOptions;
 use OZONE\Core\Router\Router;
-use PHPUtils\Str;
 use Throwable;
 
 /**
  * Class RESTFulService.
+ *
+ * CRUD routes and API docs for a table, one per {@see RESTFulAction}. A subclass can hook
+ * around each action ({@see self::beforeAction()}, {@see self::afterAction()}) and configure
+ * each action's route ({@see self::configureRoute()}).
  */
 abstract class RESTFulService extends Service
 {
@@ -48,6 +51,13 @@ abstract class RESTFulService extends Service
 	public const TABLE_NAME   = 'table_name_sample';
 	public const KEY_COLUMN   = 'id';
 
+	/**
+	 * The actions by name, and whether they are enabled. To disable one, a subclass redeclares
+	 * this property with that action set to false: changing the inherited array would change
+	 * every service.
+	 *
+	 * @var array<string, bool>
+	 */
 	protected static array $available_actions = [
 		'get_one'      => true,
 		'get_all'      => true,
@@ -79,8 +89,10 @@ abstract class RESTFulService extends Service
 	/**
 	 * Gets the route name for the given action.
 	 */
-	public static function routeName(string $action): string
+	public static function routeName(RESTFulAction|string $action): string
 	{
+		$action = $action instanceof RESTFulAction ? $action->value : $action;
+
 		if (!isset(static::$available_actions[$action])) {
 			throw new InvalidArgumentException('Invalid action: ' . $action);
 		}
@@ -89,358 +101,22 @@ abstract class RESTFulService extends Service
 	}
 
 	/**
+	 * Whether the action is enabled: a disabled action has no route and no docs.
+	 */
+	public static function isActionEnabled(RESTFulAction|string $action): bool
+	{
+		$action = $action instanceof RESTFulAction ? $action->value : $action;
+
+		return !empty(static::$available_actions[$action]);
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{
-		$table = db()->getTableOrFail(static::TABLE_NAME);
-
-		if (!$table->getMeta()->get('api.doc.enabled', true)) {
-			return;
-		}
-
-		$api_doc_meta        = $doc->tableMeta($table);
-		$singular_name       = $api_doc_meta['singular_name'];
-		$plural_name         = $api_doc_meta['plural_name'];
-		$a_an                = $api_doc_meta['use_an'] ? 'an' : 'a';
-		$operation_id_prefix = Str::stringToURLSlug($singular_name, '_');
-		$tag                 = $doc->addTag($plural_name, $api_doc_meta['description']);
-		$entity_read         = $doc->entitySchemaForRead(static::TABLE_NAME);
-		$entity_create       = $doc->entitySchemaForCreate(static::TABLE_NAME);
-		$entity_update       = $doc->entitySchemaForUpdate(static::TABLE_NAME);
-		$pk_key_column       = static::KEY_COLUMN;
-		$collections         = $table->getCollections();
-
-		$get_one_params = [];
-		$get_all_params = [
-			$doc->apiMaxParameter(),
-			$doc->apiPageParameter(),
-			$doc->apiFiltersParameter('query', $table),
-			$doc->apiOrderByParameter(),
-			$doc->apiCursorParameter(),
-			$doc->apiCursorColumnParameter(),
-			$doc->apiCursorDirParameter(),
-		];
-		$update_one_params = [];
-		$update_all_params = [
-			$doc->apiMaxParameter(),
-			$doc->apiFiltersParameter('query', $table),
-			$doc->apiOrderByParameter(),
-		];
-		$delete_one_params = [];
-		$delete_all_params = [
-			$doc->apiMaxParameter(),
-			$doc->apiFiltersParameter('query', $table),
-			$doc->apiOrderByParameter(),
-		];
-		if (!empty($collections)) {
-			$get_all_params[] = $doc->apiCollectionParameter(
-				'query',
-				\array_map(static fn ($c) => $c->getName(), $collections)
-			);
-		}
-
-		$relatives_options   = static::relationsDocOptions($table, $doc);
-		$relations           = $relatives_options['relations'];
-		$v_relations         = $relatives_options['v_relations'];
-
-		$non_paginated_relations_schemas = $relatives_options['non_paginated_relations_schemas'];
-
-		if (isset($relatives_options['relations_parameter'])) {
-			$get_one_params[] = $get_all_params[] = $relatives_options['relations_parameter'];
-		}
-
-		// create_one
-		if ($table->getMeta()->get('api.doc.create_one.enabled', true)) {
-			$doc->addOperationFromRoute(
-				static::routeName('create_one'),
-				'POST',
-				\sprintf('Create %s', $singular_name),
-				[
-					$doc->success(
-						$doc->object(['item' => $entity_read]),
-						\sprintf('The `%s` was created successfully.', $singular_name),
-						'OK',
-						201
-					),
-				],
-				[
-					'tags'            => [$tag->name],
-					'description'     => \sprintf('Create new `%s`.', $singular_name),
-					'operationId'     => \sprintf('%s.create_one', $operation_id_prefix),
-					'requestBody'     => $doc->requestBody([
-						$doc->json($entity_create),
-					]),
-				]
-			);
-		}
-
-		// get_one
-		if ($table->getMeta()->get('api.doc.get_one.enabled', true)) {
-			$doc->addOperationFromRoute(
-				static::routeName('get_one'),
-				'GET',
-				\sprintf('Get %s', $singular_name),
-				[
-					$doc->success(
-						$doc->object([
-							'item'      => $entity_read,
-							'relations' => $doc->object($non_paginated_relations_schemas),
-						]),
-						\sprintf('The `%s` was retrieved successfully.', $singular_name)
-					),
-				],
-				[
-					'tags'        => [$tag->name],
-					'description' => \sprintf(
-						'Get %s `%s` identified by a given `%s`.',
-						$a_an,
-						$singular_name,
-						ApiDoc::toHumanReadable($pk_key_column)
-					),
-					'operationId' => \sprintf('%s.get_one', $operation_id_prefix),
-					'parameters'  => $get_one_params,
-				]
-			);
-		}
-
-		// update_one
-		if ($table->getMeta()->get('api.doc.update_one.enabled', true)) {
-			$doc->addOperationFromRoute(
-				static::routeName('update_one'),
-				'PATCH',
-				\sprintf('Update %s', $singular_name),
-				[
-					$doc->success(
-						$doc->object(['item' => $entity_read]),
-						\sprintf('The `%s` was updated successfully.', $singular_name)
-					),
-				],
-				[
-					'tags'        => [$tag->name],
-					'description' => \sprintf(
-						'Update %s `%s` identified by a given `%s`',
-						$a_an,
-						$singular_name,
-						ApiDoc::toHumanReadable($pk_key_column)
-					),
-					'operationId' => \sprintf('%s.update_one', $operation_id_prefix),
-					'requestBody' => $doc->requestBody([
-						$doc->json($entity_update),
-					]),
-					'parameters' => $update_one_params,
-				]
-			);
-		}
-
-		// delete_one
-		if ($table->getMeta()->get('api.doc.delete_one.enabled', true)) {
-			$doc->addOperationFromRoute(
-				static::routeName('delete_one'),
-				'DELETE',
-				\sprintf('Delete %s', $singular_name),
-				[
-					$doc->success(
-						$doc->object(['item' => $entity_read]),
-						\sprintf('The `%s` was deleted successfully.', $singular_name)
-					),
-				],
-				[
-					'tags'        => [$tag->name],
-					'description' => \sprintf(
-						'Delete %s `%s` identified by a given `%s`.',
-						$a_an,
-						$singular_name,
-						ApiDoc::toHumanReadable($pk_key_column)
-					),
-					'operationId' => \sprintf('%s.delete_one', $operation_id_prefix),
-					'parameters'  => $delete_one_params,
-				]
-			);
-		}
-
-		// get_all
-		if ($table->getMeta()->get('api.doc.get_all.enabled', true)) {
-			$items_with_relations = [
-				'items'     => $doc->array($entity_read),
-				'relations' => $doc->object(\array_map(
-					static fn ($s) => $doc->object(['{' . $pk_key_column . '}' => $s]),
-					$non_paginated_relations_schemas
-				)),
-			];
-
-			$doc->addOperationFromRoute(
-				static::routeName('get_all'),
-				'GET',
-				\sprintf('List %s', $plural_name),
-				[
-					$doc->success(
-						new Schema([
-							'oneOf' => [
-								$doc->apiPaginated($items_with_relations),
-								$doc->apiCursorPaginated($items_with_relations),
-							],
-						]),
-						\sprintf('All `%s` were retrieved successfully.', $plural_name)
-					),
-				],
-				[
-					'tags'        => [$tag->name],
-					'description' => \sprintf('Gets all `%s` that matches a given filters.', $plural_name),
-					'operationId' => \sprintf('%s.get_all', $operation_id_prefix),
-					'parameters'  => $get_all_params,
-				]
-			);
-		}
-
-		// update_all
-		if ($table->getMeta()->get('api.doc.update_all.enabled', true)) {
-			$doc->addOperationFromRoute(
-				static::routeName('update_all'),
-				'PATCH',
-				\sprintf('Update %s', $plural_name),
-				[
-					$doc->success(
-						$doc->object(['affected' => $doc->integer('The number of affected rows.')]),
-						\sprintf('All `%s` were updated successfully.', $plural_name)
-					),
-				],
-				[
-					'tags'        => [$tag->name],
-					'description' => \sprintf('Update all `%s` that matches a given filters.`', $plural_name),
-					'operationId' => \sprintf('%s.update_all', $operation_id_prefix),
-					'requestBody' => $doc->requestBody([
-						$doc->json($entity_update),
-					]),
-					'parameters' => $update_all_params,
-				]
-			);
-		}
-
-		// delete_all
-		if ($table->getMeta()->get('api.doc.delete_all.enabled', true)) {
-			$doc->addOperationFromRoute(
-				static::routeName('delete_all'),
-				'DELETE',
-				\sprintf('Delete %s', $plural_name),
-				[
-					$doc->success(
-						$doc->object(['affected' => $doc->integer('The number of affected rows.')]),
-						\sprintf('All `%s` were deleted successfully.', $plural_name)
-					),
-				],
-				[
-					'tags'        => [$tag->name],
-					'description' => \sprintf('Delete all `%s` that matches a given filters.', $plural_name),
-					'operationId' => \sprintf('%s.delete_all', $operation_id_prefix),
-					'parameters'  => $delete_all_params,
-				]
-			);
-		}
-
-		$add_relative_operation = static function (
-			RelationInterface $r,
-			Schema $r_schema
-		) use (
-			$table,
-			$operation_id_prefix,
-			$tag,
-			$pk_key_column,
-			$singular_name,
-			$doc,
-		): void {
-			$r_name = $r->getName();
-			if (!$table->getMeta()->get(\sprintf('api.doc.get_relation.%s.enabled', $r_name), true)) {
-				return;
-			}
-
-			// ensure not a virtual relation, get the target table to be able to get the customized filters parameters for the relation
-			$r_target = $r instanceof Relation ? $r->getTargetTable() : null;
-
-			$r_params = $r->isPaginated() ? [
-				$doc->apiMaxParameter(),
-				$doc->apiPageParameter(),
-				$doc->apiFiltersParameter('query', $r_target),
-				$doc->apiOrderByParameter(),
-				$doc->apiCursorParameter(),
-				$doc->apiCursorColumnParameter(),
-				$doc->apiCursorDirParameter(),
-			] : [
-				$doc->apiFiltersParameter('query', $r_target),
-				$doc->apiOrderByParameter(),
-			];
-
-			/** @var null|Schema $r_relations_schema */
-			$r_relations_schema = null;
-			$r_table            = $r->getController()->getRelativesStoreTable();
-
-			if ($r_table?->hasSinglePKColumn()) {
-				$r_pk_column         = $r_table->getSinglePKColumnOrFail()->getName();
-				$r_relatives_options = static::relationsDocOptions($r_table, $doc);
-
-				if (isset($r_relatives_options['relations_parameter'])) {
-					$r_params[] = $r_relatives_options['relations_parameter'];
-				}
-				$r_relations_schema = $r->isPaginated() ? $doc->object(\array_map(
-					static fn ($s) => $doc->object(['{' . $r_pk_column . '}' => $s]),
-					$r_relatives_options['non_paginated_relations_schemas']
-				)) : $doc->object($r_relatives_options['non_paginated_relations_schemas']);
-			}
-
-			$doc->addOperationFromRoute(
-				static::routeName('get_relation'),
-				'GET',
-				\sprintf('Get %s %s', $singular_name, ApiDoc::toHumanReadable($r_name)),
-				[
-					$doc->success(
-						$r->isPaginated() ? new Schema([
-							'oneOf' => [
-								$doc->apiPaginated(
-									['items' => $doc->array($r_schema)]
-										+ (null !== $r_relations_schema ? ['relations' => $r_relations_schema] : [])
-								),
-								$doc->apiCursorPaginated(
-									['items' => $doc->array($r_schema)]
-										+ (null !== $r_relations_schema ? ['relations' => $r_relations_schema] : [])
-								),
-							],
-						]) : $doc->object(
-							['item' => $r_schema]
-								+ (null !== $r_relations_schema ? ['relations' => $r_relations_schema] : [])
-						),
-						\sprintf(
-							'The `%s` of the `%s` was retrieved successfully.',
-							ApiDoc::toHumanReadable($r_name),
-							$singular_name
-						)
-					),
-				],
-				[
-					'tags'            => [$tag->name],
-					'description'     => \sprintf(
-						'Gets the `%s` of the `%s` with the given `%s`.',
-						ApiDoc::toHumanReadable($r_name),
-						$singular_name,
-						ApiDoc::toHumanReadable($pk_key_column)
-					),
-					'operationId'     => \sprintf('%s.get_relation.%s', $operation_id_prefix, $r_name),
-					'parameters'      => $r_params,
-				],
-				[
-					'relation' => $r_name,
-				]
-			);
-		};
-
-		foreach ($relations as $relation) {
-			/** @psalm-suppress InvalidArgument */
-			$add_relative_operation($relation, $doc->entitySchemaForRead($relation->getTargetTable()));
-		}
-
-		foreach ($v_relations as $vr) {
-			$add_relative_operation($vr, $doc->virtualRelationTypeSchema($vr));
-		}
+		(new RESTFulApiDoc($doc, static::class))->document();
 	}
 
 	// ========================================================
@@ -781,13 +457,38 @@ abstract class RESTFulService extends Service
 	}
 
 	/**
+	 * Called before an action runs, e.g. to check the request further.
+	 *
+	 * @psalm-suppress PossiblyUnusedParam
+	 */
+	protected function beforeAction(RESTFulAction $action, RESTFulAPIRequest $req): void {}
+
+	/**
+	 * Called once an action succeeded, before the response is built: `$this->json()` holds the
+	 * action's response data.
+	 *
+	 * @psalm-suppress PossiblyUnusedParam
+	 */
+	protected function afterAction(RESTFulAction $action, RESTFulAPIRequest $req): void {}
+
+	/**
+	 * Called for each action when the routes are registered, to add guards, a form, middlewares,
+	 * ... to that action's route only.
+	 *
+	 * @psalm-suppress PossiblyUnusedParam
+	 */
+	protected static function configureRoute(RESTFulAction $action, RouteOptions $options): void {}
+
+	/**
 	 * Processes a paginated list to prepare response data.
 	 *
 	 * @param PaginationAwareListInterface $list the paginated list to process
 	 * @param RESTFulAPIRequest            $req  the API request containing pagination parameters
 	 */
-	protected function preparePaginatedListResponseData(PaginationAwareListInterface $list, RESTFulAPIRequest $req): array
-	{
+	protected function preparePaginatedListResponseData(
+		PaginationAwareListInterface $list,
+		RESTFulAPIRequest $req
+	): array {
 		if ($req->isCursorBased()) {
 			$data        = $list->getItemsWithCursorMeta($req);
 			$data['max'] = $req->getMax();
@@ -804,7 +505,8 @@ abstract class RESTFulService extends Service
 	}
 
 	/**
-	 * Registers RESTFul service routes.
+	 * Registers the routes of the enabled actions: the collection actions under
+	 * {@see self::SERVICE_PATH}, the entry actions under `/:<key column>`.
 	 *
 	 * @param Router $router
 	 *
@@ -835,84 +537,18 @@ abstract class RESTFulService extends Service
 		$relation_param = \implode('|', $relations_names);
 
 		$router->group(static::SERVICE_PATH, static function (Router $router): void {
-			$router->post(static function (RouteInfo $r) {
-				$service = new static($r);
-				$service->actionCreateOne(static::buildRequest($r));
-
-				return $service->respond();
-			})->name(static::routeName('create_one'));
-
-			$router->get(static function (RouteInfo $r) {
-				$service = new static($r);
-				$service->actionGetAll(static::buildRequest($r));
-
-				return $service->respond();
-			})->name(static::routeName('get_all'));
-
-			$router->patch(static function (RouteInfo $r) {
-				$service = new static($r);
-				$service->actionUpdateAll(static::buildRequest($r));
-
-				return $service->respond();
-			})->name(static::routeName('update_all'));
-
-			$router->delete(static function (RouteInfo $r) {
-				$service = new static($r);
-				$service->actionDeleteAll(static::buildRequest($r));
-
-				return $service->respond();
-			})->name(static::routeName('delete_all'));
+			foreach (RESTFulAction::cases() as $action) {
+				if (!$action->onEntry() && static::isActionEnabled($action)) {
+					self::registerAction($router, $action);
+				}
+			}
 
 			$router->group('/:' . static::KEY_COLUMN, static function (Router $router): void {
-				$router->get(static function (RouteInfo $r) {
-					$req = static::buildRequest($r, [
-						static::KEY_COLUMN,
-						'eq',
-						$r->param(static::KEY_COLUMN),
-					]);
-
-					$service = new static($r);
-					$service->actionGetOne($req);
-
-					return $service->respond();
-				})->name(static::routeName('get_one'));
-
-				$router->patch(static function (RouteInfo $r) {
-					$req = static::buildRequest($r, [
-						static::KEY_COLUMN,
-						'eq',
-						$r->param(static::KEY_COLUMN),
-					]);
-
-					$service = new static($r);
-					$service->actionUpdateOne($req);
-
-					return $service->respond();
-				})->name(static::routeName('update_one'));
-
-				$router->delete(static function (RouteInfo $r) {
-					$req = static::buildRequest($r, [
-						static::KEY_COLUMN,
-						'eq',
-						$r->param(static::KEY_COLUMN),
-					]);
-
-					$service = new static($r);
-					$service->actionDeleteOne($req);
-
-					return $service->respond();
-				})->name(static::routeName('delete_one'));
-
-				$router->get('/:relation', static function (RouteInfo $r) {
-					$service = new static($r);
-					$service->actionGetRelation(static::buildRequest($r), [
-						static::KEY_COLUMN,
-						'eq',
-						$r->param(static::KEY_COLUMN),
-					], $r->param('relation'));
-
-					return $service->respond();
-				})->name(static::routeName('get_relation'));
+				foreach (RESTFulAction::cases() as $action) {
+					if ($action->onEntry() && static::isActionEnabled($action)) {
+						self::registerAction($router, $action);
+					}
+				}
 			});
 		})
 			->param('relation', $relation_param)
@@ -983,47 +619,48 @@ abstract class RESTFulService extends Service
 	}
 
 	/**
-	 * @param Table  $table
-	 * @param ApiDoc $doc
-	 *
-	 * @return array{
-	 *     relations_parameter: null|Parameter,
-	 *     non_paginated_relations_schemas: array<string, Schema>,
-	 *     relations: array<int, Relation>,
-	 *     v_relations: array<int, VirtualRelation>
-	 * }
+	 * Registers the route of one action.
 	 */
-	private static function relationsDocOptions(Table $table, ApiDoc $doc): array
+	private static function registerAction(Router $router, RESTFulAction $action): void
 	{
-		$relations   = $table->getRelations(false);
-		$v_relations = $table->getVirtualRelations(false);
+		$options = $router->map(
+			$action->httpMethod(),
+			$action->path(),
+			static fn (RouteInfo $ri) => (new static($ri))->runAction($action, $ri)
+		)->name(static::routeName($action));
 
-		/** @var array<string, Schema> $schemas */
-		$schemas = [];
-		foreach ($relations as $rl) {
-			if ($rl->isPaginated()) {
-				continue;
-			}
+		static::configureRoute($action, $options);
+	}
 
-			$schemas[$rl->getName()] = $doc->entitySchemaForRead($rl->getTargetTable());
-		}
-		foreach ($v_relations as $vr) {
-			if ($vr->isPaginated()) {
-				continue;
-			}
+	/**
+	 * Runs an action and its hooks, and builds the response.
+	 *
+	 * @throws Throwable
+	 */
+	private function runAction(RESTFulAction $action, RouteInfo $ri): Response
+	{
+		$entry_filters = $action->onEntry()
+			? [static::KEY_COLUMN, 'eq', $ri->param(static::KEY_COLUMN)]
+			: [];
 
-			$schemas[$vr->getName()] = $doc->virtualRelationTypeSchema($vr);
-		}
+		// get_relation looks the entry up itself: its request filters apply to the relatives.
+		$req = static::buildRequest($ri, RESTFulAction::GET_RELATION === $action ? [] : $entry_filters);
 
-		$p = !empty($schemas)
-			? $doc->apiRelationsParameter('query', \array_keys($schemas))
-			: null;
+		$this->beforeAction($action, $req);
 
-		return [
-			'relations_parameter'             => $p,
-			'non_paginated_relations_schemas' => $schemas,
-			'relations'                       => $relations,
-			'v_relations'                     => $v_relations,
-		];
+		match ($action) {
+			RESTFulAction::CREATE_ONE   => $this->actionCreateOne($req),
+			RESTFulAction::GET_ALL      => $this->actionGetAll($req),
+			RESTFulAction::UPDATE_ALL   => $this->actionUpdateAll($req),
+			RESTFulAction::DELETE_ALL   => $this->actionDeleteAll($req),
+			RESTFulAction::GET_ONE      => $this->actionGetOne($req),
+			RESTFulAction::UPDATE_ONE   => $this->actionUpdateOne($req),
+			RESTFulAction::DELETE_ONE   => $this->actionDeleteOne($req),
+			RESTFulAction::GET_RELATION => $this->actionGetRelation($req, $entry_filters, $ri->param('relation')),
+		};
+
+		$this->afterAction($action, $req);
+
+		return $this->respond();
 	}
 }

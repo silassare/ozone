@@ -53,7 +53,7 @@ final class DateTimeUtils
 		$tz = self::resolveTimezone($timezone);
 		$dt = new DateTimeImmutable($time, $tz);
 
-		return new static($dt);
+		return new self($dt);
 	}
 
 	/**
@@ -76,7 +76,7 @@ final class DateTimeUtils
 		// 't' returns number of days in the current month
 		$lastDay = (int) $this->dt->format('t');
 
-		return new static($this->dt->setDate(
+		return new self($this->dt->setDate(
 			(int) $this->dt->format('Y'),
 			(int) $this->dt->format('n'),
 			$lastDay
@@ -90,7 +90,7 @@ final class DateTimeUtils
 	 */
 	public function addDay(): static
 	{
-		return new static($this->dt->modify('+1 day'));
+		return new self($this->dt->modify('+1 day'));
 	}
 
 	/**
@@ -100,7 +100,7 @@ final class DateTimeUtils
 	 */
 	public function subDay(): static
 	{
-		return new static($this->dt->modify('-1 day'));
+		return new self($this->dt->modify('-1 day'));
 	}
 
 	/**

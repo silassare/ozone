@@ -10,6 +10,7 @@
  */
 
 declare(strict_types=1);
+use OZONE\Core\FS\Filters\ImageFileFilterHandler;
 
 return [
 	/**
@@ -34,7 +35,8 @@ return [
 	 *  /files/ozone-7000000000-fe5017db3a4b07eb5297c745ba198355-thumb
 	 *  /files/ozone-7000000000-eaabf4cdc3f909a61be62e1fa4d231ed-fe5017db3a4b07eb5297c745ba198355-thumb
 	 */
-	'OZ_GET_FILE_URI_PATH_FORMAT'         => '/files/ozone-{oz_file_id}[-{oz_file_auth_ref}]-{oz_file_auth_key}[-{oz_file_filters}][.{oz_file_extension}]',
+	'OZ_GET_FILE_URI_PATH_FORMAT'         => '/files/ozone-{oz_file_id}[-{oz_file_auth_ref}]-{oz_file_auth_key}'
+		. '[-{oz_file_filters}][.{oz_file_extension}]',
 
 	/**
 	 * Alternative file uri path formats.
@@ -78,6 +80,15 @@ return [
 	 * maximum size of a thumbnail: in pixels.
 	 */
 	'OZ_THUMBNAIL_MAX_SIZE'               => 640,
+
+	/**
+	 * How long an image filter rendition is kept, in seconds (0: never removed). Renditions are files
+	 * in the scope's cache directory; the garbage collector removes older ones, rendered again when
+	 * next asked for.
+	 *
+	 * @see ImageFileFilterHandler
+	 */
+	'OZ_IMAGE_FILTERS_CACHE_TTL'          => 604800,
 
 	/**
 	 * Should we use nginx x-sendfile or x-accel to serve files ?

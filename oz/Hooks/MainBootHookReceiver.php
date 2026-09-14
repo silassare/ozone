@@ -17,20 +17,26 @@ use Exception;
 use Gobl\ORM\Events\ORMTableFilesGenerated;
 use Gobl\ORM\Utils\ORMClassKind;
 use Override;
+use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Events\SessionHijackingDetected;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
+use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\MethodNotAllowedException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\FS\Traits\FileEntityTrait;
+use OZONE\Core\Hooks\Events\EndRequestHook;
+use OZONE\Core\Hooks\Events\RequestHook;
 use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
-use OZONE\Core\Http\Uri;
+use OZONE\Core\Http\CorsPolicy;
 use OZONE\Core\OZone;
+use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\REST\Views\ApiDocView;
 use OZONE\Core\Router\Events\RouteMethodNotAllowed;
 use OZONE\Core\Router\Events\RouteNotFound;
+use OZONE\Core\Stores\Drivers\MemoryStore;
 use OZONE\Core\Users\Traits\UserEntityTrait;
 use OZONE\Core\Users\UsersRepository;
 use OZONE\Core\Web\WebView;
@@ -110,30 +116,63 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Main handler for {@see ResponseHook} Event.
+	 * Main handler for {@see RequestHook} Event.
 	 *
-	 * @param ResponseHook $ev
+	 * Rejects a request from a disallowed origin before it is routed: rejecting it once
+	 * the response is ready would let its handler run (writes, emails, payments) first.
+	 *
+	 * @param RequestHook $ev
 	 *
 	 * @throws ForbiddenException
 	 */
+	public static function onRequest(RequestHook $ev): void
+	{
+		// Sub-requests are skipped: they often run with the original request environment.
+		if (!$ev->context->isSubRequest()) {
+			self::assertOriginAllowed($ev->context);
+		}
+	}
+
+	/**
+	 * Throws when the request carries an `Origin` the CORS policy disallows.
+	 *
+	 * Preflights pass: they only get CORS headers, which the browser enforces.
+	 *
+	 * @throws ForbiddenException
+	 */
+	public static function assertOriginAllowed(Context $context): void
+	{
+		if ($context->getRequest()->isOptions()) {
+			return;
+		}
+
+		// Only the Origin header the browser sets matters to CORS. Falling back to the
+		// Referer would wrongly reject ordinary inbound links to web pages.
+		$origin = $context->getRequestOrigin();
+
+		if (null !== $origin && !CorsPolicy::fromContext($context)->allows($origin)) {
+			throw new ForbiddenException('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED', [
+				'origin' => $origin,
+			]);
+		}
+	}
+
+	/**
+	 * Main handler for {@see ResponseHook} Event.
+	 *
+	 * @param ResponseHook $ev
+	 */
 	public static function onResponse(ResponseHook $ev): void
 	{
-		$context        = $ev->context;
-		$request        = $context->getRequest();
-		$response       = $context->getResponse();
-		$life_time      = Settings::get('oz.request', 'OZ_CORS_ALLOWED_MAX_AGE');
-		$h_list         = [];
-		$allowed_origin = Settings::get('oz.request', 'OZ_CORS_ALLOWED_ORIGIN');
-		// header spoofing can help hacker bypass this
-		// so don't be 100% sure, :-)
-		$request_origin = $context->getRequestOriginOrReferer();
+		$context  = $ev->context;
+		$request  = $context->getRequest();
+		$response = $context->getResponse();
+		$policy   = CorsPolicy::fromContext($context);
+		$origin   = $context->getRequestOrigin();
 
-		if ('self' === $allowed_origin) {
-			$allowed_origin = $context->getDefaultOrigin();
-		} elseif ('*' === $allowed_origin) {
-			// CORS doesn't allow wildcard with Access-Control-Allow-Credentials header set to true
-			$allowed_origin = $request_origin ?? $context->getDefaultOrigin();
-		}
+		// CORS only tells browsers which origins may read responses; requests from
+		// disallowed origins were already rejected by onRequest().
+		$h_list = $policy->headers($origin);
 
 		if ($request->isOptions()) {
 			$h_list['Access-Control-Allow-Headers'] = \implode(', ', $context->getAllowedHeadersNameList());
@@ -145,43 +184,29 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 				'PUT',
 				'DELETE',
 			]);
-			$h_list['Access-Control-Max-Age']       = $life_time;
-		} elseif (!$context->isSubRequest()) {
-			// we don't check for sub-request here because often sub-request are made
-			// with the original request environment
-			if (!empty($request_origin) && $allowed_origin !== $request_origin) {
-				$allowed_host = Uri::createFromString($allowed_origin)
-					->getHost();
-				$origin_host  = Uri::createFromString($request_origin)
-					->getHost();
-				if ($allowed_host !== $origin_host) {
-					throw new ForbiddenException('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED', [
-						'origin'        => $request_origin,
-						'_origin_host'  => $origin_host,
-						'_allowed_host' => $allowed_host,
-					]);
-				}
-			}
+			$h_list['Access-Control-Max-Age']       = Settings::get('oz.request', 'OZ_CORS_ALLOWED_MAX_AGE');
 		}
-
-		// Remember: CORS is not security. Do not rely on CORS to secure your web site/application.
-		// The Access-Control-Allow-Origin header in CORS only dictates
-		// which origins should be allowed to make cross-origin requests.
-		// Its can be spoofed by the client.
-		// Don't rely on it for anything more.
-
-		// allow browser to make CORS request
-		$h_list['Access-Control-Allow-Origin'] = $allowed_origin;
-		$h_list['Vary']                        = 'Origin';
-
-		// allow browser to send CORS request with cookies
-		$h_list['Access-Control-Allow-Credentials'] = 'true';
-
-		// let's try to avoid the click-jacking
-		$h_list['X-Frame-Options'] = 'SAMEORIGIN';
 
 		foreach ($h_list as $key => $value) {
 			$response = $response->withHeader($key, (string) $value);
+		}
+
+		$is_https = 'https' === $request->getUri()->getScheme();
+
+		foreach ((array) Settings::get('oz.request', 'OZ_SECURITY_HEADERS', []) as $name => $value) {
+			$name = (string) $name;
+
+			// A security header the handler already set wins, so a route can relax or tighten it.
+			if (null === $value || false === $value || '' === $value || $response->hasHeader($name)) {
+				continue;
+			}
+
+			// Browsers ignore HSTS over http, and sending it there could pin a dev host to https.
+			if (!$is_https && 0 === \strcasecmp($name, 'Strict-Transport-Security')) {
+				continue;
+			}
+
+			$response = $response->withHeader($name, (string) $value);
 		}
 
 		$context->setResponse($response);
@@ -224,7 +249,17 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 
 		RouteMethodNotAllowed::listen([self::class, 'onMethodNotAllowed'], Event::RUN_LAST);
 
+		RequestHook::listen([self::class, 'onRequest'], Event::RUN_FIRST);
+
 		ResponseHook::listen([self::class, 'onResponse'], Event::RUN_FIRST);
+
+		// The framework's own per-request state kept outside the Context: released with each request,
+		// or a worker would serve the next request from it.
+		EndRequestHook::listen(static function (): void {
+			ApiDoc::release();
+			BaseException::release();
+			MemoryStore::release();
+		});
 
 		SessionHijackingDetected::listen(static function (SessionHijackingDetected $ev): void {
 			oz_logger()->warning('Session hijacking detected.', [

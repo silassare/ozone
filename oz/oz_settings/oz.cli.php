@@ -13,8 +13,11 @@ declare(strict_types=1);
 
 use OZONE\Core\Cli\Cmd\CronCmd;
 use OZONE\Core\Cli\Cmd\DbCmd;
+use OZONE\Core\Cli\Cmd\DeployCmd;
+use OZONE\Core\Cli\Cmd\DoctorCmd;
 use OZONE\Core\Cli\Cmd\ProjectCmd;
 use OZONE\Core\Cli\Cmd\ScopesCmd;
+use OZONE\Core\Cli\Cmd\ServerCmd;
 use OZONE\Core\Cli\Cmd\ServicesCmd;
 use OZONE\Core\Cli\Cmd\SettingsCmd;
 use OZONE\Core\Migrations\Cli\MigrationsCmd;
@@ -31,4 +34,7 @@ return [
 	'cron'       => CronCmd::class,
 	'jobs'       => JobsCmd::class,
 	'settings'   => SettingsCmd::class,
+	'doctor'     => DoctorCmd::class,
+	'server'     => ServerCmd::class,
+	'deploy'     => DeployCmd::class,
 ];

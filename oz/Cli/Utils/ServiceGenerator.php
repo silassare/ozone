@@ -42,7 +42,7 @@ class ServiceGenerator
 	 * @param string      $service_class     the service class name to use
 	 * @param string      $base_path         the service url base path
 	 * @param string      $header            the header to add at the top of the generated class file
-	 * @param null|string $output_dir        the output directory for the generated class file, if null it will be generated in the default services directory
+	 * @param null|string $output_dir        the output directory of the class file; null for the default one
 	 * @param bool        $override          whether to override the service class if it already exists,
 	 *                                       if false and the class file already exists an exception will be thrown,
 	 *                                       if true and the class file already exists it will be renamed

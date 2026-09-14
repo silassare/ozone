@@ -30,10 +30,9 @@ final class IPRateLimit extends RateLimit
 	 */
 	public function __construct(RouteInfo $ri, int $rate, int $interval, int $weight = 1)
 	{
-		$ip = $ri->getContext()->getUserIP();
-
+		// Keyed per route: a bare-IP key would make every IP-limited route share one quota.
 		parent::__construct(
-			$ip,
+			\sprintf('ip:%s:%s', $ri->route()->key(), $ri->getContext()->getUserIP() ?? ''),
 			$rate,
 			$interval,
 			$weight

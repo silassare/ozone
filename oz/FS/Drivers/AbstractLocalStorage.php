@@ -23,6 +23,7 @@ use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Interfaces\StorageInterface;
+use OZONE\Core\FS\Traits\FileResponseTrait;
 use OZONE\Core\Http\Body;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\UploadedFile;
@@ -34,6 +35,8 @@ use Throwable;
  */
 abstract class AbstractLocalStorage implements StorageInterface
 {
+	use FileResponseTrait;
+
 	/**
 	 * AbstractLocalStorage constructor.
 	 *
@@ -59,10 +62,11 @@ abstract class AbstractLocalStorage implements StorageInterface
 	public function upload(UploadedFile $upload): OZFile
 	{
 		if (($error = $upload->getError()) !== \UPLOAD_ERR_OK) {
-			$info             = FS::uploadErrorInfo($error);
-			$debug['_reason'] = $info['reason'];
+			$info = FS::uploadErrorInfo($error);
 
-			throw new RuntimeException($info['message'], $debug);
+			// Initialised, not written into out of nowhere: PHP 8 warns on an undefined variable,
+			// and it did so exactly when an upload had already failed.
+			throw new RuntimeException($info['message'], ['_reason' => $info['reason']]);
 		}
 
 		if (null !== ($result = FS::parseFileAlias($upload))) {
@@ -83,7 +87,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 		$upload->moveTo($destination);
 
-		$filesize = \filesize($destination);
+		$filesize = self::sizeOf($destination);
 
 		/** @var string $ref */
 		$f = new OZFile();
@@ -114,7 +118,16 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 		$destination = $this->createDestinationPath($clean_name, $ref);
 
-		$fw = \fopen($destination, 'wb');
+		// e.g. FileStream::fromString() leaves the stream at its end.
+		if ($source->isSeekable()) {
+			$source->rewind();
+		}
+
+		$fw = @\fopen($destination, 'wb');
+
+		if (false === $fw) {
+			throw new RuntimeException(\sprintf('Unable to write the uploaded file at "%s".', $destination));
+		}
 
 		while (!$source->eof()) {
 			\fwrite($fw, $source->read(4096));
@@ -122,7 +135,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 		\fclose($fw);
 
-		$filesize = \filesize($destination);
+		$filesize = self::sizeOf($destination);
 
 		/** @var string $ref */
 		$f = new OZFile();
@@ -180,6 +193,8 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * @psalm-suppress MoreSpecificReturnType, LessSpecificReturnStatement
 	 */
 	#[Override]
 	public function serve(OZFile $file, Response $response): Response
@@ -198,21 +213,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 				->withHeader('X-Sendfile', $abs_path);
 		}
 
-		$mime_type = $file->getMime();
-		$body      = Body::fromPath($abs_path);
-		$ts        = $file->getUpdatedAT();
-		$mtime     = \is_numeric($ts) ? (int) $ts : (int) \strtotime($ts);
-		// Derive ETag from public, stable, version-sensitive fields.
-		// The file key is an access-control secret and must NOT be exposed in headers.
-		$etag = \hash('xxh64', $file->getID() . ':' . $file->getSize() . ':' . $ts);
-
-		return $response
-			->withHeader('Content-Type', $mime_type)
-			->withHeader('Accept-Ranges', 'bytes')
-			->withHeader('ETag', '"' . $etag . '"')
-			->withHeader('Last-Modified', \gmdate('D, d M Y H:i:s \G\M\T', $mtime))
-			->withHeader('Cache-Control', 'private, max-age=31536000, immutable')
-			->withBody($body);
+		return self::withFileHeaders($file, $response)->withBody(Body::fromPath($abs_path));
 	}
 
 	/**
@@ -226,7 +227,13 @@ abstract class AbstractLocalStorage implements StorageInterface
 		$abs_path = $this->require($file->getRef());
 
 		if (\file_exists($abs_path)) {
-			$f = \fopen($abs_path, 'wb');
+			// Truncate before rewriting, so a shorter new content cannot leave a tail of the old one.
+			$f = @\fopen($abs_path, 'wb');
+
+			if (false === $f) {
+				throw new RuntimeException(\sprintf('Unable to open "%s" for writing.', $abs_path));
+			}
+
 			\ftruncate($f, 0);
 			\fclose($f);
 		}
@@ -235,7 +242,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 		\clearstatcache(true, $abs_path);
 
-		$file->setSize(\filesize($abs_path))->setUpdatedAt(\time())->save();
+		$file->setSize(self::sizeOf($abs_path))->setUpdatedAt(\time())->save();
 
 		return $this;
 	}
@@ -254,7 +261,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 		\clearstatcache(true, $abs_path);
 
-		$file->setSize(\filesize($abs_path))->setUpdatedAt(\time())->save();
+		$file->setSize(self::sizeOf($abs_path))->setUpdatedAt(\time())->save();
 
 		return $this;
 	}
@@ -273,7 +280,7 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 		\clearstatcache(true, $abs_path);
 
-		$file->setSize(\filesize($abs_path))->setUpdatedAt(\time())->save();
+		$file->setSize(self::sizeOf($abs_path))->setUpdatedAt(\time())->save();
 
 		return $this;
 	}
@@ -365,5 +372,27 @@ abstract class AbstractLocalStorage implements StorageInterface
 		}
 
 		return $abs_path;
+	}
+
+	/**
+	 * The size of a file that was just written.
+	 *
+	 * `filesize()` returns false when it cannot stat the path -- a full disk, a permission change
+	 * between the write and the stat. Passing that false into `OZFile::setSize(int)` is a TypeError
+	 * under `strict_types`, so the failure surfaced as a type error rather than as what went wrong.
+	 *
+	 * @param string $path
+	 *
+	 * @return int
+	 */
+	private static function sizeOf(string $path): int
+	{
+		$size = @\filesize($path);
+
+		if (false === $size) {
+			throw new RuntimeException(\sprintf('Unable to read the size of "%s" after writing it.', $path));
+		}
+
+		return $size;
 	}
 }

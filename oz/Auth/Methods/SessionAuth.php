@@ -45,14 +45,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
 
 	/**
-	 * SessionAuth destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->ri);
-	}
-
-	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
@@ -265,9 +257,8 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 		if (!isset($this->session)) {
 			$this->session = new Session($context, $source_key_value);
 
+			// Not id() afterwards: asking for the ID binds something to it and keeps the session.
 			$this->session->start($this->session_id);
-
-			$this->session_id = $this->session->id();
 		} elseif ($this->session->sourceKey() !== $source_key_value) {
 			$force_same_source = (bool) Settings::get('oz.sessions', 'OZ_SESSION_HIJACKING_FORCE_SAME_SOURCE');
 

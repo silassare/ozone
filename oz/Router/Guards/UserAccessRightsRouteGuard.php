@@ -80,7 +80,7 @@ final class UserAccessRightsRouteGuard extends AbstractRouteGuard
 			return true;
 		}
 
-		throw new ForbiddenException(null, [
+		throw new ForbiddenException('OZ_ERROR_MISSING_ACCESS_RIGHTS', [
 			'_reason'         => 'Missing required access rights.',
 			'_access_rights'  => $this->access_rights,
 			'_roles'          => $this->roles,

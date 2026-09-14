@@ -161,12 +161,14 @@ final class Queue
 	 * Adds a job to the queue.
 	 *
 	 * @param WorkerInterface $worker
+	 * @param null|string     $ref    the job's ref, unique in its store (32 to 128 characters); random
+	 *                                by default
 	 *
 	 * @return Job
 	 */
-	public function push(WorkerInterface $worker): Job
+	public function push(WorkerInterface $worker, ?string $ref = null): Job
 	{
-		$ref = Keys::id64('job-ref');
+		$ref ??= Keys::id64();
 
 		return (new Job($ref, $worker::getName(), $worker->getPayload()))
 			->setQueue($this->name)

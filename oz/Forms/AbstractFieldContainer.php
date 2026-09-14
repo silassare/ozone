@@ -16,8 +16,9 @@ namespace OZONE\Core\Forms;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Override;
 use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Enums\RuleSetCondition;
-use OZONE\Core\Forms\Enums\RuleSetContext;
+use OZONE\Core\Forms\Enums\RuleSetDataType;
 use OZONE\Core\Forms\Interfaces\FieldContainerInterface;
 
 /**
@@ -36,6 +37,12 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	private ?string $t_name = null;
 
 	/**
+	 * Fields keyed by their ref, not their local name.
+	 *
+	 * Keying by ref is what lets {@see Form::merge()} combine two forms that each
+	 * declare a field with the same local name: as long as the forms are named,
+	 * the refs differ and both survive.
+	 *
 	 * @var array<string, Field>
 	 */
 	private array $t_fields = [];
@@ -49,14 +56,6 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	 * @var list<RuleSet>
 	 */
 	private array $t_post_validation_rules = [];
-
-	/**
-	 * AbstractFieldContainer destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->t_fields, $this->t_pre_validation_rules, $this->t_post_validation_rules);
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -85,11 +84,13 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	#[Override]
 	public function field(string $name): Field
 	{
-		if (!isset($this->t_fields[$name])) {
-			$this->t_fields[$name] = new Field($this, $name);
+		$ref = $this->getRef($name);
+
+		if (!isset($this->t_fields[$ref])) {
+			$this->t_fields[$ref] = new Field($this, $name);
 		}
 
-		return $this->t_fields[$name];
+		return $this->t_fields[$ref];
 	}
 
 	/**
@@ -98,7 +99,10 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	#[Override]
 	public function getField(string $name): ?Field
 	{
-		return $this->t_fields[$name] ?? null;
+		// Accept either a full ref or a local name. After a merge, fields brought
+		// in from another form keep that form's namespace, so they can only be
+		// addressed by their full ref.
+		return $this->t_fields[$name] ?? $this->t_fields[$this->getRef($name)] ?? null;
 	}
 
 	/**
@@ -116,7 +120,11 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	#[Override]
 	public function expect(RuleSetCondition $condition = RuleSetCondition::AND): RuleSet
 	{
-		$rule = RuleSet::create($condition, RuleSetContext::UNSAFE);
+		$rule = RuleSet::create(
+			$condition,
+			RuleSetDataType::UNSAFE,
+			$this->getRef(\sprintf('@expect[%d]', \count($this->t_pre_validation_rules)))
+		);
 
 		$this->t_pre_validation_rules[] = $rule;
 
@@ -129,7 +137,11 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	#[Override]
 	public function ensure(RuleSetCondition $condition = RuleSetCondition::AND): RuleSet
 	{
-		$rule = RuleSet::create($condition, RuleSetContext::CLEANED);
+		$rule = RuleSet::create(
+			$condition,
+			RuleSetDataType::CLEANED,
+			$this->getRef(\sprintf('@ensure[%d]', \count($this->t_post_validation_rules)))
+		);
 
 		$this->t_post_validation_rules[] = $rule;
 
@@ -161,31 +173,86 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	abstract public function getRef(string $name): string;
 
 	/**
+	 * Clones this container's own fields and re-binds them to it.
+	 *
+	 * Used when a container itself is cloned, so the copy does not share Field
+	 * instances with the original.
+	 */
+	protected function cloneOwnFields(): void
+	{
+		$clones = [];
+
+		foreach ($this->t_fields as $ref => $field) {
+			$clones[$ref] = clone $field;
+			$clones[$ref]->rebind($this);
+		}
+
+		foreach ($this->t_fields as $ref => $field) {
+			$confirm = $field->getDoubleCheck();
+
+			if (null !== $confirm) {
+				$clones[$ref]->relinkDoubleCheck($clones[$confirm->getRef()] ?? $confirm);
+			}
+		}
+
+		$this->t_fields = $clones;
+	}
+
+	/**
 	 * Merges fields and validation rules from another container into this one.
 	 *
-	 * Access to the source container's private properties is valid here since
-	 * both `$this` and `$from` are instances of the same declaring class.
+	 * Fields are cloned so a long-lived source form is never mutated through the
+	 * merged copy, and their original parent is preserved so refs stay stable.
 	 *
 	 * @param self $from The source container to merge from
+	 *
+	 * @throws RuntimeException when a field ref is already defined in this container
 	 */
 	protected function mergeContainerState(self $from): void
 	{
-		$this->t_fields                = \array_merge($this->t_fields, $from->t_fields);
+		$clones = [];
+
+		foreach ($from->t_fields as $ref => $field) {
+			if (isset($this->t_fields[$ref])) {
+				throw new RuntimeException(\sprintf(
+					'Cannot merge form: field "%s" is already defined. '
+					. 'Give one of the two forms a name so their fields do not collide.',
+					$ref
+				));
+			}
+
+			$clones[$ref] = clone $field;
+		}
+
+		// Re-link double-check companions onto the clones: each companion is a
+		// sibling in the same container, so cloning fields one by one would
+		// otherwise leave the clone pointing at the original sibling.
+		foreach ($from->t_fields as $ref => $field) {
+			$confirm = $field->getDoubleCheck();
+
+			if (null === $confirm) {
+				continue;
+			}
+
+			$clones[$ref]->relinkDoubleCheck($clones[$confirm->getRef()] ?? $confirm);
+		}
+
+		$this->t_fields                = \array_merge($this->t_fields, $clones);
 		$this->t_pre_validation_rules  = \array_merge($this->t_pre_validation_rules, $from->t_pre_validation_rules);
 		$this->t_post_validation_rules = \array_merge($this->t_post_validation_rules, $from->t_post_validation_rules);
 	}
 
 	/**
-	 * Checks all pre-validation rules against the given unsafe form data.
+	 * Checks all pre-validation rules.
 	 *
-	 * @param FormData $unsafe_fd The raw, unvalidated form data
+	 * @param FormValidationContext $ctx
 	 *
 	 * @throws InvalidFormException if any rule is violated
 	 */
-	protected function checkPreValidationRules(FormData $unsafe_fd): void
+	protected function checkPreValidationRules(FormValidationContext $ctx): void
 	{
 		foreach ($this->getPreValidationRules() as $rule) {
-			if ($rule->check($unsafe_fd)) {
+			if ($rule->check($ctx)) {
 				continue;
 			}
 
@@ -198,16 +265,16 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	}
 
 	/**
-	 * Checks all post-validation rules against the given cleaned form data.
+	 * Checks all post-validation rules.
 	 *
-	 * @param FormData $cleaned_fd The validated and cleaned form data
+	 * @param FormValidationContext $ctx
 	 *
 	 * @throws InvalidFormException if any rule is violated
 	 */
-	protected function checkPostValidationRules(FormData $cleaned_fd): void
+	protected function checkPostValidationRules(FormValidationContext $ctx): void
 	{
 		foreach ($this->getPostValidationRules() as $rule) {
-			if ($rule->check($cleaned_fd)) {
+			if ($rule->check($ctx)) {
 				continue;
 			}
 
@@ -222,34 +289,94 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	/**
 	 * Checks all fields against the given form data.
 	 *
-	 * @param FormData $unsafe_fd  Raw (unsafe) form data from the request
-	 * @param FormData $cleaned_fd Pre-filled validated data (e.g. from a resume cache); merged with newly validated fields
+	 * Fields are processed in declaration order and each cleaned value is written
+	 * into the context's cleaned store as it is produced, so a field's condition
+	 * or {@see TypesSwitcher} can only read fields declared before it; reading a
+	 * later one throws (see {@see FormValidationContext::assertReadable()}).
+	 *
+	 * @param FormValidationContext $ctx
 	 *
 	 * @throws InvalidFormException if any field is invalid
+	 * @throws RuntimeException     if a condition reads a field validated after it
 	 */
-	protected function checkFields(FormData $unsafe_fd, FormData $cleaned_fd): void
+	protected function checkFields(FormValidationContext $ctx): void
 	{
+		$unsafe_fd  = $ctx->getUnsafeFormData();
+		$cleaned_fd = $ctx->getCleanFormData();
+
 		foreach ($this->getFields() as $field) {
 			$ref = $field->getRef();
-			if ($field->isEnabled($unsafe_fd)) {
-				if ($unsafe_fd->has($ref)) {
-					try {
-						$cleaned_fd->set($ref, $field->validate($unsafe_fd->get($ref), $unsafe_fd));
-					} catch (TypesInvalidValueException $e) {
-						/** @var InvalidFormException $e */
-						$e = InvalidFormException::tryConvert($e);
 
-						$e->suspectObject($field);
+			self::assertConditionsReadable($field, $ctx);
 
-						throw $e;
-					}
-				} elseif ($field->isRequired() && !$cleaned_fd->has($ref)) {
-					throw new InvalidFormException('OZ_FORM_MISSING_REQUIRED_FIELD', [
-						'field'   => $ref,
-						'_parent' => $this,
-						'_data'   => $unsafe_fd->getData(),
-					]);
+			if (!$field->isEnabled($ctx)) {
+				$ctx->markProcessed($ref);
+
+				continue;
+			}
+
+			if ($unsafe_fd->has($ref)) {
+				try {
+					$cleaned_fd->set($ref, $field->validate($unsafe_fd->get($ref), $ctx));
+				} catch (TypesInvalidValueException $e) {
+					/** @var InvalidFormException $e */
+					$e = InvalidFormException::tryConvert($e);
+
+					$e->suspectObject($field);
+
+					throw $e;
 				}
+			} elseif ($cleaned_fd->has($ref)) {
+				// Value replayed from a resume cache: it was cleaned by an earlier
+				// request, so re-assert it against the field as defined now instead
+				// of letting it through unchecked.
+				try {
+					$cleaned_fd->set($ref, $field->revalidateStored($cleaned_fd->get($ref), $ctx));
+				} catch (TypesInvalidValueException $e) {
+					// Drop it, so progress saved after this failure (e.g. by RouteInfo)
+					// does not store it back and replay it forever: it must be resent.
+					$cleaned_fd->remove($ref);
+
+					/** @var InvalidFormException $e */
+					$e = InvalidFormException::tryConvert($e);
+
+					$e->suspectObject($field);
+
+					throw $e;
+				}
+			} elseif ($field->isRequired()) {
+				throw new InvalidFormException('OZ_FORM_MISSING_REQUIRED_FIELD', [
+					'field'      => $ref,
+					'_parent'    => $this,
+					// Field names only: the payload may hold passwords, and this gets logged.
+					'_submitted' => \array_keys((array) $unsafe_fd->getData()),
+				]);
+			}
+
+			$ctx->markProcessed($ref);
+		}
+	}
+
+	/**
+	 * Rejects a field whose `if()` or {@see TypesSwitcher} branches read a field this
+	 * pass has not processed yet.
+	 *
+	 * @throws RuntimeException
+	 */
+	private static function assertConditionsReadable(Field $field, FormValidationContext $ctx): void
+	{
+		$ref       = $field->getRef();
+		$condition = $field->getIf();
+
+		if (null !== $condition) {
+			$ctx->assertReadable($condition, $ref);
+		}
+
+		$type = $field->getType();
+
+		if ($type instanceof TypesSwitcher) {
+			foreach ($type->getConditions() as $branch) {
+				$ctx->assertReadable($branch, $ref);
 			}
 		}
 	}

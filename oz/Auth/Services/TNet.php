@@ -80,7 +80,10 @@ final class TNet extends Service
 			[
 				$doc->success([
 					'ok'            => $doc->boolean('Whether the user is authenticated.'),
-					'_current_user' => $doc->object([], ['description' => 'The current user, if authenticated.', 'nullable' => true]),
+					'_current_user' => $doc->object([], [
+						'description' => 'The current user, if authenticated.',
+						'nullable'    => true,
+					]),
 					'_health'       => $doc->object([
 						'is_installed'     => $doc->boolean(),
 						'has_db_access'    => $doc->boolean(),

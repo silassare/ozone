@@ -28,7 +28,7 @@ final class TOTP
 	/**
 	 * Generates a cryptographically random base32-encoded TOTP secret.
 	 *
-	 * @param int $byte_length number of raw bytes before encoding (20 bytes = 160-bit secret, the RFC 4226 recommended minimum)
+	 * @param int $byte_length number of raw bytes before encoding (20 bytes = 160 bits, the RFC 4226 minimum)
 	 *
 	 * @return string base32-encoded secret (no padding)
 	 */

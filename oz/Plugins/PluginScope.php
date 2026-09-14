@@ -73,20 +73,36 @@ class PluginScope extends AbstractScope
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * A plugin's state lives under `data/{kind}/plugins/{plugin}`.
 	 */
 	#[Override]
-	public function getDataDir(): FilesManager
+	public function getStateSlug(): string
 	{
-		return app()->getDataDir()->cd('plugins' . DS . $this->scope_name, true);
+		return 'plugins' . DS . $this->scope_name;
 	}
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * A plugin has no document root of its own: it is served through the scope that loads it.
 	 */
 	#[Override]
-	public function getPublicDir(): FilesManager
+	public function getDocumentRootDir(): FilesManager
 	{
-		return app()->getPublicDir()->cd('plugins' . DS . $this->scope_name, true);
+		return app()->getDocumentRootDir();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Deliberately a subtree of the application's public files rather than its own state slug: one
+	 * symlink then exposes a plugin's assets with the rest, at `/static/plugins/{plugin}/...`.
+	 */
+	#[Override]
+	public function getPublicFilesDir(): FilesManager
+	{
+		return app()->getPublicFilesDir()->cd('plugins' . DS . $this->scope_name, true);
 	}
 
 	/**

@@ -57,7 +57,10 @@ class RouteSearchResult
 	public function foundRoute(): Route
 	{
 		if (!$this->found) {
-			throw new LogicException(\sprintf('No route was found. You should check the status before calling %s.', __METHOD__));
+			throw new LogicException(\sprintf(
+				'No route was found. You should check the status before calling %s.',
+				__METHOD__
+			));
 		}
 
 		return $this->found['route'];
@@ -71,7 +74,10 @@ class RouteSearchResult
 	public function foundRouteParams(): array
 	{
 		if (!$this->found) {
-			throw new LogicException(\sprintf('No route was found. You should check the status before calling %s.', __METHOD__));
+			throw new LogicException(\sprintf(
+				'No route was found. You should check the status before calling %s.',
+				__METHOD__
+			));
 		}
 
 		return $this->found['params'] ?? [];

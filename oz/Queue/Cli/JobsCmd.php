@@ -181,7 +181,7 @@ final class JobsCmd extends Command
 			$jobs_work->handler(self::work(...));
 
 			// supervisor
-			$jobs_supervisor = $this->action('supervisor', 'Generate a supervisord config section for the queue worker.');
+			$jobs_supervisor = $this->action('supervisor', 'Generate a supervisord config for the queue worker.');
 
 			$jobs_supervisor->option('queue', 'q')
 				->description('The queue to process.')
@@ -436,7 +436,10 @@ final class JobsCmd extends Command
 		$workers     = (int) ($args->get('workers') ?? 1);
 		$sleep       = (int) ($args->get('sleep') ?? 3);
 		$memory      = (int) ($args->get('memory') ?? 128);
-		$log_dir     = \rtrim((string) ($args->get('log-dir') ?? scope()->getLogsDir()->cd('supervisor', true)->getRoot()), '/');
+		$log_dir     = \rtrim(
+			(string) ($args->get('log-dir') ?? scope()->getLogsDir()->cd('supervisor', true)->getRoot()),
+			'/'
+		);
 		$user        = (string) ($args->get('user') ?? '');
 		$output_file = $args->get('output');
 

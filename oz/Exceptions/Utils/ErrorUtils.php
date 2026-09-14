@@ -17,6 +17,7 @@ use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\OZone;
+use OZONE\Core\Runtime\Runtime;
 use Psr\Log\LogLevel;
 use Throwable;
 
@@ -25,6 +26,45 @@ use Throwable;
  */
 class ErrorUtils
 {
+	/**
+	 * Keys whose values are treated as secrets in exception data.
+	 */
+	public const SENSITIVE_KEY_REG = '~(pass(word|wd|phrase)?|secret|token|api_?key|authorization|cookie|credential)~i';
+
+	public const REDACTED = '[redacted]';
+
+	/**
+	 * Masks the values of secret-looking keys, recursively, when redaction is enabled
+	 * (see {@see self::isRedactionEnabled()}).
+	 *
+	 * A safety net for exception data that is logged or sent to the client: code
+	 * should not put secrets there in the first place.
+	 *
+	 * @param array $data
+	 *
+	 * @return array
+	 */
+	public static function redactSensitiveData(array $data): array
+	{
+		return self::isRedactionEnabled() ? self::redact($data) : $data;
+	}
+
+	/**
+	 * Whether sensitive data is redacted: `OZ_REDACT_SENSITIVE_DATA` (`oz.logs`) when it is
+	 * a bool, else only in production mode.
+	 */
+	public static function isRedactionEnabled(): bool
+	{
+		try {
+			$setting = Settings::get('oz.logs', 'OZ_REDACT_SENSITIVE_DATA');
+
+			return \is_bool($setting) ? $setting : OZone::inProductionMode();
+		} catch (Throwable) {
+			// Settings or env not readable yet (early boot): fail safe.
+			return true;
+		}
+	}
+
 	/**
 	 * Register error handlers and shutdown function.
 	 *
@@ -49,6 +89,24 @@ class ErrorUtils
 	}
 
 	/**
+	 * @param array $data
+	 *
+	 * @return array
+	 */
+	private static function redact(array $data): array
+	{
+		foreach ($data as $key => $value) {
+			if (\is_string($key) && \preg_match(self::SENSITIVE_KEY_REG, $key)) {
+				$data[$key] = self::REDACTED;
+			} elseif (\is_array($value)) {
+				$data[$key] = self::redact($value);
+			}
+		}
+
+		return $data;
+	}
+
+	/**
 	 * @return string
 	 */
 	private static function executionTime(): string
@@ -60,9 +118,23 @@ class ErrorUtils
 	 * Called when we should shutdown and only admin
 	 * should know what is going wrong.
 	 */
-	private static function criticalDieMessage(): void
+	private static function criticalDieMessage(): never
 	{
 		BaseException::dieWithAnUnhandledErrorOccurred();
+	}
+
+	/**
+	 * Whether stopping here would have to unwind, which PHP forbids where we are.
+	 *
+	 * A persistent runtime ends a request by throwing, and throwing out of an exception handler or
+	 * a shutdown function is a fatal error -- so the exception handler reports the throwable on
+	 * stderr and exits with status 1, and the error handlers only log. Reaching them at all means
+	 * the loop failed outside a request: {@see OZone::handleRequest()} answers what it
+	 * can and swallows the rest, precisely so a worker never dies of one bad request.
+	 */
+	private static function mustNotUnwind(): bool
+	{
+		return Runtime::isPersistent();
 	}
 
 	/**
@@ -93,10 +165,32 @@ class ErrorUtils
 		self::optionalApp()
 			?->onUnhandledThrowable($t);
 
+		if (self::mustNotUnwind()) {
+			// Under a worker, `OZone::handleRequest()` answers every request's throwable, so one that
+			// reaches this handler escaped the loop itself -- bootstrap, the loop, a bridge -- and the
+			// process is ending. Say so where the server looks, and with a failing status: logged
+			// only in `.ozone/logs/`, the crash read as a clean stop to whatever supervises the worker.
+			// Through php://stderr: the STDERR constant is the CLI SAPI's alone (not FrankenPHP's).
+			$stderr = \fopen('php://stderr', 'wb');
+
+			if (false !== $stderr) {
+				\fwrite($stderr, \sprintf(
+					'%s: %s in %s:%d (the trace is in the OZone log)%s',
+					$t::class,
+					$t->getMessage(),
+					$t->getFile(),
+					$t->getLine(),
+					\PHP_EOL
+				));
+			}
+
+			exit(1);
+		}
+
 		if (OZone::isCliMode()) {
 			\fwrite(\STDERR, \PHP_EOL . $t->getMessage() . \PHP_EOL);
 
-			exit(1);
+			Runtime::current()->terminate(1);
 		}
 
 		self::criticalDieMessage();
@@ -110,10 +204,11 @@ class ErrorUtils
 		$const_e_strict = 2048;
 
 		return match ($code) {
-			\E_ERROR, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR, \E_RECOVERABLE_ERROR                                       => LogLevel::ERROR,
-			\E_WARNING, \E_CORE_WARNING, \E_COMPILE_WARNING, \E_USER_WARNING, $const_e_strict, \E_DEPRECATED, \E_USER_DEPRECATED => LogLevel::WARNING,
-			\E_NOTICE, \E_USER_NOTICE                                                                                            => LogLevel::NOTICE,
-			default                                                                                                              => LogLevel::DEBUG
+			\E_ERROR, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR, \E_RECOVERABLE_ERROR => LogLevel::ERROR,
+			\E_WARNING, \E_CORE_WARNING, \E_COMPILE_WARNING, \E_USER_WARNING,
+			$const_e_strict, \E_DEPRECATED, \E_USER_DEPRECATED => LogLevel::WARNING,
+			\E_NOTICE, \E_USER_NOTICE                          => LogLevel::NOTICE,
+			default                                            => LogLevel::DEBUG
 		};
 	}
 
@@ -144,7 +239,7 @@ class ErrorUtils
 		if ($die_on_fatal) {
 			$fatalist = [\E_ERROR, \E_PARSE, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR];
 
-			if (\in_array($code, $fatalist, true)) {
+			if (\in_array($code, $fatalist, true) && !self::mustNotUnwind()) {
 				self::criticalDieMessage();
 			}
 		}

@@ -21,11 +21,14 @@ use OZONE\Core\Router\RouteSharedOptions;
  *
  * Controls how a route's form declaration is represented in generated API documentation.
  *
- * | Value   | `requestBody` in docs     | `x-oz-form` extension                                             |
- * |---------|---------------------------|-------------------------------------------------------------------|
- * | STATIC  | embedded (schema present) | `{policy:'static',  resumable:bool, require_real_context:bool}`   |
- * | OPAQUE  | none                      | `{policy:'opaque',  resumable:bool, require_real_context:bool, provider_name?:str, init_form:null}` |
- * | DYNAMIC | none                      | `{policy:'dynamic', resumable:bool, require_real_context:bool, provider_name?:str, init_form:array|null}` |
+ * | Value   | `requestBody` in docs     | `x-oz-form` extension                                        |
+ * |---------|---------------------------|--------------------------------------------------------------|
+ * | STATIC  | embedded (schema present) | `{policy: 'static', resumable, require_real_context}`        |
+ * | OPAQUE  | none                      | `{policy: 'opaque', ..., provider_name?, init_form: null}`   |
+ * | DYNAMIC | none                      | `{policy: 'dynamic', ..., provider_name?, init_form}`        |
+ *
+ * `resumable` and `require_real_context` are booleans, `provider_name` a string and
+ * `init_form` the serialized init form, or null.
  *
  * Usage via {@see RouteSharedOptions::form()}:
  *
@@ -62,7 +65,8 @@ enum RouteFormDocPolicy: string
 	 * Explicitly hidden from API docs. The form is present and validated at request
 	 * time but nothing about its structure is revealed in the generated OpenAPI spec.
 	 *
-	 * Extension: `x-oz-form: {policy:'opaque', resumable:bool, require_real_context:bool, provider_name?:str, init_form:null}`
+	 * Extension: `x-oz-form: {policy: 'opaque', resumable, require_real_context, provider_name?,
+	 * init_form: null}`
 	 */
 	case OPAQUE = 'opaque';
 
@@ -70,7 +74,8 @@ enum RouteFormDocPolicy: string
 	 * The form is dynamic or managed by a resumable-form provider. No `requestBody`
 	 * schema is embedded; clients use the `x-oz-form` extension to discover the flow.
 	 *
-	 * Extension: `x-oz-form: {policy:'dynamic', resumable:bool, require_real_context:bool, provider_name?:str, init_form:array|null}`
+	 * Extension: `x-oz-form: {policy: 'dynamic', resumable, require_real_context, provider_name?,
+	 * init_form}`
 	 */
 	case DYNAMIC = 'dynamic';
 }

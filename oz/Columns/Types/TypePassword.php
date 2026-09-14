@@ -176,10 +176,10 @@ class TypePassword extends Type
 		$min     = $this->getOption('min', $def_min);
 		$max     = $this->getOption('max', $def_max);
 
+		// Never the value itself: rejection data reaches logs and the client.
 		$debug = [
-			'value' => $value,
-			'min'   => $min,
-			'max'   => $max,
+			'min' => $min,
+			'max' => $max,
 		];
 
 		if (!empty($value)) {

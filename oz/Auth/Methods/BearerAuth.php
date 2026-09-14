@@ -42,14 +42,6 @@ class BearerAuth implements AuthenticationMethodInterface
 	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
 
 	/**
-	 * BearerAuth destructor.
-	 */
-	public function __destruct()
-	{
-		unset($this->ri);
-	}
-
-	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
@@ -108,7 +100,6 @@ class BearerAuth implements AuthenticationMethodInterface
 		if (!$auth) {
 			throw new ForbiddenException(null, [
 				'_reason' => 'Invalid auth token.',
-				'_token'  => $this->token,
 			]);
 		}
 

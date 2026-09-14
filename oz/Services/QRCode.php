@@ -122,7 +122,10 @@ final class QRCode extends Service
 		$route_path = Settings::get('oz.paths', 'OZ_QR_CODE_ROUTE_PATH');
 
 		$router
-			->get($route_path, static fn (RouteInfo $ri) => self::generateQrCodeImage($ri->getContext(), $ri->param(self::QR_CODE_KEY)))
+			->get($route_path, static fn (RouteInfo $ri) => self::generateQrCodeImage(
+				$ri->getContext(),
+				$ri->param(self::QR_CODE_KEY)
+			))
 			->name(self::QR_CODE_ROUTE)
 			->param(self::QR_CODE_KEY, '[a-z0-9]{32}');
 	}

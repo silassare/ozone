@@ -32,9 +32,11 @@ use OZONE\Core\Exceptions\UnauthenticatedException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
 use OZONE\Core\Roles\Roles;
 use OZONE\Core\Roles\RolesUtils;
+use OZONE\Core\Utils\Random;
 use Throwable;
 
 /**
@@ -177,8 +179,9 @@ final class AuthUsers
 		$form->field(self::FIELD_AUTH_USER_TYPE)
 			->required();
 
-		$form->field(self::FIELD_AUTH_USER_ID)
-			->required()->if()->isNull(self::FIELD_AUTH_USER_IDENTIFIER_TYPE);
+		// Either the user id or an identifier (type and value): the identifier fields read the id,
+		// so it is declared first.
+		$form->field(self::FIELD_AUTH_USER_ID);
 
 		$form->field(self::FIELD_AUTH_USER_IDENTIFIER_TYPE)
 			->required()->if()->isNull(self::FIELD_AUTH_USER_ID);
@@ -231,12 +234,16 @@ final class AuthUsers
 	/**
 	 * Identifies a user using auth user selector form data.
 	 *
-	 * @param array|FormData $selector
+	 * @param array|FormData|FormDataClean $selector raw or already validated selector data
 	 *
 	 * @return null|AuthUserInterface
 	 */
-	public static function identifyBySelector(array|FormData $selector): ?AuthUserInterface
+	public static function identifyBySelector(array|FormData|FormDataClean $selector): ?AuthUserInterface
 	{
+		if ($selector instanceof FormDataClean) {
+			$selector = $selector->toArray();
+		}
+
 		$fd = $selector instanceof FormData ? $selector : new FormData($selector);
 
 		try {
@@ -426,8 +433,8 @@ final class AuthUsers
 	 * Asserts that the user with the given id has at least one role in a given roles list.
 	 *
 	 * @param array<RoleInterface|string> $allowed_roles The roles list
-	 * @param null|RoleInterface          $at_least      If not null, and the user has no role in the allowed list,
-	 *                                                   it will check if the user has a role with a higher or equal weight
+	 * @param null|RoleInterface          $at_least      when set and the user has none of the allowed roles,
+	 *                                                   a role of higher or equal weight is accepted
 	 * @param string                      $message
 	 * @param null|array                  $data
 	 * @param null|Throwable              $previous
@@ -539,7 +546,7 @@ final class AuthUsers
 		if (!$user) {
 			(new AuthUserUnknown($this->context))->dispatch();
 
-			return 'OZ_AUTH_USER_UNKNOWN';
+			return self::checkPassword(null, $user_pass, self::selectorSubject($fd)) ?? 'OZ_AUTH_INVALID_CREDENTIALS';
 		}
 
 		return $this->tryLogIn($user, $user_pass);
@@ -551,22 +558,89 @@ final class AuthUsers
 	 * @param AuthUserInterface $user
 	 * @param string            $pass
 	 *
-	 * @return AuthUserInterface|string
+	 * @return AuthUserInterface|string the user, or the failure code (see {@see self::checkPassword()})
 	 */
 	public function tryLogIn(AuthUserInterface $user, string $pass): AuthUserInterface|string
 	{
-		if (!$user->isAuthUserValid()) {
-			return 'OZ_AUTH_USER_UNVERIFIED';
-		}
+		$error = self::checkPassword($user, $pass, self::ref($user));
 
-		if (!Password::verify($pass, $user->getAuthPassword())) {
-			(new AuthUserLogInFailed($this->context, $user))->dispatch();
+		if (null !== $error) {
+			if ('OZ_AUTH_INVALID_CREDENTIALS' === $error) {
+				(new AuthUserLogInFailed($this->context, $user))->dispatch();
+			}
 
-			return 'OZ_FIELD_PASS_INVALID';
+			return $error;
 		}
 
 		$this->logUserIn($user);
 
 		return $user;
+	}
+
+	/**
+	 * Checks a password attempt, with brute-force protection.
+	 *
+	 * Known and unknown accounts get the same work and the same result, so a failure
+	 * reveals nothing: an unknown account is checked against a dummy hash, and
+	 * failures are counted per account (or per submitted identifier when unknown) by
+	 * {@see LoginThrottle}. The account state is only revealed after a right password.
+	 *
+	 * Failure codes: `OZ_AUTH_TOO_MUCH_ATTEMPT` (locked), `OZ_AUTH_INVALID_CREDENTIALS`
+	 * (unknown account or wrong password), `OZ_AUTH_USER_UNVERIFIED` (right password,
+	 * account not usable yet).
+	 *
+	 * @param null|AuthUserInterface $user    the account, or null when the identifier matched none
+	 * @param string                 $pass    the submitted password
+	 * @param string                 $subject throttling subject used when `$user` is null
+	 *
+	 * @return null|string null when the password is right and the account usable
+	 */
+	public static function checkPassword(?AuthUserInterface $user, string $pass, string $subject): ?string
+	{
+		$subject = null !== $user ? self::ref($user) : $subject;
+
+		if (LoginThrottle::isLocked($subject)) {
+			return 'OZ_AUTH_TOO_MUCH_ATTEMPT';
+		}
+
+		$hash = null !== $user ? $user->getAuthPassword() : self::dummyPasswordHash();
+
+		// Verify first, so an unknown account costs the same as a wrong password.
+		if (!Password::verify($pass, $hash) || null === $user) {
+			LoginThrottle::recordFailure($subject);
+
+			return 'OZ_AUTH_INVALID_CREDENTIALS';
+		}
+
+		if (!$user->isAuthUserValid()) {
+			return 'OZ_AUTH_USER_UNVERIFIED';
+		}
+
+		LoginThrottle::clear($subject);
+
+		return null;
+	}
+
+	/**
+	 * Throttling subject for a login attempt whose identifier matched no account.
+	 */
+	private static function selectorSubject(FormData|FormDataClean $fd): string
+	{
+		return \implode('|', [
+			$fd->get(self::FIELD_AUTH_USER_TYPE),
+			$fd->get(self::FIELD_AUTH_USER_ID),
+			$fd->get(self::FIELD_AUTH_USER_IDENTIFIER_TYPE),
+			$fd->get(self::FIELD_AUTH_USER_IDENTIFIER_VALUE),
+		]);
+	}
+
+	/**
+	 * A hash no password matches, to verify against when the account is unknown.
+	 */
+	private static function dummyPasswordHash(): string
+	{
+		static $hash = null;
+
+		return $hash ??= Password::hash(Random::string(32));
 	}
 }

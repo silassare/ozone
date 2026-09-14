@@ -107,7 +107,7 @@ final class SettingsCmd extends Command
 	private static function commonOptions(KliAction $action): void
 	{
 		$action->option('scope', 's', [], 1)
-			->description('The scope name of the setting, if not provided, the setting will be added to the root scope.')
+			->description('The scope name of the setting; the root scope when not provided.')
 			->string();
 		$action->option('group', 'g', [], 2)
 			->required()

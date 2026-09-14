@@ -22,11 +22,16 @@ use OLIUP\CG\PHPNamespace;
 use Override;
 use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Cli\Build\ProjectBuilder;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Utils\Utils;
+use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Templates;
+use OZONE\Core\OZone;
+use OZONE\Core\Scopes\Interfaces\ScopeInterface;
+use OZONE\Core\Scopes\StateLayout;
 use OZONE\Core\Utils\Random;
 use PHPUtils\Str;
 
@@ -84,6 +89,10 @@ final class ProjectCmd extends Command
 			->def('SA');
 		$create->handler($this->create(...));
 
+		// action: project link
+		$link = $this->action('link', 'Create the state directories and the public files symlinks.');
+		$link->handler($this->link(...));
+
 		// action: project backup
 		$backup = $this->action('backup', 'Backup your project.');
 		$backup->option('dir', 'd', [], 1)
@@ -121,6 +130,87 @@ final class ProjectCmd extends Command
 			->string(1, 255)
 			->def('api');
 		$serve->handler($this->serve(...));
+
+		// action: project build
+		$build = $this->action('build', 'Prepare the project for production: compile what its requests would.');
+		$build->option('mode', 'm')
+			->description('How the project is served: "classic" (a bootstrap per request, as PHP-FPM) or "worker".')
+			->string()
+			->pattern('~^(classic|worker)$~', 'The mode is "classic" or "worker".')
+			->def('classic');
+		$build->option('no-preload', 'n')
+			->description('Do not write the preload script, which classic mode writes by default.')
+			->bool()
+			->def(false);
+		$build->option('skip-orm', 's')
+			->description('Do not generate the ORM classes: this release already did.')
+			->bool()
+			->def(false);
+		$build->option('clear', 'c')
+			->description('First remove what earlier builds and requests compiled.')
+			->bool()
+			->def(false);
+		$build->handler($this->build(...));
+	}
+
+	/**
+	 * Prepares the project for production.
+	 *
+	 * @param KliArgs $args
+	 *
+	 * @throws JsonException
+	 */
+	private function build(KliArgs $args): void
+	{
+		Utils::assertProjectLoaded();
+
+		$cli     = $this->getCli();
+		$preload = 'classic' === $args->get('mode') && !$args->get('no-preload');
+
+		if ($args->get('clear')) {
+			$cli->info(\sprintf('Removed %d compiled files.', ProjectBuilder::clear()));
+		}
+
+		if (!$args->get('skip-orm')) {
+			$cli->executeString('db build --build-all --class-only');
+		}
+
+		if (!OZone::inProductionMode()) {
+			$cli->info(
+				'ENV_MODE is not "production": the production caches are only read in production, and are'
+					. ' named after the .env file, so none is compiled.'
+			);
+
+			return;
+		}
+
+		$preloaded = [];
+
+		foreach (ProjectBuilder::scopes() as $scope) {
+			$report = ProjectBuilder::buildScope($scope);
+
+			foreach ($report['preload'] as $file) {
+				$preloaded[$file] = true;
+			}
+
+			$cli->success(\sprintf(
+				'scope "%s": %d settings bundles, route tables compiled.',
+				$scope,
+				$report['settings_bundles']
+			));
+		}
+
+		$cli->success(\sprintf('class map: %d classes.', ProjectBuilder::writeClassMap()));
+
+		if ($preload) {
+			ProjectBuilder::writePreload(\array_keys($preloaded));
+
+			$cli->success(\sprintf(
+				'preload script: %d files, %s (point opcache.preload to it, then restart PHP).',
+				\count($preloaded),
+				ProjectBuilder::preloadFile()
+			));
+		}
 	}
 
 	/**
@@ -152,7 +242,7 @@ final class ProjectCmd extends Command
 
 		$sc = scope($scope_name);
 		if (empty($doc_root)) {
-			$doc_root = $sc->getPublicDir()->getRoot();
+			$doc_root = $sc->getDocumentRootDir()->getRoot();
 		}
 
 		$cli->info("Serving project on {$host}:{$port} ...");
@@ -264,6 +354,69 @@ final class ProjectCmd extends Command
 	 *
 	 * @throws JsonException
 	 */
+	/**
+	 * Creates every scope's state directories, and the symlink its web root follows to reach the
+	 * public files.
+	 *
+	 * Needed after a clone, and after any deploy that produces a new release directory: the links
+	 * are not version-controlled, and the state directories live outside the release.
+	 */
+	private function link(): void
+	{
+		Utils::assertProjectLoaded();
+
+		$cli     = $this->getCli();
+		$app     = app();
+		$project = $app->getProjectDir();
+		$scopes  = \array_merge([ScopeInterface::ROOT_SCOPE], self::scopeNames($project));
+
+		foreach ($scopes as $name) {
+			$scope = $app->getScope($name);
+
+			StateLayout::ensure($scope);
+
+			$state  = StateLayout::link($scope);
+			$path   = StateLayout::publicLinkPath($scope);
+			$target = $scope->getPublicFilesDir()->getRoot();
+
+			match ($state) {
+				'ok'       => $cli->info(\sprintf('%s: already linked', $name)),
+				'created'  => $cli->success(\sprintf('%s: %s -> %s', $name, $path, $target)),
+				'replaced' => $cli->success(\sprintf('%s: re-pointed %s -> %s', $name, $path, $target)),
+				'blocked'  => $cli->error(\sprintf(
+					'%s: %s exists and is not a symlink; move it into %s, then run this again.',
+					$name,
+					$path,
+					$target
+				), true, null),
+				default => null,
+			};
+		}
+	}
+
+	/**
+	 * The names of the project's sub-scopes, from the `scopes/` directory.
+	 *
+	 * @return list<string>
+	 */
+	private static function scopeNames(FilesManager $project): array
+	{
+		$names = [];
+		$root  = $project->resolve('scopes');
+
+		if (!\is_dir($root)) {
+			return $names;
+		}
+
+		foreach (\scandir($root) ?: [] as $entry) {
+			if ('.' !== $entry && '..' !== $entry && \is_dir($root . DS . $entry)) {
+				$names[] = $entry;
+			}
+		}
+
+		return $names;
+	}
+
 	private function create(KliArgs $args): void
 	{
 		$name       = $args->get('name');
@@ -437,6 +590,12 @@ final class ProjectCmd extends Command
 		} else {
 			$fm->wf('composer.json', $project_composer);
 		}
+
+		// The state directories, and the symlink the web server follows to the public files. They are
+		// created here and never at runtime: a request may not have the rights, and a missing one
+		// then means an unmounted volume rather than a fresh project.
+		StateLayout::ensureAt($fm, ScopeInterface::ROOT_SCOPE);
+		StateLayout::linkAt($fm, ScopeInterface::ROOT_SCOPE, $fm->resolve('public'));
 
 		$cli->success(\sprintf('project "%s" created in "%s".', $name, $root));
 

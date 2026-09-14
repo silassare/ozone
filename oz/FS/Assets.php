@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Core\FS;
 
 use Override;
-use OZONE\Core\Cache\CacheRegistry;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Stores\CacheRegistry;
 use PHPUtils\FS\PathUtils;
 use PHPUtils\Str;
 
@@ -125,7 +125,7 @@ final class Assets implements BootHookReceiverInterface
 			return $path;
 		}
 
-		$factory = static function () use ($path, $sources_group): string|false {
+		$factory = static function () use ($path, $sources_group): false|string {
 			$found = false;
 
 			foreach ($sources_group as $group) {

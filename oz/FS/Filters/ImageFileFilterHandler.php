@@ -16,14 +16,18 @@ namespace OZONE\Core\FS\Filters;
 use claviska\SimpleImage;
 use Exception;
 use Override;
+use OZONE\Core\App\GarbageCollector;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Cache\CacheRegistry;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\Enums\FileKind;
+use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\Filters\Interfaces\FileFilterHandlerInterface;
-use OZONE\Core\Http\Body;
+use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\Response;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use SplFileInfo;
 
 /**
  * Class ImageFileFilterHandler.
@@ -48,14 +52,27 @@ use OZONE\Core\Http\Response;
  * | `blur{N}`   | Gaussian blur with N passes                                               |
  * | `sharpen`   | Sharpen the image                                                         |
  *
- * Processed images are cached via the persistent cache. The cache key
- * includes the file key so it is naturally invalidated when the file changes.
+ * Each rendition is kept as a file in the scope's cache directory (`.ozone/cache/.../fs/image-filters`)
+ * and served from it as a stream: never in a key-value store, where a large image would travel
+ * through the database or Redis and sit in memory whole. Its name hashes the file ID, the file key
+ * and the tokens, so a changed file gets a new rendition; renditions older than
+ * `OZ_IMAGE_FILTERS_CACHE_TTL` (`oz.files`) are removed by the garbage collector and rendered again
+ * on demand. `.ozone/` is per instance and may be deleted at any time, which only costs a render.
  *
  * Output format always matches the original file mime type.
  */
-class ImageFileFilterHandler implements FileFilterHandlerInterface
+class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookReceiverInterface
 {
-	private const CACHE_NS = 'oz:fs:image:filters';
+	private const CACHE_DIR = 'fs/image-filters';
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public static function boot(): void
+	{
+		GarbageCollector::register('oz:fs:image-filters', self::gc(...));
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -72,24 +89,55 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface
 	#[Override]
 	public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response
 	{
-		$cacheKey = \md5($file->getID() . ':' . $file->getKey() . ':' . \implode(',', $filterTokens));
-		$store    = CacheRegistry::store(self::CACHE_NS);
+		$key  = \md5($file->getID() . ':' . $file->getKey() . ':' . \implode(',', $filterTokens));
+		$dir  = self::cacheDir()->cd(\substr($key, 0, 2), true);
+		$path = $dir->resolve($key);
 
-		/** @var null|array{mime: string, bytes: string} $cached */
-		$cached   = $store->get($cacheKey);
+		if (!\is_file($path)) {
+			[, $bytes] = $this->process($file, $stream, $filterTokens);
 
-		if (null !== $cached) {
-			$mime  = $cached['mime'];
-			$bytes = $cached['bytes'];
-		} else {
-			[$mime, $bytes] = $this->process($file, $stream, $filterTokens);
-			$store->set($cacheKey, ['mime' => $mime, 'bytes' => $bytes]);
+			// Atomic: a concurrent request serves either no rendition yet or a whole one.
+			$dir->writeAtomic($key, $bytes);
 		}
 
 		return $response
-			->withHeader('Content-type', $mime)
-			->withHeader('Content-Length', (string) \strlen($bytes))
-			->withBody(Body::fromString($bytes));
+			->withHeader('Content-type', $file->getMime())
+			->withHeader('Content-Length', (string) \filesize($path))
+			->withBody(FileStream::fromPath($path));
+	}
+
+	/**
+	 * Where the renditions are kept: the scope's cache directory, per instance.
+	 */
+	private static function cacheDir(): FilesManager
+	{
+		return app()->getCacheDir()->cd(self::CACHE_DIR, true);
+	}
+
+	/**
+	 * Removes the renditions older than `OZ_IMAGE_FILTERS_CACHE_TTL`: they are rendered again when
+	 * next asked for, and renditions of a changed or deleted file are never asked for again.
+	 */
+	private static function gc(): void
+	{
+		$root = self::cacheDir()->getRoot();
+		$ttl  = (int) Settings::get('oz.files', 'OZ_IMAGE_FILTERS_CACHE_TTL', 604800);
+
+		if ($ttl <= 0 || !\is_dir($root)) {
+			return;
+		}
+
+		$before = \time() - $ttl;
+		$files  = new RecursiveIteratorIterator(
+			new RecursiveDirectoryIterator($root, RecursiveDirectoryIterator::SKIP_DOTS)
+		);
+
+		/** @var SplFileInfo $entry */
+		foreach ($files as $entry) {
+			if ($entry->isFile() && $entry->getMTime() < $before) {
+				\unlink($entry->getPathname());
+			}
+		}
 	}
 
 	/**

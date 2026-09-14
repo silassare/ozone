@@ -213,7 +213,8 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run every thirty minutes.
 	 *
-	 * @param bool $atMinuteZeroAndThirty if true, the task will run at minute 0 and 30 of each hour; otherwise, it will run every 30 minutes starting from minute 0 (e.g., 0, 30)
+	 * @param bool $atMinuteZeroAndThirty if true, run at minutes 0 and 30 of each hour; otherwise every
+	 *                                    30 minutes from minute 0
 	 */
 	public function everyThirtyMinutes(bool $atMinuteZeroAndThirty = false): static
 	{
@@ -426,7 +427,8 @@ final class Schedule implements Stringable
 	/**
 	 * Schedule the task to run weekly on a given day and time.
 	 *
-	 * @param int|int[]|string $dayOfWeek the day(s) of the week to run on (0-6, where 0 is Sunday); accepts a single int constant, an array of int constants, or a pre-formatted cron field string (e.g. '1-5')
+	 * @param int|int[]|string $dayOfWeek the day(s) of the week (0-6, 0 is Sunday): an int constant, a
+	 *                                    list of them, or a cron field string (e.g. '1-5')
 	 * @param string           $time      the time in "H:i" format
 	 */
 	public function weeklyOn(mixed $dayOfWeek, string $time = '0:0'): static
@@ -551,7 +553,8 @@ final class Schedule implements Stringable
 	/**
 	 * Set the days of the week the task should run on.
 	 *
-	 * @param int|int[]|string $days the day(s) of the week to run on (0-6, where 0 is Sunday); accepts a single int constant, an array of int constants, a pre-formatted cron field string (e.g. '1-5'), or multiple ints as separate arguments
+	 * @param int|int[]|string $days the day(s) of the week (0-6, 0 is Sunday): an int constant, a list of
+	 *                               them, a cron field string (e.g. '1-5'), or several ints as separate arguments
 	 */
 	public function days(mixed $days): static
 	{
@@ -665,7 +668,7 @@ final class Schedule implements Stringable
 	/**
 	 * Set the position of the given value.
 	 *
-	 * @param int        $position the position to set (1 for minute, 2 for hour, 3 for day of month, 4 for month, 5 for day of week)
+	 * @param int        $position 1: minute, 2: hour, 3: day of month, 4: month, 5: day of week
 	 * @param int|string $value    the value to set at the given position
 	 */
 	private function setPosition(int $position, int|string $value): static

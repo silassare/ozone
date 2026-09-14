@@ -66,7 +66,7 @@ class EmailOwnershipVerificationService extends Service
 	 */
 	private function init(RouteInfo $ri): Response
 	{
-		$fd    =   $ri->getCleanFormData();
+		$fd    = $ri->getCleanFormData();
 		$email = $fd->get('email');
 
 		$provider = new EmailOwnershipVerificationProvider($this->getContext(), $email);

@@ -196,6 +196,7 @@ final class Cookie
 		$cfg_lifetime    = Settings::get('oz.cookie', 'OZ_COOKIE_LIFETIME');
 		$cfg_samesite    = Settings::get('oz.cookie', 'OZ_COOKIE_SAMESITE');
 		$cfg_partitioned = Settings::get('oz.cookie', 'OZ_COOKIE_PARTITIONED');
+		$cfg_secure      = Settings::get('oz.cookie', 'OZ_COOKIE_SECURE', 'auto');
 
 		$request = $context->getRequest();
 		$uri     = $request->getUri();
@@ -209,7 +210,7 @@ final class Cookie
 		$cookie->path        = $path;
 		$cookie->domain      = $domain;
 		$cookie->httponly    = true;
-		$cookie->secure      = 'https' === $uri->getScheme();
+		$cookie->secure      = \is_bool($cfg_secure) ? $cfg_secure : 'https' === $uri->getScheme();
 		$cookie->partitioned = $cfg_partitioned;
 		$cookie->samesite    = $cfg_samesite;
 

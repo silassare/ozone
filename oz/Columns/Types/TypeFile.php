@@ -27,6 +27,7 @@ use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Columns\ValidatedFile;
 use OZONE\Core\Db\OZFile;
+use OZONE\Core\Exceptions\FileScanRejectedException;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\TempFS;
 use OZONE\Core\Http\UploadedFile;
@@ -54,7 +55,7 @@ use Throwable;
  * DB storage format:
  *  - Single persisted file: the numeric OZFile primary key as a plain string
  *  - Multiple persisted files: a JSON array of numeric IDs
- *  - Temporary file: the absolute TempFS path (single or JSON array)
+ *  - Temporary file: the TempFS `{ref}/{name}` reference (single or JSON array)
  *
  * @extends Type<mixed, null|ValidatedFile|ValidatedFile[]>
  */
@@ -288,7 +289,7 @@ class TypeFile extends Type
 		}
 
 		$wrap = $this->isTemporary()
-			? static fn (string $v): ValidatedFile => ValidatedFile::forTempPath($v)
+			? static fn (string $v): ValidatedFile => ValidatedFile::forTempValue($v)
 			: static fn (string $v): ValidatedFile => ValidatedFile::forFileID($v);
 
 		if ($this->isMultiple()) {
@@ -331,7 +332,8 @@ class TypeFile extends Type
 	public function getWriteTypeHint(): ORMTypeHint
 	{
 		if ($this->isMultiple()) {
-			return ORMTypeHint::list(ORMUniversalType::STRING)->setPHPType(new PHPType('\\' . ValidatedFile::class . '[]'));
+			return ORMTypeHint::list(ORMUniversalType::STRING)
+				->setPHPType(new PHPType('\\' . ValidatedFile::class . '[]'));
 		}
 
 		return ORMTypeHint::string()
@@ -347,7 +349,8 @@ class TypeFile extends Type
 	public function getReadTypeHint(): ORMTypeHint
 	{
 		if ($this->isMultiple()) {
-			return ORMTypeHint::list(ORMUniversalType::STRING)->setPHPType(new PHPType('\\' . ValidatedFile::class . '[]'));
+			return ORMTypeHint::list(ORMUniversalType::STRING)
+				->setPHPType(new PHPType('\\' . ValidatedFile::class . '[]'));
 		}
 
 		return ORMTypeHint::string()
@@ -488,7 +491,8 @@ class TypeFile extends Type
 	 *    Aliases are rejected for temporary columns.
 	 *  - {@see OZFile} - passes {@see checkOZFile()}, then reused (non-temp only)
 	 *  - {@see ValidatedFile} - already validated by a previous pipeline run;
-	 *    accepted as-is and its size is not re-checked
+	 *    accepted as-is and its size is not re-checked, but a temporary one is
+	 *    rejected once its file is gone
 	 *
 	 * Bare strings and any other types are **rejected** to prevent IDOR: a raw
 	 * file ID supplied by the user would bypass authorization checks.
@@ -557,8 +561,19 @@ class TypeFile extends Type
 			$debug['index'] = $k;
 
 			if ($item instanceof ValidatedFile) {
-				// Already passed through this pipeline -- trust it as-is.
-				// Size is not rechecked: it was validated on initial submission.
+				// Already passed through this pipeline -- trust it as-is, except that a
+				// temporary file may since have been collected by TempFS (e.g. when
+				// replayed from a resume cache that outlived it). Size is not rechecked:
+				// it was validated on initial submission.
+				if ($item->isTemporary() && !$item->isAvailable()) {
+					throw new TypesInvalidValueException('OZ_FILE_INVALID', $debug + [
+						'_reason' => \sprintf(
+							'The temporary file no longer exists; it outlived its %s lifetime.',
+							TempFS::class
+						),
+					]);
+				}
+
 				$validated_items[$k] = $item;
 
 				continue;
@@ -694,7 +709,11 @@ class TypeFile extends Type
 				$storage->delete($f);
 			}
 
-			throw new TypesInvalidValueException('OZ_FILE_UPLOAD_FAILS', null, $t);
+			throw new TypesInvalidValueException(
+				$t instanceof FileScanRejectedException ? $t->getMessage() : 'OZ_FILE_UPLOAD_FAILS',
+				null,
+				$t
+			);
 		}
 
 		$db->commit();
@@ -706,29 +725,29 @@ class TypeFile extends Type
 	 * Moves freshly-uploaded files into TempFS and returns a `ValidatedFile[]`.
 	 *
 	 * Each item is moved to a file named after its cleaned filename inside the
-	 * TempFS upload directory. The returned `ValidatedFile::forTempPath()` instances
-	 * hold the absolute path of the moved file.
+	 * TempFS upload directory. The returned `ValidatedFile::forTempFile()` instances
+	 * hold the `{tmpfs_ref}/{name}` reference of the moved file, not its path.
 	 *
 	 * @param UploadedFile[] $uploaded_files freshly-uploaded files to move
 	 *
-	 * @return ValidatedFile[] one `ValidatedFile::forTempPath()` per input
+	 * @return ValidatedFile[] one `ValidatedFile::forTempFile()` per input
 	 */
 	protected function computeTemporaryUploadedFiles(array $uploaded_files): array
 	{
 		$lifetime = $this->getOption('temp_lifetime', self::TEMP_FILE_LIFETIME);
 
-		$tmp_fs_dir = TempFS::get($lifetime, 'upload')->dir();
+		$tmp_fs     = TempFS::get($lifetime, 'upload');
+		$tmp_fs_dir = $tmp_fs->dir();
 
 		/** @var ValidatedFile[] $list */
 		$list = [];
 
 		foreach ($uploaded_files as $upload) {
 			$name = $upload->getCleanFileName();
-			$path = $tmp_fs_dir->resolve($name);
 
-			$upload->moveTo($path);
+			$upload->moveTo($tmp_fs_dir->resolve($name));
 
-			$list[] = ValidatedFile::forTempPath($path);
+			$list[] = ValidatedFile::forTempFile($tmp_fs->getRef(), $name);
 		}
 
 		return $list;
@@ -793,8 +812,8 @@ class TypeFile extends Type
 	 */
 	protected function checkUploadedFile(UploadedFile $upload): void
 	{
-		$error              = $upload->getError();
-		$debug['file_name'] = $upload->getClientFilename();
+		$error = $upload->getError();
+		$debug = ['file_name' => $upload->getClientFilename()];
 
 		if (\UPLOAD_ERR_OK !== $error) {
 			$info             = FS::uploadErrorInfo($error);
@@ -831,8 +850,10 @@ class TypeFile extends Type
 	 */
 	protected function checkOZFile(OZFile $file): void
 	{
-		$debug['file_real_name'] = $file->getRealName();
-		$debug['file_name']      = $file->getName();
+		$debug = [
+			'file_real_name' => $file->getRealName(),
+			'file_name'      => $file->getName(),
+		];
 
 		if (!$this->checkFileSize($file->getSize())) {
 			$debug['min'] = $this->getOption('file_min_size');

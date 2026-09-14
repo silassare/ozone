@@ -15,7 +15,10 @@ namespace OZONE\Core\Forms;
 
 use Closure;
 use Override;
+use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Forms\Enums\RuleSetCondition;
+use OZONE\Core\Forms\Enums\RuleSetDataType;
 use OZONE\Core\Forms\Traits\FieldContainerHelpersTrait;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Lang\I18nMessage;
@@ -35,8 +38,7 @@ use PHPUtils\Traits\ArrayCapableTrait;
  *    time with the accumulated cleaned data, allowing structure to adapt to
  *    previously validated input.
  *
- * Fieldsets do NOT support nested fieldsets, `expect()` pre-validation rules,
- * or the `resumable()` mechanism — those belong to the parent {@see Form}.
+ * Fieldsets do NOT support nested fieldsets, or the `resumable()` mechanism — those belong to the parent {@see Form}.
  *
  * All fields inside a fieldset have their refs prefixed with
  * `{fieldset_name}.`, so clients submit flat dotted keys
@@ -56,39 +58,42 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	private bool $t_is_dynamic = false;
 
 	/**
-	 * @var null|Closure(FormData):Fieldset
+	 * @var null|Closure(FormValidationContext):Fieldset
 	 */
 	private ?Closure $t_dynamic_factory = null;
 
 	/**
 	 * Fieldset constructor.
 	 *
-	 * @param Form         $form the parent form
-	 * @param string       $name the fieldset name (validated as a dot-path segment)
-	 * @param null|RuleSet $if   optional condition controlling whether this fieldset is active
+	 * Conditions are not passed in: use {@see self::if()} on the returned
+	 * instance, which builds a correctly-typed rule set that is scoped to this
+	 * fieldset rather than registered as a form-level assertion.
+	 *
+	 * @param Form   $form the parent form
+	 * @param string $name the fieldset name (validated as a dot-path segment)
 	 */
 	private function __construct(
 		Form $form,
 		string $name,
-		?RuleSet $if = null,
 	) {
 		$this->name($name);
 		$this->t_parent_form = $form;
-		$this->t_if          = $if;
 	}
 
 	/**
-	 * Fieldset destructor.
+	 * Deep-copies the fieldset's own fields and condition.
+	 *
+	 * The parent form reference is deliberately kept: a merged fieldset keeps its
+	 * original namespace so its refs stay identical across requests and across
+	 * merges (see {@see Form::merge()}).
 	 */
-	#[Override]
-	public function __destruct()
+	public function __clone()
 	{
-		parent::__destruct();
-		unset(
-			$this->t_if,
-			$this->t_parent_form,
-			$this->t_dynamic_factory,
-		);
+		if (null !== $this->t_if) {
+			$this->t_if = clone $this->t_if;
+		}
+
+		$this->cloneOwnFields();
 	}
 
 	/**
@@ -103,6 +108,15 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	public function getRef(string $name): string
 	{
 		return $this->t_parent_form->getRef($this->getName() . '.' . $name);
+	}
+
+	/**
+	 * Returns this fieldset's own reference, as opposed to {@see self::getRef()}
+	 * which builds the reference of a child field.
+	 */
+	public function getSelfRef(): string
+	{
+		return $this->t_parent_form->getRef($this->getName());
 	}
 
 	/**
@@ -129,13 +143,12 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	 * @param Form                $parent_form the parent form
 	 * @param string              $name        the fieldset name
 	 * @param callable(self):void $callback    populates the fieldset in-place
-	 * @param null|RuleSet        $if          optional condition for this fieldset
 	 *
 	 * @return static
 	 */
-	public static function static(Form $parent_form, string $name, callable $callback, ?RuleSet $if = null): static
+	public static function static(Form $parent_form, string $name, callable $callback): static
 	{
-		$fs = new self($parent_form, $name, $if);
+		$fs = new self($parent_form, $name);
 
 		Closure::fromCallable($callback)($fs);
 
@@ -145,31 +158,30 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	/**
 	 * Creates a dynamic fieldset whose structure is built at validation time from accumulated cleaned data.
 	 *
-	 * The factory is called during {@see Form::validate()} with the cleaned `FormData` collected
-	 * from all preceding fields and fieldsets. It must return a `Fieldset` instance (created via
-	 * {@see self::static()}). Return a fieldset with no fields to emit an empty section.
+	 * The factory is called during {@see Form::validate()} with the validation context,
+	 * whose cleaned store holds everything collected from preceding fields and fieldsets.
+	 * It must return a `Fieldset` instance (created via {@see self::static()}). Return a
+	 * fieldset with no fields to emit an empty section.
 	 *
 	 * ```php
-	 * $form->dynamicFieldset('extras', function (FormData $fd): Fieldset {
-	 *     $fs = Fieldset::static($form, 'extras', function (Fieldset $f) use ($fd): void {
-	 *         if ('pro' === $fd->get('plan')) {
+	 * $form->dynamicFieldset('extras', function (FormValidationContext $ctx) use ($form): Fieldset {
+	 *     return Fieldset::static($form, 'extras', function (Fieldset $f) use ($ctx): void {
+	 *         if ('pro' === $ctx->getCleanFormData()->get('plan')) {
 	 *             $f->string('promo_code');
 	 *         }
 	 *     });
-	 *     return $fs;
 	 * });
 	 * ```
 	 *
-	 * @param Form                        $parent_form the parent form
-	 * @param string                      $name        the fieldset name
-	 * @param callable(FormData):Fieldset $factory     builds the fieldset from cleaned data
-	 * @param null|RuleSet                $if          optional condition for this fieldset
+	 * @param Form                                     $parent_form the parent form
+	 * @param string                                   $name        the fieldset name
+	 * @param callable(FormValidationContext):Fieldset $factory     builds the fieldset from the context
 	 *
 	 * @return static
 	 */
-	public static function dynamic(Form $parent_form, string $name, callable $factory, ?RuleSet $if = null): static
+	public static function dynamic(Form $parent_form, string $name, callable $factory): static
 	{
-		$fs                    = new self($parent_form, $name, $if);
+		$fs                    = new self($parent_form, $name);
 		$fs->t_is_dynamic      = true;
 		$fs->t_dynamic_factory = Closure::fromCallable($factory);
 
@@ -237,7 +249,11 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	public function if(): RuleSet
 	{
 		if (!isset($this->t_if)) {
-			$this->t_if = new RuleSet();
+			$this->t_if = RuleSet::create(
+				RuleSetCondition::AND,
+				RuleSetDataType::CLEANED,
+				$this->getSelfRef() . '@if'
+			);
 		}
 
 		return $this->t_if;
@@ -246,15 +262,15 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	/**
 	 * Returns true when this fieldset's condition is satisfied (or when no condition is set).
 	 *
-	 * @param FormData $fd cleaned form data accumulated so far
+	 * @param FormValidationContext $ctx
 	 */
-	public function isEnabled(FormData $fd): bool
+	public function isEnabled(FormValidationContext $ctx): bool
 	{
 		if (null === $this->t_if) {
 			return true;
 		}
 
-		return $this->t_if->check($fd);
+		return $this->t_if->check($ctx);
 	}
 
 	/**
@@ -265,13 +281,13 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	 *  - `$this` for static fieldsets when enabled.
 	 *  - A new `Fieldset` instance from the dynamic factory when enabled.
 	 *
-	 * @param FormData $fd accumulated cleaned data from preceding fields
+	 * @param FormValidationContext $ctx
 	 *
 	 * @return null|Fieldset
 	 */
-	public function build(FormData $fd): ?self
+	public function build(FormValidationContext $ctx): ?self
 	{
-		if (!$this->isEnabled($fd)) {
+		if (!$this->isEnabled($ctx)) {
 			return null;
 		}
 
@@ -279,22 +295,23 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 			return $this;
 		}
 
-		return $this->callDynamicFactory($fd);
+		return $this->callDynamicFactory($ctx);
 	}
 
 	/**
 	 * Validates this fieldset against the given form data.
 	 *
-	 * @param FormData $unsafe_fd  Raw (unsafe) form data from the request
-	 * @param FormData $cleaned_fd Pre-filled validated data (e.g. from a resume cache); merged with newly validated fields
+	 * @param FormValidationContext $ctx
+	 *
+	 * @throws InvalidFormException
 	 */
-	public function validate(FormData $unsafe_fd, FormData $cleaned_fd): void
+	public function validate(FormValidationContext $ctx): void
 	{
-		$this->checkPreValidationRules($unsafe_fd);
+		$this->checkPreValidationRules($ctx);
 
-		$this->checkFields($unsafe_fd, $cleaned_fd);
+		$this->checkFields($ctx);
 
-		$this->checkPostValidationRules($cleaned_fd);
+		$this->checkPostValidationRules($ctx);
 	}
 
 	/**
@@ -313,7 +330,7 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	public function toArray(): array
 	{
 		return [
-			'ref'    => $this->t_parent_form->getRef($this->getName()),
+			'ref'    => $this->getSelfRef(),
 			'name'   => $this->getName(),
 			'legend' => $this->t_legend,
 			'type'   => $this->t_is_dynamic ? 'dynamic' : 'static',
@@ -325,13 +342,13 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	/**
 	 * Calls the dynamic factory and validates its return type.
 	 *
-	 * @param FormData $fd
+	 * @param FormValidationContext $ctx
 	 *
 	 * @return Fieldset
 	 */
-	private function callDynamicFactory(FormData $fd): self
+	private function callDynamicFactory(FormValidationContext $ctx): self
 	{
-		$result = ($this->t_dynamic_factory)($fd);
+		$result = ($this->t_dynamic_factory)($ctx);
 
 		if (!$result instanceof self) {
 			throw (new RuntimeException(

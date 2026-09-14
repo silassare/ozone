@@ -107,6 +107,42 @@ class FilesManager extends FSUtils
 	}
 
 	/**
+	 * Writes a file atomically: a reader sees either the old content or the new one, never a
+	 * half-written file.
+	 *
+	 * `wf()` opens the destination and writes into it, so a concurrent reader can catch it
+	 * truncated. That is tolerable for a cache under `.ozone/`, and not for anything under `data/`,
+	 * which may be on a volume shared between instances. The temporary file is created in the same
+	 * directory on purpose: `rename()` is only atomic within one filesystem.
+	 *
+	 * @param string $path    the file to write
+	 * @param string $content the content
+	 *
+	 * @return static
+	 *
+	 * @throws RuntimeException when the file cannot be written
+	 */
+	public function writeAtomic(string $path, string $content): static
+	{
+		$abs_path = $this->resolve($path);
+		$tmp_path = $abs_path . '.' . \bin2hex(\random_bytes(6)) . '.tmp';
+
+		if (false === \file_put_contents($tmp_path, $content)) {
+			throw new RuntimeException(\sprintf('Unable to write at: "%s".', $tmp_path));
+		}
+
+		\chmod($tmp_path, self::FILE_PERMISSIONS);
+
+		if (!\rename($tmp_path, $abs_path)) {
+			@\unlink($tmp_path);
+
+			throw new RuntimeException(\sprintf('Unable to replace: "%s".', $abs_path));
+		}
+
+		return $this;
+	}
+
+	/**
 	 * Returns a relative path from a given path.
 	 *
 	 * @param string $path

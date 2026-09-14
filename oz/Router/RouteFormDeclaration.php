@@ -16,8 +16,9 @@ namespace OZONE\Core\Router;
 use Closure;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\Interfaces\ResumableFormProviderInterface;
-use OZONE\Core\Forms\Services\ResumableFormService;
+use OZONE\Core\Forms\FormDataClean;
+use OZONE\Core\Forms\Resume\FormSessionStore;
+use OZONE\Core\Forms\Resume\Interfaces\ResumableFormProviderInterface;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use ReflectionException;
 use ReflectionFunction;
@@ -80,11 +81,6 @@ final class RouteFormDeclaration
 
 	private function __construct() {}
 
-	public function __destruct()
-	{
-		unset($this->t_static_form, $this->t_static_factory, $this->t_dynamic_factory, $this->t_doc_preview, $this->t_provider_class);
-	}
-
 	/**
 	 * Creates a declaration from a callable or Form with arity auto-detection.
 	 *
@@ -99,20 +95,19 @@ final class RouteFormDeclaration
 	 * override the auto-detected value. Passing {@see RouteFormDocPolicy::STATIC} has no
 	 * effect on detection; use a Form instance or zero-arg callable instead.
 	 *
-	 * @param callable|Form           $form   the form definition or factory callable
-	 * @param null|RouteFormDocPolicy $policy explicit override (OPAQUE or DYNAMIC); null = auto-detect
+	 * @param callable(null|RouteInfo):(null|Form)|Form $form   the form definition or factory callable
+	 * @param null|RouteFormDocPolicy                   $policy explicit override (OPAQUE or DYNAMIC), or null
 	 *
 	 * @return static
 	 */
 	public static function make(callable|Form $form, ?RouteFormDocPolicy $policy = null): static
 	{
-		$decl = new self();
+		$decl     = new self();
+		$explicit = RouteFormDocPolicy::OPAQUE === $policy || RouteFormDocPolicy::DYNAMIC === $policy;
 
 		if ($form instanceof Form) {
 			$decl->t_static_form = $form;
-			$decl->t_policy      = (RouteFormDocPolicy::OPAQUE === $policy || RouteFormDocPolicy::DYNAMIC === $policy)
-				? $policy
-				: RouteFormDocPolicy::STATIC;
+			$decl->t_policy      = $explicit ? $policy : RouteFormDocPolicy::STATIC;
 
 			return $decl;
 		}
@@ -136,9 +131,7 @@ final class RouteFormDeclaration
 				: RouteFormDocPolicy::DYNAMIC;
 		} else {
 			$decl->t_static_factory = $closure;
-			$decl->t_policy         = (RouteFormDocPolicy::OPAQUE === $policy || RouteFormDocPolicy::DYNAMIC === $policy)
-				? $policy
-				: RouteFormDocPolicy::STATIC;
+			$decl->t_policy         = $explicit ? $policy : RouteFormDocPolicy::STATIC;
 		}
 
 		return $decl;
@@ -155,8 +148,8 @@ final class RouteFormDeclaration
 	 * DYNAMIC extension for non-provider routes — useful when the form shape is known ahead of
 	 * time despite being resolved at request time.
 	 *
-	 * @param callable(RouteInfo):?Form $factory     runtime factory - receives a live RouteInfo
-	 * @param null|(callable():Form)    $doc_preview zero-arg preview factory for the extension hint
+	 * @param callable(RouteInfo):(null|Form) $factory     runtime factory - receives a live RouteInfo
+	 * @param null|(callable():Form)          $doc_preview zero-arg preview factory for the extension hint
 	 *
 	 * @return static
 	 */
@@ -191,8 +184,8 @@ final class RouteFormDeclaration
 	/**
 	 * Creates a declaration that delegates form resolution entirely to a resumable-form provider.
 	 *
-	 * The route handler receives the completed {@see FormData} via {@see RouteInfo::getCleanFormData()},
-	 * which is populated by {@see ResumableFormService::requireCompletion()}
+	 * The route handler receives the completed {@see FormDataClean} via
+	 * {@see RouteInfo::getCleanFormData()}, populated by {@see FormSessionStore::requireCompletionForRoute()}
 	 * using the request header. No normal bundle validation is run.
 	 *
 	 * Policy is always {@see RouteFormDocPolicy::DYNAMIC}: the `x-oz-form` extension carries the
@@ -264,9 +257,12 @@ final class RouteFormDeclaration
 	}
 
 	/**
-	 * Returns the form for API doc generation (no RouteInfo needed). Returns null when:
-	 *  - The policy is {@see RouteFormDocPolicy::OPAQUE} or {@see RouteFormDocPolicy::DYNAMIC}.
-	 *  - The form is a dynamic factory (DYNAMIC routes never embed schema in requestBody).
+	 * Returns the form to embed as the OpenAPI `requestBody` (no RouteInfo needed).
+	 *
+	 * Only {@see RouteFormDocPolicy::STATIC} declarations embed a schema, and a STATIC
+	 * policy is only ever assigned to a Form instance or a zero-arg factory. Every
+	 * other declaration returns null; a DYNAMIC one surfaces its shape through
+	 * {@see self::getDocPreviewForm()} instead.
 	 *
 	 * @return null|Form
 	 */
@@ -284,21 +280,21 @@ final class RouteFormDeclaration
 			return ($this->t_static_factory)();
 		}
 
-		if (null !== $this->t_doc_preview) {
-			return ($this->t_doc_preview)();
-		}
-
-		// Dynamic factory without a preview: nothing to embed.
 		return null;
 	}
 
 	/**
-	 * Returns the doc-gen preview form for use as the `init_form` hint in the `x-oz-form`
-	 * DYNAMIC extension on non-provider routes. Returns null when no preview was supplied.
+	 * Returns the form exposed as the `init_form` hint of the `x-oz-form` DYNAMIC
+	 * extension on non-provider routes.
 	 *
-	 * Only meaningful when the policy is {@see RouteFormDocPolicy::DYNAMIC} and no provider
-	 * class is set. For provider-based DYNAMIC declarations the caller should use
-	 * `$providerClass::initForm()` instead.
+	 * Resolution order:
+	 *  - the explicit preview passed to {@see self::dynamic()};
+	 *  - otherwise, for a DYNAMIC declaration whose form is known ahead of time
+	 *    (`make($form, RouteFormDocPolicy::DYNAMIC)`), that form itself: its shape is
+	 *    not secret, only {@see RouteFormDocPolicy::OPAQUE} is meant to hide it;
+	 *  - otherwise null.
+	 *
+	 * Provider-based declarations use `$providerClass::initForm()` instead.
 	 *
 	 * @return null|Form
 	 */
@@ -306,6 +302,18 @@ final class RouteFormDeclaration
 	{
 		if (null !== $this->t_doc_preview) {
 			return ($this->t_doc_preview)();
+		}
+
+		if (RouteFormDocPolicy::DYNAMIC !== $this->t_policy) {
+			return null;
+		}
+
+		if (null !== $this->t_static_form) {
+			return $this->t_static_form;
+		}
+
+		if (null !== $this->t_static_factory) {
+			return ($this->t_static_factory)();
 		}
 
 		return null;
