@@ -14,22 +14,22 @@ declare(strict_types=1);
 namespace OZONE\Tests\Forms;
 
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Forms\Enums\FormResumePhase;
-use OZONE\Core\Forms\FormResumeProgress;
-use OZONE\Core\Forms\Services\ResumableFormService;
+use OZONE\Core\Forms\Resume\Enums\FormResumePhase;
+use OZONE\Core\Forms\Resume\FormResumeProgress;
+use OZONE\Core\Forms\Resume\Services\ResumableFormService;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class ResumableFormServiceTest.
  *
- * Unit tests for {@see FormResumeProgress} and {@see ResumableFormService} constants.
+ * Unit tests for {@see FormResumeProgress} and the {@see ResumableFormService} route names.
  *
- * Full end-to-end handler tests (initSession, nextStep, etc.) require HTTP scaffolding
+ * Full end-to-end handler tests (init, next, etc.) require HTTP scaffolding
  * and live in the integration suite: tests/Integration/Forms/.
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Forms\Resume\Services\ResumableFormService
  */
 final class ResumableFormServiceTest extends TestCase
 {
@@ -171,46 +171,7 @@ final class ResumableFormServiceTest extends TestCase
 		self::assertSame(3, $progress->getStepIndex());
 	}
 
-	// -----------------------------------------------------------------------
-	// ResumableFormService — constants
-	// -----------------------------------------------------------------------
-
-	public function testCacheNamespaceConstant(): void
-	{
-		self::assertSame('oz:form:sessions', ResumableFormService::CACHE_NAMESPACE);
-	}
-
-	public function testRouteInitConstant(): void
-	{
-		self::assertSame('oz:form:init', ResumableFormService::ROUTE_INIT);
-	}
-
-	public function testRouteStateConstant(): void
-	{
-		self::assertSame('oz:form:state', ResumableFormService::ROUTE_STATE);
-	}
-
-	public function testRouteNextConstant(): void
-	{
-		self::assertSame('oz:form:next', ResumableFormService::ROUTE_NEXT);
-	}
-
-	public function testRouteBackConstant(): void
-	{
-		self::assertSame('oz:form:back', ResumableFormService::ROUTE_BACK);
-	}
-
-	public function testRouteCancelConstant(): void
-	{
-		self::assertSame('oz:form:cancel', ResumableFormService::ROUTE_CANCEL);
-	}
-
-	public function testRouteEvaluateConstant(): void
-	{
-		self::assertSame('oz:form:evaluate', ResumableFormService::ROUTE_EVALUATE);
-	}
-
-	public function testAllRouteConstantsAreDistinct(): void
+	public function testAllRouteNamesAreDistinct(): void
 	{
 		$names = [
 			ResumableFormService::ROUTE_INIT,

@@ -11,10 +11,11 @@
 
 declare(strict_types=1);
 
-// Use in-memory SQLite for the unit test suite - no external DB server required.
+// SQLite in the unit suite sandbox (see tests/autoload.php): no DB server required, and the schema
+// that tests/sandbox_build.php applies is there for every test, whatever the order.
 return [
 	'OZ_DB_RDBMS' => 'sqlite',
-	'OZ_DB_HOST'  => ':memory:',
+	'OZ_DB_HOST'  => app()->getProjectDir()->resolve('db.sqlite'),
 	'OZ_DB_NAME'  => '',
 	'OZ_DB_USER'  => '',
 	'OZ_DB_PASS'  => '',

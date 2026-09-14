@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Http\Stream
  */
 final class StreamTest extends TestCase
 {

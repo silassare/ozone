@@ -32,8 +32,8 @@ use PHPUnit\Framework\TestCase;
  *   A second project uses a task with `inBackground()`.  `oz cron run` dispatches it to
  *   `cron:async` and spawns a subprocess via `oz jobs run --force`.  The subprocess
  *   bootstraps OZone and calls `CronTaskWorker::__construct()`, where `Cron::collect()`
- *   is now invoked so the task registry is populated before `Cron::getTask()` is called.
- *   Without the BUG-1 fix, the subprocess always threw "Cron task not found".
+ *   is invoked so the task registry is populated before `Cron::getTask()` is called: without it,
+ *   the subprocess threw "Cron task not found".
  *
  * @internal
  *
@@ -120,8 +120,8 @@ final class CronTaskTest extends TestCase
 	}
 
 	/**
-	 * A second `oz cron run` cycle re-dispatches and re-executes the task
-	 * (everyMinute is always due) and exits cleanly.
+	 * A task runs once per scheduled minute: the first `oz cron run` of a minute runs the everyMinute
+	 * task again, a second one in the same minute does not -- as for two servers' schedulers.
 	 *
 	 * @dataProvider provideDbConfig
 	 */
@@ -130,20 +130,22 @@ final class CronTaskTest extends TestCase
 		$proj     = self::getProject($config);
 		$flagFile = $proj->getPath() . \DIRECTORY_SEPARATOR . 'cron_ran.flag';
 
-		// Remove the previous flag so we detect a fresh run.
-		if (\is_file($flagFile)) {
-			\unlink($flagFile);
-		}
+		$minute = self::nextMinute();
 
-		$proc1 = $proj->oz('cron', 'run');
-		$proc1->mustRun();
+		self::removeFile($flagFile);
+		$proj->oz('cron', 'run')->mustRun();
 
-		self::assertSame(0, $proc1->getExitCode());
-		self::assertFileExists($flagFile, 'Task should run again on a second dispatch cycle.');
+		self::assertFileExists($flagFile, 'The first run of a minute should run the task.');
+
+		self::removeFile($flagFile);
+		$proj->oz('cron', 'run')->mustRun();
+
+		self::assertSame($minute, \intdiv(\time(), 60), 'Both runs should have been in the same minute.');
+		self::assertFileDoesNotExist($flagFile, 'A second run in the same minute should not run the task again.');
 	}
 
 	// =========================================================================
-	// Async cron tests (BUG-1 regression: CronTaskWorker subprocess context)
+	// Async cron tests (CronTaskWorker in a subprocess, which has not collected the tasks)
 	// =========================================================================
 
 	/**
@@ -152,8 +154,8 @@ final class CronTaskTest extends TestCase
 	 * A background task routes to the `cron:async` queue.  `oz cron run` spawns
 	 * a subprocess (`oz jobs run --force`) to execute it.  In that subprocess OZone
 	 * bootstraps but `Cron::runDues()` is never called, so `Cron::$tasks` would be
-	 * empty without the BUG-1 fix.  `CronTaskWorker::__construct()` now calls
-	 * `Cron::collect()` to populate the registry before `Cron::getTask()` is called.
+	 * empty if `CronTaskWorker::__construct()` did not call `Cron::collect()` to
+	 * populate the registry before `Cron::getTask()` is called.
 	 *
 	 * @dataProvider provideDbConfig
 	 */
@@ -201,7 +203,7 @@ final class CronTaskTest extends TestCase
 	}
 
 	/**
-	 * A second `oz cron run` cycle re-dispatches and re-executes the async task.
+	 * The same for a background task: run by the first `oz cron run` of a minute, not by a second one.
 	 *
 	 * @dataProvider provideDbConfig
 	 */
@@ -210,26 +212,54 @@ final class CronTaskTest extends TestCase
 		$proj     = self::getAsyncProject($config);
 		$flagFile = $proj->getPath() . \DIRECTORY_SEPARATOR . 'async_cron_ran.flag';
 
-		if (\is_file($flagFile)) {
-			\unlink($flagFile);
-		}
+		$minute = self::nextMinute();
 
-		$proc = $proj->oz('cron', 'run');
-		$proc->mustRun();
+		self::removeFile($flagFile);
+		$proj->oz('cron', 'run')->mustRun();
 
-		// Poll for the flag file (background subprocess is fire-and-forget).
-		$deadline = \microtime(true) + 15.0;
-		while (!\is_file($flagFile) && \microtime(true) < $deadline) {
-			\usleep(100_000); // 100 ms
-		}
+		self::assertTrue(self::waitForFile($flagFile, 15.0), 'The first run of a minute should run the task.');
 
-		self::assertSame(0, $proc->getExitCode());
-		self::assertFileExists($flagFile, 'Async task should run again on a second dispatch cycle.');
+		self::removeFile($flagFile);
+		$proj->oz('cron', 'run')->mustRun();
+
+		// the background subprocess is fire-and-forget: give it the time it took above
+		self::assertFalse(self::waitForFile($flagFile, 3.0), 'A second run in the same minute should not run it.');
+		self::assertSame($minute, \intdiv(\time(), 60), 'Both runs should have been in the same minute.');
 	}
 
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('cron-task');
+	}
+
+	/**
+	 * Waits for the start of a minute no run has dispatched yet, and returns it.
+	 */
+	private static function nextMinute(): int
+	{
+		$next = (\intdiv(\time(), 60) + 1) * 60;
+
+		\time_sleep_until($next + 1);
+
+		return \intdiv(\time(), 60);
+	}
+
+	private static function waitForFile(string $file, float $seconds): bool
+	{
+		$deadline = \microtime(true) + $seconds;
+
+		while (!\is_file($file) && \microtime(true) < $deadline) {
+			\usleep(100_000);
+		}
+
+		return \is_file($file);
+	}
+
+	private static function removeFile(string $file): void
+	{
+		if (\is_file($file)) {
+			\unlink($file);
+		}
 	}
 
 	// -------------------------------------------------------------------------

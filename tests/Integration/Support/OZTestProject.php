@@ -15,6 +15,7 @@ namespace OZONE\Tests\Integration\Support;
 
 use JsonException;
 use OZONE\Core\Utils\Env;
+use OZONE\Tests\Support\ServiceEnv;
 use PDO;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -23,12 +24,18 @@ use Symfony\Component\Process\Process;
  * Helper that manages a throwaway OZone project inside /tmp/_oz_tests_/projects/{name}/.
  *
  * Vendor caching:
- *   - A SHA-256 hash is computed from the project's effective require + require-dev.
+ *   - Every package of OZone's own graph is pinned to the version OZone's composer.lock records (a
+ *     dev branch to its commit): a project installs what the lock says, not whatever a moving
+ *     branch points at on the day its cache is built.
+ *   - A SHA-256 hash is computed from the project's effective require, pins included.
  *   - If /tmp/_oz_tests_/_vendors_cache_/{hash}/ already exists, vendor/ is symlinked there
  *     -- no composer install needed.
  *   - Otherwise composer install runs, the resulting vendor/ is moved to the cache
  *     dir, then symlinked back in. Subsequent projects with the same dep set reuse
  *     the cache instantly.
+ *   - A project directory reused from an earlier run (not `$fresh`, or left behind by a run that
+ *     was killed) is relinked to the current set's vendor/ whenever its own is another set's --
+ *     OZone's composer.lock moved -- or an install that never finished.
  *   - The ozone root is always added as a path repository so silassare/ozone is
  *     resolved locally without any download.
  *
@@ -104,6 +111,20 @@ final class OZTestProject
 			$create->mustRun();
 		}
 
+		// The services this environment provides, so the project talks to the running Redis / MinIO /
+		// ClamAV rather than the defaults. The image ships ext-redis, which makes `OZ_REDIS_ENABLED`
+		// default to true, so without this every `oz jobs` / `oz cron` command in a test project
+		// dials 127.0.0.1 and fails with "Connection refused".
+		//
+		// These are keys the generated `.env` does not already have, which `EnvEditor::upset()` used
+		// to render as `=value` -- name dropped, file no longer parsing. Fixed upstream in
+		// silassare/php-utils; `EnvEditorTest` there covers adding a new key and quoting one.
+		$services = ServiceEnv::fromEnvironment();
+
+		if ($services) {
+			(new self($project_dir))->writeEnv($services);
+		}
+
 		// -- Step 2: patch composer.json --------------------------------------
 		$composer_file = $project_dir . \DIRECTORY_SEPARATOR . 'composer.json';
 		$composer      = \json_decode(
@@ -114,12 +135,16 @@ final class OZTestProject
 		);
 
 		// Path repository -> silassare/ozone resolved from local ozone root,
-		// vendor/silassare/ozone will be a symlink to the ozone root.
-		$composer['repositories'] = [[
+		// vendor/silassare/ozone will be a symlink to the ozone root. Added in front of whatever the
+		// project template declares rather than replacing it, so these projects resolve the way a
+		// real one does.
+		$composer['repositories'] ??= [];
+
+		\array_unshift($composer['repositories'], [
 			'type'    => 'path',
 			'url'     => $ozone_root,
 			'options' => ['symlink' => true],
-		]];
+		]);
 
 		// Allow any version of ozone so the path-repo (which exports dev-main)
 		// satisfies the constraint regardless of the exact version written in
@@ -137,6 +162,13 @@ final class OZTestProject
 			$composer['autoload']['psr-4'] = $psr4;
 		}
 
+		// OZone's graph at the versions its composer.lock records. Left to the constraints, a
+		// `dev-main` dependency resolves to wherever the branch is when the cache is built, and a
+		// cache built earlier keeps an older commit than the lock under the same key.
+		foreach (self::lockedPackages($ozone_root) as $pkg => $ver) {
+			$composer['require'][$pkg] = $ver;
+		}
+
 		foreach ($deps as $pkg => $ver) {
 			$composer['require'][$pkg] = $ver;
 		}
@@ -144,16 +176,8 @@ final class OZTestProject
 		\ksort($composer['require']);
 
 		// -- Step 3: compute vendor cache hash --------------------------------
-		// Include a fingerprint of the ozone composer.lock so that any upstream
-		// dependency update (e.g. kli, gobl, php-utils) that does not change the
-		// project's require constraints still busts the cache and triggers a fresh
-		// composer install.
-		$lock_file  = $ozone_root . \DIRECTORY_SEPARATOR . 'composer.lock';
-		$lock_hash  = \is_readable($lock_file) ? \md5_file($lock_file) : '';
-		$hash_input = [
-			'require' => $composer['require'] ?? [],
-			'lock'    => $lock_hash,
-		];
+		// The require holds the pins: a dependency moving in OZone's composer.lock busts the cache.
+		$hash_input = ['require' => $composer['require'] ?? []];
 		if (!$shared) {
 			$hash_input['project'] = $name;
 		}
@@ -168,10 +192,28 @@ final class OZTestProject
 		);
 
 		// -- Step 4: vendor caching -------------------------------------------
-		if (!\is_link($vendor_symlink) && !\is_dir($vendor_symlink)) {
+		// A project reused from an earlier run keeps its vendor/ only if it is this dependency set's:
+		// after a composer update in OZone the set, so the hash, changed, and the project must follow.
+		if (\is_link($vendor_symlink)) {
+			if (\readlink($vendor_symlink) !== $cache_dir || !\is_dir($cache_dir)) {
+				\unlink($vendor_symlink);
+			}
+		} elseif (\is_dir($vendor_symlink)) {
+			// A vendor/ that is no symlink is the one of an install that never finished.
+			(new Process(['rm', '-rf', $vendor_symlink]))->mustRun();
+		}
+
+		if (!\is_link($vendor_symlink)) {
 			if (\is_dir($cache_dir)) {
 				\symlink($cache_dir, $vendor_symlink);
 			} else {
+				// The project's own lock would be an earlier set's, which composer would install again.
+				$lock_file = $project_dir . \DIRECTORY_SEPARATOR . 'composer.lock';
+
+				if (\is_file($lock_file)) {
+					\unlink($lock_file);
+				}
+
 				// First time this dep set is seen: install, cache, symlink.
 				// Composer install can take several minutes on a cold network - use a generous timeout.
 				// --no-dev: sub-projects only run oz CLI commands; dev packages are never needed.
@@ -202,13 +244,27 @@ final class OZTestProject
 	 */
 	public function oz(string ...$args): Process
 	{
+		return $this->ozIn($this->dir, ...$args);
+	}
+
+	/**
+	 * Runs `bin/oz` from another working directory, to exercise what a command does outside a
+	 * project (or in a different one).
+	 *
+	 * @param string $cwd     the working directory to run from
+	 * @param string ...$args the command arguments
+	 *
+	 * @return Process
+	 */
+	public function ozIn(string $cwd, string ...$args): Process
+	{
 		return new Process(
 			[
 				\PHP_BINARY,
 				self::ozoneRoot() . \DIRECTORY_SEPARATOR . 'bin' . \DIRECTORY_SEPARATOR . 'oz',
 				...$args,
 			],
-			$this->dir,
+			$cwd,
 		);
 	}
 
@@ -407,9 +463,15 @@ final class OZTestProject
 		// Kill any tracked php -S server processes that may have been orphaned
 		// when their parent oz process was killed (Symfony Process puts children
 		// in their own process group, so they do not die with the parent).
+		// SIGTERM is 15 on every POSIX system, and is spelled out rather than used as a constant:
+		// `SIGTERM` comes from ext-pcntl, not from the ext-posix that `posix_kill()` belongs to, so
+		// guarding on `posix_kill` and then naming the constant threw "Undefined constant" wherever
+		// only one of the two was installed.
+		$sigterm = \defined('SIGTERM') ? \SIGTERM : 15;
+
 		foreach ($this->serverPids as $pid) {
 			if ($pid > 0 && \function_exists('posix_kill') && \posix_kill($pid, 0)) {
-				\posix_kill($pid, \SIGTERM);
+				\posix_kill($pid, $sigterm);
 			}
 		}
 		$this->serverPids = [];
@@ -495,6 +557,38 @@ final class OZTestProject
 	private static function ozoneRoot(): string
 	{
 		return \dirname(__DIR__, 3);
+	}
+
+	/**
+	 * The packages of OZone's runtime graph, each at the version OZone's composer.lock records: the
+	 * exact version of a release, the commit of a branch (`dev-main#<ref>`, which the package's branch
+	 * alias keeps satisfying OZone's own constraints).
+	 *
+	 * @return array<string, string> package name -> constraint
+	 *
+	 * @throws JsonException
+	 */
+	private static function lockedPackages(string $ozone_root): array
+	{
+		$lock_file = $ozone_root . \DIRECTORY_SEPARATOR . 'composer.lock';
+
+		if (!\is_readable($lock_file)) {
+			return [];
+		}
+
+		$lock = \json_decode((string) \file_get_contents($lock_file), true, 512, \JSON_THROW_ON_ERROR);
+		$pins = [];
+
+		foreach ($lock['packages'] ?? [] as $package) {
+			$version = $package['version'];
+			$ref     = $package['source']['reference'] ?? $package['dist']['reference'] ?? null;
+
+			$pins[$package['name']] = \str_starts_with($version, 'dev-') && null !== $ref
+				? $version . '#' . $ref
+				: $version;
+		}
+
+		return $pins;
 	}
 
 	/**

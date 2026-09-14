@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Router\RouteGroup
  */
 final class RouteGroupTest extends TestCase
 {

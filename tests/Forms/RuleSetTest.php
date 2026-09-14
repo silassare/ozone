@@ -13,10 +13,12 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
-use OZONE\Core\Forms\DynamicValue;
+use OZONE\Core\Forms\AsyncValue;
 use OZONE\Core\Forms\Enums\RuleSetCondition;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormDataClean;
+use OZONE\Core\Forms\FormValidationContext;
 use OZONE\Core\Forms\Rule;
 use OZONE\Core\Forms\RuleSet;
 use OZONE\Core\Forms\RuleViolation;
@@ -27,7 +29,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Forms\RuleSet
  */
 final class RuleSetTest extends TestCase
 {
@@ -275,18 +277,18 @@ final class RuleSetTest extends TestCase
 		self::assertFalse($rs->isServerOnly());
 	}
 
-	public function testIsServerOnlyTrueWhenDynamicValuePresent(): void
+	public function testIsServerOnlyTrueWhenAsyncValuePresent(): void
 	{
-		$rs = (new RuleSet())->eq('field', new DynamicValue(static fn () => 'x'));
+		$rs = (new RuleSet())->eq('field', new AsyncValue(static fn () => 'x'));
 		self::assertTrue($rs->isServerOnly());
 	}
 
-	public function testIsServerOnlyTrueWhenDynamicValueInNestedGroup(): void
+	public function testIsServerOnlyTrueWhenAsyncValueInNestedGroup(): void
 	{
 		$rs = (new RuleSet())
 			->eq('a', 'b')
 			->and(static function (RuleSet $sub): void {
-				$sub->eq('x', new DynamicValue(static fn () => 'val'));
+				$sub->eq('x', new AsyncValue(static fn () => 'val'));
 			});
 
 		self::assertTrue($rs->isServerOnly());
@@ -348,8 +350,8 @@ final class RuleSetTest extends TestCase
 
 	public function testToArrayReturnsAsyncForServerOnly(): void
 	{
-		$rs = (new RuleSet())->eq('field', new DynamicValue(static fn () => 'x'));
-		self::assertSame(['$async' => true], $rs->toArray());
+		$rs = (new RuleSet())->eq('field', new AsyncValue(static fn () => 'x'));
+		self::assertSame(['ref' => '', '$async' => true], $rs->toArray());
 	}
 
 	public function testToArrayCrossFieldRuleHasTargetRef(): void
@@ -388,8 +390,15 @@ final class RuleSetTest extends TestCase
 		}
 	}
 
-	private function fd(array $data): FormData
+	/**
+	 * Builds a validation context holding $data on both sides.
+	 *
+	 * The rule sets under test are built with `new RuleSet()`, which defaults to
+	 * UNSAFE, but filling both stores keeps the helper usable for CLEANED rule
+	 * sets too.
+	 */
+	private function fd(array $data): FormValidationContext
 	{
-		return new FormData($data);
+		return new FormValidationContext(new FormData($data), new FormDataClean($data));
 	}
 }

@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace OZONE\Tests\Router;
 
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Forms\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\FormData;
-use OZONE\Core\Forms\FormResumeProgress;
+use OZONE\Core\Forms\FormDataClean;
+use OZONE\Core\Forms\Resume\AbstractResumableFormProvider;
+use OZONE\Core\Forms\Resume\FormResumeProgress;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use OZONE\Core\Router\RouteFormDeclaration;
 use PHPUnit\Framework\TestCase;
@@ -31,7 +31,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Router\RouteFormDeclaration
  */
 final class RouteFormDeclarationTest extends TestCase
 {
@@ -131,6 +131,34 @@ final class RouteFormDeclarationTest extends TestCase
 
 		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
+	}
+
+	public function testMakeWithFormAndDynamicPolicyExposesFormAsPreview(): void
+	{
+		$form = new Form();
+		$decl = RouteFormDeclaration::make($form, RouteFormDocPolicy::DYNAMIC);
+
+		self::assertSame($form, $decl->getDocPreviewForm());
+	}
+
+	public function testMakeWithZeroArgCallableAndDynamicPolicyExposesFormAsPreview(): void
+	{
+		$form = new Form();
+		$decl = RouteFormDeclaration::make(static fn () => $form, RouteFormDocPolicy::DYNAMIC);
+
+		self::assertSame($form, $decl->getDocPreviewForm());
+	}
+
+	public function testOpaqueNeverExposesPreview(): void
+	{
+		self::assertNull(RouteFormDeclaration::opaque(new Form())->getDocPreviewForm());
+		self::assertNull(RouteFormDeclaration::opaque(static fn () => new Form())->getDocPreviewForm());
+	}
+
+	public function testStaticDeclarationHasNoPreview(): void
+	{
+		// STATIC embeds the schema in requestBody; the preview is a DYNAMIC-only hint.
+		self::assertNull(RouteFormDeclaration::make(new Form())->getDocPreviewForm());
 	}
 
 	public function testMakeWithZeroArgCallableAndOpaquePolicy(): void
@@ -368,7 +396,7 @@ final class StubFormProvider extends AbstractResumableFormProvider
 		return 'test:stub';
 	}
 
-	public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
+	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		return null;
 	}

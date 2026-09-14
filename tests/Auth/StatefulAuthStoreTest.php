@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Auth\StatefulAuthenticationMethodStore
  */
 final class StatefulAuthStoreTest extends TestCase
 {
@@ -76,7 +76,7 @@ final class StatefulAuthStoreTest extends TestCase
 		//
 		// Note: Store uses dot-notation for get()/set(), so a key with dots is treated as
 		// a nested path.  Use a plain key without dots to avoid ambiguity here.
-		$id     = Keys::id64('same');
+		$id     = Keys::id64();
 		$storeA = StatefulAuthenticationMethodStore::getInstance($id, ['initialized' => true]);
 		$storeB = StatefulAuthenticationMethodStore::getInstance($id, ['initialized' => true]);
 
@@ -111,6 +111,6 @@ final class StatefulAuthStoreTest extends TestCase
 	/** Each test gets a fresh store keyed by a unique state ID. */
 	private function makeStore(): StatefulAuthenticationMethodStore
 	{
-		return StatefulAuthenticationMethodStore::getInstance(Keys::id64('test'), []);
+		return StatefulAuthenticationMethodStore::getInstance(Keys::id64(), []);
 	}
 }

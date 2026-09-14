@@ -91,7 +91,7 @@ final class ResumableFormServiceTest extends TestCase
 		$proj->setSetting('oz.forms.providers', 'test-real-ctx', "{$ns}\\TestFormRealContextProvider");
 		$proj->setSetting('oz.forms.providers', 'test-irreversible', "{$ns}\\TestFormIrreversibleProvider");
 
-		// Register consumer routes (requireCompletion / dropSession test endpoints).
+		// Register consumer routes (requireCompletion / drop test endpoints).
 		$proj->setSetting('oz.routes.api', "{$ns}\\TestFormConsumerRoutesProvider", true);
 
 		// Build ORM classes and install the schema.
@@ -103,7 +103,7 @@ final class ResumableFormServiceTest extends TestCase
 			[$server, $host, $port] = $proj->startServer('api', self::$host);
 		} catch (RuntimeException $e) {
 			$proj->destroy();
-			self::markTestSkipped($e->getMessage());
+			self::fail($e->getMessage());
 		}
 
 		self::$proj   = $proj;
@@ -313,7 +313,7 @@ final class ResumableFormServiceTest extends TestCase
 		]);
 
 		// Evaluate on step 1: accumulated cleaned data contains name='skip'.
-		// hint's condition: neq('name', DynamicValue(=>'skip')) -> false -> hint is NOT visible.
+		// hint's condition: neq('name', AsyncValue(=>'skip')) -> false -> hint is NOT visible.
 		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', [], [
 			'X-OZONE-Form-Resume-Ref' => $resumeRef,
 		]);
@@ -341,7 +341,7 @@ final class ResumableFormServiceTest extends TestCase
 		]);
 
 		// Evaluate: accumulated cleaned data contains name='alice'.
-		// hint's condition: neq('name', DynamicValue(=>'skip')) -> true -> hint IS visible.
+		// hint's condition: neq('name', AsyncValue(=>'skip')) -> true -> hint IS visible.
 		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', [], [
 			'X-OZONE-Form-Resume-Ref' => $resumeRef,
 		]);
@@ -357,6 +357,49 @@ final class ResumableFormServiceTest extends TestCase
 
 	public function testEvaluateReturnsServerSideExpectResult(): void
 	{
+		// Advance to step 2 (notes).
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		$this->request('POST', '/form/test-wizard/next', ['wish' => 'anything'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['name' => 'alice'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['color' => 'blue'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+
+		// expect() reads the raw payload of this request, so the rule is evaluated
+		// against the notes value sent here: notes='forbidden-notes' -> must fail.
+		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', ['notes' => 'forbidden-notes'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(0, $data['error']);
+		self::assertArrayHasKey('expect', $data['data']);
+		self::assertNotEmpty($data['data']['expect'], 'expect array must contain at least one entry.');
+		self::assertFalse(
+			$data['data']['expect'][0]['passes'] ?? true,
+			"Expect rule must fail when notes='forbidden-notes'."
+		);
+
+		// Same step, acceptable raw input -> the rule must pass.
+		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', ['notes' => 'ok-notes'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertTrue(
+			$data['data']['expect'][0]['passes'] ?? false,
+			"Expect rule must pass when notes != 'forbidden-notes'."
+		);
+	}
+
+	public function testEvaluateReturnsServerSideCrossStepEnsureResult(): void
+	{
 		// Advance to step 2 (notes) with color='forbidden' accumulated.
 		[, $body]  = $this->request('POST', '/form/test-wizard/init');
 		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
@@ -371,24 +414,25 @@ final class ResumableFormServiceTest extends TestCase
 			'X-OZONE-Form-Resume-Ref' => $resumeRef,
 		]);
 
-		// On step 2 the server-only expect rule checks color != 'forbidden' -> should fail.
+		// ensure()[1] reads the accumulated cleaned data, which still holds the
+		// step 1 color -> the cross-step rule must fail.
 		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', [], [
 			'X-OZONE-Form-Resume-Ref' => $resumeRef,
 		]);
 		$data = \json_decode($body, true);
 
 		self::assertSame(0, $data['error']);
-		self::assertArrayHasKey('expect', $data['data']);
-		self::assertNotEmpty($data['data']['expect'], 'expect array must contain at least one entry.');
+		self::assertArrayHasKey('ensure', $data['data']);
+		self::assertCount(2, $data['data']['ensure'], 'step 2 declares two ensure rules.');
 		self::assertFalse(
-			$data['data']['expect'][0]['passes'] ?? true,
-			"Expect rule must fail when color='forbidden'."
+			$data['data']['ensure'][1]['passes'] ?? true,
+			"Cross-step ensure rule must fail when color='forbidden'."
 		);
 	}
 
 	public function testEvaluateReturnsServerSideEnsureResult(): void
 	{
-		// Advance to step 2 (notes). The ensure rule checks notes != 'bad-notes'.
+		// Advance to step 2 (notes). The first ensure rule checks notes != 'bad-notes'.
 		[, $body]  = $this->request('POST', '/form/test-wizard/init');
 		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
 
@@ -484,7 +528,7 @@ final class ResumableFormServiceTest extends TestCase
 			$data['data']['fieldsets']['extra_details'] ?? false,
 			"'extra_details' fieldset must be shown when wish='skip-detail' (not 'skip-details')."
 		);
-		// Field inside fieldset: wish='skip-detail' == DynamicValue('skip-detail') -> hidden.
+		// Field inside fieldset: wish='skip-detail' == AsyncValue('skip-detail') -> hidden.
 		self::assertFalse(
 			$data['data']['visibility']['extra_details.conditional_detail'] ?? true,
 			"'extra_details.conditional_detail' must be hidden when wish='skip-detail'."
@@ -627,6 +671,125 @@ final class ResumableFormServiceTest extends TestCase
 		self::assertSame(1, $data['error'], 'requireCompletion on a not-done session should return error=1.');
 	}
 
+	public function testRequireCompletionRejectsSessionOfAnotherProvider(): void
+	{
+		$resumeRef = $this->completeWizard('other-provider');
+
+		// The consumer expects a test-irreversible flow; a completed test-wizard
+		// session must not stand in for it.
+		[, $body] = $this->request('GET', '/test/require-completion-as-irreversible/' . $resumeRef);
+		$data     = \json_decode($body, true);
+
+		self::assertSame(1, $data['error'], 'requireCompletion must reject a session of another provider. Body: ' . $body);
+	}
+
+	// -------------------------------------------------------------------------
+	// Consuming a completed session on a provider route
+	// -------------------------------------------------------------------------
+
+	public function testProviderRouteConsumesCompletedSessionOnce(): void
+	{
+		$resumeRef = $this->completeWizard('route-consume');
+
+		[, $body] = $this->request('POST', '/test/wizard-route', [], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(0, $data['error'], 'The provider route should accept its own completed session. Body: ' . $body);
+		self::assertSame('route-consume', $data['data']['values']['wish'] ?? null);
+
+		// The successful response dropped the session: it cannot be replayed.
+		[, $body] = $this->request('POST', '/test/wizard-route', [], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(1, $data['error'], 'A consumed session must not be accepted twice. Body: ' . $body);
+	}
+
+	public function testProviderRouteRejectsSessionOfAnotherProvider(): void
+	{
+		$resumeRef = $this->completeWizard('route-cross');
+
+		[, $body] = $this->request('POST', '/test/irreversible-route', [], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(1, $data['error'], 'A route must reject a session completed for another provider. Body: ' . $body);
+
+		// The rejected attempt did not consume it: the right route still accepts it.
+		[, $body] = $this->request('POST', '/test/wizard-route', [], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(0, $data['error'], 'The session should still be usable on its own route. Body: ' . $body);
+	}
+
+	// -------------------------------------------------------------------------
+	// Form-level resume cache (Form::resumable()) replayed by RouteInfo
+	// -------------------------------------------------------------------------
+
+	public function testFormResumeReplaysValuesAfterAFailedAttempt(): void
+	{
+		// `second` is missing: the attempt fails but `first` is kept.
+		[, $body] = $this->request('POST', '/test/incremental-a', ['first' => 'one']);
+		self::assertSame(1, \json_decode($body, true)['error'], 'The incomplete attempt should fail. Body: ' . $body);
+
+		// Only the missing field is sent; `first` is replayed.
+		[, $body] = $this->request('POST', '/test/incremental-a', ['second' => 'two']);
+		$data     = \json_decode($body, true);
+
+		self::assertSame(0, $data['error'], 'The replayed attempt should succeed. Body: ' . $body);
+		self::assertSame(['first' => 'one', 'second' => 'two'], $data['data']['values']);
+
+		// The success cleared the entry: `first` is no longer replayed.
+		[, $body] = $this->request('POST', '/test/incremental-a', ['second' => 'two']);
+		self::assertSame(1, \json_decode($body, true)['error'], 'A consumed entry must not be replayed. Body: ' . $body);
+	}
+
+	public function testFormResumeIsScopedToTheRoute(): void
+	{
+		// Both routes use the same form (same id) under the same scope.
+		[, $body] = $this->request('POST', '/test/incremental-a', ['first' => 'from-a']);
+		self::assertSame(1, \json_decode($body, true)['error'], 'Body: ' . $body);
+
+		[, $body] = $this->request('POST', '/test/incremental-b', ['second' => 'x']);
+		self::assertSame(1, \json_decode($body, true)['error'], 'Route B must not replay route A values. Body: ' . $body);
+
+		[, $body] = $this->request('POST', '/test/incremental-a', ['second' => 'y']);
+		$data     = \json_decode($body, true);
+
+		self::assertSame(0, $data['error'], 'Route A should still replay its own values. Body: ' . $body);
+		self::assertSame('from-a', $data['data']['values']['first'] ?? null);
+	}
+
+	public function testFormResumeReplaysUploadedFiles(): void
+	{
+		// Both files validate (the temporary one is moved to TempFS, the other is
+		// persisted), then `note` is missing: the files are saved for the next attempt.
+		[, $body] = $this->requestMultipart('/test/incremental-upload', [], [
+			'doc'   => ['name' => 'doc.txt', 'type' => 'text/plain', 'content' => 'temporary content'],
+			'photo' => ['name' => 'photo.txt', 'type' => 'text/plain', 'content' => 'persisted content'],
+		]);
+		self::assertSame(1, \json_decode($body, true)['error'], 'The attempt without note should fail. Body: ' . $body);
+
+		// Only `note` is sent; both files come back from the cache and are re-checked.
+		[, $body] = $this->request('POST', '/test/incremental-upload', ['note' => 'hi']);
+		$data     = \json_decode($body, true);
+
+		self::assertSame(0, $data['error'], 'The uploaded files should be replayed. Body: ' . $body);
+		self::assertSame([
+			'note'               => 'hi',
+			'doc_is_temp'        => true,
+			'doc_exists'         => true,
+			'photo_is_persisted' => true,
+			'photo_loads'        => true,
+		], $data['data']['values']);
+	}
+
 	// -------------------------------------------------------------------------
 	// Irreversible provider -- POST /back
 	// -------------------------------------------------------------------------
@@ -697,7 +860,7 @@ final class ResumableFormServiceTest extends TestCase
 	}
 
 	// -------------------------------------------------------------------------
-	// dropSession invalidates the ref
+	// drop() invalidates the ref
 	// -------------------------------------------------------------------------
 
 	public function testDropSessionInvalidatesRef(): void
@@ -722,7 +885,7 @@ final class ResumableFormServiceTest extends TestCase
 
 		// Downstream consumer drops the session.
 		[, $dropBody] = $this->request('POST', '/test/drop-session/' . $resumeRef);
-		self::assertSame(0, \json_decode($dropBody, true)['error'], 'dropSession should return error=0.');
+		self::assertSame(0, \json_decode($dropBody, true)['error'], 'drop() should return error=0.');
 
 		// After drop, any access with the old ref must fail.
 		[, $body] = $this->request('GET', '/form/test-wizard/state', [], [
@@ -730,7 +893,7 @@ final class ResumableFormServiceTest extends TestCase
 		]);
 		$data = \json_decode($body, true);
 
-		self::assertSame(1, $data['error'], 'GET /state after dropSession should return error=1.');
+		self::assertSame(1, $data['error'], 'GET /state after drop() should return error=1.');
 	}
 
 	// -------------------------------------------------------------------------
@@ -770,6 +933,26 @@ final class ResumableFormServiceTest extends TestCase
 	// -------------------------------------------------------------------------
 
 	/**
+	 * Runs the whole test-wizard flow through the standalone endpoints and returns
+	 * the resume_ref of the now-DONE session.
+	 */
+	private function completeWizard(string $wish): string
+	{
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		foreach ([['wish' => $wish], ['name' => 'erin'], ['color' => 'blue'], ['notes' => 'n']] as $step) {
+			[, $body] = $this->request('POST', '/form/test-wizard/next', $step, [
+				'X-OZONE-Form-Resume-Ref' => $resumeRef,
+			]);
+		}
+
+		self::assertTrue(\json_decode($body, true)['data']['done'] ?? false, 'test-wizard should be done. Body: ' . $body);
+
+		return $resumeRef;
+	}
+
+	/**
 	 * Makes an HTTP request to the running test server.
 	 *
 	 * @param string               $method  HTTP verb (GET, POST, ...)
@@ -781,12 +964,61 @@ final class ResumableFormServiceTest extends TestCase
 	 */
 	private function request(string $method, string $path, array $fields = [], array $headers = []): array
 	{
-		$url = 'http://' . self::$host . ':' . self::$port . $path;
-
 		$headerStr = "Accept: application/json\r\n";
 		foreach ($headers as $name => $value) {
 			$headerStr .= "{$name}: {$value}\r\n";
 		}
+
+		$content = null;
+
+		if ([] !== $fields) {
+			$content = \http_build_query($fields);
+			$headerStr .= "Content-Type: application/x-www-form-urlencoded\r\n";
+		}
+
+		return $this->send($method, $path, $headerStr, $content);
+	}
+
+	/**
+	 * Makes a multipart/form-data POST, for file uploads.
+	 *
+	 * @param string                                                            $path   request path
+	 * @param array<string, string>                                             $fields plain fields
+	 * @param array<string, array{name: string, type: string, content: string}> $files  files by field name
+	 *
+	 * @return array{0: int, 1: string} [status, body]
+	 */
+	private function requestMultipart(string $path, array $fields, array $files): array
+	{
+		$boundary = 'oz-' . \bin2hex(\random_bytes(8));
+		$content  = '';
+
+		foreach ($fields as $name => $value) {
+			$content .= "--{$boundary}\r\nContent-Disposition: form-data; name=\"{$name}\"\r\n\r\n{$value}\r\n";
+		}
+
+		foreach ($files as $name => $file) {
+			$content .= "--{$boundary}\r\n"
+				. "Content-Disposition: form-data; name=\"{$name}\"; filename=\"{$file['name']}\"\r\n"
+				. "Content-Type: {$file['type']}\r\n\r\n"
+				. $file['content'] . "\r\n";
+		}
+
+		$content .= "--{$boundary}--\r\n";
+
+		$headerStr = "Accept: application/json\r\nContent-Type: multipart/form-data; boundary={$boundary}\r\n";
+
+		return $this->send('POST', $path, $headerStr, $content);
+	}
+
+	/**
+	 * Sends a raw request to the running test server.
+	 *
+	 * @return array{0: int, 1: string} [status, body]
+	 */
+	private function send(string $method, string $path, string $headerStr, ?string $content): array
+	{
+		$url = 'http://' . self::$host . ':' . self::$port . $path;
 
 		$opts = [
 			'method'          => $method,
@@ -796,9 +1028,8 @@ final class ResumableFormServiceTest extends TestCase
 			'header'          => $headerStr,
 		];
 
-		if ([] !== $fields) {
-			$opts['content'] = \http_build_query($fields);
-			$opts['header'] .= "Content-Type: application/x-www-form-urlencoded\r\n";
+		if (null !== $content) {
+			$opts['content'] = $content;
 		}
 
 		$ctx  = \stream_context_create(['http' => $opts]);

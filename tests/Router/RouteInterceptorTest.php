@@ -18,10 +18,10 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormDiscoveryRouteInterceptor;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
-use OZONE\Core\Router\RouteFormDiscoveryInterceptor;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Tests\TestUtils;
@@ -30,27 +30,28 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class RouteInterceptorTest.
  *
- * Tests for {@see RouteInterceptorInterface}, {@see RouteFormDiscoveryInterceptor},
+ * Tests for {@see RouteInterceptorInterface}, {@see FormDiscoveryRouteInterceptor},
  * and the interceptor pipeline in {@see RouteInfo}.
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Forms\FormDiscoveryRouteInterceptor
+ * @covers \OZONE\Core\Router\RouteInfo
  */
 final class RouteInterceptorTest extends TestCase
 {
 	// -----------------------------------------------------------------------
-	// RouteFormDiscoveryInterceptor static contract
+	// FormDiscoveryRouteInterceptor static contract
 	// -----------------------------------------------------------------------
 
 	public function testGetNameReturnsExpectedValue(): void
 	{
-		self::assertSame('route-form-discovery', RouteFormDiscoveryInterceptor::getName());
+		self::assertSame('oz:form:discovery:route:interceptor', FormDiscoveryRouteInterceptor::getName());
 	}
 
 	public function testGetPriorityReturnsZero(): void
 	{
-		self::assertSame(0, RouteFormDiscoveryInterceptor::getPriority());
+		self::assertSame(0, FormDiscoveryRouteInterceptor::getPriority());
 	}
 
 	public function testInstanceReturnsNewInstanceBoundToRouteInfo(): void
@@ -59,9 +60,9 @@ final class RouteInterceptorTest extends TestCase
 		$route  = $router->getRoute('foo');
 		$ri     = new RouteInfo(context(), $route, []);
 
-		$interceptor = RouteFormDiscoveryInterceptor::instance($ri);
+		$interceptor = FormDiscoveryRouteInterceptor::instance($ri);
 
-		self::assertInstanceOf(RouteFormDiscoveryInterceptor::class, $interceptor);
+		self::assertInstanceOf(FormDiscoveryRouteInterceptor::class, $interceptor);
 	}
 
 	// -----------------------------------------------------------------------
@@ -74,7 +75,7 @@ final class RouteInterceptorTest extends TestCase
 		$route  = $router->getRoute('foo');
 		$ri     = new RouteInfo(context(), $route, []);
 
-		$interceptor = RouteFormDiscoveryInterceptor::instance($ri);
+		$interceptor = FormDiscoveryRouteInterceptor::instance($ri);
 		self::assertFalse($interceptor->shouldIntercept());
 	}
 
@@ -85,7 +86,7 @@ final class RouteInterceptorTest extends TestCase
 		$context = $this->makeDiscoveryContext();
 		$ri      = new RouteInfo($context, $route, []);
 
-		$interceptor = RouteFormDiscoveryInterceptor::instance($ri);
+		$interceptor = FormDiscoveryRouteInterceptor::instance($ri);
 		self::assertTrue($interceptor->shouldIntercept());
 	}
 
@@ -111,7 +112,7 @@ final class RouteInterceptorTest extends TestCase
 		$ri      = new RouteInfo($context, $route, []);
 
 		self::assertTrue($ri->isIntercepted());
-		self::assertInstanceOf(RouteFormDiscoveryInterceptor::class, $ri->getInterceptor());
+		self::assertInstanceOf(FormDiscoveryRouteInterceptor::class, $ri->getInterceptor());
 	}
 
 	// -----------------------------------------------------------------------

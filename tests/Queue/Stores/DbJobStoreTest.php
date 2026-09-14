@@ -22,7 +22,7 @@ use OZONE\Core\Queue\Stores\DbJobStore;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Queue\Stores\DbJobStore
  */
 final class DbJobStoreTest extends AbstractJobStoreTest
 {

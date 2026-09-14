@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Columns\Types\TypeCC2
  */
 final class TypeCC2Test extends TestCase
 {

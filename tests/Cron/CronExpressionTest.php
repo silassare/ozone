@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Cli\Cron\CronExpression
  */
 final class CronExpressionTest extends TestCase
 {

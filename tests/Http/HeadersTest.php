@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Http\Headers
  */
 final class HeadersTest extends TestCase
 {

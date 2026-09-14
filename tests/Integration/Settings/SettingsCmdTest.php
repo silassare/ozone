@@ -162,12 +162,12 @@ final class SettingsCmdTest extends TestCase
 		self::$proj->oz('settings', 'set', '-s=myweb', '-g=oz.request', '-k=OZ_DEFAULT_ORIGIN', '-v=http://scoped.example.com')
 			->mustRun();
 
-		// Runtime writes always go to the stateful directory (data/), not the source tree.
+		// Runtime writes always go to the stateful directory (data/), not the source tree, and the
+		// layout there is kind first: data/settings/{scope}.
 		$scope_file = self::$proj->getPath()
 			. \DIRECTORY_SEPARATOR . 'data'
-			. \DIRECTORY_SEPARATOR . 'scopes'
-			. \DIRECTORY_SEPARATOR . 'myweb'
 			. \DIRECTORY_SEPARATOR . 'settings'
+			. \DIRECTORY_SEPARATOR . 'myweb'
 			. \DIRECTORY_SEPARATOR . 'oz.request.php';
 
 		self::assertFileExists($scope_file);
@@ -197,11 +197,12 @@ final class SettingsCmdTest extends TestCase
 
 	private static function settingsPath(string $group): string
 	{
-		// Runtime writes always go to the stateful directory (data/settings/) so that
-		// source-controlled defaults in app/settings/ are never modified by oz commands.
+		// Runtime writes always go to the stateful directory so that source-controlled defaults in
+		// app/settings/ are never modified by oz commands: data/settings/{scope}, root scope here.
 		return self::$proj->getPath()
 			. \DIRECTORY_SEPARATOR . 'data'
 			. \DIRECTORY_SEPARATOR . 'settings'
+			. \DIRECTORY_SEPARATOR . 'root'
 			. \DIRECTORY_SEPARATOR . $group . '.php';
 	}
 }

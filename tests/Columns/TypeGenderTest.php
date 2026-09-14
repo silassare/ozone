@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Columns\Types\TypeGender
  */
 final class TypeGenderTest extends TestCase
 {

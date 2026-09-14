@@ -34,6 +34,17 @@ final class TestRoutesProvider extends BaseService
 			return $s->respond();
 		})->name('test:ping');
 
+		// GET route that uses the session (writes to its store): the session is then kept, and its
+		// cookies sent.
+		$router->get('/test-session', static function (RouteInfo $ri) {
+			$ri->getContext()->requireAuthStore()->set('test_session', true);
+
+			$s = new self($ri);
+			$s->json()->setDone()->setData(['session' => true]);
+
+			return $s->respond();
+		})->name('test:session');
+
 		// POST route with required form field.
 		$router->post('/test-echo', static function (RouteInfo $ri) {
 			$s = new self($ri);

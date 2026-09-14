@@ -28,13 +28,11 @@ use Throwable;
  *    tearDownAfterClass()).
  *
  * Database connection:
- *  - Configured via environment variables read by noop/settings/oz.db.php.
- *  - Defaults to MySQL on 127.0.0.1, database "ozone_test", user "root".
- *  - Set OZ_TEST_DB_RDBMS=sqlite and OZ_TEST_DB_HOST=:memory: to use
- *    an in-memory SQLite database instead (fast, no external server required).
- *
- * @see run_test_integration - the companion script that exports env vars and
- *      creates the MySQL test database before running PHPUnit.
+ *  - The sandbox project of `tests/autoload.php` (SQLite by default, see
+ *    `tests/settings/oz.db.php`), so no server is needed for it.
+ *  - Servers come from the environment: `docker/compose.yaml` exports the
+ *    `OZ_TEST_*`, `OZ_REDIS_*`, `OZ_MINIO_*` and `OZ_CLAMAV_*` variables into
+ *    the PHP container, and `make` is what runs the suites.
  */
 abstract class IntegrationTestCase extends TestCase
 {

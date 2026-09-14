@@ -1,0 +1,26 @@
+# FrankenPHP in worker mode, for tests/Runtime/Servers/ (docker/compose.yaml, service `frankenphp`).
+{
+	# Plain HTTP on one port: the test client talks to the container directly.
+	auto_https off
+	admin off
+
+	frankenphp {
+		worker {
+			file /ozone/tests/Support/Servers/frankenphp/index.php
+			# Two workers, so the tests see requests spread over more than one process.
+			num 2
+		}
+	}
+}
+
+:8080 {
+	# The worker script is the only file here, so every path is served by a worker.
+	root * /ozone/tests/Support/Servers/frankenphp
+	php_server
+}
+
+# The same server in classic mode, for the runtime detection: no worker, the script runs per request.
+:8081 {
+	root * /ozone/tests/Support/Servers/frankenphp-classic
+	php_server
+}

@@ -37,7 +37,7 @@ use RuntimeException;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Sessions\Session
  */
 final class SessionManagementTest extends TestCase
 {
@@ -277,6 +277,86 @@ final class SessionManagementTest extends TestCase
 		self::assertGreaterThan(\time(), (int) $result->getExpireAT());
 	}
 
+	/**
+	 * A new session is saved and given a cookie only when something used it (it used to be one
+	 * session row per anonymous request).
+	 */
+	public function testAnUntouchedNewSessionIsNeitherSavedNorSent(): void
+	{
+		[$session, $context] = $this->makeSessionInContext();
+
+		$session->start();
+		$session->responseReady();
+
+		self::assertSame([], $context->getResponse()->getHeader('Set-Cookie'));
+	}
+
+	public function testASessionWhoseStoreWasWrittenIsKept(): void
+	{
+		[$session, $context] = $this->makeSessionInContext();
+
+		$session->start();
+		$session->store()->set('cart', ['item' => 1]);
+		$session->responseReady();
+
+		self::assertContains(Session::cookieName(), self::cookieNames($context));
+	}
+
+	public function testASessionWhoseIdWasHandedOutIsKept(): void
+	{
+		[$session, $context] = $this->makeSessionInContext();
+
+		$session->start();
+
+		// A CSRF token, a rate-limit key or a form-resume scope bound to it.
+		$session->id();
+		$session->responseReady();
+
+		self::assertContains(Session::cookieName(), self::cookieNames($context));
+	}
+
+	public function testASessionWithAUserIsKept(): void
+	{
+		[$session, $context] = $this->makeSessionInContext();
+
+		$session->start();
+		$session->attachAuthUser($this->mockUser('user', '42'));
+		$session->responseReady();
+
+		self::assertContains(Session::cookieName(), self::cookieNames($context));
+	}
+
+	public function testACookieForNoSessionIsDropped(): void
+	{
+		$stale = Keys::newSessionID();
+
+		[$session, $context] = $this->makeSessionInContext([
+			'HTTP_COOKIE' => Session::cookieName() . '=' . $stale,
+		]);
+
+		// The row is gone (expired, collected): a new session starts, and nothing uses it.
+		$session->start($stale);
+		$session->responseReady();
+
+		$lines = $context->getResponse()->getHeader('Set-Cookie');
+
+		// One line, clearing the cookie, so the client stops sending it.
+		self::assertCount(1, $lines);
+		self::assertStringStartsWith(Session::cookieName() . '=;', $lines[0]);
+		self::assertStringContainsString('Max-Age=0', $lines[0]);
+	}
+
+	public function testReadingTheStoreDoesNotKeepTheSession(): void
+	{
+		[$session, $context] = $this->makeSessionInContext();
+
+		$session->start();
+		$session->store()->get('lang');
+		$session->responseReady();
+
+		self::assertSame([], $context->getResponse()->getHeader('Set-Cookie'));
+	}
+
 	// -----------------------------------------------------------------------
 	// Helpers
 	// -----------------------------------------------------------------------
@@ -295,6 +375,33 @@ final class SessionManagementTest extends TestCase
 			->setLastSeenAT((string) \time())
 			->setExpireAT((string) ($expire_at ?? \time() + Session::lifetime()));
 		$entry->save();
+	}
+
+	/**
+	 * Creates a Session and the context it answers in.
+	 *
+	 * @param array $env the request environment
+	 *
+	 * @return array{0: Session, 1: Context}
+	 */
+	private function makeSessionInContext(array $env = []): array
+	{
+		$context = new Context(HTTPEnvironment::mock($env), null, Context::root());
+
+		return [new Session($context, 'test-source'), $context];
+	}
+
+	/**
+	 * The names of the cookies a context's response sets.
+	 *
+	 * @return list<string>
+	 */
+	private static function cookieNames(Context $context): array
+	{
+		return \array_map(
+			static fn (string $line): string => \urldecode((string) \strstr($line, '=', true)),
+			$context->getResponse()->getHeader('Set-Cookie')
+		);
 	}
 
 	/**

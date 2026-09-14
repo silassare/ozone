@@ -22,7 +22,7 @@ use RuntimeException;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Crypt\DoCrypt
  */
 final class DoCryptTest extends TestCase
 {

@@ -16,27 +16,29 @@ namespace OZONE\Tests\Queue\Stores;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\Stores\RedisJobStore;
+use OZONE\Tests\Support\RequiresRedisTrait;
 
 /**
  * Redis-backed job store contract tests.
  *
- * Skipped automatically when the Redis store is not registered.
- * To enable: set OZ_REDIS_ENABLED=true in your .env and ensure ext-redis is loaded.
+ * Needs ext-redis, a Redis server and `OZ_REDIS_ENABLED=true`; run with `make test-redis`.
  *
  * @internal
  *
- * @coversNothing
+ * @group redis
+ *
+ * @covers \OZONE\Core\Queue\Stores\RedisJobStore
  */
 final class RedisJobStoreTest extends AbstractJobStoreTest
 {
+	use RequiresRedisTrait;
+
 	protected function setUp(): void
 	{
-		$stores = JobsManager::getStores();
+		self::requireRedis();
 
-		if (!isset($stores[RedisJobStore::NAME])) {
-			self::markTestSkipped(
-				'Redis store is not registered. Set OZ_REDIS_ENABLED=true and ensure ext-redis is available.'
-			);
+		if (!isset(JobsManager::getStores()[RedisJobStore::NAME])) {
+			self::redisUnavailable('Redis store is not registered. Set OZ_REDIS_ENABLED=true.');
 		}
 
 		parent::setUp();

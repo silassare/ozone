@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Http\Collection
  */
 final class CollectionTest extends TestCase
 {

@@ -27,7 +27,7 @@ use RuntimeException;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Auth\AuthUsers
  */
 final class AuthUsersUtilsTest extends TestCase
 {

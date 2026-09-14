@@ -220,6 +220,37 @@ final class ScopesAddTest extends TestCase
 		];
 	}
 
+	public function testAddingAnExistingScopeIsRefusedAndSaysWhy(): void
+	{
+		// The guard used to assert `{project}/{scope}`, a path that never exists, so it reported a
+		// missing directory instead of an existing scope.
+		$proc = self::$proj->oz('scopes', 'add', '--name=myapi', '--origin=http://api.example.com', '--api=true');
+		$proc->run();
+
+		$output = (string) \preg_replace('~\s+~', ' ', $proc->getOutput() . $proc->getErrorOutput());
+
+		self::assertNotSame(0, $proc->getExitCode());
+		self::assertStringContainsString('already exists', $output);
+		self::assertStringNotContainsString('no directory found', $output);
+
+		// And it left the existing scope alone.
+		self::assertFileExists(self::path('scopes/myapi/settings/oz.request.php'));
+	}
+
+	public function testAnEmptyDirectoryDoesNotCountAsAnExistingScope(): void
+	{
+		// A pre-created empty folder is fine: that is what the guard's emptiness check is for, and
+		// it never ran before.
+		\mkdir(self::path('scopes/fresh'), 0o775, true);
+		\mkdir(self::path('public/fresh'), 0o775, true);
+
+		self::$proj->oz('scopes', 'add', '--name=fresh', '--origin=http://fresh.example.com', '--api=true')
+			->mustRun();
+
+		self::assertFileExists(self::path('scopes/fresh/settings/oz.request.php'));
+		self::assertFileExists(self::path('public/fresh/index.php'));
+	}
+
 	private static function path(string $relative): string
 	{
 		return self::$proj->getPath() . \DIRECTORY_SEPARATOR . \str_replace('/', \DIRECTORY_SEPARATOR, $relative);

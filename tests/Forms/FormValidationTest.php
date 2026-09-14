@@ -14,9 +14,10 @@ declare(strict_types=1);
 namespace OZONE\Tests\Forms;
 
 use OZONE\Core\Exceptions\InvalidFormException;
-use OZONE\Core\Forms\DynamicValue;
+use OZONE\Core\Forms\AsyncValue;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormDataClean;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,7 +25,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Forms\Form
  */
 final class FormValidationTest extends TestCase
 {
@@ -140,30 +141,40 @@ final class FormValidationTest extends TestCase
 		self::assertFalse($ruleArr['rules'][0]['server_only']);
 	}
 
-	public function testToArrayExcludesServerOnlyExpectEntries(): void
+	public function testToArraySendsServerOnlyExpectAsOpaqueRef(): void
 	{
-		$form = new Form();
-		// DynamicValue -> isServerOnly() = true -> excluded from toArray()
-		$form->expect()->eq('plan', new DynamicValue(static fn (FormData $fd) => 'enterprise'));
+		$form = new Form('checkout');
+		$form->expect()->eq('plan', new AsyncValue(static fn () => 'enterprise'));
 
 		$arr = $form->toArray();
 
 		self::assertArrayHasKey('expect', $arr);
-		// server-only rule sets are excluded entirely
-		self::assertCount(0, $arr['expect']);
+		// The rule is still advertised so the client knows it exists and can ask
+		// the evaluate endpoint about it by ref, but its operands stay server-side.
+		self::assertCount(1, $arr['expect']);
+
+		$rule_arr = $arr['expect'][0]->toArray();
+
+		self::assertSame(['ref' => 'checkout.@expect[0]', '$async' => true], $rule_arr);
 	}
 
-	public function testToArrayExcludesMixedExpectRuleWhenServerOnly(): void
+	public function testToArraySendsMixedExpectRuleAsOpaqueRef(): void
 	{
-		$form = new Form();
+		$form = new Form('checkout');
 		$rule = $form->expect();
 		$rule->eq('plan', 'enterprise');
-		$rule->eq('flag', new DynamicValue(static fn (FormData $fd) => 'ok'));  // makes whole RuleSet server-only
+		$rule->eq('flag', new AsyncValue(static fn () => 'ok'));  // makes the whole RuleSet server-only
 
 		$arr = $form->toArray();
 
-		// The entire RuleSet is excluded because isServerOnly() is true (all-or-nothing)
-		self::assertCount(0, $arr['expect']);
+		self::assertCount(1, $arr['expect']);
+
+		// All-or-nothing: one server-only rule makes the whole set opaque, so the
+		// client gets only the ref and must round-trip to evaluate it.
+		self::assertSame(
+			['ref' => 'checkout.@expect[0]', '$async' => true],
+			$arr['expect'][0]->toArray()
+		);
 	}
 
 	public function testToArrayEmptyExpectWhenNoExpectRules(): void
@@ -224,7 +235,7 @@ final class FormValidationTest extends TestCase
 		$form->field('name')->required(true);
 		$form->field('email')->required(true);
 
-		$prefilled = new FormData();
+		$prefilled = new FormDataClean();
 		$prefilled->set('name', 'Alice');
 		// 'email' is required but missing from both input and prefilled
 
@@ -237,7 +248,7 @@ final class FormValidationTest extends TestCase
 		$form = new Form();
 		$form->field('name')->required(true);
 
-		$prefilled = new FormData();
+		$prefilled = new FormDataClean();
 		$prefilled->set('name', 'Alice');
 
 		$clean = $form->validate(new FormData(['name' => 'Bob']), $prefilled);

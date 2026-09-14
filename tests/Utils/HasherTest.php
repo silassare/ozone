@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Utils\Hasher
  */
 final class HasherTest extends TestCase
 {

@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Queue\Queue
  */
 final class QueueTest extends TestCase
 {

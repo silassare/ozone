@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
-use OZONE\Core\Forms\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\FormData;
-use OZONE\Core\Forms\FormResumeProgress;
+use OZONE\Core\Forms\FormDataClean;
+use OZONE\Core\Forms\Resume\AbstractResumableFormProvider;
+use OZONE\Core\Forms\Resume\FormResumeProgress;
 use OZONE\Core\Http\Enums\RequestScope;
 use PHPUnit\Framework\TestCase;
 
@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Forms\Resume\AbstractResumableFormProvider
  */
 final class ResumableFormProviderTest extends TestCase
 {
@@ -96,7 +96,7 @@ final class SimpleTestProvider extends AbstractResumableFormProvider
 		return 'test:simple';
 	}
 
-	public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
+	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		if (0 === $progress->getStepIndex()) {
 			$form = new Form();
@@ -126,7 +126,7 @@ final class HostScopedTestProvider extends AbstractResumableFormProvider
 		return RequestScope::HOST;
 	}
 
-	public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
+	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		return null;
 	}

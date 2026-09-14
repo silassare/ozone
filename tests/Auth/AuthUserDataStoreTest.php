@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Auth\AuthUserDataStore
  */
 final class AuthUserDataStoreTest extends TestCase
 {

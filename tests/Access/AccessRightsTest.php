@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Access\AccessRights
  */
 final class AccessRightsTest extends TestCase
 {

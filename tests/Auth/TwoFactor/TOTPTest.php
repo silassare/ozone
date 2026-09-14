@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Auth\TwoFactor\TOTP
  */
 final class TOTPTest extends TestCase
 {

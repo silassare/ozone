@@ -15,14 +15,15 @@ namespace OZONE\Tests\Router;
 
 use Override;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Forms\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\FormData;
-use OZONE\Core\Forms\FormResumeProgress;
+use OZONE\Core\Forms\FormDataClean;
+use OZONE\Core\Forms\FormDiscoveryRouteInterceptor;
+use OZONE\Core\Forms\Resume\AbstractResumableFormProvider;
+use OZONE\Core\Forms\Resume\FormResumeProgress;
+use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
-use OZONE\Core\Router\RouteFormDiscoveryInterceptor;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Router\RouteSharedOptions;
@@ -37,7 +38,8 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Router\ResolvedRouteOptions
+ * @covers \OZONE\Core\Router\RouteSharedOptions
  */
 final class RouteSharedOptionsTest extends TestCase
 {
@@ -155,12 +157,12 @@ final class RouteSharedOptionsTest extends TestCase
 	{
 		$router = TestUtils::router();
 		$route  = $router->getRoute('foo');
-		$name   = RouteFormDiscoveryInterceptor::getName();
+		$name   = FormDiscoveryRouteInterceptor::getName();
 
 		$interceptors = $route->getOptions()->getInterceptors();
 
 		self::assertArrayHasKey($name, $interceptors);
-		self::assertSame(RouteFormDiscoveryInterceptor::class, $interceptors[$name]);
+		self::assertSame(FormDiscoveryRouteInterceptor::class, $interceptors[$name]);
 	}
 
 	public function testInterceptorMethodAddsCustomInterceptor(): void
@@ -228,6 +230,70 @@ final class RouteSharedOptionsTest extends TestCase
 		// Same name — only one entry should be present (last write wins in the map).
 		self::assertCount(1, \array_filter($interceptors, static fn ($v) => StubSharedOptionsInterceptor::class === $v));
 	}
+
+	// -----------------------------------------------------------------------
+	// resolved()
+	// -----------------------------------------------------------------------
+
+	public function testResolvedMergesGroupOptionsOutermostFirst(): void
+	{
+		$group_mdl = static fn (RouteInfo $ri) => null;
+		$route_mdl = static fn (RouteInfo $ri) => null;
+
+		$router = new Router();
+		$router->group('/items', static function (Router $router) use ($route_mdl): void {
+			$router->get('/:id/:slug', static fn () => null)
+				->name('get')
+				->param('slug', '[a-z-]+')
+				->withAdminRole()
+				->withCSRF(RequestScope::STATE)
+				->middleware($route_mdl);
+		})
+			->name('items')
+			->param('id', '[0-9]+')
+			->withAuthenticatedUser()
+			->withoutCSRF()
+			->resumable(RequestScope::STATE, 60)
+			->middleware($group_mdl);
+
+		$resolved = $router->getRoute('items.get')->getOptions()->resolved();
+
+		self::assertSame(['id' => '[0-9]+', 'slug' => '[a-z-]+'], $resolved->params);
+		self::assertSame([$group_mdl, $route_mdl], $resolved->middlewares);
+		self::assertSame(
+			['authenticated_user', 'role', 'csrf'],
+			\array_column($resolved->guard_descriptors, 'type')
+		);
+		self::assertSame(RequestScope::STATE, $resolved->csrf_scope);
+		// The route's withCSRF() overrides the group's withoutCSRF().
+		self::assertFalse($resolved->csrf_disabled);
+		self::assertSame([RequestScope::STATE, 60], $resolved->resume_config);
+		self::assertTrue($resolved->hasResumeSupport());
+	}
+
+	public function testResolvedIsCachedUntilAnOptionChanges(): void
+	{
+		$router = new Router();
+		$group  = $router->group('/cached', static function (Router $router): void {
+			$router->get('/child', static fn () => null)->name('child');
+		})->name('cached');
+
+		$options = $router->getRoute('cached.child')->getOptions();
+		$first   = $options->resolved();
+
+		self::assertSame($first, $options->resolved());
+		self::assertSame([], $first->middlewares);
+
+		// A group change made after the route was resolved reaches the route.
+		$mdl = static fn (RouteInfo $ri) => null;
+		$group->middleware($mdl);
+
+		$second = $options->resolved();
+
+		self::assertNotSame($first, $second);
+		self::assertSame([$mdl], $second->middlewares);
+		self::assertSame([$mdl], $options->getMiddlewares());
+	}
 }
 
 /**
@@ -242,7 +308,7 @@ final class StubSharedOptionsProvider extends AbstractResumableFormProvider
 		return 'test:shared-options-stub';
 	}
 
-	public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
+	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		return null;
 	}

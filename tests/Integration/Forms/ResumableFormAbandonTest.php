@@ -73,6 +73,9 @@ final class ResumableFormAbandonTest extends TestCase
 		// Register provider in settings.
 		$proj->setSetting('oz.forms.providers', 'test-abandon', "{$ns}\\TestFormAbandonProvider");
 
+		// Collect garbage after every request, so an expired session is abandoned on the next one.
+		$proj->setSetting('oz.gc', 'OZ_GC_PROBABILITY', 1);
+
 		// Build ORM classes and install the schema.
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
 		$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
@@ -82,7 +85,7 @@ final class ResumableFormAbandonTest extends TestCase
 			[$server,, $port] = $proj->startServer('api', self::$host);
 		} catch (RuntimeException $e) {
 			$proj->destroy();
-			self::markTestSkipped($e->getMessage());
+			self::fail($e->getMessage());
 		}
 
 		self::$proj   = $proj;
@@ -116,20 +119,18 @@ final class ResumableFormAbandonTest extends TestCase
 
 		self::assertSame(0, $data['error'] ?? -1, 'Init failed: ' . $body);
 
-		// 2. Wait long enough for the 1-second TTL to elapse.
-		\sleep(2);
+		// 2. Once the 1-second TTL has elapsed, any request runs the garbage collector after
+		//    its response (every request collects here, see OZ_GC_PROBABILITY). Poll rather
+		//    than sleeping a fixed time. GET / avoids creating a new form session as a side
+		//    effect (a POST to /form/test-abandon/init would create an orphaned session with
+		//    TTL=1s that could be GC'd in a later test, causing a spurious onAbandon call).
+		$deadline = \microtime(true) + 10;
 
-		// 3. Make a request -- the FinishHook fires on the server side after the
-		//    response is sent, which triggers the cache garbage collector.
-		//    Use GET / to avoid creating a new form session as a side effect
-		//    (a POST to /form/test-abandon/init would create an orphaned session
-		//    with TTL=1s that could then be GC'd in a subsequent test, causing
-		//    a spurious onAbandon call and flag-file write).
-		$this->request('GET', '/');
+		do {
+			\usleep(250_000);
+			$this->request('GET', '/');
+		} while (!\is_file(self::$flagFile) && \microtime(true) < $deadline);
 
-		// 4. The flag file is written synchronously inside the server process (same
-		//    PHP request handling the FinishHook), so by the time file_get_contents
-		//    (step 3 above) returns, the flag must already exist.
 		self::assertFileExists(
 			self::$flagFile,
 			'onAbandon() should be called by the GC when the session expires by TTL.'

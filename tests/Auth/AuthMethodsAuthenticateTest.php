@@ -55,7 +55,8 @@ use RuntimeException;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Auth\Methods\ApiKeyHeaderAuth
+ * @covers \OZONE\Core\Auth\Methods\BearerAuth
  */
 final class AuthMethodsAuthenticateTest extends TestCase
 {

@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Lang\Polyglot
  */
 final class PolyglotTest extends TestCase
 {

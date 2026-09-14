@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Utils\DateTimeUtils
  */
 final class DateTimeUtilsTest extends TestCase
 {

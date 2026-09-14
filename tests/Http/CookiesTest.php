@@ -15,6 +15,7 @@ namespace OZONE\Tests\Http;
 
 use OZONE\Core\Http\Cookie;
 use OZONE\Core\Http\Cookies;
+use OZONE\Core\Http\Response;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -22,10 +23,46 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Http\Cookies
  */
 final class CookiesTest extends TestCase
 {
+	public function testApplyToKeepsTheCookiesAHandlerSet(): void
+	{
+		$response = (new Response())
+			->withAddedHeader('Set-Cookie', 'theme=dark; Path=/')
+			->withAddedHeader('Set-Cookie', 'lang=fr; Path=/');
+
+		$jar = (new Cookies())->add(new Cookie('sid', 'abc'));
+
+		$lines = $jar->applyTo($response)->getHeader('Set-Cookie');
+
+		// The session adds its cookie on the way out; a handler's cookies must still be there.
+		self::assertCount(3, $lines);
+		self::assertSame(['theme=dark; Path=/', 'lang=fr; Path=/'], \array_slice($lines, 0, 2));
+		self::assertStringStartsWith('sid=abc', $lines[2]);
+	}
+
+	public function testApplyToReplacesALineForTheSameCookie(): void
+	{
+		$response = (new Response())
+			->withAddedHeader('Set-Cookie', 'sid=old; Path=/')
+			->withAddedHeader('Set-Cookie', 'theme=dark; Path=/');
+
+		$lines = (new Cookies())->add(new Cookie('sid', 'new'))->applyTo($response)->getHeader('Set-Cookie');
+
+		self::assertCount(2, $lines);
+		self::assertSame('theme=dark; Path=/', $lines[0]);
+		self::assertStringStartsWith('sid=new', $lines[1]);
+	}
+
+	public function testApplyToWithoutCookiesLeavesTheResponseAlone(): void
+	{
+		$response = (new Response())->withAddedHeader('Set-Cookie', 'theme=dark; Path=/');
+
+		self::assertSame($response, (new Cookies())->applyTo($response));
+	}
+
 	public function testGetRequestCookiesReturnsInitialCookies(): void
 	{
 		$cookies = new Cookies(['session' => 'abc123', 'lang' => 'fr']);

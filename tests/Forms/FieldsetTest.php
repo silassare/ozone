@@ -19,6 +19,8 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Fieldset;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormDataClean;
+use OZONE\Core\Forms\FormValidationContext;
 use OZONE\Core\Forms\RuleSet;
 use PHPUnit\Framework\TestCase;
 
@@ -27,7 +29,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Forms\Fieldset
  */
 final class FieldsetTest extends TestCase
 {
@@ -43,8 +45,8 @@ final class FieldsetTest extends TestCase
 			$fs->field('city');
 		});
 
-		self::assertArrayHasKey('street', $fieldset->getFields());
-		self::assertArrayHasKey('city', $fieldset->getFields());
+		self::assertArrayHasKey('address.street', $fieldset->getFields());
+		self::assertArrayHasKey('address.city', $fieldset->getFields());
 	}
 
 	public function testStaticFieldsetIsStatic(): void
@@ -137,25 +139,25 @@ final class FieldsetTest extends TestCase
 		$parent   = new Form();
 		$fieldset = Fieldset::static($parent, 'address', static function (Fieldset $fs): void {});
 
-		self::assertTrue($fieldset->isEnabled(new FormData([])));
+		self::assertTrue($fieldset->isEnabled($this->ctx([])));
 	}
 
 	public function testIsEnabledReturnsTrueWhenConditionPasses(): void
 	{
 		$parent   = new Form();
-		$only_if  = (new RuleSet())->eq('type', 'advanced');
-		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {}, $only_if);
+		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {});
+		$fieldset->if()->eq('type', 'advanced');
 
-		self::assertTrue($fieldset->isEnabled(new FormData(['type' => 'advanced'])));
+		self::assertTrue($fieldset->isEnabled($this->ctx(['type' => 'advanced'])));
 	}
 
 	public function testIsEnabledReturnsFalseWhenConditionFails(): void
 	{
 		$parent   = new Form();
-		$only_if  = (new RuleSet())->eq('type', 'advanced');
-		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {}, $only_if);
+		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {});
+		$fieldset->if()->eq('type', 'advanced');
 
-		self::assertFalse($fieldset->isEnabled(new FormData(['type' => 'simple'])));
+		self::assertFalse($fieldset->isEnabled($this->ctx(['type' => 'simple'])));
 	}
 
 	// -----------------------------------------------------------------------
@@ -166,7 +168,7 @@ final class FieldsetTest extends TestCase
 	{
 		$parent   = new Form();
 		$fieldset = Fieldset::static($parent, 'address', static function (Fieldset $fs): void {});
-		$built    = $fieldset->build(new FormData([]));
+		$built    = $fieldset->build($this->ctx([]));
 
 		self::assertSame($fieldset, $built);
 	}
@@ -174,36 +176,40 @@ final class FieldsetTest extends TestCase
 	public function testBuildReturnsNullWhenConditionFails(): void
 	{
 		$parent   = new Form();
-		$only_if  = (new RuleSet())->eq('type', 'advanced');
-		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {}, $only_if);
+		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {});
+		$fieldset->if()->eq('type', 'advanced');
 
-		self::assertNull($fieldset->build(new FormData(['type' => 'simple'])));
+		self::assertNull($fieldset->build($this->ctx(['type' => 'simple'])));
 	}
 
-	public function testBuildCallsDynamicFactoryWithFormData(): void
+	public function testBuildCallsDynamicFactoryWithContext(): void
 	{
-		$parent      = new Form();
-		$received_fd = null;
-		$fieldset    = Fieldset::dynamic($parent, 'dyn', static function (FormData $fd) use ($parent, &$received_fd): Fieldset {
-			$received_fd = $fd;
+		$parent       = new Form();
+		$received_ctx = null;
+		$fieldset     = Fieldset::dynamic(
+			$parent,
+			'dyn',
+			static function (FormValidationContext $ctx) use ($parent, &$received_ctx): Fieldset {
+				$received_ctx = $ctx;
 
-			return Fieldset::static($parent, 'dyn', static function (Fieldset $f): void {});
-		});
+				return Fieldset::static($parent, 'dyn', static function (Fieldset $f): void {});
+			}
+		);
 
-		$fd    = new FormData(['key' => 'val']);
-		$built = $fieldset->build($fd);
+		$ctx   = $this->ctx(['key' => 'val']);
+		$built = $fieldset->build($ctx);
 
 		self::assertNotNull($built);
-		self::assertSame($fd, $received_fd);
+		self::assertSame($ctx, $received_ctx);
 	}
 
 	public function testBuildDynamicFactoryMustReturnFieldsetInstance(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::dynamic($parent, 'bad', static fn (FormData $fd) => new Form());
+		$fieldset = Fieldset::dynamic($parent, 'bad', static fn (FormValidationContext $ctx) => new Form());
 
 		$this->expectException(RuntimeException::class);
-		$fieldset->build(new FormData([]));
+		$fieldset->build($this->ctx([]));
 	}
 
 	// -----------------------------------------------------------------------
@@ -217,11 +223,10 @@ final class FieldsetTest extends TestCase
 			$fs->field('street');
 		});
 
-		$unsafe  = new FormData(['address' => ['street' => 'Main St']]);
-		$cleaned = new FormData();
-		$fieldset->validate($unsafe, $cleaned);
+		$ctx = $this->ctx(['address' => ['street' => 'Main St']]);
+		$fieldset->validate($ctx);
 
-		self::assertSame('Main St', $cleaned->get('address.street'));
+		self::assertSame('Main St', $ctx->getCleanFormData()->get('address.street'));
 	}
 
 	public function testValidateMissingRequiredFieldThrows(): void
@@ -232,7 +237,7 @@ final class FieldsetTest extends TestCase
 		});
 
 		$this->expectException(InvalidFormException::class);
-		$fieldset->validate(new FormData([]), new FormData());
+		$fieldset->validate($this->ctx([]));
 	}
 
 	public function testValidateRunsPostValidationEnsureRules(): void
@@ -244,9 +249,9 @@ final class FieldsetTest extends TestCase
 			$fs->ensure()->eq('pw.password', 'pw.confirm');
 		});
 
-		$unsafe  = new FormData(['pw' => ['password' => 'abc', 'confirm' => 'xyz']]);
+		$ctx = $this->ctx(['pw' => ['password' => 'abc', 'confirm' => 'xyz']]);
 		$this->expectException(InvalidFormException::class);
-		$fieldset->validate($unsafe, new FormData());
+		$fieldset->validate($ctx);
 	}
 
 	// -----------------------------------------------------------------------
@@ -282,9 +287,9 @@ final class FieldsetTest extends TestCase
 	public function testToArrayIncludesCondition(): void
 	{
 		$parent   = new Form();
-		$only_if  = (new RuleSet())->eq('type', 'advanced');
-		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {}, $only_if);
-		$arr      = $fieldset->toArray();
+		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {});
+		$fieldset->if()->eq('type', 'advanced');
+		$arr = $fieldset->toArray();
 
 		self::assertNotNull($arr['if']);
 		self::assertInstanceOf(RuleSet::class, $arr['if']);
@@ -338,20 +343,6 @@ final class FieldsetTest extends TestCase
 	// -----------------------------------------------------------------------
 	// Form validate integration with fieldsets
 	// -----------------------------------------------------------------------
-
-	public function testValidateShallowDoesNotTraverseFieldsets(): void
-	{
-		$form = new Form();
-		$form->field('name')->required(true);
-		$form->fieldset('profile', static function (Fieldset $fs): void {
-			$fs->field('bio')->required(true); // required but not checked in shallow mode
-		});
-
-		$clean = $form->validate(new FormData(['name' => 'Alice']), null, shallow: true);
-
-		self::assertSame('Alice', $clean->get('name'));
-		self::assertFalse($clean->has('profile.bio'));
-	}
 
 	public function testValidateTraversesFieldsets(): void
 	{
@@ -411,9 +402,11 @@ final class FieldsetTest extends TestCase
 	{
 		$form = new Form();
 		$form->field('mode')->required(true);
-		$form->dynamicFieldset('dyn', static function (FormData $fd) use ($form): Fieldset {
-			return Fieldset::static($form, 'dyn', static function (Fieldset $fs) use ($fd): void {
-				if ('verbose' === $fd->get('mode')) {
+		$form->dynamicFieldset('dyn', static function (FormValidationContext $ctx) use ($form): Fieldset {
+			$cleaned = $ctx->getCleanFormData();
+
+			return Fieldset::static($form, 'dyn', static function (Fieldset $fs) use ($cleaned): void {
+				if ('verbose' === $cleaned->get('mode')) {
 					$fs->field('detail')->required(true);
 				}
 			});
@@ -428,9 +421,11 @@ final class FieldsetTest extends TestCase
 	{
 		$form = new Form();
 		$form->field('mode')->required(true);
-		$form->dynamicFieldset('dyn', static function (FormData $fd) use ($form): Fieldset {
-			return Fieldset::static($form, 'dyn', static function (Fieldset $fs) use ($fd): void {
-				if ('verbose' === $fd->get('mode')) {
+		$form->dynamicFieldset('dyn', static function (FormValidationContext $ctx) use ($form): Fieldset {
+			$cleaned = $ctx->getCleanFormData();
+
+			return Fieldset::static($form, 'dyn', static function (Fieldset $fs) use ($cleaned): void {
+				if ('verbose' === $cleaned->get('mode')) {
 					$fs->field('detail')->required(true);
 				}
 			});
@@ -451,5 +446,13 @@ final class FieldsetTest extends TestCase
 		$after = $form->getVersion();
 
 		self::assertNotSame($before, $after);
+	}
+
+	/**
+	 * Builds a validation context seeded with $data on both sides.
+	 */
+	private function ctx(array $data): FormValidationContext
+	{
+		return new FormValidationContext(new FormData($data), new FormDataClean($data));
 	}
 }

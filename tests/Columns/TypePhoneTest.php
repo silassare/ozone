@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Columns\Types\TypePhone
  */
 final class TypePhoneTest extends TestCase
 {

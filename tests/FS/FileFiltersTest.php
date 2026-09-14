@@ -30,7 +30,7 @@ use ReflectionObject;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\FS\Filters\FileFilters
  */
 final class FileFiltersTest extends TestCase
 {
@@ -38,6 +38,14 @@ final class FileFiltersTest extends TestCase
 	 * Reset static state in FileFilters between tests so registered spy
 	 * handlers from one test do not bleed into the next.
 	 */
+	protected function setUp(): void
+	{
+		parent::setUp();
+
+		// Renditions are files that outlive a test: each test starts without any.
+		self::clearRenditions();
+	}
+
 	protected function tearDown(): void
 	{
 		$rc = new ReflectionClass(FileFilters::class);
@@ -247,6 +255,50 @@ final class FileFiltersTest extends TestCase
 		self::assertSame((string) \strlen($body), $result->getHeaderLine('Content-Length'));
 	}
 
+	public function testARenditionIsAFileServedOnTheNextRequest(): void
+	{
+		$file    = self::makeFile('image/png', '77');
+		$handler = new ImageFileFilterHandler();
+		$first   = (string) $handler->handle($file, self::makeStream(self::makePng(80, 40)), new Response(), ['w20'])
+			->getBody();
+
+		// A file in the cache directory, never a store entry (the image would travel through the
+		// database or Redis and sit in memory whole).
+		$files = self::renditions();
+
+		self::assertCount(1, $files);
+		self::assertSame($first, \file_get_contents($files[0]));
+
+		// The next request is served from that file: the source is not read again.
+		$again = (string) $handler->handle($file, self::makeStream('not read'), new Response(), ['w20'])
+			->getBody();
+
+		self::assertSame($first, $again);
+	}
+
+	public function testOldRenditionsAreCollected(): void
+	{
+		$handler = new ImageFileFilterHandler();
+
+		$handler->handle(
+			self::makeFile('image/png', '78'),
+			self::makeStream(self::makePng(30, 30)),
+			new Response(),
+			['w10']
+		);
+
+		$files = self::renditions();
+
+		self::assertCount(1, $files);
+
+		// Older than OZ_IMAGE_FILTERS_CACHE_TTL: the garbage collector removes it.
+		\touch($files[0], \time() - 30 * 86400);
+
+		(new ReflectionClass(ImageFileFilterHandler::class))->getMethod('gc')->invoke(null);
+
+		self::assertSame([], self::renditions());
+	}
+
 	public function testRegisterAndApplyUsesFirstMatchingHandler(): void
 	{
 		// Reset static state between tests by using a fresh anonymous handler
@@ -319,6 +371,28 @@ final class FileFiltersTest extends TestCase
 	 *
 	 * @return OZFile
 	 */
+	/**
+	 * The rendition files in the cache directory.
+	 *
+	 * @return list<string>
+	 */
+	private static function renditions(): array
+	{
+		$root = app()->getCacheDir()->cd('fs/image-filters', true)->getRoot();
+
+		return \array_values(\array_filter(
+			\glob(\rtrim($root, '/') . '/*/*') ?: [],
+			static fn (string $path): bool => \is_file($path)
+		));
+	}
+
+	private static function clearRenditions(): void
+	{
+		foreach (self::renditions() as $path) {
+			\unlink($path);
+		}
+	}
+
 	private static function makeFile(string $mime, string $id = '1'): OZFile
 	{
 		$f = new OZFile();

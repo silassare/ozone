@@ -14,10 +14,13 @@ declare(strict_types=1);
 namespace OZONE\Tests\Forms;
 
 use LogicException;
-use OZONE\Core\Cache\CacheRegistry;
+use OZONE\Core\Exceptions\InvalidFormException;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Http\Enums\RequestScope;
+use OZONE\Core\Stores\StateRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,7 +31,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Forms\Form
  */
 final class FormTest extends TestCase
 {
@@ -36,7 +39,7 @@ final class FormTest extends TestCase
 	{
 		// Clear the form resume cache before each test so cache round-trip tests
 		// do not interfere with each other.
-		CacheRegistry::store(Form::FORM_DATA_RESUME_CACHE_NAMESPACE)->clear();
+		StateRegistry::store(Form::FORM_DATA_RESUME_CACHE_NAMESPACE)->clear();
 	}
 
 	// -----------------------------------------------------------------------
@@ -298,7 +301,7 @@ final class FormTest extends TestCase
 		self::assertNotNull($target->getField('email'));
 	}
 
-	public function testMergeSourceFieldOverridesTargetFieldWithSameName(): void
+	public function testMergeRejectsCollidingFieldRef(): void
 	{
 		$target = new Form();
 		$target->field('name')->required(false);
@@ -306,10 +309,38 @@ final class FormTest extends TestCase
 		$source = new Form();
 		$source->field('name')->required(true);
 
+		// Both forms are unnamed, so both fields carry the ref "name".
+		// Silently overwriting one with the other would drop a constraint, so merge refuses.
+		$this->expectException(RuntimeException::class);
+		$target->merge($source);
+	}
+
+	public function testMergeKeepsSameLocalNameWhenFormsAreNamed(): void
+	{
+		$target = new Form('a');
+		$target->field('name')->required(false);
+
+		$source = new Form('b');
+		$source->field('name')->required(true);
+
 		$target->merge($source);
 
-		// Source field overrides (array_merge string key — last wins).
-		self::assertTrue($target->getField('name')->isRequired());
+		self::assertFalse($target->getField('a.name')->isRequired());
+		self::assertTrue($target->getField('b.name')->isRequired());
+	}
+
+	public function testMergeClonesFieldsSoSourceIsNotMutated(): void
+	{
+		$source = new Form('src');
+		$source->field('name')->required(true);
+
+		$bundle = new Form();
+		$bundle->merge($source);
+
+		$bundle->getField('src.name')->required(false);
+
+		// A long-lived source form must not be mutated through a merged bundle.
+		self::assertTrue($source->getField('name')->isRequired());
 	}
 
 	// -----------------------------------------------------------------------
@@ -413,38 +444,55 @@ final class FormTest extends TestCase
 
 	public function testResumeRoundTrip(): void
 	{
-		$form = (new Form())->resumable(RequestScope::HOST);
+		$form = (new Form('signup'))->resumable(RequestScope::HOST);
 		$form->field('email')->required(true);
 
-		$form->saveForLater(context(), $this->makeFormData(['email' => 'test@example.com']));
+		$form->saveForLater(context(), $this->makeFormData(['signup' => ['email' => 'test@example.com']]));
 
 		[$prefilled] = $form->resume(context());
 
 		self::assertNotNull($prefilled);
-		self::assertSame('test@example.com', $prefilled->get('email'));
+		self::assertSame('test@example.com', $prefilled->get('signup.email'));
 	}
 
-	public function testResumeDiscardsDataWhenFormVersionChanges(): void
+	public function testResumeSurvivesAddingAField(): void
 	{
-		$form = (new Form())->resumable(RequestScope::HOST);
+		$form = (new Form('signup'))->resumable(RequestScope::HOST);
 		$form->field('email')->required(true);
 
-		$form->saveForLater(context(), $this->makeFormData(['email' => 'test@example.com']));
+		$form->saveForLater(context(), $this->makeFormData(['signup' => ['email' => 'test@example.com']]));
 
-		// Adding a field changes the form version -> new cache key -> miss.
-		$form->field('name')->required(true);
+		// Adding a field no longer orphans in-flight resume data.
+		$form->field('name');
 
 		[$prefilled] = $form->resume(context());
 
-		self::assertNull($prefilled);
+		self::assertNotNull($prefilled);
+		self::assertSame('test@example.com', $prefilled->get('signup.email'));
+	}
+
+	public function testResumeDropsValuesWhoseFieldNoLongerExists(): void
+	{
+		$before = (new Form('signup'))->resumable(RequestScope::HOST);
+		$before->field('email')->required(true);
+		$before->saveForLater(context(), $this->makeFormData(['signup' => ['email' => 'test@example.com']]));
+
+		// 'email' is gone from the definition, so its cached value must not be replayed.
+		$after = (new Form('signup'))->resumable(RequestScope::HOST);
+		$after->field('name');
+
+		[$prefilled] = $after->resume(context());
+
+		self::assertNotNull($prefilled);
+		self::assertFalse($prefilled->has('signup.email'));
 	}
 
 	public function testDropCallableClearsCachedData(): void
 	{
-		$form = (new Form())->resumable(RequestScope::HOST);
+		$form = (new Form('drop'))->resumable(RequestScope::HOST);
 		$form->field('email')->required(true);
 
-		$form->saveForLater(context(), $this->makeFormData(['email' => 'x@x.com']));
+		$form->saveForLater(context(), $this->makeFormData(['drop' => ['email' => 'x@x.com']]));
 
 		[$prefilled, $drop] = $form->resume(context());
 		self::assertNotNull($prefilled); // data is there
@@ -463,13 +511,61 @@ final class FormTest extends TestCase
 		self::assertSame(900, $form->getResumeTTL());
 	}
 
+	public function testBuildResumeCacheKeyDiffersPerPartition(): void
+	{
+		$form = (new Form())->setId('step-1');
+
+		$none = $form->buildResumeCacheKey('scope-x');
+		$a    = $form->buildResumeCacheKey('scope-x', 'route-a');
+		$b    = $form->buildResumeCacheKey('scope-x', 'route-b');
+
+		self::assertNotSame($none, $a);
+		self::assertNotSame($a, $b);
+		self::assertSame($a, $form->buildResumeCacheKey('scope-x', 'route-a'));
+		self::assertStringStartsWith('step-1_', $a);
+	}
+
+	public function testResumeIsIsolatedPerPartition(): void
+	{
+		$form = (new Form('part'))->resumable(RequestScope::HOST);
+		$form->field('email')->required(true);
+
+		$form->saveForLater(context(), $this->makeFormData(['part' => ['email' => 'a@b.com']]), 'route-a');
+
+		[$other] = $form->resume(context(), 'route-b');
+		[$none]  = $form->resume(context());
+		[$same]  = $form->resume(context(), 'route-a');
+
+		self::assertNull($other);
+		self::assertNull($none);
+		self::assertNotNull($same);
+		self::assertSame('a@b.com', $same->get('part.email'));
+	}
+
+	public function testReplayedValueThatNoLongerValidatesIsDropped(): void
+	{
+		$form = new Form();
+		$form->int('age', true);
+
+		$cleaned = new FormDataClean(['age' => 'not a number']);
+
+		try {
+			$form->validate(new FormData([]), $cleaned);
+			self::fail('The stale replayed value should be rejected.');
+		} catch (InvalidFormException) {
+		}
+
+		// Dropped, so saving progress after the failure cannot store it back.
+		self::assertFalse($cleaned->has('age'));
+	}
+
 	// -----------------------------------------------------------------------
 	// helper
 	// -----------------------------------------------------------------------
 
-	private function makeFormData(array $data): FormData
+	private function makeFormData(array $data): FormDataClean
 	{
-		$fd = new FormData();
+		$fd = new FormDataClean();
 
 		foreach ($data as $key => $value) {
 			$fd->set($key, $value);

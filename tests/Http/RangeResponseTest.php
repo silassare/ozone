@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Http\RangeResponse
  */
 final class RangeResponseTest extends TestCase
 {

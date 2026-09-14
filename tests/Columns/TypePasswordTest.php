@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Columns\Types\TypePassword
  */
 final class TypePasswordTest extends TestCase
 {
@@ -83,6 +83,16 @@ final class TypePasswordTest extends TestCase
 	{
 		$this->expectException(TypesInvalidValueException::class);
 		(new TypePassword())->max(8)->validate('toolongpassword');
+	}
+
+	public function testRejectionDataNeverContainsThePassword(): void
+	{
+		try {
+			(new TypePassword())->validate('zq9');
+			self::fail('A too short password should be rejected.');
+		} catch (TypesInvalidValueException $e) {
+			self::assertStringNotContainsString('zq9', (string) \json_encode($e->getData(true)));
+		}
 	}
 
 	public function testRejectsTooShortPassword(): void

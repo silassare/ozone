@@ -37,7 +37,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Auth\Providers\AuthorizationProvider
  */
 final class AuthorizationProviderTest extends TestCase
 {

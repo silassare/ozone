@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace __PLH_NAMESPACE__;
 
 use Override;
-use OZONE\Core\Forms\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\FormData;
-use OZONE\Core\Forms\FormResumeProgress;
+use OZONE\Core\Forms\FormDataClean;
+use OZONE\Core\Forms\Resume\AbstractResumableFormProvider;
+use OZONE\Core\Forms\Resume\FormResumeProgress;
 
 /**
  * Minimal resumable form provider that requires real context.
@@ -39,7 +39,7 @@ final class TestFormRealContextProvider extends AbstractResumableFormProvider
 	// requiresRealContext() intentionally not overridden: inherits true.
 
 	#[Override]
-	public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
+	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		return null;
 	}

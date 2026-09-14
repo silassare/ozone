@@ -15,10 +15,10 @@ namespace __PLH_NAMESPACE__;
 
 use DateTimeImmutable;
 use Override;
-use OZONE\Core\Forms\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Form;
-use OZONE\Core\Forms\FormData;
-use OZONE\Core\Forms\FormResumeProgress;
+use OZONE\Core\Forms\FormDataClean;
+use OZONE\Core\Forms\Resume\AbstractResumableFormProvider;
+use OZONE\Core\Forms\Resume\FormResumeProgress;
 use OZONE\Core\Http\Enums\RequestScope;
 
 /**
@@ -104,7 +104,7 @@ final class TestFormIrreversibleProvider extends AbstractResumableFormProvider
 	}
 
 	#[Override]
-	public function nextStep(FormData $cleaned_form, FormResumeProgress $progress): ?Form
+	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		if ($progress->getStepIndex() > 0) {
 			// Single-step provider: done after the first step.

@@ -23,7 +23,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Auth\AuthorizationScope
  */
 final class AuthorizationScopeTest extends TestCase
 {

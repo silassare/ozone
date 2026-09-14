@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\CRUD\AllowCheckResult
  */
 final class AllowCheckResultTest extends TestCase
 {

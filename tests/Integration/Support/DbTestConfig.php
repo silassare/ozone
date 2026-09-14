@@ -13,12 +13,15 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Support;
 
+use RuntimeException;
+
 /**
  * Holds test DB configuration for one RDBMS driver.
  *
- * Out of the box (no env vars), only SQLite is available.
- * To enable MySQL or PostgreSQL, set the driver-specific env vars
- * documented in {@see allConfigured()}.
+ * SQLite needs nothing. MySQL and PostgreSQL are configured through the driver-specific env vars
+ * documented in {@see allConfigured()}, which `docker/compose.yaml` exports into the PHP container:
+ * a driver with no server is a broken environment, and {@see allConfigured()} refuses to provide any
+ * data set rather than quietly covering SQLite alone (see {@see allowsPartialRun()}).
  */
 final class DbTestConfig
 {
@@ -102,7 +105,7 @@ final class DbTestConfig
 			return null;
 		}
 
-		return new static(
+		return new self(
 			'mysql',
 			$envs['OZ_TEST_MYSQL_HOST'],
 			(int) ($envs['OZ_TEST_MYSQL_PORT'] ?? 3306),
@@ -125,7 +128,7 @@ final class DbTestConfig
 			return null;
 		}
 
-		return new static(
+		return new self(
 			'postgresql',
 			$envs['OZ_TEST_POSTGRESQL_HOST'],
 			(int) ($envs['OZ_TEST_POSTGRESQL_PORT'] ?? 5432),
@@ -136,8 +139,75 @@ final class DbTestConfig
 	}
 
 	/**
+	 * Fails when a supported RDBMS has no server configured.
+	 *
+	 * Every test class reaching for a data set goes through here, so an incomplete environment stops
+	 * the suite instead of silently reducing its coverage to SQLite.
+	 *
+	 * @throws RuntimeException
+	 */
+	public static function assertEveryDriverConfigured(): void
+	{
+		$missing = self::missingDrivers();
+
+		if (empty($missing) || self::allowsPartialRun()) {
+			return;
+		}
+
+		throw new RuntimeException(\sprintf(
+			'The integration suite covers SQLite, MySQL and PostgreSQL, but no server is configured'
+			. ' for %s. Run `make test-integration`: docker/compose.yaml starts them and exports their'
+			. ' OZ_TEST_* variables into the PHP container. Without Docker, export them yourself (%s),'
+			. ' or set OZ_TEST_ALLOW_PARTIAL=1 to run on the configured drivers only -- knowing the'
+			. ' others are then not covered at all.',
+			\implode(' and ', $missing),
+			\implode(', ', \array_map(
+				static fn (string $driver): string => 'OZ_TEST_' . \strtoupper($driver) . '_HOST',
+				$missing
+			))
+		));
+	}
+
+	/**
+	 * The server-backed drivers that are not configured.
+	 *
+	 * @return list<string>
+	 */
+	public static function missingDrivers(): array
+	{
+		$missing = [];
+
+		if (null === self::mysql()) {
+			$missing[] = 'mysql';
+		}
+
+		if (null === self::postgresql()) {
+			$missing[] = 'postgresql';
+		}
+
+		return $missing;
+	}
+
+	/**
+	 * Whether the suite may run on the configured drivers only.
+	 *
+	 * Set `OZ_TEST_ALLOW_PARTIAL=1` for it, knowing the others are then not covered at all.
+	 *
+	 * @return bool
+	 */
+	public static function allowsPartialRun(): bool
+	{
+		$value = \getenv('OZ_TEST_ALLOW_PARTIAL');
+
+		return false !== $value && '' !== $value && '0' !== $value;
+	}
+
+	/**
 	 * Returns all DB configurations that are currently available, keyed by
 	 * driver name so PHPUnit @dataProvider output is readable.
+	 *
+	 * Every configured driver is returned; the suite refuses to start when one is missing, unless
+	 * {@see self::allowsPartialRun()}.
 	 *
 	 * A `$tag` string is appended to the SQLite filename so test classes that
 	 * run concurrently (or sequentially with stale files) do not share the same
@@ -160,6 +230,8 @@ final class DbTestConfig
 	 */
 	public static function allConfigured(string $tag = ''): array
 	{
+		self::assertEveryDriverConfigured();
+
 		$suffix  = '' !== $tag ? "_{$tag}" : '';
 		$configs = [
 			'sqlite' => [self::sqlite(\sys_get_temp_dir() . '/oz_test_' . \getmypid() . $suffix . '.db')],

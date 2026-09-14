@@ -24,7 +24,7 @@ use Throwable;
 /**
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Queue\Job
  */
 final class JobTest extends IntegrationTestCase
 {

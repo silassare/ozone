@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Services\QRCode\BuiltinQRCodeEncoderDecoder
  */
 final class QRCodeEncoderDecoderTest extends TestCase
 {

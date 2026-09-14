@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Router\Router
  */
 final class RouterTest extends TestCase
 {

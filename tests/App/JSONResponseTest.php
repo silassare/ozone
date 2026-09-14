@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\App\JSONResponse
  */
 final class JSONResponseTest extends TestCase
 {

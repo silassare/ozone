@@ -28,7 +28,7 @@ use ReflectionClass;
 /**
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Auth\TwoFactor\TwoFactorChannelRegistry
  */
 final class TwoFactorChannelRegistryTest extends TestCase
 {

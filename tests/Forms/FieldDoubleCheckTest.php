@@ -28,7 +28,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Forms\Field
  */
 final class FieldDoubleCheckTest extends TestCase
 {

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Http;
 
 use OZONE\Tests\Integration\Support\OZTestProject;
+use PDO;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -71,7 +72,7 @@ final class HttpRoutingTest extends TestCase
 			[$server, $host, $port] = $proj->startServer('api', self::$host);
 		} catch (RuntimeException $e) {
 			$proj->destroy();
-			self::markTestSkipped($e->getMessage());
+			self::fail($e->getMessage());
 		}
 
 		self::$proj   = $proj;
@@ -170,6 +171,39 @@ final class HttpRoutingTest extends TestCase
 		self::assertSame(0, $data['error']);
 	}
 
+	public function testSessionPostNeedsTheCsrfTokenHandedInTheCookie(): void
+	{
+		// An anonymous request that uses no session gets none: no row, no cookie.
+		[, , $headers] = $this->request('GET', '/test-ping');
+
+		self::assertSame([], self::cookies($headers));
+
+		// A request that uses the session starts one: the session cookie comes with the session's
+		// CSRF token, in a cookie scripts can read.
+		[, , $headers] = $this->request('GET', '/test-session');
+		$cookies       = self::cookies($headers);
+
+		self::assertArrayHasKey('OZONE_SID', $cookies);
+		self::assertArrayHasKey('XSRF-TOKEN', $cookies);
+
+		$session = 'Cookie: OZONE_SID=' . $cookies['OZONE_SID'];
+
+		// An unsafe request riding the session cookie without the token is rejected.
+		[$status, $body] = $this->request('POST', '/logout', [], [$session]);
+		$data            = \json_decode($body, true);
+
+		self::assertSame(403, $status, $body);
+		self::assertSame(1, $data['error'] ?? null);
+
+		// Sending the token back, as axios or Angular would, passes.
+		[$status, $body] = $this->request('POST', '/logout', [], [
+			$session,
+			'X-XSRF-TOKEN: ' . $cookies['XSRF-TOKEN'],
+		]);
+
+		self::assertSame(200, $status, $body);
+	}
+
 	public function testLoginWithMissingFieldsFailsValidation(): void
 	{
 		// POST /login with no body: form validation fails before any DB lookup.
@@ -193,6 +227,51 @@ final class HttpRoutingTest extends TestCase
 
 		self::assertIsArray($data);
 		self::assertSame(1, $data['error'], 'Login with non-existent user should fail.');
+		self::assertSame('OZ_AUTH_INVALID_CREDENTIALS', $data['msg'] ?? null, $body);
+	}
+
+	public function testLoginWithRightCredentialsOpensAnAuthenticatedSession(): void
+	{
+		self::seedCountry('BJ');
+
+		self::$proj->oz(
+			'users',
+			'add',
+			'--user_civility=Mrs',
+			'--user_display_name=Jane Doe',
+			'--user_first_name=Jane',
+			'--user_last_name=Doe',
+			'--user_email=jane.doe@example.com',
+			'--user_gender=Female',
+			'--user_birth_date=1990-05-17',
+			'--user_pass=Jane_Pass_42',
+			'--user_cc2=BJ',
+		)->mustRun();
+
+		[$status, $body, $headers] = $this->request('POST', '/login', [
+			'auth_user_type'             => 'user',
+			'auth_user_identifier_type'  => 'email',
+			'auth_user_identifier_value' => 'jane.doe@example.com',
+			'auth_user_password'         => 'Jane_Pass_42',
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(200, $status, $body);
+		self::assertSame(0, $data['error'] ?? null, $body);
+		self::assertSame('OZ_USER_SIGN_IN_DONE', $data['msg'] ?? null, $body);
+
+		$cookies = self::cookies($headers);
+
+		self::assertArrayHasKey('OZONE_SID', $cookies);
+
+		// The session opened by the login reaches a route that requires a user.
+		[$status, $body] = $this->request('GET', '/test-protected', [], [
+			'Cookie: OZONE_SID=' . $cookies['OZONE_SID'],
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(200, $status, $body);
+		self::assertSame('ok', $data['data']['secret'] ?? null, $body);
 	}
 
 	// -------------------------------------------------------------------------
@@ -202,13 +281,14 @@ final class HttpRoutingTest extends TestCase
 	/**
 	 * Makes an HTTP request to the running test server.
 	 *
-	 * @param string               $method HTTP verb (GET, POST, ...)
-	 * @param string               $path   URL path (e.g. '/test-ping')
-	 * @param array<string,string> $fields form fields for POST requests
+	 * @param string               $method  HTTP verb (GET, POST, ...)
+	 * @param string               $path    URL path (e.g. '/test-ping')
+	 * @param array<string,string> $fields  form fields for POST requests
+	 * @param list<string>         $headers extra request headers ("Name: value")
 	 *
-	 * @return array{0: int, 1: string} [status_code, body]
+	 * @return array{0: int, 1: string, 2: list<string>} [status_code, body, response_headers]
 	 */
-	private function request(string $method, string $path, array $fields = []): array
+	private function request(string $method, string $path, array $fields = [], array $headers = []): array
 	{
 		$url = 'http://' . self::$host . ':' . self::$port . $path;
 
@@ -217,7 +297,8 @@ final class HttpRoutingTest extends TestCase
 			'timeout'         => 10,
 			'ignore_errors'   => true,
 			'follow_location' => false,
-			'header'          => "Accept: application/json\r\n",
+			'header'          => "Accept: application/json\r\n"
+				. \implode('', \array_map(static fn (string $h): string => $h . "\r\n", $headers)),
 		];
 
 		if ([] !== $fields) {
@@ -229,7 +310,7 @@ final class HttpRoutingTest extends TestCase
 		$body = @\file_get_contents($url, false, $ctx);
 
 		if (false === $body) {
-			return [0, ''];
+			return [0, '', []];
 		}
 
 		// Extract HTTP status code from $http_response_header.
@@ -241,6 +322,54 @@ final class HttpRoutingTest extends TestCase
 			$status = (int) $m[1];
 		}
 
-		return [$status, $body];
+		return [$status, $body, $http_response_header ?? []];
+	}
+
+	/**
+	 * The cookies set by a response.
+	 *
+	 * @param list<string> $headers
+	 *
+	 * @return array<string, string> cookie name => decoded value
+	 */
+	private static function cookies(array $headers): array
+	{
+		$cookies = [];
+
+		foreach ($headers as $header) {
+			if (\preg_match('~^Set-Cookie:\s*([^=;]+)=([^;]*)~i', $header, $m)) {
+				$cookies[\urldecode($m[1])] = \urldecode($m[2]);
+			}
+		}
+
+		return $cookies;
+	}
+
+	/**
+	 * Adds an allowed country: a user needs one (`user_cc2`) and no command creates countries.
+	 */
+	private static function seedCountry(string $cc2): void
+	{
+		$pdo = new PDO(
+			'sqlite:' . self::$proj->getPath() . '/http_routing_test.sqlite',
+			null,
+			null,
+			[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+		);
+
+		// Generated projects use a random table prefix.
+		$table = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%oz_countries'")
+			->fetchColumn();
+
+		self::assertIsString($table);
+
+		$now = (string) \time();
+
+		$pdo->prepare(\sprintf(
+			'INSERT INTO "%s" (country_cc2, country_calling_code, country_name, country_name_real, country_data,'
+				. ' country_is_valid, country_created_at, country_updated_at, country_deleted, country_deleted_at)'
+				. ' VALUES (?, ?, ?, ?, ?, 1, ?, ?, 0, NULL)',
+			$table
+		))->execute([$cc2, '+229', 'Benin', 'Benin', '{}', $now, $now]);
 	}
 }

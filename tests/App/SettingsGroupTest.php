@@ -30,7 +30,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\App\SettingsGroup
  */
 final class SettingsGroupTest extends TestCase
 {

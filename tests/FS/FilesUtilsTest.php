@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\FS\FS
  */
 final class FilesUtilsTest extends TestCase
 {
@@ -126,5 +126,58 @@ final class FilesUtilsTest extends TestCase
 
 		self::assertSame($expected_data_sizes, $results_data_sizes);
 		self::assertSame($expected_file_sizes, $results_file_sizes);
+	}
+
+	public function testWriteAtomicReplacesTheContentAndLeavesNoTemporaryFile(): void
+	{
+		$dir = \sys_get_temp_dir() . \DIRECTORY_SEPARATOR . 'oz_atomic_' . \bin2hex(\random_bytes(6));
+
+		\mkdir($dir, 0o775, true);
+
+		$fm   = FS::from($dir);
+		$name = 'entry.cache';
+
+		try {
+			$fm->writeAtomic($name, 'first');
+
+			self::assertSame('first', \file_get_contents($fm->resolve($name)));
+
+			$fm->writeAtomic($name, 'second');
+
+			self::assertSame('second', \file_get_contents($fm->resolve($name)));
+
+			// The temporary file lives in the same directory, so it must be gone afterwards: a
+			// leftover would be mistaken for a cache entry.
+			$left = \array_values(\array_diff(\scandir($dir) ?: [], ['.', '..']));
+
+			self::assertSame([$name], $left);
+		} finally {
+			@\unlink($fm->resolve($name));
+			@\rmdir($dir);
+		}
+	}
+
+	public function testWriteAtomicNeverLeavesAReaderWithPartialContent(): void
+	{
+		$dir = \sys_get_temp_dir() . \DIRECTORY_SEPARATOR . 'oz_atomic_' . \bin2hex(\random_bytes(6));
+
+		\mkdir($dir, 0o775, true);
+
+		$fm   = FS::from($dir);
+		$name = 'entry.cache';
+		$big  = \str_repeat('a', 512 * 1024);
+
+		try {
+			$fm->writeAtomic($name, $big);
+
+			// Rewriting with different content of a different length: whatever a reader sees, it is
+			// one of the two whole values, never a mixture. `wf()` cannot promise that.
+			$fm->writeAtomic($name, 'tiny');
+
+			self::assertSame('tiny', \file_get_contents($fm->resolve($name)));
+		} finally {
+			@\unlink($fm->resolve($name));
+			@\rmdir($dir);
+		}
 	}
 }

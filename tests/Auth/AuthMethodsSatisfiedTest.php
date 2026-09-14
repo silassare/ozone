@@ -36,7 +36,8 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Auth\Methods\ApiKeyHeaderAuth
+ * @covers \OZONE\Core\Auth\Methods\BearerAuth
  */
 final class AuthMethodsSatisfiedTest extends TestCase
 {

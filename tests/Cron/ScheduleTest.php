@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Cli\Cron\Schedule
  */
 final class ScheduleTest extends TestCase
 {

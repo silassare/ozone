@@ -26,7 +26,9 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Auth\TwoFactor\Channels\EmailOtpChannel
+ * @covers \OZONE\Core\Auth\TwoFactor\Channels\SmsOtpChannel
+ * @covers \OZONE\Core\Auth\TwoFactor\Channels\TotpChannel
  */
 final class ChannelAvailabilityTest extends TestCase
 {

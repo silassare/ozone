@@ -78,7 +78,7 @@ final class ProjectServeTest extends TestCase
 
 		if (!\is_file($server_json)) {
 			self::$server->stop(0);
-			self::markTestSkipped('oz project serve did not write server.json within 10 seconds.');
+			self::fail('oz project serve did not write server.json within 10 seconds.');
 		}
 
 		$info       = \json_decode(\file_get_contents($server_json), true);
@@ -86,7 +86,7 @@ final class ProjectServeTest extends TestCase
 
 		if (0 === self::$port) {
 			self::$server->stop(0);
-			self::markTestSkipped('server.json did not contain a valid port.');
+			self::fail('server.json did not contain a valid port.');
 		}
 
 		// Poll until the port is actually accepting connections.
@@ -105,7 +105,7 @@ final class ProjectServeTest extends TestCase
 
 		if (!$ready) {
 			self::$server->stop(0);
-			self::markTestSkipped('PHP built-in server did not start within 10 seconds.');
+			self::fail('PHP built-in server did not start within 10 seconds.');
 		}
 	}
 

@@ -25,7 +25,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Columns\Types\TypeFile
  */
 final class TypeFileTest extends TestCase
 {
@@ -163,6 +163,23 @@ final class TypeFileTest extends TestCase
 		self::assertCount(2, $clean);
 		self::assertSame($vf1, $clean[0]);
 		self::assertSame($vf2, $clean[1]);
+	}
+
+	public function testValidateAcceptsTemporaryFileThatStillExists(): void
+	{
+		$path             = (string) \tempnam(\sys_get_temp_dir(), 'oz_tf_');
+		$this->tmpFiles[] = $path;
+		$vf               = ValidatedFile::forTempPath($path);
+
+		self::assertSame($vf, (new TypeFile())->temp()->validate($vf)->getCleanValue());
+	}
+
+	public function testValidateRejectsTemporaryFileThatNoLongerExists(): void
+	{
+		// e.g. replayed from a resume cache that outlived its TempFS lifetime.
+		$this->expectException(TypesInvalidValueException::class);
+
+		(new TypeFile())->temp()->validate(ValidatedFile::forTempPath(\sys_get_temp_dir() . '/oz_tf_gone_' . \uniqid()));
 	}
 
 	public function testValidateNullableAcceptsNull(): void

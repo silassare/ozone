@@ -18,7 +18,7 @@ use OZONE\Tests\Integration\Support\OZTestProject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Regression test for BUG-3: DbJobStore stale lock recovery.
+ * Regression test: DbJobStore stale lock recovery.
  *
  * When a worker subprocess crashes after acquiring the lock but before
  * calling finish(), the job is left in state=RUNNING with locked=true.

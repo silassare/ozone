@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Columns\Types\TypeUrl
  */
 final class TypeUrlTest extends TestCase
 {
@@ -96,5 +96,35 @@ final class TypeUrlTest extends TestCase
 	{
 		$this->expectException(TypesInvalidValueException::class);
 		(new TypeUrl())->allowAbsolutePath()->validate('/path with spaces');
+	}
+
+	public function testAllowedHostsAcceptsListedHostsAndLocalPaths(): void
+	{
+		$type = (new TypeUrl())->allowAbsolutePath()->allowedHosts(['App.Example.com']);
+
+		self::assertSame('https://APP.example.com/home', $type->validate('https://APP.example.com/home')->getCleanValue());
+		self::assertSame('/local', $type->validate('/local')->getCleanValue());
+	}
+
+	public function testAllowedHostsRejectsOtherHosts(): void
+	{
+		$this->expectException(TypesInvalidValueException::class);
+		$this->expectExceptionMessage('OZ_FIELD_URL_HOST_NOT_ALLOWED');
+
+		(new TypeUrl())->allowAbsolutePath()->allowedHosts(['app.example.com'])->validate('https://evil.example/');
+	}
+
+	public function testAllowedHostsRejectsNonHttpSchemes(): void
+	{
+		$this->expectException(TypesInvalidValueException::class);
+
+		(new TypeUrl())->allowedHosts(['app.example.com'])->validate('javascript://app.example.com/%0Aalert(1)');
+	}
+
+	public function testProtocolRelativeUrlIsNotALocalPath(): void
+	{
+		$this->expectException(TypesInvalidValueException::class);
+
+		(new TypeUrl())->allowAbsolutePath()->allowedHosts(['app.example.com'])->validate('//evil.example/');
 	}
 }

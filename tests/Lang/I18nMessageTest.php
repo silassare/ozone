@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Lang\I18nMessage
  */
 final class I18nMessageTest extends TestCase
 {

@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\App\Keys
  */
 final class KeysTest extends TestCase
 {
@@ -48,6 +48,18 @@ final class KeysTest extends TestCase
 	public function testId64KeyIsUnique(): void
 	{
 		self::assertNotSame(Keys::id64(), Keys::id64());
+	}
+
+	public function testIdsDoNotRepeat(): void
+	{
+		$ids = [];
+
+		for ($i = 0; $i < 1000; ++$i) {
+			$ids[] = Keys::id32();
+			$ids[] = Keys::id64();
+		}
+
+		self::assertCount(2000, \array_unique($ids));
 	}
 
 	public function testNewFileKeyReturns32HexChars(): void

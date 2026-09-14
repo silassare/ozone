@@ -1,0 +1,15 @@
+# RoadRunner, for tests/Runtime/Servers/ (docker/compose.yaml, service `roadrunner`).
+version: "3"
+
+server:
+  command: "php /ozone/tests/Support/Servers/roadrunner/worker.php"
+
+http:
+  address: "0.0.0.0:8080"
+  pool:
+    # Two workers, so the tests see requests spread over more than one process.
+    num_workers: 2
+
+logs:
+  mode: production
+  level: warn

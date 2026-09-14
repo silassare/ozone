@@ -27,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Http\Request
  */
 final class RequestFormHeadersTest extends TestCase
 {

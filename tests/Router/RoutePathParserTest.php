@@ -25,7 +25,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Router\RoutePathParser
  */
 final class RoutePathParserTest extends TestCase
 {

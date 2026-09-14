@@ -24,7 +24,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Router\Route
  */
 final class RouteTest extends TestCase
 {
@@ -55,6 +55,19 @@ final class RouteTest extends TestCase
 		self::expectExceptionMessage('Route name must be non-empty and not whitespace-only string.');
 
 		$route->name('');
+	}
+
+	public function testKeyIsStableAndUniquePerRoute(): void
+	{
+		$router = TestUtils::router();
+
+		$foo = $router->getRoute('foo');
+		$baz = $router->getRoute('bar.baz');
+
+		self::assertSame($foo->key(), $router->getRoute('foo')->key());
+		self::assertNotSame($foo->key(), $baz->key());
+		self::assertStringStartsWith('foo|', $foo->key());
+		self::assertStringEndsWith('|' . $foo->getPath(), $foo->key());
 	}
 
 	public function testGetPath(): void

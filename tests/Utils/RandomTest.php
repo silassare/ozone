@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @internal
  *
- * @coversNothing
+ * @covers \OZONE\Core\Utils\Random
  */
 final class RandomTest extends TestCase
 {
@@ -110,6 +110,22 @@ final class RandomTest extends TestCase
 
 		self::assertTrue($trueFound, 'bool() never returned true in 200 tries');
 		self::assertTrue($falseFound, 'bool() never returned false in 200 tries');
+	}
+
+	public function testBoolHonoursItsFrequency(): void
+	{
+		self::assertTrue(Random::bool(1));
+		self::assertTrue(Random::bool(0));
+
+		$hits = 0;
+
+		for ($i = 0; $i < 4000; ++$i) {
+			$hits += Random::bool(4) ? 1 : 0;
+		}
+
+		// 1 in 4 expected (1000 hits); the bounds are ~7 standard deviations away.
+		self::assertGreaterThan(800, $hits);
+		self::assertLessThan(1200, $hits);
 	}
 
 	public function testFileNameDefaultFormat(): void
