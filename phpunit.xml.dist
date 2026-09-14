@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/5.2/phpunit.xsd"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          backupGlobals="false"
          colors="true"
          bootstrap="tests/autoload.php"
@@ -10,18 +10,17 @@
 
     <php>
         <ini name="error_reporting" value="-1"/>
-        <!-- MySQL test database (ozone_test user / database). -->
-        <env name="OZ_TEST_MYSQL_HOST" value="127.0.0.1"/>
-        <env name="OZ_TEST_MYSQL_PORT" value="3306"/>
-        <env name="OZ_TEST_MYSQL_DB" value="ozone_test"/>
-        <env name="OZ_TEST_MYSQL_USER" value="ozone_test"/>
-        <env name="OZ_TEST_MYSQL_PASSWORD" value="OzoneTest@1"/>
-        <!-- PostgreSQL test database (ozone_test user / database). -->
-        <env name="OZ_TEST_POSTGRESQL_HOST" value="127.0.0.1"/>
-        <env name="OZ_TEST_POSTGRESQL_PORT" value="5432"/>
-        <env name="OZ_TEST_POSTGRESQL_DB" value="ozone_test"/>
-        <env name="OZ_TEST_POSTGRESQL_USER" value="ozone_test"/>
-        <env name="OZ_TEST_POSTGRESQL_PASSWORD" value="OzoneTest@1"/>
+        <!--
+            No server address belongs in this file. The suites run through `make`, in Docker, and
+            docker/compose.yaml exports every OZ_TEST_* / OZ_REDIS_* / OZ_MINIO_* / OZ_CLAMAV_*
+            variable into the PHP container. A developer who does not want Docker exports the same
+            variables themselves; do NOT copy this file to phpunit.xml, which PHPUnit would then
+            prefer over it (see CONTRIBUTING.md).
+
+            The integration suite runs on SQLite, MySQL and PostgreSQL, and fails when MySQL or
+            PostgreSQL is not configured. Set OZ_TEST_ALLOW_PARTIAL=1 to run on the drivers that
+            are configured, and only then.
+        -->
     </php>
 
     <testsuites>
@@ -33,4 +32,33 @@
             <directory>tests/Integration/</directory>
         </testsuite>
     </testsuites>
+
+    <!--
+        Need a server or a throwaway container: `make test-services` runs redis / minio / clamav,
+        `make test-runtimes` runs frankenphp / roadrunner / swoole, `make test-provision` runs
+        provision. All fail instead of skipping when what they need is missing.
+    -->
+    <groups>
+        <exclude>
+            <group>redis</group>
+            <group>minio</group>
+            <group>clamav</group>
+            <group>frankenphp</group>
+            <group>roadrunner</group>
+            <group>swoole</group>
+            <group>provision</group>
+        </exclude>
+    </groups>
+
+    <coverage processUncoveredFiles="false">
+        <include>
+            <directory suffix=".php">oz</directory>
+        </include>
+        <exclude>
+            <directory>oz/Db</directory>
+            <directory>oz/oz_default</directory>
+            <directory>oz/oz_settings</directory>
+            <directory>oz/oz_templates</directory>
+        </exclude>
+    </coverage>
 </phpunit>
