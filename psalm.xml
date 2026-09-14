@@ -15,6 +15,16 @@
             <directory name="tests"/>
         </ignoreFiles>
     </projectFiles>
+    <!--
+        The worker-server APIs the bridges of oz/Runtime/Bridges/ use (FrankenPHP, spiral/roadrunner-http,
+        ext-swoole): optional integrations, declared under `suggest` and never installed here. The stubs
+        hold only what the bridges call; the real servers check the rest (tests/Runtime/Servers/).
+    -->
+    <stubs>
+        <file name="stubs/frankenphp.phpstub"/>
+        <file name="stubs/roadrunner.phpstub"/>
+        <file name="stubs/swoole.phpstub"/>
+    </stubs>
 
     <issueHandlers>
         <UndefinedClass>

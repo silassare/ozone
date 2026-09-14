@@ -1,0 +1,45 @@
+<?php
+
+// Psalm stub: the part of ext-swoole (a `suggest`) that OZONE\Core\Runtime\Bridges\SwooleBridge uses. The bridge is
+// exercised against a real Swoole server by tests/Runtime/Servers (group `swoole`).
+
+namespace Swoole {
+	class Server
+	{
+		public function set(array $settings): bool {}
+
+		public function on(string $event_name, callable $callback): bool {}
+
+		public function start(): bool {}
+	}
+}
+
+namespace Swoole\Http {
+	class Server extends \Swoole\Server
+	{
+		public function __construct(string $host, int $port = 0, int $mode = 2, int $sock_type = 1) {}
+	}
+
+	class Request
+	{
+		public ?array $header = null;
+		public ?array $server = null;
+		public ?array $cookie = null;
+		public ?array $get = null;
+		public ?array $files = null;
+		public ?array $post = null;
+
+		public function rawContent(): string|false {}
+	}
+
+	class Response
+	{
+		public function status(int $http_code, string $reason = ''): bool {}
+
+		public function header(string $key, string|array $value, bool $format = true): bool {}
+
+		public function write(string $content): bool {}
+
+		public function end(?string $content = null): bool {}
+	}
+}

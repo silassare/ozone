@@ -1,0 +1,8 @@
+<?php
+
+// Psalm stub: FrankenPHP defines this function in worker mode only (OZONE\Core\Runtime\Bridges\FrankenPhpBridge).
+
+/**
+ * @param callable():void $callback
+ */
+function frankenphp_handle_request(callable $callback): bool {}

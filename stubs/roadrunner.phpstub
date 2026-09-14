@@ -1,0 +1,64 @@
+<?php
+
+// Psalm stub: the part of spiral/roadrunner-http (a `suggest`) that OZONE\Core\Runtime\Bridges\RoadRunnerBridge
+// uses. The bridge is exercised against a real RoadRunner by tests/Runtime/Servers (group `roadrunner`).
+
+namespace Spiral\RoadRunner {
+	interface WorkerInterface
+	{
+		public function error(string $error): void;
+	}
+
+	final class Worker implements WorkerInterface
+	{
+		public static function create(bool $interceptSideEffects = true): self {}
+
+		public function error(string $error): void {}
+	}
+}
+
+namespace Spiral\RoadRunner\Http {
+	use Generator;
+	use Spiral\RoadRunner\WorkerInterface;
+
+	final class Request
+	{
+		public readonly string $remoteAddr;
+		public readonly string $protocol;
+		public readonly string $method;
+		public readonly string $uri;
+		/** @var array<string, list<string>> */
+		public readonly array $headers;
+		public readonly array $cookies;
+		public readonly array $uploads;
+		public readonly array $attributes;
+		public readonly array $query;
+		public readonly string $body;
+		public readonly bool $parsed;
+
+		public function getParsedBody(): ?array {}
+	}
+
+	interface HttpWorkerInterface
+	{
+		public function getWorker(): WorkerInterface;
+
+		public function waitRequest(): ?Request;
+
+		/**
+		 * @param array<string, list<string>|string> $headers
+		 */
+		public function respond(int $status, string|Generator $body, array $headers = [], bool $endOfStream = true): void;
+	}
+
+	class HttpWorker implements HttpWorkerInterface
+	{
+		public function __construct(WorkerInterface $worker) {}
+
+		public function getWorker(): WorkerInterface {}
+
+		public function waitRequest(): ?Request {}
+
+		public function respond(int $status, string|Generator $body = '', array $headers = [], bool $endOfStream = true): void {}
+	}
+}
