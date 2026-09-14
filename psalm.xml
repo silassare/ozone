@@ -8,13 +8,18 @@
 >
     <projectFiles>
         <directory name="oz"/>
-        <directory name=".ozone/plugins"/>
         <ignoreFiles>
             <directory name="oz/oz_templates"/>
             <directory name="vendor"/>
             <directory name="tests"/>
         </ignoreFiles>
     </projectFiles>
+
+    <!-- The ORM classes Gobl generates (`oz db build`): scanned for their types, not analysed. -->
+    <extraFiles>
+        <directory name=".ozone/plugins"/>
+    </extraFiles>
+
     <!--
         The worker-server APIs the bridges of oz/Runtime/Bridges/ use (FrankenPHP, spiral/roadrunner-http,
         ext-swoole): optional integrations, declared under `suggest` and never installed here. The stubs
@@ -33,11 +38,40 @@
             </errorLevel>
         </UndefinedClass>
 
+        <!--
+            Level 4, with no baseline. The checks level 3 would add that the code has
+            no occurrence of stay errors, so none can appear: dereferencing, iterating or indexing what
+            may be null or false, a possibly undefined variable, a risky cast. Left out: a `false` or
+            `null` a function may return passed on as an argument, and annotation precision.
+        -->
+        <NonInvariantDocblockPropertyType errorLevel="error"/>
+        <PossiblyFalseIterator errorLevel="error"/>
+        <PossiblyFalseOperand errorLevel="error"/>
+        <PossiblyFalsePropertyAssignmentValue errorLevel="error"/>
+        <PossiblyFalseReference errorLevel="error"/>
+        <PossiblyInvalidArrayAssignment errorLevel="error"/>
+        <PossiblyInvalidClone errorLevel="error"/>
+        <PossiblyInvalidFunctionCall errorLevel="error"/>
+        <PossiblyInvalidIterator errorLevel="error"/>
+        <PossiblyInvalidMethodCall errorLevel="error"/>
+        <PossiblyInvalidOperand errorLevel="error"/>
+        <PossiblyInvalidPropertyAssignment errorLevel="error"/>
+        <PossiblyInvalidPropertyFetch errorLevel="error"/>
+        <PossiblyNullArrayAccess errorLevel="error"/>
+        <PossiblyNullArrayAssignment errorLevel="error"/>
+        <PossiblyNullArrayOffset errorLevel="error"/>
+        <PossiblyNullIterator errorLevel="error"/>
+        <PossiblyNullPropertyAssignment errorLevel="error"/>
+        <PossiblyNullPropertyFetch errorLevel="error"/>
+        <PossiblyNullReference errorLevel="error"/>
+        <PossiblyUndefinedGlobalVariable errorLevel="error"/>
+        <PossiblyUndefinedVariable errorLevel="error"/>
+        <RiskyCast errorLevel="error"/>
+
         <PossiblyUnusedMethod errorLevel="suppress"/>
         <PossiblyUnusedReturnValue errorLevel="suppress"/>
         <UnusedClass errorLevel="suppress"/>
         <PossiblyUnusedProperty errorLevel="suppress"/>
-        <RedundantCondition errorLevel="suppress"/>
         <RedundantCondition errorLevel="suppress"/>
         <TypeDoesNotContainNull errorLevel="suppress"/>
         <ImplicitToStringCast errorLevel="suppress"/>
