@@ -28,3 +28,6 @@ docs/.vitepress/cache/
 # tests
 /noop/
 /data/
+
+# Issues
+ISSUES.md
