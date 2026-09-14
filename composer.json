@@ -30,6 +30,7 @@
 		"ext-posix": "*",
 		"ext-bcmath": "*",
 		"ext-fileinfo": "*",
+		"ext-mbstring": "*",
 		"silassare/gobl": "^3.0.0",
 		"silassare/kli": "^2.0.0",
 		"silassare/blate": "^1.1.0",
@@ -51,7 +52,10 @@
 		"ext-sqlite3": "Required to use the SQLite driver.",
 		"ext-pdo_pgsql": "Required to use the PostgreSQL driver.",
 		"ext-memcached": "Required to use Memcached Cache driver.",
-		"ext-redis": "Required to use Redis Cache driver."
+		"ext-redis": "Required to use Redis Cache driver.",
+		"ext-curl": "Streams object storage uploads and downloads; without it they are sent part by part.",
+		"ext-swoole": "Required to serve OZone from Swoole (OZONE\\Core\\Runtime\\Bridges\\SwooleBridge).",
+		"spiral/roadrunner-http": "Required to serve OZone from RoadRunner (OZONE\\Core\\Runtime\\Bridges\\RoadRunnerBridge)."
 	},
 	"bin": [
 		"bin/oz",
@@ -62,6 +66,7 @@
 		"exclude": [
 			"/.ozone/",
 			"/noop/",
+			"/stubs/",
 			"/tests/"
 		]
 	},
