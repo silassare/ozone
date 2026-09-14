@@ -60,10 +60,10 @@ final class Provisioner
 			throw new InvalidArgumentException(\sprintf(
 				PackageManager::BREW === $this->manager
 					? 'Homebrew is a developer machine, not a server: there is no systemd and no'
-						. ' distribution service names to configure. Use Docker locally, or run this on'
-						. ' the Linux host you are deploying to.'
+					. ' distribution service names to configure. Use Docker locally, or run this on'
+					. ' the Linux host you are deploying to.'
 					: 'No supported package manager found (apt, apk, dnf, pacman). Install what'
-						. ' `oz doctor` reports yourself, or run OZone in Docker.%s',
+					. ' `oz doctor check` reports yourself, or run OZone in Docker.%s',
 				''
 			));
 		}
@@ -147,7 +147,7 @@ final class Provisioner
 				'web:' . $this->web_server,
 				\sprintf('The %s web server.', $this->web_server),
 				[$this->manager->installCommand([$package])],
-				static fn (): bool => PackageManager::hasBinary($binary),
+				static fn(): bool => PackageManager::hasBinary($binary),
 			));
 
 			$services[] = $package;
@@ -181,7 +181,7 @@ final class Provisioner
 			'services:enable',
 			'Start the services, and start them at boot.',
 			\array_map(
-				static fn (string $service): string => \sprintf('systemctl enable --now %s', \escapeshellarg($service)),
+				static fn(string $service): string => \sprintf('systemctl enable --now %s', \escapeshellarg($service)),
 				$services
 			),
 		));
@@ -206,7 +206,7 @@ final class Provisioner
 			'docker',
 			'Docker and the compose plugin.',
 			[$this->manager->installCommand($packages)],
-			static fn (): bool => PackageManager::hasBinary('docker'),
+			static fn(): bool => PackageManager::hasBinary('docker'),
 		));
 
 		$plan->add(new ProvisionStep(

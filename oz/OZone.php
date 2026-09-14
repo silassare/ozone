@@ -476,7 +476,7 @@ final class OZone
 		// most anonymous API calls, static pages -- never builds the schema. The command line
 		// initializes it here, so a schema that cannot be prepared -- a migration version with no
 		// file, a malformed `oz.db.schema`, a plugin whose tables fail to load -- is recorded rather
-		// than fatal: `oz doctor` and `oz migrations rollback` are how that gets diagnosed and fixed.
+		// than fatal: `oz doctor check` and `oz migrations rollback` are how that gets diagnosed and fixed.
 		// Whatever touches the database afterwards throws it again, since Db::$db stays unset.
 		if (self::isCliMode()) {
 			try {

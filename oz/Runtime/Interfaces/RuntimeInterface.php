@@ -29,7 +29,7 @@ use OZONE\Core\Runtime\Exceptions\RequestFinished;
 interface RuntimeInterface
 {
 	/**
-	 * A short name, for diagnostics (`oz doctor`, logs).
+	 * A short name, for diagnostics (`oz doctor check`, logs).
 	 */
 	public static function getName(): string;
 

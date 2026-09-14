@@ -20,7 +20,7 @@ use Throwable;
  * Class Requirements.
  *
  * What a machine needs to run OZone, read from `composer.json` rather than from a hardcoded list:
- * the `install` script and `oz doctor` would otherwise drift apart from the actual requirements.
+ * the `install` script and `oz doctor check` would otherwise drift apart from the actual requirements.
  * When a project is loaded, its own `composer.json` is read too, so a project's extra extensions
  * are checked with the framework's.
  */
@@ -87,7 +87,7 @@ final class Requirements
 	{
 		return \array_values(\array_filter(
 			self::extensions(),
-			static fn (string $name): bool => !\extension_loaded($name)
+			static fn(string $name): bool => !\extension_loaded($name)
 		));
 	}
 
@@ -138,7 +138,7 @@ final class Requirements
 						$cache[$file] = $require;
 					}
 				}
-			} catch (JsonException|Throwable) {
+			} catch (JsonException | Throwable) {
 				// An unreadable or malformed composer.json contributes nothing; doctor reports it.
 			}
 		}

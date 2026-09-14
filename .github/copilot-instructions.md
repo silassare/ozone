@@ -48,25 +48,25 @@
 
 OZone is a PHP 8.1+ service-oriented REST API and web framework.
 
-| Layer         | Location                                  | Purpose                                                           |
-| ------------- | ----------------------------------------- | ----------------------------------------------------------------- |
-| Bootstrap     | `oz/OZone.php`                            | Static facade — entry points, router creation, installation checks |
-| App contract  | `oz/App/AbstractApp.php`                  | Directory resolution, settings/templates sourcing                 |
-| Request cycle | `oz/App/Context.php`                      | Per-request container — auth state, request, response, route info |
-| Runtime       | `oz/Runtime/`                             | How a request ends, where its response goes, server bridges       |
-| Routing       | `oz/Router/`                              | HTTP router with guards, middlewares, rate limiting, forms        |
-| Services      | `oz/App/Service.php`, `oz/Services/`      | Base controller class + built-in services                         |
-| Auth          | `oz/Auth/`                                | Authentication methods, providers, services, events               |
-| ORM/DB        | `oz/App/Db.php`, `oz/Columns/`            | Gobl ORM integration, custom column types                         |
-| Forms         | `oz/Forms/`                               | Validation engine for route inputs                                |
-| CRUD          | `oz/CRUD/`                                | Access-controlled Gobl ORM event listeners                        |
-| Settings      | `oz/App/Settings.php`, `oz/oz_settings/`  | Layered PHP-file config system                                    |
-| Hooks/Events  | `oz/Hooks/`                               | Lifecycle events (boot, request, response, finish, DB)            |
-| Plugins       | `oz/Plugins/`                             | Plugin system with scoped source/settings/data directories        |
-| Migrations    | `oz/Migrations/`                          | Schema versioning with diff-based migration generation            |
-| REST          | `oz/REST/`                                | RESTful CRUD trait, OpenAPI doc generation                        |
-| CLI           | `oz/Cli/`                                 | Command-line tools built on `silassare/kli`                       |
-| Sessions      | `oz/Sessions/Session.php`                 | Cookie-based session management tied to `OZSession` DB entity     |
+| Layer         | Location                                 | Purpose                                                            |
+| ------------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| Bootstrap     | `oz/OZone.php`                           | Static facade — entry points, router creation, installation checks |
+| App contract  | `oz/App/AbstractApp.php`                 | Directory resolution, settings/templates sourcing                  |
+| Request cycle | `oz/App/Context.php`                     | Per-request container — auth state, request, response, route info  |
+| Runtime       | `oz/Runtime/`                            | How a request ends, where its response goes, server bridges        |
+| Routing       | `oz/Router/`                             | HTTP router with guards, middlewares, rate limiting, forms         |
+| Services      | `oz/App/Service.php`, `oz/Services/`     | Base controller class + built-in services                          |
+| Auth          | `oz/Auth/`                               | Authentication methods, providers, services, events                |
+| ORM/DB        | `oz/App/Db.php`, `oz/Columns/`           | Gobl ORM integration, custom column types                          |
+| Forms         | `oz/Forms/`                              | Validation engine for route inputs                                 |
+| CRUD          | `oz/CRUD/`                               | Access-controlled Gobl ORM event listeners                         |
+| Settings      | `oz/App/Settings.php`, `oz/oz_settings/` | Layered PHP-file config system                                     |
+| Hooks/Events  | `oz/Hooks/`                              | Lifecycle events (boot, request, response, finish, DB)             |
+| Plugins       | `oz/Plugins/`                            | Plugin system with scoped source/settings/data directories         |
+| Migrations    | `oz/Migrations/`                         | Schema versioning with diff-based migration generation             |
+| REST          | `oz/REST/`                               | RESTful CRUD trait, OpenAPI doc generation                         |
+| CLI           | `oz/Cli/`                                | Command-line tools built on `silassare/kli`                        |
+| Sessions      | `oz/Sessions/Session.php`                | Cookie-based session management tied to `OZSession` DB entity      |
 
 ### Request lifecycle
 
@@ -123,7 +123,7 @@ database never builds the schema. **Never load an ORM class — a constant count
 routes or in `boot()`**: it initializes the database for every request (`AuthorizationService` names its
 route parameter `REF_PARAM` for that reason). On the command line `OZone::bootstrap()` initializes it,
 and a schema that fails to prepare is recorded in `OZone::getDbInitError()` instead of being fatal, so
-`oz doctor` and `oz migrations rollback` still run on a broken project; anything that then touches the
+`oz doctor check` and `oz migrations rollback` still run on a broken project; anything that then touches the
 database throws it (`Utils::assertDatabaseAccess()`).
 
 `OZ_OZONE_IS_CLI` is `PHP_SAPI === 'cli'`: ask `OZone::isCliMode()` instead, which means "there is
@@ -135,11 +135,11 @@ a command line.
 How a request ends is the runtime's decision (`oz/Runtime/`, `Runtime::current()`). `Context::finish()`
 flushes, dispatches `FinishHook`, then asks the runtime to stop:
 
-| Runtime          | When                                                  | `terminate()`            | `isConsole()` |
-| ---------------- | ----------------------------------------------------- | ------------------------ | ------------- |
-| `CgiRuntime`     | PHP-FPM, mod_php, the built-in server                 | `exit`                   | false         |
-| `ConsoleRuntime` | the `oz` command line                                 | `exit`                   | true          |
-| `WorkerRuntime`  | FrankenPHP worker mode, RoadRunner, Swoole, ReactPHP  | throws `RequestFinished` | false         |
+| Runtime          | When                                                 | `terminate()`            | `isConsole()` |
+| ---------------- | ---------------------------------------------------- | ------------------------ | ------------- |
+| `CgiRuntime`     | PHP-FPM, mod_php, the built-in server                | `exit`                   | false         |
+| `ConsoleRuntime` | the `oz` command line                                | `exit`                   | true          |
+| `WorkerRuntime`  | FrankenPHP worker mode, RoadRunner, Swoole, ReactPHP | throws `RequestFinished` | false         |
 
 `terminate()` is `: never` under all three, and that is a **published contract**: `respond()` and
 `finish()` are `: never`, so a handler, guard or view — in an application as much as in the
@@ -191,11 +191,11 @@ Uploads a server parsed are not PHP's, so they are built with `sapi: false`
 
 Bridges (`oz/Runtime/Bridges/`), each declaring its `WorkerRuntime`:
 
-| Bridge                            | Needs                    | Notes                                                                                     |
-| --------------------------------- | ------------------------ | ----------------------------------------------------------------------------------------- |
-| `FrankenPhpBridge::serve($app)`   | FrankenPHP worker mode   | FrankenPHP resets the superglobals per request: no sink                                   |
-| `RoadRunnerBridge::serve($app)`   | `spiral/roadrunner-http` | Is the sink; streams bodies above 1 MiB through the worker                                |
-| `SwooleBridge::attach($s, $app)`  | `ext-swoole`             | Bootstraps in each worker's `workerStart`, never before the fork; turns coroutines off   |
+| Bridge                           | Needs                    | Notes                                                                                  |
+| -------------------------------- | ------------------------ | -------------------------------------------------------------------------------------- |
+| `FrankenPhpBridge::serve($app)`  | FrankenPHP worker mode   | FrankenPHP resets the superglobals per request: no sink                                |
+| `RoadRunnerBridge::serve($app)`  | `spiral/roadrunner-http` | Is the sink; streams bodies above 1 MiB through the worker                             |
+| `SwooleBridge::attach($s, $app)` | `ext-swoole`             | Bootstraps in each worker's `workerStart`, never before the fork; turns coroutines off |
 
 `make test-runtimes` serves OZone from real FrankenPHP, RoadRunner and Swoole containers and tests it
 over HTTP (`tests/Runtime/Servers/`); `tests/Runtime/WorkerLoopTest` runs `tests/Support/worker_loop.php`
@@ -220,20 +220,20 @@ and may be deleted at any time** (caches, logs, `oz db build` output). `Scopes\S
 layout inside `data/`: **kind first, then scope** — the level a backup rule, a volume and a retention
 policy are written at.
 
-| Path                    | Accessor                   | Holds                                                   |
-| ----------------------- | -------------------------- | ------------------------------------------------------- |
-| `data/settings/{scope}` | `getStatefulSettingsDir()` | stateful settings (`Settings::set()`)                   |
-| `data/files/{scope}`    | `getPrivateFilesDir()`     | private files (`PrivateLocalStorage`)                   |
-| `data/static/{scope}`   | `getPublicFilesDir()`      | public files, reached through the `static` symlink      |
-| `data/tmp-fs/{scope}`   | `getTempDir()`             | `TempFS`: chunked uploads, accepted `ValidatedFile`s    |
-| `data/state/{scope}`    | `getStateStoreDir()`       | file-backed durable state                               |
+| Path                    | Accessor                   | Holds                                                |
+| ----------------------- | -------------------------- | ---------------------------------------------------- |
+| `data/settings/{scope}` | `getStatefulSettingsDir()` | stateful settings (`Settings::set()`)                |
+| `data/files/{scope}`    | `getPrivateFilesDir()`     | private files (`PrivateLocalStorage`)                |
+| `data/static/{scope}`   | `getPublicFilesDir()`      | public files, reached through the `static` symlink   |
+| `data/tmp-fs/{scope}`   | `getTempDir()`             | `TempFS`: chunked uploads, accepted `ValidatedFile`s |
+| `data/state/{scope}`    | `getStateStoreDir()`       | file-backed durable state                            |
 
 `{scope}` is `ScopeInterface::getStateSlug()`: `root` for the application, the scope name, or
 `plugins/{name}`. Logs are `.ozone/logs/ozone.{scope}.log`, rotated (`OZ_LOG_MAX_FILES`); caches are
 `.ozone/cache/scopes/{scope}/`.
 
 - **`data/` is never created automatically** — it is the volume a deployment mounts, so a node whose
-  disk did not come up says so. Everything *inside* it is created on demand.
+  disk did not come up says so. Everything _inside_ it is created on demand.
 - **Public files go through a symlink**: `{document root}/static` -> `data/static/{scope}`, created by
   `oz project create`, `oz scopes add` and `oz project link` (after a clone or a deploy: the links are
   not version-controlled). PHP never depends on it; `StateLayout::link()` is idempotent and reports
@@ -539,15 +539,15 @@ registration, which under a worker is the boot context, with no user.
 process; a second `bootstrap()` does not re-notify the boot receivers, whose `boot()` methods are not
 individually idempotent.
 
-| Event                                         | When                                                                  |
-| --------------------------------------------- | --------------------------------------------------------------------- |
-| `InitHook`                                    | end of bootstrap, database available                                  |
-| `RequestHook`                                 | before each request, sub-requests included (origins rejected here)    |
-| `ResponseHook`                                | before the response is sent (CORS and `OZ_SECURITY_HEADERS` here)     |
-| `FinishHook`                                  | after the response was sent, whichever way; not for sub-requests      |
-| `EndRequestHook`                              | a request's state is released (`OZone::endRequest()`): per-request cleanup |
-| `RedirectHook`                                | before a redirect (`Uri $to`)                                         |
-| `DbSchemaCollectHook` / `DbSchemaReadyHook` / `DbReadyHook` | see `Db::init()`                                        |
+| Event                                                       | When                                                                       |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `InitHook`                                                  | end of bootstrap, database available                                       |
+| `RequestHook`                                               | before each request, sub-requests included (origins rejected here)         |
+| `ResponseHook`                                              | before the response is sent (CORS and `OZ_SECURITY_HEADERS` here)          |
+| `FinishHook`                                                | after the response was sent, whichever way; not for sub-requests           |
+| `EndRequestHook`                                            | a request's state is released (`OZone::endRequest()`): per-request cleanup |
+| `RedirectHook`                                              | before a redirect (`Uri $to`)                                              |
+| `DbSchemaCollectHook` / `DbSchemaReadyHook` / `DbReadyHook` | see `Db::init()`                                                           |
 
 Other families: migrations (`MigrationBeforeRun`, `MigrationAfterRun`, `MigrationCreated`), router
 (`RouteNotFound`, `RouteMethodNotAllowed`, `RouteBeforeRun`, `RouterCreated`), auth
@@ -653,12 +653,12 @@ minute; with several, any due one fires it. Window predicates (`between()`, `not
 entry is visible to a user (a half-finished wizard, a reset rate limit, a re-opened replay window). The
 call site says which by the registry it asks; both return a `KeyValueStore`.
 
-| | Cache | State |
-| --- | --- | --- |
-| Read with | `CacheRegistry::store()` | `StateRegistry::store()` |
-| Declared in | `oz.stores.cache` | `oz.stores.state` |
-| Driver must be | anything | `StoreCapabilities::$durable` |
-| Shipped | none (image filter renditions are files) | `oz:form:sessions`, `oz:form:resume`, `oz:rate_limit`, `oz:auth:digest:nonces`, `oz:cron` |
+|                | Cache                                    | State                                                                                     |
+| -------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Read with      | `CacheRegistry::store()`                 | `StateRegistry::store()`                                                                  |
+| Declared in    | `oz.stores.cache`                        | `oz.stores.state`                                                                         |
+| Driver must be | anything                                 | `StoreCapabilities::$durable`                                                             |
+| Shipped        | none (image filter renditions are files) | `oz:form:sessions`, `oz:form:resume`, `oz:rate_limit`, `oz:auth:digest:nonces`, `oz:cron` |
 
 - The boundary is enforced both ways: `StateRegistry` refuses an undeclared store and a non-durable
   driver; `CacheRegistry::store()` throws on a state store name (instead of quietly handing out a
@@ -722,7 +722,7 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   project, outside a deploy root) -- never a release that failed before going live. Preloaded code
   only changes when PHP restarts.
 
-- **`install`** (repository root) puts `oz` / `ozone` on `PATH` and nothing else: it only *checks* PHP,
+- **`install`** (repository root) puts `oz` / `ozone` on `PATH` and nothing else: it only _checks_ PHP,
   the extensions, Composer and git unless `--with-php`. Preparing a server is `oz server provision`.
 - **`oz project create`** generates a `composer.json` requiring `silassare/ozone`; every package in its
   graph is on Packagist, so it needs no `repositories` and no credentials.
@@ -823,7 +823,7 @@ SQLite file apart.
 ## 22. Dependencies
 
 PHP 8.1+; MySQL by default (SQLite and PostgreSQL supported). Required extensions are in
-`composer.json` (`oz doctor` checks them). Packages: `silassare/gobl` (ORM, DBAL, code generation),
+`composer.json` (`oz doctor check` checks them). Packages: `silassare/gobl` (ORM, DBAL, code generation),
 `silassare/kli` (CLI), `silassare/blate` (templates), `silassare/php-utils` (`Event`, `Store`,
 `PathUtils`, ...), `claviska/simpleimage`, `symfony/process`, `zircote/swagger-php`, `psr/http-message`,
 `psr/log`.

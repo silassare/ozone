@@ -135,7 +135,7 @@ pm_install() {
 #
 # The extension list is read from the installed OZone's composer.json when there is one, so it
 # cannot drift from what the framework declares. Before the first install we have no checkout, so
-# this fallback is used -- `oz doctor` is authoritative afterwards.
+# this fallback is used -- `oz doctor check` is authoritative afterwards.
 FALLBACK_EXTS="pdo openssl json gd libxml simplexml posix bcmath fileinfo mbstring"
 
 required_extensions() {

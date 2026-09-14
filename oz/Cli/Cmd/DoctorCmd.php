@@ -49,7 +49,7 @@ final class DoctorCmd extends Command
 	public function check(KliArgs $args): void
 	{
 		$checks = \array_merge($this->environmentChecks(), $this->projectChecks());
-		$failed = \array_filter($checks, static fn (array $c): bool => self::FAIL === $c['status']);
+		$failed = \array_filter($checks, static fn(array $c): bool => self::FAIL === $c['status']);
 
 		$cli = $this->getCli();
 
@@ -68,7 +68,7 @@ final class DoctorCmd extends Command
 
 		if (!empty($failed)) {
 			$cli->error(\sprintf(
-				'%d check(s) failed. Fix them, then run "oz doctor" again.',
+				'%d check(s) failed. Fix them, then run "oz doctor check" again.',
 				\count($failed)
 			), true, 1);
 		}
@@ -254,7 +254,7 @@ final class DoctorCmd extends Command
 					self::FAIL,
 					self::rootCause($error),
 					'The schema could not be prepared: check oz.db.schema, the plugins it loads, and'
-					. ' that OZ_MIGRATION_VERSION matches a migration file.'
+						. ' that OZ_MIGRATION_VERSION matches a migration file.'
 				),
 			];
 		}
