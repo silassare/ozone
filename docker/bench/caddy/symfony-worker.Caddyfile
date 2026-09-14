@@ -1,0 +1,19 @@
+# symfony-worker (`make benchmark-http`): the application bootstrapped once per worker, 8 workers (FrankenPHP needs one more thread
+# than workers, which serves nothing here: 8 PHP threads answer requests, as in classic mode).
+# symfony/runtime (7.4+) runs public/index.php as a FrankenPHP worker by itself.
+{
+	auto_https off
+	admin off
+	frankenphp {
+		num_threads 9
+		worker {
+			file /app/public/index.php
+			num 8
+		}
+	}
+}
+
+:8080 {
+	root * /app/public
+	php_server
+}

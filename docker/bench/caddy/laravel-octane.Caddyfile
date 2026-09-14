@@ -1,0 +1,24 @@
+# laravel-octane (`make benchmark-http`): the application bootstrapped once per worker, 8 workers (FrankenPHP needs one more thread
+# than workers, which serves nothing here: 8 PHP threads answer requests, as in classic mode).
+{
+	auto_https off
+	admin off
+	frankenphp {
+		num_threads 9
+		worker {
+			file /app/public/frankenphp-worker.php
+			num 8
+			env APP_BASE_PATH /app
+			env LARAVEL_OCTANE 1
+		}
+	}
+}
+
+:8080 {
+	root * /app/public
+	# As Octane's own Caddyfile: every request goes to the worker script, not to index.php.
+	php_server {
+		index frankenphp-worker.php
+		try_files {path} frankenphp-worker.php
+	}
+}

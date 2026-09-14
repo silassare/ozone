@@ -1,0 +1,19 @@
+# ozone-worker (`make benchmark-http`): the application bootstrapped once per worker, 8 workers (FrankenPHP needs one more thread
+# than workers, which serves nothing here: 8 PHP threads answer requests, as in classic mode).
+# Real paths (/tmp/ozone, not the /ozone symlink): FrankenPHP matches the worker by its real path.
+{
+	auto_https off
+	admin off
+	frankenphp {
+		num_threads 9
+		worker {
+			file /tmp/ozone/tests/Support/Servers/frankenphp/index.php
+			num 8
+		}
+	}
+}
+
+:8080 {
+	root * /tmp/ozone/tests/Support/Servers/frankenphp
+	php_server
+}

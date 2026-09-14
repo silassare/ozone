@@ -1,0 +1,12 @@
+{
+	"name": "ozone/test-roadrunner-worker",
+	"description": "The RoadRunner PHP worker library, for the roadrunner test server (docker/runtimes/Dockerfile).",
+	"license": "MIT",
+	"require": {
+		"spiral/roadrunner-http": "^4.1",
+		"spiral/roadrunner-worker": "^3.6"
+	},
+	"config": {
+		"optimize-autoloader": true
+	}
+}

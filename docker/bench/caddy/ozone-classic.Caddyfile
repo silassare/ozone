@@ -1,0 +1,17 @@
+# ozone-classic (`make benchmark-http`): one PHP thread per request in flight, the application bootstrapped for each.
+# Real paths (/tmp/ozone, not the /ozone symlink): FrankenPHP matches the worker by its real path.
+{
+	auto_https off
+	admin off
+	frankenphp {
+		num_threads 8
+		# What `oz project build` writes (docker/bench/ozone/build.php): the class files a request loads,
+		# compiled once when PHP starts.
+		php_ini opcache.preload {$OZ_TEST_SERVER_SANDBOX}/.ozone/preload.php
+	}
+}
+
+:8080 {
+	root * /tmp/ozone/docker/bench/ozone
+	php_server
+}

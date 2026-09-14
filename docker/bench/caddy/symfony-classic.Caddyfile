@@ -1,0 +1,17 @@
+# symfony-classic (`make benchmark-http`): one PHP thread per request in flight, the application bootstrapped for each.
+{
+	auto_https off
+	admin off
+	frankenphp {
+		num_threads 8
+		# Symfony's own preload script (config/preload.php, fed by cache:warmup), as its performance
+		# guide sets it up. The container runs as root, which PHP only preloads as when told to.
+		php_ini opcache.preload /app/config/preload.php
+		php_ini opcache.preload_user root
+	}
+}
+
+:8080 {
+	root * /app/public
+	php_server
+}

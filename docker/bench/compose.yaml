@@ -1,0 +1,92 @@
+# `make benchmark-http` (docker/bench/run.sh starts one server at a time). Each server is pinned to
+# CPUs 0-3 and wrk to CPUs 4-7, so the load generator never competes with what it measures.
+
+name: ozone-bench
+
+x-server: &server
+  cpuset: "0-3"
+  healthcheck:
+    test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8080' . getenv('BENCH_HEALTH_PATH')) === 'pong' ? 0 : 1);"]
+    interval: 2s
+    timeout: 5s
+    retries: 90
+    start_period: 3m
+
+# OZone runs from a copy of the repository in the container, installed as a deployment installs it
+# and as the Laravel and Symfony images are built: `composer install --no-dev --optimize-autoloader`,
+# then built as `oz project build` builds a project (docker/bench/ozone/build.php).
+x-ozone: &ozone
+  <<: *server
+  build:
+    context: .
+    target: ozone
+  image: ozone-bench-ozone
+  user: "${OZ_UID:-1000}:${OZ_GID:-1000}"
+  working_dir: /tmp
+  volumes:
+    - ../..:/src:ro
+  environment: &ozone-env
+    HOME: /tmp
+    XDG_CONFIG_HOME: /tmp/caddy
+    XDG_DATA_HOME: /tmp/caddy
+    OZ_TEST_SERVER_SANDBOX: /tmp/oz_server_sandbox
+    # As deployed: the schema installed through a migration (tests/sandbox_build.php).
+    OZ_TEST_SERVER_INSTALLED: "1"
+    BENCH_HEALTH_PATH: /runtime-probe/ping
+
+services:
+  ozone-classic:
+    <<: *ozone
+    command:
+      - sh
+      - -c
+      - mkdir -p /tmp/ozone && tar -C /src --exclude=./.git --exclude=./.ozone -cf - . | tar -C /tmp/ozone -xf - && cd /ozone && composer install --no-dev --optimize-autoloader --no-interaction --quiet && php tests/Support/Servers/prepare.php && php docker/bench/ozone/seed.php && echo 'ENV_MODE="production"' >> "$$OZ_TEST_SERVER_SANDBOX/.env" && php docker/bench/ozone/build.php classic && exec frankenphp run --config docker/bench/caddy/ozone-classic.Caddyfile
+
+  ozone-worker:
+    <<: *ozone
+    command:
+      - sh
+      - -c
+      - mkdir -p /tmp/ozone && tar -C /src --exclude=./.git --exclude=./.ozone -cf - . | tar -C /tmp/ozone -xf - && cd /ozone && composer install --no-dev --optimize-autoloader --no-interaction --quiet && php tests/Support/Servers/prepare.php && php docker/bench/ozone/seed.php && echo 'ENV_MODE="production"' >> "$$OZ_TEST_SERVER_SANDBOX/.env" && php docker/bench/ozone/build.php worker && exec frankenphp run --config docker/bench/caddy/ozone-worker.Caddyfile
+
+  laravel-classic:
+    <<: *server
+    build:
+      context: .
+      target: laravel
+    image: ozone-bench-laravel
+    environment:
+      BENCH_HEALTH_PATH: /api/ping
+    command: ["frankenphp", "run", "--config", "/etc/bench/laravel-classic.Caddyfile"]
+
+  laravel-octane:
+    <<: *server
+    image: ozone-bench-laravel
+    environment:
+      BENCH_HEALTH_PATH: /api/ping
+    command: ["frankenphp", "run", "--config", "/etc/bench/laravel-octane.Caddyfile"]
+
+  symfony-classic:
+    <<: *server
+    build:
+      context: .
+      target: symfony
+    image: ozone-bench-symfony
+    environment:
+      BENCH_HEALTH_PATH: /ping
+    command: ["frankenphp", "run", "--config", "/etc/bench/symfony-classic.Caddyfile"]
+
+  symfony-worker:
+    <<: *server
+    image: ozone-bench-symfony
+    environment:
+      BENCH_HEALTH_PATH: /ping
+    command: ["frankenphp", "run", "--config", "/etc/bench/symfony-worker.Caddyfile"]
+
+  wrk:
+    build:
+      context: .
+      target: wrk
+    image: ozone-bench-wrk
+    cpuset: "4-7"
+    profiles: [tools]

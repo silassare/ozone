@@ -1,0 +1,192 @@
+# OZone's development and test services: PHP with its tools, and the servers the test suites
+# use (MySQL, PostgreSQL, Redis, MinIO, and ClamAV for `make test-services` only). Nothing is
+# needed on the host but Docker.
+#
+# Use it through the Makefile: `make test`, `make test-unit`, `make lint`, `make shell`, ...
+# The databases keep their data in memory: each run starts from empty servers.
+
+name: ozone-dev
+
+services:
+  php:
+    build:
+      context: ./php
+      args:
+        PHP_VERSION: ${OZ_PHP_VERSION:-8.4}
+    image: ozone-dev-php:${OZ_PHP_VERSION:-8.4}
+    # The host user, so files written in the repository stay theirs (set by the Makefile).
+    user: "${OZ_UID:-1000}:${OZ_GID:-1000}"
+    working_dir: /ozone
+    volumes:
+      - ..:/ozone
+      # Projects created by the integration tests, and their cached vendors.
+      - test-projects:/tmp/_oz_tests_
+      - composer-cache:/tmp/composer
+    environment:
+      OZ_TEST_MYSQL_HOST: mysql
+      OZ_TEST_MYSQL_PORT: "3306"
+      OZ_TEST_MYSQL_DB: ozone_test
+      OZ_TEST_MYSQL_USER: ozone_test
+      OZ_TEST_MYSQL_PASSWORD: ozone_test
+      OZ_TEST_POSTGRESQL_HOST: postgres
+      OZ_TEST_POSTGRESQL_PORT: "5432"
+      OZ_TEST_POSTGRESQL_DB: ozone_test
+      OZ_TEST_POSTGRESQL_USER: ozone_test
+      OZ_TEST_POSTGRESQL_PASSWORD: ozone_test
+      # Copied into the `.env` of the unit suite's sandbox (tests/autoload.php).
+      OZ_REDIS_HOST: redis
+      OZ_REDIS_PORT: "6379"
+      OZ_MINIO_ENDPOINT: http://minio:9000
+      OZ_MINIO_ACCESS_KEY: ozone
+      OZ_MINIO_SECRET_KEY: ozone-secret
+      OZ_MINIO_BUCKET: ozone-test
+      OZ_CLAMAV_HOST: clamav
+      OZ_CLAMAV_PORT: "3310"
+      # The worker servers of `make test-runtimes` (profile `runtimes`).
+      OZ_TEST_FRANKENPHP_URL: http://frankenphp:8080
+      OZ_TEST_FRANKENPHP_CLASSIC_URL: http://frankenphp:8081
+      OZ_TEST_ROADRUNNER_URL: http://roadrunner:8080
+      OZ_TEST_SWOOLE_URL: http://swoole:8080
+    depends_on:
+      mysql:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ozone_test
+      MYSQL_USER: ozone_test
+      MYSQL_PASSWORD: ozone_test
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ozone_test
+      POSTGRES_USER: ozone_test
+      POSTGRES_PASSWORD: ozone_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "ozone_test", "-d", "ozone_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  minio:
+    image: minio/minio
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ozone
+      MINIO_ROOT_PASSWORD: ozone-secret
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  # Started by `make test-services` only (profile `clamav`): clamd needs about 3 GB of memory and a
+  # minute or two to load the signatures shipped in the image.
+  clamav:
+    profiles: [clamav]
+    image: clamav/clamav:stable
+    environment:
+      CLAMAV_NO_FRESHCLAMD: "true"
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 5s
+      timeout: 10s
+      retries: 60
+      start_period: 5m
+
+  # The worker servers of `make test-runtimes` (profile `runtimes`): OZone served for real by
+  # FrankenPHP in worker mode, RoadRunner and Swoole, each through its bridge (oz/Runtime/Bridges/).
+  # Each container builds its own sandbox project at start (tests/Support/Servers/prepare.php) and
+  # runs two workers on it; the tests reach them at OZ_TEST_*_URL. `make test-runtimes` recreates
+  # them on every run, since a worker keeps the code it booted with.
+  frankenphp: &runtime
+    profiles: [runtimes]
+    build:
+      context: ./runtimes
+      target: frankenphp
+      args:
+        PHP_VERSION: ${OZ_PHP_VERSION:-8.4}
+    image: ozone-dev-frankenphp:${OZ_PHP_VERSION:-8.4}
+    user: "${OZ_UID:-1000}:${OZ_GID:-1000}"
+    working_dir: /ozone
+    volumes:
+      - ..:/ozone
+    environment:
+      HOME: /tmp
+      XDG_CONFIG_HOME: /tmp/caddy
+      XDG_DATA_HOME: /tmp/caddy
+      OZ_TEST_SERVER_SANDBOX: /tmp/oz_server_sandbox
+    command:
+      - sh
+      - -c
+      - php tests/Support/Servers/prepare.php && exec frankenphp run --config tests/Support/Servers/frankenphp/Caddyfile
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8080/runtime-probe/ping') === 'pong' ? 0 : 1);"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+      start_period: 2m
+
+  roadrunner:
+    <<: *runtime
+    build:
+      context: ./runtimes
+      target: roadrunner
+      args:
+        PHP_VERSION: ${OZ_PHP_VERSION:-8.4}
+    image: ozone-dev-roadrunner:${OZ_PHP_VERSION:-8.4}
+    environment:
+      HOME: /tmp
+      OZ_TEST_SERVER_SANDBOX: /tmp/oz_server_sandbox
+    command:
+      - sh
+      - -c
+      - php tests/Support/Servers/prepare.php && exec rr serve -c tests/Support/Servers/roadrunner/rr.yaml -w /ozone
+
+  swoole:
+    <<: *runtime
+    build:
+      context: ./runtimes
+      target: swoole
+      args:
+        PHP_VERSION: ${OZ_PHP_VERSION:-8.4}
+    image: ozone-dev-swoole:${OZ_PHP_VERSION:-8.4}
+    environment:
+      HOME: /tmp
+      OZ_TEST_SERVER_SANDBOX: /tmp/oz_server_sandbox
+    command:
+      - sh
+      - -c
+      - php tests/Support/Servers/prepare.php && exec php tests/Support/Servers/swoole/server.php
+
+volumes:
+  test-projects:
+  composer-cache:
