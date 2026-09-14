@@ -429,7 +429,7 @@ final class DoctorCmd extends Command
 			#[Override]
 			public function getStyle(mixed $value, KliTableHeader $header, array $row): ?KliStyle
 			{
-				return match ($value) {
+				return match (\strtolower($value)) {
 					DoctorCmd::FAIL => (new KliStyle())->red()->bold(),
 					DoctorCmd::WARN => (new KliStyle())->yellow(),
 					default         => (new KliStyle())->green(),
