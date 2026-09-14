@@ -1,0 +1,145 @@
+# Sample deployment of an OZone project (see README.md). From the project root:
+#
+#   docker compose --env-file .env -f docker/compose.yaml up -d --build
+#
+# Services: `app` (PHP-FPM), `web` (nginx, the only published port), `cron`, `worker` (queue)
+# and `db` (MySQL). Optional, with --profile:
+#
+#   --profile redis    Redis, for the Redis job store and cache (build with OZ_WITH_REDIS=1)
+#   --profile minio    MinIO, for the MinioStorage file driver (see oz.files.minio)
+#   --profile clamav   ClamAV, for the virus scan of new files (see oz.files.scan)
+#   --profile apache   Apache with mod_php, to use instead of `app` + `web`
+#
+# The database, Redis, MinIO and ClamAV settings come from the project .env (OZ_DB_*, OZ_REDIS_*,
+# OZ_MINIO_*, OZ_CLAMAV_*), the same file OZone reads.
+
+x-app: &app
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+    target: app
+    args:
+      WITH_REDIS: ${OZ_WITH_REDIS:-0}
+  image: ${OZ_IMAGE:-ozone-app}:${OZ_IMAGE_TAG:-latest}
+  restart: unless-stopped
+  volumes:
+    - ../.env:/var/www/html/.env:ro
+    # Every state directory: stateful settings, private files, public files, TempFS and the
+    # file-backed state stores. One volume, because public/*/static are symlinks into data/static
+    # (created by `oz project link`, which the entrypoint runs).
+    - data:/var/www/html/data
+    - logs:/var/www/html/.ozone/logs
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  app:
+    <<: *app
+    environment:
+      OZ_MIGRATE_ON_START: ${OZ_MIGRATE_ON_START:-0}
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: web
+    image: ${OZ_IMAGE:-ozone-app}-web:${OZ_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "${OZ_HTTP_PORT:-8080}:80"
+    depends_on:
+      - app
+
+  # The scheduler (`oz cron work`): a tick every minute runs the due tasks, including the hourly
+  # garbage collection (oz:gc), in this container rather than in the ones answering requests.
+  cron:
+    <<: *app
+    command: ["php", "vendor/bin/oz", "cron", "work"]
+
+  # Processes queued jobs; scale with `--scale worker=N`.
+  worker:
+    <<: *app
+    command: ["php", "vendor/bin/oz", "jobs", "work"]
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${OZ_DB_NAME:-ozone}
+      MYSQL_USER: ${OZ_DB_USER:-ozone}
+      MYSQL_PASSWORD: ${OZ_DB_PASS:?set OZ_DB_PASS in .env}
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    profiles: [redis]
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${OZ_REDIS_PASSWORD:?set OZ_REDIS_PASSWORD in .env}"]
+    volumes:
+      - redis-data:/data
+
+  minio:
+    profiles: [minio]
+    image: minio/minio
+    restart: unless-stopped
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: ${OZ_MINIO_ACCESS_KEY:?set OZ_MINIO_ACCESS_KEY in .env}
+      MINIO_ROOT_PASSWORD: ${OZ_MINIO_SECRET_KEY:?set OZ_MINIO_SECRET_KEY in .env}
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # Creates the bucket of OZ_MINIO_BUCKET, then exits.
+  minio-init:
+    profiles: [minio]
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MC_HOST_local: http://${OZ_MINIO_ACCESS_KEY}:${OZ_MINIO_SECRET_KEY}@minio:9000
+    command: ["mb", "--ignore-existing", "local/${OZ_MINIO_BUCKET:-ozone}"]
+
+  # clamd on port 3310, for OZ_CLAMAV_HOST=clamav. Needs about 3 GB of memory; freshclam, in the
+  # same container, keeps the signatures (volume clamav-data) up to date.
+  clamav:
+    profiles: [clamav]
+    image: clamav/clamav:stable
+    restart: unless-stopped
+    volumes:
+      - clamav-data:/var/lib/clamav
+
+  # Instead of `app` + `web`: docker compose ... --profile apache up -d db apache
+  apache:
+    <<: *app
+    profiles: [apache]
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: apache
+      args:
+        WITH_REDIS: ${OZ_WITH_REDIS:-0}
+    image: ${OZ_IMAGE:-ozone-app}-apache:${OZ_IMAGE_TAG:-latest}
+    ports:
+      - "${OZ_HTTP_PORT:-8080}:80"
+
+volumes:
+  data:
+  logs:
+  db-data:
+  redis-data:
+  minio-data:
+  clamav-data:

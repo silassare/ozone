@@ -1,0 +1,13 @@
+# Used by `docker build -f docker/Dockerfile .`: keeps secrets, dependencies and runtime state
+# out of the images.
+
+.env
+.env.*
+.git
+vendor
+node_modules
+data
+.ozone
+public/static
+public/*/static
+*.log
