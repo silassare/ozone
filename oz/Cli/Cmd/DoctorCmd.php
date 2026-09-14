@@ -463,6 +463,8 @@ final class DoctorCmd extends Command
 	 */
 	private static function rootCause(Throwable $t): string
 	{
+		\oz_logger()->debug($t);
+
 		while (null !== ($previous = $t->getPrevious())) {
 			$t = $previous;
 		}
