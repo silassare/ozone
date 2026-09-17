@@ -33,7 +33,9 @@ final class SignedSerializerTest extends TestCase
 		[$signed, $out] = SignedSerializer::unserialize(SignedSerializer::serialize($value));
 
 		self::assertTrue($signed);
-		self::assertSame($value, $out);
+		// unserialize() builds new objects: equal, never the same instances
+		self::assertEquals($value, $out);
+		self::assertInstanceOf(ArrayObject::class, $out['list']);
 	}
 
 	public function testTamperedPayloadIsRejected(): void
