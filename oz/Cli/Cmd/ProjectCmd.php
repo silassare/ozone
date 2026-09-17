@@ -87,10 +87,9 @@ final class ProjectCmd extends Command
 			->string(2, 2)
 			->pattern($project_prefix_reg)
 			->def('SA');
-		$create->option('json', 'j')
-			->description('Output the result as one JSON object, for tools.')
-			->bool()
-			->def(false);
+
+		$this->getCli()->withJsonSupport($create);
+
 		$create->handler($this->create(...));
 
 		// action: project link

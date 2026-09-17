@@ -15,6 +15,7 @@ namespace OZONE\Core\Cli;
 
 use Kli\Exceptions\KliException;
 use Kli\Kli;
+use Kli\KliAction;
 use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Cron\Cron;
@@ -166,6 +167,19 @@ final class Cli extends Kli
 	public static function inJsonMode(): bool
 	{
 		return self::$json;
+	}
+
+	/**
+	 * Adds a `--json` option to the action, which will make it output a JSON object instead of human-readable text.
+	 *
+	 * @param KliAction $action
+	 */
+	public function withJsonSupport(KliAction $action): void
+	{
+		$action->option('json', 'j')
+			->description('Output the result as one JSON object, for tools.')
+			->bool()
+			->def(false);
 	}
 
 	/**

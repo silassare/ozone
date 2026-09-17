@@ -51,10 +51,9 @@ final class MigrationsCmd extends Command
 			->string()->def('Auto generated migration.');
 
 		$check = $this->action('check', 'Check database migrations.');
-		$check->option('json', 'j')
-			->description('Output the result as one JSON object, for tools.')
-			->bool()
-			->def(false);
+
+		$this->getCli()->withJsonSupport($check);
+
 		$check->handler($this->check(...));
 
 		$run = $this->action('run', 'Run database migrations.')

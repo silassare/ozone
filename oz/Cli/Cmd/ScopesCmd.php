@@ -198,10 +198,9 @@ final class ScopesCmd extends Command
 			->description('Define if the scope should run in api context or not.')
 			->bool()
 			->def(false);
-		$add->option('json', 'j')
-			->description('Output the result as one JSON object, for tools.')
-			->bool()
-			->def(false);
+
+		$this->getCli()->withJsonSupport($add);
+
 		$add->handler($this->add(...));
 	}
 

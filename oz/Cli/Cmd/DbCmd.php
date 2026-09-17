@@ -85,10 +85,9 @@ final class DbCmd extends Command
 			->string()
 			->pattern(PHPNamespace::NAMESPACE_PATTERN)
 			->def(null);
-		$build->option('json', 'j')
-			->description('Output the result as one JSON object, for tools.')
-			->bool()
-			->def(false);
+
+		$this->getCli()->withJsonSupport($build);
+
 		$build->handler($this->build(...));
 
 		// action: ts bundle

@@ -387,10 +387,9 @@ final class DeployCmd extends Command
 		// action: deploy releases
 		$releases = $this->action('releases', 'List the releases of a deploy root.');
 		self::rootOption($releases, 1);
-		$releases->option('json', 'j')
-			->description('Output the result as one JSON object, for tools.')
-			->bool()
-			->def(false);
+
+		$this->getCli()->withJsonSupport($releases);
+
 		$releases->handler($this->releases(...));
 	}
 

@@ -217,10 +217,9 @@ final class ServerCmd extends Command
 			->description('Where the manifest is.')
 			->string()
 			->def(ProvisionManifest::DEFAULT_PATH);
-		$status->option('json', 'j')
-			->description('Output the result as one JSON object, for tools.')
-			->bool()
-			->def(false);
+
+		$this->getCli()->withJsonSupport($status);
+
 		$status->handler($this->status(...));
 	}
 

@@ -49,7 +49,7 @@ final class DoctorCmd extends Command
 	public function check(KliArgs $args): void
 	{
 		$checks = \array_merge($this->environmentChecks(), $this->projectChecks());
-		$failed = \array_filter($checks, static fn(array $c): bool => self::FAIL === $c['status']);
+		$failed = \array_filter($checks, static fn (array $c): bool => self::FAIL === $c['status']);
 
 		$cli = $this->getCli();
 
@@ -470,7 +470,7 @@ final class DoctorCmd extends Command
 	 */
 	private static function rootCause(Throwable $t): string
 	{
-		\oz_logger()->debug($t);
+		oz_logger()->debug($t);
 
 		while (null !== ($previous = $t->getPrevious())) {
 			$t = $previous;
