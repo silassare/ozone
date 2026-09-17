@@ -129,7 +129,9 @@ final class OZTestProject
 					'--class-name=SampleApp',
 					"--prefix={$prefix}",
 				],
-				$ozone_root,
+				// not OZone's root: without its own data/ (an installed package has none), `oz` run there
+				// refuses to start
+				$project_dir,
 			);
 			$create->mustRun();
 		}
