@@ -69,13 +69,17 @@ final class CronRunnerTest extends TestCase
 
 	public function testASchedulerTickChecksIn(): void
 	{
+		$before = \time();
+
 		CronRunner::tick(CronRunner::RUNNER_SCHEDULER, true);
 
 		$last = CronRunner::lastTick();
 
 		self::assertNotNull($last);
 		self::assertSame(CronRunner::RUNNER_SCHEDULER, $last['runner']);
-		self::assertLessThanOrEqual(2, \time() - $last['at']);
+		// checked in during this tick, however long the tick took on a loaded machine
+		self::assertGreaterThanOrEqual($before, $last['at']);
+		self::assertLessThanOrEqual(\time(), $last['at']);
 		self::assertSame($last['at'], CronRunner::lastSchedulerTick());
 		self::assertTrue(CronRunner::isScheduled());
 	}
