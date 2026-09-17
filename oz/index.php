@@ -24,8 +24,15 @@ if (\file_exists(\getcwd() . \DIRECTORY_SEPARATOR . 'app' . \DIRECTORY_SEPARATOR
 	// = Load the project boot file
 	require_once \getcwd() . \DIRECTORY_SEPARATOR . 'app' . \DIRECTORY_SEPARATOR . 'boot.php';
 } else {
-	// = There is no project, load ozone autoload file
-	require_once \dirname(__DIR__) . \DIRECTORY_SEPARATOR . 'vendor' . \DIRECTORY_SEPARATOR . 'autoload.php';
+	// = There is no project: OZone's own autoload file, or, when OZone is installed as a dependency
+	// (vendor/silassare/ozone, as a plugin's test suite has it), the one of the package it is installed in
+	$autoload = \dirname(__DIR__) . \DIRECTORY_SEPARATOR . 'vendor' . \DIRECTORY_SEPARATOR . 'autoload.php';
+
+	if (!\is_file($autoload)) {
+		$autoload = \dirname(__DIR__, 3) . \DIRECTORY_SEPARATOR . 'autoload.php';
+	}
+
+	require_once $autoload;
 }
 
 // = Start the cli and execute any requested command
