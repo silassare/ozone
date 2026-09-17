@@ -87,6 +87,10 @@ final class ProjectCmd extends Command
 			->string(2, 2)
 			->pattern($project_prefix_reg)
 			->def('SA');
+		$create->option('json', 'j')
+			->description('Output the result as one JSON object, for tools.')
+			->bool()
+			->def(false);
 		$create->handler($this->create(...));
 
 		// action: project link
@@ -607,6 +611,16 @@ final class ProjectCmd extends Command
 			'namespace'    => $namespace,
 			'app_class'    => $class_name,
 		]);
+
+		if ($args->get('json')) {
+			$cli->writeJson([
+				'root'       => $root,
+				'name'       => $name,
+				'namespace'  => $namespace,
+				'class_name' => $class_name,
+				'next'       => ['composer update'],
+			]);
+		}
 
 		$cli->info('You need to run:')
 			->writeLn("\tcomposer update");

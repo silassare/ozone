@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli;
 
 use Kli\KliCommand;
+use Override;
+use OZONE\Core\Exceptions\RuntimeException;
 
 /**
  * Class Command.
@@ -41,6 +43,21 @@ abstract class Command extends KliCommand
 	public static function instance(string $name, Cli $cli): static
 	{
 		return new static($name, $cli);
+	}
+
+	/**
+	 * The OZone command line, with its JSON mode ({@see Cli::writeJson()}).
+	 */
+	#[Override]
+	public function getCli(): Cli
+	{
+		$cli = parent::getCli();
+
+		if (!$cli instanceof Cli) {
+			throw new RuntimeException('An OZone command runs in the OZone command line.');
+		}
+
+		return $cli;
 	}
 
 	/**

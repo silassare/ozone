@@ -85,6 +85,10 @@ final class DbCmd extends Command
 			->string()
 			->pattern(PHPNamespace::NAMESPACE_PATTERN)
 			->def(null);
+		$build->option('json', 'j')
+			->description('Output the result as one JSON object, for tools.')
+			->bool()
+			->def(false);
 		$build->handler($this->build(...));
 
 		// action: ts bundle
@@ -211,6 +215,16 @@ final class DbCmd extends Command
 
 		if (!$class_only) {
 			$cli->executeString('migrations create');
+		}
+
+		if ($args->get('json')) {
+			$cli->writeJson([
+				'namespaces' => \array_map(static fn (string $ns): array => [
+					'namespace' => $ns,
+					'dir'       => ORM::getOutputDir($ns),
+				], \array_keys($ns_map)),
+				'migration'  => !$class_only,
+			]);
 		}
 	}
 

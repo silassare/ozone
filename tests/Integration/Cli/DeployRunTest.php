@@ -51,7 +51,7 @@ final class DeployRunTest extends TestCase
 		self::rmdir(self::$repo);
 		self::rmdir(self::$root);
 
-		// A real repository, so `git clone --depth 1 --branch` is exercised as it is in production.
+		// A real repository, so the checkout (init, fetch, checkout) is exercised as it is in production.
 		// The fixture owns it: a leftover .git from an interrupted run would make the commit below
 		// a no-op and fail with "nothing to commit".
 		$project = self::$proj->getPath();

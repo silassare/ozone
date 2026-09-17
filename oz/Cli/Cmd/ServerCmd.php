@@ -124,6 +124,17 @@ final class ServerCmd extends Command
 		$manifest = ProvisionManifest::load((string) $args->get('manifest'));
 		$steps    = $manifest->steps();
 
+		if ($args->get('json')) {
+			$cli->writeJson([
+				'manifest'    => $manifest->path,
+				'provisioned' => !empty($steps),
+				'steps'       => \array_map(static fn (string $step): array => [
+					'step'       => $step,
+					'applied_at' => $manifest->at($step),
+				], $steps),
+			]);
+		}
+
 		if (empty($steps)) {
 			$cli->info(\sprintf(
 				'No provision manifest at %s: this host was not provisioned by OZone.',
@@ -206,6 +217,10 @@ final class ServerCmd extends Command
 			->description('Where the manifest is.')
 			->string()
 			->def(ProvisionManifest::DEFAULT_PATH);
+		$status->option('json', 'j')
+			->description('Output the result as one JSON object, for tools.')
+			->bool()
+			->def(false);
 		$status->handler($this->status(...));
 	}
 

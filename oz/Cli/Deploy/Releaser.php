@@ -53,6 +53,7 @@ final class Releaser
 		private readonly ?string $health_url = null,
 		private readonly array $restart = [],
 		private readonly string $php = \PHP_BINARY,
+		private readonly string $archive = '',
 	) {}
 
 	/**
@@ -92,18 +93,7 @@ final class Releaser
 			),
 		);
 
-		$steps[] = new ProvisionStep(
-			'checkout',
-			\sprintf('Check out %s at %s.', $this->repository, $this->ref),
-			[
-				\sprintf(
-					'git clone --depth 1 --branch %s %s %s',
-					\escapeshellarg($this->ref),
-					\escapeshellarg($this->repository),
-					\escapeshellarg($release)
-				),
-			],
-		);
+		$steps[] = $this->checkoutStep($release);
 
 		// The state lives beside the releases, so the release links to it: nothing inside a release
 		// directory may hold state, or a deploy would orphan it. The same goes for `.env`, which is
@@ -280,6 +270,59 @@ final class Releaser
 	 *
 	 * @return list<string> the names of the steps that ran
 	 */
+	/**
+	 * Puts the code of the release in place, from exactly one source.
+	 *
+	 * - A git repository (`$repository`): a URL, a path, or a bundle file (`git bundle create`), which
+	 *   carries the commits without a server to fetch them from. The ref is fetched, then checked out:
+	 *   a branch, a tag or a full commit hash (`git clone --branch` takes no commit).
+	 * - A tar archive (`$archive`, gzipped): the project at its root, as `git archive` writes it.
+	 *
+	 * The git directory is given explicitly rather than entered, so a relative source resolves from the
+	 * working directory, as it did for `git clone`.
+	 */
+	private function checkoutStep(string $release): ProvisionStep
+	{
+		$has_repository = '' !== $this->repository;
+		$has_archive    = '' !== $this->archive;
+
+		if ($has_repository === $has_archive) {
+			throw new RuntimeException('A release needs exactly one source: a git repository or a tar archive.');
+		}
+
+		if ($has_archive) {
+			return new ProvisionStep(
+				'checkout',
+				\sprintf('Unpack %s.', $this->archive),
+				[
+					\sprintf('mkdir -p %s', \escapeshellarg($release)),
+					\sprintf('tar -xzf %s -C %s', \escapeshellarg($this->archive), \escapeshellarg($release)),
+				],
+			);
+		}
+
+		$git = \sprintf(
+			'git --git-dir=%s --work-tree=%s',
+			\escapeshellarg($release . DS . '.git'),
+			\escapeshellarg($release)
+		);
+
+		return new ProvisionStep(
+			'checkout',
+			\sprintf('Check out %s at %s.', $this->repository, $this->ref),
+			[
+				\sprintf('git init --quiet %s', \escapeshellarg($release)),
+				\sprintf(
+					'%s fetch --quiet --depth 1 %s %s',
+					$git,
+					\escapeshellarg($this->repository),
+					\escapeshellarg($this->ref)
+				),
+				\sprintf('%s checkout --quiet FETCH_HEAD', $git),
+			],
+		);
+	}
+
 	public function run(ShellRunnerInterface $runner, ?callable $on_step = null): array
 	{
 		// Checked before anything is created: a release whose `.env` is missing cannot boot, and

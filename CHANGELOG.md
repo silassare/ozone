@@ -125,6 +125,9 @@
 
 ### Added
 
+- `oz deploy run --archive=<tar.gz>` deploys a release from a tar archive of the project (as `git archive` writes it), and `--repository` accepts a git bundle file (`git bundle create`): neither needs the server to reach a repository. A release takes exactly one source.
+- `--json` on `oz migrations check`, `deploy releases`, `server status`, `db build`, `scopes add` and `project create`, as `oz doctor check` had: stdout holds one JSON object, `{"ok": bool, ...}` with what the command reported under `messages`, and errors are answered in JSON too (`{"ok": false, "error": ...}`, a non-zero exit), whether Kli, the command or the global exception handler reports them. `Cli::writeJson()` writes it; `Cli::inJsonMode()` tells whether the command line asked for it.
+- `oz users grant --user=<id|email> --role=<role> [--by=id|email|phone|username] [--type=<user type>]` gives a role to an existing user of any user type (restoring a revoked one), so a project's first super admin needs no web installer; `oz doctor check` warns when an installed project has no super admin.
 - The test kit ships with OZone (`OZONE\Core\Testing`, moved from `tests/`), so a plugin or an app tests the way OZone does: `Sandbox` (`create()` with settings sources, `bootstrap()`, `addSettingsSources()`; the build generates the ORM classes of every enabled namespace, plugins included), `SandboxApp`, `OZTestProject` (new `$repositories` argument, pins from the root package's `composer.lock` with path-repository packages resolved from their directory, `useStubsDir()`), `DbTestConfig`, `ServiceEnv`, `IntegrationTestCase` and `Traits\Requires{Redis,Minio,ClamAV}Trait`. It is left out of the preload list. `phpunit/phpunit` is suggested for `IntegrationTestCase` and the traits. `bin/oz` run outside a project loads, when OZone has no `vendor/` of its own (installed as a dependency), the autoloader of the package it is installed in.
 - `Route::key()`, `RouteInfo::onSuccess()` (callbacks scoped to one dispatch), `Field::configureType()`, public `Field::validateType()`, `RuleSet::getFieldRefs()`, `TypesSwitcher::getConditions()`, `RouteSharedOptions::resolveResumeProviderClass()`.
 - `Http\CorsPolicy`, `Context::getRequestOrigin()`, `Auth\LoginThrottle`, `AuthUsers::checkPassword()`, `TypeUrl::allowedHosts()`, `ErrorUtils::redactSensitiveData()`.
@@ -143,6 +146,7 @@
 
 ### Fixed
 
+- `oz deploy run --ref=<commit>` failed ("Remote branch not found"): the checkout was `git clone --depth 1 --branch`, which takes a branch or a tag only, while the option documents a commit. The release now fetches the ref and checks it out, so a full commit hash works.
 - `Env::patch()` (and `upset()`) no longer needs a running app: it wrote the file through `app()->getProjectDir()`, so a standalone tool editing a project's `.env` (`OZTestProject::writeEnv()` in a script) failed with "No app is running".
 - A completed form session was accepted by any resumable route, letting one flow's data stand in for another's validated input.
 - `make cs` failed on a missing `api/` path and disagreed with the php-cs-fixer output of `make fix`.

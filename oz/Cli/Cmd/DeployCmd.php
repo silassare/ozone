@@ -121,7 +121,14 @@ final class DeployCmd extends Command
 			!$args->get('skip-migrations'),
 			($url = (string) $args->get('health-url')) === '' ? null : $url,
 			self::parseList((string) $args->get('restart')),
+			archive: (string) $args->get('archive'),
 		);
+
+		if (('' === (string) $args->get('repository')) === ('' === (string) $args->get('archive'))) {
+			$cli->error('Give the code to deploy: --repository (with --ref), or --archive.');
+
+			return;
+		}
 
 		$cli->writeLn(\sprintf('Deploy root: %s', $root));
 		$cli->writeLn(\sprintf('Release:     %s', $releaser->releaseName()));
@@ -235,6 +242,17 @@ final class DeployCmd extends Command
 		$cli  = $this->getCli();
 		$root = \rtrim((string) $args->get('root'), DS);
 
+		if ($args->get('json')) {
+			$deployed = ReleaseLayout::isDeployRoot($root);
+
+			$cli->writeJson([
+				'root'     => $root,
+				'deployed' => $deployed,
+				'current'  => $deployed ? ReleaseLayout::currentRelease($root) : null,
+				'releases' => $deployed ? ReleaseLayout::releases($root) : [],
+			]);
+		}
+
 		if (!ReleaseLayout::isDeployRoot($root)) {
 			$cli->info(\sprintf('No releases in %s: nothing was deployed there.', $root));
 
@@ -312,13 +330,17 @@ final class DeployCmd extends Command
 		$run = $this->action('run', 'Deploy a release, atomically.');
 		self::rootOption($run, 1);
 		$run->option('repository', 'r', [], 2)
-			->description('The git repository to check out.')
+			->description('The git repository to deploy from: a URL, a path or a bundle file (git bundle create).')
 			->string()
 			->def('');
 		$run->option('ref', '', [], 3)
-			->description('The branch, tag or commit to deploy.')
+			->description('The branch, tag or full commit hash to deploy from the repository.')
 			->string()
 			->def('main');
+		$run->option('archive', 'a')
+			->description('A tar.gz archive of the project, as git archive writes it, instead of a repository.')
+			->string()
+			->def('');
 		$run->option('release', '', [], 4)
 			->description('The release directory name; a UTC timestamp by default.')
 			->string()
@@ -365,6 +387,10 @@ final class DeployCmd extends Command
 		// action: deploy releases
 		$releases = $this->action('releases', 'List the releases of a deploy root.');
 		self::rootOption($releases, 1);
+		$releases->option('json', 'j')
+			->description('Output the result as one JSON object, for tools.')
+			->bool()
+			->def(false);
 		$releases->handler($this->releases(...));
 	}
 

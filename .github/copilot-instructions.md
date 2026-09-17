@@ -726,6 +726,14 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   the extensions, Composer and git unless `--with-php`. Preparing a server is `oz server provision`.
 - **`oz project create`** generates a `composer.json` requiring `silassare/ozone`; every package in its
   graph is on Packagist, so it needs no `repositories` and no credentials.
+- **JSON mode** (`--json`, for tools such as the O'Web Builder): `Cli::run()` sees the flag before bootstrap,
+  so every output goes through `Cli`: `write()` / `writeLn()` print nothing, `info()` / `warn()` /
+  `success()` / `error()` are collected as `messages`, and one with an exit code ends the command in JSON.
+  A command answers with `$cli->writeJson([...], $ok, $exit)` (`{"ok": ...}` first). Never `echo` in a
+  command, and a new command a tool drives gets `--json` the same way.
+- **`oz users grant`** gives a role to an existing user (`Roles::assign()`, restoring a revoked one): the
+  way to make the first super admin, never a web installer. `oz doctor check` warns while an installed
+  project has none.
 - **`oz doctor check [--json]`** reports what the machine and project miss and exits non-zero on a
   failure, including a schema that failed to load at bootstrap. In production it warns (never fails)
   when this release has no class map or one the classes no longer match, and when its preload list
@@ -746,7 +754,9 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   timer running `oz cron run` (`--cron=timer`, the default) or `oz cron work` as a service
   (`--cron=daemon`); the Docker sample runs `oz cron work` in its `cron` container. `Cli\Deploy\DeployTemplates` renders `oz_templates/gen/deploy/` by `__TOKEN__`
   substitution, not Blate (nginx and GitHub `${{ }}` braces collide with it), and **throws on a token
-  it did not replace**. `run` is an atomic release: `prepare`, `checkout`, `link-shared`,
+  it did not replace**. `run` is an atomic release from one source -- a git repository, URL, path or bundle file, at a branch, tag or
+  full commit hash (fetched, then checked out: `git clone --branch` takes no commit), or a tar archive
+  (`--archive`) -- whose `prepare`, `checkout`, `link-shared`,
   `dependencies`, `link-public`, `orm`, `migrations` and `build` all run **before** `go-live` (a temporary
   symlink plus `mv -T`), so a failure leaves the live release serving; a failed health check moves
   `current` back; `prune` never removes what `current` resolves to. `.env`, `data/` and `.ozone/` live

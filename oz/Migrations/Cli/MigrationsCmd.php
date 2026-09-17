@@ -50,8 +50,12 @@ final class MigrationsCmd extends Command
 			->prompt(true, 'Enter migration label')
 			->string()->def('Auto generated migration.');
 
-		$this->action('check', 'Check database migrations.')
-			->handler($this->check(...));
+		$check = $this->action('check', 'Check database migrations.');
+		$check->option('json', 'j')
+			->description('Output the result as one JSON object, for tools.')
+			->bool()
+			->def(false);
+		$check->handler($this->check(...));
 
 		$run = $this->action('run', 'Run database migrations.')
 			->handler($this->run(...));
@@ -93,12 +97,26 @@ final class MigrationsCmd extends Command
 	/**
 	 * Checks pending migrations.
 	 */
-	private function check(): void
+	private function check(KliArgs $args): void
 	{
 		Utils::assertProjectLoaded();
 
 		$mg  = new Migrations();
 		$cli = $this->getCli();
+
+		if ($args->get('json')) {
+			$cli->writeJson([
+				'state'          => \strtolower(Migrations::getState()->name),
+				'db_version'     => Migrations::getCurrentDbVersion(true),
+				'source_version' => Migrations::getSourceCodeDbVersion(),
+				'pending'        => \array_map(static fn (MigrationInterface $migration) => [
+					'label'   => $migration->getLabel(),
+					'version' => $migration->getVersion(),
+					'date'    => $migration->getTimestamp(),
+				], $mg->getPendingMigrations(true)),
+			]);
+		}
+
 		if ($mg->hasPendingMigrations()) {
 			$cli->info('There are pending migrations.');
 

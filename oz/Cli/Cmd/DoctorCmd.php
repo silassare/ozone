@@ -54,14 +54,7 @@ final class DoctorCmd extends Command
 		$cli = $this->getCli();
 
 		if ($args->get('json')) {
-			// Never wrapped: Kli word-wraps by default, which would break long JSON strings.
-			$cli->writeLn((string) \json_encode([
-				'ok'     => empty($failed),
-				'checks' => $checks,
-			], \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES), false);
-
-			// Nothing but JSON on stdout, so the output stays machine-readable.
-			$cli->terminate(empty($failed) ? 0 : 1);
+			$cli->writeJson(['checks' => $checks], empty($failed), empty($failed) ? 0 : 1);
 		}
 
 		$this->report($checks);
@@ -301,6 +294,20 @@ final class DoctorCmd extends Command
 			};
 
 			$checks[] = self::row('Migrations', $status, $detail, $fix);
+
+			// An installed project nobody can administer: no project needs a web installer to fix it.
+			if (MigrationsState::INSTALLED === $state) {
+				$has_super_admin = OZone::hasSuperAdmin();
+
+				$checks[] = self::row(
+					'Super admin',
+					$has_super_admin ? self::OK : self::WARN,
+					$has_super_admin ? 'present' : 'none',
+					$has_super_admin
+						? ''
+						: 'Give the role to a user: "oz users grant --user=<id|email> --role=super-admin".'
+				);
+			}
 		} catch (Throwable $t) {
 			$checks[] = self::row('Migrations', self::WARN, $t->getMessage(), '');
 		}

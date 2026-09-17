@@ -15,6 +15,7 @@ namespace OZONE\Core\Exceptions\Utils;
 
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Cli\Cli;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\OZone;
 use OZONE\Core\Runtime\Runtime;
@@ -188,6 +189,11 @@ class ErrorUtils
 		}
 
 		if (OZone::isCliMode()) {
+			// A command in JSON mode answers in JSON on stdout, whatever went wrong.
+			if (Cli::inJsonMode()) {
+				echo \json_encode(['ok' => false, 'error' => $t->getMessage()], \JSON_UNESCAPED_SLASHES), \PHP_EOL;
+			}
+
 			\fwrite(\STDERR, \PHP_EOL . $t->getMessage() . \PHP_EOL);
 
 			Runtime::current()->terminate(1);

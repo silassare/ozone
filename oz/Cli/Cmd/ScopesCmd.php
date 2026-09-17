@@ -198,6 +198,10 @@ final class ScopesCmd extends Command
 			->description('Define if the scope should run in api context or not.')
 			->bool()
 			->def(false);
+		$add->option('json', 'j')
+			->description('Output the result as one JSON object, for tools.')
+			->bool()
+			->def(false);
 		$add->handler($this->add(...));
 	}
 
@@ -250,5 +254,18 @@ final class ScopesCmd extends Command
 				'app_class'    => $class_name,
 			]
 		);
+
+		if ($args->get('json')) {
+			// a fresh files manager: addScope() moved $fm
+			$project = app()->getProjectDir();
+
+			$this->getCli()->writeJson([
+				'scope'   => $scope_name,
+				'origin'  => $origin,
+				'api'     => (bool) $use_api_context,
+				'private' => $project->resolve('scopes' . DS . $scope_name),
+				'public'  => $project->resolve('public' . DS . $scope_name),
+			]);
+		}
 	}
 }

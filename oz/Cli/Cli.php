@@ -37,6 +37,19 @@ final class Cli extends Kli
 	private static ?Cli $instance = null;
 
 	/**
+	 * JSON mode: the command line asked for `--json`, so stdout holds one JSON object ({@see writeJson()})
+	 * and nothing else. Set before bootstrap, so an error at any point is answered in JSON.
+	 */
+	private static bool $json = false;
+
+	/**
+	 * What the command reported while in JSON mode, returned with its JSON output.
+	 *
+	 * @var list<array{level: string, message: string}>
+	 */
+	private static array $json_messages = [];
+
+	/**
 	 * Cli constructor.
 	 */
 	private function __construct()
@@ -139,10 +152,132 @@ final class Cli extends Kli
 	 */
 	public static function run(array $args): void
 	{
+		self::$json = self::asksForJson($args);
+
 		ErrorUtils::registerHandlers();
 
 		self::getInstance()
 			->execute($args);
+	}
+
+	/**
+	 * Whether the command line runs in JSON mode (`--json`).
+	 */
+	public static function inJsonMode(): bool
+	{
+		return self::$json;
+	}
+
+	/**
+	 * Writes the result of a command as one JSON object, `{"ok": bool, ...}` followed by what the command
+	 * reported (`messages`), and terminates. In JSON mode nothing else reaches stdout.
+	 *
+	 * @param array<string, mixed> $data
+	 */
+	public function writeJson(array $data, bool $ok = true, int $exit = 0): never
+	{
+		$payload = ['ok' => $ok] + $data;
+
+		if (!empty(self::$json_messages)) {
+			$payload['messages'] = self::$json_messages;
+		}
+
+		// Never wrapped: Kli word-wraps by default, which would break long JSON strings.
+		echo \json_encode($payload, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES | \JSON_THROW_ON_ERROR), \PHP_EOL;
+
+		$this->terminate($exit);
+	}
+
+	#[Override]
+	public function writeLn(string $str = '', bool $wrap = true): static
+	{
+		return self::$json ? $this : parent::writeLn($str, $wrap);
+	}
+
+	#[Override]
+	public function write(string $str, bool $wrap = false): static
+	{
+		return self::$json ? $this : parent::write($str, $wrap);
+	}
+
+	#[Override]
+	public function info(string $msg, bool $wrap = true): static
+	{
+		if (!self::$json) {
+			return parent::info($msg, $wrap);
+		}
+
+		self::$json_messages[] = ['level' => 'info', 'message' => $msg];
+
+		return $this;
+	}
+
+	#[Override]
+	public function warn(string $msg, bool $wrap = true, ?int $exit = null): static
+	{
+		if (!self::$json) {
+			return parent::warn($msg, $wrap, $exit);
+		}
+
+		if (null !== $exit) {
+			$this->writeJson(['error' => $msg], 0 === $exit, $exit);
+		}
+
+		self::$json_messages[] = ['level' => 'warn', 'message' => $msg];
+
+		return $this;
+	}
+
+	#[Override]
+	public function success(string $msg, bool $wrap = true, ?int $exit = null): static
+	{
+		if (!self::$json) {
+			return parent::success($msg, $wrap, $exit);
+		}
+
+		self::$json_messages[] = ['level' => 'success', 'message' => $msg];
+
+		if (null !== $exit) {
+			$this->writeJson([], 0 === $exit, $exit);
+		}
+
+		return $this;
+	}
+
+	#[Override]
+	public function error(string $msg, bool $wrap = true, ?int $exit = 1): static
+	{
+		if (!self::$json) {
+			return parent::error($msg, $wrap, $exit);
+		}
+
+		if (null !== $exit) {
+			$this->writeJson(['error' => $msg], false, $exit);
+		}
+
+		self::$json_messages[] = ['level' => 'error', 'message' => $msg];
+
+		return $this;
+	}
+
+	/**
+	 * Whether a command line asks for JSON output: `--json`, or `--json=<value>` with a true value.
+	 *
+	 * @param array<int, string> $args
+	 */
+	private static function asksForJson(array $args): bool
+	{
+		foreach ($args as $arg) {
+			if ('--json' === $arg) {
+				return true;
+			}
+
+			if (\str_starts_with($arg, '--json=')) {
+				return !\in_array(\strtolower(\substr($arg, 7)), ['', '0', 'false', 'no', 'off'], true);
+			}
+		}
+
+		return false;
 	}
 
 	/**

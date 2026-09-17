@@ -98,6 +98,41 @@ final class ReleaserTest extends TestCase
 		self::assertStringContainsString('ln -s ', $commands);
 	}
 
+	public function testTheCheckoutFetchesTheRefSoACommitWorks(): void
+	{
+		$commands = self::commandsOf(new Releaser(self::ROOT, self::REPO, ref: 'a1b2c3d4'), 'checkout');
+
+		self::assertCount(3, $commands);
+		self::assertStringStartsWith('git init --quiet ', $commands[0]);
+		// `git clone --branch` refuses a commit: the ref is fetched, whatever it names
+		self::assertStringContainsString("fetch --quiet --depth 1 '" . self::REPO . "' 'a1b2c3d4'", $commands[1]);
+		self::assertStringEndsWith('checkout --quiet FETCH_HEAD', $commands[2]);
+		self::assertStringNotContainsString('--branch', \implode(' ', $commands));
+	}
+
+	public function testAnArchiveIsUnpackedInsteadOfCheckedOut(): void
+	{
+		$commands = self::commandsOf(new Releaser(self::ROOT, '', archive: '/tmp/app.tar.gz', release: 'v1'), 'checkout');
+
+		self::assertSame([
+			"mkdir -p '/srv/app/releases/v1'",
+			"tar -xzf '/tmp/app.tar.gz' -C '/srv/app/releases/v1'",
+		], $commands);
+	}
+
+	public function testAReleaseNeedsExactlyOneSource(): void
+	{
+		foreach ([['', ''], [self::REPO, '/tmp/app.tar.gz']] as [$repository, $archive]) {
+			try {
+				(new Releaser(self::ROOT, $repository, archive: $archive))->steps();
+
+				self::fail('a release with ' . ('' === $repository ? 'no' : 'two') . ' sources must be refused');
+			} catch (RuntimeException $e) {
+				self::assertStringContainsString('exactly one source', $e->getMessage());
+			}
+		}
+	}
+
 	public function testMigrationsCanBeSkipped(): void
 	{
 		self::assertNotContains('migrations', self::stepNames(new Releaser(self::ROOT, self::REPO, migrations: false)));
