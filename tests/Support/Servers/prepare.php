@@ -16,7 +16,7 @@ declare(strict_types=1);
  * so every worker process of the server shares one project and one database.
  */
 
-use OZONE\Tests\Support\Sandbox;
+use OZONE\Core\Testing\Sandbox;
 
 $loader = require __DIR__ . '/../../../vendor/autoload.php';
 
@@ -34,6 +34,6 @@ if (!\is_string($sandbox) || '' === $sandbox) {
 // A restarted container starts over: fresh keys, empty database.
 Sandbox::remove($sandbox);
 // OZ_TEST_SERVER_INSTALLED: the schema installed through a migration, as a deployed project has it.
-Sandbox::create($sandbox, (bool) \getenv('OZ_TEST_SERVER_INSTALLED'));
+Sandbox::create($sandbox, (bool) \getenv('OZ_TEST_SERVER_INSTALLED'), [\dirname(__DIR__, 2) . '/settings']);
 
 \fwrite(\STDERR, 'Sandbox ready: ' . $sandbox . \PHP_EOL);

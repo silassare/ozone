@@ -16,7 +16,7 @@ namespace OZONE\Tests\Queue\Stores;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\Stores\RedisJobStore;
-use OZONE\Tests\Support\RequiresRedisTrait;
+use OZONE\Core\Testing\Traits\RequiresRedisTrait;
 
 /**
  * Redis-backed job store contract tests.

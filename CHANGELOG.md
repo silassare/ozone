@@ -125,6 +125,7 @@
 
 ### Added
 
+- The test kit ships with OZone (`OZONE\Core\Testing`, moved from `tests/`), so a plugin or an app tests the way OZone does: `Sandbox` (`create()` with settings sources, `bootstrap()`, `addSettingsSources()`; the build generates the ORM classes of every enabled namespace, plugins included), `SandboxApp`, `OZTestProject` (new `$repositories` argument, pins from the root package's `composer.lock` with path-repository packages resolved from their directory, `useStubsDir()`), `DbTestConfig`, `ServiceEnv`, `IntegrationTestCase` and `Traits\Requires{Redis,Minio,ClamAV}Trait`. It is left out of the preload list. `phpunit/phpunit` is suggested for `IntegrationTestCase` and the traits. `bin/oz` run outside a project loads, when OZone has no `vendor/` of its own (installed as a dependency), the autoloader of the package it is installed in.
 - `Route::key()`, `RouteInfo::onSuccess()` (callbacks scoped to one dispatch), `Field::configureType()`, public `Field::validateType()`, `RuleSet::getFieldRefs()`, `TypesSwitcher::getConditions()`, `RouteSharedOptions::resolveResumeProviderClass()`.
 - `Http\CorsPolicy`, `Context::getRequestOrigin()`, `Auth\LoginThrottle`, `AuthUsers::checkPassword()`, `TypeUrl::allowedHosts()`, `ErrorUtils::redactSensitiveData()`.
 - `Http\TrustedProxies` (with `resolveScheme()` and `resolveHost()`), `Context::isFromTrustedProxy()`, `Crypt\SignedSerializer`, `CSRF::isValid()`, `AuthLinkView::AUTH_LINK_CONFIRM_ROUTE`, `ErrorUtils::isRedactionEnabled()`; `Uri::createFromEnvironment()` accepts a `TrustedProxies`.

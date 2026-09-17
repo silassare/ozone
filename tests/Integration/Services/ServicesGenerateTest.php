@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Services;
 
-use OZONE\Tests\Integration\Support\DbTestConfig;
-use OZONE\Tests\Integration\Support\OZTestProject;
+use OZONE\Core\Testing\DbTestConfig;
+use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 

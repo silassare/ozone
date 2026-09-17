@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Router;
 
-use OZONE\Tests\Integration\Support\OZTestProject;
+use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Process\Process;

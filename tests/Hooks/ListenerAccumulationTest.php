@@ -18,7 +18,7 @@ use OZONE\Core\Hooks\Events\RequestHook;
 use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\OZone;
-use OZONE\Tests\App;
+use OZONE\Core\Testing\SandboxApp;
 use PHPUnit\Framework\TestCase;
 use PHPUtils\Events\EventManager;
 use ReflectionClass;
@@ -87,7 +87,7 @@ final class ListenerAccumulationTest extends TestCase
 		// The suite already bootstrapped; a second call must refuse rather than re-notify the boot
 		// receivers, whose boot() methods are not individually idempotent (Session::boot() would add
 		// a second DbReadyHook listener).
-		@OZone::bootstrap(new App());
+		@OZone::bootstrap(new SandboxApp());
 
 		self::assertSame(
 			$before,

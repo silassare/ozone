@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Http;
 
-use OZONE\Tests\Integration\Support\OZTestProject;
+use OZONE\Core\Testing\OZTestProject;
 use PDO;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;

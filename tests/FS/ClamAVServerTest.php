@@ -16,7 +16,7 @@ namespace OZONE\Tests\FS;
 use Override;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\Scan\Scanners\ClamAVScanner;
-use OZONE\Tests\Support\RequiresClamAVTrait;
+use OZONE\Core\Testing\Traits\RequiresClamAVTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

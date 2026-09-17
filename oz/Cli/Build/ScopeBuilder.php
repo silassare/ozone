@@ -88,9 +88,10 @@ final class ScopeBuilder
 	 * preload list holds what a request may load, and not only what booting and building the routers
 	 * did: the request path, Gobl's ORM runtime, the template engine.
 	 *
-	 * Left out: the command line (`OZONE\Core\Cli\`, Kli), tests, the generated ORM classes, and a
-	 * file that does not declare the class its path names. A class that cannot be declared -- an
-	 * optional integration whose package is missing -- is left out too.
+	 * Left out: the command line (`OZONE\Core\Cli\`, Kli), tests and the test kit
+	 * (`OZONE\Core\Testing\`), the generated ORM classes, and a file that does not declare the class its
+	 * path names. A class that cannot be declared -- an optional integration whose package is missing --
+	 * is left out too.
 	 */
 	private static function declareFirstParty(): void
 	{
@@ -112,6 +113,7 @@ final class ScopeBuilder
 		$skip = [
 			'Kli\\',
 			'OZONE\Core\Cli\\',
+			'OZONE\Core\Testing\\',
 			...\array_map(static fn (string $ns): string => $ns . '\\', Db::ormNamespaces()),
 		];
 

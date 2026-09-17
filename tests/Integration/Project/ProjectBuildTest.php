@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Project;
 
-use OZONE\Tests\Integration\Support\OZTestProject;
+use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -90,6 +90,8 @@ final class ProjectBuildTest extends TestCase
 		foreach ($files as $file) {
 			self::assertFileExists($file);
 			self::assertStringNotContainsString('/.ozone/', $file);
+			// the test kit is never loaded by a request
+			self::assertStringNotContainsString('/oz/Testing/', $file);
 		}
 	}
 

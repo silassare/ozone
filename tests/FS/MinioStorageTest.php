@@ -21,8 +21,8 @@ use OZONE\Core\FS\Drivers\MinioStorage;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\S3\S3Client;
-use OZONE\Tests\Support\IntegrationTestCase;
-use OZONE\Tests\Support\RequiresMinioTrait;
+use OZONE\Core\Testing\IntegrationTestCase;
+use OZONE\Core\Testing\Traits\RequiresMinioTrait;
 
 /**
  * Class MinioStorageTest.

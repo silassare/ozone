@@ -21,7 +21,7 @@ use OZONE\Core\FS\S3\Interfaces\S3TransportInterface;
 use OZONE\Core\FS\S3\S3Client;
 use OZONE\Core\FS\S3\Transport\CurlTransport;
 use OZONE\Core\FS\S3\Transport\StreamWrapperTransport;
-use OZONE\Tests\Support\RequiresMinioTrait;
+use OZONE\Core\Testing\Traits\RequiresMinioTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

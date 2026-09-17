@@ -11,8 +11,9 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Tests\Support;
+namespace OZONE\Core\Testing;
 
+use Override;
 use OZONE\Core\App\Db;
 use PHPUnit\Framework\TestCase;
 use Throwable;
@@ -28,11 +29,11 @@ use Throwable;
  *    tearDownAfterClass()).
  *
  * Database connection:
- *  - The sandbox project of `tests/autoload.php` (SQLite by default, see
- *    `tests/settings/oz.db.php`), so no server is needed for it.
- *  - Servers come from the environment: `docker/compose.yaml` exports the
- *    `OZ_TEST_*`, `OZ_REDIS_*`, `OZ_MINIO_*` and `OZ_CLAMAV_*` variables into
- *    the PHP container, and `make` is what runs the suites.
+ *  - The suite's sandbox project ({@see Sandbox}; SQLite by default, see
+ *    `settings/oz.db.php`), so no server is needed for it.
+ *  - Servers come from the environment: a Docker test setup (OZone's
+ *    `docker/compose.yaml`) exports the `OZ_TEST_*`, `OZ_REDIS_*`, `OZ_MINIO_*`
+ *    and `OZ_CLAMAV_*` variables into the PHP container, and `make` runs the suites.
  */
 abstract class IntegrationTestCase extends TestCase
 {
@@ -46,6 +47,7 @@ abstract class IntegrationTestCase extends TestCase
 	/**
 	 * {@inheritDoc}
 	 */
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();

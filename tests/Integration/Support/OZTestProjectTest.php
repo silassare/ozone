@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Support;
 
+use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\TestCase;
 
 /**

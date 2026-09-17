@@ -19,7 +19,7 @@ use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\Job;
 use OZONE\Core\Queue\JobContract;
 use OZONE\Core\Queue\JobState;
-use OZONE\Tests\Support\IntegrationTestCase;
+use OZONE\Core\Testing\IntegrationTestCase;
 use Throwable;
 
 /**

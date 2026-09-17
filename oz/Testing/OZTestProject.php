@@ -11,22 +11,31 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Tests\Integration\Support;
+namespace OZONE\Core\Testing;
 
+use Composer\InstalledVersions;
 use JsonException;
 use OZONE\Core\Utils\Env;
-use OZONE\Tests\Support\ServiceEnv;
 use PDO;
 use RuntimeException;
 use Symfony\Component\Process\Process;
 
 /**
- * Helper that manages a throwaway OZone project inside /tmp/_oz_tests_/projects/{name}/.
+ * Helper that manages a throwaway OZone project inside /tmp/_oz_tests_/projects/{name}/, created with
+ * the `oz` of the OZone running the tests. OZone's integration suite uses it, and so can a plugin's or
+ * an app's: the project resolves its dependencies the way the repository running the tests does.
+ *
+ * Dependencies:
+ *   - Every package of the running repository's graph is pinned to the version its composer.lock
+ *     records (a dev branch to its commit): a project installs what the lock says, not whatever a
+ *     moving branch points at on the day its cache is built.
+ *   - A package the lock resolved from a path repository (a local sibling checkout) is resolved from
+ *     the same directory, so unreleased changes are tested together.
+ *   - When OZone itself runs the tests, its root is added as a path repository so silassare/ozone
+ *     is resolved locally without any download.
+ *   - `$repositories` adds path repositories, e.g. the plugin under test (required through `$deps`).
  *
  * Vendor caching:
- *   - Every package of OZone's own graph is pinned to the version OZone's composer.lock records (a
- *     dev branch to its commit): a project installs what the lock says, not whatever a moving
- *     branch points at on the day its cache is built.
  *   - A SHA-256 hash is computed from the project's effective require, pins included.
  *   - If /tmp/_oz_tests_/_vendors_cache_/{hash}/ already exists, vendor/ is symlinked there
  *     -- no composer install needed.
@@ -35,9 +44,7 @@ use Symfony\Component\Process\Process;
  *     the cache instantly.
  *   - A project directory reused from an earlier run (not `$fresh`, or left behind by a run that
  *     was killed) is relinked to the current set's vendor/ whenever its own is another set's --
- *     OZone's composer.lock moved -- or an install that never finished.
- *   - The ozone root is always added as a path repository so silassare/ozone is
- *     resolved locally without any download.
+ *     the running repository's composer.lock moved -- or an install that never finished.
  *
  * Usage:
  *
@@ -48,10 +55,21 @@ use Symfony\Component\Process\Process;
  */
 final class OZTestProject
 {
+	/** The directory of the suite's stubs ({@see writeFileFromStub()}). */
+	private static ?string $stubs_dir = null;
+
 	/** @var int[] PIDs of php -S processes started via startServer(), killed on destroy(). */
 	private array $serverPids = [];
 
 	private function __construct(private readonly string $dir) {}
+
+	/**
+	 * Sets the directory {@see writeFileFromStub()} loads stubs from, once for the suite.
+	 */
+	public static function useStubsDir(string $dir): void
+	{
+		self::$stubs_dir = \rtrim($dir, '/\\');
+	}
 
 	/**
 	 * Creates a test project in /tmp/_oz_tests_/projects/{name}/ and returns a handle.
@@ -59,15 +77,18 @@ final class OZTestProject
 	 * Composer install only runs when the effective dependency set has never
 	 * been seen before - otherwise the cached vendor/ directory is symlinked.
 	 *
-	 * @param string               $name   project directory name (slug)
-	 * @param array<string,string> $deps   extra require packages (name -> constraint)
-	 * @param bool                 $shared when true the vendor cache is shared with
-	 *                                     other projects that have the same dep set;
-	 *                                     pass false to isolate vendor per project name;
-	 *                                     in most cases tests should set shared=true so that composer installs are minimized
-	 * @param bool                 $fresh  when true, any existing project directory is destroyed before creating;
-	 *                                     use when the test must start from a clean slate on every run
-	 *                                     (e.g. tests that call migrations create + run inline)
+	 * @param string               $name         project directory name (slug)
+	 * @param array<string,string> $deps         extra require packages (name -> constraint)
+	 * @param bool                 $shared       when true the vendor cache is shared with other projects
+	 *                                           that have the same dep set; pass false to isolate vendor
+	 *                                           per project name; in most cases tests should set
+	 *                                           shared=true so that composer installs are minimized
+	 * @param bool                 $fresh        when true, any existing project directory is destroyed
+	 *                                           before creating; use when the test must start from a
+	 *                                           clean slate on every run (e.g. tests that call
+	 *                                           migrations create + run inline)
+	 * @param list<string>         $repositories directories added as path repositories (symlinked),
+	 *                                           e.g. the package under test
 	 *
 	 * @throws JsonException
 	 */
@@ -76,8 +97,10 @@ final class OZTestProject
 		array $deps = [],
 		bool $shared = true,
 		bool $fresh = false,
+		array $repositories = [],
 	): static {
 		$ozone_root  = self::ozoneRoot();
+		$root_dir    = self::rootDir();
 		$project_dir = self::projectsDir() . \DIRECTORY_SEPARATOR . $name;
 
 		// Destroy any existing project directory when a clean slate is requested.
@@ -134,22 +157,16 @@ final class OZTestProject
 			\JSON_THROW_ON_ERROR,
 		);
 
-		// Path repository -> silassare/ozone resolved from local ozone root,
-		// vendor/silassare/ozone will be a symlink to the ozone root. Added in front of whatever the
-		// project template declares rather than replacing it, so these projects resolve the way a
-		// real one does.
-		$composer['repositories'] ??= [];
+		// Path repositories, added in front of whatever the project template declares rather than
+		// replacing it, so these projects resolve the way a real one does.
+		$path_repositories = $repositories;
 
-		\array_unshift($composer['repositories'], [
-			'type'    => 'path',
-			'url'     => $ozone_root,
-			'options' => ['symlink' => true],
-		]);
-
-		// Allow any version of ozone so the path-repo (which exports dev-main)
-		// satisfies the constraint regardless of the exact version written in
-		// the generated composer.json.
-		$composer['require']['silassare/ozone'] = '*';
+		// When OZone runs the tests, silassare/ozone is resolved from its root (vendor/silassare/ozone
+		// will be a symlink to it), in any version: the path repository exports dev-main.
+		if ($root_dir === $ozone_root) {
+			$path_repositories[]                    = $ozone_root;
+			$composer['require']['silassare/ozone'] = '*';
+		}
 
 		// Composer requires PSR-4 namespace prefixes to end with '\'.
 		// The project generator omits the trailing backslash, so add it here.
@@ -162,11 +179,25 @@ final class OZTestProject
 			$composer['autoload']['psr-4'] = $psr4;
 		}
 
-		// OZone's graph at the versions its composer.lock records. Left to the constraints, a
-		// `dev-main` dependency resolves to wherever the branch is when the cache is built, and a
-		// cache built earlier keeps an older commit than the lock under the same key.
-		foreach (self::lockedPackages($ozone_root) as $pkg => $ver) {
+		// The running repository's graph at the versions its composer.lock records. Left to the
+		// constraints, a `dev-main` dependency resolves to wherever the branch is when the cache is
+		// built, and a cache built earlier keeps an older commit than the lock under the same key.
+		foreach (self::lockedPackages($root_dir) as $pkg => [$ver, $path]) {
 			$composer['require'][$pkg] = $ver;
+
+			if (null !== $path) {
+				$path_repositories[] = $path;
+			}
+		}
+
+		$composer['repositories'] ??= [];
+
+		foreach (\array_reverse(\array_values(\array_unique($path_repositories))) as $path) {
+			\array_unshift($composer['repositories'], [
+				'type'    => 'path',
+				'url'     => $path,
+				'options' => ['symlink' => true],
+			]);
 		}
 
 		foreach ($deps as $pkg => $ver) {
@@ -275,7 +306,7 @@ final class OZTestProject
 	 * This is the preferred way to inject DB credentials and similar
 	 * runtime config - the generated oz.db.php already reads from .env.
 	 *
-	 * @param array<string, string> $values
+	 * @param array<string, bool|float|int|string> $values
 	 */
 	public function writeEnv(array $values): void
 	{
@@ -359,16 +390,20 @@ final class OZTestProject
 	}
 
 	/**
-	 * Writes a file to the project by loading a stub from tests/Integration/Stubs/
-	 * and replacing `__PLH_KEY__` placeholders with the given values.
+	 * Writes a file to the project by loading a stub from the suite's stubs directory
+	 * ({@see useStubsDir()}) and replacing `__PLH_KEY__` placeholders with the given values.
 	 *
-	 * @param string              $stubName      stub filename without the .php extension (in tests/Integration/Stubs/)
+	 * @param string              $stubName      stub filename without the .php extension
 	 * @param string              $targetRelPath relative path inside the project (e.g. 'app/Workers/MyWorker.php')
 	 * @param array<string,mixed> $placeholders  key => value map; each key is uppercased and wrapped in __PLH_...__
 	 */
 	public function writeFileFromStub(string $stubName, string $targetRelPath, array $placeholders): void
 	{
-		$stubFile = \dirname(__DIR__) . \DIRECTORY_SEPARATOR . 'Stubs' . \DIRECTORY_SEPARATOR . $stubName . '.php';
+		if (null === self::$stubs_dir) {
+			throw new RuntimeException('No stubs directory: call OZTestProject::useStubsDir() first.');
+		}
+
+		$stubFile = self::$stubs_dir . \DIRECTORY_SEPARATOR . $stubName . '.php';
 		$content  = (string) \file_get_contents($stubFile);
 
 		foreach ($placeholders as $key => $value) {
@@ -551,26 +586,49 @@ final class OZTestProject
 	}
 
 	/**
-	 * Absolute path to the OZone repository root.
-	 * tests/Integration/Support/ -> tests/Integration/ -> tests/ -> ozone root.
+	 * Absolute path to the root of the OZone package running the tests: oz/Testing/ -> oz/ -> root.
 	 */
 	private static function ozoneRoot(): string
 	{
-		return \dirname(__DIR__, 3);
+		return self::realDir(\dirname(__DIR__, 2));
 	}
 
 	/**
-	 * The packages of OZone's runtime graph, each at the version OZone's composer.lock records: the
-	 * exact version of a release, the commit of a branch (`dev-main#<ref>`, which the package's branch
-	 * alias keeps satisfying OZone's own constraints).
+	 * Absolute path to the root package of the process: OZone itself, or the plugin or app whose suite
+	 * runs.
+	 */
+	private static function rootDir(): string
+	{
+		return self::realDir(InstalledVersions::getRootPackage()['install_path']);
+	}
+
+	/**
+	 * The real path of an existing directory.
+	 */
+	private static function realDir(string $dir): string
+	{
+		$real = \realpath($dir);
+
+		if (false === $real) {
+			throw new RuntimeException(\sprintf('Directory "%s" does not exist.', $dir));
+		}
+
+		return $real;
+	}
+
+	/**
+	 * The packages of the root package's runtime graph, each at the version its composer.lock records:
+	 * the exact version of a release, the commit of a branch (`dev-main#<ref>`, which the package's
+	 * branch alias keeps satisfying the root's own constraints). A package installed from a path
+	 * repository keeps its version and gives its directory, to be resolved from there again.
 	 *
-	 * @return array<string, string> package name -> constraint
+	 * @return array<string, array{0: string, 1: null|string}> package name -> [constraint, path]
 	 *
 	 * @throws JsonException
 	 */
-	private static function lockedPackages(string $ozone_root): array
+	private static function lockedPackages(string $root_dir): array
 	{
-		$lock_file = $ozone_root . \DIRECTORY_SEPARATOR . 'composer.lock';
+		$lock_file = $root_dir . \DIRECTORY_SEPARATOR . 'composer.lock';
 
 		if (!\is_readable($lock_file)) {
 			return [];
@@ -581,11 +639,22 @@ final class OZTestProject
 
 		foreach ($lock['packages'] ?? [] as $package) {
 			$version = $package['version'];
-			$ref     = $package['source']['reference'] ?? $package['dist']['reference'] ?? null;
 
-			$pins[$package['name']] = \str_starts_with($version, 'dev-') && null !== $ref
-				? $version . '#' . $ref
-				: $version;
+			if ('path' === ($package['dist']['type'] ?? null)) {
+				$url = (string) $package['dist']['url'];
+				$dir = \str_starts_with($url, '/') ? $url : $root_dir . \DIRECTORY_SEPARATOR . $url;
+
+				$pins[$package['name']] = [$version, self::realDir($dir)];
+
+				continue;
+			}
+
+			$ref = $package['source']['reference'] ?? $package['dist']['reference'] ?? null;
+
+			$pins[$package['name']] = [
+				\str_starts_with($version, 'dev-') && null !== $ref ? $version . '#' . $ref : $version,
+				null,
+			];
 		}
 
 		return $pins;
@@ -612,7 +681,7 @@ final class OZTestProject
 	 */
 	private static function toNamespace(string $name): string
 	{
-		return \preg_replace('/[^a-zA-Z0-9]/', '', \ucwords(\str_replace(['-', '_'], ' ', $name)));
+		return (string) \preg_replace('/[^a-zA-Z0-9]/', '', \ucwords(\str_replace(['-', '_'], ' ', $name)));
 	}
 
 	/**

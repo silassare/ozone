@@ -91,6 +91,8 @@ final class CatalogTest extends TestCase
 	{
 		$settings_dir = OZ_OZONE_DIR . 'oz_settings';
 		$db_dir       = OZ_OZONE_DIR . 'Db';
+		// the test kit names environment variables (OZ_TEST_*, service addresses), never messages
+		$testing_dir  = OZ_OZONE_DIR . 'Testing';
 		$excluded     = \array_flip(self::NOT_MESSAGES);
 		$codes        = [];
 
@@ -109,6 +111,7 @@ final class CatalogTest extends TestCase
 				!\preg_match('~\.(php|blate)$~', $path)
 				|| \str_starts_with($path, $settings_dir)
 				|| \str_starts_with($path, $db_dir)
+				|| \str_starts_with($path, $testing_dir)
 			) {
 				continue;
 			}

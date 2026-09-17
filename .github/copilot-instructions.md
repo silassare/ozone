@@ -15,7 +15,7 @@
 - **When a bug or issue is found, do not fix it directly** — ask for feedback and approval first. Open findings live in `ISSUES.md`; a fixed item leaves it, and its breaking changes go in `CHANGELOG.md` (Unreleased).
 - No too verbose comment blocks on obvious code. Keep comments concise and focused on non-obvious insights or rationale.
 - **Symlinks:** If `AGENTS.md` or `CLAUDE.md` do not exist, symlink them to `.github/copilot-instructions.md`.
-- **Direct dependencies only.** Only use packages listed in `require` or `require-dev` of `composer.json`. Do not rely on transitive dependencies — they are not guaranteed to be present and can change without notice. An optional integration may use what `suggest` declares (`ext-redis`, `ext-memcached`, `ext-curl`, and the server bridges' `ext-swoole` / `spiral/roadrunner-http`), and must not need it until it is used; psalm reads the bridges' server APIs from `stubs/`.
+- **Direct dependencies only.** Only use packages listed in `require` or `require-dev` of `composer.json`. Do not rely on transitive dependencies — they are not guaranteed to be present and can change without notice. An optional integration may use what `suggest` declares (`ext-redis`, `ext-memcached`, `ext-curl`, the server bridges' `ext-swoole` / `spiral/roadrunner-http`, and `phpunit/phpunit` for the test kit's `IntegrationTestCase` and traits), and must not need it until it is used; psalm reads the bridges' server APIs from `stubs/`.
 - **Strict types.** Every PHP file starts with `declare(strict_types=1);`.
 - **Indentation — IMPORTANT.** Use **tabs** (never spaces) for all PHP indentation. This applies to every generated or edited PHP file without exception.
 - **"oz" casing.** When uppercasing "oz", always use `OZ`, `OZone`, or `ozone` — never `Oz` or `Ozone`.
@@ -770,11 +770,19 @@ runs), `lint`, `cs`, `fix`, `shell`, `down`, ...
   runs them without the server: `redis`, `minio`, `clamav` (`make test-services`), `frankenphp`,
   `roadrunner`, `swoole` (`make test-runtimes`, which recreates the server containers so they run the
   current code), `provision` (`make test-provision`, on the host: it drives Docker itself).
+- **The test kit is part of OZone** (`oz/Testing/`, `OZONE\Core\Testing`), so a plugin or an app tests
+  the way OZone does: `Sandbox`, `SandboxApp`, `OZTestProject`, `DbTestConfig`, `ServiceEnv`,
+  `IntegrationTestCase` and the `Requires*Trait`s. It is never preloaded (`ScopeBuilder`), and only
+  `IntegrationTestCase` and the traits need PHPUnit. It finds the running Composer autoloader and root
+  package through Composer's runtime API (`ClassLoader`, `InstalledVersions`), since OZone may be the
+  root package or a dependency.
 - **Sandbox**: `tests/autoload.php` (the one bootstrap of both suites) creates a throwaway project
-  (`tests/Support/Sandbox`: `.env` with fresh keys, `data/`, OZone's ORM classes and SQLite schema
-  built by `tests/sandbox_build.php` in a separate process) and bootstraps `tests/App.php` on it, so
-  tests never touch the repository's `data/` or `.ozone/`. The worker servers serve the same kind of
-  sandbox (`tests/Support/Servers/`).
+  (`Sandbox::create()`: `.env` with fresh keys, `data/`, the ORM classes of every enabled namespace
+  and the SQLite schema, built by `oz/Testing/sandbox_build.php` in a separate process) and
+  bootstraps `SandboxApp` on it (`Sandbox::bootstrap()`), so tests never touch the repository's
+  `data/` or `.ozone/`. **Pass the same settings sources to both** (the suite's `tests/settings/`):
+  the build and the suite must see one schema. The worker servers serve the same kind of sandbox
+  (`tests/Support/Servers/`).
 - Unit tests live under `tests/` by namespace (`OZONE\Tests`), extend `TestCase`, and declare
   `@covers` (the fixer adds `@coversNothing` otherwise). `TestUtils::router()` is a pre-populated router.
 - `make lint` regenerates OZone's ORM classes in the git-ignored `.ozone/plugins/` first
@@ -787,13 +795,16 @@ SQLite, MySQL **and** PostgreSQL: `DbTestConfig::allConfigured('<class tag>')` t
 PostgreSQL is not configured (`OZ_TEST_ALLOW_PARTIAL=1` to run on what is). The tag keeps each class's
 SQLite file apart.
 
-- `OZTestProject::create($name, $deps, $shared, $fresh)` resolves `silassare/ozone` from the
-  repository through a path repository, pins every package of OZone's graph to the version its
-  `composer.lock` records (a branch to its commit), and caches `vendor/` by a hash of that
+- `OZTestProject::create($name, $deps, $shared, $fresh, $repositories)` pins every package of the
+  running repository's graph (OZone's, or the plugin's) to the version its `composer.lock` records (a
+  branch to its commit; a package the lock took from a path repository is resolved from that directory
+  again), resolves `silassare/ozone` from the repository through a path repository when OZone is the
+  root package, adds `$repositories` as path repositories, and caches `vendor/` by a hash of that
   dependency set, so `composer install` runs only when it changes. A project directory reused from
   an earlier run (or left by a killed one) is relinked to the current set's `vendor/`: after a
   `composer update` in OZone, no test project runs on the dependencies it was created with. Inject DB and other
-  values with `writeEnv()`, settings with `setSetting()`, run commands with `oz(...)`, and
+  values with `writeEnv()`, settings with `setSetting()`, stubs with `writeFileFromStub()` (from the
+  directory `useStubsDir()` set, `tests/Integration/Stubs/` here), run commands with `oz(...)`, and
   `destroy()` in `tearDownAfterClass()`.
 - **Never combine `@depends` with `@dataProvider`** (PHPUnit 9 cannot pass values across data sets):
   every method takes the provider, and projects are shared through a `private static array $projects`

@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Tests\Support;
+namespace OZONE\Core\Testing\Traits;
 
 use OZONE\Core\FS\Scan\Scanners\ClamAVScanner;
 use Throwable;

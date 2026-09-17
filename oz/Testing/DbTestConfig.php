@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Tests\Integration\Support;
+namespace OZONE\Core\Testing;
 
 use RuntimeException;
 
@@ -19,7 +19,7 @@ use RuntimeException;
  * Holds test DB configuration for one RDBMS driver.
  *
  * SQLite needs nothing. MySQL and PostgreSQL are configured through the driver-specific env vars
- * documented in {@see allConfigured()}, which `docker/compose.yaml` exports into the PHP container:
+ * documented in {@see allConfigured()}, which a Docker test setup exports into the PHP container:
  * a driver with no server is a broken environment, and {@see allConfigured()} refuses to provide any
  * data set rather than quietly covering SQLite alone (see {@see allowsPartialRun()}).
  */
@@ -67,7 +67,7 @@ final class DbTestConfig
 	 * Returns the DB config as .env key-value pairs suitable for
 	 * {@see OZTestProject::writeEnv()}.
 	 *
-	 * @return array<string, string>
+	 * @return array<string, int|string>
 	 */
 	public function toEnvArray(): array
 	{

@@ -18,7 +18,7 @@ use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
 use OZONE\Core\Utils\JSONResult;
-use OZONE\Tests\Support\IntegrationTestCase;
+use OZONE\Core\Testing\IntegrationTestCase;
 use Throwable;
 
 /**

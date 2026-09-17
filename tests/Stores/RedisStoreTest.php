@@ -15,7 +15,7 @@ namespace OZONE\Tests\Stores;
 
 use OZONE\Core\Stores\Drivers\RedisStore;
 use OZONE\Core\Stores\StoreEntry;
-use OZONE\Tests\Support\RequiresRedisTrait;
+use OZONE\Core\Testing\Traits\RequiresRedisTrait;
 use PHPUnit\Framework\TestCase;
 
 /**

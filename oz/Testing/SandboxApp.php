@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Tests;
+namespace OZONE\Core\Testing;
 
 use Override;
 use OZONE\Core\App\AbstractApp;
@@ -19,12 +19,12 @@ use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FS;
 
 /**
- * Class App.
+ * Class SandboxApp.
  *
- * The unit suite's app. Given a sandbox directory (see tests/autoload.php), it uses it as its
- * project directory, so tests neither read state from nor leave it in the repository.
+ * The app of a test suite. Given a sandbox directory ({@see Sandbox}), it uses it as its project
+ * directory, so tests neither read state from nor leave it in the repository they run from.
  */
-class App extends AbstractApp
+class SandboxApp extends AbstractApp
 {
 	/**
 	 * @param null|string $sandbox the project directory to use, or null for the working directory

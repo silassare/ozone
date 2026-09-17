@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Tests\Support;
+namespace OZONE\Core\Testing\Traits;
 
 use OZONE\Core\Utils\RedisFactory;
 use Throwable;
@@ -20,7 +20,7 @@ use Throwable;
  * Trait RequiresRedisTrait.
  *
  * For tests of the `redis` group: they are skipped without a reachable Redis server, and
- * fail instead when `OZ_TEST_REDIS_REQUIRED` is set (`make test-redis`), so a CI job that
+ * fail instead when `OZ_TEST_REDIS_REQUIRED` is set (`make test-services`), so a CI job that
  * requires Redis cannot silently pass without it.
  */
 trait RequiresRedisTrait

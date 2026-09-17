@@ -11,8 +11,8 @@
 
 declare(strict_types=1);
 
-// SQLite in the unit suite sandbox (see tests/autoload.php): no DB server required, and the schema
-// that tests/sandbox_build.php applies is there for every test, whatever the order.
+// SQLite in a sandbox project (Sandbox::settingsSources()): no DB server required, and the schema
+// that sandbox_build.php applies is there for every test, whatever the order.
 return [
 	'OZ_DB_RDBMS' => 'sqlite',
 	'OZ_DB_HOST'  => app()->getProjectDir()->resolve('db.sqlite'),

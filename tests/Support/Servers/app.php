@@ -19,7 +19,8 @@ declare(strict_types=1);
  */
 
 use OZONE\Core\App\Settings;
-use OZONE\Tests\App;
+use OZONE\Core\Testing\Sandbox;
+use OZONE\Core\Testing\SandboxApp;
 
 $loader = require __DIR__ . '/../../../vendor/autoload.php';
 
@@ -27,8 +28,8 @@ $loader = require __DIR__ . '/../../../vendor/autoload.php';
 // has no autoload-dev: the probe and the sandbox app are registered here.
 $loader->addPsr4('OZONE\Tests\\', \dirname(__DIR__, 2) . '/');
 
-// The sandbox's SQLite database (tests/settings/oz.db.php), then the probe routes.
-Settings::addSource(\dirname(__DIR__, 2) . '/settings');
+// The sandbox's SQLite database and the suite's settings, then the probe routes.
+Sandbox::addSettingsSources([\dirname(__DIR__, 2) . '/settings']);
 Settings::addSource(__DIR__ . '/settings');
 
-return new App((string) \getenv('OZ_TEST_SERVER_SANDBOX'));
+return new SandboxApp((string) \getenv('OZ_TEST_SERVER_SANDBOX'));

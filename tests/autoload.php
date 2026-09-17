@@ -11,10 +11,8 @@
 
 declare(strict_types=1);
 
-use OZONE\Core\App\Settings;
-use OZONE\Core\OZone;
-use OZONE\Tests\App;
-use OZONE\Tests\Support\Sandbox;
+use OZONE\Core\Testing\OZTestProject;
+use OZONE\Core\Testing\Sandbox;
 
 // PHPUnit prefers phpunit.xml over phpunit.xml.dist, so a local one silently decides which servers
 // the suites see and which groups run. The Makefile passes `-c phpunit.xml.dist`; say so loudly
@@ -34,10 +32,12 @@ $sandbox = \sys_get_temp_dir() . \DIRECTORY_SEPARATOR . 'oz_unit_' . \getmypid()
 	Sandbox::remove($sandbox);
 });
 
-Sandbox::create($sandbox);
+// The suite's settings overrides, for the build process and before bootstrap, so that lazily-loaded
+// groups pick them up on first access.
+$settings = [__DIR__ . '/settings'];
 
-// Register test-specific settings overrides before bootstrap so that
-// lazily-loaded groups pick them up on first access.
-Settings::addSource(__DIR__ . '/settings');
+Sandbox::create($sandbox, false, $settings);
+Sandbox::bootstrap($sandbox, $settings);
 
-OZone::bootstrap(new App($sandbox));
+// The stubs integration tests write into their projects (OZTestProject::writeFileFromStub()).
+OZTestProject::useStubsDir(__DIR__ . '/Integration/Stubs');

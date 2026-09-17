@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Cli;
 
 use OZONE\Core\Cli\Deploy\ReleaseLayout;
-use OZONE\Tests\Integration\Support\OZTestProject;
+use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
