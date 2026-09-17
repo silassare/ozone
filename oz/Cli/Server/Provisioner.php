@@ -147,7 +147,7 @@ final class Provisioner
 				'web:' . $this->web_server,
 				\sprintf('The %s web server.', $this->web_server),
 				[$this->manager->installCommand([$package])],
-				static fn(): bool => PackageManager::hasBinary($binary),
+				static fn (): bool => PackageManager::hasBinary($binary),
 			));
 
 			$services[] = $package;
@@ -181,7 +181,7 @@ final class Provisioner
 			'services:enable',
 			'Start the services, and start them at boot.',
 			\array_map(
-				static fn(string $service): string => \sprintf('systemctl enable --now %s', \escapeshellarg($service)),
+				static fn (string $service): string => \sprintf('systemctl enable --now %s', \escapeshellarg($service)),
 				$services
 			),
 		));
@@ -206,7 +206,7 @@ final class Provisioner
 			'docker',
 			'Docker and the compose plugin.',
 			[$this->manager->installCommand($packages)],
-			static fn(): bool => PackageManager::hasBinary('docker'),
+			static fn (): bool => PackageManager::hasBinary('docker'),
 		));
 
 		$plan->add(new ProvisionStep(

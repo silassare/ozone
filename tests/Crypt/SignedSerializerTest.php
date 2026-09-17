@@ -34,7 +34,7 @@ final class SignedSerializerTest extends TestCase
 
 		self::assertTrue($signed);
 		// unserialize() builds new objects: equal, never the same instances
-		self::assertEquals($value, $out);
+		self::assertSame($value, $out);
 		self::assertInstanceOf(ArrayObject::class, $out['list']);
 	}
 

@@ -162,6 +162,14 @@ final class JsonOutputTest extends TestCase
 		}
 	}
 
+	/**
+	 * @return iterable<string, array{DbTestConfig}>
+	 */
+	public static function provideDbConfig(): iterable
+	{
+		return DbTestConfig::allConfigured('json-output');
+	}
+
 	public function testProjectCreate(): void
 	{
 		$dir = \sys_get_temp_dir() . '/oz_json_create_' . \bin2hex(\random_bytes(4));
@@ -196,14 +204,6 @@ final class JsonOutputTest extends TestCase
 		} finally {
 			(new Process(['rm', '-rf', $dir]))->run();
 		}
-	}
-
-	/**
-	 * @return iterable<string, array{DbTestConfig}>
-	 */
-	public static function provideDbConfig(): iterable
-	{
-		return DbTestConfig::allConfigured('json-output');
 	}
 
 	/**

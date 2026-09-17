@@ -87,7 +87,7 @@ final class Requirements
 	{
 		return \array_values(\array_filter(
 			self::extensions(),
-			static fn(string $name): bool => !\extension_loaded($name)
+			static fn (string $name): bool => !\extension_loaded($name)
 		));
 	}
 
@@ -138,7 +138,7 @@ final class Requirements
 						$cache[$file] = $require;
 					}
 				}
-			} catch (JsonException | Throwable) {
+			} catch (JsonException|Throwable) {
 				// An unreadable or malformed composer.json contributes nothing; doctor reports it.
 			}
 		}
