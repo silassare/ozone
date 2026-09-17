@@ -10,6 +10,7 @@
  */
 
 declare(strict_types=1);
+
 use OZONE\Core\FS\Filters\ImageFileFilterHandler;
 
 return [
