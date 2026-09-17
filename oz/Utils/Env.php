@@ -142,7 +142,9 @@ class Env
 			}
 		}
 
-		app()->getProjectDir()->wf($this->path, (string) $editor);
+		// The path is absolute (see the constructor): no running app is needed to write it, so a tool
+		// can edit a project's .env from outside (OZONE\Core\Testing\OZTestProject::writeEnv()).
+		(new FilesManager(\dirname($this->path)))->wf(\basename($this->path), (string) $editor);
 
 		$this->env = null;
 

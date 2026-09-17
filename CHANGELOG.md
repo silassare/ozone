@@ -143,6 +143,7 @@
 
 ### Fixed
 
+- `Env::patch()` (and `upset()`) no longer needs a running app: it wrote the file through `app()->getProjectDir()`, so a standalone tool editing a project's `.env` (`OZTestProject::writeEnv()` in a script) failed with "No app is running".
 - A completed form session was accepted by any resumable route, letting one flow's data stand in for another's validated input.
 - `make cs` failed on a missing `api/` path and disagreed with the php-cs-fixer output of `make fix`.
 - The `lang` route param listener was registered every time routes were registered; it is now registered once, in `Polyglot::boot()`. Every `::listen()` call in `oz/` now runs from a `boot()`.

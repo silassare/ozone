@@ -16,6 +16,7 @@ namespace OZONE\Tests\Utils;
 use OZONE\Core\Utils\Env;
 use PHPUnit\Framework\TestCase;
 use PHPUtils\Env\EnvParser;
+use Symfony\Component\Process\Process;
 
 /**
  * Env reads through a compiled copy of the file, named after its path and content.
@@ -62,6 +63,24 @@ final class EnvCompiledTest extends TestCase
 
 		// And the same from the compiled copy.
 		self::assertSame($parser->getEnv('B'), (new Env($this->file))->get('B'));
+	}
+
+	public function testPatchNeedsNoRunningApp(): void
+	{
+		// A process with OZone's autoloader and no app booted, as a standalone tool has it.
+		$autoload = \dirname(__DIR__, 2) . \DIRECTORY_SEPARATOR . 'vendor' . \DIRECTORY_SEPARATOR . 'autoload.php';
+		$script   = 'require $argv[1]; (new OZONE\Core\Utils\Env($argv[2]))->patch(["B" => "patched", "E" => 5]);';
+		$process  = new Process([\PHP_BINARY, '-r', $script, $autoload, $this->file]);
+
+		$process->run();
+
+		self::assertSame(0, $process->getExitCode(), $process->getErrorOutput() . $process->getOutput());
+
+		$parser = EnvParser::fromFile($this->file);
+
+		self::assertSame('patched', $parser->getEnv('B'));
+		self::assertSame(5, $parser->getEnv('E'));
+		self::assertSame($parser->getEnv('A'), (new Env($this->file))->get('A'));
 	}
 
 	public function testAnEditMakesANewCopy(): void
