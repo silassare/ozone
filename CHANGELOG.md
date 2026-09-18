@@ -148,6 +148,7 @@
 
 ### Fixed
 
+- A discovered form's `action` said nothing: `Form::toArray()` put the `Uri` instance of `submitTo()` there, and `Uri` has no public property and is not `JsonSerializable`, so every client received an empty `{}` (or `[]`). It is now the **absolute path** (`Uri::getAbsolutePath()`, new: the base path, path, query and fragment, without scheme or authority), so a form knows where it submits and the answer is not tied to the host it was asked on; `null` when the form declares no `submitTo()`.
 - `oz deploy run --ref=<commit>` failed ("Remote branch not found"): the checkout was `git clone --depth 1 --branch`, which takes a branch or a tag only, while the option documents a commit. The release now fetches the ref and checks it out, so a full commit hash works.
 - `Env::patch()` (and `upset()`) no longer needs a running app: it wrote the file through `app()->getProjectDir()`, so a standalone tool editing a project's `.env` (`OZTestProject::writeEnv()` in a script) failed with "No app is running".
 - A completed form session was accepted by any resumable route, letting one flow's data stand in for another's validated input.

@@ -398,7 +398,9 @@ expose the token in the readable `XSRF-TOKEN` cookie (axios and Angular send it 
 
 `X-OZONE-Form-Discovery: ?1` makes a route answer its form bundle instead of running its handler
 (`FormDiscoveryRouteInterceptor`). The bundle is a **top-level `form` key next to `data`** in the
-envelope, not inside it. Header booleans are RFC 8941: `Headers::getBool()` reads `?1` and `?0` and
+envelope, not inside it. Its `action` is the **absolute path** of `submitTo()` (`Uri::getAbsolutePath()`:
+no scheme, no authority), so an answer is not tied to the host it was asked on, and `null` when the form
+declares none. Header booleans are RFC 8941: `Headers::getBool()` reads `?1` and `?0` and
 **nothing else** (any other value silently falls back to the default), which holds for every boolean
 header (`X-OZONE-Form-Resume`, ...).
 

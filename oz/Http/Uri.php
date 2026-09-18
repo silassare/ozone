@@ -134,6 +134,24 @@ class Uri implements UriInterface
 	}
 
 	/**
+	 * Returns the URI without its scheme and authority: the base path, the path, the query and the
+	 * fragment.
+	 *
+	 * What a client uses to address the same server it is talking to, whatever the host answers on:
+	 * a form action, a link in an API answer. {@see self::__toString()} for the whole URI.
+	 */
+	public function getAbsolutePath(): string
+	{
+		$path     = $this->getBasePath() . '/' . \ltrim($this->getPath(), '/');
+		$query    = $this->getQuery();
+		$fragment = $this->getFragment();
+
+		return $path
+			. ($query ? '?' . $query : '')
+			. ($fragment ? '#' . $fragment : '');
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]

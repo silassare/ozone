@@ -137,8 +137,8 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 			'n'   => $this->getName(),
 			'f'   => $fields,
 			'fs'  => $fieldsets,
-			'pr'  => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->getPreValidationRules()),
-			'po'  => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->getPostValidationRules()),
+			'pr'  => \array_map(static fn(RuleSet $r) => $r->toArray(), $this->getPreValidationRules()),
+			'po'  => \array_map(static fn(RuleSet $r) => $r->toArray(), $this->getPostValidationRules()),
 		];
 
 		return Hasher::shorten(Hasher::hash32(\json_encode($descriptor, \JSON_THROW_ON_ERROR)));
@@ -398,7 +398,7 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 			}
 		}
 
-		$drop_callable = static fn () => $cache_key && $cache?->delete($cache_key);
+		$drop_callable = static fn() => $cache_key && $cache?->delete($cache_key);
 
 		return [$prefilled, $drop_callable];
 	}
@@ -498,7 +498,7 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	 * @return array{
 	 *  version: string,
 	 *  name: ?string,
-	 *  action: ?Uri,
+	 *  action: ?string,
 	 *  method: string,
 	 *  fields: array<string, Field>,
 	 *  fieldsets: array<string, Fieldset>,
@@ -513,7 +513,9 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 		return [
 			'version'      => $this->getVersion(),
 			'name'         => $this->getName(),
-			'action'       => $this->t_submit_to,
+			// The absolute path, not the whole URI: a client addresses the server it is talking to,
+			// whatever host answers for it.
+			'action'       => $this->t_submit_to?->getAbsolutePath(),
 			'method'       => $this->t_method,
 			'fields'       => $this->getFields(),
 			'fieldsets'    => $this->t_fieldsets,
@@ -551,7 +553,7 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 			if (isset($this->t_fieldsets[$ref])) {
 				throw new RuntimeException(\sprintf(
 					'Cannot merge form: fieldset "%s" is already defined. '
-					. 'Give one of the two forms a name so their fieldsets do not collide.',
+						. 'Give one of the two forms a name so their fieldsets do not collide.',
 					$ref
 				));
 			}

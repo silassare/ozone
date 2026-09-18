@@ -20,6 +20,7 @@ use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Http\Enums\RequestScope;
+use OZONE\Core\Http\Uri;
 use OZONE\Core\Stores\StateRegistry;
 use PHPUnit\Framework\TestCase;
 
@@ -380,6 +381,21 @@ final class FormTest extends TestCase
 	public function testSubmitToNullByDefault(): void
 	{
 		self::assertNull((new Form())->getSubmitTo());
+	}
+
+	public function testActionIsTheAbsolutePathOfTheSubmitUri(): void
+	{
+		// A client addresses the server it is talking to: the scheme and the authority are left out, so
+		// the same answer serves whatever host it was asked on.
+		$uri  = Uri::createFromString('https://api.example.com/orders/new?step=2');
+		$form = (new Form())->submitTo($uri);
+
+		self::assertSame('/orders/new?step=2', $form->toArray()['action']);
+	}
+
+	public function testActionIsNullWithoutASubmitUri(): void
+	{
+		self::assertNull((new Form())->toArray()['action']);
 	}
 
 	// -----------------------------------------------------------------------
