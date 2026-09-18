@@ -707,9 +707,18 @@ call site says which by the registry it asks; both return a `KeyValueStore`.
   `static configureRoute()` (once per action at registration), never by re-registering routes.
 - **Disable an action by redeclaring `protected static array $available_actions`** in the subclass
   (changing the inherited array would change every service): no route, no docs.
+- `KEY_COLUMN` is written as the table names it, short (`id`) or full (`article_id`): it is resolved
+  through the table wherever a column is needed, and it also names the route parameter
+  (`/articles/:id`).
 - Pagination: offset (`max`, `page`) or cursor (`cursor`, `cursor_column`, `cursor_dir`); any cursor
   parameter switches to cursor mode, and mixing it with `page` is an error. Private relations throw
   `ForbiddenException`.
+- **A paginated (to-many) relation is not loaded with `relations`**: asking for one answers
+  `OZ_RELATION_IS_PAGINATED_AND_SHOULD_BE_RETRIEVED_WITH_DEDICATED_ENDPOINT`. It is read through
+  `get_relation` (`{path}/{id}/{relation}`). What `relations` carries is keyed by relation name, then
+  by the id of the entity holding it.
+- Of the CRUD actions, **`delete_all` alone is refused by default** (`CRUD::assertDeleteAll()`
+  authorizes with `false`): a project allows it with a CRUD listener.
 - OpenAPI: implement `ApiDocProviderInterface::apiDoc(ApiDoc $doc)`. `ApiDoc` is a facade over the
   `REST\ApiDoc\` builders (`schemas()`, `gobl()`, `parameters()`, `responses()`, `operations()`); its
   own methods delegate to them and stay. Served at `/api-doc-spec.json` and `/api-doc-view.html`

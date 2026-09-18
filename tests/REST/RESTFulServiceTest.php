@@ -187,6 +187,20 @@ final class RESTFulServiceTest extends TestCase
 		self::assertSame(['before:get_all', 'action:get_all', 'after:get_all'], StubUsersRESTService::$calls);
 	}
 
+	public function testTheKeyOfAnEntryIsFilteredByItsFullColumnName(): void
+	{
+		// KEY_COLUMN is the short name, as the class declares it by default; `oz_users` prefixes its
+		// columns, so a filter on `id` would find no column and the query would fail.
+		$route = self::route(StubUsersRESTService::routeName(RESTFulAction::GET_ONE));
+		$ri    = new RouteInfo(context(), $route, ['id' => '42']);
+
+		StubUsersRESTService::$filters = [];
+
+		($route->getHandler())($ri);
+
+		self::assertSame([['user_id', 'eq', '42']], StubUsersRESTService::$filters);
+	}
+
 	private static function route(string $name): ?Route
 	{
 		return context()->getRouter()->getRoute($name);
@@ -208,6 +222,13 @@ final class StubUsersRESTService extends RESTFulService
 	 * @var list<string>
 	 */
 	public static array $calls = [];
+
+	/**
+	 * The filters the last entry action was given.
+	 *
+	 * @var array
+	 */
+	public static array $filters = [];
 
 	protected static array $available_actions = [
 		'get_one'      => true,
@@ -233,6 +254,18 @@ final class StubUsersRESTService extends RESTFulService
 	public function actionGetAll(RESTFulAPIRequest $req): void
 	{
 		self::$calls[] = 'action:get_all';
+
+		$this->json()->setDone();
+	}
+
+	/**
+	 * Stands in for the database query, and records what the entry is looked up with.
+	 */
+	#[Override]
+	public function actionGetOne(RESTFulAPIRequest $req): void
+	{
+		self::$calls[] = 'action:get_one';
+		self::$filters = $req->getFilters();
 
 		$this->json()->setDone();
 	}

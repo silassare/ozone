@@ -639,8 +639,16 @@ abstract class RESTFulService extends Service
 	 */
 	private function runAction(RESTFulAction $action, RouteInfo $ri): Response
 	{
+		// The filter names the column as the database does: KEY_COLUMN may be the short name (`id`),
+		// which every other use resolves through the table, and which no query would find on a table
+		// whose columns carry a prefix (`article_id`).
 		$entry_filters = $action->onEntry()
-			? [static::KEY_COLUMN, 'eq', $ri->param(static::KEY_COLUMN)]
+			? [
+				$this->table->getColumnOrFail(static::KEY_COLUMN)
+					->getFullName(),
+				'eq',
+				$ri->param(static::KEY_COLUMN),
+			]
 			: [];
 
 		// get_relation looks the entry up itself: its request filters apply to the relatives.

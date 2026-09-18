@@ -148,6 +148,7 @@
 
 ### Fixed
 
+- Every entry action of a `RESTFulService` failed when `KEY_COLUMN` is a short column name, which is the class's own default (`'id'`). `runAction()` built the key filter from the raw constant while every other use resolves it through the table (`getColumnOrFail()`, which takes a short or a full name), so on a table whose columns carry a prefix -- all of OZone's do -- `get_one`, `update_one`, `delete_one` and `get_relation` answered 500 (`Unknown column 'id' in 'where clause'`). The filter now names the column as the database does.
 - A discovered form's `action` said nothing: `Form::toArray()` put the `Uri` instance of `submitTo()` there, and `Uri` has no public property and is not `JsonSerializable`, so every client received an empty `{}` (or `[]`). It is now the **absolute path** (`Uri::getAbsolutePath()`, new: the base path, path, query and fragment, without scheme or authority), so a form knows where it submits and the answer is not tied to the host it was asked on; `null` when the form declares no `submitTo()`.
 - `oz deploy run --ref=<commit>` failed ("Remote branch not found"): the checkout was `git clone --depth 1 --branch`, which takes a branch or a tag only, while the option documents a commit. The release now fetches the ref and checks it out, so a full commit hash works.
 - `Env::patch()` (and `upset()`) no longer needs a running app: it wrote the file through `app()->getProjectDir()`, so a standalone tool editing a project's `.env` (`OZTestProject::writeEnv()` in a script) failed with "No app is running".
