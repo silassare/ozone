@@ -214,7 +214,7 @@ final class CronRunnersTest extends TestCase
 		$proc->run();
 
 		$out    = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR);
-		$detail = (string) (\array_column($out['checks'], 'detail', 'name')['Cron'] ?? '');
+		$detail = (string) (\array_column($out['data']['checks'], 'detail', 'name')['Cron'] ?? '');
 
 		return \explode(',', $detail)[0];
 	}

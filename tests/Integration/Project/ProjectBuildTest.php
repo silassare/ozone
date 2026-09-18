@@ -160,7 +160,7 @@ final class ProjectBuildTest extends TestCase
 		self::assertIsArray($out, $proc->getOutput() . $proc->getErrorOutput());
 
 		return \array_intersect_key(
-			\array_column($out['checks'], 'status', 'name'),
+			\array_column($out['data']['checks'], 'status', 'name'),
 			['Production build' => true, 'Preload' => true]
 		);
 	}

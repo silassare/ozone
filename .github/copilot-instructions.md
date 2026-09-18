@@ -324,7 +324,9 @@ path, name, guards and middlewares without a group block.
 
 `App\Service` (abstract) implements `RouteProviderInterface` and `ApiDocProviderInterface`; its
 constructor takes `Context|RouteInfo`. `respond()` builds the JSON envelope from `$this->json()`:
-`{error, msg, data, utime, stime}` (`stime`: session expiry, when applicable).
+`{error, msg, data, utime, stime}` (`stime`: session expiry, when applicable). **Every answer has that
+shape**: an error built from an exception (`BaseException::getJSONResponse()`) and a command's `--json`
+output too.
 
 `Web\WebView` renders HTML: `setTemplate('oz://path/to.blate')->inject([...])`; the context reaches
 templates through `BlatePlugin::CONTEXT_INJECT_KEY`.
@@ -729,8 +731,10 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
 - **JSON mode** (`--json`, for tools such as the O'Web Builder): `Cli::run()` sees the flag before bootstrap,
   so every output goes through `Cli`: `write()` / `writeLn()` print nothing, `info()` / `warn()` /
   `success()` / `error()` are collected as `messages`, and one with an exit code ends the command in JSON.
-  A command answers with `$cli->writeJson([...], $ok, $exit)` (`{"ok": ...}` first). Never `echo` in a
-  command, and a new command a tool drives gets `--json` the same way.
+  A command answers with `$cli->writeJson([...], $ok, $exit, $msg)`, which writes the envelope of every
+  OZone answer (`JSONResponse`: `{error, msg, data, utime}`, the result under `data`, the reported
+  messages under `data.messages`). Never `echo` in a command, and a new command a tool drives gets
+  `--json` through `withJsonSupport()`.
 - **`oz users grant`** gives a role to an existing user (`Roles::assign()`, restoring a revoked one): the
   way to make the first super admin, never a web installer. `oz doctor check` warns while an installed
   project has none.

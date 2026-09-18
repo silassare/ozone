@@ -191,7 +191,12 @@ class ErrorUtils
 		if (OZone::isCliMode()) {
 			// A command in JSON mode answers in JSON on stdout, whatever went wrong.
 			if (Cli::inJsonMode()) {
-				echo \json_encode(['ok' => false, 'error' => $t->getMessage()], \JSON_UNESCAPED_SLASHES), \PHP_EOL;
+				echo \json_encode([
+					'error' => 1,
+					'msg'   => $t->getMessage(),
+					'data'  => [],
+					'utime' => \time(),
+				], \JSON_UNESCAPED_SLASHES), \PHP_EOL;
 			}
 
 			\fwrite(\STDERR, \PHP_EOL . $t->getMessage() . \PHP_EOL);

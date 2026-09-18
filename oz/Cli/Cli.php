@@ -16,6 +16,7 @@ namespace OZONE\Core\Cli;
 use Kli\Exceptions\KliException;
 use Kli\Kli;
 use Override;
+use OZONE\Core\App\JSONResponse;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Cron\Cron;
 use OZONE\Core\Cli\Utils\Utils;
@@ -169,18 +170,29 @@ final class Cli extends Kli
 	}
 
 	/**
-	 * Writes the result of a command as one JSON object, `{"ok": bool, ...}` followed by what the command
-	 * reported (`messages`), and terminates. In JSON mode nothing else reaches stdout.
+	 * Writes the result of a command as the envelope every OZone answer uses
+	 * ({@see \OZONE\Core\App\JSONResponse}): `{error, msg, data, utime}`, with what the command reported
+	 * under `data.messages`, and terminates. In JSON mode nothing else reaches stdout.
 	 *
 	 * @param array<string, mixed> $data
+	 * @param bool                 $ok   false when the command failed: `error` is then 1
+	 * @param int                  $exit the exit code
+	 * @param string               $msg  the message code; `OK` for a success
 	 */
-	public function writeJson(array $data, bool $ok = true, int $exit = 0): never
+	public function writeJson(array $data, bool $ok = true, int $exit = 0, string $msg = ''): never
 	{
-		$payload = ['ok' => $ok] + $data;
+		$json = new JSONResponse();
+
+		$ok
+			? $json->setDone('' === $msg ? 'OK' : $msg)
+			: $json->setError('' === $msg ? 'OZ_ERROR_INTERNAL' : $msg);
 
 		if (!empty(self::$json_messages)) {
-			$payload['messages'] = self::$json_messages;
+			$data['messages'] = self::$json_messages;
 		}
+
+		$payload          = $json->setData($data)->toArray();
+		$payload['utime'] = \time();
 
 		// Never wrapped: Kli word-wraps by default, which would break long JSON strings.
 		echo \json_encode($payload, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES | \JSON_THROW_ON_ERROR), \PHP_EOL;
@@ -220,7 +232,7 @@ final class Cli extends Kli
 		}
 
 		if (null !== $exit) {
-			$this->writeJson(['error' => $msg], 0 === $exit, $exit);
+			$this->writeJson([], 0 === $exit, $exit, $msg);
 		}
 
 		self::$json_messages[] = ['level' => 'warn', 'message' => $msg];
@@ -252,7 +264,7 @@ final class Cli extends Kli
 		}
 
 		if (null !== $exit) {
-			$this->writeJson(['error' => $msg], false, $exit);
+			$this->writeJson([], false, $exit, $msg);
 		}
 
 		self::$json_messages[] = ['level' => 'error', 'message' => $msg];

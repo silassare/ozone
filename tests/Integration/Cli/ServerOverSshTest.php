@@ -173,8 +173,9 @@ final class ServerOverSshTest extends TestCase
 		$json   = \json_decode($status['output'], true);
 
 		self::assertIsArray($json, $status['output']);
-		self::assertTrue($json['provisioned']);
-		self::assertContains('web:nginx', \array_column($json['steps'], 'step'));
+		self::assertSame(0, $json['error']);
+		self::assertTrue($json['data']['provisioned']);
+		self::assertContains('web:nginx', \array_column($json['data']['steps'], 'step'));
 
 		$again = $this->oz($platform, ['server', 'provision', '--yes', '--web-server=nginx', '--db=none', '--ssh-port=22']);
 
@@ -195,9 +196,9 @@ final class ServerOverSshTest extends TestCase
 		$releases = \json_decode($this->oz($platform, ['deploy', 'releases', '--root=/srv/app', '--json'])['output'], true);
 
 		self::assertIsArray($releases);
-		self::assertTrue($releases['deployed']);
-		self::assertSame('20260102000000', $releases['current']);
-		self::assertSame(['20260101000000', '20260102000000'], $releases['releases']);
+		self::assertTrue($releases['data']['deployed']);
+		self::assertSame('20260102000000', $releases['data']['current']);
+		self::assertSame(['20260101000000', '20260102000000'], $releases['data']['releases']);
 
 		$rollback = $this->oz($platform, ['deploy', 'rollback', '--root=/srv/app']);
 

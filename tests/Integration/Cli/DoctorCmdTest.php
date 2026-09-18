@@ -79,10 +79,10 @@ final class DoctorCmdTest extends TestCase
 		$out = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR);
 
 		self::assertIsArray($out);
-		self::assertTrue($out['ok'], 'doctor reported a failure: ' . $proc->getOutput());
+		self::assertSame(0, $out['error'], 'doctor reported a failure: ' . $proc->getOutput());
 		self::assertSame(0, $proc->getExitCode());
 
-		$by_name = \array_column($out['checks'], 'status', 'name');
+		$by_name = \array_column($out['data']['checks'], 'status', 'name');
 
 		self::assertSame('ok', $by_name['PHP version']);
 		self::assertSame('ok', $by_name['ext-pdo']);
@@ -111,9 +111,9 @@ final class DoctorCmdTest extends TestCase
 		self::assertJson($proc->getOutput(), self::outputOf($proc));
 
 		$out     = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR);
-		$by_name = \array_column($out['checks'], 'status', 'name');
+		$by_name = \array_column($out['data']['checks'], 'status', 'name');
 
-		self::assertFalse($out['ok']);
+		self::assertSame(1, $out['error']);
 		self::assertSame(1, $proc->getExitCode());
 		self::assertSame('fail', $by_name['Migrations']);
 	}
@@ -142,9 +142,9 @@ final class DoctorCmdTest extends TestCase
 			self::assertJson($proc->getOutput(), self::outputOf($proc));
 
 			$out     = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR);
-			$by_name = \array_column($out['checks'], 'status', 'name');
+			$by_name = \array_column($out['data']['checks'], 'status', 'name');
 
-			self::assertFalse($out['ok']);
+			self::assertSame(1, $out['error']);
 			self::assertSame(1, $proc->getExitCode());
 			self::assertSame('fail', $by_name['Database schema'], self::outputOf($proc));
 
@@ -181,9 +181,9 @@ final class DoctorCmdTest extends TestCase
 		self::assertJson($proc->getOutput(), self::outputOf($proc));
 
 		$out     = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR);
-		$by_name = \array_column($out['checks'], 'status', 'name');
+		$by_name = \array_column($out['data']['checks'], 'status', 'name');
 
-		self::assertTrue($out['ok'], 'A machine without a project is not a failure.');
+		self::assertSame(0, $out['error'], 'A machine without a project is not a failure.');
 		self::assertSame('warn', $by_name['Project']);
 		self::assertArrayNotHasKey('Database', $by_name);
 	}

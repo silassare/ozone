@@ -66,7 +66,6 @@ final class JsonOutputTest extends TestCase
 		$build      = self::json($proj, 'db', 'build', '--build-all', '--class-only', '--json');
 		$namespaces = \array_column($build['namespaces'], 'namespace');
 
-		self::assertTrue($build['ok']);
 		self::assertFalse($build['migration']);
 		self::assertContains('OZONE\Core\Db', $namespaces);
 
@@ -74,7 +73,6 @@ final class JsonOutputTest extends TestCase
 
 		$before = self::json($proj, 'migrations', 'check', '--json');
 
-		self::assertTrue($before['ok']);
 		self::assertSame('not_installed', $before['state']);
 		self::assertSame([], $before['pending']);
 
@@ -103,7 +101,6 @@ final class JsonOutputTest extends TestCase
 
 		$scope = self::json($proj, 'scopes', 'add', '--name=web', '--origin=http://www.example.com', '--api=false', '--json');
 
-		self::assertTrue($scope['ok']);
 		self::assertSame('web', $scope['scope']);
 		self::assertFalse($scope['api']);
 		self::assertDirectoryExists($scope['private']);
@@ -113,18 +110,17 @@ final class JsonOutputTest extends TestCase
 		$releases = self::json($proj, 'deploy', 'releases', '--root=' . $missing, '--json');
 
 		self::assertSame(
-			['ok' => true, 'root' => $missing, 'deployed' => false, 'current' => null, 'releases' => []],
+			['root' => $missing, 'deployed' => false, 'current' => null, 'releases' => []],
 			$releases
 		);
 
 		$manifest = $proj->getPath() . '/no-manifest.json';
 		$status   = self::json($proj, 'server', 'status', '--manifest=' . $manifest, '--json');
 
-		self::assertSame(['ok' => true, 'manifest' => $manifest, 'provisioned' => false, 'steps' => []], $status);
+		self::assertSame(['manifest' => $manifest, 'provisioned' => false, 'steps' => []], $status);
 
 		$doctor = self::json($proj, 'doctor', 'check', '--json');
 
-		self::assertTrue($doctor['ok']);
 		self::assertNotEmpty($doctor['checks']);
 	}
 
@@ -136,16 +132,16 @@ final class JsonOutputTest extends TestCase
 		$proj = self::project($config);
 
 		// an input error Kli reports before the command runs
-		$unknown = self::json($proj, 'migrations', 'check', '--json', '--nope');
+		$unknown = self::envelope($proj, 'migrations', 'check', '--json', '--nope');
 
-		self::assertFalse($unknown['ok']);
-		self::assertIsString($unknown['error']);
+		self::assertSame(1, $unknown['error']);
+		self::assertIsString($unknown['msg']);
 
 		// an error the command reports while running
-		$namespace = self::json($proj, 'db', 'build', '--namespace=Nope\Db', '--json');
+		$namespace = self::envelope($proj, 'db', 'build', '--namespace=Nope\Db', '--json');
 
-		self::assertFalse($namespace['ok']);
-		self::assertStringContainsString('Nope\Db', $namespace['error']);
+		self::assertSame(1, $namespace['error']);
+		self::assertStringContainsString('Nope\Db', $namespace['msg']);
 
 		// an exception no command catches, answered by the global handler: a migration version with no
 		// file, so the database cannot initialize
@@ -153,10 +149,10 @@ final class JsonOutputTest extends TestCase
 			->mustRun();
 
 		try {
-			$uncaught = self::json($proj, 'db', 'build', '--class-only', '--json');
+			$uncaught = self::envelope($proj, 'db', 'build', '--class-only', '--json');
 
-			self::assertFalse($uncaught['ok']);
-			self::assertNotSame('', $uncaught['error']);
+			self::assertSame(1, $uncaught['error']);
+			self::assertNotSame('', $uncaught['msg']);
 		} finally {
 			$proj->oz('settings', 'unset', '--group=oz.db.migrations', '--key=OZ_MIGRATION_VERSION')->mustRun();
 		}
@@ -192,10 +188,9 @@ final class JsonOutputTest extends TestCase
 
 			$proc->run();
 
-			$out = self::decode($proc);
+			$out = self::decode($proc)['data'];
 
 			self::assertSame(0, $proc->getExitCode());
-			self::assertTrue($out['ok']);
 			self::assertSame('json-probe', $out['name']);
 			self::assertSame('JsonProbe', $out['namespace']);
 			self::assertSame(['composer update'], $out['next']);
@@ -207,11 +202,21 @@ final class JsonOutputTest extends TestCase
 	}
 
 	/**
-	 * Runs an `oz` command and returns its stdout, which must be one JSON object and nothing else.
+	 * Runs an `oz` command and returns the `data` of its answer.
 	 *
 	 * @return array<string, mixed>
 	 */
 	private static function json(OZTestProject $proj, string ...$args): array
+	{
+		return self::envelope($proj, ...$args)['data'];
+	}
+
+	/**
+	 * Runs an `oz` command and returns the whole envelope.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function envelope(OZTestProject $proj, string ...$args): array
 	{
 		$proc = $proj->oz(...$args);
 
@@ -232,7 +237,9 @@ final class JsonOutputTest extends TestCase
 		$out = \json_decode($stdout, true, 512, \JSON_THROW_ON_ERROR);
 
 		self::assertIsArray($out);
-		self::assertSame(0 === $proc->getExitCode(), $out['ok'], 'the exit code matches "ok"');
+		self::assertSame(0 === $proc->getExitCode(), 0 === $out['error'], 'the exit code matches the envelope');
+		self::assertIsString($out['msg']);
+		self::assertIsInt($out['utime']);
 
 		return $out;
 	}

@@ -159,7 +159,7 @@ final class UsersGrantTest extends TestCase
 		$proc->run();
 
 		$out     = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR);
-		$by_name = \array_column($out['checks'], null, 'name');
+		$by_name = \array_column($out['data']['checks'], null, 'name');
 
 		self::assertArrayHasKey('Super admin', $by_name, $proc->getOutput());
 
