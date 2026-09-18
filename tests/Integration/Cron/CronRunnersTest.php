@@ -82,6 +82,8 @@ final class CronRunnersTest extends TestCase
 			'flag_file' => $flag,
 		]);
 		$proj->setSetting('oz.boot', $proj->getNamespace() . '\TestCronBootHookReceiver', true);
+		// A rate of its own, to read back from the answer: the route's limit is a setting.
+		$proj->setSetting('oz.cron', 'OZ_CRON_WEB_IP_RATE', 7);
 
 		[$server, $host, $port] = $proj->startServer('api');
 
@@ -109,6 +111,26 @@ final class CronRunnersTest extends TestCase
 
 		// the tick runs once the response is sent
 		self::assertTrue(self::waitFor(null, static fn (): bool => 'web' === self::lastRunner($proj)));
+	}
+
+	/**
+	 * The per-IP limit of the cron route is what the project's settings say.
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testTheCronRouteRateLimitComesFromTheSettings(DbTestConfig $config): void
+	{
+		[, , $host, $port] = self::project($config);
+
+		[$status, $headers] = self::requestWithHeaders(
+			$host,
+			$port,
+			CronEndpoint::PATH,
+			['X-OZONE-Cron-Key' => self::KEY]
+		);
+
+		self::assertSame(202, $status);
+		self::assertSame('7', self::header($headers, 'X-RateLimit-Limit'));
 	}
 
 	/**
@@ -185,6 +207,58 @@ final class CronRunnersTest extends TestCase
 		\preg_match('~^HTTP/\S+\s+(\d{3})~', $http_response_header[0] ?? '', $m);
 
 		return (int) ($m[1] ?? 0);
+	}
+
+	/**
+	 * Sends a request, and returns the status code with the response headers.
+	 *
+	 * @param array<string, string> $headers
+	 *
+	 * @return array{0:int, 1:list<string>}
+	 */
+	private static function requestWithHeaders(
+		string $host,
+		int $port,
+		string $path,
+		array $headers = []
+	): array {
+		$lines = ['Accept: application/json'];
+
+		foreach ($headers as $name => $value) {
+			$lines[] = $name . ': ' . $value;
+		}
+
+		$context = \stream_context_create(['http' => [
+			'method'        => 'POST',
+			'ignore_errors' => true,
+			'header'        => \implode("\r\n", $lines) . "\r\n",
+			'timeout'       => 30,
+		]]);
+
+		\file_get_contents("http://{$host}:{$port}{$path}", false, $context);
+
+		/** @var list<string> $http_response_header */
+		$received = $http_response_header ?? [];
+
+		\preg_match('~^HTTP/\S+\s+(\d{3})~', $received[0] ?? '', $m);
+
+		return [(int) ($m[1] ?? 0), $received];
+	}
+
+	/**
+	 * The value of a header of a response.
+	 *
+	 * @param list<string> $headers
+	 */
+	private static function header(array $headers, string $name): ?string
+	{
+		foreach ($headers as $header) {
+			if (\preg_match('~^' . \preg_quote($name, '~') . ':\s*(.*)$~i', $header, $m)) {
+				return \trim($m[1]);
+			}
+		}
+
+		return null;
 	}
 
 	/**

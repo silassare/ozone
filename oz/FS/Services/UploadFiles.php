@@ -50,6 +50,11 @@ class UploadFiles extends Service
 	public const PARAM_CHUNK       = 'chunk';
 	public const PARAM_CHUNK_INDEX = 'chunk_index';
 	public const PARAM_FILES       = 'files';
+	/**
+	 * The default of `oz.files`: `OZ_UPLOAD_CHUNK_MAX_SIZE`, which a project may change.
+	 *
+	 * Read the setting through {@see self::chunkMaxSize()} rather than this constant.
+	 */
 	public const CHUNK_MAX_SIZE    = 1000 * 1000; // 1MB
 
 	/**
@@ -241,6 +246,16 @@ class UploadFiles extends Service
 	 *
 	 * @throws TypesException
 	 */
+	/**
+	 * The biggest chunk of a chunked upload the server accepts, in bytes.
+	 *
+	 * A client asks for it to slice a file accordingly; the form of `chunk/add` refuses a bigger one.
+	 */
+	public static function chunkMaxSize(): int
+	{
+		return (int) Settings::get('oz.files', 'OZ_UPLOAD_CHUNK_MAX_SIZE', self::CHUNK_MAX_SIZE);
+	}
+
 	public static function uploadForm(): Form
 	{
 		$form = new Form();
@@ -282,7 +297,7 @@ class UploadFiles extends Service
 		$form->int(self::PARAM_CHUNK_INDEX, true)
 			->configureType(static fn (TypeInt $t) => $t->unsigned());
 		$form->file(self::PARAM_CHUNK, true)
-			->configureType(static fn (TypeFile $t) => $t->temp()->fileMaxSize(self::CHUNK_MAX_SIZE));
+			->configureType(static fn (TypeFile $t) => $t->temp()->fileMaxSize(self::chunkMaxSize()));
 
 		return $form;
 	}
@@ -338,7 +353,7 @@ class UploadFiles extends Service
 			$key      = $has_user ? 'OZ_UPLOAD_AUTHENTICATED_RATE_LIMIT' : 'OZ_UPLOAD_ANONYMOUS_RATE_LIMIT';
 			$limit    = Settings::get('oz.files', $key);
 
-			return new IPRateLimit($ri, $limit, 60);
+			return new IPRateLimit($ri, $limit, (int) Settings::get('oz.files', 'OZ_UPLOAD_RATE_INTERVAL'));
 		});
 	}
 

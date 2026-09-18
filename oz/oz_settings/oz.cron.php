@@ -59,4 +59,21 @@ return [
 	 * @default ''
 	 */
 	'OZ_CRON_WEB_KEY' => env('OZ_CRON_WEB_KEY', ''),
+
+	/**
+	 * Calls of `/oz-cron` allowed per client IP within `OZ_CRON_WEB_IP_INTERVAL` seconds.
+	 *
+	 * The route is called once a minute by one service, so the default leaves room for a retry and
+	 * nothing more; the key is what protects it, this only caps what a caller can cost.
+	 *
+	 * @default 10
+	 */
+	'OZ_CRON_WEB_IP_RATE' => 10,
+
+	/**
+	 * Length in seconds of the per-IP window of `/oz-cron`.
+	 *
+	 * @default 60
+	 */
+	'OZ_CRON_WEB_IP_INTERVAL' => 60,
 ];

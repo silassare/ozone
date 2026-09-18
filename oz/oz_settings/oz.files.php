@@ -78,6 +78,22 @@ return [
 	'OZ_UPLOAD_AUTHENTICATED_RATE_LIMIT'  => 100,
 
 	/**
+	 * Length in seconds of the per-IP upload window, which the two rates above are counted in.
+	 *
+	 * @default 60
+	 */
+	'OZ_UPLOAD_RATE_INTERVAL'             => 60,
+
+	/**
+	 * maximum size of one chunk of a chunked upload: in bytes.
+	 *
+	 * A client asks the server for it and slices accordingly, so raising it makes for fewer requests
+	 * on a big file, and lowering it for smaller ones a poor connection can finish. The form of
+	 * `/upload/chunk/add` refuses a bigger chunk.
+	 */
+	'OZ_UPLOAD_CHUNK_MAX_SIZE'            => 1000 * 1000, // 1 MB
+
+	/**
 	 * maximum size of a thumbnail: in pixels.
 	 */
 	'OZ_THUMBNAIL_MAX_SIZE'               => 640,

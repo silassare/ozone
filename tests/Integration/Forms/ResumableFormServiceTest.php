@@ -91,6 +91,11 @@ final class ResumableFormServiceTest extends TestCase
 		$proj->setSetting('oz.forms.providers', 'test-real-ctx', "{$ns}\\TestFormRealContextProvider");
 		$proj->setSetting('oz.forms.providers', 'test-irreversible', "{$ns}\\TestFormIrreversibleProvider");
 
+		// Opening a session is limited per IP (30 an hour by default) and this class opens one in
+		// nearly every test, from one address: a rate of its own keeps the suite out of the limit, and
+		// a test reads it back to prove the setting is what the route uses.
+		$proj->setSetting('oz.forms', 'OZ_FORM_RESUME_INIT_IP_RATE', 500);
+
 		// Register consumer routes (requireCompletion / drop test endpoints).
 		$proj->setSetting('oz.routes.api', "{$ns}\\TestFormConsumerRoutesProvider", true);
 
@@ -962,6 +967,31 @@ final class ResumableFormServiceTest extends TestCase
 	 *
 	 * @return array{0: int, 1: string} [status_code, body]
 	 */
+	public function testTheInitRateLimitComesFromTheSettings(): void
+	{
+		$url = 'http://' . self::$host . ':' . self::$port . '/form/test-wizard/init';
+		$ctx = \stream_context_create(['http' => [
+			'method'        => 'POST',
+			'timeout'       => 10,
+			'ignore_errors' => true,
+			'header'        => "Accept: application/json\r\n",
+		]]);
+
+		@\file_get_contents($url, false, $ctx);
+
+		/** @var list<string> $http_response_header */
+		$received = $http_response_header ?? [];
+		$limit    = null;
+
+		foreach ($received as $header) {
+			if (\preg_match('~^X-RateLimit-Limit:\s*(.*)$~i', $header, $m)) {
+				$limit = \trim($m[1]);
+			}
+		}
+
+		self::assertSame('500', $limit, 'the route reads OZ_FORM_RESUME_INIT_IP_RATE');
+	}
+
 	private function request(string $method, string $path, array $fields = [], array $headers = []): array
 	{
 		$headerStr = "Accept: application/json\r\n";

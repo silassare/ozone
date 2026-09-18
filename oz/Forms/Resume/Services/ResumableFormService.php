@@ -86,7 +86,13 @@ final class ResumableFormService extends Service
 			$router->group('/:provider', static function (Router $router): void {
 				$router->post('/init', static fn (RouteInfo $ri) => self::standalone($ri, self::ACTION_INIT))
 					->name(self::ROUTE_INIT)
-					->rateLimit(static fn (RouteInfo $ri) => new IPRateLimit($ri, 30, 3600));
+					// Opening a session is what costs the server; the steps of one already opened are not
+					// limited.
+					->rateLimit(static fn (RouteInfo $ri) => new IPRateLimit(
+						$ri,
+						(int) Settings::get('oz.forms', 'OZ_FORM_RESUME_INIT_IP_RATE'),
+						(int) Settings::get('oz.forms', 'OZ_FORM_RESUME_INIT_IP_INTERVAL')
+					));
 
 				$router->get('/state', static fn (RouteInfo $ri) => self::standalone($ri, self::ACTION_STATE))
 					->name(self::ROUTE_STATE);

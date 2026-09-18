@@ -62,6 +62,8 @@ final class HttpRoutingTest extends TestCase
 			'namespace' => $ns,
 		]);
 		$proj->setSetting('oz.routes.api', "{$ns}\\TestRoutesProvider", true);
+		// A chunk size of its own, small enough for a test to send one chunk over it.
+		$proj->setSetting('oz.files', 'OZ_UPLOAD_CHUNK_MAX_SIZE', 8);
 
 		// Build ORM classes and install the schema.
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
@@ -323,6 +325,54 @@ final class HttpRoutingTest extends TestCase
 		self::assertCount(2, $data['data']['files'] ?? [], $body);
 	}
 
+	/**
+	 * The biggest chunk a chunked upload accepts is what the project's settings say.
+	 */
+	public function testTheChunkSizeComesFromTheSettings(): void
+	{
+		[$status, $body, $headers] = $this->request('POST', '/upload/chunk/start', [
+			'name' => 'chunked.txt',
+			'size' => 10,
+			'type' => 'text/plain',
+		]);
+		$data = \json_decode($body, true);
+
+		self::assertSame(200, $status, $body);
+
+		$ref     = $data['data']['ref'] ?? '';
+		$cookies = self::cookies($headers);
+
+		self::assertNotEmpty($ref, $body);
+
+		// The upload lives in the session that opened it, and an unsafe request riding that cookie
+		// carries its CSRF token.
+		$session = [
+			'Cookie: OZONE_SID=' . ($cookies['OZONE_SID'] ?? ''),
+			'X-XSRF-TOKEN: ' . ($cookies['XSRF-TOKEN'] ?? ''),
+		];
+
+		// Ten bytes, where the project allows eight: the form of `chunk/add` refuses it.
+		[$status, $body] = $this->multipart(
+			'/upload/chunk/add',
+			[['name' => 'chunk', 'filename' => 'c0', 'type' => 'text/plain', 'content' => '0123456789']],
+			$session,
+			['ref' => $ref, 'chunk_index' => '0']
+		);
+
+		self::assertSame(1, \json_decode($body, true)['error'] ?? null, $body);
+
+		// Eight bytes pass, and the upload goes on.
+		[$status, $body] = $this->multipart(
+			'/upload/chunk/add',
+			[['name' => 'chunk', 'filename' => 'c0', 'type' => 'text/plain', 'content' => '01234567']],
+			$session,
+			['ref' => $ref, 'chunk_index' => '0']
+		);
+
+		self::assertSame(200, $status, $body);
+		self::assertSame(0, \json_decode($body, true)['error'] ?? null, $body);
+	}
+
 	// -------------------------------------------------------------------------
 	// Helpers
 	// -------------------------------------------------------------------------
@@ -379,13 +429,20 @@ final class HttpRoutingTest extends TestCase
 	 *
 	 * @param list<array{name:string, filename:string, type:string, content:string}> $files
 	 * @param list<string>                                                           $headers
+	 * @param array<string, string>                                                  $fields
 	 *
 	 * @return array{0:int, 1:string}
 	 */
-	private function multipart(string $path, array $files, array $headers = []): array
+	private function multipart(string $path, array $files, array $headers = [], array $fields = []): array
 	{
 		$boundary = '----OZoneTestBoundary' . \bin2hex(\random_bytes(8));
 		$body     = '';
+
+		foreach ($fields as $name => $value) {
+			$body .= '--' . $boundary . "\r\n"
+				. \sprintf('Content-Disposition: form-data; name="%s"', $name) . "\r\n\r\n"
+				. $value . "\r\n";
+		}
 
 		foreach ($files as $file) {
 			$body .= '--' . $boundary . "\r\n"

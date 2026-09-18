@@ -76,7 +76,11 @@ final class CronEndpoint implements RouteProviderInterface
 			->name(self::ROUTE)
 			// Called by a service, with no session: nothing for a CSRF token to protect.
 			->withoutCSRF()
-			->rateLimit(static fn (RouteInfo $ri) => new IPRateLimit($ri, 10, 60));
+			->rateLimit(static fn (RouteInfo $ri) => new IPRateLimit(
+				$ri,
+				(int) Settings::get('oz.cron', 'OZ_CRON_WEB_IP_RATE'),
+				(int) Settings::get('oz.cron', 'OZ_CRON_WEB_IP_INTERVAL')
+			));
 	}
 
 	private static function key(): string
