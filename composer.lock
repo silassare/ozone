@@ -447,12 +447,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "4c39e028e8ac7f05fe96368152b57b97d33e2e48"
+                "reference": "d3c0c7f40e4e87595445d60667181a7695dc3827"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/4c39e028e8ac7f05fe96368152b57b97d33e2e48",
-                "reference": "4c39e028e8ac7f05fe96368152b57b97d33e2e48",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/d3c0c7f40e4e87595445d60667181a7695dc3827",
+                "reference": "d3c0c7f40e4e87595445d60667181a7695dc3827",
                 "shasum": ""
             },
             "require": {
@@ -516,7 +516,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/main"
             },
-            "time": "2026-09-18T14:38:21+00:00"
+            "time": "2026-09-18T19:51:56+00:00"
         },
         {
             "name": "silassare/kli",
@@ -4953,12 +4953,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "884216c4b85b0792e9e75fddd826e72e4bff92c7"
+                "reference": "c8918fe7ff3556283d5db435dc1d0d7545722ebb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/884216c4b85b0792e9e75fddd826e72e4bff92c7",
-                "reference": "884216c4b85b0792e9e75fddd826e72e4bff92c7",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/c8918fe7ff3556283d5db435dc1d0d7545722ebb",
+                "reference": "c8918fe7ff3556283d5db435dc1d0d7545722ebb",
                 "shasum": ""
             },
             "conflict": {
@@ -5486,7 +5486,7 @@
                 "mediawiki/data-transfer": ">=1.39,<1.39.11|>=1.41,<1.41.3|>=1.42,<1.42.2",
                 "mediawiki/maps": "<12.1.3",
                 "mediawiki/matomo": "<2.4.3",
-                "mediawiki/semantic-media-wiki": "<4.0.2",
+                "mediawiki/semantic-media-wiki": "<=7.2.1",
                 "mehrwert/phpmyadmin": "<3.2",
                 "melisplatform/melis-asset-manager": "<5.0.1",
                 "melisplatform/melis-cms": "<5.3.4",
@@ -6092,7 +6092,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-17T23:23:12+00:00"
+            "time": "2026-09-18T17:31:24+00:00"
         },
         {
             "name": "sebastian/cli-parser",
