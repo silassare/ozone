@@ -46,6 +46,7 @@ final class CatalogTest extends TestCase
 		'OZ_PROJECT_DIR',
 		'OZ_RUNTIME',
 		'OZ_SCOPE_NAME',
+		'OZ_SSH_COMMAND',
 	];
 
 	/**
