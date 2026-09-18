@@ -191,6 +191,10 @@ final class RouteFormDeclaration
 	 * Policy is always {@see RouteFormDocPolicy::DYNAMIC}: the `x-oz-form` extension carries the
 	 * provider name (when not `requiresRealContext`) and the provider's `initForm()` schema.
 	 *
+	 * Such a declaration holds neither a form nor a factory, so {@see self::resolve()} gives null: the
+	 * route has no bundle, and a form discovery request on it answers no `form` key. The forms of the
+	 * route are the provider's steps, obtained through the resume flow.
+	 *
 	 * @param class-string<ResumableFormProviderInterface> $class the provider class
 	 *
 	 * @return static

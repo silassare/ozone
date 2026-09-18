@@ -83,6 +83,9 @@ final class FormSessionManager
 	 * Otherwise `nextStep()` runs immediately and the session starts in STEPS, or
 	 * DONE when the provider has no steps at all.
 	 *
+	 * Every call creates a new session: it never picks up one already under way. A client that comes
+	 * back to a filling keeps its `resume_ref` and reads {@see self::state()} with it.
+	 *
 	 * @throws FormResumeNotYetActiveException when `notBefore()` is in the future
 	 */
 	public function init(): FormSessionStep
@@ -200,6 +203,9 @@ final class FormSessionManager
 
 	/**
 	 * Reverts the session to the previous step.
+	 *
+	 * History is pushed by {@see self::next()} only outside the INIT phase, so submitting the init form
+	 * leaves nothing to go back to: a `back` right after it throws `OZ_FORM_SESSION_NO_HISTORY`.
 	 *
 	 * @throws BadRequestException        when the provider is not reversible or there is no history
 	 * @throws NotFoundException          when the session is not found

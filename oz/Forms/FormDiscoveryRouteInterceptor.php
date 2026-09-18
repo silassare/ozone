@@ -23,6 +23,14 @@ use OZONE\Core\Router\RouteInfo;
  * Class FormDiscoveryRouteInterceptor.
  *
  * Route interceptor that discovers form bundles for routes in form discovery requests.
+ *
+ * The bundle is answered as a top-level `form` key next to `data` in the envelope, and the route
+ * handler is not run.
+ *
+ * A route whose form is declared through a provider has no bundle to discover: that declaration
+ * ({@see \OZONE\Core\Router\RouteFormDeclaration::provider()}) holds neither a form nor a factory, so
+ * the answer carries no `form` key. The forms of such a route are the provider's steps, read through
+ * the resume flow ({@see \OZONE\Core\Forms\Resume\Services\ResumableFormService}).
  */
 final class FormDiscoveryRouteInterceptor implements RouteInterceptorInterface
 {

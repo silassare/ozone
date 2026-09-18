@@ -394,8 +394,25 @@ out with `->withoutCSRF()` (webhooks, cross-site posts on purpose); a child can 
 expose the token in the readable `XSRF-TOKEN` cookie (axios and Angular send it back); pages use the
 `csrf_token` template global.
 
+### Discovery
+
+`X-OZONE-Form-Discovery: ?1` makes a route answer its form bundle instead of running its handler
+(`FormDiscoveryRouteInterceptor`). The bundle is a **top-level `form` key next to `data`** in the
+envelope, not inside it. Header booleans are RFC 8941: `Headers::getBool()` reads `?1` and `?0` and
+**nothing else** (any other value silently falls back to the default), which holds for every boolean
+header (`X-OZONE-Form-Resume`, ...).
+
+A route whose form is declared through a provider (`RouteFormDeclaration::provider()`) **discovers no
+form**: that declaration holds neither a form nor a factory, so `resolve()` gives null and the answer
+carries no `form` key. Its forms are the provider's steps, read through the resume flow below. Only a
+form or a factory declaration is discoverable.
+
 ### Resume
 
+- **`init` always opens a new session**, it never picks up one under way: a client that wants to come
+  back to a filling keeps the `resume_ref` and reads `state` with it. `next` after the **init step**
+  keeps no history, so a `back` there answers `OZ_FORM_SESSION_NO_HISTORY`: history starts once a
+  step of the STEPS phase was submitted.
 - **`Form::resumable()`** (opt-in per form; route-level `->resumable()` does not enable it): a failed
   attempt saves what validated before the failure, the next attempt replays it
   (`Field::revalidateStored()`), and the entry is cleared through `onSuccess()`. Entries (store
