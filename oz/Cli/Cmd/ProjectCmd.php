@@ -88,7 +88,7 @@ final class ProjectCmd extends Command
 			->pattern($project_prefix_reg)
 			->def('SA');
 
-		$this->getCli()->withJsonSupport($create);
+		self::withJsonSupport($create);
 
 		$create->handler($this->create(...));
 

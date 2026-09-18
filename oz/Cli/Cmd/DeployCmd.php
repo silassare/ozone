@@ -413,7 +413,7 @@ final class DeployCmd extends Command
 		$releases = $this->action('releases', 'List the releases of a deploy root.');
 		self::rootOption($releases, 1);
 
-		$this->getCli()->withJsonSupport($releases);
+		self::withJsonSupport($releases);
 
 		self::withHostOptions($releases);
 		$releases->handler($this->releases(...));
@@ -439,7 +439,7 @@ final class DeployCmd extends Command
 	{
 		return \array_values(\array_filter(
 			\array_map('trim', \explode(',', $value)),
-			static fn (string $v): bool => '' !== $v
+			static fn(string $v): bool => '' !== $v
 		));
 	}
 }

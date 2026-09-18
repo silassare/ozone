@@ -52,7 +52,7 @@ final class MigrationsCmd extends Command
 
 		$check = $this->action('check', 'Check database migrations.');
 
-		$this->getCli()->withJsonSupport($check);
+		self::withJsonSupport($check);
 
 		$check->handler($this->check(...));
 
@@ -108,7 +108,7 @@ final class MigrationsCmd extends Command
 				'state'          => \strtolower(Migrations::getState()->name),
 				'db_version'     => Migrations::getCurrentDbVersion(true),
 				'source_version' => Migrations::getSourceCodeDbVersion(),
-				'pending'        => \array_map(static fn (MigrationInterface $migration) => [
+				'pending'        => \array_map(static fn(MigrationInterface $migration) => [
 					'label'   => $migration->getLabel(),
 					'version' => $migration->getVersion(),
 					'date'    => $migration->getTimestamp(),
@@ -125,7 +125,7 @@ final class MigrationsCmd extends Command
 			$table->addHeader('Date', 'date')
 				->setCellFormatter(KliTableFormatter::date('jS F Y, g:i:s a'));
 
-			$table->addRows(\array_map(static fn (MigrationInterface $migration) => [
+			$table->addRows(\array_map(static fn(MigrationInterface $migration) => [
 				'label'   => $migration->getLabel(),
 				'version' => $migration->getVersion(),
 				'date'    => $migration->getTimestamp(),

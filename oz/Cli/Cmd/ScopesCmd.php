@@ -199,7 +199,7 @@ final class ScopesCmd extends Command
 			->bool()
 			->def(false);
 
-		$this->getCli()->withJsonSupport($add);
+		self::withJsonSupport($add);
 
 		$add->handler($this->add(...));
 	}

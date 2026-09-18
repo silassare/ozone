@@ -66,6 +66,19 @@ abstract class Command extends KliCommand
 	}
 
 	/**
+	 * Adds a `--json` option to the action, which will make it output a JSON object instead of human-readable text.
+	 *
+	 * @param KliAction $action
+	 */
+	protected static function withJsonSupport(KliAction $action): void
+	{
+		$action->option('json', 'j')
+			->description('Output the result as one JSON object, for tools.')
+			->bool()
+			->def(false);
+	}
+
+	/**
 	 * Adds the options choosing the host an action acts on: this machine, or a server over SSH.
 	 */
 	protected static function withHostOptions(KliAction $action): void
