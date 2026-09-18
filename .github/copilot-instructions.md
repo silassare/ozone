@@ -740,7 +740,14 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   names files changed or gone since the build.
 - **`oz server provision`**: `Cli\Server\Provisioner::plan()` is a pure function of the options and the
   detected `PackageManager` (so `--dry-run` is honest and every distribution is asserted from one
-  machine), and `ProvisionPlan::run()` reaches the host only through `ShellRunnerInterface`.
+  machine), and everything that reads or runs on the target goes through `Cli\Server\Interfaces\HostInterface`:
+  `LocalHost` (this machine) or `SshHost` (`--host=user@host[:port]`, `--identity`, on `oz server provision|status`
+  and `oz deploy run|rollback|releases`). Detection, the `ProvisionStep` checks (`fn (HostInterface $host)`), the
+  manifest, the root check and `ReleaseLayout` all take the host: **never read the target with PHP's file
+  functions**, or `--host` acts on the wrong machine. `SshHost` uses the system client (agent, one reused
+  connection, host keys accepted on first sight), plain POSIX shell (BusyBox answers too) and standard input
+  for files; `OZ_SSH_COMMAND` replaces the client, as `GIT_SSH_COMMAND` does. `oz deploy run --host` copies a
+  local archive or bundle file to `{root}/uploads/` first.
   `/etc/ozone/provision.json` records each applied step: a second run is a diff, and nothing the
   manifest does not claim is touched. **The firewall step allows SSH before it denies anything, and
   it is the last step.** `phpExtensionPackage()` returns null for extensions built into PHP. Debian
@@ -779,7 +786,8 @@ runs), `lint`, `cs`, `fix`, `shell`, `down`, ...
 - Groups needing a server are excluded by default and **fail instead of skipping** when their target
   runs them without the server: `redis`, `minio`, `clamav` (`make test-services`), `frankenphp`,
   `roadrunner`, `swoole` (`make test-runtimes`, which recreates the server containers so they run the
-  current code), `provision` (`make test-provision`, on the host: it drives Docker itself).
+  current code), `provision` (`make test-provision`, on the host: it drives Docker itself, and the system
+  `ssh` client for the sshd containers of `ServerOverSshTest`).
 - **The test kit is part of OZone** (`oz/Testing/`, `OZONE\Core\Testing`), so a plugin or an app tests
   the way OZone does: `Sandbox`, `SandboxApp`, `OZTestProject`, `DbTestConfig`, `ServiceEnv`,
   `IntegrationTestCase` and the `Requires*Trait`s. It is never preloaded (`ScopeBuilder`), and only

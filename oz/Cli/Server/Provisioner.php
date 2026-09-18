@@ -15,6 +15,7 @@ namespace OZONE\Core\Cli\Server;
 
 use InvalidArgumentException;
 use OZONE\Core\Cli\Server\Enums\PackageManager;
+use OZONE\Core\Cli\Server\Interfaces\HostInterface;
 use OZONE\Core\Cli\Utils\Requirements;
 
 /**
@@ -147,7 +148,7 @@ final class Provisioner
 				'web:' . $this->web_server,
 				\sprintf('The %s web server.', $this->web_server),
 				[$this->manager->installCommand([$package])],
-				static fn (): bool => PackageManager::hasBinary($binary),
+				static fn (HostInterface $host): bool => $host->hasBinary($binary),
 			));
 
 			$services[] = $package;
@@ -206,7 +207,7 @@ final class Provisioner
 			'docker',
 			'Docker and the compose plugin.',
 			[$this->manager->installCommand($packages)],
-			static fn (): bool => PackageManager::hasBinary('docker'),
+			static fn (HostInterface $host): bool => $host->hasBinary('docker'),
 		));
 
 		$plan->add(new ProvisionStep(

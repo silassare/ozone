@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Deploy;
 
+use OZONE\Core\Cli\Server\Interfaces\HostInterface;
+use OZONE\Core\Cli\Server\LocalHost;
+
 /**
  * Class ReleaseLayout.
  *
@@ -66,12 +69,13 @@ final class ReleaseLayout
 	 *
 	 * @return list<string>
 	 */
-	public static function missingSharedFiles(string $root): array
+	public static function missingSharedFiles(string $root, ?HostInterface $host = null): array
 	{
+		$host ??= new LocalHost();
 		$missing = [];
 
 		foreach (self::sharedFiles() as $file) {
-			if (!\file_exists(\rtrim($root, DS) . DS . $file)) {
+			if (!$host->exists(\rtrim($root, DS) . DS . $file)) {
 				$missing[] = $file;
 			}
 		}
@@ -114,16 +118,15 @@ final class ReleaseLayout
 	/**
 	 * The release `current` points at, or null when there is none yet.
 	 */
-	public static function currentRelease(string $root): ?string
+	public static function currentRelease(string $root, ?HostInterface $host = null): ?string
 	{
-		$link = self::currentLink($root);
+		$target = ($host ?? new LocalHost())->readLink(self::currentLink($root));
 
-		if (!\is_link($link)) {
+		if (null === $target) {
 			return null;
 		}
 
-		$target = (string) \readlink($link);
-		$name   = \basename($target);
+		$name = \basename($target);
 
 		return '' === $name ? null : $name;
 	}
@@ -133,33 +136,18 @@ final class ReleaseLayout
 	 *
 	 * @return list<string>
 	 */
-	public static function releases(string $root): array
+	public static function releases(string $root, ?HostInterface $host = null): array
 	{
-		$dir      = self::releasesDir($root);
-		$releases = [];
-
-		if (!\is_dir($dir)) {
-			return $releases;
-		}
-
-		foreach (\scandir($dir) ?: [] as $entry) {
-			if ('.' !== $entry && '..' !== $entry && \is_dir($dir . DS . $entry)) {
-				$releases[] = $entry;
-			}
-		}
-
-		\sort($releases);
-
-		return $releases;
+		return ($host ?? new LocalHost())->listDirs(self::releasesDir($root));
 	}
 
 	/**
 	 * The release before the current one, which is what a rollback goes back to.
 	 */
-	public static function previousRelease(string $root): ?string
+	public static function previousRelease(string $root, ?HostInterface $host = null): ?string
 	{
-		$releases = self::releases($root);
-		$current  = self::currentRelease($root);
+		$releases = self::releases($root, $host);
+		$current  = self::currentRelease($root, $host);
 
 		if (null === $current) {
 			return null;
@@ -177,8 +165,8 @@ final class ReleaseLayout
 	/**
 	 * Whether a deploy root has the shape this expects.
 	 */
-	public static function isDeployRoot(string $root): bool
+	public static function isDeployRoot(string $root, ?HostInterface $host = null): bool
 	{
-		return \is_dir(self::releasesDir($root));
+		return ($host ?? new LocalHost())->isDir(self::releasesDir($root));
 	}
 }

@@ -13,8 +13,13 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli;
 
+use Kli\KliAction;
+use Kli\KliArgs;
 use Kli\KliCommand;
 use Override;
+use OZONE\Core\Cli\Server\Interfaces\HostInterface;
+use OZONE\Core\Cli\Server\LocalHost;
+use OZONE\Core\Cli\Server\SshHost;
 use OZONE\Core\Exceptions\RuntimeException;
 
 /**
@@ -58,6 +63,37 @@ abstract class Command extends KliCommand
 		}
 
 		return $cli;
+	}
+
+	/**
+	 * Adds the options choosing the host an action acts on: this machine, or a server over SSH.
+	 */
+	protected static function withHostOptions(KliAction $action): void
+	{
+		$action->option('host')
+			->description('Act on a server over SSH, user@host[:port], instead of this machine.')
+			->string()
+			->def('');
+		$action->option('identity')
+			->description('The private key for --host; by default the SSH agent and client configuration.')
+			->string()
+			->def('');
+	}
+
+	/**
+	 * The host chosen by {@see withHostOptions()}.
+	 */
+	protected static function hostFromArgs(KliArgs $args): HostInterface
+	{
+		$target = (string) $args->get('host');
+
+		if ('' === $target) {
+			return new LocalHost();
+		}
+
+		$identity = (string) $args->get('identity');
+
+		return SshHost::fromTarget($target, '' === $identity ? null : $identity);
 	}
 
 	/**

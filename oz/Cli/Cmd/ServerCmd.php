@@ -18,11 +18,11 @@ use Kli\Table\KliTable;
 use Override;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Server\Enums\PackageManager;
+use OZONE\Core\Cli\Server\Interfaces\HostInterface;
 use OZONE\Core\Cli\Server\Provisioner;
 use OZONE\Core\Cli\Server\ProvisionManifest;
 use OZONE\Core\Cli\Server\ProvisionPlan;
 use OZONE\Core\Cli\Server\ProvisionStep;
-use OZONE\Core\Cli\Server\ShellRunner;
 
 /**
  * Class ServerCmd.
@@ -45,9 +45,11 @@ final class ServerCmd extends Command
 		$cli     = $this->getCli();
 		$dry_run = (bool) $args->get('dry-run');
 		$yes     = (bool) $args->get('yes');
+		$host    = self::hostFromArgs($args);
+		$manager = PackageManager::detect($host);
 
 		$provisioner = new Provisioner(
-			PackageManager::detect(),
+			$manager,
 			(string) $args->get('mode'),
 			(string) $args->get('web-server'),
 			(string) $args->get('db'),
@@ -59,7 +61,7 @@ final class ServerCmd extends Command
 		);
 
 		$plan     = $provisioner->plan();
-		$manifest = ProvisionManifest::load((string) $args->get('manifest'));
+		$manifest = ProvisionManifest::load((string) $args->get('manifest'), $host);
 
 		if ($plan->isEmpty()) {
 			$cli->info('Nothing to do.');
@@ -67,7 +69,7 @@ final class ServerCmd extends Command
 			return;
 		}
 
-		$this->showPlan($plan, $manifest);
+		$this->showPlan($plan, $manifest, $host, $manager);
 
 		if ($dry_run) {
 			$cli->info('Nothing was run (--dry-run).');
@@ -75,8 +77,11 @@ final class ServerCmd extends Command
 			return;
 		}
 
-		if (0 !== \posix_geteuid()) {
-			$cli->error('Provisioning needs root. Re-run with sudo, or use --dry-run to see the plan.');
+		if (!$host->isRoot()) {
+			$cli->error(\sprintf(
+				'Provisioning needs root on %s. Re-run as root, or use --dry-run to see the plan.',
+				$host->describe()
+			));
 
 			return;
 		}
@@ -97,7 +102,7 @@ final class ServerCmd extends Command
 			}
 		}
 
-		$ran = $plan->run(new ShellRunner(), $manifest, static function (ProvisionStep $step, string $state) use ($cli): void {
+		$ran = $plan->run($host, $manifest, static function (ProvisionStep $step, string $state) use ($cli): void {
 			match ($state) {
 				'skipped' => $cli->info(\sprintf('- %s: already done', $step->name)),
 				'running' => $cli->writeLn(\sprintf('> %s', $step->name)),
@@ -121,7 +126,7 @@ final class ServerCmd extends Command
 	public function status(KliArgs $args): void
 	{
 		$cli      = $this->getCli();
-		$manifest = ProvisionManifest::load((string) $args->get('manifest'));
+		$manifest = ProvisionManifest::load((string) $args->get('manifest'), self::hostFromArgs($args));
 		$steps    = $manifest->steps();
 
 		if ($args->get('json')) {
@@ -210,6 +215,7 @@ final class ServerCmd extends Command
 			->string()
 			->def(ProvisionManifest::DEFAULT_PATH);
 
+		self::withHostOptions($provision);
 		$provision->handler($this->provision(...));
 
 		$status = $this->action('status', 'Show what an OZone provision run installed on this host.');
@@ -219,6 +225,7 @@ final class ServerCmd extends Command
 			->def(ProvisionManifest::DEFAULT_PATH);
 
 		$this->getCli()->withJsonSupport($status);
+		self::withHostOptions($status);
 
 		$status->handler($this->status(...));
 	}
@@ -226,12 +233,15 @@ final class ServerCmd extends Command
 	/**
 	 * Prints the plan, marking what an earlier run already did.
 	 */
-	private function showPlan(ProvisionPlan $plan, ProvisionManifest $manifest): void
-	{
+	private function showPlan(
+		ProvisionPlan $plan,
+		ProvisionManifest $manifest,
+		HostInterface $host,
+		PackageManager $manager
+	): void {
 		$cli = $this->getCli();
 
-		$manager = PackageManager::detect();
-
+		$cli->writeLn(\sprintf('Host: %s', $host->describe()));
 		$cli->writeLn(\sprintf('Package manager: %s', $manager->value));
 
 		if (!$manager->isVerified()) {
@@ -248,7 +258,7 @@ final class ServerCmd extends Command
 		$cli->writeLn();
 
 		foreach ($plan->steps() as $step) {
-			$done = $manifest->has($step->name) || $step->isSatisfied();
+			$done = $manifest->has($step->name) || $step->isSatisfied($host);
 
 			$cli->writeLn(\sprintf('%s %s -- %s', $done ? '[skip]' : '[ run]', $step->name, $step->reason));
 

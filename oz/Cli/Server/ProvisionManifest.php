@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Server;
 
 use JsonException;
+use OZONE\Core\Cli\Server\Interfaces\HostInterface;
 use Throwable;
 
 /**
@@ -34,6 +35,7 @@ final class ProvisionManifest
 
 	private function __construct(
 		public readonly string $path,
+		private readonly HostInterface $host,
 		public readonly array $loaded = [],
 	) {
 		/** @var array<string, array{at: int, version: string, commands: list<string>}> $steps */
@@ -42,15 +44,18 @@ final class ProvisionManifest
 	}
 
 	/**
-	 * Reads the manifest of a host, empty when there is none.
+	 * Reads the manifest of a host (this machine by default), empty when there is none.
 	 */
-	public static function load(string $path = self::DEFAULT_PATH): self
+	public static function load(string $path = self::DEFAULT_PATH, ?HostInterface $host = null): self
 	{
-		$data = [];
+		$host ??= new LocalHost();
+		$data   = [];
 
 		try {
-			if (\is_file($path) && \is_readable($path)) {
-				$decoded = \json_decode((string) \file_get_contents($path), true, 512, \JSON_THROW_ON_ERROR);
+			$content = $host->readFile($path);
+
+			if (null !== $content) {
+				$decoded = \json_decode($content, true, 512, \JSON_THROW_ON_ERROR);
 				$data    = \is_array($decoded) ? $decoded : [];
 			}
 		} catch (JsonException|Throwable) {
@@ -59,7 +64,7 @@ final class ProvisionManifest
 			$data = [];
 		}
 
-		return new self($path, $data);
+		return new self($path, $host, $data);
 	}
 
 	/**
@@ -111,12 +116,6 @@ final class ProvisionManifest
 	 */
 	public function save(): bool
 	{
-		$dir = \dirname($this->path);
-
-		if (!\is_dir($dir) && !@\mkdir($dir, 0o755, true) && !\is_dir($dir)) {
-			return false;
-		}
-
 		try {
 			$json = \json_encode([
 				'ozone'   => OZ_OZONE_VERSION,
@@ -127,6 +126,6 @@ final class ProvisionManifest
 			return false;
 		}
 
-		return false !== @\file_put_contents($this->path, $json . \PHP_EOL);
+		return $this->host->writeFile($this->path, $json . \PHP_EOL);
 	}
 }

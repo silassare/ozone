@@ -13,7 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Deploy;
 
-use OZONE\Core\Cli\Server\Interfaces\ShellRunnerInterface;
+use OZONE\Core\Cli\Server\Interfaces\HostInterface;
+use OZONE\Core\Cli\Server\LocalHost;
 use OZONE\Core\Cli\Server\ProvisionStep;
 use OZONE\Core\Exceptions\RuntimeException;
 
@@ -226,12 +227,12 @@ final class Releaser
 	 *
 	 * @return list<ProvisionStep>
 	 */
-	public function rollbackSteps(string $to): array
+	public function rollbackSteps(string $to, ?HostInterface $host = null): array
 	{
 		$release = ReleaseLayout::releaseDir($this->root, $to);
 		$current = ReleaseLayout::currentLink($this->root);
 
-		if (!\is_dir($release)) {
+		if (!($host ?? new LocalHost())->isDir($release)) {
 			throw new RuntimeException(\sprintf('No such release: "%s".', $to));
 		}
 
@@ -262,13 +263,13 @@ final class Releaser
 		return $steps;
 	}
 
-	public function run(ShellRunnerInterface $runner, ?callable $on_step = null): array
+	public function run(HostInterface $host, ?callable $on_step = null): array
 	{
 		// Checked before anything is created: a release whose `.env` is missing cannot boot, and
 		// failing here is a great deal clearer than failing inside the first `oz` command.
-		$missing = ReleaseLayout::missingSharedFiles($this->root);
+		$missing = ReleaseLayout::missingSharedFiles($this->root, $host);
 
-		if (!empty($missing) && \is_dir($this->root)) {
+		if (!empty($missing) && $host->isDir($this->root)) {
 			throw new RuntimeException(\sprintf(
 				'The deploy root %s is missing %s. It is not in the repository (it holds the app'
 					. ' secret and the database password): put it there once, and every release will'
@@ -278,7 +279,7 @@ final class Releaser
 			));
 		}
 
-		$previous = ReleaseLayout::currentRelease($this->root);
+		$previous = ReleaseLayout::currentRelease($this->root, $host);
 		$live     = false;
 		$ran      = [];
 
@@ -288,15 +289,15 @@ final class Releaser
 			foreach ($step->commands as $command) {
 				$output = '';
 
-				if (0 !== $runner->run($command, $output)) {
+				if (0 !== $host->run($command, $output)) {
 					// Before the swap nothing is serving the new release, so failing here changes
 					// nothing. After it, the release is live and broken: put the old one back.
 					if ($live && null !== $previous) {
 						null !== $on_step && $on_step($step, 'rolling-back');
 
-						foreach ($this->rollbackSteps($previous) as $back) {
+						foreach ($this->rollbackSteps($previous, $host) as $back) {
 							foreach ($back->commands as $back_command) {
-								$runner->run($back_command);
+								$host->run($back_command);
 							}
 						}
 					}
@@ -329,8 +330,8 @@ final class Releaser
 	/**
 	 * Runs the steps, rolling `current` back when one fails after the swap.
 	 *
-	 * @param ShellRunnerInterface $runner
-	 * @param null|callable        $on_step called with (ProvisionStep, string $state)
+	 * @param HostInterface $host
+	 * @param null|callable $on_step called with (ProvisionStep, string $state)
 	 *
 	 * @return list<string> the names of the steps that ran
 	 */

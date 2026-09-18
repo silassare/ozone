@@ -21,7 +21,6 @@ use OZONE\Core\Cli\Deploy\DeployInitializer;
 use OZONE\Core\Cli\Deploy\ReleaseLayout;
 use OZONE\Core\Cli\Deploy\Releaser;
 use OZONE\Core\Cli\Server\ProvisionStep;
-use OZONE\Core\Cli\Server\ShellRunner;
 use OZONE\Core\Cli\Utils\Utils;
 
 /**
@@ -109,19 +108,34 @@ final class DeployCmd extends Command
 	 */
 	public function run(KliArgs $args): void
 	{
-		$cli  = $this->getCli();
-		$root = \rtrim((string) $args->get('root'), DS);
+		$cli     = $this->getCli();
+		$root    = \rtrim((string) $args->get('root'), DS);
+		$host    = self::hostFromArgs($args);
+		$uploads = [];
+
+		// On a server, a local archive or bundle file is copied into the deploy root first: the server
+		// cannot read this machine. A directory or URL is the server's own.
+		$source = static function (string $path) use ($host, $root, &$uploads): string {
+			if ('' === $path || $host->isLocal() || !\is_file($path)) {
+				return $path;
+			}
+
+			$remote           = $root . DS . 'uploads' . DS . \basename($path);
+			$uploads[$remote] = $path;
+
+			return $remote;
+		};
 
 		$releaser = new Releaser(
 			$root,
-			(string) $args->get('repository'),
+			$source((string) $args->get('repository')),
 			(string) $args->get('ref'),
 			(string) $args->get('release'),
 			(int) $args->get('keep'),
 			!$args->get('skip-migrations'),
 			($url = (string) $args->get('health-url')) === '' ? null : $url,
 			self::parseList((string) $args->get('restart')),
-			archive: (string) $args->get('archive'),
+			archive: $source((string) $args->get('archive')),
 		);
 
 		if (('' === (string) $args->get('repository')) === ('' === (string) $args->get('archive'))) {
@@ -130,9 +144,10 @@ final class DeployCmd extends Command
 			return;
 		}
 
+		$cli->writeLn(\sprintf('Host:        %s', $host->describe()));
 		$cli->writeLn(\sprintf('Deploy root: %s', $root));
 		$cli->writeLn(\sprintf('Release:     %s', $releaser->releaseName()));
-		$cli->writeLn(\sprintf('Current:     %s', ReleaseLayout::currentRelease($root) ?? '(none)'));
+		$cli->writeLn(\sprintf('Current:     %s', ReleaseLayout::currentRelease($root, $host) ?? '(none)'));
 		$cli->writeLn();
 
 		foreach ($releaser->steps() as $step) {
@@ -151,7 +166,15 @@ final class DeployCmd extends Command
 			return;
 		}
 
-		$ran = $releaser->run(new ShellRunner(), static function (ProvisionStep $step, string $state) use ($cli): void {
+		foreach ($uploads as $remote => $local) {
+			if (!$host->upload($local, $remote)) {
+				$cli->error(\sprintf('Unable to copy %s to %s on %s.', $local, $remote, $host->describe()));
+
+				return;
+			}
+		}
+
+		$ran = $releaser->run($host, static function (ProvisionStep $step, string $state) use ($cli): void {
 			match ($state) {
 				'running'      => $cli->writeLn('> ' . $step->name),
 				'done'         => $cli->success('  ' . $step->name . ': ok'),
@@ -177,9 +200,10 @@ final class DeployCmd extends Command
 		$cli  = $this->getCli();
 		$root = \rtrim((string) $args->get('root'), DS);
 		$to   = (string) $args->get('to');
+		$host = self::hostFromArgs($args);
 
 		if ('' === $to) {
-			$to = (string) ReleaseLayout::previousRelease($root);
+			$to = (string) ReleaseLayout::previousRelease($root, $host);
 
 			if ('' === $to) {
 				$cli->error('There is no previous release to roll back to.');
@@ -198,7 +222,7 @@ final class DeployCmd extends Command
 			null,
 			self::parseList((string) $args->get('restart'))
 		);
-		$steps    = $releaser->rollbackSteps($to);
+		$steps    = $releaser->rollbackSteps($to, $host);
 
 		foreach ($steps as $step) {
 			$cli->writeLn(\sprintf('[%s] %s', $step->name, $step->reason));
@@ -214,13 +238,11 @@ final class DeployCmd extends Command
 			return;
 		}
 
-		$runner = new ShellRunner();
-
 		foreach ($steps as $step) {
 			foreach ($step->commands as $command) {
 				$output = '';
 
-				if (0 !== $runner->run($command, $output)) {
+				if (0 !== $host->run($command, $output)) {
 					$cli->error(\sprintf('Rollback failed on: %s', $command));
 
 					return;
@@ -241,27 +263,28 @@ final class DeployCmd extends Command
 	{
 		$cli  = $this->getCli();
 		$root = \rtrim((string) $args->get('root'), DS);
+		$host = self::hostFromArgs($args);
 
 		if ($args->get('json')) {
-			$deployed = ReleaseLayout::isDeployRoot($root);
+			$deployed = ReleaseLayout::isDeployRoot($root, $host);
 
 			$cli->writeJson([
 				'root'     => $root,
 				'deployed' => $deployed,
-				'current'  => $deployed ? ReleaseLayout::currentRelease($root) : null,
-				'releases' => $deployed ? ReleaseLayout::releases($root) : [],
+				'current'  => $deployed ? ReleaseLayout::currentRelease($root, $host) : null,
+				'releases' => $deployed ? ReleaseLayout::releases($root, $host) : [],
 			]);
 		}
 
-		if (!ReleaseLayout::isDeployRoot($root)) {
+		if (!ReleaseLayout::isDeployRoot($root, $host)) {
 			$cli->info(\sprintf('No releases in %s: nothing was deployed there.', $root));
 
 			return;
 		}
 
-		$current = ReleaseLayout::currentRelease($root);
+		$current = ReleaseLayout::currentRelease($root, $host);
 
-		foreach (ReleaseLayout::releases($root) as $release) {
+		foreach (ReleaseLayout::releases($root, $host) as $release) {
 			$cli->writeLn(\sprintf('%s %s', $release === $current ? '*' : ' ', $release));
 		}
 	}
@@ -365,6 +388,7 @@ final class DeployCmd extends Command
 			->description('Print the steps and run nothing.')
 			->bool()
 			->def(false);
+		self::withHostOptions($run);
 		$run->handler($this->run(...));
 
 		// action: deploy rollback
@@ -382,6 +406,7 @@ final class DeployCmd extends Command
 			->description('Print the steps and run nothing.')
 			->bool()
 			->def(false);
+		self::withHostOptions($rollback);
 		$rollback->handler($this->rollback(...));
 
 		// action: deploy releases
@@ -390,6 +415,7 @@ final class DeployCmd extends Command
 
 		$this->getCli()->withJsonSupport($releases);
 
+		self::withHostOptions($releases);
 		$releases->handler($this->releases(...));
 	}
 

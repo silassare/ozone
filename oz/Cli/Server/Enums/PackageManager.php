@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Server\Enums;
 
+use OZONE\Core\Cli\Server\Interfaces\HostInterface;
+use OZONE\Core\Cli\Server\LocalHost;
+
 /**
  * Enum PackageManager.
  *
@@ -30,10 +33,12 @@ enum PackageManager: string
 	case UNKNOWN = 'unknown';
 
 	/**
-	 * The manager of the host, from the binaries it has.
+	 * The manager of a host, from the binaries it has: this machine by default.
 	 */
-	public static function detect(): self
+	public static function detect(?HostInterface $host = null): self
 	{
+		$host ??= new LocalHost();
+
 		foreach (
 			[
 				'apt-get' => self::APT,
@@ -43,26 +48,12 @@ enum PackageManager: string
 				'brew'    => self::BREW,
 			] as $binary => $manager
 		) {
-			if (self::hasBinary($binary)) {
+			if ($host->hasBinary($binary)) {
 				return $manager;
 			}
 		}
 
 		return self::UNKNOWN;
-	}
-
-	/**
-	 * Whether an executable is on `PATH`.
-	 */
-	public static function hasBinary(string $binary): bool
-	{
-		foreach (\explode(\PATH_SEPARATOR, (string) \getenv('PATH')) as $dir) {
-			if ('' !== $dir && \is_executable(\rtrim($dir, DS) . DS . $binary)) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	/**
