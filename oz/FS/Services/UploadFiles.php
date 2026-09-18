@@ -61,8 +61,13 @@ class UploadFiles extends Service
 	{
 		$r->getContext()->getAuthUsers()->assertUserIsAuthenticated();
 
-		$files_ids = $r->getCleanFormField(self::PARAM_FILES);
-		$ref       = self::newRef();
+		// A validated file is an object holding the id (or the reference of a temporary file), and both
+		// the state store and a query want that value, not the object.
+		$files_ids = \array_map(
+			static fn (ValidatedFile $file): string => (string) $file,
+			$r->getCleanFormField(self::PARAM_FILES)
+		);
+		$ref = self::newRef();
 
 		$this->saveUploadedFilesIds($ref, $files_ids);
 

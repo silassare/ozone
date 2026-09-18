@@ -274,6 +274,55 @@ final class HttpRoutingTest extends TestCase
 		self::assertSame('ok', $data['data']['secret'] ?? null, $body);
 	}
 
+	/**
+	 * `POST /upload` saves the files it was given and answers them.
+	 *
+	 * The service reads the validated files of the form, which are objects holding the id: a query and
+	 * the state store want that value, and passing the objects made every upload answer a 500.
+	 */
+	public function testUploadSavesTheFilesAndAnswersThem(): void
+	{
+		self::$proj->oz(
+			'users',
+			'add',
+			'--user_civility=Mr',
+			'--user_display_name=Up Loader',
+			'--user_first_name=Up',
+			'--user_last_name=Loader',
+			'--user_email=up.loader@example.com',
+			'--user_gender=Male',
+			'--user_birth_date=1990-05-17',
+			'--user_pass=Up_Pass_42',
+			'--user_cc2=BJ',
+		)->mustRun();
+
+		[, , $headers] = $this->request('POST', '/login', [
+			'auth_user_type'             => 'user',
+			'auth_user_identifier_type'  => 'email',
+			'auth_user_identifier_value' => 'up.loader@example.com',
+			'auth_user_password'         => 'Up_Pass_42',
+		]);
+
+		$cookies = self::cookies($headers);
+		$session = [
+			'Cookie: OZONE_SID=' . $cookies['OZONE_SID'],
+			'X-XSRF-TOKEN: ' . ($cookies['XSRF-TOKEN'] ?? ''),
+		];
+
+		// `files[]` is how PHP reads several files of one field.
+		[$status, $body] = $this->multipart('/upload/', [
+			['name' => 'files[]', 'filename' => 'one.txt', 'type' => 'text/plain', 'content' => 'first'],
+			['name' => 'files[]', 'filename' => 'two.txt', 'type' => 'text/plain', 'content' => 'second'],
+		], $session);
+
+		$data = \json_decode($body, true);
+
+		self::assertSame(200, $status, $body);
+		self::assertSame(0, $data['error'] ?? null, $body);
+		self::assertNotEmpty($data['data']['ref'] ?? null, $body);
+		self::assertCount(2, $data['data']['files'] ?? [], $body);
+	}
+
 	// -------------------------------------------------------------------------
 	// Helpers
 	// -------------------------------------------------------------------------
@@ -323,6 +372,56 @@ final class HttpRoutingTest extends TestCase
 		}
 
 		return [$status, $body, $http_response_header ?? []];
+	}
+
+	/**
+	 * Sends a multipart request, as a browser uploading files does.
+	 *
+	 * @param list<array{name:string, filename:string, type:string, content:string}> $files
+	 * @param list<string>                                                           $headers
+	 *
+	 * @return array{0:int, 1:string}
+	 */
+	private function multipart(string $path, array $files, array $headers = []): array
+	{
+		$boundary = '----OZoneTestBoundary' . \bin2hex(\random_bytes(8));
+		$body     = '';
+
+		foreach ($files as $file) {
+			$body .= '--' . $boundary . "\r\n"
+				. \sprintf(
+					'Content-Disposition: form-data; name="%s"; filename="%s"',
+					$file['name'],
+					$file['filename']
+				) . "\r\n"
+				. 'Content-Type: ' . $file['type'] . "\r\n\r\n"
+				. $file['content'] . "\r\n";
+		}
+
+		$body .= '--' . $boundary . "--\r\n";
+
+		$opts = [
+			'method'        => 'POST',
+			'timeout'       => 10,
+			'ignore_errors' => true,
+			'content'       => $body,
+			'header'        => "Accept: application/json\r\n"
+				. 'Content-Type: multipart/form-data; boundary=' . $boundary . "\r\n"
+				. \implode('', \array_map(static fn (string $h): string => $h . "\r\n", $headers)),
+		];
+
+		$ctx      = \stream_context_create(['http' => $opts]);
+		$response = @\file_get_contents('http://' . self::$host . ':' . self::$port . $path, false, $ctx);
+		$status   = 0;
+
+		if (
+			!empty($http_response_header[0])
+			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', $http_response_header[0], $m)
+		) {
+			$status = (int) $m[1];
+		}
+
+		return [$status, false === $response ? '' : $response];
 	}
 
 	/**

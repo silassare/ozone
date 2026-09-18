@@ -528,6 +528,16 @@ unless already a hash), `TypeCC2`, `TypeGender`, `TypeFile`. `registered()` / `n
   project directory across instances. Build one with `ValidatedFile::forTempFile()`, read a stored
   value with `forTempValue()`, check it with `isAvailable()` (ref not expired **and** file present),
   never `is_file(getPath())`. `TempFS` rejects a ref or name that is not a single safe path segment.
+- **Uploading** (`FS\Services\UploadFiles`, registered by default in `oz.routes.api`): `POST /upload`
+  takes the files of one request and wants a signed-in user; a big file goes through
+  `POST /upload/chunk/start` (`name`, `size`, `type`, answering a `ref`) then
+  `POST /upload/chunk/add` (`ref`, `chunk_index`, `chunk`), and the chunk that completes the declared
+  size answers the assembled file. A chunk is at most `CHUNK_MAX_SIZE` (1 MB, the form refuses a bigger
+  one) and sending the same index twice is ignored, so a client may retry one. **What was received
+  lives in the session** (`requireAuthStore()`), so every chunk comes from the client that started the
+  upload, with its CSRF token; `DELETE /upload/chunk/{ref}` drops it. The stored name is never the one
+  that was sent: `FS::sanitizeFilename()` slugifies it, adds a random suffix and takes the extension
+  from the type.
 - **Virus scan** (`FS\Scan\FileScan`, `oz.files.scan`, off by default): every new `OZFile` goes
   through it from `FileEntityTrait::save()`, clones excepted. `sync` scans before the insert and throws
   `FileScanRejectedException` after deleting the content; `async` inserts `pending` and queues a
