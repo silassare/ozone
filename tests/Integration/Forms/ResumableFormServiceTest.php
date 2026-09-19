@@ -933,30 +933,6 @@ final class ResumableFormServiceTest extends TestCase
 		self::assertSame(1, $data['error'], 'POST /next on a completed session must return error=1.');
 	}
 
-	// -------------------------------------------------------------------------
-	// Helpers
-	// -------------------------------------------------------------------------
-
-	/**
-	 * Runs the whole test-wizard flow through the standalone endpoints and returns
-	 * the resume_ref of the now-DONE session.
-	 */
-	private function completeWizard(string $wish): string
-	{
-		[, $body]  = $this->request('POST', '/form/test-wizard/init');
-		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
-
-		foreach ([['wish' => $wish], ['name' => 'erin'], ['color' => 'blue'], ['notes' => 'n']] as $step) {
-			[, $body] = $this->request('POST', '/form/test-wizard/next', $step, [
-				'X-OZONE-Form-Resume-Ref' => $resumeRef,
-			]);
-		}
-
-		self::assertTrue(\json_decode($body, true)['data']['done'] ?? false, 'test-wizard should be done. Body: ' . $body);
-
-		return $resumeRef;
-	}
-
 	/**
 	 * Makes an HTTP request to the running test server.
 	 *
@@ -990,6 +966,30 @@ final class ResumableFormServiceTest extends TestCase
 		}
 
 		self::assertSame('500', $limit, 'the route reads OZ_FORM_RESUME_INIT_IP_RATE');
+	}
+
+	// -------------------------------------------------------------------------
+	// Helpers
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Runs the whole test-wizard flow through the standalone endpoints and returns
+	 * the resume_ref of the now-DONE session.
+	 */
+	private function completeWizard(string $wish): string
+	{
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		foreach ([['wish' => $wish], ['name' => 'erin'], ['color' => 'blue'], ['notes' => 'n']] as $step) {
+			[, $body] = $this->request('POST', '/form/test-wizard/next', $step, [
+				'X-OZONE-Form-Resume-Ref' => $resumeRef,
+			]);
+		}
+
+		self::assertTrue(\json_decode($body, true)['data']['done'] ?? false, 'test-wizard should be done. Body: ' . $body);
+
+		return $resumeRef;
 	}
 
 	private function request(string $method, string $path, array $fields = [], array $headers = []): array

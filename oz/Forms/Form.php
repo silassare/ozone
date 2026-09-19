@@ -137,8 +137,8 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 			'n'   => $this->getName(),
 			'f'   => $fields,
 			'fs'  => $fieldsets,
-			'pr'  => \array_map(static fn(RuleSet $r) => $r->toArray(), $this->getPreValidationRules()),
-			'po'  => \array_map(static fn(RuleSet $r) => $r->toArray(), $this->getPostValidationRules()),
+			'pr'  => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->getPreValidationRules()),
+			'po'  => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->getPostValidationRules()),
 		];
 
 		return Hasher::shorten(Hasher::hash32(\json_encode($descriptor, \JSON_THROW_ON_ERROR)));
@@ -398,7 +398,7 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 			}
 		}
 
-		$drop_callable = static fn() => $cache_key && $cache?->delete($cache_key);
+		$drop_callable = static fn () => $cache_key && $cache?->delete($cache_key);
 
 		return [$prefilled, $drop_callable];
 	}

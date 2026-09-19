@@ -171,7 +171,7 @@ final class Cli extends Kli
 
 	/**
 	 * Writes the result of a command as the envelope every OZone answer uses
-	 * ({@see \OZONE\Core\App\JSONResponse}): `{error, msg, data, utime}`, with what the command reported
+	 * ({@see JSONResponse}): `{error, msg, data, utime}`, with what the command reported
 	 * under `data.messages`, and terminates. In JSON mode nothing else reaches stdout.
 	 *
 	 * @param array<string, mixed> $data

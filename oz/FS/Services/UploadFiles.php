@@ -50,6 +50,7 @@ class UploadFiles extends Service
 	public const PARAM_CHUNK       = 'chunk';
 	public const PARAM_CHUNK_INDEX = 'chunk_index';
 	public const PARAM_FILES       = 'files';
+
 	/**
 	 * The default of `oz.files`: `OZ_UPLOAD_CHUNK_MAX_SIZE`, which a project may change.
 	 *

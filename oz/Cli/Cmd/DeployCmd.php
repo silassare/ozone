@@ -439,7 +439,7 @@ final class DeployCmd extends Command
 	{
 		return \array_values(\array_filter(
 			\array_map('trim', \explode(',', $value)),
-			static fn(string $v): bool => '' !== $v
+			static fn (string $v): bool => '' !== $v
 		));
 	}
 }

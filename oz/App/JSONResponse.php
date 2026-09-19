@@ -15,6 +15,7 @@ namespace OZONE\Core\App;
 
 use LogicException;
 use Override;
+use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Utils\JSONResult;
 
@@ -31,7 +32,7 @@ final class JSONResponse extends JSONResult
 	 * Every JSON answer of OZone has this shape: `error`, `msg`, `data`, the form of a discovery or of
 	 * a resumable step, the server time (`utime`), and the session expiry (`stime`) when the request
 	 * was an authenticated stateful one. A service answers through {@see Service::respond()}, a failure
-	 * through {@see \OZONE\Core\Exceptions\BaseException}, and anything else builds one here rather
+	 * through {@see BaseException}, and anything else builds one here rather
 	 * than writing its own object.
 	 *
 	 * @param null|Context $context the request being answered, for the session expiry

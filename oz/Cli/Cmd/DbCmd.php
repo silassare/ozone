@@ -218,7 +218,7 @@ final class DbCmd extends Command
 
 		if ($args->get('json')) {
 			$cli->writeJson([
-				'namespaces' => \array_map(static fn(string $ns): array => [
+				'namespaces' => \array_map(static fn (string $ns): array => [
 					'namespace' => $ns,
 					'dir'       => ORM::getOutputDir($ns),
 				], \array_keys($ns_map)),

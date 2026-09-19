@@ -15,8 +15,10 @@ namespace OZONE\Core\Forms;
 
 use Override;
 use OZONE\Core\App\Service;
+use OZONE\Core\Forms\Resume\Services\ResumableFormService;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
+use OZONE\Core\Router\RouteFormDeclaration;
 use OZONE\Core\Router\RouteInfo;
 
 /**
@@ -28,9 +30,9 @@ use OZONE\Core\Router\RouteInfo;
  * handler is not run.
  *
  * A route whose form is declared through a provider has no bundle to discover: that declaration
- * ({@see \OZONE\Core\Router\RouteFormDeclaration::provider()}) holds neither a form nor a factory, so
+ * ({@see RouteFormDeclaration::provider()}) holds neither a form nor a factory, so
  * the answer carries no `form` key. The forms of such a route are the provider's steps, read through
- * the resume flow ({@see \OZONE\Core\Forms\Resume\Services\ResumableFormService}).
+ * the resume flow ({@see ResumableFormService}).
  */
 final class FormDiscoveryRouteInterceptor implements RouteInterceptorInterface
 {

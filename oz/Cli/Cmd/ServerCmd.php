@@ -133,7 +133,7 @@ final class ServerCmd extends Command
 			$cli->writeJson([
 				'manifest'    => $manifest->path,
 				'provisioned' => !empty($steps),
-				'steps'       => \array_map(static fn(string $step): array => [
+				'steps'       => \array_map(static fn (string $step): array => [
 					'step'       => $step,
 					'applied_at' => $manifest->at($step),
 				], $steps),
@@ -152,7 +152,7 @@ final class ServerCmd extends Command
 		$table = new KliTable();
 		$table->addHeader('Step', 'step')->alignLeft();
 		$table->addHeader('Applied', 'at')->alignLeft();
-		$table->addRows(\array_map(static fn(string $step): array => [
+		$table->addRows(\array_map(static fn (string $step): array => [
 			'step' => $step,
 			'at'   => \date('Y-m-d H:i', (int) $manifest->at($step)),
 		], $steps));
@@ -279,7 +279,7 @@ final class ServerCmd extends Command
 	{
 		return \array_values(\array_filter(
 			\array_map('trim', \explode(',', $value)),
-			static fn(string $v): bool => '' !== $v
+			static fn (string $v): bool => '' !== $v
 		));
 	}
 }
