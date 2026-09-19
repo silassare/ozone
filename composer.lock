@@ -447,12 +447,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "d3c0c7f40e4e87595445d60667181a7695dc3827"
+                "reference": "c8d541060275cfed95f2141781cbd6f95eb7f29c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/d3c0c7f40e4e87595445d60667181a7695dc3827",
-                "reference": "d3c0c7f40e4e87595445d60667181a7695dc3827",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/c8d541060275cfed95f2141781cbd6f95eb7f29c",
+                "reference": "c8d541060275cfed95f2141781cbd6f95eb7f29c",
                 "shasum": ""
             },
             "require": {
@@ -516,7 +516,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/main"
             },
-            "time": "2026-09-18T19:51:56+00:00"
+            "time": "2026-09-19T02:12:24+00:00"
         },
         {
             "name": "silassare/kli",
@@ -4953,12 +4953,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "c8918fe7ff3556283d5db435dc1d0d7545722ebb"
+                "reference": "f1dd47da8977aa9dcb913f443ed6c26042da059f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/c8918fe7ff3556283d5db435dc1d0d7545722ebb",
-                "reference": "c8918fe7ff3556283d5db435dc1d0d7545722ebb",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/f1dd47da8977aa9dcb913f443ed6c26042da059f",
+                "reference": "f1dd47da8977aa9dcb913f443ed6c26042da059f",
                 "shasum": ""
             },
             "conflict": {
@@ -5590,7 +5590,7 @@
                 "paragonie/random_compat": "<2",
                 "paragonie/sodium_compat": "<1.24.1|>=2,<2.5.1",
                 "passbolt/passbolt_api": "<4.6.2",
-                "paymenter/paymenter": "<=1.5.4",
+                "paymenter/paymenter": "<=1.5.6",
                 "paypal/adaptivepayments-sdk-php": "<=3.9.2",
                 "paypal/invoice-sdk-php": "<=3.9",
                 "paypal/merchant-sdk-php": "<3.12",
@@ -6092,7 +6092,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-18T17:31:24+00:00"
+            "time": "2026-09-18T20:28:15+00:00"
         },
         {
             "name": "sebastian/cli-parser",
