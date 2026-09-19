@@ -186,6 +186,10 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 		$ref         = $this->credentials->getReference();
 		$refresh_key = $this->credentials->getRefreshKey();
 		$expire      = \time() + $this->scope->getLifetime();
+		// The label is shown to the user and the column requires one: a scope that was given none is
+		// named after the provider, rather than failing to save an authorization nobody labelled.
+		$label = $this->scope->getLabel();
+		$label = '' === $label ? static::getName() : $label;
 
 		if (Auth::get($ref)) {
 			throw new RuntimeException('An auth ref conflict occurred, newly generated auth ref already in use.', [
@@ -198,7 +202,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 			$auth->setRef($ref)
 				->setRefreshKey($refresh_key)
 				->setProvider(static::getName())
-				->setLabel($this->scope->getLabel())
+				->setLabel($label)
 				->setPayload($this->getPayload())
 				->setTryMax($this->scope->getTryMax())
 				->setLifetime($this->scope->getLifetime())

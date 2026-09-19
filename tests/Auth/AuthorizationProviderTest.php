@@ -407,6 +407,25 @@ final class AuthorizationProviderTest extends TestCase
 	// -----------------------------------------------------------------------
 
 	/** Creates a no-op provider with a 60 s lifetime and configurable try_max. */
+	/**
+	 * An authorization is saved even when nothing labelled its scope.
+	 *
+	 * The column requires a label and the scope starts with none, so every provider that did not set
+	 * one failed to save: `/auth/verify/email`, and every flow built on one, answered a 500.
+	 */
+	public function testGenerateWithoutALabelNamesItAfterTheProvider(): void
+	{
+		$provider = $this->makeProvider();
+		$provider->setScope(new AuthorizationScope());
+
+		$provider->generate();
+
+		$auth = Auth::get($provider->getCredentials()->getReference());
+
+		self::assertNotNull($auth);
+		self::assertSame($provider::getName(), $auth->getLabel());
+	}
+
 	private function makeProvider(int $try_max = 3): AuthorizationProvider
 	{
 		$context = new Context(HTTPEnvironment::mock(), null, Context::root());

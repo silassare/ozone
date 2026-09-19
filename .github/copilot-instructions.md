@@ -451,6 +451,15 @@ access): `Auth::provider($context, $auth)`; `AuthorizationService` exposes
 `/auth/:ref/authorize|refresh|state|cancel`; `->withAuthorization('auth:provider:...')` guards a
 route with one.
 
+- An authorization carries a **label shown to the user**: set it on the scope
+  (`AuthorizationScope::setLabel()`), otherwise `generate()` names it after the provider, since the
+  column requires one.
+- **What a client is told**: starting a verification (`POST /auth/verify/email|phone`) answers
+  whether this is the first message, **not the reference**; the reference and the token travel in the
+  message, as the link `GET /auth/link/:ref/:token`. `refresh` and `cancel` need the refresh key,
+  which only the flow that opened the authorization holds. Starting a verification again opens a new
+  authorization rather than refreshing the one open.
+
 - **Passwords** are checked through `AuthUsers::checkPassword()` only: failures are counted per
   account (or per submitted identifier when unknown) by `LoginThrottle`, unknown accounts are checked
   against a dummy hash, and clients get one generic `OZ_AUTH_INVALID_CREDENTIALS`. `POST /login` is
