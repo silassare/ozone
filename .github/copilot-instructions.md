@@ -325,8 +325,12 @@ path, name, guards and middlewares without a group block.
 `App\Service` (abstract) implements `RouteProviderInterface` and `ApiDocProviderInterface`; its
 constructor takes `Context|RouteInfo`. `respond()` builds the JSON envelope from `$this->json()`:
 `{error, msg, data, utime, stime}` (`stime`: session expiry, when applicable). **Every answer has that
-shape**: an error built from an exception (`BaseException::getJSONResponse()`) and a command's `--json`
-output too.
+shape**: an error built from an exception (`BaseException::getJSONResponse()`), a route guard, an
+authentication challenge, the cron endpoint and a command's `--json` output too.
+
+**Never write a JSON body by hand.** `Response::withJson()` takes what `JSONResponse::toEnvelope(?Context)`
+built, which is the one place `utime` and `stime` are added: anything answering `withJson(['ok' => true])`
+invents a shape no client reads.
 
 `Web\WebView` renders HTML: `setTemplate('oz://path/to.blate')->inject([...])`; the context reaches
 templates through `BlatePlugin::CONTEXT_INJECT_KEY`.

@@ -439,13 +439,10 @@ STRING;
 		$json->setError($this->getMessage())
 			->setData(ErrorUtils::redactSensitiveData($this->getData()));
 
-		// The same envelope as a service's answer (`Service::respond()`), `utime` included: a client reads
-		// one shape, whether the request succeeded or failed.
-		$data          = $json->toArray();
-		$data['utime'] = \time();
-
+		// The same envelope as a service's answer: a client reads one shape, whether the request
+		// succeeded or failed.
 		return $context->getResponse()
-			->withJson($data);
+			->withJson($json->toEnvelope($context));
 	}
 
 	/**

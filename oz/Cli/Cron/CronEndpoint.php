@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cron;
 
 use Override;
+use OZONE\Core\App\JSONResponse;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Http\Response;
@@ -71,7 +72,13 @@ final class CronEndpoint implements RouteProviderInterface
 
 			CronRunner::tickAfterResponse();
 
-			return $context->getResponse()->withJson(['accepted' => true], 202);
+			// The standard envelope, as every JSON answer of OZone: `{error, msg, data, utime}`.
+			$json = new JSONResponse();
+			$json->setDone()
+				->setData(['accepted' => true]);
+
+			return $context->getResponse()
+				->withJson($json->toEnvelope($context), 202);
 		})
 			->name(self::ROUTE)
 			// Called by a service, with no session: nothing for a CSRF token to protect.

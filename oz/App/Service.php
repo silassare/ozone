@@ -70,17 +70,8 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 	 */
 	public function respond(): Response
 	{
-		$json_response = $this->json();
-		$data          = $json_response->toArray();
-		$now           = \time();
-		$data['utime'] = $now;
-
-		if ($this->context->hasAuthenticatedUser() && $this->context->hasStatefulAuth()) {
-			$data['stime'] = $now + $this->context->requireStatefulAuth()->lifetime();
-		}
-
 		return $this->context->getResponse()
-			->withJson($data, $this->response_status);
+			->withJson($this->json()->toEnvelope($this->context), $this->response_status);
 	}
 
 	/**

@@ -90,7 +90,7 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 				->setForm($form);
 
 			$response = $context->getResponse()
-				->withJson($json);
+				->withJson($json->toEnvelope($context));
 		} else {
 			$view     = new AccessGrantView($context);
 			$response = $view->renderAccessGrantForm($form);

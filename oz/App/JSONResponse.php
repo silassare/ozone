@@ -26,6 +26,33 @@ final class JSONResponse extends JSONResult
 	private ?Form $form = null;
 
 	/**
+	 * The envelope a client reads, whatever built it.
+	 *
+	 * Every JSON answer of OZone has this shape: `error`, `msg`, `data`, the form of a discovery or of
+	 * a resumable step, the server time (`utime`), and the session expiry (`stime`) when the request
+	 * was an authenticated stateful one. A service answers through {@see Service::respond()}, a failure
+	 * through {@see \OZONE\Core\Exceptions\BaseException}, and anything else builds one here rather
+	 * than writing its own object.
+	 *
+	 * @param null|Context $context the request being answered, for the session expiry
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function toEnvelope(?Context $context = null): array
+	{
+		$data          = $this->toArray();
+		$now           = \time();
+		$data['utime'] = $now;
+
+		if (null !== $context && $context->hasAuthenticatedUser() && $context->hasStatefulAuth()) {
+			$data['stime'] = $now + $context->requireStatefulAuth()
+				->lifetime();
+		}
+
+		return $data;
+	}
+
+	/**
 	 * Gets form.
 	 *
 	 * @return null|Form

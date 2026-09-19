@@ -114,6 +114,32 @@ final class CronRunnersTest extends TestCase
 	}
 
 	/**
+	 * The cron route answers the envelope every JSON answer of OZone has.
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testTheCronRouteAnswersTheStandardEnvelope(DbTestConfig $config): void
+	{
+		[, , $host, $port] = self::project($config);
+
+		[$status, $body] = self::requestBody(
+			$host,
+			$port,
+			CronEndpoint::PATH,
+			['X-OZONE-Cron-Key' => self::KEY]
+		);
+
+		$data = \json_decode($body, true);
+
+		self::assertSame(202, $status, $body);
+		self::assertIsArray($data, $body);
+		self::assertSame(0, $data['error'] ?? null, $body);
+		self::assertIsString($data['msg'] ?? null, $body);
+		self::assertIsInt($data['utime'] ?? null, $body);
+		self::assertTrue($data['data']['accepted'] ?? false, $body);
+	}
+
+	/**
 	 * The per-IP limit of the cron route is what the project's settings say.
 	 *
 	 * @dataProvider provideDbConfig
@@ -243,6 +269,40 @@ final class CronRunnersTest extends TestCase
 		\preg_match('~^HTTP/\S+\s+(\d{3})~', $received[0] ?? '', $m);
 
 		return [(int) ($m[1] ?? 0), $received];
+	}
+
+	/**
+	 * Sends a request, and returns the status code with the body.
+	 *
+	 * @param array<string, string> $headers
+	 *
+	 * @return array{0:int, 1:string}
+	 */
+	private static function requestBody(
+		string $host,
+		int $port,
+		string $path,
+		array $headers = []
+	): array {
+		$lines = ['Accept: application/json'];
+
+		foreach ($headers as $name => $value) {
+			$lines[] = $name . ': ' . $value;
+		}
+
+		$context = \stream_context_create(['http' => [
+			'method'        => 'POST',
+			'ignore_errors' => true,
+			'header'        => \implode("\r\n", $lines) . "\r\n",
+			'timeout'       => 30,
+		]]);
+
+		$body = @\file_get_contents("http://{$host}:{$port}{$path}", false, $context);
+
+		/** @var list<string> $http_response_header */
+		\preg_match('~^HTTP/\S+\s+(\d{3})~', $http_response_header[0] ?? '', $m);
+
+		return [(int) ($m[1] ?? 0), false === $body ? '' : $body];
 	}
 
 	/**

@@ -40,7 +40,7 @@ trait AskCredentialsByHTTPHeaderTrait
 				->setData($this->askInfo());
 
 			$response = $context->getResponse()
-				->withJson($json);
+				->withJson($json->toEnvelope($context));
 		} else {
 			$view     = new AccessGrantView($context);
 			$response = $view->renderAccessGrantAuth($this->askInfo());
