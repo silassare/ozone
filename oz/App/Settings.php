@@ -51,6 +51,35 @@ final class Settings
 	public const REG_SETTING_GROUP_NAME = '#^' . self::PATTERN_SETTING_GROUP_NAME . '$#';
 
 	/**
+	 * The key a settings file declares its merge strategies under, which never reaches the values.
+	 *
+	 * ```php
+	 * return [
+	 *     Settings::MERGE_KEY => ['OZ_REDIRECT_ALLOWED_HOSTS' => Settings::MERGE_LOCK],
+	 *     'OZ_REDIRECT_ALLOWED_HOSTS' => ['example.com'],
+	 * ];
+	 * ```
+	 */
+	public const MERGE_KEY = '@merge';
+
+	/** Maps merge key by key, and everything else is replaced: what a key does when nothing says. */
+	public const MERGE_DEFAULT = 'default';
+
+	/** The value of a later source replaces what an earlier one gave, whatever its shape. */
+	public const MERGE_REPLACE = 'replace';
+
+	/** Lists are appended, maps merged: for a key every source adds to. */
+	public const MERGE_APPEND = 'append';
+
+	/**
+	 * No source may change the key after the one that declared it.
+	 *
+	 * What an allow-list needs: a plugin loaded after the application cannot widen it, and a later
+	 * source that tries is a loud failure rather than a quiet hole.
+	 */
+	public const MERGE_LOCK = 'lock';
+
+	/**
 	 * Settings groups map.
 	 *
 	 * @var array<string, SettingsGroup>
@@ -63,6 +92,20 @@ final class Settings
 	 * @var array<string, null>
 	 */
 	private static array $settings_blacklist = ['oz.config' => null];
+
+	/**
+	 * The strategies each group declared, by group then key.
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	private static array $merge_strategies = [];
+
+	/**
+	 * Which source locked a key, to name it when a later one tries to change it.
+	 *
+	 * @var array<string, array<string, true>>
+	 */
+	private static array $locked = [];
 
 	/**
 	 * Settings as loaded array.
@@ -233,6 +276,7 @@ final class Settings
 		?ScopeInterface $scope = null,
 		bool $stateful = true
 	): void {
+		self::assertNotLocked($group, $key);
 		self::modify($group, static fn ($current) => $current->set($key, $value), $scope, $stateful);
 	}
 
@@ -250,6 +294,7 @@ final class Settings
 		?ScopeInterface $scope = null,
 		bool $stateful = true
 	): void {
+		self::assertNotLocked($group, $key);
 		self::modify($group, static fn ($current) => $current->remove($key), $scope, $stateful);
 	}
 
@@ -288,13 +333,46 @@ final class Settings
 	 *
 	 * @return array
 	 */
-	public static function applyMergeStrategy(array $a, array $b): array
+	public static function applyMergeStrategy(array $a, array $b, array $strategies = []): array
 	{
 		if (\is_int(\key($a))) {
 			return \array_merge($a, $b);
 		}
 
-		return \array_replace_recursive($a, $b);
+		$merged = $a;
+
+		foreach ($b as $key => $value) {
+			$current  = $merged[$key] ?? null;
+			$strategy = $strategies[$key] ?? self::MERGE_DEFAULT;
+
+			if (self::MERGE_REPLACE === $strategy) {
+				$merged[$key] = $value;
+
+				continue;
+			}
+
+			if (self::MERGE_APPEND === $strategy && \is_array($current) && \is_array($value)) {
+				$merged[$key] = self::isList($current) && self::isList($value)
+					? \array_merge($current, $value)
+					: self::applyMergeStrategy($current, $value);
+
+				continue;
+			}
+
+			// The default: a map is merged key by key, so a source adds to what another declared, and a
+			// **list is replaced whole**, being one value. `array_replace_recursive` spliced it element
+			// by element instead, so a shorter list kept the tail of the longer one and no project could
+			// restrict `OZ_2FA_CHANNEL_PRIORITY`.
+			if (\is_array($current) && \is_array($value) && !self::isList($current) && !self::isList($value)) {
+				$merged[$key] = self::applyMergeStrategy($current, $value);
+
+				continue;
+			}
+
+			$merged[$key] = $value;
+		}
+
+		return $merged;
 	}
 
 	/**
@@ -312,6 +390,14 @@ final class Settings
 			'oz_settings_data' => $settings,
 			'oz_settings_str'  => self::export($settings, 1, "\t", true),
 		];
+	}
+
+	/**
+	 * Whether an array is a list: no keys of its own, so it is one value rather than a map of them.
+	 */
+	private static function isList(array $value): bool
+	{
+		return [] === $value || \array_is_list($value);
 	}
 
 	/**
@@ -344,6 +430,25 @@ final class Settings
 	 * @param null|ScopeInterface          $scope    the scope to use (default: current app scope)
 	 * @param bool                         $stateful true -> stateful dir (data/), false -> source dir (app/)
 	 */
+	/**
+	 * A locked setting is not edited at runtime either: what a source locked stays as it was declared.
+	 *
+	 * @throws RuntimeException when the key is locked
+	 */
+	private static function assertNotLocked(string $group, string $key): void
+	{
+		// The group must have been read for its locks to be known.
+		self::requireGroupStore($group);
+
+		if (isset(self::$locked[$group][$key])) {
+			throw new RuntimeException(\sprintf(
+				'Setting "%s.%s" is locked: it cannot be edited.',
+				$group,
+				$key
+			));
+		}
+	}
+
 	private static function modify(
 		string $group,
 		callable $modifier,
@@ -412,7 +517,12 @@ final class Settings
 	private static function loadAll(string $group, bool $reload = false): void
 	{
 		if ($reload) {
-			unset(self::$settings_groups[$group], self::$values[$group]);
+			unset(
+				self::$settings_groups[$group],
+				self::$values[$group],
+				self::$merge_strategies[$group],
+				self::$locked[$group]
+			);
 		}
 
 		if (!\array_key_exists($group, self::$settings_groups)) {
@@ -426,7 +536,7 @@ final class Settings
 
 					if (null !== $bundle) {
 						if (isset($bundle[$group])) {
-							self::mergeGroup($group, $bundle[$group]);
+							self::mergeGroup($group, $bundle[$group], $source);
 						}
 
 						continue;
@@ -449,7 +559,7 @@ final class Settings
 
 					self::$as_loaded[$abs_path] = $result;
 
-					self::mergeGroup($group, $result);
+					self::mergeGroup($group, $result, $abs_path);
 				}
 			}
 		}
@@ -458,13 +568,85 @@ final class Settings
 	/**
 	 * Merges a source's values of a group into what the sources before it gave.
 	 */
-	private static function mergeGroup(string $group, array $values): void
+	private static function mergeGroup(string $group, array $values, string $source = ''): void
 	{
+		$values = self::takeMergeStrategies($group, $values, $source);
+
 		if (!\array_key_exists($group, self::$settings_groups)) {
 			self::$settings_groups[$group] = new SettingsGroup($values);
 		} else {
-			self::$settings_groups[$group]->merge($values);
+			self::$settings_groups[$group]->merge($values, self::$merge_strategies[$group] ?? []);
 		}
+	}
+
+	/**
+	 * Reads what a source declared about merging, and hands back its values without that declaration.
+	 *
+	 * A later source may **tighten** a strategy (lock a key nobody locked) and never loosen one: a
+	 * plugin loaded after the application cannot unlock what the application locked, which is the whole
+	 * point of locking an allow-list.
+	 *
+	 * @param array<string, mixed> $values
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function takeMergeStrategies(string $group, array $values, string $source): array
+	{
+		$declared = $values[self::MERGE_KEY] ?? null;
+
+		unset($values[self::MERGE_KEY]);
+
+		// A key already locked cannot be given a value again, whatever this source says about it.
+		foreach (self::$locked[$group] ?? [] as $key => $_) {
+			if (\array_key_exists($key, $values)) {
+				throw new RuntimeException(\sprintf(
+					'Setting "%s.%s" is locked: "%s" cannot change it.',
+					$group,
+					$key,
+					'' === $source ? 'this source' : $source
+				));
+			}
+		}
+
+		if (!\is_array($declared)) {
+			return $values;
+		}
+
+		foreach ($declared as $key => $strategy) {
+			$known = [
+				self::MERGE_DEFAULT,
+				self::MERGE_REPLACE,
+				self::MERGE_APPEND,
+				self::MERGE_LOCK,
+			];
+
+			if (!\in_array($strategy, $known, true)) {
+				throw new RuntimeException(\sprintf(
+					'Unknown merge strategy "%s" for "%s.%s".',
+					\get_debug_type($strategy),
+					$group,
+					$key
+				));
+			}
+
+			if (isset(self::$locked[$group][$key]) && self::MERGE_LOCK !== $strategy) {
+				throw new RuntimeException(\sprintf(
+					'Setting "%s.%s" is locked: a later source cannot loosen it to "%s".',
+					$group,
+					$key,
+					$strategy
+				));
+			}
+
+			self::$merge_strategies[$group][$key] = $strategy;
+
+			if (self::MERGE_LOCK === $strategy) {
+				// Locked from the next source on: the one declaring it still gives the value.
+				self::$locked[$group][$key] = true;
+			}
+		}
+
+		return $values;
 	}
 
 	/**

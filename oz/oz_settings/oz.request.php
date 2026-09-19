@@ -11,9 +11,22 @@
 
 declare(strict_types=1);
 
+use OZONE\Core\App\Settings;
+
 return [
 	/**
+	 * How each key of this group takes what a later source says (`Settings::MERGE_KEY`).
+	 */
+	Settings::MERGE_KEY => [
+		// Every source adds the headers its own routes need, rather than restating the others'.
+		'OZ_CORS_ALLOWED_HEADERS' => Settings::MERGE_APPEND,
+	],
+
+	/**
 	 * Allowed CORS headers.
+	 *
+	 * Appended across sources: a plugin adds what it needs without dropping what another declared. A
+	 * project that must take one away restates the whole list with the `replace` strategy, or locks it.
 	 */
 	'OZ_CORS_ALLOWED_HEADERS'     => ['accept', 'content-type'],
 

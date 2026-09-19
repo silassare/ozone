@@ -60,9 +60,13 @@ final class SettingsGroup extends Store
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function merge(iterable $data): static
+	public function merge(iterable $data, array $strategies = []): static
 	{
-		$bundle = Settings::applyMergeStrategy($this->toArray(), $data);
+		$bundle = Settings::applyMergeStrategy(
+			$this->toArray(),
+			\is_array($data) ? $data : \iterator_to_array($data),
+			$strategies
+		);
 
 		return parent::setData($bundle);
 	}
