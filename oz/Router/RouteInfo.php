@@ -211,6 +211,19 @@ final class RouteInfo
 	}
 
 	/**
+	 * Whether a guard ran and stored results for this request.
+	 *
+	 * A route that is not guarded stores none, which is how a handler tells "nothing was checked"
+	 * from "checked and refused" (the guard throws in that case).
+	 *
+	 * @param class-string<RouteGuardInterface> $guard_fqn_class
+	 */
+	public function hasGuardStoredResults(string $guard_fqn_class): bool
+	{
+		return isset($this->guards_data[$guard_fqn_class]);
+	}
+
+	/**
 	 * Gets guard stored results.
 	 *
 	 * @param class-string<RouteGuardInterface> $guard_fqn_class

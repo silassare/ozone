@@ -20,13 +20,13 @@ use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
 use OZONE\Core\Auth\Providers\PhoneOwnershipVerificationProvider;
+use OZONE\Core\Auth\VerificationPolicy;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InternalErrorException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\REST\ApiDoc;
-use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 
@@ -50,7 +50,12 @@ final class AccountRecovery extends Service
 		$user_type               = $ri->getCleanFormField(AuthUsers::FIELD_AUTH_USER_TYPE);
 		$auto_login_on_success   = $ri->getCleanFormField(self::AUTO_LOGIN_ON_SUCCESS_FIELD, false);
 
-		$provider = AuthorizationProviderRouteGuard::resolveResults($ri)['provider'];
+		// What this user type must prove (`oz.auth.verification`), checked against what was presented.
+		$provider = VerificationPolicy::resolve(
+			$ri,
+			VerificationPolicy::ACCOUNT_RECOVERY,
+			$user_type
+		);
 		$selector = [
 			AuthUsers::FIELD_AUTH_USER_TYPE => $user_type,
 		];
@@ -62,8 +67,14 @@ final class AccountRecovery extends Service
 			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_TYPE]  = AuthUserInterface::IDENTIFIER_TYPE_PHONE;
 			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_VALUE] = $provider->getPhone();
 		} else {
-			// this is a logic error or someone is playing with us
-			throw new InternalErrorException();
+			// Nothing had to be proven, or a provider of the project's own: the account is the one the
+			// form names, and it is the project's rule that says this is enough.
+			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_TYPE]  = $ri->getCleanFormField(
+				AuthUsers::FIELD_AUTH_USER_IDENTIFIER_TYPE
+			);
+			$selector[AuthUsers::FIELD_AUTH_USER_IDENTIFIER_VALUE] = $ri->getCleanFormField(
+				AuthUsers::FIELD_AUTH_USER_IDENTIFIER_VALUE
+			);
 		}
 		$user = AuthUsers::identifyBySelector($selector);
 
@@ -90,7 +101,7 @@ final class AccountRecovery extends Service
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
-		$router
+		$route = $router
 			->post('/account-recovery', static function (RouteInfo $ri) {
 				$s = new self($ri);
 
@@ -99,11 +110,15 @@ final class AccountRecovery extends Service
 				return $s->respond();
 			})
 			->name(self::ROUTE_ACCOUNT_RECOVERY)
-			->withAuthorization(
-				EmailOwnershipVerificationProvider::NAME,
-				PhoneOwnershipVerificationProvider::NAME
-			)
 			->form(self::editPassForm(...));
+
+		// Asked for at the door only when every user type must prove something; the rule of the type
+		// being recovered is what `actionRecover()` enforces in any case.
+		if (VerificationPolicy::alwaysRequired(VerificationPolicy::ACCOUNT_RECOVERY)) {
+			$route->withAuthorization(
+				...VerificationPolicy::allProviders(VerificationPolicy::ACCOUNT_RECOVERY)
+			);
+		}
 	}
 
 	/**

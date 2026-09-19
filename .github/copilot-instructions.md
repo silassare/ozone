@@ -252,8 +252,28 @@ policy are written at.
 `OZONE\Core\App\Settings` (final, static). Groups are PHP files returning arrays, loaded from
 `oz/oz_settings/` then the app's sources; **the last source wins per key**. Group `foo.bar.baz` is
 `foo.bar.baz.php` (dots are literal); `foo/bar.baz` is `foo/bar.baz.php`. Merging
-(`Settings::applyMergeStrategy()`): indexed arrays `array_merge`, associative ones
-`array_replace_recursive` — so overriding one key of a group in `{app}/settings/` keeps the others.
+(`Settings::applyMergeStrategy()`): a group's own keys merge, so overriding one in `{app}/settings/`
+keeps the others, and by default a **list is one value: a source that declares one replaces it whole**.
+A key a source does not mention keeps the value another gave it, so a rule is emptied with `[]`, never
+by leaving it out.
+
+**A key may say how it is merged**, in the file that owns it, under `Settings::MERGE_KEY` (`@merge`),
+which never reaches the values:
+
+```php
+return [
+    Settings::MERGE_KEY => ['OZ_CORS_ALLOWED_HEADERS' => Settings::MERGE_APPEND],
+    'OZ_CORS_ALLOWED_HEADERS' => ['accept', 'content-type'],
+];
+```
+
+- `default` — a map merges key by key, anything else is replaced.
+- `append` — lists are appended: for what every source adds to (CORS headers).
+- `replace` — always the later value, whatever its shape.
+- `lock` — **no source after this one may change the key**, and one that tries fails loudly;
+  `Settings::set()` refuses it too. What an allow-list wants (`OZ_REDIRECT_ALLOWED_HOSTS`): a plugin
+  loaded after the application cannot widen it. A later source may **tighten** a strategy (add a lock)
+  and never loosen one, which is what makes the lock worth anything.
 Each file in `oz/oz_settings/` documents its keys.
 
 - `Settings::set()` / `unset()` write the **stateful** directory by default (`data/settings/{scope}/`),
@@ -460,6 +480,12 @@ route with one.
   drop the reference and leave the client with nothing to answer. The token travels only in the
   message, as the link `GET /auth/link/:ref/:token`. Starting a verification again opens a new
   authorization rather than refreshing the one open.
+- **What must be proven before an account exists or is handed back** is configurable per user type in
+  `oz.auth.verification`: a map of user type to accepted provider names, `*` being the fallback.
+  An **empty list** means nothing is proven (the identifier is taken as given, verified later), and a
+  project's own provider is named here. `VerificationPolicy` reads it; `/signup` and
+  `/account-recovery` guard their door only when every type requires something, and the handler always
+  enforces the rule of the type it was given, since the type is a form field a guard cannot see.
 - **Two-factor authentication** (`Auth2FA`, booted by default): a user with `2fa.enabled` in their data
   store has their login interrupted, the user is detached, an authorization is opened through
   `TwoFactorAuthorizationProvider` on the channel `oz.auth.2fa` selects (`totp`, `email`, `sms`), and
