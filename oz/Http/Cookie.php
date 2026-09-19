@@ -135,7 +135,8 @@ final class Cookie
 			$this->secure = true;
 		}
 
-		// don't set domain for localhost
+		// No domain is a host-only cookie. `localhost` is never a valid domain attribute either: a
+		// browser refuses the cookie rather than scope it.
 		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#attributes
 		if (isset($this->domain) && !empty($this->domain) && 'localhost' !== $this->domain) {
 			$result .= '; Domain=' . $this->domain;
@@ -200,7 +201,11 @@ final class Cookie
 
 		$request = $context->getRequest();
 		$uri     = $request->getUri();
-		$domain  = (empty($cfg_domain) || 'self' === $cfg_domain) ? $context->getHost() : $cfg_domain;
+		// `self` is a host-only cookie: no `Domain` attribute, so the browser keeps it for the exact host
+		// it talked to. Naming the host instead would send it to every subdomain as well (RFC 6265,
+		// 5.2.3), and behind a proxy that rewrites `Host` it would name a host the browser never saw,
+		// which it then refuses. Sharing a cookie across subdomains is what an explicit domain is for.
+		$domain  = (empty($cfg_domain) || 'self' === $cfg_domain) ? null : $cfg_domain;
 		$path    = (empty($cfg_path) || 'self' === $cfg_path) ? $uri->getBasePath() : $cfg_path;
 		$path    = empty($path) ? '/' : $path;
 

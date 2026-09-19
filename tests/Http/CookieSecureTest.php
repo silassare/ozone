@@ -48,6 +48,34 @@ final class CookieSecureTest extends TestCase
 		self::assertTrue(Cookie::create(self::context([]), 'c')->secure);
 	}
 
+	/**
+	 * A cookie of the default domain is host-only: it names no domain.
+	 *
+	 * Naming the request host sent the session to every subdomain of it (RFC 6265), and behind a proxy
+	 * that rewrites `Host` it named a host the browser never saw, which the browser refused: the
+	 * session was lost on every request.
+	 */
+	public function testTheDefaultCookieIsHostOnly(): void
+	{
+		$cookie = Cookie::create(self::context(['HTTP_HOST' => 'app.example.com']), 'sid', 'v');
+
+		self::assertNull($cookie->domain);
+		self::assertStringNotContainsString('Domain=', (string) $cookie);
+	}
+
+	public function testAnExplicitDomainIsStillNamed(): void
+	{
+		Settings::set('oz.cookie', 'OZ_COOKIE_DOMAIN', 'example.com');
+
+		try {
+			$cookie = Cookie::create(self::context(['HTTP_HOST' => 'app.example.com']), 'sid', 'v');
+
+			self::assertStringContainsString('; Domain=example.com', (string) $cookie);
+		} finally {
+			Settings::set('oz.cookie', 'OZ_COOKIE_DOMAIN', 'self');
+		}
+	}
+
 	private static function context(array $env): Context
 	{
 		return new Context(HTTPEnvironment::mock($env), null, Context::root());

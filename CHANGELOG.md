@@ -151,6 +151,8 @@
 
 ### Fixed
 
+- The session cookie was sent to every subdomain, and lost behind a proxy. `OZ_COOKIE_DOMAIN` defaults to `self`, which named the request host in a `Domain` attribute: per RFC 6265 that sends the cookie to the host **and all its subdomains** (on `example.com`, to any `*.example.com`), and behind a proxy that rewrites `Host` it named a host the browser never saw, so the browser refused it and every request started a new session. `self` is now a **host-only** cookie (no `Domain` attribute), which is what a session cookie should be; an explicit domain still shares a cookie across subdomains. Found by the end-to-end suite of oweb, whose app is served by a dev server proxying the API.
+
 - A project could not shorten a list-valued setting. `Settings::applyMergeStrategy()` merged with `array_replace_recursive()`, which overwrites element by element, so a shorter list kept the tail of the longer one: restricting `OZ_2FA_CHANNEL_PRIORITY` to `['email']` left `['email', 'email', 'sms']`, and the override its own documentation describes could not work. A **list is now replaced whole** and a map still merges key by key.
 
 - Every JSON answer carries the same envelope. A route guard's refusal and an authentication challenge answered `{error, msg, data}` without `utime`, and the cron endpoint answered `{"accepted": true}` with no envelope at all. `JSONResponse::toEnvelope(?Context)` is now the one place it is built (`utime`, and `stime` for an authenticated stateful request), used by `Service::respond()`, `BaseException`, the guards and the cron endpoint.

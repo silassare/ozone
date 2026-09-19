@@ -15,7 +15,12 @@ return [
 	/**
 	 * Cookie domain.
 	 *
-	 * @default self (current domain)
+	 * `self` is a **host-only** cookie: no `Domain` attribute, so it is sent back to the exact host that
+	 * set it and to none of its subdomains, which is what a session cookie should be. Name a domain
+	 * (`example.com`) only to share cookies across its subdomains, knowing each of them then receives
+	 * the session.
+	 *
+	 * @default self (host-only)
 	 */
 	'OZ_COOKIE_DOMAIN'      => 'self',
 

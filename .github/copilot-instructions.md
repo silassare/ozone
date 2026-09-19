@@ -513,7 +513,13 @@ route with one.
   `X-Forwarded-Proto` / `X-Forwarded-Port`, so URLs, links and the cookie `Secure` flag follow what the
   client used (`OZ_COOKIE_SECURE` can force it).
 - CORS (`OZ_CORS_ALLOWED_ORIGIN`, `Http\CorsPolicy`): `'self'` by default, an origin, a list, or `'*'`
-  without credentials. Disallowed origins are rejected at `RequestHook`.
+  without credentials. Disallowed origins are rejected at `RequestHook`
+  (`OZ_CROSS_SITE_REQUEST_NOT_ALLOWED`): a front end served from another origin (a dev server, a
+  separate app host) is added here.
+- **Cookies are host-only by default** (`OZ_COOKIE_DOMAIN` = `self`: no `Domain` attribute). Naming a
+  domain sends the cookie, the session included, to every subdomain of it (RFC 6265), and naming the
+  request host breaks behind a proxy that rewrites `Host`, where the browser refuses a cookie for a host
+  it never saw. Set a domain only to share cookies across subdomains, on purpose.
 
 Sessions (`Sessions\Session`, table `oz_sessions`) are a boot receiver. They start lazily: an
 anonymous request gets no session row and no cookie. A new session is kept only once used — its ID
