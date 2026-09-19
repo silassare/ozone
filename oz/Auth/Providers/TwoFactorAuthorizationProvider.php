@@ -157,10 +157,9 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 	{
 		parent::onInit($auth);
 
-		$this->json_response->setData([
-			'two_fa_required' => true,
-			'channel'         => $this->channel,
-		]);
+		// Added to what `generate()` published (the reference and the refresh key), never replacing it.
+		$this->json_response->setDataKey('two_fa_required', true)
+			->setDataKey('channel', $this->channel);
 
 		match ($this->channel) {
 			'email' => $this->sendEmail(),
@@ -340,7 +339,7 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 			->addRecipient($email)
 			->send();
 
-		$this->json_response->setData(['first' => $first]);
+		$this->json_response->setDataKey('first', $first);
 	}
 
 	/**
@@ -365,6 +364,6 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 			->addRecipient($phone)
 			->send();
 
-		$this->json_response->setData(['first' => $first]);
+		$this->json_response->setDataKey('first', $first);
 	}
 }

@@ -222,6 +222,12 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 			throw new RuntimeException('Unable to save auth entity.', null, $t);
 		}
 
+		// What a client needs to answer this authorization: the reference names it, and the refresh key
+		// is the right to ask for the secret again or to give it up. Set before `onInit()`, so a
+		// provider adds its own keys on top (`setDataKey`) rather than replacing these.
+		$this->json_response->setDataKey(OZAuth::COL_REF, $ref)
+			->setDataKey(OZAuth::COL_REFRESH_KEY, $refresh_key);
+
 		$this->onInit($auth);
 
 		return $this;

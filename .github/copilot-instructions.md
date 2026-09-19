@@ -454,11 +454,17 @@ route with one.
 - An authorization carries a **label shown to the user**: set it on the scope
   (`AuthorizationScope::setLabel()`), otherwise `generate()` names it after the provider, since the
   column requires one.
-- **What a client is told**: starting a verification (`POST /auth/verify/email|phone`) answers
-  whether this is the first message, **not the reference**; the reference and the token travel in the
-  message, as the link `GET /auth/link/:ref/:token`. `refresh` and `cancel` need the refresh key,
-  which only the flow that opened the authorization holds. Starting a verification again opens a new
+- **What a client is told**: opening one answers `{auth_ref, auth_refresh_key}` (`generate()` puts
+  them there), plus what the provider adds: `first` for a message just sent, `two_fa_required` and
+  `channel` for a 2FA challenge. A provider **adds** its keys with `setDataKey()`; `setData()` would
+  drop the reference and leave the client with nothing to answer. The token travels only in the
+  message, as the link `GET /auth/link/:ref/:token`. Starting a verification again opens a new
   authorization rather than refreshing the one open.
+- **Two-factor authentication** (`Auth2FA`, booted by default): a user with `2fa.enabled` in their data
+  store has their login interrupted, the user is detached, an authorization is opened through
+  `TwoFactorAuthorizationProvider` on the channel `oz.auth.2fa` selects (`totp`, `email`, `sms`), and
+  `OZ_2FA_REQUIRED` carries the reference. The client answers `POST /auth/:ref/authorize` with the
+  code; the provider re-attaches the user and the login goes through.
 
 - **Passwords** are checked through `AuthUsers::checkPassword()` only: failures are counted per
   account (or per submitted identifier when unknown) by `LoginThrottle`, unknown accounts are checked

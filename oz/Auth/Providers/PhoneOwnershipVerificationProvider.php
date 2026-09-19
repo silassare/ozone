@@ -127,9 +127,8 @@ final class PhoneOwnershipVerificationProvider extends AuthorizationProvider
 			->addRecipient($this->phone)
 			->send();
 
+		// Added to what `generate()` published (the reference and the refresh key), never replacing it.
 		$this->json_response->setDone()
-			->setData([
-				'first' => $first,
-			]);
+			->setDataKey('first', $first);
 	}
 }

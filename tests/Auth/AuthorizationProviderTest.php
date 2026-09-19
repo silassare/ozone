@@ -408,6 +408,30 @@ final class AuthorizationProviderTest extends TestCase
 
 	/** Creates a no-op provider with a 60 s lifetime and configurable try_max. */
 	/**
+	 * What a client needs to answer an authorization is in the answer that opened it.
+	 *
+	 * Without the reference a client is told an authorization exists and can do nothing about it: two
+	 * factor authentication told the user to enter a code while answering `auth_ref: null`.
+	 */
+	public function testGeneratePublishesTheReferenceAndTheRefreshKey(): void
+	{
+		$provider = $this->makeProvider();
+		$provider->generate();
+
+		$data = $provider->getJSONResponse()
+			->getData();
+
+		self::assertSame(
+			$provider->getCredentials()->getReference(),
+			$data[OZAuth::COL_REF] ?? null
+		);
+		self::assertSame(
+			$provider->getCredentials()->getRefreshKey(),
+			$data[OZAuth::COL_REFRESH_KEY] ?? null
+		);
+	}
+
+	/**
 	 * An authorization is saved even when nothing labelled its scope.
 	 *
 	 * The column requires a label and the scope starts with none, so every provider that did not set
