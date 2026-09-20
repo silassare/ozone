@@ -13,7 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Forms;
 
+use Gobl\DBAL\Operator;
+use Gobl\DBAL\Types\Interfaces\TypeInterface;
 use Override;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Enums\RuleOperator;
 use OZONE\Core\Forms\Enums\RuleSetCondition;
 use OZONE\Core\Forms\Enums\RuleSetDataType;
@@ -479,6 +482,59 @@ class RuleSet implements ArrayCapableInterface
 		}
 
 		return $refs;
+	}
+
+	/**
+	 * Throws when a rule compares a field with an operator its type does not allow.
+	 *
+	 * Gobl limits the operators of a column by its type (a boolean has no order), and the values a
+	 * CLEANED set reads are the types' clean values, so the same limit holds here. An UNSAFE set reads
+	 * the raw payload, which the field's type says nothing about: it is left alone. `is_null` and
+	 * `is_not_null` are always allowed, since a field left out of the payload reads as null whatever
+	 * its type. A field this form does not know (a dynamic fieldset's, or none) and a field whose type
+	 * is picked at validation time ({@see TypesSwitcher}) cannot be checked, and are skipped.
+	 *
+	 * @param array<string, Field> $fields the fields the refs of this set resolve to, by ref
+	 *
+	 * @throws RuntimeException
+	 */
+	public function assertOperatorsFit(array $fields): void
+	{
+		foreach ($this->t_children as $child) {
+			if ($child instanceof self) {
+				$child->assertOperatorsFit($fields);
+
+				continue;
+			}
+
+			if (RuleSetDataType::CLEANED !== $this->t_data_type) {
+				continue;
+			}
+
+			if (RuleOperator::IS_NULL === $child->operator || RuleOperator::IS_NOT_NULL === $child->operator) {
+				continue;
+			}
+
+			$type = ($fields[$child->field_ref] ?? null)?->getType();
+
+			if (!$type instanceof TypeInterface) {
+				continue;
+			}
+
+			$operator = Operator::from($child->operator->value);
+			$allowed  = $type->getAllowedFilterOperators();
+
+			if (!\in_array($operator, $allowed, true)) {
+				throw new RuntimeException(\sprintf(
+					'"%s": the rule "%s" on "%s" is not allowed, a "%s" field accepts %s.',
+					'' === $this->t_ref ? 'rule set' : $this->t_ref,
+					$child->operator->value,
+					$child->field_ref,
+					$type->getName(),
+					\implode(', ', \array_map(static fn (Operator $op) => \sprintf('"%s"', $op->value), $allowed))
+				));
+			}
+		}
 	}
 
 	/**

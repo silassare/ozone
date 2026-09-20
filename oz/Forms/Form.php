@@ -445,6 +445,8 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	{
 		$cleaned_fd ??= new FormDataClean();
 
+		$this->assertRulesFit();
+
 		$ctx = new FormValidationContext($unsafe_fd, $cleaned_fd);
 
 		// Everything this pass will validate, so a condition reading a field that is
@@ -510,6 +512,8 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	#[Override]
 	public function toArray(): array
 	{
+		$this->assertRulesFit();
+
 		return [
 			'version'      => $this->getVersion(),
 			'name'         => $this->getName(),
@@ -655,6 +659,55 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 		}
 
 		return $kept->toArray();
+	}
+
+	/**
+	 * Checks every rule set of this form against the types of the fields it reads
+	 * ({@see RuleSet::assertOperatorsFit()}), so a mistake is reported when the form is
+	 * discovered or first validated, not when a client happens to hit it.
+	 *
+	 * @throws RuntimeException
+	 */
+	private function assertRulesFit(): void
+	{
+		$fields = $this->getFields();
+		$sets   = [...$this->getPreValidationRules(), ...$this->getPostValidationRules()];
+
+		foreach ($this->t_fieldsets as $fieldset) {
+			if ($fieldset->isStatic()) {
+				$fields = \array_merge($fields, $fieldset->getFields());
+			}
+		}
+
+		foreach ($fields as $field) {
+			$if = $field->getIf();
+
+			if (null !== $if) {
+				$sets[] = $if;
+			}
+
+			$type = $field->getType();
+
+			if ($type instanceof TypesSwitcher) {
+				\array_push($sets, ...$type->getConditions());
+			}
+		}
+
+		foreach ($this->t_fieldsets as $fieldset) {
+			$if = $fieldset->getIf();
+
+			if (null !== $if) {
+				$sets[] = $if;
+			}
+
+			if ($fieldset->isStatic()) {
+				\array_push($sets, ...$fieldset->getPreValidationRules(), ...$fieldset->getPostValidationRules());
+			}
+		}
+
+		foreach ($sets as $set) {
+			$set->assertOperatorsFit($fields);
+		}
 	}
 
 	/**

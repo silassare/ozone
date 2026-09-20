@@ -182,8 +182,8 @@ class TypesSwitcher implements ArrayCapableInterface
 	 *
 	 * @return array{
 	 *  type: 'types-switcher',
-	 *  types: list<array{type: TypeInterface, rule: RuleSet}>,
-	 *  otherwise: null|TypeInterface
+	 *  types: list<array{type: array<string, mixed>, rule: RuleSet}>,
+	 *  otherwise: null|array<string, mixed>
 	 * }
 	 */
 	#[Override]
@@ -192,10 +192,10 @@ class TypesSwitcher implements ArrayCapableInterface
 		return [
 			'type'  => 'types-switcher',
 			'types' => \array_map(static fn ($item) => [
-				'type' => Field::cleanType($item['type']),
+				'type' => Field::frontendType($item['type']),
 				'rule' => $item['rule'],
 			], $this->types),
-			'otherwise' => null === $this->default_type ? null : Field::cleanType($this->default_type),
+			'otherwise' => null === $this->default_type ? null : Field::frontendType($this->default_type),
 		];
 	}
 }

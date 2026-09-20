@@ -589,4 +589,37 @@ final class FormTest extends TestCase
 
 		return $fd;
 	}
+
+	public function testADiscoveredFieldSaysWhetherItHoldsAList(): void
+	{
+		$form = new Form();
+		$form->int('one');
+		$form->int('several')->multiple();
+
+		$fields = \json_decode((string) \json_encode($form->toArray()), true)['fields'];
+
+		self::assertFalse($fields['one']['multiple']);
+		self::assertTrue($fields['several']['multiple']);
+	}
+
+	public function testADiscoveredEnumFieldSendsItsCases(): void
+	{
+		$form = new Form();
+		$form->enum('plan', FormTestPlan::class);
+
+		$type = \json_decode((string) \json_encode($form->toArray()), true)['fields']['plan']['type'];
+
+		self::assertSame('enum', $type['type']);
+		self::assertSame([
+			['name' => 'Free', 'value' => 'free'],
+			['name' => 'Pro', 'value' => 'pro'],
+		], $type['enum_cases']);
+	}
+}
+
+enum FormTestPlan: string
+{
+	case Free = 'free';
+
+	case Pro = 'pro';
 }

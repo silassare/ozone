@@ -399,6 +399,12 @@ for the field's type class (`TypeError` otherwise).
 - `expect()` rules are all sent to the client (a server-only one, holding an `AsyncValue` without
   preview, serializes as `{ref, $async: true}` and is resolved through the form session `evaluate`
   endpoint); `ensure()` rules are server-side only.
+- **A rule on a cleaned value uses an operator its field's type allows**, as a Gobl filter does
+  (`TypeInterface::getAllowedFilterOperators()`: a boolean has no order). `Form::validate()` and
+  `Form::toArray()` refuse a violation with a `RuntimeException` (`RuleSet::assertOperatorsFit()`).
+  `is_null` / `is_not_null` are always allowed (an absent optional field reads as null); `expect()`
+  reads the raw payload and is not checked; a field whose type a `TypesSwitcher` picks, or one the
+  form does not know (a dynamic fieldset's), is skipped.
 - **Never pass `$this->ensure()->...` as a fieldset condition**: `ensure()` registers a form-level
   assertion, so the form is rejected instead of the fieldset skipped. Use the fieldset's `->if()`.
 - Fieldsets: `fieldset()` (static, populated at definition time) or `dynamicFieldset()` (factory

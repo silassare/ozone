@@ -13,9 +13,11 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Forms;
 
+use BackedEnum;
 use Gobl\DBAL\Types\Exceptions\TypesException;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
+use Gobl\DBAL\Types\TypeEnum;
 use Gobl\DBAL\Types\TypeString;
 use Gobl\DBAL\Types\Utils\TypeUtils;
 use Override;
@@ -513,12 +515,13 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 * @return array{
 	 *  ref: string,
 	 *  name: string,
-	 *  type: TypeInterface|TypesSwitcher,
+	 *  type: array<string, mixed>|TypesSwitcher,
 	 *  label: ?I18nMessage|string,
 	 *  description: ?I18nMessage|string,
 	 *  help: ?I18nMessage|string,
 	 *  required: bool,
 	 *  hidden: bool,
+	 *  multiple: bool,
 	 *  if: ?RuleSet
 	 * }
 	 *
@@ -530,14 +533,39 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 		return [
 			'ref' 	       => $this->getRef(),
 			'name'        => $this->t_name,
-			'type'        => $this->t_type instanceof TypeInterface ? self::cleanType($this->t_type) : $this->t_type,
+			'type'        => $this->t_type instanceof TypeInterface ? self::frontendType($this->t_type) : $this->t_type,
 			'label'       => $this->t_label,
 			'description' => $this->t_description,
 			'help'        => $this->t_help,
 			'required'    => $this->t_required,
 			'hidden'      => $this->t_hide,
+			// A list of values of `type`: without it a client takes the field for a single value.
+			'multiple'    => $this->t_multiple,
 			'if'          => $this->t_if,
 		];
+	}
+
+	/**
+	 * What a client is told of a type: the clean type ({@see self::cleanType()}), and for an enum its
+	 * cases (`enum_cases`, `[{name, value}]` in declaration order), since the class name alone tells a
+	 * client nothing it can render or check.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws TypesException
+	 */
+	public static function frontendType(TypeInterface $type): array
+	{
+		$out = self::cleanType($type)->toArray();
+
+		if ($type instanceof TypeEnum) {
+			$out['enum_cases'] = \array_map(
+				static fn (BackedEnum $case) => ['name' => $case->name, 'value' => $case->value],
+				$type->getEnumClass()::cases()
+			);
+		}
+
+		return $out;
 	}
 
 	/**
