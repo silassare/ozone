@@ -81,4 +81,11 @@ final class TypeGenderTest extends TestCase
 		$this->expectException(TypesInvalidValueException::class);
 		(new TypeGender())->validate('');
 	}
+
+	/** PHP counts "0" as empty, which used to skip every check of this type: it is checked now. */
+	public function testGenderChecksTheStringZero(): void
+	{
+		$this->expectException(TypesInvalidValueException::class);
+		(new TypeGender())->validate('0');
+	}
 }

@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Columns;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Columns\Types\TypeUsername;
 use PHPUnit\Framework\TestCase;
 
@@ -90,5 +91,27 @@ final class TypeUsernameTest extends TestCase
 	{
 		$this->expectException(TypesInvalidValueException::class);
 		(new TypeUsername())->validate('');
+	}
+
+	/** PHP counts "0" as empty, which used to skip every check of this type: it is checked now. */
+	public function testUsernameChecksTheStringZero(): void
+	{
+		$this->expectException(TypesInvalidValueException::class);
+		(new TypeUsername())->validate('0');
+	}
+
+	/**
+	 * The settings pattern runs as a client runs it, in Unicode mode, so the two agree: `.{2}` is two
+	 * characters, not two bytes, and `éé` (four bytes) matches it.
+	 */
+	public function testThePatternRunsInUnicodeMode(): void
+	{
+		Settings::set('oz.users', 'OZ_USER_NAME_PATTERN', '~^.{2}$~');
+
+		try {
+			self::assertSame("\u{e9}\u{e9}", (new TypeUsername())->validate("\u{e9}\u{e9}")->getCleanValue());
+		} finally {
+			Settings::unset('oz.users', 'OZ_USER_NAME_PATTERN');
+		}
 	}
 }

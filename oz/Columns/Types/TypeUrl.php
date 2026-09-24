@@ -70,7 +70,7 @@ class TypeUrl extends Type
 	 */
 	public function allowedHosts(array $hosts): static
 	{
-		$hosts = \array_map(static fn ($host) => \strtolower(\trim((string) $host)), $hosts);
+		$hosts = \array_map(static fn($host) => \strtolower(\trim((string) $host)), $hosts);
 
 		return $this->setOption('allowed_hosts', \array_values(\array_unique(\array_filter($hosts))));
 	}
@@ -143,7 +143,7 @@ class TypeUrl extends Type
 			'value' => $value,
 		];
 
-		if (!empty($value)) {
+		if (null !== $value && '' !== $value) {
 			$allow_absolute_path = (bool) $this->getOption('allow_absolute_path', false);
 
 			if ($allow_absolute_path && \str_starts_with($value, '/') && !\str_starts_with($value, '//')) {

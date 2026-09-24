@@ -128,7 +128,7 @@ class TypeEmail extends Type
 			'value' => $value,
 		];
 
-		if (!empty($value)) {
+		if (null !== $value && '' !== $value) {
 			if (!\filter_var($value, \FILTER_VALIDATE_EMAIL)) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_EMAIL_INVALID', $debug));
 

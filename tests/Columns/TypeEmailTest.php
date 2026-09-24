@@ -77,4 +77,11 @@ final class TypeEmailTest extends TestCase
 		$this->expectException(TypesInvalidValueException::class);
 		(new TypeEmail())->validate('');
 	}
+
+	/** PHP counts "0" as empty, which used to skip every check of this type: it is checked now. */
+	public function testEmailChecksTheStringZero(): void
+	{
+		$this->expectException(TypesInvalidValueException::class);
+		(new TypeEmail())->validate('0');
+	}
 }

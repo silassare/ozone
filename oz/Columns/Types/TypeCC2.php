@@ -127,7 +127,7 @@ class TypeCC2 extends Type
 			'value' => $value,
 		];
 
-		if (!empty($value)) {
+		if (null !== $value && '' !== $value) {
 			$value = \strtoupper($value);
 
 			if ($this->getOption('authorized')) {

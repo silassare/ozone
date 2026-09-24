@@ -127,4 +127,11 @@ final class TypeUrlTest extends TestCase
 
 		(new TypeUrl())->allowAbsolutePath()->allowedHosts(['app.example.com'])->validate('//evil.example/');
 	}
+
+	/** PHP counts "0" as empty, which used to skip every check of this type: it is checked now. */
+	public function testUrlChecksTheStringZero(): void
+	{
+		$this->expectException(TypesInvalidValueException::class);
+		(new TypeUrl())->validate('0');
+	}
 }

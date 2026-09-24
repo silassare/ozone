@@ -142,9 +142,7 @@ class TypePhone extends Type
 			'value' => $value,
 		];
 
-		if (!empty($value)) {
-			$value = \str_replace(' ', '', $value);
-
+		if (null !== $value && '' !== $value) {
 			/** @var null|bool $registered */
 			/** @var null|string $registered_as */
 			$registered    = $this->getOption('registered');

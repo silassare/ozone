@@ -434,6 +434,13 @@ declares none. Header booleans are RFC 8941: `Headers::getBool()` reads `?1` and
 **nothing else** (any other value silently falls back to the default), which holds for every boolean
 header (`X-OZONE-Form-Resume`, ...).
 
+A field's type is sent through `Field::frontendType()`, which is **enough for a client to check a value
+the way the server will**: an enum adds its `enum_cases`, and a type implementing
+`FrontendTypeOptionsInterface` adds the rules it takes from the settings, resolved at discovery (a
+password's effective `min` / `max`, a username's `min`, `max` and portable `pattern`, a gender's
+`allowed` values). A type whose rules depend on a setting implements it rather than leaving the client
+to copy the setting.
+
 A route whose form is declared through a provider (`RouteFormDeclaration::provider()`) **discovers no
 form**: that declaration holds neither a form nor a factory, so `resolve()` gives null and the answer
 carries no `form` key. Its forms are the provider's steps, read through the resume flow below. Only a

@@ -107,4 +107,11 @@ final class TypePasswordTest extends TestCase
 		$this->expectException(TypesInvalidValueException::class);
 		(new TypePassword())->validate('');
 	}
+
+	/** PHP counts "0" as empty, which used to skip every check of this type: it is checked now. */
+	public function testPasswordChecksTheStringZero(): void
+	{
+		$this->expectException(TypesInvalidValueException::class);
+		(new TypePassword())->validate('0');
+	}
 }

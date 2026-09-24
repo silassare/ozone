@@ -25,6 +25,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Enums\RuleSetCondition;
 use OZONE\Core\Forms\Enums\RuleSetDataType;
 use OZONE\Core\Forms\Interfaces\FieldContainerInterface;
+use OZONE\Core\Forms\Interfaces\FrontendTypeOptionsInterface;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Lang\I18nMessage;
 use OZONE\Core\Utils\Utils;
@@ -563,6 +564,13 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 				static fn (BackedEnum $case) => ['name' => $case->name, 'value' => $case->value],
 				$type->getEnumClass()::cases()
 			);
+		}
+
+		// The rules a type takes from the settings, resolved now, so a client checks what the server
+		// will check (G15). They are resolved here, at discovery, rather than copied into the client:
+		// a copy is stale as soon as a project changes a setting.
+		if ($type instanceof FrontendTypeOptionsInterface) {
+			$out = \array_replace($out, $type->frontendOptions());
 		}
 
 		return $out;

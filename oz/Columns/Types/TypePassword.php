@@ -22,13 +22,14 @@ use Gobl\DBAL\Types\TypeString;
 use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Crypt\Password;
+use OZONE\Core\Forms\Interfaces\FrontendTypeOptionsInterface;
 
 /**
  * Class TypePassword.
  *
  * @extends Type<mixed, null|string>
  */
-class TypePassword extends Type
+class TypePassword extends Type implements FrontendTypeOptionsInterface
 {
 	public const NAME = 'password';
 
@@ -182,7 +183,7 @@ class TypePassword extends Type
 			'max' => $max,
 		];
 
-		if (!empty($value)) {
+		if (null !== $value && '' !== $value) {
 			$value = (string) $value;
 			$len   = \strlen($value);
 
@@ -232,5 +233,19 @@ class TypePassword extends Type
 		}
 
 		$subject->accept($value);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * The lengths it checks: its own, or the settings' when it sets none.
+	 */
+	#[Override]
+	public function frontendOptions(): array
+	{
+		return [
+			'min' => (int) $this->getOption('min', Settings::get('oz.users', 'OZ_USER_PASS_MIN_LENGTH')),
+			'max' => (int) $this->getOption('max', Settings::get('oz.users', 'OZ_USER_PASS_MAX_LENGTH')),
+		];
 	}
 }

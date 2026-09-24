@@ -20,13 +20,14 @@ use Gobl\DBAL\Types\Type;
 use Gobl\DBAL\Types\TypeString;
 use Override;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Forms\Interfaces\FrontendTypeOptionsInterface;
 
 /**
  * Class TypeGender.
  *
  * @extends Type<mixed, null|string>
  */
-class TypeGender extends Type
+class TypeGender extends Type implements FrontendTypeOptionsInterface
 {
 	public const NAME = 'gender';
 
@@ -89,7 +90,7 @@ class TypeGender extends Type
 			'value' => $value,
 		];
 
-		if (!empty($value)) {
+		if (null !== $value && '' !== $value) {
 			$allowed = Settings::get('oz.users', 'OZ_USER_ALLOWED_GENDERS');
 
 			if (!\in_array($value, $allowed, true)) {
@@ -100,5 +101,16 @@ class TypeGender extends Type
 		}
 
 		$subject->accept($value);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * The genders the settings accept, which a client needs to offer them at all.
+	 */
+	#[Override]
+	public function frontendOptions(): array
+	{
+		return ['allowed' => \array_values((array) Settings::get('oz.users', 'OZ_USER_ALLOWED_GENDERS'))];
 	}
 }
