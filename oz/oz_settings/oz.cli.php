@@ -15,6 +15,7 @@ use OZONE\Core\Cli\Cmd\CronCmd;
 use OZONE\Core\Cli\Cmd\DbCmd;
 use OZONE\Core\Cli\Cmd\DeployCmd;
 use OZONE\Core\Cli\Cmd\DoctorCmd;
+use OZONE\Core\Cli\Cmd\LangCmd;
 use OZONE\Core\Cli\Cmd\ProjectCmd;
 use OZONE\Core\Cli\Cmd\ScopesCmd;
 use OZONE\Core\Cli\Cmd\ServerCmd;
@@ -37,4 +38,5 @@ return [
 	'doctor'     => DoctorCmd::class,
 	'server'     => ServerCmd::class,
 	'deploy'     => DeployCmd::class,
+	'lang'       => LangCmd::class,
 ];

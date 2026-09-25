@@ -102,4 +102,61 @@ final class PolyglotTest extends TestCase
 		// We rely on this in translate() tests.
 		self::assertTrue(true);
 	}
+
+	public function testExportedCatalogsHoldWhatTranslateReads(): void
+	{
+		$export = Polyglot::exportCatalogs();
+
+		self::assertSame(Polyglot::getDefaultLanguage(), $export['default']);
+		self::assertSame(\array_keys(Polyglot::getEnabledLanguages()), $export['languages']);
+
+		foreach ($export['languages'] as $lang) {
+			self::assertSame(
+				Polyglot::translate('OZ_ERROR_INVALID_FORM', null, $lang),
+				$export['catalogs'][$lang]['OZ_ERROR_INVALID_FORM']
+			);
+		}
+	}
+
+	public function testExportedCatalogsNameTheDeclaredFilters(): void
+	{
+		Polyglot::declareFilter('test_export_lower', static fn ($v) => \strtolower((string) $v));
+
+		self::assertContains('test_export_lower', Polyglot::exportCatalogs()['filters']);
+	}
+
+	public function testAValueIsNeverReadForPlaceholders(): void
+	{
+		// A value holding a placeholder is shown as it is: it neither pulls in another variable's
+		// value nor fills itself again, which looped forever when it named itself.
+		self::assertSame(
+			'The fields {field_confirm} and pass2 must have the same value.',
+			Polyglot::translate(
+				'OZ_FIELD_SHOULD_HAVE_SAME_VALUE',
+				['field' => '{field_confirm}', 'field_confirm' => 'pass2'],
+				'en'
+			)
+		);
+		self::assertSame(
+			'Allows the {action} action.',
+			Polyglot::translate('OZ_ACCESS_RIGHT_DESCRIPTION', ['action' => '{action}'], 'en')
+		);
+	}
+
+	public function testABrowserGetsTheExactLanguageItAsksForFirst(): void
+	{
+		$enabled = ['fr' => true, 'fr-bj' => true, 'en' => true];
+
+		self::assertSame('fr-bj', Polyglot::parseBrowserLanguage('fr-bj', $enabled)['advice']);
+		self::assertSame('fr', Polyglot::parseBrowserLanguage('fr-ci', $enabled)['advice']);
+		self::assertSame('en', Polyglot::parseBrowserLanguage('de;q=0.9, en;q=0.5', $enabled)['advice']);
+	}
+
+	public function testALanguageWithoutACatalogFallsBackToTheDefault(): void
+	{
+		self::assertSame(
+			Polyglot::translate('OZ_ERROR_INVALID_FORM', null, Polyglot::getDefaultLanguage()),
+			Polyglot::translate('OZ_ERROR_INVALID_FORM', null, 'xx')
+		);
+	}
 }

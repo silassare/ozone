@@ -341,8 +341,9 @@ final class OZTestProject
 		}
 		$current[$key] = $value;
 
-		if (!\is_dir($dir)) {
-			\mkdir($dir, 0o775, true);
+		// A group may sit in a sub-directory (`lang/oz.en`).
+		if (!\is_dir(\dirname($file))) {
+			\mkdir(\dirname($file), 0o775, true);
 		}
 
 		$content = "<?php\n\ndeclare(strict_types=1);\n\nreturn "

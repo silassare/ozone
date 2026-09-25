@@ -289,6 +289,12 @@ Each file in `oz/oz_settings/` documents its keys.
 - **`oz.config` is blacklisted**: no runtime edit.
 - `SettingsGroup` is `@internal`: never use it directly.
 - Every message code must be in both `lang/oz.en` and `lang/oz.fr` (`tests/Lang/CatalogTest`).
+- **The API sends message codes, never text**: a client translates them from `oz lang export --json`
+  (`Polyglot::exportCatalogs()`), the catalogs of the enabled languages merged as `Polyglot` reads
+  them, the texts raw (`{var}`, `{var | filter}` and `{{KEY}}` are the client's to resolve), with the
+  default language and the declared filter names, each of which the client must implement too.
+  Placeholders are filled **in one pass** (a value is never read for placeholders); a missing text, or
+  a language without a catalog, falls back to the default language, then to the key itself.
 - `oz.proxies`: IP or CIDR => bool, `false` wins. Forwarding headers are only read from these peers.
 - `OZ_REDACT_SENSITIVE_DATA` (`oz.logs`) is a safety net, on in production (`ENV_MODE=production`) —
   never put passwords, tokens or raw payloads in exception data.

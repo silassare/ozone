@@ -62,6 +62,51 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	}
 
 	/**
+	 * The names of the translation filters declared ({@see self::declareFilter()}), which a client
+	 * translating the catalogs itself must implement too.
+	 *
+	 * @return list<string>
+	 */
+	public static function getFilterNames(): array
+	{
+		return \array_keys(self::$filters);
+	}
+
+	/**
+	 * What a client needs to translate the keys the API sends, since the API never translates them:
+	 * the catalog of every enabled language as {@see self::translate()} reads it (OZone's, the
+	 * plugins' and the project's merged by {@see Settings}), the default language a missing text falls
+	 * back to, and the filters the texts may use.
+	 *
+	 * The texts are as written: `{var}`, `{var | filter}` and `{{KEY}}` are for the client to resolve.
+	 * A language enabled without a catalog has an empty one, and every text falls back to the default.
+	 *
+	 * @return array{
+	 *  default: string,
+	 *  languages: list<string>,
+	 *  catalogs: array<string, array<string, mixed>>,
+	 *  filters: list<string>
+	 * }
+	 */
+	public static function exportCatalogs(): array
+	{
+		$languages = \array_keys(self::getEnabledLanguages());
+		$catalogs  = [];
+
+		foreach ($languages as $lang) {
+			$group           = 'lang/oz.' . $lang;
+			$catalogs[$lang] = Settings::has($group) ? Settings::load($group) : [];
+		}
+
+		return [
+			'default'   => self::getDefaultLanguage(),
+			'languages' => $languages,
+			'catalogs'  => $catalogs,
+			'filters'   => self::getFilterNames(),
+		];
+	}
+
+	/**
 	 * Gets language to use.
 	 *
 	 * @param null|Context $context
@@ -209,14 +254,17 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	 * Parse user browser 'Accept-Language' header and advice
 	 * for the best to use according to available languages.
 	 *
-	 * @param null|string $http_accept_language
+	 * @param null|string                    $http_accept_language
+	 * @param null|array<string, true>        $enabled_languages    the enabled ones by default
 	 *
 	 * @return array
 	 */
-	public static function parseBrowserLanguage(?string $http_accept_language = null): array
-	{
+	public static function parseBrowserLanguage(
+		?string $http_accept_language = null,
+		?array $enabled_languages = null
+	): array {
 		$browser_languages = [];
-		$enabled_languages = self::getEnabledLanguages();
+		$enabled_languages ??= self::getEnabledLanguages();
 		$advice            = null;
 
 		if (!empty($http_accept_language)) {
@@ -243,9 +291,9 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 
 		if (\count($browser_languages) && \count($enabled_languages)) {
 			// look through sorted list and use first one that matches our languages
-			foreach ($browser_languages as $lang => $q) {
+			foreach (\array_keys($browser_languages) as $lang) {
 				// user language is available
-				if (isset($enabled_languages[$q])) {
+				if (isset($enabled_languages[$lang])) {
 					$advice = $lang;
 
 					break;
@@ -322,32 +370,27 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	{
 		$text = self::getI18n($i18n_key, $lang);
 
-		if (\is_string($text) && \preg_match(self::SIMPLE_REPLACE_REG, $text)) {
-			$in = [];
+		if (!\is_string($text)) {
+			return $text;
+		}
 
-			while (\preg_match(self::SIMPLE_REPLACE_REG, $text, $in)) {
-				[$found, $variable] = $in;
-				$filters            = $in[2] ?? '';
+		// One pass over the text as written: a value is never read for placeholders, so one that holds
+		// `{name}` is shown as it is, rather than filled again (forever, when it names itself).
+		return \preg_replace_callback(
+			self::SIMPLE_REPLACE_REG,
+			static function (array $in) use ($inject, $lang): string {
+				$value = (string) ($inject[$in[1]] ?? '');
 
-				$value = (string) ($inject[$variable] ?? '');
-
-				if (!empty($filters)) {
-					$filters_list = \explode(self::FILTERS_SEP, $filters);
-
-					foreach ($filters_list as $filter) {
-						if (empty($filter = \trim($filter))) {
-							continue;
-						}
-
+				foreach (\explode(self::FILTERS_SEP, $in[2] ?? '') as $filter) {
+					if ('' !== ($filter = \trim($filter))) {
 						$value = (string) self::applyFilter($filter, $value, $lang);
 					}
 				}
 
-				$text = \str_replace($found, $value, $text);
-			}
-		}
-
-		return $text;
+				return $value;
+			},
+			$text
+		);
 	}
 
 	/**
@@ -384,11 +427,10 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	private static function getI18n(string $i18n_key, string $lang, array $history = []): mixed
 	{
 		// for 'fr-bj' lang settings should be 'lang/oz.fr-bj'
-		$text = Settings::get('lang/oz.' . $lang, $i18n_key);
+		$text = self::catalogText($lang, $i18n_key);
 
 		if (null === $text) {
-			$default = self::getDefaultLanguage();
-			$text    = Settings::get('lang/oz.' . $default, $i18n_key);
+			$text = self::catalogText(self::getDefaultLanguage(), $i18n_key);
 		}
 
 		// could be string or array or anything else
@@ -410,6 +452,17 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 		}
 
 		return $text ?? $i18n_key;
+	}
+
+	/**
+	 * A text of a language's catalog; none when the language has no catalog, which a project may
+	 * enable before writing it: its texts then fall back to the default language.
+	 */
+	private static function catalogText(string $lang, string $i18n_key): mixed
+	{
+		$group = 'lang/oz.' . $lang;
+
+		return Settings::has($group) ? Settings::get($group, $i18n_key) : null;
 	}
 
 	/**
