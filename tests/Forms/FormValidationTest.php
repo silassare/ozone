@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
+use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\AsyncValue;
 use OZONE\Core\Forms\Form;
@@ -138,13 +139,13 @@ final class FormValidationTest extends TestCase
 		self::assertSame('and', $ruleArr['condition']);
 		self::assertSame('plan', $ruleArr['rules'][0]['field_ref']);
 		self::assertSame('enterprise', $ruleArr['rules'][0]['value']);
-		self::assertFalse($ruleArr['rules'][0]['server_only']);
+		self::assertArrayNotHasKey('server_only', $ruleArr['rules'][0]);
 	}
 
 	public function testToArraySendsServerOnlyExpectAsOpaqueRef(): void
 	{
 		$form = new Form('checkout');
-		$form->expect()->eq('plan', new AsyncValue(static fn () => 'enterprise'));
+		$form->expect()->eq('plan', AsyncValue::secret(static fn () => 'enterprise'));
 
 		$arr = $form->toArray();
 
@@ -155,7 +156,7 @@ final class FormValidationTest extends TestCase
 
 		$rule_arr = $arr['expect'][0]->toArray();
 
-		self::assertSame(['ref' => 'checkout.@expect[0]', '$async' => true], $rule_arr);
+		self::assertSame(['ref' => 'checkout.@expect[0]', '$secret' => true], $rule_arr);
 	}
 
 	public function testToArraySendsMixedExpectRuleAsOpaqueRef(): void
@@ -163,7 +164,7 @@ final class FormValidationTest extends TestCase
 		$form = new Form('checkout');
 		$rule = $form->expect();
 		$rule->eq('plan', 'enterprise');
-		$rule->eq('flag', new AsyncValue(static fn () => 'ok'));  // makes the whole RuleSet server-only
+		$rule->eq('flag', AsyncValue::secret(static fn () => 'ok'));  // makes the whole RuleSet server-only
 
 		$arr = $form->toArray();
 
@@ -172,7 +173,7 @@ final class FormValidationTest extends TestCase
 		// All-or-nothing: one server-only rule makes the whole set opaque, so the
 		// client gets only the ref and must round-trip to evaluate it.
 		self::assertSame(
-			['ref' => 'checkout.@expect[0]', '$async' => true],
+			['ref' => 'checkout.@expect[0]', '$secret' => true],
 			$arr['expect'][0]->toArray()
 		);
 	}
@@ -187,17 +188,86 @@ final class FormValidationTest extends TestCase
 		self::assertSame([], $arr['expect']);
 	}
 
-	public function testToArrayDoesNotExposeEnsureRules(): void
+	public function testToArraySendsEnsureRules(): void
 	{
 		$form = new Form();
-		$form->ensure()->eq('password', 'password_confirm');
+		$form->string('password');
+		$form->ensure()->neq('password', 'password', 'TOO_OBVIOUS');
+		$form->ensure()->neq('password', AsyncValue::secret(static fn (): string => 'leaked'));
 
-		$arr = $form->toArray();
+		$arr = \json_decode((string) \json_encode($form->toArray()), true);
 
-		// ensure rules are server-side only — must not appear in the serialized form
-		self::assertArrayNotHasKey('ensure', $arr);
+		// Sent as expect() is, so a client checks them in the order the server does.
 		self::assertSame([], $arr['expect']);
+		self::assertSame('@ensure[0]', $arr['ensure'][0]['ref']);
+		self::assertSame('cleaned', $arr['ensure'][0]['data_type']);
+		self::assertSame('TOO_OBVIOUS', $arr['ensure'][0]['rules'][0]['message']);
+		// A server-only one keeps its operands to itself.
+		self::assertSame(['ref' => '@ensure[1]', '$secret' => true], $arr['ensure'][1]);
 	}
+
+	public function testToArraySendsTheCheckOfADoubleCheck(): void
+	{
+		$form = new Form();
+		$form->string('password')->doubleCheck();
+
+		$arr  = \json_decode((string) \json_encode($form->toArray()), true);
+		$rule = $arr['ensure'][0]['rules'][0];
+
+		self::assertSame('password', $rule['field_ref']);
+		self::assertSame('eq', $rule['rule']);
+		self::assertSame('password_confirm', $rule['target_ref']);
+	}
+
+	// region multiple fields
+
+	public function testAMultipleFieldGivenAListCleansEachEntry(): void
+	{
+		$form = new Form();
+		$form->int('ids')->multiple();
+
+		self::assertSame([1, 2], $form->validate(new FormData(['ids' => ['1', 2]]))->get('ids'));
+	}
+
+	/**
+	 * @dataProvider provideAMultipleFieldGivenSomethingElseIsAFormErrorCases
+	 */
+	public function testAMultipleFieldGivenSomethingElseIsAFormError(mixed $value): void
+	{
+		$form = new Form();
+		$form->int('ids')->multiple();
+
+		try {
+			$form->validate(new FormData(['ids' => $value]));
+			self::fail('A value that is not a list must be refused.');
+		} catch (InvalidFormException $e) {
+			self::assertSame('OZ_FIELD_SHOULD_BE_A_LIST', $e->getMessage());
+			self::assertSame('ids', $e->getData()['field']);
+			// The value is kept for the logs, on the type error, and never sent to the client.
+			self::assertArrayNotHasKey('_value', $e->getData(true));
+
+			$previous = $e->getPrevious();
+
+			self::assertInstanceOf(TypesInvalidValueException::class, $previous);
+			self::assertSame($value, $previous->getData(true)['_value']);
+		}
+	}
+
+	/**
+	 * @return iterable<string, array{mixed}>
+	 */
+	public static function provideAMultipleFieldGivenSomethingElseIsAFormErrorCases(): iterable
+	{
+		yield 'a string' => ['1'];
+
+		yield 'an int' => [1];
+
+		yield 'a bool' => [true];
+
+		yield 'null' => [null];
+	}
+
+	// endregion
 
 	// region prefilled data
 

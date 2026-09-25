@@ -16,6 +16,7 @@ namespace OZONE\Tests\Forms;
 use LogicException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Forms\AsyncValue;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormDataClean;
@@ -27,7 +28,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class FormTest.
  *
- * Tests for structural {@see Form} features: version fingerprinting, resume
+ * Tests for structural {@see Form} features: its version, resume
  * configuration, merge behaviour, toArray output, and cache-key derivation.
  *
  * @internal
@@ -575,21 +576,6 @@ final class FormTest extends TestCase
 		self::assertFalse($cleaned->has('age'));
 	}
 
-	// -----------------------------------------------------------------------
-	// helper
-	// -----------------------------------------------------------------------
-
-	private function makeFormData(array $data): FormDataClean
-	{
-		$fd = new FormDataClean();
-
-		foreach ($data as $key => $value) {
-			$fd->set($key, $value);
-		}
-
-		return $fd;
-	}
-
 	public function testADiscoveredFieldSaysWhetherItHoldsAList(): void
 	{
 		$form = new Form();
@@ -600,6 +586,77 @@ final class FormTest extends TestCase
 
 		self::assertFalse($fields['one']['multiple']);
 		self::assertTrue($fields['several']['multiple']);
+	}
+
+	public function testAClientIsSentThePreviewOfAPublicValue(): void
+	{
+		$form = new Form();
+		$form->int('seats');
+		$form->expect()->lte('seats', AsyncValue::public(static fn () => 12, static fn () => 10));
+
+		// Resolved to plain values: nothing is left to serialize outside the preview scope.
+		$sent = $form->toClientArray();
+
+		self::assertSame(['$preview' => ['value' => 10]], $sent['expect'][0]['rules'][0]['value']);
+		self::assertSame($sent, \json_decode((string) \json_encode($sent), true));
+	}
+
+	public function testAFormsVersionRunsNoPreview(): void
+	{
+		$runs = 0;
+		$form = new Form();
+		$form->int('seats');
+		$form->expect()->lte('seats', AsyncValue::public(
+			static fn () => 12,
+			static function () use (&$runs) {
+				++$runs;
+
+				return 10;
+			}
+		));
+
+		$version = $form->getVersion();
+
+		self::assertSame(0, $runs);
+
+		// A preview changes with what it reads (seats left): it must not change the version.
+		$form->toClientArray();
+
+		self::assertSame(1, $runs);
+		self::assertSame($version, $form->getVersion());
+		// The client is sent the version the server computes.
+		self::assertSame($version, $form->toClientArray()['version']);
+	}
+
+	public function testAFormsVersionSeesEveryChangeAClientWouldSee(): void
+	{
+		$make = static function (string $kind, string $label): Form {
+			$form = new Form();
+			$form->string('kind');
+			$form->string('detail')->label($label)->if()->eq('kind', $kind);
+
+			return $form;
+		};
+
+		$version = $make('a', 'Detail')->getVersion();
+
+		// A condition and a label were outside the old structural fingerprint.
+		self::assertNotSame($version, $make('b', 'Detail')->getVersion());
+		self::assertNotSame($version, $make('a', 'More')->getVersion());
+		self::assertSame($version, $make('a', 'Detail')->getVersion());
+	}
+
+	public function testAnExplicitVersionIsTheFormsVersion(): void
+	{
+		$form = (new Form())->version('b3f9c2');
+		$form->string('name');
+
+		self::assertSame('b3f9c2', $form->getVersion());
+		self::assertSame('b3f9c2', $form->toClientArray()['version']);
+
+		$this->expectException(LogicException::class);
+
+		(new Form())->version('');
 	}
 
 	public function testADiscoveredEnumFieldSendsItsCases(): void
@@ -614,6 +671,21 @@ final class FormTest extends TestCase
 			['name' => 'Free', 'value' => 'free'],
 			['name' => 'Pro', 'value' => 'pro'],
 		], $type['enum_cases']);
+	}
+
+	// -----------------------------------------------------------------------
+	// helper
+	// -----------------------------------------------------------------------
+
+	private function makeFormData(array $data): FormDataClean
+	{
+		$fd = new FormDataClean();
+
+		foreach ($data as $key => $value) {
+			$fd->set($key, $value);
+		}
+
+		return $fd;
 	}
 }
 

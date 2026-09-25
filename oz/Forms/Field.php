@@ -624,7 +624,11 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 		if ($this->t_multiple) {
 			if (!\is_array($value)) {
-				throw new TypesInvalidValueException('Expected an array', $value);
+				// The value goes in the data, under a private key: the data of an exception is an array.
+				throw new TypesInvalidValueException('OZ_FIELD_SHOULD_BE_A_LIST', [
+					'field'  => $this->getRef(),
+					'_value' => $value,
+				]);
 			}
 
 			$list = [];

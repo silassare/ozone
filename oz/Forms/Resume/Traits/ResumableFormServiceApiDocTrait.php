@@ -237,26 +237,28 @@ DESC;
 			$doc->success([
 				'visibility' => $doc->object([], [
 					'description'          => 'Map of `field_ref -> bool` for fields whose `if()` condition uses '
-						. 'an `AsyncValue` (server-side only); `true` means the field is shown.',
+						. 'a secret `AsyncValue` (server-side only); `true` means the field is shown.',
 					'additionalProperties' => $doc->boolean(),
 				]),
 				'fieldsets'  => $doc->object([], [
 					'description'          => 'Map of `fieldset_ref -> bool` for fieldsets whose `if()` condition '
-						. 'uses an `AsyncValue`; `true` means the fieldset is shown.',
+						. 'uses a secret `AsyncValue`; `true` means the fieldset is shown.',
 					'additionalProperties' => $doc->boolean(),
 				]),
 				'expect'     => $doc->array($doc->object([
 					'ref'     => $doc->string(
-						'The ref of the server-only rule set, as announced (`{ref, $async: true}`) in `expect`.'
+						'The ref of the server-only rule set, as announced (`{ref, $secret: true}`) in `expect`.'
 					),
 					'passes'  => $doc->boolean('`true` when the server-only expect rule passes with the input.'),
 					'message' => $message(),
-				]), ['description' => 'Server-only pre-validation (`expect`) rule results.']),
+				]), ['description' => 'Server-only pre-validation (`expect`) rule results, the form\'s, then '
+					. 'each shown fieldset\'s.']),
 				'ensure'     => $doc->array($doc->object([
 					'ref'     => $doc->string('The ref of the server-only `ensure()` rule set.'),
 					'passes'  => $doc->boolean('`true` when the server-only ensure rule passes with the input.'),
 					'message' => $message(),
-				]), ['description' => 'Server-only post-validation (`ensure`) rule results.']),
+				]), ['description' => 'Server-only post-validation (`ensure`) rule results, the form\'s, then '
+					. 'each shown fieldset\'s.']),
 			], 'Server-side evaluation results.'),
 			$doc->error([], 'Session already complete.', 'OZ_FORM_SESSION_ALREADY_DONE', 200),
 			$doc->error([], 'Session not found or expired.', 'OZ_FORM_SESSION_NOT_FOUND', 200),
@@ -265,7 +267,7 @@ DESC;
 			'tags'        => [$tag->name],
 			'operationId' => 'Form.evaluate',
 			'description' => 'Resolve server-only form conditions for the current step without advancing. '
-				. 'Fields and fieldsets using `AsyncValue` in their `if()`, `expect()`, or `ensure()` rules '
+				. 'Fields and fieldsets using a secret `AsyncValue` in their `if()`, `expect()`, or `ensure()` rules '
 				. 'need a server round-trip to evaluate. The response maps each such item to a visibility or '
 				. 'pass result. '
 				. 'Input is cleaned by type, field by field (missing or invalid values are left out), '

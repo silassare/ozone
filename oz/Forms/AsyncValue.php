@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Forms;
 
+use LogicException;
 use Override;
 use PHPUtils\Interfaces\ArrayCapableInterface;
 use PHPUtils\Traits\ArrayCapableTrait;
@@ -20,22 +21,19 @@ use PHPUtils\Traits\ArrayCapableTrait;
 /**
  * Class AsyncValue.
  *
- * A server-side value resolved at validation time.
+ * A value resolved on the server when a form is validated, from the validation context (a stock
+ * level, a list read from the database, a secret). Whether a client ever sees it is decided by the
+ * constructor, never by an optional argument, so a secret cannot become public by accident:
  *
- * When constructed with only a runtime factory, the value is opaque to the
- * client: `toArray()` returns `['$async' => true, '$preview' => null]`.
- * The client must send a server round-trip to evaluate rules that depend on it.
+ *  - {@see self::secret()}: never leaves the server. A rule set holding one is withheld whole
+ *    (`{ref, $secret: true}`), and a client asks the form session's `evaluate` about it.
+ *  - {@see self::public()}: the client gets a preview of it, computed without the validation
+ *    context, and checks the rule itself (`{$preview: {value: <T>}}`). The server still compares
+ *    against the value its factory gives when the form is validated, which may differ.
  *
- * When a preview factory is also provided, a preview can be produced at
- * form-discovery time (inside a {@see self::withPreview()} callback).
- * `toArray()` then returns `['$async' => true, '$preview' => ['value' => <T>]]`
- * so the client can evaluate the rule locally without a round-trip.
+ * The preview is wrapped so that a preview of `null` is told apart from none.
  *
- * The `$preview` shape is intentionally wrapped:
- *  - `$preview: null`           -> no preview available
- *  - `$preview: ['value': null]` -> preview IS available and its value is null
- *
- * @template T The type of the dynamic value.
+ * @template T The type of the value.
  */
 final class AsyncValue implements ArrayCapableInterface
 {
@@ -44,42 +42,57 @@ final class AsyncValue implements ArrayCapableInterface
 	private static int $s_wp_counter = 0;
 
 	/**
-	 * @var callable(FormValidationContext):T
+	 * @param callable(FormValidationContext):T $factory
+	 * @param null|callable():T                 $preview_factory null for a secret value
 	 */
-	private $factory;
+	private function __construct(
+		private readonly mixed $factory,
+		private readonly mixed $preview_factory,
+	) {}
 
 	/**
-	 * @var null|callable():T
-	 */
-	private $preview_factory;
-
-	/**
-	 * AsyncValue constructor.
+	 * A value the client never sees: its rule set is withheld.
 	 *
-	 * @param callable(FormValidationContext):T $factory         runtime factory; receives the validation context
-	 * @param null|callable():T                 $preview_factory Optional preview factory; receives no arguments
-	 *                                                           because discovery has no user-submitted context.
-	 *                                                           When provided, {@see self::isClientResolvable()}
-	 *                                                           returns true and the preview value is embedded in
-	 *                                                           the serialized form during discovery.
+	 * @template V
+	 *
+	 * @param callable(FormValidationContext):V $factory receives the validation context
+	 *
+	 * @return self<V>
 	 */
-	public function __construct(callable $factory, ?callable $preview_factory = null)
+	public static function secret(callable $factory): self
 	{
-		$this->factory         = $factory;
-		$this->preview_factory = $preview_factory;
+		return new self($factory, null);
 	}
 
 	/**
-	 * Runs $cb with discovery mode active for all {@see AsyncValue} instances.
+	 * A value the client gets a preview of, to check its rule without asking the server.
 	 *
-	 * Inside $cb, any `AsyncValue` that has a preview factory will return
-	 * `['$async' => true, '$preview' => ['value' => <T>]]` from `toArray()`.
+	 * @template V
+	 *
+	 * @param callable(FormValidationContext):V $factory what the server compares against on validation
+	 * @param callable():V                      $preview what the client is sent; it has no validation
+	 *                                                   context, since the form is not submitted yet
+	 *
+	 * @return self<V>
+	 */
+	public static function public(callable $factory, callable $preview): self
+	{
+		return new self($factory, $preview);
+	}
+
+	/**
+	 * Runs $cb with the previews of public values computed when they are serialized.
+	 *
+	 * {@see Form::toClientArray()} serializes a form for a client inside it, and nothing else does:
+	 * {@see Form::getVersion()} fingerprints a form without running a preview ({@see self::withoutPreview()}).
 	 *
 	 * @template R
 	 *
 	 * @param callable():R $cb
 	 *
 	 * @return R
+	 *
+	 * @internal
 	 */
 	public static function withPreview(callable $cb): mixed
 	{
@@ -93,10 +106,31 @@ final class AsyncValue implements ArrayCapableInterface
 	}
 
 	/**
-	 * Gets the runtime value, evaluated against the current validation context.
+	 * Runs $cb with no preview computed, even inside {@see self::withPreview()}: what
+	 * {@see Form::getVersion()} fingerprints, so that a preview never changes a form's version.
 	 *
-	 * The factory receives the full {@see FormValidationContext} so it can read
-	 * either the raw payload or the cleaned data, whichever it needs.
+	 * @template R
+	 *
+	 * @param callable():R $cb
+	 *
+	 * @return R
+	 *
+	 * @internal
+	 */
+	public static function withoutPreview(callable $cb): mixed
+	{
+		$saved              = self::$s_wp_counter;
+		self::$s_wp_counter = 0;
+
+		try {
+			return $cb();
+		} finally {
+			self::$s_wp_counter = $saved;
+		}
+	}
+
+	/**
+	 * Gets the value, evaluated against the current validation context.
 	 *
 	 * @param FormValidationContext $ctx
 	 *
@@ -108,44 +142,36 @@ final class AsyncValue implements ArrayCapableInterface
 	}
 
 	/**
-	 * Whether this value can be resolved by the client.
-	 *
-	 * Returns true when a preview factory was provided: the preview data is
-	 * embedded in the serialized form at discovery time, so the client does not
-	 * need a server round-trip to evaluate rules that use this value.
+	 * Whether the client must never see this value.
 	 */
-	public function isClientResolvable(): bool
+	public function isSecret(): bool
 	{
-		return null !== $this->preview_factory;
+		return null === $this->preview_factory;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * Outside discovery mode always returns `['$async' => true, '$preview' => null]`.
+	 * A public value's preview, computed only inside {@see self::withPreview()} (`null` outside it,
+	 * where the form is not being sent to a client).
 	 *
-	 * Inside a {@see self::withPreview()} callback, when a preview factory was
-	 * supplied, returns `['$async' => true, '$preview' => ['value' => <T>]]`.
+	 * @return array{'$preview': null|array{value: T}}
 	 *
-	 * @return array{
-	 *  '$async': true,
-	 *  '$preview': null|array{value: T}
-	 * }
+	 * @throws LogicException for a secret value, which is never serialized: its rule set is withheld
 	 */
 	#[Override]
 	public function toArray(): array
 	{
-		$preview = null;
-
-		$run_preview = self::$s_wp_counter > 0;
-
-		if ($run_preview && null !== $this->preview_factory) {
-			$preview = ['value' => \call_user_func($this->preview_factory)];
+		if (null === $this->preview_factory) {
+			throw new LogicException(
+				\sprintf('A secret %s is never serialized: its rule set is withheld.', self::class)
+			);
 		}
 
 		return [
-			'$async'   => true,
-			'$preview' => $preview,
+			'$preview' => self::$s_wp_counter > 0
+				? ['value' => \call_user_func($this->preview_factory)]
+				: null,
 		];
 	}
 }

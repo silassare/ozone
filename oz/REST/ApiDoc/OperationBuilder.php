@@ -271,8 +271,8 @@ final class OperationBuilder
 
 		if (RouteFormDocPolicy::DYNAMIC === $doc_policy) {
 			$extension['init_form'] = null !== $provider_class
-				? $provider_class::initForm()?->toArray()
-				: $resolved->formDeclaration()?->getDocPreviewForm()?->toArray();
+				? $provider_class::initForm()?->toClientArray()
+				: $resolved->formDeclaration()?->getDocPreviewForm()?->toClientArray();
 		} else {
 			$extension['init_form'] = null;
 		}

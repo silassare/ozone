@@ -277,18 +277,24 @@ final class RuleSetTest extends TestCase
 		self::assertFalse($rs->isServerOnly());
 	}
 
-	public function testIsServerOnlyTrueWhenAsyncValuePresent(): void
+	public function testIsServerOnlyFalseForAPublicValue(): void
 	{
-		$rs = (new RuleSet())->eq('field', new AsyncValue(static fn () => 'x'));
+		$rs = (new RuleSet())->eq('field', AsyncValue::public(static fn () => 'x', static fn () => 'x'));
+		self::assertFalse($rs->isServerOnly());
+	}
+
+	public function testIsServerOnlyTrueWhenASecretValueIsPresent(): void
+	{
+		$rs = (new RuleSet())->eq('field', AsyncValue::secret(static fn () => 'x'));
 		self::assertTrue($rs->isServerOnly());
 	}
 
-	public function testIsServerOnlyTrueWhenAsyncValueInNestedGroup(): void
+	public function testIsServerOnlyTrueWhenASecretValueIsInANestedGroup(): void
 	{
 		$rs = (new RuleSet())
 			->eq('a', 'b')
 			->and(static function (RuleSet $sub): void {
-				$sub->eq('x', new AsyncValue(static fn () => 'val'));
+				$sub->eq('x', AsyncValue::secret(static fn () => 'val'));
 			});
 
 		self::assertTrue($rs->isServerOnly());
@@ -307,27 +313,24 @@ final class RuleSetTest extends TestCase
 		self::assertCount(3, $arr['rules']);
 
 		self::assertSame([
-			'field_ref'   => 'type',
-			'rule'        => 'eq',
-			'server_only' => false,
-			'message'     => 'TYPE_MUST_BE_ADMIN',
-			'value'       => 'admin',
+			'field_ref' => 'type',
+			'rule'      => 'eq',
+			'message'   => 'TYPE_MUST_BE_ADMIN',
+			'value'     => 'admin',
 		], $arr['rules'][0]);
 
 		self::assertSame([
-			'field_ref'   => 'email',
-			'rule'        => 'is_not_null',
-			'server_only' => false,
-			'message'     => null,
-			'value'       => null,
+			'field_ref' => 'email',
+			'rule'      => 'is_not_null',
+			'message'   => null,
+			'value'     => null,
 		], $arr['rules'][1]);
 
 		self::assertSame([
-			'field_ref'   => 'status',
-			'rule'        => 'in',
-			'server_only' => false,
-			'message'     => null,
-			'value'       => ['active', 'pending'],
+			'field_ref' => 'status',
+			'rule'      => 'in',
+			'message'   => null,
+			'value'     => ['active', 'pending'],
 		], $arr['rules'][2]);
 	}
 
@@ -350,8 +353,8 @@ final class RuleSetTest extends TestCase
 
 	public function testToArrayReturnsAsyncForServerOnly(): void
 	{
-		$rs = (new RuleSet())->eq('field', new AsyncValue(static fn () => 'x'));
-		self::assertSame(['ref' => '', '$async' => true], $rs->toArray());
+		$rs = (new RuleSet())->eq('field', AsyncValue::secret(static fn () => 'x'));
+		self::assertSame(['ref' => '', '$secret' => true], $rs->toArray());
 	}
 
 	public function testToArrayCrossFieldRuleHasTargetRef(): void

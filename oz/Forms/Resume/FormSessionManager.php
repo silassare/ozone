@@ -258,7 +258,8 @@ final class FormSessionManager
 	 * validators are not run, and file fields are never cleaned here (that would
 	 * store the upload). Rules reading the unsafe side still see the raw payload.
 	 *
-	 * Fields and fieldsets are both reported by ref.
+	 * Fields, fieldsets and rule sets are all reported by ref; a shown fieldset's own
+	 * `expect()` and `ensure()` sets come after the form's.
 	 *
 	 * @return array{
 	 *  visibility: array<string, bool>,
@@ -286,6 +287,8 @@ final class FormSessionManager
 
 		$visibility = [];
 		$fieldsets  = [];
+		$expect     = self::evaluateServerOnly($form->getPreValidationRules(), $ctx);
+		$ensure     = self::evaluateServerOnly($form->getPostValidationRules(), $ctx);
 
 		foreach ($form->getFields() as $field) {
 			if ($field->getIf()?->isServerOnly()) {
@@ -305,6 +308,10 @@ final class FormSessionManager
 				continue;
 			}
 
+			// A fieldset's own rules are sent with it, so they are answered here too, after the form's
+			// (each result names its ref): its expect() before its fields are cleaned, its ensure() after.
+			\array_push($expect, ...self::evaluateServerOnly($built->getPreValidationRules(), $ctx));
+
 			self::cleanPartially($built->getFields(), $ctx);
 
 			foreach ($built->getFields() as $field) {
@@ -312,13 +319,15 @@ final class FormSessionManager
 					$visibility[$field->getRef()] = $field->isEnabled($ctx);
 				}
 			}
+
+			\array_push($ensure, ...self::evaluateServerOnly($built->getPostValidationRules(), $ctx));
 		}
 
 		return [
 			'visibility' => $visibility,
 			'fieldsets'  => $fieldsets,
-			'expect'     => self::evaluateServerOnly($form->getPreValidationRules(), $ctx),
-			'ensure'     => self::evaluateServerOnly($form->getPostValidationRules(), $ctx),
+			'expect'     => $expect,
+			'ensure'     => $ensure,
 		];
 	}
 

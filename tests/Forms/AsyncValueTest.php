@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
+use LogicException;
 use OZONE\Core\Forms\AsyncValue;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormDataClean;
@@ -28,72 +29,57 @@ use PHPUnit\Framework\TestCase;
  */
 final class AsyncValueTest extends TestCase
 {
-	public function testGetValueCallsFactory(): void
+	public function testGetValueCallsTheFactoryWithTheContext(): void
 	{
-		$fd      = $this->makeFormData(['key' => 'hello']);
-		$dynamic = new AsyncValue(
+		$ctx    = $this->context(['key' => 'hello']);
+		$secret = AsyncValue::secret(
 			static fn (FormValidationContext $ctx) => $ctx->getCleanFormData()->get('key')
 		);
-
-		self::assertSame('hello', $dynamic->getValue($fd));
-	}
-
-	public function testGetValueReturnsNullWhenFactoryReturnsNull(): void
-	{
-		$fd      = $this->makeFormData([]);
-		$dynamic = new AsyncValue(static fn () => null);
-
-		self::assertNull($dynamic->getValue($fd));
-	}
-
-	public function testToArrayReturnsAsyncMarker(): void
-	{
-		$dynamic = new AsyncValue(static fn () => 42);
-
-		self::assertSame(['$async' => true, '$preview' => null], $dynamic->toArray());
-	}
-
-	public function testToArrayWithNoPreviewFactoryAlwaysReturnsNullPreview(): void
-	{
-		$dynamic = new AsyncValue(static fn () => 'runtime');
-
-		// Even inside withPreview(), no preview factory -> $preview stays null.
-		$result = AsyncValue::withPreview(static fn () => $dynamic->toArray());
-
-		self::assertSame(['$async' => true, '$preview' => null], $result);
-	}
-
-	public function testToArrayWithPreviewFactoryReturnsPreviewDuringDiscovery(): void
-	{
-		$dynamic = new AsyncValue(
-			static fn (FormValidationContext $ctx) => $ctx->getCleanFormData()->get('x'),
-			static fn () => ['a', 'b', 'c'],
+		$public = AsyncValue::public(
+			static fn (FormValidationContext $ctx) => $ctx->getCleanFormData()->get('key'),
+			static fn () => 'preview'
 		);
 
-		// Outside discovery: no preview.
-		self::assertSame(['$async' => true, '$preview' => null], $dynamic->toArray());
-
-		// Inside withPreview(): preview is embedded.
-		$result = AsyncValue::withPreview(static fn () => $dynamic->toArray());
-
-		self::assertSame(['$async' => true, '$preview' => ['value' => ['a', 'b', 'c']]], $result);
+		// The server compares against the value, never the preview.
+		self::assertSame('hello', $secret->getValue($ctx));
+		self::assertSame('hello', $public->getValue($ctx));
 	}
 
-	public function testIsClientResolvableFalseWithoutPreview(): void
+	public function testASecretValueIsNeverSerialized(): void
 	{
-		$dynamic = new AsyncValue(static fn () => 1);
+		$secret = AsyncValue::secret(static fn () => 'hidden');
 
-		self::assertFalse($dynamic->isClientResolvable());
+		self::assertTrue($secret->isSecret());
+
+		$this->expectException(LogicException::class);
+
+		AsyncValue::withPreview(static fn () => $secret->toArray());
 	}
 
-	public function testIsClientResolvableTrueWithPreview(): void
+	public function testAPublicValueSendsItsPreviewWhenSentToAClient(): void
 	{
-		$dynamic = new AsyncValue(static fn () => 1, static fn () => [1, 2, 3]);
+		$public = AsyncValue::public(static fn () => 'runtime', static fn () => ['a', 'b']);
 
-		self::assertTrue($dynamic->isClientResolvable());
+		self::assertFalse($public->isSecret());
+		self::assertSame(
+			['$preview' => ['value' => ['a', 'b']]],
+			AsyncValue::withPreview(static fn () => $public->toArray())
+		);
+		// Outside (a form's version fingerprint), the preview is not computed.
+		self::assertSame(['$preview' => null], $public->toArray());
 	}
 
-	private function makeFormData(array $data): FormValidationContext
+	public function testAPreviewOfNullIsToldApartFromNone(): void
+	{
+		$public = AsyncValue::public(static fn () => null, static fn () => null);
+
+		self::assertSame(
+			['$preview' => ['value' => null]],
+			AsyncValue::withPreview(static fn () => $public->toArray())
+		);
+	}
+
+	private function context(array $data): FormValidationContext
 	{
 		return new FormValidationContext(new FormData($data), new FormDataClean($data));
 	}

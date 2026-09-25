@@ -323,18 +323,25 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	 *  legend: null|I18nMessage,
 	 *  type: 'dynamic'|'static',
 	 *  fields: null|array<string, Field>,
+	 *  expect: null|list<RuleSet>,
+	 *  ensure: null|list<RuleSet>,
 	 *  if: null|RuleSet
 	 * }
 	 */
 	#[Override]
 	public function toArray(): array
 	{
+		// A dynamic fieldset's fields and rules are those of the fieldset its factory builds, unknown
+		// until then.
 		return [
 			'ref'    => $this->getSelfRef(),
 			'name'   => $this->getName(),
 			'legend' => $this->t_legend,
 			'type'   => $this->t_is_dynamic ? 'dynamic' : 'static',
 			'fields' => $this->t_is_dynamic ? null : $this->getFields(),
+			// Checked before its fields and after them (validate()).
+			'expect' => $this->t_is_dynamic ? null : $this->getPreValidationRules(),
+			'ensure' => $this->t_is_dynamic ? null : $this->getPostValidationRules(),
 			'if'     => $this->t_if,
 		];
 	}

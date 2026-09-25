@@ -13,11 +13,16 @@ declare(strict_types=1);
 
 namespace __PLH_NAMESPACE__;
 
+use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\App\Service as BaseService;
 use OZONE\Core\Columns\Types\TypeFile;
 use OZONE\Core\Columns\ValidatedFile;
+use OZONE\Core\Forms\AsyncValue;
+use OZONE\Core\Forms\Fieldset;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\Resume\FormSessionStore;
+use OZONE\Core\Forms\RuleSet;
+use OZONE\Core\Forms\TypesSwitcher;
 use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteFormDeclaration;
@@ -36,11 +41,18 @@ use OZONE\Core\Router\Router;
  *  POST /test/irreversible-route                      -- route declared with TestFormIrreversibleProvider
  *  POST /test/incremental-a, /test/incremental-b      -- same Form::resumable() form on two routes
  *  POST /test/incremental-upload                      -- Form::resumable() form with file fields
+ *  POST /test/secret-form                             -- a form hiding SECRET wherever a secret can sit
  *
  * Every route returns what it consumed as {values: ...}.
  */
 final class TestFormConsumerRoutesProvider extends BaseService
 {
+	/** What no response may ever contain: every secret value of `secretForm()` holds it. */
+	public const SECRET = 'oz-secret-sentinel';
+
+	/** A public value's own value, which the client is never sent either: only its preview. */
+	public const PUBLIC_RUNTIME = 'oz-public-runtime';
+
 	public static function registerRoutes(Router $router): void
 	{
 		$router->get('/test/require-completion/:ref', static function (RouteInfo $ri) {
@@ -94,6 +106,12 @@ final class TestFormConsumerRoutesProvider extends BaseService
 		})
 			->name('test:incremental-upload')
 			->form(static fn () => self::uploadForm());
+
+		$router->post('/test/secret-form', static function (RouteInfo $ri) {
+			return self::values($ri, $ri->getCleanFormData()->toArray());
+		})
+			->name('test:secret-form')
+			->form(static fn () => self::secretForm());
 	}
 
 	public static function apiDoc(ApiDoc $doc): void {}
@@ -122,6 +140,37 @@ final class TestFormConsumerRoutesProvider extends BaseService
 		$form->file('doc', true)->configureType(static fn (TypeFile $t) => $t->temp());
 		$form->file('photo', true);
 		$form->string('note', true);
+
+		return $form;
+	}
+
+	/**
+	 * A secret in each place a rule set can be: the form's expect() and ensure(), a field's if(), a
+	 * switcher's branch, a fieldset's if(), expect() and ensure(); and a public value whose own value
+	 * differs from its preview.
+	 */
+	private static function secretForm(): Form
+	{
+		$secret = static fn (): string => self::SECRET;
+		$form   = (new Form())->setId('secret-form');
+
+		$form->expect()
+			->notIn('code', AsyncValue::secret(static fn (): array => ['blocked', self::SECRET]), 'CODE_BLOCKED');
+		$form->expect()->neq('code', AsyncValue::public(
+			static fn (): string => self::PUBLIC_RUNTIME,
+			static fn (): string => 'shown-preview'
+		));
+		$form->string('code', true);
+		$form->string('hint')->if()->neq('code', AsyncValue::secret($secret));
+		$form->switcher('pick')->configureType(static fn (TypesSwitcher $s) => $s
+			->when(static fn (RuleSet $rs) => $rs->eq('code', AsyncValue::secret($secret)), new TypeString())
+			->otherwise(new TypeString()));
+		$form->fieldset('box', static function (Fieldset $fs) use ($secret): void {
+			$fs->string('inner');
+			$fs->expect()->neq('box.inner', AsyncValue::secret($secret));
+			$fs->ensure()->neq('box.inner', AsyncValue::secret($secret));
+		})->if()->neq('code', AsyncValue::secret($secret));
+		$form->ensure()->neq('code', AsyncValue::secret($secret));
 
 		return $form;
 	}

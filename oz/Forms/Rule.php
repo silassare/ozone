@@ -31,8 +31,8 @@ use PHPUtils\Traits\ArrayCapableTrait;
  *  - Value   : field ref vs. a scalar / {@see AsyncValue}
  *  - Cross-field: field ref vs. another field ref (target_ref)
  *
- * A rule is considered server-only when its comparison value is a
- * {@see AsyncValue} (resolved at runtime, never exposed to the client).
+ * A rule is server-only when its comparison value is a secret {@see AsyncValue}: its rule set is
+ * then withheld from the client.
  */
 final class Rule implements ArrayCapableInterface
 {
@@ -41,7 +41,8 @@ final class Rule implements ArrayCapableInterface
 	/**
 	 * Whether this rule must be evaluated server-side only.
 	 *
-	 * True when {@see $value} is an {@see AsyncValue}.
+	 * True when {@see $value} is a secret {@see AsyncValue}. Never sent: a rule a client receives is
+	 * never server-only, since one such rule withholds its whole set.
 	 */
 	public readonly bool $server_only;
 
@@ -64,7 +65,7 @@ final class Rule implements ArrayCapableInterface
 	) {
 		$this->server_only = null === $target_ref
 			&& $value instanceof AsyncValue
-			&& !$value->isClientResolvable();
+			&& $value->isSecret();
 	}
 
 	/**
@@ -105,6 +106,40 @@ final class Rule implements ArrayCapableInterface
 	}
 
 	/**
+	 * {@inheritDoc}
+	 *
+	 * When in cross-field mode ({@see $target_ref} is set) the `value` key is omitted
+	 * and replaced by `target_ref`.  Otherwise `target_ref` is omitted.
+	 *
+	 * @return array{
+	 *  field_ref: string,
+	 *  rule: string,
+	 *  message: null|I18nMessage|string,
+	 *  value?: mixed,
+	 *  target_ref?: string
+	 * }
+	 */
+	#[Override]
+	public function toArray(): array
+	{
+		$arr = [
+			'field_ref'   => $this->field_ref,
+			'rule'        => $this->operator->value,
+			'message'     => $this->message,
+		];
+
+		if (null !== $this->target_ref) {
+			$arr['target_ref'] = $this->target_ref;
+		} else {
+			$arr['value'] = $this->value instanceof AsyncValue
+				? $this->value->toArray()
+				: $this->value;
+		}
+
+		return $arr;
+	}
+
+	/**
 	 * Whether two operands are the same value (G16).
 	 *
 	 * Identical (`===`), except that two numbers are compared by value: an int and a float that are
@@ -115,8 +150,10 @@ final class Rule implements ArrayCapableInterface
 	 */
 	private static function same(mixed $a, mixed $b): bool
 	{
-		if ((\is_int($a) || \is_float($a)) && (\is_int($b) || \is_float($b))) {
-			return $a == $b;
+		// An int and a float compare as floats, as PHP's `==` does; written as casts, since the fixer
+		// turns a `==` into `===` (strict_comparison), which would undo this. Two ints stay exact.
+		if ((\is_int($a) && \is_float($b)) || (\is_float($a) && \is_int($b))) {
+			return (float) $a === (float) $b;
 		}
 
 		return $a === $b;
@@ -136,41 +173,5 @@ final class Rule implements ArrayCapableInterface
 		}
 
 		return false;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * When in cross-field mode ({@see $target_ref} is set) the `value` key is omitted
-	 * and replaced by `target_ref`.  Otherwise `target_ref` is omitted.
-	 *
-	 * @return array{
-	 *  field_ref: string,
-	 *  rule: string,
-	 *  server_only: bool,
-	 *  message: null|I18nMessage|string,
-	 *  value?: mixed,
-	 *  target_ref?: string
-	 * }
-	 */
-	#[Override]
-	public function toArray(): array
-	{
-		$arr = [
-			'field_ref'   => $this->field_ref,
-			'rule'        => $this->operator->value,
-			'server_only' => $this->server_only,
-			'message'     => $this->message,
-		];
-
-		if (null !== $this->target_ref) {
-			$arr['target_ref'] = $this->target_ref;
-		} else {
-			$arr['value'] = $this->value instanceof AsyncValue
-				? $this->value->toArray()
-				: $this->value;
-		}
-
-		return $arr;
 	}
 }

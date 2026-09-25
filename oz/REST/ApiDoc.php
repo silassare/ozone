@@ -243,7 +243,14 @@ How OZone handles form validation across the API.
 
 Any route with a form attached supports **Form Discovery**.
 Add `{$discovery_header}: ?1` to the request and the handler is skipped;
-the server returns the form schema in `data.form` - useful for building dynamic UIs.
+the server returns the form bundle in `form`, next to `data` in the envelope - useful for building
+dynamic UIs.
+
+Every rule set of a form is sent (`expect`, `ensure`, a fieldset's own, the `if` conditions), so a
+client can check a form while it is filled, in the order the server does. A set comparing against a
+secret server value is sent as `{ref, \$secret: true}`: ask the `evaluate` endpoint of a form session
+about it. A server value the client may see is sent as its preview, `{\$preview: {value}}`; the server
+compares against its own value on submit.
 
 Each operation carries an `x-oz-form` extension describing the form doc policy:
 

@@ -318,7 +318,7 @@ final class ResumableFormServiceTest extends TestCase
 		]);
 
 		// Evaluate on step 1: accumulated cleaned data contains name='skip'.
-		// hint's condition: neq('name', AsyncValue(=>'skip')) -> false -> hint is NOT visible.
+		// hint's condition: neq('name', AsyncValue::secret(=> 'skip')) -> false -> hint is NOT visible.
 		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', [], [
 			'X-OZONE-Form-Resume-Ref' => $resumeRef,
 		]);
@@ -346,7 +346,7 @@ final class ResumableFormServiceTest extends TestCase
 		]);
 
 		// Evaluate: accumulated cleaned data contains name='alice'.
-		// hint's condition: neq('name', AsyncValue(=>'skip')) -> true -> hint IS visible.
+		// hint's condition: neq('name', AsyncValue::secret(=> 'skip')) -> true -> hint IS visible.
 		[, $body] = $this->request('POST', '/form/test-wizard/evaluate', [], [
 			'X-OZONE-Form-Resume-Ref' => $resumeRef,
 		]);
@@ -428,7 +428,7 @@ final class ResumableFormServiceTest extends TestCase
 
 		self::assertSame(0, $data['error']);
 		self::assertArrayHasKey('ensure', $data['data']);
-		self::assertCount(2, $data['data']['ensure'], 'step 2 declares two ensure rules.');
+		self::assertCount(3, $data['data']['ensure'], 'step 2 declares two ensure rules, its fieldset one.');
 		self::assertFalse(
 			$data['data']['ensure'][1]['passes'] ?? true,
 			"Cross-step ensure rule must fail when color='forbidden'."
@@ -533,11 +533,123 @@ final class ResumableFormServiceTest extends TestCase
 			$data['data']['fieldsets']['extra_details'] ?? false,
 			"'extra_details' fieldset must be shown when wish='skip-detail' (not 'skip-details')."
 		);
-		// Field inside fieldset: wish='skip-detail' == AsyncValue('skip-detail') -> hidden.
+		// Field inside fieldset: wish='skip-detail' == AsyncValue::secret(=> 'skip-detail') -> hidden.
 		self::assertFalse(
 			$data['data']['visibility']['extra_details.conditional_detail'] ?? true,
 			"'extra_details.conditional_detail' must be hidden when wish='skip-detail'."
 		);
+	}
+
+	public function testEvaluateAnswersAFieldsetsOwnServerOnlyRules(): void
+	{
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		$this->request('POST', '/form/test-wizard/next', ['wish' => 'anything'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		$this->request('POST', '/form/test-wizard/next', ['name' => 'alice'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		[, $body] = $this->request('POST', '/form/test-wizard/next', ['color' => 'blue'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+
+		// The step announces them by ref, so a client knows what to ask about.
+		$fieldset = \json_decode($body, true)['form']['fieldsets']['extra_details'];
+
+		self::assertSame([['ref' => 'extra_details.@expect[0]', '$secret' => true]], $fieldset['expect']);
+		self::assertSame([['ref' => 'extra_details.@ensure[0]', '$secret' => true]], $fieldset['ensure']);
+
+		$passes = function (array $note) use ($resumeRef): array {
+			[, $body] = $this->request('POST', '/form/test-wizard/evaluate', ['extra_details' => $note], [
+				'X-OZONE-Form-Resume-Ref' => $resumeRef,
+			]);
+			$data = \json_decode($body, true)['data'];
+			$out  = [];
+
+			foreach ([...$data['expect'], ...$data['ensure']] as $result) {
+				$out[$result['ref']] = $result['passes'];
+			}
+
+			return $out;
+		};
+
+		$bad = $passes(['detail_note' => 'raw-bad']);
+
+		self::assertFalse($bad['extra_details.@expect[0]']);
+		self::assertTrue($bad['extra_details.@ensure[0]']);
+
+		$bad = $passes(['detail_note' => 'bad']);
+
+		self::assertTrue($bad['extra_details.@expect[0]']);
+		self::assertFalse($bad['extra_details.@ensure[0]']);
+	}
+
+	public function testASecretValueReachesNoResponse(): void
+	{
+		$leaks = static function (string $body): array {
+			return \array_values(\array_filter(
+				['oz-secret-sentinel', 'oz-public-runtime'],
+				static fn (string $secret): bool => \str_contains($body, $secret)
+			));
+		};
+
+		// Discovered: every set holding a secret is withheld, and the public value sends its preview.
+		[, $body] = $this->request('POST', '/test/secret-form', [], ['X-OZONE-Form-Discovery' => '?1']);
+
+		self::assertSame([], $leaks($body));
+		self::assertStringContainsString('"$secret":true', $body);
+		self::assertStringContainsString('shown-preview', $body);
+
+		// Refused by a secret rule: the error names the rule's message, not the value.
+		[, $body] = $this->request('POST', '/test/secret-form', ['code' => 'blocked']);
+
+		self::assertSame('CODE_BLOCKED', \json_decode($body, true)['msg']);
+		self::assertSame([], $leaks($body));
+
+		[, $body] = $this->request('POST', '/test/secret-form', ['code' => 'fine', 'box' => ['inner' => 'x']]);
+
+		self::assertSame(0, \json_decode($body, true)['error']);
+		self::assertSame([], $leaks($body));
+
+		// Through a form session: each step, and what evaluate answers, withholds the wizard's secrets.
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+		$bodies    = [$body];
+		$ref       = ['X-OZONE-Form-Resume-Ref' => $resumeRef];
+
+		foreach ([['wish' => 'anything'], ['name' => 'alice'], ['color' => 'blue']] as $step) {
+			[, $bodies[]] = $this->request('POST', '/form/test-wizard/next', $step, $ref);
+			[, $bodies[]] = $this->request('POST', '/form/test-wizard/evaluate', [], $ref);
+		}
+
+		foreach ($bodies as $body) {
+			foreach (['forbidden-notes', 'bad-notes', 'raw-bad', 'skip-detail'] as $secret) {
+				self::assertStringNotContainsString($secret, $body);
+			}
+		}
+	}
+
+	public function testAStepSendsThePreviewOfAValue(): void
+	{
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+
+		$this->request('POST', '/form/test-wizard/next', ['wish' => 'anything'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+		[, $body] = $this->request('POST', '/form/test-wizard/next', ['name' => 'alice'], [
+			'X-OZONE-Form-Resume-Ref' => $resumeRef,
+		]);
+
+		// Step 1, as discovery would send it: the value comes with its preview, so the rule is the
+		// client's to check, and not left undecided.
+		$expect = \json_decode($body, true)['form']['expect'][0];
+
+		self::assertSame(['$preview' => ['value' => 'black']], $expect['rules'][0]['value']);
+		// Every rule a client gets is one it can check: the flag would always be false, so it is not sent.
+		self::assertArrayNotHasKey('server_only', $expect['rules'][0]);
 	}
 
 	// -------------------------------------------------------------------------

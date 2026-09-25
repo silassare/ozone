@@ -31,8 +31,10 @@ use OZONE\Core\Http\Enums\RequestScope;
  * - Steps:
  *   0: 'name' (required string)
  *   1: 'color' (required string) + 'hint' (optional, server-only visibility condition)
+ *      + an expect rule on a value with a preview (sent with the step)
  *   2: 'notes' (optional string) + server-only expect rule (current-step)
  *      + server-only ensure rules (notes, and cross-step color)
+ *      + a fieldset with server-only expect and ensure rules of its own
  * - totalSteps() = 3
  * - isReversible() = true
  */
@@ -83,9 +85,14 @@ final class TestFormProvider extends AbstractResumableFormProvider
 				$f = new Form();
 				$f->string('color', true);
 				// 'hint' is server-conditionally visible: shown only when name != 'skip'.
-				// AsyncValue makes this condition server-only (not sent to client).
+				// A secret value withholds this condition: only its ref is sent.
 				$f->string('hint');
-				$f->field('hint')->if()->neq('name', new AsyncValue(static fn (): string => 'skip'));
+				$f->field('hint')->if()->neq('name', AsyncValue::secret(static fn (): string => 'skip'));
+				// A value with a preview: a client gets it with the step and checks the rule itself.
+				$f->expect()->neq('color', AsyncValue::public(
+					static fn (): string => 'black',
+					static fn (): string => 'black'
+				), 'NO_BLACK');
 
 				return $f;
 			})(),
@@ -95,22 +102,27 @@ final class TestFormProvider extends AbstractResumableFormProvider
 				// Server-only expect rule. expect() reads the UNSAFE side, which for a
 				// wizard step holds only that step's own raw payload -- so it can only
 				// reference fields of the current step: notes must not be 'forbidden-notes'.
-				$f->expect()->neq('notes', new AsyncValue(static fn (): string => 'forbidden-notes'));
+				$f->expect()->neq('notes', AsyncValue::secret(static fn (): string => 'forbidden-notes'));
 				// Server-only ensure rules. ensure() reads the CLEANED side, which is the
 				// accumulated store, so cross-step references belong here.
 				// [0] notes must not be 'bad-notes'.
-				$f->ensure()->neq('notes', new AsyncValue(static fn (): string => 'bad-notes'));
+				$f->ensure()->neq('notes', AsyncValue::secret(static fn (): string => 'bad-notes'));
 				// [1] cross-step: the color picked on step 1 must not be 'forbidden'.
-				$f->ensure()->neq('color', new AsyncValue(static fn (): string => 'forbidden'));
+				$f->ensure()->neq('color', AsyncValue::secret(static fn (): string => 'forbidden'));
 				// Fieldset with a server-only if condition: shown only when wish != 'skip-details'.
 				$fs = $f->fieldset('extra_details', static function (Fieldset $fs): void {
 					$fs->string('detail_note');
 					// Field inside fieldset with server-only if: shown only when wish != 'skip-detail'.
 					$fs->string('conditional_detail');
 					$fs->field('conditional_detail')
-						->if()->neq('wish', new AsyncValue(static fn (): string => 'skip-detail'));
+						->if()->neq('wish', AsyncValue::secret(static fn (): string => 'skip-detail'));
+					// The fieldset's own rules, server-only: the raw note, then the cleaned one.
+					$fs->expect()
+						->neq('extra_details.detail_note', AsyncValue::secret(static fn (): string => 'raw-bad'));
+					$fs->ensure()
+						->neq('extra_details.detail_note', AsyncValue::secret(static fn (): string => 'bad'));
 				});
-				$fs->if()->neq('wish', new AsyncValue(static fn (): string => 'skip-details'));
+				$fs->if()->neq('wish', AsyncValue::secret(static fn (): string => 'skip-details'));
 
 				return $f;
 			})(),

@@ -46,8 +46,8 @@ use PHPUtils\Traits\ArrayCapableTrait;
  * ```
  *
  * The rule set is considered server-only when any descendant {@see Rule}
- * has {@see Rule::$server_only} set to true (i.e. its value is an {@see AsyncValue}).
- * Server-only rule sets emit `['ref' => ..., '$async' => true]` in {@see toArray()}.
+ * has {@see Rule::$server_only} set to true (i.e. its value is a secret {@see AsyncValue}).
+ * Server-only rule sets emit `['ref' => ..., '$secret' => true]` in {@see toArray()}.
  *
  * Context ({@see RuleSetDataType}) is set exclusively by the framework via
  * {@see self::create()} and is never exposed through a public setter.
@@ -419,7 +419,7 @@ class RuleSet implements ArrayCapableInterface
 	 * Whether this rule set (or any of its nested descendants) contains
 	 * a {@see Rule} that must be evaluated server-side only.
 	 *
-	 * Server-only rule sets serialize to `['ref' => ..., '$async' => true]` in {@see toArray()}.
+	 * Server-only rule sets serialize to `['ref' => ..., '$secret' => true]` in {@see toArray()}.
 	 *
 	 * @return bool
 	 */
@@ -540,7 +540,7 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * {@inheritDoc}
 	 *
-	 * Returns `['ref' => ..., '$async' => true]` when {@see self::isServerOnly()} is true:
+	 * Returns `['ref' => ..., '$secret' => true]` when {@see self::isServerOnly()} is true:
 	 * the ref is still sent so the client can ask the evaluate endpoint about the
 	 * rule, while its operands stay server-side.
 	 *
@@ -561,8 +561,8 @@ class RuleSet implements ArrayCapableInterface
 	{
 		if ($this->isServerOnly()) {
 			return [
-				'ref'    => $this->t_ref,
-				'$async' => true,
+				'ref'     => $this->t_ref,
+				'$secret' => true,
 			];
 		}
 

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Forms\Interfaces;
 
+use OZONE\Core\Forms\AsyncValue;
 use OZONE\Core\Forms\Enums\RuleSetCondition;
 use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Fieldset;
@@ -77,7 +78,8 @@ interface FieldContainerInterface
 	 * Creates and registers a new pre-validation condition on this container.
 	 *
 	 * Pre-validation conditions run on raw (unsafe) data before any field is
-	 * validated. Non-server-only rule sets may be forwarded to the client.
+	 * validated. Sent to the client with the form; a set holding an
+	 * {@see AsyncValue::secret()} is sent as its ref alone.
 	 *
 	 * @param RuleSetCondition $condition AND (default) or OR
 	 *
@@ -89,7 +91,7 @@ interface FieldContainerInterface
 	 * Creates and registers a new post-validation assertion on this container.
 	 *
 	 * Post-validation assertions run on cleaned data after all fields have been
-	 * validated. They are server-side only and never sent to the client.
+	 * validated. Sent to the client with the form, as {@see self::expect()} sets are.
 	 *
 	 * @param RuleSetCondition $condition AND (default) or OR
 	 *

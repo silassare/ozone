@@ -118,7 +118,7 @@ final class JSONResponse extends JSONResult
 	{
 		$res = parent::toArray();
 
-		$f = $this->form?->toArray();
+		$f = $this->form?->toClientArray();
 
 		if (!empty($f)) {
 			$res['form'] = $f;

@@ -396,9 +396,10 @@ for the field's type class (`TypeError` otherwise).
   requests; rule sets have refs too (`checkout.@expect[0]`, `checkout.promo@if`). `Form::merge()`
   clones and keeps the original parent, and **throws on a colliding ref**: name forms whose refs
   would collide.
-- `expect()` rules are all sent to the client (a server-only one, holding an `AsyncValue` without
-  preview, serializes as `{ref, $async: true}` and is resolved through the form session `evaluate`
-  endpoint); `ensure()` rules are server-side only.
+- **Every rule set is sent to the client** (G18): a form's `expect()` and `ensure()`, a static
+  fieldset's own, the conditions. A server-only one, holding an `AsyncValue::secret()`, serializes as
+  `{ref, $secret: true}` and is resolved through the form session `evaluate` endpoint; a literal
+  operand is sent as it is, so a value the client must not see belongs in an `AsyncValue::secret()`.
 - **Two numbers are the same when they are equal** (G16): `eq`, `neq`, `in` and `not_in` are strict,
   except between an int and a float (`Rule::same()`), so a rule's literal need not match the PHP type of
   the field's clean value, and a client reading the rule from JSON (which writes `3.0` as `3`) agrees.
@@ -412,9 +413,21 @@ for the field's type class (`TypeError` otherwise).
   assertion, so the form is rejected instead of the fieldset skipped. Use the fieldset's `->if()`.
 - Fieldsets: `fieldset()` (static, populated at definition time) or `dynamicFieldset()` (factory
   called with the validation context).
-- `AsyncValue` wraps a server-side value for rule comparisons; with a preview factory, inside
-  `AsyncValue::withPreview()` (used by `FormDiscoveryRouteInterceptor`), the client gets the value to
-  evaluate the rule locally. A rule holding one is `server_only`.
+- **`AsyncValue`: a value the server resolves on validation, whose disclosure its constructor
+  decides** (G20). `AsyncValue::secret($factory)` never leaves the server and withholds its rule set;
+  `AsyncValue::public($factory, $preview)` sends the preview (`{$preview: {value}}`) and the client
+  checks the rule itself. The constructor is private so that a secret cannot become public by adding
+  an argument: turning one into the other is a visible change of method, and
+  `ResumableFormServiceTest::testASecretValueReachesNoResponse` fails on any leak. Previews are
+  computed only in `Form::toClientArray()`, which every path sending a form to a client uses (the
+  envelope's `form`, the OpenAPI `x-oz-form` `init_form`); `AsyncValue::withPreview()` is internal.
+- **A form's version** is `Form::version()` when its author sets one (a generator: its definition's
+  hash), else a fingerprint of the whole bundle a client is sent, **previews left out**
+  (`AsyncValue::withoutPreview()`), since they vary per user and per moment. The server never checks it
+  on resume (unknown refs are dropped and replayed values validated again): it tells a client whether
+  a saved draft still fits, and keys the resume cache of a form with neither id nor name.
+- **Run `make fix` knowing its `strict_comparison` rule turns `==` into `===`**: where a loose
+  comparison is meant (`Rule::same()`, G16), write it so the fixer cannot rewrite it.
 
 ### CSRF
 
@@ -458,7 +471,7 @@ form or a factory declaration is discoverable.
 - **`Form::resumable()`** (opt-in per form; route-level `->resumable()` does not enable it): a failed
   attempt saves what validated before the failure, the next attempt replays it
   (`Field::revalidateStored()`), and the entry is cleared through `onSuccess()`. Entries (store
-  `oz:form:resume`) are keyed by form identity (id, else name, else structure — **set an id**), the
+  `oz:form:resume`) are keyed by form identity (id, else name, else version — **set an id**), the
   `Route::key()` partition and the resume scope. A replayed value that no longer validates is dropped.
 - **Resumable form sessions** (`Forms\Resume\`): multi-step, server-side sessions driven by a provider
   (`ResumableFormProviderInterface`, registered by name in `oz.forms.providers`) through the

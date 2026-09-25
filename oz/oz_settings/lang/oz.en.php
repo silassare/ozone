@@ -101,6 +101,7 @@ return [
 	'OZ_FIELD_PASS_NOT_SECURE'               => 'The password is not secure enough.',
 	'OZ_FIELD_PASS_TOO_LONG'                 => 'The password is too long.',
 	'OZ_FIELD_PASS_TOO_SHORT'                => 'The password is too short.',
+	'OZ_FIELD_SHOULD_BE_A_LIST'              => 'A list of values is expected.',
 	'OZ_FIELD_SHOULD_HAVE_SAME_VALUE'        => 'The fields {field} and {field_confirm} must have the same value.',
 
 	// files

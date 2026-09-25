@@ -17,9 +17,11 @@ use Closure;
 use Gobl\DBAL\Table;
 use Gobl\DBAL\Types\TypeDate;
 use JsonException;
+use JsonSerializable;
 use LogicException;
 use Override;
 use OZONE\Core\App\Context;
+use OZONE\Core\App\JSONResponse;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Traits\FieldContainerHelpersTrait;
@@ -78,6 +80,11 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	private ?string $t_id = null;
 
 	/**
+	 * The version its author gives it ({@see self::version()}), or null to fingerprint it.
+	 */
+	private ?string $t_version = null;
+
+	/**
 	 * Form constructor.
 	 *
 	 * @param null|string $name      optional name for field namespacing (validated as a dot-path segment)
@@ -109,39 +116,43 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	}
 
 	/**
-	 * Returns a short structural fingerprint of this form.
+	 * Sets this form's version, instead of the fingerprint {@see self::getVersion()} computes.
+	 *
+	 * For a form generated from a definition (the hash of that definition), or one whose texts change
+	 * per request: the author then bumps it whenever the form changes in a way a saved draft of it
+	 * should not survive, and nothing is computed.
+	 *
+	 * @return $this
+	 */
+	public function version(string $version): static
+	{
+		if ('' === $version) {
+			throw new LogicException('A form version cannot be empty.');
+		}
+
+		$this->t_version = $version;
+
+		return $this;
+	}
+
+	/**
+	 * Gets this form's version: the one set with {@see self::version()}, else a fingerprint of what a
+	 * client is sent of it.
+	 *
+	 * The fingerprint covers the whole bundle (fields and their types, conditions, labels, fieldsets,
+	 * every rule set) and leaves out the previews of public values, which may differ per user and per
+	 * moment (seats left) without the form changing. It is the same on the server and in what a
+	 * client is sent, and a client reads it to tell whether a saved draft still fits the form.
 	 */
 	public function getVersion(): string
 	{
-		$field_info = static function (Field $f) {
-			return [
-				'r'  => $f->getRef(),
-				'rq' => $f->isRequired(),
-				'm'  => $f->isMultiple(),
-				'f'  => $f->getType()->toArray(),
-			];
-		};
-
-		$fields    = \array_map($field_info, $this->getFields());
-		$fieldsets = [];
-
-		foreach ($this->t_fieldsets as $fieldset) {
-			$fieldsets[] = [
-				'n'  => $fieldset->getName(),
-				'sd' => $fieldset->isStatic() ? 'static' : 'dynamic',
-				'f'  => \array_map($field_info, $fieldset->getFields()),
-			];
+		if (null !== $this->t_version) {
+			return $this->t_version;
 		}
 
-		$descriptor = [
-			'n'   => $this->getName(),
-			'f'   => $fields,
-			'fs'  => $fieldsets,
-			'pr'  => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->getPreValidationRules()),
-			'po'  => \array_map(static fn (RuleSet $r) => $r->toArray(), $this->getPostValidationRules()),
-		];
+		$bundle = AsyncValue::withoutPreview(fn (): array => self::resolve($this->bundle()));
 
-		return Hasher::shorten(Hasher::hash32(\json_encode($descriptor, \JSON_THROW_ON_ERROR)));
+		return Hasher::shorten(Hasher::hash32(\json_encode($bundle, \JSON_THROW_ON_ERROR)));
 	}
 
 	/**
@@ -490,12 +501,13 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	/**
 	 * {@inheritDoc}
 	 *
-	 * Server-only {@see RuleSet} entries (those containing an {@see AsyncValue})
-	 * are included in `expect`, but serialize to `{ref, $async: true}` rather than
-	 * exposing their operands. The client cannot evaluate them locally; it sends
-	 * their refs to the evaluate endpoint and gets a pass/fail back per ref.
-	 * Omitting them entirely would leave the client unable to discover that the
-	 * rules exist at all.
+	 * Every rule set is sent (`expect`, `ensure`, and a fieldset's own), so a client can check a form
+	 * in the order the server does. Server-only {@see RuleSet} entries (those holding an
+	 * {@see AsyncValue::secret()}) serialize to `{ref, $secret: true}` rather than exposing their
+	 * operands. The client cannot evaluate them locally; it sends their refs to the evaluate endpoint
+	 * and gets a pass/fail back per ref. Omitting them entirely would leave the client unable to
+	 * discover that the rules exist at all. A literal operand is sent as it is: a value the client must
+	 * not see belongs in an {@see AsyncValue::secret()}.
 	 *
 	 * @return array{
 	 *  version: string,
@@ -505,6 +517,7 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	 *  fields: array<string, Field>,
 	 *  fieldsets: array<string, Fieldset>,
 	 *  expect: list<RuleSet>,
+	 *  ensure: list<RuleSet>,
 	 *  resume_scope: ?string,
 	 *  resume_ttl: ?int
 	 * }
@@ -514,19 +527,23 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	{
 		$this->assertRulesFit();
 
-		return [
-			'version'      => $this->getVersion(),
-			'name'         => $this->getName(),
-			// The absolute path, not the whole URI: a client addresses the server it is talking to,
-			// whatever host answers for it.
-			'action'       => $this->t_submit_to?->getAbsolutePath(),
-			'method'       => $this->t_method,
-			'fields'       => $this->getFields(),
-			'fieldsets'    => $this->t_fieldsets,
-			'expect'       => $this->getPreValidationRules(),
-			'resume_scope' => $this->t_resume_scope?->value,
-			'resume_ttl'   => null !== $this->t_resume_scope ? $this->t_resume_ttl : null,
-		];
+		return ['version' => $this->getVersion(), ...$this->bundle()];
+	}
+
+	/**
+	 * What a client is sent of this form: {@see self::toArray()} resolved to plain values inside
+	 * {@see AsyncValue::withPreview()}, so a public value carries its preview.
+	 *
+	 * Every path that sends a form to a client goes through here (the envelope's `form`,
+	 * {@see JSONResponse::toArray()}, and the `init_form` of the OpenAPI `x-oz-form`
+	 * extension): resolved now, since the fields and rule sets {@see self::toArray()} holds are
+	 * otherwise serialized when encoded, which may be outside the preview scope.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function toClientArray(): array
+	{
+		return AsyncValue::withPreview(fn (): array => self::resolve($this->toArray()));
 	}
 
 	/**
@@ -625,6 +642,39 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 		}
 
 		return $form;
+	}
+
+	/**
+	 * The bundle a client is sent, but its version.
+	 *
+	 * @return array{
+	 *  name: ?string,
+	 *  action: ?string,
+	 *  method: string,
+	 *  fields: array<string, Field>,
+	 *  fieldsets: array<string, Fieldset>,
+	 *  expect: list<RuleSet>,
+	 *  ensure: list<RuleSet>,
+	 *  resume_scope: ?string,
+	 *  resume_ttl: ?int
+	 * }
+	 */
+	private function bundle(): array
+	{
+		return [
+			'name'         => $this->getName(),
+			// The absolute path, not the whole URI: a client addresses the server it is talking to,
+			// whatever host answers for it.
+			'action'       => $this->t_submit_to?->getAbsolutePath(),
+			'method'       => $this->t_method,
+			'fields'       => $this->getFields(),
+			'fieldsets'    => $this->t_fieldsets,
+			'expect'       => $this->getPreValidationRules(),
+			// Checked last, once every field and fieldset is validated.
+			'ensure'       => $this->getPostValidationRules(),
+			'resume_scope' => $this->t_resume_scope?->value,
+			'resume_ttl'   => null !== $this->t_resume_scope ? $this->t_resume_ttl : null,
+		];
 	}
 
 	/**
@@ -731,5 +781,21 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 		}
 
 		return $refs;
+	}
+
+	/**
+	 * Resolves what json_encode() would serialize, keeping arrays and objects as they are.
+	 */
+	private static function resolve(mixed $value): mixed
+	{
+		if ($value instanceof JsonSerializable) {
+			return self::resolve($value->jsonSerialize());
+		}
+
+		if (\is_array($value)) {
+			return \array_map(self::resolve(...), $value);
+		}
+
+		return $value;
 	}
 }

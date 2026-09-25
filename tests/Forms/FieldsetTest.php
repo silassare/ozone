@@ -16,6 +16,7 @@ namespace OZONE\Tests\Forms;
 use InvalidArgumentException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Forms\AsyncValue;
 use OZONE\Core\Forms\Fieldset;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
@@ -282,6 +283,28 @@ final class FieldsetTest extends TestCase
 
 		self::assertSame('dynamic', $arr['type']);
 		self::assertNull($arr['fields']);
+		// Its rules are those of the fieldset its factory builds, unknown until then.
+		self::assertNull($arr['expect']);
+		self::assertNull($arr['ensure']);
+	}
+
+	public function testToArraySendsTheFieldsetsOwnRules(): void
+	{
+		$parent   = new Form('order');
+		$fieldset = Fieldset::static($parent, 'address', static function (Fieldset $fs): void {
+			$fs->string('street');
+			$fs->string('city');
+			$fs->expect()->neq('address.street', 'nowhere', 'NO_SUCH_STREET');
+			$fs->ensure()->neq('address.city', AsyncValue::secret(static fn (): string => 'closed'));
+		});
+
+		$arr = \json_decode((string) \json_encode($fieldset->toArray()), true);
+
+		self::assertSame('order.address.@expect[0]', $arr['expect'][0]['ref']);
+		self::assertSame('unsafe', $arr['expect'][0]['data_type']);
+		self::assertSame('nowhere', $arr['expect'][0]['rules'][0]['value']);
+		// A server-only set is announced by its ref alone, as the form's are.
+		self::assertSame([['ref' => 'order.address.@ensure[0]', '$secret' => true]], $arr['ensure']);
 	}
 
 	public function testToArrayIncludesCondition(): void

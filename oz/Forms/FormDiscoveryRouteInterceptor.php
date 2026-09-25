@@ -79,7 +79,7 @@ final class FormDiscoveryRouteInterceptor implements RouteInterceptorInterface
 		$svc = new class($this->ri) extends Service {};
 		$svc->json()->setDone()->setForm($bundle);
 
-		return AsyncValue::withPreview(static fn () => $svc->respond());
+		return $svc->respond();
 	}
 
 	/**
