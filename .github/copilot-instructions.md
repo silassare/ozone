@@ -396,15 +396,15 @@ for the field's type class (`TypeError` otherwise).
   requests; rule sets have refs too (`checkout.@expect[0]`, `checkout.promo@if`). `Form::merge()`
   clones and keeps the original parent, and **throws on a colliding ref**: name forms whose refs
   would collide.
-- **Every rule set is sent to the client** (G18): a form's `expect()` and `ensure()`, a static
+- **Every rule set is sent to the client**: a form's `expect()` and `ensure()`, a static
   fieldset's own, the conditions. A server-only one, holding an `AsyncValue::secret()`, serializes as
   `{ref, $secret: true}` and is resolved through the form session `evaluate` endpoint (a switcher's
-  secret branches too, in `switchers`, G23); a literal
+  secret branches too, in `switchers`); a literal
   operand is sent as it is, so a value the client must not see belongs in an `AsyncValue::secret()`.
-- **A refused form names what refused it** (G22): `InvalidFormException` data carries `field` (the
+- **A refused form names what refused it**: `InvalidFormException` data carries `field` (the
   ref) for a missing or refused value and `rule` (the set's ref) for a failed rule set, which a client
   maps onto what it rendered from the bundle. What caused it (`_suspect`, `_rule`) stays private.
-- **Two numbers are the same when they are equal** (G16): `eq`, `neq`, `in` and `not_in` are strict,
+- **Two numbers are the same when they are equal**: `eq`, `neq`, `in` and `not_in` are strict,
   except between an int and a float (`Rule::same()`), so a rule's literal need not match the PHP type of
   the field's clean value, and a client reading the rule from JSON (which writes `3.0` as `3`) agrees.
 - **A rule on a cleaned value uses an operator its field's type allows**, as a Gobl filter does
@@ -418,7 +418,7 @@ for the field's type class (`TypeError` otherwise).
 - Fieldsets: `fieldset()` (static, populated at definition time) or `dynamicFieldset()` (factory
   called with the validation context).
 - **`AsyncValue`: a value the server resolves on validation, whose disclosure its constructor
-  decides** (G20). `AsyncValue::secret($factory)` never leaves the server and withholds its rule set;
+  decides**. `AsyncValue::secret($factory)` never leaves the server and withholds its rule set;
   `AsyncValue::public($factory, $preview)` sends the preview (`{$preview: {value}}`) and the client
   checks the rule itself. The constructor is private so that a secret cannot become public by adding
   an argument: turning one into the other is a visible change of method, and
@@ -431,7 +431,7 @@ for the field's type class (`TypeError` otherwise).
   on resume (unknown refs are dropped and replayed values validated again): it tells a client whether
   a saved draft still fits, and keys the resume cache of a form with neither id nor name.
 - **Run `make fix` knowing its `strict_comparison` rule turns `==` into `===`**: where a loose
-  comparison is meant (`Rule::same()`, G16), write it so the fixer cannot rewrite it.
+  comparison is meant (`Rule::same()`), write it so the fixer cannot rewrite it.
 
 ### CSRF
 
