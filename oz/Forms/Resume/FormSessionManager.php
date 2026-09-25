@@ -261,7 +261,7 @@ final class FormSessionManager
 	 *
 	 * Fields, fieldsets and rule sets are all reported by ref; a shown fieldset's own
 	 * `expect()` and `ensure()` sets come after the form's. A switcher's branches holding a
-	 * secret are answered in `switchers` (G23), by their ref (`<field>@switch[<n>]`), so a client
+	 * secret are answered in `switchers`, by their ref (`<field>@switch[<n>]`), so a client
 	 * knows which type such a field takes.
 	 *
 	 * @return array{
@@ -500,7 +500,7 @@ final class FormSessionManager
 
 			try {
 				$cleaned->set($ref, $field->validateType($unsafe->get($ref), $ctx));
-			} catch (RuntimeException|TypesInvalidValueException) {
+			} catch (RuntimeException | TypesInvalidValueException) {
 				// Left out: a step being filled may be incomplete or wrong. RuntimeException
 				// covers a TypesSwitcher whose discriminating field is not usable yet.
 			}

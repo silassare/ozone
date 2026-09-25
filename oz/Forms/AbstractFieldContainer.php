@@ -257,7 +257,7 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 			}
 
 			throw new InvalidFormException($rule->getViolationMessage(), [
-				// The set's ref, which the client holds in the bundle: it names what refused (G22).
+				// The set's ref, which the client holds in the bundle: it names what refused.
 				'rule'  => $rule->getRef(),
 				// rule is prefixed by "_" as form rules are checked on validated data (cleaned data),
 				// they may contains values that are not safe to be exposed to client (added while validating etc...)
@@ -281,7 +281,7 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 			}
 
 			throw new InvalidFormException($rule->getViolationMessage(), [
-				// The set's ref, which the client holds in the bundle: it names what refused (G22).
+				// The set's ref, which the client holds in the bundle: it names what refused.
 				'rule'  => $rule->getRef(),
 				// rule is prefixed by "_" as form rules are checked on validated data (cleaned data),
 				// they may contains values that are not safe to be exposed to client (added while validating etc...)
@@ -326,7 +326,7 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 					/** @var InvalidFormException $e */
 					$e = InvalidFormException::tryConvert($e);
 
-					// The ref names the refused field to the client (G22); the field itself is for the logs.
+					// The ref names the refused field to the client; the field itself is for the logs.
 					$e->mergeData(['field' => $ref])
 						->suspectObject($field);
 
@@ -346,7 +346,7 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 					/** @var InvalidFormException $e */
 					$e = InvalidFormException::tryConvert($e);
 
-					// The ref names the refused field to the client (G22); the field itself is for the logs.
+					// The ref names the refused field to the client; the field itself is for the logs.
 					$e->mergeData(['field' => $ref])
 						->suspectObject($field);
 

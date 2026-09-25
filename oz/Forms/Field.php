@@ -561,13 +561,13 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 		if ($type instanceof TypeEnum) {
 			$out['enum_cases'] = \array_map(
-				static fn (BackedEnum $case) => ['name' => $case->name, 'value' => $case->value],
+				static fn(BackedEnum $case) => ['name' => $case->name, 'value' => $case->value],
 				$type->getEnumClass()::cases()
 			);
 		}
 
 		// The rules a type takes from the settings, resolved now, so a client checks what the server
-		// will check (G15). They are resolved here, at discovery, rather than copied into the client:
+		// will check. They are resolved here, at discovery, rather than copied into the client:
 		// a copy is stale as soon as a project changes a setting.
 		if ($type instanceof FrontendTypeOptionsInterface) {
 			$out = \array_replace($out, $type->frontendOptions());

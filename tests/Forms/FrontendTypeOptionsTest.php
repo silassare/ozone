@@ -19,7 +19,7 @@ use OZONE\Core\Forms\Form;
 use PHPUnit\Framework\TestCase;
 
 /**
- * A discovered type carries the rules it takes from the settings (G15), so a client checks a value
+ * A discovered type carries the rules it takes from the settings, so a client checks a value
  * the way the server will without knowing the settings itself.
  *
  * @covers \OZONE\Core\Columns\Types\TypeGender

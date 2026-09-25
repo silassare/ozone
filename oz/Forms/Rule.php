@@ -140,7 +140,7 @@ final class Rule implements ArrayCapableInterface
 	}
 
 	/**
-	 * Whether two operands are the same value (G16).
+	 * Whether two operands are the same value.
 	 *
 	 * Identical (`===`), except that two numbers are compared by value: an int and a float that are
 	 * equal are the same number. A float field's clean value is always a float, so `eq('price', 3)`

@@ -146,7 +146,7 @@ final class FormValidationTest extends TestCase
 	public function testToArraySendsServerOnlyExpectAsOpaqueRef(): void
 	{
 		$form = new Form('checkout');
-		$form->expect()->eq('plan', AsyncValue::secret(static fn () => 'enterprise'));
+		$form->expect()->eq('plan', AsyncValue::secret(static fn() => 'enterprise'));
 
 		$arr = $form->toArray();
 
@@ -165,7 +165,7 @@ final class FormValidationTest extends TestCase
 		$form = new Form('checkout');
 		$rule = $form->expect();
 		$rule->eq('plan', 'enterprise');
-		$rule->eq('flag', AsyncValue::secret(static fn () => 'ok'));  // makes the whole RuleSet server-only
+		$rule->eq('flag', AsyncValue::secret(static fn() => 'ok'));  // makes the whole RuleSet server-only
 
 		$arr = $form->toArray();
 
@@ -194,7 +194,7 @@ final class FormValidationTest extends TestCase
 		$form = new Form();
 		$form->string('password');
 		$form->ensure()->neq('password', 'password', 'TOO_OBVIOUS');
-		$form->ensure()->neq('password', AsyncValue::secret(static fn (): string => 'leaked'));
+		$form->ensure()->neq('password', AsyncValue::secret(static fn(): string => 'leaked'));
 
 		$arr = \json_decode((string) \json_encode($form->toArray()), true);
 
@@ -220,7 +220,7 @@ final class FormValidationTest extends TestCase
 		self::assertSame('password_confirm', $rule['target_ref']);
 	}
 
-	// region what a refusal names (G22)
+	// region what a refusal names
 
 	public function testATypeRefusalNamesItsField(): void
 	{

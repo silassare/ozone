@@ -279,13 +279,13 @@ final class RuleSetTest extends TestCase
 
 	public function testIsServerOnlyFalseForAPublicValue(): void
 	{
-		$rs = (new RuleSet())->eq('field', AsyncValue::public(static fn () => 'x', static fn () => 'x'));
+		$rs = (new RuleSet())->eq('field', AsyncValue::public(static fn() => 'x', static fn() => 'x'));
 		self::assertFalse($rs->isServerOnly());
 	}
 
 	public function testIsServerOnlyTrueWhenASecretValueIsPresent(): void
 	{
-		$rs = (new RuleSet())->eq('field', AsyncValue::secret(static fn () => 'x'));
+		$rs = (new RuleSet())->eq('field', AsyncValue::secret(static fn() => 'x'));
 		self::assertTrue($rs->isServerOnly());
 	}
 
@@ -294,7 +294,7 @@ final class RuleSetTest extends TestCase
 		$rs = (new RuleSet())
 			->eq('a', 'b')
 			->and(static function (RuleSet $sub): void {
-				$sub->eq('x', AsyncValue::secret(static fn () => 'val'));
+				$sub->eq('x', AsyncValue::secret(static fn() => 'val'));
 			});
 
 		self::assertTrue($rs->isServerOnly());
@@ -353,7 +353,7 @@ final class RuleSetTest extends TestCase
 
 	public function testToArrayReturnsAsyncForServerOnly(): void
 	{
-		$rs = (new RuleSet())->eq('field', AsyncValue::secret(static fn () => 'x'));
+		$rs = (new RuleSet())->eq('field', AsyncValue::secret(static fn() => 'x'));
 		self::assertSame(['ref' => '', '$secret' => true], $rs->toArray());
 	}
 
@@ -401,7 +401,7 @@ final class RuleSetTest extends TestCase
 	 * sets too.
 	 */
 	/**
-	 * Two numbers are the same when they are equal, whatever their PHP type (G16): a float field's
+	 * Two numbers are the same when they are equal, whatever their PHP type: a float field's
 	 * clean value is a float, so an int in the rule used to make it fail whatever was sent.
 	 */
 	public function testEqComparesNumbersByValue(): void
