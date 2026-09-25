@@ -32,6 +32,7 @@ use OZONE\Core\Forms\FormValidationContext;
 use OZONE\Core\Forms\Resume\Enums\FormResumePhase;
 use OZONE\Core\Forms\Resume\Interfaces\ResumableFormProviderInterface;
 use OZONE\Core\Forms\RuleSet;
+use OZONE\Core\Forms\TypesSwitcher;
 use OZONE\Core\Lang\I18nMessage;
 use OZONE\Core\Router\Route;
 use OZONE\Core\Router\RouteInfo;
@@ -259,13 +260,16 @@ final class FormSessionManager
 	 * store the upload). Rules reading the unsafe side still see the raw payload.
 	 *
 	 * Fields, fieldsets and rule sets are all reported by ref; a shown fieldset's own
-	 * `expect()` and `ensure()` sets come after the form's.
+	 * `expect()` and `ensure()` sets come after the form's. A switcher's branches holding a
+	 * secret are answered in `switchers` (G23), by their ref (`<field>@switch[<n>]`), so a client
+	 * knows which type such a field takes.
 	 *
 	 * @return array{
 	 *  visibility: array<string, bool>,
 	 *  fieldsets: array<string, bool>,
 	 *  expect: list<array{ref: string, passes: bool, message: mixed}>,
-	 *  ensure: list<array{ref: string, passes: bool, message: mixed}>
+	 *  ensure: list<array{ref: string, passes: bool, message: mixed}>,
+	 *  switchers: list<array{ref: string, passes: bool, message: mixed}>
 	 * }
 	 *
 	 * @throws BadRequestException        when the session is complete
@@ -289,6 +293,7 @@ final class FormSessionManager
 		$fieldsets  = [];
 		$expect     = self::evaluateServerOnly($form->getPreValidationRules(), $ctx);
 		$ensure     = self::evaluateServerOnly($form->getPostValidationRules(), $ctx);
+		$switchers  = self::evaluateSwitchers($form->getFields(), $ctx);
 
 		foreach ($form->getFields() as $field) {
 			if ($field->getIf()?->isServerOnly()) {
@@ -321,6 +326,7 @@ final class FormSessionManager
 			}
 
 			\array_push($ensure, ...self::evaluateServerOnly($built->getPostValidationRules(), $ctx));
+			\array_push($switchers, ...self::evaluateSwitchers($built->getFields(), $ctx));
 		}
 
 		return [
@@ -328,7 +334,30 @@ final class FormSessionManager
 			'fieldsets'  => $fieldsets,
 			'expect'     => $expect,
 			'ensure'     => $ensure,
+			'switchers'  => $switchers,
 		];
+	}
+
+	/**
+	 * The server-only branches of the switchers among the given fields.
+	 *
+	 * @param array<string, Field> $fields
+	 *
+	 * @return list<array{ref: string, passes: bool, message: mixed}>
+	 */
+	private static function evaluateSwitchers(array $fields, FormValidationContext $ctx): array
+	{
+		$results = [];
+
+		foreach ($fields as $field) {
+			$type = $field->getType();
+
+			if ($type instanceof TypesSwitcher) {
+				\array_push($results, ...self::evaluateServerOnly($type->getConditions(), $ctx));
+			}
+		}
+
+		return $results;
 	}
 
 	/**

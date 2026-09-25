@@ -259,6 +259,13 @@ DESC;
 					'message' => $message(),
 				]), ['description' => 'Server-only post-validation (`ensure`) rule results, the form\'s, then '
 					. 'each shown fieldset\'s.']),
+				'switchers'  => $doc->array($doc->object([
+					'ref'     => $doc->string('The ref of a server-only switcher branch (`<field>@switch[<n>]`).'),
+					'passes'  => $doc->boolean('`true` when the branch holds, so its type is the field\'s '
+						. '(the first that holds wins, in branch order).'),
+					'message' => $message(),
+				]), ['description' => 'Server-only switcher branch results, so a client knows which type such a '
+					. 'field takes.']),
 			], 'Server-side evaluation results.'),
 			$doc->error([], 'Session already complete.', 'OZ_FORM_SESSION_ALREADY_DONE', 200),
 			$doc->error([], 'Session not found or expired.', 'OZ_FORM_SESSION_NOT_FOUND', 200),
@@ -267,7 +274,8 @@ DESC;
 			'tags'        => [$tag->name],
 			'operationId' => 'Form.evaluate',
 			'description' => 'Resolve server-only form conditions for the current step without advancing. '
-				. 'Fields and fieldsets using a secret `AsyncValue` in their `if()`, `expect()`, or `ensure()` rules '
+				. 'Fields and fieldsets using a secret `AsyncValue` in their `if()`, `expect()`, `ensure()` rules '
+				. 'or a switcher branch '
 				. 'need a server round-trip to evaluate. The response maps each such item to a visibility or '
 				. 'pass result. '
 				. 'Input is cleaned by type, field by field (missing or invalid values are left out), '

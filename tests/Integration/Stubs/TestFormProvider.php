@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace __PLH_NAMESPACE__;
 
+use Gobl\DBAL\Types\TypeInt;
+use Gobl\DBAL\Types\TypeString;
 use Override;
 use OZONE\Core\Forms\AsyncValue;
 use OZONE\Core\Forms\Fieldset;
@@ -20,6 +22,8 @@ use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Forms\Resume\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Resume\FormResumeProgress;
+use OZONE\Core\Forms\RuleSet;
+use OZONE\Core\Forms\TypesSwitcher;
 use OZONE\Core\Http\Enums\RequestScope;
 
 /**
@@ -32,6 +36,7 @@ use OZONE\Core\Http\Enums\RequestScope;
  *   0: 'name' (required string)
  *   1: 'color' (required string) + 'hint' (optional, server-only visibility condition)
  *      + an expect rule on a value with a preview (sent with the step)
+ *      + 'size', whose switcher branch holds a secret (a string for a big color, else an int)
  *   2: 'notes' (optional string) + server-only expect rule (current-step)
  *      + server-only ensure rules (notes, and cross-step color)
  *      + a fieldset with server-only expect and ensure rules of its own
@@ -93,6 +98,12 @@ final class TestFormProvider extends AbstractResumableFormProvider
 					static fn (): string => 'black',
 					static fn (): string => 'black'
 				), 'NO_BLACK');
+				$f->switcher('size')->configureType(static fn (TypesSwitcher $s) => $s
+					->when(
+						static fn (RuleSet $rs) => $rs->eq('color', AsyncValue::secret(static fn (): string => 'big')),
+						new TypeString()
+					)
+					->otherwise(new TypeInt()));
 
 				return $f;
 			})(),

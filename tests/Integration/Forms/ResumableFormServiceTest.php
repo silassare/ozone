@@ -631,6 +631,26 @@ final class ResumableFormServiceTest extends TestCase
 		}
 	}
 
+	public function testEvaluateAnswersASwitchersSecretBranch(): void
+	{
+		[, $body]  = $this->request('POST', '/form/test-wizard/init');
+		$resumeRef = \json_decode($body, true)['data']['resume_ref'];
+		$ref       = ['X-OZONE-Form-Resume-Ref' => $resumeRef];
+
+		$this->request('POST', '/form/test-wizard/next', ['wish' => 'anything'], $ref);
+		$this->request('POST', '/form/test-wizard/next', ['name' => 'alice'], $ref);
+
+		// Step 1: `size` is a string when the color is the secret one, else an int.
+		foreach (['big' => true, 'red' => false] as $color => $holds) {
+			[, $body] = $this->request('POST', '/form/test-wizard/evaluate', ['color' => $color], $ref);
+
+			self::assertSame(
+				[['ref' => 'size@switch[0]', 'passes' => $holds, 'message' => null]],
+				\json_decode($body, true)['data']['switchers']
+			);
+		}
+	}
+
 	public function testAStepSendsThePreviewOfAValue(): void
 	{
 		[, $body]  = $this->request('POST', '/form/test-wizard/init');

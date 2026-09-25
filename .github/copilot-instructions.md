@@ -398,7 +398,8 @@ for the field's type class (`TypeError` otherwise).
   would collide.
 - **Every rule set is sent to the client** (G18): a form's `expect()` and `ensure()`, a static
   fieldset's own, the conditions. A server-only one, holding an `AsyncValue::secret()`, serializes as
-  `{ref, $secret: true}` and is resolved through the form session `evaluate` endpoint; a literal
+  `{ref, $secret: true}` and is resolved through the form session `evaluate` endpoint (a switcher's
+  secret branches too, in `switchers`, G23); a literal
   operand is sent as it is, so a value the client must not see belongs in an `AsyncValue::secret()`.
 - **A refused form names what refused it** (G22): `InvalidFormException` data carries `field` (the
   ref) for a missing or refused value and `rule` (the set's ref) for a failed rule set, which a client
