@@ -399,6 +399,9 @@ for the field's type class (`TypeError` otherwise).
 - `expect()` rules are all sent to the client (a server-only one, holding an `AsyncValue` without
   preview, serializes as `{ref, $async: true}` and is resolved through the form session `evaluate`
   endpoint); `ensure()` rules are server-side only.
+- **Two numbers are the same when they are equal** (G16): `eq`, `neq`, `in` and `not_in` are strict,
+  except between an int and a float (`Rule::same()`), so a rule's literal need not match the PHP type of
+  the field's clean value, and a client reading the rule from JSON (which writes `3.0` as `3`) agrees.
 - **A rule on a cleaned value uses an operator its field's type allows**, as a Gobl filter does
   (`TypeInterface::getAllowedFilterOperators()`: a boolean has no order). `Form::validate()` and
   `Form::toArray()` refuse a violation with a `RuntimeException` (`RuleSet::assertOperatorsFit()`).

@@ -91,17 +91,51 @@ final class Rule implements ArrayCapableInterface
 		}
 
 		return match ($this->operator) {
-			RuleOperator::EQ          => ($a === $b),
-			RuleOperator::NEQ         => ($a !== $b),
+			RuleOperator::EQ          => self::same($a, $b),
+			RuleOperator::NEQ         => !self::same($a, $b),
 			RuleOperator::GT          => ($a > $b),
 			RuleOperator::GTE         => ($a >= $b),
 			RuleOperator::LT          => ($a < $b),
 			RuleOperator::LTE         => ($a <= $b),
-			RuleOperator::IN          => \is_array($b) && \in_array($a, $b, true),
-			RuleOperator::NOT_IN      => !\is_array($b) || !\in_array($a, $b, true),
+			RuleOperator::IN          => \is_array($b) && self::contains($b, $a),
+			RuleOperator::NOT_IN      => !\is_array($b) || !self::contains($b, $a),
 			RuleOperator::IS_NULL     => null === $a,
 			RuleOperator::IS_NOT_NULL => null !== $a,
 		};
+	}
+
+	/**
+	 * Whether two operands are the same value (G16).
+	 *
+	 * Identical (`===`), except that two numbers are compared by value: an int and a float that are
+	 * equal are the same number. A float field's clean value is always a float, so `eq('price', 3)`
+	 * compared `3.0 === 3` and could never pass; and JSON writes `3.0` as `3`, so a client could not
+	 * tell the two apart anyway. `3` and `3.5` stay different, and a number is never the same as a
+	 * numeric string or a boolean.
+	 */
+	private static function same(mixed $a, mixed $b): bool
+	{
+		if ((\is_int($a) || \is_float($a)) && (\is_int($b) || \is_float($b))) {
+			return $a == $b;
+		}
+
+		return $a === $b;
+	}
+
+	/**
+	 * `in_array()`, strict except for numbers, which are compared by value as in {@see self::same()}.
+	 *
+	 * @param array<array-key, mixed> $list
+	 */
+	private static function contains(array $list, mixed $a): bool
+	{
+		foreach ($list as $item) {
+			if (self::same($a, $item)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

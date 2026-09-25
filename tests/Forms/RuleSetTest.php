@@ -397,6 +397,34 @@ final class RuleSetTest extends TestCase
 	 * UNSAFE, but filling both stores keeps the helper usable for CLEANED rule
 	 * sets too.
 	 */
+	/**
+	 * Two numbers are the same when they are equal, whatever their PHP type (G16): a float field's
+	 * clean value is a float, so an int in the rule used to make it fail whatever was sent.
+	 */
+	public function testEqComparesNumbersByValue(): void
+	{
+		self::assertTrue((new RuleSet())->eq('price', 3)->check($this->fd(['price' => 3.0])));
+		self::assertTrue((new RuleSet())->eq('price', 3.0)->check($this->fd(['price' => 3])));
+		self::assertFalse((new RuleSet())->eq('price', 3)->check($this->fd(['price' => 3.5])));
+		self::assertFalse((new RuleSet())->neq('price', 3)->check($this->fd(['price' => 3.0])));
+	}
+
+	/** A number is still never the same as a numeric string or a boolean. */
+	public function testEqKeepsNumbersApartFromOtherTypes(): void
+	{
+		self::assertFalse((new RuleSet())->eq('n', 3)->check($this->fd(['n' => '3'])));
+		self::assertFalse((new RuleSet())->eq('n', 1)->check($this->fd(['n' => true])));
+		self::assertFalse((new RuleSet())->eq('n', 0)->check($this->fd(['n' => null])));
+	}
+
+	public function testInComparesNumbersByValue(): void
+	{
+		self::assertTrue((new RuleSet())->in('n', [1, 2, 3])->check($this->fd(['n' => 2.0])));
+		self::assertFalse((new RuleSet())->in('n', [1, 2, 3])->check($this->fd(['n' => '2'])));
+		self::assertTrue((new RuleSet())->notIn('n', [1, 2, 3])->check($this->fd(['n' => 2.5])));
+		self::assertFalse((new RuleSet())->notIn('n', [1, 2, 3])->check($this->fd(['n' => 3.0])));
+	}
+
 	private function fd(array $data): FormValidationContext
 	{
 		return new FormValidationContext(new FormData($data), new FormDataClean($data));
