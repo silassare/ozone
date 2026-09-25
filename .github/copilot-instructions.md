@@ -295,6 +295,11 @@ Each file in `oz/oz_settings/` documents its keys.
   default language and the declared filter names, each of which the client must implement too.
   Placeholders are filled **in one pass** (a value is never read for placeholders); a missing text, or
   a language without a catalog, falls back to the default language, then to the key itself.
+- **One message syntax for every catalog** (`Lang\Message\`, described in `MessageParser`'s
+  docblock): a client of the API implements the same parser, so a change to it is a change to a
+  contract. Plural categories come from ext-intl only (`PluralRules`); without it a category never
+  matches, by design, and the browser, which always has rules, still agrees on `=N`, the comparisons
+  and `other`. Compare numbers with casts, not `==` (the fixer's `strict_comparison`).
 - `oz.proxies`: IP or CIDR => bool, `false` wins. Forwarding headers are only read from these peers.
 - `OZ_REDACT_SENSITIVE_DATA` (`oz.logs`) is a safety net, on in production (`ENV_MODE=production`) —
   never put passwords, tokens or raw payloads in exception data.

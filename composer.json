@@ -54,6 +54,7 @@
 		"ext-memcached": "Required to use Memcached Cache driver.",
 		"ext-redis": "Required to use Redis Cache driver.",
 		"ext-curl": "Streams object storage uploads and downloads; without it they are sent part by part.",
+		"ext-intl": "The plural rules of translations (one, few...) and the number filter; without it a text chooses its plural with =N, comparisons and other.",
 		"ext-swoole": "Required to serve OZone from Swoole (OZONE\\Core\\Runtime\\Bridges\\SwooleBridge).",
 		"spiral/roadrunner-http": "Required to serve OZone from RoadRunner (OZONE\\Core\\Runtime\\Bridges\\RoadRunnerBridge).",
 		"phpunit/phpunit": "Required by the test kit's base test case and traits (OZONE\\Core\\Testing\\IntegrationTestCase, OZONE\\Core\\Testing\\Traits)."

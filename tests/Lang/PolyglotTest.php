@@ -159,4 +159,36 @@ final class PolyglotTest extends TestCase
 			Polyglot::translate('OZ_ERROR_INVALID_FORM', null, 'xx')
 		);
 	}
+
+	public function testChecksEveryTextOfTheCatalogs(): void
+	{
+		$check = Polyglot::checkCatalogs([
+			'en' => [
+				'OK'     => 'Hello {name}',
+				'BROKEN' => 'Hello {name',
+				'group'  => ['NESTED' => 'a } b'],
+			],
+			'fr' => ['OK' => 'Bonjour {name}'],
+		]);
+
+		self::assertSame(['BROKEN', 'group.NESTED'], \array_column($check['errors'], 'key'));
+		self::assertSame(['en', 'en'], \array_column($check['errors'], 'lang'));
+		self::assertFalse($check['categories']);
+	}
+
+	public function testTellsWhetherATextReliesOnPluralCategories(): void
+	{
+		$uses = static fn (string $text): bool => Polyglot::checkCatalogs(['en' => ['K' => $text]])['categories'];
+
+		self::assertTrue($uses('{n, plural, one {a} other {b}}'));
+		self::assertTrue($uses('{g, select, x {{n, selectordinal, few {a} other {b}}} other {c}}'));
+		self::assertFalse($uses('{n, plural, =1 {a} >1 {b} other {c}}'));
+		// A select's words are not categories.
+		self::assertFalse($uses('{g, select, one {a} other {b}}'));
+	}
+
+	public function testOzonesOwnCatalogsFollowTheSyntax(): void
+	{
+		self::assertSame([], Polyglot::checkCatalogs()['errors']);
+	}
 }

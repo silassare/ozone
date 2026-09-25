@@ -105,6 +105,45 @@ final class LangCmdTest extends TestCase
 		self::assertStringContainsString('ar: enabled, but no catalog', $text);
 	}
 
+	public function testRefusesATextThatDoesNotFollowTheSyntax(): void
+	{
+		$proj = self::requireProject();
+
+		$proj->setSetting('lang/oz.en', 'MY_APP_BROKEN', 'Hello {name');
+
+		try {
+			$proc = $proj->oz('lang', 'export', '--json');
+			$proc->run();
+
+			$out = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR);
+
+			self::assertSame(1, $proc->getExitCode(), self::outputOf($proc));
+			self::assertSame(1, $out['error']);
+			self::assertSame('OZ_LANG_CATALOG_INVALID', $out['msg']);
+			self::assertSame(
+				[['lang' => 'en', 'key' => 'MY_APP_BROKEN']],
+				\array_map(
+					static fn (array $e): array => ['lang' => $e['lang'], 'key' => $e['key']],
+					$out['data']['errors']
+				)
+			);
+
+			// The doctor says so too.
+			$doctor = $proj->oz('doctor', 'check', '--json');
+			$doctor->run();
+
+			$checks = \array_column(
+				\json_decode($doctor->getOutput(), true, 512, \JSON_THROW_ON_ERROR)['data']['checks'],
+				'status',
+				'name'
+			);
+
+			self::assertSame('fail', $checks['Translations']);
+		} finally {
+			$proj->setSetting('lang/oz.en', 'MY_APP_BROKEN', 'Hello {name}');
+		}
+	}
+
 	/**
 	 * @return array<string, mixed>
 	 */

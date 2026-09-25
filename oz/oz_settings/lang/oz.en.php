@@ -20,6 +20,7 @@ return [
 	'OZ_ERROR_METHOD_NOT_ALLOWED'            => 'The request method is not allowed.',
 	'OZ_ERROR_NOT_ALLOWED'                   => 'An error occurred. You may not be allowed to perform this action.',
 	'OZ_ERROR_INVALID_FORM'                  => 'The submitted data is invalid.',
+	'OZ_LANG_CATALOG_INVALID'                => 'Some translations do not follow the message syntax.',
 	'OZ_ERROR_UNAUTHENTICATED'               => 'You must sign in first.',
 	'OZ_ERROR_RATE_LIMIT_REACHED'            => 'You have reached the request limit.',
 	'OZ_RATE_LIMIT_EXCEEDED'                 => 'Too many requests. Please try again later.',

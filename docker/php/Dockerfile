@@ -1,5 +1,6 @@
-# PHP for OZone's tests and tools: the extensions OZone requires (and the ones its drivers
-# suggest: MySQL, PostgreSQL, Redis), pcov for coverage, and Composer.
+# PHP for OZone's tests and tools: the extensions OZone requires (and the ones it suggests: the
+# MySQL, PostgreSQL and Redis drivers, intl for the plural rules of translations), pcov for
+# coverage, and Composer.
 #
 # The database *clients* are here for `oz db backup`, which shells out to mysqldump and pg_dump --
 # `oz migrations rollback` takes a backup first, so without them it cannot roll back either.
@@ -19,10 +20,11 @@ RUN apt-get update \
 		libpng-dev \
 		libwebp-dev \
 		libpq-dev \
+		libicu-dev \
 		default-mysql-client \
 		postgresql-client \
 	&& docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-	&& docker-php-ext-install -j"$(nproc)" bcmath gd pcntl pdo_mysql pdo_pgsql \
+	&& docker-php-ext-install -j"$(nproc)" bcmath gd intl pcntl pdo_mysql pdo_pgsql \
 	&& pecl install redis pcov \
 	&& docker-php-ext-enable redis pcov \
 	&& rm -rf /var/lib/apt/lists/* /tmp/pear

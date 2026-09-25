@@ -24,6 +24,8 @@ use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Cron\CronRunner;
 use OZONE\Core\Cli\Utils\Requirements;
 use OZONE\Core\Cli\Utils\Utils;
+use OZONE\Core\Lang\Message\PluralRules;
+use OZONE\Core\Lang\Polyglot;
 use OZONE\Core\Migrations\Enums\MigrationsState;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
@@ -186,7 +188,47 @@ final class DoctorCmd extends Command
 			);
 		}
 
-		return \array_merge($checks, $this->databaseChecks(), $this->buildChecks(), $this->cronChecks());
+		return \array_merge(
+			$checks,
+			$this->databaseChecks(),
+			$this->buildChecks(),
+			$this->cronChecks(),
+			$this->translationChecks()
+		);
+	}
+
+	/**
+	 * Whether every text of the enabled catalogs follows the message syntax, and whether the plural
+	 * categories they rely on can be answered: only ext-intl knows them on the server.
+	 *
+	 * @return list<array{name: string, status: string, detail: string, fix: string}>
+	 */
+	private function translationChecks(): array
+	{
+		$check  = Polyglot::checkCatalogs();
+		$errors = \count($check['errors']);
+		$rows   = [
+			self::row(
+				'Translations',
+				0 === $errors ? self::OK : self::FAIL,
+				0 === $errors ? 'every text follows the message syntax' : \sprintf('%d text(s) do not parse', $errors),
+				0 === $errors ? '' : 'Run "oz lang export" to see them, and fix the catalogs.'
+			),
+		];
+
+		if (PluralRules::available()) {
+			$rows[] = self::row('Plural rules', self::OK, 'ext-intl', '');
+		} elseif ($check['categories']) {
+			$rows[] = self::row(
+				'Plural rules',
+				self::WARN,
+				'a catalog picks plurals by category (one, few...), and ext-intl is not loaded',
+				'Install ext-intl, or write those plurals with =N, comparisons and other: without it the'
+					. ' server always writes the other branch.'
+			);
+		}
+
+		return $rows;
 	}
 
 	/**

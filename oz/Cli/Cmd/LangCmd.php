@@ -35,9 +35,15 @@ final class LangCmd extends Command
 	{
 		$export = Polyglot::exportCatalogs();
 		$cli    = $this->getCli();
+		$failed = [] !== $export['errors'];
 
+		// A text that does not parse is a mistake in a catalog: the export fails, saying where.
 		if ($args->get('json')) {
-			$cli->writeJson($export);
+			$cli->writeJson($export, !$failed, $failed ? 1 : 0, $failed ? 'OZ_LANG_CATALOG_INVALID' : '');
+		}
+
+		foreach ($export['errors'] as $error) {
+			$cli->warn(\sprintf('%s %s: %s', $error['lang'], $error['key'], $error['reason']));
 		}
 
 		$cli->info(\sprintf('Default language: %s', $export['default']));
@@ -54,6 +60,10 @@ final class LangCmd extends Command
 
 		if ([] !== $export['filters']) {
 			$cli->writeLn(\sprintf('Filters: %s', \implode(', ', $export['filters'])));
+		}
+
+		if ($failed) {
+			$cli->error(\sprintf('%d text(s) do not follow the message syntax.', \count($export['errors'])), true, 1);
 		}
 	}
 

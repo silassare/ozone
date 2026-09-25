@@ -16,8 +16,12 @@ namespace OZONE\Core\Lang;
 use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
-use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Lang\Message\MessageNode;
+use OZONE\Core\Lang\Message\MessageParser;
+use OZONE\Core\Lang\Message\MessageRenderer;
+use OZONE\Core\Lang\Message\MessageSyntaxException;
+use OZONE\Core\Lang\Message\PluralRules;
 use OZONE\Core\Router\Events\RouteBeforeRun;
 use OZONE\Core\Router\Interfaces\RouteProviderInterface;
 use OZONE\Core\Router\Router;
@@ -37,21 +41,15 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 
 	public const LANG_KEY_REG = '~^[A-Z][A-Z0-9_.]+$~';
 
-	// for {{LANG_KEY}}
-	public const PORTION_COPY_REG = '~{{\s*([A-Z][A-Z0-9_.]+)\s*}}~';
-
-	// for {variable} and {variable | filter1 | filter2}
-	public const SIMPLE_REPLACE_REG = '~{\s*(\w+)\s*((?:\|\s*[a-zA-Z_]\w*\s*)+)?}~';
-	public const FILTERS_SEP        = '|';
-
 	private static array $filters = [];
 
 	/**
 	 * Declare a filter.
 	 *
-	 * When used, the filter will receive two arguments:
-	 *  - the `value` on which the filter is being applied
-	 *  - the current `lang` used for translation
+	 * When used, the filter receives the `value` it is applied to, the `lang` of the translation,
+	 * then the arguments the text gives it (`{price | money: "XOF"}` passes `"XOF"`). A filter of the
+	 * same name as a built-in one (`upper`, `lower`, `capitalize`, `number`) is used instead of it.
+	 * A client translating the catalogs must implement it too (`oz lang export` lists the names).
 	 *
 	 * @param string   $name
 	 * @param callable $filter
@@ -85,7 +83,8 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	 *  default: string,
 	 *  languages: list<string>,
 	 *  catalogs: array<string, array<string, mixed>>,
-	 *  filters: list<string>
+	 *  filters: list<string>,
+	 *  errors: list<array{lang: string, key: string, reason: string, offset: int}>
 	 * }
 	 */
 	public static function exportCatalogs(): array
@@ -103,7 +102,94 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 			'languages' => $languages,
 			'catalogs'  => $catalogs,
 			'filters'   => self::getFilterNames(),
+			'errors'    => self::checkCatalogs($catalogs)['errors'],
 		];
+	}
+
+	/**
+	 * Reads every text of the given catalogs (those of the enabled languages by default): the ones
+	 * that do not follow the message syntax, and whether any relies on a plural category (`one`,
+	 * `few`, ...), which only ext-intl answers on the server.
+	 *
+	 * @param null|array<string, array<string, mixed>> $catalogs by language
+	 *
+	 * @return array{
+	 *  errors: list<array{lang: string, key: string, reason: string, offset: int}>,
+	 *  categories: bool
+	 * }
+	 */
+	public static function checkCatalogs(?array $catalogs = null): array
+	{
+		$catalogs ??= self::exportCatalogs()['catalogs'];
+		$errors     = [];
+		$categories = false;
+
+		foreach ($catalogs as $lang => $catalog) {
+			foreach (self::textsOf($catalog) as $key => $text) {
+				try {
+					$categories = $categories || self::usesCategories(MessageParser::parse($text));
+				} catch (MessageSyntaxException $e) {
+					$errors[] = [
+						'lang'   => (string) $lang,
+						'key'    => $key,
+						'reason' => $e->getMessage(),
+						'offset' => $e->offset,
+					];
+				}
+			}
+		}
+
+		return ['errors' => $errors, 'categories' => $categories];
+	}
+
+	/**
+	 * The texts of a catalog by key, a nested group's as `group.KEY`.
+	 *
+	 * @param array<array-key, mixed> $catalog
+	 *
+	 * @return array<string, string>
+	 */
+	private static function textsOf(array $catalog, string $prefix = ''): array
+	{
+		$out = [];
+
+		foreach ($catalog as $key => $value) {
+			if (\is_string($value)) {
+				$out[$prefix . $key] = $value;
+			} elseif (\is_array($value)) {
+				$out += self::textsOf($value, $prefix . $key . '.');
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Whether a plural choice of the text picks a branch by its CLDR category.
+	 *
+	 * @param list<MessageNode> $nodes
+	 */
+	private static function usesCategories(array $nodes): bool
+	{
+		foreach ($nodes as $node) {
+			if ('choice' !== $node->type) {
+				continue;
+			}
+
+			foreach ($node->branches as $branch) {
+				$category = \in_array($branch['selector'], ['zero', 'one', 'two', 'few', 'many'], true);
+
+				if ('select' !== $node->kind && $category) {
+					return true;
+				}
+
+				if (self::usesCategories($branch['nodes'])) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -374,43 +460,37 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 			return $text;
 		}
 
-		// One pass over the text as written: a value is never read for placeholders, so one that holds
-		// `{name}` is shown as it is, rather than filled again (forever, when it names itself).
-		return \preg_replace_callback(
-			self::SIMPLE_REPLACE_REG,
-			static function (array $in) use ($inject, $lang): string {
-				$value = (string) ($inject[$in[1]] ?? '');
-
-				foreach (\explode(self::FILTERS_SEP, $in[2] ?? '') as $filter) {
-					if ('' !== ($filter = \trim($filter))) {
-						$value = (string) self::applyFilter($filter, $value, $lang);
-					}
-				}
-
-				return $value;
-			},
-			$text
+		$renderer = new MessageRenderer(
+			$lang,
+			static fn (string $key): array => self::nodesOf($key, $lang),
+			self::$filters,
+			PluralRules::category(...)
 		);
+
+		return $renderer->render(self::nodesOf($i18n_key, $lang), $inject);
 	}
 
 	/**
-	 * Apply a filter to a given value.
+	 * The parsed text of a key. A text that does not parse is a mistake in a catalog: it is written as
+	 * it is, and logged, so a page never breaks on a typo in a translation.
 	 *
-	 * @param string $filter
-	 * @param mixed  $value
-	 * @param string $lang
-	 *
-	 * @return mixed
+	 * @return list<MessageNode>
 	 */
-	private static function applyFilter(string $filter, mixed $value, string $lang): mixed
+	private static function nodesOf(string $i18n_key, string $lang): array
 	{
-		$fn = self::$filters[$filter] ?? null;
+		$text = self::getI18n($i18n_key, $lang);
 
-		if (!$fn) {
-			throw new RuntimeException(\sprintf('Undefined translation filter: %s', $filter));
+		if (!\is_string($text)) {
+			return [];
 		}
 
-		return $fn($value, $lang);
+		try {
+			return MessageParser::parse($text);
+		} catch (MessageSyntaxException $e) {
+			oz_logger($e);
+
+			return [MessageNode::text($text)];
+		}
 	}
 
 	/**
@@ -420,35 +500,16 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	 *
 	 * @param string $i18n_key
 	 * @param string $lang
-	 * @param array  $history
 	 *
 	 * @return mixed
 	 */
-	private static function getI18n(string $i18n_key, string $lang, array $history = []): mixed
+	private static function getI18n(string $i18n_key, string $lang): mixed
 	{
 		// for 'fr-bj' lang settings should be 'lang/oz.fr-bj'
 		$text = self::catalogText($lang, $i18n_key);
 
 		if (null === $text) {
 			$text = self::catalogText(self::getDefaultLanguage(), $i18n_key);
-		}
-
-		// could be string or array or anything else
-		if (\is_string($text) && \preg_match(self::PORTION_COPY_REG, $text)) {
-			$in                 = [];
-			$history[$i18n_key] = true;
-
-			while (\preg_match(self::PORTION_COPY_REG, $text, $in)) {
-				[$found, $lk] = $in;
-
-				if (isset($history[$lk])) {
-					throw new RuntimeException(\sprintf('Possible infinite loop in lang key: %s.', $lk));
-				}
-
-				$history[$lk] = true;
-				$part         = self::getI18n($lk, $lang, $history);
-				$text         = \str_replace($found, $part, $text);
-			}
 		}
 
 		return $text ?? $i18n_key;
