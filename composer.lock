@@ -447,12 +447,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "c323fe731314cee63ed58776c56ed6370114e233"
+                "reference": "db3f84fbd55ed8c0a1a5e12012839dd854f1ec05"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/c323fe731314cee63ed58776c56ed6370114e233",
-                "reference": "c323fe731314cee63ed58776c56ed6370114e233",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/db3f84fbd55ed8c0a1a5e12012839dd854f1ec05",
+                "reference": "db3f84fbd55ed8c0a1a5e12012839dd854f1ec05",
                 "shasum": ""
             },
             "require": {
@@ -517,7 +517,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/main"
             },
-            "time": "2026-09-24T22:14:59+00:00"
+            "time": "2026-09-25T04:42:20+00:00"
         },
         {
             "name": "silassare/kli",
@@ -589,12 +589,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/php-utils.git",
-                "reference": "2c86fbbe38e752484d5d907a7174f42f996262fc"
+                "reference": "be911a031683db154ae976511e2e73e82ac9877f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/php-utils/zipball/2c86fbbe38e752484d5d907a7174f42f996262fc",
-                "reference": "2c86fbbe38e752484d5d907a7174f42f996262fc",
+                "url": "https://api.github.com/repos/silassare/php-utils/zipball/be911a031683db154ae976511e2e73e82ac9877f",
+                "reference": "be911a031683db154ae976511e2e73e82ac9877f",
                 "shasum": ""
             },
             "require": {
@@ -642,7 +642,7 @@
                 "issues": "https://github.com/silassare/php-utils/issues",
                 "source": "https://github.com/silassare/php-utils/tree/main"
             },
-            "time": "2026-09-20T11:05:04+00:00"
+            "time": "2026-09-25T04:41:14+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
