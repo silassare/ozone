@@ -16,6 +16,7 @@ namespace OZONE\Tests\Forms;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\AsyncValue;
+use OZONE\Core\Forms\Fieldset;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormDataClean;
@@ -218,6 +219,52 @@ final class FormValidationTest extends TestCase
 		self::assertSame('eq', $rule['rule']);
 		self::assertSame('password_confirm', $rule['target_ref']);
 	}
+
+	// region what a refusal names (G22)
+
+	public function testATypeRefusalNamesItsField(): void
+	{
+		$form = new Form('order');
+		$form->int('qty');
+		$form->fieldset('address', static function (Fieldset $fs): void {
+			$fs->int('zip');
+		});
+
+		$cases = [
+			'order.qty'         => ['order' => ['qty' => 'x']],
+			'order.address.zip' => ['order' => ['qty' => 1, 'address' => ['zip' => 'x']]],
+		];
+
+		foreach ($cases as $ref => $payload) {
+			try {
+				$form->validate(new FormData($payload));
+				self::fail('The value must be refused.');
+			} catch (InvalidFormException $e) {
+				self::assertSame($ref, $e->getData()['field']);
+			}
+		}
+	}
+
+	public function testARuleViolationNamesItsSet(): void
+	{
+		$form = new Form();
+		$form->string('a');
+		$form->expect()->neq('a', 'raw', 'NOT_RAW');
+		$form->ensure()->neq('a', 'clean', 'NOT_CLEAN');
+
+		foreach (['@expect[0]' => 'raw', '@ensure[0]' => 'clean'] as $ref => $value) {
+			try {
+				$form->validate(new FormData(['a' => $value]));
+				self::fail('The value must be refused.');
+			} catch (InvalidFormException $e) {
+				self::assertSame($ref, $e->getData()['rule']);
+				// The set itself stays out of what the client is sent.
+				self::assertArrayNotHasKey('_rule', $e->getData());
+			}
+		}
+	}
+
+	// endregion
 
 	// region multiple fields
 
