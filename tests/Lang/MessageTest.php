@@ -202,6 +202,51 @@ final class MessageTest extends TestCase
 	}
 
 	/**
+	 * @dataProvider provideWritesAsHtmlCases
+	 *
+	 * @param array<string, mixed> $data
+	 */
+	public function testWritesAsHtml(string $text, array $data, string $expected): void
+	{
+		$texts    = ['BOLD' => '<b>{name}</b>'];
+		$renderer = new MessageRenderer(
+			'en',
+			static fn (string $key): array => MessageParser::parse($texts[$key] ?? $key),
+			['wrap' => static fn (mixed $value): string => '<' . $value . '>'],
+			PluralRules::category(...),
+			true
+		);
+
+		self::assertSame($expected, $renderer->render(MessageParser::parse($text), $data));
+	}
+
+	/**
+	 * @return iterable<string, array{string, array<string, mixed>, string}>
+	 */
+	public static function provideWritesAsHtmlCases(): iterable
+	{
+		yield 'the text as it is' => ['Read the <a href="/terms">terms</a>.', [], 'Read the <a href="/terms">terms</a>.'];
+
+		yield 'a value escaped' => ['Hi <b>{name}</b>', ['name' => '<i>Ann</i> & "Bo" \'x\''], 'Hi <b>&lt;i&gt;Ann&lt;/i&gt; &amp; &quot;Bo&quot; &#039;x&#039;</b>'];
+
+		yield 'already escaped, escaped again' => ['{v}', ['v' => '&amp;'], '&amp;amp;'];
+
+		yield 'after its filters' => ['{v | upper}', ['v' => '<i>'], '&lt;I&gt;'];
+
+		yield "a project filter's markup" => ['{v | wrap}', ['v' => 'x'], '&lt;x&gt;'];
+
+		yield 'a path' => ['{u.name}', ['u' => ['name' => '<x>']], '&lt;x&gt;'];
+
+		yield 'the # of a plural' => ['{n, plural, =1 {<b>#</b>} other {#}}', ['n' => '<5>'], '&lt;5&gt;'];
+
+		yield 'a branch keeps its markup' => ['{n, plural, =1 {<b>#</b>} other {#}}', ['n' => 1], '<b>1</b>'];
+
+		yield 'an included text keeps its markup' => ['{{BOLD}}!', ['name' => '<i>'], '<b>&lt;i&gt;</b>!'];
+
+		yield 'a value that is not text' => ['{v}{w}', ['v' => true, 'w' => ['x']], '1'];
+	}
+
+	/**
 	 * @dataProvider provideRefusesWhatIsNotTheSyntaxCases
 	 */
 	public function testRefusesWhatIsNotTheSyntax(string $text): void

@@ -284,6 +284,37 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	}
 
 	/**
+	 * Translates a key into HTML: the text is kept as it is, HTML included, and every value is
+	 * escaped, so a value never becomes markup. What is not a key is escaped whole.
+	 *
+	 * ```php
+	 * // 'WELCOME' => 'Hello <b>{name}</b>.'
+	 * Polyglot::translateHtml('WELCOME', ['name' => '<i>Ann</i>']); // Hello <b>&lt;i&gt;Ann&lt;/i&gt;</b>.
+	 * ```
+	 *
+	 * @param string       $key     the human readable text key
+	 * @param null|array   $inject  data to use for replacement
+	 * @param null|string  $lang    use a specific lang
+	 * @param null|Context $context the context
+	 */
+	public static function translateHtml(
+		string $key,
+		?array $inject = null,
+		?string $lang = null,
+		?Context $context = null
+	): string {
+		if (!self::isLangKey($key)) {
+			return MessageRenderer::escape($key);
+		}
+
+		if (null === $lang) {
+			$lang = self::getLanguage($context);
+		}
+
+		return self::parseText($key, $inject ?? [], $lang, true);
+	}
+
+	/**
 	 * Checks if we have a valid lang key.
 	 *
 	 * @param string $key the key to check
@@ -449,10 +480,11 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	 * @param string $i18n_key
 	 * @param array  $inject
 	 * @param string $lang
+	 * @param bool   $html   whether the text is written as HTML (the values escaped)
 	 *
 	 * @return mixed
 	 */
-	private static function parseText(string $i18n_key, array $inject, string $lang): mixed
+	private static function parseText(string $i18n_key, array $inject, string $lang, bool $html = false): mixed
 	{
 		$text = self::getI18n($i18n_key, $lang);
 
@@ -464,7 +496,8 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 			$lang,
 			static fn (string $key): array => self::nodesOf($key, $lang),
 			self::$filters,
-			PluralRules::category(...)
+			PluralRules::category(...),
+			$html
 		);
 
 		return $renderer->render(self::nodesOf($i18n_key, $lang), $inject);

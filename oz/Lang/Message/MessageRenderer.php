@@ -24,6 +24,9 @@ use Stringable;
  * A value is written as PHP's `(string)` writes a scalar (`true` as `1`, `false` and `null` as
  * nothing); an array or an object without `__toString()` writes nothing. A client of the API writes
  * values the same way.
+ *
+ * Written as HTML, the text is kept as it is and every value is escaped (what `#` writes, and each
+ * placeholder after its filters), so a value never becomes markup.
  */
 final class MessageRenderer
 {
@@ -34,21 +37,24 @@ final class MessageRenderer
 	private array $including = [];
 
 	/**
-	 * @param string                                                    $lang     the language written in
-	 * @param callable(string):list<MessageNode>                        $include  the nodes of another key
-	 * @param array<string, callable>                                   $filters  the project's own filters,
-	 *                                                                            called with the value,
-	 *                                                                            the language, then the
-	 *                                                                            arguments
-	 * @param null|callable(float|int, string, bool):?string            $category the plural category of a
-	 *                                                                            number, null when there
-	 *                                                                            are no rules
+	 * @param string                                         $lang     the language written in
+	 * @param callable(string):list<MessageNode>             $include  the nodes of another key
+	 * @param array<string, callable>                        $filters  the project's own filters,
+	 *                                                                 called with the value,
+	 *                                                                 the language, then the
+	 *                                                                 arguments
+	 * @param null|callable(float|int, string, bool):?string $category the plural category of a
+	 *                                                                 number, null when there
+	 *                                                                 are no rules
+	 * @param bool                                           $html     whether the text is
+	 *                                                                 written as HTML
 	 */
 	public function __construct(
 		private readonly string $lang,
 		private readonly mixed $include,
 		private readonly array $filters,
 		private readonly mixed $category,
+		private readonly bool $html = false,
 	) {}
 
 	/**
@@ -60,10 +66,16 @@ final class MessageRenderer
 		return $this->write($nodes, $data, null);
 	}
 
+	/** Escaped for HTML, as `htmlspecialchars()` does with its default flags. */
+	public static function escape(string $text): string
+	{
+		return \htmlspecialchars($text, \ENT_QUOTES | \ENT_SUBSTITUTE | \ENT_HTML401, 'UTF-8');
+	}
+
 	/**
-	 * @param list<MessageNode>    $nodes
-	 * @param array<string, mixed> $data
-	 * @param null|bool|float|int|string $hash what `#` writes, inside a plural branch
+	 * @param list<MessageNode>          $nodes
+	 * @param array<string, mixed>       $data
+	 * @param null|bool|float|int|string $hash  what `#` writes, inside a plural branch
 	 */
 	private function write(array $nodes, array $data, bool|float|int|string|null $hash): string
 	{
@@ -72,7 +84,7 @@ final class MessageRenderer
 		foreach ($nodes as $node) {
 			$out .= match ($node->type) {
 				'text'     => $node->value,
-				'hash'     => self::stringOf($hash),
+				'hash'     => $this->value(self::stringOf($hash)),
 				'include'  => $this->included($node->value, $data),
 				'argument' => $this->argument($node, $data),
 				'choice'   => $this->choice($node, $data),
@@ -111,7 +123,13 @@ final class MessageRenderer
 			$value = $this->filter($filter['name'], $value, $filter['args']);
 		}
 
-		return self::stringOf($value);
+		return $this->value(self::stringOf($value));
+	}
+
+	/** A value as written: escaped when the text is written as HTML. */
+	private function value(string $text): string
+	{
+		return $this->html ? self::escape($text) : $text;
 	}
 
 	/**

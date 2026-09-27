@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Lang;
 
+use OZONE\Core\Lang\I18n;
 use OZONE\Core\Lang\Polyglot;
 use PHPUnit\Framework\TestCase;
 
@@ -140,6 +141,24 @@ final class PolyglotTest extends TestCase
 		self::assertSame(
 			'Allows the {action} action.',
 			Polyglot::translate('OZ_ACCESS_RIGHT_DESCRIPTION', ['action' => '{action}'], 'en')
+		);
+	}
+
+	public function testTranslatesIntoHtmlWithEveryValueEscaped(): void
+	{
+		self::assertSame(
+			'Allows the &lt;b&gt;x&lt;/b&gt; action.',
+			Polyglot::translateHtml('OZ_ACCESS_RIGHT_DESCRIPTION', ['action' => '<b>x</b>'], 'en')
+		);
+		self::assertSame(
+			'Allows the <b>x</b> action.',
+			Polyglot::translate('OZ_ACCESS_RIGHT_DESCRIPTION', ['action' => '<b>x</b>'], 'en')
+		);
+		// what is not a key is written as text, escaped whole
+		self::assertSame('a &lt;b&gt;', Polyglot::translateHtml('a <b>'));
+		self::assertSame(
+			'Allows the &lt;i&gt; action.',
+			I18n::html(I18n::m('OZ_ACCESS_RIGHT_DESCRIPTION', ['action' => '<i>']), null, 'en')
 		);
 	}
 

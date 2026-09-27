@@ -58,6 +58,7 @@ final class BlatePlugin implements BootHookReceiverInterface
 		Blate::registerHelper('env', env(...));
 		Blate::registerHelper('log', oz_logger(...));
 		Blate::registerHelper('t', self::t(...));
+		Blate::registerHelper('t_html', self::tHtml(...));
 		Blate::registerHelper('uri', self::uri(...));
 		Blate::registerHelper('route_uri', self::routeUri(...));
 
@@ -138,6 +139,33 @@ final class BlatePlugin implements BootHookReceiverInterface
 
 		try {
 			return I18n::t($key, $data, $lang, $ctx);
+		} catch (Throwable $t) {
+			throw new RuntimeException('Translation failed.', [
+				'key'  => $key,
+				'data' => $data,
+				'lang' => $lang,
+			], $t);
+		}
+	}
+
+	/**
+	 * Translation helper for Blate templates, into HTML: the text as it is, HTML included, every value
+	 * escaped. Printed raw, since it is HTML already: `{= $t_html('KEY', $map('name', user.name))}`.
+	 *
+	 * Shortcut for {@see I18n::html()}.
+	 *
+	 * @param I18nMessage|string $key  The translation key
+	 * @param array              $data The data for interpolation
+	 * @param null|string        $lang The language to use (optional)
+	 *
+	 * @return string
+	 */
+	public static function tHtml(I18nMessage|string $key, array $data = [], ?string $lang = null): string
+	{
+		$ctx = self::getContext();
+
+		try {
+			return I18n::html($key, $data, $lang, $ctx);
 		} catch (Throwable $t) {
 			throw new RuntimeException('Translation failed.', [
 				'key'  => $key,

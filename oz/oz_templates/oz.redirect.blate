@@ -32,7 +32,10 @@
 			<div class="oz-title">{$t('OZ_VIEW_REDIRECT_TITLE')}</div>
 			<div class="oz-desc">
 				<div class="oz-desc-item" style="text-align: center;">
-				{$t('OZ_VIEW_REDIRECT_MESSAGE', $map('url', oz_redirect_url))}
+				{$t('OZ_VIEW_REDIRECT_MESSAGE')}
+				</div>
+				<div class="oz-desc-item" style="text-align: center;">
+				<a href="{oz_redirect_url}">{$t('OZ_VIEW_REDIRECT_LINK')}</a>
 				</div>
 			</div>
 		</div>

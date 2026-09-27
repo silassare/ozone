@@ -46,6 +46,25 @@ class I18n
 	}
 
 	/**
+	 * Translates a message into HTML ({@see Polyglot::translateHtml()}): the text as it is, every
+	 * value escaped.
+	 */
+	public static function html(
+		I18nMessage|string $message,
+		?array $inject = null,
+		?string $lang = null,
+		?Context $context = null
+	): string {
+		if (\is_string($message)) {
+			return Polyglot::translateHtml($message, $inject, $lang, $context);
+		}
+
+		$inject = \array_merge($message->getData(), $inject ?? []);
+
+		return Polyglot::translateHtml($message->getText(), $inject, $lang, $context);
+	}
+
+	/**
 	 * Creates an instance of {@see I18nMessage}.
 	 *
 	 * @param string $message the message text (usually a lang key)

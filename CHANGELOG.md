@@ -167,6 +167,7 @@
 
 ### Fixed
 
+- The redirect page (`oz.redirect.blate`) shows a working link. Its text held an `<a>` tag, which the template printed escaped, so the page showed the markup instead of a link. `OZ_VIEW_REDIRECT_MESSAGE` is now plain text (it no longer takes `url`), and the link, labelled by the new `OZ_VIEW_REDIRECT_LINK`, is the template's.
 - `Polyglot` fills a text's placeholders in one pass: a value is never read for placeholders. It used to search the text again after each replacement, so a value holding `{other}` was filled with another variable's value, and one holding its own placeholder (a user named `{name}` in `Hello {name}`) made the request loop forever.
 - `Polyglot::parseBrowserLanguage()` takes the language a browser asks for when it is enabled: it tested the quality factor instead (`$enabled[$q]`), so with `fr` and `fr-bj` enabled a browser asking for `fr-bj` got `fr`. It takes the enabled languages as an optional second argument.
 - A language enabled without a catalog falls back to the default language's texts, as a missing text does; every translation used to throw "Undefined setting group".
