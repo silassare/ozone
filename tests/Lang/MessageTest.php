@@ -162,6 +162,79 @@ final class MessageTest extends TestCase
 		self::assertSame('abc', self::render('{n | number: 2}', ['n' => 'abc'], 'en', true));
 	}
 
+	/**
+	 * @dataProvider provideADateFilterWritesAnInstantInUtcCases
+	 *
+	 * @param array<string, mixed> $data
+	 */
+	public function testADateFilterWritesAnInstantInUtc(string $text, array $data, string $lang, string $expected): void
+	{
+		// ICU writes a narrow no-break space before "PM"
+		self::assertSame($expected, \str_replace("\u{202F}", ' ', self::render($text, $data, $lang, true)));
+	}
+
+	/**
+	 * @return iterable<string, array{string, array<string, mixed>, string, string}>
+	 */
+	public static function provideADateFilterWritesAnInstantInUtcCases(): iterable
+	{
+		// 2026-09-21 14:13:20 UTC
+		$t = 1790000000;
+
+		yield 'a medium date by default' => ['{d | date}', ['d' => $t], 'en', 'Sep 21, 2026'];
+
+		yield 'a long date' => ['{d | date: "long"}', ['d' => $t], 'en', 'September 21, 2026'];
+
+		yield 'a date and a time' => ['{d | date: "short", "short"}', ['d' => $t], 'en', '9/21/26, 2:13 PM'];
+
+		yield 'a time alone' => ['{d | date: "none", "short"}', ['d' => $t], 'en', '2:13 PM'];
+
+		yield 'in the language' => ['{d | date: "long"}', ['d' => $t], 'fr', '21 septembre 2026'];
+
+		yield 'the text of a timestamp' => ['{d | date}', ['d' => '1790000000'], 'en', 'Sep 21, 2026'];
+
+		yield 'a fraction of a second is dropped' => ['{d | date: "none", "medium"}', ['d' => $t + 0.99], 'en', '2:13:20 PM'];
+
+		yield 'before 1970' => ['{d | date: "long"}', ['d' => -86400], 'en', 'December 31, 1969'];
+
+		yield 'an ISO date, at midnight UTC' => ['{d | date: "short", "short"}', ['d' => '2026-09-21'], 'en', '9/21/26, 12:00 AM'];
+
+		yield 'an ISO time without offset is UTC' => ['{d | date: "none", "short"}', ['d' => '2026-09-21T14:13'], 'en', '2:13 PM'];
+
+		yield 'an ISO time with an offset' => ['{d | date: "short", "short"}', ['d' => '2026-09-21T01:30:00+02:00'], 'en', '9/20/26, 11:30 PM'];
+
+		yield 'a day past its month rolls over' => ['{d | date}', ['d' => '2026-02-30'], 'en', 'Mar 2, 2026'];
+
+		yield 'not an instant, as it is' => ['{d | date}', ['d' => 'soon'], 'en', 'soon'];
+
+		yield 'an impossible month, as it is' => ['{d | date}', ['d' => '2026-13-01'], 'en', '2026-13-01'];
+
+		yield 'out of range, as it is' => ['{d | date}', ['d' => 1e21], 'en', '1.0E+21'];
+	}
+
+	/**
+	 * @dataProvider provideADateFilterRefusesUnknownStylesCases
+	 */
+	public function testADateFilterRefusesUnknownStyles(string $text): void
+	{
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Invalid date filter styles');
+
+		self::render($text, ['d' => 1790000000], 'en', true);
+	}
+
+	/**
+	 * @return iterable<string, array{string}>
+	 */
+	public static function provideADateFilterRefusesUnknownStylesCases(): iterable
+	{
+		yield 'an unknown date style' => ['{d | date: "tiny"}'];
+
+		yield 'an unknown time style' => ['{d | date: "short", "tiny"}'];
+
+		yield 'nothing to write' => ['{d | date: "none", "none"}'];
+	}
+
 	public function testAProjectFilterTakesTheLanguageThenItsArguments(): void
 	{
 		$filters = ['wrap' => static fn (mixed $v, string $lang, string $l, string $r) => $l . $v . $r . $lang];

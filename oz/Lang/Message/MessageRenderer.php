@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Lang\Message;
 
+use IntlDateFormatter;
 use NumberFormatter;
 use OZONE\Core\Exceptions\RuntimeException;
 use Stringable;
@@ -31,7 +32,20 @@ use Stringable;
 final class MessageRenderer
 {
 	/** The filters every side has. A project's own, declared with the same name, is used instead. */
-	public const BUILTIN_FILTERS = ['upper', 'lower', 'capitalize', 'number'];
+	public const BUILTIN_FILTERS = ['upper', 'lower', 'capitalize', 'number', 'date'];
+
+	/** The styles of the `date` filter, as ICU names them. */
+	public const DATE_STYLES = ['none', 'short', 'medium', 'long', 'full'];
+
+	/**
+	 * An ISO 8601 date, with an optional time and offset: read by hand, as the client reads it, so
+	 * both sides accept exactly the same texts.
+	 */
+	private const ISO_DATE = '~^(-?\d{4})-(\d{2})-(\d{2})'
+		. '(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|([+-])(\d{2}):?(\d{2}))?)?$~';
+
+	/** The widest instant, in seconds either side of 1970, that both sides can write. */
+	private const MAX_TIMESTAMP = 8640000000000;
 
 	/** @var array<string, true> The keys being included, to refuse one including itself. */
 	private array $including = [];
@@ -148,6 +162,7 @@ final class MessageRenderer
 			'lower'      => \mb_strtolower(self::stringOf($value)),
 			'capitalize' => self::capitalize(self::stringOf($value)),
 			'number'     => $this->number($value, $args[0] ?? null),
+			'date'       => $this->date($value, $args[0] ?? 'medium', $args[1] ?? 'none'),
 			default      => throw new RuntimeException(\sprintf('Undefined translation filter: %s', $name)),
 		};
 	}
@@ -180,6 +195,95 @@ final class MessageRenderer
 		}
 
 		return null === $digits ? $n : \number_format($n, $digits, '.', '');
+	}
+
+	/**
+	 * An instant for the language, in UTC (the server always works in UTC; a client writes it in its
+	 * viewer's timezone): `date` for a medium date, `date: "long"`, `date: "short", "short"` for a date
+	 * and a time, `date: "none", "short"` for a time alone. Without ext-intl, ISO 8601 in UTC. What is
+	 * not an instant is written as it is.
+	 */
+	private function date(mixed $value, float|int|string $date_style, float|int|string $time_style): mixed
+	{
+		$date = (string) $date_style;
+		$time = (string) $time_style;
+
+		if (
+			!\in_array($date, self::DATE_STYLES, true)
+			|| !\in_array($time, self::DATE_STYLES, true)
+			|| ('none' === $date && 'none' === $time)
+		) {
+			throw new RuntimeException(\sprintf('Invalid date filter styles: %s, %s', $date, $time));
+		}
+
+		$seconds = self::instantOf($value);
+
+		if (null === $seconds) {
+			return $value;
+		}
+
+		if (\extension_loaded('intl')) {
+			$styles = [
+				'none'   => IntlDateFormatter::NONE,
+				'short'  => IntlDateFormatter::SHORT,
+				'medium' => IntlDateFormatter::MEDIUM,
+				'long'   => IntlDateFormatter::LONG,
+				'full'   => IntlDateFormatter::FULL,
+			];
+
+			$formatted = (new IntlDateFormatter($this->lang, $styles[$date], $styles[$time], 'UTC'))->format($seconds);
+
+			return false === $formatted ? $value : $formatted;
+		}
+
+		return \gmdate('Y-m-d\\TH:i:s\\Z', $seconds);
+	}
+
+	/**
+	 * The instant of a value, in whole seconds since 1970 (UTC): a UNIX timestamp (a number, or the
+	 * text of one), or an ISO 8601 date, whose missing offset is UTC. Out of range or anything else:
+	 * null.
+	 */
+	private static function instantOf(mixed $value): ?int
+	{
+		$n = self::numberOf($value);
+
+		if (null !== $n) {
+			return \abs($n) <= self::MAX_TIMESTAMP ? (int) \floor($n) : null;
+		}
+
+		if (!\is_string($value) || !\preg_match(self::ISO_DATE, $value, $m)) {
+			return null;
+		}
+
+		[$month, $day, $hour, $minute, $second] = [
+			(int) $m[2],
+			(int) $m[3],
+			(int) ($m[4] ?? 0),
+			(int) ($m[5] ?? 0),
+			(int) ($m[6] ?? 0),
+		];
+
+		if ($month < 1 || $month > 12 || $day < 1 || $day > 31 || $hour > 23 || $minute > 59 || $second > 59) {
+			return null;
+		}
+
+		// Days since 1970 of a proleptic Gregorian date (Howard Hinnant's days_from_civil), the same
+		// arithmetic as the client's; a day past its month's end rolls into the next month, as there.
+		$year  = (int) $m[1] - ($month <= 2 ? 1 : 0);
+		$era   = \intdiv($year >= 0 ? $year : $year - 399, 400);
+		$yoe   = $year - $era * 400;
+		$doy   = \intdiv(153 * ($month + ($month > 2 ? -3 : 9)) + 2, 5) + $day - 1;
+		$doe   = $yoe * 365 + \intdiv($yoe, 4) - \intdiv($yoe, 100) + $doy;
+		$days  = $era * 146097 + $doe - 719468;
+		$total = $days * 86400 + $hour * 3600 + $minute * 60 + $second;
+
+		if (isset($m[8]) && '' !== $m[8]) {
+			$offset = ((int) $m[9] * 60 + (int) $m[10]) * 60;
+			$total -= '+' === $m[8] ? $offset : -$offset;
+		}
+
+		return \abs($total) <= self::MAX_TIMESTAMP ? $total : null;
 	}
 
 	/**

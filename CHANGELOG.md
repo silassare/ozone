@@ -140,6 +140,7 @@
 
 ### Added
 
+- A `date` filter in the message syntax: `{d | date}`, `{d | date: "long"}`, `{d | date: "short", "short"}`, `{d | date: "none", "short"}` (ICU's `none`, `short`, `medium`, `long`, `full`), written in UTC in the language of the text, for a UNIX timestamp in seconds or an ISO 8601 date (no offset is UTC); anything else is written as it is. Without ext-intl it writes ISO 8601 in UTC.
 - `oz lang export` (`--json` for tools): the catalogs of the enabled languages, merged as the server reads them (OZone's, the plugins' and the project's), with the default language and the names of the declared translation filters (`Polyglot::exportCatalogs()`, `Polyglot::getFilterNames()`). The API sends message codes and never text, so a client translates them itself from this. A language enabled without a catalog is exported with an empty one.
 - The form session's `evaluate` answers a switcher's server-only branches: `switchers` lists them as `expect` lists its sets, `{ref, passes, message}`, by the branch's ref (`<field>@switch[<n>]`), so a client knows which type such a field takes before the step is submitted.
 - A refused form names what refused it: a field whose value its type refuses adds `field` (its ref) to the error's data, as a missing required field already did, and a rule set that fails adds `rule` (its ref, `@expect[0]`, `address.@ensure[0]`). Both refs are in the bundle a client holds, so it can show the server's answer next to the field or the rule; the field and the set themselves stay in the private `_suspect` and `_rule`, for the logs.
