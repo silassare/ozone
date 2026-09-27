@@ -420,7 +420,8 @@ final class DoctorCmd extends Command
 	}
 
 	/**
-	 * Prints the checks as a table, then the fix hints of what is not ok.
+	 * Prints the checks as a table, then the fix hints of what is not ok. The table fits the
+	 * terminal itself, wrapping a long detail, so it is printed as it is.
 	 *
 	 * @param list<array{name: string, status: string, detail: string, fix: string}> $checks
 	 */
@@ -432,18 +433,9 @@ final class DoctorCmd extends Command
 		$table->addHeader('Check', 'name')->alignLeft();
 		$table->addHeader('Status', 'status')->alignCenter()->setCellFormatter(self::statusFormatter());
 		$table->addHeader('Detail', 'detail')->alignLeft();
-		$table->addRows(\array_map(
-			static function (array $check): array {
-				$check['detail'] = \strlen($check['detail']) > 56
-					? \substr($check['detail'], 0, 53) . '...'
-					: $check['detail'];
+		$table->addRows($checks);
 
-				return $check;
-			},
-			$checks
-		));
-
-		$cli->writeLn((string) $table);
+		$cli->writeLn((string) $table, false);
 
 		foreach ($checks as $check) {
 			if (self::OK === $check['status'] || '' === $check['fix']) {
@@ -456,10 +448,6 @@ final class DoctorCmd extends Command
 				$check['name'],
 				$check['fix']
 			));
-
-			if (\strlen($check['detail']) > 56) {
-				$cli->writeLn('    ' . $check['detail']);
-			}
 		}
 	}
 
