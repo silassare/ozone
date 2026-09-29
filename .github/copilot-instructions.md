@@ -348,6 +348,10 @@ path, name, guards and middlewares without a group block.
   params and interceptors by name; CSRF, resume and form declaration from the innermost level that
   sets them). It is cached, and any option change anywhere invalidates every cache.
 - Route names: OZone's use the `oz:` prefix; projects use their own (`myapp:resource.action`).
+- **A route name is unique**: a second route with a taken name is refused when routes are listed, the
+  table compiled, or every provider registered (`Router::assertUniqueNames()`), never per request once a
+  table routes them. `oz routes export --json` (`Router\RouteExport`) lists the explicitly named routes
+  for clients, which call routes by name, never by path.
 
 ---
 
@@ -803,7 +807,10 @@ call site says which by the registry it asks; both return a `KeyValueStore`.
 
 ## 18. REST
 
-`REST\RESTFulService` turns a service into a CRUD controller for a table. Its actions are the cases of
+`REST\RESTFulService` turns a service into a CRUD controller for a table. It declares `SERVICE_NAME` (stable,
+lowercase words joined by `_` or `.`), `SERVICE_PATH` and `TABLE_NAME`, all required
+(`assertDeclared()`); its routes, and their OpenAPI `operationId`, are named `<SERVICE_NAME>.<action>`,
+so a client names a service and never depends on its path or table. Its actions are the cases of
 `REST\Enums\RESTFulAction` (`get_one`, `get_all`, `get_relation`, `update_one`, `update_all`,
 `delete_one`, `delete_all`, `create_one`), which drive both the routes and the docs
 (`REST\RESTFulApiDoc`; table meta `api.doc.<action>.enabled` turns one doc off).
@@ -840,7 +847,7 @@ call site says which by the registry it asks; both return a `KeyValueStore`.
 `bin/oz` (or `bin/ozone`) runs `oz/index.php`, which loads the project when run inside one. Commands
 extend `OZONE\Core\Cli\Command` (`silassare/kli`) and start with `Utils::assertProjectLoaded()` when
 they need a project. Each command documents its options (`oz <cmd> --help`): `project`
-(`create`, `serve`, `link`, `backup`, `build`), `scopes`, `db`, `migrations`, `services`, `settings`,
+(`create`, `serve`, `link`, `backup`, `build`), `scopes`, `db`, `migrations`, `services`, `routes`, `settings`,
 `users`, `doctor`, `server`, `deploy`, `cron`, `jobs`.
 
 - **`oz project build`** compiles for production what requests would compile at first use: per
