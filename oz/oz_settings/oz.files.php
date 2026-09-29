@@ -12,6 +12,7 @@
 declare(strict_types=1);
 
 use OZONE\Core\FS\Filters\ImageFileFilterHandler;
+use OZONE\Core\FS\Filters\ImageFilterTokens;
 
 return [
 	/**
@@ -106,6 +107,25 @@ return [
 	 * @see ImageFileFilterHandler
 	 */
 	'OZ_IMAGE_FILTERS_CACHE_TTL'          => 604800,
+
+	/**
+	 * The sizes an image filter may render, in pixels: a width, a height or a thumbnail asked for is
+	 * snapped to the nearest (the larger on a tie), so the renditions of an image are bounded. The
+	 * widths a page asks for in a `srcset` are these.
+	 *
+	 * @see ImageFilterTokens
+	 */
+	'OZ_IMAGE_FILTERS_SIZES'              => [
+		16, 32, 48, 64, 96, 128, 256, 384, 640, 750, 828, 1080, 1200, 1920, 2048, 3840,
+	],
+
+	/**
+	 * The most passes a blur may take, and the most tokens a rendition may have.
+	 *
+	 * @see ImageFilterTokens
+	 */
+	'OZ_IMAGE_FILTERS_MAX_BLUR'           => 10,
+	'OZ_IMAGE_FILTERS_MAX_TOKENS'         => 8,
 
 	/**
 	 * Should we use nginx x-sendfile or x-accel to serve files ?

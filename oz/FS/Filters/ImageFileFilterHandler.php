@@ -52,6 +52,11 @@ use SplFileInfo;
  * | `blur{N}`   | Gaussian blur with N passes                                               |
  * | `sharpen`   | Sharpen the image                                                         |
  *
+ * The tokens are first reduced to one canonical list ({@see ImageFilterTokens}): sizes snapped to
+ * `OZ_IMAGE_FILTERS_SIZES`, blur and quality bounded, unknown tokens dropped, their number capped;
+ * and an image is never enlarged beyond its own size. So a URL cannot make the server render, or
+ * keep, an unbounded number of renditions, nor an image of any size.
+ *
  * Each rendition is kept as a file in the scope's cache directory (`.ozone/cache/.../fs/image-filters`)
  * and served from it as a stream: never in a key-value store, where a large image would travel
  * through the database or Redis and sit in memory whole. Its name hashes the file ID, the file key
@@ -89,7 +94,8 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 	#[Override]
 	public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response
 	{
-		$key  = \md5($file->getID() . ':' . $file->getKey() . ':' . \implode(',', $filterTokens));
+		$filterTokens = ImageFilterTokens::normalize($filterTokens);
+		$key          = \md5($file->getID() . ':' . $file->getKey() . ':' . \implode(',', $filterTokens));
 		$dir  = self::cacheDir()->cd(\substr($key, 0, 2), true);
 		$path = $dir->resolve($key);
 
@@ -229,6 +235,15 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 			if (null !== $maxW || null !== $maxH) {
 				$w = $maxW ?? 0;
 				$h = $maxH ?? 0;
+
+				// Never enlarged: a size beyond the image's own is brought down, keeping the ratio asked.
+				$scale = \min(
+					1,
+					$w ? $img->getWidth() / $w : 1,
+					$h ? $img->getHeight() / $h : 1
+				);
+				$w     = (int) \floor($w * $scale);
+				$h     = (int) \floor($h * $scale);
 
 				if ($useCrop && $w && $h) {
 					$img->thumbnail($w, $h);

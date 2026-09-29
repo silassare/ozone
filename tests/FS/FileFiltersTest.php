@@ -19,6 +19,7 @@ use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\Filters\FileFilters;
 use OZONE\Core\FS\Filters\ImageFileFilterHandler;
+use OZONE\Core\FS\Filters\ImageFilterTokens;
 use OZONE\Core\FS\Filters\Interfaces\FileFilterHandlerInterface;
 use OZONE\Core\Http\Response;
 use PHPUnit\Framework\TestCase;
@@ -91,30 +92,30 @@ final class FileFiltersTest extends TestCase
 		$out   = self::applyFilters($file, $bytes, ['w100']);
 
 		[$w, $h] = self::pngDimensions($out);
-		self::assertSame(100, $w);
-		self::assertSame(50, $h); // proportional
+		self::assertSame(96, $w); // snapped to the nearest allowed size
+		self::assertSame(48, $h); // proportional
 	}
 
 	public function testHeightTokenResizesHeight(): void
 	{
 		$file  = self::makeFile('image/png');
 		$bytes = self::makePng(200, 100);
-		$out   = self::applyFilters($file, $bytes, ['h50']);
+		$out   = self::applyFilters($file, $bytes, ['h48']);
 
 		[$w, $h] = self::pngDimensions($out);
-		self::assertSame(100, $w); // proportional
-		self::assertSame(50, $h);
+		self::assertSame(96, $w); // proportional
+		self::assertSame(48, $h);
 	}
 
 	public function testThumbNTokenProducesSquare(): void
 	{
 		$file  = self::makeFile('image/png');
 		$bytes = self::makePng(200, 150);
-		$out   = self::applyFilters($file, $bytes, ['thumb80']);
+		$out   = self::applyFilters($file, $bytes, ['thumb96']);
 
 		[$w, $h] = self::pngDimensions($out);
-		self::assertSame(80, $w);
-		self::assertSame(80, $h);
+		self::assertSame(96, $w);
+		self::assertSame(96, $h);
 	}
 
 	public function testThumbTokenUsesThumbnailSize(): void
@@ -130,25 +131,25 @@ final class FileFiltersTest extends TestCase
 
 	public function testNocropTokenPreservesAspectRatio(): void
 	{
-		// 200x100 with thumb80+nocrop -> bestFit(80,80) -> 80x40
+		// 200x100 with thumb96+nocrop -> bestFit(96,96) -> 96x48
 		$file  = self::makeFile('image/png');
 		$bytes = self::makePng(200, 100);
-		$out   = self::applyFilters($file, $bytes, ['thumb80', 'nocrop']);
+		$out   = self::applyFilters($file, $bytes, ['thumb96', 'nocrop']);
 
 		[$w, $h] = self::pngDimensions($out);
-		self::assertSame(80, $w);
-		self::assertSame(40, $h);
+		self::assertSame(96, $w);
+		self::assertSame(48, $h);
 	}
 
 	public function testCropTokenWithWidthAndHeightProducesExactSize(): void
 	{
 		$file  = self::makeFile('image/png');
 		$bytes = self::makePng(200, 150);
-		$out   = self::applyFilters($file, $bytes, ['w80', 'h60', 'crop']);
+		$out   = self::applyFilters($file, $bytes, ['w96', 'h64', 'crop']);
 
 		[$w, $h] = self::pngDimensions($out);
-		self::assertSame(80, $w);
-		self::assertSame(60, $h);
+		self::assertSame(96, $w);
+		self::assertSame(64, $h);
 	}
 
 	public function testGrayscaleTokenProducesValidImage(): void
@@ -222,11 +223,11 @@ final class FileFiltersTest extends TestCase
 	{
 		$file  = self::makeFile('image/png');
 		$bytes = self::makePng(50, 50);
-		$out   = self::applyFilters($file, $bytes, ['unknown', 'foobar', 'w30']);
+		$out   = self::applyFilters($file, $bytes, ['unknown', 'foobar', 'w32']);
 
 		[$w, $h] = self::pngDimensions($out);
-		self::assertSame(30, $w);
-		self::assertSame(30, $h);
+		self::assertSame(32, $w);
+		self::assertSame(32, $h);
 	}
 
 	public function testBadImageFallsBackToRawContent(): void
@@ -297,6 +298,54 @@ final class FileFiltersTest extends TestCase
 		(new ReflectionClass(ImageFileFilterHandler::class))->getMethod('gc')->invoke(null);
 
 		self::assertSame([], self::renditions());
+	}
+
+	public function testAnImageIsNeverEnlarged(): void
+	{
+		$file = self::makeFile('image/png');
+
+		[$w, $h] = self::pngDimensions(self::applyFilters($file, self::makePng(200, 100), ['w3840']));
+		self::assertSame([200, 100], [$w, $h]);
+
+		// A crop asked beyond the image keeps its ratio, brought down to what the image holds.
+		[$w, $h] = self::pngDimensions(self::applyFilters($file, self::makePng(300, 200), ['thumb640']));
+		self::assertSame([200, 200], [$w, $h]);
+	}
+
+	public function testEquivalentRequestsShareOneRendition(): void
+	{
+		$file    = self::makeFile('image/png', '79');
+		$handler = new ImageFileFilterHandler();
+		$png     = self::makePng(200, 100);
+
+		// Another size near an allowed one, an unknown token, a token given twice: one image, one file.
+		foreach ([['w100'], ['w96'], ['w96', 'junk'], ['w10', 'w96'], ['junk1', 'w97', 'junk2']] as $tokens) {
+			$handler->handle($file, self::makeStream($png), new Response(), $tokens);
+		}
+
+		self::assertCount(1, self::renditions());
+	}
+
+	public function testTokensAreBoundedBeforeAnythingIsRendered(): void
+	{
+		self::assertSame(['w1080'], ImageFilterTokens::normalize(['w1000']));
+		self::assertSame(['w3840'], ImageFilterTokens::normalize(['w999999']));
+		self::assertSame(['blur10'], ImageFilterTokens::normalize(['blur999']));
+		self::assertSame(['q50'], ImageFilterTokens::normalize(['q52']));
+		self::assertSame(['q5'], ImageFilterTokens::normalize(['q0']));
+		self::assertSame(['w96', 'h48', 'thumb96', 'crop', 'q80', 'sepia'], ImageFilterTokens::normalize(
+			['sepia', 'q80', 'crop', 'thumb96', 'h48', 'w96', 'sepia']
+		));
+		self::assertSame([], ImageFilterTokens::normalize(['unknown', 'w', 'wx1', 'blurx', '../etc']));
+
+		// However many tokens are sent, at most OZ_IMAGE_FILTERS_MAX_TOKENS are kept.
+		$many = [];
+
+		for ($i = 1; $i <= 50; ++$i) {
+			$many[] = 'blur' . $i;
+		}
+
+		self::assertCount(8, ImageFilterTokens::normalize($many));
 	}
 
 	public function testRegisterAndApplyUsesFirstMatchingHandler(): void
