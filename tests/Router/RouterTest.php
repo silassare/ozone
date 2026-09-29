@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Router;
 
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Router\Route;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Router\RouteSearchStatus;
@@ -103,5 +104,28 @@ final class RouterTest extends TestCase
 		$result = $router->find('GET', '/items/42');
 		self::assertSame(RouteSearchStatus::FOUND, $result->status());
 		self::assertSame('/items/:id', $result->foundRoute()->getPath(true));
+	}
+
+	public function testRefusesTwoRoutesOfOneName(): void
+	{
+		$router = new Router();
+
+		$router->get('/first', static fn () => null)->name('same');
+		$router->post('/second', static fn () => null)->name('same');
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('The route name "same" is taken twice: by "/first"');
+
+		$router->getRoutes();
+	}
+
+	public function testKeepsRoutesOfOnePathApartByTheirAutoNames(): void
+	{
+		$router = new Router();
+
+		$router->get('/same', static fn () => null);
+		$router->get('/same', static fn () => null);
+
+		self::assertCount(2, $router->getRoutes());
 	}
 }

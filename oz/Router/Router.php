@@ -229,6 +229,7 @@ final class Router
 	public function getDynamicRoutes(): array
 	{
 		$this->registerAll();
+		$this->assertUniqueNames();
 
 		return $this->dynamic_routes;
 	}
@@ -243,6 +244,7 @@ final class Router
 	public function getStaticRoutes(): array
 	{
 		$this->registerAll();
+		$this->assertUniqueNames();
 
 		return $this->static_routes;
 	}
@@ -257,6 +259,7 @@ final class Router
 	public function getRoutes(): array
 	{
 		$this->registerAll();
+		$this->assertUniqueNames();
 
 		$routes = $this->static_routes;
 
@@ -541,6 +544,7 @@ final class Router
 	public function compileTable(): RouteTable
 	{
 		$this->registerAll();
+		$this->assertUniqueNames();
 		$this->ensureOrdered();
 
 		$static  = [];
@@ -807,6 +811,41 @@ final class Router
 
 		foreach (\array_keys($this->providers) as $provider) {
 			$this->registerProvider($provider);
+		}
+
+		$this->assertUniqueNames();
+	}
+
+	/**
+	 * Refuses two routes of one name: a lookup by name, a built URI and the route table would reach
+	 * one of them only, whichever was mapped first. Auto names are unique by construction, so this
+	 * catches an explicit name given twice, or given as another route's auto name.
+	 *
+	 * Run where every route is read (the listings, the table's compilation) and when every provider
+	 * is registered at once; never per request once a table routes them.
+	 */
+	private function assertUniqueNames(): void
+	{
+		$seen = [];
+
+		foreach ([$this->static_routes, $this->dynamic_routes] as $routes) {
+			foreach ($routes as $route) {
+				$name  = $route->getName();
+				$first = $seen[$name] ?? null;
+
+				if (null !== $first) {
+					throw new RuntimeException(\sprintf(
+						'The route name "%s" is taken twice: by "%s" (%s) and by "%s" (%s).',
+						$name,
+						$first->getPath(),
+						$first->getSource(),
+						$route->getPath(),
+						$route->getSource()
+					));
+				}
+
+				$seen[$name] = $route;
+			}
 		}
 	}
 
