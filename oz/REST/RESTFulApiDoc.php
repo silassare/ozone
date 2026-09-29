@@ -22,7 +22,6 @@ use OpenApi\Annotations\Parameter;
 use OpenApi\Annotations\Response;
 use OpenApi\Annotations\Schema;
 use OZONE\Core\REST\Enums\RESTFulAction;
-use PHPUtils\Str;
 
 /**
  * Class RESTFulApiDoc.
@@ -37,7 +36,6 @@ use PHPUtils\Str;
  *     singular: string,
  *     plural: string,
  *     a_an: string,
- *     op_prefix: string,
  *     tag: string,
  *     entity_read: Schema,
  *     entity_create: Schema,
@@ -75,7 +73,6 @@ final class RESTFulApiDoc
 			'singular'      => $api_doc_meta['singular_name'],
 			'plural'        => $api_doc_meta['plural_name'],
 			'a_an'          => $api_doc_meta['use_an'] ? 'an' : 'a',
-			'op_prefix'     => Str::stringToURLSlug($api_doc_meta['singular_name'], '_'),
 			'tag'           => $tag->name,
 			'entity_read'   => $doc->entitySchemaForRead($table),
 			'entity_create' => $doc->entitySchemaForCreate($table),
@@ -136,7 +133,8 @@ final class RESTFulApiDoc
 		$singular = $s['singular'];
 		$plural   = $s['plural'];
 		$key      = ApiDoc::toHumanReadable($service::KEY_COLUMN);
-		$op_id    = \sprintf('%s.%s', $s['op_prefix'], $action->value);
+		// The route name: a client maps an operation to the route it calls without guessing.
+		$op_id    = $service::routeName($action);
 		$item     = $doc->object(['item' => $s['entity_read']]);
 		$affected = $doc->object(['affected' => $doc->integer('The number of affected rows.')]);
 
@@ -315,7 +313,7 @@ final class RESTFulApiDoc
 					$s['singular'],
 					ApiDoc::toHumanReadable($service::KEY_COLUMN)
 				),
-				'operationId' => \sprintf('%s.get_relation.%s', $s['op_prefix'], $r_name),
+				'operationId' => \sprintf('%s.%s', $service::routeName(RESTFulAction::GET_RELATION), $r_name),
 				'parameters'  => $r_params,
 			],
 			[

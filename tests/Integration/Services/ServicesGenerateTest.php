@@ -134,6 +134,47 @@ final class ServicesGenerateTest extends TestCase
 	}
 
 	/**
+	 * The name comes from the base path when none is given, never from the table.
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testGeneratedServiceIsNamedAfterItsPath(DbTestConfig $config): void
+	{
+		$file    = self::getProject($config)->getPath() . '/app/Services/' . self::SERVICE_CLASS . '.php';
+		$content = (string) \file_get_contents($file);
+
+		self::assertStringContainsString("public const SERVICE_NAME = 'countries';", $content);
+		self::assertStringContainsString("public const SERVICE_PATH = '/countries';", $content);
+	}
+
+	/**
+	 * The generated service's routes are exported by name, as a client calls them.
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testRoutesExportListsTheServiceByName(DbTestConfig $config): void
+	{
+		$proc = self::getProject($config)->oz('routes', 'export', '--json');
+		$proc->mustRun();
+
+		$answer = \json_decode($proc->getOutput(), true);
+
+		self::assertIsArray($answer, $proc->getOutput());
+		self::assertSame(0, $answer['error'] ?? null, $proc->getOutput());
+
+		$routes = \array_column($answer['data']['routes'], null, 'name');
+
+		self::assertSame(['GET'], $routes['countries.get_all']['methods'] ?? null);
+		self::assertSame('/countries', $routes['countries.get_all']['path']);
+
+		$get_one = $routes['countries.get_one'] ?? [];
+		$key     = $get_one['params'][0]['name'] ?? '';
+
+		self::assertNotSame('', $key);
+		self::assertSame('/countries/:' . $key, $get_one['path']);
+	}
+
+	/**
 	 * @dataProvider provideDbConfig
 	 */
 	public function testServiceIsRegisteredInRoutesSettings(DbTestConfig $config): void

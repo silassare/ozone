@@ -35,12 +35,23 @@ class ServiceGenerator
 	) {}
 
 	/**
+	 * The name a service gets from its base path when none is given: `/shop/orders` gives
+	 * `shop.orders`, `/order-items` gives `order_items`. Never the table's name, which a client would
+	 * then see.
+	 */
+	public static function defaultName(string $base_path): string
+	{
+		return \str_replace(['/', '-'], ['.', '_'], \strtolower(\trim($base_path, '/')));
+	}
+
+	/**
 	 * Generate OZone service class for a given table.
 	 *
 	 * @param Table       $table             the table
 	 * @param string      $service_namespace the service class namespace
 	 * @param string      $service_class     the service class name to use
 	 * @param string      $base_path         the service url base path
+	 * @param string      $service_name      the stable name (RESTFulService::SERVICE_NAME)
 	 * @param string      $header            the header to add at the top of the generated class file
 	 * @param null|string $output_dir        the output directory of the class file; null for the default one
 	 * @param bool        $override          whether to override the service class if it already exists,
@@ -55,6 +66,7 @@ class ServiceGenerator
 		string $service_namespace,
 		string $service_class,
 		string $base_path,
+		string $service_name,
 		string $header = '',
 		?string $output_dir = null,
 		bool $override = false
@@ -100,6 +112,7 @@ class ServiceGenerator
 		$inject                         = $og->describeTable($table);
 		$inject['oz_header']            = $header;
 		$inject['service']['path']      = $base_path;
+		$inject['service']['name']      = $service_name;
 		$inject['service']['namespace'] = $service_namespace;
 		$inject['service']['class']     = $service_class;
 		$qualified_class                = $service_namespace . '\\' . $inject['service']['class'];

@@ -23,6 +23,7 @@ use OZONE\Core\Router\Route;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\RouteOptions;
 use OZONE\Core\Router\Router;
+use OZONE\Core\Exceptions\RuntimeException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -75,9 +76,55 @@ final class RESTFulServiceTest extends TestCase
 		}
 	}
 
+	public function testRoutesAreNamedAfterTheServiceNameNotItsPath(): void
+	{
+		self::assertSame('stub_rest_users.get_one', StubUsersRESTService::routeName(RESTFulAction::GET_ONE));
+		self::assertSame(
+			'/stub-rest-users/:id',
+			self::route('stub_rest_users.get_one')?->getPath()
+		);
+	}
+
+	public function testOperationIdsAreTheRouteNames(): void
+	{
+		$doc = ApiDoc::get();
+
+		StubFilesRESTService::apiDoc($doc);
+
+		$paths = \json_decode(\json_encode($doc->toArray()), true)['spec']['paths'];
+
+		self::assertSame('stub_rest_files.get_all', $paths['/stub-rest-files']['get']['operationId']);
+		self::assertSame('stub_rest_files.get_one', $paths['/stub-rest-files/:id']['get']['operationId']);
+	}
+
+	/**
+	 * @return array<string, array{0: class-string<RESTFulService>, 1: string}>
+	 */
+	public static function undeclaredServices(): array
+	{
+		return [
+			'no name'      => [StubNamelessRESTService::class, 'StubNamelessRESTService::SERVICE_NAME must be'],
+			'a bad name'   => [StubBadNameRESTService::class, 'got "Stub-Users"'],
+			'no path'      => [StubPathlessRESTService::class, 'StubPathlessRESTService::SERVICE_PATH must be'],
+			'no table'     => [StubTablelessRESTService::class, 'StubTablelessRESTService::TABLE_NAME is required'],
+		];
+	}
+
+	/**
+	 * @dataProvider undeclaredServices
+	 *
+	 * @param class-string<RESTFulService> $service
+	 */
+	public function testAServiceMissingItsNamePathOrTableRefusesToRegister(string $service, string $message): void
+	{
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage($message);
+
+		$service::registerRoutes(new Router());
+	}
+
 	public function testRouteNameAcceptsAnAction(): void
 	{
-		self::assertSame('/stub-rest-users.get_one', StubUsersRESTService::routeName(RESTFulAction::GET_ONE));
 		self::assertSame(
 			StubUsersRESTService::routeName('get_one'),
 			StubUsersRESTService::routeName(RESTFulAction::GET_ONE)
@@ -143,16 +190,16 @@ final class RESTFulServiceTest extends TestCase
 		\ksort($operations);
 
 		self::assertSame([
-			'file.create_one'               => 'POST /stub-rest-files',
-			'file.delete_all'               => 'DELETE /stub-rest-files',
-			'file.delete_one'               => 'DELETE /stub-rest-files/:id',
-			'file.get_all'                  => 'GET /stub-rest-files',
-			'file.get_one'                  => 'GET /stub-rest-files/:id',
-			'file.get_relation.cloned_from' => 'GET /stub-rest-files/:id/cloned_from',
-			'file.get_relation.clones'      => 'GET /stub-rest-files/:id/clones',
-			'file.get_relation.source'      => 'GET /stub-rest-files/:id/source',
-			'file.update_all'               => 'PATCH /stub-rest-files',
-			'file.update_one'               => 'PATCH /stub-rest-files/:id',
+			'stub_rest_files.create_one'               => 'POST /stub-rest-files',
+			'stub_rest_files.delete_all'               => 'DELETE /stub-rest-files',
+			'stub_rest_files.delete_one'               => 'DELETE /stub-rest-files/:id',
+			'stub_rest_files.get_all'                  => 'GET /stub-rest-files',
+			'stub_rest_files.get_one'                  => 'GET /stub-rest-files/:id',
+			'stub_rest_files.get_relation.cloned_from' => 'GET /stub-rest-files/:id/cloned_from',
+			'stub_rest_files.get_relation.clones'      => 'GET /stub-rest-files/:id/clones',
+			'stub_rest_files.get_relation.source'      => 'GET /stub-rest-files/:id/source',
+			'stub_rest_files.update_all'               => 'PATCH /stub-rest-files',
+			'stub_rest_files.update_one'               => 'PATCH /stub-rest-files/:id',
 		], $operations);
 
 		$get_all_params = \array_column($spec['paths']['/stub-rest-files']['get']['parameters'], 'name');
@@ -214,6 +261,7 @@ final class RESTFulServiceTest extends TestCase
  */
 final class StubUsersRESTService extends RESTFulService
 {
+	public const SERVICE_NAME = 'stub_rest_users';
 	public const SERVICE_PATH = '/stub-rest-users';
 	public const TABLE_NAME   = 'oz_users';
 	public const KEY_COLUMN   = 'id';
@@ -290,6 +338,7 @@ final class StubUsersRESTService extends RESTFulService
  */
 final class StubFilesRESTService extends RESTFulService
 {
+	public const SERVICE_NAME = 'stub_rest_files';
 	public const SERVICE_PATH = '/stub-rest-files';
 	public const TABLE_NAME   = 'oz_files';
 	public const KEY_COLUMN   = 'id';
@@ -306,5 +355,74 @@ final class StubFilesRESTService extends RESTFulService
 		if (RESTFulAction::DELETE_ALL === $action) {
 			$options->withAdminRole();
 		}
+	}
+}
+
+/**
+ * A service declaring its path and table, not its name.
+ *
+ * @internal
+ */
+final class StubNamelessRESTService extends RESTFulService
+{
+	public const SERVICE_PATH = '/stub-nameless';
+	public const TABLE_NAME   = 'oz_users';
+
+	#[Override]
+	public static function registerRoutes(Router $router): void
+	{
+		self::registerRESTRoutes($router);
+	}
+}
+
+/**
+ * A service whose name is not lowercase words.
+ *
+ * @internal
+ */
+final class StubBadNameRESTService extends RESTFulService
+{
+	public const SERVICE_NAME = 'Stub-Users';
+	public const SERVICE_PATH = '/stub-bad-name';
+	public const TABLE_NAME   = 'oz_users';
+
+	#[Override]
+	public static function registerRoutes(Router $router): void
+	{
+		self::registerRESTRoutes($router);
+	}
+}
+
+/**
+ * A service declaring its name and table, not its path.
+ *
+ * @internal
+ */
+final class StubPathlessRESTService extends RESTFulService
+{
+	public const SERVICE_NAME = 'stub_pathless';
+	public const TABLE_NAME   = 'oz_users';
+
+	#[Override]
+	public static function registerRoutes(Router $router): void
+	{
+		self::registerRESTRoutes($router);
+	}
+}
+
+/**
+ * A service declaring its name and path, not its table.
+ *
+ * @internal
+ */
+final class StubTablelessRESTService extends RESTFulService
+{
+	public const SERVICE_NAME = 'stub_tableless';
+	public const SERVICE_PATH = '/stub-tableless';
+
+	#[Override]
+	public static function registerRoutes(Router $router): void
+	{
+		self::registerRESTRoutes($router);
 	}
 }

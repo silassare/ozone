@@ -30,6 +30,7 @@ use OZONE\Core\Access\AtomicActionsRegistry;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Service;
 use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\REST\Enums\RESTFulAction;
@@ -47,9 +48,19 @@ use Throwable;
  */
 abstract class RESTFulService extends Service
 {
-	public const SERVICE_PATH = '/svc-path-sample';
-	public const TABLE_NAME   = 'table_name_sample';
+	/**
+	 * The service's stable name, which its routes are named after (`events.get_all`) and a client
+	 * names the service by: a path may change, the name stays. Lowercase words joined by `_` or `.`
+	 * (`events`, `shop.orders`). Required, as are the path and the table.
+	 */
+	public const SERVICE_NAME = '';
+	/** Where its routes are served (`/events`). */
+	public const SERVICE_PATH = '';
+	public const TABLE_NAME   = '';
 	public const KEY_COLUMN   = 'id';
+
+	/** What a {@see self::SERVICE_NAME} looks like. */
+	public const SERVICE_NAME_REG = '~^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$~';
 
 	/**
 	 * The actions by name, and whether they are enabled. To disable one, a subclass redeclares
@@ -97,7 +108,38 @@ abstract class RESTFulService extends Service
 			throw new InvalidArgumentException('Invalid action: ' . $action);
 		}
 
-		return static::SERVICE_PATH . '.' . $action;
+		static::assertDeclared();
+
+		return static::SERVICE_NAME . '.' . $action;
+	}
+
+	/**
+	 * Refuses a service missing its name, its path or its table: without them it would register
+	 * under a placeholder, or under a name a client cannot rely on.
+	 */
+	public static function assertDeclared(): void
+	{
+		$class = static::class;
+
+		if (!\preg_match(self::SERVICE_NAME_REG, static::SERVICE_NAME)) {
+			throw new RuntimeException(\sprintf(
+				'%s::SERVICE_NAME must be lowercase words joined by "_" or "." ("events", "shop.orders"), got "%s".',
+				$class,
+				static::SERVICE_NAME
+			));
+		}
+
+		if (!\str_starts_with(static::SERVICE_PATH, '/') || '/' === static::SERVICE_PATH) {
+			throw new RuntimeException(\sprintf(
+				'%s::SERVICE_PATH must be a path under the root ("/"), got "%s".',
+				$class,
+				static::SERVICE_PATH
+			));
+		}
+
+		if ('' === static::TABLE_NAME) {
+			throw new RuntimeException(\sprintf('%s::TABLE_NAME is required.', $class));
+		}
 	}
 
 	/**
@@ -514,6 +556,8 @@ abstract class RESTFulService extends Service
 	 */
 	protected static function registerRESTRoutes(Router $router): void
 	{
+		static::assertDeclared();
+
 		$table = db()
 			->getTableOrFail(static::TABLE_NAME);
 		$key_column  = $table->getColumnOrFail(static::KEY_COLUMN);
@@ -626,7 +670,7 @@ abstract class RESTFulService extends Service
 		$options = $router->map(
 			$action->httpMethod(),
 			$action->path(),
-			static fn (RouteInfo $ri) => (new static($ri))->runAction($action, $ri)
+			static fn(RouteInfo $ri) => (new static($ri))->runAction($action, $ri)
 		)->name(static::routeName($action));
 
 		static::configureRoute($action, $options);

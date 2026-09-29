@@ -20,6 +20,7 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\ServiceGenerator;
 use OZONE\Core\Cli\Utils\Utils;
+use OZONE\Core\REST\RESTFulService;
 use PHPUtils\Str;
 
 /**
@@ -81,6 +82,18 @@ final class ServicesCmd extends Command
 			->path()
 			->dir();
 
+		$generate->option('name', 'n', [], 6)
+			->description(
+				'The service\'s stable name, which its routes are named after and clients use;'
+					. ' from the base path by default ("/shop/orders" gives "shop.orders").'
+			)
+			->string()
+			->pattern(RESTFulService::SERVICE_NAME_REG, \sprintf(
+				'The service name is invalid, required pattern: "%s"',
+				\trim(RESTFulService::SERVICE_NAME_REG, RESTFulService::SERVICE_NAME_REG[0])
+			))
+			->def('');
+
 		$generate->handler($this->generate(...));
 	}
 
@@ -98,6 +111,7 @@ final class ServicesCmd extends Command
 		$service_class = (string) $args->get('class');
 		$output_dir    = (string) $args->get('out-dir');
 		$override      = (bool) $args->get('override');
+		$service_name  = (string) $args->get('name');
 
 		if (!$output_dir) {
 			$output_dir = app()
@@ -117,6 +131,10 @@ final class ServicesCmd extends Command
 			$service_class = Str::toClassName($table->getName() . '_service');
 		}
 
+		if ('' === $service_name) {
+			$service_name = ServiceGenerator::defaultName($base_path);
+		}
+
 		$p_ns              = Settings::get('oz.config', 'OZ_PROJECT_NAMESPACE');
 		$service_namespace = \sprintf('%s\Services', $p_ns);
 
@@ -126,6 +144,7 @@ final class ServicesCmd extends Command
 			$service_namespace,
 			$service_class,
 			$base_path,
+			$service_name,
 			'',
 			$output_dir,
 			$override
@@ -134,6 +153,12 @@ final class ServicesCmd extends Command
 		Settings::set('oz.routes.api', $info['provider'], true, null, false);
 
 		$this->getCli()
-			->success(\sprintf('service "%s" generated for "%s => %s".', $service_class, $base_path, $table_name));
+			->success(\sprintf(
+				'service "%s" (%s) generated for "%s => %s".',
+				$service_class,
+				$service_name,
+				$base_path,
+				$table_name
+			));
 	}
 }

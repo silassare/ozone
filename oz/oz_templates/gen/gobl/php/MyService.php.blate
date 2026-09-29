@@ -16,6 +16,7 @@ use Throwable;
 	my_id = pk_columns[0].full_name;
 	my_table = table.name;
 	my_path = service.path;
+	my_name = service.name;
 	my_svc_class = service.class;
 }
 /**
@@ -63,6 +64,7 @@ use Throwable;
  */
 final class {= my_svc_class} extends RESTFulService
 {='{'}
+	public const SERVICE_NAME = '{= my_name}';
 	public const SERVICE_PATH = '/{= my_path}';
 	public const TABLE_NAME   = '{= my_table}';
 	public const KEY_COLUMN   = '{= my_id}';
