@@ -102,6 +102,18 @@ final class RouteTableTest extends TestCase
 		self::assertSame([1, 1, 1], self::registrations());
 	}
 
+	public function testAPatternRunsInUnicodeModeUpToTheEndOfThePath(): void
+	{
+		$full  = self::router();
+		$table = self::router($full->compileTable());
+
+		foreach ([$full, $table] as $router) {
+			// `$` used to also match before a final newline, so `[0-9]+` took "42\n".
+			self::assertSame('item.by_slug', $router->find('GET', "/items/42\n")->foundRoute()->getName());
+			self::assertSame('item.get', $router->find('GET', '/items/42')->foundRoute()->getName());
+		}
+	}
+
 	public function testAnUnknownNameRegistersNothing(): void
 	{
 		$router = self::router(self::router()->compileTable());

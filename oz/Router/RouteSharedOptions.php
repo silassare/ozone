@@ -556,13 +556,7 @@ class RouteSharedOptions
 	 */
 	public function param(string $name, string $pattern = Route::DEFAULT_PARAM_PATTERN): static
 	{
-		if (!self::checkPattern($pattern, $reason)) {
-			throw new InvalidArgumentException(\sprintf(
-				'Route parameter name "%s" pattern is not valid or is too complex. Keep it simple: %s',
-				$name,
-				$reason
-			));
-		}
+		Route::assertParamPattern($name, $pattern);
 
 		$this->route_params[$name] = $pattern;
 
@@ -832,43 +826,6 @@ class RouteSharedOptions
 		}
 
 		return $this->path;
-	}
-
-	/**
-	 * Checks if the parameter pattern is complex or is invalid.
-	 *
-	 * Should be valid regex pattern
-	 * Should not starts with ^
-	 * Should not ends with $
-	 *
-	 * @psalm-suppress InvalidArgument
-	 *
-	 * @param string      $pattern
-	 * @param null|string &$reason
-	 *
-	 * @return bool
-	 */
-	protected static function checkPattern(string $pattern, ?string &$reason = null): bool
-	{
-		if (\str_starts_with($pattern, '^')) {
-			$reason = 'should not start with "^"';
-
-			return false;
-		}
-
-		if (\str_ends_with($pattern, '$')) {
-			$reason = 'should not end with "$"';
-
-			return false;
-		}
-
-		\set_error_handler(static function (): void {}, \E_WARNING);
-		$pattern    = \preg_quote($pattern, Route::REG_DELIMITER);
-		$is_invalid = false === \preg_match(Route::REG_DELIMITER . $pattern . Route::REG_DELIMITER, '');
-		$reason     = \preg_last_error_msg();
-		\restore_error_handler();
-
-		return !$is_invalid;
 	}
 
 	/**

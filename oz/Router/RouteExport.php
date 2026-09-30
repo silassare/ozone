@@ -26,11 +26,16 @@ use OZONE\Core\OZone;
  * Only explicitly named routes: an auto name follows the path, so no client may rely on it. Internal
  * routes (sub-requests only) are left out.
  *
+ * Each parameter has its pattern (a portable pattern body, {@see Route::assertParamPattern()}),
+ * whether the path needs it (`required` is false in an optional part, `[/:state]`), and whether the
+ * router fills it from the context in the URLs it builds (`global`, a parameter of
+ * {@see Router::addGlobalParam()}), which a client fills from its own context the same way.
+ *
  * @psalm-type ExportedRoute = array{
  *     name: string,
  *     methods: list<string>,
  *     path: string,
- *     params: list<array{name: string, pattern: string}>,
+ *     params: list<array{name: string, pattern: string, required: bool, global: bool}>,
  *     form: bool,
  *     resumable: bool,
  *     guards: list<array{type: string, ...}>,
@@ -49,7 +54,8 @@ final class RouteExport
 	 */
 	public static function of(Router $router): array
 	{
-		$out = [];
+		$out     = [];
+		$globals = $router->getGlobalParams();
 
 		foreach ($router->getRoutes() as $route) {
 			$options = $route->getOptions();
@@ -63,7 +69,12 @@ final class RouteExport
 			$params   = [];
 
 			foreach ($route->getPathParams() as $name) {
-				$params[] = ['name' => $name, 'pattern' => $declared[$name] ?? Route::DEFAULT_PARAM_PATTERN];
+				$params[] = [
+					'name'     => $name,
+					'pattern'  => $declared[$name] ?? Route::DEFAULT_PARAM_PATTERN,
+					'required' => $route->isPathParamRequired($name),
+					'global'   => isset($globals[$name]),
+				];
 			}
 
 			$out[] = [

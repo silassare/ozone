@@ -32,9 +32,10 @@ use Throwable;
 final class RouteTable
 {
 	/**
-	 * The layout of {@see toArray()}: a file of another layout is ignored.
+	 * The layout of {@see toArray()}: a file of another layout is ignored. 2: the regular expressions
+	 * of dynamic routes run in Unicode mode, `$` at the very end ({@see Route::getRegExp()}).
 	 */
-	public const FORMAT = 1;
+	public const FORMAT = 2;
 
 	/**
 	 * @param array{

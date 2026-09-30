@@ -224,4 +224,81 @@ final class RouteTest extends TestCase
 		$this->expectException(InvalidArgumentException::class);
 		$router->getRoute('articles.get_by_id')->buildPath($context);
 	}
+
+	public function testAcceptsPortableParamPatterns(): void
+	{
+		$router = new Router();
+
+		$patterns = ['[^/]+', '[0-9]+', '[a-z0-9]{32}', '[a-zA-Z0-9_-]+', 'tickets|seats', '[a-z]{1,8}(-[a-z]{1,8})?'];
+
+		foreach ($patterns as $i => $pattern) {
+			$router->get('/p' . $i . '/:value', static fn () => null)->param('value', $pattern);
+		}
+
+		$router->addGlobalParam('lang', '[a-z]{2}', static fn () => null);
+
+		self::assertCount(6, $router->getRoutes());
+	}
+
+	/**
+	 * @dataProvider provideRefusesParamPatternsThatAreNotPortableCases
+	 */
+	public function testRefusesParamPatternsThatAreNotPortable(string $pattern): void
+	{
+		$router = new Router();
+
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage('Route parameter "value" pattern');
+
+		$router->get('/p/:value', static fn () => null)->param('value', $pattern);
+	}
+
+	/**
+	 * @return iterable<string, array{string}>
+	 */
+	public static function provideRefusesParamPatternsThatAreNotPortableCases(): iterable
+	{
+		yield 'invalid' => ['[a-z'];
+
+		yield 'anchored at start' => ['^[a-z]+'];
+
+		yield 'anchored at end' => ['[a-z]+$'];
+
+		yield 'possessive quantifier' => ['[a-z]++'];
+
+		yield 'atomic group' => ['(?>ab)'];
+
+		yield 'unescaped delimiter' => ['a~b'];
+	}
+
+	public function testRefusesAGlobalParamPatternThatIsNotPortable(): void
+	{
+		$router = new Router();
+
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage('Route parameter "lang" pattern');
+
+		$router->addGlobalParam('lang', '[a-z', static fn () => null);
+	}
+
+	public function testMatchesAsAPortablePatternIsRun(): void
+	{
+		$router = new Router();
+		$route  = $router->get('/u/:name/:id', static fn () => null)
+			->param('name', '.{2}')
+			->param('id', '[0-9]+');
+
+		$route = $router->getRoute($route->getName());
+
+		self::assertNotNull($route);
+		self::assertSame('~^/u/(?P<name>.{2})/(?P<id>[0-9]+)$~uD', $route->getRegExp());
+
+		// Characters, not bytes: "é" is one character and two bytes.
+		self::assertTrue($route->is('/u/éa/1'));
+		self::assertFalse($route->is('/u/é/1'));
+
+		// `$` is the end of the path, not also before a final newline.
+		self::assertFalse($route->is("/u/ab/1\n"));
+		self::assertTrue($route->is('/u/ab/1'));
+	}
 }

@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Router;
 
+use InvalidArgumentException;
 use OZONE\Core\App\Context;
+use PHPUtils\PortablePattern;
 
 /**
  * Class Route.
@@ -33,7 +35,9 @@ final class Route
 	private string $parser_result;
 
 	/**
-	 * @var string[]
+	 * Whether each parameter of the path is required, by name: false for one in an optional part.
+	 *
+	 * @var array<string, bool>
 	 */
 	private array $params_found = [];
 
@@ -205,6 +209,16 @@ final class Route
 	}
 
 	/**
+	 * Returns the regular expression a path must match, run as a portable pattern is
+	 * ({@see PortablePattern::toPcre()}): in Unicode mode, and with `$` at the very end of the path,
+	 * so a client checking a param with its pattern reads it the way the router does.
+	 */
+	public function getRegExp(): string
+	{
+		return self::REG_DELIMITER . '^' . $this->getParserResult() . '$' . self::REG_DELIMITER . 'uD';
+	}
+
+	/**
 	 * Returns the parameters found after parsing the route path if any.
 	 *
 	 * @return array
@@ -213,7 +227,51 @@ final class Route
 	{
 		$this->ensureParsed();
 
-		return $this->params_found;
+		return \array_keys($this->params_found);
+	}
+
+	/**
+	 * Checks if a parameter of the path is required: false for one in an optional part (`[/:state]`)
+	 * or not in the path.
+	 */
+	public function isPathParamRequired(string $name): bool
+	{
+		$this->ensureParsed();
+
+		return $this->params_found[$name] ?? false;
+	}
+
+	/**
+	 * Asserts that a parameter pattern is one a route may declare: a portable pattern body
+	 * ({@see PortablePattern}), so a client checks a value the way the router matches it, without
+	 * `^` and `$`, which the router adds.
+	 *
+	 * @throws InvalidArgumentException
+	 */
+	public static function assertParamPattern(string $name, string $pattern): void
+	{
+		$reason = null;
+
+		if (\str_starts_with($pattern, '^')) {
+			$reason = 'should not start with "^"';
+		} elseif (\str_ends_with($pattern, '$')) {
+			$reason = 'should not end with "$"';
+		} else {
+			try {
+				PortablePattern::assertPortable(self::REG_DELIMITER . $pattern . self::REG_DELIMITER);
+			} catch (InvalidArgumentException $e) {
+				$reason = $e->getMessage();
+			}
+		}
+
+		if (null !== $reason) {
+			throw new InvalidArgumentException(\sprintf(
+				'Route parameter "%s" pattern "%s" is not valid: %s',
+				$name,
+				$pattern,
+				$reason
+			));
+		}
 	}
 
 	/**
@@ -232,9 +290,8 @@ final class Route
 			return $path === $this->options->getPath();
 		}
 
-		$regexp  = self::REG_DELIMITER . '^' . $this->parser_result . '$' . self::REG_DELIMITER;
 		$matches = [];
-		$passed  = 1 === \preg_match($regexp, $path, $matches);
+		$passed  = 1 === \preg_match($this->getRegExp(), $path, $matches);
 
 		if ($passed) {
 			$params = $matches;
@@ -267,7 +324,7 @@ final class Route
 				$declared_params     = $this->getDeclaredParams();
 				$parser              = new RoutePathParser($path, $this->router);
 				$this->parser_result = $parser->parse($declared_params, $params_found);
-				$this->params_found  = \array_keys($params_found);
+				$this->params_found  = \array_map(\boolval(...), $params_found);
 			} else {
 				$this->parser_result = $path;
 			}

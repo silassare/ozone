@@ -181,6 +181,8 @@ final class Router
 	 */
 	public function addGlobalParam(string $param, string $pattern, callable $provider): self
 	{
+		Route::assertParamPattern($param, $pattern);
+
 		$this->global_params[$param]           = $pattern;
 		$this->global_params_providers[$param] = $provider;
 
@@ -564,7 +566,7 @@ final class Router
 			$ordinal = $route->getOrdinal();
 
 			$dynamic[] = [
-				Route::REG_DELIMITER . '^' . $route->getParserResult() . '$' . Route::REG_DELIMITER,
+				$route->getRegExp(),
 				\array_fill_keys($route->getMethods(), 1),
 				$source,
 				$ordinal,

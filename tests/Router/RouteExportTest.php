@@ -84,8 +84,8 @@ final class RouteExportTest extends TestCase
 				'methods'       => ['GET'],
 				'path'          => '/events/:id/tickets/:ticket',
 				'params'        => [
-					['name' => 'id', 'pattern' => '[0-9]+'],
-					['name' => 'ticket', 'pattern' => '[^/]+'],
+					['name' => 'id', 'pattern' => '[0-9]+', 'required' => true, 'global' => false],
+					['name' => 'ticket', 'pattern' => '[^/]+', 'required' => true, 'global' => false],
 				],
 				'form'          => false,
 				'resumable'     => false,
@@ -93,6 +93,23 @@ final class RouteExportTest extends TestCase
 				'opaque_guards' => 0,
 			],
 		], RouteExport::of($router));
+	}
+
+	public function testTellsOptionalAndGlobalParams(): void
+	{
+		$router = new Router();
+
+		$router->addGlobalParam('lang', '[a-z]{2}', static fn () => 'en');
+		$router->get('/:lang/users/:id/articles[/:state[/:page]]', static fn () => null)
+			->name('articles')
+			->param('page', '[0-9]+');
+
+		self::assertSame([
+			['name' => 'lang', 'pattern' => '[a-z]{2}', 'required' => true, 'global' => true],
+			['name' => 'id', 'pattern' => '[^/]+', 'required' => true, 'global' => false],
+			['name' => 'state', 'pattern' => '[^/]+', 'required' => false, 'global' => false],
+			['name' => 'page', 'pattern' => '[0-9]+', 'required' => false, 'global' => false],
+		], RouteExport::of($router)[0]['params']);
 	}
 
 	public function testLeavesOutAutoNamedAndInternalRoutes(): void

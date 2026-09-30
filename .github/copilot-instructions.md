@@ -319,6 +319,8 @@ optional `$parent` (`RouteSharedOptions`): any route can then act as the parent 
 path, name, guards and middlewares without a group block.
 
 - Params: `/users/:id` captures `[^/]+` unless constrained with `param()`; read with `$ri->param('id')`.
+  A param pattern (and a global param's) is a portable pattern body (`PortablePattern`), and a route's
+  regex runs as one (`Route::getRegExp()`, flags `uD`): clients check values with it.
   Named routes build URIs: `$context->buildRouteUri('route:name', ['id' => 42])`.
 - Not found -> `RouteNotFound` -> `NotFoundException`; wrong method -> `RouteMethodNotAllowed` ->
   `MethodNotAllowedException`, except an OPTIONS preflight, which passes.
