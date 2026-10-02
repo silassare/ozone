@@ -95,6 +95,15 @@ return [
 	'OZ_UPLOAD_CHUNK_MAX_SIZE'            => 1000 * 1000, // 1 MB
 
 	/**
+	 * The image driver renditions are rendered with: `auto` (the first the server has: libvips with
+	 * ext-ffi and intervention/image-driver-vips, then ext-imagick, then ext-gd), `vips`, `imagick`
+	 * or `gd`. A driver named here and missing on the server fails the first rendition, saying so.
+	 *
+	 * @see \OZONE\Core\FS\Images\Images
+	 */
+	'OZ_IMAGE_DRIVER'                     => 'auto',
+
+	/**
 	 * maximum size of a thumbnail: in pixels.
 	 */
 	'OZ_THUMBNAIL_MAX_SIZE'               => 640,

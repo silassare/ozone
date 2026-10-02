@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS\Filters;
 
-use claviska\SimpleImage;
 use Exception;
 use Override;
 use OZONE\Core\App\GarbageCollector;
@@ -23,6 +22,8 @@ use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\Filters\Interfaces\FileFilterHandlerInterface;
+use OZONE\Core\FS\Images\ImageRecipe;
+use OZONE\Core\FS\Images\Images;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\Response;
 use RecursiveDirectoryIterator;
@@ -32,8 +33,9 @@ use SplFileInfo;
 /**
  * Class ImageFileFilterHandler.
  *
- * Built-in filter handler for image files (any `image/*` mime type).
- * Uses the `claviska/simpleimage` library to apply transformations.
+ * Built-in filter handler for image files (any `image/*` mime type), rendered by the image
+ * processor of OZone ({@see Images}: Intervention Image, with libvips, Imagick or GD). Every
+ * rendition is upright (its orientation applied) and carries no metadata (location, camera).
  *
  * Supported filter tokens (URL-safe: `[a-z0-9]+`):
  *
@@ -147,120 +149,27 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 	}
 
 	/**
-	 * Parse tokens, apply SimpleImage transformations, return [mime, bytes].
+	 * Renders the canonical tokens, returns [mime, bytes].
 	 *
 	 * Falls back to the raw content when image processing fails.
 	 *
-	 * @param OZFile     $file
-	 * @param FileStream $stream
-	 * @param string[]   $filterTokens
+	 * @param OZFile       $file
+	 * @param FileStream   $stream
+	 * @param list<string> $filterTokens
 	 *
 	 * @return array{0: string, 1: string}
 	 */
 	private function process(OZFile $file, FileStream $stream, array $filterTokens): array
 	{
-		/**
-		 * @var null|int $maxW
-		 * @var null|int $maxH
-		 */
-		$maxW           = null;
-		$maxH           = null;
-		$quality        = 100;
-		$useCrop        = false;
-		// true when 'crop' or 'nocrop' was explicit
-		$cropOverridden = false;
-
-		// Effects are stored as closures applied in declaration order.
-		$effects = [];
-
-		foreach ($filterTokens as $token) {
-			if ('thumb' === $token) {
-				if (!$cropOverridden) {
-					$useCrop = true;
-				}
-				$maxW ??= (int) Settings::get('oz.files', 'OZ_THUMBNAIL_MAX_SIZE');
-				$maxH ??= (int) Settings::get('oz.files', 'OZ_THUMBNAIL_MAX_SIZE');
-			} elseif (\preg_match('/^thumb(\d+)$/', $token, $m)) {
-				if (!$cropOverridden) {
-					$useCrop = true;
-				}
-				$maxW = (int) $m[1];
-				$maxH = (int) $m[1];
-			} elseif (\preg_match('/^w(\d+)$/', $token, $m)) {
-				$maxW = (int) $m[1];
-			} elseif (\preg_match('/^h(\d+)$/', $token, $m)) {
-				$maxH = (int) $m[1];
-			} elseif (\preg_match('/^q(\d+)$/', $token, $m)) {
-				$quality = \max(1, \min(100, (int) $m[1]));
-			} elseif ('crop' === $token) {
-				$useCrop        = true;
-				$cropOverridden = true;
-			} elseif ('nocrop' === $token) {
-				$useCrop        = false;
-				$cropOverridden = true;
-			} elseif ('grayscale' === $token) {
-				$effects[] = static function (SimpleImage $img): void {
-					$img->desaturate();
-				};
-			} elseif ('sepia' === $token) {
-				$effects[] = static function (SimpleImage $img): void {
-					$img->sepia();
-				};
-			} elseif ('sharpen' === $token) {
-				$effects[] = static function (SimpleImage $img): void {
-					$img->sharpen();
-				};
-			} elseif ('blur' === $token) {
-				$effects[] = static function (SimpleImage $img): void {
-					$img->blur('gaussian', 1);
-				};
-			} elseif (\preg_match('/^blur(\d+)$/', $token, $m)) {
-				$passes    = (int) $m[1];
-				$effects[] = static function (SimpleImage $img) use ($passes): void {
-					$img->blur('gaussian', $passes);
-				};
-			}
-			// Unknown tokens are silently ignored.
-		}
-
-		// Process image
-
 		$mime    = $file->getMime();
 		$content = $stream->getContents();
+		$recipe  = ImageRecipe::fromTokens(
+			$filterTokens,
+			(int) Settings::get('oz.files', 'OZ_THUMBNAIL_MAX_SIZE')
+		);
 
 		try {
-			$img = new SimpleImage();
-			$img->fromString($content);
-
-			if (null !== $maxW || null !== $maxH) {
-				$w = $maxW ?? 0;
-				$h = $maxH ?? 0;
-
-				// Never enlarged: a size beyond the image's own is brought down, keeping the ratio asked.
-				$scale = \min(
-					1,
-					$w ? $img->getWidth() / $w : 1,
-					$h ? $img->getHeight() / $h : 1
-				);
-				$w     = (int) \floor($w * $scale);
-				$h     = (int) \floor($h * $scale);
-
-				if ($useCrop && $w && $h) {
-					$img->thumbnail($w, $h);
-				} elseif ($w && $h) {
-					$img->bestFit($w, $h);
-				} elseif ($w) {
-					$img->resize($w, null);
-				} else {
-					$img->resize(null, $h);
-				}
-			}
-
-			foreach ($effects as $effect) {
-				$effect($img);
-			}
-
-			$bytes = $img->toString($mime, $quality);
+			$bytes = Images::processor()->render($content, $mime, $recipe);
 		} catch (Exception $e) {
 			oz_logger()->error('Image filter processing failed, falling back to raw file.', [
 				'_file'      => $file->getID(),
