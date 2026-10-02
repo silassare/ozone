@@ -115,7 +115,7 @@ final class Provisioner
 	 */
 	private function planBare(ProvisionPlan $plan): void
 	{
-		$packages = [$this->manager->phpFpmPackage()];
+		$packages = [$this->manager->phpCliPackage(), $this->manager->phpFpmPackage()];
 
 		foreach (Requirements::extensions() as $extension) {
 			$package = $this->manager->phpExtensionPackage($extension);
@@ -128,8 +128,27 @@ final class Provisioner
 
 		$plan->add(new ProvisionStep(
 			'php',
-			'PHP-FPM and the extensions OZone requires.',
+			'PHP (its command line and FPM) and the extensions OZone requires.',
 			[$this->manager->installCommand(\array_values(\array_unique($packages)))],
+		));
+
+		// A distribution ships one PHP series (Debian 12 has 8.2): installed is not enough, it must
+		// be one OZone runs on, else the provision stops here rather than leave a server that cannot.
+		$min = Requirements::minPhpVersion();
+		$php = $this->manager->phpBinary();
+
+		$plan->add(new ProvisionStep(
+			'php:version',
+			\sprintf('PHP %s or newer, which OZone needs: the distribution\'s is checked.', $min),
+			[\sprintf(
+				'%1$s -r %2$s %3$s || { echo "OZone needs PHP %3$s or newer, this server has $(%1$s -r %4$s):'
+				. ' its distribution ships an older one. Use Debian 13, Ubuntu 24.04 or a current Alpine." >&2;'
+				. ' exit 1; }',
+				$php,
+				\escapeshellarg('exit(version_compare(PHP_VERSION, $argv[1], ">=") ? 0 : 1);'),
+				$min,
+				\escapeshellarg('echo PHP_VERSION;'),
+			)],
 		));
 
 		$services = ['php-fpm'];

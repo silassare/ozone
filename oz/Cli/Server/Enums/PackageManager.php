@@ -98,7 +98,7 @@ enum PackageManager: string
 	 * asking for `php-json` or `php-pdo` on Debian fails, because no such package exists. Returning
 	 * null for those is what keeps a plan installable.
 	 *
-	 * Verified against Debian 12 and Alpine 3 (see `ServerProvisionTest`); the Fedora and Arch maps
+	 * Verified against Debian 13 and Alpine 3 (see `ServerProvisionTest`); the Fedora and Arch maps
 	 * follow their documented package splits but are not yet covered by a container run.
 	 */
 	public function phpExtensionPackage(string $extension): ?string
@@ -146,6 +146,28 @@ enum PackageManager: string
 	public static function alpinePrefix(): string
 	{
 		return 'php' . \PHP_MAJOR_VERSION . \PHP_MINOR_VERSION;
+	}
+
+	/**
+	 * The PHP command line binary the packages install: Alpine's carries the series (`php84`).
+	 */
+	public function phpBinary(): string
+	{
+		return self::APK === $this ? self::alpinePrefix() : 'php';
+	}
+
+	/**
+	 * The package providing PHP's command line, which `oz`, its cron and its workers run on: Alpine's
+	 * PHP-FPM package does not bring it.
+	 */
+	public function phpCliPackage(): string
+	{
+		return match ($this) {
+			self::APT, self::DNF, self::UNKNOWN => 'php-cli',
+			self::APK                           => self::alpinePrefix(),
+			// One package with everything.
+			self::PACMAN, self::BREW            => 'php',
+		};
 	}
 
 	/**

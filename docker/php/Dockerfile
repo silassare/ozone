@@ -1,5 +1,6 @@
 # PHP for OZone's tests and tools: the extensions OZone requires (and the ones it suggests: the
-# MySQL, PostgreSQL and Redis drivers, intl for the plural rules of translations), pcov for
+# MySQL, PostgreSQL and Redis drivers, intl for the plural rules of translations, every image driver:
+# GD with AVIF and WebP, Imagick, libvips through FFI, and exif for an image's orientation), pcov for
 # coverage, and Composer.
 #
 # The database *clients* are here for `oz db backup`, which shells out to mysqldump and pg_dump --
@@ -19,14 +20,18 @@ RUN apt-get update \
 		libjpeg62-turbo-dev \
 		libpng-dev \
 		libwebp-dev \
+		libavif-dev \
+		libmagickwand-dev \
+		libvips42 \
+		libffi-dev \
 		libpq-dev \
 		libicu-dev \
 		default-mysql-client \
 		postgresql-client \
-	&& docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-	&& docker-php-ext-install -j"$(nproc)" bcmath gd intl pcntl pdo_mysql pdo_pgsql \
-	&& pecl install redis pcov \
-	&& docker-php-ext-enable redis pcov \
+	&& docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp --with-avif \
+	&& docker-php-ext-install -j"$(nproc)" bcmath exif ffi gd intl pcntl pdo_mysql pdo_pgsql \
+	&& pecl install redis pcov imagick \
+	&& docker-php-ext-enable redis pcov imagick \
 	&& rm -rf /var/lib/apt/lists/* /tmp/pear
 
 # Debian ships MariaDB's client, which verifies the server certificate by default; the MySQL 8.4

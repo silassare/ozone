@@ -27,23 +27,23 @@ use Throwable;
 final class Requirements
 {
 	/**
-	 * The PHP version constraint, e.g. `>=8.1`.
+	 * The PHP version constraint, e.g. `>=8.3`.
 	 */
 	public static function phpConstraint(): string
 	{
 		$require = self::require(self::ozoneComposerFile());
 
-		return (string) ($require['php'] ?? '>=8.1');
+		return (string) ($require['php'] ?? '>=8.3');
 	}
 
 	/**
-	 * The minimum PHP version the constraint asks for, e.g. `8.1`.
+	 * The minimum PHP version the constraint asks for, e.g. `8.3`.
 	 */
 	public static function minPhpVersion(): string
 	{
 		\preg_match('~(\d+\.\d+(?:\.\d+)?)~', self::phpConstraint(), $m);
 
-		return $m[1] ?? '8.1';
+		return $m[1] ?? '8.3';
 	}
 
 	/**
@@ -117,11 +117,35 @@ final class Requirements
 	}
 
 	/**
+	 * The PHP version OZone's dependencies are resolved for (`config.platform.php` of its
+	 * `composer.json`), else the minimum version: what a new project pins too.
+	 */
+	public static function phpPlatform(): string
+	{
+		$platform = self::composer(self::ozoneComposerFile())['config']['platform']['php'] ?? null;
+
+		return \is_string($platform) ? $platform : self::minPhpVersion();
+	}
+
+	/**
 	 * The `require` map of a `composer.json`, empty when it cannot be read.
 	 *
 	 * @return array<string, string>
 	 */
 	private static function require(string $file): array
+	{
+		$require = self::composer($file)['require'] ?? null;
+
+		/** @var array<string, string> */
+		return \is_array($require) ? $require : [];
+	}
+
+	/**
+	 * A `composer.json` decoded, empty when it cannot be read.
+	 *
+	 * @return array<mixed>
+	 */
+	private static function composer(string $file): array
 	{
 		static $cache = [];
 
@@ -132,10 +156,8 @@ final class Requirements
 				if (\is_file($file) && \is_readable($file)) {
 					$data = \json_decode((string) \file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
 
-					if (\is_array($data) && \is_array($data['require'] ?? null)) {
-						/** @var array<string, string> $require */
-						$require      = $data['require'];
-						$cache[$file] = $require;
+					if (\is_array($data)) {
+						$cache[$file] = $data;
 					}
 				}
 			} catch (JsonException|Throwable) {

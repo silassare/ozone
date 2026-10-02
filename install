@@ -22,7 +22,7 @@ BRANCH="main"
 
 OZONE_HOME="${OZONE_HOME:-$HOME/.ozone/tool}"
 OZONE_BIN="${OZONE_BIN:-$HOME/.local/bin}"
-MIN_PHP="8.1"
+MIN_PHP="8.3"
 
 WITH_PHP=0
 SYSTEM=0

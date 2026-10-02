@@ -13,14 +13,14 @@
 	],
 	"config": {
 		"platform": {
-			"php": "8.1.31"
+			"php": "8.3.16"
 		},
 		"allow-plugins": {
 			"dealerdirect/phpcodesniffer-composer-installer": true
 		}
 	},
 	"require": {
-		"php": ">=8.1",
+		"php": ">=8.3",
 		"ext-pdo": "*",
 		"ext-openssl": "*",
 		"ext-json": "*",
@@ -35,7 +35,7 @@
 		"silassare/kli": "^2.0.0",
 		"silassare/blate": "^1.1.0",
 		"silassare/php-utils": "^2.0.0",
-		"claviska/simpleimage": "^4.0",
+		"intervention/image": "^4.3",
 		"psr/http-message": "^2.0",
 		"symfony/process": "^6.3",
 		"zircote/swagger-php": "^5.0",
@@ -45,7 +45,8 @@
 		"roave/security-advisories": "dev-latest",
 		"oliup/oliup-cs-php": "dev-main",
 		"phpunit/phpunit": "^9.6.21",
-		"vimeo/psalm": "^6.0"
+		"vimeo/psalm": "^6.0",
+		"intervention/image-driver-vips": "^4.1"
 	},
 	"suggest": {
 		"ext-pdo_mysql": "Required to use the MySQL driver.",
@@ -57,7 +58,11 @@
 		"ext-intl": "The plural rules of translations (one, few...) and the number filter; without it a text chooses its plural with =N, comparisons and other.",
 		"ext-swoole": "Required to serve OZone from Swoole (OZONE\\Core\\Runtime\\Bridges\\SwooleBridge).",
 		"spiral/roadrunner-http": "Required to serve OZone from RoadRunner (OZONE\\Core\\Runtime\\Bridges\\RoadRunnerBridge).",
-		"phpunit/phpunit": "Required by the test kit's base test case and traits (OZONE\\Core\\Testing\\IntegrationTestCase, OZONE\\Core\\Testing\\Traits)."
+		"phpunit/phpunit": "Required by the test kit's base test case and traits (OZONE\\Core\\Testing\\IntegrationTestCase, OZONE\\Core\\Testing\\Traits).",
+		"ext-imagick": "An image driver: OZone uses the first of libvips, Imagick and GD the server has (oz.files OZ_IMAGE_DRIVER).",
+		"ext-ffi": "With intervention/image-driver-vips and libvips, the fastest image driver.",
+		"intervention/image-driver-vips": "The libvips image driver (with ext-ffi and libvips installed).",
+		"ext-exif": "Reads a photo's orientation, so it is served upright."
 	},
 	"bin": [
 		"bin/oz",

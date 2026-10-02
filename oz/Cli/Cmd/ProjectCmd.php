@@ -25,6 +25,7 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Build\ProjectBuilder;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Process;
+use OZONE\Core\Cli\Utils\Requirements;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FS;
@@ -485,6 +486,9 @@ final class ProjectCmd extends Command
 			'oz_project_namespace_escaped' => \str_replace('\\', '\\\\', $namespace),
 			'oz_project_app_class_name'    => $class_name,
 			'oz_install_path'              => \dirname(OZ_OZONE_DIR),
+			// OZone's own PHP requirement and platform: a new project resolves what OZone does.
+			'oz_php_constraint'            => Requirements::phpConstraint(),
+			'oz_php_platform'              => Requirements::phpPlatform(),
 		];
 
 		$app_class        = Templates::compile('oz://~core~/gen/app_class.blate', $inject);
