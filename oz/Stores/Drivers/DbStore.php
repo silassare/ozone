@@ -190,7 +190,7 @@ final class DbStore implements StoreDriverInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function increment(string $key, float $factor = 1): bool
+	public function increment(string $key, float|int $factor = 1): bool
 	{
 		$entry = $this->get($key);
 
@@ -207,7 +207,7 @@ final class DbStore implements StoreDriverInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function decrement(string $key, float $factor = 1): bool
+	public function decrement(string $key, float|int $factor = 1): bool
 	{
 		$entry = $this->get($key);
 

@@ -56,28 +56,28 @@ interface StoreDriverInterface
 	public function set(StoreEntry $entry): bool;
 
 	/**
-	 * Increments the value of a given key.
+	 * Increments the value of a given key: a whole number stays one when the factor is one.
 	 *
 	 * Returns false when the key does not exist.
 	 *
-	 * @param string $key
-	 * @param float  $factor
+	 * @param string    $key
+	 * @param float|int $factor
 	 *
 	 * @return bool
 	 */
-	public function increment(string $key, float $factor = 1): bool;
+	public function increment(string $key, float|int $factor = 1): bool;
 
 	/**
-	 * Decrements the value of a given key.
+	 * Decrements the value of a given key: a whole number stays one when the factor is one.
 	 *
 	 * Returns false when the key does not exist.
 	 *
-	 * @param string $key
-	 * @param float  $factor
+	 * @param string    $key
+	 * @param float|int $factor
 	 *
 	 * @return bool
 	 */
-	public function decrement(string $key, float $factor = 1): bool;
+	public function decrement(string $key, float|int $factor = 1): bool;
 
 	/**
 	 * Deletes a cache entry by key.

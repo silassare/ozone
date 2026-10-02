@@ -170,7 +170,7 @@ class MemoryStore implements StoreDriverInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function increment(string $key, float $factor = 1): bool
+	public function increment(string $key, float|int $factor = 1): bool
 	{
 		if (!isset(self::$cache_data[$this->namespace][$key])) {
 			return false;
@@ -187,7 +187,7 @@ class MemoryStore implements StoreDriverInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function decrement(string $key, float $factor = 1): bool
+	public function decrement(string $key, float|int $factor = 1): bool
 	{
 		if (!isset(self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP])) {
 			return false;

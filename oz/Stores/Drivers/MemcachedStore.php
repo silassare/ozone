@@ -125,18 +125,18 @@ final class MemcachedStore implements StoreDriverInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function increment(string $key, float $factor = 1): bool
+	public function increment(string $key, float|int $factor = 1): bool
 	{
-		return $this->memcached->increment($key, $factor);
+		return false !== $this->memcached->increment($key, self::wholeFactor($factor));
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function decrement(string $key, float $factor = 1): bool
+	public function decrement(string $key, float|int $factor = 1): bool
 	{
-		return $this->memcached->decrement($key, $factor);
+		return false !== $this->memcached->decrement($key, self::wholeFactor($factor));
 	}
 
 	/**
@@ -229,5 +229,19 @@ final class MemcachedStore implements StoreDriverInterface
 				'The Memcached cache driver needs the PHP ext-memcached extension, which is not installed.'
 			);
 		}
+	}
+
+	/**
+	 * Memcached counts in whole numbers only (its `incr` / `decr`).
+	 *
+	 * @throws RuntimeException for a factor with a fraction
+	 */
+	private static function wholeFactor(float|int $factor): int
+	{
+		if (\is_float($factor) && \floor($factor) !== $factor) {
+			throw new RuntimeException(\sprintf('Memcached counts in whole numbers only, %s given.', $factor));
+		}
+
+		return (int) $factor;
 	}
 }

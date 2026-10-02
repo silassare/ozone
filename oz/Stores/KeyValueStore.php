@@ -171,7 +171,7 @@ final class KeyValueStore
 	 */
 	public function increment(string $key, float|int $by = 1): bool
 	{
-		return $this->provider->increment($key, (float) $by);
+		return $this->provider->increment($key, $by);
 	}
 
 	/**
@@ -186,7 +186,7 @@ final class KeyValueStore
 	 */
 	public function decrement(string $key, float|int $by = 1): bool
 	{
-		return $this->provider->decrement($key, (float) $by);
+		return $this->provider->decrement($key, $by);
 	}
 
 	/**
