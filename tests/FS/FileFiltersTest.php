@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\FS;
 
-use claviska\SimpleImage;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\FS\FileStream;
@@ -405,11 +404,6 @@ final class FileFiltersTest extends TestCase
 		self::assertSame($content, $body);
 		self::assertSame('application/octet-stream', $response->getHeaderLine('Content-type'));
 		self::assertSame((string) \strlen($content), $response->getHeaderLine('Content-Length'));
-	}
-
-	public function testSimpleImageIsAvailable(): void
-	{
-		self::assertTrue(\class_exists(SimpleImage::class), 'claviska/simpleimage must be installed');
 	}
 
 	/**

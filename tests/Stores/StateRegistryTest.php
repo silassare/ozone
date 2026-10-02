@@ -67,6 +67,24 @@ final class StateRegistryTest extends TestCase
 		self::assertNull($store->get('probe'));
 	}
 
+	public function testADatabaseStoreCountsInWholeNumbersUntilAFractionIsAdded(): void
+	{
+		// `oz:form:resume` is backed by the database store (DbStore).
+		$store = StateRegistry::store('oz:form:resume');
+
+		$store->set('count', 1);
+		$store->increment('count', 2);
+		$store->increment('count');
+
+		self::assertSame(4, $store->get('count'));
+
+		$store->decrement('count', 0.5);
+
+		self::assertSame(3.5, $store->get('count'));
+
+		$store->delete('count');
+	}
+
 	public function testTheSameStoreIsReturnedTwice(): void
 	{
 		self::assertSame(StateRegistry::store('oz:form:resume'), StateRegistry::store('oz:form:resume'));

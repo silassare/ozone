@@ -27,7 +27,7 @@ make shell             # a shell in the PHP container, servers running
 make down              # stop the servers
 ```
 
-`OZ_PHP_VERSION=8.1 make docker-build test` runs the suites on another PHP version.
+`OZ_PHP_VERSION=8.3 make docker-build test` runs the suites on another PHP version.
 
 Run the suites through `make`, never `vendor/bin/phpunit` directly: the targets pass
 `-c phpunit.xml.dist`, and PHPUnit would otherwise prefer a local `phpunit.xml` and quietly change

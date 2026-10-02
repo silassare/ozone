@@ -208,9 +208,19 @@ final class OZTestProject
 
 		\ksort($composer['require']);
 
+		// The PHP the graph was resolved for, as the running repository pins it: a project scaffolded
+		// before a change of PHP minimum would otherwise keep its older pin and refuse the graph.
+		$platform = self::platformPhp($root_dir);
+
+		if (null !== $platform) {
+			$composer['config']['platform']['php'] = $platform;
+		} else {
+			unset($composer['config']['platform']['php']);
+		}
+
 		// -- Step 3: compute vendor cache hash --------------------------------
 		// The require holds the pins: a dependency moving in OZone's composer.lock busts the cache.
-		$hash_input = ['require' => $composer['require'] ?? []];
+		$hash_input = ['require' => $composer['require'] ?? [], 'platform' => $platform];
 		if (!$shared) {
 			$hash_input['project'] = $name;
 		}
@@ -617,6 +627,28 @@ final class OZTestProject
 		}
 
 		return $real;
+	}
+
+	/**
+	 * The `config.platform.php` of a repository's `composer.json`, null when it has none.
+	 */
+	private static function platformPhp(string $root_dir): ?string
+	{
+		$file = $root_dir . \DIRECTORY_SEPARATOR . 'composer.json';
+
+		if (!\is_file($file)) {
+			return null;
+		}
+
+		try {
+			$data = \json_decode((string) \file_get_contents($file), true, 512, \JSON_THROW_ON_ERROR);
+		} catch (JsonException) {
+			return null;
+		}
+
+		$php = \is_array($data) ? ($data['config']['platform']['php'] ?? null) : null;
+
+		return \is_string($php) ? $php : null;
 	}
 
 	/**

@@ -46,7 +46,7 @@
 
 ## 1. Architecture
 
-OZone is a PHP 8.1+ service-oriented REST API and web framework.
+OZone is a PHP 8.3+ service-oriented REST API and web framework.
 
 | Layer         | Location                                 | Purpose                                                            |
 | ------------- | ---------------------------------------- | ------------------------------------------------------------------ |
@@ -997,11 +997,13 @@ SQLite file apart.
 
 ## 22. Dependencies
 
-PHP 8.1+; MySQL by default (SQLite and PostgreSQL supported). Required extensions are in
+PHP 8.3+; MySQL by default (SQLite and PostgreSQL supported). Required extensions are in
 `composer.json` (`oz doctor check` checks them). Packages: `silassare/gobl` (ORM, DBAL, code generation),
 `silassare/kli` (CLI), `silassare/blate` (templates), `silassare/php-utils` (`Event`, `Store`,
-`PathUtils`, ...), `claviska/simpleimage`, `symfony/process`, `zircote/swagger-php`, `psr/http-message`,
-`psr/log`.
+`PathUtils`, ...), `intervention/image` (images, only behind `FS\Images\Interfaces\ImageProcessorInterface`:
+the driver is libvips, Imagick or GD, whichever the server has first, `OZ_IMAGE_DRIVER`; the test image
+has all three and every driver is held to the same renditions), `symfony/process`, `zircote/swagger-php`,
+`psr/http-message`, `psr/log`.
 
 The four `silassare/*` packages are first-party: **read their instructions before using them** —
 `vendor/silassare/{gobl,kli,php-utils,blate}/.github/copilot-instructions.md` — and never guess at

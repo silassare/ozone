@@ -186,14 +186,6 @@ final class S3ClientTest extends TestCase
 	 */
 	public function testLargeUploadAndDownloadStayWithinAFixedBuffer(S3TransportInterface $transport): void
 	{
-		// Called through a variable: the function is PHP 8.2+, OZone supports 8.1, and the
-		// compatibility sniff cannot see the guard below it.
-		$reset_peak = 'memory_reset_peak_usage';
-
-		if (!\function_exists($reset_peak)) {
-			self::markTestSkipped('memory_reset_peak_usage() needs PHP 8.2+; the peak cannot be isolated.');
-		}
-
 		$part_size = S3Client::MIN_PART_SIZE;
 		$parts     = 5;
 		$size      = $part_size * $parts;
@@ -214,7 +206,7 @@ final class S3ClientTest extends TestCase
 		$key    = $this->key('big.bin');
 
 		try {
-			$reset_peak();
+			\memory_reset_peak_usage();
 			$before = \memory_get_usage();
 
 			$stored = $client->putObjectFromStream(
@@ -228,7 +220,7 @@ final class S3ClientTest extends TestCase
 
 			self::assertSame($size, $stored);
 
-			$reset_peak();
+			\memory_reset_peak_usage();
 			$before = \memory_get_usage();
 
 			$sink = FileStream::fromPath('php://temp/maxmemory:1024', 'w+b');

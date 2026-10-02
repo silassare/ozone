@@ -36,7 +36,7 @@ final class ServerOverSshTest extends TestCase
 {
 	private const PLATFORMS = [
 		'debian' => [
-			'image'     => 'debian:12-slim',
+			'image'     => 'debian:13-slim',
 			'manager'   => 'apt',
 			'bootstrap' => 'apt-get update -qq'
 				. ' && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends openssh-server'

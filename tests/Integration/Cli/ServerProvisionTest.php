@@ -47,7 +47,7 @@ final class ServerProvisionTest extends TestCase
 	 */
 	private const PLATFORMS = [
 		'debian' => [
-			'image'     => 'debian:12-slim',
+			'image'     => 'debian:13-slim',
 			'manager'   => 'apt',
 			// php-mbstring included: Kli renders every table through mb_*.
 			'bootstrap' => 'apt-get update -qq'

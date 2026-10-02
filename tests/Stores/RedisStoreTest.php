@@ -83,6 +83,10 @@ final class RedisStoreTest extends TestCase
 		$this->cache->increment('n');
 
 		self::assertSame(4, $this->cache->get('n')?->value);
+
+		$this->cache->decrement('n', 1.5);
+
+		self::assertSame(2.5, $this->cache->get('n')?->value);
 	}
 
 	public function testClearOnlyTouchesItsNamespace(): void

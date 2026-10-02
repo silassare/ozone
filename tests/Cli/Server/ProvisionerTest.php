@@ -255,6 +255,27 @@ final class ProvisionerTest extends TestCase
 		];
 	}
 
+	public function testThePhpInstalledIsCheckedAgainstWhatOZoneNeeds(): void
+	{
+		$names = self::stepNames((new Provisioner(PackageManager::APT))->plan());
+
+		// Right after PHP is installed, before anything is built on it.
+		self::assertSame('php:version', $names[\array_search('php', $names, true) + 1]);
+
+		$apt    = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'php:version')[0];
+		$alpine = self::stepCommands((new Provisioner(PackageManager::APK))->plan(), 'php:version')[0];
+
+		self::assertStringStartsWith("php -r 'exit(version_compare(PHP_VERSION, \$argv[1], \">=\") ? 0 : 1);' 8.3", $apt);
+		self::assertStringContainsString('OZone needs PHP 8.3 or newer', $apt);
+		self::assertStringStartsWith(PackageManager::alpinePrefix() . ' -r ', $alpine);
+
+		// Which needs the command line: Alpine's FPM package does not bring it.
+		self::assertStringContainsString(
+			"'" . PackageManager::alpinePrefix() . "'",
+			self::stepCommands((new Provisioner(PackageManager::APK))->plan(), 'php')[0]
+		);
+	}
+
 	public function testDockerModeInstallsOnlyDockerAndTheFirewall(): void
 	{
 		$names = self::stepNames((new Provisioner(PackageManager::APT, mode: Provisioner::MODE_DOCKER))->plan());
