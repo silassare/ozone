@@ -17,6 +17,7 @@ use Gobl\ORM\ORMOptions;
 use OZONE\Core\App\Keys;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Enums\FileKind;
+use OZONE\Core\FS\Images\ImageProbe;
 use OZONE\Core\FS\Scan\FileScan;
 use OZONE\Core\Router\Guards;
 use OZONE\Core\Router\Interfaces\RouteGuardInterface;
@@ -29,7 +30,8 @@ trait FileEntityTrait
 	/**
 	 * {@inheritDoc}
 	 *
-	 * A new file goes through the virus scan ({@see FileScan}) when it is enabled.
+	 * A new file goes through the virus scan ({@see FileScan}) when it is enabled; a new image keeps
+	 * its size and dominant color in its data ({@see ImageProbe}).
 	 */
 	public function save(): bool
 	{
@@ -45,6 +47,15 @@ trait FileEntityTrait
 
 		if ($mime) {
 			$this->setKind(FileKind::fromMime($mime));
+		}
+
+		// An image's size and dominant color, read once as it is stored (a clone keeps its source's).
+		if ($is_new && !isset($this->getData()[ImageProbe::DATA_KEY])) {
+			$info = ImageProbe::of($this);
+
+			if (null !== $info) {
+				$this->setData([...$this->getData(), ImageProbe::DATA_KEY => $info->toArray()]);
+			}
 		}
 
 		$saved = parent::save();

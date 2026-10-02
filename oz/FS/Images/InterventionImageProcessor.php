@@ -17,10 +17,12 @@ use Intervention\Image\Drivers\Gd\Driver as GdDriver;
 use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
 use Intervention\Image\Drivers\Imagick\Modifiers\StripMetaModifier as ImagickStripMeta;
 use Intervention\Image\Drivers\Vips\Driver as VipsDriver;
+use Intervention\Image\Analyzers\DominantPaletteAnalyzer;
 use Intervention\Image\Direction;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Interfaces\DriverInterface;
 use Intervention\Image\Interfaces\ImageInterface;
+use Intervention\Image\Interfaces\PaletteInterface;
 use Override;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Enums\ImageDriverName;
@@ -148,6 +150,23 @@ final class InterventionImageProcessor implements ImageProcessorInterface
 			$image->encodeUsingMediaType($out, quality: $recipe->quality, strip: true)->toString(),
 			$out
 		);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
+	public function probe(string $bytes): ImageInfo
+	{
+		$image  = $this->manager->decodeBinary($bytes);
+		$width  = $image->width();
+		$height = $image->height();
+
+		// The color of a small copy: the same to the eye, and far quicker on a large photo.
+		$palette = $image->scaleDown(64, 64)->analyze(new DominantPaletteAnalyzer(1));
+		$color   = $palette instanceof PaletteInterface ? $palette->first() : null;
+
+		return new ImageInfo($width, $height, '#' . \strtolower($color?->toHex() ?? 'cccccc'));
 	}
 
 	/**

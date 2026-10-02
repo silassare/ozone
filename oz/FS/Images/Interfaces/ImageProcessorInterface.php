@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS\Images\Interfaces;
 
+use OZONE\Core\FS\Images\ImageInfo;
 use OZONE\Core\FS\Images\ImageRecipe;
 use OZONE\Core\FS\Images\RenderedImage;
 
@@ -41,4 +42,11 @@ interface ImageProcessorInterface
 	 * @param ImageRecipe $recipe what to do
 	 */
 	public function render(string $bytes, string $mime, ImageRecipe $recipe): RenderedImage;
+
+	/**
+	 * An image's size as shown (its orientation applied) and its dominant color.
+	 *
+	 * @param string $bytes the image as stored
+	 */
+	public function probe(string $bytes): ImageInfo;
 }

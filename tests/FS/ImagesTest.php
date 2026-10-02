@@ -244,6 +244,30 @@ final class ImagesTest extends TestCase
 	}
 
 	/**
+	 * @dataProvider provideDrivers
+	 */
+	public function testProbesAnImagesSizeAsShownAndItsColor(ImageDriverName $driver): void
+	{
+		$processor = new InterventionImageProcessor($driver);
+		$info      = $processor->probe(self::withExif(self::jpeg(200, 100), 6));
+
+		self::assertSame([100, 200], [$info->width, $info->height]);
+
+		// Mostly red: a red half and a blue strip.
+		$img = \imagecreatetruecolor(100, 100);
+		\imagefill($img, 0, 0, (int) \imagecolorallocate($img, 220, 30, 30));
+		\imagefilledrectangle($img, 0, 0, 9, 99, (int) \imagecolorallocate($img, 0, 0, 255));
+		\ob_start();
+		\imagepng($img);
+
+		$color = $processor->probe((string) \ob_get_clean())->color;
+
+		self::assertMatchesRegularExpression('~^#[0-9a-f]{6}$~', $color);
+		self::assertGreaterThan(180, \hexdec(\substr($color, 1, 2)));
+		self::assertLessThan(80, \hexdec(\substr($color, 5, 2)));
+	}
+
+	/**
 	 * [width, height] of an image's bytes.
 	 *
 	 * @return array{int, int}

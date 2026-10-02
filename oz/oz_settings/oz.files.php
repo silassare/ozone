@@ -129,6 +129,14 @@ return [
 	],
 
 	/**
+	 * The largest image, in bytes, whose size and dominant color are read when it is stored (0: no
+	 * limit): decoding a huge image takes its memory.
+	 *
+	 * @see \OZONE\Core\FS\Images\ImageProbe
+	 */
+	'OZ_IMAGE_PROBE_MAX_SIZE'             => 30 * 1000 * 1000,
+
+	/**
 	 * Watermarks by name, drawn by the token `wm{name}` (a name of `[a-z0-9]`, at most 32):
 	 *
 	 * ```php
