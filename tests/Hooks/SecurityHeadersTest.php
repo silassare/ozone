@@ -67,6 +67,17 @@ final class SecurityHeadersTest extends TestCase
 		);
 	}
 
+	public function testAHandlersVaryIsKeptBesideTheOrigin(): void
+	{
+		$context = self::context([]);
+		$context->setResponse($context->getResponse()->withHeader('Vary', 'Accept'));
+
+		$vary = self::respond($context)->getHeader('Vary');
+
+		self::assertContains('Accept', $vary);
+		self::assertContains('Origin', $vary);
+	}
+
 	private static function respond(Context $context): Response
 	{
 		MainBootHookReceiver::onResponse(new ResponseHook($context));

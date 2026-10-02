@@ -188,7 +188,11 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		}
 
 		foreach ($h_list as $key => $value) {
-			$response = $response->withHeader($key, (string) $value);
+			// `Vary` is added to: a handler's own (`Accept` for an image in the browser's best format)
+			// must stay, or a shared cache serves one answer for all.
+			$response = 'Vary' === $key
+				? $response->withAddedHeader($key, (string) $value)
+				: $response->withHeader($key, (string) $value);
 		}
 
 		$is_https = 'https' === $request->getUri()->getScheme();
