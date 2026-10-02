@@ -16,13 +16,19 @@ namespace OZONE\Core\FS\Views;
 use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Db\OZFile;
+use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Exceptions\UnauthorizedException;
+use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\FS\FileAccess;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\Filters\FileFilters;
+use OZONE\Core\FS\Images\Images;
 use OZONE\Core\FS\Images\ImageWatermarks;
+use OZONE\Core\FS\Images\Interfaces\ImageOriginalAccessInterface;
+use OZONE\Core\FS\Images\UploaderOrAdminOriginalAccess;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Scan\FileScan;
 use OZONE\Core\Http\Response;
@@ -134,8 +140,20 @@ class GetFilesView extends WebView
 
 		$response = $context->getResponse();
 
-		// An image whose watermark is forced is never served without it, its plain URL included.
-		if ($req_file_filters || null !== ImageWatermarks::enforcedFor($file)) {
+		if ('original' === $req_file_filters && self::rendersAsImage($file)) {
+			// The untouched original: its metadata, without a forced watermark, for whom the project allows.
+			if (!self::originalAccess()->allows($file, $context)) {
+				throw new ForbiddenException(null, ['_reason' => 'The original of this image is not served to you.']);
+			}
+
+			$response = $driver->serve($file, $response);
+		} elseif (
+			$req_file_filters
+			// Never served with its metadata, nor without the watermark a project forces, its plain URL
+			// included.
+			|| null !== ImageWatermarks::enforcedFor($file)
+			|| (Settings::get('oz.files', 'OZ_IMAGE_STRIP_METADATA', true) && self::rendersAsImage($file))
+		) {
 			$response = self::applyFilters($response, $file, $driver->getStream($file), (string) $req_file_filters);
 		} else {
 			$response = $driver->serve($file, $response);
@@ -147,6 +165,29 @@ class GetFilesView extends WebView
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Whether a file is an image OZone renders (JPEG, PNG and what its driver writes): an SVG, for
+	 * one, is served as it is.
+	 */
+	private static function rendersAsImage(OZFile $file): bool
+	{
+		$mime = $file->getMime();
+
+		return FileKind::IMAGE === FileKind::fromMime($mime)
+			&& ('image/jpeg' === $mime || 'image/png' === $mime || Images::processor()->supports($mime));
+	}
+
+	private static function originalAccess(): ImageOriginalAccessInterface
+	{
+		$class = Settings::get('oz.files', 'OZ_IMAGE_ORIGINAL_ACCESS', UploaderOrAdminOriginalAccess::class);
+
+		if (!\is_string($class) || !\is_subclass_of($class, ImageOriginalAccessInterface::class)) {
+			throw new RuntimeException('OZ_IMAGE_ORIGINAL_ACCESS must name an ImageOriginalAccessInterface class.');
+		}
+
+		return new $class();
 	}
 
 	/**

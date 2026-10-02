@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\FS\Traits;
 
 use Gobl\ORM\ORMOptions;
+use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Enums\FileKind;
@@ -39,6 +40,18 @@ trait FileEntityTrait
 
 		if ($is_new) {
 			$this->setKey(Keys::newFileKey());
+
+			// The uploader is whoever the request storing it is for, unless the code said otherwise.
+			if (null === $this->getUploaderID() && Context::hasRoot()) {
+				$context = Context::current();
+
+				if ($context->hasAuthenticatedUser()) {
+					$user = $context->auth()->user();
+
+					$this->setUploaderType($user->getAuthUserType())
+						->setUploaderID($user->getAuthIdentifier());
+				}
+			}
 
 			FileScan::beforeInsert($this);
 		}

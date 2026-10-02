@@ -26,6 +26,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Images\ImageRecipe;
 use OZONE\Core\FS\Images\ImageWatermarks;
 use OZONE\Core\FS\Images\Images;
+use OZONE\Core\FS\Images\MetadataStripper;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\Response;
 use RecursiveDirectoryIterator;
@@ -233,25 +234,39 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 	}
 
 	/**
-	 * Renders the canonical tokens: the rendition's bytes, or null when the image could not be
-	 * rendered (it is then served as it is), unless a watermark is due on it: then it is never served
-	 * without, and the failure is the request's.
+	 * Renders the canonical tokens (none: the plain image, without its metadata): the rendition's
+	 * bytes, or null when the image could not be rendered (it is then served as it is), unless a
+	 * watermark is due on it or it is the plain image: then it is never served raw, and the failure is
+	 * the request's.
 	 *
 	 * @param list<string> $filterTokens
 	 */
 	private function process(OZFile $file, FileStream $stream, array $filterTokens, bool $watermarked): ?string
 	{
 		$content = $stream->getContents();
-		$recipe  = ImageRecipe::fromTokens(
-			$filterTokens,
-			(int) Settings::get('oz.files', 'OZ_THUMBNAIL_MAX_SIZE')
-		);
+		$mime    = $file->getMime();
+		$plain   = [] === $filterTokens;
+
+		// The plain image: its metadata dropped without touching its pixels where that can be done,
+		// else re-encoded as it is.
+		if ($plain) {
+			$stripped = MetadataStripper::strip($content, $mime);
+
+			if (null !== $stripped) {
+				return $stripped;
+			}
+		}
+
+		$recipe = $plain
+			? new ImageRecipe(quality: 90)
+			: ImageRecipe::fromTokens($filterTokens, (int) Settings::get('oz.files', 'OZ_THUMBNAIL_MAX_SIZE'));
 
 		try {
-			return Images::processor()->render($content, $file->getMime(), $recipe)->bytes;
+			return Images::processor()->render($content, $mime, $recipe)->bytes;
 		} catch (Exception $e) {
-			if ($watermarked) {
-				throw new RuntimeException('The image could not be rendered with its watermark.', [
+			// Never the raw file when it would carry what had to go: its metadata, or its watermark.
+			if ($watermarked || $plain) {
+				throw new RuntimeException('The image could not be rendered as it must be served.', [
 					'_file' => $file->getID(),
 				], $e);
 			}

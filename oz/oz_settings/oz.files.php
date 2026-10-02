@@ -137,6 +137,22 @@ return [
 	'OZ_IMAGE_PROBE_MAX_SIZE'             => 30 * 1000 * 1000,
 
 	/**
+	 * Whether an image's plain URL is served without its metadata (location, camera, comments):
+	 * JPEG and PNG losslessly, other formats re-encoded, the result kept as a rendition. Its
+	 * untouched original is the token `original`, for whom `OZ_IMAGE_ORIGINAL_ACCESS` allows.
+	 *
+	 * @see \OZONE\Core\FS\Images\MetadataStripper
+	 */
+	'OZ_IMAGE_STRIP_METADATA'             => true,
+
+	/**
+	 * Who may get an image's untouched original (`original`): a class implementing
+	 * `OZONE\Core\FS\Images\Interfaces\ImageOriginalAccessInterface`; by default the uploader and
+	 * administrators. Anyone else is refused (403).
+	 */
+	'OZ_IMAGE_ORIGINAL_ACCESS'            => \OZONE\Core\FS\Images\UploaderOrAdminOriginalAccess::class,
+
+	/**
 	 * Watermarks by name, drawn by the token `wm{name}` (a name of `[a-z0-9]`, at most 32):
 	 *
 	 * ```php

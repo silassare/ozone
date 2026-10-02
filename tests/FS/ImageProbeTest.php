@@ -16,6 +16,7 @@ namespace OZONE\Tests\FS;
 use OZONE\Core\App\Settings;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Images\ImageProbe;
+use OZONE\Tests\Support\ImageBytes;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -36,7 +37,7 @@ final class ImageProbeTest extends TestCase
 
 	public function testAStoredImageKeepsItsSizeAndColor(): void
 	{
-		$file = FS::getStorage(FS::PRIVATE_STORAGE)->saveRaw(self::png(120, 80), 'image/png', 'photo.png');
+		$file = FS::getStorage(FS::PRIVATE_STORAGE)->saveRaw(ImageBytes::filled(120, 80, 10, 20, 30), 'image/png', 'photo.png');
 
 		$file->save();
 
@@ -47,7 +48,7 @@ final class ImageProbeTest extends TestCase
 
 	public function testAClonedImageKeepsItsSourcesWithoutReadingItAgain(): void
 	{
-		$file = FS::getStorage(FS::PRIVATE_STORAGE)->saveRaw(self::png(40, 40), 'image/png', 'a.png');
+		$file = FS::getStorage(FS::PRIVATE_STORAGE)->saveRaw(ImageBytes::filled(40, 40, 10, 20, 30), 'image/png', 'a.png');
 
 		$file->save();
 
@@ -75,20 +76,10 @@ final class ImageProbeTest extends TestCase
 	{
 		Settings::set('oz.files', 'OZ_IMAGE_PROBE_MAX_SIZE', 10);
 
-		$file = FS::getStorage(FS::PRIVATE_STORAGE)->saveRaw(self::png(40, 40), 'image/png', 'big.png');
+		$file = FS::getStorage(FS::PRIVATE_STORAGE)->saveRaw(ImageBytes::filled(40, 40, 10, 20, 30), 'image/png', 'big.png');
 
 		$file->save();
 
 		self::assertArrayNotHasKey(ImageProbe::DATA_KEY, $file->getData());
-	}
-
-	private static function png(int $width, int $height): string
-	{
-		$img = \imagecreatetruecolor($width, $height);
-		\imagefill($img, 0, 0, (int) \imagecolorallocate($img, 10, 20, 30));
-		\ob_start();
-		\imagepng($img);
-
-		return (string) \ob_get_clean();
 	}
 }

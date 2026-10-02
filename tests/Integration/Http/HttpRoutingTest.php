@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Http;
 
 use OZONE\Core\Testing\OZTestProject;
+use OZONE\Tests\Support\ImageBytes;
 use PDO;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -64,6 +65,12 @@ final class HttpRoutingTest extends TestCase
 		$proj->setSetting('oz.routes.api', "{$ns}\\TestRoutesProvider", true);
 		// A chunk size of its own, small enough for a test to send one chunk over it.
 		$proj->setSetting('oz.files', 'OZ_UPLOAD_CHUNK_MAX_SIZE', 8);
+		// Every uploaded image (`asset`) carries a watermark: a white square, a quarter of its width.
+		\file_put_contents($proj->getPath() . '/watermark.png', ImageBytes::filled(10, 10, 255, 255, 255));
+		$proj->setSetting('oz.files', 'OZ_IMAGE_WATERMARKS', [
+			'stamp' => ['path' => 'watermark.png', 'position' => 'bottom-right', 'opacity' => 1, 'width' => 25, 'margin' => 0],
+		]);
+		$proj->setSetting('oz.files', 'OZ_IMAGE_WATERMARK_POLICY', [['for_label' => 'asset', 'watermark' => 'stamp']]);
 
 		// Build ORM classes and install the schema.
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
@@ -323,6 +330,77 @@ final class HttpRoutingTest extends TestCase
 		self::assertSame(0, $data['error'] ?? null, $body);
 		self::assertNotEmpty($data['data']['ref'] ?? null, $body);
 		self::assertCount(2, $data['data']['files'] ?? [], $body);
+	}
+
+	/**
+	 * An uploaded photo, served by its plain URL: without its location and camera, with the watermark
+	 * the project forces; its untouched original only to its uploader.
+	 */
+	public function testAnUploadedPhotoIsServedWithoutItsMetadataAndItsOriginalOnlyToItsUploader(): void
+	{
+		self::seedCountry('TG');
+		self::$proj->oz(
+			'users',
+			'add',
+			'--user_civility=Mr',
+			'--user_display_name=Photo Grapher',
+			'--user_first_name=Photo',
+			'--user_last_name=Grapher',
+			'--user_email=photo.grapher@example.com',
+			'--user_gender=Male',
+			'--user_birth_date=1990-05-17',
+			'--user_pass=Photo_Pass_42',
+			'--user_cc2=TG',
+		)->mustRun();
+
+		[, , $headers] = $this->request('POST', '/login', [
+			'auth_user_type'             => 'user',
+			'auth_user_identifier_type'  => 'email',
+			'auth_user_identifier_value' => 'photo.grapher@example.com',
+			'auth_user_password'         => 'Photo_Pass_42',
+		]);
+
+		$cookies = self::cookies($headers);
+		$session = [
+			'Cookie: OZONE_SID=' . $cookies['OZONE_SID'],
+			'X-XSRF-TOKEN: ' . ($cookies['XSRF-TOKEN'] ?? ''),
+		];
+		$photo   = ImageBytes::withExif(ImageBytes::jpeg(200, 100), 1);
+
+		[$status, $body] = $this->multipart('/upload/', [
+			['name' => 'files[]', 'filename' => 'photo.jpg', 'type' => 'image/jpeg', 'content' => $photo],
+		], $session);
+
+		self::assertSame(200, $status, $body);
+
+		$file = \json_decode($body, true)['data']['files'][0] ?? [];
+		$base = \sprintf('/files/ozone-%s-%s', $file['file_id'] ?? '', $file['file_key'] ?? '');
+
+		// Recorded as the one who uploaded it.
+		self::assertNotNull($file['file_uploader_id'] ?? null, $body);
+
+		// The image as it was taken: with what the camera wrote, the location among it.
+		self::assertStringContainsString('OZoneCamera', $photo);
+
+		[$status, $plain, $headers] = $this->request('GET', $base . '.jpg');
+
+		self::assertSame(200, $status, $plain);
+		self::assertNotEmpty(\preg_grep('~^content-type: image/jpeg$~i', $headers), \implode("\n", $headers));
+		self::assertStringNotContainsString('OZoneCamera', $plain);
+		self::assertStringNotContainsString("Exif\0\0", $plain);
+		self::assertSame([200, 100], ImageBytes::size($plain));
+		// The watermark, in the bottom right corner.
+		self::assertGreaterThan(200, ImageBytes::rgbAt($plain, 190, 90)[0]);
+
+		// Its original: refused to anyone, served whole to its uploader.
+		[$status] = $this->request('GET', $base . '-original.jpg');
+
+		self::assertSame(403, $status);
+
+		[$status, $original] = $this->request('GET', $base . '-original.jpg', [], $session);
+
+		self::assertSame(200, $status);
+		self::assertSame($photo, $original);
 	}
 
 	/**

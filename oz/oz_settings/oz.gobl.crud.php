@@ -11,8 +11,4 @@
 
 declare(strict_types=1);
 
-use OZONE\Core\FS\Handlers\FilesHandler;
-
-return [
-	FilesHandler::class => true,
-];
+return [];
