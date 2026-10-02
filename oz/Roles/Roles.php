@@ -18,6 +18,8 @@ use Gobl\Exceptions\GoblException;
 use Gobl\ORM\Exceptions\ORMException;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Db\OZRole;
+use OZONE\Core\Db\OZRolesQuery;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Roles\Enums\RoleCheckMode;
 use OZONE\Core\Roles\Interfaces\RoleInterface;
 
@@ -168,13 +170,24 @@ class Roles
 					->save();
 			}
 		} else {
-			$entry = new OZRole();
-
-			$entry->setOwnerID($user->getAuthIdentifier())
+			$row = (new OZRole())
+				->setOwnerID($user->getAuthIdentifier())
 				->setOwnerType($user->getAuthUserType())
 				->setRole($role)
 				->setIsValid(true)
-				->save();
+				->toRow();
+
+			unset($row[OZRole::COL_ID]);
+
+			// Skipped when the same role was assigned meanwhile (two requests at once): reading first,
+			// then inserting, let the second fail on the role's unique key.
+			(new OZRolesQuery())->insert($row)->ignoreOnConflict()->execute();
+
+			$entry = RolesUtils::role($user, $role, false);
+
+			if (null === $entry) {
+				throw new RuntimeException(\sprintf('The role "%s" could not be assigned.', $role));
+			}
 		}
 
 		return $entry;

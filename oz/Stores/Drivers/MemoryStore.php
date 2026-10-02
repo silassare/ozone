@@ -18,6 +18,7 @@ use OZONE\Core\Hooks\Events\EndRequestHook;
 use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
+use OZONE\Core\Stores\StoreNumbers;
 
 /**
  * Class MemoryStore.
@@ -72,7 +73,7 @@ class MemoryStore implements StoreDriverInterface
 			perEntryTTL: true,
 			persistent: false,
 			expiryCallbacks: false,
-			atomic: false,
+			atomic: true,
 			// In-memory, gone with the process.
 			durable: false,
 		);
@@ -84,6 +85,8 @@ class MemoryStore implements StoreDriverInterface
 	#[Override]
 	public function get(string $key): ?StoreEntry
 	{
+		$this->refresh();
+
 		if (isset(self::$cache_data[$this->namespace][$key])) {
 			$item   = self::$cache_data[$this->namespace][$key];
 			$expire = $item[self::CACHE_EXPIRE_PROP] ?? null;
@@ -123,12 +126,14 @@ class MemoryStore implements StoreDriverInterface
 	#[Override]
 	public function set(StoreEntry $entry): bool
 	{
-		self::$cache_data[$this->namespace][$entry->key] = [
-			self::CACHE_VALUE_PROP  => $entry->value,
-			self::CACHE_EXPIRE_PROP => $entry->expiresAt,
-		];
+		return $this->mutate(function () use ($entry): bool {
+			self::$cache_data[$this->namespace][$entry->key] = [
+				self::CACHE_VALUE_PROP  => $entry->value,
+				self::CACHE_EXPIRE_PROP => $entry->expiresAt,
+			];
 
-		return $this->save();
+			return true;
+		});
 	}
 
 	/**
@@ -137,9 +142,11 @@ class MemoryStore implements StoreDriverInterface
 	#[Override]
 	public function delete(string $key): bool
 	{
-		unset(self::$cache_data[$this->namespace][$key]);
+		return $this->mutate(function () use ($key): bool {
+			unset(self::$cache_data[$this->namespace][$key]);
 
-		return $this->save();
+			return true;
+		});
 	}
 
 	/**
@@ -148,11 +155,13 @@ class MemoryStore implements StoreDriverInterface
 	#[Override]
 	public function deleteMultiple(array $keys): bool
 	{
-		foreach ($keys as $key) {
-			unset(self::$cache_data[$this->namespace][$key]);
-		}
+		return $this->mutate(function () use ($keys): bool {
+			foreach ($keys as $key) {
+				unset(self::$cache_data[$this->namespace][$key]);
+			}
 
-		return $this->save();
+			return true;
+		});
 	}
 
 	/**
@@ -161,43 +170,42 @@ class MemoryStore implements StoreDriverInterface
 	#[Override]
 	public function clear(): bool
 	{
-		self::$cache_data[$this->namespace] = [];
+		return $this->mutate(function (): bool {
+			self::$cache_data[$this->namespace] = [];
 
-		return $this->save();
+			return true;
+		});
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function increment(string $key, float|int $factor = 1): bool
+	public function add(string $key, float|int $by, bool $create = false, ?float $expiresAt = null): float|int|null
 	{
-		if (!isset(self::$cache_data[$this->namespace][$key])) {
-			return false;
-		}
+		return $this->mutate(function () use ($key, $by, $create, $expiresAt): float|int|null {
+			$item   = self::$cache_data[$this->namespace][$key] ?? null;
+			$expire = \is_array($item) ? ($item[self::CACHE_EXPIRE_PROP] ?? null) : null;
 
-		$val = self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] ?? 0;
+			if (!\is_array($item) || (null !== $expire && $expire <= \microtime(true))) {
+				if (!$create) {
+					return null;
+				}
 
-		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] = $val + $factor;
+				self::$cache_data[$this->namespace][$key] = [
+					self::CACHE_VALUE_PROP  => $by,
+					self::CACHE_EXPIRE_PROP => $expiresAt,
+				];
 
-		return $this->save();
-	}
+				return $by;
+			}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function decrement(string $key, float|int $factor = 1): bool
-	{
-		if (!isset(self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP])) {
-			return false;
-		}
+			$sum = StoreNumbers::sum($key, $item[self::CACHE_VALUE_PROP] ?? null, $by);
 
-		$val = self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] ?? 0;
+			self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] = $sum;
 
-		self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] = $val - $factor;
-
-		return $this->save();
+			return $sum;
+		});
 	}
 
 	/**
@@ -239,4 +247,28 @@ class MemoryStore implements StoreDriverInterface
 	{
 		return true;
 	}
+
+	/**
+	 * Applies a change to the namespace's entries, then saves them. One process holds them here; a
+	 * store shared between processes makes the change exclusive and on what they hold now.
+	 *
+	 * @template T
+	 *
+	 * @param callable(): T $change
+	 *
+	 * @return T
+	 */
+	protected function mutate(callable $change): mixed
+	{
+		$result = $change();
+
+		$this->save();
+
+		return $result;
+	}
+
+	/**
+	 * Brings the namespace's entries up to date before a read: nothing to do in one process.
+	 */
+	protected function refresh(): void {}
 }

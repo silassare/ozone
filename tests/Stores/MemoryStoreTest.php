@@ -103,7 +103,7 @@ final class MemoryStoreTest extends TestCase
 	public function testIncrementIncreasesValue(): void
 	{
 		$this->cache->set(new StoreEntry('counter', 10));
-		$this->cache->increment('counter', 5);
+		$this->cache->add('counter', 5);
 
 		$entry = $this->cache->get('counter');
 		self::assertNotNull($entry);
@@ -113,30 +113,30 @@ final class MemoryStoreTest extends TestCase
 	public function testAFractionMakesAFloat(): void
 	{
 		$this->cache->set(new StoreEntry('counter', 10));
-		$this->cache->increment('counter', 0.5);
-		$this->cache->decrement('counter', 0.25);
+		$this->cache->add('counter', 0.5);
+		$this->cache->add('counter', -0.25);
 
 		self::assertSame(10.25, $this->cache->get('counter')?->value);
 	}
 
-	public function testIncrementReturnsFalseForMissingKey(): void
+	public function testAddingToAMissingKeyCreatesNothing(): void
 	{
-		self::assertFalse($this->cache->increment('nonexistent'));
+		self::assertNull($this->cache->add('nonexistent', 1));
 	}
 
 	public function testDecrementDecreasesValue(): void
 	{
 		$this->cache->set(new StoreEntry('counter', 10));
-		$this->cache->decrement('counter', 3);
+		$this->cache->add('counter', -3);
 
 		$entry = $this->cache->get('counter');
 		self::assertNotNull($entry);
 		self::assertSame(7, $entry->value);
 	}
 
-	public function testDecrementReturnsFalseForMissingKey(): void
+	public function testSubtractingFromAMissingKeyCreatesNothing(): void
 	{
-		self::assertFalse($this->cache->decrement('nonexistent'));
+		self::assertNull($this->cache->add('nonexistent', -1));
 	}
 
 	public function testFromConfigReturnsSameNamespace(): void

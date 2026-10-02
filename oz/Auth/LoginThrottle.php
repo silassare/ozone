@@ -59,10 +59,9 @@ final class LoginThrottle
 		$store = self::store();
 		$key   = self::key($subject);
 
-		// The window runs from the first failure: incrementing keeps its expiry.
-		if (!$store->increment($key)) {
-			$store->set($key, 1, self::window());
-		}
+		// The window runs from the first failure: counting keeps its expiry. One atomic step, so
+		// failures arriving together are all counted.
+		$store->count($key, 1, self::window());
 	}
 
 	/**

@@ -56,28 +56,20 @@ interface StoreDriverInterface
 	public function set(StoreEntry $entry): bool;
 
 	/**
-	 * Increments the value of a given key: a whole number stays one when the factor is one.
+	 * Adds to a number, atomically: concurrent adds, from requests or processes, are never lost.
+	 * A whole number stays one when what is added is one.
 	 *
-	 * Returns false when the key does not exist.
+	 * @param string     $key       the entry's key
+	 * @param float|int  $by        what to add (negative: subtract)
+	 * @param bool       $create    a missing (or expired) entry is created at `$by`, else nothing is
+	 *                              done and null answered
+	 * @param null|float $expiresAt the expiry of an entry this creates; an existing one keeps its own
 	 *
-	 * @param string    $key
-	 * @param float|int $factor
+	 * @return null|float|int the new number; null when the entry is missing and not created
 	 *
-	 * @return bool
+	 * @throws \OZONE\Core\Exceptions\RuntimeException when the entry holds something else than a number
 	 */
-	public function increment(string $key, float|int $factor = 1): bool;
-
-	/**
-	 * Decrements the value of a given key: a whole number stays one when the factor is one.
-	 *
-	 * Returns false when the key does not exist.
-	 *
-	 * @param string    $key
-	 * @param float|int $factor
-	 *
-	 * @return bool
-	 */
-	public function decrement(string $key, float|int $factor = 1): bool;
+	public function add(string $key, float|int $by, bool $create = false, ?float $expiresAt = null): float|int|null;
 
 	/**
 	 * Deletes a cache entry by key.

@@ -17,6 +17,7 @@ use Override;
 use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
+use OZONE\Core\Stores\StoreNumbers;
 use OZONE\Core\Utils\RedisFactory;
 use Redis as PhpRedis;
 use RuntimeException;
@@ -157,32 +158,62 @@ class RedisStore implements StoreDriverInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * An optimistic transaction: the entry is watched while it is read, and the new number written
+	 * only if no other client changed it meanwhile (`WATCH` / `MULTI` / `EXEC`), else read again.
 	 */
 	#[Override]
-	public function increment(string $key, float|int $factor = 1): bool
+	public function add(string $key, float|int $by, bool $create = false, ?float $expiresAt = null): float|int|null
 	{
-		$entry = $this->get($key);
+		$redis     = RedisFactory::get();
+		$redis_key = $this->buildKey($key);
 
-		if (null === $entry) {
-			return false;
+		for ($attempt = 0; $attempt < StoreNumbers::MAX_ATTEMPTS; ++$attempt) {
+			$redis->watch($redis_key);
+
+			$raw     = $redis->get($redis_key);
+			$data    = \is_string($raw) ? \unserialize($raw, ['allowed_classes' => false]) : null;
+			$expire  = \is_array($data) ? ($data[self::EXPIRE_KEY] ?? null) : null;
+			$current = \is_array($data) ? ($data[self::VALUE_KEY] ?? null) : null;
+			$missing = !\is_array($data) || (\is_numeric($expire) && (float) $expire <= \microtime(true));
+
+			if ($missing && !$create) {
+				$redis->unwatch();
+
+				return null;
+			}
+
+			if ($missing) {
+				$sum    = $by;
+				$expire = $expiresAt;
+			} else {
+				$sum    = StoreNumbers::sum($key, $current, $by);
+				$expire = \is_numeric($expire) ? (float) $expire : null;
+
+				if (0 == $by) {
+					$redis->unwatch();
+
+					return $sum;
+				}
+			}
+
+			$value = \serialize([self::VALUE_KEY => $sum, self::EXPIRE_KEY => $expire]);
+
+			$redis->multi();
+
+			if (null !== $expire) {
+				$redis->set($redis_key, $value, ['px' => (int) \max(1, ($expire - \microtime(true)) * 1000)]);
+			} else {
+				$redis->set($redis_key, $value);
+			}
+
+			// Answered false when the watched entry changed: another client wrote it first.
+			if (\is_array($redis->exec())) {
+				return $sum;
+			}
 		}
 
-		return $this->set(new StoreEntry($key, $entry->value + $factor, $entry->expiresAt));
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function decrement(string $key, float|int $factor = 1): bool
-	{
-		$entry = $this->get($key);
-
-		if (null === $entry) {
-			return false;
-		}
-
-		return $this->set(new StoreEntry($key, $entry->value - $factor, $entry->expiresAt));
+		throw StoreNumbers::contended($key);
 	}
 
 	/**

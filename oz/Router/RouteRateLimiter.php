@@ -56,29 +56,20 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 		$key      = $this->limit->key();
 		$interval = $this->limit->interval();
 		$weight   = $this->limit->weight();
-		$rate     = $this->limit->rate();
 		$now      = \microtime(true);
-		$hits     = $this->cache->get($key . ':hits', 0);
-		$last_hit = $this->cache->get($key . ':last_hit', $now);
 
-		if ($now - $last_hit > $interval) {
-			$hits = 0;
-		}
+		// Counted and read in one atomic step: requests arriving together are all counted, so no
+		// more of them pass than the limit allows. A refused hit counts too.
+		$hits = $this->cache->count($key . ':hits', $weight, $interval);
 
-		if ($hits + $weight > $rate) {
-			return false;
+		// The hit that opened the window says when it ends.
+		if ($hits == $weight) {
+			$this->cache->set($key . ':first_hits', $now, $interval);
 		}
 
 		$this->cache->set($key . ':last_hit', $now, $interval);
 
-		if (0 === $hits) {
-			$this->cache->set($key . ':first_hits', $now, $interval);
-			$this->cache->set($key . ':hits', $weight, $interval);
-		} else {
-			$this->cache->increment($key . ':hits', $weight);
-		}
-
-		return true;
+		return $hits <= $this->limit->rate();
 	}
 
 	/**
@@ -112,7 +103,7 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 
 		return [
 			'limit'     => $rate,
-			'remaining' => $rate - $hits,
+			'remaining' => \max(0, $rate - $hits),
 			'reset'     => $first_hits + $interval,
 		];
 	}

@@ -429,16 +429,24 @@ final class OZTestProject
 	/**
 	 * Starts `oz project serve` for the given scope and waits until it accepts connections.
 	 *
-	 * @param string $scope the scope name (default 'api')
-	 * @param string $host  the host to bind to (default '127.0.0.1')
+	 * @param string $scope   the scope name (default 'api')
+	 * @param string $host    the host to bind to (default '127.0.0.1')
+	 * @param int    $workers how many requests it answers at once (`PHP_CLI_SERVER_WORKERS`): one by
+	 *                        default, more to test what concurrent requests do
 	 *
 	 * @return array{0: Process, 1: string, 2: int} [$server_process, $host, $port]
 	 *
 	 * @throws RuntimeException when the server does not start within the timeout
 	 */
-	public function startServer(string $scope = 'api', string $host = '127.0.0.1'): array
+	public function startServer(string $scope = 'api', string $host = '127.0.0.1', int $workers = 1): array
 	{
 		$server = $this->oz('project', 'serve', "--scope={$scope}", "--host={$host}");
+
+		if ($workers > 1) {
+			// Passed explicitly: a child process only inherits what is in $_SERVER or $_ENV.
+			$server->setEnv(['PHP_CLI_SERVER_WORKERS' => (string) $workers]);
+		}
+
 		$server->start();
 
 		// oz project serve writes server.json before binding the port.

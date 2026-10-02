@@ -88,6 +88,16 @@ final class RolesTest extends TestCase
 		self::assertTrue(Roles::hasRole($user, Role::EDITOR, true, RoleCheckMode::READ));
 	}
 
+	public function testAssigningARoleTwiceKeepsOneAndAnswersIt(): void
+	{
+		$user  = self::user('105');
+		$first = Roles::assign($user, Role::EDITOR);
+		$again = Roles::assign($user, Role::EDITOR);
+
+		self::assertSame($first->getID(), $again->getID());
+		self::assertCount(1, RolesUtils::roles($user, true));
+	}
+
 	private static function user(string $id): AuthUserInterface
 	{
 		return new class($id) implements AuthUserInterface {

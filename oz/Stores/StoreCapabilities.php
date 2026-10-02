@@ -33,7 +33,7 @@ final class StoreCapabilities
 	 * @param bool $perEntryTTL     whether the driver supports per-entry TTL
 	 * @param bool $persistent      whether the driver data survives process restart
 	 * @param bool $expiryCallbacks whether the driver supports server-side expiry scanning (used by GC)
-	 * @param bool $atomic          whether increment/decrement operations are atomic
+	 * @param bool $atomic          whether `add()` is atomic: concurrent adds never lost (every built-in driver)
 	 * @param bool $durable         whether this *instance* may back a state store
 	 */
 	public function __construct(

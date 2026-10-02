@@ -16,6 +16,7 @@ namespace OZONE\Tests\Stores;
 use OZONE\Core\Stores\Drivers\RedisStore;
 use OZONE\Core\Stores\StoreEntry;
 use OZONE\Core\Testing\Traits\RequiresRedisTrait;
+use OZONE\Core\Utils\RedisFactory;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -79,12 +80,12 @@ final class RedisStoreTest extends TestCase
 	public function testIncrementIsCumulative(): void
 	{
 		$this->cache->set(new StoreEntry('n', 1));
-		$this->cache->increment('n', 2);
-		$this->cache->increment('n');
+		$this->cache->add('n', 2);
+		$this->cache->add('n', 1);
 
 		self::assertSame(4, $this->cache->get('n')?->value);
 
-		$this->cache->decrement('n', 1.5);
+		$this->cache->add('n', -1.5);
 
 		self::assertSame(2.5, $this->cache->get('n')?->value);
 	}
@@ -101,5 +102,37 @@ final class RedisStoreTest extends TestCase
 		self::assertNotNull($other->get('kept'));
 
 		$other->clear();
+	}
+
+	public function testEveryAddOfSeveralProcessesIsCounted(): void
+	{
+		$pids = [];
+
+		for ($i = 0; $i < 6; ++$i) {
+			$pid = \pcntl_fork();
+
+			if (0 === $pid) {
+				try {
+					// A connection of its own: the parent's socket is not to be shared.
+					RedisFactory::reset();
+
+					for ($j = 0; $j < 40; ++$j) {
+						$this->cache->add('hits', 1, true, \microtime(true) + 600);
+					}
+				} finally {
+					\posix_kill(\posix_getpid(), \SIGKILL);
+				}
+			}
+
+			$pids[] = $pid;
+		}
+
+		foreach ($pids as $pid) {
+			\pcntl_waitpid($pid, $status);
+		}
+
+		RedisFactory::reset();
+
+		self::assertSame(240, $this->cache->get('hits')?->value);
 	}
 }

@@ -73,16 +73,25 @@ final class StateRegistryTest extends TestCase
 		$store = StateRegistry::store('oz:form:resume');
 
 		$store->set('count', 1);
-		$store->increment('count', 2);
-		$store->increment('count');
 
-		self::assertSame(4, $store->get('count'));
-
-		$store->decrement('count', 0.5);
-
+		self::assertSame(3, $store->increment('count', 2));
+		self::assertSame(4, $store->increment('count'));
+		self::assertSame(3.5, $store->decrement('count', 0.5));
 		self::assertSame(3.5, $store->get('count'));
 
 		$store->delete('count');
+	}
+
+	public function testADatabaseStoreCountsFromItsCreation(): void
+	{
+		$store = StateRegistry::store('oz:form:resume');
+
+		self::assertSame(1, $store->count('counted', 1, 60));
+		self::assertSame(4, $store->count('counted', 3, 60));
+		self::assertSame(4, $store->get('counted'));
+		self::assertFalse($store->increment('never-created'));
+
+		$store->delete('counted');
 	}
 
 	public function testTheSameStoreIsReturnedTwice(): void

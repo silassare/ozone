@@ -18,6 +18,7 @@ use Override;
 use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
+use OZONE\Core\Stores\StoreNumbers;
 use OZONE\Core\Utils\Hasher;
 use RuntimeException;
 
@@ -123,20 +124,50 @@ final class MemcachedStore implements StoreDriverInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * Compare-and-set (`gets` / `cas`), read again when another client wrote first; a missing entry
+	 * is created with `add`, which only one client wins.
 	 */
 	#[Override]
-	public function increment(string $key, float|int $factor = 1): bool
+	public function add(string $key, float|int $by, bool $create = false, ?float $expiresAt = null): float|int|null
 	{
-		return false !== $this->memcached->increment($key, self::wholeFactor($factor));
-	}
+		for ($attempt = 0; $attempt < StoreNumbers::MAX_ATTEMPTS; ++$attempt) {
+			$got = $this->memcached->get($key, null, Memcached::GET_EXTENDED);
 
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function decrement(string $key, float|int $factor = 1): bool
-	{
-		return false !== $this->memcached->decrement($key, self::wholeFactor($factor));
+			if (!\is_array($got)) {
+				if (!$create) {
+					return null;
+				}
+
+				// Memcached takes an expiry in seconds, absolute here.
+				$expiration = null !== $expiresAt ? (int) \ceil($expiresAt) : 0;
+
+				if ($this->memcached->add($key, $by, $expiration)) {
+					if (null !== $expiresAt) {
+						$this->memcached->set($key . ':expire', $expiresAt, $expiration);
+					}
+
+					return $by;
+				}
+
+				continue;
+			}
+
+			$sum = StoreNumbers::sum($key, $got['value'] ?? null, $by);
+
+			if (0 == $by) {
+				return $sum;
+			}
+
+			$expire     = $this->memcached->get($key . ':expire');
+			$expiration = \is_numeric($expire) ? (int) \ceil((float) $expire) : 0;
+
+			if ($this->memcached->cas((float) ($got['cas'] ?? 0), $key, $sum, $expiration)) {
+				return $sum;
+			}
+		}
+
+		throw StoreNumbers::contended($key);
 	}
 
 	/**
@@ -229,19 +260,5 @@ final class MemcachedStore implements StoreDriverInterface
 				'The Memcached cache driver needs the PHP ext-memcached extension, which is not installed.'
 			);
 		}
-	}
-
-	/**
-	 * Memcached counts in whole numbers only (its `incr` / `decr`).
-	 *
-	 * @throws RuntimeException for a factor with a fraction
-	 */
-	private static function wholeFactor(float|int $factor): int
-	{
-		if (\is_float($factor) && \floor($factor) !== $factor) {
-			throw new RuntimeException(\sprintf('Memcached counts in whole numbers only, %s given.', $factor));
-		}
-
-		return (int) $factor;
 	}
 }

@@ -22,6 +22,7 @@ use OZONE\Core\Db\OZDbStoresQuery;
 use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
+use OZONE\Core\Stores\StoreNumbers;
 
 /**
  * Class DbStore.
@@ -60,7 +61,7 @@ final class DbStore implements StoreDriverInterface
 			perEntryTTL: true,
 			persistent: true,
 			expiryCallbacks: true,
-			atomic: false,
+			atomic: true,
 			// The database is the project's own durable store.
 			durable: true,
 		);
@@ -126,14 +127,31 @@ final class DbStore implements StoreDriverInterface
 	#[Override]
 	public function set(StoreEntry $entry): bool
 	{
-		$store = $this->findRow($entry->key) ?? $this->newRow($entry->key);
-
 		$raw       = SignedSerializer::serialize([self::CACHE_VALUE => $entry->value]);
 		$expire_at = null !== $entry->expiresAt ? (int) \ceil($entry->expiresAt) : null;
-
-		$store->setValue($raw)
+		$row       = $this->newRow($entry->key)
+			->setValue($raw)
 			->setExpireAT($expire_at)
-			->save();
+			->toRow();
+
+		unset($row[OZDbStore::COL_ID]);
+
+		// One statement, inserted or updated in place: reading first, then inserting, let two requests
+		// writing a new key at once (two first hits of a rate limit) collide on its unique key.
+		(new OZDbStoresQuery())
+			->insert($row)
+			->doUpdateOnConflict(
+				[OZDbStore::COL_GROUP, OZDbStore::COL_KEY],
+				[
+					OZDbStore::COL_VALUE,
+					OZDbStore::COL_EXPIRE_AT,
+					OZDbStore::COL_LABEL,
+					OZDbStore::COL_UPDATED_AT,
+					OZDbStore::COL_DELETED,
+					OZDbStore::COL_DELETED_AT,
+				]
+			)
+			->execute();
 
 		return true;
 	}
@@ -188,36 +206,70 @@ final class DbStore implements StoreDriverInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * Compare-and-set: the new number is written only where the entry still holds what was read, and
+	 * read again otherwise. A missing entry is first created at zero (skipped when another request
+	 * created it meanwhile), then added to as any other.
+	 *
+	 * @throws GoblException
 	 */
 	#[Override]
-	public function increment(string $key, float|int $factor = 1): bool
+	public function add(string $key, float|int $by, bool $create = false, ?float $expiresAt = null): float|int|null
 	{
-		$entry = $this->get($key);
+		for ($attempt = 0; $attempt < StoreNumbers::MAX_ATTEMPTS; ++$attempt) {
+			$store = $this->findRow($key);
 
-		if (null === $entry) {
-			return false;
+			if (null === $store) {
+				if (!$create) {
+					return null;
+				}
+
+				$this->insertIfMissing($key, 0, $expiresAt);
+
+				continue;
+			}
+
+			$raw       = (string) $store->getValue();
+			$expire_at = $store->getExpireAT();
+			$expired   = null !== $expire_at && (int) $expire_at <= \time();
+
+			if ($expired && !$create) {
+				return null;
+			}
+
+			if ($expired) {
+				$sum        = $by;
+				$new_expire = null !== $expiresAt ? (int) \ceil($expiresAt) : null;
+			} else {
+				[$signed, $data] = SignedSerializer::unserialize($raw);
+				$sum             = StoreNumbers::sum(
+					$key,
+					$signed && \is_array($data) ? ($data[self::CACHE_VALUE] ?? null) : null,
+					$by
+				);
+				$new_expire = null !== $expire_at ? (int) $expire_at : null;
+
+				if (0 == $by) {
+					return $sum;
+				}
+			}
+
+			$written = (new OZDbStoresQuery())
+				->whereIdIs($store->getID())
+				->whereValueIs($raw)
+				->update([
+					OZDbStore::COL_VALUE      => SignedSerializer::serialize([self::CACHE_VALUE => $sum]),
+					OZDbStore::COL_EXPIRE_AT  => $new_expire,
+					OZDbStore::COL_UPDATED_AT => \time(),
+				])
+				->execute();
+
+			if (1 === $written) {
+				return $sum;
+			}
 		}
 
-		$new = new StoreEntry($key, $entry->value + $factor, $entry->expiresAt);
-
-		return $this->set($new);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function decrement(string $key, float|int $factor = 1): bool
-	{
-		$entry = $this->get($key);
-
-		if (null === $entry) {
-			return false;
-		}
-
-		$new = new StoreEntry($key, $entry->value - $factor, $entry->expiresAt);
-
-		return $this->set($new);
+		throw StoreNumbers::contended($key);
 	}
 
 	/**
@@ -289,6 +341,22 @@ final class DbStore implements StoreDriverInterface
 			->whereIsNotDeleted()
 			->find(ORMOptions::makePaginated(1))
 			->fetchClass();
+	}
+
+	/**
+	 * Creates an entry holding a number unless one exists by that key (another request may have just
+	 * created it): one statement, so nothing collides.
+	 */
+	private function insertIfMissing(string $key, float|int $value, ?float $expiresAt): void
+	{
+		$row = $this->newRow($key)
+			->setValue(SignedSerializer::serialize([self::CACHE_VALUE => $value]))
+			->setExpireAT(null !== $expiresAt ? (int) \ceil($expiresAt) : null)
+			->toRow();
+
+		unset($row[OZDbStore::COL_ID]);
+
+		(new OZDbStoresQuery())->insert($row)->ignoreOnConflict()->execute();
 	}
 
 	/**

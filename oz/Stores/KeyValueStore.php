@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Stores;
 
 use InvalidArgumentException;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 
 /**
@@ -160,33 +161,58 @@ final class KeyValueStore
 	}
 
 	/**
-	 * Increments the numeric value stored at `$key` by `$by`.
-	 *
-	 * Returns false when the key does not exist.
+	 * Adds to the number stored at `$key`, atomically (concurrent increments are never lost), and
+	 * answers the new number; false when the key does not exist, which is not created.
 	 *
 	 * @param string    $key
 	 * @param float|int $by
 	 *
-	 * @return bool
+	 * @return false|float|int
 	 */
-	public function increment(string $key, float|int $by = 1): bool
+	public function increment(string $key, float|int $by = 1): false|float|int
 	{
-		return $this->provider->increment($key, $by);
+		self::assertValidKey($key);
+
+		return $this->provider->add($key, $by) ?? false;
 	}
 
 	/**
-	 * Decrements the numeric value stored at `$key` by `$by`.
-	 *
-	 * Returns false when the key does not exist.
+	 * Subtracts from the number stored at `$key`, as `increment()` adds.
 	 *
 	 * @param string    $key
 	 * @param float|int $by
 	 *
-	 * @return bool
+	 * @return false|float|int
 	 */
-	public function decrement(string $key, float|int $by = 1): bool
+	public function decrement(string $key, float|int $by = 1): false|float|int
 	{
-		return $this->provider->decrement($key, $by);
+		self::assertValidKey($key);
+
+		return $this->provider->add($key, -$by) ?? false;
+	}
+
+	/**
+	 * Counts at `$key`, atomically: adds `$by`, the counter created at `$by` with its TTL when it
+	 * does not exist (or expired); answers its new total. What a rate limit or a throttle counts with:
+	 * a burst of requests is counted whole.
+	 *
+	 * @param string    $key
+	 * @param float|int $by
+	 * @param null|int  $ttl the TTL of a counter this creates, in seconds; an existing one keeps its own
+	 *
+	 * @return float|int
+	 */
+	public function count(string $key, float|int $by = 1, ?int $ttl = null): float|int
+	{
+		self::assertValidKey($key);
+
+		$total = $this->provider->add($key, $by, true, null !== $ttl ? \microtime(true) + $ttl : null);
+
+		if (null === $total) {
+			throw new RuntimeException(\sprintf('The store did not create the counter "%s".', $key));
+		}
+
+		return $total;
 	}
 
 	/**

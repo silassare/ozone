@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Stores\Drivers;
 
 use Override;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Crypt\SignedSerializer;
 use OZONE\Core\FS\FS;
 use OZONE\Core\Stores\StoreCapabilities;
@@ -42,6 +43,9 @@ final class FileStore extends MemoryStore
 
 	private ?string $cache_path = null;
 
+	/** @var array<string, null|int> by namespace: the inode of the file its entries were read from */
+	private static array $inodes = [];
+
 	/**
 	 * @param string $namespace
 	 * @param string $root      {@see self::ROOT_CACHE} or {@see self::ROOT_STATE}
@@ -61,7 +65,7 @@ final class FileStore extends MemoryStore
 			perEntryTTL: true,
 			persistent: true,
 			expiryCallbacks: false,
-			atomic: false,
+			atomic: true,
 			// Only when the files are in data/state: .ozone/cache may be deleted at any time.
 			durable: self::ROOT_STATE === $this->root,
 		);
@@ -77,6 +81,61 @@ final class FileStore extends MemoryStore
 			? self::ROOT_STATE
 			: self::ROOT_CACHE);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Several processes share the file: the change is made under an exclusive lock, on what the file
+	 * holds now, so a write of one never undoes another's, and an add never loses one.
+	 */
+	#[Override]
+	protected function mutate(callable $change): mixed
+	{
+		$path = $this->getCachePath();
+		$lock = \fopen($path . '.lock', 'c');
+
+		if (false === $lock) {
+			throw new RuntimeException(\sprintf('The store file "%s" cannot be locked.', $path));
+		}
+
+		try {
+			\flock($lock, \LOCK_EX);
+
+			self::$cache_data[$this->namespace] = $this->load();
+
+			$result = $change();
+
+			$this->save();
+			$this->remember($path);
+
+			return $result;
+		} finally {
+			\flock($lock, \LOCK_UN);
+			\fclose($lock);
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Another process may have written the file since it was read: each write replaces it whole
+	 * (`writeAtomic()`), so a new inode says it changed, within the same second too.
+	 */
+	#[Override]
+	protected function refresh(): void
+	{
+		$path = $this->getCachePath();
+
+		\clearstatcache(true, $path);
+
+		$inode = \is_file($path) ? (\fileinode($path) ?: null) : null;
+
+		if ($inode !== (self::$inodes[$this->namespace] ?? null)) {
+			self::$cache_data[$this->namespace] = $this->load();
+			self::$inodes[$this->namespace]     = $inode;
+		}
+	}
+
 
 	/**
 	 * {@inheritDoc}
@@ -117,6 +176,16 @@ final class FileStore extends MemoryStore
 		}
 
 		return [];
+	}
+
+	/**
+	 * Notes the file just written as the one the entries are from.
+	 */
+	private function remember(string $path): void
+	{
+		\clearstatcache(true, $path);
+
+		self::$inodes[$this->namespace] = \is_file($path) ? (\fileinode($path) ?: null) : null;
 	}
 
 	/**
