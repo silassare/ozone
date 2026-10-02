@@ -22,7 +22,9 @@ use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\Filters\Interfaces\FileFilterHandlerInterface;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Images\ImageRecipe;
+use OZONE\Core\FS\Images\ImageWatermarks;
 use OZONE\Core\FS\Images\Images;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\Response;
@@ -96,22 +98,104 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 	#[Override]
 	public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response
 	{
-		$filterTokens = ImageFilterTokens::normalize($filterTokens);
-		$key          = \md5($file->getID() . ':' . $file->getKey() . ':' . \implode(',', $filterTokens));
+		$tokens   = ImageFilterTokens::normalize($filterTokens);
+		$auto     = \in_array('auto', $tokens, true);
+		$tokens   = self::resolveFormat($tokens, $file->getMime());
+		$enforced = ImageWatermarks::enforcedFor($file);
+
+		// A watermark a project forces replaces any the URL asks for: it cannot be dropped.
+		if (null !== $enforced) {
+			$tokens   = \array_values(
+				\array_filter($tokens, static fn (string $t): bool => !\str_starts_with($t, 'wm'))
+			);
+			$tokens[] = 'wm' . $enforced;
+		}
+
+		$mime = self::mimeOf($tokens, $file->getMime());
+		$key  = \md5($file->getID() . ':' . $file->getKey() . ':' . \implode(',', $tokens));
 		$dir  = self::cacheDir()->cd(\substr($key, 0, 2), true);
 		$path = $dir->resolve($key);
 
 		if (!\is_file($path)) {
-			[, $bytes] = $this->process($file, $stream, $filterTokens);
+			$bytes = $this->process($file, $stream, $tokens, null !== $enforced);
+
+			if (null === $bytes) {
+				// Not rendered: the file as it is, which is not kept as a rendition.
+				$stream->rewind();
+
+				return $response
+					->withHeader('Content-type', $file->getMime())
+					->withBody($stream);
+			}
 
 			// Atomic: a concurrent request serves either no rendition yet or a whole one.
 			$dir->writeAtomic($key, $bytes);
 		}
 
-		return $response
-			->withHeader('Content-type', $file->getMime())
+		$response = $response
+			->withHeader('Content-type', $mime)
 			->withHeader('Content-Length', (string) \filesize($path))
 			->withBody(FileStream::fromPath($path));
+
+		// What was served depends on what the browser accepts: a cache must keep them apart.
+		return $auto ? $response->withAddedHeader('Vary', 'Accept') : $response;
+	}
+
+	/**
+	 * `auto` made the best format the browser accepts and this server writes (AVIF, then WebP),
+	 * or dropped for the image's own; an animated format keeps its own.
+	 *
+	 * @param list<string> $tokens
+	 *
+	 * @return list<string>
+	 */
+	public static function resolveFormat(array $tokens, string $mime, ?string $accept = null): array
+	{
+		$index = \array_search('auto', $tokens, true);
+
+		if (false === $index) {
+			return $tokens;
+		}
+
+		$accept ??= context()->getRequest()->getHeaderLine('Accept');
+		$chosen = null;
+
+		if ('image/gif' !== $mime) {
+			foreach (['avif', 'webp'] as $format) {
+				if (
+					\str_contains($accept, 'image/' . $format)
+					&& Images::processor()->supports('image/' . $format)
+				) {
+					$chosen = 'image/' . $format === $mime ? null : $format;
+
+					break;
+				}
+			}
+		}
+
+		if (null === $chosen) {
+			unset($tokens[$index]);
+		} else {
+			$tokens[$index] = $chosen;
+		}
+
+		return \array_values($tokens);
+	}
+
+	/**
+	 * The media type a rendition of these tokens has.
+	 *
+	 * @param list<string> $tokens
+	 */
+	private static function mimeOf(array $tokens, string $mime): string
+	{
+		foreach (['webp', 'avif'] as $format) {
+			if (\in_array($format, $tokens, true)) {
+				return 'image/' . $format;
+			}
+		}
+
+		return $mime;
 	}
 
 	/**
@@ -149,19 +233,14 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 	}
 
 	/**
-	 * Renders the canonical tokens, returns [mime, bytes].
+	 * Renders the canonical tokens: the rendition's bytes, or null when the image could not be
+	 * rendered (it is then served as it is), unless a watermark is due on it: then it is never served
+	 * without, and the failure is the request's.
 	 *
-	 * Falls back to the raw content when image processing fails.
-	 *
-	 * @param OZFile       $file
-	 * @param FileStream   $stream
 	 * @param list<string> $filterTokens
-	 *
-	 * @return array{0: string, 1: string}
 	 */
-	private function process(OZFile $file, FileStream $stream, array $filterTokens): array
+	private function process(OZFile $file, FileStream $stream, array $filterTokens, bool $watermarked): ?string
 	{
-		$mime    = $file->getMime();
 		$content = $stream->getContents();
 		$recipe  = ImageRecipe::fromTokens(
 			$filterTokens,
@@ -169,18 +248,21 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 		);
 
 		try {
-			$bytes = Images::processor()->render($content, $mime, $recipe);
+			return Images::processor()->render($content, $file->getMime(), $recipe)->bytes;
 		} catch (Exception $e) {
-			oz_logger()->error('Image filter processing failed, falling back to raw file.', [
+			if ($watermarked) {
+				throw new RuntimeException('The image could not be rendered with its watermark.', [
+					'_file' => $file->getID(),
+				], $e);
+			}
+
+			oz_logger()->error('Image filter processing failed, serving the raw file.', [
 				'_file'      => $file->getID(),
 				'_filters'   => $filterTokens,
 				'_exception' => $e->getMessage(),
 			]);
 
-			// Return raw content so the request never serves an empty body.
-			$bytes = $content;
+			return null;
 		}
-
-		return [$mime, $bytes];
 	}
 }

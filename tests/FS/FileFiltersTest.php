@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\FS;
 
+use Intervention\Image\Interfaces\ImageInterface;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\FS\FileStream;
@@ -20,6 +22,9 @@ use OZONE\Core\FS\Filters\FileFilters;
 use OZONE\Core\FS\Filters\ImageFileFilterHandler;
 use OZONE\Core\FS\Filters\ImageFilterTokens;
 use OZONE\Core\FS\Filters\Interfaces\FileFilterHandlerInterface;
+use OZONE\Core\FS\Images\Images;
+use OZONE\Core\FS\Images\ImageTokens;
+use OZONE\Core\FS\Images\Interfaces\ImageTokenInterface;
 use OZONE\Core\Http\Response;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -342,9 +347,128 @@ final class FileFiltersTest extends TestCase
 
 		for ($i = 1; $i <= 50; ++$i) {
 			$many[] = 'blur' . $i;
+			$many[] = 'bright' . $i;
 		}
 
-		self::assertCount(8, ImageFilterTokens::normalize($many));
+		self::assertCount(12, ImageFilterTokens::normalize($many));
+	}
+
+	public function testTheNewTokensAreBoundedAndOrdered(): void
+	{
+		self::assertSame(
+			['r90', 'fliph', 'area100x0x500x1000', 'focal300x700', 'q80', 'webp', 'invert', 'bright20', 'contrastn5', 'pixel8'],
+			ImageFilterTokens::normalize([
+				'invert', 'bright22', 'contrastn4', 'pixel10', 'webp', 'q80',
+				'focal304x696', 'area102x0x498x1000', 'fliph', 'r90',
+			])
+		);
+		// Nothing that changes nothing, nothing unknown, nothing out of bounds.
+		self::assertSame([], ImageFilterTokens::normalize([
+			'bright0', 'bright2', 'area0x0x1000x1000', 'r45', 'flipx', 'wmnone', 'jpeg',
+		]));
+		// An area is kept inside the image.
+		self::assertSame(['area900x900x100x100'], ImageFilterTokens::normalize(['area900x900x500x500']));
+		self::assertSame(['auto'], ImageFilterTokens::normalize(['auto']));
+	}
+
+	public function testAWatermarkIsADeclaredOneAndIsNeverTheTokenDropped(): void
+	{
+		Settings::set('oz.files', 'OZ_IMAGE_WATERMARKS', ['logo' => ['path' => '/tmp/logo.png']]);
+
+		try {
+			self::assertSame(['w96', 'wmlogo'], ImageFilterTokens::normalize(['wmlogo', 'w96', 'wmother']));
+
+			$many = ['wmlogo'];
+
+			for ($i = 1; $i <= 20; ++$i) {
+				$many[] = 'bright' . (5 * $i);
+			}
+
+			$kept = ImageFilterTokens::normalize($many);
+
+			self::assertCount(12, $kept);
+			self::assertSame('wmlogo', \end($kept));
+		} finally {
+			Settings::unset('oz.files', 'OZ_IMAGE_WATERMARKS');
+		}
+	}
+
+	public function testAProjectsOwnTokenIsKeptInItsCanonicalForm(): void
+	{
+		ImageTokens::register(new class implements ImageTokenInterface {
+			public function canonical(string $token): ?string
+			{
+				return \preg_match('~^tint(\d+)$~', $token, $m) ? 'tint' . (10 * \intdiv((int) $m[1], 10)) : null;
+			}
+
+			public function apply(ImageInterface $image, string $token): void {}
+		});
+
+		try {
+			self::assertSame(['grayscale', 'tint40'], ImageFilterTokens::normalize(['grayscale', 'tint47', 'tint42']));
+		} finally {
+			ImageTokens::reset();
+		}
+	}
+
+	public function testAutoIsTheBestFormatTheBrowserAcceptsAndTheServerWrites(): void
+	{
+		$writesAvif = Images::processor()->supports('image/avif');
+
+		self::assertSame(
+			[$writesAvif ? 'avif' : 'webp'],
+			ImageFileFilterHandler::resolveFormat(['auto'], 'image/jpeg', 'image/avif,image/webp,*/*')
+		);
+		self::assertSame(['webp'], ImageFileFilterHandler::resolveFormat(['auto'], 'image/jpeg', 'image/webp,*/*'));
+		// Neither accepted, already the best, or animated: the image's own.
+		self::assertSame(['w96'], ImageFileFilterHandler::resolveFormat(['w96', 'auto'], 'image/jpeg', 'image/png,*/*'));
+		self::assertSame([], ImageFileFilterHandler::resolveFormat(['auto'], 'image/webp', 'image/webp'));
+		self::assertSame([], ImageFileFilterHandler::resolveFormat(['auto'], 'image/gif', 'image/webp'));
+	}
+
+	public function testAForcedWatermarkCannotBeLeftOut(): void
+	{
+		$mark = \tempnam(\sys_get_temp_dir(), 'oz-mark') . '.png';
+
+		\file_put_contents($mark, self::makePng(10, 10));
+		Settings::set('oz.files', 'OZ_IMAGE_WATERMARKS', ['logo' => ['path' => $mark, 'opacity' => 1]]);
+		Settings::set('oz.files', 'OZ_IMAGE_WATERMARK_POLICY', [['for_label' => 'product_photo', 'watermark' => 'logo']]);
+
+		try {
+			$file = self::makeFile('image/png');
+			$file->setForLabel('product_photo');
+
+			$png     = self::makePng(200, 100);
+			$handler = new ImageFileFilterHandler();
+
+			// Asked with no token, or with another watermark: the same rendition, watermarked.
+			$handler->handle($file, self::makeStream($png), new Response(), []);
+			$handler->handle($file, self::makeStream($png), new Response(), ['wmlogo']);
+
+			self::assertCount(1, self::renditions());
+
+			$free = self::makeFile('image/png', '2');
+
+			$handler->handle($free, self::makeStream($png), new Response(), []);
+			self::assertCount(2, self::renditions());
+		} finally {
+			Settings::unset('oz.files', 'OZ_IMAGE_WATERMARK_POLICY');
+			Settings::unset('oz.files', 'OZ_IMAGE_WATERMARKS');
+			\unlink($mark);
+		}
+	}
+
+	public function testARenditionInAnotherFormatSaysSo(): void
+	{
+		$response = (new ImageFileFilterHandler())->handle(
+			self::makeFile('image/png'),
+			self::makeStream(self::makePng(40, 40)),
+			new Response(),
+			['webp']
+		);
+
+		self::assertSame('image/webp', $response->getHeaderLine('Content-type'));
+		self::assertSame('WEBP', \substr((string) $response->getBody(), 8, 4));
 	}
 
 	public function testRegisterAndApplyUsesFirstMatchingHandler(): void

@@ -129,12 +129,46 @@ return [
 	],
 
 	/**
+	 * Watermarks by name, drawn by the token `wm{name}` (a name of `[a-z0-9]`, at most 32):
+	 *
+	 * ```php
+	 * 'logo' => [
+	 *     'path'     => 'app/assets/watermark.png', // an image, from the project's root
+	 *     'position' => 'bottom-right',             // top-left ... center ... bottom-right
+	 *     'opacity'  => 0.5,                        // 0 to 1
+	 *     'width'    => 20,                         // its width, in % of the image's
+	 *     'margin'   => 2,                          // from the edges, in % of the image's width
+	 * ],
+	 * ```
+	 *
+	 * @see \OZONE\Core\FS\Images\ImageWatermarks
+	 */
+	'OZ_IMAGE_WATERMARKS'                 => [],
+
+	/**
+	 * Watermarks forced on images, on every rendition and on the plain URL: a list of
+	 * `['for_label' => 'product_photo', 'watermark' => 'logo']`. A file's own `watermark` data names
+	 * one for that file alone.
+	 *
+	 * @see \OZONE\Core\FS\Images\ImageWatermarks::enforcedFor()
+	 */
+	'OZ_IMAGE_WATERMARK_POLICY'           => [],
+
+	/**
+	 * A project's own image tokens: classes implementing
+	 * `OZONE\Core\FS\Images\Interfaces\ImageTokenInterface`.
+	 *
+	 * @see \OZONE\Core\FS\Images\ImageTokens
+	 */
+	'OZ_IMAGE_TOKENS'                     => [],
+
+	/**
 	 * The most passes a blur may take, and the most tokens a rendition may have.
 	 *
 	 * @see ImageFilterTokens
 	 */
 	'OZ_IMAGE_FILTERS_MAX_BLUR'           => 10,
-	'OZ_IMAGE_FILTERS_MAX_TOKENS'         => 8,
+	'OZ_IMAGE_FILTERS_MAX_TOKENS'         => 12,
 
 	/**
 	 * Should we use nginx x-sendfile or x-accel to serve files ?

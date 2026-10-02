@@ -1002,7 +1002,8 @@ PHP 8.3+; MySQL by default (SQLite and PostgreSQL supported). Required extension
 `silassare/kli` (CLI), `silassare/blate` (templates), `silassare/php-utils` (`Event`, `Store`,
 `PathUtils`, ...), `intervention/image` (images, only behind `FS\Images\Interfaces\ImageProcessorInterface`:
 the driver is libvips, Imagick or GD, whichever the server has first, `OZ_IMAGE_DRIVER`; the test image
-has all three and every driver is held to the same renditions), `symfony/process`, `zircote/swagger-php`,
+has all three and every driver is held to the same renditions; a filter token is bounded before anything is rendered,
+a project's own too: `ImageTokenInterface::canonical()` must snap its values), `symfony/process`, `zircote/swagger-php`,
 `psr/http-message`, `psr/log`.
 
 The four `silassare/*` packages are first-party: **read their instructions before using them** —

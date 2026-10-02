@@ -22,6 +22,7 @@ use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\FS\FileAccess;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\Filters\FileFilters;
+use OZONE\Core\FS\Images\ImageWatermarks;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Scan\FileScan;
 use OZONE\Core\Http\Response;
@@ -133,8 +134,9 @@ class GetFilesView extends WebView
 
 		$response = $context->getResponse();
 
-		if ($req_file_filters) {
-			$response = self::applyFilters($response, $file, $driver->getStream($file), $req_file_filters);
+		// An image whose watermark is forced is never served without it, its plain URL included.
+		if ($req_file_filters || null !== ImageWatermarks::enforcedFor($file)) {
+			$response = self::applyFilters($response, $file, $driver->getStream($file), (string) $req_file_filters);
 		} else {
 			$response = $driver->serve($file, $response);
 

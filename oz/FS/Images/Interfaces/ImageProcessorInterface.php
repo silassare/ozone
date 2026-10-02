@@ -14,9 +14,11 @@ declare(strict_types=1);
 namespace OZONE\Core\FS\Images\Interfaces;
 
 use OZONE\Core\FS\Images\ImageRecipe;
+use OZONE\Core\FS\Images\RenderedImage;
 
 /**
- * What OZone asks of an image library: the library stays behind it.
+ * What OZone asks of an image library: the library stays behind it (a project's own tokens, which
+ * draw with Intervention Image, aside).
  */
 interface ImageProcessorInterface
 {
@@ -26,14 +28,17 @@ interface ImageProcessorInterface
 	public function driver(): string;
 
 	/**
-	 * An image rendered as a recipe says, in its own format: upright (its orientation applied),
-	 * never enlarged, and without its metadata (location, camera, comments).
+	 * Whether it can write images of a media type (`image/avif`): what `auto` chooses among.
+	 */
+	public function supports(string $mime): bool;
+
+	/**
+	 * An image rendered as a recipe says: upright (its orientation applied), never enlarged, and
+	 * without its metadata (location, camera, comments).
 	 *
 	 * @param string      $bytes  the image as stored
-	 * @param string      $mime   its media type, which the rendition keeps
+	 * @param string      $mime   its media type, which the rendition keeps unless the recipe names a format
 	 * @param ImageRecipe $recipe what to do
-	 *
-	 * @return string the rendition's bytes
 	 */
-	public function render(string $bytes, string $mime, ImageRecipe $recipe): string;
+	public function render(string $bytes, string $mime, ImageRecipe $recipe): RenderedImage;
 }
