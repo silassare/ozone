@@ -158,6 +158,11 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 			->setMetaKey('field.label', 'Is Valid')
 			->setMetaKey('api.doc.description', 'Whether the auth user is active and valid');
 
+		// The server's own: no form asks for them (sign-up, profile), no CRUD request writes them
+		// unless a listener allows it, and no answer shows them.
+		$tb->useColumn('data')->setPrivate();
+		$tb->useColumn('is_valid')->setPrivate();
+
 		$tb->timestamps();
 		$tb->softDeletable();
 

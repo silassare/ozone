@@ -596,7 +596,9 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	}
 
 	/**
-	 * Generates a form for a given table.
+	 * Generates a form for a given table: a field per column a client may give (not a private one,
+	 * nor one the database fills itself, auto-incremented or timestamped), required when the column
+	 * has neither a null nor a default.
 	 *
 	 * @param string|Table $table
 	 *
@@ -636,7 +638,8 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 				->help($column->getMeta()->get('field.help'))
 
 				->type($type)
-				->required(!$type->isNullable());
+				// A column the database fills (a default) is never asked for.
+				->required(!$type->isNullable() && !$type->hasDefault());
 
 			Utils::safeFrontendMeta($column, $field);
 		}

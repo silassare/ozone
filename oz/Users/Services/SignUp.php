@@ -13,7 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Users\Services;
 
+use Gobl\DBAL\Exceptions\DBALUniqueViolationException;
+use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use Gobl\Exceptions\GoblException;
+use Gobl\ORM\ORM;
 use Override;
 use OZONE\Core\App\Service;
 use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
@@ -22,6 +25,7 @@ use OZONE\Core\Auth\VerificationPolicy;
 use OZONE\Core\Db\OZUser;
 use OZONE\Core\Db\OZUsersController;
 use OZONE\Core\Exceptions\InternalErrorException;
+use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
@@ -43,8 +47,12 @@ final class SignUp extends Service
 	 */
 	public function actionSignUp(RouteInfo $ri): void
 	{
-		$data = $ri->getCleanFormData()
-			->getData();
+		// By the columns' full names (the form says `email`): a verified identifier set below
+		// replaces the one the form gave, instead of naming the column a second time.
+		$data = ORM::formByFullNames(
+			db()->getTableOrFail(OZUser::TABLE_NAME),
+			$ri->getCleanFormData()->getData()
+		);
 
 		// What this user type must prove (`oz.auth.verification`): null when nothing, and then the
 		// identifiers are the ones the form carries, for the project to verify later.
@@ -69,7 +77,12 @@ final class SignUp extends Service
 		}
 
 		$controller = new OZUsersController();
-		$user       = $controller->addItem($data);
+
+		try {
+			$user = $controller->addItem($data);
+		} catch (DBALUniqueViolationException $e) {
+			throw self::takenField($e, $data) ?? $e;
+		}
 
 		$ri->getContext()
 			->getAuthUsers()
@@ -78,6 +91,34 @@ final class SignUp extends Service
 		$this->json()
 			->setDone('OZ_USER_SIGN_UP_SUCCESS')
 			->setData($user);
+	}
+
+	/**
+	 * The field error of a sign-up that met a unique key: another sign-up with the same email (or
+	 * phone) passed the column's own "not registered" check at the same time, and was written first.
+	 * That check, run again, now refuses the value, and its error is the field's, as the form gives it.
+	 *
+	 * @param DBALUniqueViolationException $e    the key met
+	 * @param array<array-key, mixed>      $data the form, by the columns' full names
+	 */
+	private static function takenField(DBALUniqueViolationException $e, array $data): ?InvalidFormException
+	{
+		$columns = $e->getColumns();
+
+		if (1 !== \count($columns)) {
+			return null;
+		}
+
+		$column = $e->getTable()->getColumnOrFail($columns[0]);
+
+		try {
+			$column->getType()->validate($data[$column->getFullName()] ?? null);
+		} catch (TypesInvalidValueException $refused) {
+			return (new InvalidFormException($refused->getMessage(), $refused->getData(true), $e))
+				->mergeData(['field' => $column->getName()]);
+		}
+
+		return null;
 	}
 
 	/**
@@ -94,6 +135,7 @@ final class SignUp extends Service
 				return $s->respond();
 			})
 			->name(self::ROUTE_SIGN_UP)
+			// The table's private columns (`data`, `is_valid`) are not in it.
 			->form(static fn () => Form::fromTable(OZUser::TABLE_NAME));
 
 		// The route asks for a verification at its door only when every user type needs one; otherwise

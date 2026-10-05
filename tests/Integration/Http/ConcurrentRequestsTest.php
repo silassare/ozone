@@ -15,6 +15,7 @@ namespace OZONE\Tests\Integration\Http;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PDO;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -71,20 +72,22 @@ final class ConcurrentRequestsTest extends TestCase
 	/**
 	 * Sign-ups with one email at once: each passes the check that the email is free, then inserts.
 	 * One user is created; the others get the email field's error, never a 500.
+	 *
+	 * @dataProvider provideSignUpDbConfig
 	 */
-	public function testSignUpsWithOneEmailAtOnceMakeOneUser(): void
+	public function testSignUpsWithOneEmailAtOnceMakeOneUser(DbTestConfig $config): void
 	{
-		$proj = OZTestProject::create('concurrent-signup', fresh: true);
-		$db   = $proj->getPath() . '/signup.sqlite';
+		$proj = OZTestProject::create('concurrent-signup-' . $config->rdbms, fresh: true);
 
-		$proj->writeEnv(['OZ_DB_RDBMS' => 'sqlite', 'OZ_DB_HOST' => $db]);
+		$proj->writeEnv($config->toEnvArray());
 		// No email to prove here: the test is about what reaches the database.
 		$proj->setSetting('oz.auth.verification', 'OZ_SIGNUP_VERIFICATION', []);
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
+		$proj->cleanDb();
 		$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
 		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
 
-		self::seedCountry($db, 'BJ');
+		self::seedCountry($config, 'BJ');
 
 		[$server, $host, $port] = $proj->startServer('api', '127.0.0.1', self::WORKERS);
 
@@ -98,7 +101,7 @@ final class ConcurrentRequestsTest extends TestCase
 				'gender'       => 'Male',
 				'birth_date'   => '1990-05-17',
 				'pass'         => 'Twin_Pass_42',
-				'cc2'               => 'BJ',
+				'cc2'          => 'BJ',
 			]);
 		} finally {
 			$server->stop(3);
@@ -120,6 +123,16 @@ final class ConcurrentRequestsTest extends TestCase
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('concurrent');
+	}
+
+	/**
+	 * Its own SQLite file: `cleanDb()` leaves a SQLite file as it is.
+	 *
+	 * @return iterable<string, array{DbTestConfig}>
+	 */
+	public static function provideSignUpDbConfig(): iterable
+	{
+		return DbTestConfig::allConfigured('concurrent_signup');
 	}
 
 	/**
@@ -167,7 +180,8 @@ final class ConcurrentRequestsTest extends TestCase
 	}
 
 	/**
-	 * Sends the same POST `$count` times at once: each answer's status and message.
+	 * Sends the same POST `$count` times at once: each answer's status, and its message followed by the
+	 * field it names, if any.
 	 *
 	 * @param array<string, string> $fields
 	 *
@@ -206,9 +220,7 @@ final class ConcurrentRequestsTest extends TestCase
 			$body      = \json_decode((string) \curl_multi_getcontent($handle), true);
 			$answers[] = [
 				(int) \curl_getinfo($handle, \CURLINFO_RESPONSE_CODE),
-				\is_array($body)
-					? \trim(($body['msg'] ?? '') . ' ' . ($body['data']['field'] ?? \json_encode($body['data'] ?? null)))
-					: '',
+				\is_array($body) ? \trim(($body['msg'] ?? '') . ' ' . ($body['data']['field'] ?? '')) : '',
 			];
 			\curl_multi_remove_handle($multi, $handle);
 		}
@@ -221,21 +233,42 @@ final class ConcurrentRequestsTest extends TestCase
 	/**
 	 * Adds an allowed country: a user needs one (`user_cc2`) and no command creates countries.
 	 */
-	private static function seedCountry(string $db, string $cc2): void
+	private static function seedCountry(DbTestConfig $config, string $cc2): void
 	{
-		$pdo   = new \PDO('sqlite:' . $db, null, null, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
-		$table = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%oz_countries'")
-			->fetchColumn();
+		if ($config->isSQLite()) {
+			$pdo  = new PDO('sqlite:' . $config->host);
+			$find = "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%oz_countries'";
+		} elseif ($config->isMySQL()) {
+			$pdo  = new PDO(
+				\sprintf('mysql:host=%s;port=%d;dbname=%s', $config->host, $config->port, $config->name),
+				$config->user,
+				$config->pass
+			);
+			$find = "SHOW TABLES LIKE '%oz_countries'";
+		} else {
+			$pdo  = new PDO(
+				\sprintf('pgsql:host=%s;port=%d;dbname=%s', $config->host, $config->port, $config->name),
+				$config->user,
+				$config->pass
+			);
+			$find = "SELECT tablename FROM pg_tables WHERE tablename LIKE '%oz_countries'";
+		}
+
+		$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+		$table = $pdo->query($find)->fetchColumn();
 
 		self::assertIsString($table);
 
-		$now = (string) \time();
+		$quote = $config->isMySQL() ? '`' : '"';
+		$now   = (string) \time();
 
 		$pdo->prepare(\sprintf(
-			'INSERT INTO "%s" (country_cc2, country_calling_code, country_name, country_name_real, country_data,'
-				. ' country_is_valid, country_created_at, country_updated_at, country_deleted, country_deleted_at)'
-				. ' VALUES (?, ?, ?, ?, ?, 1, ?, ?, 0, NULL)',
-			$table
+			'INSERT INTO %2$s%1$s%2$s (country_cc2, country_calling_code, country_name, country_name_real,'
+				. ' country_data, country_is_valid, country_created_at, country_updated_at, country_deleted,'
+				. ' country_deleted_at) VALUES (?, ?, ?, ?, ?, TRUE, ?, ?, FALSE, NULL)',
+			$table,
+			$quote
 		))->execute([$cc2, '+229', 'Benin', 'Benin', '{}', $now, $now]);
 	}
 }
