@@ -201,8 +201,9 @@ final class Utils
 	/**
 	 * Builds cli options from a table.
 	 *
-	 * Private, auto-incremented and soft-delete columns are left out (the ORM manages the last
-	 * ones). An option is required only when its column is not nullable and has no default, and
+	 * Auto-incremented and soft-delete columns are left out (the ORM manages them). A private column
+	 * is offered: the command line is an administrator on the server, and an entity's own save may
+	 * write it. An option is required only when its column is not nullable and has no default, and
 	 * bool columns take `true` / `false`, `1` / `0` or `yes` / `no`.
 	 *
 	 * @param Table $table
@@ -231,7 +232,7 @@ final class Utils
 
 			$db_type = $column->getType();
 
-			if ($column->isPrivate() || $db_type->isAutoIncremented()) {
+			if ($db_type->isAutoIncremented()) {
 				continue;
 			}
 
