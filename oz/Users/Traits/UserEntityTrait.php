@@ -150,22 +150,6 @@ trait UserEntityTrait
 		// of the user entity.
 		$arr[self::COL_PASS] = null;
 
-		if ($hide_sensitive_data) {
-			$data = $this->getData()->toArray();
-
-			// we should not include the auth user data store in the array representation
-			// of the user entity,
-			unset($data[self::AUTH_USER_DATA_STORE_KEY]);
-
-			foreach ($data as $key => $_) {
-				if (\str_starts_with((string) $key, '_')) {
-					unset($data[$key]);
-				}
-			}
-
-			$arr[self::COL_DATA] = $data;
-		}
-
 		return $arr;
 	}
 }
