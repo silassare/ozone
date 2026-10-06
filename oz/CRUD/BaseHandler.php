@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\CRUD;
 
 use Gobl\CRUD\CRUDAction;
+use Gobl\CRUD\CRUDEventProducer;
 use Gobl\CRUD\Events\BeforeCreate;
 use Gobl\CRUD\Events\BeforeDelete;
 use Gobl\CRUD\Events\BeforeDeleteAll;
@@ -23,8 +24,6 @@ use Gobl\CRUD\Events\BeforeUpdate;
 use Gobl\CRUD\Events\BeforeUpdateAll;
 use Gobl\DBAL\Table;
 use Gobl\ORM\ORMEntity;
-use Gobl\ORM\ORMEntityCRUD;
-use Gobl\ORM\Utils\ORMClassKind;
 use InvalidArgumentException;
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Roles\Enums\Role;
@@ -146,7 +145,7 @@ abstract class BaseHandler extends TableCRUDListener
 
 	protected function listen(): void
 	{
-		$this->withCrud(function (ORMEntityCRUD $crud): void {
+		$this->withCrud(function (CRUDEventProducer $crud): void {
 			$crud->onBeforeCreate(fn (BeforeCreate $ev) => $this->can('create', $ev));
 			$crud->onBeforeUpdate(fn (BeforeUpdate $ev) => $this->can('update', $ev));
 			$crud->onBeforeUpdateAll(fn (BeforeUpdateAll $ev) => $this->can('update_all', $ev));
@@ -158,31 +157,24 @@ abstract class BaseHandler extends TableCRUDListener
 	}
 
 	/**
-	 * Call the factory with the CRUD instance.
+	 * Call the factory with the CRUD events of the table.
 	 *
-	 * @param callable(ORMEntityCRUD):void $factory
+	 * @param callable(CRUDEventProducer):void $factory
 	 */
 	protected function withCrud(callable $factory): void
 	{
-		$crud = $this->crud();
-
-		$crud && \call_user_func($factory, $crud);
+		$factory($this->crud());
 	}
 
 	/**
-	 * Get the CRUD instance for the table.
+	 * The CRUD events of the table, by its name: no generated class is loaded.
 	 *
-	 * @return null|ORMEntityCRUD
+	 * Listeners attach while the database initializes, which may happen while a generated class of
+	 * this very table is loading: going through the entity then found it missing (`class_exists()` is
+	 * false for a class still loading), and the table was left without its rules for the process.
 	 */
-	protected function crud(): ?ORMEntityCRUD
+	protected function crud(): CRUDEventProducer
 	{
-		/** @var class-string<ORMEntity> $entity_class */
-		$entity_class = ORMClassKind::ENTITY->getClassFQN($this->table);
-
-		if (!\class_exists($entity_class)) {
-			return null;
-		}
-
-		return $entity_class::crud();
+		return TableCRUD::events($this->table->getName());
 	}
 }

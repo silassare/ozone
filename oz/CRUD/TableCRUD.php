@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\CRUD;
 
+use Gobl\CRUD\CRUDEventProducer;
 use OZONE\Core\App\Settings;
 use OZONE\Core\CRUD\Interfaces\TableCRUDListenerInterface;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -23,6 +24,22 @@ use OZONE\Core\Migrations\Migrations;
  */
 final class TableCRUD
 {
+	/**
+	 * The CRUD events of a table, to listen to: `TableCRUD::events('oz_files')->onBeforeRead(...)`.
+	 *
+	 * Listen through this rather than a generated CRUD class (`OZFilesCrud::new()`): listeners
+	 * register while the database initializes, which happens when a request first loads a generated
+	 * ORM class, still loading then. Constructing that class, or its entity, from there fails (a
+	 * class cannot load while it is loading); this loads no generated class. Both listen on the same
+	 * channel, the table's full name.
+	 */
+	public static function events(string $table_name): CRUDEventProducer
+	{
+		$table = db()->getTableOrFail($table_name);
+
+		return new CRUDEventProducer($table->getNamespace(), $table->getName());
+	}
+
 	/**
 	 * Register CRUD event listeners, once per process, when the database is ready.
 	 *

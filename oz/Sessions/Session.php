@@ -23,6 +23,7 @@ use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
 use OZONE\Core\CSRF\CSRF;
+use OZONE\Core\CRUD\TableCRUD;
 use OZONE\Core\Db\OZSession;
 use OZONE\Core\Db\OZSessionsQuery;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -283,13 +284,10 @@ final class Session implements BootHookReceiverInterface
 	{
 		GarbageCollector::register('oz:sessions', self::gc(...));
 
-		// The class is checked when the database is ready, not here: loading a generated ORM class
-		// at boot cost every request, including the ones that never touch a session.
+		// When the database is ready, by the table's name: loading a generated ORM class at boot cost
+		// every request, and the database may be initializing while that very class loads.
 		DbReadyHook::listen(static function (): void {
-			if (\class_exists(OZSession::class)) {
-				OZSession::crud()
-					->onBeforePKColumnWrite(static fn () => true);
-			}
+			TableCRUD::events('oz_sessions')->onBeforePKColumnWrite(static fn () => true);
 		});
 	}
 

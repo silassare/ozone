@@ -662,6 +662,11 @@ default create is allowed and delete, delete-all and update-all are denied.
 when an event fires, with `$this->context()` (`Context::current()`) — never one kept from
 registration, which under a worker is the boot context, with no user.
 
+A listener attaches by the table's name, `TableCRUD::events('oz_files')` (a Gobl
+`CRUDEventProducer`), never through a generated class (`XxxCrud::new()`, `XxxEntity::crud()`):
+listeners attach while the database initializes, which happens while a request's first generated
+ORM class is still loading, and that class cannot be loaded from there.
+
 ---
 
 ## 12. Hooks & Events
