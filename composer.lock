@@ -476,12 +476,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "e40c485ba43ccab7a4146904ba4d4ef883068a51"
+                "reference": "15b72a85330f6db5487c9ec0681f72c49b1b7de7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/e40c485ba43ccab7a4146904ba4d4ef883068a51",
-                "reference": "e40c485ba43ccab7a4146904ba4d4ef883068a51",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/15b72a85330f6db5487c9ec0681f72c49b1b7de7",
+                "reference": "15b72a85330f6db5487c9ec0681f72c49b1b7de7",
                 "shasum": ""
             },
             "require": {
@@ -546,7 +546,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/main"
             },
-            "time": "2026-10-05T18:52:15+00:00"
+            "time": "2026-10-06T06:31:11+00:00"
         },
         {
             "name": "silassare/kli",
@@ -5124,12 +5124,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "69ddaead6caa68f4f6190e2ee732f103326e78ba"
+                "reference": "08ce189d89be521a44e20b191a2418b299a44b2b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/69ddaead6caa68f4f6190e2ee732f103326e78ba",
-                "reference": "69ddaead6caa68f4f6190e2ee732f103326e78ba",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/08ce189d89be521a44e20b191a2418b299a44b2b",
+                "reference": "08ce189d89be521a44e20b191a2418b299a44b2b",
                 "shasum": ""
             },
             "conflict": {
@@ -5418,7 +5418,7 @@
                 "feehi/feehicms": "<=2.1.1",
                 "fenom/fenom": "<=2.12.1",
                 "filament/actions": ">=3.2,<3.2.123|>=4,<=4.11.3|>=5,<=5.6.3",
-                "filament/filament": ">=3,<=3.3.51|>=4,<4.12.6|>=5,<5.7.6",
+                "filament/filament": ">=3,<=3.3.51|>=4,<4.13.2|>=5,<5.8.2",
                 "filament/forms": ">=3,<=3.3.52",
                 "filament/infolists": ">=3,<3.2.115|>=4,<=4.11.4|>=5,<=5.6.4",
                 "filament/tables": ">=3,<=3.3.50|>=4,<=4.11.4|>=5,<=5.6.4",
@@ -5682,7 +5682,7 @@
                 "mobiledetect/mobiledetectlib": "<2.8.32",
                 "modx/revolution": "<=3.1",
                 "mojo42/jirafeau": "<4.4",
-                "mongodb/mongodb": "<1.21.4|>=2,<2.4.1",
+                "mongodb/mongodb": "<1.21.5|>=2,<2.4.2",
                 "mongodb/mongodb-extension": "<1.21.2",
                 "monolog/monolog": ">=1.8,<1.12",
                 "moodle/moodle": "<4.5.9|>=5.0.0.0-beta,<5.0.5|>=5.1.0.0-beta,<5.1.2",
@@ -6266,7 +6266,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-30T15:40:52+00:00"
+            "time": "2026-10-05T23:50:51+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -8745,16 +8745,16 @@
         },
         {
             "name": "webmozart/assert",
-            "version": "2.4.1",
+            "version": "2.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozarts/assert.git",
-                "reference": "2ccb7c2e821038c03a3e6e1700c570c158c55f70"
+                "reference": "8a163706bbcac613733dba03f51e13b5eb1bb819"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozarts/assert/zipball/2ccb7c2e821038c03a3e6e1700c570c158c55f70",
-                "reference": "2ccb7c2e821038c03a3e6e1700c570c158c55f70",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/8a163706bbcac613733dba03f51e13b5eb1bb819",
+                "reference": "8a163706bbcac613733dba03f51e13b5eb1bb819",
                 "shasum": ""
             },
             "require": {
@@ -8805,9 +8805,9 @@
             ],
             "support": {
                 "issues": "https://github.com/webmozarts/assert/issues",
-                "source": "https://github.com/webmozarts/assert/tree/2.4.1"
+                "source": "https://github.com/webmozarts/assert/tree/2.5.0"
             },
-            "time": "2026-06-15T15:31:57+00:00"
+            "time": "2026-10-05T23:14:19+00:00"
         }
     ],
     "aliases": [],
