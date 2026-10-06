@@ -109,7 +109,18 @@ final class ConcurrentRequestsTest extends TestCase
 
 		$seen = \implode(', ', \array_map(static fn (array $a): string => $a[0] . ' ' . $a[1], $answers));
 
-		self::assertCount(1, \array_filter($answers, static fn (array $a): bool => 200 === $a[0]), $seen);
+		$created = \array_values(\array_filter($answers, static fn (array $a): bool => 200 === $a[0]));
+
+		self::assertCount(1, $created, $seen);
+		// The columns the server owns are in no answer.
+		self::assertSame(
+			[],
+			\array_intersect(
+				['user_data', 'user_is_valid', 'user_deleted', 'user_deleted_at', 'user_pass'],
+				\array_keys(\array_filter($created[0][2], static fn ($value): bool => null !== $value))
+			)
+		);
+		self::assertSame('twin@example.com', $created[0][2]['user_email'] ?? null);
 		self::assertCount(
 			7,
 			\array_filter($answers, static fn (array $a): bool => 'OZ_FIELD_EMAIL_ALREADY_REGISTERED email' === $a[1]),
@@ -181,11 +192,11 @@ final class ConcurrentRequestsTest extends TestCase
 
 	/**
 	 * Sends the same POST `$count` times at once: each answer's status, and its message followed by the
-	 * field it names, if any.
+	 * field it names, if any, and its data.
 	 *
 	 * @param array<string, string> $fields
 	 *
-	 * @return list<array{int, string}>
+	 * @return list<array{int, string, array<array-key, mixed>}>
 	 */
 	private static function burstAnswers(string $url, int $count, array $fields): array
 	{
@@ -221,6 +232,7 @@ final class ConcurrentRequestsTest extends TestCase
 			$answers[] = [
 				(int) \curl_getinfo($handle, \CURLINFO_RESPONSE_CODE),
 				\is_array($body) ? \trim(($body['msg'] ?? '') . ' ' . ($body['data']['field'] ?? '')) : '',
+				\is_array($body) && \is_array($body['data'] ?? null) ? $body['data'] : [],
 			];
 			\curl_multi_remove_handle($multi, $handle);
 		}
