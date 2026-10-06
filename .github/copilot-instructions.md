@@ -662,10 +662,11 @@ default create is allowed and delete, delete-all and update-all are denied.
 when an event fires, with `$this->context()` (`Context::current()`) — never one kept from
 registration, which under a worker is the boot context, with no user.
 
-A listener attaches by the table's name, `TableCRUD::events('oz_files')` (a Gobl
-`CRUDEventProducer`), never through a generated class (`XxxCrud::new()`, `XxxEntity::crud()`):
-listeners attach while the database initializes, which happens while a request's first generated
-ORM class is still loading, and that class cannot be loaded from there.
+Listeners attach on `DbReadyHook`. When the database initializes because a request loads its first
+generated ORM class (`Db::initOnFirstUse()`), that hook waits until the class is complete
+(`ClassLoader::afterLoad()`): PHP cannot load a class that is still loading, so a listener may use the
+generated classes (`XxxCrud::new()`, `XxxEntity::crud()`, their constants). `TableCRUD::events('<table>')`
+(a Gobl `CRUDEventProducer`) listens by name, loading none; `BaseHandler` uses it with its table.
 
 ---
 

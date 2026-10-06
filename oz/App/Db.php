@@ -354,6 +354,12 @@ final class Db
 
 		self::$db->lock();
 
-		(new DbReadyHook(self::$db))->dispatch();
+		$db = self::$db;
+
+		// Its listeners (the CRUD listeners attach there) use the generated ORM classes: when a class
+		// of the ORM is what is loading ({@see initOnFirstUse()}), they wait for it to be complete.
+		ClassLoader::afterLoad(static function () use ($db): void {
+			(new DbReadyHook($db))->dispatch();
+		});
 	}
 }

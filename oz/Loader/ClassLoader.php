@@ -134,6 +134,18 @@ class ClassLoader
 	private static array $lazy_namespaces = [];
 
 	/**
+	 * How many {@see loadClass()} calls are under way: one loading a class may load others.
+	 */
+	private static int $loading = 0;
+
+	/**
+	 * What waits for the class being loaded to be complete ({@see afterLoad()}).
+	 *
+	 * @var list<callable():void>
+	 */
+	private static array $after_load = [];
+
+	/**
 	 * Classes mapped to their files by a production build ({@see useClassMap()}).
 	 *
 	 * @var array<string, string>
@@ -379,15 +391,56 @@ class ClassLoader
 	 */
 	public static function loadClass(string $class_name): bool|string
 	{
-		$file = self::findFile($class_name);
+		++self::$loading;
 
-		if (null === $file) {
-			return false;
+		try {
+			$file = self::findFile($class_name);
+
+			if (null === $file) {
+				return false;
+			}
+
+			require $file;
+
+			return $file;
+		} finally {
+			if (0 === --self::$loading) {
+				self::runAfterLoad();
+			}
+		}
+	}
+
+	/**
+	 * Runs `$callback` once the class being loaded, and every class it loads, is complete; at once
+	 * when none is loading.
+	 *
+	 * A lazy namespace's provider runs while its first class is loading ({@see addLazyNamespace()}):
+	 * what it starts and needs that class, or another that names it, waits for it here. PHP cannot
+	 * load a class that is already loading.
+	 *
+	 * @param callable():void $callback
+	 */
+	public static function afterLoad(callable $callback): void
+	{
+		if (0 === self::$loading) {
+			$callback();
+
+			return;
 		}
 
-		require $file;
+		self::$after_load[] = $callback;
+	}
 
-		return $file;
+	/**
+	 * Runs what waited for the classes loading to be complete, in the order it was queued.
+	 */
+	private static function runAfterLoad(): void
+	{
+		while ([] !== self::$after_load) {
+			$callback = \array_shift(self::$after_load);
+
+			$callback();
+		}
 	}
 
 	/**
