@@ -15,6 +15,7 @@ namespace OZONE\Core\Auth\Methods;
 
 use Override;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
+use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Enums\AuthenticationMethodScheme;
 use OZONE\Core\Auth\Events\SessionHijackingDetected;
@@ -247,36 +248,53 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 */
 	protected function session(): Session
 	{
-		$context            = $this->ri->getContext();
-		$session_source_key = Settings::get('oz.sessions', 'OZ_SESSION_SOURCE_KEY');
-		$source_key_value   = match ($session_source_key) {
-			'user_agent' => 'User-Agent-Hash-' . Hasher::hash64($context->getRequest()->getHeaderLine('User-Agent')),
-			default      => $context->getUserIP(),
-		};
+		if (isset($this->session)) {
+			return $this->session;
+		}
 
-		if (!isset($this->session)) {
-			$this->session = new Session($context, $source_key_value);
+		$context = $this->ri->getContext();
 
-			// Not id() afterwards: asking for the ID binds something to it and keeps the session.
-			$this->session->start($this->session_id);
-		} elseif ($this->session->sourceKey() !== $source_key_value) {
-			$force_same_source = (bool) Settings::get('oz.sessions', 'OZ_SESSION_HIJACKING_FORCE_SAME_SOURCE');
+		$this->session = new Session($context, self::sourceKeyOf($context));
 
-			if ($force_same_source) {
-				if ($this->session->attachedAuthUser()) {
-					(new SessionHijackingDetected($context, $this->session))->dispatch();
+		// Not id() afterwards: asking for the ID binds something to it and keeps the session.
+		$this->session->start($this->session_id);
 
-					throw new ForbiddenException('OZ_SESSION_HIJACKING_DETECTED', [
-						'_reason' => 'Session source key mismatch.',
-						'_help'   => 'This is possible session hijacking attempt.'
-							. ' It may also be that the user is using a proxy, a VPN'
-							. ' or his IP address has changed, usual under mobile network.',
-					]);
-				}
-				$this->session->restart();
+		// The cookie reached us from another source than the one the session was opened from. Checked
+		// once, here: the source of a request cannot change while it is served.
+		if (
+			$this->session->sourceChanged()
+			&& (bool) Settings::get('oz.sessions', 'OZ_SESSION_HIJACKING_FORCE_SAME_SOURCE')
+		) {
+			if ($this->session->attachedAuthUser()) {
+				(new SessionHijackingDetected($context, $this->session))->dispatch();
+
+				throw new ForbiddenException('OZ_SESSION_HIJACKING_DETECTED', [
+					'_reason' => 'Session source key mismatch.',
+					'_help'   => 'This is possible session hijacking attempt.'
+						. ' It may also be that the user is using a proxy, a VPN'
+						. ' or his IP address has changed, usual under mobile network.',
+				]);
 			}
+
+			// Nothing to steal yet: the request goes on with a session of its own.
+			$this->session->restart();
 		}
 
 		return $this->session;
+	}
+
+	/**
+	 * The key identifying where the current request comes from.
+	 *
+	 * Stored with a session when it is opened (`oz_sessions`.`request_source_key`) and compared with
+	 * it on every later request, so it is prefixed rather than raw: a key always says which
+	 * `OZ_SESSION_SOURCE_KEY` produced it, and never ends up shorter than the column accepts.
+	 */
+	private static function sourceKeyOf(Context $context): string
+	{
+		return match (Settings::get('oz.sessions', 'OZ_SESSION_SOURCE_KEY')) {
+			'user_ip' => 'User-IP-' . ($context->getUserIP() ?? 'unknown'),
+			default   => 'User-Agent-Hash-' . Hasher::hash64($context->getRequest()->getHeaderLine('User-Agent')),
+		};
 	}
 }

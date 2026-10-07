@@ -72,6 +72,14 @@ final class Session implements BootHookReceiverInterface
 	 */
 	private bool $is_new = false;
 
+	/**
+	 * Whether the loaded session was opened from another source than this request's.
+	 *
+	 * Set by {@see self::start()} from the stored `request_source_key`, acted upon by
+	 * {@see \OZONE\Core\Auth\Methods\SessionAuth}.
+	 */
+	private bool $source_changed = false;
+
 	private ?string $new_id = null;
 
 	private ?string $new_owner_type = null;
@@ -125,11 +133,26 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Returns session source key.
 	 *
+	 * This is the source of the current request, not the one the session was opened from: the stored
+	 * key is the baseline {@see self::sourceChanged()} compares against.
+	 *
 	 * @return string
 	 */
 	public function sourceKey(): string
 	{
 		return $this->request_source_key;
+	}
+
+	/**
+	 * Whether this session was opened from another source than the current request's.
+	 *
+	 * False for a new session: there is no stored key to compare with.
+	 *
+	 * @return bool
+	 */
+	public function sourceChanged(): bool
+	{
+		return $this->source_changed;
 	}
 
 	/**
@@ -151,6 +174,7 @@ final class Session implements BootHookReceiverInterface
 
 		$this->session_entry  = $entry;
 		$this->is_new         = null === $entry;
+		$this->source_changed = null !== $entry && $entry->getRequestSourceKey() !== $this->request_source_key;
 		$this->new_id         = null;
 		$this->new_owner_type = null;
 		$this->new_owner_id   = null;
@@ -196,6 +220,7 @@ final class Session implements BootHookReceiverInterface
 		}
 
 		$this->session_entry  = null;
+		$this->source_changed = false;
 		$this->new_id         = null;
 		$this->new_owner_type = null;
 		$this->new_owner_id   = null;

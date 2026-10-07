@@ -602,6 +602,14 @@ is the stateful store. Force a logout everywhere with
 `AuthUsers::forceUserLogoutOnAllActiveSessions($user)`. User repositories implement
 `AuthUsersRepositoryInterface` (`oz.auth.users.repositories`).
 
+- **A session is bound to the source it was opened from**: `SessionAuth` stores a key for it
+  (`OZ_SESSION_SOURCE_KEY`: a User-Agent hash by default, or the client IP) and `Session::start()`
+  compares the loaded row's stored key with the current request's (`Session::sourceChanged()`, from the
+  `request_source_key` column; `sourceKey()` is the request's own key, not the stored one). Where
+  `OZ_SESSION_HIJACKING_FORCE_SAME_SOURCE` is on, a session carrying a user is then refused (403
+  `OZ_SESSION_HIJACKING_DETECTED`, after `SessionHijackingDetected`) and one carrying none is restarted.
+  The check runs once, when the session starts: the source of a request cannot change while it is served.
+
 **Garbage collection** (`App\GarbageCollector`): modules register collectors from `boot()`
 (`GarbageCollector::register()`; built in: `oz:sessions`, `oz:auths`, `oz:temp-fs`, `oz:cache`). They run
 from the hourly `oz:gc` cron task and, only while no scheduler runs cron (none for an hour:
