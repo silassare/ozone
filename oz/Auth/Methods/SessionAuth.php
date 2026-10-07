@@ -41,6 +41,11 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	protected AuthUserInterface $user;
 
 	/**
+	 * Whether this request was refused the session it carried (see {@see self::session()}).
+	 */
+	private bool $source_refused = false;
+
+	/**
 	 * SessionAuth constructor.
 	 */
 	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
@@ -178,6 +183,13 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	#[Override]
 	public function persist(): void
 	{
+		// A refused request leaves the session exactly as it found it: saving it would renew the
+		// expiry (`isKept()` holds for a session loaded from a row), so replaying a stolen cookie
+		// would keep a session alive for as long as it is replayed, and outlive the theft.
+		if ($this->source_refused) {
+			return;
+		}
+
 		$this->session()
 			->responseReady();
 	}
@@ -266,6 +278,8 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 			&& (bool) Settings::get('oz.sessions', 'OZ_SESSION_HIJACKING_FORCE_SAME_SOURCE')
 		) {
 			if ($this->session->attachedAuthUser()) {
+				$this->source_refused = true;
+
 				(new SessionHijackingDetected($context, $this->session))->dispatch();
 
 				throw new ForbiddenException('OZ_SESSION_HIJACKING_DETECTED', [

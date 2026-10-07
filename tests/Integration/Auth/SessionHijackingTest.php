@@ -119,6 +119,38 @@ final class SessionHijackingTest extends TestCase
 	}
 
 	/**
+	 * A refused request leaves the session row alone: it may not keep a session it cannot use from
+	 * expiring, while the source that owns it still refreshes it.
+	 */
+	public function testARefusedRequestDoesNotRefreshTheSession(): void
+	{
+		$project = 'session-hijacking';
+		$sid     = $this->login($project);
+
+		// An expiry of its own, far from the one a save would write (now plus the session lifetime).
+		$expire_at = \time() + 600;
+
+		self::touchSession($project, $sid, $expire_at);
+
+		[$status, $body] = $this->request($project, 'GET', '/test-protected', [
+			'Cookie: OZONE_SID=' . $sid,
+			self::AGENT_STOLEN,
+		]);
+
+		self::assertSame(403, $status, $body);
+		self::assertSame($expire_at, self::sessionExpiry($project, $sid), 'The refused request saved the session.');
+
+		// The source that opened it does refresh it, so the assertion above is not a save that never runs.
+		[$status, $body] = $this->request($project, 'GET', '/test-protected', [
+			'Cookie: OZONE_SID=' . $sid,
+			self::AGENT_OPENED,
+		]);
+
+		self::assertSame(200, $status, $body);
+		self::assertGreaterThan($expire_at, self::sessionExpiry($project, $sid));
+	}
+
+	/**
 	 * A session with no user attached has nothing to steal: the request is served, with a session of
 	 * its own.
 	 */
@@ -316,6 +348,62 @@ final class SessionHijackingTest extends TestCase
 		}
 
 		return $cookies;
+	}
+
+	/**
+	 * Gives a session row an expiry of its own, to tell a save from the absence of one.
+	 */
+	private static function touchSession(string $project, string $sid, int $expire_at): void
+	{
+		$pdo   = self::pdo($project);
+		$table = self::sessionsTable($pdo);
+
+		$pdo->prepare(\sprintf('UPDATE "%s" SET session_expire_at = ? WHERE session_id = ?', $table))
+			->execute([(string) $expire_at, $sid]);
+	}
+
+	/**
+	 * The expiry a session row holds.
+	 */
+	private static function sessionExpiry(string $project, string $sid): int
+	{
+		$pdo   = self::pdo($project);
+		$table = self::sessionsTable($pdo);
+
+		$statement = $pdo->prepare(\sprintf('SELECT session_expire_at FROM "%s" WHERE session_id = ?', $table));
+		$statement->execute([$sid]);
+
+		$expire_at = $statement->fetchColumn();
+
+		self::assertNotFalse($expire_at, 'The session row is gone.');
+
+		return (int) $expire_at;
+	}
+
+	/**
+	 * The sessions table, whose prefix a generated project draws at random.
+	 */
+	private static function sessionsTable(PDO $pdo): string
+	{
+		$table = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%oz_sessions'")
+			->fetchColumn();
+
+		self::assertIsString($table);
+
+		return $table;
+	}
+
+	/**
+	 * A connection to a project's database.
+	 */
+	private static function pdo(string $project): PDO
+	{
+		return new PDO(
+			'sqlite:' . self::$projects[$project]->getPath() . \DIRECTORY_SEPARATOR . self::DB_FILE,
+			null,
+			null,
+			[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+		);
 	}
 
 	/**
