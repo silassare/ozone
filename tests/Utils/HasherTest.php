@@ -42,21 +42,18 @@ final class HasherTest extends TestCase
 		self::assertNotSame(Hasher::hash32('foo'), Hasher::hash32('bar'));
 	}
 
-	public function testHash32WithNullProducesRandomHash(): void
+	/**
+	 * The empty string is a string: hashing it twice gives one hash, as any other input does. It used
+	 * to give a random hash, so a caller hashing a value that may be absent -- a header a client did
+	 * not send -- got a different hash on every call and could never compare two of them.
+	 */
+	public function testHash32OfTheEmptyStringIsAHashLikeAnyOther(): void
 	{
-		// Null generates a random hash each time - so two calls must differ
-		$h1 = Hasher::hash32(null);
-		$h2 = Hasher::hash32(null);
-		self::assertSame(32, \strlen($h1));
-		self::assertNotSame($h1, $h2);
-	}
+		$hash = Hasher::hash32('');
 
-	public function testHash32WithEmptyStringProducesRandomHash(): void
-	{
-		$h1 = Hasher::hash32('');
-		$h2 = Hasher::hash32('');
-		self::assertSame(32, \strlen($h1));
-		self::assertNotSame($h1, $h2);
+		self::assertSame(32, \strlen($hash));
+		self::assertSame($hash, Hasher::hash32(''));
+		self::assertNotSame($hash, Hasher::hash32('ozone'));
 	}
 
 	public function testHash64ReturnsA64CharHexString(): void
@@ -76,12 +73,13 @@ final class HasherTest extends TestCase
 		self::assertNotSame(Hasher::hash64('foo'), Hasher::hash64('bar'));
 	}
 
-	public function testHash64WithNullProducesRandomHash(): void
+	public function testHash64OfTheEmptyStringIsAHashLikeAnyOther(): void
 	{
-		$h1 = Hasher::hash64(null);
-		$h2 = Hasher::hash64(null);
-		self::assertSame(64, \strlen($h1));
-		self::assertNotSame($h1, $h2);
+		$hash = Hasher::hash64('');
+
+		self::assertSame(64, \strlen($hash));
+		self::assertSame($hash, Hasher::hash64(''));
+		self::assertNotSame($hash, Hasher::hash64('ozone'));
 	}
 
 	public function testShortenReturnsNonEmptyStringForNonZeroCrc(): void

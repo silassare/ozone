@@ -16,6 +16,7 @@ namespace OZONE\Core\Services;
 use OpenApi\Annotations\MediaType;
 use Override;
 use OZONE\Core\App\Context;
+use OZONE\Core\App\Keys;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -27,7 +28,6 @@ use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Services\QRCode\Interfaces\QRCodeEncoderDecoderInterface;
-use OZONE\Core\Utils\Hasher;
 
 /**
  * Class QRCode.
@@ -49,7 +49,7 @@ final class QRCode extends Service
 	 */
 	public static function buildQrCodeUri(Context $context, string $data, int $expire_at): Uri
 	{
-		$qr_code_key = Hasher::hash32();
+		$qr_code_key = Keys::id32();
 
 		$context->requireAuthStore()
 			->set('oz.qr_code_cfg.' . $qr_code_key, [

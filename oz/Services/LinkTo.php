@@ -15,6 +15,7 @@ namespace OZONE\Core\Services;
 
 use Override;
 use OZONE\Core\App\Context;
+use OZONE\Core\App\Keys;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -23,7 +24,6 @@ use OZONE\Core\Http\Uri;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Utils\Hasher;
 use Throwable;
 
 /**
@@ -46,7 +46,7 @@ final class LinkTo extends Service
 	 */
 	public static function buildHiddenUri(Context $context, Uri $next, int $expire_at = 0): Uri
 	{
-		$link_key = Hasher::hash32();
+		$link_key = Keys::id32();
 
 		$context->requireAuthStore()
 			->set('oz.link_to_cfg.' . $link_key, [

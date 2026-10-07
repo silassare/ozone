@@ -16,6 +16,7 @@ namespace OZONE\Core\Services;
 use OpenApi\Annotations\MediaType;
 use Override;
 use OZONE\Core\App\Context;
+use OZONE\Core\App\Keys;
 use OZONE\Core\App\Service;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -25,7 +26,6 @@ use OZONE\Core\Http\Uri;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Utils\Hasher;
 use OZONE\Core\Utils\Random;
 use PHPUtils\Str;
 
@@ -72,7 +72,7 @@ final class CaptchaCode extends Service
 	 */
 	public static function buildCaptchaUri(Context $context, string $code, int $expire_at = 0): Uri
 	{
-		$captcha_key = Hasher::hash32();
+		$captcha_key = Keys::id32();
 
 		$context->requireAuthStore()
 			->set('oz.captcha_cfg.' . $captcha_key, [

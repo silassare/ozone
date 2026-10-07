@@ -21,36 +21,30 @@ final class Hasher
 	/**
 	 * Returns a 32 string length hash of a given string.
 	 *
-	 * When string is null or empty (length === 0) a random hash is generated.
+	 * The hash of a string is always the same, the empty string included: a caller that wants an
+	 * unguessable value rather than the hash of one asks {@see \OZONE\Core\App\Keys} for a key.
 	 *
-	 * @param null|string $string The string to hash
+	 * @param string $string The string to hash
 	 *
 	 * @return string
 	 */
-	public static function hash32(?string $string = null): string
+	public static function hash32(string $string): string
 	{
-		if (null === $string || '' === $string) {
-			$string = Random::string(64) . \microtime();
-		}
-
 		return \md5(\hash('sha256', $string));
 	}
 
 	/**
 	 * Returns a 64 string length hash of a given string.
 	 *
-	 * When string is null or empty (length === 0) a random hash is generated.
+	 * The hash of a string is always the same, the empty string included: a caller that wants an
+	 * unguessable value rather than the hash of one asks {@see \OZONE\Core\App\Keys} for a key.
 	 *
-	 * @param null|string $string The string to hash
+	 * @param string $string The string to hash
 	 *
 	 * @return string
 	 */
-	public static function hash64(?string $string = null): string
+	public static function hash64(string $string): string
 	{
-		if (null === $string || '' === $string) {
-			$string = Random::string(64) . \microtime();
-		}
-
 		return \hash('sha256', $string);
 	}
 
