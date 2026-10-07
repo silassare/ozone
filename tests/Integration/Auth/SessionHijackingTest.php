@@ -119,8 +119,10 @@ final class SessionHijackingTest extends TestCase
 	}
 
 	/**
-	 * A refused request leaves the session row alone: it may not keep a session it cannot use from
-	 * expiring, while the source that owns it still refreshes it.
+	 * A refused request leaves the session row alone, so replaying a stolen cookie cannot renew the
+	 * expiry of a session it is not allowed to use. The refusal unwinds before the request's
+	 * authentication method becomes the context's, so nothing saves the session on the way out; the
+	 * source that owns it still refreshes it, which is what the second half asserts.
 	 */
 	public function testARefusedRequestDoesNotRefreshTheSession(): void
 	{
@@ -203,6 +205,21 @@ final class SessionHijackingTest extends TestCase
 		self::assertSame($sid, $sent, $body);
 	}
 
+	/**
+	 * A client that sends no User-Agent still has a source of its own: whatever the header is, the key
+	 * built from it has to be the same on the next request.
+	 */
+	public function testAClientSendingNoUserAgentKeepsItsSession(): void
+	{
+		$project = 'session-hijacking';
+		$sid     = $this->login($project, []);
+
+		[$status, $body] = $this->request($project, 'GET', '/test-protected', ['Cookie: OZONE_SID=' . $sid]);
+
+		self::assertSame(200, $status, $body);
+		self::assertSame('ok', \json_decode($body, true)['data']['secret'] ?? null, $body);
+	}
+
 	// -------------------------------------------------------------------------
 	// Helpers
 	// -------------------------------------------------------------------------
@@ -259,11 +276,13 @@ final class SessionHijackingTest extends TestCase
 	}
 
 	/**
-	 * Signs the user in from {@see self::AGENT_OPENED} and returns the session ID it was given.
+	 * Signs the user in and returns the session ID it was given.
+	 *
+	 * @param list<string> $headers_sent the headers the session is opened with
 	 */
-	private function login(string $project): string
+	private function login(string $project, array $headers_sent = [self::AGENT_OPENED]): string
 	{
-		[$status, $body, $headers] = $this->request($project, 'POST', '/login', [self::AGENT_OPENED], [
+		[$status, $body, $headers] = $this->request($project, 'POST', '/login', $headers_sent, [
 			'auth_user_type'             => 'user',
 			'auth_user_identifier_type'  => 'email',
 			'auth_user_identifier_value' => self::USER_EMAIL,
