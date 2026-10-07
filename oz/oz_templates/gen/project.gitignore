@@ -4,7 +4,7 @@
 #   data/    -- must be backed up and must be consistent across instances
 #   .ozone/  -- per instance, safe to delete at any time (caches, logs, build output)
 #
-# public/*/static are symlinks into data/static, recreated by `oz project link`.
+# public/*/static are symlinks into data/{scope}/static, recreated by `oz project link`.
 .env
 /data/
 .ozone

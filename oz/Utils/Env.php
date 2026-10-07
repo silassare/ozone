@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Utils;
 
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
 use PHPUtils\Env\EnvParser;
@@ -22,7 +23,7 @@ use Throwable;
 /**
  * Class Env.
  *
- * Values are read from a compiled copy of the file, a PHP array under `.ozone/cache/env/` next to it,
+ * Values are read from a compiled copy of the file, a PHP array under `.ozone/build/env/` next to it,
  * named after the file's path and content: an edit makes a new one, and OPcache keeps it in memory.
  * Parsing the file, for every request under PHP-FPM, cost more than the rest of reading it.
  */
@@ -168,7 +169,7 @@ class Env
 		}
 
 		// Next to the file: in its project's .ozone/, even for a .env linked from a shared directory.
-		$dir       = \dirname($path) . DS . '.ozone' . DS . 'cache' . DS . 'env';
+		$dir       = InstanceLayout::buildPath(\dirname($path), InstanceLayout::BUILD_ENV);
 		$name      = \hash('xxh128', $path);
 		$signature = \hash('xxh128', $content);
 		$file      = $dir . DS . $name . '.' . $signature . '.php';

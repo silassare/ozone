@@ -36,7 +36,7 @@ final class ProjectBuilderTest extends TestCase
 
 		$this->dir = \sys_get_temp_dir() . \DIRECTORY_SEPARATOR . 'oz-preload-' . \bin2hex(\random_bytes(6));
 
-		\mkdir($this->dir . '/.ozone/cache', 0o775, true);
+		\mkdir($this->dir . '/.ozone/build', 0o775, true);
 
 		$this->dir = (string) \realpath($this->dir);
 
@@ -98,7 +98,7 @@ final class ProjectBuilderTest extends TestCase
 
 		// the list of a release is in the shared .ozone/, where the script looks for it
 		self::assertStringStartsWith(
-			$this->dir . '/.ozone/cache/',
+			$this->dir . '/.ozone/build/',
 			(string) \realpath(\dirname($file)) . '/'
 		);
 

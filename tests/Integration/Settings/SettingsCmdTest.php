@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
  * Verifies `oz settings set` and `oz settings unset` commands.
  *
  * Tests cover:
- *  - Setting a string value (stateful: data/settings/)
+ *  - Setting a string value (stateful: data/{scope}/settings)
  *  - Setting boolean, integer, and null values (auto-parsed)
  *  - Setting a JSON array and object value
  *  - Unsetting a key removes it from the settings file
@@ -163,11 +163,11 @@ final class SettingsCmdTest extends TestCase
 			->mustRun();
 
 		// Runtime writes always go to the stateful directory (data/), not the source tree, and the
-		// layout there is kind first: data/settings/{scope}.
+		// layout there is scope first: data/{scope}/settings.
 		$scope_file = self::$proj->getPath()
 			. \DIRECTORY_SEPARATOR . 'data'
-			. \DIRECTORY_SEPARATOR . 'settings'
 			. \DIRECTORY_SEPARATOR . 'myweb'
+			. \DIRECTORY_SEPARATOR . 'settings'
 			. \DIRECTORY_SEPARATOR . 'oz.request.php';
 
 		self::assertFileExists($scope_file);
@@ -182,7 +182,7 @@ final class SettingsCmdTest extends TestCase
 		self::$proj->oz('settings', 'set', '--source', '-g=app.custom', '-k=SOURCE_KEY', '-v=source-value')
 			->mustRun();
 
-		// --source writes to app/settings/, not data/settings/.
+		// --source writes to app/settings/, not data/{scope}/settings.
 		$source_file = self::$proj->getPath()
 			. \DIRECTORY_SEPARATOR . 'app'
 			. \DIRECTORY_SEPARATOR . 'settings'
@@ -198,11 +198,11 @@ final class SettingsCmdTest extends TestCase
 	private static function settingsPath(string $group): string
 	{
 		// Runtime writes always go to the stateful directory so that source-controlled defaults in
-		// app/settings/ are never modified by oz commands: data/settings/{scope}, root scope here.
+		// app/settings/ are never modified by oz commands: data/{scope}/settings, root scope here.
 		return self::$proj->getPath()
 			. \DIRECTORY_SEPARATOR . 'data'
-			. \DIRECTORY_SEPARATOR . 'settings'
 			. \DIRECTORY_SEPARATOR . 'root'
+			. \DIRECTORY_SEPARATOR . 'settings'
 			. \DIRECTORY_SEPARATOR . $group . '.php';
 	}
 }

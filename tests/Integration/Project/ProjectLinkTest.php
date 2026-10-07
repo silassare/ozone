@@ -53,13 +53,32 @@ final class ProjectLinkTest extends TestCase
 	public function testCreateAndScopesAddProduceEveryStateDirectory(string $scope): void
 	{
 		foreach (StateLayout::kinds() as $kind) {
-			self::assertDirectoryExists(self::path('data/' . $kind . '/' . $scope), $kind);
+			self::assertDirectoryExists(self::path('data/' . $scope . '/' . $kind), $kind);
 		}
 	}
 
-	public function testTheStateDirectoriesAreTheOnlyThingUnderData(): void
+	public function testTheScopeSlugsAreTheOnlyThingUnderData(): void
 	{
 		$entries = \array_values(\array_diff(\scandir(self::path('data')) ?: [], ['.', '..']));
+
+		\sort($entries);
+
+		// The application, the `api` scope `oz project create` adds, the one added above, and
+		// `plugins`, which holds one directory per plugin rather than a scope's state kinds: that
+		// last name is why no scope may be called `plugins` (StateLayout::reservedScopeNames()).
+		$expected = ['root', 'api', self::SCOPE, StateLayout::PLUGINS];
+
+		\sort($expected);
+
+		self::assertSame($expected, $entries, 'Nothing but a state slug belongs at the top of data/.');
+	}
+
+	/**
+	 * @dataProvider provideScopes
+	 */
+	public function testAScopeHoldsNothingButTheStateKinds(string $scope): void
+	{
+		$entries = \array_values(\array_diff(\scandir(self::path('data/' . $scope)) ?: [], ['.', '..']));
 
 		\sort($entries);
 
@@ -67,7 +86,7 @@ final class ProjectLinkTest extends TestCase
 
 		\sort($kinds);
 
-		self::assertSame($kinds, $entries, 'Nothing but the state kinds belongs at the top of data/.');
+		self::assertSame($kinds, $entries, 'A scope directory holds one directory per state kind.');
 	}
 
 	/**
@@ -79,7 +98,7 @@ final class ProjectLinkTest extends TestCase
 
 		self::assertTrue(\is_link($link), $link . ' is not a symlink');
 		self::assertSame(
-			\realpath(self::path('data/static/' . $scope)),
+			\realpath(self::path('data/' . $scope . '/static')),
 			\realpath((string) \readlink($link))
 		);
 	}
@@ -156,7 +175,7 @@ final class ProjectLinkTest extends TestCase
 	{
 		$name = 'probe-' . \bin2hex(\random_bytes(4)) . '.txt';
 
-		\file_put_contents(self::path('data/static/' . self::SCOPE) . \DIRECTORY_SEPARATOR . $name, 'served');
+		\file_put_contents(self::path('data/' . self::SCOPE . '/static') . \DIRECTORY_SEPARATOR . $name, 'served');
 
 		self::assertSame('served', \file_get_contents(self::linkPath(self::SCOPE) . \DIRECTORY_SEPARATOR . $name));
 	}

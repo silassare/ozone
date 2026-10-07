@@ -22,7 +22,7 @@ namespace OZONE\Core\Stores;
  * state end up in a cache. `persistent` asks whether the data survives the process; `durable` asks
  * whether losing it is *allowed*, which depends on where this instance was configured to write, not
  * on the driver class. `FileStore` is persistent either way, but only durable when it is rooted under
- * `data/state/{scope}` -- under `.ozone/cache/` it is a cache, and `.ozone/` may be deleted at any
+ * `data/{scope}/state` -- under `.ozone/cache/` it is a cache, and `.ozone/` may be deleted at any
  * time. A store declared in `oz.stores.state` refuses a driver that does not promise `durable`.
  */
 final class StoreCapabilities

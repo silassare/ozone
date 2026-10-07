@@ -118,7 +118,7 @@ final class EnvCompiledTest extends TestCase
 	private static function compiledCopies(string $file): array
 	{
 		$ds  = \DIRECTORY_SEPARATOR;
-		$dir = \dirname($file) . $ds . '.ozone' . $ds . 'cache' . $ds . 'env';
+		$dir = \dirname($file) . $ds . '.ozone' . $ds . 'build' . $ds . 'env';
 
 		return \glob($dir . $ds . \hash('xxh128', $file) . '.*.php') ?: [];
 	}

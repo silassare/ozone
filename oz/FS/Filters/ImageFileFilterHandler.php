@@ -62,7 +62,7 @@ use SplFileInfo;
  * and an image is never enlarged beyond its own size. So a URL cannot make the server render, or
  * keep, an unbounded number of renditions, nor an image of any size.
  *
- * Each rendition is kept as a file in the scope's cache directory (`.ozone/cache/.../fs/image-filters`)
+ * Each rendition is kept as a file in the scope's cache directory (`.ozone/cache/{scope}/fs/image-filters`)
  * and served from it as a stream: never in a key-value store, where a large image would travel
  * through the database or Redis and sit in memory whole. Its name hashes the file ID, the file key
  * and the tokens, so a changed file gets a new rendition; renditions older than

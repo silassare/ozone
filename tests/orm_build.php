@@ -11,7 +11,7 @@
 
 declare(strict_types=1);
 
-// Generates OZone's ORM classes in the repository's `.ozone/plugins/` (git-ignored), which psalm
+// Generates OZone's ORM classes in the repository's `.ozone/build/plugins/` (git-ignored), which psalm
 // reads (`make lint`): a temporary sandbox project builds them (OZONE\Core\Testing\Sandbox), then
 // they are copied over the previous ones.
 
@@ -37,8 +37,8 @@ $rm = static function (string $dir): void {
 };
 
 $sandbox = \sys_get_temp_dir() . \DIRECTORY_SEPARATOR . 'oz_orm_' . \bin2hex(\random_bytes(4)) . \DIRECTORY_SEPARATOR;
-$from    = $sandbox . '.ozone/plugins/OZONE/Core/Db';
-$to      = __DIR__ . '/../.ozone/plugins/OZONE/Core/Db';
+$from    = $sandbox . '.ozone/build/plugins/OZONE/Core/Db';
+$to      = __DIR__ . '/../.ozone/build/plugins/OZONE/Core/Db';
 
 try {
 	Sandbox::create($sandbox);
@@ -61,4 +61,4 @@ try {
 	$rm($sandbox);
 }
 
-echo 'ORM classes generated in .ozone/plugins/', \PHP_EOL;
+echo 'ORM classes generated in .ozone/build/plugins/', \PHP_EOL;

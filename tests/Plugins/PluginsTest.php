@@ -19,6 +19,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\Plugins\AbstractPlugin;
 use OZONE\Core\Plugins\CorePlugin;
+use OZONE\Core\Plugins\PluginScope;
 use OZONE\Core\Plugins\Plugins;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -85,17 +86,17 @@ final class PluginsTest extends TestCase
 		self::assertSame($scope, $plugin->getScope());
 		self::assertSame('ozone', $scope->getName());
 
-		// A plugin's state lives under data/{kind}/plugins/{plugin}; getDataDir() is the one data
+		// A plugin's state lives under data/plugins/{plugin}/{kind}; getDataDir() is the one data
 		// root shared by every scope.
 		self::assertSame('plugins/ozone', \str_replace('\\', '/', $scope->getStateSlug()));
 		self::assertStringEndsWith(
-			'/data/settings/plugins/ozone',
+			'/data/plugins/ozone/settings',
 			\rtrim(\str_replace('\\', '/', $scope->getStatefulSettingsDir()->getRoot()), '/')
 		);
 
 		// Its public assets stay inside the application's pool, so one symlink exposes them.
 		self::assertStringEndsWith(
-			'/data/static/root/plugins/ozone',
+			'/data/root/static/plugins/ozone',
 			\rtrim(\str_replace('\\', '/', $scope->getPublicFilesDir()->getRoot()), '/')
 		);
 	}
@@ -143,6 +144,34 @@ final class PluginsTest extends TestCase
 
 		StubPlugin::instance();
 	}
+
+	public function testAPluginNameThatSlugsToNothingGetsNoStateDirectory(): void
+	{
+		NamelessPlugin::$root = self::$dir;
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessageMatches('~slugged~');
+
+		// Its state would be the directory every plugin's state lives under.
+		new PluginScope(NamelessPlugin::instance());
+	}
+
+	public function testTwoPluginsMayNotClaimOneStateDirectory(): void
+	{
+		TwinOnePlugin::$root = self::$dir;
+		TwinTwoPlugin::$root = self::$dir;
+
+		$first = Plugins::scopeOf(TwinOnePlugin::instance());
+
+		self::assertSame('twin-plugin', $first->getName());
+
+		// Both names slug the same way, so the second would read the first's settings, write its
+		// files and serve its assets.
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessageMatches('~twin-plugin~');
+
+		Plugins::scopeOf(TwinTwoPlugin::instance());
+	}
 }
 
 /**
@@ -157,6 +186,69 @@ final class StubPlugin extends AbstractPlugin
 	public function __construct()
 	{
 		parent::__construct('stub-plugin', 'Acme\StubPlugin', self::$root);
+	}
+
+	#[Override]
+	public static function instance(): static
+	{
+		return new self();
+	}
+}
+
+/**
+ * A plugin whose name is made only of characters a slug drops.
+ *
+ * @internal
+ */
+final class NamelessPlugin extends AbstractPlugin
+{
+	public static string $root = '';
+
+	public function __construct()
+	{
+		parent::__construct('!!!', 'Acme\NamelessPlugin', self::$root);
+	}
+
+	#[Override]
+	public static function instance(): static
+	{
+		return new self();
+	}
+}
+
+/**
+ * One of two plugins whose names slug the same way.
+ *
+ * @internal
+ */
+final class TwinOnePlugin extends AbstractPlugin
+{
+	public static string $root = '';
+
+	public function __construct()
+	{
+		parent::__construct('twin-plugin', 'Acme\TwinOnePlugin', self::$root);
+	}
+
+	#[Override]
+	public static function instance(): static
+	{
+		return new self();
+	}
+}
+
+/**
+ * The other one: a different name, the same slug.
+ *
+ * @internal
+ */
+final class TwinTwoPlugin extends AbstractPlugin
+{
+	public static string $root = '';
+
+	public function __construct()
+	{
+		parent::__construct('Twin Plugin', 'Acme\TwinTwoPlugin', self::$root);
 	}
 
 	#[Override]

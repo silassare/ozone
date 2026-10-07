@@ -69,7 +69,7 @@ final class DeployInitTest extends TestCase
 		$compose    = (string) \file_get_contents(self::path('docker/compose.yaml'));
 		$entrypoint = (string) \file_get_contents(self::path('docker/docker-entrypoint.sh'));
 
-		// One volume for every state directory: public/*/static are symlinks into data/static now.
+		// One volume for every state directory: public/*/static are symlinks into data/{scope}/static.
 		self::assertStringContainsString('data:/var/www/html/data', $compose);
 		self::assertStringNotContainsString('public-static', $compose);
 

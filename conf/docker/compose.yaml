@@ -25,8 +25,8 @@ x-app: &app
   volumes:
     - ../.env:/var/www/html/.env:ro
     # Every state directory: stateful settings, private files, public files, TempFS and the
-    # file-backed state stores. One volume, because public/*/static are symlinks into data/static
-    # (created by `oz project link`, which the entrypoint runs).
+    # file-backed state stores, one directory per scope. One volume, because public/*/static are
+    # symlinks into data/{scope}/static (created by `oz project link`, which the entrypoint runs).
     - data:/var/www/html/data
     - logs:/var/www/html/.ozone/logs
   depends_on:

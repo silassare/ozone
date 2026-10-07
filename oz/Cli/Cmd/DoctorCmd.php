@@ -19,6 +19,7 @@ use Kli\Table\Interfaces\KliTableCellFormatterInterface;
 use Kli\Table\KliTable;
 use Kli\Table\KliTableHeader;
 use Override;
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Cli\Build\ProjectBuilder;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Cron\CronRunner;
@@ -173,7 +174,7 @@ final class DoctorCmd extends Command
 		// The state directories have to be writable by the process that serves requests.
 		$state_dirs = [
 			'data'   => $app->getDataDir(),
-			'.ozone' => $app->getProjectDir()->cd('.ozone', true),
+			InstanceLayout::DIR => $app->getProjectDir()->cd(InstanceLayout::DIR, true),
 		];
 
 		foreach ($state_dirs as $label => $fm) {

@@ -140,7 +140,7 @@ final class TempFS implements BootHookReceiverInterface
 	 */
 	public static function root(): FilesManager
 	{
-		// data/tmp-fs/{scope}, not .ozone/cache: an in-flight chunked upload and a file a form has
+		// data/{scope}/tmp-fs, not .ozone/cache: an in-flight chunked upload and a file a form has
 		// already accepted are a user's work in progress, and must survive what may delete a cache.
 		return scope()->getTempDir();
 	}

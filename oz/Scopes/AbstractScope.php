@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Scopes;
 
 use Override;
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Settings;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
@@ -65,7 +66,9 @@ abstract class AbstractScope implements ScopeInterface
 	#[Override]
 	public function getDataDir(): FilesManager
 	{
-		// One data root for the whole project: the kinds inside it are per scope, not the reverse.
+		// The application's root by default, so one volume holds the whole project's state. A scope
+		// that must keep its state elsewhere -- another disk, another host's mount -- overrides this,
+		// and StateLayout asks the scope and never app(), so the override is honoured everywhere.
 		return app()->getDataDir();
 	}
 
@@ -130,9 +133,17 @@ abstract class AbstractScope implements ScopeInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
+	public function getCacheDir(): FilesManager
+	{
+		return InstanceLayout::scopeCacheDir(app()->getProjectDir()->getRoot(), $this->getStateSlug());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
 	public function getLogsDir(): FilesManager
 	{
-		return app()->getProjectDir()
-			->cd('.ozone/logs/', true);
+		return InstanceLayout::logsDir(app()->getProjectDir()->getRoot());
 	}
 }

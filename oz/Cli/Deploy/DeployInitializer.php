@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Deploy;
 
 use InvalidArgumentException;
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Utils\Requirements;
 use OZONE\Core\Http\Uri;
@@ -211,7 +212,7 @@ final class DeployInitializer
 					'project'      => $project_name,
 					'name'         => $slug,
 					'php_version'  => $php_version,
-					'preload_file' => $project . '.ozone' . DS . 'preload.php',
+					'preload_file' => InstanceLayout::preloadScriptPath($project),
 					'user'         => $this->user,
 				]),
 				false,

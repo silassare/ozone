@@ -203,7 +203,7 @@ final class ProductionRouteTableTest extends TestCase
 	 */
 	private static function tables(): array
 	{
-		return \glob(self::$proj->getPath() . '/.ozone/cache/scopes/api/routes/api.*.php') ?: [];
+		return \glob(self::$proj->getPath() . '/.ozone/build/routes/api/api.*.php') ?: [];
 	}
 
 	/**

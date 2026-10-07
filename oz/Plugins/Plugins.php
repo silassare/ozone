@@ -73,12 +73,31 @@ class Plugins
 	 */
 	public static function scopeOf(PluginInterface $plugin): PluginScope
 	{
+		/** @var array<class-string<PluginInterface>, PluginScope> $scopes */
 		static $scopes = [];
+		/** @var array<string, class-string<PluginInterface>> $claimed */
+		static $claimed = [];
 
 		$class = \get_class($plugin);
 
 		if (!isset($scopes[$class])) {
-			$scopes[$class] = new PluginScope($plugin);
+			$scope = new PluginScope($plugin);
+			$slug  = $scope->getName();
+
+			// Two plugins whose names slug the same way would share one state directory, one cache
+			// directory and one public assets directory, and each would read the other's settings.
+			if (isset($claimed[$slug]) && $claimed[$slug] !== $class) {
+				throw new RuntimeException(\sprintf(
+					'Plugins "%s" and "%s" both claim the state directory of "%s": their names slug'
+						. ' the same way. Rename one of them.',
+					$claimed[$slug],
+					$class,
+					$slug
+				));
+			}
+
+			$claimed[$slug] = $class;
+			$scopes[$class] = $scope;
 		}
 
 		return $scopes[$class];

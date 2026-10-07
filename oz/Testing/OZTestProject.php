@@ -450,7 +450,7 @@ final class OZTestProject
 		$server->start();
 
 		// oz project serve writes server.json before binding the port.
-		$server_json = $this->dir . "/.ozone/cache/scopes/{$scope}/server.json";
+		$server_json = $this->dir . "/.ozone/cache/{$scope}/server.json";
 		$deadline    = \microtime(true) + 15.0;
 		while (!\is_file($server_json) && \microtime(true) < $deadline) {
 			\usleep(100_000);

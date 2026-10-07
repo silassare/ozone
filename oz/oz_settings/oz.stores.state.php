@@ -32,7 +32,7 @@ use OZONE\Core\Stores\StateRegistry;
  *   - `driver`          -- FQN of a class implementing StoreDriverInterface. It has to promise
  *                          `StoreCapabilities::$durable`, or the store is refused: `DbStore` and
  *                          `RedisStore` always do, `FileStore` only with `options: {root: state}`
- *                          (which puts its files in `data/state/{scope}` rather than `.ozone/cache`).
+ *                          (which puts its files in `data/{scope}/state` rather than `.ozone/cache`).
  *                          Defaults to `OZ_STATE_DEFAULT` from `oz.stores`.
  *   - `options`         -- driver-specific options passed to `fromConfig()`.
  *   - `expiry_listener` -- FQN of a class implementing StoreEntryExpiryListenerInterface.

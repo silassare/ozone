@@ -17,7 +17,7 @@
 
     <!-- The ORM classes Gobl generates (`oz db build`): scanned for their types, not analysed. -->
     <extraFiles>
-        <directory name=".ozone/plugins"/>
+        <directory name=".ozone/build/plugins"/>
     </extraFiles>
 
     <!--

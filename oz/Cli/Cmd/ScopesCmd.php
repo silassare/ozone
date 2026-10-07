@@ -43,6 +43,17 @@ final class ScopesCmd extends Command
 	): void {
 		$scope_name      = $options['name'];
 		$origin          = $options['origin'];
+
+		// The authoritative rule, which the option's pattern only catches the shape of: a reserved
+		// name would give the scope the application's state directory, or the plugins' one.
+		$fault = StateLayout::scopeNameFault($scope_name);
+
+		if (null !== $fault) {
+			$cli->error($fault);
+
+			return;
+		}
+
 		$use_api_context = $options['api'];
 		$project_name    = $options['project_name'];
 		$namespace       = $options['namespace'];
@@ -184,7 +195,10 @@ final class ScopesCmd extends Command
 			->prompt(true, 'The scope name')
 			->description('The scope name.')
 			->string()
-			->pattern('#^[^\\\/?%*:|"<>]+$#', '"%s" is not a valid scope name.');
+			->pattern(
+				StateLayout::SLUG_PATTERN,
+				'"%s" is not a valid scope name: lowercase letters, digits and dashes only.'
+			);
 		$add->option('origin', 'o', [], 2)
 			->required()
 			->prompt(true, 'The scope url origin')

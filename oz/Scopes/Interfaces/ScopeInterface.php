@@ -89,7 +89,7 @@ interface ScopeInterface
 	public function getStatefulSettingsDir(): FilesManager;
 
 	/**
-	 * The scope's directory name under each `data/{kind}/` state directory.
+	 * The scope's own directory under `data/`, which holds one directory per state kind.
 	 *
 	 * `root` for the root scope, the scope name for a sub-scope, `plugins/{name}` for a plugin.
 	 *
@@ -98,7 +98,7 @@ interface ScopeInterface
 	public function getStateSlug(): string;
 
 	/**
-	 * Gets the scope temporary files directory (`data/tmp-fs/{scope}`).
+	 * Gets the scope temporary files directory (`data/{scope}/tmp-fs`).
 	 *
 	 * Under `data/` and not `.ozone/cache/`: an in-flight chunked upload, or a file a form has
 	 * accepted, is a user's work in progress and not a cache.
@@ -108,7 +108,7 @@ interface ScopeInterface
 	public function getTempDir(): FilesManager;
 
 	/**
-	 * Gets the scope durable key-value state directory (`data/state/{scope}`).
+	 * Gets the scope durable key-value state directory (`data/{scope}/state`).
 	 *
 	 * For a store whose loss is visible to a user and that has no database or Redis behind it.
 	 *

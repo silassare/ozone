@@ -135,8 +135,8 @@ final class DeployRunTest extends TestCase
 
 		self::assertTrue(\is_link($link), 'public/static must be linked in the release');
 		self::assertSame(
-			\realpath(self::$root . \DIRECTORY_SEPARATOR . 'data' . \DIRECTORY_SEPARATOR . 'static'
-				. \DIRECTORY_SEPARATOR . 'root'),
+			\realpath(self::$root . \DIRECTORY_SEPARATOR . 'data' . \DIRECTORY_SEPARATOR . 'root'
+				. \DIRECTORY_SEPARATOR . 'static'),
 			\realpath((string) \readlink($link)),
 			'it must resolve into the shared data directory, not into the release'
 		);
@@ -145,8 +145,8 @@ final class DeployRunTest extends TestCase
 	public function testAFileWrittenByOneReleaseIsSeenByTheNext(): void
 	{
 		// The point of sharing data/: an upload does not belong to the release that received it.
-		$uploads = self::$root . \DIRECTORY_SEPARATOR . 'data' . \DIRECTORY_SEPARATOR . 'static'
-			. \DIRECTORY_SEPARATOR . 'root';
+		$uploads = self::$root . \DIRECTORY_SEPARATOR . 'data' . \DIRECTORY_SEPARATOR . 'root'
+			. \DIRECTORY_SEPARATOR . 'static';
 
 		\file_put_contents($uploads . \DIRECTORY_SEPARATOR . 'kept.txt', 'survives a deploy');
 

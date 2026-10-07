@@ -65,12 +65,12 @@ final class ProjectServeTest extends TestCase
 		self::$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
 
 		// Start the server via `oz project serve`. The command auto-picks a port,
-		// writes .ozone/cache/scopes/api/server.json, then begins serving.
+		// writes .ozone/cache/api/server.json, then begins serving.
 		self::$server = self::$proj->oz('project', 'serve', '--scope=api', '--host=' . self::$host);
 		self::$server->start();
 
 		// Wait for server.json to appear (written by oz before binding the port).
-		$server_json = self::$proj->getPath() . '/.ozone/cache/scopes/api/server.json';
+		$server_json = self::$proj->getPath() . '/.ozone/cache/api/server.json';
 		$deadline    = \microtime(true) + 10.0;
 		while (!\is_file($server_json) && \microtime(true) < $deadline) {
 			\usleep(100_000); // 100 ms

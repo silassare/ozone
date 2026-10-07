@@ -216,28 +216,48 @@ server reports why its worker died.
 ## 3. State Directories: `data/` and `.ozone/`
 
 **`data/` must be consistent across instances, persist, and be backed up. `.ozone/` is per instance
-and may be deleted at any time** (caches, logs, `oz db build` output). `Scopes\StateLayout` owns the
-layout inside `data/`: **kind first, then scope** — the level a backup rule, a volume and a retention
-policy are written at.
+and may be deleted at any time** (build output, caches, logs). `Scopes\StateLayout` owns the layout
+inside `data/`: **scope first, then kind** — as `scopes/{scope}`, `public/{scope}` and
+`.ozone/cache/{scope}` already read, and so that the whole of a scope's state is **one subtree**: one
+path to move, mount, measure, back up or remove. A per-kind rule stays one glob over the scopes
+(`data/{scope}/tmp-fs`), which is the form a backup exclude takes anyway.
 
 | Path                    | Accessor                   | Holds                                                |
 | ----------------------- | -------------------------- | ---------------------------------------------------- |
-| `data/settings/{scope}` | `getStatefulSettingsDir()` | stateful settings (`Settings::set()`)                |
-| `data/files/{scope}`    | `getPrivateFilesDir()`     | private files (`PrivateLocalStorage`)                |
-| `data/static/{scope}`   | `getPublicFilesDir()`      | public files, reached through the `static` symlink   |
-| `data/tmp-fs/{scope}`   | `getTempDir()`             | `TempFS`: chunked uploads, accepted `ValidatedFile`s |
-| `data/state/{scope}`    | `getStateStoreDir()`       | file-backed durable state                            |
+| `data/{scope}/settings` | `getStatefulSettingsDir()` | stateful settings (`Settings::set()`)                |
+| `data/{scope}/files`    | `getPrivateFilesDir()`     | private files (`PrivateLocalStorage`)                |
+| `data/{scope}/static`   | `getPublicFilesDir()`      | public files, reached through the `static` symlink   |
+| `data/{scope}/tmp-fs`   | `getTempDir()`             | `TempFS`: chunked uploads, accepted `ValidatedFile`s |
+| `data/{scope}/state`    | `getStateStoreDir()`       | file-backed durable state                            |
 
 `{scope}` is `ScopeInterface::getStateSlug()`: `root` for the application, the scope name, or
-`plugins/{name}`. Logs are `.ozone/logs/ozone.{scope}.log`, rotated (`OZ_LOG_MAX_FILES`); caches are
-`.ozone/cache/scopes/{scope}/`.
+`plugins/{name}`. Logs are `.ozone/logs/ozone.{scope}.log`, rotated (`OZ_LOG_MAX_FILES`); a scope's
+cache is `.ozone/cache/{scope}/`, the same slug.
 
+- **The root is `$scope->getDataDir()`**, not a fixed `{project}/data`: the application's `data/`
+  unless an app or a single scope overrides it, so one host's instance can keep its state outside the
+  project and one scope can keep its own apart. `StateLayout` always asks the scope, never `app()`.
 - **`data/` is never created automatically** — it is the volume a deployment mounts, so a node whose
   disk did not come up says so. Everything _inside_ it is created on demand.
-- **Public files go through a symlink**: `{document root}/static` -> `data/static/{scope}`, created by
+- **The first level of `data/` is one namespace**, shared by the scopes and by `plugins/`, so names
+  are checked before anything writes: `StateLayout::scopeNameFault()` refuses `root` (the
+  application's own slug), `plugins`, a state kind's name, and anything that is not a plain slug
+  (`[a-z0-9-]`, `StateLayout::SLUG_PATTERN`) — `.` and `..` among them. `oz scopes add` reports it and
+  `SubScope`'s constructor throws. `StateLayout::pluginSlugFault()` does the same for a plugin's name
+  once slugged, and `Plugins::scopeOf()` refuses two plugins whose names slug alike: they would share
+  one state directory and read each other's settings.
+- **Public files go through a symlink**: `{document root}/static` -> `data/{scope}/static`, created by
   `oz project create`, `oz scopes add` and `oz project link` (after a clone or a deploy: the links are
   not version-controlled). PHP never depends on it; `StateLayout::link()` is idempotent and reports
   `blocked` rather than deleting real content in the way.
+- **`App\InstanceLayout` owns `.ozone/`, split by lifetime**: `build/` is what `oz project build`
+  produces and a request fills in when no build has run (the compiled `.env`, the settings bundles,
+  the route tables, the class map, the preload list, the generated ORM classes) — all derived from the
+  release's code, so a deployment may drop it whole and pay only a rebuild; `cache/{scope}/` is what a
+  request fills on demand (image renditions, compiled templates, a file store's disposable entries)
+  and may be dropped mid-flight; `logs/`; and `preload.php`, which stays directly under `.ozone/`
+  because `opcache.preload` points at that one path for every release. `ProjectBuilder::clear()`
+  removes build output only.
 - `example.com/static/x` and `scope.example.com/static/x` are different files, and either may hold what
   no DB row tracks. But **`OZFile` rows resolve against the root pool** (a row has a storage name and a
   `Y/m/name` ref, no scope), so the local drivers use `app()->getPublicFilesDir()` /
@@ -276,15 +296,15 @@ return [
   and never loosen one, which is what makes the lock worth anything.
 Each file in `oz/oz_settings/` documents its keys.
 
-- `Settings::set()` / `unset()` write the **stateful** directory by default (`data/settings/{scope}/`),
+- `Settings::set()` / `unset()` write the **stateful** directory by default (`data/{scope}/settings/`),
   for runtime overrides that must not touch version-controlled files; `$stateful = false` writes the
   **source** directory (`app/settings/`, `scopes/{name}/settings/`), for dev-time scaffolding
   (`oz services generate`, `oz settings set --source`).
 - In production outside the console, each **source** directory is read from a compiled bundle
-  (`.ozone/cache/settings/`) named after the directory, the release, OZone's version, the `.env`
+  (`.ozone/build/settings/`) named after the directory, the release, OZone's version, the `.env`
   signature and the directory's mtime; stateful ones (`Settings::addSource($dir, true)`) are always
   read file by file. A settings file returns plain data (one holding an object leaves its directory
-  unbundled) and may read `env()`: `.env` is read through a compiled copy (`.ozone/cache/env/`, named
+  unbundled) and may read `env()`: `.env` is read through a compiled copy (`.ozone/build/env/`, named
   after its content), and editing it gives new bundles.
 - **`oz.config` is blacklisted**: no runtime edit.
 - `SettingsGroup` is `@internal`: never use it directly.
@@ -700,7 +720,7 @@ Plugins (`Plugins\AbstractPlugin`, enabled in `oz.plugins`, booted by `OZone::bo
 source settings in `boot()` with `Settings::addSource($this->getScope()->getSettingsDir()->getRoot())`;
 the stateful settings directory is registered by `AbstractScope`. A plugin's state is under
 `data/{kind}/plugins/{name}/`, and its public files inside the application's pool
-(`data/static/root/plugins/{name}/`) so one symlink exposes them. `Plugins::ozone()` is the core plugin.
+(`data/root/static/plugins/{name}/`) so one symlink exposes them. `Plugins::ozone()` is the core plugin.
 
 A **scope** is an entry point (`api`, `www`, ...): `scopes/{name}/` (settings and templates overrides,
 denied to the web), `public/{name}/` (`index.php`, the `static` symlink) and `data/{kind}/{name}/`.
@@ -804,7 +824,7 @@ call site says which by the registry it asks; both return a `KeyValueStore`.
 - **`durable` is not `persistent`**: `persistent` is "survives the process", `durable` is "losing it
   is not allowed", which depends on where the instance writes. `DbStore` and `RedisStore` are durable;
   `MemoryStore` and `MemcachedStore` never; `FileStore` only with `options: {'root' => FileStore::ROOT_STATE}`
-  (files in `data/state/{scope}`, not `.ozone/cache/`).
+  (files in `data/{scope}/state`, not `.ozone/cache/`).
 - Obtain stores from the registries, never by constructing a driver: `store(name)`, or
   `CacheRegistry::runtime(__METHOD__)` (per-request memoization) and `persistent(self::class)`.
 - Expiry listeners (`StoreEntryExpiryListenerInterface`, the `expiry_listener` of a store) are called
@@ -955,7 +975,7 @@ runs), `lint`, `cs`, `fix`, `shell`, `down`, ...
   (`tests/Support/Servers/`).
 - Unit tests live under `tests/` by namespace (`OZONE\Tests`), extend `TestCase`, and declare
   `@covers` (the fixer adds `@coversNothing` otherwise). `TestUtils::router()` is a pre-populated router.
-- `make lint` regenerates OZone's ORM classes in the git-ignored `.ozone/plugins/` first
+- `make lint` regenerates OZone's ORM classes in the git-ignored `.ozone/build/plugins/` first
   (`tests/orm_build.php`), which psalm scans for types without analysing.
 
 ### Integration tests (`tests/Integration/`)

@@ -160,7 +160,7 @@ final class Settings
 	 * Adds settings sources directory.
 	 *
 	 * @param string $path     settings files directory path
-	 * @param bool   $stateful whether it holds stateful settings, written at runtime (`data/settings/...`):
+	 * @param bool   $stateful whether it holds stateful settings, written at runtime (`data/.../settings`):
 	 *                         never read from a compiled bundle
 	 */
 	public static function addSource(string $path, bool $stateful = false): void
@@ -267,7 +267,7 @@ final class Settings
 	 * @param string              $key      the setting key
 	 * @param mixed               $value    the setting value
 	 * @param null|ScopeInterface $scope    the scope to use (default: current app scope)
-	 * @param bool                $stateful true -> stateful dir (data/settings/), false -> source dir (app/settings/)
+	 * @param bool                $stateful true -> the stateful dir, false -> the source dir (app/settings/)
 	 */
 	public static function set(
 		string $group,
@@ -286,7 +286,7 @@ final class Settings
 	 * @param string              $group    the setting group name
 	 * @param string              $key      the setting key
 	 * @param null|ScopeInterface $scope    the scope to use (default: current app scope)
-	 * @param bool                $stateful true -> stateful dir (data/settings/), false -> source dir (app/settings/)
+	 * @param bool                $stateful true -> the stateful dir, false -> the source dir (app/settings/)
 	 */
 	public static function unset(
 		string $group,
@@ -692,7 +692,7 @@ final class Settings
 		}
 
 		$root  = \rtrim(app()->getProjectDir()->getRoot(), '/\\');
-		$cache = $root . DS . '.ozone' . DS . 'cache' . DS . 'settings';
+		$cache = InstanceLayout::buildPath($root, InstanceLayout::BUILD_SETTINGS);
 		$name  = \hash('xxh128', $dir);
 		$file  = $cache . DS . $name . '.' . \hash('xxh128', \serialize([
 			$root,

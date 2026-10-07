@@ -15,6 +15,7 @@ namespace OZONE\Core\Cli\Build;
 
 use FilesystemIterator;
 use OZONE\Core\App\Db;
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\App\Settings;
 use OZONE\Core\FS\Assets;
@@ -197,7 +198,7 @@ final class ScopeBuilder
 	private static function preloadable(): array
 	{
 		$vendor    = OZ_PROJECT_DIR . 'vendor' . DS;
-		$skip_dirs = [OZ_PROJECT_DIR . '.ozone' . DS, $vendor . 'composer' . DS];
+		$skip_dirs = [InstanceLayout::path(OZ_PROJECT_DIR) . DS, $vendor . 'composer' . DS];
 		$skip_ns   = \array_map(static fn (string $ns): string => $ns . '\\', Db::ormNamespaces());
 		$skip      = \is_file($vendor . 'composer' . DS . 'autoload_files.php')
 			? \array_fill_keys(\array_values((array) require $vendor . 'composer' . DS . 'autoload_files.php'), true)

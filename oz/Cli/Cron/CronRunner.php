@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Cron;
 
 use Override;
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Hooks\Events\FinishHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
@@ -225,8 +226,9 @@ final class CronRunner implements BootHookReceiverInterface
 	 */
 	private static function firstLookThisMinute(): bool
 	{
-		$dir      = \rtrim(app()->getProjectDir()->getRoot(), '/\\') . DS . '.ozone' . DS . 'cache';
-		$file     = $dir . DS . 'cron.minute';
+		$root     = app()->getProjectDir()->getRoot();
+		$dir      = InstanceLayout::cachePath($root);
+		$file     = InstanceLayout::cachePath($root, InstanceLayout::CACHE_CRON_MARKER);
 		$interval = \max(60, (int) Settings::get('oz.cron', 'OZ_CRON_REQUESTS_INTERVAL', 60));
 		$slot     = (string) \intdiv(\time(), $interval);
 

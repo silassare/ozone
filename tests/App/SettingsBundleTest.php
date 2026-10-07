@@ -211,6 +211,6 @@ final class SettingsBundleTest extends TestCase
 	private static function cacheDir(): string
 	{
 		return \rtrim(app()->getProjectDir()->getRoot(), '/\\')
-			. \DIRECTORY_SEPARATOR . '.ozone' . \DIRECTORY_SEPARATOR . 'cache' . \DIRECTORY_SEPARATOR . 'settings';
+			. \DIRECTORY_SEPARATOR . '.ozone' . \DIRECTORY_SEPARATOR . 'build' . \DIRECTORY_SEPARATOR . 'settings';
 	}
 }

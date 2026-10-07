@@ -17,6 +17,7 @@ use JsonException;
 use OZONE\Core\Cli\Deploy\ReleaseLayout;
 use OZONE\Core\Cli\Process;
 use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\OZone;
@@ -28,8 +29,9 @@ use OZONE\Core\OZone;
  * settings bundles and the route tables of each scope ({@see ScopeBuilder}) -- then the class map
  * and, for a server that bootstraps for each request, the preload list.
  *
- * All of it is named after the release (the project directory): `.ozone/` is shared by the releases
- * of an `oz deploy` root, and a release must never read what another compiled.
+ * All of it goes under `.ozone/build/` and is named after the release (the project directory):
+ * `.ozone/` is shared by the releases of an `oz deploy` root, and a release must never read what
+ * another compiled.
  *
  * @internal
  */
@@ -141,7 +143,7 @@ final class ProjectBuilder
 	 */
 	public static function preloadFile(): string
 	{
-		return self::root() . DS . '.ozone' . DS . 'preload.php';
+		return InstanceLayout::preloadScriptPath(self::root());
 	}
 
 	/**
@@ -151,7 +153,7 @@ final class ProjectBuilder
 	 */
 	public static function preloadListFor(string $root): string
 	{
-		return $root . DS . '.ozone' . DS . 'cache' . DS . 'preload.' . \hash('xxh128', $root) . '.php';
+		return InstanceLayout::buildPath($root, 'preload.' . \hash('xxh128', $root) . '.php');
 	}
 
 	/**
@@ -210,7 +212,7 @@ final class ProjectBuilder
 				$base = \dirname(__DIR__);
 				$live = \is_link($base . '/%s') && \is_dir($base . '/%s') ? \realpath($base . '/%s') : false;
 				$root = false === $live ? $base : $live;
-				$list = __DIR__ . '/cache/preload.' . \hash('xxh128', $root) . '.php';
+				$list = __DIR__ . '/%s/preload.' . \hash('xxh128', $root) . '.php';
 
 				if (\is_file($list)) {
 					foreach ((array) require $list as $file) {
@@ -222,26 +224,29 @@ final class ProjectBuilder
 				PHP,
 			ReleaseLayout::CURRENT,
 			ReleaseLayout::RELEASES,
-			ReleaseLayout::CURRENT
+			ReleaseLayout::CURRENT,
+			InstanceLayout::BUILD
 		);
 	}
 
 	/**
 	 * Removes what builds and requests compiled: the next ones compile it again.
 	 *
-	 * The preload script stays, since PHP refuses to start when `opcache.preload` points to nothing,
-	 * and so do the preload lists of other releases: none of them is compiled again by a request.
+	 * Only the build output of this release, never `.ozone/cache/`, which holds what requests filled
+	 * on demand and which no build wrote. The preload script stays, since PHP refuses to start when
+	 * `opcache.preload` points to nothing, and so do the preload lists of other releases: none of
+	 * them is compiled again by a request.
 	 *
 	 * @return int the files removed
 	 */
 	public static function clear(): int
 	{
-		$cache = self::root() . DS . '.ozone' . DS . 'cache' . DS;
+		$build = InstanceLayout::buildPath(self::root()) . DS;
 		$files = [
-			...\glob($cache . 'env' . DS . '*.php') ?: [],
-			...\glob($cache . 'settings' . DS . '*.php') ?: [],
-			...\glob($cache . 'classmap.*.php') ?: [],
-			...\glob($cache . 'scopes' . DS . '*' . DS . 'routes' . DS . '*.php') ?: [],
+			...\glob($build . InstanceLayout::BUILD_ENV . DS . '*.php') ?: [],
+			...\glob($build . InstanceLayout::BUILD_SETTINGS . DS . '*.php') ?: [],
+			...\glob($build . 'classmap.*.php') ?: [],
+			...\glob($build . InstanceLayout::BUILD_ROUTES . DS . '*' . DS . '*.php') ?: [],
 		];
 
 		if (\is_file($list = self::preloadListFor(self::root()))) {

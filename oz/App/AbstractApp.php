@@ -241,8 +241,10 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function getPluginsSourcesDir(): FilesManager
 	{
-		return $this->getProjectDir()
-			->cd('.ozone/plugins/', true);
+		return InstanceLayout::buildDir(
+			$this->getProjectDir()->getRoot(),
+			InstanceLayout::BUILD_PLUGINS
+		);
 	}
 
 	/**
@@ -251,8 +253,7 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function getCacheDir(): FilesManager
 	{
-		return $this->getProjectDir()
-			->cd('.ozone/cache/scopes/' . ScopeInterface::ROOT_SCOPE, true);
+		return InstanceLayout::scopeCacheDir($this->getProjectDir()->getRoot(), $this->getStateSlug());
 	}
 
 	/**
@@ -289,7 +290,6 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function getLogsDir(): FilesManager
 	{
-		return $this->getProjectDir()
-			->cd('.ozone/logs/', true);
+		return InstanceLayout::logsDir($this->getProjectDir()->getRoot());
 	}
 }

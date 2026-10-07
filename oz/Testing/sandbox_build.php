@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 // Prepares a sandbox project (OZONE\Core\Testing\Sandbox::create() runs it in its own process): generates
 // the ORM classes of every enabled ORM namespace (OZone's, the project's, the enabled plugins') in
-// `.ozone/plugins/`, as `oz db build` does in a project, and creates the schema in its SQLite database,
-// so whoever boots next finds both present, like an installed project.
+// `.ozone/build/plugins/`, as `oz db build` does in a project, and creates the schema in its SQLite
+// database, so whoever boots next finds both present, like an installed project.
 //
 // With `--installed` the schema is created the way a deployed project gets it: a migration is created
 // and installed, which records its version (`OZ_MIGRATION_VERSION`), so every later boot loads the schema

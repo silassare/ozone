@@ -75,8 +75,8 @@ final class Sandbox
 
 		\file_put_contents($dir . '.env', $lines);
 
-		// The ORM classes are generated in the project (`.ozone/plugins/`), as `oz db build` does. A
-		// separate process builds them, so whoever boots next finds the classes present.
+		// The ORM classes are generated in the project (`.ozone/build/plugins/`), as `oz db build`
+		// does. A separate process builds them, so whoever boots next finds the classes present.
 		$build = [\PHP_BINARY, __DIR__ . \DIRECTORY_SEPARATOR . 'sandbox_build.php', self::autoloadFile(), $dir];
 
 		if ($installed) {

@@ -26,7 +26,7 @@ use OZONE\Core\Stores\StoreCapabilities;
  *
  * Where those files go decides whether this instance may back a **state** store: under
  * `.ozone/cache/` it is a cache, and `.ozone/` is per instance and may be deleted at any time; under
- * `data/state/{scope}` ({@see self::ROOT_STATE}) it is durable, and losing it is not allowed. Pass
+ * `data/{scope}/state` ({@see self::ROOT_STATE}) it is durable, and losing it is not allowed. Pass
  * `['root' => FileStore::ROOT_STATE]` in the store's `options` for the second.
  */
 final class FileStore extends MemoryStore
@@ -37,7 +37,7 @@ final class FileStore extends MemoryStore
 	public const ROOT_CACHE = 'cache';
 
 	/**
-	 * Files under `data/state/{scope}`: durable, and required to back a state store.
+	 * Files under `data/{scope}/state`: durable, and required to back a state store.
 	 */
 	public const ROOT_STATE = 'state';
 

@@ -16,6 +16,7 @@ namespace OZONE\Core;
 use Gobl\ORM\ORMOptions;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Db;
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Auth;
@@ -535,8 +536,10 @@ final class OZone
 	{
 		$root = \rtrim(app()->getProjectDir()->getRoot(), '/\\');
 
-		return $root . DS . '.ozone' . DS . 'cache' . DS . 'classmap.'
-			. \hash('xxh128', $root . "\0" . OZ_OZONE_VERSION) . '.php';
+		return InstanceLayout::buildPath(
+			$root,
+			'classmap.' . \hash('xxh128', $root . "\0" . OZ_OZONE_VERSION) . '.php'
+		);
 	}
 
 	/**
@@ -575,7 +578,8 @@ final class OZone
 	 * The name says what the table was compiled from, so a file never describes other routes -- opcache
 	 * may never check it again: the release (a deployment makes a new project directory), the providers,
 	 * and the application's and the scope's stateful settings, which the providers may read
-	 * (Settings::set() touches the directory it writes). Kept in the scope's cache directory.
+	 * (Settings::set() touches the directory it writes). Kept with the rest of what a build
+	 * compiles, under one directory per scope.
 	 *
 	 * @param bool                $api       true for the API router, false for the web one
 	 * @param array<string, bool> $providers the router's route providers
@@ -596,8 +600,12 @@ final class OZone
 			@\filemtime(StateLayout::path($scope, StateLayout::SETTINGS)),
 		]));
 
-		return \rtrim($scope->getCacheDir()->getRoot(), DS) . DS . 'routes' . DS
-			. ($api ? 'api' : 'web') . '.' . $key . '.php';
+		return InstanceLayout::buildPath(
+			$app->getProjectDir()->getRoot(),
+			InstanceLayout::BUILD_ROUTES,
+			$scope->getStateSlug(),
+			($api ? 'api' : 'web') . '.' . $key . '.php'
+		);
 	}
 
 	/**

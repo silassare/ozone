@@ -69,13 +69,20 @@ final class AbstractScopeTest extends TestCase
 		self::assertSame('stub', $scope->getName());
 		self::assertSame(self::path("{$root}/sources/settings"), self::path($scope->getSettingsDir()->getRoot()));
 		self::assertSame(self::path("{$root}/sources/templates"), self::path($scope->getTemplatesDir()->getRoot()));
-		// data/{kind}/{scope}: kind first, because that is the level a backup rule and a container
-		// volume are written at.
-		self::assertSame(self::path("{$root}/data/settings/stub"), self::path($scope->getStatefulSettingsDir()->getRoot()));
-		self::assertSame(self::path("{$root}/data/files/stub"), self::path($scope->getPrivateFilesDir()->getRoot()));
-		self::assertSame(self::path("{$root}/data/static/stub"), self::path($scope->getPublicFilesDir()->getRoot()));
-		self::assertSame(self::path("{$root}/data/tmp-fs/stub"), self::path($scope->getTempDir()->getRoot()));
-		self::assertSame(self::path("{$root}/data/state/stub"), self::path($scope->getStateStoreDir()->getRoot()));
+		// data/{scope}/{kind}: scope first, so the whole of a scope's state is one subtree.
+		self::assertSame(self::path("{$root}/data/stub/settings"), self::path($scope->getStatefulSettingsDir()->getRoot()));
+		self::assertSame(self::path("{$root}/data/stub/files"), self::path($scope->getPrivateFilesDir()->getRoot()));
+		self::assertSame(self::path("{$root}/data/stub/static"), self::path($scope->getPublicFilesDir()->getRoot()));
+		self::assertSame(self::path("{$root}/data/stub/tmp-fs"), self::path($scope->getTempDir()->getRoot()));
+		self::assertSame(self::path("{$root}/data/stub/state"), self::path($scope->getStateStoreDir()->getRoot()));
+
+		// Every kind of one scope under one directory: what a move, a mount or a quota takes.
+		foreach (StateLayout::kinds() as $kind) {
+			self::assertSame(
+				self::path("{$root}/data/stub/{$kind}"),
+				self::path(StateLayout::dir($scope, $kind)->getRoot())
+			);
+		}
 
 		// The document root holds the entry point and the symlink, never the files themselves.
 		self::assertSame(self::path("{$root}/public"), self::path($scope->getDocumentRootDir()->getRoot()));

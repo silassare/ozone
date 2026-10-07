@@ -35,4 +35,36 @@ final class StateLayoutPathTest extends TestCase
 		self::assertSame($path, StateLayout::path($app, StateLayout::SETTINGS));
 		self::assertNotSame($path, StateLayout::path($app, StateLayout::STATE));
 	}
+
+	public function testTheScopeComesBeforeTheKind(): void
+	{
+		$app  = app();
+		$slug = $app->getStateSlug();
+		$ds   = \DIRECTORY_SEPARATOR;
+
+		foreach (StateLayout::kinds() as $kind) {
+			self::assertStringEndsWith(
+				$ds . 'data' . $ds . $slug . $ds . $kind,
+				\rtrim(StateLayout::dir($app, $kind)->getRoot(), '/\\'),
+				$kind
+			);
+		}
+	}
+
+	public function testThePathFormOfTheScaffoldingAgrees(): void
+	{
+		$app     = app();
+		$project = $app->getProjectDir();
+		$slug    = $app->getStateSlug();
+
+		// `dirAt()` is what `oz project create` and `oz scopes add` use, before there is an app to
+		// ask: it must put a scope's state exactly where a request later looks for it.
+		foreach (StateLayout::kinds() as $kind) {
+			self::assertSame(
+				\realpath(StateLayout::dir($app, $kind)->getRoot()),
+				\realpath(StateLayout::dirAt($project, $kind, $slug, true)->getRoot()),
+				$kind
+			);
+		}
+	}
 }

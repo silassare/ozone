@@ -106,7 +106,7 @@ benchmark-http:
 cs:
 	$(RUN_FREE) vendor/bin/phpcs
 
-## Generate OZone's ORM classes in .ozone/plugins/, which psalm reads
+## Generate OZone's ORM classes in .ozone/build/plugins/, which psalm reads
 orm:
 	$(RUN_FREE) php tests/orm_build.php
 
