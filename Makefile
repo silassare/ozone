@@ -1,6 +1,16 @@
-# Every target runs in Docker (docker/compose.yaml): the host only needs Docker and make.
+# Code style, static analysis, the fixer and the ORM generator run on the host by default (RUNNER=host):
+# they need nothing but PHP and `vendor/`, which `make install` writes in the container so Composer
+# resolves as CI does (the first-party packages land there as real directories, so the host reads them).
+# `make host-check` says whether the host's PHP satisfies composer.json.
+#
+# Everything else runs in Docker (docker/compose.yaml) whatever RUNNER says, and so does `make ci`: that
+# image is the reference environment. The unit suite is among them: `ImagesTest` drives every image
+# driver OZone supports (gd, imagick, vips) and only the image has all three. RUNNER=docker puts the
+# host-side targets back in the container too.
 
-.PHONY: docker-build install shell down test test-unit test-services test-runtimes test-provision test-integration test-coverage ci benchmark cs orm lint fix clean
+.PHONY: docker-build install shell host-check down test test-unit test-services test-runtimes test-provision test-integration test-coverage ci benchmark cs orm lint fix clean
+
+export RUNNER ?= host
 
 DOCKER_COMPOSE = docker compose -f docker/compose.yaml
 
@@ -11,6 +21,13 @@ export OZ_GID := $(shell id -g)
 # The PHP container with the test servers started, or alone when a target needs none.
 RUN        = $(DOCKER_COMPOSE) run --rm php
 RUN_NODEPS = $(DOCKER_COMPOSE) run --rm --no-deps php
+
+# What needs no server: the host, or the container when RUNNER=docker.
+ifeq ($(RUNNER),docker)
+RUN_FREE = $(RUN_NODEPS)
+else
+RUN_FREE =
+endif
 
 PHPUNIT = vendor/bin/phpunit -c phpunit.xml.dist --do-not-cache-result
 
@@ -23,6 +40,10 @@ docker-build:
 ## Install the Composer dependencies
 install:
 	$(RUN_NODEPS) composer install
+
+## Check that the host's PHP satisfies what composer.json requires (RUNNER=host needs it; a failure names what is missing)
+host-check:
+	composer check-platform-reqs
 
 ## Open a shell in the PHP container, with the test servers running
 shell:
@@ -37,7 +58,7 @@ down:
 ## Run every test suite
 test: test-unit test-services test-runtimes test-provision test-integration
 
-## Run the unit test suite (no server needed)
+## Run the unit test suite (no server needed, but `ImagesTest` needs the image's imagick and vips)
 test-unit:
 	$(RUN_NODEPS) $(PHPUNIT) --testsuite Unit --testdox
 
@@ -65,12 +86,13 @@ test-integration:
 test-coverage:
 	$(RUN_NODEPS) php -d pcov.enabled=1 $(PHPUNIT) --testsuite Unit --coverage-html .ozone/coverage
 
-## What CI runs: dependencies, code style, static analysis, then every suite
-ci: install cs lint test
+## What CI runs, in the PHP container: dependencies, code style, static analysis, then every suite
+ci:
+	$(MAKE) RUNNER=docker install cs lint test
 
 # = Benchmarks
 
-## Run benchmarks
+## Run benchmarks (in the container whatever RUNNER says: a number is only comparable against the same environment)
 benchmark:
 	$(RUN_NODEPS) php tests/run_benchmarks.php
 
@@ -82,19 +104,19 @@ benchmark-http:
 
 ## Check code style
 cs:
-	$(RUN_NODEPS) vendor/bin/phpcs
+	$(RUN_FREE) vendor/bin/phpcs
 
 ## Generate OZone's ORM classes in .ozone/plugins/, which psalm reads
 orm:
-	$(RUN_NODEPS) php tests/orm_build.php
+	$(RUN_FREE) php tests/orm_build.php
 
 ## Run static analysis (psalm), with freshly generated ORM classes
 lint: orm
-	$(RUN_NODEPS) vendor/bin/psalm --no-cache
+	$(RUN_FREE) vendor/bin/psalm --no-cache
 
 ## Run code style fixer
 fix: lint
-	$(RUN_NODEPS) vendor/bin/oliup-cs fix
+	$(RUN_FREE) vendor/bin/oliup-cs fix
 
 ## Remove blate caches, and stop the test servers
 clean:
