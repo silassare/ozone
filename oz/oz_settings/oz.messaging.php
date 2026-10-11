@@ -65,6 +65,25 @@ return [
 	'OZ_MESSAGING_QUEUE'    => 'oz:messages',
 
 	/**
+	 * The look of the emails, which carry inline styles (mail clients ignore CSS variables): `color`
+	 * (buttons and links), `logo_url` (an absolute URL; the initial of the name when null) and `name`
+	 * (the product, `OZ_PROJECT_NAME` when null). A full redesign overrides
+	 * `oz.mail.layout.html.blate` in the project's templates.
+	 */
+	'OZ_MESSAGING_MAIL_THEME' => [
+		'color'    => '#c4203d',
+		'logo_url' => null,
+		'name'     => null,
+	],
+
+	/**
+	 * The domain of the site a one-time code is entered on (`app.example.com`): when set, an SMS
+	 * carrying a code ends with `@<domain> #<code>`, which lets browsers and phones fill the code in
+	 * (WebOTP, the iOS and Android one-time code). Null leaves the line out.
+	 */
+	'OZ_MESSAGING_OTP_DOMAIN' => null,
+
+	/**
 	 * How many days a settled record (sent, failed, skipped) of `oz_messages` is kept once settled,
 	 * before the hourly garbage collection (`oz:gc`) deletes it; null keeps every one. Queued records
 	 * are never deleted.

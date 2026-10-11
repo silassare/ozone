@@ -74,6 +74,7 @@ final class PasswordProtectedRouteGuard extends AbstractRouteGuard
 		$form    = new Form();
 		$form->field($this->password_field)
 			->type(new TypePassword())
+			->label('OZ_ACCESS_GRANT_FORM_PASSWORD')
 			->required();
 
 		$fd = $this->requireForm($context, $form);

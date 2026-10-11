@@ -1,133 +1,292 @@
+/*
+ * The default pages of OZone (errors, redirects, authorization links, the welcome page).
+ *
+ * Class names follow BEM (`oz-block__element--modifier`): blocks `oz-page`, `oz-card`, `oz-btn`,
+ * `oz-link`, `oz-form`, `oz-badge`, `oz-details`, `oz-pill`.
+ *
+ * Everything is drawn from the variables below. A project changes them in its own `oz.theme.css`
+ * (in its templates directory), which every page loads after this file: see that file.
+ */
+
+:root {
+	color-scheme: light dark;
+	--oz-color-primary: #c4203d;
+	--oz-color-on-primary: #ffffff;
+	--oz-color-bg: #f6f5f2;
+	--oz-color-surface: #ffffff;
+	--oz-color-text: #1f1e1c;
+	--oz-color-muted: #5d5b57;
+	--oz-color-border: #e4e1db;
+	--oz-color-field-border: #cfcbc4;
+	--oz-color-danger: #b42318;
+	--oz-color-success: #1f7a45;
+	--oz-radius: 12px;
+	--oz-font: system-ui, -apple-system, "Segoe UI", sans-serif;
+	--oz-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	--oz-max-width: 480px;
+	--oz-logo: none;
+	--oz-mark-bg: var(--oz-color-primary);
+	--oz-mark-color: var(--oz-color-on-primary);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--oz-color-primary: #ff6b81;
+		--oz-color-on-primary: #1f1e1c;
+		--oz-color-bg: #161514;
+		--oz-color-surface: #211f1e;
+		--oz-color-text: #f2f0ec;
+		--oz-color-muted: #b4b0a9;
+		--oz-color-border: #3a3734;
+		--oz-color-field-border: #4a4643;
+		--oz-color-danger: #ff8a80;
+		--oz-color-success: #5fd08d;
+	}
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
 body {
-    font-family: Ubuntu, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Oxygen-Sans, Cantarell, "Helvetica Neue", "Open Sans", sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    font-size: 1.2em;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #F5F5F5;
+	margin: 0;
+	min-block-size: 100vh;
+	background: var(--oz-color-bg);
+	color: var(--oz-color-text);
+	font-family: var(--oz-font);
+	font-size: 16px;
+	line-height: 1.55;
+	-webkit-font-smoothing: antialiased;
 }
 
-#oz-box {
-    width: 80%;
-    max-width: 800px;
-    margin: 100px auto auto auto;
-    padding: 50px 20px;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
-    border: 1px solid white;
-    background: white;
-    border-radius: 3px;
+.oz-page {
+	min-block-size: 100vh;
+	padding: 40px 16px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 24px;
 }
 
-.oz-logo {
-    display: block;
-    margin: 0 auto 30px auto;
-    width: 100px;
-    height: 100px;
-    background-image: url('/logo.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+.oz-card {
+	inline-size: 100%;
+	max-inline-size: var(--oz-max-width);
+	padding: 40px;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	background: var(--oz-color-surface);
+	border: 1px solid var(--oz-color-border);
+	border-radius: var(--oz-radius);
 }
 
-.oz-title {
-    font-size: 3em;
-    color: #ff5064;
-    text-align: center;
+.oz-card__mark {
+	inline-size: 40px;
+	block-size: 40px;
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--oz-logo) center / contain no-repeat, var(--oz-mark-bg);
+	color: var(--oz-mark-color);
+	font-weight: 700;
+	font-size: 17px;
 }
 
-.oz-desc {
-    color: #333333;
-    margin: 30px 0;
+.oz-card__heading {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
 }
 
-.oz-desc-item {
-    padding: 10px;
-    background-color: #E6E6E6;
-    word-break: break-word;
+.oz-card__eyebrow {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--oz-color-muted);
 }
 
-.oz-desc-item:nth-child(odd) {
-    background-color: #F7F7F7;
+.oz-card__title {
+	margin: 0;
+	font-size: 26px;
+	line-height: 1.25;
+	font-weight: 700;
+}
+
+.oz-card__text {
+	margin: 0;
+	color: var(--oz-color-muted);
+}
+
+.oz-card__note {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.5;
+	color: var(--oz-color-muted);
+}
+
+.oz-card__note--break {
+	word-break: break-all;
+}
+
+.oz-card__actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px 20px;
 }
 
 .oz-btn {
-    display: block;
-    text-align: center;
-    background-color: #ff5064;
-    margin: 10px auto;
-    padding: 15px;
-    max-width: 50%;
-    text-decoration: none;
-    color: #FFFFFF;
-    border: 2px solid #ff5064;
-    border-radius: 3px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-block-size: 44px;
+	padding: 0 20px;
+	border: 0;
+	border-radius: calc(var(--oz-radius) - 4px);
+	background: var(--oz-color-primary);
+	color: var(--oz-color-on-primary);
+	font: 600 15px/1 var(--oz-font);
+	text-decoration: none;
+	cursor: pointer;
 }
 
 .oz-btn:hover {
-    background-color: #ffffff;
-    color: #ff5064;
+	filter: brightness(1.08);
 }
+
+.oz-btn--block {
+	display: flex;
+	inline-size: 100%;
+	min-block-size: 48px;
+	font-size: 16px;
+}
+
+.oz-link {
+	display: inline-flex;
+	align-items: center;
+	min-block-size: 44px;
+	color: var(--oz-color-primary);
+	font-weight: 600;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.oz-btn:focus-visible,
+.oz-link:focus-visible {
+	outline: 3px solid var(--oz-color-primary);
+	outline-offset: 3px;
+}
+
 .oz-form {
-    margin-top: 20px;
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
 }
 
-.oz-form-field {
-    margin-bottom: 16px;
+.oz-form__field {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 
-.oz-form-field label {
-    display: block;
-    color: #555555;
-    margin-bottom: 6px;
-    font-size: 0.9em;
+.oz-form__label {
+	font-size: 14px;
+	font-weight: 600;
 }
 
-.oz-required {
-    color: #ff5064;
-    margin-left: 2px;
+.oz-form__required {
+	color: var(--oz-color-danger);
+	margin-inline-start: 2px;
 }
 
-.oz-form-field input[type="text"],
-.oz-form-field input[type="password"],
-.oz-form-field input[type="email"],
-.oz-form-field input[type="number"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #dddddd;
-    border-radius: 3px;
-    box-sizing: border-box;
-    font-size: 0.9em;
-    font-family: inherit;
+.oz-form__input {
+	min-block-size: 44px;
+	padding: 0 12px;
+	border: 1px solid var(--oz-color-field-border);
+	border-radius: calc(var(--oz-radius) - 4px);
+	background: var(--oz-color-surface);
+	color: var(--oz-color-text);
+	font: 16px var(--oz-font);
 }
 
-.oz-form-field input:focus {
-    outline: none;
-    border-color: #ff5064;
+.oz-form__input:focus-visible {
+	outline: 3px solid var(--oz-color-primary);
+	outline-offset: 1px;
+	border-color: var(--oz-color-primary);
 }
 
-.oz-btn-submit {
-    display: block;
-    width: 100%;
-    padding: 15px;
-    margin-top: 10px;
-    background-color: #ff5064;
-    color: #ffffff;
-    border: 2px solid #ff5064;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 1em;
-    font-family: inherit;
+
+.oz-badge {
+	inline-size: 48px;
+	block-size: 48px;
+	border-radius: 999px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: 2px solid currentColor;
 }
 
-.oz-btn-submit:hover {
-    background-color: #ffffff;
-    color: #ff5064;
+.oz-badge--success {
+	color: var(--oz-color-success);
 }
 
-@media all and (max-width: 360px) {
-    .oz-title {
-        font-size: 2em;
-    }
+.oz-badge--danger {
+	color: var(--oz-color-danger);
+}
+
+.oz-details {
+	padding-block-start: 16px;
+	border-block-start: 1px solid var(--oz-color-border);
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	font-size: 13px;
+	color: var(--oz-color-muted);
+}
+
+.oz-details__label {
+	color: var(--oz-color-text);
+}
+
+.oz-details__code {
+	font-family: var(--oz-font-mono);
+	word-break: break-all;
+}
+
+.oz-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 10px;
+	border: 1px solid var(--oz-color-border);
+	border-radius: 999px;
+	font-size: 13px;
+	color: var(--oz-color-muted);
+}
+
+.oz-pill::before {
+	content: "";
+	inline-size: 8px;
+	block-size: 8px;
+	border-radius: 999px;
+	background: var(--oz-color-success);
+}
+
+.oz-page__footer {
+	font-size: 13px;
+	color: var(--oz-color-muted);
+}
+
+@media (max-width: 480px) {
+	.oz-card {
+		padding: 28px 20px;
+	}
+
+	.oz-card__title {
+		font-size: 22px;
+	}
 }

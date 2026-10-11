@@ -1,1 +1,3 @@
-Your authentication code is: {auth_code}
+{= $t('OZ_AUTH_2FA_SMS', oz_vars, oz_locale)}{@if oz_otp_domain}
+
+@{= oz_otp_domain} #{= auth_code}{/if}

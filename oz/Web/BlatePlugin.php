@@ -79,6 +79,16 @@ final class BlatePlugin implements BootHookReceiverInterface
 			'description' => 'The current language.',
 		]);
 
+		Blate::registerComputedGlobalVar('dir', static fn (): string => Polyglot::direction(self::lang()), [
+			'description' => 'Which way the current language is written: rtl or ltr.',
+		]);
+		Blate::registerComputedGlobalVar('project_name', self::projectName(...), [
+			'description' => 'The project name (OZ_PROJECT_NAME).',
+		]);
+		Blate::registerComputedGlobalVar('project_initial', self::projectInitial(...), [
+			'description' => 'The first letter of the project name, for the mark of the default pages.',
+		]);
+
 		Blate::registerGlobalVar('oz_version', OZ_OZONE_VERSION, [
 			'description' => 'The current OZone version.',
 		]);
@@ -268,5 +278,21 @@ final class BlatePlugin implements BootHookReceiverInterface
 		$ctx = self::getContext();
 
 		return Polyglot::getLanguage($ctx);
+	}
+
+	/**
+	 * The project name.
+	 */
+	public static function projectName(): string
+	{
+		return (string) Settings::get('oz.config', 'OZ_PROJECT_NAME', '');
+	}
+
+	/**
+	 * The first letter of the project name, upper case; empty when there is no name.
+	 */
+	public static function projectInitial(): string
+	{
+		return \mb_strtoupper(\mb_substr(\trim(self::projectName()), 0, 1));
 	}
 }

@@ -120,9 +120,11 @@ final class CredentialsRouteGuard extends AbstractRouteGuard
 		$form = new Form();
 		$form->field($this->username_field)
 			->type($username_type)
+			->label('OZ_ACCESS_GRANT_FORM_USERNAME')
 			->required();
 		$form->field($this->password_field)
 			->type($password_type)
+			->label('OZ_ACCESS_GRANT_FORM_PASSWORD')
 			->required();
 
 		$clean_form = $this->requireForm($context, $form);

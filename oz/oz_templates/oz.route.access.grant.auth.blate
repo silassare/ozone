@@ -1,1 +1,1 @@
-<p>You need to authenticate for {realm}.</p>
+<p>{$t('OZ_ACCESS_GRANT_AUTH_MESSAGE', oz_vars)}</p>

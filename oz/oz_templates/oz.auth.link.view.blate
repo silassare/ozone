@@ -1,1 +1,18 @@
-You could close this window.
+{@extends 'oz://oz.page.layout.blate' $$}
+{@slot title}{@if oz_auth_link_done}{$t('OZ_VIEW_AUTH_LINK_DONE_TITLE')}{:else}{$t('OZ_VIEW_AUTH_LINK_INVALID_TITLE')}{/if}{/slot}
+{@slot content}
+				{@if oz_auth_link_done}
+				<div class="oz-badge oz-badge--success"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+				<div class="oz-card__heading">
+					<h1 class="oz-card__title">{$t('OZ_VIEW_AUTH_LINK_DONE_TITLE')}</h1>
+					<p class="oz-card__text">{$t('OZ_VIEW_AUTH_LINK_DONE_MESSAGE')}</p>
+				</div>
+				{:else}
+				<div class="oz-badge oz-badge--danger"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></div>
+				<div class="oz-card__heading">
+					<h1 class="oz-card__title">{$t('OZ_VIEW_AUTH_LINK_INVALID_TITLE')}</h1>
+					<p class="oz-card__text">{$t('OZ_VIEW_AUTH_LINK_INVALID_MESSAGE')}</p>
+				</div>
+				{/if}
+{/slot}
+{/extends}

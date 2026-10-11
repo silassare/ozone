@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) 2017-present, Emile Silas Sare
+  ~
+  ~ This file is part of OZone package.
+  ~
+  ~ For the full copyright and license information, please view the LICENSE
+  ~ file that was distributed with this source code.
+  -->
+
+<html lang="{oz_locale}" dir="{oz_dir}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{@slot title}{oz_name}{/slot}</title>
+</head>
+<body style="margin:0;padding:0;background:#f6f5f2;color:#1f1e1c;font-family:system-ui,-apple-system,'Segoe UI',Helvetica,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f5f2;">
+<tr>
+<td align="center" style="padding:28px 16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:512px;">
+<tr>
+<td style="padding:0 0 16px 0;">
+{@if oz_mail.logo_url}
+<img src="{oz_mail.logo_url}" alt="{oz_name}" height="32" style="display:block;height:32px;width:auto;border:0;">
+{:else}
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td width="32" height="32" align="center" style="width:32px;height:32px;border-radius:8px;background:{oz_mail.color};color:#ffffff;font-weight:700;font-size:15px;">{oz_initial}</td>
+<td style="padding:0 10px;font-weight:700;font-size:16px;">{oz_name}</td>
+</tr></table>
+{/if}
+</td>
+</tr>
+<tr>
+<td style="background:#ffffff;border:1px solid #e4e1db;border-radius:12px;padding:32px;">
+{@slot content}{/slot}
+</td>
+</tr>
+<tr>
+<td align="center" style="padding:16px 8px 0 8px;font-size:12px;line-height:1.5;color:#6b6964;">{oz_name} · {@slot footer}{/slot}</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</body>
+</html>

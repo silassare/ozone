@@ -283,13 +283,47 @@ final class Messenger implements BootHookReceiverInterface
 			? self::firstTemplate(self::candidates($template, $channel->name, $locale, '.html'))
 			: null;
 
-		$body = Templates::compile($text, $data);
+		$vars = [...$data, ...self::templateVars($locale)];
+
+		// What `$t()` fills a text with in a template: a template's own data is an object there.
+		$vars['oz_vars'] = $vars;
+		$body = Templates::compile($text, $vars);
 
 		return new RenderedMessage(
 			$channel->gsm7 ? Gsm7::fold($body) : $body,
-			null === $html ? null : Templates::compile($html, $data),
-			null === $subject ? null : Polyglot::translate($subject, $data, $locale)
+			null === $html ? null : Templates::compile($html, $vars),
+			null === $subject ? null : Polyglot::translate($subject, $vars, $locale)
 		);
+	}
+
+	/**
+	 * What every message template gets besides its own data: `oz_locale` (the language to write in,
+	 * for `$t()`), `oz_dir`, `oz_name` and `oz_initial` (the product), `oz_mail` (the mail theme,
+	 * `OZ_MESSAGING_MAIL_THEME`) and `oz_otp_domain` (`OZ_MESSAGING_OTP_DOMAIN`, null when unset).
+	 *
+	 * @return array<string, mixed>
+	 */
+	public static function templateVars(?string $locale): array
+	{
+		$locale ??= Polyglot::getDefaultLanguage();
+		$theme    = (array) Settings::get('oz.messaging', 'OZ_MESSAGING_MAIL_THEME', []);
+		$name     = $theme['name'] ?? null;
+		$name     = \is_string($name) && '' !== $name
+			? $name
+			: (string) Settings::get('oz.config', 'OZ_PROJECT_NAME', '');
+		$domain   = Settings::get('oz.messaging', 'OZ_MESSAGING_OTP_DOMAIN');
+
+		return [
+			'oz_locale'     => $locale,
+			'oz_dir'        => Polyglot::direction($locale),
+			'oz_name'       => $name,
+			'oz_initial'    => \mb_strtoupper(\mb_substr(\trim($name), 0, 1)),
+			'oz_mail'       => [
+				'color'    => (string) ($theme['color'] ?? '#c4203d'),
+				'logo_url' => $theme['logo_url'] ?? null,
+			],
+			'oz_otp_domain' => \is_string($domain) && '' !== $domain ? $domain : null,
+		];
 	}
 
 	/**

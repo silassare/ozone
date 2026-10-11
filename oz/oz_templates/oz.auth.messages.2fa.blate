@@ -1,4 +1,8 @@
-Your two-factor authentication code is:
-{auth_code}
+{= $t('OZ_AUTH_2FA_SUBJECT', oz_vars, oz_locale)}
 
-This code expires in a few minutes. Do not share it with anyone.
+{= $t('OZ_AUTH_2FA_BODY', oz_vars, oz_locale)} {= $t('OZ_AUTH_2FA_EXPIRY', oz_vars, oz_locale)}
+
+{= $t('OZ_AUTH_2FA_NEVER_SHARE', oz_vars, oz_locale)}
+
+-- 
+{= oz_name}

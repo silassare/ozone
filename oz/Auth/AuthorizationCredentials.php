@@ -168,7 +168,8 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 	public function toArray(): array
 	{
 		return [
-			'auth_link'  => $this->getLink(),
+			// A string: the array goes into a message's data, which is serialized to JSON when queued.
+			'auth_link'  => (string) $this->getLink(),
 			'auth_code'  => $this->code,
 			'auth_token' => $this->token,
 		];

@@ -83,14 +83,10 @@ final class MessagingTestRoutesProvider extends BaseService
 	public static function registerGcRoute(Router $router): void
 	{
 		$router->get('/messaging/gc', static function (RouteInfo $ri) {
-			$s = new self($ri);
+			GarbageCollector::run();
 
-			try {
-				\OZONE\Core\Messaging\Messenger::gc();
-				$s->json()->setDone();
-			} catch (\Throwable $t) {
-				$s->json()->setDone()->setData(['error' => (string) $t]);
-			}
+			$s = new self($ri);
+			$s->json()->setDone();
 
 			return $s->respond();
 		})->name('test:messaging:gc');

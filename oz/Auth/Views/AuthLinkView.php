@@ -37,43 +37,61 @@ final class AuthLinkView extends WebView
 	public const AUTH_LINK_CONFIRM_ROUTE = 'oz:auth_link:confirm';
 
 	/**
-	 * Shows the confirmation page, without touching the token.
-	 *
-	 * @throws NotFoundException when the reference is unknown
+	 * Shows the confirmation page, without touching the token; an unknown reference shows the page
+	 * of a link that no longer works.
 	 */
 	public function confirm(RouteInfo $ri): Response
 	{
-		Auth::getRequired($ri->param('ref'));
+		try {
+			Auth::getRequired($ri->param('ref'));
+		} catch (NotFoundException $e) {
+			return $this->invalid($e);
+		}
 
 		return $this->setTemplate('oz.auth.link.confirm.blate')
 			->respond();
 	}
 
 	/**
-	 * Authorizes with the link token.
-	 *
-	 * @throws NotFoundException
-	 * @throws UnauthorizedException
+	 * Authorizes with the link token; a link unknown, used or expired shows the page of a link that no
+	 * longer works.
 	 */
 	public function authorize(RouteInfo $ri): Response
 	{
 		$ref   = $ri->param('ref');
 		$token = $ri->param('token');
-		$auth  = Auth::getRequired($ref);
 
-		$provider = Auth::provider($ri->getContext(), $auth);
+		try {
+			$auth = Auth::getRequired($ref);
 
-		$provider->getCredentials()
-			->setReference($ref);
+			$provider = Auth::provider($ri->getContext(), $auth);
 
-		$type = AuthorizationSecretType::TOKEN;
-		$provider->getCredentials()
-			->setToken($token);
+			$provider->getCredentials()
+				->setReference($ref);
 
-		$provider->authorize($type);
+			$type = AuthorizationSecretType::TOKEN;
+			$provider->getCredentials()
+				->setToken($token);
+
+			$provider->authorize($type);
+		} catch (NotFoundException|UnauthorizedException $e) {
+			return $this->invalid($e);
+		}
 
 		return $this->setTemplate('oz.auth.link.view.blate')
+			->inject(['oz_auth_link_done' => true])
 			->respond();
+	}
+
+	/**
+	 * The page of a link that no longer works (unknown, used or expired), with the status of why.
+	 */
+	private function invalid(NotFoundException|UnauthorizedException $e): Response
+	{
+		return $this->setTemplate('oz.auth.link.view.blate')
+			->inject(['oz_auth_link_done' => false])
+			->respond()
+			->withStatus($e->getHTTPStatusCode());
 	}
 
 	#[Override]

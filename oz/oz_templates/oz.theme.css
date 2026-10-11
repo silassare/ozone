@@ -1,0 +1,24 @@
+/*
+ * The theme of the default pages: empty in OZone, loaded after `oz.css` by every page.
+ *
+ * A project puts its own `oz.theme.css` in its templates directory (`app/templates/`), which is
+ * found before this one, and sets only the variables it changes (the list is at the top of
+ * `oz.css`):
+ *
+ * :root {
+ *     --oz-color-primary: #0b6e4f;
+ *     --oz-radius: 8px;
+ * }
+ *
+ * @media (prefers-color-scheme: dark) {
+ *     :root { --oz-color-primary: #4cc39b; }
+ * }
+ *
+ * A logo in place of the initial of the project name:
+ *
+ * :root {
+ *     --oz-logo: url("/assets/logo.svg");
+ *     --oz-mark-bg: transparent;
+ *     --oz-mark-color: transparent;
+ * }
+ */

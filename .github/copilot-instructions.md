@@ -405,6 +405,15 @@ registered on first use too.
 `~project~` prefixes, then scans the sources `Assets::addSource()` registered (a plugin adds its
 templates there).
 
+### Default pages and messages
+
+Every page OZone renders extends `oz.page.layout.blate`; every email `oz.mail.layout.html.blate`. CSS
+is BEM on `--oz-*` variables in `oz.css`; a project themes through its own `oz.theme.css`, never by
+copying `oz.css`. Emails cannot use CSS variables: their theme is `OZ_MESSAGING_MAIL_THEME`. Every text
+is a lang key (`oz.en` and `oz.fr`), never literal English. In a template, `$$` is an object: pass
+`$t()` an array (`oz_vars`, `oz_error_vars`, or `$map()`). Hand a template plain values, not objects
+whose setters it would read as properties (a `Field` gave `hidden()`, always true).
+
 ---
 
 ## 7. Forms & Validation
@@ -790,6 +799,8 @@ OZone's own verification and two-factor messages included, on the channels of `o
   once per minute: a retry may wait for the next one. **Never put template data in `oz_messages`.**
 - A transport only delivers (`TransportInterface`): retries, records and the decision to send are the
   Messenger's. `LogTransport` is the default and is unavailable in production on purpose.
+- Old records go with the `oz:messages` garbage collector; a record sent `once()` is the only memory of
+  that send, hence its own retention (`OZ_MESSAGING_ONCE_RETENTION`, null by default).
 
 ---
 

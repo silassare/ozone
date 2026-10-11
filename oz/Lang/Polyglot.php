@@ -41,6 +41,11 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 
 	public const LANG_KEY_REG = '~^[A-Z][A-Z0-9_.]+$~';
 
+	/**
+	 * The languages written right to left, by their primary subtag.
+	 */
+	public const RTL_LANGUAGES = ['ar', 'arc', 'ckb', 'dv', 'fa', 'he', 'ks', 'ps', 'sd', 'ug', 'ur', 'yi'];
+
 	private static array $filters = [];
 
 	/**
@@ -344,6 +349,16 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	public static function getDefaultLanguage(): string
 	{
 		return Settings::get('lang/oz.lang.list', 'default');
+	}
+
+	/**
+	 * Which way a language is written: `rtl` or `ltr`, for a page's `dir`.
+	 */
+	public static function direction(string $lang): string
+	{
+		$primary = \strtolower(\explode('-', $lang)[0]);
+
+		return \in_array($primary, self::RTL_LANGUAGES, true) ? 'rtl' : 'ltr';
 	}
 
 	/**

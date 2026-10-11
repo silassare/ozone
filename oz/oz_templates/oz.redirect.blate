@@ -1,43 +1,16 @@
-<!DOCTYPE html>
-<!--
-  ~ Copyright (c) 2017-present, Emile Silas Sare
-  ~
-  ~ This file is part of OZone package.
-  ~
-  ~ For the full copyright and license information, please view the LICENSE
-  ~ file that was distributed with this source code.
-  -->
-
-<html lang="{$global.lang}">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport"
-			  content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no"/>
-
-		<title>Redirect</title>
-
-		<meta http-equiv="Refresh" content="5;url={oz_redirect_url}">
-		<link href="https://fonts.googleapis.com/css?family=Ubuntu&display=swap" rel="stylesheet">
-
-		<script type="text/javascript">
-			window.location.href = "{oz_redirect_url}";
-		</script>
-		<style>
-		{@import_raw 'oz://oz.css'}
-		</style>
-	</head>
-	<body>
-		<div id="oz-box">
-			<span class="oz-logo"></span>
-			<div class="oz-title">{$t('OZ_VIEW_REDIRECT_TITLE')}</div>
-			<div class="oz-desc">
-				<div class="oz-desc-item" style="text-align: center;">
-				{$t('OZ_VIEW_REDIRECT_MESSAGE')}
+{@extends 'oz://oz.page.layout.blate' $$}
+{@slot title}{$t('OZ_VIEW_REDIRECT_TITLE')}{/slot}
+{@slot head}
+		<meta http-equiv="refresh" content="0;url={oz_redirect_url}">
+{/slot}
+{@slot content}
+				<div class="oz-card__heading">
+					<h1 class="oz-card__title">{$t('OZ_VIEW_REDIRECT_TITLE')}</h1>
+					<p class="oz-card__text">{$t('OZ_VIEW_REDIRECT_MESSAGE')}</p>
+					<p class="oz-card__note oz-card__note--break">{oz_redirect_url}</p>
 				</div>
-				<div class="oz-desc-item" style="text-align: center;">
-				<a href="{oz_redirect_url}">{$t('OZ_VIEW_REDIRECT_LINK')}</a>
+				<div class="oz-card__actions">
+					<a class="oz-btn" href="{oz_redirect_url}">{$t('OZ_VIEW_REDIRECT_LINK')}</a>
 				</div>
-			</div>
-		</div>
-	</body>
-</html>
+{/slot}
+{/extends}

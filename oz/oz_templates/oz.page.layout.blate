@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) 2017-present, Emile Silas Sare
+  ~
+  ~ This file is part of OZone package.
+  ~
+  ~ For the full copyright and license information, please view the LICENSE
+  ~ file that was distributed with this source code.
+  -->
+
+<html lang="{$global.lang}" dir="{$global.dir}">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="robots" content="noindex, nofollow">
+		<title>{@slot title}{$global.project_name}{/slot}</title>
+		{@slot head}{/slot}
+		<style>
+		{@import_raw 'oz://oz.css'}
+		{@import_raw 'oz://oz.theme.css'}
+		</style>
+	</head>
+	<body>
+		<div class="oz-page">
+			<main class="oz-card">
+				<div class="oz-card__mark" aria-hidden="true">{$global.project_initial}</div>
+				{@slot content}{/slot}
+			</main>
+			<footer class="oz-page__footer">{@slot footer}{$global.project_name}{/slot}</footer>
+		</div>
+	</body>
+</html>

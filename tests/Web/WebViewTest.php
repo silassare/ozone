@@ -35,7 +35,7 @@ final class WebViewTest extends TestCase
 		$body     = (string) $response->getBody();
 
 		self::assertStringContainsString('https://example.com/next', $body);
-		self::assertStringContainsString('You are being redirected.', $body);
+		self::assertStringContainsString('Taking you there', $body);
 		self::assertStringContainsString('text/html', $response->getHeaderLine('Content-Type'));
 	}
 
@@ -44,7 +44,7 @@ final class WebViewTest extends TestCase
 		$body = (string) self::render([])->getBody();
 
 		// The link is the template's: a translation is plain text, escaped when printed.
-		self::assertStringContainsString('<a href="https://example.com/next">Continue</a>', $body);
+		self::assertStringContainsString('<a class="oz-btn" href="https://example.com/next">Continue</a>', $body);
 		self::assertStringNotContainsString('&lt;', $body);
 	}
 
@@ -52,8 +52,9 @@ final class WebViewTest extends TestCase
 	{
 		$body = (string) self::render(['HTTP_ACCEPT_LANGUAGE' => 'fr-FR,fr;q=0.9'])->getBody();
 
-		self::assertStringContainsString('Vous allez être redirigé.', $body);
-		self::assertStringContainsString('<a href="https://example.com/next">Continuer</a>', $body);
+		self::assertStringContainsString('Redirection en cours', $body);
+		self::assertStringContainsString('<html lang="fr" dir="ltr">', $body);
+		self::assertStringContainsString('<a class="oz-btn" href="https://example.com/next">Continuer</a>', $body);
 	}
 
 	public function testATemplatePrintsATranslationAsTextOrAsHtml(): void

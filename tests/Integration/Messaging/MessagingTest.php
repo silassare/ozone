@@ -134,7 +134,7 @@ final class MessagingTest extends TestCase
 			'template' => 'test.hello',
 			'to'      => ['jane@example.com'],
 			'data'    => ['name' => 'Jane'],
-			'subject' => 'OZ_AUTH_2FA_SUBJECT',
+			'subject' => 'OZ_AUTH_VERIFY_EMAIL_SUBJECT',
 			'locale'  => 'en',
 		]);
 
@@ -152,7 +152,7 @@ final class MessagingTest extends TestCase
 		self::assertSame('jane@example.com', $delivery['destination']);
 		self::assertSame('Hello Jane, en', $delivery['text']);
 		self::assertSame('<p>Hello Jane</p>', $delivery['html']);
-		self::assertSame('Your authentication code', $delivery['subject']);
+		self::assertSame('Verify your email address', $delivery['subject']);
 	}
 
 	/**
@@ -375,7 +375,11 @@ final class MessagingTest extends TestCase
 
 		self::assertSame('ann@example.com', $sent['destination']);
 		self::assertSame('Verify your email address', $sent['subject']);
-		self::assertMatchesRegularExpression('~^Please follow this link to verify your email:\n\S+$~', \trim($sent['text']));
+		self::assertMatchesRegularExpression(
+			'~^Verify your email address\n\nConfirm that this email address is yours\.\n\nhttp\S+/auth/link/\S+\n\n~',
+			$sent['text']
+		);
+		self::assertStringContainsString('<html lang="en" dir="ltr">', (string) $sent['html']);
 		self::assertStringNotContainsString('&amp;', $sent['text']);
 		self::assertStringContainsString('<a href="', (string) $sent['html']);
 
@@ -386,7 +390,10 @@ final class MessagingTest extends TestCase
 		$sms = self::waitForTemplate($config, 'oz.auth.messages.verify.phone', 'sent');
 
 		self::assertSame('+22990000099', self::delivery($config, $sms['id'])['destination']);
-		self::assertMatchesRegularExpression('~This is your auth code:\s+\d+~', self::delivery($config, $sms['id'])['text']);
+		self::assertMatchesRegularExpression(
+			'~^.*: your phone verification code is \d+\. Do not share it\.$~',
+			self::delivery($config, $sms['id'])['text']
+		);
 	}
 
 	/**
@@ -429,11 +436,9 @@ final class MessagingTest extends TestCase
 		self::get($config, '/messaging/gc');
 		self::assertNotEmpty(\array_filter(self::records($config), static fn (array $r) => null === $r['once_key']));
 
-		// Settled before this second.
-		\sleep(1);
-
 		$proj->setSetting('oz.messaging', 'OZ_MESSAGING_RETENTION', 0);
-		\fwrite(\STDERR, \json_encode(self::get($config, '/messaging/gc')) . \file_get_contents($proj->getPath() . '/app/settings/oz.messaging.php'));
+		self::settingsSeen();
+		self::get($config, '/messaging/gc');
 
 		$left = self::records($config);
 
@@ -441,9 +446,20 @@ final class MessagingTest extends TestCase
 		self::assertSame($left, \array_values(\array_filter($left, $once)), \json_encode($left));
 
 		$proj->setSetting('oz.messaging', 'OZ_MESSAGING_ONCE_RETENTION', 0);
+		self::settingsSeen();
 		self::get($config, '/messaging/gc');
 
 		self::assertSame([], self::records($config));
+	}
+
+	/**
+	 * Waits until the server sees a settings file just rewritten: opcache checks a file's timestamp
+	 * every `opcache.revalidate_freq` seconds (2 in the image). Also puts the records settled before
+	 * now a second behind.
+	 */
+	private static function settingsSeen(): void
+	{
+		\sleep(3);
 	}
 
 	private static function project(DbTestConfig $config): OZTestProject
