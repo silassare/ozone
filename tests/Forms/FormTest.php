@@ -671,6 +671,8 @@ final class FormTest extends TestCase
 			['name' => 'Free', 'value' => 'free'],
 			['name' => 'Pro', 'value' => 'pro'],
 		], $type['enum_cases']);
+		// What a client is told, no more: Gobl's frozen cases are for migration files.
+		self::assertArrayNotHasKey('enum_backing', $type);
 	}
 
 	// -----------------------------------------------------------------------

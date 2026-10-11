@@ -560,6 +560,10 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 		$out = self::cleanType($type)->toArray();
 
 		if ($type instanceof TypeEnum) {
+			// Gobl's frozen cases (`enum_cases` as name => value, `enum_backing`) serve migration files;
+			// a client gets the cases as a list, and the backing type shows in their values.
+			unset($out['enum_backing']);
+
 			$out['enum_cases'] = \array_map(
 				static fn(BackedEnum $case) => ['name' => $case->name, 'value' => $case->value],
 				$type->getEnumClass()::cases()

@@ -29,13 +29,23 @@ class AtomicActionsRegistry
 	/**
 	 * Registers an action with its corresponding access right.
 	 *
+	 * An action registered again with the same definition is kept as it is: the actions of a REST
+	 * service are named after its table, so a second service over the same table registers the same
+	 * ones. A different definition under a registered name is a conflict, and throws.
+	 *
 	 * @param AtomicAction $accessRight
 	 */
 	public static function register(AtomicAction $accessRight): void
 	{
-		$action = $accessRight->getAction();
-		if (isset(self::$registry[$action])) {
-			throw new RuntimeException("Action '{$action}' already registered.");
+		$action     = $accessRight->getAction();
+		$registered = self::$registry[$action] ?? null;
+
+		if (null !== $registered) {
+			if ($registered->toArray() === $accessRight->toArray()) {
+				return;
+			}
+
+			throw new RuntimeException("Action '{$action}' already registered with another definition.");
 		}
 
 		self::$registry[$action] = $accessRight;

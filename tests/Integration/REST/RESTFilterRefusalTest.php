@@ -20,7 +20,8 @@ use Symfony\Component\Process\Process;
 
 /**
  * A REST client's filters, on a real server and every configured database: a refused filter says which
- * item and why in the answer, and a boolean column takes the words a query string carries.
+ * item and why in the answer, and a boolean column takes the words a query string carries. The project
+ * also serves a second service over the same table.
  *
  * @internal
  *
@@ -93,6 +94,10 @@ final class RESTFilterRefusalTest extends TestCase
 		]);
 		$proj->writeFileFromStub('FilterTermsRESTService', 'app/FilterTermsRESTService.php', ['namespace' => $ns]);
 		$proj->setSetting('oz.routes.api', "{$ns}\\FilterTermsRESTService", true);
+		$proj->writeFileFromStub('FilterTermsArchiveRESTService', 'app/FilterTermsArchiveRESTService.php', [
+			'namespace' => $ns,
+		]);
+		$proj->setSetting('oz.routes.api', "{$ns}\\FilterTermsArchiveRESTService", true);
 
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
 		$proj->cleanDb();
@@ -105,6 +110,20 @@ final class RESTFilterRefusalTest extends TestCase
 		[$status] = self::get($config, '/terms-seed');
 
 		self::assertSame(200, $status);
+	}
+
+	/**
+	 * Two services over one table register the same access rights actions, named after the table: the
+	 * second one used to stop the boot ("Action 'terms.read' already registered").
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testASecondServiceOverTheSameTableServesToo(DbTestConfig $config): void
+	{
+		[$status, $json] = self::get($config, '/terms-archive');
+
+		self::assertSame(200, $status, \json_encode($json));
+		self::assertCount(3, $json['data']['items'] ?? [], \json_encode($json));
 	}
 
 	/**
