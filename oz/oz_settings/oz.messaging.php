@@ -63,4 +63,17 @@ return [
 	 * The queue of the messages delivered by a job.
 	 */
 	'OZ_MESSAGING_QUEUE'    => 'oz:messages',
+
+	/**
+	 * How many days a settled record (sent, failed, skipped) of `oz_messages` is kept once settled,
+	 * before the hourly garbage collection (`oz:gc`) deletes it; null keeps every one. Queued records
+	 * are never deleted.
+	 */
+	'OZ_MESSAGING_RETENTION' => 90,
+
+	/**
+	 * The same for the records of messages sent once (`Message::once()`): deleting one lets that
+	 * message be sent again for its key, so they are kept until a project says otherwise (null).
+	 */
+	'OZ_MESSAGING_ONCE_RETENTION' => null,
 ];

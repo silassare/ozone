@@ -16,6 +16,7 @@ namespace OZONE\Core\Messaging;
 use Gobl\DBAL\Exceptions\DBALUniqueViolationException;
 use Override;
 use OZONE\Core\App\Context;
+use OZONE\Core\App\GarbageCollector;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Cli\Cron\Cron;
@@ -67,6 +68,11 @@ final class Messenger implements BootHookReceiverInterface
 	public const CRON_TASK = 'oz:messages';
 
 	/**
+	 * The collector deleting the old records (`GarbageCollector`, the hourly `oz:gc` task).
+	 */
+	public const GC_NAME = 'oz:messages';
+
+	/**
 	 * Why a message was not attempted (`oz_messages.msg_last_error`).
 	 */
 	public const SKIPPED_NO_DESTINATION       = 'no destination';
@@ -92,6 +98,8 @@ final class Messenger implements BootHookReceiverInterface
 		FinishHook::listen(static function (): void {
 			self::afterResponse();
 		}, Event::RUN_LAST);
+
+		GarbageCollector::register(self::GC_NAME, self::gc(...));
 
 		CronCollect::listen(static function (): void {
 			Cron::call(static function (JSONResult $result): void {
@@ -317,6 +325,37 @@ final class Messenger implements BootHookReceiverInterface
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Deletes the settled records (sent, failed, skipped) older than their retention, counted from when
+	 * they settled: `OZ_MESSAGING_RETENTION` days, and `OZ_MESSAGING_ONCE_RETENTION` days for the ones sent
+	 * once, whose record is what keeps them from being sent again. A null retention keeps them. A queued
+	 * record is never deleted.
+	 */
+	public static function gc(): void
+	{
+		if (!OZone::hasDbInstalled()) {
+			return;
+		}
+
+		$settled = [MessageStatus::SENT, MessageStatus::FAILED, MessageStatus::SKIPPED];
+
+		foreach ([false, true] as $once) {
+			$days = Settings::get('oz.messaging', $once ? 'OZ_MESSAGING_ONCE_RETENTION' : 'OZ_MESSAGING_RETENTION');
+
+			if (null === $days) {
+				continue;
+			}
+
+			$qb = (new OZMessagesQuery())
+				->whereStatusIsIn($settled)
+				->whereUpdatedAtIsLt((string) (\time() - \max(0, (int) $days) * 86400));
+
+			($once ? $qb->whereOnceKeyIsNotNull() : $qb->whereOnceKeyIsNull())
+				->delete()
+				->execute();
+		}
 	}
 
 	/**

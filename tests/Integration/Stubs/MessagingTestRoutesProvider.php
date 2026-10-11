@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace __PLH_NAMESPACE__;
 
+use OZONE\Core\App\GarbageCollector;
 use OZONE\Core\App\Service as BaseService;
 use OZONE\Core\Db\OZMessage;
 use OZONE\Core\Db\OZMessagesQuery;
@@ -27,7 +28,7 @@ use Throwable;
  *
  * `GET /messaging/send?spec=<json>` sends the message the spec describes (channel, template, to, data,
  * subject, locale, once, sync) and answers the records written, or the error thrown.
- * `GET /messaging/records` answers every record.
+ * `GET /messaging/records` answers every record, `GET /messaging/gc` runs the garbage collection.
  */
 final class MessagingTestRoutesProvider extends BaseService
 {
@@ -60,6 +61,8 @@ final class MessagingTestRoutesProvider extends BaseService
 			return $s->respond();
 		})->name('test:messaging:send');
 
+		self::registerGcRoute($router);
+
 		$router->get('/messaging/records', static function (RouteInfo $ri) {
 			$records = (new OZMessagesQuery())->find()->fetchAllClass();
 
@@ -73,6 +76,25 @@ final class MessagingTestRoutesProvider extends BaseService
 	}
 
 	public static function apiDoc(ApiDoc $doc): void {}
+
+	/**
+	 * `GET /messaging/gc` runs the garbage collection, as the hourly `oz:gc` task does.
+	 */
+	public static function registerGcRoute(Router $router): void
+	{
+		$router->get('/messaging/gc', static function (RouteInfo $ri) {
+			$s = new self($ri);
+
+			try {
+				\OZONE\Core\Messaging\Messenger::gc();
+				$s->json()->setDone();
+			} catch (\Throwable $t) {
+				$s->json()->setDone()->setData(['error' => (string) $t]);
+			}
+
+			return $s->respond();
+		})->name('test:messaging:gc');
+	}
 
 	private static function describe(OZMessage $m): array
 	{

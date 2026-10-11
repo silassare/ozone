@@ -412,6 +412,40 @@ final class MessagingTest extends TestCase
 		self::assertArrayNotHasKey('Messaging: off', $checks);
 	}
 
+	/**
+	 * The garbage collection deletes the settled records past their retention, keeps the ones sent once
+	 * while their own retention is null, and deletes them once it is set. Last: it empties the table.
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testOldRecordsAreDeletedByTheGarbageCollection(DbTestConfig $config): void
+	{
+		$proj = self::project($config);
+		$once = static fn (array $r) => null !== $r['once_key'];
+
+		self::assertNotEmpty(\array_filter(self::records($config), $once));
+
+		// Kept with the default retention (90 days).
+		self::get($config, '/messaging/gc');
+		self::assertNotEmpty(\array_filter(self::records($config), static fn (array $r) => null === $r['once_key']));
+
+		// Settled before this second.
+		\sleep(1);
+
+		$proj->setSetting('oz.messaging', 'OZ_MESSAGING_RETENTION', 0);
+		\fwrite(\STDERR, \json_encode(self::get($config, '/messaging/gc')) . \file_get_contents($proj->getPath() . '/app/settings/oz.messaging.php'));
+
+		$left = self::records($config);
+
+		self::assertNotEmpty($left);
+		self::assertSame($left, \array_values(\array_filter($left, $once)), \json_encode($left));
+
+		$proj->setSetting('oz.messaging', 'OZ_MESSAGING_ONCE_RETENTION', 0);
+		self::get($config, '/messaging/gc');
+
+		self::assertSame([], self::records($config));
+	}
+
 	private static function project(DbTestConfig $config): OZTestProject
 	{
 		if (!isset(self::$projects[$config->rdbms], self::$servers[$config->rdbms])) {
