@@ -63,4 +63,13 @@ return [
 	 * For MySQL/MariaDB with 'utf8mb4' charset, use 'utf8mb4_unicode_ci' for proper Unicode sorting and comparison.
 	 */
 	'OZ_DB_COLLATE'      => 'utf8mb4_unicode_ci',
+
+	/**
+	 * Whether the classes and bundles generated from the schema (`oz db build`, `oz db ts-bundle`,
+	 * `oz db dart-bundle`, `oz db generate`) carry the time they were generated at in their header.
+	 *
+	 * Set to false, a file generated again from an unchanged schema is identical, so a regeneration
+	 * only rewrites the files whose content changed.
+	 */
+	'OZ_DB_GENERATED_TIMESTAMP' => true,
 ];

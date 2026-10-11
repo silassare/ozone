@@ -17,7 +17,7 @@ use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Senders\Messages\MailMessage;
+use OZONE\Core\Messaging\Messages\MailMessage;
 
 /**
  * Class EmailOwnershipVerificationProvider.
@@ -114,15 +114,9 @@ final class EmailOwnershipVerificationProvider extends AuthorizationProvider
 	 */
 	private function sendMail(bool $first = true): void
 	{
-		$message = new MailMessage(
-			'oz.auth.messages.verify.email.blate',
-			'oz.auth.messages.verify.email.rich.blate',
-			[
-				'label' => $this->label,
-			]
-		);
-
-		$message->inject($this->credentials->toArray())
+		(new MailMessage('oz.auth.messages.verify.email'))
+			->setSubject('OZ_AUTH_VERIFY_EMAIL_SUBJECT')
+			->inject($this->credentials->toArray() + ['label' => $this->label])
 			->addRecipient($this->email)
 			->send();
 

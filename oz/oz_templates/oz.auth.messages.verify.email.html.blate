@@ -1,0 +1,2 @@
+<p>Please follow this link to verify your email:</p>
+<p><a href="{auth_link}" rel="nofollow">Verify</a></p>

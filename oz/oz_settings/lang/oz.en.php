@@ -58,6 +58,8 @@ return [
 	'OZ_AUTH_REFRESH_KEY_INVALID'            => 'The refresh key is invalid or has expired.',
 	'OZ_AUTH_INVALID_PROVIDER'               => 'These credentials cannot be used to sign in.',
 	'OZ_AUTH_NOT_AUTHORIZED'                 => 'These credentials have not been authorized yet.',
+	'OZ_AUTH_VERIFY_EMAIL_SUBJECT'           => 'Verify your email address',
+	'OZ_AUTH_2FA_SUBJECT'                    => 'Your authentication code',
 
 	// sign in, sign up and sessions
 	'OZ_AUTH_USER_UNKNOWN'                      => 'No user matches these sign-in details.',

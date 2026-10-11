@@ -22,6 +22,7 @@ use OZONE\Core\FS\Scan\FileScan;
 use OZONE\Core\FS\TempFS;
 use OZONE\Core\Hooks\MainBootHookReceiver;
 use OZONE\Core\Lang\Polyglot;
+use OZONE\Core\Messaging\Messenger;
 use OZONE\Core\Queue\QueueBootHookReceiver;
 use OZONE\Core\Sessions\Session;
 use OZONE\Core\Stores\StoresGarbageCollector;
@@ -42,5 +43,6 @@ return [
 	GarbageCollector::class       => true,
 	CronRunner::class             => true,
 	FileScan::class               => true,
+	Messenger::class              => true,
 	ImageFileFilterHandler::class => true,
 ];

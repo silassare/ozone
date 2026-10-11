@@ -158,6 +158,89 @@ final class DbBuildTest extends TestCase
 		self::assertSame(0, $proc->getExitCode(), $proc->getErrorOutput());
 	}
 
+	/**
+	 * A table added to the code's schema gets no class until a migration creating it has run, and the
+	 * build says so instead of only reporting success.
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testBuildNamesTablesNoMigrationHasInstalled(DbTestConfig $config): void
+	{
+		$proj = self::getProject($config);
+		$base = $proj->getPath() . '/app/Db/Base/BuildNoteBase.php';
+
+		$proj->setSetting('oz.db.schema', 'build_notes', [
+			'plural_name'   => 'build_notes',
+			'singular_name' => 'build_note',
+			'column_prefix' => 'bn',
+			'columns'       => [
+				'id'    => ['type' => 'bigint', 'auto_increment' => true, 'unsigned' => true],
+				'title' => ['type' => 'string', 'max' => 60],
+			],
+			'constraints'   => [
+				['type' => 'primary_key', 'columns' => ['id']],
+			],
+		]);
+
+		$proc = $proj->oz('db', 'build');
+		$proc->mustRun();
+		$out = $proc->getOutput() . $proc->getErrorOutput();
+
+		self::assertStringContainsString('1 table(s) of the schema are in no migration the database has run', $out);
+		self::assertStringContainsString('build_notes', $out);
+		self::assertFileDoesNotExist($base);
+
+		$json = $proj->oz('db', 'build', '--class-only', '--json');
+		$json->mustRun();
+		self::assertSame(['build_notes'], \json_decode($json->getOutput(), true)['data']['not_installed'] ?? null);
+
+		$bundle = $proj->oz('db', 'ts-bundle', '--dir=' . $proj->getPath());
+		$bundle->mustRun();
+		self::assertStringContainsString('build_notes', $bundle->getOutput() . $bundle->getErrorOutput());
+
+		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
+
+		$again = $proj->oz('db', 'build', '--class-only');
+		$again->mustRun();
+
+		self::assertStringNotContainsString('no migration the database has run', $again->getOutput() . $again->getErrorOutput());
+		self::assertFileExists($base);
+	}
+
+	/**
+	 * `OZ_DB_GENERATED_TIMESTAMP` off: a header no longer carries the generation time, so a rebuild of an
+	 * unchanged schema rewrites nothing.
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testGeneratedTimestampCanBeTurnedOff(DbTestConfig $config): void
+	{
+		$proj = self::getProject($config);
+		$base = $proj->getPath() . '/app/Db/Base/BuildNoteBase.php';
+		$ts   = $proj->getPath() . '/gobl/db/base/BuildNoteBase.ts';
+
+		self::assertStringContainsString(" * Time: ", (string) \file_get_contents($base));
+
+		$proj->setSetting('oz.db', 'OZ_DB_GENERATED_TIMESTAMP', false);
+
+		$proj->oz('db', 'build', '--class-only')->mustRun();
+		$proj->oz('db', 'ts-bundle', '--dir=' . $proj->getPath())->mustRun();
+
+		$php = (string) \file_get_contents($base);
+		$tsc = (string) \file_get_contents($ts);
+
+		self::assertStringNotContainsString('Time:', $php);
+		self::assertStringContainsString('Proudly With:', $php);
+		self::assertStringNotContainsString('Time:', $tsc);
+		self::assertStringContainsString('export type { BuildNoteRow } from', (string) \file_get_contents(
+			$proj->getPath() . '/gobl/index.ts'
+		));
+
+		$proj->oz('db', 'build', '--class-only')->mustRun();
+
+		self::assertSame($php, (string) \file_get_contents($base));
+	}
+
 	// -------------------------------------------------------------------------
 	// Data provider
 	// -------------------------------------------------------------------------

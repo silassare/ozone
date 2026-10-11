@@ -11,27 +11,24 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Senders\Messages;
-
-use Override;
-use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Senders\Events\SendSMS;
+namespace OZONE\Core\Messaging\Messages;
 
 /**
  * Class SMSMessage.
  *
- * @extends Message<AuthUserInterface|string>
+ * An SMS: the destination of a user recipient is their phone number.
  */
 class SMSMessage extends Message
 {
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function send(): static
-	{
-		(new SendSMS($this))->dispatch();
+	public const CHANNEL = 'sms';
 
-		return $this;
+	/**
+	 * SMSMessage constructor.
+	 *
+	 * @param string $template the template name, without extension
+	 */
+	public function __construct(string $template)
+	{
+		parent::__construct(self::CHANNEL, $template);
 	}
 }

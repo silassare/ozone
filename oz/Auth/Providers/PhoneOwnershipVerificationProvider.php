@@ -17,7 +17,7 @@ use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Senders\Messages\SMSMessage;
+use OZONE\Core\Messaging\Messages\SMSMessage;
 
 /**
  * Class PhoneOwnershipVerificationProvider.
@@ -116,14 +116,8 @@ final class PhoneOwnershipVerificationProvider extends AuthorizationProvider
 	 */
 	private function sendSms(bool $first = true): void
 	{
-		$message = new SMSMessage(
-			'oz.auth.messages.verify.phone.blate',
-			[
-				'label' => $this->label,
-			]
-		);
-
-		$message->inject($this->credentials->toArray())
+		(new SMSMessage('oz.auth.messages.verify.phone'))
+			->inject($this->credentials->toArray() + ['label' => $this->label])
 			->addRecipient($this->phone)
 			->send();
 

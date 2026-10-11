@@ -32,8 +32,8 @@ use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Exceptions\UnauthorizedException;
-use OZONE\Core\Senders\Messages\MailMessage;
-use OZONE\Core\Senders\Messages\SMSMessage;
+use OZONE\Core\Messaging\Messages\MailMessage;
+use OZONE\Core\Messaging\Messages\SMSMessage;
 
 /**
  * Class TwoFactorAuthorizationProvider.
@@ -330,12 +330,9 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 			]);
 		}
 
-		$message = new MailMessage(
-			'oz.auth.messages.2fa.email.blate',
-			'oz.auth.messages.2fa.email.rich.blate'
-		);
-
-		$message->inject($this->credentials->toArray())
+		(new MailMessage('oz.auth.messages.2fa'))
+			->setSubject('OZ_AUTH_2FA_SUBJECT')
+			->inject($this->credentials->toArray())
 			->addRecipient($email)
 			->send();
 
@@ -358,9 +355,8 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 			]);
 		}
 
-		$message = new SMSMessage('oz.auth.messages.2fa.sms.blate');
-
-		$message->inject($this->credentials->toArray())
+		(new SMSMessage('oz.auth.messages.2fa'))
+			->inject($this->credentials->toArray())
 			->addRecipient($phone)
 			->send();
 

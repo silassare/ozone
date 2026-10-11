@@ -306,6 +306,7 @@ final class Db
 				->getCacheDir()
 				->getRoot()
 		);
+		Gobl::enableGeneratedAtDate((bool) Settings::get('oz.db', 'OZ_DB_GENERATED_TIMESTAMP'));
 
 		$mg = new Migrations();
 

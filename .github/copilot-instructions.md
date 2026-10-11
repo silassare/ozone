@@ -777,6 +777,20 @@ CANCELLED (terminal)
   `BatchFinished` fires once when every job is terminal, dispatched from `JobsManager::finish()`
   through the owning store's `countByBatch()` — never by querying `oz_jobs` directly.
 
+### Messaging
+
+`Messaging\Messenger` sends every message (`Message`, `MailMessage`, `SMSMessage`, `NotificationMessage`),
+OZone's own verification and two-factor messages included, on the channels of `oz.messaging`.
+
+- **Recorded before anything is attempted** (`oz_messages`), one record per recipient; a message is
+  never dropped silently: skipped ones carry their reason and are logged.
+- Queued messages are `MessageWorker` jobs on `OZ_MESSAGING_QUEUE`, payload **encrypted** (template data
+  holds codes and links), run after the response (a `FinishHook` listener, request-scoped refs in
+  `CacheRegistry::runtime()`) and by the `oz:messages` cron task, which runs the retries. A cron task runs
+  once per minute: a retry may wait for the next one. **Never put template data in `oz_messages`.**
+- A transport only delivers (`TransportInterface`): retries, records and the decision to send are the
+  Messenger's. `LogTransport` is the default and is unavailable in production on purpose.
+
 ---
 
 ## 16. Cron

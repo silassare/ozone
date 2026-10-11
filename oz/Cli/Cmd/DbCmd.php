@@ -34,6 +34,7 @@ use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FS;
+use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\Utils\Random;
 use PHPUtils\FS\PathUtils;
 use Throwable;
@@ -216,15 +217,68 @@ final class DbCmd extends Command
 			$cli->executeString('migrations create');
 		}
 
+		$not_installed = self::tablesNotInstalled();
+
+		$this->warnTablesNotInstalled($not_installed);
+
 		if ($args->get('json')) {
 			$cli->writeJson([
-				'namespaces' => \array_map(static fn (string $ns): array => [
+				'namespaces'    => \array_map(static fn (string $ns): array => [
 					'namespace' => $ns,
 					'dir'       => ORM::getOutputDir($ns),
 				], \array_keys($ns_map)),
-				'migration'  => !$class_only,
+				'migration'     => !$class_only,
+				'not_installed' => $not_installed,
 			]);
 		}
+	}
+
+	/**
+	 * The tables the code's schema declares and the installed database does not have.
+	 *
+	 * On an installed database the schema is loaded from the migration the database is at, not from
+	 * the code (`Db::initStepPrepare()`): a table added since gets no class, and no TypeScript or Dart
+	 * entity, until a migration creating it has run.
+	 *
+	 * @return list<string>
+	 */
+	private static function tablesNotInstalled(): array
+	{
+		if (Migrations::DB_NOT_INSTALLED_VERSION === Migrations::getInstalledDbVersion()) {
+			return [];
+		}
+
+		$installed = db();
+		$missing   = [];
+
+		foreach (Db::dev()->getTables() as $table) {
+			if (!$installed->hasTable($table->getName())) {
+				$missing[] = $table->getName();
+			}
+		}
+
+		return $missing;
+	}
+
+	/**
+	 * Says which tables were left out of what was just generated, and what to run.
+	 *
+	 * @param list<string> $tables
+	 */
+	private function warnTablesNotInstalled(array $tables): void
+	{
+		if (empty($tables)) {
+			return;
+		}
+
+		$this->getCli()
+			->warn(\sprintf(
+				'%d table(s) of the schema are in no migration the database has run, so nothing was generated'
+					. ' for them: %s. Run `oz migrations run` (after `oz db build` or `oz migrations create`'
+					. ' has created the migration), then generate again.',
+				\count($tables),
+				\implode(', ', $tables)
+			));
 	}
 
 	/**
@@ -247,6 +301,8 @@ final class DbCmd extends Command
 		$gen->generate($tables, $dir);
 		$cli->success('TypeScript entities bundle generated.')
 			->info(PathUtils::resolve($dir, 'gobl'));
+
+		$this->warnTablesNotInstalled(self::tablesNotInstalled());
 	}
 
 	/**
@@ -269,6 +325,8 @@ final class DbCmd extends Command
 		$gen->generate($tables, $dir);
 		$cli->success('Dart entities bundle generated.')
 			->info(PathUtils::resolve($dir, 'gobl'));
+
+		$this->warnTablesNotInstalled(self::tablesNotInstalled());
 	}
 
 	/**

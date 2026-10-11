@@ -27,6 +27,7 @@ use OZONE\Core\Cli\Utils\Requirements;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\Lang\Message\PluralRules;
 use OZONE\Core\Lang\Polyglot;
+use OZONE\Core\Messaging\Messenger;
 use OZONE\Core\Migrations\Enums\MigrationsState;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
@@ -194,8 +195,50 @@ final class DoctorCmd extends Command
 			$this->databaseChecks(),
 			$this->buildChecks(),
 			$this->cronChecks(),
+			$this->messagingChecks(),
 			$this->translationChecks()
 		);
+	}
+
+	/**
+	 * Whether every enabled messaging channel sends: one whose transport only writes to the log, or
+	 * is unavailable, sends no verification email and no two-factor code. A failure in production, so
+	 * a release stops on it.
+	 *
+	 * @return list<array{name: string, status: string, detail: string, fix: string}>
+	 */
+	private function messagingChecks(): array
+	{
+		try {
+			$not_sending = Messenger::channelsNotSending();
+		} catch (Throwable $t) {
+			return [self::row(
+				'Messaging',
+				self::FAIL,
+				self::rootCause($t),
+				'Fix OZ_MESSAGING_CHANNELS (oz.messaging).'
+			)];
+		}
+
+		if (empty($not_sending)) {
+			return [self::row('Messaging', self::OK, 'every enabled channel has a transport', '')];
+		}
+
+		$checks = [];
+
+		foreach ($not_sending as $channel => $reason) {
+			$checks[] = self::row(
+				'Messaging: ' . $channel,
+				OZone::inProductionMode() ? self::FAIL : self::WARN,
+				$reason,
+				\sprintf(
+					'Give the channel "%s" a transport in OZ_MESSAGING_CHANNELS (oz.messaging), or disable it.',
+					$channel
+				)
+			);
+		}
+
+		return $checks;
 	}
 
 	/**

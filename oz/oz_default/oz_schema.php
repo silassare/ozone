@@ -20,6 +20,7 @@ use OZONE\Core\Columns\Types\TypeUsername;
 use OZONE\Core\Columns\TypeUtils;
 use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\FS\Enums\FileScanState;
+use OZONE\Core\Messaging\Enums\MessageStatus;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
 use OZONE\Core\Roles\RolesUtils;
@@ -353,6 +354,68 @@ return static function (NamespaceBuilder $ns): void {
 		$tb->timestamp('finished_at')->nullable()
 			->setMetaKey('field.label', 'Finished At')
 			->setMetaKey('api.doc.description', 'The timestamp when all jobs in this batch reached a terminal state.');
+
+		$tb->timestamps();
+	});
+
+	$ns->table('oz_messages', static function (TableBuilder $tb): void {
+		$tb->getTable()->setPrivate();
+
+		$tb->plural('oz_messages')
+			->singular('oz_message')
+			->columnPrefix('msg')
+			->meta('api.doc.description', 'A message sent on one channel to one destination, and what happened to it.');
+
+		$tb->id();
+
+		$tb->string('channel')->min(1)->max(32)
+			->setMetaKey('field.label', 'Channel')
+			->setMetaKey('api.doc.description', 'The channel of the message (mail, sms, notification, or one a project declares).');
+
+		$tb->enum('status', MessageStatus::class)->default(MessageStatus::QUEUED)
+			->setMetaKey('field.label', 'Status')
+			->setMetaKey('api.doc.description', 'What happened to the message: queued, sent, failed or skipped.');
+
+		$tb->string('template')->min(1)->max(128)
+			->setMetaKey('field.label', 'Template')
+			->setMetaKey('api.doc.description', 'The template the message is rendered from.');
+
+		// Copied when the message is recorded: a user who changes their address later has not changed
+		// where this one went.
+		$tb->string('destination')->max(255)->default('')
+			->setMetaKey('field.label', 'Destination')
+			->setMetaKey('api.doc.description', 'Where the message goes: an email address, a phone number, a device.');
+
+		$tb->string('locale')->max(16)->nullable()
+			->setMetaKey('field.label', 'Locale')
+			->setMetaKey('api.doc.description', 'The language the message is rendered in.');
+
+		$tb->string('once_key')->max(128)->nullable()
+			->setMetaKey('field.label', 'Once Key')
+			->setMetaKey('api.doc.description', 'What the message is about, when it is sent once only for it.');
+
+		$tb->string('job_ref')->max(128)->nullable()
+			->setMetaKey('field.label', 'Job Reference')
+			->setMetaKey('api.doc.description', 'The queue job delivering the message, when it is delivered in one.');
+
+		$tb->int('attempts')->unsigned()->default(0)
+			->setMetaKey('field.label', 'Attempts')
+			->setMetaKey('api.doc.description', 'How many times delivery was attempted.');
+
+		$tb->string('last_error')->max(512)->nullable()
+			->setMetaKey('field.label', 'Last Error')
+			->setMetaKey('api.doc.description', 'Why the last attempt failed, or why the message was skipped.');
+
+		$tb->timestamp('sent_at')->nullable()
+			->setMetaKey('field.label', 'Sent At')
+			->setMetaKey('api.doc.description', 'When the transport accepted the message.');
+
+		$tb->collectIndex(static function (TableBuilder $tb): void {
+			// Sent once: a second record of the same template, about the same thing, on the same channel
+			// is refused by the database, whoever sends it.
+			$tb->unique('channel', 'template', 'once_key');
+			$tb->index(['status', 'created_at']);
+		});
 
 		$tb->timestamps();
 	});

@@ -58,6 +58,8 @@ return [
 	'OZ_AUTH_REFRESH_KEY_INVALID'            => 'La clé de rafraîchissement est invalide ou a expiré.',
 	'OZ_AUTH_INVALID_PROVIDER'               => 'Ces identifiants ne permettent pas de se connecter.',
 	'OZ_AUTH_NOT_AUTHORIZED'                 => "Ces identifiants n'ont pas encore été autorisés.",
+	'OZ_AUTH_VERIFY_EMAIL_SUBJECT'           => 'Vérifiez votre adresse e-mail',
+	'OZ_AUTH_2FA_SUBJECT'                    => "Votre code d'authentification",
 
 	// sign in, sign up and sessions
 	'OZ_AUTH_USER_UNKNOWN'                      => "Aucun utilisateur n'est associé à ces informations de connexion.",

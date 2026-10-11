@@ -11,27 +11,24 @@
 
 declare(strict_types=1);
 
-namespace OZONE\Core\Senders\Messages;
-
-use Override;
-use OZONE\Core\Auth\Interfaces\AuthUserInterface;
-use OZONE\Core\Senders\Events\SendNotification;
+namespace OZONE\Core\Messaging\Messages;
 
 /**
  * Class NotificationMessage.
  *
- * @extends Message<AuthUserInterface|string>
+ * A push notification: the destination of a user recipient is their identifier.
  */
 class NotificationMessage extends Message
 {
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function send(): static
-	{
-		(new SendNotification($this))->dispatch();
+	public const CHANNEL = 'notification';
 
-		return $this;
+	/**
+	 * NotificationMessage constructor.
+	 *
+	 * @param string $template the template name, without extension
+	 */
+	public function __construct(string $template)
+	{
+		parent::__construct(self::CHANNEL, $template);
 	}
 }
