@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth;
 
 use OZONE\Core\App\Settings;
+use OZONE\Core\Auth\Enums\VerificationPurpose;
 use OZONE\Core\Auth\Interfaces\AuthorizationProviderInterface;
+use OZONE\Core\Auth\Providers\OwnershipVerificationProvider;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -45,6 +47,12 @@ final class VerificationPolicy
 
 	/** The settings key of what `POST /account-recovery` accepts. */
 	public const ACCOUNT_RECOVERY = 'OZ_ACCOUNT_RECOVERY_VERIFICATION';
+
+	/** The purpose an email or phone verification must have been started for, by settings key. */
+	private const PURPOSES = [
+		self::SIGN_UP          => VerificationPurpose::SIGN_UP,
+		self::ACCOUNT_RECOVERY => VerificationPurpose::ACCOUNT_RECOVERY,
+	];
 
 	/**
 	 * The providers a given user type may prove itself with.
@@ -142,6 +150,29 @@ final class VerificationPolicy
 				'_reason'    => 'Auth provider is not allowed for this user type.',
 				'_user_type' => $user_type,
 			]);
+		}
+
+		// An email or phone verification says what it is for, and its owner confirmed that.
+		// A key a project added names no purpose of OZone's: the project checks it.
+		$purpose = self::PURPOSES[$key] ?? null;
+
+		if ($provider instanceof OwnershipVerificationProvider && null !== $purpose) {
+			if ($purpose !== $provider->getPurpose()) {
+				throw new ForbiddenException('OZ_AUTH_WRONG_PURPOSE', [
+					'_purpose'  => $provider->getPurpose()->value,
+					'_expected' => $purpose->value,
+				]);
+			}
+
+			$for_type = $provider->getUserType();
+
+			if (null !== $for_type && $for_type !== $user_type) {
+				throw new ForbiddenException('OZ_AUTH_WRONG_PURPOSE', [
+					'_reason'    => 'The verification is for another user type.',
+					'_user_type' => $user_type,
+					'_for_type'  => $for_type,
+				]);
+			}
 		}
 
 		return $provider;

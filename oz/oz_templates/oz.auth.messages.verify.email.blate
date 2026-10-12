@@ -1,10 +1,10 @@
-{= $t('OZ_AUTH_VERIFY_EMAIL_TITLE', oz_vars, oz_locale)}
+{= $t(texts.email_title, oz_vars, oz_locale)}
 
-{= $t('OZ_AUTH_VERIFY_EMAIL_BODY', oz_vars, oz_locale)}
+{= $t(texts.email_body, oz_vars, oz_locale)}
 
 {= auth_link}
 
-{= $t('OZ_AUTH_VERIFY_EMAIL_IGNORE', oz_vars, oz_locale)}
+{= $t(texts.email_ignore, oz_vars, oz_locale)}
 
 -- 
 {= oz_name}

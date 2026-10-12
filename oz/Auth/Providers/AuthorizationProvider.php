@@ -112,55 +112,30 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	#[Override]
 	public function authorize(AuthorizationSecretType $type): void
 	{
-		$ref    = $this->credentials->getReference();
-		$secret = match ($type) {
-			AuthorizationSecretType::CODE  => $this->credentials->getCode(),
-			AuthorizationSecretType::TOKEN => $this->credentials->getToken(),
-		};
+		$auth = $this->checkSecret($type);
 
-		if (empty($ref)) {
-			throw new InvalidFormException('OZ_AUTH_MISSING_REF');
-		}
+		$this->save($auth->setState(AuthorizationState::AUTHORIZED->value));
+		$this->onAuthorized($auth);
+	}
 
-		if (empty($secret)) {
-			throw new InvalidFormException('OZ_AUTH_MISSING_SECRET');
-		}
+	/**
+	 * Checks the secret as {@see self::authorize()} does, then deletes the authorization instead of
+	 * granting it: what the secret proved is used by the caller, now, and nothing is left for whoever
+	 * holds the reference.
+	 *
+	 * @throws InvalidFormException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedException
+	 * @throws GoblException
+	 */
+	public function redeem(AuthorizationSecretType $type): void
+	{
+		$auth = $this->checkSecret($type);
 
-		$auth = Auth::getRequired($ref);
-
-		$this->scope = $this->scope::from($auth);
-
-		$try_max    = $auth->try_max; // 0 means unlimited try
-		$count      = $auth->try_count + 1;
-		$remainder  = $try_max - $count;
-		$is_code    = AuthorizationSecretType::CODE === $type;
-		$known_hash = $is_code ? $auth->code_hash : $auth->token_hash;
-
-		// checks if auth process has expired
-		if ($auth->expire_at <= \time()) {
-			$this->save($auth->setState(AuthorizationState::REFUSED->value));
-			$this->onExpired($auth);
-		}
-
-		$this->assertPending($auth);
-
-		if ((0 === $try_max || $remainder >= 0) && \hash_equals($known_hash, $this->hash($secret))) {
-			// we don't exceed the auth_try_max and the token/code is valid
-			$this->save($auth->setState(AuthorizationState::AUTHORIZED->value));
-			$this->onAuthorized($auth);
-		} elseif (0 === $try_max || $remainder <= 0) {
-			// it is our last tentative or we already exceed auth_try_max
-			$this->save($auth->setState(AuthorizationState::REFUSED->value));
-			$this->onTooMuchRetry($auth);
-		} else {
-			// we have another chance
-			$this->save($auth->setTryCount($auth->try_count + 1));
-
-			if (AuthorizationSecretType::CODE === $type) {
-				$this->onInvalidCode($auth);
-			} else {
-				$this->onInvalidToken($auth);
-			}
+		try {
+			$auth->selfDelete();
+		} catch (Throwable $t) {
+			throw new RuntimeException('Unable to delete the redeemed authorization.', null, $t);
 		}
 	}
 
@@ -365,5 +340,75 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 		} catch (CRUDException|ORMException $e) {
 			throw new RuntimeException('Unable to save auth entity data.', null, $e);
 		}
+	}
+
+	/**
+	 * Checks a secret against a pending authorization, counting the tries: returns the authorization
+	 * when the secret is right, throws otherwise.
+	 *
+	 * @throws InvalidFormException
+	 * @throws NotFoundException
+	 * @throws UnauthorizedException
+	 * @throws GoblException
+	 */
+	private function checkSecret(AuthorizationSecretType $type): OZAuth
+	{
+		$ref    = $this->credentials->getReference();
+		$secret = match ($type) {
+			AuthorizationSecretType::CODE  => $this->credentials->getCode(),
+			AuthorizationSecretType::TOKEN => $this->credentials->getToken(),
+		};
+
+		if (empty($ref)) {
+			throw new InvalidFormException('OZ_AUTH_MISSING_REF');
+		}
+
+		if (empty($secret)) {
+			throw new InvalidFormException('OZ_AUTH_MISSING_SECRET');
+		}
+
+		$auth = Auth::getRequired($ref);
+
+		$this->scope = $this->scope::from($auth);
+
+		$try_max    = $auth->try_max; // 0 means unlimited try
+		$count      = $auth->try_count + 1;
+		$remainder  = $try_max - $count;
+		$is_code    = AuthorizationSecretType::CODE === $type;
+		$known_hash = $is_code ? $auth->code_hash : $auth->token_hash;
+
+		// checks if auth process has expired
+		if ($auth->expire_at <= \time()) {
+			$this->save($auth->setState(AuthorizationState::REFUSED->value));
+			$this->onExpired($auth);
+		}
+
+		$this->assertPending($auth);
+
+		if ((0 === $try_max || $remainder >= 0) && \hash_equals($known_hash, $this->hash($secret))) {
+			// we don't exceed the auth_try_max and the token/code is valid
+			return $auth;
+		}
+
+		if (0 === $try_max || $remainder <= 0) {
+			// it is our last tentative or we already exceed auth_try_max
+			$this->save($auth->setState(AuthorizationState::REFUSED->value));
+			$this->onTooMuchRetry($auth);
+		} else {
+			// we have another chance
+			$this->save($auth->setTryCount($auth->try_count + 1));
+
+			if ($is_code) {
+				$this->onInvalidCode($auth);
+			} else {
+				$this->onInvalidToken($auth);
+			}
+		}
+
+		// A hook that does not throw still refuses: the secret was not the right one.
+		throw new UnauthorizedException(
+			$is_code ? 'OZ_AUTH_INVALID_CODE' : 'OZ_AUTH_INVALID_TOKEN',
+			$this->debug($auth)
+		);
 	}
 }

@@ -3,7 +3,7 @@
 {@slot content}
 				<div class="oz-card__heading">
 					<h1 class="oz-card__title">{$t('OZ_VIEW_AUTH_LINK_CONFIRM_TITLE')}</h1>
-					<p class="oz-card__text">{$t('OZ_VIEW_AUTH_LINK_CONFIRM_MESSAGE')}</p>
+					<p class="oz-card__text">{$t(oz_link_message, oz_vars)}</p>
 				</div>
 				<form class="oz-form" method="post">
 					<input type="hidden" name="_csrf" value="{$global.csrf_token}">

@@ -1,0 +1,32 @@
+{@extends 'oz://oz.page.layout.blate' $$}
+{@slot title}{@if oz_recovery_done}{$t('OZ_VIEW_AUTH_LINK_RECOVERY_DONE_TITLE')}{:else}{$t('OZ_VIEW_AUTH_LINK_RECOVERY_TITLE')}{/if}{/slot}
+{@slot content}
+				{@if oz_recovery_done}
+				<div class="oz-badge oz-badge--success"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+				<div class="oz-card__heading">
+					<h1 class="oz-card__title">{$t('OZ_VIEW_AUTH_LINK_RECOVERY_DONE_TITLE')}</h1>
+					<p class="oz-card__text">{$t('OZ_VIEW_AUTH_LINK_RECOVERY_DONE')}</p>
+				</div>
+				{:else}
+				<div class="oz-card__heading">
+					<h1 class="oz-card__title">{$t('OZ_VIEW_AUTH_LINK_RECOVERY_TITLE')}</h1>
+					<p class="oz-card__text">{$t('OZ_VIEW_AUTH_LINK_RECOVERY_MESSAGE', oz_vars)}</p>
+				</div>
+				<form class="oz-form" method="post">
+					<input type="hidden" name="_csrf" value="{$global.csrf_token}">
+					{@if oz_recovery_error}
+					<p class="oz-form__error" role="alert">{$t(oz_recovery_error)}</p>
+					{/if}
+					<div class="oz-form__field">
+						<label class="oz-form__label" for="oz_field_pass">{$t('OZ_VIEW_AUTH_LINK_RECOVERY_PASS')}</label>
+						<input class="oz-form__input" id="oz_field_pass" type="password" name="pass" autocomplete="new-password" required>
+					</div>
+					<div class="oz-form__field">
+						<label class="oz-form__label" for="oz_field_pass_confirm">{$t('OZ_VIEW_AUTH_LINK_RECOVERY_CONFIRM')}</label>
+						<input class="oz-form__input" id="oz_field_pass_confirm" type="password" name="pass_confirm" autocomplete="new-password" required>
+					</div>
+					<button class="oz-btn oz-btn--block" type="submit">{$t('OZ_VIEW_AUTH_LINK_RECOVERY_BTN')}</button>
+				</form>
+				{/if}
+{/slot}
+{/extends}

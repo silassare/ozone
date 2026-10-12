@@ -30,6 +30,22 @@ return [
 	'OZ_AUTH_CODE_LIFE_TIME'      => 3600,
 
 	/**
+	 * Lifetime of an email or phone ownership verification, in seconds, per purpose
+	 * (`VerificationPurpose`): how long the owner has to answer the code or open the link.
+	 *
+	 * A purpose with no entry here lives `OZ_AUTH_CODE_LIFE_TIME`. A sign-up is the one the owner may
+	 * come back to much later, and nothing exists until it is answered; a password reset stays short,
+	 * since it opens an account that already exists.
+	 *
+	 * @default sign-up a day, the rest an hour
+	 */
+	'OZ_AUTH_VERIFICATION_LIFETIMES' => [
+		'check'            => 3600,
+		'sign-up'          => 86400,
+		'account-recovery' => 3600,
+	],
+
+	/**
 	 * Auth code length.
 	 */
 	'OZ_AUTH_CODE_LENGTH'         => 6,

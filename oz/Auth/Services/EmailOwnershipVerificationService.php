@@ -69,7 +69,7 @@ class EmailOwnershipVerificationService extends Service
 		$fd    = $ri->getCleanFormData();
 		$email = $fd->get('email');
 
-		$provider = new EmailOwnershipVerificationProvider($this->getContext(), $email);
+		$provider = EmailOwnershipVerificationProvider::fromForm($this->getContext(), $email, $fd);
 
 		$provider->generate();
 
@@ -87,6 +87,8 @@ class EmailOwnershipVerificationService extends Service
 		$fb = new Form();
 
 		$fb->field('email')->type(new TypeEmail())->required(true);
+
+		EmailOwnershipVerificationProvider::purposeFields($fb);
 
 		return $fb;
 	}

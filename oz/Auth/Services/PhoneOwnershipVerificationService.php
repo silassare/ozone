@@ -69,7 +69,7 @@ class PhoneOwnershipVerificationService extends Service
 		$fd    = $ri->getCleanFormData();
 		$phone = $fd->get('phone');
 
-		$provider = new PhoneOwnershipVerificationProvider($this->getContext(), $phone);
+		$provider = PhoneOwnershipVerificationProvider::fromForm($this->getContext(), $phone, $fd);
 
 		$provider->generate();
 
@@ -87,6 +87,8 @@ class PhoneOwnershipVerificationService extends Service
 		$fb = new Form();
 
 		$fb->field('phone')->type(new TypePhone())->required(true);
+
+		PhoneOwnershipVerificationProvider::purposeFields($fb);
 
 		return $fb;
 	}

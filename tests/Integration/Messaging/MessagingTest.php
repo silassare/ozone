@@ -134,7 +134,7 @@ final class MessagingTest extends TestCase
 			'template' => 'test.hello',
 			'to'      => ['jane@example.com'],
 			'data'    => ['name' => 'Jane'],
-			'subject' => 'OZ_AUTH_VERIFY_EMAIL_SUBJECT',
+			'subject' => 'OZ_AUTH_2FA_TITLE',
 			'locale'  => 'en',
 		]);
 
@@ -152,7 +152,7 @@ final class MessagingTest extends TestCase
 		self::assertSame('jane@example.com', $delivery['destination']);
 		self::assertSame('Hello Jane, en', $delivery['text']);
 		self::assertSame('<p>Hello Jane</p>', $delivery['html']);
-		self::assertSame('Verify your email address', $delivery['subject']);
+		self::assertSame('Your sign-in code', $delivery['subject']);
 	}
 
 	/**

@@ -80,30 +80,14 @@ final class VerificationFlowsTest extends TestCase
 	}
 
 	/**
-	 * @return iterable<string, array{0: string}>
-	 */
-	public static function provideProject(): iterable
-	{
-		yield 'every type verifies' => ['account-recovery'];
-
-		yield 'one type verifies nothing' => ['account-recovery-mixed'];
-	}
-
-	/**
-	 * The authorization is refused while pending, accepted once the user followed the link, and the
-	 * new password is the one that signs in.
+	 * Who started the recovery recovers with the code the email carries, typed where they asked: the
+	 * authorization is refused while pending, works once confirmed, and only once.
 	 *
-	 * @dataProvider provideProject
+	 * @dataProvider provideAnAccountIsRecoveredWithTheCodeOfTheEmailCases
 	 */
-	public function testAnAccountIsRecoveredWithAConfirmedEmailAuthorization(string $project): void
+	public function testAnAccountIsRecoveredWithTheCodeOfTheEmail(string $project): void
 	{
-		[$status, $body] = $this->request($project, 'POST', '/auth/verify/email', ['email' => self::USER_EMAIL]);
-
-		self::assertSame(200, $status, $body);
-
-		$ref = \json_decode($body, true)['data']['auth_ref'] ?? null;
-
-		self::assertIsString($ref, $body);
+		$ref = $this->startVerification($project, self::USER_EMAIL, 'account-recovery');
 
 		$recover = [
 			'auth_ref'       => $ref,
@@ -117,12 +101,13 @@ final class VerificationFlowsTest extends TestCase
 
 		self::assertSame(401, $status, $body);
 
-		// The user follows the link of the email.
-		[$link_ref, $token] = self::linkOfLastEmail($project);
+		$text = self::lastMessage($project)['text'];
 
-		self::assertSame($ref, $link_ref);
+		self::assertStringContainsString('Reset your password', $text);
+		self::assertMatchesRegularExpression('~code (\d+)~', $text);
+		\preg_match('~code (\d+)~', $text, $m);
 
-		[$status, $body] = $this->request($project, 'POST', '/auth/link/' . $link_ref . '/' . $token);
+		[$status, $body] = $this->request($project, 'POST', '/auth/' . $ref . '/authorize', ['code' => $m[1]]);
 
 		self::assertSame(200, $status, $body);
 
@@ -140,15 +125,103 @@ final class VerificationFlowsTest extends TestCase
 		self::assertSame(404, $status, $body);
 		self::assertSame('OZ_AUTH_INVALID_OR_DELETED_REF', \json_decode($body, true)['msg'] ?? null, $body);
 
-		[$status, $body] = $this->request($project, 'POST', '/login', [
-			'auth_user_type'             => 'user',
-			'auth_user_identifier_type'  => 'email',
-			'auth_user_identifier_value' => self::USER_EMAIL,
-			'auth_user_password'         => self::NEW_PASSWORD,
+		$this->assertSignsIn($project, self::NEW_PASSWORD);
+	}
+
+	/**
+	 * @return iterable<string, array{0: string}>
+	 */
+	public static function provideAnAccountIsRecoveredWithTheCodeOfTheEmailCases(): iterable
+	{
+		yield 'every type verifies' => ['account-recovery'];
+
+		yield 'one type verifies nothing' => ['account-recovery-mixed'];
+	}
+
+	/**
+	 * The link of the email sets the new password on its own page, and grants nothing to whoever
+	 * started the recovery: their reference is gone.
+	 */
+	public function testTheLinkOfARecoverySetsThePasswordWhereItIsOpened(): void
+	{
+		$project = 'account-recovery';
+		$ref     = $this->startVerification($project, self::USER_EMAIL, 'account-recovery');
+
+		[$link_ref, $token] = self::linkOfLastMessage($project);
+		$link               = '/auth/link/' . $link_ref . '/' . $token;
+
+		[$status, $body] = $this->request($project, 'GET', $link);
+
+		self::assertSame(200, $status, $body);
+		self::assertStringContainsString('name="pass_confirm"', $body);
+		self::assertStringContainsString(self::USER_EMAIL, $body);
+
+		// Two passwords that differ: the form again, the link still usable.
+		[$status, $body] = $this->request($project, 'POST', $link, [
+			'pass'         => 'Jane_Link_Pass_45',
+			'pass_confirm' => 'Jane_Link_Pass_46',
+		]);
+
+		self::assertSame(400, $status, $body);
+		self::assertStringContainsString('The two passwords are not the same.', $body);
+
+		[$status, $body] = $this->request($project, 'POST', $link, [
+			'pass'         => 'Jane_Link_Pass_45',
+			'pass_confirm' => 'Jane_Link_Pass_45',
 		]);
 
 		self::assertSame(200, $status, $body);
-		self::assertSame('OZ_USER_SIGN_IN_DONE', \json_decode($body, true)['msg'] ?? null, $body);
+		self::assertStringContainsString('Password changed', $body);
+
+		// Who started it holds a reference to nothing.
+		[$status, $body] = $this->request($project, 'POST', '/account-recovery', [
+			'auth_ref'       => $ref,
+			'auth_user_type' => 'user',
+			'pass'           => 'Attacker_Pass_47',
+			'pass_confirm'   => 'Attacker_Pass_47',
+		]);
+
+		self::assertSame(404, $status, $body);
+
+		[$status] = $this->request($project, 'POST', $link, [
+			'pass'         => 'Jane_Link_Pass_48',
+			'pass_confirm' => 'Jane_Link_Pass_48',
+		]);
+
+		self::assertSame(404, $status, 'The link worked twice.');
+
+		$this->assertSignsIn($project, 'Jane_Link_Pass_45');
+	}
+
+	/**
+	 * A verification started to check an address does not recover the account of that address, even
+	 * confirmed by its owner, whose page did not say it would.
+	 */
+	public function testAVerificationStartedForSomethingElseDoesNotRecover(): void
+	{
+		$project = 'account-recovery';
+		$ref     = $this->startVerification($project, self::USER_EMAIL, null);
+
+		[$link_ref, $token] = self::linkOfLastMessage($project);
+
+		[$status, $body] = $this->request($project, 'GET', '/auth/link/' . $link_ref . '/' . $token);
+
+		self::assertSame(200, $status, $body);
+		self::assertStringContainsString('is yours', $body);
+
+		[$status, $body] = $this->request($project, 'POST', '/auth/link/' . $link_ref . '/' . $token);
+
+		self::assertSame(200, $status, $body);
+
+		[$status, $body] = $this->request($project, 'POST', '/account-recovery', [
+			'auth_ref'       => $ref,
+			'auth_user_type' => 'user',
+			'pass'           => 'Attacker_Pass_47',
+			'pass_confirm'   => 'Attacker_Pass_47',
+		]);
+
+		self::assertSame(403, $status, $body);
+		self::assertSame('OZ_AUTH_WRONG_PURPOSE', \json_decode($body, true)['msg'] ?? null, $body);
 	}
 
 	/**
@@ -160,11 +233,16 @@ final class VerificationFlowsTest extends TestCase
 		$project = 'account-recovery';
 		$email   = 'john.doe@example.com';
 
-		[$status, $body] = $this->request($project, 'POST', '/auth/verify/email', ['email' => $email]);
+		$this->startVerification($project, $email, 'sign-up');
+
+		self::assertStringContainsString('Create your account', self::lastMessage($project)['text']);
+
+		[$ref, $token] = self::linkOfLastMessage($project);
+
+		[$status, $body] = $this->request($project, 'GET', '/auth/link/' . $ref . '/' . $token);
 
 		self::assertSame(200, $status, $body);
-
-		[$ref, $token] = self::linkOfLastEmail($project);
+		self::assertStringContainsString('Confirming lets the account started with ' . $email, $body);
 
 		[$status, $body] = $this->request($project, 'POST', '/auth/link/' . $ref . '/' . $token);
 
@@ -197,6 +275,119 @@ final class VerificationFlowsTest extends TestCase
 		self::assertSame('OZ_AUTH_INVALID_OR_DELETED_REF', \json_decode($body, true)['msg'] ?? null, $body);
 	}
 
+	/**
+	 * The SMS says what its code is for.
+	 */
+	public function testTheSmsOfAVerificationSaysWhatItIsFor(): void
+	{
+		$project = 'account-recovery';
+
+		foreach (['check' => 'verification code', 'sign-up' => 'create an account', 'account-recovery' => 'reset your password'] as $purpose => $says) {
+			[$status, $body] = $this->request($project, 'POST', '/auth/verify/phone', [
+				'phone'   => '+22997000000',
+				'purpose' => $purpose,
+			]);
+
+			self::assertSame(200, $status, $body);
+			self::assertStringContainsString($says, self::lastMessage($project)['text'], $purpose);
+		}
+
+		[$status, $body] = $this->request($project, 'POST', '/auth/verify/phone', [
+			'phone'   => '+22997000000',
+			'purpose' => 'anything',
+		]);
+
+		self::assertSame(400, $status, $body);
+	}
+
+	/**
+	 * A link whose authorization expired says so when it is opened, rather than offering a button, or
+	 * a password form, that could only fail. The row is still there: the garbage collection deletes it
+	 * an hour later.
+	 *
+	 * @dataProvider provideExpiredLinkCases
+	 */
+	public function testAnExpiredLinkSaysSoBeforeAnythingIsTyped(string $purpose): void
+	{
+		$project = 'account-recovery';
+
+		$this->startVerification($project, self::USER_EMAIL, $purpose);
+
+		[$ref, $token] = self::linkOfLastMessage($project);
+
+		self::expire($project, $ref);
+
+		[$status, $body] = $this->request($project, 'GET', '/auth/link/' . $ref . '/' . $token);
+
+		self::assertSame(401, $status, $body);
+		self::assertStringContainsString('This link no longer works', $body);
+		self::assertStringNotContainsString('name="pass"', $body);
+	}
+
+	/**
+	 * @return iterable<string, array{0: string}>
+	 */
+	public static function provideExpiredLinkCases(): iterable
+	{
+		yield 'a sign-up' => ['sign-up'];
+
+		yield 'an account recovery' => ['account-recovery'];
+	}
+
+	/**
+	 * A link already answered says the same: it is not offered twice.
+	 */
+	public function testALinkAlreadyAnsweredSaysItNoLongerWorks(): void
+	{
+		$project = 'account-recovery';
+
+		$this->startVerification($project, 'claire.doe@example.com', 'sign-up');
+
+		[$ref, $token] = self::linkOfLastMessage($project);
+		$link          = '/auth/link/' . $ref . '/' . $token;
+
+		[$status, $body] = $this->request($project, 'POST', $link);
+
+		self::assertSame(200, $status, $body);
+
+		[$status, $body] = $this->request($project, 'GET', $link);
+
+		self::assertSame(401, $status, $body);
+		self::assertStringContainsString('This link no longer works', $body);
+	}
+
+	/**
+	 * Back-dates the expiry of an authorization, as waiting would.
+	 */
+	private static function expire(string $project, string $ref): void
+	{
+		$pdo   = self::pdo($project);
+		$table = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE '%oz_auths'")
+			->fetchColumn();
+
+		self::assertIsString($table);
+
+		$statement = $pdo->prepare(
+			\sprintf('UPDATE "%s" SET auth_expire_at = ? WHERE auth_ref = ?', $table)
+		);
+		$statement->execute([(string) (\time() - 1), $ref]);
+
+		self::assertSame(1, $statement->rowCount(), 'No authorization was aged.');
+	}
+
+	/**
+	 * A connection to a project's database.
+	 */
+	private static function pdo(string $project): PDO
+	{
+		return new PDO(
+			'sqlite:' . self::$projects[$project]->getPath() . \DIRECTORY_SEPARATOR . self::DB_FILE,
+			null,
+			null,
+			[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+		);
+	}
+
 	// -------------------------------------------------------------------------
 	// Helpers
 	// -------------------------------------------------------------------------
@@ -227,6 +418,7 @@ final class VerificationFlowsTest extends TestCase
 		// Sent within the request, so the email is there when the answer is.
 		$project->setSetting('oz.messaging', 'OZ_MESSAGING_CHANNELS', [
 			'mail' => ['transport' => "{$ns}\\MessagingTestTransport", 'async' => false],
+			'sms'  => ['transport' => "{$ns}\\MessagingTestTransport", 'async' => false],
 		]);
 
 		if (null !== $recovery_policy) {
@@ -266,11 +458,51 @@ final class VerificationFlowsTest extends TestCase
 	}
 
 	/**
-	 * The reference and token of the authorization link in the last email sent.
+	 * Starts an email verification and returns its reference.
 	 *
-	 * @return array{0: string, 1: string}
+	 * @param null|string $purpose null to send none
 	 */
-	private static function linkOfLastEmail(string $project): array
+	private function startVerification(string $project, string $email, ?string $purpose): string
+	{
+		$fields = ['email' => $email];
+
+		if (null !== $purpose) {
+			$fields['purpose'] = $purpose;
+		}
+
+		[$status, $body] = $this->request($project, 'POST', '/auth/verify/email', $fields);
+
+		self::assertSame(200, $status, $body);
+
+		$ref = \json_decode($body, true)['data']['auth_ref'] ?? null;
+
+		self::assertIsString($ref, $body);
+
+		return $ref;
+	}
+
+	/**
+	 * Signs the user in with a password.
+	 */
+	private function assertSignsIn(string $project, string $password): void
+	{
+		[$status, $body] = $this->request($project, 'POST', '/login', [
+			'auth_user_type'             => 'user',
+			'auth_user_identifier_type'  => 'email',
+			'auth_user_identifier_value' => self::USER_EMAIL,
+			'auth_user_password'         => $password,
+		]);
+
+		self::assertSame(200, $status, $body);
+		self::assertSame('OZ_USER_SIGN_IN_DONE', \json_decode($body, true)['msg'] ?? null, $body);
+	}
+
+	/**
+	 * The last message sent, email or SMS.
+	 *
+	 * @return array{text: string}
+	 */
+	private static function lastMessage(string $project): array
 	{
 		$file = self::$projects[$project]->getPath() . '/deliveries.jsonl';
 
@@ -278,7 +510,18 @@ final class VerificationFlowsTest extends TestCase
 
 		$lines = \array_filter(\explode("\n", (string) \file_get_contents($file)));
 		$last  = \json_decode((string) \end($lines), true);
-		$text  = \is_array($last) ? (string) ($last['text'] ?? '') : '';
+
+		return ['text' => \is_array($last) ? (string) ($last['text'] ?? '') : ''];
+	}
+
+	/**
+	 * The reference and token of the authorization link in the last email sent.
+	 *
+	 * @return array{0: string, 1: string}
+	 */
+	private static function linkOfLastMessage(string $project): array
+	{
+		$text = self::lastMessage($project)['text'];
 
 		self::assertMatchesRegularExpression('~/auth/link/[^/\s]+/[^/\s]+~', $text);
 		\preg_match('~/auth/link/([^/\s]+)/([^/\s]+)~', $text, $m);

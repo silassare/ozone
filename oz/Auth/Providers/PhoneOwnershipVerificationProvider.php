@@ -14,70 +14,31 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Providers;
 
 use Override;
-use OZONE\Core\App\Context;
-use OZONE\Core\Db\OZAuth;
-use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Messaging\Messages\SMSMessage;
 
 /**
  * Class PhoneOwnershipVerificationProvider.
  */
-final class PhoneOwnershipVerificationProvider extends AuthorizationProvider
+final class PhoneOwnershipVerificationProvider extends OwnershipVerificationProvider
 {
 	public const NAME = 'auth:provider:phone:verify';
 
 	/**
-	 * PhoneOwnershipVerificationProvider constructor.
-	 *
-	 * @param Context     $context the context
-	 * @param string      $phone   the phone number to verify
-	 * @param null|string $label   the label to use in the message
-	 */
-	public function __construct(
-		Context $context,
-		protected string $phone,
-		protected ?string $label = null
-	) {
-		parent::__construct($context);
-	}
-
-	/**
-	 * Gets the phone.
-	 *
-	 * @return string
+	 * The phone verified.
 	 */
 	public function getPhone(): string
 	{
-		return $this->phone;
+		return $this->identifier;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function resolve(Context $context, OZAuth $auth): static
+	public static function identifierType(): string
 	{
-		$payload = $auth->getPayload();
-		$phone   = $payload['phone'] ?? null;
-		$label   = $payload['label'] ?? null;
-
-		if (empty($phone)) {
-			throw (new RuntimeException('Missing "phone" in payload.'))->suspectObject($payload);
-		}
-
-		return new self($context, $phone, $label);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function getPayload(): array
-	{
-		return [
-			'phone' => $this->phone,
-			'label' => $this->label,
-		];
+		return AuthUserInterface::IDENTIFIER_TYPE_PHONE;
 	}
 
 	/**
@@ -93,36 +54,11 @@ final class PhoneOwnershipVerificationProvider extends AuthorizationProvider
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	protected function onInit(OZAuth $auth): void
-	{
-		parent::onInit($auth);
-
-		$this->sendSms();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	protected function onRefresh(OZAuth $auth): void
-	{
-		parent::onRefresh($auth);
-
-		$this->sendSms(false);
-	}
-
-	/**
-	 * @param bool $first
-	 */
-	private function sendSms(bool $first = true): void
+	protected function send(): void
 	{
 		(new SMSMessage('oz.auth.messages.verify.phone'))
-			->inject($this->credentials->toArray() + ['label' => $this->label])
-			->addRecipient($this->phone)
+			->inject($this->messageData(['PHONE_SMS']))
+			->addRecipient($this->identifier)
 			->send();
-
-		// Added to what `generate()` published (the reference and the refresh key), never replacing it.
-		$this->json_response->setDone()
-			->setDataKey('first', $first);
 	}
 }

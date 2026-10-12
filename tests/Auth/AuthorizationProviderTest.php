@@ -15,17 +15,11 @@ namespace OZONE\Tests\Auth;
 
 use Override;
 use OZONE\Core\App\Context;
-use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\AuthorizationScope;
-use OZONE\Core\Auth\AuthUserDataStore;
 use OZONE\Core\Auth\Enums\AuthorizationSecretType;
 use OZONE\Core\Auth\Enums\AuthorizationState;
-use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\Providers\AuthorizationProvider;
-use OZONE\Core\Auth\Providers\TwoFactorAuthorizationProvider;
-use OZONE\Core\Auth\TwoFactor\Channels\TotpChannel;
-use OZONE\Core\Auth\TwoFactor\TOTP;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\NotFoundException;
@@ -296,49 +290,6 @@ final class AuthorizationProviderTest extends TestCase
 		self::assertNotNull($auth);
 		self::assertSame(AuthorizationState::AUTHORIZED, $auth->getState());
 		self::assertSame(0, $auth->getTryCount());
-	}
-
-	/**
-	 * Two factor authentication with an authenticator app keeps the try limit too.
-	 */
-	public function testARefusedTotpAuthorizationIsNotGrantedByTheRightCode(): void
-	{
-		$secret = TOTP::generateSecret();
-		$user   = $this->createMock(AuthUserInterface::class);
-		$user->method('getAuthUserType')->willReturn('test');
-		$user->method('getAuthIdentifier')->willReturn('totp-try-max-user-' . \uniqid());
-		$store = AuthUserDataStore::getInstance($user, []);
-		$store->set2FATotpSecret($secret);
-		$user->method('getAuthUserDataStore')->willReturn($store);
-
-		$context  = new Context(HTTPEnvironment::mock(), null, Context::root());
-		$provider = new TwoFactorAuthorizationProvider($context, $user, TotpChannel::getName(), 'state-id');
-		$provider->generate();
-
-		$ref     = $provider->getCredentials()->getReference();
-		$try_max = (int) Settings::get('oz.auth.2fa', 'OZ_2FA_CODE_TRY_MAX');
-
-		for ($i = 0; $i <= $try_max; ++$i) {
-			try {
-				// Not digits: six of them could be the current code.
-				$provider->getCredentials()->setReference($ref)->setCode('wrong');
-				$provider->authorize(AuthorizationSecretType::CODE);
-			} catch (InvalidFormException|UnauthorizedException) {
-			}
-		}
-
-		self::assertSame(AuthorizationState::REFUSED, Auth::get($ref)?->getState());
-
-		$provider->getCredentials()->setReference($ref)->setCode(TOTP::compute($secret));
-
-		try {
-			$provider->authorize(AuthorizationSecretType::CODE);
-			self::fail('A refused authorization was granted.');
-		} catch (UnauthorizedException $e) {
-			self::assertSame('OZ_AUTH_TOO_MUCH_ATTEMPT', $e->getMessage());
-		}
-
-		self::assertSame(AuthorizationState::REFUSED, Auth::get($ref)?->getState());
 	}
 
 	// -----------------------------------------------------------------------

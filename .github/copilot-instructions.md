@@ -11,7 +11,26 @@
 ## IMPORTANT
 
 - **No hallucination or invention.** Read the actual source files before generating code, docs, or this file. Focus only on what can be directly observed in the codebase.
-- **Keep this file current, and small.** When a change alters an API, a behaviour, a convention or a path described here, update this file in the same change (`CLAUDE.md` and `AGENTS.md` are symlinks to it). Refresh the phpdoc and OpenAPI texts the change touches too. Stale instructions are worse than none. Add rules and non-obvious behaviour; never copy here what the code already says (method lists, option tables, settings keys).
+- **Keep this file current, and small.** When a change alters an API, a behaviour, a convention or a path described here, update this file in the same change (`CLAUDE.md` and `AGENTS.md` are symlinks to it). Refresh the phpdoc and OpenAPI texts the change touches too. Stale instructions are worse than none. Add rules and non-obvious behaviour; never copy here what the code already says (method lists, option tables, settings keys). **The two design laws below outlive every rewrite of this file**: shorten anything else first, and never summarise them away, soften them or drop their rationale.
+- **DESIGN LAW 1 - OZone is identity centered, and coupled to no user entity.** `oz_users` is only the
+  **default** auth user, one entry of `oz.auth.users.repositories`; a project authenticates whatever
+  entity it registers, and that entity may hold **neither an email nor a phone** (a username of a
+  messaging account, a national identity number, whatever an identity provider offers next). So
+  framework code speaks `AuthUserInterface` and `AuthUsersRepositoryInterface`, never a generated user
+  class: `OZUser` is named in `oz/Users/` only (`SignUp`, `UsersCmd`, the default repository's own
+  services), and `grep -rn 'OZUser' oz/` staying inside `oz/Users/` is the check that this still holds.
+  An identifier **type is an open string** end to end (`getAuthIdentifiers()` is a free map,
+  `getAuthUserByIdentifierType(string $type, string $value)`, and `AuthUsers::selectorForm()`
+  constrains neither); `AuthUserInterface::IDENTIFIER_TYPE_*` are well known names, **not a closed
+  set**. Never add a column, an enum, a flag or a settings key that assumes a credential kind -- there
+  is deliberately no `email_verified` column and none is coming, because a marker like it would hold
+  for `oz_users` and mean nothing for an entity that authenticates on something else: a project marks
+  what it needs on its own entity or in the auth user data store. Give a project the means, never the
+  assumption.
+- **DESIGN LAW 2 - the default is the strict one.** Where a flow has a safe shape and a convenient
+  one, OZone ships the safe one and a project loosens it through options and settings, or composes its
+  own logic with its own classes, **at its own risk**. Never ship a permissive default because it is
+  convenient, and never widen one to make a test or an example pass.
 - **When a bug or issue is found, do not fix it directly** — ask for feedback and approval first. Open findings live in `ISSUES.md`; a fixed item leaves it, and its breaking changes go in `CHANGELOG.md` (Unreleased).
 - No too verbose comment blocks on obvious code. Keep comments concise and focused on non-obvious insights or rationale.
 - **Symlinks:** If `AGENTS.md` or `CLAUDE.md` do not exist, symlink them to `.github/copilot-instructions.md`.
@@ -572,11 +591,28 @@ access): `Auth::provider($context, $auth)` rebuilds one with the row's reference
   enforces the rule of the type it was given, since the type is a form field a guard cannot see:
   `VerificationPolicy::resolve()` runs the guard's check itself when the route did not. Once the
   action is done, `VerificationPolicy::consume()` deletes the authorization, so it serves once.
+- **An ownership verification says what it is for** (`VerificationPurpose`: `check`, `sign-up`,
+  `account-recovery`), given to `/auth/verify/email|phone` as `purpose`, with `auth_user_type` for the
+  account a recovery is for. The owner is told it before confirming, every text being the purpose's
+  own lang key (`VerificationPurpose::text()`), and `resolve()` refuses a verification started for
+  another purpose or user type (`OZ_AUTH_WRONG_PURPOSE`). **A recovery link sets the new password on
+  its own page** (`AuthLinkView`, `oz.auth.link.recovery.blate`), then `redeem()`s the authorization:
+  whoever started the recovery is granted nothing by the owner opening the link, and recovers only
+  with the code. A provider built directly (not through `/auth/verify/*`) must pass the purpose it is
+  for: `OwnershipVerificationProvider`'s constructor takes it, and `fromForm()` reads it from a form.
+  Each purpose has its own lifetime (`OZ_AUTH_VERIFICATION_LIFETIMES`), and the link's GET refuses an
+  authorization that is not `PENDING`, so a dead link never shows a button or a form that could only
+  fail. **A verification is tied to no session**: its row holds no state ID, `GET /auth/:ref/state` is
+  open to whoever holds the reference, and the link page needs no session either -- a client keeps
+  `auth_ref` outside the session and comes back to the flow after a reload (oweb's
+  `BrowserVerificationStore`, `waitForVerification()`). Only 2FA is session-bound, deliberately.
 - **Two-factor authentication** (`Auth2FA`, booted by default): a user with `2fa.enabled` in their data
   store has their login interrupted, the user is detached, an authorization is opened through
   `TwoFactorAuthorizationProvider` on the channel `oz.auth.2fa` selects (`totp`, `email`, `sms`), and
   `OZ_2FA_REQUIRED` carries the reference. The client answers `POST /auth/:ref/authorize` with the
-  code; the provider re-attaches the user and the login goes through.
+  code; the provider re-attaches the user and the login goes through. The code is answered **only by
+  the session that signed in**: `authorize()` compares the state ID before checking it, so a foreign
+  request is refused (`OZ_2FA_SESSION_MISMATCH`) without spending the challenge.
 
 - **Passwords** are checked through `AuthUsers::checkPassword()` only: failures are counted per
   account (or per submitted identifier when unknown) by `LoginThrottle`, unknown accounts are checked
@@ -587,7 +623,8 @@ access): `Auth::provider($context, $auth)` rebuilds one with the row's reference
 - **Never put passwords, tokens or raw payloads in exception data**: exceptions are logged, and
   `ErrorUtils::redactSensitiveData()` is only a safety net.
 - **Never authorize or change state on a GET.** Auth links (`GET /auth/link/:ref/:token`) only render a
-  confirmation page whose POST consumes the token, so mail scanners and previews cannot. Web logout
+  confirmation page (or a recovery form) whose POST consumes the token, so mail scanners and previews
+  cannot. Web logout
   (`GET /logout`) needs `_csrf`.
 - **Redirect targets**: `next` only accepts local paths, the current host and
   `OZ_REDIRECT_ALLOWED_HOSTS`; validate any user-supplied target with
@@ -615,8 +652,23 @@ store data changed — so never write per-request noise into the auth store. Unt
 to a response with `Cookies::applyTo()`, never `withHeader('Set-Cookie', ...)`, which would drop the
 handler's own; `$context->requireAuthStore()`
 is the stateful store. Force a logout everywhere with
-`AuthUsers::forceUserLogoutOnAllActiveSessions($user)`. User repositories implement
-`AuthUsersRepositoryInterface` (`oz.auth.users.repositories`).
+`AuthUsers::forceUserLogoutOnAllActiveSessions($user)`.
+
+**Identity** (DESIGN LAW 1): a user type is a key of `oz.auth.users.repositories` mapped to an
+`AuthUsersRepositoryInterface` (`UsersRepository::DEFAULT_USER_TYPE` is `user`, served by `oz_users`),
+and a request names the type it means (`auth_user_type`). An account is found by its id
+(`getAuthUserByIdentifier()`) or by an identifier **type and value**
+(`getAuthUserByIdentifierType()`), both strings a repository reads as it likes;
+`AuthUsers::identify()` / `identifyBySelector()` route to the repository of the type and validate
+nothing about the kind. An entity answers what it has through `getAuthIdentifiers()` (a free map,
+`['id' => ..., 'email' => ...]`), carries per-user state in `AuthUserDataStore`
+(`getAuthUserDataStore()` / `setAuthUserDataStore()`, persisted in the entity's data column), and says
+whether it may sign in through `isAuthUserValid()` -- which means **enabled**, not verified, and is
+the project's to interpret. A flow that needs to reach a user reads the address from
+`getAuthIdentifiers()` and throws when it is absent (`TwoFactorAuthorizationProvider::sendEmail()` /
+`sendSms()`), rather than assuming a column; an ownership verification is handed the identifier by the
+request instead, and finds the account by identifier type
+(`AuthUsers::identifyBySelector()`), so it assumes no column either.
 
 - **A session is bound to the source it was opened from**: `SessionAuth` stores a key for it
   (`OZ_SESSION_SOURCE_KEY`: a User-Agent hash by default, or the client IP) and `Session::start()`

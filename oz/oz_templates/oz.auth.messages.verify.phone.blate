@@ -1,3 +1,3 @@
-{= $t('OZ_AUTH_VERIFY_PHONE_SMS', oz_vars, oz_locale)}{@if oz_otp_domain}
+{= $t(texts.phone_sms, oz_vars, oz_locale)}{@if oz_otp_domain}
 
 @{= oz_otp_domain} #{= auth_code}{/if}

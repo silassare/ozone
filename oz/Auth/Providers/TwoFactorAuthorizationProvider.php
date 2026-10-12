@@ -137,6 +137,17 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 	#[Override]
 	public function authorize(AuthorizationSecretType $type): void
 	{
+		// Before any secret is checked: a code answered from another session is refused and leaves
+		// the authorization, which belongs to the session that signed in, untouched.
+		if (
+			!$this->context->hasStatefulAuth()
+			|| $this->state_id !== $this->context->requireStatefulAuth()->stateID()
+		) {
+			throw new UnauthorizedException('OZ_2FA_SESSION_MISMATCH', [
+				'_debug' => [OZAuth::COL_REF => $this->credentials->getReference()],
+			]);
+		}
+
 		if (TotpChannel::getName() !== $this->channel) {
 			parent::authorize($type);
 
@@ -196,15 +207,8 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 	{
 		parent::onAuthorized($auth);
 
+		// authorize() refused any other session than the one that signed in.
 		$auth_method = $this->context->requireStatefulAuth();
-
-		// Verify the auth method state matches the one recorded at login time.
-		// This prevents a different session from completing another session's 2FA.
-		if ($this->state_id !== $auth_method->stateID()) {
-			throw new UnauthorizedException('OZ_2FA_SESSION_MISMATCH', [
-				'_debug' => [OZAuth::COL_REF => $auth->getRef()],
-			]);
-		}
 
 		$store        = $auth_method->store();
 		$pending_user = $store->get2FAPendingUser();

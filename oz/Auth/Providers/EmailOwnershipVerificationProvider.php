@@ -14,70 +14,31 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Providers;
 
 use Override;
-use OZONE\Core\App\Context;
-use OZONE\Core\Db\OZAuth;
-use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Messaging\Messages\MailMessage;
 
 /**
  * Class EmailOwnershipVerificationProvider.
  */
-final class EmailOwnershipVerificationProvider extends AuthorizationProvider
+final class EmailOwnershipVerificationProvider extends OwnershipVerificationProvider
 {
 	public const NAME = 'auth:provider:email:verify';
 
 	/**
-	 * EmailOwnershipVerificationProvider constructor.
-	 *
-	 * @param Context     $context the context
-	 * @param string      $email   the email to verify
-	 * @param null|string $label   the label to use in the message
-	 */
-	public function __construct(
-		Context $context,
-		protected string $email,
-		protected ?string $label = null
-	) {
-		parent::__construct($context);
-	}
-
-	/**
-	 * Gets the email.
-	 *
-	 * @return string
+	 * The email verified.
 	 */
 	public function getEmail(): string
 	{
-		return $this->email;
+		return $this->identifier;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public static function resolve(Context $context, OZAuth $auth): static
+	public static function identifierType(): string
 	{
-		$payload = $auth->getPayload();
-		$email   = $payload['email'] ?? null;
-		$label   = $payload['label'] ?? null;
-
-		if (empty($email)) {
-			throw (new RuntimeException('Missing "email" in payload.'))->suspectObject($payload);
-		}
-
-		return new self($context, $email, $label);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	public function getPayload(): array
-	{
-		return [
-			'email' => $this->email,
-			'label' => $this->label,
-		];
+		return AuthUserInterface::IDENTIFIER_TYPE_EMAIL;
 	}
 
 	/**
@@ -93,35 +54,12 @@ final class EmailOwnershipVerificationProvider extends AuthorizationProvider
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	protected function onInit(OZAuth $auth): void
-	{
-		parent::onInit($auth);
-		$this->sendMail();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	#[Override]
-	protected function onRefresh(OZAuth $auth): void
-	{
-		parent::onRefresh($auth);
-		$this->sendMail(false);
-	}
-
-	/**
-	 * @param bool $first
-	 */
-	private function sendMail(bool $first = true): void
+	protected function send(): void
 	{
 		(new MailMessage('oz.auth.messages.verify.email'))
-			->setSubject('OZ_AUTH_VERIFY_EMAIL_SUBJECT')
-			->inject($this->credentials->toArray() + ['label' => $this->label])
-			->addRecipient($this->email)
+			->setSubject($this->purpose->text('EMAIL_SUBJECT'))
+			->inject($this->messageData(['EMAIL_TITLE', 'EMAIL_BODY', 'EMAIL_BTN', 'EMAIL_IGNORE']))
+			->addRecipient($this->identifier)
 			->send();
-
-		// Added to what `generate()` published (the reference and the refresh key), never replacing it.
-		$this->json_response->setDone()
-			->setDataKey('first', $first);
 	}
 }

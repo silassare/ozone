@@ -2,7 +2,7 @@
  * The default pages of OZone (errors, redirects, authorization links, the welcome page).
  *
  * Class names follow BEM (`oz-block__element--modifier`): blocks `oz-page`, `oz-card`, `oz-btn`,
- * `oz-link`, `oz-form`, `oz-badge`, `oz-details`, `oz-pill`.
+ * `oz-link`, `oz-form` (with `__error`), `oz-badge`, `oz-details`, `oz-pill`.
  *
  * Everything is drawn from the variables below. A project changes them in its own `oz.theme.css`
  * (in its templates directory), which every page loads after this file: see that file.
@@ -217,6 +217,13 @@ body {
 	outline: 3px solid var(--oz-color-primary);
 	outline-offset: 1px;
 	border-color: var(--oz-color-primary);
+}
+
+.oz-form__error {
+	margin: 0;
+	color: var(--oz-color-danger);
+	font-size: 14px;
+	font-weight: 600;
 }
 
 
