@@ -212,12 +212,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/oliup-io/code-generator.git",
-                "reference": "1e85a80df5ce615156f9d27d02914a851582070a"
+                "reference": "20889fe850902097df78b24ef033dbf3c082d122"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/oliup-io/code-generator/zipball/1e85a80df5ce615156f9d27d02914a851582070a",
-                "reference": "1e85a80df5ce615156f9d27d02914a851582070a",
+                "url": "https://api.github.com/repos/oliup-io/code-generator/zipball/20889fe850902097df78b24ef033dbf3c082d122",
+                "reference": "20889fe850902097df78b24ef033dbf3c082d122",
                 "shasum": ""
             },
             "require": {
@@ -257,7 +257,7 @@
                 "issues": "https://github.com/oliup-io/code-generator/issues",
                 "source": "https://github.com/oliup-io/code-generator/tree/main"
             },
-            "time": "2026-03-21T06:10:10+00:00"
+            "time": "2026-10-12T19:20:29+00:00"
         },
         {
             "name": "phpstan/phpdoc-parser",
@@ -415,12 +415,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/blate.git",
-                "reference": "8fa72d056d8cc08eafcc89602960d383262f7772"
+                "reference": "286696fd259eaab89a70e2af70c8e0e33e95ff40"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/blate/zipball/8fa72d056d8cc08eafcc89602960d383262f7772",
-                "reference": "8fa72d056d8cc08eafcc89602960d383262f7772",
+                "url": "https://api.github.com/repos/silassare/blate/zipball/286696fd259eaab89a70e2af70c8e0e33e95ff40",
+                "reference": "286696fd259eaab89a70e2af70c8e0e33e95ff40",
                 "shasum": ""
             },
             "require": {
@@ -468,7 +468,7 @@
                 "issues": "https://github.com/silassare/blate/issues",
                 "source": "https://github.com/silassare/blate/tree/main"
             },
-            "time": "2026-10-07T10:12:23+00:00"
+            "time": "2026-10-12T19:22:38+00:00"
         },
         {
             "name": "silassare/gobl",
@@ -476,12 +476,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "3113b71cb3ce2046b5cf16cd413a996a193d069e"
+                "reference": "2ef3862d065fdf6d2b32b27815baa097352c7659"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/3113b71cb3ce2046b5cf16cd413a996a193d069e",
-                "reference": "3113b71cb3ce2046b5cf16cd413a996a193d069e",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/2ef3862d065fdf6d2b32b27815baa097352c7659",
+                "reference": "2ef3862d065fdf6d2b32b27815baa097352c7659",
                 "shasum": ""
             },
             "require": {
@@ -546,7 +546,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/main"
             },
-            "time": "2026-10-11T21:44:06+00:00"
+            "time": "2026-10-12T19:23:36+00:00"
         },
         {
             "name": "silassare/kli",
@@ -554,12 +554,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/kli.git",
-                "reference": "62402d1bde8eb8ce61ad9300fcad8a3ff3c622c9"
+                "reference": "3311fcc89ac426cb78c556da9910b26689ac033b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/kli/zipball/62402d1bde8eb8ce61ad9300fcad8a3ff3c622c9",
-                "reference": "62402d1bde8eb8ce61ad9300fcad8a3ff3c622c9",
+                "url": "https://api.github.com/repos/silassare/kli/zipball/3311fcc89ac426cb78c556da9910b26689ac033b",
+                "reference": "3311fcc89ac426cb78c556da9910b26689ac033b",
                 "shasum": ""
             },
             "require": {
@@ -610,7 +610,7 @@
                 "issues": "https://github.com/silassare/kli/issues",
                 "source": "https://github.com/silassare/kli/tree/main"
             },
-            "time": "2026-09-27T17:59:55+00:00"
+            "time": "2026-10-12T19:21:54+00:00"
         },
         {
             "name": "silassare/php-utils",
@@ -618,12 +618,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/php-utils.git",
-                "reference": "be911a031683db154ae976511e2e73e82ac9877f"
+                "reference": "5547d2c12006bac69192c790e03148ea382efd9a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/php-utils/zipball/be911a031683db154ae976511e2e73e82ac9877f",
-                "reference": "be911a031683db154ae976511e2e73e82ac9877f",
+                "url": "https://api.github.com/repos/silassare/php-utils/zipball/5547d2c12006bac69192c790e03148ea382efd9a",
+                "reference": "5547d2c12006bac69192c790e03148ea382efd9a",
                 "shasum": ""
             },
             "require": {
@@ -671,7 +671,7 @@
                 "issues": "https://github.com/silassare/php-utils/issues",
                 "source": "https://github.com/silassare/php-utils/tree/main"
             },
-            "time": "2026-09-25T04:41:14+00:00"
+            "time": "2026-10-12T19:19:28+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
