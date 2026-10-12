@@ -266,6 +266,8 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 			return;
 		}
 
+		$this->assertPending($auth);
+
 		$secret = $this->user->getAuthUserDataStore()->get2FATotpSecret();
 
 		if (empty($secret)) {

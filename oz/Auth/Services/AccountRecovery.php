@@ -86,6 +86,10 @@ final class AccountRecovery extends Service
 
 		AuthUsers::updatePassword($user, $new_pass);
 
+		if (null !== $provider) {
+			VerificationPolicy::consume($provider);
+		}
+
 		if ($auto_login_on_success) {
 			$ri->getContext()->getAuthUsers()->logUserIn($user);
 		}

@@ -93,7 +93,6 @@ class AuthorizationService extends Service
 		$provider = Auth::provider($ri->getContext(), $auth);
 
 		$provider->getCredentials()
-			->setReference($ref)
 			->setRefreshKey($refresh_key);
 
 		$provider->refresh();
@@ -115,9 +114,6 @@ class AuthorizationService extends Service
 		$auth = Auth::getRequired($ref);
 
 		$provider = Auth::provider($ri->getContext(), $auth);
-
-		$provider->getCredentials()
-			->setReference($ref);
 
 		$this->json()
 			->setDone()
@@ -143,7 +139,6 @@ class AuthorizationService extends Service
 		$provider = Auth::provider($ri->getContext(), $auth);
 
 		$provider->getCredentials()
-			->setReference($ref)
 			->setRefreshKey($refresh_key);
 
 		$provider->cancel();
@@ -166,9 +161,6 @@ class AuthorizationService extends Service
 		$auth = Auth::getRequired($ref);
 
 		$provider = Auth::provider($ri->getContext(), $auth);
-
-		$provider->getCredentials()
-			->setReference($ref);
 
 		$code  = $fd->get('code');
 		$token = $fd->get('token');

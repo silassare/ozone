@@ -294,7 +294,7 @@ return [
   `Settings::set()` refuses it too. What an allow-list wants (`OZ_REDIRECT_ALLOWED_HOSTS`): a plugin
   loaded after the application cannot widen it. A later source may **tighten** a strategy (add a lock)
   and never loosen one, which is what makes the lock worth anything.
-Each file in `oz/oz_settings/` documents its keys.
+  Each file in `oz/oz_settings/` documents its keys.
 
 - `Settings::set()` / `unset()` write the **stateful** directory by default (`data/{scope}/settings/`),
   for runtime overrides that must not touch version-controlled files; `$stateful = false` writes the
@@ -395,8 +395,8 @@ templates through `BlatePlugin::CONTEXT_INJECT_KEY`.
 `Web\BlatePlugin` is **`@internal`** — never reference it from application or plugin code. Its
 `register()` runs from `.blate.php` at the project root (picked up by `Blate::autoLoad()`, generated
 once per project, and must call `BlatePlugin::register()`) and registers the template helpers
-(`setting`, `env`, `log`, `t`, `uri`, `route`) and globals (`request_uri`, `base_url`, `lang`,
-`oz_version`, `oz_version_name`); its `boot()` defers to Blate's first use (`Blate::onFirstUse()`:
+(`setting`, `env`, `log`, `t`, `uri`, `route`) and globals (`request_uri`, `base_url`, `lang`, `dir`,
+`project_name`, `project_initial`, `oz_version`, `oz_version_name`); its `boot()` defers to Blate's first use (`Blate::onFirstUse()`:
 a template compiled or rendered) loading the framework's and the project's `.blate.php` and setting the
 cache directory, so a request that renders no template does no Blate work -- Blate's own built-ins are
 registered on first use too.
@@ -546,9 +546,14 @@ per route with `withAuthentication()`): `SESSION` (cookie, always satisfied, sta
 guards store results for `$ri->getGuardStoredResults(GuardClass::class)`.
 
 **OZAuth** providers drive multi-step authorizations (email / phone ownership, account recovery, file
-access): `Auth::provider($context, $auth)`; `AuthorizationService` exposes
-`/auth/:ref/authorize|refresh|state|cancel`; `->withAuthorization('auth:provider:...')` guards a
-route with one.
+access): `Auth::provider($context, $auth)` rebuilds one with the row's reference;
+`AuthorizationService` exposes `/auth/:ref/authorize|refresh|state|cancel`;
+`->withAuthorization('auth:provider:...')` guards a route with one.
+
+- **A secret is checked only while the authorization is `PENDING`**: once refused (tries used up) or
+  granted, `authorize()` refuses without looking at the secret, so the try limit holds. Only
+  `refresh()` (new code, tries reset) reopens one. `getState()` throws `OZ_AUTH_HAS_EXPIRED` past
+  `expire_at`: the row outlives its expiry until the garbage collection, and grants nothing then.
 
 - An authorization carries a **label shown to the user**: set it on the scope
   (`AuthorizationScope::setLabel()`), otherwise `generate()` names it after the provider, since the
@@ -564,7 +569,9 @@ route with one.
   An **empty list** means nothing is proven (the identifier is taken as given, verified later), and a
   project's own provider is named here. `VerificationPolicy` reads it; `/signup` and
   `/account-recovery` guard their door only when every type requires something, and the handler always
-  enforces the rule of the type it was given, since the type is a form field a guard cannot see.
+  enforces the rule of the type it was given, since the type is a form field a guard cannot see:
+  `VerificationPolicy::resolve()` runs the guard's check itself when the route did not. Once the
+  action is done, `VerificationPolicy::consume()` deletes the authorization, so it serves once.
 - **Two-factor authentication** (`Auth2FA`, booted by default): a user with `2fa.enabled` in their data
   store has their login interrupted, the user is detached, an authorization is opened through
   `TwoFactorAuthorizationProvider` on the channel `oz.auth.2fa` selects (`totp`, `email`, `sms`), and

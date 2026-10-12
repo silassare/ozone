@@ -84,6 +84,10 @@ final class SignUp extends Service
 			throw self::takenField($e, $data) ?? $e;
 		}
 
+		if (null !== $provider) {
+			VerificationPolicy::consume($provider);
+		}
+
 		$ri->getContext()
 			->getAuthUsers()
 			->logUserIn($user);

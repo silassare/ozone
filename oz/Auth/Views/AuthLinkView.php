@@ -66,9 +66,6 @@ final class AuthLinkView extends WebView
 
 			$provider = Auth::provider($ri->getContext(), $auth);
 
-			$provider->getCredentials()
-				->setReference($ref);
-
 			$type = AuthorizationSecretType::TOKEN;
 			$provider->getCredentials()
 				->setToken($token);

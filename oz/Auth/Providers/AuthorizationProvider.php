@@ -140,7 +140,11 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 		if ($auth->expire_at <= \time()) {
 			$this->save($auth->setState(AuthorizationState::REFUSED->value));
 			$this->onExpired($auth);
-		} elseif ((0 === $try_max || $remainder >= 0) && \hash_equals($known_hash, $this->hash($secret))) {
+		}
+
+		$this->assertPending($auth);
+
+		if ((0 === $try_max || $remainder >= 0) && \hash_equals($known_hash, $this->hash($secret))) {
 			// we don't exceed the auth_try_max and the token/code is valid
 			$this->save($auth->setState(AuthorizationState::AUTHORIZED->value));
 			$this->onAuthorized($auth);
@@ -169,10 +173,16 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	#[Override]
 	public function getState(): AuthorizationState
 	{
-		$ref = $this->credentials->getReference();
+		$ref  = $this->credentials->getReference();
+		$auth = Auth::getRequired($ref);
 
-		return Auth::getRequired($ref)
-			->getState();
+		// The row outlives its expiry until the garbage collection deletes it: an authorization
+		// granted before it expired grants nothing after.
+		if ((int) $auth->getExpireAt() <= \time()) {
+			throw new UnauthorizedException('OZ_AUTH_HAS_EXPIRED', $this->debug($auth));
+		}
+
+		return $auth->getState();
 	}
 
 	/**
@@ -303,6 +313,28 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 		$this->onCancel($auth);
 
 		return $this;
+	}
+
+	/**
+	 * Refuses to check a secret against an authorization that is no longer pending: a refused one
+	 * would let the guessing go on past its try limit, and a granted one is not granted twice.
+	 *
+	 * @throws UnauthorizedException
+	 */
+	protected function assertPending(OZAuth $auth): void
+	{
+		$state = $auth->getState();
+
+		if (AuthorizationState::PENDING === $state) {
+			return;
+		}
+
+		if (AuthorizationState::REFUSED === $state) {
+			// An expired authorization was answered before: refused, it ran out of tries.
+			$this->onTooMuchRetry($auth);
+		}
+
+		throw new UnauthorizedException('OZ_AUTH_CODE_INVALID', $this->debug($auth));
 	}
 
 	/**

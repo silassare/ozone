@@ -112,7 +112,9 @@ final class Auth implements BootHookReceiverInterface
 	}
 
 	/**
-	 * Gets instance of the a given auth provider name.
+	 * Gets the provider of an existing authorization, its credentials carrying the authorization's
+	 * reference: a provider's credentials draw a new one when built, and a lookup by that one
+	 * (`getState()`, `authorize()`, ...) would miss the row.
 	 *
 	 * @param Context $context
 	 * @param OZAuth  $auth
@@ -138,8 +140,13 @@ final class Auth implements BootHookReceiverInterface
 		}
 
 		/* @var AuthorizationProviderInterface $provider */
-		return $provider::resolve($context, $auth)
+		$instance = $provider::resolve($context, $auth)
 			->setScope(AuthorizationScope::from($auth));
+
+		$instance->getCredentials()
+			->setReference($auth->getRef());
+
+		return $instance;
 	}
 
 	/**

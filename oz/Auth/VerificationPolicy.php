@@ -16,8 +16,12 @@ namespace OZONE\Core\Auth;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Interfaces\AuthorizationProviderInterface;
 use OZONE\Core\Exceptions\ForbiddenException;
+use OZONE\Core\Exceptions\NotFoundException;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Router\Guards\AuthorizationProviderRouteGuard;
 use OZONE\Core\Router\RouteInfo;
+use Throwable;
 
 /**
  * What must be proven before an account is created, or handed back.
@@ -28,7 +32,8 @@ use OZONE\Core\Router\RouteInfo;
  *
  * A route guard cannot hold these rules: it runs before the handler, while the user type is a field of
  * the form. So a route is guarded only when **every** type requires a verification, and the handler
- * always checks the rule of the type it was actually given.
+ * always checks the rule of the type it was actually given, running that check itself when the route
+ * could not.
  */
 final class VerificationPolicy
 {
@@ -108,7 +113,9 @@ final class VerificationPolicy
 	 *
 	 * @return null|AuthorizationProviderInterface null when that type has nothing to prove
 	 *
-	 * @throws ForbiddenException when the type must prove something and this request does not
+	 * @throws ForbiddenException    when the type must prove something and this request does not
+	 * @throws NotFoundException     when the authorization presented does not exist
+	 * @throws UnauthorizedException when the authorization presented is not granted
 	 */
 	public static function resolve(
 		RouteInfo $ri,
@@ -121,18 +128,13 @@ final class VerificationPolicy
 			return null;
 		}
 
+		// The route demanded an authorization at its door only when every user type has to present
+		// one; otherwise the one this type must present is checked here, as the guard does.
 		$results = $ri->hasGuardStoredResults(AuthorizationProviderRouteGuard::class)
 			? AuthorizationProviderRouteGuard::resolveResults($ri)
-			: null;
+			: (new AuthorizationProviderRouteGuard($allowed))->check($ri);
 
-		$provider = $results['provider'] ?? null;
-
-		if (null === $provider) {
-			throw new ForbiddenException('OZ_AUTH_REF_NOT_PROVIDED', [
-				'_reason'    => 'This user type requires a verified authorization.',
-				'_user_type' => $user_type,
-			]);
-		}
+		$provider = $results['provider'];
 
 		if (!\in_array($provider::getName(), $allowed, true)) {
 			throw new ForbiddenException(null, [
@@ -143,6 +145,23 @@ final class VerificationPolicy
 		}
 
 		return $provider;
+	}
+
+	/**
+	 * Spends the authorization an action was allowed by, once the action is done: it proved what it
+	 * had to, and must not allow the action a second time.
+	 *
+	 * @param AuthorizationProviderInterface $provider what {@see self::resolve()} gave
+	 */
+	public static function consume(AuthorizationProviderInterface $provider): void
+	{
+		$auth = Auth::get($provider->getCredentials()->getReference());
+
+		try {
+			$auth?->selfDelete();
+		} catch (Throwable $t) {
+			throw new RuntimeException('Unable to delete the authorization an action used.', null, $t);
+		}
 	}
 
 	/**
