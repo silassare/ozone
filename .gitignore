@@ -11,6 +11,9 @@ ignore
 # cs fixer
 .php-cs-fixer.cache
 
+# phpcs
+.phpcs.cache
+
 # phpunit
 .phpunit.result.cache
 

@@ -11,6 +11,8 @@ the files they write stay yours.
 
 ```sh
 make install           # Composer dependencies
+make check             # code style and static analysis: the gate for every change
+make check-full        # the same two with their caches ignored
 make test              # every suite
 make test-unit         # unit suite, no server needed
 make test-services     # Redis, MinIO and ClamAV tests, against their servers
@@ -19,13 +21,18 @@ make test-provision    # provisions throwaway Debian and Alpine containers for r
 make test-integration  # CLI and HTTP tests, on SQLite, MySQL and PostgreSQL
 make test-coverage     # unit suite coverage report in .ozone/coverage/
 make benchmark-http    # HTTP throughput next to Laravel and Symfony (runs on the host)
-make ci                # what CI runs: install, cs, lint, then every suite
+make ci                # what CI runs: install, the checks with no cache, then every suite
 make lint              # psalm
 make cs                # code style check
 make fix               # psalm, then the code style fixer
 make shell             # a shell in the PHP container, servers running
 make down              # stop the servers
 ```
+
+`make test-unit` and `make test-integration` take `FILTER=` (a class or method pattern) and `FILE=`
+(a path, which wins over the suite the target selects), so a change is checked against the class
+that covers it before the whole suite runs. The whole suite is still what has to pass before
+anything is handed over.
 
 `OZ_PHP_VERSION=8.3 make docker-build test` runs the suites on another PHP version.
 

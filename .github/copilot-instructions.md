@@ -1046,6 +1046,21 @@ plus MySQL, PostgreSQL, Redis, MinIO, ClamAV and the worker servers). The host n
 `test-unit`, `test-services`, `test-runtimes`, `test-provision`, `test-integration`, `ci` (what CI
 runs), `lint`, `cs`, `fix`, `shell`, `down`, ...
 
+**Three tiers of re-running**, the cadence of every repository of the suite, with the same words
+everywhere (the `Makefile`'s own comments say what each one skips):
+
+- `make check` -- **every change**: `cs` and `lint`, on the host, both cached. `make check-full`
+  is the same two with the caches ignored, and is what `make ci` runs.
+- `make test-unit FILTER=Router` or `FILE=tests/Router/RouterTest.php`, and the same on
+  `make test-integration` -- **a feature is done**: one class or one case of the suite that covers
+  it. A path given as `FILE` wins over the suite the target selects, so it names a file of that
+  suite.
+- `make test`, then `make ci` -- **end of a cycle, and before anything is handed over**: every
+  suite, the service and runtime servers included. Start it in the background and carry on working.
+
+The tiers are about re-running, never about writing: a feature's test is written with the feature.
+A failure in a narrowed run is repeated with the full target before it is believed or reported.
+
 - **Never create a `phpunit.xml`**: PHPUnit prefers it over `phpunit.xml.dist`, it is git-ignored, and
   it would silently decide which servers the suites see. The targets pass `-c phpunit.xml.dist`;
   server addresses come from the environment compose exports.
