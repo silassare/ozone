@@ -7,6 +7,11 @@
 					<h1 class="oz-card__title">{$t('OZ_VIEW_AUTH_LINK_RECOVERY_DONE_TITLE')}</h1>
 					<p class="oz-card__text">{$t('OZ_VIEW_AUTH_LINK_RECOVERY_DONE')}</p>
 				</div>
+				{@if oz_sign_in_uri}
+				<div class="oz-card__actions">
+					<a class="oz-btn" href="{oz_sign_in_uri}">{$t('OZ_VIEW_AUTH_LINK_SIGN_IN_BTN')}</a>
+				</div>
+				{/if}
 				{:else}
 				<div class="oz-card__heading">
 					<h1 class="oz-card__title">{$t('OZ_VIEW_AUTH_LINK_RECOVERY_TITLE')}</h1>

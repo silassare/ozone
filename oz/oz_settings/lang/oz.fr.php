@@ -170,6 +170,7 @@ return [
 	'OZ_VIEW_AUTH_LINK_CONFIRM_WHY'         => "Cette étape évite qu'un aperçu de lien ou un outil de sécurité qui ouvre le lien ne l'utilise à votre place.",
 	'OZ_VIEW_AUTH_LINK_DONE_TITLE'          => 'Confirmé',
 	'OZ_VIEW_AUTH_LINK_DONE_MESSAGE'        => 'Vous pouvez fermer cette fenêtre et revenir là où vous avez commencé.',
+	'OZ_VIEW_AUTH_LINK_DONE_SIGN_IN'        => 'Vous pouvez maintenant vous connecter.',
 	'OZ_VIEW_AUTH_LINK_INVALID_TITLE'       => 'Ce lien ne fonctionne plus',
 	'OZ_VIEW_AUTH_LINK_INVALID_MESSAGE'     => "Il a expiré ou n'est pas valide. Demandez-en un nouveau depuis l'endroit où vous avez commencé.",
 	'OZ_VIEW_AUTH_LINK_RECOVERY_TITLE'      => 'Choisissez un nouveau mot de passe',
@@ -180,6 +181,7 @@ return [
 	'OZ_VIEW_AUTH_LINK_RECOVERY_MISMATCH'   => 'Les deux mots de passe ne sont pas identiques.',
 	'OZ_VIEW_AUTH_LINK_RECOVERY_DONE_TITLE' => 'Mot de passe changé',
 	'OZ_VIEW_AUTH_LINK_RECOVERY_DONE'       => 'Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.',
+	'OZ_VIEW_AUTH_LINK_SIGN_IN_BTN'         => 'Se connecter',
 
 	// access grant form view
 	'OZ_ACCESS_GRANT_FORM_TITLE'      => 'Connectez-vous pour continuer',

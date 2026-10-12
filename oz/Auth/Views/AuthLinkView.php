@@ -116,7 +116,10 @@ final class AuthLinkView extends WebView
 		}
 
 		return $this->setTemplate('oz.auth.link.view.blate')
-			->inject(['oz_auth_link_done' => true])
+			->inject([
+				'oz_auth_link_done' => true,
+				'oz_sign_in_uri'    => $this->signInUri(),
+			])
 			->respond();
 	}
 
@@ -193,7 +196,10 @@ final class AuthLinkView extends WebView
 		AuthUsers::updatePassword($user, $pass);
 
 		return $this->setTemplate('oz.auth.link.recovery.blate')
-			->inject(['oz_recovery_done' => true])
+			->inject([
+				'oz_recovery_done' => true,
+				'oz_sign_in_uri'   => $this->signInUri(),
+			])
 			->respond();
 	}
 
@@ -211,6 +217,38 @@ final class AuthLinkView extends WebView
 			->respond();
 
 		return null === $error ? $response : $response->withStatus(400);
+	}
+
+	/**
+	 * The link onward of the pages that end a flow: the URI of the project's sign-in route
+	 * (`OZ_AUTH_SIGN_IN_ROUTE`), an empty string when the project named none.
+	 *
+	 * A name the router of this scope does not know, or a route that takes parameters, gives no link
+	 * and is logged: the page of a recovery is reached once the password is already changed, so a
+	 * mistake in the settings must not be what the owner sees instead of it.
+	 */
+	private function signInUri(): string
+	{
+		$name = (string) Settings::get('oz.auth', 'OZ_AUTH_SIGN_IN_ROUTE', '');
+
+		if ('' === $name) {
+			return '';
+		}
+
+		$context = $this->getContext();
+		$route   = $context->getRouter()
+			->getRoute($name);
+
+		if (null === $route || $route->isDynamic()) {
+			oz_logger()->warning(
+				'OZ_AUTH_SIGN_IN_ROUTE names no parameterless route of this scope: no link is shown.',
+				['_route' => $name]
+			);
+
+			return '';
+		}
+
+		return (string) $context->buildRouteUri($name);
 	}
 
 	/**

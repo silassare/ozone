@@ -49,6 +49,13 @@ final class DefaultPagesServedTest extends TestCase
 			'mail' => ['transport' => LogTransport::class, 'async' => false],
 		]);
 		$proj->writeFile('app/templates/oz.theme.css', ':root { --oz-color-primary: #0b6e4f; }');
+		// The project's sign-in page, which the pages that end an authorization link link to.
+		$ns = $proj->getNamespace();
+		$proj->writeFileFromStub('SignInPageRoutesProvider', 'app/SignInPageRoutesProvider.php', [
+			'namespace' => $ns,
+		]);
+		$proj->setSetting('oz.routes.api', "{$ns}\\SignInPageRoutesProvider", true);
+		$proj->setSetting('oz.auth', 'OZ_AUTH_SIGN_IN_ROUTE', 'app:sign-in');
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
 		$proj->oz('migrations', 'create', '--force', '--label=initial')->mustRun();
 		$proj->oz('migrations', 'run', '--skip-backup')->mustRun();
@@ -119,6 +126,59 @@ final class DefaultPagesServedTest extends TestCase
 		self::assertSame(200, $status, $page);
 		self::assertStringContainsString('Confirmed', $page);
 		self::assertStringContainsString('oz-badge--success', $page);
+
+		// The way onward, built from the route OZ_AUTH_SIGN_IN_ROUTE names.
+		[, $host] = self::$server;
+		$link_to  = '~<a class="oz-btn" href="http://' . \preg_quote($host, '~') . '[^"]*/sign-in">Sign in</a>~';
+
+		self::assertSame(1, \preg_match($link_to, $page), $page);
+		self::assertStringContainsString('You can now sign in.', $page);
+	}
+
+	/**
+	 * A sign-in route this scope cannot build is logged and leaves the page without a link, rather
+	 * than failing a page that is reached once the authorization is already spent.
+	 */
+	public function testASignInRouteThatCannotBeBuiltIsLoggedAndLinksNothing(): void
+	{
+		// A real route, of every scope, but one that takes parameters.
+		self::$project->setSetting('oz.auth', 'OZ_AUTH_SIGN_IN_ROUTE', 'oz:auth_link');
+		self::serveAgain();
+
+		try {
+			[$status] = self::request('POST', '/auth/verify/email', ['email' => 'bob@example.com'], [
+				'Accept: application/json',
+			]);
+
+			self::assertSame(200, $status);
+
+			$link                      = self::linkFromTheLog();
+			[$status, $page, $headers] = self::request('GET', $link);
+
+			self::assertSame(200, $status, $page);
+			self::assertSame(1, \preg_match('~name="_csrf" value="([^"]*)"~', $page, $m));
+
+			[$status, $page] = self::request('POST', $link, ['_csrf' => $m[1]], self::cookies($headers));
+
+			self::assertSame(200, $status, $page);
+			self::assertStringContainsString('Confirmed', $page);
+			self::assertStringNotContainsString('<div class="oz-card__actions">', $page);
+			self::assertStringContainsString('You can close this window', $page);
+			self::assertStringContainsString('OZ_AUTH_SIGN_IN_ROUTE names no parameterless route', self::logs());
+		} finally {
+			self::$project->setSetting('oz.auth', 'OZ_AUTH_SIGN_IN_ROUTE', 'app:sign-in');
+		}
+	}
+
+	/**
+	 * Starts the server again, for a settings change to reach it: the dev server is one long-lived
+	 * process, and OPcache holds the settings file it has already compiled (`opcache.revalidate_freq`),
+	 * so a file rewritten in place between two requests is not what the next one reads.
+	 */
+	private static function serveAgain(): void
+	{
+		self::$server[0]->stop();
+		self::$server = self::$project->startServer('api');
 	}
 
 	/**
@@ -126,15 +186,25 @@ final class DefaultPagesServedTest extends TestCase
 	 */
 	private static function linkFromTheLog(): string
 	{
+		$logs = self::logs();
+
+		self::assertGreaterThan(0, \preg_match_all('~https?://[^\s"<]+(/auth/link/[^\s"<]+)~', $logs, $m), $logs);
+
+		return (string) \end($m[1]);
+	}
+
+	/**
+	 * Everything the project has logged so far.
+	 */
+	private static function logs(): string
+	{
 		$logs = '';
 
 		foreach (\glob(self::$project->getPath() . '/.ozone/logs/*.log') ?: [] as $file) {
 			$logs .= (string) \file_get_contents($file);
 		}
 
-		self::assertGreaterThan(0, \preg_match_all('~https?://[^\s"<]+(/auth/link/[^\s"<]+)~', $logs, $m), $logs);
-
-		return (string) \end($m[1]);
+		return $logs;
 	}
 
 	/**

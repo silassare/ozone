@@ -170,6 +170,7 @@ return [
 	'OZ_VIEW_AUTH_LINK_CONFIRM_WHY'         => 'This extra step keeps a link preview or a security scanner that opens the link from using it in your place.',
 	'OZ_VIEW_AUTH_LINK_DONE_TITLE'          => 'Confirmed',
 	'OZ_VIEW_AUTH_LINK_DONE_MESSAGE'        => 'You can close this window and go back to where you started.',
+	'OZ_VIEW_AUTH_LINK_DONE_SIGN_IN'        => 'You can now sign in.',
 	'OZ_VIEW_AUTH_LINK_INVALID_TITLE'       => 'This link no longer works',
 	'OZ_VIEW_AUTH_LINK_INVALID_MESSAGE'     => 'It has expired or is not valid. Ask for a new one from where you started.',
 	'OZ_VIEW_AUTH_LINK_RECOVERY_TITLE'      => 'Choose a new password',
@@ -180,6 +181,7 @@ return [
 	'OZ_VIEW_AUTH_LINK_RECOVERY_MISMATCH'   => 'The two passwords are not the same.',
 	'OZ_VIEW_AUTH_LINK_RECOVERY_DONE_TITLE' => 'Password changed',
 	'OZ_VIEW_AUTH_LINK_RECOVERY_DONE'       => 'You can now sign in with your new password.',
+	'OZ_VIEW_AUTH_LINK_SIGN_IN_BTN'         => 'Sign in',
 
 	// access grant form view
 	'OZ_ACCESS_GRANT_FORM_TITLE'      => 'Sign in to continue',

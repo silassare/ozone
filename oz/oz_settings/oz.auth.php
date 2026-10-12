@@ -46,6 +46,23 @@ return [
 	],
 
 	/**
+	 * Name of the project's sign-in route, linked by the pages that end an authorization link: the
+	 * one that confirms a link, and the one that confirms a new password after an account recovery.
+	 * Left empty, those pages say what happened and stop there, leaving the person to find their own
+	 * way back.
+	 *
+	 * A route name, never a URL: the link is built with the project's own router
+	 * (`Context::buildRouteUri()`), so nothing a request carries can send these pages elsewhere. The
+	 * route takes no parameter, and must be registered where the page is served (`oz.routes`, or the
+	 * `oz.routes.web` of the scope that serves it). A name the router of that scope does not know, or
+	 * one that takes parameters, is logged and shows no link, rather than failing a page that is
+	 * reached once the password is already changed.
+	 *
+	 * @default '' (no link onward)
+	 */
+	'OZ_AUTH_SIGN_IN_ROUTE' => '',
+
+	/**
 	 * Auth code length.
 	 */
 	'OZ_AUTH_CODE_LENGTH'         => 6,

@@ -172,6 +172,8 @@ final class VerificationFlowsTest extends TestCase
 
 		self::assertSame(200, $status, $body);
 		self::assertStringContainsString('Password changed', $body);
+		// The way onward: the owner is not sent back to the email to find where to sign in.
+		self::assertStringContainsString('/sign-in">Sign in</a>', $body);
 
 		// Who started it holds a reference to nothing.
 		[$status, $body] = $this->request($project, 'POST', '/account-recovery', [
@@ -424,6 +426,13 @@ final class VerificationFlowsTest extends TestCase
 		if (null !== $recovery_policy) {
 			$project->setSetting('oz.auth.verification', 'OZ_ACCOUNT_RECOVERY_VERIFICATION', $recovery_policy);
 		}
+
+		// The page that confirms a new password links to the project's sign-in page.
+		$project->writeFileFromStub('SignInPageRoutesProvider', 'app/SignInPageRoutesProvider.php', [
+			'namespace' => $ns,
+		]);
+		$project->setSetting('oz.routes.api', "{$ns}\\SignInPageRoutesProvider", true);
+		$project->setSetting('oz.auth', 'OZ_AUTH_SIGN_IN_ROUTE', 'app:sign-in');
 
 		$project->oz('db', 'build', '--build-all', '--class-only')->mustRun();
 		$project->oz('migrations', 'create', '--force', '--label=initial')->mustRun();

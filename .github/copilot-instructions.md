@@ -428,10 +428,12 @@ templates there).
 
 Every page OZone renders extends `oz.page.layout.blate`; every email `oz.mail.layout.html.blate`. CSS
 is BEM on `--oz-*` variables in `oz.css`; a project themes through its own `oz.theme.css`, never by
-copying `oz.css`. Emails cannot use CSS variables: their theme is `OZ_MESSAGING_MAIL_THEME`. Every text
-is a lang key (`oz.en` and `oz.fr`), never literal English. In a template, `$$` is an object: pass
-`$t()` an array (`oz_vars`, `oz_error_vars`, or `$map()`). Hand a template plain values, not objects
-whose setters it would read as properties (a `Field` gave `hidden()`, always true).
+copying `oz.css`. A page that ends a flow links to the project's sign-in route when `oz.auth` names
+one (`OZ_AUTH_SIGN_IN_ROUTE`), so a project adds the way onward without overriding the template.
+Emails cannot use CSS variables: their theme is `OZ_MESSAGING_MAIL_THEME`. Every text is a lang key
+(`oz.en` and `oz.fr`), never literal English. In a template, `$$` is an object: pass `$t()` an array
+(`oz_vars`, `oz_error_vars`, or `$map()`). Hand a template plain values, not objects whose setters it
+would read as properties (a `Field` gave `hidden()`, always true).
 
 ---
 

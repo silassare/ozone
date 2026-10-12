@@ -91,6 +91,46 @@ final class DefaultPagesTest extends TestCase
 		self::assertStringContainsString('oz-badge--danger', $invalid);
 	}
 
+	/**
+	 * A page that ends a flow links onward when `OZ_AUTH_SIGN_IN_ROUTE` gave a URI, and says its
+	 * piece without one when it did not: the person who just changed their password is not sent back
+	 * to the email to find where to sign in.
+	 */
+	public function testTheEndOfAFlowLinksToTheSignInPageWhenThereIsOne(): void
+	{
+		$recovered = self::template('oz.auth.link.recovery.blate', [
+			'oz_recovery_done' => true,
+			'oz_sign_in_uri'   => 'https://acme.test/sign-in',
+		]);
+		$alone = self::template('oz.auth.link.recovery.blate', [
+			'oz_recovery_done' => true,
+			'oz_sign_in_uri'   => '',
+		]);
+		$confirmed = self::template('oz.auth.link.view.blate', [
+			'oz_auth_link_done' => true,
+			'oz_sign_in_uri'    => 'https://acme.test/sign-in',
+		]);
+
+		self::assertStringContainsString('Password changed', $recovered);
+		self::assertStringContainsString(
+			'<a class="oz-btn" href="https://acme.test/sign-in">Sign in</a>',
+			$recovered
+		);
+		self::assertStringContainsString('Password changed', $alone);
+		self::assertStringNotContainsString('<div class="oz-card__actions">', $alone);
+		self::assertStringContainsString(
+			'<a class="oz-btn" href="https://acme.test/sign-in">Sign in</a>',
+			$confirmed
+		);
+
+		// The confirmation page says what its page offers: signing in, or closing the window.
+		self::assertStringContainsString('You can now sign in.', $confirmed);
+		self::assertStringContainsString(
+			'You can close this window',
+			self::template('oz.auth.link.view.blate', ['oz_auth_link_done' => true, 'oz_sign_in_uri' => ''])
+		);
+	}
+
 	public function testTheAccessGrantFormLabelsItsFields(): void
 	{
 		$form = new Form();
