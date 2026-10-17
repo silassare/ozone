@@ -325,7 +325,15 @@ final class JobsCmd extends Command
 		$force   = (bool) $args->get('force');
 
 		if (null !== $job_ref) {
-			$job = JobsManager::getStore($store)->getOrFail($job_ref);
+			if (null === $store) {
+				// Not the option's own required(): without --job this action runs the queue of every
+				// registered store, which is what leaving it out means there.
+				throw new KliInputException(
+					\sprintf('Running the single job "%s" needs the store holding it: --store.', $job_ref)
+				);
+			}
+
+			$job = JobsManager::getStore((string) $store)->getOrFail($job_ref);
 
 			if ($force) {
 				if ($job->isLocked()) {

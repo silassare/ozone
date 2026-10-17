@@ -126,6 +126,29 @@ final class JobQueueTest extends TestCase
 		self::assertSame(0, $proc->getExitCode());
 	}
 
+	/**
+	 * Running one job by ref needs the store that holds it. The option is not required for the
+	 * action -- left out without `--job` it means every registered store's queue -- so the single
+	 * job case says what is missing instead of handing a null store name to the registry.
+	 *
+	 * @dataProvider provideDbConfig
+	 */
+	public function testRunningOneJobByRefWithoutAStoreSaysWhatIsMissing(DbTestConfig $config): void
+	{
+		$proj = self::getProject($config);
+		$proc = $proj->oz('jobs', 'run', '--job=' . \str_repeat('a', 32));
+
+		$proc->run();
+
+		$output = $proc->getOutput() . $proc->getErrorOutput();
+
+		self::assertNotSame(0, $proc->getExitCode(), $output);
+		self::assertStringContainsString('--store', $output);
+
+		// Not the TypeError of a null reaching JobsManager::getStore().
+		self::assertStringNotContainsString('must be of type string', $output);
+	}
+
 	public static function provideDbConfig(): iterable
 	{
 		return DbTestConfig::allConfigured('job-queue');
