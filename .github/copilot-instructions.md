@@ -677,7 +677,11 @@ request instead, and finds the account by identifier type
   compares the loaded row's stored key with the current request's (`Session::sourceChanged()`, from the
   `request_source_key` column; `sourceKey()` is the request's own key, not the stored one). Where
   `OZ_SESSION_HIJACKING_FORCE_SAME_SOURCE` is on, a session carrying a user is then refused (403
-  `OZ_SESSION_HIJACKING_DETECTED`, after `SessionHijackingDetected`) and one carrying none is restarted.
+  `OZ_SESSION_HIJACKING_DETECTED`, after `SessionHijackingDetected`, which carries the user, the
+  session ID and both source keys, never the session) and one carrying none is restarted. The refusal drops the session
+  and CSRF cookies (`Session::abandon()`, on `ResponseHook`) and leaves the stored session alone: the
+  client is not stuck sending an ID every route refuses, and a client replaying the cookie of a
+  session it cannot use does not sign its owner out by sending it.
   The check runs once, when the session starts: the source of a request cannot change while it is served.
 
 **Garbage collection** (`App\GarbageCollector`): modules register collectors from `boot()`

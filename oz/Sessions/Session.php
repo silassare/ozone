@@ -131,6 +131,19 @@ final class Session implements BootHookReceiverInterface
 	}
 
 	/**
+	 * Returns the session ID without binding anything to it.
+	 *
+	 * Unlike {@see self::id()}, asking does not keep the session: for saying which session something
+	 * happened to, not for handing the ID to something that will come back with it.
+	 *
+	 * @return string
+	 */
+	public function peekID(): string
+	{
+		return $this->ensureID();
+	}
+
+	/**
 	 * Returns session source key.
 	 *
 	 * This is the source of the current request, not the one the session was opened from: the stored
@@ -141,6 +154,20 @@ final class Session implements BootHookReceiverInterface
 	public function sourceKey(): string
 	{
 		return $this->request_source_key;
+	}
+
+	/**
+	 * Returns the source key the session was opened from, the baseline
+	 * {@see self::sourceChanged()} compares the current request's against.
+	 *
+	 * This request's own key for a new session: nothing is stored yet, and that is the key the
+	 * session will be opened with.
+	 *
+	 * @return string
+	 */
+	public function openedSourceKey(): string
+	{
+		return $this->session_entry?->getRequestSourceKey() ?? $this->request_source_key;
 	}
 
 	/**

@@ -267,8 +267,11 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 
 		SessionHijackingDetected::listen(static function (SessionHijackingDetected $ev): void {
 			oz_logger()->warning('Session hijacking detected.', [
-				'session_id' => $ev->session->id(),
-				'user_ip'    => $ev->context->getUserIP(),
+				'auth_user_type'     => $ev->auth_user->getAuthUserType(),
+				'auth_user_id'       => $ev->auth_user->getAuthIdentifier(),
+				'opened_source_key'  => $ev->opened_source_key,
+				'request_source_key' => $ev->request_source_key,
+				'user_ip'            => $ev->context->getUserIP(),
 			]);
 		}, Event::RUN_LAST);
 

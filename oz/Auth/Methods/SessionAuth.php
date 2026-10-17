@@ -268,11 +268,18 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 			$this->session->sourceChanged()
 			&& (bool) Settings::get('oz.sessions', 'OZ_SESSION_HIJACKING_FORCE_SAME_SOURCE')
 		) {
-			if ($this->session->attachedAuthUser()) {
-				(new SessionHijackingDetected($context, $this->session))->dispatch();
+			$user = $this->session->attachedAuthUser();
 
-				// Dispatched first, so a listener still reads the session's ID, and let go of here:
-				// the refusal must take the cookie with it.
+			if (null !== $user) {
+				(new SessionHijackingDetected(
+					$context,
+					$user,
+					$this->session->peekID(),
+					$this->session->openedSourceKey(),
+					$this->session->sourceKey()
+				))->dispatch();
+
+				// The refusal must take the cookie with it.
 				$this->dropCookieOnResponse();
 
 				throw new ForbiddenException('OZ_SESSION_HIJACKING_DETECTED', [

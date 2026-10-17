@@ -37,6 +37,7 @@ final class SessionHijackingTest extends TestCase
 	private const AGENT_OPENED  = 'User-Agent: OZoneTest/1.0 (the browser that opened the session)';
 	private const AGENT_STOLEN  = 'User-Agent: OZoneTest/1.0 (another browser, with the cookie)';
 	private const DB_FILE       = 'session_hijacking_test.sqlite';
+	private const WITNESS_FILE  = 'hijacking_witness.json';
 	private const USER_EMAIL    = 'jane.doe@example.com';
 	private const USER_PASSWORD = 'Jane_Pass_42';
 
@@ -191,6 +192,46 @@ final class SessionHijackingTest extends TestCase
 	}
 
 	/**
+	 * What a listener is handed: whose session it is and the two source keys, so it can alert the
+	 * user or record the attempt without the session object -- whose ID is the very credential the
+	 * request is refused the use of, and which stays valid for its owner.
+	 */
+	public function testTheEventSaysWhoseSessionItIsAndWhatChanged(): void
+	{
+		$project = 'session-hijacking';
+		$witness = self::$projects[$project]->getPath() . \DIRECTORY_SEPARATOR . self::WITNESS_FILE;
+
+		// Another test of this class may have left one behind.
+		if (\file_exists($witness)) {
+			\unlink($witness);
+		}
+
+		$sid = $this->login($project);
+
+		[$status, $body] = $this->request($project, 'GET', '/test-protected', [
+			'Cookie: OZONE_SID=' . $sid,
+			self::AGENT_STOLEN,
+		]);
+
+		self::assertSame(403, $status, $body);
+		self::assertFileExists($witness, 'The event was not dispatched.');
+
+		$seen = \json_decode((string) \file_get_contents($witness), true);
+
+		self::assertSame('user', $seen['auth_user_type'] ?? null);
+		self::assertNotEmpty($seen['auth_user_id'] ?? null);
+		self::assertSame(self::$host, $seen['user_ip'] ?? null);
+
+		// Which session was targeted, and not a new one made by the asking.
+		self::assertSame($sid, $seen['session_id'] ?? null);
+
+		// The source the session was opened from, and the one it came from this time.
+		self::assertStringStartsWith('User-Agent-Hash-', (string) ($seen['opened_source_key'] ?? ''));
+		self::assertStringStartsWith('User-Agent-Hash-', (string) ($seen['request_source_key'] ?? ''));
+		self::assertNotSame($seen['opened_source_key'], $seen['request_source_key']);
+	}
+
+	/**
 	 * A session with no user attached has nothing to steal: the request is served, with a session of
 	 * its own.
 	 */
@@ -278,6 +319,11 @@ final class SessionHijackingTest extends TestCase
 		$ns = $project->getNamespace();
 		$project->writeFileFromStub('TestRoutesProvider', 'app/TestRoutesProvider.php', ['namespace' => $ns]);
 		$project->setSetting('oz.routes.api', "{$ns}\\TestRoutesProvider", true);
+		$project->writeFileFromStub('SessionHijackingWitness', 'app/SessionHijackingWitness.php', [
+			'namespace'    => $ns,
+			'witness_file' => $project->getPath() . \DIRECTORY_SEPARATOR . self::WITNESS_FILE,
+		]);
+		$project->setSetting('oz.boot', "{$ns}\\SessionHijackingWitness", true);
 		$project->setSetting('oz.sessions', 'OZ_SESSION_SOURCE_KEY', 'user_agent');
 		$project->setSetting('oz.sessions', 'OZ_SESSION_HIJACKING_FORCE_SAME_SOURCE', $force_same_source);
 
