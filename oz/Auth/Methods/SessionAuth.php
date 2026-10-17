@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Auth\Methods;
 
+use ArrayObject;
 use Override;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\App\Context;
@@ -24,6 +25,8 @@ use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\UnauthenticatedException;
+use OZONE\Core\Hooks\Events\EndRequestHook;
+use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Sessions\Session;
 use OZONE\Core\Utils\Hasher;
@@ -268,6 +271,10 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 			if ($this->session->attachedAuthUser()) {
 				(new SessionHijackingDetected($context, $this->session))->dispatch();
 
+				// Dispatched first, so a listener still reads the session's ID, and let go of here:
+				// the refusal must take the cookie with it.
+				$this->dropCookieOnResponse();
+
 				throw new ForbiddenException('OZ_SESSION_HIJACKING_DETECTED', [
 					'_reason' => 'Session source key mismatch.',
 					'_help'   => 'This is possible session hijacking attempt.'
@@ -281,6 +288,55 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 		}
 
 		return $this->session;
+	}
+
+	/**
+	 * Drops the cookie of the refused session as the response goes out.
+	 *
+	 * Without this the refusal is a dead end. The cookie is still on the client, so every later
+	 * request carries the same session ID and is refused in turn: the home page, the sign-out route
+	 * and the sign-in form, until the session expires. The only way back is for the user to clear
+	 * their cookies by hand, which is not something a browser offers to do on a phone -- and the
+	 * source key changes for honest reasons too, a browser updating itself mid-session among them.
+	 *
+	 * The stored session is left alone ({@see Session::abandon()}): the request that is refused is
+	 * precisely the one that may not act on it, so it may not end it either. A client replaying the
+	 * cookie of a session it cannot use would otherwise sign its owner out by sending it.
+	 *
+	 * Deferred to the response because this runs inside `authenticate()`: the throw that follows
+	 * leaves `ContextAuth` without a method, so nothing persists the session afterwards and
+	 * `responseReady()` is called here instead. The listeners release each other, since the
+	 * registry outlives a request in a worker: the response hook when it runs, the end of the
+	 * request when it never did -- the request unwound without responding, or it was a sub-request
+	 * answering its parent.
+	 */
+	private function dropCookieOnResponse(): void
+	{
+		$session = $this->session;
+
+		if (null === $session) {
+			return;
+		}
+
+		/** @var ArrayObject<int, \Closure():bool> $detachers */
+		$detachers = new ArrayObject();
+
+		$release = static function () use ($detachers): void {
+			foreach ($detachers as $detach) {
+				$detach();
+			}
+
+			$detachers->exchangeArray([]);
+		};
+
+		$detachers->append(ResponseHook::listen(static function () use ($session, $release): void {
+			$release();
+
+			$session->abandon()
+				->responseReady();
+		}));
+
+		$detachers->append(EndRequestHook::listen($release));
 	}
 
 	/**

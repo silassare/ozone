@@ -153,6 +153,44 @@ final class SessionHijackingTest extends TestCase
 	}
 
 	/**
+	 * A refused request drops the cookie, so the client is not left sending an ID every route
+	 * refuses -- the sign-in form and the sign-out route included -- until the session expires.
+	 * The source key changes for honest reasons too (a mobile IP, a browser that updated itself),
+	 * and the only way out would be clearing the cookies by hand.
+	 */
+	public function testARefusedRequestDropsTheCookie(): void
+	{
+		$project = 'session-hijacking';
+		$sid     = $this->login($project);
+
+		[$status, $body, $headers] = $this->request($project, 'GET', '/test-protected', [
+			'Cookie: OZONE_SID=' . $sid,
+			self::AGENT_STOLEN,
+		]);
+
+		self::assertSame(403, $status, $body);
+
+		$dropped = self::droppedCookies($headers);
+
+		self::assertContains('OZONE_SID', $dropped, 'The session cookie was not dropped.');
+		self::assertContains('XSRF-TOKEN', $dropped, 'The CSRF cookie was not dropped.');
+
+		// A browser honours that by forgetting the cookie, which this client stands in for by no
+		// longer sending it: the user signs in again from where they are now.
+		$new_sid = $this->login($project, [self::AGENT_STOLEN]);
+
+		self::assertNotSame($sid, $new_sid);
+
+		[$status, $body] = $this->request($project, 'GET', '/test-protected', [
+			'Cookie: OZONE_SID=' . $new_sid,
+			self::AGENT_STOLEN,
+		]);
+
+		self::assertSame(200, $status, $body);
+		self::assertSame('ok', \json_decode($body, true)['data']['secret'] ?? null, $body);
+	}
+
+	/**
 	 * A session with no user attached has nothing to steal: the request is served, with a session of
 	 * its own.
 	 */
@@ -367,6 +405,29 @@ final class SessionHijackingTest extends TestCase
 		}
 
 		return $cookies;
+	}
+
+	/**
+	 * The names of the cookies a response tells the client to forget.
+	 *
+	 * @param list<string> $headers
+	 *
+	 * @return list<string>
+	 */
+	private static function droppedCookies(array $headers): array
+	{
+		$dropped = [];
+
+		foreach ($headers as $header) {
+			if (
+				\preg_match('~^Set-Cookie:\s*([^=;]+)=;~i', $header, $m)
+				&& \preg_match('~;\s*Max-Age=0\b~i', $header)
+			) {
+				$dropped[] = \urldecode($m[1]);
+			}
+		}
+
+		return $dropped;
 	}
 
 	/**

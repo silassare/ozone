@@ -219,16 +219,22 @@ final class Session implements BootHookReceiverInterface
 			self::delete($this->session_entry->getID());
 		}
 
-		$this->session_entry  = null;
-		$this->source_changed = false;
-		$this->new_id         = null;
-		$this->new_owner_type = null;
-		$this->new_owner_id   = null;
-		$this->state          = null;
-		$this->started        = false;
-		$this->delete_cookie  = true;
+		return $this->letGo();
+	}
 
-		return $this;
+	/**
+	 * Lets go of the session and drops its cookie, leaving the stored session itself alone.
+	 *
+	 * For a request that may not use the session it carries, when that is no reason for the session
+	 * to go: the client stops sending an ID it cannot use and asks for one of its own on the next
+	 * request, while whoever the session belongs to keeps it. A client holding the cookie can
+	 * therefore not end someone else's session by sending it.
+	 */
+	public function abandon(): static
+	{
+		$this->assertSessionStarted();
+
+		return $this->letGo();
 	}
 
 	/**
@@ -404,6 +410,24 @@ final class Session implements BootHookReceiverInterface
 
 		// Added to the response's `Set-Cookie` lines, never in place of them: a handler's cookies stay.
 		$this->context->setResponse($cookies_jar->applyTo($response));
+	}
+
+	/**
+	 * Forgets what the session was, so that nothing is saved for it afterwards and its cookie is
+	 * dropped on the way out.
+	 */
+	private function letGo(): static
+	{
+		$this->session_entry  = null;
+		$this->source_changed = false;
+		$this->new_id         = null;
+		$this->new_owner_type = null;
+		$this->new_owner_id   = null;
+		$this->state          = null;
+		$this->started        = false;
+		$this->delete_cookie  = true;
+
+		return $this;
 	}
 
 	/**
