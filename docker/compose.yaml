@@ -28,6 +28,10 @@ services:
       OZ_TEST_MYSQL_DB: ozone_test
       OZ_TEST_MYSQL_USER: ozone_test
       OZ_TEST_MYSQL_PASSWORD: ozone_test
+      # The test user may not create databases; these let the suites give each test class one of its
+      # own (DbTestConfig::own()), which is what keeps their schemas from colliding.
+      OZ_TEST_MYSQL_ROOT_USER: root
+      OZ_TEST_MYSQL_ROOT_PASSWORD: root
       OZ_TEST_POSTGRESQL_HOST: postgres
       OZ_TEST_POSTGRESQL_PORT: "5432"
       OZ_TEST_POSTGRESQL_DB: ozone_test
