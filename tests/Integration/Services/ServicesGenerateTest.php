@@ -79,7 +79,7 @@ final class ServicesGenerateTest extends TestCase
 	{
 		$rdbms = $config->rdbms;
 		$proj  = OZTestProject::create('svcgen-' . $rdbms, shared: true, fresh: true);
-		$proj->useDatabase($config);
+		$config = $proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;
 		self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;
