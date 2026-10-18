@@ -1046,9 +1046,12 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
 PHPUnit 9, run **in Docker through `make`** (`docker/compose.yaml`: PHP with OZone's extensions and
 tools — including `mysqldump`, `pg_dump` and `ext-pcntl`, which the CLI shells out to or needs —
 plus MySQL, PostgreSQL, Redis, MinIO, ClamAV and the worker servers). The host needs only Docker and
-`make`. Each target is described by its `##` comment in the `Makefile`: `test` (every suite),
-`test-unit`, `test-services`, `test-runtimes`, `test-provision`, `test-integration`, `ci` (what CI
-runs), `lint`, `cs`, `fix`, `shell`, `down`, ...
+`make`. Each target is described by its `##` comment in the `Makefile`: `test` (every suite that
+answers for the code), `test-unit`, `test-services`, `test-runtimes`, `test-integration`, `ci` (what
+CI runs), `test-provision` (**not** part of `test` or `ci`: it builds containers and drives them over
+SSH, so an unreachable package mirror or a container the kernel kills fails it with nothing wrong in
+`oz/`, and as a prerequisite it stopped the run before `test-integration`; run it when the
+provisioning code changes, and before a release), `lint`, `cs`, `fix`, `shell`, `down`, ...
 
 **Three tiers of re-running**, the cadence of every repository of the suite, with the same words
 everywhere (the `Makefile`'s own comments say what each one skips):

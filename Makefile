@@ -15,8 +15,9 @@
 #   each suite builds its own sandbox or project, and the integration one reuses the vendors cache
 #   that OZTestProject keys by dependency set. What a narrow run still pays is the container start,
 #   about five seconds.
-# - `test` is every suite, the service and runtime servers included, and is the only thing that says
-#   a change broke nothing elsewhere. Start it in the background and carry on working.
+# - `test` is every suite that answers for the code, the service and runtime servers included, and is
+#   the only thing that says a change broke nothing elsewhere. Start it in the background and carry
+#   on working. `test-provision` is deliberately not one of them: see the target.
 #
 # The tiers are about re-running, never about writing: a feature's test is written with the feature.
 # A failure in a narrowed run is repeated with the full target before it is believed or reported.
@@ -89,8 +90,8 @@ down:
 
 # = Tests
 
-## Run every test suite
-test: test-unit test-services test-runtimes test-provision test-integration
+## Run every test suite that answers for the code (`test-provision` is its own run, see below)
+test: test-unit test-services test-runtimes test-integration
 
 ## Run the unit test suite (FILTER=RouterTest or FILE=tests/Router/RouterTest.php runs one of them)
 #
@@ -110,6 +111,12 @@ test-runtimes:
 	$(RUN_NODEPS) env OZ_TEST_RUNTIMES_REQUIRED=1 $(PHPUNIT) --group frankenphp,roadrunner,swoole --testdox
 
 ## Provision a throwaway Debian container for real (runs on the host: it drives Docker itself)
+#
+# Not in `test`: it builds Debian and Alpine containers and drives them over SSH, so it answers for
+# this machine's network and memory as much as for the code -- a package mirror that cannot be
+# reached or a container the kernel kills (exit 137) fails it with nothing wrong in `oz/`. Being a
+# prerequisite of `test`, it stopped the run before `test-integration`, which is the suite that had
+# something to say. Run it on its own when the provisioning code changes, and before a release.
 test-provision:
 	OZ_TEST_PROVISION_REQUIRED=1 vendor/bin/phpunit -c phpunit.xml.dist --do-not-cache-result \
 		--group provision --testdox
@@ -122,7 +129,8 @@ test-integration:
 test-coverage:
 	$(RUN_NODEPS) php -d pcov.enabled=1 $(PHPUNIT) --testsuite Unit --coverage-html .ozone/coverage
 
-## What CI runs, in the PHP container: dependencies, code style, static analysis with no cache, then every suite
+## What CI runs, in the PHP container: dependencies, code style, static analysis with no cache,
+## then every suite that answers for the code (`test-provision` is run on its own)
 ci:
 	$(MAKE) RUNNER=docker install check-full test
 
