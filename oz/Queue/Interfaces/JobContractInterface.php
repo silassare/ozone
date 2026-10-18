@@ -45,6 +45,17 @@ interface JobContractInterface extends JobInterface
 	public function save(): static;
 
 	/**
+	 * Says the job is still being worked on.
+	 *
+	 * A worker whose single run outlasts its store's lock lease calls this as it goes, or the job
+	 * is taken for one a dead process left behind and settled while it is still running. Work that
+	 * finishes well within the lease never needs it: every save says as much.
+	 *
+	 * @return static
+	 */
+	public function touch(): static;
+
+	/**
 	 * Locks the job contract.
 	 *
 	 * @return bool

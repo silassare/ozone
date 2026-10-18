@@ -99,6 +99,16 @@ class JobContract extends Job implements JobContractInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
+	public function touch(): static
+	{
+		// A save is what stamps the job as last written, so this is one, named for why it is made.
+		return $this->save();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	#[Override]
 	public function lock(): bool
 	{
 		return $this->store->lock($this);

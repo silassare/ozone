@@ -155,6 +155,9 @@ class RedisJobStore implements JobStoreInterface
 	#[Override]
 	public function update(JobContractInterface $job_contract): static
 	{
+		// The row's own clock: a write says when it happened, as in every store.
+		$job_contract->setUpdatedAt(\time());
+
 		if ($this->redis()->exists($this->jobKey($job_contract->getRef()))) {
 			$this->redis()->hMset($this->jobKey($job_contract->getRef()), $this->toData($job_contract));
 		} else {
@@ -178,6 +181,26 @@ class RedisJobStore implements JobStoreInterface
 		$this->redis()->del($this->lockKey($ref));
 
 		return $this;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * The lock key carries the lease itself ({@see self::lock()} sets it to expire), so a running
+	 * job whose lock is gone is one whose holder never came back.
+	 */
+	#[Override]
+	public function listStale(string $queue_name): array
+	{
+		$jobs = [];
+
+		foreach ($this->iterator($queue_name, null, JobState::RUNNING) as $job) {
+			if (!$this->isLocked($job)) {
+				$jobs[] = $job;
+			}
+		}
+
+		return $jobs;
 	}
 
 	/**

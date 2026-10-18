@@ -18,6 +18,7 @@ use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\Job;
 use OZONE\Core\Queue\JobContract;
+use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Testing\IntegrationTestCase;
 use Throwable;
@@ -345,6 +346,83 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 	 * Provide the store implementation under test.
 	 */
 	abstract protected function makeStore(): JobStoreInterface;
+
+	// -----------------------------------------------------------------------
+	// listStale() / JobsManager::reclaimStale()
+	// -----------------------------------------------------------------------
+
+	public function testListStaleIgnoresAJobBeingWorkedOn(): void
+	{
+		$contract = $this->addJob();
+
+		self::assertTrue($this->store->lock($contract));
+
+		$contract->setState(JobState::RUNNING);
+		$this->store->update($contract);
+
+		self::assertSame([], $this->store->listStale($this->testQueue));
+	}
+
+	public function testListStaleFindsAJobWhoseHolderIsGone(): void
+	{
+		$contract = $this->addJob();
+
+		$this->strandJob($contract);
+
+		$stale = $this->store->listStale($this->testQueue);
+
+		self::assertCount(1, $stale);
+		self::assertSame($contract->getRef(), $stale[0]->getRef());
+	}
+
+	public function testReclaimRetriesAnAbandonedJobAfterItsDelay(): void
+	{
+		$contract = $this->addJob();
+
+		$contract->setRetryMax(3)
+			->setRetryDelay(60);
+		$this->store->update($contract);
+		$this->strandJob($contract);
+
+		self::assertSame(1, JobsManager::reclaimStale($this->store, $this->testQueue));
+
+		$fetched = $this->store->getOrFail($contract->getRef());
+
+		// The attempt is counted, the lock released, and the backoff of a failure applied.
+		self::assertSame(JobState::PENDING, $fetched->getState());
+		self::assertFalse($this->store->isLocked($fetched));
+		self::assertSame(1, $fetched->getTryCount());
+		self::assertGreaterThan(\time(), (int) $fetched->getRunAfter());
+
+		// So it is not handed straight back, which is what made it a hot loop.
+		$pending = \iterator_to_array($this->store->iterator($this->testQueue, null, JobState::PENDING), false);
+
+		self::assertSame([], $pending);
+	}
+
+	public function testReclaimDeadLettersAnAbandonedJobOutOfTries(): void
+	{
+		$contract = $this->addJob();
+
+		$contract->setRetryMax(3)
+			->setTryCount(3);
+		$this->store->update($contract);
+		$this->strandJob($contract);
+
+		self::assertSame(1, JobsManager::reclaimStale($this->store, $this->testQueue));
+
+		$fetched = $this->store->getOrFail($contract->getRef());
+
+		// A cap that caps: the row stops being work instead of being tried for ever.
+		self::assertSame(JobState::DEAD_LETTER, $fetched->getState());
+		self::assertFalse($this->store->isLocked($fetched));
+		self::assertSame(4, $fetched->getTryCount());
+	}
+
+	/**
+	 * Leaves a job as a dead process would: taken, and past whatever this store calls its lease.
+	 */
+	abstract protected function strandJob(JobContractInterface $job): void;
 
 	protected function makeJob(
 		string $queue = '',

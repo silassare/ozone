@@ -172,6 +172,8 @@ final class JobsManager
 				continue;
 			}
 
+			self::reclaimStale($store, $queue->getName());
+
 			foreach ($store->iterator($queue->getName(), $worker_name, JobState::PENDING, $priority) as $job) {
 				if (self::runJob($job)) {
 					if (JobState::FAILED === $job->getState()) {
@@ -238,6 +240,44 @@ final class JobsManager
 		}
 
 		return true;
+	}
+
+	/**
+	 * Settles the jobs of a queue that a dead process left behind, and says how many.
+	 *
+	 * A job whose worker ended without finishing it stays RUNNING with its lock held; its store
+	 * says which of those outlived their lock lease ({@see JobStoreInterface::listStale()}). Each
+	 * is settled as the failed attempt it is, through {@see self::finish()}: the attempt is
+	 * counted, the job waits out its retry delay while it has tries left, and it is dead-lettered
+	 * once it does not.
+	 *
+	 * Handing it straight back as PENDING instead -- which is what a bulk reset does -- consults
+	 * neither `retry_max` nor `retry_delay`: the job is picked up again at once, for ever, and the
+	 * cap it carries never caps.
+	 *
+	 * @param JobStoreInterface $store
+	 * @param string            $queue_name
+	 *
+	 * @return int
+	 */
+	public static function reclaimStale(JobStoreInterface $store, string $queue_name): int
+	{
+		$count = 0;
+
+		foreach ($store->listStale($queue_name) as $job) {
+			$job->incrementTryCount();
+			$job->setState(JobState::FAILED);
+			$job->setResult(
+				$job->getResult()
+					->setError('The job was abandoned: the process working on it ended without finishing it.')
+			);
+
+			self::finish($job);
+
+			++$count;
+		}
+
+		return $count;
 	}
 
 	/**
