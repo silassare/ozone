@@ -65,7 +65,7 @@ final class CronRunnersTest extends TestCase
 		$rdbms = $config->rdbms;
 		$proj  = OZTestProject::create('cron-runners-' . $rdbms, shared: false);
 
-		$proj->writeEnv($config->toEnvArray() + ['OZ_CRON_WEB_KEY' => self::KEY]);
+		$proj->useDatabase($config, ['OZ_CRON_WEB_KEY' => self::KEY]);
 
 		self::$dbFiles[$rdbms] = $config->isSQLite() ? $config->host : null;
 

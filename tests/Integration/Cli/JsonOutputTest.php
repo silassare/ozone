@@ -61,7 +61,7 @@ final class JsonOutputTest extends TestCase
 		self::$projects[$rdbms] = $proj;
 		self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;
 
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 
 		$build      = self::json($proj, 'db', 'build', '--build-all', '--class-only', '--json');
 		$namespaces = \array_column($build['namespaces'], 'namespace');

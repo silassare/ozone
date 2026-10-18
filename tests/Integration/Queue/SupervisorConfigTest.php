@@ -57,7 +57,7 @@ final class SupervisorConfigTest extends TestCase
 	{
 		$config = DbTestConfig::sqlite(\sys_get_temp_dir() . '/oz_test_' . \getmypid() . '_supervisor.db');
 		$proj   = OZTestProject::create('supervisor-config', shared: true, fresh: true);
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 
 		self::$project = $proj;
 		self::$dbFile  = $config->host;

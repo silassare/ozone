@@ -69,7 +69,7 @@ final class DbBackupTest extends TestCase
 		$proj = OZTestProject::create('db-backup-' . $config->rdbms, shared: true, fresh: true);
 
 		try {
-			$proj->writeEnv($config->toEnvArray());
+			$proj->useDatabase($config);
 
 			// ORM classes must exist before migrations can run.
 			$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();

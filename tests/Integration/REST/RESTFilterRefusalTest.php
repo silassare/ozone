@@ -78,7 +78,7 @@ final class RESTFilterRefusalTest extends TestCase
 		self::$projects[$rdbms] = $proj;
 		self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;
 
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 		$proj->setSetting('oz.db.schema', 'terms', [
 			'plural_name'   => 'terms',
 			'singular_name' => 'term',

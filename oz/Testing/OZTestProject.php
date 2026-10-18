@@ -363,6 +363,28 @@ final class OZTestProject
 	}
 
 	/**
+	 * Points this project at a database of its own on the given server, creating it.
+	 *
+	 * Two projects of one test class would otherwise share that class's database. They can coexist
+	 * there -- their table prefixes are drawn per project, and so are their constraint names -- but
+	 * a database each means neither can reach the other's tables at all, and it costs a few
+	 * milliseconds per project.
+	 *
+	 * A SQLite config already names a file of its own and is written through unchanged.
+	 *
+	 * @param DbTestConfig         $config the server to use
+	 * @param array<string, mixed> $extra  further env values to write with it
+	 */
+	public function useDatabase(DbTestConfig $config, array $extra = []): void
+	{
+		if (!$config->isSQLite()) {
+			$config = $config->own(\basename($this->dir));
+		}
+
+		$this->writeEnv($config->toEnvArray() + $extra);
+	}
+
+	/**
 	 * This project's table prefix (`OZ_DB_TABLE_PREFIX`), or null when it has no settings file yet.
 	 *
 	 * `oz project create` draws it at random per project, so it is what tells this project's tables

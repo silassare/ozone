@@ -67,7 +67,7 @@ final class UsersGrantTest extends TestCase
 		self::$projects[$rdbms] = $proj;
 		self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;
 
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
 		// MySQL scopes foreign key constraint names to the schema, which every class shares.
 		$proj->cleanDb();

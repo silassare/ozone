@@ -67,7 +67,7 @@ final class JobPruneTest extends TestCase
 	{
 		$rdbms = $config->rdbms;
 		$proj  = OZTestProject::create('job-prune-' . $rdbms, shared: true, fresh: true);
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;
 		self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;

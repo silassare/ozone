@@ -58,7 +58,7 @@ final class DoctorCmdTest extends TestCase
 	{
 		$rdbms = $config->rdbms;
 		$proj  = OZTestProject::create('doctor-' . $rdbms, shared: false);
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;
 		self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;

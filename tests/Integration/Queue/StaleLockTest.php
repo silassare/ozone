@@ -72,7 +72,7 @@ final class StaleLockTest extends TestCase
 	{
 		$rdbms = $config->rdbms;
 		$proj  = OZTestProject::create('stale-lock-' . $rdbms, shared: false, fresh: true);
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;
 		self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;

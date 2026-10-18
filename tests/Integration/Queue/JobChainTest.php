@@ -66,7 +66,7 @@ final class JobChainTest extends TestCase
 	{
 		$rdbms = $config->rdbms;
 		$proj  = OZTestProject::create('job-chain-' . $rdbms, shared: true, fresh: true);
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;
 		self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;
