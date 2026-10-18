@@ -34,6 +34,12 @@ final class DbTestConfig
 	public readonly string $user;
 	public readonly string $pass;
 
+	/**
+	 * The database name this server was configured with, which {@see self::own()} derives from, so
+	 * that asking for a database of one's own twice over does not pile suffix upon suffix.
+	 */
+	private readonly string $base;
+
 	private function __construct(
 		string $rdbms,
 		string $host,
@@ -41,6 +47,7 @@ final class DbTestConfig
 		string $name,
 		string $user,
 		string $pass,
+		?string $base = null,
 	) {
 		$this->rdbms = $rdbms;
 		$this->host  = $host;
@@ -48,6 +55,7 @@ final class DbTestConfig
 		$this->name  = $name;
 		$this->user  = $user;
 		$this->pass  = $pass;
+		$this->base  = $base ?? $name;
 	}
 
 	/**
@@ -335,14 +343,15 @@ final class DbTestConfig
 	 * unless something dropped every table in sight first -- which took the tables of the classes
 	 * running beside it. A database each is what makes both unnecessary.
 	 *
-	 * @param string $tag short slug of the test class, as passed to {@see self::allConfigured()}
+	 * @param string $tag what the database belongs to: the test class, as {@see self::allConfigured()}
+	 *                     passes it, or one project of that class ({@see OZTestProject::useDatabase()})
 	 */
 	public function own(string $tag): static
 	{
 		$slug = \strtolower((string) \preg_replace('/[^a-zA-Z0-9]+/', '_', $tag));
-		$name = \trim(\substr($this->name . '_' . $slug . '_' . \getmypid(), 0, 63), '_');
+		$name = \trim(\substr($this->base . '_' . $slug . '_' . \getmypid(), 0, 63), '_');
 
-		$mine = new self($this->rdbms, $this->host, $this->port, $name, $this->user, $this->pass);
+		$mine = new self($this->rdbms, $this->host, $this->port, $name, $this->user, $this->pass, $this->base);
 
 		$mine->createDatabase();
 

@@ -232,7 +232,7 @@ final class MigrationsTest extends TestCase
 		}
 
 		$proj = OZTestProject::create('migrations-' . $rdbms, shared: true, fresh: true);
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 		// ORM classes must be generated before any migration operation.
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
 		// Drop all tables so FK constraint names don't collide between test runs.

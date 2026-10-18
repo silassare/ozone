@@ -46,7 +46,7 @@ final class ConcurrentRequestsTest extends TestCase
 	{
 		$proj = OZTestProject::create('concurrent-' . $config->rdbms, fresh: true);
 
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 		$proj->setSetting('oz.files', 'OZ_UPLOAD_ANONYMOUS_RATE_LIMIT', self::LIMIT);
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();
 		$proj->cleanDb();
@@ -79,7 +79,7 @@ final class ConcurrentRequestsTest extends TestCase
 	{
 		$proj = OZTestProject::create('concurrent-signup-' . $config->rdbms, fresh: true);
 
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 		// No email to prove here: the test is about what reaches the database.
 		$proj->setSetting('oz.auth.verification', 'OZ_SIGNUP_VERIFICATION', []);
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();

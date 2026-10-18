@@ -82,7 +82,7 @@ final class MessagingTest extends TestCase
 		self::$projects[$rdbms] = $proj;
 		self::$dbFiles[$rdbms]  = $config->isSQLite() ? $config->host : null;
 
-		$proj->writeEnv($config->toEnvArray());
+		$proj->useDatabase($config);
 		$proj->writeFileFromStub('MessagingTestTransport', 'app/MessagingTestTransport.php', [
 			'namespace'        => $ns,
 			'deliveries_file'  => $path . '/deliveries.jsonl',
