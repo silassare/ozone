@@ -372,16 +372,24 @@ final class OZTestProject
 	 *
 	 * A SQLite config already names a file of its own and is written through unchanged.
 	 *
+	 * Returns the config the project is now on, which is **not** the one passed in: a test that
+	 * also reaches the database itself has to use the returned one, or it connects to a database
+	 * this project never had tables in. Hence `$config = $project->useDatabase($config);`.
+	 *
 	 * @param DbTestConfig         $config the server to use
 	 * @param array<string, mixed> $extra  further env values to write with it
+	 *
+	 * @return DbTestConfig the config this project is on
 	 */
-	public function useDatabase(DbTestConfig $config, array $extra = []): void
+	public function useDatabase(DbTestConfig $config, array $extra = []): DbTestConfig
 	{
 		if (!$config->isSQLite()) {
 			$config = $config->own(\basename($this->dir));
 		}
 
 		$this->writeEnv($config->toEnvArray() + $extra);
+
+		return $config;
 	}
 
 	/**
