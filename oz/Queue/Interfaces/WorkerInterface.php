@@ -34,6 +34,11 @@ use OZONE\Core\Utils\JSONResult;
  *   CLI dispatch) so the queue worker process stays free to pick up the next job
  *   immediately. The lock is held by the parent process and transferred to the
  *   subprocess, which releases it in {@link JobsManager::finish()}.
+ *
+ * A store holds a job's lock on a lease, so that a job whose process dies is not locked for ever
+ * ({@link JobsManager::reclaimStale()}). A {@link work()} that can run longer than that lease
+ * calls {@link JobContractInterface::touch()} as it goes -- once a page, once a batch of rows --
+ * or the job is settled as abandoned and started again beside the run that is still going.
  */
 interface WorkerInterface
 {

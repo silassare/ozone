@@ -46,13 +46,16 @@ final class StaleLockBootHookReceiver implements BootHookReceiverInterface
 				\unlink($flagFile);
 			}
 
-			// Dispatch the job (state = PENDING).
+			// Dispatch the job (state = PENDING), with no wait before a retry: reclaiming an
+			// abandoned job counts the attempt and makes it wait out its retry delay, so the
+			// default minute would put the re-run after this test.
 			$contract = Queue::get(Queue::DEFAULT)
 				->push(new StaleLockTestWorker($flagFile))
+				->setRetryDelay(0)
 				->dispatch();
 
 			// Simulate a crashed subprocess: set state=RUNNING, locked=true,
-			// updated_at=1 so the stale-lock check always fires.
+			// updated_at=1 so the job is past its lock lease.
 			// Using a direct bulk UPDATE bypasses entity-level auto-column logic.
 			(new OZJobsQuery())
 				->whereRefIs($contract->getRef())

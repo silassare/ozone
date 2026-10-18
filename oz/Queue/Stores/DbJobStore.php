@@ -122,6 +122,11 @@ class DbJobStore implements JobStoreInterface
 	#[Override]
 	public function update(JobContractInterface $job_contract): static
 	{
+		// The row's own clock. A job is taken for abandoned by how long ago it was last written
+		// ({@see self::listStale()}), so a write says when it happened; left at the value it was
+		// created with, every job older than the lease looks abandoned while it runs.
+		$job_contract->setUpdatedAt(\time());
+
 		$qb = new OZJobsQuery();
 
 		$entity = $qb->whereRefIs($job_contract->getRef())
@@ -155,6 +160,33 @@ class DbJobStore implements JobStoreInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * Past their lease by when they were last written: every write stamps the job
+	 * ({@see self::update()}), so a job being worked on stays out of this.
+	 */
+	#[Override]
+	public function listStale(string $queue_name): array
+	{
+		$qb = new OZJobsQuery();
+
+		empty($queue_name) || $qb->whereQueueIs($queue_name);
+
+		$result = $qb->whereStateIs(JobState::RUNNING)
+			->whereIsLocked()
+			->whereUpdatedAtIsLte((string) (\time() - self::LOCK_TTL))
+			->find();
+
+		$jobs = [];
+
+		foreach ($result->lazy() as $oz_job) {
+			$jobs[] = $this->fromEntity($oz_job);
+		}
+
+		return $jobs;
+	}
+
+	/**
+	 * {@inheritDoc}
 	 */
 	#[Override]
 	public function iterator(
@@ -165,27 +197,6 @@ class DbJobStore implements JobStoreInterface
 	): Generator {
 		$qb  = new OZJobsQuery();
 		$now = \time();
-
-		// Reclaim jobs stranded in RUNNING+locked state by crashed subprocesses.
-		// When a worker process dies without calling finish(), the job stays locked
-		// and RUNNING indefinitely.  A single atomic UPDATE resets any such job
-		// whose last update (set by JobsManager when transitioning to RUNNING)
-		// is older than LOCK_TTL.  Only PENDING callers trigger this to avoid
-		// unnecessary DB writes on admin / diagnostic iterators.
-		if (null === $state || JobState::PENDING === $state) {
-			$stale_cutoff = $now - self::LOCK_TTL;
-
-			(new OZJobsQuery())
-				->whereQueueIs($queue_name)
-				->whereStateIs(JobState::RUNNING)
-				->whereIsLocked()
-				->whereUpdatedAtIsLte((string) $stale_cutoff)
-				->update([
-					OZJob::COL_STATE  => JobState::PENDING->value,
-					OZJob::COL_LOCKED => false,
-				])
-				->execute();
-		}
 
 		empty($queue_name) || $qb->whereQueueIs($queue_name);
 		empty($worker_name) || $qb->whereWorkerIs($worker_name);

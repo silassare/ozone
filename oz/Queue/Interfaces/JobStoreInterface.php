@@ -158,6 +158,20 @@ interface JobStoreInterface
 	public function count(string $queue_name, ?JobState $state = null): int;
 
 	/**
+	 * The jobs of a queue a dead process left behind: running, locked, and past their lock lease.
+	 *
+	 * How long a lease lasts, and how a store knows one has run out, is the store's own business:
+	 * a database store compares when the job was last written, a Redis store lets the lock key
+	 * expire. What to do with them is not -- {@see \OZONE\Core\Queue\JobsManager::reclaimStale()}
+	 * settles them against the job's retry policy.
+	 *
+	 * @param string $queue_name
+	 *
+	 * @return list<JobContractInterface>
+	 */
+	public function listStale(string $queue_name): array;
+
+	/**
 	 * Delete terminal jobs older than the given age.
 	 *
 	 * Only jobs in a terminal state (DONE, FAILED, DEAD_LETTER, CANCELLED) are eligible.

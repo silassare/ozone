@@ -29,8 +29,9 @@ use PHPUnit\Framework\TestCase;
  *   2. Immediately after dispatch (via an InitHook listener) setting the job to
  *      state=RUNNING, locked=true, updated_at=1 (Unix epoch -- guaranteed to be
  *      older than the 7200-second LOCK_TTL).
- *   3. Running `oz jobs run`, which now calls the stale-lock recovery pass inside
- *      DbJobStore::iterator() and resets the job back to PENDING.
+ *   3. Running `oz jobs run`, which reclaims it through JobsManager::reclaimStale():
+ *      the abandoned attempt is counted and the job goes back to PENDING, released,
+ *      to be retried once its retry delay has passed -- zero, in this stub.
  *   4. Asserting the worker ran and wrote its flag file.
  *
  * @internal
