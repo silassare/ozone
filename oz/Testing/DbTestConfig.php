@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Testing;
 
+use PDO;
 use RuntimeException;
+use Throwable;
 
 /**
  * Holds test DB configuration for one RDBMS driver.
@@ -46,6 +48,78 @@ final class DbTestConfig
 		$this->name  = $name;
 		$this->user  = $user;
 		$this->pass  = $pass;
+	}
+
+	/**
+	 * Creates this config's database, and has the process drop it on the way out.
+	 *
+	 * MySQL's test user may not create databases, so the server's root credentials do it and grant
+	 * the test user what it needs (`OZ_TEST_MYSQL_ROOT_USER` / `_PASSWORD`, which `docker/compose.yaml`
+	 * gives the PHP container); PostgreSQL's test user is a superuser and needs no help.
+	 */
+	private function createDatabase(): void
+	{
+		if ($this->isMySQL()) {
+			$root = $this->rootPdo();
+
+			$root->exec(\sprintf('CREATE DATABASE IF NOT EXISTS `%s`', $this->name));
+			$root->exec(\sprintf(
+				'GRANT ALL PRIVILEGES ON `%s`.* TO %s@\'%%\'',
+				$this->name,
+				$root->quote($this->user)
+			));
+		} else {
+			$admin = new PDO(
+				\sprintf('pgsql:host=%s;port=%d;dbname=postgres', $this->host, $this->port),
+				$this->user,
+				$this->pass,
+				[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+			);
+
+			$exists = $admin->prepare('SELECT 1 FROM pg_database WHERE datname = ?');
+			$exists->execute([$this->name]);
+
+			if (!$exists->fetchColumn()) {
+				// No IF NOT EXISTS for a database here, and none needed: the name holds the PID.
+				$admin->exec(\sprintf('CREATE DATABASE "%s"', $this->name));
+			}
+		}
+
+		$name  = $this->name;
+		$clone = $this;
+
+		\register_shutdown_function(static function () use ($clone, $name): void {
+			try {
+				if ($clone->isMySQL()) {
+					$clone->rootPdo()->exec(\sprintf('DROP DATABASE IF EXISTS `%s`', $name));
+				} else {
+					$admin = new PDO(
+						\sprintf('pgsql:host=%s;port=%d;dbname=postgres', $clone->host, $clone->port),
+						$clone->user,
+						$clone->pass,
+						[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+					);
+					$admin->exec(\sprintf('DROP DATABASE IF EXISTS "%s"', $name));
+				}
+			} catch (Throwable) {
+				// A database left behind is litter, not a failed test run.
+			}
+		});
+	}
+
+	/**
+	 * A connection to the MySQL server as root, for what the test user may not do itself.
+	 */
+	private function rootPdo(): PDO
+	{
+		$envs = \getenv();
+
+		return new PDO(
+			\sprintf('mysql:host=%s;port=%d', $this->host, $this->port),
+			$envs['OZ_TEST_MYSQL_ROOT_USER'] ?? 'root',
+			$envs['OZ_TEST_MYSQL_ROOT_PASSWORD'] ?? 'root',
+			[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+		);
 	}
 
 	public function isSQLite(): bool
@@ -239,14 +313,39 @@ final class DbTestConfig
 
 		$mysql = self::mysql();
 		if (null !== $mysql) {
-			$configs['mysql'] = [$mysql];
+			$configs['mysql'] = [$mysql->own($tag)];
 		}
 
 		$postgresql = self::postgresql();
 		if (null !== $postgresql) {
-			$configs['postgresql'] = [$postgresql];
+			$configs['postgresql'] = [$postgresql->own($tag)];
 		}
 
 		return $configs;
+	}
+
+	/**
+	 * The same server, with a database of this test class's own, created now and dropped with the
+	 * process.
+	 *
+	 * SQLite gets a file per class and per run above; a server driver used to get the one database
+	 * every class shares, and a generated project's foreign keys are named after its tables without
+	 * its table prefix (`fk_oz_users_oz_usernames`), which MySQL requires unique per database. So
+	 * the first class to install its schema held those names and the next one's migration failed,
+	 * unless something dropped every table in sight first -- which took the tables of the classes
+	 * running beside it. A database each is what makes both unnecessary.
+	 *
+	 * @param string $tag short slug of the test class, as passed to {@see self::allConfigured()}
+	 */
+	public function own(string $tag): static
+	{
+		$slug = \strtolower((string) \preg_replace('/[^a-zA-Z0-9]+/', '_', $tag));
+		$name = \trim(\substr($this->name . '_' . $slug . '_' . \getmypid(), 0, 63), '_');
+
+		$mine = new self($this->rdbms, $this->host, $this->port, $name, $this->user, $this->pass);
+
+		$mine->createDatabase();
+
+		return $mine;
 	}
 }

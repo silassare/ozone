@@ -363,6 +363,38 @@ final class OZTestProject
 	}
 
 	/**
+	 * This project's table prefix (`OZ_DB_TABLE_PREFIX`), or null when it has no settings file yet.
+	 *
+	 * `oz project create` draws it at random per project, so it is what tells this project's tables
+	 * from those of the test class running beside it in the same database.
+	 */
+	public function tablePrefix(): ?string
+	{
+		$file = $this->dir . \DIRECTORY_SEPARATOR . 'app' . \DIRECTORY_SEPARATOR . 'settings'
+			. \DIRECTORY_SEPARATOR . 'oz.db.php';
+
+		if (!\is_file($file)) {
+			return null;
+		}
+
+		$settings = require $file;
+
+		if (!\is_array($settings)) {
+			throw new RuntimeException(\sprintf('Settings file "%s" does not return an array.', $file));
+		}
+
+		$prefix = $settings['OZ_DB_TABLE_PREFIX'] ?? '';
+
+		if (!\is_string($prefix) || '' === $prefix) {
+			// Dropping by prefix is the only thing keeping this project out of its neighbours'
+			// tables, so an unusable prefix is said out loud rather than widened to everything.
+			throw new RuntimeException(\sprintf('No OZ_DB_TABLE_PREFIX in "%s".', $file));
+		}
+
+		return $prefix;
+	}
+
+	/**
 	 * Absolute path to the test project root directory.
 	 */
 	public function getPath(): string
@@ -540,14 +572,18 @@ final class OZTestProject
 	}
 
 	/**
-	 * Drops all tables in the project's database (MySQL / PostgreSQL).
+	 * Drops this project's tables (MySQL / PostgreSQL), and only this project's.
 	 *
 	 * Call this before running `oz migrations run` when the project reuses a
 	 * shared server-side database.  MySQL enforces globally-unique FK
 	 * constraint names within a database (e.g. `fk_oz_users_oz_usernames`),
 	 * so leftover tables from a previous project with the same schema cause
-	 * "Duplicate foreign key constraint name" errors.  Dropping everything
-	 * first gives each test run a clean slate.
+	 * "Duplicate foreign key constraint name" errors.
+	 *
+	 * Scoped to `OZ_DB_TABLE_PREFIX`, which `oz project create` draws at random per project: every
+	 * test class on a server driver shares one database, so dropping whatever that database holds
+	 * takes the tables of the classes running beside this one with it, and they fail on tables that
+	 * were there a moment ago.
 	 *
 	 * No-op for SQLite (each SQLite test already uses a unique file).
 	 */
@@ -563,6 +599,12 @@ final class OZTestProject
 
 		if ('sqlite' === $rdbms) {
 			return; // SQLite uses a unique file per test class / run.
+		}
+
+		$prefix = $this->tablePrefix();
+
+		if (null === $prefix) {
+			return; // Not scaffolded yet: it has no tables of its own to drop.
 		}
 
 		$host = (string) ($env->get('OZ_DB_HOST') ?? '127.0.0.1');
@@ -582,7 +624,7 @@ final class OZTestProject
 			$tables = $pdo->query(
 				'SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()'
 			)->fetchAll(PDO::FETCH_COLUMN);
-			foreach ($tables as $table) {
+			foreach (self::ownTables($tables, $prefix) as $table) {
 				$pdo->exec("DROP TABLE IF EXISTS `{$table}`");
 			}
 			$pdo->exec('SET foreign_key_checks = 1');
@@ -599,8 +641,8 @@ final class OZTestProject
 			$tables = $pdo->query(
 				"SELECT tablename FROM pg_tables WHERE schemaname = 'public'"
 			)->fetchAll(PDO::FETCH_COLUMN);
-			foreach ($tables as $table) {
-				$quoted = '"' . \str_replace('"', '""', (string) $table) . '"';
+			foreach (self::ownTables($tables, $prefix) as $table) {
+				$quoted = '"' . \str_replace('"', '""', $table) . '"';
 				$pdo->exec("DROP TABLE IF EXISTS {$quoted} CASCADE");
 			}
 		}
@@ -725,6 +767,28 @@ final class OZTestProject
 	private static function toNamespace(string $name): string
 	{
 		return (string) \preg_replace('/[^a-zA-Z0-9]/', '', \ucwords(\str_replace(['-', '_'], ' ', $name)));
+	}
+
+	/**
+	 * The tables of a project, out of everything a shared database holds.
+	 *
+	 * @param list<mixed> $tables
+	 *
+	 * @return list<string>
+	 */
+	private static function ownTables(array $tables, string $prefix): array
+	{
+		$own = [];
+
+		foreach ($tables as $table) {
+			$table = (string) $table;
+
+			if (\str_starts_with($table, $prefix . '_')) {
+				$own[] = $table;
+			}
+		}
+
+		return $own;
 	}
 
 	/**
