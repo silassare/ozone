@@ -1,5 +1,9 @@
 {@extends 'oz://oz.page.layout.blate' $$}
 {@slot title}{$t(oz_error_title)}{/slot}
+{@slot head}
+		{# Nothing here is worth a search result: an error page indexed is an error page shared. #}
+		<meta name="robots" content="noindex, nofollow">
+{/slot}
 {@slot content}
 				<div class="oz-card__heading">
 					<div class="oz-card__eyebrow">{$t('OZ_VIEW_ERROR_LABEL', oz_error_vars)}</div>
