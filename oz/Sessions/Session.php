@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Sessions;
 
+use Gobl\DBAL\Types\Utils\JsonPatch;
 use Gobl\ORM\ORMOptions;
 use Override;
 use OZONE\Core\App\Context;
@@ -33,6 +34,7 @@ use OZONE\Core\Http\Cookies;
 use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\OZone;
 use OZONE\Core\Stores\CacheRegistry;
+use PHPUtils\Store\Map;
 use Throwable;
 
 /**
@@ -574,14 +576,92 @@ final class Session implements BootHookReceiverInterface
 
 			$data = $this->store()->getData();
 
-			$entry->setData($data)
-				->setExpireAT($expire)
+			if ($this->is_new) {
+				$entry->setData($data);
+			} else {
+				// What this request changed, as the keys it changed: the database applies them to the
+				// row it holds. Writing the whole store back would carry every key as it was when the
+				// request started, so a request that overlaps this one would have its own writes
+				// undone by whichever of the two answers last -- a sign-out among them.
+				$patch = self::dataPatch($entry->getData(), $this->initial_data, $data);
+
+				if ($patch->hasOperations()) {
+					$entry->setData($patch);
+				}
+			}
+
+			$entry->setExpireAT($expire)
 				->setLastSeenAT($now)
 				->setUpdatedAT($now)
 				->save();
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to save session.', ['_session_id' => $sid], $t);
 		}
+	}
+
+	/**
+	 * The patch from the data the session started with to the data it ends the request with.
+	 *
+	 * @param Map   $stored the document the entity holds, which the patch falls back to
+	 * @param array $before the store's data when the session started
+	 * @param array $after  the store's data now
+	 */
+	private static function dataPatch(Map $stored, array $before, array $after): JsonPatch
+	{
+		$patch = new JsonPatch($stored);
+
+		self::collectDataChanges($patch, $before, $after, []);
+
+		return $patch;
+	}
+
+	/**
+	 * Adds to a patch every key of the store whose value is not what it was.
+	 *
+	 * @param JsonPatch    $patch
+	 * @param array        $before
+	 * @param array        $after
+	 * @param list<string> $path   the keys walked into so far
+	 */
+	private static function collectDataChanges(JsonPatch $patch, array $before, array $after, array $path): void
+	{
+		foreach ($after as $key => $value) {
+			$key_path = [...$path, (string) $key];
+
+			if (!\array_key_exists($key, $before)) {
+				$patch->setAt($key_path, $value);
+
+				continue;
+			}
+
+			$previous = $before[$key];
+
+			if (self::isDataBranch($previous) && self::isDataBranch($value)) {
+				self::collectDataChanges($patch, $previous, $value, $key_path);
+
+				continue;
+			}
+
+			if ($previous !== $value) {
+				$patch->setAt($key_path, $value);
+			}
+		}
+
+		foreach ($before as $key => $_) {
+			if (!\array_key_exists($key, $after)) {
+				$patch->removeAt([...$path, (string) $key]);
+			}
+		}
+	}
+
+	/**
+	 * Whether a value is walked into rather than written whole: a map of named keys.
+	 *
+	 * A list is written whole, since what its entries mean is their order.
+	 */
+	private static function isDataBranch(mixed $value): bool
+	{
+		return \is_array($value) && [] !== $value && !\array_is_list($value);
 	}
 
 	/**
