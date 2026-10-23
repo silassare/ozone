@@ -74,7 +74,7 @@ final class MessageTest extends TestCase
 
 		yield 'upper' => ['{name | upper}', ['name' => 'straße'], 'STRASSE'];
 
-		yield 'escapes' => ['\{name\} \\\\ \q #', ['name' => 'x'], '{name} \ \q #'];
+		yield 'escapes' => ['\{name\} \\\ \q #', ['name' => 'x'], '{name} \ \q #'];
 
 		yield 'plural, exact' => ['{n, plural, =0 {none} one {# file} other {# files}}', ['n' => 0], 'none'];
 
@@ -245,7 +245,7 @@ final class MessageTest extends TestCase
 		);
 		self::assertSame(
 			'a"b\\',
-			self::render('{v | wrap: "a", "\"b\\\\"}', ['v' => ''], '', true, [
+			self::render('{v | wrap: "a", "\"b\\\"}', ['v' => ''], '', true, [
 				'wrap' => static fn (mixed $v, string $lang, string $l, string $r) => $l . $r,
 			])
 		);
@@ -260,8 +260,8 @@ final class MessageTest extends TestCase
 
 	public function testIncludesAnotherKeyWithTheSameData(): void
 	{
-		$texts = ['SIGN' => 'regards, {name}', 'LOOP' => 'a {{LOOP}}'];
-		$include = static fn (string $key): array => MessageParser::parse($texts[$key] ?? $key);
+		$texts    = ['SIGN' => 'regards, {name}', 'LOOP' => 'a {{LOOP}}'];
+		$include  = static fn (string $key): array => MessageParser::parse($texts[$key] ?? $key);
 		$renderer = new MessageRenderer('en', $include, [], null);
 
 		self::assertSame(

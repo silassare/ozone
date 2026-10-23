@@ -31,7 +31,7 @@ use OZONE\Core\Exceptions\RuntimeException;
  * Migrations are the one step a rollback cannot undo, which is why they run with a backup and why
  * `--skip-migrations` exists for a release that must not touch the schema.
  */
-final class Releaser
+final readonly class Releaser
 {
 	/**
 	 * @param string       $root       the deploy root, holding releases/, current, data/ and .ozone/
@@ -45,16 +45,16 @@ final class Releaser
 	 * @param string       $php        the PHP binary
 	 */
 	public function __construct(
-		private readonly string $root,
-		private readonly string $repository,
-		private readonly string $ref = 'main',
-		private readonly string $release = '',
-		private readonly int $keep = 5,
-		private readonly bool $migrations = true,
-		private readonly ?string $health_url = null,
-		private readonly array $restart = [],
-		private readonly string $php = \PHP_BINARY,
-		private readonly string $archive = '',
+		private string $root,
+		private string $repository,
+		private string $ref = 'main',
+		private string $release = '',
+		private int $keep = 5,
+		private bool $migrations = true,
+		private ?string $health_url = null,
+		private array $restart = [],
+		private string $php = \PHP_BINARY,
+		private string $archive = '',
 	) {}
 
 	/**

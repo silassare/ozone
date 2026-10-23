@@ -38,15 +38,15 @@ use OZONE\Core\Utils\Random;
  */
 class CSRF
 {
-	public const TOKEN_SEP    = '.';
-	public const TOKEN_PARAM  = '_csrf';
-	public const TOKEN_HEADER = 'X-XSRF-TOKEN';
+	public const string TOKEN_SEP    = '.';
+	public const string TOKEN_PARAM  = '_csrf';
+	public const string TOKEN_HEADER = 'X-XSRF-TOKEN';
 
 	/**
 	 * Tolerated clock difference, in seconds, between the server that issued a token
 	 * and the one checking it.
 	 */
-	private const CLOCK_SKEW = 60;
+	private const int CLOCK_SKEW = 60;
 
 	private string $scope_ref;
 

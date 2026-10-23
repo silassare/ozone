@@ -15,6 +15,7 @@ namespace OZONE\Core\Utils;
 
 use InvalidArgumentException;
 use OZONE\Core\Exceptions\RuntimeException;
+use Random\Randomizer;
 use Throwable;
 
 /**
@@ -22,15 +23,17 @@ use Throwable;
  */
 final class Random
 {
-	public const CHARS_ALPHA = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	public const string CHARS_ALPHA = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-	public const CHARS_NUM = '0123456789';
+	public const string CHARS_NUM = '0123456789';
 
-	public const CHARS_SYMBOLS = '~!@#$£µ§²¨%^&()_-+={}[]:";\'<>?,./\\';
+	public const string CHARS_SYMBOLS = '~!@#$£µ§²¨%^&()_-+={}[]:";\'<>?,./\\';
 
-	public const CHARS_ALPHA_NUM = self::CHARS_ALPHA . self::CHARS_NUM;
+	public const string CHARS_ALPHA_NUM = self::CHARS_ALPHA . self::CHARS_NUM;
 
-	public const CHARS_ALL = self::CHARS_ALPHA_NUM . self::CHARS_SYMBOLS;
+	public const string CHARS_ALL = self::CHARS_ALPHA_NUM . self::CHARS_SYMBOLS;
+
+	private static ?Randomizer $randomizer = null;
 
 	/**
 	 * Generate random file name.
@@ -98,14 +101,14 @@ final class Random
 			throw new InvalidArgumentException('Require at least 2 chars to generate random string.');
 		}
 
-		$chars_length = \strlen($chars) - 1;
-		$string       = '';
-
-		for ($i = 0; $i < $length; ++$i) {
-			$string .= $chars[self::int(0, $chars_length)];
+		try {
+			// One call to the engine for the whole string, where a character at a time was one call
+			// each. The bytes are drawn uniformly, as indexing the string by a random index was:
+			// a multi-byte character in `$chars` is as many candidate bytes either way.
+			return self::randomizer()->getBytesFromString($chars, $length);
+		} catch (Throwable $t) {
+			throw new RuntimeException('Unable to generate a secure random string.', null, $t);
 		}
-
-		return $string;
 	}
 
 	/**
@@ -142,5 +145,13 @@ final class Random
 	public static function alphaNum(int $length = 32): string
 	{
 		return self::string($length, self::CHARS_ALPHA_NUM);
+	}
+
+	/**
+	 * The randomizer every call draws from: the engine is the platform's CSPRNG.
+	 */
+	private static function randomizer(): Randomizer
+	{
+		return self::$randomizer ??= new Randomizer();
 	}
 }

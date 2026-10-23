@@ -30,11 +30,6 @@ use OZONE\Core\Queue\Stores\DbJobStore;
  */
 final class DbJobStoreTest extends AbstractJobStoreTest
 {
-	protected function makeStore(): JobStoreInterface
-	{
-		return JobsManager::getStore(DbJobStore::NAME);
-	}
-
 	/**
 	 * The regression: a job carries its own clock, so being old is not being abandoned.
 	 *
@@ -55,6 +50,11 @@ final class DbJobStoreTest extends AbstractJobStoreTest
 
 		self::assertTrue($this->store->isLocked($taken));
 		self::assertSame([], $this->store->listStale($this->testQueue));
+	}
+
+	protected function makeStore(): JobStoreInterface
+	{
+		return JobsManager::getStore(DbJobStore::NAME);
 	}
 
 	/**

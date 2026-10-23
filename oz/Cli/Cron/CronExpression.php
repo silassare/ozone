@@ -39,18 +39,18 @@ use OZONE\Core\Exceptions\RuntimeException;
 final class CronExpression
 {
 	// Field positions
-	private const MINUTE       = 0;
+	private const int MINUTE       = 0;
 
-	private const HOUR         = 1;
+	private const int HOUR         = 1;
 
-	private const DAY_OF_MONTH = 2;
+	private const int DAY_OF_MONTH = 2;
 
-	private const MONTH        = 3;
+	private const int MONTH        = 3;
 
-	private const DAY_OF_WEEK  = 4;
+	private const int DAY_OF_WEEK  = 4;
 
 	// Allowed [min, max] per field
-	private const RANGES = [
+	private const array RANGES = [
 		self::MINUTE       => [0, 59],
 		self::HOUR         => [0, 23],
 		self::DAY_OF_MONTH => [1, 31],
@@ -59,7 +59,7 @@ final class CronExpression
 	];
 
 	// Standard Unix named-value aliases (case-insensitive)
-	private const MONTH_NAMES = [
+	private const array MONTH_NAMES = [
 		'jan' => 1,
 		'feb' => 2,
 		'mar' => 3,
@@ -74,7 +74,7 @@ final class CronExpression
 		'dec' => 12,
 	];
 
-	private const DOW_NAMES = [
+	private const array DOW_NAMES = [
 		'sun' => 0,
 		'mon' => 1,
 		'tue' => 2,

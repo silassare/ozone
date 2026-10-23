@@ -36,7 +36,7 @@ enum VerificationPurpose: string
 	 * The lang key of each text a verification shows, by purpose. A recovery link opens a form, with
 	 * texts of its own, so a recovery has no `LINK` text.
 	 */
-	private const TEXTS = [
+	private const array TEXTS = [
 		'check' => [
 			'EMAIL_SUBJECT' => 'OZ_AUTH_VERIFY_EMAIL_SUBJECT_CHECK',
 			'EMAIL_TITLE'   => 'OZ_AUTH_VERIFY_EMAIL_TITLE_CHECK',

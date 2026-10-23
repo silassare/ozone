@@ -15,6 +15,7 @@ namespace OZONE\Core\Auth\Interfaces;
 
 use OZONE\Core\Auth\AuthUserDataStore;
 use PHPUtils\Interfaces\ArrayCapableInterface;
+use SensitiveParameter;
 
 /**
  * Interface AuthUserInterface.
@@ -23,11 +24,11 @@ use PHPUtils\Interfaces\ArrayCapableInterface;
  */
 interface AuthUserInterface extends ArrayCapableInterface
 {
-	public const IDENTIFIER_TYPE_ID         = 'id';
-	public const IDENTIFIER_TYPE_NAME       = 'username';
-	public const IDENTIFIER_TYPE_PHONE      = 'phone';
-	public const IDENTIFIER_TYPE_EMAIL      = 'email';
-	public const AUTH_USER_DATA_STORE_KEY   = '_auth_user_data_store';
+	public const string IDENTIFIER_TYPE_ID         = 'id';
+	public const string IDENTIFIER_TYPE_NAME       = 'username';
+	public const string IDENTIFIER_TYPE_PHONE      = 'phone';
+	public const string IDENTIFIER_TYPE_EMAIL      = 'email';
+	public const string AUTH_USER_DATA_STORE_KEY   = '_auth_user_data_store';
 
 	/**
 	 * Get the entity auth type.
@@ -81,7 +82,7 @@ interface AuthUserInterface extends ArrayCapableInterface
 	 *
 	 * @return static
 	 */
-	public function setAuthPassword(string $password_hash): static;
+	public function setAuthPassword(#[SensitiveParameter] string $password_hash): static;
 
 	/**
 	 * Get the auth user data store.

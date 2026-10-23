@@ -42,7 +42,7 @@ use OZONE\Core\Stores\StoreNumbers;
  */
 final class DbStore implements StoreDriverInterface
 {
-	private const CACHE_VALUE = 'v';
+	private const string CACHE_VALUE = 'v';
 
 	/**
 	 * DbStore constructor.
@@ -249,7 +249,7 @@ final class DbStore implements StoreDriverInterface
 				);
 				$new_expire = null !== $expire_at ? (int) $expire_at : null;
 
-				if (0 == $by) {
+				if (0 === $by) {
 					return $sum;
 				}
 			}

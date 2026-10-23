@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Stores\Interfaces;
 
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
 
@@ -67,7 +68,7 @@ interface StoreDriverInterface
 	 *
 	 * @return null|float|int the new number; null when the entry is missing and not created
 	 *
-	 * @throws \OZONE\Core\Exceptions\RuntimeException when the entry holds something else than a number
+	 * @throws RuntimeException when the entry holds something else than a number
 	 */
 	public function add(string $key, float|int $by, bool $create = false, ?float $expiresAt = null): float|int|null;
 

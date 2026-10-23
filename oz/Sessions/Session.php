@@ -22,6 +22,7 @@ use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
+use OZONE\Core\Auth\Methods\SessionAuth;
 use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
 use OZONE\Core\CSRF\CSRF;
 use OZONE\Core\Db\OZSession;
@@ -44,7 +45,7 @@ use Throwable;
  */
 final class Session implements BootHookReceiverInterface
 {
-	private const SESSION_ID_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
+	private const string SESSION_ID_REG = '~^[-,a-zA-Z0-9]{32,128}$~';
 
 	private ?StatefulAuthenticationMethodStore $state = null;
 
@@ -78,7 +79,7 @@ final class Session implements BootHookReceiverInterface
 	 * Whether the loaded session was opened from another source than this request's.
 	 *
 	 * Set by {@see self::start()} from the stored `request_source_key`, acted upon by
-	 * {@see \OZONE\Core\Auth\Methods\SessionAuth}.
+	 * {@see SessionAuth}.
 	 */
 	private bool $source_changed = false;
 

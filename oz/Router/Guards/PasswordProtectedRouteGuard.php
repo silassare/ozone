@@ -21,6 +21,7 @@ use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Router\RouteInfo;
+use SensitiveParameter;
 
 /**
  * Class PasswordProtectedRouteGuard.
@@ -35,7 +36,7 @@ final class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	 * @param string $password           The password
 	 * @param bool   $is_hashed_password Set to true if the password is already hashed
 	 */
-	public function __construct(string $password, protected bool $is_hashed_password = false)
+	public function __construct(#[SensitiveParameter] string $password, protected bool $is_hashed_password = false)
 	{
 		$this->password_hash = $is_hashed_password ? $password : Password::hash($password);
 	}

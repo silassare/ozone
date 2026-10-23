@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Crypt;
 
+use SensitiveParameter;
+
 /**
  * Class Password.
  */
@@ -44,7 +46,7 @@ class Password
 	 *
 	 * @return string
 	 */
-	public static function hash(string $pass, string $algo = \PASSWORD_BCRYPT): string
+	public static function hash(#[SensitiveParameter] string $pass, string $algo = \PASSWORD_BCRYPT): string
 	{
 		return \password_hash(self::resizePass($pass, $algo), $algo);
 	}
@@ -57,7 +59,7 @@ class Password
 	 *
 	 * @return bool
 	 */
-	public static function verify(string $pass, string $known_hash): bool
+	public static function verify(#[SensitiveParameter] string $pass, string $known_hash): bool
 	{
 		$info = \password_get_info($known_hash);
 		$algo = $info['algo'] ?? null;
@@ -79,7 +81,7 @@ class Password
 	 *
 	 * @return string
 	 */
-	private static function resizePass(string $pass, string $algo): string
+	private static function resizePass(#[SensitiveParameter] string $pass, string $algo): string
 	{
 		$max_len = self::$algo_options[$algo]['max_len'] ?? null;
 

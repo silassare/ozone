@@ -26,7 +26,7 @@ use stdClass;
  */
 final class SettingsBundleTest extends TestCase
 {
-	private const GROUPS = ['oz.config', 'oz.db', 'oz.routes', 'oz.gc', 'lang/oz.en'];
+	private const array GROUPS = ['oz.config', 'oz.db', 'oz.routes', 'oz.gc', 'lang/oz.en'];
 
 	protected function tearDown(): void
 	{

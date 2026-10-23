@@ -37,7 +37,7 @@ use OZONE\Core\Router\Interfaces\RouteMiddlewareInterface;
  * followed by the route's own; params and interceptors are merged by name; CSRF, resume and
  * form declaration settings come from the innermost level that sets them.
  */
-final class ResolvedRouteOptions
+final readonly class ResolvedRouteOptions
 {
 	/**
 	 * ResolvedRouteOptions constructor.
@@ -58,16 +58,16 @@ final class ResolvedRouteOptions
 	 * @param null|array{0: RequestScope, 1: int}                                  $resume_config
 	 */
 	public function __construct(
-		public readonly array $authentication_methods,
-		public readonly array $guard_descriptors,
-		public readonly array $guard_entries,
-		public readonly array $middlewares,
-		public readonly array $interceptors,
-		public readonly array $params,
-		public readonly array $form_declarations,
-		public readonly ?RequestScope $csrf_scope,
-		public readonly bool $csrf_disabled,
-		public readonly ?array $resume_config,
+		public array $authentication_methods,
+		public array $guard_descriptors,
+		public array $guard_entries,
+		public array $middlewares,
+		public array $interceptors,
+		public array $params,
+		public array $form_declarations,
+		public ?RequestScope $csrf_scope,
+		public bool $csrf_disabled,
+		public ?array $resume_config,
 	) {}
 
 	/**

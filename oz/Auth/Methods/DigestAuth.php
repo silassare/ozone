@@ -46,7 +46,7 @@ class DigestAuth implements AuthenticationMethodInterface
 	use AskCredentialsByHTTPHeaderTrait;
 	use AuthUserKeyAuthenticationMethodTrait;
 
-	public const NONCE_CACHE_NAMESPACE = 'oz:auth:digest:nonces';
+	public const string NONCE_CACHE_NAMESPACE = 'oz:auth:digest:nonces';
 
 	protected AuthenticationMethodScheme $scheme;
 

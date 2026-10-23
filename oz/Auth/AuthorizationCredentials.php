@@ -20,6 +20,7 @@ use OZONE\Core\Auth\Interfaces\AuthorizationCredentialsInterface;
 use OZONE\Core\Auth\Views\AuthLinkView;
 use OZONE\Core\Http\Uri;
 use PHPUtils\Traits\ArrayCapableTrait;
+use SensitiveParameter;
 
 /**
  * Class AuthCredentials.
@@ -82,7 +83,7 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setCode(string $code): static
+	public function setCode(#[SensitiveParameter] string $code): static
 	{
 		$this->code = $code;
 
@@ -102,7 +103,7 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setToken(string $token): static
+	public function setToken(#[SensitiveParameter] string $token): static
 	{
 		$this->token = $token;
 

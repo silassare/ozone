@@ -40,23 +40,23 @@ use Throwable;
  */
 class UploadFiles extends Service
 {
-	public const MAIN_ROUTE        = 'oz:upload';
-	public const CHUNK_START_ROUTE = 'oz:upload:chunk:start';
-	public const CHUNK_ADD_ROUTE   = 'oz:upload:chunk:add';
-	public const PARAM_REF         = 'ref';
-	public const PARAM_NAME        = 'name';
-	public const PARAM_SIZE        = 'size';
-	public const PARAM_TYPE        = 'type';
-	public const PARAM_CHUNK       = 'chunk';
-	public const PARAM_CHUNK_INDEX = 'chunk_index';
-	public const PARAM_FILES       = 'files';
+	public const string MAIN_ROUTE        = 'oz:upload';
+	public const string CHUNK_START_ROUTE = 'oz:upload:chunk:start';
+	public const string CHUNK_ADD_ROUTE   = 'oz:upload:chunk:add';
+	public const string PARAM_REF         = 'ref';
+	public const string PARAM_NAME        = 'name';
+	public const string PARAM_SIZE        = 'size';
+	public const string PARAM_TYPE        = 'type';
+	public const string PARAM_CHUNK       = 'chunk';
+	public const string PARAM_CHUNK_INDEX = 'chunk_index';
+	public const string PARAM_FILES       = 'files';
 
 	/**
 	 * The default of `oz.files`: `OZ_UPLOAD_CHUNK_MAX_SIZE`, which a project may change.
 	 *
 	 * Read the setting through {@see self::chunkMaxSize()} rather than this constant.
 	 */
-	public const CHUNK_MAX_SIZE    = 1000 * 1000; // 1MB
+	public const int CHUNK_MAX_SIZE    = 1000 * 1000; // 1MB
 
 	/**
 	 * @param RouteInfo $r

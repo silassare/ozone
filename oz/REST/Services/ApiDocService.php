@@ -26,7 +26,7 @@ use OZONE\Core\Router\Router;
  */
 final class ApiDocService extends Service implements ApiDocProviderInterface
 {
-	public const API_DOC_SPEC_ROUTE = 'oz:api-doc-spec';
+	public const string API_DOC_SPEC_ROUTE = 'oz:api-doc-spec';
 
 	/**
 	 * {@inheritDoc}

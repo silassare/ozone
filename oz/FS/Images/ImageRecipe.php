@@ -13,13 +13,15 @@ declare(strict_types=1);
 
 namespace OZONE\Core\FS\Images;
 
+use OZONE\Core\FS\Filters\ImageFilterTokens;
+
 /**
  * What a rendition of an image is: read from the canonical filter tokens
- * ({@see \OZONE\Core\FS\Filters\ImageFilterTokens::normalize()}), so it is bounded already. It is
+ * ({@see ImageFilterTokens::normalize()}), so it is bounded already. It is
  * applied in this order: turned and mirrored, the area kept, resized (around the focal point when
  * cropped to a size), the effects, the watermark, then encoded.
  */
-final class ImageRecipe
+final readonly class ImageRecipe
 {
 	/**
 	 * @param null|int                       $width     the width asked for, never beyond the image's own
@@ -35,17 +37,17 @@ final class ImageRecipe
 	 * @param null|string                    $watermark a watermark's name (`ImageWatermarks`)
 	 */
 	public function __construct(
-		public readonly ?int $width = null,
-		public readonly ?int $height = null,
-		public readonly bool $cover = false,
-		public readonly int $quality = 100,
-		public readonly array $effects = [],
-		public readonly int $rotate = 0,
-		public readonly ?string $flip = null,
-		public readonly ?array $area = null,
-		public readonly ?array $focal = null,
-		public readonly ?string $format = null,
-		public readonly ?string $watermark = null,
+		public ?int $width = null,
+		public ?int $height = null,
+		public bool $cover = false,
+		public int $quality = 100,
+		public array $effects = [],
+		public int $rotate = 0,
+		public ?string $flip = null,
+		public ?array $area = null,
+		public ?array $focal = null,
+		public ?string $format = null,
+		public ?string $watermark = null,
 	) {}
 
 	/**

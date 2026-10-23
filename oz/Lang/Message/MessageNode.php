@@ -23,21 +23,21 @@ namespace OZONE\Core\Lang\Message;
  * - `choice`: `kind` (`plural`, `selectordinal`, `select`) over the value at `path`, and its
  *   `branches`, each a selector and the nodes of its text.
  */
-final class MessageNode
+final readonly class MessageNode
 {
 	/**
-	 * @param 'argument'|'choice'|'hash'|'include'|'text'                                       $type
-	 * @param list<string>                                                                      $path
-	 * @param list<array{name: string, args: list<float|int|string>}>                           $filters
-	 * @param list<array{selector: string, nodes: list<MessageNode>}>                           $branches
+	 * @param 'argument'|'choice'|'hash'|'include'|'text'             $type
+	 * @param list<string>                                            $path
+	 * @param list<array{name: string, args: list<float|int|string>}> $filters
+	 * @param list<array{selector: string, nodes: list<MessageNode>}> $branches
 	 */
 	private function __construct(
-		public readonly string $type,
-		public readonly string $value = '',
-		public readonly array $path = [],
-		public readonly array $filters = [],
-		public readonly string $kind = '',
-		public readonly array $branches = [],
+		public string $type,
+		public string $value = '',
+		public array $path = [],
+		public array $filters = [],
+		public string $kind = '',
+		public array $branches = [],
 	) {}
 
 	public static function text(string $value): self
@@ -56,7 +56,7 @@ final class MessageNode
 	}
 
 	/**
-	 * @param list<string>                                             $path
+	 * @param list<string>                                            $path
 	 * @param list<array{name: string, args: list<float|int|string>}> $filters
 	 */
 	public static function argument(array $path, array $filters): self
@@ -65,8 +65,8 @@ final class MessageNode
 	}
 
 	/**
-	 * @param list<string>                                             $path
-	 * @param 'plural'|'select'|'selectordinal'                        $kind
+	 * @param list<string>                                            $path
+	 * @param 'plural'|'select'|'selectordinal'                       $kind
 	 * @param list<array{selector: string, nodes: list<MessageNode>}> $branches
 	 */
 	public static function choice(array $path, string $kind, array $branches): self

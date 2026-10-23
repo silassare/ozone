@@ -30,7 +30,7 @@ use Symfony\Component\Process\Process;
  */
 final class CronRunnersTest extends TestCase
 {
-	private const KEY = 'cron-runners-test-key-0123456789abcdef';
+	private const string KEY = 'cron-runners-test-key-0123456789abcdef';
 
 	/** @var array<string, array{0: OZTestProject, 1: Process, 2: string, 3: int}> */
 	private static array $projects = [];

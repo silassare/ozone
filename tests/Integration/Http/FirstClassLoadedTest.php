@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
 final class FirstClassLoadedTest extends TestCase
 {
 	/** The listener refusing an anonymous read, by how it attaches: its stub. */
-	private const LISTENERS = [
+	private const array LISTENERS = [
 		'by-table'  => 'FirstClassCrudHandler',
 		'generated' => 'FirstClassGeneratedCrudListener',
 	];
@@ -52,21 +52,9 @@ final class FirstClassLoadedTest extends TestCase
 	}
 
 	/**
-	 * @return iterable<string, array{string, string}>
-	 */
-	public static function provideKindCases(): iterable
-	{
-		foreach (\array_keys(self::LISTENERS) as $listener) {
-			foreach (['entity', 'query', 'controller', 'results', 'crud'] as $kind) {
-				yield "{$listener}, {$kind} first" => [$listener, $kind];
-			}
-		}
-	}
-
-	/**
 	 * A server of its own: its one worker initializes the database on this request.
 	 *
-	 * @dataProvider provideKindCases
+	 * @dataProvider provideTheTableRulesHoldWhicheverClassLoadsFirstCases
 	 */
 	public function testTheTableRulesHoldWhicheverClassLoadsFirst(string $listener, string $kind): void
 	{
@@ -85,6 +73,18 @@ final class FirstClassLoadedTest extends TestCase
 
 		// Refused by the rules, not answered (200) nor broken (500).
 		self::assertSame(403, $status, (string) $body);
+	}
+
+	/**
+	 * @return iterable<string, array{string, string}>
+	 */
+	public static function provideTheTableRulesHoldWhicheverClassLoadsFirstCases(): iterable
+	{
+		foreach (\array_keys(self::LISTENERS) as $listener) {
+			foreach (['entity', 'query', 'controller', 'results', 'crud'] as $kind) {
+				yield "{$listener}, {$kind} first" => [$listener, $kind];
+			}
+		}
 	}
 
 	/**

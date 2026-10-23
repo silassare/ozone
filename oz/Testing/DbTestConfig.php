@@ -25,20 +25,20 @@ use Throwable;
  * a driver with no server is a broken environment, and {@see allConfigured()} refuses to provide any
  * data set rather than quietly covering SQLite alone (see {@see allowsPartialRun()}).
  */
-final class DbTestConfig
+final readonly class DbTestConfig
 {
-	public readonly string $rdbms;
-	public readonly string $host;
-	public readonly int $port;
-	public readonly string $name;
-	public readonly string $user;
-	public readonly string $pass;
+	public string $rdbms;
+	public string $host;
+	public int $port;
+	public string $name;
+	public string $user;
+	public string $pass;
 
 	/**
 	 * The database name this server was configured with, which {@see self::own()} derives from, so
 	 * that asking for a database of one's own twice over does not pile suffix upon suffix.
 	 */
-	private readonly string $base;
+	private string $base;
 
 	private function __construct(
 		string $rdbms,
@@ -56,78 +56,6 @@ final class DbTestConfig
 		$this->user  = $user;
 		$this->pass  = $pass;
 		$this->base  = $base ?? $name;
-	}
-
-	/**
-	 * Creates this config's database, and has the process drop it on the way out.
-	 *
-	 * MySQL's test user may not create databases, so the server's root credentials do it and grant
-	 * the test user what it needs (`OZ_TEST_MYSQL_ROOT_USER` / `_PASSWORD`, which `docker/compose.yaml`
-	 * gives the PHP container); PostgreSQL's test user is a superuser and needs no help.
-	 */
-	private function createDatabase(): void
-	{
-		if ($this->isMySQL()) {
-			$root = $this->rootPdo();
-
-			$root->exec(\sprintf('CREATE DATABASE IF NOT EXISTS `%s`', $this->name));
-			$root->exec(\sprintf(
-				'GRANT ALL PRIVILEGES ON `%s`.* TO %s@\'%%\'',
-				$this->name,
-				$root->quote($this->user)
-			));
-		} else {
-			$admin = new PDO(
-				\sprintf('pgsql:host=%s;port=%d;dbname=postgres', $this->host, $this->port),
-				$this->user,
-				$this->pass,
-				[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-			);
-
-			$exists = $admin->prepare('SELECT 1 FROM pg_database WHERE datname = ?');
-			$exists->execute([$this->name]);
-
-			if (!$exists->fetchColumn()) {
-				// No IF NOT EXISTS for a database here, and none needed: the name holds the PID.
-				$admin->exec(\sprintf('CREATE DATABASE "%s"', $this->name));
-			}
-		}
-
-		$name  = $this->name;
-		$clone = $this;
-
-		\register_shutdown_function(static function () use ($clone, $name): void {
-			try {
-				if ($clone->isMySQL()) {
-					$clone->rootPdo()->exec(\sprintf('DROP DATABASE IF EXISTS `%s`', $name));
-				} else {
-					$admin = new PDO(
-						\sprintf('pgsql:host=%s;port=%d;dbname=postgres', $clone->host, $clone->port),
-						$clone->user,
-						$clone->pass,
-						[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-					);
-					$admin->exec(\sprintf('DROP DATABASE IF EXISTS "%s"', $name));
-				}
-			} catch (Throwable) {
-				// A database left behind is litter, not a failed test run.
-			}
-		});
-	}
-
-	/**
-	 * A connection to the MySQL server as root, for what the test user may not do itself.
-	 */
-	private function rootPdo(): PDO
-	{
-		$envs = \getenv();
-
-		return new PDO(
-			\sprintf('mysql:host=%s;port=%d', $this->host, $this->port),
-			$envs['OZ_TEST_MYSQL_ROOT_USER'] ?? 'root',
-			$envs['OZ_TEST_MYSQL_ROOT_PASSWORD'] ?? 'root',
-			[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
-		);
 	}
 
 	public function isSQLite(): bool
@@ -344,7 +272,7 @@ final class DbTestConfig
 	 * running beside it. A database each is what makes both unnecessary.
 	 *
 	 * @param string $tag what the database belongs to: the test class, as {@see self::allConfigured()}
-	 *                     passes it, or one project of that class ({@see OZTestProject::useDatabase()})
+	 *                    passes it, or one project of that class ({@see OZTestProject::useDatabase()})
 	 */
 	public function own(string $tag): static
 	{
@@ -356,5 +284,77 @@ final class DbTestConfig
 		$mine->createDatabase();
 
 		return $mine;
+	}
+
+	/**
+	 * Creates this config's database, and has the process drop it on the way out.
+	 *
+	 * MySQL's test user may not create databases, so the server's root credentials do it and grant
+	 * the test user what it needs (`OZ_TEST_MYSQL_ROOT_USER` / `_PASSWORD`, which `docker/compose.yaml`
+	 * gives the PHP container); PostgreSQL's test user is a superuser and needs no help.
+	 */
+	private function createDatabase(): void
+	{
+		if ($this->isMySQL()) {
+			$root = $this->rootPdo();
+
+			$root->exec(\sprintf('CREATE DATABASE IF NOT EXISTS `%s`', $this->name));
+			$root->exec(\sprintf(
+				'GRANT ALL PRIVILEGES ON `%s`.* TO %s@\'%%\'',
+				$this->name,
+				$root->quote($this->user)
+			));
+		} else {
+			$admin = new PDO(
+				\sprintf('pgsql:host=%s;port=%d;dbname=postgres', $this->host, $this->port),
+				$this->user,
+				$this->pass,
+				[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+			);
+
+			$exists = $admin->prepare('SELECT 1 FROM pg_database WHERE datname = ?');
+			$exists->execute([$this->name]);
+
+			if (!$exists->fetchColumn()) {
+				// No IF NOT EXISTS for a database here, and none needed: the name holds the PID.
+				$admin->exec(\sprintf('CREATE DATABASE "%s"', $this->name));
+			}
+		}
+
+		$name  = $this->name;
+		$clone = $this;
+
+		\register_shutdown_function(static function () use ($clone, $name): void {
+			try {
+				if ($clone->isMySQL()) {
+					$clone->rootPdo()->exec(\sprintf('DROP DATABASE IF EXISTS `%s`', $name));
+				} else {
+					$admin = new PDO(
+						\sprintf('pgsql:host=%s;port=%d;dbname=postgres', $clone->host, $clone->port),
+						$clone->user,
+						$clone->pass,
+						[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+					);
+					$admin->exec(\sprintf('DROP DATABASE IF EXISTS "%s"', $name));
+				}
+			} catch (Throwable) {
+				// A database left behind is litter, not a failed test run.
+			}
+		});
+	}
+
+	/**
+	 * A connection to the MySQL server as root, for what the test user may not do itself.
+	 */
+	private function rootPdo(): PDO
+	{
+		$envs = \getenv();
+
+		return new PDO(
+			\sprintf('mysql:host=%s;port=%d', $this->host, $this->port),
+			$envs['OZ_TEST_MYSQL_ROOT_USER'] ?? 'root',
+			$envs['OZ_TEST_MYSQL_ROOT_PASSWORD'] ?? 'root',
+			[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+		);
 	}
 }

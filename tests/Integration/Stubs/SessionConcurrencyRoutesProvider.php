@@ -23,7 +23,7 @@ use OZONE\Core\Router\Router;
  */
 final class SessionConcurrencyRoutesProvider extends BaseService
 {
-	private const SLOW_MS = 1500;
+	private const int SLOW_MS = 1500;
 
 	public static function registerRoutes(Router $router): void
 	{

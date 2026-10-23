@@ -18,14 +18,14 @@ use Override;
 use OZONE\Core\App\GarbageCollector;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Db\OZFile;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\Filters\Interfaces\FileFilterHandlerInterface;
-use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\Images\ImageRecipe;
-use OZONE\Core\FS\Images\ImageWatermarks;
 use OZONE\Core\FS\Images\Images;
+use OZONE\Core\FS\Images\ImageWatermarks;
 use OZONE\Core\FS\Images\MetadataStripper;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
 use OZONE\Core\Http\Response;
@@ -73,7 +73,7 @@ use SplFileInfo;
  */
 class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookReceiverInterface
 {
-	private const CACHE_DIR = 'fs/image-filters';
+	private const string CACHE_DIR = 'fs/image-filters';
 
 	/**
 	 * {@inheritDoc}

@@ -32,8 +32,8 @@ class BasicAuth implements AuthenticationMethodInterface
 {
 	use AskCredentialsByHTTPHeaderTrait;
 
-	public const BASIC_AUTH_SEPARATOR               = ':';
-	public const BASIC_AUTH_USERNAME_INFO_SEPARATOR = '|';
+	public const string BASIC_AUTH_SEPARATOR               = ':';
+	public const string BASIC_AUTH_USERNAME_INFO_SEPARATOR = '|';
 
 	protected AuthenticationMethodScheme $scheme = AuthenticationMethodScheme::BASIC;
 

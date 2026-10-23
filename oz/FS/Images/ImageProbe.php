@@ -26,7 +26,7 @@ use Throwable;
 final class ImageProbe
 {
 	/** The key of a file's data that holds it. */
-	public const DATA_KEY = 'image';
+	public const string DATA_KEY = 'image';
 
 	/**
 	 * Reads an image file's facts from its storage; null for a file that is not an image, larger

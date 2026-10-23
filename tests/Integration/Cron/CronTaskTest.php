@@ -86,8 +86,8 @@ final class CronTaskTest extends TestCase
 	 */
 	public function testCronTaskDispatchedAndProcessed(DbTestConfig $config): void
 	{
-		$rdbms = $config->rdbms;
-		$proj  = OZTestProject::create('cron-task-' . $rdbms, shared: true, fresh: true);
+		$rdbms  = $config->rdbms;
+		$proj   = OZTestProject::create('cron-task-' . $rdbms, shared: true, fresh: true);
 		$config = $proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;
@@ -161,8 +161,8 @@ final class CronTaskTest extends TestCase
 	 */
 	public function testAsyncCronTaskDispatchedAndProcessed(DbTestConfig $config): void
 	{
-		$rdbms = $config->rdbms;
-		$proj  = OZTestProject::create('cron-async-' . $rdbms, shared: true, fresh: true);
+		$rdbms  = $config->rdbms;
+		$proj   = OZTestProject::create('cron-async-' . $rdbms, shared: true, fresh: true);
 		$config = $proj->useDatabase($config);
 
 		self::$asyncProjects[$rdbms] = $proj;

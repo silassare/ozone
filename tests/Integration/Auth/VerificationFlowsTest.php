@@ -30,10 +30,10 @@ use Symfony\Component\Process\Process;
  */
 final class VerificationFlowsTest extends TestCase
 {
-	private const DB_FILE       = 'verification_flows_test.sqlite';
-	private const USER_EMAIL    = 'jane.doe@example.com';
-	private const USER_PASSWORD = 'Jane_Pass_42';
-	private const NEW_PASSWORD  = 'Jane_New_Pass_43';
+	private const string DB_FILE       = 'verification_flows_test.sqlite';
+	private const string USER_EMAIL    = 'jane.doe@example.com';
+	private const string USER_PASSWORD = 'Jane_Pass_42';
+	private const string NEW_PASSWORD  = 'Jane_New_Pass_43';
 
 	/** @var array<string, OZTestProject> projects by name */
 	private static array $projects = [];
@@ -307,7 +307,7 @@ final class VerificationFlowsTest extends TestCase
 	 * a password form, that could only fail. The row is still there: the garbage collection deletes it
 	 * an hour later.
 	 *
-	 * @dataProvider provideExpiredLinkCases
+	 * @dataProvider provideAnExpiredLinkSaysSoBeforeAnythingIsTypedCases
 	 */
 	public function testAnExpiredLinkSaysSoBeforeAnythingIsTyped(string $purpose): void
 	{
@@ -329,7 +329,7 @@ final class VerificationFlowsTest extends TestCase
 	/**
 	 * @return iterable<string, array{0: string}>
 	 */
-	public static function provideExpiredLinkCases(): iterable
+	public static function provideAnExpiredLinkSaysSoBeforeAnythingIsTypedCases(): iterable
 	{
 		yield 'a sign-up' => ['sign-up'];
 

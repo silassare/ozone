@@ -34,9 +34,9 @@ use OZONE\Core\Services\QRCode\Interfaces\QRCodeEncoderDecoderInterface;
  */
 final class QRCode extends Service
 {
-	public const QR_CODE_KEY = 'oz_qr_code_key';
+	public const string QR_CODE_KEY = 'oz_qr_code_key';
 
-	public const QR_CODE_ROUTE = 'oz:qr-code';
+	public const string QR_CODE_ROUTE = 'oz:qr-code';
 
 	/**
 	 * Gets qr-code image uri.

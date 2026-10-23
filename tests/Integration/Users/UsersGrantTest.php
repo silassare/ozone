@@ -27,7 +27,7 @@ use Symfony\Component\Process\Process;
  */
 final class UsersGrantTest extends TestCase
 {
-	private const EMAIL = 'ada@example.com';
+	private const string EMAIL = 'ada@example.com';
 
 	/** @var array<string, OZTestProject> */
 	private static array $projects = [];

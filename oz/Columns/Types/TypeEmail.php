@@ -30,7 +30,7 @@ use OZONE\Core\Users\UsersRepository;
  */
 class TypeEmail extends Type
 {
-	public const NAME = 'email';
+	public const string NAME = 'email';
 
 	/**
 	 * TypeEmail constructor.

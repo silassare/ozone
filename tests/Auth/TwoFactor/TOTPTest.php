@@ -29,7 +29,7 @@ final class TOTPTest extends TestCase
 	 * Used to reproduce RFC 4226 appendix D HOTP counter vectors via TOTP
 	 * (counter = floor(time / step)).
 	 */
-	private const RFC_SEED = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+	private const string RFC_SEED = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
 
 	// generateSecret -------------------------------------------------------
 

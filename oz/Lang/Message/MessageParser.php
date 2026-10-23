@@ -30,13 +30,13 @@ namespace OZONE\Core\Lang\Message;
  */
 final class MessageParser
 {
-	private const KINDS = ['plural', 'selectordinal', 'select'];
+	private const array KINDS = ['plural', 'selectordinal', 'select'];
 
-	private const KEY_REG = '~^[A-Z][A-Z0-9_.]+$~';
+	private const string KEY_REG = '~^[A-Z][A-Z0-9_.]+$~';
 
-	private const SEGMENT_REG = '~^\w+$~';
+	private const string SEGMENT_REG = '~^\w+$~';
 
-	private const NUMBER_REG = '~^-?\d+(\.\d+)?$~';
+	private const string NUMBER_REG = '~^-?\d+(\.\d+)?$~';
 
 	/** @var array<string, list<MessageNode>> */
 	private static array $cache = [];

@@ -36,7 +36,7 @@ use OZONE\Core\Stores\StoresGarbageCollector;
  */
 final class FormSessionStore implements StoreEntryExpiryListenerInterface
 {
-	public const CACHE_NAMESPACE = 'oz:form:sessions';
+	public const string CACHE_NAMESPACE = 'oz:form:sessions';
 
 	/**
 	 * {@inheritDoc}

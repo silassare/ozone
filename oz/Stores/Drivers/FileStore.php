@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Core\Stores\Drivers;
 
 use Override;
-use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Crypt\SignedSerializer;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FS;
 use OZONE\Core\Stores\StoreCapabilities;
 
@@ -34,12 +34,12 @@ final class FileStore extends MemoryStore
 	/**
 	 * Files under `.ozone/cache/`: disposable, and the default.
 	 */
-	public const ROOT_CACHE = 'cache';
+	public const string ROOT_CACHE = 'cache';
 
 	/**
 	 * Files under `data/{scope}/state`: durable, and required to back a state store.
 	 */
-	public const ROOT_STATE = 'state';
+	public const string ROOT_STATE = 'state';
 
 	private ?string $cache_path = null;
 
@@ -92,7 +92,7 @@ final class FileStore extends MemoryStore
 	protected function mutate(callable $change): mixed
 	{
 		$path = $this->getCachePath();
-		$lock = \fopen($path . '.lock', 'c');
+		$lock = \fopen($path . '.lock', 'cb');
 
 		if (false === $lock) {
 			throw new RuntimeException(\sprintf('The store file "%s" cannot be locked.', $path));
@@ -136,7 +136,6 @@ final class FileStore extends MemoryStore
 		}
 	}
 
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -179,16 +178,6 @@ final class FileStore extends MemoryStore
 	}
 
 	/**
-	 * Notes the file just written as the one the entries are from.
-	 */
-	private function remember(string $path): void
-	{
-		\clearstatcache(true, $path);
-
-		self::$inodes[$this->namespace] = \is_file($path) ? (\fileinode($path) ?: null) : null;
-	}
-
-	/**
 	 * Gets the cache path.
 	 *
 	 * @return string
@@ -210,5 +199,15 @@ final class FileStore extends MemoryStore
 		}
 
 		return $this->cache_path;
+	}
+
+	/**
+	 * Notes the file just written as the one the entries are from.
+	 */
+	private function remember(string $path): void
+	{
+		\clearstatcache(true, $path);
+
+		self::$inodes[$this->namespace] = \is_file($path) ? (\fileinode($path) ?: null) : null;
 	}
 }

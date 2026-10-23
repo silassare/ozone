@@ -32,7 +32,7 @@ use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
  *   - `CacheRegistry::persistent($ns)` — persistent (configured driver)
  *   - `CacheRegistry::store('oz:form:sessions')` — named store from `oz.stores.cache` settings
  */
-final class KeyValueStore
+final readonly class KeyValueStore
 {
 	/**
 	 * KeyValueStore constructor.
@@ -41,8 +41,8 @@ final class KeyValueStore
 	 * @param StoreDriverInterface $provider the underlying driver
 	 */
 	public function __construct(
-		private readonly string $name,
-		private readonly StoreDriverInterface $provider,
+		private string $name,
+		private StoreDriverInterface $provider,
 	) {}
 
 	/**

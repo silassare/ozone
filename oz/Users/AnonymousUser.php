@@ -18,6 +18,7 @@ use OZONE\Core\Auth\AuthUserDataStore;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Crypt\Password;
 use PHPUtils\Traits\ArrayCapableTrait;
+use SensitiveParameter;
 
 /**
  * Class AnonymousUser.
@@ -70,7 +71,7 @@ final class AnonymousUser implements AuthUserInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function setAuthPassword(string $password_hash): static
+	public function setAuthPassword(#[SensitiveParameter] string $password_hash): static
 	{
 		return $this;
 	}

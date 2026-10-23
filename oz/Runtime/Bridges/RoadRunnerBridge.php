@@ -51,9 +51,9 @@ final class RoadRunnerBridge implements ResponseSinkInterface
 	/**
 	 * Bodies up to this size are sent in one frame; larger ones are streamed in chunks.
 	 */
-	private const STREAM_THRESHOLD = 1048576;
+	private const int STREAM_THRESHOLD = 1048576;
 
-	private const CHUNK_SIZE = 65536;
+	private const int CHUNK_SIZE = 65536;
 
 	public function __construct(private readonly HttpWorkerInterface $worker) {}
 

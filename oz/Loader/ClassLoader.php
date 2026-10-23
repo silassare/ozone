@@ -97,12 +97,12 @@ class ClassLoader
 	 *
 	 * @var string Class file name regular expression
 	 */
-	public const CLASS_FILE_REG = '~([A-Z][\w_]*)\.php$~';
+	public const string CLASS_FILE_REG = '~([A-Z][\w_]*)\.php$~';
 
 	/**
 	 * A file path, relative to a namespace's base directory and without `.php`, that names a class.
 	 */
-	private const PSR4_RELATIVE_REG = '~^[A-Za-z_]\w*(?:[/\\\][A-Za-z_]\w*)*$~';
+	private const string PSR4_RELATIVE_REG = '~^[A-Za-z_]\w*(?:[/\\\][A-Za-z_]\w*)*$~';
 
 	/**
 	 * An associative array where the key is a namespace prefix and the value
@@ -432,18 +432,6 @@ class ClassLoader
 	}
 
 	/**
-	 * Runs what waited for the classes loading to be complete, in the order it was queued.
-	 */
-	private static function runAfterLoad(): void
-	{
-		while ([] !== self::$after_load) {
-			$callback = \array_shift(self::$after_load);
-
-			$callback();
-		}
-	}
-
-	/**
 	 * The file a class would be loaded from, without loading it: null when none is found.
 	 *
 	 * The directory of a lazy namespace is resolved on the way.
@@ -600,6 +588,18 @@ class ClassLoader
 		}
 
 		return false;
+	}
+
+	/**
+	 * Runs what waited for the classes loading to be complete, in the order it was queued.
+	 */
+	private static function runAfterLoad(): void
+	{
+		while ([] !== self::$after_load) {
+			$callback = \array_shift(self::$after_load);
+
+			$callback();
+		}
 	}
 
 	/**

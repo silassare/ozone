@@ -49,13 +49,13 @@ use OZONE\Core\FS\Images\ImageWatermarks;
 final class ImageFilterTokens
 {
 	/** Effects without a value, applied in the order given, each once. */
-	private const EFFECTS = ['grayscale', 'sepia', 'sharpen', 'invert'];
+	private const array EFFECTS = ['grayscale', 'sepia', 'sharpen', 'invert'];
 
 	/** The block sizes `pixel{N}` snaps to. */
-	private const PIXEL_SIZES = [4, 8, 16, 32, 64];
+	private const array PIXEL_SIZES = [4, 8, 16, 32, 64];
 
 	/** The canonical groups, in the order a rendition applies them. */
-	private const ORDER = ['w', 'h', 'thumb', 'crop', 'r', 'flip', 'area', 'focal', 'q', 'format'];
+	private const array ORDER = ['w', 'h', 'thumb', 'crop', 'r', 'flip', 'area', 'focal', 'q', 'format'];
 
 	/**
 	 * The canonical tokens.

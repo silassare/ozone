@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Core\Router\Views;
 
 use Gobl\DBAL\Types\Interfaces\TypeInterface;
-use OZONE\Core\CSRF\CSRF;
 use OZONE\Core\Columns\Types\TypePassword;
+use OZONE\Core\CSRF\CSRF;
 use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Enums\RequestScope;

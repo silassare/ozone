@@ -31,7 +31,7 @@ use PHPUnit\Framework\TestCase;
 final class ContextHostTest extends TestCase
 {
 	// No dot in the key: dotted settings keys are read as paths.
-	private const PROXY_RANGE = '2001:db8::/32';
+	private const string PROXY_RANGE = '2001:db8::/32';
 
 	protected function setUp(): void
 	{

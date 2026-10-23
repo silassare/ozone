@@ -37,12 +37,12 @@ final class StateRegistry
 	/**
 	 * The settings group declaring the state stores.
 	 */
-	public const SETTINGS_GROUP = 'oz.stores.state';
+	public const string SETTINGS_GROUP = 'oz.stores.state';
 
 	/**
 	 * The default driver of a state store that names none.
 	 */
-	public const DEFAULT_DRIVER_SETTING = 'OZ_STATE_DEFAULT';
+	public const string DEFAULT_DRIVER_SETTING = 'OZ_STATE_DEFAULT';
 
 	/** @var array<string, KeyValueStore> */
 	private static array $stores = [];

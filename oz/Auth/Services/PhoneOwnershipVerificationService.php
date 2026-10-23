@@ -28,7 +28,7 @@ use OZONE\Core\Router\Router;
  */
 class PhoneOwnershipVerificationService extends Service
 {
-	public const ROUTE_VERIFY_PHONE = 'oz:auth:verify:phone';
+	public const string ROUTE_VERIFY_PHONE = 'oz:auth:verify:phone';
 
 	/**
 	 * {@inheritDoc}

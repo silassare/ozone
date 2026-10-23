@@ -28,7 +28,7 @@ use OZONE\Core\Router\Router;
  */
 class EmailOwnershipVerificationService extends Service
 {
-	public const ROUTE_VERIFY_EMAIL = 'oz:auth:verify:email';
+	public const string ROUTE_VERIFY_EMAIL = 'oz:auth:verify:email';
 
 	/**
 	 * {@inheritDoc}

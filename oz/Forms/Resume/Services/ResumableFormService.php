@@ -59,20 +59,20 @@ final class ResumableFormService extends Service
 {
 	use ResumableFormServiceApiDocTrait;
 
-	public const ROUTE_INIT     = 'oz:form:init';
-	public const ROUTE_STATE    = 'oz:form:state';
-	public const ROUTE_NEXT     = 'oz:form:next';
-	public const ROUTE_BACK     = 'oz:form:back';
-	public const ROUTE_CANCEL   = 'oz:form:cancel';
-	public const ROUTE_EVALUATE = 'oz:form:evaluate';
+	public const string ROUTE_INIT     = 'oz:form:init';
+	public const string ROUTE_STATE    = 'oz:form:state';
+	public const string ROUTE_NEXT     = 'oz:form:next';
+	public const string ROUTE_BACK     = 'oz:form:back';
+	public const string ROUTE_CANCEL   = 'oz:form:cancel';
+	public const string ROUTE_EVALUATE = 'oz:form:evaluate';
 
 	// Sub-action values carried by the X-OZONE-Form-Resume-Action header.
-	public const ACTION_INIT     = 'init';
-	public const ACTION_STATE    = 'state';
-	public const ACTION_NEXT     = 'next';
-	public const ACTION_BACK     = 'back';
-	public const ACTION_CANCEL   = 'cancel';
-	public const ACTION_EVALUATE = 'evaluate';
+	public const string ACTION_INIT     = 'init';
+	public const string ACTION_STATE    = 'state';
+	public const string ACTION_NEXT     = 'next';
+	public const string ACTION_BACK     = 'back';
+	public const string ACTION_CANCEL   = 'cancel';
+	public const string ACTION_EVALUATE = 'evaluate';
 
 	/**
 	 * {@inheritDoc}

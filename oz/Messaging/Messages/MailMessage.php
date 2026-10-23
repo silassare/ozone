@@ -20,7 +20,7 @@ namespace OZONE\Core\Messaging\Messages;
  */
 class MailMessage extends Message
 {
-	public const CHANNEL = 'mail';
+	public const string CHANNEL = 'mail';
 
 	/**
 	 * MailMessage constructor.

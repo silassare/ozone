@@ -36,10 +36,10 @@ use Symfony\Component\Process\Process;
 final class ServicesGenerateTest extends TestCase
 {
 	/** The OZone built-in public table we generate a service for. */
-	private const TABLE = 'oz_countries';
+	private const string TABLE = 'oz_countries';
 
 	/** Expected generated class name (derived from table name). */
-	private const SERVICE_CLASS = 'OzCountriesService';
+	private const string SERVICE_CLASS = 'OzCountriesService';
 
 	/**
 	 * Projects created per RDBMS, kept for tearDownAfterClass.
@@ -77,8 +77,8 @@ final class ServicesGenerateTest extends TestCase
 	 */
 	public function testGenerateExitsCleanly(DbTestConfig $config): void
 	{
-		$rdbms = $config->rdbms;
-		$proj  = OZTestProject::create('svcgen-' . $rdbms, shared: true, fresh: true);
+		$rdbms  = $config->rdbms;
+		$proj   = OZTestProject::create('svcgen-' . $rdbms, shared: true, fresh: true);
 		$config = $proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;
@@ -143,8 +143,8 @@ final class ServicesGenerateTest extends TestCase
 		$file    = self::getProject($config)->getPath() . '/app/Services/' . self::SERVICE_CLASS . '.php';
 		$content = (string) \file_get_contents($file);
 
-		self::assertStringContainsString("public const SERVICE_NAME = 'countries';", $content);
-		self::assertStringContainsString("public const SERVICE_PATH = '/countries';", $content);
+		self::assertStringContainsString("public const string SERVICE_NAME = 'countries';", $content);
+		self::assertStringContainsString("public const string SERVICE_PATH = '/countries';", $content);
 	}
 
 	/**

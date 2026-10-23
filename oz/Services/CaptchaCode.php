@@ -34,9 +34,9 @@ use PHPUtils\Str;
  */
 final class CaptchaCode extends Service
 {
-	public const CAPTCHA_KEY = 'oz_captcha_key';
+	public const string CAPTCHA_KEY = 'oz_captcha_key';
 
-	public const CAPTCHA_ROUTE = 'oz:captcha';
+	public const string CAPTCHA_ROUTE = 'oz:captcha';
 
 	private static array $default_config = [
 		'backgrounds'     => [

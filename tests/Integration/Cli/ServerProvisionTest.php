@@ -45,7 +45,7 @@ final class ServerProvisionTest extends TestCase
 	 *
 	 * @var array<string, array{image: string, manager: string, bootstrap: string}>
 	 */
-	private const PLATFORMS = [
+	private const array PLATFORMS = [
 		'debian' => [
 			'image'     => 'debian:13-slim',
 			'manager'   => 'apt',

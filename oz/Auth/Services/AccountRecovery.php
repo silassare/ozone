@@ -35,8 +35,8 @@ use OZONE\Core\Router\Router;
  */
 final class AccountRecovery extends Service
 {
-	public const ROUTE_ACCOUNT_RECOVERY      = 'oz:account-recovery';
-	public const AUTO_LOGIN_ON_SUCCESS_FIELD = 'auto_login_on_success';
+	public const string ROUTE_ACCOUNT_RECOVERY      = 'oz:account-recovery';
+	public const string AUTO_LOGIN_ON_SUCCESS_FIELD = 'auto_login_on_success';
 
 	/**
 	 * @param RouteInfo $ri

@@ -20,7 +20,7 @@ namespace OZONE\Core\Messaging\Messages;
  */
 class SMSMessage extends Message
 {
-	public const CHANNEL = 'sms';
+	public const string CHANNEL = 'sms';
 
 	/**
 	 * SMSMessage constructor.

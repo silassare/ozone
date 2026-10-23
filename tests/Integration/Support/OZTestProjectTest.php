@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class OZTestProjectTest extends TestCase
 {
-	private const NAME = 'harness-reuse';
+	private const string NAME = 'harness-reuse';
 
 	public static function tearDownAfterClass(): void
 	{

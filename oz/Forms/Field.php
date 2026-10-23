@@ -565,7 +565,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 			unset($out['enum_backing']);
 
 			$out['enum_cases'] = \array_map(
-				static fn(BackedEnum $case) => ['name' => $case->name, 'value' => $case->value],
+				static fn (BackedEnum $case) => ['name' => $case->name, 'value' => $case->value],
 				$type->getEnumClass()::cases()
 			);
 		}

@@ -21,7 +21,7 @@ use OZONE\Core\Forms\Form;
  * Outcome of a session transition (init, state, next, back): the form the
  * client should fill next and the session metadata that goes with it.
  */
-final class FormSessionStep
+final readonly class FormSessionStep
 {
 	/**
 	 * FormSessionStep constructor.
@@ -33,11 +33,11 @@ final class FormSessionStep
 	 * @param null|array{step: int, total_steps: int} $progress   set when the provider declares `totalSteps()`
 	 */
 	public function __construct(
-		public readonly string $resume_ref,
-		public readonly ?Form $form,
-		public readonly bool $done,
-		public readonly ?int $expires_at,
-		public readonly ?array $progress,
+		public string $resume_ref,
+		public ?Form $form,
+		public bool $done,
+		public ?int $expires_at,
+		public ?array $progress,
 	) {}
 
 	/**

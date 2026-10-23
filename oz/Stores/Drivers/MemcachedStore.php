@@ -155,7 +155,7 @@ final class MemcachedStore implements StoreDriverInterface
 
 			$sum = StoreNumbers::sum($key, $got['value'] ?? null, $by);
 
-			if (0 == $by) {
+			if (0 === $by) {
 				return $sum;
 			}
 

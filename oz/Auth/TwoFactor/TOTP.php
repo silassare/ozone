@@ -15,6 +15,7 @@ namespace OZONE\Core\Auth\TwoFactor;
 
 use Exception;
 use OZONE\Core\Exceptions\RuntimeException;
+use SensitiveParameter;
 
 /**
  * Class TOTP.
@@ -23,7 +24,7 @@ use OZONE\Core\Exceptions\RuntimeException;
  */
 final class TOTP
 {
-	private const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+	private const string BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
 	/**
 	 * Generates a cryptographically random base32-encoded TOTP secret.
@@ -109,7 +110,9 @@ final class TOTP
 	 * @return bool true if the code is valid within the given window
 	 */
 	public static function verify(
+		#[SensitiveParameter]
 		string $secret,
+		#[SensitiveParameter]
 		string $code,
 		int $time = 0,
 		int $window = 1,
@@ -208,7 +211,7 @@ final class TOTP
 	 *
 	 * @return string zero-padded numeric code
 	 */
-	private static function hotp(string $secret, int $counter, int $digits): string
+	private static function hotp(#[SensitiveParameter] string $secret, int $counter, int $digits): string
 	{
 		$key     = self::base32Decode($secret);
 		$message = \pack('J', $counter); // 8 bytes, big-endian unsigned 64-bit

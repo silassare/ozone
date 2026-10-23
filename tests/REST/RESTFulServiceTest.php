@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\REST;
 
 use Override;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Response;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\REST\Enums\RESTFulAction;
@@ -23,7 +24,6 @@ use OZONE\Core\Router\Route;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\RouteOptions;
 use OZONE\Core\Router\Router;
-use OZONE\Core\Exceptions\RuntimeException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -98,20 +98,7 @@ final class RESTFulServiceTest extends TestCase
 	}
 
 	/**
-	 * @return array<string, array{0: class-string<RESTFulService>, 1: string}>
-	 */
-	public static function undeclaredServices(): array
-	{
-		return [
-			'no name'      => [StubNamelessRESTService::class, 'StubNamelessRESTService::SERVICE_NAME must be'],
-			'a bad name'   => [StubBadNameRESTService::class, 'got "Stub-Users"'],
-			'no path'      => [StubPathlessRESTService::class, 'StubPathlessRESTService::SERVICE_PATH must be'],
-			'no table'     => [StubTablelessRESTService::class, 'StubTablelessRESTService::TABLE_NAME is required'],
-		];
-	}
-
-	/**
-	 * @dataProvider undeclaredServices
+	 * @dataProvider provideAServiceMissingItsNamePathOrTableRefusesToRegisterCases
 	 *
 	 * @param class-string<RESTFulService> $service
 	 */
@@ -121,6 +108,19 @@ final class RESTFulServiceTest extends TestCase
 		$this->expectExceptionMessage($message);
 
 		$service::registerRoutes(new Router());
+	}
+
+	/**
+	 * @return array<string, array{0: class-string<RESTFulService>, 1: string}>
+	 */
+	public static function provideAServiceMissingItsNamePathOrTableRefusesToRegisterCases(): iterable
+	{
+		return [
+			'no name'      => [StubNamelessRESTService::class, 'StubNamelessRESTService::SERVICE_NAME must be'],
+			'a bad name'   => [StubBadNameRESTService::class, 'got "Stub-Users"'],
+			'no path'      => [StubPathlessRESTService::class, 'StubPathlessRESTService::SERVICE_PATH must be'],
+			'no table'     => [StubTablelessRESTService::class, 'StubTablelessRESTService::TABLE_NAME is required'],
+		];
 	}
 
 	public function testRouteNameAcceptsAnAction(): void
@@ -261,10 +261,10 @@ final class RESTFulServiceTest extends TestCase
  */
 final class StubUsersRESTService extends RESTFulService
 {
-	public const SERVICE_NAME = 'stub_rest_users';
-	public const SERVICE_PATH = '/stub-rest-users';
-	public const TABLE_NAME   = 'oz_users';
-	public const KEY_COLUMN   = 'id';
+	public const string SERVICE_NAME = 'stub_rest_users';
+	public const string SERVICE_PATH = '/stub-rest-users';
+	public const string TABLE_NAME   = 'oz_users';
+	public const string KEY_COLUMN   = 'id';
 
 	/**
 	 * @var list<string>
@@ -338,10 +338,10 @@ final class StubUsersRESTService extends RESTFulService
  */
 final class StubFilesRESTService extends RESTFulService
 {
-	public const SERVICE_NAME = 'stub_rest_files';
-	public const SERVICE_PATH = '/stub-rest-files';
-	public const TABLE_NAME   = 'oz_files';
-	public const KEY_COLUMN   = 'id';
+	public const string SERVICE_NAME = 'stub_rest_files';
+	public const string SERVICE_PATH = '/stub-rest-files';
+	public const string TABLE_NAME   = 'oz_files';
+	public const string KEY_COLUMN   = 'id';
 
 	#[Override]
 	public static function registerRoutes(Router $router): void
@@ -365,8 +365,8 @@ final class StubFilesRESTService extends RESTFulService
  */
 final class StubNamelessRESTService extends RESTFulService
 {
-	public const SERVICE_PATH = '/stub-nameless';
-	public const TABLE_NAME   = 'oz_users';
+	public const string SERVICE_PATH = '/stub-nameless';
+	public const string TABLE_NAME   = 'oz_users';
 
 	#[Override]
 	public static function registerRoutes(Router $router): void
@@ -382,9 +382,9 @@ final class StubNamelessRESTService extends RESTFulService
  */
 final class StubBadNameRESTService extends RESTFulService
 {
-	public const SERVICE_NAME = 'Stub-Users';
-	public const SERVICE_PATH = '/stub-bad-name';
-	public const TABLE_NAME   = 'oz_users';
+	public const string SERVICE_NAME = 'Stub-Users';
+	public const string SERVICE_PATH = '/stub-bad-name';
+	public const string TABLE_NAME   = 'oz_users';
 
 	#[Override]
 	public static function registerRoutes(Router $router): void
@@ -400,8 +400,8 @@ final class StubBadNameRESTService extends RESTFulService
  */
 final class StubPathlessRESTService extends RESTFulService
 {
-	public const SERVICE_NAME = 'stub_pathless';
-	public const TABLE_NAME   = 'oz_users';
+	public const string SERVICE_NAME = 'stub_pathless';
+	public const string TABLE_NAME   = 'oz_users';
 
 	#[Override]
 	public static function registerRoutes(Router $router): void
@@ -417,8 +417,8 @@ final class StubPathlessRESTService extends RESTFulService
  */
 final class StubTablelessRESTService extends RESTFulService
 {
-	public const SERVICE_NAME = 'stub_tableless';
-	public const SERVICE_PATH = '/stub-tableless';
+	public const string SERVICE_NAME = 'stub_tableless';
+	public const string SERVICE_PATH = '/stub-tableless';
 
 	#[Override]
 	public static function registerRoutes(Router $router): void

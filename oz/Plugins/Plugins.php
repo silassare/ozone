@@ -75,6 +75,7 @@ class Plugins
 	{
 		/** @var array<class-string<PluginInterface>, PluginScope> $scopes */
 		static $scopes = [];
+
 		/** @var array<string, class-string<PluginInterface>> $claimed */
 		static $claimed = [];
 

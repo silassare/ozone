@@ -139,7 +139,7 @@ final class Auth implements BootHookReceiverInterface
 			);
 		}
 
-		/* @var AuthorizationProviderInterface $provider */
+		/** @var AuthorizationProviderInterface $provider */
 		$instance = $provider::resolve($context, $auth)
 			->setScope(AuthorizationScope::from($auth));
 

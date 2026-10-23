@@ -26,7 +26,7 @@ use OZONE\Core\Lang\I18nMessage;
  * Message resolution walks from the leaf node upward, returning
  * the first non-null message found.
  */
-final class RuleViolation
+final readonly class RuleViolation
 {
 	/**
 	 * RuleViolation constructor.
@@ -35,8 +35,8 @@ final class RuleViolation
 	 * @param null|RuleViolation $cause the inner cause for nested rule-set failures
 	 */
 	public function __construct(
-		private readonly Rule|RuleSet $node,
-		private readonly ?self $cause = null,
+		private Rule|RuleSet $node,
+		private ?self $cause = null,
 	) {}
 
 	/**

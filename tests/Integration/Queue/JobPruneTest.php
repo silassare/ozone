@@ -65,8 +65,8 @@ final class JobPruneTest extends TestCase
 	 */
 	public function testSetup(DbTestConfig $config): void
 	{
-		$rdbms = $config->rdbms;
-		$proj  = OZTestProject::create('job-prune-' . $rdbms, shared: true, fresh: true);
+		$rdbms  = $config->rdbms;
+		$proj   = OZTestProject::create('job-prune-' . $rdbms, shared: true, fresh: true);
 		$config = $proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;

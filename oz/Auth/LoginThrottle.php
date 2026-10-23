@@ -31,7 +31,7 @@ use OZONE\Core\Utils\Hasher;
  */
 final class LoginThrottle
 {
-	public const CACHE_NAMESPACE = 'oz:rate_limit';
+	public const string CACHE_NAMESPACE = 'oz:rate_limit';
 
 	/**
 	 * Whether the subject reached the maximum number of failures in its window.

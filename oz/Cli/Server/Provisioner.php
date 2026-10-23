@@ -27,13 +27,13 @@ use OZONE\Core\Cli\Utils\Requirements;
  * package manager, which is what makes `--dry-run` honest and the whole thing testable for every
  * distribution from one machine.
  */
-final class Provisioner
+final readonly class Provisioner
 {
-	public const MODE_BARE   = 'bare';
-	public const MODE_DOCKER = 'docker';
+	public const string MODE_BARE   = 'bare';
+	public const string MODE_DOCKER = 'docker';
 
-	public const WEB_SERVERS = ['nginx', 'apache', 'caddy', 'none'];
-	public const DATABASES   = ['mysql', 'postgresql', 'none'];
+	public const array WEB_SERVERS = ['nginx', 'apache', 'caddy', 'none'];
+	public const array DATABASES   = ['mysql', 'postgresql', 'none'];
 
 	/**
 	 * @param PackageManager $manager    the package manager to write the plan for
@@ -47,15 +47,15 @@ final class Provisioner
 	 * @param bool           $firewall   whether to configure the firewall
 	 */
 	public function __construct(
-		private readonly PackageManager $manager,
-		private readonly string $mode = self::MODE_BARE,
-		private readonly string $web_server = 'nginx',
-		private readonly string $database = 'none',
-		private readonly bool $redis = false,
-		private readonly int $ssh_port = 22,
-		private readonly array $domains = [],
-		private readonly string $tls_email = '',
-		private readonly bool $firewall = true,
+		private PackageManager $manager,
+		private string $mode = self::MODE_BARE,
+		private string $web_server = 'nginx',
+		private string $database = 'none',
+		private bool $redis = false,
+		private int $ssh_port = 22,
+		private array $domains = [],
+		private string $tls_email = '',
+		private bool $firewall = true,
 	) {
 		if (!$this->manager->isServerTarget()) {
 			throw new InvalidArgumentException(\sprintf(

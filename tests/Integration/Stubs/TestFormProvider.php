@@ -45,7 +45,7 @@ use OZONE\Core\Http\Enums\RequestScope;
  */
 final class TestFormProvider extends AbstractResumableFormProvider
 {
-	public const PROVIDER_NAME = 'test-wizard';
+	public const string PROVIDER_NAME = 'test-wizard';
 
 	#[Override]
 	public static function getName(): string

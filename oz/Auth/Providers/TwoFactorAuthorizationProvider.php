@@ -51,7 +51,7 @@ use OZONE\Core\Messaging\Messages\SMSMessage;
  */
 final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 {
-	public const NAME = 'auth:provider:2fa';
+	public const string NAME = 'auth:provider:2fa';
 
 	protected Context $context;
 

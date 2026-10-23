@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Crypt\Interfaces;
 
+use SensitiveParameter;
+
 /**
  * Interface CryptInterface.
  */
@@ -31,7 +33,7 @@ interface CryptInterface
 	 *
 	 * @return false|string
 	 */
-	public function encrypt(string $message, string $pass_phrase): false|string;
+	public function encrypt(string $message, #[SensitiveParameter] string $pass_phrase): false|string;
 
 	/**
 	 * Decrypts a message.
@@ -41,5 +43,5 @@ interface CryptInterface
 	 *
 	 * @return false|string
 	 */
-	public function decrypt(string $message, string $pass_phrase): false|string;
+	public function decrypt(string $message, #[SensitiveParameter] string $pass_phrase): false|string;
 }

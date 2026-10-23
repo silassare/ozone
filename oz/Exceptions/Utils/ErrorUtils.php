@@ -30,9 +30,9 @@ class ErrorUtils
 	/**
 	 * Keys whose values are treated as secrets in exception data.
 	 */
-	public const SENSITIVE_KEY_REG = '~(pass(word|wd|phrase)?|secret|token|api_?key|authorization|cookie|credential)~i';
+	public const string SENSITIVE_KEY_REG = '~(pass(word|wd|phrase)?|secret|token|api_?key|authorization|cookie|credential)~i';
 
-	public const REDACTED = '[redacted]';
+	public const string REDACTED = '[redacted]';
 
 	/**
 	 * Masks the values of secret-looking keys, recursively, when redaction is enabled

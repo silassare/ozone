@@ -24,12 +24,12 @@ use OZONE\Core\Messaging\Transports\TransportInterface;
  *
  * A channel as `OZ_MESSAGING_CHANNELS` (`oz.messaging`) declares it, each option defaulted.
  */
-final class Channel
+final readonly class Channel
 {
 	/**
 	 * What a channel declares, and the value of what it leaves out.
 	 */
-	public const DEFAULTS = [
+	public const array DEFAULTS = [
 		'enabled'     => true,
 		'transport'   => LogTransport::class,
 		'async'       => true,
@@ -55,15 +55,15 @@ final class Channel
 	 * @param bool                             $gsm7        whether the text is folded to GSM 03.38
 	 */
 	public function __construct(
-		public readonly string $name,
-		public readonly bool $enabled,
-		public readonly string $transport,
-		public readonly bool $async,
-		public readonly int $retry_max,
-		public readonly int $retry_delay,
-		public readonly string $identifier,
-		public readonly bool $html,
-		public readonly bool $gsm7,
+		public string $name,
+		public bool $enabled,
+		public string $transport,
+		public bool $async,
+		public int $retry_max,
+		public int $retry_delay,
+		public string $identifier,
+		public bool $html,
+		public bool $gsm7,
 	) {}
 
 	/**

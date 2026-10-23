@@ -56,8 +56,8 @@ final class DoctorCmdTest extends TestCase
 	 */
 	public function testDoctorPassesOnAFreshMigratedProject(DbTestConfig $config): void
 	{
-		$rdbms = $config->rdbms;
-		$proj  = OZTestProject::create('doctor-' . $rdbms, shared: false);
+		$rdbms  = $config->rdbms;
+		$proj   = OZTestProject::create('doctor-' . $rdbms, shared: false);
 		$config = $proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;

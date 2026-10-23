@@ -29,7 +29,7 @@ class Response extends Message implements ResponseInterface
 	/**
 	 * EOL characters used for HTTP response.
 	 */
-	public const EOL = "\r\n";
+	public const string EOL = "\r\n";
 
 	/**
 	 * Status codes and reason phrases.

@@ -20,7 +20,7 @@ namespace OZONE\Core\Messaging\Messages;
  */
 class NotificationMessage extends Message
 {
-	public const CHANNEL = 'notification';
+	public const string CHANNEL = 'notification';
 
 	/**
 	 * NotificationMessage constructor.

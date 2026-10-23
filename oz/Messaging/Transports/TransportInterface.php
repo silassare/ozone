@@ -15,6 +15,7 @@ namespace OZONE\Core\Messaging\Transports;
 
 use OZONE\Core\Db\OZMessage;
 use OZONE\Core\Messaging\Channel;
+use OZONE\Core\Messaging\Messenger;
 use OZONE\Core\Messaging\RenderedMessage;
 use Throwable;
 
@@ -25,7 +26,7 @@ use Throwable;
  * aggregator, a push service. A project or a plugin implements it; OZone ships {@see LogTransport}.
  *
  * A transport only delivers: it never retries, never writes `oz_messages`, never decides whether a
- * message should go. {@see \OZONE\Core\Messaging\Messenger} does.
+ * message should go. {@see Messenger} does.
  */
 interface TransportInterface
 {

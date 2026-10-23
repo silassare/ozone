@@ -28,9 +28,9 @@ use OZONE\Core\Stores\StoreNumbers;
  */
 class MemoryStore implements StoreDriverInterface
 {
-	protected const CACHE_VALUE_PROP  = 'value';
+	protected const string CACHE_VALUE_PROP  = 'value';
 
-	protected const CACHE_EXPIRE_PROP = 'expire';
+	protected const string CACHE_EXPIRE_PROP = 'expire';
 
 	protected string $namespace;
 

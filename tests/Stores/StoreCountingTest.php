@@ -31,15 +31,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class StoreCountingTest extends TestCase
 {
-	/**
-	 * @return iterable<string, array{callable(): KeyValueStore}>
-	 */
-	public static function provideStores(): iterable
-	{
-		yield 'memory' => [static fn (): KeyValueStore => self::kv(new MemoryStore(self::namespace()))];
-
-		yield 'file' => [static fn (): KeyValueStore => self::kv(new FileStore(self::namespace()))];
-	}
+	/** @var list<int> the processes the last `inProcesses()` started */
+	private static array $children = [];
 
 	/**
 	 * @dataProvider provideStores
@@ -105,6 +98,16 @@ final class StoreCountingTest extends TestCase
 		$store->increment('word');
 	}
 
+	/**
+	 * @return iterable<string, array{callable(): KeyValueStore}>
+	 */
+	public static function provideStores(): iterable
+	{
+		yield 'memory' => [static fn (): KeyValueStore => self::kv(new MemoryStore(self::namespace()))];
+
+		yield 'file' => [static fn (): KeyValueStore => self::kv(new FileStore(self::namespace()))];
+	}
+
 	public function testFileStoreCountsEveryAddOfSeveralProcesses(): void
 	{
 		$namespace = self::namespace();
@@ -117,7 +120,7 @@ final class StoreCountingTest extends TestCase
 			}
 		});
 
-		self::assertSame(240, (self::kv(new FileStore($namespace)))->get('hits'));
+		self::assertSame(240, self::kv(new FileStore($namespace))->get('hits'));
 	}
 
 	public function testFileStoreKeepsWhatOtherProcessesWrote(): void
@@ -155,9 +158,6 @@ final class StoreCountingTest extends TestCase
 	{
 		return 'count:' . \bin2hex(\random_bytes(4));
 	}
-
-	/** @var list<int> the processes the last `inProcesses()` started */
-	private static array $children = [];
 
 	/**
 	 * Runs work in several processes at once, and waits for them all.

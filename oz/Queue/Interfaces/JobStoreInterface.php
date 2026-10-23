@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Queue\Interfaces;
 
 use Iterator;
+use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\JobState;
 
 /**
@@ -162,7 +163,7 @@ interface JobStoreInterface
 	 *
 	 * How long a lease lasts, and how a store knows one has run out, is the store's own business:
 	 * a database store compares when the job was last written, a Redis store lets the lock key
-	 * expire. What to do with them is not -- {@see \OZONE\Core\Queue\JobsManager::reclaimStale()}
+	 * expire. What to do with them is not -- {@see JobsManager::reclaimStale()}
 	 * settles them against the job's retry policy.
 	 *
 	 * @param string $queue_name

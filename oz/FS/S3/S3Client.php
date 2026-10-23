@@ -34,28 +34,28 @@ use Throwable;
  * reading a seekable body once, without buffering it, and falls back to `UNSIGNED-PAYLOAD` only for
  * a body that cannot be read twice.
  */
-final class S3Client
+final readonly class S3Client
 {
 	/**
 	 * Default size of a multipart part, and the size above which an upload is split.
 	 *
 	 * S3 rejects a non-final part below 5 MiB, so this is also the floor for {@see self::$part_size}.
 	 */
-	public const DEFAULT_PART_SIZE = 16 << 20;
-	public const MIN_PART_SIZE     = 5 << 20;
-	public const MAX_PARTS         = 10000;
+	public const DEFAULT_PART_SIZE     = 16 << 20;
+	public const MIN_PART_SIZE         = 5 << 20;
+	public const int MAX_PARTS         = 10000;
 
-	private readonly S3Signer $signer;
+	private S3Signer $signer;
 
-	private readonly S3TransportInterface $transport;
+	private S3TransportInterface $transport;
 
-	private readonly string $scheme;
+	private string $scheme;
 
-	private readonly string $host;
+	private string $host;
 
-	private readonly string $base_path;
+	private string $base_path;
 
-	private readonly int $part_size;
+	private int $part_size;
 
 	/**
 	 * @param string                    $endpoint   the service URL, e.g. `http://minio:9000`
@@ -72,9 +72,9 @@ final class S3Client
 		string $access_key,
 		#[SensitiveParameter]
 		string $secret_key,
-		private readonly bool $path_style = true,
-		private readonly float $timeout = 30.0,
-		private readonly bool $verify_tls = true,
+		private bool $path_style = true,
+		private float $timeout = 30.0,
+		private bool $verify_tls = true,
 		?int $part_size = null,
 		?S3TransportInterface $transport = null,
 	) {

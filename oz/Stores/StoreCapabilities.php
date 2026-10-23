@@ -25,7 +25,7 @@ namespace OZONE\Core\Stores;
  * `data/{scope}/state` -- under `.ozone/cache/` it is a cache, and `.ozone/` may be deleted at any
  * time. A store declared in `oz.stores.state` refuses a driver that does not promise `durable`.
  */
-final class StoreCapabilities
+final readonly class StoreCapabilities
 {
 	/**
 	 * StoreCapabilities constructor.
@@ -37,10 +37,10 @@ final class StoreCapabilities
 	 * @param bool $durable         whether this *instance* may back a state store
 	 */
 	public function __construct(
-		public readonly bool $perEntryTTL,
-		public readonly bool $persistent,
-		public readonly bool $expiryCallbacks,
-		public readonly bool $atomic,
-		public readonly bool $durable = false,
+		public bool $perEntryTTL,
+		public bool $persistent,
+		public bool $expiryCallbacks,
+		public bool $atomic,
+		public bool $durable = false,
 	) {}
 }

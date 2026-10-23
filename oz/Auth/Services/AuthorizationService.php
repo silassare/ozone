@@ -36,10 +36,10 @@ use Throwable;
  */
 class AuthorizationService extends Service
 {
-	public const ROUTE_AUTHORIZE = 'oz:auth:authorize';
-	public const ROUTE_REFRESH   = 'oz:auth:refresh';
-	public const ROUTE_STATE     = 'oz:auth:state';
-	public const ROUTE_CANCEL    = 'oz:auth:cancel';
+	public const string ROUTE_AUTHORIZE = 'oz:auth:authorize';
+	public const string ROUTE_REFRESH   = 'oz:auth:refresh';
+	public const string ROUTE_STATE     = 'oz:auth:state';
+	public const string ROUTE_CANCEL    = 'oz:auth:cancel';
 
 	/**
 	 * The route parameter holding the authorization reference.
@@ -48,7 +48,7 @@ class AuthorizationService extends Service
 	 * route registration must not -- loading an ORM class initializes the database, so every
 	 * request would build the schema just to declare these routes.
 	 */
-	private const REF_PARAM = 'auth_ref';
+	private const string REF_PARAM = 'auth_ref';
 
 	/**
 	 * {@inheritDoc}

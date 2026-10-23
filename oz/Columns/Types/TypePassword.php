@@ -31,7 +31,7 @@ use OZONE\Core\Forms\Interfaces\FrontendTypeOptionsInterface;
  */
 class TypePassword extends Type implements FrontendTypeOptionsInterface
 {
-	public const NAME = 'password';
+	public const string NAME = 'password';
 
 	/**
 	 * TypePassword constructor.
@@ -158,6 +158,20 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * The lengths it checks: its own, or the settings' when it sets none.
+	 */
+	#[Override]
+	public function frontendOptions(): array
+	{
+		return [
+			'min' => (int) $this->getOption('min', Settings::get('oz.users', 'OZ_USER_PASS_MIN_LENGTH')),
+			'max' => (int) $this->getOption('max', Settings::get('oz.users', 'OZ_USER_PASS_MAX_LENGTH')),
+		];
+	}
+
+	/**
+	 * {@inheritDoc}
 	 */
 	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
@@ -233,19 +247,5 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 		}
 
 		$subject->accept($value);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * The lengths it checks: its own, or the settings' when it sets none.
-	 */
-	#[Override]
-	public function frontendOptions(): array
-	{
-		return [
-			'min' => (int) $this->getOption('min', Settings::get('oz.users', 'OZ_USER_PASS_MIN_LENGTH')),
-			'max' => (int) $this->getOption('max', Settings::get('oz.users', 'OZ_USER_PASS_MAX_LENGTH')),
-		];
 	}
 }

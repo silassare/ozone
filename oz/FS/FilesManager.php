@@ -29,7 +29,7 @@ class FilesManager extends FSUtils
 	 * Group can rwx
 	 * Other can ---
 	 */
-	public const DIRECTORY_PERMISSIONS = 0o770;
+	public const int DIRECTORY_PERMISSIONS = 0o770;
 
 	/**
 	 * Files default permissions.
@@ -38,7 +38,7 @@ class FilesManager extends FSUtils
 	 * Group can rw
 	 * Other can ---
 	 */
-	public const FILE_PERMISSIONS = 0o660;
+	public const int FILE_PERMISSIONS = 0o660;
 
 	/**
 	 * FilesManager constructor.

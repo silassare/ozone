@@ -23,7 +23,7 @@ interface ScopeInterface
 	/**
 	 * The root scope name.
 	 */
-	public const ROOT_SCOPE = 'root';
+	public const string ROOT_SCOPE = 'root';
 
 	/**
 	 * Returns the scope name.

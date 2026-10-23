@@ -62,8 +62,8 @@ final class JobBatchTest extends TestCase
 	 */
 	public function testBatchJobsRunAndBatchFinishedEventFires(DbTestConfig $config): void
 	{
-		$rdbms = $config->rdbms;
-		$proj  = OZTestProject::create('job-batch-' . $rdbms, shared: true, fresh: true);
+		$rdbms  = $config->rdbms;
+		$proj   = OZTestProject::create('job-batch-' . $rdbms, shared: true, fresh: true);
 		$config = $proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;

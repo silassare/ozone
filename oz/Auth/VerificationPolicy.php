@@ -40,16 +40,16 @@ use Throwable;
 final class VerificationPolicy
 {
 	/** The entry a user type with no rule of its own falls back to. */
-	public const ANY_USER_TYPE = '*';
+	public const string ANY_USER_TYPE = '*';
 
 	/** The settings key of what `POST /signup` accepts. */
-	public const SIGN_UP = 'OZ_SIGNUP_VERIFICATION';
+	public const string SIGN_UP = 'OZ_SIGNUP_VERIFICATION';
 
 	/** The settings key of what `POST /account-recovery` accepts. */
-	public const ACCOUNT_RECOVERY = 'OZ_ACCOUNT_RECOVERY_VERIFICATION';
+	public const string ACCOUNT_RECOVERY = 'OZ_ACCOUNT_RECOVERY_VERIFICATION';
 
 	/** The purpose an email or phone verification must have been started for, by settings key. */
-	private const PURPOSES = [
+	private const array PURPOSES = [
 		self::SIGN_UP          => VerificationPurpose::SIGN_UP,
 		self::ACCOUNT_RECOVERY => VerificationPurpose::ACCOUNT_RECOVERY,
 	];

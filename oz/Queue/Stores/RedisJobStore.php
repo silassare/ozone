@@ -51,35 +51,35 @@ use Redis as PhpRedis;
  */
 class RedisJobStore implements JobStoreInterface
 {
-	public const NAME = 'redis';
+	public const string NAME = 'redis';
 
 	/**
 	 * Seconds before an acquired lock expires automatically.
 	 * Prevents jobs from staying locked forever if the worker process crashes.
 	 */
-	private const LOCK_TTL = 7200;
+	private const int LOCK_TTL = 7200;
 
-	private const KEY_PREFIX = 'oz:jobs:';
+	private const string KEY_PREFIX = 'oz:jobs:';
 
 	// Hash field names
-	private const F_REF        = 'ref';
-	private const F_NAME       = 'name';
-	private const F_QUEUE      = 'queue';
-	private const F_WORKER     = 'worker';
-	private const F_STATE      = 'state';
-	private const F_PRIORITY   = 'priority';
-	private const F_PAYLOAD    = 'payload';
-	private const F_RESULT     = 'result';
-	private const F_TRY_COUNT  = 'try_count';
-	private const F_RETRY_MAX  = 'retry_max';
-	private const F_RETRY_DEL  = 'retry_delay';
-	private const F_STARTED_AT = 'started_at';
-	private const F_ENDED_AT   = 'ended_at';
-	private const F_CREATED_AT = 'created_at';
-	private const F_UPDATED_AT = 'updated_at';
-	private const F_RUN_AFTER  = 'run_after';
-	private const F_CHAIN      = 'chain';
-	private const F_BATCH_ID   = 'batch_id';
+	private const string F_REF        = 'ref';
+	private const string F_NAME       = 'name';
+	private const string F_QUEUE      = 'queue';
+	private const string F_WORKER     = 'worker';
+	private const string F_STATE      = 'state';
+	private const string F_PRIORITY   = 'priority';
+	private const string F_PAYLOAD    = 'payload';
+	private const string F_RESULT     = 'result';
+	private const string F_TRY_COUNT  = 'try_count';
+	private const string F_RETRY_MAX  = 'retry_max';
+	private const string F_RETRY_DEL  = 'retry_delay';
+	private const string F_STARTED_AT = 'started_at';
+	private const string F_ENDED_AT   = 'ended_at';
+	private const string F_CREATED_AT = 'created_at';
+	private const string F_UPDATED_AT = 'updated_at';
+	private const string F_RUN_AFTER  = 'run_after';
+	private const string F_CHAIN      = 'chain';
+	private const string F_BATCH_ID   = 'batch_id';
 
 	private ?PhpRedis $redis = null;
 

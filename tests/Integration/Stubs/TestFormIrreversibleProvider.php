@@ -33,7 +33,7 @@ use OZONE\Core\Http\Enums\RequestScope;
  */
 final class TestFormIrreversibleProvider extends AbstractResumableFormProvider
 {
-	public const PROVIDER_NAME = 'test-irreversible';
+	public const string PROVIDER_NAME = 'test-irreversible';
 
 	/**
 	 * Absolute path to the file that activates notBefore().
@@ -41,7 +41,7 @@ final class TestFormIrreversibleProvider extends AbstractResumableFormProvider
 	 * to make the endpoint reject the request with FormResumeNotYetActiveException.
 	 * Delete the file (or leave it absent) to disable the constraint.
 	 */
-	private const NOT_BEFORE_FILE = '__PLH_NOT_BEFORE_FILE__';
+	private const string NOT_BEFORE_FILE = '__PLH_NOT_BEFORE_FILE__';
 
 	/**
 	 * Absolute path to the file that activates deadline().
@@ -49,7 +49,7 @@ final class TestFormIrreversibleProvider extends AbstractResumableFormProvider
 	 * to store a past/future deadline in the session.
 	 * Delete the file (or leave it absent) to disable the constraint.
 	 */
-	private const DEADLINE_FILE = '__PLH_DEADLINE_FILE__';
+	private const string DEADLINE_FILE = '__PLH_DEADLINE_FILE__';
 
 	#[Override]
 	public static function getName(): string

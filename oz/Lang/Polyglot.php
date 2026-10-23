@@ -32,19 +32,19 @@ use PHPUtils\Events\Event;
  */
 final class Polyglot implements BootHookReceiverInterface, RouteProviderInterface
 {
-	public const ROUTE_LANG_PARAM         = 'lang';
-	public const ROUTE_LANG_PARAM_PATTERN = '[a-z]{1,8}(-[a-z]{1,8})?';
+	public const string ROUTE_LANG_PARAM         = 'lang';
+	public const string ROUTE_LANG_PARAM_PATTERN = '[a-z]{1,8}(-[a-z]{1,8})?';
 
-	public const CLIENT_LANG_SESSION_KEY = 'oz.polyglot.favorite';
+	public const string CLIENT_LANG_SESSION_KEY = 'oz.polyglot.favorite';
 
-	public const ACCEPT_LANGUAGE_REG = '~([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.\d+))?~i';
+	public const string ACCEPT_LANGUAGE_REG = '~([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.\d+))?~i';
 
-	public const LANG_KEY_REG = '~^[A-Z][A-Z0-9_.]+$~';
+	public const string LANG_KEY_REG = '~^[A-Z][A-Z0-9_.]+$~';
 
 	/**
 	 * The languages written right to left, by their primary subtag.
 	 */
-	public const RTL_LANGUAGES = ['ar', 'arc', 'ckb', 'dv', 'fa', 'he', 'ks', 'ps', 'sd', 'ug', 'ur', 'yi'];
+	public const array RTL_LANGUAGES = ['ar', 'arc', 'ckb', 'dv', 'fa', 'he', 'ks', 'ps', 'sd', 'ug', 'ur', 'yi'];
 
 	private static array $filters = [];
 
@@ -145,56 +145,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 		}
 
 		return ['errors' => $errors, 'categories' => $categories];
-	}
-
-	/**
-	 * The texts of a catalog by key, a nested group's as `group.KEY`.
-	 *
-	 * @param array<array-key, mixed> $catalog
-	 *
-	 * @return array<string, string>
-	 */
-	private static function textsOf(array $catalog, string $prefix = ''): array
-	{
-		$out = [];
-
-		foreach ($catalog as $key => $value) {
-			if (\is_string($value)) {
-				$out[$prefix . $key] = $value;
-			} elseif (\is_array($value)) {
-				$out += self::textsOf($value, $prefix . $key . '.');
-			}
-		}
-
-		return $out;
-	}
-
-	/**
-	 * Whether a plural choice of the text picks a branch by its CLDR category.
-	 *
-	 * @param list<MessageNode> $nodes
-	 */
-	private static function usesCategories(array $nodes): bool
-	{
-		foreach ($nodes as $node) {
-			if ('choice' !== $node->type) {
-				continue;
-			}
-
-			foreach ($node->branches as $branch) {
-				$category = \in_array($branch['selector'], ['zero', 'one', 'two', 'few', 'many'], true);
-
-				if ('select' !== $node->kind && $category) {
-					return true;
-				}
-
-				if (self::usesCategories($branch['nodes'])) {
-					return true;
-				}
-			}
-		}
-
-		return false;
 	}
 
 	/**
@@ -386,8 +336,8 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	 * Parse user browser 'Accept-Language' header and advice
 	 * for the best to use according to available languages.
 	 *
-	 * @param null|string                    $http_accept_language
-	 * @param null|array<string, true>        $enabled_languages    the enabled ones by default
+	 * @param null|string              $http_accept_language
+	 * @param null|array<string, true> $enabled_languages    the enabled ones by default
 	 *
 	 * @return array
 	 */
@@ -490,12 +440,62 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	}
 
 	/**
+	 * The texts of a catalog by key, a nested group's as `group.KEY`.
+	 *
+	 * @param array<array-key, mixed> $catalog
+	 *
+	 * @return array<string, string>
+	 */
+	private static function textsOf(array $catalog, string $prefix = ''): array
+	{
+		$out = [];
+
+		foreach ($catalog as $key => $value) {
+			if (\is_string($value)) {
+				$out[$prefix . $key] = $value;
+			} elseif (\is_array($value)) {
+				$out += self::textsOf($value, $prefix . $key . '.');
+			}
+		}
+
+		return $out;
+	}
+
+	/**
+	 * Whether a plural choice of the text picks a branch by its CLDR category.
+	 *
+	 * @param list<MessageNode> $nodes
+	 */
+	private static function usesCategories(array $nodes): bool
+	{
+		foreach ($nodes as $node) {
+			if ('choice' !== $node->type) {
+				continue;
+			}
+
+			foreach ($node->branches as $branch) {
+				$category = \in_array($branch['selector'], ['zero', 'one', 'two', 'few', 'many'], true);
+
+				if ('select' !== $node->kind && $category) {
+					return true;
+				}
+
+				if (self::usesCategories($branch['nodes'])) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Parse lang key.
 	 *
 	 * @param string $i18n_key
 	 * @param array  $inject
 	 * @param string $lang
-	 * @param bool   $html   whether the text is written as HTML (the values escaped)
+	 * @param bool   $html     whether the text is written as HTML (the values escaped)
 	 *
 	 * @return mixed
 	 */

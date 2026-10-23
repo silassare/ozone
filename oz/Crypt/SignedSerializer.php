@@ -25,7 +25,7 @@ use OZONE\Core\App\Keys;
  */
 final class SignedSerializer
 {
-	private const SEP = ':';
+	private const string SEP = ':';
 
 	/**
 	 * Serializes and signs a value.

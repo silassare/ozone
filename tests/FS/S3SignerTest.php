@@ -28,9 +28,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class S3SignerTest extends TestCase
 {
-	private const ACCESS_KEY = 'AKIAIOSFODNN7EXAMPLE';
-	private const SECRET_KEY = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY';
-	private const HOST       = 'examplebucket.s3.amazonaws.com';
+	private const string ACCESS_KEY = 'AKIAIOSFODNN7EXAMPLE';
+	private const string SECRET_KEY = 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY';
+	private const string HOST       = 'examplebucket.s3.amazonaws.com';
 
 	public function testSignsTheGetObjectExample(): void
 	{

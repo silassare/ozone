@@ -61,8 +61,8 @@ use Throwable;
  */
 class TypeFile extends Type
 {
-	public const NAME               = 'file';
-	public const TEMP_FILE_LIFETIME = 3600;
+	public const string NAME               = 'file';
+	public const int TEMP_FILE_LIFETIME    = 3600;
 
 	/**
 	 * TypeFile constructor.

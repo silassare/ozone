@@ -23,7 +23,7 @@ use Generator;
  */
 final class ResponseEmitter
 {
-	private const CHUNK_SIZE = 4096;
+	private const int CHUNK_SIZE = 4096;
 
 	/**
 	 * Final touches before sending: no body headers on an empty response, a

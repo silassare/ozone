@@ -49,7 +49,7 @@ final class Cron
 	/**
 	 * How far back {@see runDues()} dispatches the tasks of the minutes no tick ran, in seconds.
 	 */
-	public const CATCH_UP = 3600;
+	public const int CATCH_UP = 3600;
 
 	private static bool $collected = false;
 

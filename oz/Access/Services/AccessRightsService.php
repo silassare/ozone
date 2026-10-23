@@ -36,17 +36,17 @@ use Throwable;
  */
 class AccessRightsService extends Service
 {
-	public const ROUTE_READ_ME       = 'oz:access-rights.me';
+	public const string ROUTE_READ_ME       = 'oz:access-rights.me';
 
-	public const ROUTE_READ_AS_ADMIN = 'oz:access-rights.read';
+	public const string ROUTE_READ_AS_ADMIN = 'oz:access-rights.read';
 
-	public const ROUTE_LIST          = 'oz:access-rights.list';
+	public const string ROUTE_LIST          = 'oz:access-rights.list';
 
-	public const ROUTE_ALLOW         = 'oz:access-rights.allow';
+	public const string ROUTE_ALLOW         = 'oz:access-rights.allow';
 
-	public const ROUTE_DENY          = 'oz:access-rights.deny';
+	public const string ROUTE_DENY          = 'oz:access-rights.deny';
 
-	public const ROUTE_UPDATE        = 'oz:access-rights.update';
+	public const string ROUTE_UPDATE        = 'oz:access-rights.update';
 
 	public function readForMe(RouteInfo $ri): Response
 	{

@@ -48,7 +48,7 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	use FieldContainerHelpersTrait;
 	use MetaCapableTrait;
 
-	public const FORM_DATA_RESUME_CACHE_NAMESPACE = 'oz:form:resume';
+	public const string FORM_DATA_RESUME_CACHE_NAMESPACE = 'oz:form:resume';
 
 	/**
 	 * Fieldsets keyed by their ref, not their local name — same rationale as

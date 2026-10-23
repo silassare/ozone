@@ -28,7 +28,7 @@ use OZONE\Core\Http\Uri;
  */
 class TypeUrl extends Type
 {
-	public const NAME = 'url';
+	public const string NAME = 'url';
 
 	/**
 	 * Regex for validating absolute URL paths (starting with a single slash, no scheme or host).
@@ -36,7 +36,7 @@ class TypeUrl extends Type
 	 * This is used when allow_absolute_path option is enabled, to validate URLs that are not
 	 * full URLs with scheme and host, but just paths (e.g. "/foo/bar?baz=qux#fragment").
 	 */
-	private const ABSOLUTE_URL_PATH_REG = '~^\/[^\s?#]*(\?[^\s#]*)?(#[^\s]*)?$~u';
+	private const string ABSOLUTE_URL_PATH_REG = '~^\/[^\s?#]*(\?[^\s#]*)?(#[^\s]*)?$~u';
 
 	/**
 	 * TypeUrl constructor.
@@ -70,7 +70,7 @@ class TypeUrl extends Type
 	 */
 	public function allowedHosts(array $hosts): static
 	{
-		$hosts = \array_map(static fn($host) => \strtolower(\trim((string) $host)), $hosts);
+		$hosts = \array_map(static fn ($host) => \strtolower(\trim((string) $host)), $hosts);
 
 		return $this->setOption('allowed_hosts', \array_values(\array_unique(\array_filter($hosts))));
 	}

@@ -24,7 +24,7 @@ use OZONE\Core\Stores\StateRegistry;
  */
 class RouteRateLimiter implements RouteRateLimiterInterface
 {
-	public const CACHE_NAMESPACE = 'oz:rate_limit';
+	public const string CACHE_NAMESPACE = 'oz:rate_limit';
 	private KeyValueStore $cache;
 
 	/**
@@ -63,7 +63,7 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 		$hits = $this->cache->count($key . ':hits', $weight, $interval);
 
 		// The hit that opened the window says when it ends.
-		if ($hits == $weight) {
+		if ($hits === $weight) {
 			$this->cache->set($key . ':first_hits', $now, $interval);
 		}
 

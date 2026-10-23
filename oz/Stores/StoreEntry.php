@@ -18,7 +18,7 @@ namespace OZONE\Core\Stores;
  *
  * Immutable cache entry value object.
  */
-final class StoreEntry
+final readonly class StoreEntry
 {
 	/**
 	 * StoreEntry constructor.
@@ -28,9 +28,9 @@ final class StoreEntry
 	 * @param null|float $expiresAt absolute expiry timestamp as microtime float, or null for no expiry
 	 */
 	public function __construct(
-		public readonly string $key,
-		public readonly mixed $value,
-		public readonly ?float $expiresAt = null,
+		public string $key,
+		public mixed $value,
+		public ?float $expiresAt = null,
 	) {}
 
 	/**

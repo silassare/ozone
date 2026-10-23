@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Cli;
 
+use LogicException;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
@@ -164,7 +165,7 @@ final class LangCmdTest extends TestCase
 
 	private static function requireProject(): OZTestProject
 	{
-		return self::$proj ?? throw new \LogicException('The project was not created.');
+		return self::$proj ?? throw new LogicException('The project was not created.');
 	}
 
 	private static function outputOf(Process $proc): string

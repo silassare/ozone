@@ -27,7 +27,7 @@ use Throwable;
  */
 class Logger implements LoggerInterface
 {
-	private const LEVELS = [
+	private const array LEVELS = [
 		LogLevel::EMERGENCY => 0,
 		LogLevel::ALERT     => 1,
 		LogLevel::CRITICAL  => 2,

@@ -231,7 +231,7 @@ final class MigrationsTest extends TestCase
 			return self::$projects[$rdbms];
 		}
 
-		$proj = OZTestProject::create('migrations-' . $rdbms, shared: true, fresh: true);
+		$proj   = OZTestProject::create('migrations-' . $rdbms, shared: true, fresh: true);
 		$config = $proj->useDatabase($config);
 		// ORM classes must be generated before any migration operation.
 		$proj->oz('db', 'build', '--build-all', '--class-only')->mustRun();

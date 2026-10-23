@@ -19,7 +19,7 @@ namespace OZONE\Core\FS\S3;
  * `body` is empty when the request carried a sink: the bytes went there instead, so a response
  * never holds an object in memory unless the caller asked for it.
  */
-final class S3Response
+final readonly class S3Response
 {
 	/**
 	 * @param int                   $status  the HTTP status
@@ -27,9 +27,9 @@ final class S3Response
 	 * @param string                $body    the response body, empty when it went to a sink
 	 */
 	public function __construct(
-		public readonly int $status,
-		public readonly array $headers = [],
-		public readonly string $body = '',
+		public int $status,
+		public array $headers = [],
+		public string $body = '',
 	) {}
 
 	/**
