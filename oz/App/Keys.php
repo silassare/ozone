@@ -124,23 +124,28 @@ final class Keys
 	}
 
 	/**
-	 * Generate new project salt.
+	 * Generate new project salt (512 random bits).
+	 *
+	 * Raw bytes, not characters drawn from an alphabet: the only callers base64-encode the result
+	 * into the env file, so a printable alphabet would cost entropy and buy nothing.
 	 *
 	 * @return string
 	 */
 	public static function newSalt(): string
 	{
-		return Random::string(64);
+		return \random_bytes(64);
 	}
 
 	/**
-	 * Generate new project secret.
+	 * Generate new project secret (512 random bits).
+	 *
+	 * Raw bytes, for the same reason as the salt.
 	 *
 	 * @return string
 	 */
 	public static function newSecret(): string
 	{
-		return Random::string(64);
+		return \random_bytes(64);
 	}
 
 	/**
