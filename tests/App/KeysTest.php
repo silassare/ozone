@@ -153,15 +153,26 @@ final class KeysTest extends TestCase
 		self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $ref);
 	}
 
-	public function testNewSaltReturnsA64CharString(): void
+	public function testNewSaltReturns64RandomBytes(): void
 	{
 		$salt = Keys::newSalt();
 		self::assertSame(64, \strlen($salt));
+		self::assertNotSame($salt, Keys::newSalt());
+
+		// The callers write it base64-encoded into the env file, and read it back with base64_decode().
+		$encoded = \base64_encode($salt);
+		self::assertMatchesRegularExpression('#^[A-Za-z0-9+/=]+$#', $encoded);
+		self::assertSame($salt, \base64_decode($encoded, true));
 	}
 
-	public function testNewSecretReturnsA64CharString(): void
+	public function testNewSecretReturns64RandomBytes(): void
 	{
 		$secret = Keys::newSecret();
 		self::assertSame(64, \strlen($secret));
+		self::assertNotSame($secret, Keys::newSecret());
+
+		$encoded = \base64_encode($secret);
+		self::assertMatchesRegularExpression('#^[A-Za-z0-9+/=]+$#', $encoded);
+		self::assertSame($secret, \base64_decode($encoded, true));
 	}
 }
