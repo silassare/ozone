@@ -25,8 +25,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class CorsPolicyTest extends TestCase
 {
-	private const REQUEST_URL = 'https://api.example.com/items?x=1';
-	private const APP_ORIGIN  = 'https://app.example.com';
+	private const string REQUEST_URL = 'https://api.example.com/items?x=1';
+	private const string APP_ORIGIN  = 'https://app.example.com';
 
 	public function testWildcardAllowsAnyOriginButNeverWithCredentials(): void
 	{

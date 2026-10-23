@@ -37,23 +37,23 @@ use Throwable;
  * knowing the project's paths -- and the PHP-FPM setting that turns OPcache preloading on, which the
  * Docker sample does in its entrypoint.
  */
-final class DeployInitializer
+final readonly class DeployInitializer
 {
-	public const TARGET_DOCKER = 'docker';
-	public const TARGET_BARE   = 'bare';
+	public const string TARGET_DOCKER = 'docker';
+	public const string TARGET_BARE   = 'bare';
 
-	public const CI_GITHUB = 'github';
-	public const CI_NONE   = 'none';
+	public const string CI_GITHUB = 'github';
+	public const string CI_NONE   = 'none';
 
 	/**
 	 * Cron on a bare server: a systemd timer starting `oz cron run` every minute.
 	 */
-	public const CRON_TIMER = 'timer';
+	public const string CRON_TIMER = 'timer';
 
 	/**
 	 * Cron on a bare server: `oz cron work`, a long-running process, as a service.
 	 */
-	public const CRON_DAEMON = 'daemon';
+	public const string CRON_DAEMON = 'daemon';
 
 	/**
 	 * @param string       $target   {@see self::TARGET_DOCKER} or {@see self::TARGET_BARE}
@@ -67,15 +67,15 @@ final class DeployInitializer
 	 * @param string       $cron     for a bare server: {@see self::CRON_TIMER} or {@see self::CRON_DAEMON}
 	 */
 	public function __construct(
-		private readonly string $target = self::TARGET_DOCKER,
-		private readonly string $ci = self::CI_NONE,
-		private readonly array $scopes = [],
-		private readonly string $user = 'www-data',
-		private readonly string $web_user = 'www-data',
-		private readonly string $branch = 'main',
-		private readonly string $max_body = '64M',
-		private readonly bool $preload = true,
-		private readonly string $cron = self::CRON_TIMER,
+		private string $target = self::TARGET_DOCKER,
+		private string $ci = self::CI_NONE,
+		private array $scopes = [],
+		private string $user = 'www-data',
+		private string $web_user = 'www-data',
+		private string $branch = 'main',
+		private string $max_body = '64M',
+		private bool $preload = true,
+		private string $cron = self::CRON_TIMER,
 	) {
 		if (!\in_array($this->target, [self::TARGET_DOCKER, self::TARGET_BARE], true)) {
 			throw new InvalidArgumentException(\sprintf('Unknown deploy target "%s".', $this->target));

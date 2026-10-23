@@ -27,7 +27,7 @@ class Templates
 	 *
 	 * @var string
 	 */
-	public const OZ_TEMPLATE_DIR = OZ_OZONE_DIR . 'oz_templates' . DS;
+	public const string OZ_TEMPLATE_DIR = OZ_OZONE_DIR . 'oz_templates' . DS;
 
 	/**
 	 * Compiles a template file with the given data and returns the output.

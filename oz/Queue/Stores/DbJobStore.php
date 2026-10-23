@@ -36,7 +36,7 @@ use OZONE\Core\Queue\JobState;
  */
 class DbJobStore implements JobStoreInterface
 {
-	public const NAME = 'db';
+	public const string NAME = 'db';
 
 	/**
 	 * Seconds after which a RUNNING+locked job with no heartbeat is considered
@@ -44,7 +44,7 @@ class DbJobStore implements JobStoreInterface
 	 *
 	 * Matches the lock TTL used by RedisJobStore for consistency.
 	 */
-	private const LOCK_TTL = 7200;
+	private const int LOCK_TTL = 7200;
 
 	/**
 	 * {@inheritDoc}

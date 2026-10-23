@@ -31,7 +31,7 @@ use OZONE\Core\Http\Enums\RequestScope;
  */
 final class TestFormAbandonProvider extends AbstractResumableFormProvider
 {
-	public const PROVIDER_NAME = 'test-abandon';
+	public const string PROVIDER_NAME = 'test-abandon';
 
 	#[Override]
 	public static function getName(): string

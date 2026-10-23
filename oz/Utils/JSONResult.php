@@ -28,12 +28,12 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	/**
 	 * @var int success code
 	 */
-	public const SUCCESS = 0;
+	public const int SUCCESS = 0;
 
 	/**
 	 * @var int error code
 	 */
-	public const ERROR = 1;
+	public const int ERROR = 1;
 
 	protected int $error;
 	protected string $msg;

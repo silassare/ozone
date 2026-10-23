@@ -29,7 +29,7 @@ use OZONE\Core\Web\WebView;
  */
 final class LogoutAndRedirectView extends WebView
 {
-	public const LOGOUT_AND_REDIRECT_ROUTE = 'oz:logout:redirect';
+	public const string LOGOUT_AND_REDIRECT_ROUTE = 'oz:logout:redirect';
 
 	/**
 	 * @param RouteInfo $ri

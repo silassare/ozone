@@ -342,11 +342,6 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 		self::assertTrue($reloaded->shouldEncryptPayload());
 	}
 
-	/**
-	 * Provide the store implementation under test.
-	 */
-	abstract protected function makeStore(): JobStoreInterface;
-
 	// -----------------------------------------------------------------------
 	// listStale() / JobsManager::reclaimStale()
 	// -----------------------------------------------------------------------
@@ -418,6 +413,11 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 		self::assertFalse($this->store->isLocked($fetched));
 		self::assertSame(4, $fetched->getTryCount());
 	}
+
+	/**
+	 * Provide the store implementation under test.
+	 */
+	abstract protected function makeStore(): JobStoreInterface;
 
 	/**
 	 * Leaves a job as a dead process would: taken, and past whatever this store calls its lease.

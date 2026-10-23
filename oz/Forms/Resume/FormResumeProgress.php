@@ -30,8 +30,8 @@ use PHPUtils\Store\Store;
  */
 final class FormResumeProgress extends Store
 {
-	private const STEP_INDEX_KEY = '_step_index';
-	private const PHASE_KEY      = '_phase';
+	private const string STEP_INDEX_KEY = '_step_index';
+	private const string PHASE_KEY      = '_phase';
 
 	/**
 	 * Creates a FormResumeProgress from a raw state array.

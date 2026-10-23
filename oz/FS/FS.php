@@ -40,17 +40,17 @@ class FS
 	/**
 	 * the default mime type for any file.
 	 */
-	public const DEFAULT_FILE_MIME_TYPE = 'application/octet-stream';
+	public const string DEFAULT_FILE_MIME_TYPE = 'application/octet-stream';
 
 	/**
 	 * the default extension for any file.
 	 */
-	public const DEFAULT_FILE_EXTENSION = 'ext';
+	public const string DEFAULT_FILE_EXTENSION = 'ext';
 
-	public const DEFAULT_STORAGE   = 'default';
-	public const PUBLIC_STORAGE    = 'public';
-	public const PRIVATE_STORAGE   = 'private';
-	public const FILTERS_SEPARATOR = '~';
+	public const string DEFAULT_STORAGE   = 'default';
+	public const string PUBLIC_STORAGE    = 'public';
+	public const string PRIVATE_STORAGE   = 'private';
+	public const string FILTERS_SEPARATOR = '~';
 
 	/**
 	 * Gets extension from a file with a given file name and expected mime type.

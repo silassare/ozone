@@ -33,10 +33,10 @@ use OZONE\Core\Queue\Stores\DbJobStore;
  */
 final class Queue
 {
-	public const DEFAULT       = 'default';
-	public const CRON_ASYNC    = 'cron:async';
-	public const CRON_SYNC     = 'cron:sync';
-	public const DEFAULT_STORE = DbJobStore::NAME;
+	public const string DEFAULT       = 'default';
+	public const string CRON_ASYNC    = 'cron:async';
+	public const string CRON_SYNC     = 'cron:sync';
+	public const DEFAULT_STORE        = DbJobStore::NAME;
 
 	/**
 	 * @var array<string, Queue>

@@ -20,7 +20,7 @@ namespace OZONE\Core\Messaging;
  * the HTML part only when the channel shows HTML and the template has one; the subject only when the
  * message has one.
  */
-final class RenderedMessage
+final readonly class RenderedMessage
 {
 	/**
 	 * RenderedMessage constructor.
@@ -30,9 +30,9 @@ final class RenderedMessage
 	 * @param null|string $subject the subject, translated
 	 */
 	public function __construct(
-		public readonly string $text,
-		public readonly ?string $html = null,
-		public readonly ?string $subject = null,
+		public string $text,
+		public ?string $html = null,
+		public ?string $subject = null,
 	) {}
 
 	/**

@@ -31,8 +31,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class ReleaserTest extends TestCase
 {
-	private const ROOT = '/srv/app';
-	private const REPO = 'git@example.com:me/app.git';
+	private const string ROOT = '/srv/app';
+	private const string REPO = 'git@example.com:me/app.git';
 
 	public function testEverythingThatCanFailRunsBeforeTheSwap(): void
 	{

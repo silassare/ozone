@@ -65,24 +65,24 @@ final class Messenger implements BootHookReceiverInterface
 	/**
 	 * The cron task that sends what is queued.
 	 */
-	public const CRON_TASK = 'oz:messages';
+	public const string CRON_TASK = 'oz:messages';
 
 	/**
 	 * The collector deleting the old records (`GarbageCollector`, the hourly `oz:gc` task).
 	 */
-	public const GC_NAME = 'oz:messages';
+	public const string GC_NAME = 'oz:messages';
 
 	/**
 	 * Why a message was not attempted (`oz_messages.msg_last_error`).
 	 */
-	public const SKIPPED_NO_DESTINATION       = 'no destination';
-	public const SKIPPED_CHANNEL_DISABLED     = 'channel disabled';
-	public const SKIPPED_TRANSPORT_UNAVAILABLE = 'transport unavailable';
+	public const string SKIPPED_NO_DESTINATION        = 'no destination';
+	public const string SKIPPED_CHANNEL_DISABLED      = 'channel disabled';
+	public const string SKIPPED_TRANSPORT_UNAVAILABLE = 'transport unavailable';
 
 	/**
 	 * The length `oz_messages.msg_last_error` keeps.
 	 */
-	private const ERROR_MAX = 512;
+	private const int ERROR_MAX = 512;
 
 	/**
 	 * {@inheritDoc}
@@ -287,7 +287,7 @@ final class Messenger implements BootHookReceiverInterface
 
 		// What `$t()` fills a text with in a template: a template's own data is an object there.
 		$vars['oz_vars'] = $vars;
-		$body = Templates::compile($text, $vars);
+		$body            = Templates::compile($text, $vars);
 
 		return new RenderedMessage(
 			$channel->gsm7 ? Gsm7::fold($body) : $body,

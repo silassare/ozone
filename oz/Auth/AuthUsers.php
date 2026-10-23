@@ -37,6 +37,7 @@ use OZONE\Core\Roles\Interfaces\RoleInterface;
 use OZONE\Core\Roles\Roles;
 use OZONE\Core\Roles\RolesUtils;
 use OZONE\Core\Utils\Random;
+use SensitiveParameter;
 use Throwable;
 
 /**
@@ -44,11 +45,11 @@ use Throwable;
  */
 final class AuthUsers
 {
-	public const FIELD_AUTH_USER_TYPE             = 'auth_user_type';
-	public const FIELD_AUTH_USER_ID               = 'auth_user_id';
-	public const FIELD_AUTH_USER_IDENTIFIER_TYPE  = 'auth_user_identifier_type';
-	public const FIELD_AUTH_USER_IDENTIFIER_VALUE = 'auth_user_identifier_value';
-	public const FIELD_AUTH_USER_PASSWORD         = 'auth_user_password';
+	public const string FIELD_AUTH_USER_TYPE             = 'auth_user_type';
+	public const string FIELD_AUTH_USER_ID               = 'auth_user_id';
+	public const string FIELD_AUTH_USER_IDENTIFIER_TYPE  = 'auth_user_identifier_type';
+	public const string FIELD_AUTH_USER_IDENTIFIER_VALUE = 'auth_user_identifier_value';
+	public const string FIELD_AUTH_USER_PASSWORD         = 'auth_user_password';
 
 	/**
 	 * @var array<string, AuthUsersRepositoryInterface>
@@ -560,7 +561,7 @@ final class AuthUsers
 	 *
 	 * @return AuthUserInterface|string the user, or the failure code (see {@see self::checkPassword()})
 	 */
-	public function tryLogIn(AuthUserInterface $user, string $pass): AuthUserInterface|string
+	public function tryLogIn(AuthUserInterface $user, #[SensitiveParameter] string $pass): AuthUserInterface|string
 	{
 		$error = self::checkPassword($user, $pass, self::ref($user));
 
@@ -595,7 +596,7 @@ final class AuthUsers
 	 *
 	 * @return null|string null when the password is right and the account usable
 	 */
-	public static function checkPassword(?AuthUserInterface $user, string $pass, string $subject): ?string
+	public static function checkPassword(?AuthUserInterface $user, #[SensitiveParameter] string $pass, string $subject): ?string
 	{
 		$subject = null !== $user ? self::ref($user) : $subject;
 

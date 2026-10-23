@@ -42,8 +42,8 @@ use RuntimeException;
  */
 class RedisStore implements StoreDriverInterface
 {
-	private const VALUE_KEY  = 'v';
-	private const EXPIRE_KEY = 'e';
+	private const string VALUE_KEY  = 'v';
+	private const string EXPIRE_KEY = 'e';
 
 	/**
 	 * RedisStore constructor.
@@ -190,7 +190,7 @@ class RedisStore implements StoreDriverInterface
 				$sum    = StoreNumbers::sum($key, $current, $by);
 				$expire = \is_numeric($expire) ? (float) $expire : null;
 
-				if (0 == $by) {
+				if (0 === $by) {
 					$redis->unwatch();
 
 					return $sum;

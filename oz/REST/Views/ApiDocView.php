@@ -25,7 +25,7 @@ use OZONE\Core\Web\WebView;
  */
 final class ApiDocView extends WebView
 {
-	public const API_DOC_VIEW_ROUTE = 'oz:api-doc-view';
+	public const string API_DOC_VIEW_ROUTE = 'oz:api-doc-view';
 
 	/**
 	 * {@inheritDoc}

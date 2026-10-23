@@ -23,9 +23,9 @@ use MessageFormatter;
  */
 final class PluralRules
 {
-	private const CARDINAL = '{0, plural, zero {zero} one {one} two {two} few {few} many {many} other {other}}';
+	private const string CARDINAL = '{0, plural, zero {zero} one {one} two {two} few {few} many {many} other {other}}';
 
-	private const ORDINAL = '{0, selectordinal, zero {zero} one {one} two {two} few {few} many {many} other {other}}';
+	private const string ORDINAL = '{0, selectordinal, zero {zero} one {one} two {two} few {few} many {many} other {other}}';
 
 	/** @var array<string, null|MessageFormatter> */
 	private static array $formatters = [];

@@ -16,10 +16,10 @@ namespace OZONE\Core\FS\Images;
 /**
  * A rendition: its bytes, and its media type, the image's own or the format the recipe asked for.
  */
-final class RenderedImage
+final readonly class RenderedImage
 {
 	public function __construct(
-		public readonly string $bytes,
-		public readonly string $mime,
+		public string $bytes,
+		public string $mime,
 	) {}
 }

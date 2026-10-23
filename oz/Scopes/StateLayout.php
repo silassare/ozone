@@ -51,17 +51,17 @@ final class StateLayout
 	/**
 	 * Stateful settings, written by `Settings::set()`.
 	 */
-	public const SETTINGS = 'settings';
+	public const string SETTINGS = 'settings';
 
 	/**
 	 * Private files, served only after an access check.
 	 */
-	public const PRIVATE_FILES = 'files';
+	public const string PRIVATE_FILES = 'files';
 
 	/**
 	 * Public files, exposed through a symlink from the web root.
 	 */
-	public const PUBLIC_FILES = 'static';
+	public const string PUBLIC_FILES = 'static';
 
 	/**
 	 * Temporary files: chunked uploads, and files a form has accepted but not yet persisted.
@@ -69,17 +69,17 @@ final class StateLayout
 	 * Under `data/` and not under `.ozone/cache/`, because losing it loses a user's work in
 	 * progress. It is collected by `TempFS`, never by an operator.
 	 */
-	public const TEMP = 'tmp-fs';
+	public const string TEMP = 'tmp-fs';
 
 	/**
 	 * Durable key-value state, for a store that has no database or Redis behind it.
 	 */
-	public const STATE = 'state';
+	public const string STATE = 'state';
 
 	/**
 	 * The name of the symlink a web server follows to reach a scope's public files.
 	 */
-	public const PUBLIC_LINK = 'static';
+	public const string PUBLIC_LINK = 'static';
 
 	/**
 	 * The directory, under `data/` and under `.ozone/cache/`, that holds every plugin's state.
@@ -87,7 +87,7 @@ final class StateLayout
 	 * A plugin's state slug is `plugins/{plugin}`, so the first level of `data/` is one namespace
 	 * shared by the scopes and by this directory: {@see self::reservedScopeNames()}.
 	 */
-	public const PLUGINS = 'plugins';
+	public const string PLUGINS = 'plugins';
 
 	/**
 	 * What a scope name, and a plugin's slug, must look like.
@@ -97,7 +97,7 @@ final class StateLayout
 	 * name something outside the project; no separator; and no uppercase, which a case-insensitive
 	 * filesystem would merge with another scope's directory.
 	 */
-	public const SLUG_PATTERN = '~^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$~';
+	public const string SLUG_PATTERN = '~^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$~';
 
 	/**
 	 * Every kind, in the order the scaffolding creates them.

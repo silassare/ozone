@@ -21,7 +21,7 @@ namespace OZONE\Core\Cli\Deploy;
  * Content, not a path to copy from: a plan can then be asserted in full without a filesystem, which
  * is what makes the generated nginx and systemd files testable rather than hoped-for.
  */
-final class DeployFile
+final readonly class DeployFile
 {
 	/**
 	 * @param string $path       where to write, relative to the project
@@ -30,9 +30,9 @@ final class DeployFile
 	 * @param string $reason     what the file is for, shown to the operator
 	 */
 	public function __construct(
-		public readonly string $path,
-		public readonly string $content,
-		public readonly bool $executable = false,
-		public readonly string $reason = '',
+		public string $path,
+		public string $content,
+		public bool $executable = false,
+		public string $reason = '',
 	) {}
 }

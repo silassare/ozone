@@ -44,7 +44,7 @@ final class OwnershipVerificationTest extends TestCase
 	 * The owner has longer to confirm a sign-up, which creates nothing until answered, than to reset
 	 * the password of an account that already exists.
 	 *
-	 * @dataProvider provideLifetimeCases
+	 * @dataProvider provideEachPurposeHasItsOwnLifetimeCases
 	 */
 	public function testEachPurposeHasItsOwnLifetime(VerificationPurpose $purpose, int $lifetime): void
 	{
@@ -56,7 +56,7 @@ final class OwnershipVerificationTest extends TestCase
 	/**
 	 * @return iterable<string, array{0: VerificationPurpose, 1: int}>
 	 */
-	public static function provideLifetimeCases(): iterable
+	public static function provideEachPurposeHasItsOwnLifetimeCases(): iterable
 	{
 		yield 'a plain check' => [VerificationPurpose::CHECK, 3600];
 

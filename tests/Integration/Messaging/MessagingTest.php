@@ -64,11 +64,6 @@ final class MessagingTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	public static function provideDbConfig(): iterable
-	{
-		return DbTestConfig::allConfigured('messaging');
-	}
-
 	/**
 	 * @dataProvider provideDbConfig
 	 */
@@ -130,12 +125,12 @@ final class MessagingTest extends TestCase
 	public function testAsyncMailIsSentAfterTheResponse(DbTestConfig $config): void
 	{
 		$answer = self::send($config, [
-			'channel' => 'mail',
+			'channel'  => 'mail',
 			'template' => 'test.hello',
-			'to'      => ['jane@example.com'],
-			'data'    => ['name' => 'Jane'],
-			'subject' => 'OZ_AUTH_2FA_TITLE',
-			'locale'  => 'en',
+			'to'       => ['jane@example.com'],
+			'data'     => ['name' => 'Jane'],
+			'subject'  => 'OZ_AUTH_2FA_TITLE',
+			'locale'   => 'en',
 		]);
 
 		self::assertCount(1, $answer['records'], \json_encode($answer));
@@ -450,6 +445,11 @@ final class MessagingTest extends TestCase
 		self::get($config, '/messaging/gc');
 
 		self::assertSame([], self::records($config));
+	}
+
+	public static function provideDbConfig(): iterable
+	{
+		return DbTestConfig::allConfigured('messaging');
 	}
 
 	/**

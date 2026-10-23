@@ -45,30 +45,30 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 	use ExceptionWithCustomResponseTrait;
 	use RichExceptionTrait;
 
-	public const BAD_REQUEST = 400;
+	public const int BAD_REQUEST = 400;
 
-	public const UNAUTHORIZED = 401;
+	public const int UNAUTHORIZED = 401;
 
-	public const FORBIDDEN = 403;
+	public const int FORBIDDEN = 403;
 
-	public const NOT_FOUND = 404;
+	public const int NOT_FOUND = 404;
 
-	public const METHOD_NOT_ALLOWED = 405;
+	public const int METHOD_NOT_ALLOWED = 405;
 
-	public const RATE_LIMIT_REACHED = 429;
+	public const int RATE_LIMIT_REACHED = 429;
 
-	public const GONE = 410;
+	public const int GONE = 410;
 
-	public const INTERNAL_ERROR = 500;
+	public const int INTERNAL_ERROR = 500;
 
-	public const UNKNOWN_ERROR = 520;
+	public const int UNKNOWN_ERROR = 520;
 
 	// ozone custom error codes
-	public const UNAUTHENTICATED_USER = 10001;
+	public const int UNAUTHENTICATED_USER = 10001;
 
-	public const INVALID_FORM = 10002;
+	public const int INVALID_FORM = 10002;
 
-	private const ERRORS_STATUS_CODE_MAP = [
+	private const array ERRORS_STATUS_CODE_MAP = [
 		self::BAD_REQUEST         => 400,
 		self::UNAUTHORIZED        => 401,
 		self::FORBIDDEN           => 403,

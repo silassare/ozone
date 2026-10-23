@@ -14,10 +14,10 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Build;
 
 use JsonException;
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Cli\Deploy\ReleaseLayout;
 use OZONE\Core\Cli\Process;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\OZone;

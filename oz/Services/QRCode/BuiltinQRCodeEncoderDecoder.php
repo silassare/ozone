@@ -37,7 +37,7 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 	// [data codewords, ec codewords per block, blocks in group 1, codewords in group 1 blocks,
 	//  blocks in group 2, codewords in group 2 blocks]
 	// Source: ISO 18004 Table 9
-	private const EC_M = [
+	private const array EC_M = [
 		1  => [16, 10, 1, 16, 0, 0],
 		2  => [28, 16, 1, 28, 0, 0],
 		3  => [44, 26, 2, 22, 0, 0],
@@ -81,7 +81,7 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 	];
 
 	// GF(256) log table (generator polynomial x^8 + x^4 + x^3 + x^2 + 1, 0x11d)
-	private const GF_LOG = [
+	private const array GF_LOG = [
 		0,
 		0,
 		1,
@@ -340,7 +340,7 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 		175,
 	];
 
-	private const GF_EXP = [
+	private const array GF_EXP = [
 		1,
 		2,
 		4,
@@ -601,7 +601,7 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 
 	// EC level M format information strings (ISO 18004 Table C.1), XOR'd with 101010000010010
 	// Indexed by mask pattern 0..7
-	private const FORMAT_INFO_M = [
+	private const array FORMAT_INFO_M = [
 		0b101000111011111,  // L mask 0 -> for M: 0b100000011101100 ^ mask_xor... precomputed below
 		0,
 		0,
@@ -615,16 +615,16 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 	// EC level indicator bits for M: 00 (L), 01 (M), 10 (Q), 11 (H)
 	// For M: indicator = 00 (spec uses 00 for M? No: L=01, M=00, Q=11, H=10)
 	// Actually: L=01, M=00, Q=11, H=10 (ISO 18004 Table 12)
-	private const EC_LEVEL_M_BITS = 0b00; // M
+	private const int EC_LEVEL_M_BITS = 0b00; // M
 
 	// Format info mask constant (ISO 18004): 101010000010010
-	private const FORMAT_MASK = 0b101010000010010;
+	private const int FORMAT_MASK = 0b101010000010010;
 
 	// Generator polynomial for format info: 10100110111 (x^10+x^8+x^5+x^4+x^2+x+1)
-	private const FORMAT_POLY = 0b10100110111;
+	private const int FORMAT_POLY = 0b10100110111;
 
 	// Finder pattern
-	private const FINDER = [
+	private const array FINDER = [
 		[1, 1, 1, 1, 1, 1, 1],
 		[1, 0, 0, 0, 0, 0, 1],
 		[1, 0, 1, 1, 1, 0, 1],
@@ -636,7 +636,7 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 
 	// Alignment pattern center coordinates by version (version 2..40)
 	// ISO 18004 Annex E
-	private const ALIGN_COORDS = [
+	private const array ALIGN_COORDS = [
 		2  => [6, 18],
 		3  => [6, 22],
 		4  => [6, 26],

@@ -37,7 +37,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class LoginThrottleTest extends TestCase
 {
-	private const PASSWORD = 'right-pass-1';
+	private const string PASSWORD = 'right-pass-1';
 
 	protected function setUp(): void
 	{

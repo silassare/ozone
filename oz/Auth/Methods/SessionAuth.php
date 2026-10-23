@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Auth\Methods;
 
 use ArrayObject;
+use Closure;
 use Override;
 use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\App\Context;
@@ -325,7 +326,7 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 			return;
 		}
 
-		/** @var ArrayObject<int, \Closure():bool> $detachers */
+		/** @var ArrayObject<int, Closure():bool> $detachers */
 		$detachers = new ArrayObject();
 
 		$release = static function () use ($detachers): void {

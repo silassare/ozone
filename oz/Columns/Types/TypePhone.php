@@ -34,13 +34,13 @@ use OZONE\Core\Users\UsersRepository;
  */
 class TypePhone extends Type
 {
-	public const NAME = 'phone';
+	public const string NAME = 'phone';
 
 	/**
 	 * E.164 phone regex: `+` followed by 6 to 15 digits.
 	 * Total maximum length: 16 characters (1 for `+`, up to 15 for digits).
 	 */
-	public const PHONE_REG = '~^\+\d{6,15}$~';
+	public const string PHONE_REG = '~^\+\d{6,15}$~';
 
 	/**
 	 * TypePhone constructor.

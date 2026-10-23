@@ -19,8 +19,8 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\Plugins\AbstractPlugin;
 use OZONE\Core\Plugins\CorePlugin;
-use OZONE\Core\Plugins\PluginScope;
 use OZONE\Core\Plugins\Plugins;
+use OZONE\Core\Plugins\PluginScope;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 

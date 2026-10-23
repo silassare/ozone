@@ -20,18 +20,18 @@ use SensitiveParameter;
  *
  * AWS Signature Version 4, as the S3 API (MinIO and the other S3-compatible services) expects it.
  */
-final class S3Signer
+final readonly class S3Signer
 {
-	public const ALGORITHM          = 'AWS4-HMAC-SHA256';
-	public const UNSIGNED_PAYLOAD   = 'UNSIGNED-PAYLOAD';
-	public const EMPTY_PAYLOAD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+	public const string ALGORITHM          = 'AWS4-HMAC-SHA256';
+	public const string UNSIGNED_PAYLOAD   = 'UNSIGNED-PAYLOAD';
+	public const string EMPTY_PAYLOAD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
 	public function __construct(
-		private readonly string $access_key,
+		private string $access_key,
 		#[SensitiveParameter]
-		private readonly string $secret_key,
-		private readonly string $region,
-		private readonly string $service = 's3',
+		private string $secret_key,
+		private string $region,
+		private string $service = 's3',
 	) {}
 
 	/**

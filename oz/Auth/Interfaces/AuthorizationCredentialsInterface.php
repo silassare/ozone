@@ -15,6 +15,7 @@ namespace OZONE\Core\Auth\Interfaces;
 
 use OZONE\Core\Http\Uri;
 use PHPUtils\Interfaces\ArrayCapableInterface;
+use SensitiveParameter;
 
 /**
  * Interface AuthorizationCredentialsInterface.
@@ -47,7 +48,7 @@ interface AuthorizationCredentialsInterface extends ArrayCapableInterface
 	 *
 	 * @param string $code
 	 */
-	public function setCode(string $code): static;
+	public function setCode(#[SensitiveParameter] string $code): static;
 
 	/**
 	 * Gets raw auth token.
@@ -61,7 +62,7 @@ interface AuthorizationCredentialsInterface extends ArrayCapableInterface
 	 *
 	 * @param string $token
 	 */
-	public function setToken(string $token): static;
+	public function setToken(#[SensitiveParameter] string $token): static;
 
 	/**
 	 * Gets the auth reference.

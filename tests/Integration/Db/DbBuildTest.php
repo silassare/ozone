@@ -76,8 +76,8 @@ final class DbBuildTest extends TestCase
 	 */
 	public function testDbBuildExitsCleanly(DbTestConfig $config): void
 	{
-		$rdbms = $config->rdbms;
-		$proj  = OZTestProject::create('db-build-' . $rdbms, shared: true, fresh: true);
+		$rdbms  = $config->rdbms;
+		$proj   = OZTestProject::create('db-build-' . $rdbms, shared: true, fresh: true);
 		$config = $proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;
@@ -219,7 +219,7 @@ final class DbBuildTest extends TestCase
 		$base = $proj->getPath() . '/app/Db/Base/BuildNoteBase.php';
 		$ts   = $proj->getPath() . '/gobl/db/base/BuildNoteBase.ts';
 
-		self::assertStringContainsString(" * Time: ", (string) \file_get_contents($base));
+		self::assertStringContainsString(' * Time: ', (string) \file_get_contents($base));
 
 		$proj->setSetting('oz.db', 'OZ_DB_GENERATED_TIMESTAMP', false);
 

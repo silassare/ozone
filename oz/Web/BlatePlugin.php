@@ -35,7 +35,7 @@ use Throwable;
  */
 final class BlatePlugin implements BootHookReceiverInterface
 {
-	public const CONTEXT_INJECT_KEY = '__blate_inject_oz_context__';
+	public const string CONTEXT_INJECT_KEY = '__blate_inject_oz_context__';
 
 	private static $enable_risky = false;
 

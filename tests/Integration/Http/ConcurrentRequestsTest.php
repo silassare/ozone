@@ -31,16 +31,16 @@ use PHPUnit\Framework\TestCase;
 final class ConcurrentRequestsTest extends TestCase
 {
 	/** Requests sent at once, the server's workers answering them, and the route's limit. */
-	private const BURST   = 12;
-	private const WORKERS = 8;
-	private const LIMIT   = 5;
+	private const int BURST   = 12;
+	private const int WORKERS = 8;
+	private const int LIMIT   = 5;
 
 	/**
 	 * The first hits of a rate limit arrive together: each writes the limit's new key. Writing it by
 	 * reading first, then inserting, made all but one fail on its unique key (500). And they are
 	 * counted together: counting by reading then writing let more of them pass than the limit.
 	 *
-	 * @dataProvider provideDbConfig
+	 * @dataProvider provideABurstOfFirstHitsIsAnsweredAndCountedWholeCases
 	 */
 	public function testABurstOfFirstHitsIsAnsweredAndCountedWhole(DbTestConfig $config): void
 	{
@@ -70,10 +70,18 @@ final class ConcurrentRequestsTest extends TestCase
 	}
 
 	/**
+	 * @return iterable<string, array{DbTestConfig}>
+	 */
+	public static function provideABurstOfFirstHitsIsAnsweredAndCountedWholeCases(): iterable
+	{
+		return DbTestConfig::allConfigured('concurrent');
+	}
+
+	/**
 	 * Sign-ups with one email at once: each passes the check that the email is free, then inserts.
 	 * One user is created; the others get the email field's error, never a 500.
 	 *
-	 * @dataProvider provideSignUpDbConfig
+	 * @dataProvider provideSignUpsWithOneEmailAtOnceMakeOneUserCases
 	 */
 	public function testSignUpsWithOneEmailAtOnceMakeOneUser(DbTestConfig $config): void
 	{
@@ -129,19 +137,11 @@ final class ConcurrentRequestsTest extends TestCase
 	}
 
 	/**
-	 * @return iterable<string, array{DbTestConfig}>
-	 */
-	public static function provideDbConfig(): iterable
-	{
-		return DbTestConfig::allConfigured('concurrent');
-	}
-
-	/**
 	 * Its own SQLite file: `cleanDb()` leaves a SQLite file as it is.
 	 *
 	 * @return iterable<string, array{DbTestConfig}>
 	 */
-	public static function provideSignUpDbConfig(): iterable
+	public static function provideSignUpsWithOneEmailAtOnceMakeOneUserCases(): iterable
 	{
 		return DbTestConfig::allConfigured('concurrent_signup');
 	}

@@ -46,15 +46,15 @@ use OZONE\Core\Router\RouteInfo;
  *
  * Phases: INIT (optional pre-flight form) -> STEPS -> DONE.
  */
-final class FormSessionManager
+final readonly class FormSessionManager
 {
-	private readonly ResumableFormProviderInterface $provider;
+	private ResumableFormProviderInterface $provider;
 
 	/**
 	 * {@see Route::key()} of the serving route for route-bound sessions,
 	 * null for standalone ones.
 	 */
-	private readonly ?string $route_key;
+	private ?string $route_key;
 
 	/**
 	 * FormSessionManager constructor.
@@ -68,9 +68,9 @@ final class FormSessionManager
 	 *                                                                     the session to that route.
 	 */
 	public function __construct(
-		private readonly string $provider_class,
-		private readonly RouteInfo $ri,
-		private readonly ?string $provider_name = null,
+		private string $provider_class,
+		private RouteInfo $ri,
+		private ?string $provider_name = null,
 	) {
 		$this->provider  = $provider_class::instance($ri);
 		$this->route_key = null === $provider_name ? $ri->route()->key() : null;
@@ -500,7 +500,7 @@ final class FormSessionManager
 
 			try {
 				$cleaned->set($ref, $field->validateType($unsafe->get($ref), $ctx));
-			} catch (RuntimeException | TypesInvalidValueException) {
+			} catch (RuntimeException|TypesInvalidValueException) {
 				// Left out: a step being filled may be incomplete or wrong. RuntimeException
 				// covers a TypesSwitcher whose discriminating field is not usable yet.
 			}

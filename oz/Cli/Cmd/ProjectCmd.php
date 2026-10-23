@@ -41,7 +41,7 @@ use PHPUtils\Str;
  */
 final class ProjectCmd extends Command
 {
-	private const NAMESPACE_PLACEHOLDER = '_Default_';
+	private const string NAMESPACE_PLACEHOLDER = '_Default_';
 
 	/**
 	 * {@inheritDoc}

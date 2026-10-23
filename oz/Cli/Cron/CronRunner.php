@@ -41,28 +41,28 @@ use Throwable;
  */
 final class CronRunner implements BootHookReceiverInterface
 {
-	public const RUNNER_AUTO      = 'auto';
-	public const RUNNER_SCHEDULER = 'scheduler';
-	public const RUNNER_REQUESTS  = 'requests';
+	public const string RUNNER_AUTO      = 'auto';
+	public const string RUNNER_SCHEDULER = 'scheduler';
+	public const string RUNNER_REQUESTS  = 'requests';
 
 	/**
 	 * What ran a tick through the `oz:cron` route: an external scheduler.
 	 */
-	public const RUNNER_WEB = 'web';
+	public const string RUNNER_WEB = 'web';
 
 	/**
 	 * The state store of the check-ins (`oz.stores.state`).
 	 */
-	public const STORE = 'oz:cron';
+	public const string STORE = 'oz:cron';
 
 	/**
 	 * How recent a scheduler's tick must be for cron to run the hourly tasks (the garbage collection
 	 * among them).
 	 */
-	private const SCHEDULED_WITHIN = 3900;
+	private const int SCHEDULED_WITHIN = 3900;
 
-	private const LAST_TICK      = 'last_tick';
-	private const LAST_SCHEDULER = 'last_scheduler';
+	private const string LAST_TICK      = 'last_tick';
+	private const string LAST_SCHEDULER = 'last_scheduler';
 
 	/**
 	 * Runs a tick: dispatches the due tasks ({@see Cron::runDues()}), the minutes since the last tick

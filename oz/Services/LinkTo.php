@@ -31,9 +31,9 @@ use Throwable;
  */
 final class LinkTo extends Service
 {
-	public const URI_KEY = 'oz_link_to_key';
+	public const string URI_KEY = 'oz_link_to_key';
 
-	public const MAIN_ROUTE = 'oz:link-to';
+	public const string MAIN_ROUTE = 'oz:link-to';
 
 	/**
 	 * Gets hidden link.

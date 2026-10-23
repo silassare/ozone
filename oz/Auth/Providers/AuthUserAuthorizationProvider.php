@@ -25,7 +25,7 @@ use OZONE\Core\Exceptions\RuntimeException;
  */
 final class AuthUserAuthorizationProvider extends AuthorizationProvider
 {
-	public const NAME = 'auth:provider:user';
+	public const string NAME = 'auth:provider:user';
 
 	/**
 	 * AuthUserAuthorizationProvider constructor.

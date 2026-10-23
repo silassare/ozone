@@ -27,8 +27,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class DeployInitTest extends TestCase
 {
-	private const SCOPE  = 'myweb';
-	private const ORIGIN = 'web.example.com';
+	private const string SCOPE  = 'myweb';
+	private const string ORIGIN = 'web.example.com';
 
 	private static OZTestProject $proj;
 

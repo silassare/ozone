@@ -51,8 +51,8 @@ use OZONE\Core\Web\WebView;
  */
 final class AuthLinkView extends WebView
 {
-	public const AUTH_LINK_ROUTE         = 'oz:auth_link';
-	public const AUTH_LINK_CONFIRM_ROUTE = 'oz:auth_link:confirm';
+	public const string AUTH_LINK_ROUTE         = 'oz:auth_link';
+	public const string AUTH_LINK_CONFIRM_ROUTE = 'oz:auth_link:confirm';
 
 	/**
 	 * Shows the confirmation page, or the new password form of an account recovery, without touching

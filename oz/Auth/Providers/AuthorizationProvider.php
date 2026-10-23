@@ -36,6 +36,7 @@ use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Utils\Hasher;
+use SensitiveParameter;
 use Throwable;
 
 /**
@@ -319,7 +320,7 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	 *
 	 * @return string
 	 */
-	protected function hash(string $secret): string
+	protected function hash(#[SensitiveParameter] string $secret): string
 	{
 		return Hasher::hash64($secret);
 	}

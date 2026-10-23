@@ -30,9 +30,9 @@ use Symfony\Component\Process\Process;
  */
 final class TwoFactorTest extends TestCase
 {
-	private const DB_FILE       = 'two_factor_test.sqlite';
-	private const USER_EMAIL    = 'jane.doe@example.com';
-	private const USER_PASSWORD = 'Jane_Pass_42';
+	private const string DB_FILE       = 'two_factor_test.sqlite';
+	private const string USER_EMAIL    = 'jane.doe@example.com';
+	private const string USER_PASSWORD = 'Jane_Pass_42';
 
 	private static ?OZTestProject $project = null;
 

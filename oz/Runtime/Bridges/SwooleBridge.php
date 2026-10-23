@@ -56,14 +56,14 @@ final class SwooleBridge implements ResponseSinkInterface
 	/**
 	 * Bodies up to this size are sent with one `end()`; larger ones are written in chunks.
 	 */
-	private const STREAM_THRESHOLD = 1048576;
+	private const int STREAM_THRESHOLD = 1048576;
 
-	private const CHUNK_SIZE = 65536;
+	private const int CHUNK_SIZE = 65536;
 
 	/**
 	 * Headers Swoole computes itself: sending them too would duplicate or contradict its own.
 	 */
-	private const SERVER_HEADERS = ['content-length' => true, 'transfer-encoding' => true, 'connection' => true];
+	private const array SERVER_HEADERS = ['content-length' => true, 'transfer-encoding' => true, 'connection' => true];
 
 	private function __construct(private readonly SwooleResponse $response) {}
 

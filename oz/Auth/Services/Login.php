@@ -29,7 +29,7 @@ use OZONE\Core\Router\Router;
  */
 final class Login extends Service
 {
-	public const ROUTE_LOGIN = 'oz:login';
+	public const string ROUTE_LOGIN = 'oz:login';
 
 	/**
 	 * @throws InvalidFormException

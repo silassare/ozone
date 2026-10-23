@@ -33,7 +33,7 @@ use Symfony\Component\Process\Process;
  */
 final class SessionConcurrencyTest extends TestCase
 {
-	private const DB_FILE = 'session_concurrency_test.sqlite';
+	private const string DB_FILE = 'session_concurrency_test.sqlite';
 
 	private static ?OZTestProject $project = null;
 

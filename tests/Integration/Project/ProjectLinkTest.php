@@ -28,7 +28,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class ProjectLinkTest extends TestCase
 {
-	private const SCOPE = 'myweb';
+	private const string SCOPE = 'myweb';
 
 	private static OZTestProject $proj;
 

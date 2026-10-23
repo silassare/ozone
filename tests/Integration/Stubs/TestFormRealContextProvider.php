@@ -28,7 +28,7 @@ use OZONE\Core\Forms\Resume\FormResumeProgress;
  */
 final class TestFormRealContextProvider extends AbstractResumableFormProvider
 {
-	public const PROVIDER_NAME = 'test-real-ctx';
+	public const string PROVIDER_NAME = 'test-real-ctx';
 
 	#[Override]
 	public static function getName(): string

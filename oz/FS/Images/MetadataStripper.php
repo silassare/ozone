@@ -22,7 +22,7 @@ namespace OZONE\Core\FS\Images;
 final class MetadataStripper
 {
 	/** The PNG chunks that hold text, EXIF or a timestamp. */
-	private const PNG_DROPPED = ['tEXt', 'zTXt', 'iTXt', 'eXIf', 'tIME'];
+	private const array PNG_DROPPED = ['tEXt', 'zTXt', 'iTXt', 'eXIf', 'tIME'];
 
 	/**
 	 * The image without its metadata; null when it cannot be done losslessly (another format, a
@@ -86,11 +86,11 @@ final class MetadataStripper
 			}
 
 			$keep = match (true) {
-				0xE0 === $marker                                        => true,
-				0xE2 === $marker                                        => \str_starts_with($payload, "ICC_PROFILE\0"),
-				0xEE === $marker                                        => true,
+				0xE0 === $marker                                         => true,
+				0xE2 === $marker                                         => \str_starts_with($payload, "ICC_PROFILE\0"),
+				0xEE === $marker                                         => true,
 				($marker >= 0xE0 && $marker <= 0xEF) || 0xFE === $marker => false,
-				default                                                 => true,
+				default                                                  => true,
 			};
 
 			if ($keep) {

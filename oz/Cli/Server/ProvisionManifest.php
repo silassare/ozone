@@ -28,7 +28,7 @@ use Throwable;
  */
 final class ProvisionManifest
 {
-	public const DEFAULT_PATH = '/etc/ozone/provision.json';
+	public const string DEFAULT_PATH = '/etc/ozone/provision.json';
 
 	/** @var array<string, array{at: int, version: string, commands: list<string>}> */
 	private array $steps = [];

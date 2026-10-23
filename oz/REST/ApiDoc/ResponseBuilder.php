@@ -26,11 +26,11 @@ use OZONE\Core\Forms\TypesSwitcher;
  * OpenAPI responses and request bodies: the O'Zone API response envelope, pagination
  * payloads, and request bodies documented from forms.
  */
-final class ResponseBuilder
+final readonly class ResponseBuilder
 {
 	public function __construct(
-		private readonly SchemaBuilder $schemas,
-		private readonly GoblSchemaMapper $gobl
+		private SchemaBuilder $schemas,
+		private GoblSchemaMapper $gobl
 	) {}
 
 	/**

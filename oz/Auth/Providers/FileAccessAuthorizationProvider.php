@@ -25,7 +25,7 @@ use OZONE\Core\FS\FS;
  */
 final class FileAccessAuthorizationProvider extends AuthorizationProvider
 {
-	public const NAME = 'auth:provider:file';
+	public const string NAME = 'auth:provider:file';
 
 	/**
 	 * FileAccessAuthorizationProvider constructor.

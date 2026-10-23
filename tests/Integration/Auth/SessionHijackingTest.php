@@ -34,12 +34,12 @@ use Symfony\Component\Process\Process;
  */
 final class SessionHijackingTest extends TestCase
 {
-	private const AGENT_OPENED  = 'User-Agent: OZoneTest/1.0 (the browser that opened the session)';
-	private const AGENT_STOLEN  = 'User-Agent: OZoneTest/1.0 (another browser, with the cookie)';
-	private const DB_FILE       = 'session_hijacking_test.sqlite';
-	private const WITNESS_FILE  = 'hijacking_witness.json';
-	private const USER_EMAIL    = 'jane.doe@example.com';
-	private const USER_PASSWORD = 'Jane_Pass_42';
+	private const string AGENT_OPENED  = 'User-Agent: OZoneTest/1.0 (the browser that opened the session)';
+	private const string AGENT_STOLEN  = 'User-Agent: OZoneTest/1.0 (another browser, with the cookie)';
+	private const string DB_FILE       = 'session_hijacking_test.sqlite';
+	private const string WITNESS_FILE  = 'hijacking_witness.json';
+	private const string USER_EMAIL    = 'jane.doe@example.com';
+	private const string USER_PASSWORD = 'Jane_Pass_42';
 
 	/** @var array<string, OZTestProject> projects by name */
 	private static array $projects = [];

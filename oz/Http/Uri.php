@@ -16,6 +16,7 @@ namespace OZONE\Core\Http;
 use InvalidArgumentException;
 use Override;
 use Psr\Http\Message\UriInterface;
+use SensitiveParameter;
 
 /**
  * Class Uri.
@@ -237,7 +238,7 @@ class Uri implements UriInterface
 	 * {@inheritDoc}
 	 */
 	#[Override]
-	public function withUserInfo(string $user, ?string $password = null): static
+	public function withUserInfo(string $user, #[SensitiveParameter] ?string $password = null): static
 	{
 		$clone           = clone $this;
 		$clone->user     = $user;

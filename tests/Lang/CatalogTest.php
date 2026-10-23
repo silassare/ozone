@@ -35,7 +35,7 @@ final class CatalogTest extends TestCase
 	/**
 	 * Constants and environment variable names that look like message codes.
 	 */
-	private const NOT_MESSAGES = [
+	private const array NOT_MESSAGES = [
 		'OZ_APP_DIR',
 		'OZ_APP_SALT',
 		'OZ_APP_SECRET',

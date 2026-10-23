@@ -34,7 +34,7 @@ use Symfony\Component\Process\Process;
  */
 final class ServerOverSshTest extends TestCase
 {
-	private const PLATFORMS = [
+	private const array PLATFORMS = [
 		'debian' => [
 			'image'     => 'debian:13-slim',
 			'manager'   => 'apt',

@@ -26,7 +26,7 @@ use OZONE\Core\FS\Enums\FileKind;
 final class ImageWatermarks
 {
 	/** Where a watermark may sit, as `Intervention\Image\Alignment` names the places. */
-	public const POSITIONS = [
+	public const array POSITIONS = [
 		'top-left', 'top', 'top-right', 'left', 'center', 'right', 'bottom-left', 'bottom', 'bottom-right',
 	];
 

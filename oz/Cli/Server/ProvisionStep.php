@@ -23,7 +23,7 @@ use OZONE\Core\Cli\Server\Interfaces\HostInterface;
  * nothing about how it runs: that is {@see ProvisionPlan}, which is what makes a plan printable and
  * assertable without touching the host.
  */
-final class ProvisionStep
+final readonly class ProvisionStep
 {
 	/**
 	 * @param string       $name      a short identifier, recorded in the manifest
@@ -33,10 +33,10 @@ final class ProvisionStep
 	 *                                null when unknown
 	 */
 	public function __construct(
-		public readonly string $name,
-		public readonly string $reason,
-		public readonly array $commands,
-		private readonly ?Closure $satisfied = null,
+		public string $name,
+		public string $reason,
+		public array $commands,
+		private ?Closure $satisfied = null,
 	) {}
 
 	/**

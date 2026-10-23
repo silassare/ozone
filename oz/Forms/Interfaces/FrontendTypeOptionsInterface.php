@@ -13,13 +13,15 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Forms\Interfaces;
 
+use OZONE\Core\Forms\Field;
+
 /**
  * A type whose rules do not all live in its own options.
  *
  * A password's length, a username's length and pattern, the genders accepted: they come from the
  * settings when the type does not set them, so a client reading only the type's options could not
  * check a value the way the server will. A type that implements this says what those rules resolve to,
- * and {@see \OZONE\Core\Forms\Field::frontendType()} adds them to what a discovered form sends.
+ * and {@see Field::frontendType()} adds them to what a discovered form sends.
  *
  * Only what a client may see: these reach the browser.
  */

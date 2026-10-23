@@ -26,7 +26,7 @@ final class Gsm7
 	/**
 	 * The basic character set (the escape character excepted).
 	 */
-	public const BASIC = "@\u{a3}\$\u{a5}\u{e8}\u{e9}\u{f9}\u{ec}\u{f2}\u{c7}\n\u{d8}\u{f8}\r\u{c5}\u{e5}"
+	public const string BASIC = "@\u{a3}\$\u{a5}\u{e8}\u{e9}\u{f9}\u{ec}\u{f2}\u{c7}\n\u{d8}\u{f8}\r\u{c5}\u{e5}"
 		. "\u{394}_\u{3a6}\u{393}\u{39b}\u{3a9}\u{3a0}\u{3a8}\u{3a3}\u{398}\u{39e}\u{c6}\u{e6}\u{df}\u{c9}"
 		. " !\"#\u{a4}%&'()*+,-./0123456789:;<=>?"
 		. "\u{a1}ABCDEFGHIJKLMNOPQRSTUVWXYZ\u{c4}\u{d6}\u{d1}\u{dc}\u{a7}"
@@ -35,22 +35,22 @@ final class Gsm7
 	/**
 	 * The extension table: each of these takes two characters of a message (an escape, then itself).
 	 */
-	public const EXTENSION = "\f^{}\\[~]|\u{20ac}";
+	public const string EXTENSION = "\f^{}\\[~]|\u{20ac}";
 
 	/**
 	 * Characters per message, for one message and for each part of a longer one.
 	 */
-	public const GSM7_SINGLE = 160;
-	public const GSM7_PART   = 153;
-	public const UCS2_SINGLE = 70;
-	public const UCS2_PART   = 67;
+	public const int GSM7_SINGLE = 160;
+	public const int GSM7_PART   = 153;
+	public const int UCS2_SINGLE = 70;
+	public const int UCS2_PART   = 67;
 
 	/**
 	 * What a character outside the alphabet becomes when it has a close one inside it.
 	 *
 	 * @var array<string, string>
 	 */
-	private const FOLD = [
+	private const array FOLD = [
 		// Latin letters with marks the alphabet does not have.
 		'á' => 'a', 'â' => 'a', 'ã' => 'a', 'ā' => 'a', 'ă' => 'a', 'ą' => 'a',
 		'Á' => 'A', 'À' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Ā' => 'A', 'Ă' => 'A', 'Ą' => 'A',
@@ -86,7 +86,7 @@ final class Gsm7
 	/**
 	 * What a character with no close one in the alphabet becomes.
 	 */
-	private const UNKNOWN = '?';
+	private const string UNKNOWN = '?';
 
 	/**
 	 * Whether every character of the text is in the alphabet (its extension table included).

@@ -32,20 +32,20 @@ use Stringable;
 final class MessageRenderer
 {
 	/** The filters every side has. A project's own, declared with the same name, is used instead. */
-	public const BUILTIN_FILTERS = ['upper', 'lower', 'capitalize', 'number', 'date'];
+	public const array BUILTIN_FILTERS = ['upper', 'lower', 'capitalize', 'number', 'date'];
 
 	/** The styles of the `date` filter, as ICU names them. */
-	public const DATE_STYLES = ['none', 'short', 'medium', 'long', 'full'];
+	public const array DATE_STYLES = ['none', 'short', 'medium', 'long', 'full'];
 
 	/**
 	 * An ISO 8601 date, with an optional time and offset: read by hand, as the client reads it, so
 	 * both sides accept exactly the same texts.
 	 */
-	private const ISO_DATE = '~^(-?\d{4})-(\d{2})-(\d{2})'
+	private const string ISO_DATE = '~^(-?\d{4})-(\d{2})-(\d{2})'
 		. '(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|([+-])(\d{2}):?(\d{2}))?)?$~';
 
 	/** The widest instant, in seconds either side of 1970, that both sides can write. */
-	private const MAX_TIMESTAMP = 8640000000000;
+	private const int MAX_TIMESTAMP = 8640000000000;
 
 	/** @var array<string, true> The keys being included, to refuse one including itself. */
 	private array $including = [];
@@ -236,7 +236,7 @@ final class MessageRenderer
 			return false === $formatted ? $value : $formatted;
 		}
 
-		return \gmdate('Y-m-d\\TH:i:s\\Z', $seconds);
+		return \gmdate('Y-m-d\TH:i:s\Z', $seconds);
 	}
 
 	/**

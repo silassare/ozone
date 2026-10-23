@@ -25,7 +25,7 @@ use OZONE\Core\Router\Router;
  */
 final class TNet extends Service
 {
-	public const ROUTE_TNET = 'oz:tnet';
+	public const string ROUTE_TNET = 'oz:tnet';
 
 	public function actionTNet(): void
 	{

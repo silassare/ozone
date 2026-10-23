@@ -22,9 +22,9 @@ use PHPUtils\PortablePattern;
  */
 final class Route
 {
-	public const DEFAULT_PARAM_PATTERN = '[^/]+';
-	public const REG_DELIMITER         = '~';
-	public const ROUTE_PARAM_REG       = '~^[a-zA-Z_][a-zA-Z0-9_]*$~';
+	public const string DEFAULT_PARAM_PATTERN = '[^/]+';
+	public const string REG_DELIMITER         = '~';
+	public const string ROUTE_PARAM_REG       = '~^[a-zA-Z_][a-zA-Z0-9_]*$~';
 
 	/**
 	 * @var callable

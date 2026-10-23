@@ -53,14 +53,15 @@ abstract class RESTFulService extends Service
 	 * names the service by: a path may change, the name stays. Lowercase words joined by `_` or `.`
 	 * (`events`, `shop.orders`). Required, as are the path and the table.
 	 */
-	public const SERVICE_NAME = '';
+	public const string SERVICE_NAME = '';
+
 	/** Where its routes are served (`/events`). */
-	public const SERVICE_PATH = '';
-	public const TABLE_NAME   = '';
-	public const KEY_COLUMN   = 'id';
+	public const string SERVICE_PATH = '';
+	public const string TABLE_NAME   = '';
+	public const string KEY_COLUMN   = 'id';
 
 	/** What a {@see self::SERVICE_NAME} looks like. */
-	public const SERVICE_NAME_REG = '~^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$~';
+	public const string SERVICE_NAME_REG = '~^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*$~';
 
 	/**
 	 * The actions by name, and whether they are enabled. To disable one, a subclass redeclares
@@ -670,7 +671,7 @@ abstract class RESTFulService extends Service
 		$options = $router->map(
 			$action->httpMethod(),
 			$action->path(),
-			static fn(RouteInfo $ri) => (new static($ri))->runAction($action, $ri)
+			static fn (RouteInfo $ri) => (new static($ri))->runAction($action, $ri)
 		)->name(static::routeName($action));
 
 		static::configureRoute($action, $options);

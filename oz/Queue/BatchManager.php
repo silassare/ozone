@@ -54,7 +54,7 @@ final class BatchManager
 	/**
 	 * Terminal states -- a job in one of these states is considered settled.
 	 */
-	public const TERMINAL_STATES = [
+	public const array TERMINAL_STATES = [
 		JobState::DONE,
 		JobState::FAILED,
 		JobState::DEAD_LETTER,

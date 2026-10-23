@@ -58,7 +58,7 @@ final class StateLayoutNamesTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider provideNamesThatAreNotSlugs
+	 * @dataProvider provideANameThatIsNotASlugIsRefusedCases
 	 */
 	public function testANameThatIsNotASlugIsRefused(string $name): void
 	{
@@ -68,7 +68,7 @@ final class StateLayoutNamesTest extends TestCase
 	/**
 	 * @return array<string, array{string}>
 	 */
-	public static function provideNamesThatAreNotSlugs(): iterable
+	public static function provideANameThatIsNotASlugIsRefusedCases(): iterable
 	{
 		return [
 			'empty'                 => [''],
@@ -76,7 +76,7 @@ final class StateLayoutNamesTest extends TestCase
 			'the parent directory'  => ['..'],
 			'a hidden name'         => ['.api'],
 			'a path'                => ['api/v2'],
-			'a windows path'        => ['api\\v2'],
+			'a windows path'        => ['api\v2'],
 			'a space'               => ['my scope'],
 			'uppercase'             => ['Api'],
 			'an underscore'         => ['my_scope'],
@@ -87,7 +87,7 @@ final class StateLayoutNamesTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider provideSlugs
+	 * @dataProvider provideAPlainSlugIsAcceptedCases
 	 */
 	public function testAPlainSlugIsAccepted(string $name): void
 	{
@@ -97,7 +97,7 @@ final class StateLayoutNamesTest extends TestCase
 	/**
 	 * @return array<string, array{string}>
 	 */
-	public static function provideSlugs(): iterable
+	public static function provideAPlainSlugIsAcceptedCases(): iterable
 	{
 		return [
 			'one letter'   => ['a'],

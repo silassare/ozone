@@ -32,7 +32,7 @@ use PHPUtils\PortablePattern;
  */
 class TypeUsername extends Type implements FrontendTypeOptionsInterface
 {
-	public const NAME = 'username';
+	public const string NAME = 'username';
 
 	/**
 	 * TypeUsername constructor.
@@ -114,6 +114,33 @@ class TypeUsername extends Type implements FrontendTypeOptionsInterface
 
 	/**
 	 * {@inheritDoc}
+	 *
+	 * The lengths and the pattern the settings give a username. The pattern is sent only when it is
+	 * portable ({@see PortablePattern}): a project may set one JavaScript would read differently, and a
+	 * client that ran it anyway would disagree with the server, so it is left to the server then.
+	 */
+	#[Override]
+	public function frontendOptions(): array
+	{
+		$out = [
+			'min' => (int) Settings::get('oz.users', 'OZ_USER_NAME_MIN_LENGTH'),
+			'max' => (int) Settings::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH'),
+		];
+
+		$pattern = (string) Settings::get('oz.users', 'OZ_USER_NAME_PATTERN');
+
+		try {
+			PortablePattern::assertPortable($pattern);
+			$out['pattern'] = $pattern;
+		} catch (InvalidArgumentException) {
+			// Not portable: the client leaves the characters of a username to the server.
+		}
+
+		return $out;
+	}
+
+	/**
+	 * {@inheritDoc}
 	 */
 	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
@@ -175,32 +202,5 @@ class TypeUsername extends Type implements FrontendTypeOptionsInterface
 		}
 
 		$subject->accept($value);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * The lengths and the pattern the settings give a username. The pattern is sent only when it is
-	 * portable ({@see PortablePattern}): a project may set one JavaScript would read differently, and a
-	 * client that ran it anyway would disagree with the server, so it is left to the server then.
-	 */
-	#[Override]
-	public function frontendOptions(): array
-	{
-		$out = [
-			'min' => (int) Settings::get('oz.users', 'OZ_USER_NAME_MIN_LENGTH'),
-			'max' => (int) Settings::get('oz.users', 'OZ_USER_NAME_MAX_LENGTH'),
-		];
-
-		$pattern = (string) Settings::get('oz.users', 'OZ_USER_NAME_PATTERN');
-
-		try {
-			PortablePattern::assertPortable($pattern);
-			$out['pattern'] = $pattern;
-		} catch (InvalidArgumentException) {
-			// Not portable: the client leaves the characters of a username to the server.
-		}
-
-		return $out;
 	}
 }

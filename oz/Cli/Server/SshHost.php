@@ -31,7 +31,7 @@ use Symfony\Component\Process\Process;
  *
  * `OZ_SSH_COMMAND` replaces the client and its first arguments, as `GIT_SSH_COMMAND` does for git.
  */
-final class SshHost implements HostInterface
+final readonly class SshHost implements HostInterface
 {
 	/**
 	 * @param string       $destination `user@host`, or a host of the client's configuration
@@ -41,11 +41,11 @@ final class SshHost implements HostInterface
 	 * @param list<string> $options     more `-o Name=value` client options, as `Name=value`
 	 */
 	public function __construct(
-		private readonly string $destination,
-		private readonly int $port = 22,
-		private readonly ?string $identity = null,
-		private readonly float $timeout = 900.0,
-		private readonly array $options = [],
+		private string $destination,
+		private int $port = 22,
+		private ?string $identity = null,
+		private float $timeout = 900.0,
+		private array $options = [],
 	) {
 		if ('' === $destination || \str_starts_with($destination, '-')) {
 			throw new InvalidArgumentException(\sprintf('Invalid SSH destination: "%s".', $destination));

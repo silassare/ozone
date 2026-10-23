@@ -28,9 +28,9 @@ use OZONE\Core\FS\Scan\Interfaces\FileScannerInterface;
  * the socket, so clamd needs no access to the files. clamd rejects a content larger than its
  * `StreamMaxLength` (25 MB by default): keep it above `OZ_UPLOAD_FILE_MAX_SIZE` (`oz.files`).
  */
-final class ClamAVScanner implements FileScannerInterface
+final readonly class ClamAVScanner implements FileScannerInterface
 {
-	private const CHUNK_SIZE = 8192;
+	private const int CHUNK_SIZE = 8192;
 
 	/**
 	 * ClamAVScanner constructor.
@@ -40,9 +40,9 @@ final class ClamAVScanner implements FileScannerInterface
 	 * @param null|Closure $connector opens the connection instead of `stream_socket_client()` (tests)
 	 */
 	public function __construct(
-		private readonly string $address,
-		private readonly int $timeout = 30,
-		private readonly ?Closure $connector = null
+		private string $address,
+		private int $timeout = 30,
+		private ?Closure $connector = null
 	) {}
 
 	/**

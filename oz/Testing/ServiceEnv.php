@@ -30,7 +30,7 @@ final class ServiceEnv
 	/**
 	 * @var list<string>
 	 */
-	public const KEYS = [
+	public const array KEYS = [
 		'OZ_REDIS_HOST',
 		'OZ_REDIS_PORT',
 		'OZ_REDIS_PASSWORD',

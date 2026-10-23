@@ -43,12 +43,12 @@ final class Settings
 	 * foo/./pop.bob      -> no
 	 * ```
 	 */
-	public const PATTERN_SETTING_GROUP_NAME = '(?:[a-z0-9]+/)*[a-z0-9]+(?:\.[a-z0-9]+)*';
+	public const string PATTERN_SETTING_GROUP_NAME = '(?:[a-z0-9]+/)*[a-z0-9]+(?:\.[a-z0-9]+)*';
 
 	/**
 	 * Setting group name regular expression.
 	 */
-	public const REG_SETTING_GROUP_NAME = '#^' . self::PATTERN_SETTING_GROUP_NAME . '$#';
+	public const string REG_SETTING_GROUP_NAME = '#^' . self::PATTERN_SETTING_GROUP_NAME . '$#';
 
 	/**
 	 * The key a settings file declares its merge strategies under, which never reaches the values.
@@ -60,16 +60,16 @@ final class Settings
 	 * ];
 	 * ```
 	 */
-	public const MERGE_KEY = '@merge';
+	public const string MERGE_KEY = '@merge';
 
 	/** Maps merge key by key, and everything else is replaced: what a key does when nothing says. */
-	public const MERGE_DEFAULT = 'default';
+	public const string MERGE_DEFAULT = 'default';
 
 	/** The value of a later source replaces what an earlier one gave, whatever its shape. */
-	public const MERGE_REPLACE = 'replace';
+	public const string MERGE_REPLACE = 'replace';
 
 	/** Lists are appended, maps merged: for a key every source adds to. */
-	public const MERGE_APPEND = 'append';
+	public const string MERGE_APPEND = 'append';
 
 	/**
 	 * No source may change the key after the one that declared it.
@@ -77,7 +77,7 @@ final class Settings
 	 * What an allow-list needs: a plugin loaded after the application cannot widen it, and a later
 	 * source that tries is a loud failure rather than a quiet hole.
 	 */
-	public const MERGE_LOCK = 'lock';
+	public const string MERGE_LOCK = 'lock';
 
 	/**
 	 * Settings groups map.

@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class RouteTableTest extends TestCase
 {
-	private const PROVIDERS = [
+	private const array PROVIDERS = [
 		TableItemsProvider::class => true,
 		TableItemProvider::class  => true,
 		TableLangProvider::class  => true,

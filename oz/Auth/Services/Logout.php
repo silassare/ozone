@@ -24,7 +24,7 @@ use OZONE\Core\Router\Router;
  */
 final class Logout extends Service
 {
-	public const ROUTE_LOGOUT = 'oz:logout';
+	public const string ROUTE_LOGOUT = 'oz:logout';
 
 	public function actionLogout(): void
 	{

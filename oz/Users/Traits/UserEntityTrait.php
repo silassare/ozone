@@ -17,6 +17,7 @@ use OZONE\Core\Auth\AuthUserDataStore;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Exceptions\RuntimeException;
+use SensitiveParameter;
 
 /**
  * Trait UserEntityTrait.
@@ -69,7 +70,7 @@ trait UserEntityTrait
 	/**
 	 * {@inheritDoc}
 	 */
-	public function setAuthPassword(string $password_hash): static
+	public function setAuthPassword(#[SensitiveParameter] string $password_hash): static
 	{
 		$this->setPass($password_hash);
 

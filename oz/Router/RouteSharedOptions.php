@@ -45,8 +45,8 @@ class RouteSharedOptions
 {
 	use RouteGuardShortcutsTrait;
 
-	public const PRIORITY_RUN_LAST    = -1;
-	public const PRIORITY_RUN_DEFAULT = 0;
+	public const int PRIORITY_RUN_LAST    = -1;
+	public const int PRIORITY_RUN_DEFAULT = 0;
 
 	/**
 	 * @var null|RouteSharedOptions

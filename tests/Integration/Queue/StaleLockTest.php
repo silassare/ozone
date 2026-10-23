@@ -70,8 +70,8 @@ final class StaleLockTest extends TestCase
 	 */
 	public function testStaleLockJobIsRecoveredAndProcessed(DbTestConfig $config): void
 	{
-		$rdbms = $config->rdbms;
-		$proj  = OZTestProject::create('stale-lock-' . $rdbms, shared: false, fresh: true);
+		$rdbms  = $config->rdbms;
+		$proj   = OZTestProject::create('stale-lock-' . $rdbms, shared: false, fresh: true);
 		$config = $proj->useDatabase($config);
 
 		self::$projects[$rdbms] = $proj;

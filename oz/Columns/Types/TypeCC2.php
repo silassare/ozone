@@ -28,9 +28,9 @@ use OZONE\Core\Users\Countries;
  */
 class TypeCC2 extends Type
 {
-	public const NAME = 'cc2';
+	public const string NAME = 'cc2';
 
-	public const CC2_REG = '~^[a-zA-Z]{2}$~';
+	public const string CC2_REG = '~^[a-zA-Z]{2}$~';
 
 	/**
 	 * TypeCC2 constructor.

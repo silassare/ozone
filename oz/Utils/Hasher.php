@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Utils;
 
+use OZONE\Core\App\Keys;
+
 /**
  * Class Hasher.
  */
@@ -22,7 +24,7 @@ final class Hasher
 	 * Returns a 32 string length hash of a given string.
 	 *
 	 * The hash of a string is always the same, the empty string included: a caller that wants an
-	 * unguessable value rather than the hash of one asks {@see \OZONE\Core\App\Keys} for a key.
+	 * unguessable value rather than the hash of one asks {@see Keys} for a key.
 	 *
 	 * @param string $string The string to hash
 	 *
@@ -37,7 +39,7 @@ final class Hasher
 	 * Returns a 64 string length hash of a given string.
 	 *
 	 * The hash of a string is always the same, the empty string included: a caller that wants an
-	 * unguessable value rather than the hash of one asks {@see \OZONE\Core\App\Keys} for a key.
+	 * unguessable value rather than the hash of one asks {@see Keys} for a key.
 	 *
 	 * @param string $string The string to hash
 	 *

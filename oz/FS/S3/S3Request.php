@@ -24,7 +24,7 @@ use Psr\Http\Message\StreamInterface;
  * a sink is written as the response arrives. A transport that cannot stream one of them falls back
  * to a string, so a caller must still bound what it passes.
  */
-final class S3Request
+final readonly class S3Request
 {
 	/**
 	 * @param string                 $method      the HTTP method
@@ -37,14 +37,14 @@ final class S3Request
 	 * @param bool                   $expect_body false for HEAD, whose response body is discarded
 	 */
 	public function __construct(
-		public readonly string $method,
-		public readonly string $url,
-		public readonly array $headers = [],
-		public readonly StreamInterface|string $body = '',
-		public readonly ?StreamInterface $sink = null,
-		public readonly float $timeout = 30.0,
-		public readonly bool $verify_tls = true,
-		public readonly bool $expect_body = true,
+		public string $method,
+		public string $url,
+		public array $headers = [],
+		public StreamInterface|string $body = '',
+		public ?StreamInterface $sink = null,
+		public float $timeout = 30.0,
+		public bool $verify_tls = true,
+		public bool $expect_body = true,
 	) {}
 
 	/**

@@ -22,7 +22,7 @@ use OZONE\Core\Messaging\Messages\SMSMessage;
  */
 final class PhoneOwnershipVerificationProvider extends OwnershipVerificationProvider
 {
-	public const NAME = 'auth:provider:phone:verify';
+	public const string NAME = 'auth:provider:phone:verify';
 
 	/**
 	 * The phone verified.

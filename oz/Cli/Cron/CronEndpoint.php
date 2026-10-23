@@ -35,14 +35,14 @@ use OZONE\Core\Router\Router;
  */
 final class CronEndpoint implements RouteProviderInterface
 {
-	public const ROUTE = 'oz:cron';
+	public const string ROUTE = 'oz:cron';
 
 	/**
 	 * A public path: the internal ones (`OZone::INTERNAL_PATH_PREFIX`) only answer sub-requests.
 	 */
-	public const PATH = '/oz-cron';
+	public const string PATH = '/oz-cron';
 
-	public const KEY_HEADER = 'X-OZONE-Cron-Key';
+	public const string KEY_HEADER = 'X-OZONE-Cron-Key';
 
 	/**
 	 * {@inheritDoc}

@@ -21,7 +21,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 final class StoreNumbers
 {
 	/** How many times a store tries its compare-and-set before it gives up. */
-	public const MAX_ATTEMPTS = 100;
+	public const int MAX_ATTEMPTS = 100;
 
 	/**
 	 * @throws RuntimeException when the stored value is not a number

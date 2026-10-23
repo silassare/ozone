@@ -31,9 +31,9 @@ use PHPUnit\Framework\TestCase;
 final class ContextUserIpTest extends TestCase
 {
 	// No dot in the key: dotted settings keys are read as paths.
-	private const PROXY_RANGE = '2001:db8::/32';
+	private const string PROXY_RANGE = '2001:db8::/32';
 
-	private const BEHIND_PROXY = [
+	private const array BEHIND_PROXY = [
 		'REMOTE_ADDR'           => '2001:db8::1',
 		'HTTP_X_FORWARDED_FOR'  => '198.51.100.9',
 		'HTTP_CF_CONNECTING_IP' => '203.0.113.5',

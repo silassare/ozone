@@ -27,9 +27,18 @@ use PHPUnit\Framework\TestCase;
 final class ServiceGeneratorTest extends TestCase
 {
 	/**
+	 * @dataProvider provideNamesAServiceAfterItsBasePathCases
+	 */
+	public function testNamesAServiceAfterItsBasePath(string $path, string $name): void
+	{
+		self::assertSame($name, ServiceGenerator::defaultName($path));
+		self::assertMatchesRegularExpression(RESTFulService::SERVICE_NAME_REG, $name);
+	}
+
+	/**
 	 * @return array<string, array{0: string, 1: string}>
 	 */
-	public static function paths(): array
+	public static function provideNamesAServiceAfterItsBasePathCases(): iterable
 	{
 		return [
 			'one segment'   => ['/countries', 'countries'],
@@ -37,14 +46,5 @@ final class ServiceGeneratorTest extends TestCase
 			'with a dash'   => ['/order-items', 'order_items'],
 			'in capitals'   => ['/Shop/Order-Items/', 'shop.order_items'],
 		];
-	}
-
-	/**
-	 * @dataProvider paths
-	 */
-	public function testNamesAServiceAfterItsBasePath(string $path, string $name): void
-	{
-		self::assertSame($name, ServiceGenerator::defaultName($path));
-		self::assertMatchesRegularExpression(RESTFulService::SERVICE_NAME_REG, $name);
 	}
 }

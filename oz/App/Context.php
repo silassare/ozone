@@ -54,9 +54,9 @@ use Throwable;
  */
 final class Context
 {
-	public const CONTEXT_TYPE_API = 1;
+	public const int CONTEXT_TYPE_API = 1;
 
-	public const CONTEXT_TYPE_WEB = 2;
+	public const int CONTEXT_TYPE_WEB = 2;
 
 	private bool $handle_called = false;
 

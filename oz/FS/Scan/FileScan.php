@@ -44,8 +44,8 @@ use Throwable;
  */
 final class FileScan implements BootHookReceiverInterface
 {
-	public const MODE_SYNC  = 'sync';
-	public const MODE_ASYNC = 'async';
+	public const string MODE_SYNC  = 'sync';
+	public const string MODE_ASYNC = 'async';
 
 	/**
 	 * {@inheritDoc}

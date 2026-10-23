@@ -26,7 +26,7 @@ use OZONE\Core\Web\WebView;
  */
 final class RedirectView extends WebView
 {
-	public const REDIRECT_ROUTE = 'oz:redirect';
+	public const string REDIRECT_ROUTE = 'oz:redirect';
 
 	/**
 	 * @return Response

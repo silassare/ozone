@@ -17,7 +17,7 @@ namespace OZONE\Core\FS\Images;
  * What a page needs of an image before it loads: its size as shown (upright), which reserves its
  * place, and its dominant color, shown in that place meanwhile.
  */
-final class ImageInfo
+final readonly class ImageInfo
 {
 	/**
 	 * @param int    $width  in pixels, upright
@@ -25,9 +25,9 @@ final class ImageInfo
 	 * @param string $color  `#rrggbb`
 	 */
 	public function __construct(
-		public readonly int $width,
-		public readonly int $height,
-		public readonly string $color,
+		public int $width,
+		public int $height,
+		public string $color,
 	) {}
 
 	/**

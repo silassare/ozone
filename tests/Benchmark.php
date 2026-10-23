@@ -72,12 +72,12 @@ class Benchmark
 	/**
 	 * Default number of warmup calls before measurement begins.
 	 */
-	private const DEFAULT_WARMUP = 3;
+	private const int DEFAULT_WARMUP = 3;
 
 	/**
 	 * Default regression detection threshold in percent.
 	 */
-	private const DEFAULT_THRESHOLD = 5.0;
+	private const float DEFAULT_THRESHOLD = 5.0;
 
 	/**
 	 * Number of unmeasured warmup calls fired before each callable's timed loop.

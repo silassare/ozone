@@ -46,59 +46,59 @@ final class InstanceLayout
 	/**
 	 * The directory itself, under a project.
 	 */
-	public const DIR = '.ozone';
+	public const string DIR = '.ozone';
 
 	/**
 	 * Build output: derived from the release's code, and dropping it costs only a rebuild.
 	 */
-	public const BUILD = 'build';
+	public const string BUILD = 'build';
 
 	/**
 	 * Caches a request fills on demand, and that may be dropped mid-flight.
 	 */
-	public const CACHE = 'cache';
+	public const string CACHE = 'cache';
 
 	/**
 	 * Logs.
 	 */
-	public const LOGS = 'logs';
+	public const string LOGS = 'logs';
 
 	/**
 	 * The script `opcache.preload` points at, directly under {@see self::DIR}.
 	 */
-	public const PRELOAD_SCRIPT = 'preload.php';
+	public const string PRELOAD_SCRIPT = 'preload.php';
 
 	/**
 	 * Build output: the compiled `.env` files.
 	 */
-	public const BUILD_ENV = 'env';
+	public const string BUILD_ENV = 'env';
 
 	/**
 	 * Build output: the settings bundle of each source directory.
 	 */
-	public const BUILD_SETTINGS = 'settings';
+	public const string BUILD_SETTINGS = 'settings';
 
 	/**
 	 * Build output: the route table of each scope, under one directory per state slug.
 	 */
-	public const BUILD_ROUTES = 'routes';
+	public const string BUILD_ROUTES = 'routes';
 
 	/**
 	 * Build output: the ORM classes generated for OZone and for each plugin.
 	 */
-	public const BUILD_PLUGINS = 'plugins';
+	public const string BUILD_PLUGINS = 'plugins';
 
 	/**
 	 * The marker telling a request whether it is the first of its minute to look at the schedule.
 	 *
 	 * Project-wide and not per scope: whichever scope serves the request, there is one schedule.
 	 */
-	public const CACHE_CRON_MARKER = 'cron.minute';
+	public const string CACHE_CRON_MARKER = 'cron.minute';
 
 	/**
 	 * `{root}/.ozone`, with the parts under it joined on.
 	 *
-	 * @param string $root  a project directory
+	 * @param string $root     a project directory
 	 * @param string ...$parts
 	 */
 	public static function path(string $root, string ...$parts): string
@@ -109,7 +109,7 @@ final class InstanceLayout
 	/**
 	 * A path under `.ozone/build/`.
 	 *
-	 * @param string $root  a project directory
+	 * @param string $root     a project directory
 	 * @param string ...$parts
 	 */
 	public static function buildPath(string $root, string ...$parts): string
@@ -120,7 +120,7 @@ final class InstanceLayout
 	/**
 	 * A path under `.ozone/cache/`.
 	 *
-	 * @param string $root  a project directory
+	 * @param string $root     a project directory
 	 * @param string ...$parts
 	 */
 	public static function cachePath(string $root, string ...$parts): string
@@ -141,7 +141,7 @@ final class InstanceLayout
 	/**
 	 * A directory under `.ozone/build/`, created when missing.
 	 *
-	 * @param string $root  a project directory
+	 * @param string $root     a project directory
 	 * @param string ...$parts
 	 */
 	public static function buildDir(string $root, string ...$parts): FilesManager
@@ -178,7 +178,7 @@ final class InstanceLayout
 	 *
 	 * A fresh manager, never a caller's: `FilesManager::cd()` moves one in place.
 	 *
-	 * @param string $root  a project directory
+	 * @param string $root     a project directory
 	 * @param string ...$parts
 	 */
 	private static function dirAt(string $root, string ...$parts): FilesManager

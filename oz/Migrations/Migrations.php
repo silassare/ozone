@@ -39,8 +39,8 @@ use Throwable;
  */
 final class Migrations
 {
-	public const DB_NOT_INSTALLED_VERSION = 0;
-	public const FIRST_VERSION            = 1;
+	public const int DB_NOT_INSTALLED_VERSION = 0;
+	public const int FIRST_VERSION            = 1;
 
 	/**
 	 * Migrations constructor.

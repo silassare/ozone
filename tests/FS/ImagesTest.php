@@ -35,18 +35,6 @@ use PHPUnit\Framework\TestCase;
  */
 final class ImagesTest extends TestCase
 {
-	/**
-	 * @return array<string, array{ImageDriverName}>
-	 */
-	public static function provideDrivers(): iterable
-	{
-		yield 'vips' => [ImageDriverName::VIPS];
-
-		yield 'imagick' => [ImageDriverName::IMAGICK];
-
-		yield 'gd' => [ImageDriverName::GD];
-	}
-
 	public function testTheFirstDriverTheServerHasIsUsed(): void
 	{
 		self::assertSame('vips', (new InterventionImageProcessor())->driver());
@@ -266,5 +254,17 @@ final class ImagesTest extends TestCase
 		self::assertMatchesRegularExpression('~^#[0-9a-f]{6}$~', $color);
 		self::assertGreaterThan(180, \hexdec(\substr($color, 1, 2)));
 		self::assertLessThan(80, \hexdec(\substr($color, 5, 2)));
+	}
+
+	/**
+	 * @return array<string, array{ImageDriverName}>
+	 */
+	public static function provideDrivers(): iterable
+	{
+		yield 'vips' => [ImageDriverName::VIPS];
+
+		yield 'imagick' => [ImageDriverName::IMAGICK];
+
+		yield 'gd' => [ImageDriverName::GD];
 	}
 }

@@ -52,7 +52,7 @@ use Throwable;
  */
 final class OZone
 {
-	public const INTERNAL_PATH_PREFIX = '/~ozone-internal~/';
+	public const string INTERNAL_PATH_PREFIX = '/~ozone-internal~/';
 
 	/**
 	 * @var null|Router

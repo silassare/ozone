@@ -61,11 +61,6 @@ final class RESTFilterRefusalTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	public static function provideDbConfig(): iterable
-	{
-		return DbTestConfig::allConfigured('rest-filters');
-	}
-
 	/**
 	 * @dataProvider provideDbConfig
 	 */
@@ -174,6 +169,11 @@ final class RESTFilterRefusalTest extends TestCase
 			self::assertSame(200, $status, (string) $word . ': ' . \json_encode($json));
 			self::assertSame($count, $json['data']['total'] ?? null, (string) $word . ': ' . \json_encode($json));
 		}
+	}
+
+	public static function provideDbConfig(): iterable
+	{
+		return DbTestConfig::allConfigured('rest-filters');
 	}
 
 	/**

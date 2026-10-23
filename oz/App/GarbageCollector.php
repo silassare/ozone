@@ -33,7 +33,7 @@ use Throwable;
  */
 final class GarbageCollector implements BootHookReceiverInterface
 {
-	public const CRON_TASK = 'oz:gc';
+	public const string CRON_TASK = 'oz:gc';
 
 	/**
 	 * @var array<string, callable():void>

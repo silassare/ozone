@@ -41,9 +41,9 @@ use Throwable;
  */
 final class DoctorCmd extends Command
 {
-	public const OK   = 'ok';
-	public const WARN = 'warn';
-	public const FAIL = 'fail';
+	public const string OK   = 'ok';
+	public const string WARN = 'warn';
+	public const string FAIL = 'fail';
 
 	/**
 	 * Runs every check and reports.
@@ -174,7 +174,7 @@ final class DoctorCmd extends Command
 
 		// The state directories have to be writable by the process that serves requests.
 		$state_dirs = [
-			'data'   => $app->getDataDir(),
+			'data'              => $app->getDataDir(),
 			InstanceLayout::DIR => $app->getProjectDir()->cd(InstanceLayout::DIR, true),
 		];
 

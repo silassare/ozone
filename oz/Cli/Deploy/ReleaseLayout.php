@@ -37,8 +37,8 @@ use OZONE\Core\Cli\Server\LocalHost;
  */
 final class ReleaseLayout
 {
-	public const RELEASES = 'releases';
-	public const CURRENT  = 'current';
+	public const string RELEASES = 'releases';
+	public const string CURRENT  = 'current';
 
 	/**
 	 * The directories a release links to instead of holding.

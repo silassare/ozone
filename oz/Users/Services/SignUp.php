@@ -37,7 +37,7 @@ use OZONE\Core\Users\UsersRepository;
  */
 final class SignUp extends Service
 {
-	public const ROUTE_SIGN_UP = 'oz:signup';
+	public const string ROUTE_SIGN_UP = 'oz:signup';
 
 	/**
 	 * @param RouteInfo $ri
@@ -98,34 +98,6 @@ final class SignUp extends Service
 	}
 
 	/**
-	 * The field error of a sign-up that met a unique key: another sign-up with the same email (or
-	 * phone) passed the column's own "not registered" check at the same time, and was written first.
-	 * That check, run again, now refuses the value, and its error is the field's, as the form gives it.
-	 *
-	 * @param DBALUniqueViolationException $e    the key met
-	 * @param array<array-key, mixed>      $data the form, by the columns' full names
-	 */
-	private static function takenField(DBALUniqueViolationException $e, array $data): ?InvalidFormException
-	{
-		$columns = $e->getColumns();
-
-		if (1 !== \count($columns)) {
-			return null;
-		}
-
-		$column = $e->getTable()->getColumnOrFail($columns[0]);
-
-		try {
-			$column->getType()->validate($data[$column->getFullName()] ?? null);
-		} catch (TypesInvalidValueException $refused) {
-			return (new InvalidFormException($refused->getMessage(), $refused->getData(true), $e))
-				->mergeData(['field' => $column->getName()]);
-		}
-
-		return null;
-	}
-
-	/**
 	 * {@inheritDoc}
 	 */
 	#[Override]
@@ -169,5 +141,33 @@ final class SignUp extends Service
 				'description' => 'Create a new user account. Requires prior email or phone ownership verification.',
 			]
 		);
+	}
+
+	/**
+	 * The field error of a sign-up that met a unique key: another sign-up with the same email (or
+	 * phone) passed the column's own "not registered" check at the same time, and was written first.
+	 * That check, run again, now refuses the value, and its error is the field's, as the form gives it.
+	 *
+	 * @param DBALUniqueViolationException $e    the key met
+	 * @param array<array-key, mixed>      $data the form, by the columns' full names
+	 */
+	private static function takenField(DBALUniqueViolationException $e, array $data): ?InvalidFormException
+	{
+		$columns = $e->getColumns();
+
+		if (1 !== \count($columns)) {
+			return null;
+		}
+
+		$column = $e->getTable()->getColumnOrFail($columns[0]);
+
+		try {
+			$column->getType()->validate($data[$column->getFullName()] ?? null);
+		} catch (TypesInvalidValueException $refused) {
+			return (new InvalidFormException($refused->getMessage(), $refused->getData(true), $e))
+				->mergeData(['field' => $column->getName()]);
+		}
+
+		return null;
 	}
 }

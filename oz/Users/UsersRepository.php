@@ -37,9 +37,9 @@ use Throwable;
  */
 final class UsersRepository implements AuthUsersRepositoryInterface
 {
-	public const DEFAULT_USER_TYPE = 'user';
+	public const string DEFAULT_USER_TYPE = 'user';
 
-	private const TABLE_MARKER_META_KEY = 'ozone.auth_users_repository.auth_user_type';
+	private const string TABLE_MARKER_META_KEY = 'ozone.auth_users_repository.auth_user_type';
 
 	/**
 	 * UsersRepository constructor.

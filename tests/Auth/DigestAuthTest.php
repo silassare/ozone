@@ -38,10 +38,10 @@ use PHPUnit\Framework\TestCase;
  */
 final class DigestAuthTest extends TestCase
 {
-	public const REALM = 'test';
+	public const string REALM = 'test';
 
-	private const AUTH_REF = 'digest-test-unknown-ref';
-	private const SUBJECT  = 'digest:' . self::AUTH_REF;
+	private const string AUTH_REF = 'digest-test-unknown-ref';
+	private const string SUBJECT  = 'digest:' . self::AUTH_REF;
 
 	private static Route $route;
 

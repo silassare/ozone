@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Web;
 
-use OZONE\Core\App\Context;
 use Gobl\DBAL\Types\TypeString;
+use OZONE\Core\App\Context;
 use OZONE\Core\Columns\Types\TypePassword;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\InternalErrorException;
@@ -25,6 +25,7 @@ use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Router\Views\AccessGrantView;
 use OZONE\Core\Web\WebView;
 use PHPUnit\Framework\TestCase;
+use Throwable;
 
 /**
  * The default pages: every text translated, every page on the shared layout and stylesheet.
@@ -169,7 +170,7 @@ final class DefaultPagesTest extends TestCase
 		self::assertStringContainsString('Powered by OZone', $page);
 	}
 
-	private static function error(\Throwable $e, array $env): string
+	private static function error(Throwable $e, array $env): string
 	{
 		return (string) (new ErrorView(self::context($env)))->renderError($e)->getBody();
 	}

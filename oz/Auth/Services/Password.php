@@ -31,11 +31,11 @@ use Throwable;
  */
 final class Password extends Service
 {
-	public const ROUTE_PASS_EDIT_BY_AS_ADMIN = 'oz:pass-edit-as-admin';
-	public const ROUTE_PASS_EDIT_AS_SELF     = 'oz:pass-edit-as-self';
+	public const string ROUTE_PASS_EDIT_BY_AS_ADMIN = 'oz:pass-edit-as-admin';
+	public const string ROUTE_PASS_EDIT_AS_SELF     = 'oz:pass-edit-as-self';
 
-	protected const FIELD_PASS_NEW     = 'pass_new';
-	protected const FIELD_PASS_CURRENT = 'pass_current';
+	protected const string FIELD_PASS_NEW     = 'pass_new';
+	protected const string FIELD_PASS_CURRENT = 'pass_current';
 
 	/**
 	 * Edit password: verified user only.

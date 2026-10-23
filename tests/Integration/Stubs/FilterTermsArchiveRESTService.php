@@ -22,9 +22,9 @@ use OZONE\Core\Router\Router;
  */
 final class FilterTermsArchiveRESTService extends RESTFulService
 {
-	public const SERVICE_NAME = 'terms_archive';
-	public const SERVICE_PATH = '/terms-archive';
-	public const TABLE_NAME   = 'terms';
+	public const string SERVICE_NAME = 'terms_archive';
+	public const string SERVICE_PATH = '/terms-archive';
+	public const string TABLE_NAME   = 'terms';
 
 	public static function registerRoutes(Router $router): void
 	{

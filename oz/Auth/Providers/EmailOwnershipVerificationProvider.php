@@ -22,7 +22,7 @@ use OZONE\Core\Messaging\Messages\MailMessage;
  */
 final class EmailOwnershipVerificationProvider extends OwnershipVerificationProvider
 {
-	public const NAME = 'auth:provider:email:verify';
+	public const string NAME = 'auth:provider:email:verify';
 
 	/**
 	 * The email verified.

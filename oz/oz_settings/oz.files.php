@@ -13,6 +13,12 @@ declare(strict_types=1);
 
 use OZONE\Core\FS\Filters\ImageFileFilterHandler;
 use OZONE\Core\FS\Filters\ImageFilterTokens;
+use OZONE\Core\FS\Images\ImageProbe;
+use OZONE\Core\FS\Images\Images;
+use OZONE\Core\FS\Images\ImageTokens;
+use OZONE\Core\FS\Images\ImageWatermarks;
+use OZONE\Core\FS\Images\MetadataStripper;
+use OZONE\Core\FS\Images\UploaderOrAdminOriginalAccess;
 
 return [
 	/**
@@ -99,7 +105,7 @@ return [
 	 * ext-ffi and intervention/image-driver-vips, then ext-imagick, then ext-gd), `vips`, `imagick`
 	 * or `gd`. A driver named here and missing on the server fails the first rendition, saying so.
 	 *
-	 * @see \OZONE\Core\FS\Images\Images
+	 * @see Images
 	 */
 	'OZ_IMAGE_DRIVER'                     => 'auto',
 
@@ -132,7 +138,7 @@ return [
 	 * The largest image, in bytes, whose size and dominant color are read when it is stored (0: no
 	 * limit): decoding a huge image takes its memory.
 	 *
-	 * @see \OZONE\Core\FS\Images\ImageProbe
+	 * @see ImageProbe
 	 */
 	'OZ_IMAGE_PROBE_MAX_SIZE'             => 30 * 1000 * 1000,
 
@@ -141,7 +147,7 @@ return [
 	 * JPEG and PNG losslessly, other formats re-encoded, the result kept as a rendition. Its
 	 * untouched original is the token `original`, for whom `OZ_IMAGE_ORIGINAL_ACCESS` allows.
 	 *
-	 * @see \OZONE\Core\FS\Images\MetadataStripper
+	 * @see MetadataStripper
 	 */
 	'OZ_IMAGE_STRIP_METADATA'             => true,
 
@@ -150,7 +156,7 @@ return [
 	 * `OZONE\Core\FS\Images\Interfaces\ImageOriginalAccessInterface`; by default the uploader and
 	 * administrators. Anyone else is refused (403).
 	 */
-	'OZ_IMAGE_ORIGINAL_ACCESS'            => \OZONE\Core\FS\Images\UploaderOrAdminOriginalAccess::class,
+	'OZ_IMAGE_ORIGINAL_ACCESS'            => UploaderOrAdminOriginalAccess::class,
 
 	/**
 	 * Watermarks by name, drawn by the token `wm{name}` (a name of `[a-z0-9]`, at most 32):
@@ -165,7 +171,7 @@ return [
 	 * ],
 	 * ```
 	 *
-	 * @see \OZONE\Core\FS\Images\ImageWatermarks
+	 * @see ImageWatermarks
 	 */
 	'OZ_IMAGE_WATERMARKS'                 => [],
 
@@ -174,7 +180,7 @@ return [
 	 * `['for_label' => 'product_photo', 'watermark' => 'logo']`. A file's own `watermark` data names
 	 * one for that file alone.
 	 *
-	 * @see \OZONE\Core\FS\Images\ImageWatermarks::enforcedFor()
+	 * @see ImageWatermarks::enforcedFor()
 	 */
 	'OZ_IMAGE_WATERMARK_POLICY'           => [],
 
@@ -182,7 +188,7 @@ return [
 	 * A project's own image tokens: classes implementing
 	 * `OZONE\Core\FS\Images\Interfaces\ImageTokenInterface`.
 	 *
-	 * @see \OZONE\Core\FS\Images\ImageTokens
+	 * @see ImageTokens
 	 */
 	'OZ_IMAGE_TOKENS'                     => [],
 

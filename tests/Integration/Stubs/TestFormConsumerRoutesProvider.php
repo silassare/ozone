@@ -48,10 +48,10 @@ use OZONE\Core\Router\Router;
 final class TestFormConsumerRoutesProvider extends BaseService
 {
 	/** What no response may ever contain: every secret value of `secretForm()` holds it. */
-	public const SECRET = 'oz-secret-sentinel';
+	public const string SECRET = 'oz-secret-sentinel';
 
 	/** A public value's own value, which the client is never sent either: only its preview. */
-	public const PUBLIC_RUNTIME = 'oz-public-runtime';
+	public const string PUBLIC_RUNTIME = 'oz-public-runtime';
 
 	public static function registerRoutes(Router $router): void
 	{

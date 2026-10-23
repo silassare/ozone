@@ -25,11 +25,11 @@ use OZONE\Core\FS\Enums\FileKind;
 use OZONE\Core\FS\FileAccess;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\Filters\FileFilters;
+use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Images\Images;
 use OZONE\Core\FS\Images\ImageWatermarks;
 use OZONE\Core\FS\Images\Interfaces\ImageOriginalAccessInterface;
 use OZONE\Core\FS\Images\UploaderOrAdminOriginalAccess;
-use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Scan\FileScan;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\RouteInfo;
@@ -42,7 +42,7 @@ use OZONE\Core\Web\WebView;
  */
 class GetFilesView extends WebView
 {
-	public const MAIN_ROUTE = 'oz:files';
+	public const string MAIN_ROUTE = 'oz:files';
 
 	/**
 	 * {@inheritDoc}
