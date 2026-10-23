@@ -40,6 +40,36 @@ final class RandomTest extends TestCase
 		self::assertMatchesRegularExpression('/^[abc123]+$/', $result);
 	}
 
+	public function testStringIsValidUtf8WithEveryBuiltInCharSet(): void
+	{
+		foreach (
+			[
+				'CHARS_ALPHA'     => Random::CHARS_ALPHA,
+				'CHARS_NUM'       => Random::CHARS_NUM,
+				'CHARS_SYMBOLS'   => Random::CHARS_SYMBOLS,
+				'CHARS_ALPHA_NUM' => Random::CHARS_ALPHA_NUM,
+				'CHARS_ALL'       => Random::CHARS_ALL,
+			] as $name => $chars
+		) {
+			// The charset itself must be ASCII: a random string is drawn byte by byte, so a multi-byte
+			// character would be picked one byte at a time.
+			self::assertSame(
+				\strlen($chars),
+				\mb_strlen($chars),
+				\sprintf('%s must hold single-byte characters only', $name)
+			);
+
+			for ($i = 0; $i < 50; ++$i) {
+				$value = Random::string(32, $chars);
+				self::assertTrue(
+					\mb_check_encoding($value, 'UTF-8'),
+					\sprintf('%s produced a value that is not valid UTF-8', $name)
+				);
+				self::assertIsString(\json_encode($value, \JSON_THROW_ON_ERROR));
+			}
+		}
+	}
+
 	public function testStringThrowsForInvalidLength(): void
 	{
 		$this->expectException(InvalidArgumentException::class);

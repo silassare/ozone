@@ -27,7 +27,11 @@ final class Random
 
 	public const string CHARS_NUM = '0123456789';
 
-	public const string CHARS_SYMBOLS = '~!@#$£µ§²¨%^&()_-+={}[]:";\'<>?,./\\';
+	/**
+	 * ASCII only, deliberately: a random string is drawn byte by byte, so a multi-byte character here
+	 * would be picked one byte at a time and the result would not be valid UTF-8.
+	 */
+	public const string CHARS_SYMBOLS = '~!@#$%^&()_-+={}[]:";\'<>?,./\\';
 
 	public const string CHARS_ALPHA_NUM = self::CHARS_ALPHA . self::CHARS_NUM;
 
@@ -104,7 +108,8 @@ final class Random
 		try {
 			// One call to the engine for the whole string, where a character at a time was one call
 			// each. The bytes are drawn uniformly, as indexing the string by a random index was:
-			// a multi-byte character in `$chars` is as many candidate bytes either way.
+			// a multi-byte character in `$chars` is as many candidate bytes either way, so a caller
+			// passing one gets its bytes on their own. The charsets here are all ASCII for that reason.
 			return self::randomizer()->getBytesFromString($chars, $length);
 		} catch (Throwable $t) {
 			throw new RuntimeException('Unable to generate a secure random string.', null, $t);
