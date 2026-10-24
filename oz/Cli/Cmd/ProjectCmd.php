@@ -211,6 +211,12 @@ final class ProjectCmd extends Command
 		foreach (ProjectBuilder::scopes() as $scope) {
 			$report = ProjectBuilder::buildScope($scope);
 
+			// Not a failure: the build answered. But a scope build that printed something while
+			// succeeding used to have it thrown away with the process.
+			foreach ($report['diagnostics'] as $line) {
+				$cli->warn(\sprintf('scope "%s" said: %s', $scope, $line), true, null);
+			}
+
 			foreach ($report['preload'] as $file) {
 				$preloaded[$file] = true;
 			}
