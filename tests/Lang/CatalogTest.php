@@ -39,6 +39,7 @@ final class CatalogTest extends TestCase
 		'OZ_APP_DIR',
 		'OZ_APP_SALT',
 		'OZ_APP_SECRET',
+		'OZ_CLI_PROJECT',
 		'OZ_OZONE_DIR',
 		'OZ_OZONE_IS_CLI',
 		'OZ_OZONE_IS_WEB_CONTEXT',

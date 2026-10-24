@@ -52,6 +52,54 @@ final class ErrorUtilsTest extends TestCase
 		self::assertStringContainsString('installed', $out);
 	}
 
+	/**
+	 * @dataProvider provideAnySignalAProjectSetsBeforeTheAutoloadIsEnoughCases
+	 */
+	public function testAnySignalAProjectSetsBeforeTheAutoloadIsEnough(string $constant, string $value): void
+	{
+		// One of these is set before `vendor/autoload.php` is required by the generated boot file
+		// (OZ_PROJECT_DIR, OZ_APP_DIR), by the scope's index.php (OZ_SCOPE_NAME) or by `oz`
+		// (OZ_CLI_PROJECT), so a boot file edited into another order still leaves one of the others.
+		[$code, $out] = self::runAutoloading(
+			'echo \OZONE\Core\Exceptions\Utils\ErrorUtils::registeredByTheAutoloader()'
+				. " ? 'early' : 'late';",
+			false,
+			\sprintf('\define(%s, %s);', \var_export($constant, true), \var_export($value, true))
+		);
+
+		self::assertSame(0, $code, $out);
+		self::assertStringContainsString('early', $out, $constant . ' must be enough on its own');
+	}
+
+	/**
+	 * @return iterable<string, array{0: string, 1: string}>
+	 */
+	public static function provideAnySignalAProjectSetsBeforeTheAutoloadIsEnoughCases(): iterable
+	{
+		yield 'OZ_PROJECT_DIR' => ['OZ_PROJECT_DIR', '/tmp/oz-probe/'];
+
+		yield 'OZ_APP_DIR' => ['OZ_APP_DIR', '/tmp/oz-probe/app/'];
+
+		yield 'OZ_SCOPE_NAME' => ['OZ_SCOPE_NAME', 'api'];
+
+		yield 'OZ_CLI_PROJECT' => ['OZ_CLI_PROJECT', '1'];
+	}
+
+	public function testRegisteringLateIsReportedAsSuch(): void
+	{
+		// What `oz doctor check` reads: no signal, so the autoloader leaves it alone and whoever
+		// registers later -- bootstrap(), Cli::run() -- is registering late.
+		[$code, $out] = self::runAutoloading(
+			'\OZONE\Core\Exceptions\Utils\ErrorUtils::registerHandlers();'
+				. 'echo \OZONE\Core\Exceptions\Utils\ErrorUtils::registeredByTheAutoloader()'
+				. " ? 'early' : 'late';",
+			false
+		);
+
+		self::assertSame(0, $code, $out);
+		self::assertStringContainsString('late', $out);
+	}
+
 	public function testAToolThatOnlyAutoloadsThePackageKeepsItsOwnErrorHandling(): void
 	{
 		// Static analysis, the code style fixer, a build script: none of them boots a project, and
@@ -71,9 +119,9 @@ final class ErrorUtilsTest extends TestCase
 		// it as the last error and the shutdown function is the first to see it -- at the end of a run
 		// that was otherwise clean, and nowhere near where it happened.
 		[$code, , $log] = self::runAutoloading(
-			'\\set_error_handler(static fn (): bool => false);'
+			'\set_error_handler(static fn (): bool => false);'
 				. "@include __DIR__ . '/not-here.php';"
-				. '\\restore_error_handler();',
+				. '\restore_error_handler();',
 			true
 		);
 
@@ -158,7 +206,7 @@ final class ErrorUtilsTest extends TestCase
 	 *
 	 * @return array{0: null|int, 1: string, 2: string} the exit code, the output, the project log
 	 */
-	private static function runAutoloading(string $body, bool $as_project): array
+	private static function runAutoloading(string $body, bool $as_project, string $preamble = ''): array
 	{
 		$dir = \sys_get_temp_dir() . \DIRECTORY_SEPARATOR . 'oz_err_' . \bin2hex(\random_bytes(6));
 
@@ -171,7 +219,10 @@ final class ErrorUtilsTest extends TestCase
 
 		\file_put_contents($script, "<?php\n\n"
 			// Before the autoload require, as a project's boot file does it.
-			. ($as_project ? '\define(\'OZ_PROJECT_DIR\', ' . \var_export($dir . \DIRECTORY_SEPARATOR, true) . ");\n" : '')
+			. ($as_project
+				? '\define(\'OZ_PROJECT_DIR\', ' . \var_export($dir . \DIRECTORY_SEPARATOR, true) . ");\n"
+				: '')
+			. ('' === $preamble ? '' : $preamble . "\n")
 			. 'require ' . \var_export($autoload, true) . ";\n"
 			. $body . "\n");
 

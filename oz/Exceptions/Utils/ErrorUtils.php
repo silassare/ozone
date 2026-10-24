@@ -40,6 +40,11 @@ class ErrorUtils
 	private const array FATAL_CODES = [\E_ERROR, \E_PARSE, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR];
 
 	/**
+	 * Whether the autoloader is what registered the handlers.
+	 */
+	private static bool $registered_early = false;
+
+	/**
 	 * Masks the values of secret-looking keys, recursively, when redaction is enabled
 	 * (see {@see self::isRedactionEnabled()}).
 	 *
@@ -72,11 +77,26 @@ class ErrorUtils
 	}
 
 	/**
+	 * Whether the handlers were registered by the autoloader, before a project's boot file ran.
+	 *
+	 * False means they went up at the top of {@see OZone::bootstrap()} or {@see Cli::run()} instead,
+	 * so an error raised while the project booted reached PHP's own error log and nothing of ours.
+	 * `oz doctor check` reports it: the way back is for the project's boot file to define
+	 * `OZ_PROJECT_DIR` before it requires `vendor/autoload.php`, which is what the generated one does.
+	 */
+	public static function registeredByTheAutoloader(): bool
+	{
+		return self::$registered_early;
+	}
+
+	/**
 	 * Register error handlers and shutdown function.
+	 *
+	 * @param bool $early true when the autoloader is registering them, before a project's boot file
 	 *
 	 * @psalm-suppress InvalidArgument
 	 */
-	public static function registerHandlers(): void
+	public static function registerHandlers(bool $early = false): void
 	{
 		static $registered = false;
 
@@ -84,7 +104,8 @@ class ErrorUtils
 			return;
 		}
 
-		$registered = true;
+		$registered             = true;
+		self::$registered_early = $early;
 		\set_exception_handler(self::exceptionHandler(...));
 		\set_error_handler(static function (int $code, string $message, string $file, int $line) {
 			self::errorHandler($code, $message, $file, $line, true);

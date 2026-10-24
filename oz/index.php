@@ -21,6 +21,11 @@ if (\file_exists(\getcwd() . \DIRECTORY_SEPARATOR . 'app' . \DIRECTORY_SEPARATOR
 			 . 'Please run "composer install" in your project directory.' . \PHP_EOL);
 	}
 
+	// = Tell OZone's own bootstrap (the autoload `files` entry, which runs from inside the boot file
+	// = below) that a project is starting, so it registers the error handlers before the boot file and
+	// = the app file run. Nothing else may be assumed from it: the boot file owns the paths.
+	\define('OZ_CLI_PROJECT', true);
+
 	// = Load the project boot file
 	require_once \getcwd() . \DIRECTORY_SEPARATOR . 'app' . \DIRECTORY_SEPARATOR . 'boot.php';
 } else {

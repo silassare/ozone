@@ -91,8 +91,12 @@ OZone is a PHP 8.3+ service-oriented REST API and web framework.
 
 ```
 vendor/autoload.php                # oz_bootstrap.php: ini, constants, helpers, and the error
-                                   # handlers when a project is booting (OZ_PROJECT_DIR defined
-                                   # before the require), so boot-time errors are logged too
+                                   # handlers when a project is booting -- any of OZ_PROJECT_DIR,
+                                   # OZ_APP_DIR (app/boot.php), OZ_SCOPE_NAME (the scope's
+                                   # index.php) or OZ_CLI_PROJECT (oz/index.php) defined before
+                                   # the require -- so boot-time errors are logged too, and a
+                                   # tool that merely autoloads the package is left alone.
+                                   # `oz doctor check` reports it when they went up late.
 OZone::run($app)  /  OZone::handleRequest($request, $sink)   # one-shot  /  worker loop
   +-- bootstrap($app)              # once per process: plugins, BootHookReceivers,
   |                                # CRUD listeners, InitHook

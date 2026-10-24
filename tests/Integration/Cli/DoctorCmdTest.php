@@ -91,6 +91,9 @@ final class DoctorCmdTest extends TestCase
 		self::assertSame('ok', $by_name['data/ writable']);
 		self::assertSame('ok', $by_name['Database']);
 		self::assertSame('ok', $by_name['Migrations']);
+		// The generated boot file says a project is starting before it requires the autoloader, so
+		// the error handlers are up before it and the app file run.
+		self::assertSame('ok', $by_name['Boot-time errors']);
 	}
 
 	/**
