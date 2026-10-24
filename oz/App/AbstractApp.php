@@ -241,7 +241,7 @@ abstract class AbstractApp implements AppInterface
 	#[Override]
 	public function getPluginsSourcesDir(): FilesManager
 	{
-		return InstanceLayout::buildDir(
+		return InstanceLayout::releaseBuildDir(
 			$this->getProjectDir()->getRoot(),
 			InstanceLayout::BUILD_PLUGINS
 		);

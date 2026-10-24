@@ -77,6 +77,59 @@ final class InstanceLayoutTest extends TestCase
 		);
 	}
 
+	public function testEveryBuildOutputIsUnderItsReleaseDirectory(): void
+	{
+		$ds   = \DIRECTORY_SEPARATOR;
+		$key  = InstanceLayout::releaseKey($this->root);
+		$mine = InstanceLayout::buildPath($this->root) . $ds . $key;
+
+		self::assertMatchesRegularExpression('#^[0-9a-f]{32}$#', $key);
+		self::assertSame($mine, InstanceLayout::releaseBuildPath($this->root));
+
+		// Every build output: a release reads only what its own vendor produced.
+		foreach (
+			[
+				InstanceLayout::BUILD_PLUGINS,
+				InstanceLayout::BUILD_ENV,
+				InstanceLayout::BUILD_SETTINGS,
+				InstanceLayout::BUILD_ROUTES,
+			] as $part
+		) {
+			self::assertSame(
+				$mine . $ds . $part,
+				InstanceLayout::releaseBuildPath($this->root, $part)
+			);
+		}
+
+		self::assertSame(
+			$mine . $ds . 'routes' . $ds . 'api' . $ds . 'api.key.php',
+			InstanceLayout::releaseBuildPath($this->root, InstanceLayout::BUILD_ROUTES, 'api', 'api.key.php')
+		);
+	}
+
+	public function testTwoReleasesOfOneDeployRootDoNotShareABuildDirectory(): void
+	{
+		$releases = $this->root . \DIRECTORY_SEPARATOR . 'releases';
+
+		\mkdir($releases . \DIRECTORY_SEPARATOR . 'r1', 0o775, true);
+		\mkdir($releases . \DIRECTORY_SEPARATOR . 'r2', 0o775, true);
+
+		$r1 = InstanceLayout::releaseBuildPath($releases . \DIRECTORY_SEPARATOR . 'r1');
+		$r2 = InstanceLayout::releaseBuildPath($releases . \DIRECTORY_SEPARATOR . 'r2');
+
+		self::assertNotSame($r1, $r2);
+
+		// And `current` naming one of them keys to that one, not to a third: the generated classes
+		// of a release must be found whichever way the release was reached. The path itself keeps
+		// the root as it was given, as every other path here does.
+		\symlink($releases . \DIRECTORY_SEPARATOR . 'r1', $this->root . \DIRECTORY_SEPARATOR . 'current');
+
+		self::assertSame(
+			InstanceLayout::releaseKey($releases . \DIRECTORY_SEPARATOR . 'r1'),
+			InstanceLayout::releaseKey($this->root . \DIRECTORY_SEPARATOR . 'current')
+		);
+	}
+
 	public function testEveryPartJoinsUnderItsDirectory(): void
 	{
 		$ds = \DIRECTORY_SEPARATOR;

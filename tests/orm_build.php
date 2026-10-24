@@ -14,7 +14,11 @@ declare(strict_types=1);
 // Generates OZone's ORM classes in the repository's `.ozone/build/plugins/` (git-ignored), which psalm
 // reads (`make lint`): a temporary sandbox project builds them (OZONE\Core\Testing\Sandbox), then
 // they are copied over the previous ones.
+//
+// The sandbox writes them under its own release directory, as every project does; psalm is given one
+// fixed path instead (`psalm.xml`), which nothing but psalm reads.
 
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Testing\Sandbox;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -37,7 +41,8 @@ $rm = static function (string $dir): void {
 };
 
 $sandbox = \sys_get_temp_dir() . \DIRECTORY_SEPARATOR . 'oz_orm_' . \bin2hex(\random_bytes(4)) . \DIRECTORY_SEPARATOR;
-$from    = $sandbox . '.ozone/build/plugins/OZONE/Core/Db';
+$from    = InstanceLayout::releaseBuildPath($sandbox, InstanceLayout::BUILD_PLUGINS)
+	. '/OZONE/Core/Db';
 $to      = __DIR__ . '/../.ozone/build/plugins/OZONE/Core/Db';
 
 try {

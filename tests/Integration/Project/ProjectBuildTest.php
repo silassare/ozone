@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Project;
 
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\TestCase;
 
@@ -64,10 +65,10 @@ final class ProjectBuildTest extends TestCase
 		$out = $proc->getOutput();
 
 		self::assertStringContainsString('scope "api"', $out, $out);
-		self::assertNotEmpty(self::files('.ozone/build/env/*.php'));
-		self::assertNotEmpty(self::files('.ozone/build/settings/*.php'));
-		self::assertCount(1, self::files('.ozone/build/classmap.*.php'));
-		self::assertCount(1, self::files('.ozone/build/routes/api/api.*.php'));
+		self::assertNotEmpty(self::buildFiles('env/*.php'));
+		self::assertNotEmpty(self::buildFiles('settings/*.php'));
+		self::assertCount(1, self::buildFiles('classmap.*.php'));
+		self::assertCount(1, self::buildFiles('routes/api/api.*.php'));
 		self::assertFileDoesNotExist(self::$proj->getPath() . '/.ozone/preload.php');
 	}
 
@@ -78,7 +79,7 @@ final class ProjectBuildTest extends TestCase
 		// what opcache.preload points to, which preloads the list of the live release
 		self::assertFileExists(self::$proj->getPath() . '/.ozone/preload.php');
 
-		$lists = self::files('.ozone/build/preload.*.php');
+		$lists = self::buildFiles('preload.php');
 
 		self::assertCount(1, $lists);
 
@@ -99,7 +100,7 @@ final class ProjectBuildTest extends TestCase
 	{
 		self::$proj->oz('project', 'build', '--skip-orm', '--no-preload')->mustRun();
 
-		$tables = self::files('.ozone/build/routes/api/api.*.php');
+		$tables = self::buildFiles('routes/api/api.*.php');
 
 		[$server, $host, $port] = self::$proj->startServer('api');
 
@@ -113,7 +114,7 @@ final class ProjectBuildTest extends TestCase
 			self::assertTrue(\json_decode($body, true)['data']['pong'] ?? false, $body);
 
 			// Routed through the table the build compiled: none compiled since.
-			self::assertSame($tables, self::files('.ozone/build/routes/api/api.*.php'));
+			self::assertSame($tables, self::buildFiles('routes/api/api.*.php'));
 		} finally {
 			$server->stop(3);
 		}
@@ -168,8 +169,15 @@ final class ProjectBuildTest extends TestCase
 	/**
 	 * @return string[]
 	 */
-	private static function files(string $pattern): array
+	/**
+	 * Files matching a pattern under this release's build directory, where every build output goes.
+	 *
+	 * @return list<string>
+	 */
+	private static function buildFiles(string $pattern): array
 	{
-		return \glob(self::$proj->getPath() . '/' . $pattern) ?: [];
+		$dir = InstanceLayout::releaseBuildPath(self::$proj->getPath());
+
+		return \glob($dir . \DIRECTORY_SEPARATOR . $pattern) ?: [];
 	}
 }

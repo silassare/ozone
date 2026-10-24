@@ -320,11 +320,19 @@ return [
   **source** directory (`app/settings/`, `scopes/{name}/settings/`), for dev-time scaffolding
   (`oz services generate`, `oz settings set --source`).
 - In production outside the console, each **source** directory is read from a compiled bundle
-  (`.ozone/build/settings/`) named after the directory, the release, OZone's version, the `.env`
+  (`.ozone/build/{release}/settings/`) named after the directory, OZone's version, the `.env`
   signature and the directory's mtime; stateful ones (`Settings::addSource($dir, true)`) are always
   read file by file. A settings file returns plain data (one holding an object leaves its directory
-  unbundled) and may read `env()`: `.env` is read through a compiled copy (`.ozone/build/env/`, named
-  after its content), and editing it gives new bundles.
+  unbundled) and may read `env()`: `.env` is read through a compiled copy
+  (`.ozone/build/{release}/env/`, named after its content), and editing it gives new bundles.
+- **Every build output goes under `.ozone/build/{release}/`**, through
+  `InstanceLayout::releaseBuildPath()` / `releaseBuildDir()`: the compiled `.env`, the settings
+  bundles, the route tables, the class map, the preload list and the generated ORM classes. `.ozone/`
+  is shared by the releases of an `oz deploy` root, and the shape of what a build writes comes from
+  that release's `vendor/` -- a generated query class's constants are typed by the Gobl installed
+  there -- so a release that read another's build output died at bootstrap on a constant it could not
+  redeclare. Never build a path under `build/` by hand; a new build output goes through the helper and
+  is keyed because of where it lands.
 - **`oz.config` is blacklisted**: no runtime edit.
 - `SettingsGroup` is `@internal`: never use it directly.
 - Every message code must be in both `lang/oz.en` and `lang/oz.fr` (`tests/Lang/CatalogTest`).

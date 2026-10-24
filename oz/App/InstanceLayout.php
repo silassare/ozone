@@ -26,7 +26,8 @@ use OZONE\Core\FS\FS;
  *
  * ```
  * .ozone/
- *   build/     what `oz project build` produces, and a request fills in when a build has not run:
+ *   build/
+ *     {release}/ what `oz project build` produces, and a request fills in when a build has not run:
  *              the compiled `.env`, the settings bundles, the route tables, the class map, the
  *              preload list, the generated ORM classes. All of it is derived from the release's
  *              code, so a deployment may drop the whole directory: it costs a rebuild, never data.
@@ -38,8 +39,11 @@ use OZONE\Core\FS\FS;
  *              it is not in `build/` -- PHP refuses to start when that path holds nothing.
  * ```
  *
- * What a build writes is named after the release, because `.ozone/` is shared by the releases of an
- * `oz deploy` root and a release must never read what another compiled.
+ * Everything a build writes goes under `build/{release}/` ({@see self::releaseBuildPath()}), because
+ * `.ozone/` is shared by the releases of an `oz deploy` root and a release must never read what
+ * another compiled. The directory, not the file name, is what keys it: a build output added later is
+ * keyed because of where it goes, not because whoever added it remembered to name it after the
+ * release.
  */
 final class InstanceLayout
 {
@@ -107,7 +111,56 @@ final class InstanceLayout
 	}
 
 	/**
-	 * A path under `.ozone/build/`.
+	 * The directory name that holds one release's build output.
+	 *
+	 * The release's real path and not the path as given: a release is reached as itself and through
+	 * `current`, and the two spellings must name one directory. Outside a deploy root there is one
+	 * release, the project itself, and this names it.
+	 *
+	 * @param string $root a project directory
+	 */
+	public static function releaseKey(string $root): string
+	{
+		static $keys = [];
+
+		$root = \rtrim($root, '/\\');
+
+		// Every path under `build/` goes through here, several times a request: a release does not
+		// move under a running process, so the answer is computed once per spelling of it.
+		return $keys[$root] ??= \hash('xxh128', \realpath($root) ?: $root);
+	}
+
+	/**
+	 * A path under this release's build directory: `.ozone/build/{release}/...`.
+	 *
+	 * What every build output goes through. The shape of what a build writes depends on the versions
+	 * in the release's `vendor/` -- the generated ORM classes most of all, whose constants and
+	 * signatures come from Gobl and the code generator installed there -- so two releases on disk at
+	 * once cannot share one directory, and a release reads only what its own `vendor/` produced.
+	 *
+	 * @param string $root     a project directory
+	 * @param string ...$parts
+	 */
+	public static function releaseBuildPath(string $root, string ...$parts): string
+	{
+		return self::buildPath($root, self::releaseKey($root), ...$parts);
+	}
+
+	/**
+	 * A directory under this release's build directory, created when missing.
+	 *
+	 * @param string $root     a project directory
+	 * @param string ...$parts
+	 */
+	public static function releaseBuildDir(string $root, string ...$parts): FilesManager
+	{
+		return self::buildDir($root, self::releaseKey($root), ...$parts);
+	}
+
+	/**
+	 * A path under `.ozone/build/`, holding every release's build directory.
+	 *
+	 * A build output belongs under {@see self::releaseBuildPath()}, never directly here.
 	 *
 	 * @param string $root     a project directory
 	 * @param string ...$parts

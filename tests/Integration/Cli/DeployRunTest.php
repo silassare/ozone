@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Cli;
 
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Cli\Deploy\ReleaseLayout;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\TestCase;
@@ -37,6 +38,14 @@ final class DeployRunTest extends TestCase
 
 	private static string $root  = '';
 	private static string $repo  = '';
+
+	/**
+	 * Each release's build directory, taken while that release is on disk: the key is its real path,
+	 * which a release that has been pruned no longer has.
+	 *
+	 * @var array<string, string>
+	 */
+	private static array $build_dirs = [];
 
 	public static function setUpBeforeClass(): void
 	{
@@ -160,6 +169,67 @@ final class DeployRunTest extends TestCase
 		self::assertSame('survives a deploy', \file_get_contents($through_new_release));
 	}
 
+	public function testEachReleaseGeneratesIntoItsOwnBuildDirectory(): void
+	{
+		$r1 = ReleaseLayout::releaseDir(self::$root, 'r1');
+		$r2 = ReleaseLayout::releaseDir(self::$root, 'r2');
+
+		$build = self::$root . \DIRECTORY_SEPARATOR . InstanceLayout::DIR . \DIRECTORY_SEPARATOR
+			. InstanceLayout::BUILD . \DIRECTORY_SEPARATOR;
+
+		// The shape of a generated class comes from the Gobl and code generator in the release's own
+		// vendor/, so two releases on disk at once cannot share one directory for them.
+		self::assertNotSame(InstanceLayout::releaseKey($r1), InstanceLayout::releaseKey($r2));
+
+		foreach (['r1' => $r1, 'r2' => $r2] as $name => $release) {
+			$dir = $build . InstanceLayout::releaseKey($release);
+
+			self::$build_dirs[$name] = $dir;
+
+			self::assertDirectoryExists($dir, $name . ' must have a build directory of its own');
+			self::assertDirectoryExists(
+				$dir . \DIRECTORY_SEPARATOR . InstanceLayout::BUILD_PLUGINS . \DIRECTORY_SEPARATOR
+					. 'OZONE' . \DIRECTORY_SEPARATOR . 'Core' . \DIRECTORY_SEPARATOR . 'Db',
+				$name . ' must hold the ORM classes its own deploy generated'
+			);
+		}
+	}
+
+	public function testAGeneratedClassLeftByAnOlderLayoutDoesNotStopACommand(): void
+	{
+		// What a deploy root carries after an OZone that kept the generated classes in one shared
+		// directory: a class whose shape is that of the release that generated it. Loading this one
+		// is a fatal error, not an exception -- PHP refuses a constant redeclared without the type
+		// its parent now gives it -- so nothing could catch it and every `oz` command died with it,
+		// including the one command that regenerates the classes.
+		$stale = self::$root . \DIRECTORY_SEPARATOR . InstanceLayout::DIR . \DIRECTORY_SEPARATOR
+			. InstanceLayout::BUILD . \DIRECTORY_SEPARATOR . InstanceLayout::BUILD_PLUGINS
+			. \DIRECTORY_SEPARATOR . 'OZONE' . \DIRECTORY_SEPARATOR . 'Core' . \DIRECTORY_SEPARATOR
+			. 'Db' . \DIRECTORY_SEPARATOR . 'Base';
+
+		\mkdir($stale, 0o775, true);
+		\file_put_contents(
+			$stale . \DIRECTORY_SEPARATOR . 'OZSessionsQueryBase.php',
+			"<?php\n\nnamespace OZONE\\Core\\Db\\Base;\n\n"
+				. "class OZSessionsQueryBase extends \\Gobl\\ORM\\ORMTableQuery\n{\n"
+				. "\tprotected const FILTER_METHODS = [];\n}\n"
+		);
+
+		$release = ReleaseLayout::releaseDir(self::$root, (string) ReleaseLayout::currentRelease(self::$root));
+		$proc    = self::ozIn($release, ['db', 'build', '--build-all', '--class-only']);
+		$proc->run();
+
+		self::assertSame(
+			0,
+			$proc->getExitCode(),
+			'the stale class is in no release\'s directory, so nothing loads it: '
+				. $proc->getOutput() . $proc->getErrorOutput()
+		);
+
+		// And it is left where it is: a release still running the older OZone reads it.
+		self::assertFileExists($stale . \DIRECTORY_SEPARATOR . 'OZSessionsQueryBase.php');
+	}
+
 	public function testRollbackPutsThePreviousReleaseBack(): void
 	{
 		self::assertSame('r2', ReleaseLayout::currentRelease(self::$root));
@@ -206,6 +276,47 @@ final class DeployRunTest extends TestCase
 		);
 	}
 
+	public function testTheBuildOutputOfAPrunedReleaseGoesWithTheNextDeploy(): void
+	{
+		$build = self::$root . \DIRECTORY_SEPARATOR . InstanceLayout::DIR . \DIRECTORY_SEPARATOR
+			. InstanceLayout::BUILD . \DIRECTORY_SEPARATOR;
+
+		$dir_of = static fn (string $release): string => $build . InstanceLayout::releaseKey(
+			ReleaseLayout::releaseDir(self::$root, $release)
+		);
+
+		// r1 and r2 were pruned by the deploy before this one, and what they compiled is still there:
+		// `oz project build` is a step of the release, and it runs before the release that follows it
+		// prunes anything, so it only ever sees the releases an earlier deploy removed. One deploy's
+		// worth of build output is orphaned at a time, never more.
+		self::assertSame(['r3'], ReleaseLayout::releases(self::$root));
+		self::assertCount(2, self::$build_dirs, 'the directories of r1 and r2, taken while they existed');
+
+		foreach (self::$build_dirs as $name => $dir) {
+			self::assertDirectoryExists($dir, $name . ' was pruned, what it compiled is still here');
+		}
+
+		self::deploy(['--release=r3b'])->mustRun();
+
+		foreach (self::$build_dirs as $name => $dir) {
+			self::assertDirectoryDoesNotExist(
+				$dir,
+				$name . ' is gone, and nothing else would ever remove what it compiled'
+			);
+		}
+
+		self::assertDirectoryExists($dir_of('r3'), 'a release still on disk keeps what it compiled');
+		self::assertDirectoryExists($dir_of('r3b'), 'and so does the live one');
+
+		// Not a release directory, so not an orphan: it is what a release still running the older
+		// OZone reads, and removing it would stop that release serving.
+		self::assertFileExists(
+			$build . InstanceLayout::BUILD_PLUGINS . \DIRECTORY_SEPARATOR . 'OZONE'
+				. \DIRECTORY_SEPARATOR . 'Core' . \DIRECTORY_SEPARATOR . 'Db' . \DIRECTORY_SEPARATOR
+				. 'Base' . \DIRECTORY_SEPARATOR . 'OZSessionsQueryBase.php'
+		);
+	}
+
 	public function testAFailedHealthCheckRollsTheReleaseBack(): void
 	{
 		$live = (string) ReleaseLayout::currentRelease(self::$root);
@@ -245,6 +356,22 @@ final class DeployRunTest extends TestCase
 		return new Process(
 			[\PHP_BINARY, \dirname(__DIR__, 3) . '/bin/oz', ...$args],
 			self::$proj->getPath(),
+			null,
+			null,
+			600.0
+		);
+	}
+
+	/**
+	 * `oz` run from inside a release, as every step of a deploy runs it.
+	 *
+	 * @param list<string> $args
+	 */
+	private static function ozIn(string $release, array $args): Process
+	{
+		return new Process(
+			[\PHP_BINARY, \dirname(__DIR__, 3) . '/bin/oz', ...$args],
+			$release,
 			null,
 			null,
 			600.0

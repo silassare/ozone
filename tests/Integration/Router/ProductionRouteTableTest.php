@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Router;
 
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -203,7 +204,9 @@ final class ProductionRouteTableTest extends TestCase
 	 */
 	private static function tables(): array
 	{
-		return \glob(self::$proj->getPath() . '/.ozone/build/routes/api/api.*.php') ?: [];
+		$dir = InstanceLayout::releaseBuildPath(self::$proj->getPath(), InstanceLayout::BUILD_ROUTES, 'api');
+
+		return \glob($dir . \DIRECTORY_SEPARATOR . 'api.*.php') ?: [];
 	}
 
 	/**

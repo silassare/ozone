@@ -301,9 +301,11 @@ final class Db
 	 */
 	private static function initStepPrepare(): ?MigrationInterface
 	{
+		// What a relative output directory resolves against, and where a generator asked for no path
+		// writes: this release's build directory, never the shared cache -- generated code's shape
+		// comes from the release's `vendor/`, so another release must not find it.
 		Gobl::setDefaultOutputDir(
-			app()
-				->getCacheDir()
+			InstanceLayout::releaseBuildDir(app()->getProjectDir()->getRoot())
 				->getRoot()
 		);
 		Gobl::enableGeneratedAtDate((bool) Settings::get('oz.db', 'OZ_DB_GENERATED_TIMESTAMP'));

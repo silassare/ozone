@@ -35,6 +35,7 @@ use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use OZONE\Core\Scopes\StateLayout;
 use OZONE\Core\Utils\Random;
 use PHPUtils\Str;
+use Throwable;
 
 /**
  * Class ProjectCmd.
@@ -177,6 +178,23 @@ final class ProjectCmd extends Command
 
 		if (!$args->get('skip-orm')) {
 			$cli->executeString('db build --build-all --class-only');
+		}
+
+		// Only in a deploy root: the build directory of a release that was pruned is read by nothing
+		// and removed by nothing else. Housekeeping, so a directory it cannot remove is said and not
+		// raised: a deploy must not fail over one.
+		try {
+			$pruned = ProjectBuilder::pruneOrphans();
+
+			if ($pruned > 0) {
+				$cli->info(\sprintf('Removed the build output of %d release(s) no longer on disk.', $pruned));
+			}
+		} catch (Throwable $t) {
+			$cli->error(
+				'Unable to remove the build output of the releases that are gone: ' . $t->getMessage(),
+				true,
+				null
+			);
 		}
 
 		if (!OZone::inProductionMode()) {

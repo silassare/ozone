@@ -168,8 +168,9 @@ class Env
 			throw new RuntimeException(\sprintf('Unable to read the env file "%s".', $path));
 		}
 
-		// Next to the file: in its project's .ozone/, even for a .env linked from a shared directory.
-		$dir       = InstanceLayout::buildPath(\dirname($path), InstanceLayout::BUILD_ENV);
+		// Next to the file: in its release's build directory, even for a .env linked from a shared
+		// directory. The name is the env file's path, so a scope with its own .env gets its own copy.
+		$dir       = InstanceLayout::releaseBuildPath(\dirname($path), InstanceLayout::BUILD_ENV);
 		$name      = \hash('xxh128', $path);
 		$signature = \hash('xxh128', $content);
 		$file      = $dir . DS . $name . '.' . $signature . '.php';

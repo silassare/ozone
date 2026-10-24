@@ -147,13 +147,13 @@ final class ProjectBuilder
 	}
 
 	/**
-	 * The file listing what a release preloads.
+	 * The file listing what a release preloads, in that release's build directory.
 	 *
 	 * @param string $root the release: the real path of its project directory
 	 */
 	public static function preloadListFor(string $root): string
 	{
-		return InstanceLayout::buildPath($root, 'preload.' . \hash('xxh128', $root) . '.php');
+		return InstanceLayout::releaseBuildPath($root, 'preload.php');
 	}
 
 	/**
@@ -212,7 +212,7 @@ final class ProjectBuilder
 				$base = \dirname(__DIR__);
 				$live = \is_link($base . '/%s') && \is_dir($base . '/%s') ? \realpath($base . '/%s') : false;
 				$root = false === $live ? $base : $live;
-				$list = __DIR__ . '/%s/preload.' . \hash('xxh128', $root) . '.php';
+				$list = __DIR__ . '/%s/' . \hash('xxh128', $root) . '/preload.php';
 
 				if (\is_file($list)) {
 					foreach ((array) require $list as $file) {
@@ -232,16 +232,22 @@ final class ProjectBuilder
 	/**
 	 * Removes what builds and requests compiled: the next ones compile it again.
 	 *
-	 * Only the build output of this release, never `.ozone/cache/`, which holds what requests filled
-	 * on demand and which no build wrote. The preload script stays, since PHP refuses to start when
-	 * `opcache.preload` points to nothing, and so do the preload lists of other releases: none of
-	 * them is compiled again by a request.
+	 * This release's build directory and nothing else: never `.ozone/cache/`, which holds what
+	 * requests filled on demand and which no build wrote, and never another release's, which this
+	 * one has no business touching -- a live release whose compiled settings and class map were
+	 * removed under it recompiles them mid-request, and the window where the file is gone is a
+	 * window where it fails.
+	 *
+	 * The generated ORM classes are left alone although a build writes them, because nothing
+	 * regenerates them on demand: `oz db build` does, and a request that needs a missing one only
+	 * fails. The preload script stays too, since PHP refuses to start when `opcache.preload` points
+	 * to nothing.
 	 *
 	 * @return int the files removed
 	 */
 	public static function clear(): int
 	{
-		$build = InstanceLayout::buildPath(self::root()) . DS;
+		$build = InstanceLayout::releaseBuildPath(self::root()) . DS;
 		$files = [
 			...\glob($build . InstanceLayout::BUILD_ENV . DS . '*.php') ?: [],
 			...\glob($build . InstanceLayout::BUILD_SETTINGS . DS . '*.php') ?: [],
@@ -258,6 +264,71 @@ final class ProjectBuilder
 		}
 
 		return \count($files);
+	}
+
+	/**
+	 * Removes the build directories of releases that are gone.
+	 *
+	 * Only in a deploy root, where `.ozone/` is shared: a pruned release leaves its build directory
+	 * behind and nothing else would ever remove it. What a release still on disk compiled is kept,
+	 * whatever state that release is in -- it may be the live one, or the one a rollback goes back
+	 * to -- and so is anything in `build/` that is not a release directory, which is what a
+	 * deployment made before build output was keyed left there and what a release still running the
+	 * older OZone reads.
+	 *
+	 * This runs as a step of a release, before the release that follows it prunes anything, so it
+	 * collects what an earlier deploy removed: one deploy's worth of build output is orphaned at a
+	 * time, never more. Pruning here and not in the deploy's own prune step is deliberate -- a
+	 * project that is not deployed this way still has one release, itself, and nothing to remove.
+	 *
+	 * @param null|string $root the release to prune around, this one by default
+	 *
+	 * @return int the directories removed
+	 */
+	public static function pruneOrphans(?string $root = null): int
+	{
+		$root = null === $root ? self::root() : (\realpath($root) ?: $root);
+		$dir  = \dirname(\rtrim($root, '/\\'));
+
+		// A release sits in `{deploy root}/releases/{name}`; anything else is a project of its own,
+		// which owns the whole of `build/` and has nothing to prune.
+		if (ReleaseLayout::RELEASES !== \basename($dir) || !ReleaseLayout::isDeployRoot($deploy = \dirname($dir))) {
+			return 0;
+		}
+
+		$keep = [];
+
+		foreach (ReleaseLayout::releases($deploy) as $release) {
+			$keep[InstanceLayout::releaseKey(ReleaseLayout::releaseDir($deploy, $release))] = true;
+		}
+
+		// Whatever this build is for, even a release directory not listed yet.
+		$keep[InstanceLayout::releaseKey($root)] = true;
+
+		$build   = InstanceLayout::buildPath($root);
+		$orphans = [];
+
+		foreach (\glob($build . DS . '*', \GLOB_ONLYDIR) ?: [] as $path) {
+			$name = \basename($path);
+
+			// A release key and nothing else: `env`, `settings`, `routes` and `plugins` directly
+			// under `build/` are what a deployment made before this keying left there.
+			if (!isset($keep[$name]) && \preg_match('#^[0-9a-f]{32}$#', $name)) {
+				$orphans[] = $name;
+			}
+		}
+
+		if (!$orphans) {
+			return 0;
+		}
+
+		$fm = new FilesManager($build);
+
+		foreach ($orphans as $name) {
+			$fm->rmdir($name);
+		}
+
+		return \count($orphans);
 	}
 
 	/**

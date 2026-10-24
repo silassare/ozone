@@ -158,7 +158,7 @@ check-full: cs lint
 cs:
 	$(RUN_FREE) vendor/bin/phpcs --parallel=$(PHPCS_JOBS) $(PHPCS_CACHE)
 
-## Generate OZone's ORM classes in .ozone/build/plugins/, which psalm reads
+## Generate OZone's ORM classes in .ozone/build/plugins/, the one fixed path psalm reads
 orm:
 	$(RUN_FREE) php tests/orm_build.php
 
