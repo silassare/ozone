@@ -25,6 +25,7 @@ use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Cron\CronRunner;
 use OZONE\Core\Cli\Utils\Requirements;
 use OZONE\Core\Cli\Utils\Utils;
+use OZONE\Core\Exceptions\Utils\ErrorUtils;
 use OZONE\Core\Lang\Message\PluralRules;
 use OZONE\Core\Lang\Polyglot;
 use OZONE\Core\Messaging\Messenger;
@@ -189,6 +190,20 @@ final class DoctorCmd extends Command
 				$writable ? '' : \sprintf('Make %s writable by the user running OZone.', $root)
 			);
 		}
+
+		// Whether an error raised while the project boots is logged at all. The autoloader registers the
+		// handlers when the boot file, the scope's index.php or `oz` has said a project is starting; a
+		// boot file edited into requiring the autoloader first says nothing, and everything until
+		// `bootstrap()` is then handled by PHP alone -- its own error log, never `.ozone/logs/`.
+		$early = ErrorUtils::registeredByTheAutoloader();
+
+		$checks[] = self::row(
+			'Boot-time errors',
+			$early ? self::OK : self::WARN,
+			$early ? 'logged (handlers registered by the autoloader)' : 'logged by PHP only',
+			$early ? '' : 'Define OZ_PROJECT_DIR in app/boot.php before it requires vendor/autoload.php,'
+				. ' as the generated boot file does.'
+		);
 
 		return \array_merge(
 			$checks,

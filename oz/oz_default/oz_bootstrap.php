@@ -15,11 +15,18 @@ use OZONE\Core\Exceptions\Utils\ErrorUtils;
 
 include_once __DIR__ . \DIRECTORY_SEPARATOR . 'oz_php_config.php';
 
-// Whether a project is booting: its boot file defines this before it requires the autoloader, and
-// `oz_define.php` below gives it a fallback, so the answer has to be read before that include. A tool
-// that only autoloads the package -- static analysis, the code style fixer, a build script -- defines
-// nothing and is left with its own error handling.
-$oz_booting_a_project = \defined('OZ_PROJECT_DIR');
+// Whether a project is booting, by any of the constants one sets before it requires the autoloader:
+// `OZ_PROJECT_DIR` and `OZ_APP_DIR` from its boot file, `OZ_SCOPE_NAME` from the scope's index.php,
+// `OZ_CLI_PROJECT` from `oz/index.php`. Several of them, because one is enough and a project whose
+// boot file was edited into another order still sets one of the others. `oz_define.php` below gives
+// three of them a fallback, so the answer has to be read before that include.
+//
+// A tool that only autoloads the package -- static analysis, the code style fixer, a build script --
+// sets none of them and is left with its own error handling and its own shutdown.
+$oz_booting_a_project = \defined('OZ_PROJECT_DIR')
+	|| \defined('OZ_APP_DIR')
+	|| \defined('OZ_SCOPE_NAME')
+	|| \defined('OZ_CLI_PROJECT');
 
 include_once __DIR__ . \DIRECTORY_SEPARATOR . 'oz_define.php';
 
@@ -30,5 +37,5 @@ include_once __DIR__ . \DIRECTORY_SEPARATOR . 'oz_func.php';
 // for them. An error there used to reach only PHP's own error log, and came back at the end of the run
 // as the last error with no reason attached, which reads like a failure at shutdown.
 if ($oz_booting_a_project) {
-	ErrorUtils::registerHandlers();
+	ErrorUtils::registerHandlers(true);
 }
