@@ -98,14 +98,19 @@ services:
       timeout: 5s
       retries: 30
 
+  # MinIO itself, rebuilt by Chainguard: `minio/minio` was removed from Docker Hub in September 2026
+  # and `quay.io/minio/minio` answers 401 to an anonymous pull, so neither can be fetched any more.
+  # The last free community build is also vulnerable (CVE-2026-40344, an authentication bypass in the
+  # Snowball auto-extract handler), which the rebuild carries the patch for. It runs as uid 65532 and
+  # carries no shell beyond `sh` and `mc`, hence the tmpfs ownership below.
   minio:
-    image: minio/minio
+    image: cgr.dev/chainguard/minio:latest
     command: server /data
     environment:
       MINIO_ROOT_USER: ozone
       MINIO_ROOT_PASSWORD: ozone-secret
     tmpfs:
-      - /data
+      - /data:uid=65532,gid=65532
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 2s
