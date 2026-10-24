@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\App;
 
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Settings;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -210,7 +211,9 @@ final class SettingsBundleTest extends TestCase
 
 	private static function cacheDir(): string
 	{
-		return \rtrim(app()->getProjectDir()->getRoot(), '/\\')
-			. \DIRECTORY_SEPARATOR . '.ozone' . \DIRECTORY_SEPARATOR . 'build' . \DIRECTORY_SEPARATOR . 'settings';
+		return InstanceLayout::releaseBuildPath(
+			app()->getProjectDir()->getRoot(),
+			InstanceLayout::BUILD_SETTINGS
+		);
 	}
 }

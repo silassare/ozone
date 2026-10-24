@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Cli\Build;
 
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Cli\Build\ProjectBuilder;
 use PHPUnit\Framework\TestCase;
 
@@ -89,18 +90,67 @@ final class ProjectBuilderTest extends TestCase
 		self::assertNull($this->preload());
 	}
 
+	public function testPruningRemovesTheBuildOutputOfReleasesThatAreGone(): void
+	{
+		// r1 is live, r2 is on disk, r3 was pruned by an earlier deploy.
+		foreach (['r1', 'r2', 'r3'] as $release) {
+			\mkdir($this->dir . '/releases/' . $release, 0o775, true);
+			\symlink($this->dir . '/.ozone', $this->dir . '/releases/' . $release . '/.ozone');
+			$this->writeList($this->dir . '/releases/' . $release, $release);
+		}
+
+		\symlink($this->dir . '/releases/r1', $this->dir . '/current');
+
+		$keyed = fn (string $release): string => $this->dir . '/.ozone/build/'
+			. InstanceLayout::releaseKey($this->dir . '/releases/' . $release);
+
+		$gone = $keyed('r3');
+		self::remove($this->dir . '/releases/r3');
+
+		// What a deployment made before build output was keyed, and what a release still running it
+		// reads: not a release directory, so not an orphan.
+		\mkdir($this->dir . '/.ozone/build/plugins/OZONE/Core/Db', 0o775, true);
+		\file_put_contents($this->dir . '/.ozone/build/plugins/OZONE/Core/Db/Old.php', "<?php\n");
+
+		self::assertSame(1, ProjectBuilder::pruneOrphans($this->dir . '/releases/r2'));
+
+		self::assertDirectoryDoesNotExist($gone);
+		self::assertDirectoryExists($keyed('r1'), 'the live release keeps what it compiled');
+		self::assertDirectoryExists($keyed('r2'), 'and so does the one being built');
+		self::assertFileExists($this->dir . '/.ozone/build/plugins/OZONE/Core/Db/Old.php');
+
+		// Idempotent: nothing is left to remove.
+		self::assertSame(0, ProjectBuilder::pruneOrphans($this->dir . '/releases/r2'));
+	}
+
+	public function testAProjectOutsideADeployRootPrunesNothing(): void
+	{
+		$this->writeList($this->dir, 'project');
+
+		self::assertSame(0, ProjectBuilder::pruneOrphans($this->dir));
+		self::assertFileExists(ProjectBuilder::preloadListFor($this->dir));
+	}
+
 	/**
 	 * A list recording that the preload script read it: it lists no file, so nothing is compiled.
 	 */
 	private function writeList(string $release, string $label): void
 	{
 		$file = ProjectBuilder::preloadListFor($release);
+		$dir  = \dirname($file);
 
-		// the list of a release is in the shared .ozone/, where the script looks for it
+		// as ProjectBuilder::write() creates it
+		if (!\is_dir($dir)) {
+			\mkdir($dir, 0o775, true);
+		}
+
+		// the list of a release is in the shared .ozone/, under that release's own directory, where
+		// the script looks for it
 		self::assertStringStartsWith(
 			$this->dir . '/.ozone/build/',
-			(string) \realpath(\dirname($file)) . '/'
+			(string) \realpath($dir) . '/'
 		);
+		self::assertSame(InstanceLayout::releaseKey($release), \basename($dir));
 
 		\file_put_contents(
 			$file,

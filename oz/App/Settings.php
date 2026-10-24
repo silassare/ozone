@@ -692,10 +692,9 @@ final class Settings
 		}
 
 		$root  = \rtrim(app()->getProjectDir()->getRoot(), '/\\');
-		$cache = InstanceLayout::buildPath($root, InstanceLayout::BUILD_SETTINGS);
+		$cache = InstanceLayout::releaseBuildPath($root, InstanceLayout::BUILD_SETTINGS);
 		$name  = \hash('xxh128', $dir);
 		$file  = $cache . DS . $name . '.' . \hash('xxh128', \serialize([
-			$root,
 			OZ_OZONE_VERSION,
 			app()->getEnv()->getSignature(),
 			\filemtime($dir),

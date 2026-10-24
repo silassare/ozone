@@ -527,18 +527,19 @@ final class OZone
 	}
 
 	/**
-	 * The class map of this release, written by `oz project build`: in the app's project directory,
-	 * named after it (a deployment makes a new one) and OZone's version.
+	 * The class map of this release, written by `oz project build`: in this release's build directory
+	 * ({@see InstanceLayout::releaseBuildPath()}), named after OZone's version.
+	 *
+	 * The release is the directory, so the file name carries only what invalidates the map: an OZone
+	 * that moved a class leaves the map it was built from untouched, under a name nothing reads.
 	 *
 	 * @internal
 	 */
 	public static function classMapFile(): string
 	{
-		$root = \rtrim(app()->getProjectDir()->getRoot(), '/\\');
-
-		return InstanceLayout::buildPath(
-			$root,
-			'classmap.' . \hash('xxh128', $root . "\0" . OZ_OZONE_VERSION) . '.php'
+		return InstanceLayout::releaseBuildPath(
+			app()->getProjectDir()->getRoot(),
+			'classmap.' . \hash('xxh128', OZ_OZONE_VERSION) . '.php'
 		);
 	}
 
@@ -593,14 +594,13 @@ final class OZone
 		$app   = app();
 		$scope = scope();
 		$key   = \hash('xxh128', \serialize([
-			OZ_PROJECT_DIR,
 			OZ_OZONE_VERSION,
 			$providers,
 			@\filemtime(StateLayout::path($app, StateLayout::SETTINGS)),
 			@\filemtime(StateLayout::path($scope, StateLayout::SETTINGS)),
 		]));
 
-		return InstanceLayout::buildPath(
+		return InstanceLayout::releaseBuildPath(
 			$app->getProjectDir()->getRoot(),
 			InstanceLayout::BUILD_ROUTES,
 			$scope->getStateSlug(),

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Utils;
 
+use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Utils\Env;
 use PHPUnit\Framework\TestCase;
 use PHPUtils\Env\EnvParser;
@@ -117,9 +118,10 @@ final class EnvCompiledTest extends TestCase
 	 */
 	private static function compiledCopies(string $file): array
 	{
-		$ds  = \DIRECTORY_SEPARATOR;
-		$dir = \dirname($file) . $ds . '.ozone' . $ds . 'build' . $ds . 'env';
+		// Under the release's build directory, where Env writes it: the env file's own directory is
+		// the release, even when the file is linked there from a deploy root's shared one.
+		$dir = InstanceLayout::releaseBuildPath(\dirname($file), InstanceLayout::BUILD_ENV);
 
-		return \glob($dir . $ds . \hash('xxh128', $file) . '.*.php') ?: [];
+		return \glob($dir . \DIRECTORY_SEPARATOR . \hash('xxh128', $file) . '.*.php') ?: [];
 	}
 }
