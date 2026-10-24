@@ -146,6 +146,36 @@ final class ProjectBuildTest extends TestCase
 		}
 	}
 
+	public function testWhatAScopeBuildPrintsBesidesItsReportIsReported(): void
+	{
+		$boot     = self::$proj->getPath() . '/app/boot.php';
+		$original = (string) \file_get_contents($boot);
+
+		// Each scope is built in a process of its own and its output used to be read for the report
+		// and dropped. PHP puts a warning it raises while no handler is installed on one of these two.
+		self::$proj->writeFile(
+			'app/boot.php',
+			$original . \PHP_EOL
+				. "\\fwrite(\\STDOUT, 'OZ-NOISE-OUT' . \\PHP_EOL);" . \PHP_EOL
+				. "\\fwrite(\\STDERR, 'OZ-NOISE-ERR' . \\PHP_EOL);" . \PHP_EOL
+		);
+
+		try {
+			$proc = self::$proj->oz('project', 'build', '--skip-orm', '--no-preload');
+			$proc->mustRun();
+
+			$out = $proc->getOutput() . $proc->getErrorOutput();
+
+			self::assertStringContainsString('scope "api" said: OZ-NOISE-OUT', $out, $out);
+			self::assertStringContainsString('scope "api" said: OZ-NOISE-ERR', $out, $out);
+
+			// Still a successful build: what the process said is reported, not turned into a failure.
+			self::assertStringContainsString('settings bundles', $out, $out);
+		} finally {
+			self::$proj->writeFile('app/boot.php', $original);
+		}
+	}
+
 	/**
 	 * The statuses of the build checks of `oz doctor check`.
 	 *
@@ -166,9 +196,6 @@ final class ProjectBuildTest extends TestCase
 		);
 	}
 
-	/**
-	 * @return string[]
-	 */
 	/**
 	 * Files matching a pattern under this release's build directory, where every build output goes.
 	 *

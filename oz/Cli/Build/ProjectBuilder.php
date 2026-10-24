@@ -58,7 +58,19 @@ final class ProjectBuilder
 	/**
 	 * Builds a scope, in a process of its own.
 	 *
-	 * @return array{scope: string, production: bool, settings_bundles: int, preload: list<string>}
+	 * `diagnostics` holds what that process printed besides its report, stdout and stderr together.
+	 * A build that succeeds while printing something used to say nothing at all: PHP writes a startup
+	 * warning, or one raised while no error handler of ours is installed, to one of those two streams,
+	 * and dropping them left the last error at shutdown as the only trace, without the line that says
+	 * why.
+	 *
+	 * @return array{
+	 *     scope: string,
+	 *     production: bool,
+	 *     settings_bundles: int,
+	 *     preload: list<string>,
+	 *     diagnostics: list<string>,
+	 * }
 	 *
 	 * @throws JsonException
 	 */
@@ -85,7 +97,38 @@ final class ProjectBuilder
 			));
 		}
 
-		return \json_decode($last, true, 512, \JSON_THROW_ON_ERROR);
+		/** @var array{scope: string, production: bool, settings_bundles: int, preload: list<string>} $report */
+		$report = \json_decode($last, true, 512, \JSON_THROW_ON_ERROR);
+
+		// the report is the last line of stdout; whatever came before it, the process had to say
+		\array_pop($lines);
+
+		$report['diagnostics'] = self::diagnostics($lines, $process->getErrorOutput());
+
+		return $report;
+	}
+
+	/**
+	 * The lines a scope build printed that are not its report.
+	 *
+	 * @param list<string> $out stdout without its last line, the report
+	 * @param string       $err stderr
+	 *
+	 * @return list<string>
+	 */
+	private static function diagnostics(array $out, string $err): array
+	{
+		$kept = [];
+
+		foreach ([...$out, ...(\preg_split('~\R~', $err) ?: [])] as $line) {
+			$line = \trim($line);
+
+			if ('' !== $line) {
+				$kept[] = $line;
+			}
+		}
+
+		return $kept;
 	}
 
 	/**
