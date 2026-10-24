@@ -35,6 +35,11 @@ class ErrorUtils
 	public const string REDACTED = '[redacted]';
 
 	/**
+	 * The error codes PHP does not call an error handler for, and that end the process.
+	 */
+	private const array FATAL_CODES = [\E_ERROR, \E_PARSE, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR];
+
+	/**
 	 * Masks the values of secret-looking keys, recursively, when redaction is enabled
 	 * (see {@see self::isRedactionEnabled()}).
 	 *
@@ -247,17 +252,25 @@ class ErrorUtils
 		self::optionalApp()
 			?->onUnhandledError($code, $message, $file, $line);
 
-		if ($die_on_fatal) {
-			$fatalist = [\E_ERROR, \E_PARSE, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR];
-
-			if (\in_array($code, $fatalist, true) && !self::mustNotUnwind()) {
-				self::criticalDieMessage();
-			}
+		if ($die_on_fatal && \in_array($code, self::FATAL_CODES, true) && !self::mustNotUnwind()) {
+			self::criticalDieMessage();
 		}
 	}
 
 	/**
 	 * Try to log error after shutdown.
+	 *
+	 * Only an error the error handler never saw can reach here. The handler returns `null`, which
+	 * tells PHP the error is handled and keeps it out of `error_get_last()`, so what is left is
+	 * either a fatal -- the handler is not called for one -- or an error raised while no handler of
+	 * ours was installed: before {@see self::registerHandlers()} ran, or inside a block that swapped
+	 * in its own. Which of the two it is goes in the line, because a non-fatal here did **not** happen
+	 * at shutdown, and reading it as if it did sends the next reader to the wrong end of the run.
+	 *
+	 * PHP keeps only the last diagnostic, and some come in pairs: a failed `include` reports
+	 * `Failed to open stream: <reason>` and then `Failed opening '...' for inclusion`, and only the
+	 * second is here. The first, the one that says why, went to PHP's own error log, since ours was
+	 * not handling errors yet.
 	 */
 	private static function shutdownErrorFunction(): void
 	{
@@ -269,7 +282,13 @@ class ErrorUtils
 				self::errorCodeToLogLevel($code),
 				'::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
 					. \PHP_EOL
-					. 'OZone shutdown error'
+					. (\in_array($code, self::FATAL_CODES, true)
+						? 'OZone shutdown error'
+						: 'OZone error raised while no error handler of ours was installed:'
+							. ' before they were registered, or inside a block that swapped in its own.'
+							. ' It did not happen at shutdown, PHP only kept it as the last error.'
+							. ' Where a diagnostic comes in a pair only the second is kept, so the reason'
+							. ' is in PHP\'s own error log, not here.')
 					. \PHP_EOL . '::::::::::::::::::::::::'
 			);
 			self::errorHandler($code, $error['message'], $error['file'], $error['line'], true);
