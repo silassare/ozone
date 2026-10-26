@@ -150,10 +150,11 @@ class RedisStore implements StoreDriverInterface
 		if (null !== $expire) {
 			$ttl_ms = (int) \max(1, ($expire - \microtime(true)) * 1000);
 
-			return RedisFactory::get()->set($redis_key, $raw, ['px' => $ttl_ms]);
+			// `true`, not a cast: see RedisJobStore::lock().
+			return true === RedisFactory::get()->set($redis_key, $raw, ['px' => $ttl_ms]);
 		}
 
-		return RedisFactory::get()->set($redis_key, $raw);
+		return true === RedisFactory::get()->set($redis_key, $raw);
 	}
 
 	/**

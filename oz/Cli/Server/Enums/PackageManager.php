@@ -104,12 +104,12 @@ enum PackageManager: string
 	public function phpExtensionPackage(string $extension): ?string
 	{
 		return match ($this) {
-			// Debian and Ubuntu: pdo, json, openssl, posix, fileinfo and libxml are in php-cli;
-			// the XML extensions come together in php-xml.
+			// Debian and Ubuntu: pdo, json, openssl, posix, fileinfo and libxml are in the command
+			// line package; the XML extensions come together in one `-xml` package.
 			self::APT => match ($extension) {
 				'pdo', 'json', 'openssl', 'posix', 'fileinfo', 'libxml' => null,
-				'simplexml', 'dom', 'xml'                               => 'php-xml',
-				default                                                 => 'php-' . $extension,
+				'simplexml', 'dom', 'xml'                               => self::aptPrefix() . '-xml',
+				default                                                 => self::aptPrefix() . '-' . $extension,
 			},
 			// Fedora: posix lives in php-process, the XML extensions in php-xml, and the rest of
 			// what OZone needs is in php-common.
@@ -149,11 +149,29 @@ enum PackageManager: string
 	}
 
 	/**
+	 * The APT package prefix for the running PHP series, e.g. `php8.5`.
+	 *
+	 * Versioned deliberately. The unversioned meta-package follows the distribution's default
+	 * series, which on a distribution that has not caught up is older than OZone's minimum -- and
+	 * stays older once a PHP repository is added, because that repository's own meta-package tracks
+	 * the same default: on Debian 13 with deb.sury.org, `php-cli` is 8.4 while `php8.5-cli` is 8.5.
+	 * Naming the series is what makes the install deterministic.
+	 */
+	public static function aptPrefix(): string
+	{
+		return 'php' . \PHP_MAJOR_VERSION . '.' . \PHP_MINOR_VERSION;
+	}
+
+	/**
 	 * The PHP command line binary the packages install: Alpine's carries the series (`php84`).
 	 */
 	public function phpBinary(): string
 	{
-		return self::APK === $this ? self::alpinePrefix() : 'php';
+		return match ($this) {
+			self::APK => self::alpinePrefix(),
+			self::APT => self::aptPrefix(),
+			default   => 'php',
+		};
 	}
 
 	/**
@@ -163,7 +181,8 @@ enum PackageManager: string
 	public function phpCliPackage(): string
 	{
 		return match ($this) {
-			self::APT, self::DNF, self::UNKNOWN => 'php-cli',
+			self::APT                           => self::aptPrefix() . '-cli',
+			self::DNF, self::UNKNOWN            => 'php-cli',
 			self::APK                           => self::alpinePrefix(),
 			// One package with everything.
 			self::PACMAN, self::BREW            => 'php',
@@ -176,10 +195,28 @@ enum PackageManager: string
 	public function phpFpmPackage(): string
 	{
 		return match ($this) {
-			self::APT, self::DNF, self::PACMAN, self::UNKNOWN => 'php-fpm',
-			self::APK                                         => self::alpinePrefix() . '-fpm',
+			self::APT                                => self::aptPrefix() . '-fpm',
+			self::DNF, self::PACMAN, self::UNKNOWN   => 'php-fpm',
+			self::APK                                => self::alpinePrefix() . '-fpm',
 			// Homebrew's `php` formula includes php-fpm.
-			self::BREW                                        => 'php',
+			self::BREW                               => 'php',
+		};
+	}
+
+	/**
+	 * The service name of PHP-FPM, which is not always its package name.
+	 *
+	 * Debian and Ubuntu name both after the series (`php8.5-fpm`); Alpine installs the package
+	 * `php85-fpm` but its init script is `php-fpm85`, the other way round. Verified against
+	 * alpine:3 and a sury `php8.5-fpm` package (`usr/lib/systemd/system/php8.5-fpm.service`).
+	 */
+	public function phpFpmService(): string
+	{
+		return match ($this) {
+			self::APT                              => self::aptPrefix() . '-fpm',
+			self::APK                              => 'php-fpm' . \PHP_MAJOR_VERSION . \PHP_MINOR_VERSION,
+			self::DNF, self::PACMAN, self::UNKNOWN => 'php-fpm',
+			self::BREW                             => 'php',
 		};
 	}
 

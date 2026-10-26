@@ -32,6 +32,19 @@ final readonly class Provisioner
 	public const string MODE_BARE   = 'bare';
 	public const string MODE_DOCKER = 'docker';
 
+	/**
+	 * The PHP repository used where a distribution's own PHP is older than OZone's minimum.
+	 *
+	 * Debian and Ubuntu ship one series per release and it is often behind -- Debian 13 has 8.4 --
+	 * while `deb.sury.org` carries every supported series for both. The keyring goes in a file of
+	 * its own and the source trusts that file alone (`Signed-By`), so it signs nothing else, and the
+	 * download is checked against the digest rather than trusted for having arrived over TLS.
+	 */
+	public const string PHP_REPO_KEY_URL = 'https://packages.sury.org/php/apt.gpg';
+	public const string PHP_REPO_KEY_SHA256 = 'b486fd5488185c4c46467960fa69c53d5085fec492cf76b9eaf3db33561c9d7c';
+	public const string PHP_REPO_KEYRING = '/usr/share/keyrings/debsuryorg-archive-keyring.gpg';
+	public const string PHP_REPO_SOURCES = '/etc/apt/sources.list.d/php.sources';
+
 	public const array WEB_SERVERS = ['nginx', 'apache', 'caddy', 'none'];
 	public const array DATABASES   = ['mysql', 'postgresql', 'none'];
 
@@ -111,6 +124,46 @@ final readonly class Provisioner
 	}
 
 	/**
+	 * Adds the PHP repository when the distribution does not carry the series OZone runs on.
+	 *
+	 * Nothing is added when it does: a server whose own index has the packages gets no third-party
+	 * source. {@see self::PHP_REPO_KEY_URL} for what is trusted and how.
+	 */
+	private function phpRepositoryStep(): ProvisionStep
+	{
+		$cli = $this->manager->phpCliPackage();
+
+		return new ProvisionStep(
+			'php:repository',
+			\sprintf('A repository carrying %s, when the distribution does not.', $cli),
+			[\sprintf(
+				'if apt-cache policy %1$s 2>/dev/null | grep -q \'Candidate: [0-9]\'; then' . \PHP_EOL
+				. '  echo "%1$s is in the distribution index: no PHP repository added."' . \PHP_EOL
+				. 'else' . \PHP_EOL
+				. '  %2$s' . \PHP_EOL
+				. '  wget -qO %3$s.new %4$s || { echo "Cannot fetch %4$s." >&2; exit 1; }' . \PHP_EOL
+				. '  echo "%5$s  %3$s.new" | sha256sum -c - >/dev/null 2>&1 || {' . \PHP_EOL
+				. '    rm -f %3$s.new;' . \PHP_EOL
+				. '    echo "The key at %4$s is not the one OZone pins (%5$s)." >&2;' . \PHP_EOL
+				. '    exit 1; }' . \PHP_EOL
+				. '  mv %3$s.new %3$s' . \PHP_EOL
+				. '  . /etc/os-release' . \PHP_EOL
+				. '  printf \'Types: deb\\nURIs: %6$s\\nSuites: %%s\\nComponents: main\\nSigned-By: %3$s\\n\''
+				. ' "$VERSION_CODENAME" > %7$s' . \PHP_EOL
+				. '  apt-get update -qq' . \PHP_EOL
+				. 'fi',
+				$cli,
+				$this->manager->installCommand(['ca-certificates', 'wget']),
+				self::PHP_REPO_KEYRING,
+				self::PHP_REPO_KEY_URL,
+				self::PHP_REPO_KEY_SHA256,
+				\dirname(self::PHP_REPO_KEY_URL) . '/',
+				self::PHP_REPO_SOURCES,
+			)],
+		);
+	}
+
+	/**
 	 * PHP-FPM, a web server, a database and Redis, installed on the host.
 	 */
 	private function planBare(ProvisionPlan $plan): void
@@ -124,6 +177,10 @@ final readonly class Provisioner
 			if (null !== $package) {
 				$packages[] = $package;
 			}
+		}
+
+		if (PackageManager::APT === $this->manager) {
+			$plan->add($this->phpRepositoryStep());
 		}
 
 		$plan->add(new ProvisionStep(
@@ -142,7 +199,8 @@ final readonly class Provisioner
 			\sprintf('PHP %s or newer, which OZone needs: the distribution\'s is checked.', $min),
 			[\sprintf(
 				'%1$s -r %2$s %3$s || { echo "OZone needs PHP %3$s or newer, this server has $(%1$s -r %4$s):'
-				. ' its distribution ships an older one. Use Debian 13, Ubuntu 24.04 or a current Alpine." >&2;'
+				. ' its distribution ships an older one and no repository carrying %3$s was added.'
+				. ' Use a distribution whose PHP is %3$s or newer, or add a repository that has it." >&2;'
 				. ' exit 1; }',
 				$php,
 				\escapeshellarg('exit(version_compare(PHP_VERSION, $argv[1], ">=") ? 0 : 1);'),
@@ -151,7 +209,7 @@ final readonly class Provisioner
 			)],
 		));
 
-		$services = ['php-fpm'];
+		$services = [$this->manager->phpFpmService()];
 
 		if ('none' !== $this->web_server) {
 			$package = (string) $this->manager->servicePackage($this->web_server);

@@ -8,7 +8,7 @@
 #
 # Built by docker/compose.yaml; use it through the Makefile (`make test`, `make shell`, ...).
 
-ARG PHP_VERSION=8.4
+ARG PHP_VERSION=8.5
 
 FROM php:${PHP_VERSION}-cli
 

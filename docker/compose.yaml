@@ -12,8 +12,8 @@ services:
     build:
       context: ./php
       args:
-        PHP_VERSION: ${OZ_PHP_VERSION:-8.4}
-    image: ozone-dev-php:${OZ_PHP_VERSION:-8.4}
+        PHP_VERSION: ${OZ_PHP_VERSION:-8.5}
+    image: ozone-dev-php:${OZ_PHP_VERSION:-8.5}
     # The host user, so files written in the repository stay theirs (set by the Makefile).
     user: "${OZ_UID:-1000}:${OZ_GID:-1000}"
     working_dir: /ozone
@@ -142,8 +142,8 @@ services:
       context: ./runtimes
       target: frankenphp
       args:
-        PHP_VERSION: ${OZ_PHP_VERSION:-8.4}
-    image: ozone-dev-frankenphp:${OZ_PHP_VERSION:-8.4}
+        PHP_VERSION: ${OZ_PHP_VERSION:-8.5}
+    image: ozone-dev-frankenphp:${OZ_PHP_VERSION:-8.5}
     user: "${OZ_UID:-1000}:${OZ_GID:-1000}"
     working_dir: /ozone
     volumes:
@@ -170,8 +170,8 @@ services:
       context: ./runtimes
       target: roadrunner
       args:
-        PHP_VERSION: ${OZ_PHP_VERSION:-8.4}
-    image: ozone-dev-roadrunner:${OZ_PHP_VERSION:-8.4}
+        PHP_VERSION: ${OZ_PHP_VERSION:-8.5}
+    image: ozone-dev-roadrunner:${OZ_PHP_VERSION:-8.5}
     environment:
       HOME: /tmp
       OZ_TEST_SERVER_SANDBOX: /tmp/oz_server_sandbox
@@ -186,8 +186,8 @@ services:
       context: ./runtimes
       target: swoole
       args:
-        PHP_VERSION: ${OZ_PHP_VERSION:-8.4}
-    image: ozone-dev-swoole:${OZ_PHP_VERSION:-8.4}
+        PHP_VERSION: ${OZ_PHP_VERSION:-8.5}
+    image: ozone-dev-swoole:${OZ_PHP_VERSION:-8.5}
     environment:
       HOME: /tmp
       OZ_TEST_SERVER_SANDBOX: /tmp/oz_server_sandbox

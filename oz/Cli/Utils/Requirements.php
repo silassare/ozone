@@ -43,7 +43,7 @@ final class Requirements
 	{
 		\preg_match('~(\d+\.\d+(?:\.\d+)?)~', self::phpConstraint(), $m);
 
-		return $m[1] ?? '8.3';
+		return $m[1] ?? '8.5';
 	}
 
 	/**

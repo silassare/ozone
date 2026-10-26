@@ -7,7 +7,7 @@
 # Built by docker/compose.yaml (profile `runtimes`), one target per server. php.ini is copied last in
 # each target, so editing it never rebuilds the extensions (Swoole compiles from source).
 
-ARG PHP_VERSION=8.4
+ARG PHP_VERSION=8.5
 
 FROM dunglas/frankenphp:1-php${PHP_VERSION} AS frankenphp
 

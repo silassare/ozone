@@ -13,14 +13,14 @@
 	],
 	"config": {
 		"platform": {
-			"php": "8.3.36"
+			"php": "8.5.12"
 		},
 		"allow-plugins": {
 			"dealerdirect/phpcodesniffer-composer-installer": true
 		}
 	},
 	"require": {
-		"php": ">=8.3",
+		"php": ">=8.5",
 		"ext-pdo": "*",
 		"ext-openssl": "*",
 		"ext-json": "*",

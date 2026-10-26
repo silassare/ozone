@@ -68,7 +68,7 @@ PSALM_CACHE ?=
 
 # = Environment
 
-## Build the PHP image (OZ_PHP_VERSION=8.3 make docker-build for another PHP version)
+## Build the PHP image (OZ_PHP_VERSION=8.4 make docker-build for another PHP version)
 docker-build:
 	$(DOCKER_COMPOSE) build php
 

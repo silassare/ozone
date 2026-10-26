@@ -314,7 +314,9 @@ class RedisJobStore implements JobStoreInterface
 	#[Override]
 	public function lock(JobContractInterface $job_contract): bool
 	{
-		return $this->redis()->set(
+		// `true`, not a cast: the extension answers `SET` with the old value when asked for it
+		// (`GET`) and with itself in a pipeline, and neither of those is a lock we hold.
+		return true === $this->redis()->set(
 			$this->lockKey($job_contract->getRef()),
 			'1',
 			['EX' => self::LOCK_TTL, 'NX']

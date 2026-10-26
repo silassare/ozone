@@ -10,7 +10,7 @@
 # the framework's ORM (Eloquent, Doctrine), from SQLite; OZone serves the repository mounted at /ozone
 # (tests/Support/Servers/, docker/bench/ozone/seed.php). Built by docker/bench/compose.yaml.
 
-ARG PHP_VERSION=8.4
+ARG PHP_VERSION=8.5
 
 FROM dunglas/frankenphp:1-php${PHP_VERSION} AS base
 
