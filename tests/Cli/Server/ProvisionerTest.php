@@ -108,7 +108,7 @@ final class ProvisionerTest extends TestCase
 		$php      = self::stepCommands($plan, 'php');
 
 		self::assertCount(1, $php);
-		self::assertStringContainsString("'php-fpm'", $php[0]);
+		self::assertStringContainsString("'" . PackageManager::aptPrefix() . "-fpm'", $php[0]);
 
 		foreach (Requirements::extensions() as $extension) {
 			$package = PackageManager::APT->phpExtensionPackage($extension);
@@ -124,9 +124,9 @@ final class ProvisionerTest extends TestCase
 	}
 
 	/**
-	 * The failure a real Debian container caught: `php-json`, `php-pdo`, `php-openssl`,
-	 * `php-posix`, `php-fileinfo` and `php-libxml` are not packages -- they are built into
-	 * `php-cli`, and asking apt for them aborts the whole install.
+	 * The failure a real Debian container caught: there are no `-json`, `-pdo`, `-openssl`,
+	 * `-posix`, `-fileinfo` or `-libxml` packages -- they are built into the command line package,
+	 * and asking apt for them aborts the whole install.
 	 *
 	 * @dataProvider provideAptNeverAsksForAnExtensionBuiltIntoPhpCases
 	 */
@@ -136,7 +136,7 @@ final class ProvisionerTest extends TestCase
 
 		$command = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'php')[0];
 
-		self::assertStringNotContainsString("'php-" . $extension . "'", $command);
+		self::assertStringNotContainsString("'" . PackageManager::aptPrefix() . '-' . $extension . "'", $command);
 	}
 
 	public static function provideAptNeverAsksForAnExtensionBuiltIntoPhpCases(): iterable
@@ -153,12 +153,71 @@ final class ProvisionerTest extends TestCase
 
 	public function testAptGroupsTheXmlExtensionsIntoPhpXml(): void
 	{
-		self::assertSame('php-xml', PackageManager::APT->phpExtensionPackage('simplexml'));
+		$prefix = PackageManager::aptPrefix();
+
+		self::assertSame($prefix . '-xml', PackageManager::APT->phpExtensionPackage('simplexml'));
 
 		$command = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'php')[0];
 
-		self::assertStringContainsString("'php-xml'", $command);
-		self::assertStringNotContainsString("'php-simplexml'", $command);
+		self::assertStringContainsString("'" . $prefix . "-xml'", $command);
+		self::assertStringNotContainsString("'" . $prefix . "-simplexml'", $command);
+	}
+
+	/**
+	 * Debian and Ubuntu get the series named too, not the unversioned meta-package: that one follows
+	 * the distribution's default series, and keeps following it after a PHP repository is added.
+	 */
+	public function testAptPackagesCarryThePhpSeries(): void
+	{
+		$prefix  = PackageManager::aptPrefix();
+		$command = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'php')[0];
+
+		self::assertMatchesRegularExpression('~^php\d+\.\d+$~', $prefix);
+		self::assertStringContainsString("'" . $prefix . "-cli'", $command);
+		self::assertStringContainsString("'" . $prefix . "-fpm'", $command);
+		self::assertStringNotContainsString("'php-cli'", $command, 'the unversioned one follows the distribution');
+		self::assertStringNotContainsString("'php-fpm'", $command);
+	}
+
+	/**
+	 * The service is not always the package: Debian names both after the series, Alpine installs
+	 * `php85-fpm` and starts `php-fpm85`.
+	 */
+	public function testThePhpFpmServiceIsNamedAsEachManagerNamesIt(): void
+	{
+		self::assertSame(PackageManager::aptPrefix() . '-fpm', PackageManager::APT->phpFpmService());
+		self::assertSame('php-fpm' . \PHP_MAJOR_VERSION . \PHP_MINOR_VERSION, PackageManager::APK->phpFpmService());
+		self::assertSame('php-fpm', PackageManager::DNF->phpFpmService());
+
+		$enable = self::stepCommands((new Provisioner(PackageManager::APK))->plan(), 'services:enable');
+
+		self::assertStringContainsString(PackageManager::APK->phpFpmService(), \implode(' ', $enable));
+	}
+
+	/**
+	 * Added only for apt, only when the distribution has nothing to offer, and pinned to a digest
+	 * rather than trusted for arriving over TLS.
+	 */
+	public function testThePhpRepositoryIsAddedForAptOnlyAndIsPinned(): void
+	{
+		$names = self::stepNames((new Provisioner(PackageManager::APT))->plan());
+
+		// Before PHP is installed, since it is where the packages come from.
+		self::assertSame('php:repository', $names[\array_search('php', $names, true) - 1]);
+		self::assertNotContains('php:repository', self::stepNames((new Provisioner(PackageManager::APK))->plan()));
+
+		$command = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'php:repository')[0];
+
+		// Nothing is added when the distribution already carries the series.
+		self::assertStringContainsString('apt-cache policy ' . PackageManager::aptPrefix() . '-cli', $command);
+		self::assertStringContainsString(Provisioner::PHP_REPO_KEY_SHA256, $command);
+		self::assertStringContainsString('sha256sum -c -', $command);
+		self::assertStringContainsString('Signed-By: ' . Provisioner::PHP_REPO_KEYRING, $command);
+		self::assertStringContainsString('$VERSION_CODENAME', $command);
+
+		// Never the whole trust store: the source trusts that one keyring and nothing else.
+		self::assertStringNotContainsString('apt-key', $command);
+		self::assertStringNotContainsString('trusted=yes', $command);
 	}
 
 	public function testAlpinePackagesCarryThePhpSeries(): void
@@ -265,8 +324,12 @@ final class ProvisionerTest extends TestCase
 		$apt    = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'php:version')[0];
 		$alpine = self::stepCommands((new Provisioner(PackageManager::APK))->plan(), 'php:version')[0];
 
-		self::assertStringStartsWith("php -r 'exit(version_compare(PHP_VERSION, \$argv[1], \">=\") ? 0 : 1);' 8.3", $apt);
-		self::assertStringContainsString('OZone needs PHP 8.3 or newer', $apt);
+		self::assertStringStartsWith(
+			PackageManager::aptPrefix()
+				. " -r 'exit(version_compare(PHP_VERSION, \$argv[1], \">=\") ? 0 : 1);' 8.5",
+			$apt
+		);
+		self::assertStringContainsString('OZone needs PHP 8.5 or newer', $apt);
 		self::assertStringStartsWith(PackageManager::alpinePrefix() . ' -r ', $alpine);
 
 		// Which needs the command line: Alpine's FPM package does not bring it.

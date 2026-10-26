@@ -65,7 +65,7 @@
 
 ## 1. Architecture
 
-OZone is a PHP 8.3+ service-oriented REST API and web framework.
+OZone is a PHP 8.5+ service-oriented REST API and web framework.
 
 | Layer         | Location                                 | Purpose                                                            |
 | ------------- | ---------------------------------------- | ------------------------------------------------------------------ |
@@ -1154,7 +1154,7 @@ SQLite file apart.
 
 ## 22. Dependencies
 
-PHP 8.3+; MySQL by default (SQLite and PostgreSQL supported). Required extensions are in
+PHP 8.5+; MySQL by default (SQLite and PostgreSQL supported). Required extensions are in
 `composer.json` (`oz doctor check` checks them). Packages: `silassare/gobl` (ORM, DBAL, code generation),
 `silassare/kli` (CLI), `silassare/blate` (templates), `silassare/php-utils` (`Event`, `Store`,
 `PathUtils`, ...), `intervention/image` (images, only behind `FS\Images\Interfaces\ImageProcessorInterface`:

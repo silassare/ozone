@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Cli;
 
+use OZONE\Core\Cli\Server\Enums\PackageManager;
+use OZONE\Core\Cli\Server\Provisioner;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -40,28 +42,18 @@ use Symfony\Component\Process\Process;
 final class ServerProvisionTest extends TestCase
 {
 	/**
-	 * Per platform: the image, the package manager `detect()` must find, and the commands that give
-	 * the container a PHP able to run `oz` at all -- what the `install` script checks for.
+	 * Per platform: the image and the package manager `detect()` must find.
 	 *
-	 * @var array<string, array{image: string, manager: string, bootstrap: string}>
+	 * @var array<string, array{image: string, manager: string}>
 	 */
 	private const array PLATFORMS = [
 		'debian' => [
-			'image'     => 'debian:13-slim',
-			'manager'   => 'apt',
-			// php-mbstring included: Kli renders every table through mb_*.
-			'bootstrap' => 'apt-get update -qq'
-				. ' && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends'
-				. ' php-cli php-xml php-bcmath php-gd php-mbstring',
+			'image'   => 'debian:13-slim',
+			'manager' => 'apt',
 		],
 		'alpine' => [
-			'image'     => 'alpine:3',
-			'manager'   => 'apk',
-			// Alpine names its packages after the PHP series, and ships no unversioned `php`.
-			'bootstrap' => 'apk update --quiet'
-				. ' && apk add --no-cache php84 php84-xml php84-simplexml php84-bcmath php84-gd'
-				. ' php84-mbstring php84-posix php84-fileinfo php84-openssl php84-pdo'
-				. ' && ln -sf /usr/bin/php84 /usr/bin/php',
+			'image'   => 'alpine:3',
+			'manager' => 'apk',
 		],
 	];
 
@@ -247,7 +239,7 @@ final class ServerProvisionTest extends TestCase
 		// its calls; a service manager would need a privileged container. It goes in
 		// /usr/local/bin, which comes first on PATH and is not overwritten when a package pulls in
 		// systemd itself.
-		$prepare = self::exec($platform, $config['bootstrap']
+		$prepare = self::exec($platform, self::bootstrap($platform)
 			. ' && printf \'#!/bin/sh\necho "systemctl $*" >> /var/log/oz-systemctl.log\n\' > /usr/local/bin/systemctl'
 			. ' && chmod +x /usr/local/bin/systemctl');
 
@@ -273,6 +265,56 @@ final class ServerProvisionTest extends TestCase
 	private static function container(string $platform): string
 	{
 		return 'oz-test-provision-' . $platform;
+	}
+
+	/**
+	 * The commands that give a container a PHP able to run `oz` at all -- what the `install` script
+	 * checks for.
+	 *
+	 * Needed because here the container is both the operator's machine and the target; driven over
+	 * SSH, as the `ssh` cases are, the target needs no PHP of its own. Built from the running series
+	 * rather than written down, and on Debian it has to add the repository the provision plan would
+	 * add: the distribution ships one series, it is below OZone's minimum, so there is no PHP that
+	 * can run `oz` until the repository is there. That command comes from the plan itself, so the
+	 * two cannot drift.
+	 */
+	private static function bootstrap(string $platform): string
+	{
+		// mbstring on both: Kli renders every table through mb_*.
+		if ('alpine' === $platform) {
+			$prefix   = PackageManager::alpinePrefix();
+			$packages = [$prefix];
+
+			foreach (['xml', 'simplexml', 'bcmath', 'gd', 'mbstring', 'posix', 'fileinfo', 'openssl', 'pdo'] as $s) {
+				$packages[] = $prefix . '-' . $s;
+			}
+
+			// Alpine ships no unversioned `php`, so `oz` is reached through a link.
+			return 'apk update --quiet && apk add --no-cache ' . \implode(' ', $packages)
+				. ' && ln -sf /usr/bin/' . $prefix . ' /usr/bin/php';
+		}
+
+		$prefix   = PackageManager::aptPrefix();
+		$packages = [];
+
+		foreach (['cli', 'xml', 'bcmath', 'gd', 'mbstring'] as $s) {
+			$packages[] = $prefix . '-' . $s;
+		}
+
+		$repository = '';
+
+		foreach ((new Provisioner(PackageManager::APT))->plan()->steps() as $step) {
+			if ('php:repository' === $step->name) {
+				$repository = $step->commands[0];
+			}
+		}
+
+		self::assertNotSame('', $repository, 'The plan no longer has a php:repository step.');
+
+		// `php8.5-cli` registers the `php` alternative, so no link is needed here.
+		return 'apt-get update -qq && ' . $repository
+			. ' && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends '
+			. \implode(' ', $packages);
 	}
 
 	/**

@@ -34,7 +34,7 @@ make down              # stop the servers
 that covers it before the whole suite runs. The whole suite is still what has to pass before
 anything is handed over.
 
-`OZ_PHP_VERSION=8.3 make docker-build test` runs the suites on another PHP version.
+`OZ_PHP_VERSION=8.4 make docker-build test` runs the suites on another PHP version.
 
 Run the suites through `make`, never `vendor/bin/phpunit` directly: the targets pass
 `-c phpunit.xml.dist`, and PHPUnit would otherwise prefer a local `phpunit.xml` and quietly change
