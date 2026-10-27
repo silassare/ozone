@@ -53,13 +53,7 @@ final class DeployPlan
 	 */
 	public function get(string $path): ?DeployFile
 	{
-		foreach ($this->files as $file) {
-			if ($file->path === $path) {
-				return $file;
-			}
-		}
-
-		return null;
+		return \array_find($this->files, static fn (DeployFile $file): bool => $file->path === $path);
 	}
 
 	/**

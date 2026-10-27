@@ -36,61 +36,31 @@ interface StorageInterface
 
 	/**
 	 * Should return stream.
-	 *
-	 * @param OZFile $file
-	 *
-	 * @return FileStream
 	 */
 	public function getStream(OZFile $file): FileStream;
 
 	/**
 	 * Handle uploaded file.
-	 *
-	 * @param UploadedFile $upload
-	 *
-	 * @return OZFile
 	 */
 	public function upload(UploadedFile $upload): OZFile;
 
 	/**
 	 * Add a file with content from a given stream.
-	 *
-	 * @param FileStream $source
-	 * @param string     $mimetype
-	 * @param string     $filename
-	 *
-	 * @return OZFile
 	 */
 	public function saveStream(FileStream $source, string $mimetype, string $filename): OZFile;
 
 	/**
 	 * Add a file at a given file path.
-	 *
-	 * @param string $path
-	 * @param string $mimetype
-	 * @param string $filename
-	 *
-	 * @return OZFile
 	 */
 	public function saveFromPath(string $path, string $mimetype, string $filename): OZFile;
 
 	/**
 	 * Add a file with a given raw content.
-	 *
-	 * @param string $content
-	 * @param string $mimetype
-	 * @param string $filename
-	 *
-	 * @return OZFile
 	 */
 	public function saveRaw(string $content, string $mimetype, string $filename): OZFile;
 
 	/**
 	 * Checks if a given file exists.
-	 *
-	 * @param OZFile $file
-	 *
-	 * @return bool
 	 */
 	public function exists(OZFile $file): bool;
 
@@ -101,11 +71,6 @@ interface StorageInterface
 	 * The given auth provider credentials can be used to contact the auth server.
 	 * The file provider is responsible for contacting the auth server to check if the credential is still valid.
 	 *
-	 * @param Context                         $context
-	 * @param FileAccessAuthorizationProvider $provider
-	 *
-	 * @return Uri
-	 *
 	 * @see AuthorizationService for more information on how to check if the credential
 	 *      still valid or not.
 	 */
@@ -114,54 +79,31 @@ interface StorageInterface
 	/**
 	 * Should returns a public access uri for the given file.
 	 * Or fail if the file is not public.
-	 *
-	 * @param Context $context
-	 * @param OZFile  $file
-	 *
-	 * @return Uri
 	 */
 	public function publicUri(Context $context, OZFile $file): Uri;
 
 	/**
 	 * Should serve the file to the HTTP client.
-	 *
-	 * @param OZFile   $file
-	 * @param Response $response
-	 *
-	 * @return Response
 	 */
 	public function serve(OZFile $file, Response $response): Response;
 
 	/**
 	 * Writes data to the given file, this should overwrite the file content.
-	 *
-	 * @param OZFile            $file
-	 * @param FileStream|string $content
 	 */
 	public function write(OZFile $file, FileStream|string $content): static;
 
 	/**
 	 * Appends data to the given file.
-	 *
-	 * @param OZFile            $file
-	 * @param FileStream|string $data
 	 */
 	public function append(OZFile $file, FileStream|string $data): static;
 
 	/**
 	 * Prepends data to the given file.
-	 *
-	 * @param OZFile            $file
-	 * @param FileStream|string $data
 	 */
 	public function prepend(OZFile $file, FileStream|string $data): static;
 
 	/**
 	 * Delete a file.
-	 *
-	 * @param OZFile $file
-	 *
-	 * @return bool
 	 */
 	public function delete(OZFile $file): bool;
 }

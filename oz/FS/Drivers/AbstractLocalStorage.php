@@ -44,9 +44,6 @@ abstract class AbstractLocalStorage implements StorageInterface
 	 */
 	public function __construct(protected readonly string $name) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStream(OZFile $file): FileStream
 	{
@@ -55,9 +52,6 @@ abstract class AbstractLocalStorage implements StorageInterface
 		return FileStream::fromPath($abs_path);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function upload(UploadedFile $upload): OZFile
 	{
@@ -102,9 +96,6 @@ abstract class AbstractLocalStorage implements StorageInterface
 		return $f;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function saveStream(FileStream $source, string $mimetype, string $filename): OZFile
 	{
@@ -150,36 +141,24 @@ abstract class AbstractLocalStorage implements StorageInterface
 		return $f;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function saveFromPath(string $path, string $mimetype, string $filename): OZFile
 	{
 		return $this->saveStream(FileStream::fromPath($path), $mimetype, $filename);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function saveRaw(string $content, string $mimetype, string $filename): OZFile
 	{
 		return $this->saveStream(FileStream::fromString($content), $mimetype, $filename);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function exists(OZFile $file): bool
 	{
 		return null !== $this->localize($file->getRef());
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function revocableAccessUri(Context $context, FileAccessAuthorizationProvider $provider): Uri
 	{
@@ -191,11 +170,6 @@ abstract class AbstractLocalStorage implements StorageInterface
 		return FS::buildFileUri($context, $file, $credentials);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @psalm-suppress MoreSpecificReturnType, LessSpecificReturnStatement
-	 */
 	#[Override]
 	public function serve(OZFile $file, Response $response): Response
 	{
@@ -217,8 +191,6 @@ abstract class AbstractLocalStorage implements StorageInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws Throwable
 	 */
 	#[Override]
@@ -248,8 +220,6 @@ abstract class AbstractLocalStorage implements StorageInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws Throwable
 	 */
 	#[Override]
@@ -267,8 +237,6 @@ abstract class AbstractLocalStorage implements StorageInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws Throwable
 	 */
 	#[Override]
@@ -285,9 +253,6 @@ abstract class AbstractLocalStorage implements StorageInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function delete(OZFile $file): bool
 	{
@@ -308,18 +273,11 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 	/**
 	 * Gets the files uploads directory.
-	 *
-	 * @return FilesManager
 	 */
 	abstract protected function uploadsDir(): FilesManager;
 
 	/**
 	 * Creates a file destination with a ref.
-	 *
-	 * @param string      $clean_name
-	 * @param null|string &$ref
-	 *
-	 * @return string
 	 */
 	protected function createDestinationPath(string $clean_name, ?string &$ref = null): string
 	{
@@ -333,10 +291,6 @@ abstract class AbstractLocalStorage implements StorageInterface
 
 	/**
 	 * Returns file absolute path with the given ref.
-	 *
-	 * @param string $ref
-	 *
-	 * @return null|string
 	 */
 	protected function localize(string $ref): ?string
 	{
@@ -356,10 +310,6 @@ abstract class AbstractLocalStorage implements StorageInterface
 	/**
 	 * Returns file absolute path with the given ref
 	 * or throws an exception if the file is not found.
-	 *
-	 * @param string $ref
-	 *
-	 * @return string
 	 */
 	protected function require(string $ref): string
 	{
@@ -380,10 +330,6 @@ abstract class AbstractLocalStorage implements StorageInterface
 	 * `filesize()` returns false when it cannot stat the path -- a full disk, a permission change
 	 * between the write and the stat. Passing that false into `OZFile::setSize(int)` is a TypeError
 	 * under `strict_types`, so the failure surfaced as a type error rather than as what went wrong.
-	 *
-	 * @param string $path
-	 *
-	 * @return int
 	 */
 	private static function sizeOf(string $path): int
 	{

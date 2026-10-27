@@ -53,8 +53,6 @@ final readonly class ResolvedRouteOptions
 	 * @param array<string, class-string<RouteInterceptorInterface>>               $interceptors
 	 * @param array<string, string>                                                $params
 	 * @param list<RouteFormDeclaration>                                           $form_declarations
-	 * @param null|RequestScope                                                    $csrf_scope
-	 * @param bool                                                                 $csrf_disabled
 	 * @param null|array{0: RequestScope, 1: int}                                  $resume_config
 	 */
 	public function __construct(
@@ -75,9 +73,7 @@ final readonly class ResolvedRouteOptions
 	 */
 	public function formDeclaration(): ?RouteFormDeclaration
 	{
-		$last = \array_key_last($this->form_declarations);
-
-		return null === $last ? null : $this->form_declarations[$last];
+		return \array_last($this->form_declarations);
 	}
 
 	/**
@@ -140,11 +136,11 @@ final readonly class ResolvedRouteOptions
 			}
 
 			if (!$guard instanceof RouteGuardInterface) {
-				throw (new RuntimeException(\sprintf(
+				throw new RuntimeException(\sprintf(
 					'Route guard provider should return instance of "%s" or "null" not: %s',
 					RouteGuardInterface::class,
 					\get_debug_type($guard)
-				)))->suspectCallable($entry);
+				))->suspectCallable($entry);
 			}
 
 			$guards[] = $guard;

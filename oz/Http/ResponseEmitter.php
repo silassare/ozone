@@ -29,10 +29,6 @@ final class ResponseEmitter
 	 * Final touches before sending: no body headers on an empty response, a
 	 * `Content-Length` when the size is known, and byte ranges / conditional requests for a
 	 * response that opted in with `Accept-Ranges`.
-	 *
-	 * Message's `with*()` methods return `static`, which psalm widens to Message here.
-	 *
-	 * @psalm-suppress MoreSpecificReturnType, LessSpecificReturnStatement, ArgumentTypeCoercion
 	 */
 	public static function prepare(Response $response, Request $request): Response
 	{

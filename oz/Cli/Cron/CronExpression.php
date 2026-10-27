@@ -118,10 +118,6 @@ final class CronExpression
 
 	/**
 	 * Check whether the expression is due at the given DateTime.
-	 *
-	 * @param DateTime $dt
-	 *
-	 * @return bool
 	 */
 	public function isDue(DateTime $dt): bool
 	{
@@ -177,8 +173,6 @@ final class CronExpression
 	 * Get the next DateTime at which the expression will be due, after $from.
 	 *
 	 * @param DateTime $from start point (exclusive)
-	 *
-	 * @return DateTime
 	 */
 	public function getNextRunDate(DateTime $from): DateTime
 	{
@@ -210,8 +204,6 @@ final class CronExpression
 	 *
 	 * @param int $position field position constant
 	 * @param int $value    actual time component value
-	 *
-	 * @return bool
 	 */
 	private function matchesField(int $position, int $value): bool
 	{
@@ -227,13 +219,10 @@ final class CronExpression
 			return true;
 		}
 
-		foreach (\explode(',', $field) as $part) {
-			if ($this->matchesPart($part, $value, $min, $max, $position)) {
-				return true;
-			}
-		}
-
-		return false;
+		return \array_any(
+			\explode(',', $field),
+			fn (string $part): bool => $this->matchesPart($part, $value, $min, $max, $position)
+		);
 	}
 
 	/**
@@ -244,8 +233,6 @@ final class CronExpression
 	 * @param int    $min      minimum allowed value for the field
 	 * @param int    $max      maximum allowed value for the field
 	 * @param int    $position field position constant
-	 *
-	 * @return bool
 	 */
 	private function matchesPart(string $part, int $value, int $min, int $max, int $position): bool
 	{
@@ -293,10 +280,7 @@ final class CronExpression
 	 *
 	 * Works transparently within all field syntaxes: literals, ranges, steps, and comma-separated lists.
 	 *
-	 * @param string             $field
 	 * @param array<string, int> $aliases lowercase-name -> int map
-	 *
-	 * @return string
 	 */
 	private function resolveNames(string $field, array $aliases): string
 	{

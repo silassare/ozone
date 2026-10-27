@@ -56,9 +56,6 @@ final class SettingsGroup extends Store
 		parent::__construct($data);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function merge(iterable $data, array $strategies = []): static
 	{
@@ -71,36 +68,24 @@ final class SettingsGroup extends Store
 		return parent::setData($bundle);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function set(string $key, mixed $value): static
 	{
 		return parent::set(self::normalizeKey($key), $value);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function remove(string $key): static
 	{
 		return parent::remove(self::normalizeKey($key));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function has(string $key): bool
 	{
 		return parent::has(self::normalizeKey($key));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function get(string $key, mixed $default = null): mixed
 	{

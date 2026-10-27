@@ -22,8 +22,6 @@ class TestUtils
 {
 	/**
 	 * Returns a mock router.
-	 *
-	 * @return Router
 	 */
 	public static function router(): Router
 	{

@@ -33,10 +33,6 @@ trait AuthUserKeyAuthenticationMethodTrait
 	protected ?AuthUserAuthorizationProvider $provider         = null;
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @return AuthUserInterface
-	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
@@ -52,10 +48,6 @@ trait AuthUserKeyAuthenticationMethodTrait
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @return AccessRightsInterface
-	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
@@ -72,9 +64,6 @@ trait AuthUserKeyAuthenticationMethodTrait
 		return $provider->getScope()->getAccessRight();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function isScoped(): bool
 	{
 		return true;
@@ -82,9 +71,6 @@ trait AuthUserKeyAuthenticationMethodTrait
 
 	/**
 	 * Authenticate with auth entity.
-	 *
-	 * @param OZAuth                 $auth
-	 * @param null|AuthUserInterface $expected_user
 	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
@@ -98,25 +84,25 @@ trait AuthUserKeyAuthenticationMethodTrait
 		// The credential is genuine past this point: the public codes tell its holder what to
 		// fix without revealing anything about other accounts.
 		if (!$provider instanceof AuthUserAuthorizationProvider) {
-			throw (new ForbiddenException('OZ_AUTH_INVALID_PROVIDER', [
+			throw new ForbiddenException('OZ_AUTH_INVALID_PROVIDER', [
 				'_reason' => 'Invalid auth provider.',
-			]))->suspectObject($auth);
+			])->suspectObject($auth);
 		}
 
 		$state = $provider->getState();
 
 		if (AuthorizationState::AUTHORIZED !== $state) {
-			throw (new ForbiddenException('OZ_AUTH_NOT_AUTHORIZED', [
+			throw new ForbiddenException('OZ_AUTH_NOT_AUTHORIZED', [
 				'_reason' => 'Referenced auth is not authorized.',
-			]))->suspectObject($auth);
+			])->suspectObject($auth);
 		}
 
 		$user = $provider->getUser();
 
 		if (!$user->isAuthUserValid()) {
-			throw (new ForbiddenException('OZ_AUTH_USER_UNVERIFIED', [
+			throw new ForbiddenException('OZ_AUTH_USER_UNVERIFIED', [
 				'_reason' => 'Auth user is not verified.',
-			]))->suspectObject($user);
+			])->suspectObject($user);
 		}
 
 		if ($expected_user) { // check if the expected user is the same as the authenticated user

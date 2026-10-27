@@ -75,27 +75,18 @@ class ImageFileFilterHandler implements FileFilterHandlerInterface, BootHookRece
 {
 	private const string CACHE_DIR = 'fs/image-filters';
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{
 		GarbageCollector::register('oz:fs:image-filters', self::gc(...));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function canHandle(OZFile $file, array $filterTokens): bool
 	{
 		return FileKind::IMAGE === FileKind::fromMime($file->getMime());
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response
 	{

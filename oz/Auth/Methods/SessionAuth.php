@@ -49,18 +49,12 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	 */
 	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function get(RouteInfo $ri, string $realm): static
 	{
 		return new self($ri, $realm);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function satisfied(): bool
 	{
@@ -80,8 +74,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -91,8 +83,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -102,8 +92,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 * @throws UnauthenticatedException
 	 */
@@ -128,10 +116,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @return AccessRightsInterface
-	 *
 	 * @throws ForbiddenException
 	 * @throws UnauthenticatedException
 	 */
@@ -141,9 +125,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 		return $this->user()->getAuthUserDataStore()->getAuthUserAccessRights();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isScoped(): bool
 	{
@@ -151,8 +132,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -163,8 +142,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -175,8 +152,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -187,8 +162,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -199,8 +172,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -211,8 +182,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -223,8 +192,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -234,9 +201,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 			->detachAuthUser();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function lifetime(): int
 	{
@@ -245,8 +209,6 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 
 	/**
 	 * Start current or new session.
-	 *
-	 * @return Session
 	 *
 	 * @throws ForbiddenException
 	 */
@@ -272,13 +234,13 @@ class SessionAuth implements AuthenticationMethodStatefulInterface
 			$user = $this->session->attachedAuthUser();
 
 			if (null !== $user) {
-				(new SessionHijackingDetected(
+				new SessionHijackingDetected(
 					$context,
 					$user,
 					$this->session->peekID(),
 					$this->session->openedSourceKey(),
 					$this->session->sourceKey()
-				))->dispatch();
+				)->dispatch();
 
 				// The refusal must take the cookie with it.
 				$this->dropCookieOnResponse();

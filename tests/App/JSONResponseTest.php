@@ -37,7 +37,7 @@ final class JSONResponseTest extends TestCase
 
 	public function testSetErrorFlagAndMessage(): void
 	{
-		$r = (new JSONResponse())->setError('SOMETHING_WENT_WRONG');
+		$r = new JSONResponse()->setError('SOMETHING_WENT_WRONG');
 		$a = $r->toArray();
 
 		self::assertSame(JSONResponse::ERROR, $a['error']);
@@ -46,13 +46,13 @@ final class JSONResponseTest extends TestCase
 
 	public function testSetErrorDefaultMessage(): void
 	{
-		$r = (new JSONResponse())->setError();
+		$r = new JSONResponse()->setError();
 		self::assertSame('OZ_ERROR_INTERNAL', $r->toArray()['msg']);
 	}
 
 	public function testSetDoneResetsToSuccess(): void
 	{
-		$r = (new JSONResponse())
+		$r = new JSONResponse()
 			->setError('OOPS')
 			->setDone('TASK_DONE');
 
@@ -63,13 +63,13 @@ final class JSONResponseTest extends TestCase
 
 	public function testSetDataOverwritesData(): void
 	{
-		$r = (new JSONResponse())->setData(['items' => [1, 2, 3]]);
+		$r = new JSONResponse()->setData(['items' => [1, 2, 3]]);
 		self::assertSame(['items' => [1, 2, 3]], $r->toArray()['data']);
 	}
 
 	public function testSetDataKeyAddsKeyToData(): void
 	{
-		$r = (new JSONResponse())
+		$r = new JSONResponse()
 			->setDataKey('count', 42)
 			->setDataKey('name', 'Alice');
 
@@ -80,7 +80,7 @@ final class JSONResponseTest extends TestCase
 
 	public function testGetDataKeyReturnsValueOrDefault(): void
 	{
-		$r = (new JSONResponse())->setDataKey('x', 99);
+		$r = new JSONResponse()->setDataKey('x', 99);
 		self::assertSame(99, $r->getDataKey('x'));
 		self::assertNull($r->getDataKey('missing'));
 		self::assertSame('def', $r->getDataKey('missing', 'def'));
@@ -95,7 +95,7 @@ final class JSONResponseTest extends TestCase
 
 	public function testMergeOverwritesFromOtherResponse(): void
 	{
-		$source = (new JSONResponse())->setError('ERR')->setDataKey('x', 1);
+		$source = new JSONResponse()->setError('ERR')->setDataKey('x', 1);
 		$target = new JSONResponse();
 		$target->merge($source);
 
@@ -107,7 +107,7 @@ final class JSONResponseTest extends TestCase
 
 	public function testToArraySnapshotForComplexResponse(): void
 	{
-		$r = (new JSONResponse())
+		$r = new JSONResponse()
 			->setDone('USER_LISTED')
 			->setDataKey('users', [['id' => 1, 'name' => 'Alice'], ['id' => 2, 'name' => 'Bob']])
 			->setDataKey('total', 2);

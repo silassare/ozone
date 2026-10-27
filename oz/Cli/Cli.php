@@ -58,9 +58,6 @@ final class Cli extends Kli
 		parent::__construct('oz', true);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getVersion(bool $full = false): string
 	{
@@ -73,8 +70,6 @@ final class Cli extends Kli
 
 	/**
 	 * Gets the Cli instance.
-	 *
-	 * @return static
 	 */
 	public static function getInstance(): static
 	{
@@ -114,18 +109,12 @@ final class Cli extends Kli
 		return self::$instance;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function welcome(): void
 	{
 		$this->write(\file_get_contents(OZ_OZONE_DIR . 'welcome'));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function quit(): void
 	{
@@ -133,9 +122,6 @@ final class Cli extends Kli
 		parent::quit();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function log(string $level, mixed $msg, array $context = []): static
 	{
@@ -146,8 +132,6 @@ final class Cli extends Kli
 
 	/**
 	 * Runs the commands.
-	 *
-	 * @param array $args
 	 *
 	 * @throws KliException
 	 */

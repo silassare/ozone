@@ -75,27 +75,18 @@ class TypeUrl extends Type
 		return $this->setOption('allowed_hosts', \array_values(\array_unique(\array_filter($hosts))));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getInstance(array $options): static
 	{
 		return (new static())->configure($options);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function default($default): static
 	{
@@ -104,9 +95,6 @@ class TypeUrl extends Type
 		return parent::default($default);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function configure(array $options): static
 	{
@@ -123,9 +111,6 @@ class TypeUrl extends Type
 		return parent::configure($options);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
 	{

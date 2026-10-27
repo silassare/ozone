@@ -24,17 +24,11 @@ interface StoreDriverInterface
 {
 	/**
 	 * Returns the capabilities of this cache driver.
-	 *
-	 * @return StoreCapabilities
 	 */
 	public function capabilities(): StoreCapabilities;
 
 	/**
 	 * Gets a cache entry by key, or null when not found or expired.
-	 *
-	 * @param string $key
-	 *
-	 * @return null|StoreEntry
 	 */
 	public function get(string $key): ?StoreEntry;
 
@@ -49,10 +43,6 @@ interface StoreDriverInterface
 
 	/**
 	 * Stores a cache entry.
-	 *
-	 * @param StoreEntry $entry
-	 *
-	 * @return bool
 	 */
 	public function set(StoreEntry $entry): bool;
 
@@ -74,10 +64,6 @@ interface StoreDriverInterface
 
 	/**
 	 * Deletes a cache entry by key.
-	 *
-	 * @param string $key
-	 *
-	 * @return bool
 	 */
 	public function delete(string $key): bool;
 
@@ -85,15 +71,11 @@ interface StoreDriverInterface
 	 * Deletes multiple cache entries.
 	 *
 	 * @param string[] $keys
-	 *
-	 * @return bool
 	 */
 	public function deleteMultiple(array $keys): bool;
 
 	/**
 	 * Clears all entries in this driver's namespace.
-	 *
-	 * @return bool
 	 */
 	public function clear(): bool;
 
@@ -117,8 +99,6 @@ interface StoreDriverInterface
 	 *
 	 * @param string $namespace the namespace (store name) for this driver instance
 	 * @param array  $options   driver-specific configuration options
-	 *
-	 * @return static
 	 */
 	public static function fromConfig(string $namespace, array $options = []): static;
 }

@@ -63,7 +63,7 @@ final class DbJobStoreTest extends AbstractJobStoreTest
 	 */
 	protected function strandJob(JobContractInterface $job): void
 	{
-		(new OZJobsQuery())
+		new OZJobsQuery()
 			->whereRefIs($job->getRef())
 			->update([
 				OZJob::COL_STATE      => JobState::RUNNING->value,

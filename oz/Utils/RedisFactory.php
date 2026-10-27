@@ -36,8 +36,6 @@ final class RedisFactory
 
 	/**
 	 * Checks whether the ext-redis PHP extension is installed.
-	 *
-	 * @return bool
 	 */
 	public static function isAvailable(): bool
 	{
@@ -46,8 +44,6 @@ final class RedisFactory
 
 	/**
 	 * Returns the shared Redis connection, creating it on the first call.
-	 *
-	 * @return PhpRedis
 	 */
 	public static function get(): PhpRedis
 	{

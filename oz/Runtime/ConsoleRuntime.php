@@ -27,54 +27,36 @@ use OZONE\Core\Runtime\Interfaces\RuntimeInterface;
  */
 final class ConsoleRuntime implements RuntimeInterface
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return 'cli';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function isSupported(): bool
 	{
 		return 'cli' === \PHP_SAPI || 'phpdbg' === \PHP_SAPI;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isConsole(): bool
 	{
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isPersistent(): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function flushRequest(): void
 	{
 		// Nothing to hand over: the terminal reads the output as it is written.
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function terminate(int $code = 0): never
 	{

@@ -31,8 +31,6 @@ enum FileKind: string
 	 * Gets the file kind from a given mime type.
 	 *
 	 * @param string $mime the mime type
-	 *
-	 * @return FileKind
 	 */
 	public static function fromMime(string $mime): FileKind
 	{

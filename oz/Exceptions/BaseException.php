@@ -84,9 +84,6 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 		self::INVALID_FORM             => 400,
 	];
 
-	/**
-	 * @var bool
-	 */
 	protected static bool $just_die = false;
 
 	/**
@@ -114,8 +111,6 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 	/**
 	 * OZone exception to string magic helper.
-	 *
-	 * @return string
 	 */
 	public function __toString(): string
 	{
@@ -138,8 +133,6 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 	/**
 	 * Gets an http header reason phrase that matches this exception.
-	 *
-	 * @return string
 	 */
 	public function getHTTPReasonPhrase(): string
 	{
@@ -148,8 +141,6 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 	/**
 	 * Gets an http header status code that matches this exception.
-	 *
-	 * @return int
 	 */
 	public function getHTTPStatusCode(): int
 	{
@@ -160,8 +151,6 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 	/**
 	 * Show exception according to accept header name or request type.
-	 *
-	 * @param Context $context
 	 */
 	public function informClient(Context $context): void
 	{
@@ -209,10 +198,6 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 	/**
 	 * Returns error occurred message.
-	 *
-	 * @param string $type
-	 *
-	 * @return string
 	 */
 	public static function anErrorOccurredMessage(string $type = 'error'): string
 	{
@@ -240,8 +225,6 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 
 	/**
 	 * Try to send error message to the client.
-	 *
-	 * @param string $err_msg
 	 */
 	public static function criticalDie(string $err_msg): never
 	{
@@ -312,10 +295,6 @@ ERROR_PAGE;
 
 	/**
 	 * Convert a given throwable to string.
-	 *
-	 * @param Throwable $throwable
-	 *
-	 * @return string
 	 */
 	public static function throwableToString(Throwable $throwable): string
 	{
@@ -428,10 +407,6 @@ STRING;
 
 	/**
 	 * Returns json response.
-	 *
-	 * @param Context $context
-	 *
-	 * @return Response
 	 */
 	private function getJSONResponse(Context $context): Response
 	{
@@ -447,14 +422,10 @@ STRING;
 
 	/**
 	 * Returns default error page response.
-	 *
-	 * @param Context $context
-	 *
-	 * @return Response
 	 */
 	private function getDefaultErrorPage(Context $context): Response
 	{
-		return (new ErrorView($context))->renderError($this);
+		return new ErrorView($context)->renderError($this);
 	}
 
 	/**

@@ -202,8 +202,6 @@ final readonly class DbTestConfig
 	 * Whether the suite may run on the configured drivers only.
 	 *
 	 * Set `OZ_TEST_ALLOW_PARTIAL=1` for it, knowing the others are then not covered at all.
-	 *
-	 * @return bool
 	 */
 	public static function allowsPartialRun(): bool
 	{

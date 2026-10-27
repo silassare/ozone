@@ -76,23 +76,23 @@ final readonly class Channel
 		$declared = self::declared();
 
 		if (!isset($declared[$name]) || !\is_array($declared[$name])) {
-			throw (new RuntimeException(\sprintf(
+			throw new RuntimeException(\sprintf(
 				'The messaging channel "%s" is not declared: no message can be sent on it.',
 				$name
-			), ['declared' => \array_keys($declared)]))->suspectConfig('oz.messaging', 'OZ_MESSAGING_CHANNELS');
+			), ['declared' => \array_keys($declared)])->suspectConfig('oz.messaging', 'OZ_MESSAGING_CHANNELS');
 		}
 
 		$options   = $declared[$name] + self::DEFAULTS;
 		$transport = $options['transport'];
 
 		if (!\is_string($transport) || !\is_subclass_of($transport, TransportInterface::class)) {
-			throw (new RuntimeException(\sprintf(
+			throw new RuntimeException(\sprintf(
 				'The transport of the messaging channel "%s" should implement "%s".',
 				$name,
 				TransportInterface::class
 			), [
 				'transport' => \is_string($transport) ? $transport : \get_debug_type($transport),
-			]))->suspectConfig('oz.messaging', 'OZ_MESSAGING_CHANNELS');
+			])->suspectConfig('oz.messaging', 'OZ_MESSAGING_CHANNELS');
 		}
 
 		return new self(

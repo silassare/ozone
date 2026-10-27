@@ -197,7 +197,7 @@ final class JsonOutputTest extends TestCase
 			self::assertFileExists($dir . '/app/boot.php');
 			self::assertContains('success', \array_column($out['messages'], 'level'));
 		} finally {
-			(new Process(['rm', '-rf', $dir]))->run();
+			new Process(['rm', '-rf', $dir])->run();
 		}
 	}
 

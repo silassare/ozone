@@ -34,8 +34,6 @@ interface AuthUserInterface extends ArrayCapableInterface
 	 * Get the entity auth type.
 	 *
 	 * Usually the entity table morph type {@see Table::getMorphType()}.
-	 *
-	 * @return string
 	 */
 	public function getAuthUserType(): string;
 
@@ -44,8 +42,6 @@ interface AuthUserInterface extends ArrayCapableInterface
 	 *
 	 * The auth main identifier is a unique string that identifies the entity.
 	 * This is usually the primary key of the entity.
-	 *
-	 * @return string
 	 */
 	public function getAuthIdentifier(): string;
 
@@ -63,8 +59,6 @@ interface AuthUserInterface extends ArrayCapableInterface
 	 *   'phone' => $this->getPhone(),
 	 * ];
 	 * ```
-	 *
-	 * @return array
 	 */
 	public function getAuthIdentifiers(): array;
 
@@ -77,26 +71,16 @@ interface AuthUserInterface extends ArrayCapableInterface
 
 	/**
 	 * Set the auth user password.
-	 *
-	 * @param string $password_hash
-	 *
-	 * @return static
 	 */
 	public function setAuthPassword(#[SensitiveParameter] string $password_hash): static;
 
 	/**
 	 * Get the auth user data store.
-	 *
-	 * @return AuthUserDataStore
 	 */
 	public function getAuthUserDataStore(): AuthUserDataStore;
 
 	/**
 	 * Set the auth user data store.
-	 *
-	 * @param AuthUserDataStore $store
-	 *
-	 * @return static
 	 */
 	public function setAuthUserDataStore(AuthUserDataStore $store): static;
 

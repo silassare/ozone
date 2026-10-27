@@ -114,6 +114,6 @@ final class CronRunnerTest extends TestCase
 
 	private static function jobs(string $name): int
 	{
-		return (int) (new OZJobsQuery())->whereNameIs($name)->find()->getTotal();
+		return (int) new OZJobsQuery()->whereNameIs($name)->find()->getTotal();
 	}
 }

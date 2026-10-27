@@ -43,14 +43,14 @@ final class TypePasswordTest extends TestCase
 
 	public function testNullableAcceptsNull(): void
 	{
-		$type  = (new TypePassword())->nullable();
+		$type  = new TypePassword()->nullable();
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
 
 	public function testSecureModeAcceptsComplexPassword(): void
 	{
-		$type  = (new TypePassword())->secure();
+		$type  = new TypePassword()->secure();
 		$clean = $type->validate('Abc1!xyz')->getCleanValue();
 		self::assertSame('Abc1!xyz', $clean);
 	}
@@ -58,37 +58,37 @@ final class TypePasswordTest extends TestCase
 	public function testSecureModeRejectsAllLowercase(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePassword())->secure()->validate('alllowercase');
+		new TypePassword()->secure()->validate('alllowercase');
 	}
 
 	public function testSecureModeRejectsNoDigit(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePassword())->secure()->validate('NoDigitHere!');
+		new TypePassword()->secure()->validate('NoDigitHere!');
 	}
 
 	public function testSecureModeRejectsNoSpecialChar(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePassword())->secure()->validate('NoSpecial1');
+		new TypePassword()->secure()->validate('NoSpecial1');
 	}
 
 	public function testCustomMinEnforced(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePassword())->min(10)->validate('short');
+		new TypePassword()->min(10)->validate('short');
 	}
 
 	public function testCustomMaxEnforced(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePassword())->max(8)->validate('toolongpassword');
+		new TypePassword()->max(8)->validate('toolongpassword');
 	}
 
 	public function testRejectionDataNeverContainsThePassword(): void
 	{
 		try {
-			(new TypePassword())->validate('zq9');
+			new TypePassword()->validate('zq9');
 			self::fail('A too short password should be rejected.');
 		} catch (TypesInvalidValueException $e) {
 			self::assertStringNotContainsString('zq9', (string) \json_encode($e->getData(true)));
@@ -99,19 +99,19 @@ final class TypePasswordTest extends TestCase
 	{
 		// below default min of 6
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePassword())->validate('abc');
+		new TypePassword()->validate('abc');
 	}
 
 	public function testRejectsEmptyStringWhenNotNullable(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePassword())->validate('');
+		new TypePassword()->validate('');
 	}
 
 	/** PHP counts "0" as empty, which used to skip every check of this type: it is checked now. */
 	public function testPasswordChecksTheStringZero(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePassword())->validate('0');
+		new TypePassword()->validate('0');
 	}
 }

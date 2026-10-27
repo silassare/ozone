@@ -383,7 +383,7 @@ final class DeployRunTest extends TestCase
 	 */
 	private static function git(array $args, string $cwd): void
 	{
-		(new Process(['git', ...$args], $cwd, null, null, 120.0))->mustRun();
+		new Process(['git', ...$args], $cwd, null, null, 120.0)->mustRun();
 	}
 
 	private static function rmdir(string $dir): void
@@ -392,6 +392,6 @@ final class DeployRunTest extends TestCase
 			return;
 		}
 
-		(new Process(['rm', '-rf', $dir], null, null, null, 120.0))->run();
+		new Process(['rm', '-rf', $dir], null, null, null, 120.0)->run();
 	}
 }

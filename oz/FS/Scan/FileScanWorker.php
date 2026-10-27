@@ -33,35 +33,24 @@ final class FileScanWorker implements WorkerInterface
 
 	/**
 	 * FileScanWorker constructor.
-	 *
-	 * @param string $file_id
 	 */
 	public function __construct(private readonly string $file_id)
 	{
 		$this->result = new JSONResult();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return self::class;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isAsync(): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function work(JobContractInterface $job_contract): static
 	{
@@ -80,27 +69,18 @@ final class FileScanWorker implements WorkerInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromPayload(array $payload): static
 	{
 		return new self((string) $payload['file_id']);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPayload(): array
 	{
 		return ['file_id' => $this->file_id];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getResult(): JSONResult
 	{

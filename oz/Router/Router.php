@@ -43,9 +43,6 @@ final class Router
 		'TRACE'   => 1,
 	];
 
-	/**
-	 * @var null|RouteGroup
-	 */
 	private ?RouteGroup $current_group = null;
 
 	/**
@@ -142,10 +139,7 @@ final class Router
 	/**
 	 * Create a new route group.
 	 *
-	 * @param string                            $path
 	 * @param callable(Router, RouteGroup):void $factory
-	 *
-	 * @return RouteGroup
 	 */
 	public function group(string $path, callable $factory): RouteGroup
 	{
@@ -173,11 +167,7 @@ final class Router
 	/**
 	 * Add a global parameter provider.
 	 *
-	 * @param string                                  $param
-	 * @param string                                  $pattern
 	 * @param callable(Context):(null|numeric|string) $provider
-	 *
-	 * @return Router
 	 */
 	public function addGlobalParam(string $param, string $pattern, callable $provider): self
 	{
@@ -191,11 +181,6 @@ final class Router
 
 	/**
 	 * Gets a given global parameter value.
-	 *
-	 * @param Context $context
-	 * @param string  $param
-	 *
-	 * @return null|string
 	 */
 	public function getGlobalParamValue(Context $context, string $param): ?string
 	{
@@ -211,11 +196,11 @@ final class Router
 				return (string) $value;
 			}
 
-			throw (new RuntimeException(\sprintf(
+			throw new RuntimeException(\sprintf(
 				'Declared provider for global route parameter "%s" should return "string" or "null" value type not: %s',
 				$param,
 				\get_debug_type($value)
-			)))->suspectCallable($factory);
+			))->suspectCallable($factory);
 		}
 
 		return null;
@@ -274,12 +259,6 @@ final class Router
 
 	/**
 	 * Builds route path.
-	 *
-	 * @param Context $context
-	 * @param string  $route_name
-	 * @param array   $params
-	 *
-	 * @return string
 	 */
 	public function buildRoutePath(Context $context, string $route_name, array $params = []): string
 	{
@@ -290,10 +269,6 @@ final class Router
 	 * Gets route with a given name.
 	 *
 	 * With a route table, the route's provider is registered when it is not yet.
-	 *
-	 * @param string $name
-	 *
-	 * @return null|Route
 	 */
 	public function getRoute(string $name): ?Route
 	{
@@ -351,8 +326,6 @@ final class Router
 	 * @param string $method The request method
 	 * @param string $path   The request path
 	 * @param bool   $all    True to stop searching when a route match
-	 *
-	 * @return RouteSearchResult
 	 */
 	public function find(string $method, string $path, bool $all = false): RouteSearchResult
 	{
@@ -440,7 +413,6 @@ final class Router
 	/**
 	 * Handle the request in a given context.
 	 *
-	 * @param Context                       $context
 	 * @param null|callable(RouteInfo):void $authenticator
 	 *
 	 * @throws ForbiddenException
@@ -455,12 +427,12 @@ final class Router
 
 		switch ($result->status()) {
 			case RouteSearchStatus::NOT_FOUND:
-				(new RouteNotFound($context))->dispatch();
+				new RouteNotFound($context)->dispatch();
 
 				break;
 
 			case RouteSearchStatus::METHOD_NOT_ALLOWED:
-				(new RouteMethodNotAllowed($context))->dispatch();
+				new RouteMethodNotAllowed($context)->dispatch();
 
 				break;
 
@@ -468,7 +440,7 @@ final class Router
 				$route  = $result->foundRoute();
 				$params = $result->foundRouteParams();
 
-				(new RouteFound($context, $route, $params))->dispatch();
+				new RouteFound($context, $route, $params)->dispatch();
 
 				$ri = new RouteInfo($context, $route, $params, $authenticator);
 
@@ -476,7 +448,7 @@ final class Router
 					$ri->checkRouteForm();
 				}
 
-				(new RouteBeforeRun($ri))->dispatch();
+				new RouteBeforeRun($ri)->dispatch();
 
 				$this->runRoute($ri);
 
@@ -587,11 +559,7 @@ final class Router
 	 * Registers route.
 	 *
 	 * @param string|string[]         $methods
-	 * @param callable|string         $path
-	 * @param null|callable           $factory
 	 * @param null|RouteSharedOptions $parent  explicit parent; defaults to the current open group when null
-	 *
-	 * @return RouteOptions
 	 */
 	public function map(
 		array|string $methods,
@@ -666,11 +634,6 @@ final class Router
 
 	/**
 	 * Register route for CONNECT request method.
-	 *
-	 * @param callable|string $path
-	 * @param null|callable   $factory
-	 *
-	 * @return RouteOptions
 	 */
 	public function connect(callable|string $path, ?callable $factory = null): RouteOptions
 	{
@@ -679,11 +642,6 @@ final class Router
 
 	/**
 	 * Register route for DELETE request method.
-	 *
-	 * @param callable|string $path
-	 * @param null|callable   $factory
-	 *
-	 * @return RouteOptions
 	 */
 	public function delete(callable|string $path, ?callable $factory = null): RouteOptions
 	{
@@ -692,11 +650,6 @@ final class Router
 
 	/**
 	 * Register route for GET request method.
-	 *
-	 * @param callable|string $path
-	 * @param null|callable   $factory
-	 *
-	 * @return RouteOptions
 	 */
 	public function get(callable|string $path, ?callable $factory = null): RouteOptions
 	{
@@ -705,11 +658,6 @@ final class Router
 
 	/**
 	 * Register route for HEAD request method.
-	 *
-	 * @param callable|string $path
-	 * @param null|callable   $factory
-	 *
-	 * @return RouteOptions
 	 */
 	public function head(callable|string $path, ?callable $factory = null): RouteOptions
 	{
@@ -718,11 +666,6 @@ final class Router
 
 	/**
 	 * Register route for OPTIONS request method.
-	 *
-	 * @param callable|string $path
-	 * @param null|callable   $factory
-	 *
-	 * @return RouteOptions
 	 */
 	public function options(callable|string $path, ?callable $factory = null): RouteOptions
 	{
@@ -731,11 +674,6 @@ final class Router
 
 	/**
 	 * Register route for PATCH request method.
-	 *
-	 * @param callable|string $path
-	 * @param null|callable   $factory
-	 *
-	 * @return RouteOptions
 	 */
 	public function patch(callable|string $path, ?callable $factory = null): RouteOptions
 	{
@@ -744,11 +682,6 @@ final class Router
 
 	/**
 	 * Register route for POST request method.
-	 *
-	 * @param callable|string $path
-	 * @param null|callable   $factory
-	 *
-	 * @return RouteOptions
 	 */
 	public function post(callable|string $path, ?callable $factory = null): RouteOptions
 	{
@@ -757,11 +690,6 @@ final class Router
 
 	/**
 	 * Register route for PUT request method.
-	 *
-	 * @param callable|string $path
-	 * @param null|callable   $factory
-	 *
-	 * @return RouteOptions
 	 */
 	public function put(callable|string $path, ?callable $factory = null): RouteOptions
 	{
@@ -770,11 +698,6 @@ final class Router
 
 	/**
 	 * Register route for TRACE request method.
-	 *
-	 * @param callable|string $path
-	 * @param null|callable   $factory
-	 *
-	 * @return RouteOptions
 	 */
 	public function trace(callable|string $path, ?callable $factory = null): RouteOptions
 	{
@@ -1016,11 +939,6 @@ final class Router
 	 * Comparator for sorting routes by priority.
 	 *
 	 * The routes with higher priority values will be sorted before those with lower values.
-	 *
-	 * @param Route $a
-	 * @param Route $b
-	 *
-	 * @return int
 	 */
 	private function routePriorityComparator(Route $a, Route $b): int
 	{
@@ -1084,18 +1002,18 @@ final class Router
 		}
 
 		if (!empty($output_buffer)) {
-			throw (new RuntimeException(
+			throw new RuntimeException(
 				'Writing to output buffer is not allowed.',
 				$debug_data($route, ['output_buffer' => $output_buffer])
-			))->suspectCallable($handler);
+			)->suspectCallable($handler);
 		}
 
 		if (!$return instanceof Response) {
-			throw (new RuntimeException(\sprintf(
+			throw new RuntimeException(\sprintf(
 				'Invalid return type, got "%s" will expecting "%s".',
 				\get_debug_type($return),
 				Response::class
-			), $debug_data($route)))->suspectCallable($handler);
+			), $debug_data($route))->suspectCallable($handler);
 		}
 
 		$ri->getContext()

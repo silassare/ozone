@@ -50,8 +50,6 @@ final class SettingsCmd extends Command
 
 	/**
 	 * Unsets a setting in the project.
-	 *
-	 * @param KliArgs $args
 	 */
 	public function unset(
 		KliArgs $args
@@ -73,9 +71,6 @@ final class SettingsCmd extends Command
 		));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{

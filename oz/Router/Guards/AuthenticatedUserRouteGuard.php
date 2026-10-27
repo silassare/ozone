@@ -33,9 +33,6 @@ final class AuthenticatedUserRouteGuard extends AbstractRouteGuard
 		private readonly array $allowed_user_types,
 	) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toRules(): array
 	{
@@ -44,9 +41,6 @@ final class AuthenticatedUserRouteGuard extends AbstractRouteGuard
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromRules(array $rules): static
 	{
@@ -56,8 +50,6 @@ final class AuthenticatedUserRouteGuard extends AbstractRouteGuard
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws UnauthenticatedException|UnauthorizedException
 	 */
 	#[Override]

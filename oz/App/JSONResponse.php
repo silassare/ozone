@@ -55,8 +55,6 @@ final class JSONResponse extends JSONResult
 
 	/**
 	 * Gets form.
-	 *
-	 * @return null|Form
 	 */
 	public function getForm(): ?Form
 	{
@@ -77,9 +75,6 @@ final class JSONResponse extends JSONResult
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function merge(JSONResult $other): static
 	{
@@ -110,9 +105,6 @@ final class JSONResponse extends JSONResult
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toArray(): array
 	{

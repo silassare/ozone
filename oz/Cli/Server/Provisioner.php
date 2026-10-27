@@ -40,10 +40,10 @@ final readonly class Provisioner
 	 * its own and the source trusts that file alone (`Signed-By`), so it signs nothing else, and the
 	 * download is checked against the digest rather than trusted for having arrived over TLS.
 	 */
-	public const string PHP_REPO_KEY_URL = 'https://packages.sury.org/php/apt.gpg';
+	public const string PHP_REPO_KEY_URL    = 'https://packages.sury.org/php/apt.gpg';
 	public const string PHP_REPO_KEY_SHA256 = 'b486fd5488185c4c46467960fa69c53d5085fec492cf76b9eaf3db33561c9d7c';
-	public const string PHP_REPO_KEYRING = '/usr/share/keyrings/debsuryorg-archive-keyring.gpg';
-	public const string PHP_REPO_SOURCES = '/etc/apt/sources.list.d/php.sources';
+	public const string PHP_REPO_KEYRING    = '/usr/share/keyrings/debsuryorg-archive-keyring.gpg';
+	public const string PHP_REPO_SOURCES    = '/etc/apt/sources.list.d/php.sources';
 
 	public const array WEB_SERVERS = ['nginx', 'apache', 'caddy', 'none'];
 	public const array DATABASES   = ['mysql', 'postgresql', 'none'];
@@ -148,7 +148,7 @@ final readonly class Provisioner
 				. '    exit 1; }' . \PHP_EOL
 				. '  mv %3$s.new %3$s' . \PHP_EOL
 				. '  . /etc/os-release' . \PHP_EOL
-				. '  printf \'Types: deb\\nURIs: %6$s\\nSuites: %%s\\nComponents: main\\nSigned-By: %3$s\\n\''
+				. '  printf \'Types: deb\nURIs: %6$s\nSuites: %%s\nComponents: main\nSigned-By: %3$s\n\''
 				. ' "$VERSION_CODENAME" > %7$s' . \PHP_EOL
 				. '  apt-get update -qq' . \PHP_EOL
 				. 'fi',

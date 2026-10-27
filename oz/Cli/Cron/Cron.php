@@ -134,18 +134,11 @@ final class Cron
 
 		self::$collected = true;
 
-		(new CronCollect())->dispatch();
+		new CronCollect()->dispatch();
 	}
 
 	/**
 	 * Schedule a command task.
-	 *
-	 * @param array|string $command
-	 * @param string       $name
-	 * @param string       $description
-	 * @param bool         $in_background
-	 *
-	 * @return Schedule
 	 */
 	public static function command(
 		array|string $command,
@@ -168,11 +161,7 @@ final class Cron
 	/**
 	 * Schedule a callable cron task.
 	 *
-	 * @param string                    $name
 	 * @param callable(JSONResult):void $callable
-	 * @param string                    $description
-	 *
-	 * @return Schedule
 	 */
 	public static function call(callable $callable, string $name = '', string $description = ''): Schedule
 	{
@@ -185,12 +174,6 @@ final class Cron
 
 	/**
 	 * Schedule a worker job.
-	 *
-	 * @param WorkerInterface $worker
-	 * @param string          $queue
-	 * @param string          $store
-	 *
-	 * @return Schedule
 	 */
 	public static function work(
 		WorkerInterface $worker,
@@ -216,8 +199,6 @@ final class Cron
 
 	/**
 	 * Start a cron task.
-	 *
-	 * @param string $name
 	 */
 	public static function start(string $name): void
 	{
@@ -253,7 +234,7 @@ final class Cron
 				// Multi-server safe: check the shared DB for existing PENDING or RUNNING instances.
 				// The oz_jobs table is visible to all servers sharing the same DB, so this check
 				// prevents concurrent dispatch across multiple nodes.
-				$existing = (new OZJobsQuery())
+				$existing = new OZJobsQuery()
 					->whereNameIs($task->getName())
 					->whereWorkerIs(CronTaskWorker::class)
 					->whereStateIsIn([JobState::PENDING->value, JobState::RUNNING->value])

@@ -31,8 +31,6 @@ final class RoutesCmd extends Command
 {
 	/**
 	 * Exports the named routes of the API router.
-	 *
-	 * @param KliArgs $args
 	 */
 	public function export(KliArgs $args): void
 	{
@@ -62,9 +60,6 @@ final class RoutesCmd extends Command
 		$cli->info(\sprintf('%d named route(s).', \count($routes)));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{

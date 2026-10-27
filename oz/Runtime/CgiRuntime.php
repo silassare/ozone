@@ -25,18 +25,12 @@ use OZONE\Core\Utils\Utils;
  */
 final class CgiRuntime implements RuntimeInterface
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return 'cgi';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function isSupported(): bool
 	{
@@ -44,27 +38,18 @@ final class CgiRuntime implements RuntimeInterface
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isConsole(): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isPersistent(): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function flushRequest(): void
 	{
@@ -77,9 +62,6 @@ final class CgiRuntime implements RuntimeInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function terminate(int $code = 0): never
 	{

@@ -26,10 +26,6 @@ class Password
 
 	/**
 	 * Checks if a given string is a password hash.
-	 *
-	 * @param string $str
-	 *
-	 * @return bool
 	 */
 	public static function isHash(string $str): bool
 	{
@@ -43,8 +39,6 @@ class Password
 	 *
 	 * @param string $pass The password to be hashed
 	 * @param string $algo The algorithm to use
-	 *
-	 * @return string
 	 */
 	public static function hash(#[SensitiveParameter] string $pass, string $algo = \PASSWORD_BCRYPT): string
 	{
@@ -56,8 +50,6 @@ class Password
 	 *
 	 * @param string $pass       The password to be checked
 	 * @param string $known_hash The known password hash
-	 *
-	 * @return bool
 	 */
 	public static function verify(#[SensitiveParameter] string $pass, string $known_hash): bool
 	{
@@ -78,8 +70,6 @@ class Password
 	 *
 	 * @param string $pass the password
 	 * @param string $algo the algorithm
-	 *
-	 * @return string
 	 */
 	private static function resizePass(#[SensitiveParameter] string $pass, string $algo): string
 	{

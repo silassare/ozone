@@ -41,11 +41,6 @@ final class Random
 
 	/**
 	 * Generate random file name.
-	 *
-	 * @param string $prefix
-	 * @param bool   $readable_date
-	 *
-	 * @return string
 	 */
 	public static function fileName(string $prefix = 'oz', bool $readable_date = true): string
 	{
@@ -57,11 +52,6 @@ final class Random
 
 	/**
 	 * Generate a random integer.
-	 *
-	 * @param int $min
-	 * @param int $max
-	 *
-	 * @return int
 	 */
 	public static function int(int $min = 0, int $max = \PHP_INT_MAX): int
 	{
@@ -76,8 +66,6 @@ final class Random
 	 * Returns true once in `$frequency` calls on average (always true when `$frequency` <= 1).
 	 *
 	 * @param int $frequency e.g. 2 for a coin flip, 100 for a 1% chance
-	 *
-	 * @return bool
 	 */
 	public static function bool(int $frequency = 2): bool
 	{
@@ -89,8 +77,6 @@ final class Random
 	 *
 	 * @param int    $length The desired random string length default 32 range is [1,512]
 	 * @param string $chars  The chars to use
-	 *
-	 * @return string
 	 */
 	public static function string(int $length = 32, string $chars = self::CHARS_ALL): string
 	{
@@ -118,10 +104,6 @@ final class Random
 
 	/**
 	 * Generate a random alpha string with a given length.
-	 *
-	 * @param int $length
-	 *
-	 * @return string
 	 */
 	public static function alpha(int $length = 32): string
 	{
@@ -130,10 +112,6 @@ final class Random
 
 	/**
 	 * Generate a random numeric string with a given length.
-	 *
-	 * @param int $length
-	 *
-	 * @return string
 	 */
 	public static function num(int $length = 32): string
 	{
@@ -142,10 +120,6 @@ final class Random
 
 	/**
 	 * Generate a random alpha numeric string with a given length.
-	 *
-	 * @param int $length
-	 *
-	 * @return string
 	 */
 	public static function alphaNum(int $length = 32): string
 	{

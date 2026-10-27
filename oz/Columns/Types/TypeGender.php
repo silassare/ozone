@@ -41,27 +41,18 @@ class TypeGender extends Type implements FrontendTypeOptionsInterface
 		parent::__construct(new TypeString(1, 30));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getInstance(array $options): static
 	{
 		return (new static())->configure($options);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function default($default): static
 	{
@@ -81,9 +72,6 @@ class TypeGender extends Type implements FrontendTypeOptionsInterface
 		return ['allowed' => \array_values((array) Settings::get('oz.users', 'OZ_USER_ALLOWED_GENDERS'))];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
 	{

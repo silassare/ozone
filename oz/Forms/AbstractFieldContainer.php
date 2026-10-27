@@ -57,9 +57,6 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	 */
 	private array $t_post_validation_rules = [];
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function name(string $name): static
 	{
@@ -69,18 +66,12 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): ?string
 	{
 		return $this->t_name;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function field(string $name): Field
 	{
@@ -93,9 +84,6 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 		return $this->t_fields[$ref];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getField(string $name): ?Field
 	{
@@ -105,18 +93,12 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 		return $this->t_fields[$name] ?? $this->t_fields[$this->getRef($name)] ?? null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getFields(): array
 	{
 		return $this->t_fields;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function expect(RuleSetCondition $condition = RuleSetCondition::AND): RuleSet
 	{
@@ -131,9 +113,6 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 		return $rule;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function ensure(RuleSetCondition $condition = RuleSetCondition::AND): RuleSet
 	{
@@ -148,27 +127,18 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 		return $rule;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPreValidationRules(): array
 	{
 		return $this->t_pre_validation_rules;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPostValidationRules(): array
 	{
 		return $this->t_post_validation_rules;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	abstract public function getRef(string $name): string;
 
@@ -245,8 +215,6 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	/**
 	 * Checks all pre-validation rules.
 	 *
-	 * @param FormValidationContext $ctx
-	 *
 	 * @throws InvalidFormException if any rule is violated
 	 */
 	protected function checkPreValidationRules(FormValidationContext $ctx): void
@@ -268,8 +236,6 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 
 	/**
 	 * Checks all post-validation rules.
-	 *
-	 * @param FormValidationContext $ctx
 	 *
 	 * @throws InvalidFormException if any rule is violated
 	 */
@@ -297,8 +263,6 @@ abstract class AbstractFieldContainer implements FieldContainerInterface
 	 * into the context's cleaned store as it is produced, so a field's condition
 	 * or {@see TypesSwitcher} can only read fields declared before it; reading a
 	 * later one throws (see {@see FormValidationContext::assertReadable()}).
-	 *
-	 * @param FormValidationContext $ctx
 	 *
 	 * @throws InvalidFormException if any field is invalid
 	 * @throws RuntimeException     if a condition reads a field validated after it

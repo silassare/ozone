@@ -171,9 +171,6 @@ final class CronRunner implements BootHookReceiverInterface
 		CacheRegistry::runtime(self::class)->set('tick', true);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{

@@ -109,10 +109,6 @@ class TypesSwitcher implements ArrayCapableInterface
 	/**
 	 * Gets the appropriate type.
 	 *
-	 * @param FormValidationContext $ctx
-	 *
-	 * @return TypeInterface
-	 *
 	 * @throws RuntimeException when no condition matches and no default type is set
 	 */
 	public function getType(FormValidationContext $ctx): TypeInterface
@@ -156,8 +152,6 @@ class TypesSwitcher implements ArrayCapableInterface
 	 * Without a default, {@see self::getType()} throws instead of silently
 	 * falling back to a permissive type.
 	 *
-	 * @param TypeInterface $type
-	 *
 	 * @return $this
 	 */
 	public function otherwise(TypeInterface $type): static
@@ -178,8 +172,6 @@ class TypesSwitcher implements ArrayCapableInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @return array{
 	 *  type: 'types-switcher',
 	 *  types: list<array{type: array<string, mixed>, rule: RuleSet}>,

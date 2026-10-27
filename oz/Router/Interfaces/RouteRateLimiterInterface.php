@@ -22,9 +22,6 @@ interface RouteRateLimiterInterface
 {
 	/**
 	 * Should return the rate limiter instance for the given key.
-	 *
-	 * @param RouteInfo               $ri
-	 * @param RouteRateLimitInterface $limit
 	 */
 	public static function get(RouteInfo $ri, RouteRateLimitInterface $limit): static;
 

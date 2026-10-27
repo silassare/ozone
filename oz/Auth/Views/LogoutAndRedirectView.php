@@ -32,14 +32,8 @@ final class LogoutAndRedirectView extends WebView
 	public const string LOGOUT_AND_REDIRECT_ROUTE = 'oz:logout:redirect';
 
 	/**
-	 * @param RouteInfo $ri
-	 *
-	 * @return never
-	 *
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
-	 *
-	 * @psalm-suppress UnusedVariable
 	 */
 	public function logoutAndRedirect(RouteInfo $ri): never
 	{
@@ -69,7 +63,7 @@ final class LogoutAndRedirectView extends WebView
 	{
 		$router
 			->get('/logout', static function (RouteInfo $ri): void {
-				(new self($ri))->logoutAndRedirect($ri);
+				new self($ri)->logoutAndRedirect($ri);
 			})->form(static function (RouteInfo $ri) {
 				// `next` may only point to a local path, this host, or a host listed in
 				// OZ_REDIRECT_ALLOWED_HOSTS: anything else would be an open redirect.
@@ -77,7 +71,7 @@ final class LogoutAndRedirectView extends WebView
 				$hosts[] = $ri->getContext()->getHost();
 
 				$form = new Form();
-				$form->field('next')->type((new TypeUrl())->allowAbsolutePath()->allowedHosts($hosts));
+				$form->field('next')->type(new TypeUrl()->allowAbsolutePath()->allowedHosts($hosts));
 
 				return $form;
 			})

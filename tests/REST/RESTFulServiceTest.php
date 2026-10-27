@@ -273,8 +273,6 @@ final class StubUsersRESTService extends RESTFulService
 
 	/**
 	 * The filters the last entry action was given.
-	 *
-	 * @var array
 	 */
 	public static array $filters = [];
 

@@ -34,7 +34,7 @@ final class RangeResponseTest extends TestCase
 	public function testNon200ResponseIsReturnedUnchanged(): void
 	{
 		$request  = self::makeRequest('GET', ['Range' => 'bytes=0-4']);
-		$response = (new Response())->withStatus(404);
+		$response = new Response()->withStatus(404);
 		$result   = RangeResponse::apply($request, $response);
 
 		self::assertSame(404, $result->getStatusCode());
@@ -277,7 +277,7 @@ final class RangeResponseTest extends TestCase
 	{
 		$request  = self::makeRequest('GET', ['Range' => 'bytes=0-4']);
 		$body     = Body::fromString('Hello World');
-		$response = (new Response())
+		$response = new Response()
 			->withHeader('Accept-Ranges', 'bytes')
 			// Intentionally no Content-Length header.
 			->withBody($body);
@@ -336,8 +336,6 @@ final class RangeResponseTest extends TestCase
 	 *
 	 * @param string               $method  HTTP method
 	 * @param array<string, mixed> $headers header name => value pairs
-	 *
-	 * @return Request
 	 */
 	private static function makeRequest(string $method = 'GET', array $headers = []): Request
 	{
@@ -362,13 +360,11 @@ final class RangeResponseTest extends TestCase
 	 *
 	 * @param string      $content full body content
 	 * @param null|string $etag    optional ETag value (without quotes)
-	 *
-	 * @return Response
 	 */
 	private static function makeResponse(string $content, ?string $etag = null): Response
 	{
 		$body = Body::fromString($content);
-		$r    = (new Response())
+		$r    = new Response()
 			->withHeader('Accept-Ranges', 'bytes')
 			->withHeader('Content-Length', (string) \strlen($content))
 			->withBody($body);

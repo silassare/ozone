@@ -25,9 +25,6 @@ use OZONE\Core\Http\Uri;
  */
 final class PrivateLocalStorage extends AbstractLocalStorage
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function get(string $name): static
 	{
@@ -35,8 +32,6 @@ final class PrivateLocalStorage extends AbstractLocalStorage
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws UnauthorizedException
 	 */
 	#[Override]
@@ -45,9 +40,6 @@ final class PrivateLocalStorage extends AbstractLocalStorage
 		throw new UnauthorizedException('Private files cannot be publicly accessed.');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function uploadsDir(): FilesManager
 	{

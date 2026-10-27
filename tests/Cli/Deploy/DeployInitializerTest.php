@@ -67,7 +67,7 @@ final class DeployInitializerTest extends TestCase
 
 	public function testDockerPlanIsThePackageSample(): void
 	{
-		$plan  = (new DeployInitializer(DeployInitializer::TARGET_DOCKER))->plan();
+		$plan  = new DeployInitializer(DeployInitializer::TARGET_DOCKER)->plan();
 		$paths = \array_map(static fn ($f): string => $f->path, $plan->files());
 
 		self::assertContains('docker' . \DIRECTORY_SEPARATOR . 'Dockerfile', $paths);
@@ -90,7 +90,7 @@ final class DeployInitializerTest extends TestCase
 
 	public function testTheEntrypointIsGeneratedExecutable(): void
 	{
-		$plan = (new DeployInitializer(DeployInitializer::TARGET_DOCKER))->plan();
+		$plan = new DeployInitializer(DeployInitializer::TARGET_DOCKER)->plan();
 		$file = $plan->get('docker' . \DIRECTORY_SEPARATOR . 'docker-entrypoint.sh');
 
 		self::assertNotNull($file);
@@ -117,7 +117,7 @@ final class DeployInitializerTest extends TestCase
 	{
 		$paths = \array_map(
 			static fn ($f): string => $f->path,
-			(new DeployInitializer(DeployInitializer::TARGET_BARE))->plan()->files()
+			new DeployInitializer(DeployInitializer::TARGET_BARE)->plan()->files()
 		);
 
 		$units = \array_values(\array_filter($paths, static fn (string $p): bool => \str_contains($p, 'systemd')));
@@ -134,7 +134,7 @@ final class DeployInitializerTest extends TestCase
 	public function testBareCronCanBeTheSchedulerProcess(): void
 	{
 		$units = [];
-		$plan  = (new DeployInitializer(DeployInitializer::TARGET_BARE, cron: DeployInitializer::CRON_DAEMON))->plan();
+		$plan  = new DeployInitializer(DeployInitializer::TARGET_BARE, cron: DeployInitializer::CRON_DAEMON)->plan();
 
 		foreach ($plan->files() as $file) {
 			if (\str_contains($file->path, '-cron.')) {
@@ -175,7 +175,7 @@ final class DeployInitializerTest extends TestCase
 	public function testNoGeneratedFileKeepsAnUnreplacedToken(): void
 	{
 		foreach ([DeployInitializer::TARGET_BARE, DeployInitializer::TARGET_DOCKER] as $target) {
-			$plan = (new DeployInitializer($target, DeployInitializer::CI_GITHUB))->plan();
+			$plan = new DeployInitializer($target, DeployInitializer::CI_GITHUB)->plan();
 
 			foreach ($plan->files() as $file) {
 				self::assertDoesNotMatchRegularExpression(
@@ -191,9 +191,9 @@ final class DeployInitializerTest extends TestCase
 	{
 		$workflow = '.github' . \DIRECTORY_SEPARATOR . 'workflows' . \DIRECTORY_SEPARATOR . 'ci.yml';
 
-		self::assertNull((new DeployInitializer())->plan()->get($workflow));
+		self::assertNull(new DeployInitializer()->plan()->get($workflow));
 		self::assertNotNull(
-			(new DeployInitializer(DeployInitializer::TARGET_DOCKER, DeployInitializer::CI_GITHUB))
+			new DeployInitializer(DeployInitializer::TARGET_DOCKER, DeployInitializer::CI_GITHUB)
 				->plan()
 				->get($workflow)
 		);

@@ -39,9 +39,6 @@ use OZONE\Core\Router\RouteInfo;
  */
 final class ResumableFormProvider extends AbstractResumableFormProvider
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
@@ -98,9 +95,6 @@ final class ResumableFormProvider extends AbstractResumableFormProvider
 		return $this->ri->route()->getOptions()->resolveResumeConfig()[1] ?? 3600;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function totalSteps(): ?int
 	{

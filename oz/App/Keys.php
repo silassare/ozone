@@ -41,8 +41,6 @@ final class Keys
 
 	/**
 	 * Generate new file key.
-	 *
-	 * @return string
 	 */
 	public static function newFileKey(): string
 	{
@@ -53,8 +51,6 @@ final class Keys
 
 	/**
 	 * Generate new session id.
-	 *
-	 * @return string
 	 */
 	public static function newSessionID(): string
 	{
@@ -63,8 +59,6 @@ final class Keys
 
 	/**
 	 * Generate new session token.
-	 *
-	 * @return string
 	 */
 	public static function newSessionToken(): string
 	{
@@ -76,8 +70,6 @@ final class Keys
 	 *
 	 * @param int  $length    the auth code length
 	 * @param bool $alpha_num whether to use digits or alpha_num
-	 *
-	 * @return string
 	 */
 	public static function newAuthCode(int $length = 4, bool $alpha_num = false): string
 	{
@@ -93,8 +85,6 @@ final class Keys
 
 	/**
 	 * Generate new auth token.
-	 *
-	 * @return string
 	 */
 	public static function newAuthToken(): string
 	{
@@ -105,8 +95,6 @@ final class Keys
 	 * Generate new auth refresh key.
 	 *
 	 * @param string $auth_ref the auth reference
-	 *
-	 * @return string
 	 */
 	public static function newAuthRefreshKey(string $auth_ref): string
 	{
@@ -115,8 +103,6 @@ final class Keys
 
 	/**
 	 * Generate new auth ref.
-	 *
-	 * @return string
 	 */
 	public static function newAuthReference(): string
 	{
@@ -128,8 +114,6 @@ final class Keys
 	 *
 	 * Raw bytes, not characters drawn from an alphabet: the only callers base64-encode the result
 	 * into the env file, so a printable alphabet would cost entropy and buy nothing.
-	 *
-	 * @return string
 	 */
 	public static function newSalt(): string
 	{
@@ -140,8 +124,6 @@ final class Keys
 	 * Generate new project secret (512 random bits).
 	 *
 	 * Raw bytes, for the same reason as the salt.
-	 *
-	 * @return string
 	 */
 	public static function newSecret(): string
 	{
@@ -150,8 +132,6 @@ final class Keys
 
 	/**
 	 * Get project salt.
-	 *
-	 * @return string
 	 */
 	public static function salt(): string
 	{
@@ -160,8 +140,6 @@ final class Keys
 
 	/**
 	 * Get project secret.
-	 *
-	 * @return string
 	 */
 	public static function secret(): string
 	{
@@ -171,10 +149,6 @@ final class Keys
 	/**
 	 * Get and decode a base64-encoded secret from env.
 	 * Caches decoded values to avoid redundant decoding on subsequent calls.
-	 *
-	 * @param string $key
-	 *
-	 * @return string
 	 */
 	private static function b64SecretEnv(string $key): string
 	{
@@ -184,13 +158,13 @@ final class Keys
 			$secret = env($key);
 
 			if (empty($secret) || !\is_string($secret)) {
-				throw (new RuntimeException(\sprintf('Missing or invalid "%s" in env file.', $key)))->suspectEnv($key);
+				throw new RuntimeException(\sprintf('Missing or invalid "%s" in env file.', $key))->suspectEnv($key);
 			}
 
 			$value = \base64_decode($secret, true);
 
 			if (false === $value) {
-				throw (new RuntimeException(\sprintf('Invalid "%s" in env file.', $key)))->suspectEnv($key);
+				throw new RuntimeException(\sprintf('Invalid "%s" in env file.', $key))->suspectEnv($key);
 			}
 
 			$decoded[$key] = $value;

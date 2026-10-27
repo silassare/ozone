@@ -28,8 +28,6 @@ class I18nMessage implements ArrayCapableInterface
 
 	/**
 	 * Gets the message text/key.
-	 *
-	 * @return string
 	 */
 	public function getText(): string
 	{
@@ -38,17 +36,12 @@ class I18nMessage implements ArrayCapableInterface
 
 	/**
 	 * Gets the message data.
-	 *
-	 * @return array
 	 */
 	public function getData(): array
 	{
 		return $this->data;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toArray(): array
 	{

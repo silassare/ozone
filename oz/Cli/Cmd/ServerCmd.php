@@ -37,8 +37,6 @@ final class ServerCmd extends Command
 {
 	/**
 	 * Provisions this host.
-	 *
-	 * @param KliArgs $args
 	 */
 	public function provision(KliArgs $args): void
 	{
@@ -120,8 +118,6 @@ final class ServerCmd extends Command
 
 	/**
 	 * Shows what an earlier run installed.
-	 *
-	 * @param KliArgs $args
 	 */
 	public function status(KliArgs $args): void
 	{
@@ -160,9 +156,6 @@ final class ServerCmd extends Command
 		$cli->writeLn((string) $table, false);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{

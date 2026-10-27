@@ -47,8 +47,6 @@ class ComposerJSON
 	 *
 	 * @param string     $key     The key path
 	 * @param null|mixed $default The default value
-	 *
-	 * @return mixed
 	 */
 	public function get(string $key, mixed $default = null): mixed
 	{

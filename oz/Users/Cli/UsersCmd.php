@@ -151,8 +151,6 @@ final class UsersCmd extends Command
 	/**
 	 * Adds new user.
 	 *
-	 * @param KliArgs $args
-	 *
 	 * @throws CRUDException
 	 * @throws ORMException
 	 * @throws ORMQueryException

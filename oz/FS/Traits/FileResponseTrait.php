@@ -25,10 +25,6 @@ trait FileResponseTrait
 {
 	/**
 	 * Adds the file's type, range support, validators and caching headers.
-	 *
-	 * Message's `with*()` methods return `static`, which psalm widens to Message here.
-	 *
-	 * @psalm-suppress MoreSpecificReturnType, LessSpecificReturnStatement
 	 */
 	protected static function withFileHeaders(OZFile $file, Response $response): Response
 	{

@@ -263,6 +263,11 @@ final readonly class Releaser
 		return $steps;
 	}
 
+	/**
+	 * Runs the steps, rolling `current` back when one fails after the swap.
+	 *
+	 * @return list<string> the names of the steps that ran
+	 */
 	public function run(HostInterface $host, ?callable $on_step = null): array
 	{
 		// Checked before anything is created: a release whose `.env` is missing cannot boot, and
@@ -327,14 +332,6 @@ final readonly class Releaser
 		return $ran;
 	}
 
-	/**
-	 * Runs the steps, rolling `current` back when one fails after the swap.
-	 *
-	 * @param HostInterface $host
-	 * @param null|callable $on_step called with (ProvisionStep, string $state)
-	 *
-	 * @return list<string> the names of the steps that ran
-	 */
 	/**
 	 * Puts the code of the release in place, from exactly one source.
 	 *

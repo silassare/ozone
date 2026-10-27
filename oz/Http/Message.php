@@ -49,9 +49,6 @@ abstract class Message implements MessageInterface
 
 	/**
 	 * Disable magic setter to ensure immutability.
-	 *
-	 * @param mixed $_name
-	 * @param mixed $_value
 	 */
 	public function __set(mixed $_name, mixed $_value): void
 	{
@@ -60,8 +57,6 @@ abstract class Message implements MessageInterface
 
 	/**
 	 * Just for pairing with __set.
-	 *
-	 * @param mixed $_name
 	 */
 	public function __get(mixed $_name): void
 	{
@@ -71,8 +66,6 @@ abstract class Message implements MessageInterface
 	/**
 	 * Just for pairing with __set.
 	 *
-	 * @param mixed $_name
-	 *
 	 * @return false
 	 */
 	public function __isset(mixed $_name): bool
@@ -80,18 +73,12 @@ abstract class Message implements MessageInterface
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getProtocolVersion(): string
 	{
 		return $this->protocolVersion;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withProtocolVersion($version): static
 	{
@@ -107,36 +94,24 @@ abstract class Message implements MessageInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getHeaders(): array
 	{
 		return $this->headers->all();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function hasHeader($name): bool
 	{
 		return $this->headers->has($name);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getHeader($name): array
 	{
 		return $this->headers->get($name, []);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getHeaderLine($name): string
 	{
@@ -151,17 +126,12 @@ abstract class Message implements MessageInterface
 	 *
 	 * @param string $name    The case-insensitive header name
 	 * @param bool   $default The default value if the header is not set or invalid
-	 *
-	 * @return bool
 	 */
 	public function getHeaderAsBool(string $name, bool $default = false): bool
 	{
 		return $this->headers->getBool($name, $default);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withHeader($name, $value): static
 	{
@@ -173,8 +143,6 @@ abstract class Message implements MessageInterface
 
 	/**
 	 * Returns a new instance with the specified boolean header.
-	 *
-	 * @param mixed $name
 	 */
 	public function withHeaderBool($name, bool $value): static
 	{
@@ -184,9 +152,6 @@ abstract class Message implements MessageInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withAddedHeader($name, $value): static
 	{
@@ -196,9 +161,6 @@ abstract class Message implements MessageInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withoutHeader($name): static
 	{
@@ -208,18 +170,12 @@ abstract class Message implements MessageInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getBody(): StreamInterface
 	{
 		return $this->body;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withBody(StreamInterface $body): static
 	{

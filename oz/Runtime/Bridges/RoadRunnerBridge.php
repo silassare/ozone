@@ -114,9 +114,6 @@ final class RoadRunnerBridge implements ResponseSinkInterface
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function send(Response $response): void
 	{

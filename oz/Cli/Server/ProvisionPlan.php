@@ -83,10 +83,9 @@ final class ProvisionPlan
 	 * applied step must not be recorded as done. What did succeed stays in the manifest, so the
 	 * next run continues from there.
 	 *
-	 * @param HostInterface     $host     the host the plan is for
-	 * @param ProvisionManifest $manifest
-	 * @param null|callable     $on_step  called with (ProvisionStep, string $state) per step,
-	 *                                    state being `skipped`, `running` or `done`
+	 * @param HostInterface $host    the host the plan is for
+	 * @param null|callable $on_step called with (ProvisionStep, string $state) per step,
+	 *                               state being `skipped`, `running` or `done`
 	 *
 	 * @return list<string> the names of the steps that ran
 	 */

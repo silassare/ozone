@@ -143,8 +143,6 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	 * @param Form                $parent_form the parent form
 	 * @param string              $name        the fieldset name
 	 * @param callable(self):void $callback    populates the fieldset in-place
-	 *
-	 * @return static
 	 */
 	public static function static(Form $parent_form, string $name, callable $callback): static
 	{
@@ -176,8 +174,6 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	 * @param Form                                     $parent_form the parent form
 	 * @param string                                   $name        the fieldset name
 	 * @param callable(FormValidationContext):Fieldset $factory     builds the fieldset from the context
-	 *
-	 * @return static
 	 */
 	public static function dynamic(Form $parent_form, string $name, callable $factory): static
 	{
@@ -198,8 +194,6 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 
 	/**
 	 * Sets the fieldset legend (the visible group label shown to the user).
-	 *
-	 * @param I18nMessage|string $legend
 	 *
 	 * @return $this
 	 */
@@ -231,8 +225,6 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	 * validation, or null when no condition has been set.
 	 *
 	 * Use {@see self::if()} to set or read the condition via the fluent builder.
-	 *
-	 * @return null|RuleSet
 	 */
 	public function getIf(): ?RuleSet
 	{
@@ -243,8 +235,6 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	 * Returns (or lazily initialises) the condition that controls whether this
 	 * fieldset participates in validation. Evaluated against the parent form's
 	 * accumulated cleaned data.
-	 *
-	 * @return RuleSet
 	 */
 	public function if(): RuleSet
 	{
@@ -261,8 +251,6 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 
 	/**
 	 * Returns true when this fieldset's condition is satisfied (or when no condition is set).
-	 *
-	 * @param FormValidationContext $ctx
 	 */
 	public function isEnabled(FormValidationContext $ctx): bool
 	{
@@ -280,10 +268,6 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	 *  - `null` when the condition is not satisfied (fieldset is skipped).
 	 *  - `$this` for static fieldsets when enabled.
 	 *  - A new `Fieldset` instance from the dynamic factory when enabled.
-	 *
-	 * @param FormValidationContext $ctx
-	 *
-	 * @return null|Fieldset
 	 */
 	public function build(FormValidationContext $ctx): ?self
 	{
@@ -301,8 +285,6 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	/**
 	 * Validates this fieldset against the given form data.
 	 *
-	 * @param FormValidationContext $ctx
-	 *
 	 * @throws InvalidFormException
 	 */
 	public function validate(FormValidationContext $ctx): void
@@ -315,8 +297,6 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @return array{
 	 *  ref: string,
 	 *  name: string,
@@ -348,23 +328,19 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 
 	/**
 	 * Calls the dynamic factory and validates its return type.
-	 *
-	 * @param FormValidationContext $ctx
-	 *
-	 * @return Fieldset
 	 */
 	private function callDynamicFactory(FormValidationContext $ctx): self
 	{
 		$result = ($this->t_dynamic_factory)($ctx);
 
 		if (!$result instanceof self) {
-			throw (new RuntimeException(
+			throw new RuntimeException(
 				\sprintf(
 					'Dynamic fieldset factory must return an instance of "%s", got: %s.',
 					self::class,
 					\get_debug_type($result)
 				)
-			))->suspectCallable($this->t_dynamic_factory);
+			)->suspectCallable($this->t_dynamic_factory);
 		}
 
 		return $result;

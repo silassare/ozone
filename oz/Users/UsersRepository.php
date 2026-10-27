@@ -52,10 +52,6 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	/**
 	 * Check if a given auth user table is supported by this repository.
 	 *
-	 * @param Table $table
-	 *
-	 * @return bool
-	 *
 	 * @internal
 	 */
 	public static function isTableSupported(Table $table): bool
@@ -69,7 +65,6 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 	/**
 	 * Add standard auth user columns to a table.
 	 *
-	 * @param TableBuilder $tb
 	 * @param array{
 	 *     with_gender?:bool,
 	 *     with_birth_date?:bool,
@@ -150,7 +145,7 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 			->setMetaKey('api.doc.description', 'Additional data of the auth user');
 
 		// optional columns
-		$tb->column('pic', (new TypeFile())->mimeTypes(['image/png', 'image/jpeg'])->nullable())
+		$tb->column('pic', new TypeFile()->mimeTypes(['image/png', 'image/jpeg'])->nullable())
 			->setMetaKey('field.label', 'Profile Picture')
 			->setMetaKey('api.doc.description', 'The profile picture of the auth user');
 
@@ -203,9 +198,6 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		});
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function get(string $user_type): static
 	{
@@ -221,18 +213,12 @@ final class UsersRepository implements AuthUsersRepositoryInterface
 		return new self($table, $user_type);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAuthUserByIdentifier(string $identifier): ?AuthUserInterface
 	{
 		return $this->getAuthUserByIdentifierType(AuthUserInterface::IDENTIFIER_TYPE_ID, $identifier);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAuthUserByIdentifierType(string $identifier_type, string $identifier_value): ?AuthUserInterface
 	{

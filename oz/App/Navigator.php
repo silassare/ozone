@@ -129,7 +129,7 @@ final class Navigator
 			throw new InvalidArgumentException(\sprintf('Invalid redirect url: %s', $uri_str));
 		}
 
-		(new RedirectHook($this->context, $uri))->dispatch();
+		new RedirectHook($this->context, $uri)->dispatch();
 
 		if ($this->context->isApiContext()) {
 			$this->context->respond($this->context->getResponse()->withRedirect($uri_str, $status));
@@ -174,9 +174,6 @@ final class Navigator
 	}
 
 	/**
-	 * The navigator of the root context of this request tree.
-	 */
-	/**
 	 * Records a route run in this request tree, and returns the whole trail.
 	 *
 	 * Owned by the root context like the redirection history, so it dies with the request. It used
@@ -218,6 +215,9 @@ final class Navigator
 		$root->history[$target] = $info;
 	}
 
+	/**
+	 * The navigator of the root context of this request tree.
+	 */
 	private function root(): self
 	{
 		$context = $this->context;

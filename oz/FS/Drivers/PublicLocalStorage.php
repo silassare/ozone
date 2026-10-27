@@ -26,18 +26,12 @@ use OZONE\Core\Http\Uri;
  */
 final class PublicLocalStorage extends AbstractLocalStorage
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function get(string $name): static
 	{
 		return new self($name);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function publicUri(Context $context, OZFile $file): Uri
 	{
@@ -54,9 +48,6 @@ final class PublicLocalStorage extends AbstractLocalStorage
 		return $context->buildUri($relative_path);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function uploadsDir(): FilesManager
 	{

@@ -64,27 +64,18 @@ class Job implements Interfaces\JobInterface
 		$this->result     = new JSONResult();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getRef(): string
 	{
 		return $this->ref;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return $this->name;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setName(string $name): static
 	{
@@ -93,36 +84,24 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPayload(): array
 	{
 		return $this->payload;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getWorker(): string
 	{
 		return $this->worker;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getQueue(): string
 	{
 		return $this->queue;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setQueue(string $queue): static
 	{
@@ -131,18 +110,12 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPriority(): int
 	{
 		return $this->priority;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setPriority(int $priority): static
 	{
@@ -151,9 +124,6 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function encrypted(): static
 	{
@@ -162,18 +132,12 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function shouldEncryptPayload(): bool
 	{
 		return $this->should_encrypt_payload;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setCreatedAt(int $created_at): static
 	{
@@ -182,18 +146,12 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getCreatedAt(): int
 	{
 		return $this->created_at;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setUpdatedAt(int $updated_at): static
 	{
@@ -202,27 +160,18 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getUpdatedAt(): int
 	{
 		return $this->updated_at;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getState(): JobState
 	{
 		return $this->state;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setState(JobState $state): static
 	{
@@ -231,18 +180,12 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStartedAt(): ?float
 	{
 		return $this->started_at;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setStartedAt(?float $started_at): static
 	{
@@ -251,18 +194,12 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getEndedAt(): ?float
 	{
 		return $this->ended_at;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setEndedAt(?float $ended_at): static
 	{
@@ -271,18 +208,12 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getResult(): JSONResult
 	{
 		return $this->result;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setResult(JSONResult $result): static
 	{
@@ -291,18 +222,12 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getTryCount(): int
 	{
 		return $this->try_count;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setTryCount(int $try_count): static
 	{
@@ -311,9 +236,6 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function incrementTryCount(): static
 	{
@@ -322,18 +244,12 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getRetryMax(): int
 	{
 		return $this->retry_max;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setRetryMax(int $retry_max): static
 	{
@@ -342,18 +258,12 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getRetryDelay(): int
 	{
 		return $this->retry_delay;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setRetryDelay(int $retry_delay): static
 	{
@@ -362,9 +272,6 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function dispatch(string $store_name = Queue::DEFAULT_STORE): JobContractInterface
 	{
@@ -372,18 +279,12 @@ class Job implements Interfaces\JobInterface
 			->add($this);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getRunAfter(): ?int
 	{
 		return $this->run_after;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setRunAfter(?int $run_after): static
 	{
@@ -392,18 +293,12 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getChain(): array
 	{
 		return $this->chain;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setChain(array $chain): static
 	{
@@ -412,18 +307,12 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getBatchId(): ?string
 	{
 		return $this->batch_id;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setBatchId(?string $batch_id): static
 	{
@@ -432,9 +321,6 @@ class Job implements Interfaces\JobInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isDeadLetter(): bool
 	{

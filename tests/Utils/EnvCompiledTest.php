@@ -63,7 +63,7 @@ final class EnvCompiledTest extends TestCase
 		self::assertCount(1, self::compiledCopies($this->file));
 
 		// And the same from the compiled copy.
-		self::assertSame($parser->getEnv('B'), (new Env($this->file))->get('B'));
+		self::assertSame($parser->getEnv('B'), new Env($this->file)->get('B'));
 	}
 
 	public function testPatchNeedsNoRunningApp(): void
@@ -81,7 +81,7 @@ final class EnvCompiledTest extends TestCase
 
 		self::assertSame('patched', $parser->getEnv('B'));
 		self::assertSame(5, $parser->getEnv('E'));
-		self::assertSame($parser->getEnv('A'), (new Env($this->file))->get('A'));
+		self::assertSame($parser->getEnv('A'), new Env($this->file)->get('A'));
 	}
 
 	public function testAnEditMakesANewCopy(): void

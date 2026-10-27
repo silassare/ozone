@@ -67,9 +67,6 @@ abstract class AbstractResumableFormProvider implements ResumableFormProviderInt
 	 */
 	protected RouteInfo $ri;
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function instance(RouteInfo $ri): static
 	{
@@ -79,81 +76,54 @@ abstract class AbstractResumableFormProvider implements ResumableFormProviderInt
 		return $instance;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function requiresRealContext(): bool
 	{
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function initForm(): ?Form
 	{
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function resumeScope(): RequestScope
 	{
 		return RequestScope::STATE;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function resumeTTL(): int
 	{
 		return 3600;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function totalSteps(): ?int
 	{
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isReversible(): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function notBefore(): ?DateTimeImmutable
 	{
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function deadline(): ?DateTimeImmutable
 	{
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function onAbandon(array $session): void
 	{

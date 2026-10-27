@@ -131,7 +131,7 @@ final class TrustedProxiesTest extends TestCase
 
 	public function testSchemeFromAnUntrustedPeerIsIgnored(): void
 	{
-		self::assertNull((new TrustedProxies([]))->resolveScheme('203.0.113.9', null, 'https'));
+		self::assertNull(new TrustedProxies([])->resolveScheme('203.0.113.9', null, 'https'));
 	}
 
 	public function testHostFromATrustedProxy(): void
@@ -153,7 +153,7 @@ final class TrustedProxiesTest extends TestCase
 
 	public function testHostFromAnUntrustedPeerIsIgnored(): void
 	{
-		self::assertNull((new TrustedProxies([]))->resolveHost('203.0.113.9', null, 'app.example.com'));
+		self::assertNull(new TrustedProxies([])->resolveHost('203.0.113.9', null, 'app.example.com'));
 	}
 
 	public function testUnparsableHopStopsAtTheNearestTrustedProxy(): void

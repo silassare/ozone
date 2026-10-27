@@ -27,8 +27,6 @@ final class Middlewares
 	 *
 	 * If the name is a class name and is subclass of {@link RouteMiddlewareInterface} then it will be returned.
 	 *
-	 * @param string $name
-	 *
 	 * @return class-string<RouteMiddlewareInterface>
 	 */
 	public static function get(string $name): string
@@ -40,18 +38,18 @@ final class Middlewares
 		$mdl_class = Settings::get('oz.middlewares', $name);
 
 		if (!$mdl_class) {
-			throw (new RuntimeException(\sprintf(
+			throw new RuntimeException(\sprintf(
 				'Route middleware "%s" not found in settings.',
 				$name
-			)))->suspectConfig('oz.middlewares', $name);
+			))->suspectConfig('oz.middlewares', $name);
 		}
 
 		if (!\class_exists($mdl_class) || !\is_subclass_of($mdl_class, RouteMiddlewareInterface::class)) {
-			throw (new RuntimeException(\sprintf(
+			throw new RuntimeException(\sprintf(
 				'Route middleware "%s" should be subclass of: %s',
 				$mdl_class,
 				RouteMiddlewareInterface::class
-			)))->suspectConfig('oz.middlewares', $name);
+			))->suspectConfig('oz.middlewares', $name);
 		}
 
 		return $mdl_class;

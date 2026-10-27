@@ -82,8 +82,6 @@ final class RouteInfo
 
 	/**
 	 * Gets current request context.
-	 *
-	 * @return Context
 	 */
 	public function getContext(): Context
 	{
@@ -92,8 +90,6 @@ final class RouteInfo
 
 	/**
 	 * Checks if the route is intercepted.
-	 *
-	 * @return bool
 	 */
 	public function isIntercepted(): bool
 	{
@@ -102,8 +98,6 @@ final class RouteInfo
 
 	/**
 	 * Gets the interceptor instance if any.
-	 *
-	 * @return null|RouteInterceptorInterface
 	 */
 	public function getInterceptor(): ?RouteInterceptorInterface
 	{
@@ -112,8 +106,6 @@ final class RouteInfo
 
 	/**
 	 * Gets current route.
-	 *
-	 * @return Route
 	 */
 	public function route(): Route
 	{
@@ -137,8 +129,6 @@ final class RouteInfo
 
 	/**
 	 * Gets current route parameters.
-	 *
-	 * @return array
 	 */
 	public function params(): array
 	{
@@ -147,11 +137,6 @@ final class RouteInfo
 
 	/**
 	 * Gets current route parameter value with a given name.
-	 *
-	 * @param string     $name
-	 * @param null|mixed $def
-	 *
-	 * @return mixed
 	 */
 	public function param(string $name, mixed $def = null): mixed
 	{
@@ -160,8 +145,6 @@ final class RouteInfo
 
 	/**
 	 * Shortcut for {@see Request::getUri()}.
-	 *
-	 * @return Uri
 	 */
 	public function uri(): Uri
 	{
@@ -171,8 +154,6 @@ final class RouteInfo
 
 	/**
 	 * Gets validated form data.
-	 *
-	 * @return FormDataClean
 	 */
 	public function getCleanFormData(): FormDataClean
 	{
@@ -199,11 +180,6 @@ final class RouteInfo
 
 	/**
 	 * Gets validated form field value.
-	 *
-	 * @param string     $name
-	 * @param null|mixed $def
-	 *
-	 * @return mixed
 	 */
 	public function getCleanFormField(string $name, mixed $def = null): mixed
 	{
@@ -227,8 +203,6 @@ final class RouteInfo
 	 * Gets guard stored results.
 	 *
 	 * @param class-string<RouteGuardInterface> $guard_fqn_class
-	 *
-	 * @return mixed
 	 */
 	public function getGuardStoredResults(string $guard_fqn_class): mixed
 	{
@@ -243,10 +217,6 @@ final class RouteInfo
 
 	/**
 	 * Shortcut for {@see Request::getUnsafeFormData()}.
-	 *
-	 * @param bool $include_files
-	 *
-	 * @return FormData
 	 */
 	public function getUnsafeFormData(bool $include_files = true): FormData
 	{
@@ -256,11 +226,6 @@ final class RouteInfo
 
 	/**
 	 * Shortcut for {@see Request::getUnsafeFormField()}.
-	 *
-	 * @param string     $name
-	 * @param null|mixed $def
-	 *
-	 * @return mixed
 	 */
 	public function getUnsafeFormField(string $name, mixed $def = null): mixed
 	{
@@ -376,8 +341,6 @@ final class RouteInfo
 
 	/**
 	 * The accumulator `checkRouteForm()` created for this dispatch.
-	 *
-	 * @return FormDataClean
 	 */
 	private function cleanFormData(): FormDataClean
 	{

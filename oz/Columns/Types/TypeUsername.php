@@ -46,27 +46,18 @@ class TypeUsername extends Type implements FrontendTypeOptionsInterface
 		parent::__construct(new TypeString(1, \max(3, $max) * 2));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getInstance(array $options): static
 	{
 		return (new static())->configure($options);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function default($default): static
 	{
@@ -95,9 +86,6 @@ class TypeUsername extends Type implements FrontendTypeOptionsInterface
 		return $this->setOption('registered', false);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function configure(array $options): static
 	{
@@ -139,9 +127,6 @@ class TypeUsername extends Type implements FrontendTypeOptionsInterface
 		return $out;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
 	{

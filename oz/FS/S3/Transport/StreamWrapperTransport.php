@@ -34,36 +34,24 @@ final class StreamWrapperTransport implements S3TransportInterface
 {
 	public const CHUNK_SIZE = 1 << 19;
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return 'stream-wrapper';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function isSupported(): bool
 	{
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function streamsRequestBody(): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function send(S3Request $request): S3Response
 	{

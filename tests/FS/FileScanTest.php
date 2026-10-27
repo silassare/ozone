@@ -116,7 +116,7 @@ final class FileScanTest extends TestCase
 		self::assertSame(FileScanState::PENDING, $file->getScanState());
 		self::assertSame([], FakeFileScanner::$scanned);
 
-		$jobs = (new OZJobsQuery())
+		$jobs = new OZJobsQuery()
 			->whereWorkerIs(FileScanWorker::class)
 			->whereStateIs(JobState::PENDING)
 			->find()

@@ -61,7 +61,7 @@ final class FormTest extends TestCase
 
 	public function testToArrayResumeScopeNullWhenNotEnabled(): void
 	{
-		$arr = (new Form())->toArray();
+		$arr = new Form()->toArray();
 
 		self::assertNull($arr['resume_scope']);
 		self::assertNull($arr['resume_ttl']);
@@ -69,7 +69,7 @@ final class FormTest extends TestCase
 
 	public function testToArrayResumableScopeAndTTLWhenEnabled(): void
 	{
-		$arr = (new Form())->resumable(RequestScope::STATE, 1800)->toArray();
+		$arr = new Form()->resumable(RequestScope::STATE, 1800)->toArray();
 
 		self::assertSame(RequestScope::STATE->value, $arr['resume_scope']);
 		self::assertSame(1800, $arr['resume_ttl']);
@@ -81,7 +81,7 @@ final class FormTest extends TestCase
 
 	public function testGetVersionReturnsNonEmpty(): void
 	{
-		self::assertNotEmpty((new Form())->getVersion());
+		self::assertNotEmpty(new Form()->getVersion());
 	}
 
 	public function testGetVersionIsStableBetweenCalls(): void
@@ -130,17 +130,17 @@ final class FormTest extends TestCase
 
 	public function testResumeScopeDefaultIsNull(): void
 	{
-		self::assertNull((new Form())->getResumeScope());
+		self::assertNull(new Form()->getResumeScope());
 	}
 
 	public function testResumeTTLDefaultIs3600(): void
 	{
-		self::assertSame(3600, (new Form())->getResumeTTL());
+		self::assertSame(3600, new Form()->getResumeTTL());
 	}
 
 	public function testResumableSetsScopeAndTTL(): void
 	{
-		$form = (new Form())->resumable(RequestScope::STATE, 7200);
+		$form = new Form()->resumable(RequestScope::STATE, 7200);
 
 		self::assertSame(RequestScope::STATE, $form->getResumeScope());
 		self::assertSame(7200, $form->getResumeTTL());
@@ -234,7 +234,7 @@ final class FormTest extends TestCase
 
 	public function testGetIdNullByDefault(): void
 	{
-		self::assertNull((new Form())->getId());
+		self::assertNull(new Form()->getId());
 	}
 
 	public function testSetIdReturnsSelf(): void
@@ -258,7 +258,7 @@ final class FormTest extends TestCase
 
 	public function testMergePropagatesToNoneTarget(): void
 	{
-		$source = (new Form())->resumable(RequestScope::USER, 600);
+		$source = new Form()->resumable(RequestScope::USER, 600);
 		$target = new Form();
 
 		$target->merge($source);
@@ -269,8 +269,8 @@ final class FormTest extends TestCase
 
 	public function testMergeDoesNotOverwriteExistingScope(): void
 	{
-		$source = (new Form())->resumable(RequestScope::USER, 600);
-		$target = (new Form())->resumable(RequestScope::STATE, 300);
+		$source = new Form()->resumable(RequestScope::USER, 600);
+		$target = new Form()->resumable(RequestScope::STATE, 300);
 
 		$target->merge($source);
 
@@ -369,7 +369,7 @@ final class FormTest extends TestCase
 
 	public function testDefaultMethodIsPost(): void
 	{
-		self::assertSame('POST', (new Form())->getMethod());
+		self::assertSame('POST', new Form()->getMethod());
 	}
 
 	public function testMethodIsUpperCased(): void
@@ -381,7 +381,7 @@ final class FormTest extends TestCase
 
 	public function testSubmitToNullByDefault(): void
 	{
-		self::assertNull((new Form())->getSubmitTo());
+		self::assertNull(new Form()->getSubmitTo());
 	}
 
 	public function testActionIsTheAbsolutePathOfTheSubmitUri(): void
@@ -389,14 +389,14 @@ final class FormTest extends TestCase
 		// A client addresses the server it is talking to: the scheme and the authority are left out, so
 		// the same answer serves whatever host it was asked on.
 		$uri  = Uri::createFromString('https://api.example.com/orders/new?step=2');
-		$form = (new Form())->submitTo($uri);
+		$form = new Form()->submitTo($uri);
 
 		self::assertSame('/orders/new?step=2', $form->toArray()['action']);
 	}
 
 	public function testActionIsNullWithoutASubmitUri(): void
 	{
-		self::assertNull((new Form())->toArray()['action']);
+		self::assertNull(new Form()->toArray()['action']);
 	}
 
 	// -----------------------------------------------------------------------
@@ -405,7 +405,7 @@ final class FormTest extends TestCase
 
 	public function testGetFieldReturnsNullForUnknownField(): void
 	{
-		self::assertNull((new Form())->getField('nonexistent'));
+		self::assertNull(new Form()->getField('nonexistent'));
 	}
 
 	public function testGetFieldReturnsSameFieldInstanceAsField(): void
@@ -434,7 +434,7 @@ final class FormTest extends TestCase
 
 	public function testResumeWhenResumableAndNoCachedDataReturnsNull(): void
 	{
-		$form = (new Form())->resumable(RequestScope::HOST);
+		$form = new Form()->resumable(RequestScope::HOST);
 		$form->field('email')->required(true);
 
 		[$prefilled] = $form->resume(context());
@@ -453,7 +453,7 @@ final class FormTest extends TestCase
 
 	public function testSaveForLaterReturnsSelf(): void
 	{
-		$form = (new Form())->resumable(RequestScope::HOST);
+		$form = new Form()->resumable(RequestScope::HOST);
 		$form->field('email')->required(true);
 
 		self::assertSame($form, $form->saveForLater(context(), $this->makeFormData(['email' => 'a@b.com'])));
@@ -461,7 +461,7 @@ final class FormTest extends TestCase
 
 	public function testResumeRoundTrip(): void
 	{
-		$form = (new Form('signup'))->resumable(RequestScope::HOST);
+		$form = new Form('signup')->resumable(RequestScope::HOST);
 		$form->field('email')->required(true);
 
 		$form->saveForLater(context(), $this->makeFormData(['signup' => ['email' => 'test@example.com']]));
@@ -474,7 +474,7 @@ final class FormTest extends TestCase
 
 	public function testResumeSurvivesAddingAField(): void
 	{
-		$form = (new Form('signup'))->resumable(RequestScope::HOST);
+		$form = new Form('signup')->resumable(RequestScope::HOST);
 		$form->field('email')->required(true);
 
 		$form->saveForLater(context(), $this->makeFormData(['signup' => ['email' => 'test@example.com']]));
@@ -490,12 +490,12 @@ final class FormTest extends TestCase
 
 	public function testResumeDropsValuesWhoseFieldNoLongerExists(): void
 	{
-		$before = (new Form('signup'))->resumable(RequestScope::HOST);
+		$before = new Form('signup')->resumable(RequestScope::HOST);
 		$before->field('email')->required(true);
 		$before->saveForLater(context(), $this->makeFormData(['signup' => ['email' => 'test@example.com']]));
 
 		// 'email' is gone from the definition, so its cached value must not be replayed.
-		$after = (new Form('signup'))->resumable(RequestScope::HOST);
+		$after = new Form('signup')->resumable(RequestScope::HOST);
 		$after->field('name');
 
 		[$prefilled] = $after->resume(context());
@@ -506,7 +506,7 @@ final class FormTest extends TestCase
 
 	public function testDropCallableClearsCachedData(): void
 	{
-		$form = (new Form('drop'))->resumable(RequestScope::HOST);
+		$form = new Form('drop')->resumable(RequestScope::HOST);
 		$form->field('email')->required(true);
 
 		$form->saveForLater(context(), $this->makeFormData(['drop' => ['email' => 'x@x.com']]));
@@ -522,7 +522,7 @@ final class FormTest extends TestCase
 
 	public function testResumePreservesTTLFromResumable(): void
 	{
-		$form = (new Form())->resumable(RequestScope::HOST, 900);
+		$form = new Form()->resumable(RequestScope::HOST, 900);
 		$form->field('name')->required(true);
 
 		self::assertSame(900, $form->getResumeTTL());
@@ -530,7 +530,7 @@ final class FormTest extends TestCase
 
 	public function testBuildResumeCacheKeyDiffersPerPartition(): void
 	{
-		$form = (new Form())->setId('step-1');
+		$form = new Form()->setId('step-1');
 
 		$none = $form->buildResumeCacheKey('scope-x');
 		$a    = $form->buildResumeCacheKey('scope-x', 'route-a');
@@ -544,7 +544,7 @@ final class FormTest extends TestCase
 
 	public function testResumeIsIsolatedPerPartition(): void
 	{
-		$form = (new Form('part'))->resumable(RequestScope::HOST);
+		$form = new Form('part')->resumable(RequestScope::HOST);
 		$form->field('email')->required(true);
 
 		$form->saveForLater(context(), $this->makeFormData(['part' => ['email' => 'a@b.com']]), 'route-a');
@@ -648,7 +648,7 @@ final class FormTest extends TestCase
 
 	public function testAnExplicitVersionIsTheFormsVersion(): void
 	{
-		$form = (new Form())->version('b3f9c2');
+		$form = new Form()->version('b3f9c2');
 		$form->string('name');
 
 		self::assertSame('b3f9c2', $form->getVersion());
@@ -656,7 +656,7 @@ final class FormTest extends TestCase
 
 		$this->expectException(LogicException::class);
 
-		(new Form())->version('');
+		new Form()->version('');
 	}
 
 	public function testADiscoveredEnumFieldSendsItsCases(): void

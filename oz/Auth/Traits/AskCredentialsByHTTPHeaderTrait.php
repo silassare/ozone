@@ -51,8 +51,6 @@ trait AskCredentialsByHTTPHeaderTrait
 
 	/**
 	 * Should return the auth method header value to send to client.
-	 *
-	 * @return string
 	 */
 	abstract protected function askHeader(): string;
 
@@ -60,8 +58,6 @@ trait AskCredentialsByHTTPHeaderTrait
 	 * Should return the auth method info used to build json response to be sent to client.
 	 *
 	 * Frontend developers can use this info to build the authentication form.
-	 *
-	 * @return array
 	 */
 	abstract protected function askInfo(): array;
 }

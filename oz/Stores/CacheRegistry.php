@@ -61,8 +61,6 @@ final class CacheRegistry
 	 *
 	 * @param string $name The store name (must match a key in `oz.stores.cache`).
 	 *
-	 * @return KeyValueStore
-	 *
 	 * @throws RuntimeException when the name is that of a state store
 	 */
 	public static function store(string $name): KeyValueStore
@@ -95,8 +93,6 @@ final class CacheRegistry
 	 * per-request memoization.
 	 *
 	 * @param string $namespace Namespace for isolation (e.g. `__METHOD__` or `self::class`).
-	 *
-	 * @return KeyValueStore
 	 */
 	public static function runtime(string $namespace): KeyValueStore
 	{
@@ -109,8 +105,6 @@ final class CacheRegistry
 	 * Returns a cache store backed by the configured default persistent driver.
 	 *
 	 * @param string $namespace namespace for isolation
-	 *
-	 * @return KeyValueStore
 	 */
 	public static function persistent(string $namespace): KeyValueStore
 	{
@@ -125,8 +119,6 @@ final class CacheRegistry
 	 * @param string $driver    FQN of the driver class implementing StoreDriverInterface
 	 * @param string $namespace the namespace / store name
 	 * @param array  $options   driver-specific options forwarded to fromConfig()
-	 *
-	 * @return KeyValueStore
 	 */
 	private static function resolve(string $driver, string $namespace, array $options = []): KeyValueStore
 	{

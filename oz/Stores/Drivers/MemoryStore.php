@@ -38,8 +38,6 @@ class MemoryStore implements StoreDriverInterface
 
 	/**
 	 * MemoryStore constructor.
-	 *
-	 * @param null|string $namespace
 	 */
 	public function __construct(?string $namespace = null)
 	{
@@ -63,9 +61,6 @@ class MemoryStore implements StoreDriverInterface
 		self::$cache_data = [];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function capabilities(): StoreCapabilities
 	{
@@ -79,9 +74,6 @@ class MemoryStore implements StoreDriverInterface
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function get(string $key): ?StoreEntry
 	{
@@ -101,9 +93,6 @@ class MemoryStore implements StoreDriverInterface
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getMultiple(array $keys): array
 	{
@@ -120,9 +109,6 @@ class MemoryStore implements StoreDriverInterface
 		return $items;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function set(StoreEntry $entry): bool
 	{
@@ -136,9 +122,6 @@ class MemoryStore implements StoreDriverInterface
 		});
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function delete(string $key): bool
 	{
@@ -149,9 +132,6 @@ class MemoryStore implements StoreDriverInterface
 		});
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function deleteMultiple(array $keys): bool
 	{
@@ -164,9 +144,6 @@ class MemoryStore implements StoreDriverInterface
 		});
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function clear(): bool
 	{
@@ -177,9 +154,6 @@ class MemoryStore implements StoreDriverInterface
 		});
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function add(string $key, float|int $by, bool $create = false, ?float $expiresAt = null): float|int|null
 	{
@@ -219,9 +193,6 @@ class MemoryStore implements StoreDriverInterface
 		return [];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromConfig(string $namespace, array $options = []): static
 	{
@@ -230,8 +201,6 @@ class MemoryStore implements StoreDriverInterface
 
 	/**
 	 * Called when the cache is being initialized.
-	 *
-	 * @return array
 	 */
 	protected function load(): array
 	{
@@ -240,8 +209,6 @@ class MemoryStore implements StoreDriverInterface
 
 	/**
 	 * Called after each write operation.
-	 *
-	 * @return bool
 	 */
 	protected function save(): bool
 	{

@@ -33,11 +33,6 @@ class RolesUtils
 {
 	/**
 	 * Checks if two roles are identical.
-	 *
-	 * @param RoleInterface|string $a
-	 * @param RoleInterface|string $b
-	 *
-	 * @return bool
 	 */
 	public static function is(RoleInterface|string $a, RoleInterface|string $b): bool
 	{
@@ -62,10 +57,6 @@ class RolesUtils
 
 	/**
 	 * Normalizes a role to an instance of configured role enum class of type {@see RoleInterface}.
-	 *
-	 * @param RoleInterface|string $role
-	 *
-	 * @return RoleInterface
 	 */
 	public static function normalize(RoleInterface|string $role): RoleInterface
 	{
@@ -78,13 +69,12 @@ class RolesUtils
 		try {
 			return $role_enum_class::from($role);
 		} catch (TypeError|ValueError $e) {
-			throw (
-				new RuntimeException(\sprintf(
-					'Role "%s" is not a valid enum value for "%s"',
-					$role,
-					$role_enum_class
-				), null, $e)
-			)->suspectConfig('oz.roles', 'OZ_ROLE_ENUM_CLASS');
+			throw new RuntimeException(\sprintf(
+				'Role "%s" is not a valid enum value for "%s"',
+				$role,
+				$role_enum_class
+			), null, $e)
+				->suspectConfig('oz.roles', 'OZ_ROLE_ENUM_CLASS');
 		}
 	}
 
@@ -166,8 +156,6 @@ class RolesUtils
 	 * Gets instance for admin role.
 	 *
 	 * Alias of {@see RoleInterface::editor()}
-	 *
-	 * @return RoleInterface
 	 */
 	public static function admin(): RoleInterface
 	{
@@ -178,8 +166,6 @@ class RolesUtils
 	 * Gets instance for super admin role.
 	 *
 	 * Alias of {@see RoleInterface::editor()}
-	 *
-	 * @return RoleInterface
 	 */
 	public static function superAdmin(): RoleInterface
 	{
@@ -190,8 +176,6 @@ class RolesUtils
 	 * Gets instance for editor role.
 	 *
 	 * Alias of {@see RoleInterface::editor()}
-	 *
-	 * @return RoleInterface
 	 */
 	public static function editor(): RoleInterface
 	{
@@ -204,8 +188,6 @@ class RolesUtils
 	 * @param AuthUserInterface $user       the user
 	 * @param string            $role       the role
 	 * @param bool              $valid_only if true, only valid role will be returned
-	 *
-	 * @return null|OZRole
 	 */
 	public static function role(AuthUserInterface $user, string $role, bool $valid_only): ?OZRole
 	{

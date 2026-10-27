@@ -304,8 +304,6 @@ class Benchmark
 	 * Returns the result record for a single callable, or null if not found.
 	 *
 	 * @param string $ref callable name as provided to run()
-	 *
-	 * @return null|array
 	 */
 	public function getResult(string $ref): ?array
 	{
@@ -528,8 +526,6 @@ class Benchmark
 	 * with baselines written before the envelope was introduced).
 	 *
 	 * @param array<string, mixed> $meta optional environment fingerprint
-	 *
-	 * @return string
 	 */
 	public function exportJson(array $meta = []): string
 	{
@@ -602,8 +598,6 @@ class Benchmark
 	 *
 	 * @param string   $ref human-readable label for this callable
 	 * @param callable $fn  the callable to measure
-	 *
-	 * @return array
 	 */
 	private function measureCallable(string $ref, callable $fn): array
 	{
@@ -679,12 +673,6 @@ class Benchmark
 	/**
 	 * Returns a zeroed statistics record used when no iterations completed
 	 * (e.g. maxDuration was already exceeded before the first call finished).
-	 *
-	 * @param string     $ref
-	 * @param float      $wallTotal
-	 * @param null|float $memDelta
-	 *
-	 * @return array
 	 */
 	private function emptyResult(string $ref, float $wallTotal, ?float $memDelta): array
 	{
@@ -808,8 +796,6 @@ class Benchmark
 	/**
 	 * Returns a formatter that renders float nanosecond values to 2 decimal
 	 * places, falling back to "N/A" for null values.
-	 *
-	 * @return KliTableCellFormatterInterface
 	 */
 	private function nsFormatter(): KliTableCellFormatterInterface
 	{
@@ -829,8 +815,6 @@ class Benchmark
 	/**
 	 * Returns a formatter that renders relative speed as "X.XXx".
 	 * The fastest callable (1.00x) is highlighted in green+bold.
-	 *
-	 * @return KliTableCellFormatterInterface
 	 */
 	private function relativeFormatter(): KliTableCellFormatterInterface
 	{
@@ -844,7 +828,7 @@ class Benchmark
 			{
 				// Highlight the fastest entry (with a tiny epsilon for float rounding).
 				return (null !== $value && (float) $value <= 1.001)
-					? (new KliStyle())->green()->bold()
+					? new KliStyle()->green()->bold()
 					: null;
 			}
 		};
@@ -854,8 +838,6 @@ class Benchmark
 	 * Returns a formatter for nanosecond delta values in the regression table.
 	 * Positive deltas (slower) are red; negative deltas (faster) are green.
 	 * A "+" prefix is added for positive values.
-	 *
-	 * @return KliTableCellFormatterInterface
 	 */
 	private function deltaFormatter(): KliTableCellFormatterInterface
 	{
@@ -878,8 +860,8 @@ class Benchmark
 				}
 
 				return (float) $value > 0.0
-					? (new KliStyle())->red()
-					: (new KliStyle())->green();
+					? new KliStyle()->red()
+					: new KliStyle()->green();
 			}
 		};
 	}
@@ -888,8 +870,6 @@ class Benchmark
 	 * Returns a formatter for percentage change values in the regression table.
 	 * Values above +regressionThreshold are red; below -regressionThreshold
 	 * are green; values within the stable band are yellow.
-	 *
-	 * @return KliTableCellFormatterInterface
 	 */
 	private function pctFormatter(): KliTableCellFormatterInterface
 	{
@@ -916,12 +896,12 @@ class Benchmark
 				}
 
 				if (\abs((float) $value) <= $this->threshold) {
-					return (new KliStyle())->yellow();
+					return new KliStyle()->yellow();
 				}
 
 				return (float) $value > 0.0
-					? (new KliStyle())->red()
-					: (new KliStyle())->green();
+					? new KliStyle()->red()
+					: new KliStyle()->green();
 			}
 		};
 	}
@@ -933,8 +913,6 @@ class Benchmark
 	 *   STABLE      : yellow
 	 *   NEW         : cyan
 	 *   REMOVED     : dark gray.
-	 *
-	 * @return KliTableCellFormatterInterface
 	 */
 	private function statusFormatter(): KliTableCellFormatterInterface
 	{
@@ -947,11 +925,11 @@ class Benchmark
 			public function getStyle(mixed $value, KliTableHeader $header, array $row): ?KliStyle
 			{
 				return match ($value) {
-					'REGRESSION'  => (new KliStyle())->red()->bold(),
-					'IMPROVEMENT' => (new KliStyle())->green()->bold(),
-					'STABLE'      => (new KliStyle())->yellow(),
-					'NEW'         => (new KliStyle())->cyan(),
-					'REMOVED'     => (new KliStyle())->darkGray(),
+					'REGRESSION'  => new KliStyle()->red()->bold(),
+					'IMPROVEMENT' => new KliStyle()->green()->bold(),
+					'STABLE'      => new KliStyle()->yellow(),
+					'NEW'         => new KliStyle()->cyan(),
+					'REMOVED'     => new KliStyle()->darkGray(),
 					default       => null,
 				};
 			}
@@ -961,8 +939,6 @@ class Benchmark
 	/**
 	 * Returns the smallest avg_ns across all stored results.
 	 * Returns 1e-9 as a floor to guarantee a safe divisor for relative speed.
-	 *
-	 * @return float
 	 */
 	private function fastestAvg(): float
 	{

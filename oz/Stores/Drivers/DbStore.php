@@ -46,14 +46,9 @@ final class DbStore implements StoreDriverInterface
 
 	/**
 	 * DbStore constructor.
-	 *
-	 * @param string $namespace
 	 */
 	public function __construct(private readonly string $namespace) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function capabilities(): StoreCapabilities
 	{
@@ -68,8 +63,6 @@ final class DbStore implements StoreDriverInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws GoblException
 	 */
 	#[Override]
@@ -100,9 +93,6 @@ final class DbStore implements StoreDriverInterface
 		return new StoreEntry($key, $data[self::CACHE_VALUE], $expires_at);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getMultiple(array $keys): array
 	{
@@ -120,8 +110,6 @@ final class DbStore implements StoreDriverInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws GoblException
 	 */
 	#[Override]
@@ -138,7 +126,7 @@ final class DbStore implements StoreDriverInterface
 
 		// One statement, inserted or updated in place: reading first, then inserting, let two requests
 		// writing a new key at once (two first hits of a rate limit) collide on its unique key.
-		(new OZDbStoresQuery())
+		new OZDbStoresQuery()
 			->insert($row)
 			->doUpdateOnConflict(
 				[OZDbStore::COL_GROUP, OZDbStore::COL_KEY],
@@ -157,8 +145,6 @@ final class DbStore implements StoreDriverInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws GoblException
 	 */
 	#[Override]
@@ -173,9 +159,6 @@ final class DbStore implements StoreDriverInterface
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function deleteMultiple(array $keys): bool
 	{
@@ -189,14 +172,12 @@ final class DbStore implements StoreDriverInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws GoblException
 	 */
 	#[Override]
 	public function clear(): bool
 	{
-		(new OZDbStoresQuery())
+		new OZDbStoresQuery()
 			->whereGroupIs($this->namespace)
 			->delete()
 			->execute();
@@ -254,7 +235,7 @@ final class DbStore implements StoreDriverInterface
 				}
 			}
 
-			$written = (new OZDbStoresQuery())
+			$written = new OZDbStoresQuery()
 				->whereIdIs($store->getID())
 				->whereValueIs($raw)
 				->update([
@@ -284,7 +265,7 @@ final class DbStore implements StoreDriverInterface
 	#[Override]
 	public function getExpiredEntries(int $limit = 100): array
 	{
-		$results = (new OZDbStoresQuery())
+		$results = new OZDbStoresQuery()
 			->whereGroupIs($this->namespace)
 			->whereIsNotDeleted()
 			->whereExpireAtIsNotNull()
@@ -315,9 +296,6 @@ final class DbStore implements StoreDriverInterface
 		return $entries;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromConfig(string $namespace, array $options = []): static
 	{
@@ -327,15 +305,11 @@ final class DbStore implements StoreDriverInterface
 	/**
 	 * Finds a DB row for the given original key.
 	 *
-	 * @param string $key
-	 *
-	 * @return null|OZDbStore
-	 *
 	 * @throws GoblException
 	 */
 	private function findRow(string $key): ?OZDbStore
 	{
-		return (new OZDbStoresQuery())
+		return new OZDbStoresQuery()
 			->whereGroupIs($this->namespace)
 			->whereKeyIs($this->hashKey($key))
 			->whereIsNotDeleted()
@@ -356,19 +330,15 @@ final class DbStore implements StoreDriverInterface
 
 		unset($row[OZDbStore::COL_ID]);
 
-		(new OZDbStoresQuery())->insert($row)->ignoreOnConflict()->execute();
+		new OZDbStoresQuery()->insert($row)->ignoreOnConflict()->execute();
 	}
 
 	/**
 	 * Creates a new unsaved DB row for the given original key.
-	 *
-	 * @param string $key
-	 *
-	 * @return OZDbStore
 	 */
 	private function newRow(string $key): OZDbStore
 	{
-		return (new OZDbStore())
+		return new OZDbStore()
 			->setGroup($this->namespace)
 			->setKey($this->hashKey($key))
 			->setLabel($key);
@@ -379,10 +349,6 @@ final class DbStore implements StoreDriverInterface
 	 *
 	 * The `oz_db_stores.key` column has a min-length constraint of 32 chars,
 	 * so we always use the md5 hash of (namespace + ':' + key).
-	 *
-	 * @param string $key
-	 *
-	 * @return string
 	 */
 	private function hashKey(string $key): string
 	{

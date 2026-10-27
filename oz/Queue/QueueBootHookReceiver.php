@@ -40,9 +40,6 @@ use OZONE\Core\Utils\RedisFactory;
  */
 final class QueueBootHookReceiver implements BootHookReceiverInterface
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{

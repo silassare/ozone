@@ -27,8 +27,6 @@ final class Hasher
 	 * unguessable value rather than the hash of one asks {@see Keys} for a key.
 	 *
 	 * @param string $string The string to hash
-	 *
-	 * @return string
 	 */
 	public static function hash32(string $string): string
 	{
@@ -42,8 +40,6 @@ final class Hasher
 	 * unguessable value rather than the hash of one asks {@see Keys} for a key.
 	 *
 	 * @param string $string The string to hash
-	 *
-	 * @return string
 	 */
 	public static function hash64(string $string): string
 	{
@@ -54,10 +50,6 @@ final class Hasher
 	 * Shorten url (or any string).
 	 *
 	 * This is to shorten url string but it can also shorten any string.
-	 *
-	 * @param string $str
-	 *
-	 * @return string
 	 */
 	public static function shorten(string $str): string
 	{

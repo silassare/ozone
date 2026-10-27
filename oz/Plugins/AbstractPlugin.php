@@ -54,90 +54,60 @@ abstract class AbstractPlugin implements PluginInterface
 		$this->composer_json = new ComposerJSON($fs->resolve($composer_file));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getScope(): PluginScope
 	{
 		return Plugins::scopeOf($this);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return $this->name;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getInstallPath(): string
 	{
 		return $this->install_path;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPackageName(): string
 	{
 		return $this->composer_json->get('name', '');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getDescription(): string
 	{
 		return $this->composer_json->get('description', '');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAuthor(): string
 	{
 		return $this->composer_json->get('authors.0.name', '');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getVersion(): string
 	{
 		return $this->composer_json->get('version', '0.0.0');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	final public function getNamespace(): string
 	{
 		return $this->namespace;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	final public function getDbNamespace(): string
 	{
 		return $this->namespace . '\Db';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	final public function isEnabled(): bool
 	{
@@ -147,9 +117,6 @@ abstract class AbstractPlugin implements PluginInterface
 		return isset($plugins[$class]) && $plugins[$class];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function boot(): void
 	{
@@ -168,8 +135,6 @@ abstract class AbstractPlugin implements PluginInterface
 
 	/**
 	 * Check if the plugin ORM should be enabled.
-	 *
-	 * @return bool
 	 */
 	protected function shouldEnableORM(): bool
 	{

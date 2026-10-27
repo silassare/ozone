@@ -37,27 +37,18 @@ final class LogTransport implements TransportInterface
 	 */
 	public function __construct(private readonly string $channel) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromChannel(Channel $channel): static
 	{
 		return new self($channel->name);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isAvailable(): bool
 	{
 		return !OZone::inProductionMode();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function deliver(OZMessage $message, RenderedMessage $content): void
 	{

@@ -43,27 +43,18 @@ final class SubScope extends AbstractScope
 		parent::__construct();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return $this->name;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getSourcesDir(): FilesManager
 	{
 		return app()->getProjectDir()->cd('scopes' . DS . $this->name, true);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getDocumentRootDir(): FilesManager
 	{

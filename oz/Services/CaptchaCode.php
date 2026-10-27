@@ -64,10 +64,6 @@ final class CaptchaCode extends Service
 	/**
 	 * Gets captcha image uri.
 	 *
-	 * @param Context $context
-	 * @param string  $code
-	 * @param int     $expire_at
-	 *
 	 * @return Uri the captcha uri
 	 */
 	public static function buildCaptchaUri(Context $context, string $code, int $expire_at = 0): Uri
@@ -87,11 +83,6 @@ final class CaptchaCode extends Service
 
 	/**
 	 * Returns a response with the captcha image.
-	 *
-	 * @param Context $context
-	 * @param string  $captcha_key
-	 *
-	 * @return Response
 	 *
 	 * @throws NotFoundException
 	 */
@@ -177,9 +168,6 @@ final class CaptchaCode extends Service
 			->withBody($body);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -194,9 +182,6 @@ final class CaptchaCode extends Service
 			->param(self::CAPTCHA_KEY, '[a-z0-9]{32}');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{

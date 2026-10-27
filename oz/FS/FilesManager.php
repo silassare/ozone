@@ -60,8 +60,6 @@ class FilesManager extends FSUtils
 	 * - copy: string, the path of the file to copy
 	 * - children: array, the children of the directory
 	 * - permissions: int, the permissions of the file or directory.
-	 *
-	 * @param array $structure
 	 */
 	public function apply(array $structure): static
 	{
@@ -118,8 +116,6 @@ class FilesManager extends FSUtils
 	 * @param string $path    the file to write
 	 * @param string $content the content
 	 *
-	 * @return static
-	 *
 	 * @throws RuntimeException when the file cannot be written
 	 */
 	public function writeAtomic(string $path, string $content): static
@@ -144,11 +140,6 @@ class FilesManager extends FSUtils
 
 	/**
 	 * Returns a relative path from a given path.
-	 *
-	 * @param string $path
-	 * @param string $from
-	 *
-	 * @return string
 	 */
 	public function relativePath(string $path, string $from = '.'): string
 	{

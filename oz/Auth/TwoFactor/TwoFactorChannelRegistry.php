@@ -36,8 +36,6 @@ final class TwoFactorChannelRegistry
 	 * Registers a 2FA channel.
 	 *
 	 * Replaces any existing channel with the same name.
-	 *
-	 * @param TwoFactorChannelInterface $channel
 	 */
 	public static function register(TwoFactorChannelInterface $channel): void
 	{
@@ -56,10 +54,6 @@ final class TwoFactorChannelRegistry
 
 	/**
 	 * Returns the channel registered under the given name, or null if not found.
-	 *
-	 * @param string $name
-	 *
-	 * @return null|TwoFactorChannelInterface
 	 */
 	public static function get(string $name): ?TwoFactorChannelInterface
 	{
@@ -74,10 +68,6 @@ final class TwoFactorChannelRegistry
 	 *     if the channel is registered and available for the user.
 	 *  2. Channels tried in the priority order from the oz.auth.2fa settings group
 	 *     (OZ_2FA_CHANNEL_PRIORITY) until one is available.
-	 *
-	 * @param AuthUserInterface $user
-	 *
-	 * @return TwoFactorChannelInterface
 	 *
 	 * @throws RuntimeException when no channel is available for the user
 	 */

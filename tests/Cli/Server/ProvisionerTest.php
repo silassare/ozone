@@ -75,7 +75,7 @@ final class ProvisionerTest extends TestCase
 		self::assertSame($prefix . '-pdo', PackageManager::APK->phpExtensionPackage('pdo'));
 		self::assertSame($prefix . '-json', PackageManager::APK->phpExtensionPackage('json'));
 
-		$command = self::stepCommands((new Provisioner(PackageManager::APK))->plan(), 'php')[0];
+		$command = self::stepCommands(new Provisioner(PackageManager::APK)->plan(), 'php')[0];
 
 		self::assertStringNotContainsString("'" . $prefix . "-libxml'", $command);
 		self::assertStringContainsString("'" . $prefix . "-xml'", $command);
@@ -103,7 +103,7 @@ final class ProvisionerTest extends TestCase
 
 	public function testBarePlanInstallsPhpFpmAndEveryExtensionThatNeedsAPackage(): void
 	{
-		$plan     = (new Provisioner(PackageManager::APT))->plan();
+		$plan     = new Provisioner(PackageManager::APT)->plan();
 		$commands = $plan->commands();
 		$php      = self::stepCommands($plan, 'php');
 
@@ -134,7 +134,7 @@ final class ProvisionerTest extends TestCase
 	{
 		self::assertNull(PackageManager::APT->phpExtensionPackage($extension));
 
-		$command = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'php')[0];
+		$command = self::stepCommands(new Provisioner(PackageManager::APT)->plan(), 'php')[0];
 
 		self::assertStringNotContainsString("'" . PackageManager::aptPrefix() . '-' . $extension . "'", $command);
 	}
@@ -157,7 +157,7 @@ final class ProvisionerTest extends TestCase
 
 		self::assertSame($prefix . '-xml', PackageManager::APT->phpExtensionPackage('simplexml'));
 
-		$command = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'php')[0];
+		$command = self::stepCommands(new Provisioner(PackageManager::APT)->plan(), 'php')[0];
 
 		self::assertStringContainsString("'" . $prefix . "-xml'", $command);
 		self::assertStringNotContainsString("'" . $prefix . "-simplexml'", $command);
@@ -170,7 +170,7 @@ final class ProvisionerTest extends TestCase
 	public function testAptPackagesCarryThePhpSeries(): void
 	{
 		$prefix  = PackageManager::aptPrefix();
-		$command = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'php')[0];
+		$command = self::stepCommands(new Provisioner(PackageManager::APT)->plan(), 'php')[0];
 
 		self::assertMatchesRegularExpression('~^php\d+\.\d+$~', $prefix);
 		self::assertStringContainsString("'" . $prefix . "-cli'", $command);
@@ -189,7 +189,7 @@ final class ProvisionerTest extends TestCase
 		self::assertSame('php-fpm' . \PHP_MAJOR_VERSION . \PHP_MINOR_VERSION, PackageManager::APK->phpFpmService());
 		self::assertSame('php-fpm', PackageManager::DNF->phpFpmService());
 
-		$enable = self::stepCommands((new Provisioner(PackageManager::APK))->plan(), 'services:enable');
+		$enable = self::stepCommands(new Provisioner(PackageManager::APK)->plan(), 'services:enable');
 
 		self::assertStringContainsString(PackageManager::APK->phpFpmService(), \implode(' ', $enable));
 	}
@@ -200,13 +200,13 @@ final class ProvisionerTest extends TestCase
 	 */
 	public function testThePhpRepositoryIsAddedForAptOnlyAndIsPinned(): void
 	{
-		$names = self::stepNames((new Provisioner(PackageManager::APT))->plan());
+		$names = self::stepNames(new Provisioner(PackageManager::APT)->plan());
 
 		// Before PHP is installed, since it is where the packages come from.
 		self::assertSame('php:repository', $names[\array_search('php', $names, true) - 1]);
-		self::assertNotContains('php:repository', self::stepNames((new Provisioner(PackageManager::APK))->plan()));
+		self::assertNotContains('php:repository', self::stepNames(new Provisioner(PackageManager::APK)->plan()));
 
-		$command = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'php:repository')[0];
+		$command = self::stepCommands(new Provisioner(PackageManager::APT)->plan(), 'php:repository')[0];
 
 		// Nothing is added when the distribution already carries the series.
 		self::assertStringContainsString('apt-cache policy ' . PackageManager::aptPrefix() . '-cli', $command);
@@ -223,7 +223,7 @@ final class ProvisionerTest extends TestCase
 	public function testAlpinePackagesCarryThePhpSeries(): void
 	{
 		$prefix  = PackageManager::alpinePrefix();
-		$command = self::stepCommands((new Provisioner(PackageManager::APK))->plan(), 'php')[0];
+		$command = self::stepCommands(new Provisioner(PackageManager::APK)->plan(), 'php')[0];
 
 		self::assertMatchesRegularExpression('~^php\d{2,3}$~', $prefix);
 		self::assertStringContainsString("'" . $prefix . "-fpm'", $command);
@@ -239,7 +239,7 @@ final class ProvisionerTest extends TestCase
 
 	public function testTheFirewallAllowsSshBeforeEnablingItself(): void
 	{
-		$commands = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'firewall');
+		$commands = self::stepCommands(new Provisioner(PackageManager::APT)->plan(), 'firewall');
 		$allow    = self::indexOf($commands, 'ufw allow 22/tcp');
 		$enable   = self::indexOf($commands, 'ufw --force enable');
 		$deny     = self::indexOf($commands, 'ufw default deny incoming');
@@ -251,21 +251,21 @@ final class ProvisionerTest extends TestCase
 
 	public function testTheFirewallIsLastSoItNeverPrecedesTheServices(): void
 	{
-		$names = self::stepNames((new Provisioner(PackageManager::APT))->plan());
+		$names = self::stepNames(new Provisioner(PackageManager::APT)->plan());
 
 		self::assertSame('firewall', \end($names));
 	}
 
 	public function testTheFirewallCanBeLeftAlone(): void
 	{
-		$plan = (new Provisioner(PackageManager::APT, firewall: false))->plan();
+		$plan = new Provisioner(PackageManager::APT, firewall: false)->plan();
 
 		self::assertNotContains('firewall', self::stepNames($plan));
 	}
 
 	public function testNoWebServerMeansNoHttpPorts(): void
 	{
-		$plan     = (new Provisioner(PackageManager::APT, web_server: 'none'))->plan();
+		$plan     = new Provisioner(PackageManager::APT, web_server: 'none')->plan();
 		$commands = self::stepCommands($plan, 'firewall');
 
 		self::assertNotContains('web:nginx', self::stepNames($plan));
@@ -275,7 +275,7 @@ final class ProvisionerTest extends TestCase
 
 	public function testSshPortIsHonoured(): void
 	{
-		$commands = self::stepCommands((new Provisioner(PackageManager::APT, ssh_port: 2222))->plan(), 'firewall');
+		$commands = self::stepCommands(new Provisioner(PackageManager::APT, ssh_port: 2222)->plan(), 'firewall');
 
 		self::assertContains('ufw allow 2222/tcp', $commands);
 		self::assertNotContains('ufw allow 22/tcp', $commands);
@@ -283,7 +283,7 @@ final class ProvisionerTest extends TestCase
 
 	public function testNoDatabaseByDefaultSoAManagedOneIsNotShadowed(): void
 	{
-		$names = self::stepNames((new Provisioner(PackageManager::APT))->plan());
+		$names = self::stepNames(new Provisioner(PackageManager::APT)->plan());
 
 		self::assertNotContains('db:mysql', $names);
 		self::assertNotContains('db:postgresql', $names);
@@ -295,7 +295,7 @@ final class ProvisionerTest extends TestCase
 	public function testDatabasePackagePerManager(PackageManager $manager, string $database, string $package): void
 	{
 		$commands = self::stepCommands(
-			(new Provisioner($manager, database: $database))->plan(),
+			new Provisioner($manager, database: $database)->plan(),
 			'db:' . $database
 		);
 
@@ -316,13 +316,13 @@ final class ProvisionerTest extends TestCase
 
 	public function testThePhpInstalledIsCheckedAgainstWhatOZoneNeeds(): void
 	{
-		$names = self::stepNames((new Provisioner(PackageManager::APT))->plan());
+		$names = self::stepNames(new Provisioner(PackageManager::APT)->plan());
 
 		// Right after PHP is installed, before anything is built on it.
 		self::assertSame('php:version', $names[\array_search('php', $names, true) + 1]);
 
-		$apt    = self::stepCommands((new Provisioner(PackageManager::APT))->plan(), 'php:version')[0];
-		$alpine = self::stepCommands((new Provisioner(PackageManager::APK))->plan(), 'php:version')[0];
+		$apt    = self::stepCommands(new Provisioner(PackageManager::APT)->plan(), 'php:version')[0];
+		$alpine = self::stepCommands(new Provisioner(PackageManager::APK)->plan(), 'php:version')[0];
 
 		self::assertStringStartsWith(
 			PackageManager::aptPrefix()
@@ -335,13 +335,13 @@ final class ProvisionerTest extends TestCase
 		// Which needs the command line: Alpine's FPM package does not bring it.
 		self::assertStringContainsString(
 			"'" . PackageManager::alpinePrefix() . "'",
-			self::stepCommands((new Provisioner(PackageManager::APK))->plan(), 'php')[0]
+			self::stepCommands(new Provisioner(PackageManager::APK)->plan(), 'php')[0]
 		);
 	}
 
 	public function testDockerModeInstallsOnlyDockerAndTheFirewall(): void
 	{
-		$names = self::stepNames((new Provisioner(PackageManager::APT, mode: Provisioner::MODE_DOCKER))->plan());
+		$names = self::stepNames(new Provisioner(PackageManager::APT, mode: Provisioner::MODE_DOCKER)->plan());
 
 		self::assertSame(['packages:refresh', 'docker', 'services:enable', 'firewall'], $names);
 	}
@@ -349,7 +349,7 @@ final class ProvisionerTest extends TestCase
 	public function testDockerModeStillOpensTheHttpPorts(): void
 	{
 		$commands = self::stepCommands(
-			(new Provisioner(PackageManager::APT, mode: Provisioner::MODE_DOCKER))->plan(),
+			new Provisioner(PackageManager::APT, mode: Provisioner::MODE_DOCKER)->plan(),
 			'firewall'
 		);
 
@@ -358,16 +358,16 @@ final class ProvisionerTest extends TestCase
 
 	public function testTlsIsSkippedWithoutADomain(): void
 	{
-		self::assertNotContains('tls', self::stepNames((new Provisioner(PackageManager::APT))->plan()));
+		self::assertNotContains('tls', self::stepNames(new Provisioner(PackageManager::APT)->plan()));
 	}
 
 	public function testTlsRequestsEveryDomainOnce(): void
 	{
-		$plan = (new Provisioner(
+		$plan = new Provisioner(
 			PackageManager::APT,
 			domains: ['example.com', 'www.example.com'],
 			tls_email: 'ops@example.com'
-		))->plan();
+		)->plan();
 
 		$commands = self::stepCommands($plan, 'tls');
 		$certbot  = \end($commands);
@@ -380,19 +380,19 @@ final class ProvisionerTest extends TestCase
 
 	public function testTlsUsesTheApachePluginForApache(): void
 	{
-		$plan = (new Provisioner(
+		$plan = new Provisioner(
 			PackageManager::APT,
 			web_server: 'apache',
 			domains: ['example.com'],
 			tls_email: 'ops@example.com'
-		))->plan();
+		)->plan();
 
 		self::assertStringContainsString('--apache', \end(self::stepCommands($plan, 'tls')));
 	}
 
 	public function testFedoraUsesFirewalldAndHttpd(): void
 	{
-		$plan  = (new Provisioner(PackageManager::DNF, web_server: 'apache'))->plan();
+		$plan  = new Provisioner(PackageManager::DNF, web_server: 'apache')->plan();
 		$fw    = self::stepCommands($plan, 'firewall');
 		$web   = self::stepCommands($plan, 'web:apache');
 
@@ -405,18 +405,18 @@ final class ProvisionerTest extends TestCase
 	{
 		self::assertStringStartsWith(
 			'apk add --no-cache',
-			self::stepCommands((new Provisioner(PackageManager::APK))->plan(), 'php')[0]
+			self::stepCommands(new Provisioner(PackageManager::APK)->plan(), 'php')[0]
 		);
 		self::assertStringStartsWith(
 			'pacman -S --needed --noconfirm',
-			self::stepCommands((new Provisioner(PackageManager::PACMAN))->plan(), 'php')[0]
+			self::stepCommands(new Provisioner(PackageManager::PACMAN)->plan(), 'php')[0]
 		);
 	}
 
 	public function testPacmanFoldsBuiltInExtensionsIntoThePhpPackage(): void
 	{
 		// Arch ships pdo, json, posix and friends inside `php`; asking for `php-pdo` fails.
-		$command = self::stepCommands((new Provisioner(PackageManager::PACMAN))->plan(), 'php')[0];
+		$command = self::stepCommands(new Provisioner(PackageManager::PACMAN)->plan(), 'php')[0];
 
 		self::assertStringNotContainsString("'php-pdo'", $command);
 		self::assertNull(PackageManager::PACMAN->phpExtensionPackage('pdo'));
@@ -425,13 +425,13 @@ final class ProvisionerTest extends TestCase
 	public function testNoCommandIsEverInteractive(): void
 	{
 		foreach ([PackageManager::APT, PackageManager::DNF, PackageManager::PACMAN, PackageManager::APK] as $manager) {
-			$plan = (new Provisioner(
+			$plan = new Provisioner(
 				$manager,
 				database: 'mysql',
 				redis: true,
 				domains: ['example.com'],
 				tls_email: 'ops@example.com'
-			))->plan();
+			)->plan();
 
 			// Only the package manager's own commands: `firewall-cmd --add-port` is not an install.
 			$prefix = \explode(' ', \ltrim($manager->installCommand(['probe']), 'DEBIAN_FRONTEND=noninteractive '))[0];

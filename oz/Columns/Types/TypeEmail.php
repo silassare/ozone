@@ -42,27 +42,18 @@ class TypeEmail extends Type
 		parent::__construct(new TypeString(1, 255));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getInstance(array $options): static
 	{
 		return (new static())->configure($options);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function default($default): static
 	{
@@ -91,9 +82,6 @@ class TypeEmail extends Type
 		return $this->setOption('registered', false)->setOption('registered_as', $as);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function configure(array $options): static
 	{
@@ -108,9 +96,6 @@ class TypeEmail extends Type
 		return parent::configure($options);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
 	{

@@ -51,9 +51,6 @@ class BasicAuth implements AuthenticationMethodInterface
 	 */
 	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function get(RouteInfo $ri, string $realm): static
 	{
@@ -62,8 +59,6 @@ class BasicAuth implements AuthenticationMethodInterface
 
 	/**
 	 * Returns the username.
-	 *
-	 * @return string
 	 */
 	public function getUsername(): string
 	{
@@ -72,17 +67,12 @@ class BasicAuth implements AuthenticationMethodInterface
 
 	/**
 	 * Returns the password.
-	 *
-	 * @return string
 	 */
 	public function getPassword(): string
 	{
 		return $this->password;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function satisfied(): bool
 	{
@@ -119,8 +109,6 @@ class BasicAuth implements AuthenticationMethodInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -150,8 +138,6 @@ class BasicAuth implements AuthenticationMethodInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -165,8 +151,6 @@ class BasicAuth implements AuthenticationMethodInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]
@@ -175,27 +159,18 @@ class BasicAuth implements AuthenticationMethodInterface
 		return $this->user()->getAuthUserDataStore()->getAuthUserAccessRights();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isScoped(): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function askHeader(): string
 	{
 		return 'Basic realm="' . $this->realm . '"';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function askInfo(): array
 	{

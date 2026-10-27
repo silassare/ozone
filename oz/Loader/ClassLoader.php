@@ -107,22 +107,16 @@ class ClassLoader
 	/**
 	 * An associative array where the key is a namespace prefix and the value
 	 * is an array of base directories for classes in that namespace.
-	 *
-	 * @var array
 	 */
 	protected static array $psr4_namespaces_map = [];
 
 	/**
 	 * Cache array of indexed dirs.
-	 *
-	 * @var array
 	 */
 	private static array $indexed_dirs = [];
 
 	/**
 	 * Array of classes name mapped to classes path.
-	 *
-	 * @var array
 	 */
 	private static array $class_map = [];
 
@@ -161,15 +155,11 @@ class ClassLoader
 
 	/**
 	 * Registered as class loader or not.
-	 *
-	 * @var bool
 	 */
 	private static bool $registered = false;
 
 	/**
 	 * Returns a report of the class loader.
-	 *
-	 * @return array
 	 */
 	public static function report(): array
 	{
@@ -468,8 +458,6 @@ class ClassLoader
 	 * Checks if the class exists.
 	 *
 	 * @param string $class_name The class name
-	 *
-	 * @return bool
 	 */
 	public static function exists(string $class_name): bool
 	{
@@ -555,8 +543,6 @@ class ClassLoader
 	 * Cleans a given directory path.
 	 *
 	 * @param string $dir_path the directory path
-	 *
-	 * @return string
 	 */
 	protected static function cleanPath(string $dir_path): string
 	{

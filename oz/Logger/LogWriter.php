@@ -65,9 +65,6 @@ class LogWriter implements LogWriterInterface
 		$this->max_files = $max_files ?? (int) Settings::get('oz.logs', 'OZ_LOG_MAX_FILES', 5);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function instance(): static
 	{
@@ -82,9 +79,6 @@ class LogWriter implements LogWriterInterface
 		return $writer;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function write($level, mixed $message, array $context = []): void
 	{
@@ -165,10 +159,6 @@ LOG;
 
 	/**
 	 * Returns a string representation of a value to be logged.
-	 *
-	 * @param mixed $value
-	 *
-	 * @return string
 	 */
 	protected static function describe(mixed $value): string
 	{

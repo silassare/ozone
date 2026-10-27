@@ -41,9 +41,6 @@ class BearerAuth implements AuthenticationMethodInterface
 	 */
 	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function get(RouteInfo $ri, string $realm): static
 	{
@@ -52,17 +49,12 @@ class BearerAuth implements AuthenticationMethodInterface
 
 	/**
 	 * Returns the token.
-	 *
-	 * @return string
 	 */
 	public function getToken(): string
 	{
 		return $this->token;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function satisfied(): bool
 	{
@@ -86,8 +78,6 @@ class BearerAuth implements AuthenticationMethodInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
@@ -106,18 +96,12 @@ class BearerAuth implements AuthenticationMethodInterface
 		$this->authenticateWithAuthEntity($auth);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function askHeader(): string
 	{
 		return 'Bearer realm="' . $this->realm . '"';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function askInfo(): array
 	{

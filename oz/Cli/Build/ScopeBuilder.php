@@ -170,7 +170,7 @@ final class ScopeBuilder
 			}
 
 			$pattern = '~^\s*(?:(?:final|abstract|readonly)\s+)*(?:class|interface|trait|enum)\s+'
-				. \preg_quote((string) \end($segments), '~') . '\b~m';
+				. \preg_quote((string) \array_last($segments), '~') . '\b~m';
 
 			if (!\preg_match($pattern, (string) \file_get_contents($file->getPathname()))) {
 				continue;

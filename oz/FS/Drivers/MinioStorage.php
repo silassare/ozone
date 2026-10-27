@@ -64,9 +64,6 @@ final class MinioStorage implements StorageInterface
 		private readonly bool $public,
 	) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function get(string $name): static
 	{
@@ -123,9 +120,6 @@ final class MinioStorage implements StorageInterface
 		return $this->bucket;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStream(OZFile $file): FileStream
 	{
@@ -139,9 +133,6 @@ final class MinioStorage implements StorageInterface
 		return $stream;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function upload(UploadedFile $upload): OZFile
 	{
@@ -168,9 +159,6 @@ final class MinioStorage implements StorageInterface
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function saveStream(FileStream $source, string $mimetype, string $filename): OZFile
 	{
@@ -181,36 +169,24 @@ final class MinioStorage implements StorageInterface
 		return $this->store($source, $mimetype, $clean_name, '' === $filename ? $clean_name : $filename, $ext);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function saveFromPath(string $path, string $mimetype, string $filename): OZFile
 	{
 		return $this->saveStream(FileStream::fromPath($path), $mimetype, $filename);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function saveRaw(string $content, string $mimetype, string $filename): OZFile
 	{
 		return $this->saveStream(FileStream::fromString($content), $mimetype, $filename);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function exists(OZFile $file): bool
 	{
 		return null !== $this->client->headObject($this->bucket, $this->key($file->getRef()));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function revocableAccessUri(Context $context, FileAccessAuthorizationProvider $provider): Uri
 	{
@@ -222,8 +198,6 @@ final class MinioStorage implements StorageInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws UnauthorizedException when this storage slot is not public
 	 */
 	#[Override]
@@ -248,8 +222,6 @@ final class MinioStorage implements StorageInterface
 	 * {@inheritDoc}
 	 *
 	 * In `redirect` mode (OZ_MINIO_SERVE_MODE), the client is sent to a presigned URL instead.
-	 *
-	 * @psalm-suppress MoreSpecificReturnType, LessSpecificReturnStatement
 	 */
 	#[Override]
 	public function serve(OZFile $file, Response $response): Response
@@ -280,36 +252,24 @@ final class MinioStorage implements StorageInterface
 		return self::withFileHeaders($file, $response)->withBody($body);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function write(OZFile $file, FileStream|string $content): static
 	{
 		return $this->replace($file, self::asStream($content));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function append(OZFile $file, FileStream|string $data): static
 	{
 		return $this->replace($file, $this->concat($file, $data, true));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function prepend(OZFile $file, FileStream|string $data): static
 	{
 		return $this->replace($file, $this->concat($file, $data, false));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function delete(OZFile $file): bool
 	{

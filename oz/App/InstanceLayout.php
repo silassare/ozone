@@ -102,8 +102,7 @@ final class InstanceLayout
 	/**
 	 * `{root}/.ozone`, with the parts under it joined on.
 	 *
-	 * @param string $root     a project directory
-	 * @param string ...$parts
+	 * @param string $root a project directory
 	 */
 	public static function path(string $root, string ...$parts): string
 	{
@@ -138,8 +137,7 @@ final class InstanceLayout
 	 * signatures come from Gobl and the code generator installed there -- so two releases on disk at
 	 * once cannot share one directory, and a release reads only what its own `vendor/` produced.
 	 *
-	 * @param string $root     a project directory
-	 * @param string ...$parts
+	 * @param string $root a project directory
 	 */
 	public static function releaseBuildPath(string $root, string ...$parts): string
 	{
@@ -149,8 +147,7 @@ final class InstanceLayout
 	/**
 	 * A directory under this release's build directory, created when missing.
 	 *
-	 * @param string $root     a project directory
-	 * @param string ...$parts
+	 * @param string $root a project directory
 	 */
 	public static function releaseBuildDir(string $root, string ...$parts): FilesManager
 	{
@@ -162,8 +159,7 @@ final class InstanceLayout
 	 *
 	 * A build output belongs under {@see self::releaseBuildPath()}, never directly here.
 	 *
-	 * @param string $root     a project directory
-	 * @param string ...$parts
+	 * @param string $root a project directory
 	 */
 	public static function buildPath(string $root, string ...$parts): string
 	{
@@ -173,8 +169,7 @@ final class InstanceLayout
 	/**
 	 * A path under `.ozone/cache/`.
 	 *
-	 * @param string $root     a project directory
-	 * @param string ...$parts
+	 * @param string $root a project directory
 	 */
 	public static function cachePath(string $root, string ...$parts): string
 	{
@@ -194,8 +189,7 @@ final class InstanceLayout
 	/**
 	 * A directory under `.ozone/build/`, created when missing.
 	 *
-	 * @param string $root     a project directory
-	 * @param string ...$parts
+	 * @param string $root a project directory
 	 */
 	public static function buildDir(string $root, string ...$parts): FilesManager
 	{
@@ -231,8 +225,7 @@ final class InstanceLayout
 	 *
 	 * A fresh manager, never a caller's: `FilesManager::cd()` moves one in place.
 	 *
-	 * @param string $root     a project directory
-	 * @param string ...$parts
+	 * @param string $root a project directory
 	 */
 	private static function dirAt(string $root, string ...$parts): FilesManager
 	{

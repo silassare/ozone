@@ -25,7 +25,7 @@ OZone::bootstrap(require __DIR__ . '/app/app.php');
 
 // A primary key is not written through an entity (PK_COLUMN_WRITE_REFUSED): the row goes through the
 // query builder, as seeding does.
-(new OZCountriesQuery())->insertMulti([[
+new OZCountriesQuery()->insertMulti([[
 	OZCountry::COL_CC2          => 'BJ',
 	OZCountry::COL_NAME         => 'Benin',
 	OZCountry::COL_NAME_REAL    => 'Benin',

@@ -84,8 +84,6 @@ trait FileEntityTrait
 	 * Clone the current ozone file.
 	 *
 	 * !This doesn't work as php object clone feature.
-	 *
-	 * @return static
 	 */
 	public function cloneFile(): static
 	{
@@ -110,8 +108,6 @@ trait FileEntityTrait
 
 	/**
 	 * Checks if this file can be safely deleted.
-	 *
-	 * @return bool
 	 */
 	public function canDelete(): bool
 	{
@@ -120,8 +116,6 @@ trait FileEntityTrait
 
 	/**
 	 * Checks if this file has clones.
-	 *
-	 * @return bool
 	 */
 	public function hasClones(): bool
 	{
@@ -174,8 +168,6 @@ trait FileEntityTrait
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @return array<string, mixed>
 	 */
 	public function toArray($hide_sensitive_data = true): array

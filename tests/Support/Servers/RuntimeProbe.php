@@ -56,7 +56,7 @@ final class RuntimeProbe implements RouteProviderInterface
 			// The database route `make benchmark-http` measures: one row read by its primary key through
 			// the ORM (docker/bench/ozone/seed.php writes it), as Laravel and Symfony read theirs.
 			$router->get('/db', static function (RouteInfo $ri): Response {
-				$country  = (new OZCountriesQuery())->whereCc2Is('BJ')
+				$country  = new OZCountriesQuery()->whereCc2Is('BJ')
 					->find(ORMOptions::makePaginated(1))
 					->fetchClass();
 				$response = $ri->getContext()->getResponse();

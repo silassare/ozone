@@ -24,10 +24,6 @@ class CommandTask extends AbstractTask
 {
 	/**
 	 * CommandTask constructor.
-	 *
-	 * @param array|string $command
-	 * @param string       $name
-	 * @param string       $description
 	 */
 	public function __construct(
 		protected array|string $command,

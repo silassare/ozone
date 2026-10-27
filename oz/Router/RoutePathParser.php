@@ -26,9 +26,6 @@ final class RoutePathParser
 
 	/**
 	 * RoutePathParser constructor.
-	 *
-	 * @param string $route_path
-	 * @param Router $router
 	 */
 	public function __construct(
 		private readonly string $route_path,
@@ -39,10 +36,6 @@ final class RoutePathParser
 
 	/**
 	 * Checks if a parameter is valid.
-	 *
-	 * @param string $str
-	 *
-	 * @return bool
 	 */
 	public static function isValidParameter(string $str): bool
 	{
@@ -51,12 +44,6 @@ final class RoutePathParser
 
 	/**
 	 * Builds dynamic path.
-	 *
-	 * @param Context     $context
-	 * @param array       $params
-	 * @param null|string $original_route_path
-	 *
-	 * @return string
 	 */
 	public function buildPath(
 		Context $context,
@@ -130,12 +117,6 @@ final class RoutePathParser
 
 	/**
 	 * Dynamic route parser.
-	 *
-	 * @param array       $declared_params
-	 * @param array       &$params_found
-	 * @param null|string $original_route_path
-	 *
-	 * @return string
 	 */
 	public function parse(
 		array $declared_params = [],
@@ -237,8 +218,6 @@ final class RoutePathParser
 	 * @param string $open      open tag
 	 * @param string $close     close tag
 	 * @param bool   $go_deeply go deeply
-	 *
-	 * @return string
 	 */
 	private function searchUntilCloseTag(
 		string $open,
@@ -295,8 +274,6 @@ final class RoutePathParser
 	 * Search while a given callable return true.
 	 *
 	 * @param callable $predicate the predicate function
-	 *
-	 * @return string
 	 */
 	private function searchWhile(callable $predicate): string
 	{

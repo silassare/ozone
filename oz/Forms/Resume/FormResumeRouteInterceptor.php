@@ -44,9 +44,6 @@ final class FormResumeRouteInterceptor implements RouteInterceptorInterface
 	 */
 	public function __construct(private readonly RouteInfo $ri) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
@@ -65,9 +62,6 @@ final class FormResumeRouteInterceptor implements RouteInterceptorInterface
 		return 1;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function shouldIntercept(): bool
 	{
@@ -75,9 +69,6 @@ final class FormResumeRouteInterceptor implements RouteInterceptorInterface
 			&& $this->ri->route()->getOptions()->hasResumeSupport();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function handle(): Response
 	{
@@ -94,9 +85,6 @@ final class FormResumeRouteInterceptor implements RouteInterceptorInterface
 		return $svc->handleFromRealContext($providerClass, $action);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function instance(RouteInfo $ri): static
 	{

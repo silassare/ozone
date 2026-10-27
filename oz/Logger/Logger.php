@@ -53,11 +53,6 @@ class Logger implements LoggerInterface
 		return self::LEVELS[$level] <= self::LEVELS[$configured_level];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @param string|Stringable|Throwable $message
-	 */
 	#[Override]
 	public function log($level, string|Stringable|Throwable $message, array $context = []): void
 	{
@@ -68,72 +63,48 @@ class Logger implements LoggerInterface
 		self::writer()->write($level, $message, $context);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function emergency(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::EMERGENCY, $message, $context);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function alert(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::ALERT, $message, $context);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function critical(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::CRITICAL, $message, $context);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function error(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::ERROR, $message, $context);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function warning(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::WARNING, $message, $context);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function notice(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::NOTICE, $message, $context);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function info(string|Stringable|Throwable $message, array $context = []): void
 	{
 		$this->log(LogLevel::INFO, $message, $context);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function debug(string|Stringable|Throwable $message, array $context = []): void
 	{
@@ -153,11 +124,11 @@ class Logger implements LoggerInterface
 
 			if (LogWriter::class !== $cls) {
 				if (!\is_subclass_of($cls, LogWriterInterface::class)) {
-					throw (new RuntimeException(\sprintf(
+					throw new RuntimeException(\sprintf(
 						'Log writer "%s" must implement "%s".',
 						$cls,
 						LogWriterInterface::class
-					)))->suspectConfig('oz.logs', 'OZ_LOG_WRITER');
+					))->suspectConfig('oz.logs', 'OZ_LOG_WRITER');
 				}
 
 				/** @var class-string<LogWriterInterface> $cls */

@@ -52,8 +52,6 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	/**
 	 * Main handler for {@see RouteNotFound} Event.
 	 *
-	 * @param RouteNotFound $ev
-	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
 	 */
@@ -101,8 +99,6 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	/**
 	 * Main handler for {@see RouteMethodNotAllowed} Event.
 	 *
-	 * @param RouteMethodNotAllowed $ev
-	 *
 	 * @throws MethodNotAllowedException
 	 */
 	public static function onMethodNotAllowed(RouteMethodNotAllowed $ev): void
@@ -120,8 +116,6 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 	 *
 	 * Rejects a request from a disallowed origin before it is routed: rejecting it once
 	 * the response is ready would let its handler run (writes, emails, payments) first.
-	 *
-	 * @param RequestHook $ev
 	 *
 	 * @throws ForbiddenException
 	 */
@@ -159,8 +153,6 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 
 	/**
 	 * Main handler for {@see ResponseHook} Event.
-	 *
-	 * @param ResponseHook $ev
 	 */
 	public static function onResponse(ResponseHook $ev): void
 	{
@@ -243,9 +235,6 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{

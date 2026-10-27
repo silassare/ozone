@@ -140,7 +140,7 @@ final class VerificationPolicy
 		// one; otherwise the one this type must present is checked here, as the guard does.
 		$results = $ri->hasGuardStoredResults(AuthorizationProviderRouteGuard::class)
 			? AuthorizationProviderRouteGuard::resolveResults($ri)
-			: (new AuthorizationProviderRouteGuard($allowed))->check($ri);
+			: new AuthorizationProviderRouteGuard($allowed)->check($ri);
 
 		$provider = $results['provider'];
 

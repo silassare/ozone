@@ -81,8 +81,6 @@ interface ResumableFormProviderInterface
 	 * auth state, etc. Called once per session action, by {@see FormSessionManager}.
 	 *
 	 * @param RouteInfo $ri the current route info
-	 *
-	 * @return static
 	 */
 	public static function instance(RouteInfo $ri): static;
 

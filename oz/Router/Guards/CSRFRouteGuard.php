@@ -31,9 +31,6 @@ final class CSRFRouteGuard extends AbstractRouteGuard
 		private RequestScope $scope
 	) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toRules(): array
 	{
@@ -42,9 +39,6 @@ final class CSRFRouteGuard extends AbstractRouteGuard
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromRules(array $rules): static
 	{
@@ -54,8 +48,6 @@ final class CSRFRouteGuard extends AbstractRouteGuard
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]

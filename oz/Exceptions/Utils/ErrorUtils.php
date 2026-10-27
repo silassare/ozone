@@ -40,6 +40,17 @@ class ErrorUtils
 	private const array FATAL_CODES = [\E_ERROR, \E_PARSE, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR];
 
 	/**
+	 * The error codes that mean the run ended where the error was raised.
+	 *
+	 * What {@see self::shutdownErrorFunction()} reads to label what it found, which is a different
+	 * question from whether to interrupt. PHP does hand `E_RECOVERABLE_ERROR` to an error handler
+	 * and the handler may carry on, so it is not in {@see self::FATAL_CODES}; with no handler
+	 * installed PHP ends the run on it instead, and that is the only way it reaches the shutdown
+	 * function -- as a fatal, not as a stale last error.
+	 */
+	private const array RUN_ENDING_CODES = [...self::FATAL_CODES, \E_RECOVERABLE_ERROR];
+
+	/**
 	 * Whether the autoloader is what registered the handlers.
 	 */
 	private static bool $registered_early = false;
@@ -50,10 +61,6 @@ class ErrorUtils
 	 *
 	 * A safety net for exception data that is logged or sent to the client: code
 	 * should not put secrets there in the first place.
-	 *
-	 * @param array $data
-	 *
-	 * @return array
 	 */
 	public static function redactSensitiveData(array $data): array
 	{
@@ -115,11 +122,6 @@ class ErrorUtils
 		\register_shutdown_function(self::shutdownErrorFunction(...));
 	}
 
-	/**
-	 * @param array $data
-	 *
-	 * @return array
-	 */
 	private static function redact(array $data): array
 	{
 		foreach ($data as $key => $value) {
@@ -133,9 +135,6 @@ class ErrorUtils
 		return $data;
 	}
 
-	/**
-	 * @return string
-	 */
 	private static function executionTime(): string
 	{
 		return \number_format(\microtime(true) - OZ_OZONE_START_TIME, 3);
@@ -166,8 +165,6 @@ class ErrorUtils
 
 	/**
 	 * Get the running app or null.
-	 *
-	 * @return null|AppInterface
 	 */
 	private static function optionalApp(): ?AppInterface
 	{
@@ -182,8 +179,6 @@ class ErrorUtils
 
 	/**
 	 * Handle unhandled exception.
-	 *
-	 * @param Throwable $t
 	 */
 	private static function exceptionHandler(Throwable $t): void
 	{
@@ -235,17 +230,12 @@ class ErrorUtils
 
 	private static function errorCodeToLogLevel(int $code): string
 	{
-		/**
-		 * \E_STRICT is deprecated in php 8.4, so we use const value to avoid deprecation warning.
-		 */
-		$const_e_strict = 2048;
-
 		return match ($code) {
 			\E_ERROR, \E_CORE_ERROR, \E_COMPILE_ERROR, \E_USER_ERROR, \E_RECOVERABLE_ERROR => LogLevel::ERROR,
 			\E_WARNING, \E_CORE_WARNING, \E_COMPILE_WARNING, \E_USER_WARNING,
-			$const_e_strict, \E_DEPRECATED, \E_USER_DEPRECATED => LogLevel::WARNING,
-			\E_NOTICE, \E_USER_NOTICE                          => LogLevel::NOTICE,
-			default                                            => LogLevel::DEBUG
+			\E_DEPRECATED, \E_USER_DEPRECATED => LogLevel::WARNING,
+			\E_NOTICE, \E_USER_NOTICE         => LogLevel::NOTICE,
+			default                           => LogLevel::DEBUG
 		};
 	}
 
@@ -303,7 +293,7 @@ class ErrorUtils
 				self::errorCodeToLogLevel($code),
 				'::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
 					. \PHP_EOL
-					. (\in_array($code, self::FATAL_CODES, true)
+					. (\in_array($code, self::RUN_ENDING_CODES, true)
 						? 'OZone shutdown error'
 						: 'OZone error raised while no error handler of ours was installed:'
 							. ' before they were registered, or inside a block that swapped in its own.'

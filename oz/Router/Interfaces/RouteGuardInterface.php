@@ -27,8 +27,6 @@ interface RouteGuardInterface
 
 	/**
 	 * Creates a new instance from rules.
-	 *
-	 * @param array $rules
 	 */
 	public static function fromRules(array $rules): static;
 
@@ -39,10 +37,6 @@ interface RouteGuardInterface
 
 	/**
 	 * The route guard implement this to resolve any saved data.
-	 *
-	 * @param RouteInfo $ri
-	 *
-	 * @return mixed
 	 */
 	public static function resolveResults(RouteInfo $ri): mixed;
 }

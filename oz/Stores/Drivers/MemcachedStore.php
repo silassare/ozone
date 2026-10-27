@@ -34,14 +34,9 @@ final class MemcachedStore implements StoreDriverInterface
 {
 	/**
 	 * MemcachedStore constructor.
-	 *
-	 * @param Memcached $memcached
 	 */
 	private function __construct(private Memcached $memcached) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function capabilities(): StoreCapabilities
 	{
@@ -55,9 +50,6 @@ final class MemcachedStore implements StoreDriverInterface
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function get(string $key): ?StoreEntry
 	{
@@ -80,9 +72,6 @@ final class MemcachedStore implements StoreDriverInterface
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getMultiple(array $keys): array
 	{
@@ -99,9 +88,6 @@ final class MemcachedStore implements StoreDriverInterface
 		return $items;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function set(StoreEntry $entry): bool
 	{
@@ -170,18 +156,12 @@ final class MemcachedStore implements StoreDriverInterface
 		throw StoreNumbers::contended($key);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function delete(string $key): bool
 	{
 		return $this->memcached->delete($key);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function deleteMultiple(array $keys): bool
 	{
@@ -194,9 +174,6 @@ final class MemcachedStore implements StoreDriverInterface
 		return $deleted;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function clear(): bool
 	{
@@ -214,9 +191,6 @@ final class MemcachedStore implements StoreDriverInterface
 		return [];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromConfig(string $namespace, array $options = []): static
 	{

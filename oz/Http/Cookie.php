@@ -24,50 +24,36 @@ final class Cookie
 {
 	/**
 	 * The name of the cookie.
-	 *
-	 * @var string
 	 */
 	public string $name;
 
 	/**
 	 * The value of the cookie.
-	 *
-	 * @var string
 	 */
 	public string $value = '';
 
 	/**
 	 * The domain of the cookie.
-	 *
-	 * @var null|string
 	 */
 	public ?string $domain = null;
 
 	/**
 	 * The path of the cookie.
-	 *
-	 * @var null|string
 	 */
 	public ?string $path = null;
 
 	/**
 	 * The expiration time of the cookie in seconds.
-	 *
-	 * @var null|int
 	 */
 	public ?int $expires = null;
 
 	/**
 	 * The maximum age of the cookie in seconds.
-	 *
-	 * @var null|int
 	 */
 	public ?int $max_age = null;
 
 	/**
 	 * The secure flag of the cookie.
-	 *
-	 * @var bool
 	 */
 	public bool $secure = false;
 
@@ -75,15 +61,11 @@ final class Cookie
 	 * The httponly flag of the cookie.
 	 *
 	 * Prevent access from javascript
-	 *
-	 * @var bool
 	 */
 	public bool $httponly = false;
 
 	/**
 	 * The hostonly flag of the cookie.
-	 *
-	 * @var bool
 	 */
 	public bool $hostonly = false;
 
@@ -91,15 +73,11 @@ final class Cookie
 	 * The samesite flag of the cookie.
 	 *
 	 * `None`, `Lax` or `Strict`
-	 *
-	 * @var null|string
 	 */
 	public ?string $samesite = null;
 
 	/**
 	 * The partitioned flag of the cookie.
-	 *
-	 * @var bool
 	 */
 	public bool $partitioned = false;
 

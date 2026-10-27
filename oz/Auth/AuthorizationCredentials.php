@@ -48,9 +48,6 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 		$this->refresh_key = Keys::newAuthRefreshKey($this->reference);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function newCode(): string
 	{
@@ -59,9 +56,6 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 		return $this->code;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function newToken(): string
 	{
@@ -70,18 +64,12 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 		return $this->token;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getCode(): string
 	{
 		return $this->code;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setCode(#[SensitiveParameter] string $code): static
 	{
@@ -90,18 +78,12 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getToken(): string
 	{
 		return $this->token;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setToken(#[SensitiveParameter] string $token): static
 	{
@@ -110,18 +92,12 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getRefreshKey(): string
 	{
 		return $this->refresh_key;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setRefreshKey(string $refresh_key): static
 	{
@@ -130,18 +106,12 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getReference(): string
 	{
 		return $this->reference;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setReference(string $reference): static
 	{
@@ -150,9 +120,6 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getLink(): Uri
 	{
@@ -162,9 +129,6 @@ class AuthorizationCredentials implements AuthorizationCredentialsInterface
 		]);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toArray(): array
 	{

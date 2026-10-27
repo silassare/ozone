@@ -51,8 +51,6 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 
 	/**
 	 * Checks if the result is an error.
-	 *
-	 * @return bool
 	 */
 	public function isError(): bool
 	{
@@ -61,8 +59,6 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 
 	/**
 	 * Checks if the result is done.
-	 *
-	 * @return bool
 	 */
 	public function isDone(): bool
 	{
@@ -132,8 +128,6 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 
 	/**
 	 * Gets the result data.
-	 *
-	 * @return array
 	 */
 	public function getData(): array
 	{
@@ -144,9 +138,6 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 	 * Gets a custom key/value from the result data.
 	 *
 	 * @param string $key the key name
-	 * @param mixed  $def
-	 *
-	 * @return mixed
 	 */
 	public function getDataKey(string $key, mixed $def = null): mixed
 	{
@@ -155,8 +146,6 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 
 	/**
 	 * Merge json result from a given instance.
-	 *
-	 * @param JSONResult $other
 	 *
 	 * @return $this
 	 */
@@ -169,9 +158,6 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toArray(): array
 	{
@@ -182,9 +168,6 @@ class JSONResult implements ArrayCapableInterface, JsonOfInterface
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function revive(mixed $payload): static
 	{

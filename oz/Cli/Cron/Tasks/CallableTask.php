@@ -31,9 +31,7 @@ class CallableTask extends AbstractTask
 	/**
 	 * CallableTask constructor.
 	 *
-	 * @param string                    $name
-	 * @param callable(JSONResult):void $callable    callable that will be called when the task runs
-	 * @param string                    $description
+	 * @param callable(JSONResult):void $callable callable that will be called when the task runs
 	 */
 	public function __construct(string $name, callable $callable, string $description = '')
 	{
@@ -42,9 +40,6 @@ class CallableTask extends AbstractTask
 		$this->callable = $callable;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function run(): void
 	{

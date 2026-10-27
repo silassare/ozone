@@ -48,31 +48,22 @@ final class MessageWorker implements WorkerInterface
 		$this->result = new JSONResult();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return self::class;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isAsync(): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function work(JobContractInterface $job_contract): static
 	{
-		$record = (new OZMessagesQuery())
+		$record = new OZMessagesQuery()
 			->whereIdIs($this->message_id)
 			->find()
 			->fetchClass();
@@ -97,9 +88,6 @@ final class MessageWorker implements WorkerInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromPayload(array $payload): static
 	{
@@ -112,9 +100,6 @@ final class MessageWorker implements WorkerInterface
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPayload(): array
 	{
@@ -125,9 +110,6 @@ final class MessageWorker implements WorkerInterface
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getResult(): JSONResult
 	{

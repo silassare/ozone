@@ -41,36 +41,24 @@ final class FormDiscoveryRouteInterceptor implements RouteInterceptorInterface
 	 */
 	public function __construct(private readonly RouteInfo $ri) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return 'oz:form:discovery:route:interceptor';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getPriority(): int
 	{
 		return 0;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function shouldIntercept(): bool
 	{
 		return $this->ri->getContext()->getRequest()->isFormDiscoveryRequest();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function handle(): Response
 	{
@@ -82,9 +70,6 @@ final class FormDiscoveryRouteInterceptor implements RouteInterceptorInterface
 		return $svc->respond();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function instance(RouteInfo $ri): static
 	{

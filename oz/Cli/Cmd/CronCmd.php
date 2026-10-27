@@ -27,9 +27,6 @@ use Throwable;
  */
 final class CronCmd extends Command
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{
@@ -48,11 +45,11 @@ final class CronCmd extends Command
 
 			$work->option('max-time', 't')
 				->description('Stop after this many seconds (0 = run indefinitely).')
-				->type((new KliTypeNumber())->min(0)->def(0));
+				->type(new KliTypeNumber()->min(0)->def(0));
 
 			$work->option('memory', 'e')
 				->description('Stop when PHP memory usage exceeds this many MB (0 = unlimited).')
-				->type((new KliTypeNumber())->min(0)->def(128));
+				->type(new KliTypeNumber()->min(0)->def(128));
 
 			$work->handler(self::work(...));
 

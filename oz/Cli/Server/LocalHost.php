@@ -57,13 +57,10 @@ final class LocalHost implements HostInterface
 	#[Override]
 	public function hasBinary(string $binary): bool
 	{
-		foreach (\explode(\PATH_SEPARATOR, (string) \getenv('PATH')) as $dir) {
-			if ('' !== $dir && \is_executable(\rtrim($dir, DS) . DS . $binary)) {
-				return true;
-			}
-		}
-
-		return false;
+		return \array_any(
+			\explode(\PATH_SEPARATOR, (string) \getenv('PATH')),
+			static fn (string $dir): bool => '' !== $dir && \is_executable(\rtrim($dir, DS) . DS . $binary)
+		);
 	}
 
 	#[Override]

@@ -30,17 +30,11 @@ interface JobContractInterface extends JobInterface
 
 	/**
 	 * Gets the job from a tracking code.
-	 *
-	 * @param string $tracking_code
-	 *
-	 * @return static
 	 */
 	public static function fromTrackingCode(string $tracking_code): static;
 
 	/**
 	 * Saves the job contract.
-	 *
-	 * @return static
 	 */
 	public function save(): static;
 
@@ -50,29 +44,21 @@ interface JobContractInterface extends JobInterface
 	 * A worker whose single run outlasts its store's lock lease calls this as it goes, or the job
 	 * is taken for one a dead process left behind and settled while it is still running. Work that
 	 * finishes well within the lease never needs it: every save says as much.
-	 *
-	 * @return static
 	 */
 	public function touch(): static;
 
 	/**
 	 * Locks the job contract.
-	 *
-	 * @return bool
 	 */
 	public function lock(): bool;
 
 	/**
 	 * Unlocks the job contract.
-	 *
-	 * @return bool
 	 */
 	public function unlock(): bool;
 
 	/**
 	 * Checks whether the job contract is currently locked.
-	 *
-	 * @return bool
 	 */
 	public function isLocked(): bool;
 
@@ -81,8 +67,6 @@ interface JobContractInterface extends JobInterface
 	 *
 	 * Returns true on success, false when the job is already running, finished,
 	 * or held by another worker (locked).
-	 *
-	 * @return bool
 	 */
 	public function cancel(): bool;
 }

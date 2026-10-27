@@ -84,9 +84,6 @@ final class Messenger implements BootHookReceiverInterface
 	 */
 	private const int ERROR_MAX = 512;
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{
@@ -382,7 +379,7 @@ final class Messenger implements BootHookReceiverInterface
 				continue;
 			}
 
-			$qb = (new OZMessagesQuery())
+			$qb = new OZMessagesQuery()
 				->whereStatusIsIn($settled)
 				->whereUpdatedAtIsLt((string) (\time() - \max(0, (int) $days) * 86400));
 
@@ -397,7 +394,7 @@ final class Messenger implements BootHookReceiverInterface
 	 */
 	private static function alreadySent(string $channel, string $template, string $once_key): bool
 	{
-		return 0 < (new OZMessagesQuery())
+		return 0 < new OZMessagesQuery()
 			->whereChannelIs($channel)
 			->whereTemplateIs($template)
 			->whereOnceKeyIs($once_key)
@@ -463,13 +460,7 @@ final class Messenger implements BootHookReceiverInterface
 	 */
 	private static function firstTemplate(array $paths): ?string
 	{
-		foreach ($paths as $path) {
-			if (false !== Assets::localize($path)) {
-				return $path;
-			}
-		}
-
-		return null;
+		return \array_find($paths, static fn (string $path): bool => false !== Assets::localize($path));
 	}
 
 	private static function logSkipped(OZMessage $record, string $reason): void

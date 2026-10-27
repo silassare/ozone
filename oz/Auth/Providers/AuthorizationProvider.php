@@ -64,27 +64,18 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 		$this->credentials   = new AuthorizationCredentials($context, $code_length, $code_use_alpha_num);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getCredentials(): AuthorizationCredentialsInterface
 	{
 		return $this->credentials;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getScope(): AuthorizationScopeInterface
 	{
 		return $this->scope;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setScope(AuthorizationScopeInterface $scope): static
 	{
@@ -93,9 +84,6 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getJSONResponse(): JSONResponse
 	{
@@ -103,8 +91,6 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws InvalidFormException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
@@ -141,8 +127,6 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 */
@@ -161,9 +145,6 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 		return $auth->getState();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function generate(?AuthUserInterface $user = null): static
 	{
@@ -220,8 +201,6 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 * @throws InvalidFormException
@@ -263,8 +242,6 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
 	 */
@@ -315,10 +292,6 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 
 	/**
 	 * Used to hash a code or a token.
-	 *
-	 * @param string $secret
-	 *
-	 * @return string
 	 */
 	protected function hash(#[SensitiveParameter] string $secret): string
 	{
@@ -327,8 +300,6 @@ abstract class AuthorizationProvider implements AuthorizationProviderInterface
 
 	/**
 	 * Save auth entity into the database.
-	 *
-	 * @param OZAuth $auth
 	 *
 	 * @throws GoblException
 	 */

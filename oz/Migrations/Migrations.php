@@ -78,12 +78,10 @@ final class Migrations
 	 * it records the version the database is *at* ({@see self::getInstalledDbVersion()}), and is
 	 * only written once a migration has run, so a created but unrun migration would be invisible
 	 * here and {@see self::getState()} could never report {@see MigrationsState::PENDING}.
-	 *
-	 * @return int
 	 */
 	public static function getSourceCodeDbVersion(): int
 	{
-		return (new self())->getLatestMigration()?->getVersion() ?? self::DB_NOT_INSTALLED_VERSION;
+		return new self()->getLatestMigration()?->getVersion() ?? self::DB_NOT_INSTALLED_VERSION;
 	}
 
 	/**
@@ -93,8 +91,6 @@ final class Migrations
 	 * migration runs, so it is the version the database is at, known offline. {@see Db::init()}
 	 * needs it before there is any connection, to load the schema matching the live database
 	 * rather than the newest one on disk.
-	 *
-	 * @return int
 	 */
 	public static function getInstalledDbVersion(): int
 	{
@@ -105,8 +101,6 @@ final class Migrations
 	 * Gets the current database version.
 	 *
 	 * @param bool $silent if true, the error will be silenced
-	 *
-	 * @return int
 	 */
 	public static function getCurrentDbVersion(bool $silent = false): int
 	{
@@ -133,8 +127,7 @@ final class Migrations
 	 *
 	 * Assumes that the database is not installed.
 	 *
-	 * @param MigrationInterface $migration
-	 * @param null|string        &$query    the query executed, useful for debugging when error
+	 * @param null|string &$query the query executed, useful for debugging when error
 	 *
 	 * @throws CRUDException
 	 * @throws GoblException
@@ -144,19 +137,17 @@ final class Migrations
 	{
 		$mode = MigrationMode::FULL;
 
-		(new MigrationBeforeRun($migration, $mode))->dispatch();
+		new MigrationBeforeRun($migration, $mode)->dispatch();
 
 		$this->runMigrationQuery($migration, $mode, $query);
 
 		$this->updateMigrationsHistory($migration->getVersion(), $mode);
 
-		(new MigrationAfterRun($migration, $mode))->dispatch();
+		new MigrationAfterRun($migration, $mode)->dispatch();
 	}
 
 	/**
 	 * Updates the database to a given migration.
-	 *
-	 * @param MigrationInterface $migration
 	 *
 	 * @throws CRUDException
 	 * @throws GoblException
@@ -166,19 +157,17 @@ final class Migrations
 	{
 		$mode = MigrationMode::UP;
 
-		(new MigrationBeforeRun($migration, $mode))->dispatch();
+		new MigrationBeforeRun($migration, $mode)->dispatch();
 
 		$this->runMigrationQuery($migration, $mode);
 
 		$this->updateMigrationsHistory($migration->getVersion(), $mode);
 
-		(new MigrationAfterRun($migration, $mode))->dispatch();
+		new MigrationAfterRun($migration, $mode)->dispatch();
 	}
 
 	/**
 	 * Rolls back a given migration.
-	 *
-	 * @param MigrationInterface $migration
 	 *
 	 * @throws CRUDException
 	 * @throws GoblException
@@ -195,13 +184,13 @@ final class Migrations
 
 		$mode = MigrationMode::DOWN;
 
-		(new MigrationBeforeRun($migration, $mode))->dispatch();
+		new MigrationBeforeRun($migration, $mode)->dispatch();
 
 		$this->runMigrationQuery($migration, $mode);
 
 		$this->updateMigrationsHistory($version, $mode);
 
-		(new MigrationAfterRun($migration, $mode))->dispatch();
+		new MigrationAfterRun($migration, $mode)->dispatch();
 	}
 
 	/**
@@ -226,8 +215,6 @@ final class Migrations
 	 *
 	 * @param bool        $force if true, a migration file will be created even if there are no changes
 	 * @param null|string $label the migration label
-	 *
-	 * @return null|string
 	 */
 	public function create(bool $force, ?string $label = null): ?string
 	{
@@ -252,7 +239,7 @@ final class Migrations
 			// clear cache
 			self::clearCache();
 
-			(new MigrationCreated($version))->dispatch();
+			new MigrationCreated($version)->dispatch();
 
 			return $outfile;
 		}
@@ -262,8 +249,6 @@ final class Migrations
 
 	/**
 	 * Clears the migrations cache.
-	 *
-	 * @return bool
 	 */
 	public static function clearCache(): bool
 	{
@@ -272,8 +257,6 @@ final class Migrations
 
 	/**
 	 * Gets all migrations.
-	 *
-	 * @return array
 	 */
 	public function migrations(): array
 	{
@@ -331,21 +314,16 @@ final class Migrations
 
 	/**
 	 * Gets the latest migration.
-	 *
-	 * @return null|MigrationInterface
 	 */
 	public function getLatestMigration(): ?MigrationInterface
 	{
-		$migrations = $this->migrations();
-		$latest     = \end($migrations);
+		$latest = \array_last($this->migrations());
 
 		return $latest instanceof MigrationInterface ? $latest : null;
 	}
 
 	/**
 	 * Checks if there are pending migrations.
-	 *
-	 * @return bool
 	 */
 	public function hasPendingMigrations(): bool
 	{
@@ -380,10 +358,6 @@ final class Migrations
 
 	/**
 	 * Gets a migration by its version.
-	 *
-	 * @param int $version
-	 *
-	 * @return null|MigrationInterface
 	 */
 	public function getMigration(int $version): ?MigrationInterface
 	{
@@ -402,10 +376,6 @@ final class Migrations
 
 	/**
 	 * Gets the previous migration.
-	 *
-	 * @param int $version
-	 *
-	 * @return null|MigrationInterface
 	 */
 	public function getPreviousMigration(int $version): ?MigrationInterface
 	{
@@ -425,9 +395,6 @@ final class Migrations
 
 	/**
 	 * Gets the migrations between two versions.
-	 *
-	 * @param int $from_version
-	 * @param int $to_version
 	 *
 	 * @return MigrationInterface[]
 	 */
@@ -449,10 +416,6 @@ final class Migrations
 
 	/**
 	 * Gets the next migration.
-	 *
-	 * @param int $version
-	 *
-	 * @return null|MigrationInterface
 	 */
 	public function getNextMigration(int $version): ?MigrationInterface
 	{
@@ -507,8 +470,6 @@ final class Migrations
 
 	/**
 	 * Gets the migrations cache.
-	 *
-	 * @return KeyValueStore
 	 */
 	private static function cache(): KeyValueStore
 	{

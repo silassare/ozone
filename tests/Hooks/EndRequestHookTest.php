@@ -123,8 +123,7 @@ final class EndRequestHookTest extends TestCase
 
 	private static function readStatic(string $name): ?Context
 	{
-		$property = (new ReflectionClass(Context::class))->getProperty($name);
-		$property->setAccessible(true);
+		$property = new ReflectionClass(Context::class)->getProperty($name);
 
 		/** @var null|Context $value */
 		return $property->getValue();
@@ -132,8 +131,7 @@ final class EndRequestHookTest extends TestCase
 
 	private static function writeStatic(string $name, ?Context $value): void
 	{
-		$property = (new ReflectionClass(Context::class))->getProperty($name);
-		$property->setAccessible(true);
+		$property = new ReflectionClass(Context::class)->getProperty($name);
 		$property->setValue(null, $value);
 	}
 }

@@ -45,7 +45,7 @@ final class ChainTestBootHookReceiver implements BootHookReceiverInterface
 			$chain = [
 				[
 					'worker'  => ChainTestWorkerB::getName(),
-					'payload' => (new ChainTestWorkerB('__PLH_FLAG_B__'))->getPayload(),
+					'payload' => new ChainTestWorkerB('__PLH_FLAG_B__')->getPayload(),
 					'queue'   => Queue::DEFAULT,
 				],
 			];

@@ -66,7 +66,7 @@ final class EntityCollectionsTest extends TestCase
 	 */
 	private static function registerProviders(array $providers): void
 	{
-		(new ReflectionMethod(EntityCollections::class, 'registerProviders'))->invoke(null, db(), $providers);
+		new ReflectionMethod(EntityCollections::class, 'registerProviders')->invoke(null, db(), $providers);
 	}
 }
 

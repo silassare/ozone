@@ -28,8 +28,6 @@ class Headers extends Collection
 	 * headers are made available directly by PHP without the prefix.
 	 * This array is used to identify and handle these exceptions when
 	 * normalizing and extracting headers from the environment.
-	 *
-	 * @var array
 	 */
 	protected static array $special = [
 		'CONTENT_TYPE'    => 1,
@@ -79,8 +77,6 @@ class Headers extends Collection
 	 *
 	 * @param string     $key     The case-insensitive header name
 	 * @param null|mixed $default The default value if key does not exist
-	 *
-	 * @return null|string
 	 */
 	public function getOriginalKey(string $key, ?string $default = null): ?string
 	{
@@ -91,9 +87,6 @@ class Headers extends Collection
 		return $default;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function has(string $key): bool
 	{
@@ -143,9 +136,6 @@ class Headers extends Collection
 		$this->set($key, \array_merge($oldValues, \array_values($newValues)));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function get(string $key, mixed $default = null): mixed
 	{
@@ -201,8 +191,6 @@ class Headers extends Collection
 	 *
 	 * @param string $key     The case-insensitive header name
 	 * @param bool   $default The default value if the header is not set or invalid
-	 *
-	 * @return bool
 	 */
 	public function getBool(string $key, bool $default = false): bool
 	{
@@ -219,9 +207,6 @@ class Headers extends Collection
 		return $default;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function remove(string $key): void
 	{
@@ -231,8 +216,6 @@ class Headers extends Collection
 	/**
 	 * Creates new headers collection with data extracted from
 	 * the application Environment object.
-	 *
-	 * @param HTTPEnvironment $environment
 	 */
 	public static function createFromEnvironment(HTTPEnvironment $environment): static
 	{
@@ -260,8 +243,6 @@ class Headers extends Collection
 	/**
 	 * If HTTP_AUTHORIZATION does not exist tries to get it from
 	 * getallheaders() when available.
-	 *
-	 * @param HTTPEnvironment $environment
 	 */
 	private static function tryFixAuthorization(HTTPEnvironment $environment): void
 	{

@@ -52,7 +52,7 @@ final class TypePhoneTest extends TestCase
 
 	public function testNullableAcceptsNull(): void
 	{
-		$type  = (new TypePhone())->nullable();
+		$type  = new TypePhone()->nullable();
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
@@ -60,32 +60,32 @@ final class TypePhoneTest extends TestCase
 	public function testRejectsPhoneWithoutPlus(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePhone())->validate('1234567');
+		new TypePhone()->validate('1234567');
 	}
 
 	public function testRejectsTooFewDigits(): void
 	{
 		// + 5 digits = below the 6-digit minimum
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePhone())->validate('+12345');
+		new TypePhone()->validate('+12345');
 	}
 
 	public function testRejectsTooManyDigits(): void
 	{
 		// + 16 digits = 17 chars, beyond the 15-digit E.164 maximum
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePhone())->validate('+1234567890123456');
+		new TypePhone()->validate('+1234567890123456');
 	}
 
 	public function testRejectsAlphaCharacters(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePhone())->validate('+1234abc890');
+		new TypePhone()->validate('+1234abc890');
 	}
 
 	public function testRejectsEmptyStringWhenNotNullable(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypePhone())->validate('');
+		new TypePhone()->validate('');
 	}
 }

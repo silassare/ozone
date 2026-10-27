@@ -44,9 +44,6 @@ final class CronEndpoint implements RouteProviderInterface
 
 	public const string KEY_HEADER = 'X-OZONE-Cron-Key';
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{

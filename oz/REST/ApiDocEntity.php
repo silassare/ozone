@@ -20,9 +20,6 @@ class ApiDocEntity
 {
 	/**
 	 * ApiDocEntity constructor.
-	 *
-	 * @param string $table_name
-	 * @param string $service_path
 	 */
 	public function __construct(
 		public string $table_name,

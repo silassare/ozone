@@ -36,9 +36,6 @@ final class Logout extends Service
 			->setDone('OZ_USER_LOGOUT_DONE');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -52,9 +49,6 @@ final class Logout extends Service
 			->name(self::ROUTE_LOGOUT);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{

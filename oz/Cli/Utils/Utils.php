@@ -34,10 +34,6 @@ final class Utils
 	/**
 	 * Checks if provided folder is an ozone project root directory.
 	 * If provided folder is null, it will use current working directory.
-	 *
-	 * @param null|string $folder
-	 *
-	 * @return null|string
 	 */
 	public static function isProjectFolder(?string $folder = null): ?string
 	{
@@ -55,8 +51,6 @@ final class Utils
 
 	/**
 	 * Checks if a project is loaded.
-	 *
-	 * @return bool
 	 */
 	public static function isProjectLoaded(): bool
 	{
@@ -66,12 +60,7 @@ final class Utils
 	/**
 	 * Checks if a port is open.
 	 *
-	 * @param int    $port
-	 * @param string $host
-	 *
 	 * @psalm-suppress InvalidArgument
-	 *
-	 * @return bool
 	 */
 	public static function isPortOpen(int $port, string $host = '127.0.0.1'): bool
 	{
@@ -96,8 +85,6 @@ final class Utils
 	 * @param null|string $host      the host
 	 * @param null|int    $start     start port
 	 * @param null|int    $end       end port
-	 *
-	 * @return null|int
 	 */
 	public static function getOpenPort(
 		array $favorites = [],
@@ -134,15 +121,12 @@ final class Utils
 
 	/**
 	 * Checks if a project is loaded and returns the app instance.
-	 *
-	 * @return null|AppInterface
 	 */
 	public static function tryGetProjectApp(): ?AppInterface
 	{
 		static $app = null;
 
 		if (null === $app && \defined('OZ_APP_DIR') && \file_exists($app_file = OZ_APP_DIR . 'app.php')) {
-			/** @psalm-suppress MissingFile */
 			$return = require $app_file;
 
 			if (!$return instanceof AppInterface) {
@@ -205,10 +189,6 @@ final class Utils
 	 * is offered: the command line is an administrator on the server, and an entity's own save may
 	 * write it. An option is required only when its column is not nullable and has no default, and
 	 * bool columns take `true` / `false`, `1` / `0` or `yes` / `no`.
-	 *
-	 * @param Table $table
-	 * @param array $includes
-	 * @param array $excludes
 	 *
 	 * @return KliOption[]
 	 */

@@ -167,10 +167,7 @@ final class StateLayout
 	 * Created when missing; what is not created is `data/` itself, so the error below is always about
 	 * the volume rather than about a directory nobody got round to making.
 	 *
-	 * @param ScopeInterface $scope
-	 * @param string         $kind  one of the constants of this class
-	 *
-	 * @return FilesManager
+	 * @param string $kind one of the constants of this class
 	 *
 	 * @throws RuntimeException when `data/` is missing
 	 */
@@ -202,8 +199,7 @@ final class StateLayout
 	 * reading them. It is still checked to exist on every call (one stat), and created again when
 	 * missing.
 	 *
-	 * @param ScopeInterface $scope
-	 * @param string         $kind  one of the constants of this class
+	 * @param string $kind one of the constants of this class
 	 *
 	 * @throws RuntimeException when `data/` is missing
 	 */
@@ -236,8 +232,6 @@ final class StateLayout
 	 * @param string       $kind    one of the constants of this class
 	 * @param string       $slug    the scope slug, {@see ScopeInterface::getStateSlug()}
 	 * @param bool         $create  whether to create it
-	 *
-	 * @return FilesManager
 	 */
 	public static function dirAt(
 		FilesManager $project,
@@ -298,8 +292,6 @@ final class StateLayout
 	 * Creates every state directory of a scope.
 	 *
 	 * Called by `oz project create`, `oz scopes add` and `oz project link`, never by a request.
-	 *
-	 * @param ScopeInterface $scope
 	 *
 	 * @return list<string> the absolute paths, in {@see self::kinds()} order
 	 */

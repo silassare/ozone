@@ -41,9 +41,6 @@ abstract class Command extends KliCommand
 
 	/**
 	 * Should return a new instance.
-	 *
-	 * @param string $name
-	 * @param Cli    $cli
 	 */
 	public static function instance(string $name, Cli $cli): static
 	{
@@ -67,8 +64,6 @@ abstract class Command extends KliCommand
 
 	/**
 	 * Adds a `--json` option to the action, which will make it output a JSON object instead of human-readable text.
-	 *
-	 * @param KliAction $action
 	 */
 	protected static function withJsonSupport(KliAction $action): void
 	{

@@ -42,21 +42,21 @@ final class TypeUrlTest extends TestCase
 
 	public function testNullableAcceptsNull(): void
 	{
-		$type  = (new TypeUrl())->nullable();
+		$type  = new TypeUrl()->nullable();
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
 
 	public function testAbsolutePathAcceptedWhenAllowed(): void
 	{
-		$type  = (new TypeUrl())->allowAbsolutePath();
+		$type  = new TypeUrl()->allowAbsolutePath();
 		$clean = $type->validate('/some/path')->getCleanValue();
 		self::assertSame('/some/path', $clean);
 	}
 
 	public function testAbsolutePathWithQueryAndFragment(): void
 	{
-		$type  = (new TypeUrl())->allowAbsolutePath();
+		$type  = new TypeUrl()->allowAbsolutePath();
 		$clean = $type->validate('/search?q=hello#results')->getCleanValue();
 		self::assertSame('/search?q=hello#results', $clean);
 	}
@@ -64,43 +64,43 @@ final class TypeUrlTest extends TestCase
 	public function testAbsolutePathRejectedWhenNotAllowed(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUrl())->validate('/absolute/path');
+		new TypeUrl()->validate('/absolute/path');
 	}
 
 	public function testProtocolRelativeUrlRejectedAsAbsolutePath(): void
 	{
 		// //example.com starts with // -> not treated as absolute path and fails FILTER_VALIDATE_URL
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUrl())->allowAbsolutePath()->validate('//example.com');
+		new TypeUrl()->allowAbsolutePath()->validate('//example.com');
 	}
 
 	public function testRejectsPlainWord(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUrl())->validate('notaurl');
+		new TypeUrl()->validate('notaurl');
 	}
 
 	public function testRejectsMissingScheme(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUrl())->validate('example.com/path');
+		new TypeUrl()->validate('example.com/path');
 	}
 
 	public function testRejectsEmptyStringWhenNotNullable(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUrl())->validate('');
+		new TypeUrl()->validate('');
 	}
 
 	public function testRejectsAbsolutePathWithSpaces(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUrl())->allowAbsolutePath()->validate('/path with spaces');
+		new TypeUrl()->allowAbsolutePath()->validate('/path with spaces');
 	}
 
 	public function testAllowedHostsAcceptsListedHostsAndLocalPaths(): void
 	{
-		$type = (new TypeUrl())->allowAbsolutePath()->allowedHosts(['App.Example.com']);
+		$type = new TypeUrl()->allowAbsolutePath()->allowedHosts(['App.Example.com']);
 
 		self::assertSame('https://APP.example.com/home', $type->validate('https://APP.example.com/home')->getCleanValue());
 		self::assertSame('/local', $type->validate('/local')->getCleanValue());
@@ -111,27 +111,27 @@ final class TypeUrlTest extends TestCase
 		$this->expectException(TypesInvalidValueException::class);
 		$this->expectExceptionMessage('OZ_FIELD_URL_HOST_NOT_ALLOWED');
 
-		(new TypeUrl())->allowAbsolutePath()->allowedHosts(['app.example.com'])->validate('https://evil.example/');
+		new TypeUrl()->allowAbsolutePath()->allowedHosts(['app.example.com'])->validate('https://evil.example/');
 	}
 
 	public function testAllowedHostsRejectsNonHttpSchemes(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
 
-		(new TypeUrl())->allowedHosts(['app.example.com'])->validate('javascript://app.example.com/%0Aalert(1)');
+		new TypeUrl()->allowedHosts(['app.example.com'])->validate('javascript://app.example.com/%0Aalert(1)');
 	}
 
 	public function testProtocolRelativeUrlIsNotALocalPath(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
 
-		(new TypeUrl())->allowAbsolutePath()->allowedHosts(['app.example.com'])->validate('//evil.example/');
+		new TypeUrl()->allowAbsolutePath()->allowedHosts(['app.example.com'])->validate('//evil.example/');
 	}
 
 	/** PHP counts "0" as empty, which used to skip every check of this type: it is checked now. */
 	public function testUrlChecksTheStringZero(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUrl())->validate('0');
+		new TypeUrl()->validate('0');
 	}
 }

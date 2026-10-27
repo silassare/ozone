@@ -110,7 +110,7 @@ final class JobsCmd extends Command
 
 			$jobs_prune->option('older-than', 'o')
 				->description('Only delete jobs older than this many seconds (default: 86400 = 24 h).')
-				->type((new KliTypeNumber())->min(0)->def(86400));
+				->type(new KliTypeNumber()->min(0)->def(86400));
 
 			$jobs_prune->handler(self::prune(...));
 
@@ -164,19 +164,19 @@ final class JobsCmd extends Command
 
 			$jobs_work->option('sleep', 'l')
 				->description('Seconds to sleep between polls when the queue is empty.')
-				->type((new KliTypeNumber())->min(0)->def(3));
+				->type(new KliTypeNumber()->min(0)->def(3));
 
 			$jobs_work->option('max-time', 't')
 				->description('Stop after this many seconds (0 = run indefinitely).')
-				->type((new KliTypeNumber())->min(0)->def(0));
+				->type(new KliTypeNumber()->min(0)->def(0));
 
 			$jobs_work->option('max-jobs', 'm')
 				->description('Stop after processing this many jobs (0 = unlimited).')
-				->type((new KliTypeNumber())->min(0)->def(0));
+				->type(new KliTypeNumber()->min(0)->def(0));
 
 			$jobs_work->option('memory', 'e')
 				->description('Stop when PHP memory usage exceeds this many MB (0 = unlimited).')
-				->type((new KliTypeNumber())->min(0)->def(128));
+				->type(new KliTypeNumber()->min(0)->def(128));
 
 			$jobs_work->handler(self::work(...));
 
@@ -189,19 +189,19 @@ final class JobsCmd extends Command
 
 			$jobs_supervisor->option('workers', 'n')
 				->description('Number of worker processes (numprocs).')
-				->type((new KliTypeNumber())->min(1)->def(1));
+				->type(new KliTypeNumber()->min(1)->def(1));
 
 			$jobs_supervisor->option('sleep', 'l')
 				->description('Seconds to sleep between polls when the queue is empty.')
-				->type((new KliTypeNumber())->min(0)->def(3));
+				->type(new KliTypeNumber()->min(0)->def(3));
 
 			$jobs_supervisor->option('memory', 'e')
 				->description('Memory limit in MB per worker process.')
-				->type((new KliTypeNumber())->min(0)->def(128));
+				->type(new KliTypeNumber()->min(0)->def(128));
 
 			$jobs_supervisor->option('log-dir', 'd')
 				->description('Directory for worker log files.')
-				->type((new KliTypeString())->def('/var/log/ozone'));
+				->type(new KliTypeString()->def('/var/log/ozone'));
 
 			$jobs_supervisor->option('user', 'u')
 				->description('OS user to run the workers as.')

@@ -48,9 +48,6 @@ use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
  */
 final class Auth2FA implements BootHookReceiverInterface
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{
@@ -81,8 +78,6 @@ final class Auth2FA implements BootHookReceiverInterface
 	 *
 	 * This is a convenience wrapper around {@see TwoFactorChannelRegistry::register()}.
 	 * It is intended to be called from a BootHookReceiverInterface::boot() method.
-	 *
-	 * @param TwoFactorChannelInterface $channel
 	 */
 	public static function registerChannel(TwoFactorChannelInterface $channel): void
 	{
@@ -91,10 +86,6 @@ final class Auth2FA implements BootHookReceiverInterface
 
 	/**
 	 * Intercepts a login event and starts the 2FA flow when the user has it enabled.
-	 *
-	 * @param Context                               $context
-	 * @param AuthUserInterface                     $user
-	 * @param AuthenticationMethodStatefulInterface $auth_method
 	 *
 	 * @throws UnauthorizedException when 2FA is required and the flow is started
 	 */

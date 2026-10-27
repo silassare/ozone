@@ -30,22 +30,16 @@ class PhoneOwnershipVerificationService extends Service
 {
 	public const string ROUTE_VERIFY_PHONE = 'oz:auth:verify:phone';
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router->post('/auth/verify/phone', static function (RouteInfo $ri) {
-			return (new self($ri))->init($ri);
+			return new self($ri)->init($ri);
 		})
 			->name(self::ROUTE_VERIFY_PHONE)
 			->form(self::buildInitForm(...));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{
@@ -59,11 +53,6 @@ class PhoneOwnershipVerificationService extends Service
 		]);
 	}
 
-	/**
-	 * @param RouteInfo $ri
-	 *
-	 * @return Response
-	 */
 	private function init(RouteInfo $ri): Response
 	{
 		$fd    = $ri->getCleanFormData();
@@ -79,9 +68,6 @@ class PhoneOwnershipVerificationService extends Service
 		return $this->respond();
 	}
 
-	/**
-	 * @return Form
-	 */
 	private static function buildInitForm(): Form
 	{
 		$fb = new Form();

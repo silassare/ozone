@@ -198,7 +198,7 @@ final class RouteTableTest extends TestCase
 		$file = $dir . \DIRECTORY_SEPARATOR . 'api.php';
 
 		try {
-			self::assertTrue((new RouteTable($data))->save($file));
+			self::assertTrue(new RouteTable($data)->save($file));
 
 			$router = self::router(RouteTable::load($file));
 

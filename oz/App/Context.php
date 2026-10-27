@@ -86,10 +86,6 @@ final class Context
 	/**
 	 * Context constructor.
 	 *
-	 * @param HTTPEnvironment            $http_env
-	 * @param null|Request               $request
-	 * @param null|Context               $parent
-	 * @param bool                       $is_api
 	 * @param null|ResponseSinkInterface $response_sink where the response goes instead of PHP's
 	 *                                                  output; a root context's only, see
 	 *                                                  {@see self::getResponseSink()}
@@ -178,8 +174,6 @@ final class Context
 
 	/**
 	 * Checks whether json response should be returned.
-	 *
-	 * @return bool
 	 */
 	public function shouldReturnJSON(): bool
 	{
@@ -223,7 +217,7 @@ final class Context
 				throw new ForbiddenException();
 			}
 
-			(new RequestHook($this))->dispatch();
+			new RequestHook($this)->dispatch();
 
 			$this->getRouter()
 				->handle($this, function (RouteInfo $route_info): void {
@@ -245,8 +239,6 @@ final class Context
 
 	/**
 	 * Gets HTTP environment.
-	 *
-	 * @return StoreNotEditable
 	 */
 	public function getHTTPEnvironment(): StoreNotEditable
 	{
@@ -255,8 +247,6 @@ final class Context
 
 	/**
 	 * Gets request instance object.
-	 *
-	 * @return Request
 	 */
 	public function getRequest(): Request
 	{
@@ -265,8 +255,6 @@ final class Context
 
 	/**
 	 * Gets route info instance object.
-	 *
-	 * @return RouteInfo
 	 */
 	public function getRouteInfo(): RouteInfo
 	{
@@ -279,8 +267,6 @@ final class Context
 
 	/**
 	 * Gets response.
-	 *
-	 * @return Response
 	 */
 	public function getResponse(): Response
 	{
@@ -289,8 +275,6 @@ final class Context
 
 	/**
 	 * Sets response.
-	 *
-	 * @param Response $response
 	 */
 	public function setResponse(Response $response): static
 	{
@@ -337,8 +321,6 @@ final class Context
 	 * Gets current auth.
 	 *
 	 * Shortcut for {@see ContextAuth::method()}.
-	 *
-	 * @return AuthenticationMethodInterface
 	 */
 	public function auth(): AuthenticationMethodInterface
 	{
@@ -357,8 +339,6 @@ final class Context
 
 	/**
 	 * Checks if we have a stateful auth method.
-	 *
-	 * @return bool
 	 */
 	public function hasStatefulAuth(): bool
 	{
@@ -367,8 +347,6 @@ final class Context
 
 	/**
 	 * Gets {@link AuthenticationMethodStatefulInterface} instance object.
-	 *
-	 * @return AuthenticationMethodStatefulInterface
 	 */
 	public function requireStatefulAuth(): AuthenticationMethodStatefulInterface
 	{
@@ -377,8 +355,6 @@ final class Context
 
 	/**
 	 * Try to get the state if the auth method is stateful.
-	 *
-	 * @return null|StatefulAuthenticationMethodStore
 	 */
 	public function authStore(): ?StatefulAuthenticationMethodStore
 	{
@@ -387,8 +363,6 @@ final class Context
 
 	/**
 	 * Make sure we have a stateful auth method and return its store.
-	 *
-	 * @return StatefulAuthenticationMethodStore
 	 */
 	public function requireAuthStore(): StatefulAuthenticationMethodStore
 	{
@@ -397,8 +371,6 @@ final class Context
 
 	/**
 	 * Gets attached {@link AuthUsers} instance object.
-	 *
-	 * @return AuthUsers
 	 */
 	public function getAuthUsers(): AuthUsers
 	{
@@ -407,8 +379,6 @@ final class Context
 
 	/**
 	 * Gets the router instance object.
-	 *
-	 * @return Router
 	 */
 	public function getRouter(): Router
 	{
@@ -421,8 +391,6 @@ final class Context
 
 	/**
 	 * Checks if we are in WebSite context.
-	 *
-	 * @return bool
 	 */
 	public function isWebContext(): bool
 	{
@@ -431,8 +399,6 @@ final class Context
 
 	/**
 	 * Checks if we are in API context.
-	 *
-	 * @return bool
 	 */
 	public function isApiContext(): bool
 	{
@@ -441,8 +407,6 @@ final class Context
 
 	/**
 	 * Checks it is a sub-request.
-	 *
-	 * @return bool
 	 */
 	public function isSubRequest(): bool
 	{
@@ -451,8 +415,6 @@ final class Context
 
 	/**
 	 * Gets base url.
-	 *
-	 * @return string
 	 */
 	public function getBaseUrl(): string
 	{
@@ -462,11 +424,6 @@ final class Context
 
 	/**
 	 * Builds URI with a given path and query data.
-	 *
-	 * @param string $path
-	 * @param array  $query
-	 *
-	 * @return Uri
 	 */
 	public function buildUri(string $path, array $query = []): Uri
 	{
@@ -478,12 +435,6 @@ final class Context
 
 	/**
 	 * Builds URI with a given path and query data.
-	 *
-	 * @param string $name
-	 * @param array  $params
-	 * @param array  $query
-	 *
-	 * @return Uri
 	 */
 	public function buildRouteUri(string $name, array $params = [], array $query = []): Uri
 	{
@@ -499,8 +450,6 @@ final class Context
 	 * Shortcut for {@see ClientInfo::ip()}.
 	 *
 	 * @param bool $with_port append the client port; only known when the client is the TCP peer
-	 *
-	 * @return null|string
 	 */
 	public function getUserIP(bool $with_port = false): ?string
 	{
@@ -519,10 +468,6 @@ final class Context
 	 * Gets the host.
 	 *
 	 * Shortcut for {@see ClientInfo::host()}.
-	 *
-	 * @param bool $with_port
-	 *
-	 * @return string
 	 */
 	public function getHost(bool $with_port = false): string
 	{
@@ -531,8 +476,6 @@ final class Context
 
 	/**
 	 * Gets default origin.
-	 *
-	 * @return string
 	 */
 	public function getDefaultOrigin(): string
 	{
@@ -544,8 +487,6 @@ final class Context
 	 *
 	 * Should be called only once.
 	 * As it will finish/terminate the request.
-	 *
-	 * @param null|Response $with
 	 */
 	public function respond(?Response $with = null): never
 	{
@@ -553,7 +494,7 @@ final class Context
 			$this->response = $with;
 		}
 
-		(new ResponseHook($this))->dispatch();
+		new ResponseHook($this)->dispatch();
 
 		if ($this->auth_state->isStateful()) {
 			$this->auth_state->requireStateful()->persist();
@@ -591,8 +532,6 @@ final class Context
 	 * @param array  $params            route parameters
 	 * @param array  $query             query parameters
 	 * @param bool   $override_response if true, the response will be set to the current context
-	 *
-	 * @return Response
 	 */
 	public function callRoute(
 		string $route_name,
@@ -610,8 +549,6 @@ final class Context
 	 * @param array  $attributes        attributes to be passed to the request
 	 * @param array  $query             query parameters to be passed to the request
 	 * @param bool   $override_response if true, the response will be set to the current context
-	 *
-	 * @return Response
 	 */
 	public function callPath(
 		string $path,
@@ -666,8 +603,6 @@ final class Context
 	 * Gets the request origin or referer.
 	 *
 	 * Shortcut for {@see ClientInfo::originOrReferer()}; never trust it for security decisions.
-	 *
-	 * @return null|string
 	 */
 	public function getRequestOriginOrReferer(): ?string
 	{
@@ -678,8 +613,6 @@ final class Context
 	 * Returns custom headers name for use in CORS.
 	 *
 	 * Shortcut for {@see ClientInfo::corsAllowedHeaders()}.
-	 *
-	 * @return array
 	 */
 	public function getAllowedHeadersNameList(): array
 	{
@@ -702,7 +635,7 @@ final class Context
 			$runtime->flushRequest();
 		}
 
-		(new FinishHook($this))->dispatch();
+		new FinishHook($this)->dispatch();
 
 		// How a request ends is the runtime's business, and the only thing a persistent process does
 		// differently: PHP-FPM exits here, a worker unwinds to its loop. Either way nothing written
@@ -716,8 +649,6 @@ final class Context
 	/**
 	 * Authenticates the request with the matched route's methods, see
 	 * {@see ContextAuth::authenticate()}.
-	 *
-	 * @param RouteInfo $ri
 	 *
 	 * @throws ForbiddenException
 	 */

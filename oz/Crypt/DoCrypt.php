@@ -39,9 +39,6 @@ class DoCrypt implements CryptInterface
 		$this->cypher = $cypher;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function encrypt(string $message, #[SensitiveParameter] string $pass_phrase): false|string
 	{
@@ -62,9 +59,6 @@ class DoCrypt implements CryptInterface
 		return \base64_encode($iv . $encrypted);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function decrypt(string $message, #[SensitiveParameter] string $pass_phrase): false|string
 	{

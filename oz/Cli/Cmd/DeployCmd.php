@@ -36,8 +36,6 @@ final class DeployCmd extends Command
 {
 	/**
 	 * Writes the deployment files.
-	 *
-	 * @param KliArgs $args
 	 */
 	public function init(KliArgs $args): void
 	{
@@ -103,8 +101,6 @@ final class DeployCmd extends Command
 
 	/**
 	 * Deploys a release.
-	 *
-	 * @param KliArgs $args
 	 */
 	public function run(KliArgs $args): void
 	{
@@ -192,8 +188,6 @@ final class DeployCmd extends Command
 
 	/**
 	 * Points `current` back at a previous release.
-	 *
-	 * @param KliArgs $args
 	 */
 	public function rollback(KliArgs $args): void
 	{
@@ -256,8 +250,6 @@ final class DeployCmd extends Command
 
 	/**
 	 * Lists the releases of a deploy root.
-	 *
-	 * @param KliArgs $args
 	 */
 	public function releases(KliArgs $args): void
 	{
@@ -289,9 +281,6 @@ final class DeployCmd extends Command
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{

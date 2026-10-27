@@ -30,8 +30,6 @@ class WebView extends Service
 	protected array $compile_data = [];
 
 	/**
-	 * @param array $data
-	 *
 	 * @return $this
 	 */
 	public function inject(array $data): static
@@ -44,9 +42,6 @@ class WebView extends Service
 	}
 
 	/**
-	 * @param string $key
-	 * @param mixed  $value
-	 *
 	 * @return $this
 	 */
 	public function injectKey(string $key, mixed $value): static
@@ -58,8 +53,6 @@ class WebView extends Service
 
 	/**
 	 * Gets the view template compile data, called just before the view is rendered.
-	 *
-	 * @return array
 	 */
 	public function getCompileData(): array
 	{
@@ -68,8 +61,6 @@ class WebView extends Service
 
 	/**
 	 * Gets the view template to render.
-	 *
-	 * @return string
 	 */
 	public function getTemplate(): string
 	{
@@ -78,8 +69,6 @@ class WebView extends Service
 
 	/**
 	 * Sets the view template to render.
-	 *
-	 * @param string $template
 	 *
 	 * @return $this
 	 */
@@ -92,8 +81,6 @@ class WebView extends Service
 
 	/**
 	 * Render the view and return response.
-	 *
-	 * @return Response
 	 */
 	#[Override]
 	public function respond(): Response
@@ -104,16 +91,11 @@ class WebView extends Service
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void {}
 
 	/**
 	 * Render the view.
-	 *
-	 * @return string
 	 */
 	protected function render(): string
 	{
@@ -129,10 +111,7 @@ class WebView extends Service
 	/**
 	 * Render the view to a given response object.
 	 *
-	 * @param Response $response
-	 * @param string   $mode     one of: append, prepend, overwrite
-	 *
-	 * @return Response
+	 * @param string $mode one of: append, prepend, overwrite
 	 */
 	protected function renderTo(Response $response, string $mode = 'append'): Response
 	{

@@ -25,36 +25,24 @@ enum Role: string implements RoleInterface
 	case ADMIN       = 'admin';
 	case EDITOR      = 'editor';
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function admin(): static
 	{
 		return self::ADMIN;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function superAdmin(): static
 	{
 		return self::SUPER_ADMIN;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function editor(): static
 	{
 		return self::EDITOR;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function weight(): int
 	{

@@ -28,8 +28,6 @@ final class Countries
 	 * Gets country info by cc2 (country code 2).
 	 *
 	 * @param string $cc2 the country code 2
-	 *
-	 * @return null|OZCountry
 	 */
 	public static function get(string $cc2): ?OZCountry
 	{
@@ -54,8 +52,6 @@ final class Countries
 	 * Checks if a country (with a given cc2) is allowed.
 	 *
 	 * @param string $cc2 the country code 2
-	 *
-	 * @return bool
 	 */
 	public static function allowed(string $cc2): bool
 	{

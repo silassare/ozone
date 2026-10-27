@@ -100,7 +100,7 @@ final class BatchManager
 
 		foreach ($workers as $worker) {
 			$ref = Keys::id64();
-			$job = (new Job($ref, $worker::getName(), $worker->getPayload()))
+			$job = new Job($ref, $worker::getName(), $worker->getPayload())
 				->setQueue($queue_name)
 				->setName($worker::getName())
 				->setBatchId($batch_id);
@@ -113,7 +113,7 @@ final class BatchManager
 			$batch->setFinishedAT((string) \time());
 			$batch->save();
 
-			(new BatchFinished($batch, false))->dispatch();
+			new BatchFinished($batch, false)->dispatch();
 		}
 
 		return $batch;
@@ -204,8 +204,6 @@ final class BatchManager
 	 * marked finished by {@link onJobSettled()} once all jobs have settled.
 	 *
 	 * @param string $batch_id the batch ID (oz_job_batches.id)
-	 *
-	 * @return bool
 	 */
 	public static function isFinished(string $batch_id): bool
 	{
@@ -249,7 +247,7 @@ final class BatchManager
 		// allow two simultaneous workers settling the last two jobs to both read
 		// finished_at=null and both dispatch BatchFinished.
 		$now      = (string) \time();
-		$affected = (new OZJobBatchesQuery())
+		$affected = new OZJobBatchesQuery()
 			->whereIdIs($batch_id)
 			->whereFinishedAtIsNull()
 			->update([OZJobBatch::COL_FINISHED_AT => $now])
@@ -260,7 +258,7 @@ final class BatchManager
 		}
 
 		// Re-fetch the entity so BatchFinished receives the fully populated object.
-		$batch = (new OZJobBatchesQuery())->whereIdIs($batch_id)->find()->fetchClass();
+		$batch = new OZJobBatchesQuery()->whereIdIs($batch_id)->find()->fetchClass();
 
 		if (null === $batch) {
 			return; // should never happen after a successful update, but guard anyway
@@ -278,6 +276,6 @@ final class BatchManager
 			}
 		}
 
-		(new BatchFinished($batch, $has_error))->dispatch();
+		new BatchFinished($batch, $has_error)->dispatch();
 	}
 }

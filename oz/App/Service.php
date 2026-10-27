@@ -34,8 +34,6 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 
 	/**
 	 * Service constructor.
-	 *
-	 * @param Context|RouteInfo $context
 	 */
 	public function __construct(Context|RouteInfo $context)
 	{
@@ -45,8 +43,6 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 
 	/**
 	 * Gets the context.
-	 *
-	 * @return Context
 	 */
 	public function getContext(): Context
 	{
@@ -55,8 +51,6 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 
 	/**
 	 * Gets the service json response.
-	 *
-	 * @return JSONResponse
 	 */
 	public function json(): JSONResponse
 	{
@@ -65,8 +59,6 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 
 	/**
 	 * Return service response.
-	 *
-	 * @return Response
 	 */
 	public function respond(): Response
 	{
@@ -74,22 +66,14 @@ abstract class Service implements RouteProviderInterface, ApiDocProviderInterfac
 			->withJson($this->json()->toEnvelope($this->context), $this->response_status);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void {}
 
 	/**
 	 * Sets the HTTP response status code.
-	 *
-	 * @param int $status
 	 */
 	protected function setResponseStatus(int $status): void
 	{

@@ -20,8 +20,6 @@ interface RouteRateLimitInterface
 {
 	/**
 	 * Should return a unique key to be used for rate limit.
-	 *
-	 * @return string
 	 */
 	public function key(): string;
 
@@ -29,8 +27,6 @@ interface RouteRateLimitInterface
 	 * Should return the rate limit interval in seconds.
 	 *
 	 * The interval is the time window in which the rate limit applies.
-	 *
-	 * @return int
 	 */
 	public function interval(): int;
 
@@ -38,8 +34,6 @@ interface RouteRateLimitInterface
 	 * Should return the rate limit.
 	 *
 	 * The number of requests allowed in the interval.
-	 *
-	 * @return int
 	 */
 	public function rate(): int;
 

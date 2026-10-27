@@ -71,9 +71,6 @@ class DigestAuth implements AuthenticationMethodInterface
 		$this->newKeys();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function get(RouteInfo $ri, string $realm): static
 	{
@@ -82,17 +79,12 @@ class DigestAuth implements AuthenticationMethodInterface
 
 	/**
 	 * Returns the digest.
-	 *
-	 * @return string
 	 */
 	public function getDigest(): string
 	{
 		return $this->digest;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function satisfied(): bool
 	{
@@ -121,8 +113,6 @@ class DigestAuth implements AuthenticationMethodInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException when the nonce expired (a new, `stale` challenge)
@@ -312,9 +302,6 @@ class DigestAuth implements AuthenticationMethodInterface
 		return 'nonce:' . Hasher::hash32($nonce);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function askHeader(): string
 	{
@@ -339,9 +326,6 @@ class DigestAuth implements AuthenticationMethodInterface
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function askInfo(): array
 	{
@@ -356,10 +340,6 @@ class DigestAuth implements AuthenticationMethodInterface
 
 	/**
 	 * Parse digest auth header string.
-	 *
-	 * @param string $digest
-	 *
-	 * @return array|false
 	 */
 	protected function digestProperties(string $digest): array|false
 	{

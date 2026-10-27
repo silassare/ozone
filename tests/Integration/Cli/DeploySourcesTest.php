@@ -163,6 +163,6 @@ final class DeploySourcesTest extends TestCase
 			return;
 		}
 
-		(new Process(['rm', '-rf', $dir], null, null, null, 120.0))->run();
+		new Process(['rm', '-rf', $dir], null, null, null, 120.0)->run();
 	}
 }

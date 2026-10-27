@@ -32,9 +32,6 @@ use PHPUtils\Str;
  */
 final class Assets implements BootHookReceiverInterface
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{
@@ -56,8 +53,6 @@ final class Assets implements BootHookReceiverInterface
 
 	/**
 	 * Returns the registered asset sources.
-	 *
-	 * @return PathSources
 	 */
 	public static function getSources(): PathSources
 	{

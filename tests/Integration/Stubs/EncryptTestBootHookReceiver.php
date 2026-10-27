@@ -52,7 +52,7 @@ final class EncryptTestBootHookReceiver implements BootHookReceiverInterface
 
 			// Read back the raw entity -- payload is still {"$enc":"..."} here because
 			// OZJobsQuery does NOT decrypt; only DbJobStore::fromEntity() does.
-			$entity = (new OZJobsQuery())
+			$entity = new OZJobsQuery()
 				->whereRefIs($contract->getRef())
 				->find(ORMOptions::makePaginated(1))
 				->fetchClass();

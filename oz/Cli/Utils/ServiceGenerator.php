@@ -27,8 +27,6 @@ class ServiceGenerator
 {
 	/**
 	 * ServiceGenerator constructor.
-	 *
-	 * @param RDBMSInterface $db
 	 */
 	public function __construct(
 		private RDBMSInterface $db,

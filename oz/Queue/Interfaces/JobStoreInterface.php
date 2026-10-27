@@ -34,26 +34,16 @@ interface JobStoreInterface
 {
 	/**
 	 * Gets the store name.
-	 *
-	 * @return string
 	 */
 	public function getName(): string;
 
 	/**
 	 * Gets a job by ref.
-	 *
-	 * @param string $ref
-	 *
-	 * @return null|JobContractInterface
 	 */
 	public function get(string $ref): ?JobContractInterface;
 
 	/**
 	 * Gets a job by ref or fail.
-	 *
-	 * @param string $ref
-	 *
-	 * @return JobContractInterface
 	 */
 	public function getOrFail(string $ref): JobContractInterface;
 
@@ -62,34 +52,21 @@ interface JobStoreInterface
 	 *
 	 * A ref is unique in a store: adding a job whose ref the store has throws, and leaves the stored
 	 * job as it was (what makes a cron dispatch idempotent, `Cron::runDues()`).
-	 *
-	 * @param JobInterface $job
-	 *
-	 * @return JobContractInterface
 	 */
 	public function add(JobInterface $job): JobContractInterface;
 
 	/**
 	 * Update a job.
-	 *
-	 * @param JobContractInterface $job_contract
 	 */
 	public function update(JobContractInterface $job_contract): static;
 
 	/**
 	 * Delete a job.
-	 *
-	 * @param JobContractInterface $job_contract
 	 */
 	public function delete(JobContractInterface $job_contract): static;
 
 	/**
 	 * Returns iterator for jobs in a queue.
-	 *
-	 * @param string        $queue_name
-	 * @param null|string   $worker_name
-	 * @param null|JobState $state
-	 * @param null|int      $priority
 	 *
 	 * @return Iterator<JobContractInterface>
 	 */
@@ -102,13 +79,6 @@ interface JobStoreInterface
 
 	/**
 	 * List jobs in a queue.
-	 *
-	 * @param null|string   $queue_name
-	 * @param null|string   $worker_name
-	 * @param null|JobState $state
-	 * @param null|int      $priority
-	 * @param int           $page
-	 * @param int           $max
 	 *
 	 * @return JobContractInterface[]
 	 */
@@ -123,38 +93,23 @@ interface JobStoreInterface
 
 	/**
 	 * Lock a job.
-	 *
-	 * @param JobContractInterface $job_contract
-	 *
-	 * @return bool
 	 */
 	public function lock(JobContractInterface $job_contract): bool;
 
 	/**
 	 * Unlock a job.
-	 *
-	 * @param JobContractInterface $job_contract
-	 *
-	 * @return bool
 	 */
 	public function unlock(JobContractInterface $job_contract): bool;
 
 	/**
 	 * Checks whether a job is currently locked.
-	 *
-	 * @param JobContractInterface $job_contract
-	 *
-	 * @return bool
 	 */
 	public function isLocked(JobContractInterface $job_contract): bool;
 
 	/**
 	 * Count jobs in a queue, optionally filtered by state.
 	 *
-	 * @param string        $queue_name
-	 * @param null|JobState $state      when null, all states are counted
-	 *
-	 * @return int
+	 * @param null|JobState $state when null, all states are counted
 	 */
 	public function count(string $queue_name, ?JobState $state = null): int;
 
@@ -165,8 +120,6 @@ interface JobStoreInterface
 	 * a database store compares when the job was last written, a Redis store lets the lock key
 	 * expire. What to do with them is not -- {@see JobsManager::reclaimStale()}
 	 * settles them against the job's retry policy.
-	 *
-	 * @param string $queue_name
 	 *
 	 * @return list<JobContractInterface>
 	 */
@@ -191,8 +144,6 @@ interface JobStoreInterface
 	 *
 	 * @param string        $batch_id the value of the `batch_id` field stored on each job
 	 * @param null|JobState $state    when null, all states are counted
-	 *
-	 * @return int
 	 */
 	public function countByBatch(string $batch_id, ?JobState $state = null): int;
 

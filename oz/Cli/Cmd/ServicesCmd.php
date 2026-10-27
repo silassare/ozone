@@ -28,9 +28,6 @@ use PHPUtils\Str;
  */
 final class ServicesCmd extends Command
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{
@@ -99,8 +96,6 @@ final class ServicesCmd extends Command
 
 	/**
 	 * Generate service for a table in the database.
-	 *
-	 * @param KliArgs $args
 	 */
 	private function generate(KliArgs $args): void
 	{

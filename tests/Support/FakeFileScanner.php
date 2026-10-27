@@ -51,18 +51,12 @@ final class FakeFileScanner implements FileScannerInterface
 		self::$scanned   = [];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromSettings(): static
 	{
 		return new self();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function scan(FileStream $content): FileScanResult
 	{

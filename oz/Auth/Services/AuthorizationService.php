@@ -51,16 +51,14 @@ class AuthorizationService extends Service
 	private const string REF_PARAM = 'auth_ref';
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws Throwable
 	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router->group('/auth/:' . self::REF_PARAM, static function (Router $router): void {
-			$authorize = static fn (RouteInfo $ri) => (new self($ri))->authorize($ri, $ri->getCleanFormData());
-			$refresh   = static fn (RouteInfo $ri) => (new self($ri))->refresh($ri, $ri->getCleanFormData());
+			$authorize = static fn (RouteInfo $ri) => new self($ri)->authorize($ri, $ri->getCleanFormData());
+			$refresh   = static fn (RouteInfo $ri) => new self($ri)->refresh($ri, $ri->getCleanFormData());
 
 			$router->post('/authorize', $authorize)
 				->name(self::ROUTE_AUTHORIZE)
@@ -70,10 +68,10 @@ class AuthorizationService extends Service
 				->name(self::ROUTE_REFRESH)
 				->form(self::buildRefreshForm(...));
 
-			$router->get('/state', static fn (RouteInfo $ri) => (new self($ri))->state($ri))
+			$router->get('/state', static fn (RouteInfo $ri) => new self($ri)->state($ri))
 				->name(self::ROUTE_STATE);
 
-			$router->post('/cancel', static fn (RouteInfo $ri) => (new self($ri))->cancel($ri, $ri->getCleanFormData()))
+			$router->post('/cancel', static fn (RouteInfo $ri) => new self($ri)->cancel($ri, $ri->getCleanFormData()))
 				->name(self::ROUTE_CANCEL)
 				->form(self::buildCancelForm(...));
 		});
@@ -185,9 +183,6 @@ class AuthorizationService extends Service
 		return $this->respond();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{
@@ -253,8 +248,6 @@ class AuthorizationService extends Service
 	}
 
 	/**
-	 * @return Form
-	 *
 	 * @throws TypesException
 	 */
 	private static function buildCancelForm(): Form
@@ -269,8 +262,6 @@ class AuthorizationService extends Service
 	}
 
 	/**
-	 * @return Form
-	 *
 	 * @throws TypesException
 	 */
 	private static function buildRefreshForm(): Form
@@ -284,9 +275,6 @@ class AuthorizationService extends Service
 		return $fb;
 	}
 
-	/**
-	 * @return Form
-	 */
 	private static function buildAuthorizeForm(): Form
 	{
 		$fb = new Form();

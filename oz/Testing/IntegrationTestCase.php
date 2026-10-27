@@ -44,9 +44,6 @@ abstract class IntegrationTestCase extends TestCase
 	 */
 	private static bool $schemaReady = false;
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function setUpBeforeClass(): void
 	{

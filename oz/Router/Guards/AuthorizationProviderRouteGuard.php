@@ -35,9 +35,6 @@ final class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 	 */
 	public function __construct(private array $allowed_providers) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toRules(): array
 	{
@@ -46,9 +43,6 @@ final class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromRules(array $rules): static
 	{
@@ -56,8 +50,6 @@ final class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @return array{provider:AuthorizationProviderInterface, auth:OZAuth}
 	 *
 	 * @throws ForbiddenException
@@ -101,8 +93,6 @@ final class AuthorizationProviderRouteGuard extends AbstractRouteGuard
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @return array{provider:AuthorizationProviderInterface, auth:OZAuth}
 	 */
 	#[Override]

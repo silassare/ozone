@@ -360,7 +360,7 @@ final class FieldsetTest extends TestCase
 
 	public function testGetFieldsetReturnsNullForUnknownName(): void
 	{
-		self::assertNull((new Form())->getFieldset('unknown'));
+		self::assertNull(new Form()->getFieldset('unknown'));
 	}
 
 	// -----------------------------------------------------------------------

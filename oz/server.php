@@ -12,15 +12,10 @@
 declare(strict_types=1);
 
 $cli_server_router = (new class {
-	/**
-	 * @var string
-	 */
 	public string $index_file;
 
 	/**
 	 * Run.
-	 *
-	 * @return bool
 	 */
 	public function run(): bool
 	{
@@ -87,8 +82,6 @@ $cli_server_router = (new class {
 
 	/**
 	 * Log to console.
-	 *
-	 * @param $message
 	 */
 	public function log($message): void
 	{

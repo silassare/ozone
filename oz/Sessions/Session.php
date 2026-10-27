@@ -96,16 +96,11 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Session constructor.
-	 *
-	 * @param Context $context
-	 * @param string  $request_source_key
 	 */
 	public function __construct(private Context $context, private readonly string $request_source_key) {}
 
 	/**
 	 * Returns session lifetime in seconds from settings.
-	 *
-	 * @return int
 	 */
 	public static function lifetime(): int
 	{
@@ -122,8 +117,6 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Returns session ID.
-	 *
-	 * @return string
 	 */
 	public function id(): string
 	{
@@ -138,8 +131,6 @@ final class Session implements BootHookReceiverInterface
 	 *
 	 * Unlike {@see self::id()}, asking does not keep the session: for saying which session something
 	 * happened to, not for handing the ID to something that will come back with it.
-	 *
-	 * @return string
 	 */
 	public function peekID(): string
 	{
@@ -151,8 +142,6 @@ final class Session implements BootHookReceiverInterface
 	 *
 	 * This is the source of the current request, not the one the session was opened from: the stored
 	 * key is the baseline {@see self::sourceChanged()} compares against.
-	 *
-	 * @return string
 	 */
 	public function sourceKey(): string
 	{
@@ -165,8 +154,6 @@ final class Session implements BootHookReceiverInterface
 	 *
 	 * This request's own key for a new session: nothing is stored yet, and that is the key the
 	 * session will be opened with.
-	 *
-	 * @return string
 	 */
 	public function openedSourceKey(): string
 	{
@@ -177,8 +164,6 @@ final class Session implements BootHookReceiverInterface
 	 * Whether this session was opened from another source than the current request's.
 	 *
 	 * False for a new session: there is no stored key to compare with.
-	 *
-	 * @return bool
 	 */
 	public function sourceChanged(): bool
 	{
@@ -187,8 +172,6 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * To checks if session has started.
-	 *
-	 * @return bool
 	 */
 	public function hasStarted(): bool
 	{
@@ -287,8 +270,6 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Attach user to this session.
-	 *
-	 * @param AuthUserInterface $user
 	 */
 	public function attachAuthUser(AuthUserInterface $user): static
 	{
@@ -325,8 +306,6 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Gets the session data store.
-	 *
-	 * @return StatefulAuthenticationMethodStore
 	 */
 	public function store(): StatefulAuthenticationMethodStore
 	{
@@ -336,9 +315,6 @@ final class Session implements BootHookReceiverInterface
 		return $this->state;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{
@@ -356,10 +332,6 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Find session by ID.
-	 *
-	 * @param string $sid
-	 *
-	 * @return null|OZSession
 	 */
 	public static function findSessionByID(string $sid): ?OZSession
 	{
@@ -405,7 +377,7 @@ final class Session implements BootHookReceiverInterface
 			// A cookie the request carried for a session that no longer exists is dropped, so the
 			// client stops sending it.
 			if (null !== $this->context->getRequest()->getCookieParam($session_cookie_name)) {
-				$this->context->setResponse((new Cookies())
+				$this->context->setResponse(new Cookies()
 					->add(Cookie::create($this->context, $session_cookie_name)->drop())
 					->applyTo($response));
 			}
@@ -557,7 +529,7 @@ final class Session implements BootHookReceiverInterface
 
 		if ($this->is_new) {
 			// The entity of a new session exists only once it is kept.
-			$this->session_entry ??= (new OZSession())
+			$this->session_entry ??= new OZSession()
 				->setID($sid)
 				->setRequestSourceKey($this->request_source_key);
 
@@ -619,10 +591,7 @@ final class Session implements BootHookReceiverInterface
 	/**
 	 * Adds to a patch every key of the store whose value is not what it was.
 	 *
-	 * @param JsonPatch    $patch
-	 * @param array        $before
-	 * @param array        $after
-	 * @param list<string> $path   the keys walked into so far
+	 * @param list<string> $path the keys walked into so far
 	 */
 	private static function collectDataChanges(JsonPatch $patch, array $before, array $after, array $path): void
 	{
@@ -684,10 +653,6 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Checks for session id string.
-	 *
-	 * @param mixed $value
-	 *
-	 * @return bool
 	 */
 	private static function isSessionIdLike(mixed $value): bool
 	{
@@ -696,8 +661,6 @@ final class Session implements BootHookReceiverInterface
 
 	/**
 	 * Delete session from database.
-	 *
-	 * @param string $sid
 	 */
 	private static function delete(string $sid): void
 	{

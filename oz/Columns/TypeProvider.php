@@ -23,9 +23,6 @@ use OZONE\Core\App\Settings;
  */
 class TypeProvider implements TypeProviderInterface
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getTypeInstance(string $name, array $options): ?TypeInterface
 	{
@@ -39,9 +36,6 @@ class TypeProvider implements TypeProviderInterface
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function hasType(string $name): bool
 	{

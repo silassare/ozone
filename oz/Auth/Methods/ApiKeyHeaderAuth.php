@@ -40,9 +40,6 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 	 */
 	protected function __construct(protected RouteInfo $ri, protected string $realm) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function get(RouteInfo $ri, string $realm): static
 	{
@@ -51,17 +48,12 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 
 	/**
 	 * Returns the api key.
-	 *
-	 * @return string
 	 */
 	public function getApiKey(): string
 	{
 		return $this->api_key;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function satisfied(): bool
 	{
@@ -82,8 +74,6 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException
@@ -102,8 +92,6 @@ class ApiKeyHeaderAuth implements AuthenticationMethodInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]

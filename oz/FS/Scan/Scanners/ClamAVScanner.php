@@ -45,9 +45,6 @@ final readonly class ClamAVScanner implements FileScannerInterface
 		private ?Closure $connector = null
 	) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromSettings(): static
 	{
@@ -79,9 +76,6 @@ final readonly class ClamAVScanner implements FileScannerInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function scan(FileStream $content): FileScanResult
 	{

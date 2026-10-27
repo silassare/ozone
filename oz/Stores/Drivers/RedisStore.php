@@ -46,13 +46,6 @@ class RedisStore implements StoreDriverInterface
 	private const string EXPIRE_KEY = 'e';
 
 	/**
-	 * RedisStore constructor.
-	 *
-	 * @param string $namespace
-	 */
-	/**
-	 * @param string $namespace
-	 *
 	 * @throws RuntimeException when `ext-redis` is missing
 	 */
 	public function __construct(protected readonly string $namespace)
@@ -69,9 +62,6 @@ class RedisStore implements StoreDriverInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function capabilities(): StoreCapabilities
 	{
@@ -85,9 +75,6 @@ class RedisStore implements StoreDriverInterface
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function get(string $key): ?StoreEntry
 	{
@@ -115,9 +102,6 @@ class RedisStore implements StoreDriverInterface
 		return new StoreEntry($key, $data[self::VALUE_KEY], $expire);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getMultiple(array $keys): array
 	{
@@ -134,9 +118,6 @@ class RedisStore implements StoreDriverInterface
 		return $items;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function set(StoreEntry $entry): bool
 	{
@@ -217,18 +198,12 @@ class RedisStore implements StoreDriverInterface
 		throw StoreNumbers::contended($key);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function delete(string $key): bool
 	{
 		return (bool) RedisFactory::get()->del($this->buildKey($key));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function deleteMultiple(array $keys): bool
 	{
@@ -282,9 +257,6 @@ class RedisStore implements StoreDriverInterface
 		return [];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromConfig(string $namespace, array $options = []): static
 	{
@@ -293,10 +265,6 @@ class RedisStore implements StoreDriverInterface
 
 	/**
 	 * Builds the namespaced Redis key for a given cache key.
-	 *
-	 * @param string $key
-	 *
-	 * @return string
 	 */
 	private function buildKey(string $key): string
 	{

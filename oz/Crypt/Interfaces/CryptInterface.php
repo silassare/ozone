@@ -27,21 +27,11 @@ interface CryptInterface
 
 	/**
 	 * Encrypts a message.
-	 *
-	 * @param string $message
-	 * @param string $pass_phrase
-	 *
-	 * @return false|string
 	 */
 	public function encrypt(string $message, #[SensitiveParameter] string $pass_phrase): false|string;
 
 	/**
 	 * Decrypts a message.
-	 *
-	 * @param string $message
-	 * @param string $pass_phrase
-	 *
-	 * @return false|string
 	 */
 	public function decrypt(string $message, #[SensitiveParameter] string $pass_phrase): false|string;
 }

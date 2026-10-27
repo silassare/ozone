@@ -47,7 +47,6 @@ use OZONE\Core\REST\Enums\RESTFulAction;
 final class RESTFulApiDoc
 {
 	/**
-	 * @param ApiDoc                       $doc
 	 * @param class-string<RESTFulService> $service
 	 */
 	public function __construct(private readonly ApiDoc $doc, private readonly string $service) {}

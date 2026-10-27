@@ -32,31 +32,22 @@ final class EmailOwnershipVerificationProvider extends OwnershipVerificationProv
 		return $this->identifier;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function identifierType(): string
 	{
 		return AuthUserInterface::IDENTIFIER_TYPE_EMAIL;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return self::NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function send(): void
 	{
-		(new MailMessage('oz.auth.messages.verify.email'))
+		new MailMessage('oz.auth.messages.verify.email')
 			->setSubject($this->purpose->text('EMAIL_SUBJECT'))
 			->inject($this->messageData(['EMAIL_TITLE', 'EMAIL_BODY', 'EMAIL_BTN', 'EMAIL_IGNORE']))
 			->addRecipient($this->identifier)

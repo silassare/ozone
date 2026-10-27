@@ -20,8 +20,6 @@ interface LogWriterInterface
 {
 	/**
 	 * Creates an instance of the log writer.
-	 *
-	 * @return static
 	 */
 	public static function instance(): static;
 

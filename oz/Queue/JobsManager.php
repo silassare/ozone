@@ -87,8 +87,6 @@ final class JobsManager
 	/**
 	 * Gets a worker.
 	 *
-	 * @param string $worker_name
-	 *
 	 * @return class-string<WorkerInterface>
 	 */
 	public static function getWorker(string $worker_name): string
@@ -102,8 +100,6 @@ final class JobsManager
 
 	/**
 	 * Register a job store.
-	 *
-	 * @param JobStoreInterface $store
 	 */
 	public static function registerStore(JobStoreInterface $store): void
 	{
@@ -126,10 +122,6 @@ final class JobsManager
 
 	/**
 	 * Get a job store.
-	 *
-	 * @param string $store_name
-	 *
-	 * @return JobStoreInterface
 	 */
 	public static function getStore(string $store_name): JobStoreInterface
 	{
@@ -213,10 +205,6 @@ final class JobsManager
 	 * Sets the job state to CANCELLED and dispatches {@link JobCancelled}.
 	 * Returns false when the job cannot be cancelled: it is already running,
 	 * in a terminal state, or held by another worker (locked).
-	 *
-	 * @param JobContractInterface $job_contract
-	 *
-	 * @return bool
 	 */
 	public static function cancel(JobContractInterface $job_contract): bool
 	{
@@ -231,7 +219,7 @@ final class JobsManager
 		$job_contract->setState(JobState::CANCELLED);
 		$job_contract->save();
 
-		(new JobCancelled($job_contract))->dispatch();
+		new JobCancelled($job_contract)->dispatch();
 
 		$batch_id = $job_contract->getBatchId();
 
@@ -254,11 +242,6 @@ final class JobsManager
 	 * Handing it straight back as PENDING instead -- which is what a bulk reset does -- consults
 	 * neither `retry_max` nor `retry_delay`: the job is picked up again at once, for ever, and the
 	 * cap it carries never caps.
-	 *
-	 * @param JobStoreInterface $store
-	 * @param string            $queue_name
-	 *
-	 * @return int
 	 */
 	public static function reclaimStale(JobStoreInterface $store, string $queue_name): int
 	{
@@ -282,15 +265,11 @@ final class JobsManager
 
 	/**
 	 * Run a job.
-	 *
-	 * @param JobContractInterface $job_contract
-	 *
-	 * @return bool
 	 */
 	public static function runJob(JobContractInterface $job_contract): bool
 	{
 		if ($job_contract->lock()) {
-			(new JobBeforeStart($job_contract))->dispatch();
+			new JobBeforeStart($job_contract)->dispatch();
 
 			$job_contract->setState(JobState::RUNNING);
 			$job_contract->save();
@@ -366,8 +345,6 @@ final class JobsManager
 	 * On failure with remaining retries, sets `run_after` to enforce the retry delay then
 	 * resets state to PENDING. When all retries are exhausted, transitions to DEAD_LETTER.
 	 * On success, dispatches the next job in the chain (if any) and notifies BatchManager.
-	 *
-	 * @param JobContractInterface $job_contract
 	 */
 	public static function finish(
 		JobContractInterface $job_contract
@@ -392,7 +369,7 @@ final class JobsManager
 		$final_state = $job_contract->getState();
 
 		if (JobState::DONE === $final_state) {
-			(new JobFinished($job_contract))->dispatch();
+			new JobFinished($job_contract)->dispatch();
 
 			// Dispatch next job in chain (if any).
 			$chain = $job_contract->getChain();
@@ -406,7 +383,7 @@ final class JobsManager
 
 				if (null !== $worker && isset(self::$workers[$worker])) {
 					$ref      = Keys::id64();
-					$next_job = (new Job($ref, $worker, (array) $payload))
+					$next_job = new Job($ref, $worker, (array) $payload)
 						->setQueue((string) $queue)
 						->setName($worker)
 						->setChain($remaining)
@@ -436,8 +413,6 @@ final class JobsManager
 	 * to be locked and in RUNNING state from the dispatching process. This method
 	 * bypasses the lock() check -- the subprocess is the designated handler and is
 	 * responsible for the final unlock via finish().
-	 *
-	 * @param JobContractInterface $job_contract
 	 */
 	public static function forceRunJob(JobContractInterface $job_contract): void
 	{
@@ -481,8 +456,6 @@ final class JobsManager
 	 * and calls forceRunJob(), which owns the job from that point and releases
 	 * the lock via finish(). If Process::start() throws, the exception propagates
 	 * to runJob()'s catch block, which calls finish() -> unlock() exactly once.
-	 *
-	 * @param JobContractInterface $job_contract
 	 */
 	private static function workAsync(
 		JobContractInterface $job_contract,

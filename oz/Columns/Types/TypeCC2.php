@@ -42,27 +42,18 @@ class TypeCC2 extends Type
 		parent::__construct(new TypeString(2, 2, self::CC2_REG));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getInstance(array $options): static
 	{
-		return (new self())->configure($options);
+		return new self()->configure($options);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function default($default): static
 	{
@@ -91,9 +82,6 @@ class TypeCC2 extends Type
 		return $this->setOption('check', $check);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function configure(array $options): static
 	{
@@ -107,9 +95,6 @@ class TypeCC2 extends Type
 		return parent::configure($options);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
 	{

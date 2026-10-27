@@ -41,10 +41,6 @@ final class QRCode extends Service
 	/**
 	 * Gets qr-code image uri.
 	 *
-	 * @param Context $context
-	 * @param string  $data
-	 * @param int     $expire_at
-	 *
 	 * @return Uri the qr-code info
 	 */
 	public static function buildQrCodeUri(Context $context, string $data, int $expire_at): Uri
@@ -64,11 +60,6 @@ final class QRCode extends Service
 
 	/**
 	 * Returns a response with the qrcode image.
-	 *
-	 * @param Context $context
-	 * @param string  $qr_code_key
-	 *
-	 * @return Response
 	 *
 	 * @throws NotFoundException
 	 */
@@ -113,9 +104,6 @@ final class QRCode extends Service
 			->withBody($body);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -130,9 +118,6 @@ final class QRCode extends Service
 			->param(self::QR_CODE_KEY, '[a-z0-9]{32}');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{

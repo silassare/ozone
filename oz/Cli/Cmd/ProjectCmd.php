@@ -44,9 +44,6 @@ final class ProjectCmd extends Command
 {
 	private const string NAMESPACE_PLACEHOLDER = '_Default_';
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{
@@ -161,8 +158,6 @@ final class ProjectCmd extends Command
 	/**
 	 * Prepares the project for production.
 	 *
-	 * @param KliArgs $args
-	 *
 	 * @throws JsonException
 	 */
 	private function build(KliArgs $args): void
@@ -243,8 +238,6 @@ final class ProjectCmd extends Command
 
 	/**
 	 * Serve project.
-	 *
-	 * @param KliArgs $args
 	 *
 	 * @throws JsonException
 	 */
@@ -340,8 +333,6 @@ final class ProjectCmd extends Command
 	/**
 	 * Creates project backup.
 	 *
-	 * @param KliArgs $args
-	 *
 	 * @throws KliException
 	 * @throws KliInputException
 	 */
@@ -375,13 +366,6 @@ final class ProjectCmd extends Command
 			->writeLn($target_fm->getRoot());
 	}
 
-	/**
-	 * Creates new project.
-	 *
-	 * @param KliArgs $args
-	 *
-	 * @throws JsonException
-	 */
 	/**
 	 * Creates every scope's state directories, and the symlink its web root follows to reach the
 	 * public files.
@@ -445,6 +429,11 @@ final class ProjectCmd extends Command
 		return $names;
 	}
 
+	/**
+	 * Creates new project.
+	 *
+	 * @throws JsonException
+	 */
 	private function create(KliArgs $args): void
 	{
 		$name       = $args->get('name');

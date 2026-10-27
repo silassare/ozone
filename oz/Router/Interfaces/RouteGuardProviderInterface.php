@@ -22,10 +22,6 @@ interface RouteGuardProviderInterface
 {
 	/**
 	 * Returns route guard.
-	 *
-	 * @param RouteInfo $ri
-	 *
-	 * @return null|RouteGuardInterface
 	 */
 	public static function getGuard(RouteInfo $ri): ?RouteGuardInterface;
 }

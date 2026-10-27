@@ -34,9 +34,6 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 	protected string $username_field = 'user';
 	protected string $password_field = 'password';
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function resolveResults(RouteInfo $ri): mixed
 	{
@@ -77,7 +74,7 @@ abstract class AbstractRouteGuard implements RouteGuardInterface
 
 		$form->submitTo($uri);
 		$form->field('grant_form_ref')
-			->type((new TypeString())->default($reference))
+			->type(new TypeString()->default($reference))
 			->hidden()
 			->required();
 

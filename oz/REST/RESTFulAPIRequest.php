@@ -29,10 +29,6 @@ class RESTFulAPIRequest extends ORMOptions
 	/**
 	 * RESTFulAPIRequest constructor.
 	 *
-	 * @param Context        $context
-	 * @param array|FormData $form
-	 * @param null|string    $scope
-	 *
 	 * @throws ORMQueryException
 	 */
 	public function __construct(Context $context, array|FormData $form, ?string $scope = null)
@@ -44,19 +40,12 @@ class RESTFulAPIRequest extends ORMOptions
 
 	/**
 	 * Gets the context.
-	 *
-	 * @return Context
 	 */
 	public function getContext(): Context
 	{
 		return $this->context;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @return static
-	 */
 	#[Override]
 	public function createScopedInstance(string $scope): static
 	{

@@ -32,8 +32,6 @@ class Roles
 	 * Checks if the given id belongs to an user with super-admin role.
 	 *
 	 * @param AuthUserInterface $user The user
-	 *
-	 * @return bool
 	 */
 	public static function isSuperAdmin(AuthUserInterface $user): bool
 	{
@@ -48,8 +46,6 @@ class Roles
 	 *                                      in non-strict mode user may have a role with
 	 *                                      a higher or equal weight
 	 * @param RoleCheckMode     $check_mode The check mode
-	 *
-	 * @return bool
 	 */
 	public static function isAdmin(
 		AuthUserInterface $user,
@@ -67,8 +63,6 @@ class Roles
 	 *                                      in non-strict mode user may have a role with
 	 *                                      a higher or equal weight
 	 * @param RoleCheckMode     $check_mode The check mode
-	 *
-	 * @return bool
 	 */
 	public static function isEditor(
 		AuthUserInterface $user,
@@ -87,8 +81,6 @@ class Roles
 	 *                                      in non-strict mode user may have a role with
 	 *                                      a higher or equal weight
 	 * @param RoleCheckMode     $check_mode The check mode
-	 *
-	 * @return bool
 	 */
 	public static function hasRole(
 		AuthUserInterface $user,
@@ -108,8 +100,6 @@ class Roles
 	 *                                                  it will check if the user has a role with a higher
 	 *                                                  or equal weight
 	 * @param RoleCheckMode               $check_mode   The check mode
-	 *
-	 * @return bool
 	 */
 	public static function hasOneOfRoles(
 		AuthUserInterface $user,
@@ -153,8 +143,6 @@ class Roles
 	 * @param RoleInterface|string $role    the role
 	 * @param bool                 $restore if true and the role is invalid, it will be restored
 	 *
-	 * @return OZRole
-	 *
 	 * @throws CRUDException
 	 * @throws ORMException
 	 * @throws GoblException
@@ -170,7 +158,7 @@ class Roles
 					->save();
 			}
 		} else {
-			$row = (new OZRole())
+			$row = new OZRole()
 				->setOwnerID($user->getAuthIdentifier())
 				->setOwnerType($user->getAuthUserType())
 				->setRole($role)
@@ -181,7 +169,7 @@ class Roles
 
 			// Skipped when the same role was assigned meanwhile (two requests at once): reading first,
 			// then inserting, let the second fail on the role's unique key.
-			(new OZRolesQuery())->insert($row)->ignoreOnConflict()->execute();
+			new OZRolesQuery()->insert($row)->ignoreOnConflict()->execute();
 
 			$entry = RolesUtils::role($user, $role, false);
 
@@ -198,8 +186,6 @@ class Roles
 	 *
 	 * @param AuthUserInterface    $user the user
 	 * @param RoleInterface|string $role the role
-	 *
-	 * @return bool
 	 *
 	 * @throws CRUDException
 	 * @throws GoblException

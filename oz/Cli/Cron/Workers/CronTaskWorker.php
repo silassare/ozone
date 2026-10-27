@@ -42,8 +42,6 @@ class CronTaskWorker implements WorkerInterface
 
 	/**
 	 * CronTaskWorker constructor.
-	 *
-	 * @param string $task_name
 	 */
 	public function __construct(protected readonly string $task_name)
 	{
@@ -65,27 +63,18 @@ class CronTaskWorker implements WorkerInterface
 		$this->task = $task;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return self::class;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isAsync(): bool
 	{
 		return $this->task->shouldRunInBackground();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function work(JobContractInterface $job_contract): static
 	{
@@ -94,7 +83,7 @@ class CronTaskWorker implements WorkerInterface
 			// The RUNNING state on the job record acts as the shared lock. No explicit lock
 			// release is required -- the state transitions to DONE/FAILED automatically via
 			// JobsManager::finish(), making this check reliable across multiple servers.
-			$other_running = (new OZJobsQuery())
+			$other_running = new OZJobsQuery()
 				->whereNameIs($this->task->getName())
 				->whereWorkerIs(static::class)
 				->whereStateIs(JobState::RUNNING)
@@ -116,18 +105,12 @@ class CronTaskWorker implements WorkerInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromPayload(array $payload): static
 	{
 		return new static($payload['task_name']);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPayload(): array
 	{
@@ -136,9 +119,6 @@ class CronTaskWorker implements WorkerInterface
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getResult(): JSONResult
 	{

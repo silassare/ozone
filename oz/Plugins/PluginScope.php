@@ -28,8 +28,6 @@ class PluginScope extends AbstractScope
 {
 	/**
 	 * The scope name.
-	 *
-	 * @var string
 	 */
 	protected string $scope_name;
 
@@ -37,8 +35,6 @@ class PluginScope extends AbstractScope
 	 * The scope psr4 namespace directory.
 	 *
 	 * This is the plugin namespace with backslash replaced by directory separator.
-	 *
-	 * @var string
 	 */
 	protected string $scope_psr4_ns_dir;
 
@@ -72,18 +68,12 @@ class PluginScope extends AbstractScope
 		parent::__construct();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return $this->scope_name;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getSourcesDir(): FilesManager
 	{

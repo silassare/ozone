@@ -242,7 +242,7 @@ final class SessionManagementTest extends TestCase
 		$sid = Keys::newSessionID();
 		$this->persistSessionRow($sid, \time() - 10); // already expired
 
-		$result = (new OZSessionsQuery())
+		$result = new OZSessionsQuery()
 			->whereIdIs($sid)
 			->whereIsValid()
 			->find(ORMOptions::makePaginated(1))
@@ -266,7 +266,7 @@ final class SessionManagementTest extends TestCase
 		$sid = Keys::newSessionID();
 		$this->persistSessionRow($sid); // expire_at = now + lifetime
 
-		$result = (new OZSessionsQuery())
+		$result = new OZSessionsQuery()
 			->whereIdIs($sid)
 			->whereIsValid()
 			->find(ORMOptions::makePaginated(1))

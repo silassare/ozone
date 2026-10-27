@@ -21,9 +21,6 @@ trait ExceptionCustomSuspectTrait
 	/**
 	 * Specify the config that cause the error.
 	 *
-	 * @param string $group
-	 * @param string $key
-	 *
 	 * @return $this
 	 */
 	public function suspectConfig(string $group, string $key): static
@@ -37,8 +34,6 @@ trait ExceptionCustomSuspectTrait
 
 	/**
 	 * Specify the environment variable that cause the error.
-	 *
-	 * @param string $key
 	 *
 	 * @return $this
 	 */

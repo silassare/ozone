@@ -28,11 +28,6 @@ use Throwable;
  */
 final class AccessGrantView extends WebView
 {
-	/**
-	 * @param Form $form
-	 *
-	 * @return Response
-	 */
 	public function renderAccessGrantForm(Form $form): Response
 	{
 		/** @var array<string, mixed> $data a generic map here, not the form's declared shape */
@@ -63,10 +58,6 @@ final class AccessGrantView extends WebView
 
 	/**
 	 * Render the access grant form with a custom template.
-	 *
-	 * @param array $info
-	 *
-	 * @return Response
 	 */
 	public function renderAccessGrantAuth(array $info): Response
 	{
@@ -86,7 +77,7 @@ final class AccessGrantView extends WebView
 		try {
 			$scope = $context->getRouteInfo()->route()->getOptions()->getCSRFScope() ?? RequestScope::STATE;
 
-			return (new CSRF($context, $scope))->generateToken();
+			return new CSRF($context, $scope)->generateToken();
 		} catch (Throwable) {
 			return null;
 		}

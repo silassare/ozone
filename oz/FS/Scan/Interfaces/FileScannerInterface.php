@@ -26,8 +26,6 @@ interface FileScannerInterface
 {
 	/**
 	 * Creates the scanner from the `oz.files.scan` settings.
-	 *
-	 * @return static
 	 */
 	public static function fromSettings(): static;
 
@@ -35,8 +33,6 @@ interface FileScannerInterface
 	 * Scans a file content.
 	 *
 	 * @param FileStream $content the content, scanned from its start
-	 *
-	 * @return FileScanResult
 	 *
 	 * @throws RuntimeException when the content could not be scanned
 	 */

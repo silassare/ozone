@@ -22,8 +22,6 @@ interface RouteProviderInterface
 {
 	/**
 	 * Called to register the service routes.
-	 *
-	 * @param Router $router
 	 */
 	public static function registerRoutes(Router $router);
 }

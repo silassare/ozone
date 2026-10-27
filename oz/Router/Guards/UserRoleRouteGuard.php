@@ -33,9 +33,6 @@ final class UserRoleRouteGuard extends AbstractRouteGuard
 		private readonly bool $strict = true
 	) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toRules(): array
 	{
@@ -45,9 +42,6 @@ final class UserRoleRouteGuard extends AbstractRouteGuard
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromRules(array $rules): static
 	{
@@ -58,8 +52,6 @@ final class UserRoleRouteGuard extends AbstractRouteGuard
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws ForbiddenException
 	 */
 	#[Override]

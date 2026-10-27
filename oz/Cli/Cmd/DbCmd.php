@@ -47,9 +47,6 @@ final class DbCmd extends Command
 	/**
 	 * Ensures database backup.
 	 *
-	 * @param Kli               $cli
-	 * @param null|FilesManager $fm
-	 *
 	 * @throws KliException
 	 */
 	public static function ensureDBBackup(Kli $cli, ?FilesManager $fm = null): void
@@ -62,9 +59,6 @@ final class DbCmd extends Command
 		$cli->executeString("db backup --dir={$db_backup_dir}");
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{
@@ -149,8 +143,6 @@ final class DbCmd extends Command
 	 * Builds database.
 	 *
 	 * You should backup your database first.
-	 *
-	 * @param KliArgs $args
 	 *
 	 * @throws KliInputException
 	 * @throws KliException
@@ -284,8 +276,6 @@ final class DbCmd extends Command
 	/**
 	 * Creates entities TypeScript bundle.
 	 *
-	 * @param KliArgs $args
-	 *
 	 * @throws Exception
 	 */
 	private function tsBundle(KliArgs $args): void
@@ -308,8 +298,6 @@ final class DbCmd extends Command
 	/**
 	 * Creates entities Dart bundle.
 	 *
-	 * @param KliArgs $args
-	 *
 	 * @throws Exception
 	 */
 	private function dartBundle(KliArgs $args): void
@@ -331,8 +319,6 @@ final class DbCmd extends Command
 
 	/**
 	 * Generate database file.
-	 *
-	 * @param KliArgs $args
 	 */
 	private function generate(KliArgs $args): void
 	{
@@ -363,8 +349,6 @@ final class DbCmd extends Command
 
 	/**
 	 * Runs database file.
-	 *
-	 * @param KliArgs $args
 	 */
 	private function source(KliArgs $args): void
 	{
@@ -392,8 +376,6 @@ final class DbCmd extends Command
 
 	/**
 	 * Backup database.
-	 *
-	 * @param KliArgs $args
 	 */
 	private function backup(KliArgs $args): void
 	{
@@ -417,9 +399,6 @@ final class DbCmd extends Command
 
 	/**
 	 * Backup MySQL database using mysqldump.
-	 *
-	 * @param Kli          $cli
-	 * @param FilesManager $fm
 	 */
 	private function backupMySQL(Kli $cli, FilesManager $fm): void
 	{
@@ -451,9 +430,6 @@ final class DbCmd extends Command
 
 	/**
 	 * Backup PostgreSQL database using pg_dump.
-	 *
-	 * @param Kli          $cli
-	 * @param FilesManager $fm
 	 */
 	private function backupPostgreSQL(Kli $cli, FilesManager $fm): void
 	{
@@ -494,9 +470,6 @@ final class DbCmd extends Command
 
 	/**
 	 * Backup SQLite database by copying the database file.
-	 *
-	 * @param Kli          $cli
-	 * @param FilesManager $fm
 	 */
 	private function backupSQLite(Kli $cli, FilesManager $fm): void
 	{

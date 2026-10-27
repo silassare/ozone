@@ -22,15 +22,11 @@ interface AuthenticationMethodStatefulInterface extends AuthenticationMethodInte
 {
 	/**
 	 * State ID.
-	 *
-	 * @return string
 	 */
 	public function stateID(): string;
 
 	/**
 	 * Returns the stateful auth store.
-	 *
-	 * @return StatefulAuthenticationMethodStore
 	 */
 	public function store(): StatefulAuthenticationMethodStore;
 
@@ -55,8 +51,6 @@ interface AuthenticationMethodStatefulInterface extends AuthenticationMethodInte
 
 	/**
 	 * Attach the user to the state.
-	 *
-	 * @param AuthUserInterface $user
 	 */
 	public function attachAuthUser(AuthUserInterface $user): void;
 
@@ -67,8 +61,6 @@ interface AuthenticationMethodStatefulInterface extends AuthenticationMethodInte
 
 	/**
 	 * Get the state lifetime in seconds.
-	 *
-	 * @return int
 	 */
 	public function lifetime(): int;
 }

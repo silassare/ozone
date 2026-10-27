@@ -39,7 +39,7 @@ final class MessagingTestRoutesProvider extends BaseService
 			$s    = new self($ri);
 
 			try {
-				$message = (new Message((string) $spec['channel'], (string) $spec['template']))
+				$message = new Message((string) $spec['channel'], (string) $spec['template'])
 					->inject((array) ($spec['data'] ?? []))
 					->setSubject($spec['subject'] ?? null)
 					->setLocale($spec['locale'] ?? null)
@@ -64,7 +64,7 @@ final class MessagingTestRoutesProvider extends BaseService
 		self::registerGcRoute($router);
 
 		$router->get('/messaging/records', static function (RouteInfo $ri) {
-			$records = (new OZMessagesQuery())->find()->fetchAllClass();
+			$records = new OZMessagesQuery()->find()->fetchAllClass();
 
 			\usort($records, static fn (OZMessage $a, OZMessage $b) => (int) $a->getID() <=> (int) $b->getID());
 

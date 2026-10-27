@@ -28,9 +28,6 @@ final class RedirectView extends WebView
 {
 	public const string REDIRECT_ROUTE = 'oz:redirect';
 
-	/**
-	 * @return Response
-	 */
 	public function mainRoute(): Response
 	{
 		$context = $this->getContext();
@@ -49,9 +46,6 @@ final class RedirectView extends WebView
 			->withRedirect($url, $status);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -59,7 +53,7 @@ final class RedirectView extends WebView
 			->map(
 				'*',
 				OZone::INTERNAL_PATH_PREFIX . 'redirect',
-				static fn (RouteInfo $ri) => (new self($ri))->mainRoute()
+				static fn (RouteInfo $ri) => new self($ri)->mainRoute()
 			)
 			->name(self::REDIRECT_ROUTE);
 	}

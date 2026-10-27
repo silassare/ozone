@@ -204,8 +204,7 @@ final class TrustedProxies
 		}
 
 		if ('' === $host && null !== $x_forwarded_host) {
-			$parts = \explode(',', $x_forwarded_host);
-			$host  = (string) \end($parts);
+			$host = (string) \array_last(\explode(',', $x_forwarded_host));
 		}
 
 		$host = \strtolower(\trim($host, " \t\""));

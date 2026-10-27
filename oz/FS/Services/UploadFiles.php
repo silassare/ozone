@@ -59,8 +59,6 @@ class UploadFiles extends Service
 	public const int CHUNK_MAX_SIZE    = 1000 * 1000; // 1MB
 
 	/**
-	 * @param RouteInfo $r
-	 *
 	 * @throws UnauthenticatedException
 	 */
 	public function upload(RouteInfo $r): void
@@ -243,11 +241,6 @@ class UploadFiles extends Service
 	}
 
 	/**
-	 * @return Form
-	 *
-	 * @throws TypesException
-	 */
-	/**
 	 * The biggest chunk of a chunked upload the server accepts, in bytes.
 	 *
 	 * A client asks for it to slice a file accordingly; the form of `chunk/add` refuses a bigger one.
@@ -257,6 +250,9 @@ class UploadFiles extends Service
 		return (int) Settings::get('oz.files', 'OZ_UPLOAD_CHUNK_MAX_SIZE', self::CHUNK_MAX_SIZE);
 	}
 
+	/**
+	 * @throws TypesException
+	 */
 	public static function uploadForm(): Form
 	{
 		$form = new Form();
@@ -267,8 +263,6 @@ class UploadFiles extends Service
 	}
 
 	/**
-	 * @return Form
-	 *
 	 * @throws TypesException
 	 */
 	public static function uploadChunkStartForm(): Form
@@ -286,8 +280,6 @@ class UploadFiles extends Service
 	}
 
 	/**
-	 * @return Form
-	 *
 	 * @throws TypesException
 	 */
 	public static function uploadChunkAddForm(): Form
@@ -304,8 +296,6 @@ class UploadFiles extends Service
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws Throwable
 	 */
 	#[Override]
@@ -358,9 +348,6 @@ class UploadFiles extends Service
 		});
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{
@@ -416,7 +403,6 @@ class UploadFiles extends Service
 	/**
 	 * Saves the uploaded files info.
 	 *
-	 * @param string   $ref
 	 * @param string[] $files_ids
 	 */
 	private function saveUploadedFilesIds(string $ref, array $files_ids): void
@@ -429,7 +415,6 @@ class UploadFiles extends Service
 	/**
 	 * Saves the chunks info.
 	 *
-	 * @param string                                                                                           $ref
 	 * @param array{name:string, size:int, type:string, chunks:array<array{chunk_ref:string, chunk_size:int}>} $info
 	 */
 	private function saveChunksInfo(string $ref, array $info): void
@@ -442,8 +427,6 @@ class UploadFiles extends Service
 	/**
 	 * Loads the chunks info.
 	 *
-	 * @param string $ref
-	 *
 	 * @return null|array{name:string, size:int, type:string, chunks:array<array{chunk_ref:string, chunk_size:int}>}
 	 */
 	private function loadChunksInfo(string $ref): ?array
@@ -455,10 +438,6 @@ class UploadFiles extends Service
 
 	/**
 	 * Gets the state key.
-	 *
-	 * @param string $ref
-	 *
-	 * @return string
 	 */
 	private static function getKey(string $ref): string
 	{
@@ -467,8 +446,6 @@ class UploadFiles extends Service
 
 	/**
 	 * Generates a new upload ref.
-	 *
-	 * @return string
 	 */
 	private static function newRef(): string
 	{
@@ -477,10 +454,6 @@ class UploadFiles extends Service
 
 	/**
 	 * Resolves the current path of a stored chunk reference.
-	 *
-	 * @param string $chunk_ref
-	 *
-	 * @return string
 	 */
 	private static function chunkPath(string $chunk_ref): string
 	{

@@ -187,8 +187,6 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 
 	/**
 	 * Returns the active resume scope, or null if resume is disabled.
-	 *
-	 * @return null|RequestScope
 	 */
 	public function getResumeScope(): ?RequestScope
 	{
@@ -276,8 +274,6 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	 *
 	 * @param string                  $name     the fieldset name
 	 * @param callable(Fieldset):void $callback populates the fieldset in-place
-	 *
-	 * @return Fieldset
 	 */
 	public function fieldset(string $name, callable $callback): Fieldset
 	{
@@ -295,8 +291,6 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	 *
 	 * @param string                                   $name    the fieldset name
 	 * @param callable(FormValidationContext):Fieldset $factory builds the fieldset from the context
-	 *
-	 * @return Fieldset
 	 */
 	public function dynamicFieldset(string $name, callable $factory): Fieldset
 	{
@@ -311,8 +305,6 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	 * Retrieves a previously registered fieldset by name.
 	 *
 	 * @param string $name the fieldset name
-	 *
-	 * @return null|Fieldset
 	 */
 	public function getFieldset(string $name): ?Fieldset
 	{
@@ -356,8 +348,6 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 
 	/**
 	 * Gets form submit uri.
-	 *
-	 * @return null|Uri
 	 */
 	public function getSubmitTo(): ?Uri
 	{
@@ -366,8 +356,6 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 
 	/**
 	 * Gets form submit method.
-	 *
-	 * @return string
 	 */
 	public function getMethod(): string
 	{
@@ -447,8 +435,6 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	 * @param FormData           $unsafe_fd  Raw (unsafe) form data from the request
 	 * @param null|FormDataClean $cleaned_fd Pre-filled validated data (e.g. from a resume cache);
 	 *                                       merged with newly validated fields
-	 *
-	 * @return FormDataClean
 	 *
 	 * @throws InvalidFormException
 	 */
@@ -554,8 +540,6 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	 * bundle - and identical across requests. A ref already present in this form
 	 * is a collision and throws rather than silently overwriting.
 	 *
-	 * @param Form $from
-	 *
 	 * @return $this
 	 *
 	 * @throws RuntimeException when a field or fieldset ref collides
@@ -599,10 +583,6 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	 * Generates a form for a given table: a field per column a client may give (not a private one,
 	 * nor one the database fills itself, auto-incremented or timestamped), required when the column
 	 * has neither a null nor a default.
-	 *
-	 * @param string|Table $table
-	 *
-	 * @return Form
 	 */
 	public static function fromTable(string|Table $table): self
 	{
@@ -697,8 +677,6 @@ class Form extends AbstractFieldContainer implements ArrayCapableInterface, Meta
 	 * Drops every entry that does not map to a field ref in this form.
 	 *
 	 * @param array $data raw cached payload
-	 *
-	 * @return array
 	 */
 	private function keepKnownRefs(array $data): array
 	{

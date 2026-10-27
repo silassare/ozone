@@ -58,7 +58,7 @@ final class TypeGenderTest extends TestCase
 
 	public function testNullableAcceptsNull(): void
 	{
-		$type  = (new TypeGender())->nullable();
+		$type  = new TypeGender()->nullable();
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
@@ -67,25 +67,25 @@ final class TypeGenderTest extends TestCase
 	{
 		// The allowed list is case-sensitive
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeGender())->validate('male');
+		new TypeGender()->validate('male');
 	}
 
 	public function testRejectsArbitraryString(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeGender())->validate('Unknown');
+		new TypeGender()->validate('Unknown');
 	}
 
 	public function testRejectsEmptyStringWhenNotNullable(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeGender())->validate('');
+		new TypeGender()->validate('');
 	}
 
 	/** PHP counts "0" as empty, which used to skip every check of this type: it is checked now. */
 	public function testGenderChecksTheStringZero(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeGender())->validate('0');
+		new TypeGender()->validate('0');
 	}
 }

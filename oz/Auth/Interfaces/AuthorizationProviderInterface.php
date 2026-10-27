@@ -26,65 +26,46 @@ interface AuthorizationProviderInterface
 {
 	/**
 	 * Get authorization provider name.
-	 *
-	 * @return string
 	 */
 	public static function getName(): string;
 
 	/**
 	 * Resolve authorization provider instance using an existing auth entity.
-	 *
-	 * @param Context $context
-	 * @param OZAuth  $auth
 	 */
 	public static function resolve(Context $context, OZAuth $auth): static;
 
 	/**
 	 * Get payload.
-	 *
-	 * @return array
 	 */
 	public function getPayload(): array;
 
 	/**
 	 * Returns json response.
-	 *
-	 * @return JSONResponse
 	 */
 	public function getJSONResponse(): JSONResponse;
 
 	/**
 	 * Gets credentials.
-	 *
-	 * @return AuthorizationCredentialsInterface
 	 */
 	public function getCredentials(): AuthorizationCredentialsInterface;
 
 	/**
 	 * Gets authorization scope.
-	 *
-	 * @return AuthorizationScopeInterface
 	 */
 	public function getScope(): AuthorizationScopeInterface;
 
 	/**
 	 * Sets authorization scope.
-	 *
-	 * @param AuthorizationScopeInterface $scope
 	 */
 	public function setScope(AuthorizationScopeInterface $scope): static;
 
 	/**
 	 * Authorize with current credentials.
-	 *
-	 * @param AuthorizationSecretType $type
 	 */
 	public function authorize(AuthorizationSecretType $type): void;
 
 	/**
 	 * Get an auth process state.
-	 *
-	 * @return AuthorizationState
 	 */
 	public function getState(): AuthorizationState;
 

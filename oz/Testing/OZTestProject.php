@@ -105,7 +105,7 @@ final class OZTestProject
 
 		// Destroy any existing project directory when a clean slate is requested.
 		if ($fresh && \is_dir($project_dir)) {
-			(new self($project_dir))->destroy();
+			new self($project_dir)->destroy();
 		}
 
 		if (!\is_dir($project_dir)) {
@@ -147,7 +147,7 @@ final class OZTestProject
 		$services = ServiceEnv::fromEnvironment();
 
 		if ($services) {
-			(new self($project_dir))->writeEnv($services);
+			new self($project_dir)->writeEnv($services);
 		}
 
 		// -- Step 2: patch composer.json --------------------------------------
@@ -243,7 +243,7 @@ final class OZTestProject
 			}
 		} elseif (\is_dir($vendor_symlink)) {
 			// A vendor/ that is no symlink is the one of an install that never finished.
-			(new Process(['rm', '-rf', $vendor_symlink]))->mustRun();
+			new Process(['rm', '-rf', $vendor_symlink])->mustRun();
 		}
 
 		if (!\is_link($vendor_symlink)) {
@@ -296,8 +296,6 @@ final class OZTestProject
 	 *
 	 * @param string $cwd     the working directory to run from
 	 * @param string ...$args the command arguments
-	 *
-	 * @return Process
 	 */
 	public function ozIn(string $cwd, string ...$args): Process
 	{
@@ -328,7 +326,7 @@ final class OZTestProject
 			\file_put_contents($env_file, '');
 		}
 
-		(new Env($env_file))->patch($values);
+		new Env($env_file)->patch($values);
 	}
 
 	/**
@@ -598,7 +596,7 @@ final class OZTestProject
 		if (\is_link($vendor)) {
 			\unlink($vendor);
 		}
-		(new Process(['rm', '-rf', $this->dir]))->run();
+		new Process(['rm', '-rf', $this->dir])->run();
 	}
 
 	/**

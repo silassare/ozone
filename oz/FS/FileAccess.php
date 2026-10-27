@@ -32,11 +32,6 @@ class FileAccess
 	 *
 	 * If the file has guards rules, they will be checked.
 	 *
-	 * @param OZFile      $file
-	 * @param RouteInfo   $ri
-	 * @param string      $auth_key
-	 * @param null|string $auth_ref
-	 *
 	 * @throws InvalidFormException
 	 * @throws NotFoundException
 	 * @throws UnauthorizedException

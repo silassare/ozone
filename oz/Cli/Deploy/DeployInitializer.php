@@ -321,7 +321,6 @@ final readonly class DeployInitializer
 					continue;
 				}
 
-				/** @psalm-suppress UnresolvableInclude */
 				$settings = require $file;
 				$origin   = \is_array($settings) ? (string) ($settings['OZ_DEFAULT_ORIGIN'] ?? '') : '';
 				$host     = '' === $origin ? '' : Uri::createFromString($origin)->getHost();

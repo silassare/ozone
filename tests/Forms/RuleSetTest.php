@@ -35,31 +35,31 @@ final class RuleSetTest extends TestCase
 {
 	public function testEqPassesWhenEqual(): void
 	{
-		$rs = (new RuleSet())->eq('type', 'admin');
+		$rs = new RuleSet()->eq('type', 'admin');
 		self::assertTrue($rs->check($this->fd(['type' => 'admin'])));
 	}
 
 	public function testEqFailsWhenNotEqual(): void
 	{
-		$rs = (new RuleSet())->eq('type', 'admin');
+		$rs = new RuleSet()->eq('type', 'admin');
 		self::assertFalse($rs->check($this->fd(['type' => 'user'])));
 	}
 
 	public function testNeqPassesWhenNotEqual(): void
 	{
-		$rs = (new RuleSet())->neq('status', 'banned');
+		$rs = new RuleSet()->neq('status', 'banned');
 		self::assertTrue($rs->check($this->fd(['status' => 'active'])));
 	}
 
 	public function testNeqFailsWhenEqual(): void
 	{
-		$rs = (new RuleSet())->neq('status', 'banned');
+		$rs = new RuleSet()->neq('status', 'banned');
 		self::assertFalse($rs->check($this->fd(['status' => 'banned'])));
 	}
 
 	public function testGtPassesWhenGreater(): void
 	{
-		$rs = (new RuleSet())->gt('age', 18);
+		$rs = new RuleSet()->gt('age', 18);
 		self::assertTrue($rs->check($this->fd(['age' => 25])));
 		self::assertFalse($rs->check($this->fd(['age' => 18])));
 		self::assertFalse($rs->check($this->fd(['age' => 10])));
@@ -67,7 +67,7 @@ final class RuleSetTest extends TestCase
 
 	public function testGtePassesWhenGreaterOrEqual(): void
 	{
-		$rs = (new RuleSet())->gte('age', 18);
+		$rs = new RuleSet()->gte('age', 18);
 		self::assertTrue($rs->check($this->fd(['age' => 18])));
 		self::assertTrue($rs->check($this->fd(['age' => 25])));
 		self::assertFalse($rs->check($this->fd(['age' => 17])));
@@ -75,14 +75,14 @@ final class RuleSetTest extends TestCase
 
 	public function testLtPassesWhenLess(): void
 	{
-		$rs = (new RuleSet())->lt('score', 100);
+		$rs = new RuleSet()->lt('score', 100);
 		self::assertTrue($rs->check($this->fd(['score' => 50])));
 		self::assertFalse($rs->check($this->fd(['score' => 100])));
 	}
 
 	public function testLtePassesWhenLessOrEqual(): void
 	{
-		$rs = (new RuleSet())->lte('score', 100);
+		$rs = new RuleSet()->lte('score', 100);
 		self::assertTrue($rs->check($this->fd(['score' => 100])));
 		self::assertTrue($rs->check($this->fd(['score' => 50])));
 		self::assertFalse($rs->check($this->fd(['score' => 101])));
@@ -90,39 +90,39 @@ final class RuleSetTest extends TestCase
 
 	public function testInPassesWhenValueIsInList(): void
 	{
-		$rs = (new RuleSet())->in('role', ['admin', 'editor', 'user']);
+		$rs = new RuleSet()->in('role', ['admin', 'editor', 'user']);
 		self::assertTrue($rs->check($this->fd(['role' => 'admin'])));
 		self::assertFalse($rs->check($this->fd(['role' => 'guest'])));
 	}
 
 	public function testNotInPassesWhenValueIsNotInList(): void
 	{
-		$rs = (new RuleSet())->notIn('role', ['banned', 'deleted']);
+		$rs = new RuleSet()->notIn('role', ['banned', 'deleted']);
 		self::assertTrue($rs->check($this->fd(['role' => 'admin'])));
 		self::assertFalse($rs->check($this->fd(['role' => 'banned'])));
 	}
 
 	public function testIsNullPassesWhenFieldAbsent(): void
 	{
-		$rs = (new RuleSet())->isNull('optional_field');
+		$rs = new RuleSet()->isNull('optional_field');
 		self::assertTrue($rs->check($this->fd([])));
 	}
 
 	public function testIsNullFailsWhenFieldPresent(): void
 	{
-		$rs = (new RuleSet())->isNull('field');
+		$rs = new RuleSet()->isNull('field');
 		self::assertFalse($rs->check($this->fd(['field' => 'something'])));
 	}
 
 	public function testIsNotNullPassesWhenFieldPresent(): void
 	{
-		$rs = (new RuleSet())->isNotNull('field');
+		$rs = new RuleSet()->isNotNull('field');
 		self::assertTrue($rs->check($this->fd(['field' => 'value'])));
 	}
 
 	public function testIsNotNullFailsWhenFieldAbsent(): void
 	{
-		$rs = (new RuleSet())->isNotNull('field');
+		$rs = new RuleSet()->isNotNull('field');
 		self::assertFalse($rs->check($this->fd([])));
 	}
 
@@ -132,7 +132,7 @@ final class RuleSetTest extends TestCase
 		$pw   = $form->field('password');
 		$cpw  = $form->field('confirm_password');
 
-		$rs = (new RuleSet())->eq($pw, $cpw);
+		$rs = new RuleSet()->eq($pw, $cpw);
 
 		self::assertTrue($rs->check($this->fd([
 			'password'         => 'secret',
@@ -147,7 +147,7 @@ final class RuleSetTest extends TestCase
 
 	public function testMultipleChainedRulesAllMustPass(): void
 	{
-		$rs = (new RuleSet())
+		$rs = new RuleSet()
 			->isNotNull('name')
 			->gt('age', 0)
 			->in('role', ['admin', 'user']);
@@ -167,13 +167,13 @@ final class RuleSetTest extends TestCase
 
 	public function testOrGroupPassesWhenAnyBranchMatches(): void
 	{
-		$rs = (new RuleSet())->or(static function (RuleSet $sub): void {
+		$rs = new RuleSet()->or(static function (RuleSet $sub): void {
 			$sub->eq('status', 'active')->eq('status', 'pending');
 		});
 
 		// Direct OR: all children of $sub are AND-combined — both can't pass simultaneously
 		// Let's use two separate OR branches via nested or():
-		$rs2 = (new RuleSet())
+		$rs2 = new RuleSet()
 			->or(static function (RuleSet $sub): void {
 				$sub->eq('role', 'admin');
 			})
@@ -209,7 +209,7 @@ final class RuleSetTest extends TestCase
 
 	public function testAndNestingAllMustPass(): void
 	{
-		$rs = (new RuleSet())
+		$rs = new RuleSet()
 			->eq('type', 'premium')
 			->and(static function (RuleSet $sub): void {
 				$sub->isNotNull('email')->gt('age', 18);
@@ -230,20 +230,20 @@ final class RuleSetTest extends TestCase
 
 	public function testGetViolationIsNullBeforeCheck(): void
 	{
-		$rs = (new RuleSet())->eq('x', 'y');
+		$rs = new RuleSet()->eq('x', 'y');
 		self::assertNull($rs->getViolation());
 	}
 
 	public function testGetViolationReturnsNullOnPass(): void
 	{
-		$rs = (new RuleSet())->eq('x', 'y');
+		$rs = new RuleSet()->eq('x', 'y');
 		$rs->check($this->fd(['x' => 'y']));
 		self::assertNull($rs->getViolation());
 	}
 
 	public function testGetViolationReturnsViolationOnFailure(): void
 	{
-		$rs = (new RuleSet())->eq('x', 'expected', 'VALUE_MISMATCH');
+		$rs = new RuleSet()->eq('x', 'expected', 'VALUE_MISMATCH');
 		$rs->check($this->fd(['x' => 'actual']));
 
 		$violation = $rs->getViolation();
@@ -253,45 +253,45 @@ final class RuleSetTest extends TestCase
 
 	public function testGetViolationMessageReturnsMessageAfterFailedCheck(): void
 	{
-		$rs = (new RuleSet())->eq('x', 'expected', 'VALUE_MISMATCH');
+		$rs = new RuleSet()->eq('x', 'expected', 'VALUE_MISMATCH');
 		$rs->check($this->fd(['x' => 'actual']));
 		self::assertSame('VALUE_MISMATCH', $rs->getViolationMessage());
 	}
 
 	public function testGetViolationMessageIsNullBeforeCheck(): void
 	{
-		$rs = (new RuleSet())->eq('x', 'y');
+		$rs = new RuleSet()->eq('x', 'y');
 		self::assertNull($rs->getViolationMessage());
 	}
 
 	public function testViolationNodeIsRule(): void
 	{
-		$rs = (new RuleSet())->eq('x', 'val');
+		$rs = new RuleSet()->eq('x', 'val');
 		$rs->check($this->fd(['x' => 'other']));
 		self::assertInstanceOf(Rule::class, $rs->getViolation()?->getNode());
 	}
 
 	public function testIsServerOnlyFalseForScalarValues(): void
 	{
-		$rs = (new RuleSet())->eq('field', 'value');
+		$rs = new RuleSet()->eq('field', 'value');
 		self::assertFalse($rs->isServerOnly());
 	}
 
 	public function testIsServerOnlyFalseForAPublicValue(): void
 	{
-		$rs = (new RuleSet())->eq('field', AsyncValue::public(static fn () => 'x', static fn () => 'x'));
+		$rs = new RuleSet()->eq('field', AsyncValue::public(static fn () => 'x', static fn () => 'x'));
 		self::assertFalse($rs->isServerOnly());
 	}
 
 	public function testIsServerOnlyTrueWhenASecretValueIsPresent(): void
 	{
-		$rs = (new RuleSet())->eq('field', AsyncValue::secret(static fn () => 'x'));
+		$rs = new RuleSet()->eq('field', AsyncValue::secret(static fn () => 'x'));
 		self::assertTrue($rs->isServerOnly());
 	}
 
 	public function testIsServerOnlyTrueWhenASecretValueIsInANestedGroup(): void
 	{
-		$rs = (new RuleSet())
+		$rs = new RuleSet()
 			->eq('a', 'b')
 			->and(static function (RuleSet $sub): void {
 				$sub->eq('x', AsyncValue::secret(static fn () => 'val'));
@@ -302,7 +302,7 @@ final class RuleSetTest extends TestCase
 
 	public function testToArrayStructureForFlatAnd(): void
 	{
-		$rs = (new RuleSet())
+		$rs = new RuleSet()
 			->eq('type', 'admin', 'TYPE_MUST_BE_ADMIN')
 			->isNotNull('email')
 			->in('status', ['active', 'pending']);
@@ -336,7 +336,7 @@ final class RuleSetTest extends TestCase
 
 	public function testToArrayNestedOrGroup(): void
 	{
-		$rs = (new RuleSet())
+		$rs = new RuleSet()
 			->eq('type', 'premium')
 			->or(static function (RuleSet $sub): void {
 				$sub->eq('status', 'active');
@@ -353,7 +353,7 @@ final class RuleSetTest extends TestCase
 
 	public function testToArrayReturnsAsyncForServerOnly(): void
 	{
-		$rs = (new RuleSet())->eq('field', AsyncValue::secret(static fn () => 'x'));
+		$rs = new RuleSet()->eq('field', AsyncValue::secret(static fn () => 'x'));
 		self::assertSame(['ref' => '', '$secret' => true], $rs->toArray());
 	}
 
@@ -363,7 +363,7 @@ final class RuleSetTest extends TestCase
 		$pw   = $form->field('password');
 		$cpw  = $form->field('confirm_password');
 
-		$rs  = (new RuleSet())->eq($pw, $cpw);
+		$rs  = new RuleSet()->eq($pw, $cpw);
 		$arr = $rs->toArray();
 
 		self::assertSame('password', $arr['rules'][0]['field_ref']);
@@ -385,12 +385,40 @@ final class RuleSetTest extends TestCase
 
 	public function testGetChildrenContainsAddedRules(): void
 	{
-		$rs = (new RuleSet())->eq('x', 1)->neq('y', 2);
+		$rs = new RuleSet()->eq('x', 1)->neq('y', 2);
 		self::assertCount(2, $rs->getChildren());
 
 		foreach ($rs->getChildren() as $child) {
 			self::assertInstanceOf(Rule::class, $child);
 		}
+	}
+
+	/**
+	 * Two numbers are the same when they are equal, whatever their PHP type: a float field's
+	 * clean value is a float, so an int in the rule used to make it fail whatever was sent.
+	 */
+	public function testEqComparesNumbersByValue(): void
+	{
+		self::assertTrue(new RuleSet()->eq('price', 3)->check($this->fd(['price' => 3.0])));
+		self::assertTrue(new RuleSet()->eq('price', 3.0)->check($this->fd(['price' => 3])));
+		self::assertFalse(new RuleSet()->eq('price', 3)->check($this->fd(['price' => 3.5])));
+		self::assertFalse(new RuleSet()->neq('price', 3)->check($this->fd(['price' => 3.0])));
+	}
+
+	/** A number is still never the same as a numeric string or a boolean. */
+	public function testEqKeepsNumbersApartFromOtherTypes(): void
+	{
+		self::assertFalse(new RuleSet()->eq('n', 3)->check($this->fd(['n' => '3'])));
+		self::assertFalse(new RuleSet()->eq('n', 1)->check($this->fd(['n' => true])));
+		self::assertFalse(new RuleSet()->eq('n', 0)->check($this->fd(['n' => null])));
+	}
+
+	public function testInComparesNumbersByValue(): void
+	{
+		self::assertTrue(new RuleSet()->in('n', [1, 2, 3])->check($this->fd(['n' => 2.0])));
+		self::assertFalse(new RuleSet()->in('n', [1, 2, 3])->check($this->fd(['n' => '2'])));
+		self::assertTrue(new RuleSet()->notIn('n', [1, 2, 3])->check($this->fd(['n' => 2.5])));
+		self::assertFalse(new RuleSet()->notIn('n', [1, 2, 3])->check($this->fd(['n' => 3.0])));
 	}
 
 	/**
@@ -400,34 +428,6 @@ final class RuleSetTest extends TestCase
 	 * UNSAFE, but filling both stores keeps the helper usable for CLEANED rule
 	 * sets too.
 	 */
-	/**
-	 * Two numbers are the same when they are equal, whatever their PHP type: a float field's
-	 * clean value is a float, so an int in the rule used to make it fail whatever was sent.
-	 */
-	public function testEqComparesNumbersByValue(): void
-	{
-		self::assertTrue((new RuleSet())->eq('price', 3)->check($this->fd(['price' => 3.0])));
-		self::assertTrue((new RuleSet())->eq('price', 3.0)->check($this->fd(['price' => 3])));
-		self::assertFalse((new RuleSet())->eq('price', 3)->check($this->fd(['price' => 3.5])));
-		self::assertFalse((new RuleSet())->neq('price', 3)->check($this->fd(['price' => 3.0])));
-	}
-
-	/** A number is still never the same as a numeric string or a boolean. */
-	public function testEqKeepsNumbersApartFromOtherTypes(): void
-	{
-		self::assertFalse((new RuleSet())->eq('n', 3)->check($this->fd(['n' => '3'])));
-		self::assertFalse((new RuleSet())->eq('n', 1)->check($this->fd(['n' => true])));
-		self::assertFalse((new RuleSet())->eq('n', 0)->check($this->fd(['n' => null])));
-	}
-
-	public function testInComparesNumbersByValue(): void
-	{
-		self::assertTrue((new RuleSet())->in('n', [1, 2, 3])->check($this->fd(['n' => 2.0])));
-		self::assertFalse((new RuleSet())->in('n', [1, 2, 3])->check($this->fd(['n' => '2'])));
-		self::assertTrue((new RuleSet())->notIn('n', [1, 2, 3])->check($this->fd(['n' => 2.5])));
-		self::assertFalse((new RuleSet())->notIn('n', [1, 2, 3])->check($this->fd(['n' => 3.0])));
-	}
-
 	private function fd(array $data): FormValidationContext
 	{
 		return new FormValidationContext(new FormData($data), new FormDataClean($data));

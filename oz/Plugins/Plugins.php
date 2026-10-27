@@ -26,8 +26,6 @@ class Plugins
 	 * Returns a plugin instance.
 	 *
 	 * @param class-string<PluginInterface> $plugin
-	 *
-	 * @return PluginInterface
 	 */
 	public static function getPlugin(string $plugin): PluginInterface
 	{
@@ -66,10 +64,6 @@ class Plugins
 
 	/**
 	 * Returns the plugin scope.
-	 *
-	 * @param PluginInterface $plugin
-	 *
-	 * @return PluginScope
 	 */
 	public static function scopeOf(PluginInterface $plugin): PluginScope
 	{
@@ -106,8 +100,6 @@ class Plugins
 
 	/**
 	 * Returns the core ozone plugin.
-	 *
-	 * @return PluginInterface
 	 */
 	public static function ozone(): PluginInterface
 	{

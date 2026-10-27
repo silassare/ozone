@@ -37,17 +37,12 @@ final class FileAccessAuthorizationProvider extends AuthorizationProvider
 
 	/**
 	 * Gets the file.
-	 *
-	 * @return OZFile
 	 */
 	public function getFile(): OZFile
 	{
 		return $this->file;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function resolve(Context $context, OZAuth $auth): static
 	{
@@ -55,21 +50,18 @@ final class FileAccessAuthorizationProvider extends AuthorizationProvider
 		$id      = $payload['file_id'] ?? null;
 
 		if (empty($id)) {
-			throw (new RuntimeException('Missing "file_id" in payload.'))->suspectObject($payload);
+			throw new RuntimeException('Missing "file_id" in payload.')->suspectObject($payload);
 		}
 
 		$file = FS::getFileByID($id);
 
 		if (!$file || !$file->isValid()) {
-			throw (new RuntimeException('Unable to load file using provided "file_id".'))->suspectObject($payload);
+			throw new RuntimeException('Unable to load file using provided "file_id".')->suspectObject($payload);
 		}
 
 		return new self($context, $file);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPayload(): array
 	{
@@ -78,9 +70,6 @@ final class FileAccessAuthorizationProvider extends AuthorizationProvider
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{

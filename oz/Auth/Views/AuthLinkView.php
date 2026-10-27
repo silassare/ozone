@@ -128,13 +128,13 @@ final class AuthLinkView extends WebView
 	{
 		$router
 			->get('/auth/link/:ref/:token', static function (RouteInfo $ri) {
-				return (new self($ri))->confirm($ri);
+				return new self($ri)->confirm($ri);
 			})
 			->name(self::AUTH_LINK_ROUTE);
 
 		$router
 			->post('/auth/link/:ref/:token', static function (RouteInfo $ri) {
-				return (new self($ri))->authorize($ri);
+				return new self($ri)->authorize($ri);
 			})
 			->name(self::AUTH_LINK_CONFIRM_ROUTE);
 	}
@@ -155,7 +155,7 @@ final class AuthLinkView extends WebView
 		$confirm = $ri->getUnsafeFormField('pass_confirm');
 
 		try {
-			(new TypePassword())->validate($pass);
+			new TypePassword()->validate($pass);
 		} catch (TypesInvalidValueException $e) {
 			return $this->recoveryForm($provider, $e->getMessage());
 		}

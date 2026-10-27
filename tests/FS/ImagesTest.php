@@ -37,7 +37,7 @@ final class ImagesTest extends TestCase
 {
 	public function testTheFirstDriverTheServerHasIsUsed(): void
 	{
-		self::assertSame('vips', (new InterventionImageProcessor())->driver());
+		self::assertSame('vips', new InterventionImageProcessor()->driver());
 		self::assertSame('vips', Images::processor()->driver());
 	}
 
@@ -65,7 +65,7 @@ final class ImagesTest extends TestCase
 		// Stored 200 x 100, its EXIF saying "turn it a quarter clockwise" (orientation 6).
 		$jpeg = ImageBytes::withExif(ImageBytes::jpeg(200, 100), 6);
 
-		$out = (new InterventionImageProcessor($driver))->render($jpeg, 'image/jpeg', new ImageRecipe())->bytes;
+		$out = new InterventionImageProcessor($driver)->render($jpeg, 'image/jpeg', new ImageRecipe())->bytes;
 
 		self::assertSame([100, 200], ImageBytes::size($out));
 	}
@@ -223,7 +223,7 @@ final class ImagesTest extends TestCase
 		});
 
 		try {
-			$out = (new InterventionImageProcessor($driver))
+			$out = new InterventionImageProcessor($driver)
 				->render(ImageBytes::png(10, 10), 'image/png', new ImageRecipe(effects: ['redden']))->bytes;
 
 			self::assertSame('red', ImageBytes::colorAt($out, 5, 5));

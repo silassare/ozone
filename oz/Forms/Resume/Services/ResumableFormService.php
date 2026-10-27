@@ -74,9 +74,6 @@ final class ResumableFormService extends Service
 	public const string ACTION_CANCEL   = 'cancel';
 	public const string ACTION_EVALUATE = 'evaluate';
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -166,7 +163,7 @@ final class ResumableFormService extends Service
 	 */
 	private static function standalone(RouteInfo $ri, string $action): Response
 	{
-		return (new self($ri))->handleStandalone($ri, $action);
+		return new self($ri)->handleStandalone($ri, $action);
 	}
 
 	/**

@@ -145,8 +145,6 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Converts response to string.
-	 *
-	 * @return string
 	 */
 	public function __toString(): string
 	{
@@ -172,8 +170,6 @@ class Response extends Message implements ResponseInterface
 	 * Write data to the response body.
 	 *
 	 * Proxies to the underlying stream and writes the provided data to it.
-	 *
-	 * @param string $data
 	 *
 	 * @return $this
 	 */
@@ -212,18 +208,12 @@ class Response extends Message implements ResponseInterface
 		return $responseWithRedirect;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStatusCode(): int
 	{
 		return $this->status;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withStatus(int $code, string $reasonPhrase = ''): static
 	{
@@ -280,8 +270,6 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Is this response empty?
-	 *
-	 * @return bool
 	 */
 	public function isEmpty(): bool
 	{
@@ -290,8 +278,6 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Is this response informational?
-	 *
-	 * @return bool
 	 */
 	public function isInformational(): bool
 	{
@@ -300,8 +286,6 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Is this response OK?
-	 *
-	 * @return bool
 	 */
 	public function isOk(): bool
 	{
@@ -310,8 +294,6 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Is this response successful?
-	 *
-	 * @return bool
 	 */
 	public function isSuccessful(): bool
 	{
@@ -320,8 +302,6 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Is this response a redirect?
-	 *
-	 * @return bool
 	 */
 	public function isRedirect(): bool
 	{
@@ -330,8 +310,6 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Is this response a redirection?
-	 *
-	 * @return bool
 	 */
 	public function isRedirection(): bool
 	{
@@ -340,8 +318,6 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Is this response forbidden?
-	 *
-	 * @return bool
 	 */
 	public function isForbidden(): bool
 	{
@@ -350,8 +326,6 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Is this response not Found?
-	 *
-	 * @return bool
 	 */
 	public function isNotFound(): bool
 	{
@@ -360,8 +334,6 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Is this response a client error?
-	 *
-	 * @return bool
 	 */
 	public function isClientError(): bool
 	{
@@ -370,17 +342,12 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Is this response a server error?
-	 *
-	 * @return bool
 	 */
 	public function isServerError(): bool
 	{
 		return $this->getStatusCode() >= 500 && $this->getStatusCode() < 600;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getReasonPhrase(): string
 	{
@@ -393,10 +360,6 @@ class Response extends Message implements ResponseInterface
 
 	/**
 	 * Converts HTTP status code to reason phrase.
-	 *
-	 * @param int $status
-	 *
-	 * @return null|string
 	 */
 	public static function statusToReasonPhrase(int $status): ?string
 	{
@@ -407,8 +370,6 @@ class Response extends Message implements ResponseInterface
 	 * Filters HTTP status code.
 	 *
 	 * @param int $status HTTP status code
-	 *
-	 * @return int
 	 *
 	 * @throws InvalidArgumentException if an invalid HTTP status code is provided
 	 */

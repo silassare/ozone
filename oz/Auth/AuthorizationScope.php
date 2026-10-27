@@ -42,18 +42,12 @@ class AuthorizationScope implements AuthorizationScopeInterface
 		$this->access_right = new AccessRights();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getLabel(): string
 	{
 		return $this->label;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setLabel(string $label): static
 	{
@@ -62,18 +56,12 @@ class AuthorizationScope implements AuthorizationScopeInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getLifetime(): int
 	{
 		return $this->lifetime;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setLifetime(int $lifetime): static
 	{
@@ -88,18 +76,12 @@ class AuthorizationScope implements AuthorizationScopeInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getTryMax(): int
 	{
 		return $this->try_max;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setTryMax(int $try_max): static
 	{
@@ -115,18 +97,12 @@ class AuthorizationScope implements AuthorizationScopeInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAccessRight(): AccessRightsInterface
 	{
 		return $this->access_right;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setAccessRight(AccessRightsInterface $access_right): static
 	{
@@ -135,9 +111,6 @@ class AuthorizationScope implements AuthorizationScopeInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function from(OZAuth $auth): static
 	{

@@ -114,9 +114,6 @@ abstract class OwnershipVerificationProvider extends AuthorizationProvider
 	 */
 	abstract public static function identifierType(): string;
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function resolve(Context $context, OZAuth $auth): static
 	{
@@ -124,9 +121,9 @@ abstract class OwnershipVerificationProvider extends AuthorizationProvider
 		$identifier = $payload[static::identifierType()] ?? null;
 
 		if (empty($identifier) || !\is_string($identifier)) {
-			throw (new RuntimeException(
+			throw new RuntimeException(
 				\sprintf('Missing "%s" in payload.', static::identifierType())
-			))->suspectObject($payload);
+			)->suspectObject($payload);
 		}
 
 		// An authorization saved before purposes existed proves ownership and nothing more.
@@ -143,9 +140,6 @@ abstract class OwnershipVerificationProvider extends AuthorizationProvider
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPayload(): array
 	{
@@ -157,9 +151,6 @@ abstract class OwnershipVerificationProvider extends AuthorizationProvider
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function onInit(OZAuth $auth): void
 	{
@@ -172,9 +163,6 @@ abstract class OwnershipVerificationProvider extends AuthorizationProvider
 			->setDataKey('first', true);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function onRefresh(OZAuth $auth): void
 	{

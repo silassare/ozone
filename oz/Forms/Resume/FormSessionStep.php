@@ -42,8 +42,6 @@ final readonly class FormSessionStep
 
 	/**
 	 * Response data, excluding the form (sent separately via `setForm()`).
-	 *
-	 * @return array
 	 */
 	public function toResponseData(): array
 	{

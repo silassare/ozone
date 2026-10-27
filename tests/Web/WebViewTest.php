@@ -80,7 +80,7 @@ final class WebViewTest extends TestCase
 	{
 		$context = new Context(HTTPEnvironment::mock($env), null, Context::root());
 
-		return (new WebView($context))
+		return new WebView($context)
 			->setTemplate('oz.redirect.blate')
 			->injectKey('oz_redirect_url', 'https://example.com/next')
 			->respond();

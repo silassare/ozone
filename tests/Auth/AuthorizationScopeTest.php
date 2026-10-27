@@ -49,19 +49,19 @@ final class AuthorizationScopeTest extends TestCase
 	public function testSetLifetimeRejectsZero(): void
 	{
 		$this->expectException(InvalidArgumentException::class);
-		(new AuthorizationScope())->setLifetime(0);
+		new AuthorizationScope()->setLifetime(0);
 	}
 
 	public function testSetLifetimeRejectsNegative(): void
 	{
 		$this->expectException(InvalidArgumentException::class);
-		(new AuthorizationScope())->setLifetime(-5);
+		new AuthorizationScope()->setLifetime(-5);
 	}
 
 	public function testSetTryMaxRejectsZero(): void
 	{
 		$this->expectException(InvalidArgumentException::class);
-		(new AuthorizationScope())->setTryMax(0);
+		new AuthorizationScope()->setTryMax(0);
 	}
 
 	public function testSetTryMaxAcceptsPositiveInteger(): void

@@ -23,19 +23,11 @@ interface AccessRightsInterface extends ArrayCapableInterface
 {
 	/**
 	 * Loads access rights info from auth entity.
-	 *
-	 * @param OZAuth $auth
-	 *
-	 * @return static
 	 */
 	public static function from(OZAuth $auth): static;
 
 	/**
 	 * Pushes a scope to the stack.
-	 *
-	 * @param AccessRightsInterface $scope
-	 *
-	 * @return static
 	 */
 	public function pushScope(self $scope): static;
 
@@ -46,10 +38,6 @@ interface AccessRightsInterface extends ArrayCapableInterface
 	 * allow: users.read_all
 	 * allow: articles.read
 	 * allow: articles.update
-	 *
-	 * @param string $action
-	 *
-	 * @return static
 	 */
 	public function allow(string $action): static;
 
@@ -61,26 +49,16 @@ interface AccessRightsInterface extends ArrayCapableInterface
 	 * allow: users.*
 	 * deny: users.delete_all
 	 * deny: users.delete
-	 *
-	 * @param string $action
-	 *
-	 * @return static
 	 */
 	public function deny(string $action): static;
 
 	/**
 	 * Checks if all given action are allowed.
-	 *
-	 * @param string ...$actions
-	 *
-	 * @return bool
 	 */
 	public function can(string ...$actions): bool;
 
 	/**
 	 * Asserts that all given action are allowed.
-	 *
-	 * @param string ...$actions
 	 */
 	public function assertCan(string ...$actions): void;
 }

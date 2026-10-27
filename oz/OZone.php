@@ -54,20 +54,12 @@ final class OZone
 {
 	public const string INTERNAL_PATH_PREFIX = '/~ozone-internal~/';
 
-	/**
-	 * @var null|Router
-	 */
 	private static ?Router $api_router;
 
-	/**
-	 * @var null|Router
-	 */
 	private static ?Router $web_router;
 
 	/**
 	 * The running app.
-	 *
-	 * @var null|AppInterface
 	 */
 	private static ?AppInterface $app_instance                = null;
 	private static bool $boot_hook_receivers_notified         = false;
@@ -89,8 +81,6 @@ final class OZone
 
 	/**
 	 * Gets running app.
-	 *
-	 * @return AppInterface
 	 */
 	public static function app(): AppInterface
 	{
@@ -103,10 +93,6 @@ final class OZone
 
 	/**
 	 * Checks if a given path is an internal path.
-	 *
-	 * @param string $path
-	 *
-	 * @return bool
 	 */
 	public static function isInternalPath(string $path): bool
 	{
@@ -120,8 +106,6 @@ final class OZone
 	 * It used to be read from `OZ_OZONE_IS_CLI` (`PHP_SAPI === 'cli'`), and so was also true of a
 	 * RoadRunner or Swoole worker serving real requests: the first 404 printed itself to the
 	 * terminal and exited the worker. {@see Runtime} answers it now.
-	 *
-	 * @return bool
 	 */
 	public static function isCliMode(): bool
 	{
@@ -147,8 +131,6 @@ final class OZone
 
 	/**
 	 * Checks if the app is running.
-	 *
-	 * @return bool
 	 */
 	public static function isRunning(): bool
 	{
@@ -160,8 +142,6 @@ final class OZone
 	 *
 	 * This method is the entry point of the app.
 	 * It will bootstrap the app and handle the request.
-	 *
-	 * @param AppInterface $app
 	 */
 	public static function run(AppInterface $app): never
 	{
@@ -278,8 +258,6 @@ final class OZone
 
 	/**
 	 * Returns the router with all API routes registered.
-	 *
-	 * @return Router
 	 */
 	public static function getApiRouter(): Router
 	{
@@ -292,8 +270,6 @@ final class OZone
 
 	/**
 	 * Returns the router with all WEB routes registered.
-	 *
-	 * @return Router
 	 */
 	public static function getWebRouter(): Router
 	{
@@ -306,8 +282,6 @@ final class OZone
 
 	/**
 	 * Check if we already completed installation process.
-	 *
-	 * @return bool
 	 */
 	public static function isInstalled(): bool
 	{
@@ -336,7 +310,7 @@ final class OZone
 	public static function endRequest(): void
 	{
 		try {
-			(new EndRequestHook(Context::hasRoot() ? Context::root() : null))->dispatch();
+			new EndRequestHook(Context::hasRoot() ? Context::root() : null)->dispatch();
 		} catch (Throwable $t) {
 			// A failing cleanup must not keep the next request from starting.
 			oz_logger($t);
@@ -351,8 +325,6 @@ final class OZone
 	 * Only ever set in CLI mode: a web request fails at bootstrap instead. Anything touching the
 	 * database afterwards throws the same failure again, so this is for reporting it
 	 * ({@see DoctorCmd}), not for deciding whether to go on.
-	 *
-	 * @return null|Throwable
 	 */
 	public static function getDbInitError(): ?Throwable
 	{
@@ -361,8 +333,6 @@ final class OZone
 
 	/**
 	 * Check if we have database access.
-	 *
-	 * @return bool
 	 */
 	public static function hasDbAccess(): bool
 	{
@@ -390,8 +360,6 @@ final class OZone
 
 	/**
 	 * Check if we have database installed.
-	 *
-	 * @return bool
 	 */
 	public static function hasDbInstalled(): bool
 	{
@@ -400,8 +368,6 @@ final class OZone
 
 	/**
 	 * Check if we have a super admin.
-	 *
-	 * @return bool
 	 */
 	public static function hasSuperAdmin(): bool
 	{
@@ -501,15 +467,13 @@ final class OZone
 
 		$context = new Context($http_env, null, null, $is_api_context);
 
-		(new InitHook($context))->dispatch();
+		new InitHook($context)->dispatch();
 
 		return $context;
 	}
 
 	/**
 	 * Check if we are in dev mode.
-	 *
-	 * @return bool
 	 */
 	public static function inDevMode(): bool
 	{
@@ -518,8 +482,6 @@ final class OZone
 
 	/**
 	 * Check if we are in production mode.
-	 *
-	 * @return bool
 	 */
 	public static function inProductionMode(): bool
 	{
@@ -563,7 +525,7 @@ final class OZone
 			$router->registerProviders($providers, $table);
 		})->withAuthentication(...($api ? Auth::apiAuthMethods() : Auth::webAuthMethods()));
 
-		(new RouterCreated($router, $group, $api))->dispatch();
+		new RouterCreated($router, $group, $api)->dispatch();
 
 		if (null !== $file && null === $table) {
 			$router->compileTable()

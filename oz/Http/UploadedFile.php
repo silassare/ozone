@@ -119,9 +119,6 @@ class UploadedFile implements UploadedFileInterface
 		$this->sapi        = $sapi;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStream(): Stream
 	{
@@ -136,9 +133,6 @@ class UploadedFile implements UploadedFileInterface
 		return $this->stream;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function moveTo(string $targetPath): void
 	{
@@ -197,27 +191,18 @@ class UploadedFile implements UploadedFileInterface
 		$this->moved = true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getError(): int
 	{
 		return $this->error;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getClientFilename(): string
 	{
 		return $this->unsafe_name;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getClientMediaType(): ?string
 	{
@@ -226,8 +211,6 @@ class UploadedFile implements UploadedFileInterface
 
 	/**
 	 * Returns a more secure version of the file's media type.
-	 *
-	 * @return string
 	 */
 	public function getCleanMediaType(): string
 	{
@@ -236,17 +219,12 @@ class UploadedFile implements UploadedFileInterface
 
 	/**
 	 * Returns a more secure version of the file's name.
-	 *
-	 * @return string
 	 */
 	public function getCleanFileName(): string
 	{
 		return $this->clean_name;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getSize(): int
 	{

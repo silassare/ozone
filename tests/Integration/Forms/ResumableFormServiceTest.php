@@ -1065,16 +1065,6 @@ final class ResumableFormServiceTest extends TestCase
 		self::assertSame(1, $data['error'], 'POST /next on a completed session must return error=1.');
 	}
 
-	/**
-	 * Makes an HTTP request to the running test server.
-	 *
-	 * @param string               $method  HTTP verb (GET, POST, ...)
-	 * @param string               $path    URL path (e.g. '/form/test-wizard/init')
-	 * @param array<string,string> $fields  form fields for POST requests
-	 * @param array<string,string> $headers extra HTTP headers
-	 *
-	 * @return array{0: int, 1: string} [status_code, body]
-	 */
 	public function testTheInitRateLimitComesFromTheSettings(): void
 	{
 		$url = 'http://' . self::$host . ':' . self::$port . '/form/test-wizard/init';
@@ -1124,6 +1114,11 @@ final class ResumableFormServiceTest extends TestCase
 		return $resumeRef;
 	}
 
+	/**
+	 * Makes an HTTP request to the running test server.
+	 *
+	 * @return array{0: int, 1: string} [status_code, body]
+	 */
 	private function request(string $method, string $path, array $fields = [], array $headers = []): array
 	{
 		$headerStr = "Accept: application/json\r\n";

@@ -74,7 +74,7 @@ return static function (NamespaceBuilder $ns): void {
 			->meta('api.doc.description', 'A country entry with its calling code, names, and validity status.');
 
 		// columns
-		$tb->column('cc2', (new TypeCC2())->check(false))
+		$tb->column('cc2', new TypeCC2()->check(false))
 			->setMetaKey('field.label', 'Country Code')
 			->setMetaKey('api.doc.description', 'The ISO 3166-1 alpha-2 country code (e.g. FR, US).');
 

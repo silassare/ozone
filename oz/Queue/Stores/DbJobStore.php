@@ -46,18 +46,12 @@ class DbJobStore implements JobStoreInterface
 	 */
 	private const int LOCK_TTL = 7200;
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function get(string $ref): ?JobContractInterface
 	{
@@ -70,9 +64,6 @@ class DbJobStore implements JobStoreInterface
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getOrFail(string $ref): JobContractInterface
 	{
@@ -90,12 +81,6 @@ class DbJobStore implements JobStoreInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @param JobInterface $job
-	 *
-	 * @return JobContractInterface
-	 *
 	 * @throws CRUDException
 	 * @throws GoblException
 	 * @throws ORMException
@@ -111,10 +96,6 @@ class DbJobStore implements JobStoreInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
-	 * @param JobContractInterface $job_contract
-	 *
 	 * @throws CRUDException
 	 * @throws GoblException
 	 * @throws ORMException
@@ -143,9 +124,6 @@ class DbJobStore implements JobStoreInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function delete(JobContractInterface $job_contract): static
 	{
@@ -185,9 +163,6 @@ class DbJobStore implements JobStoreInterface
 		return $jobs;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function iterator(
 		string $queue_name,
@@ -217,9 +192,6 @@ class DbJobStore implements JobStoreInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function list(
 		?string $queue_name = null,
@@ -267,9 +239,6 @@ class DbJobStore implements JobStoreInterface
 		return $affected > 0;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function unlock(JobContractInterface $job_contract): bool
 	{
@@ -282,9 +251,6 @@ class DbJobStore implements JobStoreInterface
 			->execute();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isLocked(JobContractInterface $job_contract): bool
 	{
@@ -340,9 +306,6 @@ class DbJobStore implements JobStoreInterface
 		return $qb->delete()->execute();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function countByBatch(string $batch_id, ?JobState $state = null): int
 	{
@@ -353,9 +316,6 @@ class DbJobStore implements JobStoreInterface
 		return $qb->find()->getTotal();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function listByBatch(string $batch_id): array
 	{
@@ -369,10 +329,6 @@ class DbJobStore implements JobStoreInterface
 
 	/**
 	 * Find {@link \OZONE\Core\Db\OZJob} by ref.
-	 *
-	 * @param string $ref
-	 *
-	 * @return null|OZJob
 	 */
 	protected static function identify(string $ref): ?OZJob
 	{
@@ -385,11 +341,6 @@ class DbJobStore implements JobStoreInterface
 
 	/**
 	 * Convert a {@link JobInterface} to {@link \OZONE\Core\Db\OZJob}.
-	 *
-	 * @param JobInterface $job
-	 * @param null|OZJob   $oz_job
-	 *
-	 * @return OZJob
 	 */
 	protected function toEntity(JobInterface $job, ?OZJob $oz_job = null): OZJob
 	{
@@ -400,7 +351,7 @@ class DbJobStore implements JobStoreInterface
 		// Encrypt payload at rest when requested.
 		if ($job->shouldEncryptPayload()) {
 			$secret  = Keys::secret();
-			$cipher  = (new DoCrypt())->encrypt(\json_encode($job->getPayload()), $secret);
+			$cipher  = new DoCrypt()->encrypt(\json_encode($job->getPayload()), $secret);
 			$payload = ['$enc' => $cipher];
 		} else {
 			$payload = $job->getPayload();
@@ -428,11 +379,6 @@ class DbJobStore implements JobStoreInterface
 
 	/**
 	 * Convert a {@link \OZONE\Core\Db\OZJob} to {@link JobInterface}.
-	 *
-	 * @param OZJob             $oz_job
-	 * @param null|JobInterface $job
-	 *
-	 * @return JobContractInterface
 	 */
 	protected function fromEntity(OZJob $oz_job, ?JobInterface $job = null): JobContractInterface
 	{
@@ -441,7 +387,7 @@ class DbJobStore implements JobStoreInterface
 
 		// Detect encrypted payload: sentinel key '$enc' wraps the ciphertext.
 		if (isset($raw_payload['$enc']) && \is_string($raw_payload['$enc'])) {
-			$decrypted = (new DoCrypt())->decrypt($raw_payload['$enc'], Keys::secret());
+			$decrypted = new DoCrypt()->decrypt($raw_payload['$enc'], Keys::secret());
 
 			if (false !== $decrypted) {
 				$raw_payload  = (array) \json_decode($decrypted, true);

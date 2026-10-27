@@ -27,8 +27,6 @@ class I18n
 	 * @param ?array             $inject  data to use for replacement
 	 * @param null|string        $lang    use a specific lang
 	 * @param null|Context       $context the context
-	 *
-	 * @return string
 	 */
 	public static function t(
 		I18nMessage|string $message,
@@ -69,8 +67,6 @@ class I18n
 	 *
 	 * @param string $message the message text (usually a lang key)
 	 * @param ?array $inject  data to use for replacement
-	 *
-	 * @return I18nMessage
 	 */
 	public static function m(string $message, ?array $inject = null): I18nMessage
 	{

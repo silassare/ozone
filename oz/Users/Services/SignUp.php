@@ -40,8 +40,6 @@ final class SignUp extends Service
 	public const string ROUTE_SIGN_UP = 'oz:signup';
 
 	/**
-	 * @param RouteInfo $ri
-	 *
 	 * @throws GoblException
 	 * @throws InternalErrorException
 	 */
@@ -97,9 +95,6 @@ final class SignUp extends Service
 			->setData($user);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -121,9 +116,6 @@ final class SignUp extends Service
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{
@@ -164,7 +156,7 @@ final class SignUp extends Service
 		try {
 			$column->getType()->validate($data[$column->getFullName()] ?? null);
 		} catch (TypesInvalidValueException $refused) {
-			return (new InvalidFormException($refused->getMessage(), $refused->getData(true), $e))
+			return new InvalidFormException($refused->getMessage(), $refused->getData(true), $e)
 				->mergeData(['field' => $column->getName()]);
 		}
 

@@ -44,8 +44,6 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws TypesInvalidValueException
 	 */
 	#[Override]
@@ -60,18 +58,12 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 		return $value;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getInstance(array $options): static
 	{
 		return (new static())->configure($options);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
@@ -80,8 +72,6 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 
 	/**
 	 * Sets password min length.
-	 *
-	 * @param int $min
 	 *
 	 * @return $this
 	 *
@@ -97,8 +87,6 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 	/**
 	 * Sets password max length.
 	 *
-	 * @param int $max
-	 *
 	 * @return $this
 	 *
 	 * @throws TypesException
@@ -113,8 +101,6 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 	/**
 	 * Enable password security check.
 	 *
-	 * @param bool $secure
-	 *
 	 * @return $this
 	 */
 	public function secure(bool $secure = true): static
@@ -122,9 +108,6 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 		return $this->setOption('secure', $secure);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function default($default): static
 	{
@@ -134,8 +117,6 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws TypesException
 	 */
 	#[Override]
@@ -170,9 +151,6 @@ class TypePassword extends Type implements FrontendTypeOptionsInterface
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function runValidation(ValidationSubjectInterface $subject): void
 	{

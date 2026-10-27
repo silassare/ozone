@@ -111,7 +111,7 @@ final class ContextAuth
 			throw new RuntimeException('No auth method yet: the router has not matched a route.');
 		}
 
-		throw (new RuntimeException('The current route defines no auth method.'))
+		throw new RuntimeException('The current route defines no auth method.')
 			->suspectCallable($this->route_info->getEffectiveHandler());
 	}
 

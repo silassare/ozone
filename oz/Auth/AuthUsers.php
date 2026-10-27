@@ -58,8 +58,6 @@ final class AuthUsers
 
 	/**
 	 * AuthUsers constructor.
-	 *
-	 * @param Context $context
 	 */
 	public function __construct(private readonly Context $context) {}
 
@@ -114,11 +112,6 @@ final class AuthUsers
 
 	/**
 	 * Checks if two users are the same.
-	 *
-	 * @param AuthUserInterface $a
-	 * @param AuthUserInterface $b
-	 *
-	 * @return bool
 	 */
 	public static function same(AuthUserInterface $a, AuthUserInterface $b): bool
 	{
@@ -146,22 +139,22 @@ final class AuthUsers
 			$class = Settings::get('oz.auth.users.repositories', $user_type_name);
 
 			if (!$class) {
-				throw (new RuntimeException(
+				throw new RuntimeException(
 					\sprintf(
 						'Auth users repository for "%s" not found in settings.',
 						$user_type_name
 					)
-				))->suspectConfig('oz.auth.users.repositories', $user_type_name);
+				)->suspectConfig('oz.auth.users.repositories', $user_type_name);
 			}
 
 			if (!\class_exists($class) || !\is_subclass_of($class, AuthUsersRepositoryInterface::class)) {
-				throw (new RuntimeException(
+				throw new RuntimeException(
 					\sprintf(
 						'Auth users repository "%s" should be subclass of: %s',
 						$class,
 						AuthUsersRepositoryInterface::class
 					)
-				))->suspectConfig('oz.auth.users.repositories', $user_type_name);
+				)->suspectConfig('oz.auth.users.repositories', $user_type_name);
 			}
 			self::$repositories[$user_type_name] = $class::get($user_type_name);
 		}
@@ -171,8 +164,6 @@ final class AuthUsers
 
 	/**
 	 * Build a form to select an auth user.
-	 *
-	 * @return Form
 	 */
 	public static function selectorForm(): Form
 	{
@@ -195,8 +186,6 @@ final class AuthUsers
 
 	/**
 	 * Build a logon form.
-	 *
-	 * @return Form
 	 */
 	public static function logInForm(): Form
 	{
@@ -236,8 +225,6 @@ final class AuthUsers
 	 * Identifies a user using auth user selector form data.
 	 *
 	 * @param array|FormData|FormDataClean $selector raw or already validated selector data
-	 *
-	 * @return null|AuthUserInterface
 	 */
 	public static function identifyBySelector(array|FormData|FormDataClean $selector): ?AuthUserInterface
 	{
@@ -268,8 +255,6 @@ final class AuthUsers
 
 	/**
 	 * Gets active sessions for a given user id.
-	 *
-	 * @param AuthUserInterface $user
 	 *
 	 * @return OZSession[]
 	 */
@@ -336,10 +321,6 @@ final class AuthUsers
 	/**
 	 * Asserts that we have an authenticated user.
 	 *
-	 * @param null|string    $message
-	 * @param null|array     $data
-	 * @param null|Throwable $previous
-	 *
 	 * @throws UnauthenticatedException
 	 */
 	public function assertUserIsAuthenticated(
@@ -361,10 +342,6 @@ final class AuthUsers
 	/**
 	 * Asserts that the authenticated user is at least a verified admin.
 	 *
-	 * @param string         $message
-	 * @param null|array     $data
-	 * @param null|Throwable $previous
-	 *
 	 * @throws ForbiddenException
 	 * @throws UnauthenticatedException
 	 */
@@ -385,10 +362,6 @@ final class AuthUsers
 	/**
 	 * Asserts that the authenticated user is at least a verified editor.
 	 *
-	 * @param string         $message
-	 * @param null|array     $data
-	 * @param null|Throwable $previous
-	 *
 	 * @throws ForbiddenException
 	 * @throws UnauthenticatedException
 	 */
@@ -408,10 +381,6 @@ final class AuthUsers
 
 	/**
 	 * Asserts that the authenticated user is a super-admin.
-	 *
-	 * @param string         $message
-	 * @param null|array     $data
-	 * @param null|Throwable $previous
 	 *
 	 * @throws ForbiddenException
 	 * @throws UnauthenticatedException
@@ -436,9 +405,6 @@ final class AuthUsers
 	 * @param array<RoleInterface|string> $allowed_roles The roles list
 	 * @param null|RoleInterface          $at_least      when set and the user has none of the allowed roles,
 	 *                                                   a role of higher or equal weight is accepted
-	 * @param string                      $message
-	 * @param null|array                  $data
-	 * @param null|Throwable              $previous
 	 *
 	 * @throws ForbiddenException
 	 * @throws UnauthenticatedException
@@ -489,7 +455,7 @@ final class AuthUsers
 			throw new RuntimeException('OZ_USER_LOG_ON_FAIL', null, $t);
 		}
 
-		(new AuthUserLoggedIn($this->context, $user))->dispatch();
+		new AuthUserLoggedIn($this->context, $user)->dispatch();
 
 		return $this;
 	}
@@ -520,7 +486,7 @@ final class AuthUsers
 				throw new RuntimeException('OZ_USER_LOG_OUT_FAIL', null, $t);
 			}
 
-			(new AuthUserLoggedOut($this->context, $current_user))->dispatch();
+			new AuthUserLoggedOut($this->context, $current_user)->dispatch();
 		}
 
 		return $this;
@@ -528,8 +494,6 @@ final class AuthUsers
 
 	/**
 	 * Try to log on a user with a given form.
-	 *
-	 * @param FormData $form_data
 	 *
 	 * @return AuthUserInterface|string the user object or error string
 	 *
@@ -545,7 +509,7 @@ final class AuthUsers
 		$user = self::identifyBySelector($fd);
 
 		if (!$user) {
-			(new AuthUserUnknown($this->context))->dispatch();
+			new AuthUserUnknown($this->context)->dispatch();
 
 			return self::checkPassword(null, $user_pass, self::selectorSubject($fd)) ?? 'OZ_AUTH_INVALID_CREDENTIALS';
 		}
@@ -556,9 +520,6 @@ final class AuthUsers
 	/**
 	 * Try to log on a user.
 	 *
-	 * @param AuthUserInterface $user
-	 * @param string            $pass
-	 *
 	 * @return AuthUserInterface|string the user, or the failure code (see {@see self::checkPassword()})
 	 */
 	public function tryLogIn(AuthUserInterface $user, #[SensitiveParameter] string $pass): AuthUserInterface|string
@@ -567,7 +528,7 @@ final class AuthUsers
 
 		if (null !== $error) {
 			if ('OZ_AUTH_INVALID_CREDENTIALS' === $error) {
-				(new AuthUserLogInFailed($this->context, $user))->dispatch();
+				new AuthUserLogInFailed($this->context, $user)->dispatch();
 			}
 
 			return $error;

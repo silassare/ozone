@@ -28,8 +28,6 @@ interface RouteMiddlewareInterface
 
 	/**
 	 * Run middleware.
-	 *
-	 * @param RouteInfo $ri
 	 */
 	public function run(RouteInfo $ri): ?Response;
 }

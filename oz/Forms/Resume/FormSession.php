@@ -75,8 +75,6 @@ final class FormSession
 	 *
 	 * @param string $ref  the session reference (cache key)
 	 * @param array  $data the cached record
-	 *
-	 * @return null|self
 	 */
 	public static function fromArray(string $ref, array $data): ?self
 	{
@@ -167,8 +165,6 @@ final class FormSession
 	 *
 	 * `provider_name` is only present for standalone sessions and `route` only for
 	 * route-bound ones.
-	 *
-	 * @return array
 	 */
 	public function toArray(): array
 	{

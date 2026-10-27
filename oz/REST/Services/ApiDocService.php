@@ -28,9 +28,6 @@ final class ApiDocService extends Service implements ApiDocProviderInterface
 {
 	public const string API_DOC_SPEC_ROUTE = 'oz:api-doc-spec';
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -52,9 +49,6 @@ final class ApiDocService extends Service implements ApiDocProviderInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{

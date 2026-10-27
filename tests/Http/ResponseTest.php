@@ -45,67 +45,67 @@ final class ResponseTest extends TestCase
 
 	public function testWithStatusAcceptsCustomReasonPhrase(): void
 	{
-		$r = (new Response())->withStatus(418, "I'm a teapot");
+		$r = new Response()->withStatus(418, "I'm a teapot");
 		self::assertSame(418, $r->getStatusCode());
 		self::assertSame("I'm a teapot", $r->getReasonPhrase());
 	}
 
 	public function testIsOkReturnsTrueFor200(): void
 	{
-		self::assertTrue((new Response(200))->isOk());
-		self::assertFalse((new Response(201))->isOk());
+		self::assertTrue(new Response(200)->isOk());
+		self::assertFalse(new Response(201)->isOk());
 	}
 
 	public function testIsSuccessfulReturnsTrueFor2xxRange(): void
 	{
-		self::assertTrue((new Response(200))->isSuccessful());
-		self::assertTrue((new Response(201))->isSuccessful());
-		self::assertTrue((new Response(204))->isSuccessful());
-		self::assertFalse((new Response(301))->isSuccessful());
-		self::assertFalse((new Response(404))->isSuccessful());
+		self::assertTrue(new Response(200)->isSuccessful());
+		self::assertTrue(new Response(201)->isSuccessful());
+		self::assertTrue(new Response(204)->isSuccessful());
+		self::assertFalse(new Response(301)->isSuccessful());
+		self::assertFalse(new Response(404)->isSuccessful());
 	}
 
 	public function testIsRedirectReturnsTrueFor301And302(): void
 	{
-		self::assertTrue((new Response(301))->isRedirect());
-		self::assertTrue((new Response(302))->isRedirect());
+		self::assertTrue(new Response(301)->isRedirect());
+		self::assertTrue(new Response(302)->isRedirect());
 	}
 
 	public function testIsNotFoundReturnsTrueFor404(): void
 	{
-		self::assertTrue((new Response(404))->isNotFound());
-		self::assertFalse((new Response(200))->isNotFound());
+		self::assertTrue(new Response(404)->isNotFound());
+		self::assertFalse(new Response(200)->isNotFound());
 	}
 
 	public function testIsForbiddenReturnsTrueFor403(): void
 	{
-		self::assertTrue((new Response(403))->isForbidden());
+		self::assertTrue(new Response(403)->isForbidden());
 	}
 
 	public function testIsClientErrorReturnsTrueFor4xxRange(): void
 	{
-		self::assertTrue((new Response(400))->isClientError());
-		self::assertTrue((new Response(404))->isClientError());
-		self::assertTrue((new Response(422))->isClientError());
-		self::assertFalse((new Response(500))->isClientError());
+		self::assertTrue(new Response(400)->isClientError());
+		self::assertTrue(new Response(404)->isClientError());
+		self::assertTrue(new Response(422)->isClientError());
+		self::assertFalse(new Response(500)->isClientError());
 	}
 
 	public function testIsServerErrorReturnsTrueFor5xxRange(): void
 	{
-		self::assertTrue((new Response(500))->isServerError());
-		self::assertTrue((new Response(503))->isServerError());
-		self::assertFalse((new Response(200))->isServerError());
+		self::assertTrue(new Response(500)->isServerError());
+		self::assertTrue(new Response(503)->isServerError());
+		self::assertFalse(new Response(200)->isServerError());
 	}
 
 	public function testIsEmptyReturnsTrueFor204(): void
 	{
-		self::assertTrue((new Response(204))->isEmpty());
+		self::assertTrue(new Response(204)->isEmpty());
 	}
 
 	public function testWithJsonSetsJsonBody(): void
 	{
 		$data = ['key' => 'value', 'count' => 3];
-		$r    = (new Response())->withJson($data);
+		$r    = new Response()->withJson($data);
 
 		self::assertSame('application/json;charset=utf-8', $r->getHeaderLine('Content-Type'));
 		self::assertSame(\json_encode($data), (string) $r->getBody());
@@ -121,14 +121,14 @@ final class ResponseTest extends TestCase
 
 	public function testWithRedirectSetsLocationHeader(): void
 	{
-		$r = (new Response())->withRedirect('https://example.com/redirect');
+		$r = new Response()->withRedirect('https://example.com/redirect');
 		self::assertSame('https://example.com/redirect', $r->getHeaderLine('Location'));
 		self::assertSame(302, $r->getStatusCode());
 	}
 
 	public function testWithRedirectAcceptsCustomStatus(): void
 	{
-		$r = (new Response())->withRedirect('https://example.com/', 301);
+		$r = new Response()->withRedirect('https://example.com/', 301);
 		self::assertSame(301, $r->getStatusCode());
 	}
 

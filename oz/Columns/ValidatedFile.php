@@ -223,8 +223,6 @@ final class ValidatedFile implements JsonSerializable
 
 	/**
 	 * Returns true when this represents a temporary TempFS file (not yet saved to permanent storage).
-	 *
-	 * @return bool
 	 */
 	public function isTemporary(): bool
 	{
@@ -233,8 +231,6 @@ final class ValidatedFile implements JsonSerializable
 
 	/**
 	 * Returns true when this represents a file that has been persisted in the OZFile DB table.
-	 *
-	 * @return bool
 	 */
 	public function isPersisted(): bool
 	{
@@ -300,8 +296,6 @@ final class ValidatedFile implements JsonSerializable
 	 * A temporary file must also still be within the lifetime of its TempFS ref:
 	 * the garbage collector may have taken the directory since, and a reference
 	 * replayed from a resume entry can outlive it.
-	 *
-	 * @return bool
 	 */
 	public function isAvailable(): bool
 	{
@@ -352,8 +346,6 @@ final class ValidatedFile implements JsonSerializable
 	 *
 	 * Only values stored before references replaced paths are: a TempFS ref never
 	 * starts with a separator or a drive letter.
-	 *
-	 * @return bool
 	 */
 	private function isLegacyPath(): bool
 	{

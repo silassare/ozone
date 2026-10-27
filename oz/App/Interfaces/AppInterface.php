@@ -54,8 +54,6 @@ interface AppInterface extends ScopeInterface
 
 	/**
 	 * Returns an instance of the files manager with the project directory as root.
-	 *
-	 * @return FilesManager
 	 */
 	public function getProjectDir(): FilesManager;
 
@@ -65,8 +63,6 @@ interface AppInterface extends ScopeInterface
 	 * If the scope name is null, the current scope is returned.
 	 *
 	 * @param null|string $scope the scope name
-	 *
-	 * @return ScopeInterface
 	 */
 	public function getScope(?string $scope = null): ScopeInterface;
 
@@ -74,15 +70,11 @@ interface AppInterface extends ScopeInterface
 	 * Returns an instance of the files manager with the plugins sources directory as root.
 	 *
 	 * This is where plugins generated sources files should be stored.
-	 *
-	 * @return FilesManager
 	 */
 	public function getPluginsSourcesDir(): FilesManager;
 
 	/**
 	 * Returns an instance of the files manager with the migrations directory as root.
-	 *
-	 * @return FilesManager
 	 */
 	public function getMigrationsDir(): FilesManager;
 }

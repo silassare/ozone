@@ -107,10 +107,6 @@ class CSRF
 	 * Check a csrf token validity in a given route.
 	 *
 	 * The token is read from the `_csrf` form field, else the `X-XSRF-TOKEN` header.
-	 *
-	 * @param RouteInfo $ri
-	 *
-	 * @return bool
 	 */
 	public function check(RouteInfo $ri): bool
 	{
@@ -155,8 +151,6 @@ class CSRF
 
 	/**
 	 * Generate a new CSRF Token.
-	 *
-	 * @return string
 	 */
 	public function generateToken(): string
 	{

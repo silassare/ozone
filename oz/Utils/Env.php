@@ -61,8 +61,6 @@ class Env
 
 	/**
 	 * Gets the path to the env file.
-	 *
-	 * @return string
 	 */
 	public function getPath(): string
 	{
@@ -74,8 +72,6 @@ class Env
 	 *
 	 * @param string     $key     the env key
 	 * @param null|mixed $default the default value
-	 *
-	 * @return null|bool|float|int|string
 	 */
 	public function get(string $key, mixed $default = null): bool|float|int|string|null
 	{
@@ -84,9 +80,6 @@ class Env
 
 	/**
 	 * Upsets an environment variable.
-	 *
-	 * @param string                $key
-	 * @param bool|float|int|string $value
 	 *
 	 * @return $this
 	 */
@@ -125,7 +118,7 @@ class Env
 						break;
 
 					default:
-						throw (new RuntimeException('Invalid value type.'))
+						throw new RuntimeException('Invalid value type.')
 							->suspectObject((object) $patch_envs, $key . '.type');
 				}
 			} else {
@@ -137,7 +130,7 @@ class Env
 				} elseif (\is_string($value)) {
 					$editor->upset($key, $value, false, true);
 				} else {
-					throw (new RuntimeException('Invalid value type.'))
+					throw new RuntimeException('Invalid value type.')
 						->suspectObject((object) $patch_envs, $key);
 				}
 			}
@@ -145,7 +138,7 @@ class Env
 
 		// The path is absolute (see the constructor): no running app is needed to write it, so a tool
 		// can edit a project's .env from outside (OZONE\Core\Testing\OZTestProject::writeEnv()).
-		(new FilesManager(\dirname($this->path)))->wf(\basename($this->path), (string) $editor);
+		new FilesManager(\dirname($this->path))->wf(\basename($this->path), (string) $editor);
 
 		$this->env = null;
 
@@ -196,7 +189,7 @@ class Env
 				\unlink($old);
 			}
 
-			(new FilesManager($dir))->writeAtomic(
+			new FilesManager($dir)->writeAtomic(
 				\basename($file),
 				'<?php' . \PHP_EOL . \PHP_EOL . 'return ' . \var_export($values, true) . ';' . \PHP_EOL
 			);

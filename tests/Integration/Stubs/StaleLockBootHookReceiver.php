@@ -57,7 +57,7 @@ final class StaleLockBootHookReceiver implements BootHookReceiverInterface
 			// Simulate a crashed subprocess: set state=RUNNING, locked=true,
 			// updated_at=1 so the job is past its lock lease.
 			// Using a direct bulk UPDATE bypasses entity-level auto-column logic.
-			(new OZJobsQuery())
+			new OZJobsQuery()
 				->whereRefIs($contract->getRef())
 				->update([
 					OZJob::COL_STATE      => JobState::RUNNING->value,

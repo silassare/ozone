@@ -71,9 +71,6 @@ final class Schedule implements Stringable
 		$this->dayOfWeek  = $segments[4] ?? '*';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function __toString()
 	{
@@ -85,21 +82,17 @@ final class Schedule implements Stringable
 	 *
 	 * @param int $time the timestamp to check against
 	 *
-	 * @return bool
-	 *
 	 * @throws Exception
 	 */
 	public function isDue(int $time): bool
 	{
 		$dt = new DateTime('@' . $time);
 
-		return (new CronExpression((string) $this))->isDue($dt);
+		return new CronExpression((string) $this)->isDue($dt);
 	}
 
 	/**
 	 * Checks if all conditions are met for the current schedule.
-	 *
-	 * @return bool
 	 */
 	public function shouldRun(): bool
 	{
@@ -295,8 +288,6 @@ final class Schedule implements Stringable
 
 	/**
 	 * Schedule the task at a given time.
-	 *
-	 * @param string $time
 	 */
 	public function at(string $time): static
 	{
@@ -583,8 +574,6 @@ final class Schedule implements Stringable
 	 * {@link shouldRun()} time.
 	 *
 	 * @param int $grace_minutes how many minutes past the scheduled time are acceptable (>= 1)
-	 *
-	 * @return static
 	 */
 	public function skipIfLate(int $grace_minutes = 5): static
 	{
@@ -621,8 +610,6 @@ final class Schedule implements Stringable
 	 * build time. Chain multiple calls to AND them together.
 	 *
 	 * @param callable():bool $fn predicate that returns true when the task should run
-	 *
-	 * @return static
 	 */
 	public function when(callable $fn): static
 	{

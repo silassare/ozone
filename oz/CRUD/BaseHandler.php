@@ -50,8 +50,6 @@ abstract class BaseHandler extends TableCRUDListener
 
 	/**
 	 * Gets the last allow check result.
-	 *
-	 * @return null|AllowCheckResult
 	 */
 	public function getLastAllowCheckResult(): ?AllowCheckResult
 	{
@@ -60,8 +58,6 @@ abstract class BaseHandler extends TableCRUDListener
 
 	/**
 	 * @param 'create'|'create_all'|'delete'|'delete_all'|'read'|'read_all'|'update'|'update_all' $action
-	 *
-	 * @return AllowRuleBuilder
 	 */
 	public function allow(string $action): AllowRuleBuilder
 	{
@@ -98,9 +94,6 @@ abstract class BaseHandler extends TableCRUDListener
 
 	/**
 	 * @param 'create'|'create_all'|'delete'|'delete_all'|'read'|'read_all'|'update'|'update_all' $action
-	 * @param CRUDAction                                                                          $event
-	 *
-	 * @return bool
 	 */
 	protected function can(string $action, CRUDAction $event): bool
 	{

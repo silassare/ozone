@@ -50,15 +50,11 @@ final class Queue
 
 	/**
 	 * Queue constructor.
-	 *
-	 * @param string $name
 	 */
 	public function __construct(private readonly string $name) {}
 
 	/**
 	 * Gets queue name.
-	 *
-	 * @return string
 	 */
 	public function getName(): string
 	{
@@ -67,8 +63,6 @@ final class Queue
 
 	/**
 	 * Enables or disables stop on error.
-	 *
-	 * @param bool $stop_on_error
 	 */
 	public function enableStopOnError(bool $stop_on_error = true): static
 	{
@@ -79,8 +73,6 @@ final class Queue
 
 	/**
 	 * Checks if stop on error is enabled.
-	 *
-	 * @return bool
 	 */
 	public function shouldStopOnError(): bool
 	{
@@ -89,8 +81,6 @@ final class Queue
 
 	/**
 	 * Sets max consecutive errors count.
-	 *
-	 * @param int $max_consecutive_errors_count
 	 */
 	public function setMaxConsecutiveErrorsCount(int $max_consecutive_errors_count): static
 	{
@@ -101,8 +91,6 @@ final class Queue
 
 	/**
 	 * Gets max consecutive errors count.
-	 *
-	 * @return int
 	 */
 	public function getMaxConsecutiveErrorsCount(): int
 	{
@@ -111,8 +99,6 @@ final class Queue
 
 	/**
 	 * Sets max errors count.
-	 *
-	 * @param int $max_errors
 	 */
 	public function setMaxErrorsCount(int $max_errors): static
 	{
@@ -123,8 +109,6 @@ final class Queue
 
 	/**
 	 * Gets max errors count.
-	 *
-	 * @return int
 	 */
 	public function getMaxErrorsCount(): int
 	{
@@ -137,8 +121,6 @@ final class Queue
 	 * When the RUNNING job count exceeds this limit at async dispatch time,
 	 * the new async job is demoted to synchronous in-process execution rather
 	 * than spawning an additional subprocess. Set to null (default) for no limit.
-	 *
-	 * @param null|int $max_concurrent
 	 */
 	public function setMaxConcurrent(?int $max_concurrent): static
 	{
@@ -160,25 +142,20 @@ final class Queue
 	/**
 	 * Adds a job to the queue.
 	 *
-	 * @param WorkerInterface $worker
-	 * @param null|string     $ref    the job's ref, unique in its store (32 to 128 characters); random
-	 *                                by default
-	 *
-	 * @return Job
+	 * @param null|string $ref the job's ref, unique in its store (32 to 128 characters); random
+	 *                         by default
 	 */
 	public function push(WorkerInterface $worker, ?string $ref = null): Job
 	{
 		$ref ??= Keys::id64();
 
-		return (new Job($ref, $worker::getName(), $worker->getPayload()))
+		return new Job($ref, $worker::getName(), $worker->getPayload())
 			->setQueue($this->name)
 			->setName($worker::getName());
 	}
 
 	/**
 	 * Gets a queue by name.
-	 *
-	 * @param string $name
 	 */
 	public static function get(string $name): static
 	{

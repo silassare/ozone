@@ -183,8 +183,6 @@ final class Db
 	 * If a migration is provided, the migration schema is loaded.
 	 *
 	 * @param null|MigrationInterface $migration The migration instance to autoload
-	 *
-	 * @return RDBMSInterface
 	 */
 	public static function new(?MigrationInterface $migration = null): RDBMSInterface
 	{
@@ -225,8 +223,6 @@ final class Db
 
 	/**
 	 * Creates a new RDBMS instance with the actual development schema loaded.
-	 *
-	 * @return RDBMSInterface
 	 */
 	public static function dev(): RDBMSInterface
 	{
@@ -259,10 +255,6 @@ final class Db
 	 * Returns an instance of the files manager with the scope set to the db folder.
 	 *
 	 * If no scope is provided, the current app scope is used.
-	 *
-	 * @param null|ScopeInterface $scope
-	 *
-	 * @return FilesManager
 	 */
 	public static function dir(?ScopeInterface $scope = null): FilesManager
 	{
@@ -275,8 +267,6 @@ final class Db
 
 	/**
 	 * Collects all tables from the project and O'Zone into a given db instance.
-	 *
-	 * @param RDBMSInterface $db
 	 */
 	public static function loadDevSchemaInto(RDBMSInterface $db): void
 	{
@@ -284,20 +274,18 @@ final class Db
 		$factory = include OZ_OZONE_DIR . 'oz_default' . DS . 'oz_schema.php';
 		$factory($db->ns(self::getOZoneDbNamespace()));
 
-		(new DbSchemaCollectHook($db))->dispatch();
+		new DbSchemaCollectHook($db)->dispatch();
 
 		// the project schema is the last to be loaded as its
 		// may require some tables from OZone or plugins
 		$db->ns(self::getProjectDbNamespace())
 			->schema(Settings::load('oz.db.schema'));
 
-		(new DbSchemaReadyHook($db))->dispatch();
+		new DbSchemaReadyHook($db)->dispatch();
 	}
 
 	/**
 	 * Initialize step prepare.
-	 *
-	 * @return null|MigrationInterface
 	 */
 	private static function initStepPrepare(): ?MigrationInterface
 	{
@@ -323,12 +311,12 @@ final class Db
 		$current = $mg->getMigration($version);
 
 		if (!$current) {
-			throw (new RuntimeException(
+			throw new RuntimeException(
 				\sprintf(
 					'Unable to find migration, using db version "%s" defined in settings.',
 					$version
 				)
-			))->suspectConfig('oz.db.migrations', 'OZ_MIGRATION_VERSION');
+			)->suspectConfig('oz.db.migrations', 'OZ_MIGRATION_VERSION');
 		}
 
 		return $current;
@@ -342,7 +330,7 @@ final class Db
 	private static function initStepRegister(bool $migration_loaded): void
 	{
 		if ($migration_loaded) {
-			(new DbSchemaReadyHook(self::$db))->dispatch();
+			new DbSchemaReadyHook(self::$db)->dispatch();
 		} else {
 			self::loadDevSchemaInto(self::$db);
 		}
@@ -362,7 +350,7 @@ final class Db
 		// Its listeners (the CRUD listeners attach there) use the generated ORM classes: when a class
 		// of the ORM is what is loading ({@see initOnFirstUse()}), they wait for it to be complete.
 		ClassLoader::afterLoad(static function () use ($db): void {
-			(new DbReadyHook($db))->dispatch();
+			new DbReadyHook($db)->dispatch();
 		});
 	}
 }

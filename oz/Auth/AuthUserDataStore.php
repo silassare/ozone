@@ -29,8 +29,6 @@ class AuthUserDataStore extends Store
 {
 	/**
 	 * AuthUserDataStore constructor.
-	 *
-	 * @param array $data
 	 */
 	private function __construct(array $data)
 	{
@@ -83,8 +81,6 @@ class AuthUserDataStore extends Store
 
 	/**
 	 * Sets the 2FA enabled status.
-	 *
-	 * @param bool $enabled
 	 */
 	public function set2FAEnabled(bool $enabled = true): static
 	{
@@ -99,8 +95,6 @@ class AuthUserDataStore extends Store
 	 * Returns null when no preference is set (auto-selection applies).
 	 * Possible values are channel names such as 'totp', 'email', 'sms',
 	 * or any name registered with {@see TwoFactorChannelRegistry}.
-	 *
-	 * @return null|string
 	 */
 	public function get2FAMethod(): ?string
 	{
@@ -127,8 +121,6 @@ class AuthUserDataStore extends Store
 	 * Gets the base32-encoded TOTP secret stored for this user.
 	 *
 	 * Returns null when TOTP has not been set up.
-	 *
-	 * @return null|string
 	 */
 	public function get2FATotpSecret(): ?string
 	{

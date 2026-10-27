@@ -44,8 +44,6 @@ final readonly class RuleViolation
 	 *
 	 * For a {@see Rule} node, returns the rule's own message.
 	 * For a {@see RuleSet} node, delegates to the inner {@see $cause}.
-	 *
-	 * @return null|I18nMessage|string
 	 */
 	public function getMessage(): I18nMessage|string|null
 	{
@@ -58,8 +56,6 @@ final readonly class RuleViolation
 
 	/**
 	 * Gets the node that failed.
-	 *
-	 * @return Rule|RuleSet
 	 */
 	public function getNode(): Rule|RuleSet
 	{
@@ -68,8 +64,6 @@ final readonly class RuleViolation
 
 	/**
 	 * Gets the inner cause of this violation, if any.
-	 *
-	 * @return null|RuleViolation
 	 */
 	public function getCause(): ?self
 	{

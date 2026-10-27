@@ -74,6 +74,6 @@ final class ContextUserIpTest extends TestCase
 
 	private static function userIp(array $env): ?string
 	{
-		return (new Context(HTTPEnvironment::mock($env), null, Context::root()))->getUserIP();
+		return new Context(HTTPEnvironment::mock($env), null, Context::root())->getUserIP();
 	}
 }

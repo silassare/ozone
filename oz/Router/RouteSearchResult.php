@@ -23,7 +23,6 @@ class RouteSearchResult
 	/**
 	 * RouteSearchResult constructor.
 	 *
-	 * @param RouteSearchStatus                     $status
 	 * @param null|array{route:Route, params:array} $found
 	 * @param array{route:Route, params:array}[]    $static_full_matches
 	 * @param array{route:Route, params:array}[]    $dynamic_full_matches
@@ -41,8 +40,6 @@ class RouteSearchResult
 
 	/**
 	 * Gets the status.
-	 *
-	 * @return RouteSearchStatus
 	 */
 	public function status(): RouteSearchStatus
 	{
@@ -51,8 +48,6 @@ class RouteSearchResult
 
 	/**
 	 * Gets the route that matched.
-	 *
-	 * @return Route
 	 */
 	public function foundRoute(): Route
 	{
@@ -68,8 +63,6 @@ class RouteSearchResult
 
 	/**
 	 * Gets the parameters extracted from the request path for the route that matched.
-	 *
-	 * @return array
 	 */
 	public function foundRouteParams(): array
 	{

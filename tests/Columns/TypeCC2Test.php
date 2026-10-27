@@ -49,7 +49,7 @@ final class TypeCC2Test extends TestCase
 
 	public function testNullableAcceptsNull(): void
 	{
-		$type  = (new TypeCC2())->nullable();
+		$type  = new TypeCC2()->nullable();
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
@@ -57,24 +57,24 @@ final class TypeCC2Test extends TestCase
 	public function testRejectsSingleChar(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeCC2())->validate('U');
+		new TypeCC2()->validate('U');
 	}
 
 	public function testRejectsThreeCharCode(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeCC2())->validate('USA');
+		new TypeCC2()->validate('USA');
 	}
 
 	public function testRejectsNumericCode(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeCC2())->validate('12');
+		new TypeCC2()->validate('12');
 	}
 
 	public function testRejectsEmptyStringWhenNotNullable(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeCC2())->validate('');
+		new TypeCC2()->validate('');
 	}
 }

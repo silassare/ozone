@@ -36,8 +36,6 @@ final class DeployTemplates
 	 *
 	 * @param string                $name   the file name under `gen/deploy/`
 	 * @param array<string, string> $tokens token name (without the underscores) => value
-	 *
-	 * @return string
 	 */
 	public static function render(string $name, array $tokens): string
 	{

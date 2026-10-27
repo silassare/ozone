@@ -77,9 +77,6 @@ final class GarbageCollector implements BootHookReceiverInterface
 		return $frequency > 0 && Random::bool($frequency) && !CronRunner::isScheduled();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{

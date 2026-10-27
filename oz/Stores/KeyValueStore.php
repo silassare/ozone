@@ -47,8 +47,6 @@ final readonly class KeyValueStore
 
 	/**
 	 * Returns the store name (namespace).
-	 *
-	 * @return string
 	 */
 	public function getName(): string
 	{
@@ -59,8 +57,6 @@ final readonly class KeyValueStore
 	 * Returns the underlying cache provider driver.
 	 *
 	 * Use this when you need direct provider access, e.g. for garbage collection.
-	 *
-	 * @return StoreDriverInterface
 	 */
 	public function getProvider(): StoreDriverInterface
 	{
@@ -69,11 +65,6 @@ final readonly class KeyValueStore
 
 	/**
 	 * Returns the cached value for the given key, or `$default` when missing/expired.
-	 *
-	 * @param string $key
-	 * @param mixed  $default
-	 *
-	 * @return mixed
 	 */
 	public function get(string $key, mixed $default = null): mixed
 	{
@@ -86,10 +77,6 @@ final readonly class KeyValueStore
 	 * Returns the raw cache entry for the given key, or null when missing/expired.
 	 *
 	 * Use this when you need access to expiry metadata alongside the value.
-	 *
-	 * @param string $key
-	 *
-	 * @return null|StoreEntry
 	 */
 	public function entry(string $key): ?StoreEntry
 	{
@@ -99,11 +86,7 @@ final readonly class KeyValueStore
 	/**
 	 * Stores a value with an optional TTL in seconds.
 	 *
-	 * @param string   $key
-	 * @param mixed    $value
-	 * @param null|int $ttl   TTL in seconds; null means no expiry
-	 *
-	 * @return bool
+	 * @param null|int $ttl TTL in seconds; null means no expiry
 	 */
 	public function set(string $key, mixed $value, ?int $ttl = null): bool
 	{
@@ -116,10 +99,6 @@ final readonly class KeyValueStore
 
 	/**
 	 * Checks whether a non-expired entry exists for the given key.
-	 *
-	 * @param string $key
-	 *
-	 * @return bool
 	 */
 	public function has(string $key): bool
 	{
@@ -128,10 +107,6 @@ final readonly class KeyValueStore
 
 	/**
 	 * Deletes the entry for the given key.
-	 *
-	 * @param string $key
-	 *
-	 * @return bool
 	 */
 	public function delete(string $key): bool
 	{
@@ -142,8 +117,6 @@ final readonly class KeyValueStore
 	 * Deletes multiple entries.
 	 *
 	 * @param string[] $keys
-	 *
-	 * @return bool
 	 */
 	public function deleteMultiple(array $keys): bool
 	{
@@ -152,8 +125,6 @@ final readonly class KeyValueStore
 
 	/**
 	 * Clears all entries in this store's namespace.
-	 *
-	 * @return bool
 	 */
 	public function clear(): bool
 	{
@@ -163,11 +134,6 @@ final readonly class KeyValueStore
 	/**
 	 * Adds to the number stored at `$key`, atomically (concurrent increments are never lost), and
 	 * answers the new number; false when the key does not exist, which is not created.
-	 *
-	 * @param string    $key
-	 * @param float|int $by
-	 *
-	 * @return false|float|int
 	 */
 	public function increment(string $key, float|int $by = 1): false|float|int
 	{
@@ -178,11 +144,6 @@ final readonly class KeyValueStore
 
 	/**
 	 * Subtracts from the number stored at `$key`, as `increment()` adds.
-	 *
-	 * @param string    $key
-	 * @param float|int $by
-	 *
-	 * @return false|float|int
 	 */
 	public function decrement(string $key, float|int $by = 1): false|float|int
 	{
@@ -196,11 +157,7 @@ final readonly class KeyValueStore
 	 * does not exist (or expired); answers its new total. What a rate limit or a throttle counts with:
 	 * a burst of requests is counted whole.
 	 *
-	 * @param string    $key
-	 * @param float|int $by
-	 * @param null|int  $ttl the TTL of a counter this creates, in seconds; an existing one keeps its own
-	 *
-	 * @return float|int
+	 * @param null|int $ttl the TTL of a counter this creates, in seconds; an existing one keeps its own
 	 */
 	public function count(string $key, float|int $by = 1, ?int $ttl = null): float|int
 	{
@@ -219,11 +176,8 @@ final readonly class KeyValueStore
 	 * Returns the cached value if present and not expired; otherwise calls
 	 * `$factory`, stores the result with the given TTL, and returns it.
 	 *
-	 * @param string   $key
 	 * @param callable $factory called with no arguments when cache misses
 	 * @param null|int $ttl     TTL in seconds; null means no expiry
-	 *
-	 * @return mixed
 	 */
 	public function remember(string $key, callable $factory, ?int $ttl = null): mixed
 	{
@@ -243,8 +197,6 @@ final readonly class KeyValueStore
 
 	/**
 	 * Validates a cache key.
-	 *
-	 * @param string $key
 	 */
 	private static function assertValidKey(string $key): void
 	{

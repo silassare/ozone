@@ -121,7 +121,7 @@ final class TestFormConsumerRoutesProvider extends BaseService
 	 */
 	private static function incrementalForm(): Form
 	{
-		$form = (new Form())->setId('incremental')->resumable(RequestScope::HOST);
+		$form = new Form()->setId('incremental')->resumable(RequestScope::HOST);
 		$form->string('first', true);
 		$form->string('second', true);
 
@@ -136,7 +136,7 @@ final class TestFormConsumerRoutesProvider extends BaseService
 	 */
 	private static function uploadForm(): Form
 	{
-		$form = (new Form())->setId('incremental-upload')->resumable(RequestScope::HOST);
+		$form = new Form()->setId('incremental-upload')->resumable(RequestScope::HOST);
 		$form->file('doc', true)->configureType(static fn (TypeFile $t) => $t->temp());
 		$form->file('photo', true);
 		$form->string('note', true);
@@ -152,7 +152,7 @@ final class TestFormConsumerRoutesProvider extends BaseService
 	private static function secretForm(): Form
 	{
 		$secret = static fn (): string => self::SECRET;
-		$form   = (new Form())->setId('secret-form');
+		$form   = new Form()->setId('secret-form');
 
 		$form->expect()
 			->notIn('code', AsyncValue::secret(static fn (): array => ['blocked', self::SECRET]), 'CODE_BLOCKED');

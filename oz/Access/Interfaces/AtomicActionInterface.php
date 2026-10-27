@@ -23,22 +23,16 @@ interface AtomicActionInterface extends ArrayCapableInterface
 {
 	/**
 	 * Gets the action.
-	 *
-	 * @return string
 	 */
 	public function getAction(): string;
 
 	/**
 	 * Gets the description.
-	 *
-	 * @return I18nMessage
 	 */
 	public function getDescription(): I18nMessage;
 
 	/**
 	 * Gets the error message.
-	 *
-	 * @return I18nMessage
 	 */
 	public function getErrorMessage(): I18nMessage;
 }

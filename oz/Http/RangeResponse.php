@@ -46,10 +46,7 @@ final class RangeResponse
 	 *   is returned.
 	 * - All other cases return the response unchanged.
 	 *
-	 * @param Request  $request
 	 * @param Response $response a 200 response with Content-Length and Accept-Ranges: bytes already set
-	 *
-	 * @return Response
 	 */
 	public static function apply(Request $request, Response $response): Response
 	{
@@ -122,8 +119,6 @@ final class RangeResponse
 	 *
 	 * @param string $ifNoneMatch the `If-None-Match` value from the request
 	 * @param string $etag        the `ETag` value from the response
-	 *
-	 * @return bool
 	 */
 	private static function etagMatches(string $ifNoneMatch, string $etag): bool
 	{

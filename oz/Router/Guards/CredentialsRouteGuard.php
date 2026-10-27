@@ -35,10 +35,7 @@ final class CredentialsRouteGuard extends AbstractRouteGuard
 	/**
 	 * CredentialsRouteGuard constructor.
 	 *
-	 * @param array<string,string> $credentials        username and password as key value pair
-	 * @param bool                 $is_hashed_password
-	 * @param null|TypeInterface   $username_type
-	 * @param null|TypeInterface   $password_type
+	 * @param array<string,string> $credentials username and password as key value pair
 	 */
 	public function __construct(
 		private array $credentials,
@@ -61,9 +58,6 @@ final class CredentialsRouteGuard extends AbstractRouteGuard
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toRules(): array
 	{
@@ -75,8 +69,6 @@ final class CredentialsRouteGuard extends AbstractRouteGuard
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws TypesException
 	 */
 	#[Override]
@@ -94,8 +86,6 @@ final class CredentialsRouteGuard extends AbstractRouteGuard
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @return array{username:string, password:string}
 	 *
 	 * @throws ForbiddenException
@@ -107,7 +97,7 @@ final class CredentialsRouteGuard extends AbstractRouteGuard
 	{
 		$context = $ri->getContext();
 
-		$username_type = $this->username_type ?? (new TypeString())->oneLine();
+		$username_type = $this->username_type ?? new TypeString()->oneLine();
 		$password_type = $this->password_type ?? new TypePassword();
 		$credentials   = $this->credentials;
 
@@ -151,8 +141,6 @@ final class CredentialsRouteGuard extends AbstractRouteGuard
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @return array{username:string, password:string}
 	 */
 	#[Override]

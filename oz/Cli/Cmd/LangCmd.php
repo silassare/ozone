@@ -28,8 +28,6 @@ final class LangCmd extends Command
 {
 	/**
 	 * Exports the catalogs of the enabled languages, merged as the server reads them.
-	 *
-	 * @param KliArgs $args
 	 */
 	public function export(KliArgs $args): void
 	{
@@ -67,9 +65,6 @@ final class LangCmd extends Command
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{

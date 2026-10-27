@@ -37,12 +37,6 @@ final class LinkTo extends Service
 
 	/**
 	 * Gets hidden link.
-	 *
-	 * @param Context $context
-	 * @param Uri     $next
-	 * @param int     $expire_at
-	 *
-	 * @return Uri
 	 */
 	public static function buildHiddenUri(Context $context, Uri $next, int $expire_at = 0): Uri
 	{
@@ -59,9 +53,6 @@ final class LinkTo extends Service
 		]);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -69,15 +60,12 @@ final class LinkTo extends Service
 
 		$router
 			->get($route_path, static function (RouteInfo $ri) {
-				return (new self($ri->getContext()))->handleRequest($ri);
+				return new self($ri->getContext())->handleRequest($ri);
 			})
 			->name(self::MAIN_ROUTE)
 			->param(self::URI_KEY, '[a-z0-9]{32}');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{
@@ -98,10 +86,6 @@ final class LinkTo extends Service
 	}
 
 	/**
-	 * @param RouteInfo $ri
-	 *
-	 * @return Response
-	 *
 	 * @throws NotFoundException
 	 * @throws Throwable
 	 */

@@ -50,9 +50,6 @@ final class TNet extends Service
 			]);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -66,9 +63,6 @@ final class TNet extends Service
 			->name(self::ROUTE_TNET);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{

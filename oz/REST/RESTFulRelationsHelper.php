@@ -35,8 +35,6 @@ final class RESTFulRelationsHelper
 {
 	/**
 	 * RESTFulRelationsHelper constructor.
-	 *
-	 * @param Table $table
 	 */
 	public function __construct(private readonly Table $table) {}
 
@@ -57,11 +55,6 @@ final class RESTFulRelationsHelper
 
 	/**
 	 * Make sure to load non-paginated relations for a single entity.
-	 *
-	 * @param ORMEntity         $entity
-	 * @param RESTFulAPIRequest $req
-	 *
-	 * @return array
 	 *
 	 * @throws BadRequestException|ForbiddenException
 	 */
@@ -94,10 +87,7 @@ final class RESTFulRelationsHelper
 	/**
 	 * Make sure to load non-paginated relations for a list of entities.
 	 *
-	 * @param ORMEntity[]       $entities
-	 * @param RESTFulAPIRequest $req
-	 *
-	 * @return array
+	 * @param ORMEntity[] $entities
 	 *
 	 * @throws BadRequestException|ForbiddenException
 	 */
@@ -145,8 +135,6 @@ final class RESTFulRelationsHelper
 	 * @param RESTFulAPIRequest $req            The request object
 	 * @param bool              $scoped_filters Whether to scope filters to the relation name
 	 *
-	 * @return null|ORMResults
-	 *
 	 * @throws Throwable
 	 */
 	public function getRelationItemsList(
@@ -162,11 +150,6 @@ final class RESTFulRelationsHelper
 
 	/**
 	 * Get relation item.
-	 *
-	 * @param Relation  $relation
-	 * @param ORMEntity $entity
-	 *
-	 * @return mixed
 	 */
 	public function getRelationItem(Relation $relation, ORMEntity $entity): mixed
 	{
@@ -175,10 +158,6 @@ final class RESTFulRelationsHelper
 
 	/**
 	 * Creates, patches or delete relations.
-	 *
-	 * @param ORMEntity         $entity
-	 * @param RESTFulAPIRequest $req
-	 * @param bool              $patch
 	 *
 	 * @throws InvalidFormException
 	 */
@@ -239,9 +218,6 @@ final class RESTFulRelationsHelper
 	 * Resolve relations.
 	 *
 	 * @param array<int, string> $relations_names_list
-	 * @param bool               $allow_paginated
-	 *
-	 * @return array
 	 *
 	 * @throws BadRequestException|ForbiddenException
 	 */

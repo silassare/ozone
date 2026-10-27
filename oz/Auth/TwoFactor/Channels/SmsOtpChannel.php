@@ -25,18 +25,12 @@ use OZONE\Core\Auth\TwoFactor\TwoFactorChannelInterface;
  */
 final class SmsOtpChannel implements TwoFactorChannelInterface
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return 'sms';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isAvailableFor(AuthUserInterface $user): bool
 	{

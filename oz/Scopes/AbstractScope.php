@@ -33,36 +33,24 @@ abstract class AbstractScope implements ScopeInterface
 		Settings::addSource(StateLayout::path($this, StateLayout::SETTINGS), true);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getSettingsDir(): FilesManager
 	{
 		return $this->getSourcesDir()->cd('settings', true);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStatefulSettingsDir(): FilesManager
 	{
 		return StateLayout::dir($this, StateLayout::SETTINGS);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStateSlug(): string
 	{
 		return $this->getName();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getDataDir(): FilesManager
 	{
@@ -72,18 +60,12 @@ abstract class AbstractScope implements ScopeInterface
 		return app()->getDataDir();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getTempDir(): FilesManager
 	{
 		return StateLayout::dir($this, StateLayout::TEMP);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStateStoreDir(): FilesManager
 	{
@@ -102,45 +84,30 @@ abstract class AbstractScope implements ScopeInterface
 		return $this->getDocumentRootDir();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getTemplatesDir(): FilesManager
 	{
 		return $this->getSourcesDir()->cd('templates', true);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPrivateFilesDir(): FilesManager
 	{
 		return StateLayout::dir($this, StateLayout::PRIVATE_FILES);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPublicFilesDir(): FilesManager
 	{
 		return StateLayout::dir($this, StateLayout::PUBLIC_FILES);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getCacheDir(): FilesManager
 	{
 		return InstanceLayout::scopeCacheDir(app()->getProjectDir()->getRoot(), $this->getStateSlug());
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getLogsDir(): FilesManager
 	{

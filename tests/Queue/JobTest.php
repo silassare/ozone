@@ -179,7 +179,7 @@ final class JobTest extends IntegrationTestCase
 		$ref                 = 'test-dispatch-' . \uniqid('', true);
 		$this->createdRefs[] = $ref;
 
-		$job      = (new Job($ref, 'dummy-worker', ['x' => 1]))->setQueue('test-dispatch')->setName('test-dispatch-job');
+		$job      = new Job($ref, 'dummy-worker', ['x' => 1])->setQueue('test-dispatch')->setName('test-dispatch-job');
 		$contract = $job->dispatch();
 
 		self::assertSame($ref, $contract->getRef());
@@ -222,7 +222,7 @@ final class JobTest extends IntegrationTestCase
 		$ref                 = 'test-cancel-' . \uniqid('', true);
 		$this->createdRefs[] = $ref;
 
-		$job      = (new Job($ref, 'dummy-worker', []))->setQueue('test-cancel')->setName('test-cancel-job');
+		$job      = new Job($ref, 'dummy-worker', [])->setQueue('test-cancel')->setName('test-cancel-job');
 		$contract = $job->dispatch();
 
 		self::assertSame(JobState::PENDING, $contract->getState());
@@ -238,7 +238,7 @@ final class JobTest extends IntegrationTestCase
 		$ref                 = 'test-cancel2-' . \uniqid('', true);
 		$this->createdRefs[] = $ref;
 
-		$job      = (new Job($ref, 'dummy-worker', []))->setQueue('test-cancel')->setName('test-cancel2-job');
+		$job      = new Job($ref, 'dummy-worker', [])->setQueue('test-cancel')->setName('test-cancel2-job');
 		$contract = $job->dispatch();
 
 		JobsManager::cancel($contract);

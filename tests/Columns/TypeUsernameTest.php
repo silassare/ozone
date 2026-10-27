@@ -45,7 +45,7 @@ final class TypeUsernameTest extends TestCase
 
 	public function testNullableAcceptsNull(): void
 	{
-		$type  = (new TypeUsername())->nullable();
+		$type  = new TypeUsername()->nullable();
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
@@ -59,7 +59,7 @@ final class TypeUsernameTest extends TestCase
 	{
 		// '  a  ' trims to 'a' which is below the min of 3
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUsername())->validate('  a  ');
+		new TypeUsername()->validate('  a  ');
 	}
 
 	/**
@@ -77,27 +77,27 @@ final class TypeUsernameTest extends TestCase
 	{
 		// 'ab' is 2 chars, below the default min of 3
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUsername())->validate('ab');
+		new TypeUsername()->validate('ab');
 	}
 
 	public function testRejectsTooLongUsername(): void
 	{
 		// 61 chars, above the default max of 60
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUsername())->validate(\str_repeat('x', 61));
+		new TypeUsername()->validate(\str_repeat('x', 61));
 	}
 
 	public function testRejectsEmptyStringWhenNotNullable(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUsername())->validate('');
+		new TypeUsername()->validate('');
 	}
 
 	/** PHP counts "0" as empty, which used to skip every check of this type: it is checked now. */
 	public function testUsernameChecksTheStringZero(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeUsername())->validate('0');
+		new TypeUsername()->validate('0');
 	}
 
 	/**
@@ -109,7 +109,7 @@ final class TypeUsernameTest extends TestCase
 		Settings::set('oz.users', 'OZ_USER_NAME_PATTERN', '~^.{2}$~');
 
 		try {
-			self::assertSame("\u{e9}\u{e9}", (new TypeUsername())->validate("\u{e9}\u{e9}")->getCleanValue());
+			self::assertSame("\u{e9}\u{e9}", new TypeUsername()->validate("\u{e9}\u{e9}")->getCleanValue());
 		} finally {
 			Settings::unset('oz.users', 'OZ_USER_NAME_PATTERN');
 		}

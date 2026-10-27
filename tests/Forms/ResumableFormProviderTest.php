@@ -50,37 +50,37 @@ final class ResumableFormProviderTest extends TestCase
 
 	public function testDefaultResumeTTLIs3600(): void
 	{
-		self::assertSame(3600, (new SimpleTestProvider())->resumeTTL());
+		self::assertSame(3600, new SimpleTestProvider()->resumeTTL());
 	}
 
 	public function testDefaultResumeScopeIsState(): void
 	{
-		self::assertSame(RequestScope::STATE, (new SimpleTestProvider())->resumeScope());
+		self::assertSame(RequestScope::STATE, new SimpleTestProvider()->resumeScope());
 	}
 
 	public function testDefaultIsReversibleIsFalse(): void
 	{
-		self::assertFalse((new SimpleTestProvider())->isReversible());
+		self::assertFalse(new SimpleTestProvider()->isReversible());
 	}
 
 	public function testDefaultTotalStepsIsNull(): void
 	{
-		self::assertNull((new SimpleTestProvider())->totalSteps());
+		self::assertNull(new SimpleTestProvider()->totalSteps());
 	}
 
 	public function testDefaultNotBeforeIsNull(): void
 	{
-		self::assertNull((new SimpleTestProvider())->notBefore());
+		self::assertNull(new SimpleTestProvider()->notBefore());
 	}
 
 	public function testDefaultDeadlineIsNull(): void
 	{
-		self::assertNull((new SimpleTestProvider())->deadline());
+		self::assertNull(new SimpleTestProvider()->deadline());
 	}
 
 	public function testResumeScopeCanBeOverridden(): void
 	{
-		self::assertSame(RequestScope::HOST, (new HostScopedTestProvider())->resumeScope());
+		self::assertSame(RequestScope::HOST, new HostScopedTestProvider()->resumeScope());
 	}
 }
 

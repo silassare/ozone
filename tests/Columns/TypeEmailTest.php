@@ -49,7 +49,7 @@ final class TypeEmailTest extends TestCase
 
 	public function testNullableAcceptsNull(): void
 	{
-		$type  = (new TypeEmail())->nullable();
+		$type  = new TypeEmail()->nullable();
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
@@ -57,31 +57,31 @@ final class TypeEmailTest extends TestCase
 	public function testRejectsMissingAtSign(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeEmail())->validate('userexample.com');
+		new TypeEmail()->validate('userexample.com');
 	}
 
 	public function testRejectsMissingDomain(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeEmail())->validate('user@');
+		new TypeEmail()->validate('user@');
 	}
 
 	public function testRejectsPlainString(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeEmail())->validate('not-an-email');
+		new TypeEmail()->validate('not-an-email');
 	}
 
 	public function testRejectsEmptyStringWhenNotNullable(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeEmail())->validate('');
+		new TypeEmail()->validate('');
 	}
 
 	/** PHP counts "0" as empty, which used to skip every check of this type: it is checked now. */
 	public function testEmailChecksTheStringZero(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeEmail())->validate('0');
+		new TypeEmail()->validate('0');
 	}
 }

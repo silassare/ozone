@@ -35,11 +35,6 @@ class JobContract extends Job implements JobContractInterface
 {
 	/**
 	 * JobContract constructor.
-	 *
-	 * @param string            $ref
-	 * @param string            $worker
-	 * @param array             $payload
-	 * @param JobStoreInterface $store
 	 */
 	public function __construct(
 		string $ref,
@@ -50,27 +45,18 @@ class JobContract extends Job implements JobContractInterface
 		parent::__construct($ref, $worker, $payload);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStore(): JobStoreInterface
 	{
 		return $this->store;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getTrackingCode(): string
 	{
 		return \sprintf('%s:%s', $this->store->getName(), $this->getRef());
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromTrackingCode(string $tracking_code): static
 	{
@@ -84,9 +70,6 @@ class JobContract extends Job implements JobContractInterface
 			->getOrFail($ref);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function save(): static
 	{
@@ -95,9 +78,6 @@ class JobContract extends Job implements JobContractInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function touch(): static
 	{
@@ -105,36 +85,24 @@ class JobContract extends Job implements JobContractInterface
 		return $this->save();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function lock(): bool
 	{
 		return $this->store->lock($this);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function unlock(): bool
 	{
 		return $this->store->unlock($this);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isLocked(): bool
 	{
 		return $this->store->isLocked($this);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function cancel(): bool
 	{

@@ -106,7 +106,7 @@ final class LocalHostTest extends TestCase
 		$step = new ProvisionStep('probe', 'A probe.', ['true'], static fn (LocalHost $h): bool => $h->hasBinary('sh'));
 
 		self::assertTrue($step->isSatisfied($host));
-		self::assertFalse((new ProvisionStep('probe', 'A probe.', ['true']))->isSatisfied($host));
+		self::assertFalse(new ProvisionStep('probe', 'A probe.', ['true'])->isSatisfied($host));
 	}
 
 	public function testTheManifestIsReadAndSavedThroughTheHost(): void

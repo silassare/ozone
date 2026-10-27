@@ -97,8 +97,6 @@ final class RouteFormDeclaration
 	 *
 	 * @param callable(null|RouteInfo):(null|Form)|Form $form   the form definition or factory callable
 	 * @param null|RouteFormDocPolicy                   $policy explicit override (OPAQUE or DYNAMIC), or null
-	 *
-	 * @return static
 	 */
 	public static function make(callable|Form $form, ?RouteFormDocPolicy $policy = null): static
 	{
@@ -119,7 +117,7 @@ final class RouteFormDeclaration
 		$is_dynamic = true;
 
 		try {
-			$is_dynamic = (new ReflectionFunction($closure))->getNumberOfRequiredParameters() > 0;
+			$is_dynamic = new ReflectionFunction($closure)->getNumberOfRequiredParameters() > 0;
 		} catch (ReflectionException) {
 			// Conservative default: treat as dynamic when reflection is unavailable.
 		}
@@ -150,8 +148,6 @@ final class RouteFormDeclaration
 	 *
 	 * @param callable(RouteInfo):(null|Form) $factory     runtime factory - receives a live RouteInfo
 	 * @param null|(callable():Form)          $doc_preview zero-arg preview factory for the extension hint
-	 *
-	 * @return static
 	 */
 	public static function dynamic(callable $factory, ?callable $doc_preview = null): static
 	{
@@ -171,10 +167,6 @@ final class RouteFormDeclaration
 	 *
 	 * The form works normally at request time. The generated OpenAPI spec adds
 	 * `x-oz-form: {policy:'opaque', ...}` to the operation — no `requestBody` schema.
-	 *
-	 * @param callable|Form $form
-	 *
-	 * @return static
 	 */
 	public static function opaque(callable|Form $form): static
 	{
@@ -196,8 +188,6 @@ final class RouteFormDeclaration
 	 * route are the provider's steps, obtained through the resume flow.
 	 *
 	 * @param class-string<ResumableFormProviderInterface> $class the provider class
-	 *
-	 * @return static
 	 */
 	public static function provider(string $class): static
 	{
@@ -228,10 +218,6 @@ final class RouteFormDeclaration
 
 	/**
 	 * Resolves the form at request time. Returns null when the factory returns null.
-	 *
-	 * @param RouteInfo $ri
-	 *
-	 * @return null|Form
 	 *
 	 * @throws RuntimeException when the factory returns an unexpected type
 	 */
@@ -267,8 +253,6 @@ final class RouteFormDeclaration
 	 * policy is only ever assigned to a Form instance or a zero-arg factory. Every
 	 * other declaration returns null; a DYNAMIC one surfaces its shape through
 	 * {@see self::getDocPreviewForm()} instead.
-	 *
-	 * @return null|Form
 	 */
 	public function getDocForm(): ?Form
 	{
@@ -299,8 +283,6 @@ final class RouteFormDeclaration
 	 *  - otherwise null.
 	 *
 	 * Provider-based declarations use `$providerClass::initForm()` instead.
-	 *
-	 * @return null|Form
 	 */
 	public function getDocPreviewForm(): ?Form
 	{
@@ -332,8 +314,6 @@ final class RouteFormDeclaration
 	 *  - {@see dynamic()} always returns DYNAMIC.
 	 *  - {@see opaque()} always returns OPAQUE.
 	 *  - {@see provider()} always returns DYNAMIC.
-	 *
-	 * @return RouteFormDocPolicy
 	 */
 	public function getPolicy(): RouteFormDocPolicy
 	{
@@ -342,8 +322,6 @@ final class RouteFormDeclaration
 
 	/**
 	 * Returns true when the form requires a live RouteInfo to be resolved at request time.
-	 *
-	 * @return bool
 	 */
 	public function isDynamic(): bool
 	{

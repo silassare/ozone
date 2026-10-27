@@ -41,9 +41,6 @@ final class RouteOptions extends RouteSharedOptions
 	 * RouteOptions constructor.
 	 *
 	 * The router names the route ({@see autoName()}) until {@see name()} does.
-	 *
-	 * @param string                  $path
-	 * @param null|RouteSharedOptions $parent
 	 */
 	public function __construct(
 		string $path,
@@ -54,8 +51,6 @@ final class RouteOptions extends RouteSharedOptions
 
 	/**
 	 * Names the route, unless {@see name()} did: the name is not explicit.
-	 *
-	 * @param string $name
 	 *
 	 * @return $this
 	 *
@@ -70,9 +65,6 @@ final class RouteOptions extends RouteSharedOptions
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function name(string $name): static
 	{
@@ -109,8 +101,6 @@ final class RouteOptions extends RouteSharedOptions
 	 *
 	 * Some features may require an explicit name because auto-generated names
 	 * are not stable across deployments or PHP workers.
-	 *
-	 * @return bool
 	 */
 	public function isNameExplicit(): bool
 	{

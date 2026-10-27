@@ -46,36 +46,21 @@ abstract class AbstractApp implements AppInterface
 			->getRoot());
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	final public function getName(): string
 	{
 		return ScopeInterface::ROOT_SCOPE;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function boot(): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function onUnhandledThrowable(Throwable $t): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function onUnhandledError(int $code, string $message, string $file, int $line): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getScope(?string $scope = null): ScopeInterface
 	{
@@ -104,18 +89,12 @@ abstract class AbstractApp implements AppInterface
 		return $scopes[$scope];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getSourcesDir(): FilesManager
 	{
 		return FS::from(OZ_APP_DIR);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getDataDir(): FilesManager
 	{
@@ -125,18 +104,12 @@ abstract class AbstractApp implements AppInterface
 			->cd('data', false);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPublicDir(): FilesManager
 	{
 		return $this->getDocumentRootDir();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getDocumentRootDir(): FilesManager
 	{
@@ -144,36 +117,24 @@ abstract class AbstractApp implements AppInterface
 			->cd('public', true);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStateSlug(): string
 	{
 		return ScopeInterface::ROOT_SCOPE;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getTempDir(): FilesManager
 	{
 		return StateLayout::dir($this, StateLayout::TEMP);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStateStoreDir(): FilesManager
 	{
 		return StateLayout::dir($this, StateLayout::STATE);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getEnv(): Env
 	{
@@ -198,36 +159,24 @@ abstract class AbstractApp implements AppInterface
 		return $env;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getProjectDir(): FilesManager
 	{
 		return FS::from(OZ_PROJECT_DIR);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getSettingsDir(): FilesManager
 	{
 		return $this->getSourcesDir()->cd('settings', true);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getStatefulSettingsDir(): FilesManager
 	{
 		return StateLayout::dir($this, StateLayout::SETTINGS);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getTemplatesDir(): FilesManager
 	{
@@ -235,9 +184,6 @@ abstract class AbstractApp implements AppInterface
 			->cd('templates', true);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPluginsSourcesDir(): FilesManager
 	{
@@ -247,36 +193,24 @@ abstract class AbstractApp implements AppInterface
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getCacheDir(): FilesManager
 	{
 		return InstanceLayout::scopeCacheDir($this->getProjectDir()->getRoot(), $this->getStateSlug());
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPrivateFilesDir(): FilesManager
 	{
 		return StateLayout::dir($this, StateLayout::PRIVATE_FILES);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPublicFilesDir(): FilesManager
 	{
 		return StateLayout::dir($this, StateLayout::PUBLIC_FILES);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getMigrationsDir(): FilesManager
 	{
@@ -284,9 +218,6 @@ abstract class AbstractApp implements AppInterface
 			->cd('migrations', true);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getLogsDir(): FilesManager
 	{

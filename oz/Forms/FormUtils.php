@@ -34,10 +34,7 @@ final class FormUtils
 	public static function assertValidFieldName(string $name): void
 	{
 		try {
-			/**
-			 * @psalm-suppress UnusedMethodCall since we just want to check if the name can be parsed as a dot path,
-			 * we don't care about the segments themselves
-			 */
+			// Parsing is the check: the segments themselves are not wanted.
 			DotPath::parse($name);
 		} catch (Throwable $t) {
 			throw new InvalidArgumentException(\sprintf('Invalid field name: "%s"', $name), 0, $t);

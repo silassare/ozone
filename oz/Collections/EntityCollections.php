@@ -28,9 +28,6 @@ use OZONE\Core\OZone;
  */
 final class EntityCollections implements BootHookReceiverInterface
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{
@@ -39,8 +36,6 @@ final class EntityCollections implements BootHookReceiverInterface
 
 	/**
 	 * Register collections providers.
-	 *
-	 * @param DbReadyHook $ev
 	 */
 	private static function registerCollections(DbReadyHook $ev): void
 	{

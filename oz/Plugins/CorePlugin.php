@@ -28,9 +28,6 @@ final class CorePlugin extends AbstractPlugin
 		parent::__construct('ozone', 'OZONE\Core', OZ_OZONE_DIR . '..');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function instance(): static
 	{

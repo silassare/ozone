@@ -30,11 +30,6 @@ final class ErrorView extends WebView
 	 */
 	public const array TITLED_STATUSES = [400, 401, 403, 404, 405, 429, 500, 503];
 
-	/**
-	 * @param BaseException $error
-	 *
-	 * @return Response
-	 */
 	public function renderError(BaseException $error): Response
 	{
 		$context = $this->getContext();

@@ -34,18 +34,12 @@ final class WorkerRuntime implements RuntimeInterface
 {
 	public function __construct(private readonly string $name = 'worker') {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return 'worker';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function isSupported(): bool
 	{
@@ -81,18 +75,12 @@ final class WorkerRuntime implements RuntimeInterface
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isConsole(): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isPersistent(): bool
 	{
@@ -107,9 +95,6 @@ final class WorkerRuntime implements RuntimeInterface
 		return $this->name;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function flushRequest(): void
 	{
@@ -120,9 +105,6 @@ final class WorkerRuntime implements RuntimeInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function terminate(int $code = 0): never
 	{

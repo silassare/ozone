@@ -32,31 +32,22 @@ final class PhoneOwnershipVerificationProvider extends OwnershipVerificationProv
 		return $this->identifier;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function identifierType(): string
 	{
 		return AuthUserInterface::IDENTIFIER_TYPE_PHONE;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return self::NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function send(): void
 	{
-		(new SMSMessage('oz.auth.messages.verify.phone'))
+		new SMSMessage('oz.auth.messages.verify.phone')
 			->inject($this->messageData(['PHONE_SMS']))
 			->addRecipient($this->identifier)
 			->send();

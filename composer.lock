@@ -262,16 +262,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "2.3.6",
+            "version": "2.3.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "1427af4647235b4a73b13940b1f1258d3584f36e"
+                "reference": "ec4293f7caf9936acce286b589ccb84faf1aa88d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/1427af4647235b4a73b13940b1f1258d3584f36e",
-                "reference": "1427af4647235b4a73b13940b1f1258d3584f36e",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/ec4293f7caf9936acce286b589ccb84faf1aa88d",
+                "reference": "ec4293f7caf9936acce286b589ccb84faf1aa88d",
                 "shasum": ""
             },
             "require": {
@@ -303,9 +303,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.6"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.8"
             },
-            "time": "2026-09-27T20:07:45+00:00"
+            "time": "2026-10-26T20:24:50+00:00"
         },
         {
             "name": "psr/http-message",
@@ -477,12 +477,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/silassare/gobl.git",
-                "reference": "811957838af4837aaba86021144e066c2ea2ccc8"
+                "reference": "e39f119bd6060657cc2b154f2020e706582d6214"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/silassare/gobl/zipball/811957838af4837aaba86021144e066c2ea2ccc8",
-                "reference": "811957838af4837aaba86021144e066c2ea2ccc8",
+                "url": "https://api.github.com/repos/silassare/gobl/zipball/e39f119bd6060657cc2b154f2020e706582d6214",
+                "reference": "e39f119bd6060657cc2b154f2020e706582d6214",
                 "shasum": ""
             },
             "require": {
@@ -547,7 +547,7 @@
                 "issues": "https://github.com/silassare/gobl/issues",
                 "source": "https://github.com/silassare/gobl/tree/main"
             },
-            "time": "2026-10-26T13:22:21+00:00"
+            "time": "2026-10-27T10:28:47+00:00"
         },
         {
             "name": "silassare/kli",
@@ -3410,17 +3410,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/oliup-io/oliup-cs-php.git",
-                "reference": "43a284886bdb0825bf74dbf42eb4c5c0f5b53676"
+                "reference": "ebb21918670fb8303628912a3dd710a3a4c601d2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/oliup-io/oliup-cs-php/zipball/43a284886bdb0825bf74dbf42eb4c5c0f5b53676",
-                "reference": "43a284886bdb0825bf74dbf42eb4c5c0f5b53676",
+                "url": "https://api.github.com/repos/oliup-io/oliup-cs-php/zipball/ebb21918670fb8303628912a3dd710a3a4c601d2",
+                "reference": "ebb21918670fb8303628912a3dd710a3a4c601d2",
                 "shasum": ""
             },
             "require": {
                 "friendsofphp/php-cs-fixer": "^3.94",
-                "php": ">=8.3",
+                "php": ">=8.5",
                 "phpcompatibility/php-compatibility": "^10.0@alpha",
                 "squizlabs/php_codesniffer": "^4.0"
             },
@@ -3465,7 +3465,7 @@
                 "issues": "https://github.com/oliup-io/oliup-cs-php/issues",
                 "source": "https://github.com/oliup-io/oliup-cs-php/tree/main"
             },
-            "time": "2026-10-23T08:26:31+00:00"
+            "time": "2026-10-27T11:25:04+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -5125,12 +5125,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Roave/SecurityAdvisories.git",
-                "reference": "e8f028bf983890e7ac18437f9b6f481e82233c4d"
+                "reference": "253a70fe410a08c0468eccdffcafd5870b58a1cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/e8f028bf983890e7ac18437f9b6f481e82233c4d",
-                "reference": "e8f028bf983890e7ac18437f9b6f481e82233c4d",
+                "url": "https://api.github.com/repos/Roave/SecurityAdvisories/zipball/253a70fe410a08c0468eccdffcafd5870b58a1cf",
+                "reference": "253a70fe410a08c0468eccdffcafd5870b58a1cf",
                 "shasum": ""
             },
             "conflict": {
@@ -5815,7 +5815,7 @@
                 "phpseclib/phpseclib": "<3.0.57|>=4,<4.0.1",
                 "phpservermon/phpservermon": "<3.6",
                 "phpsysinfo/phpsysinfo": "<=3.4.5",
-                "phpunit/phpunit": "<8.5.52|>=9,<9.6.33|>=10,<10.5.62|>=11,<11.5.50|>=12,<12.5.8|>=12.5.21,<12.5.22|>=13.1.5,<13.1.6",
+                "phpunit/phpunit": "<8.5.52|>=9,<9.6.33|>=10,<10.5.62|>=11,<11.5.50|>=12,<12.5.8|>=12.5.21,<12.5.22|>=13.1.5,<13.1.6|>=13.4,<13.4.4",
                 "phpwhois/phpwhois": "<=4.2.5",
                 "phpxmlrpc/extras": "<0.6.1",
                 "phpxmlrpc/phpxmlrpc": "<4.9.2",
@@ -6285,7 +6285,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-23T21:03:08+00:00"
+            "time": "2026-10-27T07:21:21+00:00"
         },
         {
             "name": "sebastian/cli-parser",

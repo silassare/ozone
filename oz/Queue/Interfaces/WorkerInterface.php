@@ -44,36 +44,26 @@ interface WorkerInterface
 {
 	/**
 	 * Gets the worker name.
-	 *
-	 * @return string
 	 */
 	public static function getName(): string;
 
 	/**
 	 * Instructs the worker to do the job.
-	 *
-	 * @param JobContractInterface $job_contract
 	 */
 	public function work(JobContractInterface $job_contract): static;
 
 	/**
 	 * Is the worker working asynchronously?
-	 *
-	 * @return bool
 	 */
 	public function isAsync(): bool;
 
 	/**
 	 * Gets the result.
-	 *
-	 * @return JSONResult
 	 */
 	public function getResult(): JSONResult;
 
 	/**
 	 * Gets the worker instance from payload.
-	 *
-	 * @param array $payload
 	 */
 	public static function fromPayload(array $payload): static;
 
@@ -81,8 +71,6 @@ interface WorkerInterface
 	 * Returns the payload.
 	 *
 	 * The payload is the data that will be passed to the worker later.
-	 *
-	 * @return array
 	 */
 	public function getPayload(): array;
 }

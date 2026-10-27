@@ -40,8 +40,6 @@ final class Password extends Service
 	/**
 	 * Edit password: verified user only.
 	 *
-	 * @param RouteInfo $ri
-	 *
 	 * @throws UnauthorizedException
 	 */
 	public function actionEditOwnPass(RouteInfo $ri): void
@@ -62,8 +60,6 @@ final class Password extends Service
 	/**
 	 * Edit password: admin only.
 	 *
-	 * @param RouteInfo $ri
-	 *
 	 * @throws BadRequestException
 	 * @throws UnauthorizedException
 	 */
@@ -82,8 +78,6 @@ final class Password extends Service
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws Throwable
 	 */
 	#[Override]
@@ -115,9 +109,6 @@ final class Password extends Service
 			->form(self::newPassForm(...));
 	}
 
-	/**
-	 * @return Form
-	 */
 	public static function newPassForm(): Form
 	{
 		$form = new Form();
@@ -130,9 +121,6 @@ final class Password extends Service
 		return $form;
 	}
 
-	/**
-	 * @return Form
-	 */
 	public static function currentPassForm(): Form
 	{
 		$form = new Form();
@@ -141,9 +129,6 @@ final class Password extends Service
 		return $form;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{

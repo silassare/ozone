@@ -37,10 +37,6 @@ final class Auth implements BootHookReceiverInterface
 {
 	/**
 	 * Get an auth entity by ref.
-	 *
-	 * @param string $ref
-	 *
-	 * @return null|OZAuth
 	 */
 	public static function get(string $ref): ?OZAuth
 	{
@@ -58,10 +54,6 @@ final class Auth implements BootHookReceiverInterface
 
 	/**
 	 * Get an auth entity by token.
-	 *
-	 * @param string $token_hash
-	 *
-	 * @return null|OZAuth
 	 */
 	public static function getByTokenHash(string $token_hash): ?OZAuth
 	{
@@ -79,10 +71,6 @@ final class Auth implements BootHookReceiverInterface
 
 	/**
 	 * Get an auth entity by ref.
-	 *
-	 * @param string $ref
-	 *
-	 * @return OZAuth
 	 *
 	 * @throws NotFoundException     when not found
 	 * @throws UnauthorizedException auth is disabled
@@ -102,9 +90,6 @@ final class Auth implements BootHookReceiverInterface
 		return $auth;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{
@@ -115,11 +100,6 @@ final class Auth implements BootHookReceiverInterface
 	 * Gets the provider of an existing authorization, its credentials carrying the authorization's
 	 * reference: a provider's credentials draw a new one when built, and a lookup by that one
 	 * (`getState()`, `authorize()`, ...) would miss the row.
-	 *
-	 * @param Context $context
-	 * @param OZAuth  $auth
-	 *
-	 * @return AuthorizationProviderInterface
 	 */
 	public static function provider(Context $context, OZAuth $auth): AuthorizationProviderInterface
 	{
@@ -152,8 +132,6 @@ final class Auth implements BootHookReceiverInterface
 	/**
 	 * Gets the authentication method class from settings.
 	 *
-	 * @param AuthenticationMethodScheme|string $method
-	 *
 	 * @return class-string<AuthenticationMethodInterface>
 	 */
 	public static function method(AuthenticationMethodScheme|string $method): string
@@ -165,22 +143,22 @@ final class Auth implements BootHookReceiverInterface
 		$class = Settings::get('oz.auth.methods', $method);
 
 		if (!$class) {
-			throw (new RuntimeException(
+			throw new RuntimeException(
 				\sprintf(
 					'Authentication method "%s" not found in settings.',
 					$method
 				)
-			))->suspectConfig('oz.auth.methods', $method);
+			)->suspectConfig('oz.auth.methods', $method);
 		}
 
 		if (!\class_exists($class) || !\is_subclass_of($class, AuthenticationMethodInterface::class)) {
-			throw (new RuntimeException(
+			throw new RuntimeException(
 				\sprintf(
 					'Authentication method "%s" should be subclass of: %s',
 					$class,
 					AuthenticationMethodInterface::class
 				)
-			))->suspectConfig('oz.auth.methods', $method);
+			)->suspectConfig('oz.auth.methods', $method);
 		}
 
 		/** @var class-string<AuthenticationMethodInterface> $class */

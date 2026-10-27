@@ -124,7 +124,7 @@ final class ReleaserTest extends TestCase
 	{
 		foreach ([['', ''], [self::REPO, '/tmp/app.tar.gz']] as [$repository, $archive]) {
 			try {
-				(new Releaser(self::ROOT, $repository, archive: $archive))->steps();
+				new Releaser(self::ROOT, $repository, archive: $archive)->steps();
 
 				self::fail('a release with ' . ('' === $repository ? 'no' : 'two') . ' sources must be refused');
 			} catch (RuntimeException $e) {
@@ -158,8 +158,8 @@ final class ReleaserTest extends TestCase
 
 	public function testTheReleaseNameIsSortableAndOverridable(): void
 	{
-		self::assertMatchesRegularExpression('~^\d{14}$~', (new Releaser(self::ROOT, self::REPO))->releaseName());
-		self::assertSame('v1', (new Releaser(self::ROOT, self::REPO, release: 'v1'))->releaseName());
+		self::assertMatchesRegularExpression('~^\d{14}$~', new Releaser(self::ROOT, self::REPO)->releaseName());
+		self::assertSame('v1', new Releaser(self::ROOT, self::REPO, release: 'v1')->releaseName());
 	}
 
 	public function testRollbackToAnUnknownReleaseIsRefused(): void
@@ -167,7 +167,7 @@ final class ReleaserTest extends TestCase
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessageMatches('~No such release~');
 
-		(new Releaser(self::ROOT, self::REPO))->rollbackSteps('nope');
+		new Releaser(self::ROOT, self::REPO)->rollbackSteps('nope');
 	}
 
 	public function testReleaseLayoutReadsADeployRoot(): void

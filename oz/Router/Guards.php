@@ -50,8 +50,6 @@ final class Guards
 	 *
 	 * If the name is a class name and is subclass of {@link RouteGuardInterface} then it will be returned.
 	 *
-	 * @param string $name
-	 *
 	 * @return class-string<RouteGuardInterface>
 	 */
 	public static function get(string $name): string
@@ -63,18 +61,18 @@ final class Guards
 		$guard_class = Settings::get('oz.guards', $name);
 
 		if (!$guard_class) {
-			throw (new RuntimeException(\sprintf(
+			throw new RuntimeException(\sprintf(
 				'Route guard "%s" not found in settings.',
 				$name
-			)))->suspectConfig('oz.guards', $name);
+			))->suspectConfig('oz.guards', $name);
 		}
 
 		if (!\class_exists($guard_class) || !\is_subclass_of($guard_class, RouteGuardInterface::class)) {
-			throw (new RuntimeException(\sprintf(
+			throw new RuntimeException(\sprintf(
 				'Route guard "%s" should be subclass of: %s',
 				$guard_class,
 				RouteGuardInterface::class
-			)))->suspectConfig('oz.guards', $name);
+			))->suspectConfig('oz.guards', $name);
 		}
 
 		return $guard_class;
@@ -83,8 +81,6 @@ final class Guards
 	/**
 	 * Gets guard provider class from settings.
 	 *
-	 * @param string $name
-	 *
 	 * @return class-string<RouteGuardProviderInterface>
 	 */
 	public static function provider(string $name): string
@@ -92,18 +88,18 @@ final class Guards
 		$provider_class = Settings::get('oz.guards.providers', $name);
 
 		if (!$provider_class) {
-			throw (new RuntimeException(\sprintf(
+			throw new RuntimeException(\sprintf(
 				'Route guard provider "%s" not found in settings.',
 				$name
-			)))->suspectConfig('oz.guards.providers', $name);
+			))->suspectConfig('oz.guards.providers', $name);
 		}
 
 		if (!\class_exists($provider_class) || !\is_subclass_of($provider_class, RouteGuardProviderInterface::class)) {
-			throw (new RuntimeException(\sprintf(
+			throw new RuntimeException(\sprintf(
 				'Route guard provider "%s" should be subclass of: %s',
 				$provider_class,
 				RouteGuardProviderInterface::class
-			)))->suspectConfig('oz.guards.providers', $name);
+			))->suspectConfig('oz.guards.providers', $name);
 		}
 
 		return $provider_class;

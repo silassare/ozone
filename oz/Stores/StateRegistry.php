@@ -52,8 +52,6 @@ final class StateRegistry
 	 *
 	 * @param string $name the store name, a key of `oz.stores.state`
 	 *
-	 * @return KeyValueStore
-	 *
 	 * @throws RuntimeException when the store is unknown, or its driver is not durable
 	 */
 	public static function store(string $name): KeyValueStore

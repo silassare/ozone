@@ -27,10 +27,6 @@ use Psr\Log\LogLevel;
 if (!\function_exists('oz_logger')) {
 	/**
 	 * Get the logger instance or log a value.
-	 *
-	 * @param mixed $value
-	 *
-	 * @return Logger
 	 */
 	function oz_logger(mixed $value = null): Logger
 	{
@@ -88,8 +84,6 @@ if (!\function_exists('oz_logger')) {
 
 	/**
 	 * Alias for {@see OZone::app()}.
-	 *
-	 * @return AppInterface
 	 */
 	function app(): AppInterface
 	{
@@ -99,10 +93,7 @@ if (!\function_exists('oz_logger')) {
 	/**
 	 * Get the value of an environment variable.
 	 *
-	 * @param string                     $key
 	 * @param null|bool|float|int|string $default
-	 *
-	 * @return null|bool|float|int|string
 	 */
 	function env(string $key, mixed $default = null): bool|float|int|string|null
 	{
@@ -111,8 +102,6 @@ if (!\function_exists('oz_logger')) {
 
 	/**
 	 * Alias for {@see Db::get()}.
-	 *
-	 * @return RDBMSInterface
 	 */
 	function db(): RDBMSInterface
 	{
@@ -121,8 +110,6 @@ if (!\function_exists('oz_logger')) {
 
 	/**
 	 * Alias for {@see Context::current()}.
-	 *
-	 * @return Context
 	 */
 	function context(): Context
 	{
@@ -133,8 +120,6 @@ if (!\function_exists('oz_logger')) {
 	 * Alias for {@see Context::auth()}.
 	 *
 	 * @param null|Context $ctx instance of {@see Context} to use or null to use the current one
-	 *
-	 * @return AuthenticationMethodInterface
 	 */
 	function auth(?Context $ctx = null): AuthenticationMethodInterface
 	{
@@ -147,8 +132,6 @@ if (!\function_exists('oz_logger')) {
 	 * Get the current authenticated user.
 	 *
 	 * @param null|Context $ctx instance of {@see Context} to use or null to use the current one
-	 *
-	 * @return AuthUserInterface
 	 */
 	function user(?Context $ctx = null): AuthUserInterface
 	{
@@ -159,8 +142,6 @@ if (!\function_exists('oz_logger')) {
 	 * Alias for {@see Context::getAuthUsers()}.
 	 *
 	 * @param null|Context $ctx instance of {@see Context} to use or null to use the current one
-	 *
-	 * @return AuthUsers
 	 */
 	function authUsers(?Context $ctx = null): AuthUsers
 	{
@@ -173,8 +154,6 @@ if (!\function_exists('oz_logger')) {
 	 * Alias for {@see AppInterface::getScope()}.
 	 *
 	 * @param null|string $scope the scope name to use or null to use the current one
-	 *
-	 * @return ScopeInterface
 	 */
 	function scope(?string $scope = null): ScopeInterface
 	{

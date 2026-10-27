@@ -165,8 +165,6 @@ final class ApiDoc implements ArrayCapableInterface
 
 	/**
 	 * Gets the OpenApi view render data.
-	 *
-	 * @return array
 	 */
 	public function viewInject(): array
 	{
@@ -177,9 +175,6 @@ final class ApiDoc implements ArrayCapableInterface
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toArray(): array
 	{
@@ -659,8 +654,6 @@ DESC;
 
 	/**
 	 * Create the OpenApi context.
-	 *
-	 * @return \OpenApi\Context
 	 */
 	private function createContext(): \OpenApi\Context
 	{
@@ -695,6 +688,6 @@ DESC;
 			$provider::apiDoc($this);
 		}
 
-		(new ApiDocReady($this))->dispatch();
+		new ApiDocReady($this)->dispatch();
 	}
 }

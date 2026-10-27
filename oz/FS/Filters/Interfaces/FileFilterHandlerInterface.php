@@ -33,8 +33,6 @@ interface FileFilterHandlerInterface
 	 *
 	 * @param OZFile   $file         the file entity
 	 * @param string[] $filterTokens the individual filter tokens (already split on FS::FILTERS_SEPARATOR)
-	 *
-	 * @return bool
 	 */
 	public function canHandle(OZFile $file, array $filterTokens): bool;
 
@@ -45,8 +43,6 @@ interface FileFilterHandlerInterface
 	 * @param FileStream $stream       a fresh, unread stream of the file content
 	 * @param Response   $response     the response object to populate and return
 	 * @param string[]   $filterTokens the individual filter tokens to apply
-	 *
-	 * @return Response
 	 */
 	public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response;
 }

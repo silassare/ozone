@@ -56,7 +56,7 @@ final class FrontendTypeOptionsTest extends TestCase
 	public function testAPasswordSendsItsOwnLengths(): void
 	{
 		$form = new Form();
-		$form->field('pass')->type((new TypePassword())->min(4)->max(12));
+		$form->field('pass')->type(new TypePassword()->min(4)->max(12));
 
 		$type = self::typeOf($form, 'pass');
 

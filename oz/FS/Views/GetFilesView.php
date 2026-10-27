@@ -44,9 +44,6 @@ class GetFilesView extends WebView
 {
 	public const string MAIN_ROUTE = 'oz:files';
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -72,8 +69,6 @@ class GetFilesView extends WebView
 	 * Define params for the route or route group.
 	 *
 	 * > This is public so developers can use it in their custom routes.
-	 *
-	 * @param RouteSharedOptions $routeOrGroup
 	 */
 	public static function defineRouteParams(RouteSharedOptions $routeOrGroup): void
 	{
@@ -93,8 +88,6 @@ class GetFilesView extends WebView
 	 *
 	 * @param RouteInfo $ri                   The route info
 	 * @param bool      $force_show_real_name serve the file under its real name, whatever the configuration
-	 *
-	 * @return Response
 	 *
 	 * @throws InvalidFormException
 	 * @throws NotFoundException
@@ -200,8 +193,6 @@ class GetFilesView extends WebView
 	 * @param OZFile     $file     the file entity
 	 * @param FileStream $stream   a fresh, unread file stream
 	 * @param string     $filters  the raw filters param from the URL (tokens joined by FS::FILTERS_SEPARATOR)
-	 *
-	 * @return Response
 	 */
 	private static function applyFilters(
 		Response $response,

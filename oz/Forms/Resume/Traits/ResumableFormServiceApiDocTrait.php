@@ -25,9 +25,6 @@ use OZONE\Core\REST\ApiDoc;
  */
 trait ResumableFormServiceApiDocTrait
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{

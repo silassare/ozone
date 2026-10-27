@@ -203,9 +203,6 @@ class Request extends Message implements ServerRequestInterface
 		return $result ? $result[0] : null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withParsedBody($data): static
 	{
@@ -221,8 +218,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Gets the original HTTP method (ignore override).
-	 *
-	 * @return string
 	 */
 	public function getOriginalMethod(): string
 	{
@@ -231,8 +226,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Is this a GET request?
-	 *
-	 * @return bool
 	 */
 	public function isGet(): bool
 	{
@@ -243,26 +236,18 @@ class Request extends Message implements ServerRequestInterface
 	 * Does this request use a given method?
 	 *
 	 * @param string $method HTTP method
-	 *
-	 * @return bool
 	 */
 	public function isMethod(string $method): bool
 	{
 		return $this->getMethod() === $method;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getMethod(): string
 	{
 		return $this->method;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getParsedBody(): array|object|null
 	{
@@ -273,9 +258,6 @@ class Request extends Message implements ServerRequestInterface
 		return $this->bodyParsed;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withMethod(string $method): static
 	{
@@ -287,9 +269,6 @@ class Request extends Message implements ServerRequestInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getRequestTarget(): string
 	{
@@ -315,9 +294,6 @@ class Request extends Message implements ServerRequestInterface
 		return $this->requestTarget;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withRequestTarget(string $requestTarget): static
 	{
@@ -332,18 +308,12 @@ class Request extends Message implements ServerRequestInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getUri(): Uri
 	{
 		return $this->uri;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withUri(UriInterface $uri, bool $preserveHost = false): static
 	{
@@ -363,8 +333,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Is this a POST request?
-	 *
-	 * @return bool
 	 */
 	public function isPost(): bool
 	{
@@ -373,8 +341,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Is this a PUT request?
-	 *
-	 * @return bool
 	 */
 	public function isPut(): bool
 	{
@@ -383,8 +349,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Is this a PATCH request?
-	 *
-	 * @return bool
 	 */
 	public function isPatch(): bool
 	{
@@ -393,8 +357,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Is this a DELETE request?
-	 *
-	 * @return bool
 	 */
 	public function isDelete(): bool
 	{
@@ -403,8 +365,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Is this a HEAD request?
-	 *
-	 * @return bool
 	 */
 	public function isHead(): bool
 	{
@@ -413,8 +373,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Is this a OPTIONS request?
-	 *
-	 * @return bool
 	 */
 	public function isOptions(): bool
 	{
@@ -423,8 +381,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Is this an XHR request?
-	 *
-	 * @return bool
 	 */
 	public function isXhr(): bool
 	{
@@ -433,8 +389,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Gets request content character set, if known.
-	 *
-	 * @return null|string
 	 */
 	public function getContentCharset(): ?string
 	{
@@ -453,8 +407,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Gets request content length, if known.
-	 *
-	 * @return null|int
 	 */
 	public function getContentLength(): ?int
 	{
@@ -468,8 +420,6 @@ class Request extends Message implements ServerRequestInterface
 	 *
 	 * @param string     $key     the attribute name
 	 * @param null|mixed $default default value to return if the attribute does not exist
-	 *
-	 * @return mixed
 	 */
 	public function getCookieParam(string $key, mixed $default = null): mixed
 	{
@@ -478,18 +428,12 @@ class Request extends Message implements ServerRequestInterface
 		return $cookies[$key] ?? $default;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getCookieParams(): array
 	{
 		return $this->cookies;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withCookieParams(array $cookies): static
 	{
@@ -501,11 +445,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Retrieve a server parameter.
-	 *
-	 * @param string     $key
-	 * @param null|mixed $default
-	 *
-	 * @return mixed
 	 */
 	public function getServerParam(string $key, mixed $default = null): mixed
 	{
@@ -514,36 +453,24 @@ class Request extends Message implements ServerRequestInterface
 		return $serverParams[$key] ?? $default;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getServerParams(): array
 	{
 		return $this->serverParams;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAttributes(): array
 	{
 		return $this->attributes->all();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAttribute(string $name, $default = null): mixed
 	{
 		return $this->attributes->get($name, $default);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withAttribute(string $name, $value): static
 	{
@@ -553,9 +480,6 @@ class Request extends Message implements ServerRequestInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withoutAttribute(string $name): static
 	{
@@ -576,8 +500,6 @@ class Request extends Message implements ServerRequestInterface
 	 * updated attributes.
 	 *
 	 * @param array $attributes New attributes
-	 *
-	 * @return static
 	 */
 	public function withAttributes(array $attributes): static
 	{
@@ -629,10 +551,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Fetches associative array of body, query string parameters and uploaded files.
-	 *
-	 * @param bool $include_files
-	 *
-	 * @return FormData
 	 */
 	public function getUnsafeFormData(bool $include_files = true): FormData
 	{
@@ -651,9 +569,6 @@ class Request extends Message implements ServerRequestInterface
 		return new FormData($params);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getQueryParams(): array
 	{
@@ -670,9 +585,6 @@ class Request extends Message implements ServerRequestInterface
 		return $this->queryParams;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withQueryParams(array $query): static
 	{
@@ -683,8 +595,6 @@ class Request extends Message implements ServerRequestInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @return UploadedFile[]
 	 */
 	#[Override]
@@ -693,9 +603,6 @@ class Request extends Message implements ServerRequestInterface
 		return $this->uploadedFiles;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withUploadedFiles(array $uploadedFiles): static
 	{
@@ -707,11 +614,6 @@ class Request extends Message implements ServerRequestInterface
 
 	/**
 	 * Fetches parameter value from query string.
-	 *
-	 * @param string     $key
-	 * @param null|mixed $default
-	 *
-	 * @return mixed
 	 */
 	public function getQueryParam(string $key, mixed $default = null): mixed
 	{
@@ -728,12 +630,9 @@ class Request extends Message implements ServerRequestInterface
 	 * that hands requests over as objects (RoadRunner, Swoole), so PHP's own request globals are not
 	 * this request's and none of them is read: pass the server's parsed form and files instead.
 	 *
-	 * @param HTTPEnvironment      $environment
 	 * @param null|StreamInterface $body           the request body, when PHP did not receive the request
 	 * @param null|array           $parsed_body    the parsed form body, when the server parsed it
 	 * @param null|array           $uploaded_files a normalized tree of {@see UploadedFile}
-	 *
-	 * @return static
 	 */
 	public static function createFromHTTPEnvironment(
 		HTTPEnvironment $environment,
@@ -769,10 +668,6 @@ class Request extends Message implements ServerRequestInterface
 	/**
 	 * Validate the HTTP method.
 	 *
-	 * @param string $method
-	 *
-	 * @return string
-	 *
 	 * @throws InvalidArgumentException on invalid HTTP method
 	 */
 	public static function filterMethod(string $method): string
@@ -792,8 +687,6 @@ class Request extends Message implements ServerRequestInterface
 	 * When enabled in settings, the client may send the configured header to indicate
 	 * that instead of executing the route handler, the server should return the route's
 	 * form bundle as JSON so the client can build the form UI dynamically.
-	 *
-	 * @return bool
 	 */
 	public function isFormDiscoveryRequest(): bool
 	{

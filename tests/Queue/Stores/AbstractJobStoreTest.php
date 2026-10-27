@@ -432,7 +432,7 @@ abstract class AbstractJobStoreTest extends IntegrationTestCase
 		// md5() gives exactly 32 hex chars, satisfying the job_ref min=32 constraint.
 		$ref = \md5(\uniqid('', true));
 
-		return (new Job($ref, $worker, $payload))
+		return new Job($ref, $worker, $payload)
 			->setQueue($queue ?: $this->testQueue)
 			->setName($worker); // job_name column requires min=1
 	}

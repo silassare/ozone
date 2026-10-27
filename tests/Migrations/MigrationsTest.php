@@ -108,7 +108,7 @@ final class MigrationsTest extends TestCase
 			self::assertSame(2, Migrations::getSourceCodeDbVersion());
 			self::assertSame(1, Migrations::getInstalledDbVersion());
 			self::assertSame(MigrationsState::PENDING, Migrations::getState());
-			self::assertTrue((new Migrations())->hasPendingMigrations());
+			self::assertTrue(new Migrations()->hasPendingMigrations());
 		} finally {
 			Settings::unset('oz.db.migrations', 'OZ_MIGRATION_VERSION');
 		}
@@ -135,7 +135,7 @@ final class MigrationsTest extends TestCase
 		self::seed([1, 2], 0);
 
 		self::assertSame(MigrationsState::NOT_INSTALLED, Migrations::getState());
-		self::assertTrue((new Migrations())->hasPendingMigrations());
+		self::assertTrue(new Migrations()->hasPendingMigrations());
 	}
 
 	/**

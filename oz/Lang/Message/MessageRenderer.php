@@ -231,7 +231,7 @@ final class MessageRenderer
 				'full'   => IntlDateFormatter::FULL,
 			];
 
-			$formatted = (new IntlDateFormatter($this->lang, $styles[$date], $styles[$time], 'UTC'))->format($seconds);
+			$formatted = new IntlDateFormatter($this->lang, $styles[$date], $styles[$time], 'UTC')->format($seconds);
 
 			return false === $formatted ? $value : $formatted;
 		}

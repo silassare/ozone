@@ -38,8 +38,7 @@ class PathSources
 	/**
 	 * Add a path source.
 	 *
-	 * @param string $path
-	 * @param bool   $stateful whether the source is written at runtime, rather than shipped with the code
+	 * @param bool $stateful whether the source is written at runtime, rather than shipped with the code
 	 */
 	public function add(string $path, bool $stateful = false): static
 	{

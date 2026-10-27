@@ -55,9 +55,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	 * then the arguments the text gives it (`{price | money: "XOF"}` passes `"XOF"`). A filter of the
 	 * same name as a built-in one (`upper`, `lower`, `capitalize`, `number`) is used instead of it.
 	 * A client translating the catalogs must implement it too (`oz lang export` lists the names).
-	 *
-	 * @param string   $name
-	 * @param callable $filter
 	 */
 	public static function declareFilter(string $name, callable $filter): void
 	{
@@ -149,10 +146,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 
 	/**
 	 * Gets language to use.
-	 *
-	 * @param null|Context $context
-	 *
-	 * @return string
 	 */
 	public static function getLanguage(?Context $context = null): string
 	{
@@ -181,11 +174,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 
 	/**
 	 * Sets user preferred language.
-	 *
-	 * @param Context $context
-	 * @param string  $lang
-	 *
-	 * @return bool
 	 */
 	public static function setUserLanguage(Context $context, string $lang): bool
 	{
@@ -273,8 +261,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	 * Checks if we have a valid lang key.
 	 *
 	 * @param string $key the key to check
-	 *
-	 * @return bool
 	 */
 	public static function isLangKey(string $key): bool
 	{
@@ -283,8 +269,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 
 	/**
 	 * Gets available languages list or check if a given one is defined.
-	 *
-	 * @return array
 	 */
 	public static function getAvailableLanguages(): array
 	{
@@ -293,8 +277,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 
 	/**
 	 * Gets the default language.
-	 *
-	 * @return string
 	 */
 	public static function getDefaultLanguage(): string
 	{
@@ -313,8 +295,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 
 	/**
 	 * Gets enabled languages list from available languages.
-	 *
-	 * @return array
 	 */
 	public static function getEnabledLanguages(): array
 	{
@@ -336,10 +316,7 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	 * Parse user browser 'Accept-Language' header and advice
 	 * for the best to use according to available languages.
 	 *
-	 * @param null|string              $http_accept_language
-	 * @param null|array<string, true> $enabled_languages    the enabled ones by default
-	 *
-	 * @return array
+	 * @param null|array<string, true> $enabled_languages the enabled ones by default
 	 */
 	public static function parseBrowserLanguage(
 		?string $http_accept_language = null,
@@ -411,9 +388,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 		return ['languages' => $browser_languages, 'advice' => $advice];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{
@@ -426,9 +400,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 		}, Event::RUN_FIRST);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -492,12 +463,7 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	/**
 	 * Parse lang key.
 	 *
-	 * @param string $i18n_key
-	 * @param array  $inject
-	 * @param string $lang
-	 * @param bool   $html     whether the text is written as HTML (the values escaped)
-	 *
-	 * @return mixed
+	 * @param bool $html whether the text is written as HTML (the values escaped)
 	 */
 	private static function parseText(string $i18n_key, array $inject, string $lang, bool $html = false): mixed
 	{
@@ -545,11 +511,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	 * Returns i18n data for a given key.
 	 *
 	 * when the lang key is invalid the supplied key is simply returned
-	 *
-	 * @param string $i18n_key
-	 * @param string $lang
-	 *
-	 * @return mixed
 	 */
 	private static function getI18n(string $i18n_key, string $lang): mixed
 	{
@@ -578,10 +539,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	 * Gets the language group of a given language.
 	 *
 	 * ex: 'fr-bj' -> 'fr'
-	 *
-	 * @param string $lang
-	 *
-	 * @return string
 	 */
 	private static function getLanguageGroup(string $lang): string
 	{
@@ -592,10 +549,6 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 
 	/**
 	 * Sort languages by language group.
-	 *
-	 * @param array $languages
-	 *
-	 * @return array
 	 */
 	private static function sortLanguagesByGroups(array $languages): array
 	{

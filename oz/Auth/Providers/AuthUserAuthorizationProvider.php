@@ -37,17 +37,12 @@ final class AuthUserAuthorizationProvider extends AuthorizationProvider
 
 	/**
 	 * Gets the user.
-	 *
-	 * @return AuthUserInterface
 	 */
 	public function getUser(): AuthUserInterface
 	{
 		return $this->user;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function resolve(Context $context, OZAuth $auth): static
 	{
@@ -57,24 +52,18 @@ final class AuthUserAuthorizationProvider extends AuthorizationProvider
 		]);
 
 		if (!$user) {
-			throw (new RuntimeException('Unable to identify the owner of this auth key.'))->suspectObject($auth);
+			throw new RuntimeException('Unable to identify the owner of this auth key.')->suspectObject($auth);
 		}
 
 		return new self($context, $user);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPayload(): array
 	{
 		return [];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{

@@ -39,8 +39,6 @@ final class AccountRecovery extends Service
 	public const string AUTO_LOGIN_ON_SUCCESS_FIELD = 'auto_login_on_success';
 
 	/**
-	 * @param RouteInfo $ri
-	 *
 	 * @throws ForbiddenException
 	 * @throws UnauthorizedException
 	 * @throws InternalErrorException
@@ -99,9 +97,6 @@ final class AccountRecovery extends Service
 			->setData($user);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
@@ -125,9 +120,6 @@ final class AccountRecovery extends Service
 		}
 	}
 
-	/**
-	 * @return Form
-	 */
 	public static function editPassForm(): Form
 	{
 		$form = new Form();
@@ -143,9 +135,6 @@ final class AccountRecovery extends Service
 		return $form;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{

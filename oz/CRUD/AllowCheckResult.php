@@ -29,8 +29,6 @@ final class AllowCheckResult implements ArrayCapableInterface
 
 	/**
 	 * Gets the result of the allow check.
-	 *
-	 * @return bool
 	 */
 	public function isAllowed(): bool
 	{
@@ -39,17 +37,12 @@ final class AllowCheckResult implements ArrayCapableInterface
 
 	/**
 	 * Gets the reason for the allow check result.
-	 *
-	 * @return I18nMessage
 	 */
 	public function getReason(): I18nMessage
 	{
 		return $this->reason;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toArray(): array
 	{
@@ -61,8 +54,6 @@ final class AllowCheckResult implements ArrayCapableInterface
 
 	/**
 	 * Creates a new AllowCheckResult instance with rejection status.
-	 *
-	 * @param I18nMessage $reason
 	 */
 	public static function reject(I18nMessage $reason): static
 	{
@@ -71,8 +62,6 @@ final class AllowCheckResult implements ArrayCapableInterface
 
 	/**
 	 * Creates a new AllowCheckResult instance with approval status.
-	 *
-	 * @param I18nMessage $reason
 	 */
 	public static function allow(I18nMessage $reason): static
 	{

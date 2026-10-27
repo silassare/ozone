@@ -29,27 +29,18 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 
 	/**
 	 * RouteRateLimiter constructor.
-	 *
-	 * @param RouteInfo               $ri
-	 * @param RouteRateLimitInterface $limit
 	 */
 	public function __construct(protected RouteInfo $ri, protected RouteRateLimitInterface $limit)
 	{
 		$this->cache = StateRegistry::store(self::CACHE_NAMESPACE);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function get(RouteInfo $ri, RouteRateLimitInterface $limit): static
 	{
 		return new static($ri, $limit);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function hit(): bool
 	{
@@ -72,9 +63,6 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 		return $hits <= $this->limit->rate();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function reset(): static
 	{
@@ -87,9 +75,6 @@ class RouteRateLimiter implements RouteRateLimiterInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function status(): array
 	{

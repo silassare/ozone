@@ -104,9 +104,6 @@ class Uri implements UriInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function __toString(): string
 	{
 		$scheme    = $this->getScheme();
@@ -125,9 +122,6 @@ class Uri implements UriInterface
 			. ($fragment ? '#' . $fragment : '');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getScheme(): string
 	{
@@ -152,9 +146,6 @@ class Uri implements UriInterface
 			. ($fragment ? '#' . $fragment : '');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withScheme(string $scheme): static
 	{
@@ -165,9 +156,6 @@ class Uri implements UriInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAuthority(): string
 	{
@@ -180,10 +168,6 @@ class Uri implements UriInterface
 
 	/**
 	 * Sets base path.
-	 *
-	 * @param string $basePath
-	 *
-	 * @return static
 	 */
 	public function withBasePath(string $basePath): static
 	{
@@ -201,9 +185,6 @@ class Uri implements UriInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getUserInfo(): string
 	{
@@ -216,8 +197,6 @@ class Uri implements UriInterface
 	 * Note that this method never includes a trailing /
 	 *
 	 * This method is not part of PSR-7.
-	 *
-	 * @return string
 	 */
 	public function getBaseUrl(): string
 	{
@@ -234,9 +213,6 @@ class Uri implements UriInterface
 			. \rtrim($basePath, '/');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withUserInfo(string $user, #[SensitiveParameter] ?string $password = null): static
 	{
@@ -247,18 +223,12 @@ class Uri implements UriInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getHost(): string
 	{
 		return $this->host;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withHost(string $host): static
 	{
@@ -268,18 +238,12 @@ class Uri implements UriInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPort(): ?int
 	{
 		return $this->port && !$this->hasStandardPort() ? $this->port : null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withPort(?int $port): static
 	{
@@ -290,18 +254,12 @@ class Uri implements UriInterface
 		return $clone;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPath(): string
 	{
 		return $this->path;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withPath(string $path, bool $preserve_base_path = false): static
 	{
@@ -329,18 +287,12 @@ class Uri implements UriInterface
 		return $this->basePath;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getQuery(): string
 	{
 		return $this->query;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withQuery(string $query): static
 	{
@@ -354,8 +306,6 @@ class Uri implements UriInterface
 	/**
 	 * Returns an instance with the specified query string.
 	 *
-	 * @param array $query
-	 *
 	 * @return static a new instance with the specified query string
 	 */
 	public function withQueryArray(array $query): static
@@ -363,18 +313,12 @@ class Uri implements UriInterface
 		return $this->withQuery(\http_build_query($query, '', '&', \PHP_QUERY_RFC3986));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getFragment(): string
 	{
 		return $this->fragment;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function withFragment(string $fragment): static
 	{
@@ -389,8 +333,6 @@ class Uri implements UriInterface
 	 * Creates new Uri from string.
 	 *
 	 * @param string $uri Complete Uri string (i.e., https://user:pass@host:443/path?query).
-	 *
-	 * @return static
 	 */
 	public static function createFromString(string $uri): static
 	{
@@ -414,10 +356,7 @@ class Uri implements UriInterface
 	 * proxy reports (`Forwarded` `host=` / `X-Forwarded-Host`, `Forwarded` `proto=` /
 	 * `X-Forwarded-Proto`, `X-Forwarded-Port`).
 	 *
-	 * @param HTTPEnvironment     $env
 	 * @param null|TrustedProxies $proxies defaults to {@see TrustedProxies::fromSettings()}
-	 *
-	 * @return static
 	 */
 	public static function createFromEnvironment(HTTPEnvironment $env, ?TrustedProxies $proxies = null): static
 	{
@@ -542,8 +481,6 @@ class Uri implements UriInterface
 	 *
 	 * @param string $scheme raw Uri scheme
 	 *
-	 * @return string
-	 *
 	 * @throws InvalidArgumentException if Uri scheme is not "", "https", or "http"
 	 * @throws InvalidArgumentException if the Uri scheme is not a string
 	 */
@@ -568,8 +505,6 @@ class Uri implements UriInterface
 	 * Filters Uri port.
 	 *
 	 * @param null|int $port the Uri port number
-	 *
-	 * @return null|int
 	 *
 	 * @throws InvalidArgumentException if the port is invalid
 	 */
@@ -623,8 +558,6 @@ class Uri implements UriInterface
 
 	/**
 	 * Does this Uri use a standard port?
-	 *
-	 * @return bool
 	 */
 	protected function hasStandardPort(): bool
 	{

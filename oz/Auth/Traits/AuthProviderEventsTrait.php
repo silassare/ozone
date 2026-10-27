@@ -24,8 +24,6 @@ trait AuthProviderEventsTrait
 {
 	/**
 	 * Called when a new auth process start.
-	 *
-	 * @param OZAuth $auth
 	 */
 	protected function onInit(OZAuth $auth): void
 	{
@@ -39,8 +37,6 @@ trait AuthProviderEventsTrait
 
 	/**
 	 * Called when the auth process is refreshed.
-	 *
-	 * @param OZAuth $auth
 	 */
 	protected function onRefresh(OZAuth $auth): void
 	{
@@ -55,8 +51,6 @@ trait AuthProviderEventsTrait
 	/**
 	 * Called when the provided refresh key is invalid.
 	 *
-	 * @param OZAuth $auth
-	 *
 	 * @throws InvalidFormException
 	 */
 	protected function onInvalidRefreshKey(OZAuth $auth): void
@@ -66,8 +60,6 @@ trait AuthProviderEventsTrait
 
 	/**
 	 * Called when the auth process is canceled.
-	 *
-	 * @param OZAuth $auth
 	 */
 	protected function onCancel(OZAuth $auth): void
 	{
@@ -79,8 +71,6 @@ trait AuthProviderEventsTrait
 
 	/**
 	 * Called when the auth process succeeded.
-	 *
-	 * @param OZAuth $auth
 	 */
 	protected function onAuthorized(OZAuth $auth): void
 	{
@@ -94,8 +84,6 @@ trait AuthProviderEventsTrait
 	/**
 	 * Called when the auth entity has expired.
 	 *
-	 * @param OZAuth $auth
-	 *
 	 * @throws UnauthorizedException
 	 */
 	protected function onExpired(OZAuth $auth): void
@@ -105,8 +93,6 @@ trait AuthProviderEventsTrait
 
 	/**
 	 * Called when the provided code is invalid.
-	 *
-	 * @param OZAuth $auth
 	 *
 	 * @throws InvalidFormException
 	 */
@@ -118,8 +104,6 @@ trait AuthProviderEventsTrait
 	/**
 	 * Called when the provided token is invalid.
 	 *
-	 * @param OZAuth $auth
-	 *
 	 * @throws InvalidFormException
 	 */
 	protected function onInvalidToken(OZAuth $auth): void
@@ -130,8 +114,6 @@ trait AuthProviderEventsTrait
 	/**
 	 * Called when attempt exceeded try_max.
 	 *
-	 * @param OZAuth $auth
-	 *
 	 * @throws UnauthorizedException
 	 */
 	protected function onTooMuchRetry(OZAuth $auth): void
@@ -141,8 +123,6 @@ trait AuthProviderEventsTrait
 
 	/**
 	 * Generate debug info to be passed to exception.
-	 *
-	 * @param OZAuth $auth
 	 *
 	 * @return array[]
 	 */

@@ -87,7 +87,7 @@ final class ProjectBuilder
 		$process->run();
 
 		$lines = \preg_split('~\R~', \trim($process->getOutput())) ?: [];
-		$last  = (string) \end($lines);
+		$last  = (string) \array_last($lines);
 
 		if (!$process->isSuccessful() || !\str_starts_with($last, '{')) {
 			throw new RuntimeException(\sprintf(
@@ -106,29 +106,6 @@ final class ProjectBuilder
 		$report['diagnostics'] = self::diagnostics($lines, $process->getErrorOutput());
 
 		return $report;
-	}
-
-	/**
-	 * The lines a scope build printed that are not its report.
-	 *
-	 * @param list<string> $out stdout without its last line, the report
-	 * @param string       $err stderr
-	 *
-	 * @return list<string>
-	 */
-	private static function diagnostics(array $out, string $err): array
-	{
-		$kept = [];
-
-		foreach ([...$out, ...(\preg_split('~\R~', $err) ?: [])] as $line) {
-			$line = \trim($line);
-
-			if ('' !== $line) {
-				$kept[] = $line;
-			}
-		}
-
-		return $kept;
 	}
 
 	/**
@@ -375,6 +352,29 @@ final class ProjectBuilder
 	}
 
 	/**
+	 * The lines a scope build printed that are not its report.
+	 *
+	 * @param list<string> $out stdout without its last line, the report
+	 * @param string       $err stderr
+	 *
+	 * @return list<string>
+	 */
+	private static function diagnostics(array $out, string $err): array
+	{
+		$kept = [];
+
+		foreach ([...$out, ...(\preg_split('~\R~', $err) ?: [])] as $line) {
+			$line = \trim($line);
+
+			if ('' !== $line) {
+				$kept[] = $line;
+			}
+		}
+
+		return $kept;
+	}
+
+	/**
 	 * The release: the real path of the application's project directory, as the preload script finds
 	 * it from its own.
 	 */
@@ -393,6 +393,6 @@ final class ProjectBuilder
 			throw new RuntimeException(\sprintf('Unable to create the directory "%s".', $dir));
 		}
 
-		(new FilesManager($dir))->writeAtomic(\basename($file), '<?php' . \PHP_EOL . \PHP_EOL . $code . \PHP_EOL);
+		new FilesManager($dir)->writeAtomic(\basename($file), '<?php' . \PHP_EOL . \PHP_EOL . $code . \PHP_EOL);
 	}
 }

@@ -88,8 +88,6 @@ abstract class RESTFulService extends Service
 
 	/**
 	 * RESTFulService constructor.
-	 *
-	 * @param Context|RouteInfo $context
 	 */
 	protected function __construct(Context|RouteInfo $context)
 	{
@@ -153,13 +151,10 @@ abstract class RESTFulService extends Service
 		return !empty(static::$available_actions[$action]);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function apiDoc(ApiDoc $doc): void
 	{
-		(new RESTFulApiDoc($doc, static::class))->document();
+		new RESTFulApiDoc($doc, static::class)->document();
 	}
 
 	// ========================================================
@@ -168,8 +163,6 @@ abstract class RESTFulService extends Service
 
 	/**
 	 * Creates a new entry.
-	 *
-	 * @param RESTFulAPIRequest $req
 	 *
 	 * @throws Throwable
 	 */
@@ -204,8 +197,6 @@ abstract class RESTFulService extends Service
 	/**
 	 * Updates only one item in the table that matches some filters.
 	 *
-	 * @param RESTFulAPIRequest $req
-	 *
 	 * @throws Throwable
 	 */
 	public function actionUpdateOne(RESTFulAPIRequest $req): void
@@ -236,8 +227,6 @@ abstract class RESTFulService extends Service
 	/**
 	 * Updates all items in the table that matches some filters.
 	 *
-	 * @param RESTFulAPIRequest $req
-	 *
 	 * @throws Throwable
 	 */
 	public function actionUpdateAll(RESTFulAPIRequest $req): void
@@ -265,8 +254,6 @@ abstract class RESTFulService extends Service
 	/**
 	 * Deletes only one item in the table that matches some filters.
 	 *
-	 * @param RESTFulAPIRequest $req
-	 *
 	 * @throws Throwable
 	 */
 	public function actionDeleteOne(RESTFulAPIRequest $req): void
@@ -288,8 +275,6 @@ abstract class RESTFulService extends Service
 
 	/**
 	 * Deletes all items in the table that matches some filters.
-	 *
-	 * @param RESTFulAPIRequest $req
 	 *
 	 * @throws Throwable
 	 */
@@ -317,8 +302,6 @@ abstract class RESTFulService extends Service
 
 	/**
 	 * Gets only one item from the table that matches some filters.
-	 *
-	 * @param RESTFulAPIRequest $req
 	 *
 	 * @throws Throwable
 	 */
@@ -348,8 +331,6 @@ abstract class RESTFulService extends Service
 
 	/**
 	 * Gets all items from the table that matches some filters.
-	 *
-	 * @param RESTFulAPIRequest $req
 	 *
 	 * @throws Throwable
 	 */
@@ -392,10 +373,6 @@ abstract class RESTFulService extends Service
 
 	/**
 	 * Gets relation item(s) that matches some filters.
-	 *
-	 * @param RESTFulAPIRequest $req
-	 * @param array             $entity_filters
-	 * @param string            $relation_name
 	 *
 	 * @throws Throwable
 	 */
@@ -551,8 +528,6 @@ abstract class RESTFulService extends Service
 	 * Registers the routes of the enabled actions: the collection actions under
 	 * {@see self::SERVICE_PATH}, the entry actions under `/:<key column>`.
 	 *
-	 * @param Router $router
-	 *
 	 * @throws Throwable
 	 */
 	protected static function registerRESTRoutes(Router $router): void
@@ -602,8 +577,6 @@ abstract class RESTFulService extends Service
 
 	/**
 	 * Registers access rights actions for the given table.
-	 *
-	 * @param Table $table
 	 */
 	protected static function registerAccessRightsActions(Table $table): void
 	{
@@ -633,11 +606,6 @@ abstract class RESTFulService extends Service
 	/**
 	 * Returns {@link RESTFulAPIRequest} instance.
 	 *
-	 * @param RouteInfo $ri
-	 * @param array     $filters
-	 *
-	 * @return RESTFulAPIRequest
-	 *
 	 * @throws ORMQueryException
 	 */
 	protected static function buildRequest(RouteInfo $ri, array $filters = []): RESTFulAPIRequest
@@ -655,8 +623,6 @@ abstract class RESTFulService extends Service
 
 	/**
 	 * Returns the table controller instance.
-	 *
-	 * @return ORMController
 	 */
 	protected function ctrl(): ORMController
 	{

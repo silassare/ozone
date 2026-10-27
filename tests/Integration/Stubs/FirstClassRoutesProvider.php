@@ -41,7 +41,7 @@ final class FirstClassRoutesProvider extends BaseService
 				'crud'       => OZFilesCrud::new(),
 			};
 
-			$count = (new OZFilesController())->getAllItems()->count();
+			$count = new OZFilesController()->getAllItems()->count();
 
 			$s = new self($ri);
 			$s->json()->setDone()->setData(['count' => $count]);

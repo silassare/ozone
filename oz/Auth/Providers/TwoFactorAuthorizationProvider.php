@@ -78,18 +78,12 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 		$this->scope->setTryMax((int) Settings::get('oz.auth.2fa', 'OZ_2FA_CODE_TRY_MAX'));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return self::NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function resolve(Context $context, OZAuth $auth): static
 	{
@@ -103,15 +97,12 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 		]);
 
 		if (!$user) {
-			throw (new RuntimeException('Unable to identify the owner of this 2FA auth flow.'))->suspectObject($auth);
+			throw new RuntimeException('Unable to identify the owner of this 2FA auth flow.')->suspectObject($auth);
 		}
 
 		return new self($context, $user, $channel, $state_id);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getPayload(): array
 	{
@@ -226,13 +217,11 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 
 		$auth_method->attachAuthUser($pending_user);
 
-		(new AuthUserLoggedIn($this->context, $pending_user))->dispatch();
+		new AuthUserLoggedIn($this->context, $pending_user)->dispatch();
 	}
 
 	/**
 	 * Handles TOTP-specific authorization (replaces hash-based comparison with TOTP verification).
-	 *
-	 * @param AuthorizationSecretType $type
 	 *
 	 * @throws InvalidFormException
 	 * @throws NotFoundException
@@ -336,7 +325,7 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 			]);
 		}
 
-		(new MailMessage('oz.auth.messages.2fa'))
+		new MailMessage('oz.auth.messages.2fa')
 			->setSubject('OZ_AUTH_2FA_SUBJECT')
 			->inject($this->credentials->toArray())
 			->addRecipient($email)
@@ -361,7 +350,7 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 			]);
 		}
 
-		(new SMSMessage('oz.auth.messages.2fa'))
+		new SMSMessage('oz.auth.messages.2fa')
 			->inject($this->credentials->toArray())
 			->addRecipient($phone)
 			->send();

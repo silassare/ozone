@@ -71,7 +71,7 @@ final class GoblSchemaMapper
 		}
 
 		if (null === $schema) {
-			throw (new RuntimeException("Unsupported type: {$type->getName()}"))->suspectObject($type);
+			throw new RuntimeException("Unsupported type: {$type->getName()}")->suspectObject($type);
 		}
 
 		return $schema;

@@ -29,27 +29,18 @@ final class AnonymousUser implements AuthUserInterface
 {
 	use ArrayCapableTrait;
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAuthUserType(): string
 	{
 		return 'anonymous';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAuthIdentifier(): string
 	{
 		return 'anonymous';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAuthIdentifiers(): array
 	{
@@ -58,54 +49,36 @@ final class AnonymousUser implements AuthUserInterface
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAuthPassword(): string
 	{
 		return Password::hash('anonymous');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setAuthPassword(#[SensitiveParameter] string $password_hash): static
 	{
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAuthUserDataStore(): AuthUserDataStore
 	{
 		return AuthUserDataStore::getInstance($this, []);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setAuthUserDataStore(AuthUserDataStore $store): static
 	{
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function save(): bool
 	{
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toArray(): array
 	{
@@ -114,9 +87,6 @@ final class AnonymousUser implements AuthUserInterface
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isAuthUserValid(): bool
 	{

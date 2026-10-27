@@ -132,8 +132,6 @@ final class AsyncValue implements ArrayCapableInterface
 	/**
 	 * Gets the value, evaluated against the current validation context.
 	 *
-	 * @param FormValidationContext $ctx
-	 *
 	 * @return T
 	 */
 	public function getValue(FormValidationContext $ctx): mixed

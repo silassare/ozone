@@ -47,17 +47,13 @@ final class FileStore extends MemoryStore
 	private static array $inodes = [];
 
 	/**
-	 * @param string $namespace
-	 * @param string $root      {@see self::ROOT_CACHE} or {@see self::ROOT_STATE}
+	 * @param string $root {@see self::ROOT_CACHE} or {@see self::ROOT_STATE}
 	 */
 	public function __construct(?string $namespace = null, private readonly string $root = self::ROOT_CACHE)
 	{
 		parent::__construct($namespace);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function capabilities(): StoreCapabilities
 	{
@@ -71,9 +67,6 @@ final class FileStore extends MemoryStore
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromConfig(string $namespace, array $options = []): static
 	{
@@ -136,9 +129,6 @@ final class FileStore extends MemoryStore
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function save(): bool
 	{
@@ -151,9 +141,6 @@ final class FileStore extends MemoryStore
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function load(): array
 	{
@@ -179,8 +166,6 @@ final class FileStore extends MemoryStore
 
 	/**
 	 * Gets the cache path.
-	 *
-	 * @return string
 	 */
 	protected function getCachePath(): string
 	{

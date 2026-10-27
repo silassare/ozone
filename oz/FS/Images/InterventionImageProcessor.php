@@ -70,18 +70,12 @@ final class InterventionImageProcessor implements ImageProcessorInterface
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function driver(): string
 	{
 		return $this->driverName;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function supports(string $mime): bool
 	{
@@ -99,9 +93,6 @@ final class InterventionImageProcessor implements ImageProcessorInterface
 		return $this->writes[$mime];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function render(string $bytes, string $mime, ImageRecipe $recipe): RenderedImage
 	{
@@ -152,9 +143,6 @@ final class InterventionImageProcessor implements ImageProcessorInterface
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function probe(string $bytes): ImageInfo
 	{

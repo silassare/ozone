@@ -55,7 +55,6 @@ class AllowRuleBuilder
 
 	/**
 	 * @param RoleInterface[]                $roles
-	 * @param null|RoleInterface             $at_least
 	 * @param null|callable(CRUDAction):bool $and_when
 	 */
 	public function ifRoles(array $roles, ?RoleInterface $at_least, ?callable $and_when = null): void
@@ -68,7 +67,6 @@ class AllowRuleBuilder
 	}
 
 	/**
-	 * @param RoleInterface                  $at_least
 	 * @param null|callable(CRUDAction):bool $and_when
 	 */
 	public function ifRole(RoleInterface $at_least, ?callable $and_when = null): void
@@ -86,11 +84,6 @@ class AllowRuleBuilder
 
 	/**
 	 * Checks if the action is allowed for the current context.
-	 *
-	 * @param Context    $context
-	 * @param CRUDAction $action
-	 *
-	 * @return AllowCheckResult
 	 */
 	public function allowed(Context $context, CRUDAction $action): AllowCheckResult
 	{

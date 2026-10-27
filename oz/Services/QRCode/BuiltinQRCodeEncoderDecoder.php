@@ -678,18 +678,12 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 		40 => [6, 30, 58, 86, 114, 142, 170],
 	];
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function instance(): static
 	{
 		return new self();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function encode(string $data, int $size = 6, int $margin = 2): string
 	{
@@ -715,9 +709,6 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 		return $this->renderPng($matrix, $size_m, $size, $margin);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function decode(string $image): string
 	{
@@ -1026,7 +1017,6 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 	 * the concatenated data codewords for all blocks (EC codewords are discarded).
 	 *
 	 * @param int[] $codewords full interleaved codeword stream (data + EC)
-	 * @param int   $version
 	 *
 	 * @return int[] data codewords only
 	 */
@@ -1064,9 +1054,6 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 	 * Parses a byte-mode segment from the data codeword stream and returns the original string.
 	 *
 	 * @param int[] $dataCodewords
-	 * @param int   $version
-	 *
-	 * @return string
 	 */
 	private function parseByteMode(array $dataCodewords, int $version): string
 	{
@@ -1227,7 +1214,6 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 	 * Computes Reed-Solomon EC codewords and interleaves data + EC into the final stream.
 	 *
 	 * @param int[] $dataCodewords
-	 * @param int   $version
 	 *
 	 * @return int[]
 	 */

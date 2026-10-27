@@ -93,13 +93,7 @@ final class Gsm7
 	 */
 	public static function fits(string $text): bool
 	{
-		foreach (\mb_str_split($text) as $char) {
-			if (!self::inAlphabet($char)) {
-				return false;
-			}
-		}
-
-		return true;
+		return \array_all(\mb_str_split($text), self::inAlphabet(...));
 	}
 
 	/**

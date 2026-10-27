@@ -48,9 +48,6 @@ class RouteSharedOptions
 	public const int PRIORITY_RUN_LAST    = -1;
 	public const int PRIORITY_RUN_DEFAULT = 0;
 
-	/**
-	 * @var null|RouteSharedOptions
-	 */
 	protected readonly ?RouteSharedOptions $parent;
 	protected readonly string $path;
 	protected int $priority = self::PRIORITY_RUN_DEFAULT;
@@ -122,9 +119,6 @@ class RouteSharedOptions
 
 	/**
 	 * RouteSharedOptions constructor.
-	 *
-	 * @param string                  $path
-	 * @param null|RouteSharedOptions $parent
 	 */
 	protected function __construct(
 		string $path,
@@ -136,8 +130,6 @@ class RouteSharedOptions
 
 	/**
 	 * Define the route name.
-	 *
-	 * @param string $name
 	 *
 	 * @return $this
 	 */
@@ -168,11 +160,11 @@ class RouteSharedOptions
 				}
 
 				if (!$limit instanceof RouteRateLimitInterface) {
-					throw (new RuntimeException(\sprintf(
+					throw new RuntimeException(\sprintf(
 						'Route rate limit provider should return instance of "%s" or "null" not: %s',
 						RouteRateLimitInterface::class,
 						\get_debug_type($limit)
-					)))->suspectCallable($limit_provider);
+					))->suspectCallable($limit_provider);
 				}
 			}
 
@@ -196,8 +188,6 @@ class RouteSharedOptions
 
 	/**
 	 * Defines allowed authentication methods.
-	 *
-	 * @param AuthenticationMethodScheme|string ...$allowed_methods
 	 *
 	 * @return $this
 	 */
@@ -260,8 +250,6 @@ class RouteSharedOptions
 
 	/**
 	 * Gets CSRF scope defined for this route or its parent.
-	 *
-	 * @return null|RequestScope
 	 */
 	public function getCSRFScope(): ?RequestScope
 	{
@@ -499,8 +487,6 @@ class RouteSharedOptions
 
 	/**
 	 * Returns the form declaration defined for this route or its parent.
-	 *
-	 * @return null|RouteFormDeclaration
 	 */
 	public function getFormDeclaration(): ?RouteFormDeclaration
 	{
@@ -512,8 +498,6 @@ class RouteSharedOptions
 	 *
 	 * This method sets the priority of the route. Routes with higher priority values
 	 * will be matched before those with lower values.
-	 *
-	 * @param int $priority
 	 *
 	 * @return $this
 	 */
@@ -536,8 +520,6 @@ class RouteSharedOptions
 	 * Get route priority.
 	 *
 	 * @param bool $include_parent whether to include the priority of parent in the calculation
-	 *
-	 * @return int
 	 */
 	public function getPriority(bool $include_parent): int
 	{
@@ -548,9 +530,6 @@ class RouteSharedOptions
 
 	/**
 	 * Add parameter.
-	 *
-	 * @param string $name
-	 * @param string $pattern
 	 *
 	 * @return $this
 	 */
@@ -583,8 +562,6 @@ class RouteSharedOptions
 
 	/**
 	 * Gets parent.
-	 *
-	 * @return null|RouteSharedOptions
 	 */
 	public function getParent(): ?self
 	{
@@ -593,10 +570,6 @@ class RouteSharedOptions
 
 	/**
 	 * Gets name.
-	 *
-	 * @param bool $full
-	 *
-	 * @return string
 	 */
 	public function getName(bool $full = true): string
 	{
@@ -615,10 +588,6 @@ class RouteSharedOptions
 
 	/**
 	 * Gets path.
-	 *
-	 * @param bool $full
-	 *
-	 * @return string
 	 */
 	public function getPath(bool $full = true): string
 	{
@@ -653,10 +622,6 @@ class RouteSharedOptions
 
 	/**
 	 * Gets form bundle.
-	 *
-	 * @param RouteInfo $ri
-	 *
-	 * @return null|Form
 	 */
 	public function getFormBundle(RouteInfo $ri): ?Form
 	{
@@ -665,8 +630,6 @@ class RouteSharedOptions
 
 	/**
 	 * Gets forms at request time.
-	 *
-	 * @param RouteInfo $ri
 	 *
 	 * @return list<Form>
 	 */
@@ -681,8 +644,6 @@ class RouteSharedOptions
 	 * Collects doc forms from the entire parent-group chain, merging them into one {@see Form}.
 	 * Declarations with policy {@see RouteFormDocPolicy::OPAQUE} or {@see RouteFormDocPolicy::DYNAMIC},
 	 * and dynamic factories without a preview callable, contribute nothing.
-	 *
-	 * @return null|Form
 	 */
 	public function getStaticFormBundle(): ?Form
 	{
@@ -694,8 +655,6 @@ class RouteSharedOptions
 	 *
 	 * Returns the policy of the innermost (child-most) declaration in the chain.
 	 * Returns null when no form declaration exists anywhere in the chain.
-	 *
-	 * @return null|RouteFormDocPolicy
 	 */
 	public function getEffectiveDocPolicy(): ?RouteFormDocPolicy
 	{
@@ -770,8 +729,6 @@ class RouteSharedOptions
 	/**
 	 * Returns true when this route/group chain has resume support — i.e. when at
 	 * least one level has called resumable() or declared a resumable form provider.
-	 *
-	 * @return bool
 	 */
 	public function hasResumeSupport(): bool
 	{
@@ -830,11 +787,6 @@ class RouteSharedOptions
 
 	/**
 	 * Concat two path.
-	 *
-	 * @param string $prefix
-	 * @param string $path
-	 *
-	 * @return string
 	 */
 	protected static function safePathConcat(string $prefix, string $path): string
 	{

@@ -59,8 +59,6 @@ final class FileFilters
 	 * Register a file filter handler.
 	 *
 	 * Handlers registered here are checked before settings-declared handlers.
-	 *
-	 * @param FileFilterHandlerInterface $handler
 	 */
 	public static function register(FileFilterHandlerInterface $handler): void
 	{
@@ -77,8 +75,6 @@ final class FileFilters
 	 * @param FileStream $stream       a fresh, unread file stream
 	 * @param Response   $response     the response to populate
 	 * @param string[]   $filterTokens the individual filter tokens to apply
-	 *
-	 * @return Response
 	 */
 	public static function apply(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response
 	{

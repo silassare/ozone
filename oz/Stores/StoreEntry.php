@@ -39,8 +39,6 @@ final readonly class StoreEntry
 	 * @param string $key        the cache key
 	 * @param mixed  $value      the cached value
 	 * @param float  $ttlSeconds TTL in seconds
-	 *
-	 * @return static
 	 */
 	public static function forTTL(string $key, mixed $value, float $ttlSeconds): static
 	{
@@ -49,8 +47,6 @@ final readonly class StoreEntry
 
 	/**
 	 * Checks if this entry has expired.
-	 *
-	 * @return bool
 	 */
 	public function isExpired(): bool
 	{

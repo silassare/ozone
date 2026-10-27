@@ -49,9 +49,6 @@ abstract class AbstractTask implements TaskInterface
 
 	/**
 	 * TaskBase constructor.
-	 *
-	 * @param string $name
-	 * @param string $description
 	 */
 	public function __construct(
 		protected readonly string $name,
@@ -60,27 +57,18 @@ abstract class AbstractTask implements TaskInterface
 		$this->result = new JSONResult();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return $this->name;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getDescription(): string
 	{
 		return $this->description;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setDescription(string $description): static
 	{
@@ -89,9 +77,6 @@ abstract class AbstractTask implements TaskInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function addSchedule(Schedule $schedule): static
 	{
@@ -100,9 +85,6 @@ abstract class AbstractTask implements TaskInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function schedule(): Schedule
 	{
@@ -111,18 +93,12 @@ abstract class AbstractTask implements TaskInterface
 		return $schedule;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getSchedules(): array
 	{
 		return $this->schedules;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function inBackground(): static
 	{
@@ -131,18 +107,12 @@ abstract class AbstractTask implements TaskInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function shouldRunInBackground(): bool
 	{
 		return $this->in_background;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function oneAtATime(int $timeout = 0): static
 	{
@@ -152,27 +122,18 @@ abstract class AbstractTask implements TaskInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function shouldRunOneAtATime(): bool
 	{
 		return $this->one_at_a_time;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getTimeout(): ?int
 	{
 		return $this->timeout;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function setTimeout(?int $timeout = null): static
 	{
@@ -181,9 +142,6 @@ abstract class AbstractTask implements TaskInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getResult(): JSONResult
 	{

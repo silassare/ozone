@@ -24,8 +24,6 @@ trait ExceptionWithCustomResponseTrait
 
 	/**
 	 * Gets custom response.
-	 *
-	 * @return null|Response
 	 */
 	public function getCustomResponse(): ?Response
 	{
@@ -34,8 +32,6 @@ trait ExceptionWithCustomResponseTrait
 
 	/**
 	 * Sets custom response.
-	 *
-	 * @param Response $response
 	 *
 	 * @return $this
 	 */

@@ -106,9 +106,6 @@ final class BlatePlugin implements BootHookReceiverInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{
@@ -140,8 +137,6 @@ final class BlatePlugin implements BootHookReceiverInterface
 	 * @param I18nMessage|string $key  The translation key
 	 * @param array              $data The data for interpolation
 	 * @param null|string        $lang The language to use (optional)
-	 *
-	 * @return string
 	 */
 	public static function t(I18nMessage|string $key, array $data = [], ?string $lang = null): string
 	{
@@ -167,8 +162,6 @@ final class BlatePlugin implements BootHookReceiverInterface
 	 * @param I18nMessage|string $key  The translation key
 	 * @param array              $data The data for interpolation
 	 * @param null|string        $lang The language to use (optional)
-	 *
-	 * @return string
 	 */
 	public static function tHtml(I18nMessage|string $key, array $data = [], ?string $lang = null): string
 	{
@@ -189,8 +182,6 @@ final class BlatePlugin implements BootHookReceiverInterface
 	 * Returns the current request URI.
 	 *
 	 * Shortcut for {@see Request::getUri()}.
-	 *
-	 * @return Uri
 	 */
 	public static function requestUri(): Uri
 	{
@@ -206,8 +197,6 @@ final class BlatePlugin implements BootHookReceiverInterface
 	 *
 	 * @param string $path  The path for the URI
 	 * @param array  $query The query parameters for the URI
-	 *
-	 * @return Uri
 	 */
 	public static function uri(string $path, array $query = []): Uri
 	{
@@ -224,8 +213,6 @@ final class BlatePlugin implements BootHookReceiverInterface
 	 * @param string $name   The name of the route
 	 * @param array  $params The parameters for the route
 	 * @param array  $query  The query parameters
-	 *
-	 * @return Uri
 	 */
 	public static function routeUri(string $name, array $params, array $query = []): Uri
 	{
@@ -251,15 +238,13 @@ final class BlatePlugin implements BootHookReceiverInterface
 		$route = self::route();
 		$scope = $route->getOptions()->getCSRFScope() ?? RequestScope::STATE;
 
-		return (new CSRF($ctx, $scope))->generateToken();
+		return new CSRF($ctx, $scope)->generateToken();
 	}
 
 	/**
 	 * Returns the base URL of the application.
 	 *
 	 * Shortcut for {@see Context::getBaseUrl()}.
-	 *
-	 * @return string
 	 */
 	public static function baseURL(): string
 	{
@@ -270,8 +255,6 @@ final class BlatePlugin implements BootHookReceiverInterface
 
 	/**
 	 * Gets current language.
-	 *
-	 * @return string
 	 */
 	public static function lang(): string
 	{

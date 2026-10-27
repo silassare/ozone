@@ -72,27 +72,18 @@ class TypeFile extends Type
 		parent::__construct(new TypeString());
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getInstance(array $options): static
 	{
-		return (new self())->configure($options);
+		return new self()->configure($options);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function default($default): static
 	{
@@ -130,8 +121,6 @@ class TypeFile extends Type
 
 	/**
 	 * Checks if upload is temporary.
-	 *
-	 * @return bool
 	 */
 	public function isTemporary(): bool
 	{
@@ -150,8 +139,6 @@ class TypeFile extends Type
 
 	/**
 	 * Checks if multiple file is allowed.
-	 *
-	 * @return bool
 	 */
 	public function isMultiple(): bool
 	{
@@ -175,8 +162,6 @@ class TypeFile extends Type
 	/**
 	 * Sets upload file label.
 	 *
-	 * @param string $label
-	 *
 	 * @return $this
 	 */
 	public function fileLabel(string $label): static
@@ -186,8 +171,6 @@ class TypeFile extends Type
 
 	/**
 	 * Sets minimum file size.
-	 *
-	 * @param int $min
 	 *
 	 * @return $this
 	 *
@@ -205,8 +188,6 @@ class TypeFile extends Type
 	/**
 	 * Sets maximum file size.
 	 *
-	 * @param int $max
-	 *
 	 * @return $this
 	 *
 	 * @throws TypesException
@@ -223,8 +204,6 @@ class TypeFile extends Type
 	/**
 	 * Sets minimum files count.
 	 *
-	 * @param int $min
-	 *
 	 * @return $this
 	 *
 	 * @throws TypesException
@@ -240,8 +219,6 @@ class TypeFile extends Type
 
 	/**
 	 * Sets maximum files count.
-	 *
-	 * @param int $max
 	 *
 	 * @return $this
 	 *
@@ -277,8 +254,6 @@ class TypeFile extends Type
 	/**
 	 * Converts the stored DB string back to a {@see ValidatedFile} or {@see ValidatedFile}[] instance.
 	 *
-	 * {@inheritDoc}
-	 *
 	 * @throws JsonException
 	 */
 	#[Override]
@@ -305,8 +280,6 @@ class TypeFile extends Type
 	/**
 	 * Serializes a {@see ValidatedFile} or {@see ValidatedFile}[] to the DB storage string.
 	 *
-	 * {@inheritDoc}
-	 *
 	 * @throws JsonException
 	 */
 	#[Override]
@@ -325,9 +298,6 @@ class TypeFile extends Type
 		return (string) $value;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getWriteTypeHint(): ORMTypeHint
 	{
@@ -358,8 +328,6 @@ class TypeFile extends Type
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws TypesException
 	 */
 	#[Override]
@@ -498,7 +466,6 @@ class TypeFile extends Type
 	 * file ID supplied by the user would bypass authorization checks.
 	 *
 	 * @param array<OZFile|UploadedFile|ValidatedFile> $uploaded_files
-	 * @param array                                    $debug
 	 *
 	 * @return ValidatedFile[] the validated file references
 	 *
@@ -755,10 +722,6 @@ class TypeFile extends Type
 
 	/**
 	 * Checks file count.
-	 *
-	 * @param int $total
-	 *
-	 * @return bool
 	 */
 	protected function checkFileCount(int $total): bool
 	{
@@ -775,10 +738,6 @@ class TypeFile extends Type
 
 	/**
 	 * Checks file size.
-	 *
-	 * @param int $size
-	 *
-	 * @return bool
 	 */
 	protected function checkFileSize(int $size): bool
 	{
@@ -791,10 +750,6 @@ class TypeFile extends Type
 
 	/**
 	 * Checks file mime.
-	 *
-	 * @param string $mime
-	 *
-	 * @return bool
 	 */
 	protected function checkFileMime(string $mime): bool
 	{
@@ -805,8 +760,6 @@ class TypeFile extends Type
 
 	/**
 	 * Checks uploaded file.
-	 *
-	 * @param UploadedFile $upload
 	 *
 	 * @throws TypesInvalidValueException
 	 */
@@ -843,8 +796,6 @@ class TypeFile extends Type
 
 	/**
 	 * Checks ozone file.
-	 *
-	 * @param OZFile $file
 	 *
 	 * @throws TypesInvalidValueException
 	 */

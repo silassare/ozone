@@ -34,8 +34,6 @@ final class SchemaBuilder
 	 *
 	 * @param Schema[] $properties The object properties
 	 * @param array    $options    The schema options
-	 *
-	 * @return Schema
 	 */
 	public function object(array $properties, array $options = []): Schema
 	{
@@ -67,8 +65,6 @@ final class SchemaBuilder
 	 *
 	 * @param null|Schema $item    The array items schema
 	 * @param array       $options The schema options
-	 *
-	 * @return Schema
 	 */
 	public function array(?Schema $item = null, array $options = []): Schema
 	{
@@ -83,8 +79,6 @@ final class SchemaBuilder
 	 *
 	 * @param null|string $description the schema description
 	 * @param array       $options     the schema options
-	 *
-	 * @return Schema
 	 */
 	public function integer(?string $description = null, array $options = []): Schema
 	{
@@ -96,8 +90,6 @@ final class SchemaBuilder
 	 *
 	 * @param null|string $description the schema description
 	 * @param array       $options     the schema options
-	 *
-	 * @return Schema
 	 */
 	public function string(?string $description = null, array $options = []): Schema
 	{
@@ -109,8 +101,6 @@ final class SchemaBuilder
 	 *
 	 * @param null|string $description the schema description
 	 * @param array       $options     the schema options
-	 *
-	 * @return Schema
 	 */
 	public function boolean(?string $description = null, array $options = []): Schema
 	{
@@ -123,8 +113,6 @@ final class SchemaBuilder
 	 * @param string|string[] $type        The schema type {@see Schema::$type}
 	 * @param null|string     $description The schema description
 	 * @param array           $options     The schema options
-	 *
-	 * @return Schema
 	 */
 	public function type(array|string $type, ?string $description = null, array $options = []): Schema
 	{
@@ -157,16 +145,12 @@ final class SchemaBuilder
 	/**
 	 * Create a reusable component, once, and returns a reference to it.
 	 *
-	 * @psalm-suppress PossiblyInvalidPropertyAssignmentValue
-	 *
 	 * @param string                        $kind    the component kind: `schemas`, `responses`, `parameters`,
 	 *                                               `requestBodies`, `headers`, `examples`, `links` or
 	 *                                               `securitySchemes`
 	 * @param string                        $name    the component name
 	 * @param callable():AbstractAnnotation $factory the component factory
 	 * @param array                         $options the component options
-	 *
-	 * @return Schema
 	 */
 	public function component(string $kind, string $name, callable $factory, array $options = []): Schema
 	{

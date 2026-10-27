@@ -47,9 +47,6 @@ final class FileScan implements BootHookReceiverInterface
 	public const string MODE_SYNC  = 'sync';
 	public const string MODE_ASYNC = 'async';
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{
@@ -193,7 +190,7 @@ final class FileScan implements BootHookReceiverInterface
 	 */
 	private static function saveState(OZFile $file, FileScanState $state, ?string $signature = null): void
 	{
-		$files = (new OZFilesQuery())
+		$files = new OZFilesQuery()
 			->whereStorageIs($file->getStorage())
 			->whereRefIs($file->getRef())
 			->find()

@@ -128,8 +128,7 @@ final class RequestIsolationTest extends TestCase
 
 	public function testTheErrorHandledFlagIsResetBetweenRequests(): void
 	{
-		$flag = (new ReflectionClass(BaseException::class))->getProperty('just_die');
-		$flag->setAccessible(true);
+		$flag = new ReflectionClass(BaseException::class)->getProperty('just_die');
 
 		// As a handled error leaves it: every later error would then die immediately, with no
 		// response, for the rest of the process.
@@ -157,8 +156,7 @@ final class RequestIsolationTest extends TestCase
 
 	private static function readStatic(string $name): ?Context
 	{
-		$property = (new ReflectionClass(Context::class))->getProperty($name);
-		$property->setAccessible(true);
+		$property = new ReflectionClass(Context::class)->getProperty($name);
 
 		/** @var null|Context $value */
 		return $property->getValue();
@@ -166,8 +164,7 @@ final class RequestIsolationTest extends TestCase
 
 	private static function writeStatic(string $name, ?Context $value): void
 	{
-		$property = (new ReflectionClass(Context::class))->getProperty($name);
-		$property->setAccessible(true);
+		$property = new ReflectionClass(Context::class)->getProperty($name);
 		$property->setValue(null, $value);
 	}
 }

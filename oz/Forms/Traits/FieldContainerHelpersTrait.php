@@ -54,11 +54,6 @@ trait FieldContainerHelpersTrait
 {
 	/**
 	 * Creates a new field of type string.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function string(string $name, bool $required = false): Field
 	{
@@ -67,11 +62,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type bigint.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function bigint(string $name, bool $required = false): Field
 	{
@@ -80,11 +70,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type int.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function int(string $name, bool $required = false): Field
 	{
@@ -93,11 +78,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type decimal.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function decimal(string $name, bool $required = false): Field
 	{
@@ -106,11 +86,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type float.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function float(string $name, bool $required = false): Field
 	{
@@ -120,11 +95,7 @@ trait FieldContainerHelpersTrait
 	/**
 	 * Creates a new field of type enum.
 	 *
-	 * @param string                   $name
 	 * @param class-string<BackedEnum> $enum_class
-	 * @param bool                     $required
-	 *
-	 * @return Field
 	 *
 	 * @throws TypesException
 	 */
@@ -135,11 +106,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type bool.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function bool(string $name, bool $required = false): Field
 	{
@@ -148,11 +114,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type date.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function date(string $name, bool $required = false): Field
 	{
@@ -161,24 +122,14 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type date formatted as timestamp.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function timestamp(string $name, bool $required = false): Field
 	{
-		return $this->withType($name, (new TypeDate())->format('timestamp'), $required);
+		return $this->withType($name, new TypeDate()->format('timestamp'), $required);
 	}
 
 	/**
 	 * Creates a new field of type list.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function list(string $name, bool $required = false): Field
 	{
@@ -187,11 +138,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type map.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function map(string $name, bool $required = false): Field
 	{
@@ -200,11 +146,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type json.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function json(string $name, bool $required = false): Field
 	{
@@ -213,11 +154,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type switcher.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function switcher(string $name, bool $required = false): Field
 	{
@@ -226,11 +162,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type cc2.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function cc2(string $name, bool $required = false): Field
 	{
@@ -239,11 +170,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type email.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function email(string $name, bool $required = false): Field
 	{
@@ -252,11 +178,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type file.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function file(string $name, bool $required = false): Field
 	{
@@ -265,11 +186,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type gender.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function gender(string $name, bool $required = false): Field
 	{
@@ -278,11 +194,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type phone.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function phone(string $name, bool $required = false): Field
 	{
@@ -291,11 +202,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type password.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function password(string $name, bool $required = false): Field
 	{
@@ -304,11 +210,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type url.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function url(string $name, bool $required = false): Field
 	{
@@ -317,11 +218,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Creates a new field of type user name.
-	 *
-	 * @param string $name
-	 * @param bool   $required
-	 *
-	 * @return Field
 	 */
 	public function username(string $name, bool $required = false): Field
 	{
@@ -330,12 +226,6 @@ trait FieldContainerHelpersTrait
 
 	/**
 	 * Helper method to create a field with a given type and required flag.
-	 *
-	 * @param string                      $name
-	 * @param TypeInterface|TypesSwitcher $type
-	 * @param bool                        $required
-	 *
-	 * @return Field
 	 */
 	private function withType(
 		string $name,

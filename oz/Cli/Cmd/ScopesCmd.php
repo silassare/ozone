@@ -32,9 +32,7 @@ final class ScopesCmd extends Command
 	/**
 	 * Adds new scope.
 	 *
-	 * @param Kli          $cli
-	 * @param FilesManager $fm
-	 * @param array        $options keys: api (bool), name, origin, project_name, namespace, app_class
+	 * @param array $options keys: api (bool), name, origin, project_name, namespace, app_class
 	 */
 	public static function addScope(
 		Kli $cli,
@@ -177,9 +175,6 @@ final class ScopesCmd extends Command
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{
@@ -220,26 +215,17 @@ final class ScopesCmd extends Command
 
 	/**
 	 * Whether a directory holds nothing.
-	 *
-	 * @param string $dir
-	 *
-	 * @return bool
 	 */
 	private static function isEmptyDir(string $dir): bool
 	{
-		foreach (\scandir($dir) ?: [] as $entry) {
-			if ('.' !== $entry && '..' !== $entry) {
-				return false;
-			}
-		}
-
-		return true;
+		return \array_all(
+			\scandir($dir) ?: [],
+			static fn (string $entry): bool => '.' === $entry || '..' === $entry
+		);
 	}
 
 	/**
 	 * Adds new scope.
-	 *
-	 * @param KliArgs $args
 	 */
 	private function add(KliArgs $args): void
 	{

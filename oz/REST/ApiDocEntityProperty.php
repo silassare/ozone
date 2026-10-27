@@ -19,9 +19,6 @@ class ApiDocEntityProperty
 {
 	/**
 	 * ApiDocEntityProperty constructor.
-	 *
-	 * @param string        $name
-	 * @param TypeInterface $type
 	 */
 	public function __construct(public string $name, public TypeInterface $type) {}
 }

@@ -39,36 +39,24 @@ final class CurlTransport implements S3TransportInterface
 	 */
 	public const EXPECT_CONTINUE_SIZE = 1 << 20;
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return 'curl';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function isSupported(): bool
 	{
 		return \extension_loaded('curl') && \function_exists('curl_init');
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function streamsRequestBody(): bool
 	{
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function send(S3Request $request): S3Response
 	{

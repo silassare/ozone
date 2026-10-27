@@ -23,8 +23,6 @@ interface RouteInterceptorInterface
 {
 	/**
 	 * Gets the name of the interceptor.
-	 *
-	 * @return string
 	 */
 	public static function getName(): string;
 
@@ -32,8 +30,6 @@ interface RouteInterceptorInterface
 	 * Gets the priority of the interceptor.
 	 *
 	 * Interceptors with higher priority run first.
-	 *
-	 * @return int
 	 */
 	public static function getPriority(): int;
 
@@ -44,8 +40,6 @@ interface RouteInterceptorInterface
 
 	/**
 	 * Handles the request. Called only if `shouldIntercept()` returns true.
-	 *
-	 * @return Response
 	 */
 	public function handle(): Response;
 
@@ -53,8 +47,6 @@ interface RouteInterceptorInterface
 	 * Creates an instance of the interceptor from the given route info.
 	 *
 	 * @param RouteInfo $ri the route info object
-	 *
-	 * @return static
 	 */
 	public static function instance(RouteInfo $ri): static;
 }

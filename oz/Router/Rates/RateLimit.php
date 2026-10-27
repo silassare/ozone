@@ -36,36 +36,24 @@ class RateLimit implements RouteRateLimitInterface
 		protected readonly int $weight = 1
 	) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function key(): string
 	{
 		return $this->key;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function interval(): int
 	{
 		return $this->interval;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function rate(): int
 	{
 		return $this->rate;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function weight(): int
 	{

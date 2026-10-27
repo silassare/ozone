@@ -103,7 +103,6 @@ final class OZTestProjectLockTest extends TestCase
 		$class = new ReflectionClass(OZTestProject::class);
 		$prop  = $class->getProperty('stubs_dir');
 
-		$prop->setAccessible(true);
 		$previous = $prop->getValue();
 
 		try {
@@ -134,8 +133,6 @@ final class OZTestProjectLockTest extends TestCase
 	private static function lockedPackages(string $root_dir): array
 	{
 		$method = new ReflectionMethod(OZTestProject::class, 'lockedPackages');
-
-		$method->setAccessible(true);
 
 		/** @var array<string, array{0: string, 1: null|string}> */
 		return $method->invoke(null, $root_dir);

@@ -23,7 +23,7 @@ require __DIR__ . '/app/boot.php';
 
 OZone::bootstrap(require __DIR__ . '/app/app.php');
 
-$user = (new OZUsersQuery())->whereEmailIs('__PLH_EMAIL__')->find()->fetchClass();
+$user = new OZUsersQuery()->whereEmailIs('__PLH_EMAIL__')->find()->fetchClass();
 
 if (null === $user) {
 	\fwrite(\STDERR, 'No user with this email.');

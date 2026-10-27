@@ -26,8 +26,6 @@ class StatefulAuthenticationMethodStore extends Store
 {
 	/**
 	 * StatefulAuthenticationMethodStore constructor.
-	 *
-	 * @param array $state
 	 */
 	private function __construct(array $state)
 	{
@@ -45,8 +43,6 @@ class StatefulAuthenticationMethodStore extends Store
 	/**
 	 * Gets previous user.
 	 *
-	 * @return null|AuthUserInterface
-	 *
 	 * @internal
 	 */
 	public function getPreviousUser(): ?AuthUserInterface
@@ -63,8 +59,6 @@ class StatefulAuthenticationMethodStore extends Store
 	/**
 	 * Sets previous user.
 	 *
-	 * @param AuthUserInterface $user
-	 *
 	 * @internal
 	 */
 	public function setPreviousUser(AuthUserInterface $user): static
@@ -76,8 +70,6 @@ class StatefulAuthenticationMethodStore extends Store
 	 * Gets the user held pending 2FA verification.
 	 *
 	 * Returns null when there is no pending 2FA user in the current session.
-	 *
-	 * @return null|AuthUserInterface
 	 *
 	 * @internal
 	 */
@@ -94,8 +86,6 @@ class StatefulAuthenticationMethodStore extends Store
 
 	/**
 	 * Stores the user that must complete 2FA before being fully attached to the session.
-	 *
-	 * @param AuthUserInterface $user
 	 *
 	 * @internal
 	 */

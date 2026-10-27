@@ -26,18 +26,12 @@ use OZONE\Core\Auth\TwoFactor\TwoFactorChannelInterface;
  */
 final class TotpChannel implements TwoFactorChannelInterface
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return 'totp';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isAvailableFor(AuthUserInterface $user): bool
 	{

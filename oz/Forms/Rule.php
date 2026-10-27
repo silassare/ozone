@@ -73,8 +73,6 @@ final class Rule implements ArrayCapableInterface
 	 *
 	 * @param Store                 $data the operand source selected by the owning rule set
 	 * @param FormValidationContext $ctx  full context, handed to {@see AsyncValue} factories
-	 *
-	 * @return bool
 	 */
 	public function evaluate(Store $data, FormValidationContext $ctx): bool
 	{
@@ -166,12 +164,6 @@ final class Rule implements ArrayCapableInterface
 	 */
 	private static function contains(array $list, mixed $a): bool
 	{
-		foreach ($list as $item) {
-			if (self::same($a, $item)) {
-				return true;
-			}
-		}
-
-		return false;
+		return \array_any($list, static fn (mixed $item): bool => self::same($a, $item));
 	}
 }

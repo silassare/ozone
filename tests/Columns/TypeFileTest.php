@@ -67,7 +67,7 @@ final class TypeFileTest extends TestCase
 
 	public function testDbToPhpTempStringReturnsTemporary(): void
 	{
-		$type = (new TypeFile())->temp();
+		$type = new TypeFile()->temp();
 		$vf   = $type->dbToPhp('/tmp/some/file.jpg', $this->rdbms);
 		self::assertInstanceOf(ValidatedFile::class, $vf);
 		self::assertTrue($vf->isTemporary());
@@ -76,7 +76,7 @@ final class TypeFileTest extends TestCase
 
 	public function testDbToPhpMultipleJsonReturnsArray(): void
 	{
-		$type   = (new TypeFile())->multiple();
+		$type   = new TypeFile()->multiple();
 		$result = $type->dbToPhp('["1","2","3"]', $this->rdbms);
 		self::assertIsArray($result);
 		self::assertCount(3, $result);
@@ -90,13 +90,13 @@ final class TypeFileTest extends TestCase
 
 	public function testDbToPhpMultipleNullReturnsNull(): void
 	{
-		$type = (new TypeFile())->multiple()->nullable();
+		$type = new TypeFile()->multiple()->nullable();
 		self::assertNull($type->dbToPhp(null, $this->rdbms));
 	}
 
 	public function testPhpToDbNullReturnsNull(): void
 	{
-		$type = (new TypeFile())->nullable();
+		$type = new TypeFile()->nullable();
 		self::assertNull($type->phpToDb(null, $this->rdbms));
 	}
 
@@ -109,14 +109,14 @@ final class TypeFileTest extends TestCase
 
 	public function testPhpToDbTempReturnsPath(): void
 	{
-		$type = (new TypeFile())->temp();
+		$type = new TypeFile()->temp();
 		$vf   = ValidatedFile::forTempPath('/tmp/xyz.jpg');
 		self::assertSame('/tmp/xyz.jpg', $type->phpToDb($vf, $this->rdbms));
 	}
 
 	public function testPhpToDbMultipleReturnsJson(): void
 	{
-		$type = (new TypeFile())->multiple();
+		$type = new TypeFile()->multiple();
 		$vfs  = [
 			ValidatedFile::forFileID('1'),
 			ValidatedFile::forFileID('2'),
@@ -130,26 +130,26 @@ final class TypeFileTest extends TestCase
 		$this->expectException(TypesInvalidValueException::class);
 		// A bare numeric string (e.g. a file ID from user input) must be
 		// rejected to prevent IDOR.
-		(new TypeFile())->validate('42');
+		new TypeFile()->validate('42');
 	}
 
 	public function testValidateRejectsInteger(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeFile())->validate(42);
+		new TypeFile()->validate(42);
 	}
 
 	public function testValidateRejectsPlainArray(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
 		// A plain array of IDs should be rejected.
-		(new TypeFile())->multiple()->validate(['1', '2']);
+		new TypeFile()->multiple()->validate(['1', '2']);
 	}
 
 	public function testValidateAcceptsValidatedFilePassthrough(): void
 	{
 		$vf    = ValidatedFile::forFileID('7');
-		$clean = (new TypeFile())->validate($vf)->getCleanValue();
+		$clean = new TypeFile()->validate($vf)->getCleanValue();
 		self::assertSame($vf, $clean);
 	}
 
@@ -157,7 +157,7 @@ final class TypeFileTest extends TestCase
 	{
 		$vf1   = ValidatedFile::forFileID('1');
 		$vf2   = ValidatedFile::forFileID('2');
-		$type  = (new TypeFile())->multiple();
+		$type  = new TypeFile()->multiple();
 		$clean = $type->validate([$vf1, $vf2])->getCleanValue();
 		self::assertIsArray($clean);
 		self::assertCount(2, $clean);
@@ -171,7 +171,7 @@ final class TypeFileTest extends TestCase
 		$this->tmpFiles[] = $path;
 		$vf               = ValidatedFile::forTempPath($path);
 
-		self::assertSame($vf, (new TypeFile())->temp()->validate($vf)->getCleanValue());
+		self::assertSame($vf, new TypeFile()->temp()->validate($vf)->getCleanValue());
 	}
 
 	public function testValidateRejectsTemporaryFileThatNoLongerExists(): void
@@ -179,12 +179,12 @@ final class TypeFileTest extends TestCase
 		// e.g. replayed from a resume cache that outlived its TempFS lifetime.
 		$this->expectException(TypesInvalidValueException::class);
 
-		(new TypeFile())->temp()->validate(ValidatedFile::forTempPath(\sys_get_temp_dir() . '/oz_tf_gone_' . \uniqid()));
+		new TypeFile()->temp()->validate(ValidatedFile::forTempPath(\sys_get_temp_dir() . '/oz_tf_gone_' . \uniqid()));
 	}
 
 	public function testValidateNullableAcceptsNull(): void
 	{
-		$type  = (new TypeFile())->nullable();
+		$type  = new TypeFile()->nullable();
 		$clean = $type->validate(null)->getCleanValue();
 		self::assertNull($clean);
 	}
@@ -208,7 +208,7 @@ final class TypeFileTest extends TestCase
 		);
 
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeFile())->temp()->validate($upload);
+		new TypeFile()->temp()->validate($upload);
 	}
 
 	public function testOversizedAliasRejected(): void
@@ -229,7 +229,7 @@ final class TypeFileTest extends TestCase
 		);
 
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeFile())->validate($upload);
+		new TypeFile()->validate($upload);
 	}
 
 	public function testAliasWithInvalidJsonRejected(): void
@@ -250,7 +250,7 @@ final class TypeFileTest extends TestCase
 		);
 
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeFile())->validate($upload);
+		new TypeFile()->validate($upload);
 	}
 
 	public function testAliasWithMissingFieldsRejected(): void
@@ -270,7 +270,7 @@ final class TypeFileTest extends TestCase
 		);
 
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeFile())->validate($upload);
+		new TypeFile()->validate($upload);
 	}
 
 	public function testAliasWithNonexistentFileIdRejected(): void
@@ -288,7 +288,7 @@ final class TypeFileTest extends TestCase
 		);
 
 		$this->expectException(TypesInvalidValueException::class);
-		(new TypeFile())->validate($upload);
+		new TypeFile()->validate($upload);
 	}
 
 	public function testNonAliasExtensionWithAliasMimeBypassesAliasPath(): void
@@ -321,9 +321,6 @@ final class TypeFileTest extends TestCase
 	/**
 	 * Creates a real temp file containing a JSON alias descriptor and registers
 	 * it for tearDown cleanup.
-	 *
-	 * @param string $file_id
-	 * @param string $file_key
 	 *
 	 * @return string absolute path to the created file
 	 */

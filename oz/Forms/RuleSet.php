@@ -123,8 +123,6 @@ class RuleSet implements ArrayCapableInterface
 	 * @param RuleSetDataType  $data_type UNSAFE or CLEANED
 	 * @param string           $ref       stable reference within the form definition
 	 *
-	 * @return static
-	 *
 	 * @internal not intended for use in application or plugin code
 	 */
 	public static function create(RuleSetCondition $condition, RuleSetDataType $data_type, string $ref = ''): static
@@ -149,9 +147,7 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must equal $value.
 	 *
-	 * @param Field|string                                                            $field
 	 * @param null|AsyncValue<null|bool|float|int|string>|bool|Field|float|int|string $value
-	 * @param null|I18nMessage|string                                                 $message
 	 *
 	 * @return $this
 	 */
@@ -166,9 +162,7 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must not equal $value.
 	 *
-	 * @param Field|string                                                            $field
 	 * @param null|AsyncValue<null|bool|float|int|string>|bool|Field|float|int|string $value
-	 * @param null|I18nMessage|string                                                 $message
 	 *
 	 * @return $this
 	 */
@@ -183,9 +177,7 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must be greater than $value.
 	 *
-	 * @param Field|string                                        $field
 	 * @param AsyncValue<float|int|string>|Field|float|int|string $value
-	 * @param null|I18nMessage|string                             $message
 	 *
 	 * @return $this
 	 */
@@ -200,9 +192,7 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must be greater than or equal to $value.
 	 *
-	 * @param Field|string                                        $field
 	 * @param AsyncValue<float|int|string>|Field|float|int|string $value
-	 * @param null|I18nMessage|string                             $message
 	 *
 	 * @return $this
 	 */
@@ -217,9 +207,7 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must be less than $value.
 	 *
-	 * @param Field|string                                        $field
 	 * @param AsyncValue<float|int|string>|Field|float|int|string $value
-	 * @param null|I18nMessage|string                             $message
 	 *
 	 * @return $this
 	 */
@@ -234,9 +222,7 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must be less than or equal to $value.
 	 *
-	 * @param Field|string                                        $field
 	 * @param AsyncValue<float|int|string>|Field|float|int|string $value
-	 * @param null|I18nMessage|string                             $message
 	 *
 	 * @return $this
 	 */
@@ -251,9 +237,7 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must be in $value.
 	 *
-	 * @param Field|string                  $field
 	 * @param array|AsyncValue<array>|Field $value
-	 * @param null|I18nMessage|string       $message
 	 *
 	 * @return $this
 	 */
@@ -268,9 +252,7 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must not be in $value.
 	 *
-	 * @param Field|string                  $field
 	 * @param array|AsyncValue<array>|Field $value
-	 * @param null|I18nMessage|string       $message
 	 *
 	 * @return $this
 	 */
@@ -285,9 +267,6 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Adds a rule: field value must be null (or absent).
 	 *
-	 * @param Field|string            $field
-	 * @param null|I18nMessage|string $message
-	 *
 	 * @return $this
 	 */
 	public function isNull(
@@ -299,9 +278,6 @@ class RuleSet implements ArrayCapableInterface
 
 	/**
 	 * Adds a rule: field value must not be null (and must be present).
-	 *
-	 * @param Field|string            $field
-	 * @param null|I18nMessage|string $message
 	 *
 	 * @return $this
 	 */
@@ -356,8 +332,6 @@ class RuleSet implements ArrayCapableInterface
 	 * The operand source is selected from the context by this rule set's own
 	 * {@see RuleSetDataType}, so a CLEANED rule set can never read raw input.
 	 *
-	 * @param FormValidationContext $ctx
-	 *
 	 * @return bool true when all conditions pass, false otherwise
 	 */
 	public function check(FormValidationContext $ctx): bool
@@ -367,13 +341,10 @@ class RuleSet implements ArrayCapableInterface
 		$this->t_violation = null;
 
 		if (RuleSetCondition::AND === $this->t_condition) {
-			foreach ($this->t_children as $child) {
-				if (!$this->evaluateChild($child, $ctx, $data)) {
-					return false;
-				}
-			}
-
-			return true;
+			return \array_all(
+				$this->t_children,
+				fn (mixed $child): bool => $this->evaluateChild($child, $ctx, $data)
+			);
 		}
 
 		// OR: pass on first match
@@ -397,8 +368,6 @@ class RuleSet implements ArrayCapableInterface
 	 * Gets the violation recorded by the last call to {@see self::check()}.
 	 *
 	 * Returns null when the last check passed or when no check has been run yet.
-	 *
-	 * @return null|RuleViolation
 	 */
 	public function getViolation(): ?RuleViolation
 	{
@@ -407,8 +376,6 @@ class RuleSet implements ArrayCapableInterface
 
 	/**
 	 * Gets the message from the last recorded violation, if any.
-	 *
-	 * @return null|I18nMessage|string
 	 */
 	public function getViolationMessage(): I18nMessage|string|null
 	{
@@ -420,8 +387,6 @@ class RuleSet implements ArrayCapableInterface
 	 * a {@see Rule} that must be evaluated server-side only.
 	 *
 	 * Server-only rule sets serialize to `['ref' => ..., '$secret' => true]` in {@see toArray()}.
-	 *
-	 * @return bool
 	 */
 	public function isServerOnly(): bool
 	{
@@ -440,8 +405,6 @@ class RuleSet implements ArrayCapableInterface
 
 	/**
 	 * Gets the condition (AND or OR) used to combine children.
-	 *
-	 * @return RuleSetCondition
 	 */
 	public function getCondition(): RuleSetCondition
 	{
@@ -553,8 +516,6 @@ class RuleSet implements ArrayCapableInterface
 	 *   'rules'     => [ <Rule::toArray()>|<RuleSet::toArray()>, ... ],
 	 * ]
 	 * ```
-	 *
-	 * @return array
 	 */
 	#[Override]
 	public function toArray(): array
@@ -593,10 +554,9 @@ class RuleSet implements ArrayCapableInterface
 	 * Builds a {@see Rule} child from a field, operator, value and message, then appends it
 	 * to the children list.
 	 *
-	 * @param Field|string            $field    the field ref or instance
-	 * @param RuleOperator            $operator
-	 * @param mixed                   $value    the right-hand operand (scalar, AsyncValue, or Field for cross-field)
-	 * @param null|I18nMessage|string $message  optional failure message
+	 * @param Field|string            $field   the field ref or instance
+	 * @param mixed                   $value   the right-hand operand (scalar, AsyncValue, or Field for cross-field)
+	 * @param null|I18nMessage|string $message optional failure message
 	 *
 	 * @return $this
 	 */
@@ -629,12 +589,8 @@ class RuleSet implements ArrayCapableInterface
 	/**
 	 * Evaluates a single child (Rule or RuleSet), recording any violation.
 	 *
-	 * @param Rule|RuleSet          $child
-	 * @param FormValidationContext $ctx
-	 * @param Store                 $data            this rule set's own operand source
-	 * @param bool                  $reset_violation whether to reset $t_violation before evaluating (used in OR loops)
-	 *
-	 * @return bool
+	 * @param Store $data            this rule set's own operand source
+	 * @param bool  $reset_violation whether to reset $t_violation before evaluating (used in OR loops)
 	 */
 	private function evaluateChild(
 		Rule|self $child,

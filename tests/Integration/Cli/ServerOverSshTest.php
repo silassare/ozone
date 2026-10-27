@@ -72,7 +72,7 @@ final class ServerOverSshTest extends TestCase
 
 		\mkdir(self::$dir, 0o700, true);
 
-		(new Process(['ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-f', self::$dir . '/id']))->mustRun();
+		new Process(['ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-f', self::$dir . '/id'])->mustRun();
 
 		\putenv('OZ_SSH_COMMAND=' . self::sshCommand());
 	}
@@ -86,7 +86,7 @@ final class ServerOverSshTest extends TestCase
 		self::$ports = [];
 
 		\putenv('OZ_SSH_COMMAND');
-		(new Process(['rm', '-rf', self::$dir]))->run();
+		new Process(['rm', '-rf', self::$dir])->run();
 
 		parent::tearDownAfterClass();
 	}
@@ -337,6 +337,6 @@ final class ServerOverSshTest extends TestCase
 
 	private static function available(string $tool): bool
 	{
-		return 0 === (new Process(['sh', '-c', 'command -v ' . \escapeshellarg($tool)]))->run();
+		return 0 === new Process(['sh', '-c', 'command -v ' . \escapeshellarg($tool)])->run();
 	}
 }

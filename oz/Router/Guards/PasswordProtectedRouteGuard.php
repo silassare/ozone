@@ -41,9 +41,6 @@ final class PasswordProtectedRouteGuard extends AbstractRouteGuard
 		$this->password_hash = $is_hashed_password ? $password : Password::hash($password);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toRules(): array
 	{
@@ -52,9 +49,6 @@ final class PasswordProtectedRouteGuard extends AbstractRouteGuard
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function fromRules(array $rules): static
 	{
@@ -62,8 +56,6 @@ final class PasswordProtectedRouteGuard extends AbstractRouteGuard
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws InvalidFormException
 	 * @throws UnauthorizedException
 	 * @throws ForbiddenException

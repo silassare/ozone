@@ -30,11 +30,6 @@ class TypeUtils
 {
 	/**
 	 * Returns a birth date field.
-	 *
-	 * @param int $min_age
-	 * @param int $max_age
-	 *
-	 * @return Type
 	 */
 	public static function birthDate(int $min_age, int $max_age): Type
 	{
@@ -55,8 +50,6 @@ class TypeUtils
 
 	/**
 	 * Creates a auth user username type.
-	 *
-	 * @return TypeUsername
 	 */
 	public static function authUserName(): TypeUsername
 	{
@@ -68,8 +61,6 @@ class TypeUtils
 
 	/**
 	 * Creates a auth user phone type.
-	 *
-	 * @return TypePhone
 	 */
 	public static function authUserPhone(): TypePhone
 	{
@@ -82,8 +73,6 @@ class TypeUtils
 
 	/**
 	 * Creates a auth user email type.
-	 *
-	 * @return TypeEmail
 	 */
 	public static function authUserEmail(): TypeEmail
 	{
@@ -97,12 +86,10 @@ class TypeUtils
 	 * Returns a morph any id field type.
 	 * This is used to store the id of any morphed model.
 	 *
-	 * @return TypeString
-	 *
 	 * @throws TypesException
 	 */
 	public static function morphAnyId(): TypeString
 	{
-		return (new TypeString())->max(128);
+		return new TypeString()->max(128);
 	}
 }

@@ -23,9 +23,6 @@ interface AuthenticationMethodInterface
 {
 	/**
 	 * This should return a new instance.
-	 *
-	 * @param RouteInfo $ri
-	 * @param string    $realm
 	 */
 	public static function get(RouteInfo $ri, string $realm): static;
 
@@ -34,8 +31,6 @@ interface AuthenticationMethodInterface
 	 *
 	 * This is not supposed to check the validity
 	 * of the data provided by the client.
-	 *
-	 * @return bool
 	 */
 	public function satisfied(): bool;
 
@@ -52,8 +47,6 @@ interface AuthenticationMethodInterface
 	 * Will be called after {@link AuthenticationMethodInterface::authenticate()}
 	 * and should return an instance of {@link AuthUserInterface}
 	 * or throw an exception if no user was authenticated.
-	 *
-	 * @return AuthUserInterface
 	 */
 	public function user(): AuthUserInterface;
 
@@ -62,8 +55,6 @@ interface AuthenticationMethodInterface
 	 *
 	 * As a user may generate multiple tokens with different access rights.
 	 * This is useful to override the default access rights of the user depending on the token used.
-	 *
-	 * @return AccessRightsInterface
 	 */
 	public function getAccessRights(): AccessRightsInterface;
 
@@ -76,8 +67,6 @@ interface AuthenticationMethodInterface
 	 * Examples:
 	 *      - Session based authentication is not scoped, the user has full access rights.
 	 *      - But token based authentication may be scoped, the access rights may depend on the token used.
-	 *
-	 * @return bool
 	 */
 	public function isScoped(): bool;
 

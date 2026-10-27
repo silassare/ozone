@@ -30,10 +30,6 @@ final class DateTimeUtils
 
 	/**
 	 * Return a DateTimeUtils representing the current moment.
-	 *
-	 * @param null|DateTimeZone|string $timezone
-	 *
-	 * @return static
 	 */
 	public static function now(DateTimeZone|string|null $timezone = null): static
 	{
@@ -42,11 +38,6 @@ final class DateTimeUtils
 
 	/**
 	 * Parse a date/time string into a DateTimeUtils instance.
-	 *
-	 * @param string                   $time
-	 * @param null|DateTimeZone|string $timezone
-	 *
-	 * @return static
 	 */
 	public static function parse(string $time, DateTimeZone|string|null $timezone = null): static
 	{
@@ -58,8 +49,6 @@ final class DateTimeUtils
 
 	/**
 	 * Get the day of the month (1-31).
-	 *
-	 * @return int
 	 */
 	public function getDay(): int
 	{
@@ -68,8 +57,6 @@ final class DateTimeUtils
 
 	/**
 	 * Return a new instance pointing to the last day of the current month.
-	 *
-	 * @return static
 	 */
 	public function endOfMonth(): static
 	{
@@ -85,8 +72,6 @@ final class DateTimeUtils
 
 	/**
 	 * Return a new instance one day in the future.
-	 *
-	 * @return static
 	 */
 	public function addDay(): static
 	{
@@ -95,8 +80,6 @@ final class DateTimeUtils
 
 	/**
 	 * Return a new instance one day in the past.
-	 *
-	 * @return static
 	 */
 	public function subDay(): static
 	{
@@ -107,8 +90,6 @@ final class DateTimeUtils
 	 * Check whether this instance is strictly before another.
 	 *
 	 * @param static $other
-	 *
-	 * @return bool
 	 */
 	public function lessThan(self $other): bool
 	{
@@ -119,8 +100,6 @@ final class DateTimeUtils
 	 * Check whether this instance is strictly after another.
 	 *
 	 * @param static $other
-	 *
-	 * @return bool
 	 */
 	public function greaterThan(self $other): bool
 	{
@@ -132,8 +111,6 @@ final class DateTimeUtils
 	 *
 	 * @param static $start
 	 * @param static $end
-	 *
-	 * @return bool
 	 */
 	public function between(self $start, self $end): bool
 	{
@@ -142,10 +119,6 @@ final class DateTimeUtils
 
 	/**
 	 * Resolve a timezone argument to a DateTimeZone instance.
-	 *
-	 * @param null|DateTimeZone|string $timezone
-	 *
-	 * @return DateTimeZone
 	 */
 	private static function resolveTimezone(DateTimeZone|string|null $timezone): DateTimeZone
 	{

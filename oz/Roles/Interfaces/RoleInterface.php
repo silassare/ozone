@@ -24,8 +24,6 @@ interface RoleInterface extends BackedEnum
 	 * Gets the role weight.
 	 *
 	 * The weight is used to determine the privilege level of the role.
-	 *
-	 * @return int
 	 */
 	public function weight(): int;
 

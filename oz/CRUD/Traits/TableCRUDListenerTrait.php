@@ -42,146 +42,80 @@ use Gobl\ORM\ORMEntity;
  */
 trait TableCRUDListenerTrait
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeCreate(BeforeCreate $action): bool
 	{
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeCreateFlush(BeforeCreateFlush $action): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeRead(BeforeRead $action): bool
 	{
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeReadAll(BeforeReadAll $action): bool
 	{
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeUpdate(BeforeUpdate $action): bool
 	{
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeUpdateFlush(BeforeUpdateFlush $action): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeUpdateAll(BeforeUpdateAll $action): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeUpdateAllFlush(BeforeUpdateAllFlush $action): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeDelete(BeforeDelete $action): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeDeleteFlush(BeforeDeleteFlush $action): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeDeleteAll(BeforeDeleteAll $action): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeDeleteAllFlush(BeforeDeleteAllFlush $action): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeColumnUpdate(BeforeColumnUpdate $action): bool
 	{
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforePKColumnWrite(BeforePKColumnWrite $action): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforePrivateColumnWrite(BeforePrivateColumnWrite $action): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeSensitiveColumnWrite(BeforeSensitiveColumnWrite $action): bool
 	{
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onAfterEntityRead(ORMEntity $entity, AfterEntityRead $event): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeEntityUpdate(ORMEntity $entity, BeforeEntityUpdate $event): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onAfterEntityUpdate(ORMEntity $entity, AfterEntityUpdate $event): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onBeforeEntityDeletion(ORMEntity $entity, BeforeEntityDeletion $event): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onAfterEntityDeletion(ORMEntity $entity, AfterEntityDeletion $event): void {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function onAfterEntityCreation(ORMEntity $entity, AfterEntityCreation $event): void {}
 }

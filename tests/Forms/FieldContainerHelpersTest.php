@@ -75,12 +75,12 @@ final class FieldContainerHelpersTest extends TestCase
 	{
 		$this->expectException(TypeError::class);
 
-		(new Form())->int('age')->configureType(static fn (TypeString $t) => $t);
+		new Form()->int('age')->configureType(static fn (TypeString $t) => $t);
 	}
 
 	public function testConfigureTypeReachesTypesSwitcher(): void
 	{
-		$field = (new Form())->switcher('doc')
+		$field = new Form()->switcher('doc')
 			->configureType(static fn (TypesSwitcher $s) => $s->otherwise(new TypeString()));
 
 		self::assertInstanceOf(TypesSwitcher::class, $field->getType());
@@ -88,7 +88,7 @@ final class FieldContainerHelpersTest extends TestCase
 
 	public function testTimestampHelperSetsTimestampFormat(): void
 	{
-		$type = (new Form())->timestamp('at')->getType();
+		$type = new Form()->timestamp('at')->getType();
 
 		self::assertInstanceOf(TypeDate::class, $type);
 		self::assertSame('timestamp', $type->getOption('format'));

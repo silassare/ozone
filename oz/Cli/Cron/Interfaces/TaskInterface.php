@@ -23,29 +23,21 @@ interface TaskInterface
 {
 	/**
 	 * Get task name.
-	 *
-	 * @return string
 	 */
 	public function getName(): string;
 
 	/**
 	 * Get task description.
-	 *
-	 * @return string
 	 */
 	public function getDescription(): string;
 
 	/**
 	 * Set task description.
-	 *
-	 * @param string $description
 	 */
 	public function setDescription(string $description): static;
 
 	/**
 	 * Add a schedule to the task.
-	 *
-	 * @param Schedule $schedule
 	 */
 	public function addSchedule(Schedule $schedule): static;
 
@@ -53,8 +45,6 @@ interface TaskInterface
 	 * Create a new schedule.
 	 *
 	 * This is a shortcut to {@link addSchedule()}.
-	 *
-	 * @return Schedule
 	 */
 	public function schedule(): Schedule;
 
@@ -72,8 +62,6 @@ interface TaskInterface
 
 	/**
 	 * Get the task result.
-	 *
-	 * @return JSONResult
 	 */
 	public function getResult(): JSONResult;
 
@@ -96,15 +84,11 @@ interface TaskInterface
 
 	/**
 	 * Gets the task timeout in seconds.
-	 *
-	 * @return null|int
 	 */
 	public function getTimeout(): ?int;
 
 	/**
 	 * Sets the task timeout in seconds.
-	 *
-	 * @param null|int $timeout
 	 */
 	public function setTimeout(?int $timeout = null): static;
 

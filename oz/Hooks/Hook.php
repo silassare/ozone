@@ -23,8 +23,6 @@ class Hook extends Event
 {
 	/**
 	 * Hook constructor.
-	 *
-	 * @param Context $context
 	 */
 	public function __construct(public readonly Context $context) {}
 }

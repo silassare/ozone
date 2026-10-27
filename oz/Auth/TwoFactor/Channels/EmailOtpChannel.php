@@ -25,18 +25,12 @@ use OZONE\Core\Auth\TwoFactor\TwoFactorChannelInterface;
  */
 final class EmailOtpChannel implements TwoFactorChannelInterface
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function getName(): string
 	{
 		return 'email';
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isAvailableFor(AuthUserInterface $user): bool
 	{

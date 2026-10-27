@@ -90,10 +90,7 @@ final class FormResumeProgress extends Store
 	 * Keys starting with `_` are reserved for the framework and will throw.
 	 * Use {@see self::setPhase()} and {@see self::setStepIndex()} for framework keys.
 	 *
-	 * @param string $key   must not start with `_`
-	 * @param mixed  $value
-	 *
-	 * @return static
+	 * @param string $key must not start with `_`
 	 */
 	#[Override]
 	public function set(string $key, mixed $value): static

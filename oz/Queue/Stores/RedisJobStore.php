@@ -83,18 +83,12 @@ class RedisJobStore implements JobStoreInterface
 
 	private ?PhpRedis $redis = null;
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getName(): string
 	{
 		return self::NAME;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function get(string $ref): ?JobContractInterface
 	{
@@ -107,9 +101,6 @@ class RedisJobStore implements JobStoreInterface
 		return $this->fromData($data);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getOrFail(string $ref): JobContractInterface
 	{
@@ -126,9 +117,6 @@ class RedisJobStore implements JobStoreInterface
 		return $job;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function add(JobInterface $job): JobContractInterface
 	{
@@ -149,9 +137,6 @@ class RedisJobStore implements JobStoreInterface
 		return $this->fromData($data);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function update(JobContractInterface $job_contract): static
 	{
@@ -167,9 +152,6 @@ class RedisJobStore implements JobStoreInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function delete(JobContractInterface $job_contract): static
 	{
@@ -251,9 +233,6 @@ class RedisJobStore implements JobStoreInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function list(
 		?string $queue_name = null,
@@ -323,18 +302,12 @@ class RedisJobStore implements JobStoreInterface
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function unlock(JobContractInterface $job_contract): bool
 	{
 		return (bool) $this->redis()->del($this->lockKey($job_contract->getRef()));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isLocked(JobContractInterface $job_contract): bool
 	{
@@ -479,8 +452,6 @@ class RedisJobStore implements JobStoreInterface
 
 	/**
 	 * Returns the shared Redis connection, connecting lazily on first call.
-	 *
-	 * @return PhpRedis
 	 */
 	private function redis(): PhpRedis
 	{
@@ -489,10 +460,6 @@ class RedisJobStore implements JobStoreInterface
 
 	/**
 	 * Redis key for the job HASH.
-	 *
-	 * @param string $ref
-	 *
-	 * @return string
 	 */
 	private function jobKey(string $ref): string
 	{
@@ -501,10 +468,6 @@ class RedisJobStore implements JobStoreInterface
 
 	/**
 	 * Redis key for the queue membership sorted set.
-	 *
-	 * @param string $queue
-	 *
-	 * @return string
 	 */
 	private function queueKey(string $queue): string
 	{
@@ -513,8 +476,6 @@ class RedisJobStore implements JobStoreInterface
 
 	/**
 	 * Redis key for the all-queues sorted set.
-	 *
-	 * @return string
 	 */
 	private function allKey(): string
 	{
@@ -523,10 +484,6 @@ class RedisJobStore implements JobStoreInterface
 
 	/**
 	 * Redis key for the job lock.
-	 *
-	 * @param string $ref
-	 *
-	 * @return string
 	 */
 	private function lockKey(string $ref): string
 	{
@@ -535,8 +492,6 @@ class RedisJobStore implements JobStoreInterface
 
 	/**
 	 * Serializes a {@link JobInterface} to the flat string map stored in a Redis HASH.
-	 *
-	 * @param JobInterface $job
 	 *
 	 * @return array<string, string>
 	 */
@@ -547,7 +502,7 @@ class RedisJobStore implements JobStoreInterface
 		// Encrypt payload at rest when requested.
 		if ($job->shouldEncryptPayload()) {
 			$secret  = Keys::secret();
-			$cipher  = (new DoCrypt())->encrypt(\json_encode($job->getPayload()), $secret);
+			$cipher  = new DoCrypt()->encrypt(\json_encode($job->getPayload()), $secret);
 			$payload = \json_encode(['$enc' => $cipher]) ?: '{}';
 		} else {
 			$payload = \json_encode($job->getPayload()) ?: '{}';
@@ -579,8 +534,6 @@ class RedisJobStore implements JobStoreInterface
 	 * Deserializes a Redis HGETALL result array into a {@link JobContractInterface}.
 	 *
 	 * @param array<string, string> $data
-	 *
-	 * @return JobContractInterface
 	 */
 	private function fromData(array $data): JobContractInterface
 	{
@@ -593,7 +546,7 @@ class RedisJobStore implements JobStoreInterface
 
 		// Detect encrypted payload: sentinel key '$enc' wraps the ciphertext.
 		if (isset($raw_payload['$enc']) && \is_string($raw_payload['$enc'])) {
-			$decrypted = (new DoCrypt())->decrypt($raw_payload['$enc'], Keys::secret());
+			$decrypted = new DoCrypt()->decrypt($raw_payload['$enc'], Keys::secret());
 
 			if (false !== $decrypted) {
 				$raw_payload  = (array) \json_decode($decrypted, true);

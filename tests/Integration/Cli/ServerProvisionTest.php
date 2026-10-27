@@ -303,7 +303,7 @@ final class ServerProvisionTest extends TestCase
 
 		$repository = '';
 
-		foreach ((new Provisioner(PackageManager::APT))->plan()->steps() as $step) {
+		foreach (new Provisioner(PackageManager::APT)->plan()->steps() as $step) {
 			if ('php:repository' === $step->name) {
 				$repository = $step->commands[0];
 			}

@@ -102,8 +102,6 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate
 	 * Does this collection have a given key?
 	 *
 	 * @param string $key The data key
-	 *
-	 * @return bool
 	 */
 	public function has(string $key): bool
 	{
@@ -128,54 +126,36 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate
 		$this->data = [];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function offsetExists($offset): bool
 	{
 		return $this->has($offset);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function offsetGet($offset): mixed
 	{
 		return $this->get($offset);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function offsetSet($offset, $value): void
 	{
 		$this->set($offset, $value);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function offsetUnset($offset): void
 	{
 		$this->remove($offset);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function count(): int
 	{
 		return \count($this->data);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getIterator(): ArrayIterator
 	{

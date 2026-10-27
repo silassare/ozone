@@ -27,8 +27,6 @@ final class RouteGroup extends RouteSharedOptions
 
 	/**
 	 * Returns the parent group, or null when this is a root group.
-	 *
-	 * @return null|RouteGroup
 	 */
 	#[Override]
 	public function getParent(): ?self

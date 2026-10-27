@@ -45,10 +45,6 @@ interface S3TransportInterface
 	 * Sends a request.
 	 *
 	 * Transport errors throw; an error *response* is returned, for the caller to interpret.
-	 *
-	 * @param S3Request $request
-	 *
-	 * @return S3Response
 	 */
 	public function send(S3Request $request): S3Response;
 }

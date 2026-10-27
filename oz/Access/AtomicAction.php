@@ -31,9 +31,6 @@ class AtomicAction implements AtomicActionInterface
 		protected readonly I18nMessage $error,
 	) {}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toArray(): array
 	{
@@ -44,27 +41,18 @@ class AtomicAction implements AtomicActionInterface
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getAction(): string
 	{
 		return $this->action;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getDescription(): I18nMessage
 	{
 		return $this->description;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getErrorMessage(): I18nMessage
 	{

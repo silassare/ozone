@@ -136,7 +136,7 @@ final class DefaultPagesTest extends TestCase
 	{
 		$form = new Form();
 		$form->field('grant_form_ref')
-			->type((new TypeString())->default('ref-1'))
+			->type(new TypeString()->default('ref-1'))
 			->hidden()
 			->required();
 		$form->field('pass')
@@ -144,7 +144,7 @@ final class DefaultPagesTest extends TestCase
 			->label('OZ_ACCESS_GRANT_FORM_PASSWORD')
 			->required();
 
-		$page = (string) (new AccessGrantView(self::context([])))->renderAccessGrantForm($form)->getBody();
+		$page = (string) new AccessGrantView(self::context([]))->renderAccessGrantForm($form)->getBody();
 
 		self::assertStringContainsString('<title>Sign in to continue</title>', $page);
 		self::assertStringContainsString('<label class="oz-form__label" for="oz_field_pass">Password', $page);
@@ -155,7 +155,7 @@ final class DefaultPagesTest extends TestCase
 
 	public function testTheAccessGrantAuthMessageNamesTheRealm(): void
 	{
-		$page = (string) (new AccessGrantView(self::context([])))
+		$page = (string) new AccessGrantView(self::context([]))
 			->renderAccessGrantAuth(['scheme' => 'Basic', 'realm' => 'Staff area'])
 			->getBody();
 
@@ -172,12 +172,12 @@ final class DefaultPagesTest extends TestCase
 
 	private static function error(Throwable $e, array $env): string
 	{
-		return (string) (new ErrorView(self::context($env)))->renderError($e)->getBody();
+		return (string) new ErrorView(self::context($env))->renderError($e)->getBody();
 	}
 
 	private static function template(string $template, array $data): string
 	{
-		return (string) (new WebView(self::context([])))
+		return (string) new WebView(self::context([]))
 			->setTemplate($template)
 			->inject($data)
 			->respond()

@@ -43,9 +43,6 @@ use OZONE\Core\Stores\Interfaces\StoreEntryExpiryListenerInterface;
  */
 final class StoresGarbageCollector implements BootHookReceiverInterface
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function boot(): void
 	{

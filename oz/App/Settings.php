@@ -140,8 +140,6 @@ final class Settings
 
 	/**
 	 * Gets settings path sources.
-	 *
-	 * @return PathSources
 	 */
 	public static function getSources(): PathSources
 	{
@@ -220,8 +218,6 @@ final class Settings
 	 *
 	 * @param string $group  the setting group
 	 * @param bool   $reload reload settings from sources
-	 *
-	 * @return array
 	 */
 	public static function load(string $group, bool $reload = false): array
 	{
@@ -239,8 +235,6 @@ final class Settings
 	 * @param string     $key    the setting key name
 	 * @param null|mixed $def    the default value (when not set)
 	 * @param bool       $reload reload settings from sources
-	 *
-	 * @return mixed
 	 */
 	public static function get(string $group, string $key, mixed $def = null, bool $reload = false): mixed
 	{
@@ -304,8 +298,6 @@ final class Settings
 	 *
 	 * @param string      $group the setting group
 	 * @param null|string $key   the setting key name
-	 *
-	 * @return bool
 	 */
 	public static function has(string $group, ?string $key = null): bool
 	{
@@ -330,8 +322,6 @@ final class Settings
 	 *
 	 * @param array $a the first settings array
 	 * @param array $b the second settings array
-	 *
-	 * @return array
 	 */
 	public static function applyMergeStrategy(array $a, array $b, array $strategies = []): array
 	{
@@ -380,8 +370,6 @@ final class Settings
 	 *
 	 * @param string $group    the setting group name
 	 * @param array  $settings the settings
-	 *
-	 * @return array
 	 */
 	public static function genExportInfo(string $group, array $settings): array
 	{
@@ -405,8 +393,6 @@ final class Settings
 	 *
 	 * @param string $group  the setting group name
 	 * @param bool   $reload reload settings from sources
-	 *
-	 * @return SettingsGroup
 	 */
 	private static function requireGroupStore(string $group, bool $reload = false): SettingsGroup
 	{
@@ -422,14 +408,6 @@ final class Settings
 		throw new RuntimeException(\sprintf('Undefined setting group: %s', $group));
 	}
 
-	/**
-	 * Modifies settings group data with a modifier callback function.
-	 *
-	 * @param string                       $group    the setting group name
-	 * @param callable(SettingsGroup):void $modifier the settings modifier callback function
-	 * @param null|ScopeInterface          $scope    the scope to use (default: current app scope)
-	 * @param bool                         $stateful true -> stateful dir (data/), false -> source dir (app/)
-	 */
 	/**
 	 * A locked setting is not edited at runtime either: what a source locked stays as it was declared.
 	 *
@@ -449,6 +427,14 @@ final class Settings
 		}
 	}
 
+	/**
+	 * Modifies settings group data with a modifier callback function.
+	 *
+	 * @param string                       $group    the setting group name
+	 * @param callable(SettingsGroup):void $modifier the settings modifier callback function
+	 * @param null|ScopeInterface          $scope    the scope to use (default: current app scope)
+	 * @param bool                         $stateful true -> stateful dir (data/), false -> source dir (app/)
+	 */
 	private static function modify(
 		string $group,
 		callable $modifier,
@@ -770,13 +756,7 @@ final class Settings
 	private static function isExportable(mixed $value): bool
 	{
 		if (\is_array($value)) {
-			foreach ($value as $item) {
-				if (!self::isExportable($item)) {
-					return false;
-				}
-			}
-
-			return true;
+			return \array_all($value, self::isExportable(...));
 		}
 
 		return !\is_object($value) || $value instanceof UnitEnum;
@@ -799,7 +779,7 @@ final class Settings
 				\unlink($old);
 			}
 
-			(new FilesManager($cache))->writeAtomic(
+			new FilesManager($cache)->writeAtomic(
 				\basename($file),
 				'<?php' . \PHP_EOL . \PHP_EOL . '// Compiled by OZone from a settings directory: see Settings.'
 					. \PHP_EOL . \PHP_EOL . 'return ' . \var_export($groups, true) . ';' . \PHP_EOL
@@ -840,8 +820,6 @@ final class Settings
 	 * @param int    $indent      indent start
 	 * @param string $indent_char the indent char to use
 	 * @param bool   $align       enable array key align
-	 *
-	 * @return string
 	 */
 	private static function export(
 		mixed $data,

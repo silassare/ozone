@@ -31,9 +31,6 @@ use Throwable;
  */
 final class MigrationsCmd extends Command
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{
@@ -230,8 +227,6 @@ final class MigrationsCmd extends Command
 
 	/**
 	 * Rolls back migrations.
-	 *
-	 * @param KliArgs $args
 	 *
 	 * @throws KliException
 	 */

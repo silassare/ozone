@@ -32,9 +32,6 @@ class AccessRights implements AccessRightsInterface
 	 */
 	protected array $scopes = [];
 
-	/**
-	 * @var null|string
-	 */
 	protected ?string $last_checked = null;
 
 	/**
@@ -59,8 +56,6 @@ class AccessRights implements AccessRightsInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws UnauthorizedException
 	 */
 	#[Override]
@@ -78,9 +73,6 @@ class AccessRights implements AccessRightsInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function deny(string $action): static
 	{
@@ -151,8 +143,6 @@ class AccessRights implements AccessRightsInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @throws UnauthorizedException
 	 */
 	#[Override]
@@ -176,18 +166,12 @@ class AccessRights implements AccessRightsInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function from(OZAuth $auth): static
 	{
 		return new self((array) $auth->getPermissions());
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function pushScope(AccessRightsInterface $scope): static
 	{
@@ -198,9 +182,6 @@ class AccessRights implements AccessRightsInterface
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function toArray(): array
 	{

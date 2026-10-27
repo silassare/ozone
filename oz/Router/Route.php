@@ -44,12 +44,8 @@ final class Route
 	/**
 	 * Route constructor.
 	 *
-	 * @param Router       $router
-	 * @param array        $methods
-	 * @param callable     $callable
-	 * @param RouteOptions $options
-	 * @param string       $source   the route provider that maps the route, '' for none
-	 * @param int          $ordinal  the position of the route among those its source maps
+	 * @param string $source  the route provider that maps the route, '' for none
+	 * @param int    $ordinal the position of the route among those its source maps
 	 */
 	public function __construct(
 		private readonly Router $router,
@@ -74,8 +70,6 @@ final class Route
 
 	/**
 	 * Checks if this route is dynamic.
-	 *
-	 * @return bool
 	 */
 	public function isDynamic(): bool
 	{
@@ -88,11 +82,6 @@ final class Route
 
 	/**
 	 * Builds the route path with given parameters values.
-	 *
-	 * @param Context $context
-	 * @param array   $params
-	 *
-	 * @return string
 	 */
 	public function buildPath(Context $context, array $params = []): string
 	{
@@ -101,15 +90,11 @@ final class Route
 			return $path;
 		}
 
-		return (new RoutePathParser($path, $this->router))->buildPath($context, $params);
+		return new RoutePathParser($path, $this->router)->buildPath($context, $params);
 	}
 
 	/**
 	 * Returns the route path as defined.
-	 *
-	 * @param bool $full
-	 *
-	 * @return string
 	 */
 	public function getPath(bool $full = true): string
 	{
@@ -118,8 +103,6 @@ final class Route
 
 	/**
 	 * Returns the route handler callable.
-	 *
-	 * @return callable
 	 */
 	public function getHandler(): callable
 	{
@@ -128,8 +111,6 @@ final class Route
 
 	/**
 	 * Returns the route options.
-	 *
-	 * @return RouteOptions
 	 */
 	public function getOptions(): RouteOptions
 	{
@@ -160,8 +141,6 @@ final class Route
 
 	/**
 	 * Returns this route allowed HTTP request methods.
-	 *
-	 * @return array
 	 */
 	public function getMethods(): array
 	{
@@ -173,8 +152,6 @@ final class Route
 	 *
 	 * Built from the definition only, so it is identical across requests and processes.
 	 * Used to scope per-route state such as form sessions and form resume caches.
-	 *
-	 * @return string
 	 */
 	public function key(): string
 	{
@@ -186,10 +163,6 @@ final class Route
 
 	/**
 	 * Checks if this route accept a given HTTP request method.
-	 *
-	 * @param string $method
-	 *
-	 * @return bool
 	 */
 	public function accept(string $method): bool
 	{
@@ -198,8 +171,6 @@ final class Route
 
 	/**
 	 * Returns parser result.
-	 *
-	 * @return string
 	 */
 	public function getParserResult(): string
 	{
@@ -220,8 +191,6 @@ final class Route
 
 	/**
 	 * Returns the parameters found after parsing the route path if any.
-	 *
-	 * @return array
 	 */
 	public function getPathParams(): array
 	{
@@ -276,11 +245,6 @@ final class Route
 
 	/**
 	 * Checks if a given path matches this route.
-	 *
-	 * @param string     $path
-	 * @param null|array $params
-	 *
-	 * @return bool
 	 */
 	public function is(string $path, ?array &$params = []): bool
 	{

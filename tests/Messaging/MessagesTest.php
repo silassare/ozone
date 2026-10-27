@@ -33,15 +33,15 @@ final class MessagesTest extends TestCase
 {
 	public function testEachMessageClassNamesItsChannel(): void
 	{
-		self::assertSame('mail', (new MailMessage('t'))->getChannel());
-		self::assertSame('sms', (new SMSMessage('t'))->getChannel());
-		self::assertSame('notification', (new NotificationMessage('t'))->getChannel());
-		self::assertSame('whatsapp', (new Message('whatsapp', 't'))->getChannel());
+		self::assertSame('mail', new MailMessage('t')->getChannel());
+		self::assertSame('sms', new SMSMessage('t')->getChannel());
+		self::assertSame('notification', new NotificationMessage('t')->getChannel());
+		self::assertSame('whatsapp', new Message('whatsapp', 't')->getChannel());
 	}
 
 	public function testMessageKeepsWhatItIsGiven(): void
 	{
-		$message = (new Message('whatsapp', 'app.reminder'))
+		$message = new Message('whatsapp', 'app.reminder')
 			->inject(['name' => 'Jane'])
 			->addRecipient('+22990000000')
 			->addRecipient('+22991111111')

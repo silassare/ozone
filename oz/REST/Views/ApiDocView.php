@@ -27,9 +27,6 @@ final class ApiDocView extends WebView
 {
 	public const string API_DOC_VIEW_ROUTE = 'oz:api-doc-view';
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{

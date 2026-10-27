@@ -32,8 +32,6 @@ class AtomicActionsRegistry
 	 * An action registered again with the same definition is kept as it is: the actions of a REST
 	 * service are named after its table, so a second service over the same table registers the same
 	 * ones. A different definition under a registered name is a conflict, and throws.
-	 *
-	 * @param AtomicAction $accessRight
 	 */
 	public static function register(AtomicAction $accessRight): void
 	{
@@ -53,10 +51,6 @@ class AtomicActionsRegistry
 
 	/**
 	 * Gets the access right for a specific action.
-	 *
-	 * @param string $action
-	 *
-	 * @return null|AtomicAction
 	 */
 	public static function get(string $action): ?AtomicAction
 	{
@@ -65,10 +59,6 @@ class AtomicActionsRegistry
 
 	/**
 	 * Checks if an action is registered.
-	 *
-	 * @param string $action
-	 *
-	 * @return bool
 	 */
 	public static function isRegistered(string $action): bool
 	{
@@ -87,8 +77,6 @@ class AtomicActionsRegistry
 
 	/**
 	 * Read atomic actions for a specific user access rights.
-	 *
-	 * @param AccessRights $user_access_rights
 	 *
 	 * @return array<string, array{action: AtomicActionInterface, allowed: bool}>
 	 */

@@ -54,8 +54,8 @@ final class ListenerAccumulationTest extends TestCase
 				Context::root()
 			);
 
-			(new RequestHook($context))->dispatch();
-			(new ResponseHook($context))->dispatch();
+			new RequestHook($context)->dispatch();
+			new ResponseHook($context)->dispatch();
 		}
 
 		self::assertSame(
@@ -115,8 +115,7 @@ final class ListenerAccumulationTest extends TestCase
 	 */
 	private static function listenerCount(): int
 	{
-		$property = (new ReflectionClass(EventManager::class))->getProperty('listeners');
-		$property->setAccessible(true);
+		$property = new ReflectionClass(EventManager::class)->getProperty('listeners');
 
 		/** @var array<string, mixed> $listeners */
 		$listeners = $property->getValue();

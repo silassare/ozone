@@ -45,8 +45,6 @@ final class Runtime
 
 	/**
 	 * Declares the runtime, before serving.
-	 *
-	 * @param RuntimeInterface $runtime
 	 */
 	public static function set(RuntimeInterface $runtime): void
 	{

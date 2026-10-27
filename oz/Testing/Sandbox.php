@@ -88,7 +88,7 @@ final class Sandbox
 			$build[] = '--settings=' . $source;
 		}
 
-		(new Process($build))->mustRun();
+		new Process($build)->mustRun();
 	}
 
 	/**
@@ -185,7 +185,7 @@ final class Sandbox
 	 */
 	private static function autoloadFile(): string
 	{
-		$loader_file = (new ReflectionClass(ClassLoader::class))->getFileName();
+		$loader_file = new ReflectionClass(ClassLoader::class)->getFileName();
 
 		if (false === $loader_file) {
 			throw new RuntimeException('Unable to locate the Composer autoloader.');

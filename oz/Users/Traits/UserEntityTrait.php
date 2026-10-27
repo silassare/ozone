@@ -24,17 +24,11 @@ use SensitiveParameter;
  */
 trait UserEntityTrait
 {
-	/**
-	 * {@inheritDoc}
-	 */
 	public function getAuthUserType(): string
 	{
 		return db()->getTableOrFail(self::TABLE_NAME)->getMorphType();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function getAuthIdentifier(): string
 	{
 		$id = $this->getID();
@@ -46,9 +40,6 @@ trait UserEntityTrait
 		return $id;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function getAuthIdentifiers(): array
 	{
 		return [
@@ -59,17 +50,11 @@ trait UserEntityTrait
 		];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function getAuthPassword(): string
 	{
 		return $this->getPass();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function setAuthPassword(#[SensitiveParameter] string $password_hash): static
 	{
 		$this->setPass($password_hash);
@@ -77,17 +62,11 @@ trait UserEntityTrait
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function getAuthUserDataStore(): AuthUserDataStore
 	{
 		return AuthUserDataStore::getInstance($this, $this->getData()->get(self::AUTH_USER_DATA_STORE_KEY, []));
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function setAuthUserDataStore(AuthUserDataStore $store): static
 	{
 		$this->setDataKey(self::AUTH_USER_DATA_STORE_KEY, $store->getData());
@@ -95,17 +74,11 @@ trait UserEntityTrait
 		return $this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function isAuthUserValid(): bool
 	{
 		return $this->isValid();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function save(): bool
 	{
 		if (!$this->getID()) {
@@ -138,8 +111,6 @@ trait UserEntityTrait
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @return array<string, mixed>
 	 */
 	public function toArray($hide_sensitive_data = true): array

@@ -60,8 +60,6 @@ class FS
 	 *
 	 * @param string $file_name          the file name
 	 * @param string $expected_mime_type the expected file mime type
-	 *
-	 * @return string
 	 */
 	public static function getRealExtension(string $file_name, string $expected_mime_type): string
 	{
@@ -76,8 +74,6 @@ class FS
 
 	/**
 	 * Convert php upload error code to message.
-	 *
-	 * @param int $error
 	 *
 	 * @return array{message: string, reason: string}
 	 */
@@ -143,8 +139,6 @@ class FS
 	 * Gets file by id.
 	 *
 	 * @param string $id the file id
-	 *
-	 * @return null|OZFile
 	 */
 	public static function getFileByID(string $id): ?OZFile
 	{
@@ -202,10 +196,6 @@ class FS
 
 	/**
 	 * Parse an alias file.
-	 *
-	 * @param UploadedFile $upload
-	 *
-	 * @return null|OZFile
 	 */
 	public static function parseFileAlias(UploadedFile $upload): ?OZFile
 	{
@@ -296,10 +286,6 @@ class FS
 
 	/**
 	 * Converts base64 data to file stream.
-	 *
-	 * @param string $base64
-	 *
-	 * @return FileStream
 	 */
 	public static function base64ToFile(string $base64): FileStream
 	{
@@ -331,8 +317,6 @@ class FS
 
 	/**
 	 * Gets instance of the public files storage driver.
-	 *
-	 * @return StorageInterface
 	 */
 	public static function getPublicStorage(): StorageInterface
 	{
@@ -341,8 +325,6 @@ class FS
 
 	/**
 	 * Gets instance of the private files storage driver.
-	 *
-	 * @return StorageInterface
 	 */
 	public static function getPrivateStorage(): StorageInterface
 	{
@@ -351,10 +333,6 @@ class FS
 
 	/**
 	 * Gets instance of the files storage driver with the given name.
-	 *
-	 * @param string $name
-	 *
-	 * @return StorageInterface
 	 */
 	public static function getStorage(string $name = self::DEFAULT_STORAGE): StorageInterface
 	{
@@ -382,8 +360,6 @@ class FS
 
 	/**
 	 * Returns a new temp file path.
-	 *
-	 * @return false|string
 	 */
 	public static function newTempFile(): false|string
 	{
@@ -396,8 +372,6 @@ class FS
 	 * @param string $filename the filename
 	 * @param string $ext      the file extension
 	 * @param string $prefix   the prefix to use when a new filename is generated
-	 *
-	 * @return string
 	 */
 	public static function sanitizeFilename(string $filename, string $ext, string $prefix = 'upload'): string
 	{
@@ -432,8 +406,6 @@ class FS
 	/**
 	 * Gets mime type of a file.
 	 *
-	 * @param string $file_path
-	 *
 	 * @return false|string
 	 */
 	public static function getMimeType(string $file_path): bool|string
@@ -465,12 +437,7 @@ class FS
 	/**
 	 * Builds a file uri.
 	 *
-	 * @param Context                                $context
-	 * @param OZFile                                 $file
-	 * @param null|AuthorizationCredentialsInterface $credentials
-	 * @param string[]                               $filters
-	 *
-	 * @return Uri
+	 * @param string[] $filters
 	 */
 	public static function buildFileUri(
 		Context $context,
@@ -501,8 +468,6 @@ class FS
 	 * Creates a new instance of {@see FilesManager} with the given root path.
 	 *
 	 * @param string $root the root path
-	 *
-	 * @return FilesManager
 	 */
 	public static function from(string $root): FilesManager
 	{
@@ -511,8 +476,6 @@ class FS
 
 	/**
 	 * Creates a new instance of {@see FilesManager} with the project root path.
-	 *
-	 * @return FilesManager
 	 */
 	public static function fromRoot(): FilesManager
 	{

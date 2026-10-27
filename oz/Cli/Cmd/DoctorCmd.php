@@ -48,8 +48,6 @@ final class DoctorCmd extends Command
 
 	/**
 	 * Runs every check and reports.
-	 *
-	 * @param KliArgs $args
 	 */
 	public function check(KliArgs $args): void
 	{
@@ -72,9 +70,6 @@ final class DoctorCmd extends Command
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	protected function describe(): void
 	{
@@ -526,9 +521,9 @@ final class DoctorCmd extends Command
 			public function getStyle(mixed $value, KliTableHeader $header, array $row): ?KliStyle
 			{
 				return match (\strtolower($value)) {
-					DoctorCmd::FAIL => (new KliStyle())->red()->bold(),
-					DoctorCmd::WARN => (new KliStyle())->yellow(),
-					default         => (new KliStyle())->green(),
+					DoctorCmd::FAIL => new KliStyle()->red()->bold(),
+					DoctorCmd::WARN => new KliStyle()->yellow(),
+					default         => new KliStyle()->green(),
 				};
 			}
 		};

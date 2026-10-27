@@ -42,9 +42,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	use ArrayCapableTrait;
 	use MetaCapableTrait;
 
-	/**
-	 * @var TypeInterface|TypesSwitcher
-	 */
 	private TypeInterface|TypesSwitcher $t_type;
 
 	/**
@@ -65,9 +62,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Field constructor.
 	 *
-	 * @param FieldContainerInterface          $parent the container (Form or Fieldset) this field belongs to
-	 * @param string                           $name
-	 * @param null|TypeInterface|TypesSwitcher $type
+	 * @param FieldContainerInterface $parent the container (Form or Fieldset) this field belongs to
 	 */
 	public function __construct(
 		FieldContainerInterface $parent,
@@ -167,8 +162,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Define the field name.
 	 *
-	 * @param string $name
-	 *
 	 * @return $this
 	 */
 	public function name(string $name): static
@@ -183,8 +176,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Define the field label.
 	 *
-	 * @param null|I18nMessage|string $label
-	 *
 	 * @return $this
 	 */
 	public function label(I18nMessage|string|null $label): static
@@ -196,8 +187,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Define the field description.
-	 *
-	 * @param null|I18nMessage|string $description
 	 *
 	 * @return $this
 	 */
@@ -213,8 +202,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Define the field help text.
 	 *
-	 * @param null|I18nMessage|string $help
-	 *
 	 * @return $this
 	 */
 	public function help(I18nMessage|string|null $help): static
@@ -227,8 +214,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Define whether the field should be hidden or not.
 	 *
-	 * @param bool $hide
-	 *
 	 * @return $this
 	 */
 	public function hidden(bool $hide = true): static
@@ -240,8 +225,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Define whether the field is required or not.
-	 *
-	 * @param bool $required
 	 *
 	 * @return $this
 	 */
@@ -257,8 +240,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Define whether the field is multiple or not.
 	 *
-	 * @param bool $multiple
-	 *
 	 * @return $this
 	 */
 	public function multiple(bool $multiple = true): static
@@ -272,8 +253,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Set the field visibility condition.
-	 *
-	 * @return RuleSet
 	 */
 	public function if(): RuleSet
 	{
@@ -290,8 +269,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Set the field type.
-	 *
-	 * @param TypeInterface|TypesSwitcher $type
 	 *
 	 * @return $this
 	 */
@@ -361,8 +338,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 *
 	 * Returns null when no condition has been defined (field is always visible).
 	 * Use this to inspect the condition without creating one as a side effect.
-	 *
-	 * @return null|RuleSet
 	 */
 	public function getIf(): ?RuleSet
 	{
@@ -371,10 +346,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Check if the field is enabled.
-	 *
-	 * @param FormValidationContext $ctx
-	 *
-	 * @return bool
 	 */
 	public function isEnabled(FormValidationContext $ctx): bool
 	{
@@ -387,8 +358,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Gets the field name.
-	 *
-	 * @return string
 	 */
 	public function getName(): string
 	{
@@ -397,8 +366,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Gets the field label.
-	 *
-	 * @return null|I18nMessage|string
 	 */
 	public function getLabel(): I18nMessage|string|null
 	{
@@ -407,8 +374,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Gets the field description.
-	 *
-	 * @return null|I18nMessage|string
 	 */
 	public function getDescription(): I18nMessage|string|null
 	{
@@ -417,8 +382,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Gets the field help text.
-	 *
-	 * @return null|I18nMessage|string
 	 */
 	public function getHelp(): I18nMessage|string|null
 	{
@@ -427,17 +390,12 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Gets the field type.
-	 *
-	 * @return TypeInterface|TypesSwitcher
 	 */
 	public function getType(): TypeInterface|TypesSwitcher
 	{
 		return $this->t_type;
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function isRequired(): bool
 	{
 		return $this->t_required;
@@ -445,8 +403,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Check if the field is hidden.
-	 *
-	 * @return bool
 	 */
 	public function isHidden(): bool
 	{
@@ -455,8 +411,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 
 	/**
 	 * Check if the field is multiple.
-	 *
-	 * @return bool
 	 */
 	public function isMultiple(): bool
 	{
@@ -468,11 +422,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 *
 	 * The raw $value is what gets validated; $ctx only supplies the surrounding
 	 * data that a {@see TypesSwitcher} or a custom validator may consult.
-	 *
-	 * @param mixed                 $value
-	 * @param FormValidationContext $ctx
-	 *
-	 * @return mixed
 	 *
 	 * @throws TypesInvalidValueException
 	 */
@@ -498,10 +447,7 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	 * ran when the value was first cleaned, and it is not required to be
 	 * idempotent, so running it again could transform the value a second time.
 	 *
-	 * @param mixed                 $value a value produced by an earlier {@see self::validate()}
-	 * @param FormValidationContext $ctx
-	 *
-	 * @return mixed
+	 * @param mixed $value a value produced by an earlier {@see self::validate()}
 	 *
 	 * @throws TypesInvalidValueException when the stored value no longer satisfies the field
 	 */
@@ -511,8 +457,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @return array{
 	 *  ref: string,
 	 *  name: string,
@@ -583,10 +527,6 @@ final class Field implements ArrayCapableInterface, MetaCapableInterface
 	/**
 	 * Creates a clean type instance for frontend consumption by stripping out
 	 * any meta information that may contain sensitive data.
-	 *
-	 * @param TypeInterface $type
-	 *
-	 * @return TypeInterface
 	 *
 	 * @throws TypesException
 	 */

@@ -28,8 +28,6 @@ interface TwoFactorChannelInterface
 	 *
 	 * The name is stored in the OZAuth payload and used to route
 	 * the authorization provider to the correct send/verify logic.
-	 *
-	 * @return string
 	 */
 	public static function getName(): string;
 
@@ -38,10 +36,6 @@ interface TwoFactorChannelInterface
 	 *
 	 * Called during channel auto-selection to skip channels that are not
 	 * set up for the user (e.g. no email address, no TOTP secret).
-	 *
-	 * @param AuthUserInterface $user
-	 *
-	 * @return bool
 	 */
 	public function isAvailableFor(AuthUserInterface $user): bool;
 }

@@ -89,9 +89,6 @@ class Stream implements StreamInterface
 		$this->attach($stream);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	public function __toString(): string
 	{
 		if (!$this->isAttached()) {
@@ -107,9 +104,6 @@ class Stream implements StreamInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function detach()
 	{
@@ -125,9 +119,6 @@ class Stream implements StreamInterface
 		return $oldResource;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function rewind(): void
 	{
@@ -136,9 +127,6 @@ class Stream implements StreamInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isSeekable(): bool
 	{
@@ -156,9 +144,6 @@ class Stream implements StreamInterface
 		return $this->seekable;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getMetadata(?string $key = null): mixed
 	{
@@ -173,8 +158,6 @@ class Stream implements StreamInterface
 
 	/**
 	 * Returns whether or not the stream is a pipe.
-	 *
-	 * @return bool
 	 */
 	public function isPipe(): bool
 	{
@@ -190,9 +173,6 @@ class Stream implements StreamInterface
 		return $this->isPipe;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getContents(): string
 	{
@@ -211,9 +191,6 @@ class Stream implements StreamInterface
 		return $result;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isReadable(): bool
 	{
@@ -244,8 +221,6 @@ class Stream implements StreamInterface
 	}
 
 	/**
-	 * {@inheritDoc}
-	 *
 	 * @psalm-suppress InvalidPropertyAssignmentValue
 	 */
 	#[Override]
@@ -262,9 +237,6 @@ class Stream implements StreamInterface
 		$this->detach();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function getSize(): ?int
 	{
@@ -276,9 +248,6 @@ class Stream implements StreamInterface
 		return $this->size;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function tell(): int
 	{
@@ -289,18 +258,12 @@ class Stream implements StreamInterface
 		return $position;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function eof(): bool
 	{
 		return !$this->isAttached() || \feof($this->stream);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function seek(int $offset, int $whence = \SEEK_SET): void
 	{
@@ -310,9 +273,6 @@ class Stream implements StreamInterface
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function read(int $length): string
 	{
@@ -323,9 +283,6 @@ class Stream implements StreamInterface
 		return $data;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function write(string $string): int
 	{
@@ -339,9 +296,6 @@ class Stream implements StreamInterface
 		return $written;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	#[Override]
 	public function isWritable(): bool
 	{
@@ -387,8 +341,6 @@ class Stream implements StreamInterface
 
 	/**
 	 * Is a resource attached to this stream?
-	 *
-	 * @return bool
 	 */
 	protected function isAttached(): bool
 	{

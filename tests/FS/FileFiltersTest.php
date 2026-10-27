@@ -299,7 +299,7 @@ final class FileFiltersTest extends TestCase
 		// Older than OZ_IMAGE_FILTERS_CACHE_TTL: the garbage collector removes it.
 		\touch($files[0], \time() - 30 * 86400);
 
-		(new ReflectionClass(ImageFileFilterHandler::class))->getMethod('gc')->invoke(null);
+		new ReflectionClass(ImageFileFilterHandler::class)->getMethod('gc')->invoke(null);
 
 		self::assertSame([], self::renditions());
 	}
@@ -460,7 +460,7 @@ final class FileFiltersTest extends TestCase
 
 	public function testARenditionInAnotherFormatSaysSo(): void
 	{
-		$response = (new ImageFileFilterHandler())->handle(
+		$response = new ImageFileFilterHandler()->handle(
 			self::makeFile('image/png'),
 			self::makeStream(self::makePng(40, 40)),
 			new Response(),
@@ -531,14 +531,6 @@ final class FileFiltersTest extends TestCase
 	}
 
 	/**
-	 * Build a minimal OZFile with the given mime type.
-	 *
-	 * @param string $mime
-	 * @param string $id
-	 *
-	 * @return OZFile
-	 */
-	/**
 	 * The rendition files in the cache directory.
 	 *
 	 * @return list<string>
@@ -560,6 +552,9 @@ final class FileFiltersTest extends TestCase
 		}
 	}
 
+	/**
+	 * Build a minimal OZFile with the given mime type.
+	 */
 	private static function makeFile(string $mime, string $id = '1'): OZFile
 	{
 		$f = new OZFile();
@@ -591,9 +586,6 @@ final class FileFiltersTest extends TestCase
 	/**
 	 * Create a minimal PNG image as a byte string with given dimensions.
 	 *
-	 * @param int $width
-	 * @param int $height
-	 *
 	 * @return string PNG bytes
 	 */
 	private static function makePng(int $width = 200, int $height = 150): string
@@ -608,10 +600,6 @@ final class FileFiltersTest extends TestCase
 
 	/**
 	 * Build a FileStream from a byte string.
-	 *
-	 * @param string $bytes
-	 *
-	 * @return FileStream
 	 */
 	private static function makeStream(string $bytes): FileStream
 	{
@@ -620,8 +608,6 @@ final class FileFiltersTest extends TestCase
 
 	/**
 	 * Decode PNG bytes and return [width, height].
-	 *
-	 * @param string $bytes
 	 *
 	 * @return array{int, int}
 	 */
@@ -638,11 +624,7 @@ final class FileFiltersTest extends TestCase
 	/**
 	 * Apply filters and return the response body bytes.
 	 *
-	 * @param OZFile   $file
-	 * @param string   $imageBytes
 	 * @param string[] $tokens
-	 *
-	 * @return string
 	 */
 	private static function applyFilters(OZFile $file, string $imageBytes, array $tokens): string
 	{

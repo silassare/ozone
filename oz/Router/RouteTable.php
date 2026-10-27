@@ -91,7 +91,7 @@ final class RouteTable
 				. '// Compiled by OZone from its route providers: see OZONE\Core\Router\RouteTable.'
 				. \PHP_EOL . \PHP_EOL . 'return ' . \var_export($this->data, true) . ';' . \PHP_EOL;
 
-			(new FilesManager($dir))->writeAtomic(\basename($file), $code);
+			new FilesManager($dir)->writeAtomic(\basename($file), $code);
 		} catch (Throwable) {
 			return false;
 		}
