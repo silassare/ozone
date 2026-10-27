@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Support;
 
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -21,9 +22,8 @@ use PHPUnit\Framework\TestCase;
  * it was created with.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class OZTestProjectTest extends TestCase
 {
 	private const string NAME = 'harness-reuse';

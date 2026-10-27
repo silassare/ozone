@@ -15,15 +15,15 @@ namespace OZONE\Tests\Auth;
 
 use OZONE\Core\Auth\AuthUserDataStore;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests the 2FA-related methods of {@see AuthUserDataStore}.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\AuthUserDataStore
  */
+#[CoversClass(AuthUserDataStore::class)]
 final class AuthUserDataStoreTest extends TestCase
 {
 	private static int $userSeq = 0;
@@ -159,7 +159,7 @@ final class AuthUserDataStoreTest extends TestCase
 	private function makeStore(array $initial_data = []): AuthUserDataStore
 	{
 		$id   = 'test-user-' . ++self::$userSeq;
-		$user = $this->createMock(AuthUserInterface::class);
+		$user = self::createStub(AuthUserInterface::class);
 		$user->method('getAuthUserType')->willReturn('test');
 		$user->method('getAuthIdentifier')->willReturn($id);
 

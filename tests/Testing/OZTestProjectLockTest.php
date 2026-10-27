@@ -15,6 +15,7 @@ namespace OZONE\Tests\Testing;
 
 use OZONE\Core\Testing\OZTestProject;
 use OZONE\Core\Testing\Sandbox;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
@@ -27,9 +28,8 @@ use RuntimeException;
  * the lock records, path-repository packages (local sibling checkouts) to their directory.
  *
  * @internal
- *
- * @covers \OZONE\Core\Testing\OZTestProject
  */
+#[CoversClass(OZTestProject::class)]
 final class OZTestProjectLockTest extends TestCase
 {
 	private string $dir;

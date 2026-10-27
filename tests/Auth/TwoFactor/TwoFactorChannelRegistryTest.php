@@ -22,14 +22,14 @@ use OZONE\Core\Auth\TwoFactor\TOTP;
 use OZONE\Core\Auth\TwoFactor\TwoFactorChannelInterface;
 use OZONE\Core\Auth\TwoFactor\TwoFactorChannelRegistry;
 use OZONE\Core\Exceptions\RuntimeException;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
 /**
  * @internal
- *
- * @covers \OZONE\Core\Auth\TwoFactor\TwoFactorChannelRegistry
  */
+#[CoversClass(TwoFactorChannelRegistry::class)]
 final class TwoFactorChannelRegistryTest extends TestCase
 {
 	/** @var array<string, TwoFactorChannelInterface> */
@@ -204,7 +204,7 @@ final class TwoFactorChannelRegistryTest extends TestCase
 		?string $preferred_method = null
 	): AuthUserInterface {
 		$id   = 'registry-test-user-' . ++self::$userSeq;
-		$user = $this->createMock(AuthUserInterface::class);
+		$user = self::createStub(AuthUserInterface::class);
 		$user->method('getAuthUserType')->willReturn('test');
 		$user->method('getAuthIdentifier')->willReturn($id);
 		$user->method('getAuthIdentifiers')->willReturn([

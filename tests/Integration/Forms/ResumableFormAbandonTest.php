@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Forms;
 
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -28,9 +29,8 @@ use Symfony\Component\Process\Process;
  *    calls delete() directly, bypassing the TTL path).
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class ResumableFormAbandonTest extends TestCase
 {
 	private static OZTestProject $proj;
@@ -217,8 +217,8 @@ final class ResumableFormAbandonTest extends TestCase
 
 		$status = 0;
 		if (
-			!empty($http_response_header[0])
-			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', $http_response_header[0], $m)
+			!empty((\http_get_last_response_headers() ?? [])[0])
+			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', (\http_get_last_response_headers() ?? [])[0], $m)
 		) {
 			$status = (int) $m[1];
 		}

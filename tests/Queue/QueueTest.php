@@ -18,13 +18,13 @@ use OZONE\Core\Queue\Interfaces\WorkerInterface;
 use OZONE\Core\Queue\Job;
 use OZONE\Core\Queue\Queue;
 use OZONE\Core\Utils\JSONResult;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
- *
- * @covers \OZONE\Core\Queue\Queue
  */
+#[CoversClass(Queue::class)]
 final class QueueTest extends TestCase
 {
 	public function testGetCreatesQueueWithCorrectName(): void

@@ -20,15 +20,15 @@ use OZONE\Core\Http\Request;
 use OZONE\Core\Http\RequestBody;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\Uri;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RangeResponseTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Http\RangeResponse
  */
+#[CoversClass(RangeResponse::class)]
 final class RangeResponseTest extends TestCase
 {
 	public function testNon200ResponseIsReturnedUnchanged(): void

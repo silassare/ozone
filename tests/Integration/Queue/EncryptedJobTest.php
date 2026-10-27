@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Queue;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -31,9 +33,8 @@ use PHPUnit\Framework\TestCase;
  *      or state issues.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class EncryptedJobTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -61,9 +62,8 @@ final class EncryptedJobTest extends TestCase
 	 * Creates the project, dispatches an encrypted job, verifies the raw
 	 * stored payload carries the "$enc" sentinel (not plaintext), runs the
 	 * queue, and asserts the worker flag file was created.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSetup(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -129,9 +129,8 @@ final class EncryptedJobTest extends TestCase
 	/**
 	 * Dispatches a second encrypted job and repeats the storage + execution
 	 * assertions to confirm encryption is stateless (no one-shot key issues).
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSecondEncryptedJobAlsoWorks(DbTestConfig $config): void
 	{
 		$proj           = self::getProject($config);

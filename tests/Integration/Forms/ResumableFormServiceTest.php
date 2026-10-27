@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Forms;
 
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -31,9 +32,8 @@ use Symfony\Component\Process\Process;
  * is needed -- all requests from the same host share the same scope_id.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class ResumableFormServiceTest extends TestCase
 {
 	private static OZTestProject $proj;
@@ -1077,8 +1077,7 @@ final class ResumableFormServiceTest extends TestCase
 
 		@\file_get_contents($url, false, $ctx);
 
-		/** @var list<string> $http_response_header */
-		$received = $http_response_header ?? [];
+		$received = \http_get_last_response_headers() ?? [];
 		$limit    = null;
 
 		foreach ($received as $header) {
@@ -1198,8 +1197,8 @@ final class ResumableFormServiceTest extends TestCase
 
 		$status = 0;
 		if (
-			!empty($http_response_header[0])
-			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', $http_response_header[0], $m)
+			!empty((\http_get_last_response_headers() ?? [])[0])
+			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', (\http_get_last_response_headers() ?? [])[0], $m)
 		) {
 			$status = (int) $m[1];
 		}

@@ -16,15 +16,15 @@ namespace OZONE\Tests\Columns;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Columns\Types\TypeUsername;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class TypeUsernameTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Columns\Types\TypeUsername
  */
+#[CoversClass(TypeUsername::class)]
 final class TypeUsernameTest extends TestCase
 {
 	// OZ_USER_NAME_MIN_LENGTH defaults to 3, OZ_USER_NAME_MAX_LENGTH defaults to 60.

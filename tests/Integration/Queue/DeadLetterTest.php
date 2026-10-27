@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Queue;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,9 +34,8 @@ use PHPUnit\Framework\TestCase;
  *      `oz jobs dead-letter --action=retry`, run again -> job succeeds.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class DeadLetterTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -60,9 +61,8 @@ final class DeadLetterTest extends TestCase
 
 	/**
 	 * Creates the project, installs schema, dispatches and fails the job once.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSetup(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -114,9 +114,8 @@ final class DeadLetterTest extends TestCase
 	/**
 	 * A second run with retry_delay=0 picks up the job immediately and fails
 	 * it again. try_count reaches retry_max -> job moves to DEAD_LETTER.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSecondFailureMovesToDeadLetter(DbTestConfig $config): void
 	{
 		$proj        = self::getProject($config);
@@ -152,9 +151,8 @@ final class DeadLetterTest extends TestCase
 	/**
 	 * After removing the fail flag and resetting via `--action=retry`, the job
 	 * should succeed on the next run.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDeadLetterJobCanBeRetried(DbTestConfig $config): void
 	{
 		$proj        = self::getProject($config);

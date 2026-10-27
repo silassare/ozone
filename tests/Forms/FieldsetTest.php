@@ -23,15 +23,15 @@ use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Forms\FormValidationContext;
 use OZONE\Core\Forms\RuleSet;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class FieldsetTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\Fieldset
  */
+#[CoversClass(Fieldset::class)]
 final class FieldsetTest extends TestCase
 {
 	// -----------------------------------------------------------------------

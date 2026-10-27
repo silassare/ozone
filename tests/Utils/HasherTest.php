@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Utils;
 
 use OZONE\Core\Utils\Hasher;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class HasherTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Utils\Hasher
  */
+#[CoversClass(Hasher::class)]
 final class HasherTest extends TestCase
 {
 	public function testHash32ReturnsA32CharHexString(): void

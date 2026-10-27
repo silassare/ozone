@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Tests\Runtime\Servers;
 
 use OZONE\Core\Runtime\Bridges\SwooleBridge;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Class SwooleServerTest.
@@ -21,11 +23,9 @@ use OZONE\Core\Runtime\Bridges\SwooleBridge;
  * OZone served by a Swoole HTTP server, through {@see SwooleBridge}.
  *
  * @internal
- *
- * @group swoole
- *
- * @covers \OZONE\Core\Runtime\Bridges\SwooleBridge
  */
+#[Group('swoole')]
+#[CoversClass(SwooleBridge::class)]
 final class SwooleServerTest extends WorkerServerTestCase
 {
 	protected static function loopName(): string

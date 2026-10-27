@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\REST;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -24,9 +26,8 @@ use Symfony\Component\Process\Process;
  * also serves a second service over the same table.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class RESTFilterRefusalTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -61,9 +62,7 @@ final class RESTFilterRefusalTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSetup(DbTestConfig $config): void
 	{
 		$rdbms = $config->rdbms;
@@ -110,9 +109,8 @@ final class RESTFilterRefusalTest extends TestCase
 	/**
 	 * Two services over one table register the same access rights actions, named after the table: the
 	 * second one used to stop the boot ("Action 'terms.read' already registered").
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testASecondServiceOverTheSameTableServesToo(DbTestConfig $config): void
 	{
 		[$status, $json] = self::get($config, '/terms-archive');
@@ -121,9 +119,7 @@ final class RESTFilterRefusalTest extends TestCase
 		self::assertCount(3, $json['data']['items'] ?? [], \json_encode($json));
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testTwoConditionsWithoutGlueAreRefusedSayingWhere(DbTestConfig $config): void
 	{
 		[$status, $json] = self::get(
@@ -141,9 +137,7 @@ final class RESTFilterRefusalTest extends TestCase
 		self::assertSame([1], $json['data']['data']['position']);
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testARefusedValueNamesTheColumnAndItsOperators(DbTestConfig $config): void
 	{
 		[$status, $json] = self::get($config, '/terms?filters[0]=is_active&filters[1]=eq&filters[2]=maybe');
@@ -158,9 +152,7 @@ final class RESTFilterRefusalTest extends TestCase
 		self::assertSame(['eq', 'neq', 'is_false', 'is_true'], $data['allowed_operators']);
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testABooleanColumnTakesEqWithQueryStringWords(DbTestConfig $config): void
 	{
 		foreach (['1' => 2, 'true' => 2, '0' => 1, 'false' => 1] as $word => $count) {
@@ -192,7 +184,7 @@ final class RESTFilterRefusalTest extends TestCase
 			false,
 			\stream_context_create(['http' => ['ignore_errors' => true, 'timeout' => 30, 'header' => "Accept: application/json\r\n"]])
 		);
-		$status = (int) \explode(' ', $http_response_header[0] ?? 'HTTP/1.1 0')[1];
+		$status = (int) \explode(' ', (\http_get_last_response_headers() ?? [])[0] ?? 'HTTP/1.1 0')[1];
 
 		return [$status, (array) \json_decode((string) $body, true)];
 	}

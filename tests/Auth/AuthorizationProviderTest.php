@@ -26,6 +26,7 @@ use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Utils\Hasher;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -36,9 +37,8 @@ use PHPUnit\Framework\TestCase;
  * tests/settings/oz.db.php) is used for all persistence assertions.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\Providers\AuthorizationProvider
  */
+#[CoversClass(AuthorizationProvider::class)]
 final class AuthorizationProviderTest extends TestCase
 {
 	/**

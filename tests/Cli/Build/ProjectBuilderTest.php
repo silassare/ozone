@@ -15,6 +15,7 @@ namespace OZONE\Tests\Cli\Build;
 
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Cli\Build\ProjectBuilder;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,9 +25,8 @@ use PHPUnit\Framework\TestCase;
  * directories and symlinks, laid out as `oz deploy` lays out a deploy root.
  *
  * @internal
- *
- * @covers \OZONE\Core\Cli\Build\ProjectBuilder
  */
+#[CoversClass(ProjectBuilder::class)]
 final class ProjectBuilderTest extends TestCase
 {
 	private string $dir;

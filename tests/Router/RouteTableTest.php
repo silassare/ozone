@@ -22,14 +22,14 @@ use OZONE\Core\Router\RouteTable;
 use OZONE\Tests\Router\Stubs\TableItemProvider;
 use OZONE\Tests\Router\Stubs\TableItemsProvider;
 use OZONE\Tests\Router\Stubs\TableLangProvider;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \OZONE\Core\Router\Router
- * @covers \OZONE\Core\Router\RouteTable
- *
  * @internal
  */
+#[CoversClass(Router::class)]
+#[CoversClass(RouteTable::class)]
 final class RouteTableTest extends TestCase
 {
 	private const array PROVIDERS = [

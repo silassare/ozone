@@ -17,6 +17,7 @@ use Override;
 use OZONE\Core\Auth\AuthUserDataStore;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -26,9 +27,8 @@ use RuntimeException;
  * No DB or HTTP context is required - all methods under test are stateless.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\AuthUsers
  */
+#[CoversClass(AuthUsers::class)]
 final class AuthUsersUtilsTest extends TestCase
 {
 	// -----------------------------------------------------------------------

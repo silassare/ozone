@@ -19,6 +19,7 @@ use OZONE\Core\FS\FilesManager;
 use OZONE\Core\FS\FS;
 use OZONE\Core\Scopes\AbstractScope;
 use OZONE\Core\Scopes\StateLayout;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,9 +29,8 @@ use PHPUnit\Framework\TestCase;
  * for the rest of the process.
  *
  * @internal
- *
- * @covers \OZONE\Core\Scopes\AbstractScope
  */
+#[CoversClass(AbstractScope::class)]
 final class AbstractScopeTest extends TestCase
 {
 	private static StubScope $scope;

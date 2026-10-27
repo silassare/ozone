@@ -14,13 +14,13 @@ declare(strict_types=1);
 namespace OZONE\Tests\Auth\TwoFactor;
 
 use OZONE\Core\Auth\TwoFactor\TOTP;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
- *
- * @covers \OZONE\Core\Auth\TwoFactor\TOTP
  */
+#[CoversClass(TOTP::class)]
 final class TOTPTest extends TestCase
 {
 	/**

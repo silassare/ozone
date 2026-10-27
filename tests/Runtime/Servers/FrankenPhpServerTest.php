@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Tests\Runtime\Servers;
 
 use OZONE\Core\Runtime\Bridges\FrankenPhpBridge;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Class FrankenPhpServerTest.
@@ -21,11 +23,9 @@ use OZONE\Core\Runtime\Bridges\FrankenPhpBridge;
  * OZone served by FrankenPHP in worker mode, through {@see FrankenPhpBridge}.
  *
  * @internal
- *
- * @group frankenphp
- *
- * @covers \OZONE\Core\Runtime\Bridges\FrankenPhpBridge
  */
+#[Group('frankenphp')]
+#[CoversClass(FrankenPhpBridge::class)]
 final class FrankenPhpServerTest extends WorkerServerTestCase
 {
 	protected static function loopName(): string

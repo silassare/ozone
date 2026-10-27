@@ -15,15 +15,15 @@ namespace OZONE\Tests\CRUD;
 
 use OZONE\Core\CRUD\AllowCheckResult;
 use OZONE\Core\Lang\I18n;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class AllowCheckResultTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\CRUD\AllowCheckResult
  */
+#[CoversClass(AllowCheckResult::class)]
 final class AllowCheckResultTest extends TestCase
 {
 	public function testAllowCreatesAllowedResult(): void

@@ -18,6 +18,7 @@ use OZONE\Core\CRUD\Interfaces\TableCRUDListenerInterface;
 use OZONE\Core\CRUD\TableCRUDListener;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\OZone;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
@@ -32,9 +33,8 @@ use ReflectionMethod;
  * The suite's own root context is saved and restored around each case, as in RequestIsolationTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\CRUD\TableCRUDListener
  */
+#[CoversClass(TableCRUDListener::class)]
 final class TableCRUDListenerContextTest extends TestCase
 {
 	/** @var array<string, null|Context> */

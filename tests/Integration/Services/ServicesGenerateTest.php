@@ -15,13 +15,15 @@ namespace OZONE\Tests\Integration\Services;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
 /**
  * Integration tests for `oz services generate`.
  *
- * Runs against every configured DB type via @dataProvider.
+ * Runs against every configured DB type via a data provider.
  * SQLite is always tested. MySQL / PostgreSQL are tested when their env vars
  * are set (see DbTestConfig::allConfigured()).
  *
@@ -30,9 +32,8 @@ use Symfony\Component\Process\Process;
  * MUST precede `oz services generate`.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class ServicesGenerateTest extends TestCase
 {
 	/** The OZone built-in public table we generate a service for. */
@@ -72,9 +73,8 @@ final class ServicesGenerateTest extends TestCase
 	/**
 	 * Creates the test project, sets up DB & ORM classes, runs services generate,
 	 * and asserts the command exits cleanly.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGenerateExitsCleanly(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -103,18 +103,14 @@ final class ServicesGenerateTest extends TestCase
 		self::assertSame(0, $proc->getExitCode(), $proc->getErrorOutput());
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGeneratedFileExists(DbTestConfig $config): void
 	{
 		$file = self::getProject($config)->getPath() . '/app/Services/' . self::SERVICE_CLASS . '.php';
 		self::assertFileExists($file, 'Generated service file must exist at app/Services/.');
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGeneratedFileIsValidPhp(DbTestConfig $config): void
 	{
 		$file = self::getProject($config)->getPath() . '/app/Services/' . self::SERVICE_CLASS . '.php';
@@ -123,9 +119,7 @@ final class ServicesGenerateTest extends TestCase
 		self::assertSame(0, $lint->getExitCode(), 'PHP syntax error in generated service: ' . $lint->getOutput());
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGeneratedFileContainsClassName(DbTestConfig $config): void
 	{
 		$file    = self::getProject($config)->getPath() . '/app/Services/' . self::SERVICE_CLASS . '.php';
@@ -135,9 +129,8 @@ final class ServicesGenerateTest extends TestCase
 
 	/**
 	 * The name comes from the base path when none is given, never from the table.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGeneratedServiceIsNamedAfterItsPath(DbTestConfig $config): void
 	{
 		$file    = self::getProject($config)->getPath() . '/app/Services/' . self::SERVICE_CLASS . '.php';
@@ -149,9 +142,8 @@ final class ServicesGenerateTest extends TestCase
 
 	/**
 	 * The generated service's routes are exported by name, as a client calls them.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testRoutesExportListsTheServiceByName(DbTestConfig $config): void
 	{
 		$proc = self::getProject($config)->oz('routes', 'export', '--json');
@@ -174,9 +166,7 @@ final class ServicesGenerateTest extends TestCase
 		self::assertSame('/countries/:' . $key, $get_one['path']);
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testServiceIsRegisteredInRoutesSettings(DbTestConfig $config): void
 	{
 		// oz services generate calls Settings::set('oz.routes.api', ..., false)
@@ -200,9 +190,7 @@ final class ServicesGenerateTest extends TestCase
 		self::assertTrue($found, self::SERVICE_CLASS . ' must appear in oz.routes.api settings.');
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGenerateWithoutOverrideFails(DbTestConfig $config): void
 	{
 		// File already exists from testGenerateExitsCleanly; without --override it must fail.
@@ -217,9 +205,7 @@ final class ServicesGenerateTest extends TestCase
 		self::assertNotSame(0, $proc->getExitCode(), 'Re-generating without --override must fail when file exists.');
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGenerateWithOverrideSucceeds(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);
@@ -241,9 +227,7 @@ final class ServicesGenerateTest extends TestCase
 		self::assertSame(0, $lint->getExitCode(), $lint->getOutput());
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGenerateForNonExistentTableFails(DbTestConfig $config): void
 	{
 		$proc = self::getProject($config)->oz(

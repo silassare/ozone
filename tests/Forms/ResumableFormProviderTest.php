@@ -18,6 +18,7 @@ use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Forms\Resume\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Resume\FormResumeProgress;
 use OZONE\Core\Http\Enums\RequestScope;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,9 +27,8 @@ use PHPUnit\Framework\TestCase;
  * Tests for {@see AbstractResumableFormProvider}: interface defaults and instance().
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\Resume\AbstractResumableFormProvider
  */
+#[CoversClass(AbstractResumableFormProvider::class)]
 final class ResumableFormProviderTest extends TestCase
 {
 	public function testGetNameReturnsExpectedString(): void

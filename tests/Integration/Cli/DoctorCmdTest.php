@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Cli;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -23,9 +25,8 @@ use Symfony\Component\Process\Process;
  * fails only when something is actually wrong.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class DoctorCmdTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -51,9 +52,7 @@ final class DoctorCmdTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDoctorPassesOnAFreshMigratedProject(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -96,9 +95,7 @@ final class DoctorCmdTest extends TestCase
 		self::assertSame('ok', $by_name['Boot-time errors']);
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDoctorFailsOnPendingMigrations(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);
@@ -121,9 +118,7 @@ final class DoctorCmdTest extends TestCase
 		self::assertSame('fail', $by_name['Migrations']);
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDoctorReportsASchemaThatCannotBePrepared(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);
@@ -170,9 +165,7 @@ final class DoctorCmdTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDoctorWarnsOutsideAProject(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);

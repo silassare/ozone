@@ -13,6 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Runtime\Servers;
 
+use OZONE\Core\Runtime\WorkerRuntime;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,11 +27,9 @@ use PHPUnit\Framework\TestCase;
  * throw its way out of the script.
  *
  * @internal
- *
- * @group frankenphp
- *
- * @covers \OZONE\Core\Runtime\WorkerRuntime
  */
+#[Group('frankenphp')]
+#[CoversClass(WorkerRuntime::class)]
 final class FrankenPhpClassicServerTest extends TestCase
 {
 	protected function setUp(): void

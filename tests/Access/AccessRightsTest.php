@@ -15,15 +15,15 @@ namespace OZONE\Tests\Access;
 
 use OZONE\Core\Access\AccessRights;
 use OZONE\Core\Exceptions\UnauthorizedException;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class AccessRightsTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Access\AccessRights
  */
+#[CoversClass(AccessRights::class)]
 final class AccessRightsTest extends TestCase
 {
 	public function testScopes(): void

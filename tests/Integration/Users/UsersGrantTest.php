@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Users;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -22,9 +24,8 @@ use Symfony\Component\Process\Process;
  * `oz users grant`, and the doctor's super admin check, in a real project.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class UsersGrantTest extends TestCase
 {
 	private const string EMAIL = 'ada@example.com';
@@ -56,9 +57,7 @@ final class UsersGrantTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDoctorWarnsWhenNoUserIsSuperAdmin(DbTestConfig $config): void
 	{
 		$rdbms = $config->rdbms;
@@ -85,9 +84,7 @@ final class UsersGrantTest extends TestCase
 		self::assertSame(['warn', 'none'], self::superAdminCheck($proj));
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGrantsSuperAdminByEmail(DbTestConfig $config): void
 	{
 		$proj = self::project($config);
@@ -100,9 +97,7 @@ final class UsersGrantTest extends TestCase
 		self::assertSame(['ok', 'present'], self::superAdminCheck($proj));
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGrantsByIdAndAgainWithoutError(DbTestConfig $config): void
 	{
 		$proj = self::project($config);
@@ -117,9 +112,7 @@ final class UsersGrantTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testRefusesWhatItCannotGrant(DbTestConfig $config): void
 	{
 		$proj = self::project($config);

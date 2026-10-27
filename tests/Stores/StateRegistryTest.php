@@ -23,18 +23,20 @@ use OZONE\Core\Stores\Drivers\MemoryStore;
 use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\KeyValueStore;
 use OZONE\Core\Stores\StateRegistry;
+use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class StateRegistryTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Stores\CacheRegistry
- * @covers \OZONE\Core\Stores\StateRegistry
- * @covers \OZONE\Core\Stores\StoreCapabilities
  */
+#[CoversClass(CacheRegistry::class)]
+#[CoversClass(StateRegistry::class)]
+#[CoversClass(StoreCapabilities::class)]
 final class StateRegistryTest extends TestCase
 {
 	public function testTheShippedStateStoresAreDeclared(): void
@@ -117,9 +119,7 @@ final class StateRegistryTest extends TestCase
 		CacheRegistry::store('oz:form:sessions');
 	}
 
-	/**
-	 * @dataProvider provideANonDurableDriverCannotBackAStateStoreCases
-	 */
+	#[DataProvider('provideANonDurableDriverCannotBackAStateStoreCases')]
 	public function testANonDurableDriverCannotBackAStateStore(string $driver): void
 	{
 		Settings::set(StateRegistry::SETTINGS_GROUP, 'oz:test:durability', ['driver' => $driver]);

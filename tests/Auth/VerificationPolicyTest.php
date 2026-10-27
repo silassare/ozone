@@ -17,15 +17,15 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
 use OZONE\Core\Auth\Providers\PhoneOwnershipVerificationProvider;
 use OZONE\Core\Auth\VerificationPolicy;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * What a user type must prove before signing up or recovering an account (`oz.auth.verification`).
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\VerificationPolicy
  */
+#[CoversClass(VerificationPolicy::class)]
 final class VerificationPolicyTest extends TestCase
 {
 	private const EMAIL = EmailOwnershipVerificationProvider::NAME;

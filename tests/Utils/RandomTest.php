@@ -15,15 +15,15 @@ namespace OZONE\Tests\Utils;
 
 use InvalidArgumentException;
 use OZONE\Core\Utils\Random;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RandomTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Utils\Random
  */
+#[CoversClass(Random::class)]
 final class RandomTest extends TestCase
 {
 	public function testStringReturnsCorrectLength(): void

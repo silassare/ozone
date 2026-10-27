@@ -15,20 +15,19 @@ namespace OZONE\Tests\Cli;
 
 use OZONE\Core\Cli\Utils\ServiceGenerator;
 use OZONE\Core\REST\RESTFulService;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class ServiceGeneratorTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Cli\Utils\ServiceGenerator
  */
+#[CoversClass(ServiceGenerator::class)]
 final class ServiceGeneratorTest extends TestCase
 {
-	/**
-	 * @dataProvider provideNamesAServiceAfterItsBasePathCases
-	 */
+	#[DataProvider('provideNamesAServiceAfterItsBasePathCases')]
 	public function testNamesAServiceAfterItsBasePath(string $path, string $name): void
 	{
 		self::assertSame($name, ServiceGenerator::defaultName($path));

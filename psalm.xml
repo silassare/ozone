@@ -1,8 +1,10 @@
 <?xml version="1.0"?>
 <psalm
+        xmlns:xi="http://www.w3.org/2001/XInclude"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         errorLevel="4"
         resolveFromConfigFile="true"
+        phpVersion="8.5"
         xmlns="https://getpsalm.org/schema/config"
         xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
 >
@@ -31,51 +33,14 @@
         <file name="stubs/swoole.phpstub"/>
     </stubs>
 
+    <!-- The levels every Oliup package analyses at. Nothing here is repeated below. -->
+    <xi:include href="vendor/oliup/oliup-cs-php/src/psalm/handlers.xml"/>
+
     <issueHandlers>
         <UndefinedClass>
             <errorLevel type="suppress">
                 <referencedClass name="Memcached"/>
             </errorLevel>
         </UndefinedClass>
-
-        <!--
-            Level 4, with no baseline. The checks level 3 would add that the code has
-            no occurrence of stay errors, so none can appear: dereferencing, iterating or indexing what
-            may be null or false, a possibly undefined variable, a risky cast. Left out: a `false` or
-            `null` a function may return passed on as an argument, and annotation precision.
-        -->
-        <NonInvariantDocblockPropertyType errorLevel="error"/>
-        <PossiblyFalseIterator errorLevel="error"/>
-        <PossiblyFalseOperand errorLevel="error"/>
-        <PossiblyFalsePropertyAssignmentValue errorLevel="error"/>
-        <PossiblyFalseReference errorLevel="error"/>
-        <PossiblyInvalidArrayAssignment errorLevel="error"/>
-        <PossiblyInvalidClone errorLevel="error"/>
-        <PossiblyInvalidFunctionCall errorLevel="error"/>
-        <PossiblyInvalidIterator errorLevel="error"/>
-        <PossiblyInvalidMethodCall errorLevel="error"/>
-        <PossiblyInvalidOperand errorLevel="error"/>
-        <PossiblyInvalidPropertyAssignment errorLevel="error"/>
-        <PossiblyInvalidPropertyFetch errorLevel="error"/>
-        <PossiblyNullArrayAccess errorLevel="error"/>
-        <PossiblyNullArrayAssignment errorLevel="error"/>
-        <PossiblyNullArrayOffset errorLevel="error"/>
-        <PossiblyNullIterator errorLevel="error"/>
-        <PossiblyNullPropertyAssignment errorLevel="error"/>
-        <PossiblyNullPropertyFetch errorLevel="error"/>
-        <PossiblyNullReference errorLevel="error"/>
-        <PossiblyUndefinedGlobalVariable errorLevel="error"/>
-        <PossiblyUndefinedVariable errorLevel="error"/>
-        <RiskyCast errorLevel="error"/>
-
-        <PossiblyUnusedMethod errorLevel="suppress"/>
-        <PossiblyUnusedReturnValue errorLevel="suppress"/>
-        <UnusedClass errorLevel="suppress"/>
-        <PossiblyUnusedProperty errorLevel="suppress"/>
-        <RedundantCondition errorLevel="suppress"/>
-        <TypeDoesNotContainNull errorLevel="suppress"/>
-        <ImplicitToStringCast errorLevel="suppress"/>
-        <UnusedFunctionCall errorLevel="suppress"/>
-        <InvalidOperand errorLevel="suppress"/>
     </issueHandlers>
 </psalm>

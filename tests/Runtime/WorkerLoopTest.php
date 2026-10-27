@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Runtime;
 
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -28,9 +29,8 @@ use Symfony\Component\Process\Process;
  * PHPUnit -- which owns level 1 -- the emitted bytes are not the test's to read.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class WorkerLoopTest extends TestCase
 {
 	private static ?string $output = null;

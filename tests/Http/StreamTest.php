@@ -16,15 +16,15 @@ namespace OZONE\Tests\Http;
 use InvalidArgumentException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Stream;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class StreamTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Http\Stream
  */
+#[CoversClass(Stream::class)]
 final class StreamTest extends TestCase
 {
 	public function testConstructorThrowsForNonResource(): void

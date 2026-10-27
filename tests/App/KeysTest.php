@@ -15,15 +15,16 @@ namespace OZONE\Tests\App;
 
 use InvalidArgumentException;
 use OZONE\Core\App\Keys;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class KeysTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\App\Keys
  */
+#[CoversClass(Keys::class)]
 final class KeysTest extends TestCase
 {
 	public function testId32KeyReturns32HexChars(): void
@@ -113,9 +114,7 @@ final class KeysTest extends TestCase
 		self::assertSame(4, \strlen($code));
 	}
 
-	/**
-	 * @dataProvider provideNewAuthCodeThrowsForInvalidLengthCases
-	 */
+	#[DataProvider('provideNewAuthCodeThrowsForInvalidLengthCases')]
 	public function testNewAuthCodeThrowsForInvalidLength(int $length): void
 	{
 		$this->expectException(InvalidArgumentException::class);

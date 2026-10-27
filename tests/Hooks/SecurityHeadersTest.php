@@ -19,6 +19,7 @@ use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Hooks\MainBootHookReceiver;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Http\Response;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -27,9 +28,8 @@ use PHPUnit\Framework\TestCase;
  * Tests for the `OZ_SECURITY_HEADERS` added by {@see MainBootHookReceiver::onResponse()}.
  *
  * @internal
- *
- * @covers \OZONE\Core\Hooks\MainBootHookReceiver
  */
+#[CoversClass(MainBootHookReceiver::class)]
 final class SecurityHeadersTest extends TestCase
 {
 	protected function tearDown(): void

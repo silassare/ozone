@@ -19,6 +19,8 @@ use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Stores\RedisJobStore;
 use OZONE\Core\Testing\Traits\RequiresRedisTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Redis-backed job store contract tests.
@@ -26,12 +28,10 @@ use OZONE\Core\Testing\Traits\RequiresRedisTrait;
  * Needs ext-redis, a Redis server and `OZ_REDIS_ENABLED=true`; run with `make test-redis`.
  *
  * @internal
- *
- * @group redis
- *
- * @covers \OZONE\Core\Queue\Stores\RedisJobStore
  */
-final class RedisJobStoreTest extends AbstractJobStoreTest
+#[Group('redis')]
+#[CoversClass(RedisJobStore::class)]
+final class RedisJobStoreTest extends AbstractJobStoreTestCase
 {
 	use RequiresRedisTrait;
 

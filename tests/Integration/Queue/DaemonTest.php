@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Queue;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -36,9 +38,8 @@ use PHPUnit\Framework\TestCase;
  *      pass `--max-time=2` so the process always exits within 2 seconds.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class DaemonTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -65,9 +66,8 @@ final class DaemonTest extends TestCase
 	/**
 	 * Creates the project, installs the schema, and injects the worker and
 	 * boot hook receiver used by subsequent tests.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSetup(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -103,9 +103,8 @@ final class DaemonTest extends TestCase
 	/**
 	 * Pre-dispatches one job, then runs the daemon with `--max-jobs=1` and
 	 * `--sleep=0`. The daemon must process the job and exit with code 0.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDaemonProcessesJobAndExits(DbTestConfig $config): void
 	{
 		$proj        = self::getProject($config);
@@ -145,9 +144,8 @@ final class DaemonTest extends TestCase
 	/**
 	 * When the queue is empty the daemon still exits cleanly once the
 	 * max-time limit is reached.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDaemonExitsCleanlyOnMaxTime(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);

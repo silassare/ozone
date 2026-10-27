@@ -18,15 +18,15 @@ use OZONE\Core\Forms\AsyncValue;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Forms\FormValidationContext;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class AsyncValueTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\AsyncValue
  */
+#[CoversClass(AsyncValue::class)]
 final class AsyncValueTest extends TestCase
 {
 	public function testGetValueCallsTheFactoryWithTheContext(): void

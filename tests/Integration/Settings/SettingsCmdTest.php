@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Settings;
 
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,9 +29,8 @@ use PHPUnit\Framework\TestCase;
  *  - Setting with a scope name writes to the correct scope stateful settings dir
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class SettingsCmdTest extends TestCase
 {
 	private static OZTestProject $proj;

@@ -15,6 +15,7 @@ namespace OZONE\Tests\Integration\Cli;
 
 use OZONE\Core\Cli\Deploy\ReleaseLayout;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -24,9 +25,8 @@ use Symfony\Component\Process\Process;
  * with the code of its source. As in DeployRunTest, composer and the migrations are skipped.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class DeploySourcesTest extends TestCase
 {
 	private static OZTestProject $proj;

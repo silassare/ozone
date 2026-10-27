@@ -17,6 +17,7 @@ use Gobl\ORM\Exceptions\ORMQueryException;
 use OZONE\Core\App\Context;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\REST\RESTFulAPIRequest;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Throwable;
 
@@ -24,9 +25,8 @@ use Throwable;
  * Class RESTFulAPIRequestTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\REST\RESTFulAPIRequest
  */
+#[CoversClass(RESTFulAPIRequest::class)]
 final class RESTFulAPIRequestTest extends TestCase
 {
 	public function testOffsetPagination(): void

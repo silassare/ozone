@@ -22,15 +22,15 @@ use OZONE\Core\Forms\FormValidationContext;
 use OZONE\Core\Forms\Rule;
 use OZONE\Core\Forms\RuleSet;
 use OZONE\Core\Forms\RuleViolation;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RuleSetTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\RuleSet
  */
+#[CoversClass(RuleSet::class)]
 final class RuleSetTest extends TestCase
 {
 	public function testEqPassesWhenEqual(): void

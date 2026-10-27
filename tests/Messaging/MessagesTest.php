@@ -17,18 +17,18 @@ use OZONE\Core\Messaging\Messages\MailMessage;
 use OZONE\Core\Messaging\Messages\Message;
 use OZONE\Core\Messaging\Messages\NotificationMessage;
 use OZONE\Core\Messaging\Messages\SMSMessage;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class MessagesTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Messaging\Messages\MailMessage
- * @covers \OZONE\Core\Messaging\Messages\Message
- * @covers \OZONE\Core\Messaging\Messages\NotificationMessage
- * @covers \OZONE\Core\Messaging\Messages\SMSMessage
  */
+#[CoversClass(MailMessage::class)]
+#[CoversClass(Message::class)]
+#[CoversClass(NotificationMessage::class)]
+#[CoversClass(SMSMessage::class)]
 final class MessagesTest extends TestCase
 {
 	public function testEachMessageClassNamesItsChannel(): void

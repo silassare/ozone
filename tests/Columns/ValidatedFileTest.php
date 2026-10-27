@@ -18,15 +18,16 @@ use LogicException;
 use OZONE\Core\Columns\ValidatedFile;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\TempFS;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class ValidatedFileTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Columns\ValidatedFile
  */
+#[CoversClass(ValidatedFile::class)]
 final class ValidatedFileTest extends TestCase
 {
 	public function testForFileIDCreatesPersisted(): void
@@ -87,7 +88,7 @@ final class ValidatedFileTest extends TestCase
 
 	public function testForFileCreatesPersisted(): void
 	{
-		$file = $this->createMock(OZFile::class);
+		$file = self::createStub(OZFile::class);
 		$file->method('isSaved')->willReturn(true);
 		$file->method('getID')->willReturn('77');
 
@@ -99,7 +100,7 @@ final class ValidatedFileTest extends TestCase
 
 	public function testForFileReturnsCachedEntityOnLoadFile(): void
 	{
-		$file = $this->createMock(OZFile::class);
+		$file = self::createStub(OZFile::class);
 		$file->method('isSaved')->willReturn(true);
 		$file->method('getID')->willReturn('55');
 
@@ -114,7 +115,7 @@ final class ValidatedFileTest extends TestCase
 	{
 		$this->expectException(InvalidArgumentException::class);
 
-		$file = $this->createMock(OZFile::class);
+		$file = self::createStub(OZFile::class);
 		$file->method('isSaved')->willReturn(false);
 
 		ValidatedFile::forFile($file);
@@ -137,18 +138,14 @@ final class ValidatedFileTest extends TestCase
 		self::assertStringStartsWith(TempFS::root()->getRoot(), $vf->getPath());
 	}
 
-	/**
-	 * @dataProvider provideUnsafeSegments
-	 */
+	#[DataProvider('provideUnsafeSegments')]
 	public function testForTempFileRejectsUnsafeRef(string $segment): void
 	{
 		$this->expectException(InvalidArgumentException::class);
 		ValidatedFile::forTempFile($segment, 'photo.jpg');
 	}
 
-	/**
-	 * @dataProvider provideUnsafeSegments
-	 */
+	#[DataProvider('provideUnsafeSegments')]
 	public function testForTempFileRejectsUnsafeName(string $segment): void
 	{
 		$this->expectException(InvalidArgumentException::class);

@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Logger;
 
 use OZONE\Core\Logger\LogWriter;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class LogWriterTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Logger\LogWriter
  */
+#[CoversClass(LogWriter::class)]
 final class LogWriterTest extends TestCase
 {
 	public function testLogsUnderTheProjectLogsDir(): void

@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Queue;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -27,9 +29,8 @@ use PHPUnit\Framework\TestCase;
  * asserts.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class JobQueueTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -56,9 +57,8 @@ final class JobQueueTest extends TestCase
 	/**
 	 * Creates the test project, installs the schema, injects the custom worker
 	 * and boot hook receiver, then runs the queue.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testJobDispatchedAndProcessed(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -104,9 +104,8 @@ final class JobQueueTest extends TestCase
 	 * command exits cleanly.
 	 *
 	 * Depends on testJobDispatchedAndProcessed having run first (same project).
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSubsequentJobsRunIsIdempotent(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);
@@ -130,9 +129,8 @@ final class JobQueueTest extends TestCase
 	 * Running one job by ref needs the store that holds it. The option is not required for the
 	 * action -- left out without `--job` it means every registered store's queue -- so the single
 	 * job case says what is missing instead of handing a null store name to the registry.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testRunningOneJobByRefWithoutAStoreSaysWhatIsMissing(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);

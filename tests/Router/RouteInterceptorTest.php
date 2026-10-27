@@ -25,6 +25,7 @@ use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Tests\TestUtils;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -34,10 +35,9 @@ use PHPUnit\Framework\TestCase;
  * and the interceptor pipeline in {@see RouteInfo}.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\FormDiscoveryRouteInterceptor
- * @covers \OZONE\Core\Router\RouteInfo
  */
+#[CoversClass(FormDiscoveryRouteInterceptor::class)]
+#[CoversClass(RouteInfo::class)]
 final class RouteInterceptorTest extends TestCase
 {
 	// -----------------------------------------------------------------------

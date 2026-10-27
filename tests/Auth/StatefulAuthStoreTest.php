@@ -15,6 +15,7 @@ namespace OZONE\Tests\Auth;
 
 use OZONE\Core\App\Keys;
 use OZONE\Core\Auth\StatefulAuthenticationMethodStore;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,9 +27,8 @@ use PHPUnit\Framework\TestCase;
  * requiring a live HTTP session or database rows.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\StatefulAuthenticationMethodStore
  */
+#[CoversClass(StatefulAuthenticationMethodStore::class)]
 final class StatefulAuthStoreTest extends TestCase
 {
 	// -----------------------------------------------------------------------

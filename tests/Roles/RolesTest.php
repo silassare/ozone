@@ -20,6 +20,7 @@ use OZONE\Core\Roles\Enums\Role;
 use OZONE\Core\Roles\Enums\RoleCheckMode;
 use OZONE\Core\Roles\Roles;
 use OZONE\Core\Roles\RolesUtils;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -30,9 +31,8 @@ use RuntimeException;
  * current request whether its auth is scoped, and unit tests have no request auth.
  *
  * @internal
- *
- * @covers \OZONE\Core\Roles\Roles
  */
+#[CoversClass(Roles::class)]
 final class RolesTest extends TestCase
 {
 	public static function setUpBeforeClass(): void

@@ -14,21 +14,24 @@ declare(strict_types=1);
 namespace OZONE\Tests\Forms;
 
 use OZONE\Core\App\Settings;
+use OZONE\Core\Columns\Types\TypeGender;
 use OZONE\Core\Columns\Types\TypePassword;
+use OZONE\Core\Columns\Types\TypeUsername;
+use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * A discovered type carries the rules it takes from the settings, so a client checks a value
  * the way the server will without knowing the settings itself.
  *
- * @covers \OZONE\Core\Columns\Types\TypeGender
- * @covers \OZONE\Core\Columns\Types\TypePassword
- * @covers \OZONE\Core\Columns\Types\TypeUsername
- * @covers \OZONE\Core\Forms\Field
- *
  * @internal
  */
+#[CoversClass(TypeGender::class)]
+#[CoversClass(TypePassword::class)]
+#[CoversClass(TypeUsername::class)]
+#[CoversClass(Field::class)]
 final class FrontendTypeOptionsTest extends TestCase
 {
 	protected function tearDown(): void

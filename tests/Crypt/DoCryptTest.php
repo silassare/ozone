@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Crypt;
 
 use OZONE\Core\Crypt\DoCrypt;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -21,9 +22,8 @@ use RuntimeException;
  * Class DoCryptTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Crypt\DoCrypt
  */
+#[CoversClass(DoCrypt::class)]
 final class DoCryptTest extends TestCase
 {
 	public function testEncryptAndDecryptRoundtrip(): void

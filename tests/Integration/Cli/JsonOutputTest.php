@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Cli;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -22,9 +24,8 @@ use Symfony\Component\Process\Process;
  * `--json` on the commands a tool drives: stdout holds one JSON object, `{"ok": ...}`, errors included.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class JsonOutputTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -50,9 +51,7 @@ final class JsonOutputTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDbBuildAndMigrationsCheck(DbTestConfig $config): void
 	{
 		$rdbms = $config->rdbms;
@@ -92,9 +91,7 @@ final class JsonOutputTest extends TestCase
 		self::assertSame([], $after['pending']);
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testScopesDeployServerAndDoctor(DbTestConfig $config): void
 	{
 		$proj = self::project($config);
@@ -124,9 +121,7 @@ final class JsonOutputTest extends TestCase
 		self::assertNotEmpty($doctor['checks']);
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testErrorsAreJsonToo(DbTestConfig $config): void
 	{
 		$proj = self::project($config);

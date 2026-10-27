@@ -17,6 +17,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Resume\Enums\FormResumePhase;
 use OZONE\Core\Forms\Resume\FormResumeProgress;
 use OZONE\Core\Forms\Resume\Services\ResumableFormService;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,9 +29,8 @@ use PHPUnit\Framework\TestCase;
  * and live in the integration suite: tests/Integration/Forms/.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\Resume\Services\ResumableFormService
  */
+#[CoversClass(ResumableFormService::class)]
 final class ResumableFormServiceTest extends TestCase
 {
 	// -----------------------------------------------------------------------

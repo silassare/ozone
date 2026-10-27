@@ -16,15 +16,15 @@ namespace OZONE\Tests\Auth;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\FormData;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class LoginFormTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\AuthUsers
  */
+#[CoversClass(AuthUsers::class)]
 final class LoginFormTest extends TestCase
 {
 	public function testUserCanBeSelectedByIdentifier(): void

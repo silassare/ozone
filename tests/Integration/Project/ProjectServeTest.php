@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Project;
 
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -26,9 +27,8 @@ use Symfony\Component\Process\Process;
  * The test reads host/port from server.json and polls until the port is open.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class ProjectServeTest extends TestCase
 {
 	private static OZTestProject $proj;

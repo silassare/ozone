@@ -15,6 +15,7 @@ namespace OZONE\Tests\Integration\Cli;
 
 use LogicException;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -23,9 +24,8 @@ use Symfony\Component\Process\Process;
  * server reads them, for a client that translates the keys the API sends.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class LangCmdTest extends TestCase
 {
 	private static ?OZTestProject $proj = null;

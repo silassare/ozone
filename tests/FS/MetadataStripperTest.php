@@ -15,15 +15,15 @@ namespace OZONE\Tests\FS;
 
 use OZONE\Core\FS\Images\MetadataStripper;
 use OZONE\Tests\Support\ImageBytes;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class MetadataStripperTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\FS\Images\MetadataStripper
  */
+#[CoversClass(MetadataStripper::class)]
 final class MetadataStripperTest extends TestCase
 {
 	public function testAJpegLosesItsMetadataAndKeepsItsPixelsAndColorProfile(): void

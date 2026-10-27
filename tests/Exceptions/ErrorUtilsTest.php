@@ -17,6 +17,8 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\Utils\ErrorUtils;
 use OZONE\Core\OZone;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -24,9 +26,8 @@ use Symfony\Component\Process\Process;
  * Class ErrorUtilsTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Exceptions\Utils\ErrorUtils
  */
+#[CoversClass(ErrorUtils::class)]
 final class ErrorUtilsTest extends TestCase
 {
 	protected function setUp(): void
@@ -52,9 +53,7 @@ final class ErrorUtilsTest extends TestCase
 		self::assertStringContainsString('installed', $out);
 	}
 
-	/**
-	 * @dataProvider provideAnySignalAProjectSetsBeforeTheAutoloadIsEnoughCases
-	 */
+	#[DataProvider('provideAnySignalAProjectSetsBeforeTheAutoloadIsEnoughCases')]
 	public function testAnySignalAProjectSetsBeforeTheAutoloadIsEnough(string $constant, string $value): void
 	{
 		// One of these is set before `vendor/autoload.php` is required by the generated boot file

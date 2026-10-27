@@ -17,13 +17,13 @@ use OZONE\Core\App\Db;
 use OZONE\Core\Db\Base\OZCountriesQueryBase;
 use OZONE\Core\Db\OZCountry;
 use OZONE\Core\Loader\ClassLoader;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \OZONE\Core\App\Db
- *
  * @internal
  */
+#[CoversClass(Db::class)]
 final class DbTest extends TestCase
 {
 	public function testOrmClassesLoadFromWhereGoblGeneratedThem(): void

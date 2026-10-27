@@ -17,6 +17,7 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Http\Cookie;
 use OZONE\Core\Http\HTTPEnvironment;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,9 +26,8 @@ use PHPUnit\Framework\TestCase;
  * Tests for the `Secure` flag of {@see Cookie::create()}.
  *
  * @internal
- *
- * @covers \OZONE\Core\Http\Cookie
  */
+#[CoversClass(Cookie::class)]
 final class CookieSecureTest extends TestCase
 {
 	protected function tearDown(): void

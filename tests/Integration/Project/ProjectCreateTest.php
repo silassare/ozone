@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Project;
 
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,9 +26,8 @@ use PHPUnit\Framework\TestCase;
  * destroyed afterwards (tearDownAfterClass).
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class ProjectCreateTest extends TestCase
 {
 	private static OZTestProject $proj;
@@ -230,9 +231,7 @@ final class ProjectCreateTest extends TestCase
 		self::assertFileExists(self::path('public/api/.htaccess'));
 	}
 
-	/**
-	 * @dataProvider provideGeneratedPhpFileIsSyntacticallyValidCases
-	 */
+	#[DataProvider('provideGeneratedPhpFileIsSyntacticallyValidCases')]
 	public function testGeneratedPhpFileIsSyntacticallyValid(string $relative): void
 	{
 		$path   = self::path($relative);

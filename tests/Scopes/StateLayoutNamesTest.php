@@ -15,6 +15,8 @@ namespace OZONE\Tests\Scopes;
 
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use OZONE\Core\Scopes\StateLayout;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,9 +27,8 @@ use PHPUnit\Framework\TestCase;
  * writes there: two owners of one directory read each other's settings and files.
  *
  * @internal
- *
- * @covers \OZONE\Core\Scopes\StateLayout
  */
+#[CoversClass(StateLayout::class)]
 final class StateLayoutNamesTest extends TestCase
 {
 	public function testTheApplicationAndThePluginsDirectoryAreReserved(): void
@@ -57,9 +58,7 @@ final class StateLayoutNamesTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideANameThatIsNotASlugIsRefusedCases
-	 */
+	#[DataProvider('provideANameThatIsNotASlugIsRefusedCases')]
 	public function testANameThatIsNotASlugIsRefused(string $name): void
 	{
 		self::assertNotNull(StateLayout::scopeNameFault($name), \var_export($name, true));
@@ -86,9 +85,7 @@ final class StateLayoutNamesTest extends TestCase
 		];
 	}
 
-	/**
-	 * @dataProvider provideAPlainSlugIsAcceptedCases
-	 */
+	#[DataProvider('provideAPlainSlugIsAcceptedCases')]
 	public function testAPlainSlugIsAccepted(string $name): void
 	{
 		self::assertNull(StateLayout::scopeNameFault($name), $name);

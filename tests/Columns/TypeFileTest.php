@@ -18,15 +18,15 @@ use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use OZONE\Core\Columns\Types\TypeFile;
 use OZONE\Core\Columns\ValidatedFile;
 use OZONE\Core\Http\UploadedFile;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class TypeFileTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Columns\Types\TypeFile
  */
+#[CoversClass(TypeFile::class)]
 final class TypeFileTest extends TestCase
 {
 	private RDBMSInterface $rdbms;
@@ -36,7 +36,7 @@ final class TypeFileTest extends TestCase
 
 	protected function setUp(): void
 	{
-		$this->rdbms = $this->createMock(RDBMSInterface::class);
+		$this->rdbms = self::createStub(RDBMSInterface::class);
 	}
 
 	protected function tearDown(): void

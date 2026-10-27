@@ -15,15 +15,15 @@ namespace OZONE\Tests\Columns;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use OZONE\Core\Columns\Types\TypeCC2;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class TypeCC2Test.
  *
  * @internal
- *
- * @covers \OZONE\Core\Columns\Types\TypeCC2
  */
+#[CoversClass(TypeCC2::class)]
 final class TypeCC2Test extends TestCase
 {
 	public function testAcceptsUpperCaseCode(): void

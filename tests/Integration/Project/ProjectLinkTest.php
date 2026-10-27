@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Project;
 
 use OZONE\Core\Scopes\StateLayout;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -23,9 +25,8 @@ use PHPUnit\Framework\TestCase;
  * recreates them after a clone or a deploy that leaves a new release directory.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class ProjectLinkTest extends TestCase
 {
 	private const string SCOPE = 'myweb';
@@ -47,9 +48,7 @@ final class ProjectLinkTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	/**
-	 * @dataProvider provideScopes
-	 */
+	#[DataProvider('provideScopes')]
 	public function testCreateAndScopesAddProduceEveryStateDirectory(string $scope): void
 	{
 		foreach (StateLayout::kinds() as $kind) {
@@ -73,9 +72,7 @@ final class ProjectLinkTest extends TestCase
 		self::assertSame($expected, $entries, 'Nothing but a state slug belongs at the top of data/.');
 	}
 
-	/**
-	 * @dataProvider provideScopes
-	 */
+	#[DataProvider('provideScopes')]
 	public function testAScopeHoldsNothingButTheStateKinds(string $scope): void
 	{
 		$entries = \array_values(\array_diff(\scandir(self::path('data/' . $scope)) ?: [], ['.', '..']));
@@ -89,9 +86,7 @@ final class ProjectLinkTest extends TestCase
 		self::assertSame($kinds, $entries, 'A scope directory holds one directory per state kind.');
 	}
 
-	/**
-	 * @dataProvider provideScopes
-	 */
+	#[DataProvider('provideScopes')]
 	public function testThePublicLinkPointsAtTheScopePool(string $scope): void
 	{
 		$link = self::linkPath($scope);

@@ -16,6 +16,7 @@ namespace OZONE\Tests\Integration\Http;
 use OZONE\Core\Testing\OZTestProject;
 use OZONE\Tests\Support\ImageBytes;
 use PDO;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -31,9 +32,8 @@ use Symfony\Component\Process\Process;
  *  - The PHP built-in server running for the 'api' scope.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class HttpRoutingTest extends TestCase
 {
 	private static OZTestProject $proj;

@@ -16,6 +16,7 @@ namespace OZONE\Tests\Integration\Cli;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Cli\Deploy\ReleaseLayout;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -29,9 +30,8 @@ use Symfony\Component\Process\Process;
  * -- without a network or a database.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class DeployRunTest extends TestCase
 {
 	private static OZTestProject $proj;

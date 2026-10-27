@@ -17,6 +17,8 @@ use OZONE\Core\Stores\Drivers\RedisStore;
 use OZONE\Core\Stores\StoreEntry;
 use OZONE\Core\Testing\Traits\RequiresRedisTrait;
 use OZONE\Core\Utils\RedisFactory;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,11 +27,9 @@ use PHPUnit\Framework\TestCase;
  * Needs ext-redis and a Redis server (`oz.redis`); run with `make test-redis`.
  *
  * @internal
- *
- * @group redis
- *
- * @covers \OZONE\Core\Stores\Drivers\RedisStore
  */
+#[Group('redis')]
+#[CoversClass(RedisStore::class)]
 final class RedisStoreTest extends TestCase
 {
 	use RequiresRedisTrait;

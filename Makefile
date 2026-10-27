@@ -53,7 +53,7 @@ else
 RUN_FREE =
 endif
 
-PHPUNIT = vendor/bin/phpunit -c phpunit.xml.dist --do-not-cache-result
+PHPUNIT = vendor/bin/phpunit -c phpunit.xml.dist --do-not-record-test-run-history
 
 # What narrows a test target to what a change touched. FILE is a path and wins over the suite the
 # target selects, so it names a file of that suite; FILTER is a class or method pattern.
@@ -103,12 +103,12 @@ test-unit:
 test-services:
 	$(DOCKER_COMPOSE) --profile clamav up -d --wait clamav
 	$(RUN) env OZ_TEST_REDIS_REQUIRED=1 OZ_TEST_MINIO_REQUIRED=1 OZ_TEST_CLAMAV_REQUIRED=1 \
-		$(PHPUNIT) --group redis,minio,clamav --testdox
+		$(PHPUNIT) --group redis --group minio --group clamav --testdox
 
 ## Serve OZone from real FrankenPHP, RoadRunner and Swoole servers and test it over HTTP; a missing server fails
 test-runtimes:
 	$(DOCKER_COMPOSE) --profile runtimes up -d --build --force-recreate --wait frankenphp roadrunner swoole
-	$(RUN_NODEPS) env OZ_TEST_RUNTIMES_REQUIRED=1 $(PHPUNIT) --group frankenphp,roadrunner,swoole --testdox
+	$(RUN_NODEPS) env OZ_TEST_RUNTIMES_REQUIRED=1 $(PHPUNIT) --group frankenphp --group roadrunner --group swoole --testdox
 
 ## Provision a throwaway Debian container for real (runs on the host: it drives Docker itself)
 #
@@ -118,7 +118,7 @@ test-runtimes:
 # prerequisite of `test`, it stopped the run before `test-integration`, which is the suite that had
 # something to say. Run it on its own when the provisioning code changes, and before a release.
 test-provision:
-	OZ_TEST_PROVISION_REQUIRED=1 vendor/bin/phpunit -c phpunit.xml.dist --do-not-cache-result \
+	OZ_TEST_PROVISION_REQUIRED=1 vendor/bin/phpunit -c phpunit.xml.dist --do-not-record-test-run-history \
 		--group provision --testdox
 
 ## Run the integration test suite, on SQLite, MySQL and PostgreSQL (FILTER= and FILE= narrow it)

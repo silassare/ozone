@@ -18,16 +18,16 @@ use Gobl\ORM\Exceptions\ORMQueryException;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\REST\RESTFulAPIRequest;
 use OZONE\Core\REST\RESTFulRelationsHelper;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RESTFulRelationsTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\REST\RESTFulAPIRequest
- * @covers \OZONE\Core\REST\RESTFulRelationsHelper
  */
+#[CoversClass(RESTFulAPIRequest::class)]
+#[CoversClass(RESTFulRelationsHelper::class)]
 final class RESTFulRelationsTest extends TestCase
 {
 	public function testRelationsParameterTakesAListOrAnArray(): void
@@ -56,7 +56,7 @@ final class RESTFulRelationsTest extends TestCase
 
 	public function testPrivateRelationsAreForbidden(): void
 	{
-		$relation = $this->createMock(RelationInterface::class);
+		$relation = self::createStub(RelationInterface::class);
 		$relation->method('isPrivate')->willReturn(true);
 		$relation->method('getName')->willReturn('secrets');
 

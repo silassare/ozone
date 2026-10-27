@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Queue;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,9 +32,8 @@ use PHPUnit\Framework\TestCase;
  * enqueues it. A subsequent `oz jobs run` processes WorkerB.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class JobChainTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -59,9 +60,8 @@ final class JobChainTest extends TestCase
 	/**
 	 * Creates the project, installs schema, dispatches WorkerA with WorkerB
 	 * in its chain. After the first run WorkerA's flag must exist.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testFirstJobInChainRuns(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -110,9 +110,8 @@ final class JobChainTest extends TestCase
 	/**
 	 * A second `oz jobs run` must process the chained WorkerB that was
 	 * enqueued when WorkerA completed.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testChainedJobDispatches(DbTestConfig $config): void
 	{
 		$proj  = self::getProject($config);

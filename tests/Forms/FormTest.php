@@ -23,6 +23,7 @@ use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Uri;
 use OZONE\Core\Stores\StateRegistry;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,9 +33,8 @@ use PHPUnit\Framework\TestCase;
  * configuration, merge behaviour, toArray output, and cache-key derivation.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\Form
  */
+#[CoversClass(Form::class)]
 final class FormTest extends TestCase
 {
 	protected function setUp(): void

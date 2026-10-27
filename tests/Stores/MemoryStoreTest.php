@@ -15,15 +15,15 @@ namespace OZONE\Tests\Stores;
 
 use OZONE\Core\Stores\Drivers\MemoryStore;
 use OZONE\Core\Stores\StoreEntry;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class MemoryStoreTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Stores\Drivers\MemoryStore
  */
+#[CoversClass(MemoryStore::class)]
 final class MemoryStoreTest extends TestCase
 {
 	private MemoryStore $cache;

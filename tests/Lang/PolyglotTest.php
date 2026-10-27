@@ -15,15 +15,15 @@ namespace OZONE\Tests\Lang;
 
 use OZONE\Core\Lang\I18n;
 use OZONE\Core\Lang\Polyglot;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class PolyglotTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Lang\Polyglot
  */
+#[CoversClass(Polyglot::class)]
 final class PolyglotTest extends TestCase
 {
 	public function testIsLangKeyReturnsTrueForValidKeys(): void

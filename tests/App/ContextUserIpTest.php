@@ -15,7 +15,9 @@ namespace OZONE\Tests\App;
 
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Http\ClientInfo;
 use OZONE\Core\Http\HTTPEnvironment;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,10 +26,9 @@ use PHPUnit\Framework\TestCase;
  * Tests for {@see Context::getUserIP()}.
  *
  * @internal
- *
- * @covers \OZONE\Core\App\Context
- * @covers \OZONE\Core\Http\ClientInfo
  */
+#[CoversClass(Context::class)]
+#[CoversClass(ClientInfo::class)]
 final class ContextUserIpTest extends TestCase
 {
 	// No dot in the key: dotted settings keys are read as paths.

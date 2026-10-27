@@ -20,15 +20,16 @@ use OZONE\Core\Forms\Fieldset;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormDataClean;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class FormValidationTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\Form
  */
+#[CoversClass(Form::class)]
 final class FormValidationTest extends TestCase
 {
 	public function testExpectPassesWhenConditionHoldsOnRawData(): void
@@ -276,9 +277,7 @@ final class FormValidationTest extends TestCase
 		self::assertSame([1, 2], $form->validate(new FormData(['ids' => ['1', 2]]))->get('ids'));
 	}
 
-	/**
-	 * @dataProvider provideAMultipleFieldGivenSomethingElseIsAFormErrorCases
-	 */
+	#[DataProvider('provideAMultipleFieldGivenSomethingElseIsAFormErrorCases')]
 	public function testAMultipleFieldGivenSomethingElseIsAFormError(mixed $value): void
 	{
 		$form = new Form();

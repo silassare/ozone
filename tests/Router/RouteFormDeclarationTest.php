@@ -20,6 +20,7 @@ use OZONE\Core\Forms\Resume\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Resume\FormResumeProgress;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use OZONE\Core\Router\RouteFormDeclaration;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,9 +31,8 @@ use PHPUnit\Framework\TestCase;
  * as it requires a live RouteInfo/Context.
  *
  * @internal
- *
- * @covers \OZONE\Core\Router\RouteFormDeclaration
  */
+#[CoversClass(RouteFormDeclaration::class)]
 final class RouteFormDeclarationTest extends TestCase
 {
 	public function testMakeWithStaticFactoryDoesNotEagerlyRegister(): void

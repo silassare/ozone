@@ -15,6 +15,7 @@ namespace OZONE\Tests\Integration\Http;
 
 use OZONE\Core\Messaging\Transports\LogTransport;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -23,9 +24,8 @@ use Symfony\Component\Process\Process;
  * `oz.theme.css`, and the pages of an authorization link from the email to its confirmation.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class DefaultPagesServedTest extends TestCase
 {
 	private static ?OZTestProject $project = null;
@@ -190,7 +190,7 @@ final class DefaultPagesServedTest extends TestCase
 
 		self::assertGreaterThan(0, \preg_match_all('~https?://[^\s"<]+(/auth/link/[^\s"<]+)~', $logs, $m), $logs);
 
-		return (string) \end($m[1]);
+		return (string) \array_last($m[1]);
 	}
 
 	/**
@@ -231,9 +231,9 @@ final class DefaultPagesServedTest extends TestCase
 		}
 
 		$body   = @\file_get_contents("http://{$host}:{$port}{$path}", false, \stream_context_create(['http' => $opts]));
-		$status = (int) \explode(' ', $http_response_header[0] ?? 'HTTP/1.1 0')[1];
+		$status = (int) \explode(' ', (\http_get_last_response_headers() ?? [])[0] ?? 'HTTP/1.1 0')[1];
 
-		return [$status, (string) $body, $http_response_header ?? []];
+		return [$status, (string) $body, \http_get_last_response_headers() ?? []];
 	}
 
 	/**

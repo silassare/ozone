@@ -16,6 +16,8 @@ namespace OZONE\Tests\Integration\Cron;
 use OZONE\Core\Cli\Cron\CronEndpoint;
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -25,9 +27,8 @@ use Symfony\Component\Process\Process;
  * requests. The check-in is read back through `oz doctor check`.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class CronRunnersTest extends TestCase
 {
 	private const string KEY = 'cron-runners-test-key-0123456789abcdef';
@@ -57,9 +58,7 @@ final class CronRunnersTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testARequestRunsTheDueTasksWhenNoSchedulerDoes(DbTestConfig $config): void
 	{
 		$rdbms = $config->rdbms;
@@ -96,9 +95,7 @@ final class CronRunnersTest extends TestCase
 		self::assertSame('requests', self::lastRunner($proj));
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testTheCronRouteNeedsItsKey(DbTestConfig $config): void
 	{
 		[$proj, , $host, $port] = self::project($config);
@@ -115,9 +112,8 @@ final class CronRunnersTest extends TestCase
 
 	/**
 	 * The cron route answers the envelope every JSON answer of OZone has.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testTheCronRouteAnswersTheStandardEnvelope(DbTestConfig $config): void
 	{
 		[, , $host, $port] = self::project($config);
@@ -141,9 +137,8 @@ final class CronRunnersTest extends TestCase
 
 	/**
 	 * The per-IP limit of the cron route is what the project's settings say.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testTheCronRouteRateLimitComesFromTheSettings(DbTestConfig $config): void
 	{
 		[, , $host, $port] = self::project($config);
@@ -159,9 +154,7 @@ final class CronRunnersTest extends TestCase
 		self::assertSame('7', self::header($headers, 'X-RateLimit-Limit'));
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testASchedulerKeepsTheTasksOutOfRequests(DbTestConfig $config): void
 	{
 		[$proj, , $host, $port] = self::project($config);
@@ -229,8 +222,7 @@ final class CronRunnersTest extends TestCase
 
 		\file_get_contents("http://{$host}:{$port}{$path}", false, $context);
 
-		/** @var list<string> $http_response_header */
-		\preg_match('~^HTTP/\S+\s+(\d{3})~', $http_response_header[0] ?? '', $m);
+		\preg_match('~^HTTP/\S+\s+(\d{3})~', (\http_get_last_response_headers() ?? [])[0] ?? '', $m);
 
 		return (int) ($m[1] ?? 0);
 	}
@@ -263,8 +255,7 @@ final class CronRunnersTest extends TestCase
 
 		\file_get_contents("http://{$host}:{$port}{$path}", false, $context);
 
-		/** @var list<string> $http_response_header */
-		$received = $http_response_header ?? [];
+		$received = \http_get_last_response_headers() ?? [];
 
 		\preg_match('~^HTTP/\S+\s+(\d{3})~', $received[0] ?? '', $m);
 
@@ -299,8 +290,7 @@ final class CronRunnersTest extends TestCase
 
 		$body = @\file_get_contents("http://{$host}:{$port}{$path}", false, $context);
 
-		/** @var list<string> $http_response_header */
-		\preg_match('~^HTTP/\S+\s+(\d{3})~', $http_response_header[0] ?? '', $m);
+		\preg_match('~^HTTP/\S+\s+(\d{3})~', (\http_get_last_response_headers() ?? [])[0] ?? '', $m);
 
 		return [(int) ($m[1] ?? 0), false === $body ? '' : $body];
 	}

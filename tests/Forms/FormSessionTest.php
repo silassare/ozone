@@ -21,6 +21,7 @@ use OZONE\Core\Forms\Resume\Enums\FormResumePhase;
 use OZONE\Core\Forms\Resume\FormResumeProgress;
 use OZONE\Core\Forms\Resume\FormSession;
 use OZONE\Core\Http\Enums\RequestScope;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -31,9 +32,8 @@ use stdClass;
  * route binding enforced by {@see FormSession::assertUsableBy()}.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\Resume\FormSession
  */
+#[CoversClass(FormSession::class)]
 final class FormSessionTest extends TestCase
 {
 	public function testStandaloneSessionKeepsThePreviousCachedShape(): void

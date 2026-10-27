@@ -15,16 +15,16 @@ namespace OZONE\Tests\App;
 
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Settings;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
 /**
  * Source settings directories read from their compiled bundles, as production does.
  *
- * @covers \OZONE\Core\App\Settings
- *
  * @internal
  */
+#[CoversClass(Settings::class)]
 final class SettingsBundleTest extends TestCase
 {
 	private const array GROUPS = ['oz.config', 'oz.db', 'oz.routes', 'oz.gc', 'lang/oz.en'];

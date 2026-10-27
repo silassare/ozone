@@ -15,7 +15,9 @@ namespace OZONE\Tests\FS;
 
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FileStream;
+use OZONE\Core\FS\Scan\FileScanResult;
 use OZONE\Core\FS\Scan\Scanners\ClamAVScanner;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,10 +26,9 @@ use PHPUnit\Framework\TestCase;
  * The clamd protocol, against the other end of a socket pair holding clamd's reply.
  *
  * @internal
- *
- * @covers \OZONE\Core\FS\Scan\FileScanResult
- * @covers \OZONE\Core\FS\Scan\Scanners\ClamAVScanner
  */
+#[CoversClass(FileScanResult::class)]
+#[CoversClass(ClamAVScanner::class)]
 final class ClamAVScannerTest extends TestCase
 {
 	public function testStreamsTheContentWithInstream(): void

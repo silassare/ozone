@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Http;
 
 use OZONE\Core\Http\Headers;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class HeadersTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Http\Headers
  */
+#[CoversClass(Headers::class)]
 final class HeadersTest extends TestCase
 {
 	public function testNormalizeKeyStripsHttpPrefix(): void

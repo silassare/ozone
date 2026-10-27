@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Http;
 
 use OZONE\Core\Http\Response;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class ResponseTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Http\Response
  */
+#[CoversClass(Response::class)]
 final class ResponseTest extends TestCase
 {
 	public function testDefaultStatusIs200(): void

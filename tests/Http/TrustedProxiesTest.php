@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Http;
 
 use OZONE\Core\Http\TrustedProxies;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class TrustedProxiesTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Http\TrustedProxies
  */
+#[CoversClass(TrustedProxies::class)]
 final class TrustedProxiesTest extends TestCase
 {
 	public function testExactAndCidrEntries(): void

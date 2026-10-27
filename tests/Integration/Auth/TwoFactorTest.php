@@ -16,6 +16,7 @@ namespace OZONE\Tests\Integration\Auth;
 use OZONE\Core\Auth\TwoFactor\TOTP;
 use OZONE\Core\Testing\OZTestProject;
 use PDO;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -25,9 +26,8 @@ use Symfony\Component\Process\Process;
  * challenge belongs to the session that signed in, and keeps its try limit.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class TwoFactorTest extends TestCase
 {
 	private const string DB_FILE       = 'two_factor_test.sqlite';
@@ -233,13 +233,13 @@ final class TwoFactorTest extends TestCase
 		$status = 0;
 
 		if (
-			!empty($http_response_header[0])
-			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', $http_response_header[0], $m)
+			!empty((\http_get_last_response_headers() ?? [])[0])
+			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', (\http_get_last_response_headers() ?? [])[0], $m)
 		) {
 			$status = (int) $m[1];
 		}
 
-		return [$status, $body, $http_response_header ?? []];
+		return [$status, $body, \http_get_last_response_headers() ?? []];
 	}
 
 	/**

@@ -19,8 +19,11 @@ use OZONE\Core\Auth\Auth;
 use OZONE\Core\Auth\Enums\AuthorizationState;
 use OZONE\Core\Auth\Enums\VerificationPurpose;
 use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
+use OZONE\Core\Auth\Providers\OwnershipVerificationProvider;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Http\HTTPEnvironment;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,9 +31,8 @@ use PHPUnit\Framework\TestCase;
  * has to answer it.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\Providers\OwnershipVerificationProvider
  */
+#[CoversClass(OwnershipVerificationProvider::class)]
 final class OwnershipVerificationTest extends TestCase
 {
 	public static function setUpBeforeClass(): void
@@ -43,9 +45,8 @@ final class OwnershipVerificationTest extends TestCase
 	/**
 	 * The owner has longer to confirm a sign-up, which creates nothing until answered, than to reset
 	 * the password of an account that already exists.
-	 *
-	 * @dataProvider provideEachPurposeHasItsOwnLifetimeCases
 	 */
+	#[DataProvider('provideEachPurposeHasItsOwnLifetimeCases')]
 	public function testEachPurposeHasItsOwnLifetime(VerificationPurpose $purpose, int $lifetime): void
 	{
 		$provider = new EmailOwnershipVerificationProvider($this->context(), 'jane.doe@example.com', $purpose);

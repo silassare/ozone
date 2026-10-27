@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Cron;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -36,9 +38,8 @@ use PHPUnit\Framework\TestCase;
  *   the subprocess threw "Cron task not found".
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class CronTaskTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -81,9 +82,8 @@ final class CronTaskTest extends TestCase
 	/**
 	 * Creates the test project, installs the schema, injects a cron boot hook receiver
 	 * that registers an everyMinute task, then runs the full dispatch + process pipeline.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testCronTaskDispatchedAndProcessed(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -122,9 +122,8 @@ final class CronTaskTest extends TestCase
 	/**
 	 * A task runs once per scheduled minute: the first `oz cron run` of a minute runs the everyMinute
 	 * task again, a second one in the same minute does not -- as for two servers' schedulers.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testCronRunIsIdempotent(DbTestConfig $config): void
 	{
 		$proj     = self::getProject($config);
@@ -156,9 +155,8 @@ final class CronTaskTest extends TestCase
 	 * bootstraps but `Cron::runDues()` is never called, so `Cron::$tasks` would be
 	 * empty if `CronTaskWorker::__construct()` did not call `Cron::collect()` to
 	 * populate the registry before `Cron::getTask()` is called.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testAsyncCronTaskDispatchedAndProcessed(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -204,9 +202,8 @@ final class CronTaskTest extends TestCase
 
 	/**
 	 * The same for a background task: run by the first `oz cron run` of a minute, not by a second one.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testAsyncCronRunIsIdempotent(DbTestConfig $config): void
 	{
 		$proj     = self::getAsyncProject($config);

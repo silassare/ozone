@@ -15,15 +15,15 @@ namespace OZONE\Tests\Columns;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use OZONE\Core\Columns\Types\TypePhone;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class TypePhoneTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Columns\Types\TypePhone
  */
+#[CoversClass(TypePhone::class)]
 final class TypePhoneTest extends TestCase
 {
 	public function testAcceptsMinimumLengthE164(): void

@@ -27,6 +27,7 @@ use OZONE\Core\Router\Route;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Utils\Hasher;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -54,10 +55,9 @@ use RuntimeException;
  *      incorrectly blocked the request).
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\Methods\ApiKeyHeaderAuth
- * @covers \OZONE\Core\Auth\Methods\BearerAuth
  */
+#[CoversClass(ApiKeyHeaderAuth::class)]
+#[CoversClass(BearerAuth::class)]
 final class AuthMethodsAuthenticateTest extends TestCase
 {
 	private static Router $router;

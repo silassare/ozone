@@ -15,15 +15,15 @@ namespace OZONE\Tests\Columns;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use OZONE\Core\Columns\Types\TypeEmail;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class TypeEmailTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Columns\Types\TypeEmail
  */
+#[CoversClass(TypeEmail::class)]
 final class TypeEmailTest extends TestCase
 {
 	public function testAcceptsValidEmail(): void

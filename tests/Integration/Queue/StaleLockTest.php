@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Queue;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -35,9 +37,8 @@ use PHPUnit\Framework\TestCase;
  *   4. Asserting the worker ran and wrote its flag file.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class StaleLockTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -65,9 +66,8 @@ final class StaleLockTest extends TestCase
 	 * Creates the project, installs the schema, injects the worker + boot hook,
 	 * simulates a stale lock, then runs the queue.  Asserts the job was recovered
 	 * and the worker ran successfully.
-	 *
-	 * @dataProvider provideStaleLockJobIsRecoveredAndProcessedCases
 	 */
+	#[DataProvider('provideStaleLockJobIsRecoveredAndProcessedCases')]
 	public function testStaleLockJobIsRecoveredAndProcessed(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;

@@ -16,15 +16,15 @@ namespace OZONE\Tests\Cron;
 use DateTime;
 use OZONE\Core\Cli\Cron\CronExpression;
 use OZONE\Core\Exceptions\RuntimeException;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class CronExpressionTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Cli\Cron\CronExpression
  */
+#[CoversClass(CronExpression::class)]
 final class CronExpressionTest extends TestCase
 {
 	public function testConstructorRejectsFewerThanFiveFields(): void

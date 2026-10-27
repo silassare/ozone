@@ -14,17 +14,18 @@ declare(strict_types=1);
 namespace OZONE\Tests\Router;
 
 use OZONE\Core\Router\Route;
+use OZONE\Core\Router\RouteGroup;
 use OZONE\Core\Router\Router;
 use OZONE\Tests\TestUtils;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RouteGroupTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Router\RouteGroup
  */
+#[CoversClass(RouteGroup::class)]
 final class RouteGroupTest extends TestCase
 {
 	public function testSubGroupRouteName(): void

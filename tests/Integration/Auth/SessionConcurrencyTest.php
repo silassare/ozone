@@ -15,6 +15,7 @@ namespace OZONE\Tests\Integration\Auth;
 
 use OZONE\Core\Testing\OZTestProject;
 use PDO;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -28,9 +29,8 @@ use Symfony\Component\Process\Process;
  * navigation away from it.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class SessionConcurrencyTest extends TestCase
 {
 	private const string DB_FILE = 'session_concurrency_test.sqlite';

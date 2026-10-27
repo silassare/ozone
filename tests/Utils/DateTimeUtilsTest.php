@@ -15,15 +15,15 @@ namespace OZONE\Tests\Utils;
 
 use DateTimeZone;
 use OZONE\Core\Utils\DateTimeUtils;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class DateTimeUtilsTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Utils\DateTimeUtils
  */
+#[CoversClass(DateTimeUtils::class)]
 final class DateTimeUtilsTest extends TestCase
 {
 	public function testParseReturnsCorrectDay(): void

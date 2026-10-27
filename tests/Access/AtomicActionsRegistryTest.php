@@ -16,14 +16,14 @@ namespace OZONE\Tests\Access;
 use OZONE\Core\Access\AtomicAction;
 use OZONE\Core\Access\AtomicActionsRegistry;
 use OZONE\Core\Lang\I18nMessage;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 /**
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class AtomicActionsRegistryTest extends TestCase
 {
 	public function testTheSameActionRegisteredAgainIsKept(): void

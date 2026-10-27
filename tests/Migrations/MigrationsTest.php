@@ -20,6 +20,7 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\Migrations\Enums\MigrationsState;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\Stores\CacheRegistry;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,9 +30,8 @@ use PHPUnit\Framework\TestCase;
  * {@see Migrations} reads them from, so no migration file nor database is needed.
  *
  * @internal
- *
- * @covers \OZONE\Core\Migrations\Migrations
  */
+#[CoversClass(Migrations::class)]
 final class MigrationsTest extends TestCase
 {
 	#[Override]

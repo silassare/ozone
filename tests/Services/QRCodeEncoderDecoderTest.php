@@ -15,15 +15,16 @@ namespace OZONE\Tests\Services;
 
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Services\QRCode\BuiltinQRCodeEncoderDecoder;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class QRCodeEncoderDecoderTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Services\QRCode\BuiltinQRCodeEncoderDecoder
  */
+#[CoversClass(BuiltinQRCodeEncoderDecoder::class)]
 final class QRCodeEncoderDecoderTest extends TestCase
 {
 	private BuiltinQRCodeEncoderDecoder $qr;
@@ -57,9 +58,7 @@ final class QRCodeEncoderDecoderTest extends TestCase
 		self::assertSame($png1, $png2);
 	}
 
-	/**
-	 * @dataProvider roundTripProvider
-	 */
+	#[DataProvider('roundTripProvider')]
 	public function testRoundTrip(string $data): void
 	{
 		$png     = $this->qr->encode($data);
@@ -117,9 +116,7 @@ final class QRCodeEncoderDecoderTest extends TestCase
 		self::assertSame($data, $decoded);
 	}
 
-	/**
-	 * @dataProvider roundTripProvider
-	 */
+	#[DataProvider('roundTripProvider')]
 	public function testRoundTripViaJpeg(string $data): void
 	{
 		$png = $this->qr->encode($data, 8);

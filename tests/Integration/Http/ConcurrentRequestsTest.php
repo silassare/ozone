@@ -16,6 +16,8 @@ namespace OZONE\Tests\Integration\Http;
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
 use PDO;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,9 +27,8 @@ use PHPUnit\Framework\TestCase;
  * what they write together must not collide.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class ConcurrentRequestsTest extends TestCase
 {
 	/** Requests sent at once, the server's workers answering them, and the route's limit. */
@@ -39,9 +40,8 @@ final class ConcurrentRequestsTest extends TestCase
 	 * The first hits of a rate limit arrive together: each writes the limit's new key. Writing it by
 	 * reading first, then inserting, made all but one fail on its unique key (500). And they are
 	 * counted together: counting by reading then writing let more of them pass than the limit.
-	 *
-	 * @dataProvider provideABurstOfFirstHitsIsAnsweredAndCountedWholeCases
 	 */
+	#[DataProvider('provideABurstOfFirstHitsIsAnsweredAndCountedWholeCases')]
 	public function testABurstOfFirstHitsIsAnsweredAndCountedWhole(DbTestConfig $config): void
 	{
 		$proj = OZTestProject::create('concurrent-' . $config->rdbms, fresh: true);
@@ -80,9 +80,8 @@ final class ConcurrentRequestsTest extends TestCase
 	/**
 	 * Sign-ups with one email at once: each passes the check that the email is free, then inserts.
 	 * One user is created; the others get the email field's error, never a 500.
-	 *
-	 * @dataProvider provideSignUpsWithOneEmailAtOnceMakeOneUserCases
 	 */
+	#[DataProvider('provideSignUpsWithOneEmailAtOnceMakeOneUserCases')]
 	public function testSignUpsWithOneEmailAtOnceMakeOneUser(DbTestConfig $config): void
 	{
 		$proj = OZTestProject::create('concurrent-signup-' . $config->rdbms, fresh: true);

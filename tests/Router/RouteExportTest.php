@@ -17,15 +17,15 @@ use OZONE\Core\Forms\Form;
 use OZONE\Core\OZone;
 use OZONE\Core\Router\RouteExport;
 use OZONE\Core\Router\Router;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RouteExportTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Router\RouteExport
  */
+#[CoversClass(RouteExport::class)]
 final class RouteExportTest extends TestCase
 {
 	public function testExportsTheNamedRoutesWithWhatAClientNeedsToCallThem(): void

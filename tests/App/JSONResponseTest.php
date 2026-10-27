@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\App;
 
 use OZONE\Core\App\JSONResponse;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class JSONResponseTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\App\JSONResponse
  */
+#[CoversClass(JSONResponse::class)]
 final class JSONResponseTest extends TestCase
 {
 	public function testDefaultsToSuccessWithOkMessage(): void

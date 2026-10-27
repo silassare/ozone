@@ -20,15 +20,15 @@ use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Stores\DbJobStore;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * DB-backed job store contract tests.
  *
  * @internal
- *
- * @covers \OZONE\Core\Queue\Stores\DbJobStore
  */
-final class DbJobStoreTest extends AbstractJobStoreTest
+#[CoversClass(DbJobStore::class)]
+final class DbJobStoreTest extends AbstractJobStoreTestCase
 {
 	/**
 	 * The regression: a job carries its own clock, so being old is not being abandoned.

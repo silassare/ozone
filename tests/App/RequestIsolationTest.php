@@ -20,6 +20,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\OZone;
 use OZONE\Core\Stores\CacheRegistry;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -38,9 +39,8 @@ use ReflectionClass;
  * a process-level operation, and every other test in the run depends on it.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class RequestIsolationTest extends TestCase
 {
 	/** @var array<string, null|Context> */

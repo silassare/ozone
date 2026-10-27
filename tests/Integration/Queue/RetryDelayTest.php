@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Queue;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,9 +32,8 @@ use PHPUnit\Framework\TestCase;
  *   4. Assert the worker ran exactly once.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class RetryDelayTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -59,9 +60,8 @@ final class RetryDelayTest extends TestCase
 	/**
 	 * Creates the project, installs the schema, injects the worker + boot hook,
 	 * then dispatches and runs the job once. Asserts the worker ran exactly once.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSetup(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -116,9 +116,8 @@ final class RetryDelayTest extends TestCase
 	/**
 	 * A second `oz jobs run` must NOT pick up the failed job because its
 	 * run_after timestamp is 3600 seconds in the future.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testRunAfterPreventsImmediateRequeue(DbTestConfig $config): void
 	{
 		$proj        = self::getProject($config);

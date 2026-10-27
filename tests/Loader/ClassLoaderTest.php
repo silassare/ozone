@@ -16,6 +16,7 @@ namespace OZONE\Tests\Loader;
 use InvalidArgumentException;
 use Override;
 use OZONE\Core\Loader\ClassLoader;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -27,9 +28,8 @@ use RecursiveIteratorIterator;
  * state and the declared classes live for the whole process.
  *
  * @internal
- *
- * @covers \OZONE\Core\Loader\ClassLoader
  */
+#[CoversClass(ClassLoader::class)]
 final class ClassLoaderTest extends TestCase
 {
 	private static string $dir;

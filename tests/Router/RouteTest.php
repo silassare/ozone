@@ -14,18 +14,20 @@ declare(strict_types=1);
 namespace OZONE\Tests\Router;
 
 use InvalidArgumentException;
+use OZONE\Core\Router\Route;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Router\RouteSearchStatus;
 use OZONE\Tests\TestUtils;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RouteTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Router\Route
  */
+#[CoversClass(Route::class)]
 final class RouteTest extends TestCase
 {
 	public function testIsDynamic(): void
@@ -240,9 +242,7 @@ final class RouteTest extends TestCase
 		self::assertCount(6, $router->getRoutes());
 	}
 
-	/**
-	 * @dataProvider provideRefusesParamPatternsThatAreNotPortableCases
-	 */
+	#[DataProvider('provideRefusesParamPatternsThatAreNotPortableCases')]
 	public function testRefusesParamPatternsThatAreNotPortable(string $pattern): void
 	{
 		$router = new Router();

@@ -15,6 +15,7 @@ namespace OZONE\Tests\Utils;
 
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Utils\Env;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use PHPUtils\Env\EnvParser;
 use Symfony\Component\Process\Process;
@@ -22,10 +23,9 @@ use Symfony\Component\Process\Process;
 /**
  * Env reads through a compiled copy of the file, named after its path and content.
  *
- * @covers \OZONE\Core\Utils\Env
- *
  * @internal
  */
+#[CoversClass(Env::class)]
 final class EnvCompiledTest extends TestCase
 {
 	private string $file;

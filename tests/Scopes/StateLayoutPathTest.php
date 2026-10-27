@@ -14,13 +14,13 @@ declare(strict_types=1);
 namespace OZONE\Tests\Scopes;
 
 use OZONE\Core\Scopes\StateLayout;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \OZONE\Core\Scopes\StateLayout
- *
  * @internal
  */
+#[CoversClass(StateLayout::class)]
 final class StateLayoutPathTest extends TestCase
 {
 	public function testThePathIsTheDirectory(): void

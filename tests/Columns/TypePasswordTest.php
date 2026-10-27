@@ -15,15 +15,15 @@ namespace OZONE\Tests\Columns;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use OZONE\Core\Columns\Types\TypePassword;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class TypePasswordTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Columns\Types\TypePassword
  */
+#[CoversClass(TypePassword::class)]
 final class TypePasswordTest extends TestCase
 {
 	// Default OZ_USER_PASS_MIN_LENGTH = 6, OZ_USER_PASS_MAX_LENGTH = 60

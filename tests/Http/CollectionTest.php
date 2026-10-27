@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Http;
 
 use OZONE\Core\Http\Collection;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class CollectionTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Http\Collection
  */
+#[CoversClass(Collection::class)]
 final class CollectionTest extends TestCase
 {
 	public function testConstructorPrePopulatesItems(): void

@@ -17,7 +17,10 @@ use InvalidArgumentException;
 use OZONE\Core\Cli\Server\Enums\PackageManager;
 use OZONE\Core\Cli\Server\Provisioner;
 use OZONE\Core\Cli\Server\ProvisionPlan;
+use OZONE\Core\Cli\Server\ProvisionStep;
 use OZONE\Core\Cli\Utils\Requirements;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,12 +31,11 @@ use PHPUnit\Framework\TestCase;
  * provisions a throwaway container.
  *
  * @internal
- *
- * @covers \OZONE\Core\Cli\Server\Enums\PackageManager
- * @covers \OZONE\Core\Cli\Server\Provisioner
- * @covers \OZONE\Core\Cli\Server\ProvisionPlan
- * @covers \OZONE\Core\Cli\Server\ProvisionStep
  */
+#[CoversClass(PackageManager::class)]
+#[CoversClass(Provisioner::class)]
+#[CoversClass(ProvisionPlan::class)]
+#[CoversClass(ProvisionStep::class)]
 final class ProvisionerTest extends TestCase
 {
 	public function testAnUnknownPackageManagerIsRefused(): void
@@ -81,9 +83,7 @@ final class ProvisionerTest extends TestCase
 		self::assertStringContainsString("'" . $prefix . "-xml'", $command);
 	}
 
-	/**
-	 * @dataProvider provideBadOptionsAreRefusedCases
-	 */
+	#[DataProvider('provideBadOptionsAreRefusedCases')]
 	public function testBadOptionsAreRefused(array $args): void
 	{
 		$this->expectException(InvalidArgumentException::class);
@@ -127,9 +127,8 @@ final class ProvisionerTest extends TestCase
 	 * The failure a real Debian container caught: there are no `-json`, `-pdo`, `-openssl`,
 	 * `-posix`, `-fileinfo` or `-libxml` packages -- they are built into the command line package,
 	 * and asking apt for them aborts the whole install.
-	 *
-	 * @dataProvider provideAptNeverAsksForAnExtensionBuiltIntoPhpCases
 	 */
+	#[DataProvider('provideAptNeverAsksForAnExtensionBuiltIntoPhpCases')]
 	public function testAptNeverAsksForAnExtensionBuiltIntoPhp(string $extension): void
 	{
 		self::assertNull(PackageManager::APT->phpExtensionPackage($extension));
@@ -289,9 +288,7 @@ final class ProvisionerTest extends TestCase
 		self::assertNotContains('db:postgresql', $names);
 	}
 
-	/**
-	 * @dataProvider provideDatabasePackagePerManagerCases
-	 */
+	#[DataProvider('provideDatabasePackagePerManagerCases')]
 	public function testDatabasePackagePerManager(PackageManager $manager, string $database, string $package): void
 	{
 		$commands = self::stepCommands(
@@ -387,7 +384,7 @@ final class ProvisionerTest extends TestCase
 			tls_email: 'ops@example.com'
 		)->plan();
 
-		self::assertStringContainsString('--apache', \end(self::stepCommands($plan, 'tls')));
+		self::assertStringContainsString('--apache', \array_last(self::stepCommands($plan, 'tls')));
 	}
 
 	public function testFedoraUsesFirewalldAndHttpd(): void

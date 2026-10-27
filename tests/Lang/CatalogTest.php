@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Tests\Lang;
 
 use OZONE\Core\App\Settings;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -27,9 +29,8 @@ use SplFileInfo;
  * shipped catalog, with the same placeholders.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class CatalogTest extends TestCase
 {
 	/**
@@ -50,9 +51,7 @@ final class CatalogTest extends TestCase
 		'OZ_SSH_COMMAND',
 	];
 
-	/**
-	 * @dataProvider provideEveryUsedCodeIsTranslatedCases
-	 */
+	#[DataProvider('provideEveryUsedCodeIsTranslatedCases')]
 	public function testEveryUsedCodeIsTranslated(string $lang): void
 	{
 		$catalog = Settings::load('lang/oz.' . $lang);

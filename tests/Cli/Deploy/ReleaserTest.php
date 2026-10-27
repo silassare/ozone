@@ -16,6 +16,7 @@ namespace OZONE\Tests\Cli\Deploy;
 use OZONE\Core\Cli\Deploy\ReleaseLayout;
 use OZONE\Core\Cli\Deploy\Releaser;
 use OZONE\Core\Exceptions\RuntimeException;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,10 +26,9 @@ use PHPUnit\Framework\TestCase;
  * everything that can fail has to happen before the `current` symlink moves.
  *
  * @internal
- *
- * @covers \OZONE\Core\Cli\Deploy\ReleaseLayout
- * @covers \OZONE\Core\Cli\Deploy\Releaser
  */
+#[CoversClass(ReleaseLayout::class)]
+#[CoversClass(Releaser::class)]
 final class ReleaserTest extends TestCase
 {
 	private const string ROOT = '/srv/app';

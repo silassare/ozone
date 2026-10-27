@@ -16,8 +16,11 @@ namespace OZONE\Tests\Cli\Deploy;
 use InvalidArgumentException;
 use OZONE\Core\Cli\Deploy\DeployFile;
 use OZONE\Core\Cli\Deploy\DeployInitializer;
+use OZONE\Core\Cli\Deploy\DeployPlan;
 use OZONE\Core\Cli\Deploy\DeployTemplates;
 use OZONE\Core\Exceptions\RuntimeException;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,17 +31,14 @@ use PHPUnit\Framework\TestCase;
  * with a real `nginx -t`.
  *
  * @internal
- *
- * @covers \OZONE\Core\Cli\Deploy\DeployFile
- * @covers \OZONE\Core\Cli\Deploy\DeployInitializer
- * @covers \OZONE\Core\Cli\Deploy\DeployPlan
- * @covers \OZONE\Core\Cli\Deploy\DeployTemplates
  */
+#[CoversClass(DeployFile::class)]
+#[CoversClass(DeployInitializer::class)]
+#[CoversClass(DeployPlan::class)]
+#[CoversClass(DeployTemplates::class)]
 final class DeployInitializerTest extends TestCase
 {
-	/**
-	 * @dataProvider provideBadOptionsAreRefusedCases
-	 */
+	#[DataProvider('provideBadOptionsAreRefusedCases')]
 	public function testBadOptionsAreRefused(array $args): void
 	{
 		$this->expectException(InvalidArgumentException::class);

@@ -15,6 +15,8 @@ namespace OZONE\Tests\FS;
 
 use InvalidArgumentException;
 use OZONE\Core\FS\TempFS;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -22,9 +24,8 @@ use RuntimeException;
  * Class TempFSTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\FS\TempFS
  */
+#[CoversClass(TempFS::class)]
 final class TempFSTest extends TestCase
 {
 	public function testPathIsUnderTheRoot(): void
@@ -35,18 +36,14 @@ final class TempFSTest extends TestCase
 		self::assertSame($root . DS . 'my-ref' . DS . 'a.txt', TempFS::path('my-ref', 'a.txt'));
 	}
 
-	/**
-	 * @dataProvider provideUnsafeSegments
-	 */
+	#[DataProvider('provideUnsafeSegments')]
 	public function testPathRejectsUnsafeRef(string $segment): void
 	{
 		$this->expectException(InvalidArgumentException::class);
 		TempFS::path($segment);
 	}
 
-	/**
-	 * @dataProvider provideUnsafeSegments
-	 */
+	#[DataProvider('provideUnsafeSegments')]
 	public function testPathRejectsUnsafeName(string $segment): void
 	{
 		if ('' === $segment) {

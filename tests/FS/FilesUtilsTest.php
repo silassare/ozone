@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\FS;
 
 use OZONE\Core\FS\FS;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class FilesUtilsTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\FS\FS
  */
+#[CoversClass(FS::class)]
 final class FilesUtilsTest extends TestCase
 {
 	public function testGetRealExtension(): void

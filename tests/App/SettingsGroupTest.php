@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\App;
 
 use OZONE\Core\App\SettingsGroup;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,9 +30,8 @@ use PHPUnit\Framework\TestCase;
  *   around a known StoreTrait::parentOf() limitation for single bracket-quoted segments.
  *
  * @internal
- *
- * @covers \OZONE\Core\App\SettingsGroup
  */
+#[CoversClass(SettingsGroup::class)]
 final class SettingsGroupTest extends TestCase
 {
 	// -------------------------------------------------------------------------

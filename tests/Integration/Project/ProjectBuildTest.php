@@ -15,6 +15,7 @@ namespace OZONE\Tests\Integration\Project;
 
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -22,9 +23,8 @@ use PHPUnit\Framework\TestCase;
  * before the first one.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class ProjectBuildTest extends TestCase
 {
 	private static OZTestProject $proj;

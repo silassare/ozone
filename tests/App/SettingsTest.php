@@ -14,13 +14,13 @@ declare(strict_types=1);
 namespace OZONE\Tests\App;
 
 use OZONE\Core\App\Settings;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \OZONE\Core\App\Settings
- *
  * @internal
  */
+#[CoversClass(Settings::class)]
 final class SettingsTest extends TestCase
 {
 	public function testEveryStatefulEditMovesTheDirectoryMtime(): void

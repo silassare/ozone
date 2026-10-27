@@ -21,6 +21,7 @@ use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Router\Route;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -35,10 +36,9 @@ use PHPUnit\Framework\TestCase;
  * completely non-functional.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\Methods\ApiKeyHeaderAuth
- * @covers \OZONE\Core\Auth\Methods\BearerAuth
  */
+#[CoversClass(ApiKeyHeaderAuth::class)]
+#[CoversClass(BearerAuth::class)]
 final class AuthMethodsSatisfiedTest extends TestCase
 {
 	/** Minimal router/route used to construct RouteInfo in every test. */

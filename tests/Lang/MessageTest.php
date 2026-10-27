@@ -18,24 +18,24 @@ use OZONE\Core\Lang\Message\MessageParser;
 use OZONE\Core\Lang\Message\MessageRenderer;
 use OZONE\Core\Lang\Message\MessageSyntaxException;
 use OZONE\Core\Lang\Message\PluralRules;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * The message syntax of the catalogs, parsed and written, with and without plural rules.
  *
  * @internal
- *
- * @covers \OZONE\Core\Lang\Message\MessageParser
- * @covers \OZONE\Core\Lang\Message\MessageRenderer
- * @covers \OZONE\Core\Lang\Message\PluralRules
  */
+#[CoversClass(MessageParser::class)]
+#[CoversClass(MessageRenderer::class)]
+#[CoversClass(PluralRules::class)]
 final class MessageTest extends TestCase
 {
 	/**
-	 * @dataProvider provideWritesAsTheSyntaxSaysCases
-	 *
 	 * @param array<string, mixed> $data
 	 */
+	#[DataProvider('provideWritesAsTheSyntaxSaysCases')]
 	public function testWritesAsTheSyntaxSays(string $text, array $data, string $expected): void
 	{
 		self::assertSame($expected, self::render($text, $data, 'en', true));
@@ -163,10 +163,9 @@ final class MessageTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider provideADateFilterWritesAnInstantInUtcCases
-	 *
 	 * @param array<string, mixed> $data
 	 */
+	#[DataProvider('provideADateFilterWritesAnInstantInUtcCases')]
 	public function testADateFilterWritesAnInstantInUtc(string $text, array $data, string $lang, string $expected): void
 	{
 		// ICU writes a narrow no-break space before "PM"
@@ -212,9 +211,7 @@ final class MessageTest extends TestCase
 		yield 'out of range, as it is' => ['{d | date}', ['d' => 1e21], 'en', '1.0E+21'];
 	}
 
-	/**
-	 * @dataProvider provideADateFilterRefusesUnknownStylesCases
-	 */
+	#[DataProvider('provideADateFilterRefusesUnknownStylesCases')]
 	public function testADateFilterRefusesUnknownStyles(string $text): void
 	{
 		$this->expectException(RuntimeException::class);
@@ -275,10 +272,9 @@ final class MessageTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider provideWritesAsHtmlCases
-	 *
 	 * @param array<string, mixed> $data
 	 */
+	#[DataProvider('provideWritesAsHtmlCases')]
 	public function testWritesAsHtml(string $text, array $data, string $expected): void
 	{
 		$texts    = ['BOLD' => '<b>{name}</b>'];
@@ -319,9 +315,7 @@ final class MessageTest extends TestCase
 		yield 'a value that is not text' => ['{v}{w}', ['v' => true, 'w' => ['x']], '1'];
 	}
 
-	/**
-	 * @dataProvider provideRefusesWhatIsNotTheSyntaxCases
-	 */
+	#[DataProvider('provideRefusesWhatIsNotTheSyntaxCases')]
 	public function testRefusesWhatIsNotTheSyntax(string $text): void
 	{
 		$this->expectException(MessageSyntaxException::class);

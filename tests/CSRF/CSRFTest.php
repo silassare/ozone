@@ -16,15 +16,15 @@ namespace OZONE\Tests\CSRF;
 use OZONE\Core\App\Settings;
 use OZONE\Core\CSRF\CSRF;
 use OZONE\Core\Http\Enums\RequestScope;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class CSRFTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\CSRF\CSRF
  */
+#[CoversClass(CSRF::class)]
 final class CSRFTest extends TestCase
 {
 	public function testGeneratedTokenIsValid(): void

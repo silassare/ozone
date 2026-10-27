@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Queue;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,9 +30,8 @@ use PHPUnit\Framework\TestCase;
  *   - The batch-finished flag must indicate no error (has_error = false).
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class JobBatchTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -57,9 +58,8 @@ final class JobBatchTest extends TestCase
 	/**
 	 * Creates the project, installs schema, dispatches a two-worker batch.
 	 * A single `oz jobs run` must process both jobs and fire BatchFinished.
-	 *
-	 * @dataProvider provideBatchJobsRunAndBatchFinishedEventFiresCases
 	 */
+	#[DataProvider('provideBatchJobsRunAndBatchFinishedEventFiresCases')]
 	public function testBatchJobsRunAndBatchFinishedEventFires(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;

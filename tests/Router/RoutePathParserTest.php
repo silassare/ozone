@@ -18,15 +18,15 @@ use OZONE\Core\Router\Route;
 use OZONE\Core\Router\RoutePathParser;
 use OZONE\Core\Router\Router;
 use OZONE\Tests\TestUtils;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RoutePathParserTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Router\RoutePathParser
  */
+#[CoversClass(RoutePathParser::class)]
 final class RoutePathParserTest extends TestCase
 {
 	private Router $router;

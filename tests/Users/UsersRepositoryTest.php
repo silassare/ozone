@@ -15,16 +15,16 @@ namespace OZONE\Tests\Users;
 
 use OZONE\Core\Users\UsernameUtils;
 use OZONE\Core\Users\UsersRepository;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class UsersRepositoryTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Users\UsernameUtils
- * @covers \OZONE\Core\Users\UsersRepository
  */
+#[CoversClass(UsernameUtils::class)]
+#[CoversClass(UsersRepository::class)]
 final class UsersRepositoryTest extends TestCase
 {
 	public static function setUpBeforeClass(): void

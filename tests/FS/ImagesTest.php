@@ -22,6 +22,8 @@ use OZONE\Core\FS\Images\ImageTokens;
 use OZONE\Core\FS\Images\Interfaces\ImageTokenInterface;
 use OZONE\Core\FS\Images\InterventionImageProcessor;
 use OZONE\Tests\Support\ImageBytes;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,9 +32,8 @@ use PHPUnit\Framework\TestCase;
  * Every driver is held to the same renditions: the test image has them all (docker/php/Dockerfile).
  *
  * @internal
- *
- * @covers \OZONE\Core\FS\Images\InterventionImageProcessor
  */
+#[CoversClass(InterventionImageProcessor::class)]
 final class ImagesTest extends TestCase
 {
 	public function testTheFirstDriverTheServerHasIsUsed(): void
@@ -41,9 +42,7 @@ final class ImagesTest extends TestCase
 		self::assertSame('vips', Images::processor()->driver());
 	}
 
-	/**
-	 * @dataProvider provideDrivers
-	 */
+	#[DataProvider('provideDrivers')]
 	public function testResizesWithoutEverEnlarging(ImageDriverName $driver): void
 	{
 		$processor = new InterventionImageProcessor($driver);
@@ -57,9 +56,7 @@ final class ImagesTest extends TestCase
 		self::assertSame([100, 100], ImageBytes::size($processor->render($png, 'image/png', new ImageRecipe(400, 400, true))->bytes));
 	}
 
-	/**
-	 * @dataProvider provideDrivers
-	 */
+	#[DataProvider('provideDrivers')]
 	public function testAPhotoIsServedUpright(ImageDriverName $driver): void
 	{
 		// Stored 200 x 100, its EXIF saying "turn it a quarter clockwise" (orientation 6).
@@ -70,9 +67,7 @@ final class ImagesTest extends TestCase
 		self::assertSame([100, 200], ImageBytes::size($out));
 	}
 
-	/**
-	 * @dataProvider provideDrivers
-	 */
+	#[DataProvider('provideDrivers')]
 	public function testARenditionCarriesNoMetadata(ImageDriverName $driver): void
 	{
 		$processor = new InterventionImageProcessor($driver);
@@ -86,9 +81,7 @@ final class ImagesTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideDrivers
-	 */
+	#[DataProvider('provideDrivers')]
 	public function testEffectsKeepAValidImageOfTheSameSize(ImageDriverName $driver): void
 	{
 		$processor = new InterventionImageProcessor($driver);
@@ -97,9 +90,7 @@ final class ImagesTest extends TestCase
 		self::assertSame([40, 30], ImageBytes::size($processor->render(ImageBytes::png(40, 30), 'image/png', $recipe)->bytes));
 	}
 
-	/**
-	 * @dataProvider provideDrivers
-	 */
+	#[DataProvider('provideDrivers')]
 	public function testTurnsMirrorsAndKeepsAnArea(ImageDriverName $driver): void
 	{
 		$processor = new InterventionImageProcessor($driver);
@@ -120,9 +111,7 @@ final class ImagesTest extends TestCase
 		self::assertSame('blue', ImageBytes::colorAt($area, 50, 25));
 	}
 
-	/**
-	 * @dataProvider provideDrivers
-	 */
+	#[DataProvider('provideDrivers')]
 	public function testACropToASizeKeepsTheFocalPointInView(ImageDriverName $driver): void
 	{
 		$processor = new InterventionImageProcessor($driver);
@@ -138,9 +127,7 @@ final class ImagesTest extends TestCase
 		self::assertSame(['red', 'red'], [ImageBytes::colorAt($left, 5, 25), ImageBytes::colorAt($left, 45, 25)]);
 	}
 
-	/**
-	 * @dataProvider provideDrivers
-	 */
+	#[DataProvider('provideDrivers')]
 	public function testBrightensDarkensInvertsAndPixelates(ImageDriverName $driver): void
 	{
 		$processor = new InterventionImageProcessor($driver);
@@ -156,9 +143,7 @@ final class ImagesTest extends TestCase
 		self::assertSame([20, 20], ImageBytes::size($processor->render($gray, 'image/png', new ImageRecipe(effects: ['contrast20', 'pixel4']))->bytes));
 	}
 
-	/**
-	 * @dataProvider provideDrivers
-	 */
+	#[DataProvider('provideDrivers')]
 	public function testWritesTheFormatAsked(ImageDriverName $driver): void
 	{
 		$processor = new InterventionImageProcessor($driver);
@@ -175,9 +160,7 @@ final class ImagesTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideDrivers
-	 */
+	#[DataProvider('provideDrivers')]
 	public function testAWatermarkSitsWhereItIsDeclared(ImageDriverName $driver): void
 	{
 		$mark = \tempnam(\sys_get_temp_dir(), 'oz-mark') . '.png';
@@ -205,9 +188,7 @@ final class ImagesTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideDrivers
-	 */
+	#[DataProvider('provideDrivers')]
 	public function testAProjectsOwnTokenDrawsWithTheLibrary(ImageDriverName $driver): void
 	{
 		ImageTokens::register(new class implements ImageTokenInterface {
@@ -232,9 +213,7 @@ final class ImagesTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideDrivers
-	 */
+	#[DataProvider('provideDrivers')]
 	public function testProbesAnImagesSizeAsShownAndItsColor(ImageDriverName $driver): void
 	{
 		$processor = new InterventionImageProcessor($driver);

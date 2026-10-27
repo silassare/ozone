@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Stores;
 
 use OZONE\Core\Stores\StoreEntry;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class StoreEntryTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Stores\StoreEntry
  */
+#[CoversClass(StoreEntry::class)]
 final class StoreEntryTest extends TestCase
 {
 	public function testValueIsReadable(): void

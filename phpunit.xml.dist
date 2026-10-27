@@ -5,6 +5,7 @@
          backupGlobals="false"
          colors="true"
          bootstrap="tests/autoload.php"
+         cacheDirectory=".phpunit.cache"
          failOnRisky="true"
          failOnWarning="true">
 
@@ -50,7 +51,8 @@
         </exclude>
     </groups>
 
-    <coverage processUncoveredFiles="false">
+    <!-- What a coverage run measures: `make test-coverage`. -->
+    <source>
         <include>
             <directory suffix=".php">oz</directory>
         </include>
@@ -60,5 +62,5 @@
             <directory>oz/oz_settings</directory>
             <directory>oz/oz_templates</directory>
         </exclude>
-    </coverage>
+    </source>
 </phpunit>

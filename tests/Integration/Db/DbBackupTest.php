@@ -15,13 +15,15 @@ namespace OZONE\Tests\Integration\Db;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Integration tests for `oz db backup`.
  *
  * Tests cover:
- *  - All configured DB types can produce a backup file (via @dataProvider).
+ *  - All configured DB types can produce a backup file (via a data provider).
  *  - SQLite :memory: backup exits with an error.
  *
  * DB types are enabled via env vars (see DbTestConfig::allConfigured()).
@@ -29,9 +31,8 @@ use PHPUnit\Framework\TestCase;
  * tools (mysqldump / pg_dump) to be available on the system.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class DbBackupTest extends TestCase
 {
 	private string $backupDir;
@@ -61,9 +62,8 @@ final class DbBackupTest extends TestCase
 	/**
 	 * Verifies that `oz db backup` creates a backup file for every configured
 	 * DB type.
-	 *
-	 * @dataProvider provideBackupCreatesFileCases
 	 */
+	#[DataProvider('provideBackupCreatesFileCases')]
 	public function testBackupCreatesFile(DbTestConfig $config): void
 	{
 		$proj = OZTestProject::create('db-backup-' . $config->rdbms, shared: true, fresh: true);

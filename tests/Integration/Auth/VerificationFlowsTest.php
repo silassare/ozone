@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Auth;
 
 use OZONE\Core\Testing\OZTestProject;
 use PDO;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -25,9 +27,8 @@ use Symfony\Component\Process\Process;
  * `/account-recovery` or `/signup`, once.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class VerificationFlowsTest extends TestCase
 {
 	private const string DB_FILE       = 'verification_flows_test.sqlite';
@@ -82,9 +83,8 @@ final class VerificationFlowsTest extends TestCase
 	/**
 	 * Who started the recovery recovers with the code the email carries, typed where they asked: the
 	 * authorization is refused while pending, works once confirmed, and only once.
-	 *
-	 * @dataProvider provideAnAccountIsRecoveredWithTheCodeOfTheEmailCases
 	 */
+	#[DataProvider('provideAnAccountIsRecoveredWithTheCodeOfTheEmailCases')]
 	public function testAnAccountIsRecoveredWithTheCodeOfTheEmail(string $project): void
 	{
 		$ref = $this->startVerification($project, self::USER_EMAIL, 'account-recovery');
@@ -306,9 +306,8 @@ final class VerificationFlowsTest extends TestCase
 	 * A link whose authorization expired says so when it is opened, rather than offering a button, or
 	 * a password form, that could only fail. The row is still there: the garbage collection deletes it
 	 * an hour later.
-	 *
-	 * @dataProvider provideAnExpiredLinkSaysSoBeforeAnythingIsTypedCases
 	 */
+	#[DataProvider('provideAnExpiredLinkSaysSoBeforeAnythingIsTypedCases')]
 	public function testAnExpiredLinkSaysSoBeforeAnythingIsTyped(string $purpose): void
 	{
 		$project = 'account-recovery';
@@ -572,8 +571,8 @@ final class VerificationFlowsTest extends TestCase
 		$status = 0;
 
 		if (
-			!empty($http_response_header[0])
-			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', $http_response_header[0], $m)
+			!empty((\http_get_last_response_headers() ?? [])[0])
+			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', (\http_get_last_response_headers() ?? [])[0], $m)
 		) {
 			$status = (int) $m[1];
 		}

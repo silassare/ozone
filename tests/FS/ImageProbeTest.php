@@ -17,15 +17,15 @@ use OZONE\Core\App\Settings;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Images\ImageProbe;
 use OZONE\Tests\Support\ImageBytes;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class ImageProbeTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\FS\Images\ImageProbe
  */
+#[CoversClass(ImageProbe::class)]
 final class ImageProbeTest extends TestCase
 {
 	protected function tearDown(): void

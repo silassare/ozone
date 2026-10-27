@@ -17,6 +17,7 @@ use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Http\Request;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,9 +27,8 @@ use PHPUnit\Framework\TestCase;
  * {@see Request::isFormResumeRequest()}.
  *
  * @internal
- *
- * @covers \OZONE\Core\Http\Request
  */
+#[CoversClass(Request::class)]
 final class RequestFormHeadersTest extends TestCase
 {
 	private static string $discoveryHeaderName;

@@ -18,6 +18,7 @@ use OZONE\Core\Cli\Server\LocalHost;
 use OZONE\Core\Cli\Server\ProvisionManifest;
 use OZONE\Core\Cli\Server\ProvisionStep;
 use OZONE\Core\Testing\Sandbox;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,10 +26,9 @@ use PHPUnit\Framework\TestCase;
  * answers the same questions over a connection (tests/Integration/Cli/SshHostTest.php).
  *
  * @internal
- *
- * @covers \OZONE\Core\Cli\Server\LocalHost
- * @covers \OZONE\Core\Cli\Server\ProvisionManifest
  */
+#[CoversClass(LocalHost::class)]
+#[CoversClass(ProvisionManifest::class)]
 final class LocalHostTest extends TestCase
 {
 	private string $dir;

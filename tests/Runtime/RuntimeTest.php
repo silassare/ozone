@@ -20,6 +20,7 @@ use OZONE\Core\Runtime\ConsoleRuntime;
 use OZONE\Core\Runtime\Exceptions\RequestFinished;
 use OZONE\Core\Runtime\Runtime;
 use OZONE\Core\Runtime\WorkerRuntime;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,13 +30,12 @@ use PHPUnit\Framework\TestCase;
  * that used to be hardcoded: `Context::finish()` called `exit`.
  *
  * @internal
- *
- * @covers \OZONE\Core\Runtime\CgiRuntime
- * @covers \OZONE\Core\Runtime\ConsoleRuntime
- * @covers \OZONE\Core\Runtime\Exceptions\RequestFinished
- * @covers \OZONE\Core\Runtime\Runtime
- * @covers \OZONE\Core\Runtime\WorkerRuntime
  */
+#[CoversClass(CgiRuntime::class)]
+#[CoversClass(ConsoleRuntime::class)]
+#[CoversClass(RequestFinished::class)]
+#[CoversClass(Runtime::class)]
+#[CoversClass(WorkerRuntime::class)]
 final class RuntimeTest extends TestCase
 {
 	protected function tearDown(): void

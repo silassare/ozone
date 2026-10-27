@@ -18,15 +18,15 @@ use OZONE\Core\Router\Route;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Router\RouteSearchStatus;
 use OZONE\Tests\TestUtils;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RouterTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Router\Router
  */
+#[CoversClass(Router::class)]
 final class RouterTest extends TestCase
 {
 	public function testGetRoute(): void

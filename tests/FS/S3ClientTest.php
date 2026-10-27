@@ -19,9 +19,14 @@ use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\S3\Interfaces\S3TransportInterface;
 use OZONE\Core\FS\S3\S3Client;
+use OZONE\Core\FS\S3\S3Request;
+use OZONE\Core\FS\S3\S3Response;
 use OZONE\Core\FS\S3\Transport\CurlTransport;
 use OZONE\Core\FS\S3\Transport\StreamWrapperTransport;
 use OZONE\Core\Testing\Traits\RequiresMinioTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,15 +37,13 @@ use PHPUnit\Framework\TestCase;
  * service that actually checks the signatures.
  *
  * @internal
- *
- * @group minio
- *
- * @covers \OZONE\Core\FS\S3\S3Client
- * @covers \OZONE\Core\FS\S3\S3Request
- * @covers \OZONE\Core\FS\S3\S3Response
- * @covers \OZONE\Core\FS\S3\Transport\CurlTransport
- * @covers \OZONE\Core\FS\S3\Transport\StreamWrapperTransport
  */
+#[Group('minio')]
+#[CoversClass(S3Client::class)]
+#[CoversClass(S3Request::class)]
+#[CoversClass(S3Response::class)]
+#[CoversClass(CurlTransport::class)]
+#[CoversClass(StreamWrapperTransport::class)]
 final class S3ClientTest extends TestCase
 {
 	use RequiresMinioTrait;
@@ -74,9 +77,7 @@ final class S3ClientTest extends TestCase
 		parent::tearDown();
 	}
 
-	/**
-	 * @dataProvider provideTransports
-	 */
+	#[DataProvider('provideTransports')]
 	public function testPutAndGetAnObject(S3TransportInterface $transport): void
 	{
 		$client = $this->client($transport);
@@ -88,9 +89,7 @@ final class S3ClientTest extends TestCase
 		self::assertSame(11, $client->objectSize(self::$bucket, $key));
 	}
 
-	/**
-	 * @dataProvider provideTransports
-	 */
+	#[DataProvider('provideTransports')]
 	public function testGetObjectToWritesIntoTheSinkWithoutReturningTheBody(
 		S3TransportInterface $transport
 	): void {
@@ -109,9 +108,7 @@ final class S3ClientTest extends TestCase
 		self::assertSame(\md5($content), \md5((string) $sink));
 	}
 
-	/**
-	 * @dataProvider provideTransports
-	 */
+	#[DataProvider('provideTransports')]
 	public function testPutObjectFromStreamUsesOneRequestBelowThePartSize(
 		S3TransportInterface $transport
 	): void {
@@ -130,9 +127,7 @@ final class S3ClientTest extends TestCase
 		self::assertSame($content, $client->getObject(self::$bucket, $key));
 	}
 
-	/**
-	 * @dataProvider provideTransports
-	 */
+	#[DataProvider('provideTransports')]
 	public function testPutObjectFromStreamSplitsAboveThePartSize(S3TransportInterface $transport): void
 	{
 		// The smallest part size the service accepts, so the test data stays small.
@@ -160,9 +155,7 @@ final class S3ClientTest extends TestCase
 		self::assertSame(\md5($content), \md5((string) $sink), 'The parts must be reassembled in order.');
 	}
 
-	/**
-	 * @dataProvider provideTransports
-	 */
+	#[DataProvider('provideTransports')]
 	public function testPutObjectFromStreamStoresAnEmptyStream(S3TransportInterface $transport): void
 	{
 		$client = $this->client($transport);
@@ -181,9 +174,8 @@ final class S3ClientTest extends TestCase
 
 	/**
 	 * The point of the whole exercise: peak memory must follow the part size, not the file size.
-	 *
-	 * @dataProvider provideTransports
 	 */
+	#[DataProvider('provideTransports')]
 	public function testLargeUploadAndDownloadStayWithinAFixedBuffer(S3TransportInterface $transport): void
 	{
 		$part_size = S3Client::MIN_PART_SIZE;
@@ -255,9 +247,7 @@ final class S3ClientTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideTransports
-	 */
+	#[DataProvider('provideTransports')]
 	public function testHeadAndDeleteAnObject(S3TransportInterface $transport): void
 	{
 		$client = $this->client($transport);
@@ -273,9 +263,7 @@ final class S3ClientTest extends TestCase
 		self::assertNull($client->objectSize(self::$bucket, $key));
 	}
 
-	/**
-	 * @dataProvider provideTransports
-	 */
+	#[DataProvider('provideTransports')]
 	public function testBucketExistence(S3TransportInterface $transport): void
 	{
 		$client = $this->client($transport);

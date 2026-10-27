@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Lang;
 
 use OZONE\Core\Lang\I18nMessage;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class I18nMessageTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Lang\I18nMessage
  */
+#[CoversClass(I18nMessage::class)]
 final class I18nMessageTest extends TestCase
 {
 	public function testGetTextReturnsConstructorText(): void

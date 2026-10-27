@@ -18,15 +18,15 @@ use OZONE\Core\App\Context;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Web\WebView;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class WebViewTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Web\WebView
  */
+#[CoversClass(WebView::class)]
 final class WebViewTest extends TestCase
 {
 	public function testRendersATemplateWithInjectedData(): void

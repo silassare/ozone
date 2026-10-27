@@ -18,22 +18,24 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Response;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\REST\Enums\RESTFulAction;
+use OZONE\Core\REST\RESTFulApiDoc;
 use OZONE\Core\REST\RESTFulAPIRequest;
 use OZONE\Core\REST\RESTFulService;
 use OZONE\Core\Router\Route;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\RouteOptions;
 use OZONE\Core\Router\Router;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RESTFulServiceTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\REST\RESTFulApiDoc
- * @covers \OZONE\Core\REST\RESTFulService
  */
+#[CoversClass(RESTFulApiDoc::class)]
+#[CoversClass(RESTFulService::class)]
 final class RESTFulServiceTest extends TestCase
 {
 	private static bool $registered = false;
@@ -98,10 +100,9 @@ final class RESTFulServiceTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider provideAServiceMissingItsNamePathOrTableRefusesToRegisterCases
-	 *
 	 * @param class-string<RESTFulService> $service
 	 */
+	#[DataProvider('provideAServiceMissingItsNamePathOrTableRefusesToRegisterCases')]
 	public function testAServiceMissingItsNamePathOrTableRefusesToRegister(string $service, string $message): void
 	{
 		$this->expectException(RuntimeException::class);

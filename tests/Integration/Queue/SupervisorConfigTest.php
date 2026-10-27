@@ -15,6 +15,7 @@ namespace OZONE\Tests\Integration\Queue;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,9 +27,8 @@ use PHPUnit\Framework\TestCase;
  * All sub-tests reuse the same project.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class SupervisorConfigTest extends TestCase
 {
 	private static ?OZTestProject $project = null;

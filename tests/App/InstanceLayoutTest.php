@@ -15,15 +15,15 @@ namespace OZONE\Tests\App;
 
 use Override;
 use OZONE\Core\App\InstanceLayout;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class InstanceLayoutTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\App\InstanceLayout
  */
+#[CoversClass(InstanceLayout::class)]
 final class InstanceLayoutTest extends TestCase
 {
 	private string $root = '';
@@ -193,7 +193,13 @@ final class InstanceLayoutTest extends TestCase
 		foreach (\array_diff(\scandir($dir) ?: [], ['.', '..']) as $entry) {
 			$path = $dir . \DIRECTORY_SEPARATOR . $entry;
 
-			\is_dir($path) ? self::rmdir($path) : \unlink($path);
+			// A symlink to a directory answers `is_dir()`, and `rmdir()` refuses a link: the layout
+			// has a `current` link, so recursing into it emptied the release and left the link behind.
+			if (\is_link($path) || !\is_dir($path)) {
+				\unlink($path);
+			} else {
+				self::rmdir($path);
+			}
 		}
 
 		\rmdir($dir);

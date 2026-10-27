@@ -19,13 +19,13 @@ use OZONE\Core\Queue\JobState;
 use OZONE\Core\Queue\Queue;
 use OZONE\Core\Testing\IntegrationTestCase;
 use OZONE\Core\Utils\JSONResult;
+use PHPUnit\Framework\Attributes\CoversClass;
 use Throwable;
 
 /**
  * @internal
- *
- * @covers \OZONE\Core\Queue\Job
  */
+#[CoversClass(Job::class)]
 final class JobTest extends IntegrationTestCase
 {
 	/** @var string[] */

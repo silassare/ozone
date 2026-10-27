@@ -23,6 +23,7 @@ use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Router\Route;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -33,9 +34,8 @@ use PHPUnit\Framework\TestCase;
  * rejected with `Invalid auth ref.`.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\Methods\DigestAuth
  */
+#[CoversClass(DigestAuth::class)]
 final class DigestAuthTest extends TestCase
 {
 	public const string REALM = 'test';

@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Scopes;
 
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -31,9 +33,8 @@ use PHPUnit\Framework\TestCase;
  * composer installs.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class ScopesAddTest extends TestCase
 {
 	private static OZTestProject $proj;
@@ -193,9 +194,7 @@ final class ScopesAddTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideGeneratedPhpFileIsSyntacticallyValidCases
-	 */
+	#[DataProvider('provideGeneratedPhpFileIsSyntacticallyValidCases')]
 	public function testGeneratedPhpFileIsSyntacticallyValid(string $relative): void
 	{
 		$path   = self::path($relative);

@@ -20,6 +20,7 @@ use OZONE\Core\Db\OZJobsQuery;
 use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\Queue;
 use OZONE\Core\Utils\JSONResult;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,10 +29,9 @@ use PHPUnit\Framework\TestCase;
  * Against the sandbox's database: the jobs a tick dispatches, and its check-in.
  *
  * @internal
- *
- * @covers \OZONE\Core\Cli\Cron\Cron
- * @covers \OZONE\Core\Cli\Cron\CronRunner
  */
+#[CoversClass(Cron::class)]
+#[CoversClass(CronRunner::class)]
 final class CronRunnerTest extends TestCase
 {
 	public function testADueTaskIsDispatchedOnceAMinuteWhoeverRunsIt(): void

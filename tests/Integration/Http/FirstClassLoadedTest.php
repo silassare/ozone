@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Http;
 
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,9 +28,8 @@ use PHPUnit\Framework\TestCase;
  * class comes first, the rules hold, attached by the table's name or through its generated classes.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class FirstClassLoadedTest extends TestCase
 {
 	/** The listener refusing an anonymous read, by how it attaches: its stub. */
@@ -53,9 +54,8 @@ final class FirstClassLoadedTest extends TestCase
 
 	/**
 	 * A server of its own: its one worker initializes the database on this request.
-	 *
-	 * @dataProvider provideTheTableRulesHoldWhicheverClassLoadsFirstCases
 	 */
+	#[DataProvider('provideTheTableRulesHoldWhicheverClassLoadsFirstCases')]
 	public function testTheTableRulesHoldWhicheverClassLoadsFirst(string $listener, string $kind): void
 	{
 		[$server, $host, $port] = self::project($listener)->startServer('api');
@@ -66,7 +66,7 @@ final class FirstClassLoadedTest extends TestCase
 				false,
 				\stream_context_create(['http' => ['ignore_errors' => true, 'timeout' => 30]])
 			);
-			$status = (int) \explode(' ', $http_response_header[0] ?? 'HTTP/1.1 0')[1];
+			$status = (int) \explode(' ', (\http_get_last_response_headers() ?? [])[0] ?? 'HTTP/1.1 0')[1];
 		} finally {
 			$server->stop();
 		}

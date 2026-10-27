@@ -24,10 +24,12 @@ use OZONE\Core\Http\Enums\RequestScope;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Router\Enums\RouteFormDocPolicy;
 use OZONE\Core\Router\Interfaces\RouteInterceptorInterface;
+use OZONE\Core\Router\ResolvedRouteOptions;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Router\RouteSharedOptions;
 use OZONE\Tests\TestUtils;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -37,10 +39,9 @@ use PHPUnit\Framework\TestCase;
  * specifically the bundle assembly in {@see RouteSharedOptions::getFormBundle()}.
  *
  * @internal
- *
- * @covers \OZONE\Core\Router\ResolvedRouteOptions
- * @covers \OZONE\Core\Router\RouteSharedOptions
  */
+#[CoversClass(ResolvedRouteOptions::class)]
+#[CoversClass(RouteSharedOptions::class)]
 final class RouteSharedOptionsTest extends TestCase
 {
 	public function testGetFormBundleReturnsNullWithNoForm(): void

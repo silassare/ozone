@@ -17,6 +17,8 @@ use Override;
 use OZONE\Core\FS\FileStream;
 use OZONE\Core\FS\Scan\Scanners\ClamAVScanner;
 use OZONE\Core\Testing\Traits\RequiresClamAVTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,11 +27,9 @@ use PHPUnit\Framework\TestCase;
  * Runs against a real clamd: `make test-services` (see docker/compose.yaml).
  *
  * @internal
- *
- * @group clamav
- *
- * @covers \OZONE\Core\FS\Scan\Scanners\ClamAVScanner
  */
+#[Group('clamav')]
+#[CoversClass(ClamAVScanner::class)]
 final class ClamAVServerTest extends TestCase
 {
 	use RequiresClamAVTrait;

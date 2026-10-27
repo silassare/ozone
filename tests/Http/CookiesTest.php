@@ -16,15 +16,15 @@ namespace OZONE\Tests\Http;
 use OZONE\Core\Http\Cookie;
 use OZONE\Core\Http\Cookies;
 use OZONE\Core\Http\Response;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class CookiesTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Http\Cookies
  */
+#[CoversClass(Cookies::class)]
 final class CookiesTest extends TestCase
 {
 	public function testApplyToKeepsTheCookiesAHandlerSet(): void

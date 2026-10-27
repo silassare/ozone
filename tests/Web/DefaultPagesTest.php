@@ -24,6 +24,7 @@ use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Router\Views\AccessGrantView;
 use OZONE\Core\Web\WebView;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Throwable;
 
@@ -31,10 +32,9 @@ use Throwable;
  * The default pages: every text translated, every page on the shared layout and stylesheet.
  *
  * @internal
- *
- * @covers \OZONE\Core\Exceptions\Views\ErrorView
- * @covers \OZONE\Core\Router\Views\AccessGrantView
  */
+#[CoversClass(ErrorView::class)]
+#[CoversClass(AccessGrantView::class)]
 final class DefaultPagesTest extends TestCase
 {
 	public function testAnErrorPageIsTitledByItsStatusAndTranslated(): void

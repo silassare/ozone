@@ -16,7 +16,10 @@ namespace OZONE\Tests\Hooks;
 use OZONE\Core\App\Context;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Hooks\MainBootHookReceiver;
+use OZONE\Core\Http\CorsPolicy;
 use OZONE\Core\Http\HTTPEnvironment;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,10 +28,9 @@ use PHPUnit\Framework\TestCase;
  * Tests for {@see MainBootHookReceiver::assertOriginAllowed()}, run before routing.
  *
  * @internal
- *
- * @covers \OZONE\Core\Hooks\MainBootHookReceiver
- * @covers \OZONE\Core\Http\CorsPolicy
  */
+#[CoversClass(MainBootHookReceiver::class)]
+#[CoversClass(CorsPolicy::class)]
 final class CrossOriginRequestTest extends TestCase
 {
 	public function testDisallowedOriginIsRejected(): void
@@ -39,9 +41,7 @@ final class CrossOriginRequestTest extends TestCase
 		MainBootHookReceiver::assertOriginAllowed(self::context('POST', 'https://evil.example'));
 	}
 
-	/**
-	 * @dataProvider provideAllowedRequestsCases
-	 */
+	#[DataProvider('provideAllowedRequestsCases')]
 	public function testAllowedRequests(string $method, ?string $origin): void
 	{
 		MainBootHookReceiver::assertOriginAllowed(self::context($method, $origin));

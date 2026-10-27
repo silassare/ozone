@@ -19,17 +19,17 @@ use OZONE\Core\Auth\TwoFactor\Channels\EmailOtpChannel;
 use OZONE\Core\Auth\TwoFactor\Channels\SmsOtpChannel;
 use OZONE\Core\Auth\TwoFactor\Channels\TotpChannel;
 use OZONE\Core\Auth\TwoFactor\TOTP;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests the isAvailableFor() logic of each built-in 2FA channel.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\TwoFactor\Channels\EmailOtpChannel
- * @covers \OZONE\Core\Auth\TwoFactor\Channels\SmsOtpChannel
- * @covers \OZONE\Core\Auth\TwoFactor\Channels\TotpChannel
  */
+#[CoversClass(EmailOtpChannel::class)]
+#[CoversClass(SmsOtpChannel::class)]
+#[CoversClass(TotpChannel::class)]
 final class ChannelAvailabilityTest extends TestCase
 {
 	private static int $userSeq = 0;
@@ -57,7 +57,7 @@ final class ChannelAvailabilityTest extends TestCase
 
 	public function testEmailChannelIsUnavailableWhenEmailKeyIsAbsent(): void
 	{
-		$user = $this->createMock(AuthUserInterface::class);
+		$user = self::createStub(AuthUserInterface::class);
 		$user->method('getAuthIdentifiers')->willReturn([]);
 
 		$channel = new EmailOtpChannel();
@@ -87,7 +87,7 @@ final class ChannelAvailabilityTest extends TestCase
 
 	public function testSmsChannelIsUnavailableWhenPhoneKeyIsAbsent(): void
 	{
-		$user = $this->createMock(AuthUserInterface::class);
+		$user = self::createStub(AuthUserInterface::class);
 		$user->method('getAuthIdentifiers')->willReturn([]);
 
 		$channel = new SmsOtpChannel();
@@ -131,7 +131,7 @@ final class ChannelAvailabilityTest extends TestCase
 		?string $totp_secret = null
 	): AuthUserInterface {
 		$id   = 'ch-avail-user-' . ++self::$userSeq;
-		$user = $this->createMock(AuthUserInterface::class);
+		$user = self::createStub(AuthUserInterface::class);
 		$user->method('getAuthUserType')->willReturn('test');
 		$user->method('getAuthIdentifier')->willReturn($id);
 		$user->method('getAuthIdentifiers')->willReturn([

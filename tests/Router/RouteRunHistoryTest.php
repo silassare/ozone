@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Tests\Router;
 
 use OZONE\Core\App\Context;
+use OZONE\Core\App\Navigator;
 use OZONE\Core\Http\HTTPEnvironment;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,9 +31,8 @@ use PHPUnit\Framework\TestCase;
  * assertions here are about growth within a tree.
  *
  * @internal
- *
- * @covers \OZONE\Core\App\Navigator
  */
+#[CoversClass(Navigator::class)]
 final class RouteRunHistoryTest extends TestCase
 {
 	public function testTheHistoryIsSharedByARequestAndItsSubRequests(): void

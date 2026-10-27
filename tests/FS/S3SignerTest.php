@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\FS;
 
 use OZONE\Core\FS\S3\S3Signer;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -23,9 +24,8 @@ use PHPUnit\Framework\TestCase;
  * for S3 (bucket `examplebucket`, 2013-05-24).
  *
  * @internal
- *
- * @covers \OZONE\Core\FS\S3\S3Signer
  */
+#[CoversClass(S3Signer::class)]
 final class S3SignerTest extends TestCase
 {
 	private const string ACCESS_KEY = 'AKIAIOSFODNN7EXAMPLE';

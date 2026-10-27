@@ -55,8 +55,10 @@ them only with `--with-php`.
 - The unit suite boots OZone in a sandbox project created for each run (`tests/autoload.php`):
   its own `.env`, data, cache and generated ORM classes, removed when the run ends. Tests never
   read or write the repository's `data/` or `.ozone/`.
-- Each test class declares `@covers` for the classes it tests (the code style fixer adds
-  `@coversNothing` to a class that declares none).
+- Each test class declares `#[CoversClass]` for the classes it tests, `#[CoversTrait]` for a trait
+  (the code style fixer adds `#[CoversNothing]` to a class that declares none). PHPUnit reads
+  **attributes only**: a doc-comment `@covers`, `@dataProvider` or `@group` is ignored without a
+  word of warning, so a test left with one runs with no arguments and a `--group` matches nothing.
 - Tests needing Redis, MinIO or ClamAV belong to the `redis` / `minio` / `clamav` groups, left out
   of the default run: `make test-services` runs them, and fails rather than skips when a server is
   missing. Never fake one of those servers in a test: run the real one.

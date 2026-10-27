@@ -21,6 +21,7 @@ use OZONE\Core\Plugins\AbstractPlugin;
 use OZONE\Core\Plugins\CorePlugin;
 use OZONE\Core\Plugins\Plugins;
 use OZONE\Core\Plugins\PluginScope;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
@@ -28,10 +29,9 @@ use stdClass;
  * Class PluginsTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Plugins\AbstractPlugin
- * @covers \OZONE\Core\Plugins\Plugins
  */
+#[CoversClass(AbstractPlugin::class)]
+#[CoversClass(Plugins::class)]
 final class PluginsTest extends TestCase
 {
 	private static string $dir;

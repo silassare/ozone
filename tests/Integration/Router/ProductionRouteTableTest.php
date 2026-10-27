@@ -15,6 +15,7 @@ namespace OZONE\Tests\Integration\Router;
 
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Process\Process;
@@ -27,9 +28,8 @@ use Symfony\Component\Process\Process;
  * Two stub providers log each time a router registers them, which shows what a request registered.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class ProductionRouteTableTest extends TestCase
 {
 	private static OZTestProject $proj;
@@ -188,7 +188,7 @@ final class ProductionRouteTableTest extends TestCase
 
 		$status = 0;
 
-		if (\preg_match('~^HTTP/\S+ (\d+)~', $http_response_header[0] ?? '', $m)) {
+		if (\preg_match('~^HTTP/\S+ (\d+)~', (\http_get_last_response_headers() ?? [])[0] ?? '', $m)) {
 			$status = (int) $m[1];
 		}
 

@@ -19,8 +19,10 @@ use OZONE\Core\Forms\Fieldset;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\FormDataClean;
+use OZONE\Core\Forms\FormValidationContext;
 use OZONE\Core\Forms\RuleSet;
 use OZONE\Core\Forms\TypesSwitcher;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -30,9 +32,8 @@ use PHPUnit\Framework\TestCase;
  * reads a field validated after it would always see null, so validation throws.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\FormValidationContext
  */
+#[CoversClass(FormValidationContext::class)]
 final class DeclarationOrderTest extends TestCase
 {
 	public function testConditionOnAnEarlierFieldIsAllowed(): void

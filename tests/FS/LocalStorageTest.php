@@ -13,22 +13,24 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\FS;
 
+use OZONE\Core\FS\Drivers\AbstractLocalStorage;
 use OZONE\Core\FS\FS;
+use OZONE\Core\FS\Traits\FileEntityTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class LocalStorageTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\FS\Drivers\AbstractLocalStorage
- * @covers \OZONE\Core\FS\Traits\FileEntityTrait
  */
+#[CoversClass(AbstractLocalStorage::class)]
+#[CoversTrait(FileEntityTrait::class)]
 final class LocalStorageTest extends TestCase
 {
-	/**
-	 * @dataProvider provideSavesRawContentCases
-	 */
+	#[DataProvider('provideSavesRawContentCases')]
 	public function testSavesRawContent(string $storage_name): void
 	{
 		$storage = FS::getStorage($storage_name);

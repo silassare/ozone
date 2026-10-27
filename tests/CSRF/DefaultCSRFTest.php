@@ -26,6 +26,7 @@ use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Router\RouteSharedOptions;
 use OZONE\Core\Sessions\Session;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -34,9 +35,8 @@ use PHPUnit\Framework\TestCase;
  * Tests for {@see CSRF::isRequiredByDefault()}.
  *
  * @internal
- *
- * @covers \OZONE\Core\CSRF\CSRF
  */
+#[CoversClass(CSRF::class)]
 final class DefaultCSRFTest extends TestCase
 {
 	private static Router $router;

@@ -16,6 +16,7 @@ namespace OZONE\Tests\Http;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Http\TrustedProxies;
 use OZONE\Core\Http\Uri;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,9 +25,8 @@ use PHPUnit\Framework\TestCase;
  * Tests for {@see Uri::createFromEnvironment()} behind proxies.
  *
  * @internal
- *
- * @covers \OZONE\Core\Http\Uri
  */
+#[CoversClass(Uri::class)]
 final class UriFromEnvironmentTest extends TestCase
 {
 	public function testSchemeFromATrustedTlsProxy(): void

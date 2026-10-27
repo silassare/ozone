@@ -18,6 +18,7 @@ use OZONE\Core\Hooks\Events\EndRequestHook;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\OZone;
 use OZONE\Core\REST\ApiDoc;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use RuntimeException;
@@ -31,10 +32,9 @@ use RuntimeException;
  * The suite's own root context is saved and restored around each case, as in RequestIsolationTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Hooks\Events\EndRequestHook
- * @covers \OZONE\Core\OZone
  */
+#[CoversClass(EndRequestHook::class)]
+#[CoversClass(OZone::class)]
 final class EndRequestHookTest extends TestCase
 {
 	/** @var array<string, null|Context> */

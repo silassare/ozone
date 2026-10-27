@@ -15,20 +15,19 @@ namespace OZONE\Tests\Forms;
 
 use InvalidArgumentException;
 use OZONE\Core\Forms\FormUtils;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class FormUtilsTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\FormUtils
  */
+#[CoversClass(FormUtils::class)]
 final class FormUtilsTest extends TestCase
 {
-	/**
-	 * @dataProvider provideAssertValidFieldNamePassesForValidNamesCases
-	 */
+	#[DataProvider('provideAssertValidFieldNamePassesForValidNamesCases')]
 	public function testAssertValidFieldNamePassesForValidNames(string $name): void
 	{
 		// Should not throw
@@ -48,9 +47,7 @@ final class FormUtilsTest extends TestCase
 		];
 	}
 
-	/**
-	 * @dataProvider provideAssertValidFieldNameThrowsForInvalidNamesCases
-	 */
+	#[DataProvider('provideAssertValidFieldNameThrowsForInvalidNamesCases')]
 	public function testAssertValidFieldNameThrowsForInvalidNames(string $name): void
 	{
 		$this->expectException(InvalidArgumentException::class);

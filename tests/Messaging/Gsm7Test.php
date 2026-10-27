@@ -15,16 +15,16 @@ namespace OZONE\Tests\Messaging;
 
 use OZONE\Core\Messaging\Gsm7;
 use OZONE\Core\Messaging\RenderedMessage;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class Gsm7Test.
  *
  * @internal
- *
- * @covers \OZONE\Core\Messaging\Gsm7
- * @covers \OZONE\Core\Messaging\RenderedMessage
  */
+#[CoversClass(Gsm7::class)]
+#[CoversClass(RenderedMessage::class)]
 final class Gsm7Test extends TestCase
 {
 	public function testFits(): void

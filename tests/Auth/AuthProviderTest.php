@@ -21,15 +21,15 @@ use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
 use OZONE\Core\Db\OZAuth;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Http\HTTPEnvironment;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests the provider `Auth::provider()` rebuilds for an existing authorization.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\Auth
  */
+#[CoversClass(Auth::class)]
 final class AuthProviderTest extends TestCase
 {
 	public static function setUpBeforeClass(): void

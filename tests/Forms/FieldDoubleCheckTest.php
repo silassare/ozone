@@ -19,6 +19,7 @@ use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -27,9 +28,8 @@ use PHPUnit\Framework\TestCase;
  * Tests for {@see Field::doubleCheck()}.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\Field
  */
+#[CoversClass(Field::class)]
 final class FieldDoubleCheckTest extends TestCase
 {
 	public function testDoubleCheckCreatesConfirmField(): void

@@ -15,6 +15,9 @@ namespace OZONE\Tests\Integration\Cli;
 
 use OZONE\Core\Cli\Server\Enums\PackageManager;
 use OZONE\Core\Cli\Server\Provisioner;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -34,11 +37,9 @@ use Symfony\Component\Process\Process;
  * so the test does not depend on the host's Docker file sharing.
  *
  * @internal
- *
- * @group provision
- *
- * @coversNothing
  */
+#[CoversNothing]
+#[Group('provision')]
 final class ServerProvisionTest extends TestCase
 {
 	/**
@@ -84,9 +85,7 @@ final class ServerProvisionTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	/**
-	 * @dataProvider providePlatforms
-	 */
+	#[DataProvider('providePlatforms')]
 	public function testTheExpectedPackageManagerIsDetected(string $platform): void
 	{
 		$this->prepare($platform);
@@ -103,9 +102,7 @@ final class ServerProvisionTest extends TestCase
 		self::assertStringNotContainsString('not covered by OZone', $result['output']);
 	}
 
-	/**
-	 * @dataProvider providePlatforms
-	 */
+	#[DataProvider('providePlatforms')]
 	public function testDryRunChangesNothing(string $platform): void
 	{
 		$this->prepare($platform);
@@ -120,9 +117,7 @@ final class ServerProvisionTest extends TestCase
 		self::assertNotSame(0, self::exec($platform, 'command -v nginx')['code']);
 	}
 
-	/**
-	 * @dataProvider providePlatforms
-	 */
+	#[DataProvider('providePlatforms')]
 	public function testProvisionInstallsAndRecordsWhatItDid(string $platform): void
 	{
 		$this->prepare($platform);
@@ -167,9 +162,7 @@ final class ServerProvisionTest extends TestCase
 		self::assertArrayHasKey('firewall', $manifest['steps']);
 	}
 
-	/**
-	 * @dataProvider providePlatforms
-	 */
+	#[DataProvider('providePlatforms')]
 	public function testASecondRunSkipsWhatTheFirstDid(string $platform): void
 	{
 		$this->prepare($platform);
@@ -181,9 +174,7 @@ final class ServerProvisionTest extends TestCase
 		self::assertStringContainsString('0 step(s) applied', $result['output']);
 	}
 
-	/**
-	 * @dataProvider providePlatforms
-	 */
+	#[DataProvider('providePlatforms')]
 	public function testStatusReportsTheManifest(string $platform): void
 	{
 		$this->prepare($platform);

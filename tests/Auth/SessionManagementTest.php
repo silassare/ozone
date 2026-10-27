@@ -23,6 +23,7 @@ use OZONE\Core\Db\OZSession;
 use OZONE\Core\Db\OZSessionsQuery;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Sessions\Session;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -36,9 +37,8 @@ use RuntimeException;
  * Uses the in-memory SQLite database bootstrapped by tests/autoload.php.
  *
  * @internal
- *
- * @covers \OZONE\Core\Sessions\Session
  */
+#[CoversClass(Session::class)]
 final class SessionManagementTest extends TestCase
 {
 	/**

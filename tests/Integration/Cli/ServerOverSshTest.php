@@ -14,6 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Cli;
 
 use OZONE\Core\Cli\Server\SshHost;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -27,11 +30,9 @@ use Symfony\Component\Process\Process;
  * (`make test-provision`). The client's known hosts are kept apart through `OZ_SSH_COMMAND`.
  *
  * @internal
- *
- * @coversNothing
- *
- * @group provision
  */
+#[CoversNothing]
+#[Group('provision')]
 final class ServerOverSshTest extends TestCase
 {
 	private const array PLATFORMS = [
@@ -91,9 +92,7 @@ final class ServerOverSshTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	/**
-	 * @dataProvider providePlatforms
-	 */
+	#[DataProvider('providePlatforms')]
 	public function testTheHostAnswersOverSsh(string $platform): void
 	{
 		$host = $this->host($platform);
@@ -136,9 +135,7 @@ final class ServerOverSshTest extends TestCase
 		self::assertSame(\md5_file($local), \md5((string) $host->readFile('/srv/probe/uploads/upload.bin')));
 	}
 
-	/**
-	 * @dataProvider providePlatforms
-	 */
+	#[DataProvider('providePlatforms')]
 	public function testThePackageManagerOfTheServerIsDetected(string $platform): void
 	{
 		$result = $this->oz($platform, ['server', 'provision', '--dry-run']);
@@ -150,9 +147,7 @@ final class ServerOverSshTest extends TestCase
 		self::assertNotSame(0, self::exec($platform, 'test -f /etc/ozone/provision.json')['code'], 'a dry run writes nothing');
 	}
 
-	/**
-	 * @dataProvider providePlatforms
-	 */
+	#[DataProvider('providePlatforms')]
 	public function testTheServerIsProvisionedOverSsh(string $platform): void
 	{
 		$result = $this->oz($platform, ['server', 'provision', '--yes', '--web-server=nginx', '--db=none', '--ssh-port=22']);
@@ -183,9 +178,7 @@ final class ServerOverSshTest extends TestCase
 		self::assertStringContainsString('0 step(s) applied', $again['output']);
 	}
 
-	/**
-	 * @dataProvider providePlatforms
-	 */
+	#[DataProvider('providePlatforms')]
 	public function testADeployRootIsReadAndRolledBackOverSsh(string $platform): void
 	{
 		$host = $this->host($platform);

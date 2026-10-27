@@ -18,6 +18,8 @@ use OZONE\Core\Stores\Drivers\FileStore;
 use OZONE\Core\Stores\Drivers\MemoryStore;
 use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\KeyValueStore;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,19 +28,17 @@ use PHPUnit\Framework\TestCase;
  * What every store counts the same way, and what several processes counting at once must not lose.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class StoreCountingTest extends TestCase
 {
 	/** @var list<int> the processes the last `inProcesses()` started */
 	private static array $children = [];
 
 	/**
-	 * @dataProvider provideStores
-	 *
 	 * @param callable(): KeyValueStore $make
 	 */
+	#[DataProvider('provideStores')]
 	public function testCountsFromItsCreationAndAnswersTheTotal(callable $make): void
 	{
 		$store = $make();
@@ -50,10 +50,9 @@ final class StoreCountingTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider provideStores
-	 *
 	 * @param callable(): KeyValueStore $make
 	 */
+	#[DataProvider('provideStores')]
 	public function testIncrementsOnlyWhatExists(callable $make): void
 	{
 		$store = $make();
@@ -68,10 +67,9 @@ final class StoreCountingTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider provideStores
-	 *
 	 * @param callable(): KeyValueStore $make
 	 */
+	#[DataProvider('provideStores')]
 	public function testAnExpiredCounterStartsAgain(callable $make): void
 	{
 		$store = $make();
@@ -83,10 +81,9 @@ final class StoreCountingTest extends TestCase
 	}
 
 	/**
-	 * @dataProvider provideStores
-	 *
 	 * @param callable(): KeyValueStore $make
 	 */
+	#[DataProvider('provideStores')]
 	public function testRefusesToAddToWhatIsNotANumber(callable $make): void
 	{
 		$store = $make();

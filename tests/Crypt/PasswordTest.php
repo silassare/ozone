@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Crypt;
 
 use OZONE\Core\Crypt\Password;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class PasswordTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Crypt\Password
  */
+#[CoversClass(Password::class)]
 final class PasswordTest extends TestCase
 {
 	public function testIsHashReturnsFalseForPlainText(): void

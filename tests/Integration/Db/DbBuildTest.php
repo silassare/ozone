@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Db;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -23,7 +25,7 @@ use Symfony\Component\Process\Process;
 /**
  * Integration tests for `oz db build`.
  *
- * Runs against every configured DB type via @dataProvider.
+ * Runs against every configured DB type via a data provider.
  * SQLite is always tested. MySQL / PostgreSQL are tested when their env vars are
  * set (see DbTestConfig::allConfigured()).
  *
@@ -31,9 +33,8 @@ use Symfony\Component\Process\Process;
  * test methods via the static project store. Tests run in declaration order.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class DbBuildTest extends TestCase
 {
 	/**
@@ -71,9 +72,8 @@ final class DbBuildTest extends TestCase
 	/**
 	 * Creates the test project, runs full setup (db build + migrations), then
 	 * re-runs `oz db build --class-only` and asserts it exits cleanly.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDbBuildExitsCleanly(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -97,18 +97,14 @@ final class DbBuildTest extends TestCase
 		self::assertSame(0, $proc->getExitCode(), $proc->getErrorOutput());
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDbDirIsCreated(DbTestConfig $config): void
 	{
 		$dbDir = self::getProject($config)->getPath() . '/app/Db';
 		self::assertDirectoryExists($dbDir, 'app/Db/ should be created by db build.');
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testEntityFilesAreGenerated(DbTestConfig $config): void
 	{
 		// For an empty project schema only the Base/ subdirectory is created.
@@ -117,9 +113,7 @@ final class DbBuildTest extends TestCase
 		self::assertDirectoryExists($dbBaseDir, 'app/Db/Base/ should be created by db build for project namespace.');
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGeneratedFilesAreValidPhp(DbTestConfig $config): void
 	{
 		$dbDir = self::getProject($config)->getPath() . '/app/Db';
@@ -147,9 +141,7 @@ final class DbBuildTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDbBuildIsIdempotent(DbTestConfig $config): void
 	{
 		// Run build a second time; must exit cleanly.
@@ -161,9 +153,8 @@ final class DbBuildTest extends TestCase
 	/**
 	 * A table added to the code's schema gets no class until a migration creating it has run, and the
 	 * build says so instead of only reporting success.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testBuildNamesTablesNoMigrationHasInstalled(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);
@@ -210,9 +201,8 @@ final class DbBuildTest extends TestCase
 	/**
 	 * `OZ_DB_GENERATED_TIMESTAMP` off: a header no longer carries the generation time, so a rebuild of an
 	 * unchanged schema rewrites nothing.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testGeneratedTimestampCanBeTurnedOff(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);

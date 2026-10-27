@@ -26,6 +26,7 @@ use OZONE\Core\FS\Images\Images;
 use OZONE\Core\FS\Images\ImageTokens;
 use OZONE\Core\FS\Images\Interfaces\ImageTokenInterface;
 use OZONE\Core\Http\Response;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionObject;
@@ -34,9 +35,8 @@ use ReflectionObject;
  * Class FileFiltersTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\FS\Filters\FileFilters
  */
+#[CoversClass(FileFilters::class)]
 final class FileFiltersTest extends TestCase
 {
 	/**

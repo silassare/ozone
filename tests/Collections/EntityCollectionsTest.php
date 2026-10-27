@@ -18,6 +18,7 @@ use Override;
 use OZONE\Core\Collections\EntityCollections;
 use OZONE\Core\Collections\Interfaces\EntityCollectionsProviderInterface;
 use OZONE\Core\Exceptions\RuntimeException;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use stdClass;
@@ -29,9 +30,8 @@ use stdClass;
  * suite is not: the tests call the provider loop directly.
  *
  * @internal
- *
- * @covers \OZONE\Core\Collections\EntityCollections
  */
+#[CoversClass(EntityCollections::class)]
 final class EntityCollectionsTest extends TestCase
 {
 	#[Override]

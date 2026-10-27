@@ -15,15 +15,15 @@ namespace OZONE\Tests\Columns;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use OZONE\Core\Columns\Types\TypeGender;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class TypeGenderTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Columns\Types\TypeGender
  */
+#[CoversClass(TypeGender::class)]
 final class TypeGenderTest extends TestCase
 {
 	// Default OZ_USER_ALLOWED_GENDERS: ['Male', 'Female', 'None', 'Other']

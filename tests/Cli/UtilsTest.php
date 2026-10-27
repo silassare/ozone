@@ -15,16 +15,16 @@ namespace OZONE\Tests\Cli;
 
 use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Utils\Utils;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class UtilsTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Cli\Process
- * @covers \OZONE\Core\Cli\Utils\Utils
  */
+#[CoversClass(Process::class)]
+#[CoversClass(Utils::class)]
 final class UtilsTest extends TestCase
 {
 	public function testProjectFolderIsOneWithAnAppFile(): void

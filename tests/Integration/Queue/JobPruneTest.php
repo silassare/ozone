@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Queue;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -31,9 +33,8 @@ use PHPUnit\Framework\TestCase;
  *      --state=done (1 deleted).
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class JobPruneTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -60,9 +61,8 @@ final class JobPruneTest extends TestCase
 	/**
 	 * Creates the project, installs schema, dispatches a job and runs it to
 	 * completion so that a DONE record exists in the store.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSetup(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -107,9 +107,8 @@ final class JobPruneTest extends TestCase
 
 	/**
 	 * `oz jobs prune --older-than=0` must delete the single DONE job.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testPruneRemovesTerminalJobs(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);
@@ -126,9 +125,8 @@ final class JobPruneTest extends TestCase
 
 	/**
 	 * A second prune with no matching jobs must report "Pruned 0 job(s).".
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testPruneIsIdempotent(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);
@@ -146,9 +144,8 @@ final class JobPruneTest extends TestCase
 	/**
 	 * Pruning with --state=failed must not touch a DONE job; pruning with
 	 * --state=done must delete it.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testPruneRespectedStateFilter(DbTestConfig $config): void
 	{
 		$proj        = self::getProject($config);

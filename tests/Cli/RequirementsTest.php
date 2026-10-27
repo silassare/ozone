@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Cli;
 
 use OZONE\Core\Cli\Utils\Requirements;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RequirementsTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Cli\Utils\Requirements
  */
+#[CoversClass(Requirements::class)]
 final class RequirementsTest extends TestCase
 {
 	public function testOzoneComposerFileIsReadable(): void

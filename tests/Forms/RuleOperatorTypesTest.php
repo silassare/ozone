@@ -24,6 +24,7 @@ use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
 use OZONE\Core\Forms\RuleSet;
 use OZONE\Core\Forms\TypesSwitcher;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,10 +33,9 @@ use PHPUnit\Framework\TestCase;
  * A rule on a cleaned value uses an operator the field's type allows, as a Gobl filter does.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\Form
- * @covers \OZONE\Core\Forms\RuleSet
  */
+#[CoversClass(Form::class)]
+#[CoversClass(RuleSet::class)]
 final class RuleOperatorTypesTest extends TestCase
 {
 	public function testEveryRuleOperatorIsAGoblOperator(): void

@@ -14,6 +14,8 @@ declare(strict_types=1);
 namespace OZONE\Tests\Runtime\Servers;
 
 use OZONE\Core\Runtime\Bridges\RoadRunnerBridge;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Class RoadRunnerServerTest.
@@ -21,11 +23,9 @@ use OZONE\Core\Runtime\Bridges\RoadRunnerBridge;
  * OZone served by RoadRunner, through {@see RoadRunnerBridge}.
  *
  * @internal
- *
- * @group roadrunner
- *
- * @covers \OZONE\Core\Runtime\Bridges\RoadRunnerBridge
  */
+#[Group('roadrunner')]
+#[CoversClass(RoadRunnerBridge::class)]
 final class RoadRunnerServerTest extends WorkerServerTestCase
 {
 	protected static function loopName(): string

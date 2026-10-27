@@ -16,15 +16,15 @@ namespace OZONE\Tests\Auth;
 use InvalidArgumentException;
 use OZONE\Core\Auth\AuthorizationScope;
 use OZONE\Core\Exceptions\UnauthorizedException;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests AuthorizationScope configuration and its interaction with access rights.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\AuthorizationScope
  */
+#[CoversClass(AuthorizationScope::class)]
 final class AuthorizationScopeTest extends TestCase
 {
 	public function testDefaultLifetimeIsPositive(): void

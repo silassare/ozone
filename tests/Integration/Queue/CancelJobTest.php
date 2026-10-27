@@ -15,6 +15,8 @@ namespace OZONE\Tests\Integration\Queue;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,9 +31,8 @@ use PHPUnit\Framework\TestCase;
  *      that it "could not be cancelled".
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class CancelJobTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -58,9 +59,8 @@ final class CancelJobTest extends TestCase
 	/**
 	 * Creates the project, dispatches a PENDING job, cancels it via the CLI,
 	 * drains the queue, and verifies the worker never ran.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSetup(DbTestConfig $config): void
 	{
 		$rdbms  = $config->rdbms;
@@ -125,9 +125,8 @@ final class CancelJobTest extends TestCase
 
 	/**
 	 * Cancelling an already-CANCELLED job must report failure.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testCancelAlreadyCancelledJobFails(DbTestConfig $config): void
 	{
 		$proj        = self::getProject($config);

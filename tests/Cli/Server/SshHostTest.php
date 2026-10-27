@@ -15,6 +15,7 @@ namespace OZONE\Tests\Cli\Server;
 
 use InvalidArgumentException;
 use OZONE\Core\Cli\Server\SshHost;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -22,9 +23,8 @@ use PHPUnit\Framework\TestCase;
  * (tests/Integration/Cli/SshHostTest.php, `make test-provision`).
  *
  * @internal
- *
- * @covers \OZONE\Core\Cli\Server\SshHost
  */
+#[CoversClass(SshHost::class)]
 final class SshHostTest extends TestCase
 {
 	public function testATargetGivesTheDestinationAndThePort(): void

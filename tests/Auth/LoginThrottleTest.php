@@ -22,6 +22,7 @@ use OZONE\Core\Auth\LoginThrottle;
 use OZONE\Core\Crypt\Password;
 use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Stores\StateRegistry;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -31,10 +32,9 @@ use PHPUnit\Framework\TestCase;
  * {@see AuthUsers::checkPassword()}.
  *
  * @internal
- *
- * @covers \OZONE\Core\Auth\AuthUsers
- * @covers \OZONE\Core\Auth\LoginThrottle
  */
+#[CoversClass(AuthUsers::class)]
+#[CoversClass(LoginThrottle::class)]
 final class LoginThrottleTest extends TestCase
 {
 	private const string PASSWORD = 'right-pass-1';

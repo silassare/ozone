@@ -16,6 +16,8 @@ namespace OZONE\Tests\Integration\Messaging;
 use OZONE\Core\Messaging\Transports\LogTransport;
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
@@ -27,9 +29,8 @@ use Symfony\Component\Process\Process;
  * Tests of one database share its project and server and run in declaration order.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class MessagingTest extends TestCase
 {
 	/** @var array<string, OZTestProject> */
@@ -64,9 +65,7 @@ final class MessagingTest extends TestCase
 		parent::tearDownAfterClass();
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSetup(DbTestConfig $config): void
 	{
 		$rdbms = $config->rdbms;
@@ -119,9 +118,8 @@ final class MessagingTest extends TestCase
 	/**
 	 * Queued in the request, sent once its response is gone: rendered with the HTML part and the
 	 * translated subject a mail channel takes.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testAsyncMailIsSentAfterTheResponse(DbTestConfig $config): void
 	{
 		$answer = self::send($config, [
@@ -153,9 +151,8 @@ final class MessagingTest extends TestCase
 	/**
 	 * The most specific template wins: the channel's, then the locale's; an SMS is folded to GSM 03.38
 	 * and takes no HTML part.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testTemplatesFollowTheChannelAndTheLocale(DbTestConfig $config): void
 	{
 		$sms = self::send($config, [
@@ -182,9 +179,8 @@ final class MessagingTest extends TestCase
 
 	/**
 	 * Not attempted, recorded, and not a failure of the caller.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testSkippedMessagesAreRecordedWithTheirReason(DbTestConfig $config): void
 	{
 		$hello = ['template' => 'test.hello', 'data' => ['name' => 'X']];
@@ -207,9 +203,7 @@ final class MessagingTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testAnUndeclaredChannelThrows(DbTestConfig $config): void
 	{
 		$answer = self::send($config, ['channel' => 'pigeon', 'template' => 'test.hello', 'to' => ['x']]);
@@ -217,9 +211,7 @@ final class MessagingTest extends TestCase
 		self::assertStringContainsString('The messaging channel "pigeon" is not declared', $answer['error'] ?? '');
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testAMessageSentOnceIsNotSentAgain(DbTestConfig $config): void
 	{
 		$spec = [
@@ -249,9 +241,8 @@ final class MessagingTest extends TestCase
 	 * A failed attempt after the response is retried by the `oz:messages` cron task: run by
 	 * `oz cron run`, or by the tick a request runs once a minute when no scheduler does (the default
 	 * `auto` runner). A task runs once per minute, so the retry may wait for the next one.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testAFailedAttemptIsRetriedByTheCronTask(DbTestConfig $config): void
 	{
 		$proj = self::project($config);
@@ -284,9 +275,8 @@ final class MessagingTest extends TestCase
 
 	/**
 	 * The last attempt fails the message, its error kept.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testTheLastFailedAttemptFailsTheMessage(DbTestConfig $config): void
 	{
 		$proj = self::project($config);
@@ -332,9 +322,8 @@ final class MessagingTest extends TestCase
 
 	/**
 	 * The default transport writes the message to the log, outside production.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testTheLogTransportWritesTheMessageToTheLog(DbTestConfig $config): void
 	{
 		$answer = self::send($config, [
@@ -356,9 +345,8 @@ final class MessagingTest extends TestCase
 	/**
 	 * OZone's own messages go the same way: the email of an ownership verification, and the SMS of a
 	 * phone one, are recorded and sent after the response, with their subject and an unescaped link.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testOZoneVerificationMessagesAreSent(DbTestConfig $config): void
 	{
 		[$status, $body] = self::post($config, '/auth/verify/email', ['email' => 'ann@example.com']);
@@ -393,9 +381,8 @@ final class MessagingTest extends TestCase
 
 	/**
 	 * `oz doctor check` names the enabled channels that send nothing: a warning outside production.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testDoctorNamesTheChannelsThatSendNothing(DbTestConfig $config): void
 	{
 		$proc = self::project($config)->oz('doctor', 'check', '--json');
@@ -417,9 +404,8 @@ final class MessagingTest extends TestCase
 	/**
 	 * The garbage collection deletes the settled records past their retention, keeps the ones sent once
 	 * while their own retention is null, and deletes them once it is set. Last: it empties the table.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testOldRecordsAreDeletedByTheGarbageCollection(DbTestConfig $config): void
 	{
 		$proj = self::project($config);
@@ -571,7 +557,7 @@ final class MessagingTest extends TestCase
 			'header'        => "Accept: application/json\r\nContent-Type: application/x-www-form-urlencoded\r\n",
 			'content'       => \http_build_query($fields),
 		]]));
-		$status = (int) \explode(' ', $http_response_header[0] ?? 'HTTP/1.1 0')[1];
+		$status = (int) \explode(' ', (\http_get_last_response_headers() ?? [])[0] ?? 'HTTP/1.1 0')[1];
 
 		return [$status, (string) $body];
 	}

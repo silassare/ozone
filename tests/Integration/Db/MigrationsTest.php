@@ -15,13 +15,15 @@ namespace OZONE\Tests\Integration\Db;
 
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
+use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Process\Process;
 
 /**
  * Integration tests for the `oz migrations` command lifecycle.
  *
- * Runs the full state machine against every configured DB type via @dataProvider.
+ * Runs the full state machine against every configured DB type via a data provider.
  * SQLite is always tested. MySQL / PostgreSQL are tested when their env vars are
  * set (see DbTestConfig::allConfigured()).
  *
@@ -33,9 +35,8 @@ use Symfony\Component\Process\Process;
  * migration command so ORM classes are available.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class MigrationsTest extends TestCase
 {
 	/**
@@ -69,9 +70,8 @@ final class MigrationsTest extends TestCase
 	/**
 	 * Creates the test project for the given DB type, runs `oz db build`,
 	 * and asserts that a fresh project reports no pending migrations.
-	 *
-	 * @dataProvider provideDbConfig
 	 */
+	#[DataProvider('provideDbConfig')]
 	public function testFreshProjectNoPendingMigrations(DbTestConfig $config): void
 	{
 		$proj = self::initProject($config);
@@ -83,9 +83,7 @@ final class MigrationsTest extends TestCase
 		self::assertStringContainsStringIgnoringCase('no pending migrations', $proc->getOutput());
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testMigrationsCreateGeneratesFile(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);
@@ -101,9 +99,7 @@ final class MigrationsTest extends TestCase
 		self::assertCount(1, $files, 'Exactly one migration file must exist after initial create.');
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testAfterCreateHasPendingMigrations(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);
@@ -114,9 +110,7 @@ final class MigrationsTest extends TestCase
 		self::assertStringNotContainsStringIgnoringCase('no pending migrations', $proc->getOutput());
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testMigrationsRunInstallsSchema(DbTestConfig $config): void
 	{
 		$proc = self::getProject($config)->oz('migrations', 'run', '--skip-backup');
@@ -125,9 +119,7 @@ final class MigrationsTest extends TestCase
 		self::assertSame(0, $proc->getExitCode(), $proc->getErrorOutput());
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testAfterRunNoPendingMigrations(DbTestConfig $config): void
 	{
 		$proc = self::getProject($config)->oz('migrations', 'check');
@@ -136,9 +128,7 @@ final class MigrationsTest extends TestCase
 		self::assertStringContainsStringIgnoringCase('no pending migrations', $proc->getOutput());
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testMigrationsCreateSecondMigration(DbTestConfig $config): void
 	{
 		$proj = self::getProject($config);
@@ -156,9 +146,7 @@ final class MigrationsTest extends TestCase
 		}
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testMigrationsRunAppliesNewMigration(DbTestConfig $config): void
 	{
 		// After the second create the state is PENDING.
@@ -172,9 +160,7 @@ final class MigrationsTest extends TestCase
 		self::assertSame(0, $run->getExitCode(), $run->getErrorOutput());
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testAfterSecondRunNoPendingMigrations(DbTestConfig $config): void
 	{
 		$proc = self::getProject($config)->oz('migrations', 'check');
@@ -183,9 +169,7 @@ final class MigrationsTest extends TestCase
 		self::assertStringContainsStringIgnoringCase('no pending migrations', $proc->getOutput());
 	}
 
-	/**
-	 * @dataProvider provideDbConfig
-	 */
+	#[DataProvider('provideDbConfig')]
 	public function testMigrationsRollback(DbTestConfig $config): void
 	{
 		// Roll back to the first migration version.

@@ -23,6 +23,8 @@ use OZONE\Core\FS\FS;
 use OZONE\Core\FS\S3\S3Client;
 use OZONE\Core\Testing\IntegrationTestCase;
 use OZONE\Core\Testing\Traits\RequiresMinioTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 
 /**
  * Class MinioStorageTest.
@@ -32,12 +34,10 @@ use OZONE\Core\Testing\Traits\RequiresMinioTrait;
  * Docker; this is what proves the signing and the multipart protocol against a real service.
  *
  * @internal
- *
- * @group minio
- *
- * @covers \OZONE\Core\FS\Drivers\MinioStorage
- * @covers \OZONE\Core\FS\S3\S3Client
  */
+#[Group('minio')]
+#[CoversClass(MinioStorage::class)]
+#[CoversClass(S3Client::class)]
 final class MinioStorageTest extends IntegrationTestCase
 {
 	use RequiresMinioTrait;

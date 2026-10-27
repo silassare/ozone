@@ -19,7 +19,10 @@ use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Forms\Field;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormData;
+use OZONE\Core\Forms\Traits\FieldContainerHelpersTrait;
 use OZONE\Core\Forms\TypesSwitcher;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\TestCase;
 use TypeError;
 
@@ -30,10 +33,9 @@ use TypeError;
  * and reach the type through {@see Field::configureType()}.
  *
  * @internal
- *
- * @covers \OZONE\Core\Forms\Field
- * @covers \OZONE\Core\Forms\Traits\FieldContainerHelpersTrait
  */
+#[CoversClass(Field::class)]
+#[CoversTrait(FieldContainerHelpersTrait::class)]
 final class FieldContainerHelpersTest extends TestCase
 {
 	public function testHelperReturnsTheRegisteredField(): void

@@ -15,15 +15,15 @@ namespace OZONE\Tests\Crypt;
 
 use ArrayObject;
 use OZONE\Core\Crypt\SignedSerializer;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class SignedSerializerTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Crypt\SignedSerializer
  */
+#[CoversClass(SignedSerializer::class)]
 final class SignedSerializerTest extends TestCase
 {
 	public function testRoundTripKeepsObjects(): void

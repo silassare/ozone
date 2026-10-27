@@ -25,16 +25,16 @@ use OZONE\Core\FS\Scan\FileScan;
 use OZONE\Core\FS\Scan\FileScanWorker;
 use OZONE\Core\Queue\JobState;
 use OZONE\Tests\Support\FakeFileScanner;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class FileScanTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\FS\Scan\FileScan
- * @covers \OZONE\Core\FS\Scan\FileScanWorker
  */
+#[CoversClass(FileScan::class)]
+#[CoversClass(FileScanWorker::class)]
 final class FileScanTest extends TestCase
 {
 	#[Override]

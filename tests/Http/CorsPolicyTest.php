@@ -14,15 +14,15 @@ declare(strict_types=1);
 namespace OZONE\Tests\Http;
 
 use OZONE\Core\Http\CorsPolicy;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class CorsPolicyTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Http\CorsPolicy
  */
+#[CoversClass(CorsPolicy::class)]
 final class CorsPolicyTest extends TestCase
 {
 	private const string REQUEST_URL = 'https://api.example.com/items?x=1';
@@ -87,6 +87,40 @@ final class CorsPolicyTest extends TestCase
 		self::assertFalse($policy->allows('https://app.example.com.evil.example'));
 		self::assertTrue($policy->allows('https://APP.example.com'));
 		self::assertTrue($policy->allows('https://app.example.com:443'));
+	}
+
+	/**
+	 * The origin an allow-list is compared against is the host the browser would talk to.
+	 *
+	 * `http://evil.com\@good.com` is a request to **evil.com**; reading its authority by hand
+	 * answers `good.com`, so a policy listing `good.com` would have reflected the origin back and
+	 * let evil.com read the answer. A browser never sends an `Origin` shaped like this, so this is
+	 * the policy agreeing with the client rather than a hole anyone could have walked through --
+	 * but the agreement is what the decision rests on.
+	 */
+	public function testAnOriginIsTheHostTheBrowserWouldTalkTo(): void
+	{
+		self::assertSame('http://evil.com', CorsPolicy::normalize('http://evil.com\@good.com/'));
+	}
+
+	/**
+	 * One origin spelled two ways compares equal.
+	 */
+	public function testAnOriginHasOneSpelling(): void
+	{
+		self::assertSame('https://example.com', CorsPolicy::normalize('https://EXAMPLE.com:443'));
+		self::assertSame('http://xn--r8jz45g.jp', CorsPolicy::normalize('http://例え.jp'));
+	}
+
+	/**
+	 * A malformed origin is no origin: it used to reduce to the request root and be refused for
+	 * having no host, which was the right answer by accident.
+	 */
+	public function testAMalformedOriginIsRefused(): void
+	{
+		self::assertNull(CorsPolicy::normalize('https://exa mple.com'));
+		self::assertNull(CorsPolicy::normalize('http://host:80x'));
+		self::assertNull(CorsPolicy::normalize('javascript://comment%0Aalert(1)'));
 	}
 
 	public function testNormalize(): void

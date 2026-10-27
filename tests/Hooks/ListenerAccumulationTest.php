@@ -19,6 +19,7 @@ use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\OZone;
 use OZONE\Core\Testing\SandboxApp;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use PHPUtils\Events\EventManager;
 use ReflectionClass;
@@ -37,9 +38,8 @@ use ReflectionClass;
  * happens to be dispatched during the same test.
  *
  * @internal
- *
- * @coversNothing
  */
+#[CoversNothing]
 final class ListenerAccumulationTest extends TestCase
 {
 	public function testHandlingRequestsDoesNotRegisterListeners(): void

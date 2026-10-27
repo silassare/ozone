@@ -17,6 +17,7 @@ use InvalidArgumentException;
 use OZONE\Core\App\SubScope;
 use OZONE\Core\Scopes\Interfaces\ScopeInterface;
 use OZONE\Core\Scopes\StateLayout;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,9 +27,8 @@ use PHPUnit\Framework\TestCase;
  * a name the layout already owns would have the scope read and write someone else's state.
  *
  * @internal
- *
- * @covers \OZONE\Core\App\SubScope
  */
+#[CoversClass(SubScope::class)]
 final class SubScopeTest extends TestCase
 {
 	public function testTheApplicationsOwnSlugIsRefused(): void

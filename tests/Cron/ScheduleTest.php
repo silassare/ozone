@@ -16,13 +16,13 @@ namespace OZONE\Tests\Cron;
 use DateTime;
 use DateTimeZone;
 use OZONE\Core\Cli\Cron\Schedule;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @internal
- *
- * @covers \OZONE\Core\Cli\Cron\Schedule
  */
+#[CoversClass(Schedule::class)]
 final class ScheduleTest extends TestCase
 {
 	public function testDefaultExpressionIsEveryMinute(): void
