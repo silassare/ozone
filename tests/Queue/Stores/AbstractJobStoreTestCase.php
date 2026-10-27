@@ -21,6 +21,7 @@ use OZONE\Core\Queue\JobContract;
 use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Testing\IntegrationTestCase;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use Throwable;
 
 /**
@@ -31,10 +32,9 @@ use Throwable;
  * pollution and ensure tearDown can clean up reliably via the iterator.
  *
  * @internal
- *
- * @coversNothing
  */
-abstract class AbstractJobStoreTest extends IntegrationTestCase
+#[CoversNothing]
+abstract class AbstractJobStoreTestCase extends IntegrationTestCase
 {
 	protected JobStoreInterface $store;
 
