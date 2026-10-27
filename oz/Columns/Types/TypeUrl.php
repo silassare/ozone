@@ -140,7 +140,7 @@ class TypeUrl extends Type
 					return;
 				}
 				$value = (string) Uri::createFromString($value);
-			} elseif (!\filter_var($value, \FILTER_VALIDATE_URL)) {
+			} elseif (!Uri::isStrictUrl($value)) {
 				$subject->reject(new TypesInvalidValueException('OZ_FIELD_URL_INVALID', $debug));
 
 				return;
@@ -156,6 +156,11 @@ class TypeUrl extends Type
 
 	/**
 	 * Whether a full URL passes the {@see self::allowedHosts()} restriction.
+	 *
+	 * The scheme is not asked about here: {@see Uri::isStrictUrl()} has already refused anything
+	 * but `http` and `https`, for a value with a host list and for one without. It used to be
+	 * asked only when a list was configured, so a column with no list accepted whatever
+	 * `FILTER_VALIDATE_URL` did -- `javascript://comment%0Aalert(1)` among it.
 	 */
 	private function isAllowedHost(string $url): bool
 	{
@@ -165,9 +170,6 @@ class TypeUrl extends Type
 			return true;
 		}
 
-		$scheme = \strtolower((string) \parse_url($url, \PHP_URL_SCHEME));
-		$host   = \strtolower((string) \parse_url($url, \PHP_URL_HOST));
-
-		return ('http' === $scheme || 'https' === $scheme) && \in_array($host, $hosts, true);
+		return \in_array(\strtolower(Uri::createFromString($url)->getHost()), $hosts, true);
 	}
 }

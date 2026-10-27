@@ -17,12 +17,22 @@ use InvalidArgumentException;
 use Override;
 use Psr\Http\Message\UriInterface;
 use SensitiveParameter;
+use Uri\Rfc3986\Uri as Rfc3986Uri;
+use Uri\WhatWg\Url as WhatWgUrl;
 
 /**
  * Class Uri.
  */
 class Uri implements UriInterface
 {
+	/**
+	 * The schemes a URI of this class may carry, the empty one being a reference with no scheme.
+	 *
+	 * Read by {@see self::filterScheme()} and by whatever else decides whether a URL is one OZone
+	 * speaks: a `javascript:` or `data:` URL is a script, and `file:` reads the server's disk.
+	 */
+	public const array SCHEMES = ['', 'http', 'https'];
+
 	/**
 	 * Uri scheme (without "://" suffix).
 	 */
@@ -332,21 +342,79 @@ class Uri implements UriInterface
 	/**
 	 * Creates new Uri from string.
 	 *
+	 * Answers one question: where a browser sent here would go. An absolute URL is read the way a
+	 * browser reads it (`Uri\WhatWg\Url`), so the host is the one the client would connect to and
+	 * not a different one -- `http://evil.com\\@good.com/` is a request to **evil.com**, where
+	 * taking the authority apart by hand reports `good.com` and sends the allow-list decision to
+	 * the wrong host. An IDN host becomes its ASCII form, a default port is dropped and `..` is
+	 * resolved, so two spellings of one origin compare equal.
+	 *
+	 * A reference with no scheme (`/next`, `?q=1`, `#f`, `//host/p`) has no browser reading without
+	 * a base, and is read as RFC 3986 defines a relative reference.
+	 *
 	 * @param string $uri Complete Uri string (i.e., https://user:pass@host:443/path?query).
+	 *
+	 * @throws InvalidArgumentException when the string is not a URL, or carries a scheme that is
+	 *                                  not one of {@see self::SCHEMES}
 	 */
 	public static function createFromString(string $uri): static
 	{
-		$parts    = \parse_url($uri);
-		$scheme   = $parts['scheme'] ?? '';
-		$user     = $parts['user'] ?? '';
-		$pass     = $parts['pass'] ?? '';
-		$host     = $parts['host'] ?? '';
-		$port     = $parts['port'] ?? null;
-		$path     = $parts['path'] ?? '';
-		$query    = $parts['query'] ?? '';
-		$fragment = $parts['fragment'] ?? '';
+		if (null !== ($url = WhatWgUrl::parse($uri))) {
+			return self::fromParsed(
+				$url->getScheme(),
+				(string) $url->getAsciiHost(),
+				$url->getPort(),
+				$url->getPath(),
+				(string) $url->getQuery(),
+				(string) $url->getFragment(),
+				(string) $url->getUsername(),
+				(string) $url->getPassword()
+			);
+		}
 
-		return new static($scheme, $host, $port, $path, $query, $fragment, $user, $pass);
+		$ref = Rfc3986Uri::parse($uri);
+
+		if (null === $ref) {
+			// It used to become `/`: every component defaulted where `parse_url()` answered false,
+			// so a malformed URL turned into a request for the site root and said nothing.
+			throw new InvalidArgumentException(\sprintf('Not a URL: "%s".', $uri));
+		}
+
+		if (null !== $ref->getScheme() && '' === (string) $ref->getHost()) {
+			// A scheme with no authority names no host to reach: `https://` parses as a relative
+			// reference and would otherwise become the string `https:/`.
+			throw new InvalidArgumentException(\sprintf('A URL that names no host: "%s".', $uri));
+		}
+
+		return self::fromParsed(
+			(string) $ref->getScheme(),
+			(string) $ref->getHost(),
+			$ref->getPort(),
+			$ref->getPath(),
+			(string) $ref->getQuery(),
+			(string) $ref->getFragment(),
+			(string) $ref->getUsername(),
+			(string) $ref->getPassword()
+		);
+	}
+
+	/**
+	 * Whether a string is a URL worth keeping: one RFC 3986 allows, with a host and a scheme
+	 * {@see self::SCHEMES} lists.
+	 *
+	 * The other question from {@see self::createFromString()}, and the one a stored value asks. A
+	 * column's value is read later by something that may not be a browser, so a string whose
+	 * meaning depends on which parser reads it is refused instead of normalised into one reading.
+	 */
+	public static function isStrictUrl(string $url): bool
+	{
+		$parsed = Rfc3986Uri::parse($url);
+
+		return null !== $parsed
+			&& null !== $parsed->getHost()
+			&& '' !== $parsed->getHost()
+			&& \in_array(\strtolower((string) $parsed->getScheme()), self::SCHEMES, true)
+			&& '' !== (string) $parsed->getScheme();
 	}
 
 	/**
@@ -486,16 +554,13 @@ class Uri implements UriInterface
 	 */
 	protected function filterScheme(string $scheme): string
 	{
-		$valid = [
-			''      => true,
-			'https' => true,
-			'http'  => true,
-		];
-
 		$scheme = \str_replace('://', '', \strtolower($scheme));
 
-		if (!isset($valid[$scheme])) {
-			throw new InvalidArgumentException('Uri scheme must be one of: "", "https", "http"');
+		if (!\in_array($scheme, self::SCHEMES, true)) {
+			throw new InvalidArgumentException(\sprintf(
+				'Uri scheme must be one of: %s',
+				\implode(', ', \array_map(static fn (string $s): string => '"' . $s . '"', self::SCHEMES))
+			));
 		}
 
 		return $scheme;
@@ -562,5 +627,32 @@ class Uri implements UriInterface
 	protected function hasStandardPort(): bool
 	{
 		return ('http' === $this->scheme && 80 === $this->port) || ('https' === $this->scheme && 443 === $this->port);
+	}
+
+	/**
+	 * Builds a Uri from components a parser produced.
+	 *
+	 * The path, query and fragment are already in their encoded form, and the component filters
+	 * are for what a caller hands over raw: running them over a parsed path encodes the `%` of an
+	 * escape they do not recognise, which is how `/%zz` used to become `/%25zz`.
+	 */
+	private static function fromParsed(
+		string $scheme,
+		string $host,
+		?int $port,
+		string $path,
+		string $query,
+		string $fragment,
+		string $user,
+		#[SensitiveParameter]
+		string $password
+	): static {
+		$uri = new static($scheme, $host, $port, '/', '', '', $user, $password);
+
+		$uri->path     = '' === $path || '/' !== $path[0] ? '/' . $path : $path;
+		$uri->query    = $query;
+		$uri->fragment = $fragment;
+
+		return $uri;
 	}
 }

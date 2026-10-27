@@ -1105,7 +1105,9 @@ A failure in a narrowed run is repeated with the full target before it is believ
   the build and the suite must see one schema. The worker servers serve the same kind of sandbox
   (`tests/Support/Servers/`).
 - Unit tests live under `tests/` by namespace (`OZONE\Tests`), extend `TestCase`, and declare
-  `@covers` (the fixer adds `@coversNothing` otherwise). `TestUtils::router()` is a pre-populated router.
+  `#[CoversClass]` (the fixer adds `#[CoversNothing]` otherwise). PHPUnit reads **attributes only**:
+  a doc-comment `@covers`, `@dataProvider` or `@group` is ignored and never reported, so a test left
+  with one runs with no arguments. `TestUtils::router()` is a pre-populated router.
 - `make lint` regenerates OZone's ORM classes in the git-ignored `.ozone/build/plugins/` first
   (`tests/orm_build.php`), which psalm scans for types without analysing.
 
@@ -1127,7 +1129,7 @@ SQLite file apart.
   values with `writeEnv()`, settings with `setSetting()`, stubs with `writeFileFromStub()` (from the
   directory `useStubsDir()` set, `tests/Integration/Stubs/` here), run commands with `oz(...)`, and
   `destroy()` in `tearDownAfterClass()`.
-- **Never combine `@depends` with `@dataProvider`** (PHPUnit 9 cannot pass values across data sets):
+- **Never combine `#[Depends]` with a data provider** (PHPUnit cannot pass values across data sets):
   every method takes the provider, and projects are shared through a `private static array $projects`
   keyed by RDBMS, created by the first method in declaration order.
 - **Setup order**: `oz db build --build-all --class-only`, then **`$proj->cleanDb()`**, then the first

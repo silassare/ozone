@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Http;
 
+use InvalidArgumentException;
 use OZONE\Core\App\Settings;
 
 /**
@@ -107,7 +108,15 @@ final class ClientInfo
 				$found = 'https://' . $found;
 			}
 
-			$uri                  = Uri::createFromString($found);
+			// `Host` and `X-Forwarded-Host` are the client's to write, so a value that is not a
+			// URL is an input to refuse rather than an error to raise: the default origin's host
+			// is what the request would have used had the header not been there at all.
+			try {
+				$uri = Uri::createFromString($found);
+			} catch (InvalidArgumentException) {
+				$uri = Uri::createFromString($this->defaultOrigin());
+			}
+
 			$port                 = $uri->getPort();
 			$this->host           = $uri->getHost();
 			$this->host_with_port = $this->host . ($port ? ':' . $port : '');

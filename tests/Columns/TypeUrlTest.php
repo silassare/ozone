@@ -15,17 +15,74 @@ namespace OZONE\Tests\Columns;
 
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
 use OZONE\Core\Columns\Types\TypeUrl;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class TypeUrlTest.
  *
  * @internal
- *
- * @covers \OZONE\Core\Columns\Types\TypeUrl
  */
+#[CoversClass(TypeUrl::class)]
 final class TypeUrlTest extends TestCase
 {
+	/**
+	 * A column with no host list refuses a scheme that is not http(s).
+	 *
+	 * The scheme was only ever looked at inside the host-list check, so a column without a list
+	 * accepted whatever `FILTER_VALIDATE_URL` accepted -- and it accepts
+	 * `javascript://comment%0Aalert(1)`, because the newline ends the comment and what follows
+	 * runs wherever the stored value is put in an `href`.
+	 */
+	#[DataProvider('provideASchemeThatIsNotHttpIsRefusedWithNoHostListCases')]
+	public function testASchemeThatIsNotHttpIsRefusedWithNoHostList(string $url): void
+	{
+		$type = new TypeUrl();
+
+		$this->expectException(TypesInvalidValueException::class);
+
+		$type->validate($url);
+	}
+
+	/**
+	 * @return iterable<string, array{0: string}>
+	 */
+	public static function provideASchemeThatIsNotHttpIsRefusedWithNoHostListCases(): iterable
+	{
+		return [
+			'a javascript url behind a comment' => ['javascript://comment%0Aalert(1)'],
+			'a data url'                        => ['data://text/html;base64,PHNjcmlwdD4='],
+			'a file url'                        => ['file:///etc/passwd'],
+			'another scheme'                    => ['ftp://example.com/f'],
+		];
+	}
+
+	/**
+	 * A stored URL means one thing to every reader: what only some parsers accept is refused.
+	 */
+	#[DataProvider('provideAnAmbiguousUrlIsRefusedCases')]
+	public function testAnAmbiguousUrlIsRefused(string $url): void
+	{
+		$type = new TypeUrl();
+
+		$this->expectException(TypesInvalidValueException::class);
+
+		$type->validate($url);
+	}
+
+	/**
+	 * @return iterable<string, array{0: string}>
+	 */
+	public static function provideAnAmbiguousUrlIsRefusedCases(): iterable
+	{
+		return [
+			'an authority a browser reads differently' => ['http://evil.com\@good.com/'],
+			'a per cent that is not an escape'         => ['http://example.com/%zz'],
+			'a host that is not yet in ASCII'          => ['http://例え.jp/p'],
+		];
+	}
+
 	public function testAcceptsHttpUrl(): void
 	{
 		$type  = new TypeUrl();

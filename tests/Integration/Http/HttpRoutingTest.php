@@ -490,16 +490,16 @@ final class HttpRoutingTest extends TestCase
 			return [0, '', []];
 		}
 
-		// Extract HTTP status code from $http_response_header.
+		// Extract HTTP status code from (\http_get_last_response_headers() ?? []).
 		$status = 0;
 		if (
-			!empty($http_response_header[0])
-			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', $http_response_header[0], $m)
+			!empty((\http_get_last_response_headers() ?? [])[0])
+			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', (\http_get_last_response_headers() ?? [])[0], $m)
 		) {
 			$status = (int) $m[1];
 		}
 
-		return [$status, $body, $http_response_header ?? []];
+		return [$status, $body, \http_get_last_response_headers() ?? []];
 	}
 
 	/**
@@ -550,8 +550,8 @@ final class HttpRoutingTest extends TestCase
 		$status   = 0;
 
 		if (
-			!empty($http_response_header[0])
-			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', $http_response_header[0], $m)
+			!empty((\http_get_last_response_headers() ?? [])[0])
+			&& \preg_match('/HTTP\/\d+(?:\.\d+)? (\d+)/', (\http_get_last_response_headers() ?? [])[0], $m)
 		) {
 			$status = (int) $m[1];
 		}
