@@ -643,9 +643,11 @@ access): `Auth::provider($context, $auth)` rebuilds one with the row's reference
   confirmation page (or a recovery form) whose POST consumes the token, so mail scanners and previews
   cannot. Web logout
   (`GET /logout`) needs `_csrf`.
-- **Redirect targets**: `next` only accepts local paths, the current host and
-  `OZ_REDIRECT_ALLOWED_HOSTS`; validate any user-supplied target with
-  `TypeUrl::allowAbsolutePath()->allowedHosts(...)`.
+- **Redirect targets**: every redirection is checked against `OZ_REDIRECT_ALLOWED_HOSTS`
+  (`RedirectPolicy`, read by `Navigator::redirect()`), which allows the current host and the hosts it
+  lists, or any host with `'*'`. A route asking a client for a destination validates the field too,
+  with `TypeUrl::allowAbsolutePath()->allowedHosts(RedirectPolicy::fromContext($ctx)->hosts())`, so
+  the field and the redirection cannot disagree; never build that host list by hand.
 - **Client IP: always `Context::getUserIP()`.** Forwarding headers are ignored unless the TCP peer is
   in `oz.proxies`; then `OZ_CLIENT_IP_HEADER` (e.g. `CF-Connecting-IP`) or else the right-most
   untrusted hop of `Forwarded` / `X-Forwarded-For`. Scope IDs never include the port. Behind a

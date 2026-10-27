@@ -20,6 +20,7 @@ use OZONE\Core\Exceptions\NotFoundException;
 use OZONE\Core\Exceptions\UnauthorizedException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Http\Enums\RequestScope;
+use OZONE\Core\Http\RedirectPolicy;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Web\WebView;
@@ -65,13 +66,14 @@ final class LogoutAndRedirectView extends WebView
 			->get('/logout', static function (RouteInfo $ri): void {
 				new self($ri)->logoutAndRedirect($ri);
 			})->form(static function (RouteInfo $ri) {
-				// `next` may only point to a local path, this host, or a host listed in
-				// OZ_REDIRECT_ALLOWED_HOSTS: anything else would be an open redirect.
-				$hosts   = (array) Settings::get('oz.request', 'OZ_REDIRECT_ALLOWED_HOSTS', []);
-				$hosts[] = $ri->getContext()->getHost();
+				// `next` may only point to a local path, this host, or a host the redirect policy
+				// allows: anything else would be an open redirect. The field answers the client
+				// which address was refused, where the redirection itself would only fail.
+				$policy = RedirectPolicy::fromContext($ri->getContext());
 
 				$form = new Form();
-				$form->field('next')->type(new TypeUrl()->allowAbsolutePath()->allowedHosts($hosts));
+				$form->field('next')
+					->type(new TypeUrl()->allowAbsolutePath()->allowedHosts($policy->hosts()));
 
 				return $form;
 			})

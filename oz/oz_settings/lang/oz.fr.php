@@ -25,6 +25,7 @@ return [
 	'OZ_ERROR_RATE_LIMIT_REACHED'            => 'Vous avez atteint la limite de requêtes.',
 	'OZ_RATE_LIMIT_EXCEEDED'                 => 'Trop de requêtes. Veuillez réessayer plus tard.',
 	'OZ_RECURSIVE_REDIRECTION'               => 'Trop de redirections.',
+	'OZ_REDIRECT_HOST_NOT_ALLOWED'           => 'Ce serveur ne peut pas vous envoyer vers cette adresse.',
 	'OZ_CROSS_SITE_REQUEST_NOT_ALLOWED'      => "Requête d'une origine non autorisée.",
 	'OZ_CSRF_TOKEN_INVALID'                  => 'Le jeton de sécurité est manquant, invalide ou expiré. Rechargez la page puis réessayez.',
 

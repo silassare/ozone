@@ -17,6 +17,7 @@ use InvalidArgumentException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Hooks\Events\RedirectHook;
 use OZONE\Core\Http\HTTPEnvironment;
+use OZONE\Core\Http\RedirectPolicy;
 use OZONE\Core\Http\Request;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\Uri;
@@ -107,14 +108,21 @@ final class Navigator
 	/**
 	 * Redirects the client to a URL.
 	 *
+	 * The destination must name a host `OZ_REDIRECT_ALLOWED_HOSTS` allows, the current request's own
+	 * being allowed whatever that setting says ({@see RedirectPolicy}). A destination a caller took
+	 * from a request is how an open redirect is built, and a caller cannot be relied on to have
+	 * checked it, so the check is here rather than at each of them.
+	 *
 	 * @param string|Uri $to     the destination; a path keeps the request's scheme and host
 	 * @param null|int   $status the redirection HTTP status code
+	 *
+	 * @throws RuntimeException when the destination names a host this server may not send a client to
 	 */
 	public function redirect(string|Uri $to, ?int $status = null): never
 	{
 		$uri = $to instanceof Uri ? $to : Uri::createFromString($to);
 
-		if (empty($uri->getHost())) {
+		if ('' === $uri->getHost()) {
 			$uri = $this->context->getRequest()->getUri()
 				->withPath($uri->getPath())
 				->withFragment($uri->getFragment())
@@ -125,8 +133,15 @@ final class Navigator
 
 		$this->track($uri_str, ['status' => $status]);
 
-		if (!\filter_var($uri_str, \FILTER_VALIDATE_URL)) {
+		if (!Uri::isStrictUrl($uri_str)) {
 			throw new InvalidArgumentException(\sprintf('Invalid redirect url: %s', $uri_str));
+		}
+
+		if (!RedirectPolicy::fromContext($this->context)->allows($uri)) {
+			throw new RuntimeException('OZ_REDIRECT_HOST_NOT_ALLOWED', [
+				'to'   => $uri_str,
+				'host' => $uri->getHost(),
+			]);
 		}
 
 		new RedirectHook($this->context, $uri)->dispatch();

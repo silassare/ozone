@@ -25,6 +25,7 @@ return [
 	'OZ_ERROR_RATE_LIMIT_REACHED'            => 'You have reached the request limit.',
 	'OZ_RATE_LIMIT_EXCEEDED'                 => 'Too many requests. Please try again later.',
 	'OZ_RECURSIVE_REDIRECTION'               => 'Too many redirections.',
+	'OZ_REDIRECT_HOST_NOT_ALLOWED'           => 'This server may not send you to that address.',
 	'OZ_CROSS_SITE_REQUEST_NOT_ALLOWED'      => 'Requests from this origin are not allowed.',
 	'OZ_CSRF_TOKEN_INVALID'                  => 'The security token is missing, invalid or expired. Reload the page and try again.',
 

@@ -77,9 +77,19 @@ return [
 	'OZ_DEFAULT_ORIGIN'            => 'http://localhost',
 
 	/**
-	 * Hosts, besides the current one, that user-supplied redirect targets (e.g. the
-	 * `next` parameter of `/logout`) may point to. Anything else is rejected, so these
-	 * parameters cannot be used as open redirects.
+	 * Hosts, besides the current one, that a redirection may send a client to.
+	 *
+	 * Every redirection is checked against this list (`Navigator::redirect()`), so a destination a
+	 * route took from the request (the `next` parameter of `/logout`, a `?return=` of a project's
+	 * own) cannot be used as an open redirect. The current request's host is always allowed.
+	 *
+	 * - []: this host only;
+	 * - ['example.com', 'https://app.example.com']: those hosts too, a URL reduced to its host;
+	 * - ['*']: any host. This is an open redirect: only set it where sending a client anywhere it
+	 *   asks for is the point.
+	 *
+	 * Hosts are compared on the host alone, lowercased: a port and a path take no part. A
+	 * destination this list does not allow fails with `OZ_REDIRECT_HOST_NOT_ALLOWED`.
 	 *
 	 * @default []
 	 */
