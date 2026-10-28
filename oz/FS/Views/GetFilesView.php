@@ -52,9 +52,7 @@ class GetFilesView extends WebView
 
 		self::defineRouteParams(
 			$router
-				->get($format, static function (RouteInfo $r) {
-					return self::handle($r);
-				})
+				->get($format, static fn (RouteInfo $r) => self::handle($r))
 				->name(self::MAIN_ROUTE)
 		);
 

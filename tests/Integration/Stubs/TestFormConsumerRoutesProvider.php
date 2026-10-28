@@ -107,9 +107,7 @@ final class TestFormConsumerRoutesProvider extends BaseService
 			->name('test:incremental-upload')
 			->form(static fn () => self::uploadForm());
 
-		$router->post('/test/secret-form', static function (RouteInfo $ri) {
-			return self::values($ri, $ri->getCleanFormData()->toArray());
-		})
+		$router->post('/test/secret-form', static fn (RouteInfo $ri) => self::values($ri, $ri->getCleanFormData()->toArray()))
 			->name('test:secret-form')
 			->form(static fn () => self::secretForm());
 	}

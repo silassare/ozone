@@ -238,7 +238,7 @@ final class OZTestProject
 		// A project reused from an earlier run keeps its vendor/ only if it is this dependency set's:
 		// after a composer update in OZone the set, so the hash, changed, and the project must follow.
 		if (\is_link($vendor_symlink)) {
-			if (\readlink($vendor_symlink) !== $cache_dir || !\is_dir($cache_dir)) {
+			if (\readlink($vendor_symlink) !== $cache_dir || !self::isFilledDir($cache_dir)) {
 				\unlink($vendor_symlink);
 			}
 		} elseif (\is_dir($vendor_symlink)) {
@@ -247,7 +247,7 @@ final class OZTestProject
 		}
 
 		if (!\is_link($vendor_symlink)) {
-			if (\is_dir($cache_dir)) {
+			if (self::isFilledDir($cache_dir)) {
 				\symlink($cache_dir, $vendor_symlink);
 			} else {
 				// The project's own lock would be an earlier set's, which composer would install again.
@@ -270,7 +270,27 @@ final class OZTestProject
 				if (!\is_dir(\dirname($cache_dir))) {
 					\mkdir(\dirname($cache_dir), 0o775, true);
 				}
-				\rename($vendor_symlink, $cache_dir);
+
+				// The cache may hold this dependency set by now: it is shared, and the install above
+				// takes minutes. Whoever filled it keeps it and this copy is dropped -- the two hold
+				// the same set, since the set is what the directory is named after. An empty
+				// directory is a cache an interrupted run left behind, and goes.
+				if (self::isFilledDir($cache_dir)) {
+					new Process(['rm', '-rf', $vendor_symlink])->mustRun();
+				} else {
+					if (\is_dir($cache_dir)) {
+						\rmdir($cache_dir);
+					}
+
+					if (!@\rename($vendor_symlink, $cache_dir)) {
+						throw new RuntimeException(\sprintf(
+							'Unable to cache the vendor directory of the test project "%s" as "%s".',
+							$name,
+							$cache_dir
+						));
+					}
+				}
+
 				\symlink($cache_dir, $vendor_symlink);
 			}
 		}
@@ -566,14 +586,6 @@ final class OZTestProject
 		return [$server, $host, $port];
 	}
 
-	/**
-	 * Delete the test project directory.
-	 *
-	 * Any php -S processes spawned by {@see startServer()} are killed first so
-	 * they do not keep running as orphans after the test process exits.
-	 * The vendor/ symlink is unlinked before the recursive delete so the
-	 * shared vendor cache directory is not affected.
-	 */
 	public function destroy(): void
 	{
 		// Kill any tracked php -S server processes that may have been orphaned
@@ -674,6 +686,25 @@ final class OZTestProject
 				$pdo->exec("DROP TABLE IF EXISTS {$quoted} CASCADE");
 			}
 		}
+	}
+
+	/**
+	 * Delete the test project directory.
+	 *
+	 * Any php -S processes spawned by {@see startServer()} are killed first so
+	 * they do not keep running as orphans after the test process exits.
+	 * The vendor/ symlink is unlinked before the recursive delete so the
+	 * shared vendor cache directory is not affected.
+	 */
+	/**
+	 * Whether a directory exists and holds something.
+	 *
+	 * An empty one is not a cached dependency set: it is what an interrupted run left behind, and
+	 * symlinking a project's `vendor/` at it would give the project no dependencies at all.
+	 */
+	private static function isFilledDir(string $path): bool
+	{
+		return \is_dir($path) && [] !== \array_diff((array) \scandir($path), ['.', '..']);
 	}
 
 	/**

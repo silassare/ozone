@@ -224,9 +224,7 @@ final class Utils
 			} else {
 				$kli_type = new KliTypeString();
 
-				$kli_type->validator(static function ($value) use ($db_type) {
-					return $db_type->validate($value)->getCleanValue();
-				});
+				$kli_type->validator(static fn ($value) => $db_type->validate($value)->getCleanValue());
 			}
 
 			$option->type($kli_type)

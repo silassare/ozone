@@ -89,18 +89,18 @@ class LogWriter implements LogWriterInterface
 		$level = \strtoupper($level);
 
 		$message = <<<LOG
-================================================================================
-[{$level}] {$date}
-================================================================================
-{$message}
+			================================================================================
+			[{$level}] {$date}
+			================================================================================
+			{$message}
 
-LOG;
+			LOG;
 		if (!empty($context)) {
 			$message .= <<<LOG
-===
-{$context}
+				===
+				{$context}
 
-LOG;
+				LOG;
 		}
 
 		\clearstatcache(true, $this->log_file);

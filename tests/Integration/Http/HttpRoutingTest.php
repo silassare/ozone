@@ -451,6 +451,70 @@ final class HttpRoutingTest extends TestCase
 		self::assertSame(0, \json_decode($body, true)['error'] ?? null, $body);
 	}
 
+	/**
+	 * A ref `chunk/add` does not find says which of three things happened: all three answered
+	 * `Invalid ref.`, and only the last of them is the server's fault.
+	 */
+	public function testAnUnusableRefSaysWhichOfTheThreeItIs(): void
+	{
+		$chunk = [['name' => 'chunk', 'filename' => 'c0', 'type' => 'text/plain', 'content' => '0123']];
+
+		// A session with no upload of its own: nothing was ever here to lose.
+		[$status, $body, $headers] = $this->request('POST', '/upload/chunk/start', [
+			'name' => 'chunked.txt',
+			'size' => 4,
+			'type' => 'text/plain',
+		]);
+
+		self::assertSame(200, $status, $body);
+
+		$issued  = \json_decode($body, true)['data']['ref'] ?? '';
+		$cookies = self::cookies($headers);
+		$session = [
+			'Cookie: OZONE_SID=' . ($cookies['OZONE_SID'] ?? ''),
+			'X-XSRF-TOKEN: ' . ($cookies['XSRF-TOKEN'] ?? ''),
+		];
+
+		self::assertNotEmpty($issued, $body);
+
+		// Not the shape a ref is drawn in: this server never issued it.
+		[, $body] = $this->multipart('/upload/chunk/add', $chunk, $session, [
+			'ref'         => 'not-a-ref',
+			'chunk_index' => '0',
+		]);
+
+		self::assertSame('OZ_UPLOAD_REF_UNKNOWN', \json_decode($body, true)['msg'] ?? null, $body);
+
+		// A ref of the right shape, in a session that holds one: issued here, and gone.
+		[, $body] = $this->multipart('/upload/chunk/add', $chunk, $session, [
+			'ref'         => \str_repeat('a', \strlen($issued)),
+			'chunk_index' => '0',
+		]);
+
+		self::assertSame('OZ_UPLOAD_REF_LOST', \json_decode($body, true)['msg'] ?? null, $body);
+
+		// The same ref carried by a client with no session of this server's: the session is the
+		// thing that is wrong, not the ref.
+		[, $body] = $this->multipart('/upload/chunk/add', $chunk, [], [
+			'ref'         => \str_repeat('a', \strlen($issued)),
+			'chunk_index' => '0',
+		]);
+
+		self::assertSame('OZ_UPLOAD_REF_SESSION_CHANGED', \json_decode($body, true)['msg'] ?? null, $body);
+	}
+
+	/**
+	 * The ref in the path of `DELETE /upload/chunk/<ref>` reaches a dot path too: a value php-utils
+	 * will not read as one is refused, not answered with a 500.
+	 */
+	public function testDeletingAnUploadWithAnUnreadableRefIsRefused(): void
+	{
+		[$status, $body] = $this->request('DELETE', '/upload/chunk/not-a-ref');
+
+		self::assertSame(400, $status, $body);
+		self::assertSame('OZ_UPLOAD_REF_UNKNOWN', \json_decode($body, true)['msg'] ?? null, $body);
+	}
+
 	// -------------------------------------------------------------------------
 	// Helpers
 	// -------------------------------------------------------------------------

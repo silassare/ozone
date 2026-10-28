@@ -7,7 +7,13 @@
          bootstrap="tests/autoload.php"
          cacheDirectory=".phpunit.cache"
          failOnRisky="true"
-         failOnWarning="true">
+         failOnWarning="true"
+         failOnNotice="true"
+         failOnDeprecation="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerErrors="true">
 
     <php>
         <ini name="error_reporting" value="-1"/>
@@ -51,8 +57,13 @@
         </exclude>
     </groups>
 
-    <!-- What a coverage run measures: `make test-coverage`. -->
-    <source>
+    <!--
+        What a coverage run measures (`make test-coverage`), and the code the suite answers for:
+        `restrictNotices` and `restrictWarnings` keep a notice or a warning raised in `oz/` fatal to
+        the run. Deprecations are deliberately left unrestricted, since one raised in `tests/` is as
+        much ours to fix as one raised in `oz/`, and `failOnDeprecation` fails on both.
+    -->
+    <source restrictNotices="true" restrictWarnings="true">
         <include>
             <directory suffix=".php">oz</directory>
         </include>

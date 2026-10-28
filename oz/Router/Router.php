@@ -567,7 +567,7 @@ final class Router
 		?callable $factory = null,
 		?RouteSharedOptions $parent = null
 	): RouteOptions {
-		$parent = $parent ?? $this->current_group;
+		$parent ??= $this->current_group;
 
 		if (\is_callable($path)) {
 			$factory = $path;

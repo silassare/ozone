@@ -33,9 +33,7 @@ class PhoneOwnershipVerificationService extends Service
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
-		$router->post('/auth/verify/phone', static function (RouteInfo $ri) {
-			return new self($ri)->init($ri);
-		})
+		$router->post('/auth/verify/phone', static fn (RouteInfo $ri) => new self($ri)->init($ri))
 			->name(self::ROUTE_VERIFY_PHONE)
 			->form(self::buildInitForm(...));
 	}

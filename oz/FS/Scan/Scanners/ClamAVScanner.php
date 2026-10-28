@@ -86,8 +86,12 @@ final readonly class ClamAVScanner implements FileScannerInterface
 		$conn = $this->connect();
 
 		try {
-			// clamd stops reading once the content exceeds its limit: its reply then tells why.
-			$sending = false !== \fwrite($conn, "zINSTREAM\0");
+			// clamd stops reading once the content exceeds its limit or it has seen enough to answer,
+			// and closes its end: the next write then fails with a broken pipe. That is the expected
+			// end of a send, not an error, so each write is silenced and answered for by its return
+			// value, and the reply below says what clamd decided. Without the silencing, a scan that
+			// found a threat raises a PHP notice on the way to reporting it.
+			$sending = false !== @\fwrite($conn, "zINSTREAM\0");
 
 			while ($sending && !$content->eof()) {
 				$chunk = $content->read(self::CHUNK_SIZE);
@@ -96,11 +100,11 @@ final readonly class ClamAVScanner implements FileScannerInterface
 					break;
 				}
 
-				$sending = false !== \fwrite($conn, \pack('N', \strlen($chunk)) . $chunk);
+				$sending = false !== @\fwrite($conn, \pack('N', \strlen($chunk)) . $chunk);
 			}
 
 			if ($sending) {
-				\fwrite($conn, \pack('N', 0));
+				@\fwrite($conn, \pack('N', 0));
 			}
 
 			$reply = $this->readReply($conn);

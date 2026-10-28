@@ -599,7 +599,14 @@ final class Session implements BootHookReceiverInterface
 			$key_path = [...$path, (string) $key];
 
 			if (!\array_key_exists($key, $before)) {
-				$patch->setAt($key_path, $value);
+				// A branch this request is the first to see is written one entry at a time, never
+				// whole: another request creating the same branch at the same moment would have its
+				// entry replaced by this one's, which is the loss below with nothing yet to lose.
+				if (self::isDataBranch($value)) {
+					self::collectDataChanges($patch, [], $value, $key_path);
+				} else {
+					$patch->setAt($key_path, $value);
+				}
 
 				continue;
 			}
@@ -607,6 +614,21 @@ final class Session implements BootHookReceiverInterface
 			$previous = $before[$key];
 
 			if (self::isDataBranch($previous) && self::isDataBranch($value)) {
+				self::collectDataChanges($patch, $previous, $value, $key_path);
+
+				continue;
+			}
+
+			// An empty array is neither a map nor a list: it is what a map's last key left behind,
+			// and what a map a request has not filled yet starts as. It is walked into when the
+			// other side is a map, so that emptying a branch sends the keys that went rather than
+			// the branch itself -- writing the branch whole undoes a key another request added to
+			// it meanwhile, which is how a session store keeping its entries under one branch lost
+			// an entry to a request that removed its own.
+			if (
+				([] === $previous && self::isDataBranch($value))
+				|| (self::isDataBranch($previous) && [] === $value)
+			) {
 				self::collectDataChanges($patch, $previous, $value, $key_path);
 
 				continue;

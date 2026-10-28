@@ -33,9 +33,7 @@ class EmailOwnershipVerificationService extends Service
 	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
-		$router->post('/auth/verify/email', static function (RouteInfo $ri) {
-			return new self($ri)->init($ri);
-		})
+		$router->post('/auth/verify/email', static fn (RouteInfo $ri) => new self($ri)->init($ri))
 			->name(self::ROUTE_VERIFY_EMAIL)
 			->form(self::buildInitForm(...));
 	}

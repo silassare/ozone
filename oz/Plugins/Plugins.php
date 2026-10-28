@@ -73,7 +73,7 @@ class Plugins
 		/** @var array<string, class-string<PluginInterface>> $claimed */
 		static $claimed = [];
 
-		$class = \get_class($plugin);
+		$class = $plugin::class;
 
 		if (!isset($scopes[$class])) {
 			$scope = new PluginScope($plugin);

@@ -170,13 +170,13 @@ final class ParameterBuilder
 
 		$sc       = $this->schemas->string('The ordering rules parameter');
 		$desc     = <<<DESC
-The ordering rules parameter.
+			The ordering rules parameter.
 
-A list of ordering rules separated by the delimiter `{$list_sep}`.
-Each ordering rule is a column name followed by the delimiter `{$rule_sep}` and the order direction (`asc` or `desc`).
+			A list of ordering rules separated by the delimiter `{$list_sep}`.
+			Each ordering rule is a column name followed by the delimiter `{$rule_sep}` and the order direction (`asc` or `desc`).
 
-> Example: `field_one{$rule_sep}asc{$list_sep}field_two{$rule_sep}desc`.
-DESC;
+			> Example: `field_one{$rule_sep}asc{$list_sep}field_two{$rule_sep}desc`.
+			DESC;
 
 		return $this->parameter(
 			RESTFulAPIRequest::ORDER_BY_PARAM,
@@ -207,14 +207,14 @@ DESC;
 		$sample_relations = empty($relations) ? ['relation_one', 'relation_two'] : \array_slice($relations, 0, 2);
 		$sample           = \implode($rel_sep, $sample_relations);
 		$desc             = <<<DESC
-The relations parameter.
+			The relations parameter.
 
-A list of relations separated by the delimiter `{$rel_sep}`.
-{$allowed_relation_text}
-> Note: Only non paginated relations are allowed. For paginated relations use dedicated endpoints.
+			A list of relations separated by the delimiter `{$rel_sep}`.
+			{$allowed_relation_text}
+			> Note: Only non paginated relations are allowed. For paginated relations use dedicated endpoints.
 
-> Example: `{$sample}`.
-DESC;
+			> Example: `{$sample}`.
+			DESC;
 
 		return $this->parameter(
 			RESTFulAPIRequest::RELATIONS_PARAM,
@@ -252,66 +252,66 @@ DESC;
 		$op_has_key     = Operator::HAS_KEY->value;
 
 		$desc = <<<DESC
-The filters parameter.
+			The filters parameter.
 
-Use `{$filters_param}` to narrow query results with complex boolean conditions.
-Each condition is a JSON array triplet `[field, operator, value]`. Conditions can be
-composed with `AND` / `OR` connectors and nested arbitrarily.
+			Use `{$filters_param}` to narrow query results with complex boolean conditions.
+			Each condition is a JSON array triplet `[field, operator, value]`. Conditions can be
+			composed with `AND` / `OR` connectors and nested arbitrarily.
 
-**Available operators:**
+			**Available operators:**
 
-| Operator | Description | Value type |
-|----------|-------------|------------|
-| `{$op_eq}` | Equal | scalar |
-| `{$op_neq}` | Not equal | scalar |
-| `{$op_lt}` | Less than | number or string |
-| `{$op_lte}` | Less than or equal | number or string |
-| `{$op_gt}` | Greater than | number or string |
-| `{$op_gte}` | Greater than or equal | number or string |
-| `{$op_like}` | SQL LIKE pattern match (`%` = any chars, `_` = one char) | string |
-| `{$op_not_like}` | SQL NOT LIKE (inverse of `{$op_like}`) | string |
-| `{$op_is_null}` | Column value is NULL | omit value |
-| `{$op_is_not_null}` | Column value is NOT NULL | omit value |
-| `{$op_in}` | Value is one of a list | array of scalars |
-| `{$op_not_in}` | Value is NOT in a list | array of scalars |
-| `{$op_contains}` | JSON column contains the given JSON value (native JSON columns only) | any JSON value |
-| `{$op_has_key}` | JSON column has the given key (native JSON columns only) | string |
+			| Operator | Description | Value type |
+			|----------|-------------|------------|
+			| `{$op_eq}` | Equal | scalar |
+			| `{$op_neq}` | Not equal | scalar |
+			| `{$op_lt}` | Less than | number or string |
+			| `{$op_lte}` | Less than or equal | number or string |
+			| `{$op_gt}` | Greater than | number or string |
+			| `{$op_gte}` | Greater than or equal | number or string |
+			| `{$op_like}` | SQL LIKE pattern match (`%` = any chars, `_` = one char) | string |
+			| `{$op_not_like}` | SQL NOT LIKE (inverse of `{$op_like}`) | string |
+			| `{$op_is_null}` | Column value is NULL | omit value |
+			| `{$op_is_not_null}` | Column value is NOT NULL | omit value |
+			| `{$op_in}` | Value is one of a list | array of scalars |
+			| `{$op_not_in}` | Value is NOT in a list | array of scalars |
+			| `{$op_contains}` | JSON column contains the given JSON value (native JSON columns only) | any JSON value |
+			| `{$op_has_key}` | JSON column has the given key (native JSON columns only) | string |
 
-> The `{$op_is_null}` and `{$op_is_not_null}` operators take no value; supply only `[field, operator]`.
+			> The `{$op_is_null}` and `{$op_is_not_null}` operators take no value; supply only `[field, operator]`.
 
-> The `{$op_in}` and `{$op_not_in}` operators require an **array** as value: `["field", "in", [1, 2, 3]]`.
+			> The `{$op_in}` and `{$op_not_in}` operators require an **array** as value: `["field", "in", [1, 2, 3]]`.
 
-> The `{$op_contains}` and `{$op_has_key}` operators are only available on columns declared as native JSON.
+			> The `{$op_contains}` and `{$op_has_key}` operators are only available on columns declared as native JSON.
 
-**Condition format:**
-```
-["field", "operator", value]         // regular comparison
-["field", "is_null"]                 // no value needed for is_null / is_not_null
-["field", "in", [1, 2, 3]]          // array value for in / not_in
-```
+			**Condition format:**
+			```
+			["field", "operator", value]         // regular comparison
+			["field", "is_null"]                 // no value needed for is_null / is_not_null
+			["field", "in", [1, 2, 3]]          // array value for in / not_in
+			```
 
-**Composing conditions (array expression):**
-```json
-[
-    [
-        ["status", "eq", "active"],
-        "OR", ["role", "in", ["admin", "mod"]]
-    ],
-    "AND", ["created_at", "gte", 1700000000]
-]
-```
+			**Composing conditions (array expression):**
+			```json
+			[
+			    [
+			        ["status", "eq", "active"],
+			        "OR", ["role", "in", ["admin", "mod"]]
+			    ],
+			    "AND", ["created_at", "gte", 1700000000]
+			]
+			```
 
-**Composing conditions (flat shorthand):** all conditions share the same logical level:
-```json
-[
-    "status", "eq", "active",
-    "AND",
-    "score", "gte", 10,
-    "AND",
-    "deleted_at", "is_null"
-]
-```
-DESC;
+			**Composing conditions (flat shorthand):** all conditions share the same logical level:
+			```json
+			[
+			    "status", "eq", "active",
+			    "AND",
+			    "score", "gte", 10,
+			    "AND",
+			    "deleted_at", "is_null"
+			]
+			```
+			DESC;
 
 		if (null !== $table) {
 			$per_column_lines = [];
@@ -329,12 +329,12 @@ DESC;
 				$desc .= <<<COLS
 
 
-**Available operators per column:**
+					**Available operators per column:**
 
-| Column | Type | Operators |
-|--------|------|-----------|
-{$per_col_table}
-COLS;
+					| Column | Type | Operators |
+					|--------|------|-----------|
+					{$per_col_table}
+					COLS;
 			}
 		}
 

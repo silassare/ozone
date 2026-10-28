@@ -232,42 +232,42 @@ final class ApiDoc implements ArrayCapableInterface
 		$resume_ref_header = Settings::get('oz.request', 'OZ_FORM_RESUME_REF_HEADER_NAME');
 
 		$desc = <<<DESC
-How OZone handles form validation across the API.
+			How OZone handles form validation across the API.
 
-## Form Discovery (`{$discovery_header}: ?1`)
+			## Form Discovery (`{$discovery_header}: ?1`)
 
-Any route with a form attached supports **Form Discovery**.
-Add `{$discovery_header}: ?1` to the request and the handler is skipped;
-the server returns the form bundle in `form`, next to `data` in the envelope - useful for building
-dynamic UIs.
+			Any route with a form attached supports **Form Discovery**.
+			Add `{$discovery_header}: ?1` to the request and the handler is skipped;
+			the server returns the form bundle in `form`, next to `data` in the envelope - useful for building
+			dynamic UIs.
 
-Every rule set of a form is sent (`expect`, `ensure`, a fieldset's own, the `if` conditions), so a
-client can check a form while it is filled, in the order the server does. A set comparing against a
-secret server value is sent as `{ref, \$secret: true}`: ask the `evaluate` endpoint of a form session
-about it. A server value the client may see is sent as its preview, `{\$preview: {value}}`; the server
-compares against its own value on submit.
+			Every rule set of a form is sent (`expect`, `ensure`, a fieldset's own, the `if` conditions), so a
+			client can check a form while it is filled, in the order the server does. A set comparing against a
+			secret server value is sent as `{ref, \$secret: true}`: ask the `evaluate` endpoint of a form session
+			about it. A server value the client may see is sent as its preview, `{\$preview: {value}}`; the server
+			compares against its own value on submit.
 
-Each operation carries an `x-oz-form` extension describing the form doc policy:
+			Each operation carries an `x-oz-form` extension describing the form doc policy:
 
-| Policy | `requestBody` in spec | Meaning |
-|--------|-----------------------|---------|
-| `static` | yes | Schema is known at doc-generation time. |
-| `dynamic` | no | Schema is built at runtime; an `init_form` preview may be present. |
-| `opaque` | no | Schema is not exposed in the spec. |
+			| Policy | `requestBody` in spec | Meaning |
+			|--------|-----------------------|---------|
+			| `static` | yes | Schema is known at doc-generation time. |
+			| `dynamic` | no | Schema is built at runtime; an `init_form` preview may be present. |
+			| `opaque` | no | Schema is not exposed in the spec. |
 
-`x-oz-form` fields: `policy`, `resumable` (bool), `require_real_context` (bool),
-`provider_name` (when resumable), `init_form` (when dynamic and provider exposes one).
+			`x-oz-form` fields: `policy`, `resumable` (bool), `require_real_context` (bool),
+			`provider_name` (when resumable), `init_form` (when dynamic and provider exposes one).
 
-## Form Resume (`{$resume_header}: ?1`)
+			## Form Resume (`{$resume_header}: ?1`)
 
-For routes backed by a resumable-form provider, add `{$resume_header}: ?1` to drive
-the full session lifecycle (init / next / back / cancel / evaluate) on that route directly.
-The session reference is returned in `data.resume_ref` and must be re-sent on all
-subsequent calls via the `{$resume_ref_header}` header.
+			For routes backed by a resumable-form provider, add `{$resume_header}: ?1` to drive
+			the full session lifecycle (init / next / back / cancel / evaluate) on that route directly.
+			The session reference is returned in `data.resume_ref` and must be re-sent on all
+			subsequent calls via the `{$resume_ref_header}` header.
 
-Providers that do not require a real route context are also reachable through the
-standalone `/form/:provider/...` endpoints documented under **Resumable Forms**.
-DESC;
+			Providers that do not require a real route context are also reachable through the
+			standalone `/form/:provider/...` endpoints documented under **Resumable Forms**.
+			DESC;
 
 		return $this->addTag('OZone Form System', $desc);
 	}

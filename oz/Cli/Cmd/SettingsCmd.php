@@ -140,7 +140,7 @@ final class SettingsCmd extends Command
 		}
 
 		if (\is_numeric($value)) {
-			return false !== \strpos($value, '.') ? (float) $value : (int) $value;
+			return \str_contains($value, '.') ? (float) $value : (int) $value;
 		}
 
 		if ((\str_starts_with($value, '{') && \str_ends_with($value, '}'))

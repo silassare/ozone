@@ -478,24 +478,18 @@ abstract class RESTFulService extends Service
 
 	/**
 	 * Called before an action runs, e.g. to check the request further.
-	 *
-	 * @psalm-suppress PossiblyUnusedParam
 	 */
 	protected function beforeAction(RESTFulAction $action, RESTFulAPIRequest $req): void {}
 
 	/**
 	 * Called once an action succeeded, before the response is built: `$this->json()` holds the
 	 * action's response data.
-	 *
-	 * @psalm-suppress PossiblyUnusedParam
 	 */
 	protected function afterAction(RESTFulAction $action, RESTFulAPIRequest $req): void {}
 
 	/**
 	 * Called for each action when the routes are registered, to add guards, a form, middlewares,
 	 * ... to that action's route only.
-	 *
-	 * @psalm-suppress PossiblyUnusedParam
 	 */
 	protected static function configureRoute(RESTFulAction $action, RouteOptions $options): void {}
 

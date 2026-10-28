@@ -227,40 +227,28 @@ class AccessRightsService extends Service
 	public static function registerRoutes(Router $router): void
 	{
 		$router->group('/access-rights', static function (Router $router): void {
-			$router->get('/me', static function (RouteInfo $ri) {
-				return new self($ri)->readForMe($ri);
-			})->name(self::ROUTE_READ_ME)->withAuthenticatedUser();
+			$router->get('/me', static fn (RouteInfo $ri) => new self($ri)->readForMe($ri))->name(self::ROUTE_READ_ME)->withAuthenticatedUser();
 
-			$router->get('/read', static function (RouteInfo $ri) {
-				return new self($ri)->readAsAdmin($ri);
-			})
+			$router->get('/read', static fn (RouteInfo $ri) => new self($ri)->readAsAdmin($ri))
 				->name(self::ROUTE_READ_AS_ADMIN)
 				->form(AuthUsers::selectorForm(...))
 				->withRole(RolesUtils::admin());
 
-			$router->get('/list', static function (RouteInfo $ri) {
-				return new self($ri)->list($ri);
-			})
+			$router->get('/list', static fn (RouteInfo $ri) => new self($ri)->list($ri))
 				->name(self::ROUTE_LIST)
 				->withRole(RolesUtils::admin());
 
-			$router->post('/allow', static function (RouteInfo $ri) {
-				return new self($ri)->allow($ri);
-			})
+			$router->post('/allow', static fn (RouteInfo $ri) => new self($ri)->allow($ri))
 				->name(self::ROUTE_ALLOW)
 				->form(self::buildAllowForm(...))
 				->withRole(RolesUtils::admin());
 
-			$router->post('/deny', static function (RouteInfo $ri) {
-				return new self($ri)->deny($ri);
-			})
+			$router->post('/deny', static fn (RouteInfo $ri) => new self($ri)->deny($ri))
 				->name(self::ROUTE_DENY)
 				->form(self::buildDenyForm(...))
 				->withRole(RolesUtils::admin());
 
-			$router->post('/update', static function (RouteInfo $ri) {
-				return new self($ri)->update($ri);
-			})
+			$router->post('/update', static fn (RouteInfo $ri) => new self($ri)->update($ri))
 				->name(self::ROUTE_UPDATE)
 				->form(self::buildUpdateForm(...))
 				->withRole(RolesUtils::admin());

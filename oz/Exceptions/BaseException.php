@@ -245,38 +245,38 @@ abstract class BaseException extends Exception implements RichExceptionInterface
 		$err_msg = \preg_replace('~\"([^\"]+)\"~', '<span>$1</span>', $err_msg);
 
 		$err_html = <<<ERROR_PAGE
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<title>Error</title>
-		<meta
-			name="viewport"
-			content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
-		/>
-		<style>
-			body{
-				margin: 0;
-				font-family: 'Ubuntu', sans-serif;
-			}
-			div.oz-error{
-				margin: 50px auto;
-				width: 80%;
-				padding: 10px 20px;
-				border-left: 3px solid #ff5064;
-				background-color: whitesmoke;
-			}
-			span{
-				color: #ff5064
-			}
-		</style>
-	</head>
-	<body>
-		<div class="oz-error">
-			<p>{$err_msg}</p>
-		</div>
-	</body>
-</html>
-ERROR_PAGE;
+			<!DOCTYPE html>
+			<html lang="en">
+				<head>
+					<title>Error</title>
+					<meta
+						name="viewport"
+						content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+					/>
+					<style>
+						body{
+							margin: 0;
+							font-family: 'Ubuntu', sans-serif;
+						}
+						div.oz-error{
+							margin: 50px auto;
+							width: 80%;
+							padding: 10px 20px;
+							border-left: 3px solid #ff5064;
+							background-color: whitesmoke;
+						}
+						span{
+							color: #ff5064
+						}
+					</style>
+				</head>
+				<body>
+					<div class="oz-error">
+						<p>{$err_msg}</p>
+					</div>
+				</body>
+			</html>
+			ERROR_PAGE;
 
 		if (null === $sink) {
 			echo $err_html;
@@ -308,14 +308,14 @@ ERROR_PAGE;
 		}
 
 		return <<<STRING
-\tFile    : {$describe['file']}
-\tLine    : {$describe['line']}
-\tCode    : {$describe['code']}
-\tMessage : {$describe['message']}
-\tData    : {$data}
-\tClass   : {$describe['class']}
-\tTrace   : {$describe['trace']}
-STRING;
+			\tFile    : {$describe['file']}
+			\tLine    : {$describe['line']}
+			\tCode    : {$describe['code']}
+			\tMessage : {$describe['message']}
+			\tData    : {$data}
+			\tClass   : {$describe['class']}
+			\tTrace   : {$describe['trace']}
+			STRING;
 	}
 
 	/**
@@ -349,7 +349,7 @@ STRING;
 				'code'    => $current->getCode(),
 				'message' => $current->getMessage(),
 				'data'    => $data,
-				'class'   => \get_class($current),
+				'class'   => $current::class,
 				'trace'   => $current->getTraceAsString(),
 			];
 

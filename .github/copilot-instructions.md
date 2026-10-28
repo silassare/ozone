@@ -199,6 +199,19 @@ current request with `context()` when it needs it (`ApiDoc`, the CRUD listeners)
 memoization goes through `CacheRegistry::runtime()`, which is released that way — never a function
 `static`, which lives as long as the process.
 
+**State kept in the session store** (`Context::requireAuthStore()`) is written back as the keys the
+request changed, so two overlapping requests keep each other's writes (`Session::dataPatch()`). Two
+rules follow, and both have been paid for:
+
+- **State kept per entry goes under a branch as a map, keyed by the entry, and is removed one entry
+  at a time** (`oz_upload_files.<ref>`, `oz.link_to_cfg.<key>`). A value the diff cannot walk into
+  is written whole: a **list** is (its entries mean their order), and so is a branch removed in one
+  call. Either undoes what another request put there meanwhile.
+- **A value from the request is checked before it becomes part of a dot path.** php-utils refuses to
+  read a plain path segment holding anything outside `^[a-zA-Z0-9_]+$`, so concatenating an unchecked value
+  into a key raises out of the store and comes back as a 500. A route pattern does it
+  (`->param('key', '[a-z0-9]{32}')`), or the handler does it before the first store call.
+
 A server that hands requests over as objects (RoadRunner, Swoole) passes the `Request` it built and a
 **response sink** (`Runtime\Interfaces\ResponseSinkInterface`): the finished `Response` object goes
 to the sink instead of `header()` / `echo`. The sink is called exactly where the response would be

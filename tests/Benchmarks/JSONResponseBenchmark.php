@@ -29,19 +29,15 @@ class JSONResponseBenchmark implements BenchmarkSuiteInterface
 	{
 		return [
 			// Success path: set message + data payload, then serialise.
-			'json_response_done'  => static function () {
-				return new JSONResponse()
-					->setDone('OK')
-					->setData(['id' => 1, 'name' => 'test'])
-					->toArray();
-			},
+			'json_response_done'  => static fn () => new JSONResponse()
+				->setDone('OK')
+				->setData(['id' => 1, 'name' => 'test'])
+				->toArray(),
 
 			// Error path: set error message, then serialise.
-			'json_response_error' => static function () {
-				return new JSONResponse()
-					->setError('OZ_ERROR_NOT_FOUND')
-					->toArray();
-			},
+			'json_response_error' => static fn () => new JSONResponse()
+				->setError('OZ_ERROR_NOT_FOUND')
+				->toArray(),
 		];
 	}
 }

@@ -60,7 +60,7 @@ class PluginScope extends AbstractScope
 			throw new RuntimeException(\sprintf(
 				'Plugin "%s" of "%s" cannot be given a state directory. %s',
 				$plugin->getName(),
-				\get_class($plugin),
+				$plugin::class,
 				$fault
 			));
 		}

@@ -33,17 +33,17 @@ trait ResumableFormServiceApiDocTrait
 		$resume_ref_header = Settings::get('oz.request', 'OZ_FORM_RESUME_REF_HEADER_NAME');
 
 		$tag_desc = <<<DESC
-Multi-step form session endpoints.
+			Multi-step form session endpoints.
 
-Providers are registered in `oz.forms.providers`. Each provider controls
-the steps, their forms, reversibility, and session lifetime.
+			Providers are registered in `oz.forms.providers`. Each provider controls
+			the steps, their forms, reversibility, and session lifetime.
 
-After calling `init`, include the session reference from `data.resume_ref`
-in the `{$resume_ref_header}` header on every subsequent request.
+			After calling `init`, include the session reference from `data.resume_ref`
+			in the `{$resume_ref_header}` header on every subsequent request.
 
-Providers that set `requiresRealContext() = true` are not accessible here;
-they must be driven through the route they are attached to (see **OZone Form System**).
-DESC;
+			Providers that set `requiresRealContext() = true` are not accessible here;
+			they must be driven through the route they are attached to (see **OZone Form System**).
+			DESC;
 		$tag->description = $tag_desc;
 
 		$provider_param_desc = 'Provider name as registered in `oz.forms.providers`. '

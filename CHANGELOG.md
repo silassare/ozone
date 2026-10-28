@@ -185,6 +185,20 @@
 
 ### Added
 
+- **The suite fails on a deprecation, a notice and a risky test.** It carried `failOnWarning` and
+  `failOnRisky` only, so a deprecation or a notice passed unseen -- and PHP 8.5 deprecates a null
+  array offset in every form, `isset()`, `??` and `empty()` included, which is exactly what a suite
+  has to fail on to find. `failOnNotice` and `failOnDeprecation` are on, with the details displayed
+  and `restrictNotices` / `restrictWarnings` on the sources, and the first run of it found the
+  ClamAV notice below. Three `@psalm-suppress PossiblyUnusedParam` went with it: the shared analysis
+  levels suppress that issue for every package, so they did nothing. The other 21 suppressions here
+  were each checked by removing them and running psalm: all 21 are load-bearing.
+
+- **The shared coding standard writes the 8.5 syntax.** The floor moved to PHP 8.5 and the fixer
+  carried no version migration set, so each file kept the syntax of the year it was written:
+  `$x::class` over `get_class($x)`, `0o755` over `0755`, an arrow function over a closure that only
+  returns, a heredoc indented with its code. Twenty-one files here.
+
 - **The PHP 8.3 the framework requires is now used.** `#[\SensitiveParameter]` marks every parameter that carries a secret -- `Password::hash()` / `verify()` / `resizePass()`, `DoCrypt::encrypt()` / `decrypt()` and their interface, `AuthUsers::tryLogIn()` / `checkPassword()`, `TOTP::hotp()` / `verify()`, `AuthorizationProvider::hash()`, `AuthorizationCredentials::setCode()` / `setToken()` and their interface, `AuthUserInterface::setAuthPassword()` and its implementations, `Uri::withUserInfo()`, `PasswordProtectedRouteGuard` -- so a stack trace, a log of one or `debug_print_backtrace()` prints `Object(SensitiveParameterValue)` where it used to print the password. `Random::string()` draws the whole string with `Random\Randomizer::getBytesFromString()` instead of one `random_int()` per character, which is what every session ID, CSRF token, store key and generated file name is made of: 6 times faster at 16 characters, 10 times at 64, measured in one process over the same alphabet. Every class constant that a value types beyond doubt is typed (`private const array LEVELS`, `public const string TABLE_NAME`, ...), which says what a constant is and refuses a subclass that would redeclare it as something else. The value objects that are final, parentless and hold nothing but readonly properties are `readonly` classes (`StoreEntry`, `StoreCapabilities`, `KeyValueStore`, `RenderedMessage`, `Channel`, `ImageInfo`, `ImageRecipe`, `RenderedImage`, the `S3*` request/response/signer/client, `ResolvedRouteOptions`, `RuleViolation`, `FormSessionStep`, `FormSessionManager`, `MessageNode`, `ProvisionStep`, `SshHost`, `Provisioner`, `Releaser`, `DeployFile`, `DeployInitializer`, `DbTestConfig`, `ClamAVScanner`, `ResponseBuilder`): the class answers for its immutability, and a dynamic property on one is now an error. A class a project may extend is left alone, since `readonly` would be forced on the child.
 - The `VERSION` file says `ozone v3.0.0`, the version `OZ_OZONE_VERSION` and the `dev-main` branch alias have carried for a while. **Not a release**: no tag is cut, `CHANGELOG.md` keeps its `Unreleased` section, and `dev-main` stays aliased to `3.x-dev` so a project installing the development source is untouched.
 
@@ -219,6 +233,24 @@
 - `REST\Enums\RESTFulAction`, the action table driving `RESTFulService` routes and docs (`REST\RESTFulApiDoc`); `RESTFulService::beforeAction()` / `afterAction()` hooks and `configureRoute()` for per-action guards, forms or middlewares; `RESTFulService::routeName()` accepts a `RESTFulAction`.
 
 ### Fixed
+
+- **A session request that emptied a branch of the store wrote the branch whole, undoing a key another request had just added.** What a request changed is sent as the keys it changed, so two overlapping requests keep each other's writes; the diff walked into a map on both sides, and an empty array is not a map, so a request removing the last key it saw under a branch sent the branch itself as `[]` instead of sending that key's removal. Everything another request had put there meanwhile went with it. The same held the other way: a request that saw a branch empty and filled it sent the branch whole and undid a key added meanwhile. And nothing had to be lost for a branch to be written whole -- being **new** was enough: the first request to write under a branch sent the branch, so two requests creating the same one at the same moment kept one entry between them. All three send the entries now, not the branch: an empty array is walked into when the other side is a map, and a branch a request is the first to see is written one entry at a time. **Reported from a project as a chunked upload refused one second after the ref was issued** (`upload/chunk/start` answers a ref, `upload/chunk/add` refuses it), roughly one upload in six under a browser fetching other things from the same scope: an upload finishing removes its own ref from `oz_upload_files`, which was the only one that request saw there, and the branch write took the ref just issued with it. Any store keeping an entry per key under one branch was exposed the same way, `oz.link_to_cfg`, `oz.qr_code_cfg`, `oz.captcha_cfg` and `oz.2fa` among them. Both directions have a test that drives a real server with four workers.
+
+- **`upload/chunk/add` and `DELETE upload/chunk/<ref>` answered 500 to a ref that was never issued.** A ref becomes part of a dot path (`oz_upload_files.<ref>`), and php-utils refuses to read a path whose plain segment holds anything outside letters, digits and underscore (`^[a-zA-Z0-9_]+$`): `ref=not-a-ref` raised out of the store and came back as `OZ_ERROR_INTERNAL`, on two routes that need no authentication. A ref is now checked against the shape `newRef()` draws before anything is asked of the store, as the routes keeping a key under `oz.link_to_cfg`, `oz.qr_code_cfg` and `oz.captcha_cfg` already did through their route patterns.
+
+- **`Invalid ref.` answered three different things, and only one of them was a bug.** A chunked upload's ref that the store does not hold now says which: `OZ_UPLOAD_REF_UNKNOWN` for a value this server never issued, `OZ_UPLOAD_REF_SESSION_CHANGED` when the session holds no upload at all (it is not the one the ref was issued to, or it expired), and `OZ_UPLOAD_REF_LOST` when the session holds other refs and not this one -- which is the server's fault, and is logged as such with the refs it does hold. A caller could not tell them apart, and neither could we when one was reported.
+
+- **The test kit's vendor cache failed when the dependency set was already cached.** A project's
+  `vendor/` is renamed into a directory named after the dependency set and symlinked back, and the
+  rename was made whether or not that directory already held the set: `rename()` then raised
+  `Directory not empty` and the `symlink()` after it `File exists`, leaving the project with a real
+  `vendor/` and the suite with two warnings. Whoever filled the cache keeps it now and the second
+  copy is dropped, since both hold the set the directory is named after; an empty cache directory,
+  which is what an interrupted run leaves behind, is no longer taken for a cached set either -- a
+  project symlinked at one had no dependencies at all. It surfaced once the notice below stopped
+  ending the run before the integration suite.
+
+- **A ClamAV scan that found a threat raised a PHP notice on the way to reporting it.** clamd closes its end as soon as it has seen enough to answer, so the next write fails with a broken pipe -- the expected end of a send, already answered for by the return value. The writes are silenced, as the connect in the same file already was. It surfaced when the suite started failing on a notice.
 
 - **A URL column accepted `javascript:` and `data:` URLs.** `TypeUrl` validated with `FILTER_VALIDATE_URL`, which accepts `javascript://comment%0Aalert(1)` -- the newline ends the comment, and what follows runs wherever the stored value is written into an `href` -- and accepts `data:` and `ftp:` as readily. The scheme was looked at only inside the `allowed_hosts` check, and that check returns early when no list is configured, so a URL column **without** a host list took whatever the filter took. A stored URL is now checked against RFC 3986 with the scheme list applied either way (`Uri::isStrictUrl()`), and strictly: a value kept in a column is read later by something that may not be a browser, so a string whose meaning depends on which parser reads it is refused rather than normalised into one reading. **Refused now, where they were accepted:** a non-http(s) scheme, an authority a browser reads differently (`http://evil.com\\@good.com/`), a per cent sign that is not an escape, and a host not yet in its ASCII form.
 

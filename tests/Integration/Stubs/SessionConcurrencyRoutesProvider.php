@@ -82,6 +82,57 @@ final class SessionConcurrencyRoutesProvider extends BaseService
 
 			return self::answer($ri, ['seen' => $seen]);
 		})->name('test:session:slow-write');
+
+		// A key under a named branch, the shape a chunked upload's ref is kept in
+		// (`oz_upload_files.<ref>`), rather than a key of the store's own.
+		$router->get('/test-session-branch-add', static function (RouteInfo $ri) {
+			$ref = (string) $ri->getContext()->getRequest()->getQueryParam('ref', '');
+
+			$ri->getContext()->requireAuthStore()->set('refs.' . $ref, ['kept' => true]);
+
+			return self::answer($ri, ['ref' => $ref]);
+		})->name('test:session:branch-add');
+
+		// Reads the session, takes its time, then removes its own key from that branch. When it was
+		// the only key the request saw there, the branch it ends the request with is empty.
+		$router->get('/test-session-slow-branch-remove', static function (RouteInfo $ri) {
+			$store = $ri->getContext()->requireAuthStore();
+			$ref   = (string) $ri->getContext()->getRequest()->getQueryParam('ref', '');
+			$seen  = \array_keys((array) $store->get('refs'));
+
+			\usleep(self::SLOW_MS * 1000);
+
+			$store->remove('refs.' . $ref);
+
+			return self::answer($ri, ['seen' => $seen]);
+		})->name('test:session:slow-branch-remove');
+
+		// Reads the branch while it is empty, takes its time, then adds a key of its own.
+		$router->get('/test-session-slow-branch-add', static function (RouteInfo $ri) {
+			$store = $ri->getContext()->requireAuthStore();
+			$ref   = (string) $ri->getContext()->getRequest()->getQueryParam('ref', '');
+			$seen  = \array_keys((array) $store->get('refs'));
+
+			\usleep(self::SLOW_MS * 1000);
+
+			$store->set('refs.' . $ref, ['kept' => true]);
+
+			return self::answer($ri, ['seen' => $seen]);
+		})->name('test:session:slow-branch-add');
+
+		// Reads the session before the branch exists at all, takes its time, then creates it with
+		// an entry of its own.
+		$router->get('/test-session-slow-branch-create', static function (RouteInfo $ri) {
+			$store = $ri->getContext()->requireAuthStore();
+			$ref   = (string) $ri->getContext()->getRequest()->getQueryParam('ref', '');
+			$seen  = $store->get('fresh');
+
+			\usleep(self::SLOW_MS * 1000);
+
+			$store->set('fresh.' . $ref, ['kept' => true]);
+
+			return self::answer($ri, ['seen' => $seen]);
+		})->name('test:session:slow-branch-create');
 	}
 
 	public static function apiDoc(ApiDoc $doc): void {}

@@ -588,12 +588,10 @@ final class ResumableFormServiceTest extends TestCase
 
 	public function testASecretValueReachesNoResponse(): void
 	{
-		$leaks = static function (string $body): array {
-			return \array_values(\array_filter(
-				['oz-secret-sentinel', 'oz-public-runtime'],
-				static fn (string $secret): bool => \str_contains($body, $secret)
-			));
-		};
+		$leaks = static fn (string $body): array => \array_values(\array_filter(
+			['oz-secret-sentinel', 'oz-public-runtime'],
+			static fn (string $secret): bool => \str_contains($body, $secret)
+		));
 
 		// Discovered: every set holding a secret is withheld, and the public value sends its preview.
 		[, $body] = $this->request('POST', '/test/secret-form', [], ['X-OZONE-Form-Discovery' => '?1']);

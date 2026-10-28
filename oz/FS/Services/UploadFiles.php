@@ -59,6 +59,16 @@ class UploadFiles extends Service
 	public const int CHUNK_MAX_SIZE    = 1000 * 1000; // 1MB
 
 	/**
+	 * The store branch every upload ref of a session lives under.
+	 */
+	public const string STORE_BRANCH = 'oz_upload_files';
+
+	/**
+	 * The length {@see self::newRef()} draws, and what {@see self::isRefShape()} expects.
+	 */
+	public const int REF_LENGTH = 16;
+
+	/**
 	 * @throws UnauthenticatedException
 	 */
 	public function upload(RouteInfo $r): void
@@ -111,18 +121,18 @@ class UploadFiles extends Service
 		$ref         = $r->getCleanFormField(self::PARAM_REF);
 		$chunk_index = $r->getCleanFormField(self::PARAM_CHUNK_INDEX);
 
+		// Before the store is asked anything: a ref is part of a dot path, and a value with a dot,
+		// a dash or a bracket in it is not a path php-utils reads -- it raises, which left this
+		// route answering 500 to a ref that was simply never issued.
+		self::assertRefShape($ref);
+
 		/** @var ValidatedFile $chunk_file */
 		$chunk_file = $r->getCleanFormField(self::PARAM_CHUNK);
 
 		$info = $this->loadChunksInfo($ref);
 
 		if (!$info) {
-			throw new InvalidFormException(
-				'Invalid ref.',
-				[
-					self::PARAM_REF => $ref,
-				]
-			);
+			throw $this->refRefused($ref);
 		}
 
 		$chunks = $info['chunks'];
@@ -216,6 +226,8 @@ class UploadFiles extends Service
 
 	public function deleteUpload(string $ref): void
 	{
+		self::assertRefShape($ref);
+
 		$key   = self::getKey($ref);
 		$state = $this->getContext()->requireAuthStore();
 		$data  = $state->get($key);
@@ -441,7 +453,7 @@ class UploadFiles extends Service
 	 */
 	private static function getKey(string $ref): string
 	{
-		return 'oz_upload_files.' . $ref;
+		return self::STORE_BRANCH . '.' . $ref;
 	}
 
 	/**
@@ -449,7 +461,58 @@ class UploadFiles extends Service
 	 */
 	private static function newRef(): string
 	{
-		return Random::alphaNum(16);
+		return Random::alphaNum(self::REF_LENGTH);
+	}
+
+	/**
+	 * Whether a value is the shape {@see self::newRef()} draws.
+	 *
+	 * `Random::alphaNum()` draws from {@see Random::CHARS_ALPHA_NUM}, which is what `ctype_alnum()`
+	 * accepts, so a value that fails this was never issued by this server.
+	 */
+	private static function isRefShape(string $value): bool
+	{
+		return self::REF_LENGTH === \strlen($value) && \ctype_alnum($value);
+	}
+
+	/**
+	 * Refuses a value that is not the shape a ref is drawn in, before it reaches a dot path.
+	 *
+	 * @throws InvalidFormException
+	 */
+	private static function assertRefShape(string $ref): void
+	{
+		if (!self::isRefShape($ref)) {
+			throw new InvalidFormException('OZ_UPLOAD_REF_UNKNOWN', [self::PARAM_REF => $ref]);
+		}
+	}
+
+	/**
+	 * Says which of the two remaining things happened to a ref of the right shape that the store
+	 * does not hold.
+	 *
+	 * Three cases answered `Invalid ref.`, and only one of them is a bug: a caller could not tell a
+	 * ref it never had from one the server lost, and neither could we when one was reported.
+	 */
+	private function refRefused(string $ref): InvalidFormException
+	{
+		$data = [self::PARAM_REF => $ref];
+		$held = $this->getContext()->requireAuthStore()->get(self::STORE_BRANCH);
+
+		if (!\is_array($held) || [] === $held) {
+			// Nothing of this kind is in this store: the session is not the one the ref was issued
+			// to, or it expired and the client is on a new one.
+			return new InvalidFormException('OZ_UPLOAD_REF_SESSION_CHANGED', $data);
+		}
+
+		// The store holds other refs and not this one, so it was issued to this session and is
+		// gone. Logged, because unlike the other two this is ours to explain.
+		oz_logger()->error('OZ_UPLOAD_REF_LOST', [
+			'_ref'       => $ref,
+			'_held_refs' => \array_keys($held),
+		]);
+
+		return new InvalidFormException('OZ_UPLOAD_REF_LOST', $data);
 	}
 
 	/**

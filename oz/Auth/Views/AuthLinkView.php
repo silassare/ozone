@@ -127,15 +127,11 @@ final class AuthLinkView extends WebView
 	public static function registerRoutes(Router $router): void
 	{
 		$router
-			->get('/auth/link/:ref/:token', static function (RouteInfo $ri) {
-				return new self($ri)->confirm($ri);
-			})
+			->get('/auth/link/:ref/:token', static fn (RouteInfo $ri) => new self($ri)->confirm($ri))
 			->name(self::AUTH_LINK_ROUTE);
 
 		$router
-			->post('/auth/link/:ref/:token', static function (RouteInfo $ri) {
-				return new self($ri)->authorize($ri);
-			})
+			->post('/auth/link/:ref/:token', static fn (RouteInfo $ri) => new self($ri)->authorize($ri))
 			->name(self::AUTH_LINK_CONFIRM_ROUTE);
 	}
 

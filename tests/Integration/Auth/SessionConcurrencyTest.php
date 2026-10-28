@@ -165,6 +165,92 @@ final class SessionConcurrencyTest extends TestCase
 	/**
 	 * A request that only reads the session leaves its data alone and slides its expiry.
 	 */
+	/**
+	 * A key kept under a named branch, which is how a chunked upload's ref is kept: an overlapping
+	 * request removing its own key from that branch must not take a key added meanwhile with it.
+	 */
+	public function testAConcurrentRemovalDoesNotTakeTheWholeBranchWithIt(): void
+	{
+		$sid = $this->openSession();
+
+		[$status, $body] = $this->request($sid, '/test-session-branch-add?ref=first');
+		self::assertSame(200, $status, $body);
+
+		// Holds the branch as it is now: one key, its own.
+		$slow = $this->send($sid, '/test-session-slow-branch-remove?ref=first');
+
+		\usleep(500_000);
+
+		[$status, $body] = $this->request($sid, '/test-session-branch-add?ref=second');
+		self::assertSame(200, $status, $body);
+
+		[$status, $body] = $this->finish($slow);
+		self::assertSame(200, $status, $body);
+		self::assertSame(['first'], $this->data($body)['seen'] ?? null, 'the slow request saw another branch');
+
+		$refs = $this->storedData($sid)['refs'] ?? [];
+
+		self::assertArrayNotHasKey('first', $refs, 'the removal did not happen');
+		self::assertArrayHasKey('second', $refs, 'the removal took a key added meanwhile with it');
+	}
+
+	/**
+	 * The same branch, the other way round: a request that saw it empty and fills it must not undo
+	 * a key another request put there meanwhile.
+	 */
+	public function testAConcurrentAddToAnEmptyBranchKeepsBothKeys(): void
+	{
+		$sid = $this->openSession();
+
+		// The branch exists and is empty: a key was added and removed.
+		[$status, $body] = $this->request($sid, '/test-session-branch-add?ref=gone');
+		self::assertSame(200, $status, $body);
+		[$status, $body] = $this->request($sid, '/test-session-slow-branch-remove?ref=gone');
+		self::assertSame(200, $status, $body);
+
+		$slow = $this->send($sid, '/test-session-slow-branch-add?ref=slow');
+
+		\usleep(500_000);
+
+		[$status, $body] = $this->request($sid, '/test-session-branch-add?ref=quick');
+		self::assertSame(200, $status, $body);
+
+		[$status, $body] = $this->finish($slow);
+		self::assertSame(200, $status, $body);
+		self::assertSame([], $this->data($body)['seen'] ?? null, 'the slow request did not see an empty branch');
+
+		$refs = $this->storedData($sid)['refs'] ?? [];
+
+		self::assertArrayHasKey('slow', $refs, 'the slow request lost its own write');
+		self::assertArrayHasKey('quick', $refs, 'the write to an empty branch undid the other one');
+	}
+
+	/**
+	 * The branch does not exist yet and two requests create it at once: the first entry written is
+	 * not replaced by the second. Nothing has to be lost for the branch to be written whole -- being
+	 * new is enough.
+	 */
+	public function testTwoRequestsCreatingTheSameBranchKeepBothEntries(): void
+	{
+		$sid = $this->openSession();
+
+		$slow = $this->send($sid, '/test-session-slow-branch-create?ref=slow');
+
+		\usleep(500_000);
+
+		[$status, $body] = $this->request($sid, '/test-session-slow-branch-create?ref=quick');
+		self::assertSame(200, $status, $body);
+
+		[$status, $body] = $this->finish($slow);
+		self::assertSame(200, $status, $body);
+		self::assertNull($this->data($body)['seen'] ?? null, 'the branch already existed');
+
+		$fresh = $this->storedData($sid)['fresh'] ?? [];
+
+		self::assertArrayHasKey('slow', $fresh, 'the slow request lost its own entry');
+		self::assertArrayHasKey('quick', $fresh, 'creating the branch replaced the entry added meanwhile');
+	}
+
 	public function testAReadOnlyRequestDoesNotChangeTheData(): void
 	{
 		$sid    = $this->openSession();

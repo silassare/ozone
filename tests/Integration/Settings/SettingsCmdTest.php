@@ -135,9 +135,7 @@ final class SettingsCmdTest extends TestCase
 			->mustRun();
 
 		// Reload the file (require_once caches, so use require with a fresh import)
-		$after = (static function ($file) {
-			return require $file;
-		})(self::settingsPath('app.unset'));
+		$after = (static fn ($file) => require $file)(self::settingsPath('app.unset'));
 		self::assertArrayNotHasKey('TO_REMOVE', $after);
 	}
 
@@ -150,9 +148,7 @@ final class SettingsCmdTest extends TestCase
 		self::$proj->oz('settings', 'unset', '-g=app.unset2', '-k=REMOVE_ME')
 			->mustRun();
 
-		$settings = (static function ($file) {
-			return require $file;
-		})(self::settingsPath('app.unset2'));
+		$settings = (static fn ($file) => require $file)(self::settingsPath('app.unset2'));
 		self::assertArrayHasKey('KEEP_ME', $settings);
 		self::assertArrayNotHasKey('REMOVE_ME', $settings);
 	}
@@ -171,9 +167,7 @@ final class SettingsCmdTest extends TestCase
 			. \DIRECTORY_SEPARATOR . 'oz.request.php';
 
 		self::assertFileExists($scope_file);
-		$settings = (static function ($file) {
-			return require $file;
-		})($scope_file);
+		$settings = (static fn ($file) => require $file)($scope_file);
 		self::assertSame('http://scoped.example.com', $settings['OZ_DEFAULT_ORIGIN']);
 	}
 
@@ -189,9 +183,7 @@ final class SettingsCmdTest extends TestCase
 			. \DIRECTORY_SEPARATOR . 'app.custom.php';
 
 		self::assertFileExists($source_file);
-		$settings = (static function ($file) {
-			return require $file;
-		})($source_file);
+		$settings = (static fn ($file) => require $file)($source_file);
 		self::assertSame('source-value', $settings['SOURCE_KEY']);
 	}
 
