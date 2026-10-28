@@ -452,10 +452,10 @@ final class HttpRoutingTest extends TestCase
 	}
 
 	/**
-	 * A ref `chunk/add` does not find says which of three things happened: all three answered
-	 * `Invalid ref.`, and only the last of them is the server's fault.
+	 * A ref `chunk/add` has no chunks for says which of four things happened: all four answered
+	 * `Invalid ref.`, and only `OZ_UPLOAD_REF_LOST` is the server's fault.
 	 */
-	public function testAnUnusableRefSaysWhichOfTheThreeItIs(): void
+	public function testAnUnusableRefSaysWhichCaseItIs(): void
 	{
 		$chunk = [['name' => 'chunk', 'filename' => 'c0', 'type' => 'text/plain', 'content' => '0123']];
 
@@ -501,6 +501,49 @@ final class HttpRoutingTest extends TestCase
 		]);
 
 		self::assertSame('OZ_UPLOAD_REF_SESSION_CHANGED', \json_decode($body, true)['msg'] ?? null, $body);
+	}
+
+	/**
+	 * A chunk sent under an upload that is over: the ref is still there, holding the ids of the
+	 * files it produced rather than chunks. That reads as a client carrying on past the end, not as
+	 * a ref the server lost.
+	 */
+	public function testAChunkSentUnderAFinishedUploadIsRefused(): void
+	{
+		[$status, $body, $headers] = $this->request('POST', '/upload/chunk/start', [
+			'name' => 'done.txt',
+			'size' => 4,
+			'type' => 'text/plain',
+		]);
+
+		self::assertSame(200, $status, $body);
+
+		$ref     = \json_decode($body, true)['data']['ref'] ?? '';
+		$cookies = self::cookies($headers);
+		$session = [
+			'Cookie: OZONE_SID=' . ($cookies['OZONE_SID'] ?? ''),
+			'X-XSRF-TOKEN: ' . ($cookies['XSRF-TOKEN'] ?? ''),
+		];
+		$chunk   = [['name' => 'chunk', 'filename' => 'c0', 'type' => 'text/plain', 'content' => '0123']];
+
+		self::assertNotEmpty($ref, $body);
+
+		// The whole file in one chunk: the upload is over and the ref holds the file it produced.
+		[$status, $body] = $this->multipart('/upload/chunk/add', $chunk, $session, [
+			'ref'         => $ref,
+			'chunk_index' => '0',
+		]);
+
+		self::assertSame(200, $status, $body);
+		self::assertSame(0, \json_decode($body, true)['error'] ?? null, $body);
+
+		[$status, $body] = $this->multipart('/upload/chunk/add', $chunk, $session, [
+			'ref'         => $ref,
+			'chunk_index' => '1',
+		]);
+
+		self::assertSame(400, $status, $body);
+		self::assertSame('OZ_UPLOAD_REF_DONE', \json_decode($body, true)['msg'] ?? null, $body);
 	}
 
 	/**

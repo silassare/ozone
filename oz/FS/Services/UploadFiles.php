@@ -443,9 +443,12 @@ class UploadFiles extends Service
 	 */
 	private function loadChunksInfo(string $ref): ?array
 	{
-		$key = self::getKey($ref);
+		$info = $this->getContext()->requireAuthStore()->get(self::getKey($ref));
 
-		return $this->getContext()->requireAuthStore()->get($key);
+		// The same key holds the ids of the files an upload produced once it is over (`upload`, and
+		// `chunk/add` on the last chunk), so what is there is not always chunks. Only chunks answer
+		// here; {@see self::refRefused()} tells the other shape apart.
+		return \is_array($info) && \is_array($info['chunks'] ?? null) ? $info : null;
 	}
 
 	/**
@@ -488,10 +491,10 @@ class UploadFiles extends Service
 	}
 
 	/**
-	 * Says which of the two remaining things happened to a ref of the right shape that the store
-	 * does not hold.
+	 * Says which of the three remaining things happened to a ref of the right shape that the store
+	 * holds no chunks for.
 	 *
-	 * Three cases answered `Invalid ref.`, and only one of them is a bug: a caller could not tell a
+	 * Four cases answered `Invalid ref.`, and only one of them is a bug: a caller could not tell a
 	 * ref it never had from one the server lost, and neither could we when one was reported.
 	 */
 	private function refRefused(string $ref): InvalidFormException
@@ -505,8 +508,15 @@ class UploadFiles extends Service
 			return new InvalidFormException('OZ_UPLOAD_REF_SESSION_CHANGED', $data);
 		}
 
+		if (isset($held[$ref])) {
+			// The ref is there and holds something other than chunks: the ids of the files an upload
+			// that is over produced. A chunk sent under it is a client carrying on past the end, not
+			// a ref that went missing.
+			return new InvalidFormException('OZ_UPLOAD_REF_DONE', $data);
+		}
+
 		// The store holds other refs and not this one, so it was issued to this session and is
-		// gone. Logged, because unlike the other two this is ours to explain.
+		// gone. Logged, because unlike the other three this is ours to explain.
 		oz_logger()->error('OZ_UPLOAD_REF_LOST', [
 			'_ref'       => $ref,
 			'_held_refs' => \array_keys($held),

@@ -121,6 +121,7 @@ return [
 	'OZ_UPLOAD_REF_UNKNOWN'                  => "Cette référence d'envoi n'a jamais été délivrée.",
 	'OZ_UPLOAD_REF_SESSION_CHANGED'          => 'Cet envoi appartient à une autre session, veuillez le recommencer.',
 	'OZ_UPLOAD_REF_LOST'                     => 'Cet envoi a été interrompu sur le serveur, veuillez le recommencer.',
+	'OZ_UPLOAD_REF_DONE'                     => 'Cet envoi est déjà terminé.',
 	'OZ_CAPTCHA_CODE_EXPIRED'                => 'Le captcha a expiré.',
 	'OZ_QR_CODE_HAS_EXPIRED'                 => 'Le code QR a expiré.',
 	'OZ_LINK_EXPIRED'                        => 'Ce lien a expiré.',

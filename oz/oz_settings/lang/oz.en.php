@@ -121,6 +121,7 @@ return [
 	'OZ_UPLOAD_REF_UNKNOWN'                  => 'This upload reference was never issued.',
 	'OZ_UPLOAD_REF_SESSION_CHANGED'          => 'This upload belongs to another session, please start it again.',
 	'OZ_UPLOAD_REF_LOST'                     => 'This upload was interrupted on the server, please start it again.',
+	'OZ_UPLOAD_REF_DONE'                     => 'This upload is already finished.',
 	'OZ_CAPTCHA_CODE_EXPIRED'                => 'The captcha has expired.',
 	'OZ_QR_CODE_HAS_EXPIRED'                 => 'The QR code has expired.',
 	'OZ_LINK_EXPIRED'                        => 'This link has expired.',
