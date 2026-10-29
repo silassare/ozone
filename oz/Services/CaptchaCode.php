@@ -34,6 +34,11 @@ use PHPUtils\Str;
  */
 final class CaptchaCode extends Service
 {
+	/**
+	 * The branch of the session store holding one entry per captcha handed out.
+	 */
+	public const string STORE_BRANCH = 'oz.captcha_cfg';
+
 	public const string CAPTCHA_KEY = 'oz_captcha_key';
 
 	public const string CAPTCHA_ROUTE = 'oz:captcha';
@@ -71,7 +76,8 @@ final class CaptchaCode extends Service
 		$captcha_key = Keys::id32();
 
 		$context->requireAuthStore()
-			->set('oz.captcha_cfg.' . $captcha_key, [
+			->entries(self::STORE_BRANCH)
+			->set($captcha_key, [
 				'expire_at' => $expire_at,
 				'code'      => $code,
 			]);
@@ -89,9 +95,9 @@ final class CaptchaCode extends Service
 	public static function generateCaptchaImage(Context $context, string $captcha_key): Response
 	{
 		$response = $context->getResponse();
-		$key      = 'oz.captcha_cfg.' . $captcha_key;
 		$data     = $context->requireAuthStore()
-			->get($key);
+			->entries(self::STORE_BRANCH)
+			->get($captcha_key);
 
 		if (empty($data)) {
 			throw new NotFoundException();

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Users\Traits;
 
+use Gobl\DBAL\Types\Utils\JsonPatch;
 use OZONE\Core\Auth\AuthUserDataStore;
 use OZONE\Core\Auth\AuthUsers;
 use OZONE\Core\Crypt\Password;
@@ -69,7 +70,34 @@ trait UserEntityTrait
 
 	public function setAuthUserDataStore(AuthUserDataStore $store): static
 	{
-		$this->setDataKey(self::AUTH_USER_DATA_STORE_KEY, $store->getData());
+		// The keys the store was written at, under the store's own key: writing the store whole
+		// would carry every one of its keys as this request read them, so a right granted by one
+		// request and two-factor enabled by another would come down to whichever answers last.
+		$operations = $store->recordedOperations();
+
+		if ([] === $operations) {
+			// Nothing recorded: either nothing was written, or something changed the data in place
+			// rather than through the store, and then only the whole store answers for it.
+			$this->setDataKey(self::AUTH_USER_DATA_STORE_KEY, $store->getData());
+
+			return $this;
+		}
+
+		$patch = new JsonPatch($this->getData());
+
+		foreach ($operations as $operation) {
+			$path = [self::AUTH_USER_DATA_STORE_KEY, ...$operation['path']];
+
+			if ('remove' === $operation['op']) {
+				$patch->removeAt($path);
+
+				continue;
+			}
+
+			$patch->setAt($path, $operation['value']);
+		}
+
+		$this->setData($patch);
 
 		return $this;
 	}

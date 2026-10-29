@@ -34,6 +34,11 @@ use OZONE\Core\Services\QRCode\Interfaces\QRCodeEncoderDecoderInterface;
  */
 final class QRCode extends Service
 {
+	/**
+	 * The branch of the session store holding one entry per key handed out.
+	 */
+	public const string STORE_BRANCH = 'oz.qr_code_cfg';
+
 	public const string QR_CODE_KEY = 'oz_qr_code_key';
 
 	public const string QR_CODE_ROUTE = 'oz:qr-code';
@@ -48,7 +53,8 @@ final class QRCode extends Service
 		$qr_code_key = Keys::id32();
 
 		$context->requireAuthStore()
-			->set('oz.qr_code_cfg.' . $qr_code_key, [
+			->entries(self::STORE_BRANCH)
+			->set($qr_code_key, [
 				'expire_at' => $expire_at,
 				'data'      => $data,
 			]);
@@ -66,9 +72,9 @@ final class QRCode extends Service
 	public static function generateQrCodeImage(Context $context, string $qr_code_key): Response
 	{
 		$response = $context->getResponse();
-		$key      = 'oz.qr_code_cfg.' . $qr_code_key;
 		$data     = $context->requireAuthStore()
-			->get($key);
+			->entries(self::STORE_BRANCH)
+			->get($qr_code_key);
 
 		if (empty($data)) {
 			throw new NotFoundException();

@@ -18,14 +18,17 @@ use OZONE\Core\Access\Interfaces\AccessRightsInterface;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\TwoFactor\TwoFactorChannelRegistry;
 use OZONE\Core\Stores\CacheRegistry;
-use PHPUtils\Store\Store;
+use OZONE\Core\Stores\RecordingStore;
 
 /**
  * Class AuthUserDataStore.
  *
- * @extends Store<array>
+ * Access rights and two-factor state, kept in the user's own document: two requests changing
+ * different parts of it -- a right granted while two-factor is being enabled -- would otherwise
+ * each write the whole store and undo the other. The writes are recorded as paths; see
+ * {@see \OZONE\Core\Users\Traits\UserEntityTrait::setAuthUserDataStore()}.
  */
-class AuthUserDataStore extends Store
+class AuthUserDataStore extends RecordingStore
 {
 	/**
 	 * AuthUserDataStore constructor.

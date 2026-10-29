@@ -2,6 +2,40 @@
 
 ### Breaking changes
 
+- **Per-entry state in the session store is written through a branch handle, not a built-up dot
+  path.** The uploads a session has in flight, the links, QR codes and captchas it has been handed
+  are kept one entry per key, and each was written as `'<branch>.' . $key`. They go through
+  `requireAuthStore()->entries(self::STORE_BRANCH)` now (`set()`, `get()`, `remove()`, `has()`,
+  `all()`, `names()`), which writes and removes one entry at a time and treats the key as a
+  **member's name** whatever it looks like -- a key of all digits down a dot path is ambiguous,
+  since PHP reads `$a['12']` and `$a[12]` as one slot and JSON does not. `UploadFiles::getKey()` is
+  gone, replaced by the handle; the branch of each is a public constant (`STORE_BRANCH`). A project
+  reaching those branches by their literal path should move to the handle.
+
+- **The session store keeps the writes made to it, instead of their result being compared
+  afterwards.** What a request changed was worked out at the end by walking the document it started
+  with against the one it ended with, and that walk had to decide what each writer had meant: whether
+  a key that was gone had been one entry of a map or the branch itself, whether an array of numbers
+  was a list or a map keyed by id, whether a branch this request was first to fill was a branch at
+  all. Three of those readings came out wrong and cost a bug each; a request whose patch could not be
+  expressed cost a fourth. `StatefulAuthenticationMethodStore` extends the new
+  `Stores\RecordingStore`, so every `set()`, `remove()`, `merge()` and array write is kept as the
+  path it changed and nothing is read off the values. A write that goes around the store -- the data
+  reached and changed in place -- is noticed rather than left out of the UPDATE: the store says its
+  paths no longer account for its document, the change is worked out the old way, and the session id
+  and the keys are logged.
+
+  `oz_sessions.data` is declared `patchOnly()`, so an UPDATE that cannot send it as paths raises
+  instead of writing the document and undoing whatever another request wrote. A fallback on any
+  other column is logged through `Gobl\DBAL\Events\JsonPatchNotExpressible`, which nothing used to
+  report.
+
+- **Access rights and two-factor state are written as the keys that changed.**
+  `UserEntityTrait::setAuthUserDataStore()` wrote the whole store under one key, so a right granted
+  by one request and two-factor enabled by another came down to whichever answered last.
+  `AuthUserDataStore` records its writes like the session store, and the trait sends them as paths
+  under the store's own key.
+
 - **PHPUnit 13 is what the test kit asks for**, and a project using it must move with it: `OZONE\Core\Testing\IntegrationTestCase` and the testing traits are exercised against 13.4, and a project's own tests need the same major. PHPUnit 13 reads **no** doc-comment metadata and reports none it finds, so a project's `@dataProvider` does not warn -- the test runs with no arguments -- and a `@group` makes a `--group` selection match nothing. The attributes in `PHPUnit\Framework\Attributes` are the only form that works, and `oliup/oliup-cs-php` now carries `php_unit_attributes`, so `make fix` converts them. Two CLI changes bite the same way: one group per `--group` flag (a comma-separated list is read as a single group name), and `--do-not-cache-result` is `--do-not-record-test-run-history`.
 
 - **A redirection may only send a client to a host this server allows.** `Navigator::redirect()`, which every redirection goes through (`Context::redirect()`, `Navigator::redirectRoute()`), replaced the destination only when it named no host: an absolute URL was emitted as a `Location` whatever host it named, so any route handing `redirect()` something it took from the request was an open redirect. It now refuses a destination whose host is neither the request's own nor one `OZ_REDIRECT_ALLOWED_HOSTS` names, with `OZ_REDIRECT_HOST_NOT_ALLOWED`. That setting already existed and was read in one place only, the `next` field of `/logout`, so every other redirection was unchecked; it now decides them all, and takes `'*'` for any host, spelled as `OZ_CORS_ALLOWED_ORIGIN`'s own wildcard. Its default is unchanged (`[]`, this host only), so **a project redirecting off-site must list the hosts it sends clients to**. The decision is one class, `Http\RedirectPolicy` (`fromContext()`, `allows()`, `hosts()`, `allowsAnyHost()`), which the `/logout` form reads too, so the field and the redirection cannot disagree -- and an entry may be written as a host or as a URL, since the two settings next to it hold URLs. With it, `redirect()` validates the destination through `Uri::isStrictUrl()` instead of `FILTER_VALIDATE_URL`, which accepts `javascript://comment%0Aalert(1)`.

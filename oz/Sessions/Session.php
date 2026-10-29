@@ -556,7 +556,29 @@ final class Session implements BootHookReceiverInterface
 				// row it holds. Writing the whole store back would carry every key as it was when the
 				// request started, so a request that overlaps this one would have its own writes
 				// undone by whichever of the two answers last -- a sign-out among them.
-				$patch = self::dataPatch($entry->getData(), $this->initial_data, $data);
+				//
+				// The store kept the writes as they were made, which is the only account of them that
+				// does not have to guess what a writer meant. When it cannot answer for its document
+				// -- something changed the data in place rather than through it -- the change is
+				// worked out by comparing what the request started with, and that is said out loud
+				// rather than left to look like a store that was never written to.
+				$patch = $this->state?->recordedPatch();
+
+				if (null === $patch) {
+					$patch = self::dataPatch($entry->getData(), $this->initial_data, $data);
+
+					if ($patch->hasOperations()) {
+						oz_logger()->error('Session store write did not go through the store.', [
+							'_session_id' => $sid,
+							'_keys'       => \array_map(
+								static fn (array $operation): string => \implode('.', $operation['path']),
+								$patch->getOperations()
+							),
+							'_help'       => 'A session store write did not go through the store itself,'
+								. ' so the keys it changed had to be worked out by comparing documents.',
+						]);
+					}
+				}
 
 				if ($patch->hasOperations()) {
 					$entry->setData($patch);

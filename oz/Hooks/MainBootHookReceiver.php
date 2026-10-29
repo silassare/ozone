@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Hooks;
 
 use Exception;
+use Gobl\DBAL\Events\JsonPatchNotExpressible;
 use Gobl\ORM\Events\ORMTableFilesGenerated;
 use Gobl\ORM\Utils\ORMClassKind;
 use Override;
@@ -261,6 +262,21 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 				'opened_source_key'  => $ev->opened_source_key,
 				'request_source_key' => $ev->request_source_key,
 				'user_ip'            => $ev->context->getUserIP(),
+			]);
+		}, Event::RUN_LAST);
+
+		// An UPDATE that could not send a JSON column's patch as paths wrote the whole document, so
+		// it carried every key as the request that wrote it read them: a key another request wrote
+		// meanwhile is gone. Nothing shows it in the data, which is why it is logged here.
+		JsonPatchNotExpressible::listen(static function (JsonPatchNotExpressible $ev): void {
+			oz_logger()->error($ev->message(), [
+				'_table'  => $ev->table_name,
+				'_column' => $ev->column_name,
+				'_driver' => $ev->driver,
+				'_reason' => $ev->reason,
+				'_paths'  => $ev->paths,
+				'_help'   => 'A concurrent write to this column may have been undone by this one.'
+					. ' Declare the column patch-only to have it refused instead.',
 			]);
 		}, Event::RUN_LAST);
 

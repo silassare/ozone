@@ -31,6 +31,11 @@ use Throwable;
  */
 final class LinkTo extends Service
 {
+	/**
+	 * The branch of the session store holding one entry per key handed out.
+	 */
+	public const string STORE_BRANCH = 'oz.link_to_cfg';
+
 	public const string URI_KEY = 'oz_link_to_key';
 
 	public const string MAIN_ROUTE = 'oz:link-to';
@@ -43,7 +48,8 @@ final class LinkTo extends Service
 		$link_key = Keys::id32();
 
 		$context->requireAuthStore()
-			->set('oz.link_to_cfg.' . $link_key, [
+			->entries(self::STORE_BRANCH)
+			->set($link_key, [
 				'expire_at' => $expire_at,
 				'next'      => (string) $next,
 			]);
@@ -92,9 +98,9 @@ final class LinkTo extends Service
 		$context  = $ri->getContext();
 		$response = $context->getResponse();
 		$link_key = $ri->param(self::URI_KEY);
-		$key      = 'oz.link_to_cfg.' . $link_key;
 		$data     = $context->requireAuthStore()
-			->get($key);
+			->entries(self::STORE_BRANCH)
+			->get($link_key);
 
 		if (empty($data)) {
 			// user may be using different browser

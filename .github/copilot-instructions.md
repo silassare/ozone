@@ -200,13 +200,21 @@ memoization goes through `CacheRegistry::runtime()`, which is released that way 
 `static`, which lives as long as the process.
 
 **State kept in the session store** (`Context::requireAuthStore()`) is written back as the keys the
-request changed, so two overlapping requests keep each other's writes (`Session::dataPatch()`). Two
-rules follow, and both have been paid for:
+request changed, so two overlapping requests keep each other's writes. The store **records each
+write as it is made** (`Stores\RecordingStore`) rather than having it worked out at the end by
+comparing documents: that comparison had to decide what a writer meant, the values never held the
+answer, and every reading of it that came out wrong wrote a branch where one key was meant and took
+a concurrent write with it. Three rules follow, and all three have been paid for:
 
-- **State kept per entry goes under a branch as a map, keyed by the entry, and is removed one entry
-  at a time** (`oz_upload_files.<ref>`, `oz.link_to_cfg.<key>`). A value the diff cannot walk into
-  is written whole: a **list** is (its entries mean their order), and so is a branch removed in one
-  call. Either undoes what another request put there meanwhile.
+- **State kept per entry goes through a branch handle**, `requireAuthStore()->entries(BRANCH)`, which
+  writes and removes one entry at a time and treats the key as a member's name whatever it looks like
+  (`oz_upload_files.<ref>`, `oz.link_to_cfg.<key>`). `remove('<branch>')` or assigning a branch a
+  whole value still replaces every entry in it, which is what `tests/Stores/SessionStoreKeysTest.php`
+  fails on. A new branch of per-entry state is declared there.
+- **A write must go through the store.** Reaching the data with `getData()` and changing it in place
+  is not recorded; it is noticed rather than lost (the change is worked out the old way and logged),
+  but it is a bug to rely on. `oz_sessions.data` is declared `patchOnly()`, so an UPDATE that cannot
+  be sent as paths raises instead of quietly undoing another request's write.
 - **A value from the request is checked before it becomes part of a dot path.** php-utils refuses to
   read a plain path segment holding anything outside `^[a-zA-Z0-9_]+$`, so concatenating an unchecked value
   into a key raises out of the store and comes back as a 500. A route pattern does it

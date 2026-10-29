@@ -23,11 +23,14 @@ use SplFileInfo;
  * Class SessionStoreKeysTest.
  *
  * What a request changes in the session store is written back as the keys it changed, so two
- * overlapping requests keep each other's writes. Two shapes are written whole instead, and each
- * undoes what another request put there meanwhile:
+ * overlapping requests keep each other's writes. The store records each write as it is made
+ * ({@see \OZONE\Core\Stores\RecordingStore}), so nothing about a key's shape is worked out from
+ * its value any more -- but a write still says what it says, and one that names a branch removes
+ * the branch:
  *
- *  - a value that is a **list**, since what its entries mean is their order;
- *  - a **branch removed in one call**, which takes every entry it holds with it.
+ *  - `remove('<branch>')` takes every entry another request put there with it, where
+ *    `remove('<branch>.<entry>')` takes one;
+ *  - a branch assigned a whole value replaces every entry in it for the same reason.
  *
  * Neither is reachable from OZone's own code, and this test is what keeps it that way: a new branch
  * of per-entry state or a new whole-key removal has to be declared here, which is the moment to
@@ -163,8 +166,8 @@ final class SessionStoreKeysTest extends TestCase
 	}
 
 	/**
-	 * The branches a source writes an entry under: `'<branch>.' . $entry`, and the same through a
-	 * constant the file declares.
+	 * The branches a source keeps entries under: `entries(self::BRANCH)` and `entries('<branch>')`,
+	 * and a branch still written as a dot path, `'<branch>.' . $entry`.
 	 *
 	 * @return list<string>
 	 */
@@ -172,16 +175,30 @@ final class SessionStoreKeysTest extends TestCase
 	{
 		$branches = [];
 
+		// `entries('<branch>')`, the branch said outright.
+		\preg_match_all("~->entries\\(\\s*'([A-Za-z0-9_.]+)'\\s*\\)~", $source, $literal_branch);
+
+		foreach ($literal_branch[1] as $branch) {
+			$branches[] = $branch;
+		}
+
+		// A branch still reached by building the path of one entry, which the handle replaces.
 		\preg_match_all("~'([A-Za-z0-9_.]+)\\.'\\s*\\.\\s*\\$~", $source, $literal);
 
 		foreach ($literal[1] as $branch) {
 			$branches[] = $branch;
 		}
 
-		// `self::BRANCH . '.' . $entry`, with the constant declared in the same file.
-		\preg_match_all("~self::([A-Z][A-Z0-9_]*)\\s*\\.\\s*'\\.'\\s*\\.\\s*\\$~", $source, $named);
+		// Through a constant the file declares: `entries(self::BRANCH)`, or
+		// `self::BRANCH . '.' . $entry`.
+		\preg_match_all(
+			"~(?:->entries\\(\\s*self::([A-Z][A-Z0-9_]*)\\s*\\)"
+				. "|self::([A-Z][A-Z0-9_]*)\\s*\\.\\s*'\\.'\\s*\\.\\s*\\$)~",
+			$source,
+			$named
+		);
 
-		foreach ($named[1] as $constant) {
+		foreach (\array_filter([...$named[1], ...$named[2]]) as $constant) {
 			if (\preg_match("~const\\s+string\\s+{$constant}\\s*=\\s*'([^']+)'~", $source, $value)) {
 				$branches[] = $value[1];
 			} else {

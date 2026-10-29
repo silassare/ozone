@@ -31,6 +31,7 @@ use OZONE\Core\Http\UploadedFile;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\Rates\IPRateLimit;
 use OZONE\Core\Router\RouteInfo;
+use OZONE\Core\Stores\StoreEntries;
 use OZONE\Core\Router\Router;
 use OZONE\Core\Utils\Random;
 use Throwable;
@@ -228,9 +229,8 @@ class UploadFiles extends Service
 	{
 		self::assertRefShape($ref);
 
-		$key   = self::getKey($ref);
-		$state = $this->getContext()->requireAuthStore();
-		$data  = $state->get($key);
+		$uploads = $this->uploads();
+		$data    = $uploads->get($ref);
 
 		if (isset($data['chunks'])) {
 			$chunks = $data['chunks'];
@@ -242,13 +242,13 @@ class UploadFiles extends Service
 				}
 			}
 
-			$state->remove($key);
+			$uploads->remove($ref);
 		} elseif (\is_array($data)) {
 			foreach ($data as $file_id) {
 				FS::deleteFileByID($file_id);
 			}
 
-			$state->remove($key);
+			$uploads->remove($ref);
 		}
 	}
 
@@ -419,9 +419,7 @@ class UploadFiles extends Service
 	 */
 	private function saveUploadedFilesIds(string $ref, array $files_ids): void
 	{
-		$key   = self::getKey($ref);
-		$state = $this->getContext()->requireAuthStore();
-		$state->set($key, $files_ids);
+		$this->uploads()->set($ref, $files_ids);
 	}
 
 	/**
@@ -431,9 +429,7 @@ class UploadFiles extends Service
 	 */
 	private function saveChunksInfo(string $ref, array $info): void
 	{
-		$key   = self::getKey($ref);
-		$state = $this->getContext()->requireAuthStore();
-		$state->set($key, $info);
+		$this->uploads()->set($ref, $info);
 	}
 
 	/**
@@ -443,7 +439,7 @@ class UploadFiles extends Service
 	 */
 	private function loadChunksInfo(string $ref): ?array
 	{
-		$info = $this->getContext()->requireAuthStore()->get(self::getKey($ref));
+		$info = $this->uploads()->get($ref);
 
 		// The same key holds the ids of the files an upload produced once it is over (`upload`, and
 		// `chunk/add` on the last chunk), so what is there is not always chunks. Only chunks answer
@@ -452,11 +448,16 @@ class UploadFiles extends Service
 	}
 
 	/**
-	 * Gets the state key.
+	 * The uploads this session has in flight, one entry per ref.
+	 *
+	 * A ref is an entry's name and is written as one, so a request writing its own ref cannot take
+	 * the refs another request is holding with it.
 	 */
-	private static function getKey(string $ref): string
+	private function uploads(): StoreEntries
 	{
-		return self::STORE_BRANCH . '.' . $ref;
+		return $this->getContext()
+			->requireAuthStore()
+			->entries(self::STORE_BRANCH);
 	}
 
 	/**
@@ -500,9 +501,9 @@ class UploadFiles extends Service
 	private function refRefused(string $ref): InvalidFormException
 	{
 		$data = [self::PARAM_REF => $ref];
-		$held = $this->getContext()->requireAuthStore()->get(self::STORE_BRANCH);
+		$held = $this->uploads()->all();
 
-		if (!\is_array($held) || [] === $held) {
+		if ([] === $held) {
 			// Nothing of this kind is in this store: the session is not the one the ref was issued
 			// to, or it expired and the client is on a new one.
 			return new InvalidFormException('OZ_UPLOAD_REF_SESSION_CHANGED', $data);

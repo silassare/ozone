@@ -15,14 +15,16 @@ namespace OZONE\Core\Auth;
 
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Stores\CacheRegistry;
-use PHPUtils\Store\Store;
+use OZONE\Core\Stores\RecordingStore;
 
 /**
  * Class StatefulAuthenticationMethodStore.
  *
- * @extends Store<array>
+ * The session's own document, which several requests of one client hold at once and each own part
+ * of: the writes are recorded as the paths they changed, so the UPDATE sends those and the engine
+ * applies them to the row it holds.
  */
-class StatefulAuthenticationMethodStore extends Store
+class StatefulAuthenticationMethodStore extends RecordingStore
 {
 	/**
 	 * StatefulAuthenticationMethodStore constructor.

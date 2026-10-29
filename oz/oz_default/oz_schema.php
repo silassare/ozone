@@ -449,7 +449,9 @@ return static function (NamespaceBuilder $ns): void {
 			->setMetaKey('api.doc.description', 'The timestamp of the most recent activity for this session.');
 		$tb->useColumn('last_seen_at')->oldName('last_seen');
 
-		$tb->map('data')->default([])
+		// Several requests of one client hold this document at once, each owning part of it: it is
+		// written by the paths a request changed, never whole, so no request undoes another's keys.
+		$tb->map('data')->patchOnly()->default([])
 			->setMetaKey('field.label', 'Data')
 			->setMetaKey('api.doc.description', 'Arbitrary session data stored server-side.');
 
