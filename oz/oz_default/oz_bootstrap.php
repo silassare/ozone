@@ -28,6 +28,11 @@ $oz_booting_a_project = \defined('OZ_PROJECT_DIR')
 	|| \defined('OZ_SCOPE_NAME')
 	|| \defined('OZ_CLI_PROJECT');
 
+// Kept, because `oz_define.php` below gives three of those constants a fallback: afterwards none of
+// them answers this question any more, and `OZone::env()` is the other place that has to know whether
+// there is a project under this process or only a working directory that happens to hold a file.
+\define('OZ_BOOTING_PROJECT', $oz_booting_a_project);
+
 include_once __DIR__ . \DIRECTORY_SEPARATOR . 'oz_define.php';
 
 include_once __DIR__ . \DIRECTORY_SEPARATOR . 'oz_func.php';

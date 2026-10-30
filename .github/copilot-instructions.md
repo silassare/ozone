@@ -94,8 +94,10 @@ vendor/autoload.php                # oz_bootstrap.php: ini, constants, helpers, 
                                    # handlers when a project is booting -- any of OZ_PROJECT_DIR,
                                    # OZ_APP_DIR (app/boot.php), OZ_SCOPE_NAME (the scope's
                                    # index.php) or OZ_CLI_PROJECT (oz/index.php) defined before
-                                   # the require -- so boot-time errors are logged too, and a
-                                   # tool that merely autoloads the package is left alone.
+                                   # the require, and kept as OZ_BOOTING_PROJECT since three of
+                                   # them get a fallback -- so boot-time errors are logged too, and
+                                   # a tool that merely autoloads the package is left alone and
+                                   # reads env() from its own process.
                                    # `oz doctor check` reports it when they went up late.
 OZone::run($app)  /  OZone::handleRequest($request, $sink)   # one-shot  /  worker loop
   +-- bootstrap($app)              # once per process: plugins, BootHookReceivers,

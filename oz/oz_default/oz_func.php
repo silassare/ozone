@@ -93,11 +93,14 @@ if (!\function_exists('oz_logger')) {
 	/**
 	 * Get the value of an environment variable.
 	 *
+	 * Answers whether or not an app is running: a settings file reads this, and reading one is not
+	 * always something an app does ({@see OZone::env()}).
+	 *
 	 * @param null|bool|float|int|string $default
 	 */
 	function env(string $key, mixed $default = null): bool|float|int|string|null
 	{
-		return app()->getEnv()->get($key, $default);
+		return OZone::env()->get($key, $default);
 	}
 
 	/**

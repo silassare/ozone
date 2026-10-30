@@ -29,6 +29,12 @@ use Throwable;
  */
 class Env
 {
+	/**
+	 * A name an env file can hold, which is what the process environment is filtered by: a process
+	 * may carry names no file could (an exported shell function among them).
+	 */
+	public const string VAR_NAME_PATTERN = '~^[A-Za-z_][A-Za-z0-9_]*$~';
+
 	protected ?EnvParser $env = null;
 	protected string $path;
 
@@ -42,13 +48,35 @@ class Env
 	/**
 	 * Env constructor.
 	 *
-	 * @param string $path The path to the env file
+	 * @param null|string $path the path to the env file, or null for the process environment
+	 *                          ({@see self::ofProcess()}, which is what names that case)
 	 */
-	public function __construct(string $path)
+	public function __construct(?string $path = null)
 	{
+		if (null === $path) {
+			$this->path   = '';
+			$this->values = self::processValues();
+			// There is no file to key a cache by, so the values themselves are what identifies them.
+			$this->signature = \hash('xxh128', \serialize($this->values));
+
+			return;
+		}
+
 		$this->path = PathUtils::isRelative($path) ? app()->getProjectDir()->resolve($path) : $path;
 
 		[$this->values, $this->signature] = self::compiled($this->path);
+	}
+
+	/**
+	 * The variables the process itself was given, for a process with no project to read a file in.
+	 *
+	 * What {@see OZone::env()} answers when no app is running and no project directory is known:
+	 * `getenv()` is the only environment there is then. It has no file, so {@see self::getPath()}
+	 * answers an empty string and {@see self::patch()} refuses.
+	 */
+	public static function ofProcess(): static
+	{
+		return new static();
 	}
 
 	/**
@@ -97,6 +125,10 @@ class Env
 	 */
 	public function patch(array $patch_envs): static
 	{
+		if ('' === $this->path) {
+			throw new RuntimeException('The process environment has no file to patch.');
+		}
+
 		$editor = ($this->env ??= EnvParser::fromFile($this->path))->edit();
 
 		foreach ($patch_envs as $key => $options) {
@@ -145,6 +177,51 @@ class Env
 		[$this->values, $this->signature] = self::compiled($this->path);
 
 		return $this;
+	}
+
+	/**
+	 * The process environment, read the way an env file's values are.
+	 *
+	 * The parser does the reading, over a document made of the variables, so `true` is a bool and
+	 * `3306` an int here exactly as in a file rather than by a second set of rules. What a document
+	 * cannot carry -- a name an env file could not hold, a value holding a line break -- is left out
+	 * of it and kept as the string the process gave.
+	 *
+	 * @return array<string, null|bool|float|int|string>
+	 */
+	private static function processValues(): array
+	{
+		$given  = [];
+		$simple = [];
+
+		foreach (\getenv() as $key => $value) {
+			if (!\is_string($key) || !\preg_match(self::VAR_NAME_PATTERN, $key) || !\is_string($value)) {
+				continue;
+			}
+
+			$given[$key] = $value;
+
+			if (!\str_contains($value, "\n") && !\str_contains($value, "\r")) {
+				$simple[$key] = $value;
+			}
+		}
+
+		$editor = EnvParser::fromString('')->edit();
+
+		foreach ($simple as $key => $value) {
+			$editor->upset($key, $value, false, self::needsQuotes($value));
+		}
+
+		return \array_replace($given, EnvParser::fromString((string) $editor)->getEnvs());
+	}
+
+	/**
+	 * Whether a value has to be written quoted, which also stops the parser reading it as a number
+	 * or a boolean: everything that is not a bare word or a number is.
+	 */
+	private static function needsQuotes(string $value): bool
+	{
+		return '' === $value || 1 !== \preg_match('~^[A-Za-z0-9_.+-]+$~', $value);
 	}
 
 	/**

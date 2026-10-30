@@ -268,6 +268,20 @@
 
 ### Fixed
 
+- **`env()` raised in a process with no app running, which made a project's settings file unreadable
+  outside a request.** A settings file is PHP and reads `env()`, so reading one needs the global to
+  answer; the global went straight to the running app, and a tool, a deploy step or the test kit
+  reads a settings file before there is an app to boot. `OZone::env()` answers in all three cases: the
+  running app's env when there is one, the project's `.env` when this process is booting a project,
+  and otherwise the variables the process itself was given (`Env::ofProcess()`, read by the same
+  parser a file is, so `true` is a bool and `3306` an int there too). The signal for the middle case
+  is the new `OZ_BOOTING_PROJECT` constant, kept by the bootstrap where it is still answerable:
+  `OZ_PROJECT_DIR` falls back to the working directory, so after that every process looks like a
+  project and a `.env` found beside it would belong to whatever directory a tool was started in.
+  Found by `OZTestProject::cleanDb()`, which reads a scaffolded project's `app/settings/oz.db.php`
+  for its table prefix and fatally ended any host script using the test kit on MySQL, OZone's own
+  suite excepted because an app is always running in it.
+
 - **A session request that emptied a branch of the store wrote the branch whole, undoing a key another request had just added.** What a request changed is sent as the keys it changed, so two overlapping requests keep each other's writes; the diff walked into a map on both sides, and an empty array is not a map, so a request removing the last key it saw under a branch sent the branch itself as `[]` instead of sending that key's removal. Everything another request had put there meanwhile went with it. The same held the other way: a request that saw a branch empty and filled it sent the branch whole and undid a key added meanwhile. And nothing had to be lost for a branch to be written whole -- being **new** was enough: the first request to write under a branch sent the branch, so two requests creating the same one at the same moment kept one entry between them. All three send the entries now, not the branch: an empty array is walked into when the other side is a map, and a branch a request is the first to see is written one entry at a time. **Reported from a project as a chunked upload refused one second after the ref was issued** (`upload/chunk/start` answers a ref, `upload/chunk/add` refuses it), roughly one upload in six under a browser fetching other things from the same scope: an upload finishing removes its own ref from `oz_upload_files`, which was the only one that request saw there, and the branch write took the ref just issued with it. Any store keeping an entry per key under one branch was exposed the same way, `oz.link_to_cfg`, `oz.qr_code_cfg`, `oz.captcha_cfg` and `oz.2fa` among them. Both directions have a test that drives a real server with four workers.
 
 - **`upload/chunk/add` and `DELETE upload/chunk/<ref>` answered 500 to a ref that was never issued.** A ref becomes part of a dot path (`oz_upload_files.<ref>`), and php-utils refuses to read a path whose plain segment holds anything outside letters, digits and underscore (`^[a-zA-Z0-9_]+$`): `ref=not-a-ref` raised out of the store and came back as `OZ_ERROR_INTERNAL`, on two routes that need no authentication. A ref is now checked against the shape `newRef()` draws before anything is asked of the store, as the routes keeping a key under `oz.link_to_cfg`, `oz.qr_code_cfg` and `oz.captcha_cfg` already did through their route patterns.

@@ -45,6 +45,7 @@ use OZONE\Core\Runtime\Interfaces\ResponseSinkInterface;
 use OZONE\Core\Runtime\Runtime;
 use OZONE\Core\Scopes\StateLayout;
 use OZONE\Core\Stores\CacheRegistry;
+use OZONE\Core\Utils\Env;
 use Throwable;
 
 /**
@@ -80,6 +81,11 @@ final class OZone
 	private static bool $has_super_admin = false;
 
 	/**
+	 * The env of a process with no app running, kept for it: nothing of it changes while no app does.
+	 */
+	private static ?Env $process_env = null;
+
+	/**
 	 * Gets running app.
 	 */
 	public static function app(): AppInterface
@@ -89,6 +95,28 @@ final class OZone
 		}
 
 		return self::$app_instance;
+	}
+
+	/**
+	 * The environment values, whether or not an app is running.
+	 *
+	 * With an app, its own, which is the project's `.env`. Without one, a project's `.env` is still
+	 * where a value should come from, so it is read when this process is booting a project and has a
+	 * readable one; a process with no project at all is left with what it was given
+	 * ({@see Env::ofProcess()}), and never a file found beside its working directory.
+	 *
+	 * Why it answers with no app at all: a project's settings file is PHP and reads `env()`, and
+	 * reading one is not always something an app does. A tool, an installer, a deploy step or the
+	 * test kit reads one before there is an app to boot, and raising there made a settings file
+	 * unreadable in half the places it is read.
+	 */
+	public static function env(): Env
+	{
+		if (null !== self::$app_instance) {
+			return self::$app_instance->getEnv();
+		}
+
+		return self::$process_env ??= self::projectEnv() ?? Env::ofProcess();
 	}
 
 	/**
@@ -127,6 +155,28 @@ final class OZone
 			exit('Boot hook receivers not notified. If you are an admin, please review the log file and correct it!'
 				. \PHP_EOL);
 		}
+	}
+
+	/**
+	 * The `.env` of the project this process was started in, when there is one to read.
+	 *
+	 * Gated on `OZ_BOOTING_PROJECT` and not on `OZ_PROJECT_DIR` being defined, because that one is
+	 * given a fallback of the working directory: every process has it, so reading a `.env` beside it
+	 * would read a file belonging to whatever the process was started in rather than to a project.
+	 */
+	private static function projectEnv(): ?Env
+	{
+		if (!\defined('OZ_BOOTING_PROJECT') || true !== \constant('OZ_BOOTING_PROJECT')) {
+			return null;
+		}
+
+		$path = \rtrim(\constant('OZ_PROJECT_DIR'), '/\\') . DS . '.env';
+
+		if (!\is_file($path) || !\is_readable($path)) {
+			return null;
+		}
+
+		return new Env($path);
 	}
 
 	/**
