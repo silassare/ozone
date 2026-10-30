@@ -22,7 +22,15 @@ services:
       # Projects created by the integration tests, and their cached vendors.
       - test-projects:/tmp/_oz_tests_
       - composer-cache:/tmp/composer
+    tmpfs:
+      # The suites keep their sandbox in the system temp directory, and a write there lands in the
+      # container's own filesystem, which fsyncs to the engine's disk: 742 ms for one SQLite commit
+      # against 0.1 ms on a tmpfs, measured in this image. A test that writes a few hundred rows
+      # took minutes for no reason of its own. The servers' data directories are on a tmpfs below
+      # for the same reason; this is the SQLite half of it, pointed at by TMPDIR.
+      - /tmp/oz_tmp:size=512m,mode=1777
     environment:
+      TMPDIR: /tmp/oz_tmp
       OZ_TEST_MYSQL_HOST: mysql
       OZ_TEST_MYSQL_PORT: "3306"
       OZ_TEST_MYSQL_DB: ozone_test
@@ -148,6 +156,14 @@ services:
     working_dir: /ozone
     volumes:
       - ..:/ozone
+    tmpfs:
+      # Everything these servers write is under /tmp and is thrown away with them: the sandbox a
+      # run prepares, this user's home, Caddy's own directories. A write there otherwise lands in
+      # the container's filesystem and fsyncs through to the host, which a server answering requests
+      # against a SQLite database pays on every one of them. Nothing of theirs is mounted under
+      # /tmp, so the whole directory can be memory; the `php` service has volumes there and takes a
+      # narrower one. Inherited by roadrunner and swoole through this anchor.
+      - /tmp:size=512m,mode=1777
     environment:
       HOME: /tmp
       XDG_CONFIG_HOME: /tmp/caddy
