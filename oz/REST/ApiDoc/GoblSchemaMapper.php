@@ -288,9 +288,18 @@ final class GoblSchemaMapper
 				$g_format = $type->getOption('format', TypeDate::FORMAT_DEFAULT);
 
 				if (TypeDate::FORMAT_TIMESTAMP === $g_format) {
-					$sc_type = $this->schemas->string('The UTC date in UNIX timestamp format.', [
-						'format' => $type->isMicroseconds() ? 'float' : 'int64',
-					]);
+					// A string of digits, and said to be one. The column is stored as a big integer, or
+					// a decimal with microseconds, and Gobl answers both as strings so that no digit is
+					// lost on the way through JSON -- the same reason an id is a string. Describing it
+					// as `int64` or `float` made a generator emit a number for a field that arrives
+					// quoted, and a client that believed it got `NaN` from `Date.parse` with nothing
+					// raised. The unit is in the description because a bare count of seconds does not
+					// carry it.
+					$sc_type = $this->schemas->string(
+						$type->isMicroseconds()
+							? 'The UTC date as a UNIX timestamp in seconds, with microseconds after the point, in a string of digits.'
+							: 'The UTC date as a UNIX timestamp in seconds, in a string of digits.'
+					);
 				} else {
 					$sc_type = $this->schemas->string(\sprintf('The UTC date time in `%s` format.', $g_format), [
 						'format' => 'date-time',

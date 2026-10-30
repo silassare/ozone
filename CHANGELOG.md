@@ -2,6 +2,14 @@
 
 ### Breaking changes
 
+- **A date column is documented as the string of digits it is.** It is stored as a big integer, or
+  a decimal when it keeps microseconds, and Gobl answers both as strings so no digit is lost through
+  JSON -- the same reason an id is a string. The OpenAPI schema said `type: string` and then gave it
+  `format: int64` (`float` with microseconds), so a generator emitted a number for a field that
+  arrives quoted: `Date.parse("1763452800")` is `NaN`, `new Date(1763452800)` is January 1970, and
+  neither raises. The numeric format is gone and the unit is in the description, which a bare count
+  of seconds does not carry. A client reads a date with `Number(x)`.
+
 - **A date column answers a Unix timestamp, not an ISO 8601 string.** A date column is stored as a
   timestamp and was read back formatted; Gobl now reads it back as what it stores, and a format is
   asked for where the column is declared. OZone's schema needed nothing but the removal of the three
