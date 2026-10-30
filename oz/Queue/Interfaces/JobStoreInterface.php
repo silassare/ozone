@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Queue\Interfaces;
 
+use Generator;
 use Iterator;
 use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\JobState;
@@ -66,7 +67,36 @@ interface JobStoreInterface
 	public function delete(JobContractInterface $job_contract): static;
 
 	/**
+	 * The jobs of a queue a worker may take, the most urgent first.
+	 *
+	 * Running a queue is not iterating it. A job that has run is no longer pending, so a list of
+	 * pending jobs read ahead is a list of rows that have since moved: what a run needs is the next
+	 * job to take, asked for again each time, which is also what lets a second worker on the same
+	 * queue be right rather than lucky.
+	 *
+	 * What each job yielded promises, at the moment it is yielded: it is pending, no worker holds
+	 * it, and its `run_after` window has come. It promises nothing after that -- the caller still
+	 * locks it, and a lock that fails means another worker was first, which is not an error.
+	 *
+	 * Order is by priority, highest first, and by arrival among equals.
+	 *
+	 * A pass hands out no more jobs than were pending when it began. A job settled back to pending
+	 * inside the pass by its own retry is work for the next pass, and that bound is what stops a
+	 * retry delay of zero turning one pass into a loop.
+	 *
+	 * @return Generator<JobContractInterface>
+	 */
+	public function claimable(
+		string $queue_name,
+		?string $worker_name = null,
+		?int $priority = null
+	): Generator;
+
+	/**
 	 * Returns iterator for jobs in a queue.
+	 *
+	 * To read a queue, not to run one: the jobs are yielded as they were found, and nothing is
+	 * re-read as it is reached ({@see self::claimable()} is what a run takes its work from).
 	 *
 	 * @return Iterator<JobContractInterface>
 	 */

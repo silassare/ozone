@@ -164,6 +164,25 @@ class DbJobStore implements JobStoreInterface
 	}
 
 	#[Override]
+	public function claimable(
+		string $queue_name,
+		?string $worker_name = null,
+		?int $priority = null
+	): Generator {
+		$budget = $this->count($queue_name, JobState::PENDING);
+
+		while ($budget-- > 0) {
+			$job = $this->nextClaimable($queue_name, $worker_name, $priority);
+
+			if (null === $job) {
+				return;
+			}
+
+			yield $job;
+		}
+	}
+
+	#[Override]
 	public function iterator(
 		string $queue_name,
 		?string $worker_name = null,
@@ -421,5 +440,48 @@ class DbJobStore implements JobStoreInterface
 		}
 
 		return $contract;
+	}
+
+	/**
+	 * The one job to take next, read as the queue stands now.
+	 *
+	 * One row, chosen by the database: the work goes to the most urgent job whose window has come
+	 * and that nobody holds, and the row is read at the moment it is wanted rather than taken from
+	 * a list made earlier.
+	 *
+	 * @throws GoblException
+	 * @throws ORMException
+	 */
+	private function nextClaimable(
+		string $queue_name,
+		?string $worker_name,
+		?int $priority
+	): ?JobContractInterface {
+		$qb  = new OZJobsQuery();
+		$now = \time();
+
+		empty($queue_name) || $qb->whereQueueIs($queue_name);
+		empty($worker_name) || $qb->whereWorkerIs($worker_name);
+		null === $priority || $qb->wherePriorityIs($priority);
+
+		$qb->whereStateIs(JobState::PENDING)
+			->whereIsNotLocked()
+			->where(static function (OZJobsQuery $window) use ($now): void {
+				$window->whereRunAfterIsNull()
+					->or()
+					->whereRunAfterIsLte($now);
+			});
+
+		$results = $qb->find();
+
+		// Priority is a column the schema says decides the order, so it has to be one: filtered on
+		// and never sorted by, a job marked urgent only ran first by chance.
+		$results->getSelect()
+			->orderBy([OZJob::COL_PRIORITY => 'DESC', OZJob::COL_ID => 'ASC'])
+			->limit(1);
+
+		$oz_job = $results->fetchClass();
+
+		return $oz_job ? $this->fromEntity($oz_job) : null;
 	}
 }

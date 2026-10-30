@@ -2,6 +2,18 @@
 
 ### Breaking changes
 
+- **A date column answers a Unix timestamp, not an ISO 8601 string.** A date column is stored as a
+  timestamp and was read back formatted; Gobl now reads it back as what it stores, and a format is
+  asked for where the column is declared. OZone's schema needed nothing but the removal of the three
+  `->format('timestamp')` calls that were working around it. A client reading `created_at`,
+  `expire_at`, `last_seen_at` or any other date off a row gets a number. No DDL changes and no
+  migration; the OpenAPI schema follows the column, so it says so. The bug this closes is under
+  **Fixed**.
+
+- **`JobStoreInterface` has a new method, `claimable()`.** A queue is run from it rather than from
+  `iterator()`, which stays as it is for reading a queue. A project with its own job store
+  implements it; see **Fixed** for why running a queue is not iterating it.
+
 - **Per-entry state in the session store is written through a branch handle, not a built-up dot
   path.** The uploads a session has in flight, the links, QR codes and captchas it has been handed
   are kept one entry per key, and each was written as `'<branch>.' . $key`. They go through
@@ -267,6 +279,48 @@
 - `REST\Enums\RESTFulAction`, the action table driving `RESTFulService` routes and docs (`REST\RESTFulApiDoc`); `RESTFulService::beforeAction()` / `afterAction()` hooks and `configureRoute()` for per-action guards, forms or middlewares; `RESTFulService::routeName()` accepts a `RESTFulAction`.
 
 ### Fixed
+
+- **A queue run stopped part way through a backlog and reported itself done.** `JobsManager::run()`
+  iterated the pending jobs of a store and ran each as it arrived, and the database store read them
+  in chunks of a hundred reached by counting the rows before them -- rows the run had just taken out
+  of that count by running them. With 240 jobs waiting, one pass ran 140 and left 100 `PENDING`, and
+  nothing was logged because the read simply ended. A worker that keeps running passes does drain,
+  one pass later than it should; what does not recover is anything that queues work and runs the
+  queue in one go before reading the result.
+
+  A run no longer iterates. `JobStoreInterface::claimable()` hands out one job at a time, asked for
+  again each time, so what it answers is the queue as it stands and not a list made earlier: the
+  database store reads a single row the engine chooses, and the Redis store orders its index once
+  and re-reads each job as it reaches it. A pass hands out no more jobs than were pending when it
+  began, which is what stops a retry delay of zero turning one pass into a loop, and `iterator()` is
+  left to reading a queue rather than running one. The chunked read itself was fixed in Gobl, which
+  is where every other caller of it was exposed too.
+
+- **Priority was filtered on and never sorted by.** `job_priority` is documented as deciding which
+  job runs first and nothing ordered by it, so a job marked urgent ran first only by chance. The
+  work is handed out most urgent first, and by arrival among equals.
+
+- **A queue pass always answered zero.** `JobsManager::run()` reached its counter only inside the
+  test for a maximum number of jobs, and `&&` short-circuits when no maximum was given: the default
+  call ran its jobs and returned 0. `Messenger::runQueue(): int` passed that on, so a mailing worker
+  reported `sent: 0` for a pass that sent, and `oz jobs daemon` backs off only when a pass ran
+  nothing -- so it slept its full interval after every pass, however much work it had just done.
+
+- **Every clock a job carried was flattened to its year the first time the row was written again.**
+  A date column answers the format it declares, which defaulted to a full timestamp string, and the
+  queue store read it as an integer: `2026-10-30T10:36:12+00:00` became `2026` -- half past midnight
+  on 1 January 1970 -- and was written straight back, for `created_at`, `updated_at`, `started_at`
+  and `ended_at` alike. `oz jobs prune` compares `created_at` against its window, so it deleted
+  every terminal job whatever retention it was given; the suite could not see it because each prune
+  test passes `--older-than=0`. It is also what the stale-lock fix was treating: a job was not
+  "frozen at its creation", it carried the year.
+
+  The format was the wrong half to argue with: a date column is stored as a timestamp whatever it is
+  given, so Gobl reading it back as a formatted string was the surprise, and it is now read back as
+  what it stores. OZone's schema lost the three `->format('timestamp')` calls that were working
+  around it and declares nothing else. No DDL changes and no migration: the stored type was already
+  a big integer. **Breaking for a client**: a row carrying a date answers a Unix timestamp where it
+  answered an ISO 8601 string, and the OpenAPI schema says which.
 
 - **`env()` raised in a process with no app running, which made a project's settings file unreadable
   outside a request.** A settings file is PHP and reads `env()`, so reading one needs the global to

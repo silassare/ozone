@@ -135,6 +135,10 @@ final class JobsManager
 	/**
 	 * Run jobs in a queue.
 	 *
+	 * The work is taken one job at a time, most urgent first
+	 * ({@see JobStoreInterface::claimable()}), and a pass runs no more jobs than were waiting when
+	 * it began.
+	 *
 	 * @param null|string $store_name  the store name, if null all registered store will be
 	 *                                 used
 	 * @param string      $queue_name  The queue name
@@ -143,6 +147,8 @@ final class JobsManager
 	 *                                 its priority
 	 * @param null|int    $max_job     the max number of jobs to run, if null all jobs will be
 	 *                                 run
+	 *
+	 * @return int the number of jobs this pass ran
 	 */
 	public static function run(
 		?string $store_name = null,
@@ -166,32 +172,40 @@ final class JobsManager
 
 			self::reclaimStale($store, $queue->getName());
 
-			foreach ($store->iterator($queue->getName(), $worker_name, JobState::PENDING, $priority) as $job) {
-				if (self::runJob($job)) {
-					if (JobState::FAILED === $job->getState()) {
-						if ($queue->shouldStopOnError()) {
-							throw new RuntimeException(\sprintf(
-								'Job "%s" failed in queue "%s".',
-								$job->getRef(),
-								$queue->getName()
-							));
-						}
-						++$errors_count;
-						++$consecutive_errors_count;
-					} elseif (JobState::DONE === $job->getState()) {
-						$consecutive_errors_count = 0;
-					}
+			foreach ($store->claimable($queue->getName(), $worker_name, $priority) as $job) {
+				if (!self::runJob($job)) {
+					// Another worker locked it between the store answering and the lock being taken.
+					// Not an error, and not this worker's job: the next ask skips it.
+					continue;
+				}
 
-					if ($errors_count >= $max_errors_count || $consecutive_errors_count >= $max_consecutive_errors) {
+				if (JobState::FAILED === $job->getState()) {
+					if ($queue->shouldStopOnError()) {
 						throw new RuntimeException(\sprintf(
-							'Queue "%s" has reached the maximum number of errors allowed.',
+							'Job "%s" failed in queue "%s".',
+							$job->getRef(),
 							$queue->getName()
 						));
 					}
+					++$errors_count;
+					++$consecutive_errors_count;
+				} elseif (JobState::DONE === $job->getState()) {
+					$consecutive_errors_count = 0;
+				}
 
-					if (null !== $max_job && ++$jobs_count >= $max_job) {
-						break 2;
-					}
+				if ($errors_count >= $max_errors_count || $consecutive_errors_count >= $max_consecutive_errors) {
+					throw new RuntimeException(\sprintf(
+						'Queue "%s" has reached the maximum number of errors allowed.',
+						$queue->getName()
+					));
+				}
+
+				// Counted whether or not a maximum was asked for: this is the number the function
+				// answers, and inside the test for a maximum it counted nothing in the common call.
+				++$jobs_count;
+
+				if (null !== $max_job && $jobs_count >= $max_job) {
+					break 2;
 				}
 			}
 		}

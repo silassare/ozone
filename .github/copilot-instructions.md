@@ -766,6 +766,10 @@ Custom column types extend `Gobl\DBAL\Types\Type`, registered in `oz.db.columns.
 unless already a hash), `TypeCC2`, `TypeGender`, `TypeFile`. `registered()` / `notRegistered()` /
 `authorized()` restrict to known values.
 
+- **A date column answers the Unix timestamp it stores**, which is Gobl's default: `timestamps()`
+  and `timestamp()` need no format, and the code comparing one of these columns as a number is
+  reading a number. A column that wants a string says so where it is declared
+  (`->format(DATE_ATOM)`, or any `date()` format, as `TypeUtils::birthDate()` does with `'Y-m-d'`).
 - **A `->temp()` file column holds a TempFS `{ref}/{name}` reference, never a path.**
   `ValidatedFile::getPath()` resolves it through `TempFS::path()` at each call, so it follows the
   project directory across instances. Build one with `ValidatedFile::forTempFile()`, read a stored
@@ -880,7 +884,12 @@ PENDING -> RUNNING -> DONE
 CANCELLED (terminal)
 ```
 
+- **A run takes one job at a time** from `JobStoreInterface::claimable()`, most urgent first and by
+  arrival among equals, each re-read as it is reached; a pass hands out no more than were pending
+  when it began. `iterator()` reads a queue, it does not run one. A job that has run is no longer
+  pending, so a list of pending jobs read ahead is a list of rows that have moved.
 - `lock()` is atomic (`UPDATE ... WHERE locked = false`); stores skip jobs whose `run_after` is ahead.
+  A lock that fails means another worker was first, which `run()` passes over rather than counting.
 - **Async workers** (`isAsync()`): `runJob()` locks, sets RUNNING and spawns
   `oz jobs run --store=X --job=<ref> --force` **without releasing the lock** — the subprocess owns it
   and releases it through `finish()`. If spawning throws, `runJob()`'s catch finishes (and unlocks)

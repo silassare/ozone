@@ -21,6 +21,7 @@ use OZONE\Core\Queue\JobContract;
 use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\JobState;
 use OZONE\Core\Testing\IntegrationTestCase;
+use OZONE\Tests\Support\QueueOrderWorker;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use Throwable;
 
@@ -414,10 +415,132 @@ abstract class AbstractJobStoreTestCase extends IntegrationTestCase
 		self::assertSame(4, $fetched->getTryCount());
 	}
 
+	// -----------------------------------------------------------------------
+	// JobsManager::run() over the store's claimable jobs
+	// -----------------------------------------------------------------------
+
+	public function testAPassHandsOutEveryJobWaitingWhileItSettlesThem(): void
+	{
+		// More than the hundred a chunk used to hold, which is where the drift began.
+		$waiting = 120;
+
+		for ($i = 0; $i < $waiting; ++$i) {
+			$this->addJob();
+		}
+
+		$seen = 0;
+
+		// Settled as a run settles them, which is what a pass must survive: a job that has run is no
+		// longer pending, so the set a pass is reading shrinks under it as it works. A pass used to
+		// read the pending jobs ahead in chunks and reach each chunk by counting the rows before it
+		// -- rows it had just taken out of that count -- so of 120 waiting it handed out 100, then
+		// the 20 an offset of 100 still found, and ended. Taking one job at a time cannot drift that
+		// way whatever the backlog.
+		foreach ($this->store->claimable($this->testQueue) as $job) {
+			++$seen;
+
+			$job->setState(JobState::DONE);
+			$this->store->update($job);
+		}
+
+		self::assertSame($waiting, $seen, 'every job waiting is handed out');
+		self::assertSame(0, $this->store->count($this->testQueue, JobState::PENDING), 'and none is left waiting');
+	}
+
+	public function testAPassSaysHowManyJobsItRan(): void
+	{
+		$this->useOrderWorker();
+
+		for ($i = 0; $i < 3; ++$i) {
+			$this->addJob($this->testQueue, QueueOrderWorker::NAME, ['label' => 'job-' . $i]);
+		}
+
+		// The counter was only reached inside the test for a maximum, which short-circuits when none
+		// was given: a pass that ran three jobs answered zero, and so did everything built on it.
+		self::assertSame(3, JobsManager::run($this->store->getName(), $this->testQueue));
+		self::assertCount(3, QueueOrderWorker::ran());
+	}
+
+	public function testTheMostUrgentJobIsRunFirst(): void
+	{
+		$this->useOrderWorker();
+
+		foreach (['low' => 0, 'urgent' => 9, 'middle' => 4] as $label => $priority) {
+			$job = $this->makeJob($this->testQueue, QueueOrderWorker::NAME, ['label' => $label]);
+
+			$this->store->add($job->setPriority($priority));
+		}
+
+		JobsManager::run($this->store->getName(), $this->testQueue);
+
+		// The column is documented as deciding the order, so it has to decide it: filtered on and
+		// never sorted by, a job marked urgent only ran first by chance.
+		self::assertSame(['urgent', 'middle', 'low'], QueueOrderWorker::ran());
+	}
+
+	public function testAPassRunsNoMoreJobsThanAskedFor(): void
+	{
+		$this->useOrderWorker();
+
+		for ($i = 0; $i < 4; ++$i) {
+			$this->addJob($this->testQueue, QueueOrderWorker::NAME, ['label' => 'job-' . $i]);
+		}
+
+		$ran = JobsManager::run($this->store->getName(), $this->testQueue, max_job: 2);
+
+		self::assertSame(2, $ran);
+		self::assertSame(2, $this->store->count($this->testQueue, JobState::PENDING));
+	}
+
+	// -----------------------------------------------------------------------
+	// the job's own clocks
+	// -----------------------------------------------------------------------
+
+	public function testAJobsCreationTimeSurvivesBeingWrittenAgain(): void
+	{
+		$before   = \time();
+		$contract = $this->addJob();
+
+		// Read back and written again, which is what every step of a job's life does to it.
+		$this->store->update($this->store->getOrFail($contract->getRef()));
+
+		$created_at = $this->store->getOrFail($contract->getRef())
+			->getCreatedAt();
+
+		// It came back as the year: the column answers a formatted date and the store read it as an
+		// integer, so `2026-10-30T10:36:12+00:00` was written back as 2026 -- the first of January
+		// 1970, half an hour in. Nothing said so until a prune deleted the lot.
+		self::assertGreaterThanOrEqual($before, $created_at);
+		self::assertLessThanOrEqual(\time(), $created_at);
+	}
+
+	public function testAPruneKeepsAJobInsideItsWindow(): void
+	{
+		$contract = $this->addJob();
+
+		$contract->setState(JobState::DONE);
+		$this->store->update($contract);
+
+		self::assertSame(0, $this->store->prune(3600, null, $this->testQueue), 'a job done a moment ago is not old');
+		self::assertNotNull($this->store->get($contract->getRef()), 'and it is still there');
+	}
+
 	/**
 	 * Provide the store implementation under test.
 	 */
 	abstract protected function makeStore(): JobStoreInterface;
+
+	/**
+	 * Registers the worker the run tests queue, and forgets what a previous test ran.
+	 */
+	protected function useOrderWorker(): void
+	{
+		QueueOrderWorker::reset();
+
+		if (!isset(JobsManager::getWorkers()[QueueOrderWorker::NAME])) {
+			JobsManager::registerWorker(QueueOrderWorker::class);
+		}
+	}
 
 	/**
 	 * Leaves a job as a dead process would: taken, and past whatever this store calls its lease.

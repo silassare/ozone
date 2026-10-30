@@ -188,6 +188,57 @@ class RedisJobStore implements JobStoreInterface
 	/**
 	 * {@inheritDoc}
 	 *
+	 * The queue's index is a sorted set scored by arrival, which says nothing about priority and
+	 * keeps a job after it has run, so the candidates are read from it once and ordered here.
+	 *
+	 * @return Generator<JobContractInterface>
+	 */
+	#[Override]
+	public function claimable(
+		string $queue_name,
+		?string $worker_name = null,
+		?int $priority = null
+	): Generator {
+		$refs = $this->redis()->zRange($this->queueKey($queue_name), 0, -1);
+		$now  = \time();
+
+		// The index is read once and scored by arrival, so the order is made here. Reading it per
+		// job instead would walk it again for every job taken, and it holds a queue's whole history
+		// until a prune: a drain would cost the square of what a drain costs.
+		$candidates = [];
+
+		foreach ($refs as $arrival => $ref) {
+			$data = $this->redis()->hGetAll($this->jobKey((string) $ref));
+
+			if (!$this->isClaimable((string) $ref, $data, $worker_name, $priority, $now)) {
+				continue;
+			}
+
+			$candidates[] = [(int) ($data[self::F_PRIORITY] ?? 0), $arrival, (string) $ref];
+		}
+
+		// Most urgent first, and the earliest to arrive first among equals.
+		\usort(
+			$candidates,
+			static fn (array $a, array $b): int => $b[0] <=> $a[0] ?: $a[1] <=> $b[1]
+		);
+
+		foreach ($candidates as [, , $ref]) {
+			// Re-read as it is reached: the pass has been running since the index was read, and a job
+			// another worker took, or one this pass has already settled, is no longer work.
+			$data = $this->redis()->hGetAll($this->jobKey($ref));
+
+			if (!$this->isClaimable($ref, $data, $worker_name, $priority, \time())) {
+				continue;
+			}
+
+			yield $this->fromData($data);
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * Iterates all jobs in the given queue, applying worker / state / priority
 	 * filters in PHP. Jobs are yielded in FIFO order (oldest created_at first).
 	 *
@@ -585,5 +636,38 @@ class RedisJobStore implements JobStoreInterface
 		}
 
 		return $job;
+	}
+
+	/**
+	 * Whether a job's hash says a worker may take it now: it exists, it is pending, no worker holds
+	 * it, its window has come, and it is the worker and the priority that were asked for.
+	 *
+	 * @param array<string, string> $data
+	 */
+	private function isClaimable(string $ref, array $data, ?string $worker_name, ?int $priority, int $now): bool
+	{
+		if (empty($data)) {
+			return false;
+		}
+
+		if (JobState::PENDING->value !== (int) ($data[self::F_STATE] ?? -1)) {
+			return false;
+		}
+
+		if (null !== $worker_name && ($data[self::F_WORKER] ?? '') !== $worker_name) {
+			return false;
+		}
+
+		if (null !== $priority && (int) ($data[self::F_PRIORITY] ?? 0) !== $priority) {
+			return false;
+		}
+
+		if ($this->redis()->exists($this->lockKey($ref))) {
+			return false;
+		}
+
+		$run_after_raw = $data[self::F_RUN_AFTER] ?? '';
+
+		return '' === $run_after_raw || (int) $run_after_raw <= $now;
 	}
 }
