@@ -250,6 +250,8 @@ final class ParameterBuilder
 		$op_is_not_null = Operator::IS_NOT_NULL->value;
 		$op_contains    = Operator::CONTAINS->value;
 		$op_has_key     = Operator::HAS_KEY->value;
+		$op_matches     = Operator::MATCHES->value;
+		$op_starts_with = Operator::STARTS_WITH->value;
 
 		$desc = <<<DESC
 			The filters parameter.
@@ -276,12 +278,18 @@ final class ParameterBuilder
 			| `{$op_not_in}` | Value is NOT in a list | array of scalars |
 			| `{$op_contains}` | JSON column contains the given JSON value (native JSON columns only) | any JSON value |
 			| `{$op_has_key}` | JSON column has the given key (native JSON columns only) | string |
+			| `{$op_matches}` | Text search: the term anywhere in the text, ignoring case and accents | string |
+			| `{$op_starts_with}` | Text search: the term at the start of the text | string |
 
 			> The `{$op_is_null}` and `{$op_is_not_null}` operators take no value; supply only `[field, operator]`.
 
 			> The `{$op_in}` and `{$op_not_in}` operators require an **array** as value: `["field", "in", [1, 2, 3]]`.
 
 			> The `{$op_contains}` and `{$op_has_key}` operators are only available on columns declared as native JSON.
+
+			> The `{$op_matches}` and `{$op_starts_with}` operators take a **term**, not a pattern:
+			> `%` and `_` are searched for as themselves, and an empty term is refused.
+			> Use `{$op_like}` to send a pattern of your own.
 
 			**Condition format:**
 			```

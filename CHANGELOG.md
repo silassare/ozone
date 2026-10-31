@@ -239,6 +239,13 @@
 
 ### Added
 
+- **A request can search text.** Gobl gained two operators, `matches` and `starts_with`, so a REST
+  request's `filters` carries them and the API documentation lists them. They take a **term** and
+  not a pattern -- `%` and `_` are searched for as themselves, an empty term is refused -- which is
+  the difference from `like`, and they fold case and, where the engine can, accents. A column
+  declared `searchable()` in a project's schema is searched through an index; nothing here needs
+  declaring for that.
+
 - **The suite fails on a deprecation, a notice and a risky test.** It carried `failOnWarning` and
   `failOnRisky` only, so a deprecation or a notice passed unseen -- and PHP 8.5 deprecates a null
   array offset in every form, `isset()`, `??` and `empty()` included, which is exactly what a suite
