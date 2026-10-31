@@ -295,6 +295,19 @@
 
 ### Fixed
 
+- **A scope build was capped at 300 seconds, inside a budget that was already bounded.**
+  `oz project build` compiles each scope in a process of its own, and that process was given a
+  300-second deadline no option and no setting could raise. A deploy reaches it as a step run
+  through a host, which bounds the whole command already, so the per-scope cap could only ever fire
+  while the step still had minutes left -- and it did, on a scope that takes 0.63 seconds to build
+  when measured alone, having spent its time waiting on a disk busy with the database backup the
+  migration step had written moments before. The deadline is gone: the process runs with none of
+  its own, as every other process OZone starts for work whose length it cannot know does
+  (`JobsManager`, `CommandTask`), and the host's deadline governs a deploy while a build started by
+  hand is interrupted by hand. What made this expensive is where it fell -- after the migrations
+  and before the swap -- so a deploy driven under `set -e` stopped with the database already
+  migrated and the release not live.
+
 - **A queue run stopped part way through a backlog and reported itself done.** `JobsManager::run()`
   iterated the pending jobs of a store and ran each as it arrived, and the database store read them
   in chunks of a hundred reached by counting the rows before them -- rows the run had just taken out
