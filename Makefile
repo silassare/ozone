@@ -99,11 +99,12 @@ test: test-unit test-services test-runtimes test-integration
 test-unit:
 	$(RUN_NODEPS) $(PHPUNIT) --testsuite Unit --testdox $(NARROW)
 
-## Run the Redis, MinIO and ClamAV tests against their servers; a missing server fails
+## Run the Redis, Memcached, MinIO and ClamAV tests against their servers; a missing server fails
 test-services:
 	$(DOCKER_COMPOSE) --profile clamav up -d --wait clamav
-	$(RUN) env OZ_TEST_REDIS_REQUIRED=1 OZ_TEST_MINIO_REQUIRED=1 OZ_TEST_CLAMAV_REQUIRED=1 \
-		$(PHPUNIT) --group redis --group minio --group clamav --testdox
+	$(RUN) env OZ_TEST_REDIS_REQUIRED=1 OZ_TEST_MEMCACHED_REQUIRED=1 OZ_TEST_MINIO_REQUIRED=1 \
+		OZ_TEST_CLAMAV_REQUIRED=1 \
+		$(PHPUNIT) --group redis --group memcached --group minio --group clamav --testdox
 
 ## Serve OZone from real FrankenPHP, RoadRunner and Swoole servers and test it over HTTP; a missing server fails
 test-runtimes:

@@ -48,6 +48,7 @@
     <groups>
         <exclude>
             <group>redis</group>
+            <group>memcached</group>
             <group>minio</group>
             <group>clamav</group>
             <group>frankenphp</group>

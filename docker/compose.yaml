@@ -1,6 +1,6 @@
 # OZone's development and test services: PHP with its tools, and the servers the test suites
-# use (MySQL, PostgreSQL, Redis, MinIO, and ClamAV for `make test-services` only). Nothing is
-# needed on the host but Docker.
+# use (MySQL, PostgreSQL, Redis, Memcached, MinIO, and ClamAV for `make test-services` only).
+# Nothing is needed on the host but Docker.
 #
 # Use it through the Makefile: `make test`, `make test-unit`, `make lint`, `make shell`, ...
 # The databases keep their data in memory: each run starts from empty servers.
@@ -48,6 +48,7 @@ services:
       # Copied into the `.env` of the unit suite's sandbox (tests/autoload.php).
       OZ_REDIS_HOST: redis
       OZ_REDIS_PORT: "6379"
+      OZ_MEMCACHED_SERVERS: memcached:11211
       OZ_MINIO_ENDPOINT: http://minio:9000
       OZ_MINIO_ACCESS_KEY: ozone
       OZ_MINIO_SECRET_KEY: ozone-secret
@@ -65,6 +66,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      memcached:
         condition: service_healthy
       minio:
         condition: service_healthy
@@ -102,6 +105,17 @@ services:
     image: redis:7-alpine
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  # Nothing of what a test writes here survives a restart, which is the point: a store that evicts
+  # under pressure is what the Memcached driver is tested against.
+  memcached:
+    image: memcached:1.6-alpine
+    healthcheck:
+      # Busybox's nc, which the alpine image carries: the server answers `stats` once it listens.
+      test: ["CMD-SHELL", "echo stats | nc -w 1 127.0.0.1 11211 | grep -q uptime"]
       interval: 2s
       timeout: 5s
       retries: 30
