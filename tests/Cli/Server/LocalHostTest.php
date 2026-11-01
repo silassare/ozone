@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Cli\Server;
 
+use Override;
 use OZONE\Core\Cli\Server\Enums\PackageManager;
+use OZONE\Core\Cli\Server\Interfaces\HostInterface;
 use OZONE\Core\Cli\Server\LocalHost;
 use OZONE\Core\Cli\Server\ProvisionManifest;
 use OZONE\Core\Cli\Server\ProvisionStep;
@@ -33,6 +35,7 @@ final class LocalHostTest extends TestCase
 {
 	private string $dir;
 
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -45,6 +48,7 @@ final class LocalHostTest extends TestCase
 		\symlink($this->dir . '/releases/b', $this->dir . '/current');
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		Sandbox::remove($this->dir);
@@ -122,5 +126,27 @@ final class LocalHostTest extends TestCase
 
 		self::assertTrue($manifest->save());
 		self::assertSame(['php'], ProvisionManifest::load($path, $host)->steps());
+	}
+
+	public function testACommandGivenLessTimeThanItNeedsIsKilledAndSaysSo(): void
+	{
+		$host    = new LocalHost();
+		$bounded = $host->withTimeout(0.3);
+		$output  = '';
+		$started = \microtime(true);
+
+		$code = $bounded->run('echo begun; sleep 5', $output);
+
+		// Killed, not failed, and answered where every other outcome is answered.
+		self::assertSame(HostInterface::TIMED_OUT, $code);
+
+		// What it printed before it was killed comes back: it is often the whole diagnosis.
+		self::assertStringContainsString('begun', $output);
+
+		// And it was killed when its time ran out, not waited out.
+		self::assertLessThan(5.0, \microtime(true) - $started);
+
+		// The host it came from is untouched: a bound belongs to the command that asked for it.
+		self::assertSame(0, $host->run('sleep 0.5'));
 	}
 }

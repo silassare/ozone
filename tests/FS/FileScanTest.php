@@ -142,7 +142,8 @@ final class FileScanTest extends TestCase
 		foreach ([$file, $clone] as $f) {
 			$stored = FS::getFileByID((string) $f->getID());
 
-			self::assertSame(FileScanState::INFECTED, $stored?->getScanState());
+			self::assertNotNull($stored, 'the scanned file is not in the storage');
+			self::assertSame(FileScanState::INFECTED, $stored->getScanState());
 			self::assertSame('Test-Signature', $stored->getData()['scan_signature'] ?? null);
 		}
 	}

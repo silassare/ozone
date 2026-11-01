@@ -59,8 +59,9 @@ final class RESTFulAPIRequestTest extends TestCase
 
 		try {
 			$request = new RESTFulAPIRequest(self::context(), ['page' => 2, 'cursor' => 1]);
-			$request->getPage();
-			$request->isCursorBased();
+
+			self::assertSame(2, $request->getPage());
+			self::assertTrue($request->isCursorBased());
 		} catch (Throwable) {
 			$failed = true;
 		}
@@ -79,7 +80,7 @@ final class RESTFulAPIRequestTest extends TestCase
 	public function testFiltersMustBeAnArray(): void
 	{
 		$this->expectException(ORMQueryException::class);
-		$this->expectExceptionMessage('GOBL_ORM_REQUEST_INVALID_FILTERS');
+		$this->expectExceptionMessageIsOrContains('GOBL_ORM_REQUEST_INVALID_FILTERS');
 
 		new RESTFulAPIRequest(self::context(), ['filters' => '["user_id", "eq", 1]']);
 	}
@@ -108,7 +109,7 @@ final class RESTFulAPIRequestTest extends TestCase
 		self::assertSame('active', $request->getRequestedCollection());
 
 		$this->expectException(ORMQueryException::class);
-		$this->expectExceptionMessage('GOBL_ORM_REQUEST_INVALID_COLLECTION');
+		$this->expectExceptionMessageIsOrContains('GOBL_ORM_REQUEST_INVALID_COLLECTION');
 
 		new RESTFulAPIRequest(self::context(), ['collection' => 'not a name!']);
 	}

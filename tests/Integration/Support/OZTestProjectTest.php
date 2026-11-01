@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Support;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
@@ -33,6 +34,7 @@ final class OZTestProjectTest extends TestCase
 {
 	private const string NAME = 'harness-reuse';
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		OZTestProject::create(self::NAME)->destroy();

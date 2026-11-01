@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
+use OZONE\Tests\TestUtils;
 use Gobl\DBAL\Types\TypeBigint;
 use Gobl\DBAL\Types\TypeString;
 use OZONE\Core\Exceptions\InvalidFormException;
@@ -38,7 +39,7 @@ final class FieldDoubleCheckTest extends TestCase
 		$field = $form->field('password');
 		$field->doubleCheck();
 
-		self::assertNotNull($form->getField('password_confirm'));
+		self::assertNotNull(TestUtils::field($form, 'password_confirm'));
 	}
 
 	public function testDoubleCheckIsFluent(): void
@@ -58,7 +59,7 @@ final class FieldDoubleCheckTest extends TestCase
 		$field->doubleCheck(); // second call must be a no-op
 
 		self::assertCount(1, $form->getPostValidationRules());
-		self::assertNotNull($form->getField('password_confirm'));
+		self::assertNotNull(TestUtils::field($form, 'password_confirm'));
 	}
 
 	public function testConfirmFieldInheritsTypeSetBeforeDoubleCheck(): void
@@ -69,7 +70,7 @@ final class FieldDoubleCheckTest extends TestCase
 		$field->type($type);
 		$field->doubleCheck();
 
-		$confirm = $form->getField('amount_confirm');
+		$confirm = TestUtils::field($form, 'amount_confirm');
 		self::assertSame($type, $confirm->getType());
 	}
 
@@ -82,7 +83,7 @@ final class FieldDoubleCheckTest extends TestCase
 		$type = new TypeBigint();
 		$field->type($type);
 
-		$confirm = $form->getField('amount_confirm');
+		$confirm = TestUtils::field($form, 'amount_confirm');
 		self::assertSame($type, $confirm->getType());
 	}
 
@@ -93,11 +94,11 @@ final class FieldDoubleCheckTest extends TestCase
 		$field->doubleCheck();
 
 		self::assertFalse($field->isRequired());
-		self::assertFalse($form->getField('email_confirm')->isRequired());
+		self::assertFalse(TestUtils::field($form, 'email_confirm')->isRequired());
 
 		$field->required(true);
 
-		self::assertTrue($form->getField('email_confirm')->isRequired());
+		self::assertTrue(TestUtils::field($form, 'email_confirm')->isRequired());
 	}
 
 	public function testConfirmFieldRequiredSetBeforeDoubleCheck(): void
@@ -107,7 +108,7 @@ final class FieldDoubleCheckTest extends TestCase
 		$field->required(true);
 		$field->doubleCheck();
 
-		self::assertTrue($form->getField('email_confirm')->isRequired());
+		self::assertTrue(TestUtils::field($form, 'email_confirm')->isRequired());
 	}
 
 	public function testConfirmFieldSyncsMultiple(): void
@@ -116,11 +117,11 @@ final class FieldDoubleCheckTest extends TestCase
 		$field = $form->field('tag');
 		$field->doubleCheck();
 
-		self::assertFalse($form->getField('tag_confirm')->isMultiple());
+		self::assertFalse(TestUtils::field($form, 'tag_confirm')->isMultiple());
 
 		$field->multiple(true);
 
-		self::assertTrue($form->getField('tag_confirm')->isMultiple());
+		self::assertTrue(TestUtils::field($form, 'tag_confirm')->isMultiple());
 	}
 
 	public function testFormValidationPassesWhenBothValuesMatch(): void
@@ -186,6 +187,6 @@ final class FieldDoubleCheckTest extends TestCase
 		$field->doubleCheck();
 
 		// Confirm field ref is scoped to the same prefix.
-		self::assertSame('billing.card_confirm', $form->getField('card_confirm')->getRef());
+		self::assertSame('billing.card_confirm', TestUtils::field($form, 'card_confirm')->getRef());
 	}
 }

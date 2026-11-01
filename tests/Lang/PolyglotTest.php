@@ -88,7 +88,9 @@ final class PolyglotTest extends TestCase
 	public function testParseBrowserLanguageRespectsQuality(): void
 	{
 		$result = Polyglot::parseBrowserLanguage('en;q=0.8,fr;q=0.9');
-		$langs  = $result['languages'];
+
+		/** @var array<string, float> $langs the quality of each language, highest first */
+		$langs = $result['languages'];
 
 		// fr should come before en after arsort
 		$keys = \array_keys($langs);
@@ -98,7 +100,7 @@ final class PolyglotTest extends TestCase
 
 	public function testDeclareFilterRegistersCallable(): void
 	{
-		Polyglot::declareFilter('test_upper', static fn ($v, $lang) => \strtoupper($v));
+		Polyglot::declareFilter('test_upper', static fn ($v) => \strtoupper($v));
 		// If no exception is thrown, the filter was registered successfully.
 		// We rely on this in translate() tests.
 		self::assertTrue(true);

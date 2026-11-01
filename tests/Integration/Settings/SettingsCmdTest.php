@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Settings;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
@@ -35,6 +36,7 @@ final class SettingsCmdTest extends TestCase
 {
 	private static OZTestProject $proj;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -52,6 +54,7 @@ final class SettingsCmdTest extends TestCase
 			->mustRun();
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		self::$proj->destroy();

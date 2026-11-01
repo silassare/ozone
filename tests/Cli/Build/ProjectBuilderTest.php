@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Cli\Build;
 
+use Override;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Cli\Build\ProjectBuilder;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -31,6 +32,7 @@ final class ProjectBuilderTest extends TestCase
 {
 	private string $dir;
 
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -44,6 +46,7 @@ final class ProjectBuilderTest extends TestCase
 		\file_put_contents($this->dir . '/.ozone/preload.php', "<?php\n\n" . ProjectBuilder::preloadStub());
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		self::remove($this->dir);

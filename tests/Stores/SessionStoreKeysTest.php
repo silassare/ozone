@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Stores;
 
+use OZONE\Core\Stores\RecordingStore;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -24,7 +25,7 @@ use SplFileInfo;
  *
  * What a request changes in the session store is written back as the keys it changed, so two
  * overlapping requests keep each other's writes. The store records each write as it is made
- * ({@see \OZONE\Core\Stores\RecordingStore}), so nothing about a key's shape is worked out from
+ * ({@see RecordingStore}), so nothing about a key's shape is worked out from
  * its value any more -- but a write still says what it says, and one that names a branch removes
  * the branch:
  *
@@ -192,7 +193,7 @@ final class SessionStoreKeysTest extends TestCase
 		// Through a constant the file declares: `entries(self::BRANCH)`, or
 		// `self::BRANCH . '.' . $entry`.
 		\preg_match_all(
-			"~(?:->entries\\(\\s*self::([A-Z][A-Z0-9_]*)\\s*\\)"
+			'~(?:->entries\\(\\s*self::([A-Z][A-Z0-9_]*)\\s*\\)'
 				. "|self::([A-Z][A-Z0-9_]*)\\s*\\.\\s*'\\.'\\s*\\.\\s*\\$)~",
 			$source,
 			$named

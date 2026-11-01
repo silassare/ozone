@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Project;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
@@ -39,6 +40,7 @@ final class ProjectServeTest extends TestCase
 	private static string $host = '127.0.0.1';
 	private static int $port    = 0;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -109,6 +111,7 @@ final class ProjectServeTest extends TestCase
 		}
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		if (null !== self::$server && self::$server->isRunning()) {

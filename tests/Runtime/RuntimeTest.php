@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Runtime;
 
+use Override;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\OZone;
 use OZONE\Core\Runtime\CgiRuntime;
@@ -38,6 +39,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(WorkerRuntime::class)]
 final class RuntimeTest extends TestCase
 {
+	#[Override]
 	protected function tearDown(): void
 	{
 		Runtime::reset();
@@ -104,9 +106,9 @@ final class RuntimeTest extends TestCase
 		self::assertTrue($runtime->isPersistent());
 
 		try {
+			// `: never`, which PHP turns into a TypeError of its own if it ever returns: there is
+			// nothing left for this test to assert about returning.
 			$runtime->terminate(3);
-
-			self::fail('terminate() must not return');
 		} catch (RequestFinished $finished) {
 			// The stack unwinds exactly as far as `exit` would, and the loop gets the code `exit`
 			// would have used.
@@ -134,7 +136,13 @@ final class RuntimeTest extends TestCase
 			Runtime::reset();
 
 			self::assertTrue(Runtime::isPersistent(), 'OZ_RUNTIME=worker must be honoured');
-			self::assertSame('declared', Runtime::detect()->getLoopName());
+
+			$detected = Runtime::detect();
+
+			// The loop's name is the worker runtime's to give: asking `RuntimeInterface` for it
+			// would be a call on whatever else a detection could answer.
+			self::assertInstanceOf(WorkerRuntime::class, $detected);
+			self::assertSame('declared', $detected->getLoopName());
 		} finally {
 			\putenv('OZ_RUNTIME');
 			Runtime::reset();

@@ -19,6 +19,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\Plugins\AbstractPlugin;
 use OZONE\Core\Plugins\CorePlugin;
+use OZONE\Core\Plugins\Interfaces\PluginInterface;
 use OZONE\Core\Plugins\Plugins;
 use OZONE\Core\Plugins\PluginScope;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -105,7 +106,10 @@ final class PluginsTest extends TestCase
 	{
 		$this->expectException(RuntimeException::class);
 
-		Plugins::getPlugin(stdClass::class);
+		/** @var class-string<PluginInterface> $not_a_plugin a real class that is not a plugin */
+		$not_a_plugin = stdClass::class;
+
+		Plugins::getPlugin($not_a_plugin);
 	}
 
 	public function testAbstractPluginReadsItsComposerJson(): void

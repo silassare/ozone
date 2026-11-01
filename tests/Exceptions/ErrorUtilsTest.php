@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Exceptions;
 
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Exceptions\Utils\ErrorUtils;
@@ -30,11 +31,13 @@ use Symfony\Component\Process\Process;
 #[CoversClass(ErrorUtils::class)]
 final class ErrorUtilsTest extends TestCase
 {
+	#[Override]
 	protected function setUp(): void
 	{
 		Settings::set('oz.logs', 'OZ_REDACT_SENSITIVE_DATA', true);
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		Settings::unset('oz.logs', 'OZ_REDACT_SENSITIVE_DATA');
@@ -128,6 +131,35 @@ final class ErrorUtilsTest extends TestCase
 		self::assertStringContainsString('no error handler of ours was installed', $log);
 		self::assertStringNotContainsString('OZone shutdown error', $log);
 		self::assertStringContainsString('not-here.php', $log);
+	}
+
+	public function testADiagnosticItsCallerSilencedIsNotLoggedAndStaysReadable(): void
+	{
+		// `@` and then `error_get_last()` is how a caller reads why a call it expected to be able to
+		// fail failed: php-utils creates a directory with `@mkdir()` and checks after, the S3 stream
+		// wrapper reads back why a connection never opened. The handler logged every one of them as
+		// a warning -- two requests creating one directory wrote `mkdir(): File exists` to the log --
+		// and swallowing them instead would have taken the reason away from the caller as well.
+		[$code, $out, $log] = self::runAutoloading(
+			"@\\fopen(__DIR__ . '/not-here.txt', 'rb');"
+				. "echo \\error_get_last()['message'] ?? 'nothing';",
+			true
+		);
+
+		self::assertSame(0, $code, $out);
+		self::assertStringContainsString('not-here.txt', $out, 'the caller still reads the reason');
+		self::assertStringNotContainsString('not-here.txt', $log, 'and nothing of it is logged');
+		self::assertStringNotContainsString('no error handler of ours was installed', $log);
+	}
+
+	public function testADiagnosticNobodySilencedIsStillLogged(): void
+	{
+		// The other half of the same check: what makes the one above quiet is the caller's `@`, not
+		// the handler having stopped reporting warnings.
+		[$code, $out, $log] = self::runAutoloading("\\fopen(__DIR__ . '/not-here.txt', 'rb');", true);
+
+		self::assertSame(0, $code, $out);
+		self::assertStringContainsString('not-here.txt', $log);
 	}
 
 	public function testAFatalIsStillReportedAsAShutdownError(): void

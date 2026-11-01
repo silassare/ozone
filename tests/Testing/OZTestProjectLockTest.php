@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Testing;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use OZONE\Core\Testing\Sandbox;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -34,6 +35,7 @@ final class OZTestProjectLockTest extends TestCase
 {
 	private string $dir;
 
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -44,6 +46,7 @@ final class OZTestProjectLockTest extends TestCase
 		\mkdir($this->dir . '/sibling', 0o775, true);
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		Sandbox::remove($this->dir);

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Auth;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
 use OZONE\Core\Auth\Auth;
@@ -32,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Auth::class)]
 final class AuthProviderTest extends TestCase
 {
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -79,7 +81,7 @@ final class AuthProviderTest extends TestCase
 		$auth = $this->seedAuth(AuthorizationState::AUTHORIZED, \time() - 1);
 
 		$this->expectException(UnauthorizedException::class);
-		$this->expectExceptionMessage('OZ_AUTH_HAS_EXPIRED');
+		$this->expectExceptionMessageIsOrContains('OZ_AUTH_HAS_EXPIRED');
 
 		Auth::provider($this->context(), $auth)->getState();
 	}

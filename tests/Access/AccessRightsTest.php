@@ -42,7 +42,7 @@ final class AccessRightsTest extends TestCase
 		self::assertFalse($c->can('users.delete'));
 
 		$this->expectException(UnauthorizedException::class);
-		$this->expectExceptionMessage('Access right escalation.');
+		$this->expectExceptionMessageIsOrContains('Access right escalation.');
 
 		$b->allow('users.delete');
 	}

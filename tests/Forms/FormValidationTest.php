@@ -48,7 +48,7 @@ final class FormValidationTest extends TestCase
 		$form->expect()->eq('plan', 'enterprise', 'PLAN_REQUIRED');
 
 		$this->expectException(InvalidFormException::class);
-		$this->expectExceptionMessage('PLAN_REQUIRED');
+		$this->expectExceptionMessageIsOrContains('PLAN_REQUIRED');
 
 		$form->validate(new FormData(['plan' => 'basic']));
 	}
@@ -77,7 +77,7 @@ final class FormValidationTest extends TestCase
 
 		// expect() passes, but required 'name' is missing -> field validation throws
 		$this->expectException(InvalidFormException::class);
-		$this->expectExceptionMessage('OZ_FORM_MISSING_REQUIRED_FIELD');
+		$this->expectExceptionMessageIsOrContains('OZ_FORM_MISSING_REQUIRED_FIELD');
 
 		$form->validate(new FormData(['flag' => 'yes']));
 	}
@@ -105,7 +105,7 @@ final class FormValidationTest extends TestCase
 		$form->ensure()->eq($pw, $cpw, 'PASSWORDS_MUST_MATCH');
 
 		$this->expectException(InvalidFormException::class);
-		$this->expectExceptionMessage('PASSWORDS_MUST_MATCH');
+		$this->expectExceptionMessageIsOrContains('PASSWORDS_MUST_MATCH');
 
 		$form->validate(new FormData([
 			'password'         => 'secret',
@@ -147,7 +147,7 @@ final class FormValidationTest extends TestCase
 	public function testToArraySendsServerOnlyExpectAsOpaqueRef(): void
 	{
 		$form = new Form('checkout');
-		$form->expect()->eq('plan', AsyncValue::secret(static fn () => 'enterprise'));
+		$form->expect()->eq('plan', AsyncValue::secret(static fn() => 'enterprise'));
 
 		$arr = $form->toArray();
 
@@ -166,7 +166,7 @@ final class FormValidationTest extends TestCase
 		$form = new Form('checkout');
 		$rule = $form->expect();
 		$rule->eq('plan', 'enterprise');
-		$rule->eq('flag', AsyncValue::secret(static fn () => 'ok'));  // makes the whole RuleSet server-only
+		$rule->eq('flag', AsyncValue::secret(static fn() => 'ok'));  // makes the whole RuleSet server-only
 
 		$arr = $form->toArray();
 
@@ -195,7 +195,7 @@ final class FormValidationTest extends TestCase
 		$form = new Form();
 		$form->string('password');
 		$form->ensure()->neq('password', 'password', 'TOO_OBVIOUS');
-		$form->ensure()->neq('password', AsyncValue::secret(static fn (): string => 'leaked'));
+		$form->ensure()->neq('password', AsyncValue::secret(static fn(): string => 'leaked'));
 
 		$arr = \json_decode((string) \json_encode($form->toArray()), true);
 

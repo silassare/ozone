@@ -52,7 +52,7 @@ final class DeclarationOrderTest extends TestCase
 		$form->string('type', true);
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('"extra" has a condition on "type"');
+		$this->expectExceptionMessageIsOrContains('"extra" has a condition on "type"');
 
 		$form->validate(new FormData(['type' => 'pro', 'extra' => 'x']));
 	}
@@ -81,13 +81,13 @@ final class DeclarationOrderTest extends TestCase
 	public function testSwitcherConditionOnALaterFieldThrows(): void
 	{
 		$form = new Form();
-		$form->switcher('doc_number')->configureType(static fn (TypesSwitcher $s) => $s
-			->when(static fn (RuleSet $rs) => $rs->eq('doc_type', 'passport'), new TypeString())
+		$form->switcher('doc_number')->configureType(static fn(TypesSwitcher $s) => $s
+			->when(static fn(RuleSet $rs) => $rs->eq('doc_type', 'passport'), new TypeString())
 			->otherwise(new TypeString()));
 		$form->string('doc_type', true);
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('"doc_number" has a condition on "doc_type"');
+		$this->expectExceptionMessageIsOrContains('"doc_number" has a condition on "doc_type"');
 
 		$form->validate(new FormData(['doc_type' => 'passport', 'doc_number' => 'X1']));
 	}
@@ -117,7 +117,7 @@ final class DeclarationOrderTest extends TestCase
 		});
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('"a" has a condition on "b.y"');
+		$this->expectExceptionMessageIsOrContains('"a" has a condition on "b.y"');
 
 		$form->validate(new FormData(['b' => ['y' => 'on']]));
 	}

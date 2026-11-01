@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\App;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Exceptions\BaseException;
@@ -46,6 +47,7 @@ final class RequestIsolationTest extends TestCase
 	/** @var array<string, null|Context> */
 	private array $saved = [];
 
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -56,6 +58,7 @@ final class RequestIsolationTest extends TestCase
 		];
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		// Put the suite's context tree back, whatever the test did to it.

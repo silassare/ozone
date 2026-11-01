@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Auth;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\LoginThrottle;
@@ -45,6 +46,7 @@ final class DigestAuthTest extends TestCase
 
 	private static Route $route;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -55,6 +57,7 @@ final class DigestAuthTest extends TestCase
 		self::$route = $router->getRoute('test:digest');
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		LoginThrottle::clear(self::SUBJECT);
@@ -75,8 +78,11 @@ final class DigestAuthTest extends TestCase
 		}
 
 		self::assertSame('OZ_AUTH_TOO_MUCH_ATTEMPT', self::reason(self::digest(TestDigestAuth::nonceAt(\time()))));
-		// Rejected before any check: the attempt is not counted again.
-		self::assertSame($max, LoginThrottle::failures(self::SUBJECT));
+
+		// Counted like every other attempt, since counting is how it was refused: what it cannot do
+		// is hold the subject locked for longer, because the window runs from the first failure and
+		// counting keeps its expiry.
+		self::assertSame($max + 1, LoginThrottle::failures(self::SUBJECT));
 	}
 
 	public function testForgedNonceIsRejected(): void
@@ -102,6 +108,8 @@ final class DigestAuthTest extends TestCase
 			'stale=true',
 			(string) $caught->getCustomResponse()?->getHeaderLine('WWW-Authenticate')
 		);
+		// A nonce of ours that aged out is part of the protocol, not a guess: the attempt is given
+		// back, so a client that idles past the lifetime is never locked out by its own retries.
 		self::assertSame(0, LoginThrottle::failures(self::SUBJECT));
 	}
 

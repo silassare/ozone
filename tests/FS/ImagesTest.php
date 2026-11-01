@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\FS;
 
+use Generator;
 use Intervention\Image\Interfaces\ImageInterface;
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\FS\Enums\ImageDriverName;
 use OZONE\Core\FS\Images\ImageRecipe;
@@ -192,11 +194,13 @@ final class ImagesTest extends TestCase
 	public function testAProjectsOwnTokenDrawsWithTheLibrary(ImageDriverName $driver): void
 	{
 		ImageTokens::register(new class implements ImageTokenInterface {
+			#[Override]
 			public function canonical(string $token): ?string
 			{
 				return 'redden' === $token ? 'redden' : null;
 			}
 
+			#[Override]
 			public function apply(ImageInterface $image, string $token): void
 			{
 				$image->fill('ff0000');
@@ -236,7 +240,7 @@ final class ImagesTest extends TestCase
 	}
 
 	/**
-	 * @return array<string, array{ImageDriverName}>
+	 * @return Generator<string, array{ImageDriverName}>
 	 */
 	public static function provideDrivers(): iterable
 	{

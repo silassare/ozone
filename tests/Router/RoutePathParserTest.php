@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Router;
 
 use InvalidArgumentException;
+use Override;
 use OZONE\Core\Router\Route;
 use OZONE\Core\Router\RoutePathParser;
 use OZONE\Core\Router\Router;
@@ -31,6 +32,7 @@ final class RoutePathParserTest extends TestCase
 {
 	private Router $router;
 
+	#[Override]
 	protected function setUp(): void
 	{
 		$this->router = TestUtils::router();

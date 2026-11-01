@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Auth;
 
+use Override;
 use OZONE\Core\Auth\TwoFactor\TOTP;
 use OZONE\Core\Testing\OZTestProject;
 use PDO;
@@ -44,6 +45,7 @@ final class TwoFactorTest extends TestCase
 
 	private static string $secret = '';
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -95,6 +97,7 @@ final class TwoFactorTest extends TestCase
 		self::$port    = $port;
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		if (self::$server?->isRunning()) {

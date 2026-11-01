@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Support\Servers;
 
 use Gobl\ORM\ORMOptions;
+use Override;
 use OZONE\Core\Db\OZCountriesQuery;
 use OZONE\Core\Db\OZCountry;
 use OZONE\Core\Http\Body;
@@ -42,6 +43,7 @@ final class RuntimeProbe implements RouteProviderInterface
 	 */
 	private static int $served = 0;
 
+	#[Override]
 	public static function registerRoutes(Router $router): void
 	{
 		$router->group('/runtime-probe', static function () use ($router): void {

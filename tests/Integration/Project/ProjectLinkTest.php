@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Project;
 
+use Override;
 use OZONE\Core\Scopes\StateLayout;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -33,6 +34,7 @@ final class ProjectLinkTest extends TestCase
 
 	private static OZTestProject $proj;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -42,6 +44,7 @@ final class ProjectLinkTest extends TestCase
 			->mustRun();
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		self::$proj->destroy();

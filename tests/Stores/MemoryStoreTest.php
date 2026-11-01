@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Stores;
 
+use Override;
 use OZONE\Core\Stores\Drivers\MemoryStore;
 use OZONE\Core\Stores\StoreEntry;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -28,6 +29,7 @@ final class MemoryStoreTest extends TestCase
 {
 	private MemoryStore $cache;
 
+	#[Override]
 	protected function setUp(): void
 	{
 		// Each test gets an isolated namespace so tests do not interfere with each other

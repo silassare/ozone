@@ -33,19 +33,19 @@ final class RouterTest extends TestCase
 	{
 		$router = TestUtils::router();
 
-		$foo = $router->getRoute('foo');
+		$foo = TestUtils::route($router, 'foo');
 		self::assertInstanceOf(Route::class, $foo);
 
-		$baz = $router->getRoute('bar.baz');
+		$baz = TestUtils::route($router, 'bar.baz');
 		self::assertInstanceOf(Route::class, $baz);
 
-		$articlesList = $router->getRoute('articles.list');
+		$articlesList = TestUtils::route($router, 'articles.list');
 		self::assertInstanceOf(Route::class, $articlesList);
 
-		$articlesGetById = $router->getRoute('articles.get_by_id');
+		$articlesGetById = TestUtils::route($router, 'articles.get_by_id');
 		self::assertInstanceOf(Route::class, $articlesGetById);
 
-		$userArticlesList = $router->getRoute('users.by_id.articles');
+		$userArticlesList = TestUtils::route($router, 'users.by_id.articles');
 
 		self::assertInstanceOf(Route::class, $userArticlesList);
 	}
@@ -53,7 +53,7 @@ final class RouterTest extends TestCase
 	public function testFind(): void
 	{
 		$router          = TestUtils::router();
-		$articlesGetById = $router->getRoute('articles.get_by_id');
+		$articlesGetById = TestUtils::route($router, 'articles.get_by_id');
 
 		$result = $router->find('GET', '/articles/42', true);
 
@@ -63,7 +63,7 @@ final class RouterTest extends TestCase
 		self::assertIsArray($params);
 		self::assertSame('42', $params['id']);
 
-		$userArticlesList = $router->getRoute('users.by_id.articles');
+		$userArticlesList = TestUtils::route($router, 'users.by_id.articles');
 		$result           = $router->find('GET', '/users/1/articles', true);
 
 		self::assertSame($userArticlesList, $result->foundRoute());
@@ -87,11 +87,11 @@ final class RouterTest extends TestCase
 		$router = new Router();
 
 		// Register a parent route and keep its options object.
-		$parent = $router->get('/items', static fn () => null)
+		$parent = $router->get('/items', static fn() => null)
 			->name('items');
 
 		// Register a child route with the parent options as explicit parent.
-		$child = $router->map(['get'], '/:id', static fn () => null, $parent)
+		$child = $router->map(['get'], '/:id', static fn() => null, $parent)
 			->name('get_by_id');
 
 		// Full path should be parent path + child path.
@@ -110,11 +110,11 @@ final class RouterTest extends TestCase
 	{
 		$router = new Router();
 
-		$router->get('/first', static fn () => null)->name('same');
-		$router->post('/second', static fn () => null)->name('same');
+		$router->get('/first', static fn() => null)->name('same');
+		$router->post('/second', static fn() => null)->name('same');
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('The route name "same" is taken twice: by "/first"');
+		$this->expectExceptionMessageIsOrContains('The route name "same" is taken twice: by "/first"');
 
 		$router->getRoutes();
 	}
@@ -123,8 +123,8 @@ final class RouterTest extends TestCase
 	{
 		$router = new Router();
 
-		$router->get('/same', static fn () => null);
-		$router->get('/same', static fn () => null);
+		$router->get('/same', static fn() => null);
+		$router->get('/same', static fn() => null);
 
 		self::assertCount(2, $router->getRoutes());
 	}

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Auth;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PDO;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -43,6 +44,7 @@ final class SessionConcurrencyTest extends TestCase
 
 	private static string $host = '127.0.0.1';
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -77,6 +79,7 @@ final class SessionConcurrencyTest extends TestCase
 		self::$port    = $port;
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		if (self::$server?->isRunning()) {
@@ -273,6 +276,21 @@ final class SessionConcurrencyTest extends TestCase
 	}
 
 	/**
+	 * The project this class runs against, which its own setup created.
+	 *
+	 * Empty until that setup has run, and a test reaching it before then says so here rather than
+	 * as a call on null several frames away.
+	 */
+	private static function project(): OZTestProject
+	{
+		$project = self::$project;
+
+		self::assertNotNull($project, 'The test project was not created.');
+
+		return $project;
+	}
+
+	/**
 	 * Opens a session holding `uid` and returns its ID.
 	 */
 	private function openSession(): string
@@ -283,7 +301,9 @@ final class SessionConcurrencyTest extends TestCase
 
 		$sid = self::cookies($headers)['OZONE_SID'] ?? null;
 
-		self::assertNotEmpty($sid, $body);
+		// Asserted as a string, which is what it has to be to be returned as one.
+		self::assertIsString($sid, $body);
+		self::assertNotSame('', $sid);
 		self::assertSame('u1', $this->storedData($sid)['uid'] ?? null, 'the session was not stored');
 
 		return $sid;
@@ -390,7 +410,7 @@ final class SessionConcurrencyTest extends TestCase
 	private static function sessionRow(string $sid): array
 	{
 		$pdo = new PDO(
-			'sqlite:' . self::$project->getPath() . \DIRECTORY_SEPARATOR . self::DB_FILE,
+			'sqlite:' . self::project()->getPath() . \DIRECTORY_SEPARATOR . self::DB_FILE,
 			null,
 			null,
 			[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]

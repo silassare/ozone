@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Utils;
 
+use Override;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\OZone;
 use OZONE\Core\Utils\Env;
@@ -35,6 +36,7 @@ final class EnvWithoutAppTest extends TestCase
 	/** The variables this test puts in its own process, removed again whatever it asserted. */
 	private array $exported = [];
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		foreach ($this->exported as $key) {
@@ -150,7 +152,7 @@ final class EnvWithoutAppTest extends TestCase
 		self::assertNotSame('', $env->getSignature());
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('The process environment has no file to patch.');
+		$this->expectExceptionMessageIsOrContains('The process environment has no file to patch.');
 
 		$env->patch(['OZ_PROBE_VALUE' => 'written']);
 	}

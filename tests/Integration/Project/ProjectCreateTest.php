@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Project;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -32,12 +33,14 @@ final class ProjectCreateTest extends TestCase
 {
 	private static OZTestProject $proj;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
 		self::$proj = OZTestProject::create('project-create-test');
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		self::$proj->destroy();

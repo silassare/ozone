@@ -52,7 +52,7 @@ final class RuleOperatorTypesTest extends TestCase
 		$form->string('note')->if()->gt('active', 1);
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('the rule "gt" on "active" is not allowed, a "bool" field accepts');
+		$this->expectExceptionMessageIsOrContains('the rule "gt" on "active" is not allowed, a "bool" field accepts');
 
 		$form->validate(new FormData(['active' => true, 'note' => 'x']));
 	}
@@ -142,7 +142,7 @@ final class RuleOperatorTypesTest extends TestCase
 		});
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('the rule "lt" on "active"');
+		$this->expectExceptionMessageIsOrContains('the rule "lt" on "active"');
 
 		$form->toArray();
 	}
@@ -186,8 +186,8 @@ final class RuleOperatorTypesTest extends TestCase
 	{
 		$form = new Form();
 		$form->string('kind');
-		$form->switcher('value')->configureType(static fn (TypesSwitcher $s) => $s
-			->when(static fn (RuleSet $rs) => $rs->eq('kind', 'a'), new TypeString())
+		$form->switcher('value')->configureType(static fn(TypesSwitcher $s) => $s
+			->when(static fn(RuleSet $rs) => $rs->eq('kind', 'a'), new TypeString())
 			->otherwise(new TypeInt()));
 		$form->string('note')->if()->gt('value', 1);
 
@@ -206,12 +206,12 @@ final class RuleOperatorTypesTest extends TestCase
 	{
 		$form = new Form();
 		$form->bool('flag');
-		$form->switcher('value')->configureType(static fn (TypesSwitcher $s) => $s
-			->when(static fn (RuleSet $rs) => $rs->gt('flag', 1), new TypeString())
+		$form->switcher('value')->configureType(static fn(TypesSwitcher $s) => $s
+			->when(static fn(RuleSet $rs) => $rs->gt('flag', 1), new TypeString())
 			->otherwise(new TypeInt()));
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('the rule "gt" on "flag"');
+		$this->expectExceptionMessageIsOrContains('the rule "gt" on "flag"');
 
 		$form->toArray();
 	}

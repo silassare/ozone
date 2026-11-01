@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Http;
 
+use Override;
 use OZONE\Core\Messaging\Transports\LogTransport;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -33,6 +34,7 @@ final class DefaultPagesServedTest extends TestCase
 	/** @var null|array{0: Process, 1: string, 2: int} */
 	private static ?array $server = null;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -63,9 +65,10 @@ final class DefaultPagesServedTest extends TestCase
 		self::$server = $proj->startServer('api');
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
-		self::$server[0]->stop();
+		self::server()[0]->stop();
 		self::$project?->destroy();
 		self::$server  = null;
 		self::$project = null;
@@ -142,7 +145,7 @@ final class DefaultPagesServedTest extends TestCase
 	public function testASignInRouteThatCannotBeBuiltIsLoggedAndLinksNothing(): void
 	{
 		// A real route, of every scope, but one that takes parameters.
-		self::$project->setSetting('oz.auth', 'OZ_AUTH_SIGN_IN_ROUTE', 'oz:auth_link');
+		self::project()->setSetting('oz.auth', 'OZ_AUTH_SIGN_IN_ROUTE', 'oz:auth_link');
 		self::serveAgain();
 
 		try {
@@ -166,8 +169,34 @@ final class DefaultPagesServedTest extends TestCase
 			self::assertStringContainsString('You can close this window', $page);
 			self::assertStringContainsString('OZ_AUTH_SIGN_IN_ROUTE names no parameterless route', self::logs());
 		} finally {
-			self::$project->setSetting('oz.auth', 'OZ_AUTH_SIGN_IN_ROUTE', 'app:sign-in');
+			self::project()->setSetting('oz.auth', 'OZ_AUTH_SIGN_IN_ROUTE', 'app:sign-in');
 		}
+	}
+
+	/**
+	 * The project this class runs against, which its own setup created.
+	 */
+	private static function project(): OZTestProject
+	{
+		$project = self::$project;
+
+		self::assertNotNull($project, 'The test project was not created.');
+
+		return $project;
+	}
+
+	/**
+	 * The server this class serves the project with.
+	 *
+	 * @return array{0: Process, 1: string, 2: int}
+	 */
+	private static function server(): array
+	{
+		$server = self::$server;
+
+		self::assertNotNull($server, 'The test server was not started.');
+
+		return $server;
 	}
 
 	/**
@@ -177,8 +206,8 @@ final class DefaultPagesServedTest extends TestCase
 	 */
 	private static function serveAgain(): void
 	{
-		self::$server[0]->stop();
-		self::$server = self::$project->startServer('api');
+		self::server()[0]->stop();
+		self::$server = self::project()->startServer('api');
 	}
 
 	/**
@@ -200,7 +229,7 @@ final class DefaultPagesServedTest extends TestCase
 	{
 		$logs = '';
 
-		foreach (\glob(self::$project->getPath() . '/.ozone/logs/*.log') ?: [] as $file) {
+		foreach (\glob(self::project()->getPath() . '/.ozone/logs/*.log') ?: [] as $file) {
 			$logs .= (string) \file_get_contents($file);
 		}
 

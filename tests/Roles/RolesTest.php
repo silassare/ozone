@@ -35,6 +35,7 @@ use RuntimeException;
 #[CoversClass(Roles::class)]
 final class RolesTest extends TestCase
 {
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -101,7 +102,7 @@ final class RolesTest extends TestCase
 	private static function user(string $id): AuthUserInterface
 	{
 		return new class($id) implements AuthUserInterface {
-			private AuthUserDataStore $data_store;
+			private ?AuthUserDataStore $data_store = null;
 
 			public function __construct(private readonly string $id) {}
 

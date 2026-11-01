@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Utils;
 
+use Override;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Utils\Env;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -30,6 +31,7 @@ final class EnvCompiledTest extends TestCase
 {
 	private string $file;
 
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -39,6 +41,7 @@ final class EnvCompiledTest extends TestCase
 		\file_put_contents($this->file, "A=1\nB=\"two\"\nC=true\nD=1.5\n");
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		foreach ([$this->file, ...self::compiledCopies($this->file)] as $file) {

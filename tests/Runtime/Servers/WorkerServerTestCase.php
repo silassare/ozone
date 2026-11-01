@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Runtime\Servers;
 
 use CURLFile;
+use Override;
 use OZONE\Core\Runtime\WorkerRuntime;
 use OZONE\Tests\Support\Servers\RuntimeProbe;
 use PHPUnit\Framework\TestCase;
@@ -33,6 +34,7 @@ use PHPUnit\Framework\TestCase;
  */
 abstract class WorkerServerTestCase extends TestCase
 {
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -47,7 +49,7 @@ abstract class WorkerServerTestCase extends TestCase
 		if ('' === $url) {
 			$error = static::urlVariable() . ' is not set';
 		} else {
-			$ping = $this->request('GET', '/runtime-probe/ping', [], null, false);
+			$ping = $this->tryRequest('GET', '/runtime-probe/ping');
 
 			if (null === $ping || 'pong' !== $ping['body']) {
 				$error = 'nothing answers at ' . $url;
@@ -269,20 +271,44 @@ abstract class WorkerServerTestCase extends TestCase
 	}
 
 	/**
-	 * Sends a request to the server.
+	 * Sends a request to the server, which must answer.
+	 *
+	 * A transport error is this test's failure, so the answer is an answer: every caller reads
+	 * `['status']` without asking whether there is one, and a test that walked into a missing
+	 * response used to report it as an index on null instead of as the request that got nothing.
 	 *
 	 * @param list<string>                     $headers header lines
 	 * @param null|array<string, mixed>|string $body    a raw body, or fields sent as multipart
-	 * @param bool                             $strict  whether a transport error fails the test
 	 *
-	 * @return null|array{status: int, headers: array<string, list<string>>, body: string}
+	 * @return array{status: int, headers: array<string, list<string>>, body: string}
 	 */
 	protected function request(
 		string $method,
 		string $path,
 		array $headers = [],
-		array|string|null $body = null,
-		bool $strict = true
+		array|string|null $body = null
+	): array {
+		$response = $this->tryRequest($method, $path, $headers, $body);
+
+		self::assertNotNull($response, \sprintf('%s %s got no answer from the server.', $method, $path));
+
+		return $response;
+	}
+
+	/**
+	 * The same request, for a caller that has to live with no answer: waiting for a server that is
+	 * still starting is the one such caller.
+	 *
+	 * @param list<string>                     $headers header lines
+	 * @param null|array<string, mixed>|string $body    a raw body, or fields sent as multipart
+	 *
+	 * @return null|array{status: int, headers: array<string, list<string>>, body: string}
+	 */
+	protected function tryRequest(
+		string $method,
+		string $path,
+		array $headers = [],
+		array|string|null $body = null
 	): ?array {
 		$received = [];
 		$curl     = \curl_init(self::baseUrl() . $path);
@@ -311,10 +337,6 @@ abstract class WorkerServerTestCase extends TestCase
 		$out = \curl_exec($curl);
 
 		if (!\is_string($out)) {
-			if ($strict) {
-				self::fail(\sprintf('%s %s failed: %s', $method, $path, \curl_error($curl)));
-			}
-
 			return null;
 		}
 

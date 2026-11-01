@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Auth\TwoFactor;
 
+use Override;
 use OZONE\Core\Auth\AuthUserDataStore;
 use OZONE\Core\Auth\Interfaces\AuthUserInterface;
 use OZONE\Core\Auth\TwoFactor\Channels\EmailOtpChannel;
@@ -41,6 +42,7 @@ final class TwoFactorChannelRegistryTest extends TestCase
 	 * Saves the current channel map and resets the registry to an empty state
 	 * so each test starts with a clean slate.
 	 */
+	#[Override]
 	protected function setUp(): void
 	{
 		$ref  = new ReflectionClass(TwoFactorChannelRegistry::class);
@@ -53,6 +55,7 @@ final class TwoFactorChannelRegistryTest extends TestCase
 	/**
 	 * Restores the channel map saved before the test ran.
 	 */
+	#[Override]
 	protected function tearDown(): void
 	{
 		$ref  = new ReflectionClass(TwoFactorChannelRegistry::class);

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Hooks;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Hooks\Events\ResponseHook;
@@ -32,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(MainBootHookReceiver::class)]
 final class SecurityHeadersTest extends TestCase
 {
+	#[Override]
 	protected function tearDown(): void
 	{
 		Settings::unset('oz.request', 'OZ_SECURITY_HEADERS');

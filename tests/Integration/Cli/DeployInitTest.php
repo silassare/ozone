@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Cli;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
@@ -32,6 +33,7 @@ final class DeployInitTest extends TestCase
 
 	private static OZTestProject $proj;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -41,6 +43,7 @@ final class DeployInitTest extends TestCase
 			->mustRun();
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		self::$proj->destroy();

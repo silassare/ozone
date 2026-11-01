@@ -170,7 +170,9 @@ final class ClassLoaderTest extends TestCase
 
 	public function testALazyNamespaceNotAvailableYetIsAskedAgain(): void
 	{
-		$ns    = self::uniqueName('OzLoaderLater');
+		$ns = self::uniqueName('OzLoaderLater');
+
+		/** @var bool $ready flipped further down, which is what the closure below reads */
 		$ready = false;
 		$file  = self::write('later/Thing.php', "<?php\n\nnamespace {$ns};\n\nfinal class Thing {}\n");
 

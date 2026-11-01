@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\FS;
 
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\FS\Drivers\MinioStorage;
 use OZONE\Core\FS\FileStream;
@@ -53,6 +54,7 @@ final class S3ClientTest extends TestCase
 	/** @var list<string> the keys written by the running test */
 	private array $written = [];
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -62,6 +64,7 @@ final class S3ClientTest extends TestCase
 		self::$bucket = MinioStorage::get(FS::PRIVATE_STORAGE)->getBucket();
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		if ('' !== self::$bucket) {

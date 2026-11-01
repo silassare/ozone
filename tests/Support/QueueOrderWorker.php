@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Support;
 
+use Override;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
 use OZONE\Core\Utils\JSONResult;
@@ -57,33 +58,39 @@ final class QueueOrderWorker implements WorkerInterface
 		self::$ran = [];
 	}
 
+	#[Override]
 	public static function getName(): string
 	{
 		return self::NAME;
 	}
 
+	#[Override]
 	public function isAsync(): bool
 	{
 		return false;
 	}
 
-	public function work(JobContractInterface $job): static
+	#[Override]
+	public function work(JobContractInterface $job_contract): static
 	{
 		self::$ran[] = $this->label;
 
 		return $this;
 	}
 
+	#[Override]
 	public function getResult(): JSONResult
 	{
 		return new JSONResult()->setDone();
 	}
 
+	#[Override]
 	public static function fromPayload(array $payload): static
 	{
 		return new self((string) ($payload['label'] ?? ''));
 	}
 
+	#[Override]
 	public function getPayload(): array
 	{
 		return ['label' => $this->label];

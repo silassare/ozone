@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Runtime\Servers;
 
+use Override;
 use OZONE\Core\Runtime\Bridges\RoadRunnerBridge;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -28,11 +29,13 @@ use PHPUnit\Framework\Attributes\Group;
 #[CoversClass(RoadRunnerBridge::class)]
 final class RoadRunnerServerTest extends WorkerServerTestCase
 {
+	#[Override]
 	protected static function loopName(): string
 	{
 		return 'roadrunner';
 	}
 
+	#[Override]
 	protected static function urlVariable(): string
 	{
 		return 'OZ_TEST_ROADRUNNER_URL';

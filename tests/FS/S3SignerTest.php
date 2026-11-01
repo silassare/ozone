@@ -73,6 +73,7 @@ final class S3SignerTest extends TestCase
 
 	private static function time(): int
 	{
-		return \gmmktime(0, 0, 0, 5, 24, 2013);
+		// The worked example's date, 2013-05-24: a constant, so the answer is never `false`.
+		return (int) \gmmktime(0, 0, 0, 5, 24, 2013);
 	}
 }

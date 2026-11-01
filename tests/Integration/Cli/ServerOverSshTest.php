@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Cli;
 
+use Override;
 use OZONE\Core\Cli\Server\SshHost;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -55,6 +56,7 @@ final class ServerOverSshTest extends TestCase
 	/** @var array<string, int> the SSH port of each started platform */
 	private static array $ports = [];
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -78,6 +80,7 @@ final class ServerOverSshTest extends TestCase
 		\putenv('OZ_SSH_COMMAND=' . self::sshCommand());
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		foreach (\array_keys(self::$ports) as $platform) {
@@ -205,7 +208,7 @@ final class ServerOverSshTest extends TestCase
 	public static function providePlatforms(): iterable
 	{
 		foreach (\array_keys(self::PLATFORMS) as $platform) {
-			yield (string) $platform => [(string) $platform];
+			yield $platform => [$platform];
 		}
 	}
 
@@ -253,7 +256,9 @@ final class ServerOverSshTest extends TestCase
 
 		$port = self::docker(['port', $name, '22/tcp']);
 
-		if (0 !== $port['code'] || !\preg_match('~:(\d+)\s*$~m', \trim(\explode("\n", $port['output'])[0]), $m)) {
+		$matched = \preg_match('~:(\d+)\s*$~m', \trim(\explode("\n", $port['output'])[0]), $m);
+
+		if (0 !== $port['code'] || 1 !== $matched) {
 			self::fail('No published SSH port for ' . $platform . ': ' . $port['output']);
 		}
 

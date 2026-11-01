@@ -56,7 +56,7 @@ final class MinioStorageTest extends IntegrationTestCase
 		$file    = self::saved($storage->saveRaw('hello minio', 'text/plain', 'hello.txt'));
 
 		self::assertSame(FS::PRIVATE_STORAGE, $file->getStorage());
-		self::assertSame(11, (int) $file->getSize());
+		self::assertSame(11, $file->getSize());
 		self::assertTrue($storage->exists($file));
 		self::assertSame('hello minio', (string) $storage->getStream($file));
 
@@ -73,7 +73,7 @@ final class MinioStorageTest extends IntegrationTestCase
 		$storage->write($file, 'b')->append($file, 'c')->prepend($file, 'a');
 
 		self::assertSame('abc', (string) $storage->getStream($file));
-		self::assertSame(3, (int) $file->getSize());
+		self::assertSame(3, $file->getSize());
 
 		$storage->delete($file);
 	}
@@ -105,7 +105,7 @@ final class MinioStorageTest extends IntegrationTestCase
 
 			$file = self::saved($storage->saveStream($source, 'application/octet-stream', 'big.bin'));
 
-			self::assertSame($expected_size, (int) $file->getSize());
+			self::assertSame($expected_size, $file->getSize());
 			self::assertSame($expected_hash, \md5((string) $storage->getStream($file)));
 
 			$storage->delete($file);

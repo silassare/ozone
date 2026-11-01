@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\FS;
 
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\FS\FS;
 use OZONE\Core\FS\Images\ImageProbe;
@@ -28,6 +29,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ImageProbe::class)]
 final class ImageProbeTest extends TestCase
 {
+	#[Override]
 	protected function tearDown(): void
 	{
 		Settings::unset('oz.files', 'OZ_IMAGE_PROBE_MAX_SIZE');
@@ -68,8 +70,8 @@ final class ImageProbeTest extends TestCase
 		// An upload never fails on it: the file is stored, without the facts.
 		self::assertTrue($text->save());
 		self::assertTrue($broken->save());
-		self::assertArrayNotHasKey(ImageProbe::DATA_KEY, $text->getData());
-		self::assertArrayNotHasKey(ImageProbe::DATA_KEY, $broken->getData());
+		self::assertArrayNotHasKey(ImageProbe::DATA_KEY, $text->getData()->getData());
+		self::assertArrayNotHasKey(ImageProbe::DATA_KEY, $broken->getData()->getData());
 	}
 
 	public function testAnImageLargerThanTheLimitIsNotDecoded(): void
@@ -80,6 +82,6 @@ final class ImageProbeTest extends TestCase
 
 		$file->save();
 
-		self::assertArrayNotHasKey(ImageProbe::DATA_KEY, $file->getData());
+		self::assertArrayNotHasKey(ImageProbe::DATA_KEY, $file->getData()->getData());
 	}
 }

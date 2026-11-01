@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Queue;
 
+use Override;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
 use OZONE\Core\Queue\Job;
@@ -123,31 +124,37 @@ final class QueueTest extends TestCase
 		$q = new Queue('push-queue-' . \uniqid('', true));
 
 		$worker = new class implements WorkerInterface {
+			#[Override]
 			public static function getName(): string
 			{
 				return 'test-push-worker';
 			}
 
-			public function work(JobContractInterface $c): static
+			#[Override]
+			public function work(JobContractInterface $job_contract): static
 			{
 				return $this;
 			}
 
+			#[Override]
 			public function isAsync(): bool
 			{
 				return false;
 			}
 
+			#[Override]
 			public function getResult(): JSONResult
 			{
 				return new JSONResult();
 			}
 
-			public static function fromPayload(array $p): static
+			#[Override]
+			public static function fromPayload(array $payload): static
 			{
 				return new self();
 			}
 
+			#[Override]
 			public function getPayload(): array
 			{
 				return [];

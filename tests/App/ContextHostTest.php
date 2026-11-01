@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\App;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Http\ClientInfo;
@@ -34,11 +35,13 @@ final class ContextHostTest extends TestCase
 	// No dot in the key: dotted settings keys are read as paths.
 	private const string PROXY_RANGE = '2001:db8::/32';
 
+	#[Override]
 	protected function setUp(): void
 	{
 		Settings::set('oz.proxies', self::PROXY_RANGE, true);
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		Settings::unset('oz.proxies', self::PROXY_RANGE);

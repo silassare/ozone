@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\CSRF;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Interfaces\AuthenticationMethodInterface;
@@ -46,6 +47,7 @@ final class DefaultCSRFTest extends TestCase
 	 */
 	private static array $options = [];
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		self::$router = new Router();
@@ -64,6 +66,7 @@ final class DefaultCSRFTest extends TestCase
 		});
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		Settings::unset('oz.request', 'OZ_CSRF_SESSION_DEFAULT');

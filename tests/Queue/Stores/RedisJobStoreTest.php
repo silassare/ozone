@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Queue\Stores;
 
+use Override;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\JobsManager;
@@ -35,6 +36,7 @@ final class RedisJobStoreTest extends AbstractJobStoreTestCase
 {
 	use RequiresRedisTrait;
 
+	#[Override]
 	protected function setUp(): void
 	{
 		self::requireRedis();
@@ -50,6 +52,7 @@ final class RedisJobStoreTest extends AbstractJobStoreTestCase
 	 * Taken, with the lock gone: this store's lease *is* the lock key's expiry, so a running job
 	 * nobody holds is one whose holder never came back.
 	 */
+	#[Override]
 	protected function strandJob(JobContractInterface $job): void
 	{
 		$job->setState(JobState::RUNNING);
@@ -57,6 +60,7 @@ final class RedisJobStoreTest extends AbstractJobStoreTestCase
 		$this->store->unlock($job);
 	}
 
+	#[Override]
 	protected function makeStore(): JobStoreInterface
 	{
 		return JobsManager::getStore(RedisJobStore::NAME);

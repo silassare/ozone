@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Cli;
 
+use Override;
 use OZONE\Core\Cli\Server\Enums\PackageManager;
 use OZONE\Core\Cli\Server\Provisioner;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -61,6 +62,7 @@ final class ServerProvisionTest extends TestCase
 	/** @var array<string, bool> platforms whose container is up and prepared */
 	private static array $ready = [];
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -74,6 +76,7 @@ final class ServerProvisionTest extends TestCase
 		}
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		foreach (\array_keys(self::$ready) as $platform) {
@@ -193,7 +196,7 @@ final class ServerProvisionTest extends TestCase
 		$sets = [];
 
 		foreach (\array_keys(self::PLATFORMS) as $platform) {
-			$sets[(string) $platform] = [(string) $platform];
+			$sets[$platform] = [$platform];
 		}
 
 		return $sets;

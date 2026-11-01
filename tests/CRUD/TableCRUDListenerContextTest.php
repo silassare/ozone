@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\CRUD;
 
+use Gobl\ORM\ORMEntity;
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\CRUD\Interfaces\TableCRUDListenerInterface;
 use OZONE\Core\CRUD\TableCRUDListener;
@@ -40,6 +42,7 @@ final class TableCRUDListenerContextTest extends TestCase
 	/** @var array<string, null|Context> */
 	private array $saved = [];
 
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -50,6 +53,7 @@ final class TableCRUDListenerContextTest extends TestCase
 		];
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		self::writeStatic('root_context', $this->saved['root_context']);
@@ -61,7 +65,8 @@ final class TableCRUDListenerContextTest extends TestCase
 	public function testAListenerReadsTheContextOfEachRequest(): void
 	{
 		// Built once, like a listener registered at bootstrap.
-		$listener = new class extends TableCRUDListener {
+		$listener = new /** @extends TableCRUDListener<ORMEntity> */ class extends TableCRUDListener {
+			#[Override]
 			public static function register(): void {}
 
 			public function contextNow(): Context

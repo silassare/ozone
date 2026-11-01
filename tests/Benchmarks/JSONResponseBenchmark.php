@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Benchmarks;
 
+use Override;
 use OZONE\Core\App\JSONResponse;
 
 /**
@@ -25,6 +26,7 @@ use OZONE\Core\App\JSONResponse;
  */
 class JSONResponseBenchmark implements BenchmarkSuiteInterface
 {
+	#[Override]
 	public static function callables(): array
 	{
 		return [

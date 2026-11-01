@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Db;
 
+use Override;
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -37,6 +38,7 @@ final class DbBackupTest extends TestCase
 {
 	private string $backupDir;
 
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -44,6 +46,7 @@ final class DbBackupTest extends TestCase
 		\mkdir($this->backupDir, 0o775, true);
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		foreach (\glob($this->backupDir . '/*') ?: [] as $f) {

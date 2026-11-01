@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Http;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Http\Cookie;
@@ -30,6 +31,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Cookie::class)]
 final class CookieSecureTest extends TestCase
 {
+	#[Override]
 	protected function tearDown(): void
 	{
 		Settings::unset('oz.cookie', 'OZ_COOKIE_SECURE');

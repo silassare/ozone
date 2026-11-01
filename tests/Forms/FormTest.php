@@ -13,7 +13,9 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
+use OZONE\Tests\TestUtils;
 use LogicException;
+use Override;
 use OZONE\Core\Exceptions\InvalidFormException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\AsyncValue;
@@ -37,6 +39,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Form::class)]
 final class FormTest extends TestCase
 {
+	#[Override]
 	protected function setUp(): void
 	{
 		// Clear the form resume cache before each test so cache round-trip tests
@@ -299,8 +302,8 @@ final class FormTest extends TestCase
 
 		$target->merge($source);
 
-		self::assertNotNull($target->getField('name'));
-		self::assertNotNull($target->getField('email'));
+		self::assertNotNull(TestUtils::field($target, 'name'));
+		self::assertNotNull(TestUtils::field($target, 'email'));
 	}
 
 	public function testMergeRejectsCollidingFieldRef(): void
@@ -327,8 +330,8 @@ final class FormTest extends TestCase
 
 		$target->merge($source);
 
-		self::assertFalse($target->getField('a.name')->isRequired());
-		self::assertTrue($target->getField('b.name')->isRequired());
+		self::assertFalse(TestUtils::field($target, 'a.name')->isRequired());
+		self::assertTrue(TestUtils::field($target, 'b.name')->isRequired());
 	}
 
 	public function testMergeClonesFieldsSoSourceIsNotMutated(): void
@@ -339,10 +342,10 @@ final class FormTest extends TestCase
 		$bundle = new Form();
 		$bundle->merge($source);
 
-		$bundle->getField('src.name')->required(false);
+		TestUtils::field($bundle, 'src.name')->required(false);
 
 		// A long-lived source form must not be mutated through a merged bundle.
-		self::assertTrue($source->getField('name')->isRequired());
+		self::assertTrue(TestUtils::field($source, 'name')->isRequired());
 	}
 
 	// -----------------------------------------------------------------------
@@ -413,7 +416,7 @@ final class FormTest extends TestCase
 		$form  = new Form();
 		$field = $form->field('name');
 
-		self::assertSame($field, $form->getField('name'));
+		self::assertSame($field, TestUtils::field($form, 'name'));
 	}
 
 	// -----------------------------------------------------------------------

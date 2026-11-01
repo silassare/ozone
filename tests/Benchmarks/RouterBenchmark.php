@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Benchmarks;
 
+use Override;
 use OZONE\Tests\TestUtils;
 
 /**
@@ -27,6 +28,7 @@ use OZONE\Tests\TestUtils;
  */
 class RouterBenchmark implements BenchmarkSuiteInterface
 {
+	#[Override]
 	public static function callables(): array
 	{
 		$router = TestUtils::router();

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Runtime\Servers;
 
+use Override;
 use OZONE\Core\Runtime\Bridges\FrankenPhpBridge;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -28,11 +29,13 @@ use PHPUnit\Framework\Attributes\Group;
 #[CoversClass(FrankenPhpBridge::class)]
 final class FrankenPhpServerTest extends WorkerServerTestCase
 {
+	#[Override]
 	protected static function loopName(): string
 	{
 		return 'frankenphp';
 	}
 
+	#[Override]
 	protected static function urlVariable(): string
 	{
 		return 'OZ_TEST_FRANKENPHP_URL';

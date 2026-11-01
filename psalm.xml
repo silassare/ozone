@@ -10,10 +10,27 @@
 >
     <projectFiles>
         <directory name="oz"/>
+        <!--
+            The suite is analysed too: it is as much ours as `oz/` is, and leaving it out hid a call
+            to a private constructor in three test doubles and a dynamic-fieldset factory typed with
+            a class the factory is never called with. Neither could run without raising.
+        -->
+        <directory name="tests"/>
         <ignoreFiles>
             <directory name="oz/oz_templates"/>
             <directory name="vendor"/>
-            <directory name="tests"/>
+            <!-- Templates a generated project is built from: placeholder namespaces, and files
+                 that only exist once a project has been generated around them. -->
+            <directory name="tests/Integration/Stubs"/>
+            <!--
+                Applications the suite serves from real worker servers, not test code: their shape is
+                what is under test, and part of that shape is a line written after a call that never
+                returns (`Context::respond()`), which a worker has to unwind through. An analyser is
+                right to call that unreachable and the fixture needs it there. They also run against
+                an extension this image does not install.
+            -->
+            <directory name="tests/Support/Servers"/>
+            <file name="tests/Support/worker_loop.php"/>
         </ignoreFiles>
     </projectFiles>
 
@@ -42,5 +59,24 @@
                 <referencedClass name="Memcached"/>
             </errorLevel>
         </UndefinedClass>
+        <!--
+            Three places where the analyser, not the code, is what cannot be satisfied. Named one by
+            one rather than by issue type, so a fourth of any of them is still an error:
+
+            - `#[CoversTrait(SomeTrait::class)]` is how PHPUnit's attribute is written, and psalm
+              will not read `::class` on a trait as the `trait-string` its own stub asks for.
+            - `RESTFulRelationsHelper::assertNotPrivateRelation()` takes a `RelationInterface` whose
+              template parameters it does not write, so psalm reads them as the defaults and no
+              caller can satisfy them, `oz/` included, where both callers pass what a table
+              answers. The parameter's type is the thing to settle, and settling it is not a test's
+              business.
+        -->
+        <InvalidArgument>
+            <errorLevel type="suppress">
+                <file name="tests/FS/LocalStorageTest.php"/>
+                <file name="tests/Forms/FieldContainerHelpersTest.php"/>
+                <file name="tests/REST/RESTFulRelationsTest.php"/>
+            </errorLevel>
+        </InvalidArgument>
     </issueHandlers>
 </psalm>

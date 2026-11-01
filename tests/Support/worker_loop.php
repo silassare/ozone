@@ -117,6 +117,7 @@ $sink = new class implements ResponseSinkInterface {
 	/** @var list<string> */
 	public array $events = [];
 
+	#[Override]
 	public function send(Response $response): void
 	{
 		$this->sent[]   = $response;

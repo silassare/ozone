@@ -15,6 +15,7 @@ namespace OZONE\Tests\Columns;
 
 use Gobl\DBAL\Interfaces\RDBMSInterface;
 use Gobl\DBAL\Types\Exceptions\TypesInvalidValueException;
+use Override;
 use OZONE\Core\Columns\Types\TypeFile;
 use OZONE\Core\Columns\ValidatedFile;
 use OZONE\Core\Http\UploadedFile;
@@ -34,11 +35,13 @@ final class TypeFileTest extends TestCase
 	/** @var string[] temporary files created during tests that must be cleaned up */
 	private array $tmpFiles = [];
 
+	#[Override]
 	protected function setUp(): void
 	{
 		$this->rdbms = self::createStub(RDBMSInterface::class);
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		foreach ($this->tmpFiles as $path) {
@@ -215,7 +218,10 @@ final class TypeFileTest extends TestCase
 	{
 		// Alias descriptor > 4 KB causes FS::parseFileAlias() to return null,
 		// which the pre-resolution step converts to OZ_FILE_INVALID.
-		$path             = \tempnam(\sys_get_temp_dir(), 'oz_test_alias_big_');
+		$path = \tempnam(\sys_get_temp_dir(), 'oz_test_alias_big_');
+
+		self::assertIsString($path, 'no temporary file could be made');
+
 		$this->tmpFiles[] = $path;
 		\file_put_contents($path, \str_repeat('X', 4001));
 
@@ -236,7 +242,10 @@ final class TypeFileTest extends TestCase
 	{
 		// Non-JSON content causes FS::parseFileAlias() to throw, which the
 		// pre-resolution step wraps as OZ_FILE_INVALID.
-		$path             = \tempnam(\sys_get_temp_dir(), 'oz_test_alias_bad_');
+		$path = \tempnam(\sys_get_temp_dir(), 'oz_test_alias_bad_');
+
+		self::assertIsString($path, 'no temporary file could be made');
+
 		$this->tmpFiles[] = $path;
 		\file_put_contents($path, 'not-valid-json');
 
@@ -256,7 +265,10 @@ final class TypeFileTest extends TestCase
 	public function testAliasWithMissingFieldsRejected(): void
 	{
 		// Valid JSON but missing required file_id / file_key fields.
-		$path             = \tempnam(\sys_get_temp_dir(), 'oz_test_alias_empty_');
+		$path = \tempnam(\sys_get_temp_dir(), 'oz_test_alias_empty_');
+
+		self::assertIsString($path, 'no temporary file could be made');
+
 		$this->tmpFiles[] = $path;
 		\file_put_contents($path, \json_encode(['foo' => 'bar']));
 
@@ -326,7 +338,10 @@ final class TypeFileTest extends TestCase
 	 */
 	private function makeAliasFile(string $file_id, string $file_key): string
 	{
-		$path             = \tempnam(\sys_get_temp_dir(), 'oz_test_alias_');
+		$path = \tempnam(\sys_get_temp_dir(), 'oz_test_alias_');
+
+		self::assertIsString($path, 'no temporary file could be made');
+
 		$this->tmpFiles[] = $path;
 		\file_put_contents($path, \json_encode(['file_id' => $file_id, 'file_key' => $file_key]));
 

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
+use Override;
 use OZONE\Core\Exceptions\ForbiddenException;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormDataClean;
@@ -78,7 +79,7 @@ final class FormSessionTest extends TestCase
 		$session->assertUsableBy(StandaloneSessionTestProvider::class, null);
 		$session->assertUsableBy(StandaloneSessionTestProvider::class, 'r|POST|/a');
 
-		$this->addToAssertionCount(1);
+		self::assertTrue(true, 'reached without raising, which is what this asserts');
 	}
 
 	public function testRouteBoundSessionIsUsableOnItsRoute(): void
@@ -86,7 +87,7 @@ final class FormSessionTest extends TestCase
 		self::session(RouteBoundSessionTestProvider::class, null, 'r|POST|/a')
 			->assertUsableBy(RouteBoundSessionTestProvider::class, 'r|POST|/a');
 
-		$this->addToAssertionCount(1);
+		self::assertTrue(true, 'reached without raising, which is what this asserts');
 	}
 
 	public function testRouteBoundSessionIsRejectedOnAnotherRoute(): void
@@ -142,16 +143,19 @@ final class FormSessionTest extends TestCase
  */
 final class StandaloneSessionTestProvider extends AbstractResumableFormProvider
 {
+	#[Override]
 	public static function getName(): string
 	{
 		return 'test:standalone-session';
 	}
 
+	#[Override]
 	public static function requiresRealContext(): bool
 	{
 		return false;
 	}
 
+	#[Override]
 	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		return null;
@@ -165,11 +169,13 @@ final class StandaloneSessionTestProvider extends AbstractResumableFormProvider
  */
 final class RouteBoundSessionTestProvider extends AbstractResumableFormProvider
 {
+	#[Override]
 	public static function getName(): string
 	{
 		return 'test:route-bound-session';
 	}
 
+	#[Override]
 	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		return null;

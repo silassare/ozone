@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Http;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -41,6 +42,7 @@ final class FirstClassLoadedTest extends TestCase
 	/** @var array<string, OZTestProject> */
 	private static array $projects = [];
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		foreach (self::$projects as $proj) {

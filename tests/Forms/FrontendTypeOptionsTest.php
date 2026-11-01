@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Columns\Types\TypeGender;
 use OZONE\Core\Columns\Types\TypePassword;
@@ -34,6 +35,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Field::class)]
 final class FrontendTypeOptionsTest extends TestCase
 {
+	#[Override]
 	protected function tearDown(): void
 	{
 		Settings::unset('oz.users', 'OZ_USER_PASS_MIN_LENGTH');

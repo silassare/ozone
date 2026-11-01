@@ -34,16 +34,16 @@ final class RouteTest extends TestCase
 	{
 		$router = TestUtils::router();
 
-		$foo = $router->getRoute('foo');
+		$foo = TestUtils::route($router, 'foo');
 		self::assertFalse($foo->isDynamic());
 
-		$baz = $router->getRoute('bar.baz');
+		$baz = TestUtils::route($router, 'bar.baz');
 		self::assertFalse($baz->isDynamic());
 
-		$articlesList = $router->getRoute('articles.list');
+		$articlesList = TestUtils::route($router, 'articles.list');
 		self::assertFalse($articlesList->isDynamic());
 
-		$articlesGetById = $router->getRoute('articles.get_by_id');
+		$articlesGetById = TestUtils::route($router, 'articles.get_by_id');
 		self::assertTrue($articlesGetById->isDynamic());
 	}
 
@@ -51,10 +51,10 @@ final class RouteTest extends TestCase
 	{
 		$router = TestUtils::router();
 
-		$route = $router->get('/empty-name', static fn () => null);
+		$route = $router->get('/empty-name', static fn() => null);
 
 		self::expectException(InvalidArgumentException::class);
-		self::expectExceptionMessage('Route name must be non-empty and not whitespace-only string.');
+		self::expectExceptionMessageIsOrContains('Route name must be non-empty and not whitespace-only string.');
 
 		$route->name('');
 	}
@@ -63,10 +63,10 @@ final class RouteTest extends TestCase
 	{
 		$router = TestUtils::router();
 
-		$foo = $router->getRoute('foo');
-		$baz = $router->getRoute('bar.baz');
+		$foo = TestUtils::route($router, 'foo');
+		$baz = TestUtils::route($router, 'bar.baz');
 
-		self::assertSame($foo->key(), $router->getRoute('foo')->key());
+		self::assertSame($foo->key(), TestUtils::route($router, 'foo')->key());
 		self::assertNotSame($foo->key(), $baz->key());
 		self::assertStringStartsWith('foo|', $foo->key());
 		self::assertStringEndsWith('|' . $foo->getPath(), $foo->key());
@@ -76,18 +76,18 @@ final class RouteTest extends TestCase
 	{
 		$router = TestUtils::router();
 
-		$foo = $router->getRoute('foo');
+		$foo = TestUtils::route($router, 'foo');
 		self::assertSame('/foo', $foo->getPath());
 		self::assertSame('/foo', $foo->getPath(false));
 
-		$baz = $router->getRoute('bar.baz');
+		$baz = TestUtils::route($router, 'bar.baz');
 		self::assertSame('/bar/baz', $baz->getPath());
 		self::assertSame('/baz', $baz->getPath(false));
-		$articlesList = $router->getRoute('articles.list');
+		$articlesList = TestUtils::route($router, 'articles.list');
 		self::assertSame('/articles', $articlesList->getPath());
 		self::assertSame('', $articlesList->getPath(false));
 
-		$articlesGetById = $router->getRoute('articles.get_by_id');
+		$articlesGetById = TestUtils::route($router, 'articles.get_by_id');
 		self::assertSame('/articles/:id', $articlesGetById->getPath());
 		self::assertSame(':id', $articlesGetById->getPath(false));
 	}
@@ -97,13 +97,13 @@ final class RouteTest extends TestCase
 		$router = new Router();
 
 		$router->group('/items', static function (Router $r): void {
-			$r->get('/:id', static fn () => null)
+			$r->get('/:id', static fn() => null)
 				->name('get')
 				->fullPathPrefix('/v1');
 		})
 			->name('items');
 
-		$route = $router->getRoute('items.get');
+		$route = TestUtils::route($router, 'items.get');
 
 		// getPath(false) returns only the own path segment — prefix does not affect it.
 		self::assertSame('/:id', $route->getPath(false));
@@ -116,10 +116,10 @@ final class RouteTest extends TestCase
 	{
 		$router = new Router();
 
-		$parent = $router->get('/api/things', static fn () => null)
+		$parent = $router->get('/api/things', static fn() => null)
 			->name('things');
 
-		$child = $router->map(['get'], '/:id', static fn () => null, $parent)
+		$child = $router->map(['get'], '/:id', static fn() => null, $parent)
 			->name('get')
 			->fullPathPrefix('/v2');
 
@@ -137,7 +137,7 @@ final class RouteTest extends TestCase
 		// not /items/42.
 		$router = new Router();
 
-		$router->get('/items/:id', static fn () => null)
+		$router->get('/items/:id', static fn() => null)
 			->name('with.prefix')
 			->fullPathPrefix('/v1');
 
@@ -156,14 +156,14 @@ final class RouteTest extends TestCase
 
 		$router->group('/a', static function (Router $router): void {
 			$router->group('/b', static function (Router $router): void {
-				$router->get('/c', static fn () => null)
+				$router->get('/c', static fn() => null)
 					->name('c')->priority(1);
 			})
 				->name('b')->priority(3);
 		})
 			->name('a')->priority(1);
 
-		$c = $router->getRoute('a.b.c');
+		$c = TestUtils::route($router, 'a.b.c');
 
 		self::assertSame(1, $c->getOptions()->getPriority(false));
 		self::assertSame(5, $c->getOptions()->getPriority(true));
@@ -173,19 +173,19 @@ final class RouteTest extends TestCase
 	{
 		$router = TestUtils::router();
 
-		$foo = $router->getRoute('foo');
+		$foo = TestUtils::route($router, 'foo');
 		self::assertSame('/foo', $foo->getParserResult());
 
-		$baz = $router->getRoute('bar.baz');
+		$baz = TestUtils::route($router, 'bar.baz');
 		self::assertSame('/bar/baz', $baz->getParserResult());
 
-		$articlesList = $router->getRoute('articles.list');
+		$articlesList = TestUtils::route($router, 'articles.list');
 		self::assertSame('/articles', $articlesList->getParserResult());
 
-		$articlesGetById = $router->getRoute('articles.get_by_id');
+		$articlesGetById = TestUtils::route($router, 'articles.get_by_id');
 		self::assertSame('/articles/(?P<id>[^/]+)', $articlesGetById->getParserResult());
 
-		$userArticles = $router->getRoute('users.by_id.articles');
+		$userArticles = TestUtils::route($router, 'users.by_id.articles');
 		self::assertSame('/users/(?P<id>[^/]+)/articles(?:/(?P<state>[^/]+))?', $userArticles->getParserResult());
 	}
 
@@ -194,19 +194,19 @@ final class RouteTest extends TestCase
 		$router  = TestUtils::router();
 		$context = context();
 
-		$foo = $router->getRoute('foo');
+		$foo = TestUtils::route($router, 'foo');
 		self::assertSame('/foo', $foo->buildPath($context));
 
-		$baz = $router->getRoute('bar.baz');
+		$baz = TestUtils::route($router, 'bar.baz');
 		self::assertSame('/bar/baz', $baz->buildPath($context));
 
-		$articlesList = $router->getRoute('articles.list');
+		$articlesList = TestUtils::route($router, 'articles.list');
 		self::assertSame('/articles', $articlesList->buildPath($context));
 
-		$articlesGetById = $router->getRoute('articles.get_by_id');
+		$articlesGetById = TestUtils::route($router, 'articles.get_by_id');
 		self::assertSame('/articles/1', $articlesGetById->buildPath($context, ['id' => 1]));
 
-		$userArticles = $router->getRoute('users.by_id.articles');
+		$userArticles = TestUtils::route($router, 'users.by_id.articles');
 		self::assertSame('/users/1/articles', $userArticles->buildPath($context, ['id' => 1]));
 		self::assertSame('/users/1/articles/published', $userArticles->buildPath($context, [
 			'id'    => 1,
@@ -214,7 +214,7 @@ final class RouteTest extends TestCase
 		]));
 
 		// {brace} param syntax.
-		$userGet = $router->getRoute('users.by_id.get');
+		$userGet = TestUtils::route($router, 'users.by_id.get');
 		self::assertSame('/users/42/', $userGet->buildPath($context, ['id' => 42]));
 	}
 
@@ -224,7 +224,7 @@ final class RouteTest extends TestCase
 		$context = context();
 
 		$this->expectException(InvalidArgumentException::class);
-		$router->getRoute('articles.get_by_id')->buildPath($context);
+		TestUtils::route($router, 'articles.get_by_id')->buildPath($context);
 	}
 
 	public function testAcceptsPortableParamPatterns(): void
@@ -234,10 +234,10 @@ final class RouteTest extends TestCase
 		$patterns = ['[^/]+', '[0-9]+', '[a-z0-9]{32}', '[a-zA-Z0-9_-]+', 'tickets|seats', '[a-z]{1,8}(-[a-z]{1,8})?'];
 
 		foreach ($patterns as $i => $pattern) {
-			$router->get('/p' . $i . '/:value', static fn () => null)->param('value', $pattern);
+			$router->get('/p' . $i . '/:value', static fn() => null)->param('value', $pattern);
 		}
 
-		$router->addGlobalParam('lang', '[a-z]{2}', static fn () => null);
+		$router->addGlobalParam('lang', '[a-z]{2}', static fn() => null);
 
 		self::assertCount(6, $router->getRoutes());
 	}
@@ -248,9 +248,9 @@ final class RouteTest extends TestCase
 		$router = new Router();
 
 		$this->expectException(InvalidArgumentException::class);
-		$this->expectExceptionMessage('Route parameter "value" pattern');
+		$this->expectExceptionMessageIsOrContains('Route parameter "value" pattern');
 
-		$router->get('/p/:value', static fn () => null)->param('value', $pattern);
+		$router->get('/p/:value', static fn() => null)->param('value', $pattern);
 	}
 
 	/**
@@ -276,19 +276,19 @@ final class RouteTest extends TestCase
 		$router = new Router();
 
 		$this->expectException(InvalidArgumentException::class);
-		$this->expectExceptionMessage('Route parameter "lang" pattern');
+		$this->expectExceptionMessageIsOrContains('Route parameter "lang" pattern');
 
-		$router->addGlobalParam('lang', '[a-z', static fn () => null);
+		$router->addGlobalParam('lang', '[a-z', static fn() => null);
 	}
 
 	public function testMatchesAsAPortablePatternIsRun(): void
 	{
 		$router = new Router();
-		$route  = $router->get('/u/:name/:id', static fn () => null)
+		$route  = $router->get('/u/:name/:id', static fn() => null)
 			->param('name', '.{2}')
 			->param('id', '[0-9]+');
 
-		$route = $router->getRoute($route->getName());
+		$route = TestUtils::route($router, $route->getName());
 
 		self::assertNotNull($route);
 		self::assertSame('~^/u/(?P<name>.{2})/(?P<id>[0-9]+)$~uD', $route->getRegExp());

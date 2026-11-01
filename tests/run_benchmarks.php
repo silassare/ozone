@@ -43,6 +43,8 @@ declare(strict_types=1);
  *   4. The runner discovers the file automatically - no registration needed.
  */
 
+use Symfony\Component\Process\Process;
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 require_once __DIR__ . '/autoload.php';
@@ -51,6 +53,28 @@ use OZONE\Tests\Benchmark;
 
 const BASELINE_FILE = __DIR__ . '/benchmark-baseline.json';
 const THRESHOLD_PCT = 20.0;
+
+/**
+ * What a command printed, or null when it could not be run.
+ *
+ * Read for the fingerprint below only, and run through `Process` rather than `shell_exec()`: the
+ * arguments reach the program as they are written, with no shell to parse them.
+ *
+ * @param list<string> $command
+ */
+function benchCommandOutput(array $command): ?string
+{
+	$process = new Process($command);
+	$process->run();
+
+	if (!$process->isSuccessful()) {
+		return null;
+	}
+
+	$out = \trim($process->getOutput());
+
+	return '' === $out ? null : $out;
+}
 
 /**
  * Returns a best-effort snapshot of the current hardware and runtime
@@ -79,31 +103,31 @@ function buildMachineFingerprint(): array
 			$cpuModel = \trim($m[1]);
 		}
 
-		$nproc = @\shell_exec('nproc 2>/dev/null');
+		$nproc = benchCommandOutput(['nproc']);
 
 		if ($nproc) {
 			$cpuCount = (int) \trim($nproc);
 		}
 	} elseif (\PHP_OS_FAMILY === 'Darwin') {
-		$brand = @\shell_exec('sysctl -n machdep.cpu.brand_string 2>/dev/null');
+		$brand = benchCommandOutput(['sysctl', '-n', 'machdep.cpu.brand_string']);
 
 		if ($brand) {
 			$cpuModel = \trim($brand);
 		}
 
-		$ncpu = @\shell_exec('sysctl -n hw.ncpu 2>/dev/null');
+		$ncpu = benchCommandOutput(['sysctl', '-n', 'hw.ncpu']);
 
 		if ($ncpu) {
 			$cpuCount = (int) \trim($ncpu);
 		}
 	} elseif (\PHP_OS_FAMILY === 'Windows') {
-		$cpu = @\shell_exec('wmic cpu get name /value 2>NUL');
+		$cpu = benchCommandOutput(['wmic', 'cpu', 'get', 'name', '/value']);
 
 		if ($cpu && \preg_match('/Name=(.+)/i', $cpu, $m)) {
 			$cpuModel = \trim($m[1]);
 		}
 
-		$cores = @\shell_exec('wmic cpu get NumberOfCores /value 2>NUL');
+		$cores = benchCommandOutput(['wmic', 'cpu', 'get', 'NumberOfCores', '/value']);
 
 		if ($cores && \preg_match('/NumberOfCores=(\d+)/i', $cores, $m)) {
 			$cpuCount = (int) $m[1];

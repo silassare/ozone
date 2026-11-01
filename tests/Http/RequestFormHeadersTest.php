@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Http;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Http\HTTPEnvironment;
@@ -35,6 +36,7 @@ final class RequestFormHeadersTest extends TestCase
 
 	private static string $resumeHeaderName;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		self::$discoveryHeaderName = Settings::get('oz.request', 'OZ_FORM_DISCOVERY_HEADER_NAME');

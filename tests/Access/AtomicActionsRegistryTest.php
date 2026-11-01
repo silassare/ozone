@@ -41,7 +41,7 @@ final class AtomicActionsRegistryTest extends TestCase
 		AtomicActionsRegistry::register(self::action('registry_test_other.read', 'read'));
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage("Action 'registry_test_other.read' already registered with another definition.");
+		$this->expectExceptionMessageIsOrContains("Action 'registry_test_other.read' already registered with another definition.");
 
 		AtomicActionsRegistry::register(self::action('registry_test_other.read', 'write'));
 	}

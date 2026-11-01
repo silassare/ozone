@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Integration\Cli;
 
 use LogicException;
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
@@ -30,6 +31,7 @@ final class LangCmdTest extends TestCase
 {
 	private static ?OZTestProject $proj = null;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -50,6 +52,7 @@ final class LangCmdTest extends TestCase
 		self::$proj = $proj;
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		self::$proj?->destroy();

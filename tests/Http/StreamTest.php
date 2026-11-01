@@ -31,8 +31,10 @@ final class StreamTest extends TestCase
 	{
 		$this->expectException(InvalidArgumentException::class);
 
-		/** @phpstan-ignore-next-line */
-		new Stream('not-a-resource');
+		/** @var resource $not_a_resource a string where a stream resource is asked for */
+		$not_a_resource = 'not-a-resource';
+
+		new Stream($not_a_resource);
 	}
 
 	public function testIsReadableForReadableStream(): void

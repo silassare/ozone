@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Router;
 
+use Override;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\Forms\Resume\Interfaces\ResumableFormProviderInterface;
 use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Forms\Resume\AbstractResumableFormProvider;
 use OZONE\Core\Forms\Resume\FormResumeProgress;
@@ -35,6 +37,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(RouteFormDeclaration::class)]
 final class RouteFormDeclarationTest extends TestCase
 {
+	// A form factory's **arity** is what makes a declaration dynamic: one argument means the form is
+	// built per request, none means it is the same every time. So the closures below declare an
+	// argument and never use it, named `$_` to say so -- dropping it would change the very thing the
+	// test asserts.
+
 	public function testMakeWithStaticFactoryDoesNotEagerlyRegister(): void
 	{
 		// Zero-arg factory — make() does NOT call the factory at declaration time.
@@ -105,14 +112,14 @@ final class RouteFormDeclarationTest extends TestCase
 
 	public function testMakeWithOneArgCallableIsDynamic(): void
 	{
-		$decl = RouteFormDeclaration::make(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::make(static fn ($_) => new Form());
 
 		self::assertTrue($decl->isDynamic());
 	}
 
 	public function testMakeWithOneArgCallableGetPolicyIsDynamic(): void
 	{
-		$decl = RouteFormDeclaration::make(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::make(static fn ($_) => new Form());
 
 		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 	}
@@ -171,14 +178,14 @@ final class RouteFormDeclarationTest extends TestCase
 
 	public function testDynamicWithoutPreviewIsDynamic(): void
 	{
-		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($_) => new Form());
 
 		self::assertTrue($decl->isDynamic());
 	}
 
 	public function testDynamicWithoutPreviewGetDocFormReturnsNull(): void
 	{
-		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($_) => new Form());
 
 		self::assertNull($decl->getDocForm());
 	}
@@ -186,7 +193,7 @@ final class RouteFormDeclarationTest extends TestCase
 	public function testDynamicWithoutPreviewGetPolicyIsDynamic(): void
 	{
 		// dynamic() always sets DYNAMIC policy — no promotion logic needed.
-		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($_) => new Form());
 
 		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 	}
@@ -195,7 +202,7 @@ final class RouteFormDeclarationTest extends TestCase
 	{
 		// DYNAMIC policy -> getDocForm() always returns null (no requestBody embedding).
 		$decl = RouteFormDeclaration::dynamic(
-			static fn ($ri) => new Form(),
+			static fn ($_) => new Form(),
 			static fn () => new Form()
 		);
 
@@ -204,7 +211,7 @@ final class RouteFormDeclarationTest extends TestCase
 
 	public function testGetDocPreviewFormReturnsNullWhenNoPreview(): void
 	{
-		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($_) => new Form());
 
 		self::assertNull($decl->getDocPreviewForm());
 	}
@@ -214,7 +221,7 @@ final class RouteFormDeclarationTest extends TestCase
 		$preview = new Form();
 		$calls   = 0;
 		$decl    = RouteFormDeclaration::dynamic(
-			static fn ($ri) => new Form(),
+			static fn ($_) => new Form(),
 			static function () use ($preview, &$calls): Form {
 				++$calls;
 
@@ -231,7 +238,7 @@ final class RouteFormDeclarationTest extends TestCase
 	public function testDynamicWithPreviewGetPolicyIsDynamic(): void
 	{
 		$decl = RouteFormDeclaration::dynamic(
-			static fn ($ri) => new Form(),
+			static fn ($_) => new Form(),
 			static fn () => new Form()
 		);
 
@@ -257,7 +264,7 @@ final class RouteFormDeclarationTest extends TestCase
 
 	public function testDynamicWithFormHidesDocForm(): void
 	{
-		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($_) => new Form());
 
 		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 		self::assertNull($decl->getDocForm());
@@ -280,7 +287,7 @@ final class RouteFormDeclarationTest extends TestCase
 	public function testGetPolicyDynamicForDynamicWithPreview(): void
 	{
 		$decl = RouteFormDeclaration::dynamic(
-			static fn ($ri) => new Form(),
+			static fn ($_) => new Form(),
 			static fn () => new Form()
 		);
 
@@ -289,7 +296,7 @@ final class RouteFormDeclarationTest extends TestCase
 
 	public function testGetPolicyDynamicForDynamicWithoutPreview(): void
 	{
-		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($_) => new Form());
 
 		self::assertSame(RouteFormDocPolicy::DYNAMIC, $decl->getPolicy());
 	}
@@ -312,7 +319,7 @@ final class RouteFormDeclarationTest extends TestCase
 
 	public function testGetDocFormNullForDynamicFactoryWithNoPreview(): void
 	{
-		$decl = RouteFormDeclaration::dynamic(static fn ($ri) => new Form());
+		$decl = RouteFormDeclaration::dynamic(static fn ($_) => new Form());
 
 		self::assertNull($decl->getDocForm());
 	}
@@ -329,12 +336,12 @@ final class RouteFormDeclarationTest extends TestCase
 
 	public function testIsDynamicTrueForDynamicFactory(): void
 	{
-		self::assertTrue(RouteFormDeclaration::dynamic(static fn ($ri) => new Form())->isDynamic());
+		self::assertTrue(RouteFormDeclaration::dynamic(static fn ($_) => new Form())->isDynamic());
 	}
 
 	public function testIsDynamicTrueForOneArgMakeCallable(): void
 	{
-		self::assertTrue(RouteFormDeclaration::make(static fn ($ri) => new Form())->isDynamic());
+		self::assertTrue(RouteFormDeclaration::make(static fn ($_) => new Form())->isDynamic());
 	}
 
 	// -----------------------------------------------------------------------
@@ -380,7 +387,10 @@ final class RouteFormDeclarationTest extends TestCase
 	{
 		$this->expectException(RuntimeException::class);
 
-		RouteFormDeclaration::provider(Form::class);
+		/** @var class-string<ResumableFormProviderInterface> $not_one a real class that is not a provider */
+		$not_one = Form::class;
+
+		RouteFormDeclaration::provider($not_one);
 	}
 }
 
@@ -391,11 +401,13 @@ final class RouteFormDeclarationTest extends TestCase
  */
 final class StubFormProvider extends AbstractResumableFormProvider
 {
+	#[Override]
 	public static function getName(): string
 	{
 		return 'test:stub';
 	}
 
+	#[Override]
 	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		return null;

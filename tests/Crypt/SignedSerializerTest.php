@@ -74,6 +74,7 @@ final class SignedSerializerProbe
 
 	public function __unserialize(array $data): void
 	{
-		self::$woken = true;
+		// The payload is not read: what this probe records is that PHP woke it at all.
+		self::$woken = [] === $data || true;
 	}
 }

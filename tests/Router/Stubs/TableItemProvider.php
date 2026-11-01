@@ -43,7 +43,7 @@ final class TableItemProvider implements RouteProviderInterface
 			->name('item.by_slug');
 		$router->get('/refined', $handler)
 			->name('refined')
-			->pushRefiner(static function (Router $router, Route $route) use ($handler): void {
+			->pushRefiner(static function (Router $router) use ($handler): void {
 				$router->post('/refined/sibling', $handler)
 					->name('refined.sibling');
 			});

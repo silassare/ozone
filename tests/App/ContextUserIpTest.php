@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\App;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Http\ClientInfo;
@@ -40,11 +41,13 @@ final class ContextUserIpTest extends TestCase
 		'HTTP_CF_CONNECTING_IP' => '203.0.113.5',
 	];
 
+	#[Override]
 	protected function setUp(): void
 	{
 		Settings::set('oz.proxies', self::PROXY_RANGE, true);
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		Settings::unset('oz.proxies', self::PROXY_RANGE);

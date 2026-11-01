@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Auth;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Methods\ApiKeyHeaderAuth;
@@ -45,6 +46,7 @@ final class AuthMethodsSatisfiedTest extends TestCase
 	private static Router $router;
 	private static Route $route;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		self::$router = new Router();

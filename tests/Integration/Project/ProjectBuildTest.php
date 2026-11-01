@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Project;
 
+use Override;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -27,8 +28,9 @@ use PHPUnit\Framework\TestCase;
 #[CoversNothing]
 final class ProjectBuildTest extends TestCase
 {
-	private static OZTestProject $proj;
+	private static ?OZTestProject $proj = null;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -48,18 +50,17 @@ final class ProjectBuildTest extends TestCase
 		self::$proj = $proj;
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
-		if (isset(self::$proj)) {
-			self::$proj->destroy();
-		}
+		self::$proj?->destroy();
 
 		parent::tearDownAfterClass();
 	}
 
 	public function testBuildsWhatRequestsWouldCompile(): void
 	{
-		$proc = self::$proj->oz('project', 'build', '--clear', '--no-preload');
+		$proc = self::proj()->oz('project', 'build', '--clear', '--no-preload');
 		$proc->mustRun();
 
 		$out = $proc->getOutput();
@@ -69,15 +70,15 @@ final class ProjectBuildTest extends TestCase
 		self::assertNotEmpty(self::buildFiles('settings/*.php'));
 		self::assertCount(1, self::buildFiles('classmap.*.php'));
 		self::assertCount(1, self::buildFiles('routes/api/api.*.php'));
-		self::assertFileDoesNotExist(self::$proj->getPath() . '/.ozone/preload.php');
+		self::assertFileDoesNotExist(self::proj()->getPath() . '/.ozone/preload.php');
 	}
 
 	public function testClassicModeWritesThePreloadScript(): void
 	{
-		self::$proj->oz('project', 'build')->mustRun();
+		self::proj()->oz('project', 'build')->mustRun();
 
 		// what opcache.preload points to, which preloads the list of the live release
-		self::assertFileExists(self::$proj->getPath() . '/.ozone/preload.php');
+		self::assertFileExists(self::proj()->getPath() . '/.ozone/preload.php');
 
 		$lists = self::buildFiles('preload.php');
 
@@ -98,11 +99,11 @@ final class ProjectBuildTest extends TestCase
 
 	public function testARequestUsesTheBuiltRouteTable(): void
 	{
-		self::$proj->oz('project', 'build', '--skip-orm', '--no-preload')->mustRun();
+		self::proj()->oz('project', 'build', '--skip-orm', '--no-preload')->mustRun();
 
 		$tables = self::buildFiles('routes/api/api.*.php');
 
-		[$server, $host, $port] = self::$proj->startServer('api');
+		[$server, $host, $port] = self::proj()->startServer('api');
 
 		try {
 			$body = \file_get_contents("http://{$host}:{$port}/test-ping", false, \stream_context_create(['http' => [
@@ -122,22 +123,22 @@ final class ProjectBuildTest extends TestCase
 
 	public function testDoctorFindsTheBuildUpToDate(): void
 	{
-		self::$proj->oz('project', 'build', '--skip-orm')->mustRun();
+		self::proj()->oz('project', 'build', '--skip-orm')->mustRun();
 
 		self::assertSame(['Production build' => 'ok', 'Preload' => 'ok'], self::buildChecks());
 	}
 
 	public function testDoctorWarnsOfAStaleBuild(): void
 	{
-		$ns    = self::$proj->getNamespace();
-		$probe = self::$proj->getPath() . '/app/StaleBuildProbe.php';
+		$ns    = self::proj()->getNamespace();
+		$probe = self::proj()->getPath() . '/app/StaleBuildProbe.php';
 
 		// A class the class map does not have, and a preloaded file changed since the build.
-		self::$proj->writeFile(
+		self::proj()->writeFile(
 			'app/StaleBuildProbe.php',
 			"<?php\n\ndeclare(strict_types=1);\n\nnamespace {$ns};\n\nfinal class StaleBuildProbe {}\n"
 		);
-		\touch(self::$proj->getPath() . '/app/TestRoutesProvider.php', \time() + 10);
+		\touch(self::proj()->getPath() . '/app/TestRoutesProvider.php', \time() + 10);
 
 		try {
 			self::assertSame(['Production build' => 'warn', 'Preload' => 'warn'], self::buildChecks());
@@ -148,12 +149,12 @@ final class ProjectBuildTest extends TestCase
 
 	public function testWhatAScopeBuildPrintsBesidesItsReportIsReported(): void
 	{
-		$boot     = self::$proj->getPath() . '/app/boot.php';
+		$boot     = self::proj()->getPath() . '/app/boot.php';
 		$original = (string) \file_get_contents($boot);
 
 		// Each scope is built in a process of its own and its output used to be read for the report
 		// and dropped. PHP puts a warning it raises while no handler is installed on one of these two.
-		self::$proj->writeFile(
+		self::proj()->writeFile(
 			'app/boot.php',
 			$original . \PHP_EOL
 				. "\\fwrite(\\STDOUT, 'OZ-NOISE-OUT' . \\PHP_EOL);" . \PHP_EOL
@@ -161,7 +162,7 @@ final class ProjectBuildTest extends TestCase
 		);
 
 		try {
-			$proc = self::$proj->oz('project', 'build', '--skip-orm', '--no-preload');
+			$proc = self::proj()->oz('project', 'build', '--skip-orm', '--no-preload');
 			$proc->mustRun();
 
 			$out = $proc->getOutput() . $proc->getErrorOutput();
@@ -172,8 +173,23 @@ final class ProjectBuildTest extends TestCase
 			// Still a successful build: what the process said is reported, not turned into a failure.
 			self::assertStringContainsString('settings bundles', $out, $out);
 		} finally {
-			self::$proj->writeFile('app/boot.php', $original);
+			self::proj()->writeFile('app/boot.php', $original);
 		}
+	}
+
+	/**
+	 * The project this class runs against, which its own setup created.
+	 *
+	 * Empty until that setup has run, and a test reaching it before then says so here
+	 * rather than as a call on null several frames away.
+	 */
+	private static function proj(): OZTestProject
+	{
+		$project = self::$proj;
+
+		self::assertNotNull($project, 'The test project was not created.');
+
+		return $project;
 	}
 
 	/**
@@ -183,7 +199,7 @@ final class ProjectBuildTest extends TestCase
 	 */
 	private static function buildChecks(): array
 	{
-		$proc = self::$proj->oz('doctor', 'check', '--json');
+		$proc = self::proj()->oz('doctor', 'check', '--json');
 		$proc->run();
 
 		$out = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR);
@@ -203,7 +219,7 @@ final class ProjectBuildTest extends TestCase
 	 */
 	private static function buildFiles(string $pattern): array
 	{
-		$dir = InstanceLayout::releaseBuildPath(self::$proj->getPath());
+		$dir = InstanceLayout::releaseBuildPath(self::proj()->getPath());
 
 		return \glob($dir . \DIRECTORY_SEPARATOR . $pattern) ?: [];
 	}

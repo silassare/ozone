@@ -42,16 +42,20 @@ final class RESTFulRelationsTest extends TestCase
 	public function testRelationsParameterRejectsInvalidNames(): void
 	{
 		$this->expectException(ORMQueryException::class);
-		$this->expectExceptionMessage('GOBL_ORM_REQUEST_INVALID_RELATIONS');
+		$this->expectExceptionMessageIsOrContains('GOBL_ORM_REQUEST_INVALID_RELATIONS');
 
 		new RESTFulAPIRequest(context(), ['relations' => 'files|bad name!']);
 	}
 
 	public function testPublicRelationsCanBeRequested(): void
 	{
-		RESTFulRelationsHelper::assertNotPrivateRelation(db()->getTableOrFail('oz_users')->getRelation('files'));
+		$relation = db()->getTableOrFail('oz_users')->getRelation('files');
 
-		$this->addToAssertionCount(1);
+		self::assertInstanceOf(RelationInterface::class, $relation, 'oz_users has no "files" relation');
+
+		RESTFulRelationsHelper::assertNotPrivateRelation($relation);
+
+		self::assertTrue(true, 'reached without raising, which is what this asserts');
 	}
 
 	public function testPrivateRelationsAreForbidden(): void

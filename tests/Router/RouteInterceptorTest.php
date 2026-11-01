@@ -57,7 +57,7 @@ final class RouteInterceptorTest extends TestCase
 	public function testInstanceReturnsNewInstanceBoundToRouteInfo(): void
 	{
 		$router = TestUtils::router();
-		$route  = $router->getRoute('foo');
+		$route  = TestUtils::route($router, 'foo');
 		$ri     = new RouteInfo(context(), $route, []);
 
 		$interceptor = FormDiscoveryRouteInterceptor::instance($ri);
@@ -72,7 +72,7 @@ final class RouteInterceptorTest extends TestCase
 	public function testShouldInterceptReturnsFalseForRegularRequest(): void
 	{
 		$router = TestUtils::router();
-		$route  = $router->getRoute('foo');
+		$route  = TestUtils::route($router, 'foo');
 		$ri     = new RouteInfo(context(), $route, []);
 
 		$interceptor = FormDiscoveryRouteInterceptor::instance($ri);
@@ -82,7 +82,7 @@ final class RouteInterceptorTest extends TestCase
 	public function testShouldInterceptReturnsTrueForDiscoveryRequest(): void
 	{
 		$router  = TestUtils::router();
-		$route   = $router->getRoute('foo');
+		$route   = TestUtils::route($router, 'foo');
 		$context = $this->makeDiscoveryContext();
 		$ri      = new RouteInfo($context, $route, []);
 
@@ -97,7 +97,7 @@ final class RouteInterceptorTest extends TestCase
 	public function testRouteInfoIsNotInterceptedOnRegularRequest(): void
 	{
 		$router = TestUtils::router();
-		$route  = $router->getRoute('foo');
+		$route  = TestUtils::route($router, 'foo');
 		$ri     = new RouteInfo(context(), $route, []);
 
 		self::assertFalse($ri->isIntercepted());
@@ -107,7 +107,7 @@ final class RouteInterceptorTest extends TestCase
 	public function testRouteInfoIsInterceptedOnDiscoveryRequest(): void
 	{
 		$router  = TestUtils::router();
-		$route   = $router->getRoute('foo');
+		$route   = TestUtils::route($router, 'foo');
 		$context = $this->makeDiscoveryContext();
 		$ri      = new RouteInfo($context, $route, []);
 
@@ -122,7 +122,7 @@ final class RouteInterceptorTest extends TestCase
 	public function testGetCleanFormDataReturnsEmptyFormDataWhenIntercepted(): void
 	{
 		$router  = TestUtils::router();
-		$route   = $router->getRoute('foo');
+		$route   = TestUtils::route($router, 'foo');
 		$context = $this->makeDiscoveryContext();
 		$ri      = new RouteInfo($context, $route, []);
 
@@ -136,7 +136,7 @@ final class RouteInterceptorTest extends TestCase
 		$this->expectException(RuntimeException::class);
 
 		$router = TestUtils::router();
-		$route  = $router->getRoute('foo');
+		$route  = TestUtils::route($router, 'foo');
 		$ri     = new RouteInfo(context(), $route, []);
 
 		$ri->getCleanFormData();
@@ -149,7 +149,7 @@ final class RouteInterceptorTest extends TestCase
 	public function testGetEffectiveHandlerReturnsOriginalHandlerWhenNotIntercepted(): void
 	{
 		$router = TestUtils::router();
-		$route  = $router->getRoute('foo');
+		$route  = TestUtils::route($router, 'foo');
 		$ri     = new RouteInfo(context(), $route, []);
 
 		self::assertSame($route->getHandler(), $ri->getEffectiveHandler());
@@ -158,7 +158,7 @@ final class RouteInterceptorTest extends TestCase
 	public function testGetEffectiveHandlerReturnsInterceptorHandlerWhenIntercepted(): void
 	{
 		$router  = TestUtils::router();
-		$route   = $router->getRoute('foo');
+		$route   = TestUtils::route($router, 'foo');
 		$context = $this->makeDiscoveryContext();
 		$ri      = new RouteInfo($context, $route, []);
 
@@ -182,7 +182,7 @@ final class RouteInterceptorTest extends TestCase
 			->interceptor(StubHighPriorityInterceptor::class)
 			->interceptor(StubLowPriorityInterceptor::class);
 
-		$route   = $router->getRoute('priority.test');
+		$route   = TestUtils::route($router, 'priority.test');
 		$context = $this->makeDiscoveryContext();
 		$ri      = new RouteInfo($context, $route, []);
 
@@ -229,7 +229,9 @@ final class StubHighPriorityInterceptor implements RouteInterceptorInterface
 	#[Override]
 	public function shouldIntercept(): bool
 	{
-		return true;
+		// Answered from what it was built with, as an interceptor decides: a stub that ignored its
+		// RouteInfo would not be one.
+		return $this->ri instanceof RouteInfo;
 	}
 
 	#[Override]
@@ -267,7 +269,9 @@ final class StubLowPriorityInterceptor implements RouteInterceptorInterface
 	#[Override]
 	public function shouldIntercept(): bool
 	{
-		return true;
+		// Answered from what it was built with, as an interceptor decides: a stub that ignored its
+		// RouteInfo would not be one.
+		return $this->ri instanceof RouteInfo;
 	}
 
 	#[Override]

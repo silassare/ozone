@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Benchmarks;
 
+use Override;
 use OZONE\Core\Utils\Random;
 
 /**
@@ -26,6 +27,7 @@ use OZONE\Core\Utils\Random;
  */
 class RandomBenchmark implements BenchmarkSuiteInterface
 {
+	#[Override]
 	public static function callables(): array
 	{
 		return [

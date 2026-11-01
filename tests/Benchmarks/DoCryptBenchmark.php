@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Benchmarks;
 
+use Override;
 use OZONE\Core\Crypt\DoCrypt;
 
 /**
@@ -25,6 +26,7 @@ use OZONE\Core\Crypt\DoCrypt;
  */
 class DoCryptBenchmark implements BenchmarkSuiteInterface
 {
+	#[Override]
 	public static function callables(): array
 	{
 		$crypt  = new DoCrypt('aes-256-cbc');

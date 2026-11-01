@@ -15,10 +15,15 @@ namespace OZONE\Tests\Cli\Server;
 
 use InvalidArgumentException;
 use OZONE\Core\Cli\Server\Enums\PackageManager;
+use OZONE\Core\Cli\Server\Interfaces\HostInterface;
+use OZONE\Core\Cli\Server\LocalHost;
 use OZONE\Core\Cli\Server\Provisioner;
+use OZONE\Core\Cli\Server\ProvisionManifest;
 use OZONE\Core\Cli\Server\ProvisionPlan;
 use OZONE\Core\Cli\Server\ProvisionStep;
 use OZONE\Core\Cli\Utils\Requirements;
+use OZONE\Core\Exceptions\RuntimeException;
+use OZONE\Core\Testing\Sandbox;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -202,7 +207,12 @@ final class ProvisionerTest extends TestCase
 		$names = self::stepNames(new Provisioner(PackageManager::APT)->plan());
 
 		// Before PHP is installed, since it is where the packages come from.
-		self::assertSame('php:repository', $names[\array_search('php', $names, true) - 1]);
+		$php = \array_search('php', $names, true);
+
+		self::assertIsInt($php);
+
+		// The step before it, read as a slice: the repository is what PHP is installed from.
+		self::assertSame(['php:repository', 'php'], \array_slice($names, $php - 1, 2));
 		self::assertNotContains('php:repository', self::stepNames(new Provisioner(PackageManager::APK)->plan()));
 
 		$command = self::stepCommands(new Provisioner(PackageManager::APT)->plan(), 'php:repository')[0];
@@ -445,6 +455,38 @@ final class ProvisionerTest extends TestCase
 				);
 			}
 		}
+	}
+
+	public function testAStepRunsUnderItsOwnBoundAndFailsAsThatStepWhenItRunsOut(): void
+	{
+		$dir      = \sys_get_temp_dir() . '/oz_plan_timeout_' . \bin2hex(\random_bytes(4));
+		$manifest = ProvisionManifest::load($dir . '/provision.json');
+		$plan     = new ProvisionPlan();
+
+		$plan->add(new ProvisionStep('quick', 'Well within its own bound.', ['echo quick'], timeout: 30.0));
+		$plan->add(new ProvisionStep('stuck', 'Longer than it is given.', ['echo begun; sleep 5'], timeout: 0.3));
+		$plan->add(new ProvisionStep('after', 'Never reached.', ['echo after']));
+
+		try {
+			$plan->run(new LocalHost(), $manifest);
+
+			self::fail('A step that outlives its bound must stop the run.');
+		} catch (RuntimeException $e) {
+			$data = $e->getData(true);
+
+			// The step, not the process: which one was cut is the whole question for an operator.
+			self::assertStringContainsString('"stuck"', $e->getMessage());
+			self::assertStringContainsString('time ran out', $e->getMessage());
+			self::assertSame('stuck', $data['_step']);
+			self::assertSame(HostInterface::TIMED_OUT, $data['_code']);
+			self::assertSame(0.3, $data['_timeout']);
+			self::assertStringContainsString('begun', $data['_output']);
+		} finally {
+			Sandbox::remove($dir);
+		}
+
+		// The step before it ran under a bound of its own and is recorded; the one after never ran.
+		self::assertSame(['quick'], $manifest->steps());
 	}
 
 	/**

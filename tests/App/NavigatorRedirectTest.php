@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\App;
 
 use InvalidArgumentException;
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Navigator;
 use OZONE\Core\App\Settings;
@@ -37,6 +38,7 @@ final class NavigatorRedirectTest extends TestCase
 {
 	private const string SETTING = 'OZ_REDIRECT_ALLOWED_HOSTS';
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		Settings::set('oz.request', self::SETTING, []);
@@ -52,7 +54,7 @@ final class NavigatorRedirectTest extends TestCase
 		$context = self::context();
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('OZ_REDIRECT_HOST_NOT_ALLOWED');
+		$this->expectExceptionMessageIsOrContains('OZ_REDIRECT_HOST_NOT_ALLOWED');
 
 		$context->redirect($to);
 	}

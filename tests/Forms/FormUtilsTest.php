@@ -32,7 +32,7 @@ final class FormUtilsTest extends TestCase
 	{
 		// Should not throw
 		FormUtils::assertValidFieldName($name);
-		$this->addToAssertionCount(1);
+		self::assertTrue(true, 'reached without raising, which is what this asserts');
 	}
 
 	public static function provideAssertValidFieldNamePassesForValidNamesCases(): iterable

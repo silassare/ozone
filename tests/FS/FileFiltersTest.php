@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\FS;
 
 use Intervention\Image\Interfaces\ImageInterface;
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Db\OZFile;
 use OZONE\Core\FS\Enums\FileKind;
@@ -43,6 +44,7 @@ final class FileFiltersTest extends TestCase
 	 * Reset static state in FileFilters between tests so registered spy
 	 * handlers from one test do not bleed into the next.
 	 */
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -51,6 +53,7 @@ final class FileFiltersTest extends TestCase
 		self::clearRenditions();
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		$rc = new ReflectionClass(FileFilters::class);
@@ -396,11 +399,13 @@ final class FileFiltersTest extends TestCase
 	public function testAProjectsOwnTokenIsKeptInItsCanonicalForm(): void
 	{
 		ImageTokens::register(new class implements ImageTokenInterface {
+			#[Override]
 			public function canonical(string $token): ?string
 			{
 				return \preg_match('~^tint(\d+)$~', $token, $m) ? 'tint' . (10 * \intdiv((int) $m[1], 10)) : null;
 			}
 
+			#[Override]
 			public function apply(ImageInterface $image, string $token): void {}
 		});
 
@@ -478,11 +483,13 @@ final class FileFiltersTest extends TestCase
 		$spy     = new class implements FileFilterHandlerInterface {
 			public bool $called = false;
 
+			#[Override]
 			public function canHandle(OZFile $file, array $filterTokens): bool
 			{
 				return true; // matches anything
 			}
 
+			#[Override]
 			public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response
 			{
 				$this->called = true;
@@ -506,11 +513,13 @@ final class FileFiltersTest extends TestCase
 	{
 		// Register a handler that never matches.
 		$null    = new class implements FileFilterHandlerInterface {
+			#[Override]
 			public function canHandle(OZFile $file, array $filterTokens): bool
 			{
 				return false;
 			}
 
+			#[Override]
 			public function handle(OZFile $file, FileStream $stream, Response $response, array $filterTokens): Response
 			{
 				return $response; // should never be called

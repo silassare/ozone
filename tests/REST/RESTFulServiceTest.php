@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\REST;
 
+use OZONE\Tests\TestUtils;
 use Override;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Response;
@@ -60,7 +61,7 @@ final class RESTFulServiceTest extends TestCase
 	public function testRoutesFollowTheActionTable(): void
 	{
 		foreach (RESTFulAction::cases() as $action) {
-			$route = self::route(StubUsersRESTService::routeName($action));
+			$route = self::routeOrNull(StubUsersRESTService::routeName($action));
 
 			if (!StubUsersRESTService::isActionEnabled($action)) {
 				self::assertNull($route, $action->value);
@@ -106,7 +107,7 @@ final class RESTFulServiceTest extends TestCase
 	public function testAServiceMissingItsNamePathOrTableRefusesToRegister(string $service, string $message): void
 	{
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage($message);
+		$this->expectExceptionMessageIsOrContains($message);
 
 		$service::registerRoutes(new Router());
 	}
@@ -138,8 +139,8 @@ final class RESTFulServiceTest extends TestCase
 		self::assertFalse(StubUsersRESTService::isActionEnabled('get_relation'));
 		self::assertTrue(StubUsersRESTService::isActionEnabled(RESTFulAction::GET_ONE));
 
-		self::assertNull(self::route(StubUsersRESTService::routeName(RESTFulAction::DELETE_ONE)));
-		self::assertNull(self::route(StubUsersRESTService::routeName(RESTFulAction::GET_RELATION)));
+		self::assertNull(self::routeOrNull(StubUsersRESTService::routeName(RESTFulAction::DELETE_ONE)));
+		self::assertNull(self::routeOrNull(StubUsersRESTService::routeName(RESTFulAction::GET_RELATION)));
 
 		// Another service keeps its own actions.
 		self::assertTrue(StubFilesRESTService::isActionEnabled(RESTFulAction::DELETE_ONE));
@@ -163,7 +164,7 @@ final class RESTFulServiceTest extends TestCase
 		self::assertArrayNotHasKey('delete', $entry);
 		self::assertSame([], \array_values(\array_filter(
 			\array_keys($paths),
-			static fn (string $path) => \str_starts_with($path, '/stub-rest-users/:id/')
+			static fn(string $path) => \str_starts_with($path, '/stub-rest-users/:id/')
 		)));
 	}
 
@@ -212,7 +213,7 @@ final class RESTFulServiceTest extends TestCase
 
 	public function testConfigureRouteOnlyConfiguresThatActionRoute(): void
 	{
-		$types = static fn (RESTFulAction $action) => \array_column(
+		$types = static fn(RESTFulAction $action) => \array_column(
 			self::route(StubFilesRESTService::routeName($action))->getOptions()->getGuardDescriptors(),
 			'type'
 		);
@@ -232,7 +233,13 @@ final class RESTFulServiceTest extends TestCase
 		$response = ($route->getHandler())($ri);
 
 		self::assertInstanceOf(Response::class, $response);
-		self::assertSame(['before:get_all', 'action:get_all', 'after:get_all'], StubUsersRESTService::$calls);
+
+		// Read back after the handler ran, which is what filled it: the hooks append to it from
+		// inside the route, where the emptying above cannot be the last word on its contents.
+		/** @var list<string> $calls the hooks appended to it from inside the route */
+		$calls = StubUsersRESTService::$calls;
+
+		self::assertSame(['before:get_all', 'action:get_all', 'after:get_all'], $calls);
 	}
 
 	public function testTheKeyOfAnEntryIsFilteredByItsFullColumnName(): void
@@ -246,10 +253,25 @@ final class RESTFulServiceTest extends TestCase
 
 		($route->getHandler())($ri);
 
-		self::assertSame([['user_id', 'eq', '42']], StubUsersRESTService::$filters);
+		/** @var list<list<string>> $filters the service appended to it from inside the route */
+		$filters = StubUsersRESTService::$filters;
+
+		self::assertSame([['user_id', 'eq', '42']], $filters);
 	}
 
-	private static function route(string $name): ?Route
+	/**
+	 * The route of that name, which the service must have declared.
+	 */
+	private static function route(string $name): Route
+	{
+		return TestUtils::route(context()->getRouter(), $name);
+	}
+
+	/**
+	 * The route of that name, or null: a disabled action declares none, which is what some of these
+	 * tests are about.
+	 */
+	private static function routeOrNull(string $name): ?Route
 	{
 		return context()->getRouter()->getRoute($name);
 	}
@@ -270,13 +292,16 @@ final class StubUsersRESTService extends RESTFulService
 	/**
 	 * @var list<string>
 	 */
+	/** @var list<string> what the stub's hooks recorded, in order */
 	public static array $calls = [];
 
 	/**
 	 * The filters the last entry action was given.
 	 */
+	/** @var list<list<string>> the filters the stub was asked for */
 	public static array $filters = [];
 
+	/** @var array<string, bool> */
 	protected static array $available_actions = [
 		'get_one'      => true,
 		'get_all'      => true,

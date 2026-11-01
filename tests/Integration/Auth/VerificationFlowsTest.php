@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Auth;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PDO;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -47,6 +48,7 @@ final class VerificationFlowsTest extends TestCase
 
 	private static string $host = '127.0.0.1';
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -61,6 +63,7 @@ final class VerificationFlowsTest extends TestCase
 		]);
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		foreach (self::$servers as $server) {

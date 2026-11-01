@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Auth;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
@@ -69,6 +70,7 @@ final class AuthMethodsAuthenticateTest extends TestCase
 	 * buildDatabase() emits DROP TABLE IF EXISTS before each CREATE TABLE
 	 * so this is safe to call even when another test class ran first.
 	 */
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -156,7 +158,7 @@ final class AuthMethodsAuthenticateTest extends TestCase
 		} catch (RuntimeException) {
 			// Expected path: hash lookup succeeded, user resolution failed
 			// because no repository is configured for our dummy owner type.
-			$this->addToAssertionCount(1);
+			self::assertTrue(true, 'reached without raising, which is what this asserts');
 		}
 	}
 
@@ -219,7 +221,7 @@ final class AuthMethodsAuthenticateTest extends TestCase
 			);
 		} catch (RuntimeException) {
 			// Expected: hash lookup worked, user resolution failed (no repository).
-			$this->addToAssertionCount(1);
+			self::assertTrue(true, 'reached without raising, which is what this asserts');
 		}
 	}
 

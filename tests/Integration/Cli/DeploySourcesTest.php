@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Cli;
 
+use Override;
 use OZONE\Core\Cli\Deploy\ReleaseLayout;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -37,6 +38,7 @@ final class DeploySourcesTest extends TestCase
 
 	private static string $first_commit = '';
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -71,6 +73,7 @@ final class DeploySourcesTest extends TestCase
 		\copy($project . '/.env', self::$root . '/.env');
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		self::rmdir(self::$base);

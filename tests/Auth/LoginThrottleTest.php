@@ -39,6 +39,7 @@ final class LoginThrottleTest extends TestCase
 {
 	private const string PASSWORD = 'right-pass-1';
 
+	#[Override]
 	protected function setUp(): void
 	{
 		StateRegistry::store(LoginThrottle::CACHE_NAMESPACE)->clear();
@@ -59,6 +60,50 @@ final class LoginThrottleTest extends TestCase
 		self::assertTrue(LoginThrottle::isLocked('customer.1'));
 		self::assertSame($max, LoginThrottle::failures('customer.1'));
 		self::assertFalse(LoginThrottle::isLocked('customer.2'));
+	}
+
+	public function testAnAttemptIsCountedWhereItIsLetThrough(): void
+	{
+		$max = self::maxFailures();
+
+		// The claim is the check and the record in one step, and the total it reaches is what
+		// decides: no attempt reads a count that another has not been added to yet.
+		for ($i = 1; $i <= $max; ++$i) {
+			self::assertTrue(LoginThrottle::claim('customer.3'), \sprintf('attempt %d is within the maximum', $i));
+			self::assertSame($i, LoginThrottle::failures('customer.3'));
+		}
+
+		self::assertFalse(LoginThrottle::claim('customer.3'));
+		self::assertTrue(LoginThrottle::isLocked('customer.3'));
+		self::assertTrue(LoginThrottle::claim('customer.4'), 'another subject is untouched');
+	}
+
+	public function testAnAttemptThatNeverReportsItsFailureIsCountedAllTheSame(): void
+	{
+		$max = self::maxFailures();
+
+		// This is what let a burst past the maximum: an attempt that was let through and then
+		// recorded nothing -- a crash, a connection dropped while the password was being verified,
+		// or simply a hundred attempts all checked before the first failure was written -- cost the
+		// subject nothing, so the next one read the same count and was let through too.
+		for ($i = 0; $i < $max; ++$i) {
+			LoginThrottle::claim('customer.5');
+		}
+
+		self::assertFalse(LoginThrottle::claim('customer.5'));
+	}
+
+	public function testARightPasswordOnAnUnusableAccountIsNoGuessAndClearsTheCount(): void
+	{
+		$user = self::user(valid: false);
+
+		AuthUsers::checkPassword($user, 'wrong', '');
+
+		self::assertSame('OZ_AUTH_USER_UNVERIFIED', AuthUsers::checkPassword($user, self::PASSWORD, ''));
+
+		// The password was right, so nothing was being guessed: counting it against the account
+		// would lock out whoever has still to verify it, with the one password that works.
+		self::assertSame(0, LoginThrottle::failures(AuthUsers::ref($user)));
 	}
 
 	public function testClearForgetsFailures(): void
@@ -143,7 +188,7 @@ final class LoginThrottleTest extends TestCase
 	private static function user(bool $valid = true): AuthUserInterface
 	{
 		return new class(Password::hash(self::PASSWORD), $valid) implements AuthUserInterface {
-			private AuthUserDataStore $data_store;
+			private ?AuthUserDataStore $data_store = null;
 
 			public function __construct(private readonly string $hash, private readonly bool $valid) {}
 
@@ -180,7 +225,7 @@ final class LoginThrottleTest extends TestCase
 			#[Override]
 			public function getAuthUserDataStore(): AuthUserDataStore
 			{
-				return $this->data_store ??= new AuthUserDataStore([]);
+				return $this->data_store ??= AuthUserDataStore::getInstance($this, []);
 			}
 
 			#[Override]

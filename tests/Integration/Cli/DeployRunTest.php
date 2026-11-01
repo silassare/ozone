@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Cli;
 
+use Override;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Cli\Deploy\ReleaseLayout;
 use OZONE\Core\Testing\OZTestProject;
@@ -47,6 +48,7 @@ final class DeployRunTest extends TestCase
 	 */
 	private static array $build_dirs = [];
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -80,6 +82,7 @@ final class DeployRunTest extends TestCase
 		\copy($project . \DIRECTORY_SEPARATOR . '.env', self::$root . \DIRECTORY_SEPARATOR . '.env');
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		self::rmdir(self::$root);

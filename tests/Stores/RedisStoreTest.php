@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Stores;
 
+use Override;
 use OZONE\Core\Stores\Drivers\RedisStore;
 use OZONE\Core\Stores\StoreEntry;
 use OZONE\Core\Testing\Traits\RequiresRedisTrait;
@@ -34,8 +35,9 @@ final class RedisStoreTest extends TestCase
 {
 	use RequiresRedisTrait;
 
-	private RedisStore $cache;
+	private ?RedisStore $cache = null;
 
+	#[Override]
 	protected function setUp(): void
 	{
 		self::requireRedis();
@@ -43,34 +45,33 @@ final class RedisStoreTest extends TestCase
 		$this->cache = RedisStore::fromConfig('oz_test_' . \bin2hex(\random_bytes(4)));
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
-		if (isset($this->cache)) {
-			$this->cache->clear();
-		}
+		$this->cache?->clear();
 	}
 
 	public function testSetGetAndDelete(): void
 	{
-		$this->cache->set(new StoreEntry('hello', ['world' => true]));
+		$this->cache()->set(new StoreEntry('hello', ['world' => true]));
 
-		self::assertSame(['world' => true], $this->cache->get('hello')?->value);
+		self::assertSame(['world' => true], $this->cache()->get('hello')?->value);
 
-		$this->cache->delete('hello');
+		$this->cache()->delete('hello');
 
-		self::assertNull($this->cache->get('hello'));
+		self::assertNull($this->cache()->get('hello'));
 	}
 
 	public function testMissingKeyIsAMiss(): void
 	{
-		self::assertNull($this->cache->get('missing'));
+		self::assertNull($this->cache()->get('missing'));
 	}
 
 	public function testEntryKeepsItsExpiry(): void
 	{
-		$this->cache->set(StoreEntry::forTTL('ttl', 'v', 60));
+		$this->cache()->set(StoreEntry::forTTL('ttl', 'v', 60));
 
-		$entry = $this->cache->get('ttl');
+		$entry = $this->cache()->get('ttl');
 
 		self::assertNotNull($entry);
 		self::assertNotNull($entry->expiresAt);
@@ -79,26 +80,26 @@ final class RedisStoreTest extends TestCase
 
 	public function testIncrementIsCumulative(): void
 	{
-		$this->cache->set(new StoreEntry('n', 1));
-		$this->cache->add('n', 2);
-		$this->cache->add('n', 1);
+		$this->cache()->set(new StoreEntry('n', 1));
+		$this->cache()->add('n', 2);
+		$this->cache()->add('n', 1);
 
-		self::assertSame(4, $this->cache->get('n')?->value);
+		self::assertSame(4, $this->cache()->get('n')?->value);
 
-		$this->cache->add('n', -1.5);
+		$this->cache()->add('n', -1.5);
 
-		self::assertSame(2.5, $this->cache->get('n')?->value);
+		self::assertSame(2.5, $this->cache()->get('n')?->value);
 	}
 
 	public function testClearOnlyTouchesItsNamespace(): void
 	{
 		$other = RedisStore::fromConfig('oz_test_other_' . \bin2hex(\random_bytes(4)));
 		$other->set(new StoreEntry('kept', 1));
-		$this->cache->set(new StoreEntry('dropped', 1));
+		$this->cache()->set(new StoreEntry('dropped', 1));
 
-		$this->cache->clear();
+		$this->cache()->clear();
 
-		self::assertNull($this->cache->get('dropped'));
+		self::assertNull($this->cache()->get('dropped'));
 		self::assertNotNull($other->get('kept'));
 
 		$other->clear();
@@ -117,7 +118,7 @@ final class RedisStoreTest extends TestCase
 					RedisFactory::reset();
 
 					for ($j = 0; $j < 40; ++$j) {
-						$this->cache->add('hits', 1, true, \microtime(true) + 600);
+						$this->cache()->add('hits', 1, true, \microtime(true) + 600);
 					}
 				} finally {
 					\posix_kill(\posix_getpid(), \SIGKILL);
@@ -133,6 +134,18 @@ final class RedisStoreTest extends TestCase
 
 		RedisFactory::reset();
 
-		self::assertSame(240, $this->cache->get('hits')?->value);
+		self::assertSame(240, $this->cache()->get('hits')?->value);
+	}
+
+	/**
+	 * The store this test writes to, made in `setUp()`.
+	 */
+	private function cache(): RedisStore
+	{
+		$cache = $this->cache;
+
+		self::assertNotNull($cache, 'the store was not created');
+
+		return $cache;
 	}
 }

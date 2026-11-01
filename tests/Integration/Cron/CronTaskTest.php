@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Cron;
 
+use Override;
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -54,6 +55,7 @@ final class CronTaskTest extends TestCase
 	/** @var array<string, null|string> */
 	private static array $asyncDbFiles = [];
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		foreach (self::$projects as $proj) {

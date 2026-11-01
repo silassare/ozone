@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Router;
 
+use Override;
 use OZONE\Core\Router\Events\RouterCreated;
 use OZONE\Core\Router\Route;
 use OZONE\Core\Router\Router;
@@ -22,6 +23,7 @@ use OZONE\Core\Router\RouteTable;
 use OZONE\Tests\Router\Stubs\TableItemProvider;
 use OZONE\Tests\Router\Stubs\TableItemsProvider;
 use OZONE\Tests\Router\Stubs\TableLangProvider;
+use OZONE\Tests\TestUtils;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -39,6 +41,7 @@ final class RouteTableTest extends TestCase
 		'Disabled\Provider'       => false,
 	];
 
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -98,7 +101,7 @@ final class RouteTableTest extends TestCase
 		self::assertSame('item.get', $router->find('GET', '/items/42')->foundRoute()->getName());
 		self::assertSame([0, 1, 1], self::registrations());
 
-		self::assertSame('items.create', $router->getRoute('items.create')?->getName());
+		self::assertSame('items.create', TestUtils::route($router, 'items.create')->getName());
 		self::assertSame([1, 1, 1], self::registrations());
 	}
 

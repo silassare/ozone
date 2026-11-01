@@ -56,9 +56,12 @@ final class RequirementsTest extends TestCase
 		$data     = \json_decode((string) \file_get_contents(Requirements::ozoneComposerFile()), true);
 		$expected = [];
 
-		foreach (\array_keys($data['require']) as $package) {
-			if (\str_starts_with((string) $package, 'ext-')) {
-				$expected[] = \substr((string) $package, 4);
+		/** @var array<string, string> $require */
+		$require = $data['require'];
+
+		foreach (\array_keys($require) as $package) {
+			if (\str_starts_with($package, 'ext-')) {
+				$expected[] = \substr($package, 4);
 			}
 		}
 

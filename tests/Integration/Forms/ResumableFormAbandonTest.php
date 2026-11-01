@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Forms;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
@@ -33,7 +34,7 @@ use Symfony\Component\Process\Process;
 #[CoversNothing]
 final class ResumableFormAbandonTest extends TestCase
 {
-	private static OZTestProject $proj;
+	private static ?OZTestProject $proj = null;
 
 	/** @var null|Process background oz project serve process */
 	private static ?Process $server = null;
@@ -44,6 +45,7 @@ final class ResumableFormAbandonTest extends TestCase
 	/** Path to the flag file written by TestFormAbandonProvider::onAbandon(). */
 	private static string $flagFile;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -93,14 +95,13 @@ final class ResumableFormAbandonTest extends TestCase
 		self::$port   = $port;
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		if (null !== self::$server && self::$server->isRunning()) {
 			self::$server->stop(3);
 		}
-		if (isset(self::$proj)) {
-			self::$proj->destroy();
-		}
+		self::$proj?->destroy();
 		if (\is_file(self::$flagFile)) {
 			\unlink(self::$flagFile);
 		}
@@ -170,6 +171,21 @@ final class ResumableFormAbandonTest extends TestCase
 			self::$flagFile,
 			'onAbandon() must NOT be called when the session is explicitly cancelled.'
 		);
+	}
+
+	/**
+	 * The project this class runs against, which its own setup created.
+	 *
+	 * Empty until that setup has run, and a test reaching it before then says so here
+	 * rather than as a call on null several frames away.
+	 */
+	private static function proj(): OZTestProject
+	{
+		$project = self::$proj;
+
+		self::assertNotNull($project, 'The test project was not created.');
+
+		return $project;
 	}
 
 	// -------------------------------------------------------------------------

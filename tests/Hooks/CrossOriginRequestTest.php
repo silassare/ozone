@@ -36,7 +36,7 @@ final class CrossOriginRequestTest extends TestCase
 	public function testDisallowedOriginIsRejected(): void
 	{
 		$this->expectException(ForbiddenException::class);
-		$this->expectExceptionMessage('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED');
+		$this->expectExceptionMessageIsOrContains('OZ_CROSS_SITE_REQUEST_NOT_ALLOWED');
 
 		MainBootHookReceiver::assertOriginAllowed(self::context('POST', 'https://evil.example'));
 	}
@@ -46,7 +46,7 @@ final class CrossOriginRequestTest extends TestCase
 	{
 		MainBootHookReceiver::assertOriginAllowed(self::context($method, $origin));
 
-		$this->addToAssertionCount(1);
+		self::assertTrue(true, 'reached without raising, which is what this asserts');
 	}
 
 	public static function provideAllowedRequestsCases(): iterable

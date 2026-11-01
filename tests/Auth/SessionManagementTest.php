@@ -45,6 +45,7 @@ final class SessionManagementTest extends TestCase
 	 * Recreate all OZone DB tables before this test class runs.
 	 * buildDatabase() emits DROP TABLE IF EXISTS so it is idempotent.
 	 */
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -176,7 +177,7 @@ final class SessionManagementTest extends TestCase
 		$session->start();
 
 		$session->attachAuthUser($user); // must not throw
-		$this->addToAssertionCount(1);
+		self::assertTrue(true, 'reached without raising, which is what this asserts');
 	}
 
 	public function testAttachSameUserTwiceDoesNotThrow(): void
@@ -192,7 +193,7 @@ final class SessionManagementTest extends TestCase
 		$session->attachAuthUser($user);
 		$session->attachAuthUser($user); // same user - must not throw
 
-		$this->addToAssertionCount(1);
+		self::assertTrue(true, 'reached without raising, which is what this asserts');
 	}
 
 	public function testDetachAuthUserClearsOwnerFields(): void
@@ -253,7 +254,7 @@ final class SessionManagementTest extends TestCase
 		if ($result) {
 			self::assertLessThanOrEqual(\time(), (int) $result->getExpireAT());
 		} else {
-			$this->addToAssertionCount(1);
+			self::assertTrue(true, 'reached without raising, which is what this asserts');
 		}
 	}
 
@@ -420,7 +421,7 @@ final class SessionManagementTest extends TestCase
 	private function mockUser(string $type, string $id): AuthUserInterface
 	{
 		return new class($type, $id) implements AuthUserInterface {
-			private AuthUserDataStore $data_store;
+			private ?AuthUserDataStore $data_store = null;
 
 			public function __construct(
 				private readonly string $type,

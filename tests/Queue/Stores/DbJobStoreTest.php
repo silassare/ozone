@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Queue\Stores;
 
+use Override;
 use OZONE\Core\Db\OZJob;
 use OZONE\Core\Db\OZJobsQuery;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
@@ -52,6 +53,7 @@ final class DbJobStoreTest extends AbstractJobStoreTestCase
 		self::assertSame([], $this->store->listStale($this->testQueue));
 	}
 
+	#[Override]
 	protected function makeStore(): JobStoreInterface
 	{
 		return JobsManager::getStore(DbJobStore::NAME);
@@ -61,6 +63,7 @@ final class DbJobStoreTest extends AbstractJobStoreTestCase
 	 * Taken, and last written long enough ago to be past any lease: written straight to the row,
 	 * since no store API hands out an old timestamp any more.
 	 */
+	#[Override]
 	protected function strandJob(JobContractInterface $job): void
 	{
 		new OZJobsQuery()

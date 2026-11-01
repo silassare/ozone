@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Benchmarks;
 
+use Override;
 use OZONE\Core\Utils\Hasher;
 
 /**
@@ -25,6 +26,7 @@ use OZONE\Core\Utils\Hasher;
  */
 class HasherBenchmark implements BenchmarkSuiteInterface
 {
+	#[Override]
 	public static function callables(): array
 	{
 		return [

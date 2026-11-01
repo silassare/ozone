@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Auth;
 
+use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Auth\Providers\EmailOwnershipVerificationProvider;
 use OZONE\Core\Auth\Providers\PhoneOwnershipVerificationProvider;
@@ -32,6 +33,7 @@ final class VerificationPolicyTest extends TestCase
 
 	private const PHONE = PhoneOwnershipVerificationProvider::NAME;
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		// Back to what the package ships, for whatever runs next.

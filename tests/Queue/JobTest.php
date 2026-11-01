@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Queue;
 
+use Override;
 use OZONE\Core\Queue\Job;
 use OZONE\Core\Queue\JobsManager;
 use OZONE\Core\Queue\JobState;
@@ -31,6 +32,7 @@ final class JobTest extends IntegrationTestCase
 	/** @var string[] */
 	private array $createdRefs = [];
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		$store = JobsManager::getStore(Queue::DEFAULT_STORE);

@@ -47,7 +47,7 @@ final class RouteSharedOptionsTest extends TestCase
 	public function testGetFormBundleReturnsNullWithNoForm(): void
 	{
 		$router = TestUtils::router();
-		$route  = $router->getRoute('foo');
+		$route  = TestUtils::route($router, 'foo');
 		$ri     = new RouteInfo(context(), $route, []);
 
 		self::assertNull($route->getOptions()->getFormBundle($ri));
@@ -63,7 +63,7 @@ final class RouteSharedOptionsTest extends TestCase
 			->name('bundle.test')
 			->form($form);
 
-		$route  = $router->getRoute('bundle.test');
+		$route  = TestUtils::route($router, 'bundle.test');
 		$ri     = new RouteInfo(context(), $route, []);
 		$bundle = $route->getOptions()->getFormBundle($ri);
 
@@ -85,7 +85,7 @@ final class RouteSharedOptionsTest extends TestCase
 			->name('bundle.method.test')
 			->form($form);
 
-		$route  = $router->getRoute('bundle.method.test');
+		$route  = TestUtils::route($router, 'bundle.method.test');
 		$ri     = new RouteInfo(context(), $route, []);
 		$bundle = $route->getOptions()->getFormBundle($ri);
 
@@ -100,7 +100,7 @@ final class RouteSharedOptionsTest extends TestCase
 	public function testGetFormDeclarationIsNullByDefault(): void
 	{
 		$router = TestUtils::router();
-		$route  = $router->getRoute('foo');
+		$route  = TestUtils::route($router, 'foo');
 
 		self::assertNull($route->getOptions()->getFormDeclaration());
 	}
@@ -114,7 +114,7 @@ final class RouteSharedOptionsTest extends TestCase
 			->name('decl.test')
 			->form($form);
 
-		$route = $router->getRoute('decl.test');
+		$route = TestUtils::route($router, 'decl.test');
 
 		self::assertNotNull($route->getOptions()->getFormDeclaration());
 	}
@@ -127,7 +127,7 @@ final class RouteSharedOptionsTest extends TestCase
 			->name('provider.test')
 			->form(StubSharedOptionsProvider::class);
 
-		$route = $router->getRoute('provider.test');
+		$route = TestUtils::route($router, 'provider.test');
 		$decl  = $route->getOptions()->getFormDeclaration();
 
 		self::assertNotNull($decl);
@@ -143,7 +143,7 @@ final class RouteSharedOptionsTest extends TestCase
 			->name('provider.bundle.test')
 			->form(StubSharedOptionsProvider::class);
 
-		$route = $router->getRoute('provider.bundle.test');
+		$route = TestUtils::route($router, 'provider.bundle.test');
 		$ri    = new RouteInfo(context(), $route, []);
 
 		// Provider declarations bypass the normal bundle path — getFormBundle() returns null.
@@ -157,7 +157,7 @@ final class RouteSharedOptionsTest extends TestCase
 	public function testGetInterceptorsAlwaysIncludesFormDiscoveryInterceptor(): void
 	{
 		$router = TestUtils::router();
-		$route  = $router->getRoute('foo');
+		$route  = TestUtils::route($router, 'foo');
 		$name   = FormDiscoveryRouteInterceptor::getName();
 
 		$interceptors = $route->getOptions()->getInterceptors();
@@ -173,7 +173,7 @@ final class RouteSharedOptionsTest extends TestCase
 			->name('intercept.test')
 			->interceptor(StubSharedOptionsInterceptor::class);
 
-		$route        = $router->getRoute('intercept.test');
+		$route        = TestUtils::route($router, 'intercept.test');
 		$interceptors = $route->getOptions()->getInterceptors();
 		$name         = StubSharedOptionsInterceptor::getName();
 
@@ -185,18 +185,24 @@ final class RouteSharedOptionsTest extends TestCase
 	{
 		$this->expectException(RuntimeException::class);
 
+		/** @var class-string<RouteInterceptorInterface> $missing a class that is not there at all */
+		$missing = 'OZONE\NonExistent\SomeInterceptor';
+
 		$router = new Router();
 		$router->get('/bad-intercept', static fn () => null)
-			->interceptor('OZONE\NonExistent\SomeInterceptor');
+			->interceptor($missing);
 	}
 
 	public function testInterceptorMethodThrowsForNonInterceptorClass(): void
 	{
 		$this->expectException(RuntimeException::class);
 
+		/** @var class-string<RouteInterceptorInterface> $not_one a real class that is not an interceptor */
+		$not_one = StubSharedOptionsProvider::class;
+
 		$router = new Router();
 		$router->get('/bad-intercept2', static fn () => null)
-			->interceptor(StubSharedOptionsProvider::class);
+			->interceptor($not_one);
 	}
 
 	public function testGetInterceptorsFromParentAreInheritedByChildRoute(): void
@@ -209,7 +215,7 @@ final class RouteSharedOptionsTest extends TestCase
 			->name('parent')
 			->interceptor(StubSharedOptionsInterceptor::class);
 
-		$route        = $router->getRoute('parent.child');
+		$route        = TestUtils::route($router, 'parent.child');
 		$interceptors = $route->getOptions()->getInterceptors();
 		$name         = StubSharedOptionsInterceptor::getName();
 
@@ -224,7 +230,7 @@ final class RouteSharedOptionsTest extends TestCase
 			->interceptor(StubSharedOptionsInterceptor::class)
 			->interceptor(StubSharedOptionsInterceptor::class);
 
-		$route        = $router->getRoute('dedup.test');
+		$route        = TestUtils::route($router, 'dedup.test');
 		$interceptors = $route->getOptions()->getInterceptors();
 		$name         = StubSharedOptionsInterceptor::getName();
 
@@ -238,8 +244,8 @@ final class RouteSharedOptionsTest extends TestCase
 
 	public function testResolvedMergesGroupOptionsOutermostFirst(): void
 	{
-		$group_mdl = static fn (RouteInfo $ri) => null;
-		$route_mdl = static fn (RouteInfo $ri) => null;
+		$group_mdl = static fn () => null;
+		$route_mdl = static fn () => null;
 
 		$router = new Router();
 		$router->group('/items', static function (Router $router) use ($route_mdl): void {
@@ -257,7 +263,7 @@ final class RouteSharedOptionsTest extends TestCase
 			->resumable(RequestScope::STATE, 60)
 			->middleware($group_mdl);
 
-		$resolved = $router->getRoute('items.get')->getOptions()->resolved();
+		$resolved = TestUtils::route($router, 'items.get')->getOptions()->resolved();
 
 		self::assertSame(['id' => '[0-9]+', 'slug' => '[a-z-]+'], $resolved->params);
 		self::assertSame([$group_mdl, $route_mdl], $resolved->middlewares);
@@ -279,14 +285,14 @@ final class RouteSharedOptionsTest extends TestCase
 			$router->get('/child', static fn () => null)->name('child');
 		})->name('cached');
 
-		$options = $router->getRoute('cached.child')->getOptions();
+		$options = TestUtils::route($router, 'cached.child')->getOptions();
 		$first   = $options->resolved();
 
 		self::assertSame($first, $options->resolved());
 		self::assertSame([], $first->middlewares);
 
 		// A group change made after the route was resolved reaches the route.
-		$mdl = static fn (RouteInfo $ri) => null;
+		$mdl = static fn () => null;
 		$group->middleware($mdl);
 
 		$second = $options->resolved();
@@ -304,11 +310,13 @@ final class RouteSharedOptionsTest extends TestCase
  */
 final class StubSharedOptionsProvider extends AbstractResumableFormProvider
 {
+	#[Override]
 	public static function getName(): string
 	{
 		return 'test:shared-options-stub';
 	}
 
+	#[Override]
 	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		return null;
@@ -339,7 +347,9 @@ final class StubSharedOptionsInterceptor implements RouteInterceptorInterface
 	#[Override]
 	public function shouldIntercept(): bool
 	{
-		return false;
+		// Never intercepts, and answers from what it was built with: a stub that ignored its
+		// RouteInfo would not be an interceptor.
+		return !($this->ri instanceof RouteInfo);
 	}
 
 	#[Override]

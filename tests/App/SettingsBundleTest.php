@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\App;
 
+use Override;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Settings;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -29,6 +30,7 @@ final class SettingsBundleTest extends TestCase
 {
 	private const array GROUPS = ['oz.config', 'oz.db', 'oz.routes', 'oz.gc', 'lang/oz.en'];
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		Settings::useBundles(null);

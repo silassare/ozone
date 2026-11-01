@@ -47,8 +47,10 @@ final class RouteRunHistoryTest extends TestCase
 
 		// A sub-request must see the parent's trail: that is what catches a loop going through one.
 		self::assertCount($before + 2, $trail);
-		self::assertSame(['name' => 'a', 'path' => '/a'], $trail[\count($trail) - 2]);
-		self::assertSame(['name' => 'b', 'path' => '/b'], $trail[\count($trail) - 1]);
+		$last_two = \array_slice($trail, -2);
+
+		self::assertSame(['name' => 'a', 'path' => '/a'], $last_two[0]);
+		self::assertSame(['name' => 'b', 'path' => '/b'], $last_two[1]);
 	}
 
 	public function testDeepSubRequestsAccumulateWithinTheOneRequest(): void

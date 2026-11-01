@@ -21,6 +21,7 @@ use Kli\Table\KliTable;
 use Kli\Table\KliTableFormatter;
 use Kli\Table\KliTableHeader;
 use LogicException;
+use Override;
 use PHPUtils\Str;
 
 /**
@@ -535,7 +536,7 @@ class Benchmark
 			? $this->results
 			: ['meta' => $meta, 'results' => $this->results];
 
-		return \json_encode($payload, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_UNICODE);
+		return \json_encode($payload, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_UNICODE | \JSON_THROW_ON_ERROR);
 	}
 
 	/**
@@ -715,8 +716,8 @@ class Benchmark
 		$count = \count($durations);
 		\sort($durations);
 
-		$min = (float) $durations[0];
-		$max = (float) $durations[$count - 1];
+		$min = (float) \reset($durations);
+		$max = (float) \end($durations);
 		$avg = \array_sum($durations) / $count;
 
 		$mid    = (int) ($count / 2);
@@ -800,11 +801,13 @@ class Benchmark
 	private function nsFormatter(): KliTableCellFormatterInterface
 	{
 		return new class implements KliTableCellFormatterInterface {
+			#[Override]
 			public function format(mixed $value, KliTableHeader $header, array $row): string
 			{
 				return null === $value ? 'N/A' : \number_format((float) $value, 2);
 			}
 
+			#[Override]
 			public function getStyle(mixed $value, KliTableHeader $header, array $row): ?KliStyle
 			{
 				return null;
@@ -819,11 +822,13 @@ class Benchmark
 	private function relativeFormatter(): KliTableCellFormatterInterface
 	{
 		return new class implements KliTableCellFormatterInterface {
+			#[Override]
 			public function format(mixed $value, KliTableHeader $header, array $row): string
 			{
 				return null === $value ? 'N/A' : \number_format((float) $value, 2) . 'x';
 			}
 
+			#[Override]
 			public function getStyle(mixed $value, KliTableHeader $header, array $row): ?KliStyle
 			{
 				// Highlight the fastest entry (with a tiny epsilon for float rounding).
@@ -842,6 +847,7 @@ class Benchmark
 	private function deltaFormatter(): KliTableCellFormatterInterface
 	{
 		return new class implements KliTableCellFormatterInterface {
+			#[Override]
 			public function format(mixed $value, KliTableHeader $header, array $row): string
 			{
 				if (null === $value) {
@@ -853,6 +859,7 @@ class Benchmark
 				return $prefix . \number_format((float) $value, 2);
 			}
 
+			#[Override]
 			public function getStyle(mixed $value, KliTableHeader $header, array $row): ?KliStyle
 			{
 				if (null === $value) {
@@ -878,6 +885,7 @@ class Benchmark
 		return new class($threshold) implements KliTableCellFormatterInterface {
 			public function __construct(private readonly float $threshold) {}
 
+			#[Override]
 			public function format(mixed $value, KliTableHeader $header, array $row): string
 			{
 				if (null === $value) {
@@ -889,6 +897,7 @@ class Benchmark
 				return $prefix . \number_format((float) $value, 2) . '%';
 			}
 
+			#[Override]
 			public function getStyle(mixed $value, KliTableHeader $header, array $row): ?KliStyle
 			{
 				if (null === $value) {
@@ -917,11 +926,13 @@ class Benchmark
 	private function statusFormatter(): KliTableCellFormatterInterface
 	{
 		return new class implements KliTableCellFormatterInterface {
+			#[Override]
 			public function format(mixed $value, KliTableHeader $header, array $row): string
 			{
 				return (string) $value;
 			}
 
+			#[Override]
 			public function getStyle(mixed $value, KliTableHeader $header, array $row): ?KliStyle
 			{
 				return match ($value) {

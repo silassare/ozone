@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Queue;
 
+use Override;
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -34,10 +35,11 @@ final class SupervisorConfigTest extends TestCase
 	private static ?OZTestProject $project = null;
 	private static ?string $dbFile         = null;
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		if (null !== self::$project) {
-			self::$project->destroy();
+			self::$project?->destroy();
 			self::$project = null;
 		}
 
@@ -77,7 +79,7 @@ final class SupervisorConfigTest extends TestCase
 	{
 		self::assertNotNull(self::$project, 'Project not initialized. Did testSetup pass?');
 
-		$proc = self::$project->oz('jobs', 'supervisor');
+		$proc = self::project()->oz('jobs', 'supervisor');
 		$proc->mustRun();
 
 		$output = $proc->getOutput();
@@ -96,7 +98,7 @@ final class SupervisorConfigTest extends TestCase
 	{
 		self::assertNotNull(self::$project, 'Project not initialized. Did testSetup pass?');
 
-		$proc = self::$project->oz('jobs', 'supervisor', '--workers=3');
+		$proc = self::project()->oz('jobs', 'supervisor', '--workers=3');
 		$proc->mustRun();
 
 		self::assertStringContainsString('numprocs=3', $proc->getOutput());
@@ -109,7 +111,7 @@ final class SupervisorConfigTest extends TestCase
 	{
 		self::assertNotNull(self::$project, 'Project not initialized. Did testSetup pass?');
 
-		$proc = self::$project->oz('jobs', 'supervisor', '--queue=cron:sync');
+		$proc = self::project()->oz('jobs', 'supervisor', '--queue=cron:sync');
 		$proc->mustRun();
 
 		self::assertStringContainsString('[program:ozone-worker-cron:sync]', $proc->getOutput());
@@ -122,7 +124,7 @@ final class SupervisorConfigTest extends TestCase
 	{
 		self::assertNotNull(self::$project, 'Project not initialized. Did testSetup pass?');
 
-		$proc = self::$project->oz('jobs', 'supervisor', '--user=www-data');
+		$proc = self::project()->oz('jobs', 'supervisor', '--user=www-data');
 		$proc->mustRun();
 
 		self::assertStringContainsString('user=www-data', $proc->getOutput());
@@ -135,9 +137,9 @@ final class SupervisorConfigTest extends TestCase
 	{
 		self::assertNotNull(self::$project, 'Project not initialized. Did testSetup pass?');
 
-		$outputFile = self::$project->getPath() . '/supervisor.conf';
+		$outputFile = self::project()->getPath() . '/supervisor.conf';
 
-		$proc = self::$project->oz('jobs', 'supervisor', "--output={$outputFile}");
+		$proc = self::project()->oz('jobs', 'supervisor', "--output={$outputFile}");
 		$proc->mustRun();
 
 		// stdout reports where the file was written.
@@ -148,5 +150,20 @@ final class SupervisorConfigTest extends TestCase
 		$content = (string) \file_get_contents($outputFile);
 		self::assertStringContainsString('[program:ozone-worker-default]', $content);
 		self::assertStringContainsString('autostart=true', $content);
+	}
+
+	/**
+	 * The project this class runs against, which its own setup created.
+	 *
+	 * Empty until that setup has run, and a test reaching it before then says so here
+	 * rather than as a call on null several frames away.
+	 */
+	private static function project(): OZTestProject
+	{
+		$project = self::$project;
+
+		self::assertNotNull($project, 'The test project was not created.');
+
+		return $project;
 	}
 }

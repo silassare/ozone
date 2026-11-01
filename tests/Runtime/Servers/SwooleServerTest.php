@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Runtime\Servers;
 
+use Override;
 use OZONE\Core\Runtime\Bridges\SwooleBridge;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -28,11 +29,13 @@ use PHPUnit\Framework\Attributes\Group;
 #[CoversClass(SwooleBridge::class)]
 final class SwooleServerTest extends WorkerServerTestCase
 {
+	#[Override]
 	protected static function loopName(): string
 	{
 		return 'swoole';
 	}
 
+	#[Override]
 	protected static function urlVariable(): string
 	{
 		return 'OZ_TEST_SWOOLE_URL';

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Hooks;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\Hooks\Events\EndRequestHook;
 use OZONE\Core\Http\HTTPEnvironment;
@@ -43,6 +44,7 @@ final class EndRequestHookTest extends TestCase
 	/** @var list<callable():void> */
 	private array $detach = [];
 
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -53,6 +55,7 @@ final class EndRequestHookTest extends TestCase
 		];
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		foreach ($this->detach as $detach) {
@@ -70,7 +73,9 @@ final class EndRequestHookTest extends TestCase
 		OZone::endRequest();
 
 		$context = new Context(HTTPEnvironment::mock(['REQUEST_METHOD' => 'GET']));
-		$seen    = [];
+
+		/** @var list<array{0: null|Context, 1: bool}> $seen what the listener saw, one entry per release */
+		$seen = [];
 
 		$this->detach[] = EndRequestHook::listen(static function (EndRequestHook $hook) use (&$seen): void {
 			$seen[] = [$hook->context, Context::hasRoot()];
@@ -79,12 +84,16 @@ final class EndRequestHookTest extends TestCase
 		OZone::endRequest();
 
 		// The listener runs while the context is still there, and the tree is released after it.
-		self::assertSame([[$context, true]], $seen);
+		// Asserted on what it held at that point, so the entry the next release appends is still
+		// possible as far as the reader -- and the analyser -- is concerned.
+		self::assertSame([[$context, true]], [...$seen]);
 		self::assertFalse(Context::hasRoot());
 
 		// Between two requests there is nothing to release, and the listener is told so.
 		OZone::endRequest();
 
+		self::assertCount(2, $seen);
+		self::assertArrayHasKey(1, $seen);
 		self::assertNull($seen[1][0]);
 	}
 

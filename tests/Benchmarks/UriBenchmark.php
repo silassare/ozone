@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Benchmarks;
 
+use Override;
 use OZONE\Core\Http\Uri;
 
 /**
@@ -25,6 +26,7 @@ use OZONE\Core\Http\Uri;
  */
 class UriBenchmark implements BenchmarkSuiteInterface
 {
+	#[Override]
 	public static function callables(): array
 	{
 		$rawUri = 'https://example.com/users/42?page=1&sort=asc#section';

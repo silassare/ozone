@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Tests\Queue\Stores;
 
 use InvalidArgumentException;
+use Override;
 use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\Job;
@@ -45,6 +46,7 @@ abstract class AbstractJobStoreTestCase extends IntegrationTestCase
 	/** @var JobContractInterface[] Jobs added in other queues that need explicit cleanup. */
 	protected array $created = [];
 
+	#[Override]
 	protected function setUp(): void
 	{
 		$this->store     = $this->makeStore();
@@ -52,6 +54,7 @@ abstract class AbstractJobStoreTestCase extends IntegrationTestCase
 		$this->created   = [];
 	}
 
+	#[Override]
 	protected function tearDown(): void
 	{
 		// Clean up all jobs left in the test queue (catches orphans from crashed tests).

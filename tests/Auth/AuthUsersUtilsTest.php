@@ -191,7 +191,7 @@ final class AuthUsersUtilsTest extends TestCase
 	private static function mockUser(string $type, string $id, array $identifiers = []): AuthUserInterface
 	{
 		return new class($type, $id, $identifiers) implements AuthUserInterface {
-			private AuthUserDataStore $data_store;
+			private ?AuthUserDataStore $data_store = null;
 
 			public function __construct(
 				private readonly string $type,
@@ -232,7 +232,7 @@ final class AuthUsersUtilsTest extends TestCase
 			#[Override]
 			public function getAuthUserDataStore(): AuthUserDataStore
 			{
-				return $this->data_store ??= new AuthUserDataStore([]);
+				return $this->data_store ??= AuthUserDataStore::getInstance($this, []);
 			}
 
 			#[Override]

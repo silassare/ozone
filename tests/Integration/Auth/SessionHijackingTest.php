@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Auth;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PDO;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -52,6 +53,7 @@ final class SessionHijackingTest extends TestCase
 
 	private static string $host = '127.0.0.1';
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -61,6 +63,7 @@ final class SessionHijackingTest extends TestCase
 		self::startProject('session-hijacking-off', 0);
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		foreach (self::$servers as $server) {
@@ -246,7 +249,9 @@ final class SessionHijackingTest extends TestCase
 
 		$sid = self::cookies($headers)['OZONE_SID'] ?? null;
 
-		self::assertNotEmpty($sid, $body);
+		// Asserted as a string, which is what it has to be to be returned as one.
+		self::assertIsString($sid, $body);
+		self::assertNotSame('', $sid);
 
 		[$status, $body, $headers] = $this->request($project, 'GET', '/test-session', [
 			'Cookie: OZONE_SID=' . $sid,
@@ -378,7 +383,9 @@ final class SessionHijackingTest extends TestCase
 
 		$sid = self::cookies($headers)['OZONE_SID'] ?? null;
 
-		self::assertNotEmpty($sid, $body);
+		// Asserted as a string, which is what it has to be to be returned as one.
+		self::assertIsString($sid, $body);
+		self::assertNotSame('', $sid);
 
 		return $sid;
 	}

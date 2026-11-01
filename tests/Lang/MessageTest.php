@@ -42,7 +42,7 @@ final class MessageTest extends TestCase
 	}
 
 	/**
-	 * @return iterable<string, array{string, array<string, mixed>, string}>
+	 * @return iterable<string, array{string, array<array-key, mixed>, string}>
 	 */
 	public static function provideWritesAsTheSyntaxSaysCases(): iterable
 	{
@@ -215,7 +215,7 @@ final class MessageTest extends TestCase
 	public function testADateFilterRefusesUnknownStyles(string $text): void
 	{
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('Invalid date filter styles');
+		$this->expectExceptionMessageIsOrContains('Invalid date filter styles');
 
 		self::render($text, ['d' => 1790000000], 'en', true);
 	}

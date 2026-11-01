@@ -15,7 +15,7 @@ declare(strict_types=1);
 // well as in worker mode, so its presence alone must not make a worker.
 
 if (!\function_exists('frankenphp_handle_request')) {
-	function frankenphp_handle_request(callable $callback): bool
+	function frankenphp_handle_request(callable $_): bool
 	{
 		return false;
 	}

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Cron;
 
+use Override;
 use OZONE\Core\Cli\Cron\CronEndpoint;
 use OZONE\Core\Testing\DbTestConfig;
 use OZONE\Core\Testing\OZTestProject;
@@ -39,6 +40,7 @@ final class CronRunnersTest extends TestCase
 	/** @var array<string, null|string> */
 	private static array $dbFiles = [];
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		foreach (self::$projects as $rdbms => [$proj, $server]) {

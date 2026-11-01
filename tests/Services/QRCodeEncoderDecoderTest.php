@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Services;
 
+use Override;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Services\QRCode\BuiltinQRCodeEncoderDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -29,6 +30,7 @@ final class QRCodeEncoderDecoderTest extends TestCase
 {
 	private BuiltinQRCodeEncoderDecoder $qr;
 
+	#[Override]
 	protected function setUp(): void
 	{
 		$this->qr = BuiltinQRCodeEncoderDecoder::instance();

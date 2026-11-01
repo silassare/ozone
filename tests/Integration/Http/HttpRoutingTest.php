@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Http;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use OZONE\Tests\Support\ImageBytes;
 use PDO;
@@ -36,7 +37,7 @@ use Symfony\Component\Process\Process;
 #[CoversNothing]
 final class HttpRoutingTest extends TestCase
 {
-	private static OZTestProject $proj;
+	private static ?OZTestProject $proj = null;
 
 	/** @var null|Process Background oz project serve process */
 	private static ?Process $server = null;
@@ -44,6 +45,7 @@ final class HttpRoutingTest extends TestCase
 	private static string $host = '127.0.0.1';
 	private static int $port    = 0;
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -89,14 +91,13 @@ final class HttpRoutingTest extends TestCase
 		self::$port   = $port;
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		if (null !== self::$server && self::$server->isRunning()) {
 			self::$server->stop(3);
 		}
-		if (isset(self::$proj)) {
-			self::$proj->destroy();
-		}
+		self::$proj?->destroy();
 		parent::tearDownAfterClass();
 	}
 
@@ -243,7 +244,7 @@ final class HttpRoutingTest extends TestCase
 	{
 		self::seedCountry('BJ');
 
-		self::$proj->oz(
+		self::proj()->oz(
 			'users',
 			'add',
 			'--user_civility=Mrs',
@@ -291,7 +292,9 @@ final class HttpRoutingTest extends TestCase
 	 */
 	public function testUploadSavesTheFilesAndAnswersThem(): void
 	{
-		self::$proj->oz(
+		self::seedCountry('BJ');
+
+		self::proj()->oz(
 			'users',
 			'add',
 			'--user_civility=Mr',
@@ -339,7 +342,7 @@ final class HttpRoutingTest extends TestCase
 	public function testAnUploadedPhotoIsServedWithoutItsMetadataAndItsOriginalOnlyToItsUploader(): void
 	{
 		self::seedCountry('TG');
-		self::$proj->oz(
+		self::proj()->oz(
 			'users',
 			'add',
 			'--user_civility=Mr',
@@ -558,6 +561,21 @@ final class HttpRoutingTest extends TestCase
 		self::assertSame('OZ_UPLOAD_REF_UNKNOWN', \json_decode($body, true)['msg'] ?? null, $body);
 	}
 
+	/**
+	 * The project this class runs against, which its own setup created.
+	 *
+	 * Empty until that setup has run, and a test reaching it before then says so here
+	 * rather than as a call on null several frames away.
+	 */
+	private static function proj(): OZTestProject
+	{
+		$project = self::$proj;
+
+		self::assertNotNull($project, 'The test project was not created.');
+
+		return $project;
+	}
+
 	// -------------------------------------------------------------------------
 	// Helpers
 	// -------------------------------------------------------------------------
@@ -567,7 +585,7 @@ final class HttpRoutingTest extends TestCase
 	 *
 	 * @param string               $method  HTTP verb (GET, POST, ...)
 	 * @param string               $path    URL path (e.g. '/test-ping')
-	 * @param array<string,string> $fields  form fields for POST requests
+	 * @param array<string, mixed> $fields  form fields for POST requests, as `http_build_query` takes them
 	 * @param list<string>         $headers extra request headers ("Name: value")
 	 *
 	 * @return array{0: int, 1: string, 2: list<string>} [status_code, body, response_headers]
@@ -688,11 +706,14 @@ final class HttpRoutingTest extends TestCase
 
 	/**
 	 * Adds an allowed country: a user needs one (`user_cc2`) and no command creates countries.
+	 *
+	 * Idempotent, so every test that needs a country asks for it rather than relying on another
+	 * test of the class having run first.
 	 */
 	private static function seedCountry(string $cc2): void
 	{
 		$pdo = new PDO(
-			'sqlite:' . self::$proj->getPath() . '/http_routing_test.sqlite',
+			'sqlite:' . self::proj()->getPath() . '/http_routing_test.sqlite',
 			null,
 			null,
 			[PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
@@ -707,7 +728,8 @@ final class HttpRoutingTest extends TestCase
 		$now = (string) \time();
 
 		$pdo->prepare(\sprintf(
-			'INSERT INTO "%s" (country_cc2, country_calling_code, country_name, country_name_real, country_data,'
+			'INSERT OR IGNORE INTO "%s" (country_cc2, country_calling_code, country_name, country_name_real,'
+				. ' country_data,'
 				. ' country_is_valid, country_created_at, country_updated_at, country_deleted, country_deleted_at)'
 				. ' VALUES (?, ?, ?, ?, ?, 1, ?, ?, 0, NULL)',
 			$table

@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Benchmarks;
 
+use Override;
 use OZONE\Core\Stores\CacheRegistry;
 
 /**
@@ -26,6 +27,7 @@ use OZONE\Core\Stores\CacheRegistry;
  */
 class StoreBenchmark implements BenchmarkSuiteInterface
 {
+	#[Override]
 	public static function callables(): array
 	{
 		$cache = CacheRegistry::runtime('benchmark_suite');

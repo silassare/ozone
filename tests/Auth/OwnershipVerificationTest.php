@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Auth;
 
+use Override;
 use OZONE\Core\App\Context;
 use OZONE\Core\App\Keys;
 use OZONE\Core\Auth\Auth;
@@ -35,6 +36,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(OwnershipVerificationProvider::class)]
 final class OwnershipVerificationTest extends TestCase
 {
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();

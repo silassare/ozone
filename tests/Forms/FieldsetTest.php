@@ -53,7 +53,7 @@ final class FieldsetTest extends TestCase
 	public function testStaticFieldsetIsStatic(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::static($parent, 'info', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'info', static function (): void {});
 
 		self::assertTrue($fieldset->isStatic());
 		self::assertFalse($fieldset->isDynamic());
@@ -64,7 +64,7 @@ final class FieldsetTest extends TestCase
 		$parent = new Form();
 
 		$this->expectException(InvalidArgumentException::class);
-		Fieldset::static($parent, '', static function (Fieldset $fs): void {});
+		Fieldset::static($parent, '', static function (): void {});
 	}
 
 	// -----------------------------------------------------------------------
@@ -74,7 +74,7 @@ final class FieldsetTest extends TestCase
 	public function testDynamicFieldsetIsDynamic(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::dynamic($parent, 'extra', static fn (FormData $fd) => Fieldset::static($parent, 'extra', static function (Fieldset $f): void {}));
+		$fieldset = Fieldset::dynamic($parent, 'extra', static fn () => Fieldset::static($parent, 'extra', static function (): void {}));
 
 		self::assertFalse($fieldset->isStatic());
 		self::assertTrue($fieldset->isDynamic());
@@ -83,7 +83,7 @@ final class FieldsetTest extends TestCase
 	public function testDynamicFieldsetHasNoFieldsBeforeBuild(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::dynamic($parent, 'extra', static fn (FormData $fd) => Fieldset::static($parent, 'extra', static function (Fieldset $f): void {}));
+		$fieldset = Fieldset::dynamic($parent, 'extra', static fn () => Fieldset::static($parent, 'extra', static function (): void {}));
 
 		self::assertEmpty($fieldset->getFields());
 	}
@@ -95,7 +95,7 @@ final class FieldsetTest extends TestCase
 	public function testLegendSetsTheLegend(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::static($parent, 'billing', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'billing', static function (): void {});
 		$fieldset->legend('Billing Info');
 
 		self::assertNotNull($fieldset->getLegend());
@@ -105,7 +105,7 @@ final class FieldsetTest extends TestCase
 	public function testLegendIsNullByDefault(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::static($parent, 'billing', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'billing', static function (): void {});
 
 		self::assertNull($fieldset->getLegend());
 	}
@@ -117,7 +117,7 @@ final class FieldsetTest extends TestCase
 	public function testGetRefPrefixesFieldWithFieldsetName(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::static($parent, 'address', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'address', static function (): void {});
 
 		self::assertSame('address.street', $fieldset->getRef('street'));
 	}
@@ -126,7 +126,7 @@ final class FieldsetTest extends TestCase
 	{
 		$parent = new Form();
 		$parent->name('user');
-		$fieldset = Fieldset::static($parent, 'address', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'address', static function (): void {});
 
 		self::assertSame('user.address.street', $fieldset->getRef('street'));
 	}
@@ -138,7 +138,7 @@ final class FieldsetTest extends TestCase
 	public function testIsEnabledWhenNoCondition(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::static($parent, 'address', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'address', static function (): void {});
 
 		self::assertTrue($fieldset->isEnabled($this->ctx([])));
 	}
@@ -146,7 +146,7 @@ final class FieldsetTest extends TestCase
 	public function testIsEnabledReturnsTrueWhenConditionPasses(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'details', static function (): void {});
 		$fieldset->if()->eq('type', 'advanced');
 
 		self::assertTrue($fieldset->isEnabled($this->ctx(['type' => 'advanced'])));
@@ -155,7 +155,7 @@ final class FieldsetTest extends TestCase
 	public function testIsEnabledReturnsFalseWhenConditionFails(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'details', static function (): void {});
 		$fieldset->if()->eq('type', 'advanced');
 
 		self::assertFalse($fieldset->isEnabled($this->ctx(['type' => 'simple'])));
@@ -168,7 +168,7 @@ final class FieldsetTest extends TestCase
 	public function testBuildReturnsThisForStaticWhenEnabled(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::static($parent, 'address', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'address', static function (): void {});
 		$built    = $fieldset->build($this->ctx([]));
 
 		self::assertSame($fieldset, $built);
@@ -177,7 +177,7 @@ final class FieldsetTest extends TestCase
 	public function testBuildReturnsNullWhenConditionFails(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'details', static function (): void {});
 		$fieldset->if()->eq('type', 'advanced');
 
 		self::assertNull($fieldset->build($this->ctx(['type' => 'simple'])));
@@ -193,7 +193,7 @@ final class FieldsetTest extends TestCase
 			static function (FormValidationContext $ctx) use ($parent, &$received_ctx): Fieldset {
 				$received_ctx = $ctx;
 
-				return Fieldset::static($parent, 'dyn', static function (Fieldset $f): void {});
+				return Fieldset::static($parent, 'dyn', static function (): void {});
 			}
 		);
 
@@ -207,7 +207,10 @@ final class FieldsetTest extends TestCase
 	public function testBuildDynamicFactoryMustReturnFieldsetInstance(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::dynamic($parent, 'bad', static fn (FormValidationContext $ctx) => new Form());
+		/** @var callable(FormValidationContext): Fieldset $wrong a factory that returns a Form */
+		$wrong = static fn (): Form => new Form();
+
+		$fieldset = Fieldset::dynamic($parent, 'bad', $wrong);
 
 		$this->expectException(RuntimeException::class);
 		$fieldset->build($this->ctx([]));
@@ -278,7 +281,7 @@ final class FieldsetTest extends TestCase
 	public function testToArrayForDynamicFieldsetHasNullFields(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::dynamic($parent, 'dyn', static fn (FormData $fd) => Fieldset::static($parent, 'dyn', static function (Fieldset $f): void {}));
+		$fieldset = Fieldset::dynamic($parent, 'dyn', static fn () => Fieldset::static($parent, 'dyn', static function (): void {}));
 		$arr      = $fieldset->toArray();
 
 		self::assertSame('dynamic', $arr['type']);
@@ -310,7 +313,7 @@ final class FieldsetTest extends TestCase
 	public function testToArrayIncludesCondition(): void
 	{
 		$parent   = new Form();
-		$fieldset = Fieldset::static($parent, 'details', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'details', static function (): void {});
 		$fieldset->if()->eq('type', 'advanced');
 		$arr = $fieldset->toArray();
 
@@ -322,7 +325,7 @@ final class FieldsetTest extends TestCase
 	{
 		$parent = new Form();
 		$parent->name('user');
-		$fieldset = Fieldset::static($parent, 'address', static function (Fieldset $fs): void {});
+		$fieldset = Fieldset::static($parent, 'address', static function (): void {});
 		$arr      = $fieldset->toArray();
 
 		self::assertSame('user.address', $arr['ref']);
@@ -335,7 +338,7 @@ final class FieldsetTest extends TestCase
 	public function testFormFieldsetRegistersInGetFieldsets(): void
 	{
 		$form     = new Form();
-		$fieldset = $form->fieldset('address', static function (Fieldset $fs): void {});
+		$fieldset = $form->fieldset('address', static function (): void {});
 
 		self::assertArrayHasKey('address', $form->getFieldsets());
 		self::assertSame($fieldset, $form->getFieldsets()['address']);
@@ -344,7 +347,7 @@ final class FieldsetTest extends TestCase
 	public function testFormDynamicFieldsetRegistersInGetFieldsets(): void
 	{
 		$form     = new Form();
-		$fieldset = $form->dynamicFieldset('extra', static fn (FormData $fd) => Fieldset::static($form, 'extra', static function (Fieldset $f): void {}));
+		$fieldset = $form->dynamicFieldset('extra', static fn () => Fieldset::static($form, 'extra', static function (): void {}));
 
 		self::assertArrayHasKey('extra', $form->getFieldsets());
 		self::assertSame($fieldset, $form->getFieldsets()['extra']);
@@ -353,7 +356,7 @@ final class FieldsetTest extends TestCase
 	public function testGetFieldsetReturnsRegisteredFieldset(): void
 	{
 		$form = new Form();
-		$form->fieldset('billing', static function (Fieldset $fs): void {});
+		$form->fieldset('billing', static function (): void {});
 
 		self::assertInstanceOf(Fieldset::class, $form->getFieldset('billing'));
 	}
@@ -465,7 +468,7 @@ final class FieldsetTest extends TestCase
 		$form->field('name');
 		$before = $form->getVersion();
 
-		$form->fieldset('details', static function (Fieldset $fs): void {});
+		$form->fieldset('details', static function (): void {});
 		$after = $form->getVersion();
 
 		self::assertNotSame($before, $after);

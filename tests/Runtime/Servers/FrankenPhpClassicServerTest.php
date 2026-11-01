@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Runtime\Servers;
 
+use Override;
 use OZONE\Core\Runtime\WorkerRuntime;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -32,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(WorkerRuntime::class)]
 final class FrankenPhpClassicServerTest extends TestCase
 {
+	#[Override]
 	protected function setUp(): void
 	{
 		parent::setUp();
@@ -40,7 +42,7 @@ final class FrankenPhpClassicServerTest extends TestCase
 			self::fail('This test is an HTTP client: it needs ext-curl (the test image has it).');
 		}
 
-		if ('pong' !== ($this->get('/runtime-probe/ping')['body'] ?? null)) {
+		if ('pong' !== ($this->tryGet('/runtime-probe/ping')['body'] ?? null)) {
 			$message = 'FrankenPHP (classic) is unavailable at ' . self::baseUrl();
 
 			\getenv('OZ_TEST_RUNTIMES_REQUIRED') ? self::fail($message) : self::markTestSkipped($message);
@@ -64,18 +66,37 @@ final class FrankenPhpClassicServerTest extends TestCase
 	{
 		// Taken for a worker, OZone answered the mock boot request (`/`) instead of this one.
 		self::assertSame(['status' => 404], \array_intersect_key(
-			$this->get('/no-such-route', ['Accept: application/json']) ?? [],
+			$this->get('/no-such-route', ['Accept: application/json']),
 			['status' => true]
 		));
-		self::assertSame('{"hello":"world"}', $this->get('/runtime-probe/json')['body'] ?? null);
+		self::assertSame('{"hello":"world"}', $this->get('/runtime-probe/json')['body']);
 	}
 
 	/**
+	 * A GET the server must answer: a transport error is this test's failure, so every caller reads
+	 * the answer without asking whether there is one.
+	 *
+	 * @param list<string> $headers
+	 *
+	 * @return array{status: int, body: string}
+	 */
+	private function get(string $path, array $headers = []): array
+	{
+		$response = $this->tryGet($path, $headers);
+
+		self::assertNotNull($response, \sprintf('GET %s got no answer from the server.', $path));
+
+		return $response;
+	}
+
+	/**
+	 * The same, while the server may still be starting.
+	 *
 	 * @param list<string> $headers
 	 *
 	 * @return null|array{status: int, body: string}
 	 */
-	private function get(string $path, array $headers = []): ?array
+	private function tryGet(string $path, array $headers = []): ?array
 	{
 		$curl = \curl_init(self::baseUrl() . $path);
 

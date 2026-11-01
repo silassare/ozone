@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Forms;
 
+use Override;
 use OZONE\Core\Forms\Form;
 use OZONE\Core\Forms\FormDataClean;
 use OZONE\Core\Forms\Resume\AbstractResumableFormProvider;
@@ -91,11 +92,13 @@ final class ResumableFormProviderTest extends TestCase
  */
 final class SimpleTestProvider extends AbstractResumableFormProvider
 {
+	#[Override]
 	public static function getName(): string
 	{
 		return 'test:simple';
 	}
 
+	#[Override]
 	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		if (0 === $progress->getStepIndex()) {
@@ -116,16 +119,19 @@ final class SimpleTestProvider extends AbstractResumableFormProvider
  */
 final class HostScopedTestProvider extends AbstractResumableFormProvider
 {
+	#[Override]
 	public static function getName(): string
 	{
 		return 'test:host-scoped';
 	}
 
+	#[Override]
 	public function resumeScope(): RequestScope
 	{
 		return RequestScope::HOST;
 	}
 
+	#[Override]
 	public function nextStep(FormDataClean $cleaned_fd, FormResumeProgress $progress): ?Form
 	{
 		return null;

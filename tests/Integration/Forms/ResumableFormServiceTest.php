@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Forms;
 
+use Override;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
@@ -36,7 +37,7 @@ use Symfony\Component\Process\Process;
 #[CoversNothing]
 final class ResumableFormServiceTest extends TestCase
 {
-	private static OZTestProject $proj;
+	private static ?OZTestProject $proj = null;
 
 	/** @var null|Process Background oz project serve process */
 	private static ?Process $server = null;
@@ -50,6 +51,7 @@ final class ResumableFormServiceTest extends TestCase
 	/** Absolute path; writing a UNIX timestamp here activates deadline() on the irreversible provider. */
 	private static string $deadlineFile = '';
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -116,14 +118,13 @@ final class ResumableFormServiceTest extends TestCase
 		self::$port   = $port;
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		if (null !== self::$server && self::$server->isRunning()) {
 			self::$server->stop(3);
 		}
-		if (isset(self::$proj)) {
-			self::$proj->destroy();
-		}
+		self::$proj?->destroy();
 		// Clean up temp config files created for the irreversible-provider tests.
 		foreach ([self::$notBeforeFile, self::$deadlineFile] as $tmpFile) {
 			if ('' !== $tmpFile && \file_exists($tmpFile)) {
@@ -1085,6 +1086,21 @@ final class ResumableFormServiceTest extends TestCase
 		}
 
 		self::assertSame('500', $limit, 'the route reads OZ_FORM_RESUME_INIT_IP_RATE');
+	}
+
+	/**
+	 * The project this class runs against, which its own setup created.
+	 *
+	 * Empty until that setup has run, and a test reaching it before then says so here
+	 * rather than as a call on null several frames away.
+	 */
+	private static function proj(): OZTestProject
+	{
+		$project = self::$proj;
+
+		self::assertNotNull($project, 'The test project was not created.');
+
+		return $project;
 	}
 
 	// -------------------------------------------------------------------------

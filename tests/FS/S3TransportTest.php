@@ -35,7 +35,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(CurlTransport::class)]
 final class S3TransportTest extends TestCase
 {
-	#[DataProvider('provideTransports')]
+	#[DataProvider('provideATransportSaysWhyTheStorageCouldNotBeReachedCases')]
 	public function testATransportSaysWhyTheStorageCouldNotBeReached(S3TransportInterface $transport): void
 	{
 		$url = 'http://127.0.0.1:' . self::closedPort() . '/ozone-test/unreachable.txt';
@@ -65,7 +65,7 @@ final class S3TransportTest extends TestCase
 		}
 	}
 
-	public static function provideTransports(): iterable
+	public static function provideATransportSaysWhyTheStorageCouldNotBeReachedCases(): iterable
 	{
 		$transports = ['stream-wrapper' => [new StreamWrapperTransport()]];
 
@@ -84,7 +84,7 @@ final class S3TransportTest extends TestCase
 		$socket = \stream_socket_server('tcp://127.0.0.1:0', $errno, $error);
 
 		if (false === $socket) {
-			self::fail(\sprintf('Unable to reserve a port: %s.', (string) $error));
+			self::fail(\sprintf('Unable to reserve a port: %s.', $error));
 		}
 
 		$name = (string) \stream_socket_get_name($socket, false);

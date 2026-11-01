@@ -49,7 +49,7 @@ use Symfony\Component\Process\Process;
  * Usage:
  *
  *   $proj = OZTestProject::create('my-test');
- *   $proj->writeEnv((new DbTestConfig())->toEnvArray());
+ *   $proj->useDatabase(DbTestConfig::sqlite($proj->getPath() . '/my_test.sqlite'));
  *   $proj->oz('migrations', 'run')->mustRun();
  *   $proj->destroy();
  */

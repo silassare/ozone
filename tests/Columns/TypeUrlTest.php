@@ -166,7 +166,7 @@ final class TypeUrlTest extends TestCase
 	public function testAllowedHostsRejectsOtherHosts(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);
-		$this->expectExceptionMessage('OZ_FIELD_URL_HOST_NOT_ALLOWED');
+		$this->expectExceptionMessageIsOrContains('OZ_FIELD_URL_HOST_NOT_ALLOWED');
 
 		new TypeUrl()->allowAbsolutePath()->allowedHosts(['app.example.com'])->validate('https://evil.example/');
 	}

@@ -42,14 +42,17 @@ final class RouteGroupTest extends TestCase
 		})
 			->name('test');
 
-		self::assertInstanceOf(Route::class, $router->getRoute('test.foo'));
+		self::assertInstanceOf(Route::class, TestUtils::route($router, 'test.foo'));
 		// notice that the name is not test.bar.baz as the group with path '/bar' is not named
-		self::assertInstanceOf(Route::class, $router->getRoute('test.baz'));
+		self::assertInstanceOf(Route::class, TestUtils::route($router, 'test.baz'));
+
+		// Filled in by the closure above, which the router has run by now.
+		self::assertInstanceOf(RouteGroup::class, $bar_group);
 
 		$bar_group->name('bar');
 
 		// the name should have been updated
-		self::assertInstanceOf(Route::class, $router->getRoute('test.bar.baz'));
+		self::assertInstanceOf(Route::class, TestUtils::route($router, 'test.bar.baz'));
 		self::assertNull($router->getRoute('test.baz'));
 	}
 
@@ -67,9 +70,9 @@ final class RouteGroupTest extends TestCase
 		})
 			->name('test');
 
-		self::assertSame('/test/foo', $router->getRoute('test.foo')
+		self::assertSame('/test/foo', TestUtils::route($router, 'test.foo')
 			->getPath());
-		self::assertSame('/test/bar/baz', $router->getRoute('test.baz')
+		self::assertSame('/test/bar/baz', TestUtils::route($router, 'test.baz')
 			->getPath());
 	}
 }

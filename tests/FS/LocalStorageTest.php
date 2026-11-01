@@ -36,7 +36,7 @@ final class LocalStorageTest extends TestCase
 		$storage = FS::getStorage($storage_name);
 		$file    = $storage->saveRaw('raw content', 'text/plain', 'raw.txt');
 
-		self::assertSame(11, (int) $file->getSize());
+		self::assertSame(11, $file->getSize());
 		self::assertSame('raw content', (string) $storage->getStream($file));
 
 		$storage->delete($file);

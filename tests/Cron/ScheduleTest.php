@@ -256,7 +256,7 @@ final class ScheduleTest extends TestCase
 	public function testGetNextRunTimeForEveryMinuteSchedule(): void
 	{
 		// Use a UTC minute boundary so +1 minute is exactly +60 s.
-		$base = (int) new DateTime('2025-01-15 10:00:00', new DateTimeZone('UTC'))->getTimestamp();
+		$base = new DateTime('2025-01-15 10:00:00', new DateTimeZone('UTC'))->getTimestamp();
 
 		self::assertSame($base + 60, new Schedule()->getNextRunTime($base));
 	}

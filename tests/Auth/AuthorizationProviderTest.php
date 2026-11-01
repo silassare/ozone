@@ -49,6 +49,7 @@ final class AuthorizationProviderTest extends TestCase
 	 * full CREATE TABLE SQL via the Gobl query generator and run it here so
 	 * that every test in this class can persist OZAuth rows.
 	 */
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();

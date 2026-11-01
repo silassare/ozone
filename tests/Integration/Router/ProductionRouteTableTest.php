@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Integration\Router;
 
+use Override;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
@@ -32,7 +33,7 @@ use Symfony\Component\Process\Process;
 #[CoversNothing]
 final class ProductionRouteTableTest extends TestCase
 {
-	private static OZTestProject $proj;
+	private static ?OZTestProject $proj = null;
 
 	private static ?Process $server = null;
 
@@ -42,6 +43,7 @@ final class ProductionRouteTableTest extends TestCase
 
 	private static string $log = '';
 
+	#[Override]
 	public static function setUpBeforeClass(): void
 	{
 		parent::setUpBeforeClass();
@@ -72,15 +74,14 @@ final class ProductionRouteTableTest extends TestCase
 		self::$proj = $proj;
 	}
 
+	#[Override]
 	public static function tearDownAfterClass(): void
 	{
 		if (null !== self::$server && self::$server->isRunning()) {
 			self::$server->stop(3);
 		}
 
-		if (isset(self::$proj)) {
-			self::$proj->destroy();
-		}
+		self::$proj?->destroy();
 
 		parent::tearDownAfterClass();
 	}
@@ -142,7 +143,7 @@ final class ProductionRouteTableTest extends TestCase
 
 		$before = self::tables();
 
-		self::$proj->oz('settings', 'set', '--group=oz.gc', '--key=OZ_GC_PROBABILITY', '--value=0')->mustRun();
+		self::proj()->oz('settings', 'set', '--group=oz.gc', '--key=OZ_GC_PROBABILITY', '--value=0')->mustRun();
 		self::resetLog();
 
 		[$status, $data] = self::get('/rt-a');
@@ -159,7 +160,7 @@ final class ProductionRouteTableTest extends TestCase
 
 		$before = self::tables();
 
-		self::$proj->oz('settings', 'set', '--scope=api', '--group=oz.gc', '--key=OZ_GC_PROBABILITY', '--value=7')
+		self::proj()->oz('settings', 'set', '--scope=api', '--group=oz.gc', '--key=OZ_GC_PROBABILITY', '--value=7')
 			->mustRun();
 
 		[$status, $data] = self::get('/rt-b/setting');
@@ -167,6 +168,21 @@ final class ProductionRouteTableTest extends TestCase
 		self::assertSame(200, $status);
 		self::assertSame('7', (string) ($data['data']['value'] ?? ''));
 		self::assertCount(\count($before) + 1, self::tables());
+	}
+
+	/**
+	 * The project this class runs against, which its own setup created.
+	 *
+	 * Empty until that setup has run, and a test reaching it before then says so here
+	 * rather than as a call on null several frames away.
+	 */
+	private static function proj(): OZTestProject
+	{
+		$project = self::$proj;
+
+		self::assertNotNull($project, 'The test project was not created.');
+
+		return $project;
 	}
 
 	/**
@@ -204,7 +220,7 @@ final class ProductionRouteTableTest extends TestCase
 	 */
 	private static function tables(): array
 	{
-		$dir = InstanceLayout::releaseBuildPath(self::$proj->getPath(), InstanceLayout::BUILD_ROUTES, 'api');
+		$dir = InstanceLayout::releaseBuildPath(self::proj()->getPath(), InstanceLayout::BUILD_ROUTES, 'api');
 
 		return \glob($dir . \DIRECTORY_SEPARATOR . 'api.*.php') ?: [];
 	}
