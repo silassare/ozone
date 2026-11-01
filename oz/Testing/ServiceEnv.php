@@ -16,8 +16,8 @@ namespace OZONE\Core\Testing;
 /**
  * Class ServiceEnv.
  *
- * The service addresses a test project inherits from its environment -- the Redis, MinIO and ClamAV
- * containers of a Docker test setup (OZone's `docker/compose.yaml`).
+ * The service addresses a test project inherits from its environment -- the Redis, Memcached, MinIO
+ * and ClamAV containers of a Docker test setup (OZone's `docker/compose.yaml`).
  *
  * One list, because both suites need it and they used to keep their own: the unit sandbox forwarded
  * these, `OZTestProject` forwarded only the database, and the image ships `ext-redis` -- which makes
@@ -34,6 +34,7 @@ final class ServiceEnv
 		'OZ_REDIS_HOST',
 		'OZ_REDIS_PORT',
 		'OZ_REDIS_PASSWORD',
+		'OZ_MEMCACHED_SERVERS',
 		'OZ_MINIO_ENDPOINT',
 		'OZ_MINIO_ACCESS_KEY',
 		'OZ_MINIO_SECRET_KEY',

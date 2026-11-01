@@ -15,6 +15,7 @@ namespace OZONE\Core\Stores\Drivers;
 
 use Memcached;
 use Override;
+use OZONE\Core\App\Settings;
 use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
@@ -32,6 +33,21 @@ use RuntimeException;
  */
 final class MemcachedStore implements StoreDriverInterface
 {
+	/**
+	 * The 30 days above which Memcached reads an expiry as an absolute time rather than a delay.
+	 */
+	public const int RELATIVE_LIMIT = 2_592_000;
+
+	/**
+	 * The pool a store connects to when nothing names one: Memcached's own default address.
+	 */
+	public const string DEFAULT_SERVERS = '127.0.0.1:11211';
+
+	/**
+	 * The port an entry of the pool leaves out.
+	 */
+	public const int DEFAULT_PORT = 11211;
+
 	/**
 	 * MemcachedStore constructor.
 	 */
@@ -91,21 +107,47 @@ final class MemcachedStore implements StoreDriverInterface
 	#[Override]
 	public function set(StoreEntry $entry): bool
 	{
-		$key                    = $entry->key;
-		$expire                 = $entry->expiresAt;
-		$expire_in_milliseconds = (null !== $expire) ? (int) ($expire * 1000) : null;
+		$key        = $entry->key;
+		$expire     = $entry->expiresAt;
+		$expiration = (null !== $expire) ? self::expiration($expire) : 0;
 
-		$this->memcached->set($key, $entry->value, $expire_in_milliseconds);
+		$this->memcached->set($key, $entry->value, $expiration);
 
 		if (Memcached::RES_SUCCESS !== $this->memcached->getResultCode()) {
 			return false;
 		}
 
 		if (null !== $expire) {
-			$this->memcached->set($key . ':expire', $expire, $expire_in_milliseconds);
+			$this->memcached->set($key . ':expire', $expire, $expiration);
 		}
 
 		return Memcached::RES_SUCCESS === $this->memcached->getResultCode();
+	}
+
+	/**
+	 * What Memcached is given for an entry that expires at the absolute time it carries.
+	 *
+	 * Seconds, and never milliseconds: an entry's expiry is an absolute microtime, and handing
+	 * Memcached a thousand times that number made every entry one with a timestamp tens of
+	 * millennia away, so nothing this store wrote ever expired of its own accord.
+	 *
+	 * Memcached reads the number two ways: above 30 days it is the absolute time the entry ends at,
+	 * at or below it the seconds it has left, and 0 means keep it for ever. So a short life is sent
+	 * as the seconds it has left, which no clock difference between this machine and the server can
+	 * stretch, and a longer one -- or a life already over, which 0 would turn into no expiry at all
+	 * -- as the time it ends at, the only form that cannot be read as the other.
+	 *
+	 * Public so that the rule can be tested without a Memcached server, which the suite has none of.
+	 *
+	 * @internal
+	 */
+	public static function expiration(float $expires_at): int
+	{
+		$seconds_left = (int) \ceil($expires_at - \microtime(true));
+
+		return ($seconds_left > 0 && $seconds_left <= self::RELATIVE_LIMIT)
+			? $seconds_left
+			: (int) \ceil($expires_at);
 	}
 
 	/**
@@ -198,9 +240,7 @@ final class MemcachedStore implements StoreDriverInterface
 
 		static $memcached_instances = [];
 
-		$servers = [
-			'_' => [],
-		];
+		$servers = self::servers($options);
 
 		if (isset($memcached_instances[$namespace])) {
 			$instance = $memcached_instances[$namespace];
@@ -226,6 +266,55 @@ final class MemcachedStore implements StoreDriverInterface
 	/**
 	 * Fails when `ext-memcached` is missing.
 	 */
+	/**
+	 * The pool a store connects to, as `Memcached::addServers()` takes it.
+	 *
+	 * Nothing was read for it before: the list handed to `addServers()` was the literal
+	 * `['_' => []]`, which names no server at all, so a Memcached store could reach none and the
+	 * `$options` of its settings entry went nowhere. A store's own `servers` option is read first,
+	 * then `oz.memcached`.
+	 *
+	 * @param array<string, mixed> $options the store's options, from its settings entry
+	 *
+	 * @return list<array{0: string, 1: int}>
+	 */
+	private static function servers(array $options): array
+	{
+		$declared = $options['servers']
+			?? Settings::get('oz.memcached', 'OZ_MEMCACHED_SERVERS', self::DEFAULT_SERVERS);
+
+		if (\is_string($declared)) {
+			$declared = \explode(',', $declared);
+		}
+
+		$servers = [];
+
+		foreach ((array) $declared as $entry) {
+			if (\is_array($entry)) {
+				$host = \trim((string) ($entry[0] ?? ''));
+				$port = (int) ($entry[1] ?? self::DEFAULT_PORT);
+			} else {
+				// `host`, or `host:port`: the last colon, so an IPv6 address keeps its own.
+				$entry = \trim((string) $entry);
+				$colon = \strrpos($entry, ':');
+				$host  = false === $colon ? $entry : \substr($entry, 0, $colon);
+				$port  = false === $colon ? self::DEFAULT_PORT : (int) \substr($entry, $colon + 1);
+			}
+
+			if ('' !== $host) {
+				$servers[] = [$host, $port < 1 ? self::DEFAULT_PORT : $port];
+			}
+		}
+
+		if (empty($servers)) {
+			throw new RuntimeException(
+				'No Memcached server is configured: see "OZ_MEMCACHED_SERVERS" in "oz.memcached".'
+			);
+		}
+
+		return $servers;
+	}
+
 	private static function assertExtension(): void
 	{
 		/** @noinspection ClassConstantCanBeUsedInspection */
