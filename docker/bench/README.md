@@ -43,6 +43,29 @@ measures them with [wrk](https://github.com/wg/wrk).
 - Worker mode needs code written for it (no request state in statics -- see `EndRequestHook` in the
   instructions); classic mode is what a PHP-FPM deployment gets.
 
+## What a session costs a request, 2026-11-01
+
+Not part of `make benchmark-http`, which measures anonymous routes: measured on its own, because
+"one session UPDATE per request" was written down as a cost worth removing and turns out not to
+happen. `Session::save()` slides `expire_at`, `last_seen_at` and `updated_at`, all three whole
+seconds, and Gobl writes the columns that changed and no others -- so a request landing in the same
+second as the one before it finds the three already holding what it would write, and sends nothing.
+
+300 rounds on this machine (Docker Desktop on Linux): the ORM path against the suite's SQLite
+sandbox on a tmpfs, the statement against the real MySQL and PostgreSQL containers through PDO.
+
+| | p50 |
+| --- | ---: |
+| the first request of a second: the save that writes, whole ORM path | 0.885 ms |
+| any other request of that second: the save that writes nothing | 0.039 ms |
+| the session row read by id, which happens anyway | 0.380 ms |
+| the same three-column UPDATE, statement only, MySQL / PostgreSQL | 0.174 / 0.161 ms |
+
+So a write costs about twice the read it accompanies, once per second per active session, and most
+of it is the ORM and its transaction rather than the database. Throttling the slide would buy that
+millisecond per session-second and cost an expiry that no longer slides when it says it does, which
+is a security default; the second-granularity of the columns already throttles it.
+
 ## Results, 2026-09-14
 
 Docker Desktop on Linux (8 vCPUs, 3.9 GB), FrankenPHP 1.12.7, PHP 8.4.25, Laravel 12.69 (Octane

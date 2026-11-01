@@ -2,6 +2,52 @@
 
 ### Breaking changes
 
+- **A login attempt is counted where it is let through, not after it has failed.** `LoginThrottle`
+  was asked `isLocked()`, the password was verified, and a failure was recorded afterwards: three
+  steps, each atomic, the sequence not. Attempts that arrived together all read the same count
+  before any of them had been recorded, so a burst of a hundred got a hundred tries whatever
+  `OZ_AUTH_LOGIN_MAX_FAILURES` said -- concurrency alone multiplied what the throttle allowed, which
+  is the one thing a throttle exists to prevent. `LoginThrottle::claim()` counts the attempt and
+  answers whether it may go ahead in one step, and it is what `AuthUsers::checkPassword()` and
+  `DigestAuth` now call. `recordFailure()` stays for a flow that learns of a failure elsewhere than
+  where it let the attempt through, with the gap written down in its docblock.
+
+  Three consequences for a project. The counter counts attempts rather than failures, so a reading
+  of `failures()` taken mid-attempt includes the one in progress; a right password still clears it,
+  so what accumulates between two successes is unchanged. An attempt refused by the limit is counted
+  too -- counting is how it was refused -- and cannot extend a lockout, because the window runs from
+  the first failure and counting keeps its expiry. And a right password on an account that cannot be
+  used yet now clears the count before `OZ_AUTH_USER_UNVERIFIED` is returned: nothing was being
+  guessed, and holding it against the account would lock out whoever still has to verify it with the
+  one password that works. `LoginThrottle::release()` gives a claim back for a step that turns out to
+  be part of the protocol rather than a guess, which is what a digest nonce of ours that aged out
+  does before it answers with a fresh challenge.
+
+- **`ShellRunnerInterface` has a new method, `withTimeout()`, and a step says how long it is worth
+  waiting for.** A host carried one bound for every command it ran -- 900 seconds, the size of a
+  cold `composer install` -- and a deploy ran twelve steps under it: a symbolic link swap, an ORM
+  build, a migration and a package install alike. A bound sized for the slowest work means nothing
+  for the rest, so a step that hangs is waited out for fifteen minutes and a step that needs longer
+  fails anyway. `ProvisionStep` takes a `$timeout` (null for the host's own, 0 for none) and
+  `ProvisionPlan::run()` runs the step on `$host->withTimeout(...)`, leaving the host as it is for
+  the next one. A project with its own `HostInterface` implements `withTimeout()`, returning the
+  same host with that bound and changing nothing else.
+
+  `run()` gains an outcome with it: a command killed for taking longer than it was given answers
+  `ShellRunnerInterface::TIMED_OUT` (124, as `timeout(1)` reports one) instead of raising
+  `ProcessTimedOutException` out of the host. That exception reached nothing that could say what had
+  been cut; a plan now reports the step, its bound and what the command had printed, like any other
+  failure. An implementation that lets a timeout raise instead will have it cross a plan again.
+
+  The deploy's own steps say what they are worth: `dependencies` 1800 seconds (a cold install on a
+  small server with a far mirror is slower than 900), `restart` 120 (a unit that has not restarted
+  in two minutes is wedged, and waiting tells no one anything), and `migrations` **none at all** --
+  it is the step a rollback cannot undo, it backs the database up first, and both take as long as
+  the data does. Cutting that one off leaves a schema half migrated, which is what the build's old
+  300-second cap did under contention. An SSH session now ends on a dead peer of its own accord
+  (`ConnectTimeout`, `ServerAliveInterval`, `ServerAliveCountMax`), which is what bounds a step that
+  has no bound.
+
 - **A date column is documented as the string of digits it is.** It is stored as a big integer, or
   a decimal when it keeps microseconds, and Gobl answers both as strings so no digit is lost through
   JSON -- the same reason an id is a string. The OpenAPI schema said `type: string` and then gave it
@@ -239,6 +285,19 @@
 
 ### Added
 
+- **A username can be given to a user.** `oz_usernames` is the one place a username is unique across
+  every auth user repository a project registers, and `users.name` has a foreign key to it -- but
+  nothing ever wrote to that table: `UsernameUtils` only read it, so the column could point at
+  nothing and no user could hold a username at all. `UsernameUtils::claim(string $name,
+  AuthUserInterface $user)` takes a free name for an auth user of any repository (the row records the
+  holder as a morph) and answers whether it got it. The primary key is what decides rather than the
+  check above it: two requests claiming one name both read it as free, and the one the database
+  refuses is told the name is taken instead of raising. A name that was held and released is kept,
+  soft-deleted rather than removed, and is not handed to anyone else -- recycling a freed name lets
+  one user be addressed by what another was known by, so it is a project's decision and not a
+  default. Setting the name on the user's own entity stays the caller's: OZone knows what a username
+  is and deliberately not what holds it.
+
 - **A request can search text.** Gobl gained two operators, `matches` and `starts_with`, so a REST
   request's `filters` carries them and the API documentation lists them. They take a **term** and
   not a pattern -- `%` and `_` are searched for as themselves, an empty term is refused -- which is
@@ -294,6 +353,27 @@
 - `REST\Enums\RESTFulAction`, the action table driving `RESTFulService` routes and docs (`REST\RESTFulApiDoc`); `RESTFulService::beforeAction()` / `afterAction()` hooks and `configureRoute()` for per-action guards, forms or middlewares; `RESTFulService::routeName()` accepts a `RESTFulAction`.
 
 ### Fixed
+
+- **A diagnostic its caller had silenced was logged anyway.** The error handler never looked at
+  `error_reporting()`, so a warning suppressed with `@` was logged as a warning: php-utils creates a
+  directory with `@mkdir()` and checks the result after, and two requests creating one directory
+  wrote `mkdir(): File exists` to the log, which is how it was found in the concurrent sign-up test.
+  The handler now leaves a silenced diagnostic alone -- and leaves it to PHP rather than swallowing
+  it, returning `false` so that it still lands in `error_get_last()`. `@` and then `error_get_last()`
+  is how a caller reads why a call it expected to be able to fail failed, and a framework that took
+  the diagnostic out of the log and out of the caller's reach would have broken that for every
+  project; PHP's own handler honours `error_reporting()` for displaying and logging, so nothing of it
+  is printed or written. The shutdown function knows the one it passed on and does not report it as
+  an error of this run's ending.
+
+- **Every entry of a Memcached store was kept for tens of millennia.** `MemcachedStore::set()`
+  computed `(int) ($expire * 1000)` from the entry's absolute expiry and gave it to
+  `Memcached::set()`, which takes seconds: an entry meant to last a minute was given a timestamp
+  around the year 55,000, so nothing this store wrote ever expired of its own accord -- a cached
+  value, a rate-limit counter and a lock alike, until Memcached evicted it under pressure. The
+  expiry is now sent as seconds, as the delay the entry has left where Memcached reads the number
+  that way, and as the absolute time it ends at where it does not: over its 30-day threshold, and
+  for a life already over, which a delay of zero or less would have turned into no expiry at all.
 
 - **A server the test kit could not start was reported as a wait, not as a reason.**
   `OZTestProject::startServer()` polled for `server.json`, then for the port, until two deadlines of
