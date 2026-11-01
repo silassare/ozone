@@ -15,6 +15,7 @@ namespace OZONE\Core\Cli\Server;
 
 use Override;
 use OZONE\Core\Cli\Server\Interfaces\HostInterface;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 
 /**
@@ -35,11 +36,24 @@ final class LocalHost implements HostInterface
 	{
 		$process = Process::fromShellCommandline($command, null, null, null, $this->timeout);
 
-		$process->run();
+		try {
+			$process->run();
+			$code = (int) $process->getExitCode();
+		} catch (ProcessTimedOutException) {
+			// Killed, not failed: answered as an exit code so that a caller reads it where it reads
+			// every other failure, with the step and the command it belongs to.
+			$code = self::TIMED_OUT;
+		}
 
 		$output = $process->getOutput() . $process->getErrorOutput();
 
-		return (int) $process->getExitCode();
+		return $code;
+	}
+
+	#[Override]
+	public function withTimeout(float $timeout): static
+	{
+		return new self($timeout);
 	}
 
 	#[Override]

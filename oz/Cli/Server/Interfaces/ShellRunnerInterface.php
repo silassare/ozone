@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Server\Interfaces;
 
 use OZONE\Core\Cli\Server\ProvisionPlan;
+use OZONE\Core\Cli\Server\ProvisionStep;
 
 /**
  * Interface ShellRunnerInterface.
@@ -26,7 +27,20 @@ use OZONE\Core\Cli\Server\ProvisionPlan;
 interface ShellRunnerInterface
 {
 	/**
+	 * The exit code of a command that was killed for taking longer than it was given, as
+	 * `timeout(1)` reports one.
+	 *
+	 * A runner answers it instead of raising: a caller reads one failure the same way whether the
+	 * command failed or was never allowed to finish, and {@see ProvisionPlan} reports both as the
+	 * step they belong to.
+	 */
+	public const int TIMED_OUT = 124;
+
+	/**
 	 * Runs a command, and returns its exit code.
+	 *
+	 * A command that takes longer than this runner allows is killed and reported as
+	 * {@see self::TIMED_OUT}, with whatever it printed until then.
 	 *
 	 * @param string $command the shell command
 	 * @param string $output  receives the combined output
@@ -34,4 +48,12 @@ interface ShellRunnerInterface
 	 * @return int the exit code
 	 */
 	public function run(string $command, string &$output = ''): int;
+
+	/**
+	 * The same runner, allowing one command the seconds given; 0 for no limit.
+	 *
+	 * The runner is left as it is: a step that needs longer, or must not be cut short, runs on the
+	 * answer and nothing else changes bound ({@see ProvisionStep::$timeout}).
+	 */
+	public function withTimeout(float $timeout): static;
 }

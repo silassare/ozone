@@ -22,6 +22,12 @@ use OZONE\Core\Cli\Server\Interfaces\HostInterface;
  * One thing a provision run does, as a name, a reason and the exact shell commands. A step knows
  * nothing about how it runs: that is {@see ProvisionPlan}, which is what makes a plan printable and
  * assertable without touching the host.
+ *
+ * What it does say is how long it is worth waiting for. A host carries one bound for every command
+ * it runs, sized for the slowest step there is, which leaves it far too loose to mean anything for
+ * the rest: a symbolic link that has not been made in fifteen minutes is not slow, it is stuck,
+ * and a migration that has run for fourteen must not be cut off at the fifteenth. A step that says
+ * nothing keeps the host's bound.
  */
 final readonly class ProvisionStep
 {
@@ -31,12 +37,15 @@ final readonly class ProvisionStep
 	 * @param list<string> $commands  the shell commands, in order
 	 * @param null|Closure $satisfied `fn (HostInterface $host): bool`, true when the host already has this;
 	 *                                null when unknown
+	 * @param null|float   $timeout   seconds one command of this step may take: null for the bound the
+	 *                                host already carries, 0 for none
 	 */
 	public function __construct(
 		public string $name,
 		public string $reason,
 		public array $commands,
 		private ?Closure $satisfied = null,
+		public ?float $timeout = null,
 	) {}
 
 	/**

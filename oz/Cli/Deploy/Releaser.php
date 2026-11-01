@@ -34,6 +34,28 @@ use OZONE\Core\Exceptions\RuntimeException;
 final readonly class Releaser
 {
 	/**
+	 * Seconds the dependency install is given: slow is normal there, and a cold install on a small
+	 * server with a far mirror is slower than the bound a host carries by default.
+	 */
+	public const float DEPENDENCIES_TIMEOUT = 1800.0;
+
+	/**
+	 * Seconds a service restart is given: `systemctl restart` either returns or the unit is wedged,
+	 * and waiting out a long bound tells an operator nothing a short one does not.
+	 */
+	public const float RESTART_TIMEOUT = 120.0;
+
+	/**
+	 * The migrations run under no time limit at all.
+	 *
+	 * It is the one step a rollback cannot undo, it writes a backup of the database first, and both
+	 * take as long as the data does. Cutting it off is worse than any wait: what it leaves behind is
+	 * a schema half migrated, which is what a bound sized for other work once produced. A network
+	 * that has died ends it anyway, and that is the SSH client's business rather than a deadline's.
+	 */
+	public const float MIGRATIONS_TIMEOUT = 0.0;
+
+	/**
 	 * @param string       $root       the deploy root, holding releases/, current, data/ and .ozone/
 	 * @param string       $repository the git repository to check out
 	 * @param string       $ref        the branch, tag or commit to deploy
@@ -126,6 +148,7 @@ final readonly class Releaser
 					\escapeshellarg($release)
 				),
 			],
+			timeout: self::DEPENDENCIES_TIMEOUT,
 		);
 
 		$steps[] = new ProvisionStep(
@@ -159,6 +182,7 @@ final readonly class Releaser
 						\escapeshellarg($oz)
 					),
 				],
+				timeout: self::MIGRATIONS_TIMEOUT,
 			);
 		}
 
@@ -195,6 +219,7 @@ final readonly class Releaser
 					static fn (string $unit): string => \sprintf('systemctl restart %s', \escapeshellarg($unit)),
 					$this->restart
 				),
+				timeout: self::RESTART_TIMEOUT,
 			);
 		}
 
@@ -255,6 +280,7 @@ final readonly class Releaser
 					static fn (string $unit): string => \sprintf('systemctl restart %s', \escapeshellarg($unit)),
 					$this->restart
 				),
+				timeout: self::RESTART_TIMEOUT,
 			);
 		}
 

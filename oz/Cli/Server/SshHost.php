@@ -16,6 +16,7 @@ namespace OZONE\Core\Cli\Server;
 use InvalidArgumentException;
 use Override;
 use OZONE\Core\Cli\Server\Interfaces\HostInterface;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 
 /**
@@ -69,6 +70,12 @@ final readonly class SshHost implements HostInterface
 		return new self($target, $port, $identity, 900.0, $options);
 	}
 
+	#[Override]
+	public function withTimeout(float $timeout): static
+	{
+		return new self($this->destination, $this->port, $this->identity, $timeout, $this->options);
+	}
+
 	/**
 	 * The `ssh` command line that runs a shell command on the host.
 	 *
@@ -84,6 +91,16 @@ final readonly class SshHost implements HostInterface
 			'BatchMode=yes',
 			'-o',
 			'StrictHostKeyChecking=accept-new',
+			// What ends a command when the network does, and the only thing that does for a step
+			// that is deliberately given no time limit ({@see ProvisionStep::$timeout}): the client
+			// gives up on a peer that has stopped answering after four unanswered checks, rather
+			// than waiting on a connection that is never coming back.
+			'-o',
+			'ConnectTimeout=15',
+			'-o',
+			'ServerAliveInterval=15',
+			'-o',
+			'ServerAliveCountMax=4',
 			'-o',
 			'ControlMaster=auto',
 			'-o',
@@ -228,9 +245,18 @@ final readonly class SshHost implements HostInterface
 	{
 		$process = new Process($this->sshCommand($command), null, null, $input, $this->timeout);
 
-		$process->run();
+		try {
+			$process->run();
+			$code = (int) $process->getExitCode();
+		} catch (ProcessTimedOutException) {
+			// The ssh client is killed here, and the command it started keeps running on the host:
+			// nothing of ours is on the other end to stop it, and the session carries no terminal
+			// whose closing would signal it. Reported as the code `timeout(1)` uses, so that a
+			// plan says which step was cut and what it had printed.
+			$code = self::TIMED_OUT;
+		}
 
-		return [(int) $process->getExitCode(), $process->getOutput(), $process->getErrorOutput()];
+		return [$code, $process->getOutput(), $process->getErrorOutput()];
 	}
 
 	private function succeeds(string $command): bool

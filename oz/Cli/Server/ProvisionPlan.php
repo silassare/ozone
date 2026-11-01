@@ -83,6 +83,10 @@ final class ProvisionPlan
 	 * applied step must not be recorded as done. What did succeed stays in the manifest, so the
 	 * next run continues from there.
 	 *
+	 * A command killed for taking longer than its step allows is one of those failures, and says so
+	 * rather than ending the run with a message about a process: which step was cut, and what it had
+	 * printed, is what tells an operator whether to give it longer or go looking.
+	 *
 	 * @param HostInterface $host    the host the plan is for
 	 * @param null|callable $on_step called with (ProvisionStep, string $state) per step,
 	 *                               state being `skipped`, `running` or `done`
@@ -105,19 +109,25 @@ final class ProvisionPlan
 
 			null !== $on_step && $on_step($step, 'running');
 
+			// The host's own bound, unless this step said what it is worth waiting for. The host is
+			// left as it is: the next step gets the bound it asked for, or the host's again.
+			$runner = null === $step->timeout ? $host : $host->withTimeout($step->timeout);
+
 			foreach ($step->commands as $command) {
 				$output = '';
-				$code   = $host->run($command, $output);
+				$code   = $runner->run($command, $output);
 
 				if (0 !== $code) {
 					throw new RuntimeException(\sprintf(
-						'Provision step "%s" failed on: %s',
+						'Provision step "%s" %s: %s',
 						$step->name,
+						HostInterface::TIMED_OUT === $code ? 'was still running when its time ran out' : 'failed on',
 						$command
 					), [
 						'_step'    => $step->name,
 						'_command' => $command,
 						'_code'    => $code,
+						'_timeout' => $step->timeout,
 						'_output'  => \substr($output, -2000),
 					]);
 				}
