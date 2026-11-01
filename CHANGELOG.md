@@ -295,6 +295,29 @@
 
 ### Fixed
 
+- **A server the test kit could not start was reported as a wait, not as a reason.**
+  `OZTestProject::startServer()` polled for `server.json`, then for the port, until two deadlines of
+  15 and 10 seconds, whatever had happened in between: an `oz project serve` that exited at once --
+  a port already taken, a scope the project does not have, a project that cannot boot -- was waited
+  out to the full deadline, stopped, and reported as the deadline, with everything it had printed
+  thrown away. A wait now ends as soon as the process is gone, and every failure carries what it
+  printed, so the reason is in the failure instead of in a rerun. The two are named constants
+  (`SERVER_JSON_WAIT`, `SERVER_PORT_WAIT`) multiplied by `OZ_TEST_SERVER_WAIT_SCALE`, for a machine
+  on which generous is not enough: a full `make test` reached both while the ClamAV container the
+  suite starts was loading its signature database, and turned one slow start into 10 red tests in
+  cron code with nothing wrong in `oz/`.
+
+- **A request that never reached the object storage reported only the URL.** The HTTP stream
+  wrapper's `fopen()` is called under `@`, which the suite needs -- a warning raised in `oz/` is
+  fatal to a run -- and the exception it threw named the URL and nothing else, so a connection
+  refused, a name that did not resolve, a peer that hung up and a service that was down all read
+  the same. The reason is read back from the error the `@` suppressed (`error_clear_last()` before
+  the call, `error_get_last()` after), and reported in the shape the cURL transport already used:
+  `Unable to reach the object storage at "<url>": Failed to open stream: Connection refused.` PHP
+  prefixes its own message with `fopen(<url>): `, which is dropped, so the URL is said once. Found
+  when a PUT to MinIO failed once under load with nothing but the URL to go on, and covered by a
+  test that sends to a port of the machine nothing listens on.
+
 - **A scope build was capped at 300 seconds, inside a budget that was already bounded.**
   `oz project build` compiles each scope in a process of its own, and that process was given a
   300-second deadline no option and no setting could raise. A deploy reaches it as a step run

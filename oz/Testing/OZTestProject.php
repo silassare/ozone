@@ -55,6 +55,12 @@ use Symfony\Component\Process\Process;
  */
 final class OZTestProject
 {
+	/** Seconds {@see startServer()} waits for `oz project serve` to write `server.json`. */
+	public const float SERVER_JSON_WAIT = 15.0;
+
+	/** Seconds {@see startServer()} then waits for the port to accept a connection. */
+	public const float SERVER_PORT_WAIT = 10.0;
+
 	/** The directory of the suite's stubs ({@see writeFileFromStub()}). */
 	private static ?string $stubs_dir = null;
 
@@ -531,31 +537,36 @@ final class OZTestProject
 
 		// oz project serve writes server.json before binding the port.
 		$server_json = $this->dir . "/.ozone/cache/{$scope}/server.json";
-		$deadline    = \microtime(true) + 15.0;
+		$wait        = self::SERVER_JSON_WAIT * self::waitScale();
+		$deadline    = \microtime(true) + $wait;
+
 		while (!\is_file($server_json) && \microtime(true) < $deadline) {
+			if (!$server->isRunning()) {
+				throw self::serverGone($server, $scope, 'exited before it wrote server.json');
+			}
+
 			\usleep(100_000);
 		}
 
 		if (!\is_file($server_json)) {
-			$server->stop(0);
-
-			throw new RuntimeException(
-				"oz project serve (scope={$scope}) did not write server.json within 15 seconds."
-			);
+			throw self::serverGone($server, $scope, \sprintf(
+				'did not write server.json within %s seconds',
+				\round($wait, 1)
+			));
 		}
 
 		$info = \json_decode(\file_get_contents($server_json), true);
 		$port = (int) ($info['port'] ?? 0);
 
 		if (0 === $port) {
-			$server->stop(0);
-
-			throw new RuntimeException('server.json did not contain a valid port.');
+			throw self::serverGone($server, $scope, 'wrote a server.json without a valid port');
 		}
 
 		// Poll until the port is actually accepting connections.
 		$ready    = false;
-		$deadline = \microtime(true) + 10.0;
+		$wait     = self::SERVER_PORT_WAIT * self::waitScale();
+		$deadline = \microtime(true) + $wait;
+
 		while (\microtime(true) < $deadline) {
 			$sock = @\fsockopen($host, $port, $errno, $errstr, 0.1);
 			if (\is_resource($sock)) {
@@ -564,15 +575,20 @@ final class OZTestProject
 
 				break;
 			}
+
+			if (!$server->isRunning()) {
+				throw self::serverGone($server, $scope, \sprintf('exited before it bound port %d', $port));
+			}
+
 			\usleep(100_000);
 		}
 
 		if (!$ready) {
-			$server->stop(0);
-
-			throw new RuntimeException(
-				"PHP built-in server (scope={$scope}) did not start within 10 seconds."
-			);
+			throw self::serverGone($server, $scope, \sprintf(
+				'did not accept a connection on port %d within %s seconds',
+				$port,
+				\round($wait, 1)
+			));
 		}
 
 		// Re-read server.json after the port is confirmed open: at this point
@@ -584,6 +600,43 @@ final class OZTestProject
 		}
 
 		return [$server, $host, $port];
+	}
+
+	/**
+	 * What {@see startServer()}'s two waits are multiplied by: `OZ_TEST_SERVER_WAIT_SCALE`, 1 by
+	 * default.
+	 *
+	 * Both are generous on an idle machine and have been reached on a loaded one: a suite that
+	 * starts containers of its own competes with them for the disk, and one that was loading a virus
+	 * scanner's signature database behind the run reached them twice. A machine that needs longer
+	 * says so here instead of in a patch to this file, and a value of zero or less is read as 1.
+	 */
+	private static function waitScale(): float
+	{
+		$scale = (float) (\getenv('OZ_TEST_SERVER_WAIT_SCALE') ?: '1');
+
+		return $scale > 0 ? $scale : 1.0;
+	}
+
+	/**
+	 * The failure of a server that did not come up, with whatever its process printed.
+	 *
+	 * `oz project serve` says why it is not serving -- a port already taken, a project that does not
+	 * boot -- and reading its output only once it is stopped is what makes the reason part of the
+	 * failure: a wait of its own length used to be the whole report, whatever had happened.
+	 */
+	private static function serverGone(Process $server, string $scope, string $what): RuntimeException
+	{
+		$server->stop(0);
+
+		$printed = \trim($server->getOutput() . \PHP_EOL . $server->getErrorOutput());
+
+		return new RuntimeException(\sprintf(
+			'oz project serve (scope=%s) %s.%s',
+			$scope,
+			$what,
+			'' === $printed ? ' It printed nothing.' : \PHP_EOL . $printed
+		));
 	}
 
 	public function destroy(): void

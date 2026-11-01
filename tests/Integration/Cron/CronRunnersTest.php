@@ -189,7 +189,10 @@ final class CronRunnersTest extends TestCase
 	private static function project(DbTestConfig $config): array
 	{
 		if (!isset(self::$projects[$config->rdbms])) {
-			self::fail(\sprintf('Project for %s not initialized.', $config->rdbms));
+			self::fail(\sprintf(
+				'Project for %s not initialized. Did testARequestRunsTheDueTasksWhenNoSchedulerDoes pass?',
+				$config->rdbms
+			));
 		}
 
 		return self::$projects[$config->rdbms];

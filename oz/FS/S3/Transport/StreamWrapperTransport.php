@@ -73,10 +73,19 @@ final class StreamWrapperTransport implements S3TransportInterface
 			],
 		]);
 
+		// The `@` is what keeps a connection that failed from being raised as a warning, which the
+		// suite makes fatal, so the reason is read back from the error it suppressed: the URL alone
+		// does not say whether nothing was listening, the name did not resolve or the peer hung up.
+		\error_clear_last();
+
 		$handle = @\fopen($request->url, 'rb', false, $context);
 
 		if (false === $handle) {
-			throw new RuntimeException(\sprintf('Unable to reach the object storage at "%s".', $request->url));
+			throw new RuntimeException(\sprintf(
+				'Unable to reach the object storage at "%s": %s.',
+				$request->url,
+				self::lastErrorReason($request->url)
+			));
 		}
 
 		$meta = \stream_get_meta_data($handle);
@@ -112,6 +121,26 @@ final class StreamWrapperTransport implements S3TransportInterface
 		}
 
 		return new S3Response($status, $headers, $content);
+	}
+
+	/**
+	 * Why the request failed, read back from the error the `@` suppressed, in the shape the cURL
+	 * transport reports one.
+	 *
+	 * PHP names the call and the URL it was given before saying what went wrong; the caller says
+	 * the URL already.
+	 */
+	private static function lastErrorReason(string $url): string
+	{
+		$error   = \error_get_last();
+		$message = null === $error ? '' : $error['message'];
+		$prefix  = 'fopen(' . $url . '): ';
+
+		if (\str_starts_with($message, $prefix)) {
+			$message = \substr($message, \strlen($prefix));
+		}
+
+		return '' === $message ? 'unknown stream error' : $message;
 	}
 
 	/**
