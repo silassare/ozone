@@ -18,6 +18,13 @@
     <php>
         <ini name="error_reporting" value="-1"/>
         <!--
+            A bound, so a runaway allocation fails a test by name instead of taking the machine
+            with it: the CLI runs at `memory_limit = -1`, where PHP never raises, every byte of
+            RAM and swap goes, and the run is killed from outside with no output to read. The
+            whole suite peaks at 78 MB.
+        -->
+        <ini name="memory_limit" value="512M"/>
+        <!--
             No server address belongs in this file. The suites run through `make`, in Docker, and
             docker/compose.yaml exports every OZ_TEST_* / OZ_REDIS_* / OZ_MINIO_* / OZ_CLAMAV_*
             variable into the PHP container. A developer who does not want Docker exports the same
