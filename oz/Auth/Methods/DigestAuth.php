@@ -148,7 +148,9 @@ class DigestAuth implements AuthenticationMethodInterface
 		// A digest response can be guessed like a password: same lockout, per auth key.
 		$subject = 'digest:' . $auth_key_ref;
 
-		if (LoginThrottle::isLocked($subject)) {
+		// Counted as it is let through: a check here and a record in `reject()` left every attempt
+		// of a burst reading the same count, so concurrency alone bought more tries than the maximum.
+		if (!LoginThrottle::claim($subject)) {
 			throw new ForbiddenException(null, [
 				'_reason' => 'OZ_AUTH_TOO_MUCH_ATTEMPT',
 			]);
@@ -158,13 +160,16 @@ class DigestAuth implements AuthenticationMethodInterface
 		$issued_at = $this->verifyNonce($nonce);
 
 		if (null === $issued_at) {
-			$this->reject($subject, [
+			$this->reject([
 				'_reason' => 'Invalid digest nonce.',
 			]);
 		}
 
 		if (\time() - $issued_at > self::nonceLifetime()) {
-			// A nonce we issued, expired: challenge again with a new one.
+			// A nonce we issued, expired: challenge again with a new one. Nothing was guessed here,
+			// so the attempt claimed above goes back: a client that idled past the lifetime gets a
+			// fresh challenge, and spends none of the subject's attempts on it.
+			LoginThrottle::release($subject);
 			$this->newKeys();
 			$this->stale = true;
 			$this->ask();
@@ -173,7 +178,7 @@ class DigestAuth implements AuthenticationMethodInterface
 		$nc = $this->rfc2617 ? self::parseNonceCount((string) $parsed['nc']) : 1;
 
 		if (null === $nc) {
-			$this->reject($subject, [
+			$this->reject([
 				'_reason' => 'Invalid digest nonce count.',
 			]);
 		}
@@ -181,7 +186,7 @@ class DigestAuth implements AuthenticationMethodInterface
 		$nonce_key = self::nonceKey($nonce);
 
 		if ($nc <= (int) self::nonceStore()->get($nonce_key, 0)) {
-			$this->reject($subject, [
+			$this->reject([
 				'_reason' => 'Digest nonce already used.',
 			]);
 		}
@@ -189,7 +194,7 @@ class DigestAuth implements AuthenticationMethodInterface
 		$auth = Auth::get($auth_key_ref);
 
 		if (!$auth) {
-			$this->reject($subject, [
+			$this->reject([
 				'_reason'   => 'Invalid auth ref.',
 				'_auth_ref' => $auth_key_ref,
 			]);
@@ -199,7 +204,7 @@ class DigestAuth implements AuthenticationMethodInterface
 
 		if (!$selector) {
 			// invalid username
-			$this->reject($subject, [
+			$this->reject([
 				'_reason' => 'Invalid username.',
 			]);
 		}
@@ -208,7 +213,7 @@ class DigestAuth implements AuthenticationMethodInterface
 
 		if (!$user) {
 			// invalid username
-			$this->reject($subject, [
+			$this->reject([
 				'_reason' => 'Invalid username.',
 			]);
 		}
@@ -235,7 +240,7 @@ class DigestAuth implements AuthenticationMethodInterface
 
 		if (!\hash_equals($expected_response, (string) $parsed['response'])) {
 			// invalid digest response
-			$this->reject($subject, [
+			$this->reject([
 				'_reason' => 'Invalid digest response.',
 			]);
 		}
@@ -373,14 +378,15 @@ class DigestAuth implements AuthenticationMethodInterface
 	}
 
 	/**
-	 * Counts a failed attempt against the throttle subject, then rejects the request.
+	 * Rejects the request.
+	 *
+	 * The attempt was counted where it was claimed, so nothing is recorded here: counting again
+	 * would charge one attempt twice.
 	 *
 	 * @throws ForbiddenException
 	 */
-	private function reject(string $subject, array $data): never
+	private function reject(array $data): never
 	{
-		LoginThrottle::recordFailure($subject);
-
 		throw new ForbiddenException(null, $data);
 	}
 

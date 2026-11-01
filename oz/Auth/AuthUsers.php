@@ -561,7 +561,10 @@ final class AuthUsers
 	{
 		$subject = null !== $user ? self::ref($user) : $subject;
 
-		if (LoginThrottle::isLocked($subject)) {
+		// Counted as it is let through, not after it has failed: the two were a check and then a
+		// record, and attempts arriving together all passed the check before the first of them was
+		// recorded.
+		if (!LoginThrottle::claim($subject)) {
 			return 'OZ_AUTH_TOO_MUCH_ATTEMPT';
 		}
 
@@ -569,16 +572,16 @@ final class AuthUsers
 
 		// Verify first, so an unknown account costs the same as a wrong password.
 		if (!Password::verify($pass, $hash) || null === $user) {
-			LoginThrottle::recordFailure($subject);
-
 			return 'OZ_AUTH_INVALID_CREDENTIALS';
 		}
+
+		// The password is right, so nothing here was being guessed: what the subject had counted
+		// goes, whether the account can be used or not.
+		LoginThrottle::clear($subject);
 
 		if (!$user->isAuthUserValid()) {
 			return 'OZ_AUTH_USER_UNVERIFIED';
 		}
-
-		LoginThrottle::clear($subject);
 
 		return null;
 	}
