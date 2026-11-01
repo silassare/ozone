@@ -133,6 +133,24 @@ final class ErrorUtilsTest extends TestCase
 		self::assertStringContainsString('not-here.php', $log);
 	}
 
+	public function testTheLoggerIsLoadedBeforeAnErrorCanNeedIt(): void
+	{
+		// `oz_logger()` used to resolve its classes on first use, and first use is the moment an
+		// error is raised: the process may then be out of exactly what loading a file takes, and
+		// that failure happens inside the error handler, which PHP does not re-enter.
+		[$code, $out] = self::runAutoloading(
+			'echo \implode(\',\', \array_map('
+				. 'static fn (string $c): string => \class_exists($c, false) ? $c : \'MISSING \' . $c,'
+				. ' [\OZONE\Core\Logger\Logger::class, \OZONE\Core\Logger\LogWriter::class,'
+				. ' \Psr\Log\LogLevel::class]'
+				. '));',
+			true
+		);
+
+		self::assertSame(0, $code, $out);
+		self::assertStringNotContainsString('MISSING', $out, $out);
+	}
+
 	public function testADiagnosticItsCallerSilencedIsNotLoggedAndStaysReadable(): void
 	{
 		// `@` and then `error_get_last()` is how a caller reads why a call it expected to be able to

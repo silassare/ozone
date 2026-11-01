@@ -21,6 +21,7 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\OZone;
+use Throwable;
 
 /**
  * Prepares a project for production (`oz project build`).
@@ -37,6 +38,11 @@ use OZONE\Core\OZone;
  */
 final class ProjectBuilder
 {
+	/**
+	 * What the last build of this release compiled, in that release's build directory.
+	 */
+	private const string RESULT_FILE = 'build.php';
+
 	/**
 	 * The scopes of the project: its `scopes/{name}` directories.
 	 *
@@ -68,6 +74,10 @@ final class ProjectBuilder
 	 *     scope: string,
 	 *     production: bool,
 	 *     settings_bundles: int,
+	 *     settings_sources: int,
+	 *     settings_failed: array<string, string>,
+	 *     route_tables: int,
+	 *     route_tables_failed: list<string>,
 	 *     preload: list<string>,
 	 *     diagnostics: list<string>,
 	 * }
@@ -99,7 +109,18 @@ final class ProjectBuilder
 			));
 		}
 
-		/** @var array{scope: string, production: bool, settings_bundles: int, preload: list<string>} $report */
+		/**
+		 * @var array{
+		 *     scope: string,
+		 *     production: bool,
+		 *     settings_bundles: int,
+		 *     settings_sources: int,
+		 *     settings_failed: array<string, string>,
+		 *     route_tables: int,
+		 *     route_tables_failed: list<string>,
+		 *     preload: list<string>,
+		 * } $report
+		 */
 		$report = \json_decode($last, true, 512, \JSON_THROW_ON_ERROR);
 
 		// the report is the last line of stdout; whatever came before it, the process had to say
@@ -108,6 +129,91 @@ final class ProjectBuilder
 		$report['diagnostics'] = self::diagnostics($lines, $process->getErrorOutput());
 
 		return $report;
+	}
+
+	/**
+	 * Writes what the build compiled for this release, scope by scope ({@see result()}).
+	 *
+	 * The counts a build prints scroll past, and the only reader of them was a person who had to
+	 * know what they should be. Written down, `oz doctor check` reads them instead, and a release
+	 * whose build came out short is a failing check rather than a paragraph in a deploy document.
+	 *
+	 * @param array<string, array{
+	 *     settings_bundles: int,
+	 *     settings_sources: int,
+	 *     settings_failed: array<string, string>,
+	 *     route_tables: int,
+	 *     route_tables_failed: list<string>,
+	 * }> $scopes what each scope compiled, by scope name
+	 */
+	public static function writeResult(array $scopes): void
+	{
+		self::write(self::resultFile(), 'return ' . \var_export([
+			'ozone'  => OZ_OZONE_VERSION,
+			'time'   => \time(),
+			'scopes' => $scopes,
+		], true) . ';');
+	}
+
+	/**
+	 * What the last build of this release compiled, as it wrote it ({@see writeResult()}): null when
+	 * this release has no build result, and when the file holds something else.
+	 *
+	 * @return null|array{
+	 *     ozone: string,
+	 *     time: int,
+	 *     scopes: array<string, array{
+	 *         settings_bundles: int,
+	 *         settings_sources: int,
+	 *         settings_failed: array<string, string>,
+	 *         route_tables: int,
+	 *         route_tables_failed: list<string>,
+	 *     }>,
+	 * }
+	 */
+	public static function result(): ?array
+	{
+		$file = self::resultFile();
+
+		if (!\is_file($file)) {
+			return null;
+		}
+
+		try {
+			/** @var mixed $result */
+			$result = include $file;
+		} catch (Throwable) {
+			// `oz doctor check` reads this, and a file it cannot read must not be the thing that
+			// stops the command whose job is to report what is wrong.
+			return null;
+		}
+
+		if (!\is_array($result) || !\is_array($result['scopes'] ?? null)) {
+			return null;
+		}
+
+		/**
+		 * @var array{
+		 *     ozone: string,
+		 *     time: int,
+		 *     scopes: array<string, array{
+		 *         settings_bundles: int,
+		 *         settings_sources: int,
+		 *         settings_failed: array<string, string>,
+		 *         route_tables: int,
+		 *         route_tables_failed: list<string>,
+		 *     }>,
+		 * } $result
+		 */
+		return $result;
+	}
+
+	/**
+	 * The file holding what the last build of this release compiled.
+	 */
+	public static function resultFile(): string
+	{
+		return InstanceLayout::releaseBuildPath(self::root(), self::RESULT_FILE);
 	}
 
 	/**
@@ -279,6 +385,11 @@ final class ProjectBuilder
 
 		if (\is_file($list = self::preloadListFor(self::root()))) {
 			$files[] = $list;
+		}
+
+		// What was compiled is going: the record of it would describe nothing.
+		if (\is_file($result = self::resultFile())) {
+			$files[] = $result;
 		}
 
 		foreach ($files as $file) {

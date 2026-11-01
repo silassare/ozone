@@ -125,7 +125,10 @@ final class ProjectBuildTest extends TestCase
 	{
 		self::proj()->oz('project', 'build', '--skip-orm')->mustRun();
 
-		self::assertSame(['Production build' => 'ok', 'Preload' => 'ok'], self::buildChecks());
+		self::assertSame(
+			['Production build' => 'ok', 'Build result' => 'ok', 'Preload' => 'ok'],
+			self::buildChecks()
+		);
 	}
 
 	public function testDoctorWarnsOfAStaleBuild(): void
@@ -141,7 +144,11 @@ final class ProjectBuildTest extends TestCase
 		\touch(self::proj()->getPath() . '/app/TestRoutesProvider.php', \time() + 10);
 
 		try {
-			self::assertSame(['Production build' => 'warn', 'Preload' => 'warn'], self::buildChecks());
+			// Drift, not an incomplete build: the build itself compiled all it asked for.
+			self::assertSame(
+				['Production build' => 'warn', 'Build result' => 'ok', 'Preload' => 'warn'],
+				self::buildChecks()
+			);
 		} finally {
 			\unlink($probe);
 		}
@@ -177,6 +184,97 @@ final class ProjectBuildTest extends TestCase
 		}
 	}
 
+	public function testASettingsSourceThatCannotBeBundledFailsTheBuild(): void
+	{
+		// A group holding an object: no compiled bundle can write it back, so the directory it is in
+		// is read file by file instead. The build asked for a bundle of it and did not get one,
+		// which used to be visible only as a count one lower than a reader had to know it should be.
+		$file = 'app/settings/test.unbundlable.php';
+
+		self::proj()->writeFile(
+			$file,
+			"<?php\n\ndeclare(strict_types=1);\n\nreturn ['probe' => new \\stdClass()];\n"
+		);
+
+		try {
+			$proc = self::proj()->oz('project', 'build', '--clear', '--skip-orm', '--no-preload');
+			$proc->run();
+
+			$out = $proc->getOutput() . $proc->getErrorOutput();
+
+			// A deploy script under `set -e` stops here, which is the whole point.
+			self::assertNotSame(0, $proc->getExitCode(), $out);
+			self::assertStringContainsString('The build is incomplete', $out, $out);
+
+			// What was short, and why: not a bare count.
+			self::assertMatchesRegularExpression('~scope "api": \d+ of \d+ settings bundles~', $out, $out);
+			self::assertStringContainsString('was not bundled', $out, $out);
+			self::assertStringContainsString('the group "test.unbundlable" holds an object', $out, $out);
+
+			// And the release carries the verdict, so the gate is a check and not a person reading
+			// two numbers off a terminal.
+			self::assertSame('fail', self::buildChecks()['Build result'] ?? null);
+		} finally {
+			\unlink(self::proj()->getPath() . \DIRECTORY_SEPARATOR . $file);
+		}
+
+		// Gone: the next build is whole again and says so.
+		$proc = self::proj()->oz('project', 'build', '--clear', '--skip-orm', '--no-preload');
+		$proc->mustRun();
+
+		$out = $proc->getOutput();
+
+		self::assertMatchesRegularExpression('~scope "api": (\d+) of \1 settings bundles~', $out, $out);
+		self::assertSame('ok', self::buildChecks()['Build result'] ?? null);
+	}
+
+	public function testAFailureToReportADiagnosticIsNotReadAsTheCompileFailing(): void
+	{
+		// The shape the truncated builds had. A diagnostic raised while a settings directory is
+		// being compiled reaches the error handler; PHP does not re-enter that handler, so a failure
+		// of the handler's own is thrown from the line that raised the diagnostic -- inside the
+		// compile's `catch (Throwable)`, which read it as the directory being unbundlable and
+		// reported a release short of a settings bundle as a success. On the reported deploys the
+		// handler failed because it had no descriptor left to autoload the logger; here it fails
+		// because the configured log writer is not one, which is the same failure from the compile's
+		// point of view and happens on demand.
+		$logs     = 'app/settings/oz.logs.php';
+		$noisy    = 'app/settings/test.noisy.php';
+		$log_file = self::proj()->getPath() . \DIRECTORY_SEPARATOR . $logs;
+		$before   = \is_file($log_file) ? (string) \file_get_contents($log_file) : null;
+
+		self::proj()->setSetting('oz.logs', 'OZ_LOG_WRITER', 'OZONE\\Tests\\NoSuchLogWriter');
+		self::proj()->writeFile(
+			$noisy,
+			"<?php\n\ndeclare(strict_types=1);\n\n"
+				. "\\filemtime(__DIR__ . '/not-here.probe');\n\nreturn ['probe' => true];\n"
+		);
+
+		try {
+			$proc = self::proj()->oz('project', 'build', '--clear', '--skip-orm', '--no-preload');
+			$proc->run();
+
+			$out = $proc->getOutput() . $proc->getErrorOutput();
+
+			self::assertSame(0, $proc->getExitCode(), $out);
+
+			// Said where a diagnostic can still go, rather than thrown into the line that raised it.
+			self::assertStringContainsString('OZone could not report an error', $out, $out);
+			self::assertStringContainsString('not-here.probe', $out, $out);
+
+			// And the compile ran to the end: every source the project has was bundled.
+			self::assertMatchesRegularExpression('~scope "api": (\d+) of \1 settings bundles~', $out, $out);
+		} finally {
+			\unlink(self::proj()->getPath() . \DIRECTORY_SEPARATOR . $noisy);
+
+			if (null === $before) {
+				\unlink($log_file);
+			} else {
+				self::proj()->writeFile($logs, $before);
+			}
+		}
+	}
+
 	/**
 	 * The project this class runs against, which its own setup created.
 	 *
@@ -208,7 +306,7 @@ final class ProjectBuildTest extends TestCase
 
 		return \array_intersect_key(
 			\array_column($out['data']['checks'], 'status', 'name'),
-			['Production build' => true, 'Preload' => true]
+			['Production build' => true, 'Build result' => true, 'Preload' => true]
 		);
 	}
 

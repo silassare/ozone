@@ -198,6 +198,31 @@ final class SettingsBundleTest extends TestCase
 		}
 	}
 
+	public function testWarmingTheBundlesSaysWhatCouldNotBeBundledAndWhy(): void
+	{
+		// A directory read file by file is slower and not wrong, so nothing stops for it. A build is
+		// held to more: it asked for a bundle of every source, and a count on its own cannot say it
+		// got one fewer -- only the reader knew what the number should have been.
+		Settings::useBundles(true);
+
+		$before = Settings::warmBundles();
+		$dir    = self::tempSource('oztest.warm.php', '<?php return ["k" => new \stdClass()];');
+
+		try {
+			Settings::addSource($dir);
+
+			$after = Settings::warmBundles();
+
+			self::assertSame($before['expected'] + 1, $after['expected'], 'the source asked to be bundled');
+			self::assertSame($before['bundled'], $after['bundled'], 'and was not');
+			self::assertArrayHasKey($dir, $after['failed']);
+			self::assertStringContainsString('the group "oztest.warm" holds an object', $after['failed'][$dir]);
+		} finally {
+			\unlink($dir . \DIRECTORY_SEPARATOR . 'oztest.warm.php');
+			\rmdir($dir);
+		}
+	}
+
 	/**
 	 * A directory of its own holding one settings file, as a plugin or an application would have.
 	 */

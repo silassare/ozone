@@ -139,6 +139,18 @@ final class Settings
 	private static array $source_bundles = [];
 
 	/**
+	 * Why a source directory could not be bundled, by directory.
+	 *
+	 * A directory that cannot be bundled is read file by file, which is slower and not wrong, so
+	 * {@see self::sourceBundle()} carries on. But a build is held to more than that: a release whose
+	 * settings did not compile is a release built with less than it asked for, and saying so needs
+	 * the reason and not only a count that came out one short.
+	 *
+	 * @var array<string, string>
+	 */
+	private static array $bundle_failures = [];
+
+	/**
 	 * Gets settings path sources.
 	 */
 	public static function getSources(): PathSources
@@ -173,22 +185,38 @@ final class Settings
 	/**
 	 * Compiles the bundle of every source directory registered so far, as production reads them.
 	 *
+	 * Answers how many were bundled **and** how many asked to be, because the two differ silently:
+	 * a directory that fails is read file by file instead ({@see self::sourceBundle()}), so the only
+	 * sign of it is a count nobody can judge on its own. `failed` says which directories and why,
+	 * so a build reports the reason rather than the shortfall.
+	 *
 	 * @internal run by `oz project build` for each scope
 	 *
-	 * @return int the directories bundled
+	 * @return array{bundled: int, expected: int, failed: array<string, string>}
 	 */
-	public static function warmBundles(): int
+	public static function warmBundles(): array
 	{
-		$sources = self::getSources();
-		$count   = 0;
+		$sources  = self::getSources();
+		$bundled  = 0;
+		$expected = 0;
+		$failed   = [];
 
 		foreach ($sources->getAllSources() as $source) {
-			if (!$sources->isStateful($source) && null !== self::sourceBundle($source)) {
-				++$count;
+			// Stateful sources are written at runtime and never bundled: they are not expected to be.
+			if ($sources->isStateful($source)) {
+				continue;
+			}
+
+			++$expected;
+
+			if (null === self::sourceBundle($source)) {
+				$failed[$source] = self::$bundle_failures[$source] ?? 'no reason recorded';
+			} else {
+				++$bundled;
 			}
 		}
 
-		return $count;
+		return ['bundled' => $bundled, 'expected' => $expected, 'failed' => $failed];
 	}
 
 	/**
@@ -198,8 +226,9 @@ final class Settings
 	 */
 	public static function useBundles(?bool $enabled): void
 	{
-		self::$bundles        = $enabled;
-		self::$source_bundles = [];
+		self::$bundles         = $enabled;
+		self::$source_bundles  = [];
+		self::$bundle_failures = [];
 	}
 
 	/**
@@ -674,6 +703,8 @@ final class Settings
 		}
 
 		if (!\is_dir($dir)) {
+			self::$bundle_failures[$dir] = 'not a directory';
+
 			return null;
 		}
 
@@ -706,7 +737,16 @@ final class Settings
 	}
 
 	/**
-	 * Every group of a source directory: null when one cannot be bundled.
+	 * Every group of a source directory: null when one cannot be bundled, with why in
+	 * {@see self::$bundle_failures}.
+	 *
+	 * Reading a group runs its file, so anything can come out of it, and a directory this cannot
+	 * bundle is read file by file rather than stopping a request: hence the catch-all. It used to
+	 * discard what it caught, which read every failure as the one it was written for -- a group
+	 * holding an object -- and lost the rest. What it loses is worst exactly when it matters: a
+	 * diagnostic raised in here reaches the error handler, PHP does not re-enter that handler, so a
+	 * failure of the handler's own (autoloading the logger with no descriptor left) is thrown from
+	 * where the diagnostic was raised, which is inside this try.
 	 *
 	 * @return null|array<string, array>
 	 */
@@ -735,15 +775,34 @@ final class Settings
 
 				$result = require $path;
 
-				if (!\is_array($result) || !self::isExportable($result)) {
+				if (!\is_array($result)) {
+					self::$bundle_failures[$dir] = \sprintf(
+						'the group "%s" returned %s, not an array',
+						$group,
+						\get_debug_type($result)
+					);
+
+					return null;
+				}
+
+				if (!self::isExportable($result)) {
+					self::$bundle_failures[$dir] = \sprintf(
+						'the group "%s" holds an object no bundle could write back',
+						$group
+					);
+
 					return null;
 				}
 
 				$groups[$group] = $result;
 			}
-		} catch (Throwable) {
+		} catch (Throwable $t) {
+			self::$bundle_failures[$dir] = \sprintf('%s: %s', $t::class, $t->getMessage());
+
 			return null;
 		}
+
+		unset(self::$bundle_failures[$dir]);
 
 		\ksort($groups);
 

@@ -158,6 +158,16 @@ database throws it (`Utils::assertDatabaseAccess()`).
 no HTTP client to answer" and comes from the runtime — a worker runs under the `cli` SAPI and is not
 a command line.
 
+**Reporting a diagnostic may never replace it** (`ErrorUtils`). PHP does not re-enter an error
+handler, and throwing out of an exception handler or a shutdown function is fatal, so each of the
+three catches its own failure and says it through `php://stderr` instead. What that guards against is
+not hypothetical: the logger is resolved lazily, a process out of descriptors could not autoload it,
+and the resulting "class not found" was thrown from the line that had raised the original warning --
+straight into that line's own `catch (Throwable)`, which took it for its own failure. Both the
+diagnostic and what it was about were gone. The logger's classes are therefore loaded when the
+handlers are registered, while the process is still whole, and nothing added to a handler may assume
+it can log, allocate or open a file.
+
 ### How a request ends: the runtime
 
 How a request ends is the runtime's decision (`oz/Runtime/`, `Runtime::current()`). `Context::finish()`
@@ -301,7 +311,8 @@ cache is `.ozone/cache/{scope}/`, the same slug.
   `blocked` rather than deleting real content in the way.
 - **`App\InstanceLayout` owns `.ozone/`, split by lifetime**: `build/` is what `oz project build`
   produces and a request fills in when no build has run (the compiled `.env`, the settings bundles,
-  the route tables, the class map, the preload list, the generated ORM classes) — all derived from the
+  the route tables, the class map, the preload list, `build.php` -- what the last build compiled, read
+  by `oz doctor check` -- and the generated ORM classes) — all derived from the
   release's code, so a deployment may drop it whole and pay only a rebuild; `cache/{scope}/` is what a
   request fills on demand (image renditions, compiled templates, a file store's disposable entries)
   and may be dropped mid-flight; `logs/`; and `preload.php`, which stays directly under `.ozone/`
@@ -355,9 +366,14 @@ return [
   read file by file. A settings file returns plain data (one holding an object leaves its directory
   unbundled) and may read `env()`: `.env` is read through a compiled copy
   (`.ozone/build/{release}/env/`, named after its content), and editing it gives new bundles.
+  Compiling a bundle runs every file of the directory, so it catches everything and reads the
+  directory file by file instead -- but it **records why** (`Settings::warmBundles()` answers the
+  reason per directory), because the catch-all swallowing what it was not written for is how a
+  descriptor exhaustion came out as a build one settings bundle short, reported as a success.
 - **Every build output goes under `.ozone/build/{release}/`**, through
   `InstanceLayout::releaseBuildPath()` / `releaseBuildDir()`: the compiled `.env`, the settings
-  bundles, the route tables, the class map, the preload list and the generated ORM classes. `.ozone/`
+  bundles, the route tables, the class map, the preload list, `build.php` and the generated ORM
+  classes. `.ozone/`
   is shared by the releases of an `oz deploy` root, and the shape of what a build writes comes from
   that release's `vendor/` -- a generated query class's constants are typed by the Gobl installed
   there -- so a release that read another's build output died at bootstrap on a constant it could not
@@ -1039,6 +1055,16 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   project, outside a deploy root) -- never a release that failed before going live. Preloaded code
   only changes when PHP restarts.
 
+  **It reports what it compiled against what it asked for, and exits non-zero when the two differ.**
+  Neither shortfall is an error where it happens -- a settings directory that cannot be bundled is
+  read file by file, a route table that cannot be written is compiled per request -- so the build has
+  to go and ask: `Settings::warmBundles()` answers bundled, expected and why each failure failed, and
+  `OZone::routeTableBuilds()` says whether this release has each router's table. The counts print as
+  `2 of 3`, since a bare count can only be judged by someone who already knows what it should be, and
+  the result goes to `build.php` in the release's build directory, which `oz doctor check` fails on.
+  What a scope process merely *printed* is still only reported (`diagnostics`): a project's own
+  output and a dependency's deprecation must not fail a deploy.
+
 - **`install`** (repository root) puts `oz` / `ozone` on `PATH` and nothing else: it only _checks_ PHP,
   the extensions, Composer and git unless `--with-php`. Preparing a server is `oz server provision`.
 - **`oz project create`** generates a `composer.json` requiring `silassare/ozone`; every package in its
@@ -1056,7 +1082,9 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
 - **`oz doctor check [--json]`** reports what the machine and project miss and exits non-zero on a
   failure, including a schema that failed to load at bootstrap. In production it warns (never fails)
   when this release has no class map or one the classes no longer match, and when its preload list
-  names files changed or gone since the build.
+  names files changed or gone since the build: that is drift, which the next build corrects. It
+  **fails** on a build that came out short of what the project asked for (`Build result`, read from
+  the release's `build.php`), which no amount of waiting corrects.
 - **`oz server provision`**: `Cli\Server\Provisioner::plan()` is a pure function of the options and the
   detected `PackageManager` (so `--dry-run` is honest and every distribution is asserted from one
   machine), and everything that reads or runs on the target goes through `Cli\Server\Interfaces\HostInterface`:

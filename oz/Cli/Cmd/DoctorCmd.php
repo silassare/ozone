@@ -414,9 +414,10 @@ final class DoctorCmd extends Command
 	/**
 	 * In production: whether what `oz project build` compiles is there, and still matches the code.
 	 *
-	 * Warnings, not failures: requests compile what a build left out, the first ones paying for it.
-	 * A stale preload list is worse -- PHP serves the code it preloaded until it restarts -- but only
-	 * the PHP that serves requests knows what it preloaded.
+	 * Drift is a warning: requests compile what a build left out, the first ones paying for it. A
+	 * stale preload list is worse -- PHP serves the code it preloaded until it restarts -- but only
+	 * the PHP that serves requests knows what it preloaded. A build that came out short of what the
+	 * project asked for is the one failure here ({@see self::buildResultCheck()}).
 	 *
 	 * @return list<array{name: string, status: string, detail: string, fix: string}>
 	 */
@@ -449,6 +450,12 @@ final class DoctorCmd extends Command
 
 		$checks = [self::row('Production build', ...$build)];
 
+		// Only once a build wrote down what it compiled: a release built by an older OZone has no
+		// result file, and the row above already says a release that was never built.
+		if (null !== ($result = ProjectBuilder::result())) {
+			$checks[] = self::buildResultCheck($result['scopes'], $rebuild);
+		}
+
 		// Only once a build wrote the preload script: a project served in worker mode, or built
 		// with --no-preload, has none.
 		if (\is_file(ProjectBuilder::preloadFile())) {
@@ -471,6 +478,66 @@ final class DoctorCmd extends Command
 		}
 
 		return $checks;
+	}
+
+	/**
+	 * Whether the last build of this release compiled everything it set out to.
+	 *
+	 * A failure and not a warning, unlike the drift checks around it: drift means the build was
+	 * whole and the code has moved since, while this means the build itself came out short of what
+	 * the project asked for, which no amount of waiting corrects. Requests do compile what is
+	 * missing, each paying for it, so what fails is the release and not the serving of it -- which
+	 * is exactly what a deploy must stop on, and what reading two counts off a terminal was the
+	 * only guard against.
+	 *
+	 * @param array<string, array{
+	 *     settings_bundles: int,
+	 *     settings_sources: int,
+	 *     settings_failed: array<string, string>,
+	 *     route_tables: int,
+	 *     route_tables_failed: list<string>,
+	 * }> $scopes what the build wrote per scope ({@see ProjectBuilder::result()})
+	 *
+	 * @return array{name: string, status: string, detail: string, fix: string}
+	 */
+	private static function buildResultCheck(array $scopes, string $rebuild): array
+	{
+		$short = [];
+
+		foreach ($scopes as $scope => $scope_result) {
+			$missing = $scope_result['settings_sources'] - $scope_result['settings_bundles'];
+
+			if ($missing > 0) {
+				$short[] = \sprintf('scope "%s": %d settings source(s) not bundled', $scope, $missing);
+			}
+
+			if ([] !== $scope_result['route_tables_failed']) {
+				$short[] = \sprintf(
+					'scope "%s": %d route table(s) not written',
+					$scope,
+					\count($scope_result['route_tables_failed'])
+				);
+			}
+		}
+
+		if ([] !== $short) {
+			return self::row('Build result', self::FAIL, \implode('; ', $short), $rebuild);
+		}
+
+		$bundles = 0;
+		$tables  = 0;
+
+		foreach ($scopes as $scope_result) {
+			$bundles += $scope_result['settings_bundles'];
+			$tables += $scope_result['route_tables'];
+		}
+
+		return self::row('Build result', self::OK, \sprintf(
+			'%d scope(s), %d settings bundles, %d route table(s)',
+			\count($scopes),
+			$bundles,
+			$tables
+		), '');
 	}
 
 	/**

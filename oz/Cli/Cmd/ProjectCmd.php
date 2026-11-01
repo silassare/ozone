@@ -202,6 +202,8 @@ final class ProjectCmd extends Command
 		}
 
 		$preloaded = [];
+		$results   = [];
+		$short     = [];
 
 		foreach (ProjectBuilder::scopes() as $scope) {
 			$report = ProjectBuilder::buildScope($scope);
@@ -216,12 +218,51 @@ final class ProjectCmd extends Command
 				$preloaded[$file] = true;
 			}
 
-			$cli->success(\sprintf(
-				'scope "%s": %d settings bundles, route tables compiled.',
+			$results[$scope] = [
+				'settings_bundles'    => $report['settings_bundles'],
+				'settings_sources'    => $report['settings_sources'],
+				'settings_failed'     => $report['settings_failed'],
+				'route_tables'        => $report['route_tables'],
+				'route_tables_failed' => $report['route_tables_failed'],
+			];
+
+			// The counts, and what they were meant to be: a reader cannot judge "2 settings
+			// bundles" without knowing the project asked for three.
+			$line = \sprintf(
+				'scope "%s": %d of %d settings bundles, %d of %d route tables.',
 				$scope,
-				$report['settings_bundles']
-			));
+				$report['settings_bundles'],
+				$report['settings_sources'],
+				$report['route_tables'],
+				$report['route_tables'] + \count($report['route_tables_failed'])
+			);
+
+			if (
+				$report['settings_bundles'] === $report['settings_sources']
+				&& !$report['route_tables_failed']
+			) {
+				$cli->success($line);
+
+				continue;
+			}
+
+			$short[] = $scope;
+
+			// Said here and not only in the summary: the reason belongs beside the counts it
+			// explains. Unwrapped, the three of them: a path or a class name broken across two
+			// lines is one a reader cannot copy and a log nobody can grep.
+			$cli->error($line, false, null);
+
+			foreach ($report['settings_failed'] as $source => $reason) {
+				$cli->error(\sprintf('   settings source "%s" was not bundled: %s', $source, $reason), false, null);
+			}
+
+			foreach ($report['route_tables_failed'] as $file) {
+				$cli->error(\sprintf('   route table "%s" could not be written.', $file), false, null);
+			}
 		}
+
+		ProjectBuilder::writeResult($results);
 
 		$cli->success(\sprintf('class map: %d classes.', ProjectBuilder::writeClassMap()));
 
@@ -233,6 +274,19 @@ final class ProjectCmd extends Command
 				\count($preloaded),
 				ProjectBuilder::preloadFile()
 			));
+		}
+
+		// Last, so the whole build is reported before the status: what is missing is said scope by
+		// scope above, and the class map and the preload list are compiled from this process and
+		// are no less correct for a scope having come out short. Failing is the point -- a truncated
+		// build used to exit 0, which left a person reading counts off a terminal as the only thing
+		// between it and production.
+		if ($short) {
+			$cli->error(\sprintf(
+				'The build is incomplete: %s. Requests will compile what is missing, each paying for'
+					. ' it; see the reasons above, then run "oz project build" again.',
+				\implode(', ', \array_map(static fn (string $s): string => 'scope "' . $s . '"', $short))
+			), true, 1);
 		}
 	}
 

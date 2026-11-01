@@ -354,6 +354,50 @@
 
 ### Fixed
 
+- **`oz project build` reported a truncated build as a success.** Reported from a production deploy:
+  a scope compiled two of its three settings bundles, printed the PHP warnings it had swallowed, then
+  printed `✔ scope "api": 2 settings bundles, route tables compiled.` and exited 0; an identical
+  re-run compiled three. Nothing downstream looked at the number, so what stood between a short
+  release and production was a person reading two counts off a terminal and knowing what they should
+  be.
+
+  Three faults, each silent on its own. `Settings::compileBundle()` caught every throwable and
+  answered null, which is right for the case it was written for -- a group holding an object no
+  bundle could write back -- and swallowed everything else under the same answer, so a directory that
+  failed only lowered a count. The command printed `route tables compiled` while
+  `OZone::createRouter()` discarded `RouteTable::save()`'s `false`. And `oz doctor check` had drift
+  checks for the class map and the preload list and none for either of these, so the one gate that
+  could have caught it passed too.
+
+  Now: `Settings::warmBundles()` answers `{bundled, expected, failed}` with the reason per directory
+  and `OZone::routeTableBuilds()` says whether this release has each router's table; the build prints
+  `3 of 3 settings bundles, 2 of 2 route tables`, names what was short and why, and **exits non-zero**
+  so a deploy under `set -e` stops by itself; and it writes what it compiled to `build.php` in the
+  release's build directory, which `oz doctor check` reads as a new failing check (`Build result`) --
+  a check where there was a paragraph in a deploy document. A shortfall is still not an error where
+  it happens (a settings directory that cannot be bundled is read file by file, a route table that
+  cannot be written is compiled per request), which is why the build has to go and ask. What a scope
+  process merely printed is still only reported: a project's own output and a dependency's
+  deprecation must not fail a deploy.
+
+- **A failure to report a diagnostic replaced the diagnostic, and sometimes the run.** The same
+  deploys named `Logger.php` as the file that could not be opened, which was the symptom and not the
+  cause: `oz_logger()` resolves the logger on first use, and first use is the moment an error is
+  raised -- with no descriptor left, the error handler autoloaded the logger, got a "class not
+  found", and PHP, which does not re-enter an error handler, threw it from the line that had raised
+  the original warning. That line was inside the settings compile's `catch (Throwable)`, which read
+  it as its own failure: the warning, its reason and the directory being compiled all went at once.
+  The exception handler and the shutdown function had it worse -- throwing out of either is a fatal
+  error, so a logger that could not write ended the process with its own message in place of the one
+  the process was already ending for (found by the test for this, which a broken `OZ_LOG_WRITER` made
+  exit 255).
+
+  Each of the three handlers now catches its own failure and says it through `php://stderr`, and the
+  logger's classes are loaded when the handlers are registered, while the process can still open a
+  file. `OZ_LOG_WRITER`'s settings are deliberately not warmed with them: the autoloader registers
+  the handlers before a project's own settings sources exist, and reading the group then would hold
+  OZone's defaults for the rest of the process.
+
 - **A diagnostic its caller had silenced was logged anyway.** The error handler never looked at
   `error_reporting()`, so a warning suppressed with `@` was logged as a warning: php-utils creates a
   directory with `@mkdir()` and checks the result after, and two requests creating one directory

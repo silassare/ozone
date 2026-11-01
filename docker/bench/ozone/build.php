@@ -37,8 +37,20 @@ if ($classic) {
 }
 
 \fwrite(\STDERR, \sprintf(
-	'Built: %d settings bundles, a class map of %d classes, %s.' . \PHP_EOL,
+	'Built: %d of %d settings bundles, a class map of %d classes, %s.' . \PHP_EOL,
 	$report['settings_bundles'],
+	$report['settings_sources'],
 	$classes,
 	$classic ? \count($report['preload']) . ' files to preload' : 'no preload (worker mode)'
 ));
+
+// A benchmark of a release that compiled less than it asked for measures the wrong thing: the
+// scope would read its settings file by file, and every figure after it would be of that.
+if (
+	$report['settings_bundles'] !== $report['settings_sources']
+	|| [] !== $report['route_tables_failed']
+) {
+	\fwrite(\STDERR, 'The build is incomplete: it would be benchmarked as one.' . \PHP_EOL);
+
+	exit(1);
+}

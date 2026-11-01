@@ -42,7 +42,21 @@ use Throwable;
 final class ScopeBuilder
 {
 	/**
-	 * @return array{scope: string, production: bool, settings_bundles: int, preload: list<string>}
+	 * Builds one scope and reports what this release has compiled against what it asked for: a
+	 * settings directory that cannot be bundled and a route table that cannot be written both leave
+	 * the work for requests to redo instead of failing, so a count on its own never says whether the
+	 * build is whole.
+	 *
+	 * @return array{
+	 *     scope: string,
+	 *     production: bool,
+	 *     settings_bundles: int,
+	 *     settings_sources: int,
+	 *     settings_failed: array<string, string>,
+	 *     route_tables: int,
+	 *     route_tables_failed: list<string>,
+	 *     preload: list<string>,
+	 * }
 	 */
 	public static function run(AppInterface $app, string $scope): array
 	{
@@ -61,21 +75,37 @@ final class ScopeBuilder
 		OZone::bootstrap($app);
 
 		$report = [
-			'scope'            => $scope,
-			'production'       => OZone::inProductionMode(),
-			'settings_bundles' => 0,
-			'preload'          => [],
+			'scope'               => $scope,
+			'production'          => OZone::inProductionMode(),
+			'settings_bundles'    => 0,
+			'settings_sources'    => 0,
+			'settings_failed'     => [],
+			'route_tables'        => 0,
+			'route_tables_failed' => [],
+			'preload'             => [],
 		];
 
 		if (!$report['production']) {
 			return $report;
 		}
 
-		$report['settings_bundles'] = Settings::warmBundles();
+		$bundles = Settings::warmBundles();
+
+		$report['settings_bundles'] = $bundles['bundled'];
+		$report['settings_sources'] = $bundles['expected'];
+		$report['settings_failed']  = $bundles['failed'];
 
 		// Each compiles its route table, when this release has none yet.
 		OZone::getApiRouter();
 		OZone::getWebRouter();
+
+		foreach (OZone::routeTableBuilds() as $build) {
+			if ($build['compiled']) {
+				++$report['route_tables'];
+			} else {
+				$report['route_tables_failed'][] = $build['file'];
+			}
+		}
 
 		self::declareFirstParty();
 

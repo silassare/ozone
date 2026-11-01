@@ -17,6 +17,8 @@ use OZONE\Core\App\Interfaces\AppInterface;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Cli;
 use OZONE\Core\Exceptions\BaseException;
+use OZONE\Core\Logger\Logger;
+use OZONE\Core\Logger\LogWriter;
 use OZONE\Core\OZone;
 use OZONE\Core\Runtime\Runtime;
 use Psr\Log\LogLevel;
@@ -123,6 +125,9 @@ class ErrorUtils
 
 		$registered             = true;
 		self::$registered_early = $early;
+
+		self::loadTheLogger();
+
 		\set_exception_handler(self::exceptionHandler(...));
 		\set_error_handler(static function (int $code, string $message, string $file, int $line) {
 			// Silenced by its caller with `@`, or below what `error_reporting()` asks for: not ours
@@ -138,11 +143,67 @@ class ErrorUtils
 				return false;
 			}
 
-			self::errorHandler($code, $message, $file, $line, true);
+			try {
+				self::errorHandler($code, $message, $file, $line, true);
+			} catch (Throwable $t) {
+				// Reporting the diagnostic failed. PHP does not re-enter an error handler, so
+				// nothing of ours would see this one -- and letting it out throws it from the line
+				// that raised the diagnostic, where any `catch (Throwable)` reads it as that line's
+				// own failure and the diagnostic is gone with it. That is how a `project build`
+				// reported a truncated release as a success: with no descriptor left, the handler
+				// autoloaded the logger, got a "class not found", and the settings compile caught it
+				// as its own. Written where a diagnostic of a broken process can still go.
+				self::sayOnStderr(\sprintf(
+					'OZone could not report an error (%s: %s): %s in %s:%d',
+					$t::class,
+					$t->getMessage(),
+					$message,
+					$file,
+					$line
+				));
+			}
 
 			return null;
 		});
 		\register_shutdown_function(self::shutdownErrorFunction(...));
+	}
+
+	/**
+	 * Loads what writing to the log takes, before an error can need it.
+	 *
+	 * `oz_logger()` resolves its classes on first use, and first use is the moment an error is
+	 * raised: the process may then be out of exactly what loading a file takes -- a descriptor,
+	 * memory -- and that failure happens inside the error handler, which PHP does not re-enter, so
+	 * nothing of ours is left to report it. The reads cost nothing here, where the process is still
+	 * whole.
+	 *
+	 * The settings the writer reads (`oz.logs`) are deliberately not warmed with them: a project's
+	 * own settings sources are not registered yet when the autoloader registers the handlers, and
+	 * reading the group now would hold OZone's defaults for the rest of the process.
+	 */
+	private static function loadTheLogger(): void
+	{
+		\class_exists(Logger::class);
+		\class_exists(LogWriter::class);
+		\class_exists(LogLevel::class);
+		\class_exists(BaseException::class);
+	}
+
+	/**
+	 * Writes a line where a diagnostic can still go once reporting one has failed.
+	 *
+	 * Through `php://stderr` and not the `STDERR` constant, which is the CLI SAPI's alone and not
+	 * FrankenPHP's. It loads nothing and reads no settings, which is the whole point: the caller is
+	 * here because something ordinary could not be done.
+	 */
+	private static function sayOnStderr(string $line): void
+	{
+		$stderr = \fopen('php://stderr', 'wb');
+
+		if (false !== $stderr) {
+			\fwrite($stderr, $line . \PHP_EOL);
+			\fclose($stderr);
+		}
 	}
 
 	private static function redact(array $data): array
@@ -202,13 +263,29 @@ class ErrorUtils
 
 	/**
 	 * Handle unhandled exception.
+	 *
+	 * Reporting the throwable is tried and never allowed to replace it: throwing out of an exception
+	 * handler is a fatal error, so a logger that cannot write would end the process with its own
+	 * message in place of the one the process was already ending for.
 	 */
 	private static function exceptionHandler(Throwable $t): void
 	{
-		oz_logger($t);
+		try {
+			oz_logger($t);
 
-		self::optionalApp()
-			?->onUnhandledThrowable($t);
+			self::optionalApp()
+				?->onUnhandledThrowable($t);
+		} catch (Throwable $failure) {
+			self::sayOnStderr(\sprintf(
+				'OZone could not report an unhandled %s (%s: %s): %s in %s:%d',
+				$t::class,
+				$failure::class,
+				$failure->getMessage(),
+				$t->getMessage(),
+				$t->getFile(),
+				$t->getLine()
+			));
+		}
 
 		if (self::mustNotUnwind()) {
 			// Under a worker, `OZone::handleRequest()` answers every request's throwable, so one that
@@ -333,30 +410,46 @@ class ErrorUtils
 			$error = null;
 		}
 
-		if (null !== $error) {
-			$code = $error['type'];
-			oz_logger()->log(
-				self::errorCodeToLogLevel($code),
-				'::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
-					. \PHP_EOL
-					. (\in_array($code, self::RUN_ENDING_CODES, true)
-						? 'OZone shutdown error'
-						: 'OZone error raised while no error handler of ours was installed:'
-							. ' before they were registered, or inside a block that swapped in its own.'
-							. ' It did not happen at shutdown, PHP only kept it as the last error.'
-							. ' Where a diagnostic comes in a pair only the second is kept, so the reason'
-							. ' is in PHP\'s own error log, not here.')
-					. \PHP_EOL . '::::::::::::::::::::::::'
-			);
-			self::errorHandler($code, $error['message'], $error['file'], $error['line'], true);
-		}
+		// Throwing out of a shutdown function is a fatal error too, and this one runs after the work
+		// is done: a logger that cannot write must not turn a finished run into a crash.
+		try {
+			if (null !== $error) {
+				$code = $error['type'];
+				oz_logger()->log(
+					self::errorCodeToLogLevel($code),
+					'::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
+						. \PHP_EOL
+						. (\in_array($code, self::RUN_ENDING_CODES, true)
+							? 'OZone shutdown error'
+							: 'OZone error raised while no error handler of ours was installed:'
+								. ' before they were registered, or inside a block that swapped in its own.'
+								. ' It did not happen at shutdown, PHP only kept it as the last error.'
+								. ' Where a diagnostic comes in a pair only the second is kept, so the reason'
+								. ' is in PHP\'s own error log, not here.')
+						. \PHP_EOL . '::::::::::::::::::::::::'
+				);
+				self::errorHandler($code, $error['message'], $error['file'], $error['line'], true);
+			}
 
-		if (Settings::get('oz.logs', 'OZ_LOG_EXECUTION_TIME_ENABLED')) {
-			oz_logger()->info('::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
-				. \PHP_EOL
-				. 'OZone execution time'
-				. \PHP_EOL . '::::::::::::::::::::::::'
-				. \PHP_EOL . self::executionTime() . 's');
+			if (Settings::get('oz.logs', 'OZ_LOG_EXECUTION_TIME_ENABLED')) {
+				oz_logger()->info('::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::'
+					. \PHP_EOL
+					. 'OZone execution time'
+					. \PHP_EOL . '::::::::::::::::::::::::'
+					. \PHP_EOL . self::executionTime() . 's');
+			}
+		} catch (Throwable $failure) {
+			self::sayOnStderr(\sprintf(
+				'OZone could not write its shutdown log (%s: %s)%s',
+				$failure::class,
+				$failure->getMessage(),
+				null === $error ? '' : \sprintf(
+					': the last error was %s in %s:%d',
+					$error['message'],
+					$error['file'],
+					$error['line']
+				)
+			));
 		}
 	}
 }

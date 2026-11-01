@@ -73,6 +73,20 @@ final class OZone
 	private static ?Throwable $db_init_error = null;
 
 	/**
+	 * Each router's route table ("api", "web"): the file, and whether this release has it compiled.
+	 *
+	 * Listed only where a router has a table at all -- not in the console, not outside production
+	 * ({@see self::routeTableFile()}). `compiled` is true for one this process wrote and for one it
+	 * found already written, because what a build must report is whether the release has it, not
+	 * which run put it there: a second build writes none and is no less complete for it. A failed
+	 * write is not an error of its own -- {@see RouteTable::save()} answers false and the request
+	 * routes from the providers -- which is why a build has to come and ask.
+	 *
+	 * @var array<string, array{file: string, compiled: bool}>
+	 */
+	private static array $route_table_builds = [];
+
+	/**
 	 * Positive answers of {@see self::hasDbAccess()} and {@see self::hasSuperAdmin()}, kept for the
 	 * process: neither goes back to false in practice, so only a "no" is asked again.
 	 */
@@ -577,10 +591,26 @@ final class OZone
 
 		new RouterCreated($router, $group, $api)->dispatch();
 
-		if (null !== $file && null === $table) {
-			$router->compileTable()
-				->save($file);
+		if (null !== $file) {
+			self::$route_table_builds[$api ? 'api' : 'web'] = [
+				'file' => $file,
+				// Short-circuit on purpose: a table this release already has is not compiled again.
+				'compiled' => null !== $table || $router->compileTable()
+					->save($file),
+			];
 		}
+	}
+
+	/**
+	 * Each router's route table in this process: {@see self::$route_table_builds}.
+	 *
+	 * @internal read by `oz project build`
+	 *
+	 * @return array<string, array{file: string, compiled: bool}>
+	 */
+	public static function routeTableBuilds(): array
+	{
+		return self::$route_table_builds;
 	}
 
 	/**
