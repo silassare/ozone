@@ -56,6 +56,16 @@ class ErrorUtils
 	private static bool $registered_early = false;
 
 	/**
+	 * The last diagnostic the handler left to PHP because its caller had silenced it.
+	 *
+	 * That one does land in `error_get_last()`, deliberately, which is where
+	 * {@see self::shutdownErrorFunction()} looks: it must not report what the handler kept out of
+	 * the log, and the type alone does not say which it is -- a silenced warning and a warning
+	 * raised before the handlers went up are the same code.
+	 */
+	private static ?string $silenced = null;
+
+	/**
 	 * Masks the values of secret-looking keys, recursively, when redaction is enabled
 	 * (see {@see self::isRedactionEnabled()}).
 	 *
@@ -115,6 +125,19 @@ class ErrorUtils
 		self::$registered_early = $early;
 		\set_exception_handler(self::exceptionHandler(...));
 		\set_error_handler(static function (int $code, string $message, string $file, int $line) {
+			// Silenced by its caller with `@`, or below what `error_reporting()` asks for: not ours
+			// to log. `false`, not `null`, so PHP's own handler still records it as the last error:
+			// `@` and then `error_get_last()` is how a caller reads why a call it expected to be
+			// able to fail failed -- php-utils' `@mkdir()`, the S3 stream wrapper's `@fopen()` --
+			// and a framework that swallowed the diagnostic would take that away from every project
+			// too. Its own handler honours `error_reporting()` for displaying and logging, so
+			// nothing of it is printed or written either.
+			if (0 === (\error_reporting() & $code)) {
+				self::$silenced = self::signature($code, $message, $file, $line);
+
+				return false;
+			}
+
 			self::errorHandler($code, $message, $file, $line, true);
 
 			return null;
@@ -248,6 +271,15 @@ class ErrorUtils
 	 * @param int    $line         the file line where it occurs
 	 * @param bool   $die_on_fatal when true we will interrupt on fatal error
 	 */
+	/**
+	 * What tells one recorded diagnostic from another: a silenced one is recognised at shutdown by
+	 * the same four values PHP kept.
+	 */
+	private static function signature(int $code, string $message, string $file, int $line): string
+	{
+		return $code . '|' . $file . '|' . $line . '|' . $message;
+	}
+
 	private static function errorHandler(
 		int $code,
 		string $message,
@@ -286,6 +318,20 @@ class ErrorUtils
 	private static function shutdownErrorFunction(): void
 	{
 		$error = \error_get_last();
+
+		$silenced = null !== $error && self::$silenced === self::signature(
+			$error['type'],
+			$error['message'],
+			$error['file'],
+			$error['line']
+		);
+
+		if ($silenced) {
+			// The last thing PHP recorded is the diagnostic its caller silenced, which the handler
+			// left to PHP on purpose. Nothing went wrong that the caller did not already deal with,
+			// and reporting it here would put back exactly what was kept out of the log.
+			$error = null;
+		}
 
 		if (null !== $error) {
 			$code = $error['type'];
