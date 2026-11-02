@@ -354,6 +354,63 @@
 
 ### Fixed
 
+- **Every anonymous page view of a `/{lang}/` project started a session, so no shared cache could
+  store any page.** Reported from production. `Polyglot::boot()`'s `RouteBeforeRun` hook called
+  `setUserLanguage()` whenever a route carried the `lang` parameter -- which, for a project whose
+  public URLs are `/{lang}/...`, is every request. That writes `oz.polyglot.favorite` into the
+  session store, `Session::isKept()` is true as soon as the store's data differs from what it
+  started as, and so every visitor got a session row and two cookies: `OZONE_SID` and `XSRF-TOKEN`.
+
+  The cost was not the row. A response carrying `Set-Cookie` is one nginx will not cache and no
+  shared cache may hold, so a micro-cache in front of such a site sits at a 0 % hit rate -- and one
+  configured to store it anyway would hand a visitor's session id and CSRF token to every other
+  visitor. Plus a database write per crawler hit, and two cookies for a visitor who had done
+  nothing.
+
+  `Polyglot::getLanguage()` already said why this must not happen, 230 lines above the hook: "Not
+  stored: the browser sends it with every request, and writing it would give every anonymous visitor
+  a session. Only a choice (`setUserLanguage()`) is kept." The hook was treating a path segment as a
+  choice. It is not one: a language in the URL **is** the request, completely, on every request, and
+  needs no memory.
+
+  A language the request carries is now request scoped, on the `Context` (`Context::getLanguage()`,
+  `Polyglot::useLanguage()`), which is where request-scoped state belongs; `getLanguage()` reads what
+  the request said before anything stored, so a link naming a language wins over a remembered
+  choice. `setUserLanguage()` is unchanged in meaning and still keeps the session: it is for a
+  visitor who *chose*, in a switcher or a profile, which is the event worth a session.
+
+  **What changes for a project**: a visitor who lands on `/fr/...` and then follows a link with no
+  language in it is answered in the language their browser asks for, not in the one the previous URL
+  named -- unless the project calls `setUserLanguage()` when they actually choose. Projects whose
+  every route carries the language see no difference beyond the cookies and the rows going away.
+
+- **A settings file reading another group turned a scope build into an unbounded loop.** The cause of
+  the production incident the three entries below are about, found from the core of the killed
+  process: 65 530 open handles on one `app/settings` directory, one per turn of a loop, then 4 GB of
+  heap on a 3.9 GB host.
+
+  Every memo in `Settings` said what was **finished**, never what was in progress: a group lands in
+  `$settings_groups` once `mergeGroup()` has run, a directory in `$source_bundles` once
+  `compileBundle()` has returned. Running a group's file is `require`, so that file -- or anything it
+  calls -- may read a setting while both memos still answer "not done", and the nested read started
+  the same work again from inside itself, constructing one more `RecursiveDirectoryIterator` over the
+  directory each turn. The shape that triggers it is the obvious way to write a project's routes:
+  `return ModuleRegistry::apiServices();`, where the registry reads the group that says which modules
+  are enabled. Nothing about it is wrong, and it is still allowed.
+
+  What is in progress is now registered on entry (`Settings::$loading_groups`,
+  `$compiling_sources`): a nested read of a directory being compiled is answered as a directory
+  without a bundle, so it is served from the one file it needs, and a group whose own file reads it
+  gets a `RuntimeException` naming the group instead of a loop. A build runs with a worker runtime
+  (`ScopeBuilder::run()`), so `bundlesEnabled()` is true there and the bundle branch is live: the
+  loop needed production and a build, which is why no test and no development run had met it.
+
+  It also explains the three truncated builds that came before: the same loop reached the descriptor
+  limit first, the failure to open one more file was caught by the compile's catch-all as "this
+  directory cannot be bundled", and the release shipped a settings bundle short with exit 0. Making
+  the error handlers survive (below) did not cause the crash -- it removed what had been ending the
+  loop early, so a silent truncation became a silent kill, which is the only reason anyone looked.
+
 - **The database password was on `mysqldump`'s command line.** `oz db backup` passed it as
   `-p<password>` in the dump's arguments, where `ps` shows it to every user on the host, a container
   inspection keeps it, and a failure that quotes a command line writes it down. It now travels in an

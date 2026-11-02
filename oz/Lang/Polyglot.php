@@ -150,6 +150,16 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	public static function getLanguage(?Context $context = null): string
 	{
 		if ($context) {
+			// What the request itself said -- a `{lang}` route parameter above all -- before
+			// anything remembered: the URL says which language to answer in, and it says so again
+			// on the next request. A visitor whose stored choice is one language still gets the
+			// language the link they followed names.
+			$request_lang = $context->getLanguage();
+
+			if (!empty($request_lang)) {
+				return $request_lang;
+			}
+
 			$store = $context->authStore();
 
 			$user_lang = $store?->get(self::CLIENT_LANG_SESSION_KEY);
@@ -173,20 +183,45 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 	}
 
 	/**
-	 * Sets user preferred language.
+	 * The language this request answers in, for this request only: false when it is not enabled.
+	 *
+	 * What a `{lang}` route parameter gives. Nothing is stored, and that is the point: the path says
+	 * which language to answer in completely and says it again on the next request, so remembering
+	 * it buys nothing and costs a session for every anonymous visitor -- two cookies, a row per page
+	 * view, and a response carrying `Set-Cookie`, which no shared cache may store. A visitor who
+	 * *chose* a language, in a switcher, is {@see self::setUserLanguage()}.
 	 */
-	public static function setUserLanguage(Context $context, string $lang): bool
+	public static function useLanguage(Context $context, string $lang): bool
 	{
 		$list = self::getEnabledLanguages();
 
 		if (isset($list[$lang])) {
-			$context->authStore()
-				?->set(self::CLIENT_LANG_SESSION_KEY, $lang);
+			$context->setLanguage($lang);
 
 			return true;
 		}
 
 		return false;
+	}
+
+	/**
+	 * Sets user preferred language: a choice, kept for the sessions to come.
+	 *
+	 * For a visitor who picked a language rather than followed a link that names one -- a switcher,
+	 * a profile setting. It keeps the session, which is what makes the choice outlive the request,
+	 * so a route that merely carries the language in its path must use {@see self::useLanguage()}
+	 * instead.
+	 */
+	public static function setUserLanguage(Context $context, string $lang): bool
+	{
+		if (!self::useLanguage($context, $lang)) {
+			return false;
+		}
+
+		$context->authStore()
+			?->set(self::CLIENT_LANG_SESSION_KEY, $lang);
+
+		return true;
 	}
 
 	/**
@@ -395,7 +430,10 @@ final class Polyglot implements BootHookReceiverInterface, RouteProviderInterfac
 			$lang = $ev->target->param(self::ROUTE_LANG_PARAM);
 
 			if ($lang) {
-				Polyglot::setUserLanguage($ev->context, $lang);
+				// Used, not kept: a language in the path is the request, not a choice. Keeping it
+				// gave every anonymous visitor of a `/{lang}/` project a session, which is the one
+				// thing {@see self::getLanguage()} says must not happen.
+				Polyglot::useLanguage($ev->context, $lang);
 			}
 		}, Event::RUN_FIRST);
 	}

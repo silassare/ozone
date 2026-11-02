@@ -116,6 +116,28 @@ final class HttpRoutingTest extends TestCase
 		self::assertTrue($data['data']['pong'] ?? null);
 	}
 
+	public function testALanguageInThePathAnswersInItAndKeepsNoSession(): void
+	{
+		[$status, $body, $headers] = $this->request('GET', '/fr/test-lang');
+		$data                      = \json_decode($body, true);
+
+		self::assertSame(200, $status, $body);
+		self::assertIsArray($data);
+
+		// The path said which language, and that is what answered.
+		self::assertSame('fr', $data['data']['answered_in'] ?? null, $body);
+
+		// Nothing was kept: the session store is untouched, so the session is not kept. It used to
+		// hold {"oz":{"polyglot":{"favorite":"fr"}}}, written by the route's own language.
+		self::assertSame([], $data['data']['kept'] ?? null, $body);
+
+		// And so no cookie is sent. This is the assertion the project that reported it said nobody
+		// would think to write: a page carrying `Set-Cookie` is one no shared cache may store, and
+		// a cache that stored it anyway would hand one visitor's session id and CSRF token to every
+		// other visitor.
+		self::assertSame([], self::cookies($headers), \implode(' | ', $headers));
+	}
+
 	public function testFormValidationRejectsEmptyBody(): void
 	{
 		[$status, $body] = $this->request('POST', '/test-echo');

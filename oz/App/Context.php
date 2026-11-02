@@ -27,6 +27,7 @@ use OZONE\Core\Http\ClientInfo;
 use OZONE\Core\Http\Headers;
 use OZONE\Core\Http\HTTPEnvironment;
 use OZONE\Core\Http\Request;
+use OZONE\Core\Lang\Polyglot;
 use OZONE\Core\Http\Response;
 use OZONE\Core\Http\ResponseEmitter;
 use OZONE\Core\Http\Uri;
@@ -79,6 +80,11 @@ final class Context
 	private ?Navigator $navigator = null;
 
 	private ?RouteInfo $route_info = null;
+
+	/**
+	 * The language this request answers in: {@see self::getLanguage()}.
+	 */
+	private ?string $language = null;
 
 	private static ?self $root_context    = null;
 	private static ?self $current_context = null;
@@ -289,6 +295,37 @@ final class Context
 	public function getParent(): ?self
 	{
 		return $this->parent;
+	}
+
+	/**
+	 * The language this request answers in, as the request itself gave it -- a `{lang}` route
+	 * parameter above all -- or null when nothing in the request said.
+	 *
+	 * Request scoped, and deliberately: a language in the URL path says which language to answer in
+	 * completely, on every request, with no memory needed. Storing it instead would keep a session
+	 * for a visitor who has done nothing, which sends two cookies, writes a row, and leaves a
+	 * response no shared cache may hold ({@see Polyglot::getLanguage()}). A sub-request inherits it
+	 * until its own route sets one.
+	 */
+	public function getLanguage(): ?string
+	{
+		return $this->language ?? $this->parent?->getLanguage();
+	}
+
+	/**
+	 * Sets the language this request answers in, for this request only.
+	 *
+	 * Through {@see Polyglot::useLanguage()}, which is what validates it against the enabled
+	 * languages. A language the visitor *chose* and that must outlive the request is
+	 * {@see Polyglot::setUserLanguage()}.
+	 *
+	 * @internal
+	 */
+	public function setLanguage(string $language): static
+	{
+		$this->language = $language;
+
+		return $this;
 	}
 
 	/**

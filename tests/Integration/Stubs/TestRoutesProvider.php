@@ -15,6 +15,7 @@ namespace __PLH_NAMESPACE__;
 
 use OZONE\Core\App\Service as BaseService;
 use OZONE\Core\Forms\Form;
+use OZONE\Core\Lang\Polyglot;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -44,6 +45,23 @@ final class TestRoutesProvider extends BaseService
 
 			return $s->respond();
 		})->name('test:session');
+
+		// A route carrying the language in its path, as a public site's routes do. It must answer in
+		// that language and keep no session: a response with `Set-Cookie` is one no shared cache may
+		// store, and it hands a visitor who did nothing two cookies and a row.
+		$router->get('/{lang}/test-lang', static function (RouteInfo $ri) {
+			$context = $ri->getContext();
+
+			$s = new self($ri);
+			$s->json()
+				->setDone()
+				->setData([
+					'answered_in' => Polyglot::getLanguage($context),
+					'kept'        => $context->authStore()?->getData() ?? [],
+				]);
+
+			return $s->respond();
+		})->name('test:lang');
 
 		// POST route with required form field.
 		$router->post('/test-echo', static function (RouteInfo $ri) {
