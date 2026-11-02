@@ -43,6 +43,35 @@ measures them with [wrk](https://github.com/wg/wrk).
 - Worker mode needs code written for it (no request state in statics -- see `EndRequestHook` in the
   instructions); classic mode is what a PHP-FPM deployment gets.
 
+## How much of the preload list is worth preloading, 2026-11-01
+
+`ScopeBuilder::declareFirstParty()` declares every class of OZone, `silassare/*` and `psr/*` so the
+preload list holds what a request *may* load and not only what booting and building the routers did.
+That is 750 files against 240, and it had never been measured against the narrower list it replaced
+-- preloading was known to pay (the 2026-09-14 row below), the size of it was assumed.
+
+Three `ozone-classic` containers on the same code, one pass measuring all three in turn, three passes
+(10 s after a 5 s warm-up, 4 threads, 64 connections; classic mode only -- a worker bootstraps once
+and preloading does little for it). Medians of the three passes:
+
+| Preload list | files | `/ping` req/s | vs none | `/db` req/s | vs none |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| OZone and its first-party packages (what is built) | 750 | 1,326 | 1.67x | 603 | 1.32x |
+| what booting and the routers declared | 240 | 1,168 | 1.47x | 545 | 1.19x |
+| nothing preloaded, same build | -- | 793 | -- | 457 | -- |
+
+**The wide list is paid for**: the 510 extra files buy 13% on the text route and 11% on the database
+route over the narrow one, and the order held on both routes in all three passes -- the full list beat
+the narrow one by 265, 160 and 76 req/s on the text route and by 53, 65 and 37 on the database route.
+Read the pairs within a pass, not the spread between passes: the text route's variants overlap by a
+hair across passes (full 1,244-1,524, narrow 1,165-1,259) while the database route's do not at all,
+and every pass ranked them the same way. The narrow list still gets about two thirds of the gain, so
+it is what a server too small for 750 classes in `opcache.memory_consumption` should want -- there is
+no option for it today, and `--no-preload` is the only way down.
+
+Not reproducible from `make benchmark-http`: it needed a switch in `ScopeBuilder` and two bench
+services, both temporary and reverted with this measurement. Redoing it means putting them back.
+
 ## What a session costs a request, 2026-11-01
 
 Not part of `make benchmark-http`, which measures anonymous routes: measured on its own, because

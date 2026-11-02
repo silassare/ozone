@@ -123,6 +123,16 @@ final class ScopeBuilder
 	 * (`OZONE\Core\Testing\`), the generated ORM classes, and a file that does not declare the class its
 	 * path names. A class that cannot be declared -- an optional integration whose package is missing --
 	 * is left out too.
+	 *
+	 * Declaring them is what makes the list usable, not a detour: preloading only *links* a class
+	 * whose parents, interfaces and traits are already preloaded, so the list has to be emitted
+	 * parents-first with anything unlinkable dropped ({@see self::preloadable()}), and that order
+	 * comes from Reflection, which only sees what is declared. The cost is one build-time pass over
+	 * about a thousand first-party files.
+	 *
+	 * Taking this far rather than stopping at what booting and the routers declared is measured, not
+	 * assumed: 750 files against 240 buys 13% on the text route and 11% on the database route in
+	 * classic mode (`docker/bench/README.md`, 2026-11-01).
 	 */
 	private static function declareFirstParty(): void
 	{
