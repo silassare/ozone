@@ -294,6 +294,12 @@ final class OZone
 		static $results = null;
 
 		if (null === $results) {
+			// Empty first, then what the settings say: loading them runs a project's own settings
+			// files, and a project is invited to return a registry's output from `oz.routes.api`.
+			// A registry that asks for the providers used to find this still null and load the
+			// group again, from inside its own load.
+			$results = [];
+
 			$a       = Settings::load('oz.routes');
 			$b       = Settings::load('oz.routes.api');
 			$results = Settings::applyMergeStrategy($a, $b);
@@ -312,6 +318,12 @@ final class OZone
 		static $results = null;
 
 		if (null === $results) {
+			// Empty first, then what the settings say: loading them runs a project's own settings
+			// files, and a project is invited to return a registry's output from `oz.routes.web`.
+			// A registry that asks for the providers used to find this still null and load the
+			// group again, from inside its own load.
+			$results = [];
+
 			$a       = Settings::load('oz.routes');
 			$b       = Settings::load('oz.routes.web');
 			$results = Settings::applyMergeStrategy($a, $b);

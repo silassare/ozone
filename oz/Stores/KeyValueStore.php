@@ -189,7 +189,37 @@ final readonly class KeyValueStore
 			return $entry->value;
 		}
 
-		$value = $factory();
+		// The factory is the caller's code and it does real work -- a query, a directory scan, a
+		// `require` of project files -- while this entry says nothing yet. One that asks for the
+		// same key used to get another miss and run the factory again, from inside itself:
+		// unbounded, one query or one open directory per turn. The register below is what says
+		// "being computed", which an entry written afterwards cannot.
+		// A method static and not a property: this class is readonly, so it may hold no mutable
+		// state of its own, and the register has to outlive any one instance anyway -- two stores
+		// of the same name are the same store.
+		/** @var array<string, array<string, true>> $building */
+		static $building = [];
+
+		if (isset($building[$this->name][$key])) {
+			throw new RuntimeException(\sprintf(
+				'The value of "%s" was asked for while it was being computed: the factory of a'
+					. ' remembered value must not read the same key.',
+				$key
+			));
+		}
+
+		$building[$this->name][$key] = true;
+
+		try {
+			$value = $factory();
+		} finally {
+			unset($building[$this->name][$key]);
+
+			if (empty($building[$this->name])) {
+				unset($building[$this->name]);
+			}
+		}
+
 		$this->set($key, $value, $ttl);
 
 		return $value;

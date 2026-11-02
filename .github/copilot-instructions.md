@@ -42,6 +42,14 @@
 - **Real services, never fakes.** Tests talk to real MySQL, PostgreSQL, Redis, MinIO, ClamAV and worker servers, run by `docker/compose.yaml`; never a hand-written stand-in for one.
 - **Everything runs through `make`, in Docker** (section 20). Never create a `phpunit.xml`.
 - **Static analysis.** psalm runs at level 4 with no baseline and `make lint` has no error: never add a baseline, or a suppression, to get there. Level 4 does not ask whether a PHP function's `false` / `null` return reaches a typed parameter -- a `TypeError` under `strict_types` -- so check such returns in new code; the level-3 checks the code passes stay errors (`psalm.xml`). `make cs` has 0 errors, and no `oz/` line exceeds 120 characters. Its warnings are accepted and not to be re-audited: long rows in the data files (`oz_schema.php`, the `lang/` catalogs) and in tests, the `@` of a call whose result is checked right after, and two scripts that define constants or helpers (`scope_build.php`, `run_benchmarks.php`).
+- **A guard says what is in progress, never what is finished.** A memo is written when its work
+  ends, so while the work runs it reads as "not done": that is a memo, never a re-entrancy guard.
+  Where the work runs a project's code -- a settings file, a plugin's `instance()`, a route
+  provider, a type schema provider, a media type parser, a `remember()` factory, a scope's
+  constructor reaching the logger -- claim the key on entry and clear it in a `finally`, and let a
+  real cycle be an error that names it. `KeyValueStore::remember()` does this for every caller;
+  `AbstractApp::getScope()`, `Plugins`, `ClassLoader::resolveLazyNamespace()`, `ApiDoc::get()` (which
+  publishes before it loads) and `Request::getParsedBody()` each do it for their own.
 - **Request-scoped state belongs on the `Context`, never in a `static`**: a worker process serves many requests (section 2).
 - **No Unicode shortcut characters in PHP comments or docblocks.** Use plain ASCII equivalents:
 
@@ -366,10 +374,21 @@ return [
   read file by file. A settings file returns plain data (one holding an object leaves its directory
   unbundled) and may read `env()`: `.env` is read through a compiled copy
   (`.ozone/build/{release}/env/`, named after its content), and editing it gives new bundles.
-  Compiling a bundle runs every file of the directory, so it catches everything and reads the
-  directory file by file instead -- but it **records why** (`Settings::warmBundles()` answers the
+  Compiling a bundle runs every file of the directory, so it catches every **exception** and reads
+  the directory file by file instead -- but it **records why** (`Settings::warmBundles()` answers the
   reason per directory), because the catch-all swallowing what it was not written for is how a
-  descriptor exhaustion came out as a build one settings bundle short, reported as a success.
+  descriptor exhaustion came out as a build one settings bundle short, reported as a success. An
+  `Error` is not caught there: a stack exhausted or a call to something missing is a fault, not a
+  directory that cannot be bundled.
+- **A settings file may read another group** -- `return ModuleRegistry::apiServices();` in
+  `oz.routes.api.php`, where the registry reads `your.modules` -- and **may not read its own group**,
+  which answers with a `RuntimeException` naming it. Running a group's file is `require`, so the read
+  lands inside the load that is running: every memo of `Settings` says what is *finished*
+  (`$settings_groups` after `mergeGroup()`, `$source_bundles` after `compileBundle()`), so what is in
+  progress is registered on entry instead (`$loading_groups`, `$compiling_sources`) and a nested read
+  of a directory being compiled is served file by file. Without those two registers the nested read
+  started the same compile again, once per turn, each turn opening the directory: a deploy's scope
+  build reached 65 530 handles on one `app/settings` and 4 GB of heap, and was killed.
 - **Every build output goes under `.ozone/build/{release}/`**, through
   `InstanceLayout::releaseBuildPath()` / `releaseBuildDir()`: the compiled `.env`, the settings
   bundles, the route tables, the class map, the preload list, `build.php` and the generated ORM
@@ -382,6 +401,14 @@ return [
 - **`oz.config` is blacklisted**: no runtime edit.
 - `SettingsGroup` is `@internal`: never use it directly.
 - Every message code must be in both `lang/oz.en` and `lang/oz.fr` (`tests/Lang/CatalogTest`).
+- **A language the request carries is request scoped; only a choice is kept.** A `{lang}` route
+  parameter sets `Context::getLanguage()` through `Polyglot::useLanguage()` and is never stored: the
+  path says which language to answer in completely and says it again next request, so remembering it
+  buys nothing and costs a session for every anonymous visitor -- two cookies, a row per page view,
+  and a `Set-Cookie` no shared cache may store, which is a 0 % hit rate for a micro-cache and a
+  cross-visitor leak for one that stores it anyway. `Polyglot::setUserLanguage()` keeps the session
+  and is for a visitor who picked a language in a switcher. `getLanguage()` reads the request first,
+  then the stored choice, then `Accept-Language`, then the default.
 - **The API sends message codes, never text**: a client translates them from `oz lang export --json`
   (`Polyglot::exportCatalogs()`), the catalogs of the enabled languages merged as `Polyglot` reads
   them, the texts raw (`{var}`, `{var | filter}` and `{{KEY}}` are the client's to resolve), with the

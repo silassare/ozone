@@ -94,8 +94,6 @@ final class ApiDoc implements ArrayCapableInterface
 			$this->parameters,
 			$this->responses
 		);
-
-		$this->loadProviders();
 	}
 
 	/**
@@ -117,7 +115,15 @@ final class ApiDoc implements ArrayCapableInterface
 	public static function get(): static
 	{
 		if (!isset(self::$instance)) {
+			// Published before the providers are loaded, which is why loading is not in the
+			// constructor any more: loading runs every enabled route provider's `apiDoc()` and
+			// dispatches `ApiDocReady`, both a project's code, and this accessor is the only way to
+			// reach the document. One calling it used to find nothing published and build a second
+			// whole instance, which loaded the providers again. Now it is handed this one, part
+			// loaded, which is what a document being assembled is.
 			self::$instance = new self('API Documentation', '1.0.0');
+
+			self::$instance->loadProviders();
 		}
 
 		return self::$instance;

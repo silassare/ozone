@@ -232,7 +232,11 @@ class Env
 	 */
 	private static function compiled(string $path): array
 	{
-		$content = \file_get_contents($path);
+		// Silenced and checked: this runs inside the error handler too. A warning raised here
+		// reaches the handler, which logs, which reads a setting, which asks for the env -- and the
+		// memo of it is written after this returns, so the whole file was read and compiled a second
+		// time from inside the handler. The answer is read right here either way.
+		$content = @\file_get_contents($path);
 
 		if (false === $content) {
 			throw new RuntimeException(\sprintf('Unable to read the env file "%s".', $path));
@@ -257,7 +261,8 @@ class Env
 
 		// Best effort: the values are known either way, and the next process compiles them again.
 		try {
-			if (!\is_dir($dir) && !\mkdir($dir, 0o775, true) && !\is_dir($dir)) {
+			// Silenced for the same reason as the read above, and answered the same way.
+			if (!\is_dir($dir) && !@\mkdir($dir, 0o775, true) && !\is_dir($dir)) {
 				return [$values, $signature];
 			}
 

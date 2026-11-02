@@ -16,6 +16,7 @@ namespace OZONE\Core\Http;
 use InvalidArgumentException;
 use Override;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Forms\FormData;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamInterface;
@@ -70,6 +71,11 @@ class Request extends Message implements ServerRequestInterface
 	 * The request body parsed (if possible) into a PHP array or object.
 	 */
 	protected array|object|null $bodyParsed = null;
+
+	/**
+	 * Whether the body is being parsed right now: {@see self::getParsedBody()}.
+	 */
+	private bool $parsing_body = false;
 
 	/**
 	 * The request body parsers, by media type.
@@ -252,7 +258,23 @@ class Request extends Message implements ServerRequestInterface
 	public function getParsedBody(): array|object|null
 	{
 		if (null === $this->bodyParsed) {
-			$this->bodyParsed = $this->body_parser->parse($this->mediaType(), (string) $this->getBody());
+			// The parser is registered by a project ({@see self::registerMediaTypeParser()}), so a
+			// parser that reads the parsed body used to find this still null and parse the whole
+			// body again, from inside its own parse.
+			if ($this->parsing_body) {
+				throw new RuntimeException(
+					'The parsed body was read while it was being parsed: a media type parser must not'
+						. ' read what it is parsing.'
+				);
+			}
+
+			$this->parsing_body = true;
+
+			try {
+				$this->bodyParsed = $this->body_parser->parse($this->mediaType(), (string) $this->getBody());
+			} finally {
+				$this->parsing_body = false;
+			}
 		}
 
 		return $this->bodyParsed;

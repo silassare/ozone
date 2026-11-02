@@ -354,6 +354,39 @@
 
 ### Fixed
 
+- **Every lazy memo whose work can call back into itself now says what is *in progress*.** Found by
+  auditing for the shape that killed a deploy (the settings loader, above). A memo is written when
+  the work finishes, so for the whole time the work runs it answers "not done" -- which makes it a
+  memo and never a re-entrancy guard. Each of these runs a project's code and could re-enter:
+
+  - `AbstractApp::getScope()` built a scope whose constructor registers a settings source, which can
+    create directories, raise a diagnostic, and reach the logger -- which asks for that very scope.
+    What stopped it was PHP refusing to re-enter an error handler, not anything of ours. Live in
+    `scope_build.php`, the deploy-time build the original incident died in.
+  - `Logger::shouldLog()` and `Logger::writer()` held the level and the writer after reading
+    `oz.logs` and resolving a project writer; both now hold a default first, so a settings file that
+    logs is answered instead of starting the resolution again. `LogWriter::instance()` refuses to
+    build itself twice.
+  - `ClassLoader::resolveLazyNamespace()` claimed the prefix only once its provider had answered;
+    the guarantee that this did not run away lived in `Db::$initializing`, another class.
+  - `Plugins::getPlugin()` and `Plugins::scopeOf()` claim the key before running a plugin's
+    `instance()` or building its scope.
+  - `OZone::getApiRoutesProviders()` / `getWebRoutesProviders()` assign an empty list before loading
+    `oz.routes*`, which `require`s project files that may return a registry's output.
+  - `ApiDoc::get()` publishes the instance **before** loading the providers, which is why loading is
+    no longer in the constructor: a provider calling `get()` is handed the document being assembled
+    rather than building a second one.
+  - `ApiDoc\SchemaBuilder::component()` reserves the component name before running the factory, so a
+    type schema provider answering with a related entity's schema gets the reference, which is what a
+    `$ref` is for.
+  - `Cli\Utils\Utils::tryGetProjectApp()` will not `require` `app/app.php` a second time from
+    inside itself.
+  - `Http\Request::getParsedBody()` refuses a media type parser that reads what it is parsing.
+  - `Stores\KeyValueStore::remember()` -- the framework's lazy memo, handed arbitrary factories
+    (the migrations scan, a session lookup on every cookie-bearing request, a user's roles) -- keeps
+    a register of the keys being computed and refuses a factory that reads its own key. One change
+    covering every caller.
+
 - **Every anonymous page view of a `/{lang}/` project started a session, so no shared cache could
   store any page.** Reported from production. `Polyglot::boot()`'s `RouteBeforeRun` hook called
   `setUserLanguage()` whenever a route carried the `lang` parameter -- which, for a project whose

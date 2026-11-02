@@ -126,8 +126,20 @@ final class Utils
 	{
 		static $app = null;
 
-		if (null === $app && \defined('OZ_APP_DIR') && \file_exists($app_file = OZ_APP_DIR . 'app.php')) {
-			$return = require $app_file;
+		/** @var bool $loading */
+		static $loading = false;
+
+		if (!$loading && null === $app && \defined('OZ_APP_DIR') && \file_exists($app_file = OZ_APP_DIR . 'app.php')) {
+			// The memo is written once the file has returned, so a nested call used to run
+			// `app/app.php` a second time: a redeclaration fatal where it declares a named class,
+			// and a second app instance where it does not.
+			$loading = true;
+
+			try {
+				$return = require $app_file;
+			} finally {
+				$loading = false;
+			}
 
 			if (!$return instanceof AppInterface) {
 				throw new RuntimeException(

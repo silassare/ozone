@@ -47,6 +47,11 @@ class Logger implements LoggerInterface
 		static $configured_level;
 
 		if (null === $configured_level) {
+			// The default is held before the setting is read, not after: reading a settings group
+			// runs project files, and anything in there that logs used to find this still null and
+			// read the group again -- from inside its own load. What answers now is DEBUG, for that
+			// one line, and the configured level from the next.
+			$configured_level = LogLevel::DEBUG;
 			$configured_level = Settings::get('oz.logs', 'OZ_LOG_LEVEL', LogLevel::DEBUG);
 		}
 
@@ -120,6 +125,12 @@ class Logger implements LoggerInterface
 		static $writer;
 
 		if (null === $writer) {
+			// A plain writer first, so this answers something while the configured one is being
+			// resolved: reading `oz.logs` runs project settings files, and resolving a project
+			// writer runs its `instance()`. Anything in either that logs used to find this still
+			// null and start the whole resolution again, from inside itself.
+			$writer = LogWriter::instance();
+
 			$cls = Settings::get('oz.logs', 'OZ_LOG_WRITER');
 
 			if (LogWriter::class !== $cls) {

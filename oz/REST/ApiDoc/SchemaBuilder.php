@@ -161,6 +161,13 @@ final class SchemaBuilder
 
 		/** @psalm-suppress UndefinedMethod */
 		if (!isset($this->openapi->components[$kind][$name])) {
+			// The name is taken before the factory runs, and the factory is where a project's type
+			// schema provider is called: one answering with a related entity's schema re-entered
+			// here for a name already being built and recursed over the relation. A nested ask now
+			// gets the reference below, which is what a `$ref` is for.
+			/** @psalm-suppress UndefinedMethod */
+			$this->openapi->components[$kind][$name] = new Schema(['schema' => $name]);
+
 			/** @psalm-suppress UndefinedMethod */
 			$this->openapi->components[$kind][$name] = $factory();
 		}

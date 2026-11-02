@@ -647,7 +647,25 @@ class ClassLoader
 	 */
 	private static function resolveLazyNamespace(string $prefix): void
 	{
-		$dir = (self::$lazy_namespaces[$prefix])();
+		/** @var array<string, true> $resolving */
+		static $resolving = [];
+
+		// The provider is project code and it loads classes, so it comes back through the
+		// autoloader to this very prefix. The entry below is removed only once the provider has
+		// answered, so until then this answered "still lazy" and ran the provider again: it did not
+		// run away, because `Db::$initializing` is set before its own work and the second pass is
+		// cheap -- a guarantee that lives in another class. Claimed here instead.
+		if (isset($resolving[$prefix])) {
+			return;
+		}
+
+		$resolving[$prefix] = true;
+
+		try {
+			$dir = (self::$lazy_namespaces[$prefix])();
+		} finally {
+			unset($resolving[$prefix]);
+		}
 
 		if (null !== $dir && isset(self::$lazy_namespaces[$prefix])) {
 			unset(self::$lazy_namespaces[$prefix]);

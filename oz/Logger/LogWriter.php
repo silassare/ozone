@@ -71,12 +71,24 @@ class LogWriter implements LogWriterInterface
 		/** @var null|self $writer */
 		static $writer;
 
+		/** @var bool $building */
+		static $building = false;
+
 		// A fallback writer is replaced once an app is running.
-		if (null === $writer || $writer->fallback) {
-			$writer = new self();
+		if ((null === $writer || $writer->fallback) && !$building) {
+			// The constructor asks the scope for its logs directory and reads `oz.logs` twice, so
+			// it can reach code that logs -- which asks for this writer, which was still null. What
+			// a re-entrant call gets is the writer being built, or a fallback on the first turn.
+			$building = true;
+
+			try {
+				$writer = new self();
+			} finally {
+				$building = false;
+			}
 		}
 
-		return $writer;
+		return $writer ??= new self(\sys_get_temp_dir() . DS . 'ozone.log');
 	}
 
 	#[Override]

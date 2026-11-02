@@ -73,7 +73,24 @@ abstract class AbstractApp implements AppInterface
 		/** @var array<string, ScopeInterface> $scopes */
 		static $scopes = [];
 
+		/** @var array<string, true> $building */
+		static $building = [];
+
 		if (!isset($scopes[$scope])) {
+			// The memo below is written after the scope is built, so for the whole time the
+			// constructor runs it answers "not built" -- and building a scope registers its settings
+			// source, which can create directories, which can raise a diagnostic, which the logger
+			// answers by asking for this very scope ({@see Logger}, {@see LogWriter}). What stopped
+			// it was PHP refusing to re-enter an error handler, not anything here.
+			if (isset($building[$scope])) {
+				throw new InvalidArgumentException(\sprintf(
+					'Scope "%s" was asked for while it was being built.',
+					$scope
+				));
+			}
+
+			$building[$scope] = true;
+
 			try {
 				$this->getProjectDir()
 					->filter()
@@ -83,7 +100,11 @@ abstract class AbstractApp implements AppInterface
 				throw new InvalidArgumentException(\sprintf('Scope "%s" not found.', $scope), 0, $t);
 			}
 
-			$scopes[$scope] = new SubScope($scope);
+			try {
+				$scopes[$scope] = new SubScope($scope);
+			} finally {
+				unset($building[$scope]);
+			}
 		}
 
 		return $scopes[$scope];

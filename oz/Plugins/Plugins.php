@@ -43,8 +43,27 @@ class Plugins
 				);
 			}
 
+			/** @var array<string, true> $building */
+			static $building = [];
+
+			// `instance()` is a project's code, and `Plugins::ozone()` is on the hot path of the
+			// database set-up: a plugin whose `instance()` or `getName()` reaches back here found
+			// the memo below still unwritten and built itself again, with nothing to stop it.
+			if (isset($building[$plugin])) {
+				throw new RuntimeException(\sprintf(
+					'Plugin "%s" was asked for while it was being instantiated.',
+					$plugin
+				));
+			}
+
+			$building[$plugin] = true;
+
 			/* @var class-string<PluginInterface> $plugin */
-			$plugins[$plugin] = $plugin::instance();
+			try {
+				$plugins[$plugin] = $plugin::instance();
+			} finally {
+				unset($building[$plugin]);
+			}
 		}
 
 		return $plugins[$plugin];
@@ -75,9 +94,27 @@ class Plugins
 
 		$class = $plugin::class;
 
+		/** @var array<string, true> $building */
+		static $building = [];
+
 		if (!isset($scopes[$class])) {
-			$scope = new PluginScope($plugin);
-			$slug  = $scope->getName();
+			// Building a plugin scope registers its settings source, which can reach code that asks
+			// for the scope of the same plugin, while this memo still says it has none.
+			if (isset($building[$class])) {
+				throw new RuntimeException(\sprintf(
+					'The scope of plugin "%s" was asked for while it was being built.',
+					$class
+				));
+			}
+
+			$building[$class] = true;
+
+			try {
+				$scope = new PluginScope($plugin);
+				$slug  = $scope->getName();
+			} finally {
+				unset($building[$class]);
+			}
 
 			// Two plugins whose names slug the same way would share one state directory, one cache
 			// directory and one public assets directory, and each would read the other's settings.
