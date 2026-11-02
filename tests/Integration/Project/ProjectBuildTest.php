@@ -15,6 +15,7 @@ namespace OZONE\Tests\Integration\Project;
 
 use Override;
 use OZONE\Core\App\InstanceLayout;
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Testing\OZTestProject;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\TestCase;
@@ -392,6 +393,82 @@ final class ProjectBuildTest extends TestCase
 		self::proj()->oz('project', 'build', '--skip-orm', '--no-preload')->mustRun();
 
 		self::assertSame('ok', self::buildChecks()['Build result'] ?? null);
+	}
+
+	public function testASettingsFileMayReadAnotherGroupThroughARegistry(): void
+	{
+		$ns = self::proj()->getNamespace();
+
+		// What a project writes: `oz.routes.api` returns a registry's services, and the registry
+		// reads the group that says which modules are enabled. The build runs as a request would
+		// (a worker runtime, so settings come from bundles), and this read lands inside the compile
+		// of the very directory it reads from -- where no memo is in place yet, because none of them
+		// is written before the work. It was unbounded: one directory handle per turn until the
+		// process reached its descriptor limit, then heap until the host killed it.
+		self::proj()->writeFile('app/TestRegistry.php', \sprintf(
+			"<?php\n\ndeclare(strict_types=1);\n\nnamespace %s;\n\n"
+				. "use OZONE\\Core\\App\\Settings;\n\n"
+				. "final class TestRegistry\n{\n"
+				. "\tprivate static ?array \$values = null;\n\n"
+				. "\tpublic static function values(): array\n\t{\n"
+				. "\t\t// Memoised after the read returns, as a registry is: the third memo in the\n"
+				. "\t\t// chain that was not in place during it.\n"
+				. "\t\tif (null === self::\$values) {\n"
+				. "\t\t\tself::\$values = Settings::load('test.modules');\n"
+				. "\t\t}\n\n"
+				. "\t\treturn self::\$values;\n\t}\n}\n",
+			$ns
+		));
+		self::proj()->writeFile(
+			'app/settings/test.registry.php',
+			\sprintf("<?php\n\ndeclare(strict_types=1);\n\nreturn \\%s\\TestRegistry::values();\n", $ns)
+		);
+		self::proj()->writeFile(
+			'app/settings/test.modules.php',
+			"<?php\n\ndeclare(strict_types=1);\n\nreturn ['probe' => true];\n"
+		);
+
+		try {
+			// The scope process on its own, under a memory bound: a return of the loop fails here in
+			// seconds with a fatal naming Settings.php, where `oz project build` would hang until
+			// the machine gave out.
+			$proc = new Process(
+				[
+					\PHP_BINARY,
+					'-d',
+					'memory_limit=256M',
+					\dirname(__DIR__, 3) . '/oz/Cli/Build/scope_build.php',
+					'api',
+				],
+				self::proj()->getPath()
+			);
+
+			$proc->run();
+
+			$out = $proc->getOutput() . $proc->getErrorOutput();
+
+			self::assertSame(0, $proc->getExitCode(), $out);
+
+			$lines  = \preg_split('~\R~', \trim($proc->getOutput())) ?: [];
+			$report = \json_decode((string) \array_last($lines), true, 512, \JSON_THROW_ON_ERROR);
+
+			self::assertIsArray($report, $out);
+			self::assertTrue($report['production'], $out);
+
+			// Every source bundled, the registry's group among them.
+			self::assertSame($report['settings_sources'], $report['settings_bundles'], $out);
+
+			// And the count that says the loop is gone: a whole build holds a handful, the one that
+			// was killed held 65 530, every one of them the same settings directory.
+			self::assertLessThan(100, $report['descriptors']['peak'], $out);
+		} finally {
+			foreach (['app/TestRegistry.php', 'app/settings/test.registry.php', 'app/settings/test.modules.php'] as $file) {
+				\unlink(self::proj()->getPath() . \DIRECTORY_SEPARATOR . $file);
+			}
+		}
+
+		// Left as the other tests of this class expect to find it.
+		self::proj()->oz('project', 'build', '--clear', '--skip-orm', '--no-preload')->mustRun();
 	}
 
 	/**

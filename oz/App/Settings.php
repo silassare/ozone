@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\App;
 
+use Exception;
 use FilesystemIterator;
 use InvalidArgumentException;
 use OZONE\Core\Exceptions\RuntimeException;
@@ -149,6 +150,36 @@ final class Settings
 	 * @var array<string, string>
 	 */
 	private static array $bundle_failures = [];
+
+	/**
+	 * The groups being loaded, and the source directories being compiled, right now.
+	 *
+	 * The memos of this class say what is **finished**: a group is in `self::$settings_groups` once
+	 * {@see self::mergeGroup()} has run, a directory in `self::$source_bundles` once
+	 * {@see self::compileBundle()} has returned. Neither is in place while a group's file is being
+	 * run -- and running a group's file is `require`, so it may read a setting, directly or through
+	 * anything it calls. Asked again at that moment, both memos answer "not done" and the work
+	 * starts over, from inside itself.
+	 *
+	 * That is not a slow path, it is unbounded: a production deploy's scope build turned it into
+	 * 65 530 open handles on one `app/settings` directory -- one `RecursiveDirectoryIterator` per
+	 * turn -- then 4 GB of heap on a 3.9 GB host, and the process was killed. The three days before
+	 * it, the same loop reached the descriptor limit first, where the failure to open one more file
+	 * was caught as "this directory cannot be bundled" and the release was built one settings bundle
+	 * short.
+	 *
+	 * So what is in progress is registered on entry, by the thing that is about to do the work.
+	 *
+	 * @var array<string, true>
+	 */
+	private static array $loading_groups = [];
+
+	/**
+	 * @var array<string, true>
+	 *
+	 * @see self::$loading_groups
+	 */
+	private static array $compiling_sources = [];
 
 	/**
 	 * Gets settings path sources.
@@ -540,7 +571,26 @@ final class Settings
 			);
 		}
 
-		if (!\array_key_exists($group, self::$settings_groups)) {
+		if (\array_key_exists($group, self::$settings_groups)) {
+			return;
+		}
+
+		// Read while it is being loaded, by its own file or by a group whose file this one's reads:
+		// there is nothing to answer with, because the values do not exist yet and going on would run
+		// the file again to find out what it is about to return ({@see self::$loading_groups}). A
+		// project reads this and finds the cycle; what it replaced was a loop that ended in a killed
+		// process.
+		if (isset(self::$loading_groups[$group])) {
+			throw new RuntimeException(\sprintf(
+				'Settings group "%s" was read while it was being loaded: a settings file of that group,'
+					. ' or of a group it reads, reads it back.',
+				$group
+			));
+		}
+
+		self::$loading_groups[$group] = true;
+
+		try {
 			$sources = self::getSources();
 			$bundles = self::bundlesEnabled();
 
@@ -577,6 +627,8 @@ final class Settings
 					self::mergeGroup($group, $result, $abs_path);
 				}
 			}
+		} finally {
+			unset(self::$loading_groups[$group]);
 		}
 	}
 
@@ -702,6 +754,14 @@ final class Settings
 			return false === $bundle ? null : $bundle;
 		}
 
+		// Being compiled further up the stack: a group file of it is running and has read a setting.
+		// Answered as a directory without a bundle, which sends this read down the file-by-file
+		// branch -- one file, bounded, and the right values. Not recorded as a failure: the compile
+		// that is still running is the one that answers for this directory.
+		if (isset(self::$compiling_sources[$dir])) {
+			return null;
+		}
+
 		if (!\is_dir($dir)) {
 			self::$bundle_failures[$dir] = 'not a directory';
 
@@ -725,7 +785,13 @@ final class Settings
 			}
 		}
 
-		$groups = self::compileBundle($dir);
+		self::$compiling_sources[$dir] = true;
+
+		try {
+			$groups = self::compileBundle($dir);
+		} finally {
+			unset(self::$compiling_sources[$dir]);
+		}
 
 		self::$source_bundles[$dir] = $groups ?? false;
 
@@ -796,7 +862,12 @@ final class Settings
 
 				$groups[$group] = $result;
 			}
-		} catch (Throwable $t) {
+		} catch (Exception $t) {
+			// An exception and not every throwable: a group file of this directory failed, which is
+			// what reading it file by file is the answer to. An `Error` is not that -- a stack
+			// exhausted, a call to something that does not exist, a type that cannot hold what it
+			// was given -- and reporting one as a directory that cannot be bundled is how a fault
+			// came out as a release built one settings bundle short.
 			self::$bundle_failures[$dir] = \sprintf('%s: %s', $t::class, $t->getMessage());
 
 			return null;

@@ -16,6 +16,7 @@ namespace OZONE\Tests\App;
 use Override;
 use OZONE\Core\App\InstanceLayout;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Exceptions\RuntimeException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use stdClass;
@@ -219,6 +220,60 @@ final class SettingsBundleTest extends TestCase
 			self::assertStringContainsString('the group "oztest.warm" holds an object', $after['failed'][$dir]);
 		} finally {
 			\unlink($dir . \DIRECTORY_SEPARATOR . 'oztest.warm.php');
+			\rmdir($dir);
+		}
+	}
+
+	public function testAGroupFileMayReadAnotherGroupWhileItIsBeingLoaded(): void
+	{
+		// The shape a project writes without thinking about it: a settings file returns what a
+		// registry answers, and the registry reads the group that says which modules are enabled.
+		// Nothing of it is wrong, and it used to be unbounded -- neither the group's memo nor the
+		// directory's is in place while the directory is being compiled, so the nested read started
+		// the same compile again, once per turn, each one opening the directory.
+		$dir = self::tempSource('oztest.registry.php', '<?php return \OZONE\Core\App\Settings::load("oztest.named");');
+
+		\file_put_contents($dir . \DIRECTORY_SEPARATOR . 'oztest.named.php', '<?php return ["who" => "named"];');
+
+		try {
+			Settings::addSource($dir);
+			Settings::useBundles(true);
+
+			self::assertSame(['who' => 'named'], Settings::load('oztest.registry', true));
+
+			// And the directory is bundled: the nested read answered from the file, which is not a
+			// failure of the compile that was running.
+			self::assertNotEmpty(
+				\glob(self::cacheDir() . \DIRECTORY_SEPARATOR . \hash('xxh128', $dir) . '.*.php'),
+				'the directory should still have a bundle'
+			);
+		} finally {
+			\unlink($dir . \DIRECTORY_SEPARATOR . 'oztest.registry.php');
+			\unlink($dir . \DIRECTORY_SEPARATOR . 'oztest.named.php');
+			\rmdir($dir);
+		}
+	}
+
+	public function testAGroupFileThatReadsItsOwnGroupSaysSo(): void
+	{
+		// The one cycle that cannot be answered: the values do not exist yet, and going on would run
+		// the file again to find out what it is about to return. A named error, where the loop used
+		// to run until the host killed the process.
+		$dir = self::tempSource(
+			'oztest.ouroboros.php',
+			'<?php return ["a" => \OZONE\Core\App\Settings::get("oztest.ouroboros", "b", 1)];'
+		);
+
+		try {
+			Settings::addSource($dir);
+			Settings::useBundles(true);
+
+			$this->expectException(RuntimeException::class);
+			$this->expectExceptionMessage('Settings group "oztest.ouroboros" was read while it was being loaded');
+
+			Settings::load('oztest.ouroboros', true);
+		} finally {
+			\unlink($dir . \DIRECTORY_SEPARATOR . 'oztest.ouroboros.php');
 			\rmdir($dir);
 		}
 	}
