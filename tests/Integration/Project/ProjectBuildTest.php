@@ -211,6 +211,11 @@ final class ProjectBuildTest extends TestCase
 			self::assertStringContainsString('was not bundled', $out, $out);
 			self::assertStringContainsString('the group "test.unbundlable" holds an object', $out, $out);
 
+			// With it, what the build had to work with: a reason naming a file a process could not
+			// read is the same reason whether the file is unreadable or the process is out of
+			// descriptors, and only one of the two can be told from the counts.
+			self::assertMatchesRegularExpression('~descriptors: held \d+ at most~', $out, $out);
+
 			// And the release carries the verdict, so the gate is a check and not a person reading
 			// two numbers off a terminal.
 			self::assertSame('fail', self::buildChecks()['Build result'] ?? null);
@@ -281,6 +286,37 @@ final class ProjectBuildTest extends TestCase
 	 * Empty until that setup has run, and a test reaching it before then says so here
 	 * rather than as a call on null several frames away.
 	 */
+	public function testTheBuildRecordsTheDescriptorsItHeldAndTheLimitItRanUnder(): void
+	{
+		if (!\is_readable('/proc/self/fd')) {
+			self::markTestSkipped('A process counts its own descriptors through /proc, which this platform has not.');
+		}
+
+		self::proj()->oz('project', 'build', '--skip-orm', '--no-preload')->mustRun();
+
+		$results = self::buildFiles('build.php');
+
+		self::assertCount(1, $results);
+
+		$result = require $results[0];
+
+		self::assertIsArray($result);
+
+		$descriptors = $result['scopes']['api']['descriptors'] ?? null;
+
+		self::assertIsArray($descriptors, \var_export($result, true));
+
+		// Measured by the process that would run out of them, and against the limit that process
+		// ran under: a build that fails for want of a descriptor cannot say either afterwards, and
+		// a shell asked later answers for the shell.
+		self::assertIsInt($descriptors['peak']);
+		self::assertGreaterThan(0, $descriptors['peak']);
+
+		if (null !== $descriptors['limit']) {
+			self::assertGreaterThan($descriptors['peak'], $descriptors['limit']);
+		}
+	}
+
 	private static function proj(): OZTestProject
 	{
 		$project = self::$proj;

@@ -1065,6 +1065,15 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   What a scope process merely *printed* is still only reported (`diagnostics`): a project's own
   output and a dependency's deprecation must not fail a deploy.
 
+  **It records the descriptors it held at its highest and the limit it ran under**, in `build.php`
+  and beside a failure. A process that can open no more files reports what it could not read as
+  something it could not compile, which makes the reason printed above that line a symptom; and the
+  limit a build runs under belongs to whatever started it -- a deploy's shell, a systemd unit, a cron
+  job -- not to a shell asked afterwards. `ScopeBuilder` samples `/proc/self/fd` at the boundaries of
+  the build's phases and every 64th file of the first-party pass, which catches a descriptor that is
+  held and never closed rather than a spike inside one call; the peak is null where there is no
+  `/proc`.
+
 - **`install`** (repository root) puts `oz` / `ozone` on `PATH` and nothing else: it only _checks_ PHP,
   the extensions, Composer and git unless `--with-php`. Preparing a server is `oz server provision`.
 - **`oz project create`** generates a `composer.json` requiring `silassare/ozone`; every package in its

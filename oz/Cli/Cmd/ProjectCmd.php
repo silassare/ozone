@@ -224,6 +224,7 @@ final class ProjectCmd extends Command
 				'settings_failed'     => $report['settings_failed'],
 				'route_tables'        => $report['route_tables'],
 				'route_tables_failed' => $report['route_tables_failed'],
+				'descriptors'         => $report['descriptors'],
 			];
 
 			// The counts, and what they were meant to be: a reader cannot judge "2 settings
@@ -259,6 +260,23 @@ final class ProjectCmd extends Command
 
 			foreach ($report['route_tables_failed'] as $file) {
 				$cli->error(\sprintf('   route table "%s" could not be written.', $file), false, null);
+			}
+
+			// Beside the failure, because this is where it is read: a build that can open no more
+			// files reports what it could not read as something it could not compile, which makes the
+			// reason above the symptom. Said with the limit this process ran under -- whatever started
+			// it decides that, and not the shell anyone checks afterwards.
+			$peak  = $report['descriptors']['peak'];
+			$limit = $report['descriptors']['limit'];
+
+			if (null !== $peak) {
+				$cli->error(\sprintf(
+					'   descriptors: held %d at most%s.',
+					$peak,
+					null === $limit
+						? ', with no limit on them'
+						: \sprintf(' of the %d this process may open', $limit)
+				), false, null);
 			}
 		}
 

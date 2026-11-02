@@ -380,6 +380,14 @@
   process merely printed is still only reported: a project's own output and a dependency's
   deprecation must not fail a deploy.
 
+  The build now also records the descriptors it held at its highest and the limit it ran under, in
+  `build.php` and beside a failure (`descriptors: held 11 at most of the 1048576 this process may
+  open`). What exhausted them in those deploys is not known, and a process that can open no more
+  files reports what it could not read as something it could not compile -- so the reason printed
+  above that line can be the symptom rather than the cause. Neither number could be had afterwards:
+  the limit a build runs under belongs to whatever started it, a deploy's shell, a systemd unit or a
+  cron job, and a shell asked later answers for the shell.
+
 - **A failure to report a diagnostic replaced the diagnostic, and sometimes the run.** The same
   deploys named `Logger.php` as the file that could not be opened, which was the symptom and not the
   cause: `oz_logger()` resolves the logger on first use, and first use is the moment an error is

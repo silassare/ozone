@@ -496,6 +496,7 @@ final class DoctorCmd extends Command
 	 *     settings_failed: array<string, string>,
 	 *     route_tables: int,
 	 *     route_tables_failed: list<string>,
+	 *     descriptors?: array{peak: null|int, limit: null|int, hard: null|int},
 	 * }> $scopes what the build wrote per scope ({@see ProjectBuilder::result()})
 	 *
 	 * @return array{name: string, status: string, detail: string, fix: string}

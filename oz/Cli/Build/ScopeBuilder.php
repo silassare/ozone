@@ -42,10 +42,27 @@ use Throwable;
 final class ScopeBuilder
 {
 	/**
+	 * One descriptor count every so many files of the pass that opens the most of them
+	 * ({@see self::declareUnder()}).
+	 */
+	private const int DESCRIPTOR_SAMPLE_EVERY = 64;
+
+	/**
+	 * The most descriptors this process has been seen holding: {@see self::sampleDescriptors()}.
+	 */
+	private static int $fd_peak = 0;
+
+	/**
 	 * Builds one scope and reports what this release has compiled against what it asked for: a
 	 * settings directory that cannot be bundled and a route table that cannot be written both leave
 	 * the work for requests to redo instead of failing, so a count on its own never says whether the
 	 * build is whole.
+	 *
+	 * It reports the descriptors it held at its highest against the limit it ran under, which is the
+	 * one question a build that runs out of them cannot answer afterwards: a process that can open no
+	 * more files reports what it could not read as something it could not compile, and the limit it
+	 * ran under is whatever started it -- a deploy's shell, a systemd unit, a cron job -- and not what
+	 * an interactive shell reports later.
 	 *
 	 * @return array{
 	 *     scope: string,
@@ -56,6 +73,7 @@ final class ScopeBuilder
 	 *     route_tables: int,
 	 *     route_tables_failed: list<string>,
 	 *     preload: list<string>,
+	 *     descriptors: array{peak: null|int, limit: null|int, hard: null|int},
 	 * }
 	 */
 	public static function run(AppInterface $app, string $scope): array
@@ -83,6 +101,9 @@ final class ScopeBuilder
 			'route_tables'        => 0,
 			'route_tables_failed' => [],
 			'preload'             => [],
+			// The first sample is taken here, so a scope that is not built in this mode still
+			// reports what booting alone held.
+			'descriptors'         => self::descriptors(),
 		];
 
 		if (!$report['production']) {
@@ -95,9 +116,13 @@ final class ScopeBuilder
 		$report['settings_sources'] = $bundles['expected'];
 		$report['settings_failed']  = $bundles['failed'];
 
+		self::sampleDescriptors();
+
 		// Each compiles its route table, when this release has none yet.
 		OZone::getApiRouter();
 		OZone::getWebRouter();
+
+		self::sampleDescriptors();
 
 		foreach (OZone::routeTableBuilds() as $build) {
 			if ($build['compiled']) {
@@ -109,7 +134,8 @@ final class ScopeBuilder
 
 		self::declareFirstParty();
 
-		$report['preload'] = self::preloadable();
+		$report['preload']     = self::preloadable();
+		$report['descriptors'] = self::descriptors();
 
 		return $report;
 	}
@@ -185,11 +211,19 @@ final class ScopeBuilder
 	private static function declareUnder(string $prefix, string $dir, array $skip): void
 	{
 		$files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+		$seen  = 0;
 
 		/** @var SplFileInfo $file */
 		foreach ($files as $file) {
 			if ('php' !== $file->getExtension()) {
 				continue;
+			}
+
+			// Watched from the inside, this one: it is the pass that opens the most files, so a
+			// descriptor that is opened here and never released is seen climbing rather than only
+			// counted once it is all over ({@see self::sampleDescriptors()}).
+			if (0 === ++$seen % self::DESCRIPTOR_SAMPLE_EVERY) {
+				self::sampleDescriptors();
 			}
 
 			// PascalCase segments only: `oz_default/`, `bootstrap.php` and scripts name no class.
@@ -301,5 +335,59 @@ final class ScopeBuilder
 		}
 
 		return \array_keys($files);
+	}
+
+	/**
+	 * Counts the descriptors this process holds, keeping the highest it has seen
+	 * ({@see self::descriptors()}).
+	 *
+	 * Sampled and not watched: PHP offers no hook on opening a file, so this is called at the
+	 * boundaries of the build's phases and through the pass that opens the most files. What it is
+	 * there to catch is a count that climbs and never comes back down -- a descriptor held and never
+	 * closed -- and not a spike inside a single call, which it can miss.
+	 *
+	 * Linux only: `/proc/self/fd` lists a process's own descriptors and nothing portable does, so
+	 * the peak is simply unknown elsewhere.
+	 */
+	private static function sampleDescriptors(): void
+	{
+		$open = @\scandir('/proc/self/fd');
+
+		if (false === $open) {
+			return;
+		}
+
+		// Less "." and "..", and less the directory handle this very count is reading through, which
+		// /proc lists like any other.
+		$held = \count($open) - 3;
+
+		if ($held > self::$fd_peak) {
+			self::$fd_peak = $held;
+		}
+	}
+
+	/**
+	 * The most descriptors this process was seen holding, and the limits it runs under.
+	 *
+	 * `peak` is null where the platform does not say ({@see self::sampleDescriptors()}), `limit` and
+	 * `hard` where the limit is not a number -- "unlimited", which no Linux host sets for open files.
+	 *
+	 * @return array{peak: null|int, limit: null|int, hard: null|int}
+	 */
+	private static function descriptors(): array
+	{
+		self::sampleDescriptors();
+
+		/** @var array<string, mixed> $limits */
+		$limits = \posix_getrlimit() ?: [];
+
+		$number = static fn (mixed $value): ?int => \is_int($value)
+			|| (\is_string($value) && \ctype_digit($value)) ? (int) $value : null;
+
+		return [
+			'peak'  => self::$fd_peak > 0 ? self::$fd_peak : null,
+			'limit' => $number($limits['soft openfiles'] ?? null),
+			'hard'  => $number($limits['hard openfiles'] ?? null),
+		];
 	}
 }

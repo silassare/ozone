@@ -79,6 +79,7 @@ final class ProjectBuilder
 	 *     route_tables: int,
 	 *     route_tables_failed: list<string>,
 	 *     preload: list<string>,
+	 *     descriptors: array{peak: null|int, limit: null|int, hard: null|int},
 	 *     diagnostics: list<string>,
 	 * }
 	 *
@@ -119,6 +120,7 @@ final class ProjectBuilder
 		 *     route_tables: int,
 		 *     route_tables_failed: list<string>,
 		 *     preload: list<string>,
+		 *     descriptors: array{peak: null|int, limit: null|int, hard: null|int},
 		 * } $report
 		 */
 		$report = \json_decode($last, true, 512, \JSON_THROW_ON_ERROR);
@@ -144,6 +146,7 @@ final class ProjectBuilder
 	 *     settings_failed: array<string, string>,
 	 *     route_tables: int,
 	 *     route_tables_failed: list<string>,
+	 *     descriptors: array{peak: null|int, limit: null|int, hard: null|int},
 	 * }> $scopes what each scope compiled, by scope name
 	 */
 	public static function writeResult(array $scopes): void
@@ -168,6 +171,7 @@ final class ProjectBuilder
 	 *         settings_failed: array<string, string>,
 	 *         route_tables: int,
 	 *         route_tables_failed: list<string>,
+	 *         descriptors?: array{peak: null|int, limit: null|int, hard: null|int},
 	 *     }>,
 	 * }
 	 */
@@ -202,6 +206,7 @@ final class ProjectBuilder
 		 *         settings_failed: array<string, string>,
 		 *         route_tables: int,
 		 *         route_tables_failed: list<string>,
+		 *         descriptors?: array{peak: null|int, limit: null|int, hard: null|int},
 		 *     }>,
 		 * } $result
 		 */
