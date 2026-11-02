@@ -416,8 +416,11 @@ final class DoctorCmd extends Command
 	 *
 	 * Drift is a warning: requests compile what a build left out, the first ones paying for it. A
 	 * stale preload list is worse -- PHP serves the code it preloaded until it restarts -- but only
-	 * the PHP that serves requests knows what it preloaded. A build that came out short of what the
-	 * project asked for is the one failure here ({@see self::buildResultCheck()}).
+	 * the PHP that serves requests knows what it preloaded. Two things fail: a build that came out
+	 * short of what the project asked for ({@see self::buildResultCheck()}), and a production release
+	 * with no build at all -- one never built, or one whose build did not finish. The second was a
+	 * warning until a scope build was killed mid-deploy: it wrote nothing, so there was nothing short
+	 * to find, and the check that exists to stop that release from shipping passed it.
 	 *
 	 * @return list<array{name: string, status: string, detail: string, fix: string}>
 	 */
@@ -437,7 +440,10 @@ final class DoctorCmd extends Command
 				$drift = ProjectBuilder::classMapDrift();
 
 				if (null === $drift) {
-					$build = [self::WARN, 'not built for this release', $rebuild];
+					// Not drift: there is nothing to have drifted. Every build writes the class map, so a
+					// production release without one was never built or was built by a run that did not
+					// reach the end, and both serve requests that compile the whole of it themselves.
+					$build = [self::FAIL, 'not built for this release', $rebuild];
 				} elseif ($drift > 0) {
 					$build = [self::WARN, \sprintf('%d class(es) added, moved or removed since', $drift), $rebuild];
 				} else {
@@ -450,10 +456,15 @@ final class DoctorCmd extends Command
 
 		$checks = [self::row('Production build', ...$build)];
 
-		// Only once a build wrote down what it compiled: a release built by an older OZone has no
-		// result file, and the row above already says a release that was never built.
 		if (null !== ($result = ProjectBuilder::result())) {
 			$checks[] = self::buildResultCheck($result['scopes'], $rebuild);
+		} else {
+			// Said, rather than left out: a gate reads a row it cannot find as a row with no news, and
+			// the release where this was wanted had no result file at all. A warning and not a failure
+			// because a release built by an older OZone has none and is not wrong for it; one of this
+			// OZone that wrote none did not finish, and the row above fails for it -- the result file is
+			// written before the class map, so there is no build that wrote the second and not the first.
+			$checks[] = self::row('Build result', self::WARN, 'not written for this release', $rebuild);
 		}
 
 		// Only once a build wrote the preload script: a project served in worker mode, or built

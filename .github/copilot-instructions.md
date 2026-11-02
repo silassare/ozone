@@ -1063,7 +1063,12 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   `2 of 3`, since a bare count can only be judged by someone who already knows what it should be, and
   the result goes to `build.php` in the release's build directory, which `oz doctor check` fails on.
   What a scope process merely *printed* is still only reported (`diagnostics`): a project's own
-  output and a dependency's deprecation must not fail a deploy.
+  output and a dependency's deprecation must not fail a deploy. A scope process that was **killed**
+  fails the build with the signal by number and by name and with what it printed before it died:
+  Symfony's `wait()` reads the pipes and then throws, so that output has to be taken off the process
+  in the catch or it leaves with the exception -- and a killed process runs no handler and no
+  shutdown function of ours, so it is the only account of it there can be. Where the reason is named
+  is the kernel's log, not PHP's.
 
   **It records the descriptors it held at its highest and the limit it ran under**, in `build.php`
   and beside a failure. A process that can open no more files reports what it could not read as
@@ -1089,11 +1094,14 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
   way to make the first super admin, never a web installer. `oz doctor check` warns while an installed
   project has none.
 - **`oz doctor check [--json]`** reports what the machine and project miss and exits non-zero on a
-  failure, including a schema that failed to load at bootstrap. In production it warns (never fails)
-  when this release has no class map or one the classes no longer match, and when its preload list
-  names files changed or gone since the build: that is drift, which the next build corrects. It
-  **fails** on a build that came out short of what the project asked for (`Build result`, read from
-  the release's `build.php`), which no amount of waiting corrects.
+  failure, including a schema that failed to load at bootstrap. In production it **fails** on a build
+  that came out short of what the project asked for (the `Build result` row, read from the release's
+  `build.php`) and on a release with **no class map** (the `Production build` row): every build writes
+  one, so a release without it was never built or was built by a run that did not finish, and neither
+  is drift. Three rows and not one, which a gate grepping for a name has to know. It warns on drift,
+  which the next build corrects -- a class map the classes no longer match, a `Preload` list naming
+  files changed or gone since the build -- and on a release with no `build.php`, said as its own row
+  because an older OZone wrote none and a gate reads a missing row as a row with no news.
 - **`oz server provision`**: `Cli\Server\Provisioner::plan()` is a pure function of the options and the
   detected `PackageManager` (so `--dry-run` is honest and every distribution is asserted from one
   machine), and everything that reads or runs on the target goes through `Cli\Server\Interfaces\HostInterface`:

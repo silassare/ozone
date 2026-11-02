@@ -280,12 +280,6 @@ final class ProjectBuildTest extends TestCase
 		}
 	}
 
-	/**
-	 * The project this class runs against, which its own setup created.
-	 *
-	 * Empty until that setup has run, and a test reaching it before then says so here
-	 * rather than as a call on null several frames away.
-	 */
 	public function testTheBuildRecordsTheDescriptorsItHeldAndTheLimitItRanUnder(): void
 	{
 		if (!\is_readable('/proc/self/fd')) {
@@ -317,6 +311,95 @@ final class ProjectBuildTest extends TestCase
 		}
 	}
 
+	public function testAKilledScopeBuildSaysSoAndKeepsWhatItPrinted(): void
+	{
+		$boot     = self::proj()->getPath() . '/app/boot.php';
+		$original = (string) \file_get_contents($boot);
+
+		// A process that is killed runs nothing of OZone's afterwards -- no error handler, no shutdown
+		// function, no report -- so what it printed before it died is the only account of it there can
+		// be. That output is read off the pipes by `wait()`, which then throws, and it used to leave
+		// with the exception: a deploy log kept the signal number from a frame naming the builder.
+		//
+		// Only in the scope process, which `scope_build.php` is the entry point of: the command that
+		// starts it runs this boot file too, and a parent killed here would never reach the build.
+		self::proj()->writeFile(
+			'app/boot.php',
+			$original . \PHP_EOL
+				. "if (\\str_contains((string) (\$_SERVER['argv'][0] ?? ''), 'scope_build.php')) {" . \PHP_EOL
+				. "\t\\fwrite(\\STDOUT, 'OZ-DYING-OUT' . \\PHP_EOL);" . \PHP_EOL
+				. "\t\\fwrite(\\STDERR, 'OZ-DYING-ERR' . \\PHP_EOL);" . \PHP_EOL
+				// Flushed on purpose: what is still in a buffer dies with the process, and a build that
+				// is killed mid-sentence is exactly the case that has to report what it managed to say.
+				. "\t\\fflush(\\STDOUT);" . \PHP_EOL
+				// 9 is SIGKILL, which cannot be caught: the process says nothing of its own, as the
+				// reported segfault said nothing. The constant is ext-pcntl's, which OZone does not take.
+				. "\t\\posix_kill(\\posix_getpid(), 9);" . \PHP_EOL
+				. '}' . \PHP_EOL
+		);
+
+		try {
+			$proc = self::proj()->oz('project', 'build', '--skip-orm', '--no-preload');
+			$proc->run();
+
+			$out = $proc->getOutput() . $proc->getErrorOutput();
+
+			// A deploy under `set -e` stops here, as it does on a build that comes out short.
+			self::assertNotSame(0, $proc->getExitCode(), $out);
+
+			// The signal, by number and by name, and what it means for the process: "signaled with
+			// signal 11" told the one deploy that read it nothing it could act on.
+			self::assertStringContainsString('was killed by signal 9 (SIGKILL', $out, $out);
+
+			// And both streams of the dead process.
+			self::assertStringContainsString('OZ-DYING-OUT', $out, $out);
+			self::assertStringContainsString('OZ-DYING-ERR', $out, $out);
+		} finally {
+			self::proj()->writeFile('app/boot.php', $original);
+		}
+	}
+
+	public function testDoctorFailsOnAProductionReleaseWithNoBuild(): void
+	{
+		self::proj()->oz('project', 'build', '--skip-orm', '--no-preload')->mustRun();
+
+		$built = [...self::buildFiles('classmap.*.php'), ...self::buildFiles('build.php')];
+
+		self::assertCount(2, $built);
+
+		// What a build that was killed leaves behind: a release with nothing compiled in it. Nothing
+		// is short, because nothing was written, so the check for a short build has nothing to read --
+		// and this used to be two warnings and an exit 0, which is a gate passing the one release it
+		// exists to stop.
+		foreach ($built as $file) {
+			\unlink($file);
+		}
+
+		$proc = self::proj()->oz('doctor', 'check');
+		$proc->run();
+
+		$out    = $proc->getOutput() . $proc->getErrorOutput();
+		$checks = self::buildChecks();
+
+		self::assertNotSame(0, $proc->getExitCode(), $out);
+		self::assertSame('fail', $checks['Production build'] ?? null, $out);
+
+		// Said rather than left out, and a warning: a release built by an older OZone has no result
+		// file either, and the row above is what fails for one of this OZone.
+		self::assertSame('warn', $checks['Build result'] ?? null, $out);
+
+		// Left as the other tests of this class expect to find it.
+		self::proj()->oz('project', 'build', '--skip-orm', '--no-preload')->mustRun();
+
+		self::assertSame('ok', self::buildChecks()['Build result'] ?? null);
+	}
+
+	/**
+	 * The project this class runs against, which its own setup created.
+	 *
+	 * Empty until that setup has run, and a test reaching it before then says so here
+	 * rather than as a call on null several frames away.
+	 */
 	private static function proj(): OZTestProject
 	{
 		$project = self::$proj;

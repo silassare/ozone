@@ -354,6 +354,29 @@
 
 ### Fixed
 
+- **A scope build that was killed reported the signal and dropped everything else.** The deploy that
+  followed the fixes below did not truncate: the scope process was killed by `SIGSEGV`, and all the
+  deploy log kept was `ProcessSignaledException: The process has been signaled with signal "11"` from
+  a frame naming `ProjectBuilder::buildScope()`. Symfony's `wait()` throws that exception out of
+  `run()` *after* reading the pipes, so everything the process had printed was sitting on the object
+  and went with the exception, unread. It printed nothing that time; a build killed later, with a
+  warning or a reason already on its way out, would have lost that too -- in the one case where it is
+  the only account there can be, because a killed process runs no handler and no shutdown function of
+  ours. `buildScope()` now catches it and fails with the signal by number and by name (`killed by
+  signal 11 (SIGSEGV, a crash in the process)`), what the process printed on either stream, and where
+  the reason is named, which is not in PHP: the kernel's log says which library it faulted in.
+
+- **`oz doctor check` passed a production release with no build at all.** The same deploy: the build
+  died, wrote neither `build.php` nor the class map, and the two rows that judge a build answered
+  `warn` (`not built for this release`) and nothing -- the `Build result` row is only added when there
+  is a result file to read. Warnings do not fail the command, so a deploy whose gate is `doctor check`
+  would have shipped the release; what stopped that one was the build's own exit code. A production
+  release without a class map is now a **failure**: every build writes one, so a release that has none
+  was never built or was built by a run that did not finish, and neither serves what the project asked
+  for. A missing result file is reported as a warning row of its own instead of no row, because a
+  release built by an older OZone has none and is not wrong for it -- and a gate reads a row it cannot
+  find as a row with no news.
+
 - **`oz project build` reported a truncated build as a success.** Reported from a production deploy:
   a scope compiled two of its three settings bundles, printed the PHP warnings it had swallowed, then
   printed `✔ scope "api": 2 settings bundles, route tables compiled.` and exited 0; an identical
