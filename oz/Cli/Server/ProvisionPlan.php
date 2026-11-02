@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Server;
 
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Server\Interfaces\HostInterface;
 use OZONE\Core\Exceptions\RuntimeException;
 
@@ -85,7 +86,10 @@ final class ProvisionPlan
 	 *
 	 * A command killed for taking longer than its step allows is one of those failures, and says so
 	 * rather than ending the run with a message about a process: which step was cut, and what it had
-	 * printed, is what tells an operator whether to give it longer or go looking.
+	 * printed, is what tells an operator whether to give it longer or go looking. A command killed by
+	 * anything else says which signal, because "failed on" reads as the command's own verdict and a
+	 * package install the host killed -- which is what a box short of memory does to one -- never
+	 * reached a verdict at all.
 	 *
 	 * @param HostInterface $host    the host the plan is for
 	 * @param null|callable $on_step called with (ProvisionStep, string $state) per step,
@@ -118,10 +122,19 @@ final class ProvisionPlan
 				$code   = $runner->run($command, $output);
 
 				if (0 !== $code) {
+					// Killed, and not by its time running out: a package install on a small box is what
+					// the kernel out-of-memory killer takes, and the host answers that as the code a shell
+					// reports for it. Named, because "failed on" reads as the command's own verdict.
+					$killed = Process::killedPhraseFor($code);
+
 					throw new RuntimeException(\sprintf(
 						'Provision step "%s" %s: %s',
 						$step->name,
-						HostInterface::TIMED_OUT === $code ? 'was still running when its time ran out' : 'failed on',
+						match (true) {
+							HostInterface::TIMED_OUT === $code => 'was still running when its time ran out',
+							null !== $killed                   => 'was ' . $killed . ' on',
+							default                            => 'failed on',
+						},
 						$command
 					), [
 						'_step'    => $step->name,

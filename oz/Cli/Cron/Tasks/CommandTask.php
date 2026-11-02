@@ -62,10 +62,14 @@ class CommandTask extends AbstractTask
 		]);
 
 		if (0 !== $exit_code) {
+			// A killed command is not a command that failed: nothing of it chose the code, and the
+			// scheduler's record of the run is the only place the reason can be read afterwards.
 			$this->result->setError(\sprintf(
-				'Command task "%s" failed with exit code %d.',
+				'Command task "%s" %s.',
 				$this->name,
-				$exit_code
+				null !== ($killed = $process->killedPhrase())
+					? $killed
+					: \sprintf('failed with exit code %d', $exit_code)
 			));
 		} else {
 			$this->result->setDone();

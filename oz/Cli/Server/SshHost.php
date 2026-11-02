@@ -15,9 +15,9 @@ namespace OZONE\Core\Cli\Server;
 
 use InvalidArgumentException;
 use Override;
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Server\Interfaces\HostInterface;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
-use Symfony\Component\Process\Process;
 
 /**
  * Class SshHost.
@@ -245,6 +245,9 @@ final readonly class SshHost implements HostInterface
 	{
 		$process = new Process($this->sshCommand($command), null, null, $input, $this->timeout);
 
+		// Only the timeout is caught here: an ssh client killed by anything else answers 128 plus the
+		// signal through {@see Process::wait()}, and so does a command the host itself killed, which
+		// the remote shell reports the same way.
 		try {
 			$process->run();
 			$code = (int) $process->getExitCode();

@@ -14,11 +14,14 @@ declare(strict_types=1);
 namespace OZONE\Tests\Cli\Server;
 
 use Override;
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Server\Enums\PackageManager;
 use OZONE\Core\Cli\Server\Interfaces\HostInterface;
 use OZONE\Core\Cli\Server\LocalHost;
 use OZONE\Core\Cli\Server\ProvisionManifest;
+use OZONE\Core\Cli\Server\ProvisionPlan;
 use OZONE\Core\Cli\Server\ProvisionStep;
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Testing\Sandbox;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -31,6 +34,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(LocalHost::class)]
 #[CoversClass(ProvisionManifest::class)]
+#[CoversClass(ProvisionPlan::class)]
 final class LocalHostTest extends TestCase
 {
 	private string $dir;
@@ -148,5 +152,47 @@ final class LocalHostTest extends TestCase
 
 		// The host it came from is untouched: a bound belongs to the command that asked for it.
 		self::assertSame(0, $host->run('sleep 0.5'));
+	}
+
+	public function testACommandKilledByAnythingElseAnswersTheSignalAsItsCode(): void
+	{
+		$host   = new LocalHost();
+		$output = '';
+
+		// What the kernel out-of-memory killer does to a package install on a box small enough to
+		// matter, reproduced with the signal it sends. Nothing of the command chose this code, and it
+		// used to leave here as an exception no caller catches -- with what the command had printed
+		// inside it, unread.
+		$code = $host->run('echo begun; kill -9 $$', $output);
+
+		self::assertSame(137, $code);
+		self::assertSame(9, Process::signalFromExitCode($code));
+		self::assertStringContainsString('SIGKILL', (string) Process::killedPhraseFor($code));
+		self::assertStringContainsString('begun', $output);
+	}
+
+	public function testAPlanStepWhoseCommandIsKilledNamesTheSignal(): void
+	{
+		$host     = new LocalHost();
+		$manifest = ProvisionManifest::load($this->dir . '/etc/ozone/provision.json', $host);
+		$plan     = new ProvisionPlan()
+			->add(new ProvisionStep('probe', 'A probe.', ['echo begun; kill -9 $$']));
+
+		try {
+			$plan->run($host, $manifest);
+
+			self::fail('A killed command must stop the plan.');
+		} catch (RuntimeException $e) {
+			// Which step, and what took it: "failed on" reads as the command's own verdict, and a
+			// package install that the host killed never reached a verdict.
+			self::assertStringContainsString(
+				'Provision step "probe" was killed by signal 9 (SIGKILL',
+				$e->getMessage()
+			);
+			self::assertStringContainsString('begun', (string) ($e->getData(true)['_output'] ?? ''));
+		}
+
+		// And nothing was recorded as done: the next run starts the step again.
+		self::assertSame([], $manifest->steps());
 	}
 }

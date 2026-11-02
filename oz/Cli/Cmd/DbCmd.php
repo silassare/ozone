@@ -404,28 +404,84 @@ final class DbCmd extends Command
 	{
 		$outfile = $fm->resolve(\sprintf('%s.sql', Random::fileName('backup')));
 		$config  = db()->getConfig();
+		$pass    = $config->getDbPass();
+
+		// The password goes in an option file and never on the command line: `ps` shows a command
+		// line to every user on the host, and a failure quotes it. Not in the environment either,
+		// which every child of the dump inherits. It is also what `-p` could not do: with an empty
+		// password that option made mysqldump prompt for one instead of running.
+		$credentials = '' === $pass ? null : self::mysqlOptionFile($pass);
 
 		$cmd = [
 			'mysqldump',
+			// Before every other option, as mysqldump reads it. Extra and not `--defaults-file`, so
+			// the host's own option files are still read.
+			...(null === $credentials ? [] : ['--defaults-extra-file=' . $credentials]),
 			'-h' . $config->getDbHost(),
 			'-u' . $config->getDbUser(),
 			$config->getDbName(),
 			'--result-file=' . $outfile,
-			'-p' . $config->getDbPass(),
 		];
 
 		$process = new Process($cmd);
-		$process->run();
+
+		try {
+			$process->run();
+		} finally {
+			null === $credentials || \unlink($credentials);
+		}
 
 		if ($process->isSuccessful()) {
 			$cli->success('database backup file created.')
 				->writeLn($outfile);
 		} else {
-			throw new RuntimeException('unable to backup database.', [
+			// A dump of a large database is what a host short of memory kills, and the tool itself
+			// then says nothing at all.
+			throw new RuntimeException(\sprintf(
+				'unable to backup database%s.',
+				null !== ($killed = $process->killedPhrase()) ? ': mysqldump was ' . $killed : ''
+			), [
 				'mysqldump_error'     => $process->getErrorOutput(),
 				'mysqldump_exit_code' => $process->getExitCode(),
+				'mysqldump_signal'    => $process->killedBy(),
 			]);
 		}
+	}
+
+	/**
+	 * An option file holding the database password, for a client that would otherwise take it on the
+	 * command line.
+	 *
+	 * Created empty and locked to this user before the password is written into it: the other order
+	 * leaves a window where the file holds the secret and the whole host may read it. In this format
+	 * a backslash is the escape character, so it is doubled, and the quotes are what let a password
+	 * hold a `#`, which would otherwise start a comment.
+	 *
+	 * The caller deletes it: it exists for the length of one dump.
+	 */
+	private static function mysqlOptionFile(string $password): string
+	{
+		$path = \sys_get_temp_dir() . DS . Random::fileName('oz-mysql') . '.cnf';
+		// Exclusive: the name is random, and a file that somehow exists is not one to write a
+		// password into. Silenced because the answer is read right here.
+		$file = @\fopen($path, 'xb');
+
+		if (false === $file) {
+			throw new RuntimeException('unable to write the database credentials file.', [
+				'_path' => $path,
+			]);
+		}
+
+		\chmod($path, 0o600);
+		\fwrite($file, \sprintf(
+			'[client]%spassword="%s"%s',
+			\PHP_EOL,
+			\str_replace('\\', '\\\\', $password),
+			\PHP_EOL
+		));
+		\fclose($file);
+
+		return $path;
 	}
 
 	/**
@@ -461,9 +517,13 @@ final class DbCmd extends Command
 			$cli->success('database backup file created.')
 				->writeLn($outfile);
 		} else {
-			throw new RuntimeException('unable to backup database.', [
+			throw new RuntimeException(\sprintf(
+				'unable to backup database%s.',
+				null !== ($killed = $process->killedPhrase()) ? ': pg_dump was ' . $killed : ''
+			), [
 				'pg_dump_error'     => $process->getErrorOutput(),
 				'pg_dump_exit_code' => $process->getExitCode(),
+				'pg_dump_signal'    => $process->killedBy(),
 			]);
 		}
 	}

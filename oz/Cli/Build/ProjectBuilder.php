@@ -21,7 +21,6 @@ use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\FS\FilesManager;
 use OZONE\Core\Loader\ClassLoader;
 use OZONE\Core\OZone;
-use Symfony\Component\Process\Exception\ProcessSignaledException;
 use Throwable;
 
 /**
@@ -72,7 +71,7 @@ final class ProjectBuilder
 	 * why.
 	 *
 	 * A process that was killed rather than ended says the same way what it managed to print, in the
-	 * failure: {@see describeSignal()}.
+	 * failure: {@see Process::killedPhrase()}.
 	 *
 	 * @return array{
 	 *     scope: string,
@@ -101,38 +100,24 @@ final class ProjectBuilder
 			0
 		);
 
-		$signal = null;
-
-		try {
-			$process->run();
-		} catch (ProcessSignaledException $e) {
-			// The process was killed rather than ended, and `wait()` throws that out of `run()`: before
-			// this catch it left with the exception everything the process had printed, which `wait()`
-			// had already read off the pipes and left on the object. A deploy log kept "signaled with
-			// signal 11" from a frame naming this method, and the scope build's own output -- the only
-			// account of it there can be -- was gone.
-			$signal = $e->getSignal();
-		}
+		$process->run();
 
 		$lines = \preg_split('~\R~', \trim($process->getOutput())) ?: [];
 		$last  = (string) \array_last($lines);
 
-		if (null !== $signal) {
-			$said = self::diagnostics($lines, $process->getErrorOutput());
-
+		if (null !== ($killed = $process->killedPhrase())) {
 			throw new RuntimeException(\sprintf(
-				'Building the scope "%s" was killed by signal %d (%s). Nothing of OZone runs in a process'
-					. ' that is killed -- no error handler, no shutdown function -- so the reason is not in'
-					. ' its output and is named where the kernel says it ("journalctl -k", "dmesg"), with'
-					. ' the library it faulted in. What the process printed before it died: %s',
+				'Building the scope "%s" was %s. Nothing of OZone runs in a process that is killed -- no'
+					. ' error handler, no shutdown function -- so the reason is not in its output and is'
+					. ' named where the kernel says it ("journalctl -k", "dmesg"), with the library it'
+					. ' faulted in. %s',
 				$scope,
-				$signal,
-				self::describeSignal($signal),
-				[] === $said ? 'nothing.' : \PHP_EOL . \implode(\PHP_EOL, $said)
+				$killed,
+				$process->saidBeforeItDied()
 			), [
-				'scope'  => $scope,
-				'signal' => $signal,
-				'said'   => $said,
+				'_scope'  => $scope,
+				'_signal' => $process->killedBy(),
+				'_said'   => self::diagnostics($lines, $process->getErrorOutput()),
 			]);
 		}
 
@@ -501,32 +486,6 @@ final class ProjectBuilder
 		}
 
 		return \count($orphans);
-	}
-
-	/**
-	 * What a signal that killed a scope build means, for the person reading the deploy log.
-	 *
-	 * The numbers are Linux's, and only the ones a build process is killed by are named: `9` because
-	 * the kernel's out-of-memory killer sends it and a deploy host is where memory runs out, `11` and
-	 * `7` because a shared object replaced under a running process and a crash in an extension are
-	 * what they look like. `pcntl_strsignal()` would answer for the host, and ext-pcntl is not a
-	 * dependency of this package; what is left out is reported by its number, which is what a kernel
-	 * log is searched with anyway.
-	 */
-	private static function describeSignal(int $signal): string
-	{
-		return match ($signal) {
-			4 => 'SIGILL, an illegal instruction',
-			6 => 'SIGABRT, the process aborted itself',
-			7 => 'SIGBUS, a mapped file changed or could not be paged in',
-			8 => 'SIGFPE, an arithmetic fault',
-			9 => 'SIGKILL, which the kernel out-of-memory killer and "kill -9" both send',
-			11 => 'SIGSEGV, a crash in the process',
-			15 => 'SIGTERM, something asked it to stop',
-			24 => 'SIGXCPU, the CPU time limit',
-			25 => 'SIGXFSZ, the file size limit',
-			default => 'not one OZone names',
-		};
 	}
 
 	/**

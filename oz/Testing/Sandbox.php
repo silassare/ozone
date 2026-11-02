@@ -19,13 +19,13 @@ use Gobl\ORM\ORM;
 use OZONE\Core\App\Db;
 use OZONE\Core\App\Keys;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Migrations\Migrations;
 use OZONE\Core\OZone;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
 use RuntimeException;
-use Symfony\Component\Process\Process;
 
 /**
  * Class Sandbox.

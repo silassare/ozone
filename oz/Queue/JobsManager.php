@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace OZONE\Core\Queue;
 
 use OZONE\Core\App\Keys;
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Exceptions\BaseException;
 use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Queue\Hooks\JobBeforeStart;
@@ -23,7 +24,6 @@ use OZONE\Core\Queue\Interfaces\JobContractInterface;
 use OZONE\Core\Queue\Interfaces\JobStoreInterface;
 use OZONE\Core\Queue\Interfaces\WorkerInterface;
 use OZONE\Core\Utils\JSONResult;
-use Symfony\Component\Process\Process;
 use Throwable;
 
 /**

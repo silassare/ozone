@@ -15,10 +15,10 @@ namespace OZONE\Core\Testing;
 
 use Composer\InstalledVersions;
 use JsonException;
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Utils\Env;
 use PDO;
 use RuntimeException;
-use Symfony\Component\Process\Process;
 
 /**
  * Helper that manages a throwaway OZone project inside /tmp/_oz_tests_/projects/{name}/, created with

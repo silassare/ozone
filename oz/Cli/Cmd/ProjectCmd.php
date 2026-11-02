@@ -399,6 +399,12 @@ final class ProjectCmd extends Command
 
 		$exit_code = $process->wait();
 
+		// A server that was killed, rather than one that stopped: the signal is forwarded above for
+		// what this process is asked to do, so what is left here comes from outside both of them.
+		if (null !== ($killed = $process->killedPhrase())) {
+			$cli->error(\sprintf('The development server was %s.', $killed), false, null);
+		}
+
 		$this->getCli()->terminate($exit_code);
 	}
 

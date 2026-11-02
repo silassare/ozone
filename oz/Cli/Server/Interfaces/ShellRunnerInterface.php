@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Core\Cli\Server\Interfaces;
 
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Server\ProvisionPlan;
 use OZONE\Core\Cli\Server\ProvisionStep;
 
@@ -40,7 +41,10 @@ interface ShellRunnerInterface
 	 * Runs a command, and returns its exit code.
 	 *
 	 * A command that takes longer than this runner allows is killed and reported as
-	 * {@see self::TIMED_OUT}, with whatever it printed until then.
+	 * {@see self::TIMED_OUT}, with whatever it printed until then. A command killed by anything else
+	 * -- the kernel out-of-memory killer, above all, on a host small enough for a package install to
+	 * matter -- answers 128 plus the signal, as a shell reports the same death
+	 * ({@see Process::killedPhraseFor()}).
 	 *
 	 * @param string $command the shell command
 	 * @param string $output  receives the combined output

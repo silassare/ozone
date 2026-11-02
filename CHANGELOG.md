@@ -354,17 +354,51 @@
 
 ### Fixed
 
-- **A scope build that was killed reported the signal and dropped everything else.** The deploy that
-  followed the fixes below did not truncate: the scope process was killed by `SIGSEGV`, and all the
-  deploy log kept was `ProcessSignaledException: The process has been signaled with signal "11"` from
-  a frame naming `ProjectBuilder::buildScope()`. Symfony's `wait()` throws that exception out of
-  `run()` *after* reading the pipes, so everything the process had printed was sitting on the object
-  and went with the exception, unread. It printed nothing that time; a build killed later, with a
-  warning or a reason already on its way out, would have lost that too -- in the one case where it is
-  the only account there can be, because a killed process runs no handler and no shutdown function of
-  ours. `buildScope()` now catches it and fails with the signal by number and by name (`killed by
-  signal 11 (SIGSEGV, a crash in the process)`), what the process printed on either stream, and where
-  the reason is named, which is not in PHP: the kernel's log says which library it faulted in.
+- **The database password was on `mysqldump`'s command line.** `oz db backup` passed it as
+  `-p<password>` in the dump's arguments, where `ps` shows it to every user on the host, a container
+  inspection keeps it, and a failure that quotes a command line writes it down. It now travels in an
+  option file created empty, locked to this user (`0600`) *before* the secret is written into it, and
+  deleted when the dump is over -- `--defaults-extra-file`, which mysqldump reads before its other
+  option files and in addition to them, so a host's own `my.cnf` still applies. `pg_dump` already
+  took its password through the environment and is unchanged.
+
+  It also fixes an empty password: `-p` with nothing after it is the option that makes mysqldump
+  *prompt*, so a database with no password made the backup wait for input instead of running. There
+  is now no option at all in that case.
+
+- **A process OZone ran and that was killed reported the signal and dropped everything else.** A
+  production deploy's scope build was killed by `SIGSEGV`, and all the deploy log kept was
+  `ProcessSignaledException: The process has been signaled with signal "11"` from a frame naming
+  `ProjectBuilder::buildScope()`. Symfony's `wait()` throws that exception *after* reading the
+  pipes, so everything the process had printed was sitting on the object and went with the exception,
+  unread -- and `wait()` is where `run()` and `mustRun()` both end up, so this was every process
+  OZone runs: a provisioning command, a database dump, a cron task's command, the development
+  server, a scope build. Not one of them caught it, which is the one failure where there is nothing
+  else to go on: a killed process runs no error handler and no shutdown function of its own, so what
+  it printed before it died is the only account of it there can be.
+
+  `Cli\Process` is where that is answered now, once, for all of them. A signal is answered as a
+  failing **exit code** -- 128 plus the signal, as a shell reports the same death -- the way a
+  timeout already was (`ShellRunnerInterface::TIMED_OUT`), with the output intact and the signal kept
+  on the object: `killedBy()`, `killedPhrase()` (`killed by signal 9 (SIGKILL, which the kernel
+  out-of-memory killer and "kill -9" both send)`), `saidBeforeItDied()`, and `signalFromExitCode()` /
+  `killedPhraseFor()` for a caller that has only the code. Five files were running Symfony's `Process`
+  directly rather than OZone's and now do not (`LocalHost`, `SshHost`, `JobsManager`, and the test
+  kit's `OZTestProject` and `Sandbox`).
+
+  What each of them says changed with it: a scope build names the signal, what the process printed,
+  and that the reason is in the kernel's log and not in PHP; a provisioning step says `was killed by
+  signal 9 (...) on: <command>` instead of `failed on`, which read as the command's own verdict when
+  a package install on a small box had never reached one; a cron task's result says which signal
+  instead of "failed with exit code 137"; a database dump says `mysqldump was killed by ...`, which
+  is what a host short of memory does to a dump of a large database; and `oz project serve` now ends
+  with the server's code, 128 plus the signal, where an uncaught throwable made it 255.
+
+  **Breaking:** `mustRun()` on a killed process throws OZone's `RuntimeException`, naming the signal
+  and what the process printed, rather than Symfony's `ProcessFailedException`, whose message is the
+  exit code it was handed (`Exit Code: 139(Unknown error)`). A project catching the Symfony type
+  around `OZONE\Core\Cli\Process` catches `OZONE\Core\Exceptions\RuntimeException` instead; a
+  process that failed on its own still throws the Symfony one.
 
 - **`oz doctor check` passed a production release with no build at all.** The same deploy: the build
   died, wrote neither `build.php` nor the class map, and the two rows that judge a build answered

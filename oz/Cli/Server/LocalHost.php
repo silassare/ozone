@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace OZONE\Core\Cli\Server;
 
 use Override;
+use OZONE\Core\Cli\Process;
 use OZONE\Core\Cli\Server\Interfaces\HostInterface;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
-use Symfony\Component\Process\Process;
 
 /**
  * Class LocalHost.
@@ -36,6 +36,9 @@ final class LocalHost implements HostInterface
 	{
 		$process = Process::fromShellCommandline($command, null, null, null, $this->timeout);
 
+		// Only the timeout is caught here: a command killed by anything else -- the kernel
+		// out-of-memory killer, on a host small enough for a package install to matter -- answers 128
+		// plus the signal through {@see Process::wait()}, which is a failing code like any other.
 		try {
 			$process->run();
 			$code = (int) $process->getExitCode();

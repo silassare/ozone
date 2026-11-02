@@ -1041,6 +1041,19 @@ they need a project. Each command documents its options (`oz <cmd> --help`): `pr
 (`create`, `serve`, `link`, `backup`, `build`), `scopes`, `db`, `migrations`, `services`, `routes`, `settings`,
 `users`, `doctor`, `server`, `deploy`, `cron`, `jobs`.
 
+- **Every process OZone runs is `OZONE\Core\Cli\Process`**, never Symfony's directly: a scope
+  build, a provisioning command, a database dump, a cron task's command, the development server, the
+  test kit's projects. It exists for what they all have to answer for -- **being killed**. Symfony
+  throws `ProcessSignaledException` out of `wait()`, which is where `run()` and `mustRun()` both end
+  up, *after* reading the pipes, so what the process printed leaves with the exception; and a killed
+  process runs no error handler and no shutdown function of its own, so that output is the only
+  account of it there can be. Here a signal is a failing **exit code** instead -- 128 plus the
+  signal, as a shell reports it -- with `killedBy()`, `killedPhrase()`, `saidBeforeItDied()` and, for
+  a caller holding only a code, `signalFromExitCode()` / `killedPhraseFor()`. `mustRun()` on a killed
+  process throws OZone's `RuntimeException` naming the signal, not Symfony's naming a code. A caller
+  words its own failure with the phrase (`Provision step "x" was killed by signal 9 (...) on: ...`);
+  what it must not do is add a catch of its own or read `getTermSignal()`.
+
 - **`oz project build`** compiles for production what requests would compile at first use: per
   scope, in a process set up as the scope's `index.php` (`Cli\Build\ScopeBuilder`), the compiled
   `.env`, the settings bundles and the route tables; then the class map (`ClassLoader::useClassMap()`)
