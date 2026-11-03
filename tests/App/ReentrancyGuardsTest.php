@@ -51,9 +51,11 @@ final class ReentrancyGuardsTest extends TestCase
 			$body,
 		);
 
-		$request->registerMediaTypeParser('application/x-probe', static function (string $body) use (&$request): array {
-			// What a parser must not do.
-			return (array) $request->getParsedBody();
+		$request->registerMediaTypeParser('application/x-probe', static function (string $raw) use (&$request): array {
+			// What a parser must not do: ask for the body it is being called to parse. The raw body
+			// is what it was handed and what it would read, so the refusal happens before this
+			// returns anything at all.
+			return ['raw' => $raw, 'parsed' => $request->getParsedBody()];
 		});
 
 		try {
