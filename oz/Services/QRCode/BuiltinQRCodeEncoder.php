@@ -15,10 +15,10 @@ namespace OZONE\Core\Services\QRCode;
 
 use Override;
 use OZONE\Core\Exceptions\RuntimeException;
-use OZONE\Core\Services\QRCode\Interfaces\QRCodeEncoderDecoderInterface;
+use OZONE\Core\Services\QRCode\Interfaces\QRCodeEncoderInterface;
 
 /**
- * Class BuiltinQRCodeEncoderDecoder.
+ * Class BuiltinQRCodeEncoder.
  *
  * Pure-PHP QR Code encoder (no external dependencies, no GD tricks beyond pixel drawing).
  *
@@ -29,20 +29,35 @@ use OZONE\Core\Services\QRCode\Interfaces\QRCodeEncoderDecoderInterface;
  *  - All 8 mask patterns evaluated; best (lowest penalty) applied
  *  - Output: raw PNG binary via GD (ext-gd, already required by OZone)
  *
+ * Byte mode for every payload, which is the one mode that takes any input. A text of only digits,
+ * or only digits and capitals, would fit a smaller symbol in numeric or alphanumeric mode; what
+ * that costs here is a larger symbol and never a refusal, since byte mode encodes the same text.
+ *
+ * Every symbol is read back in the suite by a reader written from the specification, and its
+ * error-correction codewords are recomputed there, because an encoder and a decoder of the same
+ * package agree with each other whether or not either is right: this encoder drew symbols no
+ * standard decoder could read for its whole life, and a round trip through OZone's own decoder
+ * passed on every one of them.
+ *
  * The QR Code specification is ISO/IEC 18004:2015.
  */
-final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
+final class BuiltinQRCodeEncoder implements QRCodeEncoderInterface
 {
 	// Error-correction level M codewords per version (1..40):
 	// [data codewords, ec codewords per block, blocks in group 1, codewords in group 1 blocks,
 	//  blocks in group 2, codewords in group 2 blocks]
-	// Source: ISO 18004 Table 9
+	//
+	// The block layout of fourteen of these rows was wrong, which split a version's data into the
+	// wrong number of blocks and wrote error-correction codewords no decoder could verify. Every
+	// row here is checked by the suite against a symbol of that version: the blocks are split,
+	// the error-correction codewords are recomputed, and the data has to read back as the payload.
+	// A row whose block count or sizes are wrong fails all three.
 	private const array EC_M = [
 		1  => [16, 10, 1, 16, 0, 0],
 		2  => [28, 16, 1, 28, 0, 0],
-		3  => [44, 26, 2, 22, 0, 0],
-		4  => [64, 18, 4, 16, 0, 0],
-		5  => [86, 24, 2, 21, 2, 22],
+		3  => [44, 26, 1, 44, 0, 0],
+		4  => [64, 18, 2, 32, 0, 0],
+		5  => [86, 24, 2, 43, 0, 0],
 		6  => [108, 16, 4, 27, 0, 0],
 		7  => [124, 18, 4, 31, 0, 0],
 		8  => [154, 22, 2, 38, 2, 39],
@@ -62,22 +77,22 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 		22 => [782, 28, 17, 46, 0, 0],
 		23 => [860, 28, 4, 47, 14, 48],
 		24 => [914, 28, 6, 45, 14, 46],
-		25 => [1000, 28, 8, 45, 13, 46],
+		25 => [1000, 28, 8, 47, 13, 48],
 		26 => [1062, 28, 19, 46, 4, 47],
 		27 => [1128, 28, 22, 45, 3, 46],
 		28 => [1193, 28, 3, 45, 23, 46],
 		29 => [1267, 28, 21, 45, 7, 46],
-		30 => [1373, 28, 19, 45, 10, 46],
-		31 => [1455, 28, 2, 45, 29, 46],
-		32 => [1541, 28, 10, 45, 23, 46],
-		33 => [1631, 28, 14, 45, 21, 46],
+		30 => [1373, 28, 19, 47, 10, 48],
+		31 => [1455, 28, 2, 46, 29, 47],
+		32 => [1541, 28, 10, 46, 23, 47],
+		33 => [1631, 28, 14, 46, 21, 47],
 		34 => [1725, 28, 14, 46, 23, 47],
-		35 => [1812, 28, 12, 45, 26, 46],
-		36 => [1914, 28, 6, 45, 34, 46],
-		37 => [1992, 28, 29, 45, 14, 46],
-		38 => [2102, 28, 13, 45, 32, 46],
-		39 => [2216, 28, 40, 45, 7, 46],
-		40 => [2334, 28, 18, 45, 31, 46],
+		35 => [1812, 28, 12, 47, 26, 48],
+		36 => [1914, 28, 6, 47, 34, 48],
+		37 => [1992, 28, 29, 46, 14, 47],
+		38 => [2102, 28, 13, 46, 32, 47],
+		39 => [2216, 28, 40, 47, 7, 48],
+		40 => [2334, 28, 18, 47, 31, 48],
 	];
 
 	// GF(256) log table (generator polynomial x^8 + x^4 + x^3 + x^2 + 1, 0x11d)
@@ -709,234 +724,6 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 		return $this->renderPng($matrix, $size_m, $size, $margin);
 	}
 
-	#[Override]
-	public function decode(string $image): string
-	{
-		// 1. Load image (PNG or JPEG) and extract binary module grid
-		$matrix  = $this->imageToMatrix($image);
-		$n       = \count($matrix);
-
-		if ($n < 21 || ($n - 17) % 4 !== 0) {
-			throw new RuntimeException(\sprintf(
-				'Invalid QR code image: derived matrix size %d is not a valid QR symbol size (21-177).',
-				$n
-			));
-		}
-
-		$version = ($n - 17) / 4;
-
-		// 2. Read format information (try copy 1, fall back to copy 2)
-		$format = $this->readFormatInfo($matrix, $n);
-
-		if (null === $format) {
-			throw new RuntimeException(
-				'Failed to decode QR code: format information BCH check failed on both copies.'
-			);
-		}
-
-		[$maskPattern] = $format;
-
-		// 3. Identify function modules (same placement logic as the encoder)
-		$funcMask = $this->buildFunctionMask($n, $version);
-
-		// 4. Extract and unmask data bits in the zigzag reading order
-		$bits = $this->extractDataBits($matrix, $n, $funcMask, $maskPattern);
-
-		// 5. Convert bit stream to codeword bytes
-		$codewords = $this->bitsToBytes($bits);
-
-		// 6. De-interleave: recover per-block data codewords and strip EC bytes
-		$dataCodewords = $this->deinterleave($codewords, $version);
-
-		// 7. Parse byte-mode segment -> original string
-		return $this->parseByteMode($dataCodewords, $version);
-	}
-
-	/**
-	 * Loads a PNG or JPEG binary and samples each module at its center pixel,
-	 * returning a 2-D array of 0 (light) / 1 (dark) values.
-	 *
-	 * @return int[][]
-	 */
-	private function imageToMatrix(string $image): array
-	{
-		/**
-		 * imagecreatefromstring() emits E_WARNING on unrecognized data.
-		 * Temporarily install a noop handler so the warning does not leak into
-		 * the application log - we validate the return value immediately.
-		 *
-		 * @psalm-suppress InvalidArgument - imagecreatefromstring() may warn on invalid data, which is handled
-		 */
-		\set_error_handler(static function (): void {}, \E_WARNING);
-		$img = \imagecreatefromstring($image);
-		\restore_error_handler();
-
-		if (!$img) {
-			throw new RuntimeException('Failed to decode QR code: imagecreatefromstring returned false.');
-		}
-
-		// Palette images (e.g. palette PNG) return a colour index from imagecolorat()
-		// instead of a packed RGB value. Convert to truecolor so the $isDark threshold works.
-		if (!\imageistruecolor($img)) {
-			\imagepalettetotruecolor($img);
-		}
-
-		$w = \imagesx($img);
-		$h = \imagesy($img);
-
-		// Threshold: pixel is dark when its mean channel value < 128.
-		$isDark = static function (int $color): bool {
-			$r = ($color >> 16) & 0xFF;
-			$g = ($color >> 8) & 0xFF;
-			$b = $color & 0xFF;
-
-			return ($r + $g + $b) < 384;
-		};
-
-		// Find the first dark pixel (top-left of the quiet zone border + finder).
-		$marginY = null;
-		$marginX = null;
-
-		for ($y = 0; $y < $h && null === $marginY; ++$y) {
-			for ($x = 0; $x < $w; ++$x) {
-				if ($isDark(\imagecolorat($img, $x, $y))) {
-					$marginY = $y;
-					$marginX = $x;
-
-					break;
-				}
-			}
-		}
-
-		if (null === $marginY) {
-			throw new RuntimeException('Failed to decode QR code: no dark pixels found in image.');
-		}
-
-		// The first row of the finder pattern is 7 consecutive dark modules.
-		// Measure the run length to derive the module pixel size.
-		$runLen = 0;
-
-		for ($x = $marginX; $x < $w; ++$x) {
-			if ($isDark(\imagecolorat($img, $x, $marginY))) {
-				++$runLen;
-			} else {
-				break;
-			}
-		}
-
-		if ($runLen < 7) {
-			throw new RuntimeException(
-				'Failed to decode QR code: finder pattern run too short, cannot detect module size.'
-			);
-		}
-
-		$moduleSize = (int) \round($runLen / 7);
-
-		if ($moduleSize < 1) {
-			throw new RuntimeException('Failed to decode QR code: computed module size is 0.');
-		}
-
-		// Derive the symbol width in modules.
-		$n = (int) \round(($w - 2 * $marginX) / $moduleSize);
-
-		// Sample each module at its center pixel.
-		$matrix = [];
-
-		for ($r = 0; $r < $n; ++$r) {
-			$matrix[$r] = [];
-			$py         = $marginY + $r * $moduleSize + (int) ($moduleSize / 2);
-
-			for ($c = 0; $c < $n; ++$c) {
-				$px             = $marginX + $c * $moduleSize + (int) ($moduleSize / 2);
-				$matrix[$r][$c] = $isDark(\imagecolorat($img, $px, $py)) ? 1 : 0;
-			}
-		}
-
-		return $matrix;
-	}
-
-	/**
-	 * Reads the 15-bit format information word from the matrix (tries copy 1 then copy 2),
-	 * verifies the BCH(15,5) check, and returns [maskPattern, ecLevel], or null on failure.
-	 *
-	 * Bit positions match exactly those written by {@see writeFormatInfo}.
-	 *
-	 * @param int[][] $matrix
-	 *
-	 * @return null|int[] [maskPattern, ecLevel] or null if both copies fail BCH
-	 */
-	private function readFormatInfo(array $matrix, int $n): ?array
-	{
-		// Two copies of format information - bit positions as written by writeFormatInfo().
-		$copies = [
-			// Copy 1: adjacent to the top-left finder
-			[
-				[8, 0],
-				[8, 1],
-				[8, 2],
-				[8, 3],
-				[8, 4],
-				[8, 5],
-				[8, 7],
-				[8, 8],
-				[7, 8],
-				[5, 8],
-				[4, 8],
-				[3, 8],
-				[2, 8],
-				[1, 8],
-				[0, 8],
-			],
-			// Copy 2: top-right + bottom-left finders
-			[
-				[$n - 1, 8],
-				[$n - 2, 8],
-				[$n - 3, 8],
-				[$n - 4, 8],
-				[$n - 5, 8],
-				[$n - 6, 8],
-				[$n - 7, 8],
-				[8, $n - 8],
-				[8, $n - 7],
-				[8, $n - 6],
-				[8, $n - 5],
-				[8, $n - 4],
-				[8, $n - 3],
-				[8, $n - 2],
-				[8, $n - 1],
-			],
-		];
-
-		foreach ($copies as $positions) {
-			$raw = 0;
-
-			foreach ($positions as $i => [$r, $c]) {
-				$raw |= ($matrix[$r][$c] << (14 - $i));
-			}
-
-			// Remove the XOR mask applied at write time.
-			$unmasked = $raw ^ self::FORMAT_MASK;
-
-			// BCH(15,5) remainder check: reduce mod FORMAT_POLY; must be 0 for a clean codeword.
-			$rem = $unmasked;
-
-			for ($i = 14; $i >= 10; --$i) {
-				if (($rem >> $i) & 1) {
-					$rem ^= self::FORMAT_POLY << ($i - 10);
-				}
-			}
-
-			if (0 === ($rem & 0x3FF)) {
-				$ecLevel     = ($unmasked >> 13) & 0x3;
-				$maskPattern = ($unmasked >> 10) & 0x7;
-
-				return [$maskPattern, $ecLevel];
-			}
-		}
-
-		return null;
-	}
-
 	/**
 	 * Builds a boolean map of function modules by replaying the encoder's pattern-placement
 	 * steps on a scratch matrix (without placing any data bits).
@@ -971,135 +758,6 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 		}
 
 		return $mask;
-	}
-
-	/**
-	 * Reads bits from all non-function module positions in the standard zigzag order
-	 * and unmasks each bit using the given mask pattern.
-	 *
-	 * @param int[][]  $matrix
-	 * @param bool[][] $funcMask
-	 *
-	 * @return int[]
-	 */
-	private function extractDataBits(array $matrix, int $n, array $funcMask, int $maskPattern): array
-	{
-		$bits = [];
-		$col  = $n - 1;
-		$goUp = true;
-
-		while ($col > 0) {
-			if (6 === $col) {
-				--$col; // skip the vertical timing strip
-			}
-
-			$rows = $goUp ? \range($n - 1, 0, -1) : \range(0, $n - 1);
-
-			foreach ($rows as $row) {
-				for ($dc = 0; $dc < 2; ++$dc) {
-					$c = $col - $dc;
-
-					if (!$funcMask[$row][$c]) {
-						$bits[] = $matrix[$row][$c] ^ ($this->maskCondition($maskPattern, $row, $c) ? 1 : 0);
-					}
-				}
-			}
-
-			$col -= 2;
-			$goUp = !$goUp;
-		}
-
-		return $bits;
-	}
-
-	/**
-	 * Reverses the interleaving performed by {@see addErrorCorrection} and returns
-	 * the concatenated data codewords for all blocks (EC codewords are discarded).
-	 *
-	 * @param int[] $codewords full interleaved codeword stream (data + EC)
-	 *
-	 * @return int[] data codewords only
-	 */
-	private function deinterleave(array $codewords, int $version): array
-	{
-		[,, $b1, $cw1, $b2, $cw2] = self::EC_M[$version];
-
-		$totalBlocks = $b1 + $b2;
-		$blockSizes  = \array_merge(\array_fill(0, $b1, $cw1), \array_fill(0, $b2, $cw2));
-		$maxData     = \max($blockSizes);
-		$blocks      = \array_fill(0, $totalBlocks, []);
-		$idx         = 0;
-
-		// The encoder interleaved by taking codeword $i from each block in turn.
-		for ($i = 0; $i < $maxData; ++$i) {
-			for ($b = 0; $b < $totalBlocks; ++$b) {
-				if ($i < $blockSizes[$b]) {
-					$blocks[$b][] = $codewords[$idx++];
-				}
-			}
-		}
-
-		$data = [];
-
-		foreach ($blocks as $block) {
-			foreach ($block as $cw) {
-				$data[] = $cw;
-			}
-		}
-
-		return $data;
-	}
-
-	/**
-	 * Parses a byte-mode segment from the data codeword stream and returns the original string.
-	 *
-	 * @param int[] $dataCodewords
-	 */
-	private function parseByteMode(array $dataCodewords, int $version): string
-	{
-		$bits = [];
-
-		foreach ($dataCodewords as $cw) {
-			$this->appendBits($bits, $cw, 8);
-		}
-
-		$pos = 0;
-
-		// Mode indicator: byte mode = 0100
-		$mode = 0;
-
-		for ($i = 0; $i < 4; ++$i) {
-			$mode = ($mode << 1) | ($bits[$pos++] ?? 0);
-		}
-
-		if (0b0100 !== $mode) {
-			throw new RuntimeException(\sprintf(
-				'Unsupported QR code encoding mode: 0x%X (only byte mode 0x4 is supported).',
-				$mode
-			));
-		}
-
-		// Character count indicator: 8 bits for versions 1-9, 16 bits for 10-40
-		$ccBits = ($version <= 9) ? 8 : 16;
-		$count  = 0;
-
-		for ($i = 0; $i < $ccBits; ++$i) {
-			$count = ($count << 1) | ($bits[$pos++] ?? 0);
-		}
-
-		$result = '';
-
-		for ($i = 0; $i < $count; ++$i) {
-			$byte = 0;
-
-			for ($j = 0; $j < 8; ++$j) {
-				$byte = ($byte << 1) | ($bits[$pos++] ?? 0);
-			}
-
-			$result .= \chr($byte);
-		}
-
-		return $result;
 	}
 
 	/**
@@ -1295,33 +953,51 @@ final class BuiltinQRCodeEncoderDecoder implements QRCodeEncoderDecoderInterface
 	/**
 	 * Returns the Reed-Solomon generator polynomial coefficients in log form.
 	 *
-	 * @return int[]
+	 * g(x) = (x - a^0)(x - a^1)...(x - a^(ecCount-1)), expanded one factor at a time.
+	 *
+	 * Multiplying by a factor is a polynomial multiplication, so each coefficient of the shifted
+	 * polynomial is **added** -- which in GF(256) is XOR -- to the coefficient of the scaled one.
+	 * Adding the logs alone scales a coefficient and never sums the two, which is how this used to
+	 * return a polynomial that was not even monic: every error-correction codeword it produced was
+	 * wrong, and a decoder that checks them, which every standard decoder does before reading the
+	 * data, refused the symbol.
+	 *
+	 * The expansion is done on values and converted to logs at the end, because there is no way to
+	 * add two values in the log domain.
+	 *
+	 * @return int[] the coefficients as exponents of a, highest power of x first
 	 */
 	private function rsGenerator(int $ecCount): array
 	{
-		$g = [0]; // g(x) = 1, stored as log(1) = 0
+		// g(x) = 1
+		$g = [1];
 
 		for ($i = 0; $i < $ecCount; ++$i) {
-			$g2 = [];
+			$next = \array_fill(0, \count($g) + 1, 0);
 
-			foreach ($g as $coef) {
-				$g2[] = $coef; // multiply by x -> shift
+			foreach ($g as $j => $coef) {
+				// the shifted term, and the term scaled by a^i
+				$next[$j] ^= $coef;
+				$next[$j + 1] ^= self::gfMul($coef, self::GF_EXP[$i]);
 			}
-			$g2[] = 0;
 
-			// multiply by (x - alpha^i): XOR each coefficient
-			for ($j = \count($g2) - 1; $j > 0; --$j) {
-				if (-1 !== $g2[$j] && isset($g2[$j - 1]) && -1 !== $g2[$j - 1]) {
-					$g2[$j] = ($g2[$j] + $i) % 255;
-				} elseif (-1 === $g2[$j]) {
-					$g2[$j] = $i % 255;
-				}
-			}
-			$g2[0]  = ($g2[0] + $i) % 255;
-			$g      = $g2;
+			$g = $next;
 		}
 
-		return $g;
+		// Every coefficient of a generator polynomial is non-zero, so each has a log.
+		return \array_map(static fn (int $coef): int => self::GF_LOG[$coef], $g);
+	}
+
+	/**
+	 * Multiplies two GF(256) values.
+	 */
+	private static function gfMul(int $a, int $b): int
+	{
+		if (0 === $a || 0 === $b) {
+			return 0;
+		}
+
+		return self::GF_EXP[(self::GF_LOG[$a] + self::GF_LOG[$b]) % 255];
 	}
 
 	/**

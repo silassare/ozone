@@ -11,15 +11,15 @@
 
 declare(strict_types=1);
 
-use OZONE\Core\Services\QRCode\BuiltinQRCodeEncoderDecoder;
-use OZONE\Core\Services\QRCode\Interfaces\QRCodeEncoderDecoderInterface;
+use OZONE\Core\Services\QRCode\BuiltinQRCodeEncoder;
+use OZONE\Core\Services\QRCode\Interfaces\QRCodeEncoderInterface;
 
 return [
 	/**
 	 * QR code encoder class.
 	 *
-	 * Must implement {@see QRCodeEncoderDecoderInterface}.
+	 * Must implement {@see QRCodeEncoderInterface}.
 	 * Swap this to plug in a third-party encoder (e.g. endroid/qr-code).
 	 */
-	'OZ_QR_CODE_ENCODER'    => BuiltinQRCodeEncoderDecoder::class,
+	'OZ_QR_CODE_ENCODER'    => BuiltinQRCodeEncoder::class,
 ];

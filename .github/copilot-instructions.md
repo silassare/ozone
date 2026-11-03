@@ -42,6 +42,16 @@
 - **Real services, never fakes.** Tests talk to real MySQL, PostgreSQL, Redis, MinIO, ClamAV and worker servers, run by `docker/compose.yaml`; never a hand-written stand-in for one.
 - **Everything runs through `make`, in Docker** (section 20). Never create a `phpunit.xml`.
 - **Static analysis.** psalm runs at level 4 with no baseline and `make lint` has no error: never add a baseline, or a suppression, to get there. Level 4 does not ask whether a PHP function's `false` / `null` return reaches a typed parameter -- a `TypeError` under `strict_types` -- so check such returns in new code; the level-3 checks the code passes stay errors (`psalm.xml`). `make cs` has 0 errors, and no `oz/` line exceeds 120 characters. Its warnings are accepted and not to be re-audited: long rows in the data files (`oz_schema.php`, the `lang/` catalogs) and in tests, the `@` of a call whose result is checked right after, and two scripts that define constants or helpers (`scope_build.php`, `run_benchmarks.php`).
+- **A format we implement is tested against the format, never against our own reader.** `encode()`
+  then `decode()` through the same package proves the two agree and nothing more: OZone's QR encoder
+  wrote error-correction codewords that were wrong in fifteen of sixteen positions, and the round
+  trip passed on every one of them for the encoder's whole life, because OZone's own decoder never
+  checked them -- while no phone, browser or online decoder could read a single badge. What a format
+  test asserts is the bytes the specification calls for, recomputed independently of the code under
+  test (`tests/Services/QRCode/QRSymbolReader.php`, written from ISO 18004 and borrowing no table
+  from the encoder), plus a committed fixture so a change in output has to be deliberate. The same
+  goes for anything with a reader on the other side of a wire or a file: a signature, a token, an
+  archive, an image header.
 - **A guard says what is in progress, never what is finished.** A memo is written when its work
   ends, so while the work runs it reads as "not done": that is a memo, never a re-entrancy guard.
   Where the work runs a project's code -- a settings file, a plugin's `instance()`, a route

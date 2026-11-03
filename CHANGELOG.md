@@ -2,6 +2,21 @@
 
 ### Breaking changes
 
+- **The QR code service encodes and no longer decodes.**
+  `Services\QRCode\Interfaces\QRCodeEncoderDecoderInterface` is now `QRCodeEncoderInterface`
+  without its `decode()` method, and `BuiltinQRCodeEncoderDecoder` is `BuiltinQRCodeEncoder`. The
+  `OZ_QR_CODE_ENCODER` setting is unchanged in name and still the way a project plugs its own
+  encoder, so a project that kept the default needs no change; one that named the class explicitly,
+  implemented the interface, or called `decode()` does.
+
+  Reading a QR code that OZone did not draw means reading a photograph: finding the finder patterns
+  in it, correcting the perspective, sampling the grid and repairing the damage through the
+  error-correction codewords. The builtin decoder did none of those -- it located the grid by
+  scanning for the first dark pixel at a fixed threshold and performed no error correction at all --
+  so it could only read a pristine, square, evenly lit image that this encoder had produced. Nothing
+  in OZone called it, and where a camera is involved the client that holds it decodes and sends the
+  text. The 357 lines went, with the interface documenting what to reach for instead.
+
 - **A login attempt is counted where it is let through, not after it has failed.** `LoginThrottle`
   was asked `isLocked()`, the password was verified, and a failure was recorded afterwards: three
   steps, each atomic, the sequence not. Attempts that arrived together all read the same count
@@ -353,6 +368,33 @@
 - `REST\Enums\RESTFulAction`, the action table driving `RESTFulService` routes and docs (`REST\RESTFulApiDoc`); `RESTFulService::beforeAction()` / `afterAction()` hooks and `configureRoute()` for per-action guards, forms or middlewares; `RESTFulService::routeName()` accepts a `RESTFulAction`.
 
 ### Fixed
+
+- **Every QR code OZone has ever drawn was unreadable, and the error correction is why.** The
+  symbols were structurally perfect -- correct version, finder patterns, timing patterns, alignment
+  pattern, dark module, and format information whose BCH check passed in both copies -- and carried
+  error-correction codewords that were wrong in fifteen of sixteen positions on a version 2 symbol.
+  A standard decoder recomputes those before it reads anything, finds a syndrome far past what it
+  could repair, and refuses the symbol: phones, browsers, jsQR and online decoders all failed on
+  every badge, while OZone's own round-trip test passed because its decoder never checked them.
+
+  `rsGenerator()` built the generator polynomial by adding logarithms, which scales a coefficient by
+  `a^i` but never adds the shifted and the scaled polynomial together -- the addition that makes it a
+  polynomial multiplication, and in GF(256) an XOR. Its own comment said "XOR each coefficient" and
+  there was no XOR in the function. What it returned was not even monic. It is expanded on values
+  now and converted to logarithms at the end, because two values cannot be added in the log domain.
+
+  And the `EC_M` block layout was wrong in fourteen of its forty rows, every one of them in the
+  number of blocks or their sizes while the data count and the codewords per block were right.
+  Version 3 was split into two blocks of 22 where it is one block of 44, version 4 into four blocks
+  of 16 where it is two of 32, version 5 into two of 21 and two of 22 where it is two of 43; eleven
+  rows from version 25 up had block sizes that did not sum to their own data count. Each row is now
+  checked by the suite against a symbol of that version: the blocks are split, the error-correction
+  codewords are recomputed from the Galois field up, and the data has to read back as the payload.
+
+  The GF(256) log and exponent tables were correct, and so were every function pattern, the mask
+  conditions, the format information and the data placement -- a reader written from the
+  specification recovers the payload from the old symbols too. Only the error correction was wrong,
+  which is exactly the part that decides whether a decoder accepts a symbol at all.
 
 - **Every lazy memo whose work can call back into itself now says what is *in progress*.** Found by
   auditing for the shape that killed a deploy (the settings loader, above). A memo is written when
