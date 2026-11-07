@@ -31,6 +31,7 @@ use OZONE\Core\Hooks\Events\EndRequestHook;
 use OZONE\Core\Hooks\Events\RequestHook;
 use OZONE\Core\Hooks\Events\ResponseHook;
 use OZONE\Core\Hooks\Interfaces\BootHookReceiverInterface;
+use OZONE\Core\Http\ContentSecurityPolicy;
 use OZONE\Core\Http\CorsPolicy;
 use OZONE\Core\OZone;
 use OZONE\Core\REST\ApiDoc;
@@ -189,8 +190,9 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		}
 
 		$is_https = 'https' === $request->getUri()->getScheme();
+		$headers  = self::securityHeaders((array) Settings::get('oz.request', 'OZ_SECURITY_HEADERS', []));
 
-		foreach ((array) Settings::get('oz.request', 'OZ_SECURITY_HEADERS', []) as $name => $value) {
+		foreach ($headers as $name => $value) {
 			$name = (string) $name;
 
 			// A security header the handler already set wins, so a route can relax or tighten it.
@@ -207,6 +209,40 @@ final class MainBootHookReceiver implements BootHookReceiverInterface
 		}
 
 		$context->setResponse($response);
+	}
+
+	/**
+	 * The security headers to send, with the policy `OZ_CONTENT_SECURITY_POLICY` composes.
+	 *
+	 * A policy written out in `OZ_SECURITY_HEADERS` is the header as written, and is kept: the
+	 * directives are a default for a project to layer, never a value that overrules the one a
+	 * project stated whole. It is the rule this method's caller applies to a handler's own
+	 * header, one setting earlier.
+	 *
+	 * @param array<array-key, mixed> $headers
+	 *
+	 * @return array<array-key, mixed>
+	 */
+	private static function securityHeaders(array $headers): array
+	{
+		foreach ($headers as $name => $value) {
+			if (0 !== \strcasecmp((string) $name, ContentSecurityPolicy::HEADER)) {
+				continue;
+			}
+
+			// Null, false or empty says "do not send this header", which leaves the directives to say.
+			if (null !== $value && false !== $value && '' !== $value) {
+				return $headers;
+			}
+		}
+
+		$policy = ContentSecurityPolicy::fromSettings();
+
+		if (!$policy->isEmpty()) {
+			$headers[ContentSecurityPolicy::HEADER] = $policy->header();
+		}
+
+		return $headers;
 	}
 
 	/**

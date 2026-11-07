@@ -662,6 +662,16 @@ access): `Auth::provider($context, $auth)` rebuilds one with the row's reference
 `AuthorizationService` exposes `/auth/:ref/authorize|refresh|state|cancel`;
 `->withAuthorization('auth:provider:...')` guards a route with one.
 
+- **A content security policy is declared as directives and never as the header string**
+  (`OZ_CONTENT_SECURITY_POLICY`, `Http\ContentSecurityPolicy`): a settings map merges key by key,
+  so a scope tightens one directive and keeps the rest, where a string can only be restated whole.
+  It **ships empty on purpose** -- which origins a page may load is a fact about a project, and a
+  policy that breaks a working page is one a project switches off rather than tightens -- and
+  `ContentSecurityPolicy::STRICT` is the one-line opt-in. What a page needs beyond the project's
+  policy is granted with `with()`, which starts from the directive that answers today, so a grant
+  cannot end up narrowing the page it was granted to. The API doc view is exempt by setting
+  (`OZ_API_DOC_CSP`), being the one page here that third-party code renders.
+
 - **A secret is checked only while the authorization is `PENDING`**: once refused (tries used up) or
   granted, `authorize()` refuses without looking at the secret, so the try limit holds. Only
   `refresh()` (new code, tries reset) reopens one. `getState()` throws `OZ_AUTH_HAS_EXPIRED` past
@@ -880,7 +890,7 @@ individually idempotent.
 | ----------------------------------------------------------- | -------------------------------------------------------------------------- |
 | `InitHook`                                                  | end of bootstrap, database available                                       |
 | `RequestHook`                                               | before each request, sub-requests included (origins rejected here)         |
-| `ResponseHook`                                              | before the response is sent (CORS and `OZ_SECURITY_HEADERS` here)          |
+| `ResponseHook`                                              | before the response is sent (CORS, `OZ_SECURITY_HEADERS` and the CSP here) |
 | `FinishHook`                                                | after the response was sent, whichever way; not for sub-requests           |
 | `EndRequestHook`                                            | a request's state is released (`OZone::endRequest()`): per-request cleanup |
 | `RedirectHook`                                              | before a redirect (`Uri $to`)                                              |

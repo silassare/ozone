@@ -15,6 +15,7 @@ namespace OZONE\Core\REST\Views;
 
 use Override;
 use OZONE\Core\App\Settings;
+use OZONE\Core\Http\ContentSecurityPolicy;
 use OZONE\Core\REST\ApiDoc;
 use OZONE\Core\Router\RouteInfo;
 use OZONE\Core\Router\Router;
@@ -40,7 +41,15 @@ final class ApiDocView extends WebView
 							ApiDoc::get()->viewInject()
 						);
 
-					return $v->respond();
+					$response = $v->respond();
+					$csp = Settings::get('oz.api.doc', 'OZ_API_DOC_CSP');
+
+					// Set by the handler rather than left to `OZ_CONTENT_SECURITY_POLICY`:
+					// `MainBootHookReceiver::onResponse()` stands aside for a header the handler
+					// set, and this page is what that rule is for.
+					return \is_string($csp) && '' !== $csp
+						? $response->withHeader(ContentSecurityPolicy::HEADER, $csp)
+						: $response;
 				})
 				->name(self::API_DOC_VIEW_ROUTE);
 

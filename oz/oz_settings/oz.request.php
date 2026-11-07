@@ -57,7 +57,7 @@ return [
 	 * Security headers added to every response, unless the handler already set them.
 	 *
 	 * Set a header to null to not send it. `Strict-Transport-Security` is only sent over https.
-	 * Override per scope (`scopes/{name}/settings/oz.request.php`), e.g. a CSP for a web scope.
+	 * Override per scope (`scopes/{name}/settings/oz.request.php`).
 	 */
 	'OZ_SECURITY_HEADERS'          => [
 		'X-Frame-Options'           => 'SAMEORIGIN',
@@ -65,9 +65,44 @@ return [
 		'Referrer-Policy'           => 'strict-origin-when-cross-origin',
 		// e.g. 'max-age=31536000; includeSubDomains'
 		'Strict-Transport-Security' => null,
-		// e.g. "default-src 'self'"
+		// Written out here, this is the header as written: a policy stated as a string is the
+		// project's to keep whole, so the directives of `OZ_CONTENT_SECURITY_POLICY` are not
+		// composed into it. Left null, the directives below are what is sent.
 		'Content-Security-Policy'   => null,
 	],
+
+	/**
+	 * What a response tells the browser it may load, as the directives it is made of.
+	 *
+	 * Sent as `Content-Security-Policy` by `MainBootHookReceiver::onResponse()`, unless the
+	 * handler set that header itself or `OZ_SECURITY_HEADERS` carries it written out. `[]` sends
+	 * no header at all, which is what an API serving no HTML wants.
+	 *
+	 * Declared as a map rather than as the string it becomes so that it layers: a settings map
+	 * merges key by key, so a plugin, a scope or a project tightens `img-src` alone and keeps
+	 * every other directive the sources before it declared. A source adding to the lists instead
+	 * of replacing them declares `'OZ_CONTENT_SECURITY_POLICY' => Settings::MERGE_APPEND` under
+	 * `Settings::MERGE_KEY`, and one that must stay as written locks it.
+	 *
+	 * A directive that is not written is answered by the one it falls back to
+	 * (`ContentSecurityPolicy::FALLBACK`), so a policy says more than it writes.
+	 *
+	 * **Empty, so nothing is sent until a project says so.** Which origins a page may load is a
+	 * fact about a project, not about a framework: a policy sent by default would be wrong for
+	 * every project that loads a font, a map, a payment widget or an analytics script, and a
+	 * default that breaks a working page is one a project switches off rather than tightens. A
+	 * project ready to send one starts from `ContentSecurityPolicy::STRICT`:
+	 *
+	 * ```php
+	 * 'OZ_CONTENT_SECURITY_POLICY' => ContentSecurityPolicy::STRICT,
+	 * ```
+	 *
+	 * and widens a directive for what it really loads. What a page needs beyond the project's
+	 * policy is granted by the handler that renders it, never here.
+	 *
+	 * @default [] (no header)
+	 */
+	'OZ_CONTENT_SECURITY_POLICY'   => [],
 
 	/**
 	 * Default origin to use when the request does not have an origin header.

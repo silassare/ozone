@@ -300,6 +300,43 @@
 
 ### Added
 
+- **A response can carry a content security policy, and it is declared as directives.**
+  `OZ_CONTENT_SECURITY_POLICY` (`oz.request`) maps a directive name to the sources it allows, and
+  `MainBootHookReceiver::onResponse()` sends what it composes as `Content-Security-Policy`, unless
+  the handler set that header itself or `OZ_SECURITY_HEADERS` carries it written out. The new
+  `Http\ContentSecurityPolicy` reads it, reads a header back (`fromHeader()`), answers what a
+  directive allows through the fallback chain CSP level 3 defines (`sourcesOf()`, `allows()`), and
+  grants a page what it needs beyond the policy (`with()`).
+
+  **Directives, and not the string they become**, because that is what layers: a settings map merges
+  key by key, so a plugin, a scope or a project tightens `img-src` alone and keeps every other
+  directive the sources before it declared, where a policy written as one string can only be
+  restated whole -- and restating it is how a directive gets dropped by accident. A source that
+  would rather add to the lists than replace them says `Settings::MERGE_APPEND`.
+
+  **`with()` is why this is a class and not an `implode()`.** A directive nobody wrote is answered
+  by the one it falls back to, so granting `'unsafe-inline'` for styles to a policy of
+  `default-src 'self'` has to send `style-src 'self' 'unsafe-inline'`: writing the grant on its own
+  would take `'self'` away from every stylesheet the page loads. `'none'` makes way for a real
+  source, a list holding both being one a browser refuses to read, and a directive nothing answers
+  for is left alone -- a policy that does not restrict it cannot be loosened, and writing the grant
+  there is the one way a grant ends up restricting the page it was granted to.
+
+  **Shipped empty, so nothing changes for a project that says nothing.** Which origins a page may
+  load is a fact about a project and not about a framework: a policy sent by default is wrong for
+  every project that loads a font, a map, a payment widget or an analytics script, and a default
+  that breaks a working page is one a project switches off rather than tightens.
+  `ContentSecurityPolicy::STRICT` is the policy to start from, in one line
+  (`'OZ_CONTENT_SECURITY_POLICY' => ContentSecurityPolicy::STRICT`), and widen for what the project
+  really loads. It allows `'unsafe-inline'` for styles, every HTML page OZone serves inlining its
+  stylesheet into the layout and a style attribute being unable to carry a nonce, and nothing for
+  script beyond `'self'`, script being what an injected value needs in order to run.
+
+  The API doc view sends a policy of its own, `OZ_API_DOC_CSP` (`oz.api.doc`), because it is the one
+  page here that third-party code renders: ReDoc comes from a CDN, boots from an inline script,
+  draws through a blob worker and takes its fonts from Google. It is exempted rather than given a
+  policy guessed at for code that is not ours, so switching a project's policy on cannot break it.
+
 - **A username can be given to a user.** `oz_usernames` is the one place a username is unique across
   every auth user repository a project registers, and `users.name` has a foreign key to it -- but
   nothing ever wrote to that table: `UsernameUtils` only read it, so the column could point at
