@@ -406,6 +406,11 @@
 
 ### Fixed
 
+- **The runtime test images are built from a pinned extension installer**, taken from that
+  installer's own image as `rr` and `composer` already are, instead of a GitHub release's
+  `latest/download`. No two builds were alike, and GitHub answering 503 and 504 for an afternoon
+  failed `make test-runtimes` before it had started a single server.
+
 - **A request built in an environment that names no path crashed.** `Uri::createFromEnvironment()`
   parses `SCRIPT_NAME` and `REQUEST_URI` against a stand-in domain, and an environment carrying
   neither leaves that domain with no path at all: `dirname()` then received a null and raised a

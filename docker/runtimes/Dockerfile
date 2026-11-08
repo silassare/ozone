@@ -15,10 +15,14 @@ RUN install-php-extensions bcmath gd
 
 COPY php.ini /usr/local/etc/php/conf.d/zz-ozone.ini
 
-# php-cli images, with the extension installer the FrankenPHP image already ships.
+# php-cli images, which have to be given the extension installer the FrankenPHP image ships with.
+# It comes from the installer's own image, pinned to a version as `rr` and `composer` are below, and
+# no longer from a release's `latest/download`: that URL is whatever was published that day, so no
+# two builds were alike, and it answered 503 and 504 while GitHub was unwell, which failed a test
+# tier that has nothing to do with GitHub.
 FROM php:${PHP_VERSION}-cli AS worker
 
-ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+COPY --from=mlocati/php-extension-installer:2.13 /usr/bin/install-php-extensions /usr/local/bin/
 
 FROM worker AS roadrunner
 
