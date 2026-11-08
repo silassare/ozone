@@ -234,7 +234,9 @@ class ClassLoader
 	{
 		foreach ($dirs as $dir) {
 			if (\is_array($dir)) {
-				$c_dir       = $dir[0] ?? null;
+				$c_dir       = $dir[0] ?? throw new InvalidArgumentException(
+					'A directory declared as an array must name the directory first: [dir, recursive, deep].'
+				);
 				$c_recursive = $dir[1] ?? $recursive;
 				$c_deep      = $dir[2] ?? $deep;
 

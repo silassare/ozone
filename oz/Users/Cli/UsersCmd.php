@@ -115,12 +115,14 @@ final class UsersCmd extends Command
 			return;
 		}
 
+		$role_name = (string) $args->get('role');
+
 		try {
-			$role = RolesUtils::normalize((string) $args->get('role'));
+			$role = RolesUtils::normalize($role_name);
 		} catch (Throwable) {
 			$cli->error(\sprintf(
 				'Unknown role "%s": use one of %s.',
-				$args->get('role'),
+				$role_name,
 				\implode(', ', \array_map(
 					static fn ($case): string => (string) $case->value,
 					RolesUtils::getRoleEnumClass()::cases()

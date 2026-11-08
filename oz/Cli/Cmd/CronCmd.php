@@ -61,7 +61,7 @@ final class CronCmd extends Command
 				->string();
 
 			$start->handler(static function (KliArgs $args): void {
-				Cron::start($args->get('name'));
+				Cron::start((string) $args->get('name'));
 			});
 		}
 	}

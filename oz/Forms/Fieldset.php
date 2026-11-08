@@ -331,7 +331,11 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 	 */
 	private function callDynamicFactory(FormValidationContext $ctx): self
 	{
-		$result = ($this->t_dynamic_factory)($ctx);
+		$factory = $this->t_dynamic_factory ?? throw new RuntimeException(
+			\sprintf('Fieldset "%s" is not dynamic and has no factory to call.', $this->getName())
+		);
+
+		$result = $factory($ctx);
 
 		if (!$result instanceof self) {
 			throw new RuntimeException(
@@ -340,7 +344,7 @@ final class Fieldset extends AbstractFieldContainer implements ArrayCapableInter
 					self::class,
 					\get_debug_type($result)
 				)
-			)->suspectCallable($this->t_dynamic_factory);
+			)->suspectCallable($factory);
 		}
 
 		return $result;

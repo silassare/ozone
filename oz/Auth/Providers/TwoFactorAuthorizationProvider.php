@@ -88,8 +88,8 @@ final class TwoFactorAuthorizationProvider extends AuthorizationProvider
 	public static function resolve(Context $context, OZAuth $auth): static
 	{
 		$payload  = $auth->getPayload();
-		$channel  = $payload['channel'] ?? '';
-		$state_id = $payload['state_id'] ?? '';
+		$channel  = (string) ($payload['channel'] ?? '');
+		$state_id = (string) ($payload['state_id'] ?? '');
 
 		$user = AuthUsers::identifyBySelector([
 			AuthUsers::FIELD_AUTH_USER_TYPE => $auth->getOwnerType(),

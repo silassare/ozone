@@ -72,6 +72,32 @@ final class UtilsTest extends TestCase
 		}
 	}
 
+	/**
+	 * Every parameter of the helper is optional, so a caller may say nothing about the host or the
+	 * range: each null then means the default that parameter declares, where the first port used to
+	 * become 1 and the host used to reach a socket call as a null.
+	 */
+	public function testNothingSaidAboutTheRangeMeansTheRangeItDeclares(): void
+	{
+		$server = \stream_socket_server('tcp://127.0.0.1:0', $errno, $error);
+
+		self::assertNotFalse($server, $error);
+
+		try {
+			$name = (string) \stream_socket_get_name($server, false);
+			$port = (int) \substr($name, \strrpos($name, ':') + 1);
+
+			// The favorite is taken and nothing is said about the host or the range.
+			$free = Utils::getOpenPort([$port], null, null, null);
+
+			self::assertNotNull($free);
+			self::assertGreaterThanOrEqual(3000, $free);
+			self::assertLessThanOrEqual(9000, $free);
+		} finally {
+			\fclose($server);
+		}
+	}
+
 	public function testTableCliOptionsSkipAutoIncrementedColumns(): void
 	{
 		$table   = db()->getTableOrFail('oz_users');

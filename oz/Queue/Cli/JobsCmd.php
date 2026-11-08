@@ -217,8 +217,8 @@ final class JobsCmd extends Command
 
 	private static function finish(KliArgs $args): void
 	{
-		$store = $args->get('store');
-		$ref   = $args->get('ref');
+		$store = (string) $args->get('store');
+		$ref   = (string) $args->get('ref');
 
 		JobsManager::finish(JobsManager::getStore($store)
 			->getOrFail($ref));
@@ -357,7 +357,7 @@ final class JobsCmd extends Command
 		}
 
 		$worker   = $args->get('worker');
-		$queue    = $args->get('queue');
+		$queue    = (string) $args->get('queue');
 		$priority = $args->get('priority');
 		$max_jobs = $args->get('max-jobs');
 

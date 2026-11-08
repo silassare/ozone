@@ -377,7 +377,7 @@ class FS
 	{
 		$filename = \strtolower($filename);
 		// remove the extension
-		$name = \preg_replace('/\.' . \preg_quote($ext, '/') . '$/', '', $filename);
+		$name = \preg_replace('/\.' . \preg_quote($ext, '/') . '$/', '', $filename) ?? $filename;
 
 		// slugify the name
 		$name   = Str::stringToURLSlug($name);

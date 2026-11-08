@@ -57,7 +57,7 @@ final class LogTransport implements TransportInterface
 			$message->getTemplate(),
 			$message->getDestination(),
 			$this->channel,
-			$message->getID()
+			$message->getID() ?? '(not stored)'
 		)];
 
 		if (null !== $content->subject) {

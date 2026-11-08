@@ -272,6 +272,18 @@ final class ClassLoaderTest extends TestCase
 	}
 
 	/**
+	 * An entry declared as an array is `[dir, recursive, deep]`, so an array with nothing in it
+	 * names no directory: it used to reach the loader as a null path and raise a type error.
+	 */
+	public function testADirectoryEntryThatNamesNoDirectoryIsRefused(): void
+	{
+		$this->expectException(InvalidArgumentException::class);
+		$this->expectExceptionMessage('must name the directory first');
+
+		ClassLoader::addDirs([[]]);
+	}
+
+	/**
 	 * Writes a file under the test directory and returns its path.
 	 */
 	private static function write(string $relative_path, string $content): string

@@ -142,7 +142,9 @@ final class Sandbox
 			$mg = new Migrations();
 
 			$mg->create(true, 'sandbox');
-			$mg->install($mg->getLatestMigration());
+			$mg->install($mg->getLatestMigration() ?? throw new RuntimeException(
+				'The sandbox created no migration to install.'
+			));
 
 			return;
 		}

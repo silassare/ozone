@@ -92,8 +92,13 @@ final class Utils
 		?int $start = 3000,
 		?int $end = 9000,
 	): ?int {
-		$start = \max(1, $start);
-		$end   = \min(65535, $end);
+		// A null means "no preference", which is what each parameter's own default says: read that
+		// way, `null` for the first port no longer scanned from port 1, where a port below 1024
+		// needs privileges this process does not have.
+		$host ??= '127.0.0.1';
+
+		$start = \max(1, $start ?? 3000);
+		$end   = \min(65535, $end ?? 9000);
 
 		$checked = [];
 		// check for favorites ports first

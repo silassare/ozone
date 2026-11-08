@@ -83,6 +83,13 @@ class ServiceGenerator
 			);
 		}
 
+		// What this parameter's own docblock promises: the project's `Services` directory when the
+		// caller names none, created if it is not there. It used to be the command that did this,
+		// which left the promise here unkept and a null on its way to the filter below.
+		$output_dir ??= app()->getSourcesDir()
+			->cd('Services', true)
+			->getRoot();
+
 		$fm = FS::fromRoot();
 
 		$fm->filter()

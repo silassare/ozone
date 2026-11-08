@@ -416,10 +416,10 @@ final class ProjectCmd extends Command
 	 */
 	private function backup(KliArgs $args): void
 	{
-		$dir               = $args->get('dir');
+		$dir               = (string) $args->get('dir');
 		$full              = $args->get('full');
 		$project_fm        = FS::fromRoot();
-		$project_name      = Settings::get('oz.config', 'OZ_PROJECT_NAME');
+		$project_name      = (string) Settings::get('oz.config', 'OZ_PROJECT_NAME');
 		$project_name_slug = \strtolower(Str::stringToURLSlug($project_name));
 		$backup_name       = Random::fileName('backup-' . $project_name_slug);
 		$cli               = $this->getCli();
@@ -514,11 +514,11 @@ final class ProjectCmd extends Command
 	 */
 	private function create(KliArgs $args): void
 	{
-		$name       = $args->get('name');
-		$folder     = $args->get('root-dir');
-		$namespace  = $args->get('namespace');
-		$class_name = $args->get('class-name');
-		$prefix     = \strtoupper($args->get('prefix'));
+		$name       = (string) $args->get('name');
+		$folder     = (string) $args->get('root-dir');
+		$namespace  = (string) $args->get('namespace');
+		$class_name = (string) $args->get('class-name');
+		$prefix     = \strtoupper((string) $args->get('prefix'));
 		$cli        = $this->getCli();
 		$origin_url = 'http://localhost';
 

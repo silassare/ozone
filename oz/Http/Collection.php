@@ -18,6 +18,7 @@ use ArrayIterator;
 use Countable;
 use IteratorAggregate;
 use Override;
+use OZONE\Core\Exceptions\RuntimeException;
 
 /**
  * Class Collection.
@@ -141,6 +142,12 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate
 	#[Override]
 	public function offsetSet($offset, $value): void
 	{
+		if (null === $offset) {
+			// `$collection[] = $value`, which has no name to store the value under: this is a map
+			// of names to values and not a list, so it is said here rather than stored under "".
+			throw new RuntimeException('A collection entry needs a name.');
+		}
+
 		$this->set($offset, $value);
 	}
 

@@ -467,7 +467,7 @@ final class Messenger implements BootHookReceiverInterface
 	{
 		$log = \sprintf(
 			'Message %s ("%s") skipped on the channel "%s": %s.',
-			$record->getID(),
+			$record->getID() ?? '(not stored)',
 			$record->getTemplate(),
 			$record->getChannel(),
 			$reason

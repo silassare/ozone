@@ -154,6 +154,7 @@ final class SessionConcurrencyTest extends TestCase
 		self::assertSame(200, $status, $body);
 
 		$new_sid = self::cookies($headers)['OZONE_SID'] ?? null;
+		self::assertNotNull($new_sid, $body);
 		self::assertNotEmpty($new_sid, $body);
 		self::assertNotSame($sid, $new_sid);
 

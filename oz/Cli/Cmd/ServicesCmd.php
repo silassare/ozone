@@ -108,13 +108,6 @@ final class ServicesCmd extends Command
 		$override      = (bool) $args->get('override');
 		$service_name  = (string) $args->get('name');
 
-		if (!$output_dir) {
-			$output_dir = app()
-				->getSourcesDir()
-				->cd('Services', true)
-				->getRoot();
-		}
-
 		$db = db();
 
 		$db->assertHasTable($table_name);
@@ -141,7 +134,8 @@ final class ServicesCmd extends Command
 			$base_path,
 			$service_name,
 			'',
-			$output_dir,
+			// Nothing said is nothing passed: the generator answers for its own default.
+			'' !== $output_dir ? $output_dir : null,
 			$override
 		);
 

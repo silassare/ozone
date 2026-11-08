@@ -324,7 +324,7 @@ final class DbCmd extends Command
 	{
 		Utils::assertProjectLoaded();
 
-		$dir       = $args->get('dir');
+		$dir       = (string) $args->get('dir');
 		$namespace = $args->get('namespace');
 
 		if (empty($namespace)) {
@@ -354,7 +354,7 @@ final class DbCmd extends Command
 	{
 		Utils::assertDatabaseAccess();
 
-		$file  = $args->get('file');
+		$file  = (string) $args->get('file');
 		$query = \file_get_contents($file);
 		$cli   = $this->getCli();
 
@@ -381,7 +381,7 @@ final class DbCmd extends Command
 	{
 		Utils::assertDatabaseAccess();
 
-		$dir    = $args->get('dir');
+		$dir    = (string) $args->get('dir');
 		$cli    = $this->getCli();
 		$rdbms  = db()->getType();
 		$fm     = FS::from($dir);

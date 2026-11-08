@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace OZONE\Tests\Http;
 
+use OZONE\Core\Exceptions\RuntimeException;
 use OZONE\Core\Http\Collection;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -102,6 +103,20 @@ final class CollectionTest extends TestCase
 		self::assertSame('bar', $col['foo']);
 		unset($col['foo']);
 		self::assertFalse(isset($col['foo']));
+	}
+
+	/**
+	 * `$collection[] = $value` has no name to store the value under, and this is a map of names to
+	 * values: it used to reach the setter as a null key and raise a type error there.
+	 */
+	public function testAnEntryWithNoNameIsRefused(): void
+	{
+		$col = new Collection();
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('A collection entry needs a name.');
+
+		$col[] = 'bar';
 	}
 
 	public function testIteratorAggregateInterface(): void

@@ -67,9 +67,13 @@ class CommandTask extends AbstractTask
 			$this->result->setError(\sprintf(
 				'Command task "%s" %s.',
 				$this->name,
-				null !== ($killed = $process->killedPhrase())
-					? $killed
-					: \sprintf('failed with exit code %d', $exit_code)
+				match (true) {
+					null !== ($killed = $process->killedPhrase()) => $killed,
+					// A process that has no exit code and no kill to report: said as it is, rather
+					// than as the exit code zero a null reads as in a number's place.
+					null === $exit_code => 'did not run to completion and reported no exit code',
+					default             => \sprintf('failed with exit code %d', $exit_code),
+				}
 			));
 		} else {
 			$this->result->setDone();

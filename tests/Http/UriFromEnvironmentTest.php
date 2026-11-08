@@ -80,6 +80,18 @@ final class UriFromEnvironmentTest extends TestCase
 		self::assertNull($uri->getPort());
 	}
 
+	/**
+	 * An environment with no script name and no request uri: the stand-in domain the path is parsed
+	 * against is then all there is, it has no path of its own, and what followed read that nothing
+	 * as one.
+	 */
+	public function testAnEnvironmentThatNamesNoPathIsReadAsTheRoot(): void
+	{
+		$uri = self::uri(['SCRIPT_NAME' => '', 'REQUEST_URI' => '']);
+
+		self::assertSame('/', $uri->getPath());
+	}
+
 	private static function uri(array $env): Uri
 	{
 		return Uri::createFromEnvironment(

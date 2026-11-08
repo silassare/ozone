@@ -953,7 +953,7 @@ class Benchmark
 	 */
 	private function fastestAvg(): float
 	{
-		$avgs = \array_column($this->results, 'avg_ns');
+		$avgs = \array_column($this->results ?? [], 'avg_ns');
 
 		return $avgs ? \max(1e-9, \min($avgs)) : 1e-9;
 	}

@@ -245,7 +245,7 @@ class RouteSharedOptions
 			return $this;
 		}
 
-		return $this->guard(fn () => new CSRFRouteGuard($this->csrf_scope));
+		return $this->guard(static fn () => new CSRFRouteGuard($scope));
 	}
 
 	/**

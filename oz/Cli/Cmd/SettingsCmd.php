@@ -31,9 +31,9 @@ final class SettingsCmd extends Command
 		KliArgs $args
 	): void {
 		$scope_name      = $args->get('scope');
-		$group           = $args->get('group');
-		$key             = $args->get('key');
-		$value           = self::parseValue($args->get('value'));
+		$group           = (string) $args->get('group');
+		$key             = (string) $args->get('key');
+		$value           = self::parseValue((string) $args->get('value'));
 		$source          = (bool) $args->get('source');
 
 		Settings::set($group, $key, $value, scope($scope_name), !$source);
@@ -55,8 +55,8 @@ final class SettingsCmd extends Command
 		KliArgs $args
 	): void {
 		$scope_name      = $args->get('scope');
-		$group           = $args->get('group');
-		$key             = $args->get('key');
+		$group           = (string) $args->get('group');
+		$key             = (string) $args->get('key');
 		$source          = (bool) $args->get('source');
 
 		Settings::unset($group, $key, scope($scope_name), !$source);

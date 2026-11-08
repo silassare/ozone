@@ -75,7 +75,7 @@ final class Db
 
 				self::$db = self::new($migration);
 
-				self::initStepRegister(null !== $migration);
+				self::initStepRegister(self::$db, null !== $migration);
 			} catch (Throwable $t) {
 				throw new RuntimeException('Unable to initialize database.', null, $t);
 			} finally {
@@ -327,25 +327,21 @@ final class Db
 	 *
 	 * @throws DBALException
 	 */
-	private static function initStepRegister(bool $migration_loaded): void
+	private static function initStepRegister(RDBMSInterface $db, bool $migration_loaded): void
 	{
 		if ($migration_loaded) {
-			new DbSchemaReadyHook(self::$db)->dispatch();
+			new DbSchemaReadyHook($db)->dispatch();
 		} else {
-			self::loadDevSchemaInto(self::$db);
+			self::loadDevSchemaInto($db);
 		}
 
-		self::$db
-			->ns(self::getOZoneDbNamespace())
+		$db->ns(self::getOZoneDbNamespace())
 			->enableORM(self::dir(Plugins::ozone()->getScope())->getRoot());
 
-		self::$db
-			->ns(self::getProjectDbNamespace())
+		$db->ns(self::getProjectDbNamespace())
 			->enableORM(self::dir()->getRoot());
 
-		self::$db->lock();
-
-		$db = self::$db;
+		$db->lock();
 
 		// Its listeners (the CRUD listeners attach there) use the generated ORM classes: when a class
 		// of the ORM is what is loading ({@see initOnFirstUse()}), they wait for it to be complete.

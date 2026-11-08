@@ -406,6 +406,42 @@
 
 ### Fixed
 
+- **A request built in an environment that names no path crashed.** `Uri::createFromEnvironment()`
+  parses `SCRIPT_NAME` and `REQUEST_URI` against a stand-in domain, and an environment carrying
+  neither leaves that domain with no path at all: `dirname()` then received a null and raised a
+  `TypeError`. Both are read as the root when there is nothing to read.
+
+- **`$collection[] = $value` raised a type error inside the setter.** A `Http\Collection` is a map
+  of names to values, so an entry has to have a name: that is now said where it happens, instead of
+  a null key reaching `set()`.
+
+- **A class loader directory declared as an empty array crashed the boot that read it.** An entry
+  of `addDirs()` written as an array is `[dir, recursive, deep]`, and one that names no directory is
+  refused by name now.
+
+- **A CSRF guard was built with the scope the route held when the guard ran, not the one it was
+  declared with.** `withCSRF()` captures the scope it was given, so a later `withoutCSRF()` cannot
+  leave the guard with nothing to check against.
+
+- **An upload that declares no media type is refused by the mime check** instead of reaching it as a
+  null, and **a port helper reads each `null` as the default its own signature declares**, where the
+  first port of the scan used to become 1 (a port a process without privileges cannot bind) and the
+  host used to reach a socket call as a null.
+
+- **A message that was never stored is named as such in a log line** rather than passed to
+  `sprintf()` as a null id, and **a command task that neither finished nor reports a kill says
+  that**, where it used to read as "failed with exit code 0".
+
+- **The service generator keeps the promise its own parameter makes**: the project's `Services`
+  directory when the caller names none, which the command was computing for it while the generator
+  passed the null straight to a filesystem filter. One owner, and the docblock is true now.
+
+- Said once rather than twice, so a type carries what a comment claimed: the database the
+  initialisation step registers is given to it, a dynamic fieldset's factory is read once for both
+  the call and the refusal, a store row's id is read where the row is known to have one, and every
+  command option is read as the type its option declares, which is how the rest of this CLI already
+  read them.
+
 - **Every QR code OZone has ever drawn was unreadable, and the error correction is why.** The
   symbols were structurally perfect -- correct version, finder patterns, timing patterns, alignment
   pattern, dark module, and format information whose BCH check passed in both copies -- and carried

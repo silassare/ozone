@@ -135,7 +135,11 @@ final class DefaultCSRFTest extends TestCase
 		$method  = null;
 
 		if (null !== $auth) {
-			$ri     = new RouteInfo($context, self::$router->getRoute('csrf:plain'), []);
+			$csrf_route = self::$router->getRoute('csrf:plain');
+
+			self::assertNotNull($csrf_route);
+
+			$ri     = new RouteInfo($context, $csrf_route, []);
 			$method = $auth::get($ri, 'test');
 		}
 

@@ -131,7 +131,7 @@ final class DefaultPagesServedTest extends TestCase
 		self::assertStringContainsString('oz-badge--success', $page);
 
 		// The way onward, built from the route OZ_AUTH_SIGN_IN_ROUTE names.
-		[, $host] = self::$server;
+		[, $host] = self::server();
 		$link_to  = '~<a class="oz-btn" href="http://' . \preg_quote($host, '~') . '[^"]*/sign-in">Sign in</a>~';
 
 		self::assertSame(1, \preg_match($link_to, $page), $page);

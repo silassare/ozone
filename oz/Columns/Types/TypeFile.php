@@ -782,7 +782,9 @@ class TypeFile extends Type
 			throw new TypesInvalidValueException('OZ_FILE_SIZE_OUT_OF_RANGE', $debug);
 		}
 
-		$client_media = $upload->getClientMediaType();
+		// An upload that declares no media type is read as declaring none, and a mime check refuses
+		// that as it refuses any type the column does not allow.
+		$client_media = $upload->getClientMediaType() ?? '';
 		$clean_media  = $upload->getCleanMediaType();
 
 		if (!$this->checkFileMime($client_media)) {

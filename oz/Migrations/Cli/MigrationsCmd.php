@@ -235,7 +235,7 @@ final class MigrationsCmd extends Command
 		Utils::assertDatabaseAccess();
 
 		$mg                 = new Migrations();
-		$target_version     = $args->get('to-version');
+		$target_version     = (int) $args->get('to-version');
 		$current_db_version = $mg::getCurrentDbVersion(true);
 
 		// make sure target version is less than current version

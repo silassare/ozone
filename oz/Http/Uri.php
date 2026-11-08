@@ -506,9 +506,12 @@ class Uri implements UriInterface
 		// parse_url() requires a full URL. As we don't extract the domain name or scheme,
 		// we use a stand-in.
 		$mock_domain       = 'https://example.com';
-		$requestScriptName = \parse_url($mock_domain . $env->get('SCRIPT_NAME'), \PHP_URL_PATH);
+		// The root when there is no path to read: an environment with no `SCRIPT_NAME` or no
+		// `REQUEST_URI` leaves the stand-in domain with nothing after it, and what followed here
+		// read that nothing as a path.
+		$requestScriptName = \parse_url($mock_domain . $env->get('SCRIPT_NAME'), \PHP_URL_PATH) ?: '/';
 		$requestScriptDir  = \dirname($requestScriptName);
-		$requestUri        = \parse_url($mock_domain . $env->get('REQUEST_URI'), \PHP_URL_PATH);
+		$requestUri        = \parse_url($mock_domain . $env->get('REQUEST_URI'), \PHP_URL_PATH) ?: '/';
 
 		$basePath    = '';
 		$virtualPath = $requestUri;

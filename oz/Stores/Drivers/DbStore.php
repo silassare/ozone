@@ -23,6 +23,7 @@ use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
 use OZONE\Core\Stores\StoreNumbers;
+use RuntimeException;
 
 /**
  * Class DbStore.
@@ -236,7 +237,9 @@ final class DbStore implements StoreDriverInterface
 			}
 
 			$written = new OZDbStoresQuery()
-				->whereIdIs($store->getID())
+				->whereIdIs($store->getID() ?? throw new RuntimeException(
+					'A store row read from the database has no id.'
+				))
 				->whereValueIs($raw)
 				->update([
 					OZDbStore::COL_VALUE      => SignedSerializer::serialize([self::CACHE_VALUE => $sum]),
