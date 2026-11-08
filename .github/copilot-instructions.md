@@ -1242,7 +1242,14 @@ A failure in a narrowed run is repeated with the full target before it is believ
   bootstraps `SandboxApp` on it (`Sandbox::bootstrap()`), so tests never touch the repository's
   `data/` or `.ozone/`. **Pass the same settings sources to both** (the suite's `tests/settings/`):
   the build and the suite must see one schema. The worker servers serve the same kind of sandbox
-  (`tests/Support/Servers/`).
+  (`tests/Support/Servers/`). **In a sandbox run `OZ_PROJECT_DIR` is the working directory, not the
+  sandbox**: a project sets that constant before it requires the autoloader and a test runner cannot,
+  `vendor/bin/phpunit` loading the autoloader before its bootstrap file. Sources are classified
+  against it, so the repository the suite runs from reads as the project (last) and the sandbox's own
+  directories as plugin sources (before it). It bites a suite testing a package that **ships settings
+  of its own**, as a plugin may: neither the sources passed here nor `Settings::set()` can override
+  one of that package's keys, so give such a test the value rather than setting it, and leave what a
+  real project reads to an integration test that resolves the package into `vendor/`.
 - Unit tests live under `tests/` by namespace (`OZONE\Tests`), extend `TestCase`, and declare
   `#[CoversClass]` (the fixer adds `#[CoversNothing]` otherwise). PHPUnit reads **attributes only**:
   a doc-comment `@covers`, `@dataProvider` or `@group` is ignored and never reported, so a test left

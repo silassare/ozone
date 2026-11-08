@@ -37,6 +37,18 @@ use RuntimeException;
  *
  * The settings sources given to {@see create()} and to {@see bootstrap()} must be the same: the build
  * process and the suite must see the same schema.
+ *
+ * **What a sandbox run cannot put right: `OZ_PROJECT_DIR` is the working directory and not `$dir`.**
+ * A project sets that constant before it requires the autoloader (`gen/boot.blate` does), and a test
+ * runner cannot: `vendor/bin/phpunit` requires the autoloader before it reads its bootstrap file,
+ * and `oz_define.php` has fallen back to `getcwd()` by then. Settings and asset sources are
+ * classified against that constant ({@see \OZONE\Core\FS\PathSources}), so in a sandbox run the
+ * repository the suite runs from reads as the **project**, last, while the sandbox's own directories
+ * read as plugin sources before it. Two consequences for a suite testing a package that ships
+ * settings of its own: the sources given here cannot win over that package's settings directory, and
+ * {@see Settings::set()} cannot override one of its keys either, the write landing in the sandbox's
+ * `data/`. Give such a test the value instead of setting it; what a real project reads is what an
+ * integration test, resolving the package into `vendor/`, is there to cover.
  */
 final class Sandbox
 {
@@ -145,7 +157,11 @@ final class Sandbox
 
 	/**
 	 * Adds the sandbox's own settings source (SQLite in the project directory), then `$settings_sources`,
-	 * so theirs win. For a suite that builds its app itself; {@see bootstrap()} calls it.
+	 * so theirs win over it. For a suite that builds its app itself; {@see bootstrap()} calls it.
+	 *
+	 * They win over the sandbox's own source and not over everything: sources are read by category
+	 * before insertion order, and in a sandbox run every directory of the repository the suite runs
+	 * from is a project source read after these. See this class's own note on `OZ_PROJECT_DIR`.
 	 *
 	 * @param list<string> $settings_sources
 	 */
