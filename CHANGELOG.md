@@ -406,6 +406,19 @@
 
 ### Fixed
 
+- **An email or phone column asked to check registration without naming a user type crashed.**
+  `TypeEmail` and `TypePhone` read their `registered_as` option with no default and handed it to
+  `AuthUsers::identify()`, whose first parameter is a non-nullable `string`: under strict types a
+  `TypeError` at the first validation of such a column. `registered()`, `notRegistered()` and
+  `configure()` all store a user type, defaulting to `UsersRepository::DEFAULT_USER_TYPE`, so the
+  only way in was `setOption('registered', true)` on its own, which is public API. The read applies
+  that same default now.
+
+  What had hidden it was two stacked `/** @var */` blocks over the two reads: only the lower one
+  attaches to the statement, so the analyser never saw that `registered_as` could be null and
+  reported nothing for five releases. Placing each annotation on the statement it types is what
+  surfaced both sites, and each has a test that fails with the default removed.
+
 - **The runtime test images are built from a pinned extension installer**, taken from that
   installer's own image as `rr` and `composer` already are, instead of a GitHub release's
   `latest/download`. No two builds were alike, and GitHub answering 503 and 504 for an afternoon

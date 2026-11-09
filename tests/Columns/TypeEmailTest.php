@@ -54,6 +54,24 @@ final class TypeEmailTest extends TestCase
 		self::assertNull($clean);
 	}
 
+	/**
+	 * `registered` can be set on its own, and the lookup it asks for needs a user type.
+	 *
+	 * `registered()` and `configure()` both store one, so only `setOption()` reaches the validation
+	 * without it, and what it reached was a `TypeError` on argument 1 of `AuthUsers::identify()`:
+	 * the read of the option defaulted to null where the default is the one user type.
+	 */
+	public function testRegisteredOnItsOwnLooksTheValueUpUnderTheDefaultUserType(): void
+	{
+		$type = new TypeEmail();
+		$type->setOption('registered', true);
+
+		$this->expectException(TypesInvalidValueException::class);
+		$this->expectExceptionMessage('OZ_FIELD_EMAIL_NOT_REGISTERED');
+
+		$type->validate('user@example.com');
+	}
+
 	public function testRejectsMissingAtSign(): void
 	{
 		$this->expectException(TypesInvalidValueException::class);

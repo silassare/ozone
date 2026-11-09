@@ -264,9 +264,6 @@ final class MemcachedStore implements StoreDriverInterface
 	}
 
 	/**
-	 * Fails when `ext-memcached` is missing.
-	 */
-	/**
 	 * The pool a store connects to, as `Memcached::addServers()` takes it.
 	 *
 	 * Nothing was read for it before: the list handed to `addServers()` was the literal
@@ -315,6 +312,9 @@ final class MemcachedStore implements StoreDriverInterface
 		return $servers;
 	}
 
+	/**
+	 * Fails when `ext-memcached` is missing.
+	 */
 	private static function assertExtension(): void
 	{
 		/** @noinspection ClassConstantCanBeUsedInspection */

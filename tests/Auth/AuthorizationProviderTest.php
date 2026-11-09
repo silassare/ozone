@@ -467,11 +467,6 @@ final class AuthorizationProviderTest extends TestCase
 		$provider->getState();
 	}
 
-	// -----------------------------------------------------------------------
-	// Helper: concrete test provider (no side effects)
-	// -----------------------------------------------------------------------
-
-	/** Creates a no-op provider with a 60 s lifetime and configurable try_max. */
 	/**
 	 * What a client needs to answer an authorization is in the answer that opened it.
 	 *
@@ -515,6 +510,11 @@ final class AuthorizationProviderTest extends TestCase
 		self::assertSame($provider::getName(), $auth->getLabel());
 	}
 
+	// -----------------------------------------------------------------------
+	// Helper: concrete test provider (no side effects)
+	// -----------------------------------------------------------------------
+
+	/** Creates a no-op provider with a 60 s lifetime and configurable try_max. */
 	private function makeProvider(int $try_max = 3): AuthorizationProvider
 	{
 		$context = new Context(HTTPEnvironment::mock(), null, Context::root());

@@ -340,15 +340,6 @@ class ErrorUtils
 	}
 
 	/**
-	 * Handle unhandled error.
-	 *
-	 * @param int    $code         the error code
-	 * @param string $message      the error message
-	 * @param string $file         the file where it occurs
-	 * @param int    $line         the file line where it occurs
-	 * @param bool   $die_on_fatal when true we will interrupt on fatal error
-	 */
-	/**
 	 * What tells one recorded diagnostic from another: a silenced one is recognised at shutdown by
 	 * the same four values PHP kept.
 	 */
@@ -357,6 +348,15 @@ class ErrorUtils
 		return $code . '|' . $file . '|' . $line . '|' . $message;
 	}
 
+	/**
+	 * Handle unhandled error.
+	 *
+	 * @param int    $code         the error code
+	 * @param string $message      the error message
+	 * @param string $file         the file where it occurs
+	 * @param int    $line         the file line where it occurs
+	 * @param bool   $die_on_fatal when true we will interrupt on fatal error
+	 */
 	private static function errorHandler(
 		int $code,
 		string $message,

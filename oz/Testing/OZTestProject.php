@@ -639,6 +639,14 @@ final class OZTestProject
 		));
 	}
 
+	/**
+	 * Delete the test project directory.
+	 *
+	 * Any php -S processes spawned by {@see startServer()} are killed first so
+	 * they do not keep running as orphans after the test process exits.
+	 * The vendor/ symlink is unlinked before the recursive delete so the
+	 * shared vendor cache directory is not affected.
+	 */
 	public function destroy(): void
 	{
 		// Kill any tracked php -S server processes that may have been orphaned
@@ -741,14 +749,6 @@ final class OZTestProject
 		}
 	}
 
-	/**
-	 * Delete the test project directory.
-	 *
-	 * Any php -S processes spawned by {@see startServer()} are killed first so
-	 * they do not keep running as orphans after the test process exits.
-	 * The vendor/ symlink is unlinked before the recursive delete so the
-	 * shared vendor cache directory is not affected.
-	 */
 	/**
 	 * Whether a directory exists and holds something.
 	 *

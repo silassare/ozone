@@ -167,9 +167,6 @@ final class SessionConcurrencyTest extends TestCase
 	}
 
 	/**
-	 * A request that only reads the session leaves its data alone and slides its expiry.
-	 */
-	/**
 	 * A key kept under a named branch, which is how a chunked upload's ref is kept: an overlapping
 	 * request removing its own key from that branch must not take a key added meanwhile with it.
 	 */
@@ -255,6 +252,9 @@ final class SessionConcurrencyTest extends TestCase
 		self::assertArrayHasKey('quick', $fresh, 'creating the branch replaced the entry added meanwhile');
 	}
 
+	/**
+	 * A request that only reads the session leaves its data alone and slides its expiry.
+	 */
 	public function testAReadOnlyRequestDoesNotChangeTheData(): void
 	{
 		$sid    = $this->openSession();

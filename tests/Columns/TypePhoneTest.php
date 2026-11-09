@@ -34,6 +34,24 @@ final class TypePhoneTest extends TestCase
 		self::assertSame('+123456', $clean);
 	}
 
+	/**
+	 * `registered` can be set on its own, and the lookup it asks for needs a user type.
+	 *
+	 * `registered()` and `configure()` both store one, so only `setOption()` reaches the validation
+	 * without it, and what it reached was a `TypeError` on argument 1 of `AuthUsers::identify()`:
+	 * the read of the option defaulted to null where the default is the one user type.
+	 */
+	public function testRegisteredOnItsOwnLooksTheValueUpUnderTheDefaultUserType(): void
+	{
+		$type = new TypePhone();
+		$type->setOption('registered', true);
+
+		$this->expectException(TypesInvalidValueException::class);
+		$this->expectExceptionMessage('OZ_FIELD_PHONE_NOT_REGISTERED');
+
+		$type->validate('+1234567890');
+	}
+
 	public function testAcceptsMaximumLengthE164(): void
 	{
 		// + 15 digits = 16 chars total -- previously rejected at max=15

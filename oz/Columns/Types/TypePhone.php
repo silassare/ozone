@@ -129,9 +129,13 @@ class TypePhone extends Type
 
 		if (null !== $value && '' !== $value) {
 			/** @var null|bool $registered */
-			/** @var null|string $registered_as */
-			$registered    = $this->getOption('registered');
-			$registered_as = $this->getOption('registered_as');
+			$registered = $this->getOption('registered');
+
+			// The same default `configure()` applies, and for the same reason: `registered` can be
+			// set on its own, through `setOption()`, and a user type is not optional to the lookup
+			// below. Read without it, an absent option was a `null` into a `string` parameter.
+			/** @var string $registered_as */
+			$registered_as = $this->getOption('registered_as', UsersRepository::DEFAULT_USER_TYPE);
 
 			if (null !== $registered) {
 				$exists = null !== AuthUsers::identify(

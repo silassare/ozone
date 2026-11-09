@@ -289,16 +289,10 @@ final class StubUsersRESTService extends RESTFulService
 	public const string TABLE_NAME   = 'oz_users';
 	public const string KEY_COLUMN   = 'id';
 
-	/**
-	 * @var list<string>
-	 */
 	/** @var list<string> what the stub's hooks recorded, in order */
 	public static array $calls = [];
 
-	/**
-	 * The filters the last entry action was given.
-	 */
-	/** @var list<list<string>> the filters the stub was asked for */
+	/** @var list<list<string>> the filters the last entry action was given */
 	public static array $filters = [];
 
 	/** @var array<string, bool> */

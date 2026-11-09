@@ -242,8 +242,10 @@ final class GoblSchemaMapper
 			case TypeEnum::NAME:
 				$sc_type = $this->schemas->string();
 
-				/** @var TypeEnum $type */
-				/** @var class-string<BackedEnum> $enum_class */
+				/**
+				 * @var TypeEnum                 $type
+				 * @var class-string<BackedEnum> $enum_class
+				 */
 				$enum_class = $type->getOption('enum_class');
 
 				if ($enum_class) {
