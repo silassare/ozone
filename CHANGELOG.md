@@ -300,6 +300,36 @@
 
 ### Added
 
+- **The settings are exportable as declarations, and a key can say a browser may read it.**
+  `oz settings export` answers every key OZone declares with its type, its default, its
+  documentation and whether it is for the client; `--json` gives one object for a tool, and
+  `--client` answers instead the keys marked for a browser, with the values this project resolves.
+  `App\SettingsSchema` is what reads them.
+
+  **Read from the files as text**, because that is where the documentation is. A settings file
+  documents each key with a block comment above it, inside the array it returns, so the comment
+  belongs to no declaration and nothing reflective reaches it: `token_get_all()` pairs each comment
+  with the element after it. A group whose keys are expressions -- the authentication methods by
+  scheme, a provider by its `NAME` -- is a map and not a schema, and is listed by name with its file
+  never run.
+
+  **A default is answered only when answering it is safe.** Running a file resolves `1000 * 1000` and
+  a class constant, and resolves `env()` with it: on a configured machine that is the deployment's
+  secret (`OZ_CRON_WEB_KEY`, the MinIO keys). A key whose declaration reads the environment is
+  answered with its source text and `from_env`, never with the value it holds here. The schema reads
+  OZone's own source directories alone, so a project's file is never run for it.
+
+  **`@client` in the key's own comment** is how a key says a browser may read it, marked beside what
+  it describes rather than in a list to be held in step -- the shape that let a hand-copied list of
+  OZone's settings drift from the real key names in a front end, so an override never reached it.
+  A project marks its own keys in its own files. Sixteen of OZone's are marked: the header and cookie
+  names a client has to agree with the server on (`OZ_AUTH_API_KEY_HEADER_NAME`,
+  `OZ_CSRF_COOKIE_NAME`, the form discovery and resume headers, the real-method header),
+  the upload limits a client needs to refuse a file before sending it, the rendition sizes it may ask
+  for, and `OZ_AUTH_CODE_LENGTH`. **A key marked for the client and read from the environment is an
+  error and not an entry**: a secret marked by accident would reach every browser, and a value a
+  browser is meant to have belongs written in the file.
+
 - **A response can carry a content security policy, and it is declared as directives.**
   `OZ_CONTENT_SECURITY_POLICY` (`oz.request`) maps a directive name to the sources it allows, and
   `MainBootHookReceiver::onResponse()` sends what it composes as `Content-Security-Policy`, unless

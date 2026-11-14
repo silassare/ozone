@@ -61,16 +61,22 @@ return [
 
 	/**
 	 * maximum number of files that can be uploaded at once.
+	 *
+	 * @client so a client refuses too many before sending
 	 */
 	'OZ_UPLOAD_FILE_MAX_COUNT'            => 10,
 
 	/**
 	 * maximum size of a file: in bytes.
+	 *
+	 * @client so a client refuses a file before sending it
 	 */
 	'OZ_UPLOAD_FILE_MAX_SIZE'             => 10 * 1000 * 1000, // 10 MB
 
 	/**
 	 * maximum total size of all files that can be uploaded at once: in bytes.
+	 *
+	 * @client so a client refuses a selection before sending it
 	 */
 	'OZ_UPLOAD_FILE_MAX_TOTAL_SIZE'       => 100 * 1000 * 1000, // 100 MB
 
@@ -97,6 +103,8 @@ return [
 	 * A client asks the server for it and slices accordingly, so raising it makes for fewer requests
 	 * on a big file, and lowering it for smaller ones a poor connection can finish. The form of
 	 * `/upload/chunk/add` refuses a bigger chunk.
+	 *
+	 * @client so a client cuts its chunks to the size taken
 	 */
 	'OZ_UPLOAD_CHUNK_MAX_SIZE'            => 1000 * 1000, // 1 MB
 
@@ -111,6 +119,8 @@ return [
 
 	/**
 	 * maximum size of a thumbnail: in pixels.
+	 *
+	 * @client so a client asks for a size that renders
 	 */
 	'OZ_THUMBNAIL_MAX_SIZE'               => 640,
 
@@ -129,6 +139,8 @@ return [
 	 * widths a page asks for in a `srcset` are these.
 	 *
 	 * @see ImageFilterTokens
+	 *
+	 * @client so a client asks for a size that renders
 	 */
 	'OZ_IMAGE_FILTERS_SIZES'              => [
 		16, 32, 48, 64, 96, 128, 256, 384, 640, 750, 828, 1080, 1200, 1920, 2048, 3840,

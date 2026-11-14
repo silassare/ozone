@@ -409,6 +409,21 @@ return [
   redeclare. Never build a path under `build/` by hand; a new build output goes through the helper and
   is keyed because of where it lands.
 - **`oz.config` is blacklisted**: no runtime edit.
+- **A key is documented where it is declared, and the schema is read from there.**
+  `App\SettingsSchema` reads the settings files as text (`token_get_all()`), because a key's block
+  comment sits inside the returned array and belongs to no declaration, so nothing reflective
+  reaches it; `oz settings export` is its command. A group whose keys are expressions is a **map**,
+  listed by name and never run. A default is answered **resolved** (`1000 * 1000`, a class constant)
+  unless the declaration calls `env()`, which on a configured machine resolves to the deployment's
+  secret: then the source text is answered and the value never is. The schema reads OZone's own
+  source directories alone, so a project's file is not run for it.
+- **`@client` in a key's own comment says a browser may read it**, and `oz settings export --client`
+  answers those keys with the values the project resolves -- what a front end reads instead of
+  holding a copy of a default that an override would leave behind. Marked beside the key and not in
+  a list, because a list is a second thing to keep in step. **A key marked for the client and read
+  from `env()` is an error**, not an entry: a secret marked by accident would reach every browser,
+  and a value meant for one belongs written in the file. Adding a mark widens what every browser
+  sees, so it is a deliberate act (DESIGN LAW 2).
 - `SettingsGroup` is `@internal`: never use it directly.
 - Every message code must be in both `lang/oz.en` and `lang/oz.fr` (`tests/Lang/CatalogTest`).
 - **A language the request carries is request scoped; only a choice is kept.** A `{lang}` route

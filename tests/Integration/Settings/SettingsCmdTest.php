@@ -28,6 +28,7 @@ use PHPUnit\Framework\TestCase;
  *  - Unsetting a key removes it from the settings file
  *  - Setting with --source writes to the version-controlled source dir (app/settings/)
  *  - Setting with a scope name writes to the correct scope stateful settings dir
+ *  - `oz settings export` answering the declarations, and `--client` the keys a browser may read
  *
  * @internal
  */
@@ -188,6 +189,92 @@ final class SettingsCmdTest extends TestCase
 		self::assertFileExists($source_file);
 		$settings = (static fn ($file) => require $file)($source_file);
 		self::assertSame('source-value', $settings['SOURCE_KEY']);
+	}
+
+	/**
+	 * The export is the declarations, read from the settings files themselves.
+	 */
+	public function testExportAnswersTheDeclarationsWithTheirDocumentation(): void
+	{
+		$proc = self::$proj->oz('settings', 'export', '--json');
+
+		$proc->mustRun();
+
+		$data  = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR)['data'];
+		$found = null;
+
+		foreach ($data['settings'] as $setting) {
+			if ('oz.users' === $setting['group'] && 'OZ_USER_PASS_MIN_LENGTH' === $setting['key']) {
+				$found = $setting;
+			}
+		}
+
+		self::assertNotNull($found);
+		self::assertSame(6, $found['default']);
+		self::assertSame('int', $found['type']);
+		self::assertStringContainsString('Minimum length for user password', $found['doc']);
+		self::assertContains('oz.auth.methods', $data['maps']);
+	}
+
+	/**
+	 * Without `--json` a person reads it, which is a path of its own and crashes silently if left
+	 * untested: a count per group, then what the whole export holds.
+	 */
+	public function testExportIsReadableWithoutJson(): void
+	{
+		$proc = self::$proj->oz('settings', 'export');
+
+		$proc->mustRun();
+
+		$out = $proc->getOutput();
+
+		self::assertMatchesRegularExpression('~oz\.users\s+\d+ keys,\s+\d+ documented~', $out);
+		self::assertStringContainsString('for the client', $out);
+		self::assertStringContainsString('maps, whose keys are expressions', $out);
+	}
+
+	/**
+	 * A secret is in the same files as everything else, so what the client half answers is the
+	 * marked keys and nothing near them.
+	 */
+	public function testExportForTheClientAnswersTheMarkedKeysAndNoSecret(): void
+	{
+		$proc = self::$proj->oz('settings', 'export', '--client', '--json');
+
+		$proc->mustRun();
+
+		$settings = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR)['data']['settings'];
+
+		self::assertSame('x-ozone-api-key', $settings['oz.auth']['OZ_AUTH_API_KEY_HEADER_NAME']);
+		self::assertSame(1000 * 1000, $settings['oz.files']['OZ_UPLOAD_CHUNK_MAX_SIZE']);
+		self::assertArrayNotHasKey('oz.db', $settings);
+		self::assertArrayNotHasKey('oz.cron', $settings);
+		self::assertStringNotContainsString('OZ_DB_PASS', $proc->getOutput());
+	}
+
+	/**
+	 * The whole point: a client reads this instead of holding a copy of the default, so a project's
+	 * override has to be what it answers.
+	 */
+	public function testExportForTheClientFollowsAProjectsOverride(): void
+	{
+		$proj = self::$proj;
+
+		$proj->oz('settings', 'set', '--group=oz.auth', '--key=OZ_AUTH_API_KEY_HEADER_NAME', '--value=x-project-key')
+			->mustRun();
+
+		try {
+			$proc = $proj->oz('settings', 'export', '--client', '--json');
+
+			$proc->mustRun();
+
+			$settings = \json_decode($proc->getOutput(), true, 512, \JSON_THROW_ON_ERROR)['data']['settings'];
+
+			self::assertSame('x-project-key', $settings['oz.auth']['OZ_AUTH_API_KEY_HEADER_NAME']);
+		} finally {
+			$proj->oz('settings', 'unset', '--group=oz.auth', '--key=OZ_AUTH_API_KEY_HEADER_NAME')
+				->mustRun();
+		}
 	}
 
 	private static function settingsPath(string $group): string

@@ -21,6 +21,8 @@ return [
 	'OZ_ERROR_NOT_ALLOWED'                   => "Une erreur s'est produite. Vous n'êtes peut-être pas autorisé à effectuer cette action.",
 	'OZ_ERROR_INVALID_FORM'                  => 'Les données envoyées sont invalides.',
 	'OZ_LANG_CATALOG_INVALID'                => 'Des traductions ne suivent pas la syntaxe des messages.',
+	'OZ_SETTINGS_UNREADABLE'                 => "Des groupes de paramètres n'ont pas pu être lus.",
+	'OZ_SETTINGS_CLIENT_FROM_ENV'            => "Un paramètre marqué pour le client est lu depuis l'environnement.",
 	'OZ_ERROR_UNAUTHENTICATED'               => "Vous devez vous connecter d'abord.",
 	'OZ_ERROR_RATE_LIMIT_REACHED'            => 'Vous avez atteint la limite de requêtes.',
 	'OZ_RATE_LIMIT_EXCEEDED'                 => 'Trop de requêtes. Veuillez réessayer plus tard.',

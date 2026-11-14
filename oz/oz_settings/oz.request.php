@@ -153,6 +153,8 @@ return [
 	 * disable it; pages can always use the `csrf_token` template global.
 	 *
 	 * @default 'XSRF-TOKEN'
+	 *
+	 * @client the cookie a script reads its token from
 	 */
 	'OZ_CSRF_COOKIE_NAME'          => 'XSRF-TOKEN',
 
@@ -176,6 +178,8 @@ return [
 	 * For server that does not support HEAD, PATCH, PUT, DELETE...,
 	 *
 	 * @example: use X-OZONE-Real-Method: DELETE to simulate a DELETE request while sending a POST request.
+	 *
+	 * @client whether a client may override the method at all
 	 */
 	'OZ_REAL_METHOD_HEADER_ALLOWED' => true,
 
@@ -183,6 +187,8 @@ return [
 	 * Name of the header to use to override HTTP method.
 	 *
 	 * @default 'X-OZONE-Real-Method'
+	 *
+	 * @client the header a client overrides the method with
 	 */
 	'OZ_REAL_METHOD_HEADER_NAME'  => 'X-OZONE-Real-Method',
 
@@ -190,6 +196,8 @@ return [
 	 * Allow to use form discovery header to indicate that the request is a form discovery request.
 	 *
 	 * This is useful for clients that want to discover the form structure before submitting it.
+	 *
+	 * @client whether a client may ask for a form
 	 */
 	'OZ_FORM_DISCOVERY_HEADER_ALLOWED' => true,
 
@@ -199,6 +207,8 @@ return [
 	 * This header is used by the client to indicate that the request is a form discovery request.
 	 *
 	 * Require RFC 8941 representation of boolean values. ?1 is true, ?0 is false.
+	 *
+	 * @client the header a client asks for a form with
 	 */
 	'OZ_FORM_DISCOVERY_HEADER_NAME' => 'X-OZONE-Form-Discovery',
 
@@ -208,6 +218,8 @@ return [
 	 * This header is not necessary at the end of the form resume flow, but it is necessary for the intermediate steps.
 	 *
 	 * Require RFC 8941 representation of boolean values. ?1 is true, ?0 is false.
+	 *
+	 * @client the header a client resumes a form with
 	 */
 	'OZ_FORM_RESUME_HEADER_NAME' => 'X-OZONE-Form-Resume',
 
@@ -216,6 +228,8 @@ return [
 	 *
 	 * This header is used by the client to indicate that the request should use payload from a resumed form reference.
 	 * The value of the header should be the resume reference provided by the server in a previous response.
+	 *
+	 * @client the header carrying the session's reference
 	 */
 	'OZ_FORM_RESUME_REF_HEADER_NAME' => 'X-OZONE-Form-Resume-Ref',
 
@@ -224,6 +238,8 @@ return [
 	 *
 	 * Valid values: init, state, next, back, cancel, evaluate.
 	 * When absent the action defaults to "init".
+	 *
+	 * @client the header carrying the action
 	 */
 	'OZ_FORM_RESUME_ACTION_HEADER_NAME' => 'X-OZONE-Form-Resume-Action',
 ];

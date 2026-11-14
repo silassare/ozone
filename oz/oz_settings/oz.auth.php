@@ -64,6 +64,8 @@ return [
 
 	/**
 	 * Auth code length.
+	 *
+	 * @client so an input asks for that many characters
 	 */
 	'OZ_AUTH_CODE_LENGTH'         => 6,
 
@@ -76,6 +78,8 @@ return [
 
 	/**
 	 * Authentication by api key header name.
+	 *
+	 * @client the header a browser must send its key in
 	 */
 	'OZ_AUTH_API_KEY_HEADER_NAME' => 'x-ozone-api-key',
 

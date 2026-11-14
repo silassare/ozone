@@ -17,10 +17,14 @@ use Kli\KliAction;
 use Kli\KliArgs;
 use Override;
 use OZONE\Core\App\Settings;
+use OZONE\Core\App\SettingsSchema;
 use OZONE\Core\Cli\Command;
 
 /**
  * Class SettingsCmd.
+ *
+ * A settings key is documented where it is declared, so the schema this command exports is read from
+ * the declarations themselves ({@see SettingsSchema}) and cannot fall behind them.
  */
 final class SettingsCmd extends Command
 {
@@ -71,10 +75,109 @@ final class SettingsCmd extends Command
 		));
 	}
 
+	/**
+	 * Exports the settings as declarations: every key with its type, default and documentation.
+	 *
+	 * `--client` answers the keys a browser may read instead, with the values this project answers,
+	 * which is what a front end reads so it follows an override rather than holding a copy of a
+	 * default.
+	 */
+	public function export(KliArgs $args): void
+	{
+		$cli = $this->getCli();
+
+		if ($args->get('client')) {
+			$this->exportForClient($args);
+
+			return;
+		}
+
+		$schema = SettingsSchema::describe();
+		$failed = [] !== $schema['errors'];
+
+		if ($args->get('json')) {
+			$cli->writeJson($schema, !$failed, $failed ? 1 : 0, $failed ? 'OZ_SETTINGS_UNREADABLE' : '');
+		}
+
+		foreach ($schema['errors'] as $error) {
+			$cli->warn(\sprintf('%s: %s', $error['group'], $error['reason']));
+		}
+
+		$counts = [];
+
+		foreach ($schema['settings'] as $setting) {
+			$counts[$setting['group']] ??= ['keys' => 0, 'doc' => 0, 'client' => 0];
+			++$counts[$setting['group']]['keys'];
+			$counts[$setting['group']]['doc'] += '' === $setting['doc'] ? 0 : 1;
+			$counts[$setting['group']]['client'] += $setting['client'] ? 1 : 0;
+		}
+
+		foreach ($counts as $group => $count) {
+			$cli->writeLn(\sprintf(
+				'%-28s %4d keys, %4d documented, %2d for the client',
+				$group,
+				$count['keys'],
+				$count['doc'],
+				$count['client']
+			));
+		}
+
+		$cli->info(\sprintf(
+			'%d keys in %d groups. %d maps, whose keys are expressions: %s',
+			\count($schema['settings']),
+			\count($counts),
+			\count($schema['maps']),
+			\implode(', ', $schema['maps'])
+		));
+
+		if ($failed) {
+			$cli->error(\sprintf('%d group(s) could not be read.', \count($schema['errors'])), true, 1);
+		}
+	}
+
+	/**
+	 * The settings a browser may read, with this project's values.
+	 */
+	private function exportForClient(KliArgs $args): void
+	{
+		$cli    = $this->getCli();
+		$export = SettingsSchema::forClient();
+		$failed = [] !== $export['errors'];
+
+		if ($args->get('json')) {
+			$cli->writeJson($export, !$failed, $failed ? 1 : 0, $failed ? 'OZ_SETTINGS_CLIENT_FROM_ENV' : '');
+		}
+
+		foreach ($export['errors'] as $error) {
+			$cli->warn(\sprintf('%s: %s', $error['group'], $error['reason']));
+		}
+
+		foreach ($export['settings'] as $group => $settings) {
+			$cli->writeLn(\sprintf('%s: %d', $group, \count($settings)));
+
+			foreach ($settings as $key => $value) {
+				$cli->writeLn(\sprintf('  %-36s %s', $key, \json_encode($value)));
+			}
+		}
+
+		if ($failed) {
+			$cli->error('A setting marked for the client is read from the environment.', true, 1);
+		}
+	}
+
 	#[Override]
 	protected function describe(): void
 	{
 		$this->description('Manage your project settings.');
+
+		// action: export the settings as declarations
+		$export = $this->action('export', 'Export the settings as declarations, for a tool or a reference.');
+		$export->option('client', 'c', [], 1)
+			->description('Export only the keys a browser may read, with this project\'s values.')
+			->bool()
+			->def(false);
+		self::withJsonSupport($export);
+		$export->handler($this->export(...));
 
 		// action: set a setting
 		$set = $this->action('set', 'Set a setting in the project.');
