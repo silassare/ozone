@@ -64,6 +64,11 @@ final class FileStore extends MemoryStore
 			atomic: true,
 			// Only when the files are in data/state: .ozone/cache may be deleted at any time.
 			durable: self::ROOT_STATE === $this->root,
+			// The read and the write of a conditional write happen under the same exclusive lock
+			// ({@see self::mutate()}), so two processes cannot both believe they won.
+			versioned: true,
+			// A removal leaves nothing in the file: nothing to tell a client it is missing.
+			changes: false,
 		);
 	}
 

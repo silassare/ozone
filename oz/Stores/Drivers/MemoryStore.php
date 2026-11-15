@@ -19,6 +19,7 @@ use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
 use OZONE\Core\Stores\StoreNumbers;
+use OZONE\Core\Stores\StoreWrite;
 
 /**
  * Class MemoryStore.
@@ -31,6 +32,8 @@ class MemoryStore implements StoreDriverInterface
 	protected const string CACHE_VALUE_PROP  = 'value';
 
 	protected const string CACHE_EXPIRE_PROP = 'expire';
+
+	protected const string CACHE_VERSION_PROP = 'version';
 
 	protected string $namespace;
 
@@ -71,6 +74,13 @@ class MemoryStore implements StoreDriverInterface
 			atomic: true,
 			// In-memory, gone with the process.
 			durable: false,
+			// A version is kept and a conditional write is answered: one process at a time holds
+			// the array, and the file driver below it takes a lock around the same operations, so
+			// the read and the write really are one act in both.
+			versioned: true,
+			// What changed is not kept: a removal leaves nothing behind, so this driver cannot
+			// tell a client what it is missing. A store read by a device is on the database.
+			changes: false,
 		);
 	}
 
@@ -84,7 +94,12 @@ class MemoryStore implements StoreDriverInterface
 			$expire = $item[self::CACHE_EXPIRE_PROP] ?? null;
 
 			if (null === $expire || $expire > \microtime(true)) {
-				return new StoreEntry($key, $item[self::CACHE_VALUE_PROP], $expire);
+				return new StoreEntry(
+					$key,
+					$item[self::CACHE_VALUE_PROP],
+					$expire,
+					$item[self::CACHE_VERSION_PROP] ?? null
+				);
 			}
 
 			$this->delete($key);
@@ -113,13 +128,62 @@ class MemoryStore implements StoreDriverInterface
 	public function set(StoreEntry $entry): bool
 	{
 		return $this->mutate(function () use ($entry): bool {
-			self::$cache_data[$this->namespace][$entry->key] = [
-				self::CACHE_VALUE_PROP  => $entry->value,
-				self::CACHE_EXPIRE_PROP => $entry->expiresAt,
-			];
+			$this->write($entry, StoreEntry::nextVersion());
 
 			return true;
 		});
+	}
+
+	#[Override]
+	public function setIf(StoreEntry $entry, ?int $expectedVersion): StoreWrite
+	{
+		return $this->mutate(function () use ($entry, $expectedVersion): StoreWrite {
+			$current = $this->get($entry->key);
+
+			if (null === $expectedVersion ? null !== $current : $current?->version !== $expectedVersion) {
+				return StoreWrite::refused($current);
+			}
+
+			return StoreWrite::applied($this->write($entry, StoreEntry::nextVersion()));
+		});
+	}
+
+	#[Override]
+	public function deleteIf(string $key, int $expectedVersion): StoreWrite
+	{
+		return $this->mutate(function () use ($key, $expectedVersion): StoreWrite {
+			$current = $this->get($key);
+
+			if ($current?->version !== $expectedVersion) {
+				return StoreWrite::refused($current);
+			}
+
+			unset(self::$cache_data[$this->namespace][$key]);
+
+			return StoreWrite::applied(null);
+		});
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Nothing to answer: this driver keeps no removals, which its capabilities say.
+	 */
+	#[Override]
+	public function changedSince(int $version, int $limit = 100): array
+	{
+		return [];
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Nothing kept, nothing to forget.
+	 */
+	#[Override]
+	public function pruneRemoved(int $beforeVersion): int
+	{
+		return 0;
 	}
 
 	#[Override]
@@ -166,17 +230,15 @@ class MemoryStore implements StoreDriverInterface
 					return null;
 				}
 
-				self::$cache_data[$this->namespace][$key] = [
-					self::CACHE_VALUE_PROP  => $by,
-					self::CACHE_EXPIRE_PROP => $expiresAt,
-				];
+				$this->write(new StoreEntry($key, $by, $expiresAt), StoreEntry::nextVersion());
 
 				return $by;
 			}
 
 			$sum = StoreNumbers::sum($key, $item[self::CACHE_VALUE_PROP] ?? null, $by);
 
-			self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP] = $sum;
+			self::$cache_data[$this->namespace][$key][self::CACHE_VALUE_PROP]   = $sum;
+			self::$cache_data[$this->namespace][$key][self::CACHE_VERSION_PROP] = StoreEntry::nextVersion();
 
 			return $sum;
 		});
@@ -238,4 +300,18 @@ class MemoryStore implements StoreDriverInterface
 	 * Brings the namespace's entries up to date before a read: nothing to do in one process.
 	 */
 	protected function refresh(): void {}
+
+	/**
+	 * Puts the entry in the namespace at that version, and answers it as it was written.
+	 */
+	private function write(StoreEntry $entry, int $version): StoreEntry
+	{
+		self::$cache_data[$this->namespace][$entry->key] = [
+			self::CACHE_VALUE_PROP   => $entry->value,
+			self::CACHE_EXPIRE_PROP  => $entry->expiresAt,
+			self::CACHE_VERSION_PROP => $version,
+		];
+
+		return new StoreEntry($entry->key, $entry->value, $entry->expiresAt, $version);
+	}
 }

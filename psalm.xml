@@ -48,17 +48,22 @@
         <file name="stubs/frankenphp.phpstub"/>
         <file name="stubs/roadrunner.phpstub"/>
         <file name="stubs/swoole.phpstub"/>
+        <file name="stubs/memcached.phpstub"/>
     </stubs>
 
     <!-- The levels every Oliup package analyses at. Nothing here is repeated below. -->
     <xi:include href="vendor/oliup/oliup-cs-php/src/psalm/handlers.xml"/>
 
     <issueHandlers>
-        <UndefinedClass>
-            <errorLevel type="suppress">
-                <referencedClass name="Memcached"/>
-            </errorLevel>
-        </UndefinedClass>
+        <!--
+            `UndefinedClass` for `Memcached` was suppressed here and is not any more (2026-11-15):
+            the image that runs the analysis has ext-memcached, so psalm never threw it, and a
+            suppression that is never used is an error of its own on a cold run
+            (`UnusedIssueHandlerSuppression`, which `make lint`'s cache was hiding). What the
+            extension offers is a stub above instead, as the server bridges' is: it also says what
+            the driver may call, so a call to something the extension does not have is an error
+            rather than waved through with the class.
+        -->
         <!--
             Three places where the analyser, not the code, is what cannot be satisfied. Named one by
             one rather than by issue type, so a fourth of any of them is still an error:

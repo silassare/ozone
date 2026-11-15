@@ -35,6 +35,10 @@ final readonly class StoreCapabilities
 	 * @param bool $expiryCallbacks whether the driver supports server-side expiry scanning (used by GC)
 	 * @param bool $atomic          whether `add()` is atomic: concurrent adds never lost (every built-in driver)
 	 * @param bool $durable         whether this *instance* may back a state store
+	 * @param bool $versioned       whether entries carry a version and conditional writes are answered
+	 * @param bool $changes         whether this *instance* keeps what changed, removals included, for a
+	 *                              client to read since a version: a store says so in its options, since
+	 *                              keeping removals costs rows a cache has no use for
 	 */
 	public function __construct(
 		public bool $perEntryTTL,
@@ -42,5 +46,7 @@ final readonly class StoreCapabilities
 		public bool $expiryCallbacks,
 		public bool $atomic,
 		public bool $durable = false,
+		public bool $versioned = false,
+		public bool $changes = false,
 	) {}
 }

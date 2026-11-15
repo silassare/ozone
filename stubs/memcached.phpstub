@@ -1,0 +1,54 @@
+<?php
+
+// Psalm stub: the part of ext-memcached (a `suggest`) that OZONE\Core\Stores\Drivers\MemcachedStore uses. The driver
+// is exercised against a real Memcached server by tests/Stores/MemcachedStoreTest and MemcachedServerTest (group
+// `memcached`).
+//
+// Here rather than an `UndefinedClass` suppression (2026-11-15): the image the analysis runs in has the extension, so
+// the suppression was never used, and an unused one is an error of its own on a cold run. A stub is right either way --
+// it says what the driver may call, so a call to something the extension does not have is an error instead of being
+// waved through with the class.
+
+class Memcached
+{
+	public const int OPT_PREFIX_KEY = 2;
+
+	public const int OPT_LIBKETAMA_COMPATIBLE = 16;
+
+	public const int OPT_RECV_TIMEOUT = 12;
+
+	public const int OPT_SEND_TIMEOUT = 11;
+
+	public const int OPT_TCP_NODELAY = 14;
+
+	public const int GET_EXTENDED = 2;
+
+	public const int RES_SUCCESS = 0;
+
+	public const int RES_NOTFOUND = 16;
+
+	public function __construct(?string $persistent_id = null, ?callable $callback = null) {}
+
+	public function setOption(int $option, mixed $value): bool {}
+
+	public function addServers(array $servers): bool {}
+
+	public function getServerList(): array {}
+
+	/**
+	 * @return mixed the value, an array with its CAS token under `GET_EXTENDED`, or false
+	 */
+	public function get(string $key, ?callable $cache_cb = null, int $flags = 0): mixed {}
+
+	public function set(string $key, mixed $value, int $expiration = 0): bool {}
+
+	public function add(string $key, mixed $value, int $expiration = 0): bool {}
+
+	public function cas(float $cas_token, string $key, mixed $value, int $expiration = 0): bool {}
+
+	public function delete(string $key, int $time = 0): bool {}
+
+	public function flush(int $delay = 0): bool {}
+
+	public function getResultCode(): int {}
+}

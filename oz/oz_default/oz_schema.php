@@ -496,6 +496,14 @@ return static function (NamespaceBuilder $ns): void {
 			->setMetaKey('field.label', 'Label')
 			->setMetaKey('api.doc.description', 'A human-readable label describing this store entry.');
 
+		// The write that put the value there, as microseconds since the epoch: the entry's version
+		// and the cursor of a client reading what changed. One column for both because it is one
+		// fact -- when this entry last changed -- and a conditional write ("only if it is still
+		// the value I read") compares it in the WHERE of a single statement.
+		$tb->bigint('version')->unsigned()->default(0)
+			->setMetaKey('field.label', 'Version')
+			->setMetaKey('api.doc.description', 'When this entry was last written, in microseconds since the epoch: its version, and what a client reads changes since.');
+
 		$tb->map('data')->default([])
 			->setMetaKey('field.label', 'Data')
 			->setMetaKey('api.doc.description', 'Additional structured metadata for this entry.');

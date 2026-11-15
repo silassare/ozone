@@ -20,6 +20,7 @@ use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
 use OZONE\Core\Stores\StoreNumbers;
+use OZONE\Core\Stores\StoreWrite;
 use OZONE\Core\Utils\Hasher;
 use RuntimeException;
 
@@ -63,6 +64,12 @@ final class MemcachedStore implements StoreDriverInterface
 			atomic: true,
 			// Memcached evicts under pressure: never durable.
 			durable: false,
+			// No version, deliberately, and the reason is the line above: a store two sides write
+			// at once is state, and state may not live where an entry can be evicted between the
+			// read and the write that was conditional on it. A project wanting that uses the
+			// database or Redis, which `KeyValueStore` says before reaching this driver.
+			versioned: false,
+			changes: false,
 		);
 	}
 
@@ -153,6 +160,50 @@ final class MemcachedStore implements StoreDriverInterface
 	/**
 	 * {@inheritDoc}
 	 *
+	 * @throws RuntimeException always: this driver keeps no version
+	 */
+	#[Override]
+	public function setIf(StoreEntry $entry, ?int $expectedVersion): StoreWrite
+	{
+		throw self::unversioned();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws RuntimeException always: this driver keeps no version
+	 */
+	#[Override]
+	public function deleteIf(string $key, int $expectedVersion): StoreWrite
+	{
+		throw self::unversioned();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Nothing to answer: a removal leaves nothing here, which its capabilities say.
+	 */
+	#[Override]
+	public function changedSince(int $version, int $limit = 100): array
+	{
+		return [];
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Nothing kept, nothing to forget.
+	 */
+	#[Override]
+	public function pruneRemoved(int $beforeVersion): int
+	{
+		return 0;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * Compare-and-set (`gets` / `cas`), read again when another client wrote first; a missing entry
 	 * is created with `add`, which only one client wins.
 	 */
@@ -231,6 +282,17 @@ final class MemcachedStore implements StoreDriverInterface
 	public function getExpiredEntries(int $limit = 100): array
 	{
 		return [];
+	}
+
+	/**
+	 * Why a conditional write is refused here: a cache that evicts cannot hold what two sides write.
+	 */
+	private static function unversioned(): RuntimeException
+	{
+		return new RuntimeException(
+			'A conditional write needs a store that keeps a version per entry, and this one evicts'
+				. ' entries under pressure: use the database or Redis store.'
+		);
 	}
 
 	#[Override]

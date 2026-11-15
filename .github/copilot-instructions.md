@@ -1055,6 +1055,23 @@ call site says which by the registry it asks; both return a `KeyValueStore`.
 - Expiry listeners (`StoreEntryExpiryListenerInterface`, the `expiry_listener` of a store) are called
   by `StoresGarbageCollector`, which scans both groups on drivers with `expiryCallbacks` (`DbStore`) and
   deletes each entry even if its listener throws.
+- **A store written from two sides needs a version, and the version is the clock.** Every entry
+  carries the microsecond it was written (`StoreEntry::$version`, `StoreEntry::nextVersion()`), which
+  is at once the token a conditional write compares (`setIf()`, `deleteIf()`: "write only if it is
+  still what I read", one statement in `DbStore`) and the cursor a client reads changes from
+  (`changedSince()`). One fact, one column, nothing to keep in step -- and no sequence allocated
+  apart from the write it belongs to, which a reader can slip between and so miss a change for good.
+  Two writes to **one** key cannot share a version (the second reads what the first wrote, and a
+  store read costs far more than a microsecond); two keys can, so a client asks from slightly before
+  its cursor and takes a repeat, which costs nothing.
+- **Only a store that says `changes` keeps removals.** `changedSince()` has to report a key that is
+  gone, or a device keeps it forever; so a store configured `'changes' => true` soft-deletes instead
+  of deleting, and `clear()` marks every key rather than dropping the rows. A cache has no use for
+  those rows, so it is off by default, and `pruneRemoved()` forgets removals older than a boundary
+  the caller picks (`DbStore::CHANGES_RETENTION`, 30 days). A client whose cursor is older than the
+  retention must read the store whole, which it can work out alone: a version is a time.
+  `versioned` and `changes` are capabilities; `KeyValueStore` refuses before reaching a driver that
+  lacks one, rather than letting a conditional write pass as an ordinary one.
 
 ---
 

@@ -18,6 +18,7 @@ use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
 use OZONE\Core\Stores\StoreNumbers;
+use OZONE\Core\Stores\StoreWrite;
 use OZONE\Core\Utils\RedisFactory;
 use Redis as PhpRedis;
 use RuntimeException;
@@ -44,6 +45,8 @@ class RedisStore implements StoreDriverInterface
 {
 	private const string VALUE_KEY  = 'v';
 	private const string EXPIRE_KEY = 'e';
+
+	private const string VERSION_KEY = 'n';
 
 	/**
 	 * @throws RuntimeException when `ext-redis` is missing
@@ -72,6 +75,12 @@ class RedisStore implements StoreDriverInterface
 			atomic: true,
 			// Redis is a server shared by every instance.
 			durable: true,
+			// A version per entry, and a conditional write over WATCH / MULTI: the read and the
+			// write are one act, as they are for `add()` above.
+			versioned: true,
+			// Removals leave nothing behind here: a client reading what it is missing is served by
+			// the database store.
+			changes: false,
 		);
 	}
 
@@ -99,7 +108,9 @@ class RedisStore implements StoreDriverInterface
 			return null;
 		}
 
-		return new StoreEntry($key, $data[self::VALUE_KEY], $expire);
+		$version = $data[self::VERSION_KEY] ?? null;
+
+		return new StoreEntry($key, $data[self::VALUE_KEY], $expire, \is_int($version) ? $version : null);
 	}
 
 	#[Override]
@@ -121,21 +132,86 @@ class RedisStore implements StoreDriverInterface
 	#[Override]
 	public function set(StoreEntry $entry): bool
 	{
-		$expire    = $entry->expiresAt;
+		return $this->write($entry, StoreEntry::nextVersion());
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * The optimistic transaction `add()` uses below: the entry is watched while it is read, and the
+	 * write happens only where nothing changed it meanwhile. An `EXEC` that comes back refused is
+	 * somebody else's write, which is a conflict and not something to try again.
+	 */
+	#[Override]
+	public function setIf(StoreEntry $entry, ?int $expectedVersion): StoreWrite
+	{
+		$redis     = RedisFactory::get();
 		$redis_key = $this->buildKey($entry->key);
-		$raw       = \serialize([
-			self::VALUE_KEY  => $entry->value,
-			self::EXPIRE_KEY => $expire,
-		]);
 
-		if (null !== $expire) {
-			$ttl_ms = (int) \max(1, ($expire - \microtime(true)) * 1000);
+		$redis->watch($redis_key);
 
-			// `true`, not a cast: see RedisJobStore::lock().
-			return true === RedisFactory::get()->set($redis_key, $raw, ['px' => $ttl_ms]);
+		$current = $this->get($entry->key);
+
+		if (null === $expectedVersion ? null !== $current : $current?->version !== $expectedVersion) {
+			$redis->unwatch();
+
+			return StoreWrite::refused($current);
 		}
 
-		return true === RedisFactory::get()->set($redis_key, $raw);
+		$version = StoreEntry::nextVersion();
+
+		$redis->multi();
+		$this->write($entry, $version);
+
+		return false === $redis->exec()
+			? StoreWrite::refused($this->get($entry->key))
+			: StoreWrite::applied(new StoreEntry($entry->key, $entry->value, $entry->expiresAt, $version));
+	}
+
+	#[Override]
+	public function deleteIf(string $key, int $expectedVersion): StoreWrite
+	{
+		$redis     = RedisFactory::get();
+		$redis_key = $this->buildKey($key);
+
+		$redis->watch($redis_key);
+
+		$current = $this->get($key);
+
+		if ($current?->version !== $expectedVersion) {
+			$redis->unwatch();
+
+			return StoreWrite::refused($current);
+		}
+
+		$redis->multi();
+		$redis->del($redis_key);
+
+		return false === $redis->exec()
+			? StoreWrite::refused($this->get($key))
+			: StoreWrite::applied(null);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Nothing to answer: a removal leaves nothing here, which its capabilities say.
+	 */
+	#[Override]
+	public function changedSince(int $version, int $limit = 100): array
+	{
+		return [];
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Nothing kept, nothing to forget.
+	 */
+	#[Override]
+	public function pruneRemoved(int $beforeVersion): int
+	{
+		return 0;
 	}
 
 	/**
@@ -261,6 +337,32 @@ class RedisStore implements StoreDriverInterface
 	public static function fromConfig(string $namespace, array $options = []): static
 	{
 		return new self($namespace);
+	}
+
+	/**
+	 * Writes the entry at that version, with its TTL where it has one.
+	 *
+	 * Inside a `MULTI` what comes back is the queueing of the command and not its result, which is
+	 * why {@see self::setIf()} reads `EXEC` rather than this.
+	 */
+	private function write(StoreEntry $entry, int $version): bool
+	{
+		$expire    = $entry->expiresAt;
+		$redis_key = $this->buildKey($entry->key);
+		$raw       = \serialize([
+			self::VALUE_KEY   => $entry->value,
+			self::EXPIRE_KEY  => $expire,
+			self::VERSION_KEY => $version,
+		]);
+
+		if (null !== $expire) {
+			$ttl_ms = (int) \max(1, ($expire - \microtime(true)) * 1000);
+
+			// `true`, not a cast: see RedisJobStore::lock().
+			return true === RedisFactory::get()->set($redis_key, $raw, ['px' => $ttl_ms]);
+		}
+
+		return true === RedisFactory::get()->set($redis_key, $raw);
 	}
 
 	/**

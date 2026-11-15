@@ -23,6 +23,7 @@ use OZONE\Core\Stores\Interfaces\StoreDriverInterface;
 use OZONE\Core\Stores\StoreCapabilities;
 use OZONE\Core\Stores\StoreEntry;
 use OZONE\Core\Stores\StoreNumbers;
+use OZONE\Core\Stores\StoreWrite;
 use RuntimeException;
 
 /**
@@ -46,9 +47,26 @@ final class DbStore implements StoreDriverInterface
 	private const string CACHE_VALUE = 'v';
 
 	/**
-	 * DbStore constructor.
+	 * How long a removal is remembered, in seconds, where a store keeps what changed.
+	 *
+	 * Thirty days: long enough for a device that was away a month, short enough that a store nobody
+	 * prunes does not grow without end. A client whose cursor is older than this must read the
+	 * store whole, and it can tell: a version **is** a microsecond of the clock, so the oldest
+	 * cursor still safe is "now minus the retention" and needs nothing kept to be known.
 	 */
-	public function __construct(private readonly string $namespace) {}
+	public const int CHANGES_RETENTION = 2_592_000;
+
+	/**
+	 * DbStore constructor.
+	 *
+	 * @param string $namespace the store's name
+	 * @param bool   $changes   keep removals, so a client can read what it is missing: a store says
+	 *                          so in its options, since a cache has no use for the rows it costs
+	 */
+	public function __construct(
+		private readonly string $namespace,
+		private readonly bool $changes = false,
+	) {}
 
 	#[Override]
 	public function capabilities(): StoreCapabilities
@@ -60,6 +78,10 @@ final class DbStore implements StoreDriverInterface
 			atomic: true,
 			// The database is the project's own durable store.
 			durable: true,
+			// A version per row, and a conditional write that is one statement: the version the
+			// caller read is in its WHERE, so two writers cannot both believe they won.
+			versioned: true,
+			changes: $this->changes,
 		);
 	}
 
@@ -91,7 +113,7 @@ final class DbStore implements StoreDriverInterface
 
 		$expires_at = null !== $expire_at ? (float) $expire_at : null;
 
-		return new StoreEntry($key, $data[self::CACHE_VALUE], $expires_at);
+		return new StoreEntry($key, $data[self::CACHE_VALUE], $expires_at, (int) $store->getVersion());
 	}
 
 	#[Override]
@@ -116,41 +138,204 @@ final class DbStore implements StoreDriverInterface
 	#[Override]
 	public function set(StoreEntry $entry): bool
 	{
-		$raw       = SignedSerializer::serialize([self::CACHE_VALUE => $entry->value]);
-		$expire_at = null !== $entry->expiresAt ? (int) \ceil($entry->expiresAt) : null;
-		$row       = $this->newRow($entry->key)
-			->setValue($raw)
-			->setExpireAT($expire_at)
-			->toRow();
-
-		unset($row[OZDbStore::COL_ID]);
-
-		// One statement, inserted or updated in place: reading first, then inserting, let two requests
-		// writing a new key at once (two first hits of a rate limit) collide on its unique key.
-		new OZDbStoresQuery()
-			->insert($row)
-			->doUpdateOnConflict(
-				[OZDbStore::COL_GROUP, OZDbStore::COL_KEY],
-				[
-					OZDbStore::COL_VALUE,
-					OZDbStore::COL_EXPIRE_AT,
-					OZDbStore::COL_LABEL,
-					OZDbStore::COL_UPDATED_AT,
-					OZDbStore::COL_DELETED,
-					OZDbStore::COL_DELETED_AT,
-				]
-			)
-			->execute();
+		$this->write($entry, StoreEntry::nextVersion());
 
 		return true;
 	}
 
 	/**
+	 * {@inheritDoc}
+	 *
+	 * One statement, and the version the caller read is in its WHERE: the write happens where the
+	 * entry is still the one that was read, and nowhere else, so two writers cannot both win. A
+	 * create (`$expectedVersion` null) revives a row that is a removal or has expired, since the
+	 * key is unique and such a row is still there.
+	 *
+	 * @throws GoblException
+	 */
+	#[Override]
+	public function setIf(StoreEntry $entry, ?int $expectedVersion): StoreWrite
+	{
+		$version = StoreEntry::nextVersion();
+
+		if (null !== $expectedVersion) {
+			$written = $this->rowsOf($entry->key)
+				->whereVersionIs($expectedVersion)
+				->whereIsNotDeleted()
+				->update($this->writtenColumns($entry, $version))
+				->execute();
+
+			return 1 === $written
+				? StoreWrite::applied($this->entryOf($entry, $version))
+				: StoreWrite::refused($this->get($entry->key));
+		}
+
+		// A create: the row may be there as a removal or expired, which is a key holding nothing.
+		// `includeSoftDeletedRows()` because the ORM leaves removals out of an update by default,
+		// which is right everywhere else and would make reviving one match no row at all.
+		$revived = $this->rowsOf($entry->key)
+			->includeSoftDeletedRows()
+			->whereIsDeleted()
+			->update($this->writtenColumns($entry, $version, revive: true))
+			->execute();
+
+		if (1 === $revived) {
+			return StoreWrite::applied($this->entryOf($entry, $version));
+		}
+
+		if (null !== $this->get($entry->key)) {
+			return StoreWrite::refused($this->get($entry->key));
+		}
+
+		// Absent, or expired and not a removal. Written where nothing live holds the key: two
+		// requests creating it at once both insert, one is ignored, and the read below says whose
+		// write is there -- which the insert's own answer cannot, the drivers not agreeing on what
+		// an ignored insert returns.
+		$expired = $this->rowsOf($entry->key)
+			->whereIsNotDeleted()
+			->whereExpireAtIsNotNull()
+			->whereExpireAtIsLte(\time())
+			->update($this->writtenColumns($entry, $version))
+			->execute();
+
+		if (1 !== $expired) {
+			$row = $this->newRow($entry->key)
+				->setValue($this->serialize($entry->value))
+				->setExpireAT($this->expiryOf($entry))
+				->setVersion($version)
+				->toRow();
+
+			unset($row[OZDbStore::COL_ID]);
+
+			new OZDbStoresQuery()->insert($row)->ignoreOnConflict()->execute();
+		}
+
+		$current = $this->get($entry->key);
+
+		return $current?->version === $version
+			? StoreWrite::applied($current)
+			: StoreWrite::refused($current);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws GoblException
+	 */
+	#[Override]
+	public function deleteIf(string $key, int $expectedVersion): StoreWrite
+	{
+		$rows = $this->rowsOf($key)
+			->whereVersionIs($expectedVersion)
+			->whereIsNotDeleted();
+
+		$written = $this->changes
+			? $rows->update($this->removedColumns(StoreEntry::nextVersion()))->execute()
+			: $rows->delete()->execute();
+
+		return 1 === $written
+			? StoreWrite::applied(null)
+			: StoreWrite::refused($this->get($key));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * Removals included, as entries saying so: a client told nothing of them would keep a value the
+	 * store no longer has. An entry that **expired** is reported as removed too, for the same
+	 * reason, which is why a store read by clients is better off without per-entry expiry: an
+	 * expiry moves no version, so a client that had already read that version is never told.
+	 *
+	 * @return StoreEntry[]
+	 *
+	 * @throws GoblException
+	 */
+	#[Override]
+	public function changedSince(int $version, int $limit = 100): array
+	{
+		$results = new OZDbStoresQuery()
+			// The removals are the point: a client told nothing of them keeps what the store lost.
+			->includeSoftDeletedRows()
+			->whereGroupIs($this->namespace)
+			->whereVersionIsGt($version)
+			->find(ORMOptions::makePaginated($limit, null, [
+				// The id after the version, because two keys written in one microsecond share a
+				// version: a page of changes then still has one order, whoever reads it.
+				OZDbStore::COL_VERSION => 'ASC',
+				OZDbStore::COL_ID      => 'ASC',
+			]));
+
+		$changed = [];
+
+		while ($row = $results->fetchClass()) {
+			$key       = $row->getLabel();
+			$at        = (int) $row->getVersion();
+			$expire_at = $row->getExpireAT();
+			$expired   = null !== $expire_at && (int) $expire_at <= \time();
+
+			if ($row->isDeleted() || $expired) {
+				$changed[] = new StoreEntry($key, null, null, $at, removed: true);
+
+				continue;
+			}
+
+			[$signed, $data] = SignedSerializer::unserialize((string) $row->getValue());
+
+			if (!$signed || !\is_array($data)) {
+				continue;
+			}
+
+			$changed[] = new StoreEntry(
+				$key,
+				$data[self::CACHE_VALUE],
+				null !== $expire_at ? (float) $expire_at : null,
+				$at
+			);
+		}
+
+		return $changed;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @throws GoblException
+	 */
+	#[Override]
+	public function pruneRemoved(int $beforeVersion): int
+	{
+		if (!$this->changes) {
+			return 0;
+		}
+
+		return new OZDbStoresQuery()
+			->includeSoftDeletedRows()
+			->whereGroupIs($this->namespace)
+			->whereIsDeleted()
+			->whereVersionIsLt($beforeVersion)
+			->delete()
+			->execute();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
 	 * @throws GoblException
 	 */
 	#[Override]
 	public function delete(string $key): bool
 	{
+		if ($this->changes) {
+			// Kept as a removal with a version of its own, so a client reading changes is told the
+			// key is gone. Without that it would keep a value forever, having nothing to read.
+			$this->rowsOf($key)
+				->whereIsNotDeleted()
+				->update($this->removedColumns(StoreEntry::nextVersion()))
+				->execute();
+
+			return true;
+		}
+
 		$store = $this->findRow($key);
 
 		if (null !== $store) {
@@ -173,11 +358,25 @@ final class DbStore implements StoreDriverInterface
 	}
 
 	/**
+	 * {@inheritDoc}
+	 *
 	 * @throws GoblException
 	 */
 	#[Override]
 	public function clear(): bool
 	{
+		if ($this->changes) {
+			// Every key removed is every key a client has to be told about: a cleared store that
+			// dropped its rows would leave a device holding all of them with nothing to read.
+			new OZDbStoresQuery()
+				->whereGroupIs($this->namespace)
+				->whereIsNotDeleted()
+				->update($this->removedColumns(StoreEntry::nextVersion()))
+				->execute();
+
+			return true;
+		}
+
 		new OZDbStoresQuery()
 			->whereGroupIs($this->namespace)
 			->delete()
@@ -244,6 +443,7 @@ final class DbStore implements StoreDriverInterface
 				->update([
 					OZDbStore::COL_VALUE      => SignedSerializer::serialize([self::CACHE_VALUE => $sum]),
 					OZDbStore::COL_EXPIRE_AT  => $new_expire,
+					OZDbStore::COL_VERSION    => StoreEntry::nextVersion(),
 					OZDbStore::COL_UPDATED_AT => \time(),
 				])
 				->execute();
@@ -302,7 +502,116 @@ final class DbStore implements StoreDriverInterface
 	#[Override]
 	public static function fromConfig(string $namespace, array $options = []): static
 	{
-		return new self($namespace);
+		return new self($namespace, true === ($options['changes'] ?? false));
+	}
+
+	/**
+	 * The rows of one key in this namespace: what a conditional write and a removal narrow further.
+	 */
+	private function rowsOf(string $key): OZDbStoresQuery
+	{
+		return new OZDbStoresQuery()
+			->whereGroupIs($this->namespace)
+			->whereKeyIs($this->hashKey($key));
+	}
+
+	/**
+	 * Writes the entry at that version, inserted or updated in place.
+	 *
+	 * One statement: reading first, then inserting, let two requests writing a new key at once (two
+	 * first hits of a rate limit) collide on its unique key.
+	 *
+	 * @throws GoblException
+	 */
+	private function write(StoreEntry $entry, int $version): void
+	{
+		$row = $this->newRow($entry->key)
+			->setValue($this->serialize($entry->value))
+			->setExpireAT($this->expiryOf($entry))
+			->setVersion($version)
+			->toRow();
+
+		unset($row[OZDbStore::COL_ID]);
+
+		new OZDbStoresQuery()
+			->insert($row)
+			->doUpdateOnConflict(
+				[OZDbStore::COL_GROUP, OZDbStore::COL_KEY],
+				[
+					OZDbStore::COL_VALUE,
+					OZDbStore::COL_EXPIRE_AT,
+					OZDbStore::COL_LABEL,
+					OZDbStore::COL_VERSION,
+					OZDbStore::COL_UPDATED_AT,
+					OZDbStore::COL_DELETED,
+					OZDbStore::COL_DELETED_AT,
+				]
+			)
+			->execute();
+	}
+
+	/**
+	 * The columns a write sets: the value, when it expires, and the version it takes.
+	 *
+	 * @param bool $revive also brings back a row that was a removal
+	 *
+	 * @return array<string, null|bool|int|string>
+	 */
+	private function writtenColumns(StoreEntry $entry, int $version, bool $revive = false): array
+	{
+		$columns = [
+			OZDbStore::COL_VALUE      => $this->serialize($entry->value),
+			OZDbStore::COL_EXPIRE_AT  => $this->expiryOf($entry),
+			OZDbStore::COL_VERSION    => $version,
+			OZDbStore::COL_UPDATED_AT => \time(),
+		];
+
+		if ($revive) {
+			$columns[OZDbStore::COL_DELETED]    = false;
+			$columns[OZDbStore::COL_DELETED_AT] = null;
+		}
+
+		return $columns;
+	}
+
+	/**
+	 * The columns a removal sets: a version of its own, so a client reading changes sees it.
+	 *
+	 * @return array<string, null|bool|int|string>
+	 */
+	private function removedColumns(int $version): array
+	{
+		return [
+			OZDbStore::COL_VALUE      => null,
+			OZDbStore::COL_DELETED    => true,
+			OZDbStore::COL_DELETED_AT => \time(),
+			OZDbStore::COL_VERSION    => $version,
+			OZDbStore::COL_UPDATED_AT => \time(),
+		];
+	}
+
+	/**
+	 * The entry as it was written: what a conditional write answers with.
+	 */
+	private function entryOf(StoreEntry $entry, int $version): StoreEntry
+	{
+		return new StoreEntry($entry->key, $entry->value, $entry->expiresAt, $version);
+	}
+
+	/**
+	 * A value as the column holds it: signed, so a row changed outside the app is not read back.
+	 */
+	private function serialize(mixed $value): string
+	{
+		return SignedSerializer::serialize([self::CACHE_VALUE => $value]);
+	}
+
+	/**
+	 * When an entry expires, as the column holds it.
+	 */
+	private function expiryOf(StoreEntry $entry): ?int
+	{
+		return null !== $entry->expiresAt ? (int) \ceil($entry->expiresAt) : null;
 	}
 
 	/**
@@ -329,6 +638,7 @@ final class DbStore implements StoreDriverInterface
 		$row = $this->newRow($key)
 			->setValue(SignedSerializer::serialize([self::CACHE_VALUE => $value]))
 			->setExpireAT(null !== $expiresAt ? (int) \ceil($expiresAt) : null)
+			->setVersion(StoreEntry::nextVersion())
 			->toRow();
 
 		unset($row[OZDbStore::COL_ID]);

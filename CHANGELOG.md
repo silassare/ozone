@@ -300,6 +300,36 @@
 
 ### Added
 
+- **A store entry has a version, a write can be conditional on it, and a client can read what
+  changed.** `oz_db_stores` gains a `version` column (unsigned bigint, default 0), which **needs a
+  migration in a project that already has the table**. Every entry now carries the microsecond it
+  was written (`StoreEntry::$version`, `StoreEntry::nextVersion()`), `KeyValueStore::setIf()` and
+  `deleteIf()` write only where the version is still the one the caller read, and
+  `changedSince()` answers what moved since a version, oldest first. `StoreCapabilities` gains
+  `versioned` and `changes`, and `StoreDriverInterface` gains `setIf()`, `deleteIf()`,
+  `changedSince()` and `pruneRemoved()` -- a **breaking change for a project with a driver of its
+  own**, which must implement the four (answering `StoreWrite::refused()` / `[]` / `0` where it
+  keeps no version is a faithful implementation, and `KeyValueStore` refuses before reaching it
+  when its capabilities say so).
+
+  **The version is the clock, which is one choice answering two questions.** A conditional write
+  needs a token to compare and a client reading changes needs a cursor; the microsecond an entry was
+  written is both, so there is one column and nothing to keep in step. A counter would need an
+  allocation of its own, and a sequence allocated apart from the write it belongs to can be read by
+  a client in between -- a change it would then never see, which is the one failure a sync must not
+  have. Two writes to one key cannot share a version, since the second reads what the first wrote
+  and a store read costs far more than a microsecond; two keys can, so a client asks from slightly
+  before its cursor and takes a repeat, which costs nothing.
+
+  **Removals are kept only where a store asks for it** (`'changes' => true` in its options): such a
+  store soft-deletes instead of deleting and marks every key on `clear()`, so a client is told what
+  it no longer has rather than keeping it forever, and `pruneRemoved()` forgets removals older than
+  a boundary the caller picks (`DbStore::CHANGES_RETENTION`, 30 days). A cache has no use for those
+  rows, which is why it is off by default. `DbStore` and `RedisStore` keep a version;
+  `MemoryStore` and `FileStore` keep one and answer conditional writes under their own lock;
+  `MemcachedStore` keeps none and says so, because an entry it can evict between a read and the
+  write conditional on it is not something two sides can share.
+
 - **The settings are exportable as declarations, and a key can say a browser may read it.**
   `oz settings export` answers every key OZone declares with its type, its default, its
   documentation and whether it is for the client; `--json` gives one object for a tool, and
@@ -414,6 +444,8 @@
 - A refused form names what refused it: a field whose value its type refuses adds `field` (its ref) to the error's data, as a missing required field already did, and a rule set that fails adds `rule` (its ref, `@expect[0]`, `address.@ensure[0]`). Both refs are in the bundle a client holds, so it can show the server's answer next to the field or the rule; the field and the set themselves stay in the private `_suspect` and `_rule`, for the logs.
 - A settings key says how it is merged, in the file that owns it: `Settings::MERGE_KEY` (`@merge`) maps a key to `default` (maps merge, the rest is replaced), `append` (lists are appended, for what every source adds to), `replace`, or `lock`. A **locked** key cannot be changed by any source after the one that declared it, nor by `Settings::set()`, and a later source may only tighten a strategy, never loosen one: an allow-list such as `OZ_REDIRECT_ALLOWED_HOSTS` can be closed to the plugins loaded after it. `OZ_CORS_ALLOWED_HEADERS` ships as `append`, since every source adds the headers its own routes need. Merging all 35 shipped groups costs 0.078 ms against 0.043 ms before.
 - What a user must prove before signing up or recovering an account is configurable, per user type: `oz.auth.verification` (`OZ_SIGNUP_VERIFICATION`, `OZ_ACCOUNT_RECOVERY_VERIFICATION`) maps a user type to the authorization providers accepted for it, `VerificationPolicy::ANY_USER_TYPE` (`*`) being the rule every type falls back to. A project restricts sign-up to email, names its own provider (an invitation, an identity check), or gives a type an **empty list** so nothing has to be proven and the identifier is taken as given, to be verified later. `VerificationPolicy` reads the rules; the routes ask for an authorization at their door only when every type requires one, and the handler always enforces the rule of the type it was given (the type is a form field, which a route guard cannot see). `RouteInfo::hasGuardStoredResults()` tells a handler that a guard did not run from one that ran and refused.
+
+- The analysis stubs ext-memcached (`stubs/memcached.phpstub`) instead of suppressing `UndefinedClass` for it. The suppression was never used in the image the analysis runs in, which has the extension, and an unused suppression is an error of its own on a cold run -- `make lint`'s cache was hiding it while `make check-full` and `make ci` failed. The stub also says what the driver may call, so a call to something the extension does not have is an error rather than waved through with the class.
 
 - `oz deploy run --archive=<tar.gz>` deploys a release from a tar archive of the project (as `git archive` writes it), and `--repository` accepts a git bundle file (`git bundle create`): neither needs the server to reach a repository. A release takes exactly one source.
 - `--json` on `oz migrations check`, `deploy releases`, `server status`, `db build`, `scopes add` and `project create`, as `oz doctor check` had: stdout holds one JSON object, `{"ok": bool, ...}` with what the command reported under `messages`, and errors are answered in JSON too (`{"ok": false, "error": ...}`, a non-zero exit), whether Kli, the command or the global exception handler reports them. `Cli::writeJson()` writes it; `Cli::inJsonMode()` tells whether the command line asked for it.

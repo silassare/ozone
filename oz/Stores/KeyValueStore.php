@@ -98,6 +98,72 @@ final readonly class KeyValueStore
 	}
 
 	/**
+	 * Writes a value only where the entry's version is still the one the caller read.
+	 *
+	 * The write two sides can make at once: a client that read version V writes back saying so, and
+	 * a write that arrives after somebody else's is refused with what is there instead
+	 * ({@see StoreWrite}) rather than losing a value it never saw. `$version` of null writes only
+	 * where the key holds nothing, which is how a value is created without overwriting one.
+	 *
+	 * @param null|int $version the version read, or null to write only an absent key
+	 * @param null|int $ttl     TTL in seconds; null means no expiry
+	 *
+	 * @throws RuntimeException when this store's driver keeps no version
+	 */
+	public function setIf(string $key, mixed $value, ?int $version, ?int $ttl = null): StoreWrite
+	{
+		self::assertValidKey($key);
+		$this->assertVersioned(__FUNCTION__);
+
+		$expires_at = null !== $ttl ? \microtime(true) + $ttl : null;
+
+		return $this->provider->setIf(new StoreEntry($key, $value, $expires_at), $version);
+	}
+
+	/**
+	 * Deletes an entry only where its version is still the one the caller read.
+	 *
+	 * @throws RuntimeException when this store's driver keeps no version
+	 */
+	public function deleteIf(string $key, int $version): StoreWrite
+	{
+		self::assertValidKey($key);
+		$this->assertVersioned(__FUNCTION__);
+
+		return $this->provider->deleteIf($key, $version);
+	}
+
+	/**
+	 * What changed in this store after that version, oldest first, removals included.
+	 *
+	 * What a client reading this store since its last visit is given: a device that was offline a
+	 * week gets what moved, not the whole store. It asks from slightly before the version it last
+	 * saw -- two keys written in one microsecond share one -- and a repeat costs nothing, since the
+	 * value and its version are the same on both sides.
+	 *
+	 * @param int $version the version last seen; 0 for everything the store holds
+	 * @param int $limit   at most this many entries
+	 *
+	 * @return StoreEntry[] oldest first
+	 *
+	 * @throws RuntimeException when this store does not keep what changed
+	 */
+	public function changedSince(int $version, int $limit = 100): array
+	{
+		if (!$this->provider->capabilities()->changes) {
+			throw new RuntimeException(\sprintf(
+				'The store "%s" does not keep what changed: its driver (%s) was not configured'
+					. ' with `changes` on, and a store that keeps no removals cannot answer what'
+					. ' a client is missing.',
+				$this->name,
+				$this->provider::class
+			));
+		}
+
+		return $this->provider->changedSince($version, $limit);
+	}
+
+	/**
 	 * Checks whether a non-expired entry exists for the given key.
 	 */
 	public function has(string $key): bool
@@ -223,6 +289,28 @@ final readonly class KeyValueStore
 		$this->set($key, $value, $ttl);
 
 		return $value;
+	}
+
+	/**
+	 * Refuses a conditional write on a driver that keeps no version.
+	 *
+	 * Said here rather than answered with "refused" by the driver: a caller whose conditional write
+	 * is quietly treated as an ordinary one has lost the only thing it asked for, and would never
+	 * know. A store meant to be written from two sides is configured on a driver that can.
+	 *
+	 * @throws RuntimeException
+	 */
+	private function assertVersioned(string $operation): void
+	{
+		if (!$this->provider->capabilities()->versioned) {
+			throw new RuntimeException(\sprintf(
+				'%s() needs a store that keeps a version per entry, and "%s" is on %s, which keeps'
+					. ' none.',
+				$operation,
+				$this->name,
+				$this->provider::class
+			));
+		}
 	}
 
 	/**
