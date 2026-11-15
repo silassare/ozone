@@ -69,6 +69,45 @@ final class StateRegistryTest extends TestCase
 		self::assertNull($store->get('probe'));
 	}
 
+	public function testAScopedStoreIsOneOwnersEntriesAndNobodyElses(): void
+	{
+		$mine   = StateRegistry::scoped('oz:form:resume', 'u:1');
+		$theirs = StateRegistry::scoped('oz:form:resume', 'u:2');
+
+		$mine->set('step', 'mine');
+		$theirs->set('step', 'theirs');
+
+		self::assertSame('mine', $mine->get('step'));
+		self::assertSame('theirs', $theirs->get('step'));
+
+		// And clearing one owner's entries leaves the other's: what a namespace gives and a key
+		// prefix would have to be remembered for, every read over the store.
+		$mine->clear();
+
+		self::assertNull($mine->get('step'));
+		self::assertSame('theirs', $theirs->get('step'));
+	}
+
+	public function testAScopedStoreIsStillTheDeclaredOneAndRefusesAnUndeclaredName(): void
+	{
+		// The declaration is what says the driver and the durability; the scope only says whose
+		// entries these are.
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessageMatches('/Unknown state store/');
+
+		StateRegistry::scoped('oz:nothing:declared', 'u:1');
+	}
+
+	public function testAScopeThatSaysNothingIsRefused(): void
+	{
+		// Without this, the store itself and one owner of it would be the same namespace, and the
+		// first caller to forget the scope would read and write everybody's entries.
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessageMatches('/needs a scope/');
+
+		StateRegistry::scoped('oz:form:resume', '  ');
+	}
+
 	public function testADatabaseStoreCountsInWholeNumbersUntilAFractionIsAdded(): void
 	{
 		// `oz:form:resume` is backed by the database store (DbStore).
