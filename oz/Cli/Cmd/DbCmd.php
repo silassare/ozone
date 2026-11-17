@@ -93,6 +93,14 @@ final class DbCmd extends Command
 			->dir()
 			->writable()
 			->def('.');
+		$ts_bundle->option('shapes', 's', [], 2)
+			->description(
+				'Also write each table\'s shape beside its entity: what a row is, what writing one'
+					. ' takes, and what identifies one. The files import a type from "@oweb-io/schema",'
+					. ' so a project without that package should not ask for them.'
+			)
+			->bool()
+			->def(false);
 		$ts_bundle->handler($this->tsBundle(...));
 
 		// action: dart bundle
@@ -288,6 +296,7 @@ final class DbCmd extends Command
 		$tables = $db->getTables();
 		$gen    = new CSGeneratorTS($db);
 
+		$gen->generateShapes((bool) $args->get('shapes'));
 		$gen->generate($tables, $dir);
 		$cli->success('TypeScript entities bundle generated.')
 			->info(PathUtils::resolve($dir, 'gobl'));

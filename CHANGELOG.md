@@ -300,6 +300,24 @@
 
 ### Added
 
+- **A client can be told what each REST service answers.** `oz services export --json` lists the
+  enabled `RESTFulService`s of the API router: each one's stable name, the **morph type** of the
+  entity it answers, its table, the **full name** of its key column and the actions it really
+  serves (`REST\ServiceExport::of()`). The twin of `oz routes export`, which says where a service
+  is called and nothing about what comes back -- so a client that had a name and a path can now
+  join a service to the shapes Gobl generates for that table and type the rows it draws.
+  Read off the declarations and never off the registered routes: a service declares its name, its
+  table and its key column as constants and may turn actions off, which is the answer, where
+  reading it back out of the routes would be guessing at the declaration from what it produced.
+  The key column travels by its **full** name (`event_id`) and not the short one a service declares
+  (`id`), because a row carries the full one and reading an id off a row is the whole of what a
+  client does with it.
+
+- **`oz db ts-bundle --shapes`** writes each table's shape beside its generated entity: what a row
+  is, what writing one takes, what identifies one, and what may be read beside it. Gobl has written
+  these for a release and nothing called for them, so no project had them. The files import a type
+  from `@oweb-io/schema`, which is why they are off unless asked.
+
 - **A store entry has a version, a write can be conditional on it, and a client can read what
   changed.** `oz_db_stores` gains a `version` column (unsigned bigint, default 0), which **needs a
   migration in a project that already has the table**. Every entry now carries the microsecond it

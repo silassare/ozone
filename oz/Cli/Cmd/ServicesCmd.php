@@ -15,16 +15,22 @@ namespace OZONE\Core\Cli\Cmd;
 
 use Gobl\DBAL\Table;
 use Kli\KliArgs;
+use Kli\Table\KliTable;
 use Override;
 use OZONE\Core\App\Settings;
 use OZONE\Core\Cli\Command;
 use OZONE\Core\Cli\Utils\ServiceGenerator;
 use OZONE\Core\Cli\Utils\Utils;
 use OZONE\Core\REST\RESTFulService;
+use OZONE\Core\REST\ServiceExport;
 use PHPUtils\Str;
 
 /**
  * Class ServicesCmd.
+ *
+ * `generate` writes a {@see RESTFulService} for a table and enables it; `export` lists what the
+ * enabled ones answer, which is what a client's build types its rows from
+ * ({@see ServiceExport}) -- the twin of `oz routes export`, which says where they are called.
  */
 final class ServicesCmd extends Command
 {
@@ -92,6 +98,13 @@ final class ServicesCmd extends Command
 			->def('');
 
 		$generate->handler($this->generate(...));
+
+		$export = $this->action(
+			'export',
+			'Export what each REST service of the API answers, for clients to type it.'
+		);
+		self::withJsonSupport($export);
+		$export->handler($this->export(...));
 	}
 
 	/**
@@ -149,5 +162,36 @@ final class ServicesCmd extends Command
 				$base_path,
 				$table_name
 			));
+	}
+
+	/**
+	 * Exports what each REST service of the API answers.
+	 */
+	private function export(KliArgs $args): void
+	{
+		Utils::assertProjectLoaded();
+
+		$services = ServiceExport::of();
+		$cli      = $this->getCli();
+
+		if ($args->get('json')) {
+			$cli->writeJson(['services' => $services]);
+		}
+
+		$table = new KliTable();
+
+		$table->addHeader('Name', 'name')->alignLeft();
+		$table->addHeader('Answers', 'entity')->alignLeft();
+		$table->addHeader('Key', 'key')->alignLeft();
+		$table->addHeader('Actions', 'actions')->alignLeft();
+		$table->addRows(\array_map(static fn (array $service): array => [
+			'name'    => $service['name'],
+			'entity'  => $service['entity'],
+			'key'     => $service['key'],
+			'actions' => \implode(', ', $service['actions']),
+		], $services));
+
+		$cli->writeLn((string) $table, false);
+		$cli->info(\sprintf('%d REST service(s).', \count($services)));
 	}
 }
