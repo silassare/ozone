@@ -45,6 +45,30 @@ use OZONE\Core\Router\RouteInfo;
  * endpoints and the route interceptor, and turns its results into responses.
  *
  * Phases: INIT (optional pre-flight form) -> STEPS -> DONE.
+ *
+ * What the INIT phase is, and why there is no way back into it. The init form is a preparation,
+ * not the first question: it is where a provider gathers what it needs to build the filling, and
+ * answering it is what settles the shape of everything after. An exam provider draws and
+ * randomizes its questions there, then serves them as steps. So the steps of a session are
+ * navigable in both directions -- that is the whole point of a resumable form, and
+ * {@see self::back()} is for it -- while the init form is not a step the reader can return to.
+ * Returning to it would mean preparing the filling again, which is a restart and not a step back;
+ * a reader who wants that cancels the session and opens another.
+ *
+ * This is why {@see self::next()} snapshots only outside INIT, and why a `back` from the first
+ * step answers `OZ_FORM_SESSION_NO_HISTORY`: there is no history because no step has been
+ * answered yet, not because the provider is one-way. A provider that is one-way says so itself
+ * through {@see ResumableFormProviderInterface::isReversible()}, and a `back` to it answers
+ * `OZ_FORM_SESSION_NOT_REVERSIBLE` instead. The two are different refusals and a client reading
+ * the first as the second concludes the filling cannot be walked backwards at all, which it can.
+ *
+ * What a step answer carries, and what it does not. A step sends the form's **structure** -- its
+ * fields, their types, labels and rules -- and none of the filling: a serialized field has no
+ * value. The snapshot {@see self::back()} restores is also the state that *produced* the step
+ * being returned to, taken before the answer to it was merged, so that state does not hold that
+ * answer either. A client that wants a step returned to be filled rather than blank keeps the
+ * reader's answers on its own side; the session is the authority on what has been *validated*,
+ * not on what is currently typed into a form.
  */
 final readonly class FormSessionManager
 {
